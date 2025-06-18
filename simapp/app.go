@@ -185,12 +185,7 @@ func NewSimApp(
 		&app.FeegrantKeeper,
 		&app.GroupKeeper,
 
-		// Provenance Modules
-		&app.NameKeeper,
-		&app.AttributeKeeper,
-		&app.MarkerKeeper,
-
-		// Custom Modules
+		// ProvLabs Vault Module
 		&app.VaultKeeper,
 	); err != nil {
 		return nil, err

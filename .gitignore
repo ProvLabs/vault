@@ -22,7 +22,6 @@ go.work.sum
 
 # External tool caches
 .idea/
-.vscode/
 .DS_Store
 *.sublime-project
 *.sublime-workspace
@@ -33,9 +32,9 @@ vendor/
 # Local configuration files
 .env
 *.local
+.vaulty
 
 # macOS specific files
-.DS_Store
 .AppleDouble
 .LSOverride
 
@@ -61,3 +60,11 @@ Desktop.ini
 .settings/
 # Atom
 .atom/
+
+# Project-specific build and debug outputs
+simapp/build
+debug_*
+__debug*
+
+# Go version file
+.go-version

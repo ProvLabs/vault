@@ -1,0 +1,17 @@
+syntax = "proto3";
+package vault.v1;
+
+import "gogoproto/gogo.proto";
+import "vault/v1/params.proto";
+import "vault/v1/vault.proto";
+
+option go_package = "github.com/provlabs/vault/types";
+
+// GenesisState defines the vault module's genesis state.
+message GenesisState {
+  // params defines all the parameters of the module.
+  Params params = 1 [(gogoproto.nullable) = false];
+
+  // vaults defines the vaults that exist at genesis.
+  repeated Vault vaults = 2 [(gogoproto.nullable) = false];
+}

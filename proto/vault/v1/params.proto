@@ -1,0 +1,11 @@
+syntax = "proto3";
+package vault.v1;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/provlabs/vault/types";
+
+// Params defines the parameters for the module.
+message Params {
+  option (gogoproto.equal) = true;
+}

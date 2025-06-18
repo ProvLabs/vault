@@ -1,0 +1,125 @@
+syntax = "proto3";
+package vault.v1;
+
+import "cosmos/base/v1beta1/coin.proto";
+import "cosmos/msg/v1/msg.proto";
+import "cosmos_proto/cosmos.proto";
+import "gogoproto/gogo.proto";
+import "vault/v1/params.proto";
+
+option go_package = "github.com/provlabs/vault/types";
+
+// Msg is the service for the vault module's tx endpoints.
+service Msg {
+  option (cosmos.msg.v1.service) = true;
+
+  // CreateVault creates a new vault.
+  rpc CreateVault(MsgCreateVaultRequest) returns (MsgCreateVaultResponse);
+
+  // Deposit deposits assets into a vault, issuing vault shares in return.
+  rpc Deposit(MsgDepositRequest) returns (MsgDepositResponse);
+
+  // Withdraw withdraws a specific amount of assets from a vault by burning a calculated number of shares.
+  rpc Withdraw(MsgWithdrawRequest) returns (MsgWithdrawResponse);
+
+  // Redeem redeems a specific amount of shares from a vault for a calculated amount of the underlying asset.
+  rpc Redeem(MsgRedeemRequest) returns (MsgRedeemResponse);
+
+  // UpdateParams defines a (governance) operation for updating the module
+  // parameters. The authority defaults to the x/gov module account.
+  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
+}
+
+// MsgUpdateParams is the Msg/UpdateParams request type.
+message MsgUpdateParams {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority is the address that controls the module (defaults to x/gov unless overwritten).
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // params defines the module parameters to update.
+  //
+  // NOTE: All parameters must be supplied.
+  Params params = 2 [(gogoproto.nullable) = false];
+}
+
+// MsgUpdateParamsResponse defines the response structure for executing a
+// MsgUpdateParams message.
+message MsgUpdateParamsResponse {}
+
+// MsgCreateVaultRequest is the request message for the CreateVault endpoint.
+message MsgCreateVaultRequest {
+  option (cosmos.msg.v1.signer) = "admin";
+
+  // admin is the creator and initial administrator of the vault.
+  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // marker_address is the address of an existing marker to be used as the vault's asset.
+  // The vault module account must have Deposit and Withdraw permissions on this marker.
+  string marker_address = 2;
+}
+
+// MsgCreateVaultResponse is the response message for the CreateVault endpoint.
+message MsgCreateVaultResponse {
+  // vault_address is the bech32 address of the newly created vault.
+  string vault_address = 1;
+}
+
+// MsgDepositRequest is the request message for the Deposit endpoint.
+message MsgDepositRequest {
+  option (cosmos.msg.v1.signer) = "depositor";
+
+  // depositor is the account depositing assets into the vault.
+  string depositor = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // vault_address is the address of the vault to deposit into.
+  string vault_address = 2;
+  // amount is the amount of the base asset to deposit.
+  cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
+  // receiver is the address that will receive the vault shares. If empty, defaults to the depositor.
+  string receiver = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgDepositResponse is the response message for the Deposit endpoint.
+message MsgDepositResponse {
+  // shares_received is the amount of vault shares minted to the receiver.
+  cosmos.base.v1beta1.Coin shares_received = 1 [(gogoproto.nullable) = false];
+}
+
+// MsgWithdrawRequest is the request message for the Withdraw endpoint.
+message MsgWithdrawRequest {
+  option (cosmos.msg.v1.signer) = "owner";
+
+  // owner is the account that owns the shares and is initiating the withdrawal.
+  string owner = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // vault_address is the address of the vault to withdraw from.
+  string vault_address = 2;
+  // assets_to_withdraw is the amount of underlying assets to withdraw from the vault.
+  cosmos.base.v1beta1.Coin assets_to_withdraw = 3 [(gogoproto.nullable) = false];
+  // receiver is the address that will receive the withdrawn assets. If empty, defaults to the owner.
+  string receiver = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgWithdrawResponse is the response message for the Withdraw endpoint.
+message MsgWithdrawResponse {
+  // shares_burned is the amount of vault shares burned in the withdrawal.
+  cosmos.base.v1beta1.Coin shares_burned = 1 [(gogoproto.nullable) = false];
+}
+
+// MsgRedeemRequest is the request message for the Redeem endpoint.
+message MsgRedeemRequest {
+  option (cosmos.msg.v1.signer) = "owner";
+
+  // owner is the account that owns the shares and is initiating the redemption.
+  string owner = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // vault_address is the address of the vault to redeem from.
+  string vault_address = 2;
+  // shares_to_redeem is the amount of vault shares to redeem.
+  cosmos.base.v1beta1.Coin shares_to_redeem = 3 [(gogoproto.nullable) = false];
+  // receiver is the address that will receive the redeemed assets. If empty, defaults to the owner.
+  string receiver = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgRedeemResponse is the response message for the Redeem endpoint.
+message MsgRedeemResponse {
+  // assets_received is the amount of underlying assets received from the redemption.
+  cosmos.base.v1beta1.Coin assets_received = 1 [(gogoproto.nullable) = false];
+}

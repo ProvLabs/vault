@@ -1,0 +1,42 @@
+syntax = "proto3";
+package vault.v1;
+
+import "cosmos_proto/cosmos.proto";
+
+option go_package = "github.com/provlabs/vault/types";
+
+// EventDeposit is an event emitted when assets are deposited into a vault.
+message EventDeposit {
+  // caller is the address of the account that initiated the deposit.
+  string caller = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // owner is the address of the account that will receive the minted shares.
+  string owner = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // assets is the coins amount string of the underlying assets that were deposited.
+  string assets = 3;
+  // shares is the coins amount string of the vault shares that were minted.
+  string shares = 4;
+  // vault_id is the numerical identifier of the vault.
+  uint32 vault_id = 5;
+}
+
+// EventWithdraw is an event emitted when assets are withdrawn from a vault.
+message EventWithdraw {
+  // caller is the address of the account that initiated the withdrawal.
+  string caller = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // receiver is the address of the account that will receive the underlying assets.
+  string receiver = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // owner is the address of the account from which the shares were burned.
+  string owner = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // assets is the coins amount string of the underlying assets that were withdrawn.
+  string assets = 4;
+  // shares is the coins amount string of the vault shares that were burned.
+  string shares = 5;
+  // vault_id is the numerical identifier of the vault.
+  uint32 vault_id = 6;
+}
+
+// EventVaultCreated is an event emitted when a vault is created.
+message EventVaultCreated {
+  // admin is the address of the account that manages the vault.
+  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}

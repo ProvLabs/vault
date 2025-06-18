@@ -1,0 +1,22 @@
+syntax = "proto3";
+package vault.v1;
+
+import "cosmos/base/v1beta1/coin.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/provlabs/vault/types";
+
+// Vault represents a central holding place for assets, governed by a set of rules.
+// It is based on the ERC-4626 standard and builds upon the Provenance Marker module.
+message Vault {
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 1;
+  // marker_address is the bech32 address of the marker associated with the vault.
+  // This marker holds the underlying assets.
+  string marker_address = 2;
+  // admin is the address that has administrative privileges over the vault.
+  string admin = 3;
+  // max_total_deposit is the absolute maximum amount of the base asset that can be deposited in the vault.
+  // If empty, there is no total deposit limit.
+  cosmos.base.v1beta1.Coin max_total_deposit = 4 [(gogoproto.nullable) = true];
+}

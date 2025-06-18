@@ -1,0 +1,81 @@
+syntax = "proto3";
+package vault.v1;
+
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos/base/v1beta1/coin.proto";
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "vault/v1/params.proto";
+import "vault/v1/vault.proto";
+
+option go_package = "github.com/provlabs/vault/types";
+
+// Query is the service for the vault module's query endpoints.
+service Query {
+  // Vaults returns a paginated list of all vaults.
+  rpc Vaults(QueryVaultsRequest) returns (QueryVaultsResponse) {
+    option (google.api.http).get = "/vault/v1/vaults";
+  }
+
+  // Vault returns the configuration and state of a specific vault.
+  rpc Vault(QueryVaultRequest) returns (QueryVaultResponse) {
+    option (google.api.http).get = "/vault/v1/vaults/{vault_address}";
+  }
+
+  // TotalAssets returns the total amount of the underlying asset managed by the vault.
+  // This is equivalent to the ERC-4626 function `totalAssets`.
+  rpc TotalAssets(QueryTotalAssetsRequest) returns (QueryTotalAssetsResponse) {
+    option (google.api.http).get = "/vault/v1/vaults/{vault_address}/total_assets";
+  }
+
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/vault/v1/params";
+  }
+}
+
+// QueryParamsRequest is request type for the Query/Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method.
+message QueryParamsResponse {
+  // params holds all the parameters of this module.
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryVaultsRequest is the request message for the Query/Vaults endpoint.
+message QueryVaultsRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryVaultsResponse is the response message for the Query/Vaults endpoint.
+message QueryVaultsResponse {
+  // vaults is a list of all vaults.
+  repeated Vault vaults = 1 [(gogoproto.nullable) = false];
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryVaultRequest is the request message for the Query/Vault endpoint.
+message QueryVaultRequest {
+  // vault_address is the bech32 address of the vault to query.
+  string vault_address = 1;
+}
+
+// QueryVaultResponse is the response message for the Query/Vault endpoint.
+message QueryVaultResponse {
+  // vault is the requested vault.
+  Vault vault = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryTotalAssetsRequest is the request message for the Query/TotalAssets endpoint.
+message QueryTotalAssetsRequest {
+  // vault_address is the bech32 address of the vault to query.
+  string vault_address = 1;
+}
+
+// QueryTotalAssetsResponse is the response message for the Query/TotalAssets endpoint.
+message QueryTotalAssetsResponse {
+  // amount is the total assets in the vault.
+  cosmos.base.v1beta1.Coin amount = 1 [(gogoproto.nullable) = false];
+}

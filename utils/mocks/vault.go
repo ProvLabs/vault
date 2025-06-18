@@ -33,7 +33,7 @@ func NewVaultKeeper(
 	tkey := storetypes.NewTransientStoreKey(fmt.Sprintf("transient_%s", types.ModuleName))
 	wrapper := testutil.DefaultContextWithDB(t, key, tkey)
 
-	cfg := MakeTestEncodingConfig("cosmos")
+	cfg := MakeTestEncodingConfig("provlabs")
 	types.RegisterInterfaces(cfg.InterfaceRegistry)
 
 	k := keeper.NewKeeper(
@@ -41,8 +41,9 @@ func NewVaultKeeper(
 		runtime.NewKVStoreService(key),
 
 		runtime.ProvideEventService(),
-		addresscodec.NewBech32Codec("cosmos"),
+		addresscodec.NewBech32Codec("provlabs"),
 		authtypes.NewModuleAddress(govtypes.ModuleName),
+		nil,
 	)
 
 	ctx := wrapper.Ctx.WithHeaderInfo(header.Info{Time: time.Now().UTC()})

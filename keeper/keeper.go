@@ -19,6 +19,8 @@ type Keeper struct {
 	addressCodec address.Codec
 	authority    []byte
 
+	MarkerKeeper types.MarkerKeeper
+
 	Params collections.Item[types.Params]
 	Vaults collections.Map[uint32, types.Vault]
 }
@@ -29,6 +31,7 @@ func NewKeeper(
 	eventService event.Service,
 	addressCodec address.Codec,
 	authority []byte,
+	markerkeeper types.MarkerKeeper,
 ) *Keeper {
 	if _, err := addressCodec.BytesToString(authority); err != nil {
 		panic(fmt.Sprintf("invalid authority address %s: %s", authority, err))
@@ -42,6 +45,7 @@ func NewKeeper(
 		authority:    authority,
 		Params:       collections.NewItem(builder, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
 		Vaults:       collections.NewMap(builder, collections.Prefix(types.VaultsKey), "vaults", collections.Uint32Key, codec.CollValue[types.Vault](cdc)),
+		MarkerKeeper: markerkeeper,
 	}
 
 	schema, err := builder.Build()

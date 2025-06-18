@@ -1,0 +1,63 @@
+# Binaries for programs and plugins
+*.exe
+*.darwin
+*.dragonfly
+*.freebsd
+*.linux
+*.netbsd
+*.openbsd
+*.plan9
+*.solaris
+*.windows
+*.bin
+
+# Test binaries and data
+*_test
+*.test
+testdata/
+
+# Go build cache
+.cache/
+go.work.sum
+
+# External tool caches
+.idea/
+.vscode/
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# Dependency directories
+vendor/
+
+# Local configuration files
+.env
+*.local
+
+# macOS specific files
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux specific files
+.directory
+
+# Windows specific files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# IDE specific files
+# GoLand
+.idea/
+# VS Code
+.vscode/
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+# Eclipse
+.project
+.classpath
+.settings/
+# Atom
+.atom/

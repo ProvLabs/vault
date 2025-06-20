@@ -2,7 +2,11 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provlabs/vault/types"
 )
 
@@ -18,8 +22,44 @@ func NewMsgServer(keeper *Keeper) types.MsgServer {
 
 // CreateVault creates a new vault.
 func (k msgServer) CreateVault(goCtx context.Context, msg *types.MsgCreateVaultRequest) (*types.MsgCreateVaultResponse, error) {
-	panic("not implemented")
+	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	marker, err := k.MarkerKeeper.GetMarker(ctx, sdk.MustAccAddressFromBech32(msg.MarkerAddress))
+	if err != nil {
+		return nil, fmt.Errorf("unable to find underlying asset: %w", err)
+	}
+	vaultDenom := fmt.Sprintf("vault/%s", marker.GetDenom())
+
+	// TODO Does the owner just own the vault, and the marker created by the vault?
+	// TODO Should these be separate owners?
+	owner := msg.Admin
+
+	const (
+		// TODO We may want the supply in the message.
+		Supply          = 10_000
+		FixedSupply     = true
+		NoForceTransfer = false
+		NoGovControl    = false
+	)
+	rMarkerBaseAcct := authtypes.NewBaseAccountWithAddress(markertypes.MustGetMarkerAddress(vaultDenom))
+	rMarkerAcct := markertypes.NewMarkerAccount(rMarkerBaseAcct, sdk.NewInt64Coin(vaultDenom, Supply), sdk.MustAccAddressFromBech32(owner),
+		[]markertypes.AccessGrant{
+			{
+				Address:     owner,
+				Permissions: []markertypes.Access{markertypes.Access_Admin, markertypes.Access_Transfer, markertypes.Access_Mint, markertypes.Access_Burn, markertypes.Access_Withdraw},
+			},
+		},
+		markertypes.StatusProposed,
+		markertypes.MarkerType_RestrictedCoin,
+		FixedSupply,
+		NoGovControl,
+		NoForceTransfer,
+		[]string{},
+	)
+	k.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, rMarkerAcct)
+	return &types.MsgCreateVaultResponse{
+		VaultAddress: rMarkerAcct.Address,
+	}, nil
 }
 
 // Deposit deposits assets into a vault.

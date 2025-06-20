@@ -163,6 +163,7 @@ type ModuleInputs struct {
 	EventService  event.Service
 	Codec         codec.Codec
 	AddressCodec  address.Codec
+	MarkerKeeper  types.MarkerKeeper
 }
 
 // ModuleOutputs defines the outputs of the vault module provider.
@@ -185,6 +186,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.EventService,
 		in.AddressCodec,
 		authority,
+		in.MarkerKeeper,
 	)
 	m := NewAppModule(k, in.AddressCodec)
 	return ModuleOutputs{Keeper: k, Module: m}

@@ -20,7 +20,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	_ "github.com/cosmos/cosmos-sdk/x/auth"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
@@ -53,11 +52,8 @@ import (
 
 	// Provenance Modules
 	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
-	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
-	nametypes "github.com/provenance-io/provenance/x/name/types"
 
 	// Custom Modules
 	_ "github.com/provlabs/vault"
@@ -140,7 +136,7 @@ func ProvideExchangeDummyCustomSigners() []signing.CustomGetSigner {
 func AppConfig() depinject.Config {
 	return depinject.Configs(
 		appconfig.LoadYAML(AppConfigYAML),
-		depinject.Provide(ProvideExchangeDummyCustomSigners, ProvideNameKeeper, ProvideAttributeKeeper, ProvideMarkerKeeper),
+		depinject.Provide(ProvideExchangeDummyCustomSigners, ProvideMarkerKeeperStub),
 		depinject.Supply(
 			map[string]module.AppModuleBasic{
 				genutiltypes.ModuleName: genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
@@ -247,51 +243,16 @@ func (app *SimApp) kvStoreKeys() map[string]*storetypes.KVStoreKey {
 	return keys
 }
 
-func ProvideNameKeeper(
-	cdc codec.Codec,
-	// key *storetypes.KVStoreKey,
-) *namekeeper.Keeper {
-	key := storetypes.NewKVStoreKey(nametypes.StoreKey)
-	keeper := namekeeper.NewKeeper(cdc, key)
-	return &keeper
-}
-
-func ProvideAttributeKeeper(
-	cdc codec.Codec,
-	// key *storetypes.KVStoreKey,
-	authKeeper attributetypes.AccountKeeper,
-	nameKeeper attributetypes.NameKeeper,
-) *attributekeeper.Keeper {
-	key := storetypes.NewKVStoreKey(attributetypes.StoreKey)
-	keeper := attributekeeper.NewKeeper(cdc, key, authKeeper, nameKeeper)
-	return &keeper
-}
-
-func ProvideMarkerKeeper(
-	cdc codec.Codec,
-	//key *storetypes.KVStoreKey,
-	accountKeeper authkeeper.AccountKeeper,
-	bankKeeper bankkeeper.Keeper,
-	authzKeeper authzkeeper.Keeper,
-	feegrantKeeper feegrantkeeper.Keeper,
-	attributeKeeper *attributekeeper.Keeper,
-	nameKeeper *namekeeper.Keeper,
-	// transferKeeper *ibctransferkeeper.Keeper,
-	groupKeeper groupkeeper.Keeper,
-) *markerkeeper.Keeper {
-	key := storetypes.NewKVStoreKey(markertypes.StoreKey)
-	keeper := markerkeeper.NewKeeper(
-		cdc,
-		key,
-		accountKeeper,
-		bankKeeper,
-		authzKeeper,
-		feegrantKeeper,
-		attributeKeeper,
-		nameKeeper,
-		nil, //transferKeeper,
-		[]sdk.AccAddress{},
-		NewGroupCheckerFunc(groupKeeper),
-	)
-	return &keeper
+// ProvideMarkerKeeperStub returns an empty markerkeeper.Keeper instance.
+//
+// This stub is used to satisfy dependency injection requirements when wiring
+// the Vault module in the app module configuration. It allows the Vault module
+// to be included in the dependency graph even though the actual MarkerKeeper
+// is initialized separately using the legacy Provenance wiring in SimApp.
+//
+// This function should only be used during app setup and should not be relied
+// on at runtime, as the returned keeper is not fully configured and will panic
+// if used.
+func ProvideMarkerKeeperStub() *markerkeeper.Keeper {
+	return &markerkeeper.Keeper{}
 }

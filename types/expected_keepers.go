@@ -11,4 +11,5 @@ type MarkerKeeper interface {
 	AddFinalizeAndActivateMarker(ctx sdk.Context, marker types.MarkerAccountI) error
 	TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, amount sdk.Coin) error
 	WithdrawCoins(ctx sdk.Context, caller sdk.AccAddress, recipient sdk.AccAddress, denom string, coins sdk.Coins) error
+	GetMarker(ctx sdk.Context, address sdk.AccAddress) (types.MarkerAccountI, error)
 }

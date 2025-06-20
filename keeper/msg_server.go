@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -23,9 +24,14 @@ func NewMsgServer(keeper *Keeper) types.MsgServer {
 func (k msgServer) CreateVault(goCtx context.Context, msg *types.MsgCreateVaultRequest) (*types.MsgCreateVaultResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// TODO We will want to have the denom rather than the address in the message.
-	denom := msg.MarkerAddress
-	// TODO We probably want to use the module account as the owner.
+	marker, err := k.MarkerKeeper.GetMarker(ctx, sdk.MustAccAddressFromBech32(msg.MarkerAddress))
+	if err != nil {
+		return nil, fmt.Errorf("unable to find underlying asset: %w", err)
+	}
+	vaultDenom := fmt.Sprintf("vault/%s", marker.GetDenom())
+
+	// TODO Does the owner just own the vault, and the marker created by the vault?
+	// TODO Should these be separate owners?
 	owner := msg.Admin
 
 	const (
@@ -35,8 +41,8 @@ func (k msgServer) CreateVault(goCtx context.Context, msg *types.MsgCreateVaultR
 		NoForceTransfer = false
 		NoGovControl    = false
 	)
-	rMarkerBaseAcct := authtypes.NewBaseAccountWithAddress(markertypes.MustGetMarkerAddress(denom))
-	rMarkerAcct := markertypes.NewMarkerAccount(rMarkerBaseAcct, sdk.NewInt64Coin(denom, Supply), sdk.MustAccAddressFromBech32(owner),
+	rMarkerBaseAcct := authtypes.NewBaseAccountWithAddress(markertypes.MustGetMarkerAddress(vaultDenom))
+	rMarkerAcct := markertypes.NewMarkerAccount(rMarkerBaseAcct, sdk.NewInt64Coin(vaultDenom, Supply), sdk.MustAccAddressFromBech32(owner),
 		[]markertypes.AccessGrant{
 			{
 				Address:     owner,

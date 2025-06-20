@@ -49,13 +49,15 @@ import (
 
 	// IBC Modules
 	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
-	ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 
 	// Provenance Modules
 	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
+	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
+	nametypes "github.com/provenance-io/provenance/x/name/types"
 
 	// Custom Modules
 	_ "github.com/provlabs/vault"
@@ -138,7 +140,7 @@ func ProvideExchangeDummyCustomSigners() []signing.CustomGetSigner {
 func AppConfig() depinject.Config {
 	return depinject.Configs(
 		appconfig.LoadYAML(AppConfigYAML),
-		depinject.Provide(ProvideExchangeDummyCustomSigners),
+		depinject.Provide(ProvideExchangeDummyCustomSigners, ProvideNameKeeper, ProvideAttributeKeeper, ProvideMarkerKeeper),
 		depinject.Supply(
 			map[string]module.AppModuleBasic{
 				genutiltypes.ModuleName: genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
@@ -245,19 +247,40 @@ func (app *SimApp) kvStoreKeys() map[string]*storetypes.KVStoreKey {
 	return keys
 }
 
+func ProvideNameKeeper(
+	cdc codec.Codec,
+	// key *storetypes.KVStoreKey,
+) *namekeeper.Keeper {
+	key := storetypes.NewKVStoreKey(nametypes.StoreKey)
+	keeper := namekeeper.NewKeeper(cdc, key)
+	return &keeper
+}
+
+func ProvideAttributeKeeper(
+	cdc codec.Codec,
+	// key *storetypes.KVStoreKey,
+	authKeeper attributetypes.AccountKeeper,
+	nameKeeper attributetypes.NameKeeper,
+) *attributekeeper.Keeper {
+	key := storetypes.NewKVStoreKey(attributetypes.StoreKey)
+	keeper := attributekeeper.NewKeeper(cdc, key, authKeeper, nameKeeper)
+	return &keeper
+}
+
 func ProvideMarkerKeeper(
 	cdc codec.Codec,
-	key *storetypes.KVStoreKey,
+	//key *storetypes.KVStoreKey,
 	accountKeeper authkeeper.AccountKeeper,
 	bankKeeper bankkeeper.Keeper,
 	authzKeeper authzkeeper.Keeper,
 	feegrantKeeper feegrantkeeper.Keeper,
-	attributeKeeper attributekeeper.Keeper,
-	nameKeeper namekeeper.Keeper,
-	transferKeeper *ibctransferkeeper.Keeper,
+	attributeKeeper *attributekeeper.Keeper,
+	nameKeeper *namekeeper.Keeper,
+	// transferKeeper *ibctransferkeeper.Keeper,
 	groupKeeper groupkeeper.Keeper,
-) markerkeeper.Keeper {
-	return markerkeeper.NewKeeper(
+) *markerkeeper.Keeper {
+	key := storetypes.NewKVStoreKey(markertypes.StoreKey)
+	keeper := markerkeeper.NewKeeper(
 		cdc,
 		key,
 		accountKeeper,
@@ -266,8 +289,9 @@ func ProvideMarkerKeeper(
 		feegrantKeeper,
 		attributeKeeper,
 		nameKeeper,
-		transferKeeper,
+		nil, //transferKeeper,
 		[]sdk.AccAddress{},
 		NewGroupCheckerFunc(groupKeeper),
 	)
+	return &keeper
 }

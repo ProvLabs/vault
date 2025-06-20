@@ -6,7 +6,8 @@ AMOUNT=100 # The amount for the marker is now fixed at 100
 # --- Script Dependencies ---
 GET_KEY_SCRIPT="./scripts/get-key.sh"
 GET_MARKER_ADDR_SCRIPT="./scripts/get-marker-address.sh"
-CREATE_MARKER_SCRIPT="./scripts/create-marker.sh" # New dependency for marker creation
+CREATE_MARKER_SCRIPT="./scripts/create-marker.sh"
+TX_SCRIPT="./scripts/tx.sh"
 
 # --- Argument Parsing ---
 if [ -z "$1" ] || [ -z "$2" ]; then
@@ -26,6 +27,7 @@ if [ -z "$ADMIN" ]; then
 fi
 
 # --- 1. Check if Marker Exists ---
+echo "Checking if marker '$DENOM' already exists..."
 MARKER_ADDR=$($GET_MARKER_ADDR_SCRIPT "$DENOM") # Capture output (address or empty)
 GET_MARKER_STATUS=$? # Capture exit status (0 for found, 1 for not found)
 
@@ -35,6 +37,7 @@ else
   echo "Marker '$DENOM' does not exist or could not be retrieved. Creating it now..."
 
   # --- 2. Create Marker if it doesn't exist using create-marker.sh ---
+  # Pass amount, denom, and key_name directly to create-marker.sh
   CREATE_MARKER_CMD="$CREATE_MARKER_SCRIPT $AMOUNT $DENOM $KEY_NAME"
   $CREATE_MARKER_CMD
 
@@ -53,18 +56,16 @@ else
     echo "Marker may not have been created correctly or query failed."
     exit 1
   fi
-  echo "Successfully retrieved address for new marker '$DENOM': $MARKER_ADDR"
 fi
 
 # --- 3. Proceed with vault create-vault ---
-# Ensure MARKER_ADDR is set before proceeding
 if [ -z "$MARKER_ADDR" ]; then
   echo "CRITICAL ERROR: Marker address could not be determined. Cannot create vault."
   exit 1
 fi
 
-echo "Proceeding to create vault using marker address: $MARKER_ADDR"
 VAULT_CREATE_CMD="$TX_SCRIPT vault create-vault $ADMIN $MARKER_ADDR --from $ADMIN"
+echo "Executing vault creation: $VAULT_CREATE_CMD"
 $VAULT_CREATE_CMD
 
 # Check if the vault creation was successful based on tx.sh's exit code

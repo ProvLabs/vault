@@ -20,75 +20,89 @@ func NewMsgServer(keeper *Keeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
 }
 
-// Obtain the marker for UnderlyingAsset
-// Obtain the ModuleAccount
-// Create a marker named vault/${UnderlyingAsset}
-// It should have the following attributes:
-// - The marker owner should be the ModuleAccount
-// - Must have supply of zero
-// - Must not be fixed supply
-// - Must not have governance control
-// - Must not have forced transfer
-// - Must be restricted
-// - Must have Admin, Mint, Burn, Withdraw, Transfer
-// - Must have correct ending marker state
-// The Vault Store should be updated containing the following mapping [MarkerAddress] -> Vault
-// The Vault should have correctly populated fields
-// The Vault should have the following attributes:
-// - vault_address containing the address of the newly created marker
-// - underlying_asset containing the name of the underlying asset for the vault
-// - admin contains the address of the vault admin
-// The EventVaultCreated event should be emitted containing:
-// - The admin of the vault
-// - The vault address
-// - The underlying asset
-// It should return a MsgCreateVaultResponse containing the new marker address
-
-// ValidateBasic
-// Verify the admin is valid syntax
-// Verify the string share denom is valid syntax
-// Verify the string for supported coin is valid syntax
-
-// Mandatory tests in msg_server_test, query_server_test, msgs_test, and genesis
-// Complicated code in keepers should have tests
 func (k msgServer) CreateVault(goCtx context.Context, msg *types.MsgCreateVaultRequest) (*types.MsgCreateVaultResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	marker, err := k.MarkerKeeper.GetMarker(ctx, markertypes.MustGetMarkerAddress(msg.UnderlyingAsset))
-	if err != nil {
-		return nil, fmt.Errorf("unable to find underlying asset: %w", err)
+	// Obtain the marker for the underlying asset to ensure it exists.
+	underlyingAssetAddr := markertypes.MustGetMarkerAddress(msg.UnderlyingAsset)
+	if _, err := k.MarkerKeeper.GetMarker(ctx, underlyingAssetAddr); err != nil {
+		return nil, fmt.Errorf("underlying asset marker %q not found: %w", msg.UnderlyingAsset, err)
 	}
-	vaultDenom := fmt.Sprintf("vault/%s", marker.GetDenom())
 
-	// TODO Does the owner just own the vault, and the marker created by the vault?
-	// TODO Should these be separate owners?
-	owner := msg.Admin
+	// Obtain the module account, which will be the manager of the new vault marker.
+	moduleAcc := authtypes.NewModuleAddress(types.ModuleName)
+
+	// Create a new marker for the vault shares.
+	vaultShareMarkerAddress := markertypes.MustGetMarkerAddress(msg.ShareDenom)
+	if _, err := k.MarkerKeeper.GetMarker(ctx, vaultShareMarkerAddress); err == nil {
+		return nil, fmt.Errorf("a marker with the share denomination %q already exists", msg.ShareDenom)
+	}
 
 	const (
-		// TODO We may want the supply in the message.
-		Supply          = 10_000
-		FixedSupply     = true
+		Supply          = 0
+		NoFixedSupply   = false
 		NoForceTransfer = false
 		NoGovControl    = false
 	)
-	rMarkerBaseAcct := authtypes.NewBaseAccountWithAddress(markertypes.MustGetMarkerAddress(vaultDenom))
-	rMarkerAcct := markertypes.NewMarkerAccount(rMarkerBaseAcct, sdk.NewInt64Coin(vaultDenom, Supply), sdk.MustAccAddressFromBech32(owner),
+
+	// Create the new marker account for the vault shares.
+	baseAccount := authtypes.NewBaseAccountWithAddress(vaultShareMarkerAddress)
+	newMarker := markertypes.NewMarkerAccount(
+		baseAccount,
+		sdk.NewInt64Coin(msg.ShareDenom, Supply),
+		moduleAcc, // The marker manager is the vault module account.
 		[]markertypes.AccessGrant{
 			{
-				Address:     owner,
-				Permissions: []markertypes.Access{markertypes.Access_Admin, markertypes.Access_Transfer, markertypes.Access_Mint, markertypes.Access_Burn, markertypes.Access_Withdraw},
+				Address: moduleAcc.String(),
+				Permissions: []markertypes.Access{
+					markertypes.Access_Admin,
+					markertypes.Access_Mint,
+					markertypes.Access_Burn,
+					markertypes.Access_Withdraw,
+					markertypes.Access_Transfer,
+				},
 			},
 		},
 		markertypes.StatusProposed,
 		markertypes.MarkerType_RestrictedCoin,
-		FixedSupply,
+		NoFixedSupply,
 		NoGovControl,
 		NoForceTransfer,
-		[]string{},
+		[]string{}, // No required attributes.
 	)
-	k.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, rMarkerAcct)
+
+	// Add, finalize, and activate the new marker.
+	if err := k.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, newMarker); err != nil {
+		return nil, fmt.Errorf("failed to create and activate vault share marker: %w", err)
+	}
+
+	// Create and store the Vault object.
+	vault := types.Vault{
+		VaultAddress:    newMarker.GetAddress().String(),
+		UnderlyingAsset: msg.UnderlyingAsset,
+		Admin:           msg.Admin,
+	}
+
+	// The vault is keyed by its address, which is the new marker's address.
+	if err := k.Vaults.Set(ctx, newMarker.GetAddress(), vault); err != nil {
+		// If storing the vault fails after the marker has been created, we are in an inconsistent state.
+		// This should ideally be handled, e.g., by attempting to delete the created marker.
+		return nil, fmt.Errorf("failed to store new vault: %w", err)
+	}
+
+	// Emit the EventVaultCreated event.
+	if err := k.eventService.EventManager(ctx).Emit(ctx, types.NewEventVaultCreated(
+		msg.Admin,
+		msg.ShareDenom,
+		msg.UnderlyingAsset,
+	)); err != nil {
+		// Log the error, but don't fail the transaction as event emission is not critical.
+		k.getLogger(ctx).Error("failed to emit EventVaultCreated", "error", err)
+	}
+
+	// Return the response containing the new vault's address.
 	return &types.MsgCreateVaultResponse{
-		VaultAddress: rMarkerAcct.Address,
+		VaultAddress: newMarker.GetAddress().String(),
 	}, nil
 }
 

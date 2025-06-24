@@ -94,6 +94,7 @@ func (k msgServer) CreateVault(goCtx context.Context, msg *types.MsgCreateVaultR
 
 	// Emit the EventVaultCreated event.
 	if err := k.eventService.EventManager(ctx).Emit(ctx, types.NewEventVaultCreated(
+		newMarker.GetAddress(),
 		msg.Admin,
 		msg.ShareDenom,
 		msg.UnderlyingAsset,

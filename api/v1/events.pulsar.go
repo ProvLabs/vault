@@ -1399,6 +1399,7 @@ func (x *fastReflection_EventWithdraw) ProtoMethods() *protoiface.Methods {
 
 var (
 	md_EventVaultCreated                  protoreflect.MessageDescriptor
+	fd_EventVaultCreated_vault_address    protoreflect.FieldDescriptor
 	fd_EventVaultCreated_admin            protoreflect.FieldDescriptor
 	fd_EventVaultCreated_share_denom      protoreflect.FieldDescriptor
 	fd_EventVaultCreated_underlying_asset protoreflect.FieldDescriptor
@@ -1407,6 +1408,7 @@ var (
 func init() {
 	file_vault_v1_events_proto_init()
 	md_EventVaultCreated = File_vault_v1_events_proto.Messages().ByName("EventVaultCreated")
+	fd_EventVaultCreated_vault_address = md_EventVaultCreated.Fields().ByName("vault_address")
 	fd_EventVaultCreated_admin = md_EventVaultCreated.Fields().ByName("admin")
 	fd_EventVaultCreated_share_denom = md_EventVaultCreated.Fields().ByName("share_denom")
 	fd_EventVaultCreated_underlying_asset = md_EventVaultCreated.Fields().ByName("underlying_asset")
@@ -1477,6 +1479,12 @@ func (x *fastReflection_EventVaultCreated) Interface() protoreflect.ProtoMessage
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_EventVaultCreated) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.VaultAddress != "" {
+		value := protoreflect.ValueOfString(x.VaultAddress)
+		if !f(fd_EventVaultCreated_vault_address, value) {
+			return
+		}
+	}
 	if x.Admin != "" {
 		value := protoreflect.ValueOfString(x.Admin)
 		if !f(fd_EventVaultCreated_admin, value) {
@@ -1510,6 +1518,8 @@ func (x *fastReflection_EventVaultCreated) Range(f func(protoreflect.FieldDescri
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_EventVaultCreated) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
+	case "vault.v1.EventVaultCreated.vault_address":
+		return x.VaultAddress != ""
 	case "vault.v1.EventVaultCreated.admin":
 		return x.Admin != ""
 	case "vault.v1.EventVaultCreated.share_denom":
@@ -1532,6 +1542,8 @@ func (x *fastReflection_EventVaultCreated) Has(fd protoreflect.FieldDescriptor) 
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventVaultCreated) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
+	case "vault.v1.EventVaultCreated.vault_address":
+		x.VaultAddress = ""
 	case "vault.v1.EventVaultCreated.admin":
 		x.Admin = ""
 	case "vault.v1.EventVaultCreated.share_denom":
@@ -1554,6 +1566,9 @@ func (x *fastReflection_EventVaultCreated) Clear(fd protoreflect.FieldDescriptor
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_EventVaultCreated) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
+	case "vault.v1.EventVaultCreated.vault_address":
+		value := x.VaultAddress
+		return protoreflect.ValueOfString(value)
 	case "vault.v1.EventVaultCreated.admin":
 		value := x.Admin
 		return protoreflect.ValueOfString(value)
@@ -1583,6 +1598,8 @@ func (x *fastReflection_EventVaultCreated) Get(descriptor protoreflect.FieldDesc
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventVaultCreated) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
+	case "vault.v1.EventVaultCreated.vault_address":
+		x.VaultAddress = value.Interface().(string)
 	case "vault.v1.EventVaultCreated.admin":
 		x.Admin = value.Interface().(string)
 	case "vault.v1.EventVaultCreated.share_denom":
@@ -1609,6 +1626,8 @@ func (x *fastReflection_EventVaultCreated) Set(fd protoreflect.FieldDescriptor, 
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventVaultCreated) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
+	case "vault.v1.EventVaultCreated.vault_address":
+		panic(fmt.Errorf("field vault_address of message vault.v1.EventVaultCreated is not mutable"))
 	case "vault.v1.EventVaultCreated.admin":
 		panic(fmt.Errorf("field admin of message vault.v1.EventVaultCreated is not mutable"))
 	case "vault.v1.EventVaultCreated.share_denom":
@@ -1628,6 +1647,8 @@ func (x *fastReflection_EventVaultCreated) Mutable(fd protoreflect.FieldDescript
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_EventVaultCreated) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
+	case "vault.v1.EventVaultCreated.vault_address":
+		return protoreflect.ValueOfString("")
 	case "vault.v1.EventVaultCreated.admin":
 		return protoreflect.ValueOfString("")
 	case "vault.v1.EventVaultCreated.share_denom":
@@ -1703,6 +1724,10 @@ func (x *fastReflection_EventVaultCreated) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
+		l = len(x.VaultAddress)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
 		l = len(x.Admin)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
@@ -1749,19 +1774,26 @@ func (x *fastReflection_EventVaultCreated) ProtoMethods() *protoiface.Methods {
 			copy(dAtA[i:], x.UnderlyingAsset)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.UnderlyingAsset)))
 			i--
-			dAtA[i] = 0x1a
+			dAtA[i] = 0x22
 		}
 		if len(x.ShareDenom) > 0 {
 			i -= len(x.ShareDenom)
 			copy(dAtA[i:], x.ShareDenom)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ShareDenom)))
 			i--
-			dAtA[i] = 0x12
+			dAtA[i] = 0x1a
 		}
 		if len(x.Admin) > 0 {
 			i -= len(x.Admin)
 			copy(dAtA[i:], x.Admin)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Admin)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.VaultAddress) > 0 {
+			i -= len(x.VaultAddress)
+			copy(dAtA[i:], x.VaultAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.VaultAddress)))
 			i--
 			dAtA[i] = 0xa
 		}
@@ -1816,6 +1848,38 @@ func (x *fastReflection_EventVaultCreated) ProtoMethods() *protoiface.Methods {
 			switch fieldNum {
 			case 1:
 				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field VaultAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.VaultAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
 				}
 				var stringLen uint64
@@ -1846,7 +1910,7 @@ func (x *fastReflection_EventVaultCreated) ProtoMethods() *protoiface.Methods {
 				}
 				x.Admin = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
-			case 2:
+			case 3:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ShareDenom", wireType)
 				}
@@ -1878,7 +1942,7 @@ func (x *fastReflection_EventVaultCreated) ProtoMethods() *protoiface.Methods {
 				}
 				x.ShareDenom = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
-			case 3:
+			case 4:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field UnderlyingAsset", wireType)
 				}
@@ -2119,12 +2183,14 @@ type EventVaultCreated struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// vault_address is the bech32 address of the vault.
+	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// admin is the address of the account that manages the vault.
-	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
 	// share_denom is the name of the assets created by the vault used for distribution.
-	ShareDenom string `protobuf:"bytes,2,opt,name=share_denom,json=shareDenom,proto3" json:"share_denom,omitempty"`
+	ShareDenom string `protobuf:"bytes,3,opt,name=share_denom,json=shareDenom,proto3" json:"share_denom,omitempty"`
 	// underlying_asset is the denomination of the asset supported by the vault.
-	UnderlyingAsset string `protobuf:"bytes,3,opt,name=underlying_asset,json=underlyingAsset,proto3" json:"underlying_asset,omitempty"`
+	UnderlyingAsset string `protobuf:"bytes,4,opt,name=underlying_asset,json=underlyingAsset,proto3" json:"underlying_asset,omitempty"`
 }
 
 func (x *EventVaultCreated) Reset() {
@@ -2145,6 +2211,13 @@ func (*EventVaultCreated) ProtoMessage() {}
 // Deprecated: Use EventVaultCreated.ProtoReflect.Descriptor instead.
 func (*EventVaultCreated) Descriptor() ([]byte, []int) {
 	return file_vault_v1_events_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *EventVaultCreated) GetVaultAddress() string {
+	if x != nil {
+		return x.VaultAddress
+	}
+	return ""
 }
 
 func (x *EventVaultCreated) GetAdmin() string {
@@ -2202,25 +2275,29 @@ var file_vault_v1_events_proto_rawDesc = []byte{
 	0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x73, 0x68,
 	0x61, 0x72, 0x65, 0x73, 0x12, 0x19, 0x0a, 0x08, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x69, 0x64,
 	0x18, 0x06, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x07, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x49, 0x64, 0x22,
-	0x8f, 0x01, 0x0a, 0x11, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x43, 0x72,
-	0x65, 0x61, 0x74, 0x65, 0x64, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05,
-	0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x1f, 0x0a, 0x0b, 0x73, 0x68, 0x61, 0x72, 0x65, 0x5f, 0x64,
-	0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x73, 0x68, 0x61, 0x72,
-	0x65, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x12, 0x29, 0x0a, 0x10, 0x75, 0x6e, 0x64, 0x65, 0x72, 0x6c,
-	0x79, 0x69, 0x6e, 0x67, 0x5f, 0x61, 0x73, 0x73, 0x65, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x0f, 0x75, 0x6e, 0x64, 0x65, 0x72, 0x6c, 0x79, 0x69, 0x6e, 0x67, 0x41, 0x73, 0x73, 0x65,
-	0x74, 0x42, 0x8c, 0x01, 0x0a, 0x0c, 0x63, 0x6f, 0x6d, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e,
-	0x76, 0x31, 0x42, 0x0b, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50,
-	0x01, 0x5a, 0x2e, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72,
-	0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69,
-	0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x76,
-	0x31, 0xa2, 0x02, 0x03, 0x56, 0x58, 0x58, 0xaa, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e,
-	0x56, 0x31, 0xca, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x14,
-	0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61,
-	0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x09, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31,
-	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0xce, 0x01, 0x0a, 0x11, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x43, 0x72,
+	0x65, 0x61, 0x74, 0x65, 0x64, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61,
+	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4,
+	0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
+	0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64,
+	0x72, 0x65, 0x73, 0x73, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61,
+	0x64, 0x6d, 0x69, 0x6e, 0x12, 0x1f, 0x0a, 0x0b, 0x73, 0x68, 0x61, 0x72, 0x65, 0x5f, 0x64, 0x65,
+	0x6e, 0x6f, 0x6d, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x73, 0x68, 0x61, 0x72, 0x65,
+	0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x12, 0x29, 0x0a, 0x10, 0x75, 0x6e, 0x64, 0x65, 0x72, 0x6c, 0x79,
+	0x69, 0x6e, 0x67, 0x5f, 0x61, 0x73, 0x73, 0x65, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x0f, 0x75, 0x6e, 0x64, 0x65, 0x72, 0x6c, 0x79, 0x69, 0x6e, 0x67, 0x41, 0x73, 0x73, 0x65, 0x74,
+	0x42, 0x8c, 0x01, 0x0a, 0x0c, 0x63, 0x6f, 0x6d, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76,
+	0x31, 0x42, 0x0b, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01,
+	0x5a, 0x2e, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x6f,
+	0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69, 0x2f,
+	0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x76, 0x31,
+	0xa2, 0x02, 0x03, 0x56, 0x58, 0x58, 0xaa, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56,
+	0x31, 0xca, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x14, 0x56,
+	0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64,
+	0x61, 0x74, 0x61, 0xea, 0x02, 0x09, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62,
+	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (

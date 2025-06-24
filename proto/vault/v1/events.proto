@@ -39,4 +39,8 @@ message EventWithdraw {
 message EventVaultCreated {
   // admin is the address of the account that manages the vault.
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // share_denom is the name of the assets created by the vault used for distribution.
+  string share_denom = 2;
+  // underlying_asset_denom is the denomination of the asset supported by the vault.
+  string underlying_asset_denom = 3;
 }

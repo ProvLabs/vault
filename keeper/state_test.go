@@ -8,6 +8,8 @@ import (
 	"github.com/provlabs/vault/types"
 	"github.com/provlabs/vault/utils"
 	"github.com/provlabs/vault/utils/mocks"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestGetVaults(t *testing.T) {
@@ -18,24 +20,34 @@ func TestGetVaults(t *testing.T) {
 	require.NoError(t, err, "expected no error when the vaults map is empty")
 	require.Empty(t, vaults, "expected empty vaults map")
 
+	// Generate unique addresses for vault keys
+	vault1Addr := utils.TestAddress().Bech32
+	vault2Addr := utils.TestAddress().Bech32
+	// Ensure they are different for testing distinct entries
+	for vault1Addr == vault2Addr {
+		vault2Addr = utils.TestAddress().Bech32
+	}
+
 	vault1 := types.Vault{
-		VaultAddress: utils.TestAddress().Bech32, // Example field
-		Admin:        utils.TestAddress().Bech32, // Example field
+		VaultAddress: vault1Addr, // Use the generated address as the key
+		Admin:        utils.TestAddress().Bech32,
 	}
 	vault2 := types.Vault{
-		VaultAddress: utils.TestAddress().Bech32,
+		VaultAddress: vault2Addr, // Use the generated address as the key
 		Admin:        utils.TestAddress().Bech32,
 	}
 
-	err = k.Vaults.Set(ctx, 1, vault1)
+	// Set vaults using their Bech32 addresses as keys
+	err = k.Vaults.Set(ctx, sdk.MustAccAddressFromBech32(vault1.VaultAddress), vault1)
 	require.NoError(t, err, "expected no error setting the first vault")
-	err = k.Vaults.Set(ctx, 2, vault2)
+	err = k.Vaults.Set(ctx, sdk.MustAccAddressFromBech32(vault2.VaultAddress), vault2)
 	require.NoError(t, err, "expected no error setting the second vault")
 
 	vaults, err = k.GetVaults(ctx)
 
 	require.NoError(t, err, "expected no error when vaults are present")
 	require.Len(t, vaults, 2, "expected two vaults")
-	require.Equal(t, vault1, vaults[1], "expected different values for the first vault")
-	require.Equal(t, vault2, vaults[2], "expected different values for the second vault")
+	// Assert using the vault addresses as keys
+	require.Equal(t, vault1, vaults[vault1.VaultAddress], "expected correct value for the first vault")
+	require.Equal(t, vault2, vaults[vault2.VaultAddress], "expected correct value for the second vault")
 }

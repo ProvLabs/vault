@@ -2,10 +2,9 @@
 package vaultv1
 
 import (
-	v1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	fmt "fmt"
+	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
-	_ "github.com/cosmos/gogoproto/gogoproto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -15,20 +14,18 @@ import (
 )
 
 var (
-	md_Vault                   protoreflect.MessageDescriptor
-	fd_Vault_vault_address     protoreflect.FieldDescriptor
-	fd_Vault_marker_address    protoreflect.FieldDescriptor
-	fd_Vault_admin             protoreflect.FieldDescriptor
-	fd_Vault_max_total_deposit protoreflect.FieldDescriptor
+	md_Vault                        protoreflect.MessageDescriptor
+	fd_Vault_vault_address          protoreflect.FieldDescriptor
+	fd_Vault_underlying_asset_denom protoreflect.FieldDescriptor
+	fd_Vault_admin                  protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_vault_v1_vault_proto_init()
 	md_Vault = File_vault_v1_vault_proto.Messages().ByName("Vault")
 	fd_Vault_vault_address = md_Vault.Fields().ByName("vault_address")
-	fd_Vault_marker_address = md_Vault.Fields().ByName("marker_address")
+	fd_Vault_underlying_asset_denom = md_Vault.Fields().ByName("underlying_asset_denom")
 	fd_Vault_admin = md_Vault.Fields().ByName("admin")
-	fd_Vault_max_total_deposit = md_Vault.Fields().ByName("max_total_deposit")
 }
 
 var _ protoreflect.Message = (*fastReflection_Vault)(nil)
@@ -102,21 +99,15 @@ func (x *fastReflection_Vault) Range(f func(protoreflect.FieldDescriptor, protor
 			return
 		}
 	}
-	if x.MarkerAddress != "" {
-		value := protoreflect.ValueOfString(x.MarkerAddress)
-		if !f(fd_Vault_marker_address, value) {
+	if x.UnderlyingAssetDenom != "" {
+		value := protoreflect.ValueOfString(x.UnderlyingAssetDenom)
+		if !f(fd_Vault_underlying_asset_denom, value) {
 			return
 		}
 	}
 	if x.Admin != "" {
 		value := protoreflect.ValueOfString(x.Admin)
 		if !f(fd_Vault_admin, value) {
-			return
-		}
-	}
-	if x.MaxTotalDeposit != nil {
-		value := protoreflect.ValueOfMessage(x.MaxTotalDeposit.ProtoReflect())
-		if !f(fd_Vault_max_total_deposit, value) {
 			return
 		}
 	}
@@ -137,12 +128,10 @@ func (x *fastReflection_Vault) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	case "vault.v1.Vault.vault_address":
 		return x.VaultAddress != ""
-	case "vault.v1.Vault.marker_address":
-		return x.MarkerAddress != ""
+	case "vault.v1.Vault.underlying_asset_denom":
+		return x.UnderlyingAssetDenom != ""
 	case "vault.v1.Vault.admin":
 		return x.Admin != ""
-	case "vault.v1.Vault.max_total_deposit":
-		return x.MaxTotalDeposit != nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.Vault"))
@@ -161,12 +150,10 @@ func (x *fastReflection_Vault) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "vault.v1.Vault.vault_address":
 		x.VaultAddress = ""
-	case "vault.v1.Vault.marker_address":
-		x.MarkerAddress = ""
+	case "vault.v1.Vault.underlying_asset_denom":
+		x.UnderlyingAssetDenom = ""
 	case "vault.v1.Vault.admin":
 		x.Admin = ""
-	case "vault.v1.Vault.max_total_deposit":
-		x.MaxTotalDeposit = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.Vault"))
@@ -186,15 +173,12 @@ func (x *fastReflection_Vault) Get(descriptor protoreflect.FieldDescriptor) prot
 	case "vault.v1.Vault.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.Vault.marker_address":
-		value := x.MarkerAddress
+	case "vault.v1.Vault.underlying_asset_denom":
+		value := x.UnderlyingAssetDenom
 		return protoreflect.ValueOfString(value)
 	case "vault.v1.Vault.admin":
 		value := x.Admin
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.Vault.max_total_deposit":
-		value := x.MaxTotalDeposit
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.Vault"))
@@ -217,12 +201,10 @@ func (x *fastReflection_Vault) Set(fd protoreflect.FieldDescriptor, value protor
 	switch fd.FullName() {
 	case "vault.v1.Vault.vault_address":
 		x.VaultAddress = value.Interface().(string)
-	case "vault.v1.Vault.marker_address":
-		x.MarkerAddress = value.Interface().(string)
+	case "vault.v1.Vault.underlying_asset_denom":
+		x.UnderlyingAssetDenom = value.Interface().(string)
 	case "vault.v1.Vault.admin":
 		x.Admin = value.Interface().(string)
-	case "vault.v1.Vault.max_total_deposit":
-		x.MaxTotalDeposit = value.Message().Interface().(*v1beta1.Coin)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.Vault"))
@@ -243,15 +225,10 @@ func (x *fastReflection_Vault) Set(fd protoreflect.FieldDescriptor, value protor
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Vault) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.Vault.max_total_deposit":
-		if x.MaxTotalDeposit == nil {
-			x.MaxTotalDeposit = new(v1beta1.Coin)
-		}
-		return protoreflect.ValueOfMessage(x.MaxTotalDeposit.ProtoReflect())
 	case "vault.v1.Vault.vault_address":
 		panic(fmt.Errorf("field vault_address of message vault.v1.Vault is not mutable"))
-	case "vault.v1.Vault.marker_address":
-		panic(fmt.Errorf("field marker_address of message vault.v1.Vault is not mutable"))
+	case "vault.v1.Vault.underlying_asset_denom":
+		panic(fmt.Errorf("field underlying_asset_denom of message vault.v1.Vault is not mutable"))
 	case "vault.v1.Vault.admin":
 		panic(fmt.Errorf("field admin of message vault.v1.Vault is not mutable"))
 	default:
@@ -269,13 +246,10 @@ func (x *fastReflection_Vault) NewField(fd protoreflect.FieldDescriptor) protore
 	switch fd.FullName() {
 	case "vault.v1.Vault.vault_address":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.Vault.marker_address":
+	case "vault.v1.Vault.underlying_asset_denom":
 		return protoreflect.ValueOfString("")
 	case "vault.v1.Vault.admin":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.Vault.max_total_deposit":
-		m := new(v1beta1.Coin)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.Vault"))
@@ -349,16 +323,12 @@ func (x *fastReflection_Vault) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		l = len(x.MarkerAddress)
+		l = len(x.UnderlyingAssetDenom)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		l = len(x.Admin)
 		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.MaxTotalDeposit != nil {
-			l = options.Size(x.MaxTotalDeposit)
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		if x.unknownFields != nil {
@@ -390,20 +360,6 @@ func (x *fastReflection_Vault) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if x.MaxTotalDeposit != nil {
-			encoded, err := options.Marshal(x.MaxTotalDeposit)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
-			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-			i--
-			dAtA[i] = 0x22
-		}
 		if len(x.Admin) > 0 {
 			i -= len(x.Admin)
 			copy(dAtA[i:], x.Admin)
@@ -411,10 +367,10 @@ func (x *fastReflection_Vault) ProtoMethods() *protoiface.Methods {
 			i--
 			dAtA[i] = 0x1a
 		}
-		if len(x.MarkerAddress) > 0 {
-			i -= len(x.MarkerAddress)
-			copy(dAtA[i:], x.MarkerAddress)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.MarkerAddress)))
+		if len(x.UnderlyingAssetDenom) > 0 {
+			i -= len(x.UnderlyingAssetDenom)
+			copy(dAtA[i:], x.UnderlyingAssetDenom)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.UnderlyingAssetDenom)))
 			i--
 			dAtA[i] = 0x12
 		}
@@ -508,7 +464,7 @@ func (x *fastReflection_Vault) ProtoMethods() *protoiface.Methods {
 				iNdEx = postIndex
 			case 2:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MarkerAddress", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field UnderlyingAssetDenom", wireType)
 				}
 				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
@@ -536,7 +492,7 @@ func (x *fastReflection_Vault) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.MarkerAddress = string(dAtA[iNdEx:postIndex])
+				x.UnderlyingAssetDenom = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 3:
 				if wireType != 2 {
@@ -569,42 +525,6 @@ func (x *fastReflection_Vault) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				x.Admin = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 4:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MaxTotalDeposit", wireType)
-				}
-				var msglen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					msglen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if msglen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + msglen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if x.MaxTotalDeposit == nil {
-					x.MaxTotalDeposit = &v1beta1.Coin{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.MaxTotalDeposit); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -663,14 +583,10 @@ type Vault struct {
 
 	// vault_address is the bech32 address of the vault.
 	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// marker_address is the bech32 address of the marker associated with the vault.
-	// This marker holds the underlying assets.
-	MarkerAddress string `protobuf:"bytes,2,opt,name=marker_address,json=markerAddress,proto3" json:"marker_address,omitempty"`
+	// underlying_asset_denom is the denomination of the asset supported by the vault.
+	UnderlyingAssetDenom string `protobuf:"bytes,2,opt,name=underlying_asset_denom,json=underlyingAssetDenom,proto3" json:"underlying_asset_denom,omitempty"`
 	// admin is the address that has administrative privileges over the vault.
 	Admin string `protobuf:"bytes,3,opt,name=admin,proto3" json:"admin,omitempty"`
-	// max_total_deposit is the absolute maximum amount of the base asset that can be deposited in the vault.
-	// If empty, there is no total deposit limit.
-	MaxTotalDeposit *v1beta1.Coin `protobuf:"bytes,4,opt,name=max_total_deposit,json=maxTotalDeposit,proto3" json:"max_total_deposit,omitempty"`
 }
 
 func (x *Vault) Reset() {
@@ -700,9 +616,9 @@ func (x *Vault) GetVaultAddress() string {
 	return ""
 }
 
-func (x *Vault) GetMarkerAddress() string {
+func (x *Vault) GetUnderlyingAssetDenom() string {
 	if x != nil {
-		return x.MarkerAddress
+		return x.UnderlyingAssetDenom
 	}
 	return ""
 }
@@ -714,43 +630,33 @@ func (x *Vault) GetAdmin() string {
 	return ""
 }
 
-func (x *Vault) GetMaxTotalDeposit() *v1beta1.Coin {
-	if x != nil {
-		return x.MaxTotalDeposit
-	}
-	return nil
-}
-
 var File_vault_v1_vault_proto protoreflect.FileDescriptor
 
 var file_vault_v1_vault_proto_rawDesc = []byte{
 	0x0a, 0x14, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74,
 	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x08, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31,
-	0x1a, 0x1e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x73, 0x65, 0x2f, 0x76, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x63, 0x6f, 0x69, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x1a, 0x14, 0x67, 0x6f, 0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f,
-	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xb6, 0x01, 0x0a, 0x05, 0x56, 0x61, 0x75, 0x6c, 0x74,
-	0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73,
-	0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64,
-	0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x25, 0x0a, 0x0e, 0x6d, 0x61, 0x72, 0x6b, 0x65, 0x72, 0x5f,
-	0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0d, 0x6d,
-	0x61, 0x72, 0x6b, 0x65, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x14, 0x0a, 0x05,
-	0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x61, 0x64, 0x6d,
-	0x69, 0x6e, 0x12, 0x4b, 0x0a, 0x11, 0x6d, 0x61, 0x78, 0x5f, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x5f,
-	0x64, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x01, 0x52, 0x0f,
-	0x6d, 0x61, 0x78, 0x54, 0x6f, 0x74, 0x61, 0x6c, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x42,
-	0x8b, 0x01, 0x0a, 0x0c, 0x63, 0x6f, 0x6d, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31,
-	0x42, 0x0a, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2e,
-	0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c,
-	0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x61,
-	0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2, 0x02,
-	0x03, 0x56, 0x58, 0x58, 0xaa, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56, 0x31, 0xca,
-	0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x14, 0x56, 0x61, 0x75,
-	0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74,
-	0x61, 0xea, 0x02, 0x09, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x1a, 0x19, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xac, 0x01, 0x0a, 0x05,
+	0x56, 0x61, 0x75, 0x6c, 0x74, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61,
+	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4,
+	0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
+	0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64,
+	0x72, 0x65, 0x73, 0x73, 0x12, 0x34, 0x0a, 0x16, 0x75, 0x6e, 0x64, 0x65, 0x72, 0x6c, 0x79, 0x69,
+	0x6e, 0x67, 0x5f, 0x61, 0x73, 0x73, 0x65, 0x74, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x14, 0x75, 0x6e, 0x64, 0x65, 0x72, 0x6c, 0x79, 0x69, 0x6e, 0x67,
+	0x41, 0x73, 0x73, 0x65, 0x74, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64,
+	0x6d, 0x69, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72,
+	0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x42, 0x8b, 0x01, 0x0a, 0x0c, 0x63,
+	0x6f, 0x6d, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x42, 0x0a, 0x56, 0x61, 0x75,
+	0x6c, 0x74, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2e, 0x67, 0x69, 0x74, 0x68, 0x75,
+	0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76,
+	0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76,
+	0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x56, 0x58, 0x58, 0xaa,
+	0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x08, 0x56, 0x61, 0x75,
+	0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x14, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31,
+	0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x09, 0x56,
+	0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -767,16 +673,14 @@ func file_vault_v1_vault_proto_rawDescGZIP() []byte {
 
 var file_vault_v1_vault_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_vault_v1_vault_proto_goTypes = []interface{}{
-	(*Vault)(nil),        // 0: vault.v1.Vault
-	(*v1beta1.Coin)(nil), // 1: cosmos.base.v1beta1.Coin
+	(*Vault)(nil), // 0: vault.v1.Vault
 }
 var file_vault_v1_vault_proto_depIdxs = []int32{
-	1, // 0: vault.v1.Vault.max_total_deposit:type_name -> cosmos.base.v1beta1.Coin
-	1, // [1:1] is the sub-list for method output_type
-	1, // [1:1] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	0, // [0:0] is the sub-list for method output_type
+	0, // [0:0] is the sub-list for method input_type
+	0, // [0:0] is the sub-list for extension type_name
+	0, // [0:0] is the sub-list for extension extendee
+	0, // [0:0] is the sub-list for field type_name
 }
 
 func init() { file_vault_v1_vault_proto_init() }

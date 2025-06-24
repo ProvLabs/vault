@@ -9,11 +9,7 @@ import (
 
 // ValidateBasic returns a not implemented error for MsgCreateVaultRequest.
 func (m MsgCreateVaultRequest) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(m.MarkerAddress)
-	if err != nil {
-		return fmt.Errorf("invalid marker address: %q: %w", m.MarkerAddress, err)
-	}
-	_, err = sdk.AccAddressFromBech32(m.Admin)
+	_, err := sdk.AccAddressFromBech32(m.Admin)
 	if err != nil {
 		return fmt.Errorf("invalid admin address: %q: %w", m.Admin, err)
 	}

@@ -4,15 +4,16 @@ import (
 	"context"
 	"errors"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provlabs/vault/types"
 )
 
 // GetVaults is a helper function for retrieving all vaults from state.
-func (k *Keeper) GetVaults(ctx context.Context) (map[uint32]types.Vault, error) {
-	vaults := make(map[uint32]types.Vault)
+func (k *Keeper) GetVaults(ctx context.Context) (map[string]types.Vault, error) {
+	vaults := map[string]types.Vault{}
 
-	err := k.Vaults.Walk(ctx, nil, func(index uint32, guardianSet types.Vault) (stop bool, err error) {
-		vaults[index] = guardianSet
+	err := k.Vaults.Walk(ctx, nil, func(key sdk.AccAddress, vault types.Vault) (stop bool, err error) {
+		vaults[key.String()] = vault
 		return false, nil
 	})
 

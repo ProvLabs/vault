@@ -20,11 +20,41 @@ func NewMsgServer(keeper *Keeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
 }
 
-// CreateVault creates a new vault.
+// Obtain the marker for UnderlyingAsset
+// Obtain the ModuleAccount
+// Create a marker named vault/${UnderlyingAsset}
+// It should have the following attributes:
+// - The marker owner should be the ModuleAccount
+// - Must have supply of zero
+// - Must not be fixed supply
+// - Must not have governance control
+// - Must not have forced transfer
+// - Must be restricted
+// - Must have Admin, Mint, Burn, Withdraw, Transfer
+// - Must have correct ending marker state
+// The Vault Store should be updated containing the following mapping [MarkerAddress] -> Vault
+// The Vault should have correctly populated fields
+// The Vault should have the following attributes:
+// - vault_address containing the address of the newly created marker
+// - underlying_asset containing the name of the underlying asset for the vault
+// - admin contains the address of the vault admin
+// The EventVaultCreated event should be emitted containing:
+// - The admin of the vault
+// - The vault address
+// - The underlying asset
+// It should return a MsgCreateVaultResponse containing the new marker address
+
+// ValidateBasic
+// Verify the admin is valid syntax
+// Verify the string share denom is valid syntax
+// Verify the string for supported coin is valid syntax
+
+// Mandatory tests in msg_server_test, query_server_test, msgs_test, and genesis
+// Complicated code in keepers should have tests
 func (k msgServer) CreateVault(goCtx context.Context, msg *types.MsgCreateVaultRequest) (*types.MsgCreateVaultResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	marker, err := k.MarkerKeeper.GetMarker(ctx, sdk.MustAccAddressFromBech32(msg.MarkerAddress))
+	marker, err := k.MarkerKeeper.GetMarker(ctx, markertypes.MustGetMarkerAddress(msg.UnderlyingAssetDenom))
 	if err != nil {
 		return nil, fmt.Errorf("unable to find underlying asset: %w", err)
 	}

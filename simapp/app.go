@@ -256,3 +256,7 @@ func (app *SimApp) kvStoreKeys() map[string]*storetypes.KVStoreKey {
 func ProvideMarkerKeeperStub() *markerkeeper.Keeper {
 	return &markerkeeper.Keeper{}
 }
+
+func (app *SimApp) AppCodec() codec.Codec {
+	return app.appCodec
+}

@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/provlabs/vault/types"
 )
 
@@ -65,4 +66,10 @@ func (k Keeper) GetAuthority() []byte {
 // getLogger returns a logger with vault module context.
 func (k Keeper) getLogger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
+}
+
+func (k Keeper) emitEvent(ctx sdk.Context, event proto.Message) {
+	if err := k.eventService.EventManager(ctx).Emit(ctx, event); err != nil {
+		k.getLogger(ctx).Error(fmt.Sprintf("error emitting event %#v: %v", event, err))
+	}
 }

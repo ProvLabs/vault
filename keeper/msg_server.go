@@ -39,14 +39,12 @@ func (k msgServer) CreateVault(goCtx context.Context, msg *types.MsgCreateVaultR
 		return nil, fmt.Errorf("failed to store new vault: %w", err)
 	}
 
-	if err := k.eventService.EventManager(ctx).Emit(ctx, types.NewEventVaultCreated(
+	k.emitEvent(ctx, types.NewEventVaultCreated(
 		vault.VaultAddress,
 		msg.Admin,
 		msg.ShareDenom,
 		msg.UnderlyingAsset,
-	)); err != nil {
-		k.getLogger(ctx).Error("failed to emit EventVaultCreated", "error", err)
-	}
+	))
 
 	return &types.MsgCreateVaultResponse{
 		VaultAddress: vault.VaultAddress,

@@ -4,7 +4,9 @@ import (
 	"context"
 	"testing"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/simapp"
@@ -112,6 +114,36 @@ func runMsgServerTestCase[R any, S any, F any](s *TestSuite, td msgServerTestDef
 	td.followup(&tc.msg, tc.fArgs)
 }
 
+// requireAddFinalizeAndActivateMarker creates a restricted marker, requiring it to not error.
+func (s *TestSuite) requireAddFinalizeAndActivateMarker(coin sdk.Coin, manager sdk.AccAddress, reqAttrs ...string) {
+	markerAddr, err := markertypes.MarkerAddress(coin.Denom)
+	s.Require().NoError(err, "MarkerAddress(%q)", coin.Denom)
+	marker := &markertypes.MarkerAccount{
+		BaseAccount: &authtypes.BaseAccount{Address: markerAddr.String()},
+		Manager:     manager.String(),
+		AccessControl: []markertypes.AccessGrant{
+			{
+				Address: manager.String(),
+				Permissions: markertypes.AccessList{
+					markertypes.Access_Mint, markertypes.Access_Burn,
+					markertypes.Access_Deposit, markertypes.Access_Withdraw, markertypes.Access_Delete,
+					markertypes.Access_Admin, markertypes.Access_Transfer,
+				},
+			},
+		},
+		Status:                 markertypes.StatusProposed,
+		Denom:                  coin.Denom,
+		Supply:                 coin.Amount,
+		MarkerType:             markertypes.MarkerType_RestrictedCoin,
+		SupplyFixed:            true,
+		AllowGovernanceControl: true,
+		AllowForcedTransfer:    true,
+		RequiredAttributes:     reqAttrs,
+	}
+	err = s.simApp.MarkerKeeper.AddFinalizeAndActivateMarker(s.ctx, marker)
+	s.Require().NoError(err, "AddFinalizeAndActivateMarker(%s)", coin.Denom)
+}
+
 func (s *TestSuite) TestMsgServer_CreateVault() {
 	type followupArgs struct {
 		UnderlyingAsset string
@@ -150,10 +182,10 @@ func (s *TestSuite) TestMsgServer_CreateVault() {
 			)
 
 			// Check vault record exists
-			vault, found := s.k.GetVault(s.ctx, vaultAddr)
-			s.Require().True(found, "vault should exist in state")
+			vault, err := s.k.Vaults.Get(s.ctx, vaultAddr)
+			s.Require().NoError(err, "vault should exist in state")
 			s.Equal(fargs.Admin, vault.Admin)
-			s.Equal(fargs.ShareDenom, vault.ShareDenom)
+			s.Equal(markertypes.MustGetMarkerAddress(fargs.ShareDenom), vault.VaultAddress)
 			s.Equal(fargs.UnderlyingAsset, vault.UnderlyingAsset)
 			s.Equal(vaultAddr.String(), vault.VaultAddress)
 
@@ -177,8 +209,10 @@ func (s *TestSuite) TestMsgServer_CreateVault() {
 	}
 
 	tc := msgServerTestCase[types.MsgCreateVaultRequest, followupArgs]{
-		name:     "happy path",
-		setup:    nil,
+		name: "happy path",
+		setup: func() {
+			s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(100)), s.adminAddr)
+		},
 		msg:      vaultReq,
 		expInErr: nil,
 		fArgs: followupArgs{

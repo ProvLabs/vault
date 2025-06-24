@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"cosmossdk.io/math"
@@ -36,82 +37,185 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(TestSuite))
 }
 
-// msgServerTestDef is the definition of a MsgServer endpoint to be tested.
-// R is the request Msg type. S is the response message type.
-// F is a type that holds arguments to provide to the followup function.
-type msgServerTestDef[R any, S any, F any] struct {
-	// endpointName is the name of the endpoint being tested.
-	endpointName string
-	// endpoint is the endpoint function to invoke.
-	endpoint func(goCtx context.Context, msg *R) (*S, error)
-	// expResp is the expected response from the endpoint. It's only used if an error is not expected.
-	expResp *S
-	// followup is a function that runs any needed followup checks.
-	// This is only executed if an error is neither expected, nor received.
-	// The TestSuite's ctx will be the cached context with the results of the setup and endpoint applied.
-	followup func(msg *R, fArgs F)
-}
-
-// msgServerTestCase is a test case for a MsgServer endpoint
-// R is the request Msg type.
-// F is a type that holds arguments to provide to the followup function.
-type msgServerTestCase[R any, F any] struct {
-	// name is the name of the test case.
-	name string
-	// setup is a function that does any needed app/state setup.
-	// A cached context is used for tests, so this setup will not carry over between test cases.
-	setup func()
-	// msg is the sdk.Msg to provide to the endpoint.
-	msg R
-	// expInErr is the strings that are expected to be in the error returned by the endpoint.
-	// If empty, that error is expected to be nil.
-	expInErr []string
-	// fArgs are any args to provide to the followup function.
-	fArgs F
-	// expEvents are the typed events that should be emitted.
-	// These are only checked if an error is neither expected, nor received.
-	expEvents sdk.Events
-}
-
-// runMsgServerTestCase runs a unit test on a MsgServer endpoint.
-// A cached context is used so each test case won't affect the others.
-// R is the request Msg type. S is the response Msg type.
-// F is a type that holds arguments to provide to the td.followup function.
-func runMsgServerTestCase[R any, S any, F any](s *TestSuite, td msgServerTestDef[R, S, F], tc msgServerTestCase[R, F]) {
-	s.T().Helper()
-	origCtx := s.ctx
-	defer func() {
-		s.ctx = origCtx
-	}()
-	s.ctx, _ = s.ctx.CacheContext()
-
-	var expResp *S
-	if len(tc.expInErr) == 0 {
-		expResp = td.expResp
+func (s *TestSuite) TestMsgServer_CreateVault() {
+	type postCheckArgs struct {
+		UnderlyingAsset string
+		ShareDenom      string
+		Admin           string
 	}
+
+	testDef := msgServerTestDef[types.MsgCreateVaultRequest, types.MsgCreateVaultResponse, postCheckArgs]{
+		endpointName: "CreateVault",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).CreateVault,
+		postCheck: func(msg *types.MsgCreateVaultRequest, fargs postCheckArgs) {
+			vaultDenom := fargs.ShareDenom
+			vaultAddr := markertypes.MustGetMarkerAddress(vaultDenom)
+
+			marker, err := s.simApp.MarkerKeeper.GetMarker(s.ctx, vaultAddr)
+			s.Require().NoError(err, "marker should exist")
+
+			s.EqualValues(0, marker.GetSupply().Amount.Int64(), "vault marker supply should be zero")
+			s.False(marker.AllowsForcedTransfer(), "vault marker should not have forced transfer")
+			s.False(marker.HasGovernanceEnabled(), "vault marker should not have governance")
+			s.True(marker.GetMarkerType() == markertypes.MarkerType_RestrictedCoin, "vault marker should be restricted")
+			s.False(marker.HasGovernanceEnabled(), "vault marker should not allow governance control")
+
+			access := marker.GetAccessList()
+			s.Len(access, 1)
+			s.Equal(authtypes.NewModuleAddress(types.ModuleName).String(), access[0].Address, "vault marker access should be granted to admin")
+			s.ElementsMatch(
+				[]markertypes.Access{
+					markertypes.Access_Admin,
+					markertypes.Access_Mint,
+					markertypes.Access_Burn,
+					markertypes.Access_Withdraw,
+					markertypes.Access_Transfer,
+				},
+				access[0].Permissions,
+			)
+
+			// Check vault record exists
+			vault, err := s.k.Vaults.Get(s.ctx, vaultAddr)
+			s.Require().NoError(err, "vault should exist in state")
+			s.Equal(fargs.Admin, vault.Admin)
+			s.Equal(markertypes.MustGetMarkerAddress(fargs.ShareDenom).String(), vault.VaultAddress)
+			s.Equal(fargs.UnderlyingAsset, vault.UnderlyingAsset)
+			s.Equal(vaultAddr.String(), vault.VaultAddress)
+		},
+	}
+
+	underlying := "undercoin"
+	sharedenom := "jackthecat"
+	admin := s.adminAddr.String()
+
+	vaultReq := types.MsgCreateVaultRequest{
+		Admin:           admin,
+		ShareDenom:      sharedenom,
+		UnderlyingAsset: underlying,
+	}
+
+	tc := msgServerTestCase[types.MsgCreateVaultRequest, postCheckArgs]{
+		name: "happy path",
+		setup: func() {
+			s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(100)), s.adminAddr)
+		},
+		msg:                vaultReq,
+		expectedErrSubstrs: nil,
+		postCheckArgs: postCheckArgs{
+			UnderlyingAsset: underlying,
+			ShareDenom:      sharedenom,
+			Admin:           admin,
+		},
+		expectedEvents: sdk.Events{
+			sdk.NewEvent("provenance.marker.v1.EventMarkerAdd",
+				sdk.NewAttribute("address", "provlabs157rf76qwxlttnjyncsaxvelc96m9e5eedpymea"),
+				sdk.NewAttribute("amount", "0"),
+				sdk.NewAttribute("denom", "jackthecat"),
+				sdk.NewAttribute("manager", "provlabs1umc2r7a58jy3jmw0e0hctyy0rx45chmucvk52e"),
+				sdk.NewAttribute("marker_type", "MARKER_TYPE_RESTRICTED"),
+				sdk.NewAttribute("status", "proposed"),
+			),
+			sdk.NewEvent("provenance.marker.v1.EventMarkerFinalize",
+				sdk.NewAttribute("administrator", "provlabs1umc2r7a58jy3jmw0e0hctyy0rx45chmucvk52e"),
+				sdk.NewAttribute("denom", "jackthecat"),
+			),
+			sdk.NewEvent("provenance.marker.v1.EventMarkerActivate",
+				sdk.NewAttribute("administrator", "provlabs1umc2r7a58jy3jmw0e0hctyy0rx45chmucvk52e"),
+				sdk.NewAttribute("denom", "jackthecat"),
+			),
+			sdk.NewEvent("vault.v1.EventVaultCreated",
+				sdk.NewAttribute("admin", "provlabs1v9jx66twg9jxgujlta047h6lta047h6l7pxv8u"),
+				sdk.NewAttribute("share_denom", "jackthecat"),
+				sdk.NewAttribute("underlying_asset", "undercoin"),
+			),
+		},
+	}
+
+	testDef.expectedResponse = &types.MsgCreateVaultResponse{
+		VaultAddress: markertypes.MustGetMarkerAddress(sharedenom).String(),
+	}
+
+	runMsgServerTestCase(s, testDef, tc)
+}
+
+// msgServerTestDef defines the configuration for testing a specific MsgServer endpoint.
+// Req is the request message type.
+// Resp is the expected response message type.
+// CheckArgs is the argument type passed to the postCheck function.
+type msgServerTestDef[Req any, Resp any, CheckArgs any] struct {
+	endpointName     string
+	endpoint         func(ctx context.Context, msg *Req) (*Resp, error)
+	expectedResponse *Resp
+	postCheck        func(msg *Req, args CheckArgs)
+}
+
+// msgServerTestCase defines a single test case for a MsgServer endpoint.
+// Req is the request message type.
+// CheckArgs is the argument type passed to the postCheck function.
+type msgServerTestCase[Req any, CheckArgs any] struct {
+	name               string
+	setup              func()
+	msg                Req
+	expectedErrSubstrs []string
+	postCheckArgs      CheckArgs
+	expectedEvents     sdk.Events
+}
+
+// runMsgServerTestCase executes a unit test for a MsgServer endpoint using the given test definition and test case.
+// Req is the request message type.
+// Resp is the expected response message type.
+// CheckArgs is the argument type passed to the postCheck function.
+func runMsgServerTestCase[Req any, Resp any, CheckArgs any](
+	s *TestSuite,
+	td msgServerTestDef[Req, Resp, CheckArgs],
+	tc msgServerTestCase[Req, CheckArgs],
+) {
+	s.T().Helper()
+
+	origCtx := s.ctx
+	defer func() { s.ctx = origCtx }()
+	s.ctx, _ = s.ctx.CacheContext()
 
 	if tc.setup != nil {
 		tc.setup()
 	}
 
 	em := sdk.NewEventManager()
-	var resp *S
-	var err error
-	testFunc := func() {
-		resp, err = td.endpoint(s.ctx, &tc.msg)
-	}
-	s.Require().NotPanicsf(testFunc, td.endpointName)
-	s.assertErrorContentsf(err, tc.expInErr, "%s error", td.endpointName)
-	s.Assert().Equalf(expResp, resp, "%s response", td.endpointName)
+	s.ctx = s.ctx.WithEventManager(em)
 
-	if len(tc.expInErr) > 0 || err != nil {
+	var resp *Resp
+	var err error
+	s.Require().NotPanicsf(func() {
+		resp, err = td.endpoint(s.ctx, &tc.msg)
+	}, "%s panic", td.endpointName)
+
+	if len(tc.expectedErrSubstrs) == 0 {
+		s.Assert().NoErrorf(err, "%s error", td.endpointName)
+		s.Assert().Equalf(td.expectedResponse, resp, "%s response", td.endpointName)
+	} else {
+		s.Assert().Errorf(err, "%s error", td.endpointName)
+		for _, substr := range tc.expectedErrSubstrs {
+			s.Assert().Containsf(err.Error(), substr, "%s error missing expected substring", td.endpointName)
+		}
 		return
 	}
 
-	actEvents := em.Events()
-	s.assertEqualEvents(tc.expEvents, actEvents, "%s events", td.endpointName)
+	s.Assert().Equalf(
+		normalizeEvents(tc.expectedEvents),
+		normalizeEvents(em.Events()),
+		"%s events", td.endpointName,
+	)
 
-	td.followup(&tc.msg, tc.fArgs)
+	td.postCheck(&tc.msg, tc.postCheckArgs)
+}
+
+func normalizeEvents(events sdk.Events) sdk.Events {
+	for i := range events {
+		for j := range events[i].Attributes {
+			events[i].Attributes[j].Value = strings.Trim(events[i].Attributes[j].Value, `"`)
+		}
+	}
+	return events
 }
 
 // requireAddFinalizeAndActivateMarker creates a restricted marker, requiring it to not error.
@@ -142,90 +246,4 @@ func (s *TestSuite) requireAddFinalizeAndActivateMarker(coin sdk.Coin, manager s
 	}
 	err = s.simApp.MarkerKeeper.AddFinalizeAndActivateMarker(s.ctx, marker)
 	s.Require().NoError(err, "AddFinalizeAndActivateMarker(%s)", coin.Denom)
-}
-
-func (s *TestSuite) TestMsgServer_CreateVault() {
-	type followupArgs struct {
-		UnderlyingAsset string
-		ShareDenom      string
-		Admin           string
-	}
-
-	testDef := msgServerTestDef[types.MsgCreateVaultRequest, types.MsgCreateVaultResponse, followupArgs]{
-		endpointName: "CreateVault",
-		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).CreateVault,
-		followup: func(msg *types.MsgCreateVaultRequest, fargs followupArgs) {
-			vaultDenom := fargs.ShareDenom
-			vaultAddr := markertypes.MustGetMarkerAddress(vaultDenom)
-
-			marker, err := s.simApp.MarkerKeeper.GetMarker(s.ctx, vaultAddr)
-			s.Require().NoError(err, "marker should exist")
-
-			s.EqualValues(0, marker.GetSupply().Amount.Int64(), "vault marker supply should be zero")
-			s.False(marker.AllowsForcedTransfer(), "vault marker should not have forced transfer")
-			s.False(marker.HasGovernanceEnabled(), "vault marker should not have governance")
-			s.True(marker.GetMarkerType() == markertypes.MarkerType_RestrictedCoin, "vault marker should be restricted")
-			s.False(marker.HasGovernanceEnabled(), "vault marker should not allow governance control")
-
-			access := marker.GetAccessList()
-			s.Len(access, 1)
-			s.Equal(fargs.Admin, access[0].Address, "vault marker access should be granted to admin")
-			s.ElementsMatch(
-				[]markertypes.Access{
-					markertypes.Access_Admin,
-					markertypes.Access_Mint,
-					markertypes.Access_Burn,
-					markertypes.Access_Withdraw,
-					markertypes.Access_Transfer,
-				},
-				access[0].Permissions,
-			)
-
-			// Check vault record exists
-			vault, err := s.k.Vaults.Get(s.ctx, vaultAddr)
-			s.Require().NoError(err, "vault should exist in state")
-			s.Equal(fargs.Admin, vault.Admin)
-			s.Equal(markertypes.MustGetMarkerAddress(fargs.ShareDenom), vault.VaultAddress)
-			s.Equal(fargs.UnderlyingAsset, vault.UnderlyingAsset)
-			s.Equal(vaultAddr.String(), vault.VaultAddress)
-
-			// Check event emitted
-			// s.assertTypedEvent(&types.EventVaultCreated{
-			// 	Admin:           fargs.Admin,
-			// 	ShareDenom:      vault.ShareDenom,
-			// 	UnderlyingAsset: vault.UnderlyingAsset,
-			// })
-		},
-	}
-
-	underlying := "undercoin"
-	sharedenom := "jackthecat"
-	admin := s.adminAddr.String()
-
-	vaultReq := types.MsgCreateVaultRequest{
-		Admin:           admin,
-		ShareDenom:      sharedenom,
-		UnderlyingAsset: underlying,
-	}
-
-	tc := msgServerTestCase[types.MsgCreateVaultRequest, followupArgs]{
-		name: "happy path",
-		setup: func() {
-			s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(100)), s.adminAddr)
-		},
-		msg:      vaultReq,
-		expInErr: nil,
-		fArgs: followupArgs{
-			UnderlyingAsset: underlying,
-			ShareDenom:      sharedenom,
-			Admin:           admin,
-		},
-		expEvents: sdk.Events{},
-	}
-
-	testDef.expResp = &types.MsgCreateVaultResponse{
-		VaultAddress: markertypes.MustGetMarkerAddress(sharedenom).String(),
-	}
-
-	runMsgServerTestCase(s, testDef, tc)
 }

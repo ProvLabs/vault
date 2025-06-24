@@ -28,8 +28,10 @@ func NewEventWithdraw(caller string, receiver string, owner string, assets sdk.C
 }
 
 // NewEventVaultCreated creates a new EventVaultCreated.
-func NewEventVaultCreated(admin string) *EventVaultCreated {
+func NewEventVaultCreated(admin, shareDenom, underlyingAsset string) *EventVaultCreated {
 	return &EventVaultCreated{
-		Admin: admin,
+		Admin:           admin,
+		ShareDenom:      shareDenom,
+		UnderlyingAsset: underlyingAsset,
 	}
 }

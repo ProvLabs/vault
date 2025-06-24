@@ -10,8 +10,8 @@ option go_package = "github.com/provlabs/vault/types";
 message Vault {
   // vault_address is the bech32 address of the vault.
   string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // underlying_asset_denom is the denomination of the asset supported by the vault.
-  string underlying_asset_denom = 2;
+  // underlying_asset is the denomination of the asset supported by the vault.
+  string underlying_asset = 2;
   // admin is the address that has administrative privileges over the vault.
   string admin = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }

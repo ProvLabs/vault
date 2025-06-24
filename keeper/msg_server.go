@@ -54,7 +54,7 @@ func NewMsgServer(keeper *Keeper) types.MsgServer {
 func (k msgServer) CreateVault(goCtx context.Context, msg *types.MsgCreateVaultRequest) (*types.MsgCreateVaultResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	marker, err := k.MarkerKeeper.GetMarker(ctx, markertypes.MustGetMarkerAddress(msg.UnderlyingAssetDenom))
+	marker, err := k.MarkerKeeper.GetMarker(ctx, markertypes.MustGetMarkerAddress(msg.UnderlyingAsset))
 	if err != nil {
 		return nil, fmt.Errorf("unable to find underlying asset: %w", err)
 	}

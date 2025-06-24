@@ -1398,10 +1398,10 @@ func (x *fastReflection_EventWithdraw) ProtoMethods() *protoiface.Methods {
 }
 
 var (
-	md_EventVaultCreated                        protoreflect.MessageDescriptor
-	fd_EventVaultCreated_admin                  protoreflect.FieldDescriptor
-	fd_EventVaultCreated_share_denom            protoreflect.FieldDescriptor
-	fd_EventVaultCreated_underlying_asset_denom protoreflect.FieldDescriptor
+	md_EventVaultCreated                  protoreflect.MessageDescriptor
+	fd_EventVaultCreated_admin            protoreflect.FieldDescriptor
+	fd_EventVaultCreated_share_denom      protoreflect.FieldDescriptor
+	fd_EventVaultCreated_underlying_asset protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -1409,7 +1409,7 @@ func init() {
 	md_EventVaultCreated = File_vault_v1_events_proto.Messages().ByName("EventVaultCreated")
 	fd_EventVaultCreated_admin = md_EventVaultCreated.Fields().ByName("admin")
 	fd_EventVaultCreated_share_denom = md_EventVaultCreated.Fields().ByName("share_denom")
-	fd_EventVaultCreated_underlying_asset_denom = md_EventVaultCreated.Fields().ByName("underlying_asset_denom")
+	fd_EventVaultCreated_underlying_asset = md_EventVaultCreated.Fields().ByName("underlying_asset")
 }
 
 var _ protoreflect.Message = (*fastReflection_EventVaultCreated)(nil)
@@ -1489,9 +1489,9 @@ func (x *fastReflection_EventVaultCreated) Range(f func(protoreflect.FieldDescri
 			return
 		}
 	}
-	if x.UnderlyingAssetDenom != "" {
-		value := protoreflect.ValueOfString(x.UnderlyingAssetDenom)
-		if !f(fd_EventVaultCreated_underlying_asset_denom, value) {
+	if x.UnderlyingAsset != "" {
+		value := protoreflect.ValueOfString(x.UnderlyingAsset)
+		if !f(fd_EventVaultCreated_underlying_asset, value) {
 			return
 		}
 	}
@@ -1514,8 +1514,8 @@ func (x *fastReflection_EventVaultCreated) Has(fd protoreflect.FieldDescriptor) 
 		return x.Admin != ""
 	case "vault.v1.EventVaultCreated.share_denom":
 		return x.ShareDenom != ""
-	case "vault.v1.EventVaultCreated.underlying_asset_denom":
-		return x.UnderlyingAssetDenom != ""
+	case "vault.v1.EventVaultCreated.underlying_asset":
+		return x.UnderlyingAsset != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultCreated"))
@@ -1536,8 +1536,8 @@ func (x *fastReflection_EventVaultCreated) Clear(fd protoreflect.FieldDescriptor
 		x.Admin = ""
 	case "vault.v1.EventVaultCreated.share_denom":
 		x.ShareDenom = ""
-	case "vault.v1.EventVaultCreated.underlying_asset_denom":
-		x.UnderlyingAssetDenom = ""
+	case "vault.v1.EventVaultCreated.underlying_asset":
+		x.UnderlyingAsset = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultCreated"))
@@ -1560,8 +1560,8 @@ func (x *fastReflection_EventVaultCreated) Get(descriptor protoreflect.FieldDesc
 	case "vault.v1.EventVaultCreated.share_denom":
 		value := x.ShareDenom
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventVaultCreated.underlying_asset_denom":
-		value := x.UnderlyingAssetDenom
+	case "vault.v1.EventVaultCreated.underlying_asset":
+		value := x.UnderlyingAsset
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
@@ -1587,8 +1587,8 @@ func (x *fastReflection_EventVaultCreated) Set(fd protoreflect.FieldDescriptor, 
 		x.Admin = value.Interface().(string)
 	case "vault.v1.EventVaultCreated.share_denom":
 		x.ShareDenom = value.Interface().(string)
-	case "vault.v1.EventVaultCreated.underlying_asset_denom":
-		x.UnderlyingAssetDenom = value.Interface().(string)
+	case "vault.v1.EventVaultCreated.underlying_asset":
+		x.UnderlyingAsset = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultCreated"))
@@ -1613,8 +1613,8 @@ func (x *fastReflection_EventVaultCreated) Mutable(fd protoreflect.FieldDescript
 		panic(fmt.Errorf("field admin of message vault.v1.EventVaultCreated is not mutable"))
 	case "vault.v1.EventVaultCreated.share_denom":
 		panic(fmt.Errorf("field share_denom of message vault.v1.EventVaultCreated is not mutable"))
-	case "vault.v1.EventVaultCreated.underlying_asset_denom":
-		panic(fmt.Errorf("field underlying_asset_denom of message vault.v1.EventVaultCreated is not mutable"))
+	case "vault.v1.EventVaultCreated.underlying_asset":
+		panic(fmt.Errorf("field underlying_asset of message vault.v1.EventVaultCreated is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultCreated"))
@@ -1632,7 +1632,7 @@ func (x *fastReflection_EventVaultCreated) NewField(fd protoreflect.FieldDescrip
 		return protoreflect.ValueOfString("")
 	case "vault.v1.EventVaultCreated.share_denom":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventVaultCreated.underlying_asset_denom":
+	case "vault.v1.EventVaultCreated.underlying_asset":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
@@ -1711,7 +1711,7 @@ func (x *fastReflection_EventVaultCreated) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		l = len(x.UnderlyingAssetDenom)
+		l = len(x.UnderlyingAsset)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
@@ -1744,10 +1744,10 @@ func (x *fastReflection_EventVaultCreated) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if len(x.UnderlyingAssetDenom) > 0 {
-			i -= len(x.UnderlyingAssetDenom)
-			copy(dAtA[i:], x.UnderlyingAssetDenom)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.UnderlyingAssetDenom)))
+		if len(x.UnderlyingAsset) > 0 {
+			i -= len(x.UnderlyingAsset)
+			copy(dAtA[i:], x.UnderlyingAsset)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.UnderlyingAsset)))
 			i--
 			dAtA[i] = 0x1a
 		}
@@ -1880,7 +1880,7 @@ func (x *fastReflection_EventVaultCreated) ProtoMethods() *protoiface.Methods {
 				iNdEx = postIndex
 			case 3:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field UnderlyingAssetDenom", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field UnderlyingAsset", wireType)
 				}
 				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
@@ -1908,7 +1908,7 @@ func (x *fastReflection_EventVaultCreated) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.UnderlyingAssetDenom = string(dAtA[iNdEx:postIndex])
+				x.UnderlyingAsset = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -2123,8 +2123,8 @@ type EventVaultCreated struct {
 	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
 	// share_denom is the name of the assets created by the vault used for distribution.
 	ShareDenom string `protobuf:"bytes,2,opt,name=share_denom,json=shareDenom,proto3" json:"share_denom,omitempty"`
-	// underlying_asset_denom is the denomination of the asset supported by the vault.
-	UnderlyingAssetDenom string `protobuf:"bytes,3,opt,name=underlying_asset_denom,json=underlyingAssetDenom,proto3" json:"underlying_asset_denom,omitempty"`
+	// underlying_asset is the denomination of the asset supported by the vault.
+	UnderlyingAsset string `protobuf:"bytes,3,opt,name=underlying_asset,json=underlyingAsset,proto3" json:"underlying_asset,omitempty"`
 }
 
 func (x *EventVaultCreated) Reset() {
@@ -2161,9 +2161,9 @@ func (x *EventVaultCreated) GetShareDenom() string {
 	return ""
 }
 
-func (x *EventVaultCreated) GetUnderlyingAssetDenom() string {
+func (x *EventVaultCreated) GetUnderlyingAsset() string {
 	if x != nil {
-		return x.UnderlyingAssetDenom
+		return x.UnderlyingAsset
 	}
 	return ""
 }
@@ -2202,26 +2202,25 @@ var file_vault_v1_events_proto_rawDesc = []byte{
 	0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x73, 0x68,
 	0x61, 0x72, 0x65, 0x73, 0x12, 0x19, 0x0a, 0x08, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x69, 0x64,
 	0x18, 0x06, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x07, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x49, 0x64, 0x22,
-	0x9a, 0x01, 0x0a, 0x11, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x43, 0x72,
+	0x8f, 0x01, 0x0a, 0x11, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x43, 0x72,
 	0x65, 0x61, 0x74, 0x65, 0x64, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x01,
 	0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
 	0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05,
 	0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x1f, 0x0a, 0x0b, 0x73, 0x68, 0x61, 0x72, 0x65, 0x5f, 0x64,
 	0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x73, 0x68, 0x61, 0x72,
-	0x65, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x12, 0x34, 0x0a, 0x16, 0x75, 0x6e, 0x64, 0x65, 0x72, 0x6c,
-	0x79, 0x69, 0x6e, 0x67, 0x5f, 0x61, 0x73, 0x73, 0x65, 0x74, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d,
-	0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x14, 0x75, 0x6e, 0x64, 0x65, 0x72, 0x6c, 0x79, 0x69,
-	0x6e, 0x67, 0x41, 0x73, 0x73, 0x65, 0x74, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x42, 0x8c, 0x01, 0x0a,
-	0x0c, 0x63, 0x6f, 0x6d, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x42, 0x0b, 0x45,
-	0x76, 0x65, 0x6e, 0x74, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2e, 0x67, 0x69,
-	0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62,
-	0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x61, 0x75, 0x6c,
-	0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x56,
-	0x58, 0x58, 0xaa, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x08,
-	0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x14, 0x56, 0x61, 0x75, 0x6c, 0x74,
-	0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea,
-	0x02, 0x09, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x33,
+	0x65, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x12, 0x29, 0x0a, 0x10, 0x75, 0x6e, 0x64, 0x65, 0x72, 0x6c,
+	0x79, 0x69, 0x6e, 0x67, 0x5f, 0x61, 0x73, 0x73, 0x65, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x0f, 0x75, 0x6e, 0x64, 0x65, 0x72, 0x6c, 0x79, 0x69, 0x6e, 0x67, 0x41, 0x73, 0x73, 0x65,
+	0x74, 0x42, 0x8c, 0x01, 0x0a, 0x0c, 0x63, 0x6f, 0x6d, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e,
+	0x76, 0x31, 0x42, 0x0b, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50,
+	0x01, 0x5a, 0x2e, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72,
+	0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69,
+	0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x76,
+	0x31, 0xa2, 0x02, 0x03, 0x56, 0x58, 0x58, 0xaa, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e,
+	0x56, 0x31, 0xca, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x14,
+	0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61,
+	0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x09, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31,
+	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (

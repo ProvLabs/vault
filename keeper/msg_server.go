@@ -24,17 +24,19 @@ func (k msgServer) CreateVault(goCtx context.Context, msg *types.MsgCreateVaultR
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// Obtain the marker for the underlying asset to ensure it exists.
+
 	underlyingAssetAddr := markertypes.MustGetMarkerAddress(msg.UnderlyingAsset)
-	if _, err := k.MarkerKeeper.GetMarker(ctx, underlyingAssetAddr); err != nil {
-		return nil, fmt.Errorf("underlying asset marker %q not found: %w", msg.UnderlyingAsset, err)
+	if found := k.MarkerKeeper.IsMarkerAccount(ctx, underlyingAssetAddr); !found {
+		return nil, fmt.Errorf("underlying asset marker %q not found", msg.UnderlyingAsset)
 	}
+	// TODO How to check if it is a properly setup marker
 
 	// Obtain the module account, which will be the manager of the new vault marker.
 	moduleAcc := authtypes.NewModuleAddress(types.ModuleName)
 
 	// Create a new marker for the vault shares.
 	vaultShareMarkerAddress := markertypes.MustGetMarkerAddress(msg.ShareDenom)
-	if _, err := k.MarkerKeeper.GetMarker(ctx, vaultShareMarkerAddress); err == nil {
+	if found := k.MarkerKeeper.IsMarkerAccount(ctx, vaultShareMarkerAddress); found {
 		return nil, fmt.Errorf("a marker with the share denomination %q already exists", msg.ShareDenom)
 	}
 

@@ -20,6 +20,7 @@ func (k *Keeper) GetVaults(ctx context.Context) (map[string]types.Vault, error) 
 	return vaults, err
 }
 
+// Sets a vault in the store, using its address as the key.
 func (k *Keeper) SetVault(ctx context.Context, vault *types.Vault) error {
 	if vault == nil {
 		return errors.New("vault cannot be nil")

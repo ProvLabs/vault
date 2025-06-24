@@ -26,15 +26,12 @@ var (
 	Bech32PrefixConsPub = Bech32PrefixAccAddr + "valconspub"
 )
 
-func init() {
+func main() {
 	cfg := sdk.GetConfig()
 	cfg.SetBech32PrefixForAccount("provlabs", "provlabspub")
 	cfg.SetBech32PrefixForValidator("provlabsvaloper", "provlabsvaloperpub")
 	cfg.SetBech32PrefixForConsensusNode("provlabsvalcons", "provlabsvalconspub")
 	cfg.Seal()
-}
-
-func main() {
 	rootCmd := cmd.NewRootCmd()
 	if err := svrcmd.Execute(rootCmd, "", simapp.DefaultNodeHome); err != nil {
 		fmt.Fprintln(rootCmd.OutOrStderr(), err)

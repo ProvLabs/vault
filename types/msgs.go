@@ -13,6 +13,15 @@ func (m MsgCreateVaultRequest) ValidateBasic() error {
 	if err != nil {
 		return fmt.Errorf("invalid admin address: %q: %w", m.Admin, err)
 	}
+
+	if err := sdk.ValidateDenom(m.ShareDenom); err != nil {
+		return fmt.Errorf("invalid share denom: %q: %w", m.ShareDenom, err)
+	}
+
+	if err := sdk.ValidateDenom(m.UnderlyingAsset); err != nil {
+		return fmt.Errorf("invalid underlying asset: %q: %w", m.UnderlyingAsset, err)
+	}
+
 	return nil
 }
 

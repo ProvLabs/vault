@@ -102,7 +102,7 @@ func (s *TestSuite) TestQueryServer_Vault() {
 		{
 			name:     "invalid vault address",
 			req:      &types.QueryVaultRequest{VaultAddress: "invalid-bech32-address"},
-			expInErr: []string{"invalid vault_address", "decoding bech32 failed"}, // This error might vary based on your sdk.AccAddressFromBech32 implementation
+			expInErr: []string{"invalid vault_address", "decoding bech32 failed"},
 		},
 		{
 			name:     "vault not found",

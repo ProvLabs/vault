@@ -110,7 +110,7 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 				Vaults: []types.Vault{
 					*types.NewVault(admin, vault1Addr, "stake"),
 				},
-				Pagination: &query.PageResponse{},
+				Pagination: &query.PageResponse{Total: 1},
 			},
 		},
 		{
@@ -127,10 +127,10 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 			expResp: &types.QueryVaultsResponse{
 				Vaults: []types.Vault{
 					*types.NewVault(admin, vault1Addr, "stake"),
-					*types.NewVault(admin, vault2Addr, "nhash"),
 					*types.NewVault(admin, vault3Addr, "usdf"),
+					*types.NewVault(admin, vault2Addr, "nhash"),
 				},
-				Pagination: &query.PageResponse{},
+				Pagination: &query.PageResponse{Total: 3},
 			},
 		},
 		{
@@ -146,9 +146,11 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 			expResp: &types.QueryVaultsResponse{
 				Vaults: []types.Vault{
 					*types.NewVault(admin, vault1Addr, "stake"),
-					*types.NewVault(admin, vault2Addr, "nhash"),
+					*types.NewVault(admin, vault3Addr, "usdf"),
 				},
-				Pagination: &query.PageResponse{},
+				Pagination: &query.PageResponse{
+					NextKey: []byte{0xfd, 0xbb, 0xbd, 0xab, 0x27, 0x50, 0xf4, 0x3c, 0x2b, 0x2d, 0xb2, 0xe1, 0xa9, 0x3d, 0xb6, 0x64, 0xf4, 0xb0, 0xe7, 0xd2},
+				},
 			},
 		},
 		{
@@ -163,10 +165,10 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 			},
 			expResp: &types.QueryVaultsResponse{
 				Vaults: []types.Vault{
-					*types.NewVault(admin, vault2Addr, "nhash"),
 					*types.NewVault(admin, vault3Addr, "usdf"),
+					*types.NewVault(admin, vault2Addr, "nhash"),
 				},
-				Pagination: &query.PageResponse{},
+				Pagination: &query.PageResponse{Total: 3},
 			},
 		},
 		{
@@ -181,7 +183,7 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 			},
 			expResp: &types.QueryVaultsResponse{
 				Vaults: []types.Vault{
-					*types.NewVault(admin, vault3Addr, "usdf"),
+					*types.NewVault(admin, vault2Addr, "nhash"),
 				},
 				Pagination: &query.PageResponse{},
 			},
@@ -199,8 +201,8 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 			expResp: &types.QueryVaultsResponse{
 				Vaults: []types.Vault{
 					*types.NewVault(admin, vault1Addr, "stake"),
-					*types.NewVault(admin, vault2Addr, "nhash"),
 					*types.NewVault(admin, vault3Addr, "usdf"),
+					*types.NewVault(admin, vault2Addr, "nhash"),
 				},
 				Pagination: &query.PageResponse{Total: 3},
 			},
@@ -213,15 +215,16 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 				s.Require().NoError(s.k.SetVault(s.ctx, types.NewVault(admin, vault3Addr, "usdf")))
 			},
 			req: &types.QueryVaultsRequest{
-				Pagination: &query.PageRequest{Reverse: true},
+				Pagination: &query.PageRequest{Reverse: true, Limit: 2},
 			},
 			expResp: &types.QueryVaultsResponse{
 				Vaults: []types.Vault{
-					*types.NewVault(admin, vault3Addr, "usdf"),
 					*types.NewVault(admin, vault2Addr, "nhash"),
-					*types.NewVault(admin, vault1Addr, "stake"),
+					*types.NewVault(admin, vault3Addr, "usdf"),
 				},
-				Pagination: &query.PageResponse{},
+				Pagination: &query.PageResponse{
+					NextKey: []byte{0x6b, 0xd4, 0x73, 0x07, 0xd6, 0x2f, 0xda, 0x7b, 0x2e, 0x33, 0x60, 0xae, 0xba, 0x1c, 0x2d, 0x4d, 0x49, 0x97, 0x68, 0x84},
+				},
 			},
 		},
 		{

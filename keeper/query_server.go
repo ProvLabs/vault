@@ -20,6 +20,9 @@ func NewQueryServer(keeper *Keeper) types.QueryServer {
 
 // Vaults returns a paginated list of all vaults.
 func (k queryServer) Vaults(goCtx context.Context, req *types.QueryVaultsRequest) (*types.QueryVaultsResponse, error) {
+	if req == nil {
+		return nil, fmt.Errorf("invalid request")
+	}
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	vaultMap, err := k.Keeper.GetVaults(ctx)
@@ -40,6 +43,7 @@ func (k queryServer) Vaults(goCtx context.Context, req *types.QueryVaultsRequest
 
 // Vault returns the configuration and state of a specific vault.
 func (k queryServer) Vault(goCtx context.Context, req *types.QueryVaultRequest) (*types.QueryVaultResponse, error) {
+	// TODO allow queries by share denom
 	if req == nil || req.VaultAddress == "" {
 		return nil, fmt.Errorf("vault_address must be provided")
 	}
@@ -51,8 +55,8 @@ func (k queryServer) Vault(goCtx context.Context, req *types.QueryVaultRequest) 
 		return nil, fmt.Errorf("invalid vault_address: %w", err)
 	}
 
-	vault, found := k.Keeper.GetVaultByAddress(ctx, vaultAddr)
-	if !found {
+	vault, err := k.Keeper.Vaults.Get(ctx, vaultAddr)
+	if err != nil {
 		return nil, fmt.Errorf("vault with address %q not found", req.VaultAddress)
 	}
 

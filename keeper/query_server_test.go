@@ -3,8 +3,10 @@ package keeper_test
 import (
 	"context"
 	"fmt"
+	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
@@ -22,26 +24,6 @@ func (s *TestSuite) TestQueryServer_Vault() {
 	admin := s.adminAddr.String()
 
 	tests := []queryTestCase[types.QueryVaultRequest, types.QueryVaultResponse]{
-		{
-			name:     "nil request",
-			req:      nil,
-			expInErr: []string{"vault_address must be provided"},
-		},
-		{
-			name:     "empty vault address",
-			req:      &types.QueryVaultRequest{VaultAddress: ""},
-			expInErr: []string{"vault_address must be provided"},
-		},
-		{
-			name:     "invalid vault address",
-			req:      &types.QueryVaultRequest{VaultAddress: "invalid-bech32-address"},
-			expInErr: []string{"invalid vault_address", "decoding bech32 failed"},
-		},
-		{
-			name:     "vault not found",
-			req:      &types.QueryVaultRequest{VaultAddress: addr1},
-			expInErr: []string{fmt.Sprintf("vault with address %q not found", addr1)},
-		},
 		{
 			name: "vault found",
 			setup: func() {
@@ -68,6 +50,26 @@ func (s *TestSuite) TestQueryServer_Vault() {
 				Vault: *types.NewVault(admin, addr2, "stake"),
 			},
 		},
+		{
+			name:     "nil request",
+			req:      nil,
+			expInErr: []string{"vault_address must be provided"},
+		},
+		{
+			name:     "empty vault address",
+			req:      &types.QueryVaultRequest{VaultAddress: ""},
+			expInErr: []string{"vault_address must be provided"},
+		},
+		{
+			name:     "invalid vault address",
+			req:      &types.QueryVaultRequest{VaultAddress: "invalid-bech32-address"},
+			expInErr: []string{"invalid vault_address", "decoding bech32 failed"},
+		},
+		{
+			name:     "vault not found",
+			req:      &types.QueryVaultRequest{VaultAddress: addr1},
+			expInErr: []string{fmt.Sprintf("vault with address %q not found", addr1)},
+		},
 	}
 
 	for _, tc := range tests {
@@ -75,6 +77,182 @@ func (s *TestSuite) TestQueryServer_Vault() {
 			runQueryTestCase(s, testDef, tc)
 		})
 	}
+}
+
+// TestQueryServer_Vaults tests the Vaults query endpoint.
+func (s *TestSuite) TestQueryServer_Vaults() {
+	testDef := queryTestDef[types.QueryVaultsRequest, types.QueryVaultsResponse]{
+		queryName: "Vaults",
+		query:     keeper.NewQueryServer(s.simApp.VaultKeeper).Vaults,
+		postCheck: func(expected, actual *types.QueryVaultsResponse) {
+			// Sort both expected and actual vaults for deterministic comparison
+			sortVaults(expected.Vaults)
+			sortVaults(actual.Vaults)
+		},
+	}
+
+	admin := s.adminAddr.String()
+
+	// Define some vault addresses for consistent testing
+	vault1Addr := markertypes.MustGetMarkerAddress("vault1").String()
+	vault2Addr := markertypes.MustGetMarkerAddress("vault2").String()
+	vault3Addr := markertypes.MustGetMarkerAddress("vault3").String()
+
+	tests := []queryTestCase[types.QueryVaultsRequest, types.QueryVaultsResponse]{
+		{
+			name: "happy path - single vault",
+			setup: func() {
+				testVault1 := types.NewVault(admin, vault1Addr, "stake")
+				s.Require().NoError(s.k.SetVault(s.ctx, testVault1))
+			},
+			req: &types.QueryVaultsRequest{},
+			expResp: &types.QueryVaultsResponse{
+				Vaults: []types.Vault{
+					*types.NewVault(admin, vault1Addr, "stake"),
+				},
+				Pagination: &query.PageResponse{},
+			},
+		},
+		{
+			name: "happy path - multiple vaults",
+			setup: func() {
+				testVault1 := types.NewVault(admin, vault1Addr, "stake")
+				s.Require().NoError(s.k.SetVault(s.ctx, testVault1))
+				testVault2 := types.NewVault(admin, vault2Addr, "nhash")
+				s.Require().NoError(s.k.SetVault(s.ctx, testVault2))
+				testVault3 := types.NewVault(admin, vault3Addr, "usdf")
+				s.Require().NoError(s.k.SetVault(s.ctx, testVault3))
+			},
+			req: &types.QueryVaultsRequest{},
+			expResp: &types.QueryVaultsResponse{
+				Vaults: []types.Vault{
+					*types.NewVault(admin, vault1Addr, "stake"),
+					*types.NewVault(admin, vault2Addr, "nhash"),
+					*types.NewVault(admin, vault3Addr, "usdf"),
+				},
+				Pagination: &query.PageResponse{},
+			},
+		},
+		{
+			name: "pagination - limits the number of outputs",
+			setup: func() {
+				s.Require().NoError(s.k.SetVault(s.ctx, types.NewVault(admin, vault1Addr, "stake")))
+				s.Require().NoError(s.k.SetVault(s.ctx, types.NewVault(admin, vault2Addr, "nhash")))
+				s.Require().NoError(s.k.SetVault(s.ctx, types.NewVault(admin, vault3Addr, "usdf")))
+			},
+			req: &types.QueryVaultsRequest{
+				Pagination: &query.PageRequest{Limit: 2},
+			},
+			expResp: &types.QueryVaultsResponse{
+				Vaults: []types.Vault{
+					*types.NewVault(admin, vault1Addr, "stake"),
+					*types.NewVault(admin, vault2Addr, "nhash"),
+				},
+				Pagination: &query.PageResponse{},
+			},
+		},
+		{
+			name: "pagination - offset starts at correct location",
+			setup: func() {
+				s.Require().NoError(s.k.SetVault(s.ctx, types.NewVault(admin, vault1Addr, "stake")))
+				s.Require().NoError(s.k.SetVault(s.ctx, types.NewVault(admin, vault2Addr, "nhash")))
+				s.Require().NoError(s.k.SetVault(s.ctx, types.NewVault(admin, vault3Addr, "usdf")))
+			},
+			req: &types.QueryVaultsRequest{
+				Pagination: &query.PageRequest{Offset: 1},
+			},
+			expResp: &types.QueryVaultsResponse{
+				Vaults: []types.Vault{
+					*types.NewVault(admin, vault2Addr, "nhash"),
+					*types.NewVault(admin, vault3Addr, "usdf"),
+				},
+				Pagination: &query.PageResponse{},
+			},
+		},
+		{
+			name: "pagination - offset starts at correct location and enforces limit",
+			setup: func() {
+				s.Require().NoError(s.k.SetVault(s.ctx, types.NewVault(admin, vault1Addr, "stake")))
+				s.Require().NoError(s.k.SetVault(s.ctx, types.NewVault(admin, vault2Addr, "nhash")))
+				s.Require().NoError(s.k.SetVault(s.ctx, types.NewVault(admin, vault3Addr, "usdf")))
+			},
+			req: &types.QueryVaultsRequest{
+				Pagination: &query.PageRequest{Offset: 2, Limit: 1},
+			},
+			expResp: &types.QueryVaultsResponse{
+				Vaults: []types.Vault{
+					*types.NewVault(admin, vault3Addr, "usdf"),
+				},
+				Pagination: &query.PageResponse{},
+			},
+		},
+		{
+			name: "pagination - enabled count total",
+			setup: func() {
+				s.Require().NoError(s.k.SetVault(s.ctx, types.NewVault(admin, vault1Addr, "stake")))
+				s.Require().NoError(s.k.SetVault(s.ctx, types.NewVault(admin, vault2Addr, "nhash")))
+				s.Require().NoError(s.k.SetVault(s.ctx, types.NewVault(admin, vault3Addr, "usdf")))
+			},
+			req: &types.QueryVaultsRequest{
+				Pagination: &query.PageRequest{CountTotal: true},
+			},
+			expResp: &types.QueryVaultsResponse{
+				Vaults: []types.Vault{
+					*types.NewVault(admin, vault1Addr, "stake"),
+					*types.NewVault(admin, vault2Addr, "nhash"),
+					*types.NewVault(admin, vault3Addr, "usdf"),
+				},
+				Pagination: &query.PageResponse{Total: 3},
+			},
+		},
+		{
+			name: "pagination - reverse provides the results in reverse order",
+			setup: func() {
+				s.Require().NoError(s.k.SetVault(s.ctx, types.NewVault(admin, vault1Addr, "stake")))
+				s.Require().NoError(s.k.SetVault(s.ctx, types.NewVault(admin, vault2Addr, "nhash")))
+				s.Require().NoError(s.k.SetVault(s.ctx, types.NewVault(admin, vault3Addr, "usdf")))
+			},
+			req: &types.QueryVaultsRequest{
+				Pagination: &query.PageRequest{Reverse: true},
+			},
+			expResp: &types.QueryVaultsResponse{
+				Vaults: []types.Vault{
+					*types.NewVault(admin, vault3Addr, "usdf"),
+					*types.NewVault(admin, vault2Addr, "nhash"),
+					*types.NewVault(admin, vault1Addr, "stake"),
+				},
+				Pagination: &query.PageResponse{},
+			},
+		},
+		{
+			name: "empty state",
+			setup: func() {
+			},
+			req: &types.QueryVaultsRequest{},
+			expResp: &types.QueryVaultsResponse{
+				Vaults:     []types.Vault{},
+				Pagination: &query.PageResponse{},
+			},
+		},
+		{
+			name:     "nil request",
+			req:      nil,
+			expInErr: []string{"invalid request"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runQueryTestCase(s, testDef, tc)
+		})
+	}
+}
+
+// sortVaults sorts a slice of Vaults by their VaultAddress for deterministic testing.
+func sortVaults(vaults []types.Vault) {
+	sort.Slice(vaults, func(i, j int) bool {
+		return vaults[i].VaultAddress < vaults[j].VaultAddress
+	})
 }
 
 // queryTestDef is the definition of a QueryServer endpoint to be tested.

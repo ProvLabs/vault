@@ -28,7 +28,7 @@ func (k msgServer) CreateVault(goCtx context.Context, msg *types.MsgCreateVaultR
 	}
 	// TODO How to check if it is a properly setup marker
 
-	marker, err := k.CreateVaultMarker(ctx, msg.Admin, msg.ShareDenom, msg.UnderlyingAsset)
+	marker, err := k.CreateVaultMarker(ctx, msg.ShareDenom, msg.UnderlyingAsset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create vault marker: %w", err)
 	}

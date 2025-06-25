@@ -130,7 +130,7 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 		Tx: &autocliv1.ServiceCommandDescriptor{
 			Service: vaultv1.Msg_ServiceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
-				{RpcMethod: "CreateVault", Use: "create-vault [admin] [marker_address]", Short: "Create a new vault", PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "admin"}, {ProtoField: "marker_address"}}},
+				{RpcMethod: "CreateVault", Use: "create-vault [admin] [underlying_asset] [share_denom]", Short: "Create a new vault", PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "admin"}, {ProtoField: "underlying_asset"}, {ProtoField: "share_denom"}}},
 				{RpcMethod: "Deposit", Use: "deposit [depositor] [vault_address] [amount] [receiver]", Short: "Deposit assets into a vault", PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "depositor"}, {ProtoField: "vault_address"}, {ProtoField: "amount"}, {ProtoField: "receiver"}}},
 				{RpcMethod: "Withdraw", Use: "withdraw [owner] [vault_address] [assets_to_withdraw] [receiver]", Short: "Withdraw assets from a vault", PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "owner"}, {ProtoField: "vault_address"}, {ProtoField: "assets_to_withdraw"}, {ProtoField: "receiver"}}},
 				{RpcMethod: "Redeem", Use: "redeem [owner] [vault_address] [shares_to_redeem] [receiver]", Short: "Redeem shares for underlying assets", PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "owner"}, {ProtoField: "vault_address"}, {ProtoField: "shares_to_redeem"}, {ProtoField: "receiver"}}},
@@ -163,6 +163,7 @@ type ModuleInputs struct {
 	EventService  event.Service
 	Codec         codec.Codec
 	AddressCodec  address.Codec
+	MarkerKeeper  types.MarkerKeeper
 }
 
 // ModuleOutputs defines the outputs of the vault module provider.
@@ -185,6 +186,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.EventService,
 		in.AddressCodec,
 		authority,
+		in.MarkerKeeper,
 	)
 	m := NewAppModule(k, in.AddressCodec)
 	return ModuleOutputs{Keeper: k, Module: m}

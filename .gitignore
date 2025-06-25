@@ -68,3 +68,6 @@ __debug*
 
 # Go version file
 .go-version
+
+# Vault runtime
+.vaulty/

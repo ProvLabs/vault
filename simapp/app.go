@@ -20,7 +20,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	_ "github.com/cosmos/cosmos-sdk/x/auth"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
@@ -49,7 +48,6 @@ import (
 
 	// IBC Modules
 	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
-	ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 
 	// Provenance Modules
@@ -138,7 +136,7 @@ func ProvideExchangeDummyCustomSigners() []signing.CustomGetSigner {
 func AppConfig() depinject.Config {
 	return depinject.Configs(
 		appconfig.LoadYAML(AppConfigYAML),
-		depinject.Provide(ProvideExchangeDummyCustomSigners),
+		depinject.Provide(ProvideExchangeDummyCustomSigners, ProvideMarkerKeeperStub),
 		depinject.Supply(
 			map[string]module.AppModuleBasic{
 				genutiltypes.ModuleName: genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
@@ -245,29 +243,20 @@ func (app *SimApp) kvStoreKeys() map[string]*storetypes.KVStoreKey {
 	return keys
 }
 
-func ProvideMarkerKeeper(
-	cdc codec.Codec,
-	key *storetypes.KVStoreKey,
-	accountKeeper authkeeper.AccountKeeper,
-	bankKeeper bankkeeper.Keeper,
-	authzKeeper authzkeeper.Keeper,
-	feegrantKeeper feegrantkeeper.Keeper,
-	attributeKeeper attributekeeper.Keeper,
-	nameKeeper namekeeper.Keeper,
-	transferKeeper *ibctransferkeeper.Keeper,
-	groupKeeper groupkeeper.Keeper,
-) markerkeeper.Keeper {
-	return markerkeeper.NewKeeper(
-		cdc,
-		key,
-		accountKeeper,
-		bankKeeper,
-		authzKeeper,
-		feegrantKeeper,
-		attributeKeeper,
-		nameKeeper,
-		transferKeeper,
-		[]sdk.AccAddress{},
-		NewGroupCheckerFunc(groupKeeper),
-	)
+// ProvideMarkerKeeperStub returns an empty markerkeeper.Keeper instance.
+//
+// This stub is used to satisfy dependency injection requirements when wiring
+// the Vault module in the app module configuration. It allows the Vault module
+// to be included in the dependency graph even though the actual MarkerKeeper
+// is initialized separately using the legacy Provenance wiring in SimApp.
+//
+// This function should only be used during app setup and should not be relied
+// on at runtime, as the returned keeper is not fully configured and will panic
+// if used.
+func ProvideMarkerKeeperStub() *markerkeeper.Keeper {
+	return &markerkeeper.Keeper{}
+}
+
+func (app *SimApp) AppCodec() codec.Codec {
+	return app.appCodec
 }

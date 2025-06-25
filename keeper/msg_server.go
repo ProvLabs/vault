@@ -2,7 +2,10 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provlabs/vault/types"
 )
 
@@ -16,10 +19,35 @@ func NewMsgServer(keeper *Keeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
 }
 
-// CreateVault creates a new vault.
 func (k msgServer) CreateVault(goCtx context.Context, msg *types.MsgCreateVaultRequest) (*types.MsgCreateVaultResponse, error) {
-	panic("not implemented")
+	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	underlyingAssetAddr := markertypes.MustGetMarkerAddress(msg.UnderlyingAsset)
+	if found := k.MarkerKeeper.IsMarkerAccount(ctx, underlyingAssetAddr); !found {
+		return nil, fmt.Errorf("underlying asset marker %q not found", msg.UnderlyingAsset)
+	}
+	// TODO How to check if it is a properly setup marker
+
+	marker, err := k.CreateVaultMarker(ctx, msg.Admin, msg.ShareDenom, msg.UnderlyingAsset)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create vault marker: %w", err)
+	}
+
+	vault := types.NewVault(msg.Admin, marker.GetAddress().String(), msg.UnderlyingAsset)
+	if err := k.SetVault(ctx, vault); err != nil {
+		return nil, fmt.Errorf("failed to store new vault: %w", err)
+	}
+
+	k.emitEvent(ctx, types.NewEventVaultCreated(
+		vault.VaultAddress,
+		msg.Admin,
+		msg.ShareDenom,
+		msg.UnderlyingAsset,
+	))
+
+	return &types.MsgCreateVaultResponse{
+		VaultAddress: vault.VaultAddress,
+	}, nil
 }
 
 // Deposit deposits assets into a vault.

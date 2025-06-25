@@ -13,6 +13,19 @@ import (
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
 
+// RegisterProvenanceModules sets up and registers the Provenance modules
+// used by the SimApp, including name, attribute, marker, and vault modules.
+//
+// It performs the following actions:
+//   - Registers the KV store keys required by the modules.
+//   - Initializes the NameKeeper, AttributeKeeper, and MarkerKeeper using the legacy Provenance wiring pattern.
+//   - Injects the MarkerKeeper into the VaultKeeper to fulfill its dependency.
+//   - Registers the modules with the app for inclusion in BeginBlocker, EndBlocker, InitGenesis, etc.
+//
+// This function is typically called during app initialization to ensure
+// all Provenance modules are correctly configured and available.
+//
+// Returns an error if store registration fails.
 func (app *SimApp) RegisterProvenanceModules() error {
 	if err := app.RegisterStores(
 		storetypes.NewKVStoreKey(markertypes.StoreKey),
@@ -47,6 +60,7 @@ func (app *SimApp) RegisterProvenanceModules() error {
 		nil,
 		NewGroupCheckerFunc(app.GroupKeeper),
 	)
+	app.VaultKeeper.MarkerKeeper = app.MarkerKeeper
 
 	return app.RegisterModules(
 		name.NewAppModule(app.appCodec, app.NameKeeper, app.AccountKeeper, app.BankKeeper),

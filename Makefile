@@ -1,4 +1,4 @@
-.PHONY: proto-format proto-lint proto-gen license format lint build
+.PHONY: proto-format proto-lint proto-gen license format lint build run
 all: proto-all format lint test-unit build
 
 ###############################################################################
@@ -9,6 +9,9 @@ build:
 	@echo "Building simd binary..."
 	@cd simapp && make build > /dev/null
 	@echo "Build completed successfully."
+
+run: build
+	@./local.sh
 
 ###############################################################################
 ###                                 Tooling                                 ###

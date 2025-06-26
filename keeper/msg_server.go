@@ -33,7 +33,8 @@ func (k msgServer) CreateVault(goCtx context.Context, msg *types.MsgCreateVaultR
 		return nil, fmt.Errorf("failed to create vault marker: %w", err)
 	}
 
-	vault := types.NewVault(msg.Admin, marker.GetAddress().String(), msg.UnderlyingAsset)
+	acc := k.authKeeper.NewAccount(ctx, marker).(types.VaultAccountI)
+	vault := types.NewVault(acc, msg.Admin, marker.GetAddress().String(), []string{msg.UnderlyingAsset})
 	if err := k.SetVault(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to store new vault: %w", err)
 	}

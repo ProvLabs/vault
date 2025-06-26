@@ -2,10 +2,12 @@ package types
 
 import (
 	fmt "fmt"
+	"slices"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	proto "github.com/cosmos/gogoproto/proto"
+	"github.com/provlabs/vault/utils"
 )
 
 var (
@@ -38,12 +40,15 @@ type VaultAccountI interface {
 }
 
 // NewVault creates a new vault.
-func NewVault(baseAcc *authtypes.BaseAccount, admin string, shareDenom string, underlyingAssets sdk.Coins) *Vault {
+func NewVault(baseAcc *authtypes.BaseAccount, admin string, shareDenom string, underlyingAssets []string) *Vault {
+	coins := utils.Map(underlyingAssets, func(denom string) sdk.Coin {
+		return sdk.NewInt64Coin(denom, 0)
+	})
 	return &Vault{
 		BaseAccount:      baseAcc,
 		Admin:            admin,
 		ShareDenom:       shareDenom,
-		UnderlyingAssets: underlyingAssets,
+		UnderlyingAssets: sdk.NewCoins(slices.Collect(coins)...),
 	}
 }
 

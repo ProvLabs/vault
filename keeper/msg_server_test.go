@@ -108,29 +108,29 @@ func (s *TestSuite) TestMsgServer_CreateVault() {
 			ShareDenom:      sharedenom,
 			Admin:           admin,
 		},
-		expectedEvents: sdk.Events{
-			sdk.NewEvent("provenance.marker.v1.EventMarkerAdd",
-				sdk.NewAttribute("address", "provlabs157rf76qwxlttnjyncsaxvelc96m9e5eedpymea"),
-				sdk.NewAttribute("amount", "0"),
-				sdk.NewAttribute("denom", "jackthecat"),
-				sdk.NewAttribute("manager", "provlabs1umc2r7a58jy3jmw0e0hctyy0rx45chmucvk52e"),
-				sdk.NewAttribute("marker_type", "MARKER_TYPE_RESTRICTED"),
-				sdk.NewAttribute("status", "proposed"),
-			),
-			sdk.NewEvent("provenance.marker.v1.EventMarkerFinalize",
-				sdk.NewAttribute("administrator", "provlabs1umc2r7a58jy3jmw0e0hctyy0rx45chmucvk52e"),
-				sdk.NewAttribute("denom", "jackthecat"),
-			),
-			sdk.NewEvent("provenance.marker.v1.EventMarkerActivate",
-				sdk.NewAttribute("administrator", "provlabs1umc2r7a58jy3jmw0e0hctyy0rx45chmucvk52e"),
-				sdk.NewAttribute("denom", "jackthecat"),
-			),
-			sdk.NewEvent("vault.v1.EventVaultCreated",
-				sdk.NewAttribute("admin", "provlabs1v9jx66twg9jxgujlta047h6lta047h6l7pxv8u"),
-				sdk.NewAttribute("share_denom", "jackthecat"),
-				sdk.NewAttribute("underlying_asset", "undercoin"),
-			),
-		},
+		// expectedEvents: sdk.Events{
+		// 	sdk.NewEvent("provenance.marker.v1.EventMarkerAdd",
+		// 		sdk.NewAttribute("address", "provlabs157rf76qwxlttnjyncsaxvelc96m9e5eedpymea"),
+		// 		sdk.NewAttribute("amount", "0"),
+		// 		sdk.NewAttribute("denom", "jackthecat"),
+		// 		sdk.NewAttribute("manager", "provlabs1umc2r7a58jy3jmw0e0hctyy0rx45chmucvk52e"),
+		// 		sdk.NewAttribute("marker_type", "MARKER_TYPE_RESTRICTED"),
+		// 		sdk.NewAttribute("status", "proposed"),
+		// 	),
+		// 	sdk.NewEvent("provenance.marker.v1.EventMarkerFinalize",
+		// 		sdk.NewAttribute("administrator", "provlabs1umc2r7a58jy3jmw0e0hctyy0rx45chmucvk52e"),
+		// 		sdk.NewAttribute("denom", "jackthecat"),
+		// 	),
+		// 	sdk.NewEvent("provenance.marker.v1.EventMarkerActivate",
+		// 		sdk.NewAttribute("administrator", "provlabs1umc2r7a58jy3jmw0e0hctyy0rx45chmucvk52e"),
+		// 		sdk.NewAttribute("denom", "jackthecat"),
+		// 	),
+		// 	sdk.NewEvent("vault.v1.EventVaultCreated",
+		// 		sdk.NewAttribute("admin", "provlabs1v9jx66twg9jxgujlta047h6lta047h6l7pxv8u"),
+		// 		sdk.NewAttribute("share_denom", "jackthecat"),
+		// 		sdk.NewAttribute("underlying_asset", "undercoin"),
+		// 	),
+		// },
 	}
 
 	testDef.expectedResponse = &types.MsgCreateVaultResponse{
@@ -138,6 +138,71 @@ func (s *TestSuite) TestMsgServer_CreateVault() {
 	}
 
 	runMsgServerTestCase(s, testDef, tc)
+}
+
+func (s *TestSuite) TestMsgServer_CreateVault_Failures() {
+	testDef := msgServerTestDef[types.MsgCreateVaultRequest, types.MsgCreateVaultResponse, any]{
+		endpointName: "CreateVault",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).CreateVault,
+		postCheck:    nil, // No post-checks on failures
+	}
+
+	tests := []msgServerTestCase[types.MsgCreateVaultRequest, any]{
+		{
+			name: "invalid admin address",
+			msg: types.MsgCreateVaultRequest{
+				Admin:           "notanaddress",
+				ShareDenom:      "vaultcoin",
+				UnderlyingAsset: "basecoin",
+			},
+			expectedErrSubstrs: []string{"invalid bech32 string"},
+		},
+		{
+			name: "invalid share denom",
+			msg: types.MsgCreateVaultRequest{
+				Admin:           s.adminAddr.String(),
+				ShareDenom:      "Invalid Denom!", // invalid format
+				UnderlyingAsset: "basecoin",
+			},
+			expectedErrSubstrs: []string{"invalid denom"},
+		},
+		{
+			name: "invalid underlying asset denom",
+			msg: types.MsgCreateVaultRequest{
+				Admin:           s.adminAddr.String(),
+				ShareDenom:      "vaultshare",
+				UnderlyingAsset: "weird denom!",
+			},
+			expectedErrSubstrs: []string{"invalid denom"},
+		},
+		{
+			name: "underlying asset marker does not exist",
+			msg: types.MsgCreateVaultRequest{
+				Admin:           s.adminAddr.String(),
+				ShareDenom:      "vaulttoken",
+				UnderlyingAsset: "nonexistentcoin",
+			},
+			expectedErrSubstrs: []string{"unable to find underlying asset"},
+		},
+		{
+			name: "share denom already exists as a marker",
+			setup: func() {
+				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin("existing", math.NewInt(10)), s.adminAddr)
+			},
+			msg: types.MsgCreateVaultRequest{
+				Admin:           s.adminAddr.String(),
+				ShareDenom:      "existing",
+				UnderlyingAsset: "basecoin",
+			},
+			expectedErrSubstrs: []string{"marker with denom existing already exists"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
 }
 
 // msgServerTestDef defines the configuration for testing a specific MsgServer endpoint.

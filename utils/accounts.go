@@ -27,12 +27,12 @@ func TestAddress() Address {
 
 	return Address{
 		Bytes:  bytes,
-		Bech32: generateProvlabsAddress(bytes),
+		Bech32: generateCosmosAddress(bytes),
 	}
 }
 
-func generateProvlabsAddress(bytes []byte) string {
-	address, err := sdk.Bech32ifyAddressBytes("provlabs", bytes)
+func generateCosmosAddress(bytes []byte) string {
+	address, err := sdk.Bech32ifyAddressBytes("cosmos", bytes)
 	if err != nil {
 		panic("error during cosmos address creation")
 	}

@@ -26,6 +26,14 @@ type TestSuite struct {
 	adminAddr sdk.AccAddress
 }
 
+func (s *TestSuite) Context() sdk.Context {
+	return s.ctx
+}
+
+func (s *TestSuite) SetContext(ctx sdk.Context) {
+	s.ctx = ctx
+}
+
 func (s *TestSuite) SetupTest() {
 	s.simApp = simapp.Setup(s.T())
 	s.ctx = s.simApp.NewContext(false)

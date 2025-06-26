@@ -17,7 +17,7 @@ const (
 )
 
 // CreateVaultMarker creates, finalizes, and activates a new restricted marker for the vault's share denomination.
-func (k *Keeper) CreateVaultMarker(ctx sdk.Context, admin, shareDenom, underlyingAsset string) (*markertypes.MarkerAccount, error) {
+func (k *Keeper) CreateVaultMarker(ctx sdk.Context, shareDenom, underlyingAsset string) (*markertypes.MarkerAccount, error) {
 	markerManager := authtypes.NewModuleAddress(types.ModuleName)
 
 	vaultShareMarkerAddress := markertypes.MustGetMarkerAddress(shareDenom)

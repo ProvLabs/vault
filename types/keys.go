@@ -32,7 +32,7 @@ var (
 	VaultsName = "vaults"
 )
 
-// GetVaultAddress returns the module account address for the given vaultID.
-func GetVaultAddress(vaultID uint32) sdk.AccAddress {
-	return sdk.AccAddress(crypto.AddressHash([]byte(fmt.Sprintf("%s/%d", ModuleName, vaultID))))
+// GetVaultAddress returns the module account address for the given shareDenom.
+func GetVaultAddress(shareDenom string) sdk.AccAddress {
+	return sdk.AccAddress(crypto.AddressHash([]byte(fmt.Sprintf("%s/%s", ModuleName, shareDenom))))
 }

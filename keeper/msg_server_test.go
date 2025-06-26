@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -43,7 +44,8 @@ func (s *TestSuite) TestMsgServer_CreateVault() {
 		ShareDenom      string
 		Admin           string
 	}
-
+	coins := sdk.NewCoins(sdk.NewCoin("test", math.Int(math.ZeroUint())))
+	fmt.Printf("%v", coins)
 	testDef := msgServerTestDef[types.MsgCreateVaultRequest, types.MsgCreateVaultResponse, postCheckArgs]{
 		endpointName: "CreateVault",
 		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).CreateVault,

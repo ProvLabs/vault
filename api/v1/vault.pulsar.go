@@ -2,9 +2,13 @@
 package vaultv1
 
 import (
+	_ "cosmossdk.io/api/amino"
+	v1beta11 "cosmossdk.io/api/cosmos/auth/v1beta1"
+	v1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
+	_ "github.com/cosmos/gogoproto/gogoproto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -13,18 +17,71 @@ import (
 	sync "sync"
 )
 
+var _ protoreflect.List = (*_Vault_3_list)(nil)
+
+type _Vault_3_list struct {
+	list *[]*v1beta1.Coin
+}
+
+func (x *_Vault_3_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_Vault_3_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_Vault_3_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_Vault_3_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_Vault_3_list) AppendMutable() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_Vault_3_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_Vault_3_list) NewElement() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_Vault_3_list) IsValid() bool {
+	return x.list != nil
+}
+
 var (
-	md_Vault                  protoreflect.MessageDescriptor
-	fd_Vault_vault_address    protoreflect.FieldDescriptor
-	fd_Vault_underlying_asset protoreflect.FieldDescriptor
-	fd_Vault_admin            protoreflect.FieldDescriptor
+	md_Vault                   protoreflect.MessageDescriptor
+	fd_Vault_base_account      protoreflect.FieldDescriptor
+	fd_Vault_share_denom       protoreflect.FieldDescriptor
+	fd_Vault_underlying_assets protoreflect.FieldDescriptor
+	fd_Vault_admin             protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_vault_v1_vault_proto_init()
 	md_Vault = File_vault_v1_vault_proto.Messages().ByName("Vault")
-	fd_Vault_vault_address = md_Vault.Fields().ByName("vault_address")
-	fd_Vault_underlying_asset = md_Vault.Fields().ByName("underlying_asset")
+	fd_Vault_base_account = md_Vault.Fields().ByName("base_account")
+	fd_Vault_share_denom = md_Vault.Fields().ByName("share_denom")
+	fd_Vault_underlying_assets = md_Vault.Fields().ByName("underlying_assets")
 	fd_Vault_admin = md_Vault.Fields().ByName("admin")
 }
 
@@ -93,15 +150,21 @@ func (x *fastReflection_Vault) Interface() protoreflect.ProtoMessage {
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_Vault) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.VaultAddress != "" {
-		value := protoreflect.ValueOfString(x.VaultAddress)
-		if !f(fd_Vault_vault_address, value) {
+	if x.BaseAccount != nil {
+		value := protoreflect.ValueOfMessage(x.BaseAccount.ProtoReflect())
+		if !f(fd_Vault_base_account, value) {
 			return
 		}
 	}
-	if x.UnderlyingAsset != "" {
-		value := protoreflect.ValueOfString(x.UnderlyingAsset)
-		if !f(fd_Vault_underlying_asset, value) {
+	if x.ShareDenom != "" {
+		value := protoreflect.ValueOfString(x.ShareDenom)
+		if !f(fd_Vault_share_denom, value) {
+			return
+		}
+	}
+	if len(x.UnderlyingAssets) != 0 {
+		value := protoreflect.ValueOfList(&_Vault_3_list{list: &x.UnderlyingAssets})
+		if !f(fd_Vault_underlying_assets, value) {
 			return
 		}
 	}
@@ -126,10 +189,12 @@ func (x *fastReflection_Vault) Range(f func(protoreflect.FieldDescriptor, protor
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_Vault) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.Vault.vault_address":
-		return x.VaultAddress != ""
-	case "vault.v1.Vault.underlying_asset":
-		return x.UnderlyingAsset != ""
+	case "vault.v1.Vault.base_account":
+		return x.BaseAccount != nil
+	case "vault.v1.Vault.share_denom":
+		return x.ShareDenom != ""
+	case "vault.v1.Vault.underlying_assets":
+		return len(x.UnderlyingAssets) != 0
 	case "vault.v1.Vault.admin":
 		return x.Admin != ""
 	default:
@@ -148,10 +213,12 @@ func (x *fastReflection_Vault) Has(fd protoreflect.FieldDescriptor) bool {
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Vault) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.Vault.vault_address":
-		x.VaultAddress = ""
-	case "vault.v1.Vault.underlying_asset":
-		x.UnderlyingAsset = ""
+	case "vault.v1.Vault.base_account":
+		x.BaseAccount = nil
+	case "vault.v1.Vault.share_denom":
+		x.ShareDenom = ""
+	case "vault.v1.Vault.underlying_assets":
+		x.UnderlyingAssets = nil
 	case "vault.v1.Vault.admin":
 		x.Admin = ""
 	default:
@@ -170,12 +237,18 @@ func (x *fastReflection_Vault) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_Vault) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.Vault.vault_address":
-		value := x.VaultAddress
+	case "vault.v1.Vault.base_account":
+		value := x.BaseAccount
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "vault.v1.Vault.share_denom":
+		value := x.ShareDenom
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.Vault.underlying_asset":
-		value := x.UnderlyingAsset
-		return protoreflect.ValueOfString(value)
+	case "vault.v1.Vault.underlying_assets":
+		if len(x.UnderlyingAssets) == 0 {
+			return protoreflect.ValueOfList(&_Vault_3_list{})
+		}
+		listValue := &_Vault_3_list{list: &x.UnderlyingAssets}
+		return protoreflect.ValueOfList(listValue)
 	case "vault.v1.Vault.admin":
 		value := x.Admin
 		return protoreflect.ValueOfString(value)
@@ -199,10 +272,14 @@ func (x *fastReflection_Vault) Get(descriptor protoreflect.FieldDescriptor) prot
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Vault) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.Vault.vault_address":
-		x.VaultAddress = value.Interface().(string)
-	case "vault.v1.Vault.underlying_asset":
-		x.UnderlyingAsset = value.Interface().(string)
+	case "vault.v1.Vault.base_account":
+		x.BaseAccount = value.Message().Interface().(*v1beta11.BaseAccount)
+	case "vault.v1.Vault.share_denom":
+		x.ShareDenom = value.Interface().(string)
+	case "vault.v1.Vault.underlying_assets":
+		lv := value.List()
+		clv := lv.(*_Vault_3_list)
+		x.UnderlyingAssets = *clv.list
 	case "vault.v1.Vault.admin":
 		x.Admin = value.Interface().(string)
 	default:
@@ -225,10 +302,19 @@ func (x *fastReflection_Vault) Set(fd protoreflect.FieldDescriptor, value protor
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_Vault) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.Vault.vault_address":
-		panic(fmt.Errorf("field vault_address of message vault.v1.Vault is not mutable"))
-	case "vault.v1.Vault.underlying_asset":
-		panic(fmt.Errorf("field underlying_asset of message vault.v1.Vault is not mutable"))
+	case "vault.v1.Vault.base_account":
+		if x.BaseAccount == nil {
+			x.BaseAccount = new(v1beta11.BaseAccount)
+		}
+		return protoreflect.ValueOfMessage(x.BaseAccount.ProtoReflect())
+	case "vault.v1.Vault.underlying_assets":
+		if x.UnderlyingAssets == nil {
+			x.UnderlyingAssets = []*v1beta1.Coin{}
+		}
+		value := &_Vault_3_list{list: &x.UnderlyingAssets}
+		return protoreflect.ValueOfList(value)
+	case "vault.v1.Vault.share_denom":
+		panic(fmt.Errorf("field share_denom of message vault.v1.Vault is not mutable"))
 	case "vault.v1.Vault.admin":
 		panic(fmt.Errorf("field admin of message vault.v1.Vault is not mutable"))
 	default:
@@ -244,10 +330,14 @@ func (x *fastReflection_Vault) Mutable(fd protoreflect.FieldDescriptor) protoref
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_Vault) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.Vault.vault_address":
+	case "vault.v1.Vault.base_account":
+		m := new(v1beta11.BaseAccount)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "vault.v1.Vault.share_denom":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.Vault.underlying_asset":
-		return protoreflect.ValueOfString("")
+	case "vault.v1.Vault.underlying_assets":
+		list := []*v1beta1.Coin{}
+		return protoreflect.ValueOfList(&_Vault_3_list{list: &list})
 	case "vault.v1.Vault.admin":
 		return protoreflect.ValueOfString("")
 	default:
@@ -319,13 +409,19 @@ func (x *fastReflection_Vault) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		l = len(x.VaultAddress)
+		if x.BaseAccount != nil {
+			l = options.Size(x.BaseAccount)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.ShareDenom)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		l = len(x.UnderlyingAsset)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
+		if len(x.UnderlyingAssets) > 0 {
+			for _, e := range x.UnderlyingAssets {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
 		}
 		l = len(x.Admin)
 		if l > 0 {
@@ -365,19 +461,42 @@ func (x *fastReflection_Vault) ProtoMethods() *protoiface.Methods {
 			copy(dAtA[i:], x.Admin)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Admin)))
 			i--
-			dAtA[i] = 0x1a
+			dAtA[i] = 0x22
 		}
-		if len(x.UnderlyingAsset) > 0 {
-			i -= len(x.UnderlyingAsset)
-			copy(dAtA[i:], x.UnderlyingAsset)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.UnderlyingAsset)))
+		if len(x.UnderlyingAssets) > 0 {
+			for iNdEx := len(x.UnderlyingAssets) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.UnderlyingAssets[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x1a
+			}
+		}
+		if len(x.ShareDenom) > 0 {
+			i -= len(x.ShareDenom)
+			copy(dAtA[i:], x.ShareDenom)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ShareDenom)))
 			i--
 			dAtA[i] = 0x12
 		}
-		if len(x.VaultAddress) > 0 {
-			i -= len(x.VaultAddress)
-			copy(dAtA[i:], x.VaultAddress)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.VaultAddress)))
+		if x.BaseAccount != nil {
+			encoded, err := options.Marshal(x.BaseAccount)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
 			i--
 			dAtA[i] = 0xa
 		}
@@ -432,9 +551,9 @@ func (x *fastReflection_Vault) ProtoMethods() *protoiface.Methods {
 			switch fieldNum {
 			case 1:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field VaultAddress", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field BaseAccount", wireType)
 				}
-				var stringLen uint64
+				var msglen int
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -444,27 +563,31 @@ func (x *fastReflection_Vault) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
+					msglen |= int(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
+				if msglen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + intStringLen
+				postIndex := iNdEx + msglen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.VaultAddress = string(dAtA[iNdEx:postIndex])
+				if x.BaseAccount == nil {
+					x.BaseAccount = &v1beta11.BaseAccount{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.BaseAccount); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
 				iNdEx = postIndex
 			case 2:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field UnderlyingAsset", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ShareDenom", wireType)
 				}
 				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
@@ -492,9 +615,43 @@ func (x *fastReflection_Vault) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.UnderlyingAsset = string(dAtA[iNdEx:postIndex])
+				x.ShareDenom = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field UnderlyingAssets", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.UnderlyingAssets = append(x.UnderlyingAssets, &v1beta1.Coin{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.UnderlyingAssets[len(x.UnderlyingAssets)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 4:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
 				}
@@ -581,12 +738,14 @@ type Vault struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// vault_address is the bech32 address of the vault.
-	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// underlying_asset is the denomination of the asset supported by the vault.
-	UnderlyingAsset string `protobuf:"bytes,2,opt,name=underlying_asset,json=underlyingAsset,proto3" json:"underlying_asset,omitempty"`
+	// base_account cosmos account information including address and coin holdings.
+	BaseAccount *v1beta11.BaseAccount `protobuf:"bytes,1,opt,name=base_account,json=baseAccount,proto3" json:"base_account,omitempty"`
+	// share_denom is the denomination used to represent shares in the vault (e.g., vault tokens).
+	ShareDenom string `protobuf:"bytes,2,opt,name=share_denom,json=shareDenom,proto3" json:"share_denom,omitempty"`
+	// underlying_assets specifies the denomination(s) of the asset(s) managed by the vault.
+	UnderlyingAssets []*v1beta1.Coin `protobuf:"bytes,3,rep,name=underlying_assets,json=underlyingAssets,proto3" json:"underlying_assets,omitempty"`
 	// admin is the address that has administrative privileges over the vault.
-	Admin string `protobuf:"bytes,3,opt,name=admin,proto3" json:"admin,omitempty"`
+	Admin string `protobuf:"bytes,4,opt,name=admin,proto3" json:"admin,omitempty"`
 }
 
 func (x *Vault) Reset() {
@@ -609,18 +768,25 @@ func (*Vault) Descriptor() ([]byte, []int) {
 	return file_vault_v1_vault_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *Vault) GetVaultAddress() string {
+func (x *Vault) GetBaseAccount() *v1beta11.BaseAccount {
 	if x != nil {
-		return x.VaultAddress
+		return x.BaseAccount
+	}
+	return nil
+}
+
+func (x *Vault) GetShareDenom() string {
+	if x != nil {
+		return x.ShareDenom
 	}
 	return ""
 }
 
-func (x *Vault) GetUnderlyingAsset() string {
+func (x *Vault) GetUnderlyingAssets() []*v1beta1.Coin {
 	if x != nil {
-		return x.UnderlyingAsset
+		return x.UnderlyingAssets
 	}
-	return ""
+	return nil
 }
 
 func (x *Vault) GetAdmin() string {
@@ -635,28 +801,44 @@ var File_vault_v1_vault_proto protoreflect.FileDescriptor
 var file_vault_v1_vault_proto_rawDesc = []byte{
 	0x0a, 0x14, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74,
 	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x08, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31,
-	0x1a, 0x19, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xa1, 0x01, 0x0a, 0x05,
-	0x56, 0x61, 0x75, 0x6c, 0x74, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61,
-	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4,
-	0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
-	0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64,
-	0x72, 0x65, 0x73, 0x73, 0x12, 0x29, 0x0a, 0x10, 0x75, 0x6e, 0x64, 0x65, 0x72, 0x6c, 0x79, 0x69,
-	0x6e, 0x67, 0x5f, 0x61, 0x73, 0x73, 0x65, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0f,
-	0x75, 0x6e, 0x64, 0x65, 0x72, 0x6c, 0x79, 0x69, 0x6e, 0x67, 0x41, 0x73, 0x73, 0x65, 0x74, 0x12,
-	0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18,
-	0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65,
-	0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x42,
-	0x8b, 0x01, 0x0a, 0x0c, 0x63, 0x6f, 0x6d, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31,
-	0x42, 0x0a, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2e,
-	0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c,
-	0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x61,
-	0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2, 0x02,
-	0x03, 0x56, 0x58, 0x58, 0xaa, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56, 0x31, 0xca,
-	0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x14, 0x56, 0x61, 0x75,
-	0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74,
-	0x61, 0xea, 0x02, 0x09, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x1a, 0x11, 0x61, 0x6d, 0x69, 0x6e, 0x6f, 0x2f, 0x61, 0x6d, 0x69, 0x6e, 0x6f, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x1a, 0x19, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5f, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1e,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x75, 0x74, 0x68, 0x2f, 0x76, 0x31, 0x62, 0x65,
+	0x74, 0x61, 0x31, 0x2f, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1e,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x73, 0x65, 0x2f, 0x76, 0x31, 0x62, 0x65,
+	0x74, 0x61, 0x31, 0x2f, 0x63, 0x6f, 0x69, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x14,
+	0x67, 0x6f, 0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x22, 0xb4, 0x02, 0x0a, 0x05, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x12, 0x49,
+	0x0a, 0x0c, 0x62, 0x61, 0x73, 0x65, 0x5f, 0x61, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75,
+	0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x42, 0x61, 0x73, 0x65, 0x41,
+	0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x42, 0x04, 0xd0, 0xde, 0x1f, 0x01, 0x52, 0x0b, 0x62, 0x61,
+	0x73, 0x65, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x1f, 0x0a, 0x0b, 0x73, 0x68, 0x61,
+	0x72, 0x65, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a,
+	0x73, 0x68, 0x61, 0x72, 0x65, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x12, 0x8e, 0x01, 0x0a, 0x11, 0x75,
+	0x6e, 0x64, 0x65, 0x72, 0x6c, 0x79, 0x69, 0x6e, 0x67, 0x5f, 0x61, 0x73, 0x73, 0x65, 0x74, 0x73,
+	0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69,
+	0x6e, 0x42, 0x46, 0xc8, 0xde, 0x1f, 0x00, 0xaa, 0xdf, 0x1f, 0x28, 0x67, 0x69, 0x74, 0x68, 0x75,
+	0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x43, 0x6f,
+	0x69, 0x6e, 0x73, 0x9a, 0xe7, 0xb0, 0x2a, 0x0c, 0x6c, 0x65, 0x67, 0x61, 0x63, 0x79, 0x5f, 0x63,
+	0x6f, 0x69, 0x6e, 0x73, 0xa8, 0xe7, 0xb0, 0x2a, 0x01, 0x52, 0x10, 0x75, 0x6e, 0x64, 0x65, 0x72,
+	0x6c, 0x79, 0x69, 0x6e, 0x67, 0x41, 0x73, 0x73, 0x65, 0x74, 0x73, 0x12, 0x2e, 0x0a, 0x05, 0x61,
+	0x64, 0x6d, 0x69, 0x6e, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74,
+	0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x42, 0x8b, 0x01, 0x0a, 0x0c,
+	0x63, 0x6f, 0x6d, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x42, 0x0a, 0x56, 0x61,
+	0x75, 0x6c, 0x74, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2e, 0x67, 0x69, 0x74, 0x68,
+	0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f,
+	0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f,
+	0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x56, 0x58, 0x58,
+	0xaa, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x08, 0x56, 0x61,
+	0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x14, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56,
+	0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x09,
+	0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x33,
 }
 
 var (
@@ -673,14 +855,18 @@ func file_vault_v1_vault_proto_rawDescGZIP() []byte {
 
 var file_vault_v1_vault_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_vault_v1_vault_proto_goTypes = []interface{}{
-	(*Vault)(nil), // 0: vault.v1.Vault
+	(*Vault)(nil),                // 0: vault.v1.Vault
+	(*v1beta11.BaseAccount)(nil), // 1: cosmos.auth.v1beta1.BaseAccount
+	(*v1beta1.Coin)(nil),         // 2: cosmos.base.v1beta1.Coin
 }
 var file_vault_v1_vault_proto_depIdxs = []int32{
-	0, // [0:0] is the sub-list for method output_type
-	0, // [0:0] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	1, // 0: vault.v1.Vault.base_account:type_name -> cosmos.auth.v1beta1.BaseAccount
+	2, // 1: vault.v1.Vault.underlying_assets:type_name -> cosmos.base.v1beta1.Coin
+	2, // [2:2] is the sub-list for method output_type
+	2, // [2:2] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_vault_v1_vault_proto_init() }

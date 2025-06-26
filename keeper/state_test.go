@@ -29,18 +29,18 @@ func TestGetVaults(t *testing.T) {
 	}
 
 	vault1 := types.Vault{
-		VaultAddress: vault1Addr, // Use the generated address as the key
-		Admin:        utils.TestAddress().Bech32,
+		// VaultAddress: vault1Addr, // Use the generated address as the key
+		Admin: utils.TestAddress().Bech32,
 	}
 	vault2 := types.Vault{
-		VaultAddress: vault2Addr, // Use the generated address as the key
-		Admin:        utils.TestAddress().Bech32,
+		// VaultAddress: vault2Addr, // Use the generated address as the key
+		Admin: utils.TestAddress().Bech32,
 	}
 
 	// Set vaults using their Bech32 addresses as keys
-	err = k.Vaults.Set(ctx, sdk.MustAccAddressFromBech32(vault1.VaultAddress), vault1)
+	err = k.Vaults.Set(ctx, sdk.MustAccAddressFromBech32(vault1.Address), vault1)
 	require.NoError(t, err, "expected no error setting the first vault")
-	err = k.Vaults.Set(ctx, sdk.MustAccAddressFromBech32(vault2.VaultAddress), vault2)
+	err = k.Vaults.Set(ctx, sdk.MustAccAddressFromBech32(vault2.Address), vault2)
 	require.NoError(t, err, "expected no error setting the second vault")
 
 	vaults, err = k.GetVaults(ctx)
@@ -48,6 +48,6 @@ func TestGetVaults(t *testing.T) {
 	require.NoError(t, err, "expected no error when vaults are present")
 	require.Len(t, vaults, 2, "expected two vaults")
 	// Assert using the vault addresses as keys
-	require.Equal(t, vault1, vaults[vault1.VaultAddress], "expected correct value for the first vault")
-	require.Equal(t, vault2, vaults[vault2.VaultAddress], "expected correct value for the second vault")
+	require.Equal(t, vault1, vaults[vault1.Address], "expected correct value for the first vault")
+	require.Equal(t, vault2, vaults[vault2.Address], "expected correct value for the second vault")
 }

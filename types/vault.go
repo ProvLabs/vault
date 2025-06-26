@@ -2,12 +2,10 @@ package types
 
 import (
 	fmt "fmt"
-	"slices"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	proto "github.com/cosmos/gogoproto/proto"
-	"github.com/provlabs/vault/utils"
 )
 
 var (
@@ -36,19 +34,16 @@ type VaultAccountI interface {
 	GetShareDenom() string
 
 	// GetUnderlyingAssets returns the list of assets backing the vault.
-	GetUnderlyingAssets() sdk.Coins
+	GetUnderlyingAssets() []string
 }
 
 // NewVault creates a new vault.
 func NewVault(baseAcc *authtypes.BaseAccount, admin string, shareDenom string, underlyingAssets []string) *Vault {
-	coins := utils.Map(underlyingAssets, func(denom string) sdk.Coin {
-		return sdk.NewInt64Coin(denom, 0)
-	})
 	return &Vault{
 		BaseAccount:      baseAcc,
 		Admin:            admin,
 		ShareDenom:       shareDenom,
-		UnderlyingAssets: sdk.NewCoins(slices.Collect(coins)...),
+		UnderlyingAssets: underlyingAssets,
 	}
 }
 
@@ -65,8 +60,8 @@ func (va Vault) Validate() error {
 	if err := sdk.ValidateDenom(va.ShareDenom); err != nil {
 		return fmt.Errorf("invalid share denom: %w", err)
 	}
-	if !va.UnderlyingAssets.IsValid() {
-		return fmt.Errorf("invalid underlying assets: %s", va.UnderlyingAssets.String())
-	}
+	// if !va.UnderlyingAssets.IsValid() {
+	// 	return fmt.Errorf("invalid underlying assets: %s", va.UnderlyingAssets.String())
+	// }
 	return nil
 }

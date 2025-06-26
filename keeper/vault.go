@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
-	"github.com/provlabs/vault/types"
 )
 
 const (
@@ -17,8 +16,7 @@ const (
 )
 
 // CreateVaultMarker creates, finalizes, and activates a new restricted marker for the vault's share denomination.
-func (k *Keeper) CreateVaultMarker(ctx sdk.Context, shareDenom, underlyingAsset string) (*markertypes.MarkerAccount, error) {
-	markerManager := authtypes.NewModuleAddress(types.ModuleName)
+func (k *Keeper) CreateVaultMarker(ctx sdk.Context, markerManager sdk.AccAddress, shareDenom, underlyingAsset string) (*markertypes.MarkerAccount, error) {
 
 	vaultShareMarkerAddress := markertypes.MustGetMarkerAddress(shareDenom)
 	if found := k.MarkerKeeper.IsMarkerAccount(ctx, vaultShareMarkerAddress); found {

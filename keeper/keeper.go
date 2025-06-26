@@ -20,6 +20,7 @@ type Keeper struct {
 	addressCodec address.Codec
 	authority    []byte
 
+	AuthKeeper   types.AccountKeeper
 	MarkerKeeper types.MarkerKeeper
 
 	Params collections.Item[types.Params]
@@ -32,6 +33,7 @@ func NewKeeper(
 	eventService event.Service,
 	addressCodec address.Codec,
 	authority []byte,
+	authKeeper types.AccountKeeper,
 	markerkeeper types.MarkerKeeper,
 ) *Keeper {
 	if _, err := addressCodec.BytesToString(authority); err != nil {
@@ -46,6 +48,7 @@ func NewKeeper(
 		authority:    authority,
 		Params:       collections.NewItem(builder, types.ParamsKeyPrefix, types.ParamsName, codec.CollValue[types.Params](cdc)),
 		Vaults:       collections.NewMap(builder, types.VaultsKeyPrefix, types.VaultsName, sdk.AccAddressKey, codec.CollValue[types.Vault](cdc)),
+		AuthKeeper:   authKeeper,
 		MarkerKeeper: markerkeeper,
 	}
 

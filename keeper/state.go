@@ -26,7 +26,7 @@ func (k *Keeper) SetVault(ctx context.Context, vault *types.Vault) error {
 		return errors.New("vault cannot be nil")
 	}
 
-	addr, err := sdk.AccAddressFromBech32(vault.VaultAddress)
+	addr, err := sdk.AccAddressFromBech32(vault.Address)
 	if err != nil {
 		return err
 	}

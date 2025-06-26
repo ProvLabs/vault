@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"testing"
 
@@ -44,8 +43,7 @@ func (s *TestSuite) TestMsgServer_CreateVault() {
 		ShareDenom      string
 		Admin           string
 	}
-	coins := sdk.NewCoins(sdk.NewCoin("test", math.Int(math.ZeroUint())))
-	fmt.Printf("%v", coins)
+
 	testDef := msgServerTestDef[types.MsgCreateVaultRequest, types.MsgCreateVaultResponse, postCheckArgs]{
 		endpointName: "CreateVault",
 		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).CreateVault,
@@ -63,7 +61,7 @@ func (s *TestSuite) TestMsgServer_CreateVault() {
 
 			access := marker.GetAccessList()
 			s.Len(access, 1)
-			s.Equal(authtypes.NewModuleAddress(types.ModuleName).String(), access[0].Address, "vault marker access should be granted to admin")
+			s.Equal(types.GetVaultAddress(postCheckArgs.ShareDenom).String(), access[0].Address, "vault marker access should be granted to vault account")
 			s.ElementsMatch(
 				[]markertypes.Access{
 					markertypes.Access_Admin,
@@ -82,7 +80,8 @@ func (s *TestSuite) TestMsgServer_CreateVault() {
 			s.Require().True(ok, "account type should be VaultAccountI")
 			s.Equal(postCheckArgs.Admin, vaultAcc.GetAdmin())
 			s.Equal(types.GetVaultAddress(postCheckArgs.ShareDenom).String(), vaultAcc.GetAddress().String())
-			s.Equal(postCheckArgs.UnderlyingAsset, vaultAcc.GetUnderlyingAssets()[0].Denom)
+			s.Len(vaultAcc.GetUnderlyingAssets(), 1)
+			s.Equal(postCheckArgs.UnderlyingAsset, vaultAcc.GetUnderlyingAssets()[0])
 		},
 	}
 
@@ -108,33 +107,34 @@ func (s *TestSuite) TestMsgServer_CreateVault() {
 			ShareDenom:      sharedenom,
 			Admin:           admin,
 		},
-		// expectedEvents: sdk.Events{
-		// 	sdk.NewEvent("provenance.marker.v1.EventMarkerAdd",
-		// 		sdk.NewAttribute("address", "provlabs157rf76qwxlttnjyncsaxvelc96m9e5eedpymea"),
-		// 		sdk.NewAttribute("amount", "0"),
-		// 		sdk.NewAttribute("denom", "jackthecat"),
-		// 		sdk.NewAttribute("manager", "provlabs1umc2r7a58jy3jmw0e0hctyy0rx45chmucvk52e"),
-		// 		sdk.NewAttribute("marker_type", "MARKER_TYPE_RESTRICTED"),
-		// 		sdk.NewAttribute("status", "proposed"),
-		// 	),
-		// 	sdk.NewEvent("provenance.marker.v1.EventMarkerFinalize",
-		// 		sdk.NewAttribute("administrator", "provlabs1umc2r7a58jy3jmw0e0hctyy0rx45chmucvk52e"),
-		// 		sdk.NewAttribute("denom", "jackthecat"),
-		// 	),
-		// 	sdk.NewEvent("provenance.marker.v1.EventMarkerActivate",
-		// 		sdk.NewAttribute("administrator", "provlabs1umc2r7a58jy3jmw0e0hctyy0rx45chmucvk52e"),
-		// 		sdk.NewAttribute("denom", "jackthecat"),
-		// 	),
-		// 	sdk.NewEvent("vault.v1.EventVaultCreated",
-		// 		sdk.NewAttribute("admin", "provlabs1v9jx66twg9jxgujlta047h6lta047h6l7pxv8u"),
-		// 		sdk.NewAttribute("share_denom", "jackthecat"),
-		// 		sdk.NewAttribute("underlying_asset", "undercoin"),
-		// 	),
-		// },
+		expectedEvents: sdk.Events{
+			sdk.NewEvent("provenance.marker.v1.EventMarkerAdd",
+				sdk.NewAttribute("address", "provlabs157rf76qwxlttnjyncsaxvelc96m9e5eedpymea"),
+				sdk.NewAttribute("amount", "0"),
+				sdk.NewAttribute("denom", "jackthecat"),
+				sdk.NewAttribute("manager", "provlabs1addaf30l2p7wjjap2us5ckudqzusp7fhhz80h6"),
+				sdk.NewAttribute("marker_type", "MARKER_TYPE_RESTRICTED"),
+				sdk.NewAttribute("status", "proposed"),
+			),
+			sdk.NewEvent("provenance.marker.v1.EventMarkerFinalize",
+				sdk.NewAttribute("administrator", "provlabs1addaf30l2p7wjjap2us5ckudqzusp7fhhz80h6"),
+				sdk.NewAttribute("denom", "jackthecat"),
+			),
+			sdk.NewEvent("provenance.marker.v1.EventMarkerActivate",
+				sdk.NewAttribute("administrator", "provlabs1addaf30l2p7wjjap2us5ckudqzusp7fhhz80h6"),
+				sdk.NewAttribute("denom", "jackthecat"),
+			),
+			sdk.NewEvent("vault.v1.EventVaultCreated",
+				sdk.NewAttribute("admin", "provlabs1v9jx66twg9jxgujlta047h6lta047h6l7pxv8u"),
+				sdk.NewAttribute("share_denom", "jackthecat"),
+				sdk.NewAttribute("underlying_asset", "undercoin"),
+				sdk.NewAttribute("vault_address", "provlabs1addaf30l2p7wjjap2us5ckudqzusp7fhhz80h6"),
+			),
+		},
 	}
 
 	testDef.expectedResponse = &types.MsgCreateVaultResponse{
-		VaultAddress: markertypes.MustGetMarkerAddress(sharedenom).String(),
+		VaultAddress: types.GetVaultAddress(sharedenom).String(),
 	}
 
 	runMsgServerTestCase(s, testDef, tc)

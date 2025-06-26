@@ -57,6 +57,22 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 // RegisterInterfaces registers vault interfaces to the interface registry.
 func (AppModuleBasic) RegisterInterfaces(reg codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(reg)
+
+	reg.RegisterInterface(
+		"vault.v1.Vault",
+		(*types.VaultAccountI)(nil),
+		&types.Vault{},
+	)
+	reg.RegisterInterface(
+		"vault.v1.Vault",
+		(*sdk.AccountI)(nil),
+		&types.Vault{},
+	)
+	reg.RegisterInterface(
+		"vault.v1.Vault",
+		(*authtypes.GenesisAccount)(nil),
+		&types.Vault{},
+	)
 }
 
 // RegisterGRPCGatewayRoutes sets up gRPC gateway routes.
@@ -163,6 +179,7 @@ type ModuleInputs struct {
 	EventService  event.Service
 	Codec         codec.Codec
 	AddressCodec  address.Codec
+	AuthKeeper    types.AccountKeeper
 	MarkerKeeper  types.MarkerKeeper
 }
 
@@ -186,6 +203,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.EventService,
 		in.AddressCodec,
 		authority,
+		in.AuthKeeper,
 		in.MarkerKeeper,
 	)
 	m := NewAppModule(k, in.AddressCodec)

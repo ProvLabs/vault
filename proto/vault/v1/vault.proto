@@ -18,12 +18,7 @@ message Vault {
   // share_denom is the denomination used to represent shares in the vault (e.g., vault tokens).
   string share_denom = 2;
   // underlying_assets specifies the denomination(s) of the asset(s) managed by the vault.
-  repeated cosmos.base.v1beta1.Coin underlying_assets = 3 [
-    (gogoproto.nullable)     = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
-    (amino.dont_omitempty)   = true,
-    (amino.encoding)         = "legacy_coins"
-  ];
+  repeated string underlying_assets = 3; 
   // admin is the address that has administrative privileges over the vault.
   string admin = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }

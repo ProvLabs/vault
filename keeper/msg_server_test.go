@@ -26,14 +26,6 @@ type TestSuite struct {
 	adminAddr sdk.AccAddress
 }
 
-func (s *TestSuite) Context() sdk.Context {
-	return s.ctx
-}
-
-func (s *TestSuite) SetContext(ctx sdk.Context) {
-	s.ctx = ctx
-}
-
 func (s *TestSuite) SetupTest() {
 	s.simApp = simapp.Setup(s.T())
 	s.ctx = s.simApp.NewContext(false)
@@ -57,11 +49,10 @@ func (s *TestSuite) TestMsgServer_CreateVault() {
 	testDef := msgServerTestDef[types.MsgCreateVaultRequest, types.MsgCreateVaultResponse, postCheckArgs]{
 		endpointName: "CreateVault",
 		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).CreateVault,
-		postCheck: func(msg *types.MsgCreateVaultRequest, fargs postCheckArgs) {
-			vaultDenom := fargs.ShareDenom
-			vaultAddr := markertypes.MustGetMarkerAddress(vaultDenom)
+		postCheck: func(msg *types.MsgCreateVaultRequest, postCheckArgs postCheckArgs) {
+			markerAddr := markertypes.MustGetMarkerAddress(postCheckArgs.ShareDenom)
 
-			marker, err := s.simApp.MarkerKeeper.GetMarker(s.ctx, vaultAddr)
+			marker, err := s.simApp.MarkerKeeper.GetMarker(s.ctx, markerAddr)
 			s.Require().NoError(err, "marker should exist")
 
 			s.EqualValues(0, marker.GetSupply().Amount.Int64(), "vault marker supply should be zero")
@@ -85,12 +76,13 @@ func (s *TestSuite) TestMsgServer_CreateVault() {
 			)
 
 			// Check vault record exists
-			vault, err := s.k.Vaults.Get(s.ctx, vaultAddr)
-			s.Require().NoError(err, "vault should exist in state")
-			s.Equal(fargs.Admin, vault.Admin)
-			s.Equal(markertypes.MustGetMarkerAddress(fargs.ShareDenom).String(), vault.VaultAddress)
-			s.Equal(fargs.UnderlyingAsset, vault.UnderlyingAsset)
-			s.Equal(vaultAddr.String(), vault.VaultAddress)
+			account := s.simApp.AccountKeeper.GetAccount(s.ctx, types.GetVaultAddress(postCheckArgs.ShareDenom))
+			s.Require().NotNil(account, "vault should exist in state")
+			vaultAcc, ok := account.(types.VaultAccountI)
+			s.Require().True(ok, "account type should be VaultAccountI")
+			s.Equal(postCheckArgs.Admin, vaultAcc.GetAdmin())
+			s.Equal(types.GetVaultAddress(postCheckArgs.ShareDenom).String(), vaultAcc.GetAddress().String())
+			s.Equal(postCheckArgs.UnderlyingAsset, vaultAcc.GetUnderlyingAssets()[0].Denom)
 		},
 	}
 

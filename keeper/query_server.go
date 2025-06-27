@@ -29,18 +29,19 @@ func (k queryServer) Vaults(goCtx context.Context, req *types.QueryVaultsRequest
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	var vaults []types.VaultAccount
+	vaults := []types.VaultAccount{}
 
 	_, pageRes, err := query.CollectionFilteredPaginate(
 		ctx,
 		k.Keeper.Vaults,
 		req.Pagination,
-		func(key sdk.AccAddress, vault types.VaultAccount) (include bool, err error) {
-			vaults = append(vaults, vault)
+		func(key sdk.AccAddress, val []byte) (include bool, err error) {
+			vault, _ := k.GetVault(ctx, key)
+			vaults = append(vaults, *vault)
 			return true, nil
 		},
-		func(_ sdk.AccAddress, value types.VaultAccount) (*types.VaultAccount, error) {
-			return &value, nil
+		func(_ sdk.AccAddress, value []byte) ([]byte, error) {
+			return value, nil
 		},
 	)
 	if err != nil {
@@ -66,13 +67,13 @@ func (k queryServer) Vault(goCtx context.Context, req *types.QueryVaultRequest) 
 		return nil, status.Errorf(codes.InvalidArgument, "invalid vault_address: %v", err)
 	}
 
-	vault, err := k.Keeper.Vaults.Get(ctx, vaultAddr)
+	vault, err := k.GetVault(ctx, vaultAddr)
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "vault with address %q not found", req.VaultAddress)
 	}
 
 	return &types.QueryVaultResponse{
-		Vault: vault,
+		Vault: *vault,
 	}, nil
 }
 

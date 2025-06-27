@@ -24,7 +24,7 @@ type Keeper struct {
 	MarkerKeeper types.MarkerKeeper
 
 	Params collections.Item[types.Params]
-	Vaults collections.Map[sdk.AccAddress, types.VaultAccount]
+	Vaults collections.Map[sdk.AccAddress, []byte]
 }
 
 func NewKeeper(
@@ -47,7 +47,7 @@ func NewKeeper(
 		addressCodec: addressCodec,
 		authority:    authority,
 		Params:       collections.NewItem(builder, types.ParamsKeyPrefix, types.ParamsName, codec.CollValue[types.Params](cdc)),
-		Vaults:       collections.NewMap(builder, types.VaultsKeyPrefix, types.VaultsName, sdk.AccAddressKey, codec.CollValue[types.VaultAccount](cdc)),
+		Vaults:       collections.NewMap(builder, types.VaultsKeyPrefix, types.VaultsName, sdk.AccAddressKey, collections.BytesValue),
 		AuthKeeper:   authKeeper,
 		MarkerKeeper: markerkeeper,
 	}

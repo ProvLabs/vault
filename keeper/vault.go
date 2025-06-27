@@ -16,6 +16,19 @@ const (
 	NoGovControl    = false
 )
 
+// GetVault finds a vault by a given address
+func (k Keeper) GetVault(ctx sdk.Context, address sdk.AccAddress) (*types.VaultAccount, error) {
+	mac := k.AuthKeeper.GetAccount(ctx, address)
+	if mac != nil {
+		macc, ok := mac.(*types.VaultAccount)
+		if !ok {
+			return nil, fmt.Errorf("account at %s is not a vault account", address.String())
+		}
+		return macc, nil
+	}
+	return nil, nil
+}
+
 // CreateVaultAccount creates and stores a new vault account.
 func (k *Keeper) CreateVaultAccount(ctx sdk.Context, admin, shareDenom, underlyingAsset string) (*types.VaultAccount, error) {
 	vaultAddr := types.GetVaultAddress(shareDenom)

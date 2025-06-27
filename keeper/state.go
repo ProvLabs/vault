@@ -9,11 +9,11 @@ import (
 )
 
 // GetVaults is a helper function for retrieving all vaults from state.
-func (k *Keeper) GetVaults(ctx context.Context) (map[string]types.VaultAccount, error) {
-	vaults := map[string]types.VaultAccount{}
+func (k *Keeper) GetVaults(ctx context.Context) ([]sdk.AccAddress, error) {
+	vaults := []sdk.AccAddress{}
 
-	err := k.Vaults.Walk(ctx, nil, func(key sdk.AccAddress, vault types.VaultAccount) (stop bool, err error) {
-		vaults[key.String()] = vault
+	err := k.Vaults.Walk(ctx, nil, func(key sdk.AccAddress, val []byte) (stop bool, err error) {
+		vaults = append(vaults, key)
 		return false, nil
 	})
 
@@ -31,7 +31,7 @@ func (k *Keeper) SetVault(ctx context.Context, vault *types.VaultAccount) error 
 		return err
 	}
 
-	return k.Vaults.Set(ctx, addr, *vault)
+	return k.Vaults.Set(ctx, addr, []byte{})
 }
 
 // GetVaults is a helper function for retrieving all vaults from state.

@@ -10,6 +10,7 @@ import (
 	"github.com/provlabs/vault/utils/mocks"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 func TestGetVaults(t *testing.T) {
@@ -29,12 +30,12 @@ func TestGetVaults(t *testing.T) {
 	}
 
 	vault1 := types.VaultAccount{
-		// VaultAddress: vault1Addr, // Use the generated address as the key
-		Admin: utils.TestAddress().Bech32,
+		BaseAccount: authtypes.NewBaseAccountWithAddress(types.GetVaultAddress("address1")),
+		Admin:       utils.TestAddress().Bech32,
 	}
 	vault2 := types.VaultAccount{
-		// VaultAddress: vault2Addr, // Use the generated address as the key
-		Admin: utils.TestAddress().Bech32,
+		BaseAccount: authtypes.NewBaseAccountWithAddress(types.GetVaultAddress("address2")),
+		Admin:       utils.TestAddress().Bech32,
 	}
 
 	// Set vaults using their Bech32 addresses as keys

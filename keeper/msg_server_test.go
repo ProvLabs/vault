@@ -3,39 +3,14 @@ package keeper_test
 import (
 	"context"
 	"strings"
-	"testing"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provlabs/vault/keeper"
-	"github.com/provlabs/vault/simapp"
 	"github.com/provlabs/vault/types"
-	suite "github.com/stretchr/testify/suite"
 )
-
-type TestSuite struct {
-	suite.Suite
-	simApp *simapp.SimApp
-	ctx    sdk.Context
-
-	k keeper.Keeper
-
-	adminAddr sdk.AccAddress
-}
-
-func (s *TestSuite) SetupTest() {
-	s.simApp = simapp.Setup(s.T())
-	s.ctx = s.simApp.NewContext(false)
-	s.k = *s.simApp.VaultKeeper
-
-	s.adminAddr = sdk.AccAddress("adminAddr___________")
-}
-
-func TestKeeperTestSuite(t *testing.T) {
-	suite.Run(t, new(TestSuite))
-}
 
 func (s *TestSuite) TestMsgServer_CreateVault() {
 	type postCheckArgs struct {
@@ -138,7 +113,7 @@ func (s *TestSuite) TestMsgServer_CreateVault() {
 			sdk.NewEvent("vault.v1.EventVaultCreated",
 				sdk.NewAttribute("admin", admin),
 				sdk.NewAttribute("share_denom", sharedenom),
-				sdk.NewAttribute("underlying_asset", underlying),
+				sdk.NewAttribute("underlying_assets", "[\"undercoin\"]"),
 				sdk.NewAttribute("vault_address", vaultAddr.String()),
 			),
 		},

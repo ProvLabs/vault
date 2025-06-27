@@ -59,19 +59,19 @@ func (AppModuleBasic) RegisterInterfaces(reg codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(reg)
 
 	reg.RegisterInterface(
-		"vault.v1.Vault",
+		"vault.v1.VaultAccount",
 		(*types.VaultAccountI)(nil),
-		&types.Vault{},
+		&types.VaultAccount{},
 	)
 	reg.RegisterInterface(
-		"vault.v1.Vault",
+		"vault.v1.VaultAccount",
 		(*sdk.AccountI)(nil),
-		&types.Vault{},
+		&types.VaultAccount{},
 	)
 	reg.RegisterInterface(
-		"vault.v1.Vault",
+		"vault.v1.VaultAccount",
 		(*authtypes.GenesisAccount)(nil),
-		&types.Vault{},
+		&types.VaultAccount{},
 	)
 }
 

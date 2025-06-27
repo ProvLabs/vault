@@ -29,17 +29,17 @@ func (k queryServer) Vaults(goCtx context.Context, req *types.QueryVaultsRequest
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	var vaults []types.Vault
+	var vaults []types.VaultAccount
 
 	_, pageRes, err := query.CollectionFilteredPaginate(
 		ctx,
 		k.Keeper.Vaults,
 		req.Pagination,
-		func(key sdk.AccAddress, vault types.Vault) (include bool, err error) {
+		func(key sdk.AccAddress, vault types.VaultAccount) (include bool, err error) {
 			vaults = append(vaults, vault)
 			return true, nil
 		},
-		func(_ sdk.AccAddress, value types.Vault) (*types.Vault, error) {
+		func(_ sdk.AccAddress, value types.VaultAccount) (*types.VaultAccount, error) {
 			return &value, nil
 		},
 	)

@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	_ sdk.AccountI             = (*Vault)(nil)
-	_ authtypes.GenesisAccount = (*Vault)(nil)
+	_ sdk.AccountI             = (*VaultAccount)(nil)
+	_ authtypes.GenesisAccount = (*VaultAccount)(nil)
 )
 
 // VaultAccountI defines the interface for a Vault account.
@@ -22,7 +22,7 @@ type VaultAccountI interface {
 	sdk.AccountI
 
 	// Clone returns a deep copy of the vault.
-	Clone() *Vault
+	Clone() *VaultAccount
 
 	// Validate verifies the vault’s integrity and internal fields.
 	Validate() error
@@ -37,9 +37,9 @@ type VaultAccountI interface {
 	GetUnderlyingAssets() []string
 }
 
-// NewVault creates a new vault.
-func NewVault(baseAcc *authtypes.BaseAccount, admin string, shareDenom string, underlyingAssets []string) *Vault {
-	return &Vault{
+// NewVaultAccount creates a new vault.
+func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin string, shareDenom string, underlyingAssets []string) *VaultAccount {
+	return &VaultAccount{
 		BaseAccount:      baseAcc,
 		Admin:            admin,
 		ShareDenom:       shareDenom,
@@ -48,12 +48,12 @@ func NewVault(baseAcc *authtypes.BaseAccount, admin string, shareDenom string, u
 }
 
 // Clone makes a MarkerAccount instance copy
-func (va Vault) Clone() *Vault {
-	return proto.Clone(&va).(*Vault)
+func (va VaultAccount) Clone() *VaultAccount {
+	return proto.Clone(&va).(*VaultAccount)
 }
 
 // Validate performs basic validation on the vault fields.
-func (va Vault) Validate() error {
+func (va VaultAccount) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(va.Admin); err != nil {
 		return fmt.Errorf("invalid admin address: %w", err)
 	}

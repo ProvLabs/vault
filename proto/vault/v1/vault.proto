@@ -10,9 +10,9 @@ import "gogoproto/gogo.proto";
 
 option go_package = "github.com/provlabs/vault/types";
 
-// Vault represents a central holding place for assets, governed by a set of rules.
+// VaultAccount represents a central holding place for assets, governed by a set of rules.
 // It is based on the ERC-4626 standard and builds upon the Provenance Marker module.
-message Vault {
+message VaultAccount {
   // base_account cosmos account information including address and coin holdings.
   cosmos.auth.v1beta1.BaseAccount base_account = 1 [(gogoproto.embed) = true];
   // share_denom is the denomination used to represent shares in the vault (e.g., vault tokens).

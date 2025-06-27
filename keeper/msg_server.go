@@ -29,7 +29,7 @@ func (k msgServer) CreateVault(goCtx context.Context, msg *types.MsgCreateVaultR
 	}
 
 	vaultAddr := types.GetVaultAddress(msg.ShareDenom)
-	vault := types.NewVault(authtypes.NewBaseAccountWithAddress(vaultAddr), msg.Admin, msg.ShareDenom, []string{msg.UnderlyingAsset})
+	vault := types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(vaultAddr), msg.Admin, msg.ShareDenom, []string{msg.UnderlyingAsset})
 	if err := k.SetVault(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to store new vault: %w", err)
 	}

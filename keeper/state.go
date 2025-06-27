@@ -9,10 +9,10 @@ import (
 )
 
 // GetVaults is a helper function for retrieving all vaults from state.
-func (k *Keeper) GetVaults(ctx context.Context) (map[string]types.Vault, error) {
-	vaults := map[string]types.Vault{}
+func (k *Keeper) GetVaults(ctx context.Context) (map[string]types.VaultAccount, error) {
+	vaults := map[string]types.VaultAccount{}
 
-	err := k.Vaults.Walk(ctx, nil, func(key sdk.AccAddress, vault types.Vault) (stop bool, err error) {
+	err := k.Vaults.Walk(ctx, nil, func(key sdk.AccAddress, vault types.VaultAccount) (stop bool, err error) {
 		vaults[key.String()] = vault
 		return false, nil
 	})
@@ -21,7 +21,7 @@ func (k *Keeper) GetVaults(ctx context.Context) (map[string]types.Vault, error) 
 }
 
 // Sets a vault in the store, using its address as the key.
-func (k *Keeper) SetVault(ctx context.Context, vault *types.Vault) error {
+func (k *Keeper) SetVault(ctx context.Context, vault *types.VaultAccount) error {
 	if vault == nil {
 		return errors.New("vault cannot be nil")
 	}

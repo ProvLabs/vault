@@ -28,11 +28,11 @@ func TestGetVaults(t *testing.T) {
 		vault2Addr = utils.TestAddress().Bech32
 	}
 
-	vault1 := types.Vault{
+	vault1 := types.VaultAccount{
 		// VaultAddress: vault1Addr, // Use the generated address as the key
 		Admin: utils.TestAddress().Bech32,
 	}
-	vault2 := types.Vault{
+	vault2 := types.VaultAccount{
 		// VaultAddress: vault2Addr, // Use the generated address as the key
 		Admin: utils.TestAddress().Bech32,
 	}

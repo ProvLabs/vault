@@ -69,7 +69,7 @@ func SimulateMsgCreateVault(k keeper.Keeper) simtypes.Operation {
 		}
 
 		handler := keeper.NewMsgServer(&k)
-		_, err = handler.CreateVault(sdk.WrapSDKContext(ctx), msg)
+		_, err := handler.CreateVault(sdk.WrapSDKContext(ctx), msg)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 		}

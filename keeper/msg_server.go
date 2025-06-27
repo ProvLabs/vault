@@ -37,12 +37,7 @@ func (k msgServer) CreateVault(goCtx context.Context, msg *types.MsgCreateVaultR
 		return nil, fmt.Errorf("failed to create vault marker: %w", err)
 	}
 
-	k.emitEvent(ctx, types.NewEventVaultCreated(
-		vault.Address,
-		msg.Admin,
-		msg.ShareDenom,
-		msg.UnderlyingAsset,
-	))
+	k.emitEvent(ctx, types.NewEventVaultCreated(vault))
 
 	return &types.MsgCreateVaultResponse{
 		VaultAddress: vault.Address,

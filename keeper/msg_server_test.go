@@ -42,6 +42,7 @@ func (s *TestSuite) TestMsgServer_CreateVault() {
 		UnderlyingAsset string
 		ShareDenom      string
 		Admin           string
+		VaultAddr       sdk.AccAddress
 	}
 
 	testDef := msgServerTestDef[types.MsgCreateVaultRequest, types.MsgCreateVaultResponse, postCheckArgs]{
@@ -74,20 +75,29 @@ func (s *TestSuite) TestMsgServer_CreateVault() {
 			)
 
 			// Check vault record exists
-			account := s.simApp.AccountKeeper.GetAccount(s.ctx, types.GetVaultAddress(postCheckArgs.ShareDenom))
-			s.Require().NotNil(account, "vault should exist in state")
+			account := s.simApp.AccountKeeper.GetAccount(s.ctx, postCheckArgs.VaultAddr)
+			s.Require().NotNil(account, "expected vault account to exist in state")
 			vaultAcc, ok := account.(types.VaultAccountI)
-			s.Require().True(ok, "account type should be VaultAccountI")
-			s.Equal(postCheckArgs.Admin, vaultAcc.GetAdmin())
-			s.Equal(types.GetVaultAddress(postCheckArgs.ShareDenom).String(), vaultAcc.GetAddress().String())
-			s.Len(vaultAcc.GetUnderlyingAssets(), 1)
-			s.Equal(postCheckArgs.UnderlyingAsset, vaultAcc.GetUnderlyingAssets()[0])
+			s.Require().True(ok, "expected account to be of type VaultAccountI")
+			s.Equal(postCheckArgs.Admin, vaultAcc.GetAdmin(), "expected vault admin to match requested admin address")
+			s.Equal(
+				types.GetVaultAddress(postCheckArgs.ShareDenom),
+				vaultAcc.GetAddress(),
+				"expected vault address to match derived address from share denom",
+			)
+			s.Len(vaultAcc.GetUnderlyingAssets(), 1, "expected vault to contain exactly one underlying asset")
+			s.Equal(
+				postCheckArgs.UnderlyingAsset,
+				vaultAcc.GetUnderlyingAssets()[0],
+				"expected vault underlying asset denom to match request",
+			)
 		},
 	}
 
 	underlying := "undercoin"
 	sharedenom := "jackthecat"
 	admin := s.adminAddr.String()
+	vaultAddr := types.GetVaultAddress(sharedenom)
 
 	vaultReq := types.MsgCreateVaultRequest{
 		Admin:           admin,
@@ -106,29 +116,30 @@ func (s *TestSuite) TestMsgServer_CreateVault() {
 			UnderlyingAsset: underlying,
 			ShareDenom:      sharedenom,
 			Admin:           admin,
+			VaultAddr:       vaultAddr,
 		},
 		expectedEvents: sdk.Events{
 			sdk.NewEvent("provenance.marker.v1.EventMarkerAdd",
 				sdk.NewAttribute("address", "provlabs157rf76qwxlttnjyncsaxvelc96m9e5eedpymea"),
 				sdk.NewAttribute("amount", "0"),
-				sdk.NewAttribute("denom", "jackthecat"),
-				sdk.NewAttribute("manager", "provlabs1addaf30l2p7wjjap2us5ckudqzusp7fhhz80h6"),
+				sdk.NewAttribute("denom", sharedenom),
+				sdk.NewAttribute("manager", vaultAddr.String()),
 				sdk.NewAttribute("marker_type", "MARKER_TYPE_RESTRICTED"),
 				sdk.NewAttribute("status", "proposed"),
 			),
 			sdk.NewEvent("provenance.marker.v1.EventMarkerFinalize",
-				sdk.NewAttribute("administrator", "provlabs1addaf30l2p7wjjap2us5ckudqzusp7fhhz80h6"),
-				sdk.NewAttribute("denom", "jackthecat"),
+				sdk.NewAttribute("administrator", vaultAddr.String()),
+				sdk.NewAttribute("denom", sharedenom),
 			),
 			sdk.NewEvent("provenance.marker.v1.EventMarkerActivate",
-				sdk.NewAttribute("administrator", "provlabs1addaf30l2p7wjjap2us5ckudqzusp7fhhz80h6"),
-				sdk.NewAttribute("denom", "jackthecat"),
+				sdk.NewAttribute("administrator", vaultAddr.String()),
+				sdk.NewAttribute("denom", sharedenom),
 			),
 			sdk.NewEvent("vault.v1.EventVaultCreated",
-				sdk.NewAttribute("admin", "provlabs1v9jx66twg9jxgujlta047h6lta047h6l7pxv8u"),
-				sdk.NewAttribute("share_denom", "jackthecat"),
-				sdk.NewAttribute("underlying_asset", "undercoin"),
-				sdk.NewAttribute("vault_address", "provlabs1addaf30l2p7wjjap2us5ckudqzusp7fhhz80h6"),
+				sdk.NewAttribute("admin", admin),
+				sdk.NewAttribute("share_denom", sharedenom),
+				sdk.NewAttribute("underlying_asset", underlying),
+				sdk.NewAttribute("vault_address", vaultAddr.String()),
 			),
 		},
 	}

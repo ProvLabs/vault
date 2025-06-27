@@ -60,8 +60,15 @@ func (va VaultAccount) Validate() error {
 	if err := sdk.ValidateDenom(va.ShareDenom); err != nil {
 		return fmt.Errorf("invalid share denom: %w", err)
 	}
-	// if !va.UnderlyingAssets.IsValid() {
-	// 	return fmt.Errorf("invalid underlying assets: %s", va.UnderlyingAssets.String())
-	// }
+
+	if len(va.UnderlyingAssets) < 1 {
+		return fmt.Errorf("at least one underlying asset is required")
+	}
+
+	for _, denom := range va.UnderlyingAssets {
+		if err := sdk.ValidateDenom(denom); err != nil {
+			return fmt.Errorf("invalid underlying asset denom: %s", denom)
+		}
+	}
 	return nil
 }

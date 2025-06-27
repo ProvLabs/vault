@@ -11,6 +11,7 @@ require (
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/errors v1.0.1
 	cosmossdk.io/log v1.5.0
+	cosmossdk.io/math v1.4.0
 	cosmossdk.io/store v1.1.1
 	github.com/cometbft/cometbft v0.38.17
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
@@ -38,7 +39,6 @@ require (
 	cloud.google.com/go/compute/metadata v0.6.0 // indirect
 	cloud.google.com/go/iam v1.2.0 // indirect
 	cloud.google.com/go/storage v1.43.0 // indirect
-	cosmossdk.io/math v1.4.0 // indirect
 	cosmossdk.io/x/feegrant v0.1.1 // indirect
 	cosmossdk.io/x/tx v0.13.8 // indirect
 	cosmossdk.io/x/upgrade v0.1.4 // indirect

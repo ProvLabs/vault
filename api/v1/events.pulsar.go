@@ -2249,7 +2249,7 @@ type EventVaultCreated struct {
 	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
 	// share_denom is the name of the assets created by the vault used for distribution.
 	ShareDenom string `protobuf:"bytes,3,opt,name=share_denom,json=shareDenom,proto3" json:"share_denom,omitempty"`
-	// underlying_assets is the denomination of the asset supported by the vault.
+	// underlying_assets is the denominations of the assets supported by the vault.
 	UnderlyingAssets []string `protobuf:"bytes,4,rep,name=underlying_assets,json=underlyingAssets,proto3" json:"underlying_assets,omitempty"`
 }
 

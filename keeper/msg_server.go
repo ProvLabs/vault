@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provlabs/vault/types"
 )
@@ -28,25 +27,12 @@ func (k msgServer) CreateVault(goCtx context.Context, msg *types.MsgCreateVaultR
 		return nil, fmt.Errorf("underlying asset marker %q not found", msg.UnderlyingAsset)
 	}
 
-	vaultAddr := types.GetVaultAddress(msg.ShareDenom)
-	vault := types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(vaultAddr), msg.Admin, msg.ShareDenom, []string{msg.UnderlyingAsset})
-	if err := k.SetVault(ctx, vault); err != nil {
-		return nil, fmt.Errorf("failed to store new vault: %w", err)
+	vault, err := k.CreateVaultAccount(ctx, msg.Admin, msg.ShareDenom, msg.UnderlyingAsset)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create vault account: %w", err)
 	}
-	vaultAcc := k.AuthKeeper.GetAccount(ctx, vaultAddr)
-	if vaultAcc != nil {
-		_, ok := vaultAcc.(types.VaultAccountI)
-		if ok {
-			return nil, fmt.Errorf("vault address already exists for %s", vaultAddr.String())
-		} else if vaultAcc.GetSequence() > 0 {
-			// account exists, is not a vault, and has been signed for
-			return nil, fmt.Errorf("account at %s is not a vault account", vaultAddr.String())
-		}
-	}
-	vaultAcc = k.AuthKeeper.NewAccount(ctx, vault).(types.VaultAccountI)
-	k.AuthKeeper.SetAccount(ctx, vaultAcc)
 
-	_, err := k.CreateVaultMarker(ctx, vaultAddr, msg.ShareDenom, msg.UnderlyingAsset)
+	_, err = k.CreateVaultMarker(ctx, vault.GetAddress(), msg.ShareDenom, msg.UnderlyingAsset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create vault marker: %w", err)
 	}

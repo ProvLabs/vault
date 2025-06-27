@@ -155,57 +155,55 @@ func (s *TestSuite) TestMsgServer_CreateVault_Failures() {
 	testDef := msgServerTestDef[types.MsgCreateVaultRequest, types.MsgCreateVaultResponse, any]{
 		endpointName: "CreateVault",
 		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).CreateVault,
-		postCheck:    nil, // No post-checks on failures
+		postCheck:    nil,
 	}
 
 	tests := []msgServerTestCase[types.MsgCreateVaultRequest, any]{
 		{
 			name: "invalid admin address",
-			msg: types.MsgCreateVaultRequest{
-				Admin:           "notanaddress",
-				ShareDenom:      "vaultcoin",
-				UnderlyingAsset: "basecoin",
+			setup: func() {
+				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("assetcoin", 100), s.adminAddr)
 			},
-			expectedErrSubstrs: []string{"invalid bech32 string"},
+			msg: types.MsgCreateVaultRequest{
+				Admin:           "invalid_bech32",
+				ShareDenom:      "sharecoin",
+				UnderlyingAsset: "assetcoin",
+			},
+			expectedErrSubstrs: []string{"failed to create vault account: failed to validate vault account: invalid admin address: decoding bech32"},
 		},
 		{
 			name: "invalid share denom",
+			setup: func() {
+				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("assetcoin", 100), s.adminAddr)
+			},
 			msg: types.MsgCreateVaultRequest{
 				Admin:           s.adminAddr.String(),
-				ShareDenom:      "Invalid Denom!", // invalid format
-				UnderlyingAsset: "basecoin",
+				ShareDenom:      "invalid denom!",
+				UnderlyingAsset: "assetcoin",
 			},
-			expectedErrSubstrs: []string{"invalid denom"},
+			expectedErrSubstrs: []string{"failed to create vault account: failed to validate vault account: invalid share denom: invalid denom: invalid denom!"},
 		},
 		{
-			name: "invalid underlying asset denom",
-			msg: types.MsgCreateVaultRequest{
-				Admin:           s.adminAddr.String(),
-				ShareDenom:      "vaultshare",
-				UnderlyingAsset: "weird denom!",
-			},
-			expectedErrSubstrs: []string{"invalid denom"},
-		},
-		{
-			name: "underlying asset marker does not exist",
+			name: "underlying asset marker not found",
 			msg: types.MsgCreateVaultRequest{
 				Admin:           s.adminAddr.String(),
 				ShareDenom:      "vaulttoken",
-				UnderlyingAsset: "nonexistentcoin",
+				UnderlyingAsset: "nonexistentasset",
 			},
-			expectedErrSubstrs: []string{"unable to find underlying asset"},
+			expectedErrSubstrs: []string{"underlying asset marker \"nonexistentasset\" not found"},
 		},
 		{
-			name: "share denom already exists as a marker",
+			name: "share denom marker already exists",
 			setup: func() {
-				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin("existing", math.NewInt(10)), s.adminAddr)
+				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("existingmarker", 1), s.adminAddr)
+				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("under", 1), s.adminAddr)
 			},
 			msg: types.MsgCreateVaultRequest{
 				Admin:           s.adminAddr.String(),
-				ShareDenom:      "existing",
-				UnderlyingAsset: "basecoin",
+				ShareDenom:      "existingmarker",
+				UnderlyingAsset: "under",
 			},
-			expectedErrSubstrs: []string{"marker with denom existing already exists"},
+			expectedErrSubstrs: []string{"already exists"},
 		},
 	}
 

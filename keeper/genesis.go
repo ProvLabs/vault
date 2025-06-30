@@ -58,5 +58,22 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 
 // ExportGenesis exports the current state of the vault module.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
-	return nil
+	params, err := k.Params.Get(ctx)
+	if err != nil {
+		panic(fmt.Errorf("failed to get vault module params: %w", err))
+	}
+
+	allAccounts := k.AuthKeeper.GetAllAccounts(ctx)
+
+	var vaults []types.VaultAccount
+	for _, acc := range allAccounts {
+		if v, ok := acc.(*types.VaultAccount); ok {
+			vaults = append(vaults, *v)
+		}
+	}
+
+	return &types.GenesisState{
+		Params: params,
+		Vaults: vaults,
+	}
 }

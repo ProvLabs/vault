@@ -16,6 +16,35 @@ const (
 	NoGovControl    = false
 )
 
+// VaultAttributer provides the attributes for creating a new vault.
+type VaultAttributer interface {
+	GetAdmin() string
+	GetShareDenom() string
+	GetUnderlyingAsset() string
+}
+
+// CreateVault creates the vault based on the provided attributes.
+func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*types.VaultAccount, error) {
+	underlyingAssetAddr := markertypes.MustGetMarkerAddress(attributes.GetUnderlyingAsset())
+	if found := k.MarkerKeeper.IsMarkerAccount(ctx, underlyingAssetAddr); !found {
+		return nil, fmt.Errorf("underlying asset marker %q not found", attributes.GetUnderlyingAsset())
+	}
+
+	vault, err := k.CreateVaultAccount(ctx, attributes.GetAdmin(), attributes.GetShareDenom(), attributes.GetUnderlyingAsset())
+	if err != nil {
+		return nil, fmt.Errorf("failed to create vault account: %w", err)
+	}
+
+	_, err = k.CreateVaultMarker(ctx, vault.GetAddress(), attributes.GetShareDenom(), attributes.GetUnderlyingAsset())
+	if err != nil {
+		return nil, fmt.Errorf("failed to create vault marker: %w", err)
+	}
+
+	k.emitEvent(ctx, types.NewEventVaultCreated(vault))
+
+	return vault, nil
+}
+
 // GetVault finds a vault by a given address
 func (k Keeper) GetVault(ctx sdk.Context, address sdk.AccAddress) (*types.VaultAccount, error) {
 	mac := k.AuthKeeper.GetAccount(ctx, address)

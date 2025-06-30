@@ -125,12 +125,12 @@ func (AppModule) ConsensusVersion() uint64 { return ConsensusVersion }
 func (m AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.RawMessage) {
 	var genesis types.GenesisState
 	cdc.MustUnmarshalJSON(bz, &genesis)
-	InitGenesis(ctx, m.keeper, m.addressCodec, genesis)
+	m.keeper.InitGenesis(ctx, &genesis)
 }
 
 // ExportGenesis exports the module's state to genesis.
 func (m AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	genesis := ExportGenesis(ctx, m.keeper)
+	genesis := m.keeper.ExportGenesis(ctx)
 	return cdc.MustMarshalJSON(genesis)
 }
 

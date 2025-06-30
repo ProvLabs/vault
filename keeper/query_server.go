@@ -68,7 +68,7 @@ func (k queryServer) Vault(goCtx context.Context, req *types.QueryVaultRequest) 
 	}
 
 	vault, err := k.GetVault(ctx, vaultAddr)
-	if err != nil {
+	if err != nil || vault == nil {
 		return nil, status.Errorf(codes.NotFound, "vault with address %q not found", req.VaultAddress)
 	}
 

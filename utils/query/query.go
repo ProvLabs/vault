@@ -15,9 +15,8 @@ type TestDef[R any, S any] struct {
 	QueryName string
 	// Query is the query function to invoke.
 	Query func(goCtx context.Context, req *R) (*S, error)
-	// PostCheck is a function that runs any desired followup assertions to help pinpoint
-	// differences between the expected and actual. It's only called if they're not equal and neither are nil.
-	PostCheck func(expected, actual *S)
+	// ManualEquality is a function that allows the tester to define their own equality tests.
+	ManualEquality func(s TestSuiter, expected, actual *S)
 }
 
 // TestCase is a test case for a QueryServer endpoint.
@@ -69,16 +68,15 @@ func RunTestCase[R any, S any](s TestSuiter, td TestDef[R, S], tc TestCase[R, S]
 
 	if len(tc.ExpectedErrSubstrs) == 0 {
 		s.Assert().NoErrorf(err, "%s error", td.QueryName)
-		s.Assert().Equalf(tc.ExpectedResp, resp, "%s response", td.QueryName)
+		if td.ManualEquality != nil {
+			td.ManualEquality(s, tc.ExpectedResp, resp)
+		} else {
+			s.Assert().Equalf(tc.ExpectedResp, resp, "%s response", td.QueryName)
+		}
 	} else {
 		s.Assert().Errorf(err, "%s error", td.QueryName)
 		for _, substr := range tc.ExpectedErrSubstrs {
 			s.Assert().Containsf(err.Error(), substr, "%s error missing expected substring", td.QueryName)
 		}
-		return
-	}
-
-	if td.PostCheck != nil && tc.ExpectedResp != nil && resp != nil {
-		td.PostCheck(tc.ExpectedResp, resp)
 	}
 }

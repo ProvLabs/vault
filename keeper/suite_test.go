@@ -27,6 +27,14 @@ func (s *TestSuite) SetupTest() {
 	s.adminAddr = sdk.AccAddress("adminAddr___________")
 }
 
+func (s *TestSuite) Context() sdk.Context {
+	return s.ctx
+}
+
+func (s *TestSuite) SetContext(ctx sdk.Context) {
+	s.ctx = ctx
+}
+
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(TestSuite))
 }

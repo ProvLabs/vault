@@ -92,6 +92,7 @@ func (k *Keeper) createVaultAccount(ctx sdk.Context, admin, shareDenom, underlyi
 }
 
 // createVaultMarker creates, finalizes, and activates a new restricted marker for the vault's share denomination.
+// TODO: https://github.com/ProvLabs/vault/issues/2 discussion of marker configuration
 func (k *Keeper) createVaultMarker(ctx sdk.Context, markerManager sdk.AccAddress, shareDenom, underlyingAsset string) (*markertypes.MarkerAccount, error) {
 
 	vaultShareMarkerAddress, err := markertypes.MarkerAddress(shareDenom)

@@ -25,7 +25,11 @@ type VaultAttributer interface {
 
 // CreateVault creates the vault based on the provided attributes.
 func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*types.VaultAccount, error) {
-	underlyingAssetAddr := markertypes.MustGetMarkerAddress(attributes.GetUnderlyingAsset())
+	underlyingAssetAddr, err := markertypes.MarkerAddress(attributes.GetUnderlyingAsset())
+	if err != nil {
+		return nil, fmt.Errorf("failed to get underlying asset marker address: %w", err)
+	}
+
 	if found := k.MarkerKeeper.IsMarkerAccount(ctx, underlyingAssetAddr); !found {
 		return nil, fmt.Errorf("underlying asset marker %q not found", attributes.GetUnderlyingAsset())
 	}
@@ -35,7 +39,7 @@ func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*type
 		return nil, fmt.Errorf("failed to create vault account: %w", err)
 	}
 
-	_, err = k.CreateVaultMarker(ctx, vault.GetAddress(), attributes.GetShareDenom(), attributes.GetUnderlyingAsset())
+	_, err = k.CreateVaultMarker(ctx, vault.GetAddress(), vault.ShareDenom, vault.UnderlyingAssets[0])
 	if err != nil {
 		return nil, fmt.Errorf("failed to create vault marker: %w", err)
 	}
@@ -90,7 +94,11 @@ func (k *Keeper) CreateVaultAccount(ctx sdk.Context, admin, shareDenom, underlyi
 // CreateVaultMarker creates, finalizes, and activates a new restricted marker for the vault's share denomination.
 func (k *Keeper) CreateVaultMarker(ctx sdk.Context, markerManager sdk.AccAddress, shareDenom, underlyingAsset string) (*markertypes.MarkerAccount, error) {
 
-	vaultShareMarkerAddress := markertypes.MustGetMarkerAddress(shareDenom)
+	vaultShareMarkerAddress, err := markertypes.MarkerAddress(shareDenom)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault share marker address: %w", err)
+	}
+
 	if found := k.MarkerKeeper.IsMarkerAccount(ctx, vaultShareMarkerAddress); found {
 		return nil, fmt.Errorf("a marker with the share denomination %q already exists", shareDenom)
 	}

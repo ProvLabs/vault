@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provlabs/vault/types"
 )
 
@@ -19,25 +18,14 @@ func NewMsgServer(keeper *Keeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
 }
 
+// CreateVault creates a vault.
 func (k msgServer) CreateVault(goCtx context.Context, msg *types.MsgCreateVaultRequest) (*types.MsgCreateVaultResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	underlyingAssetAddr := markertypes.MustGetMarkerAddress(msg.UnderlyingAsset)
-	if found := k.MarkerKeeper.IsMarkerAccount(ctx, underlyingAssetAddr); !found {
-		return nil, fmt.Errorf("underlying asset marker %q not found", msg.UnderlyingAsset)
-	}
-
-	vault, err := k.CreateVaultAccount(ctx, msg.Admin, msg.ShareDenom, msg.UnderlyingAsset)
+	vault, err := k.Keeper.CreateVault(ctx, msg)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create vault account: %w", err)
+		return nil, fmt.Errorf("failed to create vault: %w", err)
 	}
-
-	_, err = k.CreateVaultMarker(ctx, vault.GetAddress(), msg.ShareDenom, msg.UnderlyingAsset)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create vault marker: %w", err)
-	}
-
-	k.emitEvent(ctx, types.NewEventVaultCreated(vault))
 
 	return &types.MsgCreateVaultResponse{
 		VaultAddress: vault.Address,

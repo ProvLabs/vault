@@ -56,3 +56,11 @@ func (s *TestSuite) TestCreateVaultMarker_DuplicateDenomFails() {
 	_, err := s.k.CreateVaultMarker(s.ctx, addr, denom, "under")
 	s.Require().ErrorContains(err, "a marker with the share denomination \"existingmarker\" already exists")
 }
+
+func (s *TestSuite) TestCreateVaultMarker_InvalidDenomFails() {
+	denom := "x"
+
+	addr := types.GetVaultAddress(denom)
+	_, err := s.k.CreateVaultMarker(s.ctx, addr, denom, "under")
+	s.Require().ErrorContains(err, "failed to get vault share marker address: invalid denom: x")
+}

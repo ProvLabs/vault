@@ -5,62 +5,94 @@ import (
 	"github.com/provlabs/vault/types"
 )
 
-func (s *TestSuite) TestCreateVaultAccount_And_GetVault() {
-	shareDenom := "vaultshare"
-	underlying := "vaultbase"
-
-	vault, err := s.k.CreateVaultAccount(s.ctx, s.adminAddr.String(), shareDenom, underlying)
-	s.Require().NoError(err, "CreateVaultAccount should not error")
-	s.Require().Equal(types.GetVaultAddress(shareDenom).String(), vault.Address, "vault address mismatch")
-	s.Require().Equal(s.adminAddr.String(), vault.Admin, "vault admin mismatch")
-
-	foundVault, err := s.k.GetVault(s.ctx, types.GetVaultAddress(shareDenom))
-	s.Require().NoError(err, "GetVault should not error")
-	s.Require().Equal(vault.Address, foundVault.Address, "retrieved vault address mismatch")
+type vaultAttrs struct {
+	admin    string
+	share    string
+	base     string
+	expected types.VaultAccount
 }
 
-func (s *TestSuite) TestCreateVaultAccount_AlreadyExistsError() {
-	shareDenom := "dupecoin"
-	underlying := "basecoin"
+func (v vaultAttrs) GetAdmin() string           { return v.admin }
+func (v vaultAttrs) GetShareDenom() string      { return v.share }
+func (v vaultAttrs) GetUnderlyingAsset() string { return v.base }
 
-	addr := types.GetVaultAddress(shareDenom)
-	existing := s.simApp.AccountKeeper.NewAccountWithAddress(s.ctx, addr)
-	existing.SetSequence(1000)
-	s.simApp.AccountKeeper.SetAccount(s.ctx, existing)
+func (s *TestSuite) TestCreateVault_Success() {
+	share := "vaultshare"
+	base := "undercoin"
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(base, 1_000_000), s.adminAddr)
 
-	_, err := s.k.CreateVaultAccount(s.ctx, s.adminAddr.String(), shareDenom, underlying)
-	s.Require().ErrorContains(err, "account at provlabs1etm9rr8jc5ej4clfhwhynh0vxgm6v26znv73u0 is not a vault account")
-}
+	attrs := vaultAttrs{
+		admin: s.adminAddr.String(),
+		share: share,
+		base:  base,
+	}
 
-func (s *TestSuite) TestCreateVaultMarker_Success() {
-	denom := "sharetoken"
-	underlying := "coinbase"
-
-	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlying, 1000), s.adminAddr)
-
-	vault, err := s.k.CreateVaultAccount(s.ctx, s.adminAddr.String(), denom, underlying)
+	vault, err := s.k.CreateVault(s.ctx, attrs)
 	s.Require().NoError(err)
+	s.Require().Equal(attrs.admin, vault.Admin)
+	s.Require().Equal(attrs.share, vault.ShareDenom)
+	s.Require().Equal([]string{attrs.base}, vault.UnderlyingAssets)
 
-	marker, err := s.k.CreateVaultMarker(s.ctx, vault.GetAddress(), denom, underlying)
-	s.Require().NoError(err, "CreateVaultMarker should not error")
-	s.Require().Equal(denom, marker.Denom, "denom mismatch")
-	s.Require().Equal(types.GetVaultAddress(denom).String(), marker.Manager, "manager mismatch")
+	addr := types.GetVaultAddress(share)
+	stored, err := s.k.GetVault(s.ctx, addr)
+	s.Require().NoError(err)
+	s.Require().Equal(vault.Address, stored.Address)
 }
 
-func (s *TestSuite) TestCreateVaultMarker_DuplicateDenomFails() {
-	denom := "existingmarker"
+func (s *TestSuite) TestCreateVault_AssetMarkerMissing() {
+	share := "vaultshare"
+	base := "missingasset"
 
-	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(denom, 100), s.adminAddr)
+	attrs := vaultAttrs{
+		admin: s.adminAddr.String(),
+		share: share,
+		base:  base,
+	}
 
-	addr := types.GetVaultAddress(denom)
-	_, err := s.k.CreateVaultMarker(s.ctx, addr, denom, "under")
-	s.Require().ErrorContains(err, "a marker with the share denomination \"existingmarker\" already exists")
+	_, err := s.k.CreateVault(s.ctx, attrs)
+	s.Require().ErrorContains(err, "underlying asset marker")
 }
 
-func (s *TestSuite) TestCreateVaultMarker_InvalidDenomFails() {
-	denom := "x"
+func (s *TestSuite) TestCreateVault_DuplicateMarkerFails() {
+	denom := "dupecoin"
+	base := "basecoin"
 
-	addr := types.GetVaultAddress(denom)
-	_, err := s.k.CreateVaultMarker(s.ctx, addr, denom, "under")
-	s.Require().ErrorContains(err, "failed to get vault share marker address: invalid denom: x")
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(base, 1000), s.adminAddr)
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(denom, 1), s.adminAddr)
+
+	attrs := vaultAttrs{
+		admin: s.adminAddr.String(),
+		share: denom,
+		base:  base,
+	}
+
+	_, err := s.k.CreateVault(s.ctx, attrs)
+	s.Require().ErrorContains(err, "already exists")
+}
+
+func (s *TestSuite) TestCreateVault_InvalidDenomFails() {
+	attrs := vaultAttrs{
+		admin: s.adminAddr.String(),
+		share: "!!bad!!",
+		base:  "under",
+	}
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(attrs.base, 1000), s.adminAddr)
+
+	_, err := s.k.CreateVault(s.ctx, attrs)
+	s.Require().ErrorContains(err, "invalid denom")
+}
+
+func (s *TestSuite) TestCreateVault_InvalidAdminFails() {
+	share := "vaultx"
+	base := "basecoin"
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(base, 500), s.adminAddr)
+
+	attrs := vaultAttrs{
+		admin: "not-a-valid-bech32",
+		share: share,
+		base:  base,
+	}
+
+	_, err := s.k.CreateVault(s.ctx, attrs)
+	s.Require().ErrorContains(err, "invalid admin address")
 }

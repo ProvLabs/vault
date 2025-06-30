@@ -45,7 +45,7 @@ func Setup(t *testing.T) *SimApp {
 	cfg.SetBech32PrefixForAccount("provlabs", "provlabspub")
 	cfg.SetBech32PrefixForValidator("provlabsvaloper", "provlabsvaloperpub")
 	cfg.SetBech32PrefixForConsensusNode("provlabsvalcons", "provlabsvalconspub")
-	cfg.Seal()
+	// cfg.Seal()
 	privVal := mock.NewPV()
 	pubKey, err := privVal.GetPubKey()
 	require.NoError(t, err)

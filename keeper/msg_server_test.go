@@ -40,7 +40,6 @@ func (s *TestSuite) TestMsgServer_CreateVault() {
 			s.Equal(types.GetVaultAddress(postCheckArgs.ShareDenom).String(), access[0].Address, "vault marker access should be granted to vault account")
 			s.ElementsMatch(
 				[]markertypes.Access{
-					markertypes.Access_Admin,
 					markertypes.Access_Mint,
 					markertypes.Access_Burn,
 					markertypes.Access_Withdraw,
@@ -282,7 +281,7 @@ func (s *TestSuite) requireAddFinalizeAndActivateMarker(coin sdk.Coin, manager s
 				Permissions: markertypes.AccessList{
 					markertypes.Access_Mint, markertypes.Access_Burn,
 					markertypes.Access_Deposit, markertypes.Access_Withdraw, markertypes.Access_Delete,
-					markertypes.Access_Admin, markertypes.Access_Transfer,
+					markertypes.Access_Transfer,
 				},
 			},
 		},

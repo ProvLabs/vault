@@ -113,7 +113,6 @@ func (k *Keeper) createVaultMarker(ctx sdk.Context, markerManager sdk.AccAddress
 			{
 				Address: markerManager.String(),
 				Permissions: []markertypes.Access{
-					markertypes.Access_Admin,
 					markertypes.Access_Mint,
 					markertypes.Access_Burn,
 					markertypes.Access_Withdraw,

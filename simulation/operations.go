@@ -54,7 +54,7 @@ func SimulateMsgCreateVault(k keeper.Keeper) simtypes.Operation {
 				Permissions: markertypes.AccessList{
 					markertypes.Access_Mint, markertypes.Access_Burn,
 					markertypes.Access_Deposit, markertypes.Access_Withdraw, markertypes.Access_Delete,
-					markertypes.Access_Admin, markertypes.Access_Transfer,
+					markertypes.Access_Transfer,
 				},
 			},
 		}

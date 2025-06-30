@@ -82,8 +82,6 @@ func (k queryServer) TotalAssets(goCtx context.Context, req *types.QueryTotalAss
 	panic("not implemented")
 }
 
-//TODO possibly add a ShareHolders query to query holders of the share denom or have that part of TotalAssets?
-
 // Params returns the params for the module.
 func (q queryServer) Params(ctx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	panic("not implemented")

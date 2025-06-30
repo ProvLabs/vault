@@ -34,12 +34,12 @@ func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*type
 		return nil, fmt.Errorf("underlying asset marker %q not found", attributes.GetUnderlyingAsset())
 	}
 
-	vault, err := k.CreateVaultAccount(ctx, attributes.GetAdmin(), attributes.GetShareDenom(), attributes.GetUnderlyingAsset())
+	vault, err := k.createVaultAccount(ctx, attributes.GetAdmin(), attributes.GetShareDenom(), attributes.GetUnderlyingAsset())
 	if err != nil {
 		return nil, fmt.Errorf("failed to create vault account: %w", err)
 	}
 
-	_, err = k.CreateVaultMarker(ctx, vault.GetAddress(), vault.ShareDenom, vault.UnderlyingAssets[0])
+	_, err = k.createVaultMarker(ctx, vault.GetAddress(), vault.ShareDenom, vault.UnderlyingAssets[0])
 	if err != nil {
 		return nil, fmt.Errorf("failed to create vault marker: %w", err)
 	}
@@ -62,8 +62,8 @@ func (k Keeper) GetVault(ctx sdk.Context, address sdk.AccAddress) (*types.VaultA
 	return nil, nil
 }
 
-// CreateVaultAccount creates and stores a new vault account.
-func (k *Keeper) CreateVaultAccount(ctx sdk.Context, admin, shareDenom, underlyingAsset string) (*types.VaultAccount, error) {
+// createVaultAccount creates and stores a new vault account.
+func (k *Keeper) createVaultAccount(ctx sdk.Context, admin, shareDenom, underlyingAsset string) (*types.VaultAccount, error) {
 	vaultAddr := types.GetVaultAddress(shareDenom)
 	vault := types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(vaultAddr), admin, shareDenom, []string{underlyingAsset})
 
@@ -91,8 +91,9 @@ func (k *Keeper) CreateVaultAccount(ctx sdk.Context, admin, shareDenom, underlyi
 	return vault, nil
 }
 
-// CreateVaultMarker creates, finalizes, and activates a new restricted marker for the vault's share denomination.
-func (k *Keeper) CreateVaultMarker(ctx sdk.Context, markerManager sdk.AccAddress, shareDenom, underlyingAsset string) (*markertypes.MarkerAccount, error) {
+// createVaultMarker creates, finalizes, and activates a new restricted marker for the vault's share denomination.
+// TODO: https://github.com/ProvLabs/vault/issues/2 discussion of marker configuration
+func (k *Keeper) createVaultMarker(ctx sdk.Context, markerManager sdk.AccAddress, shareDenom, underlyingAsset string) (*markertypes.MarkerAccount, error) {
 
 	vaultShareMarkerAddress, err := markertypes.MarkerAddress(shareDenom)
 	if err != nil {

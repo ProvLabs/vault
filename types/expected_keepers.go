@@ -41,3 +41,8 @@ type AccountKeeper interface {
 	SetModuleAccount(ctx context.Context, macc sdk.ModuleAccountI)
 	GetModulePermissions() map[string]authtypes.PermissionsForAddress
 }
+
+// BankKeeper defines the bank functionality needed from within the quarantine module.
+type BankKeeper interface {
+	SendCoins(context context.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
+}

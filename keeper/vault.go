@@ -133,3 +133,38 @@ func (k *Keeper) createVaultMarker(ctx sdk.Context, markerManager sdk.AccAddress
 
 	return newMarker, nil
 }
+
+func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, asset sdk.Coin) (*sdk.Coin, error) {
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	markerAddr, err := markertypes.MarkerAddress(vault.ShareDenom)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := vault.ValidateUnderlyingAssets(asset); err != nil {
+		return nil, err
+	}
+
+	shares := sdk.NewCoin(vault.ShareDenom, asset.Amount)
+	if err := shares.Validate(); err != nil {
+		return nil, err
+	}
+
+	if err := k.MarkerKeeper.MintCoin(ctx, vault.GetAddress(), shares); err != nil {
+		return nil, err
+	}
+
+	if err := k.MarkerKeeper.WithdrawCoins(ctx, vault.GetAddress(), recipient, shares.Denom, sdk.NewCoins(shares)); err != nil {
+		return nil, err
+	}
+
+	if err := k.BankKeeper.SendCoins(ctx, recipient, markerAddr, sdk.NewCoins(asset)); err != nil {
+		return nil, err
+	}
+
+	return &shares, nil
+}

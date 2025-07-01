@@ -7,6 +7,7 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
@@ -221,6 +222,7 @@ func (s *TestSuite) TestMsgServer_SwapIn() {
 	vaultAddr := types.GetVaultAddress(shareDenom)
 	assets := sdk.NewInt64Coin(underlyingDenom, 100)
 	shares := sdk.NewInt64Coin(shareDenom, 100)
+	sendCoinEvents := createSendCoinEvents(owner.String(), vaultAddr.String(), sdk.NewCoins(assets))
 
 	swapInReq := types.MsgSwapInRequest{
 		Owner:        owner.String(),
@@ -255,7 +257,7 @@ func (s *TestSuite) TestMsgServer_SwapIn() {
 				sdk.NewAttribute("shares_received", sdk.NewCoin(shareDenom, assets.Amount).String()),
 			),
 			sdk.NewEvent("provenance.marker.v1.EventMarkerMint",
-				sdk.NewAttribute("amount", assets.Amount.String()),
+				sdk.NewAttribute("amount", assets.String()),
 				sdk.NewAttribute("denom", shareDenom),
 				sdk.NewAttribute("administrator", vaultAddr.String()),
 			),
@@ -265,26 +267,40 @@ func (s *TestSuite) TestMsgServer_SwapIn() {
 				sdk.NewAttribute("administrator", vaultAddr.String()),
 				sdk.NewAttribute("to_address", owner.String()),
 			),
-			sdk.NewEvent("provenance.marker.v1.EventMarkerWithdraw",
-				sdk.NewAttribute("coins", sdk.NewCoins(assets).String()),
-				sdk.NewAttribute("denom", underlyingDenom),
-				sdk.NewAttribute("administrator", owner.String()),
-				sdk.NewAttribute("to_address", vaultAddr.String()),
-			),
+			sendCoinEvents[0],
+			sendCoinEvents[1],
+			sendCoinEvents[2],
 		},
 	}
 	testDef.expectedResponse = &types.MsgSwapInResponse{SharesReceived: sdk.NewCoin(shareDenom, assets.Amount)}
 	runMsgServerTestCase(s, testDef, tc)
 }
 
-/*
-message EventMarkerWithdraw {
-  string coins         = 1;
-  string denom         = 2;
-  string administrator = 3;
-  string to_address    = 4;
+func createSendCoinEvents(fromAddress, toAddress string, amt sdk.Coins) []sdk.Event {
+	events := sdk.NewEventManager().Events()
+	// subUnlockedCoins event `coin_spent`
+	events = events.AppendEvent(sdk.NewEvent(
+		banktypes.EventTypeCoinSpent,
+		sdk.NewAttribute(banktypes.AttributeKeySpender, fromAddress),
+		sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
+	))
+	// addCoins event
+	events = events.AppendEvent(sdk.NewEvent(
+		banktypes.EventTypeCoinReceived,
+		sdk.NewAttribute(banktypes.AttributeKeyReceiver, toAddress),
+		sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
+	))
+
+	// SendCoins function
+	events = events.AppendEvent(sdk.NewEvent(
+		banktypes.EventTypeTransfer,
+		sdk.NewAttribute(banktypes.AttributeKeyRecipient, toAddress),
+		sdk.NewAttribute(banktypes.AttributeKeySender, fromAddress),
+		sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
+	))
+
+	return events
 }
-*/
 
 // msgServerTestDef defines the configuration for testing a specific MsgServer endpoint.
 // Req is the request message type.

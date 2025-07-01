@@ -146,20 +146,87 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 		Tx: &autocliv1.ServiceCommandDescriptor{
 			Service: vaultv1.Msg_ServiceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
-				{RpcMethod: "CreateVault", Use: "create-vault [admin] [underlying_asset] [share_denom]", Short: "Create a new vault", PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "admin"}, {ProtoField: "underlying_asset"}, {ProtoField: "share_denom"}}},
-				{RpcMethod: "Deposit", Use: "deposit [depositor] [vault_address] [amount] [receiver]", Short: "Deposit assets into a vault", PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "depositor"}, {ProtoField: "vault_address"}, {ProtoField: "amount"}, {ProtoField: "receiver"}}},
-				{RpcMethod: "Withdraw", Use: "withdraw [owner] [vault_address] [assets_to_withdraw] [receiver]", Short: "Withdraw assets from a vault", PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "owner"}, {ProtoField: "vault_address"}, {ProtoField: "assets_to_withdraw"}, {ProtoField: "receiver"}}},
-				{RpcMethod: "Redeem", Use: "redeem [owner] [vault_address] [shares_to_redeem] [receiver]", Short: "Redeem shares for underlying assets", PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "owner"}, {ProtoField: "vault_address"}, {ProtoField: "shares_to_redeem"}, {ProtoField: "receiver"}}},
-				{RpcMethod: "UpdateParams", Use: "update-params [authority] [params]", Short: "Update module parameters via governance", PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "authority"}, {ProtoField: "params"}}},
+				{
+					RpcMethod: "CreateVault",
+					Use:       "create-vault [admin] [underlying_asset] [share_denom]",
+					Short:     "Create a new vault",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "admin"},
+						{ProtoField: "underlying_asset"},
+						{ProtoField: "share_denom"},
+					},
+				},
+				{
+					RpcMethod: "SwapIn",
+					Use:       "swap-in [owner] [vault_address] [assets]",
+					Short:     "Deposit underlying assets into a vault to mint shares",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "owner"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "assets"},
+					},
+				},
+				{
+					RpcMethod: "SwapOut",
+					Use:       "swap-out [owner] [vault_address] [assets]",
+					Short:     "Withdraw underlying assets from a vault by burning shares",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "owner"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "assets"},
+					},
+				},
+				{
+					RpcMethod: "Redeem",
+					Use:       "redeem [owner] [vault_address] [shares_to_redeem] [receiver]",
+					Short:     "Redeem shares for underlying assets",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "owner"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "shares_to_redeem"},
+						{ProtoField: "receiver"},
+					},
+				},
+				{
+					RpcMethod: "UpdateParams",
+					Use:       "update-params [authority] [params]",
+					Short:     "Update module parameters via governance",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "authority"},
+						{ProtoField: "params"},
+					},
+				},
 			},
 		},
 		Query: &autocliv1.ServiceCommandDescriptor{
 			Service: vaultv1.Query_ServiceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
-				{RpcMethod: "Params", Use: "params", Short: "Query the current module parameters"},
-				{RpcMethod: "Vaults", Use: "vaults", Short: "Query all vaults"},
-				{RpcMethod: "Vault", Use: "vault [vault_address]", Short: "Query a specific vault's configuration and state", PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "vault_address"}}},
-				{RpcMethod: "TotalAssets", Use: "total-assets [vault_address]", Short: "Query the total assets held by a specific vault", PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "vault_address"}}},
+				{
+					RpcMethod: "Params",
+					Use:       "params",
+					Short:     "Query the current module parameters",
+				},
+				{
+					RpcMethod: "Vaults",
+					Use:       "vaults",
+					Short:     "Query all vaults",
+				},
+				{
+					RpcMethod: "Vault",
+					Use:       "vault [vault_address]",
+					Short:     "Query a specific vault's configuration and state",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "vault_address"},
+					},
+				},
+				{
+					RpcMethod: "TotalAssets",
+					Use:       "total-assets [vault_address]",
+					Short:     "Query the total assets held by a specific vault",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "vault_address"},
+					},
+				},
 			},
 		},
 	}

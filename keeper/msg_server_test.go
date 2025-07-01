@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"cosmossdk.io/math"
@@ -224,7 +225,6 @@ func (s *TestSuite) TestMsgServer_SwapIn() {
 	vaultAddr := types.GetVaultAddress(shareDenom)
 	assets := sdk.NewInt64Coin(underlyingDenom, 100)
 	shares := sdk.NewInt64Coin(shareDenom, 100)
-	sendCoinEvents := createSendCoinEvents(owner.String(), vaultAddr.String(), sdk.NewCoins(assets))
 
 	swapInReq := types.MsgSwapInRequest{
 		Owner:        owner.String(),
@@ -252,28 +252,7 @@ func (s *TestSuite) TestMsgServer_SwapIn() {
 		msg:                swapInReq,
 		expectedErrSubstrs: nil,
 		postCheckArgs:      postCheckArgs{Owner: owner, VaultAddr: vaultAddr, UnderlyingAsset: assets, Shares: sdk.NewCoin(shareDenom, assets.Amount)},
-		expectedEvents: sdk.Events{
-			sdk.NewEvent("vault.v1.EventSwapIn",
-				sdk.NewAttribute("owner", owner.String()),
-				sdk.NewAttribute("vault_address", vaultAddr.String()),
-				sdk.NewAttribute("amount_in", "{\"denom\":\"underlying\",\"amount\":\"100\"}"),
-				sdk.NewAttribute("shares_received", "{\"denom\":\"vaultshares\",\"amount\":\"100\"}"),
-			),
-			sdk.NewEvent("provenance.marker.v1.EventMarkerMint",
-				sdk.NewAttribute("amount", assets.Amount.String()),
-				sdk.NewAttribute("denom", shareDenom),
-				sdk.NewAttribute("administrator", vaultAddr.String()),
-			),
-			sdk.NewEvent("provenance.marker.v1.EventMarkerWithdraw",
-				sdk.NewAttribute("coins", sdk.NewCoins(shares).String()),
-				sdk.NewAttribute("denom", shareDenom),
-				sdk.NewAttribute("administrator", vaultAddr.String()),
-				sdk.NewAttribute("to_address", owner.String()),
-			),
-			sendCoinEvents[0],
-			sendCoinEvents[1],
-			sendCoinEvents[2],
-		},
+		expectedEvents:     createEventSwapInEvents(owner, vaultAddr, markertypes.MustGetMarkerAddress(shareDenom), assets, shares),
 	}
 	testDef.expectedResponse = &types.MsgSwapInResponse{SharesReceived: sdk.NewCoin(shareDenom, assets.Amount)}
 	runMsgServerTestCase(s, testDef, tc)
@@ -385,30 +364,111 @@ func (s *TestSuite) TestMsgServer_SwapIn_Failures() {
 	}
 }
 
-func createSendCoinEvents(fromAddress, toAddress string, amt sdk.Coins) []sdk.Event {
+func createReceiveCoinsEvents(fromAddress, amount string) sdk.Events {
 	events := sdk.NewEventManager().Events()
-	// subUnlockedCoins event `coin_spent`
+	events = events.AppendEvent(sdk.NewEvent(
+		banktypes.EventTypeCoinReceived,
+		sdk.NewAttribute(banktypes.AttributeKeyReceiver, fromAddress),
+		sdk.NewAttribute(sdk.AttributeKeyAmount, amount),
+	))
+	events = events.AppendEvent(sdk.NewEvent(
+		banktypes.EventTypeCoinMint,
+		sdk.NewAttribute(banktypes.AttributeKeyMinter, fromAddress),
+		sdk.NewAttribute(sdk.AttributeKeyAmount, amount),
+	))
+	return events
+}
+
+func createSendCoinEvents(fromAddress, toAddress string, amount string) []sdk.Event {
+	events := sdk.NewEventManager().Events()
 	events = events.AppendEvent(sdk.NewEvent(
 		banktypes.EventTypeCoinSpent,
 		sdk.NewAttribute(banktypes.AttributeKeySpender, fromAddress),
-		sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
+		sdk.NewAttribute(sdk.AttributeKeyAmount, amount),
 	))
-	// addCoins event
 	events = events.AppendEvent(sdk.NewEvent(
 		banktypes.EventTypeCoinReceived,
 		sdk.NewAttribute(banktypes.AttributeKeyReceiver, toAddress),
-		sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
+		sdk.NewAttribute(sdk.AttributeKeyAmount, amount),
 	))
-
-	// SendCoins function
 	events = events.AppendEvent(sdk.NewEvent(
 		banktypes.EventTypeTransfer,
 		sdk.NewAttribute(banktypes.AttributeKeyRecipient, toAddress),
 		sdk.NewAttribute(banktypes.AttributeKeySender, fromAddress),
-		sdk.NewAttribute(sdk.AttributeKeyAmount, amt.String()),
+		sdk.NewAttribute(sdk.AttributeKeyAmount, amount),
+	))
+	events = events.AppendEvent(sdk.NewEvent(
+		"message",
+		sdk.NewAttribute(banktypes.AttributeKeySender, fromAddress),
 	))
 
 	return events
+}
+
+// createMarkerMintCoinEvents creates events for minting a coin and sending it to a recipient.
+func createMarkerMintCoinEvents(markerModule, admin, recipient sdk.AccAddress, coin sdk.Coin) []sdk.Event {
+
+	events := createReceiveCoinsEvents(markerModule.String(), sdk.NewCoins(coin).String())
+
+	sendEvents := createSendCoinEvents(markerModule.String(), recipient.String(), sdk.NewCoins(coin).String())
+	events = append(events, sendEvents...)
+
+	// The specific marker mint event
+	markerMintEvent := sdk.NewEvent("provenance.marker.v1.EventMarkerMint",
+		sdk.NewAttribute("administrator", admin.String()),
+		sdk.NewAttribute("amount", coin.Amount.String()),
+		sdk.NewAttribute("denom", coin.Denom),
+	)
+	events = append(events, markerMintEvent)
+
+	return events
+}
+
+// createMarkerWithdraw creates events for withdrawing a coin from a marker.
+func createMarkerWithdraw(administrator, sender sdk.AccAddress, recipient sdk.AccAddress, shares sdk.Coin) []sdk.Event {
+
+	events := createSendCoinEvents(sender.String(), recipient.String(), sdk.NewCoins(shares).String())
+
+	// The specific marker withdraw event
+	withdrawEvent := sdk.NewEvent("provenance.marker.v1.EventMarkerWithdraw",
+		sdk.NewAttribute("administrator", administrator.String()),
+		sdk.NewAttribute("coins", sdk.NewCoins(shares).String()),
+		sdk.NewAttribute("denom", shares.Denom),
+		sdk.NewAttribute("to_address", recipient.String()),
+	)
+
+	events = append(events, withdrawEvent)
+
+	return events
+}
+
+// createEventSwapInEvents creates the full set of expected events for a successful SwapIn.
+func createEventSwapInEvents(owner, vaultAddr, markerAddr sdk.AccAddress, asset, shares sdk.Coin) []sdk.Event {
+	var allEvents []sdk.Event
+
+	markerModule := authtypes.NewModuleAddress(markertypes.ModuleName)
+	mintEvents := createMarkerMintCoinEvents(markerModule, vaultAddr, markerAddr, shares)
+	allEvents = append(allEvents, mintEvents...)
+
+	withdrawEvents := createMarkerWithdraw(vaultAddr, markerAddr, owner, shares)
+	allEvents = append(allEvents, withdrawEvents...)
+
+	sendAssetEvents := createSendCoinEvents(owner.String(), markerAddr.String(), sdk.NewCoins(asset).String())
+	allEvents = append(allEvents, sendAssetEvents...)
+
+	swapInEvent := sdk.NewEvent("vault.v1.EventSwapIn",
+		sdk.NewAttribute("amount_in", CoinToJSON(asset)),
+		sdk.NewAttribute("owner", owner.String()),
+		sdk.NewAttribute("shares_received", CoinToJSON(shares)),
+		sdk.NewAttribute("vault_address", vaultAddr.String()),
+	)
+	allEvents = append(allEvents, swapInEvent)
+
+	return allEvents
+}
+
+func CoinToJSON(coin sdk.Coin) string {
+	return fmt.Sprintf("{\"denom\":\"%s\",\"amount\":\"%s\"}", coin.Denom, coin.Amount.String())
 }
 
 // msgServerTestDef defines the configuration for testing a specific MsgServer endpoint.

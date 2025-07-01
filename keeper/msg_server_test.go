@@ -203,12 +203,14 @@ func (s *TestSuite) TestMsgServer_SwapIn() {
 			// Check that the marker created by the vault has a supply of 100.
 			markerAddr := markertypes.MustGetMarkerAddress(args.Shares.Denom)
 			marker, err := s.simApp.MarkerKeeper.GetMarker(s.ctx, markerAddr)
-			s.Require().NoError(err, "marker should exist")
-			s.Require().Equal(args.Shares.Amount, marker.GetSupply(), "marker supply should be updated")
+			s.Require().NoError(err, "get marker should not err")
+			s.Require().NotNil(marker, "marker should exist")
+			supply := s.simApp.BankKeeper.GetSupply(s.ctx, args.Shares.Denom)
+			s.Require().Equal(args.Shares.Amount, supply.Amount, "marker supply should be updated")
 
-			// Check that the balance of the vault account has increased by the denom in the Msg.
-			vaultBalance := s.simApp.BankKeeper.GetBalance(s.ctx, args.VaultAddr, args.UnderlyingAsset.Denom)
-			s.Require().Equal(args.UnderlyingAsset, vaultBalance, "vault balance should be updated")
+			// Check that the balance of the marker account has increased by the denom in the Msg.
+			markerBalance := s.simApp.BankKeeper.GetBalance(s.ctx, markerAddr, args.UnderlyingAsset.Denom)
+			s.Require().Equal(args.UnderlyingAsset, markerBalance, "marker balance should be updated")
 
 			// Check that the owner's balance contains the shares.
 			ownerBalance := s.simApp.BankKeeper.GetBalance(s.ctx, args.Owner, args.Shares.Denom)
@@ -245,6 +247,7 @@ func (s *TestSuite) TestMsgServer_SwapIn() {
 			// Fund owner with underlying assets
 			err = FundAccount(s.ctx, s.simApp.BankKeeper, owner, sdk.NewCoins(assets))
 			s.Require().NoError(err)
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 		},
 		msg:                swapInReq,
 		expectedErrSubstrs: nil,
@@ -253,11 +256,11 @@ func (s *TestSuite) TestMsgServer_SwapIn() {
 			sdk.NewEvent("vault.v1.EventSwapIn",
 				sdk.NewAttribute("owner", owner.String()),
 				sdk.NewAttribute("vault_address", vaultAddr.String()),
-				sdk.NewAttribute("amount_in", assets.String()),
-				sdk.NewAttribute("shares_received", sdk.NewCoin(shareDenom, assets.Amount).String()),
+				sdk.NewAttribute("amount_in", "{\"denom\":\"underlying\",\"amount\":\"100\"}"),
+				sdk.NewAttribute("shares_received", "{\"denom\":\"vaultshares\",\"amount\":\"100\"}"),
 			),
 			sdk.NewEvent("provenance.marker.v1.EventMarkerMint",
-				sdk.NewAttribute("amount", assets.String()),
+				sdk.NewAttribute("amount", assets.Amount.String()),
 				sdk.NewAttribute("denom", shareDenom),
 				sdk.NewAttribute("administrator", vaultAddr.String()),
 			),

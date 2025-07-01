@@ -36,3 +36,12 @@ func NewEventVaultCreated(vault *VaultAccount) *EventVaultCreated {
 		UnderlyingAssets: vault.UnderlyingAssets,
 	}
 }
+
+func NewEventSwapIn(vaultAddress, owner string, assets, shares sdk.Coin) *EventSwapIn {
+	return &EventSwapIn{
+		VaultAddress:   vaultAddress,
+		SharesReceived: shares,
+		AmountIn:       assets,
+		Owner:          owner,
+	}
+}

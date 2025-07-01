@@ -166,6 +166,8 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 		return nil, err
 	}
 
+	k.emitEvent(ctx, types.NewEventSwapIn(vaultAddr.String(), recipient.String(), asset, shares))
+
 	return &shares, nil
 }
 

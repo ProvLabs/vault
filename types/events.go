@@ -45,3 +45,12 @@ func NewEventSwapIn(vaultAddress, owner string, assets, shares sdk.Coin) *EventS
 		Owner:          owner,
 	}
 }
+
+func NewEventSwapOut(vaultAddress, owner string, assets, shares sdk.Coin) *EventSwapOut {
+	return &EventSwapOut{
+		VaultAddress: vaultAddress,
+		SharesBurned: shares,
+		AmountOut:    assets,
+		Owner:        owner,
+	}
+}

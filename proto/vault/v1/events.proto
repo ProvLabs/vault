@@ -60,3 +60,15 @@ message EventSwapIn {
   // vault_address is the bech32 address of the vault.
   string vault_address = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
+
+// EventSwapOut is an event emitted when vault shares are swapped out for underlying assets.
+message EventSwapOut {
+  // owner is the address of the account that initiated the swap.
+  string owner = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // shares_burned is the amount of vault shares that were burned.
+  cosmos.base.v1beta1.Coin shares_burned = 2 [(gogoproto.nullable) = false];
+  // amount_out is the amount of underlying assets that were sent to the recipient.
+  cosmos.base.v1beta1.Coin amount_out = 3 [(gogoproto.nullable) = false];
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}

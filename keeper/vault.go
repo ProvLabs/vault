@@ -200,5 +200,7 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 		return nil, fmt.Errorf("failed to send underlying asset: %w", err)
 	}
 
+	k.emitEvent(ctx, types.NewEventSwapIn(vaultAddr.String(), owner.String(), assets, shares))
+
 	return &shares, nil
 }

@@ -22,6 +22,8 @@ modules:
         - account: attribute
         - account: marker
           permissions: [ burner, minter ]
+        - account: mint
+          permissions: [ minter ]
   - name: bank
     config:
       "@type": cosmos.bank.module.v1.Module

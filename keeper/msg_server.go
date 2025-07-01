@@ -2,7 +2,9 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provlabs/vault/types"
 )
 
@@ -16,10 +18,18 @@ func NewMsgServer(keeper *Keeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
 }
 
-// CreateVault creates a new vault.
+// CreateVault creates a vault.
 func (k msgServer) CreateVault(goCtx context.Context, msg *types.MsgCreateVaultRequest) (*types.MsgCreateVaultResponse, error) {
-	panic("not implemented")
+	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	vault, err := k.Keeper.CreateVault(ctx, msg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create vault: %w", err)
+	}
+
+	return &types.MsgCreateVaultResponse{
+		VaultAddress: vault.Address,
+	}, nil
 }
 
 // Deposit deposits assets into a vault.

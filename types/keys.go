@@ -3,6 +3,7 @@ package types
 import (
 	fmt "fmt"
 
+	"cosmossdk.io/collections"
 	"github.com/cometbft/cometbft/crypto"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -20,13 +21,18 @@ const (
 	GovModuleName = "gov"
 )
 
-// ParamsKey is the prefix to retrieve all Params
 var (
-	ParamsKey = []byte("params")
-	VaultsKey = []byte("vaults")
+	// ParamsKeyPrefix is the prefix to retrieve all Params
+	ParamsKeyPrefix = collections.NewPrefix(0)
+	// ParamsName is a human-readable name for the params collection.
+	ParamsName = "params"
+	// VaultsKeyPrefix is the prefix to retrieve all Vaults
+	VaultsKeyPrefix = collections.NewPrefix(1)
+	// VaultsName is a human-readable name for the vaults collection.
+	VaultsName = "vaults"
 )
 
-// GetVaultAddress returns the module account address for the given vaultID.
-func GetVaultAddress(vaultID uint32) sdk.AccAddress {
-	return sdk.AccAddress(crypto.AddressHash([]byte(fmt.Sprintf("%s/%d", ModuleName, vaultID))))
+// GetVaultAddress returns the module account address for the given shareDenom.
+func GetVaultAddress(shareDenom string) sdk.AccAddress {
+	return sdk.AccAddress(crypto.AddressHash([]byte(fmt.Sprintf("%s/%s", ModuleName, shareDenom))))
 }

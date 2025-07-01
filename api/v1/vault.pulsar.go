@@ -2,8 +2,11 @@
 package vaultv1
 
 import (
-	v1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
+	_ "cosmossdk.io/api/amino"
+	v1beta1 "cosmossdk.io/api/cosmos/auth/v1beta1"
+	_ "cosmossdk.io/api/cosmos/base/v1beta1"
 	fmt "fmt"
+	_ "github.com/cosmos/cosmos-proto"
 	runtime "github.com/cosmos/cosmos-proto/runtime"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -14,32 +17,78 @@ import (
 	sync "sync"
 )
 
+var _ protoreflect.List = (*_VaultAccount_3_list)(nil)
+
+type _VaultAccount_3_list struct {
+	list *[]string
+}
+
+func (x *_VaultAccount_3_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_VaultAccount_3_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfString((*x.list)[i])
+}
+
+func (x *_VaultAccount_3_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.String()
+	concreteValue := valueUnwrapped
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_VaultAccount_3_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.String()
+	concreteValue := valueUnwrapped
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_VaultAccount_3_list) AppendMutable() protoreflect.Value {
+	panic(fmt.Errorf("AppendMutable can not be called on message VaultAccount at list field UnderlyingAssets as it is not of Message kind"))
+}
+
+func (x *_VaultAccount_3_list) Truncate(n int) {
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_VaultAccount_3_list) NewElement() protoreflect.Value {
+	v := ""
+	return protoreflect.ValueOfString(v)
+}
+
+func (x *_VaultAccount_3_list) IsValid() bool {
+	return x.list != nil
+}
+
 var (
-	md_Vault                   protoreflect.MessageDescriptor
-	fd_Vault_vault_address     protoreflect.FieldDescriptor
-	fd_Vault_marker_address    protoreflect.FieldDescriptor
-	fd_Vault_admin             protoreflect.FieldDescriptor
-	fd_Vault_max_total_deposit protoreflect.FieldDescriptor
+	md_VaultAccount                   protoreflect.MessageDescriptor
+	fd_VaultAccount_base_account      protoreflect.FieldDescriptor
+	fd_VaultAccount_share_denom       protoreflect.FieldDescriptor
+	fd_VaultAccount_underlying_assets protoreflect.FieldDescriptor
+	fd_VaultAccount_admin             protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_vault_v1_vault_proto_init()
-	md_Vault = File_vault_v1_vault_proto.Messages().ByName("Vault")
-	fd_Vault_vault_address = md_Vault.Fields().ByName("vault_address")
-	fd_Vault_marker_address = md_Vault.Fields().ByName("marker_address")
-	fd_Vault_admin = md_Vault.Fields().ByName("admin")
-	fd_Vault_max_total_deposit = md_Vault.Fields().ByName("max_total_deposit")
+	md_VaultAccount = File_vault_v1_vault_proto.Messages().ByName("VaultAccount")
+	fd_VaultAccount_base_account = md_VaultAccount.Fields().ByName("base_account")
+	fd_VaultAccount_share_denom = md_VaultAccount.Fields().ByName("share_denom")
+	fd_VaultAccount_underlying_assets = md_VaultAccount.Fields().ByName("underlying_assets")
+	fd_VaultAccount_admin = md_VaultAccount.Fields().ByName("admin")
 }
 
-var _ protoreflect.Message = (*fastReflection_Vault)(nil)
+var _ protoreflect.Message = (*fastReflection_VaultAccount)(nil)
 
-type fastReflection_Vault Vault
+type fastReflection_VaultAccount VaultAccount
 
-func (x *Vault) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_Vault)(x)
+func (x *VaultAccount) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_VaultAccount)(x)
 }
 
-func (x *Vault) slowProtoReflect() protoreflect.Message {
+func (x *VaultAccount) slowProtoReflect() protoreflect.Message {
 	mi := &file_vault_v1_vault_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -51,43 +100,43 @@ func (x *Vault) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_Vault_messageType fastReflection_Vault_messageType
-var _ protoreflect.MessageType = fastReflection_Vault_messageType{}
+var _fastReflection_VaultAccount_messageType fastReflection_VaultAccount_messageType
+var _ protoreflect.MessageType = fastReflection_VaultAccount_messageType{}
 
-type fastReflection_Vault_messageType struct{}
+type fastReflection_VaultAccount_messageType struct{}
 
-func (x fastReflection_Vault_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_Vault)(nil)
+func (x fastReflection_VaultAccount_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_VaultAccount)(nil)
 }
-func (x fastReflection_Vault_messageType) New() protoreflect.Message {
-	return new(fastReflection_Vault)
+func (x fastReflection_VaultAccount_messageType) New() protoreflect.Message {
+	return new(fastReflection_VaultAccount)
 }
-func (x fastReflection_Vault_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_Vault
+func (x fastReflection_VaultAccount_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_VaultAccount
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_Vault) Descriptor() protoreflect.MessageDescriptor {
-	return md_Vault
+func (x *fastReflection_VaultAccount) Descriptor() protoreflect.MessageDescriptor {
+	return md_VaultAccount
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_Vault) Type() protoreflect.MessageType {
-	return _fastReflection_Vault_messageType
+func (x *fastReflection_VaultAccount) Type() protoreflect.MessageType {
+	return _fastReflection_VaultAccount_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_Vault) New() protoreflect.Message {
-	return new(fastReflection_Vault)
+func (x *fastReflection_VaultAccount) New() protoreflect.Message {
+	return new(fastReflection_VaultAccount)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_Vault) Interface() protoreflect.ProtoMessage {
-	return (*Vault)(x)
+func (x *fastReflection_VaultAccount) Interface() protoreflect.ProtoMessage {
+	return (*VaultAccount)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -95,28 +144,28 @@ func (x *fastReflection_Vault) Interface() protoreflect.ProtoMessage {
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_Vault) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.VaultAddress != "" {
-		value := protoreflect.ValueOfString(x.VaultAddress)
-		if !f(fd_Vault_vault_address, value) {
+func (x *fastReflection_VaultAccount) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.BaseAccount != nil {
+		value := protoreflect.ValueOfMessage(x.BaseAccount.ProtoReflect())
+		if !f(fd_VaultAccount_base_account, value) {
 			return
 		}
 	}
-	if x.MarkerAddress != "" {
-		value := protoreflect.ValueOfString(x.MarkerAddress)
-		if !f(fd_Vault_marker_address, value) {
+	if x.ShareDenom != "" {
+		value := protoreflect.ValueOfString(x.ShareDenom)
+		if !f(fd_VaultAccount_share_denom, value) {
+			return
+		}
+	}
+	if len(x.UnderlyingAssets) != 0 {
+		value := protoreflect.ValueOfList(&_VaultAccount_3_list{list: &x.UnderlyingAssets})
+		if !f(fd_VaultAccount_underlying_assets, value) {
 			return
 		}
 	}
 	if x.Admin != "" {
 		value := protoreflect.ValueOfString(x.Admin)
-		if !f(fd_Vault_admin, value) {
-			return
-		}
-	}
-	if x.MaxTotalDeposit != nil {
-		value := protoreflect.ValueOfMessage(x.MaxTotalDeposit.ProtoReflect())
-		if !f(fd_Vault_max_total_deposit, value) {
+		if !f(fd_VaultAccount_admin, value) {
 			return
 		}
 	}
@@ -133,21 +182,21 @@ func (x *fastReflection_Vault) Range(f func(protoreflect.FieldDescriptor, protor
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_Vault) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_VaultAccount) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.Vault.vault_address":
-		return x.VaultAddress != ""
-	case "vault.v1.Vault.marker_address":
-		return x.MarkerAddress != ""
-	case "vault.v1.Vault.admin":
+	case "vault.v1.VaultAccount.base_account":
+		return x.BaseAccount != nil
+	case "vault.v1.VaultAccount.share_denom":
+		return x.ShareDenom != ""
+	case "vault.v1.VaultAccount.underlying_assets":
+		return len(x.UnderlyingAssets) != 0
+	case "vault.v1.VaultAccount.admin":
 		return x.Admin != ""
-	case "vault.v1.Vault.max_total_deposit":
-		return x.MaxTotalDeposit != nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.Vault"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.VaultAccount"))
 		}
-		panic(fmt.Errorf("message vault.v1.Vault does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.VaultAccount does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -157,21 +206,21 @@ func (x *fastReflection_Vault) Has(fd protoreflect.FieldDescriptor) bool {
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Vault) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_VaultAccount) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.Vault.vault_address":
-		x.VaultAddress = ""
-	case "vault.v1.Vault.marker_address":
-		x.MarkerAddress = ""
-	case "vault.v1.Vault.admin":
+	case "vault.v1.VaultAccount.base_account":
+		x.BaseAccount = nil
+	case "vault.v1.VaultAccount.share_denom":
+		x.ShareDenom = ""
+	case "vault.v1.VaultAccount.underlying_assets":
+		x.UnderlyingAssets = nil
+	case "vault.v1.VaultAccount.admin":
 		x.Admin = ""
-	case "vault.v1.Vault.max_total_deposit":
-		x.MaxTotalDeposit = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.Vault"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.VaultAccount"))
 		}
-		panic(fmt.Errorf("message vault.v1.Vault does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.VaultAccount does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -181,25 +230,28 @@ func (x *fastReflection_Vault) Clear(fd protoreflect.FieldDescriptor) {
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_Vault) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_VaultAccount) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.Vault.vault_address":
-		value := x.VaultAddress
+	case "vault.v1.VaultAccount.base_account":
+		value := x.BaseAccount
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "vault.v1.VaultAccount.share_denom":
+		value := x.ShareDenom
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.Vault.marker_address":
-		value := x.MarkerAddress
-		return protoreflect.ValueOfString(value)
-	case "vault.v1.Vault.admin":
+	case "vault.v1.VaultAccount.underlying_assets":
+		if len(x.UnderlyingAssets) == 0 {
+			return protoreflect.ValueOfList(&_VaultAccount_3_list{})
+		}
+		listValue := &_VaultAccount_3_list{list: &x.UnderlyingAssets}
+		return protoreflect.ValueOfList(listValue)
+	case "vault.v1.VaultAccount.admin":
 		value := x.Admin
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.Vault.max_total_deposit":
-		value := x.MaxTotalDeposit
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.Vault"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.VaultAccount"))
 		}
-		panic(fmt.Errorf("message vault.v1.Vault does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message vault.v1.VaultAccount does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -213,21 +265,23 @@ func (x *fastReflection_Vault) Get(descriptor protoreflect.FieldDescriptor) prot
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Vault) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_VaultAccount) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.Vault.vault_address":
-		x.VaultAddress = value.Interface().(string)
-	case "vault.v1.Vault.marker_address":
-		x.MarkerAddress = value.Interface().(string)
-	case "vault.v1.Vault.admin":
+	case "vault.v1.VaultAccount.base_account":
+		x.BaseAccount = value.Message().Interface().(*v1beta1.BaseAccount)
+	case "vault.v1.VaultAccount.share_denom":
+		x.ShareDenom = value.Interface().(string)
+	case "vault.v1.VaultAccount.underlying_assets":
+		lv := value.List()
+		clv := lv.(*_VaultAccount_3_list)
+		x.UnderlyingAssets = *clv.list
+	case "vault.v1.VaultAccount.admin":
 		x.Admin = value.Interface().(string)
-	case "vault.v1.Vault.max_total_deposit":
-		x.MaxTotalDeposit = value.Message().Interface().(*v1beta1.Coin)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.Vault"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.VaultAccount"))
 		}
-		panic(fmt.Errorf("message vault.v1.Vault does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.VaultAccount does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -241,56 +295,61 @@ func (x *fastReflection_Vault) Set(fd protoreflect.FieldDescriptor, value protor
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Vault) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_VaultAccount) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.Vault.max_total_deposit":
-		if x.MaxTotalDeposit == nil {
-			x.MaxTotalDeposit = new(v1beta1.Coin)
+	case "vault.v1.VaultAccount.base_account":
+		if x.BaseAccount == nil {
+			x.BaseAccount = new(v1beta1.BaseAccount)
 		}
-		return protoreflect.ValueOfMessage(x.MaxTotalDeposit.ProtoReflect())
-	case "vault.v1.Vault.vault_address":
-		panic(fmt.Errorf("field vault_address of message vault.v1.Vault is not mutable"))
-	case "vault.v1.Vault.marker_address":
-		panic(fmt.Errorf("field marker_address of message vault.v1.Vault is not mutable"))
-	case "vault.v1.Vault.admin":
-		panic(fmt.Errorf("field admin of message vault.v1.Vault is not mutable"))
+		return protoreflect.ValueOfMessage(x.BaseAccount.ProtoReflect())
+	case "vault.v1.VaultAccount.underlying_assets":
+		if x.UnderlyingAssets == nil {
+			x.UnderlyingAssets = []string{}
+		}
+		value := &_VaultAccount_3_list{list: &x.UnderlyingAssets}
+		return protoreflect.ValueOfList(value)
+	case "vault.v1.VaultAccount.share_denom":
+		panic(fmt.Errorf("field share_denom of message vault.v1.VaultAccount is not mutable"))
+	case "vault.v1.VaultAccount.admin":
+		panic(fmt.Errorf("field admin of message vault.v1.VaultAccount is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.Vault"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.VaultAccount"))
 		}
-		panic(fmt.Errorf("message vault.v1.Vault does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.VaultAccount does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_Vault) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_VaultAccount) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.Vault.vault_address":
-		return protoreflect.ValueOfString("")
-	case "vault.v1.Vault.marker_address":
-		return protoreflect.ValueOfString("")
-	case "vault.v1.Vault.admin":
-		return protoreflect.ValueOfString("")
-	case "vault.v1.Vault.max_total_deposit":
-		m := new(v1beta1.Coin)
+	case "vault.v1.VaultAccount.base_account":
+		m := new(v1beta1.BaseAccount)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "vault.v1.VaultAccount.share_denom":
+		return protoreflect.ValueOfString("")
+	case "vault.v1.VaultAccount.underlying_assets":
+		list := []string{}
+		return protoreflect.ValueOfList(&_VaultAccount_3_list{list: &list})
+	case "vault.v1.VaultAccount.admin":
+		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.Vault"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.VaultAccount"))
 		}
-		panic(fmt.Errorf("message vault.v1.Vault does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.VaultAccount does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_Vault) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_VaultAccount) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.Vault", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in vault.v1.VaultAccount", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -298,7 +357,7 @@ func (x *fastReflection_Vault) WhichOneof(d protoreflect.OneofDescriptor) protor
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_Vault) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_VaultAccount) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -309,7 +368,7 @@ func (x *fastReflection_Vault) GetUnknown() protoreflect.RawFields {
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_Vault) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_VaultAccount) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -321,7 +380,7 @@ func (x *fastReflection_Vault) SetUnknown(fields protoreflect.RawFields) {
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_Vault) IsValid() bool {
+func (x *fastReflection_VaultAccount) IsValid() bool {
 	return x != nil
 }
 
@@ -331,9 +390,9 @@ func (x *fastReflection_Vault) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_Vault) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_VaultAccount) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*Vault)
+		x := input.Message.Interface().(*VaultAccount)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -345,20 +404,22 @@ func (x *fastReflection_Vault) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		l = len(x.VaultAddress)
+		if x.BaseAccount != nil {
+			l = options.Size(x.BaseAccount)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.ShareDenom)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		l = len(x.MarkerAddress)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
+		if len(x.UnderlyingAssets) > 0 {
+			for _, s := range x.UnderlyingAssets {
+				l = len(s)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
 		}
 		l = len(x.Admin)
 		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
-		if x.MaxTotalDeposit != nil {
-			l = options.Size(x.MaxTotalDeposit)
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		if x.unknownFields != nil {
@@ -371,7 +432,7 @@ func (x *fastReflection_Vault) ProtoMethods() *protoiface.Methods {
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*Vault)
+		x := input.Message.Interface().(*VaultAccount)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -390,8 +451,31 @@ func (x *fastReflection_Vault) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if x.MaxTotalDeposit != nil {
-			encoded, err := options.Marshal(x.MaxTotalDeposit)
+		if len(x.Admin) > 0 {
+			i -= len(x.Admin)
+			copy(dAtA[i:], x.Admin)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Admin)))
+			i--
+			dAtA[i] = 0x22
+		}
+		if len(x.UnderlyingAssets) > 0 {
+			for iNdEx := len(x.UnderlyingAssets) - 1; iNdEx >= 0; iNdEx-- {
+				i -= len(x.UnderlyingAssets[iNdEx])
+				copy(dAtA[i:], x.UnderlyingAssets[iNdEx])
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(x.UnderlyingAssets[iNdEx])))
+				i--
+				dAtA[i] = 0x1a
+			}
+		}
+		if len(x.ShareDenom) > 0 {
+			i -= len(x.ShareDenom)
+			copy(dAtA[i:], x.ShareDenom)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ShareDenom)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if x.BaseAccount != nil {
+			encoded, err := options.Marshal(x.BaseAccount)
 			if err != nil {
 				return protoiface.MarshalOutput{
 					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -401,27 +485,6 @@ func (x *fastReflection_Vault) ProtoMethods() *protoiface.Methods {
 			i -= len(encoded)
 			copy(dAtA[i:], encoded)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-			i--
-			dAtA[i] = 0x22
-		}
-		if len(x.Admin) > 0 {
-			i -= len(x.Admin)
-			copy(dAtA[i:], x.Admin)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Admin)))
-			i--
-			dAtA[i] = 0x1a
-		}
-		if len(x.MarkerAddress) > 0 {
-			i -= len(x.MarkerAddress)
-			copy(dAtA[i:], x.MarkerAddress)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.MarkerAddress)))
-			i--
-			dAtA[i] = 0x12
-		}
-		if len(x.VaultAddress) > 0 {
-			i -= len(x.VaultAddress)
-			copy(dAtA[i:], x.VaultAddress)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.VaultAddress)))
 			i--
 			dAtA[i] = 0xa
 		}
@@ -436,7 +499,7 @@ func (x *fastReflection_Vault) ProtoMethods() *protoiface.Methods {
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*Vault)
+		x := input.Message.Interface().(*VaultAccount)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -468,17 +531,17 @@ func (x *fastReflection_Vault) ProtoMethods() *protoiface.Methods {
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Vault: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: VaultAccount: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: Vault: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: VaultAccount: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field VaultAddress", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field BaseAccount", wireType)
 				}
-				var stringLen uint64
+				var msglen int
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -488,27 +551,31 @@ func (x *fastReflection_Vault) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
+					msglen |= int(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
+				if msglen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + intStringLen
+				postIndex := iNdEx + msglen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.VaultAddress = string(dAtA[iNdEx:postIndex])
+				if x.BaseAccount == nil {
+					x.BaseAccount = &v1beta1.BaseAccount{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.BaseAccount); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
 				iNdEx = postIndex
 			case 2:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MarkerAddress", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ShareDenom", wireType)
 				}
 				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
@@ -536,9 +603,41 @@ func (x *fastReflection_Vault) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.MarkerAddress = string(dAtA[iNdEx:postIndex])
+				x.ShareDenom = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field UnderlyingAssets", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.UnderlyingAssets = append(x.UnderlyingAssets, string(dAtA[iNdEx:postIndex]))
+				iNdEx = postIndex
+			case 4:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
 				}
@@ -569,42 +668,6 @@ func (x *fastReflection_Vault) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				x.Admin = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
-			case 4:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MaxTotalDeposit", wireType)
-				}
-				var msglen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					msglen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if msglen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + msglen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if x.MaxTotalDeposit == nil {
-					x.MaxTotalDeposit = &v1beta1.Coin{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.MaxTotalDeposit); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -654,27 +717,25 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// Vault represents a central holding place for assets, governed by a set of rules.
+// VaultAccount represents a central holding place for assets, governed by a set of rules.
 // It is based on the ERC-4626 standard and builds upon the Provenance Marker module.
-type Vault struct {
+type VaultAccount struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// vault_address is the bech32 address of the vault.
-	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// marker_address is the bech32 address of the marker associated with the vault.
-	// This marker holds the underlying assets.
-	MarkerAddress string `protobuf:"bytes,2,opt,name=marker_address,json=markerAddress,proto3" json:"marker_address,omitempty"`
+	// base_account cosmos account information including address and coin holdings.
+	BaseAccount *v1beta1.BaseAccount `protobuf:"bytes,1,opt,name=base_account,json=baseAccount,proto3" json:"base_account,omitempty"`
+	// share_denom is the denomination used to represent shares in the vault (e.g., vault tokens).
+	ShareDenom string `protobuf:"bytes,2,opt,name=share_denom,json=shareDenom,proto3" json:"share_denom,omitempty"`
+	// underlying_assets specifies the denomination(s) of the asset(s) managed by the vault.
+	UnderlyingAssets []string `protobuf:"bytes,3,rep,name=underlying_assets,json=underlyingAssets,proto3" json:"underlying_assets,omitempty"`
 	// admin is the address that has administrative privileges over the vault.
-	Admin string `protobuf:"bytes,3,opt,name=admin,proto3" json:"admin,omitempty"`
-	// max_total_deposit is the absolute maximum amount of the base asset that can be deposited in the vault.
-	// If empty, there is no total deposit limit.
-	MaxTotalDeposit *v1beta1.Coin `protobuf:"bytes,4,opt,name=max_total_deposit,json=maxTotalDeposit,proto3" json:"max_total_deposit,omitempty"`
+	Admin string `protobuf:"bytes,4,opt,name=admin,proto3" json:"admin,omitempty"`
 }
 
-func (x *Vault) Reset() {
-	*x = Vault{}
+func (x *VaultAccount) Reset() {
+	*x = VaultAccount{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_vault_v1_vault_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -682,43 +743,43 @@ func (x *Vault) Reset() {
 	}
 }
 
-func (x *Vault) String() string {
+func (x *VaultAccount) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Vault) ProtoMessage() {}
+func (*VaultAccount) ProtoMessage() {}
 
-// Deprecated: Use Vault.ProtoReflect.Descriptor instead.
-func (*Vault) Descriptor() ([]byte, []int) {
+// Deprecated: Use VaultAccount.ProtoReflect.Descriptor instead.
+func (*VaultAccount) Descriptor() ([]byte, []int) {
 	return file_vault_v1_vault_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *Vault) GetVaultAddress() string {
+func (x *VaultAccount) GetBaseAccount() *v1beta1.BaseAccount {
 	if x != nil {
-		return x.VaultAddress
+		return x.BaseAccount
+	}
+	return nil
+}
+
+func (x *VaultAccount) GetShareDenom() string {
+	if x != nil {
+		return x.ShareDenom
 	}
 	return ""
 }
 
-func (x *Vault) GetMarkerAddress() string {
+func (x *VaultAccount) GetUnderlyingAssets() []string {
 	if x != nil {
-		return x.MarkerAddress
+		return x.UnderlyingAssets
 	}
-	return ""
+	return nil
 }
 
-func (x *Vault) GetAdmin() string {
+func (x *VaultAccount) GetAdmin() string {
 	if x != nil {
 		return x.Admin
 	}
 	return ""
-}
-
-func (x *Vault) GetMaxTotalDeposit() *v1beta1.Coin {
-	if x != nil {
-		return x.MaxTotalDeposit
-	}
-	return nil
 }
 
 var File_vault_v1_vault_proto protoreflect.FileDescriptor
@@ -726,31 +787,38 @@ var File_vault_v1_vault_proto protoreflect.FileDescriptor
 var file_vault_v1_vault_proto_rawDesc = []byte{
 	0x0a, 0x14, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74,
 	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x08, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31,
-	0x1a, 0x1e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x73, 0x65, 0x2f, 0x76, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x63, 0x6f, 0x69, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x1a, 0x14, 0x67, 0x6f, 0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f,
-	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xb6, 0x01, 0x0a, 0x05, 0x56, 0x61, 0x75, 0x6c, 0x74,
-	0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73,
-	0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64,
-	0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x25, 0x0a, 0x0e, 0x6d, 0x61, 0x72, 0x6b, 0x65, 0x72, 0x5f,
-	0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0d, 0x6d,
-	0x61, 0x72, 0x6b, 0x65, 0x72, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x14, 0x0a, 0x05,
-	0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x61, 0x64, 0x6d,
-	0x69, 0x6e, 0x12, 0x4b, 0x0a, 0x11, 0x6d, 0x61, 0x78, 0x5f, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x5f,
-	0x64, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x01, 0x52, 0x0f,
-	0x6d, 0x61, 0x78, 0x54, 0x6f, 0x74, 0x61, 0x6c, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x42,
-	0x8b, 0x01, 0x0a, 0x0c, 0x63, 0x6f, 0x6d, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31,
-	0x42, 0x0a, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2e,
-	0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c,
-	0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x61,
-	0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2, 0x02,
-	0x03, 0x56, 0x58, 0x58, 0xaa, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56, 0x31, 0xca,
-	0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x14, 0x56, 0x61, 0x75,
-	0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74,
-	0x61, 0xea, 0x02, 0x09, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x1a, 0x11, 0x61, 0x6d, 0x69, 0x6e, 0x6f, 0x2f, 0x61, 0x6d, 0x69, 0x6e, 0x6f, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x1a, 0x19, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5f, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1e,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x75, 0x74, 0x68, 0x2f, 0x76, 0x31, 0x62, 0x65,
+	0x74, 0x61, 0x31, 0x2f, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1e,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x73, 0x65, 0x2f, 0x76, 0x31, 0x62, 0x65,
+	0x74, 0x61, 0x31, 0x2f, 0x63, 0x6f, 0x69, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x14,
+	0x67, 0x6f, 0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x22, 0xd7, 0x01, 0x0a, 0x0c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x63,
+	0x63, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x49, 0x0a, 0x0c, 0x62, 0x61, 0x73, 0x65, 0x5f, 0x61, 0x63,
+	0x63, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
+	0x31, 0x2e, 0x42, 0x61, 0x73, 0x65, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x42, 0x04, 0xd0,
+	0xde, 0x1f, 0x01, 0x52, 0x0b, 0x62, 0x61, 0x73, 0x65, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74,
+	0x12, 0x1f, 0x0a, 0x0b, 0x73, 0x68, 0x61, 0x72, 0x65, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x73, 0x68, 0x61, 0x72, 0x65, 0x44, 0x65, 0x6e, 0x6f,
+	0x6d, 0x12, 0x2b, 0x0a, 0x11, 0x75, 0x6e, 0x64, 0x65, 0x72, 0x6c, 0x79, 0x69, 0x6e, 0x67, 0x5f,
+	0x61, 0x73, 0x73, 0x65, 0x74, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x09, 0x52, 0x10, 0x75, 0x6e,
+	0x64, 0x65, 0x72, 0x6c, 0x79, 0x69, 0x6e, 0x67, 0x41, 0x73, 0x73, 0x65, 0x74, 0x73, 0x12, 0x2e,
+	0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2,
+	0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x42, 0x8b,
+	0x01, 0x0a, 0x0c, 0x63, 0x6f, 0x6d, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x42,
+	0x0a, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2e, 0x67,
+	0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61,
+	0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x61, 0x75,
+	0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2, 0x02, 0x03,
+	0x56, 0x58, 0x58, 0xaa, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56, 0x31, 0xca, 0x02,
+	0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x14, 0x56, 0x61, 0x75, 0x6c,
+	0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,
+	0xea, 0x02, 0x09, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -767,11 +835,11 @@ func file_vault_v1_vault_proto_rawDescGZIP() []byte {
 
 var file_vault_v1_vault_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_vault_v1_vault_proto_goTypes = []interface{}{
-	(*Vault)(nil),        // 0: vault.v1.Vault
-	(*v1beta1.Coin)(nil), // 1: cosmos.base.v1beta1.Coin
+	(*VaultAccount)(nil),        // 0: vault.v1.VaultAccount
+	(*v1beta1.BaseAccount)(nil), // 1: cosmos.auth.v1beta1.BaseAccount
 }
 var file_vault_v1_vault_proto_depIdxs = []int32{
-	1, // 0: vault.v1.Vault.max_total_deposit:type_name -> cosmos.base.v1beta1.Coin
+	1, // 0: vault.v1.VaultAccount.base_account:type_name -> cosmos.auth.v1beta1.BaseAccount
 	1, // [1:1] is the sub-list for method output_type
 	1, // [1:1] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
@@ -786,7 +854,7 @@ func file_vault_v1_vault_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_vault_v1_vault_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Vault); i {
+			switch v := v.(*VaultAccount); i {
 			case 0:
 				return &v.state
 			case 1:

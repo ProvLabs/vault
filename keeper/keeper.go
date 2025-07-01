@@ -10,6 +10,7 @@ import (
 	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/provlabs/vault/types"
 )
 
@@ -19,8 +20,11 @@ type Keeper struct {
 	addressCodec address.Codec
 	authority    []byte
 
+	AuthKeeper   types.AccountKeeper
+	MarkerKeeper types.MarkerKeeper
+
 	Params collections.Item[types.Params]
-	Vaults collections.Map[uint32, types.Vault]
+	Vaults collections.Map[sdk.AccAddress, []byte]
 }
 
 func NewKeeper(
@@ -29,6 +33,8 @@ func NewKeeper(
 	eventService event.Service,
 	addressCodec address.Codec,
 	authority []byte,
+	authKeeper types.AccountKeeper,
+	markerkeeper types.MarkerKeeper,
 ) *Keeper {
 	if _, err := addressCodec.BytesToString(authority); err != nil {
 		panic(fmt.Sprintf("invalid authority address %s: %s", authority, err))
@@ -40,8 +46,10 @@ func NewKeeper(
 		eventService: eventService,
 		addressCodec: addressCodec,
 		authority:    authority,
-		Params:       collections.NewItem(builder, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
-		Vaults:       collections.NewMap(builder, collections.Prefix(types.VaultsKey), "vaults", collections.Uint32Key, codec.CollValue[types.Vault](cdc)),
+		Params:       collections.NewItem(builder, types.ParamsKeyPrefix, types.ParamsName, codec.CollValue[types.Params](cdc)),
+		Vaults:       collections.NewMap(builder, types.VaultsKeyPrefix, types.VaultsName, sdk.AccAddressKey, collections.BytesValue),
+		AuthKeeper:   authKeeper,
+		MarkerKeeper: markerkeeper,
 	}
 
 	schema, err := builder.Build()
@@ -61,4 +69,10 @@ func (k Keeper) GetAuthority() []byte {
 // getLogger returns a logger with vault module context.
 func (k Keeper) getLogger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
+}
+
+func (k Keeper) emitEvent(ctx sdk.Context, event proto.Message) {
+	if err := k.eventService.EventManager(ctx).Emit(ctx, event); err != nil {
+		k.getLogger(ctx).Error(fmt.Sprintf("error emitting event %#v: %v", event, err))
+	}
 }

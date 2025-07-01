@@ -13,5 +13,5 @@ message GenesisState {
   Params params = 1 [(gogoproto.nullable) = false];
 
   // vaults defines the vaults that exist at genesis.
-  repeated Vault vaults = 2 [(gogoproto.nullable) = false];
+  repeated VaultAccount vaults = 2 [(gogoproto.nullable) = false];
 }

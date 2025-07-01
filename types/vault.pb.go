@@ -5,7 +5,10 @@ package types
 
 import (
 	fmt "fmt"
-	types "github.com/cosmos/cosmos-sdk/types"
+	_ "github.com/cosmos/cosmos-proto"
+	_ "github.com/cosmos/cosmos-sdk/types"
+	_ "github.com/cosmos/cosmos-sdk/types/tx/amino"
+	types "github.com/cosmos/cosmos-sdk/x/auth/types"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
 	io "io"
@@ -24,33 +27,31 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// Vault represents a central holding place for assets, governed by a set of rules.
+// VaultAccount represents a central holding place for assets, governed by a set of rules.
 // It is based on the ERC-4626 standard and builds upon the Provenance Marker module.
-type Vault struct {
-	// vault_address is the bech32 address of the vault.
-	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// marker_address is the bech32 address of the marker associated with the vault.
-	// This marker holds the underlying assets.
-	MarkerAddress string `protobuf:"bytes,2,opt,name=marker_address,json=markerAddress,proto3" json:"marker_address,omitempty"`
+type VaultAccount struct {
+	// base_account cosmos account information including address and coin holdings.
+	*types.BaseAccount `protobuf:"bytes,1,opt,name=base_account,json=baseAccount,proto3,embedded=base_account" json:"base_account,omitempty"`
+	// share_denom is the denomination used to represent shares in the vault (e.g., vault tokens).
+	ShareDenom string `protobuf:"bytes,2,opt,name=share_denom,json=shareDenom,proto3" json:"share_denom,omitempty"`
+	// underlying_assets specifies the denomination(s) of the asset(s) managed by the vault.
+	UnderlyingAssets []string `protobuf:"bytes,3,rep,name=underlying_assets,json=underlyingAssets,proto3" json:"underlying_assets,omitempty"`
 	// admin is the address that has administrative privileges over the vault.
-	Admin string `protobuf:"bytes,3,opt,name=admin,proto3" json:"admin,omitempty"`
-	// max_total_deposit is the absolute maximum amount of the base asset that can be deposited in the vault.
-	// If empty, there is no total deposit limit.
-	MaxTotalDeposit *types.Coin `protobuf:"bytes,4,opt,name=max_total_deposit,json=maxTotalDeposit,proto3" json:"max_total_deposit,omitempty"`
+	Admin string `protobuf:"bytes,4,opt,name=admin,proto3" json:"admin,omitempty"`
 }
 
-func (m *Vault) Reset()         { *m = Vault{} }
-func (m *Vault) String() string { return proto.CompactTextString(m) }
-func (*Vault) ProtoMessage()    {}
-func (*Vault) Descriptor() ([]byte, []int) {
+func (m *VaultAccount) Reset()         { *m = VaultAccount{} }
+func (m *VaultAccount) String() string { return proto.CompactTextString(m) }
+func (*VaultAccount) ProtoMessage()    {}
+func (*VaultAccount) Descriptor() ([]byte, []int) {
 	return fileDescriptor_6c8870a404251180, []int{0}
 }
-func (m *Vault) XXX_Unmarshal(b []byte) error {
+func (m *VaultAccount) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *Vault) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *VaultAccount) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_Vault.Marshal(b, m, deterministic)
+		return xxx_messageInfo_VaultAccount.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -60,75 +61,71 @@ func (m *Vault) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 		return b[:n], nil
 	}
 }
-func (m *Vault) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Vault.Merge(m, src)
+func (m *VaultAccount) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_VaultAccount.Merge(m, src)
 }
-func (m *Vault) XXX_Size() int {
+func (m *VaultAccount) XXX_Size() int {
 	return m.Size()
 }
-func (m *Vault) XXX_DiscardUnknown() {
-	xxx_messageInfo_Vault.DiscardUnknown(m)
+func (m *VaultAccount) XXX_DiscardUnknown() {
+	xxx_messageInfo_VaultAccount.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_Vault proto.InternalMessageInfo
+var xxx_messageInfo_VaultAccount proto.InternalMessageInfo
 
-func (m *Vault) GetVaultAddress() string {
+func (m *VaultAccount) GetShareDenom() string {
 	if m != nil {
-		return m.VaultAddress
+		return m.ShareDenom
 	}
 	return ""
 }
 
-func (m *Vault) GetMarkerAddress() string {
+func (m *VaultAccount) GetUnderlyingAssets() []string {
 	if m != nil {
-		return m.MarkerAddress
+		return m.UnderlyingAssets
 	}
-	return ""
+	return nil
 }
 
-func (m *Vault) GetAdmin() string {
+func (m *VaultAccount) GetAdmin() string {
 	if m != nil {
 		return m.Admin
 	}
 	return ""
 }
 
-func (m *Vault) GetMaxTotalDeposit() *types.Coin {
-	if m != nil {
-		return m.MaxTotalDeposit
-	}
-	return nil
-}
-
 func init() {
-	proto.RegisterType((*Vault)(nil), "vault.v1.Vault")
+	proto.RegisterType((*VaultAccount)(nil), "vault.v1.VaultAccount")
 }
 
 func init() { proto.RegisterFile("vault/v1/vault.proto", fileDescriptor_6c8870a404251180) }
 
 var fileDescriptor_6c8870a404251180 = []byte{
-	// 278 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x3c, 0x90, 0xb1, 0x4e, 0xc3, 0x30,
-	0x10, 0x86, 0x6b, 0x68, 0x11, 0x18, 0x0a, 0x22, 0xca, 0x10, 0x3a, 0xb8, 0x15, 0x08, 0xa9, 0x93,
-	0xad, 0xc0, 0xc4, 0x48, 0x61, 0x63, 0xab, 0x10, 0x03, 0x4b, 0x74, 0x49, 0xac, 0x10, 0x11, 0xe7,
-	0xa2, 0xd8, 0x8d, 0xca, 0x5b, 0xf0, 0x34, 0x3c, 0x43, 0xc7, 0x8e, 0x4c, 0x08, 0x25, 0x2f, 0x82,
-	0x62, 0x03, 0xdb, 0x7f, 0xbf, 0xbf, 0xfb, 0xf5, 0xfb, 0xa8, 0xdf, 0xc0, 0xaa, 0x30, 0xa2, 0x09,
-	0x85, 0x15, 0xbc, 0xaa, 0xd1, 0xa0, 0xb7, 0xef, 0x86, 0x26, 0x9c, 0xb0, 0x04, 0xb5, 0x42, 0x2d,
-	0x62, 0xd0, 0x52, 0x34, 0x61, 0x2c, 0x0d, 0x84, 0x22, 0xc1, 0xbc, 0x74, 0xe4, 0xc4, 0xcf, 0x30,
-	0x43, 0x2b, 0x45, 0xaf, 0x9c, 0x7b, 0xfe, 0x41, 0xe8, 0xe8, 0xa9, 0x8f, 0xf0, 0x2e, 0xe8, 0xd8,
-	0x66, 0x45, 0x90, 0xa6, 0xb5, 0xd4, 0x3a, 0x20, 0x33, 0x32, 0x3f, 0x58, 0x1e, 0x59, 0xf3, 0xd6,
-	0x79, 0xde, 0x25, 0x3d, 0x56, 0x50, 0xbf, 0xca, 0xfa, 0x9f, 0xda, 0xb1, 0xd4, 0xd8, 0xb9, 0x7f,
-	0x98, 0x4f, 0x47, 0x90, 0xaa, 0xbc, 0x0c, 0x76, 0xed, 0xab, 0x1b, 0xbc, 0x07, 0x7a, 0xaa, 0x60,
-	0x1d, 0x19, 0x34, 0x50, 0x44, 0xa9, 0xac, 0x50, 0xe7, 0x26, 0x18, 0xce, 0xc8, 0xfc, 0xf0, 0xea,
-	0x8c, 0xbb, 0xf6, 0xbc, 0x6f, 0xcf, 0x7f, 0xdb, 0xf3, 0x3b, 0xcc, 0xcb, 0xc5, 0x70, 0xf3, 0x35,
-	0x25, 0xcb, 0x13, 0x05, 0xeb, 0xc7, 0x7e, 0xf1, 0xde, 0xed, 0x2d, 0x6e, 0x36, 0x2d, 0x23, 0xdb,
-	0x96, 0x91, 0xef, 0x96, 0x91, 0xf7, 0x8e, 0x0d, 0xb6, 0x1d, 0x1b, 0x7c, 0x76, 0x6c, 0xf0, 0x3c,
-	0xcd, 0x72, 0xf3, 0xb2, 0x8a, 0x79, 0x82, 0x4a, 0x54, 0x35, 0x36, 0x05, 0xc4, 0xda, 0xdd, 0x4c,
-	0x98, 0xb7, 0x4a, 0xea, 0x78, 0xcf, 0x7e, 0xfd, 0xfa, 0x27, 0x00, 0x00, 0xff, 0xff, 0x0e, 0x2a,
-	0x56, 0x28, 0x52, 0x01, 0x00, 0x00,
+	// 326 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x5c, 0x91, 0xc1, 0x4a, 0xc3, 0x30,
+	0x1c, 0xc6, 0x17, 0x37, 0xc5, 0x65, 0x3b, 0xb8, 0xb2, 0x43, 0xdd, 0x21, 0x2b, 0x9e, 0x06, 0x62,
+	0x43, 0xf5, 0xe4, 0x71, 0xc5, 0x8b, 0xd7, 0x0a, 0x1e, 0xbc, 0x94, 0xb4, 0x0d, 0x5d, 0x61, 0xcd,
+	0x7f, 0xf4, 0x9f, 0x16, 0xf6, 0x16, 0x3e, 0x8c, 0x0f, 0xe1, 0x71, 0x78, 0xd1, 0x93, 0xc8, 0xf6,
+	0x22, 0xd2, 0xa4, 0x38, 0xf0, 0x12, 0xfe, 0xdf, 0xf7, 0x4b, 0xbe, 0x7c, 0x24, 0x74, 0xda, 0x88,
+	0x7a, 0xad, 0x79, 0x13, 0x70, 0x33, 0xf8, 0x9b, 0x0a, 0x34, 0x38, 0xe7, 0x56, 0x34, 0xc1, 0x6c,
+	0x22, 0xca, 0x42, 0x01, 0x37, 0xab, 0x85, 0xb3, 0xcb, 0x14, 0xb0, 0x04, 0x8c, 0x8d, 0xe2, 0x56,
+	0x74, 0x88, 0x59, 0xc5, 0x45, 0xad, 0x57, 0xbc, 0x09, 0x12, 0xa9, 0x45, 0x60, 0xc4, 0x3f, 0x9e,
+	0x08, 0x94, 0x7f, 0x3c, 0x85, 0x42, 0x75, 0x7c, 0x9a, 0x43, 0x0e, 0x36, 0xb7, 0x9d, 0xac, 0x7b,
+	0xf5, 0x49, 0xe8, 0xf8, 0xb9, 0x2d, 0xb4, 0x4c, 0x53, 0xa8, 0x95, 0x76, 0x1e, 0xe9, 0xb8, 0x4d,
+	0x88, 0x85, 0xd5, 0x2e, 0xf1, 0xc8, 0x62, 0x74, 0xeb, 0xf9, 0x5d, 0x17, 0x73, 0x61, 0x97, 0xee,
+	0x87, 0x02, 0x65, 0x77, 0x2e, 0x1c, 0xec, 0xbe, 0xe7, 0x24, 0x1a, 0x25, 0x47, 0xcb, 0x99, 0xd3,
+	0x11, 0xae, 0x44, 0x25, 0xe3, 0x4c, 0x2a, 0x28, 0xdd, 0x13, 0x8f, 0x2c, 0x86, 0x11, 0x35, 0xd6,
+	0x43, 0xeb, 0x38, 0xd7, 0x74, 0x52, 0xab, 0x4c, 0x56, 0xeb, 0x6d, 0xa1, 0xf2, 0x58, 0x20, 0x4a,
+	0x8d, 0x6e, 0xdf, 0xeb, 0x2f, 0x86, 0xd1, 0xc5, 0x11, 0x2c, 0x8d, 0xef, 0xf8, 0xf4, 0x54, 0x64,
+	0x65, 0xa1, 0xdc, 0x41, 0x9b, 0x13, 0xba, 0x1f, 0x6f, 0x37, 0xd3, 0xae, 0xd4, 0x32, 0xcb, 0x2a,
+	0x89, 0xf8, 0xa4, 0xab, 0x42, 0xe5, 0x91, 0xdd, 0x16, 0xde, 0xbf, 0xef, 0x19, 0xd9, 0xed, 0x19,
+	0xf9, 0xd9, 0x33, 0xf2, 0x7a, 0x60, 0xbd, 0xdd, 0x81, 0xf5, 0xbe, 0x0e, 0xac, 0xf7, 0x32, 0xcf,
+	0x0b, 0xbd, 0xaa, 0x13, 0x3f, 0x85, 0x92, 0x6f, 0x2a, 0x68, 0xd6, 0x22, 0x41, 0xfb, 0x45, 0x5c,
+	0x6f, 0x37, 0x12, 0x93, 0x33, 0xf3, 0x36, 0x77, 0xbf, 0x01, 0x00, 0x00, 0xff, 0xff, 0x7b, 0xb8,
+	0x70, 0xaa, 0xc1, 0x01, 0x00, 0x00,
 }
 
-func (m *Vault) Marshal() (dAtA []byte, err error) {
+func (m *VaultAccount) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -138,46 +135,48 @@ func (m *Vault) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *Vault) MarshalTo(dAtA []byte) (int, error) {
+func (m *VaultAccount) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *Vault) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *VaultAccount) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if m.MaxTotalDeposit != nil {
+	if len(m.Admin) > 0 {
+		i -= len(m.Admin)
+		copy(dAtA[i:], m.Admin)
+		i = encodeVarintVault(dAtA, i, uint64(len(m.Admin)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.UnderlyingAssets) > 0 {
+		for iNdEx := len(m.UnderlyingAssets) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.UnderlyingAssets[iNdEx])
+			copy(dAtA[i:], m.UnderlyingAssets[iNdEx])
+			i = encodeVarintVault(dAtA, i, uint64(len(m.UnderlyingAssets[iNdEx])))
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if len(m.ShareDenom) > 0 {
+		i -= len(m.ShareDenom)
+		copy(dAtA[i:], m.ShareDenom)
+		i = encodeVarintVault(dAtA, i, uint64(len(m.ShareDenom)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.BaseAccount != nil {
 		{
-			size, err := m.MaxTotalDeposit.MarshalToSizedBuffer(dAtA[:i])
+			size, err := m.BaseAccount.MarshalToSizedBuffer(dAtA[:i])
 			if err != nil {
 				return 0, err
 			}
 			i -= size
 			i = encodeVarintVault(dAtA, i, uint64(size))
 		}
-		i--
-		dAtA[i] = 0x22
-	}
-	if len(m.Admin) > 0 {
-		i -= len(m.Admin)
-		copy(dAtA[i:], m.Admin)
-		i = encodeVarintVault(dAtA, i, uint64(len(m.Admin)))
-		i--
-		dAtA[i] = 0x1a
-	}
-	if len(m.MarkerAddress) > 0 {
-		i -= len(m.MarkerAddress)
-		copy(dAtA[i:], m.MarkerAddress)
-		i = encodeVarintVault(dAtA, i, uint64(len(m.MarkerAddress)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.VaultAddress) > 0 {
-		i -= len(m.VaultAddress)
-		copy(dAtA[i:], m.VaultAddress)
-		i = encodeVarintVault(dAtA, i, uint64(len(m.VaultAddress)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -195,26 +194,28 @@ func encodeVarintVault(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *Vault) Size() (n int) {
+func (m *VaultAccount) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	l = len(m.VaultAddress)
+	if m.BaseAccount != nil {
+		l = m.BaseAccount.Size()
+		n += 1 + l + sovVault(uint64(l))
+	}
+	l = len(m.ShareDenom)
 	if l > 0 {
 		n += 1 + l + sovVault(uint64(l))
 	}
-	l = len(m.MarkerAddress)
-	if l > 0 {
-		n += 1 + l + sovVault(uint64(l))
+	if len(m.UnderlyingAssets) > 0 {
+		for _, s := range m.UnderlyingAssets {
+			l = len(s)
+			n += 1 + l + sovVault(uint64(l))
+		}
 	}
 	l = len(m.Admin)
 	if l > 0 {
-		n += 1 + l + sovVault(uint64(l))
-	}
-	if m.MaxTotalDeposit != nil {
-		l = m.MaxTotalDeposit.Size()
 		n += 1 + l + sovVault(uint64(l))
 	}
 	return n
@@ -226,7 +227,7 @@ func sovVault(x uint64) (n int) {
 func sozVault(x uint64) (n int) {
 	return sovVault(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *Vault) Unmarshal(dAtA []byte) error {
+func (m *VaultAccount) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -249,17 +250,17 @@ func (m *Vault) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: Vault: wiretype end group for non-group")
+			return fmt.Errorf("proto: VaultAccount: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Vault: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: VaultAccount: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field VaultAddress", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field BaseAccount", wireType)
 			}
-			var stringLen uint64
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowVault
@@ -269,27 +270,31 @@ func (m *Vault) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
+			if msglen < 0 {
 				return ErrInvalidLengthVault
 			}
-			postIndex := iNdEx + intStringLen
+			postIndex := iNdEx + msglen
 			if postIndex < 0 {
 				return ErrInvalidLengthVault
 			}
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.VaultAddress = string(dAtA[iNdEx:postIndex])
+			if m.BaseAccount == nil {
+				m.BaseAccount = &types.BaseAccount{}
+			}
+			if err := m.BaseAccount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MarkerAddress", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field ShareDenom", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -317,9 +322,41 @@ func (m *Vault) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.MarkerAddress = string(dAtA[iNdEx:postIndex])
+			m.ShareDenom = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UnderlyingAssets", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVault
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthVault
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthVault
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.UnderlyingAssets = append(m.UnderlyingAssets, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		case 4:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
 			}
@@ -350,42 +387,6 @@ func (m *Vault) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.Admin = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MaxTotalDeposit", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowVault
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthVault
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthVault
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if m.MaxTotalDeposit == nil {
-				m.MaxTotalDeposit = &types.Coin{}
-			}
-			if err := m.MaxTotalDeposit.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

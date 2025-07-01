@@ -51,7 +51,7 @@ message QueryVaultsRequest {
 // QueryVaultsResponse is the response message for the Query/Vaults endpoint.
 message QueryVaultsResponse {
   // vaults is a list of all vaults.
-  repeated Vault vaults = 1 [(gogoproto.nullable) = false];
+  repeated VaultAccount vaults = 1 [(gogoproto.nullable) = false];
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
@@ -65,7 +65,7 @@ message QueryVaultRequest {
 // QueryVaultResponse is the response message for the Query/Vault endpoint.
 message QueryVaultResponse {
   // vault is the requested vault.
-  Vault vault = 1 [(gogoproto.nullable) = false];
+  VaultAccount vault = 1 [(gogoproto.nullable) = false];
 }
 
 // QueryTotalAssetsRequest is the request message for the Query/TotalAssets endpoint.

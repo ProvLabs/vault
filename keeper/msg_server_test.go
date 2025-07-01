@@ -370,6 +370,89 @@ func (s *TestSuite) TestMsgServer_SwapIn_Failures() {
 	}
 }
 
+func (s *TestSuite) TestMsgServer_SwapOut() {
+	type postCheckArgs struct {
+		Owner           sdk.AccAddress
+		VaultAddr       sdk.AccAddress
+		UnderlyingAsset sdk.Coin
+		Shares          sdk.Coin
+	}
+
+	testDef := msgServerTestDef[types.MsgSwapOutRequest, types.MsgSwapOutResponse, postCheckArgs]{
+		endpointName: "SwapOut",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).SwapOut,
+		postCheck: func(msg *types.MsgSwapOutRequest, args postCheckArgs) {
+			// Check that the owner has the correct amount of underlying denom.
+			ownerUnderlyingBalance := s.simApp.BankKeeper.GetBalance(s.ctx, args.Owner, args.UnderlyingAsset.Denom)
+			s.Require().Equal(args.UnderlyingAsset, ownerUnderlyingBalance, "owner should have received underlying assets")
+
+			// Check that the traded in shares are subtracted from the supply of the shares.
+			initialShares := math.NewInt(100)
+			expectedSupplyAmount := initialShares.Sub(msg.Assets.Amount)
+			supply := s.simApp.BankKeeper.GetSupply(s.ctx, args.Shares.Denom)
+			s.Require().Equal(expectedSupplyAmount, supply.Amount, "share supply should be reduced")
+		},
+	}
+
+	underlyingDenom := "underlying"
+	shareDenom := "vaultshares"
+	owner := s.adminAddr
+	vaultAddr := types.GetVaultAddress(shareDenom)
+	initialAssets := sdk.NewInt64Coin(underlyingDenom, 100)
+
+	setup := func() {
+		// Create marker for underlying asset
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), owner)
+		// Create the vault
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           owner.String(),
+			ShareDenom:      shareDenom,
+			UnderlyingAsset: underlyingDenom,
+		})
+		s.Require().NoError(err)
+		// Fund owner with underlying assets
+		err = FundAccount(s.ctx, s.simApp.BankKeeper, owner, sdk.NewCoins(initialAssets))
+		s.Require().NoError(err)
+
+		// Owner swaps in to get shares
+		_, err = s.k.SwapIn(s.ctx, vaultAddr, owner, initialAssets)
+		s.Require().NoError(err)
+
+		// Reset event manager for the test
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	tests := []struct {
+		name          string
+		sharesToTrade int64
+	}{
+		{"happy path - swap out 30 shares", 30},
+		{"happy path - swap out all shares", 100},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			sharesToSwap := sdk.NewInt64Coin(shareDenom, tt.sharesToTrade)
+			swapOutReq := types.MsgSwapOutRequest{
+				Owner:        owner.String(),
+				VaultAddress: vaultAddr.String(),
+				Assets:       sharesToSwap,
+			}
+
+			tc := msgServerTestCase[types.MsgSwapOutRequest, postCheckArgs]{
+				name:           tt.name,
+				setup:          setup,
+				msg:            swapOutReq,
+				postCheckArgs:  postCheckArgs{Owner: owner, VaultAddr: vaultAddr, UnderlyingAsset: sdk.NewInt64Coin(underlyingDenom, tt.sharesToTrade), Shares: sharesToSwap},
+				expectedEvents: sdk.Events{},
+			}
+
+			testDef.expectedResponse = &types.MsgSwapOutResponse{SharesBurned: sharesToSwap}
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
 func createReceiveCoinsEvents(fromAddress, amount string) sdk.Events {
 	events := sdk.NewEventManager().Events()
 	events = events.AppendEvent(sdk.NewEvent(

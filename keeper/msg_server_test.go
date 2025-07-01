@@ -286,39 +286,6 @@ func (s *TestSuite) TestMsgServer_SwapIn_Failures() {
 
 	tests := []msgServerTestCase[types.MsgSwapInRequest, any]{
 		{
-			name:  "invalid owner address",
-			setup: setup,
-			msg: types.MsgSwapInRequest{
-				Owner:        "invalid",
-				VaultAddress: vaultAddr.String(),
-				Assets:       assets,
-			},
-			expectedErrSubstrs: []string{"invalid owner address", "decoding bech32 failed"},
-		},
-		{
-			name:  "invalid vault address",
-			setup: setup,
-			msg: types.MsgSwapInRequest{
-				Owner:        owner.String(),
-				VaultAddress: "invalid",
-				Assets:       assets,
-			},
-			expectedErrSubstrs: []string{"invalid vault address", "decoding bech32 failed"},
-		},
-		{
-			name:  "invalid asset denom",
-			setup: setup,
-			msg: types.MsgSwapInRequest{
-				Owner:        owner.String(),
-				VaultAddress: vaultAddr.String(),
-				Assets: sdk.Coin{
-					Denom:  "!nvalid",
-					Amount: math.NewInt(100),
-				},
-			},
-			expectedErrSubstrs: []string{"invalid asset", "invalid denom"},
-		},
-		{
 			name: "vault does not exist",
 			msg: types.MsgSwapInRequest{
 				Owner:        owner.String(),
@@ -335,7 +302,7 @@ func (s *TestSuite) TestMsgServer_SwapIn_Failures() {
 				VaultAddress: vaultAddr.String(),
 				Assets:       sdk.NewInt64Coin("othercoin", 100),
 			},
-			expectedErrSubstrs: []string{"asset \"othercoin\" is not an underlying asset for this vault"},
+			expectedErrSubstrs: []string{"othercoin asset denom not supported for vault, expected one of [underlying]"},
 		},
 		{
 			name: "insufficient funds",
@@ -347,19 +314,6 @@ func (s *TestSuite) TestMsgServer_SwapIn_Failures() {
 			},
 			msg:                types.MsgSwapInRequest{Owner: owner.String(), VaultAddress: vaultAddr.String(), Assets: assets},
 			expectedErrSubstrs: []string{"insufficient funds"},
-		},
-		{
-			name:  "zero amount swap",
-			setup: setup,
-			msg: types.MsgSwapInRequest{
-				Owner:        owner.String(),
-				VaultAddress: vaultAddr.String(),
-				Assets: sdk.Coin{
-					Denom:  underlyingDenom,
-					Amount: math.NewInt(100),
-				},
-			},
-			expectedErrSubstrs: []string{"invalid amount", "must be greater than zero"},
 		},
 	}
 

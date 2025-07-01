@@ -4,6 +4,7 @@ import (
 	"errors"
 	fmt "fmt"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -27,7 +28,25 @@ func (m MsgCreateVaultRequest) ValidateBasic() error {
 
 // ValidateBasic returns a not implemented error for MsgSwapInRequest.
 func (m MsgSwapInRequest) ValidateBasic() error {
-	return errors.New("ValidateBasic not implemented for MsgSwapInRequest")
+	_, err := sdk.AccAddressFromBech32(m.VaultAddress)
+	if err != nil {
+		return fmt.Errorf("invalid vault address %s : %w", m.VaultAddress, err)
+	}
+	_, err = sdk.AccAddressFromBech32(m.Owner)
+	if err != nil {
+		return fmt.Errorf("invalid owner address %s : %w", m.VaultAddress, err)
+	}
+
+	err = m.Assets.Validate()
+	if err != nil {
+		return fmt.Errorf("invalid assets coin %v: %w", m.Assets, err)
+	}
+
+	if !m.Assets.Amount.GT(sdkmath.NewInt(0)) {
+		return fmt.Errorf("invalid amount: assets %s must be greater than zero", m.Assets.Denom)
+	}
+
+	return nil
 }
 
 // ValidateBasic returns a not implemented error for MsgSwapOutRequest.

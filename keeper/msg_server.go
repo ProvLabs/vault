@@ -36,14 +36,8 @@ func (k msgServer) CreateVault(goCtx context.Context, msg *types.MsgCreateVaultR
 func (k msgServer) SwapIn(goCtx context.Context, msg *types.MsgSwapInRequest) (*types.MsgSwapInResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	vaultAddr, err := sdk.AccAddressFromBech32(msg.VaultAddress)
-	if err != nil {
-		return nil, err
-	}
-	ownerAddr, err := sdk.AccAddressFromBech32(msg.Owner)
-	if err != nil {
-		return nil, err
-	}
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	ownerAddr := sdk.MustAccAddressFromBech32(msg.Owner)
 
 	shares, err := k.Keeper.SwapIn(ctx, vaultAddr, ownerAddr, msg.Assets)
 	if err != nil {

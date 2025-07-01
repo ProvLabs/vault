@@ -139,6 +139,9 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 	if err != nil {
 		return nil, err
 	}
+	if vault == nil {
+		return nil, fmt.Errorf("vault with address %v not found", vaultAddr.String())
+	}
 
 	markerAddr, err := markertypes.MarkerAddress(vault.ShareDenom)
 	if err != nil {

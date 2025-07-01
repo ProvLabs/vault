@@ -311,7 +311,10 @@ func (s *TestSuite) TestMsgServer_SwapIn_Failures() {
 			msg: types.MsgSwapInRequest{
 				Owner:        owner.String(),
 				VaultAddress: vaultAddr.String(),
-				Assets:       sdk.NewCoin("!nvalid", math.NewInt(100)),
+				Assets: sdk.Coin{
+					Denom:  "!nvalid",
+					Amount: math.NewInt(100),
+				},
 			},
 			expectedErrSubstrs: []string{"invalid asset", "invalid denom"},
 		},
@@ -351,7 +354,10 @@ func (s *TestSuite) TestMsgServer_SwapIn_Failures() {
 			msg: types.MsgSwapInRequest{
 				Owner:        owner.String(),
 				VaultAddress: vaultAddr.String(),
-				Assets:       sdk.NewInt64Coin(underlyingDenom, 0),
+				Assets: sdk.Coin{
+					Denom:  underlyingDenom,
+					Amount: math.NewInt(100),
+				},
 			},
 			expectedErrSubstrs: []string{"invalid amount", "must be greater than zero"},
 		},

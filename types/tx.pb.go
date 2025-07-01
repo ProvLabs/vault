@@ -236,30 +236,28 @@ func (m *MsgCreateVaultResponse) GetVaultAddress() string {
 	return ""
 }
 
-// MsgDepositRequest is the request message for the Deposit endpoint.
-type MsgDepositRequest struct {
-	// depositor is the account depositing assets into the vault.
-	Depositor string `protobuf:"bytes,1,opt,name=depositor,proto3" json:"depositor,omitempty"`
-	// vault_address is the address of the vault to deposit into.
+// MsgSwapInRequest is the request message for depositing underlying assets into a vault in exchange for shares.
+type MsgSwapInRequest struct {
+	// owner is the address initiating the swap in (deposit).
+	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
+	// vault_address is the address of the target vault.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// amount is the amount of the base asset to deposit.
-	Amount types.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount"`
-	// receiver is the address that will receive the vault shares. If empty, defaults to the depositor.
-	Receiver string `protobuf:"bytes,4,opt,name=receiver,proto3" json:"receiver,omitempty"`
+	// assets is the amount of underlying assets to deposit.
+	Assets types.Coin `protobuf:"bytes,3,opt,name=assets,proto3" json:"assets"`
 }
 
-func (m *MsgDepositRequest) Reset()         { *m = MsgDepositRequest{} }
-func (m *MsgDepositRequest) String() string { return proto.CompactTextString(m) }
-func (*MsgDepositRequest) ProtoMessage()    {}
-func (*MsgDepositRequest) Descriptor() ([]byte, []int) {
+func (m *MsgSwapInRequest) Reset()         { *m = MsgSwapInRequest{} }
+func (m *MsgSwapInRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgSwapInRequest) ProtoMessage()    {}
+func (*MsgSwapInRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_311d0123a4881c5c, []int{4}
 }
-func (m *MsgDepositRequest) XXX_Unmarshal(b []byte) error {
+func (m *MsgSwapInRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgDepositRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgSwapInRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgDepositRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgSwapInRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -269,183 +267,57 @@ func (m *MsgDepositRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, e
 		return b[:n], nil
 	}
 }
-func (m *MsgDepositRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgDepositRequest.Merge(m, src)
+func (m *MsgSwapInRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSwapInRequest.Merge(m, src)
 }
-func (m *MsgDepositRequest) XXX_Size() int {
+func (m *MsgSwapInRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgDepositRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgDepositRequest.DiscardUnknown(m)
+func (m *MsgSwapInRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSwapInRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgDepositRequest proto.InternalMessageInfo
+var xxx_messageInfo_MsgSwapInRequest proto.InternalMessageInfo
 
-func (m *MsgDepositRequest) GetDepositor() string {
-	if m != nil {
-		return m.Depositor
-	}
-	return ""
-}
-
-func (m *MsgDepositRequest) GetVaultAddress() string {
-	if m != nil {
-		return m.VaultAddress
-	}
-	return ""
-}
-
-func (m *MsgDepositRequest) GetAmount() types.Coin {
-	if m != nil {
-		return m.Amount
-	}
-	return types.Coin{}
-}
-
-func (m *MsgDepositRequest) GetReceiver() string {
-	if m != nil {
-		return m.Receiver
-	}
-	return ""
-}
-
-// MsgDepositResponse is the response message for the Deposit endpoint.
-type MsgDepositResponse struct {
-	// shares_received is the amount of vault shares minted to the receiver.
-	SharesReceived types.Coin `protobuf:"bytes,1,opt,name=shares_received,json=sharesReceived,proto3" json:"shares_received"`
-}
-
-func (m *MsgDepositResponse) Reset()         { *m = MsgDepositResponse{} }
-func (m *MsgDepositResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgDepositResponse) ProtoMessage()    {}
-func (*MsgDepositResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_311d0123a4881c5c, []int{5}
-}
-func (m *MsgDepositResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgDepositResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgDepositResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgDepositResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgDepositResponse.Merge(m, src)
-}
-func (m *MsgDepositResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgDepositResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgDepositResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgDepositResponse proto.InternalMessageInfo
-
-func (m *MsgDepositResponse) GetSharesReceived() types.Coin {
-	if m != nil {
-		return m.SharesReceived
-	}
-	return types.Coin{}
-}
-
-// MsgWithdrawRequest is the request message for the Withdraw endpoint.
-type MsgWithdrawRequest struct {
-	// owner is the account that owns the shares and is initiating the withdrawal.
-	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
-	// vault_address is the address of the vault to withdraw from.
-	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// assets_to_withdraw is the amount of underlying assets to withdraw from the vault.
-	AssetsToWithdraw types.Coin `protobuf:"bytes,3,opt,name=assets_to_withdraw,json=assetsToWithdraw,proto3" json:"assets_to_withdraw"`
-	// receiver is the address that will receive the withdrawn assets. If empty, defaults to the owner.
-	Receiver string `protobuf:"bytes,4,opt,name=receiver,proto3" json:"receiver,omitempty"`
-}
-
-func (m *MsgWithdrawRequest) Reset()         { *m = MsgWithdrawRequest{} }
-func (m *MsgWithdrawRequest) String() string { return proto.CompactTextString(m) }
-func (*MsgWithdrawRequest) ProtoMessage()    {}
-func (*MsgWithdrawRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_311d0123a4881c5c, []int{6}
-}
-func (m *MsgWithdrawRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgWithdrawRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgWithdrawRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgWithdrawRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgWithdrawRequest.Merge(m, src)
-}
-func (m *MsgWithdrawRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgWithdrawRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgWithdrawRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgWithdrawRequest proto.InternalMessageInfo
-
-func (m *MsgWithdrawRequest) GetOwner() string {
+func (m *MsgSwapInRequest) GetOwner() string {
 	if m != nil {
 		return m.Owner
 	}
 	return ""
 }
 
-func (m *MsgWithdrawRequest) GetVaultAddress() string {
+func (m *MsgSwapInRequest) GetVaultAddress() string {
 	if m != nil {
 		return m.VaultAddress
 	}
 	return ""
 }
 
-func (m *MsgWithdrawRequest) GetAssetsToWithdraw() types.Coin {
+func (m *MsgSwapInRequest) GetAssets() types.Coin {
 	if m != nil {
-		return m.AssetsToWithdraw
+		return m.Assets
 	}
 	return types.Coin{}
 }
 
-func (m *MsgWithdrawRequest) GetReceiver() string {
-	if m != nil {
-		return m.Receiver
-	}
-	return ""
+// MsgSwapInResponse is the response message for a successful SwapIn.
+type MsgSwapInResponse struct {
+	// shares_received is the amount of vault shares minted.
+	SharesReceived types.Coin `protobuf:"bytes,1,opt,name=shares_received,json=sharesReceived,proto3" json:"shares_received"`
 }
 
-// MsgWithdrawResponse is the response message for the Withdraw endpoint.
-type MsgWithdrawResponse struct {
-	// shares_burned is the amount of vault shares burned in the withdrawal.
-	SharesBurned types.Coin `protobuf:"bytes,1,opt,name=shares_burned,json=sharesBurned,proto3" json:"shares_burned"`
+func (m *MsgSwapInResponse) Reset()         { *m = MsgSwapInResponse{} }
+func (m *MsgSwapInResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgSwapInResponse) ProtoMessage()    {}
+func (*MsgSwapInResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_311d0123a4881c5c, []int{5}
 }
-
-func (m *MsgWithdrawResponse) Reset()         { *m = MsgWithdrawResponse{} }
-func (m *MsgWithdrawResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgWithdrawResponse) ProtoMessage()    {}
-func (*MsgWithdrawResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_311d0123a4881c5c, []int{7}
-}
-func (m *MsgWithdrawResponse) XXX_Unmarshal(b []byte) error {
+func (m *MsgSwapInResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *MsgWithdrawResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *MsgSwapInResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_MsgWithdrawResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_MsgSwapInResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -455,19 +327,129 @@ func (m *MsgWithdrawResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte,
 		return b[:n], nil
 	}
 }
-func (m *MsgWithdrawResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgWithdrawResponse.Merge(m, src)
+func (m *MsgSwapInResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSwapInResponse.Merge(m, src)
 }
-func (m *MsgWithdrawResponse) XXX_Size() int {
+func (m *MsgSwapInResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *MsgWithdrawResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgWithdrawResponse.DiscardUnknown(m)
+func (m *MsgSwapInResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSwapInResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_MsgWithdrawResponse proto.InternalMessageInfo
+var xxx_messageInfo_MsgSwapInResponse proto.InternalMessageInfo
 
-func (m *MsgWithdrawResponse) GetSharesBurned() types.Coin {
+func (m *MsgSwapInResponse) GetSharesReceived() types.Coin {
+	if m != nil {
+		return m.SharesReceived
+	}
+	return types.Coin{}
+}
+
+// MsgSwapOutRequest is the request message for redeeming vault shares in exchange for underlying assets.
+type MsgSwapOutRequest struct {
+	// owner is the address initiating the swap out (withdraw).
+	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
+	// vault_address is the address of the vault to redeem from.
+	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// assets is the amount of underlying assets to withdraw.
+	Assets types.Coin `protobuf:"bytes,3,opt,name=assets,proto3" json:"assets"`
+}
+
+func (m *MsgSwapOutRequest) Reset()         { *m = MsgSwapOutRequest{} }
+func (m *MsgSwapOutRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgSwapOutRequest) ProtoMessage()    {}
+func (*MsgSwapOutRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_311d0123a4881c5c, []int{6}
+}
+func (m *MsgSwapOutRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSwapOutRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSwapOutRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSwapOutRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSwapOutRequest.Merge(m, src)
+}
+func (m *MsgSwapOutRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSwapOutRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSwapOutRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSwapOutRequest proto.InternalMessageInfo
+
+func (m *MsgSwapOutRequest) GetOwner() string {
+	if m != nil {
+		return m.Owner
+	}
+	return ""
+}
+
+func (m *MsgSwapOutRequest) GetVaultAddress() string {
+	if m != nil {
+		return m.VaultAddress
+	}
+	return ""
+}
+
+func (m *MsgSwapOutRequest) GetAssets() types.Coin {
+	if m != nil {
+		return m.Assets
+	}
+	return types.Coin{}
+}
+
+// MsgSwapOutResponse is the response message for a successful SwapOut.
+type MsgSwapOutResponse struct {
+	// shares_burned is the amount of shares burned in exchange for assets.
+	SharesBurned types.Coin `protobuf:"bytes,1,opt,name=shares_burned,json=sharesBurned,proto3" json:"shares_burned"`
+}
+
+func (m *MsgSwapOutResponse) Reset()         { *m = MsgSwapOutResponse{} }
+func (m *MsgSwapOutResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgSwapOutResponse) ProtoMessage()    {}
+func (*MsgSwapOutResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_311d0123a4881c5c, []int{7}
+}
+func (m *MsgSwapOutResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSwapOutResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSwapOutResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSwapOutResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSwapOutResponse.Merge(m, src)
+}
+func (m *MsgSwapOutResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSwapOutResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSwapOutResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSwapOutResponse proto.InternalMessageInfo
+
+func (m *MsgSwapOutResponse) GetSharesBurned() types.Coin {
 	if m != nil {
 		return m.SharesBurned
 	}
@@ -598,10 +580,10 @@ func init() {
 	proto.RegisterType((*MsgUpdateParamsResponse)(nil), "vault.v1.MsgUpdateParamsResponse")
 	proto.RegisterType((*MsgCreateVaultRequest)(nil), "vault.v1.MsgCreateVaultRequest")
 	proto.RegisterType((*MsgCreateVaultResponse)(nil), "vault.v1.MsgCreateVaultResponse")
-	proto.RegisterType((*MsgDepositRequest)(nil), "vault.v1.MsgDepositRequest")
-	proto.RegisterType((*MsgDepositResponse)(nil), "vault.v1.MsgDepositResponse")
-	proto.RegisterType((*MsgWithdrawRequest)(nil), "vault.v1.MsgWithdrawRequest")
-	proto.RegisterType((*MsgWithdrawResponse)(nil), "vault.v1.MsgWithdrawResponse")
+	proto.RegisterType((*MsgSwapInRequest)(nil), "vault.v1.MsgSwapInRequest")
+	proto.RegisterType((*MsgSwapInResponse)(nil), "vault.v1.MsgSwapInResponse")
+	proto.RegisterType((*MsgSwapOutRequest)(nil), "vault.v1.MsgSwapOutRequest")
+	proto.RegisterType((*MsgSwapOutResponse)(nil), "vault.v1.MsgSwapOutResponse")
 	proto.RegisterType((*MsgRedeemRequest)(nil), "vault.v1.MsgRedeemRequest")
 	proto.RegisterType((*MsgRedeemResponse)(nil), "vault.v1.MsgRedeemResponse")
 }
@@ -609,55 +591,51 @@ func init() {
 func init() { proto.RegisterFile("vault/v1/tx.proto", fileDescriptor_311d0123a4881c5c) }
 
 var fileDescriptor_311d0123a4881c5c = []byte{
-	// 754 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x55, 0x4f, 0x6f, 0xd3, 0x4a,
-	0x10, 0x8f, 0xfb, 0x27, 0xaf, 0x99, 0xf4, 0x4f, 0xea, 0xd7, 0xbe, 0x26, 0xee, 0x7b, 0x49, 0x9f,
-	0xb9, 0x94, 0x4a, 0xd8, 0x4a, 0x41, 0x45, 0x54, 0xe2, 0xd0, 0xb4, 0x12, 0x20, 0x11, 0xa9, 0x32,
-	0x05, 0x24, 0x10, 0x58, 0x9b, 0x78, 0xe5, 0x58, 0xaa, 0xbd, 0x61, 0x77, 0x93, 0xd2, 0x1b, 0xe2,
-	0xc6, 0x8d, 0x6f, 0xc0, 0x57, 0xe8, 0x81, 0x0f, 0xd1, 0x63, 0xc5, 0x89, 0x13, 0x42, 0xed, 0xa1,
-	0x47, 0x2e, 0x9c, 0x38, 0x20, 0x94, 0xdd, 0x8d, 0x13, 0xf7, 0x8f, 0x12, 0x10, 0xdc, 0xec, 0x99,
-	0xdf, 0xcc, 0xfc, 0xe6, 0x37, 0xb3, 0xbb, 0x30, 0xdb, 0x46, 0xad, 0x5d, 0x6e, 0xb7, 0xcb, 0x36,
-	0x7f, 0x69, 0x35, 0x29, 0xe1, 0x44, 0x9f, 0x10, 0x26, 0xab, 0x5d, 0x36, 0x8a, 0x75, 0xc2, 0x42,
-	0xc2, 0xec, 0x1a, 0x62, 0xd8, 0x6e, 0x97, 0x6b, 0x98, 0xa3, 0xb2, 0x5d, 0x27, 0x41, 0x24, 0x91,
-	0xc6, 0x82, 0xf2, 0x87, 0xcc, 0xef, 0x64, 0x08, 0x99, 0xaf, 0x1c, 0x05, 0xe9, 0x70, 0xc5, 0x9f,
-	0x2d, 0x7f, 0x94, 0x6b, 0xce, 0x27, 0x3e, 0x91, 0xf6, 0xce, 0x97, 0xb2, 0xce, 0xc7, 0x34, 0x9a,
-	0x88, 0xa2, 0x50, 0x81, 0xcd, 0x37, 0x1a, 0xcc, 0x54, 0x99, 0xff, 0xb0, 0xe9, 0x21, 0x8e, 0xb7,
-	0x85, 0x47, 0x5f, 0x83, 0x0c, 0x6a, 0xf1, 0x06, 0xa1, 0x01, 0xdf, 0xcf, 0x6b, 0x4b, 0xda, 0x72,
-	0xa6, 0x92, 0xff, 0xf0, 0xfe, 0xda, 0x9c, 0xaa, 0xb2, 0xe1, 0x79, 0x14, 0x33, 0xf6, 0x80, 0xd3,
-	0x20, 0xf2, 0x9d, 0x1e, 0x54, 0xb7, 0x20, 0x2d, 0x73, 0xe7, 0x47, 0x96, 0xb4, 0xe5, 0xec, 0x6a,
-	0xce, 0xea, 0xf6, 0x69, 0xc9, 0xcc, 0x95, 0xb1, 0xc3, 0x4f, 0xa5, 0x94, 0xa3, 0x50, 0xeb, 0xd3,
-	0xaf, 0x4f, 0x0f, 0x56, 0x7a, 0xf1, 0x66, 0x01, 0x16, 0xce, 0x50, 0x71, 0x30, 0x6b, 0x92, 0x88,
-	0x61, 0xf3, 0x9d, 0x06, 0xf3, 0x55, 0xe6, 0x6f, 0x52, 0x8c, 0x38, 0x7e, 0xd4, 0xc9, 0xea, 0xe0,
-	0x17, 0x2d, 0xcc, 0xb8, 0x6e, 0xc1, 0x38, 0xf2, 0xc2, 0x20, 0x1a, 0x48, 0x54, 0xc2, 0xf4, 0x12,
-	0x64, 0x59, 0x03, 0x51, 0xec, 0x7a, 0x38, 0x22, 0xa1, 0x60, 0x9a, 0x71, 0x40, 0x98, 0xb6, 0x3a,
-	0x16, 0xfd, 0x2a, 0xe4, 0x5a, 0x91, 0x87, 0xe9, 0xee, 0x7e, 0x10, 0xf9, 0x2e, 0x62, 0x0c, 0xf3,
-	0xfc, 0xa8, 0x40, 0xcd, 0xf4, 0xec, 0x1b, 0x1d, 0xf3, 0x3a, 0x74, 0x1a, 0x90, 0x79, 0xcd, 0xdb,
-	0xf0, 0xcf, 0x59, 0x82, 0x92, 0xbb, 0x7e, 0x05, 0xa6, 0x84, 0x0e, 0x2e, 0x92, 0x7c, 0x24, 0x53,
-	0x67, 0x52, 0x18, 0x15, 0x47, 0xf3, 0x8b, 0x06, 0xb3, 0x55, 0xe6, 0x6f, 0xe1, 0x26, 0x61, 0x41,
-	0xdc, 0xdc, 0x1a, 0x64, 0x3c, 0x69, 0x21, 0x74, 0xf0, 0x24, 0x62, 0xe8, 0xf9, 0x92, 0x23, 0xe7,
-	0x4b, 0xea, 0x37, 0x21, 0x8d, 0x42, 0xd2, 0x8a, 0x64, 0x7b, 0xd9, 0xd5, 0x82, 0xa5, 0xd2, 0x76,
-	0x96, 0xd1, 0x52, 0xcb, 0x68, 0x6d, 0x92, 0x20, 0xea, 0xce, 0x4d, 0xc2, 0xf5, 0x1b, 0x30, 0x41,
-	0x71, 0x1d, 0x07, 0x6d, 0x4c, 0xf3, 0x63, 0x03, 0x48, 0xc5, 0x48, 0x35, 0xed, 0x98, 0xa3, 0xf9,
-	0x1c, 0xf4, 0xfe, 0x86, 0x95, 0x58, 0x77, 0x61, 0x46, 0xcc, 0x82, 0xb9, 0x2a, 0xd0, 0x13, 0x7d,
-	0x0f, 0xc1, 0x6e, 0x5a, 0xc6, 0x39, 0x2a, 0xcc, 0xfc, 0xa6, 0x89, 0x02, 0x8f, 0x03, 0xde, 0xf0,
-	0x28, 0xda, 0xeb, 0xdb, 0x17, 0xb2, 0x17, 0xe1, 0xc1, 0x72, 0x4a, 0xd8, 0x70, 0x52, 0x56, 0x41,
-	0x17, 0x8b, 0xc2, 0x5c, 0x4e, 0xdc, 0x3d, 0x55, 0x71, 0x58, 0x59, 0x73, 0x32, 0x74, 0x87, 0x74,
-	0xa9, 0xfe, 0xa2, 0xc0, 0x72, 0x1b, 0x05, 0x6b, 0xf3, 0x29, 0xfc, 0x9d, 0xe8, 0x5d, 0xa9, 0xbb,
-	0x05, 0x53, 0x4a, 0xdd, 0x5a, 0x8b, 0x46, 0xc3, 0x6b, 0x3b, 0x29, 0xa3, 0x2a, 0x22, 0xc8, 0xfc,
-	0xaa, 0x41, 0xae, 0xca, 0x7c, 0x07, 0x7b, 0x18, 0x87, 0x7f, 0x54, 0xd7, 0x7b, 0x90, 0x53, 0x7c,
-	0x39, 0x71, 0xa9, 0xa8, 0x37, 0xac, 0xaa, 0x6a, 0x1d, 0x76, 0x88, 0xa4, 0xf9, 0x1b, 0x34, 0x7d,
-	0x26, 0x4e, 0x68, 0xb7, 0xeb, 0xde, 0xbe, 0xaa, 0xc9, 0xff, 0xf4, 0xbe, 0xca, 0xb8, 0xee, 0xbe,
-	0xae, 0x7e, 0x1f, 0x81, 0xd1, 0x2a, 0xf3, 0xf5, 0x6d, 0xc8, 0xf6, 0xdd, 0x22, 0x7a, 0xa9, 0x77,
-	0x89, 0x5e, 0x78, 0x01, 0x1a, 0x4b, 0x97, 0x03, 0xe2, 0xa9, 0xff, 0xa5, 0x8e, 0x99, 0xbe, 0x98,
-	0x00, 0x27, 0x6f, 0x1b, 0xe3, 0xdf, 0x8b, 0x9d, 0x2a, 0xcb, 0x1d, 0x98, 0x88, 0x17, 0x34, 0x89,
-	0x3c, 0x73, 0xc4, 0x8c, 0xff, 0x2e, 0xf1, 0xaa, 0x44, 0x1b, 0x90, 0x56, 0x33, 0x31, 0x12, 0xc0,
-	0xc4, 0x3e, 0x19, 0x8b, 0x17, 0xfa, 0x54, 0x8a, 0xfb, 0x30, 0x99, 0x78, 0xb1, 0x0a, 0x09, 0x70,
-	0xbf, 0xcb, 0xf8, 0xff, 0x52, 0x57, 0x37, 0x9b, 0x31, 0xfe, 0xea, 0xf4, 0x60, 0x45, 0xab, 0xdc,
-	0x3a, 0x3c, 0x2e, 0x6a, 0x47, 0xc7, 0x45, 0xed, 0xf3, 0x71, 0x51, 0x7b, 0x7b, 0x52, 0x4c, 0x1d,
-	0x9d, 0x14, 0x53, 0x1f, 0x4f, 0x8a, 0xa9, 0x27, 0x25, 0x3f, 0xe0, 0x8d, 0x56, 0xcd, 0xaa, 0x93,
-	0xd0, 0x6e, 0x52, 0xd2, 0xde, 0x45, 0x35, 0x66, 0xcb, 0xf7, 0x94, 0xef, 0x37, 0x31, 0xab, 0xa5,
-	0xc5, 0x63, 0x7a, 0xfd, 0x47, 0x00, 0x00, 0x00, 0xff, 0xff, 0x6f, 0x7b, 0x3f, 0x60, 0xec, 0x07,
-	0x00, 0x00,
+	// 698 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x55, 0xcd, 0x6e, 0xd3, 0x4c,
+	0x14, 0x8d, 0xfb, 0x93, 0xaf, 0x9d, 0xf4, 0x27, 0x1d, 0xb5, 0x5f, 0x13, 0x83, 0x9c, 0x62, 0x36,
+	0xa5, 0x12, 0xb6, 0x52, 0x10, 0x88, 0x4a, 0x2c, 0x9a, 0x76, 0x41, 0x25, 0x22, 0x2a, 0x17, 0x58,
+	0x54, 0x42, 0xd1, 0x24, 0x1e, 0xb9, 0x96, 0x6a, 0x8f, 0x99, 0x19, 0xbb, 0x74, 0x87, 0xd8, 0xb1,
+	0xe3, 0x0d, 0x78, 0x01, 0x90, 0xba, 0xe0, 0x21, 0xba, 0xac, 0x58, 0xb1, 0x42, 0xa8, 0x5d, 0xf4,
+	0x05, 0x58, 0xb0, 0x44, 0x9e, 0x99, 0xc4, 0x71, 0x9a, 0xaa, 0x65, 0x81, 0xc4, 0x2e, 0xb9, 0xf7,
+	0xdc, 0x7b, 0xcf, 0x3d, 0x73, 0xc6, 0x03, 0xe6, 0x12, 0x14, 0xef, 0x73, 0x3b, 0xa9, 0xdb, 0xfc,
+	0x8d, 0x15, 0x51, 0xc2, 0x09, 0x9c, 0x10, 0x21, 0x2b, 0xa9, 0xeb, 0x46, 0x87, 0xb0, 0x80, 0x30,
+	0xbb, 0x8d, 0x18, 0xb6, 0x93, 0x7a, 0x1b, 0x73, 0x54, 0xb7, 0x3b, 0xc4, 0x0f, 0x25, 0x52, 0x5f,
+	0x54, 0xf9, 0x80, 0x79, 0x69, 0x87, 0x80, 0x79, 0x2a, 0x51, 0x95, 0x89, 0x96, 0xf8, 0x67, 0xcb,
+	0x3f, 0x2a, 0x35, 0xef, 0x11, 0x8f, 0xc8, 0x78, 0xfa, 0x4b, 0x45, 0x17, 0x7a, 0x34, 0x22, 0x44,
+	0x51, 0xa0, 0xc0, 0xe6, 0x7b, 0x0d, 0xcc, 0x36, 0x99, 0xf7, 0x22, 0x72, 0x11, 0xc7, 0xdb, 0x22,
+	0x03, 0x1f, 0x80, 0x49, 0x14, 0xf3, 0x3d, 0x42, 0x7d, 0x7e, 0x58, 0xd1, 0x96, 0xb4, 0xe5, 0xc9,
+	0x46, 0xe5, 0xeb, 0x97, 0xbb, 0xf3, 0x6a, 0xca, 0xba, 0xeb, 0x52, 0xcc, 0xd8, 0x0e, 0xa7, 0x7e,
+	0xe8, 0x39, 0x19, 0x14, 0x5a, 0xa0, 0x28, 0x7b, 0x57, 0x46, 0x96, 0xb4, 0xe5, 0xd2, 0x6a, 0xd9,
+	0xea, 0xee, 0x69, 0xc9, 0xce, 0x8d, 0xb1, 0xe3, 0xef, 0xb5, 0x82, 0xa3, 0x50, 0x6b, 0x33, 0xef,
+	0xce, 0x8f, 0x56, 0xb2, 0x7a, 0xb3, 0x0a, 0x16, 0x07, 0xa8, 0x38, 0x98, 0x45, 0x24, 0x64, 0xd8,
+	0xfc, 0xa8, 0x81, 0x85, 0x26, 0xf3, 0x36, 0x28, 0x46, 0x1c, 0xbf, 0x4c, 0xbb, 0x3a, 0xf8, 0x75,
+	0x8c, 0x19, 0x87, 0x16, 0x18, 0x47, 0x6e, 0xe0, 0x87, 0x57, 0x12, 0x95, 0x30, 0x58, 0x03, 0x25,
+	0xb6, 0x87, 0x28, 0x6e, 0xb9, 0x38, 0x24, 0x81, 0x60, 0x3a, 0xe9, 0x00, 0x11, 0xda, 0x4c, 0x23,
+	0xf0, 0x0e, 0x28, 0xc7, 0xa1, 0x8b, 0xe9, 0xfe, 0xa1, 0x1f, 0x7a, 0x2d, 0xc4, 0x18, 0xe6, 0x95,
+	0x51, 0x81, 0x9a, 0xcd, 0xe2, 0xeb, 0x69, 0x78, 0x0d, 0xa4, 0x0b, 0xc8, 0xbe, 0xe6, 0x63, 0xf0,
+	0xff, 0x20, 0x41, 0xc9, 0x1d, 0xde, 0x06, 0xd3, 0x42, 0x87, 0x16, 0x92, 0x7c, 0x24, 0x53, 0x67,
+	0x4a, 0x04, 0x15, 0x47, 0xf3, 0x93, 0x06, 0xca, 0x4d, 0xe6, 0xed, 0x1c, 0xa0, 0x68, 0x2b, 0xec,
+	0xdb, 0x8d, 0x1c, 0x84, 0x98, 0x5e, 0xbd, 0x9b, 0x80, 0x5d, 0x9c, 0x34, 0x72, 0x71, 0x12, 0x7c,
+	0x08, 0x8a, 0x62, 0x29, 0x26, 0xb6, 0x2a, 0xad, 0x56, 0x2d, 0xd5, 0x32, 0xf5, 0xa0, 0xa5, 0x3c,
+	0x68, 0x6d, 0x10, 0x3f, 0xec, 0x1e, 0x97, 0x84, 0xab, 0x6d, 0xc5, 0x24, 0xf3, 0x15, 0x98, 0xeb,
+	0x63, 0xab, 0x16, 0x7d, 0x02, 0x66, 0x85, 0x8e, 0xac, 0x45, 0x71, 0x07, 0xfb, 0x09, 0x76, 0x05,
+	0xf1, 0x6b, 0x8c, 0x98, 0x91, 0x75, 0x8e, 0x2a, 0x33, 0x3f, 0x6b, 0xbd, 0xfe, 0xcf, 0x62, 0xfe,
+	0xef, 0xcb, 0xb1, 0x0b, 0x60, 0x3f, 0x5d, 0xa5, 0xc7, 0x26, 0x98, 0x56, 0x7a, 0xb4, 0x63, 0x1a,
+	0x5e, 0x5f, 0x8d, 0x29, 0x59, 0xd5, 0x10, 0x45, 0xe6, 0x4f, 0xe9, 0x0c, 0x07, 0xbb, 0x18, 0x07,
+	0x7f, 0x55, 0x8a, 0x2d, 0x50, 0x56, 0x7c, 0x39, 0x69, 0x51, 0x31, 0xef, 0xba, 0xa2, 0xa8, 0x03,
+	0x7c, 0x4e, 0x24, 0x4d, 0x78, 0x1f, 0x4c, 0x28, 0x0f, 0xd0, 0xca, 0xd8, 0x15, 0x14, 0x7b, 0xc8,
+	0x21, 0x0e, 0xeb, 0x6e, 0x9d, 0x39, 0x4c, 0xaa, 0xff, 0xe7, 0x0e, 0x93, 0x75, 0x5d, 0x87, 0xad,
+	0xfe, 0x1a, 0x01, 0xa3, 0x4d, 0xe6, 0xc1, 0x6d, 0x50, 0xea, 0xbb, 0xb3, 0xb0, 0x96, 0x7d, 0xb2,
+	0x86, 0x7e, 0x6e, 0xf4, 0xa5, 0xcb, 0x01, 0x8a, 0xe3, 0x3a, 0x28, 0xca, 0x7b, 0x01, 0xf5, 0x1c,
+	0x36, 0x77, 0xb5, 0xf5, 0x1b, 0x43, 0x73, 0x3d, 0xe3, 0xfc, 0xa7, 0xbc, 0x04, 0x2f, 0xe2, 0xb2,
+	0x0b, 0xa1, 0xdf, 0x1c, 0x9e, 0xcc, 0x88, 0xa8, 0xd3, 0xc8, 0x13, 0xc9, 0x39, 0x69, 0x80, 0xc8,
+	0x80, 0xde, 0x4f, 0xc1, 0x54, 0xee, 0x65, 0xa8, 0xe6, 0xc0, 0xfd, 0x29, 0xfd, 0xd6, 0xa5, 0xa9,
+	0x6e, 0x37, 0x7d, 0xfc, 0xed, 0xf9, 0xd1, 0x8a, 0xd6, 0x78, 0x74, 0x7c, 0x6a, 0x68, 0x27, 0xa7,
+	0x86, 0xf6, 0xe3, 0xd4, 0xd0, 0x3e, 0x9c, 0x19, 0x85, 0x93, 0x33, 0xa3, 0xf0, 0xed, 0xcc, 0x28,
+	0xec, 0xd6, 0x3c, 0x9f, 0xef, 0xc5, 0x6d, 0xab, 0x43, 0x02, 0x3b, 0xa2, 0x24, 0xd9, 0x47, 0x6d,
+	0x66, 0xcb, 0x77, 0x8b, 0x1f, 0x46, 0x98, 0xb5, 0x8b, 0xe2, 0xd1, 0xba, 0xf7, 0x3b, 0x00, 0x00,
+	0xff, 0xff, 0x8d, 0x82, 0xb7, 0xe3, 0x54, 0x07, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -674,10 +652,10 @@ const _ = grpc.SupportPackageIsVersion4
 type MsgClient interface {
 	// CreateVault creates a new vault.
 	CreateVault(ctx context.Context, in *MsgCreateVaultRequest, opts ...grpc.CallOption) (*MsgCreateVaultResponse, error)
-	// Deposit deposits assets into a vault, issuing vault shares in return.
-	Deposit(ctx context.Context, in *MsgDepositRequest, opts ...grpc.CallOption) (*MsgDepositResponse, error)
-	// Withdraw withdraws a specific amount of assets from a vault by burning a calculated number of shares.
-	Withdraw(ctx context.Context, in *MsgWithdrawRequest, opts ...grpc.CallOption) (*MsgWithdrawResponse, error)
+	// SwapIn exchanges underlying assets for vault shares by depositing them into a vault.
+	SwapIn(ctx context.Context, in *MsgSwapInRequest, opts ...grpc.CallOption) (*MsgSwapInResponse, error)
+	// SwapOut exchanges vault shares for underlying assets by withdrawing from a vault.
+	SwapOut(ctx context.Context, in *MsgSwapOutRequest, opts ...grpc.CallOption) (*MsgSwapOutResponse, error)
 	// Redeem redeems a specific amount of shares from a vault for a calculated amount of the underlying asset.
 	Redeem(ctx context.Context, in *MsgRedeemRequest, opts ...grpc.CallOption) (*MsgRedeemResponse, error)
 	// UpdateParams defines a (governance) operation for updating the module
@@ -702,18 +680,18 @@ func (c *msgClient) CreateVault(ctx context.Context, in *MsgCreateVaultRequest, 
 	return out, nil
 }
 
-func (c *msgClient) Deposit(ctx context.Context, in *MsgDepositRequest, opts ...grpc.CallOption) (*MsgDepositResponse, error) {
-	out := new(MsgDepositResponse)
-	err := c.cc.Invoke(ctx, "/vault.v1.Msg/Deposit", in, out, opts...)
+func (c *msgClient) SwapIn(ctx context.Context, in *MsgSwapInRequest, opts ...grpc.CallOption) (*MsgSwapInResponse, error) {
+	out := new(MsgSwapInResponse)
+	err := c.cc.Invoke(ctx, "/vault.v1.Msg/SwapIn", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *msgClient) Withdraw(ctx context.Context, in *MsgWithdrawRequest, opts ...grpc.CallOption) (*MsgWithdrawResponse, error) {
-	out := new(MsgWithdrawResponse)
-	err := c.cc.Invoke(ctx, "/vault.v1.Msg/Withdraw", in, out, opts...)
+func (c *msgClient) SwapOut(ctx context.Context, in *MsgSwapOutRequest, opts ...grpc.CallOption) (*MsgSwapOutResponse, error) {
+	out := new(MsgSwapOutResponse)
+	err := c.cc.Invoke(ctx, "/vault.v1.Msg/SwapOut", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -742,10 +720,10 @@ func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts 
 type MsgServer interface {
 	// CreateVault creates a new vault.
 	CreateVault(context.Context, *MsgCreateVaultRequest) (*MsgCreateVaultResponse, error)
-	// Deposit deposits assets into a vault, issuing vault shares in return.
-	Deposit(context.Context, *MsgDepositRequest) (*MsgDepositResponse, error)
-	// Withdraw withdraws a specific amount of assets from a vault by burning a calculated number of shares.
-	Withdraw(context.Context, *MsgWithdrawRequest) (*MsgWithdrawResponse, error)
+	// SwapIn exchanges underlying assets for vault shares by depositing them into a vault.
+	SwapIn(context.Context, *MsgSwapInRequest) (*MsgSwapInResponse, error)
+	// SwapOut exchanges vault shares for underlying assets by withdrawing from a vault.
+	SwapOut(context.Context, *MsgSwapOutRequest) (*MsgSwapOutResponse, error)
 	// Redeem redeems a specific amount of shares from a vault for a calculated amount of the underlying asset.
 	Redeem(context.Context, *MsgRedeemRequest) (*MsgRedeemResponse, error)
 	// UpdateParams defines a (governance) operation for updating the module
@@ -760,11 +738,11 @@ type UnimplementedMsgServer struct {
 func (*UnimplementedMsgServer) CreateVault(ctx context.Context, req *MsgCreateVaultRequest) (*MsgCreateVaultResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateVault not implemented")
 }
-func (*UnimplementedMsgServer) Deposit(ctx context.Context, req *MsgDepositRequest) (*MsgDepositResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Deposit not implemented")
+func (*UnimplementedMsgServer) SwapIn(ctx context.Context, req *MsgSwapInRequest) (*MsgSwapInResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SwapIn not implemented")
 }
-func (*UnimplementedMsgServer) Withdraw(ctx context.Context, req *MsgWithdrawRequest) (*MsgWithdrawResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Withdraw not implemented")
+func (*UnimplementedMsgServer) SwapOut(ctx context.Context, req *MsgSwapOutRequest) (*MsgSwapOutResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SwapOut not implemented")
 }
 func (*UnimplementedMsgServer) Redeem(ctx context.Context, req *MsgRedeemRequest) (*MsgRedeemResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Redeem not implemented")
@@ -795,38 +773,38 @@ func _Msg_CreateVault_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_Deposit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgDepositRequest)
+func _Msg_SwapIn_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSwapInRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).Deposit(ctx, in)
+		return srv.(MsgServer).SwapIn(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/vault.v1.Msg/Deposit",
+		FullMethod: "/vault.v1.Msg/SwapIn",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).Deposit(ctx, req.(*MsgDepositRequest))
+		return srv.(MsgServer).SwapIn(ctx, req.(*MsgSwapInRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_Withdraw_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgWithdrawRequest)
+func _Msg_SwapOut_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSwapOutRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).Withdraw(ctx, in)
+		return srv.(MsgServer).SwapOut(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/vault.v1.Msg/Withdraw",
+		FullMethod: "/vault.v1.Msg/SwapOut",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).Withdraw(ctx, req.(*MsgWithdrawRequest))
+		return srv.(MsgServer).SwapOut(ctx, req.(*MsgSwapOutRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -877,12 +855,12 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_CreateVault_Handler,
 		},
 		{
-			MethodName: "Deposit",
-			Handler:    _Msg_Deposit_Handler,
+			MethodName: "SwapIn",
+			Handler:    _Msg_SwapIn_Handler,
 		},
 		{
-			MethodName: "Withdraw",
-			Handler:    _Msg_Withdraw_Handler,
+			MethodName: "SwapOut",
+			Handler:    _Msg_SwapOut_Handler,
 		},
 		{
 			MethodName: "Redeem",
@@ -1034,7 +1012,7 @@ func (m *MsgCreateVaultResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgDepositRequest) Marshal() (dAtA []byte, err error) {
+func (m *MsgSwapInRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1044,112 +1022,18 @@ func (m *MsgDepositRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgDepositRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgSwapInRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgDepositRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Receiver) > 0 {
-		i -= len(m.Receiver)
-		copy(dAtA[i:], m.Receiver)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Receiver)))
-		i--
-		dAtA[i] = 0x22
-	}
-	{
-		size, err := m.Amount.MarshalToSizedBuffer(dAtA[:i])
-		if err != nil {
-			return 0, err
-		}
-		i -= size
-		i = encodeVarintTx(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0x1a
-	if len(m.VaultAddress) > 0 {
-		i -= len(m.VaultAddress)
-		copy(dAtA[i:], m.VaultAddress)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.VaultAddress)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.Depositor) > 0 {
-		i -= len(m.Depositor)
-		copy(dAtA[i:], m.Depositor)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Depositor)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgDepositResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgDepositResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgDepositResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgSwapInRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
 	{
-		size, err := m.SharesReceived.MarshalToSizedBuffer(dAtA[:i])
-		if err != nil {
-			return 0, err
-		}
-		i -= size
-		i = encodeVarintTx(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0xa
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgWithdrawRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgWithdrawRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgWithdrawRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Receiver) > 0 {
-		i -= len(m.Receiver)
-		copy(dAtA[i:], m.Receiver)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Receiver)))
-		i--
-		dAtA[i] = 0x22
-	}
-	{
-		size, err := m.AssetsToWithdraw.MarshalToSizedBuffer(dAtA[:i])
+		size, err := m.Assets.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -1175,7 +1059,7 @@ func (m *MsgWithdrawRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgWithdrawResponse) Marshal() (dAtA []byte, err error) {
+func (m *MsgSwapInResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1185,12 +1069,92 @@ func (m *MsgWithdrawResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *MsgWithdrawResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *MsgSwapInResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *MsgWithdrawResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *MsgSwapInResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.SharesReceived.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSwapOutRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSwapOutRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSwapOutRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Assets.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	if len(m.VaultAddress) > 0 {
+		i -= len(m.VaultAddress)
+		copy(dAtA[i:], m.VaultAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.VaultAddress)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Owner) > 0 {
+		i -= len(m.Owner)
+		copy(dAtA[i:], m.Owner)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Owner)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSwapOutResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSwapOutResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSwapOutResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1364,41 +1328,7 @@ func (m *MsgCreateVaultResponse) Size() (n int) {
 	return n
 }
 
-func (m *MsgDepositRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Depositor)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	l = len(m.VaultAddress)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	l = m.Amount.Size()
-	n += 1 + l + sovTx(uint64(l))
-	l = len(m.Receiver)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	return n
-}
-
-func (m *MsgDepositResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = m.SharesReceived.Size()
-	n += 1 + l + sovTx(uint64(l))
-	return n
-}
-
-func (m *MsgWithdrawRequest) Size() (n int) {
+func (m *MsgSwapInRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1412,16 +1342,42 @@ func (m *MsgWithdrawRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
-	l = m.AssetsToWithdraw.Size()
+	l = m.Assets.Size()
 	n += 1 + l + sovTx(uint64(l))
-	l = len(m.Receiver)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
 	return n
 }
 
-func (m *MsgWithdrawResponse) Size() (n int) {
+func (m *MsgSwapInResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.SharesReceived.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgSwapOutRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Owner)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.VaultAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.Assets.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgSwapOutResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1865,7 +1821,7 @@ func (m *MsgCreateVaultResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgDepositRequest) Unmarshal(dAtA []byte) error {
+func (m *MsgSwapInRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1888,272 +1844,10 @@ func (m *MsgDepositRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgDepositRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgSwapInRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgDepositRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Depositor", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Depositor = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field VaultAddress", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.VaultAddress = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.Amount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Receiver", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Receiver = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgDepositResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgDepositResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgDepositResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field SharesReceived", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.SharesReceived.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgWithdrawRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgWithdrawRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgWithdrawRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgSwapInRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -2222,7 +1916,7 @@ func (m *MsgWithdrawRequest) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field AssetsToWithdraw", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Assets", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -2249,13 +1943,146 @@ func (m *MsgWithdrawRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.AssetsToWithdraw.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.Assets.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
-		case 4:
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSwapInResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSwapInResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSwapInResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Receiver", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field SharesReceived", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.SharesReceived.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSwapOutRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSwapOutRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSwapOutRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Owner", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -2283,7 +2110,72 @@ func (m *MsgWithdrawRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Receiver = string(dAtA[iNdEx:postIndex])
+			m.Owner = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VaultAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VaultAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Assets", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Assets.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -2306,7 +2198,7 @@ func (m *MsgWithdrawRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *MsgWithdrawResponse) Unmarshal(dAtA []byte) error {
+func (m *MsgSwapOutResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -2329,10 +2221,10 @@ func (m *MsgWithdrawResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: MsgWithdrawResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: MsgSwapOutResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgWithdrawResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: MsgSwapOutResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:

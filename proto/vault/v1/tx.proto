@@ -16,11 +16,11 @@ service Msg {
   // CreateVault creates a new vault.
   rpc CreateVault(MsgCreateVaultRequest) returns (MsgCreateVaultResponse);
 
-  // Deposit deposits assets into a vault, issuing vault shares in return.
-  rpc Deposit(MsgDepositRequest) returns (MsgDepositResponse);
+  // SwapIn exchanges underlying assets for vault shares by depositing them into a vault.
+  rpc SwapIn(MsgSwapInRequest) returns (MsgSwapInResponse);
 
-  // Withdraw withdraws a specific amount of assets from a vault by burning a calculated number of shares.
-  rpc Withdraw(MsgWithdrawRequest) returns (MsgWithdrawResponse);
+  // SwapOut exchanges vault shares for underlying assets by withdrawing from a vault.
+  rpc SwapOut(MsgSwapOutRequest) returns (MsgSwapOutResponse);
 
   // Redeem redeems a specific amount of shares from a vault for a calculated amount of the underlying asset.
   rpc Redeem(MsgRedeemRequest) returns (MsgRedeemResponse);
@@ -65,43 +65,39 @@ message MsgCreateVaultResponse {
   string vault_address = 1;
 }
 
-// MsgDepositRequest is the request message for the Deposit endpoint.
-message MsgDepositRequest {
-  option (cosmos.msg.v1.signer) = "depositor";
+// MsgSwapInRequest is the request message for depositing underlying assets into a vault in exchange for shares.
+message MsgSwapInRequest {
+  option (cosmos.msg.v1.signer) = "owner";
 
-  // depositor is the account depositing assets into the vault.
-  string depositor = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // vault_address is the address of the vault to deposit into.
+  // owner is the address initiating the swap in (deposit).
+  string owner = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // vault_address is the address of the target vault.
   string vault_address = 2;
-  // amount is the amount of the base asset to deposit.
-  cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
-  // receiver is the address that will receive the vault shares. If empty, defaults to the depositor.
-  string receiver = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // assets is the amount of underlying assets to deposit.
+  cosmos.base.v1beta1.Coin assets = 3 [(gogoproto.nullable) = false];
 }
 
-// MsgDepositResponse is the response message for the Deposit endpoint.
-message MsgDepositResponse {
-  // shares_received is the amount of vault shares minted to the receiver.
+// MsgSwapInResponse is the response message for a successful SwapIn.
+message MsgSwapInResponse {
+  // shares_received is the amount of vault shares minted.
   cosmos.base.v1beta1.Coin shares_received = 1 [(gogoproto.nullable) = false];
 }
 
-// MsgWithdrawRequest is the request message for the Withdraw endpoint.
-message MsgWithdrawRequest {
+// MsgSwapOutRequest is the request message for redeeming vault shares in exchange for underlying assets.
+message MsgSwapOutRequest {
   option (cosmos.msg.v1.signer) = "owner";
 
-  // owner is the account that owns the shares and is initiating the withdrawal.
+  // owner is the address initiating the swap out (withdraw).
   string owner = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // vault_address is the address of the vault to withdraw from.
+  // vault_address is the address of the vault to redeem from.
   string vault_address = 2;
-  // assets_to_withdraw is the amount of underlying assets to withdraw from the vault.
-  cosmos.base.v1beta1.Coin assets_to_withdraw = 3 [(gogoproto.nullable) = false];
-  // receiver is the address that will receive the withdrawn assets. If empty, defaults to the owner.
-  string receiver = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // assets is the amount of underlying assets to withdraw.
+  cosmos.base.v1beta1.Coin assets = 3 [(gogoproto.nullable) = false];
 }
 
-// MsgWithdrawResponse is the response message for the Withdraw endpoint.
-message MsgWithdrawResponse {
-  // shares_burned is the amount of vault shares burned in the withdrawal.
+// MsgSwapOutResponse is the response message for a successful SwapOut.
+message MsgSwapOutResponse {
+  // shares_burned is the amount of shares burned in exchange for assets.
   cosmos.base.v1beta1.Coin shares_burned = 1 [(gogoproto.nullable) = false];
 }
 

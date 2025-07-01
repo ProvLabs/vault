@@ -32,13 +32,13 @@ func (k msgServer) CreateVault(goCtx context.Context, msg *types.MsgCreateVaultR
 	}, nil
 }
 
-// Deposit deposits assets into a vault.
-func (k msgServer) Deposit(goCtx context.Context, msg *types.MsgDepositRequest) (*types.MsgDepositResponse, error) {
+// SwapIn handles depositing underlying assets into a vault and mints vault shares to the recipient.
+func (k msgServer) SwapIn(goCtx context.Context, msg *types.MsgSwapInRequest) (*types.MsgSwapInResponse, error) {
 	panic("not implemented")
 }
 
-// Withdraw withdraws assets from a vault.
-func (k msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdrawRequest) (*types.MsgWithdrawResponse, error) {
+// SwapOut handles redeeming vault shares for underlying assets and transfers the assets to the recipient.
+func (k msgServer) SwapOut(goCtx context.Context, msg *types.MsgSwapOutRequest) (*types.MsgSwapOutResponse, error) {
 	panic("not implemented")
 }
 

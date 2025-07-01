@@ -25,14 +25,14 @@ func (m MsgCreateVaultRequest) ValidateBasic() error {
 	return nil
 }
 
-// ValidateBasic returns a not implemented error for MsgDepositRequest.
-func (m MsgDepositRequest) ValidateBasic() error {
-	return errors.New("ValidateBasic not implemented for MsgDepositRequest")
+// ValidateBasic returns a not implemented error for MsgSwapInRequest.
+func (m MsgSwapInRequest) ValidateBasic() error {
+	return errors.New("ValidateBasic not implemented for MsgSwapInRequest")
 }
 
-// ValidateBasic returns a not implemented error for MsgWithdrawRequest.
-func (m MsgWithdrawRequest) ValidateBasic() error {
-	return errors.New("ValidateBasic not implemented for MsgWithdrawRequest")
+// ValidateBasic returns a not implemented error for MsgSwapOutRequest.
+func (m MsgSwapOutRequest) ValidateBasic() error {
+	return errors.New("ValidateBasic not implemented for MsgSwapOutRequest")
 }
 
 // ValidateBasic returns a not implemented error for MsgRedeemRequest.

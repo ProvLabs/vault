@@ -363,6 +363,16 @@ func (s *TestSuite) TestMsgServer_SwapIn_Failures() {
 			msg:                types.MsgSwapInRequest{Owner: owner.String(), VaultAddress: vaultAddr.String(), Assets: assets},
 			expectedErrSubstrs: []string{"insufficient funds"},
 		},
+		{
+			name:  "zero amount swap",
+			setup: setup,
+			msg: types.MsgSwapInRequest{
+				Owner:        owner.String(),
+				VaultAddress: vaultAddr.String(),
+				Assets:       sdk.NewInt64Coin(underlyingDenom, 0),
+			},
+			expectedErrSubstrs: []string{"invalid amount", "must be greater than zero"},
+		},
 	}
 
 	for _, tc := range tests {

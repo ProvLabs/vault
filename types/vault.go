@@ -72,3 +72,12 @@ func (va VaultAccount) Validate() error {
 	}
 	return nil
 }
+
+func (va VaultAccount) ValidateUnderlyingAssets(asset sdk.Coin) error {
+	for _, denom := range va.UnderlyingAssets {
+		if asset.Denom == denom {
+			return nil
+		}
+	}
+	return fmt.Errorf("%s asset denom not supported for vault, expected one of %v", asset.Denom, va.UnderlyingAssets)
+}

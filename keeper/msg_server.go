@@ -55,7 +55,24 @@ func (k msgServer) SwapIn(goCtx context.Context, msg *types.MsgSwapInRequest) (*
 
 // SwapOut handles redeeming vault shares for underlying assets and transfers the assets to the recipient.
 func (k msgServer) SwapOut(goCtx context.Context, msg *types.MsgSwapOutRequest) (*types.MsgSwapOutResponse, error) {
-	panic("not implemented")
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr, err := sdk.AccAddressFromBech32(msg.VaultAddress)
+	if err != nil {
+		return nil, err
+	}
+	ownerAddr, err := sdk.AccAddressFromBech32(msg.Owner)
+	if err != nil {
+		return nil, err
+	}
+
+	shares, err := k.Keeper.SwapOut(ctx, vaultAddr, ownerAddr, msg.Assets)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgSwapOutResponse{SharesBurned: *shares}, nil
+
 }
 
 // Redeem redeems shares for underlying assets.

@@ -168,3 +168,35 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 
 	return &shares, nil
 }
+
+func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, shares sdk.Coin) (*sdk.Coin, error) {
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	if shares.Denom != vault.ShareDenom {
+		return nil, fmt.Errorf("swap in denom must be share denom %v : %v", shares.Denom, vault.ShareDenom)
+	}
+
+	assets := sdk.NewCoin(vault.UnderlyingAssets[0], shares.Amount)
+
+	markerAddr, err := markertypes.MarkerAddress(vault.ShareDenom)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := k.BankKeeper.SendCoins(ctx, owner, markerAddr, sdk.NewCoins(shares)); err != nil {
+		return nil, fmt.Errorf("failed to send shares to marker: %w", err)
+	}
+
+	if err := k.MarkerKeeper.BurnCoin(ctx, vault.GetAddress(), shares); err != nil {
+		return nil, fmt.Errorf("failed to burn shares: %w", err)
+	}
+
+	if err := k.BankKeeper.SendCoins(ctx, markerAddr, owner, sdk.NewCoins(assets)); err != nil {
+		return nil, fmt.Errorf("failed to send underlying asset: %w", err)
+	}
+
+	return &shares, nil
+}

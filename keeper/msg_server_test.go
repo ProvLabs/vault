@@ -32,7 +32,7 @@ func (s *TestSuite) TestMsgServer_CreateVault() {
 			s.EqualValues(0, marker.GetSupply().Amount.Int64(), "vault marker supply should be zero")
 			s.False(marker.AllowsForcedTransfer(), "vault marker should not have forced transfer")
 			s.False(marker.HasGovernanceEnabled(), "vault marker should not have governance")
-			s.True(marker.GetMarkerType() == markertypes.MarkerType_RestrictedCoin, "vault marker should be restricted")
+			s.True(marker.GetMarkerType() == markertypes.MarkerType_Coin, "vault marker should be coin")
 			s.False(marker.HasGovernanceEnabled(), "vault marker should not allow governance control")
 
 			access := marker.GetAccessList()
@@ -43,7 +43,6 @@ func (s *TestSuite) TestMsgServer_CreateVault() {
 					markertypes.Access_Mint,
 					markertypes.Access_Burn,
 					markertypes.Access_Withdraw,
-					markertypes.Access_Transfer,
 				},
 				access[0].Permissions,
 			)
@@ -98,7 +97,7 @@ func (s *TestSuite) TestMsgServer_CreateVault() {
 				sdk.NewAttribute("amount", "0"),
 				sdk.NewAttribute("denom", sharedenom),
 				sdk.NewAttribute("manager", vaultAddr.String()),
-				sdk.NewAttribute("marker_type", "MARKER_TYPE_RESTRICTED"),
+				sdk.NewAttribute("marker_type", "MARKER_TYPE_COIN"),
 				sdk.NewAttribute("status", "proposed"),
 			),
 			sdk.NewEvent("provenance.marker.v1.EventMarkerFinalize",
@@ -281,17 +280,15 @@ func (s *TestSuite) requireAddFinalizeAndActivateMarker(coin sdk.Coin, manager s
 				Permissions: markertypes.AccessList{
 					markertypes.Access_Mint, markertypes.Access_Burn,
 					markertypes.Access_Deposit, markertypes.Access_Withdraw, markertypes.Access_Delete,
-					markertypes.Access_Transfer,
 				},
 			},
 		},
 		Status:                 markertypes.StatusProposed,
 		Denom:                  coin.Denom,
 		Supply:                 coin.Amount,
-		MarkerType:             markertypes.MarkerType_RestrictedCoin,
+		MarkerType:             markertypes.MarkerType_Coin,
 		SupplyFixed:            true,
-		AllowGovernanceControl: true,
-		AllowForcedTransfer:    true,
+		AllowGovernanceControl: false,
 		RequiredAttributes:     reqAttrs,
 	}
 	err = s.simApp.MarkerKeeper.AddFinalizeAndActivateMarker(s.ctx, marker)

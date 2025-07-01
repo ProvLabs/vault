@@ -187,6 +187,98 @@ func (s *TestSuite) TestMsgServer_CreateVault_Failures() {
 	}
 }
 
+func (s *TestSuite) TestMsgServer_SwapIn() {
+	type postCheckArgs struct {
+		Owner           sdk.AccAddress
+		VaultAddr       sdk.AccAddress
+		UnderlyingAsset sdk.Coin
+		Shares          sdk.Coin
+	}
+
+	testDef := msgServerTestDef[types.MsgSwapInRequest, types.MsgSwapInResponse, postCheckArgs]{
+		endpointName: "SwapIn",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).SwapIn,
+		postCheck: func(msg *types.MsgSwapInRequest, args postCheckArgs) {
+			// Check that the marker created by the vault has a supply of 100.
+			markerAddr := markertypes.MustGetMarkerAddress(args.Shares.Denom)
+			marker, err := s.simApp.MarkerKeeper.GetMarker(s.ctx, markerAddr)
+			s.Require().NoError(err, "marker should exist")
+			s.Require().Equal(args.Shares.Amount, marker.GetSupply(), "marker supply should be updated")
+
+			// Check that the balance of the vault account has increased by the denom in the Msg.
+			vaultBalance := s.simApp.BankKeeper.GetBalance(s.ctx, args.VaultAddr, args.UnderlyingAsset.Denom)
+			s.Require().Equal(args.UnderlyingAsset, vaultBalance, "vault balance should be updated")
+
+			// Check that the owner's balance contains the shares.
+			ownerBalance := s.simApp.BankKeeper.GetBalance(s.ctx, args.Owner, args.Shares.Denom)
+			s.Require().Equal(args.Shares, ownerBalance, "owner should have received shares")
+		},
+	}
+
+	underlyingDenom := "underlying"
+	shareDenom := "vaultshares"
+	owner := s.adminAddr
+	vaultAddr := types.GetVaultAddress(shareDenom)
+	assets := sdk.NewInt64Coin(underlyingDenom, 100)
+
+	swapInReq := types.MsgSwapInRequest{
+		Owner:        owner.String(),
+		VaultAddress: vaultAddr.String(),
+		Assets:       assets,
+	}
+
+	tc := msgServerTestCase[types.MsgSwapInRequest, postCheckArgs]{
+		name: "happy path",
+		setup: func() {
+			// Create marker for underlying asset
+			s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), owner)
+			// Create the vault
+			_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+				Admin:           owner.String(),
+				ShareDenom:      shareDenom,
+				UnderlyingAsset: underlyingDenom,
+			})
+			s.Require().NoError(err)
+			// Fund owner with underlying assets
+			err = FundAccount(s.ctx, s.simApp.BankKeeper, owner, sdk.NewCoins(assets))
+			s.Require().NoError(err)
+		},
+		msg:                swapInReq,
+		expectedErrSubstrs: nil,
+		postCheckArgs:      postCheckArgs{Owner: owner, VaultAddr: vaultAddr, UnderlyingAsset: assets, Shares: sdk.NewCoin(shareDenom, assets.Amount)},
+		expectedEvents: sdk.Events{
+			sdk.NewEvent("vault.v1.EventSwapIn",
+				sdk.NewAttribute("owner", owner.String()),
+				sdk.NewAttribute("vault_address", vaultAddr.String()),
+				sdk.NewAttribute("amount_in", assets.String()),
+				sdk.NewAttribute("shares_received", sdk.NewCoin(shareDenom, assets.Amount).String()),
+			),
+			sdk.NewEvent("provenance.marker.v1.EventMarkerMint",
+				sdk.NewAttribute("amount", assets.Amount.String()),
+				sdk.NewAttribute("denom", shareDenom),
+				sdk.NewAttribute("administrator", vaultAddr.String()),
+			),
+			sdk.NewEvent("provenance.marker.v1.EventMarkerWithdraw",
+				sdk.NewAttribute("coins", sdk.NewCoins(assets).String()),
+				sdk.NewAttribute("denom", shareDenom),
+				sdk.NewAttribute("administrator", vaultAddr.String()),
+				sdk.NewAttribute("to_address", owner.String()),
+			),
+		},
+	}
+	testDef.expectedResponse = &types.MsgSwapInResponse{SharesReceived: sdk.NewCoin(shareDenom, assets.Amount)}
+	runMsgServerTestCase(s, testDef, tc)
+}
+
+/*
+message EventMarkerWithdraw {
+  string coins         = 1;
+  string denom         = 2;
+  string administrator = 3;
+  string to_address    = 4;
+}
+*/
+
 // msgServerTestDef defines the configuration for testing a specific MsgServer endpoint.
 // Req is the request message type.
 // Resp is the expected response message type.

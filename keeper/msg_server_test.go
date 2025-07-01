@@ -220,6 +220,7 @@ func (s *TestSuite) TestMsgServer_SwapIn() {
 	owner := s.adminAddr
 	vaultAddr := types.GetVaultAddress(shareDenom)
 	assets := sdk.NewInt64Coin(underlyingDenom, 100)
+	shares := sdk.NewInt64Coin(shareDenom, 100)
 
 	swapInReq := types.MsgSwapInRequest{
 		Owner:        owner.String(),
@@ -259,10 +260,16 @@ func (s *TestSuite) TestMsgServer_SwapIn() {
 				sdk.NewAttribute("administrator", vaultAddr.String()),
 			),
 			sdk.NewEvent("provenance.marker.v1.EventMarkerWithdraw",
-				sdk.NewAttribute("coins", sdk.NewCoins(assets).String()),
+				sdk.NewAttribute("coins", sdk.NewCoins(shares).String()),
 				sdk.NewAttribute("denom", shareDenom),
 				sdk.NewAttribute("administrator", vaultAddr.String()),
 				sdk.NewAttribute("to_address", owner.String()),
+			),
+			sdk.NewEvent("provenance.marker.v1.EventMarkerWithdraw",
+				sdk.NewAttribute("coins", sdk.NewCoins(assets).String()),
+				sdk.NewAttribute("denom", underlyingDenom),
+				sdk.NewAttribute("administrator", owner.String()),
+				sdk.NewAttribute("to_address", vaultAddr.String()),
 			),
 		},
 	}

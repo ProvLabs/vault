@@ -276,6 +276,102 @@ func (s *TestSuite) TestMsgServer_SwapIn() {
 	runMsgServerTestCase(s, testDef, tc)
 }
 
+func (s *TestSuite) TestMsgServer_SwapIn_Failures() {
+	testDef := msgServerTestDef[types.MsgSwapInRequest, types.MsgSwapInResponse, any]{
+		endpointName: "SwapIn",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).SwapIn,
+		postCheck:    nil,
+	}
+
+	underlyingDenom := "underlying"
+	shareDenom := "vaultshares"
+	owner := s.adminAddr
+	vaultAddr := types.GetVaultAddress(shareDenom)
+	assets := sdk.NewInt64Coin(underlyingDenom, 100)
+
+	// Base setup for many tests
+	setup := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), owner)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           owner.String(),
+			ShareDenom:      shareDenom,
+			UnderlyingAsset: underlyingDenom,
+		})
+		s.Require().NoError(err)
+		err = FundAccount(s.ctx, s.simApp.BankKeeper, owner, sdk.NewCoins(assets))
+		s.Require().NoError(err)
+	}
+
+	tests := []msgServerTestCase[types.MsgSwapInRequest, any]{
+		{
+			name:  "invalid owner address",
+			setup: setup,
+			msg: types.MsgSwapInRequest{
+				Owner:        "invalid",
+				VaultAddress: vaultAddr.String(),
+				Assets:       assets,
+			},
+			expectedErrSubstrs: []string{"invalid owner address", "decoding bech32 failed"},
+		},
+		{
+			name:  "invalid vault address",
+			setup: setup,
+			msg: types.MsgSwapInRequest{
+				Owner:        owner.String(),
+				VaultAddress: "invalid",
+				Assets:       assets,
+			},
+			expectedErrSubstrs: []string{"invalid vault address", "decoding bech32 failed"},
+		},
+		{
+			name:  "invalid asset denom",
+			setup: setup,
+			msg: types.MsgSwapInRequest{
+				Owner:        owner.String(),
+				VaultAddress: vaultAddr.String(),
+				Assets:       sdk.NewCoin("!nvalid", math.NewInt(100)),
+			},
+			expectedErrSubstrs: []string{"invalid asset", "invalid denom"},
+		},
+		{
+			name: "vault does not exist",
+			msg: types.MsgSwapInRequest{
+				Owner:        owner.String(),
+				VaultAddress: vaultAddr.String(),
+				Assets:       assets,
+			},
+			expectedErrSubstrs: []string{"vault with address", "not found"},
+		},
+		{
+			name:  "underlying asset mismatch",
+			setup: setup,
+			msg: types.MsgSwapInRequest{
+				Owner:        owner.String(),
+				VaultAddress: vaultAddr.String(),
+				Assets:       sdk.NewInt64Coin("othercoin", 100),
+			},
+			expectedErrSubstrs: []string{"asset \"othercoin\" is not an underlying asset for this vault"},
+		},
+		{
+			name: "insufficient funds",
+			setup: func() {
+				setup()
+				// Try to swap 100, but owner only has 50.
+				err := s.simApp.BankKeeper.SendCoins(s.ctx, owner, authtypes.NewModuleAddress("burn"), sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 50)))
+				s.Require().NoError(err)
+			},
+			msg:                types.MsgSwapInRequest{Owner: owner.String(), VaultAddress: vaultAddr.String(), Assets: assets},
+			expectedErrSubstrs: []string{"insufficient funds"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
 func createSendCoinEvents(fromAddress, toAddress string, amt sdk.Coins) []sdk.Event {
 	events := sdk.NewEventManager().Events()
 	// subUnlockedCoins event `coin_spent`

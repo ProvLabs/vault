@@ -45,6 +45,7 @@ func NewVaultKeeper(
 		authtypes.NewModuleAddress(govtypes.ModuleName),
 		nil,
 		nil,
+		nil,
 	)
 
 	ctx := wrapper.Ctx.WithHeaderInfo(header.Info{Time: time.Now().UTC()})

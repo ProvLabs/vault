@@ -252,7 +252,7 @@ func (s *TestSuite) TestMsgServer_SwapIn() {
 		msg:                swapInReq,
 		expectedErrSubstrs: nil,
 		postCheckArgs:      postCheckArgs{Owner: owner, VaultAddr: vaultAddr, UnderlyingAsset: assets, Shares: sdk.NewCoin(shareDenom, assets.Amount)},
-		expectedEvents:     createEventSwapInEvents(owner, vaultAddr, markertypes.MustGetMarkerAddress(shareDenom), assets, shares),
+		expectedEvents:     createSwapInEvents(owner, vaultAddr, markertypes.MustGetMarkerAddress(shareDenom), assets, shares),
 	}
 	testDef.expectedResponse = &types.MsgSwapInResponse{SharesReceived: sdk.NewCoin(shareDenom, assets.Amount)}
 	runMsgServerTestCase(s, testDef, tc)
@@ -344,14 +344,13 @@ func (s *TestSuite) TestMsgServer_SwapOut() {
 			initialShares := math.NewInt(100)
 			expectedSupplyAmount := initialShares.Sub(msg.Assets.Amount)
 			supply := s.simApp.BankKeeper.GetSupply(s.ctx, args.Shares.Denom)
-			s.Require().Equal(expectedSupplyAmount, supply.Amount, "share supply should be reduced")
+			s.Require().Equal(expectedSupplyAmount.String(), supply.Amount.String(), "share supply should be reduced")
 
 			// Check that the underlying asset has been removed from the marker account.
-			markerAddr := markertypes.MustGetMarkerAddress(args.Shares.Denom)
 			initialUnderlying := math.NewInt(100)
-			expectedMarkerBalance := initialUnderlying.Sub(msg.Assets.Amount)
-			markerBalance := s.simApp.BankKeeper.GetBalance(s.ctx, markerAddr, args.UnderlyingAsset.Denom)
-			s.Require().Equal(expectedMarkerBalance, markerBalance.Amount, "marker account should have underlying assets removed")
+			expectedVaultBalance := initialUnderlying.Sub(msg.Assets.Amount)
+			vaultBalance := s.simApp.BankKeeper.GetBalance(s.ctx, args.VaultAddr, args.UnderlyingAsset.Denom)
+			s.Require().Equal(expectedVaultBalance.String(), vaultBalance.Amount.String(), "vault account should have underlying assets removed")
 		},
 	}
 
@@ -405,7 +404,7 @@ func (s *TestSuite) TestMsgServer_SwapOut() {
 				setup:          setup,
 				msg:            swapOutReq,
 				postCheckArgs:  postCheckArgs{Owner: owner, VaultAddr: vaultAddr, UnderlyingAsset: sdk.NewInt64Coin(underlyingDenom, tt.sharesToTrade), Shares: sharesToSwap},
-				expectedEvents: sdk.Events{},
+				expectedEvents: createSwapOutEvents(owner, vaultAddr, markertypes.MustGetMarkerAddress(shareDenom), sdk.NewInt64Coin(underlyingDenom, tt.sharesToTrade), sharesToSwap),
 			}
 
 			testDef.expectedResponse = &types.MsgSwapOutResponse{SharesBurned: sharesToSwap}
@@ -474,6 +473,26 @@ func createMarkerMintCoinEvents(markerModule, admin, recipient sdk.AccAddress, c
 	return events
 }
 
+// createMarkerMintCoinEvents creates events for minting a coin and sending it to a recipient.
+func createBurnCoinEvents(burner, amount string) []sdk.Event {
+
+	events := sdk.NewEventManager().Events()
+
+	events = events.AppendEvent(sdk.NewEvent(
+		banktypes.EventTypeCoinSpent,
+		sdk.NewAttribute(banktypes.AttributeKeySpender, burner),
+		sdk.NewAttribute(sdk.AttributeKeyAmount, amount),
+	))
+
+	events = events.AppendEvent(sdk.NewEvent(
+		banktypes.EventTypeCoinBurn,
+		sdk.NewAttribute(banktypes.AttributeKeyBurner, burner),
+		sdk.NewAttribute(sdk.AttributeKeyAmount, amount),
+	))
+
+	return events
+}
+
 // createMarkerWithdraw creates events for withdrawing a coin from a marker.
 func createMarkerWithdraw(administrator, sender sdk.AccAddress, recipient sdk.AccAddress, shares sdk.Coin) []sdk.Event {
 
@@ -492,8 +511,55 @@ func createMarkerWithdraw(administrator, sender sdk.AccAddress, recipient sdk.Ac
 	return events
 }
 
-// createEventSwapInEvents creates the full set of expected events for a successful SwapIn.
-func createEventSwapInEvents(owner, vaultAddr, markerAddr sdk.AccAddress, asset, shares sdk.Coin) []sdk.Event {
+// createMarkerBurn creates events for burning a coin from a marker.
+func createMarkerBurn(admin, markerAddr sdk.AccAddress, shares sdk.Coin) []sdk.Event {
+	markerModule := authtypes.NewModuleAddress(markertypes.ModuleName)
+	events := createSendCoinEvents(markerAddr.String(), markerModule.String(), sdk.NewCoins(shares).String())
+
+	burnEvents := createBurnCoinEvents(markerModule.String(), shares.String())
+	events = append(events, burnEvents...)
+
+	// The specific marker burn event
+	markerBurnEvent := sdk.NewEvent("provenance.marker.v1.EventMarkerBurn",
+		sdk.NewAttribute("administrator", admin.String()),
+		sdk.NewAttribute("amount", shares.Amount.String()),
+		sdk.NewAttribute("denom", shares.Denom),
+	)
+	events = append(events, markerBurnEvent)
+
+	return events
+}
+
+// createSwapOutEvents creates the full set of expected events for a successful SwapOut.
+func createSwapOutEvents(owner, vaultAddr, markerAddr sdk.AccAddress, assets, shares sdk.Coin) []sdk.Event {
+	var allEvents []sdk.Event
+
+	// 1. owner sends shares to markerAddr
+	sendToMarkerEvents := createSendCoinEvents(owner.String(), markerAddr.String(), shares.String())
+	allEvents = append(allEvents, sendToMarkerEvents...)
+
+	// 2. vaultAddr (as admin) burns shares.
+	burnEvents := createMarkerBurn(vaultAddr, markerAddr, shares)
+	allEvents = append(allEvents, burnEvents...)
+
+	// 3. vaultAddr sends assets to owner
+	sendAssetEvents := createSendCoinEvents(vaultAddr.String(), owner.String(), assets.String())
+	allEvents = append(allEvents, sendAssetEvents...)
+
+	// 4. The vault's own SwapOut event
+	swapOutEvent := sdk.NewEvent("vault.v1.EventSwapOut",
+		sdk.NewAttribute("amount_out", CoinToJSON(assets)),
+		sdk.NewAttribute("owner", owner.String()),
+		sdk.NewAttribute("shares_burned", CoinToJSON(shares)),
+		sdk.NewAttribute("vault_address", vaultAddr.String()),
+	)
+	allEvents = append(allEvents, swapOutEvent)
+
+	return allEvents
+}
+
+// createSwapInEvents creates the full set of expected events for a successful SwapIn.
+func createSwapInEvents(owner, vaultAddr, markerAddr sdk.AccAddress, asset, shares sdk.Coin) []sdk.Event {
 	var allEvents []sdk.Event
 
 	markerModule := authtypes.NewModuleAddress(markertypes.ModuleName)

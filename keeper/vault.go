@@ -194,7 +194,7 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 		return nil, fmt.Errorf("failed to burn shares: %w", err)
 	}
 
-	if err := k.BankKeeper.SendCoins(ctx, markerAddr, owner, sdk.NewCoins(assets)); err != nil {
+	if err := k.BankKeeper.SendCoins(ctx, vaultAddr, owner, sdk.NewCoins(assets)); err != nil {
 		return nil, fmt.Errorf("failed to send underlying asset: %w", err)
 	}
 

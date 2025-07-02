@@ -209,9 +209,9 @@ func (s *TestSuite) TestMsgServer_SwapIn() {
 			supply := s.simApp.BankKeeper.GetSupply(s.ctx, args.Shares.Denom)
 			s.Require().Equal(args.Shares.Amount, supply.Amount, "marker supply should be updated")
 
-			// Check that the balance of the marker account has increased by the denom in the Msg.
-			markerBalance := s.simApp.BankKeeper.GetBalance(s.ctx, markerAddr, args.UnderlyingAsset.Denom)
-			s.Require().Equal(args.UnderlyingAsset, markerBalance, "marker balance should be updated")
+			// Check that the balance of the vault account has increased by the denom in the Msg.
+			vaultBalance := s.simApp.BankKeeper.GetBalance(s.ctx, args.VaultAddr, args.UnderlyingAsset.Denom)
+			s.Require().Equal(args.UnderlyingAsset, vaultBalance, "marker balance should be updated")
 
 			// Check that the owner's balance contains the shares.
 			ownerBalance := s.simApp.BankKeeper.GetBalance(s.ctx, args.Owner, args.Shares.Denom)
@@ -345,6 +345,13 @@ func (s *TestSuite) TestMsgServer_SwapOut() {
 			expectedSupplyAmount := initialShares.Sub(msg.Assets.Amount)
 			supply := s.simApp.BankKeeper.GetSupply(s.ctx, args.Shares.Denom)
 			s.Require().Equal(expectedSupplyAmount, supply.Amount, "share supply should be reduced")
+
+			// Check that the underlying asset has been removed from the marker account.
+			markerAddr := markertypes.MustGetMarkerAddress(args.Shares.Denom)
+			initialUnderlying := math.NewInt(100)
+			expectedMarkerBalance := initialUnderlying.Sub(msg.Assets.Amount)
+			markerBalance := s.simApp.BankKeeper.GetBalance(s.ctx, markerAddr, args.UnderlyingAsset.Denom)
+			s.Require().Equal(expectedMarkerBalance, markerBalance.Amount, "marker account should have underlying assets removed")
 		},
 	}
 
@@ -496,7 +503,7 @@ func createEventSwapInEvents(owner, vaultAddr, markerAddr sdk.AccAddress, asset,
 	withdrawEvents := createMarkerWithdraw(vaultAddr, markerAddr, owner, shares)
 	allEvents = append(allEvents, withdrawEvents...)
 
-	sendAssetEvents := createSendCoinEvents(owner.String(), markerAddr.String(), sdk.NewCoins(asset).String())
+	sendAssetEvents := createSendCoinEvents(owner.String(), vaultAddr.String(), sdk.NewCoins(asset).String())
 	allEvents = append(allEvents, sendAssetEvents...)
 
 	swapInEvent := sdk.NewEvent("vault.v1.EventSwapIn",

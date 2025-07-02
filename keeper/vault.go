@@ -143,11 +143,6 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 		return nil, fmt.Errorf("vault with address %v not found", vaultAddr.String())
 	}
 
-	markerAddr, err := markertypes.MarkerAddress(vault.ShareDenom)
-	if err != nil {
-		return nil, err
-	}
-
 	if err := vault.ValidateUnderlyingAssets(asset); err != nil {
 		return nil, err
 	}
@@ -165,7 +160,7 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 		return nil, err
 	}
 
-	if err := k.BankKeeper.SendCoins(ctx, recipient, markerAddr, sdk.NewCoins(asset)); err != nil {
+	if err := k.BankKeeper.SendCoins(ctx, recipient, vaultAddr, sdk.NewCoins(asset)); err != nil {
 		return nil, err
 	}
 

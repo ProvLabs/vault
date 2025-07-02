@@ -413,6 +413,79 @@ func (s *TestSuite) TestMsgServer_SwapOut() {
 	}
 }
 
+func (s *TestSuite) TestMsgServer_SwapOut_Failures() {
+	testDef := msgServerTestDef[types.MsgSwapOutRequest, types.MsgSwapOutResponse, any]{
+		endpointName: "SwapOut",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).SwapOut,
+		postCheck:    nil,
+	}
+
+	underlyingDenom := "underlying"
+	shareDenom := "vaultshares"
+	owner := s.adminAddr
+	vaultAddr := types.GetVaultAddress(shareDenom)
+	initialAssets := sdk.NewInt64Coin(underlyingDenom, 100)
+	sharesToSwap := sdk.NewInt64Coin(shareDenom, 50)
+
+	// Base setup for many tests
+	setup := func() {
+		// Create marker for underlying asset
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), owner)
+		// Create the vault
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           owner.String(),
+			ShareDenom:      shareDenom,
+			UnderlyingAsset: underlyingDenom,
+		})
+		s.Require().NoError(err)
+		// Fund owner with underlying assets
+		err = FundAccount(s.ctx, s.simApp.BankKeeper, owner, sdk.NewCoins(initialAssets))
+		s.Require().NoError(err)
+
+		// Owner swaps in to get shares
+		_, err = s.k.SwapIn(s.ctx, vaultAddr, owner, initialAssets)
+		s.Require().NoError(err)
+	}
+
+	tests := []msgServerTestCase[types.MsgSwapOutRequest, any]{
+		{
+			name: "vault does not exist",
+			msg: types.MsgSwapOutRequest{
+				Owner:        owner.String(),
+				VaultAddress: vaultAddr.String(),
+				Assets:       sharesToSwap,
+			},
+			expectedErrSubstrs: []string{"vault with address", "not found"},
+		},
+		{
+			name:  "asset is not share denom",
+			setup: setup,
+			msg: types.MsgSwapOutRequest{
+				Owner:        owner.String(),
+				VaultAddress: vaultAddr.String(),
+				Assets:       sdk.NewInt64Coin("wrongdenom", 50),
+			},
+			expectedErrSubstrs: []string{"swap out denom must be share denom", "wrongdenom", shareDenom},
+		},
+		{
+			name:  "insufficient shares",
+			setup: setup,
+			msg: types.MsgSwapOutRequest{
+				Owner:        owner.String(),
+				VaultAddress: vaultAddr.String(),
+				Assets:       sdk.NewInt64Coin(shareDenom, 150),
+			},
+			expectedErrSubstrs: []string{"failed to send shares to marker", "insufficient funds"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
 func createReceiveCoinsEvents(fromAddress, amount string) sdk.Events {
 	events := sdk.NewEventManager().Events()
 	events = events.AppendEvent(sdk.NewEvent(

@@ -171,11 +171,11 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 
 func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, shares sdk.Coin) (*sdk.Coin, error) {
 	vault, err := k.GetVault(ctx, vaultAddr)
-	if vault == nil {
-		return nil, fmt.Errorf("vault with address %v not found", vaultAddr.String())
-	}
 	if err != nil {
 		return nil, err
+	}
+	if vault == nil {
+		return nil, fmt.Errorf("vault with address %v not found", vaultAddr.String())
 	}
 
 	if shares.Denom != vault.ShareDenom {

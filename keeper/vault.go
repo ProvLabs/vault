@@ -134,6 +134,17 @@ func (k *Keeper) createVaultMarker(ctx sdk.Context, markerManager sdk.AccAddress
 	return newMarker, nil
 }
 
+// SwapIn handles the process of depositing underlying assets into a vault in exchange for newly minted vault shares.
+// It performs the following steps:
+//  1. Retrieves the vault configuration for the given vault address.
+//  2. Validates that the provided underlying asset is supported by the vault.
+//  3. Constructs the vault share amount based on the asset value.
+//  4. Mints the equivalent amount of shares to the vault account.
+//  5. Withdraws the minted shares from the vault to the recipient address.
+//  6. Sends the underlying asset from the recipient to the vault’s marker account.
+//  7. Emits a SwapIn event with metadata for indexing and audit.
+//
+// Returns the minted share amount on success, or an error if any step fails.
 func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, asset sdk.Coin) (*sdk.Coin, error) {
 	vault, err := k.GetVault(ctx, vaultAddr)
 	if err != nil {
@@ -173,6 +184,18 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 
 	return &shares, nil
 }
+
+// SwapOut handles the process of redeeming vault shares in exchange for underlying assets.
+// It performs the following steps:
+//   1. Retrieves the vault configuration for the given vault address.
+//   2. Validates that the provided share denomination matches the vault's configured share denom.
+//   3. Calculates the amount of underlying assets to return based on the share amount.
+//   4. Transfers the shares from the owner to the vault's marker account.
+//   5. Burns the received shares from the vault account.
+//   6. Sends the equivalent amount of underlying assets from the marker to the owner.
+//   7. Emits a SwapOut event with metadata for indexing and audit.
+//
+// Returns the burned share amount on success, or an error if any step fails.
 
 func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, shares sdk.Coin) (*sdk.Coin, error) {
 	vault, err := k.GetVault(ctx, vaultAddr)

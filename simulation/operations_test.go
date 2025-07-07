@@ -52,6 +52,23 @@ func (s *VaultSimTestSuite) TestSimulateMsgCreateVault() {
 	s.Require().Len(futureOps, 0, "futureOperations")
 }
 
+func (s *VaultSimTestSuite) TestSimulateMsgSwapIn() {
+	r := rand.New(rand.NewSource(1))
+	accs := s.getTestingAccounts(r, 3)
+
+	op := simulation.SimulateMsgSwapIn(*s.app.VaultKeeper,
+		simulation.DefaultVaultAddrSelector,
+		simulation.DefaultUnderlyingAssetSelector,
+		simulation.DefaultUnderlyingAmountSelector,
+	)
+	opMsg, futureOps, err := op(r, s.app.BaseApp, s.ctx, accs, "")
+	s.Require().NoError(err, "SimulateMsgSwapIn")
+	s.Require().True(opMsg.OK, "operationMsg.OK")
+	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
+	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
+	s.Require().Len(futureOps, 0, "futureOperations")
+}
+
 // GenerateTestingAccounts generates n new accounts, creates them (in state) and gives each 1 million power worth of bond tokens.
 func GenerateTestingAccounts(t *testing.T, ctx sdk.Context, app *simapp.SimApp, r *rand.Rand, n int) []simtypes.Account {
 	return GenerateTestingAccountsWithPower(t, ctx, app, r, n, 1_000_000)

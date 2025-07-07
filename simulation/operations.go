@@ -107,7 +107,7 @@ type UnderlyingAssetSelector func(r *rand.Rand, ctx sdk.Context, k keeper.Keeper
 type UnderlyingAmountSelector func(r *rand.Rand, ctx sdk.Context, k keeper.Keeper, acc sdk.AccAddress, denom string) sdk.Coin
 
 func DefaultVaultAddrSelector(ctx sdk.Context, k keeper.Keeper, underlying string, r *rand.Rand) string {
-	choice := r.Intn(2)
+	choice := r.Intn(3)
 	switch choice {
 	case 0:
 		// Random address

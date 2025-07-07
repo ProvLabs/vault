@@ -50,6 +50,8 @@ func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*type
 }
 
 // GetVault finds a vault by a given address
+//
+// This function will return nil if nothing exists at this address.
 func (k Keeper) GetVault(ctx sdk.Context, address sdk.AccAddress) (*types.VaultAccount, error) {
 	mac := k.AuthKeeper.GetAccount(ctx, address)
 	if mac != nil {

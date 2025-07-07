@@ -73,6 +73,7 @@ func (va VaultAccount) Validate() error {
 	return nil
 }
 
+// ValidateUnderlyingAssets checks if the given asset's denomination is supported by the vault.
 func (va VaultAccount) ValidateUnderlyingAssets(asset sdk.Coin) error {
 	for _, denom := range va.UnderlyingAssets {
 		if asset.Denom == denom {

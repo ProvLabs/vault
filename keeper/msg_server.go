@@ -60,7 +60,6 @@ func (k msgServer) SwapOut(goCtx context.Context, msg *types.MsgSwapOutRequest) 
 	}
 
 	return &types.MsgSwapOutResponse{SharesBurned: *shares}, nil
-
 }
 
 // Redeem redeems shares for underlying assets.

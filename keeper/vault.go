@@ -173,6 +173,7 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 		return nil, err
 	}
 
+	ctx = markertypes.WithBypass(ctx)
 	if err := k.BankKeeper.SendCoins(ctx, recipient, vaultAddr, sdk.NewCoins(asset)); err != nil {
 		return nil, err
 	}

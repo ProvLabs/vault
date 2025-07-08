@@ -14,7 +14,7 @@ func CreateMarker(ctx context.Context, coin sdk.Coin, admin sdk.AccAddress, mark
 		Amount:      coin,
 		Manager:     admin.String(),
 		FromAddress: admin.String(),
-		MarkerType:  types.MarkerType_Coin,
+		MarkerType:  types.MarkerType_RestrictedCoin,
 		AccessList: []types.AccessGrant{
 			{
 				Address: admin.String(),
@@ -26,7 +26,7 @@ func CreateMarker(ctx context.Context, coin sdk.Coin, admin sdk.AccAddress, mark
 		SupplyFixed:            true,
 		AllowGovernanceControl: true,
 		AllowForcedTransfer:    false,
-		RequiredAttributes:     nil,
+		RequiredAttributes:     []string{"kyc.jackthecat.vault"},
 	}
 	markerMsgServer := keeper.NewMsgServerImpl(markerkeeper)
 	_, err := markerMsgServer.AddFinalizeActivateMarker(ctx, newMarker)

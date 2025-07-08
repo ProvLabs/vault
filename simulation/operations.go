@@ -102,7 +102,7 @@ func SimulateMsgSwapIn(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		// Pick a random account
 		acc, _ := simtypes.RandomAcc(r, accs)
-		underlyingDenom := "stake"
+		underlyingDenom := "underlying"
 
 		// Obtain Underlying Asset
 		balance := k.BankKeeper.GetBalance(ctx, acc.Address, underlyingDenom)

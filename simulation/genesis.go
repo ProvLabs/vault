@@ -12,7 +12,7 @@ import (
 // RandomizedGenState generates a random GenesisState for the vault module
 func RandomizedGenState(simState *module.SimulationState) {
 	admin := simState.Accounts[0].Address.String()
-	underlying := "stake"
+	underlying := "underlying"
 
 	vaults := []types.VaultAccount{}
 

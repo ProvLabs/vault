@@ -103,6 +103,8 @@ func (s *VaultSimTestSuite) TestSimulateMsgSwapOut() {
 		err = FundAccount(s.ctx, s.app.BankKeeper, acc.Address, sdk.NewCoins(sdk.NewInt64Coin("underlying", 100)))
 		s.Require().NoError(err, "FundAccount")
 	}
+	err = simulation.AddAttribute(s.ctx, selected.Address, simulation.RequiredMarkerAttribute, s.app.NameKeeper, s.app.AttributeKeeper)
+	s.Require().NoError(err, "AddAttribute")
 
 	// Create a vault that uses the marker as an underlying asset
 	newVault := &types.MsgCreateVaultRequest{
@@ -120,7 +122,8 @@ func (s *VaultSimTestSuite) TestSimulateMsgSwapOut() {
 		VaultAddress: types.GetVaultAddress(newVault.ShareDenom).String(),
 		Assets:       sdk.NewInt64Coin("underlying", 100),
 	}
-	_, err = msgServer.SwapIn(s.ctx, swapIn)
+	resp, err := msgServer.SwapIn(s.ctx, swapIn)
+	s.Require().Equal(int64(100), resp.SharesReceived.Amount.Int64(), "SwapIn")
 	s.Require().NoError(err, "SwapIn")
 
 	op := simulation.SimulateMsgSwapOut(*s.app.VaultKeeper)

@@ -150,7 +150,7 @@ func SimulateMsgSwapOut(k keeper.Keeper) simtypes.Operation {
 		var acc simtypes.Account
 		denom := "underlyingshare"
 		for _, a := range accs {
-			balance := k.BankKeeper.GetBalance(ctx, acc.Address, denom)
+			balance := k.BankKeeper.GetBalance(ctx, a.Address, denom)
 			if balance.IsZero() {
 				continue
 			}

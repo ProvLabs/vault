@@ -14,13 +14,12 @@ func CreateMarker(ctx context.Context, coin sdk.Coin, admin sdk.AccAddress, mark
 		Amount:      coin,
 		Manager:     admin.String(),
 		FromAddress: admin.String(),
-		MarkerType:  types.MarkerType_RestrictedCoin,
+		MarkerType:  types.MarkerType_Coin,
 		AccessList: []types.AccessGrant{
 			{
 				Address: admin.String(),
 				Permissions: types.AccessList{
-					types.Access_Mint, types.Access_Burn, types.Access_Withdraw, types.Access_Admin,
-					types.Access_Transfer, types.Access_Deposit, types.Access_Delete,
+					types.Access_Mint, types.Access_Burn, types.Access_Withdraw,
 				},
 			},
 		},

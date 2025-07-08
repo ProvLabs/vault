@@ -140,3 +140,55 @@ func SimulateMsgSwapIn(k keeper.Keeper) simtypes.Operation {
 		return simtypes.NewOperationMsg(msg, true, ""), nil, nil
 	}
 }
+
+func SimulateMsgSwapOut(k keeper.Keeper) simtypes.Operation {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+
+		// Find an account with the asset
+		var acc simtypes.Account
+		denom := "underlyingshare"
+		for _, a := range accs {
+			balance := k.BankKeeper.GetBalance(ctx, acc.Address, denom)
+			if balance.IsZero() {
+				continue
+			}
+			acc = a
+		}
+
+		// Obtain amount of shares
+		balance := k.BankKeeper.GetBalance(ctx, acc.Address, denom)
+
+		// Pick a random vault with matching share denom
+		vaults, _ := k.GetVaults(ctx)
+		iter := utils.Filter(vaults, func(addr sdk.AccAddress) bool {
+			vault, _ := k.GetVault(ctx, addr)
+			return vault.ShareDenom == denom
+		})
+		vaults = slices.Collect(iter)
+		vaultAddr := sdk.AccAddress{}
+		if len(vaults) > 0 {
+			vaultAddr = vaults[r.Intn(len(vaults))]
+		}
+
+		// Pick a random amount of the underlying asset
+		maxAmount := balance.Amount.Int64()
+		amount := rand.Int63n(maxAmount-1) + 1
+		assets := sdk.NewInt64Coin(denom, amount)
+
+		msg := &types.MsgSwapOutRequest{
+			Owner:        acc.Address.String(),
+			VaultAddress: vaultAddr.String(),
+			Assets:       assets,
+		}
+
+		handler := keeper.NewMsgServer(&k)
+		_, err := handler.SwapOut(sdk.WrapSDKContext(ctx), msg)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
+		}
+
+		return simtypes.NewOperationMsg(msg, true, ""), nil, nil
+	}
+}

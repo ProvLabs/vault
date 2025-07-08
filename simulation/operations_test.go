@@ -56,11 +56,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgSwapIn() {
 	r := rand.New(rand.NewSource(1))
 	accs := s.getTestingAccounts(r, 3)
 
-	op := simulation.SimulateMsgSwapIn(*s.app.VaultKeeper,
-		simulation.DefaultVaultAddrSelector,
-		simulation.DefaultUnderlyingAssetSelector,
-		simulation.DefaultUnderlyingAmountSelector,
-	)
+	op := simulation.SimulateMsgSwapIn(*s.app.VaultKeeper)
 	opMsg, futureOps, err := op(r, s.app.BaseApp, s.ctx, accs, "")
 	s.Require().NoError(err, "SimulateMsgSwapIn")
 	s.Require().True(opMsg.OK, "operationMsg.OK")

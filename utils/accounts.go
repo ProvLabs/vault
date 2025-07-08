@@ -21,18 +21,28 @@ type Address struct {
 	Bech32 string
 }
 
+func TestProvlabsAddress() Address {
+	key := secp256k1.GenPrivKey()
+	bytes := key.PubKey().Address().Bytes()
+
+	return Address{
+		Bytes:  bytes,
+		Bech32: generateAddress("provlabs", bytes),
+	}
+}
+
 func TestAddress() Address {
 	key := secp256k1.GenPrivKey()
 	bytes := key.PubKey().Address().Bytes()
 
 	return Address{
 		Bytes:  bytes,
-		Bech32: generateCosmosAddress(bytes),
+		Bech32: generateAddress("cosmos", bytes),
 	}
 }
 
-func generateCosmosAddress(bytes []byte) string {
-	address, err := sdk.Bech32ifyAddressBytes("cosmos", bytes)
+func generateAddress(prefix string, bytes []byte) string {
+	address, err := sdk.Bech32ifyAddressBytes(prefix, bytes)
 	if err != nil {
 		panic("error during cosmos address creation")
 	}

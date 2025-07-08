@@ -18,6 +18,8 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
 	"github.com/provlabs/vault/keeper"
+
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 type VaultSimTestSuite struct {
@@ -160,6 +162,6 @@ func FundAccount(ctx context.Context, bankKeeper bankkeeper.Keeper, addr sdk.Acc
 	if err := bankKeeper.MintCoins(ctx, minttypes.ModuleName, amounts); err != nil {
 		return err
 	}
-
+	ctx = markertypes.WithBypass(ctx) // Bypass marker checks for this operation.
 	return bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, amounts)
 }

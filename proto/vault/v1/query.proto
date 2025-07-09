@@ -28,6 +28,16 @@ service Query {
     option (google.api.http).get = "/vault/v1/vaults/{vault_address}/total_assets";
   }
 
+  // EstimateSwapIn estimates the amount of shares that would be received for a given amount of underlying assets.
+  rpc EstimateSwapIn(QueryEstimateSwapInRequest) returns (QueryEstimateSwapInResponse) {
+    option (google.api.http).get = "/vault/v1/vaults/{vault_address}/estimate_swap_in";
+  }
+
+  // EstimateSwapOut estimates the amount of underlying assets that would be received for a given amount of shares.
+  rpc EstimateSwapOut(QueryEstimateSwapOutRequest) returns (QueryEstimateSwapOutResponse) {
+    option (google.api.http).get = "/vault/v1/vaults/{vault_address}/estimate_swap_out";
+  }
+
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/vault/v1/params";
   }
@@ -78,4 +88,32 @@ message QueryTotalAssetsRequest {
 message QueryTotalAssetsResponse {
   // amount is the total assets in the vault.
   cosmos.base.v1beta1.Coin amount = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryEstimateSwapInRequest is the request message for the Query/EstimateSwapIn endpoint.
+message QueryEstimateSwapInRequest {
+  // vault_address is the bech32 address of the vault to query.
+  string vault_address = 1;
+  // assets is the amount of underlying assets to swap in.
+  cosmos.base.v1beta1.Coin assets = 2 [(gogoproto.nullable) = false];
+}
+
+// QueryEstimateSwapInResponse is the response message for the Query/EstimateSwapIn endpoint.
+message QueryEstimateSwapInResponse {
+  // assets is the estimated amount of shares that would be received.
+  cosmos.base.v1beta1.Coin assets = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryEstimateSwapOutRequest is the request message for the Query/EstimateSwapOut endpoint.
+message QueryEstimateSwapOutRequest {
+  // vault_address is the bech32 address of the vault to query.
+  string vault_address = 1;
+  // assets is the amount of shares to swap out.
+  cosmos.base.v1beta1.Coin assets = 2 [(gogoproto.nullable) = false];
+}
+
+// QueryEstimateSwapOutResponse is the response message for the Query/EstimateSwapOut endpoint.
+message QueryEstimateSwapOutResponse {
+  // assets is the estimated amount of underlying assets that would be received.
+  cosmos.base.v1beta1.Coin assets = 1 [(gogoproto.nullable) = false];
 }

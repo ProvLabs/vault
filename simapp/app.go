@@ -23,9 +23,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	_ "github.com/cosmos/cosmos-sdk/x/auth"
 	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	_ "github.com/cosmos/cosmos-sdk/x/authz/module"
 	_ "github.com/cosmos/cosmos-sdk/x/bank"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
+	_ "github.com/cosmos/cosmos-sdk/x/distribution"
+	govmodule "github.com/cosmos/cosmos-sdk/x/gov"
+	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	_ "github.com/cosmos/cosmos-sdk/x/group/module"
 	_ "github.com/cosmos/cosmos-sdk/x/params"
 	_ "github.com/cosmos/cosmos-sdk/x/staking"
@@ -38,6 +42,7 @@ import (
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	consensuskeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
+	distributionkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
@@ -92,7 +97,8 @@ type SimApp struct {
 	FeegrantKeeper feegrantkeeper.Keeper
 	GroupKeeper    groupkeeper.Keeper
 	// TODO We want to set this up
-	GovKeeper govkeeper.Keeper
+	GovKeeper          *govkeeper.Keeper
+	DistributionKeeper *distributionkeeper.Keeper
 
 	// IBC Modules
 	CapabilityKeeper *capabilitykeeper.Keeper
@@ -104,6 +110,8 @@ type SimApp struct {
 	// ExchangeKeeper  exchangekeeper.Keeper
 	// Custom Modules
 	VaultKeeper *vaultkeeper.Keeper
+
+	sm *module.SimulationManager
 }
 
 func init() {
@@ -136,11 +144,16 @@ func ProvideExchangeDummyCustomSigners() []signing.CustomGetSigner {
 func AppConfig() depinject.Config {
 	return depinject.Configs(
 		appconfig.LoadYAML(AppConfigYAML),
-		depinject.Provide(ProvideExchangeDummyCustomSigners, ProvideMarkerKeeperStub),
+		depinject.Provide(
+			ProvideExchangeDummyCustomSigners,
+			ProvideMarkerKeeperStub,
+		),
 		depinject.Supply(
 			map[string]module.AppModuleBasic{
 				genutiltypes.ModuleName: genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
+				"gov":                   govmodule.NewAppModuleBasic([]govclient.ProposalHandler{}),
 			},
+			govmodule.AppModule{},
 		),
 	)
 }
@@ -174,6 +187,8 @@ func NewSimApp(
 		&app.interfaceRegistry,
 		// Cosmos Modules
 		&app.AccountKeeper,
+		&app.GovKeeper,
+		// &app.DistributionKeeper,
 		&app.BankKeeper,
 		&app.ConsensusKeeper,
 		&app.ParamsKeeper,
@@ -215,7 +230,14 @@ func (app *SimApp) LegacyAmino() *codec.LegacyAmino {
 }
 
 func (app *SimApp) SimulationManager() *module.SimulationManager {
-	return nil
+	if app.sm != nil {
+		return app.sm
+	}
+
+	app.sm = module.NewSimulationManagerFromAppModules(app.App.ModuleManager.Modules, nil)
+	app.sm.RegisterStoreDecoders()
+
+	return app.sm
 }
 
 func (app *SimApp) GetKey(storeKey string) *storetypes.KVStoreKey {

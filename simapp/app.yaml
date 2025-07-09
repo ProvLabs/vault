@@ -3,9 +3,9 @@ modules:
     config:
       "@type": cosmos.app.runtime.v1alpha1.Module
       app_name: SimApp
-      begin_blockers: [ capability, staking, ibc, marker, attribute, authz ]
-      end_blockers: [ staking, feegrant, group ]
-      init_genesis: [ capability, auth, bank, staking, authz, feegrant, group, name, attribute, marker, vault, ibc, genutil, upgrade ]
+      begin_blockers: [ capability, distribution, staking, ibc, marker, attribute, authz ]
+      end_blockers: [ staking, gov, feegrant, group ]
+      init_genesis: [ capability, auth, bank, marker, distribution, staking, gov, authz, feegrant, group, vesting, name, attribute, vault, ibc, genutil, upgrade ]
       override_store_keys:
         - module_name: auth
           kv_store_key: acc
@@ -24,6 +24,10 @@ modules:
           permissions: [ burner, minter ]
         - account: mint
           permissions: [ minter ]
+        - account: distribution
+          permissions: [ burner ]
+        - account: gov
+          permissions: [ burner ]
   - name: bank
     config:
       "@type": cosmos.bank.module.v1.Module
@@ -59,3 +63,12 @@ modules:
   - name: vault
     config:
       "@type": vault.module.v1.Module
+  - name: vesting
+    config:
+      "@type": cosmos.vesting.module.v1.Module
+  - name: gov 
+    config:
+      "@type": cosmos.gov.module.v1.Module
+  - name: distribution
+    config:
+      "@type": cosmos.distribution.module.v1.Module

@@ -1,6 +1,26 @@
 .PHONY: proto-format proto-lint proto-gen license format lint build run
 all: proto-all format lint test-unit build
 
+# Find the go executable if it wasn't pre-set (e.g. via env var).
+ifeq (,$(GO))
+  ifeq ($(OS),Windows_NT)
+    GO := $(shell where go.exe 2> NUL)
+  else
+    GO := $(shell command -v go 2> /dev/null)
+  endif
+endif
+# Make sure we have a working go executable since most stuff in here needs it.
+ifeq ("$(shell $(GO) version > /dev/null || echo nogo)","nogo")
+  $(error Could not find go. Is it in PATH? $(GO))
+endif
+ifeq (,$(GOPATH))
+  GOPATH := $(shell $(GO) env GOPATH)
+endif
+BINDIR ?= $(GOPATH)/bin
+BUILDDIR ?= $(CURDIR)/build
+
+include contrib/devtools/Makefile
+
 ###############################################################################
 ###                                  Build                                  ###
 ###############################################################################
@@ -69,6 +89,8 @@ proto-lint:
 ###############################################################################
 ###                                 Testing                                 ###
 ###############################################################################
+
+include sims.mk
 
 test-unit:
 	@echo "Running unit tests with coverage..."

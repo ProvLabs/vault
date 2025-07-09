@@ -248,7 +248,7 @@ type ModuleInputs struct {
 	AddressCodec  address.Codec
 	AuthKeeper    types.AccountKeeper
 	MarkerKeeper  types.MarkerKeeper
-	BankeKeeper   types.BankKeeper
+	BankKeeper    types.BankKeeper
 }
 
 // ModuleOutputs defines the outputs of the vault module provider.
@@ -273,7 +273,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority,
 		in.AuthKeeper,
 		in.MarkerKeeper,
-		in.BankeKeeper,
+		in.BankKeeper,
 	)
 	m := NewAppModule(k, in.AddressCodec)
 	return ModuleOutputs{Keeper: k, Module: m}

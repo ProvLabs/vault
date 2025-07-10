@@ -65,6 +65,6 @@ func (app *SimApp) RegisterProvenanceModules() error {
 	return app.RegisterModules(
 		name.NewAppModule(app.appCodec, app.NameKeeper, app.AccountKeeper, app.BankKeeper),
 		attribute.NewAppModule(app.appCodec, app.AttributeKeeper, app.AccountKeeper, app.BankKeeper, app.NameKeeper),
-		marker.NewAppModule(app.appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper, app.FeegrantKeeper, app.GovKeeper, app.AttributeKeeper, app.interfaceRegistry),
+		marker.NewAppModule(app.appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper, app.FeegrantKeeper, *app.GovKeeper, app.AttributeKeeper, app.interfaceRegistry),
 	)
 }

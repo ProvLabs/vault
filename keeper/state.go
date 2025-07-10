@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/provlabs/vault/types"
 )
 

@@ -53,7 +53,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 			panic(fmt.Errorf("failed to store vault %s: %w", v.Address, err))
 		}
 	}
-
 }
 
 // ExportGenesis exports the current state of the vault module.

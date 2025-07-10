@@ -5,6 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
 	querytest "github.com/provlabs/vault/utils/query"

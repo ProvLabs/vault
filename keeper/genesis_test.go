@@ -1,9 +1,9 @@
 package keeper_test
 
 import (
-	"github.com/provlabs/vault/types"
-
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
+	"github.com/provlabs/vault/types"
 )
 
 func (s *TestSuite) TestVaultGenesis_InitAndExport() {

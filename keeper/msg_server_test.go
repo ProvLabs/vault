@@ -10,6 +10,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
+
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
 )
@@ -529,7 +530,6 @@ func createSendCoinEvents(fromAddress, toAddress string, amount string) []sdk.Ev
 
 // createMarkerMintCoinEvents creates events for minting a coin and sending it to a recipient.
 func createMarkerMintCoinEvents(markerModule, admin, recipient sdk.AccAddress, coin sdk.Coin) []sdk.Event {
-
 	events := createReceiveCoinsEvents(markerModule.String(), sdk.NewCoins(coin).String())
 
 	sendEvents := createSendCoinEvents(markerModule.String(), recipient.String(), sdk.NewCoins(coin).String())
@@ -548,7 +548,6 @@ func createMarkerMintCoinEvents(markerModule, admin, recipient sdk.AccAddress, c
 
 // createMarkerMintCoinEvents creates events for minting a coin and sending it to a recipient.
 func createBurnCoinEvents(burner, amount string) []sdk.Event {
-
 	events := sdk.NewEventManager().Events()
 
 	events = events.AppendEvent(sdk.NewEvent(
@@ -568,7 +567,6 @@ func createBurnCoinEvents(burner, amount string) []sdk.Event {
 
 // createMarkerWithdraw creates events for withdrawing a coin from a marker.
 func createMarkerWithdraw(administrator, sender sdk.AccAddress, recipient sdk.AccAddress, shares sdk.Coin) []sdk.Event {
-
 	events := createSendCoinEvents(sender.String(), recipient.String(), sdk.NewCoins(shares).String())
 
 	// The specific marker withdraw event

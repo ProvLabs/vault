@@ -90,7 +90,7 @@ func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstim
 
 	vaultAddr, err := sdk.AccAddressFromBech32(req.VaultAddress)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid vault_address: %w", err)
+		return nil, status.Errorf(codes.InvalidArgument, "invalid vault_address: %v", err)
 	}
 
 	vault, err := k.GetVault(ctx, vaultAddr)
@@ -122,7 +122,7 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 
 	vaultAddr, err := sdk.AccAddressFromBech32(req.VaultAddress)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid vault_address: %w", err)
+		return nil, status.Errorf(codes.InvalidArgument, "invalid vault_address: %v", err)
 	}
 
 	vault, err := k.GetVault(ctx, vaultAddr)

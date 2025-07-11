@@ -18,7 +18,7 @@ import (
 )
 
 // Profile with:
-// go test -benchmem -run=^$ github.com/provenance-io/provenance/app -bench ^BenchmarkFullAppSimulation$ -Commit=true -cpuprofile cpu.out
+// go test -benchmem -run=^$ github.com/provlabs/vault/simapp -bench ^BenchmarkFullAppSimulation$ -Commit=true -cpuprofile cpu.out
 func BenchmarkFullAppSimulation(b *testing.B) {
 	b.ReportAllocs()
 	config, db, dir, logger, skip, err := setupSimulation("goleveldb-app-sim", "Simulation")

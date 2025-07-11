@@ -407,3 +407,95 @@ func TestSimple(t *testing.T) {
 
 	require.NoError(t, simErr, "SimulateFromSeed")
 }
+
+func TestAppStateDeterminism(t *testing.T) {
+	// uncomment these to run in ide without flags.
+	//simcli.FlagEnabledValue = true
+	//simcli.FlagBlockSizeValue = 100
+	//simcli.FlagNumBlocksValue = 50
+
+	if !simcli.FlagEnabledValue {
+		t.Skip("skipping application simulation")
+	}
+
+	config := simcli.NewConfigFromFlags()
+	config.InitialBlockHeight = 1
+	config.ExportParamsPath = ""
+	config.OnOperation = false
+	config.AllInvariants = false
+	config.ChainID = "simulation-app"
+	config.DBBackend = "memdb"
+	config.Commit = true
+
+	numSeeds := 3
+	numTimesToRunPerSeed := 5
+	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
+
+	var seeds []int64
+	if config.Seed != simcli.DefaultSeedValue {
+		// If a seed was provided, just do that one.
+		numSeeds = 1
+		seeds = append(seeds, config.Seed)
+	} else {
+		// Otherwise, pick random seeds to use.
+		seeds = make([]int64, numSeeds)
+		for i := range seeds {
+			seeds[i] = rand.Int63()
+		}
+	}
+
+	for i, seed := range seeds {
+		config.Seed = seed
+
+		for j := 0; j < numTimesToRunPerSeed; j++ {
+			var logger log.Logger
+			if simcli.FlagVerboseValue {
+				logger = log.NewTestLogger(t)
+			} else {
+				logger = log.NewNopLogger()
+			}
+
+			// create a new temp dir for the app to fix wasmvm data dir lockfile contention
+			appOpts := newSimAppOpts(t)
+			if simcli.FlagVerboseValue {
+				appOpts[flags.FlagLogLevel] = "debug"
+			}
+
+			db := dbm.NewMemDB()
+			app, err := NewSimApp(logger, db, nil, true, appOpts, interBlockCacheOpt(), baseapp.SetChainID(config.ChainID))
+			require.NoError(t, err, "NewSimApp failed")
+			require.Equal(t, "SimApp", app.Name())
+			if !simcli.FlagSigverifyTxValue {
+				app.SetNotSigverifyTx()
+			}
+
+			fmt.Printf(
+				"running provenance non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",
+				config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
+			)
+
+			_, _, err = simulation.SimulateFromSeed(
+				t,
+				os.Stdout,
+				app.BaseApp,
+				appStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
+				simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
+				simtestutil.SimulationOperations(app, app.AppCodec(), config),
+				map[string]bool{}, // TODO: add custom module operations if needed,
+				config,
+				app.AppCodec(),
+			)
+			require.NoError(t, err)
+
+			appHash := app.LastCommitID().Hash
+			appHashList[j] = appHash
+
+			if j != 0 {
+				require.Equal(
+					t, string(appHashList[0]), string(appHashList[j]),
+					"non-determinism in seed %d: %d/%d, attempt: %d/%d\n", config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
+				)
+			}
+		}
+	}
+}

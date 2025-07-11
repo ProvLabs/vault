@@ -50,10 +50,10 @@ linters:
 
 issues:
   exclude-rules:
-    - path: ".*\\.pb\\.go$"
+    - path: .*\.pb\.go$
       linters:
         - typecheck
-    - path: ".*\\.pulsar\\.go$"
+    - path: .*\.pulsar\.go$
       linters:
         - typecheck
     - text: "Use of weak random number generator"

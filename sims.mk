@@ -11,7 +11,7 @@
 ###   BINDIR:         The Go bin directory, defaults to $GOPATH/bin
 ###   SIM_GENESIS:    Defines the path to the custom genesis file used by
 ###                   test-sim-custom-genesis-multi-seed and test-sim-custom-genesis-fast
-###                   Default is ${HOME}/.provenanced/config/genesis.json.
+###                   Default is ${PWD}/.vaulty/config/genesis.json.
 ###   SIM_NUM_BLOCKS: The number of blocks to use for test-sim-benchmark or test-sim-profile. Default is 500.
 ###   SIM_BLOCK_SIZE: The size of blocks to use for test-sim-benchmark or test-sim-profile. Default is 200.
 ###   SIM_COMMIT:     Whether to commit during  test-sim-benchmark or test-sim-profile. Default is true.

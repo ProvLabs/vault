@@ -27,6 +27,7 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/authz/module"
 	_ "github.com/cosmos/cosmos-sdk/x/bank"
 	_ "github.com/cosmos/cosmos-sdk/x/consensus"
+	_ "github.com/cosmos/cosmos-sdk/x/crisis"
 	_ "github.com/cosmos/cosmos-sdk/x/distribution"
 	govmodule "github.com/cosmos/cosmos-sdk/x/gov"
 	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
@@ -42,6 +43,7 @@ import (
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	consensuskeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
+	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
 	distributionkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
@@ -89,6 +91,7 @@ type SimApp struct {
 	AccountKeeper   authkeeper.AccountKeeper
 	BankKeeper      bankkeeper.Keeper
 	ConsensusKeeper consensuskeeper.Keeper
+	CrisisKeeper    *crisiskeeper.Keeper
 	ParamsKeeper    paramskeeper.Keeper
 	StakingKeeper   *stakingkeeper.Keeper
 	UpgradeKeeper   *upgradekeeper.Keeper
@@ -190,6 +193,7 @@ func NewSimApp(
 		&app.GovKeeper,
 		// &app.DistributionKeeper,
 		&app.BankKeeper,
+		&app.CrisisKeeper,
 		&app.ConsensusKeeper,
 		&app.ParamsKeeper,
 		&app.StakingKeeper,

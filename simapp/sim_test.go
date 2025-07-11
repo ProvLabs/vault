@@ -19,6 +19,7 @@ import (
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"cosmossdk.io/log"
+	"cosmossdk.io/store"
 	storetypes "cosmossdk.io/store/types"
 	"cosmossdk.io/x/feegrant"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -75,6 +76,12 @@ func appStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager, genes
 		appState, simAccs, chainID, genesisTimestamp := simtestutil.AppStateFn(cdc, simManager, genesisState)(r, accs, config)
 		return appState, simAccs, chainID, genesisTimestamp
 	}
+}
+
+// interBlockCacheOpt returns a BaseApp option function that sets the persistent
+// inter-block write-through cache.
+func interBlockCacheOpt() func(*baseapp.BaseApp) {
+	return baseapp.SetInterBlockCache(store.NewCommitKVStoreCacheManager())
 }
 
 // Profile with:
@@ -136,8 +143,6 @@ func TestAppImportExport(t *testing.T) {
 	err = simtestutil.CheckExportSimulation(app, config, simParams)
 	require.NoError(t, err, "CheckExportSimulation")
 	require.NoError(t, simErr, "SimulateFromSeedProv")
-
-	// printStats(config, db)
 
 	fmt.Printf("exporting genesis...\n")
 
@@ -231,7 +236,6 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	if skip {
 		t.Skip("skipping application simulation after import")
 	}
-	// printConfig(config)
 	require.NoError(t, err, "simulation setup failed")
 
 	defer func() {
@@ -269,8 +273,6 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	err = simtestutil.CheckExportSimulation(app, config, simParams)
 	require.NoError(t, err, "CheckExportSimulation")
 	require.NoError(t, simErr, "SimulateFromSeedProv")
-
-	// printStats(config, db)
 
 	if stopEarly {
 		fmt.Println("can't export or import a zero-validator genesis, exiting test...")
@@ -324,7 +326,6 @@ func TestFullAppSimulation(t *testing.T) {
 	if skip {
 		t.Skip("skipping provenance application simulation")
 	}
-	// printConfig(config)
 	require.NoError(t, err, "provenance simulation setup failed")
 
 	defer func() {
@@ -364,6 +365,45 @@ func TestFullAppSimulation(t *testing.T) {
 	err = simtestutil.CheckExportSimulation(app, config, simParams)
 	require.NoError(t, err, "CheckExportSimulation")
 	require.NoError(t, simErr, "SimulateFromSeed")
+}
 
-	// printStats(config, db)
+func TestSimple(t *testing.T) {
+	config, db, dir, logger, skip, err := setupSimulation("leveldb-app-sim", "Simulation")
+	if skip {
+		t.Skip("skipping provenance application simulation")
+	}
+	require.NoError(t, err, "provenance simulation setup failed")
+
+	defer func() {
+		require.NoError(t, db.Close())
+		require.NoError(t, os.RemoveAll(dir))
+	}()
+
+	appOpts := newSimAppOpts(t)
+	baseAppOpts := []func(*baseapp.BaseApp){
+		fauxMerkleModeOpt,
+		baseapp.SetChainID(config.ChainID),
+	}
+
+	app, err := NewSimApp(logger, db, nil, true, appOpts, baseAppOpts...)
+	require.NoError(t, err, "NewSimApp failed")
+	require.Equal(t, "SimApp", app.Name())
+	if !simcli.FlagSigverifyTxValue {
+		app.SetNotSigverifyTx()
+	}
+
+	// run randomized simulation
+	_, _, simErr := simulation.SimulateFromSeed(
+		t,
+		os.Stdout,
+		app.BaseApp,
+		appStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
+		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
+		simtestutil.SimulationOperations(app, app.AppCodec(), config),
+		map[string]bool{}, // TODO: add custom module operations if needed,
+		config,
+		app.AppCodec(),
+	)
+
+	require.NoError(t, simErr, "SimulateFromSeed")
 }

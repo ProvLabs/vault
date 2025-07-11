@@ -2,9 +2,6 @@ run:
   tests: false
 #   # timeout for analysis, e.g. 30s, 5m, default is 1m
 #   timeout: 5m
-  skip-dirs:
-    - api/module/v1
-    - api/v1
 
 linters:
   disable-all: true
@@ -53,6 +50,12 @@ linters:
 
 issues:
   exclude-rules:
+    - path: ".*\\.pb\\.go$"
+      linters:
+        - typecheck
+    - path: ".*\\.pulsar\\.go$"
+      linters:
+        - typecheck
     - text: "Use of weak random number generator"
       linters:
         - gosec

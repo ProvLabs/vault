@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/math"
 	"github.com/provlabs/vault/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -157,11 +158,21 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 		return nil, fmt.Errorf("vault with address %v not found", vaultAddr.String())
 	}
 
+	markerAddr := markertypes.MustGetMarkerAddress(vault.ShareDenom)
+
 	if err := vault.ValidateUnderlyingAssets(asset); err != nil {
 		return nil, err
 	}
 
-	shares := sdk.NewCoin(vault.ShareDenom, asset.Amount)
+	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
+	totalAssets := k.BankKeeper.GetBalance(ctx, markerAddr, vault.UnderlyingAssets[0]).Amount
+
+	shares, err := CalculateSharesFromAssets(asset.Amount, totalAssets, totalShares, vault.ShareDenom)
+	if err != nil {
+		return nil, fmt.Errorf("failed to calculate shares from assets: %w", err)
+
+	}
+
 	if err := shares.Validate(); err != nil {
 		return nil, err
 	}
@@ -174,8 +185,7 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 		return nil, err
 	}
 
-	ctx = markertypes.WithBypass(ctx)
-	if err := k.BankKeeper.SendCoins(ctx, recipient, vaultAddr, sdk.NewCoins(asset)); err != nil {
+	if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx), recipient, markerAddr, sdk.NewCoins(asset)); err != nil {
 		return nil, err
 	}
 
@@ -184,18 +194,31 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 	return &shares, nil
 }
 
+func CalculateSharesFromAssets(
+	assets math.Int,
+	totalAssets math.Int,
+	totalShares math.Int,
+	shareDenom string,
+) (sdk.Coin, error) {
+	if totalAssets.IsZero() {
+		return sdk.NewCoin(shareDenom, assets), nil // First deposit: 1:1 mapping
+	}
+
+	sharesOut := assets.Mul(totalShares).Quo(totalAssets)
+	return sdk.NewCoin(shareDenom, sharesOut), nil
+}
+
 // SwapOut handles the process of redeeming vault shares in exchange for underlying assets.
 // It performs the following steps:
-//   1. Retrieves the vault configuration for the given vault address.
-//   2. Validates that the provided share denomination matches the vault's configured share denom.
-//   3. Calculates the amount of underlying assets to return based on the share amount.
-//   4. Transfers the shares from the owner to the vault's marker account.
-//   5. Burns the received shares from the vault account.
-//   6. Sends the equivalent amount of underlying assets from the marker to the owner.
-//   7. Emits a SwapOut event with metadata for indexing and audit.
+//  1. Retrieves the vault configuration for the given vault address.
+//  2. Validates that the provided share denomination matches the vault's configured share denom.
+//  3. Calculates the amount of underlying assets to return based on the share amount.
+//  4. Transfers the shares from the owner to the vault's marker account.
+//  5. Burns the received shares from the vault account.
+//  6. Sends the equivalent amount of underlying assets from the marker to the owner.
+//  7. Emits a SwapOut event with metadata for indexing and audit.
 //
 // Returns the burned share amount on success, or an error if any step fails.
-
 func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, shares sdk.Coin) (*sdk.Coin, error) {
 	vault, err := k.GetVault(ctx, vaultAddr)
 	if err != nil {
@@ -209,10 +232,17 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 		return nil, fmt.Errorf("swap out denom must be share denom %v : %v", shares.Denom, vault.ShareDenom)
 	}
 
-	assets := sdk.NewCoin(vault.UnderlyingAssets[0], shares.Amount)
+	markerAddr := markertypes.MustGetMarkerAddress(vault.ShareDenom)
 
-	markerAddr, err := markertypes.MarkerAddress(vault.ShareDenom)
+	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
+	totalAssets := k.BankKeeper.GetBalance(ctx, markerAddr, vault.UnderlyingAssets[0]).Amount
+
+	assets, err := CalculateAssetsFromShares(shares.Amount, totalShares, totalAssets, vault.UnderlyingAssets[0])
 	if err != nil {
+		return nil, fmt.Errorf("failed to calculate assets from shares: %w", err)
+	}
+
+	if err := assets.Validate(); err != nil {
 		return nil, err
 	}
 
@@ -224,11 +254,25 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 		return nil, fmt.Errorf("failed to burn shares: %w", err)
 	}
 
-	if err := k.BankKeeper.SendCoins(ctx, vaultAddr, owner, sdk.NewCoins(assets)); err != nil {
+	if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, vaultAddr), markerAddr, owner, sdk.NewCoins(assets)); err != nil {
 		return nil, fmt.Errorf("failed to send underlying asset: %w", err)
 	}
 
 	k.emitEvent(ctx, types.NewEventSwapOut(vaultAddr.String(), owner.String(), assets, shares))
 
 	return &shares, nil
+}
+
+func CalculateAssetsFromShares(
+	shares math.Int,
+	totalShares math.Int,
+	totalAssets math.Int,
+	assetDenom string,
+) (sdk.Coin, error) {
+	if totalShares.IsZero() {
+		return sdk.Coin{}, fmt.Errorf("cannot calculate assets: totalShares is zero")
+	}
+
+	assetsOut := shares.Mul(totalAssets).Quo(totalShares)
+	return sdk.NewCoin(assetDenom, assetsOut), nil
 }

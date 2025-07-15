@@ -124,7 +124,7 @@ func TestAppImportExport(t *testing.T) {
 		app.SetNotSigverifyTx()
 	}
 
-	fmt.Printf("running provenance test import export\n")
+	fmt.Printf("running provlabs vault test import export\n")
 
 	// Run randomized simulation
 	_, lastBlockTime, simParams, simErr := simulation.SimulateFromSeedProv(
@@ -324,9 +324,9 @@ func TestAppSimulationAfterImport(t *testing.T) {
 func TestFullAppSimulation(t *testing.T) {
 	config, db, dir, logger, skip, err := setupSimulation("leveldb-app-sim", "Simulation")
 	if skip {
-		t.Skip("skipping provenance application simulation")
+		t.Skip("skipping provlabs vault application simulation")
 	}
-	require.NoError(t, err, "provenance simulation setup failed")
+	require.NoError(t, err, "provlabs vault simulation setup failed")
 
 	defer func() {
 		require.NoError(t, db.Close())
@@ -346,7 +346,7 @@ func TestFullAppSimulation(t *testing.T) {
 		app.SetNotSigverifyTx()
 	}
 
-	fmt.Printf("running provenance full app simulation\n")
+	fmt.Printf("running provlabs vault full app simulation\n")
 
 	// run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
@@ -370,9 +370,9 @@ func TestFullAppSimulation(t *testing.T) {
 func TestSimple(t *testing.T) {
 	config, db, dir, logger, skip, err := setupSimulation("leveldb-app-sim", "Simulation")
 	if skip {
-		t.Skip("skipping provenance application simulation")
+		t.Skip("skipping provlabs vault application simulation")
 	}
-	require.NoError(t, err, "provenance simulation setup failed")
+	require.NoError(t, err, "provlabs vault simulation setup failed")
 
 	defer func() {
 		require.NoError(t, db.Close())
@@ -470,7 +470,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			}
 
 			fmt.Printf(
-				"running provenance non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",
+				"running provlabs vault non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",
 				config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
 			)
 

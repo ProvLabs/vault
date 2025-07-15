@@ -47,4 +47,5 @@ type BankKeeper interface {
 	SendCoins(context context.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 	GetAllBalances(context context.Context, addr sdk.AccAddress) sdk.Coins
 	GetBalance(context context.Context, addr sdk.AccAddress, denom string) sdk.Coin
+	GetSupply(context context.Context, denom string) sdk.Coin
 }

@@ -3,8 +3,8 @@ package keeper
 import (
 	"fmt"
 
-	"cosmossdk.io/math"
 	"github.com/provlabs/vault/types"
+	"github.com/provlabs/vault/utils"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -167,7 +167,7 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
 	totalAssets := k.BankKeeper.GetBalance(ctx, markerAddr, vault.UnderlyingAssets[0]).Amount
 
-	shares, err := CalculateSharesFromAssets(asset.Amount, totalAssets, totalShares, vault.ShareDenom)
+	shares, err := utils.CalculateSharesFromAssets(asset.Amount, totalAssets, totalShares, vault.ShareDenom)
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate shares from assets: %w", err)
 
@@ -192,20 +192,6 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 	k.emitEvent(ctx, types.NewEventSwapIn(vaultAddr.String(), recipient.String(), asset, shares))
 
 	return &shares, nil
-}
-
-func CalculateSharesFromAssets(
-	assets math.Int,
-	totalAssets math.Int,
-	totalShares math.Int,
-	shareDenom string,
-) (sdk.Coin, error) {
-	if totalAssets.IsZero() {
-		return sdk.NewCoin(shareDenom, assets), nil // First deposit: 1:1 mapping
-	}
-
-	sharesOut := assets.Mul(totalShares).Quo(totalAssets)
-	return sdk.NewCoin(shareDenom, sharesOut), nil
 }
 
 // SwapOut handles the process of redeeming vault shares in exchange for underlying assets.
@@ -237,7 +223,7 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
 	totalAssets := k.BankKeeper.GetBalance(ctx, markerAddr, vault.UnderlyingAssets[0]).Amount
 
-	assets, err := CalculateAssetsFromShares(shares.Amount, totalShares, totalAssets, vault.UnderlyingAssets[0])
+	assets, err := utils.CalculateAssetsFromShares(shares.Amount, totalShares, totalAssets, vault.UnderlyingAssets[0])
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate assets from shares: %w", err)
 	}
@@ -261,18 +247,4 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 	k.emitEvent(ctx, types.NewEventSwapOut(vaultAddr.String(), owner.String(), assets, shares))
 
 	return &shares, nil
-}
-
-func CalculateAssetsFromShares(
-	shares math.Int,
-	totalShares math.Int,
-	totalAssets math.Int,
-	assetDenom string,
-) (sdk.Coin, error) {
-	if totalShares.IsZero() {
-		return sdk.Coin{}, fmt.Errorf("cannot calculate assets: totalShares is zero")
-	}
-
-	assetsOut := shares.Mul(totalAssets).Quo(totalShares)
-	return sdk.NewCoin(assetDenom, assetsOut), nil
 }

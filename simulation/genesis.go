@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/provlabs/vault/types"
+
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/provlabs/vault/types"
 )
 
 // RandomizedGenState generates a random GenesisState for the vault module
@@ -17,7 +18,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 	vaults := []types.VaultAccount{}
 
 	for i := 0; i < simState.Rand.Intn(5)+1; i++ {
-
 		denom := fmt.Sprintf("vaultshare%d", i)
 		addr := types.GetVaultAddress(denom)
 

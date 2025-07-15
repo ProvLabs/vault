@@ -4,6 +4,7 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	attrkeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"

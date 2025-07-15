@@ -2,6 +2,7 @@ package simapp
 
 import (
 	storetypes "cosmossdk.io/store/types"
+
 	"github.com/provenance-io/provenance/x/attribute"
 	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"

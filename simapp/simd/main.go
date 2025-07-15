@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"os"
 
-	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/provlabs/vault/simapp"
 	"github.com/provlabs/vault/simapp/simd/cmd"
+
+	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (

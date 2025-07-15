@@ -25,9 +25,10 @@ import (
 type VaultSimTestSuite struct {
 	suite.Suite
 
-	ctx sdk.Context
-	app *simapp.SimApp
-	cdc codec.Codec
+	ctx  sdk.Context
+	app  *simapp.SimApp
+	cdc  codec.Codec
+	accs []simtypes.Account
 }
 
 func TestVaultSimTestSuite(t *testing.T) {
@@ -46,9 +47,13 @@ func (s *VaultSimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.A
 
 func (s *VaultSimTestSuite) TestSimulateMsgCreateVault() {
 	r := rand.New(rand.NewSource(1))
+
+	// TODO We need to run this twice to fix the prefix issue. We will have to look into this some more.
+	_ = s.getTestingAccounts(r, 3)
 	accs := s.getTestingAccounts(r, 3)
 
 	op := simulation.SimulateMsgCreateVault(*s.app.VaultKeeper)
+
 	opMsg, futureOps, err := op(r, s.app.BaseApp, s.ctx, accs, "")
 	s.Require().NoError(err, "SimulateMsgCreateVault")
 	s.Require().True(opMsg.OK, "operationMsg.OK")
@@ -59,6 +64,9 @@ func (s *VaultSimTestSuite) TestSimulateMsgCreateVault() {
 
 func (s *VaultSimTestSuite) TestSimulateMsgSwapIn() {
 	r := rand.New(rand.NewSource(1))
+
+	// TODO We need to run this twice to fix the prefix issue. We will have to look into this some more.
+	_ = s.getTestingAccounts(r, 3)
 	accs := s.getTestingAccounts(r, 3)
 
 	selected := accs[0]
@@ -92,6 +100,9 @@ func (s *VaultSimTestSuite) TestSimulateMsgSwapIn() {
 
 func (s *VaultSimTestSuite) TestSimulateMsgSwapOut() {
 	r := rand.New(rand.NewSource(1))
+
+	// TODO We need to run this twice to fix the prefix issue. We will have to look into this some more.
+	_ = s.getTestingAccounts(r, 3)
 	accs := s.getTestingAccounts(r, 3)
 
 	selected := accs[0]

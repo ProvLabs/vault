@@ -5,6 +5,10 @@ import (
 	"math/rand"
 	"slices"
 
+	"github.com/provlabs/vault/keeper"
+	"github.com/provlabs/vault/types"
+	"github.com/provlabs/vault/utils"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -12,9 +16,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
-	"github.com/provlabs/vault/keeper"
-	"github.com/provlabs/vault/types"
-	"github.com/provlabs/vault/utils"
 )
 
 const (
@@ -62,7 +63,6 @@ func SimulateMsgCreateVault(k keeper.Keeper) simtypes.Operation {
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		admin, _ := simtypes.RandomAcc(r, accs)
-
 		denom := fmt.Sprintf("vaulttoken%d", r.Intn(100000))
 		underlying := fmt.Sprintf("underlying%d", r.Intn(100000))
 
@@ -145,7 +145,6 @@ func SimulateMsgSwapOut(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-
 		// Find an account with the asset
 		var acc simtypes.Account
 		denom := "underlyingshare"

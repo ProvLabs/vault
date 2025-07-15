@@ -3,16 +3,17 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/provlabs/vault/types"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
-
-	"github.com/provlabs/vault/types"
 )
 
 type Keeper struct {

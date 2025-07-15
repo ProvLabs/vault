@@ -3,11 +3,12 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/provlabs/vault/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
-	"github.com/provlabs/vault/types"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 const (

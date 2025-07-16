@@ -16,6 +16,7 @@ type Period struct {
 
 const (
 	SecondsPerYear = 31_536_000
+	// TODO Can we pass this in instead of hardcoding it
 	EulerPrecision = 18
 )
 

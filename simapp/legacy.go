@@ -2,6 +2,7 @@ package simapp
 
 import (
 	storetypes "cosmossdk.io/store/types"
+
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/ibc-go/modules/capability"
@@ -17,7 +18,6 @@ import (
 )
 
 func (app *SimApp) RegisterLegacyModules() error {
-
 	if err := app.RegisterStores(
 		storetypes.NewKVStoreKey(capabilitytypes.StoreKey),
 		storetypes.NewMemoryStoreKey(capabilitytypes.MemStoreKey),

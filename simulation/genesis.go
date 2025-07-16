@@ -4,15 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/provlabs/vault/types"
+
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/provlabs/vault/types"
 )
 
 // RandomizedGenState generates a random GenesisState for the vault module
 func RandomizedGenState(simState *module.SimulationState) {
 	admin := simState.Accounts[0].Address.String()
-	underlying := "undercoin"
+	underlying := "underlying"
 
 	vaults := []types.VaultAccount{}
 

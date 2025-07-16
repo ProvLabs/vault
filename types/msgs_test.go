@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/stretchr/testify/assert"
 
 	"github.com/provlabs/vault/types"
@@ -91,6 +94,146 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 				assert.Contains(t, err.Error(), tc.expectedErr.Error())
 			} else {
 				// We expect no error
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestMsgSwapInRequest_ValidateBasic(t *testing.T) {
+	owner := utils.TestAddress().Bech32
+	vault := utils.TestAddress().Bech32
+
+	tests := []struct {
+		name        string
+		msg         types.MsgSwapInRequest
+		expectedErr string
+	}{
+		{
+			name: "valid request",
+			msg: types.MsgSwapInRequest{
+				Owner:        owner,
+				VaultAddress: vault,
+				Assets:       sdk.NewInt64Coin("uusd", 100),
+			},
+			expectedErr: "",
+		},
+		{
+			name: "invalid vault address",
+			msg: types.MsgSwapInRequest{
+				Owner:        owner,
+				VaultAddress: "invalid",
+				Assets:       sdk.NewInt64Coin("uusd", 100),
+			},
+			expectedErr: "invalid vault address",
+		},
+		{
+			name: "invalid owner address",
+			msg: types.MsgSwapInRequest{
+				Owner:        "invalid",
+				VaultAddress: vault,
+				Assets:       sdk.NewInt64Coin("uusd", 100),
+			},
+			expectedErr: "invalid owner address",
+		},
+		{
+			name: "invalid denom",
+			msg: types.MsgSwapInRequest{
+				Owner:        owner,
+				VaultAddress: vault,
+				Assets:       sdk.Coin{Denom: "inv@lid$", Amount: sdkmath.NewInt(100)},
+			},
+			expectedErr: "invalid assets coin",
+		},
+		{
+			name: "zero amount",
+			msg: types.MsgSwapInRequest{
+				Owner:        owner,
+				VaultAddress: vault,
+				Assets:       sdk.NewInt64Coin("uusd", 0),
+			},
+			expectedErr: "must be greater than zero",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+
+			if tc.expectedErr != "" {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tc.expectedErr)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestMsgSwapOutRequest_ValidateBasic(t *testing.T) {
+	owner := utils.TestAddress().Bech32
+	vault := utils.TestAddress().Bech32
+
+	tests := []struct {
+		name        string
+		msg         types.MsgSwapOutRequest
+		expectedErr string
+	}{
+		{
+			name: "valid request",
+			msg: types.MsgSwapOutRequest{
+				Owner:        owner,
+				VaultAddress: vault,
+				Assets:       sdk.NewInt64Coin("uusd", 100),
+			},
+			expectedErr: "",
+		},
+		{
+			name: "invalid vault address",
+			msg: types.MsgSwapOutRequest{
+				Owner:        owner,
+				VaultAddress: "invalid",
+				Assets:       sdk.NewInt64Coin("uusd", 100),
+			},
+			expectedErr: "invalid vault address",
+		},
+		{
+			name: "invalid owner address",
+			msg: types.MsgSwapOutRequest{
+				Owner:        "invalid",
+				VaultAddress: vault,
+				Assets:       sdk.NewInt64Coin("uusd", 100),
+			},
+			expectedErr: "invalid owner address",
+		},
+		{
+			name: "invalid denom",
+			msg: types.MsgSwapOutRequest{
+				Owner:        owner,
+				VaultAddress: vault,
+				Assets:       sdk.Coin{Denom: "inv@lid$", Amount: sdkmath.NewInt(100)},
+			},
+			expectedErr: "invalid assets coin",
+		},
+		{
+			name: "zero amount",
+			msg: types.MsgSwapOutRequest{
+				Owner:        owner,
+				VaultAddress: vault,
+				Assets:       sdk.NewInt64Coin("uusd", 0),
+			},
+			expectedErr: "must be greater than zero",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+
+			if tc.expectedErr != "" {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tc.expectedErr)
+			} else {
 				assert.NoError(t, err)
 			}
 		})

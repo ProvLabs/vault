@@ -1,11 +1,8 @@
 syntax = "proto3";
 package vault.v1;
 
-import "amino/amino.proto";
-import "cosmos_proto/cosmos.proto";
 import "cosmos/auth/v1beta1/auth.proto";
-import "cosmos/base/v1beta1/coin.proto";
-
+import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 
 option go_package = "github.com/provlabs/vault/types";
@@ -18,7 +15,7 @@ message VaultAccount {
   // share_denom is the denomination used to represent shares in the vault (e.g., vault tokens).
   string share_denom = 2;
   // underlying_assets specifies the denomination(s) of the asset(s) managed by the vault.
-  repeated string underlying_assets = 3; 
+  repeated string underlying_assets = 3;
   // admin is the address that has administrative privileges over the vault.
   string admin = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }

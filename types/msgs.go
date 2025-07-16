@@ -4,6 +4,7 @@ import (
 	"errors"
 	fmt "fmt"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -25,14 +26,50 @@ func (m MsgCreateVaultRequest) ValidateBasic() error {
 	return nil
 }
 
-// ValidateBasic returns a not implemented error for MsgDepositRequest.
-func (m MsgDepositRequest) ValidateBasic() error {
-	return errors.New("ValidateBasic not implemented for MsgDepositRequest")
+// ValidateBasic returns a not implemented error for MsgSwapInRequest.
+func (m MsgSwapInRequest) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.VaultAddress)
+	if err != nil {
+		return fmt.Errorf("invalid vault address %s : %w", m.VaultAddress, err)
+	}
+	_, err = sdk.AccAddressFromBech32(m.Owner)
+	if err != nil {
+		return fmt.Errorf("invalid owner address %s : %w", m.VaultAddress, err)
+	}
+
+	err = m.Assets.Validate()
+	if err != nil {
+		return fmt.Errorf("invalid assets coin %v: %w", m.Assets, err)
+	}
+
+	if !m.Assets.Amount.GT(sdkmath.NewInt(0)) {
+		return fmt.Errorf("invalid amount: assets %s must be greater than zero", m.Assets.Denom)
+	}
+
+	return nil
 }
 
-// ValidateBasic returns a not implemented error for MsgWithdrawRequest.
-func (m MsgWithdrawRequest) ValidateBasic() error {
-	return errors.New("ValidateBasic not implemented for MsgWithdrawRequest")
+// ValidateBasic performs stateless validation on MsgSwapOutRequest fields.
+func (m MsgSwapOutRequest) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(m.VaultAddress)
+	if err != nil {
+		return fmt.Errorf("invalid vault address %s : %w", m.VaultAddress, err)
+	}
+	_, err = sdk.AccAddressFromBech32(m.Owner)
+	if err != nil {
+		return fmt.Errorf("invalid owner address %s : %w", m.Owner, err)
+	}
+
+	err = m.Assets.Validate()
+	if err != nil {
+		return fmt.Errorf("invalid assets coin %v: %w", m.Assets, err)
+	}
+
+	if !m.Assets.Amount.GT(sdkmath.NewInt(0)) {
+		return fmt.Errorf("invalid amount: assets %s must be greater than zero", m.Assets.Denom)
+	}
+
+	return nil
 }
 
 // ValidateBasic returns a not implemented error for MsgRedeemRequest.

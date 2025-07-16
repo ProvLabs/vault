@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provlabs/vault/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // GetVaults is a helper function for retrieving all vaults from state.

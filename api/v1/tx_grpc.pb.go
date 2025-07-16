@@ -20,8 +20,8 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	Msg_CreateVault_FullMethodName  = "/vault.v1.Msg/CreateVault"
-	Msg_Deposit_FullMethodName      = "/vault.v1.Msg/Deposit"
-	Msg_Withdraw_FullMethodName     = "/vault.v1.Msg/Withdraw"
+	Msg_SwapIn_FullMethodName       = "/vault.v1.Msg/SwapIn"
+	Msg_SwapOut_FullMethodName      = "/vault.v1.Msg/SwapOut"
 	Msg_Redeem_FullMethodName       = "/vault.v1.Msg/Redeem"
 	Msg_UpdateParams_FullMethodName = "/vault.v1.Msg/UpdateParams"
 )
@@ -34,10 +34,10 @@ const (
 type MsgClient interface {
 	// CreateVault creates a new vault.
 	CreateVault(ctx context.Context, in *MsgCreateVaultRequest, opts ...grpc.CallOption) (*MsgCreateVaultResponse, error)
-	// Deposit deposits assets into a vault, issuing vault shares in return.
-	Deposit(ctx context.Context, in *MsgDepositRequest, opts ...grpc.CallOption) (*MsgDepositResponse, error)
-	// Withdraw withdraws a specific amount of assets from a vault by burning a calculated number of shares.
-	Withdraw(ctx context.Context, in *MsgWithdrawRequest, opts ...grpc.CallOption) (*MsgWithdrawResponse, error)
+	// SwapIn exchanges underlying assets for vault shares by depositing them into a vault.
+	SwapIn(ctx context.Context, in *MsgSwapInRequest, opts ...grpc.CallOption) (*MsgSwapInResponse, error)
+	// SwapOut exchanges vault shares for underlying assets by withdrawing from a vault.
+	SwapOut(ctx context.Context, in *MsgSwapOutRequest, opts ...grpc.CallOption) (*MsgSwapOutResponse, error)
 	// Redeem redeems a specific amount of shares from a vault for a calculated amount of the underlying asset.
 	Redeem(ctx context.Context, in *MsgRedeemRequest, opts ...grpc.CallOption) (*MsgRedeemResponse, error)
 	// UpdateParams defines a (governance) operation for updating the module
@@ -63,20 +63,20 @@ func (c *msgClient) CreateVault(ctx context.Context, in *MsgCreateVaultRequest, 
 	return out, nil
 }
 
-func (c *msgClient) Deposit(ctx context.Context, in *MsgDepositRequest, opts ...grpc.CallOption) (*MsgDepositResponse, error) {
+func (c *msgClient) SwapIn(ctx context.Context, in *MsgSwapInRequest, opts ...grpc.CallOption) (*MsgSwapInResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(MsgDepositResponse)
-	err := c.cc.Invoke(ctx, Msg_Deposit_FullMethodName, in, out, cOpts...)
+	out := new(MsgSwapInResponse)
+	err := c.cc.Invoke(ctx, Msg_SwapIn_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *msgClient) Withdraw(ctx context.Context, in *MsgWithdrawRequest, opts ...grpc.CallOption) (*MsgWithdrawResponse, error) {
+func (c *msgClient) SwapOut(ctx context.Context, in *MsgSwapOutRequest, opts ...grpc.CallOption) (*MsgSwapOutResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(MsgWithdrawResponse)
-	err := c.cc.Invoke(ctx, Msg_Withdraw_FullMethodName, in, out, cOpts...)
+	out := new(MsgSwapOutResponse)
+	err := c.cc.Invoke(ctx, Msg_SwapOut_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -111,10 +111,10 @@ func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts 
 type MsgServer interface {
 	// CreateVault creates a new vault.
 	CreateVault(context.Context, *MsgCreateVaultRequest) (*MsgCreateVaultResponse, error)
-	// Deposit deposits assets into a vault, issuing vault shares in return.
-	Deposit(context.Context, *MsgDepositRequest) (*MsgDepositResponse, error)
-	// Withdraw withdraws a specific amount of assets from a vault by burning a calculated number of shares.
-	Withdraw(context.Context, *MsgWithdrawRequest) (*MsgWithdrawResponse, error)
+	// SwapIn exchanges underlying assets for vault shares by depositing them into a vault.
+	SwapIn(context.Context, *MsgSwapInRequest) (*MsgSwapInResponse, error)
+	// SwapOut exchanges vault shares for underlying assets by withdrawing from a vault.
+	SwapOut(context.Context, *MsgSwapOutRequest) (*MsgSwapOutResponse, error)
 	// Redeem redeems a specific amount of shares from a vault for a calculated amount of the underlying asset.
 	Redeem(context.Context, *MsgRedeemRequest) (*MsgRedeemResponse, error)
 	// UpdateParams defines a (governance) operation for updating the module
@@ -133,11 +133,11 @@ type UnimplementedMsgServer struct{}
 func (UnimplementedMsgServer) CreateVault(context.Context, *MsgCreateVaultRequest) (*MsgCreateVaultResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateVault not implemented")
 }
-func (UnimplementedMsgServer) Deposit(context.Context, *MsgDepositRequest) (*MsgDepositResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Deposit not implemented")
+func (UnimplementedMsgServer) SwapIn(context.Context, *MsgSwapInRequest) (*MsgSwapInResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SwapIn not implemented")
 }
-func (UnimplementedMsgServer) Withdraw(context.Context, *MsgWithdrawRequest) (*MsgWithdrawResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Withdraw not implemented")
+func (UnimplementedMsgServer) SwapOut(context.Context, *MsgSwapOutRequest) (*MsgSwapOutResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SwapOut not implemented")
 }
 func (UnimplementedMsgServer) Redeem(context.Context, *MsgRedeemRequest) (*MsgRedeemResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Redeem not implemented")
@@ -184,38 +184,38 @@ func _Msg_CreateVault_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_Deposit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgDepositRequest)
+func _Msg_SwapIn_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSwapInRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).Deposit(ctx, in)
+		return srv.(MsgServer).SwapIn(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Msg_Deposit_FullMethodName,
+		FullMethod: Msg_SwapIn_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).Deposit(ctx, req.(*MsgDepositRequest))
+		return srv.(MsgServer).SwapIn(ctx, req.(*MsgSwapInRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_Withdraw_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgWithdrawRequest)
+func _Msg_SwapOut_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSwapOutRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).Withdraw(ctx, in)
+		return srv.(MsgServer).SwapOut(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Msg_Withdraw_FullMethodName,
+		FullMethod: Msg_SwapOut_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).Withdraw(ctx, req.(*MsgWithdrawRequest))
+		return srv.(MsgServer).SwapOut(ctx, req.(*MsgSwapOutRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -268,12 +268,12 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_CreateVault_Handler,
 		},
 		{
-			MethodName: "Deposit",
-			Handler:    _Msg_Deposit_Handler,
+			MethodName: "SwapIn",
+			Handler:    _Msg_SwapIn_Handler,
 		},
 		{
-			MethodName: "Withdraw",
-			Handler:    _Msg_Withdraw_Handler,
+			MethodName: "SwapOut",
+			Handler:    _Msg_SwapOut_Handler,
 		},
 		{
 			MethodName: "Redeem",

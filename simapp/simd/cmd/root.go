@@ -3,13 +3,18 @@ package cmd
 import (
 	"os"
 
+	"github.com/provlabs/vault/simapp"
+	"github.com/spf13/cobra"
+
+	cmtcfg "github.com/cometbft/cometbft/config"
+
 	"cosmossdk.io/client/v2/autocli"
 	clientv2keyring "cosmossdk.io/client/v2/autocli/keyring"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
-	cmtcfg "github.com/cometbft/cometbft/config"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -18,6 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -27,17 +33,13 @@ import (
 	"github.com/cosmos/ibc-go/v8/modules/core/exported"
 	solomachine "github.com/cosmos/ibc-go/v8/modules/light-clients/06-solomachine"
 	tendermint "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
-	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	attribute "github.com/provenance-io/provenance/x/attribute"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	marker "github.com/provenance-io/provenance/x/marker"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	name "github.com/provenance-io/provenance/x/name"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
-
-	"github.com/provlabs/vault/simapp"
 )
 
 // NewRootCmd creates and configures the root simd command.

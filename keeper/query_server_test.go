@@ -1,9 +1,11 @@
 package keeper_test
 
 import (
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
 	querytest "github.com/provlabs/vault/utils/query"
@@ -308,6 +310,162 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 			Name:               "nil request",
 			Req:                nil,
 			ExpectedErrSubstrs: []string{"invalid request"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.Name, func() {
+			querytest.RunTestCase(s, testDef, tc)
+		})
+	}
+}
+
+func (s *TestSuite) TestQueryServer_EstimateSwapIn() {
+	testDef := querytest.TestDef[types.QueryEstimateSwapInRequest, types.QueryEstimateSwapInResponse]{
+		QueryName: "EstimateSwapIn",
+		Query:     keeper.NewQueryServer(s.simApp.VaultKeeper).EstimateSwapIn,
+	}
+
+	underlyingDenom := "underlying"
+	shareDenom := "vaultshares"
+	vaultAddr := types.GetVaultAddress(shareDenom)
+	admin := s.adminAddr.String()
+	assets := sdk.NewInt64Coin(underlyingDenom, 100)
+
+	tests := []querytest.TestCase[types.QueryEstimateSwapInRequest, types.QueryEstimateSwapInResponse]{
+		{
+			Name: "happy path",
+			Setup: func() {
+				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
+				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin:           admin,
+					ShareDenom:      shareDenom,
+					UnderlyingAsset: underlyingDenom,
+				})
+				s.Require().NoError(err)
+			},
+			Req: &types.QueryEstimateSwapInRequest{
+				VaultAddress: vaultAddr.String(),
+				Assets:       assets,
+			},
+			ExpectedResp: &types.QueryEstimateSwapInResponse{
+				Assets: sdk.NewCoin(shareDenom, assets.Amount),
+			},
+		},
+		{
+			Name:               "nil request",
+			Req:                nil,
+			ExpectedErrSubstrs: []string{"invalid request"},
+		},
+		{
+			Name:               "empty vault address",
+			Req:                &types.QueryEstimateSwapInRequest{VaultAddress: ""},
+			ExpectedErrSubstrs: []string{"vault_address must be provided"},
+		},
+		{
+			Name:               "invalid vault address",
+			Req:                &types.QueryEstimateSwapInRequest{VaultAddress: "invalid-bech32-address"},
+			ExpectedErrSubstrs: []string{"invalid vault_address", "decoding bech32 failed"},
+		},
+		{
+			Name:               "vault not found",
+			Req:                &types.QueryEstimateSwapInRequest{VaultAddress: vaultAddr.String()},
+			ExpectedErrSubstrs: []string{"vault with address", "not found"},
+		},
+		{
+			Name: "invalid asset denom",
+			Setup: func() {
+				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
+				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin:           admin,
+					ShareDenom:      shareDenom,
+					UnderlyingAsset: underlyingDenom,
+				})
+				s.Require().NoError(err)
+			},
+			Req: &types.QueryEstimateSwapInRequest{
+				VaultAddress: vaultAddr.String(),
+				Assets:       sdk.NewInt64Coin("wrongdenom", 100),
+			},
+			ExpectedErrSubstrs: []string{"invalid asset for vault", "asset denom not supported for vault"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.Name, func() {
+			querytest.RunTestCase(s, testDef, tc)
+		})
+	}
+}
+
+func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
+	testDef := querytest.TestDef[types.QueryEstimateSwapOutRequest, types.QueryEstimateSwapOutResponse]{
+		QueryName: "EstimateSwapOut",
+		Query:     keeper.NewQueryServer(s.simApp.VaultKeeper).EstimateSwapOut,
+	}
+
+	underlyingDenom := "underlying"
+	shareDenom := "vaultshares"
+	vaultAddr := types.GetVaultAddress(shareDenom)
+	admin := s.adminAddr.String()
+	sharesToSwap := sdk.NewInt64Coin(shareDenom, 100)
+
+	tests := []querytest.TestCase[types.QueryEstimateSwapOutRequest, types.QueryEstimateSwapOutResponse]{
+		{
+			Name: "happy path",
+			Setup: func() {
+				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
+				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin:           admin,
+					ShareDenom:      shareDenom,
+					UnderlyingAsset: underlyingDenom,
+				})
+				s.Require().NoError(err)
+			},
+			Req: &types.QueryEstimateSwapOutRequest{
+				VaultAddress: vaultAddr.String(),
+				Assets:       sharesToSwap,
+			},
+			ExpectedResp: &types.QueryEstimateSwapOutResponse{
+				Assets: sdk.NewCoin(underlyingDenom, sharesToSwap.Amount),
+			},
+		},
+		{
+			Name:               "nil request",
+			Req:                nil,
+			ExpectedErrSubstrs: []string{"invalid request"},
+		},
+		{
+			Name:               "empty vault address",
+			Req:                &types.QueryEstimateSwapOutRequest{VaultAddress: ""},
+			ExpectedErrSubstrs: []string{"vault_address must be provided"},
+		},
+		{
+			Name:               "invalid vault address",
+			Req:                &types.QueryEstimateSwapOutRequest{VaultAddress: "invalid-bech32-address"},
+			ExpectedErrSubstrs: []string{"invalid vault_address", "decoding bech32 failed"},
+		},
+		{
+			Name:               "vault not found",
+			Req:                &types.QueryEstimateSwapOutRequest{VaultAddress: vaultAddr.String()},
+			ExpectedErrSubstrs: []string{"vault with address", "not found"},
+		},
+		{
+			Name: "invalid asset denom",
+			Setup: func() {
+				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
+				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin:           admin,
+					ShareDenom:      shareDenom,
+					UnderlyingAsset: underlyingDenom,
+				})
+				s.Require().NoError(err)
+			},
+			Req: &types.QueryEstimateSwapOutRequest{
+				VaultAddress: vaultAddr.String(),
+				Assets:       sdk.NewInt64Coin("wrongdenom", 100),
+			},
+			ExpectedErrSubstrs: []string{"asset denom", "does not match vault share denom"},
 		},
 	}
 

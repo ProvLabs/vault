@@ -1,18 +1,22 @@
 package simapp
 
 import (
-	_ "embed"
 	"io"
 	"os"
 	"path/filepath"
+
+	vaultkeeper "github.com/provlabs/vault/keeper"
+	"google.golang.org/protobuf/proto"
 
 	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/depinject"
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
-	_ "cosmossdk.io/x/feegrant/module"
+	// Cosmos Modules
+	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
 	"cosmossdk.io/x/tx/signing"
-	_ "cosmossdk.io/x/upgrade"
+	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
+
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -21,31 +25,21 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	_ "github.com/cosmos/cosmos-sdk/x/auth"
-	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
-	_ "github.com/cosmos/cosmos-sdk/x/authz/module"
-	_ "github.com/cosmos/cosmos-sdk/x/bank"
-	_ "github.com/cosmos/cosmos-sdk/x/consensus"
-	_ "github.com/cosmos/cosmos-sdk/x/group/module"
-	_ "github.com/cosmos/cosmos-sdk/x/params"
-	_ "github.com/cosmos/cosmos-sdk/x/staking"
-	"google.golang.org/protobuf/proto"
-
-	// Cosmos Modules
-	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
-	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	consensuskeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
+	crisiskeeper "github.com/cosmos/cosmos-sdk/x/crisis/keeper"
+	distributionkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	govmodule "github.com/cosmos/cosmos-sdk/x/gov"
+	govclient "github.com/cosmos/cosmos-sdk/x/gov/client"
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	groupkeeper "github.com/cosmos/cosmos-sdk/x/group/keeper"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-
 	// IBC Modules
 	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
@@ -55,9 +49,22 @@ import (
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 
+	_ "cosmossdk.io/x/feegrant/module"
+	_ "cosmossdk.io/x/upgrade"
+	_ "embed"
+	_ "github.com/cosmos/cosmos-sdk/x/auth"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
+	_ "github.com/cosmos/cosmos-sdk/x/auth/vesting"
+	_ "github.com/cosmos/cosmos-sdk/x/authz/module"
+	_ "github.com/cosmos/cosmos-sdk/x/bank"
+	_ "github.com/cosmos/cosmos-sdk/x/consensus"
+	_ "github.com/cosmos/cosmos-sdk/x/crisis"
+	_ "github.com/cosmos/cosmos-sdk/x/distribution"
+	_ "github.com/cosmos/cosmos-sdk/x/group/module"
+	_ "github.com/cosmos/cosmos-sdk/x/params"
+	_ "github.com/cosmos/cosmos-sdk/x/staking"
 	// Custom Modules
 	_ "github.com/provlabs/vault"
-	vaultkeeper "github.com/provlabs/vault/keeper"
 )
 
 var DefaultNodeHome string
@@ -84,6 +91,7 @@ type SimApp struct {
 	AccountKeeper   authkeeper.AccountKeeper
 	BankKeeper      bankkeeper.Keeper
 	ConsensusKeeper consensuskeeper.Keeper
+	CrisisKeeper    *crisiskeeper.Keeper
 	ParamsKeeper    paramskeeper.Keeper
 	StakingKeeper   *stakingkeeper.Keeper
 	UpgradeKeeper   *upgradekeeper.Keeper
@@ -92,7 +100,8 @@ type SimApp struct {
 	FeegrantKeeper feegrantkeeper.Keeper
 	GroupKeeper    groupkeeper.Keeper
 	// TODO We want to set this up
-	GovKeeper govkeeper.Keeper
+	GovKeeper          *govkeeper.Keeper
+	DistributionKeeper *distributionkeeper.Keeper
 
 	// IBC Modules
 	CapabilityKeeper *capabilitykeeper.Keeper
@@ -104,6 +113,8 @@ type SimApp struct {
 	// ExchangeKeeper  exchangekeeper.Keeper
 	// Custom Modules
 	VaultKeeper *vaultkeeper.Keeper
+
+	sm *module.SimulationManager
 }
 
 func init() {
@@ -121,11 +132,11 @@ func init() {
 // satisfy the signing context validation during app initialization.
 func ProvideExchangeDummyCustomSigners() []signing.CustomGetSigner {
 	return []signing.CustomGetSigner{
-		signing.CustomGetSigner{
+		{
 			MsgType: "provenance.exchange.v1.MsgAcceptPaymentRequest",
 			Fn:      func(proto.Message) ([][]byte, error) { return [][]byte{}, nil },
 		},
-		signing.CustomGetSigner{
+		{
 			MsgType: "provenance.exchange.v1.MsgCreatePaymentRequest",
 			Fn:      func(proto.Message) ([][]byte, error) { return [][]byte{}, nil },
 		},
@@ -136,11 +147,16 @@ func ProvideExchangeDummyCustomSigners() []signing.CustomGetSigner {
 func AppConfig() depinject.Config {
 	return depinject.Configs(
 		appconfig.LoadYAML(AppConfigYAML),
-		depinject.Provide(ProvideExchangeDummyCustomSigners, ProvideMarkerKeeperStub),
+		depinject.Provide(
+			ProvideExchangeDummyCustomSigners,
+			ProvideMarkerKeeperStub,
+		),
 		depinject.Supply(
 			map[string]module.AppModuleBasic{
 				genutiltypes.ModuleName: genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
+				"gov":                   govmodule.NewAppModuleBasic([]govclient.ProposalHandler{}),
 			},
+			govmodule.AppModule{},
 		),
 	)
 }
@@ -174,7 +190,10 @@ func NewSimApp(
 		&app.interfaceRegistry,
 		// Cosmos Modules
 		&app.AccountKeeper,
+		&app.GovKeeper,
+		// &app.DistributionKeeper,
 		&app.BankKeeper,
+		&app.CrisisKeeper,
 		&app.ConsensusKeeper,
 		&app.ParamsKeeper,
 		&app.StakingKeeper,
@@ -215,7 +234,14 @@ func (app *SimApp) LegacyAmino() *codec.LegacyAmino {
 }
 
 func (app *SimApp) SimulationManager() *module.SimulationManager {
-	return nil
+	if app.sm != nil {
+		return app.sm
+	}
+
+	app.sm = module.NewSimulationManagerFromAppModules(app.App.ModuleManager.Modules, nil)
+	app.sm.RegisterStoreDecoders()
+
+	return app.sm
 }
 
 func (app *SimApp) GetKey(storeKey string) *storetypes.KVStoreKey {

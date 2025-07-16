@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provlabs/vault/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var _ types.MsgServer = &msgServer{}
@@ -32,14 +33,34 @@ func (k msgServer) CreateVault(goCtx context.Context, msg *types.MsgCreateVaultR
 	}, nil
 }
 
-// Deposit deposits assets into a vault.
-func (k msgServer) Deposit(goCtx context.Context, msg *types.MsgDepositRequest) (*types.MsgDepositResponse, error) {
-	panic("not implemented")
+// SwapIn handles depositing underlying assets into a vault and mints vault shares to the recipient.
+func (k msgServer) SwapIn(goCtx context.Context, msg *types.MsgSwapInRequest) (*types.MsgSwapInResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	ownerAddr := sdk.MustAccAddressFromBech32(msg.Owner)
+
+	shares, err := k.Keeper.SwapIn(ctx, vaultAddr, ownerAddr, msg.Assets)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgSwapInResponse{SharesReceived: *shares}, nil
 }
 
-// Withdraw withdraws assets from a vault.
-func (k msgServer) Withdraw(goCtx context.Context, msg *types.MsgWithdrawRequest) (*types.MsgWithdrawResponse, error) {
-	panic("not implemented")
+// SwapOut handles redeeming vault shares for underlying assets and transfers the assets to the recipient.
+func (k msgServer) SwapOut(goCtx context.Context, msg *types.MsgSwapOutRequest) (*types.MsgSwapOutResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	ownerAddr := sdk.MustAccAddressFromBech32(msg.Owner)
+
+	shares, err := k.Keeper.SwapOut(ctx, vaultAddr, ownerAddr, msg.Assets)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgSwapOutResponse{SharesBurned: *shares}, nil
 }
 
 // Redeem redeems shares for underlying assets.

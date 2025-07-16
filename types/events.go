@@ -30,9 +30,27 @@ func NewEventWithdraw(caller string, receiver string, owner string, assets sdk.C
 // NewEventVaultCreated creates a new EventVaultCreated.
 func NewEventVaultCreated(vault *VaultAccount) *EventVaultCreated {
 	return &EventVaultCreated{
-		VaultAddress:     vault.Address,
+		VaultAddress:     vault.BaseAccount.Address,
 		Admin:            vault.Admin,
 		ShareDenom:       vault.ShareDenom,
 		UnderlyingAssets: vault.UnderlyingAssets,
+	}
+}
+
+func NewEventSwapIn(vaultAddress, owner string, assets, shares sdk.Coin) *EventSwapIn {
+	return &EventSwapIn{
+		VaultAddress:   vaultAddress,
+		SharesReceived: shares,
+		AmountIn:       assets,
+		Owner:          owner,
+	}
+}
+
+func NewEventSwapOut(vaultAddress, owner string, assets, shares sdk.Coin) *EventSwapOut {
+	return &EventSwapOut{
+		VaultAddress: vaultAddress,
+		SharesBurned: shares,
+		AmountOut:    assets,
+		Owner:        owner,
 	}
 }

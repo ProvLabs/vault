@@ -4,6 +4,10 @@ import (
 	"errors"
 	"io"
 
+	"github.com/provlabs/vault/simapp"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
 	"cosmossdk.io/log"
 
 	dbm "github.com/cosmos/cosmos-db"
@@ -20,11 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
-
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-
-	"github.com/provlabs/vault/simapp"
 )
 
 func initRootCmd(rootCmd *cobra.Command, txConfig client.TxConfig, basicManager module.BasicManager, clientCtx client.Context) {

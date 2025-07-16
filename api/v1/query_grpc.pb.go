@@ -19,10 +19,12 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Query_Vaults_FullMethodName      = "/vault.v1.Query/Vaults"
-	Query_Vault_FullMethodName       = "/vault.v1.Query/Vault"
-	Query_TotalAssets_FullMethodName = "/vault.v1.Query/TotalAssets"
-	Query_Params_FullMethodName      = "/vault.v1.Query/Params"
+	Query_Vaults_FullMethodName          = "/vault.v1.Query/Vaults"
+	Query_Vault_FullMethodName           = "/vault.v1.Query/Vault"
+	Query_TotalAssets_FullMethodName     = "/vault.v1.Query/TotalAssets"
+	Query_EstimateSwapIn_FullMethodName  = "/vault.v1.Query/EstimateSwapIn"
+	Query_EstimateSwapOut_FullMethodName = "/vault.v1.Query/EstimateSwapOut"
+	Query_Params_FullMethodName          = "/vault.v1.Query/Params"
 )
 
 // QueryClient is the client API for Query service.
@@ -38,6 +40,10 @@ type QueryClient interface {
 	// TotalAssets returns the total amount of the underlying asset managed by the vault.
 	// This is equivalent to the ERC-4626 function `totalAssets`.
 	TotalAssets(ctx context.Context, in *QueryTotalAssetsRequest, opts ...grpc.CallOption) (*QueryTotalAssetsResponse, error)
+	// EstimateSwapIn estimates the amount of shares that would be received for a given amount of underlying assets.
+	EstimateSwapIn(ctx context.Context, in *QueryEstimateSwapInRequest, opts ...grpc.CallOption) (*QueryEstimateSwapInResponse, error)
+	// EstimateSwapOut estimates the amount of underlying assets that would be received for a given amount of shares.
+	EstimateSwapOut(ctx context.Context, in *QueryEstimateSwapOutRequest, opts ...grpc.CallOption) (*QueryEstimateSwapOutResponse, error)
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 }
 
@@ -79,6 +85,26 @@ func (c *queryClient) TotalAssets(ctx context.Context, in *QueryTotalAssetsReque
 	return out, nil
 }
 
+func (c *queryClient) EstimateSwapIn(ctx context.Context, in *QueryEstimateSwapInRequest, opts ...grpc.CallOption) (*QueryEstimateSwapInResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(QueryEstimateSwapInResponse)
+	err := c.cc.Invoke(ctx, Query_EstimateSwapIn_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) EstimateSwapOut(ctx context.Context, in *QueryEstimateSwapOutRequest, opts ...grpc.CallOption) (*QueryEstimateSwapOutResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(QueryEstimateSwapOutResponse)
+	err := c.cc.Invoke(ctx, Query_EstimateSwapOut_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(QueryParamsResponse)
@@ -102,6 +128,10 @@ type QueryServer interface {
 	// TotalAssets returns the total amount of the underlying asset managed by the vault.
 	// This is equivalent to the ERC-4626 function `totalAssets`.
 	TotalAssets(context.Context, *QueryTotalAssetsRequest) (*QueryTotalAssetsResponse, error)
+	// EstimateSwapIn estimates the amount of shares that would be received for a given amount of underlying assets.
+	EstimateSwapIn(context.Context, *QueryEstimateSwapInRequest) (*QueryEstimateSwapInResponse, error)
+	// EstimateSwapOut estimates the amount of underlying assets that would be received for a given amount of shares.
+	EstimateSwapOut(context.Context, *QueryEstimateSwapOutRequest) (*QueryEstimateSwapOutResponse, error)
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
@@ -121,6 +151,12 @@ func (UnimplementedQueryServer) Vault(context.Context, *QueryVaultRequest) (*Que
 }
 func (UnimplementedQueryServer) TotalAssets(context.Context, *QueryTotalAssetsRequest) (*QueryTotalAssetsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TotalAssets not implemented")
+}
+func (UnimplementedQueryServer) EstimateSwapIn(context.Context, *QueryEstimateSwapInRequest) (*QueryEstimateSwapInResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EstimateSwapIn not implemented")
+}
+func (UnimplementedQueryServer) EstimateSwapOut(context.Context, *QueryEstimateSwapOutRequest) (*QueryEstimateSwapOutResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EstimateSwapOut not implemented")
 }
 func (UnimplementedQueryServer) Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
@@ -200,6 +236,42 @@ func _Query_TotalAssets_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_EstimateSwapIn_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryEstimateSwapInRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).EstimateSwapIn(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_EstimateSwapIn_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).EstimateSwapIn(ctx, req.(*QueryEstimateSwapInRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_EstimateSwapOut_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryEstimateSwapOutRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).EstimateSwapOut(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_EstimateSwapOut_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).EstimateSwapOut(ctx, req.(*QueryEstimateSwapOutRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(QueryParamsRequest)
 	if err := dec(in); err != nil {
@@ -236,6 +308,14 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "TotalAssets",
 			Handler:    _Query_TotalAssets_Handler,
+		},
+		{
+			MethodName: "EstimateSwapIn",
+			Handler:    _Query_EstimateSwapIn_Handler,
+		},
+		{
+			MethodName: "EstimateSwapOut",
+			Handler:    _Query_EstimateSwapOut_Handler,
 		},
 		{
 			MethodName: "Params",

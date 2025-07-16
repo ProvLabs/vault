@@ -3,15 +3,17 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/provlabs/vault/types"
+
 	"cosmossdk.io/collections"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
+
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
-	"github.com/provlabs/vault/types"
 )
 
 type Keeper struct {
@@ -22,6 +24,7 @@ type Keeper struct {
 
 	AuthKeeper   types.AccountKeeper
 	MarkerKeeper types.MarkerKeeper
+	BankKeeper   types.BankKeeper
 
 	Params collections.Item[types.Params]
 	Vaults collections.Map[sdk.AccAddress, []byte]
@@ -35,6 +38,7 @@ func NewKeeper(
 	authority []byte,
 	authKeeper types.AccountKeeper,
 	markerkeeper types.MarkerKeeper,
+	bankkeeper types.BankKeeper,
 ) *Keeper {
 	if _, err := addressCodec.BytesToString(authority); err != nil {
 		panic(fmt.Sprintf("invalid authority address %s: %s", authority, err))
@@ -50,6 +54,7 @@ func NewKeeper(
 		Vaults:       collections.NewMap(builder, types.VaultsKeyPrefix, types.VaultsName, sdk.AccAddressKey, collections.BytesValue),
 		AuthKeeper:   authKeeper,
 		MarkerKeeper: markerkeeper,
+		BankKeeper:   bankkeeper,
 	}
 
 	schema, err := builder.Build()

@@ -98,3 +98,43 @@ func TestVaultAccount_Validate(t *testing.T) {
 		})
 	}
 }
+
+func TestVaultAccount_ValidateUnderlyingAssets(t *testing.T) {
+	vault := types.VaultAccount{
+		UnderlyingAssets: []string{"jackthecat", "georgethedog"},
+	}
+
+	tests := []struct {
+		name        string
+		asset       sdk.Coin
+		expectedErr string
+	}{
+		{
+			name:        "valid asset denom match (jackthecat)",
+			asset:       sdk.NewInt64Coin("jackthecat", 100),
+			expectedErr: "",
+		},
+		{
+			name:        "valid asset denom match (georgethedog)",
+			asset:       sdk.NewInt64Coin("georgethedog", 50),
+			expectedErr: "",
+		},
+		{
+			name:        "unsupported asset denom",
+			asset:       sdk.NewInt64Coin("btc", 10),
+			expectedErr: "btc asset denom not supported for vault",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := vault.ValidateUnderlyingAssets(tc.asset)
+			if tc.expectedErr != "" {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tc.expectedErr)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}

@@ -16,8 +16,16 @@ const (
 	EulerPrecision = 18
 )
 
-// Calculate the annual interest rate
-func CalculateInterest(principal sdk.Coin, rate string, seconds int64) (sdk.Coin, error) {
+// CalculateInterestEarned computes the continuously compounded interest for a given principal over a period.
+//
+// It uses the formula `Interest = (P * (e^(rt)) - P`, where:
+//   - P is the `principal`.
+//   - r is the annual `rate`.
+//   - t is the time in years, derived from (`periodSeconds` / 31_536_000).
+//
+// To ensure on-chain determinism, it uses `cosmosmath.LegacyDec` for all arithmetic
+// and approximates e^x using a Maclaurin series (`utils.ExpDec`).
+func CalculateInterestEarned(principal sdk.Coin, rate string, periodSeconds int64) (sdk.Coin, error) {
 	r, err := cosmosmath.LegacyNewDecFromStr(rate)
 	if err != nil {
 		return sdk.Coin{}, err
@@ -27,7 +35,7 @@ func CalculateInterest(principal sdk.Coin, rate string, seconds int64) (sdk.Coin
 	p := cosmosmath.LegacyNewDecFromInt(principal.Amount)
 
 	// t = time in years, as a deterministic decimal
-	t := cosmosmath.LegacyNewDec(seconds).QuoInt64(SecondsPerYear)
+	t := cosmosmath.LegacyNewDec(periodSeconds).QuoInt64(SecondsPerYear)
 
 	// rt
 	rt := r.Mul(t)

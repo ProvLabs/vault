@@ -6,11 +6,9 @@ import (
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
-
-	"github.com/stretchr/testify/require"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provlabs/vault/utils"
+	"github.com/stretchr/testify/require"
 )
 
 func TestCalculateSharesFromAssets(t *testing.T) {
@@ -77,7 +75,7 @@ func TestCalculateSharesFromAssets(t *testing.T) {
 			assets:      sdkmath.NewInt(1),
 			totalAssets: sdkmath.NewInt(1_000_000_000),
 			totalShares: sdkmath.NewInt(1_000_000_000),
-			expected:    sdk.NewCoin(denom, sdkmath.NewInt(1)), // (1 * 1e9 / 1e9)
+			expected:    sdk.NewCoin(denom, sdkmath.NewInt(1)),
 			expectErr:   false,
 		},
 		{
@@ -85,7 +83,7 @@ func TestCalculateSharesFromAssets(t *testing.T) {
 			assets:      sdkmath.NewInt(2000),
 			totalAssets: sdkmath.NewInt(1000),
 			totalShares: sdkmath.NewInt(1000),
-			expected:    sdk.NewCoin(denom, sdkmath.NewInt(2000)), // (2000 * 1000 / 1000)
+			expected:    sdk.NewCoin(denom, sdkmath.NewInt(2000)),
 			expectErr:   false,
 		},
 		{
@@ -93,8 +91,29 @@ func TestCalculateSharesFromAssets(t *testing.T) {
 			assets:      sdkmath.NewInt(100),
 			totalAssets: sdkmath.NewInt(1000),
 			totalShares: sdkmath.NewInt(1000),
-			expected:    sdk.NewCoin(denom, sdkmath.NewInt(100)), // (100 * 1000 / 1000)
+			expected:    sdk.NewCoin(denom, sdkmath.NewInt(100)),
 			expectErr:   false,
+		},
+		{
+			name:        "negative asset input",
+			assets:      sdkmath.NewInt(-100),
+			totalAssets: sdkmath.NewInt(1000),
+			totalShares: sdkmath.NewInt(1000),
+			expectErr:   true,
+		},
+		{
+			name:        "negative totalAssets",
+			assets:      sdkmath.NewInt(100),
+			totalAssets: sdkmath.NewInt(-1000),
+			totalShares: sdkmath.NewInt(1000),
+			expectErr:   true,
+		},
+		{
+			name:        "negative totalShares",
+			assets:      sdkmath.NewInt(100),
+			totalAssets: sdkmath.NewInt(1000),
+			totalShares: sdkmath.NewInt(-1000),
+			expectErr:   true,
 		},
 	}
 
@@ -128,7 +147,7 @@ func TestCalculateAssetsFromShares(t *testing.T) {
 			shares:      sdkmath.NewInt(50),
 			totalShares: sdkmath.NewInt(100),
 			totalAssets: sdkmath.NewInt(1000),
-			expected:    sdk.NewCoin(denom, sdkmath.NewInt(500)), // (50 * 1000) / 100 = 500
+			expected:    sdk.NewCoin(denom, sdkmath.NewInt(500)),
 			expectErr:   false,
 		},
 		{
@@ -140,35 +159,35 @@ func TestCalculateAssetsFromShares(t *testing.T) {
 			expectErr:   false,
 		},
 		{
-			name:        "zero total shares (error)",
+			name:        "zero total shares returns 0 assets",
 			shares:      sdkmath.NewInt(100),
 			totalShares: sdkmath.NewInt(0),
 			totalAssets: sdkmath.NewInt(1000),
-			expected:    sdk.Coin{},
-			expectErr:   true,
+			expected:    sdk.NewCoin(denom, sdkmath.NewInt(0)),
+			expectErr:   false,
 		},
 		{
 			name:        "rounding down edge case",
 			shares:      sdkmath.NewInt(1),
 			totalShares: sdkmath.NewInt(3),
 			totalAssets: sdkmath.NewInt(10),
-			expected:    sdk.NewCoin(denom, sdkmath.NewInt(3)), // truncates (1*10)/3 = 3.333...
+			expected:    sdk.NewCoin(denom, sdkmath.NewInt(3)),
 			expectErr:   false,
 		},
 		{
-			name:        "all values zero (error)",
+			name:        "all values zero",
 			shares:      sdkmath.NewInt(0),
 			totalShares: sdkmath.NewInt(0),
 			totalAssets: sdkmath.NewInt(0),
-			expected:    sdk.Coin{},
-			expectErr:   true,
+			expected:    sdk.NewCoin(denom, sdkmath.NewInt(0)),
+			expectErr:   false,
 		},
 		{
 			name:        "extremely large values (1:1)",
 			shares:      sdkmath.NewIntFromUint64(math.MaxUint64),
 			totalShares: sdkmath.NewIntFromUint64(math.MaxUint64),
 			totalAssets: sdkmath.NewIntFromUint64(math.MaxUint64),
-			expected:    sdk.NewCoin(denom, sdkmath.NewIntFromUint64(math.MaxUint64)), // (Max * Max) / Max = Max
+			expected:    sdk.NewCoin(denom, sdkmath.NewIntFromUint64(math.MaxUint64)),
 			expectErr:   false,
 		},
 		{
@@ -176,7 +195,7 @@ func TestCalculateAssetsFromShares(t *testing.T) {
 			shares:      sdkmath.NewInt(1),
 			totalShares: sdkmath.NewInt(1_000_000_000),
 			totalAssets: sdkmath.NewInt(1_000_000_000),
-			expected:    sdk.NewCoin(denom, sdkmath.NewInt(1)), // 1:1, very small unit
+			expected:    sdk.NewCoin(denom, sdkmath.NewInt(1)),
 			expectErr:   false,
 		},
 		{
@@ -184,7 +203,7 @@ func TestCalculateAssetsFromShares(t *testing.T) {
 			shares:      sdkmath.NewInt(2000),
 			totalShares: sdkmath.NewInt(1000),
 			totalAssets: sdkmath.NewInt(5000),
-			expected:    sdk.NewCoin(denom, sdkmath.NewInt(10000)), // (2000 * 5000) / 1000
+			expected:    sdk.NewCoin(denom, sdkmath.NewInt(10000)),
 			expectErr:   false,
 		},
 		{
@@ -192,8 +211,29 @@ func TestCalculateAssetsFromShares(t *testing.T) {
 			shares:      sdkmath.NewInt(100),
 			totalShares: sdkmath.NewInt(1000),
 			totalAssets: sdkmath.NewInt(100),
-			expected:    sdk.NewCoin(denom, sdkmath.NewInt(10)), // (100 * 100) / 1000
+			expected:    sdk.NewCoin(denom, sdkmath.NewInt(10)),
 			expectErr:   false,
+		},
+		{
+			name:        "negative shares",
+			shares:      sdkmath.NewInt(-100),
+			totalShares: sdkmath.NewInt(1000),
+			totalAssets: sdkmath.NewInt(1000),
+			expectErr:   true,
+		},
+		{
+			name:        "negative totalAssets",
+			shares:      sdkmath.NewInt(100),
+			totalShares: sdkmath.NewInt(1000),
+			totalAssets: sdkmath.NewInt(-1000),
+			expectErr:   true,
+		},
+		{
+			name:        "negative totalShares",
+			shares:      sdkmath.NewInt(100),
+			totalShares: sdkmath.NewInt(-1000),
+			totalAssets: sdkmath.NewInt(1000),
+			expectErr:   true,
 		},
 	}
 

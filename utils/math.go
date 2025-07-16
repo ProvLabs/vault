@@ -39,7 +39,6 @@ func CalculateSharesFromAssets(
 // If totalShares is zero, it returns zero assets.
 //
 //	assets = (shares * totalAssets) / totalShares
-
 func CalculateAssetsFromShares(
 	shares math.Int,
 	totalShares math.Int,

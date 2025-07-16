@@ -9,3 +9,7 @@ import (
 func TestCalculateInterestEarned(t *testing.T) {
 	require.Fail(t, "not implemented")
 }
+
+func TestCalculateExpiration(t *testing.T) {
+	require.Fail(t, "not implemented")
+}

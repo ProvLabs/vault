@@ -211,3 +211,7 @@ func TestCalculateAssetsFromShares(t *testing.T) {
 		})
 	}
 }
+
+func TestExpDec(t *testing.T) {
+	require.Fail(t, "not implemented")
+}

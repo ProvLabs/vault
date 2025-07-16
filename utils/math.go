@@ -48,3 +48,21 @@ func CalculateAssetsFromShares(
 	assetsOut := shares.Mul(totalAssets).Quo(totalShares)
 	return sdk.NewCoin(assetDenom, assetsOut), nil
 }
+
+// ExpDec calculates e^x using Maclaurin series expansion up to `terms` terms.
+// x must be an cosmosmath.LegacyDec. The more terms, the more accurate (and slower).
+// Safe for on-chain use (fully deterministic).
+func ExpDec(x math.LegacyDec, terms int) math.LegacyDec {
+	result := math.LegacyOneDec()    // starts at 1
+	power := math.LegacyOneDec()     // x^0
+	factorial := math.LegacyOneDec() // 0! = 1
+
+	for i := 1; i <= terms; i++ {
+		power = power.Mul(x)                     // x^i
+		factorial = factorial.MulInt64(int64(i)) // i!
+		term := power.Quo(factorial)             // x^i / i!
+		result = result.Add(term)
+	}
+
+	return result
+}

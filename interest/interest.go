@@ -1,6 +1,8 @@
 package interest
 
 import (
+	"github.com/provlabs/vault/utils"
+
 	cosmosmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -31,7 +33,7 @@ func CalculateInterest(principal sdk.Coin, rate string, seconds int64) (sdk.Coin
 	rt := r.Mul(t)
 
 	// e_rt = e^(rt) using the deterministic Exp function from the SDK
-	eRt := ExpDec(rt, EulerPrecision)
+	eRt := utils.ExpDec(rt, EulerPrecision)
 
 	// final amount A = P * e^(rt)
 	finalAmount := p.Mul(eRt)
@@ -47,22 +49,4 @@ func CalculateInterest(principal sdk.Coin, rate string, seconds int64) (sdk.Coin
 
 func CalculateExpiration() uint64 {
 	return 0
-}
-
-// ExpDec calculates e^x using Maclaurin series expansion up to `terms` terms.
-// x must be an cosmosmath.LegacyDec. The more terms, the more accurate (and slower).
-// Safe for on-chain use (fully deterministic).
-func ExpDec(x cosmosmath.LegacyDec, terms int) cosmosmath.LegacyDec {
-	result := cosmosmath.LegacyOneDec()    // starts at 1
-	power := cosmosmath.LegacyOneDec()     // x^0
-	factorial := cosmosmath.LegacyOneDec() // 0! = 1
-
-	for i := 1; i <= terms; i++ {
-		power = power.Mul(x)                     // x^i
-		factorial = factorial.MulInt64(int64(i)) // i!
-		term := power.Quo(factorial)             // x^i / i!
-		result = result.Add(term)
-	}
-
-	return result
 }

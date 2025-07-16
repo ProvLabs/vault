@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// TODO: https://github.com/ProvLabs/vault/issues/6
 // CalculateSharesFromAssets returns the number of shares that correspond
 // to a given amount of deposited assets.
 //
@@ -33,6 +34,7 @@ func CalculateSharesFromAssets(
 	return sdk.NewCoin(shareDenom, sharesOut), nil
 }
 
+// TODO: https://github.com/ProvLabs/vault/issues/6
 // CalculateAssetsFromShares returns the amount of assets that correspond
 // to a given number of shares being redeemed.
 //

@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/provlabs/vault/types"
+	"github.com/provlabs/vault/utils"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -157,11 +158,21 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 		return nil, fmt.Errorf("vault with address %v not found", vaultAddr.String())
 	}
 
+	markerAddr := markertypes.MustGetMarkerAddress(vault.ShareDenom)
+
 	if err := vault.ValidateUnderlyingAssets(asset); err != nil {
 		return nil, err
 	}
 
-	shares := sdk.NewCoin(vault.ShareDenom, asset.Amount)
+	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
+	totalAssets := k.BankKeeper.GetBalance(ctx, markerAddr, vault.UnderlyingAssets[0]).Amount
+
+	shares, err := utils.CalculateSharesFromAssets(asset.Amount, totalAssets, totalShares, vault.ShareDenom)
+	if err != nil {
+		return nil, fmt.Errorf("failed to calculate shares from assets: %w", err)
+
+	}
+
 	if err := shares.Validate(); err != nil {
 		return nil, err
 	}
@@ -174,8 +185,7 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 		return nil, err
 	}
 
-	ctx = markertypes.WithBypass(ctx)
-	if err := k.BankKeeper.SendCoins(ctx, recipient, vaultAddr, sdk.NewCoins(asset)); err != nil {
+	if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx), recipient, markerAddr, sdk.NewCoins(asset)); err != nil {
 		return nil, err
 	}
 
@@ -186,16 +196,15 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 
 // SwapOut handles the process of redeeming vault shares in exchange for underlying assets.
 // It performs the following steps:
-//   1. Retrieves the vault configuration for the given vault address.
-//   2. Validates that the provided share denomination matches the vault's configured share denom.
-//   3. Calculates the amount of underlying assets to return based on the share amount.
-//   4. Transfers the shares from the owner to the vault's marker account.
-//   5. Burns the received shares from the vault account.
-//   6. Sends the equivalent amount of underlying assets from the marker to the owner.
-//   7. Emits a SwapOut event with metadata for indexing and audit.
+//  1. Retrieves the vault configuration for the given vault address.
+//  2. Validates that the provided share denomination matches the vault's configured share denom.
+//  3. Calculates the amount of underlying assets to return based on the share amount.
+//  4. Transfers the shares from the owner to the vault's marker account.
+//  5. Burns the received shares from the vault account.
+//  6. Sends the equivalent amount of underlying assets from the marker to the owner.
+//  7. Emits a SwapOut event with metadata for indexing and audit.
 //
 // Returns the burned share amount on success, or an error if any step fails.
-
 func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, shares sdk.Coin) (*sdk.Coin, error) {
 	vault, err := k.GetVault(ctx, vaultAddr)
 	if err != nil {
@@ -209,10 +218,17 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 		return nil, fmt.Errorf("swap out denom must be share denom %v : %v", shares.Denom, vault.ShareDenom)
 	}
 
-	assets := sdk.NewCoin(vault.UnderlyingAssets[0], shares.Amount)
+	markerAddr := markertypes.MustGetMarkerAddress(vault.ShareDenom)
 
-	markerAddr, err := markertypes.MarkerAddress(vault.ShareDenom)
+	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
+	totalAssets := k.BankKeeper.GetBalance(ctx, markerAddr, vault.UnderlyingAssets[0]).Amount
+
+	assets, err := utils.CalculateAssetsFromShares(shares.Amount, totalShares, totalAssets, vault.UnderlyingAssets[0])
 	if err != nil {
+		return nil, fmt.Errorf("failed to calculate assets from shares: %w", err)
+	}
+
+	if err := assets.Validate(); err != nil {
 		return nil, err
 	}
 
@@ -224,7 +240,7 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 		return nil, fmt.Errorf("failed to burn shares: %w", err)
 	}
 
-	if err := k.BankKeeper.SendCoins(ctx, vaultAddr, owner, sdk.NewCoins(assets)); err != nil {
+	if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, vaultAddr), markerAddr, owner, sdk.NewCoins(assets)); err != nil {
 		return nil, fmt.Errorf("failed to send underlying asset: %w", err)
 	}
 

@@ -24,8 +24,8 @@ const (
 )
 
 const (
-	DefaultWeightMsgCreateVault = 100
-	DefaultWeightMsgSwapIn      = 50
+	DefaultWeightMsgCreateVault = 5
+	DefaultWeightMsgSwapIn      = 95
 )
 
 func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simulation.WeightedOperations {

@@ -47,6 +47,13 @@ func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*type
 		return nil, fmt.Errorf("failed to create vault marker: %w", err)
 	}
 
+	// TODO: add to create message or should it just default to 0 and be set through management
+	vault.InterestRate = "0.05" // Default interest rate of 5% per annum
+	// TODO: should we start period on vault creation?
+	k.VaultInterestDetails.Set(ctx, vault.GetAddress(), types.VaultInterestDetails{
+		PeriodStart: ctx.BlockTime().Unix(),
+	})
+
 	k.emitEvent(ctx, types.NewEventVaultCreated(vault))
 
 	return vault, nil
@@ -141,12 +148,13 @@ func (k *Keeper) createVaultMarker(ctx sdk.Context, markerManager sdk.AccAddress
 // SwapIn handles the process of depositing underlying assets into a vault in exchange for newly minted vault shares.
 // It performs the following steps:
 //  1. Retrieves the vault configuration for the given vault address.
-//  2. Validates that the provided underlying asset is supported by the vault.
-//  3. Constructs the vault share amount based on the asset value.
-//  4. Mints the equivalent amount of shares to the vault account.
-//  5. Withdraws the minted shares from the vault to the recipient address.
-//  6. Sends the underlying asset from the recipient to the vault’s marker account.
-//  7. Emits a SwapIn event with metadata for indexing and audit.
+//  2. Reconciles any accrued interest from the vault to the marker module if due.
+//  3. Validates that the provided underlying asset is supported by the vault.
+//  4. Constructs the vault share amount based on the asset value.
+//  5. Mints the equivalent amount of shares to the vault account.
+//  6. Withdraws the minted shares from the vault to the recipient address.
+//  7. Sends the underlying asset from the recipient to the vault’s marker account.
+//  8. Emits a SwapIn event with metadata for indexing and audit.
 //
 // Returns the minted share amount on success, or an error if any step fails.
 func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, asset sdk.Coin) (*sdk.Coin, error) {
@@ -156,6 +164,10 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 	}
 	if vault == nil {
 		return nil, fmt.Errorf("vault with address %v not found", vaultAddr.String())
+	}
+
+	if err := k.reconcileVaultInterest(ctx, vault); err != nil {
+		return nil, fmt.Errorf("failed to reconcile vault interest: %w", err)
 	}
 
 	markerAddr := markertypes.MustGetMarkerAddress(vault.ShareDenom)
@@ -197,12 +209,13 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 // SwapOut handles the process of redeeming vault shares in exchange for underlying assets.
 // It performs the following steps:
 //  1. Retrieves the vault configuration for the given vault address.
-//  2. Validates that the provided share denomination matches the vault's configured share denom.
-//  3. Calculates the amount of underlying assets to return based on the share amount.
-//  4. Transfers the shares from the owner to the vault's marker account.
-//  5. Burns the received shares from the vault account.
-//  6. Sends the equivalent amount of underlying assets from the marker to the owner.
-//  7. Emits a SwapOut event with metadata for indexing and audit.
+//  2. Reconciles any accrued interest from the vault to the marker module if due.
+//  3. Validates that the provided share denomination matches the vault's configured share denom.
+//  4. Calculates the amount of underlying assets to return based on the share amount.
+//  5. Transfers the shares from the owner to the vault's marker account.
+//  6. Burns the received shares from the vault account.
+//  7. Sends the equivalent amount of underlying assets from the marker to the owner.
+//  8. Emits a SwapOut event with metadata for indexing and audit.
 //
 // Returns the burned share amount on success, or an error if any step fails.
 func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, shares sdk.Coin) (*sdk.Coin, error) {
@@ -216,6 +229,10 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 
 	if shares.Denom != vault.ShareDenom {
 		return nil, fmt.Errorf("swap out denom must be share denom %v : %v", shares.Denom, vault.ShareDenom)
+	}
+
+	if err := k.reconcileVaultInterest(ctx, vault); err != nil {
+		return nil, fmt.Errorf("failed to reconcile vault interest: %w", err)
 	}
 
 	markerAddr := markertypes.MustGetMarkerAddress(vault.ShareDenom)

@@ -26,8 +26,9 @@ type Keeper struct {
 	MarkerKeeper types.MarkerKeeper
 	BankKeeper   types.BankKeeper
 
-	Params collections.Item[types.Params]
-	Vaults collections.Map[sdk.AccAddress, []byte]
+	Params               collections.Item[types.Params]
+	Vaults               collections.Map[sdk.AccAddress, []byte]
+	VaultInterestDetails collections.Map[sdk.AccAddress, types.VaultInterestDetails]
 }
 
 func NewKeeper(
@@ -47,14 +48,15 @@ func NewKeeper(
 	builder := collections.NewSchemaBuilder(storeService)
 
 	keeper := &Keeper{
-		eventService: eventService,
-		addressCodec: addressCodec,
-		authority:    authority,
-		Params:       collections.NewItem(builder, types.ParamsKeyPrefix, types.ParamsName, codec.CollValue[types.Params](cdc)),
-		Vaults:       collections.NewMap(builder, types.VaultsKeyPrefix, types.VaultsName, sdk.AccAddressKey, collections.BytesValue),
-		AuthKeeper:   authKeeper,
-		MarkerKeeper: markerkeeper,
-		BankKeeper:   bankkeeper,
+		eventService:         eventService,
+		addressCodec:         addressCodec,
+		authority:            authority,
+		Params:               collections.NewItem(builder, types.ParamsKeyPrefix, types.ParamsName, codec.CollValue[types.Params](cdc)),
+		Vaults:               collections.NewMap(builder, types.VaultsKeyPrefix, types.VaultsName, sdk.AccAddressKey, collections.BytesValue),
+		VaultInterestDetails: collections.NewMap(builder, types.VaultInterestDetailsPrefix, types.VaultInterestDetailsName, sdk.AccAddressKey, codec.CollValue[types.VaultInterestDetails](cdc)),
+		AuthKeeper:           authKeeper,
+		MarkerKeeper:         markerkeeper,
+		BankKeeper:           bankkeeper,
 	}
 
 	schema, err := builder.Build()

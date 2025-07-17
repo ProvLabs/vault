@@ -18,4 +18,17 @@ message VaultAccount {
   repeated string underlying_assets = 3;
   // admin is the address that has administrative privileges over the vault.
   string admin = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // interest_rate is the annualized continuous interest rate for the vault,
+  // represented as a decimal string (e.g., "0.05" for 5% APR).
+  string interest_rate = 5 [(cosmos_proto.scalar) = "cosmos.DecString"];
+}
+
+// VaultInterestDetails stores metadata related to interest accrual and payment for a vault.
+//
+// period_start represents the Unix timestamp (in seconds) when the current interest
+// accrual period began. This value is updated when interest is successfully paid out.
+// If multiple transactions occur in the same block, only the first will trigger interest reconciliation.
+message VaultInterestDetails {
+  // The start time (in Unix seconds) of the current interest accrual period.
+  int64 period_start = 1;
 }

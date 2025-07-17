@@ -170,7 +170,6 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 	shares, err := utils.CalculateSharesFromAssets(asset.Amount, totalAssets, totalShares, vault.ShareDenom)
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate shares from assets: %w", err)
-
 	}
 
 	if err := shares.Validate(); err != nil {

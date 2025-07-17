@@ -4,7 +4,7 @@ package vault.v1;
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
-import "vault/v1/interest.proto";
+import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/provlabs/vault/types";
 
@@ -78,22 +78,49 @@ message EventSwapOut {
 message EventVaultInterestPeriodStart {
   // vault_address is the bech32 address of the vault.
   string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // period is the interest period that started.
-  InterestPeriod period = 2 [(gogoproto.nullable) = false];
+  // principal is the initial amount of principal.
+  cosmos.base.v1beta1.Coin principal = 2 [(gogoproto.nullable) = false];
+  // rate is the interest rate for the period.
+  string rate = 3;
+  // time is the payout time in seconds.
+  int64 time = 4;
+  // start_time is the time when the interest period started.
+  google.protobuf.Timestamp start_time = 5 [
+    (gogoproto.stdtime) = true,
+    (gogoproto.nullable) = true
+  ];
+  // estimated_end_time is the estimated time when the interest period will end.
+  google.protobuf.Timestamp estimated_end_time = 6 [
+    (gogoproto.stdtime) = true,
+    (gogoproto.nullable) = true
+  ];
 }
 
 // EventVaultInterestPeriodStop is an event emitted when an interest period stops for a vault.
 message EventVaultInterestPeriodStop {
   // vault_address is the bech32 address of the vault.
   string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // period is the interest period that stopped.
-  InterestPeriod period = 2 [(gogoproto.nullable) = false];
+  // rate is the interest rate for the period.
+  string rate = 2;
+  // time is the payout time in seconds.
+  int64 time = 3;
+  // end_time is the time when the interest period ended.
+  google.protobuf.Timestamp end_time = 4 [
+    (gogoproto.stdtime) = true,
+    (gogoproto.nullable) = true
+  ];
 }
 
 // EventInterestEarned is an event emitted when interest is earned for a vault.
 message EventInterestEarned {
   // vault_address is the bech32 address of the vault.
   string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // period is the interest period that earned interest.
-  InterestPeriod period = 2 [(gogoproto.nullable) = false];
+  // principal is the principal the interest was earned on.
+  cosmos.base.v1beta1.Coin principal = 2 [(gogoproto.nullable) = false];
+  // rate is the interest rate for the period.
+  string rate = 3;
+  // time is the payout time in seconds.
+  int64 time = 4;
+  // interest_earned is the amount of interest earned.
+  cosmos.base.v1beta1.Coin interest_earned = 5 [(gogoproto.nullable) = false];
 }

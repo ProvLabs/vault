@@ -17,7 +17,7 @@ type Period struct {
 const (
 	SecondsPerYear = 31_536_000
 	// TODO Can we pass this in instead of hardcoding it
-	EulerPrecision = 17
+	EulerPrecision = 15
 )
 
 // CalculateInterestEarned computes the continuously compounded interest for a given principal over a period.
@@ -104,20 +104,9 @@ func CalculateExpiration(principal sdk.Coin, vaultReserves sdk.Coin, rate string
 	}
 
 	// Iteratively calculate interest until the vault is depleted.
-	remainingReserves := vaultReserves
-	currentPrincipal := principal // P
-	var periods int64
-	for {
-		interest, err := CalculateInterestEarned(currentPrincipal, rate, periodSeconds)
-		if err != nil {
-			return 0, fmt.Errorf("failed to calculate interest for period %d: %w", periods+1, err)
-		}
-		if interest.IsZero() || remainingReserves.IsLT(interest) {
-			break
-		}
-		remainingReserves = remainingReserves.Sub(interest)
-		currentPrincipal = currentPrincipal.Add(interest)
-		periods++
+	periods, i, err := CalculatePeriods(vaultReserves, principal, rate, periodSeconds)
+	if err != nil {
+		return i, err
 	}
 
 	// Calculate final expiration time with overflow checks using int64. Check for multiplication overflow.
@@ -134,4 +123,39 @@ func CalculateExpiration(principal sdk.Coin, vaultReserves sdk.Coin, rate string
 	}
 
 	return expirationTime.Int64(), nil // Unix epoch time
+}
+
+// CalculatePeriods simulates continuous compounding to determine how many compounding
+// periods a vault can sustain paying interest before its reserves are depleted.
+//
+// The interest for each period is calculated using the continuous compounding formula,
+// and deducted from the vault's reserves. The principal grows with each compounded period.
+//
+// Parameters:
+//   - vaultReserves: The available funds in the vault to pay interest.
+//   - principal: The initial amount earning interest.
+//   - rate: The annual interest rate (as a string, e.g. "0.05" for 5%).
+//   - periodSeconds: The length of each compounding period in seconds.
+//
+// Returns:
+//   - The number of full compounding periods the reserves can cover.
+//   - A placeholder value (currently always zero) for potential future use.
+//   - An error if interest calculation fails or input is invalid.
+func CalculatePeriods(vaultReserves sdk.Coin, principal sdk.Coin, rate string, periodSeconds int64) (int64, int64, error) {
+	remainingReserves := vaultReserves
+	currentPrincipal := principal // P
+	var periods int64
+	for {
+		interest, err := CalculateInterestEarned(currentPrincipal, rate, periodSeconds)
+		if err != nil {
+			return 0, 0, fmt.Errorf("failed to calculate interest for period %d: %w", periods+1, err)
+		}
+		if interest.IsZero() || remainingReserves.IsLT(interest) {
+			break
+		}
+		remainingReserves = remainingReserves.Sub(interest)
+		currentPrincipal = currentPrincipal.Add(interest)
+		periods++
+	}
+	return periods, 0, nil
 }

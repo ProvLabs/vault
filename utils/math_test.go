@@ -294,5 +294,4 @@ func TestExpDecConvergenceToE(t *testing.T) {
 
 	require.True(t, matched, "did not converge to math.E within %g tolerance", tolerance)
 	t.Logf("Matched math.E (%.20f) with %d terms: %.20f", target, termsUsed, closest)
-
 }

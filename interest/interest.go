@@ -17,7 +17,7 @@ type Period struct {
 const (
 	SecondsPerYear = 31_536_000
 	// TODO Can we pass this in instead of hardcoding it
-	EulerPrecision = 18
+	EulerPrecision = 17
 )
 
 // CalculateInterestEarned computes the continuously compounded interest for a given principal over a period.
@@ -59,7 +59,6 @@ func CalculateInterestEarned(principal sdk.Coin, rate string, periodSeconds int6
 
 	// Truncate to an integer amount for the coin, as coins cannot have fractional parts.
 	interestAmountInt := interestAmountDec.TruncateInt()
-
 	return sdk.NewCoin(principal.Denom, interestAmountInt), nil
 }
 

@@ -417,6 +417,7 @@ func (m *EventSwapOut) GetVaultAddress() string {
 	return ""
 }
 
+// EventVaultInterestPeriodStart is an event emitted when an interest period starts for a vault.
 type EventVaultInterestPeriodStart struct {
 	// vault_address is the bech32 address of the vault.
 	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
@@ -471,6 +472,7 @@ func (m *EventVaultInterestPeriodStart) GetPeriod() InterestPeriod {
 	return InterestPeriod{}
 }
 
+// EventVaultInterestPeriodStop is an event emitted when an interest period stops for a vault.
 type EventVaultInterestPeriodStop struct {
 	// vault_address is the bech32 address of the vault.
 	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
@@ -525,6 +527,7 @@ func (m *EventVaultInterestPeriodStop) GetPeriod() InterestPeriod {
 	return InterestPeriod{}
 }
 
+// EventInterestEarned is an event emitted when interest is earned for a vault.
 type EventInterestEarned struct {
 	// vault_address is the bech32 address of the vault.
 	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`

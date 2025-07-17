@@ -5212,6 +5212,7 @@ func (x *EventSwapOut) GetVaultAddress() string {
 	return ""
 }
 
+// EventVaultInterestPeriodStart is an event emitted when an interest period starts for a vault.
 type EventVaultInterestPeriodStart struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -5257,6 +5258,7 @@ func (x *EventVaultInterestPeriodStart) GetPeriod() *InterestPeriod {
 	return nil
 }
 
+// EventVaultInterestPeriodStop is an event emitted when an interest period stops for a vault.
 type EventVaultInterestPeriodStop struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -5302,6 +5304,7 @@ func (x *EventVaultInterestPeriodStop) GetPeriod() *InterestPeriod {
 	return nil
 }
 
+// EventInterestEarned is an event emitted when interest is earned for a vault.
 type EventInterestEarned struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

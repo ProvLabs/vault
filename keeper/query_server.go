@@ -111,6 +111,8 @@ func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstim
 	// Include Block height and time
 	return &types.QueryEstimateSwapInResponse{
 		Assets: estimatedShares,
+		Height: ctx.BlockHeight(),
+		Time:   ctx.BlockTime().UTC(),
 	}, nil
 }
 
@@ -154,6 +156,8 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 	// Include block height and time
 	return &types.QueryEstimateSwapOutResponse{
 		Assets: estimatedAssets,
+		Height: ctx.BlockHeight(),
+		Time:   ctx.BlockTime().UTC(),
 	}, nil
 }
 

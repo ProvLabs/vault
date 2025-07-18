@@ -4,11 +4,14 @@ import (
 	"errors"
 	"fmt"
 
-	"cosmossdk.io/collections"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provlabs/vault/interest"
 	"github.com/provlabs/vault/types"
+
+	"cosmossdk.io/collections"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 // reconcileVaultInterest processes any accrued interest for a vault since its last pay period start.

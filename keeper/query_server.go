@@ -2,17 +2,13 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/provlabs/vault/types"
-	"github.com/provlabs/vault/utils"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 var _ types.QueryServer = &queryServer{}
@@ -138,17 +134,22 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 		return nil, status.Errorf(codes.InvalidArgument, "asset denom %s does not match vault share denom %s", req.Assets.Denom, vault.ShareDenom)
 	}
 
-	markerAddr := markertypes.MustGetMarkerAddress(vault.ShareDenom)
-	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
-	totalAssets := k.BankKeeper.GetBalance(ctx, markerAddr, vault.UnderlyingAssets[0]).Amount
-	estimatedAssets, err := utils.CalculateAssetsFromShares(req.Assets.Amount, totalShares, totalAssets, vault.UnderlyingAssets[0])
-	if err != nil {
-		return nil, fmt.Errorf("failed to calculate assets from shares: %w", err)
-	}
+	// Possible way to estimate shares
+	/*
+			markerAddr := markertypes.MustGetMarkerAddress(vault.ShareDenom)
+		totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
+		totalAssets := k.BankKeeper.GetBalance(ctx, markerAddr, vault.UnderlyingAssets[0]).Amount
+		estimatedAssets, err := utils.CalculateAssetsFromShares(req.Assets.Amount, totalShares, totalAssets, vault.UnderlyingAssets[0])
+		if err != nil {
+			return nil, fmt.Errorf("failed to calculate assets from shares: %w", err)
+		}
 
-	if err := estimatedAssets.Validate(); err != nil {
-		return nil, err
-	}
+		if err := estimatedAssets.Validate(); err != nil {
+			return nil, err
+		}
+	*/
+
+	estimatedAssets := sdk.NewCoin(vault.UnderlyingAssets[0], req.Assets.Amount)
 
 	return &types.QueryEstimateSwapOutResponse{
 		Assets: estimatedAssets,

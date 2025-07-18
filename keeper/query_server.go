@@ -2,13 +2,17 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/provlabs/vault/types"
+	"github.com/provlabs/vault/utils"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 var _ types.QueryServer = &queryServer{}
@@ -102,10 +106,19 @@ func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstim
 		return nil, status.Errorf(codes.InvalidArgument, "invalid asset for vault: %v", err)
 	}
 
-	estimatedShares := sdk.NewCoin(vault.ShareDenom, req.Assets.Amount)
+	markerAddr := markertypes.MustGetMarkerAddress(vault.ShareDenom)
+	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
+	totalAssets := k.BankKeeper.GetBalance(ctx, markerAddr, vault.UnderlyingAssets[0]).Amount
+
+	estimatedShares, err := utils.CalculateSharesFromAssets(req.Assets.Amount, totalAssets, totalShares, vault.ShareDenom)
+	if err != nil {
+		return nil, fmt.Errorf("failed to calculate shares from assets: %w", err)
+	}
 
 	return &types.QueryEstimateSwapInResponse{
 		Assets: estimatedShares,
+		Height: ctx.BlockHeight(),
+		Time:   ctx.BlockTime().UTC(),
 	}, nil
 }
 
@@ -134,10 +147,18 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 		return nil, status.Errorf(codes.InvalidArgument, "asset denom %s does not match vault share denom %s", req.Assets.Denom, vault.ShareDenom)
 	}
 
-	estimatedAssets := sdk.NewCoin(vault.UnderlyingAssets[0], req.Assets.Amount)
+	markerAddr := markertypes.MustGetMarkerAddress(vault.ShareDenom)
+	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
+	totalAssets := k.BankKeeper.GetBalance(ctx, markerAddr, vault.UnderlyingAssets[0]).Amount
+	estimatedAssets, err := utils.CalculateAssetsFromShares(req.Assets.Amount, totalShares, totalAssets, vault.UnderlyingAssets[0])
+	if err != nil {
+		return nil, fmt.Errorf("failed to calculate assets from shares: %w", err)
+	}
 
 	return &types.QueryEstimateSwapOutResponse{
 		Assets: estimatedAssets,
+		Height: ctx.BlockHeight(),
+		Time:   ctx.BlockTime().UTC(),
 	}, nil
 }
 

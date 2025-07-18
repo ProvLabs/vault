@@ -106,9 +106,15 @@ func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstim
 		return nil, status.Errorf(codes.InvalidArgument, "invalid asset for vault: %v", err)
 	}
 
-	estimatedShares := sdk.NewCoin(vault.ShareDenom, req.Assets.Amount)
+	markerAddr := markertypes.MustGetMarkerAddress(vault.ShareDenom)
+	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
+	totalAssets := k.BankKeeper.GetBalance(ctx, markerAddr, vault.UnderlyingAssets[0]).Amount
 
-	// Include Block height and time
+	estimatedShares, err := utils.CalculateSharesFromAssets(req.Assets.Amount, totalAssets, totalShares, vault.ShareDenom)
+	if err != nil {
+		return nil, fmt.Errorf("failed to calculate shares from assets: %w", err)
+	}
+
 	return &types.QueryEstimateSwapInResponse{
 		Assets: estimatedShares,
 		Height: ctx.BlockHeight(),
@@ -149,11 +155,6 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 		return nil, fmt.Errorf("failed to calculate assets from shares: %w", err)
 	}
 
-	if err := estimatedAssets.Validate(); err != nil {
-		return nil, err
-	}
-
-	// Include block height and time
 	return &types.QueryEstimateSwapOutResponse{
 		Assets: estimatedAssets,
 		Height: ctx.BlockHeight(),

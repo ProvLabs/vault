@@ -61,10 +61,9 @@ func NewEventSwapOut(vaultAddress, owner string, assets, shares sdk.Coin) *Event
 
 // NewEventVaultReconcile creates a new EventVaultReconcile.
 func NewEventVaultReconcile(vaultAddress string, reconcileTime time.Time, principal sdk.Coin, rate string, time int64, interestEarned sdk.Coin) *EventVaultReconcile {
-	utc := reconcileTime.UTC()
 	return &EventVaultReconcile{
 		VaultAddress:   vaultAddress,
-		ReconcileTime:  &utc,
+		ReconcileTime:  reconcileTime.UTC(),
 		Principal:      principal,
 		Rate:           rate,
 		Time:           time,

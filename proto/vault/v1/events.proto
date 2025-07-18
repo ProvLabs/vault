@@ -81,7 +81,7 @@ message EventVaultReconcile {
   // reconcile_time is the UTC time at which the vault was reconciled.
   google.protobuf.Timestamp reconcile_time = 2 [
     (gogoproto.stdtime) = true,
-    (gogoproto.nullable) = true
+    (gogoproto.nullable) = false
   ];
   // principal is the principal amount at the time of the reconcile.
   cosmos.base.v1beta1.Coin principal = 3 [(gogoproto.nullable) = false];

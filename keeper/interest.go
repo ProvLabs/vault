@@ -17,7 +17,8 @@ import (
 // reconcileVaultInterest processes any accrued interest for a vault since its last pay period start.
 // If interest is due, it transfers funds from the vault to the marker module and resets the pay period.
 func (k *Keeper) reconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccount) error {
-	now := ctx.BlockTime().Unix()
+	blocktime := ctx.BlockTime()
+	now := blocktime.Unix()
 
 	interestDetails, err := k.VaultInterestDetails.Get(ctx, vault.GetAddress())
 	if err != nil {
@@ -60,6 +61,15 @@ func (k *Keeper) reconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccou
 	); err != nil {
 		return fmt.Errorf("failed to pay interest: %w", err)
 	}
+
+	k.emitEvent(ctx, types.NewEventVaultReconcile(
+		vault.GetAddress().String(),
+		blocktime,
+		principal,
+		vault.InterestRate,
+		duration,
+		interestEarned,
+	))
 
 	return k.VaultInterestDetails.Set(ctx, vault.GetAddress(), types.VaultInterestDetails{
 		PeriodStart: now,

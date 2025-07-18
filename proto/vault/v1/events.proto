@@ -74,53 +74,21 @@ message EventSwapOut {
   string vault_address = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
-// EventVaultInterestPeriodStart is an event emitted when an interest period starts for a vault.
-message EventVaultInterestPeriodStart {
+// EventVaultReconcile is an event emitted when a vault is reconciled.
+message EventVaultReconcile {
   // vault_address is the bech32 address of the vault.
   string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // principal is the initial amount of principal.
-  cosmos.base.v1beta1.Coin principal = 2 [(gogoproto.nullable) = false];
-  // rate is the interest rate for the period.
-  string rate = 3;
-  // time is the payout time in seconds.
-  int64 time = 4;
-  // start_time is the time when the interest period started.
-  google.protobuf.Timestamp start_time = 5 [
+  // reconcile_time is the UTC time at which the vault was reconciled.
+  google.protobuf.Timestamp reconcile_time = 2 [
     (gogoproto.stdtime) = true,
     (gogoproto.nullable) = true
   ];
-  // estimated_end_time is the estimated time when the interest period will end.
-  google.protobuf.Timestamp estimated_end_time = 6 [
-    (gogoproto.stdtime) = true,
-    (gogoproto.nullable) = true
-  ];
-}
-
-// EventVaultInterestPeriodStop is an event emitted when an interest period stops for a vault.
-message EventVaultInterestPeriodStop {
-  // vault_address is the bech32 address of the vault.
-  string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // principal is the principal amount at the time of the reconcile.
+  cosmos.base.v1beta1.Coin principal = 3 [(gogoproto.nullable) = false];
   // rate is the interest rate for the period.
-  string rate = 2;
+  string rate = 4;
   // time is the payout time in seconds.
-  int64 time = 3;
-  // end_time is the time when the interest period ended.
-  google.protobuf.Timestamp end_time = 4 [
-    (gogoproto.stdtime) = true,
-    (gogoproto.nullable) = true
-  ];
-}
-
-// EventInterestEarned is an event emitted when interest is earned for a vault.
-message EventInterestEarned {
-  // vault_address is the bech32 address of the vault.
-  string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // principal is the principal the interest was earned on.
-  cosmos.base.v1beta1.Coin principal = 2 [(gogoproto.nullable) = false];
-  // rate is the interest rate for the period.
-  string rate = 3;
-  // time is the payout time in seconds.
-  int64 time = 4;
-  // interest_earned is the amount of interest earned.
-  cosmos.base.v1beta1.Coin interest_earned = 5 [(gogoproto.nullable) = false];
+  int64 time = 5;
+  // interest_earned is the total interest earned during the time of the reconcile.
+  cosmos.base.v1beta1.Coin interest_earned = 6 [(gogoproto.nullable) = false];
 }

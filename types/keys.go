@@ -3,8 +3,10 @@ package types
 import (
 	fmt "fmt"
 
-	"cosmossdk.io/collections"
 	"github.com/cometbft/cometbft/crypto"
+
+	"cosmossdk.io/collections"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 

@@ -131,6 +131,24 @@ func TestCalculateExpiration(t *testing.T) {
 			expected:      startTime + 60,
 		},
 		{
+			name:          "TODO Fix - period limit interrupts expiration calculation",
+			principal:     sdk.NewCoin(denom, sdkmath.NewInt(100)),
+			reserves:      sdk.NewCoin(denom, sdkmath.NewInt(1_000_000)),
+			rate:          "1.0",
+			periodSeconds: interest.CalculatePeriodsLimit / 2,
+			startTime:     startTime,
+			expected:      startTime + interest.CalculatePeriodsLimit,
+		},
+		{
+			name:          "TODO Fix - never accrues interest when exceeding period limit",
+			principal:     sdk.NewCoin(denom, sdkmath.NewInt(100)),
+			reserves:      sdk.NewCoin(denom, sdkmath.NewInt(1_000_000)),
+			rate:          "1.0",
+			periodSeconds: interest.CalculatePeriodsLimit + 1,
+			startTime:     startTime,
+			expected:      startTime,
+		},
+		{
 			name:           "errors with denom mismatch",
 			principal:      sdk.NewCoin("foo", sdkmath.NewInt(1000)),
 			reserves:       sdk.NewCoin("bar", sdkmath.NewInt(1000)),
@@ -183,6 +201,7 @@ func TestCalculatePeriodsExtremes(t *testing.T) {
 		vaultReserves sdk.Coin
 		rate          string
 		periodSeconds int64
+		limit         int64
 	}{
 		{
 			name:          "average values",
@@ -190,6 +209,7 @@ func TestCalculatePeriodsExtremes(t *testing.T) {
 			vaultReserves: sdk.NewCoin(denom, sdkmath.NewInt(500_000)),
 			rate:          "0.05",
 			periodSeconds: 86400, // 1 day
+			limit:         interest.CalculatePeriodsNoLimit,
 		},
 		{
 			name:          "very high values, 1 day",
@@ -197,6 +217,7 @@ func TestCalculatePeriodsExtremes(t *testing.T) {
 			vaultReserves: sdk.NewCoin(denom, sdkmath.NewInt(10_000_000_000)),
 			rate:          "0.08",
 			periodSeconds: 86400,
+			limit:         interest.CalculatePeriodsNoLimit,
 		},
 		{
 			name:          "very high values, 1 hour",
@@ -204,6 +225,7 @@ func TestCalculatePeriodsExtremes(t *testing.T) {
 			vaultReserves: sdk.NewCoin(denom, sdkmath.NewInt(10_000_000_000)),
 			rate:          "0.08",
 			periodSeconds: 3600, // 1 hour
+			limit:         interest.CalculatePeriodsNoLimit,
 		},
 		{
 			name:          "very high values, 1 minute",
@@ -211,6 +233,7 @@ func TestCalculatePeriodsExtremes(t *testing.T) {
 			vaultReserves: sdk.NewCoin(denom, sdkmath.NewInt(10_000_000_000)),
 			rate:          "0.08",
 			periodSeconds: 60, // 1 week
+			limit:         interest.CalculatePeriodsNoLimit,
 		},
 		{
 			name:          "very high values, 5 seconds",
@@ -218,6 +241,7 @@ func TestCalculatePeriodsExtremes(t *testing.T) {
 			vaultReserves: sdk.NewCoin(denom, sdkmath.NewInt(10_000_000_000)),
 			rate:          "0.08",
 			periodSeconds: 5, // 1 week
+			limit:         interest.CalculatePeriodsNoLimit,
 		},
 		{
 			name:          "maximum values",
@@ -225,6 +249,7 @@ func TestCalculatePeriodsExtremes(t *testing.T) {
 			vaultReserves: sdk.NewCoin(denom, sdkmath.NewIntFromUint64(^uint64(0))),
 			rate:          "1.0",
 			periodSeconds: 86400,
+			limit:         interest.CalculatePeriodsNoLimit,
 		},
 		{
 			name:          "maximum values, 1 hour",
@@ -232,6 +257,7 @@ func TestCalculatePeriodsExtremes(t *testing.T) {
 			vaultReserves: sdk.NewCoin(denom, sdkmath.NewIntFromUint64(^uint64(0))),
 			rate:          "1.0",
 			periodSeconds: 3600,
+			limit:         interest.CalculatePeriodsNoLimit,
 		},
 		{
 			name:          "maximum values, 1 minute",
@@ -239,6 +265,7 @@ func TestCalculatePeriodsExtremes(t *testing.T) {
 			vaultReserves: sdk.NewCoin(denom, sdkmath.NewIntFromUint64(^uint64(0))),
 			rate:          "1.0",
 			periodSeconds: 60,
+			limit:         interest.CalculatePeriodsNoLimit,
 		},
 		{
 			name:          "maximum values, 5 seconds",
@@ -246,6 +273,7 @@ func TestCalculatePeriodsExtremes(t *testing.T) {
 			vaultReserves: sdk.NewCoin(denom, sdkmath.NewIntFromUint64(^uint64(0))),
 			rate:          "1.0",
 			periodSeconds: 5,
+			limit:         interest.CalculatePeriodsNoLimit,
 		},
 	}
 
@@ -253,7 +281,7 @@ func TestCalculatePeriodsExtremes(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			start := time.Now()
 
-			periods, _, err := interest.CalculatePeriods(tc.vaultReserves, tc.principal, tc.rate, tc.periodSeconds)
+			periods, _, err := interest.CalculatePeriods(tc.vaultReserves, tc.principal, tc.rate, tc.periodSeconds, tc.limit)
 			elapsed := time.Since(start)
 
 			if err != nil {

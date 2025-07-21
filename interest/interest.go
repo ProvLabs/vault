@@ -11,11 +11,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-type Period struct {
-}
-
 const (
-	SecondsPerYear = 31_536_000
+	SecondsPerDay   = 86_400
+	SecondsPerMonth = 2_628_000
+	SecondsPerYear  = 31_536_000
+
+	// TODO What should this value be, and does it need to be hardcoded?
+	CalculatePeriodsLimit   = 2 * SecondsPerMonth
+	CalculatePeriodsNoLimit = 0
+
 	// TODO Can we pass this in instead of hardcoding it
 	EulerPrecision = 15
 )
@@ -104,7 +108,8 @@ func CalculateExpiration(principal sdk.Coin, vaultReserves sdk.Coin, rate string
 	}
 
 	// Iteratively calculate interest until the vault is depleted.
-	periods, i, err := CalculatePeriods(vaultReserves, principal, rate, periodSeconds)
+	// TODO Change this to an appropriate limit. Have it set as NoLimit for now to follow previous behavior.
+	periods, i, err := CalculatePeriods(vaultReserves, principal, rate, periodSeconds, CalculatePeriodsNoLimit)
 	if err != nil {
 		return i, err
 	}
@@ -136,16 +141,18 @@ func CalculateExpiration(principal sdk.Coin, vaultReserves sdk.Coin, rate string
 //   - principal: The initial amount earning interest.
 //   - rate: The annual interest rate (as a string, e.g. "0.05" for 5%).
 //   - periodSeconds: The length of each compounding period in seconds.
+//   - limit: The maximum total duration in seconds to simulate. The simulation stops if `periods * periodSeconds` would exceed this limit. A limit of 0 means no limit.
 //
 // Returns:
 //   - The number of full compounding periods the reserves can cover.
 //   - A placeholder value (currently always zero) for potential future use.
 //   - An error if interest calculation fails or input is invalid.
-func CalculatePeriods(vaultReserves sdk.Coin, principal sdk.Coin, rate string, periodSeconds int64) (int64, int64, error) {
+func CalculatePeriods(vaultReserves sdk.Coin, principal sdk.Coin, rate string, periodSeconds int64, limit int64) (int64, int64, error) {
 	remainingReserves := vaultReserves
 	currentPrincipal := principal // P
 	var periods int64
-	for {
+	var totalDuration int64
+	for limit == CalculatePeriodsNoLimit || totalDuration <= limit-periodSeconds {
 		interest, err := CalculateInterestEarned(currentPrincipal, rate, periodSeconds)
 		if err != nil {
 			return 0, 0, fmt.Errorf("failed to calculate interest for period %d: %w", periods+1, err)
@@ -156,6 +163,7 @@ func CalculatePeriods(vaultReserves sdk.Coin, principal sdk.Coin, rate string, p
 		remainingReserves = remainingReserves.Sub(interest)
 		currentPrincipal = currentPrincipal.Add(interest)
 		periods++
+		totalDuration += periodSeconds
 	}
 	return periods, 0, nil
 }

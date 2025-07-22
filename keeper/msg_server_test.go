@@ -2,8 +2,6 @@ package keeper_test
 
 import (
 	"context"
-	"fmt"
-	"strings"
 	"time"
 
 	"cosmossdk.io/math"
@@ -491,47 +489,6 @@ func (s *TestSuite) TestMsgServer_SwapOut_Failures() {
 	}
 }
 
-func createReceiveCoinsEvents(fromAddress, amount string) sdk.Events {
-	events := sdk.NewEventManager().Events()
-	events = events.AppendEvent(sdk.NewEvent(
-		banktypes.EventTypeCoinReceived,
-		sdk.NewAttribute(banktypes.AttributeKeyReceiver, fromAddress),
-		sdk.NewAttribute(sdk.AttributeKeyAmount, amount),
-	))
-	events = events.AppendEvent(sdk.NewEvent(
-		banktypes.EventTypeCoinMint,
-		sdk.NewAttribute(banktypes.AttributeKeyMinter, fromAddress),
-		sdk.NewAttribute(sdk.AttributeKeyAmount, amount),
-	))
-	return events
-}
-
-func createSendCoinEvents(fromAddress, toAddress string, amount string) []sdk.Event {
-	events := sdk.NewEventManager().Events()
-	events = events.AppendEvent(sdk.NewEvent(
-		banktypes.EventTypeCoinSpent,
-		sdk.NewAttribute(banktypes.AttributeKeySpender, fromAddress),
-		sdk.NewAttribute(sdk.AttributeKeyAmount, amount),
-	))
-	events = events.AppendEvent(sdk.NewEvent(
-		banktypes.EventTypeCoinReceived,
-		sdk.NewAttribute(banktypes.AttributeKeyReceiver, toAddress),
-		sdk.NewAttribute(sdk.AttributeKeyAmount, amount),
-	))
-	events = events.AppendEvent(sdk.NewEvent(
-		banktypes.EventTypeTransfer,
-		sdk.NewAttribute(banktypes.AttributeKeyRecipient, toAddress),
-		sdk.NewAttribute(banktypes.AttributeKeySender, fromAddress),
-		sdk.NewAttribute(sdk.AttributeKeyAmount, amount),
-	))
-	events = events.AppendEvent(sdk.NewEvent(
-		"message",
-		sdk.NewAttribute(banktypes.AttributeKeySender, fromAddress),
-	))
-
-	return events
-}
-
 // createMarkerMintCoinEvents creates events for minting a coin and sending it to a recipient.
 func createMarkerMintCoinEvents(markerModule, admin, recipient sdk.AccAddress, coin sdk.Coin) []sdk.Event {
 	events := createReceiveCoinsEvents(markerModule.String(), sdk.NewCoins(coin).String())
@@ -658,10 +615,6 @@ func createSwapInEvents(owner, vaultAddr, markerAddr sdk.AccAddress, asset, shar
 	return allEvents
 }
 
-func CoinToJSON(coin sdk.Coin) string {
-	return fmt.Sprintf("{\"denom\":\"%s\",\"amount\":\"%s\"}", coin.Denom, coin.Amount.String())
-}
-
 // msgServerTestDef defines the configuration for testing a specific MsgServer endpoint.
 // Req is the request message type.
 // Resp is the expected response message type.
@@ -731,41 +684,4 @@ func runMsgServerTestCase[Req any, Resp any, CheckArgs any](
 	)
 
 	td.postCheck(&tc.msg, tc.postCheckArgs)
-}
-
-func normalizeEvents(events sdk.Events) sdk.Events {
-	for i := range events {
-		for j := range events[i].Attributes {
-			events[i].Attributes[j].Value = strings.Trim(events[i].Attributes[j].Value, `"`)
-		}
-	}
-	return events
-}
-
-// requireAddFinalizeAndActivateMarker creates a restricted marker, requiring it to not error.
-func (s *TestSuite) requireAddFinalizeAndActivateMarker(coin sdk.Coin, manager sdk.AccAddress, reqAttrs ...string) {
-	markerAddr, err := markertypes.MarkerAddress(coin.Denom)
-	s.Require().NoError(err, "MarkerAddress(%q)", coin.Denom)
-	marker := &markertypes.MarkerAccount{
-		BaseAccount: &authtypes.BaseAccount{Address: markerAddr.String()},
-		Manager:     manager.String(),
-		AccessControl: []markertypes.AccessGrant{
-			{
-				Address: manager.String(),
-				Permissions: markertypes.AccessList{
-					markertypes.Access_Mint, markertypes.Access_Burn,
-					markertypes.Access_Deposit, markertypes.Access_Withdraw, markertypes.Access_Delete,
-				},
-			},
-		},
-		Status:                 markertypes.StatusProposed,
-		Denom:                  coin.Denom,
-		Supply:                 coin.Amount,
-		MarkerType:             markertypes.MarkerType_Coin,
-		SupplyFixed:            true,
-		AllowGovernanceControl: false,
-		RequiredAttributes:     reqAttrs,
-	}
-	err = s.simApp.MarkerKeeper.AddFinalizeAndActivateMarker(s.ctx, marker)
-	s.Require().NoError(err, "AddFinalizeAndActivateMarker(%s)", coin.Denom)
 }

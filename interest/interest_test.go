@@ -219,7 +219,7 @@ func TestCalculateExpiration(t *testing.T) {
 }
 
 func TestCalculatePeriodsExtremes(t *testing.T) {
-	// t.Skip("Skipping this test temporarily")
+	t.Skip("Skipping test, used to explore edge cases")
 	denom := "stake"
 
 	tests := []struct {

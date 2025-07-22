@@ -8,6 +8,7 @@ import (
 	"github.com/provlabs/vault/types"
 
 	"cosmossdk.io/collections"
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -90,4 +91,32 @@ func (k *Keeper) ReconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccou
 	return k.VaultInterestDetails.Set(ctx, vault.GetAddress(), types.VaultInterestDetails{
 		PeriodStart: now,
 	})
+}
+
+func (k Keeper) EstimateVaultTotalAssets(ctx sdk.Context, vault *types.VaultAccount, totalAssets sdk.Coin) (sdkmath.Int, error) {
+	estimated := totalAssets.Amount
+
+	if vault.InterestRate == "" {
+		return estimated, nil
+	}
+
+	interestDetails, err := k.VaultInterestDetails.Get(ctx, vault.GetAddress())
+	if err != nil {
+		if !errors.Is(err, collections.ErrNotFound) {
+			return sdkmath.Int{}, fmt.Errorf("error getting interest details: %w", err)
+		}
+		return estimated, nil
+	}
+
+	duration := ctx.BlockTime().Unix() - interestDetails.PeriodStart
+	if duration <= 0 {
+		return estimated, nil
+	}
+
+	interestEarned, err := interest.CalculateInterestEarned(totalAssets, vault.InterestRate, duration)
+	if err != nil {
+		return sdkmath.Int{}, fmt.Errorf("error calculating interest: %w", err)
+	}
+
+	return estimated.Add(interestEarned), nil
 }

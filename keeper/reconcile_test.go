@@ -155,3 +155,94 @@ func createReconcileEvents(vaultAddr, markerAddr sdk.AccAddress, interest, princ
 	allEvents = append(allEvents, reconcileEvent)
 	return allEvents
 }
+
+func (s *TestSuite) TestKeeper_EstimateVaultTotalAssets() {
+	shareDenom := "vaultshares"
+	underlying := sdk.NewInt64Coin("underlying", 1_000_000_000)
+	vaultAddress := types.GetVaultAddress(shareDenom)
+	testBlockTime := time.Now()
+	pastTime := testBlockTime.Add(-60 * 24 * time.Hour) // ~2 months
+
+	setup := func(interestRate string, periodStartSeconds int64) *types.VaultAccount {
+		s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           s.adminAddr.String(),
+			ShareDenom:      shareDenom,
+			UnderlyingAsset: underlying.Denom,
+		})
+		s.Require().NoError(err)
+
+		vault, err := s.k.GetVault(s.ctx, vaultAddress)
+		s.Require().NoError(err)
+		vault.InterestRate = interestRate
+		s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+		if periodStartSeconds != 0 {
+			s.Require().NoError(s.k.VaultInterestDetails.Set(s.ctx, vaultAddress, types.VaultInterestDetails{
+				PeriodStart: periodStartSeconds,
+			}))
+		}
+		s.ctx = s.ctx.WithBlockTime(testBlockTime)
+		return vault
+	}
+
+	tests := []struct {
+		name             string
+		rate             string
+		startTime        int64
+		expectedIncrease sdkmath.Int
+		expectErr        bool
+	}{
+		{
+			name:             "no interest rate set",
+			rate:             "",
+			startTime:        pastTime.Unix(),
+			expectedIncrease: sdkmath.NewInt(1_000_000_000),
+		},
+		{
+			name:             "zero interest rate",
+			rate:             "0.0",
+			startTime:        pastTime.Unix(),
+			expectedIncrease: sdkmath.NewInt(1_000_000_000),
+		},
+		{
+			name:             "no start time",
+			rate:             "1.0",
+			startTime:        0,
+			expectedIncrease: sdkmath.NewInt(1_000_000_000),
+		},
+		{
+			name:             "interest accrues positively",
+			rate:             "0.25",
+			startTime:        pastTime.Unix(),
+			expectedIncrease: sdkmath.NewInt(1_041_952_013),
+		},
+		{
+			name:             "negative interest accrues",
+			rate:             "-0.25",
+			startTime:        pastTime.Unix(),
+			expectedIncrease: sdkmath.NewInt(959_737_096),
+		},
+		{
+			name:             "period in future returns original amount",
+			rate:             "0.25",
+			startTime:        testBlockTime.Add(100 * time.Second).Unix(),
+			expectedIncrease: sdkmath.NewInt(1_000_000_000),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			vault := setup(tc.rate, tc.startTime)
+			est, err := s.k.EstimateVaultTotalAssets(s.ctx, vault, underlying)
+
+			if tc.expectErr {
+				s.Require().Error(err)
+			} else {
+				s.Require().NoError(err)
+				s.Require().Equal(tc.expectedIncrease, est)
+			}
+		})
+	}
+}

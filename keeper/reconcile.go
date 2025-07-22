@@ -93,6 +93,13 @@ func (k *Keeper) ReconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccou
 	})
 }
 
+// EstimateVaultTotalAssets returns the estimated total value of the vault's assets,
+// including any interest that would have accrued since the last interest period start.
+// This is used to simulate the value of earned interest as if a reconciliation had occurred
+// at the current block time, without modifying state or transferring funds.
+//
+// If no interest rate is set or if the vault has not yet begun accruing interest,
+// the original total asset amount is returned unmodified.
 func (k Keeper) EstimateVaultTotalAssets(ctx sdk.Context, vault *types.VaultAccount, totalAssets sdk.Coin) (sdkmath.Int, error) {
 	estimated := totalAssets.Amount
 

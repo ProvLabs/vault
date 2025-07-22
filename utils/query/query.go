@@ -72,7 +72,7 @@ func RunTestCase[R any, S any](s TestSuiter, td TestDef[R, S], tc TestCase[R, S]
 		if td.ManualEquality != nil {
 			td.ManualEquality(s, tc.ExpectedResp, resp)
 		} else {
-			s.Assert().Equalf(tc.ExpectedResp, resp, "%s response", td.QueryName)
+			s.Assert().Equalf(tc.ExpectedResp, resp, "%s response does not match expected: %v actual: %v", td.QueryName, tc.ExpectedResp, resp)
 		}
 	} else {
 		s.Assert().Errorf(err, "%s error", td.QueryName)

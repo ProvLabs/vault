@@ -2,8 +2,13 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"cosmossdk.io/collections"
+	sdkmath "cosmossdk.io/math"
+
+	"github.com/provlabs/vault/interest"
 	"github.com/provlabs/vault/types"
 	"github.com/provlabs/vault/utils"
 	"google.golang.org/grpc/codes"
@@ -108,9 +113,14 @@ func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstim
 
 	markerAddr := markertypes.MustGetMarkerAddress(vault.ShareDenom)
 	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
-	totalAssets := k.BankKeeper.GetBalance(ctx, markerAddr, vault.UnderlyingAssets[0]).Amount
+	totalAssets := k.BankKeeper.GetBalance(ctx, markerAddr, vault.UnderlyingAssets[0])
 
-	estimatedShares, err := utils.CalculateSharesFromAssets(req.Assets.Amount, totalAssets, totalShares, vault.ShareDenom)
+	estimatedTotalAssets, err := k.EstimateVaultTotalAssets(ctx, vault, totalAssets)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to estimate total assets: %v", err)
+	}
+
+	estimatedShares, err := utils.CalculateSharesFromAssets(req.Assets.Amount, estimatedTotalAssets, totalShares, vault.ShareDenom)
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate shares from assets: %w", err)
 	}
@@ -120,6 +130,34 @@ func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstim
 		Height: ctx.BlockHeight(),
 		Time:   ctx.BlockTime().UTC(),
 	}, nil
+}
+
+func (k Keeper) EstimateVaultTotalAssets(ctx sdk.Context, vault *types.VaultAccount, totalAssets sdk.Coin) (sdkmath.Int, error) {
+	estimated := totalAssets.Amount
+
+	if vault.InterestRate == "" {
+		return estimated, nil
+	}
+
+	interestDetails, err := k.VaultInterestDetails.Get(ctx, vault.GetAddress())
+	if err != nil {
+		if !errors.Is(err, collections.ErrNotFound) {
+			return sdkmath.Int{}, fmt.Errorf("error getting interest details: %w", err)
+		}
+		return estimated, nil
+	}
+
+	duration := ctx.BlockTime().Unix() - interestDetails.PeriodStart
+	if duration <= 0 {
+		return estimated, nil
+	}
+
+	interestEarned, err := interest.CalculateInterestEarned(totalAssets, vault.InterestRate, duration)
+	if err != nil {
+		return sdkmath.Int{}, fmt.Errorf("error calculating interest: %w", err)
+	}
+
+	return estimated.Add(interestEarned), nil
 }
 
 // EstimateSwapOut estimates the amount of underlying assets that would be received for a given amount of shares.
@@ -149,8 +187,14 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 
 	markerAddr := markertypes.MustGetMarkerAddress(vault.ShareDenom)
 	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
-	totalAssets := k.BankKeeper.GetBalance(ctx, markerAddr, vault.UnderlyingAssets[0]).Amount
-	estimatedAssets, err := utils.CalculateAssetsFromShares(req.Assets.Amount, totalShares, totalAssets, vault.UnderlyingAssets[0])
+	totalAssets := k.BankKeeper.GetBalance(ctx, markerAddr, vault.UnderlyingAssets[0])
+
+	estimatedTotalAssets, err := k.EstimateVaultTotalAssets(ctx, vault, totalAssets)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to estimate total assets: %v", err)
+	}
+
+	estimatedAssets, err := utils.CalculateAssetsFromShares(req.Assets.Amount, totalShares, estimatedTotalAssets, vault.UnderlyingAssets[0])
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate assets from shares: %w", err)
 	}

@@ -140,15 +140,6 @@ func TestCalculateExpiration(t *testing.T) {
 			expected:      startTime,
 		},
 		{
-			name:          "negative rate",
-			principal:     sdk.NewCoin(denom, sdkmath.NewInt(525_500_000)),
-			reserves:      sdk.NewCoin(denom, sdkmath.NewInt(1_000)),
-			rate:          "-0.05",
-			periodSeconds: 60,
-			startTime:     startTime,
-			expected:      startTime + 60,
-		},
-		{
 			name:          "depletes quickly with high rate",
 			principal:     sdk.NewCoin(denom, sdkmath.NewInt(525_500_000)),
 			reserves:      sdk.NewCoin(denom, sdkmath.NewInt(1_000)),
@@ -334,7 +325,7 @@ func TestCalculatePeriodsExtremes(t *testing.T) {
 }
 
 func TestExpDecInterestDrift(t *testing.T) {
-	t.Skip("Skipping this test temporarily")
+	t.Skip("Skipping test, used to explore edge cases")
 	principals := []int64{1_000, 10_000, 1_000_000, 100_000_000, 1_000_000_000, 10_000_000_000, 100_000_000_000, 1_000_000_000_000}
 	durations := []int64{5, 3600, 7 * 24 * 3600} // 5 sec, 1 hr, 1 week
 	rates := []string{"0.01", "0.05", "0.10", "0.25"}

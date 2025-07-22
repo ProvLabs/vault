@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -238,9 +239,9 @@ func (s *TestSuite) TestMsgServer_SwapIn() {
 	tc := msgServerTestCase[types.MsgSwapInRequest, postCheckArgs]{
 		name: "happy path",
 		setup: func() {
-			// Create marker for underlying asset
+
+			s.ctx = s.ctx.WithBlockTime(time.Now())
 			s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), owner)
-			// Create the vault
 			_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 				Admin:           owner.String(),
 				ShareDenom:      shareDenom,

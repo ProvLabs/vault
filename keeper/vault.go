@@ -47,13 +47,6 @@ func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*type
 		return nil, fmt.Errorf("failed to create vault marker: %w", err)
 	}
 
-	// TODO: add to create message or should it just default to 0 and be set through management
-	vault.InterestRate = "0.05" // Default interest rate of 5% per annum
-	// TODO: should we start period on vault creation?
-	k.VaultInterestDetails.Set(ctx, vault.GetAddress(), types.VaultInterestDetails{
-		PeriodStart: ctx.BlockTime().Unix(),
-	})
-
 	k.emitEvent(ctx, types.NewEventVaultCreated(vault))
 
 	return vault, nil
@@ -166,7 +159,7 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 		return nil, fmt.Errorf("vault with address %v not found", vaultAddr.String())
 	}
 
-	if err := k.reconcileVaultInterest(ctx, vault); err != nil {
+	if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to reconcile vault interest: %w", err)
 	}
 
@@ -230,7 +223,7 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 		return nil, fmt.Errorf("swap out denom must be share denom %v : %v", shares.Denom, vault.ShareDenom)
 	}
 
-	if err := k.reconcileVaultInterest(ctx, vault); err != nil {
+	if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to reconcile vault interest: %w", err)
 	}
 

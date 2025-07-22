@@ -1,7 +1,6 @@
 package interest_test
 
 import (
-	"fmt"
 	"math"
 	"strconv"
 	"testing"
@@ -24,23 +23,43 @@ func TestCalculateInterestEarned(t *testing.T) {
 		principal        sdk.Coin
 		rate             string
 		periodSeconds    int64
-		expectedMin      sdk.Coin
-		expectedInterest sdk.Coin
+		expectedInterest sdkmath.Int
 		expectedErrorMsg string
 	}{
+		{
+			name:             "1 year at 0% APR",
+			principal:        baseCoin(100_000_000),
+			rate:             "0.0",
+			periodSeconds:    interest.SecondsPerYear,
+			expectedInterest: sdkmath.NewInt(0),
+		},
+		{
+			name:             "1 year at -100% APR",
+			principal:        baseCoin(100_000_000),
+			rate:             "-1.0",
+			periodSeconds:    interest.SecondsPerYear,
+			expectedInterest: sdkmath.NewInt(-63_212_055),
+		},
 		{
 			name:             "1 year at 5% APR",
 			principal:        baseCoin(100_000_000),
 			rate:             "0.05",
-			periodSeconds:    interest.SecondsPerYear, // 1 year
-			expectedInterest: baseCoin(5_127_109),
+			periodSeconds:    interest.SecondsPerYear,
+			expectedInterest: sdkmath.NewInt(5_127_109),
+		},
+		{
+			name:             "1 year at -5% APR",
+			principal:        baseCoin(100_000_000),
+			rate:             "-0.05",
+			periodSeconds:    interest.SecondsPerYear,
+			expectedInterest: sdkmath.NewInt(-4_877_057),
 		},
 		{
 			name:             "6 months at 10% APR",
 			principal:        baseCoin(500_000_000),
 			rate:             "0.10",
 			periodSeconds:    interest.SecondsPerYear / 2,
-			expectedInterest: baseCoin(25_635_548),
+			expectedInterest: sdkmath.NewInt(25_635_548),
 		},
 		{
 			name:             "zero period should error",
@@ -60,31 +79,30 @@ func TestCalculateInterestEarned(t *testing.T) {
 			name:             "tiny period, tiny rate",
 			principal:        baseCoin(1_000_000),
 			rate:             "0.00001",
-			periodSeconds:    60, // 1 minute
-			expectedInterest: baseCoin(0),
+			periodSeconds:    60,
+			expectedInterest: sdkmath.NewInt(0),
 		},
 		{
 			name:             "large amount over long period",
 			principal:        baseCoin(1_000_000_000_000),
 			rate:             "0.03",
-			periodSeconds:    interest.SecondsPerYear * 10, // 10 years
-			expectedInterest: baseCoin(349_858_807_576),
+			periodSeconds:    interest.SecondsPerYear * 10,
+			expectedInterest: sdkmath.NewInt(349_858_807_576),
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			interest, err := interest.CalculateInterestEarned(tc.principal, tc.rate, tc.periodSeconds)
+			interestAmt, err := interest.CalculateInterestEarned(tc.principal, tc.rate, tc.periodSeconds)
 
-			if len(tc.expectedErrorMsg) > 0 {
+			if tc.expectedErrorMsg != "" {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), tc.expectedErrorMsg)
 				return
 			}
-			require.NoError(t, err)
-			require.Equal(t, tc.principal.Denom, interest.Denom)
 
-			require.True(t, interest.Amount.Equal(tc.expectedInterest.Amount), fmt.Sprintf("got %s, expected <= %s", interest.Amount, tc.expectedInterest.Amount))
+			require.NoError(t, err)
+			require.True(t, tc.expectedInterest.Equal(interestAmt), "interest amount doesn't match expected %s : %s", tc.expectedInterest.String(), interestAmt.String())
 		})
 	}
 }
@@ -120,6 +138,15 @@ func TestCalculateExpiration(t *testing.T) {
 			periodSeconds: 60,
 			startTime:     startTime,
 			expected:      startTime,
+		},
+		{
+			name:          "negative rate",
+			principal:     sdk.NewCoin(denom, sdkmath.NewInt(525_500_000)),
+			reserves:      sdk.NewCoin(denom, sdkmath.NewInt(1_000)),
+			rate:          "-0.05",
+			periodSeconds: 60,
+			startTime:     startTime,
+			expected:      startTime + 60,
 		},
 		{
 			name:          "depletes quickly with high rate",
@@ -192,7 +219,7 @@ func TestCalculateExpiration(t *testing.T) {
 }
 
 func TestCalculatePeriodsExtremes(t *testing.T) {
-	t.Skip("Skipping this test temporarily")
+	// t.Skip("Skipping this test temporarily")
 	denom := "stake"
 
 	tests := []struct {
@@ -275,6 +302,13 @@ func TestCalculatePeriodsExtremes(t *testing.T) {
 			periodSeconds: 5,
 			limit:         interest.CalculatePeriodsNoLimit,
 		},
+		{
+			name:          "maximum values, 1 seconds",
+			principal:     sdk.NewCoin(denom, sdkmath.NewIntFromUint64(^uint64(0))),
+			vaultReserves: sdk.NewCoin(denom, sdkmath.NewIntFromUint64(^uint64(0))),
+			rate:          "1.0",
+			periodSeconds: 1,
+		},
 	}
 
 	for _, tc := range tests {
@@ -316,7 +350,7 @@ func TestExpDecInterestDrift(t *testing.T) {
 
 				earned, err := interest.CalculateInterestEarned(principal, rate, duration)
 				require.NoError(t, err)
-				sdkInterest := earned.Amount.Int64()
+				sdkInterest := earned.Int64()
 
 				tYears := float64(duration) / float64(annualSeconds)
 				expected := float64(principalAmt) * (math.Exp(rateF*tYears) - 1)

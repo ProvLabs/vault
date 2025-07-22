@@ -1,7 +1,7 @@
 package types
 
 import (
-	time "time"
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -60,13 +60,13 @@ func NewEventSwapOut(vaultAddress, owner string, assets, shares sdk.Coin) *Event
 }
 
 // NewEventVaultReconcile creates a new EventVaultReconcile.
-func NewEventVaultReconcile(vaultAddress string, reconcileTime time.Time, principal sdk.Coin, rate string, time int64, interestEarned sdk.Coin) *EventVaultReconcile {
+func NewEventVaultReconcile(vaultAddress string, principalBefore, principalAfter sdk.Coin, rate string, duration int64, interestEarned sdkmath.Int) *EventVaultReconcile {
 	return &EventVaultReconcile{
-		VaultAddress:   vaultAddress,
-		ReconcileTime:  reconcileTime.UTC(),
-		Principal:      principal,
-		Rate:           rate,
-		Time:           time,
-		InterestEarned: interestEarned,
+		VaultAddress:    vaultAddress,
+		PrincipalBefore: principalBefore,
+		PrincipalAfter:  principalAfter,
+		Rate:            rate,
+		Time:            duration,
+		InterestEarned:  sdk.Coin{Denom: principalBefore.Denom, Amount: interestEarned},
 	}
 }

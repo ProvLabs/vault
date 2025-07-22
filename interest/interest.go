@@ -6,7 +6,7 @@ import (
 
 	"github.com/provlabs/vault/utils"
 
-	cosmosmath "cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -26,28 +26,28 @@ const (
 
 // CalculateInterestEarned computes the continuously compounded interest for a given principal over a period.
 //
-// It uses the formula `Interest = (P * (e^(rt)) - P`, where:
+// It uses the formula `Interest = P * (e^(rt)) - P`, where:
 //   - P is the `principal`.
 //   - r is the annual `rate`.
 //   - t is the time in years, derived from (`periodSeconds` / 31_536_000).
 //
-// To ensure on-chain determinism, it uses cosmosmath.LegacyDec for all arithmetic
-// and approximates e^x using a Maclaurin series (`utils.ExpDec`).
-func CalculateInterestEarned(principal sdk.Coin, rate string, periodSeconds int64) (sdk.Coin, error) {
-	r, err := cosmosmath.LegacyNewDecFromStr(rate)
+// This function returns the interest as a `cosmosmath.Int`, truncating any fractional part to ensure compatibility with coin amounts.
+// It uses deterministic arithmetic via `cosmosmath.LegacyDec` and approximates e^x using a Maclaurin series (`utils.ExpDec`).
+func CalculateInterestEarned(principal sdk.Coin, rate string, periodSeconds int64) (sdkmath.Int, error) {
+	r, err := sdkmath.LegacyNewDecFromStr(rate)
 	if err != nil {
-		return sdk.Coin{}, fmt.Errorf("invalid rate string: %w", err)
+		return sdkmath.Int{}, fmt.Errorf("invalid rate string: %w", err)
 	}
 
 	if periodSeconds <= 0 {
-		return sdk.Coin{}, errors.New("periodSeconds must be positive")
+		return sdkmath.Int{}, errors.New("periodSeconds must be positive")
 	}
 
 	// P = principal amount as a deterministic decimal
-	p := cosmosmath.LegacyNewDecFromInt(principal.Amount)
+	p := sdkmath.LegacyNewDecFromInt(principal.Amount)
 
 	// t = time in years, as a deterministic decimal
-	t := cosmosmath.LegacyNewDec(periodSeconds).QuoInt64(SecondsPerYear)
+	t := sdkmath.LegacyNewDec(periodSeconds).QuoInt64(SecondsPerYear)
 
 	// rt
 	rt := r.Mul(t)
@@ -62,8 +62,7 @@ func CalculateInterestEarned(principal sdk.Coin, rate string, periodSeconds int6
 	interestAmountDec := finalAmount.Sub(p)
 
 	// Truncate to an integer amount for the coin, as coins cannot have fractional parts.
-	interestAmountInt := interestAmountDec.TruncateInt()
-	return sdk.NewCoin(principal.Denom, interestAmountInt), nil
+	return interestAmountDec.TruncateInt(), nil
 }
 
 // CalculateExpiration determines the epoch time at which a vault will no longer be
@@ -94,7 +93,7 @@ func CalculateExpiration(principal sdk.Coin, vaultReserves sdk.Coin, rate string
 	if startTime <= 0 {
 		return 0, errors.New("startTime must be positive")
 	}
-	rateDec, err := cosmosmath.LegacyNewDecFromStr(rate)
+	rateDec, err := sdkmath.LegacyNewDecFromStr(rate)
 	if err != nil {
 		return 0, fmt.Errorf("invalid rate string: %w", err)
 	}
@@ -115,13 +114,13 @@ func CalculateExpiration(principal sdk.Coin, vaultReserves sdk.Coin, rate string
 	}
 
 	// Calculate final expiration time with overflow checks using int64. Check for multiplication overflow.
-	totalSeconds := cosmosmath.NewInt(periodSeconds)
-	totalSeconds, err = totalSeconds.SafeMul(cosmosmath.NewInt(periods))
+	totalSeconds := sdkmath.NewInt(periodSeconds)
+	totalSeconds, err = totalSeconds.SafeMul(sdkmath.NewInt(periods))
 	if err != nil {
 		return 0, fmt.Errorf("failed to calculate total seconds: %w", err)
 	}
 
-	expirationTime := cosmosmath.NewInt(startTime)
+	expirationTime := sdkmath.NewInt(startTime)
 	expirationTime, err = expirationTime.SafeAdd(totalSeconds)
 	if err != nil {
 		return 0, fmt.Errorf("failed to calculate expiration time: %w", err)
@@ -134,12 +133,12 @@ func CalculateExpiration(principal sdk.Coin, vaultReserves sdk.Coin, rate string
 // periods a vault can sustain paying interest before its reserves are depleted.
 //
 // The interest for each period is calculated using the continuous compounding formula,
-// and deducted from the vault's reserves. The principal grows with each compounded period.
+// and added or subtracted from the principal depending on the sign of the rate.
 //
 // Parameters:
 //   - vaultReserves: The available funds in the vault to pay interest.
 //   - principal: The initial amount earning interest.
-//   - rate: The annual interest rate (as a string, e.g. "0.05" for 5%).
+//   - rate: The annual interest rate (as a string, e.g. "0.05" for 5%, "-0.05" for -5%).
 //   - periodSeconds: The length of each compounding period in seconds.
 //   - limit: The maximum total duration in seconds to simulate. The simulation stops if `periods * periodSeconds` would exceed this limit. A limit of 0 means no limit.
 //
@@ -147,23 +146,52 @@ func CalculateExpiration(principal sdk.Coin, vaultReserves sdk.Coin, rate string
 //   - The number of full compounding periods the reserves can cover.
 //   - A placeholder value (currently always zero) for potential future use.
 //   - An error if interest calculation fails or input is invalid.
-func CalculatePeriods(vaultReserves sdk.Coin, principal sdk.Coin, rate string, periodSeconds int64, limit int64) (int64, int64, error) {
-	remainingReserves := vaultReserves
-	currentPrincipal := principal // P
+func CalculatePeriods(
+	vaultReserves sdk.Coin,
+	principal sdk.Coin,
+	rate string,
+	periodSeconds int64,
+	limit int64,
+) (int64, int64, error) {
+	if vaultReserves.Amount.IsNegative() || principal.Amount.IsNegative() {
+		return 0, 0, fmt.Errorf("vault reserves and principal must be non-negative")
+	}
+	if principal.Amount.IsZero() || periodSeconds <= 0 {
+		return 0, 0, nil
+	}
+	if vaultReserves.Denom != principal.Denom {
+		return 0, 0, fmt.Errorf("denom mismatch: reserves=%s principal=%s", vaultReserves.Denom, principal.Denom)
+	}
+
 	var periods int64
 	var totalDuration int64
+
 	for limit == CalculatePeriodsNoLimit || totalDuration <= limit-periodSeconds {
-		interest, err := CalculateInterestEarned(currentPrincipal, rate, periodSeconds)
+		interest, err := CalculateInterestEarned(principal, rate, periodSeconds)
 		if err != nil {
 			return 0, 0, fmt.Errorf("failed to calculate interest for period %d: %w", periods+1, err)
 		}
-		if interest.IsZero() || remainingReserves.IsLT(interest) {
+
+		if interest.IsZero() {
 			break
 		}
-		remainingReserves = remainingReserves.Sub(interest)
-		currentPrincipal = currentPrincipal.Add(interest)
+
+		if interest.IsPositive() {
+			if vaultReserves.Amount.LT(interest) {
+				break
+			}
+			vaultReserves = vaultReserves.Sub(sdk.NewCoin(vaultReserves.Denom, interest))
+			principal = principal.Add(sdk.NewCoin(principal.Denom, interest))
+		} else {
+			principal = principal.Sub(sdk.NewCoin(principal.Denom, interest.Abs()))
+			if principal.Amount.IsNegative() {
+				break
+			}
+		}
+
 		periods++
 		totalDuration += periodSeconds
 	}
+
 	return periods, 0, nil
 }

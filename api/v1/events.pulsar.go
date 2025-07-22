@@ -10,7 +10,7 @@ import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoiface "google.golang.org/protobuf/runtime/protoiface"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
+	_ "google.golang.org/protobuf/types/known/timestamppb"
 	io "io"
 	reflect "reflect"
 	sync "sync"
@@ -3357,21 +3357,21 @@ func (x *fastReflection_EventSwapOut) ProtoMethods() *protoiface.Methods {
 }
 
 var (
-	md_EventVaultReconcile                 protoreflect.MessageDescriptor
-	fd_EventVaultReconcile_vault_address   protoreflect.FieldDescriptor
-	fd_EventVaultReconcile_reconcile_time  protoreflect.FieldDescriptor
-	fd_EventVaultReconcile_principal       protoreflect.FieldDescriptor
-	fd_EventVaultReconcile_rate            protoreflect.FieldDescriptor
-	fd_EventVaultReconcile_time            protoreflect.FieldDescriptor
-	fd_EventVaultReconcile_interest_earned protoreflect.FieldDescriptor
+	md_EventVaultReconcile                  protoreflect.MessageDescriptor
+	fd_EventVaultReconcile_vault_address    protoreflect.FieldDescriptor
+	fd_EventVaultReconcile_principal_before protoreflect.FieldDescriptor
+	fd_EventVaultReconcile_principal_after  protoreflect.FieldDescriptor
+	fd_EventVaultReconcile_rate             protoreflect.FieldDescriptor
+	fd_EventVaultReconcile_time             protoreflect.FieldDescriptor
+	fd_EventVaultReconcile_interest_earned  protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_vault_v1_events_proto_init()
 	md_EventVaultReconcile = File_vault_v1_events_proto.Messages().ByName("EventVaultReconcile")
 	fd_EventVaultReconcile_vault_address = md_EventVaultReconcile.Fields().ByName("vault_address")
-	fd_EventVaultReconcile_reconcile_time = md_EventVaultReconcile.Fields().ByName("reconcile_time")
-	fd_EventVaultReconcile_principal = md_EventVaultReconcile.Fields().ByName("principal")
+	fd_EventVaultReconcile_principal_before = md_EventVaultReconcile.Fields().ByName("principal_before")
+	fd_EventVaultReconcile_principal_after = md_EventVaultReconcile.Fields().ByName("principal_after")
 	fd_EventVaultReconcile_rate = md_EventVaultReconcile.Fields().ByName("rate")
 	fd_EventVaultReconcile_time = md_EventVaultReconcile.Fields().ByName("time")
 	fd_EventVaultReconcile_interest_earned = md_EventVaultReconcile.Fields().ByName("interest_earned")
@@ -3448,15 +3448,15 @@ func (x *fastReflection_EventVaultReconcile) Range(f func(protoreflect.FieldDesc
 			return
 		}
 	}
-	if x.ReconcileTime != nil {
-		value := protoreflect.ValueOfMessage(x.ReconcileTime.ProtoReflect())
-		if !f(fd_EventVaultReconcile_reconcile_time, value) {
+	if x.PrincipalBefore != nil {
+		value := protoreflect.ValueOfMessage(x.PrincipalBefore.ProtoReflect())
+		if !f(fd_EventVaultReconcile_principal_before, value) {
 			return
 		}
 	}
-	if x.Principal != nil {
-		value := protoreflect.ValueOfMessage(x.Principal.ProtoReflect())
-		if !f(fd_EventVaultReconcile_principal, value) {
+	if x.PrincipalAfter != nil {
+		value := protoreflect.ValueOfMessage(x.PrincipalAfter.ProtoReflect())
+		if !f(fd_EventVaultReconcile_principal_after, value) {
 			return
 		}
 	}
@@ -3495,10 +3495,10 @@ func (x *fastReflection_EventVaultReconcile) Has(fd protoreflect.FieldDescriptor
 	switch fd.FullName() {
 	case "vault.v1.EventVaultReconcile.vault_address":
 		return x.VaultAddress != ""
-	case "vault.v1.EventVaultReconcile.reconcile_time":
-		return x.ReconcileTime != nil
-	case "vault.v1.EventVaultReconcile.principal":
-		return x.Principal != nil
+	case "vault.v1.EventVaultReconcile.principal_before":
+		return x.PrincipalBefore != nil
+	case "vault.v1.EventVaultReconcile.principal_after":
+		return x.PrincipalAfter != nil
 	case "vault.v1.EventVaultReconcile.rate":
 		return x.Rate != ""
 	case "vault.v1.EventVaultReconcile.time":
@@ -3523,10 +3523,10 @@ func (x *fastReflection_EventVaultReconcile) Clear(fd protoreflect.FieldDescript
 	switch fd.FullName() {
 	case "vault.v1.EventVaultReconcile.vault_address":
 		x.VaultAddress = ""
-	case "vault.v1.EventVaultReconcile.reconcile_time":
-		x.ReconcileTime = nil
-	case "vault.v1.EventVaultReconcile.principal":
-		x.Principal = nil
+	case "vault.v1.EventVaultReconcile.principal_before":
+		x.PrincipalBefore = nil
+	case "vault.v1.EventVaultReconcile.principal_after":
+		x.PrincipalAfter = nil
 	case "vault.v1.EventVaultReconcile.rate":
 		x.Rate = ""
 	case "vault.v1.EventVaultReconcile.time":
@@ -3552,11 +3552,11 @@ func (x *fastReflection_EventVaultReconcile) Get(descriptor protoreflect.FieldDe
 	case "vault.v1.EventVaultReconcile.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventVaultReconcile.reconcile_time":
-		value := x.ReconcileTime
+	case "vault.v1.EventVaultReconcile.principal_before":
+		value := x.PrincipalBefore
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "vault.v1.EventVaultReconcile.principal":
-		value := x.Principal
+	case "vault.v1.EventVaultReconcile.principal_after":
+		value := x.PrincipalAfter
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	case "vault.v1.EventVaultReconcile.rate":
 		value := x.Rate
@@ -3589,10 +3589,10 @@ func (x *fastReflection_EventVaultReconcile) Set(fd protoreflect.FieldDescriptor
 	switch fd.FullName() {
 	case "vault.v1.EventVaultReconcile.vault_address":
 		x.VaultAddress = value.Interface().(string)
-	case "vault.v1.EventVaultReconcile.reconcile_time":
-		x.ReconcileTime = value.Message().Interface().(*timestamppb.Timestamp)
-	case "vault.v1.EventVaultReconcile.principal":
-		x.Principal = value.Message().Interface().(*v1beta1.Coin)
+	case "vault.v1.EventVaultReconcile.principal_before":
+		x.PrincipalBefore = value.Message().Interface().(*v1beta1.Coin)
+	case "vault.v1.EventVaultReconcile.principal_after":
+		x.PrincipalAfter = value.Message().Interface().(*v1beta1.Coin)
 	case "vault.v1.EventVaultReconcile.rate":
 		x.Rate = value.Interface().(string)
 	case "vault.v1.EventVaultReconcile.time":
@@ -3619,16 +3619,16 @@ func (x *fastReflection_EventVaultReconcile) Set(fd protoreflect.FieldDescriptor
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventVaultReconcile) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventVaultReconcile.reconcile_time":
-		if x.ReconcileTime == nil {
-			x.ReconcileTime = new(timestamppb.Timestamp)
+	case "vault.v1.EventVaultReconcile.principal_before":
+		if x.PrincipalBefore == nil {
+			x.PrincipalBefore = new(v1beta1.Coin)
 		}
-		return protoreflect.ValueOfMessage(x.ReconcileTime.ProtoReflect())
-	case "vault.v1.EventVaultReconcile.principal":
-		if x.Principal == nil {
-			x.Principal = new(v1beta1.Coin)
+		return protoreflect.ValueOfMessage(x.PrincipalBefore.ProtoReflect())
+	case "vault.v1.EventVaultReconcile.principal_after":
+		if x.PrincipalAfter == nil {
+			x.PrincipalAfter = new(v1beta1.Coin)
 		}
-		return protoreflect.ValueOfMessage(x.Principal.ProtoReflect())
+		return protoreflect.ValueOfMessage(x.PrincipalAfter.ProtoReflect())
 	case "vault.v1.EventVaultReconcile.interest_earned":
 		if x.InterestEarned == nil {
 			x.InterestEarned = new(v1beta1.Coin)
@@ -3655,10 +3655,10 @@ func (x *fastReflection_EventVaultReconcile) NewField(fd protoreflect.FieldDescr
 	switch fd.FullName() {
 	case "vault.v1.EventVaultReconcile.vault_address":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventVaultReconcile.reconcile_time":
-		m := new(timestamppb.Timestamp)
+	case "vault.v1.EventVaultReconcile.principal_before":
+		m := new(v1beta1.Coin)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "vault.v1.EventVaultReconcile.principal":
+	case "vault.v1.EventVaultReconcile.principal_after":
 		m := new(v1beta1.Coin)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "vault.v1.EventVaultReconcile.rate":
@@ -3741,12 +3741,12 @@ func (x *fastReflection_EventVaultReconcile) ProtoMethods() *protoiface.Methods 
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		if x.ReconcileTime != nil {
-			l = options.Size(x.ReconcileTime)
+		if x.PrincipalBefore != nil {
+			l = options.Size(x.PrincipalBefore)
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		if x.Principal != nil {
-			l = options.Size(x.Principal)
+		if x.PrincipalAfter != nil {
+			l = options.Size(x.PrincipalAfter)
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		l = len(x.Rate)
@@ -3815,8 +3815,8 @@ func (x *fastReflection_EventVaultReconcile) ProtoMethods() *protoiface.Methods 
 			i--
 			dAtA[i] = 0x22
 		}
-		if x.Principal != nil {
-			encoded, err := options.Marshal(x.Principal)
+		if x.PrincipalAfter != nil {
+			encoded, err := options.Marshal(x.PrincipalAfter)
 			if err != nil {
 				return protoiface.MarshalOutput{
 					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -3829,8 +3829,8 @@ func (x *fastReflection_EventVaultReconcile) ProtoMethods() *protoiface.Methods 
 			i--
 			dAtA[i] = 0x1a
 		}
-		if x.ReconcileTime != nil {
-			encoded, err := options.Marshal(x.ReconcileTime)
+		if x.PrincipalBefore != nil {
+			encoded, err := options.Marshal(x.PrincipalBefore)
 			if err != nil {
 				return protoiface.MarshalOutput{
 					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -3933,7 +3933,7 @@ func (x *fastReflection_EventVaultReconcile) ProtoMethods() *protoiface.Methods 
 				iNdEx = postIndex
 			case 2:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ReconcileTime", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PrincipalBefore", wireType)
 				}
 				var msglen int
 				for shift := uint(0); ; shift += 7 {
@@ -3960,16 +3960,16 @@ func (x *fastReflection_EventVaultReconcile) ProtoMethods() *protoiface.Methods 
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				if x.ReconcileTime == nil {
-					x.ReconcileTime = &timestamppb.Timestamp{}
+				if x.PrincipalBefore == nil {
+					x.PrincipalBefore = &v1beta1.Coin{}
 				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.ReconcileTime); err != nil {
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.PrincipalBefore); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
 			case 3:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Principal", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PrincipalAfter", wireType)
 				}
 				var msglen int
 				for shift := uint(0); ; shift += 7 {
@@ -3996,10 +3996,10 @@ func (x *fastReflection_EventVaultReconcile) ProtoMethods() *protoiface.Methods 
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				if x.Principal == nil {
-					x.Principal = &v1beta1.Coin{}
+				if x.PrincipalAfter == nil {
+					x.PrincipalAfter = &v1beta1.Coin{}
 				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Principal); err != nil {
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.PrincipalAfter); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
@@ -4485,7 +4485,7 @@ func (x *EventSwapOut) GetVaultAddress() string {
 	return ""
 }
 
-// EventVaultReconcile is an event emitted when a vault is reconciled.
+// EventVaultReconcile is an event emitted when a vault's interest is reconciled.
 type EventVaultReconcile struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -4493,15 +4493,15 @@ type EventVaultReconcile struct {
 
 	// vault_address is the bech32 address of the vault.
 	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// reconcile_time is the UTC time at which the vault was reconciled.
-	ReconcileTime *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=reconcile_time,json=reconcileTime,proto3" json:"reconcile_time,omitempty"`
-	// principal is the principal amount at the time of the reconcile.
-	Principal *v1beta1.Coin `protobuf:"bytes,3,opt,name=principal,proto3" json:"principal,omitempty"`
+	// principal_before is the principal amount before applying interest.
+	PrincipalBefore *v1beta1.Coin `protobuf:"bytes,2,opt,name=principal_before,json=principalBefore,proto3" json:"principal_before,omitempty"`
+	// principal_after is the principal amount after applying interest.
+	PrincipalAfter *v1beta1.Coin `protobuf:"bytes,3,opt,name=principal_after,json=principalAfter,proto3" json:"principal_after,omitempty"`
 	// rate is the interest rate for the period.
 	Rate string `protobuf:"bytes,4,opt,name=rate,proto3" json:"rate,omitempty"`
-	// time is the payout time in seconds.
+	// time is the payout duration in seconds.
 	Time int64 `protobuf:"varint,5,opt,name=time,proto3" json:"time,omitempty"`
-	// interest_earned is the total interest earned during the time of the reconcile.
+	// interest_earned is the interest amount (can be positive or negative).
 	InterestEarned *v1beta1.Coin `protobuf:"bytes,6,opt,name=interest_earned,json=interestEarned,proto3" json:"interest_earned,omitempty"`
 }
 
@@ -4532,16 +4532,16 @@ func (x *EventVaultReconcile) GetVaultAddress() string {
 	return ""
 }
 
-func (x *EventVaultReconcile) GetReconcileTime() *timestamppb.Timestamp {
+func (x *EventVaultReconcile) GetPrincipalBefore() *v1beta1.Coin {
 	if x != nil {
-		return x.ReconcileTime
+		return x.PrincipalBefore
 	}
 	return nil
 }
 
-func (x *EventVaultReconcile) GetPrincipal() *v1beta1.Coin {
+func (x *EventVaultReconcile) GetPrincipalAfter() *v1beta1.Coin {
 	if x != nil {
-		return x.Principal
+		return x.PrincipalAfter
 	}
 	return nil
 }
@@ -4652,38 +4652,38 @@ var file_vault_v1_events_proto_rawDesc = []byte{
 	0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18,
 	0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65,
 	0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41,
-	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x22, 0xd2, 0x02, 0x0a, 0x13, 0x45, 0x76, 0x65, 0x6e, 0x74,
+	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x22, 0xdc, 0x02, 0x0a, 0x13, 0x45, 0x76, 0x65, 0x6e, 0x74,
 	0x56, 0x61, 0x75, 0x6c, 0x74, 0x52, 0x65, 0x63, 0x6f, 0x6e, 0x63, 0x69, 0x6c, 0x65, 0x12, 0x3d,
 	0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18,
 	0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
 	0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52,
-	0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x4b, 0x0a,
-	0x0e, 0x72, 0x65, 0x63, 0x6f, 0x6e, 0x63, 0x69, 0x6c, 0x65, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18,
-	0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d,
-	0x70, 0x42, 0x08, 0xc8, 0xde, 0x1f, 0x00, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x0d, 0x72, 0x65, 0x63,
-	0x6f, 0x6e, 0x63, 0x69, 0x6c, 0x65, 0x54, 0x69, 0x6d, 0x65, 0x12, 0x3d, 0x0a, 0x09, 0x70, 0x72,
-	0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x09,
-	0x70, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x12, 0x12, 0x0a, 0x04, 0x72, 0x61, 0x74,
-	0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x72, 0x61, 0x74, 0x65, 0x12, 0x12, 0x0a,
-	0x04, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x03, 0x52, 0x04, 0x74, 0x69, 0x6d,
-	0x65, 0x12, 0x48, 0x0a, 0x0f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x5f, 0x65, 0x61,
-	0x72, 0x6e, 0x65, 0x64, 0x18, 0x06, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
-	0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x0e, 0x69, 0x6e, 0x74,
-	0x65, 0x72, 0x65, 0x73, 0x74, 0x45, 0x61, 0x72, 0x6e, 0x65, 0x64, 0x42, 0x8c, 0x01, 0x0a, 0x0c,
-	0x63, 0x6f, 0x6d, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x42, 0x0b, 0x45, 0x76,
-	0x65, 0x6e, 0x74, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2e, 0x67, 0x69, 0x74,
-	0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73,
-	0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74,
-	0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x56, 0x58,
-	0x58, 0xaa, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x08, 0x56,
-	0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x14, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c,
-	0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02,
-	0x09, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x33,
+	0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x4a, 0x0a,
+	0x10, 0x70, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x5f, 0x62, 0x65, 0x66, 0x6f, 0x72,
+	0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f,
+	0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x0f, 0x70, 0x72, 0x69, 0x6e, 0x63, 0x69,
+	0x70, 0x61, 0x6c, 0x42, 0x65, 0x66, 0x6f, 0x72, 0x65, 0x12, 0x48, 0x0a, 0x0f, 0x70, 0x72, 0x69,
+	0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x5f, 0x61, 0x66, 0x74, 0x65, 0x72, 0x18, 0x03, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65,
+	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8,
+	0xde, 0x1f, 0x00, 0x52, 0x0e, 0x70, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x41, 0x66,
+	0x74, 0x65, 0x72, 0x12, 0x12, 0x0a, 0x04, 0x72, 0x61, 0x74, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x04, 0x72, 0x61, 0x74, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x74, 0x69, 0x6d, 0x65, 0x18,
+	0x05, 0x20, 0x01, 0x28, 0x03, 0x52, 0x04, 0x74, 0x69, 0x6d, 0x65, 0x12, 0x48, 0x0a, 0x0f, 0x69,
+	0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x5f, 0x65, 0x61, 0x72, 0x6e, 0x65, 0x64, 0x18, 0x06,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61,
+	0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42,
+	0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x0e, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x45,
+	0x61, 0x72, 0x6e, 0x65, 0x64, 0x42, 0x8c, 0x01, 0x0a, 0x0c, 0x63, 0x6f, 0x6d, 0x2e, 0x76, 0x61,
+	0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x42, 0x0b, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x50, 0x72,
+	0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2e, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f,
+	0x6d, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74,
+	0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61,
+	0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x56, 0x58, 0x58, 0xaa, 0x02, 0x08, 0x56, 0x61,
+	0x75, 0x6c, 0x74, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56,
+	0x31, 0xe2, 0x02, 0x14, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42,
+	0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x09, 0x56, 0x61, 0x75, 0x6c, 0x74,
+	0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -4700,22 +4700,21 @@ func file_vault_v1_events_proto_rawDescGZIP() []byte {
 
 var file_vault_v1_events_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
 var file_vault_v1_events_proto_goTypes = []interface{}{
-	(*EventDeposit)(nil),          // 0: vault.v1.EventDeposit
-	(*EventWithdraw)(nil),         // 1: vault.v1.EventWithdraw
-	(*EventVaultCreated)(nil),     // 2: vault.v1.EventVaultCreated
-	(*EventSwapIn)(nil),           // 3: vault.v1.EventSwapIn
-	(*EventSwapOut)(nil),          // 4: vault.v1.EventSwapOut
-	(*EventVaultReconcile)(nil),   // 5: vault.v1.EventVaultReconcile
-	(*v1beta1.Coin)(nil),          // 6: cosmos.base.v1beta1.Coin
-	(*timestamppb.Timestamp)(nil), // 7: google.protobuf.Timestamp
+	(*EventDeposit)(nil),        // 0: vault.v1.EventDeposit
+	(*EventWithdraw)(nil),       // 1: vault.v1.EventWithdraw
+	(*EventVaultCreated)(nil),   // 2: vault.v1.EventVaultCreated
+	(*EventSwapIn)(nil),         // 3: vault.v1.EventSwapIn
+	(*EventSwapOut)(nil),        // 4: vault.v1.EventSwapOut
+	(*EventVaultReconcile)(nil), // 5: vault.v1.EventVaultReconcile
+	(*v1beta1.Coin)(nil),        // 6: cosmos.base.v1beta1.Coin
 }
 var file_vault_v1_events_proto_depIdxs = []int32{
 	6, // 0: vault.v1.EventSwapIn.amount_in:type_name -> cosmos.base.v1beta1.Coin
 	6, // 1: vault.v1.EventSwapIn.shares_received:type_name -> cosmos.base.v1beta1.Coin
 	6, // 2: vault.v1.EventSwapOut.shares_burned:type_name -> cosmos.base.v1beta1.Coin
 	6, // 3: vault.v1.EventSwapOut.amount_out:type_name -> cosmos.base.v1beta1.Coin
-	7, // 4: vault.v1.EventVaultReconcile.reconcile_time:type_name -> google.protobuf.Timestamp
-	6, // 5: vault.v1.EventVaultReconcile.principal:type_name -> cosmos.base.v1beta1.Coin
+	6, // 4: vault.v1.EventVaultReconcile.principal_before:type_name -> cosmos.base.v1beta1.Coin
+	6, // 5: vault.v1.EventVaultReconcile.principal_after:type_name -> cosmos.base.v1beta1.Coin
 	6, // 6: vault.v1.EventVaultReconcile.interest_earned:type_name -> cosmos.base.v1beta1.Coin
 	7, // [7:7] is the sub-list for method output_type
 	7, // [7:7] is the sub-list for method input_type

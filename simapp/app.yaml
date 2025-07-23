@@ -3,8 +3,8 @@ modules:
     config:
       "@type": cosmos.app.runtime.v1alpha1.Module
       app_name: SimApp
-      begin_blockers: [ capability, distribution, staking, ibc, marker, attribute, authz ]
-      end_blockers: [ crisis, gov, staking, feegrant, group ]
+      begin_blockers: [ capability, distribution, staking, ibc, marker, attribute, authz, vault ]
+      end_blockers: [ crisis, gov, staking, feegrant, group, vault ]
       init_genesis: [ capability, auth, bank, marker, distribution, staking, gov, crisis, authz, feegrant, group, vesting, name, attribute, vault, ibc, genutil, upgrade ]
       override_store_keys:
         - module_name: auth

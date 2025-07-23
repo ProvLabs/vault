@@ -139,10 +139,12 @@ func CalculateExpiration(principal sdk.Coin, vaultReserves sdk.Coin, rate string
 //   - principal: The initial amount earning interest.
 //   - rate: The annual interest rate (as a string, e.g. "0.05" for 5%, "-0.05" for -5%).
 //   - periodSeconds: The length of each compounding period in seconds.
-//   - limit: The maximum total duration in seconds to simulate. The simulation stops if `periods * periodSeconds` would exceed this limit. A limit of 0 means no limit.
+//   - limit: The maximum total duration (in seconds) to simulate. Once the total simulated
+//     time reaches or exceeds this limit, the loop stops, even if reserves are not fully depleted.
+//     A limit of 0 means no limit.
 //
 // Returns:
-//   - The number of full compounding periods the reserves can cover.
+//   - The number of full compounding periods the reserves can cover (up to the limit).
 //   - A placeholder value (currently always zero) for potential future use.
 //   - An error if interest calculation fails or input is invalid.
 func CalculatePeriods(

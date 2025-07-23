@@ -83,7 +83,7 @@ func CalculateInterestEarned(principal sdk.Coin, rate string, periodSeconds int6
 // - The expiration time as an epoch second.
 // - If the vault will never be depleted (e.g., zero interest rate), it returns the startTime.
 // - An error if the inputs are invalid or a calculation fails.
-func CalculateExpiration(principal sdk.Coin, vaultReserves sdk.Coin, rate string, periodSeconds int64, startTime int64) (int64, error) {
+func CalculateExpiration(principal sdk.Coin, vaultReserves sdk.Coin, rate string, periodSeconds, startTime, limit int64) (int64, error) {
 	if principal.Denom != vaultReserves.Denom {
 		return 0, fmt.Errorf("principal and vault denoms must match, got %s and %s", principal.Denom, vaultReserves.Denom)
 	}
@@ -107,8 +107,7 @@ func CalculateExpiration(principal sdk.Coin, vaultReserves sdk.Coin, rate string
 	}
 
 	// Iteratively calculate interest until the vault is depleted.
-	// TODO Change this to an appropriate limit. Have it set as NoLimit for now to follow previous behavior.
-	periods, i, err := CalculatePeriods(vaultReserves, principal, rate, periodSeconds, CalculatePeriodsNoLimit)
+	periods, i, err := CalculatePeriods(vaultReserves, principal, rate, periodSeconds, limit)
 	if err != nil {
 		return i, err
 	}

@@ -118,6 +118,7 @@ func TestCalculateExpiration(t *testing.T) {
 		rate           string
 		periodSeconds  int64
 		startTime      int64
+		limit          int64
 		expected       int64
 		expectedErrStr string
 	}{
@@ -149,20 +150,22 @@ func TestCalculateExpiration(t *testing.T) {
 			expected:      startTime + 60,
 		},
 		{
-			name:          "TODO Fix - period limit interrupts expiration calculation",
+			name:          "period limit interrupts expiration calculation",
 			principal:     sdk.NewCoin(denom, sdkmath.NewInt(100)),
 			reserves:      sdk.NewCoin(denom, sdkmath.NewInt(1_000_000)),
 			rate:          "1.0",
 			periodSeconds: interest.CalculatePeriodsLimit / 2,
+			limit:         interest.CalculatePeriodsLimit,
 			startTime:     startTime,
 			expected:      startTime + interest.CalculatePeriodsLimit,
 		},
 		{
-			name:          "TODO Fix - never accrues interest when exceeding period limit",
+			name:          "never accrues interest when exceeding period limit",
 			principal:     sdk.NewCoin(denom, sdkmath.NewInt(100)),
 			reserves:      sdk.NewCoin(denom, sdkmath.NewInt(1_000_000)),
 			rate:          "1.0",
 			periodSeconds: interest.CalculatePeriodsLimit + 1,
+			limit:         interest.CalculatePeriodsLimit,
 			startTime:     startTime,
 			expected:      startTime,
 		},
@@ -197,7 +200,7 @@ func TestCalculateExpiration(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			exp, err := interest.CalculateExpiration(tc.principal, tc.reserves, tc.rate, tc.periodSeconds, tc.startTime)
+			exp, err := interest.CalculateExpiration(tc.principal, tc.reserves, tc.rate, tc.periodSeconds, tc.startTime, interest.CalculatePeriodsLimit)
 			if len(tc.expectedErrStr) > 0 {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), tc.expectedErrStr)

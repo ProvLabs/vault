@@ -261,7 +261,7 @@ func TestCalculatePeriodsExtremes(t *testing.T) {
 			principal:     sdk.NewCoin(denom, sdkmath.NewInt(1_000_000_000_000)),
 			vaultReserves: sdk.NewCoin(denom, sdkmath.NewInt(10_000_000_000)),
 			rate:          "0.08",
-			periodSeconds: 5, // 1 week
+			periodSeconds: 5,
 			limit:         interest.CalculatePeriodsNoLimit,
 		},
 		{

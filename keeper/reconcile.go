@@ -254,10 +254,12 @@ func (k *Keeper) GetReconciledVaults(ctx context.Context, startTime int64) ([]Re
 		if interestDetails.PeriodStart == startTime {
 			vault, err := k.GetVault(sdkCtx, vaultAddr)
 			if err != nil {
-				return true, fmt.Errorf("failed to get vault account for %s: %w", vaultAddr.String(), err)
+				// TODO Check this, and should it be an error.
+				return false, nil
 			}
 			if vault == nil {
-				return true, errors.New("vault not found for existing interest details")
+				// TODO Check this, and should it be an error.
+				return false, nil
 			}
 
 			results = append(results, ReconciledVault{

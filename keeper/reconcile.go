@@ -18,8 +18,7 @@ import (
 // ReconcileVaultInterest processes any accrued interest for a vault since its last pay period start.
 // If interest is due, it transfers funds from the vault to the marker module and resets the pay period.
 func (k *Keeper) ReconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccount) error {
-	blocktime := ctx.BlockTime()
-	now := blocktime.Unix()
+	currentBlockTime := ctx.BlockTime().Unix()
 
 	interestDetails, err := k.VaultInterestDetails.Get(ctx, vault.GetAddress())
 	if err != nil {
@@ -27,17 +26,17 @@ func (k *Keeper) ReconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccou
 			// TODO: Not sure if we should handle this here, perhaps just return nil?
 			// Starting of the initial period should be done by management process? Keep for now.
 			return k.VaultInterestDetails.Set(ctx, vault.GetAddress(), types.VaultInterestDetails{
-				PeriodStart: now,
+				PeriodStart: currentBlockTime,
 			})
 		}
 		return fmt.Errorf("failed to get vault interest details: %w", err)
 	}
 
-	if now <= interestDetails.PeriodStart {
+	if currentBlockTime <= interestDetails.PeriodStart {
 		return nil
 	}
 
-	duration := now - interestDetails.PeriodStart
+	duration := currentBlockTime - interestDetails.PeriodStart
 
 	reserves := k.BankKeeper.GetBalance(ctx, vault.GetAddress(), vault.UnderlyingAssets[0])
 	principal := k.BankKeeper.GetBalance(ctx, markertypes.MustGetMarkerAddress(vault.ShareDenom), vault.UnderlyingAssets[0])
@@ -89,7 +88,7 @@ func (k *Keeper) ReconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccou
 	))
 
 	return k.VaultInterestDetails.Set(ctx, vault.GetAddress(), types.VaultInterestDetails{
-		PeriodStart: now,
+		PeriodStart: currentBlockTime,
 	})
 }
 

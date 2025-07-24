@@ -173,8 +173,16 @@ func (k *Keeper) HandleReconciledVaults(ctx context.Context) error {
 		return fmt.Errorf("failed to get reconciled vaults: %w", err)
 	}
 
+	payouts, failedPayouts := k.partitionReconciledVaults(sdkCtx, reconciled)
+	k.handlePayouts(ctx, payouts)
+	k.handleFailedPayouts(ctx, failedPayouts)
+
+	return nil
+}
+
+func (k *Keeper) partitionReconciledVaults(sdkCtx sdk.Context, vaults []ReconciledVault) ([]ReconciledVault, []ReconciledVault) {
 	var canPayout, cannotPayout []ReconciledVault
-	for _, record := range reconciled {
+	for _, record := range vaults {
 		payout, err := k.canPayout(sdkCtx, record)
 		if err != nil {
 			sdkCtx.Logger().Error("failed to check if vault can payout", "vault", record.Vault.GetAddress().String(), "err", err)
@@ -187,16 +195,24 @@ func (k *Keeper) HandleReconciledVaults(ctx context.Context) error {
 			cannotPayout = append(cannotPayout, record)
 		}
 	}
+	return canPayout, cannotPayout
+}
 
-	for _, record := range canPayout {
+func (k *Keeper) handlePayouts(ctx context.Context, payouts []ReconciledVault) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	blockTime := sdkCtx.BlockTime().Unix()
+
+	for _, record := range payouts {
 		record.InterestDetails.ExpireTime = blockTime + interest.SecondsPerDay
 		if err := k.VaultInterestDetails.Set(ctx, record.Vault.GetAddress(), *record.InterestDetails); err != nil {
 			sdkCtx.Logger().Error("failed to set VaultInterestDetails for vault", "vault", record.Vault.GetAddress().String(), "err", err)
 		}
 	}
+}
 
-	for _, record := range cannotPayout {
-		// TODO Do we want to wrap this because it involves the AuthKeeper
+func (k *Keeper) handleFailedPayouts(ctx context.Context, failedPayouts []ReconciledVault) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	for _, record := range failedPayouts {
 		record.Vault.InterestRate = "0"
 		k.AuthKeeper.SetAccount(ctx, record.Vault)
 
@@ -204,8 +220,6 @@ func (k *Keeper) HandleReconciledVaults(ctx context.Context) error {
 			sdkCtx.Logger().Error("failed to remove VaultInterestDetails for vault", "vault", record.Vault.GetAddress().String(), "err", err)
 		}
 	}
-
-	return nil
 }
 
 func (k *Keeper) canPayout(ctx context.Context, record ReconciledVault) (bool, error) {
@@ -230,7 +244,7 @@ type ReconciledVault struct {
 	InterestDetails *types.VaultInterestDetails
 }
 
-// GetVaultsForUpdate retrieves all vault records where the interest period
+// GetReconciledVaults retrieves all vault records where the interest period
 // started at the given startTime, indicating they are due for an update.
 func (k *Keeper) GetReconciledVaults(ctx context.Context, startTime int64) ([]ReconciledVault, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)

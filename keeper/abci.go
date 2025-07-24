@@ -66,39 +66,47 @@ func (k *Keeper) EndBlocker(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	blockTime := sdkCtx.BlockTime().Unix()
 
-	records, err := k.GetVaultRecords(sdkCtx, blockTime)
+	reconciled, err := k.GetReconciledVaults(sdkCtx, blockTime)
 	if err != nil {
-		return fmt.Errorf("failed to get vault records: %w", err)
+		return fmt.Errorf("failed to get reconciled vaults: %w", err)
 	}
 
-	for _, v := range records {
-		canPayout, err := k.CanPayout(sdkCtx, v)
+	var canPayout, cannotPayout []ReconciledVault
+	for _, record := range reconciled {
+		payout, err := k.canPayout(sdkCtx, record)
 		if err != nil {
-			sdkCtx.Logger().Error("failed to remove VaultInterestDetails for missing vault", "vault", v.Vault.GetAddress().String(), "err", err)
+			sdkCtx.Logger().Error("failed to check if vault can payout", "vault", record.Vault.GetAddress().String(), "err", err)
 			continue
 		}
 
-		if canPayout {
-			v.InterestDetails.ExpireTime = blockTime + interest.SecondsPerDay
-			if err := k.VaultInterestDetails.Set(ctx, v.Vault.GetAddress(), v.InterestDetails); err != nil {
-				sdkCtx.Logger().Error("failed to set VaultInterestDetails for vault", "vault", v.Vault.GetAddress().String(), "err", err)
-				continue
-			}
+		if payout {
+			canPayout = append(canPayout, record)
 		} else {
-			// TODO We want to wrap this because it involves the AuthKeeper
-			v.Vault.InterestRate = "0"
-			k.AuthKeeper.SetAccount(ctx, v.Vault)
-
-			if err := k.VaultInterestDetails.Remove(ctx, v.Vault.GetAddress()); err != nil {
-				sdkCtx.Logger().Error("failed to remove VaultInterestDetails for vault", "vault", v.Vault.GetAddress().String(), "err", err)
-				continue
-			}
+			cannotPayout = append(cannotPayout, record)
 		}
 	}
+
+	for _, record := range canPayout {
+		record.InterestDetails.ExpireTime = blockTime + interest.SecondsPerDay
+		if err := k.VaultInterestDetails.Set(ctx, record.Vault.GetAddress(), *record.InterestDetails); err != nil {
+			sdkCtx.Logger().Error("failed to set VaultInterestDetails for vault", "vault", record.Vault.GetAddress().String(), "err", err)
+		}
+	}
+
+	for _, record := range cannotPayout {
+		// TODO Do we want to wrap this because it involves the AuthKeeper
+		record.Vault.InterestRate = "0"
+		k.AuthKeeper.SetAccount(ctx, record.Vault)
+
+		if err := k.VaultInterestDetails.Remove(ctx, record.Vault.GetAddress()); err != nil {
+			sdkCtx.Logger().Error("failed to remove VaultInterestDetails for vault", "vault", record.Vault.GetAddress().String(), "err", err)
+		}
+	}
+
 	return nil
 }
 
-func (k *Keeper) CanPayout(ctx context.Context, record VaultRecord) (bool, error) {
+func (k *Keeper) canPayout(ctx context.Context, record ReconciledVault) (bool, error) {
 	markerAddr, err := markertypes.MarkerAddress(record.Vault.ShareDenom)
 	if err != nil {
 		return false, fmt.Errorf("failed to get marker address: %w", err)
@@ -106,7 +114,7 @@ func (k *Keeper) CanPayout(ctx context.Context, record VaultRecord) (bool, error
 	principal := k.BankKeeper.GetBalance(ctx, markerAddr, record.Vault.UnderlyingAssets[0])
 	reserves := k.BankKeeper.GetBalance(ctx, record.Vault.GetAddress(), record.Vault.UnderlyingAssets[0])
 
-	periods, _, err := interest.CalculatePeriods(reserves, principal, record.Vault.InterestRate, interest.SecondsPerDay, interest.CalculatePeriodsNoLimit)
+	periods, _, err := interest.CalculatePeriods(reserves, principal, record.Vault.InterestRate, interest.SecondsPerDay, interest.CalculatePeriodsLimit)
 	if err != nil {
 		return false, fmt.Errorf("failed to calculate periods: %w", err)
 	}
@@ -114,19 +122,17 @@ func (k *Keeper) CanPayout(ctx context.Context, record VaultRecord) (bool, error
 	return periods > 0, nil
 }
 
-// Vault is a helper struct to combine a vault and its interest details.
-// TODO What's a better name for this?
-// TODO Can VaultInterestDetails be a pointer?
-type VaultRecord struct {
+// ReconciledVault is a helper struct to combine a vault and its interest details.
+type ReconciledVault struct {
 	Vault           *types.VaultAccount
-	InterestDetails types.VaultInterestDetails
+	InterestDetails *types.VaultInterestDetails
 }
 
-// GetVaultsWithInterestDetailsByStartTime retrieves all vaults and their interest details
-// where the interest period started at the given startTime.
-func (k *Keeper) GetVaultRecords(ctx context.Context, startTime int64) ([]VaultRecord, error) {
+// GetVaultsForUpdate retrieves all vault records where the interest period
+// started at the given startTime, indicating they are due for an update.
+func (k *Keeper) GetReconciledVaults(ctx context.Context, startTime int64) ([]ReconciledVault, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	var results []VaultRecord
+	var results []ReconciledVault
 
 	err := k.VaultInterestDetails.Walk(sdkCtx, nil, func(vaultAddr sdk.AccAddress, interestDetails types.VaultInterestDetails) (stop bool, err error) {
 		if interestDetails.PeriodStart == startTime {
@@ -138,9 +144,9 @@ func (k *Keeper) GetVaultRecords(ctx context.Context, startTime int64) ([]VaultR
 				return true, errors.New("vault not found for existing interest details")
 			}
 
-			results = append(results, VaultRecord{
+			results = append(results, ReconciledVault{
 				Vault:           vault,
-				InterestDetails: interestDetails,
+				InterestDetails: &interestDetails,
 			})
 		}
 		return false, nil

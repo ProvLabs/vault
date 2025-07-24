@@ -246,3 +246,80 @@ func (s *TestSuite) TestKeeper_EstimateVaultTotalAssets() {
 		})
 	}
 }
+
+func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
+	twoMonthsAgo := time.Now().Add(-60 * 24 * time.Hour).Unix()
+	shareDenom := "vaultshares"
+	underlying := sdk.NewInt64Coin("underlying", 1_000_000_000)
+	vaultAddr := types.GetVaultAddress(shareDenom)
+	testBlockTime := time.Now()
+
+	tests := []struct {
+		name          string
+		setup         func()
+		expectedExist bool
+	}{
+		{
+			name: "valid vault with expired interest triggers reconciliation",
+			setup: func() {
+				s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
+				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin:           s.adminAddr.String(),
+					ShareDenom:      shareDenom,
+					UnderlyingAsset: underlying.Denom,
+				})
+				s.Require().NoError(err)
+
+				vault, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err)
+				vault.InterestRate = "0.25"
+				s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+				s.Require().NoError(s.k.VaultInterestDetails.Set(s.ctx, vaultAddr, types.VaultInterestDetails{
+					PeriodStart: twoMonthsAgo,
+					ExpireTime:  testBlockTime.Unix(),
+				}))
+
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(underlying)))
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markertypes.MustGetMarkerAddress(shareDenom), sdk.NewCoins(underlying)))
+				s.ctx = s.ctx.WithBlockTime(testBlockTime)
+			},
+			expectedExist: true,
+		},
+		{
+			name: "missing vault deletes interest record",
+			setup: func() {
+				s.Require().NoError(s.k.VaultInterestDetails.Set(s.ctx, vaultAddr, types.VaultInterestDetails{
+					PeriodStart: twoMonthsAgo,
+					ExpireTime:  testBlockTime.Unix(),
+				}))
+				s.ctx = s.ctx.WithBlockTime(testBlockTime)
+			},
+			expectedExist: false,
+		},
+		// {
+		// 	name: "malformed value triggers deletion",
+		// 	setup: func() {
+		// 		store := s.ctx.KVStore(s.storeKey)
+		// 		key, err := s.k.VaultInterestDetails.KeyCodec().Encode(vaultAddr)
+		// 		s.Require().NoError(err)
+		// 		store.Set(key, []byte("garbage"))
+		// 		s.ctx = s.ctx.WithBlockTime(testBlockTime)
+		// 	},
+		// 	expectedExist: false,
+		// },
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			tc.setup()
+
+			s.Require().NoError(s.k.HandleVaultInterestTimeouts(s.ctx))
+
+			exists, err := s.k.VaultInterestDetails.Has(s.ctx, vaultAddr)
+			s.Require().NoError(err)
+			s.Require().Equal(tc.expectedExist, exists)
+		})
+	}
+}

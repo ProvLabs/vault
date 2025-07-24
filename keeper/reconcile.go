@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -125,4 +126,40 @@ func (k Keeper) EstimateVaultTotalAssets(ctx sdk.Context, vault *types.VaultAcco
 	}
 
 	return estimated.Add(interestEarned), nil
+}
+
+func (k *Keeper) HandleVaultInterestTimeouts(ctx context.Context) error {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	blockTime := sdkCtx.BlockTime().Unix()
+
+	var toDelete []sdk.AccAddress
+
+	err := k.VaultInterestDetails.Walk(ctx, nil, func(vaultAddr sdk.AccAddress, details types.VaultInterestDetails) (bool, error) {
+		if details.ExpireTime > blockTime {
+			return false, nil
+		}
+
+		vault, err := k.GetVault(sdkCtx, vaultAddr)
+		if err != nil || vault == nil {
+			toDelete = append(toDelete, vaultAddr)
+			return false, nil
+		}
+
+		if err := k.ReconcileVaultInterest(sdkCtx, vault); err != nil {
+			sdkCtx.Logger().Error("failed to reconcile interest", "vault", vaultAddr.String(), "err", err)
+		}
+
+		return false, nil
+	})
+	if err != nil {
+		return fmt.Errorf("walk failed: %w", err)
+	}
+
+	for _, addr := range toDelete {
+		if err := k.VaultInterestDetails.Remove(ctx, addr); err != nil {
+			sdkCtx.Logger().Error("failed to remove VaultInterestDetails for missing vault", "vault", addr.String(), "err", err)
+		}
+	}
+
+	return nil
 }

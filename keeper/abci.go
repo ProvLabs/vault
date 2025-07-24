@@ -68,27 +68,21 @@ func (k *Keeper) EndBlocker(ctx context.Context) error {
 
 	records, err := k.GetVaultRecords(sdkCtx, blockTime)
 	if err != nil {
-		// TODO Something is wrong with store if there is an error
 		return fmt.Errorf("failed to get vault records: %w", err)
 	}
 
 	for _, v := range records {
 		canPayout, err := k.CanPayout(sdkCtx, v)
 		if err != nil {
-			// TODO Do we just want to continue?
-			// TODO Possibly the marker doesn't exist
-			// TODO It can't calculate interest
-			// TODO Or something is not setup in vault correctly
-			return fmt.Errorf("failed to check if vault can payout: %w", err)
+			sdkCtx.Logger().Error("failed to remove VaultInterestDetails for missing vault", "vault", v.Vault.GetAddress().String(), "err", err)
+			continue
 		}
 
-		// TODO Is this all or nothing?
 		if canPayout {
 			v.InterestDetails.ExpireTime = blockTime + interest.SecondsPerDay
 			if err := k.VaultInterestDetails.Set(ctx, v.Vault.GetAddress(), v.InterestDetails); err != nil {
-				// TODO Something is wrong with the store
-				// TODO Do we want to error or continue?
-				return fmt.Errorf("failed to set vault interest details: %w", err)
+				sdkCtx.Logger().Error("failed to set VaultInterestDetails for vault", "vault", v.Vault.GetAddress().String(), "err", err)
+				continue
 			}
 		} else {
 			// TODO We want to wrap this because it involves the AuthKeeper
@@ -96,9 +90,8 @@ func (k *Keeper) EndBlocker(ctx context.Context) error {
 			k.AuthKeeper.SetAccount(ctx, v.Vault)
 
 			if err := k.VaultInterestDetails.Remove(ctx, v.Vault.GetAddress()); err != nil {
-				// TODO Something is wrong with the store
-				// TODO Do we want to error or continue?
-				return fmt.Errorf("failed to remove vault interest details: %w", err)
+				sdkCtx.Logger().Error("failed to remove VaultInterestDetails for vault", "vault", v.Vault.GetAddress().String(), "err", err)
+				continue
 			}
 		}
 	}
@@ -131,7 +124,6 @@ type VaultRecord struct {
 
 // GetVaultsWithInterestDetailsByStartTime retrieves all vaults and their interest details
 // where the interest period started at the given startTime.
-// TODO We could possibly move this into state.go
 func (k *Keeper) GetVaultRecords(ctx context.Context, startTime int64) ([]VaultRecord, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	var results []VaultRecord

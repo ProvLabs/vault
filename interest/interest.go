@@ -20,8 +20,7 @@ const (
 	CalculatePeriodsLimit   = 2 * SecondsPerMonth
 	CalculatePeriodsNoLimit = 0
 
-	// TODO Can we pass this in instead of hardcoding it
-	EulerPrecision = 15
+	EulerPrecision = 17
 )
 
 // CalculateInterestEarned computes the continuously compounded interest for a given principal over a period.

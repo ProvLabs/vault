@@ -9,6 +9,8 @@ import (
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
 	querytest "github.com/provlabs/vault/utils/query"
+
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 func (s *TestSuite) TestQueryServer_Vault() {
@@ -420,6 +422,10 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 					ShareDenom:      shareDenom,
 					UnderlyingAsset: underlyingDenom,
 				})
+				s.Require().NoError(err)
+				err = FundAccount(s.ctx, s.simApp.BankKeeper, markertypes.MustGetMarkerAddress(shareDenom), sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 100)))
+				s.Require().NoError(err)
+				err = FundAccount(s.ctx, s.simApp.BankKeeper, s.adminAddr, sdk.NewCoins(sdk.NewInt64Coin(shareDenom, 100)))
 				s.Require().NoError(err)
 			},
 			Req: &types.QueryEstimateSwapOutRequest{

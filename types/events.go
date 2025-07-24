@@ -1,6 +1,8 @@
 package types
 
 import (
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -37,6 +39,7 @@ func NewEventVaultCreated(vault *VaultAccount) *EventVaultCreated {
 	}
 }
 
+// NewEventSwapIn creates a new NewEventSwapIn.
 func NewEventSwapIn(vaultAddress, owner string, assets, shares sdk.Coin) *EventSwapIn {
 	return &EventSwapIn{
 		VaultAddress:   vaultAddress,
@@ -46,11 +49,24 @@ func NewEventSwapIn(vaultAddress, owner string, assets, shares sdk.Coin) *EventS
 	}
 }
 
+// NewEventSwapOut creates a new NewEventSwapOut.
 func NewEventSwapOut(vaultAddress, owner string, assets, shares sdk.Coin) *EventSwapOut {
 	return &EventSwapOut{
 		VaultAddress: vaultAddress,
 		SharesBurned: shares,
 		AmountOut:    assets,
 		Owner:        owner,
+	}
+}
+
+// NewEventVaultReconcile creates a new EventVaultReconcile.
+func NewEventVaultReconcile(vaultAddress string, principalBefore, principalAfter sdk.Coin, rate string, duration int64, interestEarned sdkmath.Int) *EventVaultReconcile {
+	return &EventVaultReconcile{
+		VaultAddress:    vaultAddress,
+		PrincipalBefore: principalBefore,
+		PrincipalAfter:  principalAfter,
+		Rate:            rate,
+		Time:            duration,
+		InterestEarned:  sdk.Coin{Denom: principalBefore.Denom, Amount: interestEarned},
 	}
 }

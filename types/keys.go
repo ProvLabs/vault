@@ -3,8 +3,10 @@ package types
 import (
 	fmt "fmt"
 
-	"cosmossdk.io/collections"
 	"github.com/cometbft/cometbft/crypto"
+
+	"cosmossdk.io/collections"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -30,6 +32,10 @@ var (
 	VaultsKeyPrefix = collections.NewPrefix(1)
 	// VaultsName is a human-readable name for the vaults collection.
 	VaultsName = "vaults"
+	// VaultInterestDetailsPrefix is the prefix to retrieve all VaultInterestDetails
+	VaultInterestDetailsPrefix = collections.NewPrefix(2)
+	// VaultInterestDetailsName is a human-readable name for the vault interest details collection
+	VaultInterestDetailsName = "vault_interest_details"
 )
 
 // GetVaultAddress returns the module account address for the given shareDenom.

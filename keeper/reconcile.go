@@ -132,40 +132,27 @@ func (k *Keeper) HandleVaultInterestTimeouts(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	blockTime := sdkCtx.BlockTime().Unix()
 
-	iter, err := k.VaultInterestDetails.Iterate(ctx, nil)
-	if err != nil {
-		return fmt.Errorf("failed to iterate VaultInterestDetails: %w", err)
-	}
-	defer iter.Close()
-
 	var toDelete []sdk.AccAddress
 
-	for ; iter.Valid(); iter.Next() {
-		vaultAddr, err := iter.Key()
-		if err != nil {
-			sdkCtx.Logger().Error("failed to decode vault address", "err", err)
-			continue
+	err := k.VaultInterestDetails.Walk(ctx, nil, func(vaultAddr sdk.AccAddress, details types.VaultInterestDetails) (bool, error) {
+		if details.ExpireTime > blockTime {
+			return false, nil
 		}
 
-		details, err := iter.Value()
-		if err != nil {
-			sdkCtx.Logger().Error("failed to decode vault interest details", "vault", vaultAddr.String(), "err", err)
+		vault, err := k.GetVault(sdkCtx, vaultAddr)
+		if err != nil || vault == nil {
 			toDelete = append(toDelete, vaultAddr)
-			continue
+			return false, nil
 		}
 
-		if details.ExpireTime <= blockTime {
-			vault, err := k.GetVault(sdkCtx, vaultAddr)
-			if err != nil || vault == nil {
-				toDelete = append(toDelete, vaultAddr)
-				continue
-			}
-
-			if err := k.ReconcileVaultInterest(sdkCtx, vault); err != nil {
-				sdkCtx.Logger().Error("failed to reconcile interest", "vault", vaultAddr.String(), "err", err)
-				continue
-			}
+		if err := k.ReconcileVaultInterest(sdkCtx, vault); err != nil {
+			sdkCtx.Logger().Error("failed to reconcile interest", "vault", vaultAddr.String(), "err", err)
 		}
+
+		return false, nil
+	})
+	if err != nil {
+		return fmt.Errorf("walk failed: %w", err)
 	}
 
 	for _, addr := range toDelete {

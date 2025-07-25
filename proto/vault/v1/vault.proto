@@ -31,4 +31,6 @@ message VaultAccount {
 message VaultInterestDetails {
   // The start time (in Unix seconds) of the current interest accrual period.
   int64 period_start = 1;
+  // The expire time (in Unix seconds) of the current interest accrual period.
+  int64 expire_time = 2;
 }

@@ -164,6 +164,9 @@ func (k *Keeper) HandleVaultInterestTimeouts(ctx context.Context) error {
 	return nil
 }
 
+// HandleReconciledVaults processes vaults that have been reconciled in the current block.
+// It partitions them into active (able to pay interest) and depleted (unable to pay interest) vaults.
+// Active vaults have their expiration time extended, while depleted vaults have their interest rate set to zero.
 func (k *Keeper) HandleReconciledVaults(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	blockTime := sdkCtx.BlockTime().Unix()
@@ -173,32 +176,34 @@ func (k *Keeper) HandleReconciledVaults(ctx context.Context) error {
 		return fmt.Errorf("failed to get reconciled vaults: %w", err)
 	}
 
-	payouts, failedPayouts := k.partitionReconciledVaults(sdkCtx, reconciled)
-	k.handlePayouts(ctx, payouts)
-	k.handleFailedPayouts(ctx, failedPayouts)
+	payable, depleted := k.partitionReconciledVaults(sdkCtx, reconciled)
+	k.handlePayableVaults(ctx, payable)
+	k.handleDepletedVaults(ctx, depleted)
 
 	return nil
 }
 
+// partitionReconciledVaults groups the vaults into payable and depleted vaults.
 func (k *Keeper) partitionReconciledVaults(sdkCtx sdk.Context, vaults []ReconciledVault) ([]ReconciledVault, []ReconciledVault) {
-	var canPayout, cannotPayout []ReconciledVault
+	var payable, depleted []ReconciledVault
 	for _, record := range vaults {
-		payout, err := k.canPayout(sdkCtx, record)
+		payout, err := k.canPayoutPeriod(sdkCtx, record, interest.SecondsPerDay)
 		if err != nil {
 			sdkCtx.Logger().Error("failed to check if vault can payout", "vault", record.Vault.GetAddress().String(), "err", err)
 			continue
 		}
 
 		if payout {
-			canPayout = append(canPayout, record)
+			payable = append(payable, record)
 		} else {
-			cannotPayout = append(cannotPayout, record)
+			depleted = append(depleted, record)
 		}
 	}
-	return canPayout, cannotPayout
+	return payable, depleted
 }
 
-func (k *Keeper) handlePayouts(ctx context.Context, payouts []ReconciledVault) {
+// handlePayableVaults handles the logic for payable vaults that have been reonciled.
+func (k *Keeper) handlePayableVaults(ctx context.Context, payouts []ReconciledVault) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	blockTime := sdkCtx.BlockTime().Unix()
 
@@ -210,7 +215,8 @@ func (k *Keeper) handlePayouts(ctx context.Context, payouts []ReconciledVault) {
 	}
 }
 
-func (k *Keeper) handleFailedPayouts(ctx context.Context, failedPayouts []ReconciledVault) {
+// handleDepletedVaults handles the logic for depleted vaults that have been reconciled.
+func (k *Keeper) handleDepletedVaults(ctx context.Context, failedPayouts []ReconciledVault) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	for _, record := range failedPayouts {
 		record.Vault.InterestRate = "0"
@@ -222,7 +228,8 @@ func (k *Keeper) handleFailedPayouts(ctx context.Context, failedPayouts []Reconc
 	}
 }
 
-func (k *Keeper) canPayout(ctx context.Context, record ReconciledVault) (bool, error) {
+// canPayoutPeriod checks if the reconciled vault can payout the entire period.
+func (k *Keeper) canPayoutPeriod(ctx context.Context, record ReconciledVault, period int64) (bool, error) {
 	markerAddr, err := markertypes.MarkerAddress(record.Vault.ShareDenom)
 	if err != nil {
 		return false, fmt.Errorf("failed to get marker address: %w", err)
@@ -230,7 +237,7 @@ func (k *Keeper) canPayout(ctx context.Context, record ReconciledVault) (bool, e
 	principal := k.BankKeeper.GetBalance(ctx, markerAddr, record.Vault.UnderlyingAssets[0])
 	reserves := k.BankKeeper.GetBalance(ctx, record.Vault.GetAddress(), record.Vault.UnderlyingAssets[0])
 
-	periods, _, err := interest.CalculatePeriods(reserves, principal, record.Vault.InterestRate, interest.SecondsPerDay, interest.CalculatePeriodsLimit)
+	periods, _, err := interest.CalculatePeriods(reserves, principal, record.Vault.InterestRate, period, interest.CalculatePeriodsLimit)
 	if err != nil {
 		return false, fmt.Errorf("failed to calculate periods: %w", err)
 	}
@@ -245,7 +252,7 @@ type ReconciledVault struct {
 }
 
 // GetReconciledVaults retrieves all vault records where the interest period
-// started at the given startTime, indicating they are due for an update.
+// started at the given startTime, indicating they have been reconciled.
 func (k *Keeper) GetReconciledVaults(ctx context.Context, startTime int64) ([]ReconciledVault, error) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	var results []ReconciledVault

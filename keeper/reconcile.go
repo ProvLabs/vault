@@ -280,7 +280,7 @@ func (k *Keeper) canPayoutPeriod(ctx context.Context, record ReconciledVault, pe
 	reserves := k.BankKeeper.GetBalance(ctx, record.Vault.GetAddress(), record.Vault.UnderlyingAssets[0])
 
 	// TODO Look at this with Carlton and discuss.
-	periods, _, err := interest.CalculatePeriods(reserves, principal, record.Vault.InterestRate, period, interest.CalculatePeriodsLimit)
+	periods, _, err := interest.CalculatePeriods(reserves, principal, record.Vault.InterestRate, period, period)
 	if err != nil {
 		return false, fmt.Errorf("failed to calculate periods: %w", err)
 	}

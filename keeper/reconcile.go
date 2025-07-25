@@ -93,6 +93,37 @@ func (k *Keeper) ReconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccou
 	})
 }
 
+func (k *Keeper) CanPayoutDuration(ctx sdk.Context, vault *types.VaultAccount, duration int64) (bool, error) {
+	if duration <= 0 {
+		return true, nil
+	}
+
+	denom := vault.UnderlyingAssets[0]
+	vaultAddr := vault.GetAddress()
+	markerAddr := markertypes.MustGetMarkerAddress(vault.ShareDenom)
+
+	reserves := k.BankKeeper.GetBalance(ctx, vaultAddr, denom)
+	principal := k.BankKeeper.GetBalance(ctx, markerAddr, denom)
+
+	interestEarned, err := interest.CalculateInterestEarned(principal, vault.InterestRate, duration)
+	if err != nil {
+		return false, fmt.Errorf("failed to calculate interest: %w", err)
+	}
+
+	switch {
+	case interestEarned.IsZero():
+		return true, nil
+	case interestEarned.IsPositive():
+		return !reserves.Amount.LT(interestEarned), nil
+	case interestEarned.IsNegative():
+		required := interestEarned.Abs()
+		markerBal := k.BankKeeper.GetBalance(ctx, markerAddr, denom)
+		return !markerBal.Amount.LT(required), nil
+	default:
+		return false, fmt.Errorf("unexpected interest value: %s", interestEarned.String())
+	}
+}
+
 // EstimateVaultTotalAssets returns the estimated total value of the vault's assets,
 // including any interest that would have accrued since the last interest period start.
 // This is used to simulate the value of earned interest as if a reconciliation had occurred
@@ -133,6 +164,7 @@ func (k *Keeper) HandleVaultInterestTimeouts(ctx context.Context) error {
 	blockTime := sdkCtx.BlockTime().Unix()
 
 	var toDelete []sdk.AccAddress
+	var depletedVaults []ReconciledVault
 
 	err := k.VaultInterestDetails.Walk(ctx, nil, func(vaultAddr sdk.AccAddress, details types.VaultInterestDetails) (bool, error) {
 		if details.ExpireTime > blockTime {
@@ -142,6 +174,15 @@ func (k *Keeper) HandleVaultInterestTimeouts(ctx context.Context) error {
 		vault, err := k.GetVault(sdkCtx, vaultAddr)
 		if err != nil || vault == nil {
 			toDelete = append(toDelete, vaultAddr)
+			return false, nil
+		}
+
+		canPay, err := k.CanPayoutDuration(sdkCtx, vault, blockTime-details.PeriodStart)
+		if err != nil {
+			return false, nil
+		}
+		if !canPay {
+			depletedVaults = append(depletedVaults, ReconciledVault{Vault: vault, InterestDetails: &details})
 			return false, nil
 		}
 
@@ -161,6 +202,7 @@ func (k *Keeper) HandleVaultInterestTimeouts(ctx context.Context) error {
 		}
 	}
 
+	k.handleDepletedVaults(ctx, depletedVaults)
 	return nil
 }
 

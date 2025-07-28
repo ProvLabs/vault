@@ -571,6 +571,75 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 	}
 }
 
+func (s *TestSuite) TestKeeper_SetInterestRate() {
+	v1 := NewVaultInfo(1)
+	initialRate := "0.1"
+	newRate := "0.2"
+
+	tests := []struct {
+		name           string
+		setup          func() *types.VaultAccount
+		rateToSet      string
+		expectedEvents sdk.Events
+		postCheck      func(vault *types.VaultAccount)
+	}{
+		{
+			name: "successful rate change",
+			setup: func() *types.VaultAccount {
+				return createVaultWithInterest(s, v1, initialRate, 0, 0, false, false)
+			},
+			rateToSet: newRate,
+			expectedEvents: sdk.Events{
+				sdk.NewEvent(
+					"vault.v1.EventVaultInterestChange",
+					sdk.NewAttribute("new_rate", newRate),
+					sdk.NewAttribute("previous_rate", initialRate),
+					sdk.NewAttribute("vault_address", v1.vaultAddr.String()),
+				),
+			},
+			postCheck: func(vault *types.VaultAccount) {
+				updatedVault, err := s.k.GetVault(s.ctx, vault.GetAddress())
+				s.Require().NoError(err)
+				s.Require().NotNil(updatedVault)
+				s.Assert().Equal(newRate, updatedVault.InterestRate)
+			},
+		},
+		{
+			name: "rate is the same, no change",
+			setup: func() *types.VaultAccount {
+				return createVaultWithInterest(s, v1, initialRate, 0, 0, false, false)
+			},
+			rateToSet:      initialRate,
+			expectedEvents: sdk.Events{},
+			postCheck: func(vault *types.VaultAccount) {
+				updatedVault, err := s.k.GetVault(s.ctx, vault.GetAddress())
+				s.Require().NoError(err)
+				s.Require().NotNil(updatedVault)
+				s.Assert().Equal(initialRate, updatedVault.InterestRate)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			vault := tc.setup()
+
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			s.k.SetInterestRate(s.ctx, vault, tc.rateToSet)
+
+			s.Assert().Equal(
+				normalizeEvents(tc.expectedEvents),
+				normalizeEvents(s.ctx.EventManager().Events()),
+			)
+
+			if tc.postCheck != nil {
+				tc.postCheck(vault)
+			}
+		})
+	}
+}
+
 func createVaultWithInterest(s *TestSuite, info VaultInfo, interestRate string, periodStart, expireTime int64, fundReserves, fundPrincipal bool) *types.VaultAccount {
 	s.requireAddFinalizeAndActivateMarker(info.underlying, s.adminAddr)
 	vault, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{

@@ -129,6 +129,19 @@ func (k *Keeper) CanPayoutDuration(ctx sdk.Context, vault *types.VaultAccount, d
 	}
 }
 
+// SetInterestRate updates the interest rate for a given vault. If the new rate is
+// different from the current rate, it updates the vault account in the state and
+// emits an EventVaultInterestChange event. No action is taken if the new rate is the same as the existing one.
+func (k *Keeper) SetInterestRate(ctx context.Context, vault *types.VaultAccount, rate string) {
+	if rate == vault.InterestRate {
+		return
+	}
+	event := types.NewEventVaultInterestChange(vault.GetAddress().String(), vault.InterestRate, rate)
+	vault.InterestRate = rate
+	k.AuthKeeper.SetAccount(ctx, vault)
+	k.emitEvent(sdk.UnwrapSDKContext(ctx), event)
+}
+
 // EstimateVaultTotalAssets returns the estimated total value of the vault's assets,
 // including any interest that would have accrued since the last interest period start.
 // This is used to simulate the value of earned interest as if a reconciliation had occurred
@@ -266,8 +279,7 @@ func (k *Keeper) handlePayableVaults(ctx context.Context, payouts []ReconciledVa
 func (k *Keeper) handleDepletedVaults(ctx context.Context, failedPayouts []ReconciledVault) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	for _, record := range failedPayouts {
-		record.Vault.InterestRate = "0"
-		k.AuthKeeper.SetAccount(ctx, record.Vault)
+		k.SetInterestRate(ctx, record.Vault, "0")
 
 		if err := k.VaultInterestDetails.Remove(ctx, record.Vault.GetAddress()); err != nil {
 			sdkCtx.Logger().Error("failed to remove VaultInterestDetails for vault", "vault", record.Vault.GetAddress().String(), "err", err)

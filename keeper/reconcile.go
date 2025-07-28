@@ -16,6 +16,11 @@ import (
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
+const (
+	AutoReconcileTimeout        = 20 * interest.SecondsPerHour
+	AutoReconcilePayoutDuration = interest.SecondsPerDay
+)
+
 // ReconcileVaultInterest processes any accrued interest for a vault since its last pay period start.
 // If interest is due, it transfers funds from the vault to the marker module and resets the pay period.
 func (k *Keeper) ReconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccount) error {
@@ -229,7 +234,7 @@ func (k *Keeper) HandleReconciledVaults(ctx context.Context) error {
 func (k *Keeper) partitionReconciledVaults(sdkCtx sdk.Context, vaults []ReconciledVault) ([]ReconciledVault, []ReconciledVault) {
 	var payable, depleted []ReconciledVault
 	for _, record := range vaults {
-		payout, err := k.canPayoutPeriod(sdkCtx, record, interest.SecondsPerDay)
+		payout, err := k.CanPayoutDuration(sdkCtx, record.Vault, AutoReconcilePayoutDuration)
 		if err != nil {
 			sdkCtx.Logger().Error("failed to check if vault can payout", "vault", record.Vault.GetAddress().String(), "err", err)
 			continue
@@ -250,7 +255,7 @@ func (k *Keeper) handlePayableVaults(ctx context.Context, payouts []ReconciledVa
 	blockTime := sdkCtx.BlockTime().Unix()
 
 	for _, record := range payouts {
-		record.InterestDetails.ExpireTime = blockTime + interest.SecondsPerDay
+		record.InterestDetails.ExpireTime = blockTime + AutoReconcileTimeout
 		if err := k.VaultInterestDetails.Set(ctx, record.Vault.GetAddress(), *record.InterestDetails); err != nil {
 			sdkCtx.Logger().Error("failed to set VaultInterestDetails for vault", "vault", record.Vault.GetAddress().String(), "err", err)
 		}
@@ -268,24 +273,6 @@ func (k *Keeper) handleDepletedVaults(ctx context.Context, failedPayouts []Recon
 			sdkCtx.Logger().Error("failed to remove VaultInterestDetails for vault", "vault", record.Vault.GetAddress().String(), "err", err)
 		}
 	}
-}
-
-// canPayoutPeriod checks if the reconciled vault can payout the entire period.
-func (k *Keeper) canPayoutPeriod(ctx context.Context, record ReconciledVault, period int64) (bool, error) {
-	markerAddr, err := markertypes.MarkerAddress(record.Vault.ShareDenom)
-	if err != nil {
-		return false, fmt.Errorf("failed to get marker address: %w", err)
-	}
-	principal := k.BankKeeper.GetBalance(ctx, markerAddr, record.Vault.UnderlyingAssets[0])
-	reserves := k.BankKeeper.GetBalance(ctx, record.Vault.GetAddress(), record.Vault.UnderlyingAssets[0])
-
-	// TODO Look at this with Carlton and discuss.
-	periods, _, err := interest.CalculatePeriods(reserves, principal, record.Vault.InterestRate, period, period)
-	if err != nil {
-		return false, fmt.Errorf("failed to calculate periods: %w", err)
-	}
-
-	return periods > 0, nil
 }
 
 // ReconciledVault is a helper struct to combine a vault and its interest details.

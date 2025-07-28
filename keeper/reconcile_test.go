@@ -8,7 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
-	"github.com/provlabs/vault/interest"
+	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
 )
 
@@ -361,7 +361,7 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 				details, err := s.k.VaultInterestDetails.Get(s.ctx, v1.vaultAddr)
 				s.Require().NoError(err)
 				s.Assert().Equal(testBlockTime.Unix(), details.PeriodStart, "period start should not change")
-				expectedExpireTime := testBlockTime.Unix() + interest.SecondsPerDay
+				expectedExpireTime := testBlockTime.Unix() + keeper.AutoReconcileTimeout
 				s.Assert().Equal(expectedExpireTime, details.ExpireTime, "expire time should be extended")
 
 				// Vault interest rate should not change
@@ -403,7 +403,7 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 				// Check vault 1 (payable)
 				details1, err := s.k.VaultInterestDetails.Get(s.ctx, v1.vaultAddr)
 				s.Require().NoError(err)
-				expectedExpireTime := testBlockTime.Unix() + interest.SecondsPerDay
+				expectedExpireTime := testBlockTime.Unix() + keeper.AutoReconcileTimeout
 				s.Assert().Equal(expectedExpireTime, details1.ExpireTime, "vault 1 expire time should be extended")
 				vault1, err := s.k.GetVault(s.ctx, v1.vaultAddr)
 				s.Require().NoError(err)
@@ -453,7 +453,7 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 				// Check vault 1 (payable)
 				details1, err := s.k.VaultInterestDetails.Get(s.ctx, v1.vaultAddr)
 				s.Require().NoError(err)
-				expectedExpireTime := testBlockTime.Unix() + interest.SecondsPerDay
+				expectedExpireTime := testBlockTime.Unix() + keeper.AutoReconcileTimeout
 				s.Assert().Equal(expectedExpireTime, details1.ExpireTime, "vault 1 expire time should be extended")
 				vault1, err := s.k.GetVault(s.ctx, v1.vaultAddr)
 				s.Require().NoError(err)
@@ -492,7 +492,7 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 				createVaultWithInterest(s, v6, "0.1", pastTime.Unix(), testBlockTime.Unix(), true, true)
 			},
 			postCheck: func() {
-				expectedExpireTime := testBlockTime.Unix() + interest.SecondsPerDay
+				expectedExpireTime := testBlockTime.Unix() + keeper.AutoReconcileTimeout
 
 				// Check vault 1 (payable)
 				details1, err := s.k.VaultInterestDetails.Get(s.ctx, v1.vaultAddr)

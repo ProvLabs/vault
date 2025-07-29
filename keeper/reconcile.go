@@ -198,6 +198,8 @@ func (k *Keeper) HandleVaultInterestTimeouts(ctx context.Context) error {
 			return false, nil
 		}
 		if !canPay {
+			// PR Review TODO: Due to possible drift from endblocker to begin blocker.  The account might not be able to pay the funds.
+			// Should we just take the remainder of funds or just disable current interest of vault?
 			depletedVaults = append(depletedVaults, ReconciledVault{Vault: vault, InterestDetails: &details})
 			return false, nil
 		}

@@ -3,6 +3,8 @@ package types
 import (
 	fmt "fmt"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	proto "github.com/cosmos/gogoproto/proto"
@@ -70,6 +72,21 @@ func (va VaultAccount) Validate() error {
 			return fmt.Errorf("invalid underlying asset denom: %s", denom)
 		}
 	}
+
+	if len(va.CurrentInterestRate) > 0 {
+		_, err := sdkmath.LegacyNewDecFromStr(va.CurrentInterestRate)
+		if err != nil {
+			return fmt.Errorf("invalid current interest rate: %s", va.CurrentInterestRate)
+		}
+	}
+
+	if len(va.DesiredInterestRate) > 0 {
+		_, err := sdkmath.LegacyNewDecFromStr(va.DesiredInterestRate)
+		if err != nil {
+			return fmt.Errorf("invalid desired interest rate: %s", va.DesiredInterestRate)
+		}
+	}
+
 	return nil
 }
 

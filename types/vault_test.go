@@ -16,6 +16,8 @@ func TestVaultAccount_Validate(t *testing.T) {
 	validAdmin := utils.TestAddress().Bech32
 	validDenom := "validdenom"
 	invalidDenom := "inval!d"
+	validInterest := "0.05"
+	invalidInterest := "not-a-decimal"
 
 	baseAcc := authtypes.NewBaseAccountWithAddress(sdk.MustAccAddressFromBech32(validAdmin))
 
@@ -25,12 +27,14 @@ func TestVaultAccount_Validate(t *testing.T) {
 		expectedErr string
 	}{
 		{
-			name: "valid vault account",
+			name: "valid vault account with interest rates",
 			account: types.VaultAccount{
-				BaseAccount:      baseAcc,
-				Admin:            validAdmin,
-				ShareDenom:       validDenom,
-				UnderlyingAssets: []string{"uusd"},
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				ShareDenom:          validDenom,
+				UnderlyingAssets:    []string{"uusd"},
+				CurrentInterestRate: validInterest,
+				DesiredInterestRate: validInterest,
 			},
 			expectedErr: "",
 		},
@@ -83,6 +87,28 @@ func TestVaultAccount_Validate(t *testing.T) {
 				UnderlyingAssets: []string{invalidDenom},
 			},
 			expectedErr: fmt.Sprintf("invalid underlying asset denom: %s", invalidDenom),
+		},
+		{
+			name: "invalid current interest rate",
+			account: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				ShareDenom:          validDenom,
+				UnderlyingAssets:    []string{"uusd"},
+				CurrentInterestRate: invalidInterest,
+			},
+			expectedErr: "invalid current interest rate",
+		},
+		{
+			name: "invalid desired interest rate",
+			account: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				ShareDenom:          validDenom,
+				UnderlyingAssets:    []string{"uusd"},
+				DesiredInterestRate: invalidInterest,
+			},
+			expectedErr: "invalid desired interest rate",
 		},
 	}
 

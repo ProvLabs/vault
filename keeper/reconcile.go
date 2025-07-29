@@ -186,8 +186,8 @@ func (k *Keeper) HandleVaultInterestTimeouts(ctx context.Context) error {
 			return false, nil
 		}
 
-		vault, err := k.GetVault(sdkCtx, vaultAddr)
-		if err != nil || vault == nil {
+		vault, ok := k.tryGetVault(sdkCtx, vaultAddr)
+		if !ok {
 			toDelete = append(toDelete, vaultAddr)
 			return false, nil
 		}
@@ -222,6 +222,16 @@ func (k *Keeper) HandleVaultInterestTimeouts(ctx context.Context) error {
 
 	k.handleDepletedVaults(ctx, depletedVaults)
 	return nil
+}
+
+// tryGetVault returns the vault if found, or false if the vault is missing or invalid.
+// It should only be used in BeginBlocker/EndBlocker logic where failure is non-critical.
+func (k *Keeper) tryGetVault(ctx sdk.Context, addr sdk.AccAddress) (vault *types.VaultAccount, ok bool) {
+	vault, err := k.GetVault(ctx, addr)
+	if err != nil || vault == nil {
+		return nil, false
+	}
+	return vault, true
 }
 
 // handleReconciledVaults processes vaults that have been reconciled in the current block.
@@ -301,11 +311,8 @@ func (k *Keeper) GetReconciledVaults(ctx context.Context, startTime int64) ([]Re
 
 	err := k.VaultInterestDetails.Walk(sdkCtx, nil, func(vaultAddr sdk.AccAddress, interestDetails types.VaultInterestDetails) (stop bool, err error) {
 		if interestDetails.PeriodStart == startTime {
-			vault, err := k.GetVault(sdkCtx, vaultAddr)
-			if err != nil {
-				return false, nil
-			}
-			if vault == nil {
+			vault, ok := k.tryGetVault(sdkCtx, vaultAddr)
+			if !ok {
 				return false, nil
 			}
 

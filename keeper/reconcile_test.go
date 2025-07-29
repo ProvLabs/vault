@@ -650,7 +650,7 @@ func (s *TestSuite) TestKeeper_PartitionReconciledVaults() {
 			s.ctx = s.ctx.WithBlockTime(testBlockTime)
 			reconciledVaults := tc.setup()
 
-			payable, depleted := s.k.TestAccessor_partitionReconciledVaults(s.ctx, reconciledVaults)
+			payable, depleted := s.k.TestAccessor_partitionReconciledVaults(s.T(), s.ctx, reconciledVaults)
 
 			s.Assert().Len(payable, len(tc.expectedPayable), "payable vaults count")
 			s.Assert().Len(depleted, len(tc.expectedDepleted), "depleted vaults count")

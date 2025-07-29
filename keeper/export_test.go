@@ -30,3 +30,9 @@ func (k Keeper) TestAccessor_handleDepletedVaults(t *testing.T, ctx context.Cont
 	t.Helper()
 	k.handleDepletedVaults(ctx, failedPayouts)
 }
+
+// TestAccessor_handleDepletedVaults exposes this keeper's handleDepletedVaults function for unit tests.
+func (k Keeper) TestAccessor_handleVaultInterestTimeouts(t *testing.T, ctx context.Context) error {
+	t.Helper()
+	return k.handleVaultInterestTimeouts(ctx)
+}

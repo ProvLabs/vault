@@ -316,7 +316,7 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 			s.SetupTest()
 			tc.setup()
 
-			s.Require().NoError(s.k.HandleVaultInterestTimeouts(s.ctx))
+			s.Require().NoError(s.k.TestAccessor_handleVaultInterestTimeouts(s.T(), s.ctx))
 
 			exists, err := s.k.VaultInterestDetails.Has(s.ctx, vaultAddr)
 			s.Require().NoError(err)

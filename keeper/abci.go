@@ -5,7 +5,7 @@ import (
 )
 
 func (k *Keeper) BeginBlocker(ctx context.Context) error {
-	return k.HandleVaultInterestTimeouts(ctx)
+	return k.handleVaultInterestTimeouts(ctx)
 }
 
 func (k *Keeper) EndBlocker(ctx context.Context) error {

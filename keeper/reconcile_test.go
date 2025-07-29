@@ -32,7 +32,7 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 
 		vault, err := s.k.GetVault(s.ctx, vaultAddress)
 		s.Require().NoError(err)
-		vault.InterestRate = interestRate
+		vault.CurrentInterestRate = interestRate
 		s.k.AuthKeeper.SetAccount(s.ctx, vault)
 		err = FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddress, sdk.NewCoins(underlying))
 		s.Require().NoError(err)
@@ -175,7 +175,7 @@ func (s *TestSuite) TestKeeper_EstimateVaultTotalAssets() {
 
 		vault, err := s.k.GetVault(s.ctx, vaultAddress)
 		s.Require().NoError(err)
-		vault.InterestRate = interestRate
+		vault.CurrentInterestRate = interestRate
 		s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 		if periodStartSeconds != 0 {
@@ -273,7 +273,7 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 
 				vault, err := s.k.GetVault(s.ctx, vaultAddr)
 				s.Require().NoError(err)
-				vault.InterestRate = "0.25"
+				vault.CurrentInterestRate = "0.25"
 				s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 				s.Require().NoError(s.k.VaultInterestDetails.Set(s.ctx, vaultAddr, types.VaultInterestDetails{
@@ -368,7 +368,7 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 				vault, err := s.k.GetVault(s.ctx, v1.vaultAddr)
 				s.Require().NoError(err)
 				s.Require().NotNil(vault)
-				s.Assert().Equal("0.1", vault.InterestRate, "interest rate should not change")
+				s.Assert().Equal("0.1", vault.CurrentInterestRate, "interest rate should not change")
 			},
 			expectErr: false,
 		},
@@ -382,7 +382,7 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 				vault, err := s.k.GetVault(s.ctx, v1.vaultAddr)
 				s.Require().NoError(err)
 				s.Require().NotNil(vault)
-				s.Assert().Equal("0", vault.InterestRate, "interest rate should be zeroed out")
+				s.Assert().Equal("0", vault.CurrentInterestRate, "interest rate should be zeroed out")
 
 				// Interest details should be removed
 				has, err := s.k.VaultInterestDetails.Has(s.ctx, v1.vaultAddr)
@@ -407,12 +407,12 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 				s.Assert().Equal(expectedExpireTime, details1.ExpireTime, "vault 1 expire time should be extended")
 				vault1, err := s.k.GetVault(s.ctx, v1.vaultAddr)
 				s.Require().NoError(err)
-				s.Assert().Equal("0.1", vault1.InterestRate, "vault 1 interest rate should not change")
+				s.Assert().Equal("0.1", vault1.CurrentInterestRate, "vault 1 interest rate should not change")
 
 				// Check vault 2 (depleted)
 				vault2, err := s.k.GetVault(s.ctx, v2.vaultAddr)
 				s.Require().NoError(err)
-				s.Assert().Equal("0", vault2.InterestRate, "vault 2 interest rate should be zeroed out")
+				s.Assert().Equal("0", vault2.CurrentInterestRate, "vault 2 interest rate should be zeroed out")
 				has, err := s.k.VaultInterestDetails.Has(s.ctx, v2.vaultAddr)
 				s.Require().NoError(err)
 				s.Assert().False(has, "vault 2 interest details should be removed")
@@ -435,7 +435,7 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 				vault, err := s.k.GetVault(s.ctx, v1.vaultAddr)
 				s.Require().NoError(err)
 				s.Require().NotNil(vault)
-				s.Assert().Equal("0.1", vault.InterestRate, "interest rate should not change")
+				s.Assert().Equal("0.1", vault.CurrentInterestRate, "interest rate should not change")
 			},
 			expectErr: false,
 		},
@@ -457,12 +457,12 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 				s.Assert().Equal(expectedExpireTime, details1.ExpireTime, "vault 1 expire time should be extended")
 				vault1, err := s.k.GetVault(s.ctx, v1.vaultAddr)
 				s.Require().NoError(err)
-				s.Assert().Equal("0.1", vault1.InterestRate, "vault 1 interest rate should not change")
+				s.Assert().Equal("0.1", vault1.CurrentInterestRate, "vault 1 interest rate should not change")
 
 				// Check vault 2 (depleted)
 				vault2, err := s.k.GetVault(s.ctx, v2.vaultAddr)
 				s.Require().NoError(err)
-				s.Assert().Equal("0", vault2.InterestRate, "vault 2 interest rate should be zeroed out")
+				s.Assert().Equal("0", vault2.CurrentInterestRate, "vault 2 interest rate should be zeroed out")
 				has, err := s.k.VaultInterestDetails.Has(s.ctx, v2.vaultAddr)
 				s.Require().NoError(err)
 				s.Assert().False(has, "vault 2 interest details should be removed")
@@ -474,7 +474,7 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 				s.Assert().Equal(testBlockTime.Unix(), details3.ExpireTime, "vault 3 expire time should not change")
 				vault3, err := s.k.GetVault(s.ctx, v3.vaultAddr)
 				s.Require().NoError(err)
-				s.Assert().Equal("0.1", vault3.InterestRate, "vault 3 interest rate should not change")
+				s.Assert().Equal("0.1", vault3.CurrentInterestRate, "vault 3 interest rate should not change")
 			},
 			expectErr: false,
 		},
@@ -500,7 +500,7 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 				s.Assert().Equal(expectedExpireTime, details1.ExpireTime, "vault 1 expire time should be extended")
 				vault1, err := s.k.GetVault(s.ctx, v1.vaultAddr)
 				s.Require().NoError(err)
-				s.Assert().Equal("0.1", vault1.InterestRate, "vault 1 interest rate should not change")
+				s.Assert().Equal("0.1", vault1.CurrentInterestRate, "vault 1 interest rate should not change")
 
 				// Check vault 4 (payable)
 				details4, err := s.k.VaultInterestDetails.Get(s.ctx, v4.vaultAddr)
@@ -508,12 +508,12 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 				s.Assert().Equal(expectedExpireTime, details4.ExpireTime, "vault 4 expire time should be extended")
 				vault4, err := s.k.GetVault(s.ctx, v4.vaultAddr)
 				s.Require().NoError(err)
-				s.Assert().Equal("0.1", vault4.InterestRate, "vault 4 interest rate should not change")
+				s.Assert().Equal("0.1", vault4.CurrentInterestRate, "vault 4 interest rate should not change")
 
 				// Check vault 2 (depleted)
 				vault2, err := s.k.GetVault(s.ctx, v2.vaultAddr)
 				s.Require().NoError(err)
-				s.Assert().Equal("0", vault2.InterestRate, "vault 2 interest rate should be zeroed out")
+				s.Assert().Equal("0", vault2.CurrentInterestRate, "vault 2 interest rate should be zeroed out")
 				has2, err := s.k.VaultInterestDetails.Has(s.ctx, v2.vaultAddr)
 				s.Require().NoError(err)
 				s.Assert().False(has2, "vault 2 interest details should be removed")
@@ -521,7 +521,7 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 				// Check vault 5 (depleted)
 				vault5, err := s.k.GetVault(s.ctx, v5.vaultAddr)
 				s.Require().NoError(err)
-				s.Assert().Equal("0", vault5.InterestRate, "vault 5 interest rate should be zeroed out")
+				s.Assert().Equal("0", vault5.CurrentInterestRate, "vault 5 interest rate should be zeroed out")
 				has5, err := s.k.VaultInterestDetails.Has(s.ctx, v5.vaultAddr)
 				s.Require().NoError(err)
 				s.Assert().False(has5, "vault 5 interest details should be removed")
@@ -533,7 +533,7 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 				s.Assert().Equal(testBlockTime.Unix(), details3.ExpireTime, "vault 3 expire time should not change")
 				vault3, err := s.k.GetVault(s.ctx, v3.vaultAddr)
 				s.Require().NoError(err)
-				s.Assert().Equal("0.1", vault3.InterestRate, "vault 3 interest rate should not change")
+				s.Assert().Equal("0.1", vault3.CurrentInterestRate, "vault 3 interest rate should not change")
 
 				// Check vault 6 (not reconciled)
 				details6, err := s.k.VaultInterestDetails.Get(s.ctx, v6.vaultAddr)
@@ -542,7 +542,7 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 				s.Assert().Equal(testBlockTime.Unix(), details6.ExpireTime, "vault 6 expire time should not change")
 				vault6, err := s.k.GetVault(s.ctx, v6.vaultAddr)
 				s.Require().NoError(err)
-				s.Assert().Equal("0.1", vault6.InterestRate, "vault 6 interest rate should not change")
+				s.Assert().Equal("0.1", vault6.CurrentInterestRate, "vault 6 interest rate should not change")
 			},
 			expectErr: false,
 		},
@@ -601,7 +601,7 @@ func (s *TestSuite) TestKeeper_SetInterestRate() {
 				updatedVault, err := s.k.GetVault(s.ctx, vault.GetAddress())
 				s.Require().NoError(err)
 				s.Require().NotNil(updatedVault)
-				s.Assert().Equal(newRate, updatedVault.InterestRate)
+				s.Assert().Equal(newRate, updatedVault.CurrentInterestRate)
 			},
 		},
 		{
@@ -615,7 +615,7 @@ func (s *TestSuite) TestKeeper_SetInterestRate() {
 				updatedVault, err := s.k.GetVault(s.ctx, vault.GetAddress())
 				s.Require().NoError(err)
 				s.Require().NotNil(updatedVault)
-				s.Assert().Equal(initialRate, updatedVault.InterestRate)
+				s.Assert().Equal(initialRate, updatedVault.CurrentInterestRate)
 			},
 		},
 	}
@@ -649,7 +649,7 @@ func createVaultWithInterest(s *TestSuite, info VaultInfo, interestRate string, 
 	})
 	s.Require().NoError(err)
 
-	vault.InterestRate = interestRate
+	vault.CurrentInterestRate = interestRate
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 	if fundReserves {

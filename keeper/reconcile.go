@@ -47,7 +47,7 @@ func (k *Keeper) ReconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccou
 	reserves := k.BankKeeper.GetBalance(ctx, vault.GetAddress(), vault.UnderlyingAssets[0])
 	principal := k.BankKeeper.GetBalance(ctx, markertypes.MustGetMarkerAddress(vault.ShareDenom), vault.UnderlyingAssets[0])
 
-	interestEarned, err := interest.CalculateInterestEarned(principal, vault.InterestRate, duration)
+	interestEarned, err := interest.CalculateInterestEarned(principal, vault.CurrentInterestRate, duration)
 	if err != nil {
 		return fmt.Errorf("failed to calculate interest: %w", err)
 	}
@@ -88,7 +88,7 @@ func (k *Keeper) ReconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccou
 		vault.GetAddress().String(),
 		principal,
 		principalAfter,
-		vault.InterestRate,
+		vault.CurrentInterestRate,
 		duration,
 		interestEarned,
 	))
@@ -110,7 +110,7 @@ func (k *Keeper) CanPayoutDuration(ctx sdk.Context, vault *types.VaultAccount, d
 	reserves := k.BankKeeper.GetBalance(ctx, vaultAddr, denom)
 	principal := k.BankKeeper.GetBalance(ctx, markerAddr, denom)
 
-	interestEarned, err := interest.CalculateInterestEarned(principal, vault.InterestRate, duration)
+	interestEarned, err := interest.CalculateInterestEarned(principal, vault.CurrentInterestRate, duration)
 	if err != nil {
 		return false, fmt.Errorf("failed to calculate interest: %w", err)
 	}
@@ -133,11 +133,11 @@ func (k *Keeper) CanPayoutDuration(ctx sdk.Context, vault *types.VaultAccount, d
 // different from the current rate, it updates the vault account in the state and
 // emits an EventVaultInterestChange event. No action is taken if the new rate is the same as the existing one.
 func (k *Keeper) SetInterestRate(ctx context.Context, vault *types.VaultAccount, rate string) {
-	if rate == vault.InterestRate {
+	if rate == vault.CurrentInterestRate {
 		return
 	}
-	event := types.NewEventVaultInterestChange(vault.GetAddress().String(), vault.InterestRate, rate)
-	vault.InterestRate = rate
+	event := types.NewEventVaultInterestChange(vault.GetAddress().String(), vault.CurrentInterestRate, rate)
+	vault.CurrentInterestRate = rate
 	k.AuthKeeper.SetAccount(ctx, vault)
 	k.emitEvent(sdk.UnwrapSDKContext(ctx), event)
 }
@@ -152,7 +152,7 @@ func (k *Keeper) SetInterestRate(ctx context.Context, vault *types.VaultAccount,
 func (k Keeper) EstimateVaultTotalAssets(ctx sdk.Context, vault *types.VaultAccount, totalAssets sdk.Coin) (sdkmath.Int, error) {
 	estimated := totalAssets.Amount
 
-	if vault.InterestRate == "" {
+	if vault.CurrentInterestRate == "" {
 		return estimated, nil
 	}
 
@@ -169,7 +169,7 @@ func (k Keeper) EstimateVaultTotalAssets(ctx sdk.Context, vault *types.VaultAcco
 		return estimated, nil
 	}
 
-	interestEarned, err := interest.CalculateInterestEarned(totalAssets, vault.InterestRate, duration)
+	interestEarned, err := interest.CalculateInterestEarned(totalAssets, vault.CurrentInterestRate, duration)
 	if err != nil {
 		return sdkmath.Int{}, fmt.Errorf("error calculating interest: %w", err)
 	}

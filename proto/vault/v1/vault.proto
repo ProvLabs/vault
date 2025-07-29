@@ -18,9 +18,11 @@ message VaultAccount {
   repeated string underlying_assets = 3;
   // admin is the address that has administrative privileges over the vault.
   string admin = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // interest_rate is the annualized continuous interest rate for the vault,
-  // represented as a decimal string (e.g., "0.05" for 5% APR).
-  string interest_rate = 5 [(cosmos_proto.scalar) = "cosmos.DecString"];
+  // current_interest_rate is the actual interest rate currently being applied.
+  // This may be adjusted programmatically (e.g., due to lack of funds).
+  string current_interest_rate = 5 [(cosmos_proto.scalar) = "cosmos.DecString"];
+  // desired_interest_rate is the target interest rate that the vault intends to apply.
+  string desired_interest_rate = 6 [(cosmos_proto.scalar) = "cosmos.DecString"];
 }
 
 // VaultInterestDetails stores metadata related to interest accrual and payment for a vault.

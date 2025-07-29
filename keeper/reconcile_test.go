@@ -571,6 +571,93 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 	}
 }
 
+func (s *TestSuite) TestKeeper_PartitionReconciledVaults() {
+	v1, v2, v3, v4 := NewVaultInfo(1), NewVaultInfo(2), NewVaultInfo(3), NewVaultInfo(4)
+	testBlockTime := time.Now().UTC().Truncate(time.Second)
+
+	tests := []struct {
+		name             string
+		setup            func() []keeper.ReconciledVault
+		expectedPayable  []sdk.AccAddress
+		expectedDepleted []sdk.AccAddress
+	}{
+		{
+			name: "empty list of vaults",
+			setup: func() []keeper.ReconciledVault {
+				return []keeper.ReconciledVault{}
+			},
+			expectedPayable:  []sdk.AccAddress{},
+			expectedDepleted: []sdk.AccAddress{},
+		},
+		{
+			name: "one payable vault",
+			setup: func() []keeper.ReconciledVault {
+				vault := createVaultWithInterest(s, v1, "0.1", 0, 0, true, true)
+				details, err := s.k.VaultInterestDetails.Get(s.ctx, v1.vaultAddr)
+				s.Require().NoError(err)
+				return []keeper.ReconciledVault{{
+					Vault:           vault,
+					InterestDetails: &details,
+				}}
+			},
+			expectedPayable:  []sdk.AccAddress{v1.vaultAddr},
+			expectedDepleted: []sdk.AccAddress{},
+		},
+		{
+			name: "one depleted vault",
+			setup: func() []keeper.ReconciledVault {
+				vault := createVaultWithInterest(s, v1, "0.1", 0, 0, false, true)
+				details, err := s.k.VaultInterestDetails.Get(s.ctx, v1.vaultAddr)
+				s.Require().NoError(err)
+				return []keeper.ReconciledVault{{
+					Vault:           vault,
+					InterestDetails: &details,
+				}}
+			},
+			expectedPayable:  []sdk.AccAddress{},
+			expectedDepleted: []sdk.AccAddress{v1.vaultAddr},
+		},
+		{
+			name: "multiple payable and depleted vaults",
+			setup: func() []keeper.ReconciledVault {
+				vault1 := createVaultWithInterest(s, v1, "0.1", 0, 0, true, true)
+				details1, err := s.k.VaultInterestDetails.Get(s.ctx, v1.vaultAddr)
+				s.Require().NoError(err)
+				vault2 := createVaultWithInterest(s, v2, "0.1", 0, 0, false, true)
+				details2, err := s.k.VaultInterestDetails.Get(s.ctx, v2.vaultAddr)
+				s.Require().NoError(err)
+				vault3 := createVaultWithInterest(s, v3, "0.1", 0, 0, true, true)
+				details3, err := s.k.VaultInterestDetails.Get(s.ctx, v3.vaultAddr)
+				s.Require().NoError(err)
+				vault4 := createVaultWithInterest(s, v4, "0.1", 0, 0, false, true)
+				details4, err := s.k.VaultInterestDetails.Get(s.ctx, v4.vaultAddr)
+				s.Require().NoError(err)
+				return []keeper.ReconciledVault{
+					{Vault: vault1, InterestDetails: &details1},
+					{Vault: vault2, InterestDetails: &details2},
+					{Vault: vault3, InterestDetails: &details3},
+					{Vault: vault4, InterestDetails: &details4},
+				}
+			},
+			expectedPayable:  []sdk.AccAddress{v1.vaultAddr, v3.vaultAddr},
+			expectedDepleted: []sdk.AccAddress{v2.vaultAddr, v4.vaultAddr},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			s.ctx = s.ctx.WithBlockTime(testBlockTime)
+			reconciledVaults := tc.setup()
+
+			payable, depleted := s.k.TestAccessor_partitionReconciledVaults(s.ctx, reconciledVaults)
+
+			s.Assert().Len(payable, len(tc.expectedPayable), "payable vaults count")
+			s.Assert().Len(depleted, len(tc.expectedDepleted), "depleted vaults count")
+		})
+	}
+}
+
 func (s *TestSuite) TestKeeper_SetInterestRate() {
 	v1 := NewVaultInfo(1)
 	initialRate := "0.1"

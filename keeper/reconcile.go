@@ -44,8 +44,9 @@ func (k *Keeper) ReconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccou
 
 	duration := currentBlockTime - interestDetails.PeriodStart
 
+	markerAddress := markertypes.MustGetMarkerAddress(vault.ShareDenom)
 	reserves := k.BankKeeper.GetBalance(ctx, vault.GetAddress(), vault.UnderlyingAssets[0])
-	principal := k.BankKeeper.GetBalance(ctx, markertypes.MustGetMarkerAddress(vault.ShareDenom), vault.UnderlyingAssets[0])
+	principal := k.BankKeeper.GetBalance(ctx, markerAddress, vault.UnderlyingAssets[0])
 
 	interestEarned, err := interest.CalculateInterestEarned(principal, vault.CurrentInterestRate, duration)
 	if err != nil {
@@ -66,16 +67,12 @@ func (k *Keeper) ReconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccou
 		}
 	} else if interestEarned.IsNegative() {
 		owed := interestEarned.Abs()
-		from := markertypes.MustGetMarkerAddress(vault.ShareDenom)
-		to := vault.GetAddress()
-
-		balance := k.BankKeeper.GetBalance(ctx, from, vault.UnderlyingAssets[0])
-		if balance.Amount.LT(owed) {
+		if principal.Amount.LT(owed) {
 			return fmt.Errorf("insufficient marker balance to reclaim negative interest")
 		}
 		if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx),
-			from,
-			to,
+			markerAddress,
+			vault.GetAddress(),
 			sdk.NewCoins(sdk.NewCoin(vault.UnderlyingAssets[0], owed)),
 		); err != nil {
 			return fmt.Errorf("failed to reclaim negative interest: %w", err)
@@ -129,8 +126,8 @@ func (k *Keeper) CanPayoutDuration(ctx sdk.Context, vault *types.VaultAccount, d
 	}
 }
 
-// SetInterestRate updates the interest rate for a given vault. If the new rate is
-// different from the current rate, it updates the vault account in the state and
+// SetCurrentInterestRate updates the current interest rate for a given vault. If the new rate is
+// different from the currently set rate, it updates the vault account in the state and
 // emits an EventVaultInterestChange event. No action is taken if the new rate is the same as the existing one.
 func (k *Keeper) SetInterestRate(ctx context.Context, vault *types.VaultAccount, rate string) {
 	if rate == vault.CurrentInterestRate {
@@ -195,7 +192,8 @@ func (k *Keeper) HandleVaultInterestTimeouts(ctx context.Context) error {
 			return false, nil
 		}
 
-		canPay, err := k.CanPayoutDuration(sdkCtx, vault, blockTime-details.PeriodStart)
+		currentDuration := blockTime - details.PeriodStart
+		canPay, err := k.CanPayoutDuration(sdkCtx, vault, currentDuration)
 		if err != nil {
 			return false, nil
 		}

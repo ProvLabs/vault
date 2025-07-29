@@ -626,7 +626,7 @@ func (s *TestSuite) TestKeeper_SetInterestRate() {
 			vault := tc.setup()
 
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
-			s.k.SetInterestRate(s.ctx, vault, tc.rateToSet)
+			s.k.SetCurrentInterestRate(s.ctx, vault, tc.rateToSet)
 
 			s.Assert().Equal(
 				normalizeEvents(tc.expectedEvents),

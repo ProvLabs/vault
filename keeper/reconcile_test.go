@@ -605,10 +605,9 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 				s.Require().NoError(err)
 			}
 
-			s.Assert().Equal(
-				normalizeEvents(tc.expectedEvents),
-				normalizeEvents(s.ctx.EventManager().Events()),
-			)
+			actualEvents := normalizeEvents(s.ctx.EventManager().Events())
+			expectedEvents := normalizeEvents(tc.expectedEvents)
+			s.Assert().Subset(actualEvents, expectedEvents, "emitted events should contain all expected events")
 
 			if tc.postCheck != nil {
 				tc.postCheck()

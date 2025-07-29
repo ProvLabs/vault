@@ -47,11 +47,6 @@ func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*type
 		return nil, fmt.Errorf("failed to create vault marker: %w", err)
 	}
 
-	err = vault.Validate()
-	if err != nil {
-		return nil, fmt.Errorf("failed to validate vault: %w", err)
-	}
-
 	k.emitEvent(ctx, types.NewEventVaultCreated(vault))
 
 	return vault, nil

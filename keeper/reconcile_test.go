@@ -333,10 +333,11 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 	pastTime := testBlockTime.Add(-1 * time.Hour)
 
 	tests := []struct {
-		name      string
-		setup     func()
-		postCheck func()
-		expectErr bool
+		name           string
+		setup          func()
+		postCheck      func()
+		expectErr      bool
+		expectedEvents sdk.Events
 	}{
 		{
 			name: "no vaults in store",
@@ -349,7 +350,8 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 				s.Require().NoError(err)
 				s.Require().Empty(vaults)
 			},
-			expectErr: false,
+			expectErr:      false,
+			expectedEvents: sdk.Events{},
 		},
 		{
 			name: "one vault reconciled, sufficient funds",
@@ -370,7 +372,8 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 				s.Require().NotNil(vault)
 				s.Assert().Equal("0.1", vault.CurrentInterestRate, "interest rate should not change")
 			},
-			expectErr: false,
+			expectErr:      false,
+			expectedEvents: sdk.Events{},
 		},
 		{
 			name: "one vault reconciled, insufficient funds",
@@ -390,6 +393,14 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 				s.Assert().False(has, "interest details should be removed for depleted vault")
 			},
 			expectErr: false,
+			expectedEvents: sdk.Events{
+				sdk.NewEvent(
+					"vault.v1.EventVaultInterestChange",
+					sdk.NewAttribute("new_rate", "0"),
+					sdk.NewAttribute("previous_rate", "0.1"),
+					sdk.NewAttribute("vault_address", v1.vaultAddr.String()),
+				),
+			},
 		},
 		{
 			name: "two vaults reconciled, one payable, one depleted",
@@ -418,6 +429,14 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 				s.Assert().False(has, "vault 2 interest details should be removed")
 			},
 			expectErr: false,
+			expectedEvents: sdk.Events{
+				sdk.NewEvent(
+					"vault.v1.EventVaultInterestChange",
+					sdk.NewAttribute("new_rate", "0"),
+					sdk.NewAttribute("previous_rate", "0.1"),
+					sdk.NewAttribute("vault_address", v2.vaultAddr.String()),
+				),
+			},
 		},
 		{
 			name: "one vault, not reconciled",
@@ -437,7 +456,8 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 				s.Require().NotNil(vault)
 				s.Assert().Equal("0.1", vault.CurrentInterestRate, "interest rate should not change")
 			},
-			expectErr: false,
+			expectErr:      false,
+			expectedEvents: sdk.Events{},
 		},
 		{
 			name: "three vaults, two reconciled (one payable, one depleted), one not reconciled",
@@ -477,6 +497,14 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 				s.Assert().Equal("0.1", vault3.CurrentInterestRate, "vault 3 interest rate should not change")
 			},
 			expectErr: false,
+			expectedEvents: sdk.Events{
+				sdk.NewEvent(
+					"vault.v1.EventVaultInterestChange",
+					sdk.NewAttribute("new_rate", "0"),
+					sdk.NewAttribute("previous_rate", "0.1"),
+					sdk.NewAttribute("vault_address", v2.vaultAddr.String()),
+				),
+			},
 		},
 		{
 			name: "six vaults, two payable, two depleted, two not reconciled",
@@ -545,6 +573,18 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 				s.Assert().Equal("0.1", vault6.CurrentInterestRate, "vault 6 interest rate should not change")
 			},
 			expectErr: false,
+			expectedEvents: sdk.Events{
+				sdk.NewEvent(
+					"vault.v1.EventVaultInterestChange",
+					sdk.NewAttribute("new_rate", "0"),
+					sdk.NewAttribute("previous_rate", "0.1"),
+					sdk.NewAttribute("vault_address", v2.vaultAddr.String())),
+				sdk.NewEvent(
+					"vault.v1.EventVaultInterestChange",
+					sdk.NewAttribute("new_rate", "0"),
+					sdk.NewAttribute("previous_rate", "0.1"),
+					sdk.NewAttribute("vault_address", v5.vaultAddr.String())),
+			},
 		},
 	}
 
@@ -552,17 +592,23 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 		s.Run(tc.name, func() {
 			s.SetupTest()
 			s.ctx = s.ctx.WithBlockTime(testBlockTime)
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 			if tc.setup != nil {
 				tc.setup()
 			}
 
-			err := s.k.HandleReconciledVaults(s.ctx)
+			err := s.k.TestAccessor_handleReconciledVaults(s.T(), s.ctx)
 
 			if tc.expectErr {
 				s.Require().Error(err)
 			} else {
 				s.Require().NoError(err)
 			}
+
+			s.Assert().Equal(
+				normalizeEvents(tc.expectedEvents),
+				normalizeEvents(s.ctx.EventManager().Events()),
+			)
 
 			if tc.postCheck != nil {
 				tc.postCheck()
@@ -654,6 +700,166 @@ func (s *TestSuite) TestKeeper_PartitionReconciledVaults() {
 
 			s.Assert().Len(payable, len(tc.expectedPayable), "payable vaults count")
 			s.Assert().Len(depleted, len(tc.expectedDepleted), "depleted vaults count")
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_handlePayableVaults() {
+	v1, v2 := NewVaultInfo(1), NewVaultInfo(2)
+	testBlockTime := time.Now().UTC().Truncate(time.Second)
+
+	tests := []struct {
+		name      string
+		setup     func() []keeper.ReconciledVault
+		postCheck func(vaults []keeper.ReconciledVault)
+	}{
+		{
+			name: "single payable vault",
+			setup: func() []keeper.ReconciledVault {
+				vault := createVaultWithInterest(s, v1, "0.1", testBlockTime.Unix(), 0, true, true)
+				details, err := s.k.VaultInterestDetails.Get(s.ctx, v1.vaultAddr)
+				s.Require().NoError(err)
+				return []keeper.ReconciledVault{{Vault: vault, InterestDetails: &details}}
+			},
+			postCheck: func(vaults []keeper.ReconciledVault) {
+				addr := vaults[0].Vault.GetAddress()
+				details, err := s.k.VaultInterestDetails.Get(s.ctx, addr)
+				s.Require().NoError(err)
+				expectedExpireTime := testBlockTime.Unix() + keeper.AutoReconcileTimeout
+				s.Assert().Equal(expectedExpireTime, details.ExpireTime, "expire time should be extended")
+			},
+		},
+		{
+			name: "multiple payable vaults",
+			setup: func() []keeper.ReconciledVault {
+				vault1 := createVaultWithInterest(s, v1, "0.1", testBlockTime.Unix(), 0, true, true)
+				details1, err := s.k.VaultInterestDetails.Get(s.ctx, v1.vaultAddr)
+				s.Require().NoError(err)
+				vault2 := createVaultWithInterest(s, v2, "0.2", testBlockTime.Unix(), 0, true, true)
+				details2, err := s.k.VaultInterestDetails.Get(s.ctx, v2.vaultAddr)
+				s.Require().NoError(err)
+				return []keeper.ReconciledVault{
+					{Vault: vault1, InterestDetails: &details1},
+					{Vault: vault2, InterestDetails: &details2},
+				}
+			},
+			postCheck: func(vaults []keeper.ReconciledVault) {
+				expectedExpireTime := testBlockTime.Unix() + keeper.AutoReconcileTimeout
+
+				// Check vault 1
+				addr1 := vaults[0].Vault.GetAddress()
+				details1, err := s.k.VaultInterestDetails.Get(s.ctx, addr1)
+				s.Require().NoError(err)
+				s.Assert().Equal(expectedExpireTime, details1.ExpireTime)
+
+				// Check vault 2
+				addr2 := vaults[1].Vault.GetAddress()
+				details2, err := s.k.VaultInterestDetails.Get(s.ctx, addr2)
+				s.Require().NoError(err)
+				s.Assert().Equal(expectedExpireTime, details2.ExpireTime)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			s.ctx = s.ctx.WithBlockTime(testBlockTime)
+			vaults := tc.setup()
+
+			s.k.TestAccessor_handlePayableVaults(s.T(), s.ctx, vaults)
+
+			if tc.postCheck != nil {
+				tc.postCheck(vaults)
+			}
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_handleDepletedVaults() {
+	v1, v2 := NewVaultInfo(1), NewVaultInfo(2)
+	initialRate := "0.1"
+
+	tests := []struct {
+		name           string
+		setup          func() []keeper.ReconciledVault
+		postCheck      func(vaults []keeper.ReconciledVault)
+		expectedEvents sdk.Events
+	}{
+		{
+			name: "single depleted vault",
+			setup: func() []keeper.ReconciledVault {
+				vault := createVaultWithInterest(s, v1, initialRate, 0, 0, false, true)
+				details, err := s.k.VaultInterestDetails.Get(s.ctx, v1.vaultAddr)
+				s.Require().NoError(err)
+				return []keeper.ReconciledVault{{Vault: vault, InterestDetails: &details}}
+			},
+			postCheck: func(vaults []keeper.ReconciledVault) {
+				addr := vaults[0].Vault.GetAddress()
+				updatedVault, err := s.k.GetVault(s.ctx, addr)
+				s.Require().NoError(err)
+				s.Assert().Equal("0", updatedVault.CurrentInterestRate, "interest rate should be zeroed")
+				has, err := s.k.VaultInterestDetails.Has(s.ctx, addr)
+				s.Require().NoError(err)
+				s.Assert().False(has, "interest details should be removed")
+			},
+			expectedEvents: sdk.Events{
+				sdk.NewEvent(
+					"vault.v1.EventVaultInterestChange",
+					sdk.NewAttribute("new_rate", "0"),
+					sdk.NewAttribute("previous_rate", initialRate),
+					sdk.NewAttribute("vault_address", v1.vaultAddr.String()),
+				),
+			},
+		},
+		{
+			name: "multiple depleted vaults",
+			setup: func() []keeper.ReconciledVault {
+				vault1 := createVaultWithInterest(s, v1, initialRate, 0, 0, false, true)
+				details1, err := s.k.VaultInterestDetails.Get(s.ctx, v1.vaultAddr)
+				s.Require().NoError(err)
+				vault2 := createVaultWithInterest(s, v2, "0.2", 0, 0, false, true)
+				details2, err := s.k.VaultInterestDetails.Get(s.ctx, v2.vaultAddr)
+				s.Require().NoError(err)
+				return []keeper.ReconciledVault{
+					{Vault: vault1, InterestDetails: &details1},
+					{Vault: vault2, InterestDetails: &details2},
+				}
+			},
+			postCheck: func(vaults []keeper.ReconciledVault) {
+				for _, v := range vaults {
+					addr := v.Vault.GetAddress()
+					updatedVault, err := s.k.GetVault(s.ctx, addr)
+					s.Require().NoError(err)
+					s.Assert().Equal("0", updatedVault.CurrentInterestRate)
+					has, err := s.k.VaultInterestDetails.Has(s.ctx, addr)
+					s.Require().NoError(err)
+					s.Assert().False(has)
+				}
+			},
+			expectedEvents: sdk.Events{
+				sdk.NewEvent("vault.v1.EventVaultInterestChange", sdk.NewAttribute("new_rate", "0"), sdk.NewAttribute("previous_rate", initialRate), sdk.NewAttribute("vault_address", v1.vaultAddr.String())),
+				sdk.NewEvent("vault.v1.EventVaultInterestChange", sdk.NewAttribute("new_rate", "0"), sdk.NewAttribute("previous_rate", "0.2"), sdk.NewAttribute("vault_address", v2.vaultAddr.String())),
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			vaults := tc.setup()
+
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			s.k.TestAccessor_handleDepletedVaults(s.T(), s.ctx, vaults)
+
+			s.Assert().Equal(
+				normalizeEvents(tc.expectedEvents),
+				normalizeEvents(s.ctx.EventManager().Events()),
+			)
+
+			if tc.postCheck != nil {
+				tc.postCheck(vaults)
+			}
 		})
 	}
 }

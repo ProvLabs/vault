@@ -9,5 +9,5 @@ func (k *Keeper) BeginBlocker(ctx context.Context) error {
 }
 
 func (k *Keeper) EndBlocker(ctx context.Context) error {
-	return k.HandleReconciledVaults(ctx)
+	return k.handleReconciledVaults(ctx)
 }

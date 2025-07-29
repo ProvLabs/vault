@@ -222,10 +222,10 @@ func (k *Keeper) HandleVaultInterestTimeouts(ctx context.Context) error {
 	return nil
 }
 
-// HandleReconciledVaults processes vaults that have been reconciled in the current block.
+// handleReconciledVaults processes vaults that have been reconciled in the current block.
 // It partitions them into active (able to pay interest) and depleted (unable to pay interest) vaults.
 // Active vaults have their expiration time extended, while depleted vaults have their interest rate set to zero.
-func (k *Keeper) HandleReconciledVaults(ctx context.Context) error {
+func (k *Keeper) handleReconciledVaults(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	blockTime := sdkCtx.BlockTime().Unix()
 
@@ -301,11 +301,9 @@ func (k *Keeper) GetReconciledVaults(ctx context.Context, startTime int64) ([]Re
 		if interestDetails.PeriodStart == startTime {
 			vault, err := k.GetVault(sdkCtx, vaultAddr)
 			if err != nil {
-				// TODO Check this, and should it be an error.
 				return false, nil
 			}
 			if vault == nil {
-				// TODO Check this, and should it be an error.
 				return false, nil
 			}
 

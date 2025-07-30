@@ -182,15 +182,15 @@ func (k *Keeper) SetInterestRate(ctx context.Context, vault *types.VaultAccount,
 	k.emitEvent(sdk.UnwrapSDKContext(ctx), event)
 }
 
-// EstimateVaultTotalAssets returns the estimated total value of the vault's assets,
+// CalculateVaultTotalAssets returns the total value of the vault's assets,
 // including any interest that would have accrued since the last interest period start.
 // This is used to simulate the value of earned interest as if a reconciliation had occurred
 // at the current block time, without modifying state or transferring funds.
 //
 // If no interest rate is set or if the vault has not yet begun accruing interest,
-// the original total asset amount is returned unmodified.
-func (k Keeper) EstimateVaultTotalAssets(ctx sdk.Context, vault *types.VaultAccount, totalAssets sdk.Coin) (sdkmath.Int, error) {
-	estimated := totalAssets.Amount
+// the original principal amount is returned unmodified.
+func (k Keeper) CalculateVaultTotalAssets(ctx sdk.Context, vault *types.VaultAccount, principal sdk.Coin) (sdkmath.Int, error) {
+	estimated := principal.Amount
 
 	if vault.CurrentInterestRate == "" {
 		return estimated, nil
@@ -209,7 +209,7 @@ func (k Keeper) EstimateVaultTotalAssets(ctx sdk.Context, vault *types.VaultAcco
 		return estimated, nil
 	}
 
-	interestEarned, err := interest.CalculateInterestEarned(totalAssets, vault.CurrentInterestRate, duration)
+	interestEarned, err := interest.CalculateInterestEarned(principal, vault.CurrentInterestRate, duration)
 	if err != nil {
 		return sdkmath.Int{}, fmt.Errorf("error calculating interest: %w", err)
 	}

@@ -157,7 +157,7 @@ func createReconcileEvents(vaultAddr, markerAddr sdk.AccAddress, interest, princ
 	return allEvents
 }
 
-func (s *TestSuite) TestKeeper_EstimateVaultTotalAssets() {
+func (s *TestSuite) TestKeeper_CalculateVaultTotalAssets() {
 	shareDenom := "vaultshares"
 	underlying := sdk.NewInt64Coin("underlying", 1_000_000_000)
 	vaultAddress := types.GetVaultAddress(shareDenom)
@@ -236,7 +236,7 @@ func (s *TestSuite) TestKeeper_EstimateVaultTotalAssets() {
 		s.Run(tc.name, func() {
 			s.SetupTest()
 			vault := setup(tc.rate, tc.startTime)
-			est, err := s.k.EstimateVaultTotalAssets(s.ctx, vault, underlying)
+			est, err := s.k.CalculateVaultTotalAssets(s.ctx, vault, underlying)
 
 			if tc.expectErr {
 				s.Require().Error(err)

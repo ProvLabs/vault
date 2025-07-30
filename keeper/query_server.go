@@ -110,7 +110,7 @@ func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstim
 	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
 	totalAssets := k.BankKeeper.GetBalance(ctx, markerAddr, vault.UnderlyingAssets[0])
 
-	estimatedTotalAssets, err := k.EstimateVaultTotalAssets(ctx, vault, totalAssets)
+	estimatedTotalAssets, err := k.CalculateVaultTotalAssets(ctx, vault, totalAssets)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to estimate total assets: %v", err)
 	}
@@ -156,7 +156,7 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
 	totalAssets := k.BankKeeper.GetBalance(ctx, markerAddr, vault.UnderlyingAssets[0])
 
-	estimatedTotalAssets, err := k.EstimateVaultTotalAssets(ctx, vault, totalAssets)
+	estimatedTotalAssets, err := k.CalculateVaultTotalAssets(ctx, vault, totalAssets)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to estimate total assets: %v", err)
 	}

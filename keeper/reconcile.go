@@ -341,7 +341,7 @@ func (k *Keeper) handlePayableVaults(ctx context.Context, payouts []ReconciledVa
 func (k *Keeper) handleDepletedVaults(ctx context.Context, failedPayouts []ReconciledVault) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	for _, record := range failedPayouts {
-		k.SetInterestRate(ctx, record.Vault, ZeroInterestRate)
+		k.SetInterestRate(ctx, record.Vault, types.ZeroInterestRate)
 
 		if err := k.VaultInterestDetails.Remove(ctx, record.Vault.GetAddress()); err != nil {
 			sdkCtx.Logger().Error("failed to remove VaultInterestDetails for vault", "vault", record.Vault.GetAddress().String(), "err", err)

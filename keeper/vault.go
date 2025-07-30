@@ -13,11 +13,10 @@ import (
 )
 
 const (
-	Supply           = 0
-	NoFixedSupply    = false
-	NoForceTransfer  = false
-	NoGovControl     = false
-	ZeroInterestRate = "0.0"
+	Supply          = 0
+	NoFixedSupply   = false
+	NoForceTransfer = false
+	NoGovControl    = false
 )
 
 // VaultAttributer provides the attributes for creating a new vault.

@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	DefaultInterestRate = "0.0"
+	ZeroInterestRate = "0.0"
 )
 
 var (
@@ -50,8 +50,8 @@ func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin string, shareDenom st
 		Admin:               admin,
 		ShareDenom:          shareDenom,
 		UnderlyingAssets:    underlyingAssets,
-		CurrentInterestRate: DefaultInterestRate,
-		DesiredInterestRate: DefaultInterestRate,
+		CurrentInterestRate: ZeroInterestRate,
+		DesiredInterestRate: ZeroInterestRate,
 	}
 }
 

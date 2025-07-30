@@ -3,7 +3,6 @@ package keeper_test
 import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
 )
 
@@ -18,8 +17,8 @@ func (s *TestSuite) TestVaultGenesis_InitAndExport() {
 		Admin:               admin,
 		ShareDenom:          shareDenom,
 		UnderlyingAssets:    []string{underlying},
-		CurrentInterestRate: keeper.ZeroInterestRate,
-		DesiredInterestRate: keeper.ZeroInterestRate,
+		CurrentInterestRate: types.ZeroInterestRate,
+		DesiredInterestRate: types.ZeroInterestRate,
 	}
 
 	genesis := &types.GenesisState{

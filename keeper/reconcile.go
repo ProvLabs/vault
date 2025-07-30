@@ -17,7 +17,12 @@ import (
 )
 
 const (
-	AutoReconcileTimeout        = 20 * interest.SecondsPerHour
+	// AutoReconcileTimeout is the duration (in seconds) that a vault is considered recently reconciled
+	// and is exempt from automatic interest checks in the BeginBlocker.
+	AutoReconcileTimeout = 20 * interest.SecondsPerHour
+
+	// AutoReconcilePayoutDuration is the time period (in seconds) used to forecast if a vault has
+	// sufficient funds to cover future interest payments.
 	AutoReconcilePayoutDuration = interest.SecondsPerDay
 )
 

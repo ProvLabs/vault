@@ -13,10 +13,12 @@ func (s *TestSuite) TestVaultGenesis_InitAndExport() {
 	vaultAddr := types.GetVaultAddress(shareDenom)
 
 	vault := types.VaultAccount{
-		BaseAccount:      authtypes.NewBaseAccountWithAddress(vaultAddr),
-		Admin:            admin,
-		ShareDenom:       shareDenom,
-		UnderlyingAssets: []string{underlying},
+		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
+		Admin:               admin,
+		ShareDenom:          shareDenom,
+		UnderlyingAssets:    []string{underlying},
+		CurrentInterestRate: "0.0",
+		DesiredInterestRate: "0.0",
 	}
 
 	genesis := &types.GenesisState{

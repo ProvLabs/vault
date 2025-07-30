@@ -13,10 +13,11 @@ import (
 )
 
 const (
-	Supply          = 0
-	NoFixedSupply   = false
-	NoForceTransfer = false
-	NoGovControl    = false
+	Supply              = 0
+	NoFixedSupply       = false
+	NoForceTransfer     = false
+	NoGovControl        = false
+	DefaultInterestRate = "0.0"
 )
 
 // VaultAttributer provides the attributes for creating a new vault.
@@ -70,7 +71,9 @@ func (k Keeper) GetVault(ctx sdk.Context, address sdk.AccAddress) (*types.VaultA
 // createVaultAccount creates and stores a new vault account.
 func (k *Keeper) createVaultAccount(ctx sdk.Context, admin, shareDenom, underlyingAsset string) (*types.VaultAccount, error) {
 	vaultAddr := types.GetVaultAddress(shareDenom)
-	vault := types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(vaultAddr), admin, shareDenom, []string{underlyingAsset})
+
+	// TODO: determine how to handle setting interest rates with management issue: https://github.com/ProvLabs/vault/issues/8
+	vault := types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(vaultAddr), admin, shareDenom, []string{underlyingAsset}, DefaultInterestRate, DefaultInterestRate)
 
 	if err := vault.Validate(); err != nil {
 		return nil, fmt.Errorf("failed to validate vault account: %w", err)

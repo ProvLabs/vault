@@ -40,12 +40,14 @@ type VaultAccountI interface {
 }
 
 // NewVaultAccount creates a new vault.
-func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin string, shareDenom string, underlyingAssets []string) *VaultAccount {
+func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin string, shareDenom string, underlyingAssets []string, currentInterestRate, desiredInterestRate string) *VaultAccount {
 	return &VaultAccount{
-		BaseAccount:      baseAcc,
-		Admin:            admin,
-		ShareDenom:       shareDenom,
-		UnderlyingAssets: underlyingAssets,
+		BaseAccount:         baseAcc,
+		Admin:               admin,
+		ShareDenom:          shareDenom,
+		UnderlyingAssets:    underlyingAssets,
+		CurrentInterestRate: currentInterestRate,
+		DesiredInterestRate: desiredInterestRate,
 	}
 }
 

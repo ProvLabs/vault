@@ -26,8 +26,13 @@ const (
 	AutoReconcilePayoutDuration = interest.SecondsPerDay
 )
 
-// ReconcileVaultInterest processes any accrued interest for a vault and updates its period start.
-// It is called when reconciliation is finalized and state updates are needed.
+// ReconcileVaultInterest updates interest accounting for a vault if a new interest period has started.
+//
+// This should be called before any transaction that changes vault principal, reserves,
+// or performs management actions that depend on current interest state.
+// If a new interest period is detected, this will apply interest transfers and reset the period start.
+//
+// If no prior interest record exists, it initializes the period tracking.
 func (k *Keeper) ReconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccount) error {
 	currentBlockTime := ctx.BlockTime().Unix()
 
@@ -41,6 +46,10 @@ func (k *Keeper) ReconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccou
 		return fmt.Errorf("failed to get vault interest details: %w", err)
 	}
 
+	if currentBlockTime <= interestDetails.PeriodStart {
+		return nil
+	}
+
 	if err := k.PerformVaultInterestTransfer(ctx, vault, interestDetails); err != nil {
 		return err
 	}
@@ -50,9 +59,15 @@ func (k *Keeper) ReconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccou
 	})
 }
 
-// PerformVaultInterestTransfer executes the interest transfer logic for a vault.
-// It assumes the interest period has already elapsed and does not modify the period start.
-// This method is safe to use from BeginBlocker logic that defers period updates.
+// PerformVaultInterestTransfer applies accrued interest between the vault and the marker account
+// if the current block time is beyond the start of the interest period.
+//
+// This function should be used in contexts where the interest period should be evaluated
+// but not updated, such as BeginBlock processing. It checks whether the interest period
+// has elapsed, calculates the earned or owed interest, performs the necessary transfer,
+// and emits a reconciliation event.
+//
+// This method does not update the PeriodStart timestamp.
 func (k *Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.VaultAccount, interestDetails types.VaultInterestDetails) error {
 	currentBlockTime := ctx.BlockTime().Unix()
 
@@ -112,6 +127,18 @@ func (k *Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vaul
 	return nil
 }
 
+// CanPayoutDuration determines whether the vault can fulfill the interest transfer
+// for the given duration based on current reserves and principal.
+//
+// It calculates the interest earned (or owed) over the specified duration using the
+// vault's interest rate. The result is:
+//
+//   - true if no interest is due.
+//   - true if interest is positive and reserves are sufficient.
+//   - true if interest is negative and the marker holds enough funds to return.
+//   - false otherwise.
+//
+// This check is typically used before executing a reconciliation or scheduling expiration.
 func (k *Keeper) CanPayoutDuration(ctx sdk.Context, vault *types.VaultAccount, duration int64) (bool, error) {
 	if duration <= 0 {
 		return true, nil
@@ -142,7 +169,7 @@ func (k *Keeper) CanPayoutDuration(ctx sdk.Context, vault *types.VaultAccount, d
 	}
 }
 
-// SetCurrentInterestRate updates the current interest rate for a given vault. If the new rate is
+// SetInterestRate updates the current interest rate for a given vault. If the new rate is
 // different from the currently set rate, it updates the vault account in the state and
 // emits an EventVaultInterestChange event. No action is taken if the new rate is the same as the existing one.
 func (k *Keeper) SetInterestRate(ctx context.Context, vault *types.VaultAccount, rate string) {

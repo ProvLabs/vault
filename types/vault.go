@@ -10,6 +10,10 @@ import (
 	proto "github.com/cosmos/gogoproto/proto"
 )
 
+const (
+	DefaultInterestRate = "0.0"
+)
+
 var (
 	_ sdk.AccountI             = (*VaultAccount)(nil)
 	_ authtypes.GenesisAccount = (*VaultAccount)(nil)
@@ -40,14 +44,14 @@ type VaultAccountI interface {
 }
 
 // NewVaultAccount creates a new vault.
-func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin string, shareDenom string, underlyingAssets []string, currentInterestRate, desiredInterestRate string) *VaultAccount {
+func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin string, shareDenom string, underlyingAssets []string) *VaultAccount {
 	return &VaultAccount{
 		BaseAccount:         baseAcc,
 		Admin:               admin,
 		ShareDenom:          shareDenom,
 		UnderlyingAssets:    underlyingAssets,
-		CurrentInterestRate: currentInterestRate,
-		DesiredInterestRate: desiredInterestRate,
+		CurrentInterestRate: DefaultInterestRate,
+		DesiredInterestRate: DefaultInterestRate,
 	}
 }
 

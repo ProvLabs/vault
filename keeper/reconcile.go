@@ -23,7 +23,7 @@ const (
 
 	// AutoReconcilePayoutDuration is the time period (in seconds) used to forecast if a vault has
 	// sufficient funds to cover future interest payments.
-	AutoReconcilePayoutDuration = interest.SecondsPerDay
+	AutoReconcilePayoutDuration = 24 * interest.SecondsPerHour
 )
 
 // ReconcileVaultInterest updates interest accounting for a vault if a new interest period has started.

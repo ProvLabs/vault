@@ -16,6 +16,8 @@ func TestVaultAccount_Validate(t *testing.T) {
 	validAdmin := utils.TestAddress().Bech32
 	validDenom := "validdenom"
 	invalidDenom := "inval!d"
+	validInterest := "0.05"
+	invalidInterest := "not-a-decimal"
 
 	baseAcc := authtypes.NewBaseAccountWithAddress(sdk.MustAccAddressFromBech32(validAdmin))
 
@@ -25,64 +27,100 @@ func TestVaultAccount_Validate(t *testing.T) {
 		expectedErr string
 	}{
 		{
-			name: "valid vault account",
+			name: "valid vault account with interest rates",
 			account: types.VaultAccount{
-				BaseAccount:      baseAcc,
-				Admin:            validAdmin,
-				ShareDenom:       validDenom,
-				UnderlyingAssets: []string{"uusd"},
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				ShareDenom:          validDenom,
+				UnderlyingAssets:    []string{"uusd"},
+				CurrentInterestRate: validInterest,
+				DesiredInterestRate: validInterest,
 			},
 			expectedErr: "",
 		},
 		{
 			name: "invalid admin address",
 			account: types.VaultAccount{
-				BaseAccount:      baseAcc,
-				Admin:            "invalid-address",
-				ShareDenom:       validDenom,
-				UnderlyingAssets: []string{"uusd"},
+				BaseAccount:         baseAcc,
+				Admin:               "invalid-address",
+				ShareDenom:          validDenom,
+				UnderlyingAssets:    []string{"uusd"},
+				CurrentInterestRate: validInterest,
+				DesiredInterestRate: validInterest,
 			},
 			expectedErr: "invalid admin address",
 		},
 		{
 			name: "empty share denom",
 			account: types.VaultAccount{
-				BaseAccount:      baseAcc,
-				Admin:            validAdmin,
-				ShareDenom:       "",
-				UnderlyingAssets: []string{"uusd"},
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				ShareDenom:          "",
+				UnderlyingAssets:    []string{"uusd"},
+				CurrentInterestRate: validInterest,
+				DesiredInterestRate: validInterest,
 			},
 			expectedErr: "invalid share denom",
 		},
 		{
 			name: "invalid share denom",
 			account: types.VaultAccount{
-				BaseAccount:      baseAcc,
-				Admin:            validAdmin,
-				ShareDenom:       invalidDenom,
-				UnderlyingAssets: []string{"uusd"},
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				ShareDenom:          invalidDenom,
+				UnderlyingAssets:    []string{"uusd"},
+				CurrentInterestRate: validInterest,
+				DesiredInterestRate: validInterest,
 			},
 			expectedErr: "invalid share denom",
 		},
 		{
 			name: "empty underlying assets",
 			account: types.VaultAccount{
-				BaseAccount:      baseAcc,
-				Admin:            validAdmin,
-				ShareDenom:       validDenom,
-				UnderlyingAssets: []string{},
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				ShareDenom:          validDenom,
+				UnderlyingAssets:    []string{},
+				CurrentInterestRate: validInterest,
+				DesiredInterestRate: validInterest,
 			},
 			expectedErr: "at least one underlying asset is required",
 		},
 		{
 			name: "invalid underlying asset denom",
 			account: types.VaultAccount{
-				BaseAccount:      baseAcc,
-				Admin:            validAdmin,
-				ShareDenom:       validDenom,
-				UnderlyingAssets: []string{invalidDenom},
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				ShareDenom:          validDenom,
+				UnderlyingAssets:    []string{invalidDenom},
+				CurrentInterestRate: validInterest,
+				DesiredInterestRate: validInterest,
 			},
 			expectedErr: fmt.Sprintf("invalid underlying asset denom: %s", invalidDenom),
+		},
+		{
+			name: "invalid current interest rate",
+			account: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				ShareDenom:          validDenom,
+				UnderlyingAssets:    []string{"uusd"},
+				CurrentInterestRate: invalidInterest,
+				DesiredInterestRate: validInterest,
+			},
+			expectedErr: "invalid current interest rate",
+		},
+		{
+			name: "invalid desired interest rate",
+			account: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				ShareDenom:          validDenom,
+				UnderlyingAssets:    []string{"uusd"},
+				CurrentInterestRate: validInterest,
+				DesiredInterestRate: invalidInterest,
+			},
+			expectedErr: "invalid desired interest rate",
 		},
 	}
 

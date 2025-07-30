@@ -70,6 +70,8 @@ func (k Keeper) GetVault(ctx sdk.Context, address sdk.AccAddress) (*types.VaultA
 // createVaultAccount creates and stores a new vault account.
 func (k *Keeper) createVaultAccount(ctx sdk.Context, admin, shareDenom, underlyingAsset string) (*types.VaultAccount, error) {
 	vaultAddr := types.GetVaultAddress(shareDenom)
+
+	// TODO: determine how to handle setting interest rates with management issue: https://github.com/ProvLabs/vault/issues/8
 	vault := types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(vaultAddr), admin, shareDenom, []string{underlyingAsset})
 
 	if err := vault.Validate(); err != nil {

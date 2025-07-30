@@ -164,7 +164,7 @@ func (k *Keeper) CanPayoutDuration(ctx sdk.Context, vault *types.VaultAccount, d
 	}
 }
 
-// SetCurrentInterestRate updates the current interest rate for a given vault. If the new rate is
+// SetInterestRate updates the current interest rate for a given vault. If the new rate is
 // different from the currently set rate, it updates the vault account in the state and
 // emits an EventVaultInterestChange event. No action is taken if the new rate is the same as the existing one.
 func (k *Keeper) SetInterestRate(ctx context.Context, vault *types.VaultAccount, rate string) {

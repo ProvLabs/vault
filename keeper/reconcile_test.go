@@ -322,6 +322,44 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 	testBlockTime := time.Now().UTC().Truncate(time.Second)
 	pastTime := testBlockTime.Add(-1 * time.Hour)
 
+	AssertIsPayable := func(info VaultInfo, expectedRate string) {
+		s.T().Helper()
+		details, err := s.k.VaultInterestDetails.Get(s.ctx, info.vaultAddr)
+		s.Require().NoError(err)
+		s.Assert().Equal(testBlockTime.Unix(), details.PeriodStart, "period start should not change for payable vault")
+		expectedExpireTime := testBlockTime.Unix() + keeper.AutoReconcileTimeout
+		s.Assert().Equal(expectedExpireTime, details.ExpireTime, "expire time should be extended for payable vault")
+
+		vault, err := s.k.GetVault(s.ctx, info.vaultAddr)
+		s.Require().NoError(err)
+		s.Require().NotNil(vault)
+		s.Assert().Equal(expectedRate, vault.CurrentInterestRate, "interest rate should not change for payable vault")
+	}
+
+	AssertIsDepleted := func(info VaultInfo) {
+		s.T().Helper()
+		vault, err := s.k.GetVault(s.ctx, info.vaultAddr)
+		s.Require().NoError(err)
+		s.Require().NotNil(vault)
+		s.Assert().Equal("0", vault.CurrentInterestRate, "interest rate should be zeroed out for depleted vault")
+		has, err := s.k.VaultInterestDetails.Has(s.ctx, info.vaultAddr)
+		s.Require().NoError(err)
+		s.Assert().False(has, "interest details should be removed for depleted vault")
+	}
+
+	AssertIsNotReconciled := func(info VaultInfo, expectedPeriodStart, expectedExpireTime int64, expectedRate string) {
+		s.T().Helper()
+		details, err := s.k.VaultInterestDetails.Get(s.ctx, info.vaultAddr)
+		s.Require().NoError(err, "get interest details for not-reconciled vault %s", info.shareDenom)
+		s.Assert().Equal(expectedPeriodStart, details.PeriodStart, "period start should not change for not-reconciled vault %s", info.shareDenom)
+		s.Assert().Equal(expectedExpireTime, details.ExpireTime, "expire time should not change for not-reconciled vault %s", info.shareDenom)
+
+		vault, err := s.k.GetVault(s.ctx, info.vaultAddr)
+		s.Require().NoError(err, "get vault for not-reconciled vault %s", info.shareDenom)
+		s.Require().NotNil(vault)
+		s.Assert().Equal(expectedRate, vault.CurrentInterestRate, "interest rate should not change for not-reconciled vault %s", info.shareDenom)
+	}
+
 	tests := []struct {
 		name           string
 		setup          func()
@@ -349,18 +387,7 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 				createVaultWithInterest(s, v1, "0.1", testBlockTime.Unix(), testBlockTime.Unix(), true, true)
 			},
 			postCheck: func() {
-				// Vault interest details should be updated
-				details, err := s.k.VaultInterestDetails.Get(s.ctx, v1.vaultAddr)
-				s.Require().NoError(err)
-				s.Assert().Equal(testBlockTime.Unix(), details.PeriodStart, "period start should not change")
-				expectedExpireTime := testBlockTime.Unix() + keeper.AutoReconcileTimeout
-				s.Assert().Equal(expectedExpireTime, details.ExpireTime, "expire time should be extended")
-
-				// Vault interest rate should not change
-				vault, err := s.k.GetVault(s.ctx, v1.vaultAddr)
-				s.Require().NoError(err)
-				s.Require().NotNil(vault)
-				s.Assert().Equal("0.1", vault.CurrentInterestRate, "interest rate should not change")
+				AssertIsPayable(v1, "0.1")
 			},
 			expectErr:      false,
 			expectedEvents: sdk.Events{},
@@ -371,16 +398,7 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 				createVaultWithInterest(s, v1, "0.1", testBlockTime.Unix(), testBlockTime.Unix(), false, true)
 			},
 			postCheck: func() {
-				// Vault should be depleted
-				vault, err := s.k.GetVault(s.ctx, v1.vaultAddr)
-				s.Require().NoError(err)
-				s.Require().NotNil(vault)
-				s.Assert().Equal("0", vault.CurrentInterestRate, "interest rate should be zeroed out")
-
-				// Interest details should be removed
-				has, err := s.k.VaultInterestDetails.Has(s.ctx, v1.vaultAddr)
-				s.Require().NoError(err)
-				s.Assert().False(has, "interest details should be removed for depleted vault")
+				AssertIsDepleted(v1)
 			},
 			expectErr: false,
 			expectedEvents: sdk.Events{
@@ -401,22 +419,8 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 				createVaultWithInterest(s, v2, "0.1", testBlockTime.Unix(), testBlockTime.Unix(), false, true)
 			},
 			postCheck: func() {
-				// Check vault 1 (payable)
-				details1, err := s.k.VaultInterestDetails.Get(s.ctx, v1.vaultAddr)
-				s.Require().NoError(err)
-				expectedExpireTime := testBlockTime.Unix() + keeper.AutoReconcileTimeout
-				s.Assert().Equal(expectedExpireTime, details1.ExpireTime, "vault 1 expire time should be extended")
-				vault1, err := s.k.GetVault(s.ctx, v1.vaultAddr)
-				s.Require().NoError(err)
-				s.Assert().Equal("0.1", vault1.CurrentInterestRate, "vault 1 interest rate should not change")
-
-				// Check vault 2 (depleted)
-				vault2, err := s.k.GetVault(s.ctx, v2.vaultAddr)
-				s.Require().NoError(err)
-				s.Assert().Equal("0", vault2.CurrentInterestRate, "vault 2 interest rate should be zeroed out")
-				has, err := s.k.VaultInterestDetails.Has(s.ctx, v2.vaultAddr)
-				s.Require().NoError(err)
-				s.Assert().False(has, "vault 2 interest details should be removed")
+				AssertIsPayable(v1, "0.1")
+				AssertIsDepleted(v2)
 			},
 			expectErr: false,
 			expectedEvents: sdk.Events{
@@ -434,17 +438,7 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 				createVaultWithInterest(s, v1, "0.1", pastTime.Unix(), testBlockTime.Unix(), true, true)
 			},
 			postCheck: func() {
-				// Vault interest details should NOT be updated
-				details, err := s.k.VaultInterestDetails.Get(s.ctx, v1.vaultAddr)
-				s.Require().NoError(err)
-				s.Assert().Equal(pastTime.Unix(), details.PeriodStart, "period start should not change")
-				s.Assert().Equal(testBlockTime.Unix(), details.ExpireTime, "expire time should not change")
-
-				// Vault interest rate should not change
-				vault, err := s.k.GetVault(s.ctx, v1.vaultAddr)
-				s.Require().NoError(err)
-				s.Require().NotNil(vault)
-				s.Assert().Equal("0.1", vault.CurrentInterestRate, "interest rate should not change")
+				AssertIsNotReconciled(v1, pastTime.Unix(), testBlockTime.Unix(), "0.1")
 			},
 			expectErr:      false,
 			expectedEvents: sdk.Events{},
@@ -460,31 +454,9 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 				createVaultWithInterest(s, v3, "0.1", pastTime.Unix(), testBlockTime.Unix(), true, true)
 			},
 			postCheck: func() {
-				// Check vault 1 (payable)
-				details1, err := s.k.VaultInterestDetails.Get(s.ctx, v1.vaultAddr)
-				s.Require().NoError(err)
-				expectedExpireTime := testBlockTime.Unix() + keeper.AutoReconcileTimeout
-				s.Assert().Equal(expectedExpireTime, details1.ExpireTime, "vault 1 expire time should be extended")
-				vault1, err := s.k.GetVault(s.ctx, v1.vaultAddr)
-				s.Require().NoError(err)
-				s.Assert().Equal("0.1", vault1.CurrentInterestRate, "vault 1 interest rate should not change")
-
-				// Check vault 2 (depleted)
-				vault2, err := s.k.GetVault(s.ctx, v2.vaultAddr)
-				s.Require().NoError(err)
-				s.Assert().Equal("0", vault2.CurrentInterestRate, "vault 2 interest rate should be zeroed out")
-				has, err := s.k.VaultInterestDetails.Has(s.ctx, v2.vaultAddr)
-				s.Require().NoError(err)
-				s.Assert().False(has, "vault 2 interest details should be removed")
-
-				// Check vault 3 (not reconciled)
-				details3, err := s.k.VaultInterestDetails.Get(s.ctx, v3.vaultAddr)
-				s.Require().NoError(err)
-				s.Assert().Equal(pastTime.Unix(), details3.PeriodStart, "vault 3 period start should not change")
-				s.Assert().Equal(testBlockTime.Unix(), details3.ExpireTime, "vault 3 expire time should not change")
-				vault3, err := s.k.GetVault(s.ctx, v3.vaultAddr)
-				s.Require().NoError(err)
-				s.Assert().Equal("0.1", vault3.CurrentInterestRate, "vault 3 interest rate should not change")
+				AssertIsPayable(v1, "0.1")
+				AssertIsDepleted(v2)
+				AssertIsNotReconciled(v3, pastTime.Unix(), testBlockTime.Unix(), "0.1")
 			},
 			expectErr: false,
 			expectedEvents: sdk.Events{
@@ -510,57 +482,12 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 				createVaultWithInterest(s, v6, "0.1", pastTime.Unix(), testBlockTime.Unix(), true, true)
 			},
 			postCheck: func() {
-				expectedExpireTime := testBlockTime.Unix() + keeper.AutoReconcileTimeout
-
-				// Check vault 1 (payable)
-				details1, err := s.k.VaultInterestDetails.Get(s.ctx, v1.vaultAddr)
-				s.Require().NoError(err)
-				s.Assert().Equal(expectedExpireTime, details1.ExpireTime, "vault 1 expire time should be extended")
-				vault1, err := s.k.GetVault(s.ctx, v1.vaultAddr)
-				s.Require().NoError(err)
-				s.Assert().Equal("0.1", vault1.CurrentInterestRate, "vault 1 interest rate should not change")
-
-				// Check vault 4 (payable)
-				details4, err := s.k.VaultInterestDetails.Get(s.ctx, v4.vaultAddr)
-				s.Require().NoError(err)
-				s.Assert().Equal(expectedExpireTime, details4.ExpireTime, "vault 4 expire time should be extended")
-				vault4, err := s.k.GetVault(s.ctx, v4.vaultAddr)
-				s.Require().NoError(err)
-				s.Assert().Equal("0.1", vault4.CurrentInterestRate, "vault 4 interest rate should not change")
-
-				// Check vault 2 (depleted)
-				vault2, err := s.k.GetVault(s.ctx, v2.vaultAddr)
-				s.Require().NoError(err)
-				s.Assert().Equal("0", vault2.CurrentInterestRate, "vault 2 interest rate should be zeroed out")
-				has2, err := s.k.VaultInterestDetails.Has(s.ctx, v2.vaultAddr)
-				s.Require().NoError(err)
-				s.Assert().False(has2, "vault 2 interest details should be removed")
-
-				// Check vault 5 (depleted)
-				vault5, err := s.k.GetVault(s.ctx, v5.vaultAddr)
-				s.Require().NoError(err)
-				s.Assert().Equal("0", vault5.CurrentInterestRate, "vault 5 interest rate should be zeroed out")
-				has5, err := s.k.VaultInterestDetails.Has(s.ctx, v5.vaultAddr)
-				s.Require().NoError(err)
-				s.Assert().False(has5, "vault 5 interest details should be removed")
-
-				// Check vault 3 (not reconciled)
-				details3, err := s.k.VaultInterestDetails.Get(s.ctx, v3.vaultAddr)
-				s.Require().NoError(err)
-				s.Assert().Equal(pastTime.Unix(), details3.PeriodStart, "vault 3 period start should not change")
-				s.Assert().Equal(testBlockTime.Unix(), details3.ExpireTime, "vault 3 expire time should not change")
-				vault3, err := s.k.GetVault(s.ctx, v3.vaultAddr)
-				s.Require().NoError(err)
-				s.Assert().Equal("0.1", vault3.CurrentInterestRate, "vault 3 interest rate should not change")
-
-				// Check vault 6 (not reconciled)
-				details6, err := s.k.VaultInterestDetails.Get(s.ctx, v6.vaultAddr)
-				s.Require().NoError(err)
-				s.Assert().Equal(pastTime.Unix(), details6.PeriodStart, "vault 6 period start should not change")
-				s.Assert().Equal(testBlockTime.Unix(), details6.ExpireTime, "vault 6 expire time should not change")
-				vault6, err := s.k.GetVault(s.ctx, v6.vaultAddr)
-				s.Require().NoError(err)
-				s.Assert().Equal("0.1", vault6.CurrentInterestRate, "vault 6 interest rate should not change")
+				AssertIsPayable(v1, "0.1")
+				AssertIsPayable(v4, "0.1")
+				AssertIsDepleted(v2)
+				AssertIsDepleted(v5)
+				AssertIsNotReconciled(v3, pastTime.Unix(), testBlockTime.Unix(), "0.1")
+				AssertIsNotReconciled(v6, pastTime.Unix(), testBlockTime.Unix(), "0.1")
 			},
 			expectErr: false,
 			expectedEvents: sdk.Events{

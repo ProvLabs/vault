@@ -73,18 +73,14 @@ func (va VaultAccount) Validate() error {
 		}
 	}
 
-	if len(va.CurrentInterestRate) > 0 {
-		_, err := sdkmath.LegacyNewDecFromStr(va.CurrentInterestRate)
-		if err != nil {
-			return fmt.Errorf("invalid current interest rate: %s", va.CurrentInterestRate)
-		}
+	_, err := sdkmath.LegacyNewDecFromStr(va.CurrentInterestRate)
+	if err != nil {
+		return fmt.Errorf("invalid current interest rate: %s", va.CurrentInterestRate)
 	}
 
-	if len(va.DesiredInterestRate) > 0 {
-		_, err := sdkmath.LegacyNewDecFromStr(va.DesiredInterestRate)
-		if err != nil {
-			return fmt.Errorf("invalid desired interest rate: %s", va.DesiredInterestRate)
-		}
+	_, err = sdkmath.LegacyNewDecFromStr(va.DesiredInterestRate)
+	if err != nil {
+		return fmt.Errorf("invalid desired interest rate: %s", va.DesiredInterestRate)
 	}
 
 	return nil

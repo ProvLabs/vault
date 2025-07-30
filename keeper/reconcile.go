@@ -246,6 +246,7 @@ func (k *Keeper) handleVaultInterestTimeouts(ctx context.Context) error {
 		periodDuration := currentBlockTime - details.PeriodStart
 		canPay, err := k.CanPayoutDuration(sdkCtx, vault, periodDuration)
 		if err != nil {
+			sdkCtx.Logger().Error("failed to check payout ability", "vault", vaultAddr.String(), "err", err)
 			return false, nil
 		}
 		if !canPay {

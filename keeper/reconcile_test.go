@@ -970,3 +970,106 @@ func NewVaultInfo(id int) VaultInfo {
 		vaultAddr:  types.GetVaultAddress(shareDenom),
 	}
 }
+
+func (s *TestSuite) TestKeeper_CanPayoutDuration() {
+	shareDenom := "vaultshares"
+	underlying := sdk.NewInt64Coin("underlying", 1_000_000_000)
+	vaultAddr := types.GetVaultAddress(shareDenom)
+	markerAddr := markertypes.MustGetMarkerAddress(shareDenom)
+
+	createVaultWithRate := func(rate string) *types.VaultAccount {
+		s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           s.adminAddr.String(),
+			ShareDenom:      shareDenom,
+			UnderlyingAsset: underlying.Denom,
+		})
+		s.Require().NoError(err)
+		vault, err := s.k.GetVault(s.ctx, vaultAddr)
+		s.Require().NoError(err)
+		vault.CurrentInterestRate = rate
+		s.k.AuthKeeper.SetAccount(s.ctx, vault)
+		return vault
+	}
+
+	tests := []struct {
+		name            string
+		rate            string
+		duration        int64
+		fundReserves    sdkmath.Int
+		fundPrincipal   sdkmath.Int
+		expectOK        bool
+		expectErrSubstr string
+	}{
+		{
+			name:          "zero duration always OK",
+			rate:          "0.25",
+			duration:      0,
+			fundReserves:  sdkmath.NewInt(0),
+			fundPrincipal: sdkmath.NewInt(0),
+			expectOK:      true,
+		},
+		{
+			name:          "zero interest accrual is OK",
+			rate:          "0.0",
+			duration:      1_000,
+			fundReserves:  sdkmath.NewInt(0),
+			fundPrincipal: sdkmath.NewInt(0),
+			expectOK:      true,
+		},
+		{
+			name:          "positive interest, sufficient reserves",
+			rate:          "1.0",
+			duration:      1,
+			fundReserves:  sdkmath.NewInt(1_000_000_000),
+			fundPrincipal: sdkmath.NewInt(100_000),
+			expectOK:      true,
+		},
+		{
+			name:          "positive interest, insufficient reserves",
+			rate:          "1.0",
+			duration:      int64(24 * time.Hour / time.Second),
+			fundReserves:  sdkmath.NewInt(10),
+			fundPrincipal: sdkmath.NewInt(100_000),
+			expectOK:      false,
+		},
+		{
+			name:          "negative interest, principal available",
+			rate:          "-1.0",
+			duration:      int64(24 * time.Hour / time.Second * 365),
+			fundReserves:  sdkmath.NewInt(0),
+			fundPrincipal: sdkmath.NewInt(100_000),
+			expectOK:      true,
+		},
+		{
+			name:          "negative interest, interest more than principal, account will be liquidated",
+			rate:          "-100.0",
+			duration:      int64(24 * time.Hour / time.Second * 365),
+			fundReserves:  sdkmath.NewInt(0),
+			fundPrincipal: sdkmath.NewInt(1),
+			expectOK:      true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			vault := createVaultWithRate(tc.rate)
+			if !tc.fundReserves.IsZero() {
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(sdk.NewCoin(underlying.Denom, tc.fundReserves))))
+			}
+			if !tc.fundPrincipal.IsZero() {
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, sdk.NewCoins(sdk.NewCoin(underlying.Denom, tc.fundPrincipal))))
+			}
+
+			ok, err := s.k.CanPayoutDuration(s.ctx, vault, tc.duration)
+			if tc.expectErrSubstr != "" {
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), tc.expectErrSubstr)
+			} else {
+				s.Require().NoError(err)
+				s.Require().Equal(tc.expectOK, ok)
+			}
+		})
+	}
+}

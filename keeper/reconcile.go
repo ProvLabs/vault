@@ -64,7 +64,8 @@ func (k *Keeper) ReconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccou
 //
 // This function should be used in contexts where the interest period should be evaluated
 // but not updated, such as BeginBlock processing. It checks whether the interest period
-// has elapsed, calculates the earned or owed interest, performs the necessary transfer,
+// has elapsed, calculates the earned or owed interest, performs the necessary transfer
+// (including partial liquidation of principal if needed for negative interest),
 // and emits a reconciliation event.
 //
 // This method does not update the PeriodStart timestamp.
@@ -127,18 +128,20 @@ func (k *Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vaul
 	return nil
 }
 
-// CanPayoutDuration determines whether the vault can fulfill the interest transfer
-// for the given duration based on current reserves and principal.
+// CanPayoutDuration determines whether the vault can fulfill the interest payment
+// or refund over the given duration, based on the current reserves and principal.
 //
-// It calculates the interest earned (or owed) over the specified duration using the
-// vault's interest rate. The result is:
+// It calculates the interest accrued (positive or negative) over the specified duration
+// using the vault's interest rate. The result determines whether the vault can
+// successfully execute the interest transfer:
 //
-//   - true if no interest is due.
-//   - true if interest is positive and reserves are sufficient.
-//   - true if interest is negative and the marker holds enough funds to return.
-//   - false otherwise.
+//   - Returns true if the duration is zero or less (no accrual needed).
+//   - Returns true if the interest is zero (no transfer needed).
+//   - Returns true if the interest is positive and the vault's reserves are sufficient to pay it.
+//   - Returns true if the interest is negative and the marker holds any principal (able to refund).
+//   - Returns false otherwise.
 //
-// This check is typically used before executing a reconciliation or scheduling expiration.
+// This function is typically used prior to reconciling interest or scheduling expiration.
 func (k *Keeper) CanPayoutDuration(ctx sdk.Context, vault *types.VaultAccount, duration int64) (bool, error) {
 	if duration <= 0 {
 		return true, nil

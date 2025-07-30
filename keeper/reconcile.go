@@ -36,6 +36,10 @@ func (k *Keeper) ReconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccou
 		return fmt.Errorf("failed to get vault interest details: %w", err)
 	}
 
+	if currentBlockTime <= interestDetails.PeriodStart {
+		return nil
+	}
+
 	if err := k.PerformVaultInterestTransfer(ctx, vault, interestDetails); err != nil {
 		return err
 	}

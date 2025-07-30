@@ -101,7 +101,7 @@ func (k *Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vaul
 	} else if interestEarned.IsNegative() {
 		owed := interestEarned.Abs()
 		if principal.Amount.LT(owed) {
-			return fmt.Errorf("insufficient marker balance to reclaim negative interest")
+			owed = principal.Amount
 		}
 
 		if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx),
@@ -162,8 +162,7 @@ func (k *Keeper) CanPayoutDuration(ctx sdk.Context, vault *types.VaultAccount, d
 	case interestEarned.IsPositive():
 		return !reserves.Amount.LT(interestEarned), nil
 	case interestEarned.IsNegative():
-		required := interestEarned.Abs()
-		return !principal.Amount.LT(required), nil
+		return principal.Amount.IsPositive(), nil
 	default:
 		return false, fmt.Errorf("unexpected interest value: %s", interestEarned.String())
 	}

@@ -582,10 +582,10 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 		s.Run(tc.name, func() {
 			s.SetupTest()
 			s.ctx = s.ctx.WithBlockTime(testBlockTime)
-			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 			if tc.setup != nil {
 				tc.setup()
 			}
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 
 			err := s.k.TestAccessor_handleReconciledVaults(s.T(), s.ctx)
 
@@ -597,7 +597,7 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 
 			actualEvents := normalizeEvents(s.ctx.EventManager().Events())
 			expectedEvents := normalizeEvents(tc.expectedEvents)
-			s.Assert().Subset(actualEvents, expectedEvents, "emitted events should contain all expected events")
+			s.Assert().Equal(actualEvents, expectedEvents, "emitted events should contain all expected events")
 
 			if tc.postCheck != nil {
 				tc.postCheck()

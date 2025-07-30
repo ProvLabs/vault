@@ -202,7 +202,7 @@ func (s *TestSuite) TestKeeper_EstimateVaultTotalAssets() {
 		},
 		{
 			name:             "zero interest rate",
-			rate:             "0.0",
+			rate:             keeper.ZeroInterestRate,
 			startTime:        pastTime.Unix(),
 			expectedIncrease: sdkmath.NewInt(1_000_000_000),
 		},
@@ -343,10 +343,10 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 			checkAddr:     vaultAddr,
 			expectExists:  false,
 			expectDeleted: true,
-			expectRate:    "0",
+			expectRate:    keeper.ZeroInterestRate,
 			expectedEvents: sdk.Events{
 				sdk.NewEvent("vault.v1.EventVaultInterestChange",
-					sdk.NewAttribute("new_rate", "0"),
+					sdk.NewAttribute("new_rate", keeper.ZeroInterestRate),
 					sdk.NewAttribute("previous_rate", "0.25"),
 					sdk.NewAttribute("vault_address", vaultAddr.String()),
 				),
@@ -419,7 +419,7 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 		vault, err := s.k.GetVault(s.ctx, info.vaultAddr)
 		s.Require().NoError(err)
 		s.Require().NotNil(vault)
-		s.Assert().Equal("0", vault.CurrentInterestRate, "interest rate should be zeroed out for depleted vault")
+		s.Assert().Equal(keeper.ZeroInterestRate, vault.CurrentInterestRate, "interest rate should be zeroed out for depleted vault")
 		has, err := s.k.VaultInterestDetails.Has(s.ctx, info.vaultAddr)
 		s.Require().NoError(err)
 		s.Assert().False(has, "interest details should be removed for depleted vault")
@@ -482,7 +482,7 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 			expectedEvents: sdk.Events{
 				sdk.NewEvent(
 					"vault.v1.EventVaultInterestChange",
-					sdk.NewAttribute("new_rate", "0"),
+					sdk.NewAttribute("new_rate", keeper.ZeroInterestRate),
 					sdk.NewAttribute("previous_rate", "0.1"),
 					sdk.NewAttribute("vault_address", v1.vaultAddr.String()),
 				),
@@ -504,7 +504,7 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 			expectedEvents: sdk.Events{
 				sdk.NewEvent(
 					"vault.v1.EventVaultInterestChange",
-					sdk.NewAttribute("new_rate", "0"),
+					sdk.NewAttribute("new_rate", keeper.ZeroInterestRate),
 					sdk.NewAttribute("previous_rate", "0.1"),
 					sdk.NewAttribute("vault_address", v2.vaultAddr.String()),
 				),
@@ -540,7 +540,7 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 			expectedEvents: sdk.Events{
 				sdk.NewEvent(
 					"vault.v1.EventVaultInterestChange",
-					sdk.NewAttribute("new_rate", "0"),
+					sdk.NewAttribute("new_rate", keeper.ZeroInterestRate),
 					sdk.NewAttribute("previous_rate", "0.1"),
 					sdk.NewAttribute("vault_address", v2.vaultAddr.String()),
 				),
@@ -571,12 +571,12 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 			expectedEvents: sdk.Events{
 				sdk.NewEvent(
 					"vault.v1.EventVaultInterestChange",
-					sdk.NewAttribute("new_rate", "0"),
+					sdk.NewAttribute("new_rate", keeper.ZeroInterestRate),
 					sdk.NewAttribute("previous_rate", "0.1"),
 					sdk.NewAttribute("vault_address", v2.vaultAddr.String())),
 				sdk.NewEvent(
 					"vault.v1.EventVaultInterestChange",
-					sdk.NewAttribute("new_rate", "0"),
+					sdk.NewAttribute("new_rate", keeper.ZeroInterestRate),
 					sdk.NewAttribute("previous_rate", "0.1"),
 					sdk.NewAttribute("vault_address", v5.vaultAddr.String())),
 			},
@@ -792,7 +792,7 @@ func (s *TestSuite) TestKeeper_handleDepletedVaults() {
 				addr := vaults[0].Vault.GetAddress()
 				updatedVault, err := s.k.GetVault(s.ctx, addr)
 				s.Require().NoError(err)
-				s.Assert().Equal("0", updatedVault.CurrentInterestRate, "interest rate should be zeroed")
+				s.Assert().Equal(keeper.ZeroInterestRate, updatedVault.CurrentInterestRate, "interest rate should be zeroed")
 				has, err := s.k.VaultInterestDetails.Has(s.ctx, addr)
 				s.Require().NoError(err)
 				s.Assert().False(has, "interest details should be removed")
@@ -800,7 +800,7 @@ func (s *TestSuite) TestKeeper_handleDepletedVaults() {
 			expectedEvents: sdk.Events{
 				sdk.NewEvent(
 					"vault.v1.EventVaultInterestChange",
-					sdk.NewAttribute("new_rate", "0"),
+					sdk.NewAttribute("new_rate", keeper.ZeroInterestRate),
 					sdk.NewAttribute("previous_rate", initialRate),
 					sdk.NewAttribute("vault_address", v1.vaultAddr.String()),
 				),
@@ -825,15 +825,15 @@ func (s *TestSuite) TestKeeper_handleDepletedVaults() {
 					addr := v.Vault.GetAddress()
 					updatedVault, err := s.k.GetVault(s.ctx, addr)
 					s.Require().NoError(err)
-					s.Assert().Equal("0", updatedVault.CurrentInterestRate)
+					s.Assert().Equal(keeper.ZeroInterestRate, updatedVault.CurrentInterestRate)
 					has, err := s.k.VaultInterestDetails.Has(s.ctx, addr)
 					s.Require().NoError(err)
 					s.Assert().False(has)
 				}
 			},
 			expectedEvents: sdk.Events{
-				sdk.NewEvent("vault.v1.EventVaultInterestChange", sdk.NewAttribute("new_rate", "0"), sdk.NewAttribute("previous_rate", initialRate), sdk.NewAttribute("vault_address", v1.vaultAddr.String())),
-				sdk.NewEvent("vault.v1.EventVaultInterestChange", sdk.NewAttribute("new_rate", "0"), sdk.NewAttribute("previous_rate", "0.2"), sdk.NewAttribute("vault_address", v2.vaultAddr.String())),
+				sdk.NewEvent("vault.v1.EventVaultInterestChange", sdk.NewAttribute("new_rate", keeper.ZeroInterestRate), sdk.NewAttribute("previous_rate", initialRate), sdk.NewAttribute("vault_address", v1.vaultAddr.String())),
+				sdk.NewEvent("vault.v1.EventVaultInterestChange", sdk.NewAttribute("new_rate", keeper.ZeroInterestRate), sdk.NewAttribute("previous_rate", "0.2"), sdk.NewAttribute("vault_address", v2.vaultAddr.String())),
 			},
 		},
 	}

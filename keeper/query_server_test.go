@@ -49,7 +49,7 @@ func (s *TestSuite) TestQueryServer_Vault() {
 			},
 			Req: &types.QueryVaultRequest{VaultAddress: addr2.String()},
 			ExpectedResp: &types.QueryVaultResponse{
-				Vault: *types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, []string{"stake3"}, "0.0", "0.0"),
+				Vault: *types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, []string{"stake3"}, keeper.ZeroInterestRate, keeper.ZeroInterestRate),
 			},
 		},
 		{
@@ -146,7 +146,7 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 			Req: &types.QueryVaultsRequest{},
 			ExpectedResp: &types.QueryVaultsResponse{
 				Vaults: []types.VaultAccount{
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, []string{"stake2"}, "0.0", "0.0"),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, []string{"stake2"}, keeper.ZeroInterestRate, keeper.ZeroInterestRate),
 				},
 				Pagination: &query.PageResponse{Total: 1},
 			},
@@ -167,9 +167,9 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 			Req: &types.QueryVaultsRequest{},
 			ExpectedResp: &types.QueryVaultsResponse{
 				Vaults: []types.VaultAccount{
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, []string{"stake2"}, "0.0", "0.0"),
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, []string{"nhash"}, "0.0", "0.0"),
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr3), admin, shareDenom3, []string{"usdf"}, "0.0", "0.0"),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, []string{"stake2"}, keeper.ZeroInterestRate, keeper.ZeroInterestRate),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, []string{"nhash"}, keeper.ZeroInterestRate, keeper.ZeroInterestRate),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr3), admin, shareDenom3, []string{"usdf"}, keeper.ZeroInterestRate, keeper.ZeroInterestRate),
 				},
 				Pagination: &query.PageResponse{Total: 3},
 			},
@@ -192,8 +192,8 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 			},
 			ExpectedResp: &types.QueryVaultsResponse{
 				Vaults: []types.VaultAccount{
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr3), admin, shareDenom3, []string{"usdf"}, "0.0", "0.0"),
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, []string{"stake2"}, "0.0", "0.0"),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr3), admin, shareDenom3, []string{"usdf"}, keeper.ZeroInterestRate, keeper.ZeroInterestRate),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, []string{"stake2"}, keeper.ZeroInterestRate, keeper.ZeroInterestRate),
 				},
 				Pagination: &query.PageResponse{
 					NextKey: []byte("not nil"),
@@ -218,8 +218,8 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 			},
 			ExpectedResp: &types.QueryVaultsResponse{
 				Vaults: []types.VaultAccount{
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, []string{"stake2"}, "0.0", "0.0"),
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, []string{"nhash"}, "0.0", "0.0"),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, []string{"stake2"}, keeper.ZeroInterestRate, keeper.ZeroInterestRate),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, []string{"nhash"}, keeper.ZeroInterestRate, keeper.ZeroInterestRate),
 				},
 				Pagination: &query.PageResponse{Total: 3},
 			},
@@ -242,7 +242,7 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 			},
 			ExpectedResp: &types.QueryVaultsResponse{
 				Vaults: []types.VaultAccount{
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, []string{"nhash"}, "0.0", "0.0"),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, []string{"nhash"}, keeper.ZeroInterestRate, keeper.ZeroInterestRate),
 				},
 				Pagination: &query.PageResponse{},
 			},
@@ -265,9 +265,9 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 			},
 			ExpectedResp: &types.QueryVaultsResponse{
 				Vaults: []types.VaultAccount{
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, []string{"stake2"}, "0.0", "0.0"),
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, []string{"nhash"}, "0.0", "0.0"),
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr3), admin, shareDenom3, []string{"usdf"}, "0.0", "0.0"),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, []string{"stake2"}, keeper.ZeroInterestRate, keeper.ZeroInterestRate),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, []string{"nhash"}, keeper.ZeroInterestRate, keeper.ZeroInterestRate),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr3), admin, shareDenom3, []string{"usdf"}, keeper.ZeroInterestRate, keeper.ZeroInterestRate),
 				},
 				Pagination: &query.PageResponse{Total: 3},
 			},
@@ -290,8 +290,8 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 			},
 			ExpectedResp: &types.QueryVaultsResponse{
 				Vaults: []types.VaultAccount{
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, []string{"nhash"}, "0.0", "0.0"),
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, []string{"stake2"}, "0.0", "0.0"),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, []string{"nhash"}, keeper.ZeroInterestRate, keeper.ZeroInterestRate),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, []string{"stake2"}, keeper.ZeroInterestRate, keeper.ZeroInterestRate),
 				},
 				Pagination: &query.PageResponse{
 					NextKey: []byte("not nil"),

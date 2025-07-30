@@ -9,6 +9,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provlabs/vault/interest"
+	"github.com/provlabs/vault/keeper"
 	"github.com/stretchr/testify/require"
 )
 
@@ -29,7 +30,7 @@ func TestCalculateInterestEarned(t *testing.T) {
 		{
 			name:             "1 year at 0% APR",
 			principal:        baseCoin(100_000_000),
-			rate:             "0.0",
+			rate:             keeper.ZeroInterestRate,
 			periodSeconds:    interest.SecondsPerYear,
 			expectedInterest: sdkmath.NewInt(0),
 		},
@@ -126,7 +127,7 @@ func TestCalculateExpiration(t *testing.T) {
 			name:          "never expires with zero rate",
 			principal:     sdk.NewCoin(denom, sdkmath.NewInt(100_000)),
 			reserves:      sdk.NewCoin(denom, sdkmath.NewInt(500_000)),
-			rate:          "0.0",
+			rate:          keeper.ZeroInterestRate,
 			periodSeconds: 60,
 			startTime:     startTime,
 			expected:      startTime,

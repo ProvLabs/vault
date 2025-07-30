@@ -249,54 +249,123 @@ func (s *TestSuite) TestKeeper_EstimateVaultTotalAssets() {
 }
 
 func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
-	twoMonthsAgo := time.Now().Add(-60 * 24 * time.Hour).Unix()
+	now := time.Now()
+	twoMonthsAgo := now.Add(-60 * 24 * time.Hour).Unix()
+	testBlockTime := now
 	shareDenom := "vaultshares"
-	//underlying := sdk.NewInt64Coin("underlying", 1_000_000_000)
+	underlying := sdk.NewInt64Coin("underlying", 1_000_000_000)
 	vaultAddr := types.GetVaultAddress(shareDenom)
-	testBlockTime := time.Now()
+	markerAddr := markertypes.MustGetMarkerAddress(shareDenom)
 
 	tests := []struct {
-		name          string
-		setup         func()
-		expectedExist bool
+		name           string
+		setup          func()
+		checkAddr      sdk.AccAddress
+		expectExists   bool
+		expectDeleted  bool
+		expectRate     string
+		expectedEvents sdk.Events
 	}{
-		// {
-		// 	name: "valid vault with expired interest triggers reconciliation",
-		// 	setup: func() {
-		// 		s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
-		// 		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-		// 			Admin:           s.adminAddr.String(),
-		// 			ShareDenom:      shareDenom,
-		// 			UnderlyingAsset: underlying.Denom,
-		// 		})
-		// 		s.Require().NoError(err)
-
-		// 		vault, err := s.k.GetVault(s.ctx, vaultAddr)
-		// 		s.Require().NoError(err)
-		// 		vault.CurrentInterestRate = "0.25"
-		// 		s.k.AuthKeeper.SetAccount(s.ctx, vault)
-
-		// 		s.Require().NoError(s.k.VaultInterestDetails.Set(s.ctx, vaultAddr, types.VaultInterestDetails{
-		// 			PeriodStart: twoMonthsAgo,
-		// 			ExpireTime:  testBlockTime.Unix(),
-		// 		}))
-
-		// 		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(underlying)))
-		// 		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markertypes.MustGetMarkerAddress(shareDenom), sdk.NewCoins(underlying)))
-		// 		s.ctx = s.ctx.WithBlockTime(testBlockTime)
-		// 	},
-		// 	expectedExist: true,
-		// },
 		{
-			name: "missing vault deletes interest record",
+			name: "happy path: interest paid and period reset",
 			setup: func() {
+				s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
+				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin:           s.adminAddr.String(),
+					ShareDenom:      shareDenom,
+					UnderlyingAsset: underlying.Denom,
+				})
+				s.Require().NoError(err)
+				vault, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err)
+				vault.CurrentInterestRate = "0.25"
+				s.k.AuthKeeper.SetAccount(s.ctx, vault)
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(underlying)))
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, sdk.NewCoins(underlying)))
 				s.Require().NoError(s.k.VaultInterestDetails.Set(s.ctx, vaultAddr, types.VaultInterestDetails{
 					PeriodStart: twoMonthsAgo,
 					ExpireTime:  testBlockTime.Unix(),
 				}))
-				s.ctx = s.ctx.WithBlockTime(testBlockTime)
+				s.ctx = s.ctx.WithBlockTime(testBlockTime).WithEventManager(sdk.NewEventManager())
 			},
-			expectedExist: false,
+			checkAddr:     vaultAddr,
+			expectExists:  true,
+			expectDeleted: false,
+			expectRate:    "0.25",
+			expectedEvents: sdk.Events{
+				sdk.NewEvent("coin_spent",
+					sdk.NewAttribute("spender", vaultAddr.String()),
+					sdk.NewAttribute("amount", "41952013underlying"),
+				),
+				sdk.NewEvent("coin_received",
+					sdk.NewAttribute("receiver", markertypes.MustGetMarkerAddress(shareDenom).String()),
+					sdk.NewAttribute("amount", "41952013underlying"),
+				),
+				sdk.NewEvent("transfer",
+					sdk.NewAttribute("recipient", markertypes.MustGetMarkerAddress(shareDenom).String()),
+					sdk.NewAttribute("sender", vaultAddr.String()),
+					sdk.NewAttribute("amount", "41952013underlying"),
+				),
+				sdk.NewEvent("message",
+					sdk.NewAttribute("sender", vaultAddr.String()),
+				),
+				sdk.NewEvent("vault.v1.EventVaultReconcile",
+					sdk.NewAttribute("interest_earned", "{\"denom\":\"underlying\",\"amount\":\"41952013\"}"),
+					sdk.NewAttribute("principal_after", "{\"denom\":\"underlying\",\"amount\":\"1041952013\"}"),
+					sdk.NewAttribute("principal_before", "{\"denom\":\"underlying\",\"amount\":\"1000000000\"}"),
+					sdk.NewAttribute("rate", "0.25"),
+					sdk.NewAttribute("time", "5184000"),
+					sdk.NewAttribute("vault_address", vaultAddr.String()),
+				),
+			},
+		},
+		{
+			name: "vault cannot pay: interest set to 0 and record deleted",
+			setup: func() {
+				s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
+				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin:           s.adminAddr.String(),
+					ShareDenom:      shareDenom,
+					UnderlyingAsset: underlying.Denom,
+				})
+				s.Require().NoError(err)
+				vault, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err)
+				vault.CurrentInterestRate = "0.25"
+				s.k.AuthKeeper.SetAccount(s.ctx, vault)
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, sdk.NewCoins(underlying)))
+				s.Require().NoError(s.k.VaultInterestDetails.Set(s.ctx, vaultAddr, types.VaultInterestDetails{
+					PeriodStart: twoMonthsAgo,
+					ExpireTime:  testBlockTime.Unix(),
+				}))
+				s.ctx = s.ctx.WithBlockTime(testBlockTime).WithEventManager(sdk.NewEventManager())
+			},
+			checkAddr:     vaultAddr,
+			expectExists:  false,
+			expectDeleted: true,
+			expectRate:    "0",
+			expectedEvents: sdk.Events{
+				sdk.NewEvent("vault.v1.EventVaultInterestChange",
+					sdk.NewAttribute("new_rate", "0"),
+					sdk.NewAttribute("previous_rate", "0.25"),
+					sdk.NewAttribute("vault_address", vaultAddr.String()),
+				),
+			},
+		},
+		{
+			name: "non-vault address in interest details does nothing",
+			setup: func() {
+				s.Require().NoError(s.k.VaultInterestDetails.Set(s.ctx, markerAddr, types.VaultInterestDetails{
+					PeriodStart: twoMonthsAgo,
+					ExpireTime:  testBlockTime.Unix(),
+				}))
+				s.ctx = s.ctx.WithBlockTime(testBlockTime).WithEventManager(sdk.NewEventManager())
+			},
+			checkAddr:      markerAddr,
+			expectExists:   true,
+			expectDeleted:  false,
+			expectRate:     "",
+			expectedEvents: sdk.Events{},
 		},
 	}
 
@@ -304,13 +373,22 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 		s.Run(tc.name, func() {
 			s.SetupTest()
 			tc.setup()
-
 			err := s.k.TestAccessor_handleVaultInterestTimeouts(s.T(), s.ctx)
 			s.Require().NoError(err)
-
-			exists, err := s.k.VaultInterestDetails.Has(s.ctx, vaultAddr)
+			exists, err := s.k.VaultInterestDetails.Has(s.ctx, tc.checkAddr)
 			s.Require().NoError(err)
-			s.Require().Equal(tc.expectedExist, exists)
+			s.Require().Equal(tc.expectExists, exists)
+			if tc.expectRate != "" {
+				vault, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err)
+				s.Require().Equal(tc.expectRate, vault.CurrentInterestRate)
+			}
+			em := s.ctx.EventManager()
+			s.Assert().Equalf(
+				normalizeEvents(tc.expectedEvents),
+				normalizeEvents(em.Events()),
+				"beginblocker events",
+			)
 		})
 	}
 }

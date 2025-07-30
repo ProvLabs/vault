@@ -96,7 +96,7 @@ func (s *TestSuite) TestMsgServer_CreateVault() {
 		expectedEvents: sdk.Events{
 			sdk.NewEvent("provenance.marker.v1.EventMarkerAdd",
 				sdk.NewAttribute("address", "provlabs157rf76qwxlttnjyncsaxvelc96m9e5eedpymea"),
-				sdk.NewAttribute("amount", keeper.ZeroInterestRate),
+				sdk.NewAttribute("amount", "0"),
 				sdk.NewAttribute("denom", sharedenom),
 				sdk.NewAttribute("manager", vaultAddr.String()),
 				sdk.NewAttribute("marker_type", "MARKER_TYPE_COIN"),

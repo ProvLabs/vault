@@ -184,6 +184,17 @@ func (k *Keeper) SetInterestRate(ctx context.Context, vault *types.VaultAccount,
 	k.emitEvent(sdk.UnwrapSDKContext(ctx), event)
 }
 
+func (k *Keeper) UpdateInterestRates(ctx context.Context, vault *types.VaultAccount, currentRate, desiredRate string) {
+	if currentRate == vault.CurrentInterestRate && vault.DesiredInterestRate == currentRate {
+		return
+	}
+	// event := types.NewEventVaultInterestChange(vault.GetAddress().String(), vault.CurrentInterestRate, cu)
+	vault.CurrentInterestRate = currentRate
+	vault.DesiredInterestRate = desiredRate
+	k.AuthKeeper.SetAccount(ctx, vault)
+	// k.emitEvent(sdk.UnwrapSDKContext(ctx), event)
+}
+
 // CalculateVaultTotalAssets returns the total value of the vault's assets,
 // including any interest that would have accrued since the last interest period start.
 // This is used to simulate the value of earned interest as if a reconciliation had occurred

@@ -74,11 +74,82 @@ func (m MsgSwapOutRequest) ValidateBasic() error {
 }
 
 // ValidateBasic returns a not implemented error for MsgRedeemRequest.
-func (m MsgRedeemRequest) ValidateBasic() error {
-	return errors.New("ValidateBasic not implemented for MsgRedeemRequest")
-}
-
-// ValidateBasic returns a not implemented error for MsgRedeemRequest.
 func (m MsgUpdateParams) ValidateBasic() error {
 	return errors.New("ValidateBasic not implemented for MsgUpdateParams")
+}
+
+// ValidateBasic performs stateless validation on MsgSetInterestConfigRequest.
+func (m MsgSetInterestConfigRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
+		return fmt.Errorf("invalid admin address: %q: %w", m.Admin, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	if _, err := sdkmath.LegacyNewDecFromStr(m.MinRate); err != nil {
+		return fmt.Errorf("invalid min rate: %q: %w", m.MinRate, err)
+	}
+	if _, err := sdkmath.LegacyNewDecFromStr(m.MaxRate); err != nil {
+		return fmt.Errorf("invalid max rate: %q: %w", m.MaxRate, err)
+	}
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgUpdateInterestRateRequest.
+func (m MsgUpdateInterestRateRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
+		return fmt.Errorf("invalid admin address: %q: %w", m.Admin, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	if _, err := sdkmath.LegacyNewDecFromStr(m.NewRate); err != nil {
+		return fmt.Errorf("invalid interest rate: %q: %w", m.NewRate, err)
+	}
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgDepositInterestFundsRequest.
+func (m MsgDepositInterestFundsRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
+		return fmt.Errorf("invalid admin address: %q: %w", m.Admin, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	if err := m.Amount.Validate(); err != nil {
+		return fmt.Errorf("invalid deposit amount: %w", err)
+	}
+	if !m.Amount.Amount.IsPositive() {
+		return fmt.Errorf("deposit amount must be greater than zero")
+	}
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgWithdrawInterestFundsRequest.
+func (m MsgWithdrawInterestFundsRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.InterestAdmin); err != nil {
+		return fmt.Errorf("invalid interest admin address: %q: %w", m.InterestAdmin, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	if err := m.Amount.Validate(); err != nil {
+		return fmt.Errorf("invalid withdrawal amount: %w", err)
+	}
+	if !m.Amount.Amount.IsPositive() {
+		return fmt.Errorf("withdrawal amount must be greater than zero")
+	}
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgToggleSwapsRequest.
+func (m MsgToggleSwapsRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
+		return fmt.Errorf("invalid admin address: %q: %w", m.Admin, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	return nil
 }

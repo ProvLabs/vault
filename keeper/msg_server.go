@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/provlabs/vault/types"
-
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/provlabs/vault/types"
 )
 
 var _ types.MsgServer = &msgServer{}
@@ -63,12 +63,59 @@ func (k msgServer) SwapOut(goCtx context.Context, msg *types.MsgSwapOutRequest) 
 	return &types.MsgSwapOutResponse{SharesBurned: *shares}, nil
 }
 
-// Redeem redeems shares for underlying assets.
-func (k msgServer) Redeem(goCtx context.Context, msg *types.MsgRedeemRequest) (*types.MsgRedeemResponse, error) {
-	panic("not implemented")
-}
-
 // UpdateParams updates the params for the module.
 func (k msgServer) UpdateParams(ctx context.Context, req *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	panic("not implemented")
+}
+
+func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdateInterestRateRequest) (*types.MsgUpdateInterestRateResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault: %w", err)
+	}
+	if vault == nil {
+		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+	}
+
+	if vault.Admin != msg.Admin {
+		return nil, fmt.Errorf("unauthorized: %s is not the interest admin", msg.Admin)
+	}
+
+	if vault.CurrentInterestRate != "" {
+		currRate, err := sdkmath.LegacyNewDecFromStr(vault.CurrentInterestRate)
+		if err != nil {
+			return nil, fmt.Errorf("invalid stored interest rate: %w", err)
+		}
+		if !currRate.IsZero() {
+			if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
+				return nil, fmt.Errorf("failed to reconcile before rate change: %w", err)
+			}
+		}
+	}
+
+	k.UpdateInterestRates(ctx, vault, msg.NewRate, msg.NewRate)
+
+	err = k.VaultInterestDetails.Set(ctx, vault.GetAddress(), types.VaultInterestDetails{PeriodStart: ctx.BlockTime().Unix()})
+	if err != nil {
+		return nil, fmt.Errorf("failed to set vault interest details: %w", err)
+	}
+
+	// k.emitEvent(ctx, types.NewEventInterestRateUpdated(msg.VaultAddress, msg.InterestAdmin, newRate.String()))
+
+	return &types.MsgUpdateInterestRateResponse{}, nil
+}
+
+func (k msgServer) DepositInterestFunds(goCtx context.Context, msg *types.MsgDepositInterestFundsRequest) (*types.MsgDepositInterestFundsResponse, error) {
+	return nil, fmt.Errorf("TODO")
+}
+
+func (k msgServer) WithdrawInterestFunds(goCtx context.Context, msg *types.MsgWithdrawInterestFundsRequest) (*types.MsgWithdrawInterestFundsResponse, error) {
+	return nil, fmt.Errorf("TODO")
+}
+
+func (k msgServer) ToggleSwaps(goCtx context.Context, msg *types.MsgToggleSwapsRequest) (*types.MsgToggleSwapsResponse, error) {
+	return nil, fmt.Errorf("TODO")
 }

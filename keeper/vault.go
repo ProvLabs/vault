@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/provlabs/vault/types"
@@ -258,4 +259,57 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 	k.emitEvent(ctx, types.NewEventSwapOut(vaultAddr.String(), owner.String(), assets, shares))
 
 	return &shares, nil
+}
+
+func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdateInterestRateRequest) (*types.MsgUpdateInterestRateResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr, err := sdk.AccAddressFromBech32(msg.VaultAddress)
+	if err != nil {
+		return nil, fmt.Errorf("invalid vault address: %w", err)
+	}
+
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault: %w", err)
+	}
+	if vault == nil {
+		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+	}
+
+	if vault.InterestAdmin != msg.InterestAdmin {
+		return nil, fmt.Errorf("unauthorized: %s is not the interest admin", msg.InterestAdmin)
+	}
+
+	// Parse the new rate
+	newRate, err := sdk.NewDecFromStr(msg.NewRate)
+	if err != nil {
+		return nil, fmt.Errorf("invalid interest rate: %w", err)
+	}
+
+	// If the vault has an existing rate set, and it's non-zero, reconcile first.
+	if vault.CurrentInterestRate != "" {
+		currRate, err := sdk.NewDecFromStr(vault.CurrentInterestRate)
+		if err != nil {
+			return nil, fmt.Errorf("invalid stored interest rate: %w", err)
+		}
+		if !currRate.IsZero() {
+			if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
+				return nil, fmt.Errorf("failed to reconcile before rate change: %w", err)
+			}
+		}
+	}
+
+	// Update both rates and reset the interest period start time
+	vault.CurrentInterestRate = newRate.String()
+	vault.DesiredInterestRate = newRate.String()
+	vault.InterestPeriodStart = ctx.BlockTime()
+
+	if err := k.SetVault(ctx, vault); err != nil {
+		return nil, fmt.Errorf("failed to save vault: %w", err)
+	}
+
+	k.emitEvent(ctx, types.NewEventInterestRateUpdated(msg.VaultAddress, msg.InterestAdmin, newRate.String()))
+
+	return &types.MsgUpdateInterestRateResponse{}, nil
 }

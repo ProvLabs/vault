@@ -70,3 +70,12 @@ func NewEventVaultReconcile(vaultAddress string, principalBefore, principalAfter
 		InterestEarned:  sdk.Coin{Denom: principalBefore.Denom, Amount: interestEarned},
 	}
 }
+
+// NewEventVaultInterestChange creates a new EventVaultInterestChange.
+func NewEventVaultInterestChange(vaultAddress, previousRate, newRate string) *EventVaultInterestChange {
+	return &EventVaultInterestChange{
+		VaultAddress: vaultAddress,
+		PreviousRate: previousRate,
+		NewRate:      newRate,
+	}
+}

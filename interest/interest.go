@@ -12,6 +12,7 @@ import (
 )
 
 const (
+	SecondsPerHour  = 3_600
 	SecondsPerDay   = 86_400
 	SecondsPerMonth = 2_628_000
 	SecondsPerYear  = 31_536_000

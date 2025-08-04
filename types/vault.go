@@ -3,9 +3,15 @@ package types
 import (
 	fmt "fmt"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	proto "github.com/cosmos/gogoproto/proto"
+)
+
+const (
+	ZeroInterestRate = "0.0"
 )
 
 var (
@@ -40,10 +46,12 @@ type VaultAccountI interface {
 // NewVaultAccount creates a new vault.
 func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin string, shareDenom string, underlyingAssets []string) *VaultAccount {
 	return &VaultAccount{
-		BaseAccount:      baseAcc,
-		Admin:            admin,
-		ShareDenom:       shareDenom,
-		UnderlyingAssets: underlyingAssets,
+		BaseAccount:         baseAcc,
+		Admin:               admin,
+		ShareDenom:          shareDenom,
+		UnderlyingAssets:    underlyingAssets,
+		CurrentInterestRate: ZeroInterestRate,
+		DesiredInterestRate: ZeroInterestRate,
 	}
 }
 
@@ -70,6 +78,17 @@ func (va VaultAccount) Validate() error {
 			return fmt.Errorf("invalid underlying asset denom: %s", denom)
 		}
 	}
+
+	_, err := sdkmath.LegacyNewDecFromStr(va.CurrentInterestRate)
+	if err != nil {
+		return fmt.Errorf("invalid current interest rate: %s", va.CurrentInterestRate)
+	}
+
+	_, err = sdkmath.LegacyNewDecFromStr(va.DesiredInterestRate)
+	if err != nil {
+		return fmt.Errorf("invalid desired interest rate: %s", va.DesiredInterestRate)
+	}
+
 	return nil
 }
 

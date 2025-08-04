@@ -134,6 +134,16 @@ func (m AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawM
 	return cdc.MustMarshalJSON(genesis)
 }
 
+// BeginBlock returns the begin blocker for the vault module.
+func (m AppModule) BeginBlock(ctx context.Context) error {
+	return m.keeper.BeginBlocker(ctx)
+}
+
+// EndBlock returns the end blocker for the vault module.
+func (a AppModule) EndBlock(ctx context.Context) error {
+	return a.keeper.EndBlocker(ctx)
+}
+
 // RegisterServices registers gRPC query and message services.
 func (m AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServer(m.keeper))

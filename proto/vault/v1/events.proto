@@ -4,7 +4,6 @@ package vault.v1;
 import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
-import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/provlabs/vault/types";
 
@@ -93,4 +92,16 @@ message EventVaultReconcile {
 
   // interest_earned is the interest amount (can be positive or negative).
   cosmos.base.v1beta1.Coin interest_earned = 6 [(gogoproto.nullable) = false];
+}
+
+// EventVaultInterestChange is an event emitted when a vault's interest rate is changed.
+message EventVaultInterestChange {
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // previous_rate is the previous interest rate.
+  string previous_rate = 2;
+
+  // new_rate is the new interest rate.
+  string new_rate = 3;
 }

@@ -62,12 +62,13 @@ func (x *_VaultAccount_3_list) IsValid() bool {
 }
 
 var (
-	md_VaultAccount                   protoreflect.MessageDescriptor
-	fd_VaultAccount_base_account      protoreflect.FieldDescriptor
-	fd_VaultAccount_share_denom       protoreflect.FieldDescriptor
-	fd_VaultAccount_underlying_assets protoreflect.FieldDescriptor
-	fd_VaultAccount_admin             protoreflect.FieldDescriptor
-	fd_VaultAccount_interest_rate     protoreflect.FieldDescriptor
+	md_VaultAccount                       protoreflect.MessageDescriptor
+	fd_VaultAccount_base_account          protoreflect.FieldDescriptor
+	fd_VaultAccount_share_denom           protoreflect.FieldDescriptor
+	fd_VaultAccount_underlying_assets     protoreflect.FieldDescriptor
+	fd_VaultAccount_admin                 protoreflect.FieldDescriptor
+	fd_VaultAccount_current_interest_rate protoreflect.FieldDescriptor
+	fd_VaultAccount_desired_interest_rate protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -77,7 +78,8 @@ func init() {
 	fd_VaultAccount_share_denom = md_VaultAccount.Fields().ByName("share_denom")
 	fd_VaultAccount_underlying_assets = md_VaultAccount.Fields().ByName("underlying_assets")
 	fd_VaultAccount_admin = md_VaultAccount.Fields().ByName("admin")
-	fd_VaultAccount_interest_rate = md_VaultAccount.Fields().ByName("interest_rate")
+	fd_VaultAccount_current_interest_rate = md_VaultAccount.Fields().ByName("current_interest_rate")
+	fd_VaultAccount_desired_interest_rate = md_VaultAccount.Fields().ByName("desired_interest_rate")
 }
 
 var _ protoreflect.Message = (*fastReflection_VaultAccount)(nil)
@@ -169,9 +171,15 @@ func (x *fastReflection_VaultAccount) Range(f func(protoreflect.FieldDescriptor,
 			return
 		}
 	}
-	if x.InterestRate != "" {
-		value := protoreflect.ValueOfString(x.InterestRate)
-		if !f(fd_VaultAccount_interest_rate, value) {
+	if x.CurrentInterestRate != "" {
+		value := protoreflect.ValueOfString(x.CurrentInterestRate)
+		if !f(fd_VaultAccount_current_interest_rate, value) {
+			return
+		}
+	}
+	if x.DesiredInterestRate != "" {
+		value := protoreflect.ValueOfString(x.DesiredInterestRate)
+		if !f(fd_VaultAccount_desired_interest_rate, value) {
 			return
 		}
 	}
@@ -198,8 +206,10 @@ func (x *fastReflection_VaultAccount) Has(fd protoreflect.FieldDescriptor) bool 
 		return len(x.UnderlyingAssets) != 0
 	case "vault.v1.VaultAccount.admin":
 		return x.Admin != ""
-	case "vault.v1.VaultAccount.interest_rate":
-		return x.InterestRate != ""
+	case "vault.v1.VaultAccount.current_interest_rate":
+		return x.CurrentInterestRate != ""
+	case "vault.v1.VaultAccount.desired_interest_rate":
+		return x.DesiredInterestRate != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.VaultAccount"))
@@ -224,8 +234,10 @@ func (x *fastReflection_VaultAccount) Clear(fd protoreflect.FieldDescriptor) {
 		x.UnderlyingAssets = nil
 	case "vault.v1.VaultAccount.admin":
 		x.Admin = ""
-	case "vault.v1.VaultAccount.interest_rate":
-		x.InterestRate = ""
+	case "vault.v1.VaultAccount.current_interest_rate":
+		x.CurrentInterestRate = ""
+	case "vault.v1.VaultAccount.desired_interest_rate":
+		x.DesiredInterestRate = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.VaultAccount"))
@@ -257,8 +269,11 @@ func (x *fastReflection_VaultAccount) Get(descriptor protoreflect.FieldDescripto
 	case "vault.v1.VaultAccount.admin":
 		value := x.Admin
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.VaultAccount.interest_rate":
-		value := x.InterestRate
+	case "vault.v1.VaultAccount.current_interest_rate":
+		value := x.CurrentInterestRate
+		return protoreflect.ValueOfString(value)
+	case "vault.v1.VaultAccount.desired_interest_rate":
+		value := x.DesiredInterestRate
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
@@ -290,8 +305,10 @@ func (x *fastReflection_VaultAccount) Set(fd protoreflect.FieldDescriptor, value
 		x.UnderlyingAssets = *clv.list
 	case "vault.v1.VaultAccount.admin":
 		x.Admin = value.Interface().(string)
-	case "vault.v1.VaultAccount.interest_rate":
-		x.InterestRate = value.Interface().(string)
+	case "vault.v1.VaultAccount.current_interest_rate":
+		x.CurrentInterestRate = value.Interface().(string)
+	case "vault.v1.VaultAccount.desired_interest_rate":
+		x.DesiredInterestRate = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.VaultAccount"))
@@ -327,8 +344,10 @@ func (x *fastReflection_VaultAccount) Mutable(fd protoreflect.FieldDescriptor) p
 		panic(fmt.Errorf("field share_denom of message vault.v1.VaultAccount is not mutable"))
 	case "vault.v1.VaultAccount.admin":
 		panic(fmt.Errorf("field admin of message vault.v1.VaultAccount is not mutable"))
-	case "vault.v1.VaultAccount.interest_rate":
-		panic(fmt.Errorf("field interest_rate of message vault.v1.VaultAccount is not mutable"))
+	case "vault.v1.VaultAccount.current_interest_rate":
+		panic(fmt.Errorf("field current_interest_rate of message vault.v1.VaultAccount is not mutable"))
+	case "vault.v1.VaultAccount.desired_interest_rate":
+		panic(fmt.Errorf("field desired_interest_rate of message vault.v1.VaultAccount is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.VaultAccount"))
@@ -352,7 +371,9 @@ func (x *fastReflection_VaultAccount) NewField(fd protoreflect.FieldDescriptor) 
 		return protoreflect.ValueOfList(&_VaultAccount_3_list{list: &list})
 	case "vault.v1.VaultAccount.admin":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.VaultAccount.interest_rate":
+	case "vault.v1.VaultAccount.current_interest_rate":
+		return protoreflect.ValueOfString("")
+	case "vault.v1.VaultAccount.desired_interest_rate":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
@@ -441,7 +462,11 @@ func (x *fastReflection_VaultAccount) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		l = len(x.InterestRate)
+		l = len(x.CurrentInterestRate)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.DesiredInterestRate)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
@@ -474,10 +499,17 @@ func (x *fastReflection_VaultAccount) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if len(x.InterestRate) > 0 {
-			i -= len(x.InterestRate)
-			copy(dAtA[i:], x.InterestRate)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.InterestRate)))
+		if len(x.DesiredInterestRate) > 0 {
+			i -= len(x.DesiredInterestRate)
+			copy(dAtA[i:], x.DesiredInterestRate)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.DesiredInterestRate)))
+			i--
+			dAtA[i] = 0x32
+		}
+		if len(x.CurrentInterestRate) > 0 {
+			i -= len(x.CurrentInterestRate)
+			copy(dAtA[i:], x.CurrentInterestRate)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.CurrentInterestRate)))
 			i--
 			dAtA[i] = 0x2a
 		}
@@ -701,7 +733,7 @@ func (x *fastReflection_VaultAccount) ProtoMethods() *protoiface.Methods {
 				iNdEx = postIndex
 			case 5:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field InterestRate", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field CurrentInterestRate", wireType)
 				}
 				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
@@ -729,7 +761,39 @@ func (x *fastReflection_VaultAccount) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.InterestRate = string(dAtA[iNdEx:postIndex])
+				x.CurrentInterestRate = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 6:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field DesiredInterestRate", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.DesiredInterestRate = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -769,12 +833,14 @@ func (x *fastReflection_VaultAccount) ProtoMethods() *protoiface.Methods {
 var (
 	md_VaultInterestDetails              protoreflect.MessageDescriptor
 	fd_VaultInterestDetails_period_start protoreflect.FieldDescriptor
+	fd_VaultInterestDetails_expire_time  protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_vault_v1_vault_proto_init()
 	md_VaultInterestDetails = File_vault_v1_vault_proto.Messages().ByName("VaultInterestDetails")
 	fd_VaultInterestDetails_period_start = md_VaultInterestDetails.Fields().ByName("period_start")
+	fd_VaultInterestDetails_expire_time = md_VaultInterestDetails.Fields().ByName("expire_time")
 }
 
 var _ protoreflect.Message = (*fastReflection_VaultInterestDetails)(nil)
@@ -848,6 +914,12 @@ func (x *fastReflection_VaultInterestDetails) Range(f func(protoreflect.FieldDes
 			return
 		}
 	}
+	if x.ExpireTime != int64(0) {
+		value := protoreflect.ValueOfInt64(x.ExpireTime)
+		if !f(fd_VaultInterestDetails_expire_time, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -865,6 +937,8 @@ func (x *fastReflection_VaultInterestDetails) Has(fd protoreflect.FieldDescripto
 	switch fd.FullName() {
 	case "vault.v1.VaultInterestDetails.period_start":
 		return x.PeriodStart != int64(0)
+	case "vault.v1.VaultInterestDetails.expire_time":
+		return x.ExpireTime != int64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.VaultInterestDetails"))
@@ -883,6 +957,8 @@ func (x *fastReflection_VaultInterestDetails) Clear(fd protoreflect.FieldDescrip
 	switch fd.FullName() {
 	case "vault.v1.VaultInterestDetails.period_start":
 		x.PeriodStart = int64(0)
+	case "vault.v1.VaultInterestDetails.expire_time":
+		x.ExpireTime = int64(0)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.VaultInterestDetails"))
@@ -901,6 +977,9 @@ func (x *fastReflection_VaultInterestDetails) Get(descriptor protoreflect.FieldD
 	switch descriptor.FullName() {
 	case "vault.v1.VaultInterestDetails.period_start":
 		value := x.PeriodStart
+		return protoreflect.ValueOfInt64(value)
+	case "vault.v1.VaultInterestDetails.expire_time":
+		value := x.ExpireTime
 		return protoreflect.ValueOfInt64(value)
 	default:
 		if descriptor.IsExtension() {
@@ -924,6 +1003,8 @@ func (x *fastReflection_VaultInterestDetails) Set(fd protoreflect.FieldDescripto
 	switch fd.FullName() {
 	case "vault.v1.VaultInterestDetails.period_start":
 		x.PeriodStart = value.Int()
+	case "vault.v1.VaultInterestDetails.expire_time":
+		x.ExpireTime = value.Int()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.VaultInterestDetails"))
@@ -946,6 +1027,8 @@ func (x *fastReflection_VaultInterestDetails) Mutable(fd protoreflect.FieldDescr
 	switch fd.FullName() {
 	case "vault.v1.VaultInterestDetails.period_start":
 		panic(fmt.Errorf("field period_start of message vault.v1.VaultInterestDetails is not mutable"))
+	case "vault.v1.VaultInterestDetails.expire_time":
+		panic(fmt.Errorf("field expire_time of message vault.v1.VaultInterestDetails is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.VaultInterestDetails"))
@@ -960,6 +1043,8 @@ func (x *fastReflection_VaultInterestDetails) Mutable(fd protoreflect.FieldDescr
 func (x *fastReflection_VaultInterestDetails) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "vault.v1.VaultInterestDetails.period_start":
+		return protoreflect.ValueOfInt64(int64(0))
+	case "vault.v1.VaultInterestDetails.expire_time":
 		return protoreflect.ValueOfInt64(int64(0))
 	default:
 		if fd.IsExtension() {
@@ -1033,6 +1118,9 @@ func (x *fastReflection_VaultInterestDetails) ProtoMethods() *protoiface.Methods
 		if x.PeriodStart != 0 {
 			n += 1 + runtime.Sov(uint64(x.PeriodStart))
 		}
+		if x.ExpireTime != 0 {
+			n += 1 + runtime.Sov(uint64(x.ExpireTime))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -1061,6 +1149,11 @@ func (x *fastReflection_VaultInterestDetails) ProtoMethods() *protoiface.Methods
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.ExpireTime != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.ExpireTime))
+			i--
+			dAtA[i] = 0x10
 		}
 		if x.PeriodStart != 0 {
 			i = runtime.EncodeVarint(dAtA, i, uint64(x.PeriodStart))
@@ -1135,6 +1228,25 @@ func (x *fastReflection_VaultInterestDetails) ProtoMethods() *protoiface.Methods
 						break
 					}
 				}
+			case 2:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ExpireTime", wireType)
+				}
+				x.ExpireTime = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.ExpireTime |= int64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -1198,9 +1310,11 @@ type VaultAccount struct {
 	UnderlyingAssets []string `protobuf:"bytes,3,rep,name=underlying_assets,json=underlyingAssets,proto3" json:"underlying_assets,omitempty"`
 	// admin is the address that has administrative privileges over the vault.
 	Admin string `protobuf:"bytes,4,opt,name=admin,proto3" json:"admin,omitempty"`
-	// interest_rate is the annualized continuous interest rate for the vault,
-	// represented as a decimal string (e.g., "0.05" for 5% APR).
-	InterestRate string `protobuf:"bytes,5,opt,name=interest_rate,json=interestRate,proto3" json:"interest_rate,omitempty"`
+	// current_interest_rate is the actual interest rate currently being applied.
+	// This may be adjusted programmatically (e.g., due to lack of funds).
+	CurrentInterestRate string `protobuf:"bytes,5,opt,name=current_interest_rate,json=currentInterestRate,proto3" json:"current_interest_rate,omitempty"`
+	// desired_interest_rate is the target interest rate that the vault intends to apply.
+	DesiredInterestRate string `protobuf:"bytes,6,opt,name=desired_interest_rate,json=desiredInterestRate,proto3" json:"desired_interest_rate,omitempty"`
 }
 
 func (x *VaultAccount) Reset() {
@@ -1251,9 +1365,16 @@ func (x *VaultAccount) GetAdmin() string {
 	return ""
 }
 
-func (x *VaultAccount) GetInterestRate() string {
+func (x *VaultAccount) GetCurrentInterestRate() string {
 	if x != nil {
-		return x.InterestRate
+		return x.CurrentInterestRate
+	}
+	return ""
+}
+
+func (x *VaultAccount) GetDesiredInterestRate() string {
+	if x != nil {
+		return x.DesiredInterestRate
 	}
 	return ""
 }
@@ -1270,6 +1391,8 @@ type VaultInterestDetails struct {
 
 	// The start time (in Unix seconds) of the current interest accrual period.
 	PeriodStart int64 `protobuf:"varint,1,opt,name=period_start,json=periodStart,proto3" json:"period_start,omitempty"`
+	// The expire time (in Unix seconds) of the current interest accrual period.
+	ExpireTime int64 `protobuf:"varint,2,opt,name=expire_time,json=expireTime,proto3" json:"expire_time,omitempty"`
 }
 
 func (x *VaultInterestDetails) Reset() {
@@ -1299,6 +1422,13 @@ func (x *VaultInterestDetails) GetPeriodStart() int64 {
 	return 0
 }
 
+func (x *VaultInterestDetails) GetExpireTime() int64 {
+	if x != nil {
+		return x.ExpireTime
+	}
+	return 0
+}
+
 var File_vault_v1_vault_proto protoreflect.FileDescriptor
 
 var file_vault_v1_vault_proto_rawDesc = []byte{
@@ -1309,7 +1439,7 @@ var file_vault_v1_vault_proto_rawDesc = []byte{
 	0x1a, 0x19, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x63,
 	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x14, 0x67, 0x6f, 0x67,
 	0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x22, 0x92, 0x02, 0x0a, 0x0c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x63, 0x63, 0x6f, 0x75,
+	0x6f, 0x22, 0xeb, 0x02, 0x0a, 0x0c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x63, 0x63, 0x6f, 0x75,
 	0x6e, 0x74, 0x12, 0x49, 0x0a, 0x0c, 0x62, 0x61, 0x73, 0x65, 0x5f, 0x61, 0x63, 0x63, 0x6f, 0x75,
 	0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
 	0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x42,
@@ -1322,24 +1452,32 @@ var file_vault_v1_vault_proto_rawDesc = []byte{
 	0x6c, 0x79, 0x69, 0x6e, 0x67, 0x41, 0x73, 0x73, 0x65, 0x74, 0x73, 0x12, 0x2e, 0x0a, 0x05, 0x61,
 	0x64, 0x6d, 0x69, 0x6e, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14,
 	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74,
-	0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x39, 0x0a, 0x0d, 0x69,
-	0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x5f, 0x72, 0x61, 0x74, 0x65, 0x18, 0x05, 0x20, 0x01,
-	0x28, 0x09, 0x42, 0x14, 0xd2, 0xb4, 0x2d, 0x10, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x44,
-	0x65, 0x63, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x65,
-	0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x22, 0x39, 0x0a, 0x14, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x49,
-	0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x44, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x73, 0x12, 0x21,
-	0x0a, 0x0c, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x5f, 0x73, 0x74, 0x61, 0x72, 0x74, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x03, 0x52, 0x0b, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x53, 0x74, 0x61, 0x72,
-	0x74, 0x42, 0x8b, 0x01, 0x0a, 0x0c, 0x63, 0x6f, 0x6d, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e,
-	0x76, 0x31, 0x42, 0x0a, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01,
-	0x5a, 0x2e, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x6f,
-	0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69, 0x2f,
-	0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x76, 0x31,
-	0xa2, 0x02, 0x03, 0x56, 0x58, 0x58, 0xaa, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56,
-	0x31, 0xca, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x14, 0x56,
-	0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64,
-	0x61, 0x74, 0x61, 0xea, 0x02, 0x09, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62,
-	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x48, 0x0a, 0x15, 0x63,
+	0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x5f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x5f,
+	0x72, 0x61, 0x74, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x42, 0x14, 0xd2, 0xb4, 0x2d, 0x10,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x44, 0x65, 0x63, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67,
+	0x52, 0x13, 0x63, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73,
+	0x74, 0x52, 0x61, 0x74, 0x65, 0x12, 0x48, 0x0a, 0x15, 0x64, 0x65, 0x73, 0x69, 0x72, 0x65, 0x64,
+	0x5f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x5f, 0x72, 0x61, 0x74, 0x65, 0x18, 0x06,
+	0x20, 0x01, 0x28, 0x09, 0x42, 0x14, 0xd2, 0xb4, 0x2d, 0x10, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2e, 0x44, 0x65, 0x63, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x13, 0x64, 0x65, 0x73, 0x69,
+	0x72, 0x65, 0x64, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x22,
+	0x5a, 0x0a, 0x14, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74,
+	0x44, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x73, 0x12, 0x21, 0x0a, 0x0c, 0x70, 0x65, 0x72, 0x69, 0x6f,
+	0x64, 0x5f, 0x73, 0x74, 0x61, 0x72, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0b, 0x70,
+	0x65, 0x72, 0x69, 0x6f, 0x64, 0x53, 0x74, 0x61, 0x72, 0x74, 0x12, 0x1f, 0x0a, 0x0b, 0x65, 0x78,
+	0x70, 0x69, 0x72, 0x65, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52,
+	0x0a, 0x65, 0x78, 0x70, 0x69, 0x72, 0x65, 0x54, 0x69, 0x6d, 0x65, 0x42, 0x8b, 0x01, 0x0a, 0x0c,
+	0x63, 0x6f, 0x6d, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x42, 0x0a, 0x56, 0x61,
+	0x75, 0x6c, 0x74, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2e, 0x67, 0x69, 0x74, 0x68,
+	0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f,
+	0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f,
+	0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x56, 0x58, 0x58,
+	0xaa, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x08, 0x56, 0x61,
+	0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x14, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56,
+	0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x09,
+	0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x33,
 }
 
 var (

@@ -128,8 +128,8 @@ func (m MsgDepositInterestFundsRequest) ValidateBasic() error {
 
 // ValidateBasic performs stateless validation on MsgWithdrawInterestFundsRequest.
 func (m MsgWithdrawInterestFundsRequest) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(m.InterestAdmin); err != nil {
-		return fmt.Errorf("invalid interest admin address: %q: %w", m.InterestAdmin, err)
+	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
+		return fmt.Errorf("invalid interest admin address: %q: %w", m.Admin, err)
 	}
 	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
 		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)

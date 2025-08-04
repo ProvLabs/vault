@@ -72,14 +72,10 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
-	vault, err := k.GetVault(ctx, vaultAddr)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get vault: %w", err)
+	vault, ok := k.tryGetVault(ctx, vaultAddr)
+	if ok {
+		return nil, fmt.Errorf("failed to get vault: %v", msg.VaultAddress)
 	}
-	if vault == nil {
-		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
-	}
-
 	if vault.Admin != msg.Admin {
 		return nil, fmt.Errorf("unauthorized: %s is not the interest admin", msg.Admin)
 	}
@@ -98,7 +94,7 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 
 	k.UpdateInterestRates(ctx, vault, msg.NewRate, msg.NewRate)
 
-	err = k.VaultInterestDetails.Set(ctx, vault.GetAddress(), types.VaultInterestDetails{PeriodStart: ctx.BlockTime().Unix()})
+	err := k.VaultInterestDetails.Set(ctx, vault.GetAddress(), types.VaultInterestDetails{PeriodStart: ctx.BlockTime().Unix()})
 	if err != nil {
 		return nil, fmt.Errorf("failed to set vault interest details: %w", err)
 	}
@@ -109,13 +105,76 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 }
 
 func (k msgServer) DepositInterestFunds(goCtx context.Context, msg *types.MsgDepositInterestFundsRequest) (*types.MsgDepositInterestFundsResponse, error) {
-	return nil, fmt.Errorf("TODO")
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	adminAddr := sdk.MustAccAddressFromBech32(msg.Admin)
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+
+	vault, ok := k.tryGetVault(ctx, vaultAddr)
+	if ok {
+		return nil, fmt.Errorf("failed to get vault: %v", msg.VaultAddress)
+	}
+	if vault.Admin != msg.Admin {
+		return nil, fmt.Errorf("unauthorized: %s is not the interest admin", msg.Admin)
+	}
+
+	err := k.ReconcileVaultInterest(ctx, vault)
+	if err != nil {
+		return nil, fmt.Errorf("failed to reconcile vault interest before withdrawal: %w", err)
+	}
+
+	if err := k.BankKeeper.SendCoins(ctx, adminAddr, vaultAddr, sdk.NewCoins(msg.Amount)); err != nil {
+		return nil, fmt.Errorf("failed to deposit funds: %w", err)
+	}
+
+	// k.emitEvent(ctx, types.NewEventInterestDeposit(msg.VaultAddress, msg.Admin, msg.Amount))
+
+	return &types.MsgDepositInterestFundsResponse{}, nil
 }
 
 func (k msgServer) WithdrawInterestFunds(goCtx context.Context, msg *types.MsgWithdrawInterestFundsRequest) (*types.MsgWithdrawInterestFundsResponse, error) {
-	return nil, fmt.Errorf("TODO")
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	adminAddr := sdk.MustAccAddressFromBech32(msg.Admin)
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+
+	vault, ok := k.tryGetVault(ctx, vaultAddr)
+	if ok {
+		return nil, fmt.Errorf("failed to get vault: %v", msg.VaultAddress)
+	}
+	if vault.Admin != msg.Admin {
+		return nil, fmt.Errorf("unauthorized: %s is not the interest admin", msg.Admin)
+	}
+
+	err := k.ReconcileVaultInterest(ctx, vault)
+	if err != nil {
+		return nil, fmt.Errorf("failed to reconcile vault interest before withdrawal: %w", err)
+	}
+
+	if err := k.BankKeeper.SendCoins(ctx, vaultAddr, adminAddr, sdk.NewCoins(msg.Amount)); err != nil {
+		return nil, fmt.Errorf("failed to withdraw funds: %w", err)
+	}
+
+	// k.emitEvent(ctx, types.NewEventInterestWithdrawal(msg.VaultAddress, msg.InterestAdmin, msg.Amount))
+
+	return &types.MsgWithdrawInterestFundsResponse{}, nil
 }
 
 func (k msgServer) ToggleSwaps(goCtx context.Context, msg *types.MsgToggleSwapsRequest) (*types.MsgToggleSwapsResponse, error) {
-	return nil, fmt.Errorf("TODO")
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+
+	vault, ok := k.tryGetVault(ctx, vaultAddr)
+	if !ok {
+		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+	}
+	if vault.Admin != msg.Admin {
+		return nil, fmt.Errorf("unauthorized: %s is not the vault admin", msg.Admin)
+	}
+
+	k.SetSwapsEnable(ctx, vault, msg.SwapsEnabled)
+	// k.emitEvent(ctx, types.NewEventToggleSwaps(msg.VaultAddress, adminAddr.String(), msg.SwapsEnabled))
+
+	return &types.MsgToggleSwapsResponse{}, nil
 }

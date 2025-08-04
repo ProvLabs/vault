@@ -427,26 +427,26 @@ func TestMsgWithdrawInterestFundsRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "valid",
 			msg: types.MsgWithdrawInterestFundsRequest{
-				InterestAdmin: addr,
-				VaultAddress:  addr,
-				Amount:        sdk.NewInt64Coin("uusd", 1000),
+				Admin:        addr,
+				VaultAddress: addr,
+				Amount:       sdk.NewInt64Coin("uusd", 1000),
 			},
 		},
 		{
 			name: "zero amount",
 			msg: types.MsgWithdrawInterestFundsRequest{
-				InterestAdmin: addr,
-				VaultAddress:  addr,
-				Amount:        sdk.NewInt64Coin("uusd", 0),
+				Admin:        addr,
+				VaultAddress: addr,
+				Amount:       sdk.NewInt64Coin("uusd", 0),
 			},
 			wantErr: "greater than zero",
 		},
 		{
 			name: "invalid interest admin",
 			msg: types.MsgWithdrawInterestFundsRequest{
-				InterestAdmin: "bad",
-				VaultAddress:  addr,
-				Amount:        sdk.NewInt64Coin("uusd", 1000),
+				Admin:        "bad",
+				VaultAddress: addr,
+				Amount:       sdk.NewInt64Coin("uusd", 1000),
 			},
 			wantErr: "invalid interest admin address",
 		},

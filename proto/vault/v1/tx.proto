@@ -142,9 +142,9 @@ message MsgDepositInterestFundsRequest {
 message MsgDepositInterestFundsResponse {}
 
 message MsgWithdrawInterestFundsRequest {
-  option (cosmos.msg.v1.signer) = "interest_admin";
+  option (cosmos.msg.v1.signer) = "admin";
 
-  string interest_admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string vault_address = 2;
   cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
 }

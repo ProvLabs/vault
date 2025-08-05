@@ -143,8 +143,19 @@ func (m MsgWithdrawInterestFundsRequest) ValidateBasic() error {
 	return nil
 }
 
-// ValidateBasic performs stateless validation on MsgToggleSwapsRequest.
-func (m MsgToggleSwapsRequest) ValidateBasic() error {
+// ValidateBasic performs stateless validation on MsgToggleSwapInRequest.
+func (m MsgToggleSwapInRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
+		return fmt.Errorf("invalid admin address: %q: %w", m.Admin, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgToggleSwapOutRequest.
+func (m MsgToggleSwapOutRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
 		return fmt.Errorf("invalid admin address: %q: %w", m.Admin, err)
 	}

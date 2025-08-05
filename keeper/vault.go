@@ -162,7 +162,7 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 		return nil, fmt.Errorf("vault with address %v not found", vaultAddr.String())
 	}
 
-	if !vault.SwapsEnabled {
+	if !vault.SwapInEnabled {
 		return nil, fmt.Errorf("swaps are not enabled for vault %s", vaultAddr.String())
 	}
 
@@ -226,7 +226,7 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 		return nil, fmt.Errorf("vault with address %v not found", vaultAddr.String())
 	}
 
-	if !vault.SwapsEnabled {
+	if !vault.SwapOutEnabled {
 		return nil, fmt.Errorf("swaps are not enabled for vault %s", vaultAddr.String())
 	}
 
@@ -272,8 +272,14 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 // SetInterestRate updates the current interest rate for a given vault. If the new rate is
 // different from the currently set rate, it updates the vault account in the state and
 // emits an EventVaultInterestChange event. No action is taken if the new rate is the same as the existing one.
-func (k *Keeper) SetSwapsEnable(ctx context.Context, vault *types.VaultAccount, enabled bool) {
-	vault.SwapsEnabled = enabled
+func (k *Keeper) SetSwapInEnable(ctx context.Context, vault *types.VaultAccount, enabled bool) {
+	vault.SwapInEnabled = enabled
+	k.AuthKeeper.SetAccount(ctx, vault)
+	// k.emitEvent(sdk.UnwrapSDKContext(ctx), event)
+}
+
+func (k *Keeper) SetSwapOutEnable(ctx context.Context, vault *types.VaultAccount, enabled bool) {
+	vault.SwapOutEnabled = enabled
 	k.AuthKeeper.SetAccount(ctx, vault)
 	// k.emitEvent(sdk.UnwrapSDKContext(ctx), event)
 }

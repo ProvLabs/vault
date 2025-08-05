@@ -27,16 +27,19 @@ service Msg {
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
 
   // UpdateInterestRate allows the interest admin to update the current interest rate within limits.
-rpc UpdateInterestRate(MsgUpdateInterestRateRequest) returns (MsgUpdateInterestRateResponse);
+  rpc UpdateInterestRate(MsgUpdateInterestRateRequest) returns (MsgUpdateInterestRateResponse);
 
-// DepositInterestFunds allows depositing funds into the vault for paying interest.
-rpc DepositInterestFunds(MsgDepositInterestFundsRequest) returns (MsgDepositInterestFundsResponse);
+  // DepositInterestFunds allows depositing funds into the vault for paying interest.
+  rpc DepositInterestFunds(MsgDepositInterestFundsRequest) returns (MsgDepositInterestFundsResponse);
 
-// WithdrawInterestFunds allows withdrawing unused interest funds (admin only).
-rpc WithdrawInterestFunds(MsgWithdrawInterestFundsRequest) returns (MsgWithdrawInterestFundsResponse);
+  // WithdrawInterestFunds allows withdrawing unused interest funds (admin only).
+  rpc WithdrawInterestFunds(MsgWithdrawInterestFundsRequest) returns (MsgWithdrawInterestFundsResponse);
 
-// ToggleSwaps allows enabling or disabling all swap operations for a vault.
-rpc ToggleSwaps(MsgToggleSwapsRequest) returns (MsgToggleSwapsResponse);
+  // ToggleSwapIn allows enabling or disabling swap-in operations for a vault.
+  rpc ToggleSwapIn(MsgToggleSwapInRequest) returns (MsgToggleSwapInResponse);
+
+  // ToggleSwapOut allows enabling or disabling swap-out operations for a vault.
+  rpc ToggleSwapOut(MsgToggleSwapOutRequest) returns (MsgToggleSwapOutResponse);
 }
 
 // MsgUpdateParams is the Msg/UpdateParams request type.
@@ -115,8 +118,8 @@ message MsgSetInterestConfigRequest {
 
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string vault_address = 2;
-  string min_rate = 3; 
-  string max_rate = 4; 
+  string min_rate = 3;
+  string max_rate = 4;
 }
 
 message MsgSetInterestConfigResponse {}
@@ -151,12 +154,22 @@ message MsgWithdrawInterestFundsRequest {
 
 message MsgWithdrawInterestFundsResponse {}
 
-message MsgToggleSwapsRequest {
+message MsgToggleSwapInRequest {
   option (cosmos.msg.v1.signer) = "admin";
 
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string vault_address = 2;
-  bool swaps_enabled = 3;
+  bool enabled = 3;
 }
 
-message MsgToggleSwapsResponse {}
+message MsgToggleSwapInResponse {}
+
+message MsgToggleSwapOutRequest {
+  option (cosmos.msg.v1.signer) = "admin";
+
+  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string vault_address = 2;
+  bool enabled = 3;
+}
+
+message MsgToggleSwapOutResponse {}

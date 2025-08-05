@@ -464,35 +464,85 @@ func TestMsgWithdrawInterestFundsRequest_ValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMsgToggleSwapsRequest_ValidateBasic(t *testing.T) {
+func TestMsgToggleSwapInRequest_ValidateBasic(t *testing.T) {
 	addr := utils.TestAddress().Bech32
 
 	tests := []struct {
 		name    string
-		msg     types.MsgToggleSwapsRequest
+		msg     types.MsgToggleSwapInRequest
 		wantErr string
 	}{
 		{
 			name: "valid",
-			msg: types.MsgToggleSwapsRequest{
+			msg: types.MsgToggleSwapInRequest{
 				Admin:        addr,
 				VaultAddress: addr,
-				SwapsEnabled: true,
+				Enabled:      true,
 			},
 		},
 		{
 			name: "invalid admin",
-			msg: types.MsgToggleSwapsRequest{
+			msg: types.MsgToggleSwapInRequest{
 				Admin:        "bad",
 				VaultAddress: addr,
+				Enabled:      false,
 			},
 			wantErr: "invalid admin address",
 		},
 		{
 			name: "invalid vault address",
-			msg: types.MsgToggleSwapsRequest{
+			msg: types.MsgToggleSwapInRequest{
 				Admin:        addr,
 				VaultAddress: "bad",
+				Enabled:      true,
+			},
+			wantErr: "invalid vault address",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.wantErr != "" {
+				assert.ErrorContains(t, err, tc.wantErr)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestMsgToggleSwapOutRequest_ValidateBasic(t *testing.T) {
+	addr := utils.TestAddress().Bech32
+
+	tests := []struct {
+		name    string
+		msg     types.MsgToggleSwapOutRequest
+		wantErr string
+	}{
+		{
+			name: "valid",
+			msg: types.MsgToggleSwapOutRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				Enabled:      true,
+			},
+		},
+		{
+			name: "invalid admin",
+			msg: types.MsgToggleSwapOutRequest{
+				Admin:        "bad",
+				VaultAddress: addr,
+				Enabled:      false,
+			},
+			wantErr: "invalid admin address",
+		},
+		{
+			name: "invalid vault address",
+			msg: types.MsgToggleSwapOutRequest{
+				Admin:        addr,
+				VaultAddress: "bad",
+				Enabled:      true,
 			},
 			wantErr: "invalid vault address",
 		},

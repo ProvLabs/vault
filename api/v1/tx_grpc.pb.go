@@ -26,7 +26,8 @@ const (
 	Msg_UpdateInterestRate_FullMethodName    = "/vault.v1.Msg/UpdateInterestRate"
 	Msg_DepositInterestFunds_FullMethodName  = "/vault.v1.Msg/DepositInterestFunds"
 	Msg_WithdrawInterestFunds_FullMethodName = "/vault.v1.Msg/WithdrawInterestFunds"
-	Msg_ToggleSwaps_FullMethodName           = "/vault.v1.Msg/ToggleSwaps"
+	Msg_ToggleSwapIn_FullMethodName          = "/vault.v1.Msg/ToggleSwapIn"
+	Msg_ToggleSwapOut_FullMethodName         = "/vault.v1.Msg/ToggleSwapOut"
 )
 
 // MsgClient is the client API for Msg service.
@@ -50,8 +51,10 @@ type MsgClient interface {
 	DepositInterestFunds(ctx context.Context, in *MsgDepositInterestFundsRequest, opts ...grpc.CallOption) (*MsgDepositInterestFundsResponse, error)
 	// WithdrawInterestFunds allows withdrawing unused interest funds (admin only).
 	WithdrawInterestFunds(ctx context.Context, in *MsgWithdrawInterestFundsRequest, opts ...grpc.CallOption) (*MsgWithdrawInterestFundsResponse, error)
-	// ToggleSwaps allows enabling or disabling all swap operations for a vault.
-	ToggleSwaps(ctx context.Context, in *MsgToggleSwapsRequest, opts ...grpc.CallOption) (*MsgToggleSwapsResponse, error)
+	// ToggleSwapIn allows enabling or disabling swap-in operations for a vault.
+	ToggleSwapIn(ctx context.Context, in *MsgToggleSwapInRequest, opts ...grpc.CallOption) (*MsgToggleSwapInResponse, error)
+	// ToggleSwapOut allows enabling or disabling swap-out operations for a vault.
+	ToggleSwapOut(ctx context.Context, in *MsgToggleSwapOutRequest, opts ...grpc.CallOption) (*MsgToggleSwapOutResponse, error)
 }
 
 type msgClient struct {
@@ -132,10 +135,20 @@ func (c *msgClient) WithdrawInterestFunds(ctx context.Context, in *MsgWithdrawIn
 	return out, nil
 }
 
-func (c *msgClient) ToggleSwaps(ctx context.Context, in *MsgToggleSwapsRequest, opts ...grpc.CallOption) (*MsgToggleSwapsResponse, error) {
+func (c *msgClient) ToggleSwapIn(ctx context.Context, in *MsgToggleSwapInRequest, opts ...grpc.CallOption) (*MsgToggleSwapInResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(MsgToggleSwapsResponse)
-	err := c.cc.Invoke(ctx, Msg_ToggleSwaps_FullMethodName, in, out, cOpts...)
+	out := new(MsgToggleSwapInResponse)
+	err := c.cc.Invoke(ctx, Msg_ToggleSwapIn_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) ToggleSwapOut(ctx context.Context, in *MsgToggleSwapOutRequest, opts ...grpc.CallOption) (*MsgToggleSwapOutResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgToggleSwapOutResponse)
+	err := c.cc.Invoke(ctx, Msg_ToggleSwapOut_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -163,8 +176,10 @@ type MsgServer interface {
 	DepositInterestFunds(context.Context, *MsgDepositInterestFundsRequest) (*MsgDepositInterestFundsResponse, error)
 	// WithdrawInterestFunds allows withdrawing unused interest funds (admin only).
 	WithdrawInterestFunds(context.Context, *MsgWithdrawInterestFundsRequest) (*MsgWithdrawInterestFundsResponse, error)
-	// ToggleSwaps allows enabling or disabling all swap operations for a vault.
-	ToggleSwaps(context.Context, *MsgToggleSwapsRequest) (*MsgToggleSwapsResponse, error)
+	// ToggleSwapIn allows enabling or disabling swap-in operations for a vault.
+	ToggleSwapIn(context.Context, *MsgToggleSwapInRequest) (*MsgToggleSwapInResponse, error)
+	// ToggleSwapOut allows enabling or disabling swap-out operations for a vault.
+	ToggleSwapOut(context.Context, *MsgToggleSwapOutRequest) (*MsgToggleSwapOutResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -196,8 +211,11 @@ func (UnimplementedMsgServer) DepositInterestFunds(context.Context, *MsgDepositI
 func (UnimplementedMsgServer) WithdrawInterestFunds(context.Context, *MsgWithdrawInterestFundsRequest) (*MsgWithdrawInterestFundsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method WithdrawInterestFunds not implemented")
 }
-func (UnimplementedMsgServer) ToggleSwaps(context.Context, *MsgToggleSwapsRequest) (*MsgToggleSwapsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ToggleSwaps not implemented")
+func (UnimplementedMsgServer) ToggleSwapIn(context.Context, *MsgToggleSwapInRequest) (*MsgToggleSwapInResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ToggleSwapIn not implemented")
+}
+func (UnimplementedMsgServer) ToggleSwapOut(context.Context, *MsgToggleSwapOutRequest) (*MsgToggleSwapOutResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ToggleSwapOut not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 func (UnimplementedMsgServer) testEmbeddedByValue()             {}
@@ -346,20 +364,38 @@ func _Msg_WithdrawInterestFunds_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_ToggleSwaps_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgToggleSwapsRequest)
+func _Msg_ToggleSwapIn_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgToggleSwapInRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).ToggleSwaps(ctx, in)
+		return srv.(MsgServer).ToggleSwapIn(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Msg_ToggleSwaps_FullMethodName,
+		FullMethod: Msg_ToggleSwapIn_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).ToggleSwaps(ctx, req.(*MsgToggleSwapsRequest))
+		return srv.(MsgServer).ToggleSwapIn(ctx, req.(*MsgToggleSwapInRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_ToggleSwapOut_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgToggleSwapOutRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ToggleSwapOut(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_ToggleSwapOut_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ToggleSwapOut(ctx, req.(*MsgToggleSwapOutRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -400,8 +436,12 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_WithdrawInterestFunds_Handler,
 		},
 		{
-			MethodName: "ToggleSwaps",
-			Handler:    _Msg_ToggleSwaps_Handler,
+			MethodName: "ToggleSwapIn",
+			Handler:    _Msg_ToggleSwapIn_Handler,
+		},
+		{
+			MethodName: "ToggleSwapOut",
+			Handler:    _Msg_ToggleSwapOut_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

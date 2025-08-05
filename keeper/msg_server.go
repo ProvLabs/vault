@@ -160,7 +160,7 @@ func (k msgServer) WithdrawInterestFunds(goCtx context.Context, msg *types.MsgWi
 	return &types.MsgWithdrawInterestFundsResponse{}, nil
 }
 
-func (k msgServer) ToggleSwaps(goCtx context.Context, msg *types.MsgToggleSwapsRequest) (*types.MsgToggleSwapsResponse, error) {
+func (k msgServer) ToggleSwapIn(goCtx context.Context, msg *types.MsgToggleSwapInRequest) (*types.MsgToggleSwapInResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
@@ -173,8 +173,27 @@ func (k msgServer) ToggleSwaps(goCtx context.Context, msg *types.MsgToggleSwapsR
 		return nil, fmt.Errorf("unauthorized: %s is not the vault admin", msg.Admin)
 	}
 
-	k.SetSwapsEnable(ctx, vault, msg.SwapsEnabled)
+	k.SetSwapInEnable(ctx, vault, msg.Enabled)
 	// k.emitEvent(ctx, types.NewEventToggleSwaps(msg.VaultAddress, adminAddr.String(), msg.SwapsEnabled))
 
-	return &types.MsgToggleSwapsResponse{}, nil
+	return &types.MsgToggleSwapInResponse{}, nil
+}
+
+func (k msgServer) ToggleSwapOut(goCtx context.Context, msg *types.MsgToggleSwapOutRequest) (*types.MsgToggleSwapOutResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+
+	vault, ok := k.tryGetVault(ctx, vaultAddr)
+	if !ok {
+		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+	}
+	if vault.Admin != msg.Admin {
+		return nil, fmt.Errorf("unauthorized: %s is not the vault admin", msg.Admin)
+	}
+
+	k.SetSwapOutEnable(ctx, vault, msg.Enabled)
+	// k.emitEvent(ctx, types.NewEventToggleSwaps(msg.VaultAddress, adminAddr.String(), msg.SwapsEnabled))
+
+	return &types.MsgToggleSwapOutResponse{}, nil
 }

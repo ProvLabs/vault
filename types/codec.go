@@ -17,7 +17,8 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgUpdateInterestRateRequest{}, "vault/UpdateInterestRate", nil)
 	cdc.RegisterConcrete(&MsgDepositInterestFundsRequest{}, "vault/DepositInterestFunds", nil)
 	cdc.RegisterConcrete(&MsgWithdrawInterestFundsRequest{}, "vault/WithdrawInterestFunds", nil)
-	cdc.RegisterConcrete(&MsgToggleSwapsRequest{}, "vault/ToggleSwaps", nil)
+	cdc.RegisterConcrete(&MsgToggleSwapInRequest{}, "vault/ToggleSwapIn", nil)
+	cdc.RegisterConcrete(&MsgToggleSwapOutRequest{}, "vault/ToggleSwapOut", nil)
 }
 
 // RegisterInterfaces registers the vault module's message types for protobuf interface compatibility.
@@ -31,7 +32,8 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		&MsgUpdateInterestRateRequest{},
 		&MsgDepositInterestFundsRequest{},
 		&MsgWithdrawInterestFundsRequest{},
-		&MsgToggleSwapsRequest{},
+		&MsgToggleSwapInRequest{},
+		&MsgToggleSwapOutRequest{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

@@ -23,8 +23,10 @@ message VaultAccount {
   string current_interest_rate = 5 [(cosmos_proto.scalar) = "cosmos.DecString"];
   // desired_interest_rate is the target interest rate that the vault intends to apply.
   string desired_interest_rate = 6 [(cosmos_proto.scalar) = "cosmos.DecString"];
-// swaps_enabled indicates whether swap operations are currently allowed for this vault.
-  bool swaps_enabled = 7;
+  // swap_in_enabled indicates whether users are allowed to deposit into the vault.
+  bool swap_in_enabled = 7;
+  // swap_out_enabled indicates whether users are allowed to withdraw from the vault.
+  bool swap_out_enabled = 8;
 }
 
 // VaultInterestDetails stores metadata related to interest accrual and payment for a vault.

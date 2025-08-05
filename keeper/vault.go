@@ -275,11 +275,15 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 func (k *Keeper) SetSwapInEnable(ctx context.Context, vault *types.VaultAccount, enabled bool) {
 	vault.SwapInEnabled = enabled
 	k.AuthKeeper.SetAccount(ctx, vault)
+
+	// TODO: add event
 	// k.emitEvent(sdk.UnwrapSDKContext(ctx), event)
 }
 
 func (k *Keeper) SetSwapOutEnable(ctx context.Context, vault *types.VaultAccount, enabled bool) {
 	vault.SwapOutEnabled = enabled
 	k.AuthKeeper.SetAccount(ctx, vault)
+
+	// TODO: add event
 	// k.emitEvent(sdk.UnwrapSDKContext(ctx), event)
 }

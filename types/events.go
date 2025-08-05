@@ -6,76 +6,89 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// NewEventDeposit creates a new EventDeposit.
-func NewEventDeposit(caller string, owner string, assets sdk.Coins, shares sdk.Coins, vaultID uint32) *EventDeposit {
-	return &EventDeposit{
-		Caller:  caller,
-		Owner:   owner,
-		Assets:  assets.String(),
-		Shares:  shares.String(),
-		VaultId: vaultID,
-	}
-}
-
-// NewEventWithdraw creates a new EventWithdraw.
-func NewEventWithdraw(caller string, receiver string, owner string, assets sdk.Coins, shares sdk.Coins, vaultID uint32) *EventWithdraw {
-	return &EventWithdraw{
-		Caller:   caller,
-		Receiver: receiver,
-		Owner:    owner,
-		Assets:   assets.String(),
-		Shares:   shares.String(),
-		VaultId:  vaultID,
-	}
-}
-
-// NewEventVaultCreated creates a new EventVaultCreated.
+// NewEventVaultCreated creates a new EventVaultCreated event.
 func NewEventVaultCreated(vault *VaultAccount) *EventVaultCreated {
 	return &EventVaultCreated{
-		VaultAddress:     vault.BaseAccount.Address,
+		VaultAddress:     vault.GetAddress().String(),
 		Admin:            vault.Admin,
 		ShareDenom:       vault.ShareDenom,
 		UnderlyingAssets: vault.UnderlyingAssets,
 	}
 }
 
-// NewEventSwapIn creates a new NewEventSwapIn.
-func NewEventSwapIn(vaultAddress, owner string, assets, shares sdk.Coin) *EventSwapIn {
+// NewEventSwapIn creates a new EventSwapIn event.
+func NewEventSwapIn(vaultAddress, owner string, amountIn, sharesReceived sdk.Coin) *EventSwapIn {
 	return &EventSwapIn{
 		VaultAddress:   vaultAddress,
-		SharesReceived: shares,
-		AmountIn:       assets,
 		Owner:          owner,
+		AmountIn:       amountIn,
+		SharesReceived: sharesReceived,
 	}
 }
 
-// NewEventSwapOut creates a new NewEventSwapOut.
-func NewEventSwapOut(vaultAddress, owner string, assets, shares sdk.Coin) *EventSwapOut {
+// NewEventSwapOut creates a new EventSwapOut event.
+func NewEventSwapOut(vaultAddress, owner string, amountOut, sharesBurned sdk.Coin) *EventSwapOut {
 	return &EventSwapOut{
 		VaultAddress: vaultAddress,
-		SharesBurned: shares,
-		AmountOut:    assets,
 		Owner:        owner,
+		AmountOut:    amountOut,
+		SharesBurned: sharesBurned,
 	}
 }
 
-// NewEventVaultReconcile creates a new EventVaultReconcile.
-func NewEventVaultReconcile(vaultAddress string, principalBefore, principalAfter sdk.Coin, rate string, duration int64, interestEarned sdkmath.Int) *EventVaultReconcile {
+// NewEventVaultReconcile creates a new EventVaultReconcile event.
+func NewEventVaultReconcile(vaultAddress string, principalBefore, principalAfter sdk.Coin, rate string, time int64, interestEarned sdkmath.Int) *EventVaultReconcile {
 	return &EventVaultReconcile{
 		VaultAddress:    vaultAddress,
 		PrincipalBefore: principalBefore,
 		PrincipalAfter:  principalAfter,
 		Rate:            rate,
-		Time:            duration,
-		InterestEarned:  sdk.Coin{Denom: principalBefore.Denom, Amount: interestEarned},
+		Time:            time,
+		InterestEarned:  sdk.NewCoin(principalBefore.Denom, interestEarned),
 	}
 }
 
-// NewEventVaultInterestChange creates a new EventVaultInterestChange.
+// NewEventVaultInterestChange creates a new EventVaultInterestChange event.
 func NewEventVaultInterestChange(vaultAddress, previousRate, newRate string) *EventVaultInterestChange {
 	return &EventVaultInterestChange{
 		VaultAddress: vaultAddress,
 		PreviousRate: previousRate,
 		NewRate:      newRate,
+	}
+}
+
+// NewEventInterestDeposit creates a new EventInterestDeposit event.
+func NewEventInterestDeposit(vaultAddress, admin string, amount sdk.Coin) *EventInterestDeposit {
+	return &EventInterestDeposit{
+		VaultAddress: vaultAddress,
+		Admin:        admin,
+		Amount:       amount,
+	}
+}
+
+// NewEventInterestWithdrawal creates a new EventInterestWithdrawal event.
+func NewEventInterestWithdrawal(vaultAddress, admin string, amount sdk.Coin) *EventInterestWithdrawal {
+	return &EventInterestWithdrawal{
+		VaultAddress: vaultAddress,
+		Admin:        admin,
+		Amount:       amount,
+	}
+}
+
+// NewEventToggleSwapIn creates a new EventToggleSwapIn event.
+func NewEventToggleSwapIn(vaultAddress, admin string, enabled bool) *EventToggleSwapIn {
+	return &EventToggleSwapIn{
+		VaultAddress: vaultAddress,
+		Admin:        admin,
+		Enabled:      enabled,
+	}
+}
+
+// NewEventToggleSwapOut creates a new EventToggleSwapOut event.
+func NewEventToggleSwapOut(vaultAddress, admin string, enabled bool) *EventToggleSwapOut {
+	return &EventToggleSwapOut{
+		VaultAddress: vaultAddress,
+		Admin:        admin,
+		Enabled:      enabled,
 	}
 }

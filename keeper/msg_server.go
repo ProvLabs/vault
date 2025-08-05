@@ -82,6 +82,7 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 		return nil, fmt.Errorf("unauthorized: %s is not the interest admin", msg.Admin)
 	}
 
+	reconciled := false
 	if vault.CurrentInterestRate != "" {
 		currRate, err := sdkmath.LegacyNewDecFromStr(vault.CurrentInterestRate)
 		if err != nil {
@@ -91,16 +92,29 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 			if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
 				return nil, fmt.Errorf("failed to reconcile before rate change: %w", err)
 			}
+			reconciled = true
 		}
 	}
 
-	// TODO: check max/min restrictions
+	newRate := sdkmath.LegacyMustNewDecFromStr(msg.NewRate)
+	validIntrestRate, err := vault.IsInterestRateInRange(newRate)
+	if err != nil {
+		return nil, fmt.Errorf("failed to validate interest rate: %w", err)
+	}
+	if !validIntrestRate {
+		return nil, fmt.Errorf("interest rate %s is out of bounds for vault %s", newRate, vault.GetAddress())
+	}
 	k.UpdateInterestRates(ctx, vault, msg.NewRate, msg.NewRate)
 
-	if !reconciled {
+	if !reconciled && vault.InterestEnabled() {
 		err := k.VaultInterestDetails.Set(ctx, vault.GetAddress(), types.VaultInterestDetails{PeriodStart: ctx.BlockTime().Unix()})
 		if err != nil {
 			return nil, fmt.Errorf("failed to set vault interest details: %w", err)
+		}
+	} else if reconciled && vault.InterestEnabled() {
+		err := k.VaultInterestDetails.Remove(ctx, vault.GetAddress())
+		if err != nil {
+			return nil, fmt.Errorf("failed to remove vault interest details: %w", err)
 		}
 	}
 

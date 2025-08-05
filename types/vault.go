@@ -111,3 +111,29 @@ func (va VaultAccount) InterestEnabled() bool {
 	}
 	return !current.IsZero()
 }
+
+// IsInterestRateInRange returns true if the given rate is within the configured min/max bounds.
+// If either bound is unset (""), it is treated as unbounded in that direction.
+func (v *VaultAccount) IsInterestRateInRange(rate sdkmath.LegacyDec) (bool, error) {
+	if v.MinInterestRate != "" {
+		minRate, err := sdkmath.LegacyNewDecFromStr(v.MinInterestRate)
+		if err != nil {
+			return false, fmt.Errorf("invalid min interest rate: %w", err)
+		}
+		if rate.LT(minRate) {
+			return false, nil
+		}
+	}
+
+	if v.MaxInterestRate != "" {
+		maxRate, err := sdkmath.LegacyNewDecFromStr(v.MaxInterestRate)
+		if err != nil {
+			return false, fmt.Errorf("invalid max interest rate: %w", err)
+		}
+		if rate.GT(maxRate) {
+			return false, nil
+		}
+	}
+
+	return true, nil
+}

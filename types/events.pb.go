@@ -572,6 +572,262 @@ func (m *EventVaultInterestChange) GetNewRate() string {
 	return ""
 }
 
+// EventInterestDeposit is an event emitted when funds are deposited for paying interest.
+type EventInterestDeposit struct {
+	// vault_address is the bech32 address of the vault.
+	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// admin is the address of the account that deposited the funds.
+	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
+	// amount is the amount of funds deposited.
+	Amount types.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount"`
+}
+
+func (m *EventInterestDeposit) Reset()         { *m = EventInterestDeposit{} }
+func (m *EventInterestDeposit) String() string { return proto.CompactTextString(m) }
+func (*EventInterestDeposit) ProtoMessage()    {}
+func (*EventInterestDeposit) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ef0bb8c93781ed58, []int{7}
+}
+func (m *EventInterestDeposit) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventInterestDeposit) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventInterestDeposit.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventInterestDeposit) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventInterestDeposit.Merge(m, src)
+}
+func (m *EventInterestDeposit) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventInterestDeposit) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventInterestDeposit.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventInterestDeposit proto.InternalMessageInfo
+
+func (m *EventInterestDeposit) GetVaultAddress() string {
+	if m != nil {
+		return m.VaultAddress
+	}
+	return ""
+}
+
+func (m *EventInterestDeposit) GetAdmin() string {
+	if m != nil {
+		return m.Admin
+	}
+	return ""
+}
+
+func (m *EventInterestDeposit) GetAmount() types.Coin {
+	if m != nil {
+		return m.Amount
+	}
+	return types.Coin{}
+}
+
+// EventInterestWithdrawal is an event emitted when unused interest funds are withdrawn.
+type EventInterestWithdrawal struct {
+	// vault_address is the bech32 address of the vault.
+	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// admin is the address of the account that withdrew the funds.
+	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
+	// amount is the amount of funds withdrawn.
+	Amount types.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount"`
+}
+
+func (m *EventInterestWithdrawal) Reset()         { *m = EventInterestWithdrawal{} }
+func (m *EventInterestWithdrawal) String() string { return proto.CompactTextString(m) }
+func (*EventInterestWithdrawal) ProtoMessage()    {}
+func (*EventInterestWithdrawal) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ef0bb8c93781ed58, []int{8}
+}
+func (m *EventInterestWithdrawal) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventInterestWithdrawal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventInterestWithdrawal.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventInterestWithdrawal) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventInterestWithdrawal.Merge(m, src)
+}
+func (m *EventInterestWithdrawal) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventInterestWithdrawal) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventInterestWithdrawal.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventInterestWithdrawal proto.InternalMessageInfo
+
+func (m *EventInterestWithdrawal) GetVaultAddress() string {
+	if m != nil {
+		return m.VaultAddress
+	}
+	return ""
+}
+
+func (m *EventInterestWithdrawal) GetAdmin() string {
+	if m != nil {
+		return m.Admin
+	}
+	return ""
+}
+
+func (m *EventInterestWithdrawal) GetAmount() types.Coin {
+	if m != nil {
+		return m.Amount
+	}
+	return types.Coin{}
+}
+
+// EventToggleSwapIn is an event emitted when swap-in operations are enabled or disabled for a vault.
+type EventToggleSwapIn struct {
+	// vault_address is the bech32 address of the vault.
+	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// admin is the address of the account that toggled the swap-in operations.
+	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
+	// enabled is the new state of swap-in operations.
+	Enabled bool `protobuf:"varint,3,opt,name=enabled,proto3" json:"enabled,omitempty"`
+}
+
+func (m *EventToggleSwapIn) Reset()         { *m = EventToggleSwapIn{} }
+func (m *EventToggleSwapIn) String() string { return proto.CompactTextString(m) }
+func (*EventToggleSwapIn) ProtoMessage()    {}
+func (*EventToggleSwapIn) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ef0bb8c93781ed58, []int{9}
+}
+func (m *EventToggleSwapIn) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventToggleSwapIn) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventToggleSwapIn.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventToggleSwapIn) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventToggleSwapIn.Merge(m, src)
+}
+func (m *EventToggleSwapIn) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventToggleSwapIn) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventToggleSwapIn.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventToggleSwapIn proto.InternalMessageInfo
+
+func (m *EventToggleSwapIn) GetVaultAddress() string {
+	if m != nil {
+		return m.VaultAddress
+	}
+	return ""
+}
+
+func (m *EventToggleSwapIn) GetAdmin() string {
+	if m != nil {
+		return m.Admin
+	}
+	return ""
+}
+
+func (m *EventToggleSwapIn) GetEnabled() bool {
+	if m != nil {
+		return m.Enabled
+	}
+	return false
+}
+
+// EventToggleSwapOut is an event emitted when swap-out operations are enabled or disabled for a vault.
+type EventToggleSwapOut struct {
+	// vault_address is the bech32 address of the vault.
+	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// admin is the address of the account that toggled the swap-out operations.
+	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
+	// enabled is the new state of swap-out operations.
+	Enabled bool `protobuf:"varint,3,opt,name=enabled,proto3" json:"enabled,omitempty"`
+}
+
+func (m *EventToggleSwapOut) Reset()         { *m = EventToggleSwapOut{} }
+func (m *EventToggleSwapOut) String() string { return proto.CompactTextString(m) }
+func (*EventToggleSwapOut) ProtoMessage()    {}
+func (*EventToggleSwapOut) Descriptor() ([]byte, []int) {
+	return fileDescriptor_ef0bb8c93781ed58, []int{10}
+}
+func (m *EventToggleSwapOut) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventToggleSwapOut) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventToggleSwapOut.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventToggleSwapOut) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventToggleSwapOut.Merge(m, src)
+}
+func (m *EventToggleSwapOut) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventToggleSwapOut) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventToggleSwapOut.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventToggleSwapOut proto.InternalMessageInfo
+
+func (m *EventToggleSwapOut) GetVaultAddress() string {
+	if m != nil {
+		return m.VaultAddress
+	}
+	return ""
+}
+
+func (m *EventToggleSwapOut) GetAdmin() string {
+	if m != nil {
+		return m.Admin
+	}
+	return ""
+}
+
+func (m *EventToggleSwapOut) GetEnabled() bool {
+	if m != nil {
+		return m.Enabled
+	}
+	return false
+}
+
 func init() {
 	proto.RegisterType((*EventDeposit)(nil), "vault.v1.EventDeposit")
 	proto.RegisterType((*EventWithdraw)(nil), "vault.v1.EventWithdraw")
@@ -580,55 +836,64 @@ func init() {
 	proto.RegisterType((*EventSwapOut)(nil), "vault.v1.EventSwapOut")
 	proto.RegisterType((*EventVaultReconcile)(nil), "vault.v1.EventVaultReconcile")
 	proto.RegisterType((*EventVaultInterestChange)(nil), "vault.v1.EventVaultInterestChange")
+	proto.RegisterType((*EventInterestDeposit)(nil), "vault.v1.EventInterestDeposit")
+	proto.RegisterType((*EventInterestWithdrawal)(nil), "vault.v1.EventInterestWithdrawal")
+	proto.RegisterType((*EventToggleSwapIn)(nil), "vault.v1.EventToggleSwapIn")
+	proto.RegisterType((*EventToggleSwapOut)(nil), "vault.v1.EventToggleSwapOut")
 }
 
 func init() { proto.RegisterFile("vault/v1/events.proto", fileDescriptor_ef0bb8c93781ed58) }
 
 var fileDescriptor_ef0bb8c93781ed58 = []byte{
-	// 684 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x55, 0xcd, 0x6e, 0xd3, 0x4c,
-	0x14, 0x8d, 0x93, 0x34, 0x4d, 0xa7, 0xc9, 0xd7, 0xd6, 0x5f, 0x41, 0x49, 0x17, 0x69, 0x15, 0x36,
-	0x95, 0x10, 0x36, 0x01, 0x36, 0x48, 0x80, 0xd4, 0xb4, 0x95, 0x08, 0x1b, 0x24, 0x57, 0x02, 0x89,
-	0x8d, 0x35, 0xb6, 0x6f, 0x93, 0x91, 0x9c, 0x19, 0x6b, 0x66, 0xec, 0xa8, 0x6b, 0x78, 0x00, 0xb6,
-	0xbc, 0x07, 0x3b, 0x5e, 0xa0, 0xcb, 0x8a, 0x15, 0x0b, 0x84, 0x50, 0xfb, 0x06, 0x3c, 0x01, 0x9a,
-	0x9f, 0x26, 0x42, 0xa8, 0xaa, 0x4b, 0x77, 0xbe, 0xe7, 0xde, 0x33, 0x33, 0xe7, 0xdc, 0x99, 0x6b,
-	0x74, 0xa7, 0xc0, 0x79, 0x2a, 0xfd, 0x62, 0xe0, 0x43, 0x01, 0x54, 0x0a, 0x2f, 0xe3, 0x4c, 0x32,
-	0xb7, 0xa9, 0x61, 0xaf, 0x18, 0x6c, 0xf5, 0x62, 0x26, 0xa6, 0x4c, 0xf8, 0x11, 0x16, 0xe0, 0x17,
-	0x83, 0x08, 0x24, 0x1e, 0xf8, 0x31, 0x23, 0xd4, 0x54, 0x6e, 0x75, 0x4d, 0x3e, 0xd4, 0x91, 0x6f,
-	0x02, 0x9b, 0xda, 0x1c, 0xb3, 0x31, 0x33, 0xb8, 0xfa, 0x32, 0x68, 0xff, 0x8b, 0x83, 0x5a, 0x87,
-	0x6a, 0xaf, 0x03, 0xc8, 0x98, 0x20, 0xd2, 0x7d, 0x88, 0x1a, 0x31, 0x4e, 0x53, 0xe0, 0x1d, 0x67,
-	0xc7, 0xd9, 0x5d, 0x19, 0x76, 0xbe, 0x7e, 0x7e, 0xb0, 0x69, 0x17, 0xda, 0x4b, 0x12, 0x0e, 0x42,
-	0x1c, 0x49, 0x4e, 0xe8, 0x38, 0xb0, 0x75, 0xae, 0x87, 0x96, 0xd8, 0x8c, 0x02, 0xef, 0x54, 0xaf,
-	0x21, 0x98, 0x32, 0xf7, 0x2e, 0x6a, 0x60, 0x21, 0x40, 0x8a, 0x4e, 0x4d, 0x11, 0x02, 0x1b, 0x29,
-	0x5c, 0x4c, 0x30, 0x07, 0xd1, 0xa9, 0x1b, 0xdc, 0x44, 0x6e, 0x17, 0x19, 0xfd, 0x21, 0x49, 0x3a,
-	0x4b, 0x3b, 0xce, 0x6e, 0x3b, 0x58, 0xd6, 0xf1, 0x28, 0xe9, 0xff, 0x72, 0x50, 0x5b, 0x9f, 0xfe,
-	0x2d, 0x91, 0x93, 0x84, 0xe3, 0xd9, 0x3f, 0x1c, 0xff, 0x09, 0x6a, 0x72, 0x88, 0x81, 0x14, 0x25,
-	0x14, 0xcc, 0x2b, 0x17, 0xa2, 0x6b, 0x37, 0x15, 0x5d, 0xbf, 0x42, 0xf4, 0xd2, 0x95, 0xa2, 0x1b,
-	0x7f, 0x8a, 0x3e, 0x73, 0xd0, 0x86, 0x16, 0xfd, 0x46, 0x01, 0xfb, 0x1c, 0xb0, 0x84, 0xc4, 0x7d,
-	0x8e, 0xda, 0x86, 0x80, 0xcd, 0xf6, 0xd7, 0xea, 0x6f, 0xe9, 0x72, 0x8b, 0x29, 0x3d, 0x38, 0x99,
-	0x12, 0x7a, 0x7d, 0x13, 0x75, 0x99, 0xbb, 0x8d, 0x56, 0xf5, 0x49, 0xc3, 0x04, 0x28, 0x9b, 0xda,
-	0x4e, 0x22, 0x0d, 0x1d, 0x28, 0xc4, 0xbd, 0x8f, 0x36, 0x72, 0x9a, 0x00, 0x4f, 0x4f, 0x08, 0x1d,
-	0x87, 0x73, 0xed, 0xb5, 0xdd, 0x95, 0x60, 0x7d, 0x91, 0xd8, 0xd3, 0x78, 0xff, 0x43, 0x15, 0xad,
-	0x6a, 0x49, 0x47, 0x33, 0x9c, 0x8d, 0xe8, 0xc2, 0x5d, 0xa7, 0x9c, 0xbb, 0xcf, 0xd0, 0x0a, 0x9e,
-	0xb2, 0x9c, 0xca, 0xd0, 0x2a, 0x58, 0x7d, 0xd4, 0xf5, 0x2c, 0x41, 0x3d, 0x15, 0xcf, 0x3e, 0x15,
-	0x6f, 0x9f, 0x11, 0x3a, 0xac, 0x9f, 0xfe, 0xd8, 0xae, 0x04, 0x4d, 0xc3, 0x18, 0x51, 0xf7, 0x25,
-	0x5a, 0x33, 0xae, 0x87, 0xb6, 0xbd, 0x89, 0xd6, 0x53, 0x62, 0x8d, 0xff, 0x0c, 0x2f, 0xb0, 0xb4,
-	0xbf, 0x9b, 0x50, 0xbf, 0x49, 0x13, 0xfa, 0xef, 0xab, 0xf6, 0x31, 0x2a, 0x1b, 0x5e, 0xe7, 0xf2,
-	0xc6, 0x3e, 0x1c, 0xa0, 0xb6, 0x55, 0x12, 0xe5, 0x9c, 0x42, 0x52, 0xd6, 0x8b, 0x96, 0x61, 0x0d,
-	0x35, 0xc9, 0x7d, 0x81, 0x90, 0x75, 0x93, 0xe5, 0xb2, 0xac, 0x15, 0xb6, 0x01, 0xea, 0xd4, 0xb7,
-	0x74, 0xe1, 0x7b, 0x15, 0xfd, 0xbf, 0xb8, 0xdf, 0x01, 0xc4, 0x8c, 0xc6, 0x24, 0x85, 0xdb, 0xde,
-	0xf0, 0x57, 0x68, 0x3d, 0xe3, 0x84, 0xc6, 0x24, 0xc3, 0x69, 0x18, 0xc1, 0x31, 0xe3, 0x50, 0xd6,
-	0x9e, 0xb5, 0x39, 0x71, 0xa8, 0x79, 0xea, 0xc6, 0x2c, 0xd6, 0xc2, 0xc7, 0xd2, 0xce, 0x81, 0x32,
-	0x37, 0x66, 0xce, 0xdb, 0x53, 0x34, 0xd7, 0x45, 0x75, 0x8e, 0x25, 0xd8, 0xa9, 0xa0, 0xbf, 0x15,
-	0x26, 0xc9, 0x14, 0xf4, 0x44, 0xa8, 0x05, 0xfa, 0x5b, 0xed, 0x48, 0xa8, 0x04, 0x0e, 0x42, 0x86,
-	0x80, 0x75, 0x6f, 0x1b, 0x25, 0x77, 0xbc, 0xe4, 0x1d, 0x6a, 0x5a, 0xff, 0x93, 0x83, 0x3a, 0x0b,
-	0x7b, 0x47, 0x36, 0xb9, 0x3f, 0xc1, 0x74, 0x7c, 0x6b, 0x8f, 0xef, 0xa1, 0x76, 0xc6, 0xa1, 0x20,
-	0x2c, 0x17, 0xa1, 0x96, 0xa5, 0xa7, 0x49, 0xd0, 0xba, 0x04, 0x03, 0x25, 0xaf, 0x8b, 0x9a, 0x14,
-	0x66, 0x26, 0x6f, 0xe6, 0xc6, 0x32, 0x85, 0x99, 0x4a, 0x0d, 0x9f, 0x9e, 0x9e, 0xf7, 0x9c, 0xb3,
-	0xf3, 0x9e, 0xf3, 0xf3, 0xbc, 0xe7, 0x7c, 0xbc, 0xe8, 0x55, 0xce, 0x2e, 0x7a, 0x95, 0x6f, 0x17,
-	0xbd, 0xca, 0xbb, 0xed, 0x31, 0x91, 0x93, 0x3c, 0xf2, 0x62, 0x36, 0xf5, 0x33, 0xce, 0x8a, 0x14,
-	0x47, 0xc2, 0x37, 0x7f, 0x4b, 0x79, 0x92, 0x81, 0x88, 0x1a, 0xfa, 0x7f, 0xf6, 0xf8, 0x77, 0x00,
-	0x00, 0x00, 0xff, 0xff, 0x10, 0x64, 0x86, 0x9a, 0x43, 0x07, 0x00, 0x00,
+	// 767 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x56, 0x4f, 0x6b, 0x3b, 0x45,
+	0x18, 0xce, 0x26, 0x69, 0x9a, 0x4e, 0x13, 0x7f, 0xbf, 0xae, 0x55, 0x37, 0x3d, 0xa4, 0x65, 0xbd,
+	0x14, 0xc4, 0xac, 0x51, 0x41, 0x04, 0x15, 0x9a, 0xb6, 0x60, 0xbc, 0x08, 0x5b, 0x51, 0xf0, 0xb2,
+	0xcc, 0xee, 0xbe, 0xdd, 0x0c, 0x6c, 0x66, 0x96, 0x99, 0xd9, 0x0d, 0x3d, 0xeb, 0x07, 0xf0, 0x2a,
+	0xe8, 0xb7, 0xf0, 0x26, 0x08, 0xde, 0x7a, 0x2c, 0x9e, 0x3c, 0x88, 0x48, 0xfb, 0x0d, 0xfc, 0x04,
+	0x32, 0x7f, 0x92, 0x50, 0xb5, 0x74, 0x6b, 0xa1, 0xf2, 0xbb, 0xed, 0x3c, 0xef, 0xfb, 0xec, 0xbc,
+	0xcf, 0xf3, 0xce, 0xbe, 0xb3, 0xe8, 0x95, 0x0a, 0x97, 0xb9, 0x0c, 0xaa, 0x71, 0x00, 0x15, 0x50,
+	0x29, 0x46, 0x05, 0x67, 0x92, 0xb9, 0x5d, 0x0d, 0x8f, 0xaa, 0xf1, 0xde, 0x30, 0x61, 0x62, 0xce,
+	0x44, 0x10, 0x63, 0x01, 0x41, 0x35, 0x8e, 0x41, 0xe2, 0x71, 0x90, 0x30, 0x42, 0x4d, 0xe6, 0xde,
+	0xc0, 0xc4, 0x23, 0xbd, 0x0a, 0xcc, 0xc2, 0x86, 0x76, 0x33, 0x96, 0x31, 0x83, 0xab, 0x27, 0x83,
+	0xfa, 0x3f, 0x3a, 0xa8, 0x77, 0xaa, 0xf6, 0x3a, 0x81, 0x82, 0x09, 0x22, 0xdd, 0xb7, 0x50, 0x27,
+	0xc1, 0x79, 0x0e, 0xdc, 0x73, 0x0e, 0x9c, 0xc3, 0xad, 0x89, 0xf7, 0xcb, 0x0f, 0x6f, 0xee, 0xda,
+	0x17, 0x1d, 0xa5, 0x29, 0x07, 0x21, 0xce, 0x24, 0x27, 0x34, 0x0b, 0x6d, 0x9e, 0x3b, 0x42, 0x1b,
+	0x6c, 0x41, 0x81, 0x7b, 0xcd, 0x7b, 0x08, 0x26, 0xcd, 0x7d, 0x15, 0x75, 0xb0, 0x10, 0x20, 0x85,
+	0xd7, 0x52, 0x84, 0xd0, 0xae, 0x14, 0x2e, 0x66, 0x98, 0x83, 0xf0, 0xda, 0x06, 0x37, 0x2b, 0x77,
+	0x80, 0x8c, 0xfe, 0x88, 0xa4, 0xde, 0xc6, 0x81, 0x73, 0xd8, 0x0f, 0x37, 0xf5, 0x7a, 0x9a, 0xfa,
+	0x7f, 0x3a, 0xa8, 0xaf, 0xab, 0xff, 0x82, 0xc8, 0x59, 0xca, 0xf1, 0xe2, 0x3f, 0x94, 0xff, 0x2e,
+	0xea, 0x72, 0x48, 0x80, 0x54, 0x35, 0x14, 0xac, 0x32, 0xd7, 0xa2, 0x5b, 0x0f, 0x15, 0xdd, 0xbe,
+	0x43, 0xf4, 0xc6, 0x9d, 0xa2, 0x3b, 0xb7, 0x45, 0x5f, 0x39, 0x68, 0x47, 0x8b, 0xfe, 0x5c, 0x01,
+	0xc7, 0x1c, 0xb0, 0x84, 0xd4, 0xfd, 0x10, 0xf5, 0x0d, 0x01, 0x9b, 0xed, 0xef, 0xd5, 0xdf, 0xd3,
+	0xe9, 0x16, 0x53, 0x7a, 0x70, 0x3a, 0x27, 0xf4, 0xfe, 0x26, 0xea, 0x34, 0x77, 0x1f, 0x6d, 0xeb,
+	0x4a, 0xa3, 0x14, 0x28, 0x9b, 0xdb, 0x4e, 0x22, 0x0d, 0x9d, 0x28, 0xc4, 0x7d, 0x03, 0xed, 0x94,
+	0x34, 0x05, 0x9e, 0x5f, 0x10, 0x9a, 0x45, 0x2b, 0xed, 0xad, 0xc3, 0xad, 0xf0, 0xf9, 0x3a, 0x70,
+	0xa4, 0x71, 0xff, 0xeb, 0x26, 0xda, 0xd6, 0x92, 0xce, 0x16, 0xb8, 0x98, 0xd2, 0xb5, 0xbb, 0x4e,
+	0x3d, 0x77, 0x3f, 0x40, 0x5b, 0x78, 0xce, 0x4a, 0x2a, 0x23, 0xab, 0x60, 0xfb, 0xed, 0xc1, 0xc8,
+	0x12, 0xd4, 0xa7, 0x32, 0xb2, 0x9f, 0xca, 0xe8, 0x98, 0x11, 0x3a, 0x69, 0x5f, 0xfe, 0xbe, 0xdf,
+	0x08, 0xbb, 0x86, 0x31, 0xa5, 0xee, 0xc7, 0xe8, 0x99, 0x71, 0x3d, 0xb2, 0xed, 0x4d, 0xb5, 0x9e,
+	0x1a, 0xef, 0x78, 0xc9, 0xf0, 0x42, 0x4b, 0xfb, 0x67, 0x13, 0xda, 0x0f, 0x69, 0x82, 0xff, 0x55,
+	0xd3, 0x7e, 0x8c, 0xca, 0x86, 0x4f, 0x4b, 0xf9, 0x60, 0x1f, 0x4e, 0x50, 0xdf, 0x2a, 0x89, 0x4b,
+	0x4e, 0x21, 0xad, 0xeb, 0x45, 0xcf, 0xb0, 0x26, 0x9a, 0xe4, 0x7e, 0x84, 0x90, 0x75, 0x93, 0x95,
+	0xb2, 0xae, 0x15, 0xb6, 0x01, 0xaa, 0xea, 0x47, 0xba, 0xf0, 0x5b, 0x13, 0xbd, 0xbc, 0x3e, 0xdf,
+	0x21, 0x24, 0x8c, 0x26, 0x24, 0x87, 0xc7, 0x9e, 0xf0, 0x4f, 0xd0, 0xf3, 0x82, 0x13, 0x9a, 0x90,
+	0x02, 0xe7, 0x51, 0x0c, 0xe7, 0x8c, 0x43, 0x5d, 0x7b, 0x9e, 0xad, 0x88, 0x13, 0xcd, 0x53, 0x27,
+	0x66, 0xfd, 0x2e, 0x7c, 0x2e, 0xed, 0x1c, 0xa8, 0x73, 0x62, 0x56, 0xbc, 0x23, 0x45, 0x73, 0x5d,
+	0xd4, 0xe6, 0x58, 0x82, 0x9d, 0x0a, 0xfa, 0x59, 0x61, 0x92, 0xcc, 0x41, 0x4f, 0x84, 0x56, 0xa8,
+	0x9f, 0xd5, 0x8e, 0x84, 0x4a, 0xe0, 0x20, 0x64, 0x04, 0x58, 0xf7, 0xb6, 0x53, 0x73, 0xc7, 0x25,
+	0xef, 0x54, 0xd3, 0xfc, 0x6f, 0x1d, 0xe4, 0xad, 0xed, 0x9d, 0xda, 0xe0, 0xf1, 0x0c, 0xd3, 0xec,
+	0xd1, 0x1e, 0xbf, 0x8e, 0xfa, 0x05, 0x87, 0x8a, 0xb0, 0x52, 0x44, 0x5a, 0x96, 0x9e, 0x26, 0x61,
+	0x6f, 0x09, 0x86, 0x4a, 0xde, 0x00, 0x75, 0x29, 0x2c, 0x4c, 0xdc, 0xcc, 0x8d, 0x4d, 0x0a, 0x0b,
+	0x15, 0xf2, 0x7f, 0x72, 0xd0, 0xae, 0xae, 0x6d, 0x59, 0xd6, 0xf2, 0x56, 0x7a, 0xe2, 0xe9, 0xf6,
+	0x1e, 0xea, 0x98, 0xe3, 0x5c, 0xb7, 0xad, 0x36, 0xdd, 0xff, 0xd9, 0x41, 0xaf, 0xdd, 0x12, 0xb0,
+	0xbc, 0x98, 0x70, 0xfe, 0xc2, 0x68, 0xf8, 0x6e, 0x79, 0xbf, 0x7c, 0xc6, 0xb2, 0x2c, 0x07, 0x3b,
+	0x92, 0x9f, 0xb8, 0x7a, 0x0f, 0x6d, 0x02, 0xc5, 0x71, 0x6e, 0x67, 0x71, 0x37, 0x5c, 0x2e, 0xfd,
+	0xef, 0x1d, 0xe4, 0xfe, 0xad, 0xbc, 0x7f, 0x1d, 0x3a, 0xff, 0x53, 0x7d, 0x93, 0xf7, 0x2f, 0xaf,
+	0x87, 0xce, 0xd5, 0xf5, 0xd0, 0xf9, 0xe3, 0x7a, 0xe8, 0x7c, 0x73, 0x33, 0x6c, 0x5c, 0xdd, 0x0c,
+	0x1b, 0xbf, 0xde, 0x0c, 0x1b, 0x5f, 0xee, 0x67, 0x44, 0xce, 0xca, 0x78, 0x94, 0xb0, 0x79, 0x50,
+	0x70, 0x56, 0xe5, 0x38, 0x16, 0x81, 0xf9, 0xe3, 0x93, 0x17, 0x05, 0x88, 0xb8, 0xa3, 0xff, 0xc9,
+	0xde, 0xf9, 0x2b, 0x00, 0x00, 0xff, 0xff, 0x63, 0x79, 0x94, 0x9e, 0x07, 0x0a, 0x00, 0x00,
 }
 
 func (m *EventDeposit) Marshal() (dAtA []byte, err error) {
@@ -1033,6 +1298,194 @@ func (m *EventVaultInterestChange) MarshalToSizedBuffer(dAtA []byte) (int, error
 	return len(dAtA) - i, nil
 }
 
+func (m *EventInterestDeposit) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventInterestDeposit) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventInterestDeposit) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Amount.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintEvents(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	if len(m.Admin) > 0 {
+		i -= len(m.Admin)
+		copy(dAtA[i:], m.Admin)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Admin)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.VaultAddress) > 0 {
+		i -= len(m.VaultAddress)
+		copy(dAtA[i:], m.VaultAddress)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.VaultAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *EventInterestWithdrawal) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventInterestWithdrawal) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventInterestWithdrawal) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Amount.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintEvents(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	if len(m.Admin) > 0 {
+		i -= len(m.Admin)
+		copy(dAtA[i:], m.Admin)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Admin)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.VaultAddress) > 0 {
+		i -= len(m.VaultAddress)
+		copy(dAtA[i:], m.VaultAddress)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.VaultAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *EventToggleSwapIn) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventToggleSwapIn) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventToggleSwapIn) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Enabled {
+		i--
+		if m.Enabled {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.Admin) > 0 {
+		i -= len(m.Admin)
+		copy(dAtA[i:], m.Admin)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Admin)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.VaultAddress) > 0 {
+		i -= len(m.VaultAddress)
+		copy(dAtA[i:], m.VaultAddress)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.VaultAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *EventToggleSwapOut) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventToggleSwapOut) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventToggleSwapOut) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Enabled {
+		i--
+		if m.Enabled {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.Admin) > 0 {
+		i -= len(m.Admin)
+		copy(dAtA[i:], m.Admin)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Admin)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.VaultAddress) > 0 {
+		i -= len(m.VaultAddress)
+		copy(dAtA[i:], m.VaultAddress)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.VaultAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintEvents(dAtA []byte, offset int, v uint64) int {
 	offset -= sovEvents(v)
 	base := offset
@@ -1216,6 +1669,84 @@ func (m *EventVaultInterestChange) Size() (n int) {
 	l = len(m.NewRate)
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
+	}
+	return n
+}
+
+func (m *EventInterestDeposit) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.VaultAddress)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.Admin)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = m.Amount.Size()
+	n += 1 + l + sovEvents(uint64(l))
+	return n
+}
+
+func (m *EventInterestWithdrawal) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.VaultAddress)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.Admin)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = m.Amount.Size()
+	n += 1 + l + sovEvents(uint64(l))
+	return n
+}
+
+func (m *EventToggleSwapIn) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.VaultAddress)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.Admin)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	if m.Enabled {
+		n += 2
+	}
+	return n
+}
+
+func (m *EventToggleSwapOut) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.VaultAddress)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.Admin)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	if m.Enabled {
+		n += 2
 	}
 	return n
 }
@@ -2547,6 +3078,568 @@ func (m *EventVaultInterestChange) Unmarshal(dAtA []byte) error {
 			}
 			m.NewRate = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EventInterestDeposit) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventInterestDeposit: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventInterestDeposit: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VaultAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VaultAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Admin = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Amount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EventInterestWithdrawal) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventInterestWithdrawal: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventInterestWithdrawal: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VaultAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VaultAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Admin = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Amount", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Amount.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EventToggleSwapIn) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventToggleSwapIn: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventToggleSwapIn: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VaultAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VaultAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Admin = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Enabled", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Enabled = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EventToggleSwapOut) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventToggleSwapOut: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventToggleSwapOut: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VaultAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VaultAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Admin = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Enabled", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Enabled = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipEvents(dAtA[iNdEx:])

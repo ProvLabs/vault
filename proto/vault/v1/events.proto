@@ -105,3 +105,43 @@ message EventVaultInterestChange {
   // new_rate is the new interest rate.
   string new_rate = 3;
 }
+
+// EventInterestDeposit is an event emitted when funds are deposited for paying interest.
+message EventInterestDeposit {
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // admin is the address of the account that deposited the funds.
+  string admin = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // amount is the amount of funds deposited.
+  cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
+}
+
+// EventInterestWithdrawal is an event emitted when unused interest funds are withdrawn.
+message EventInterestWithdrawal {
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // admin is the address of the account that withdrew the funds.
+  string admin = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // amount is the amount of funds withdrawn.
+  cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
+}
+
+// EventToggleSwapIn is an event emitted when swap-in operations are enabled or disabled for a vault.
+message EventToggleSwapIn {
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // admin is the address of the account that toggled the swap-in operations.
+  string admin = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // enabled is the new state of swap-in operations.
+  bool enabled = 3;
+}
+
+// EventToggleSwapOut is an event emitted when swap-out operations are enabled or disabled for a vault.
+message EventToggleSwapOut {
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // admin is the address of the account that toggled the swap-out operations.
+  string admin = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // enabled is the new state of swap-out operations.
+  bool enabled = 3;
+}

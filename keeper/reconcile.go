@@ -409,3 +409,17 @@ func (k *Keeper) GetReconciledVaults(ctx context.Context, currentBlockTime int64
 
 	return results, nil
 }
+
+func (k *Keeper) addToVaultTimeoutCheck(ctx context.Context, vault *types.VaultAccount) error {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	interestDetails, err := k.VaultInterestDetails.Get(sdkCtx, vault.GetAddress())
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+		return fmt.Errorf("failed to get vault interest details: %w", err)
+	}
+
+	if interestDetails.ExpireTime == 0 {
+		interestDetails.ExpireTime = sdkCtx.BlockTime().Unix() + AutoReconcileTimeout
+	}
+
+	return k.VaultInterestDetails.Set(ctx, vault.GetAddress(), interestDetails)
+}

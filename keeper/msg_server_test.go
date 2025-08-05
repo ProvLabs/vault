@@ -489,6 +489,146 @@ func (s *TestSuite) TestMsgServer_SwapOut_Failures() {
 	}
 }
 
+func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
+	type postCheckArgs struct {
+		VaultAddress          sdk.AccAddress
+		ExpectedRate          string
+		ExpectedPeriodStart   int64
+		HasNewInterestDetails bool
+	}
+
+	testDef := msgServerTestDef[types.MsgUpdateInterestRateRequest, types.MsgUpdateInterestRateResponse, postCheckArgs]{
+		endpointName: "UpdateInterestRate",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).UpdateInterestRate,
+		postCheck: func(msg *types.MsgUpdateInterestRateRequest, args postCheckArgs) {
+			vault, err := s.k.GetVault(s.ctx, args.VaultAddress)
+			s.Require().NoError(err, "should be able to get vault")
+			s.Assert().Equal(args.ExpectedRate, vault.CurrentInterestRate, "vault current interest rate should match expected rate")
+			s.Assert().Equal(args.ExpectedRate, vault.DesiredInterestRate, "vault desired interest rate should match expected rate")
+
+			if args.HasNewInterestDetails {
+				v, err := s.k.VaultInterestDetails.Get(s.ctx, args.VaultAddress)
+				s.Require().NoError(err, "should be able to get vault interest details")
+				s.Assert().Equal(args.ExpectedPeriodStart, v.PeriodStart, "vault interest details period start should be current block time")
+				s.Assert().Equal(int64(0), v.ExpireTime, " vault interest details expire time should be zero")
+			} else {
+				_, err := s.k.VaultInterestDetails.Get(s.ctx, args.VaultAddress)
+				s.Require().ErrorContains(err, "not found", "should not find vault interest details")
+			}
+
+		},
+	}
+
+	underlyingDenom := "underlying"
+	shareDenom := "vaultshares"
+	owner := s.adminAddr
+	vaultAddr := types.GetVaultAddress(shareDenom)
+	currentBlockTime := time.Now()
+
+	setup := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), owner)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           owner.String(),
+			ShareDenom:      shareDenom,
+			UnderlyingAsset: underlyingDenom,
+		})
+		s.Require().NoError(err)
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+		s.ctx = s.ctx.WithBlockTime(currentBlockTime)
+	}
+
+	tests := []struct {
+		name           string
+		interestRate   string
+		setup          func()
+		postCheckArgs  postCheckArgs
+		expectedEvents sdk.Events
+	}{
+		{name: "initial setting of interest rate",
+			interestRate: "0.05",
+			setup:        setup,
+			postCheckArgs: postCheckArgs{
+				VaultAddress:          vaultAddr,
+				ExpectedRate:          "0.05",
+				HasNewInterestDetails: true,
+				ExpectedPeriodStart:   currentBlockTime.Unix(),
+			},
+			expectedEvents: sdk.Events{
+				sdk.NewEvent("vault.v1.EventInterestRateUpdated",
+					sdk.NewAttribute("vault_address", vaultAddr.String()),
+					sdk.NewAttribute("new_rate", "0.05"),
+					sdk.NewAttribute("previous_rate", "0.00"),
+				),
+			},
+		},
+		// {name: "update current interest rate to non zero, needs to reconcile previous rate",
+		// 	interestRate: "4.06",
+		// 	setup: func() {
+		// 		setup()
+		// 		vaultAcc, err := s.k.GetVault(s.ctx, vaultAddr)
+		// 		s.Require().NoError(err, "should be able to get vault")
+		// 		s.k.UpdateInterestRates(s.ctx, vaultAcc, "4.20", "4.20")
+		// 		s.k.VaultInterestDetails.Set(s.ctx, vaultAddr, types.VaultInterestDetails{PeriodStart: currentBlockTime.Unix() - 10000})
+		// 	},
+		// 	postCheckArgs: postCheckArgs{
+		// 		VaultAddress:          vaultAddr,
+		// 		ExpectedRate:          "4.06",
+		// 		HasNewInterestDetails: true,
+		// 		ExpectedPeriodStart:   currentBlockTime.Unix(),
+		// 	},
+		// 	expectedEvents: sdk.Events{
+		// 		sdk.NewEvent("vault.v1.EventInterestRateUpdated",
+		// 			sdk.NewAttribute("vault_address", vaultAddr.String()),
+		// 			sdk.NewAttribute("new_rate", "0.05"),
+		// 			sdk.NewAttribute("previous_rate", "0.00"),
+		// 		),
+		// 	},
+		// },
+		// {name: "update current interest rate to zero, needs to reconcile previous non zero rate",
+		// 	interestRate: "0",
+		// 	setup: func() {
+		// 		setup()
+		// 		vaultAcc, err := s.k.GetVault(s.ctx, vaultAddr)
+		// 		s.Require().NoError(err, "should be able to get vault")
+		// 		s.k.UpdateInterestRates(s.ctx, vaultAcc, "6.12", "6.12")
+		// 		s.k.VaultInterestDetails.Set(s.ctx, vaultAddr, types.VaultInterestDetails{PeriodStart: currentBlockTime.Unix() - 10000})
+		// 	},
+		// 	postCheckArgs: postCheckArgs{
+		// 		VaultAddress:          vaultAddr,
+		// 		ExpectedRate:          types.ZeroInterestRate,
+		// 		HasNewInterestDetails: false,
+		// 	},
+		// 	expectedEvents: sdk.Events{
+		// 		sdk.NewEvent("vault.v1.EventInterestRateUpdated",
+		// 			sdk.NewAttribute("vault_address", vaultAddr.String()),
+		// 			sdk.NewAttribute("new_rate", "0.05"),
+		// 			sdk.NewAttribute("previous_rate", "0.00"),
+		// 		),
+		// 	},
+		// },
+	}
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			updateInterestRateReq := types.MsgUpdateInterestRateRequest{
+				Admin:        owner.String(),
+				VaultAddress: vaultAddr.String(),
+				NewRate:      tt.interestRate,
+			}
+
+			tc := msgServerTestCase[types.MsgUpdateInterestRateRequest, postCheckArgs]{
+				name:           tt.name,
+				setup:          tt.setup,
+				msg:            updateInterestRateReq,
+				postCheckArgs:  tt.postCheckArgs,
+				expectedEvents: tt.expectedEvents,
+			}
+
+			testDef.expectedResponse = &types.MsgUpdateInterestRateResponse{}
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
 // createMarkerMintCoinEvents creates events for minting a coin and sending it to a recipient.
 func createMarkerMintCoinEvents(markerModule, admin, recipient sdk.AccAddress, coin sdk.Coin) []sdk.Event {
 	events := createReceiveCoinsEvents(markerModule.String(), sdk.NewCoins(coin).String())

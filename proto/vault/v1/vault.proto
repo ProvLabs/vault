@@ -23,7 +23,7 @@ message VaultAccount {
   string current_interest_rate = 5 [(cosmos_proto.scalar) = "cosmos.DecString"];
   // desired_interest_rate is the target interest rate that the vault intends to apply.
   string desired_interest_rate = 6 [(cosmos_proto.scalar) = "cosmos.DecString"];
-     // min_interest_rate is the lowest interest rate the admin is allowed to set.
+  // min_interest_rate is the lowest interest rate the admin is allowed to set.
   // If unset (empty string), there is no lower limit.
   string min_interest_rate = 7 [(cosmos_proto.scalar) = "cosmos.DecString"];
   // max_interest_rate is the highest interest rate the admin is allowed to set.

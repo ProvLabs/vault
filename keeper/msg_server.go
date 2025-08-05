@@ -118,13 +118,13 @@ func (k msgServer) DepositInterestFunds(goCtx context.Context, msg *types.MsgDep
 		return nil, fmt.Errorf("unauthorized: %s is not the interest admin", msg.Admin)
 	}
 
+	if err := k.BankKeeper.SendCoins(ctx, adminAddr, vaultAddr, sdk.NewCoins(msg.Amount)); err != nil {
+		return nil, fmt.Errorf("failed to deposit funds: %w", err)
+	}
+
 	err := k.ReconcileVaultInterest(ctx, vault)
 	if err != nil {
 		return nil, fmt.Errorf("failed to reconcile vault interest before withdrawal: %w", err)
-	}
-
-	if err := k.BankKeeper.SendCoins(ctx, adminAddr, vaultAddr, sdk.NewCoins(msg.Amount)); err != nil {
-		return nil, fmt.Errorf("failed to deposit funds: %w", err)
 	}
 
 	// k.emitEvent(ctx, types.NewEventInterestDeposit(msg.VaultAddress, msg.Admin, msg.Amount))

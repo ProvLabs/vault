@@ -103,3 +103,11 @@ func (va VaultAccount) ValidateUnderlyingAssets(asset sdk.Coin) error {
 	}
 	return fmt.Errorf("%s asset denom not supported for vault, expected one of %v", asset.Denom, va.UnderlyingAssets)
 }
+
+func (va VaultAccount) InterestEnabled() bool {
+	current, err := sdkmath.LegacyNewDecFromStr(va.CurrentInterestRate)
+	if err != nil {
+		return false
+	}
+	return !current.IsZero()
+}

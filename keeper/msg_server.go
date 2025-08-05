@@ -97,9 +97,11 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 	// TODO: check max/min restrictions
 	k.UpdateInterestRates(ctx, vault, msg.NewRate, msg.NewRate)
 
-	err := k.VaultInterestDetails.Set(ctx, vault.GetAddress(), types.VaultInterestDetails{PeriodStart: ctx.BlockTime().Unix()})
-	if err != nil {
-		return nil, fmt.Errorf("failed to set vault interest details: %w", err)
+	if !reconciled {
+		err := k.VaultInterestDetails.Set(ctx, vault.GetAddress(), types.VaultInterestDetails{PeriodStart: ctx.BlockTime().Unix()})
+		if err != nil {
+			return nil, fmt.Errorf("failed to set vault interest details: %w", err)
+		}
 	}
 
 	// TODO: add event

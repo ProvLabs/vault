@@ -131,8 +131,7 @@ func (k msgServer) DepositInterestFunds(goCtx context.Context, msg *types.MsgDep
 		return nil, fmt.Errorf("failed to reconcile vault interest before withdrawal: %w", err)
 	}
 
-	// TODO: add event
-	// k.emitEvent(ctx, types.NewEventInterestDeposit(msg.VaultAddress, msg.Admin, msg.Amount))
+	k.emitEvent(ctx, types.NewEventInterestDeposit(msg.VaultAddress, msg.Admin, msg.Amount))
 
 	return &types.MsgDepositInterestFundsResponse{}, nil
 }
@@ -160,8 +159,7 @@ func (k msgServer) WithdrawInterestFunds(goCtx context.Context, msg *types.MsgWi
 		return nil, fmt.Errorf("failed to withdraw funds: %w", err)
 	}
 
-	// TODO: add event
-	// k.emitEvent(ctx, types.NewEventInterestWithdrawal(msg.VaultAddress, msg.InterestAdmin, msg.Amount))
+	k.emitEvent(ctx, types.NewEventInterestWithdrawal(msg.VaultAddress, msg.Admin, msg.Amount))
 
 	return &types.MsgWithdrawInterestFundsResponse{}, nil
 }
@@ -181,9 +179,6 @@ func (k msgServer) ToggleSwapIn(goCtx context.Context, msg *types.MsgToggleSwapI
 
 	k.SetSwapInEnable(ctx, vault, msg.Enabled)
 
-	// TODO: add event
-	// k.emitEvent(ctx, types.NewEventToggleSwaps(msg.VaultAddress, adminAddr.String(), msg.SwapsEnabled))
-
 	return &types.MsgToggleSwapInResponse{}, nil
 }
 
@@ -201,9 +196,6 @@ func (k msgServer) ToggleSwapOut(goCtx context.Context, msg *types.MsgToggleSwap
 	}
 
 	k.SetSwapOutEnable(ctx, vault, msg.Enabled)
-
-	// TODO: add event
-	// k.emitEvent(ctx, types.NewEventToggleSwaps(msg.VaultAddress, adminAddr.String(), msg.SwapsEnabled))
 
 	return &types.MsgToggleSwapOutResponse{}, nil
 }

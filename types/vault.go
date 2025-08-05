@@ -52,6 +52,8 @@ func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin string, shareDenom st
 		UnderlyingAssets:    underlyingAssets,
 		CurrentInterestRate: ZeroInterestRate,
 		DesiredInterestRate: ZeroInterestRate,
+		SwapInEnabled:       false, // TODO: should we default it to true or false?
+		SwapOutEnabled:      false,
 	}
 }
 

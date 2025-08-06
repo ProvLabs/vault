@@ -76,12 +76,16 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
-	vault, ok := k.tryGetVault(ctx, vaultAddr)
-	if !ok {
-		return nil, fmt.Errorf("failed to get vault: %v", msg.VaultAddress)
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault: %w", err)
 	}
-	if vault.Admin != msg.Admin {
-		return nil, fmt.Errorf("unauthorized: %s is not the interest admin", msg.Admin)
+	if vault == nil {
+		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+	}
+
+	if err := vault.ValidateAdmin(msg.Admin); err != nil {
+		return nil, err
 	}
 
 	newRate := sdkmath.LegacyMustNewDecFromStr(msg.NewRate)
@@ -130,20 +134,23 @@ func (k msgServer) DepositInterestFunds(goCtx context.Context, msg *types.MsgDep
 	adminAddr := sdk.MustAccAddressFromBech32(msg.Admin)
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
 
-	vault, ok := k.tryGetVault(ctx, vaultAddr)
-	if ok {
-		return nil, fmt.Errorf("failed to get vault: %v", msg.VaultAddress)
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault: %w", err)
 	}
-	if vault.Admin != msg.Admin {
-		return nil, fmt.Errorf("unauthorized: %s is not the interest admin", msg.Admin)
+	if vault == nil {
+		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+	}
+
+	if err := vault.ValidateAdmin(msg.Admin); err != nil {
+		return nil, err
 	}
 
 	if err := k.BankKeeper.SendCoins(ctx, adminAddr, vaultAddr, sdk.NewCoins(msg.Amount)); err != nil {
 		return nil, fmt.Errorf("failed to deposit funds: %w", err)
 	}
 
-	err := k.ReconcileVaultInterest(ctx, vault)
-	if err != nil {
+	if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to reconcile vault interest before withdrawal: %w", err)
 	}
 
@@ -159,16 +166,18 @@ func (k msgServer) WithdrawInterestFunds(goCtx context.Context, msg *types.MsgWi
 	adminAddr := sdk.MustAccAddressFromBech32(msg.Admin)
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
 
-	vault, ok := k.tryGetVault(ctx, vaultAddr)
-	if ok {
-		return nil, fmt.Errorf("failed to get vault: %v", msg.VaultAddress)
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault: %w", err)
 	}
-	if vault.Admin != msg.Admin {
-		return nil, fmt.Errorf("unauthorized: %s is not the interest admin", msg.Admin)
+	if vault == nil {
+		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
 	}
 
-	err := k.ReconcileVaultInterest(ctx, vault)
-	if err != nil {
+	if err := vault.ValidateAdmin(msg.Admin); err != nil {
+		return nil, err
+	}
+	if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to reconcile vault interest before withdrawal: %w", err)
 	}
 
@@ -187,12 +196,15 @@ func (k msgServer) ToggleSwapIn(goCtx context.Context, msg *types.MsgToggleSwapI
 
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
 
-	vault, ok := k.tryGetVault(ctx, vaultAddr)
-	if !ok {
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault: %w", err)
+	}
+	if vault == nil {
 		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
 	}
-	if vault.Admin != msg.Admin {
-		return nil, fmt.Errorf("unauthorized: %s is not the vault admin", msg.Admin)
+	if err := vault.ValidateAdmin(msg.Admin); err != nil {
+		return nil, err
 	}
 
 	k.SetSwapInEnable(ctx, vault, msg.Enabled)
@@ -206,12 +218,15 @@ func (k msgServer) ToggleSwapOut(goCtx context.Context, msg *types.MsgToggleSwap
 
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
 
-	vault, ok := k.tryGetVault(ctx, vaultAddr)
-	if !ok {
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault: %w", err)
+	}
+	if vault == nil {
 		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
 	}
-	if vault.Admin != msg.Admin {
-		return nil, fmt.Errorf("unauthorized: %s is not the vault admin", msg.Admin)
+	if err := vault.ValidateAdmin(msg.Admin); err != nil {
+		return nil, err
 	}
 
 	k.SetSwapOutEnable(ctx, vault, msg.Enabled)

@@ -137,3 +137,10 @@ func (v *VaultAccount) IsInterestRateInRange(rate sdkmath.LegacyDec) (bool, erro
 
 	return true, nil
 }
+
+func (v *VaultAccount) ValidateAdmin(admin string) error {
+	if v.Admin != admin {
+		return fmt.Errorf("unauthorized: %s is not the vault admin", admin)
+	}
+	return nil
+}

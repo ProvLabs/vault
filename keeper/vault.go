@@ -269,15 +269,16 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 	return &shares, nil
 }
 
-// SetInterestRate updates the current interest rate for a given vault. If the new rate is
-// different from the currently set rate, it updates the vault account in the state and
-// emits an EventVaultInterestChange event. No action is taken if the new rate is the same as the existing one.
+// SetSwapInEnable updates the SwapInEnabled flag for a given vault. It updates the vault account in the state and
+// emits an EventToggleSwapIn event.
 func (k *Keeper) SetSwapInEnable(ctx context.Context, vault *types.VaultAccount, enabled bool) {
 	vault.SwapInEnabled = enabled
 	k.AuthKeeper.SetAccount(ctx, vault)
 	k.emitEvent(sdk.UnwrapSDKContext(ctx), types.NewEventToggleSwapIn(vault.Address, vault.Admin, enabled))
 }
 
+// SetSwapOutEnable updates the SwapOutEnabled flag for a given vault. It updates the vault account in the state and
+// emits an EventToggleSwapOut event.
 func (k *Keeper) SetSwapOutEnable(ctx context.Context, vault *types.VaultAccount, enabled bool) {
 	vault.SwapOutEnabled = enabled
 	k.AuthKeeper.SetAccount(ctx, vault)

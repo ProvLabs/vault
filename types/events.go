@@ -49,11 +49,11 @@ func NewEventVaultReconcile(vaultAddress string, principalBefore, principalAfter
 }
 
 // NewEventVaultInterestChange creates a new EventVaultInterestChange event.
-func NewEventVaultInterestChange(vaultAddress, previousRate, newRate string) *EventVaultInterestChange {
+func NewEventVaultInterestChange(vaultAddress, currentRate, desiredRate string) *EventVaultInterestChange {
 	return &EventVaultInterestChange{
 		VaultAddress: vaultAddress,
-		PreviousRate: previousRate,
-		NewRate:      newRate,
+		CurrentRate:  currentRate,
+		DesiredRate:  desiredRate,
 	}
 }
 

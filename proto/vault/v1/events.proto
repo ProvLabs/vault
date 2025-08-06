@@ -99,11 +99,11 @@ message EventVaultInterestChange {
   // vault_address is the bech32 address of the vault.
   string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 
-  // previous_rate is the previous interest rate.
-  string previous_rate = 2;
+  // current_rate is the interest rate actual rate the vault is using.
+  string current_rate = 2;
 
-  // new_rate is the new interest rate.
-  string new_rate = 3;
+  // desired_rate is the interest rate the admin wants to use.
+  string desired_rate = 3;
 }
 
 // EventInterestDeposit is an event emitted when funds are deposited for paying interest.

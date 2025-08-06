@@ -858,15 +858,17 @@ func (s *TestSuite) TestKeeper_handleDepletedVaults() {
 	}
 }
 
-func (s *TestSuite) TestKeeper_SetInterestRate() {
+func (s *TestSuite) TestKeeper_UpdateInterestRates() {
 	v1 := NewVaultInfo(1)
 	initialRate := "0.1"
 	newRate := "0.2"
+	desiredRate := "0.3"
 
 	tests := []struct {
 		name           string
 		setup          func() *types.VaultAccount
-		rateToSet      string
+		currentRate    string
+		desiredRate    string
 		expectedEvents sdk.Events
 		postCheck      func(vault *types.VaultAccount)
 	}{
@@ -875,12 +877,13 @@ func (s *TestSuite) TestKeeper_SetInterestRate() {
 			setup: func() *types.VaultAccount {
 				return createVaultWithInterest(s, v1, initialRate, 0, 0, false, false)
 			},
-			rateToSet: newRate,
+			currentRate: newRate,
+			desiredRate: desiredRate,
 			expectedEvents: sdk.Events{
 				sdk.NewEvent(
 					"vault.v1.EventVaultInterestChange",
-					sdk.NewAttribute("new_rate", newRate),
-					sdk.NewAttribute("previous_rate", initialRate),
+					sdk.NewAttribute("current_rate", newRate),
+					sdk.NewAttribute("desired_rate", desiredRate),
 					sdk.NewAttribute("vault_address", v1.vaultAddr.String()),
 				),
 			},
@@ -889,20 +892,7 @@ func (s *TestSuite) TestKeeper_SetInterestRate() {
 				s.Require().NoError(err)
 				s.Require().NotNil(updatedVault)
 				s.Assert().Equal(newRate, updatedVault.CurrentInterestRate)
-			},
-		},
-		{
-			name: "rate is the same, no change",
-			setup: func() *types.VaultAccount {
-				return createVaultWithInterest(s, v1, initialRate, 0, 0, false, false)
-			},
-			rateToSet:      initialRate,
-			expectedEvents: sdk.Events{},
-			postCheck: func(vault *types.VaultAccount) {
-				updatedVault, err := s.k.GetVault(s.ctx, vault.GetAddress())
-				s.Require().NoError(err)
-				s.Require().NotNil(updatedVault)
-				s.Assert().Equal(initialRate, updatedVault.CurrentInterestRate)
+				s.Assert().Equal(desiredRate, updatedVault.DesiredInterestRate)
 			},
 		},
 	}
@@ -913,7 +903,7 @@ func (s *TestSuite) TestKeeper_SetInterestRate() {
 			vault := tc.setup()
 
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
-			s.k.SetInterestRate(s.ctx, vault, tc.rateToSet)
+			s.k.UpdateInterestRates(s.ctx, vault, tc.currentRate, tc.desiredRate)
 
 			s.Assert().Equal(
 				normalizeEvents(tc.expectedEvents),

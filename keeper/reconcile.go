@@ -171,28 +171,14 @@ func (k *Keeper) CanPayoutDuration(ctx sdk.Context, vault *types.VaultAccount, d
 	}
 }
 
-// SetInterestRate updates the current interest rate for a given vault. If the new rate is
-// different from the currently set rate, it updates the vault account in the state and
-// emits an EventVaultInterestChange event. No action is taken if the new rate is the same as the existing one.
-func (k *Keeper) SetInterestRate(ctx context.Context, vault *types.VaultAccount, rate string) {
-	if rate == vault.CurrentInterestRate {
-		return
-	}
-	event := types.NewEventVaultInterestChange(vault.GetAddress().String(), vault.CurrentInterestRate, rate)
-	vault.CurrentInterestRate = rate
-	k.AuthKeeper.SetAccount(ctx, vault)
-	k.emitEvent(sdk.UnwrapSDKContext(ctx), event)
-}
-
+// UpdateInterestRates updates the current and desired interest rates for a vault.
+// This function will emit the NewEventVaultInterestChange event.
 func (k *Keeper) UpdateInterestRates(ctx context.Context, vault *types.VaultAccount, currentRate, desiredRate string) {
-	if currentRate == vault.CurrentInterestRate && vault.DesiredInterestRate == currentRate {
-		return
-	}
-	// event := types.NewEventVaultInterestChange(vault.GetAddress().String(), vault.CurrentInterestRate, cu)
+	event := types.NewEventVaultInterestChange(vault.GetAddress().String(), currentRate, desiredRate)
 	vault.CurrentInterestRate = currentRate
 	vault.DesiredInterestRate = desiredRate
 	k.AuthKeeper.SetAccount(ctx, vault)
-	// k.emitEvent(sdk.UnwrapSDKContext(ctx), event)
+	k.emitEvent(sdk.UnwrapSDKContext(ctx), event)
 }
 
 // CalculateVaultTotalAssets returns the total value of the vault's assets,
@@ -354,7 +340,7 @@ func (k *Keeper) handlePayableVaults(ctx context.Context, payouts []ReconciledVa
 func (k *Keeper) handleDepletedVaults(ctx context.Context, failedPayouts []ReconciledVault) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	for _, record := range failedPayouts {
-		k.SetInterestRate(ctx, record.Vault, types.ZeroInterestRate)
+		k.UpdateInterestRates(ctx, record.Vault, types.ZeroInterestRate, record.Vault.DesiredInterestRate)
 
 		if err := k.VaultInterestDetails.Remove(ctx, record.Vault.GetAddress()); err != nil {
 			sdkCtx.Logger().Error("failed to remove VaultInterestDetails for vault", "vault", record.Vault.GetAddress().String(), "err", err)

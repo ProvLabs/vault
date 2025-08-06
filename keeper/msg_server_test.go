@@ -561,51 +561,51 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 				),
 			},
 		},
-		// {name: "update current interest rate to non zero, needs to reconcile previous rate",
-		// 	interestRate: "4.06",
-		// 	setup: func() {
-		// 		setup()
-		// 		vaultAcc, err := s.k.GetVault(s.ctx, vaultAddr)
-		// 		s.Require().NoError(err, "should be able to get vault")
-		// 		s.k.UpdateInterestRates(s.ctx, vaultAcc, "4.20", "4.20")
-		// 		s.k.VaultInterestDetails.Set(s.ctx, vaultAddr, types.VaultInterestDetails{PeriodStart: currentBlockTime.Unix() - 10000})
-		// 	},
-		// 	postCheckArgs: postCheckArgs{
-		// 		VaultAddress:          vaultAddr,
-		// 		ExpectedRate:          "4.06",
-		// 		HasNewInterestDetails: true,
-		// 		ExpectedPeriodStart:   currentBlockTime.Unix(),
-		// 	},
-		// 	expectedEvents: sdk.Events{
-		// 		sdk.NewEvent("vault.v1.EventInterestRateUpdated",
-		// 			sdk.NewAttribute("vault_address", vaultAddr.String()),
-		// 			sdk.NewAttribute("new_rate", "0.05"),
-		// 			sdk.NewAttribute("previous_rate", "0.00"),
-		// 		),
-		// 	},
-		// },
-		// {name: "update current interest rate to zero, needs to reconcile previous non zero rate",
-		// 	interestRate: "0",
-		// 	setup: func() {
-		// 		setup()
-		// 		vaultAcc, err := s.k.GetVault(s.ctx, vaultAddr)
-		// 		s.Require().NoError(err, "should be able to get vault")
-		// 		s.k.UpdateInterestRates(s.ctx, vaultAcc, "6.12", "6.12")
-		// 		s.k.VaultInterestDetails.Set(s.ctx, vaultAddr, types.VaultInterestDetails{PeriodStart: currentBlockTime.Unix() - 10000})
-		// 	},
-		// 	postCheckArgs: postCheckArgs{
-		// 		VaultAddress:          vaultAddr,
-		// 		ExpectedRate:          types.ZeroInterestRate,
-		// 		HasNewInterestDetails: false,
-		// 	},
-		// 	expectedEvents: sdk.Events{
-		// 		sdk.NewEvent("vault.v1.EventInterestRateUpdated",
-		// 			sdk.NewAttribute("vault_address", vaultAddr.String()),
-		// 			sdk.NewAttribute("new_rate", "0.05"),
-		// 			sdk.NewAttribute("previous_rate", "0.00"),
-		// 		),
-		// 	},
-		// },
+		{name: "update current interest rate to non zero, needs to reconcile previous rate",
+			interestRate: "4.06",
+			setup: func() {
+				setup()
+				vaultAcc, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err, "should be able to get vault")
+				s.k.UpdateInterestRates(s.ctx, vaultAcc, "4.20", "4.20")
+				s.k.VaultInterestDetails.Set(s.ctx, vaultAddr, types.VaultInterestDetails{PeriodStart: currentBlockTime.Unix() - 10000})
+			},
+			postCheckArgs: postCheckArgs{
+				VaultAddress:          vaultAddr,
+				ExpectedRate:          "4.06",
+				HasNewInterestDetails: true,
+				ExpectedPeriodStart:   currentBlockTime.Unix(),
+			},
+			expectedEvents: sdk.Events{
+				sdk.NewEvent("vault.v1.EventInterestRateUpdated",
+					sdk.NewAttribute("vault_address", vaultAddr.String()),
+					sdk.NewAttribute("new_rate", "0.05"),
+					sdk.NewAttribute("previous_rate", "0.00"),
+				),
+			},
+		},
+		{name: "update current interest rate to zero, needs to reconcile previous non zero rate",
+			interestRate: "0",
+			setup: func() {
+				setup()
+				vaultAcc, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err, "should be able to get vault")
+				s.k.UpdateInterestRates(s.ctx, vaultAcc, "6.12", "6.12")
+				s.k.VaultInterestDetails.Set(s.ctx, vaultAddr, types.VaultInterestDetails{PeriodStart: currentBlockTime.Unix() - 10000})
+			},
+			postCheckArgs: postCheckArgs{
+				VaultAddress:          vaultAddr,
+				ExpectedRate:          types.ZeroInterestRate,
+				HasNewInterestDetails: false,
+			},
+			expectedEvents: sdk.Events{
+				sdk.NewEvent("vault.v1.EventInterestRateUpdated",
+					sdk.NewAttribute("vault_address", vaultAddr.String()),
+					sdk.NewAttribute("new_rate", "0.05"),
+					sdk.NewAttribute("previous_rate", "0.00"),
+				),
+			},
+		},
 	}
 	for _, tt := range tests {
 		s.Run(tt.name, func() {

@@ -456,11 +456,16 @@ func (m *MsgSwapOutResponse) GetSharesBurned() types.Coin {
 	return types.Coin{}
 }
 
+// MsgSetInterestConfigRequest is the request message for setting the interest rate configuration of a vault.
 type MsgSetInterestConfigRequest struct {
-	Admin        string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// admin is the address of the vault administrator.
+	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// vault_address is the bech32 address of the vault.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	MinRate      string `protobuf:"bytes,3,opt,name=min_rate,json=minRate,proto3" json:"min_rate,omitempty"`
-	MaxRate      string `protobuf:"bytes,4,opt,name=max_rate,json=maxRate,proto3" json:"max_rate,omitempty"`
+	// min_rate is the minimum interest rate that can be set for the vault.
+	MinRate string `protobuf:"bytes,3,opt,name=min_rate,json=minRate,proto3" json:"min_rate,omitempty"`
+	// max_rate is the maximum interest rate that can be set for the vault.
+	MaxRate string `protobuf:"bytes,4,opt,name=max_rate,json=maxRate,proto3" json:"max_rate,omitempty"`
 }
 
 func (m *MsgSetInterestConfigRequest) Reset()         { *m = MsgSetInterestConfigRequest{} }
@@ -524,6 +529,7 @@ func (m *MsgSetInterestConfigRequest) GetMaxRate() string {
 	return ""
 }
 
+// MsgSetInterestConfigResponse is the response message for the SetInterestConfig endpoint.
 type MsgSetInterestConfigResponse struct {
 }
 
@@ -560,10 +566,14 @@ func (m *MsgSetInterestConfigResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgSetInterestConfigResponse proto.InternalMessageInfo
 
+// MsgUpdateInterestRateRequest is the request message for updating the interest rate of a vault.
 type MsgUpdateInterestRateRequest struct {
-	Admin        string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// admin is the address of the vault administrator.
+	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// vault_address is the bech32 address of the vault.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	NewRate      string `protobuf:"bytes,3,opt,name=new_rate,json=newRate,proto3" json:"new_rate,omitempty"`
+	// new_rate is the new interest rate for the vault, expressed as an APY string (e.g., "-5.00" for -5%).
+	NewRate string `protobuf:"bytes,3,opt,name=new_rate,json=newRate,proto3" json:"new_rate,omitempty"`
 }
 
 func (m *MsgUpdateInterestRateRequest) Reset()         { *m = MsgUpdateInterestRateRequest{} }
@@ -620,6 +630,7 @@ func (m *MsgUpdateInterestRateRequest) GetNewRate() string {
 	return ""
 }
 
+// MsgUpdateInterestRateResponse is the response message for the UpdateInterestRate endpoint.
 type MsgUpdateInterestRateResponse struct {
 }
 
@@ -656,10 +667,14 @@ func (m *MsgUpdateInterestRateResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdateInterestRateResponse proto.InternalMessageInfo
 
+// MsgDepositInterestFundsRequest is the request message for depositing funds to be used for paying interest.
 type MsgDepositInterestFundsRequest struct {
-	Admin        string     `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
-	VaultAddress string     `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	Amount       types.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount"`
+	// admin is the address of the account depositing the funds.
+	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// vault_address is the bech32 address of the vault to which funds are being deposited.
+	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// amount is the amount of funds to deposit.
+	Amount types.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount"`
 }
 
 func (m *MsgDepositInterestFundsRequest) Reset()         { *m = MsgDepositInterestFundsRequest{} }
@@ -716,6 +731,7 @@ func (m *MsgDepositInterestFundsRequest) GetAmount() types.Coin {
 	return types.Coin{}
 }
 
+// MsgDepositInterestFundsResponse is the response message for the DepositInterestFunds endpoint.
 type MsgDepositInterestFundsResponse struct {
 }
 
@@ -752,10 +768,14 @@ func (m *MsgDepositInterestFundsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgDepositInterestFundsResponse proto.InternalMessageInfo
 
+// MsgWithdrawInterestFundsRequest is the request message for withdrawing unused interest funds.
 type MsgWithdrawInterestFundsRequest struct {
-	Admin        string     `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
-	VaultAddress string     `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	Amount       types.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount"`
+	// admin is the address of the vault administrator initiating the withdrawal.
+	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// vault_address is the bech32 address of the vault from which funds are being withdrawn.
+	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// amount is the amount of funds to withdraw.
+	Amount types.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount"`
 }
 
 func (m *MsgWithdrawInterestFundsRequest) Reset()         { *m = MsgWithdrawInterestFundsRequest{} }
@@ -812,6 +832,7 @@ func (m *MsgWithdrawInterestFundsRequest) GetAmount() types.Coin {
 	return types.Coin{}
 }
 
+// MsgWithdrawInterestFundsResponse is the response message for the WithdrawInterestFunds endpoint.
 type MsgWithdrawInterestFundsResponse struct {
 }
 
@@ -848,10 +869,14 @@ func (m *MsgWithdrawInterestFundsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgWithdrawInterestFundsResponse proto.InternalMessageInfo
 
+// MsgToggleSwapInRequest is the request message for enabling or disabling swap-in operations for a vault.
 type MsgToggleSwapInRequest struct {
-	Admin        string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// admin is the address of the vault administrator.
+	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// vault_address is the bech32 address of the vault.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	Enabled      bool   `protobuf:"varint,3,opt,name=enabled,proto3" json:"enabled,omitempty"`
+	// enabled specifies whether swap-in operations should be enabled (true) or disabled (false).
+	Enabled bool `protobuf:"varint,3,opt,name=enabled,proto3" json:"enabled,omitempty"`
 }
 
 func (m *MsgToggleSwapInRequest) Reset()         { *m = MsgToggleSwapInRequest{} }
@@ -908,6 +933,7 @@ func (m *MsgToggleSwapInRequest) GetEnabled() bool {
 	return false
 }
 
+// MsgToggleSwapInResponse is the response message for the ToggleSwapIn endpoint.
 type MsgToggleSwapInResponse struct {
 }
 
@@ -944,10 +970,14 @@ func (m *MsgToggleSwapInResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgToggleSwapInResponse proto.InternalMessageInfo
 
+// MsgToggleSwapOutRequest is the request message for enabling or disabling swap-out operations for a vault.
 type MsgToggleSwapOutRequest struct {
-	Admin        string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// admin is the address of the vault administrator.
+	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// vault_address is the bech32 address of the vault.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	Enabled      bool   `protobuf:"varint,3,opt,name=enabled,proto3" json:"enabled,omitempty"`
+	// enabled specifies whether swap-out operations should be enabled (true) or disabled (false).
+	Enabled bool `protobuf:"varint,3,opt,name=enabled,proto3" json:"enabled,omitempty"`
 }
 
 func (m *MsgToggleSwapOutRequest) Reset()         { *m = MsgToggleSwapOutRequest{} }
@@ -1004,6 +1034,7 @@ func (m *MsgToggleSwapOutRequest) GetEnabled() bool {
 	return false
 }
 
+// MsgToggleSwapOutResponse is the response message for the ToggleSwapOut endpoint.
 type MsgToggleSwapOutResponse struct {
 }
 

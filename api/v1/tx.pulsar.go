@@ -9698,15 +9698,20 @@ func (x *MsgSwapOutResponse) GetSharesBurned() *v1beta1.Coin {
 	return nil
 }
 
+// MsgSetInterestConfigRequest is the request message for setting the interest rate configuration of a vault.
 type MsgSetInterestConfigRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Admin        string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// admin is the address of the vault administrator.
+	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// vault_address is the bech32 address of the vault.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	MinRate      string `protobuf:"bytes,3,opt,name=min_rate,json=minRate,proto3" json:"min_rate,omitempty"`
-	MaxRate      string `protobuf:"bytes,4,opt,name=max_rate,json=maxRate,proto3" json:"max_rate,omitempty"`
+	// min_rate is the minimum interest rate that can be set for the vault.
+	MinRate string `protobuf:"bytes,3,opt,name=min_rate,json=minRate,proto3" json:"min_rate,omitempty"`
+	// max_rate is the maximum interest rate that can be set for the vault.
+	MaxRate string `protobuf:"bytes,4,opt,name=max_rate,json=maxRate,proto3" json:"max_rate,omitempty"`
 }
 
 func (x *MsgSetInterestConfigRequest) Reset() {
@@ -9757,6 +9762,7 @@ func (x *MsgSetInterestConfigRequest) GetMaxRate() string {
 	return ""
 }
 
+// MsgSetInterestConfigResponse is the response message for the SetInterestConfig endpoint.
 type MsgSetInterestConfigResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -9783,14 +9789,18 @@ func (*MsgSetInterestConfigResponse) Descriptor() ([]byte, []int) {
 	return file_vault_v1_tx_proto_rawDescGZIP(), []int{9}
 }
 
+// MsgUpdateInterestRateRequest is the request message for updating the interest rate of a vault.
 type MsgUpdateInterestRateRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Admin        string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// admin is the address of the vault administrator.
+	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// vault_address is the bech32 address of the vault.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	NewRate      string `protobuf:"bytes,3,opt,name=new_rate,json=newRate,proto3" json:"new_rate,omitempty"` // APY as string, e.g. "-5.00"
+	// new_rate is the new interest rate for the vault, expressed as an APY string (e.g., "-5.00" for -5%).
+	NewRate string `protobuf:"bytes,3,opt,name=new_rate,json=newRate,proto3" json:"new_rate,omitempty"`
 }
 
 func (x *MsgUpdateInterestRateRequest) Reset() {
@@ -9834,6 +9844,7 @@ func (x *MsgUpdateInterestRateRequest) GetNewRate() string {
 	return ""
 }
 
+// MsgUpdateInterestRateResponse is the response message for the UpdateInterestRate endpoint.
 type MsgUpdateInterestRateResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -9860,14 +9871,18 @@ func (*MsgUpdateInterestRateResponse) Descriptor() ([]byte, []int) {
 	return file_vault_v1_tx_proto_rawDescGZIP(), []int{11}
 }
 
+// MsgDepositInterestFundsRequest is the request message for depositing funds to be used for paying interest.
 type MsgDepositInterestFundsRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Admin        string        `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
-	VaultAddress string        `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	Amount       *v1beta1.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
+	// admin is the address of the account depositing the funds.
+	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// vault_address is the bech32 address of the vault to which funds are being deposited.
+	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// amount is the amount of funds to deposit.
+	Amount *v1beta1.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
 }
 
 func (x *MsgDepositInterestFundsRequest) Reset() {
@@ -9911,6 +9926,7 @@ func (x *MsgDepositInterestFundsRequest) GetAmount() *v1beta1.Coin {
 	return nil
 }
 
+// MsgDepositInterestFundsResponse is the response message for the DepositInterestFunds endpoint.
 type MsgDepositInterestFundsResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -9937,14 +9953,18 @@ func (*MsgDepositInterestFundsResponse) Descriptor() ([]byte, []int) {
 	return file_vault_v1_tx_proto_rawDescGZIP(), []int{13}
 }
 
+// MsgWithdrawInterestFundsRequest is the request message for withdrawing unused interest funds.
 type MsgWithdrawInterestFundsRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Admin        string        `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
-	VaultAddress string        `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	Amount       *v1beta1.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
+	// admin is the address of the vault administrator initiating the withdrawal.
+	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// vault_address is the bech32 address of the vault from which funds are being withdrawn.
+	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// amount is the amount of funds to withdraw.
+	Amount *v1beta1.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
 }
 
 func (x *MsgWithdrawInterestFundsRequest) Reset() {
@@ -9988,6 +10008,7 @@ func (x *MsgWithdrawInterestFundsRequest) GetAmount() *v1beta1.Coin {
 	return nil
 }
 
+// MsgWithdrawInterestFundsResponse is the response message for the WithdrawInterestFunds endpoint.
 type MsgWithdrawInterestFundsResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -10014,14 +10035,18 @@ func (*MsgWithdrawInterestFundsResponse) Descriptor() ([]byte, []int) {
 	return file_vault_v1_tx_proto_rawDescGZIP(), []int{15}
 }
 
+// MsgToggleSwapInRequest is the request message for enabling or disabling swap-in operations for a vault.
 type MsgToggleSwapInRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Admin        string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// admin is the address of the vault administrator.
+	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// vault_address is the bech32 address of the vault.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	Enabled      bool   `protobuf:"varint,3,opt,name=enabled,proto3" json:"enabled,omitempty"`
+	// enabled specifies whether swap-in operations should be enabled (true) or disabled (false).
+	Enabled bool `protobuf:"varint,3,opt,name=enabled,proto3" json:"enabled,omitempty"`
 }
 
 func (x *MsgToggleSwapInRequest) Reset() {
@@ -10065,6 +10090,7 @@ func (x *MsgToggleSwapInRequest) GetEnabled() bool {
 	return false
 }
 
+// MsgToggleSwapInResponse is the response message for the ToggleSwapIn endpoint.
 type MsgToggleSwapInResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -10091,14 +10117,18 @@ func (*MsgToggleSwapInResponse) Descriptor() ([]byte, []int) {
 	return file_vault_v1_tx_proto_rawDescGZIP(), []int{17}
 }
 
+// MsgToggleSwapOutRequest is the request message for enabling or disabling swap-out operations for a vault.
 type MsgToggleSwapOutRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Admin        string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// admin is the address of the vault administrator.
+	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// vault_address is the bech32 address of the vault.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	Enabled      bool   `protobuf:"varint,3,opt,name=enabled,proto3" json:"enabled,omitempty"`
+	// enabled specifies whether swap-out operations should be enabled (true) or disabled (false).
+	Enabled bool `protobuf:"varint,3,opt,name=enabled,proto3" json:"enabled,omitempty"`
 }
 
 func (x *MsgToggleSwapOutRequest) Reset() {
@@ -10142,6 +10172,7 @@ func (x *MsgToggleSwapOutRequest) GetEnabled() bool {
 	return false
 }
 
+// MsgToggleSwapOutResponse is the response message for the ToggleSwapOut endpoint.
 type MsgToggleSwapOutResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

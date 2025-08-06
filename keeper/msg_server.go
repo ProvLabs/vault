@@ -118,9 +118,6 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 		}
 	}
 
-	// TODO: add event
-	// k.emitEvent(ctx, types.NewEventInterestRateUpdated(msg.VaultAddress, msg.InterestAdmin, newRate.String()))
-
 	return &types.MsgUpdateInterestRateResponse{}, nil
 }
 

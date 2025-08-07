@@ -164,3 +164,37 @@ func (m MsgToggleSwapOutRequest) ValidateBasic() error {
 	}
 	return nil
 }
+
+// ValidateBasic performs stateless validation on MsgDepositPrincipalFundsRequest.
+func (m MsgDepositPrincipalFundsRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
+		return fmt.Errorf("invalid admin address: %q: %w", m.Admin, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	if err := m.Amount.Validate(); err != nil {
+		return fmt.Errorf("invalid deposit amount: %w", err)
+	}
+	if !m.Amount.Amount.IsPositive() {
+		return fmt.Errorf("deposit amount must be greater than zero")
+	}
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgWithdrawPrincipalFundsRequest.
+func (m MsgWithdrawPrincipalFundsRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
+		return fmt.Errorf("invalid admin address: %q: %w", m.Admin, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	if err := m.Amount.Validate(); err != nil {
+		return fmt.Errorf("invalid withdrawal amount: %w", err)
+	}
+	if !m.Amount.Amount.IsPositive() {
+		return fmt.Errorf("withdrawal amount must be greater than zero")
+	}
+	return nil
+}

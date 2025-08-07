@@ -449,26 +449,28 @@ func (s *TestSuite) TestMsgServer_SwapOut_Failures() {
 	sharesToSwap := sdk.NewInt64Coin(shareDenom, 50)
 
 	// Base setup for many tests
-	setup := func() {
-		// Create marker for underlying asset
-		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), owner)
-		// Create the vault
-		vault, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-			Admin:           owner.String(),
-			ShareDenom:      shareDenom,
-			UnderlyingAsset: underlyingDenom,
-		})
-		s.Require().NoError(err)
-		vault.SwapInEnabled = true
-		vault.SwapOutEnabled = true
-		s.k.AuthKeeper.SetAccount(s.ctx, vault)
-		// Fund owner with underlying assets
-		err = FundAccount(s.ctx, s.simApp.BankKeeper, owner, sdk.NewCoins(initialAssets))
-		s.Require().NoError(err)
+	setup := func(swapOutEnabled bool) func() {
+		return func() {
+			// Create marker for underlying asset
+			s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), owner)
+			// Create the vault
+			vault, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+				Admin:           owner.String(),
+				ShareDenom:      shareDenom,
+				UnderlyingAsset: underlyingDenom,
+			})
+			s.Require().NoError(err)
+			vault.SwapInEnabled = true
+			vault.SwapOutEnabled = swapOutEnabled
+			s.k.AuthKeeper.SetAccount(s.ctx, vault)
+			// Fund owner with underlying assets
+			err = FundAccount(s.ctx, s.simApp.BankKeeper, owner, sdk.NewCoins(initialAssets))
+			s.Require().NoError(err)
 
-		// Owner swaps in to get shares
-		_, err = s.k.SwapIn(s.ctx, vaultAddr, owner, initialAssets)
-		s.Require().NoError(err)
+			// Owner swaps in to get shares
+			_, err = s.k.SwapIn(s.ctx, vaultAddr, owner, initialAssets)
+			s.Require().NoError(err)
+		}
 	}
 
 	tests := []msgServerTestCase[types.MsgSwapOutRequest, any]{
@@ -482,8 +484,9 @@ func (s *TestSuite) TestMsgServer_SwapOut_Failures() {
 			expectedErrSubstrs: []string{"vault with address", "not found"},
 		},
 		{
+
 			name:  "asset is not share denom",
-			setup: setup,
+			setup: setup(true),
 			msg: types.MsgSwapOutRequest{
 				Owner:        owner.String(),
 				VaultAddress: vaultAddr.String(),
@@ -493,13 +496,23 @@ func (s *TestSuite) TestMsgServer_SwapOut_Failures() {
 		},
 		{
 			name:  "insufficient shares",
-			setup: setup,
+			setup: setup(true),
 			msg: types.MsgSwapOutRequest{
 				Owner:        owner.String(),
 				VaultAddress: vaultAddr.String(),
 				Assets:       sdk.NewInt64Coin(shareDenom, 150),
 			},
 			expectedErrSubstrs: []string{"failed to send shares to marker", "insufficient funds"},
+		},
+		{
+			name:  "swap out disabled",
+			setup: setup(false),
+			msg: types.MsgSwapOutRequest{
+				Owner:        owner.String(),
+				VaultAddress: vaultAddr.String(),
+				Assets:       sdk.NewInt64Coin(shareDenom, 150),
+			},
+			expectedErrSubstrs: []string{"swaps are not enabled for vault"},
 		},
 	}
 

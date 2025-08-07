@@ -17,6 +17,7 @@ type msgServer struct {
 	*Keeper
 }
 
+// NewMsgServer creates a new MsgServer for the module.
 func NewMsgServer(keeper *Keeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
 }
@@ -70,6 +71,7 @@ func (k msgServer) SwapOut(goCtx context.Context, msg *types.MsgSwapOutRequest) 
 	return &types.MsgSwapOutResponse{SharesBurned: *shares}, nil
 }
 
+// UpdateInterestRate updates the interest rate for a vault.
 func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdateInterestRateRequest) (*types.MsgUpdateInterestRateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -121,6 +123,7 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 	return &types.MsgUpdateInterestRateResponse{}, nil
 }
 
+// DepositInterestFunds handles depositing funds into the vault for paying interest.
 func (k msgServer) DepositInterestFunds(goCtx context.Context, msg *types.MsgDepositInterestFundsRequest) (*types.MsgDepositInterestFundsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -149,6 +152,7 @@ func (k msgServer) DepositInterestFunds(goCtx context.Context, msg *types.MsgDep
 	return &types.MsgDepositInterestFundsResponse{}, nil
 }
 
+// WithdrawInterestFunds handles withdrawing unused interest funds from the vault.
 func (k msgServer) WithdrawInterestFunds(goCtx context.Context, msg *types.MsgWithdrawInterestFundsRequest) (*types.MsgWithdrawInterestFundsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -177,6 +181,7 @@ func (k msgServer) WithdrawInterestFunds(goCtx context.Context, msg *types.MsgWi
 	return &types.MsgWithdrawInterestFundsResponse{}, nil
 }
 
+// ToggleSwapIn enables or disables swap-in operations for a vault.
 func (k msgServer) ToggleSwapIn(goCtx context.Context, msg *types.MsgToggleSwapInRequest) (*types.MsgToggleSwapInResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -195,6 +200,7 @@ func (k msgServer) ToggleSwapIn(goCtx context.Context, msg *types.MsgToggleSwapI
 	return &types.MsgToggleSwapInResponse{}, nil
 }
 
+// ToggleSwapOut enables or disables swap-out operations for a vault.
 func (k msgServer) ToggleSwapOut(goCtx context.Context, msg *types.MsgToggleSwapOutRequest) (*types.MsgToggleSwapOutResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

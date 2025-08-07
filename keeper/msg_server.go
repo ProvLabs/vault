@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provlabs/vault/types"
 
 	sdkmath "cosmossdk.io/math"
@@ -239,16 +240,28 @@ func (k msgServer) DepositPrincipalFunds(goCtx context.Context, msg *types.MsgDe
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
-
-	vault, ok := k.tryGetVault(ctx, vaultAddr)
-	if !ok {
-		return nil, fmt.Errorf("failed to get vault: %v", msg.VaultAddress)
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault: %w", err)
 	}
-	if vault.Admin != msg.Admin {
-		return nil, fmt.Errorf("unauthorized: %s is not the vault admin", msg.Admin)
+	if vault == nil {
+		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+	}
+	if err := vault.ValidateAdmin(msg.Admin); err != nil {
+		return nil, err
 	}
 
-	panic("not implemented yet")
+	markerAddres := sdk.MustAccAddressFromBech32(vault.ShareDenom)
+	if err := vault.ValidateUnderlyingAssets(msg.Amount); err != nil {
+		return nil, fmt.Errorf("invalid asset for vault: %w", err)
+	}
+	if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx),
+		vault.GetAddress(),
+		markerAddres,
+		sdk.NewCoins(msg.Amount),
+	); err != nil {
+		return nil, fmt.Errorf("failed to deposit principal funds: %w", err)
+	}
 
 	return &types.MsgDepositPrincipalFundsResponse{}, nil
 }
@@ -258,16 +271,28 @@ func (k msgServer) WithdrawPrincipalFunds(goCtx context.Context, msg *types.MsgW
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
-
-	vault, ok := k.tryGetVault(ctx, vaultAddr)
-	if !ok {
-		return nil, fmt.Errorf("failed to get vault: %v", msg.VaultAddress)
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault: %w", err)
 	}
-	if vault.Admin != msg.Admin {
-		return nil, fmt.Errorf("unauthorized: %s is not the vault admin", msg.Admin)
+	if vault == nil {
+		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
 	}
-
-	panic("not implemented yet")
+	if err := vault.ValidateAdmin(msg.Admin); err != nil {
+		return nil, err
+	}
+	withdrawAddress := sdk.MustAccAddressFromBech32(msg.Admin)
+	markerAddress := sdk.MustAccAddressFromBech32(vault.ShareDenom)
+	if err := vault.ValidateUnderlyingAssets(msg.Amount); err != nil {
+		return nil, fmt.Errorf("invalid asset for vault: %w", err)
+	}
+	if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx),
+		markerAddress,
+		withdrawAddress,
+		sdk.NewCoins(msg.Amount),
+	); err != nil {
+		return nil, fmt.Errorf("failed to withdraw principal funds: %w", err)
+	}
 
 	return &types.MsgWithdrawPrincipalFundsResponse{}, nil
 }

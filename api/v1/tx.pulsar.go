@@ -3836,6 +3836,1814 @@ func (x *fastReflection_MsgSwapOutResponse) ProtoMethods() *protoiface.Methods {
 }
 
 var (
+	md_MsgUpdateMinInterestRateRequest               protoreflect.MessageDescriptor
+	fd_MsgUpdateMinInterestRateRequest_admin         protoreflect.FieldDescriptor
+	fd_MsgUpdateMinInterestRateRequest_vault_address protoreflect.FieldDescriptor
+	fd_MsgUpdateMinInterestRateRequest_min_rate      protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_vault_v1_tx_proto_init()
+	md_MsgUpdateMinInterestRateRequest = File_vault_v1_tx_proto.Messages().ByName("MsgUpdateMinInterestRateRequest")
+	fd_MsgUpdateMinInterestRateRequest_admin = md_MsgUpdateMinInterestRateRequest.Fields().ByName("admin")
+	fd_MsgUpdateMinInterestRateRequest_vault_address = md_MsgUpdateMinInterestRateRequest.Fields().ByName("vault_address")
+	fd_MsgUpdateMinInterestRateRequest_min_rate = md_MsgUpdateMinInterestRateRequest.Fields().ByName("min_rate")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgUpdateMinInterestRateRequest)(nil)
+
+type fastReflection_MsgUpdateMinInterestRateRequest MsgUpdateMinInterestRateRequest
+
+func (x *MsgUpdateMinInterestRateRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgUpdateMinInterestRateRequest)(x)
+}
+
+func (x *MsgUpdateMinInterestRateRequest) slowProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_tx_proto_msgTypes[8]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgUpdateMinInterestRateRequest_messageType fastReflection_MsgUpdateMinInterestRateRequest_messageType
+var _ protoreflect.MessageType = fastReflection_MsgUpdateMinInterestRateRequest_messageType{}
+
+type fastReflection_MsgUpdateMinInterestRateRequest_messageType struct{}
+
+func (x fastReflection_MsgUpdateMinInterestRateRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgUpdateMinInterestRateRequest)(nil)
+}
+func (x fastReflection_MsgUpdateMinInterestRateRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgUpdateMinInterestRateRequest)
+}
+func (x fastReflection_MsgUpdateMinInterestRateRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgUpdateMinInterestRateRequest
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgUpdateMinInterestRateRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgUpdateMinInterestRateRequest
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgUpdateMinInterestRateRequest) Type() protoreflect.MessageType {
+	return _fastReflection_MsgUpdateMinInterestRateRequest_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgUpdateMinInterestRateRequest) New() protoreflect.Message {
+	return new(fastReflection_MsgUpdateMinInterestRateRequest)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgUpdateMinInterestRateRequest) Interface() protoreflect.ProtoMessage {
+	return (*MsgUpdateMinInterestRateRequest)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgUpdateMinInterestRateRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Admin != "" {
+		value := protoreflect.ValueOfString(x.Admin)
+		if !f(fd_MsgUpdateMinInterestRateRequest_admin, value) {
+			return
+		}
+	}
+	if x.VaultAddress != "" {
+		value := protoreflect.ValueOfString(x.VaultAddress)
+		if !f(fd_MsgUpdateMinInterestRateRequest_vault_address, value) {
+			return
+		}
+	}
+	if x.MinRate != "" {
+		value := protoreflect.ValueOfString(x.MinRate)
+		if !f(fd_MsgUpdateMinInterestRateRequest_min_rate, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgUpdateMinInterestRateRequest) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "vault.v1.MsgUpdateMinInterestRateRequest.admin":
+		return x.Admin != ""
+	case "vault.v1.MsgUpdateMinInterestRateRequest.vault_address":
+		return x.VaultAddress != ""
+	case "vault.v1.MsgUpdateMinInterestRateRequest.min_rate":
+		return x.MinRate != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgUpdateMinInterestRateRequest"))
+		}
+		panic(fmt.Errorf("message vault.v1.MsgUpdateMinInterestRateRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgUpdateMinInterestRateRequest) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "vault.v1.MsgUpdateMinInterestRateRequest.admin":
+		x.Admin = ""
+	case "vault.v1.MsgUpdateMinInterestRateRequest.vault_address":
+		x.VaultAddress = ""
+	case "vault.v1.MsgUpdateMinInterestRateRequest.min_rate":
+		x.MinRate = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgUpdateMinInterestRateRequest"))
+		}
+		panic(fmt.Errorf("message vault.v1.MsgUpdateMinInterestRateRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgUpdateMinInterestRateRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "vault.v1.MsgUpdateMinInterestRateRequest.admin":
+		value := x.Admin
+		return protoreflect.ValueOfString(value)
+	case "vault.v1.MsgUpdateMinInterestRateRequest.vault_address":
+		value := x.VaultAddress
+		return protoreflect.ValueOfString(value)
+	case "vault.v1.MsgUpdateMinInterestRateRequest.min_rate":
+		value := x.MinRate
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgUpdateMinInterestRateRequest"))
+		}
+		panic(fmt.Errorf("message vault.v1.MsgUpdateMinInterestRateRequest does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgUpdateMinInterestRateRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "vault.v1.MsgUpdateMinInterestRateRequest.admin":
+		x.Admin = value.Interface().(string)
+	case "vault.v1.MsgUpdateMinInterestRateRequest.vault_address":
+		x.VaultAddress = value.Interface().(string)
+	case "vault.v1.MsgUpdateMinInterestRateRequest.min_rate":
+		x.MinRate = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgUpdateMinInterestRateRequest"))
+		}
+		panic(fmt.Errorf("message vault.v1.MsgUpdateMinInterestRateRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgUpdateMinInterestRateRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "vault.v1.MsgUpdateMinInterestRateRequest.admin":
+		panic(fmt.Errorf("field admin of message vault.v1.MsgUpdateMinInterestRateRequest is not mutable"))
+	case "vault.v1.MsgUpdateMinInterestRateRequest.vault_address":
+		panic(fmt.Errorf("field vault_address of message vault.v1.MsgUpdateMinInterestRateRequest is not mutable"))
+	case "vault.v1.MsgUpdateMinInterestRateRequest.min_rate":
+		panic(fmt.Errorf("field min_rate of message vault.v1.MsgUpdateMinInterestRateRequest is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgUpdateMinInterestRateRequest"))
+		}
+		panic(fmt.Errorf("message vault.v1.MsgUpdateMinInterestRateRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgUpdateMinInterestRateRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "vault.v1.MsgUpdateMinInterestRateRequest.admin":
+		return protoreflect.ValueOfString("")
+	case "vault.v1.MsgUpdateMinInterestRateRequest.vault_address":
+		return protoreflect.ValueOfString("")
+	case "vault.v1.MsgUpdateMinInterestRateRequest.min_rate":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgUpdateMinInterestRateRequest"))
+		}
+		panic(fmt.Errorf("message vault.v1.MsgUpdateMinInterestRateRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgUpdateMinInterestRateRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in vault.v1.MsgUpdateMinInterestRateRequest", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgUpdateMinInterestRateRequest) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgUpdateMinInterestRateRequest) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgUpdateMinInterestRateRequest) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgUpdateMinInterestRateRequest) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgUpdateMinInterestRateRequest)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.Admin)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.VaultAddress)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.MinRate)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgUpdateMinInterestRateRequest)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.MinRate) > 0 {
+			i -= len(x.MinRate)
+			copy(dAtA[i:], x.MinRate)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.MinRate)))
+			i--
+			dAtA[i] = 0x1a
+		}
+		if len(x.VaultAddress) > 0 {
+			i -= len(x.VaultAddress)
+			copy(dAtA[i:], x.VaultAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.VaultAddress)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.Admin) > 0 {
+			i -= len(x.Admin)
+			copy(dAtA[i:], x.Admin)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Admin)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgUpdateMinInterestRateRequest)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateMinInterestRateRequest: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateMinInterestRateRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Admin = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field VaultAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.VaultAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MinRate", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.MinRate = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_MsgUpdateMinInterestRateResponse protoreflect.MessageDescriptor
+)
+
+func init() {
+	file_vault_v1_tx_proto_init()
+	md_MsgUpdateMinInterestRateResponse = File_vault_v1_tx_proto.Messages().ByName("MsgUpdateMinInterestRateResponse")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgUpdateMinInterestRateResponse)(nil)
+
+type fastReflection_MsgUpdateMinInterestRateResponse MsgUpdateMinInterestRateResponse
+
+func (x *MsgUpdateMinInterestRateResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgUpdateMinInterestRateResponse)(x)
+}
+
+func (x *MsgUpdateMinInterestRateResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_tx_proto_msgTypes[9]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgUpdateMinInterestRateResponse_messageType fastReflection_MsgUpdateMinInterestRateResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgUpdateMinInterestRateResponse_messageType{}
+
+type fastReflection_MsgUpdateMinInterestRateResponse_messageType struct{}
+
+func (x fastReflection_MsgUpdateMinInterestRateResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgUpdateMinInterestRateResponse)(nil)
+}
+func (x fastReflection_MsgUpdateMinInterestRateResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgUpdateMinInterestRateResponse)
+}
+func (x fastReflection_MsgUpdateMinInterestRateResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgUpdateMinInterestRateResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgUpdateMinInterestRateResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgUpdateMinInterestRateResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgUpdateMinInterestRateResponse) Type() protoreflect.MessageType {
+	return _fastReflection_MsgUpdateMinInterestRateResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgUpdateMinInterestRateResponse) New() protoreflect.Message {
+	return new(fastReflection_MsgUpdateMinInterestRateResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgUpdateMinInterestRateResponse) Interface() protoreflect.ProtoMessage {
+	return (*MsgUpdateMinInterestRateResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgUpdateMinInterestRateResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgUpdateMinInterestRateResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgUpdateMinInterestRateResponse"))
+		}
+		panic(fmt.Errorf("message vault.v1.MsgUpdateMinInterestRateResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgUpdateMinInterestRateResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgUpdateMinInterestRateResponse"))
+		}
+		panic(fmt.Errorf("message vault.v1.MsgUpdateMinInterestRateResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgUpdateMinInterestRateResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgUpdateMinInterestRateResponse"))
+		}
+		panic(fmt.Errorf("message vault.v1.MsgUpdateMinInterestRateResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgUpdateMinInterestRateResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgUpdateMinInterestRateResponse"))
+		}
+		panic(fmt.Errorf("message vault.v1.MsgUpdateMinInterestRateResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgUpdateMinInterestRateResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgUpdateMinInterestRateResponse"))
+		}
+		panic(fmt.Errorf("message vault.v1.MsgUpdateMinInterestRateResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgUpdateMinInterestRateResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgUpdateMinInterestRateResponse"))
+		}
+		panic(fmt.Errorf("message vault.v1.MsgUpdateMinInterestRateResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgUpdateMinInterestRateResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in vault.v1.MsgUpdateMinInterestRateResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgUpdateMinInterestRateResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgUpdateMinInterestRateResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgUpdateMinInterestRateResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgUpdateMinInterestRateResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgUpdateMinInterestRateResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgUpdateMinInterestRateResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgUpdateMinInterestRateResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateMinInterestRateResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateMinInterestRateResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_MsgUpdateMaxInterestRateRequest               protoreflect.MessageDescriptor
+	fd_MsgUpdateMaxInterestRateRequest_admin         protoreflect.FieldDescriptor
+	fd_MsgUpdateMaxInterestRateRequest_vault_address protoreflect.FieldDescriptor
+	fd_MsgUpdateMaxInterestRateRequest_max_rate      protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_vault_v1_tx_proto_init()
+	md_MsgUpdateMaxInterestRateRequest = File_vault_v1_tx_proto.Messages().ByName("MsgUpdateMaxInterestRateRequest")
+	fd_MsgUpdateMaxInterestRateRequest_admin = md_MsgUpdateMaxInterestRateRequest.Fields().ByName("admin")
+	fd_MsgUpdateMaxInterestRateRequest_vault_address = md_MsgUpdateMaxInterestRateRequest.Fields().ByName("vault_address")
+	fd_MsgUpdateMaxInterestRateRequest_max_rate = md_MsgUpdateMaxInterestRateRequest.Fields().ByName("max_rate")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgUpdateMaxInterestRateRequest)(nil)
+
+type fastReflection_MsgUpdateMaxInterestRateRequest MsgUpdateMaxInterestRateRequest
+
+func (x *MsgUpdateMaxInterestRateRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgUpdateMaxInterestRateRequest)(x)
+}
+
+func (x *MsgUpdateMaxInterestRateRequest) slowProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_tx_proto_msgTypes[10]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgUpdateMaxInterestRateRequest_messageType fastReflection_MsgUpdateMaxInterestRateRequest_messageType
+var _ protoreflect.MessageType = fastReflection_MsgUpdateMaxInterestRateRequest_messageType{}
+
+type fastReflection_MsgUpdateMaxInterestRateRequest_messageType struct{}
+
+func (x fastReflection_MsgUpdateMaxInterestRateRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgUpdateMaxInterestRateRequest)(nil)
+}
+func (x fastReflection_MsgUpdateMaxInterestRateRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgUpdateMaxInterestRateRequest)
+}
+func (x fastReflection_MsgUpdateMaxInterestRateRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgUpdateMaxInterestRateRequest
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgUpdateMaxInterestRateRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgUpdateMaxInterestRateRequest
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgUpdateMaxInterestRateRequest) Type() protoreflect.MessageType {
+	return _fastReflection_MsgUpdateMaxInterestRateRequest_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgUpdateMaxInterestRateRequest) New() protoreflect.Message {
+	return new(fastReflection_MsgUpdateMaxInterestRateRequest)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgUpdateMaxInterestRateRequest) Interface() protoreflect.ProtoMessage {
+	return (*MsgUpdateMaxInterestRateRequest)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgUpdateMaxInterestRateRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Admin != "" {
+		value := protoreflect.ValueOfString(x.Admin)
+		if !f(fd_MsgUpdateMaxInterestRateRequest_admin, value) {
+			return
+		}
+	}
+	if x.VaultAddress != "" {
+		value := protoreflect.ValueOfString(x.VaultAddress)
+		if !f(fd_MsgUpdateMaxInterestRateRequest_vault_address, value) {
+			return
+		}
+	}
+	if x.MaxRate != "" {
+		value := protoreflect.ValueOfString(x.MaxRate)
+		if !f(fd_MsgUpdateMaxInterestRateRequest_max_rate, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgUpdateMaxInterestRateRequest) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "vault.v1.MsgUpdateMaxInterestRateRequest.admin":
+		return x.Admin != ""
+	case "vault.v1.MsgUpdateMaxInterestRateRequest.vault_address":
+		return x.VaultAddress != ""
+	case "vault.v1.MsgUpdateMaxInterestRateRequest.max_rate":
+		return x.MaxRate != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgUpdateMaxInterestRateRequest"))
+		}
+		panic(fmt.Errorf("message vault.v1.MsgUpdateMaxInterestRateRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgUpdateMaxInterestRateRequest) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "vault.v1.MsgUpdateMaxInterestRateRequest.admin":
+		x.Admin = ""
+	case "vault.v1.MsgUpdateMaxInterestRateRequest.vault_address":
+		x.VaultAddress = ""
+	case "vault.v1.MsgUpdateMaxInterestRateRequest.max_rate":
+		x.MaxRate = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgUpdateMaxInterestRateRequest"))
+		}
+		panic(fmt.Errorf("message vault.v1.MsgUpdateMaxInterestRateRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgUpdateMaxInterestRateRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "vault.v1.MsgUpdateMaxInterestRateRequest.admin":
+		value := x.Admin
+		return protoreflect.ValueOfString(value)
+	case "vault.v1.MsgUpdateMaxInterestRateRequest.vault_address":
+		value := x.VaultAddress
+		return protoreflect.ValueOfString(value)
+	case "vault.v1.MsgUpdateMaxInterestRateRequest.max_rate":
+		value := x.MaxRate
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgUpdateMaxInterestRateRequest"))
+		}
+		panic(fmt.Errorf("message vault.v1.MsgUpdateMaxInterestRateRequest does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgUpdateMaxInterestRateRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "vault.v1.MsgUpdateMaxInterestRateRequest.admin":
+		x.Admin = value.Interface().(string)
+	case "vault.v1.MsgUpdateMaxInterestRateRequest.vault_address":
+		x.VaultAddress = value.Interface().(string)
+	case "vault.v1.MsgUpdateMaxInterestRateRequest.max_rate":
+		x.MaxRate = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgUpdateMaxInterestRateRequest"))
+		}
+		panic(fmt.Errorf("message vault.v1.MsgUpdateMaxInterestRateRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgUpdateMaxInterestRateRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "vault.v1.MsgUpdateMaxInterestRateRequest.admin":
+		panic(fmt.Errorf("field admin of message vault.v1.MsgUpdateMaxInterestRateRequest is not mutable"))
+	case "vault.v1.MsgUpdateMaxInterestRateRequest.vault_address":
+		panic(fmt.Errorf("field vault_address of message vault.v1.MsgUpdateMaxInterestRateRequest is not mutable"))
+	case "vault.v1.MsgUpdateMaxInterestRateRequest.max_rate":
+		panic(fmt.Errorf("field max_rate of message vault.v1.MsgUpdateMaxInterestRateRequest is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgUpdateMaxInterestRateRequest"))
+		}
+		panic(fmt.Errorf("message vault.v1.MsgUpdateMaxInterestRateRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgUpdateMaxInterestRateRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "vault.v1.MsgUpdateMaxInterestRateRequest.admin":
+		return protoreflect.ValueOfString("")
+	case "vault.v1.MsgUpdateMaxInterestRateRequest.vault_address":
+		return protoreflect.ValueOfString("")
+	case "vault.v1.MsgUpdateMaxInterestRateRequest.max_rate":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgUpdateMaxInterestRateRequest"))
+		}
+		panic(fmt.Errorf("message vault.v1.MsgUpdateMaxInterestRateRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgUpdateMaxInterestRateRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in vault.v1.MsgUpdateMaxInterestRateRequest", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgUpdateMaxInterestRateRequest) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgUpdateMaxInterestRateRequest) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgUpdateMaxInterestRateRequest) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgUpdateMaxInterestRateRequest) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgUpdateMaxInterestRateRequest)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.Admin)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.VaultAddress)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.MaxRate)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgUpdateMaxInterestRateRequest)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.MaxRate) > 0 {
+			i -= len(x.MaxRate)
+			copy(dAtA[i:], x.MaxRate)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.MaxRate)))
+			i--
+			dAtA[i] = 0x1a
+		}
+		if len(x.VaultAddress) > 0 {
+			i -= len(x.VaultAddress)
+			copy(dAtA[i:], x.VaultAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.VaultAddress)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.Admin) > 0 {
+			i -= len(x.Admin)
+			copy(dAtA[i:], x.Admin)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Admin)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgUpdateMaxInterestRateRequest)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateMaxInterestRateRequest: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateMaxInterestRateRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Admin = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field VaultAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.VaultAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MaxRate", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.MaxRate = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_MsgUpdateMaxInterestRateResponse protoreflect.MessageDescriptor
+)
+
+func init() {
+	file_vault_v1_tx_proto_init()
+	md_MsgUpdateMaxInterestRateResponse = File_vault_v1_tx_proto.Messages().ByName("MsgUpdateMaxInterestRateResponse")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgUpdateMaxInterestRateResponse)(nil)
+
+type fastReflection_MsgUpdateMaxInterestRateResponse MsgUpdateMaxInterestRateResponse
+
+func (x *MsgUpdateMaxInterestRateResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgUpdateMaxInterestRateResponse)(x)
+}
+
+func (x *MsgUpdateMaxInterestRateResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_tx_proto_msgTypes[11]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgUpdateMaxInterestRateResponse_messageType fastReflection_MsgUpdateMaxInterestRateResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgUpdateMaxInterestRateResponse_messageType{}
+
+type fastReflection_MsgUpdateMaxInterestRateResponse_messageType struct{}
+
+func (x fastReflection_MsgUpdateMaxInterestRateResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgUpdateMaxInterestRateResponse)(nil)
+}
+func (x fastReflection_MsgUpdateMaxInterestRateResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgUpdateMaxInterestRateResponse)
+}
+func (x fastReflection_MsgUpdateMaxInterestRateResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgUpdateMaxInterestRateResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgUpdateMaxInterestRateResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgUpdateMaxInterestRateResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgUpdateMaxInterestRateResponse) Type() protoreflect.MessageType {
+	return _fastReflection_MsgUpdateMaxInterestRateResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgUpdateMaxInterestRateResponse) New() protoreflect.Message {
+	return new(fastReflection_MsgUpdateMaxInterestRateResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgUpdateMaxInterestRateResponse) Interface() protoreflect.ProtoMessage {
+	return (*MsgUpdateMaxInterestRateResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgUpdateMaxInterestRateResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgUpdateMaxInterestRateResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgUpdateMaxInterestRateResponse"))
+		}
+		panic(fmt.Errorf("message vault.v1.MsgUpdateMaxInterestRateResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgUpdateMaxInterestRateResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgUpdateMaxInterestRateResponse"))
+		}
+		panic(fmt.Errorf("message vault.v1.MsgUpdateMaxInterestRateResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgUpdateMaxInterestRateResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgUpdateMaxInterestRateResponse"))
+		}
+		panic(fmt.Errorf("message vault.v1.MsgUpdateMaxInterestRateResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgUpdateMaxInterestRateResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgUpdateMaxInterestRateResponse"))
+		}
+		panic(fmt.Errorf("message vault.v1.MsgUpdateMaxInterestRateResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgUpdateMaxInterestRateResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgUpdateMaxInterestRateResponse"))
+		}
+		panic(fmt.Errorf("message vault.v1.MsgUpdateMaxInterestRateResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgUpdateMaxInterestRateResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgUpdateMaxInterestRateResponse"))
+		}
+		panic(fmt.Errorf("message vault.v1.MsgUpdateMaxInterestRateResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgUpdateMaxInterestRateResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in vault.v1.MsgUpdateMaxInterestRateResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgUpdateMaxInterestRateResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgUpdateMaxInterestRateResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgUpdateMaxInterestRateResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgUpdateMaxInterestRateResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgUpdateMaxInterestRateResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgUpdateMaxInterestRateResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgUpdateMaxInterestRateResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateMaxInterestRateResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgUpdateMaxInterestRateResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
 	md_MsgSetInterestConfigRequest               protoreflect.MessageDescriptor
 	fd_MsgSetInterestConfigRequest_admin         protoreflect.FieldDescriptor
 	fd_MsgSetInterestConfigRequest_vault_address protoreflect.FieldDescriptor
@@ -3861,7 +5669,7 @@ func (x *MsgSetInterestConfigRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgSetInterestConfigRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_tx_proto_msgTypes[8]
+	mi := &file_vault_v1_tx_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4465,7 +6273,7 @@ func (x *MsgSetInterestConfigResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgSetInterestConfigResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_tx_proto_msgTypes[9]
+	mi := &file_vault_v1_tx_proto_msgTypes[13]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4827,7 +6635,7 @@ func (x *MsgUpdateInterestRateRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgUpdateInterestRateRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_tx_proto_msgTypes[10]
+	mi := &file_vault_v1_tx_proto_msgTypes[14]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5369,7 +7177,7 @@ func (x *MsgUpdateInterestRateResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgUpdateInterestRateResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_tx_proto_msgTypes[11]
+	mi := &file_vault_v1_tx_proto_msgTypes[15]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5731,7 +7539,7 @@ func (x *MsgDepositInterestFundsRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgDepositInterestFundsRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_tx_proto_msgTypes[12]
+	mi := &file_vault_v1_tx_proto_msgTypes[16]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6288,7 +8096,7 @@ func (x *MsgDepositInterestFundsResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgDepositInterestFundsResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_tx_proto_msgTypes[13]
+	mi := &file_vault_v1_tx_proto_msgTypes[17]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6650,7 +8458,7 @@ func (x *MsgWithdrawInterestFundsRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgWithdrawInterestFundsRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_tx_proto_msgTypes[14]
+	mi := &file_vault_v1_tx_proto_msgTypes[18]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7207,7 +9015,7 @@ func (x *MsgWithdrawInterestFundsResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgWithdrawInterestFundsResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_tx_proto_msgTypes[15]
+	mi := &file_vault_v1_tx_proto_msgTypes[19]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7569,7 +9377,7 @@ func (x *MsgToggleSwapInRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgToggleSwapInRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_tx_proto_msgTypes[16]
+	mi := &file_vault_v1_tx_proto_msgTypes[20]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8101,7 +9909,7 @@ func (x *MsgToggleSwapInResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgToggleSwapInResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_tx_proto_msgTypes[17]
+	mi := &file_vault_v1_tx_proto_msgTypes[21]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8463,7 +10271,7 @@ func (x *MsgToggleSwapOutRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgToggleSwapOutRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_tx_proto_msgTypes[18]
+	mi := &file_vault_v1_tx_proto_msgTypes[22]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8995,7 +10803,7 @@ func (x *MsgToggleSwapOutResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgToggleSwapOutResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_tx_proto_msgTypes[19]
+	mi := &file_vault_v1_tx_proto_msgTypes[23]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9357,7 +11165,7 @@ func (x *MsgDepositPrincipalFundsRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgDepositPrincipalFundsRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_tx_proto_msgTypes[20]
+	mi := &file_vault_v1_tx_proto_msgTypes[24]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9914,7 +11722,7 @@ func (x *MsgDepositPrincipalFundsResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgDepositPrincipalFundsResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_tx_proto_msgTypes[21]
+	mi := &file_vault_v1_tx_proto_msgTypes[25]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10276,7 +12084,7 @@ func (x *MsgWithdrawPrincipalFundsRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgWithdrawPrincipalFundsRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_tx_proto_msgTypes[22]
+	mi := &file_vault_v1_tx_proto_msgTypes[26]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10833,7 +12641,7 @@ func (x *MsgWithdrawPrincipalFundsResponse) ProtoReflect() protoreflect.Message 
 }
 
 func (x *MsgWithdrawPrincipalFundsResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_tx_proto_msgTypes[23]
+	mi := &file_vault_v1_tx_proto_msgTypes[27]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11536,6 +13344,160 @@ func (x *MsgSwapOutResponse) GetSharesBurned() *v1beta1.Coin {
 	return nil
 }
 
+type MsgUpdateMinInterestRateRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Admin        string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	MinRate      string `protobuf:"bytes,3,opt,name=min_rate,json=minRate,proto3" json:"min_rate,omitempty"` // optional: "" disables the minimum limit
+}
+
+func (x *MsgUpdateMinInterestRateRequest) Reset() {
+	*x = MsgUpdateMinInterestRateRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_vault_v1_tx_proto_msgTypes[8]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgUpdateMinInterestRateRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgUpdateMinInterestRateRequest) ProtoMessage() {}
+
+// Deprecated: Use MsgUpdateMinInterestRateRequest.ProtoReflect.Descriptor instead.
+func (*MsgUpdateMinInterestRateRequest) Descriptor() ([]byte, []int) {
+	return file_vault_v1_tx_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *MsgUpdateMinInterestRateRequest) GetAdmin() string {
+	if x != nil {
+		return x.Admin
+	}
+	return ""
+}
+
+func (x *MsgUpdateMinInterestRateRequest) GetVaultAddress() string {
+	if x != nil {
+		return x.VaultAddress
+	}
+	return ""
+}
+
+func (x *MsgUpdateMinInterestRateRequest) GetMinRate() string {
+	if x != nil {
+		return x.MinRate
+	}
+	return ""
+}
+
+type MsgUpdateMinInterestRateResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *MsgUpdateMinInterestRateResponse) Reset() {
+	*x = MsgUpdateMinInterestRateResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_vault_v1_tx_proto_msgTypes[9]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgUpdateMinInterestRateResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgUpdateMinInterestRateResponse) ProtoMessage() {}
+
+// Deprecated: Use MsgUpdateMinInterestRateResponse.ProtoReflect.Descriptor instead.
+func (*MsgUpdateMinInterestRateResponse) Descriptor() ([]byte, []int) {
+	return file_vault_v1_tx_proto_rawDescGZIP(), []int{9}
+}
+
+type MsgUpdateMaxInterestRateRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Admin        string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	MaxRate      string `protobuf:"bytes,3,opt,name=max_rate,json=maxRate,proto3" json:"max_rate,omitempty"` // optional: "" disables the maximum limit
+}
+
+func (x *MsgUpdateMaxInterestRateRequest) Reset() {
+	*x = MsgUpdateMaxInterestRateRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_vault_v1_tx_proto_msgTypes[10]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgUpdateMaxInterestRateRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgUpdateMaxInterestRateRequest) ProtoMessage() {}
+
+// Deprecated: Use MsgUpdateMaxInterestRateRequest.ProtoReflect.Descriptor instead.
+func (*MsgUpdateMaxInterestRateRequest) Descriptor() ([]byte, []int) {
+	return file_vault_v1_tx_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *MsgUpdateMaxInterestRateRequest) GetAdmin() string {
+	if x != nil {
+		return x.Admin
+	}
+	return ""
+}
+
+func (x *MsgUpdateMaxInterestRateRequest) GetVaultAddress() string {
+	if x != nil {
+		return x.VaultAddress
+	}
+	return ""
+}
+
+func (x *MsgUpdateMaxInterestRateRequest) GetMaxRate() string {
+	if x != nil {
+		return x.MaxRate
+	}
+	return ""
+}
+
+type MsgUpdateMaxInterestRateResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *MsgUpdateMaxInterestRateResponse) Reset() {
+	*x = MsgUpdateMaxInterestRateResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_vault_v1_tx_proto_msgTypes[11]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgUpdateMaxInterestRateResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgUpdateMaxInterestRateResponse) ProtoMessage() {}
+
+// Deprecated: Use MsgUpdateMaxInterestRateResponse.ProtoReflect.Descriptor instead.
+func (*MsgUpdateMaxInterestRateResponse) Descriptor() ([]byte, []int) {
+	return file_vault_v1_tx_proto_rawDescGZIP(), []int{11}
+}
+
 // MsgSetInterestConfigRequest is the request message for setting the interest rate configuration of a vault.
 type MsgSetInterestConfigRequest struct {
 	state         protoimpl.MessageState
@@ -11555,7 +13517,7 @@ type MsgSetInterestConfigRequest struct {
 func (x *MsgSetInterestConfigRequest) Reset() {
 	*x = MsgSetInterestConfigRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_tx_proto_msgTypes[8]
+		mi := &file_vault_v1_tx_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -11569,7 +13531,7 @@ func (*MsgSetInterestConfigRequest) ProtoMessage() {}
 
 // Deprecated: Use MsgSetInterestConfigRequest.ProtoReflect.Descriptor instead.
 func (*MsgSetInterestConfigRequest) Descriptor() ([]byte, []int) {
-	return file_vault_v1_tx_proto_rawDescGZIP(), []int{8}
+	return file_vault_v1_tx_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *MsgSetInterestConfigRequest) GetAdmin() string {
@@ -11610,7 +13572,7 @@ type MsgSetInterestConfigResponse struct {
 func (x *MsgSetInterestConfigResponse) Reset() {
 	*x = MsgSetInterestConfigResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_tx_proto_msgTypes[9]
+		mi := &file_vault_v1_tx_proto_msgTypes[13]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -11624,7 +13586,7 @@ func (*MsgSetInterestConfigResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgSetInterestConfigResponse.ProtoReflect.Descriptor instead.
 func (*MsgSetInterestConfigResponse) Descriptor() ([]byte, []int) {
-	return file_vault_v1_tx_proto_rawDescGZIP(), []int{9}
+	return file_vault_v1_tx_proto_rawDescGZIP(), []int{13}
 }
 
 // MsgUpdateInterestRateRequest is the request message for updating the interest rate of a vault.
@@ -11644,7 +13606,7 @@ type MsgUpdateInterestRateRequest struct {
 func (x *MsgUpdateInterestRateRequest) Reset() {
 	*x = MsgUpdateInterestRateRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_tx_proto_msgTypes[10]
+		mi := &file_vault_v1_tx_proto_msgTypes[14]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -11658,7 +13620,7 @@ func (*MsgUpdateInterestRateRequest) ProtoMessage() {}
 
 // Deprecated: Use MsgUpdateInterestRateRequest.ProtoReflect.Descriptor instead.
 func (*MsgUpdateInterestRateRequest) Descriptor() ([]byte, []int) {
-	return file_vault_v1_tx_proto_rawDescGZIP(), []int{10}
+	return file_vault_v1_tx_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *MsgUpdateInterestRateRequest) GetAdmin() string {
@@ -11692,7 +13654,7 @@ type MsgUpdateInterestRateResponse struct {
 func (x *MsgUpdateInterestRateResponse) Reset() {
 	*x = MsgUpdateInterestRateResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_tx_proto_msgTypes[11]
+		mi := &file_vault_v1_tx_proto_msgTypes[15]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -11706,7 +13668,7 @@ func (*MsgUpdateInterestRateResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgUpdateInterestRateResponse.ProtoReflect.Descriptor instead.
 func (*MsgUpdateInterestRateResponse) Descriptor() ([]byte, []int) {
-	return file_vault_v1_tx_proto_rawDescGZIP(), []int{11}
+	return file_vault_v1_tx_proto_rawDescGZIP(), []int{15}
 }
 
 // MsgDepositInterestFundsRequest is the request message for depositing funds to be used for paying interest.
@@ -11726,7 +13688,7 @@ type MsgDepositInterestFundsRequest struct {
 func (x *MsgDepositInterestFundsRequest) Reset() {
 	*x = MsgDepositInterestFundsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_tx_proto_msgTypes[12]
+		mi := &file_vault_v1_tx_proto_msgTypes[16]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -11740,7 +13702,7 @@ func (*MsgDepositInterestFundsRequest) ProtoMessage() {}
 
 // Deprecated: Use MsgDepositInterestFundsRequest.ProtoReflect.Descriptor instead.
 func (*MsgDepositInterestFundsRequest) Descriptor() ([]byte, []int) {
-	return file_vault_v1_tx_proto_rawDescGZIP(), []int{12}
+	return file_vault_v1_tx_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *MsgDepositInterestFundsRequest) GetAdmin() string {
@@ -11774,7 +13736,7 @@ type MsgDepositInterestFundsResponse struct {
 func (x *MsgDepositInterestFundsResponse) Reset() {
 	*x = MsgDepositInterestFundsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_tx_proto_msgTypes[13]
+		mi := &file_vault_v1_tx_proto_msgTypes[17]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -11788,7 +13750,7 @@ func (*MsgDepositInterestFundsResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgDepositInterestFundsResponse.ProtoReflect.Descriptor instead.
 func (*MsgDepositInterestFundsResponse) Descriptor() ([]byte, []int) {
-	return file_vault_v1_tx_proto_rawDescGZIP(), []int{13}
+	return file_vault_v1_tx_proto_rawDescGZIP(), []int{17}
 }
 
 // MsgWithdrawInterestFundsRequest is the request message for withdrawing unused interest funds.
@@ -11808,7 +13770,7 @@ type MsgWithdrawInterestFundsRequest struct {
 func (x *MsgWithdrawInterestFundsRequest) Reset() {
 	*x = MsgWithdrawInterestFundsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_tx_proto_msgTypes[14]
+		mi := &file_vault_v1_tx_proto_msgTypes[18]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -11822,7 +13784,7 @@ func (*MsgWithdrawInterestFundsRequest) ProtoMessage() {}
 
 // Deprecated: Use MsgWithdrawInterestFundsRequest.ProtoReflect.Descriptor instead.
 func (*MsgWithdrawInterestFundsRequest) Descriptor() ([]byte, []int) {
-	return file_vault_v1_tx_proto_rawDescGZIP(), []int{14}
+	return file_vault_v1_tx_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *MsgWithdrawInterestFundsRequest) GetAdmin() string {
@@ -11856,7 +13818,7 @@ type MsgWithdrawInterestFundsResponse struct {
 func (x *MsgWithdrawInterestFundsResponse) Reset() {
 	*x = MsgWithdrawInterestFundsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_tx_proto_msgTypes[15]
+		mi := &file_vault_v1_tx_proto_msgTypes[19]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -11870,7 +13832,7 @@ func (*MsgWithdrawInterestFundsResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgWithdrawInterestFundsResponse.ProtoReflect.Descriptor instead.
 func (*MsgWithdrawInterestFundsResponse) Descriptor() ([]byte, []int) {
-	return file_vault_v1_tx_proto_rawDescGZIP(), []int{15}
+	return file_vault_v1_tx_proto_rawDescGZIP(), []int{19}
 }
 
 // MsgToggleSwapInRequest is the request message for enabling or disabling swap-in operations for a vault.
@@ -11890,7 +13852,7 @@ type MsgToggleSwapInRequest struct {
 func (x *MsgToggleSwapInRequest) Reset() {
 	*x = MsgToggleSwapInRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_tx_proto_msgTypes[16]
+		mi := &file_vault_v1_tx_proto_msgTypes[20]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -11904,7 +13866,7 @@ func (*MsgToggleSwapInRequest) ProtoMessage() {}
 
 // Deprecated: Use MsgToggleSwapInRequest.ProtoReflect.Descriptor instead.
 func (*MsgToggleSwapInRequest) Descriptor() ([]byte, []int) {
-	return file_vault_v1_tx_proto_rawDescGZIP(), []int{16}
+	return file_vault_v1_tx_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *MsgToggleSwapInRequest) GetAdmin() string {
@@ -11938,7 +13900,7 @@ type MsgToggleSwapInResponse struct {
 func (x *MsgToggleSwapInResponse) Reset() {
 	*x = MsgToggleSwapInResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_tx_proto_msgTypes[17]
+		mi := &file_vault_v1_tx_proto_msgTypes[21]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -11952,7 +13914,7 @@ func (*MsgToggleSwapInResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgToggleSwapInResponse.ProtoReflect.Descriptor instead.
 func (*MsgToggleSwapInResponse) Descriptor() ([]byte, []int) {
-	return file_vault_v1_tx_proto_rawDescGZIP(), []int{17}
+	return file_vault_v1_tx_proto_rawDescGZIP(), []int{21}
 }
 
 // MsgToggleSwapOutRequest is the request message for enabling or disabling swap-out operations for a vault.
@@ -11972,7 +13934,7 @@ type MsgToggleSwapOutRequest struct {
 func (x *MsgToggleSwapOutRequest) Reset() {
 	*x = MsgToggleSwapOutRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_tx_proto_msgTypes[18]
+		mi := &file_vault_v1_tx_proto_msgTypes[22]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -11986,7 +13948,7 @@ func (*MsgToggleSwapOutRequest) ProtoMessage() {}
 
 // Deprecated: Use MsgToggleSwapOutRequest.ProtoReflect.Descriptor instead.
 func (*MsgToggleSwapOutRequest) Descriptor() ([]byte, []int) {
-	return file_vault_v1_tx_proto_rawDescGZIP(), []int{18}
+	return file_vault_v1_tx_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *MsgToggleSwapOutRequest) GetAdmin() string {
@@ -12020,7 +13982,7 @@ type MsgToggleSwapOutResponse struct {
 func (x *MsgToggleSwapOutResponse) Reset() {
 	*x = MsgToggleSwapOutResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_tx_proto_msgTypes[19]
+		mi := &file_vault_v1_tx_proto_msgTypes[23]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -12034,7 +13996,7 @@ func (*MsgToggleSwapOutResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgToggleSwapOutResponse.ProtoReflect.Descriptor instead.
 func (*MsgToggleSwapOutResponse) Descriptor() ([]byte, []int) {
-	return file_vault_v1_tx_proto_rawDescGZIP(), []int{19}
+	return file_vault_v1_tx_proto_rawDescGZIP(), []int{23}
 }
 
 // MsgDepositPrincipalFundsRequest is the request message for depositing principal funds into a vault.
@@ -12054,7 +14016,7 @@ type MsgDepositPrincipalFundsRequest struct {
 func (x *MsgDepositPrincipalFundsRequest) Reset() {
 	*x = MsgDepositPrincipalFundsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_tx_proto_msgTypes[20]
+		mi := &file_vault_v1_tx_proto_msgTypes[24]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -12068,7 +14030,7 @@ func (*MsgDepositPrincipalFundsRequest) ProtoMessage() {}
 
 // Deprecated: Use MsgDepositPrincipalFundsRequest.ProtoReflect.Descriptor instead.
 func (*MsgDepositPrincipalFundsRequest) Descriptor() ([]byte, []int) {
-	return file_vault_v1_tx_proto_rawDescGZIP(), []int{20}
+	return file_vault_v1_tx_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *MsgDepositPrincipalFundsRequest) GetAdmin() string {
@@ -12102,7 +14064,7 @@ type MsgDepositPrincipalFundsResponse struct {
 func (x *MsgDepositPrincipalFundsResponse) Reset() {
 	*x = MsgDepositPrincipalFundsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_tx_proto_msgTypes[21]
+		mi := &file_vault_v1_tx_proto_msgTypes[25]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -12116,7 +14078,7 @@ func (*MsgDepositPrincipalFundsResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgDepositPrincipalFundsResponse.ProtoReflect.Descriptor instead.
 func (*MsgDepositPrincipalFundsResponse) Descriptor() ([]byte, []int) {
-	return file_vault_v1_tx_proto_rawDescGZIP(), []int{21}
+	return file_vault_v1_tx_proto_rawDescGZIP(), []int{25}
 }
 
 // MsgWithdrawPrincipalFundsRequest is the request message for withdrawing principal funds from a vault.
@@ -12136,7 +14098,7 @@ type MsgWithdrawPrincipalFundsRequest struct {
 func (x *MsgWithdrawPrincipalFundsRequest) Reset() {
 	*x = MsgWithdrawPrincipalFundsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_tx_proto_msgTypes[22]
+		mi := &file_vault_v1_tx_proto_msgTypes[26]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -12150,7 +14112,7 @@ func (*MsgWithdrawPrincipalFundsRequest) ProtoMessage() {}
 
 // Deprecated: Use MsgWithdrawPrincipalFundsRequest.ProtoReflect.Descriptor instead.
 func (*MsgWithdrawPrincipalFundsRequest) Descriptor() ([]byte, []int) {
-	return file_vault_v1_tx_proto_rawDescGZIP(), []int{22}
+	return file_vault_v1_tx_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *MsgWithdrawPrincipalFundsRequest) GetAdmin() string {
@@ -12184,7 +14146,7 @@ type MsgWithdrawPrincipalFundsResponse struct {
 func (x *MsgWithdrawPrincipalFundsResponse) Reset() {
 	*x = MsgWithdrawPrincipalFundsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_tx_proto_msgTypes[23]
+		mi := &file_vault_v1_tx_proto_msgTypes[27]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -12198,7 +14160,7 @@ func (*MsgWithdrawPrincipalFundsResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgWithdrawPrincipalFundsResponse.ProtoReflect.Descriptor instead.
 func (*MsgWithdrawPrincipalFundsResponse) Descriptor() ([]byte, []int) {
-	return file_vault_v1_tx_proto_rawDescGZIP(), []int{23}
+	return file_vault_v1_tx_proto_rawDescGZIP(), []int{27}
 }
 
 var File_vault_v1_tx_proto protoreflect.FileDescriptor
@@ -12272,184 +14234,223 @@ var file_vault_v1_tx_proto_rawDesc = []byte{
 	0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e,
 	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde,
 	0x1f, 0x00, 0x52, 0x0c, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x42, 0x75, 0x72, 0x6e, 0x65, 0x64,
-	0x22, 0xb4, 0x01, 0x0a, 0x1b, 0x4d, 0x73, 0x67, 0x53, 0x65, 0x74, 0x49, 0x6e, 0x74, 0x65, 0x72,
-	0x65, 0x73, 0x74, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42,
-	0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72,
-	0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e,
-	0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73,
-	0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64,
-	0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x19, 0x0a, 0x08, 0x6d, 0x69, 0x6e, 0x5f, 0x72, 0x61, 0x74,
-	0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x69, 0x6e, 0x52, 0x61, 0x74, 0x65,
-	0x12, 0x19, 0x0a, 0x08, 0x6d, 0x61, 0x78, 0x5f, 0x72, 0x61, 0x74, 0x65, 0x18, 0x04, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x07, 0x6d, 0x61, 0x78, 0x52, 0x61, 0x74, 0x65, 0x3a, 0x0a, 0x82, 0xe7, 0xb0,
-	0x2a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x22, 0x1e, 0x0a, 0x1c, 0x4d, 0x73, 0x67, 0x53, 0x65,
-	0x74, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x9a, 0x01, 0x0a, 0x1c, 0x4d, 0x73, 0x67, 0x55,
-	0x70, 0x64, 0x61, 0x74, 0x65, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61, 0x74,
+	0x22, 0x9d, 0x01, 0x0a, 0x1f, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x4d, 0x69,
+	0x6e, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x52, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61,
+	0x64, 0x6d, 0x69, 0x6e, 0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61, 0x75,
+	0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x19, 0x0a, 0x08, 0x6d, 0x69, 0x6e,
+	0x5f, 0x72, 0x61, 0x74, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x69, 0x6e,
+	0x52, 0x61, 0x74, 0x65, 0x3a, 0x0a, 0x82, 0xe7, 0xb0, 0x2a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e,
+	0x22, 0x22, 0x0a, 0x20, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x4d, 0x69, 0x6e,
+	0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x9d, 0x01, 0x0a, 0x1f, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61,
+	0x74, 0x65, 0x4d, 0x61, 0x78, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61, 0x74,
 	0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69,
 	0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73,
 	0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e,
 	0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c,
 	0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52,
 	0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x19, 0x0a,
-	0x08, 0x6e, 0x65, 0x77, 0x5f, 0x72, 0x61, 0x74, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x07, 0x6e, 0x65, 0x77, 0x52, 0x61, 0x74, 0x65, 0x3a, 0x0a, 0x82, 0xe7, 0xb0, 0x2a, 0x05, 0x61,
-	0x64, 0x6d, 0x69, 0x6e, 0x22, 0x1f, 0x0a, 0x1d, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74,
-	0x65, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xba, 0x01, 0x0a, 0x1e, 0x4d, 0x73, 0x67, 0x44, 0x65, 0x70,
-	0x6f, 0x73, 0x69, 0x74, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x46, 0x75, 0x6e, 0x64,
-	0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69,
+	0x08, 0x6d, 0x61, 0x78, 0x5f, 0x72, 0x61, 0x74, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x07, 0x6d, 0x61, 0x78, 0x52, 0x61, 0x74, 0x65, 0x3a, 0x0a, 0x82, 0xe7, 0xb0, 0x2a, 0x05, 0x61,
+	0x64, 0x6d, 0x69, 0x6e, 0x22, 0x22, 0x0a, 0x20, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74,
+	0x65, 0x4d, 0x61, 0x78, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61, 0x74, 0x65,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xb4, 0x01, 0x0a, 0x1b, 0x4d, 0x73, 0x67,
+	0x53, 0x65, 0x74, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x43, 0x6f, 0x6e, 0x66, 0x69,
+	0x67, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69,
 	0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73,
 	0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e,
 	0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c,
 	0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x37, 0x0a,
-	0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06,
-	0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x3a, 0x0a, 0x82, 0xe7, 0xb0, 0x2a, 0x05, 0x61, 0x64, 0x6d,
-	0x69, 0x6e, 0x22, 0x21, 0x0a, 0x1f, 0x4d, 0x73, 0x67, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74,
-	0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xbb, 0x01, 0x0a, 0x1f, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74,
-	0x68, 0x64, 0x72, 0x61, 0x77, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x46, 0x75, 0x6e,
-	0x64, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d,
-	0x69, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69,
-	0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75,
-	0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x37,
-	0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19,
-	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62,
-	0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52,
-	0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x3a, 0x0a, 0x82, 0xe7, 0xb0, 0x2a, 0x05, 0x61, 0x64,
-	0x6d, 0x69, 0x6e, 0x22, 0x22, 0x0a, 0x20, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72,
-	0x61, 0x77, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x93, 0x01, 0x0a, 0x16, 0x4d, 0x73, 0x67, 0x54,
-	0x6f, 0x67, 0x67, 0x6c, 0x65, 0x53, 0x77, 0x61, 0x70, 0x49, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64,
-	0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d,
-	0x69, 0x6e, 0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72,
-	0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74,
-	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x18, 0x0a, 0x07, 0x65, 0x6e, 0x61, 0x62, 0x6c,
-	0x65, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x08, 0x52, 0x07, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65,
-	0x64, 0x3a, 0x0a, 0x82, 0xe7, 0xb0, 0x2a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x22, 0x19, 0x0a,
-	0x17, 0x4d, 0x73, 0x67, 0x54, 0x6f, 0x67, 0x67, 0x6c, 0x65, 0x53, 0x77, 0x61, 0x70, 0x49, 0x6e,
-	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x94, 0x01, 0x0a, 0x17, 0x4d, 0x73, 0x67,
-	0x54, 0x6f, 0x67, 0x67, 0x6c, 0x65, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x52, 0x65, 0x71,
-	0x75, 0x65, 0x73, 0x74, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
-	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61,
-	0x64, 0x6d, 0x69, 0x6e, 0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64,
-	0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61, 0x75,
-	0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x18, 0x0a, 0x07, 0x65, 0x6e, 0x61,
-	0x62, 0x6c, 0x65, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x08, 0x52, 0x07, 0x65, 0x6e, 0x61, 0x62,
-	0x6c, 0x65, 0x64, 0x3a, 0x0a, 0x82, 0xe7, 0xb0, 0x2a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x22,
-	0x1a, 0x0a, 0x18, 0x4d, 0x73, 0x67, 0x54, 0x6f, 0x67, 0x67, 0x6c, 0x65, 0x53, 0x77, 0x61, 0x70,
-	0x4f, 0x75, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xbb, 0x01, 0x0a, 0x1f,
-	0x4d, 0x73, 0x67, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x50, 0x72, 0x69, 0x6e, 0x63, 0x69,
-	0x70, 0x61, 0x6c, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12,
-	0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18,
-	0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65,
-	0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12,
-	0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64,
-	0x72, 0x65, 0x73, 0x73, 0x12, 0x37, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x03,
-	0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61,
-	0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42,
-	0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x3a, 0x0a, 0x82,
-	0xe7, 0xb0, 0x2a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x22, 0x22, 0x0a, 0x20, 0x4d, 0x73, 0x67,
-	0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x50, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c,
-	0x46, 0x75, 0x6e, 0x64, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xbc, 0x01,
-	0x0a, 0x20, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x50, 0x72, 0x69,
-	0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64,
-	0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d,
-	0x69, 0x6e, 0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72,
-	0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74,
-	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x37, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e,
-	0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f,
-	0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74,
-	0x3a, 0x0a, 0x82, 0xe7, 0xb0, 0x2a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x22, 0x23, 0x0a, 0x21,
-	0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x50, 0x72, 0x69, 0x6e, 0x63,
-	0x69, 0x70, 0x61, 0x6c, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x32, 0x89, 0x08, 0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x50, 0x0a, 0x0b, 0x43, 0x72, 0x65,
-	0x61, 0x74, 0x65, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x12, 0x1f, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74,
-	0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x56, 0x61, 0x75,
-	0x6c, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x20, 0x2e, 0x76, 0x61, 0x75, 0x6c,
-	0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x56, 0x61,
-	0x75, 0x6c, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x41, 0x0a, 0x06, 0x53,
-	0x77, 0x61, 0x70, 0x49, 0x6e, 0x12, 0x1a, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31,
-	0x2e, 0x4d, 0x73, 0x67, 0x53, 0x77, 0x61, 0x70, 0x49, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x1a, 0x1b, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67,
-	0x53, 0x77, 0x61, 0x70, 0x49, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x44,
-	0x0a, 0x07, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x12, 0x1b, 0x2e, 0x76, 0x61, 0x75, 0x6c,
-	0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1c, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76,
-	0x31, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x4c, 0x0a, 0x0c, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61,
-	0x72, 0x61, 0x6d, 0x73, 0x12, 0x19, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e,
-	0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x1a,
-	0x21, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70,
-	0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x12, 0x65, 0x0a, 0x12, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x49, 0x6e, 0x74, 0x65,
-	0x72, 0x65, 0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x12, 0x26, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74,
-	0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x49, 0x6e, 0x74,
+	0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x19, 0x0a,
+	0x08, 0x6d, 0x69, 0x6e, 0x5f, 0x72, 0x61, 0x74, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x07, 0x6d, 0x69, 0x6e, 0x52, 0x61, 0x74, 0x65, 0x12, 0x19, 0x0a, 0x08, 0x6d, 0x61, 0x78, 0x5f,
+	0x72, 0x61, 0x74, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x61, 0x78, 0x52,
+	0x61, 0x74, 0x65, 0x3a, 0x0a, 0x82, 0xe7, 0xb0, 0x2a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x22,
+	0x1e, 0x0a, 0x1c, 0x4d, 0x73, 0x67, 0x53, 0x65, 0x74, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73,
+	0x74, 0x43, 0x6f, 0x6e, 0x66, 0x69, 0x67, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
+	0x9a, 0x01, 0x0a, 0x1c, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x49, 0x6e, 0x74,
 	0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x1a, 0x27, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55,
-	0x70, 0x64, 0x61, 0x74, 0x65, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61, 0x74,
-	0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x6b, 0x0a, 0x14, 0x44, 0x65, 0x70,
-	0x6f, 0x73, 0x69, 0x74, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x46, 0x75, 0x6e, 0x64,
-	0x73, 0x12, 0x28, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67,
-	0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x46,
-	0x75, 0x6e, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x29, 0x2e, 0x76, 0x61,
-	0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69,
-	0x74, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x6e, 0x0a, 0x15, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72,
-	0x61, 0x77, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x12,
-	0x29, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x57, 0x69,
-	0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x46, 0x75,
-	0x6e, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2a, 0x2e, 0x76, 0x61, 0x75,
-	0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61,
-	0x77, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x53, 0x0a, 0x0c, 0x54, 0x6f, 0x67, 0x67, 0x6c, 0x65,
-	0x53, 0x77, 0x61, 0x70, 0x49, 0x6e, 0x12, 0x20, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76,
-	0x31, 0x2e, 0x4d, 0x73, 0x67, 0x54, 0x6f, 0x67, 0x67, 0x6c, 0x65, 0x53, 0x77, 0x61, 0x70, 0x49,
-	0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x21, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74,
-	0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x54, 0x6f, 0x67, 0x67, 0x6c, 0x65, 0x53, 0x77, 0x61,
-	0x70, 0x49, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x56, 0x0a, 0x0d, 0x54,
-	0x6f, 0x67, 0x67, 0x6c, 0x65, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x12, 0x21, 0x2e, 0x76,
-	0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x54, 0x6f, 0x67, 0x67, 0x6c,
-	0x65, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
-	0x22, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x54, 0x6f,
+	0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42,
+	0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72,
+	0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e,
+	0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x19, 0x0a, 0x08, 0x6e, 0x65, 0x77, 0x5f, 0x72, 0x61, 0x74,
+	0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6e, 0x65, 0x77, 0x52, 0x61, 0x74, 0x65,
+	0x3a, 0x0a, 0x82, 0xe7, 0xb0, 0x2a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x22, 0x1f, 0x0a, 0x1d,
+	0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73,
+	0x74, 0x52, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xba, 0x01,
+	0x0a, 0x1e, 0x4d, 0x73, 0x67, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x49, 0x6e, 0x74, 0x65,
+	0x72, 0x65, 0x73, 0x74, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42,
+	0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72,
+	0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e,
+	0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x37, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18,
+	0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62,
+	0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e,
+	0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x3a, 0x0a,
+	0x82, 0xe7, 0xb0, 0x2a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x22, 0x21, 0x0a, 0x1f, 0x4d, 0x73,
+	0x67, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74,
+	0x46, 0x75, 0x6e, 0x64, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xbb, 0x01,
+	0x0a, 0x1f, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x49, 0x6e, 0x74,
+	0x65, 0x72, 0x65, 0x73, 0x74, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
+	0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64,
+	0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69,
+	0x6e, 0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65,
+	0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41,
+	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x37, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74,
+	0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69,
+	0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x3a,
+	0x0a, 0x82, 0xe7, 0xb0, 0x2a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x22, 0x22, 0x0a, 0x20, 0x4d,
+	0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65,
+	0x73, 0x74, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
+	0x93, 0x01, 0x0a, 0x16, 0x4d, 0x73, 0x67, 0x54, 0x6f, 0x67, 0x67, 0x6c, 0x65, 0x53, 0x77, 0x61,
+	0x70, 0x49, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64,
+	0x6d, 0x69, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72,
+	0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61,
+	0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12,
+	0x18, 0x0a, 0x07, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x08,
+	0x52, 0x07, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x3a, 0x0a, 0x82, 0xe7, 0xb0, 0x2a, 0x05,
+	0x61, 0x64, 0x6d, 0x69, 0x6e, 0x22, 0x19, 0x0a, 0x17, 0x4d, 0x73, 0x67, 0x54, 0x6f, 0x67, 0x67,
+	0x6c, 0x65, 0x53, 0x77, 0x61, 0x70, 0x49, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x22, 0x94, 0x01, 0x0a, 0x17, 0x4d, 0x73, 0x67, 0x54, 0x6f, 0x67, 0x67, 0x6c, 0x65, 0x53, 0x77,
+	0x61, 0x70, 0x4f, 0x75, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x2e, 0x0a, 0x05,
+	0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d,
+	0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53,
+	0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x23, 0x0a, 0x0d,
+	0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x12, 0x18, 0x0a, 0x07, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x18, 0x03, 0x20, 0x01,
+	0x28, 0x08, 0x52, 0x07, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x3a, 0x0a, 0x82, 0xe7, 0xb0,
+	0x2a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x22, 0x1a, 0x0a, 0x18, 0x4d, 0x73, 0x67, 0x54, 0x6f,
 	0x67, 0x67, 0x6c, 0x65, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x12, 0x6e, 0x0a, 0x15, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x50, 0x72,
-	0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x12, 0x29, 0x2e, 0x76,
-	0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x44, 0x65, 0x70, 0x6f, 0x73,
+	0x6e, 0x73, 0x65, 0x22, 0xbb, 0x01, 0x0a, 0x1f, 0x4d, 0x73, 0x67, 0x44, 0x65, 0x70, 0x6f, 0x73,
 	0x69, 0x74, 0x50, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x46, 0x75, 0x6e, 0x64, 0x73,
-	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2a, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e,
-	0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x50, 0x72, 0x69,
-	0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x12, 0x71, 0x0a, 0x16, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x50,
-	0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x12, 0x2a, 0x2e,
-	0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68,
-	0x64, 0x72, 0x61, 0x77, 0x50, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x46, 0x75, 0x6e,
-	0x64, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2b, 0x2e, 0x76, 0x61, 0x75, 0x6c,
-	0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77,
-	0x50, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x1a, 0x05, 0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0x88, 0x01,
-	0x0a, 0x0c, 0x63, 0x6f, 0x6d, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x42, 0x07,
-	0x54, 0x78, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2e, 0x67, 0x69, 0x74, 0x68, 0x75,
-	0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76,
-	0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76,
-	0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x56, 0x58, 0x58, 0xaa,
-	0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x08, 0x56, 0x61, 0x75,
-	0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x14, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31,
-	0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x09, 0x56,
-	0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67,
+	0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74,
+	0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c,
+	0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x37, 0x0a, 0x06,
+	0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x61,
+	0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x3a, 0x0a, 0x82, 0xe7, 0xb0, 0x2a, 0x05, 0x61, 0x64, 0x6d, 0x69,
+	0x6e, 0x22, 0x22, 0x0a, 0x20, 0x4d, 0x73, 0x67, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x50,
+	0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xbc, 0x01, 0x0a, 0x20, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74,
+	0x68, 0x64, 0x72, 0x61, 0x77, 0x50, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x46, 0x75,
+	0x6e, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64,
+	0x6d, 0x69, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72,
+	0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61,
+	0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12,
+	0x37, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31,
+	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00,
+	0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x3a, 0x0a, 0x82, 0xe7, 0xb0, 0x2a, 0x05, 0x61,
+	0x64, 0x6d, 0x69, 0x6e, 0x22, 0x23, 0x0a, 0x21, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64,
+	0x72, 0x61, 0x77, 0x50, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x46, 0x75, 0x6e, 0x64,
+	0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x32, 0xe9, 0x09, 0x0a, 0x03, 0x4d, 0x73,
+	0x67, 0x12, 0x50, 0x0a, 0x0b, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x56, 0x61, 0x75, 0x6c, 0x74,
+	0x12, 0x1f, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43,
+	0x72, 0x65, 0x61, 0x74, 0x65, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x1a, 0x20, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67,
+	0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x12, 0x41, 0x0a, 0x06, 0x53, 0x77, 0x61, 0x70, 0x49, 0x6e, 0x12, 0x1a, 0x2e,
+	0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x77, 0x61, 0x70,
+	0x49, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1b, 0x2e, 0x76, 0x61, 0x75, 0x6c,
+	0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x77, 0x61, 0x70, 0x49, 0x6e, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x44, 0x0a, 0x07, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75,
+	0x74, 0x12, 0x1b, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67,
+	0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1c,
+	0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x77, 0x61,
+	0x70, 0x4f, 0x75, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x4c, 0x0a, 0x0c,
+	0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x12, 0x19, 0x2e, 0x76,
+	0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74,
+	0x65, 0x50, 0x61, 0x72, 0x61, 0x6d, 0x73, 0x1a, 0x21, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e,
+	0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x61, 0x72, 0x61,
+	0x6d, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x6e, 0x0a, 0x15, 0x55, 0x70,
+	0x64, 0x61, 0x74, 0x65, 0x4d, 0x69, 0x6e, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52,
+	0x61, 0x74, 0x65, 0x12, 0x29, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d,
+	0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x4d, 0x69, 0x6e, 0x49, 0x6e, 0x74, 0x65, 0x72,
+	0x65, 0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2a,
+	0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64,
+	0x61, 0x74, 0x65, 0x4d, 0x69, 0x6e, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61,
+	0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x6e, 0x0a, 0x15, 0x55, 0x70,
+	0x64, 0x61, 0x74, 0x65, 0x4d, 0x61, 0x78, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52,
+	0x61, 0x74, 0x65, 0x12, 0x29, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d,
+	0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x4d, 0x61, 0x78, 0x49, 0x6e, 0x74, 0x65, 0x72,
+	0x65, 0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2a,
+	0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64,
+	0x61, 0x74, 0x65, 0x4d, 0x61, 0x78, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61,
+	0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x65, 0x0a, 0x12, 0x55, 0x70,
+	0x64, 0x61, 0x74, 0x65, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61, 0x74, 0x65,
+	0x12, 0x26, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55,
+	0x70, 0x64, 0x61, 0x74, 0x65, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61, 0x74,
+	0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x27, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74,
+	0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x49, 0x6e, 0x74,
+	0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x12, 0x6b, 0x0a, 0x14, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x49, 0x6e, 0x74, 0x65,
+	0x72, 0x65, 0x73, 0x74, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x12, 0x28, 0x2e, 0x76, 0x61, 0x75, 0x6c,
+	0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x49,
+	0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x1a, 0x29, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d,
+	0x73, 0x67, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73,
+	0x74, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x6e,
+	0x0a, 0x15, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65,
+	0x73, 0x74, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x12, 0x29, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e,
+	0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x49, 0x6e,
+	0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x1a, 0x2a, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73,
+	0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73,
+	0x74, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x53,
+	0x0a, 0x0c, 0x54, 0x6f, 0x67, 0x67, 0x6c, 0x65, 0x53, 0x77, 0x61, 0x70, 0x49, 0x6e, 0x12, 0x20,
+	0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x54, 0x6f, 0x67,
+	0x67, 0x6c, 0x65, 0x53, 0x77, 0x61, 0x70, 0x49, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x1a, 0x21, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x54,
+	0x6f, 0x67, 0x67, 0x6c, 0x65, 0x53, 0x77, 0x61, 0x70, 0x49, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x12, 0x56, 0x0a, 0x0d, 0x54, 0x6f, 0x67, 0x67, 0x6c, 0x65, 0x53, 0x77, 0x61,
+	0x70, 0x4f, 0x75, 0x74, 0x12, 0x21, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e,
+	0x4d, 0x73, 0x67, 0x54, 0x6f, 0x67, 0x67, 0x6c, 0x65, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x22, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e,
+	0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x54, 0x6f, 0x67, 0x67, 0x6c, 0x65, 0x53, 0x77, 0x61, 0x70,
+	0x4f, 0x75, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x6e, 0x0a, 0x15, 0x44,
+	0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x50, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x46,
+	0x75, 0x6e, 0x64, 0x73, 0x12, 0x29, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e,
+	0x4d, 0x73, 0x67, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x50, 0x72, 0x69, 0x6e, 0x63, 0x69,
+	0x70, 0x61, 0x6c, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
+	0x2a, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x44, 0x65,
+	0x70, 0x6f, 0x73, 0x69, 0x74, 0x50, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x46, 0x75,
+	0x6e, 0x64, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x71, 0x0a, 0x16, 0x57,
+	0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x50, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c,
+	0x46, 0x75, 0x6e, 0x64, 0x73, 0x12, 0x2a, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31,
+	0x2e, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x50, 0x72, 0x69, 0x6e,
+	0x63, 0x69, 0x70, 0x61, 0x6c, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x1a, 0x2b, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67,
+	0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x50, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61,
+	0x6c, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x1a, 0x05,
+	0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0x88, 0x01, 0x0a, 0x0c, 0x63, 0x6f, 0x6d, 0x2e, 0x76, 0x61,
+	0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x42, 0x07, 0x54, 0x78, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50,
+	0x01, 0x5a, 0x2e, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72,
+	0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69,
+	0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x76,
+	0x31, 0xa2, 0x02, 0x03, 0x56, 0x58, 0x58, 0xaa, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e,
+	0x56, 0x31, 0xca, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x14,
+	0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61,
+	0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x09, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31,
+	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -12464,7 +14465,7 @@ func file_vault_v1_tx_proto_rawDescGZIP() []byte {
 	return file_vault_v1_tx_proto_rawDescData
 }
 
-var file_vault_v1_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 24)
+var file_vault_v1_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 28)
 var file_vault_v1_tx_proto_goTypes = []interface{}{
 	(*MsgUpdateParams)(nil),                   // 0: vault.v1.MsgUpdateParams
 	(*MsgUpdateParamsResponse)(nil),           // 1: vault.v1.MsgUpdateParamsResponse
@@ -12474,59 +14475,67 @@ var file_vault_v1_tx_proto_goTypes = []interface{}{
 	(*MsgSwapInResponse)(nil),                 // 5: vault.v1.MsgSwapInResponse
 	(*MsgSwapOutRequest)(nil),                 // 6: vault.v1.MsgSwapOutRequest
 	(*MsgSwapOutResponse)(nil),                // 7: vault.v1.MsgSwapOutResponse
-	(*MsgSetInterestConfigRequest)(nil),       // 8: vault.v1.MsgSetInterestConfigRequest
-	(*MsgSetInterestConfigResponse)(nil),      // 9: vault.v1.MsgSetInterestConfigResponse
-	(*MsgUpdateInterestRateRequest)(nil),      // 10: vault.v1.MsgUpdateInterestRateRequest
-	(*MsgUpdateInterestRateResponse)(nil),     // 11: vault.v1.MsgUpdateInterestRateResponse
-	(*MsgDepositInterestFundsRequest)(nil),    // 12: vault.v1.MsgDepositInterestFundsRequest
-	(*MsgDepositInterestFundsResponse)(nil),   // 13: vault.v1.MsgDepositInterestFundsResponse
-	(*MsgWithdrawInterestFundsRequest)(nil),   // 14: vault.v1.MsgWithdrawInterestFundsRequest
-	(*MsgWithdrawInterestFundsResponse)(nil),  // 15: vault.v1.MsgWithdrawInterestFundsResponse
-	(*MsgToggleSwapInRequest)(nil),            // 16: vault.v1.MsgToggleSwapInRequest
-	(*MsgToggleSwapInResponse)(nil),           // 17: vault.v1.MsgToggleSwapInResponse
-	(*MsgToggleSwapOutRequest)(nil),           // 18: vault.v1.MsgToggleSwapOutRequest
-	(*MsgToggleSwapOutResponse)(nil),          // 19: vault.v1.MsgToggleSwapOutResponse
-	(*MsgDepositPrincipalFundsRequest)(nil),   // 20: vault.v1.MsgDepositPrincipalFundsRequest
-	(*MsgDepositPrincipalFundsResponse)(nil),  // 21: vault.v1.MsgDepositPrincipalFundsResponse
-	(*MsgWithdrawPrincipalFundsRequest)(nil),  // 22: vault.v1.MsgWithdrawPrincipalFundsRequest
-	(*MsgWithdrawPrincipalFundsResponse)(nil), // 23: vault.v1.MsgWithdrawPrincipalFundsResponse
-	(*Params)(nil),                            // 24: vault.v1.Params
-	(*v1beta1.Coin)(nil),                      // 25: cosmos.base.v1beta1.Coin
+	(*MsgUpdateMinInterestRateRequest)(nil),   // 8: vault.v1.MsgUpdateMinInterestRateRequest
+	(*MsgUpdateMinInterestRateResponse)(nil),  // 9: vault.v1.MsgUpdateMinInterestRateResponse
+	(*MsgUpdateMaxInterestRateRequest)(nil),   // 10: vault.v1.MsgUpdateMaxInterestRateRequest
+	(*MsgUpdateMaxInterestRateResponse)(nil),  // 11: vault.v1.MsgUpdateMaxInterestRateResponse
+	(*MsgSetInterestConfigRequest)(nil),       // 12: vault.v1.MsgSetInterestConfigRequest
+	(*MsgSetInterestConfigResponse)(nil),      // 13: vault.v1.MsgSetInterestConfigResponse
+	(*MsgUpdateInterestRateRequest)(nil),      // 14: vault.v1.MsgUpdateInterestRateRequest
+	(*MsgUpdateInterestRateResponse)(nil),     // 15: vault.v1.MsgUpdateInterestRateResponse
+	(*MsgDepositInterestFundsRequest)(nil),    // 16: vault.v1.MsgDepositInterestFundsRequest
+	(*MsgDepositInterestFundsResponse)(nil),   // 17: vault.v1.MsgDepositInterestFundsResponse
+	(*MsgWithdrawInterestFundsRequest)(nil),   // 18: vault.v1.MsgWithdrawInterestFundsRequest
+	(*MsgWithdrawInterestFundsResponse)(nil),  // 19: vault.v1.MsgWithdrawInterestFundsResponse
+	(*MsgToggleSwapInRequest)(nil),            // 20: vault.v1.MsgToggleSwapInRequest
+	(*MsgToggleSwapInResponse)(nil),           // 21: vault.v1.MsgToggleSwapInResponse
+	(*MsgToggleSwapOutRequest)(nil),           // 22: vault.v1.MsgToggleSwapOutRequest
+	(*MsgToggleSwapOutResponse)(nil),          // 23: vault.v1.MsgToggleSwapOutResponse
+	(*MsgDepositPrincipalFundsRequest)(nil),   // 24: vault.v1.MsgDepositPrincipalFundsRequest
+	(*MsgDepositPrincipalFundsResponse)(nil),  // 25: vault.v1.MsgDepositPrincipalFundsResponse
+	(*MsgWithdrawPrincipalFundsRequest)(nil),  // 26: vault.v1.MsgWithdrawPrincipalFundsRequest
+	(*MsgWithdrawPrincipalFundsResponse)(nil), // 27: vault.v1.MsgWithdrawPrincipalFundsResponse
+	(*Params)(nil),                            // 28: vault.v1.Params
+	(*v1beta1.Coin)(nil),                      // 29: cosmos.base.v1beta1.Coin
 }
 var file_vault_v1_tx_proto_depIdxs = []int32{
-	24, // 0: vault.v1.MsgUpdateParams.params:type_name -> vault.v1.Params
-	25, // 1: vault.v1.MsgSwapInRequest.assets:type_name -> cosmos.base.v1beta1.Coin
-	25, // 2: vault.v1.MsgSwapInResponse.shares_received:type_name -> cosmos.base.v1beta1.Coin
-	25, // 3: vault.v1.MsgSwapOutRequest.assets:type_name -> cosmos.base.v1beta1.Coin
-	25, // 4: vault.v1.MsgSwapOutResponse.shares_burned:type_name -> cosmos.base.v1beta1.Coin
-	25, // 5: vault.v1.MsgDepositInterestFundsRequest.amount:type_name -> cosmos.base.v1beta1.Coin
-	25, // 6: vault.v1.MsgWithdrawInterestFundsRequest.amount:type_name -> cosmos.base.v1beta1.Coin
-	25, // 7: vault.v1.MsgDepositPrincipalFundsRequest.amount:type_name -> cosmos.base.v1beta1.Coin
-	25, // 8: vault.v1.MsgWithdrawPrincipalFundsRequest.amount:type_name -> cosmos.base.v1beta1.Coin
+	28, // 0: vault.v1.MsgUpdateParams.params:type_name -> vault.v1.Params
+	29, // 1: vault.v1.MsgSwapInRequest.assets:type_name -> cosmos.base.v1beta1.Coin
+	29, // 2: vault.v1.MsgSwapInResponse.shares_received:type_name -> cosmos.base.v1beta1.Coin
+	29, // 3: vault.v1.MsgSwapOutRequest.assets:type_name -> cosmos.base.v1beta1.Coin
+	29, // 4: vault.v1.MsgSwapOutResponse.shares_burned:type_name -> cosmos.base.v1beta1.Coin
+	29, // 5: vault.v1.MsgDepositInterestFundsRequest.amount:type_name -> cosmos.base.v1beta1.Coin
+	29, // 6: vault.v1.MsgWithdrawInterestFundsRequest.amount:type_name -> cosmos.base.v1beta1.Coin
+	29, // 7: vault.v1.MsgDepositPrincipalFundsRequest.amount:type_name -> cosmos.base.v1beta1.Coin
+	29, // 8: vault.v1.MsgWithdrawPrincipalFundsRequest.amount:type_name -> cosmos.base.v1beta1.Coin
 	2,  // 9: vault.v1.Msg.CreateVault:input_type -> vault.v1.MsgCreateVaultRequest
 	4,  // 10: vault.v1.Msg.SwapIn:input_type -> vault.v1.MsgSwapInRequest
 	6,  // 11: vault.v1.Msg.SwapOut:input_type -> vault.v1.MsgSwapOutRequest
 	0,  // 12: vault.v1.Msg.UpdateParams:input_type -> vault.v1.MsgUpdateParams
-	10, // 13: vault.v1.Msg.UpdateInterestRate:input_type -> vault.v1.MsgUpdateInterestRateRequest
-	12, // 14: vault.v1.Msg.DepositInterestFunds:input_type -> vault.v1.MsgDepositInterestFundsRequest
-	14, // 15: vault.v1.Msg.WithdrawInterestFunds:input_type -> vault.v1.MsgWithdrawInterestFundsRequest
-	16, // 16: vault.v1.Msg.ToggleSwapIn:input_type -> vault.v1.MsgToggleSwapInRequest
-	18, // 17: vault.v1.Msg.ToggleSwapOut:input_type -> vault.v1.MsgToggleSwapOutRequest
-	20, // 18: vault.v1.Msg.DepositPrincipalFunds:input_type -> vault.v1.MsgDepositPrincipalFundsRequest
-	22, // 19: vault.v1.Msg.WithdrawPrincipalFunds:input_type -> vault.v1.MsgWithdrawPrincipalFundsRequest
-	3,  // 20: vault.v1.Msg.CreateVault:output_type -> vault.v1.MsgCreateVaultResponse
-	5,  // 21: vault.v1.Msg.SwapIn:output_type -> vault.v1.MsgSwapInResponse
-	7,  // 22: vault.v1.Msg.SwapOut:output_type -> vault.v1.MsgSwapOutResponse
-	1,  // 23: vault.v1.Msg.UpdateParams:output_type -> vault.v1.MsgUpdateParamsResponse
-	11, // 24: vault.v1.Msg.UpdateInterestRate:output_type -> vault.v1.MsgUpdateInterestRateResponse
-	13, // 25: vault.v1.Msg.DepositInterestFunds:output_type -> vault.v1.MsgDepositInterestFundsResponse
-	15, // 26: vault.v1.Msg.WithdrawInterestFunds:output_type -> vault.v1.MsgWithdrawInterestFundsResponse
-	17, // 27: vault.v1.Msg.ToggleSwapIn:output_type -> vault.v1.MsgToggleSwapInResponse
-	19, // 28: vault.v1.Msg.ToggleSwapOut:output_type -> vault.v1.MsgToggleSwapOutResponse
-	21, // 29: vault.v1.Msg.DepositPrincipalFunds:output_type -> vault.v1.MsgDepositPrincipalFundsResponse
-	23, // 30: vault.v1.Msg.WithdrawPrincipalFunds:output_type -> vault.v1.MsgWithdrawPrincipalFundsResponse
-	20, // [20:31] is the sub-list for method output_type
-	9,  // [9:20] is the sub-list for method input_type
+	8,  // 13: vault.v1.Msg.UpdateMinInterestRate:input_type -> vault.v1.MsgUpdateMinInterestRateRequest
+	10, // 14: vault.v1.Msg.UpdateMaxInterestRate:input_type -> vault.v1.MsgUpdateMaxInterestRateRequest
+	14, // 15: vault.v1.Msg.UpdateInterestRate:input_type -> vault.v1.MsgUpdateInterestRateRequest
+	16, // 16: vault.v1.Msg.DepositInterestFunds:input_type -> vault.v1.MsgDepositInterestFundsRequest
+	18, // 17: vault.v1.Msg.WithdrawInterestFunds:input_type -> vault.v1.MsgWithdrawInterestFundsRequest
+	20, // 18: vault.v1.Msg.ToggleSwapIn:input_type -> vault.v1.MsgToggleSwapInRequest
+	22, // 19: vault.v1.Msg.ToggleSwapOut:input_type -> vault.v1.MsgToggleSwapOutRequest
+	24, // 20: vault.v1.Msg.DepositPrincipalFunds:input_type -> vault.v1.MsgDepositPrincipalFundsRequest
+	26, // 21: vault.v1.Msg.WithdrawPrincipalFunds:input_type -> vault.v1.MsgWithdrawPrincipalFundsRequest
+	3,  // 22: vault.v1.Msg.CreateVault:output_type -> vault.v1.MsgCreateVaultResponse
+	5,  // 23: vault.v1.Msg.SwapIn:output_type -> vault.v1.MsgSwapInResponse
+	7,  // 24: vault.v1.Msg.SwapOut:output_type -> vault.v1.MsgSwapOutResponse
+	1,  // 25: vault.v1.Msg.UpdateParams:output_type -> vault.v1.MsgUpdateParamsResponse
+	9,  // 26: vault.v1.Msg.UpdateMinInterestRate:output_type -> vault.v1.MsgUpdateMinInterestRateResponse
+	11, // 27: vault.v1.Msg.UpdateMaxInterestRate:output_type -> vault.v1.MsgUpdateMaxInterestRateResponse
+	15, // 28: vault.v1.Msg.UpdateInterestRate:output_type -> vault.v1.MsgUpdateInterestRateResponse
+	17, // 29: vault.v1.Msg.DepositInterestFunds:output_type -> vault.v1.MsgDepositInterestFundsResponse
+	19, // 30: vault.v1.Msg.WithdrawInterestFunds:output_type -> vault.v1.MsgWithdrawInterestFundsResponse
+	21, // 31: vault.v1.Msg.ToggleSwapIn:output_type -> vault.v1.MsgToggleSwapInResponse
+	23, // 32: vault.v1.Msg.ToggleSwapOut:output_type -> vault.v1.MsgToggleSwapOutResponse
+	25, // 33: vault.v1.Msg.DepositPrincipalFunds:output_type -> vault.v1.MsgDepositPrincipalFundsResponse
+	27, // 34: vault.v1.Msg.WithdrawPrincipalFunds:output_type -> vault.v1.MsgWithdrawPrincipalFundsResponse
+	22, // [22:35] is the sub-list for method output_type
+	9,  // [9:22] is the sub-list for method input_type
 	9,  // [9:9] is the sub-list for extension type_name
 	9,  // [9:9] is the sub-list for extension extendee
 	0,  // [0:9] is the sub-list for field type_name
@@ -12636,7 +14645,7 @@ func file_vault_v1_tx_proto_init() {
 			}
 		}
 		file_vault_v1_tx_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgSetInterestConfigRequest); i {
+			switch v := v.(*MsgUpdateMinInterestRateRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12648,7 +14657,7 @@ func file_vault_v1_tx_proto_init() {
 			}
 		}
 		file_vault_v1_tx_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgSetInterestConfigResponse); i {
+			switch v := v.(*MsgUpdateMinInterestRateResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12660,7 +14669,7 @@ func file_vault_v1_tx_proto_init() {
 			}
 		}
 		file_vault_v1_tx_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgUpdateInterestRateRequest); i {
+			switch v := v.(*MsgUpdateMaxInterestRateRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12672,7 +14681,7 @@ func file_vault_v1_tx_proto_init() {
 			}
 		}
 		file_vault_v1_tx_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgUpdateInterestRateResponse); i {
+			switch v := v.(*MsgUpdateMaxInterestRateResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12684,7 +14693,7 @@ func file_vault_v1_tx_proto_init() {
 			}
 		}
 		file_vault_v1_tx_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgDepositInterestFundsRequest); i {
+			switch v := v.(*MsgSetInterestConfigRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12696,7 +14705,7 @@ func file_vault_v1_tx_proto_init() {
 			}
 		}
 		file_vault_v1_tx_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgDepositInterestFundsResponse); i {
+			switch v := v.(*MsgSetInterestConfigResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12708,7 +14717,7 @@ func file_vault_v1_tx_proto_init() {
 			}
 		}
 		file_vault_v1_tx_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgWithdrawInterestFundsRequest); i {
+			switch v := v.(*MsgUpdateInterestRateRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12720,7 +14729,7 @@ func file_vault_v1_tx_proto_init() {
 			}
 		}
 		file_vault_v1_tx_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgWithdrawInterestFundsResponse); i {
+			switch v := v.(*MsgUpdateInterestRateResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12732,7 +14741,7 @@ func file_vault_v1_tx_proto_init() {
 			}
 		}
 		file_vault_v1_tx_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgToggleSwapInRequest); i {
+			switch v := v.(*MsgDepositInterestFundsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12744,7 +14753,7 @@ func file_vault_v1_tx_proto_init() {
 			}
 		}
 		file_vault_v1_tx_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgToggleSwapInResponse); i {
+			switch v := v.(*MsgDepositInterestFundsResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12756,7 +14765,7 @@ func file_vault_v1_tx_proto_init() {
 			}
 		}
 		file_vault_v1_tx_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgToggleSwapOutRequest); i {
+			switch v := v.(*MsgWithdrawInterestFundsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12768,7 +14777,7 @@ func file_vault_v1_tx_proto_init() {
 			}
 		}
 		file_vault_v1_tx_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgToggleSwapOutResponse); i {
+			switch v := v.(*MsgWithdrawInterestFundsResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12780,7 +14789,7 @@ func file_vault_v1_tx_proto_init() {
 			}
 		}
 		file_vault_v1_tx_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgDepositPrincipalFundsRequest); i {
+			switch v := v.(*MsgToggleSwapInRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12792,7 +14801,7 @@ func file_vault_v1_tx_proto_init() {
 			}
 		}
 		file_vault_v1_tx_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgDepositPrincipalFundsResponse); i {
+			switch v := v.(*MsgToggleSwapInResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12804,7 +14813,7 @@ func file_vault_v1_tx_proto_init() {
 			}
 		}
 		file_vault_v1_tx_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgWithdrawPrincipalFundsRequest); i {
+			switch v := v.(*MsgToggleSwapOutRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -12816,6 +14825,54 @@ func file_vault_v1_tx_proto_init() {
 			}
 		}
 		file_vault_v1_tx_proto_msgTypes[23].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgToggleSwapOutResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_vault_v1_tx_proto_msgTypes[24].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgDepositPrincipalFundsRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_vault_v1_tx_proto_msgTypes[25].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgDepositPrincipalFundsResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_vault_v1_tx_proto_msgTypes[26].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgWithdrawPrincipalFundsRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_vault_v1_tx_proto_msgTypes[27].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*MsgWithdrawPrincipalFundsResponse); i {
 			case 0:
 				return &v.state
@@ -12834,7 +14891,7 @@ func file_vault_v1_tx_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_vault_v1_tx_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   24,
+			NumMessages:   28,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

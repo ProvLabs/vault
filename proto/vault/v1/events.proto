@@ -158,3 +158,23 @@ message EventPrincipalWithdrawal {
   // amount is the amount of funds withdrawn.
   cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
 }
+
+// EventMinInterestRateUpdated is emitted when the minimum interest rate is updated.
+message EventMinInterestRateUpdated {
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // admin is the address of the account that updated the limit.
+  string admin = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // min_rate is the newly set minimum interest rate (as string, can be "").
+  string min_rate = 3;
+}
+
+// EventMaxInterestRateUpdated is emitted when the maximum interest rate is updated.
+message EventMaxInterestRateUpdated {
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // admin is the address of the account that updated the limit.
+  string admin = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // max_rate is the newly set maximum interest rate (as string, can be "").
+  string max_rate = 3;
+}

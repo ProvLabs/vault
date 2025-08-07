@@ -72,6 +72,52 @@ func (k msgServer) SwapOut(goCtx context.Context, msg *types.MsgSwapOutRequest) 
 	return &types.MsgSwapOutResponse{SharesBurned: *shares}, nil
 }
 
+// UpdateMinInterestRate sets the minimum allowable interest rate for a vault.
+// Only the vault admin is authorized to perform this operation.
+// An empty string disables the minimum interest rate limit.
+func (k msgServer) UpdateMinInterestRate(goCtx context.Context, msg *types.MsgUpdateMinInterestRateRequest) (*types.MsgUpdateMinInterestRateResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault: %w", err)
+	}
+	if vault == nil {
+		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+	}
+	if err := vault.ValidateAdmin(msg.Admin); err != nil {
+		return nil, err
+	}
+
+	k.SetMinInterestRate(ctx, vault, msg.MinRate)
+
+	return &types.MsgUpdateMinInterestRateResponse{}, nil
+}
+
+// UpdateMaxInterestRate sets the maximum allowable interest rate for a vault.
+// Only the vault admin is authorized to perform this operation.
+// An empty string disables the maximum interest rate limit.
+func (k msgServer) UpdateMaxInterestRate(goCtx context.Context, msg *types.MsgUpdateMaxInterestRateRequest) (*types.MsgUpdateMaxInterestRateResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault: %w", err)
+	}
+	if vault == nil {
+		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+	}
+	if err := vault.ValidateAdmin(msg.Admin); err != nil {
+		return nil, err
+	}
+
+	k.SetMaxInterestRate(ctx, vault, msg.MaxRate)
+
+	return &types.MsgUpdateMaxInterestRateResponse{}, nil
+}
+
 // UpdateInterestRate updates the interest rate for a vault.
 func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdateInterestRateRequest) (*types.MsgUpdateInterestRateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)

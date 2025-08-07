@@ -110,3 +110,21 @@ func NewEventPrincipalWithdrawal(vaultAddress, admin string, amount sdk.Coin) *E
 		Amount:       amount,
 	}
 }
+
+// NewEventMinInterestRateUpdated creates a new EventMinInterestRateUpdated event.
+func NewEventMinInterestRateUpdated(vaultAddress, admin, minRate string) *EventMinInterestRateUpdated {
+	return &EventMinInterestRateUpdated{
+		VaultAddress: vaultAddress,
+		Admin:        admin,
+		MinRate:      minRate,
+	}
+}
+
+// NewEventMaxInterestRateUpdated creates a new EventMaxInterestRateUpdated event.
+func NewEventMaxInterestRateUpdated(vaultAddress, admin, maxRate string) *EventMaxInterestRateUpdated {
+	return &EventMaxInterestRateUpdated{
+		VaultAddress: vaultAddress,
+		Admin:        admin,
+		MaxRate:      maxRate,
+	}
+}

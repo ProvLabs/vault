@@ -559,3 +559,133 @@ func TestMsgToggleSwapOutRequest_ValidateBasic(t *testing.T) {
 		})
 	}
 }
+
+func TestMsgUpdateMinInterestRateRequest_ValidateBasic(t *testing.T) {
+	addr := utils.TestAddress().Bech32
+
+	tests := []struct {
+		name    string
+		msg     types.MsgUpdateMinInterestRateRequest
+		wantErr string
+	}{
+		{
+			name: "valid min rate",
+			msg: types.MsgUpdateMinInterestRateRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				MinRate:      "-0.75",
+			},
+		},
+		{
+			name: "empty min rate allowed (clears limit)",
+			msg: types.MsgUpdateMinInterestRateRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				MinRate:      "",
+			},
+		},
+		{
+			name: "invalid admin address",
+			msg: types.MsgUpdateMinInterestRateRequest{
+				Admin:        "bad",
+				VaultAddress: addr,
+				MinRate:      "-1.0",
+			},
+			wantErr: "invalid admin address",
+		},
+		{
+			name: "invalid vault address",
+			msg: types.MsgUpdateMinInterestRateRequest{
+				Admin:        addr,
+				VaultAddress: "bad",
+				MinRate:      "-1.0",
+			},
+			wantErr: "invalid vault address",
+		},
+		{
+			name: "invalid min rate",
+			msg: types.MsgUpdateMinInterestRateRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				MinRate:      "abc",
+			},
+			wantErr: "invalid min rate",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.wantErr != "" {
+				assert.ErrorContains(t, err, tc.wantErr)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestMsgUpdateMaxInterestRateRequest_ValidateBasic(t *testing.T) {
+	addr := utils.TestAddress().Bech32
+
+	tests := []struct {
+		name    string
+		msg     types.MsgUpdateMaxInterestRateRequest
+		wantErr string
+	}{
+		{
+			name: "valid max rate",
+			msg: types.MsgUpdateMaxInterestRateRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				MaxRate:      "3.25",
+			},
+		},
+		{
+			name: "empty max rate allowed (clears limit)",
+			msg: types.MsgUpdateMaxInterestRateRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				MaxRate:      "",
+			},
+		},
+		{
+			name: "invalid admin address",
+			msg: types.MsgUpdateMaxInterestRateRequest{
+				Admin:        "bad",
+				VaultAddress: addr,
+				MaxRate:      "2.0",
+			},
+			wantErr: "invalid admin address",
+		},
+		{
+			name: "invalid vault address",
+			msg: types.MsgUpdateMaxInterestRateRequest{
+				Admin:        addr,
+				VaultAddress: "bad",
+				MaxRate:      "2.0",
+			},
+			wantErr: "invalid vault address",
+		},
+		{
+			name: "invalid max rate",
+			msg: types.MsgUpdateMaxInterestRateRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				MaxRate:      "notanumber",
+			},
+			wantErr: "invalid max rate",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.wantErr != "" {
+				assert.ErrorContains(t, err, tc.wantErr)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}

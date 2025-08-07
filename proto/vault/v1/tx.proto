@@ -26,6 +26,12 @@ service Msg {
   // parameters. The authority defaults to the x/gov module account.
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
 
+  // UpdateMinInterestRate sets the minimum allowed interest rate for a vault.
+  rpc UpdateMinInterestRate(MsgUpdateMinInterestRateRequest) returns (MsgUpdateMinInterestRateResponse);
+
+  // UpdateMaxInterestRate sets the maximum allowed interest rate for a vault.
+  rpc UpdateMaxInterestRate(MsgUpdateMaxInterestRateRequest) returns (MsgUpdateMaxInterestRateResponse);
+
   // UpdateInterestRate allows the interest admin to update the current interest rate within limits.
   rpc UpdateInterestRate(MsgUpdateInterestRateRequest) returns (MsgUpdateInterestRateResponse);
 
@@ -118,6 +124,26 @@ message MsgSwapOutResponse {
   // shares_burned is the amount of shares burned in exchange for assets.
   cosmos.base.v1beta1.Coin shares_burned = 1 [(gogoproto.nullable) = false];
 }
+
+message MsgUpdateMinInterestRateRequest {
+  option (cosmos.msg.v1.signer) = "admin";
+
+  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string vault_address = 2;
+  string min_rate = 3; // optional: "" disables the minimum limit
+}
+
+message MsgUpdateMinInterestRateResponse {}
+
+message MsgUpdateMaxInterestRateRequest {
+  option (cosmos.msg.v1.signer) = "admin";
+
+  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string vault_address = 2;
+  string max_rate = 3; // optional: "" disables the maximum limit
+}
+
+message MsgUpdateMaxInterestRateResponse {}
 
 // MsgSetInterestConfigRequest is the request message for setting the interest rate configuration of a vault.
 message MsgSetInterestConfigRequest {

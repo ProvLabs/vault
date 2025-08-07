@@ -284,3 +284,19 @@ func (k *Keeper) SetSwapOutEnable(ctx context.Context, vault *types.VaultAccount
 	k.AuthKeeper.SetAccount(ctx, vault)
 	k.emitEvent(sdk.UnwrapSDKContext(ctx), types.NewEventToggleSwapOut(vault.Address, vault.Admin, enabled))
 }
+
+// SetMinInterestRate sets the minimum interest rate for a vault.
+// An empty string disables the minimum rate check.
+func (k *Keeper) SetMinInterestRate(ctx sdk.Context, vault *types.VaultAccount, minRate string) {
+	vault.MinInterestRate = minRate
+	k.AuthKeeper.SetAccount(ctx, vault)
+	k.emitEvent(ctx, types.NewEventMinInterestRateUpdated(vault.Address, vault.Admin, minRate))
+}
+
+// SetMaxInterestRate sets the maximum interest rate for a vault.
+// An empty string disables the maximum rate check.
+func (k *Keeper) SetMaxInterestRate(ctx sdk.Context, vault *types.VaultAccount, maxRate string) {
+	vault.MaxInterestRate = maxRate
+	k.AuthKeeper.SetAccount(ctx, vault)
+	k.emitEvent(ctx, types.NewEventMaxInterestRateUpdated(vault.Address, vault.Admin, maxRate))
+}

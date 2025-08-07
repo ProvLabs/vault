@@ -198,3 +198,35 @@ func (m MsgWithdrawPrincipalFundsRequest) ValidateBasic() error {
 	}
 	return nil
 }
+
+// ValidateBasic performs stateless validation on MsgUpdateMinInterestRateRequest.
+func (m MsgUpdateMinInterestRateRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
+		return fmt.Errorf("invalid admin address: %q: %w", m.Admin, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	if m.MinRate != "" {
+		if _, err := sdkmath.LegacyNewDecFromStr(m.MinRate); err != nil {
+			return fmt.Errorf("invalid min rate: %q: %w", m.MinRate, err)
+		}
+	}
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgUpdateMaxInterestRateRequest.
+func (m MsgUpdateMaxInterestRateRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
+		return fmt.Errorf("invalid admin address: %q: %w", m.Admin, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	if m.MaxRate != "" {
+		if _, err := sdkmath.LegacyNewDecFromStr(m.MaxRate); err != nil {
+			return fmt.Errorf("invalid max rate: %q: %w", m.MaxRate, err)
+		}
+	}
+	return nil
+}

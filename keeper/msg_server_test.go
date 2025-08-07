@@ -237,15 +237,16 @@ func (s *TestSuite) TestMsgServer_SwapIn() {
 	tc := msgServerTestCase[types.MsgSwapInRequest, postCheckArgs]{
 		name: "happy path",
 		setup: func() {
-
 			s.ctx = s.ctx.WithBlockTime(time.Now())
 			s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), owner)
-			_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			vault, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 				Admin:           owner.String(),
 				ShareDenom:      shareDenom,
 				UnderlyingAsset: underlyingDenom,
 			})
 			s.Require().NoError(err)
+			vault.SwapInEnabled = true
+			s.k.AuthKeeper.SetAccount(s.ctx, vault)
 			// Fund owner with underlying assets
 			err = FundAccount(s.ctx, s.simApp.BankKeeper, owner, sdk.NewCoins(assets))
 			s.Require().NoError(err)
@@ -273,17 +274,21 @@ func (s *TestSuite) TestMsgServer_SwapIn_Failures() {
 	vaultAddr := types.GetVaultAddress(shareDenom)
 	assets := sdk.NewInt64Coin(underlyingDenom, 100)
 
-	// Base setup for many tests
-	setup := func() {
-		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), owner)
-		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-			Admin:           owner.String(),
-			ShareDenom:      shareDenom,
-			UnderlyingAsset: underlyingDenom,
-		})
-		s.Require().NoError(err)
-		err = FundAccount(s.ctx, s.simApp.BankKeeper, owner, sdk.NewCoins(assets))
-		s.Require().NoError(err)
+	// setup is a factory for creating setup functions.
+	setup := func(swapInEnabled bool) func() {
+		return func() {
+			s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), owner)
+			vault, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+				Admin:           owner.String(),
+				ShareDenom:      shareDenom,
+				UnderlyingAsset: underlyingDenom,
+			})
+			s.Require().NoError(err)
+			vault.SwapInEnabled = swapInEnabled
+			s.k.AuthKeeper.SetAccount(s.ctx, vault)
+			err = FundAccount(s.ctx, s.simApp.BankKeeper, owner, sdk.NewCoins(assets))
+			s.Require().NoError(err)
+		}
 	}
 
 	tests := []msgServerTestCase[types.MsgSwapInRequest, any]{
@@ -297,8 +302,18 @@ func (s *TestSuite) TestMsgServer_SwapIn_Failures() {
 			expectedErrSubstrs: []string{"vault with address", "not found"},
 		},
 		{
+			name:  "swap in disabled",
+			setup: setup(false),
+			msg: types.MsgSwapInRequest{
+				Owner:        owner.String(),
+				VaultAddress: vaultAddr.String(),
+				Assets:       assets,
+			},
+			expectedErrSubstrs: []string{"swaps are not enabled for vault"},
+		},
+		{
 			name:  "underlying asset mismatch",
-			setup: setup,
+			setup: setup(true),
 			msg: types.MsgSwapInRequest{
 				Owner:        owner.String(),
 				VaultAddress: vaultAddr.String(),
@@ -309,7 +324,7 @@ func (s *TestSuite) TestMsgServer_SwapIn_Failures() {
 		{
 			name: "insufficient funds",
 			setup: func() {
-				setup()
+				setup(true)()
 				// Try to swap 100, but owner only has 50.
 				err := s.simApp.BankKeeper.SendCoins(s.ctx, owner, authtypes.NewModuleAddress("burn"), sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 50)))
 				s.Require().NoError(err)
@@ -367,12 +382,15 @@ func (s *TestSuite) TestMsgServer_SwapOut() {
 		// Create marker for underlying asset
 		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), owner)
 		// Create the vault
-		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+		vault, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 			Admin:           owner.String(),
 			ShareDenom:      shareDenom,
 			UnderlyingAsset: underlyingDenom,
 		})
 		s.Require().NoError(err)
+		vault.SwapInEnabled = true
+		vault.SwapOutEnabled = true
+		s.k.AuthKeeper.SetAccount(s.ctx, vault)
 		// Fund owner with underlying assets
 		err = FundAccount(s.ctx, s.simApp.BankKeeper, owner, sdk.NewCoins(initialAssets))
 		s.Require().NoError(err)
@@ -435,12 +453,15 @@ func (s *TestSuite) TestMsgServer_SwapOut_Failures() {
 		// Create marker for underlying asset
 		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), owner)
 		// Create the vault
-		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+		vault, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 			Admin:           owner.String(),
 			ShareDenom:      shareDenom,
 			UnderlyingAsset: underlyingDenom,
 		})
 		s.Require().NoError(err)
+		vault.SwapInEnabled = true
+		vault.SwapOutEnabled = true
+		s.k.AuthKeeper.SetAccount(s.ctx, vault)
 		// Fund owner with underlying assets
 		err = FundAccount(s.ctx, s.simApp.BankKeeper, owner, sdk.NewCoins(initialAssets))
 		s.Require().NoError(err)

@@ -19,15 +19,17 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Msg_CreateVault_FullMethodName           = "/vault.v1.Msg/CreateVault"
-	Msg_SwapIn_FullMethodName                = "/vault.v1.Msg/SwapIn"
-	Msg_SwapOut_FullMethodName               = "/vault.v1.Msg/SwapOut"
-	Msg_UpdateParams_FullMethodName          = "/vault.v1.Msg/UpdateParams"
-	Msg_UpdateInterestRate_FullMethodName    = "/vault.v1.Msg/UpdateInterestRate"
-	Msg_DepositInterestFunds_FullMethodName  = "/vault.v1.Msg/DepositInterestFunds"
-	Msg_WithdrawInterestFunds_FullMethodName = "/vault.v1.Msg/WithdrawInterestFunds"
-	Msg_ToggleSwapIn_FullMethodName          = "/vault.v1.Msg/ToggleSwapIn"
-	Msg_ToggleSwapOut_FullMethodName         = "/vault.v1.Msg/ToggleSwapOut"
+	Msg_CreateVault_FullMethodName            = "/vault.v1.Msg/CreateVault"
+	Msg_SwapIn_FullMethodName                 = "/vault.v1.Msg/SwapIn"
+	Msg_SwapOut_FullMethodName                = "/vault.v1.Msg/SwapOut"
+	Msg_UpdateParams_FullMethodName           = "/vault.v1.Msg/UpdateParams"
+	Msg_UpdateInterestRate_FullMethodName     = "/vault.v1.Msg/UpdateInterestRate"
+	Msg_DepositInterestFunds_FullMethodName   = "/vault.v1.Msg/DepositInterestFunds"
+	Msg_WithdrawInterestFunds_FullMethodName  = "/vault.v1.Msg/WithdrawInterestFunds"
+	Msg_ToggleSwapIn_FullMethodName           = "/vault.v1.Msg/ToggleSwapIn"
+	Msg_ToggleSwapOut_FullMethodName          = "/vault.v1.Msg/ToggleSwapOut"
+	Msg_DepositPrincipalFunds_FullMethodName  = "/vault.v1.Msg/DepositPrincipalFunds"
+	Msg_WithdrawPrincipalFunds_FullMethodName = "/vault.v1.Msg/WithdrawPrincipalFunds"
 )
 
 // MsgClient is the client API for Msg service.
@@ -55,6 +57,10 @@ type MsgClient interface {
 	ToggleSwapIn(ctx context.Context, in *MsgToggleSwapInRequest, opts ...grpc.CallOption) (*MsgToggleSwapInResponse, error)
 	// ToggleSwapOut allows enabling or disabling swap-out operations for a vault.
 	ToggleSwapOut(ctx context.Context, in *MsgToggleSwapOutRequest, opts ...grpc.CallOption) (*MsgToggleSwapOutResponse, error)
+	// DepositPrincipalFunds allows depositing principal funds into a vault.
+	DepositPrincipalFunds(ctx context.Context, in *MsgDepositPrincipalFundsRequest, opts ...grpc.CallOption) (*MsgDepositPrincipalFundsResponse, error)
+	// WithdrawPrincipalFunds allows withdrawing principal funds from a vault.
+	WithdrawPrincipalFunds(ctx context.Context, in *MsgWithdrawPrincipalFundsRequest, opts ...grpc.CallOption) (*MsgWithdrawPrincipalFundsResponse, error)
 }
 
 type msgClient struct {
@@ -155,6 +161,26 @@ func (c *msgClient) ToggleSwapOut(ctx context.Context, in *MsgToggleSwapOutReque
 	return out, nil
 }
 
+func (c *msgClient) DepositPrincipalFunds(ctx context.Context, in *MsgDepositPrincipalFundsRequest, opts ...grpc.CallOption) (*MsgDepositPrincipalFundsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgDepositPrincipalFundsResponse)
+	err := c.cc.Invoke(ctx, Msg_DepositPrincipalFunds_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) WithdrawPrincipalFunds(ctx context.Context, in *MsgWithdrawPrincipalFundsRequest, opts ...grpc.CallOption) (*MsgWithdrawPrincipalFundsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgWithdrawPrincipalFundsResponse)
+	err := c.cc.Invoke(ctx, Msg_WithdrawPrincipalFunds_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility.
@@ -180,6 +206,10 @@ type MsgServer interface {
 	ToggleSwapIn(context.Context, *MsgToggleSwapInRequest) (*MsgToggleSwapInResponse, error)
 	// ToggleSwapOut allows enabling or disabling swap-out operations for a vault.
 	ToggleSwapOut(context.Context, *MsgToggleSwapOutRequest) (*MsgToggleSwapOutResponse, error)
+	// DepositPrincipalFunds allows depositing principal funds into a vault.
+	DepositPrincipalFunds(context.Context, *MsgDepositPrincipalFundsRequest) (*MsgDepositPrincipalFundsResponse, error)
+	// WithdrawPrincipalFunds allows withdrawing principal funds from a vault.
+	WithdrawPrincipalFunds(context.Context, *MsgWithdrawPrincipalFundsRequest) (*MsgWithdrawPrincipalFundsResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -216,6 +246,12 @@ func (UnimplementedMsgServer) ToggleSwapIn(context.Context, *MsgToggleSwapInRequ
 }
 func (UnimplementedMsgServer) ToggleSwapOut(context.Context, *MsgToggleSwapOutRequest) (*MsgToggleSwapOutResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ToggleSwapOut not implemented")
+}
+func (UnimplementedMsgServer) DepositPrincipalFunds(context.Context, *MsgDepositPrincipalFundsRequest) (*MsgDepositPrincipalFundsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DepositPrincipalFunds not implemented")
+}
+func (UnimplementedMsgServer) WithdrawPrincipalFunds(context.Context, *MsgWithdrawPrincipalFundsRequest) (*MsgWithdrawPrincipalFundsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method WithdrawPrincipalFunds not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 func (UnimplementedMsgServer) testEmbeddedByValue()             {}
@@ -400,6 +436,42 @@ func _Msg_ToggleSwapOut_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_DepositPrincipalFunds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgDepositPrincipalFundsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).DepositPrincipalFunds(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_DepositPrincipalFunds_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).DepositPrincipalFunds(ctx, req.(*MsgDepositPrincipalFundsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_WithdrawPrincipalFunds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgWithdrawPrincipalFundsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).WithdrawPrincipalFunds(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_WithdrawPrincipalFunds_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).WithdrawPrincipalFunds(ctx, req.(*MsgWithdrawPrincipalFundsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -442,6 +514,14 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ToggleSwapOut",
 			Handler:    _Msg_ToggleSwapOut_Handler,
+		},
+		{
+			MethodName: "DepositPrincipalFunds",
+			Handler:    _Msg_DepositPrincipalFunds_Handler,
+		},
+		{
+			MethodName: "WithdrawPrincipalFunds",
+			Handler:    _Msg_WithdrawPrincipalFunds_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

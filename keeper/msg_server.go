@@ -218,3 +218,41 @@ func (k msgServer) ToggleSwapOut(goCtx context.Context, msg *types.MsgToggleSwap
 
 	return &types.MsgToggleSwapOutResponse{}, nil
 }
+
+// DepositPrincipalFunds allows an admin to deposit principal funds into a vault.
+func (k msgServer) DepositPrincipalFunds(goCtx context.Context, msg *types.MsgDepositPrincipalFundsRequest) (*types.MsgDepositPrincipalFundsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+
+	vault, ok := k.tryGetVault(ctx, vaultAddr)
+	if !ok {
+		return nil, fmt.Errorf("failed to get vault: %v", msg.VaultAddress)
+	}
+	if vault.Admin != msg.Admin {
+		return nil, fmt.Errorf("unauthorized: %s is not the vault admin", msg.Admin)
+	}
+
+	panic("not implemented yet")
+
+	return &types.MsgDepositPrincipalFundsResponse{}, nil
+}
+
+// WithdrawPrincipalFunds allows an admin to withdraw principal funds from a vault.
+func (k msgServer) WithdrawPrincipalFunds(goCtx context.Context, msg *types.MsgWithdrawPrincipalFundsRequest) (*types.MsgWithdrawPrincipalFundsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+
+	vault, ok := k.tryGetVault(ctx, vaultAddr)
+	if !ok {
+		return nil, fmt.Errorf("failed to get vault: %v", msg.VaultAddress)
+	}
+	if vault.Admin != msg.Admin {
+		return nil, fmt.Errorf("unauthorized: %s is not the vault admin", msg.Admin)
+	}
+
+	panic("not implemented yet")
+
+	return &types.MsgWithdrawPrincipalFundsResponse{}, nil
+}

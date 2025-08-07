@@ -332,6 +332,7 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 				vault, err := s.k.GetVault(s.ctx, vaultAddr)
 				s.Require().NoError(err)
 				vault.CurrentInterestRate = "0.25"
+				vault.DesiredInterestRate = "0.25"
 				s.k.AuthKeeper.SetAccount(s.ctx, vault)
 				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, sdk.NewCoins(underlying)))
 				s.Require().NoError(s.k.VaultInterestDetails.Set(s.ctx, vaultAddr, types.VaultInterestDetails{
@@ -346,8 +347,8 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 			expectRate:    types.ZeroInterestRate,
 			expectedEvents: sdk.Events{
 				sdk.NewEvent("vault.v1.EventVaultInterestChange",
-					sdk.NewAttribute("new_rate", types.ZeroInterestRate),
-					sdk.NewAttribute("previous_rate", "0.25"),
+					sdk.NewAttribute("current_rate", types.ZeroInterestRate),
+					sdk.NewAttribute("desired_rate", "0.25"),
 					sdk.NewAttribute("vault_address", vaultAddr.String()),
 				),
 			},
@@ -482,8 +483,8 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 			expectedEvents: sdk.Events{
 				sdk.NewEvent(
 					"vault.v1.EventVaultInterestChange",
-					sdk.NewAttribute("new_rate", types.ZeroInterestRate),
-					sdk.NewAttribute("previous_rate", "0.1"),
+					sdk.NewAttribute("current_rate", types.ZeroInterestRate),
+					sdk.NewAttribute("desired_rate", "0.1"),
 					sdk.NewAttribute("vault_address", v1.vaultAddr.String()),
 				),
 			},
@@ -504,8 +505,8 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 			expectedEvents: sdk.Events{
 				sdk.NewEvent(
 					"vault.v1.EventVaultInterestChange",
-					sdk.NewAttribute("new_rate", types.ZeroInterestRate),
-					sdk.NewAttribute("previous_rate", "0.1"),
+					sdk.NewAttribute("current_rate", types.ZeroInterestRate),
+					sdk.NewAttribute("desired_rate", "0.1"),
 					sdk.NewAttribute("vault_address", v2.vaultAddr.String()),
 				),
 			},
@@ -540,8 +541,8 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 			expectedEvents: sdk.Events{
 				sdk.NewEvent(
 					"vault.v1.EventVaultInterestChange",
-					sdk.NewAttribute("new_rate", types.ZeroInterestRate),
-					sdk.NewAttribute("previous_rate", "0.1"),
+					sdk.NewAttribute("current_rate", types.ZeroInterestRate),
+					sdk.NewAttribute("desired_rate", "0.1"),
 					sdk.NewAttribute("vault_address", v2.vaultAddr.String()),
 				),
 			},
@@ -571,13 +572,13 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 			expectedEvents: sdk.Events{
 				sdk.NewEvent(
 					"vault.v1.EventVaultInterestChange",
-					sdk.NewAttribute("new_rate", types.ZeroInterestRate),
-					sdk.NewAttribute("previous_rate", "0.1"),
+					sdk.NewAttribute("current_rate", types.ZeroInterestRate),
+					sdk.NewAttribute("desired_rate", "0.1"),
 					sdk.NewAttribute("vault_address", v2.vaultAddr.String())),
 				sdk.NewEvent(
 					"vault.v1.EventVaultInterestChange",
-					sdk.NewAttribute("new_rate", types.ZeroInterestRate),
-					sdk.NewAttribute("previous_rate", "0.1"),
+					sdk.NewAttribute("current_rate", types.ZeroInterestRate),
+					sdk.NewAttribute("desired_rate", "0.1"),
 					sdk.NewAttribute("vault_address", v5.vaultAddr.String())),
 			},
 		},
@@ -800,8 +801,8 @@ func (s *TestSuite) TestKeeper_handleDepletedVaults() {
 			expectedEvents: sdk.Events{
 				sdk.NewEvent(
 					"vault.v1.EventVaultInterestChange",
-					sdk.NewAttribute("new_rate", types.ZeroInterestRate),
-					sdk.NewAttribute("previous_rate", initialRate),
+					sdk.NewAttribute("current_rate", types.ZeroInterestRate),
+					sdk.NewAttribute("desired_rate", initialRate),
 					sdk.NewAttribute("vault_address", v1.vaultAddr.String()),
 				),
 			},
@@ -832,8 +833,8 @@ func (s *TestSuite) TestKeeper_handleDepletedVaults() {
 				}
 			},
 			expectedEvents: sdk.Events{
-				sdk.NewEvent("vault.v1.EventVaultInterestChange", sdk.NewAttribute("new_rate", types.ZeroInterestRate), sdk.NewAttribute("previous_rate", initialRate), sdk.NewAttribute("vault_address", v1.vaultAddr.String())),
-				sdk.NewEvent("vault.v1.EventVaultInterestChange", sdk.NewAttribute("new_rate", types.ZeroInterestRate), sdk.NewAttribute("previous_rate", "0.2"), sdk.NewAttribute("vault_address", v2.vaultAddr.String())),
+				sdk.NewEvent("vault.v1.EventVaultInterestChange", sdk.NewAttribute("current_rate", types.ZeroInterestRate), sdk.NewAttribute("desired_rate", initialRate), sdk.NewAttribute("vault_address", v1.vaultAddr.String())),
+				sdk.NewEvent("vault.v1.EventVaultInterestChange", sdk.NewAttribute("current_rate", types.ZeroInterestRate), sdk.NewAttribute("desired_rate", "0.2"), sdk.NewAttribute("vault_address", v2.vaultAddr.String())),
 			},
 		},
 	}
@@ -927,6 +928,7 @@ func createVaultWithInterest(s *TestSuite, info VaultInfo, interestRate string, 
 	s.Require().NoError(err)
 
 	vault.CurrentInterestRate = interestRate
+	vault.DesiredInterestRate = interestRate
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 	if fundReserves {

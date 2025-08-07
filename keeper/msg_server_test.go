@@ -489,6 +489,260 @@ func (s *TestSuite) TestMsgServer_SwapOut_Failures() {
 	}
 }
 
+func (s *TestSuite) TestMsgServer_ToggleSwapOut() {
+	type postCheckArgs struct {
+		VaultAddress    sdk.AccAddress
+		ExpectedEnabled bool
+	}
+
+	testDef := msgServerTestDef[types.MsgToggleSwapOutRequest, types.MsgToggleSwapOutResponse, postCheckArgs]{
+		endpointName: "ToggleSwapOut",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).ToggleSwapOut,
+		postCheck: func(msg *types.MsgToggleSwapOutRequest, args postCheckArgs) {
+			vault, err := s.k.GetVault(s.ctx, args.VaultAddress)
+			s.Require().NoError(err, "should be able to get vault")
+			s.Assert().Equal(args.ExpectedEnabled, vault.SwapOutEnabled, "vault SwapOutEnabled should match expected value")
+		},
+	}
+
+	underlyingDenom := "underlying"
+	shareDenom := "vaultshares"
+	owner := s.adminAddr
+	otherUser := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1000))
+	vaultAddr := types.GetVaultAddress(shareDenom)
+
+	setup := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), owner)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           owner.String(),
+			ShareDenom:      shareDenom,
+			UnderlyingAsset: underlyingDenom,
+		})
+		s.Require().NoError(err)
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	tests := []struct {
+		name               string
+		setup              func()
+		msg                types.MsgToggleSwapOutRequest
+		postCheckArgs      postCheckArgs
+		expectedEvents     sdk.Events
+		expectedErrSubstrs []string
+	}{
+		{
+			name:  "happy path - enable swap out",
+			setup: setup,
+			msg: types.MsgToggleSwapOutRequest{
+				Admin:        owner.String(),
+				VaultAddress: vaultAddr.String(),
+				Enabled:      true,
+			},
+			postCheckArgs: postCheckArgs{
+				VaultAddress:    vaultAddr,
+				ExpectedEnabled: true,
+			},
+			expectedEvents: sdk.Events{
+				sdk.NewEvent("vault.v1.EventToggleSwapOut",
+					sdk.NewAttribute("admin", owner.String()),
+					sdk.NewAttribute("enabled", "true"),
+					sdk.NewAttribute("vault_address", vaultAddr.String()),
+				),
+			},
+		},
+		{
+			name: "happy path - disable swap out",
+			setup: func() {
+				setup()
+				// Pre-enable it
+				vault, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err)
+				vault.SwapOutEnabled = true
+				s.k.AuthKeeper.SetAccount(s.ctx, vault)
+			},
+			msg: types.MsgToggleSwapOutRequest{
+				Admin:        owner.String(),
+				VaultAddress: vaultAddr.String(),
+				Enabled:      false,
+			},
+			postCheckArgs: postCheckArgs{
+				VaultAddress:    vaultAddr,
+				ExpectedEnabled: false,
+			},
+			expectedEvents: sdk.Events{
+				sdk.NewEvent("vault.v1.EventToggleSwapOut",
+					sdk.NewAttribute("admin", owner.String()),
+					sdk.NewAttribute("enabled", "false"),
+					sdk.NewAttribute("vault_address", vaultAddr.String()),
+				),
+			},
+		},
+		{
+			name:  "failure - vault not found",
+			setup: func() { /* no setup, so vault doesn't exist */ },
+			msg: types.MsgToggleSwapOutRequest{
+				Admin:        owner.String(),
+				VaultAddress: vaultAddr.String(),
+				Enabled:      true,
+			},
+			expectedErrSubstrs: []string{"vault not found", vaultAddr.String()},
+		},
+		{
+			name:  "failure - unauthorized admin",
+			setup: setup,
+			msg: types.MsgToggleSwapOutRequest{
+				Admin:        otherUser.String(),
+				VaultAddress: vaultAddr.String(),
+				Enabled:      true,
+			},
+			expectedErrSubstrs: []string{"unauthorized", otherUser.String(), "is not the vault admin"},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			tc := msgServerTestCase[types.MsgToggleSwapOutRequest, postCheckArgs]{
+				name:               tt.name,
+				setup:              tt.setup,
+				msg:                tt.msg,
+				postCheckArgs:      tt.postCheckArgs,
+				expectedEvents:     tt.expectedEvents,
+				expectedErrSubstrs: tt.expectedErrSubstrs,
+			}
+
+			testDef.expectedResponse = &types.MsgToggleSwapOutResponse{}
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_ToggleSwapIn() {
+	type postCheckArgs struct {
+		VaultAddress    sdk.AccAddress
+		ExpectedEnabled bool
+	}
+
+	testDef := msgServerTestDef[types.MsgToggleSwapInRequest, types.MsgToggleSwapInResponse, postCheckArgs]{
+		endpointName: "ToggleSwapIn",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).ToggleSwapIn,
+		postCheck: func(msg *types.MsgToggleSwapInRequest, args postCheckArgs) {
+			vault, err := s.k.GetVault(s.ctx, args.VaultAddress)
+			s.Require().NoError(err, "should be able to get vault")
+			s.Assert().Equal(args.ExpectedEnabled, vault.SwapInEnabled, "vault SwapInEnabled should match expected value")
+		},
+	}
+
+	underlyingDenom := "underlying"
+	shareDenom := "vaultshares"
+	owner := s.adminAddr
+	otherUser := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1000))
+	vaultAddr := types.GetVaultAddress(shareDenom)
+
+	setup := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), owner)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           owner.String(),
+			ShareDenom:      shareDenom,
+			UnderlyingAsset: underlyingDenom,
+		})
+		s.Require().NoError(err)
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	tests := []struct {
+		name               string
+		setup              func()
+		msg                types.MsgToggleSwapInRequest
+		postCheckArgs      postCheckArgs
+		expectedEvents     sdk.Events
+		expectedErrSubstrs []string
+	}{
+		{
+			name:  "happy path - enable swap in",
+			setup: setup,
+			msg: types.MsgToggleSwapInRequest{
+				Admin:        owner.String(),
+				VaultAddress: vaultAddr.String(),
+				Enabled:      true,
+			},
+			postCheckArgs: postCheckArgs{
+				VaultAddress:    vaultAddr,
+				ExpectedEnabled: true,
+			},
+			expectedEvents: sdk.Events{
+				sdk.NewEvent("vault.v1.EventToggleSwapIn",
+					sdk.NewAttribute("admin", owner.String()),
+					sdk.NewAttribute("enabled", "true"),
+					sdk.NewAttribute("vault_address", vaultAddr.String()),
+				),
+			},
+		},
+		{
+			name: "happy path - disable swap in",
+			setup: func() {
+				setup()
+				// Pre-enable it
+				vault, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err)
+				vault.SwapInEnabled = true
+				s.k.AuthKeeper.SetAccount(s.ctx, vault)
+			},
+			msg: types.MsgToggleSwapInRequest{
+				Admin:        owner.String(),
+				VaultAddress: vaultAddr.String(),
+				Enabled:      false,
+			},
+			postCheckArgs: postCheckArgs{
+				VaultAddress:    vaultAddr,
+				ExpectedEnabled: false,
+			},
+			expectedEvents: sdk.Events{
+				sdk.NewEvent("vault.v1.EventToggleSwapIn",
+					sdk.NewAttribute("admin", owner.String()),
+					sdk.NewAttribute("enabled", "false"),
+					sdk.NewAttribute("vault_address", vaultAddr.String()),
+				),
+			},
+		},
+		{
+			name:  "failure - vault not found",
+			setup: func() { /* no setup, so vault doesn't exist */ },
+			msg: types.MsgToggleSwapInRequest{
+				Admin:        owner.String(),
+				VaultAddress: vaultAddr.String(),
+				Enabled:      true,
+			},
+			expectedErrSubstrs: []string{"vault not found", vaultAddr.String()},
+		},
+		{
+			name:  "failure - unauthorized admin",
+			setup: setup,
+			msg: types.MsgToggleSwapInRequest{
+				Admin:        otherUser.String(),
+				VaultAddress: vaultAddr.String(),
+				Enabled:      true,
+			},
+			expectedErrSubstrs: []string{"unauthorized", otherUser.String(), "is not the vault admin"},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			tc := msgServerTestCase[types.MsgToggleSwapInRequest, postCheckArgs]{
+				name:               tt.name,
+				setup:              tt.setup,
+				msg:                tt.msg,
+				postCheckArgs:      tt.postCheckArgs,
+				expectedEvents:     tt.expectedEvents,
+				expectedErrSubstrs: tt.expectedErrSubstrs,
+			}
+
+			testDef.expectedResponse = &types.MsgToggleSwapInResponse{}
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
 func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 	type postCheckArgs struct {
 		VaultAddress          sdk.AccAddress

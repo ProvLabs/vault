@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"context"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -191,6 +190,9 @@ func (s *TestSuite) TestSetMinMaxInterestRate_NoOp_NoEvent() {
 	v, err := s.k.CreateVault(s.ctx, attrs)
 	s.Require().NoError(err)
 
+	s.k.UpdateInterestRates(s.ctx, v, "0.10", "0.10")
+	s.k.AuthKeeper.SetAccount(s.ctx, v)
+
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	err = s.k.SetMinInterestRate(s.ctx, v, "0.10")
 	s.Require().NoError(err)
@@ -239,13 +241,13 @@ func (s *TestSuite) TestSetMaxInterestRate_ValidationBlocksWhenBelowExistingMin(
 	v, err := s.k.CreateVault(s.ctx, attrs)
 	s.Require().NoError(err)
 
-	s.Require().NoError(s.k.SetMinInterestRate(s.ctx, v, "0.50"))
+	s.Require().NoError(s.k.SetMinInterestRate(s.ctx, v, "-0.50"))
 
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
-	err = s.k.SetMaxInterestRate(s.ctx, v, "0.40")
+	err = s.k.SetMaxInterestRate(s.ctx, v, "-0.60")
 	s.Require().Error(err)
 	s.Require().Contains(err.Error(), "minimum interest rate")
-	s.Require().Equal("0.50", v.MinInterestRate)
+	s.Require().Equal("-0.50", v.MinInterestRate)
 	s.Require().Equal("", v.MaxInterestRate)
 	s.Require().Len(s.ctx.EventManager().Events(), 0)
 }
@@ -262,13 +264,17 @@ func (s *TestSuite) TestUpdateInterestRate_BoundsEnforced() {
 
 	v, err := s.k.GetVault(s.ctx, addr)
 	s.Require().NoError(err)
+
+	s.k.UpdateInterestRates(s.ctx, v, "0.10", "0.10")
+	s.k.AuthKeeper.SetAccount(s.ctx, v)
+
 	s.Require().NoError(s.k.SetMinInterestRate(s.ctx, v, "0.10"))
 	s.Require().NoError(s.k.SetMaxInterestRate(s.ctx, v, "0.50"))
 
 	srv := keeper.NewMsgServer(s.simApp.VaultKeeper)
 
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
-	_, err = srv.UpdateInterestRate(context.Background(), &types.MsgUpdateInterestRateRequest{
+	_, err = srv.UpdateInterestRate(s.ctx, &types.MsgUpdateInterestRateRequest{
 		Admin:        s.adminAddr.String(),
 		VaultAddress: addr.String(),
 		NewRate:      "0.25",
@@ -280,7 +286,7 @@ func (s *TestSuite) TestUpdateInterestRate_BoundsEnforced() {
 	s.Require().Equal("0.25", v2.DesiredInterestRate)
 
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
-	_, err = srv.UpdateInterestRate(context.Background(), &types.MsgUpdateInterestRateRequest{
+	_, err = srv.UpdateInterestRate(s.ctx, &types.MsgUpdateInterestRateRequest{
 		Admin:        s.adminAddr.String(),
 		VaultAddress: addr.String(),
 		NewRate:      "0.05",
@@ -288,7 +294,7 @@ func (s *TestSuite) TestUpdateInterestRate_BoundsEnforced() {
 	s.Require().Error(err)
 
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
-	_, err = srv.UpdateInterestRate(context.Background(), &types.MsgUpdateInterestRateRequest{
+	_, err = srv.UpdateInterestRate(s.ctx, &types.MsgUpdateInterestRateRequest{
 		Admin:        s.adminAddr.String(),
 		VaultAddress: addr.String(),
 		NewRate:      "0.60",

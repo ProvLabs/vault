@@ -297,7 +297,9 @@ func (k *Keeper) SetMinInterestRate(ctx sdk.Context, vault *types.VaultAccount, 
 		return nil
 	}
 	vault.MinInterestRate = minRate
-	k.AuthKeeper.SetAccount(ctx, vault)
+	if err := k.SetVaultAccount(ctx, vault); err != nil {
+		return err
+	}
 	k.emitEvent(ctx, types.NewEventMinInterestRateUpdated(vault.Address, vault.Admin, minRate))
 	return nil
 }
@@ -312,7 +314,9 @@ func (k *Keeper) SetMaxInterestRate(ctx sdk.Context, vault *types.VaultAccount, 
 		return nil
 	}
 	vault.MaxInterestRate = maxRate
-	k.AuthKeeper.SetAccount(ctx, vault)
+	if err := k.SetVaultAccount(ctx, vault); err != nil {
+		return err
+	}
 	k.emitEvent(ctx, types.NewEventMaxInterestRateUpdated(vault.Address, vault.Admin, maxRate))
 	return nil
 }

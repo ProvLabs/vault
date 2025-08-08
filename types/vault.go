@@ -62,6 +62,17 @@ func (va VaultAccount) Clone() *VaultAccount {
 	return proto.Clone(&va).(*VaultAccount)
 }
 
+// Validate performs a series of checks to ensure the VaultAccount is correctly configured.
+// It validates the following:
+//   - The admin address is a valid bech32 address.
+//   - The share denom is valid.
+//   - At least one underlying asset is specified, and each has a valid denom.
+//   - The current, desired, minimum, and maximum interest rates (if provided) are valid decimals.
+//   - The minimum interest rate is not greater than the maximum interest rate.
+//   - The desired interest rate falls within the min/max bounds (if set).
+//   - The current interest rate is either zero or equal to the desired interest rate.
+//
+// Returns an error describing the first validation failure encountered, or nil if the VaultAccount is valid.
 func (va VaultAccount) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(va.Admin); err != nil {
 		return fmt.Errorf("invalid admin address: %w", err)
@@ -104,12 +115,10 @@ func (va VaultAccount) Validate() error {
 		}
 	}
 
-	// min/max mutual consistency
 	if hasMin && hasMax && min.GT(max) {
 		return fmt.Errorf("minimum interest rate %s cannot be greater than maximum interest rate %s", min, max)
 	}
 
-	// desired within bounds if bounds set
 	if hasMin && des.LT(min) {
 		return fmt.Errorf("desired interest rate %s is less than minimum interest rate %s", des, min)
 	}
@@ -117,7 +126,6 @@ func (va VaultAccount) Validate() error {
 		return fmt.Errorf("desired interest rate %s is greater than maximum interest rate %s", des, max)
 	}
 
-	// current must be zero or equal to desired
 	if !cur.IsZero() && !cur.Equal(des) {
 		return fmt.Errorf("current interest rate must be zero or equal to desired (current=%s desired=%s)", cur, des)
 	}

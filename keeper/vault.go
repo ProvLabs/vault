@@ -321,6 +321,9 @@ func (k *Keeper) SetMaxInterestRate(ctx sdk.Context, vault *types.VaultAccount, 
 	return nil
 }
 
+// ValidateInterestRateLimits checks that the provided minimum and maximum interest
+// rates are valid decimal values and that the minimum rate is not greater than
+// the maximum rate. Empty values are treated as unset and pass validation.
 func (k Keeper) ValidateInterestRateLimits(minRateStr, maxRateStr string) error {
 	if minRateStr == "" || maxRateStr == "" {
 		return nil

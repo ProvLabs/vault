@@ -206,6 +206,26 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					},
 				},
 				{
+					RpcMethod: "UpdateMinInterestRate",
+					Use:       "update-min-interest-rate [admin] [vault_address] [min_rate]",
+					Short:     "Set or clear the minimum allowable interest rate for a vault",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "admin"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "min_rate"},
+					},
+				},
+				{
+					RpcMethod: "UpdateMaxInterestRate",
+					Use:       "update-max-interest-rate [admin] [vault_address] [max_rate]",
+					Short:     "Set or clear the maximum allowable interest rate for a vault",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "admin"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "max_rate"},
+					},
+				},
+				{
 					RpcMethod: "DepositInterestFunds",
 					Use:       "deposit-interest-funds [admin] [vault_address] [amount]",
 					Short:     "Deposit funds into a vault for paying interest",
@@ -219,6 +239,26 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "WithdrawInterestFunds",
 					Use:       "withdraw-interest-funds [admin] [vault_address] [amount]",
 					Short:     "Withdraw unused interest funds from a vault",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "admin"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "amount"},
+					},
+				},
+				{
+					RpcMethod: "DepositPrincipalFunds",
+					Use:       "deposit-principal-funds [admin] [vault_address] [amount]",
+					Short:     "Deposit principal funds into the vault’s marker",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "admin"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "amount"},
+					},
+				},
+				{
+					RpcMethod: "WithdrawPrincipalFunds",
+					Use:       "withdraw-principal-funds [admin] [vault_address] [amount]",
+					Short:     "Withdraw principal funds from the vault’s marker",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "admin"},
 						{ProtoField: "vault_address"},

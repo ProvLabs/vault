@@ -1532,6 +1532,156 @@ func (s *TestSuite) TestMsgServer_DepositPrincipalFunds_Failures() {
 	}
 }
 
+func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds() {
+	type postCheckArgs struct {
+		AdminAddress        sdk.AccAddress
+		MarkerAddress       sdk.AccAddress
+		ExpectedAdminAssets sdk.Coin
+	}
+
+	testDef := msgServerTestDef[types.MsgWithdrawPrincipalFundsRequest, types.MsgWithdrawPrincipalFundsResponse, postCheckArgs]{
+		endpointName: "WithdrawPrincipalFunds",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).WithdrawPrincipalFunds,
+		postCheck: func(msg *types.MsgWithdrawPrincipalFundsRequest, args postCheckArgs) {
+			balance := s.k.BankKeeper.GetBalance(s.ctx, args.AdminAddress, args.ExpectedAdminAssets.Denom)
+			s.Assert().Equal(args.ExpectedAdminAssets, balance)
+		},
+	}
+
+	underlying := "under"
+	share := "vaultshares"
+	admin := s.adminAddr
+	vaultAddr := types.GetVaultAddress(share)
+	markerAddr := markertypes.MustGetMarkerAddress(share)
+	amount := sdk.NewInt64Coin(underlying, 500)
+
+	setup := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      share,
+			UnderlyingAsset: underlying,
+		})
+		s.Require().NoError(err)
+		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, sdk.NewCoins(amount)))
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	s.Run("happy path - withdraw principal funds", func() {
+		ev := createSendCoinEvents(markerAddr.String(), admin.String(), sdk.NewCoins(amount).String())
+		ev = append(ev, sdk.NewEvent(
+			"vault.v1.EventWithdrawPrincipalFunds",
+			sdk.NewAttribute("admin", admin.String()),
+			sdk.NewAttribute("amount", CoinToJSON(amount)),
+			sdk.NewAttribute("vault_address", vaultAddr.String()),
+		))
+
+		tc := msgServerTestCase[types.MsgWithdrawPrincipalFundsRequest, postCheckArgs]{
+			name:  "happy path",
+			setup: setup,
+			msg: types.MsgWithdrawPrincipalFundsRequest{
+				Admin:        admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Amount:       amount,
+			},
+			postCheckArgs: postCheckArgs{
+				AdminAddress:        admin,
+				MarkerAddress:       markerAddr,
+				ExpectedAdminAssets: amount,
+			},
+			expectedEvents: ev,
+		}
+
+		testDef.expectedResponse = &types.MsgWithdrawPrincipalFundsResponse{}
+		runMsgServerTestCase(s, testDef, tc)
+	})
+}
+
+func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds_Failures() {
+	testDef := msgServerTestDef[types.MsgWithdrawPrincipalFundsRequest, types.MsgWithdrawPrincipalFundsResponse, any]{
+		endpointName: "WithdrawPrincipalFunds",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).WithdrawPrincipalFunds,
+		postCheck:    nil,
+	}
+
+	underlying := "under"
+	share := "vaultshares"
+	admin := s.adminAddr
+	other := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1000))
+	vaultAddr := types.GetVaultAddress(share)
+	markerAddr := markertypes.MustGetMarkerAddress(share)
+	amount := sdk.NewInt64Coin(underlying, 500)
+
+	setup := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      share,
+			UnderlyingAsset: underlying,
+		})
+		s.Require().NoError(err)
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	tests := []msgServerTestCase[types.MsgWithdrawPrincipalFundsRequest, any]{
+		{
+			name: "vault does not exist",
+			msg: types.MsgWithdrawPrincipalFundsRequest{
+				Admin:        admin.String(),
+				VaultAddress: types.GetVaultAddress("doesnotexist").String(),
+				Amount:       amount,
+			},
+			expectedErrSubstrs: []string{"not found"},
+		},
+		{
+			name:  "invalid vault address not a vault account",
+			setup: setup,
+			msg: types.MsgWithdrawPrincipalFundsRequest{
+				Admin:        admin.String(),
+				VaultAddress: markerAddr.String(),
+				Amount:       amount,
+			},
+			expectedErrSubstrs: []string{"failed to get vault", "is not a vault account"},
+		},
+		{
+			name:  "unauthorized admin",
+			setup: setup,
+			msg: types.MsgWithdrawPrincipalFundsRequest{
+				Admin:        other.String(),
+				VaultAddress: vaultAddr.String(),
+				Amount:       amount,
+			},
+			expectedErrSubstrs: []string{"unauthorized", "is not the vault admin"},
+		},
+		{
+			name:  "invalid asset for vault",
+			setup: setup,
+			msg: types.MsgWithdrawPrincipalFundsRequest{
+				Admin:        admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Amount:       sdk.NewInt64Coin("wrongdenom", 500),
+			},
+			expectedErrSubstrs: []string{"invalid asset for vault"},
+		},
+		{
+			name:  "insufficient marker balance",
+			setup: setup,
+			msg: types.MsgWithdrawPrincipalFundsRequest{
+				Admin:        admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Amount:       sdk.NewInt64Coin(underlying, 9_999_999),
+			},
+			expectedErrSubstrs: []string{"failed to withdraw principal funds", "insufficient funds"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
 // createMarkerMintCoinEvents creates events for minting a coin and sending it to a recipient.
 func createMarkerMintCoinEvents(markerModule, admin, recipient sdk.AccAddress, coin sdk.Coin) []sdk.Event {
 	events := createReceiveCoinsEvents(markerModule.String(), sdk.NewCoins(coin).String())

@@ -329,7 +329,7 @@ func (k msgServer) WithdrawPrincipalFunds(goCtx context.Context, msg *types.MsgW
 		return nil, err
 	}
 	withdrawAddress := sdk.MustAccAddressFromBech32(msg.Admin)
-	markerAddress := sdk.MustAccAddressFromBech32(vault.ShareDenom)
+	markerAddress := markertypes.MustGetMarkerAddress(vault.ShareDenom)
 	if err := vault.ValidateUnderlyingAssets(msg.Amount); err != nil {
 		return nil, fmt.Errorf("invalid asset for vault: %w", err)
 	}

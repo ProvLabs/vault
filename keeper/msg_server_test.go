@@ -1073,6 +1073,316 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds() {
 	})
 }
 
+func (s *TestSuite) TestMsgServer_UpdateMinInterestRate() {
+	type postCheckArgs struct {
+		VaultAddress sdk.AccAddress
+		ExpectedMin  string
+	}
+
+	testDef := msgServerTestDef[types.MsgUpdateMinInterestRateRequest, types.MsgUpdateMinInterestRateResponse, postCheckArgs]{
+		endpointName: "UpdateMinInterestRate",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).UpdateMinInterestRate,
+		postCheck: func(msg *types.MsgUpdateMinInterestRateRequest, args postCheckArgs) {
+			v, err := s.k.GetVault(s.ctx, args.VaultAddress)
+			s.Require().NoError(err)
+			s.Assert().Equal(args.ExpectedMin, v.MinInterestRate)
+		},
+	}
+
+	underlying := "under"
+	share := "vaultshares"
+	admin := s.adminAddr
+	vaultAddr := types.GetVaultAddress(share)
+
+	setup := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      share,
+			UnderlyingAsset: underlying,
+		})
+		s.Require().NoError(err)
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	tests := []struct {
+		name           string
+		minRate        string
+		postCheckArgs  postCheckArgs
+		expectedEvents sdk.Events
+	}{
+		{
+			name:    "set min to non-empty",
+			minRate: "0.05",
+			postCheckArgs: postCheckArgs{
+				VaultAddress: vaultAddr,
+				ExpectedMin:  "0.05",
+			},
+			expectedEvents: sdk.Events{
+				sdk.NewEvent("vault.v1.EventMinInterestRateUpdated",
+					sdk.NewAttribute("admin", admin.String()),
+					sdk.NewAttribute("min_rate", "0.05"),
+					sdk.NewAttribute("vault_address", vaultAddr.String()),
+				),
+			},
+		},
+		{
+			name:    "disable min by empty string",
+			minRate: "",
+			postCheckArgs: postCheckArgs{
+				VaultAddress: vaultAddr,
+				ExpectedMin:  "",
+			},
+			expectedEvents: sdk.Events{
+				sdk.NewEvent("vault.v1.EventMinInterestRateUpdated",
+					sdk.NewAttribute("admin", admin.String()),
+					sdk.NewAttribute("min_rate", ""),
+					sdk.NewAttribute("vault_address", vaultAddr.String()),
+				),
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			tc := msgServerTestCase[types.MsgUpdateMinInterestRateRequest, postCheckArgs]{
+				name:  tt.name,
+				setup: setup,
+				msg: types.MsgUpdateMinInterestRateRequest{
+					Admin:        admin.String(),
+					VaultAddress: vaultAddr.String(),
+					MinRate:      tt.minRate,
+				},
+				postCheckArgs:  tt.postCheckArgs,
+				expectedEvents: tt.expectedEvents,
+			}
+			testDef.expectedResponse = &types.MsgUpdateMinInterestRateResponse{}
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_UpdateMinInterestRate_Failures() {
+	testDef := msgServerTestDef[types.MsgUpdateMinInterestRateRequest, types.MsgUpdateMinInterestRateResponse, any]{
+		endpointName: "UpdateMinInterestRate",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).UpdateMinInterestRate,
+		postCheck:    nil,
+	}
+
+	underlying := "under"
+	share := "vaultshares"
+	admin := s.adminAddr
+	other := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1000))
+	vaultAddr := types.GetVaultAddress(share)
+
+	setup := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      share,
+			UnderlyingAsset: underlying,
+		})
+		s.Require().NoError(err)
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	tests := []msgServerTestCase[types.MsgUpdateMinInterestRateRequest, any]{
+		{
+			name: "vault does not exist",
+			setup: func() {
+				s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			},
+			msg: types.MsgUpdateMinInterestRateRequest{
+				Admin:        admin.String(),
+				VaultAddress: types.GetVaultAddress("doesnotexist").String(),
+				MinRate:      "0.01",
+			},
+			expectedErrSubstrs: []string{"not found"},
+		},
+		{
+			name:  "invalid vault address (not a vault account)",
+			setup: setup,
+			msg: types.MsgUpdateMinInterestRateRequest{
+				Admin:        admin.String(),
+				VaultAddress: markertypes.MustGetMarkerAddress(share).String(),
+				MinRate:      "0.01",
+			},
+			expectedErrSubstrs: []string{"failed to get vault", "is not a vault account"},
+		},
+		{
+			name:  "unauthorized admin",
+			setup: setup,
+			msg: types.MsgUpdateMinInterestRateRequest{
+				Admin:        other.String(),
+				VaultAddress: vaultAddr.String(),
+				MinRate:      "0.02",
+			},
+			expectedErrSubstrs: []string{"unauthorized", "is not the vault admin"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_UpdateMaxInterestRate() {
+	type postCheckArgs struct {
+		VaultAddress sdk.AccAddress
+		ExpectedMax  string
+	}
+
+	testDef := msgServerTestDef[types.MsgUpdateMaxInterestRateRequest, types.MsgUpdateMaxInterestRateResponse, postCheckArgs]{
+		endpointName: "UpdateMaxInterestRate",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).UpdateMaxInterestRate,
+		postCheck: func(msg *types.MsgUpdateMaxInterestRateRequest, args postCheckArgs) {
+			v, err := s.k.GetVault(s.ctx, args.VaultAddress)
+			s.Require().NoError(err)
+			s.Assert().Equal(args.ExpectedMax, v.MaxInterestRate)
+		},
+	}
+
+	underlying := "under"
+	share := "vaultshares"
+	admin := s.adminAddr
+	vaultAddr := types.GetVaultAddress(share)
+
+	setup := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      share,
+			UnderlyingAsset: underlying,
+		})
+		s.Require().NoError(err)
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	tests := []struct {
+		name           string
+		maxRate        string
+		postCheckArgs  postCheckArgs
+		expectedEvents sdk.Events
+	}{
+		{
+			name:    "set_max_to_non-empty",
+			maxRate: "0.50",
+			postCheckArgs: postCheckArgs{
+				VaultAddress: vaultAddr,
+				ExpectedMax:  "0.50",
+			},
+			expectedEvents: sdk.Events{
+				sdk.NewEvent("vault.v1.EventMaxInterestRateUpdated",
+					sdk.NewAttribute("admin", admin.String()),
+					sdk.NewAttribute("max_rate", "0.50"),
+					sdk.NewAttribute("vault_address", vaultAddr.String()),
+				),
+			},
+		},
+		{
+			name:    "disable_max_by_empty_string",
+			maxRate: "",
+			postCheckArgs: postCheckArgs{
+				VaultAddress: vaultAddr,
+				ExpectedMax:  "",
+			},
+			expectedEvents: sdk.Events{
+				sdk.NewEvent("vault.v1.EventMaxInterestRateUpdated",
+					sdk.NewAttribute("admin", admin.String()),
+					sdk.NewAttribute("max_rate", ""),
+					sdk.NewAttribute("vault_address", vaultAddr.String()),
+				),
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			tc := msgServerTestCase[types.MsgUpdateMaxInterestRateRequest, postCheckArgs]{
+				name:  tt.name,
+				setup: setup,
+				msg: types.MsgUpdateMaxInterestRateRequest{
+					Admin:        admin.String(),
+					VaultAddress: vaultAddr.String(),
+					MaxRate:      tt.maxRate,
+				},
+				postCheckArgs:  tt.postCheckArgs,
+				expectedEvents: tt.expectedEvents,
+			}
+			testDef.expectedResponse = &types.MsgUpdateMaxInterestRateResponse{}
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_UpdateMaxInterestRate_Failures() {
+	testDef := msgServerTestDef[types.MsgUpdateMaxInterestRateRequest, types.MsgUpdateMaxInterestRateResponse, any]{
+		endpointName: "UpdateMaxInterestRate",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).UpdateMaxInterestRate,
+		postCheck:    nil,
+	}
+
+	underlying := "under"
+	share := "vaultshares"
+	admin := s.adminAddr
+	other := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1000))
+	vaultAddr := types.GetVaultAddress(share)
+
+	setup := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      share,
+			UnderlyingAsset: underlying,
+		})
+		s.Require().NoError(err)
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	tests := []msgServerTestCase[types.MsgUpdateMaxInterestRateRequest, any]{
+		{
+			name: "vault_does_not_exist",
+			setup: func() {
+				s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			},
+			msg: types.MsgUpdateMaxInterestRateRequest{
+				Admin:        admin.String(),
+				VaultAddress: types.GetVaultAddress("doesnotexist").String(),
+				MaxRate:      "0.99",
+			},
+			expectedErrSubstrs: []string{"not found"},
+		},
+		{
+			name:  "invalid_vault_address_not_a_vault_account",
+			setup: setup,
+			msg: types.MsgUpdateMaxInterestRateRequest{
+				Admin:        admin.String(),
+				VaultAddress: markertypes.MustGetMarkerAddress(share).String(),
+				MaxRate:      "0.10",
+			},
+			expectedErrSubstrs: []string{"failed to get vault", "is not a vault account"},
+		},
+		{
+			name:  "unauthorized_admin",
+			setup: setup,
+			msg: types.MsgUpdateMaxInterestRateRequest{
+				Admin:        other.String(),
+				VaultAddress: vaultAddr.String(),
+				MaxRate:      "0.33",
+			},
+			expectedErrSubstrs: []string{"unauthorized", "is not the vault admin"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
 // createMarkerMintCoinEvents creates events for minting a coin and sending it to a recipient.
 func createMarkerMintCoinEvents(markerModule, admin, recipient sdk.AccAddress, coin sdk.Coin) []sdk.Event {
 	events := createReceiveCoinsEvents(markerModule.String(), sdk.NewCoins(coin).String())

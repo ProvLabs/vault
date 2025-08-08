@@ -37,6 +37,7 @@ func NewEventSwapOut(vaultAddress, owner string, amountOut, sharesBurned sdk.Coi
 }
 
 // NewEventVaultReconcile creates a new EventVaultReconcile event.
+// Note: interestEarned does not use NewCoin to avoid panics with negative amounts.
 func NewEventVaultReconcile(vaultAddress string, principalBefore, principalAfter sdk.Coin, rate string, time int64, interestEarned sdkmath.Int) *EventVaultReconcile {
 	return &EventVaultReconcile{
 		VaultAddress:    vaultAddress,
@@ -44,7 +45,7 @@ func NewEventVaultReconcile(vaultAddress string, principalBefore, principalAfter
 		PrincipalAfter:  principalAfter,
 		Rate:            rate,
 		Time:            time,
-		InterestEarned:  sdk.NewCoin(principalBefore.Denom, interestEarned),
+		InterestEarned:  sdk.Coin{Denom: principalBefore.Denom, Amount: interestEarned},
 	}
 }
 

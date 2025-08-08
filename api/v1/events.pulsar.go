@@ -6875,29 +6875,29 @@ func (x *fastReflection_EventToggleSwapOut) ProtoMethods() *protoiface.Methods {
 }
 
 var (
-	md_EventPrincipalDeposit               protoreflect.MessageDescriptor
-	fd_EventPrincipalDeposit_vault_address protoreflect.FieldDescriptor
-	fd_EventPrincipalDeposit_admin         protoreflect.FieldDescriptor
-	fd_EventPrincipalDeposit_amount        protoreflect.FieldDescriptor
+	md_EventDepositPrincipalFunds               protoreflect.MessageDescriptor
+	fd_EventDepositPrincipalFunds_vault_address protoreflect.FieldDescriptor
+	fd_EventDepositPrincipalFunds_admin         protoreflect.FieldDescriptor
+	fd_EventDepositPrincipalFunds_amount        protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_vault_v1_events_proto_init()
-	md_EventPrincipalDeposit = File_vault_v1_events_proto.Messages().ByName("EventPrincipalDeposit")
-	fd_EventPrincipalDeposit_vault_address = md_EventPrincipalDeposit.Fields().ByName("vault_address")
-	fd_EventPrincipalDeposit_admin = md_EventPrincipalDeposit.Fields().ByName("admin")
-	fd_EventPrincipalDeposit_amount = md_EventPrincipalDeposit.Fields().ByName("amount")
+	md_EventDepositPrincipalFunds = File_vault_v1_events_proto.Messages().ByName("EventDepositPrincipalFunds")
+	fd_EventDepositPrincipalFunds_vault_address = md_EventDepositPrincipalFunds.Fields().ByName("vault_address")
+	fd_EventDepositPrincipalFunds_admin = md_EventDepositPrincipalFunds.Fields().ByName("admin")
+	fd_EventDepositPrincipalFunds_amount = md_EventDepositPrincipalFunds.Fields().ByName("amount")
 }
 
-var _ protoreflect.Message = (*fastReflection_EventPrincipalDeposit)(nil)
+var _ protoreflect.Message = (*fastReflection_EventDepositPrincipalFunds)(nil)
 
-type fastReflection_EventPrincipalDeposit EventPrincipalDeposit
+type fastReflection_EventDepositPrincipalFunds EventDepositPrincipalFunds
 
-func (x *EventPrincipalDeposit) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_EventPrincipalDeposit)(x)
+func (x *EventDepositPrincipalFunds) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_EventDepositPrincipalFunds)(x)
 }
 
-func (x *EventPrincipalDeposit) slowProtoReflect() protoreflect.Message {
+func (x *EventDepositPrincipalFunds) slowProtoReflect() protoreflect.Message {
 	mi := &file_vault_v1_events_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -6909,43 +6909,43 @@ func (x *EventPrincipalDeposit) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_EventPrincipalDeposit_messageType fastReflection_EventPrincipalDeposit_messageType
-var _ protoreflect.MessageType = fastReflection_EventPrincipalDeposit_messageType{}
+var _fastReflection_EventDepositPrincipalFunds_messageType fastReflection_EventDepositPrincipalFunds_messageType
+var _ protoreflect.MessageType = fastReflection_EventDepositPrincipalFunds_messageType{}
 
-type fastReflection_EventPrincipalDeposit_messageType struct{}
+type fastReflection_EventDepositPrincipalFunds_messageType struct{}
 
-func (x fastReflection_EventPrincipalDeposit_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_EventPrincipalDeposit)(nil)
+func (x fastReflection_EventDepositPrincipalFunds_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_EventDepositPrincipalFunds)(nil)
 }
-func (x fastReflection_EventPrincipalDeposit_messageType) New() protoreflect.Message {
-	return new(fastReflection_EventPrincipalDeposit)
+func (x fastReflection_EventDepositPrincipalFunds_messageType) New() protoreflect.Message {
+	return new(fastReflection_EventDepositPrincipalFunds)
 }
-func (x fastReflection_EventPrincipalDeposit_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_EventPrincipalDeposit
+func (x fastReflection_EventDepositPrincipalFunds_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_EventDepositPrincipalFunds
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_EventPrincipalDeposit) Descriptor() protoreflect.MessageDescriptor {
-	return md_EventPrincipalDeposit
+func (x *fastReflection_EventDepositPrincipalFunds) Descriptor() protoreflect.MessageDescriptor {
+	return md_EventDepositPrincipalFunds
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_EventPrincipalDeposit) Type() protoreflect.MessageType {
-	return _fastReflection_EventPrincipalDeposit_messageType
+func (x *fastReflection_EventDepositPrincipalFunds) Type() protoreflect.MessageType {
+	return _fastReflection_EventDepositPrincipalFunds_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_EventPrincipalDeposit) New() protoreflect.Message {
-	return new(fastReflection_EventPrincipalDeposit)
+func (x *fastReflection_EventDepositPrincipalFunds) New() protoreflect.Message {
+	return new(fastReflection_EventDepositPrincipalFunds)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_EventPrincipalDeposit) Interface() protoreflect.ProtoMessage {
-	return (*EventPrincipalDeposit)(x)
+func (x *fastReflection_EventDepositPrincipalFunds) Interface() protoreflect.ProtoMessage {
+	return (*EventDepositPrincipalFunds)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -6953,22 +6953,22 @@ func (x *fastReflection_EventPrincipalDeposit) Interface() protoreflect.ProtoMes
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_EventPrincipalDeposit) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_EventDepositPrincipalFunds) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.VaultAddress != "" {
 		value := protoreflect.ValueOfString(x.VaultAddress)
-		if !f(fd_EventPrincipalDeposit_vault_address, value) {
+		if !f(fd_EventDepositPrincipalFunds_vault_address, value) {
 			return
 		}
 	}
 	if x.Admin != "" {
 		value := protoreflect.ValueOfString(x.Admin)
-		if !f(fd_EventPrincipalDeposit_admin, value) {
+		if !f(fd_EventDepositPrincipalFunds_admin, value) {
 			return
 		}
 	}
 	if x.Amount != nil {
 		value := protoreflect.ValueOfMessage(x.Amount.ProtoReflect())
-		if !f(fd_EventPrincipalDeposit_amount, value) {
+		if !f(fd_EventDepositPrincipalFunds_amount, value) {
 			return
 		}
 	}
@@ -6985,19 +6985,19 @@ func (x *fastReflection_EventPrincipalDeposit) Range(f func(protoreflect.FieldDe
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_EventPrincipalDeposit) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_EventDepositPrincipalFunds) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.EventPrincipalDeposit.vault_address":
+	case "vault.v1.EventDepositPrincipalFunds.vault_address":
 		return x.VaultAddress != ""
-	case "vault.v1.EventPrincipalDeposit.admin":
+	case "vault.v1.EventDepositPrincipalFunds.admin":
 		return x.Admin != ""
-	case "vault.v1.EventPrincipalDeposit.amount":
+	case "vault.v1.EventDepositPrincipalFunds.amount":
 		return x.Amount != nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventPrincipalDeposit"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventDepositPrincipalFunds"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventPrincipalDeposit does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.EventDepositPrincipalFunds does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -7007,19 +7007,19 @@ func (x *fastReflection_EventPrincipalDeposit) Has(fd protoreflect.FieldDescript
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_EventPrincipalDeposit) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_EventDepositPrincipalFunds) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.EventPrincipalDeposit.vault_address":
+	case "vault.v1.EventDepositPrincipalFunds.vault_address":
 		x.VaultAddress = ""
-	case "vault.v1.EventPrincipalDeposit.admin":
+	case "vault.v1.EventDepositPrincipalFunds.admin":
 		x.Admin = ""
-	case "vault.v1.EventPrincipalDeposit.amount":
+	case "vault.v1.EventDepositPrincipalFunds.amount":
 		x.Amount = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventPrincipalDeposit"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventDepositPrincipalFunds"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventPrincipalDeposit does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.EventDepositPrincipalFunds does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -7029,22 +7029,22 @@ func (x *fastReflection_EventPrincipalDeposit) Clear(fd protoreflect.FieldDescri
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_EventPrincipalDeposit) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_EventDepositPrincipalFunds) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.EventPrincipalDeposit.vault_address":
+	case "vault.v1.EventDepositPrincipalFunds.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventPrincipalDeposit.admin":
+	case "vault.v1.EventDepositPrincipalFunds.admin":
 		value := x.Admin
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventPrincipalDeposit.amount":
+	case "vault.v1.EventDepositPrincipalFunds.amount":
 		value := x.Amount
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventPrincipalDeposit"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventDepositPrincipalFunds"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventPrincipalDeposit does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message vault.v1.EventDepositPrincipalFunds does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -7058,19 +7058,19 @@ func (x *fastReflection_EventPrincipalDeposit) Get(descriptor protoreflect.Field
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_EventPrincipalDeposit) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_EventDepositPrincipalFunds) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.EventPrincipalDeposit.vault_address":
+	case "vault.v1.EventDepositPrincipalFunds.vault_address":
 		x.VaultAddress = value.Interface().(string)
-	case "vault.v1.EventPrincipalDeposit.admin":
+	case "vault.v1.EventDepositPrincipalFunds.admin":
 		x.Admin = value.Interface().(string)
-	case "vault.v1.EventPrincipalDeposit.amount":
+	case "vault.v1.EventDepositPrincipalFunds.amount":
 		x.Amount = value.Message().Interface().(*v1beta1.Coin)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventPrincipalDeposit"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventDepositPrincipalFunds"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventPrincipalDeposit does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.EventDepositPrincipalFunds does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -7084,52 +7084,52 @@ func (x *fastReflection_EventPrincipalDeposit) Set(fd protoreflect.FieldDescript
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_EventPrincipalDeposit) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_EventDepositPrincipalFunds) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventPrincipalDeposit.amount":
+	case "vault.v1.EventDepositPrincipalFunds.amount":
 		if x.Amount == nil {
 			x.Amount = new(v1beta1.Coin)
 		}
 		return protoreflect.ValueOfMessage(x.Amount.ProtoReflect())
-	case "vault.v1.EventPrincipalDeposit.vault_address":
-		panic(fmt.Errorf("field vault_address of message vault.v1.EventPrincipalDeposit is not mutable"))
-	case "vault.v1.EventPrincipalDeposit.admin":
-		panic(fmt.Errorf("field admin of message vault.v1.EventPrincipalDeposit is not mutable"))
+	case "vault.v1.EventDepositPrincipalFunds.vault_address":
+		panic(fmt.Errorf("field vault_address of message vault.v1.EventDepositPrincipalFunds is not mutable"))
+	case "vault.v1.EventDepositPrincipalFunds.admin":
+		panic(fmt.Errorf("field admin of message vault.v1.EventDepositPrincipalFunds is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventPrincipalDeposit"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventDepositPrincipalFunds"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventPrincipalDeposit does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.EventDepositPrincipalFunds does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_EventPrincipalDeposit) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_EventDepositPrincipalFunds) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventPrincipalDeposit.vault_address":
+	case "vault.v1.EventDepositPrincipalFunds.vault_address":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventPrincipalDeposit.admin":
+	case "vault.v1.EventDepositPrincipalFunds.admin":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventPrincipalDeposit.amount":
+	case "vault.v1.EventDepositPrincipalFunds.amount":
 		m := new(v1beta1.Coin)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventPrincipalDeposit"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventDepositPrincipalFunds"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventPrincipalDeposit does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.EventDepositPrincipalFunds does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_EventPrincipalDeposit) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_EventDepositPrincipalFunds) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.EventPrincipalDeposit", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in vault.v1.EventDepositPrincipalFunds", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -7137,7 +7137,7 @@ func (x *fastReflection_EventPrincipalDeposit) WhichOneof(d protoreflect.OneofDe
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_EventPrincipalDeposit) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_EventDepositPrincipalFunds) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -7148,7 +7148,7 @@ func (x *fastReflection_EventPrincipalDeposit) GetUnknown() protoreflect.RawFiel
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_EventPrincipalDeposit) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_EventDepositPrincipalFunds) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -7160,7 +7160,7 @@ func (x *fastReflection_EventPrincipalDeposit) SetUnknown(fields protoreflect.Ra
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_EventPrincipalDeposit) IsValid() bool {
+func (x *fastReflection_EventDepositPrincipalFunds) IsValid() bool {
 	return x != nil
 }
 
@@ -7170,9 +7170,9 @@ func (x *fastReflection_EventPrincipalDeposit) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_EventPrincipalDeposit) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_EventDepositPrincipalFunds) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*EventPrincipalDeposit)
+		x := input.Message.Interface().(*EventDepositPrincipalFunds)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -7206,7 +7206,7 @@ func (x *fastReflection_EventPrincipalDeposit) ProtoMethods() *protoiface.Method
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*EventPrincipalDeposit)
+		x := input.Message.Interface().(*EventDepositPrincipalFunds)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -7264,7 +7264,7 @@ func (x *fastReflection_EventPrincipalDeposit) ProtoMethods() *protoiface.Method
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*EventPrincipalDeposit)
+		x := input.Message.Interface().(*EventDepositPrincipalFunds)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -7296,10 +7296,10 @@ func (x *fastReflection_EventPrincipalDeposit) ProtoMethods() *protoiface.Method
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EventPrincipalDeposit: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EventDepositPrincipalFunds: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EventPrincipalDeposit: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EventDepositPrincipalFunds: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -7438,29 +7438,29 @@ func (x *fastReflection_EventPrincipalDeposit) ProtoMethods() *protoiface.Method
 }
 
 var (
-	md_EventPrincipalWithdrawal               protoreflect.MessageDescriptor
-	fd_EventPrincipalWithdrawal_vault_address protoreflect.FieldDescriptor
-	fd_EventPrincipalWithdrawal_admin         protoreflect.FieldDescriptor
-	fd_EventPrincipalWithdrawal_amount        protoreflect.FieldDescriptor
+	md_EventWithdrawPrincipalFunds               protoreflect.MessageDescriptor
+	fd_EventWithdrawPrincipalFunds_vault_address protoreflect.FieldDescriptor
+	fd_EventWithdrawPrincipalFunds_admin         protoreflect.FieldDescriptor
+	fd_EventWithdrawPrincipalFunds_amount        protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_vault_v1_events_proto_init()
-	md_EventPrincipalWithdrawal = File_vault_v1_events_proto.Messages().ByName("EventPrincipalWithdrawal")
-	fd_EventPrincipalWithdrawal_vault_address = md_EventPrincipalWithdrawal.Fields().ByName("vault_address")
-	fd_EventPrincipalWithdrawal_admin = md_EventPrincipalWithdrawal.Fields().ByName("admin")
-	fd_EventPrincipalWithdrawal_amount = md_EventPrincipalWithdrawal.Fields().ByName("amount")
+	md_EventWithdrawPrincipalFunds = File_vault_v1_events_proto.Messages().ByName("EventWithdrawPrincipalFunds")
+	fd_EventWithdrawPrincipalFunds_vault_address = md_EventWithdrawPrincipalFunds.Fields().ByName("vault_address")
+	fd_EventWithdrawPrincipalFunds_admin = md_EventWithdrawPrincipalFunds.Fields().ByName("admin")
+	fd_EventWithdrawPrincipalFunds_amount = md_EventWithdrawPrincipalFunds.Fields().ByName("amount")
 }
 
-var _ protoreflect.Message = (*fastReflection_EventPrincipalWithdrawal)(nil)
+var _ protoreflect.Message = (*fastReflection_EventWithdrawPrincipalFunds)(nil)
 
-type fastReflection_EventPrincipalWithdrawal EventPrincipalWithdrawal
+type fastReflection_EventWithdrawPrincipalFunds EventWithdrawPrincipalFunds
 
-func (x *EventPrincipalWithdrawal) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_EventPrincipalWithdrawal)(x)
+func (x *EventWithdrawPrincipalFunds) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_EventWithdrawPrincipalFunds)(x)
 }
 
-func (x *EventPrincipalWithdrawal) slowProtoReflect() protoreflect.Message {
+func (x *EventWithdrawPrincipalFunds) slowProtoReflect() protoreflect.Message {
 	mi := &file_vault_v1_events_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -7472,43 +7472,43 @@ func (x *EventPrincipalWithdrawal) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_EventPrincipalWithdrawal_messageType fastReflection_EventPrincipalWithdrawal_messageType
-var _ protoreflect.MessageType = fastReflection_EventPrincipalWithdrawal_messageType{}
+var _fastReflection_EventWithdrawPrincipalFunds_messageType fastReflection_EventWithdrawPrincipalFunds_messageType
+var _ protoreflect.MessageType = fastReflection_EventWithdrawPrincipalFunds_messageType{}
 
-type fastReflection_EventPrincipalWithdrawal_messageType struct{}
+type fastReflection_EventWithdrawPrincipalFunds_messageType struct{}
 
-func (x fastReflection_EventPrincipalWithdrawal_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_EventPrincipalWithdrawal)(nil)
+func (x fastReflection_EventWithdrawPrincipalFunds_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_EventWithdrawPrincipalFunds)(nil)
 }
-func (x fastReflection_EventPrincipalWithdrawal_messageType) New() protoreflect.Message {
-	return new(fastReflection_EventPrincipalWithdrawal)
+func (x fastReflection_EventWithdrawPrincipalFunds_messageType) New() protoreflect.Message {
+	return new(fastReflection_EventWithdrawPrincipalFunds)
 }
-func (x fastReflection_EventPrincipalWithdrawal_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_EventPrincipalWithdrawal
+func (x fastReflection_EventWithdrawPrincipalFunds_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_EventWithdrawPrincipalFunds
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_EventPrincipalWithdrawal) Descriptor() protoreflect.MessageDescriptor {
-	return md_EventPrincipalWithdrawal
+func (x *fastReflection_EventWithdrawPrincipalFunds) Descriptor() protoreflect.MessageDescriptor {
+	return md_EventWithdrawPrincipalFunds
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_EventPrincipalWithdrawal) Type() protoreflect.MessageType {
-	return _fastReflection_EventPrincipalWithdrawal_messageType
+func (x *fastReflection_EventWithdrawPrincipalFunds) Type() protoreflect.MessageType {
+	return _fastReflection_EventWithdrawPrincipalFunds_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_EventPrincipalWithdrawal) New() protoreflect.Message {
-	return new(fastReflection_EventPrincipalWithdrawal)
+func (x *fastReflection_EventWithdrawPrincipalFunds) New() protoreflect.Message {
+	return new(fastReflection_EventWithdrawPrincipalFunds)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_EventPrincipalWithdrawal) Interface() protoreflect.ProtoMessage {
-	return (*EventPrincipalWithdrawal)(x)
+func (x *fastReflection_EventWithdrawPrincipalFunds) Interface() protoreflect.ProtoMessage {
+	return (*EventWithdrawPrincipalFunds)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -7516,22 +7516,22 @@ func (x *fastReflection_EventPrincipalWithdrawal) Interface() protoreflect.Proto
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_EventPrincipalWithdrawal) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_EventWithdrawPrincipalFunds) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.VaultAddress != "" {
 		value := protoreflect.ValueOfString(x.VaultAddress)
-		if !f(fd_EventPrincipalWithdrawal_vault_address, value) {
+		if !f(fd_EventWithdrawPrincipalFunds_vault_address, value) {
 			return
 		}
 	}
 	if x.Admin != "" {
 		value := protoreflect.ValueOfString(x.Admin)
-		if !f(fd_EventPrincipalWithdrawal_admin, value) {
+		if !f(fd_EventWithdrawPrincipalFunds_admin, value) {
 			return
 		}
 	}
 	if x.Amount != nil {
 		value := protoreflect.ValueOfMessage(x.Amount.ProtoReflect())
-		if !f(fd_EventPrincipalWithdrawal_amount, value) {
+		if !f(fd_EventWithdrawPrincipalFunds_amount, value) {
 			return
 		}
 	}
@@ -7548,19 +7548,19 @@ func (x *fastReflection_EventPrincipalWithdrawal) Range(f func(protoreflect.Fiel
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_EventPrincipalWithdrawal) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_EventWithdrawPrincipalFunds) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.EventPrincipalWithdrawal.vault_address":
+	case "vault.v1.EventWithdrawPrincipalFunds.vault_address":
 		return x.VaultAddress != ""
-	case "vault.v1.EventPrincipalWithdrawal.admin":
+	case "vault.v1.EventWithdrawPrincipalFunds.admin":
 		return x.Admin != ""
-	case "vault.v1.EventPrincipalWithdrawal.amount":
+	case "vault.v1.EventWithdrawPrincipalFunds.amount":
 		return x.Amount != nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventPrincipalWithdrawal"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventWithdrawPrincipalFunds"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventPrincipalWithdrawal does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.EventWithdrawPrincipalFunds does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -7570,19 +7570,19 @@ func (x *fastReflection_EventPrincipalWithdrawal) Has(fd protoreflect.FieldDescr
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_EventPrincipalWithdrawal) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_EventWithdrawPrincipalFunds) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.EventPrincipalWithdrawal.vault_address":
+	case "vault.v1.EventWithdrawPrincipalFunds.vault_address":
 		x.VaultAddress = ""
-	case "vault.v1.EventPrincipalWithdrawal.admin":
+	case "vault.v1.EventWithdrawPrincipalFunds.admin":
 		x.Admin = ""
-	case "vault.v1.EventPrincipalWithdrawal.amount":
+	case "vault.v1.EventWithdrawPrincipalFunds.amount":
 		x.Amount = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventPrincipalWithdrawal"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventWithdrawPrincipalFunds"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventPrincipalWithdrawal does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.EventWithdrawPrincipalFunds does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -7592,22 +7592,22 @@ func (x *fastReflection_EventPrincipalWithdrawal) Clear(fd protoreflect.FieldDes
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_EventPrincipalWithdrawal) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_EventWithdrawPrincipalFunds) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.EventPrincipalWithdrawal.vault_address":
+	case "vault.v1.EventWithdrawPrincipalFunds.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventPrincipalWithdrawal.admin":
+	case "vault.v1.EventWithdrawPrincipalFunds.admin":
 		value := x.Admin
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventPrincipalWithdrawal.amount":
+	case "vault.v1.EventWithdrawPrincipalFunds.amount":
 		value := x.Amount
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventPrincipalWithdrawal"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventWithdrawPrincipalFunds"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventPrincipalWithdrawal does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message vault.v1.EventWithdrawPrincipalFunds does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -7621,19 +7621,19 @@ func (x *fastReflection_EventPrincipalWithdrawal) Get(descriptor protoreflect.Fi
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_EventPrincipalWithdrawal) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_EventWithdrawPrincipalFunds) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.EventPrincipalWithdrawal.vault_address":
+	case "vault.v1.EventWithdrawPrincipalFunds.vault_address":
 		x.VaultAddress = value.Interface().(string)
-	case "vault.v1.EventPrincipalWithdrawal.admin":
+	case "vault.v1.EventWithdrawPrincipalFunds.admin":
 		x.Admin = value.Interface().(string)
-	case "vault.v1.EventPrincipalWithdrawal.amount":
+	case "vault.v1.EventWithdrawPrincipalFunds.amount":
 		x.Amount = value.Message().Interface().(*v1beta1.Coin)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventPrincipalWithdrawal"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventWithdrawPrincipalFunds"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventPrincipalWithdrawal does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.EventWithdrawPrincipalFunds does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -7647,52 +7647,52 @@ func (x *fastReflection_EventPrincipalWithdrawal) Set(fd protoreflect.FieldDescr
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_EventPrincipalWithdrawal) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_EventWithdrawPrincipalFunds) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventPrincipalWithdrawal.amount":
+	case "vault.v1.EventWithdrawPrincipalFunds.amount":
 		if x.Amount == nil {
 			x.Amount = new(v1beta1.Coin)
 		}
 		return protoreflect.ValueOfMessage(x.Amount.ProtoReflect())
-	case "vault.v1.EventPrincipalWithdrawal.vault_address":
-		panic(fmt.Errorf("field vault_address of message vault.v1.EventPrincipalWithdrawal is not mutable"))
-	case "vault.v1.EventPrincipalWithdrawal.admin":
-		panic(fmt.Errorf("field admin of message vault.v1.EventPrincipalWithdrawal is not mutable"))
+	case "vault.v1.EventWithdrawPrincipalFunds.vault_address":
+		panic(fmt.Errorf("field vault_address of message vault.v1.EventWithdrawPrincipalFunds is not mutable"))
+	case "vault.v1.EventWithdrawPrincipalFunds.admin":
+		panic(fmt.Errorf("field admin of message vault.v1.EventWithdrawPrincipalFunds is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventPrincipalWithdrawal"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventWithdrawPrincipalFunds"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventPrincipalWithdrawal does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.EventWithdrawPrincipalFunds does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_EventPrincipalWithdrawal) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_EventWithdrawPrincipalFunds) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventPrincipalWithdrawal.vault_address":
+	case "vault.v1.EventWithdrawPrincipalFunds.vault_address":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventPrincipalWithdrawal.admin":
+	case "vault.v1.EventWithdrawPrincipalFunds.admin":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventPrincipalWithdrawal.amount":
+	case "vault.v1.EventWithdrawPrincipalFunds.amount":
 		m := new(v1beta1.Coin)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventPrincipalWithdrawal"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventWithdrawPrincipalFunds"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventPrincipalWithdrawal does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.EventWithdrawPrincipalFunds does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_EventPrincipalWithdrawal) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_EventWithdrawPrincipalFunds) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.EventPrincipalWithdrawal", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in vault.v1.EventWithdrawPrincipalFunds", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -7700,7 +7700,7 @@ func (x *fastReflection_EventPrincipalWithdrawal) WhichOneof(d protoreflect.Oneo
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_EventPrincipalWithdrawal) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_EventWithdrawPrincipalFunds) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -7711,7 +7711,7 @@ func (x *fastReflection_EventPrincipalWithdrawal) GetUnknown() protoreflect.RawF
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_EventPrincipalWithdrawal) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_EventWithdrawPrincipalFunds) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -7723,7 +7723,7 @@ func (x *fastReflection_EventPrincipalWithdrawal) SetUnknown(fields protoreflect
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_EventPrincipalWithdrawal) IsValid() bool {
+func (x *fastReflection_EventWithdrawPrincipalFunds) IsValid() bool {
 	return x != nil
 }
 
@@ -7733,9 +7733,9 @@ func (x *fastReflection_EventPrincipalWithdrawal) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_EventPrincipalWithdrawal) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_EventWithdrawPrincipalFunds) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*EventPrincipalWithdrawal)
+		x := input.Message.Interface().(*EventWithdrawPrincipalFunds)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -7769,7 +7769,7 @@ func (x *fastReflection_EventPrincipalWithdrawal) ProtoMethods() *protoiface.Met
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*EventPrincipalWithdrawal)
+		x := input.Message.Interface().(*EventWithdrawPrincipalFunds)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -7827,7 +7827,7 @@ func (x *fastReflection_EventPrincipalWithdrawal) ProtoMethods() *protoiface.Met
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*EventPrincipalWithdrawal)
+		x := input.Message.Interface().(*EventWithdrawPrincipalFunds)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -7859,10 +7859,10 @@ func (x *fastReflection_EventPrincipalWithdrawal) ProtoMethods() *protoiface.Met
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EventPrincipalWithdrawal: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EventWithdrawPrincipalFunds: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EventPrincipalWithdrawal: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EventWithdrawPrincipalFunds: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -9813,8 +9813,8 @@ func (x *EventToggleSwapOut) GetEnabled() bool {
 	return false
 }
 
-// EventPrincipalDeposit is an event emitted when principal funds are deposited by the admin.
-type EventPrincipalDeposit struct {
+// EventDepositPrincipalFunds is an event emitted when principal funds are deposited by the admin.
+type EventDepositPrincipalFunds struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -9827,8 +9827,8 @@ type EventPrincipalDeposit struct {
 	Amount *v1beta1.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
 }
 
-func (x *EventPrincipalDeposit) Reset() {
-	*x = EventPrincipalDeposit{}
+func (x *EventDepositPrincipalFunds) Reset() {
+	*x = EventDepositPrincipalFunds{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_vault_v1_events_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -9836,40 +9836,40 @@ func (x *EventPrincipalDeposit) Reset() {
 	}
 }
 
-func (x *EventPrincipalDeposit) String() string {
+func (x *EventDepositPrincipalFunds) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*EventPrincipalDeposit) ProtoMessage() {}
+func (*EventDepositPrincipalFunds) ProtoMessage() {}
 
-// Deprecated: Use EventPrincipalDeposit.ProtoReflect.Descriptor instead.
-func (*EventPrincipalDeposit) Descriptor() ([]byte, []int) {
+// Deprecated: Use EventDepositPrincipalFunds.ProtoReflect.Descriptor instead.
+func (*EventDepositPrincipalFunds) Descriptor() ([]byte, []int) {
 	return file_vault_v1_events_proto_rawDescGZIP(), []int{11}
 }
 
-func (x *EventPrincipalDeposit) GetVaultAddress() string {
+func (x *EventDepositPrincipalFunds) GetVaultAddress() string {
 	if x != nil {
 		return x.VaultAddress
 	}
 	return ""
 }
 
-func (x *EventPrincipalDeposit) GetAdmin() string {
+func (x *EventDepositPrincipalFunds) GetAdmin() string {
 	if x != nil {
 		return x.Admin
 	}
 	return ""
 }
 
-func (x *EventPrincipalDeposit) GetAmount() *v1beta1.Coin {
+func (x *EventDepositPrincipalFunds) GetAmount() *v1beta1.Coin {
 	if x != nil {
 		return x.Amount
 	}
 	return nil
 }
 
-// EventPrincipalWithdrawal is an event emitted when principal funds are withdrawn by the admin.
-type EventPrincipalWithdrawal struct {
+// EventWithdrawPrincipalFunds is an event emitted when principal funds are withdrawn by the admin.
+type EventWithdrawPrincipalFunds struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -9882,8 +9882,8 @@ type EventPrincipalWithdrawal struct {
 	Amount *v1beta1.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
 }
 
-func (x *EventPrincipalWithdrawal) Reset() {
-	*x = EventPrincipalWithdrawal{}
+func (x *EventWithdrawPrincipalFunds) Reset() {
+	*x = EventWithdrawPrincipalFunds{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_vault_v1_events_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -9891,32 +9891,32 @@ func (x *EventPrincipalWithdrawal) Reset() {
 	}
 }
 
-func (x *EventPrincipalWithdrawal) String() string {
+func (x *EventWithdrawPrincipalFunds) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*EventPrincipalWithdrawal) ProtoMessage() {}
+func (*EventWithdrawPrincipalFunds) ProtoMessage() {}
 
-// Deprecated: Use EventPrincipalWithdrawal.ProtoReflect.Descriptor instead.
-func (*EventPrincipalWithdrawal) Descriptor() ([]byte, []int) {
+// Deprecated: Use EventWithdrawPrincipalFunds.ProtoReflect.Descriptor instead.
+func (*EventWithdrawPrincipalFunds) Descriptor() ([]byte, []int) {
 	return file_vault_v1_events_proto_rawDescGZIP(), []int{12}
 }
 
-func (x *EventPrincipalWithdrawal) GetVaultAddress() string {
+func (x *EventWithdrawPrincipalFunds) GetVaultAddress() string {
 	if x != nil {
 		return x.VaultAddress
 	}
 	return ""
 }
 
-func (x *EventPrincipalWithdrawal) GetAdmin() string {
+func (x *EventWithdrawPrincipalFunds) GetAdmin() string {
 	if x != nil {
 		return x.Admin
 	}
 	return ""
 }
 
-func (x *EventPrincipalWithdrawal) GetAmount() *v1beta1.Coin {
+func (x *EventWithdrawPrincipalFunds) GetAmount() *v1beta1.Coin {
 	if x != nil {
 		return x.Amount
 	}
@@ -10192,21 +10192,9 @@ var file_vault_v1_events_proto_rawDesc = []byte{
 	0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72,
 	0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e,
 	0x12, 0x18, 0x0a, 0x07, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28,
-	0x08, 0x52, 0x07, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x22, 0xbf, 0x01, 0x0a, 0x15, 0x45,
-	0x76, 0x65, 0x6e, 0x74, 0x50, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x44, 0x65, 0x70,
-	0x6f, 0x73, 0x69, 0x74, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64,
-	0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d,
-	0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53,
-	0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72,
-	0x65, 0x73, 0x73, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01,
-	0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41,
-	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64,
-	0x6d, 0x69, 0x6e, 0x12, 0x37, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x03, 0x20,
-	0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73,
-	0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04,
-	0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0xc2, 0x01, 0x0a,
-	0x18, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x50, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x57,
-	0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x61, 0x6c, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75,
+	0x08, 0x52, 0x07, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x22, 0xc4, 0x01, 0x0a, 0x1a, 0x45,
+	0x76, 0x65, 0x6e, 0x74, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x50, 0x72, 0x69, 0x6e, 0x63,
+	0x69, 0x70, 0x61, 0x6c, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75,
 	0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
 	0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64,
 	0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c,
@@ -10217,37 +10205,50 @@ var file_vault_v1_events_proto_rawDesc = []byte{
 	0x6e, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
 	0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43,
 	0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e,
-	0x74, 0x22, 0xa7, 0x01, 0x0a, 0x1b, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x4d, 0x69, 0x6e, 0x49, 0x6e,
-	0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65,
-	0x64, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65,
+	0x74, 0x22, 0xc5, 0x01, 0x0a, 0x1b, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x57, 0x69, 0x74, 0x68, 0x64,
+	0x72, 0x61, 0x77, 0x50, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x46, 0x75, 0x6e, 0x64,
+	0x73, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65,
 	0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f,
 	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69,
 	0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
 	0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42,
 	0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72,
 	0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e,
-	0x12, 0x19, 0x0a, 0x08, 0x6d, 0x69, 0x6e, 0x5f, 0x72, 0x61, 0x74, 0x65, 0x18, 0x03, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x07, 0x6d, 0x69, 0x6e, 0x52, 0x61, 0x74, 0x65, 0x22, 0xa7, 0x01, 0x0a, 0x1b,
-	0x45, 0x76, 0x65, 0x6e, 0x74, 0x4d, 0x61, 0x78, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74,
-	0x52, 0x61, 0x74, 0x65, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x64, 0x12, 0x3d, 0x0a, 0x0d, 0x76,
-	0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41,
-	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61,
-	0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64,
-	0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72,
-	0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x19, 0x0a, 0x08, 0x6d, 0x61,
-	0x78, 0x5f, 0x72, 0x61, 0x74, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x61,
-	0x78, 0x52, 0x61, 0x74, 0x65, 0x42, 0x8c, 0x01, 0x0a, 0x0c, 0x63, 0x6f, 0x6d, 0x2e, 0x76, 0x61,
-	0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x42, 0x0b, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x50, 0x72,
-	0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2e, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f,
-	0x6d, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74,
-	0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61,
-	0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x56, 0x58, 0x58, 0xaa, 0x02, 0x08, 0x56, 0x61,
-	0x75, 0x6c, 0x74, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56,
-	0x31, 0xe2, 0x02, 0x14, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42,
-	0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x09, 0x56, 0x61, 0x75, 0x6c, 0x74,
-	0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x12, 0x37, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f,
+	0x00, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0xa7, 0x01, 0x0a, 0x1b, 0x45, 0x76,
+	0x65, 0x6e, 0x74, 0x4d, 0x69, 0x6e, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61,
+	0x74, 0x65, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x64, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75,
+	0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
+	0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64,
+	0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c,
+	0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69,
+	0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e,
+	0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x19, 0x0a, 0x08, 0x6d, 0x69, 0x6e, 0x5f,
+	0x72, 0x61, 0x74, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x69, 0x6e, 0x52,
+	0x61, 0x74, 0x65, 0x22, 0xa7, 0x01, 0x0a, 0x1b, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x4d, 0x61, 0x78,
+	0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x55, 0x70, 0x64, 0x61,
+	0x74, 0x65, 0x64, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64,
+	0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74,
+	0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65,
+	0x73, 0x73, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d,
+	0x69, 0x6e, 0x12, 0x19, 0x0a, 0x08, 0x6d, 0x61, 0x78, 0x5f, 0x72, 0x61, 0x74, 0x65, 0x18, 0x03,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x61, 0x78, 0x52, 0x61, 0x74, 0x65, 0x42, 0x8c, 0x01,
+	0x0a, 0x0c, 0x63, 0x6f, 0x6d, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x42, 0x0b,
+	0x45, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2e, 0x67,
+	0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61,
+	0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x61, 0x75,
+	0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2, 0x02, 0x03,
+	0x56, 0x58, 0x58, 0xaa, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56, 0x31, 0xca, 0x02,
+	0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x14, 0x56, 0x61, 0x75, 0x6c,
+	0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61,
+	0xea, 0x02, 0x09, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -10275,8 +10276,8 @@ var file_vault_v1_events_proto_goTypes = []interface{}{
 	(*EventInterestWithdrawal)(nil),     // 8: vault.v1.EventInterestWithdrawal
 	(*EventToggleSwapIn)(nil),           // 9: vault.v1.EventToggleSwapIn
 	(*EventToggleSwapOut)(nil),          // 10: vault.v1.EventToggleSwapOut
-	(*EventPrincipalDeposit)(nil),       // 11: vault.v1.EventPrincipalDeposit
-	(*EventPrincipalWithdrawal)(nil),    // 12: vault.v1.EventPrincipalWithdrawal
+	(*EventDepositPrincipalFunds)(nil),  // 11: vault.v1.EventDepositPrincipalFunds
+	(*EventWithdrawPrincipalFunds)(nil), // 12: vault.v1.EventWithdrawPrincipalFunds
 	(*EventMinInterestRateUpdated)(nil), // 13: vault.v1.EventMinInterestRateUpdated
 	(*EventMaxInterestRateUpdated)(nil), // 14: vault.v1.EventMaxInterestRateUpdated
 	(*v1beta1.Coin)(nil),                // 15: cosmos.base.v1beta1.Coin
@@ -10291,8 +10292,8 @@ var file_vault_v1_events_proto_depIdxs = []int32{
 	15, // 6: vault.v1.EventVaultReconcile.interest_earned:type_name -> cosmos.base.v1beta1.Coin
 	15, // 7: vault.v1.EventInterestDeposit.amount:type_name -> cosmos.base.v1beta1.Coin
 	15, // 8: vault.v1.EventInterestWithdrawal.amount:type_name -> cosmos.base.v1beta1.Coin
-	15, // 9: vault.v1.EventPrincipalDeposit.amount:type_name -> cosmos.base.v1beta1.Coin
-	15, // 10: vault.v1.EventPrincipalWithdrawal.amount:type_name -> cosmos.base.v1beta1.Coin
+	15, // 9: vault.v1.EventDepositPrincipalFunds.amount:type_name -> cosmos.base.v1beta1.Coin
+	15, // 10: vault.v1.EventWithdrawPrincipalFunds.amount:type_name -> cosmos.base.v1beta1.Coin
 	11, // [11:11] is the sub-list for method output_type
 	11, // [11:11] is the sub-list for method input_type
 	11, // [11:11] is the sub-list for extension type_name
@@ -10439,7 +10440,7 @@ func file_vault_v1_events_proto_init() {
 			}
 		}
 		file_vault_v1_events_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*EventPrincipalDeposit); i {
+			switch v := v.(*EventDepositPrincipalFunds); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -10451,7 +10452,7 @@ func file_vault_v1_events_proto_init() {
 			}
 		}
 		file_vault_v1_events_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*EventPrincipalWithdrawal); i {
+			switch v := v.(*EventWithdrawPrincipalFunds); i {
 			case 0:
 				return &v.state
 			case 1:

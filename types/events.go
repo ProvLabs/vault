@@ -94,18 +94,18 @@ func NewEventToggleSwapOut(vaultAddress, admin string, enabled bool) *EventToggl
 	}
 }
 
-// NewEventPrincipalDeposit creates a new EventPrincipalDeposit event.
-func NewEventPrincipalDeposit(vaultAddress, admin string, amount sdk.Coin) *EventPrincipalDeposit {
-	return &EventPrincipalDeposit{
+// NewEventDepositPrincipalFunds creates a new EventPrincipalDeposit event.
+func NewEventDepositPrincipalFunds(vaultAddress, admin string, amount sdk.Coin) *EventDepositPrincipalFunds {
+	return &EventDepositPrincipalFunds{
 		VaultAddress: vaultAddress,
 		Admin:        admin,
 		Amount:       amount,
 	}
 }
 
-// NewEventPrincipalWithdrawal creates a new EventPrincipalWithdrawal event.
-func NewEventPrincipalWithdrawal(vaultAddress, admin string, amount sdk.Coin) *EventPrincipalWithdrawal {
-	return &EventPrincipalWithdrawal{
+// NewEventWithdrawPrincipalFunds creates a new EventWithdrawPrincipalFunds event.
+func NewEventWithdrawPrincipalFunds(vaultAddress, admin string, amount sdk.Coin) *EventWithdrawPrincipalFunds {
+	return &EventWithdrawPrincipalFunds{
 		VaultAddress: vaultAddress,
 		Admin:        admin,
 		Amount:       amount,

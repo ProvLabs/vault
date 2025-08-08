@@ -139,8 +139,8 @@ message EventToggleSwapOut {
   bool enabled = 3;
 }
 
-// EventPrincipalDeposit is an event emitted when principal funds are deposited by the admin.
-message EventPrincipalDeposit {
+// EventDepositPrincipalFunds is an event emitted when principal funds are deposited by the admin.
+message EventDepositPrincipalFunds {
   // vault_address is the bech32 address of the vault.
   string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // admin is the address of the account that deposited the funds.
@@ -149,8 +149,8 @@ message EventPrincipalDeposit {
   cosmos.base.v1beta1.Coin amount = 3 [(gogoproto.nullable) = false];
 }
 
-// EventPrincipalWithdrawal is an event emitted when principal funds are withdrawn by the admin.
-message EventPrincipalWithdrawal {
+// EventWithdrawPrincipalFunds is an event emitted when principal funds are withdrawn by the admin.
+message EventWithdrawPrincipalFunds {
   // vault_address is the bech32 address of the vault.
   string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // admin is the address of the account that withdrew the funds.

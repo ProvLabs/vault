@@ -297,6 +297,10 @@ func (k msgServer) DepositPrincipalFunds(goCtx context.Context, msg *types.MsgDe
 		return nil, err
 	}
 
+	if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
+		return nil, fmt.Errorf("failed to reconcile vault interest before principal change: %w", err)
+	}
+
 	markerAddress := markertypes.MustGetMarkerAddress(vault.ShareDenom)
 	if err := vault.ValidateUnderlyingAssets(msg.Amount); err != nil {
 		return nil, fmt.Errorf("invalid asset for vault: %w", err)
@@ -328,6 +332,11 @@ func (k msgServer) WithdrawPrincipalFunds(goCtx context.Context, msg *types.MsgW
 	if err := vault.ValidateAdmin(msg.Admin); err != nil {
 		return nil, err
 	}
+
+	if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
+		return nil, fmt.Errorf("failed to reconcile vault interest before principal change: %w", err)
+	}
+
 	withdrawAddress := sdk.MustAccAddressFromBech32(msg.Admin)
 	markerAddress := markertypes.MustGetMarkerAddress(vault.ShareDenom)
 	if err := vault.ValidateUnderlyingAssets(msg.Amount); err != nil {

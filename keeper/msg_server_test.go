@@ -1639,6 +1639,8 @@ func (s *TestSuite) TestMsgServer_DepositPrincipalFunds() {
 	}
 
 	s.Run("happy path - deposit principal funds", func() {
+		// Note: keeper now reconciles interest before the principal change.
+		// With interest disabled by default, no reconcile event is emitted.
 		ev := createSendCoinEvents(vaultAddr.String(), markerAddr.String(), sdk.NewCoins(amount).String())
 		ev = append(ev, sdk.NewEvent(
 			"vault.v1.EventDepositPrincipalFunds",
@@ -1920,7 +1922,7 @@ func createMarkerMintCoinEvents(markerModule, admin, recipient sdk.AccAddress, c
 	return events
 }
 
-// createMarkerMintCoinEvents creates events for minting a coin and sending it to a recipient.
+// createBurnCoinEvents creates events for minting a coin and sending it to a recipient.
 func createBurnCoinEvents(burner, amount string) []sdk.Event {
 	events := sdk.NewEventManager().Events()
 

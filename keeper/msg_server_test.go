@@ -1662,14 +1662,12 @@ func (s *TestSuite) TestMsgServer_DepositPrincipalFunds() {
 			UnderlyingAsset: underlying,
 		})
 		s.Require().NoError(err)
-		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(amount)))
+		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, admin, sdk.NewCoins(amount)))
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	}
 
 	s.Run("happy path - deposit principal funds", func() {
-		// Note: keeper now reconciles interest before the principal change.
-		// With interest disabled by default, no reconcile event is emitted.
-		ev := createSendCoinEvents(vaultAddr.String(), markerAddr.String(), sdk.NewCoins(amount).String())
+		ev := createSendCoinEvents(admin.String(), markerAddr.String(), sdk.NewCoins(amount).String())
 		ev = append(ev, sdk.NewEvent(
 			"vault.v1.EventDepositPrincipalFunds",
 			sdk.NewAttribute("admin", admin.String()),
@@ -1764,7 +1762,7 @@ func (s *TestSuite) TestMsgServer_DepositPrincipalFunds_Failures() {
 			expectedErrSubstrs: []string{"invalid asset for vault"},
 		},
 		{
-			name:  "insufficient vault balance",
+			name:  "insufficient admin balance",
 			setup: setup,
 			msg: types.MsgDepositPrincipalFundsRequest{
 				Admin:        admin.String(),

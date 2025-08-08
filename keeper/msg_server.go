@@ -305,12 +305,13 @@ func (k msgServer) DepositPrincipalFunds(goCtx context.Context, msg *types.MsgDe
 		return nil, fmt.Errorf("failed to reconcile vault interest before principal change: %w", err)
 	}
 
+	depositFromAddress := sdk.MustAccAddressFromBech32(msg.Admin)
 	markerAddress := markertypes.MustGetMarkerAddress(vault.ShareDenom)
 	if err := vault.ValidateUnderlyingAssets(msg.Amount); err != nil {
 		return nil, fmt.Errorf("invalid asset for vault: %w", err)
 	}
 	if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx),
-		vault.GetAddress(),
+		depositFromAddress,
 		markerAddress,
 		sdk.NewCoins(msg.Amount),
 	); err != nil {

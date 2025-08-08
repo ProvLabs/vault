@@ -90,6 +90,10 @@ func (k msgServer) UpdateMinInterestRate(goCtx context.Context, msg *types.MsgUp
 		return nil, err
 	}
 
+	if err := k.ValidateInterestRateLimits(msg.MinRate, vault.MaxInterestRate); err != nil {
+		return nil, err
+	}
+
 	k.SetMinInterestRate(ctx, vault, msg.MinRate)
 
 	return &types.MsgUpdateMinInterestRateResponse{}, nil
@@ -110,6 +114,10 @@ func (k msgServer) UpdateMaxInterestRate(goCtx context.Context, msg *types.MsgUp
 		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
 	}
 	if err := vault.ValidateAdmin(msg.Admin); err != nil {
+		return nil, err
+	}
+
+	if err := k.ValidateInterestRateLimits(msg.MaxRate, vault.MaxInterestRate); err != nil {
 		return nil, err
 	}
 

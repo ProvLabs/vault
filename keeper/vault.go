@@ -7,6 +7,8 @@ import (
 	"github.com/provlabs/vault/types"
 	"github.com/provlabs/vault/utils"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
@@ -299,4 +301,25 @@ func (k *Keeper) SetMaxInterestRate(ctx sdk.Context, vault *types.VaultAccount, 
 	vault.MaxInterestRate = maxRate
 	k.AuthKeeper.SetAccount(ctx, vault)
 	k.emitEvent(ctx, types.NewEventMaxInterestRateUpdated(vault.Address, vault.Admin, maxRate))
+}
+
+func (k Keeper) ValidateInterestRateLimits(minRateStr, maxRateStr string) error {
+	if minRateStr == "" || maxRateStr == "" {
+		return nil
+	}
+
+	minRate, err := sdkmath.LegacyNewDecFromStr(minRateStr)
+	if err != nil {
+		return fmt.Errorf("invalid min interest rate: %w", err)
+	}
+	maxRate, err := sdkmath.LegacyNewDecFromStr(maxRateStr)
+	if err != nil {
+		return fmt.Errorf("invalid max interest rate: %w", err)
+	}
+
+	if minRate.GT(maxRate) {
+		return fmt.Errorf("minimum interest rate %s cannot be greater than maximum interest rate %s", minRate, maxRate)
+	}
+
+	return nil
 }

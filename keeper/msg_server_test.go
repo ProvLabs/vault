@@ -274,7 +274,6 @@ func (s *TestSuite) TestMsgServer_SwapIn_Failures() {
 	vaultAddr := types.GetVaultAddress(shareDenom)
 	assets := sdk.NewInt64Coin(underlyingDenom, 100)
 
-	// setup is a factory for creating setup functions.
 	setup := func(swapInEnabled bool) func() {
 		return func() {
 			s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), owner)
@@ -379,9 +378,7 @@ func (s *TestSuite) TestMsgServer_SwapOut() {
 	initialAssets := sdk.NewInt64Coin(underlyingDenom, 100)
 
 	setup := func() {
-		// Create marker for underlying asset
 		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), owner)
-		// Create the vault
 		vault, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 			Admin:           owner.String(),
 			ShareDenom:      shareDenom,
@@ -448,12 +445,9 @@ func (s *TestSuite) TestMsgServer_SwapOut_Failures() {
 	initialAssets := sdk.NewInt64Coin(underlyingDenom, 100)
 	sharesToSwap := sdk.NewInt64Coin(shareDenom, 50)
 
-	// Base setup for many tests
 	setup := func(swapOutEnabled bool) func() {
 		return func() {
-			// Create marker for underlying asset
 			s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), owner)
-			// Create the vault
 			vault, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 				Admin:           owner.String(),
 				ShareDenom:      shareDenom,
@@ -588,7 +582,6 @@ func (s *TestSuite) TestMsgServer_ToggleSwapOut() {
 			name: "happy path - disable swap out",
 			setup: func() {
 				setup()
-				// Pre-enable it
 				vault, err := s.k.GetVault(s.ctx, vaultAddr)
 				s.Require().NoError(err)
 				vault.SwapOutEnabled = true
@@ -715,7 +708,6 @@ func (s *TestSuite) TestMsgServer_ToggleSwapIn() {
 			name: "happy path - disable swap in",
 			setup: func() {
 				setup()
-				// Pre-enable it
 				vault, err := s.k.GetVault(s.ctx, vaultAddr)
 				s.Require().NoError(err)
 				vault.SwapInEnabled = true
@@ -1143,6 +1135,21 @@ func (s *TestSuite) TestMsgServer_UpdateMinInterestRate_Failures() {
 			},
 			expectedErrSubstrs: []string{"unauthorized", "is not the vault admin"},
 		},
+		{
+			name: "validation failure: min > existing max",
+			setup: func() {
+				setup()
+				v, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err)
+				s.k.SetMaxInterestRate(s.ctx, v, "0.05")
+			},
+			msg: types.MsgUpdateMinInterestRateRequest{
+				Admin:        admin.String(),
+				VaultAddress: vaultAddr.String(),
+				MinRate:      "0.06",
+			},
+			expectedErrSubstrs: []string{"minimum interest rate", "greater than", "maximum"},
+		},
 	}
 
 	for _, tc := range tests {
@@ -1267,7 +1274,7 @@ func (s *TestSuite) TestMsgServer_UpdateMaxInterestRate_Failures() {
 
 	tests := []msgServerTestCase[types.MsgUpdateMaxInterestRateRequest, any]{
 		{
-			name: "vault_does_not_exist",
+			name: "vault does not exist",
 			setup: func() {
 				s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 			},
@@ -1279,7 +1286,7 @@ func (s *TestSuite) TestMsgServer_UpdateMaxInterestRate_Failures() {
 			expectedErrSubstrs: []string{"not found"},
 		},
 		{
-			name:  "invalid_vault_address_not_a_vault_account",
+			name:  "invalid vault address (not a vault account)",
 			setup: setup,
 			msg: types.MsgUpdateMaxInterestRateRequest{
 				Admin:        admin.String(),
@@ -1289,7 +1296,7 @@ func (s *TestSuite) TestMsgServer_UpdateMaxInterestRate_Failures() {
 			expectedErrSubstrs: []string{"failed to get vault", "is not a vault account"},
 		},
 		{
-			name:  "unauthorized_admin",
+			name:  "unauthorized admin",
 			setup: setup,
 			msg: types.MsgUpdateMaxInterestRateRequest{
 				Admin:        other.String(),
@@ -1297,6 +1304,30 @@ func (s *TestSuite) TestMsgServer_UpdateMaxInterestRate_Failures() {
 				MaxRate:      "0.33",
 			},
 			expectedErrSubstrs: []string{"unauthorized", "is not the vault admin"},
+		},
+		{
+			name: "validation_failure: max < existing min",
+			setup: func() {
+				setup()
+				_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).UpdateMinInterestRate(
+					s.ctx, &types.MsgUpdateMinInterestRateRequest{
+						Admin:        admin.String(),
+						VaultAddress: vaultAddr.String(),
+						MinRate:      "0.50",
+					},
+				)
+				s.Require().NoError(err)
+			},
+			msg: types.MsgUpdateMaxInterestRateRequest{
+				Admin:        admin.String(),
+				VaultAddress: vaultAddr.String(),
+				MaxRate:      "0.40",
+			},
+			expectedErrSubstrs: []string{
+				"minimum interest rate",
+				"cannot be greater than",
+				"maximum interest rate",
+			},
 		},
 	}
 

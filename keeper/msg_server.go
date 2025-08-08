@@ -117,7 +117,7 @@ func (k msgServer) UpdateMaxInterestRate(goCtx context.Context, msg *types.MsgUp
 		return nil, err
 	}
 
-	if err := k.ValidateInterestRateLimits(msg.MaxRate, vault.MaxInterestRate); err != nil {
+	if err := k.ValidateInterestRateLimits(vault.MinInterestRate, msg.MaxRate); err != nil {
 		return nil, err
 	}
 

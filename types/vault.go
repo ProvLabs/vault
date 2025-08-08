@@ -62,7 +62,6 @@ func (va VaultAccount) Clone() *VaultAccount {
 	return proto.Clone(&va).(*VaultAccount)
 }
 
-// Validate performs basic validation on the vault fields.
 func (va VaultAccount) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(va.Admin); err != nil {
 		return fmt.Errorf("invalid admin address: %w", err)
@@ -70,25 +69,57 @@ func (va VaultAccount) Validate() error {
 	if err := sdk.ValidateDenom(va.ShareDenom); err != nil {
 		return fmt.Errorf("invalid share denom: %w", err)
 	}
-
 	if len(va.UnderlyingAssets) < 1 {
 		return fmt.Errorf("at least one underlying asset is required")
 	}
-
 	for _, denom := range va.UnderlyingAssets {
 		if err := sdk.ValidateDenom(denom); err != nil {
 			return fmt.Errorf("invalid underlying asset denom: %s", denom)
 		}
 	}
 
-	_, err := sdkmath.LegacyNewDecFromStr(va.CurrentInterestRate)
+	cur, err := sdkmath.LegacyNewDecFromStr(va.CurrentInterestRate)
 	if err != nil {
 		return fmt.Errorf("invalid current interest rate: %s", va.CurrentInterestRate)
 	}
-
-	_, err = sdkmath.LegacyNewDecFromStr(va.DesiredInterestRate)
+	des, err := sdkmath.LegacyNewDecFromStr(va.DesiredInterestRate)
 	if err != nil {
 		return fmt.Errorf("invalid desired interest rate: %s", va.DesiredInterestRate)
+	}
+
+	var min, max sdkmath.LegacyDec
+	hasMin := va.MinInterestRate != ""
+	hasMax := va.MaxInterestRate != ""
+
+	if hasMin {
+		min, err = sdkmath.LegacyNewDecFromStr(va.MinInterestRate)
+		if err != nil {
+			return fmt.Errorf("invalid min interest rate: %s", va.MinInterestRate)
+		}
+	}
+	if hasMax {
+		max, err = sdkmath.LegacyNewDecFromStr(va.MaxInterestRate)
+		if err != nil {
+			return fmt.Errorf("invalid max interest rate: %s", va.MaxInterestRate)
+		}
+	}
+
+	// min/max mutual consistency
+	if hasMin && hasMax && min.GT(max) {
+		return fmt.Errorf("minimum interest rate %s cannot be greater than maximum interest rate %s", min, max)
+	}
+
+	// desired within bounds if bounds set
+	if hasMin && des.LT(min) {
+		return fmt.Errorf("desired interest rate %s is less than minimum interest rate %s", des, min)
+	}
+	if hasMax && des.GT(max) {
+		return fmt.Errorf("desired interest rate %s is greater than maximum interest rate %s", des, max)
+	}
+
+	// current must be zero or equal to desired
+	if !cur.IsZero() && !cur.Equal(des) {
+		return fmt.Errorf("current interest rate must be zero or equal to desired (current=%s desired=%s)", cur, des)
 	}
 
 	return nil

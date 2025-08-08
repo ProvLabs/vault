@@ -1049,13 +1049,7 @@ func (s *TestSuite) TestMsgServer_UpdateMinInterestRate() {
 				VaultAddress: vaultAddr,
 				ExpectedMin:  "",
 			},
-			expectedEvents: sdk.Events{
-				sdk.NewEvent("vault.v1.EventMinInterestRateUpdated",
-					sdk.NewAttribute("admin", admin.String()),
-					sdk.NewAttribute("min_rate", ""),
-					sdk.NewAttribute("vault_address", vaultAddr.String()),
-				),
-			},
+			expectedEvents: sdk.Events{},
 		},
 	}
 
@@ -1141,7 +1135,7 @@ func (s *TestSuite) TestMsgServer_UpdateMinInterestRate_Failures() {
 				setup()
 				v, err := s.k.GetVault(s.ctx, vaultAddr)
 				s.Require().NoError(err)
-				s.k.SetMaxInterestRate(s.ctx, v, "0.05")
+				s.Require().NoError(s.k.SetMaxInterestRate(s.ctx, v, "0.05"))
 			},
 			msg: types.MsgUpdateMinInterestRateRequest{
 				Admin:        admin.String(),
@@ -1219,13 +1213,7 @@ func (s *TestSuite) TestMsgServer_UpdateMaxInterestRate() {
 				VaultAddress: vaultAddr,
 				ExpectedMax:  "",
 			},
-			expectedEvents: sdk.Events{
-				sdk.NewEvent("vault.v1.EventMaxInterestRateUpdated",
-					sdk.NewAttribute("admin", admin.String()),
-					sdk.NewAttribute("max_rate", ""),
-					sdk.NewAttribute("vault_address", vaultAddr.String()),
-				),
-			},
+			expectedEvents: sdk.Events{},
 		},
 	}
 

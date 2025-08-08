@@ -90,11 +90,9 @@ func (k msgServer) UpdateMinInterestRate(goCtx context.Context, msg *types.MsgUp
 		return nil, err
 	}
 
-	if err := k.ValidateInterestRateLimits(msg.MinRate, vault.MaxInterestRate); err != nil {
-		return nil, err
+	if err := k.SetMinInterestRate(ctx, vault, msg.MinRate); err != nil {
+		return nil, fmt.Errorf("failed to set min interest rate: %w", err)
 	}
-
-	k.SetMinInterestRate(ctx, vault, msg.MinRate)
 
 	return &types.MsgUpdateMinInterestRateResponse{}, nil
 }
@@ -117,11 +115,9 @@ func (k msgServer) UpdateMaxInterestRate(goCtx context.Context, msg *types.MsgUp
 		return nil, err
 	}
 
-	if err := k.ValidateInterestRateLimits(vault.MinInterestRate, msg.MaxRate); err != nil {
-		return nil, err
+	if err := k.SetMaxInterestRate(ctx, vault, msg.MaxRate); err != nil {
+		return nil, fmt.Errorf("failed to set max interest rate: %w", err)
 	}
-
-	k.SetMaxInterestRate(ctx, vault, msg.MaxRate)
 
 	return &types.MsgUpdateMaxInterestRateResponse{}, nil
 }

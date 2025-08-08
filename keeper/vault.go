@@ -289,18 +289,32 @@ func (k *Keeper) SetSwapOutEnable(ctx context.Context, vault *types.VaultAccount
 
 // SetMinInterestRate sets the minimum interest rate for a vault.
 // An empty string disables the minimum rate check.
-func (k *Keeper) SetMinInterestRate(ctx sdk.Context, vault *types.VaultAccount, minRate string) {
+func (k *Keeper) SetMinInterestRate(ctx sdk.Context, vault *types.VaultAccount, minRate string) error {
+	if err := k.ValidateInterestRateLimits(minRate, vault.MaxInterestRate); err != nil {
+		return err
+	}
+	if vault.MinInterestRate == minRate {
+		return nil
+	}
 	vault.MinInterestRate = minRate
 	k.AuthKeeper.SetAccount(ctx, vault)
 	k.emitEvent(ctx, types.NewEventMinInterestRateUpdated(vault.Address, vault.Admin, minRate))
+	return nil
 }
 
 // SetMaxInterestRate sets the maximum interest rate for a vault.
 // An empty string disables the maximum rate check.
-func (k *Keeper) SetMaxInterestRate(ctx sdk.Context, vault *types.VaultAccount, maxRate string) {
+func (k *Keeper) SetMaxInterestRate(ctx sdk.Context, vault *types.VaultAccount, maxRate string) error {
+	if err := k.ValidateInterestRateLimits(vault.MinInterestRate, maxRate); err != nil {
+		return err
+	}
+	if vault.MaxInterestRate == maxRate {
+		return nil
+	}
 	vault.MaxInterestRate = maxRate
 	k.AuthKeeper.SetAccount(ctx, vault)
 	k.emitEvent(ctx, types.NewEventMaxInterestRateUpdated(vault.Address, vault.Admin, maxRate))
+	return nil
 }
 
 func (k Keeper) ValidateInterestRateLimits(minRateStr, maxRateStr string) error {

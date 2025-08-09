@@ -19,11 +19,19 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Msg_CreateVault_FullMethodName  = "/vault.v1.Msg/CreateVault"
-	Msg_SwapIn_FullMethodName       = "/vault.v1.Msg/SwapIn"
-	Msg_SwapOut_FullMethodName      = "/vault.v1.Msg/SwapOut"
-	Msg_Redeem_FullMethodName       = "/vault.v1.Msg/Redeem"
-	Msg_UpdateParams_FullMethodName = "/vault.v1.Msg/UpdateParams"
+	Msg_CreateVault_FullMethodName            = "/vault.v1.Msg/CreateVault"
+	Msg_SwapIn_FullMethodName                 = "/vault.v1.Msg/SwapIn"
+	Msg_SwapOut_FullMethodName                = "/vault.v1.Msg/SwapOut"
+	Msg_UpdateParams_FullMethodName           = "/vault.v1.Msg/UpdateParams"
+	Msg_UpdateMinInterestRate_FullMethodName  = "/vault.v1.Msg/UpdateMinInterestRate"
+	Msg_UpdateMaxInterestRate_FullMethodName  = "/vault.v1.Msg/UpdateMaxInterestRate"
+	Msg_UpdateInterestRate_FullMethodName     = "/vault.v1.Msg/UpdateInterestRate"
+	Msg_DepositInterestFunds_FullMethodName   = "/vault.v1.Msg/DepositInterestFunds"
+	Msg_WithdrawInterestFunds_FullMethodName  = "/vault.v1.Msg/WithdrawInterestFunds"
+	Msg_ToggleSwapIn_FullMethodName           = "/vault.v1.Msg/ToggleSwapIn"
+	Msg_ToggleSwapOut_FullMethodName          = "/vault.v1.Msg/ToggleSwapOut"
+	Msg_DepositPrincipalFunds_FullMethodName  = "/vault.v1.Msg/DepositPrincipalFunds"
+	Msg_WithdrawPrincipalFunds_FullMethodName = "/vault.v1.Msg/WithdrawPrincipalFunds"
 )
 
 // MsgClient is the client API for Msg service.
@@ -38,11 +46,27 @@ type MsgClient interface {
 	SwapIn(ctx context.Context, in *MsgSwapInRequest, opts ...grpc.CallOption) (*MsgSwapInResponse, error)
 	// SwapOut exchanges vault shares for underlying assets by withdrawing from a vault.
 	SwapOut(ctx context.Context, in *MsgSwapOutRequest, opts ...grpc.CallOption) (*MsgSwapOutResponse, error)
-	// Redeem redeems a specific amount of shares from a vault for a calculated amount of the underlying asset.
-	Redeem(ctx context.Context, in *MsgRedeemRequest, opts ...grpc.CallOption) (*MsgRedeemResponse, error)
 	// UpdateParams defines a (governance) operation for updating the module
 	// parameters. The authority defaults to the x/gov module account.
 	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
+	// UpdateMinInterestRate sets the minimum allowed interest rate for a vault.
+	UpdateMinInterestRate(ctx context.Context, in *MsgUpdateMinInterestRateRequest, opts ...grpc.CallOption) (*MsgUpdateMinInterestRateResponse, error)
+	// UpdateMaxInterestRate sets the maximum allowed interest rate for a vault.
+	UpdateMaxInterestRate(ctx context.Context, in *MsgUpdateMaxInterestRateRequest, opts ...grpc.CallOption) (*MsgUpdateMaxInterestRateResponse, error)
+	// UpdateInterestRate allows the interest admin to update the current interest rate within limits.
+	UpdateInterestRate(ctx context.Context, in *MsgUpdateInterestRateRequest, opts ...grpc.CallOption) (*MsgUpdateInterestRateResponse, error)
+	// DepositInterestFunds allows depositing funds into the vault for paying interest.
+	DepositInterestFunds(ctx context.Context, in *MsgDepositInterestFundsRequest, opts ...grpc.CallOption) (*MsgDepositInterestFundsResponse, error)
+	// WithdrawInterestFunds allows withdrawing unused interest funds (admin only).
+	WithdrawInterestFunds(ctx context.Context, in *MsgWithdrawInterestFundsRequest, opts ...grpc.CallOption) (*MsgWithdrawInterestFundsResponse, error)
+	// ToggleSwapIn allows enabling or disabling swap-in operations for a vault.
+	ToggleSwapIn(ctx context.Context, in *MsgToggleSwapInRequest, opts ...grpc.CallOption) (*MsgToggleSwapInResponse, error)
+	// ToggleSwapOut allows enabling or disabling swap-out operations for a vault.
+	ToggleSwapOut(ctx context.Context, in *MsgToggleSwapOutRequest, opts ...grpc.CallOption) (*MsgToggleSwapOutResponse, error)
+	// DepositPrincipalFunds allows depositing principal funds into a vault.
+	DepositPrincipalFunds(ctx context.Context, in *MsgDepositPrincipalFundsRequest, opts ...grpc.CallOption) (*MsgDepositPrincipalFundsResponse, error)
+	// WithdrawPrincipalFunds allows withdrawing principal funds from a vault.
+	WithdrawPrincipalFunds(ctx context.Context, in *MsgWithdrawPrincipalFundsRequest, opts ...grpc.CallOption) (*MsgWithdrawPrincipalFundsResponse, error)
 }
 
 type msgClient struct {
@@ -83,20 +107,100 @@ func (c *msgClient) SwapOut(ctx context.Context, in *MsgSwapOutRequest, opts ...
 	return out, nil
 }
 
-func (c *msgClient) Redeem(ctx context.Context, in *MsgRedeemRequest, opts ...grpc.CallOption) (*MsgRedeemResponse, error) {
+func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(MsgRedeemResponse)
-	err := c.cc.Invoke(ctx, Msg_Redeem_FullMethodName, in, out, cOpts...)
+	out := new(MsgUpdateParamsResponse)
+	err := c.cc.Invoke(ctx, Msg_UpdateParams_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error) {
+func (c *msgClient) UpdateMinInterestRate(ctx context.Context, in *MsgUpdateMinInterestRateRequest, opts ...grpc.CallOption) (*MsgUpdateMinInterestRateResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(MsgUpdateParamsResponse)
-	err := c.cc.Invoke(ctx, Msg_UpdateParams_FullMethodName, in, out, cOpts...)
+	out := new(MsgUpdateMinInterestRateResponse)
+	err := c.cc.Invoke(ctx, Msg_UpdateMinInterestRate_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateMaxInterestRate(ctx context.Context, in *MsgUpdateMaxInterestRateRequest, opts ...grpc.CallOption) (*MsgUpdateMaxInterestRateResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgUpdateMaxInterestRateResponse)
+	err := c.cc.Invoke(ctx, Msg_UpdateMaxInterestRate_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateInterestRate(ctx context.Context, in *MsgUpdateInterestRateRequest, opts ...grpc.CallOption) (*MsgUpdateInterestRateResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgUpdateInterestRateResponse)
+	err := c.cc.Invoke(ctx, Msg_UpdateInterestRate_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) DepositInterestFunds(ctx context.Context, in *MsgDepositInterestFundsRequest, opts ...grpc.CallOption) (*MsgDepositInterestFundsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgDepositInterestFundsResponse)
+	err := c.cc.Invoke(ctx, Msg_DepositInterestFunds_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) WithdrawInterestFunds(ctx context.Context, in *MsgWithdrawInterestFundsRequest, opts ...grpc.CallOption) (*MsgWithdrawInterestFundsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgWithdrawInterestFundsResponse)
+	err := c.cc.Invoke(ctx, Msg_WithdrawInterestFunds_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) ToggleSwapIn(ctx context.Context, in *MsgToggleSwapInRequest, opts ...grpc.CallOption) (*MsgToggleSwapInResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgToggleSwapInResponse)
+	err := c.cc.Invoke(ctx, Msg_ToggleSwapIn_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) ToggleSwapOut(ctx context.Context, in *MsgToggleSwapOutRequest, opts ...grpc.CallOption) (*MsgToggleSwapOutResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgToggleSwapOutResponse)
+	err := c.cc.Invoke(ctx, Msg_ToggleSwapOut_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) DepositPrincipalFunds(ctx context.Context, in *MsgDepositPrincipalFundsRequest, opts ...grpc.CallOption) (*MsgDepositPrincipalFundsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgDepositPrincipalFundsResponse)
+	err := c.cc.Invoke(ctx, Msg_DepositPrincipalFunds_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) WithdrawPrincipalFunds(ctx context.Context, in *MsgWithdrawPrincipalFundsRequest, opts ...grpc.CallOption) (*MsgWithdrawPrincipalFundsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgWithdrawPrincipalFundsResponse)
+	err := c.cc.Invoke(ctx, Msg_WithdrawPrincipalFunds_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -115,11 +219,27 @@ type MsgServer interface {
 	SwapIn(context.Context, *MsgSwapInRequest) (*MsgSwapInResponse, error)
 	// SwapOut exchanges vault shares for underlying assets by withdrawing from a vault.
 	SwapOut(context.Context, *MsgSwapOutRequest) (*MsgSwapOutResponse, error)
-	// Redeem redeems a specific amount of shares from a vault for a calculated amount of the underlying asset.
-	Redeem(context.Context, *MsgRedeemRequest) (*MsgRedeemResponse, error)
 	// UpdateParams defines a (governance) operation for updating the module
 	// parameters. The authority defaults to the x/gov module account.
 	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
+	// UpdateMinInterestRate sets the minimum allowed interest rate for a vault.
+	UpdateMinInterestRate(context.Context, *MsgUpdateMinInterestRateRequest) (*MsgUpdateMinInterestRateResponse, error)
+	// UpdateMaxInterestRate sets the maximum allowed interest rate for a vault.
+	UpdateMaxInterestRate(context.Context, *MsgUpdateMaxInterestRateRequest) (*MsgUpdateMaxInterestRateResponse, error)
+	// UpdateInterestRate allows the interest admin to update the current interest rate within limits.
+	UpdateInterestRate(context.Context, *MsgUpdateInterestRateRequest) (*MsgUpdateInterestRateResponse, error)
+	// DepositInterestFunds allows depositing funds into the vault for paying interest.
+	DepositInterestFunds(context.Context, *MsgDepositInterestFundsRequest) (*MsgDepositInterestFundsResponse, error)
+	// WithdrawInterestFunds allows withdrawing unused interest funds (admin only).
+	WithdrawInterestFunds(context.Context, *MsgWithdrawInterestFundsRequest) (*MsgWithdrawInterestFundsResponse, error)
+	// ToggleSwapIn allows enabling or disabling swap-in operations for a vault.
+	ToggleSwapIn(context.Context, *MsgToggleSwapInRequest) (*MsgToggleSwapInResponse, error)
+	// ToggleSwapOut allows enabling or disabling swap-out operations for a vault.
+	ToggleSwapOut(context.Context, *MsgToggleSwapOutRequest) (*MsgToggleSwapOutResponse, error)
+	// DepositPrincipalFunds allows depositing principal funds into a vault.
+	DepositPrincipalFunds(context.Context, *MsgDepositPrincipalFundsRequest) (*MsgDepositPrincipalFundsResponse, error)
+	// WithdrawPrincipalFunds allows withdrawing principal funds from a vault.
+	WithdrawPrincipalFunds(context.Context, *MsgWithdrawPrincipalFundsRequest) (*MsgWithdrawPrincipalFundsResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -139,11 +259,35 @@ func (UnimplementedMsgServer) SwapIn(context.Context, *MsgSwapInRequest) (*MsgSw
 func (UnimplementedMsgServer) SwapOut(context.Context, *MsgSwapOutRequest) (*MsgSwapOutResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SwapOut not implemented")
 }
-func (UnimplementedMsgServer) Redeem(context.Context, *MsgRedeemRequest) (*MsgRedeemResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Redeem not implemented")
-}
 func (UnimplementedMsgServer) UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateParams not implemented")
+}
+func (UnimplementedMsgServer) UpdateMinInterestRate(context.Context, *MsgUpdateMinInterestRateRequest) (*MsgUpdateMinInterestRateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateMinInterestRate not implemented")
+}
+func (UnimplementedMsgServer) UpdateMaxInterestRate(context.Context, *MsgUpdateMaxInterestRateRequest) (*MsgUpdateMaxInterestRateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateMaxInterestRate not implemented")
+}
+func (UnimplementedMsgServer) UpdateInterestRate(context.Context, *MsgUpdateInterestRateRequest) (*MsgUpdateInterestRateResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateInterestRate not implemented")
+}
+func (UnimplementedMsgServer) DepositInterestFunds(context.Context, *MsgDepositInterestFundsRequest) (*MsgDepositInterestFundsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DepositInterestFunds not implemented")
+}
+func (UnimplementedMsgServer) WithdrawInterestFunds(context.Context, *MsgWithdrawInterestFundsRequest) (*MsgWithdrawInterestFundsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method WithdrawInterestFunds not implemented")
+}
+func (UnimplementedMsgServer) ToggleSwapIn(context.Context, *MsgToggleSwapInRequest) (*MsgToggleSwapInResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ToggleSwapIn not implemented")
+}
+func (UnimplementedMsgServer) ToggleSwapOut(context.Context, *MsgToggleSwapOutRequest) (*MsgToggleSwapOutResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ToggleSwapOut not implemented")
+}
+func (UnimplementedMsgServer) DepositPrincipalFunds(context.Context, *MsgDepositPrincipalFundsRequest) (*MsgDepositPrincipalFundsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DepositPrincipalFunds not implemented")
+}
+func (UnimplementedMsgServer) WithdrawPrincipalFunds(context.Context, *MsgWithdrawPrincipalFundsRequest) (*MsgWithdrawPrincipalFundsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method WithdrawPrincipalFunds not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 func (UnimplementedMsgServer) testEmbeddedByValue()             {}
@@ -220,24 +364,6 @@ func _Msg_SwapOut_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_Redeem_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgRedeemRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).Redeem(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Msg_Redeem_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).Redeem(ctx, req.(*MsgRedeemRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Msg_UpdateParams_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgUpdateParams)
 	if err := dec(in); err != nil {
@@ -252,6 +378,168 @@ func _Msg_UpdateParams_Handler(srv interface{}, ctx context.Context, dec func(in
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).UpdateParams(ctx, req.(*MsgUpdateParams))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateMinInterestRate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateMinInterestRateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateMinInterestRate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_UpdateMinInterestRate_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateMinInterestRate(ctx, req.(*MsgUpdateMinInterestRateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateMaxInterestRate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateMaxInterestRateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateMaxInterestRate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_UpdateMaxInterestRate_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateMaxInterestRate(ctx, req.(*MsgUpdateMaxInterestRateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateInterestRate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateInterestRateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateInterestRate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_UpdateInterestRate_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateInterestRate(ctx, req.(*MsgUpdateInterestRateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_DepositInterestFunds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgDepositInterestFundsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).DepositInterestFunds(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_DepositInterestFunds_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).DepositInterestFunds(ctx, req.(*MsgDepositInterestFundsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_WithdrawInterestFunds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgWithdrawInterestFundsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).WithdrawInterestFunds(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_WithdrawInterestFunds_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).WithdrawInterestFunds(ctx, req.(*MsgWithdrawInterestFundsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_ToggleSwapIn_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgToggleSwapInRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ToggleSwapIn(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_ToggleSwapIn_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ToggleSwapIn(ctx, req.(*MsgToggleSwapInRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_ToggleSwapOut_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgToggleSwapOutRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ToggleSwapOut(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_ToggleSwapOut_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ToggleSwapOut(ctx, req.(*MsgToggleSwapOutRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_DepositPrincipalFunds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgDepositPrincipalFundsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).DepositPrincipalFunds(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_DepositPrincipalFunds_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).DepositPrincipalFunds(ctx, req.(*MsgDepositPrincipalFundsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_WithdrawPrincipalFunds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgWithdrawPrincipalFundsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).WithdrawPrincipalFunds(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_WithdrawPrincipalFunds_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).WithdrawPrincipalFunds(ctx, req.(*MsgWithdrawPrincipalFundsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -276,12 +564,44 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_SwapOut_Handler,
 		},
 		{
-			MethodName: "Redeem",
-			Handler:    _Msg_Redeem_Handler,
-		},
-		{
 			MethodName: "UpdateParams",
 			Handler:    _Msg_UpdateParams_Handler,
+		},
+		{
+			MethodName: "UpdateMinInterestRate",
+			Handler:    _Msg_UpdateMinInterestRate_Handler,
+		},
+		{
+			MethodName: "UpdateMaxInterestRate",
+			Handler:    _Msg_UpdateMaxInterestRate_Handler,
+		},
+		{
+			MethodName: "UpdateInterestRate",
+			Handler:    _Msg_UpdateInterestRate_Handler,
+		},
+		{
+			MethodName: "DepositInterestFunds",
+			Handler:    _Msg_DepositInterestFunds_Handler,
+		},
+		{
+			MethodName: "WithdrawInterestFunds",
+			Handler:    _Msg_WithdrawInterestFunds_Handler,
+		},
+		{
+			MethodName: "ToggleSwapIn",
+			Handler:    _Msg_ToggleSwapIn_Handler,
+		},
+		{
+			MethodName: "ToggleSwapOut",
+			Handler:    _Msg_ToggleSwapOut_Handler,
+		},
+		{
+			MethodName: "DepositPrincipalFunds",
+			Handler:    _Msg_DepositPrincipalFunds_Handler,
+		},
+		{
+			MethodName: "WithdrawPrincipalFunds",
+			Handler:    _Msg_WithdrawPrincipalFunds_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

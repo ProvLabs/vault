@@ -21,6 +21,7 @@ type queryServer struct {
 	*Keeper
 }
 
+// NewQueryServer creates a new QueryServer for the module.
 func NewQueryServer(keeper *Keeper) types.QueryServer {
 	return &queryServer{Keeper: keeper}
 }

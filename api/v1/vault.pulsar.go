@@ -69,6 +69,10 @@ var (
 	fd_VaultAccount_admin                 protoreflect.FieldDescriptor
 	fd_VaultAccount_current_interest_rate protoreflect.FieldDescriptor
 	fd_VaultAccount_desired_interest_rate protoreflect.FieldDescriptor
+	fd_VaultAccount_min_interest_rate     protoreflect.FieldDescriptor
+	fd_VaultAccount_max_interest_rate     protoreflect.FieldDescriptor
+	fd_VaultAccount_swap_in_enabled       protoreflect.FieldDescriptor
+	fd_VaultAccount_swap_out_enabled      protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -80,6 +84,10 @@ func init() {
 	fd_VaultAccount_admin = md_VaultAccount.Fields().ByName("admin")
 	fd_VaultAccount_current_interest_rate = md_VaultAccount.Fields().ByName("current_interest_rate")
 	fd_VaultAccount_desired_interest_rate = md_VaultAccount.Fields().ByName("desired_interest_rate")
+	fd_VaultAccount_min_interest_rate = md_VaultAccount.Fields().ByName("min_interest_rate")
+	fd_VaultAccount_max_interest_rate = md_VaultAccount.Fields().ByName("max_interest_rate")
+	fd_VaultAccount_swap_in_enabled = md_VaultAccount.Fields().ByName("swap_in_enabled")
+	fd_VaultAccount_swap_out_enabled = md_VaultAccount.Fields().ByName("swap_out_enabled")
 }
 
 var _ protoreflect.Message = (*fastReflection_VaultAccount)(nil)
@@ -183,6 +191,30 @@ func (x *fastReflection_VaultAccount) Range(f func(protoreflect.FieldDescriptor,
 			return
 		}
 	}
+	if x.MinInterestRate != "" {
+		value := protoreflect.ValueOfString(x.MinInterestRate)
+		if !f(fd_VaultAccount_min_interest_rate, value) {
+			return
+		}
+	}
+	if x.MaxInterestRate != "" {
+		value := protoreflect.ValueOfString(x.MaxInterestRate)
+		if !f(fd_VaultAccount_max_interest_rate, value) {
+			return
+		}
+	}
+	if x.SwapInEnabled != false {
+		value := protoreflect.ValueOfBool(x.SwapInEnabled)
+		if !f(fd_VaultAccount_swap_in_enabled, value) {
+			return
+		}
+	}
+	if x.SwapOutEnabled != false {
+		value := protoreflect.ValueOfBool(x.SwapOutEnabled)
+		if !f(fd_VaultAccount_swap_out_enabled, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -210,6 +242,14 @@ func (x *fastReflection_VaultAccount) Has(fd protoreflect.FieldDescriptor) bool 
 		return x.CurrentInterestRate != ""
 	case "vault.v1.VaultAccount.desired_interest_rate":
 		return x.DesiredInterestRate != ""
+	case "vault.v1.VaultAccount.min_interest_rate":
+		return x.MinInterestRate != ""
+	case "vault.v1.VaultAccount.max_interest_rate":
+		return x.MaxInterestRate != ""
+	case "vault.v1.VaultAccount.swap_in_enabled":
+		return x.SwapInEnabled != false
+	case "vault.v1.VaultAccount.swap_out_enabled":
+		return x.SwapOutEnabled != false
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.VaultAccount"))
@@ -238,6 +278,14 @@ func (x *fastReflection_VaultAccount) Clear(fd protoreflect.FieldDescriptor) {
 		x.CurrentInterestRate = ""
 	case "vault.v1.VaultAccount.desired_interest_rate":
 		x.DesiredInterestRate = ""
+	case "vault.v1.VaultAccount.min_interest_rate":
+		x.MinInterestRate = ""
+	case "vault.v1.VaultAccount.max_interest_rate":
+		x.MaxInterestRate = ""
+	case "vault.v1.VaultAccount.swap_in_enabled":
+		x.SwapInEnabled = false
+	case "vault.v1.VaultAccount.swap_out_enabled":
+		x.SwapOutEnabled = false
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.VaultAccount"))
@@ -275,6 +323,18 @@ func (x *fastReflection_VaultAccount) Get(descriptor protoreflect.FieldDescripto
 	case "vault.v1.VaultAccount.desired_interest_rate":
 		value := x.DesiredInterestRate
 		return protoreflect.ValueOfString(value)
+	case "vault.v1.VaultAccount.min_interest_rate":
+		value := x.MinInterestRate
+		return protoreflect.ValueOfString(value)
+	case "vault.v1.VaultAccount.max_interest_rate":
+		value := x.MaxInterestRate
+		return protoreflect.ValueOfString(value)
+	case "vault.v1.VaultAccount.swap_in_enabled":
+		value := x.SwapInEnabled
+		return protoreflect.ValueOfBool(value)
+	case "vault.v1.VaultAccount.swap_out_enabled":
+		value := x.SwapOutEnabled
+		return protoreflect.ValueOfBool(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.VaultAccount"))
@@ -309,6 +369,14 @@ func (x *fastReflection_VaultAccount) Set(fd protoreflect.FieldDescriptor, value
 		x.CurrentInterestRate = value.Interface().(string)
 	case "vault.v1.VaultAccount.desired_interest_rate":
 		x.DesiredInterestRate = value.Interface().(string)
+	case "vault.v1.VaultAccount.min_interest_rate":
+		x.MinInterestRate = value.Interface().(string)
+	case "vault.v1.VaultAccount.max_interest_rate":
+		x.MaxInterestRate = value.Interface().(string)
+	case "vault.v1.VaultAccount.swap_in_enabled":
+		x.SwapInEnabled = value.Bool()
+	case "vault.v1.VaultAccount.swap_out_enabled":
+		x.SwapOutEnabled = value.Bool()
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.VaultAccount"))
@@ -348,6 +416,14 @@ func (x *fastReflection_VaultAccount) Mutable(fd protoreflect.FieldDescriptor) p
 		panic(fmt.Errorf("field current_interest_rate of message vault.v1.VaultAccount is not mutable"))
 	case "vault.v1.VaultAccount.desired_interest_rate":
 		panic(fmt.Errorf("field desired_interest_rate of message vault.v1.VaultAccount is not mutable"))
+	case "vault.v1.VaultAccount.min_interest_rate":
+		panic(fmt.Errorf("field min_interest_rate of message vault.v1.VaultAccount is not mutable"))
+	case "vault.v1.VaultAccount.max_interest_rate":
+		panic(fmt.Errorf("field max_interest_rate of message vault.v1.VaultAccount is not mutable"))
+	case "vault.v1.VaultAccount.swap_in_enabled":
+		panic(fmt.Errorf("field swap_in_enabled of message vault.v1.VaultAccount is not mutable"))
+	case "vault.v1.VaultAccount.swap_out_enabled":
+		panic(fmt.Errorf("field swap_out_enabled of message vault.v1.VaultAccount is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.VaultAccount"))
@@ -375,6 +451,14 @@ func (x *fastReflection_VaultAccount) NewField(fd protoreflect.FieldDescriptor) 
 		return protoreflect.ValueOfString("")
 	case "vault.v1.VaultAccount.desired_interest_rate":
 		return protoreflect.ValueOfString("")
+	case "vault.v1.VaultAccount.min_interest_rate":
+		return protoreflect.ValueOfString("")
+	case "vault.v1.VaultAccount.max_interest_rate":
+		return protoreflect.ValueOfString("")
+	case "vault.v1.VaultAccount.swap_in_enabled":
+		return protoreflect.ValueOfBool(false)
+	case "vault.v1.VaultAccount.swap_out_enabled":
+		return protoreflect.ValueOfBool(false)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.VaultAccount"))
@@ -470,6 +554,20 @@ func (x *fastReflection_VaultAccount) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
+		l = len(x.MinInterestRate)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.MaxInterestRate)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.SwapInEnabled {
+			n += 2
+		}
+		if x.SwapOutEnabled {
+			n += 2
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -498,6 +596,40 @@ func (x *fastReflection_VaultAccount) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.SwapOutEnabled {
+			i--
+			if x.SwapOutEnabled {
+				dAtA[i] = 1
+			} else {
+				dAtA[i] = 0
+			}
+			i--
+			dAtA[i] = 0x50
+		}
+		if x.SwapInEnabled {
+			i--
+			if x.SwapInEnabled {
+				dAtA[i] = 1
+			} else {
+				dAtA[i] = 0
+			}
+			i--
+			dAtA[i] = 0x48
+		}
+		if len(x.MaxInterestRate) > 0 {
+			i -= len(x.MaxInterestRate)
+			copy(dAtA[i:], x.MaxInterestRate)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.MaxInterestRate)))
+			i--
+			dAtA[i] = 0x42
+		}
+		if len(x.MinInterestRate) > 0 {
+			i -= len(x.MinInterestRate)
+			copy(dAtA[i:], x.MinInterestRate)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.MinInterestRate)))
+			i--
+			dAtA[i] = 0x3a
 		}
 		if len(x.DesiredInterestRate) > 0 {
 			i -= len(x.DesiredInterestRate)
@@ -795,6 +927,110 @@ func (x *fastReflection_VaultAccount) ProtoMethods() *protoiface.Methods {
 				}
 				x.DesiredInterestRate = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
+			case 7:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MinInterestRate", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.MinInterestRate = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 8:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MaxInterestRate", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.MaxInterestRate = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 9:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field SwapInEnabled", wireType)
+				}
+				var v int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				x.SwapInEnabled = bool(v != 0)
+			case 10:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field SwapOutEnabled", wireType)
+				}
+				var v int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				x.SwapOutEnabled = bool(v != 0)
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -1315,6 +1551,16 @@ type VaultAccount struct {
 	CurrentInterestRate string `protobuf:"bytes,5,opt,name=current_interest_rate,json=currentInterestRate,proto3" json:"current_interest_rate,omitempty"`
 	// desired_interest_rate is the target interest rate that the vault intends to apply.
 	DesiredInterestRate string `protobuf:"bytes,6,opt,name=desired_interest_rate,json=desiredInterestRate,proto3" json:"desired_interest_rate,omitempty"`
+	// min_interest_rate is the lowest interest rate the admin is allowed to set.
+	// If unset (empty string), there is no lower limit.
+	MinInterestRate string `protobuf:"bytes,7,opt,name=min_interest_rate,json=minInterestRate,proto3" json:"min_interest_rate,omitempty"`
+	// max_interest_rate is the highest interest rate the admin is allowed to set.
+	// If unset (empty string), there is no upper limit.
+	MaxInterestRate string `protobuf:"bytes,8,opt,name=max_interest_rate,json=maxInterestRate,proto3" json:"max_interest_rate,omitempty"`
+	// swap_in_enabled indicates whether users are allowed to deposit into the vault.
+	SwapInEnabled bool `protobuf:"varint,9,opt,name=swap_in_enabled,json=swapInEnabled,proto3" json:"swap_in_enabled,omitempty"`
+	// swap_out_enabled indicates whether users are allowed to withdraw from the vault.
+	SwapOutEnabled bool `protobuf:"varint,10,opt,name=swap_out_enabled,json=swapOutEnabled,proto3" json:"swap_out_enabled,omitempty"`
 }
 
 func (x *VaultAccount) Reset() {
@@ -1379,6 +1625,34 @@ func (x *VaultAccount) GetDesiredInterestRate() string {
 	return ""
 }
 
+func (x *VaultAccount) GetMinInterestRate() string {
+	if x != nil {
+		return x.MinInterestRate
+	}
+	return ""
+}
+
+func (x *VaultAccount) GetMaxInterestRate() string {
+	if x != nil {
+		return x.MaxInterestRate
+	}
+	return ""
+}
+
+func (x *VaultAccount) GetSwapInEnabled() bool {
+	if x != nil {
+		return x.SwapInEnabled
+	}
+	return false
+}
+
+func (x *VaultAccount) GetSwapOutEnabled() bool {
+	if x != nil {
+		return x.SwapOutEnabled
+	}
+	return false
+}
+
 // VaultInterestDetails stores metadata related to interest accrual and payment for a vault.
 //
 // period_start represents the Unix timestamp (in seconds) when the current interest
@@ -1439,7 +1713,7 @@ var file_vault_v1_vault_proto_rawDesc = []byte{
 	0x1a, 0x19, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x63,
 	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x14, 0x67, 0x6f, 0x67,
 	0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x22, 0xeb, 0x02, 0x0a, 0x0c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x63, 0x63, 0x6f, 0x75,
+	0x6f, 0x22, 0xc1, 0x04, 0x0a, 0x0c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x63, 0x63, 0x6f, 0x75,
 	0x6e, 0x74, 0x12, 0x49, 0x0a, 0x0c, 0x62, 0x61, 0x73, 0x65, 0x5f, 0x61, 0x63, 0x63, 0x6f, 0x75,
 	0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
 	0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x42,
@@ -1461,23 +1735,36 @@ var file_vault_v1_vault_proto_rawDesc = []byte{
 	0x5f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x5f, 0x72, 0x61, 0x74, 0x65, 0x18, 0x06,
 	0x20, 0x01, 0x28, 0x09, 0x42, 0x14, 0xd2, 0xb4, 0x2d, 0x10, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
 	0x2e, 0x44, 0x65, 0x63, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x13, 0x64, 0x65, 0x73, 0x69,
-	0x72, 0x65, 0x64, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x22,
-	0x5a, 0x0a, 0x14, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74,
-	0x44, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x73, 0x12, 0x21, 0x0a, 0x0c, 0x70, 0x65, 0x72, 0x69, 0x6f,
-	0x64, 0x5f, 0x73, 0x74, 0x61, 0x72, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0b, 0x70,
-	0x65, 0x72, 0x69, 0x6f, 0x64, 0x53, 0x74, 0x61, 0x72, 0x74, 0x12, 0x1f, 0x0a, 0x0b, 0x65, 0x78,
-	0x70, 0x69, 0x72, 0x65, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52,
-	0x0a, 0x65, 0x78, 0x70, 0x69, 0x72, 0x65, 0x54, 0x69, 0x6d, 0x65, 0x42, 0x8b, 0x01, 0x0a, 0x0c,
-	0x63, 0x6f, 0x6d, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x42, 0x0a, 0x56, 0x61,
-	0x75, 0x6c, 0x74, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2e, 0x67, 0x69, 0x74, 0x68,
-	0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f,
-	0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f,
-	0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x56, 0x58, 0x58,
-	0xaa, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x08, 0x56, 0x61,
-	0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x14, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56,
-	0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x09,
-	0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x33,
+	0x72, 0x65, 0x64, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x12,
+	0x40, 0x0a, 0x11, 0x6d, 0x69, 0x6e, 0x5f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x5f,
+	0x72, 0x61, 0x74, 0x65, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09, 0x42, 0x14, 0xd2, 0xb4, 0x2d, 0x10,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x44, 0x65, 0x63, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67,
+	0x52, 0x0f, 0x6d, 0x69, 0x6e, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61, 0x74,
+	0x65, 0x12, 0x40, 0x0a, 0x11, 0x6d, 0x61, 0x78, 0x5f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73,
+	0x74, 0x5f, 0x72, 0x61, 0x74, 0x65, 0x18, 0x08, 0x20, 0x01, 0x28, 0x09, 0x42, 0x14, 0xd2, 0xb4,
+	0x2d, 0x10, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x44, 0x65, 0x63, 0x53, 0x74, 0x72, 0x69,
+	0x6e, 0x67, 0x52, 0x0f, 0x6d, 0x61, 0x78, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52,
+	0x61, 0x74, 0x65, 0x12, 0x26, 0x0a, 0x0f, 0x73, 0x77, 0x61, 0x70, 0x5f, 0x69, 0x6e, 0x5f, 0x65,
+	0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x18, 0x09, 0x20, 0x01, 0x28, 0x08, 0x52, 0x0d, 0x73, 0x77,
+	0x61, 0x70, 0x49, 0x6e, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x12, 0x28, 0x0a, 0x10, 0x73,
+	0x77, 0x61, 0x70, 0x5f, 0x6f, 0x75, 0x74, 0x5f, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x18,
+	0x0a, 0x20, 0x01, 0x28, 0x08, 0x52, 0x0e, 0x73, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x45, 0x6e,
+	0x61, 0x62, 0x6c, 0x65, 0x64, 0x22, 0x5a, 0x0a, 0x14, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x49, 0x6e,
+	0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x44, 0x65, 0x74, 0x61, 0x69, 0x6c, 0x73, 0x12, 0x21, 0x0a,
+	0x0c, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x5f, 0x73, 0x74, 0x61, 0x72, 0x74, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x03, 0x52, 0x0b, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x53, 0x74, 0x61, 0x72, 0x74,
+	0x12, 0x1f, 0x0a, 0x0b, 0x65, 0x78, 0x70, 0x69, 0x72, 0x65, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0a, 0x65, 0x78, 0x70, 0x69, 0x72, 0x65, 0x54, 0x69, 0x6d,
+	0x65, 0x42, 0x8b, 0x01, 0x0a, 0x0c, 0x63, 0x6f, 0x6d, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e,
+	0x76, 0x31, 0x42, 0x0a, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01,
+	0x5a, 0x2e, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x6f,
+	0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69, 0x2f,
+	0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x76, 0x31,
+	0xa2, 0x02, 0x03, 0x56, 0x58, 0x58, 0xaa, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56,
+	0x31, 0xca, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x14, 0x56,
+	0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64,
+	0x61, 0x74, 0x61, 0xea, 0x02, 0x09, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62,
+	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (

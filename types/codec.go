@@ -13,6 +13,8 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgCreateVaultRequest{}, "vault/CreateVault", nil)
 	cdc.RegisterConcrete(&MsgSwapInRequest{}, "vault/SwapIn", nil)
 	cdc.RegisterConcrete(&MsgSwapOutRequest{}, "vault/SwapOut", nil)
+	cdc.RegisterConcrete(&MsgUpdateMinInterestRateRequest{}, "vault/UpdateMinInterestRate", nil)
+	cdc.RegisterConcrete(&MsgUpdateMaxInterestRateRequest{}, "vault/UpdateMaxInterestRate", nil)
 	cdc.RegisterConcrete(&MsgSetInterestConfigRequest{}, "vault/SetInterestConfig", nil)
 	cdc.RegisterConcrete(&MsgUpdateInterestRateRequest{}, "vault/UpdateInterestRate", nil)
 	cdc.RegisterConcrete(&MsgDepositInterestFundsRequest{}, "vault/DepositInterestFunds", nil)
@@ -28,6 +30,8 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		&MsgCreateVaultRequest{},
 		&MsgSwapInRequest{},
 		&MsgSwapOutRequest{},
+		&MsgUpdateMinInterestRateRequest{},
+		&MsgUpdateMaxInterestRateRequest{},
 		&MsgSetInterestConfigRequest{},
 		&MsgUpdateInterestRateRequest{},
 		&MsgDepositInterestFundsRequest{},

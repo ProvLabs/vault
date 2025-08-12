@@ -78,23 +78,6 @@ func (m MsgUpdateParams) ValidateBasic() error {
 	return errors.New("ValidateBasic not implemented for MsgUpdateParams")
 }
 
-// ValidateBasic performs stateless validation on MsgSetInterestConfigRequest.
-func (m MsgSetInterestConfigRequest) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
-		return fmt.Errorf("invalid admin address: %q: %w", m.Admin, err)
-	}
-	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
-		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
-	}
-	if _, err := sdkmath.LegacyNewDecFromStr(m.MinRate); err != nil {
-		return fmt.Errorf("invalid min rate: %q: %w", m.MinRate, err)
-	}
-	if _, err := sdkmath.LegacyNewDecFromStr(m.MaxRate); err != nil {
-		return fmt.Errorf("invalid max rate: %q: %w", m.MaxRate, err)
-	}
-	return nil
-}
-
 // ValidateBasic performs stateless validation on MsgUpdateInterestRateRequest.
 func (m MsgUpdateInterestRateRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {

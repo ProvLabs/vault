@@ -150,22 +150,7 @@ message MsgUpdateMaxInterestRateRequest {
   string max_rate = 3;
 }
 
-// MsgSetInterestConfigRequest is the request message for setting the interest rate configuration of a vault.
-message MsgSetInterestConfigRequest {
-  option (cosmos.msg.v1.signer) = "admin";
-
-  // admin is the address of the vault administrator.
-  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // vault_address is the bech32 address of the vault.
-  string vault_address = 2;
-  // min_rate is the minimum interest rate that can be set for the vault.
-  string min_rate = 3;
-  // max_rate is the maximum interest rate that can be set for the vault.
-  string max_rate = 4;
-}
-
-// MsgSetInterestConfigResponse is the response message for the SetInterestConfig endpoint.
-message MsgSetInterestConfigResponse {}
+message MsgUpdateMaxInterestRateResponse {}
 
 // MsgUpdateInterestRateRequest is the request message for updating the interest rate of a vault.
 message MsgUpdateInterestRateRequest {

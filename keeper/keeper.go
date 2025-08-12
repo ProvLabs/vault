@@ -31,6 +31,7 @@ type Keeper struct {
 	VaultInterestDetails collections.Map[sdk.AccAddress, types.VaultInterestDetails]
 }
 
+// NewMsgServer creates a new Keeper for the module.
 func NewKeeper(
 	cdc codec.Codec,
 	storeService store.KVStoreService,
@@ -78,6 +79,8 @@ func (k Keeper) getLogger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)
 }
 
+// emitEvent is a helper function to emit an event using the keeper's event service.
+// It logs an error if the event emission fails.
 func (k Keeper) emitEvent(ctx sdk.Context, event proto.Message) {
 	if err := k.eventService.EventManager(ctx).Emit(ctx, event); err != nil {
 		k.getLogger(ctx).Error(fmt.Sprintf("error emitting event %#v: %v", event, err))

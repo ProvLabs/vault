@@ -187,17 +187,6 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					},
 				},
 				{
-					RpcMethod: "Redeem",
-					Use:       "redeem [owner] [vault_address] [shares_to_redeem] [receiver]",
-					Short:     "Redeem shares for underlying assets",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "owner"},
-						{ProtoField: "vault_address"},
-						{ProtoField: "shares_to_redeem"},
-						{ProtoField: "receiver"},
-					},
-				},
-				{
 					RpcMethod: "UpdateParams",
 					Use:       "update-params [authority] [params]",
 					Short:     "Update module parameters via governance",
@@ -206,8 +195,99 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						{ProtoField: "params"},
 					},
 				},
+				{
+					RpcMethod: "UpdateInterestRate",
+					Use:       "update-interest-rate [admin] [vault_address] [new_rate]",
+					Short:     "Update the current interest rate for a vault",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "admin"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "new_rate"},
+					},
+				},
+				{
+					RpcMethod: "UpdateMinInterestRate",
+					Use:       "update-min-interest-rate [admin] [vault_address] [min_rate]",
+					Short:     "Set or clear the minimum allowable interest rate for a vault",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "admin"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "min_rate"},
+					},
+				},
+				{
+					RpcMethod: "UpdateMaxInterestRate",
+					Use:       "update-max-interest-rate [admin] [vault_address] [max_rate]",
+					Short:     "Set or clear the maximum allowable interest rate for a vault",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "admin"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "max_rate"},
+					},
+				},
+				{
+					RpcMethod: "DepositInterestFunds",
+					Use:       "deposit-interest-funds [admin] [vault_address] [amount]",
+					Short:     "Deposit funds into a vault for paying interest",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "admin"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "amount"},
+					},
+				},
+				{
+					RpcMethod: "WithdrawInterestFunds",
+					Use:       "withdraw-interest-funds [admin] [vault_address] [amount]",
+					Short:     "Withdraw unused interest funds from a vault",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "admin"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "amount"},
+					},
+				},
+				{
+					RpcMethod: "DepositPrincipalFunds",
+					Use:       "deposit-principal-funds [admin] [vault_address] [amount]",
+					Short:     "Deposit principal funds into the vault’s marker",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "admin"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "amount"},
+					},
+				},
+				{
+					RpcMethod: "WithdrawPrincipalFunds",
+					Use:       "withdraw-principal-funds [admin] [vault_address] [amount]",
+					Short:     "Withdraw principal funds from the vault’s marker",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "admin"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "amount"},
+					},
+				},
+				{
+					RpcMethod: "ToggleSwapIn",
+					Use:       "toggle-swap-in [admin] [vault_address] [enabled]",
+					Short:     "Enable or disable swap-in operations for a vault",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "admin"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "enabled"},
+					},
+				},
+				{
+					RpcMethod: "ToggleSwapOut",
+					Use:       "toggle-swap-out [admin] [vault_address] [enabled]",
+					Short:     "Enable or disable swap-out operations for a vault",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "admin"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "enabled"},
+					},
+				},
 			},
 		},
+
 		Query: &autocliv1.ServiceCommandDescriptor{
 			Service: vaultv1.Query_ServiceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
@@ -235,6 +315,24 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:     "Query the total assets held by a specific vault",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "vault_address"},
+					},
+				},
+				{
+					RpcMethod: "EstimateSwapIn",
+					Use:       "estimate-swap-in [vault_address] [assets]",
+					Short:     "Estimate the number of shares received for a given deposit",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "vault_address"},
+						{ProtoField: "assets"},
+					},
+				},
+				{
+					RpcMethod: "EstimateSwapOut",
+					Use:       "estimate-swap-out [vault_address] [assets]",
+					Short:     "Estimate the amount of underlying assets received for a given withdrawal",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "vault_address"},
+						{ProtoField: "assets"},
 					},
 				},
 			},

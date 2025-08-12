@@ -1,10 +1,13 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/provlabs/vault/types"
 	"github.com/provlabs/vault/utils"
+
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -161,6 +164,10 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 		return nil, fmt.Errorf("vault with address %v not found", vaultAddr.String())
 	}
 
+	if !vault.SwapInEnabled {
+		return nil, fmt.Errorf("swaps are not enabled for vault %s", vaultAddr.String())
+	}
+
 	if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to reconcile vault interest: %w", err)
 	}
@@ -221,6 +228,10 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 		return nil, fmt.Errorf("vault with address %v not found", vaultAddr.String())
 	}
 
+	if !vault.SwapOutEnabled {
+		return nil, fmt.Errorf("swaps are not enabled for vault %s", vaultAddr.String())
+	}
+
 	if shares.Denom != vault.ShareDenom {
 		return nil, fmt.Errorf("swap out denom must be share denom %v : %v", shares.Denom, vault.ShareDenom)
 	}
@@ -258,4 +269,78 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 	k.emitEvent(ctx, types.NewEventSwapOut(vaultAddr.String(), owner.String(), assets, shares))
 
 	return &shares, nil
+}
+
+// SetSwapInEnable updates the SwapInEnabled flag for a given vault. It updates the vault account in the state and
+// emits an EventToggleSwapIn event.
+func (k *Keeper) SetSwapInEnable(ctx context.Context, vault *types.VaultAccount, enabled bool) {
+	vault.SwapInEnabled = enabled
+	k.AuthKeeper.SetAccount(ctx, vault)
+	k.emitEvent(sdk.UnwrapSDKContext(ctx), types.NewEventToggleSwapIn(vault.Address, vault.Admin, enabled))
+}
+
+// SetSwapOutEnable updates the SwapOutEnabled flag for a given vault. It updates the vault account in the state and
+// emits an EventToggleSwapOut event.
+func (k *Keeper) SetSwapOutEnable(ctx context.Context, vault *types.VaultAccount, enabled bool) {
+	vault.SwapOutEnabled = enabled
+	k.AuthKeeper.SetAccount(ctx, vault)
+	k.emitEvent(sdk.UnwrapSDKContext(ctx), types.NewEventToggleSwapOut(vault.Address, vault.Admin, enabled))
+}
+
+// SetMinInterestRate sets the minimum interest rate for a vault.
+// An empty string disables the minimum rate check.
+func (k *Keeper) SetMinInterestRate(ctx sdk.Context, vault *types.VaultAccount, minRate string) error {
+	if err := k.ValidateInterestRateLimits(minRate, vault.MaxInterestRate); err != nil {
+		return err
+	}
+	if vault.MinInterestRate == minRate {
+		return nil
+	}
+	vault.MinInterestRate = minRate
+	if err := k.SetVaultAccount(ctx, vault); err != nil {
+		return err
+	}
+	k.emitEvent(ctx, types.NewEventMinInterestRateUpdated(vault.Address, vault.Admin, minRate))
+	return nil
+}
+
+// SetMaxInterestRate sets the maximum interest rate for a vault.
+// An empty string disables the maximum rate check.
+func (k *Keeper) SetMaxInterestRate(ctx sdk.Context, vault *types.VaultAccount, maxRate string) error {
+	if err := k.ValidateInterestRateLimits(vault.MinInterestRate, maxRate); err != nil {
+		return err
+	}
+	if vault.MaxInterestRate == maxRate {
+		return nil
+	}
+	vault.MaxInterestRate = maxRate
+	if err := k.SetVaultAccount(ctx, vault); err != nil {
+		return err
+	}
+	k.emitEvent(ctx, types.NewEventMaxInterestRateUpdated(vault.Address, vault.Admin, maxRate))
+	return nil
+}
+
+// ValidateInterestRateLimits checks that the provided minimum and maximum interest
+// rates are valid decimal values and that the minimum rate is not greater than
+// the maximum rate. Empty values are treated as unset and pass validation.
+func (k Keeper) ValidateInterestRateLimits(minRateStr, maxRateStr string) error {
+	if minRateStr == "" || maxRateStr == "" {
+		return nil
+	}
+
+	minRate, err := sdkmath.LegacyNewDecFromStr(minRateStr)
+	if err != nil {
+		return fmt.Errorf("invalid min interest rate: %w", err)
+	}
+	maxRate, err := sdkmath.LegacyNewDecFromStr(maxRateStr)
+	if err != nil {
+		return fmt.Errorf("invalid max interest rate: %w", err)
+	}
+
+	if minRate.GT(maxRate) {
+		return fmt.Errorf("minimum interest rate %s cannot be greater than maximum interest rate %s", minRate, maxRate)
+	}
+
+	return nil
 }

@@ -25,25 +25,28 @@ func TestCalculateSharesFromAssets(t *testing.T) {
 		errMsg      string
 	}{
 		{
-			name:        "first deposit (1:1 mapping)",
+			name:        "first deposit (with fixed precision scalar)",
 			assets:      sdkmath.NewInt(100),
 			totalAssets: sdkmath.NewInt(0),
 			totalShares: sdkmath.NewInt(0),
-			expected:    sdk.NewCoin(denom, sdkmath.NewInt(100)),
+			// With ShareScalar=1_000_000, first deposit mints assets * ShareScalar
+			expected: sdk.NewCoin(denom, sdkmath.NewInt(100_000_000)),
 		},
 		{
-			name:        "proportional minting",
+			name:        "proportional minting with virtual offsets",
 			assets:      sdkmath.NewInt(50),
 			totalAssets: sdkmath.NewInt(100),
 			totalShares: sdkmath.NewInt(200),
-			expected:    sdk.NewCoin(denom, sdkmath.NewInt(100)),
+			// shares = floor(50 * 1_000_000 * (200 + 1_000_000) / (100 + 1_000_000)) = 50_004_999
+			expected: sdk.NewCoin(denom, sdkmath.NewInt(50_004_999)),
 		},
 		{
-			name:        "rounding down",
+			name:        "rounding down (small deposit, protected by precision)",
 			assets:      sdkmath.NewInt(1),
 			totalAssets: sdkmath.NewInt(3),
 			totalShares: sdkmath.NewInt(10),
-			expected:    sdk.NewCoin(denom, sdkmath.NewInt(3)),
+			// shares = floor(1 * 1_000_000 * (10 + 1_000_000) / (3 + 1_000_000)) = 1_000_006
+			expected: sdk.NewCoin(denom, sdkmath.NewInt(1_000_006)),
 		},
 		{
 			name:        "negative asset input",
@@ -98,24 +101,27 @@ func TestCalculateAssetsFromShares(t *testing.T) {
 		errMsg      string
 	}{
 		{
-			name:        "normal proportional case",
-			shares:      sdkmath.NewInt(50),
-			totalShares: sdkmath.NewInt(100),
-			totalAssets: sdkmath.NewInt(1000),
-			expected:    sdk.NewCoin(denom, sdkmath.NewInt(500)),
+			name: "normal proportional case with precision and virtual offsets",
+			// Scale shares and totalShares by ShareScalar to reflect fixed-precision world.
+			shares:      sdkmath.NewInt(50 * 1_000_000),
+			totalShares: sdkmath.NewInt(100 * 1_000_000),
+			// Use a realistically large totalAssets so the result is non-zero under offsets.
+			totalAssets: sdkmath.NewInt(1_000_000_000),
+			// assets = floor( 50e6 * (1_000_000_000 + 1_000_000) / ((100e6 + 1_000_000) * 1_000_000) ) = 495
+			expected: sdk.NewCoin(denom, sdkmath.NewInt(495)),
 		},
 		{
 			name:        "zero shares input",
 			shares:      sdkmath.NewInt(0),
 			totalShares: sdkmath.NewInt(1000),
-			totalAssets: sdkmath.NewInt(5000),
+			totalAssets: sdkmath.NewInt(5_000_000),
 			expected:    sdk.NewCoin(denom, sdkmath.NewInt(0)),
 		},
 		{
 			name:        "zero total shares returns 0 assets",
 			shares:      sdkmath.NewInt(100),
 			totalShares: sdkmath.NewInt(0),
-			totalAssets: sdkmath.NewInt(1000),
+			totalAssets: sdkmath.NewInt(1_000_000),
 			expected:    sdk.NewCoin(denom, sdkmath.NewInt(0)),
 		},
 		{
@@ -163,7 +169,7 @@ func TestExpDec(t *testing.T) {
 		name      string
 		input     sdkmath.LegacyDec
 		terms     int
-		expected  float64 // Expected e^x using float64 for comparison
+		expected  float64
 		tolerance float64
 	}{
 		{

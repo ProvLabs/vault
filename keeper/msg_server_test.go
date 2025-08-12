@@ -12,6 +12,7 @@ import (
 
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
+	"github.com/provlabs/vault/utils"
 )
 
 func (s *TestSuite) TestMsgServer_CreateVault() {
@@ -226,7 +227,7 @@ func (s *TestSuite) TestMsgServer_SwapIn() {
 	vaultAddr := types.GetVaultAddress(shareDenom)
 	markerAddr := markertypes.MustGetMarkerAddress(shareDenom)
 	assets := sdk.NewInt64Coin(underlyingDenom, 100)
-	shares := sdk.NewInt64Coin(shareDenom, 100)
+	shares := sdk.NewInt64Coin(shareDenom, assets.Amount.Mul(utils.ShareScalar).Int64())
 
 	swapInReq := types.MsgSwapInRequest{
 		Owner:        owner.String(),
@@ -253,10 +254,10 @@ func (s *TestSuite) TestMsgServer_SwapIn() {
 		},
 		msg:                swapInReq,
 		expectedErrSubstrs: nil,
-		postCheckArgs:      postCheckArgs{Owner: owner, VaultAddr: vaultAddr, MarkerAddr: markerAddr, UnderlyingAsset: assets, Shares: sdk.NewCoin(shareDenom, assets.Amount)},
+		postCheckArgs:      postCheckArgs{Owner: owner, VaultAddr: vaultAddr, MarkerAddr: markerAddr, UnderlyingAsset: assets, Shares: shares},
 		expectedEvents:     createSwapInEvents(owner, vaultAddr, markerAddr, assets, shares),
 	}
-	testDef.expectedResponse = &types.MsgSwapInResponse{SharesReceived: sdk.NewCoin(shareDenom, assets.Amount)}
+	testDef.expectedResponse = &types.MsgSwapInResponse{SharesReceived: shares}
 	runMsgServerTestCase(s, testDef, tc)
 }
 
@@ -378,7 +379,8 @@ func (s *TestSuite) TestMsgServer_SwapOut() {
 		s.Require().NoError(err)
 
 		// Owner swaps in to get shares
-		_, err = s.k.SwapIn(s.ctx, vaultAddr, owner, initialAssets)
+		resp, err := s.k.SwapIn(s.ctx, vaultAddr, owner, initialAssets)
+		s.Require().Equal(resp.Amount, initialAssets.Amount.Mul(utils.ShareScalar), "shares received should match expected amount")
 		s.Require().NoError(err)
 
 		// Reset event manager for the test
@@ -389,8 +391,8 @@ func (s *TestSuite) TestMsgServer_SwapOut() {
 		name          string
 		sharesToTrade int64
 	}{
-		{"happy path - swap out 30 shares", 30},
-		{"happy path - swap out all shares", 100},
+		{"happy path - swap out 30 shares", 30_000_000},
+		{"happy path - swap out all shares", 100_000_000},
 	}
 
 	for _, tt := range tests {
@@ -406,8 +408,8 @@ func (s *TestSuite) TestMsgServer_SwapOut() {
 				name:           tt.name,
 				setup:          setup,
 				msg:            swapOutReq,
-				postCheckArgs:  postCheckArgs{Owner: owner, VaultAddr: vaultAddr, MarkerAddr: markertypes.MustGetMarkerAddress(shareDenom), UnderlyingAsset: sdk.NewInt64Coin(underlyingDenom, tt.sharesToTrade), Shares: sharesToSwap},
-				expectedEvents: createSwapOutEvents(owner, vaultAddr, markertypes.MustGetMarkerAddress(shareDenom), sdk.NewInt64Coin(underlyingDenom, tt.sharesToTrade), sharesToSwap),
+				postCheckArgs:  postCheckArgs{Owner: owner, VaultAddr: vaultAddr, MarkerAddr: markertypes.MustGetMarkerAddress(shareDenom), UnderlyingAsset: sdk.NewCoin(underlyingDenom, math.NewInt(tt.sharesToTrade).Quo(utils.ShareScalar)), Shares: sharesToSwap},
+				expectedEvents: createSwapOutEvents(owner, vaultAddr, markertypes.MustGetMarkerAddress(shareDenom), sdk.NewCoin(underlyingDenom, math.NewInt(tt.sharesToTrade).Quo(utils.ShareScalar)), sharesToSwap),
 			}
 
 			testDef.expectedResponse = &types.MsgSwapOutResponse{SharesBurned: sharesToSwap}

@@ -228,7 +228,7 @@ func (s *TestSuite) TestMsgServer_SwapIn() {
 	vaultAddr := types.GetVaultAddress(shareDenom)
 	markerAddr := markertypes.MustGetMarkerAddress(shareDenom)
 	assets := sdk.NewInt64Coin(underlyingDenom, 100)
-	expectedShares := sdk.NewInt64Coin(shareDenom, assets.Amount.Mul(utils.ShareScalar).Int64())
+	expectedShares := sdk.NewCoin(shareDenom, assets.Amount.Mul(utils.ShareScalar))
 
 	swapInReq := types.MsgSwapInRequest{
 		Owner:        owner.String(),

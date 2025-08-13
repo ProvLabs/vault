@@ -228,7 +228,7 @@ func (s *TestSuite) TestMsgServer_SwapIn() {
 	vaultAddr := types.GetVaultAddress(shareDenom)
 	markerAddr := markertypes.MustGetMarkerAddress(shareDenom)
 	assets := sdk.NewInt64Coin(underlyingDenom, 100)
-	shares := sdk.NewInt64Coin(shareDenom, assets.Amount.Mul(utils.ShareScalar).Int64())
+	expectedShares := sdk.NewInt64Coin(shareDenom, assets.Amount.Mul(utils.ShareScalar).Int64())
 
 	swapInReq := types.MsgSwapInRequest{
 		Owner:        owner.String(),
@@ -256,10 +256,10 @@ func (s *TestSuite) TestMsgServer_SwapIn() {
 		},
 		msg:                swapInReq,
 		expectedErrSubstrs: nil,
-		postCheckArgs:      postCheckArgs{Owner: owner, VaultAddr: vaultAddr, MarkerAddr: markerAddr, UnderlyingAsset: assets, Shares: shares},
-		expectedEvents:     createSwapInEvents(owner, vaultAddr, markerAddr, assets, shares),
+		postCheckArgs:      postCheckArgs{Owner: owner, VaultAddr: vaultAddr, MarkerAddr: markerAddr, UnderlyingAsset: assets, Shares: expectedShares},
+		expectedEvents:     createSwapInEvents(owner, vaultAddr, markerAddr, assets, expectedShares),
 	}
-	testDef.expectedResponse = &types.MsgSwapInResponse{SharesReceived: shares}
+	testDef.expectedResponse = &types.MsgSwapInResponse{SharesReceived: expectedShares}
 	runMsgServerTestCase(s, testDef, tc)
 }
 

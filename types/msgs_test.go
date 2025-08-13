@@ -239,3 +239,382 @@ func TestMsgSwapOutRequest_ValidateBasic(t *testing.T) {
 		})
 	}
 }
+
+func TestMsgUpdateInterestRateRequest_ValidateBasic(t *testing.T) {
+	addr := utils.TestAddress().Bech32
+
+	tests := []struct {
+		name    string
+		msg     types.MsgUpdateInterestRateRequest
+		wantErr string
+	}{
+		{
+			name: "valid",
+			msg: types.MsgUpdateInterestRateRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				NewRate:      "1.5",
+			},
+		},
+		{
+			name: "invalid admin",
+			msg: types.MsgUpdateInterestRateRequest{
+				Admin:        "bad",
+				VaultAddress: addr,
+				NewRate:      "1.5",
+			},
+			wantErr: "invalid admin address",
+		},
+		{
+			name: "invalid vault address",
+			msg: types.MsgUpdateInterestRateRequest{
+				Admin:        addr,
+				VaultAddress: "bad",
+				NewRate:      "1.5",
+			},
+			wantErr: "invalid vault address",
+		},
+		{
+			name: "invalid new rate",
+			msg: types.MsgUpdateInterestRateRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				NewRate:      "bad",
+			},
+			wantErr: "invalid interest rate",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.wantErr != "" {
+				assert.ErrorContains(t, err, tc.wantErr)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestMsgDepositInterestFundsRequest_ValidateBasic(t *testing.T) {
+	addr := utils.TestAddress().Bech32
+
+	tests := []struct {
+		name    string
+		msg     types.MsgDepositInterestFundsRequest
+		wantErr string
+	}{
+		{
+			name: "valid",
+			msg: types.MsgDepositInterestFundsRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				Amount:       sdk.NewInt64Coin("uusd", 1000),
+			},
+		},
+		{
+			name: "zero amount",
+			msg: types.MsgDepositInterestFundsRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				Amount:       sdk.NewInt64Coin("uusd", 0),
+			},
+			wantErr: "greater than zero",
+		},
+		{
+			name: "invalid admin",
+			msg: types.MsgDepositInterestFundsRequest{
+				Admin:        "bad",
+				VaultAddress: addr,
+				Amount:       sdk.NewInt64Coin("uusd", 1000),
+			},
+			wantErr: "invalid admin address",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.wantErr != "" {
+				assert.ErrorContains(t, err, tc.wantErr)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestMsgWithdrawInterestFundsRequest_ValidateBasic(t *testing.T) {
+	addr := utils.TestAddress().Bech32
+
+	tests := []struct {
+		name    string
+		msg     types.MsgWithdrawInterestFundsRequest
+		wantErr string
+	}{
+		{
+			name: "valid",
+			msg: types.MsgWithdrawInterestFundsRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				Amount:       sdk.NewInt64Coin("uusd", 1000),
+			},
+		},
+		{
+			name: "zero amount",
+			msg: types.MsgWithdrawInterestFundsRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				Amount:       sdk.NewInt64Coin("uusd", 0),
+			},
+			wantErr: "greater than zero",
+		},
+		{
+			name: "invalid interest admin",
+			msg: types.MsgWithdrawInterestFundsRequest{
+				Admin:        "bad",
+				VaultAddress: addr,
+				Amount:       sdk.NewInt64Coin("uusd", 1000),
+			},
+			wantErr: "invalid interest admin address",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.wantErr != "" {
+				assert.ErrorContains(t, err, tc.wantErr)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestMsgToggleSwapInRequest_ValidateBasic(t *testing.T) {
+	addr := utils.TestAddress().Bech32
+
+	tests := []struct {
+		name    string
+		msg     types.MsgToggleSwapInRequest
+		wantErr string
+	}{
+		{
+			name: "valid",
+			msg: types.MsgToggleSwapInRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				Enabled:      true,
+			},
+		},
+		{
+			name: "invalid admin",
+			msg: types.MsgToggleSwapInRequest{
+				Admin:        "bad",
+				VaultAddress: addr,
+				Enabled:      false,
+			},
+			wantErr: "invalid admin address",
+		},
+		{
+			name: "invalid vault address",
+			msg: types.MsgToggleSwapInRequest{
+				Admin:        addr,
+				VaultAddress: "bad",
+				Enabled:      true,
+			},
+			wantErr: "invalid vault address",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.wantErr != "" {
+				assert.ErrorContains(t, err, tc.wantErr)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestMsgToggleSwapOutRequest_ValidateBasic(t *testing.T) {
+	addr := utils.TestAddress().Bech32
+
+	tests := []struct {
+		name    string
+		msg     types.MsgToggleSwapOutRequest
+		wantErr string
+	}{
+		{
+			name: "valid",
+			msg: types.MsgToggleSwapOutRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				Enabled:      true,
+			},
+		},
+		{
+			name: "invalid admin",
+			msg: types.MsgToggleSwapOutRequest{
+				Admin:        "bad",
+				VaultAddress: addr,
+				Enabled:      false,
+			},
+			wantErr: "invalid admin address",
+		},
+		{
+			name: "invalid vault address",
+			msg: types.MsgToggleSwapOutRequest{
+				Admin:        addr,
+				VaultAddress: "bad",
+				Enabled:      true,
+			},
+			wantErr: "invalid vault address",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.wantErr != "" {
+				assert.ErrorContains(t, err, tc.wantErr)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestMsgUpdateMinInterestRateRequest_ValidateBasic(t *testing.T) {
+	addr := utils.TestAddress().Bech32
+
+	tests := []struct {
+		name    string
+		msg     types.MsgUpdateMinInterestRateRequest
+		wantErr string
+	}{
+		{
+			name: "valid min rate",
+			msg: types.MsgUpdateMinInterestRateRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				MinRate:      "-0.75",
+			},
+		},
+		{
+			name: "empty min rate allowed (clears limit)",
+			msg: types.MsgUpdateMinInterestRateRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				MinRate:      "",
+			},
+		},
+		{
+			name: "invalid admin address",
+			msg: types.MsgUpdateMinInterestRateRequest{
+				Admin:        "bad",
+				VaultAddress: addr,
+				MinRate:      "-1.0",
+			},
+			wantErr: "invalid admin address",
+		},
+		{
+			name: "invalid vault address",
+			msg: types.MsgUpdateMinInterestRateRequest{
+				Admin:        addr,
+				VaultAddress: "bad",
+				MinRate:      "-1.0",
+			},
+			wantErr: "invalid vault address",
+		},
+		{
+			name: "invalid min rate",
+			msg: types.MsgUpdateMinInterestRateRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				MinRate:      "abc",
+			},
+			wantErr: "invalid min rate",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.wantErr != "" {
+				assert.ErrorContains(t, err, tc.wantErr)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestMsgUpdateMaxInterestRateRequest_ValidateBasic(t *testing.T) {
+	addr := utils.TestAddress().Bech32
+
+	tests := []struct {
+		name    string
+		msg     types.MsgUpdateMaxInterestRateRequest
+		wantErr string
+	}{
+		{
+			name: "valid max rate",
+			msg: types.MsgUpdateMaxInterestRateRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				MaxRate:      "3.25",
+			},
+		},
+		{
+			name: "empty max rate allowed (clears limit)",
+			msg: types.MsgUpdateMaxInterestRateRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				MaxRate:      "",
+			},
+		},
+		{
+			name: "invalid admin address",
+			msg: types.MsgUpdateMaxInterestRateRequest{
+				Admin:        "bad",
+				VaultAddress: addr,
+				MaxRate:      "2.0",
+			},
+			wantErr: "invalid admin address",
+		},
+		{
+			name: "invalid vault address",
+			msg: types.MsgUpdateMaxInterestRateRequest{
+				Admin:        addr,
+				VaultAddress: "bad",
+				MaxRate:      "2.0",
+			},
+			wantErr: "invalid vault address",
+		},
+		{
+			name: "invalid max rate",
+			msg: types.MsgUpdateMaxInterestRateRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				MaxRate:      "notanumber",
+			},
+			wantErr: "invalid max rate",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.wantErr != "" {
+				assert.ErrorContains(t, err, tc.wantErr)
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}

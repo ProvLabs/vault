@@ -225,6 +225,9 @@ func TestVeryLargeInitialSwapInRoundTrip(t *testing.T) {
 	out, err := utils.CalculateAssetsFromShares(minted.Amount, totalShares, totalAssets, assetDenom)
 	require.NoError(t, err, "swap-out conversion should not error")
 
+	price := totalAssets.Mul(utils.ShareScalar).Quo(totalShares)
+	require.Equal(t, sdkmath.NewInt(1), price, "implied price should be exactly 1 asset per ShareScalar shares at large scale")
+
 	require.Truef(t,
 		out.Amount.GTE(largeIn.SubRaw(1)),
 		"swap-out should be >= swap-in - 1 (got=%s, want >= %s)",

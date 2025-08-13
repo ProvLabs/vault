@@ -156,81 +156,83 @@ func TestCalculateAssetsFromShares(t *testing.T) {
 	}
 }
 
-// TestSmallFirstDepositThenHugeSwapInThenSwapOut ensures the first depositor
-// is protected from a dilution attack when making a very small deposit
-// followed by a huge swap in.
+// TestSmallFirstSwapInThenHugeSwapInThenSwapOut verifies that a very small
+// initial swap in is protected from dilution when followed by a massive swap in
+// from another participant.
 //
-// Without a virtual share offset, the first depositor’s shares could be worth
-// far less after the large swap in. This test checks that:
-//   - The first depositor’s shares are scaled for protection.
-//   - Redeeming those shares after the large swap in returns at least the
-//     original swap in and no more than the vault’s total assets.
-func TestSmallFirstDepositThenHugeSwapInThenSwapOut(t *testing.T) {
-	firstSwapIn := sdkmath.NewInt(1)
+// Without a virtual share offset, the first swapper’s shares could be worth far
+// less after the large swap in. This test confirms that:
+//   - The first swapper’s shares are scaled to maintain fair value.
+//   - Swapping out those shares after the large swap in returns at least the
+//     original swap-in amount.
+//   - The swap-out never exceeds the vault’s total assets.
+func TestSmallFirstSwapInThenHugeSwapInThenSwapOut(t *testing.T) {
+	firstIn := sdkmath.NewInt(1)
 	totalAssets := sdkmath.ZeroInt()
 	totalShares := sdkmath.ZeroInt()
 
 	shareDenom := "shares"
-	firstMint, err := utils.CalculateSharesFromAssets(firstSwapIn, totalAssets, totalShares, shareDenom)
-	require.NoError(t, err, "first deposit conversion should not error")
-	require.Equal(t, firstSwapIn.Mul(utils.ShareScalar), firstMint.Amount, "first deposit should mint deposit * ShareScalar")
+	firstShares, err := utils.CalculateSharesFromAssets(firstIn, totalAssets, totalShares, shareDenom)
+	require.NoError(t, err, "first swap-in conversion should not error")
+	require.Equal(t, firstIn.Mul(utils.ShareScalar), firstShares.Amount, "first swap-in should mint amount * ShareScalar")
 
-	totalAssets = totalAssets.Add(firstSwapIn)
-	totalShares = totalShares.Add(firstMint.Amount)
+	totalAssets = totalAssets.Add(firstIn)
+	totalShares = totalShares.Add(firstShares.Amount)
 
-	hugeSwapIn := sdkmath.NewInt(1_000_000_000)
-	totalAssets = totalAssets.Add(hugeSwapIn)
+	hugeIn := sdkmath.NewInt(1_000_000_000)
+	totalAssets = totalAssets.Add(hugeIn)
 
 	assetDenom := "underlying"
-	redeemAll, err := utils.CalculateAssetsFromShares(firstMint.Amount, totalShares, totalAssets, assetDenom)
-	require.NoError(t, err, "redeem conversion should not error")
+	outAll, err := utils.CalculateAssetsFromShares(firstShares.Amount, totalShares, totalAssets, assetDenom)
+	require.NoError(t, err, "swap-out conversion should not error")
 
 	require.Truef(t,
-		redeemAll.Amount.GTE(firstSwapIn),
-		"redeemed underlying should be >= original deposit (got=%s, want >= %s)",
-		redeemAll.Amount, firstSwapIn,
+		outAll.Amount.GTE(firstIn),
+		"swap-out should return >= original swap-in (got=%s, want >= %s)",
+		outAll.Amount, firstIn,
 	)
-
 	require.Truef(t,
-		redeemAll.Amount.LTE(totalAssets),
-		"redeemed underlying should be <= vault total assets (got=%s, want <= %s)",
-		redeemAll.Amount, totalAssets,
+		outAll.Amount.LTE(totalAssets),
+		"swap-out should not exceed total vault assets (got=%s, want <= %s)",
+		outAll.Amount, totalAssets,
 	)
-
 }
 
-// TestVeryLargeInitialSwapInRoundTrip ensures that a very large first deposit
-// correctly mints proportional shares and can be redeemed without loss or overflow.
+// TestVeryLargeInitialSwapInRoundTrip ensures that a very large first swap in
+// correctly mints proportional shares and can be swapped out without loss or
+// overflow.
 //
-// It confirms that:
-//   - Large initial deposits still use the precision scaling.
-//   - Redeeming the minted shares returns an amount within an acceptable
-//     rounding error.
+// This test verifies that:
+//   - Large initial swap-ins still apply precision scaling for consistency.
+//   - Swapping out the minted shares returns an amount within an acceptable
+//     rounding difference of the original swap-in.
+//   - The vault handles extremely large initial swap-in without exceeding
+//     asset totals or causing precision issues.
 func TestVeryLargeInitialSwapInRoundTrip(t *testing.T) {
-	large := sdkmath.NewInt(1_000_000_000_000_000_000)
+	largeIn := sdkmath.NewInt(1_000_000_000_000_000_000)
 	totalAssets := sdkmath.ZeroInt()
 	totalShares := sdkmath.ZeroInt()
 
 	shareDenom := "shares"
-	minted, err := utils.CalculateSharesFromAssets(large, totalAssets, totalShares, shareDenom)
-	require.NoError(t, err, "large first deposit conversion should not error")
-	require.Equal(t, large.Mul(utils.ShareScalar), minted.Amount, "minted shares should equal deposit * ShareScalar")
+	minted, err := utils.CalculateSharesFromAssets(largeIn, totalAssets, totalShares, shareDenom)
+	require.NoError(t, err, "large swap-in conversion should not error")
+	require.Equal(t, largeIn.Mul(utils.ShareScalar), minted.Amount, "minted shares should equal swap-in * ShareScalar")
 
-	totalAssets = totalAssets.Add(large)
+	totalAssets = totalAssets.Add(largeIn)
 	totalShares = totalShares.Add(minted.Amount)
 
 	assetDenom := "underlying"
-	redeemed, err := utils.CalculateAssetsFromShares(minted.Amount, totalShares, totalAssets, assetDenom)
-	require.NoError(t, err, "redeem conversion should not error")
-	require.Truef(t,
-		redeemed.Amount.GTE(large.SubRaw(1)),
-		"redeemed underlying should be >= deposit - 1 (got=%s, want >= %s)",
-		redeemed.Amount, large.SubRaw(1),
-	)
+	out, err := utils.CalculateAssetsFromShares(minted.Amount, totalShares, totalAssets, assetDenom)
+	require.NoError(t, err, "swap-out conversion should not error")
 
 	require.Truef(t,
-		redeemed.Amount.LTE(large),
-		"redeemed underlying should be <= deposit (got=%s, want <= %s)",
-		redeemed.Amount, large,
+		out.Amount.GTE(largeIn.SubRaw(1)),
+		"swap-out should be >= swap-in - 1 (got=%s, want >= %s)",
+		out.Amount, largeIn.SubRaw(1),
+	)
+	require.Truef(t,
+		out.Amount.LTE(largeIn),
+		"swap-out should be <= original swap-in (got=%s, want <= %s)",
+		out.Amount, largeIn,
 	)
 }

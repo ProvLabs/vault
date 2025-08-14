@@ -9,7 +9,6 @@ import (
 
 // RegisterLegacyAminoCodec registers the vault module's concrete message types for Amino.
 func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgUpdateParams{}, "vault/UpdateParams", nil)
 	cdc.RegisterConcrete(&MsgCreateVaultRequest{}, "vault/CreateVault", nil)
 	cdc.RegisterConcrete(&MsgSwapInRequest{}, "vault/SwapIn", nil)
 	cdc.RegisterConcrete(&MsgSwapOutRequest{}, "vault/SwapOut", nil)
@@ -25,7 +24,6 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 // RegisterInterfaces registers the vault module's message types for protobuf interface compatibility.
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil),
-		&MsgUpdateParams{},
 		&MsgCreateVaultRequest{},
 		&MsgSwapInRequest{},
 		&MsgSwapOutRequest{},

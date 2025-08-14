@@ -4,12 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provlabs/vault/types"
 
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 var _ types.MsgServer = &msgServer{}
@@ -21,11 +22,6 @@ type msgServer struct {
 // NewMsgServer creates a new MsgServer for the module.
 func NewMsgServer(keeper *Keeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
-}
-
-// UpdateParams updates the params for the module.
-func (k msgServer) UpdateParams(ctx context.Context, req *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
-	panic("not implemented")
 }
 
 // CreateVault creates a vault.

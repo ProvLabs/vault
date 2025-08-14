@@ -159,7 +159,7 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod: "CreateVault",
 					Use:       "create [admin] [underlying_asset] [share_denom]",
-					Alias:     []string{"c"},
+					Alias:     []string{"c", "new"},
 					Short:     "Create a new vault",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "admin"},

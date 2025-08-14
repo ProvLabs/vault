@@ -335,7 +335,7 @@ func (s *TestSuite) TestMsgServer_SwapIn_Failures() {
 			expectedErrSubstrs: []string{"insufficient funds"},
 		},
 		{
-			name: "swap in exceeding max share supply is rejected",
+			name: "swap in minted shares exceeding maximum mintable supply (precision-scaled above underlying assets) is rejected",
 			setup: func() {
 				setup(true)()
 				err := FundAccount(s.ctx, s.simApp.BankKeeper, owner,

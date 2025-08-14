@@ -278,23 +278,24 @@ func (s *TestSuite) TestMsgServer_SwapIn_Failures() {
 
 	setup := func(swapInEnabled bool) func() {
 		return func() {
-			s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), owner)
+			s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1_000_000_000_000_000_000)), owner)
 			vault, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 				Admin:           owner.String(),
 				ShareDenom:      shareDenom,
 				UnderlyingAsset: underlyingDenom,
 			})
-			s.Require().NoError(err)
+			s.Require().NoError(err, "vault creation should succeed")
 			vault.SwapInEnabled = swapInEnabled
 			s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
 			err = FundAccount(s.ctx, s.simApp.BankKeeper, owner, sdk.NewCoins(assets))
-			s.Require().NoError(err)
+			s.Require().NoError(err, "funding owner with initial underlying should succeed")
 		}
 	}
 
 	tests := []msgServerTestCase[types.MsgSwapInRequest, any]{
 		{
-			name: "vault does not exist",
+			name: "vault not found returns not found error",
 			msg: types.MsgSwapInRequest{
 				Owner:        owner.String(),
 				VaultAddress: vaultAddr.String(),
@@ -303,7 +304,7 @@ func (s *TestSuite) TestMsgServer_SwapIn_Failures() {
 			expectedErrSubstrs: []string{"vault with address", "not found"},
 		},
 		{
-			name:  "swap in disabled",
+			name:  "swap in disabled is rejected",
 			setup: setup(false),
 			msg: types.MsgSwapInRequest{
 				Owner:        owner.String(),
@@ -313,7 +314,7 @@ func (s *TestSuite) TestMsgServer_SwapIn_Failures() {
 			expectedErrSubstrs: []string{"swaps are not enabled for vault"},
 		},
 		{
-			name:  "underlying asset mismatch",
+			name:  "underlying denom mismatch is rejected",
 			setup: setup(true),
 			msg: types.MsgSwapInRequest{
 				Owner:        owner.String(),
@@ -323,15 +324,32 @@ func (s *TestSuite) TestMsgServer_SwapIn_Failures() {
 			expectedErrSubstrs: []string{"othercoin asset denom not supported for vault, expected one of [underlying]"},
 		},
 		{
-			name: "insufficient funds",
+			name: "insufficient owner funds is rejected",
 			setup: func() {
 				setup(true)()
-				// Try to swap 100, but owner only has 50.
-				err := s.simApp.BankKeeper.SendCoins(s.ctx, owner, authtypes.NewModuleAddress("burn"), sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 50)))
-				s.Require().NoError(err)
+				err := s.simApp.BankKeeper.SendCoins(s.ctx, owner, authtypes.NewModuleAddress("burn"),
+					sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 50)))
+				s.Require().NoError(err, "reducing owner's balance should succeed")
 			},
 			msg:                types.MsgSwapInRequest{Owner: owner.String(), VaultAddress: vaultAddr.String(), Assets: assets},
 			expectedErrSubstrs: []string{"insufficient funds"},
+		},
+		{
+			name: "swap in exceeding max share supply is rejected",
+			setup: func() {
+				setup(true)()
+				err := FundAccount(s.ctx, s.simApp.BankKeeper, owner,
+					sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1_000_000_000_000_000)))
+				s.Require().NoError(err, "funding owner with very large underlying should succeed")
+			},
+			msg: types.MsgSwapInRequest{
+				Owner:        owner.String(),
+				VaultAddress: vaultAddr.String(),
+				Assets:       sdk.NewCoin(underlyingDenom, math.NewInt(1_000_000_000_000_000)),
+			},
+			expectedErrSubstrs: []string{
+				"requested supply 1000000000000000000000 exceeds maximum allowed value 100000000000000000000",
+			},
 		},
 	}
 

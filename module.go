@@ -141,8 +141,8 @@ func (m AppModule) BeginBlock(ctx context.Context) error {
 }
 
 // EndBlock returns the end blocker for the vault module.
-func (a AppModule) EndBlock(ctx context.Context) error {
-	return a.keeper.EndBlocker(ctx)
+func (m AppModule) EndBlock(ctx context.Context) error {
+	return m.keeper.EndBlocker(ctx)
 }
 
 // RegisterServices registers gRPC query and message services.
@@ -205,7 +205,7 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "UpdateMinInterestRate",
 					Use:       "update-min-interest-rate [admin] [vault_address] [min_rate]",
 					Alias:     []string{"umir"},
-					Short:     "Set or clear the minimum allowable interest rate for a vault",
+					Short:     "Set or clear the minimum allowable interest rate for a vault. For example, an interest rate of 90% must be entered as '0.9'.",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "admin"},
 						{ProtoField: "vault_address"},

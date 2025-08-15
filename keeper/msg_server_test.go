@@ -1455,6 +1455,7 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds_Failures() {
 
 	underlying := "under"
 	shares := "vaultshares"
+	unsupportedDenom := "unsupportedDenom"
 	admin := s.adminAddr
 	other := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1000))
 	vaultAddr := types.GetVaultAddress(shares)
@@ -1505,6 +1506,16 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds_Failures() {
 				Amount:       amount,
 			},
 			expectedErrSubstrs: []string{"unauthorized", "is not the vault admin"},
+		},
+		{
+			name:  "incorrect underlying asset",
+			setup: setup,
+			msg: types.MsgDepositInterestFundsRequest{
+				Admin:        admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Amount:       sdk.NewInt64Coin(unsupportedDenom, 9_999_999),
+			},
+			expectedErrSubstrs: []string{"asset denom not supported for vault"},
 		},
 		{
 			name:  "insufficient admin balance",
@@ -1596,6 +1607,7 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds_Failures() {
 
 	underlying := "under"
 	shares := "vaultshares"
+	unsupportedDenom := "unsupportedDenom"
 	admin := s.adminAddr
 	other := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1000))
 	vaultAddr := types.GetVaultAddress(shares)
@@ -1657,6 +1669,16 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds_Failures() {
 				Amount:       sdk.NewInt64Coin(underlying, 9_999_999),
 			},
 			expectedErrSubstrs: []string{"failed to withdraw funds", "insufficient funds"},
+		},
+		{
+			name:  "incorrect underlying asset",
+			setup: setup,
+			msg: types.MsgWithdrawInterestFundsRequest{
+				Admin:        admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Amount:       sdk.NewInt64Coin(unsupportedDenom, 9_999_999),
+			},
+			expectedErrSubstrs: []string{"asset denom not supported for vault"},
 		},
 	}
 

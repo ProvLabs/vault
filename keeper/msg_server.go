@@ -193,6 +193,10 @@ func (k msgServer) DepositInterestFunds(goCtx context.Context, msg *types.MsgDep
 		return nil, err
 	}
 
+	if err := vault.ValidateUnderlyingAssets(msg.Amount); err != nil {
+		return nil, err
+	}
+
 	if err := k.BankKeeper.SendCoins(ctx, adminAddr, vaultAddr, sdk.NewCoins(msg.Amount)); err != nil {
 		return nil, fmt.Errorf("failed to deposit funds: %w", err)
 	}
@@ -224,6 +228,11 @@ func (k msgServer) WithdrawInterestFunds(goCtx context.Context, msg *types.MsgWi
 	if err := vault.ValidateAdmin(msg.Admin); err != nil {
 		return nil, err
 	}
+
+	if err := vault.ValidateUnderlyingAssets(msg.Amount); err != nil {
+		return nil, err
+	}
+
 	if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to reconcile vault interest before withdrawal: %w", err)
 	}

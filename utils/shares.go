@@ -20,7 +20,7 @@ import (
 var (
 	ShareScalar   = math.NewInt(1_000_000) // 1 asset = 1e6 shares (neutral precision target)
 	VirtualAssets = math.NewInt(1)         // 1 base unit of underlying
-	VirtualShares = math.NewInt(1_000_000) // must equal ShareScalar
+	VirtualShares = ShareScalar
 )
 
 // CalculateSharesFromAssets returns the number of shares that correspond

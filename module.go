@@ -5,6 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	modulev1 "github.com/provlabs/vault/api/module/v1"
+	vaultv1 "github.com/provlabs/vault/api/v1"
+	"github.com/provlabs/vault/keeper"
+	"github.com/provlabs/vault/types"
+
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/appmodule"
@@ -12,18 +18,13 @@ import (
 	"cosmossdk.io/core/header"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/depinject"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	modulev1 "github.com/provlabs/vault/api/module/v1"
-	vaultv1 "github.com/provlabs/vault/api/v1"
-	"github.com/provlabs/vault/keeper"
-	"github.com/provlabs/vault/types"
 )
 
 // ConsensusVersion defines the current x/vault module consensus version.
@@ -190,15 +191,6 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					},
 				},
 				{
-					RpcMethod: "UpdateParams",
-					Use:       "update-params [authority] [params]",
-					Short:     "Update module parameters via governance",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "authority"},
-						{ProtoField: "params"},
-					},
-				},
-				{
 					RpcMethod: "UpdateInterestRate",
 					Use:       "update-interest-rate [admin] [vault_address] [new_rate]",
 					Alias:     []string{"uir"},
@@ -304,12 +296,6 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			Service: vaultv1.Query_ServiceDesc.ServiceName,
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
-					RpcMethod: "Params",
-					Use:       "params",
-					Short:     "Query the current module parameters",
-					Alias:     []string{"p"},
-				},
-				{
 					RpcMethod: "Vaults",
 					Use:       "list",
 					Alias:     []string{"l", "ls"},
@@ -320,15 +306,6 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:       "get [vault_address]",
 					Alias:     []string{"g"},
 					Short:     "Query a specific vault's configuration and state",
-					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "vault_address"},
-					},
-				},
-				{
-					RpcMethod: "TotalAssets",
-					Use:       "total-assets [vault_address]",
-					Alias:     []string{"ta"},
-					Short:     "Query the total assets held by a specific vault",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "vault_address"},
 					},

@@ -1,7 +1,6 @@
 package types
 
 import (
-	"errors"
 	fmt "fmt"
 
 	sdkmath "cosmossdk.io/math"
@@ -71,11 +70,6 @@ func (m MsgSwapOutRequest) ValidateBasic() error {
 	}
 
 	return nil
-}
-
-// ValidateBasic returns a not implemented error for MsgRedeemRequest.
-func (m MsgUpdateParams) ValidateBasic() error {
-	return errors.New("ValidateBasic not implemented for MsgUpdateParams")
 }
 
 // ValidateBasic performs stateless validation on MsgUpdateInterestRateRequest.

@@ -22,7 +22,6 @@ const (
 	Msg_CreateVault_FullMethodName            = "/vault.v1.Msg/CreateVault"
 	Msg_SwapIn_FullMethodName                 = "/vault.v1.Msg/SwapIn"
 	Msg_SwapOut_FullMethodName                = "/vault.v1.Msg/SwapOut"
-	Msg_UpdateParams_FullMethodName           = "/vault.v1.Msg/UpdateParams"
 	Msg_UpdateMinInterestRate_FullMethodName  = "/vault.v1.Msg/UpdateMinInterestRate"
 	Msg_UpdateMaxInterestRate_FullMethodName  = "/vault.v1.Msg/UpdateMaxInterestRate"
 	Msg_UpdateInterestRate_FullMethodName     = "/vault.v1.Msg/UpdateInterestRate"
@@ -46,9 +45,6 @@ type MsgClient interface {
 	SwapIn(ctx context.Context, in *MsgSwapInRequest, opts ...grpc.CallOption) (*MsgSwapInResponse, error)
 	// SwapOut exchanges vault shares for underlying assets by withdrawing from a vault.
 	SwapOut(ctx context.Context, in *MsgSwapOutRequest, opts ...grpc.CallOption) (*MsgSwapOutResponse, error)
-	// UpdateParams defines a (governance) operation for updating the module
-	// parameters. The authority defaults to the x/gov module account.
-	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
 	// UpdateMinInterestRate sets the minimum allowed interest rate for a vault.
 	UpdateMinInterestRate(ctx context.Context, in *MsgUpdateMinInterestRateRequest, opts ...grpc.CallOption) (*MsgUpdateMinInterestRateResponse, error)
 	// UpdateMaxInterestRate sets the maximum allowed interest rate for a vault.
@@ -101,16 +97,6 @@ func (c *msgClient) SwapOut(ctx context.Context, in *MsgSwapOutRequest, opts ...
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(MsgSwapOutResponse)
 	err := c.cc.Invoke(ctx, Msg_SwapOut_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(MsgUpdateParamsResponse)
-	err := c.cc.Invoke(ctx, Msg_UpdateParams_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -219,9 +205,6 @@ type MsgServer interface {
 	SwapIn(context.Context, *MsgSwapInRequest) (*MsgSwapInResponse, error)
 	// SwapOut exchanges vault shares for underlying assets by withdrawing from a vault.
 	SwapOut(context.Context, *MsgSwapOutRequest) (*MsgSwapOutResponse, error)
-	// UpdateParams defines a (governance) operation for updating the module
-	// parameters. The authority defaults to the x/gov module account.
-	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
 	// UpdateMinInterestRate sets the minimum allowed interest rate for a vault.
 	UpdateMinInterestRate(context.Context, *MsgUpdateMinInterestRateRequest) (*MsgUpdateMinInterestRateResponse, error)
 	// UpdateMaxInterestRate sets the maximum allowed interest rate for a vault.
@@ -258,9 +241,6 @@ func (UnimplementedMsgServer) SwapIn(context.Context, *MsgSwapInRequest) (*MsgSw
 }
 func (UnimplementedMsgServer) SwapOut(context.Context, *MsgSwapOutRequest) (*MsgSwapOutResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SwapOut not implemented")
-}
-func (UnimplementedMsgServer) UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpdateParams not implemented")
 }
 func (UnimplementedMsgServer) UpdateMinInterestRate(context.Context, *MsgUpdateMinInterestRateRequest) (*MsgUpdateMinInterestRateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateMinInterestRate not implemented")
@@ -360,24 +340,6 @@ func _Msg_SwapOut_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).SwapOut(ctx, req.(*MsgSwapOutRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Msg_UpdateParams_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgUpdateParams)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).UpdateParams(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Msg_UpdateParams_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).UpdateParams(ctx, req.(*MsgUpdateParams))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -562,10 +524,6 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SwapOut",
 			Handler:    _Msg_SwapOut_Handler,
-		},
-		{
-			MethodName: "UpdateParams",
-			Handler:    _Msg_UpdateParams_Handler,
 		},
 		{
 			MethodName: "UpdateMinInterestRate",

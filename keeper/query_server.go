@@ -172,13 +172,3 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 		Time:   ctx.BlockTime().UTC(),
 	}, nil
 }
-
-// TotalAssets returns the total amount of the underlying asset managed by the vault.
-func (k queryServer) TotalAssets(goCtx context.Context, req *types.QueryTotalAssetsRequest) (*types.QueryTotalAssetsResponse, error) {
-	panic("not implemented")
-}
-
-// Params returns the params for the module.
-func (q queryServer) Params(ctx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
-	panic("not implemented")
-}

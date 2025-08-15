@@ -8,6 +8,7 @@ import (
 
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
+	"github.com/provlabs/vault/utils"
 	querytest "github.com/provlabs/vault/utils/query"
 
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -344,14 +345,14 @@ func (s *TestSuite) TestQueryServer_EstimateSwapIn() {
 					ShareDenom:      shareDenom,
 					UnderlyingAsset: underlyingDenom,
 				})
-				s.Require().NoError(err)
+				s.Require().NoError(err, "vault creation should succeed")
 			},
 			Req: &types.QueryEstimateSwapInRequest{
 				VaultAddress: vaultAddr.String(),
 				Assets:       assets,
 			},
 			ExpectedResp: &types.QueryEstimateSwapInResponse{
-				Assets: sdk.NewCoin(shareDenom, assets.Amount),
+				Assets: sdk.NewCoin(shareDenom, assets.Amount.Mul(utils.ShareScalar)),
 			},
 		},
 		{
@@ -383,7 +384,7 @@ func (s *TestSuite) TestQueryServer_EstimateSwapIn() {
 					ShareDenom:      shareDenom,
 					UnderlyingAsset: underlyingDenom,
 				})
-				s.Require().NoError(err)
+				s.Require().NoError(err, "vault creation should succeed")
 			},
 			Req: &types.QueryEstimateSwapInRequest{
 				VaultAddress: vaultAddr.String(),
@@ -410,7 +411,7 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 	shareDenom := "vaultshares"
 	vaultAddr := types.GetVaultAddress(shareDenom)
 	admin := s.adminAddr.String()
-	sharesToSwap := sdk.NewInt64Coin(shareDenom, 100)
+	sharesToSwap := sdk.NewCoin(shareDenom, math.NewInt(100).Mul(utils.ShareScalar)) // 100 * ShareScalar
 
 	tests := []querytest.TestCase[types.QueryEstimateSwapOutRequest, types.QueryEstimateSwapOutResponse]{
 		{
@@ -422,18 +423,20 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 					ShareDenom:      shareDenom,
 					UnderlyingAsset: underlyingDenom,
 				})
-				s.Require().NoError(err)
+				s.Require().NoError(err, "vault creation should succeed")
+
 				err = FundAccount(s.ctx, s.simApp.BankKeeper, markertypes.MustGetMarkerAddress(shareDenom), sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 100)))
-				s.Require().NoError(err)
-				err = FundAccount(s.ctx, s.simApp.BankKeeper, s.adminAddr, sdk.NewCoins(sdk.NewInt64Coin(shareDenom, 100)))
-				s.Require().NoError(err)
+				s.Require().NoError(err, "funding marker with underlying should succeed")
+
+				err = FundAccount(s.ctx, s.simApp.BankKeeper, s.adminAddr, sdk.NewCoins(sharesToSwap))
+				s.Require().NoError(err, "funding owner with scaled shares should succeed")
 			},
 			Req: &types.QueryEstimateSwapOutRequest{
 				VaultAddress: vaultAddr.String(),
 				Assets:       sharesToSwap,
 			},
 			ExpectedResp: &types.QueryEstimateSwapOutResponse{
-				Assets: sdk.NewCoin(underlyingDenom, sharesToSwap.Amount),
+				Assets: sdk.NewInt64Coin(underlyingDenom, 100), // ~exact with current offsets
 			},
 		},
 		{
@@ -465,7 +468,7 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 					ShareDenom:      shareDenom,
 					UnderlyingAsset: underlyingDenom,
 				})
-				s.Require().NoError(err)
+				s.Require().NoError(err, "vault creation should succeed")
 			},
 			Req: &types.QueryEstimateSwapOutRequest{
 				VaultAddress: vaultAddr.String(),

@@ -36,10 +36,6 @@ import (
 //     rounding loss even at small sizes, removing the “round to zero” leverage.
 //   - Donations are not granting the attacker a disproportionate claim against the pool;
 //     the depositor’s redeem value is preserved at or above their original contribution.
-//
-// Together, these properties ensure that the classic donation inflation cannot steal
-// value from the initial small depositor and that the exchange rate remains coherent
-// after extreme donations.
 func (s *TestSuite) TestMsgServer_SmallFirstSwapIn_HugeDonation_SwapOut() {
 	underlying := "underlying"
 	shareDenom := "vaultshares"

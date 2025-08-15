@@ -159,7 +159,8 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "CreateVault",
-					Use:       "create-vault [admin] [underlying_asset] [share_denom]",
+					Use:       "create [admin] [underlying_asset] [share_denom]",
+					Alias:     []string{"c", "new"},
 					Short:     "Create a new vault",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "admin"},
@@ -170,6 +171,7 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod: "SwapIn",
 					Use:       "swap-in [owner] [vault_address] [assets]",
+					Alias:     []string{"si"},
 					Short:     "Deposit underlying assets into a vault to mint shares",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "owner"},
@@ -180,6 +182,7 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod: "SwapOut",
 					Use:       "swap-out [owner] [vault_address] [assets]",
+					Alias:     []string{"so"},
 					Short:     "Withdraw underlying assets from a vault by burning shares",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "owner"},
@@ -190,6 +193,7 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod: "UpdateInterestRate",
 					Use:       "update-interest-rate [admin] [vault_address] [new_rate]",
+					Alias:     []string{"uir"},
 					Short:     "Update the current interest rate for a vault",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "admin"},
@@ -200,6 +204,7 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod: "UpdateMinInterestRate",
 					Use:       "update-min-interest-rate [admin] [vault_address] [min_rate]",
+					Alias:     []string{"umir"},
 					Short:     "Set or clear the minimum allowable interest rate for a vault",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "admin"},
@@ -210,6 +215,7 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod: "UpdateMaxInterestRate",
 					Use:       "update-max-interest-rate [admin] [vault_address] [max_rate]",
+					Alias:     []string{"umaxir"},
 					Short:     "Set or clear the maximum allowable interest rate for a vault",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "admin"},
@@ -220,6 +226,7 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod: "DepositInterestFunds",
 					Use:       "deposit-interest-funds [admin] [vault_address] [amount]",
+					Alias:     []string{"dif"},
 					Short:     "Deposit funds into a vault for paying interest",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "admin"},
@@ -230,6 +237,7 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod: "WithdrawInterestFunds",
 					Use:       "withdraw-interest-funds [admin] [vault_address] [amount]",
+					Alias:     []string{"wif"},
 					Short:     "Withdraw unused interest funds from a vault",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "admin"},
@@ -240,6 +248,7 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod: "DepositPrincipalFunds",
 					Use:       "deposit-principal-funds [admin] [vault_address] [amount]",
+					Alias:     []string{"dpf"},
 					Short:     "Deposit principal funds into the vault’s marker",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "admin"},
@@ -250,6 +259,7 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod: "WithdrawPrincipalFunds",
 					Use:       "withdraw-principal-funds [admin] [vault_address] [amount]",
+					Alias:     []string{"wpf"},
 					Short:     "Withdraw principal funds from the vault’s marker",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "admin"},
@@ -260,6 +270,7 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod: "ToggleSwapIn",
 					Use:       "toggle-swap-in [admin] [vault_address] [enabled]",
+					Alias:     []string{"tsi"},
 					Short:     "Enable or disable swap-in operations for a vault",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "admin"},
@@ -270,6 +281,7 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod: "ToggleSwapOut",
 					Use:       "toggle-swap-out [admin] [vault_address] [enabled]",
+					Alias:     []string{"tso"},
 					Short:     "Enable or disable swap-out operations for a vault",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "admin"},
@@ -285,12 +297,14 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "Vaults",
-					Use:       "vaults",
+					Use:       "list",
+					Alias:     []string{"l", "ls"},
 					Short:     "Query all vaults",
 				},
 				{
 					RpcMethod: "Vault",
-					Use:       "vault [vault_address]",
+					Use:       "get [vault_address]",
+					Alias:     []string{"g"},
 					Short:     "Query a specific vault's configuration and state",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "vault_address"},
@@ -299,6 +313,7 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod: "EstimateSwapIn",
 					Use:       "estimate-swap-in [vault_address] [assets]",
+					Alias:     []string{"esi"},
 					Short:     "Estimate the number of shares received for a given deposit",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "vault_address"},
@@ -308,6 +323,7 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				{
 					RpcMethod: "EstimateSwapOut",
 					Use:       "estimate-swap-out [vault_address] [assets]",
+					Alias:     []string{"eso"},
 					Short:     "Estimate the amount of underlying assets received for a given withdrawal",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "vault_address"},

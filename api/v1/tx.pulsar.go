@@ -11454,7 +11454,7 @@ type MsgUpdateMinInterestRateRequest struct {
 	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
 	// The bech32 address of the vault whose minimum interest rate is being updated.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// min_rate is the minimum allowable interest rate for the vault as a decimal string (e.g., "0.9" for 90%).
+	// min_rate is the minimum allowable interest rate(APY) for the vault as a decimal string (e.g., "0.9" for 90%).
 	// An empty string "" represents no minimum.
 	MinRate string `protobuf:"bytes,3,opt,name=min_rate,json=minRate,proto3" json:"min_rate,omitempty"`
 }
@@ -11535,7 +11535,7 @@ type MsgUpdateMaxInterestRateRequest struct {
 	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
 	// The bech32 address of the vault whose maximum interest rate is being updated.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// max_rate is the maximum allowable interest rate for the vault as a decimal string (e.g., "0.9" for 90%).
+	// max_rate is the maximum allowable interest rate (APY) for the vault as a decimal string (e.g., "0.9" for 90%).
 	// An empty string "" represents no maximum.
 	MaxRate string `protobuf:"bytes,3,opt,name=max_rate,json=maxRate,proto3" json:"max_rate,omitempty"`
 }
@@ -11607,7 +11607,7 @@ func (*MsgUpdateMaxInterestRateResponse) Descriptor() ([]byte, []int) {
 	return file_vault_v1_tx_proto_rawDescGZIP(), []int{9}
 }
 
-// MsgUpdateInterestRateRequest is the request message for updating the interest rate of a vault.
+// MsgUpdateInterestRateRequest is the request message for updating the interest rate (APY) of a vault.
 type MsgUpdateInterestRateRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -11617,7 +11617,7 @@ type MsgUpdateInterestRateRequest struct {
 	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
 	// vault_address is the bech32 address of the vault.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// new_rate is the new interest rate for the the vault as a decimal string (e.g., "0.9" for 90%).
+	// new_rate is the new interest rate (APY) for the the vault as a decimal string (e.g., "0.9" for 90%).
 	NewRate string `protobuf:"bytes,3,opt,name=new_rate,json=newRate,proto3" json:"new_rate,omitempty"`
 }
 

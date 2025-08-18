@@ -18,15 +18,15 @@ message VaultAccount {
   repeated string underlying_assets = 3;
   // admin is the address that has administrative privileges over the vault.
   string admin = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // current_interest_rate is a decimal string (e.g., "0.9" for 90%) representing the actual interest rate (APY) currently being applied.
+  // current_interest_rate is a decimal string (e.g., "0.9" for 90% and "0.038" for  3.8%) representing the actual interest rate (APY) currently being applied.
   // This may be adjusted programmatically (e.g., due to lack of funds).
   string current_interest_rate = 5 [(cosmos_proto.scalar) = "cosmos.DecString"];
-  // desired_interest_rate is a decimal string (e.g., "0.9" for 90%) representing the target interest rate (APY) that the vault intends to apply.
+  // desired_interest_rate is a decimal string (e.g., "0.9" for 90% and "0.038" for  3.8%) representing the target interest rate (APY) that the vault intends to apply.
   string desired_interest_rate = 6 [(cosmos_proto.scalar) = "cosmos.DecString"];
-  // min_interest_rate is a decimal string (e.g., "0.9" for 90%) representing the lowest interest rate (APY) the admin is allowed to set.
+  // min_interest_rate is a decimal string (e.g., "0.9" for 90% and "0.038" for  3.8%) representing the lowest interest rate (APY) the admin is allowed to set.
   // If unset (empty string), there is no lower limit.
   string min_interest_rate = 7 [(cosmos_proto.scalar) = "cosmos.DecString"];
-  // max_interest_rate is a decimal string (e.g., "0.9" for 90%) representing the highest interest rate (APY) the admin is allowed to set.
+  // max_interest_rate is a decimal string (e.g., "0.9" for 90% and "0.038" for  3.8%) representing the highest interest rate (APY) the admin is allowed to set.
   // If unset (empty string), there is no upper limit.
   string max_interest_rate = 8 [(cosmos_proto.scalar) = "cosmos.DecString"];
   // swap_in_enabled indicates whether users are allowed to deposit into the vault.

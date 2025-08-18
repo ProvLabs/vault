@@ -81,7 +81,7 @@ message EventVaultReconcile {
   cosmos.base.v1beta1.Coin principal_before = 2 [(gogoproto.nullable) = false];
   // principal_after is the principal amount after applying interest.
   cosmos.base.v1beta1.Coin principal_after = 3 [(gogoproto.nullable) = false];
-  // rate is a decimal string (e.g., "0.9" for 90%) representing interest rate (APY) for the period.
+  // rate is a decimal string (e.g., "0.9" for 90% and "0.038" for  3.8%) representing interest rate (APY) for the period.
   string rate = 4;
   // time is the payout duration in seconds.
   int64 time = 5;
@@ -93,9 +93,9 @@ message EventVaultReconcile {
 message EventVaultInterestChange {
   // vault_address is the bech32 address of the vault.
   string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // current_rate is a decimal string (e.g., "0.9" for 90%) representing the actual interest rate (APY) the vault is using.
+  // current_rate is a decimal string (e.g., "0.9" for 90% and "0.038" for  3.8%) representing the actual interest rate (APY) the vault is using.
   string current_rate = 2;
-  // desired_rate is a decimal string (e.g., "0.9" for 90%) representing the the interest rate (APY) the admin wants to use.
+  // desired_rate is a decimal string (e.g., "0.9" for 90% and "0.038" for  3.8%) representing the the interest rate (APY) the admin wants to use.
   string desired_rate = 3;
 }
 
@@ -165,7 +165,7 @@ message EventMinInterestRateUpdated {
   string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // admin is the address of the account that updated the limit.
   string admin = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // min_rate is the newly set minimum interest rate (APY) as a decimal string (e.g., "0.9" for 90%).
+  // min_rate is the newly set minimum interest rate (APY) as a decimal string (e.g., "0.9" for 90% and "0.038" for  3.8%).
   // An empty string "" represents no minimum.
   string min_rate = 3;
 }
@@ -176,7 +176,7 @@ message EventMaxInterestRateUpdated {
   string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // admin is the address of the account that updated the limit.
   string admin = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // max_rate is the newly set maximum interest rate (APY) as a decimal string (e.g., "0.9" for 90%).
+  // max_rate is the newly set maximum interest rate (APY) as a decimal string (e.g., "0.9" for 90% and "0.038" for  3.8%).
   // An empty string "" represents no maximum.
   string max_rate = 3;
 }

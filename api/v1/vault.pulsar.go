@@ -1546,15 +1546,15 @@ type VaultAccount struct {
 	UnderlyingAssets []string `protobuf:"bytes,3,rep,name=underlying_assets,json=underlyingAssets,proto3" json:"underlying_assets,omitempty"`
 	// admin is the address that has administrative privileges over the vault.
 	Admin string `protobuf:"bytes,4,opt,name=admin,proto3" json:"admin,omitempty"`
-	// current_interest_rate is a decimal string (e.g., "0.9" for 90%) representing the actual interest rate (APY) currently being applied.
+	// current_interest_rate is a decimal string (e.g., "0.9" for 90% and "0.038" for  3.8%) representing the actual interest rate (APY) currently being applied.
 	// This may be adjusted programmatically (e.g., due to lack of funds).
 	CurrentInterestRate string `protobuf:"bytes,5,opt,name=current_interest_rate,json=currentInterestRate,proto3" json:"current_interest_rate,omitempty"`
-	// desired_interest_rate is a decimal string (e.g., "0.9" for 90%) representing the target interest rate (APY) that the vault intends to apply.
+	// desired_interest_rate is a decimal string (e.g., "0.9" for 90% and "0.038" for  3.8%) representing the target interest rate (APY) that the vault intends to apply.
 	DesiredInterestRate string `protobuf:"bytes,6,opt,name=desired_interest_rate,json=desiredInterestRate,proto3" json:"desired_interest_rate,omitempty"`
-	// min_interest_rate is a decimal string (e.g., "0.9" for 90%) representing the lowest interest rate (APY) the admin is allowed to set.
+	// min_interest_rate is a decimal string (e.g., "0.9" for 90% and "0.038" for  3.8%) representing the lowest interest rate (APY) the admin is allowed to set.
 	// If unset (empty string), there is no lower limit.
 	MinInterestRate string `protobuf:"bytes,7,opt,name=min_interest_rate,json=minInterestRate,proto3" json:"min_interest_rate,omitempty"`
-	// max_interest_rate is a decimal string (e.g., "0.9" for 90%) representing the highest interest rate (APY) the admin is allowed to set.
+	// max_interest_rate is a decimal string (e.g., "0.9" for 90% and "0.038" for  3.8%) representing the highest interest rate (APY) the admin is allowed to set.
 	// If unset (empty string), there is no upper limit.
 	MaxInterestRate string `protobuf:"bytes,8,opt,name=max_interest_rate,json=maxInterestRate,proto3" json:"max_interest_rate,omitempty"`
 	// swap_in_enabled indicates whether users are allowed to deposit into the vault.

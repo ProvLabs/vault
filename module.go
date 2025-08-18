@@ -215,7 +215,7 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "UpdateMinInterestRate",
 					Use:       "update-min-interest-rate [admin] [vault_address] [min_rate]",
 					Alias:     []string{"umir"},
-					Short:     "Sets the vault's minimum APY interest rate (e.g., \"0.9\" for 90% and \"0.9001353\" for 90.01353%)) or clears it when not provided.",
+					Short:     "Sets the vault's minimum APY interest rate (e.g., \"0.9\" for 90% and \"0.9001353\" for 90.01353%) or clears it when not provided.",
 					Example:   fmt.Sprintf("%s update-min-interest-rate %s %s 0.01", txStart, exampleAdminAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "admin"},
@@ -227,7 +227,7 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "UpdateMaxInterestRate",
 					Use:       "update-max-interest-rate [admin] [vault_address] [max_rate]",
 					Alias:     []string{"umaxir"},
-					Short:     "Sets the vault's maximum APY interest rate (e.g., \"0.9\" for 90% and \"0.9001353\" for 90.01353%)) or clears it when not provided.",
+					Short:     "Sets the vault's maximum APY interest rate (e.g., \"0.9\" for 90% and \"0.9001353\" for 90.01353%) or clears it when not provided.",
 					Example:   fmt.Sprintf("%s update-max-interest-rate %s %s 0.1", txStart, exampleAdminAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "admin"},

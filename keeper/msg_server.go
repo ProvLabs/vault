@@ -174,6 +174,50 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 	return &types.MsgUpdateInterestRateResponse{}, nil
 }
 
+// ToggleSwapIn enables or disables swap-in operations for a vault.
+func (k msgServer) ToggleSwapIn(goCtx context.Context, msg *types.MsgToggleSwapInRequest) (*types.MsgToggleSwapInResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault: %w", err)
+	}
+	if vault == nil {
+		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+	}
+	if err := vault.ValidateAdmin(msg.Admin); err != nil {
+		return nil, err
+	}
+
+	k.SetSwapInEnable(ctx, vault, msg.Enabled)
+
+	return &types.MsgToggleSwapInResponse{}, nil
+}
+
+// ToggleSwapOut enables or disables swap-out operations for a vault.
+func (k msgServer) ToggleSwapOut(goCtx context.Context, msg *types.MsgToggleSwapOutRequest) (*types.MsgToggleSwapOutResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault: %w", err)
+	}
+	if vault == nil {
+		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+	}
+	if err := vault.ValidateAdmin(msg.Admin); err != nil {
+		return nil, err
+	}
+
+	k.SetSwapOutEnable(ctx, vault, msg.Enabled)
+
+	return &types.MsgToggleSwapOutResponse{}, nil
+}
+
 // DepositInterestFunds handles depositing funds into the vault for paying interest.
 func (k msgServer) DepositInterestFunds(goCtx context.Context, msg *types.MsgDepositInterestFundsRequest) (*types.MsgDepositInterestFundsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
@@ -244,50 +288,6 @@ func (k msgServer) WithdrawInterestFunds(goCtx context.Context, msg *types.MsgWi
 	k.emitEvent(ctx, types.NewEventInterestWithdrawal(msg.VaultAddress, msg.Admin, msg.Amount))
 
 	return &types.MsgWithdrawInterestFundsResponse{}, nil
-}
-
-// ToggleSwapIn enables or disables swap-in operations for a vault.
-func (k msgServer) ToggleSwapIn(goCtx context.Context, msg *types.MsgToggleSwapInRequest) (*types.MsgToggleSwapInResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
-
-	vault, err := k.GetVault(ctx, vaultAddr)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get vault: %w", err)
-	}
-	if vault == nil {
-		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
-	}
-	if err := vault.ValidateAdmin(msg.Admin); err != nil {
-		return nil, err
-	}
-
-	k.SetSwapInEnable(ctx, vault, msg.Enabled)
-
-	return &types.MsgToggleSwapInResponse{}, nil
-}
-
-// ToggleSwapOut enables or disables swap-out operations for a vault.
-func (k msgServer) ToggleSwapOut(goCtx context.Context, msg *types.MsgToggleSwapOutRequest) (*types.MsgToggleSwapOutResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
-
-	vault, err := k.GetVault(ctx, vaultAddr)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get vault: %w", err)
-	}
-	if vault == nil {
-		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
-	}
-	if err := vault.ValidateAdmin(msg.Admin); err != nil {
-		return nil, err
-	}
-
-	k.SetSwapOutEnable(ctx, vault, msg.Enabled)
-
-	return &types.MsgToggleSwapOutResponse{}, nil
 }
 
 // DepositPrincipalFunds allows an admin to deposit principal funds into a vault.

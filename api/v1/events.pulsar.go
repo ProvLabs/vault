@@ -9468,7 +9468,7 @@ type EventVaultReconcile struct {
 	PrincipalBefore *v1beta1.Coin `protobuf:"bytes,2,opt,name=principal_before,json=principalBefore,proto3" json:"principal_before,omitempty"`
 	// principal_after is the principal amount after applying interest.
 	PrincipalAfter *v1beta1.Coin `protobuf:"bytes,3,opt,name=principal_after,json=principalAfter,proto3" json:"principal_after,omitempty"`
-	// rate is a decimal string (e.g., "0.9" for 90% and "0.038" for  3.8%) representing interest rate (APY) for the period.
+	// rate is a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%) representing interest rate (APY) for the period.
 	Rate string `protobuf:"bytes,4,opt,name=rate,proto3" json:"rate,omitempty"`
 	// time is the payout duration in seconds.
 	Time int64 `protobuf:"varint,5,opt,name=time,proto3" json:"time,omitempty"`
@@ -9546,9 +9546,9 @@ type EventVaultInterestChange struct {
 
 	// vault_address is the bech32 address of the vault.
 	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// current_rate is a decimal string (e.g., "0.9" for 90% and "0.038" for  3.8%) representing the actual interest rate (APY) the vault is using.
+	// current_rate is a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%) representing the actual interest rate (APY) the vault is using.
 	CurrentRate string `protobuf:"bytes,2,opt,name=current_rate,json=currentRate,proto3" json:"current_rate,omitempty"`
-	// desired_rate is a decimal string (e.g., "0.9" for 90% and "0.038" for  3.8%) representing the the interest rate (APY) the admin wants to use.
+	// desired_rate is a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%) representing the the interest rate (APY) the admin wants to use.
 	DesiredRate string `protobuf:"bytes,3,opt,name=desired_rate,json=desiredRate,proto3" json:"desired_rate,omitempty"`
 }
 
@@ -9933,7 +9933,7 @@ type EventMinInterestRateUpdated struct {
 	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// admin is the address of the account that updated the limit.
 	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
-	// min_rate is the newly set minimum interest rate (APY) as a decimal string (e.g., "0.9" for 90% and "0.038" for  3.8%).
+	// min_rate is the newly set minimum interest rate (APY) as a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%).
 	// An empty string "" represents no minimum.
 	MinRate string `protobuf:"bytes,3,opt,name=min_rate,json=minRate,proto3" json:"min_rate,omitempty"`
 }
@@ -9989,7 +9989,7 @@ type EventMaxInterestRateUpdated struct {
 	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// admin is the address of the account that updated the limit.
 	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
-	// max_rate is the newly set maximum interest rate (APY) as a decimal string (e.g., "0.9" for 90% and "0.038" for  3.8%).
+	// max_rate is the newly set maximum interest rate (APY) as a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%).
 	// An empty string "" represents no maximum.
 	MaxRate string `protobuf:"bytes,3,opt,name=max_rate,json=maxRate,proto3" json:"max_rate,omitempty"`
 }

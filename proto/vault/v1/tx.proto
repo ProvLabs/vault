@@ -110,7 +110,7 @@ message MsgUpdateMinInterestRateRequest {
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // The bech32 address of the vault whose minimum interest rate is being updated.
   string vault_address = 2;
-  // min_rate is the minimum allowable interest rate(APY) for the vault as a decimal string (e.g., "0.9" for 90% and "0.038" for  3.8%).
+  // min_rate is the minimum allowable interest rate(APY) for the vault as a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%).
   // An empty string "" represents no minimum.
   string min_rate = 3;
 }
@@ -123,7 +123,7 @@ message MsgUpdateMaxInterestRateRequest {
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // The bech32 address of the vault whose maximum interest rate is being updated.
   string vault_address = 2;
-  // max_rate is the maximum allowable interest rate (APY) for the vault as a decimal string (e.g., "0.9" for 90% and "0.038" for  3.8%).
+  // max_rate is the maximum allowable interest rate (APY) for the vault as a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%).
   // An empty string "" represents no maximum.
   string max_rate = 3;
 }
@@ -138,7 +138,7 @@ message MsgUpdateInterestRateRequest {
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // vault_address is the bech32 address of the vault.
   string vault_address = 2;
-  // new_rate is the new interest rate (APY) for the the vault as a decimal string (e.g., "0.9" for 90% and "0.038" for  3.8%).
+  // new_rate is the new interest rate (APY) for the the vault as a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%).
   string new_rate = 3;
 }
 

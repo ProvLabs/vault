@@ -4,6 +4,8 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	proto "github.com/cosmos/gogoproto/proto"
 )
 
 // RegisterInterfaces registers the vault module's message types for protobuf interface compatibility.
@@ -23,10 +25,6 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 		(*authtypes.GenesisAccount)(nil),
 		&VaultAccount{},
 	)
-
-	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
-}
-
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }

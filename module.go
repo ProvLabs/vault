@@ -51,9 +51,7 @@ func NewAppModuleBasic() AppModuleBasic {
 func (AppModuleBasic) Name() string { return types.ModuleName }
 
 // RegisterLegacyAminoCodec registers the legacy amino codec.
-func (AppModuleBasic) RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	types.RegisterLegacyAminoCodec(cdc)
-}
+func (AppModuleBasic) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {}
 
 // RegisterInterfaces registers vault interfaces to the interface registry.
 func (AppModuleBasic) RegisterInterfaces(reg codectypes.InterfaceRegistry) {

@@ -366,8 +366,8 @@ type MsgUpdateMinInterestRateRequest struct {
 	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
 	// The bech32 address of the vault whose minimum interest rate is being updated.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// The minimum allowable interest rate for the vault.
-	// Provide an empty string ("") to disable the minimum interest rate limit.
+	// min_rate is the minimum allowable interest rate(APY) for the vault as a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%).
+	// An empty string "" represents no minimum.
 	MinRate string `protobuf:"bytes,3,opt,name=min_rate,json=minRate,proto3" json:"min_rate,omitempty"`
 }
 
@@ -466,8 +466,8 @@ type MsgUpdateMaxInterestRateRequest struct {
 	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
 	// The bech32 address of the vault whose maximum interest rate is being updated.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// The maximum allowable interest rate for the vault.
-	// Provide an empty string ("") to disable the maximum interest rate limit.
+	// max_rate is the maximum allowable annual interest rate for the vault as a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%).
+	// An empty string "" represents no maximum.
 	MaxRate string `protobuf:"bytes,3,opt,name=max_rate,json=maxRate,proto3" json:"max_rate,omitempty"`
 }
 
@@ -561,13 +561,13 @@ func (m *MsgUpdateMaxInterestRateResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdateMaxInterestRateResponse proto.InternalMessageInfo
 
-// MsgUpdateInterestRateRequest is the request message for updating the interest rate of a vault.
+// MsgUpdateInterestRateRequest is the request message for updating the annual interest rate of a vault.
 type MsgUpdateInterestRateRequest struct {
 	// admin is the address of the vault administrator.
 	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
 	// vault_address is the bech32 address of the vault.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// new_rate is the new interest rate for the vault, expressed as an APY string (e.g., "-5.00" for -5%).
+	// new_rate is the new annual interest rate for the the vault as a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%).
 	NewRate string `protobuf:"bytes,3,opt,name=new_rate,json=newRate,proto3" json:"new_rate,omitempty"`
 }
 
@@ -1378,11 +1378,11 @@ type MsgClient interface {
 	SwapIn(ctx context.Context, in *MsgSwapInRequest, opts ...grpc.CallOption) (*MsgSwapInResponse, error)
 	// SwapOut exchanges vault shares for underlying assets by withdrawing from a vault.
 	SwapOut(ctx context.Context, in *MsgSwapOutRequest, opts ...grpc.CallOption) (*MsgSwapOutResponse, error)
-	// UpdateMinInterestRate sets the minimum allowed interest rate for a vault.
+	// UpdateMinInterestRate sets the minimum allowed annual interest rate for a vault.
 	UpdateMinInterestRate(ctx context.Context, in *MsgUpdateMinInterestRateRequest, opts ...grpc.CallOption) (*MsgUpdateMinInterestRateResponse, error)
-	// UpdateMaxInterestRate sets the maximum allowed interest rate for a vault.
+	// UpdateMaxInterestRate sets the maximum allowed annual interest rate for a vault.
 	UpdateMaxInterestRate(ctx context.Context, in *MsgUpdateMaxInterestRateRequest, opts ...grpc.CallOption) (*MsgUpdateMaxInterestRateResponse, error)
-	// UpdateInterestRate allows the interest admin to update the current interest rate within limits.
+	// UpdateInterestRate allows the interest admin to update the current annual interest rate within limits.
 	UpdateInterestRate(ctx context.Context, in *MsgUpdateInterestRateRequest, opts ...grpc.CallOption) (*MsgUpdateInterestRateResponse, error)
 	// DepositInterestFunds allows depositing funds into the vault for paying interest.
 	DepositInterestFunds(ctx context.Context, in *MsgDepositInterestFundsRequest, opts ...grpc.CallOption) (*MsgDepositInterestFundsResponse, error)
@@ -1522,11 +1522,11 @@ type MsgServer interface {
 	SwapIn(context.Context, *MsgSwapInRequest) (*MsgSwapInResponse, error)
 	// SwapOut exchanges vault shares for underlying assets by withdrawing from a vault.
 	SwapOut(context.Context, *MsgSwapOutRequest) (*MsgSwapOutResponse, error)
-	// UpdateMinInterestRate sets the minimum allowed interest rate for a vault.
+	// UpdateMinInterestRate sets the minimum allowed annual interest rate for a vault.
 	UpdateMinInterestRate(context.Context, *MsgUpdateMinInterestRateRequest) (*MsgUpdateMinInterestRateResponse, error)
-	// UpdateMaxInterestRate sets the maximum allowed interest rate for a vault.
+	// UpdateMaxInterestRate sets the maximum allowed annual interest rate for a vault.
 	UpdateMaxInterestRate(context.Context, *MsgUpdateMaxInterestRateRequest) (*MsgUpdateMaxInterestRateResponse, error)
-	// UpdateInterestRate allows the interest admin to update the current interest rate within limits.
+	// UpdateInterestRate allows the interest admin to update the current annual interest rate within limits.
 	UpdateInterestRate(context.Context, *MsgUpdateInterestRateRequest) (*MsgUpdateInterestRateResponse, error)
 	// DepositInterestFunds allows depositing funds into the vault for paying interest.
 	DepositInterestFunds(context.Context, *MsgDepositInterestFundsRequest) (*MsgDepositInterestFundsResponse, error)

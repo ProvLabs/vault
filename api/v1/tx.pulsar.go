@@ -11454,8 +11454,8 @@ type MsgUpdateMinInterestRateRequest struct {
 	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
 	// The bech32 address of the vault whose minimum interest rate is being updated.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// The minimum allowable interest rate for the vault.
-	// Provide an empty string ("") to disable the minimum interest rate limit.
+	// min_rate is the minimum allowable interest rate(APY) for the vault as a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%).
+	// An empty string "" represents no minimum.
 	MinRate string `protobuf:"bytes,3,opt,name=min_rate,json=minRate,proto3" json:"min_rate,omitempty"`
 }
 
@@ -11535,8 +11535,8 @@ type MsgUpdateMaxInterestRateRequest struct {
 	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
 	// The bech32 address of the vault whose maximum interest rate is being updated.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// The maximum allowable interest rate for the vault.
-	// Provide an empty string ("") to disable the maximum interest rate limit.
+	// max_rate is the maximum allowable annual interest rate for the vault as a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%).
+	// An empty string "" represents no maximum.
 	MaxRate string `protobuf:"bytes,3,opt,name=max_rate,json=maxRate,proto3" json:"max_rate,omitempty"`
 }
 
@@ -11607,7 +11607,7 @@ func (*MsgUpdateMaxInterestRateResponse) Descriptor() ([]byte, []int) {
 	return file_vault_v1_tx_proto_rawDescGZIP(), []int{9}
 }
 
-// MsgUpdateInterestRateRequest is the request message for updating the interest rate of a vault.
+// MsgUpdateInterestRateRequest is the request message for updating the annual interest rate of a vault.
 type MsgUpdateInterestRateRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -11617,7 +11617,7 @@ type MsgUpdateInterestRateRequest struct {
 	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
 	// vault_address is the bech32 address of the vault.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// new_rate is the new interest rate for the vault, expressed as an APY string (e.g., "-5.00" for -5%).
+	// new_rate is the new annual interest rate for the the vault as a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%).
 	NewRate string `protobuf:"bytes,3,opt,name=new_rate,json=newRate,proto3" json:"new_rate,omitempty"`
 }
 

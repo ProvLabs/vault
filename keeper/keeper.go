@@ -60,6 +60,7 @@ func NewKeeper(
 		eventService:      eventService,
 		addressCodec:      addressCodec,
 		authority:         authority,
+		Vaults:            collections.NewMap(builder, types.VaultsKeyPrefix, types.VaultsName, sdk.AccAddressKey, collections.BytesValue),
 		VaultStartQueue:   collections.NewMap[collections.Pair[uint64, sdk.AccAddress], collections.NoValue](builder, types.VaultStartQueuePrefix, types.VaultStartQueueName, startKeyCodec, collections.NoValue{}),
 		VaultTimeoutQueue: collections.NewMap[collections.Pair[uint64, sdk.AccAddress], collections.NoValue](builder, types.VaultEndQueuePrefix, types.VaultEndQueueName, endKeyCodec, collections.NoValue{}),
 		AuthKeeper:        authKeeper,

@@ -361,6 +361,7 @@ func (m *MsgSwapOutResponse) GetSharesBurned() types.Coin {
 	return types.Coin{}
 }
 
+// MsgUpdateMinInterestRateRequest is the request message for updating the minimum interest rate of a vault.
 type MsgUpdateMinInterestRateRequest struct {
 	// The address of the account authorized to update the minimum interest rate for the vault.
 	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
@@ -425,6 +426,7 @@ func (m *MsgUpdateMinInterestRateRequest) GetMinRate() string {
 	return ""
 }
 
+// MsgUpdateMinInterestRateResponse is the response message for the UpdateMinInterestRate endpoint.
 type MsgUpdateMinInterestRateResponse struct {
 }
 
@@ -461,6 +463,7 @@ func (m *MsgUpdateMinInterestRateResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdateMinInterestRateResponse proto.InternalMessageInfo
 
+// MsgUpdateMaxInterestRateRequest is the request message for updating the maximum interest rate of a vault.
 type MsgUpdateMaxInterestRateRequest struct {
 	// The address of the account authorized to update the maximum interest rate for the vault.
 	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
@@ -525,6 +528,7 @@ func (m *MsgUpdateMaxInterestRateRequest) GetMaxRate() string {
 	return ""
 }
 
+// MsgUpdateMaxInterestRateResponse is the response message for the UpdateMaxInterestRate endpoint.
 type MsgUpdateMaxInterestRateResponse struct {
 }
 
@@ -662,208 +666,6 @@ func (m *MsgUpdateInterestRateResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdateInterestRateResponse proto.InternalMessageInfo
 
-// MsgDepositInterestFundsRequest is the request message for depositing funds to be used for paying interest.
-type MsgDepositInterestFundsRequest struct {
-	// admin is the address of the account depositing the funds.
-	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
-	// vault_address is the bech32 address of the vault to which funds are being deposited.
-	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// amount is the amount of funds to deposit.
-	Amount types.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount"`
-}
-
-func (m *MsgDepositInterestFundsRequest) Reset()         { *m = MsgDepositInterestFundsRequest{} }
-func (m *MsgDepositInterestFundsRequest) String() string { return proto.CompactTextString(m) }
-func (*MsgDepositInterestFundsRequest) ProtoMessage()    {}
-func (*MsgDepositInterestFundsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_311d0123a4881c5c, []int{12}
-}
-func (m *MsgDepositInterestFundsRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgDepositInterestFundsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgDepositInterestFundsRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgDepositInterestFundsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgDepositInterestFundsRequest.Merge(m, src)
-}
-func (m *MsgDepositInterestFundsRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgDepositInterestFundsRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgDepositInterestFundsRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgDepositInterestFundsRequest proto.InternalMessageInfo
-
-func (m *MsgDepositInterestFundsRequest) GetAdmin() string {
-	if m != nil {
-		return m.Admin
-	}
-	return ""
-}
-
-func (m *MsgDepositInterestFundsRequest) GetVaultAddress() string {
-	if m != nil {
-		return m.VaultAddress
-	}
-	return ""
-}
-
-func (m *MsgDepositInterestFundsRequest) GetAmount() types.Coin {
-	if m != nil {
-		return m.Amount
-	}
-	return types.Coin{}
-}
-
-// MsgDepositInterestFundsResponse is the response message for the DepositInterestFunds endpoint.
-type MsgDepositInterestFundsResponse struct {
-}
-
-func (m *MsgDepositInterestFundsResponse) Reset()         { *m = MsgDepositInterestFundsResponse{} }
-func (m *MsgDepositInterestFundsResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgDepositInterestFundsResponse) ProtoMessage()    {}
-func (*MsgDepositInterestFundsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_311d0123a4881c5c, []int{13}
-}
-func (m *MsgDepositInterestFundsResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgDepositInterestFundsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgDepositInterestFundsResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgDepositInterestFundsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgDepositInterestFundsResponse.Merge(m, src)
-}
-func (m *MsgDepositInterestFundsResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgDepositInterestFundsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgDepositInterestFundsResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgDepositInterestFundsResponse proto.InternalMessageInfo
-
-// MsgWithdrawInterestFundsRequest is the request message for withdrawing unused interest funds.
-type MsgWithdrawInterestFundsRequest struct {
-	// admin is the address of the vault administrator initiating the withdrawal.
-	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
-	// vault_address is the bech32 address of the vault from which funds are being withdrawn.
-	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// amount is the amount of funds to withdraw.
-	Amount types.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount"`
-}
-
-func (m *MsgWithdrawInterestFundsRequest) Reset()         { *m = MsgWithdrawInterestFundsRequest{} }
-func (m *MsgWithdrawInterestFundsRequest) String() string { return proto.CompactTextString(m) }
-func (*MsgWithdrawInterestFundsRequest) ProtoMessage()    {}
-func (*MsgWithdrawInterestFundsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_311d0123a4881c5c, []int{14}
-}
-func (m *MsgWithdrawInterestFundsRequest) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgWithdrawInterestFundsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgWithdrawInterestFundsRequest.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgWithdrawInterestFundsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgWithdrawInterestFundsRequest.Merge(m, src)
-}
-func (m *MsgWithdrawInterestFundsRequest) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgWithdrawInterestFundsRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgWithdrawInterestFundsRequest.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgWithdrawInterestFundsRequest proto.InternalMessageInfo
-
-func (m *MsgWithdrawInterestFundsRequest) GetAdmin() string {
-	if m != nil {
-		return m.Admin
-	}
-	return ""
-}
-
-func (m *MsgWithdrawInterestFundsRequest) GetVaultAddress() string {
-	if m != nil {
-		return m.VaultAddress
-	}
-	return ""
-}
-
-func (m *MsgWithdrawInterestFundsRequest) GetAmount() types.Coin {
-	if m != nil {
-		return m.Amount
-	}
-	return types.Coin{}
-}
-
-// MsgWithdrawInterestFundsResponse is the response message for the WithdrawInterestFunds endpoint.
-type MsgWithdrawInterestFundsResponse struct {
-}
-
-func (m *MsgWithdrawInterestFundsResponse) Reset()         { *m = MsgWithdrawInterestFundsResponse{} }
-func (m *MsgWithdrawInterestFundsResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgWithdrawInterestFundsResponse) ProtoMessage()    {}
-func (*MsgWithdrawInterestFundsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_311d0123a4881c5c, []int{15}
-}
-func (m *MsgWithdrawInterestFundsResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgWithdrawInterestFundsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgWithdrawInterestFundsResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgWithdrawInterestFundsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgWithdrawInterestFundsResponse.Merge(m, src)
-}
-func (m *MsgWithdrawInterestFundsResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgWithdrawInterestFundsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgWithdrawInterestFundsResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgWithdrawInterestFundsResponse proto.InternalMessageInfo
-
 // MsgToggleSwapInRequest is the request message for enabling or disabling swap-in operations for a vault.
 type MsgToggleSwapInRequest struct {
 	// admin is the address of the vault administrator.
@@ -878,7 +680,7 @@ func (m *MsgToggleSwapInRequest) Reset()         { *m = MsgToggleSwapInRequest{}
 func (m *MsgToggleSwapInRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgToggleSwapInRequest) ProtoMessage()    {}
 func (*MsgToggleSwapInRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_311d0123a4881c5c, []int{16}
+	return fileDescriptor_311d0123a4881c5c, []int{12}
 }
 func (m *MsgToggleSwapInRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -936,7 +738,7 @@ func (m *MsgToggleSwapInResponse) Reset()         { *m = MsgToggleSwapInResponse
 func (m *MsgToggleSwapInResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgToggleSwapInResponse) ProtoMessage()    {}
 func (*MsgToggleSwapInResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_311d0123a4881c5c, []int{17}
+	return fileDescriptor_311d0123a4881c5c, []int{13}
 }
 func (m *MsgToggleSwapInResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -979,7 +781,7 @@ func (m *MsgToggleSwapOutRequest) Reset()         { *m = MsgToggleSwapOutRequest
 func (m *MsgToggleSwapOutRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgToggleSwapOutRequest) ProtoMessage()    {}
 func (*MsgToggleSwapOutRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_311d0123a4881c5c, []int{18}
+	return fileDescriptor_311d0123a4881c5c, []int{14}
 }
 func (m *MsgToggleSwapOutRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1037,7 +839,7 @@ func (m *MsgToggleSwapOutResponse) Reset()         { *m = MsgToggleSwapOutRespon
 func (m *MsgToggleSwapOutResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgToggleSwapOutResponse) ProtoMessage()    {}
 func (*MsgToggleSwapOutResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_311d0123a4881c5c, []int{19}
+	return fileDescriptor_311d0123a4881c5c, []int{15}
 }
 func (m *MsgToggleSwapOutResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1065,6 +867,208 @@ func (m *MsgToggleSwapOutResponse) XXX_DiscardUnknown() {
 }
 
 var xxx_messageInfo_MsgToggleSwapOutResponse proto.InternalMessageInfo
+
+// MsgDepositInterestFundsRequest is the request message for depositing funds to be used for paying interest.
+type MsgDepositInterestFundsRequest struct {
+	// admin is the address of the account depositing the funds.
+	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// vault_address is the bech32 address of the vault to which funds are being deposited.
+	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// amount is the amount of funds to deposit.
+	Amount types.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount"`
+}
+
+func (m *MsgDepositInterestFundsRequest) Reset()         { *m = MsgDepositInterestFundsRequest{} }
+func (m *MsgDepositInterestFundsRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgDepositInterestFundsRequest) ProtoMessage()    {}
+func (*MsgDepositInterestFundsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_311d0123a4881c5c, []int{16}
+}
+func (m *MsgDepositInterestFundsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgDepositInterestFundsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgDepositInterestFundsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgDepositInterestFundsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgDepositInterestFundsRequest.Merge(m, src)
+}
+func (m *MsgDepositInterestFundsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgDepositInterestFundsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgDepositInterestFundsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgDepositInterestFundsRequest proto.InternalMessageInfo
+
+func (m *MsgDepositInterestFundsRequest) GetAdmin() string {
+	if m != nil {
+		return m.Admin
+	}
+	return ""
+}
+
+func (m *MsgDepositInterestFundsRequest) GetVaultAddress() string {
+	if m != nil {
+		return m.VaultAddress
+	}
+	return ""
+}
+
+func (m *MsgDepositInterestFundsRequest) GetAmount() types.Coin {
+	if m != nil {
+		return m.Amount
+	}
+	return types.Coin{}
+}
+
+// MsgDepositInterestFundsResponse is the response message for the DepositInterestFunds endpoint.
+type MsgDepositInterestFundsResponse struct {
+}
+
+func (m *MsgDepositInterestFundsResponse) Reset()         { *m = MsgDepositInterestFundsResponse{} }
+func (m *MsgDepositInterestFundsResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgDepositInterestFundsResponse) ProtoMessage()    {}
+func (*MsgDepositInterestFundsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_311d0123a4881c5c, []int{17}
+}
+func (m *MsgDepositInterestFundsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgDepositInterestFundsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgDepositInterestFundsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgDepositInterestFundsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgDepositInterestFundsResponse.Merge(m, src)
+}
+func (m *MsgDepositInterestFundsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgDepositInterestFundsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgDepositInterestFundsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgDepositInterestFundsResponse proto.InternalMessageInfo
+
+// MsgWithdrawInterestFundsRequest is the request message for withdrawing unused interest funds.
+type MsgWithdrawInterestFundsRequest struct {
+	// admin is the address of the vault administrator initiating the withdrawal.
+	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// vault_address is the bech32 address of the vault from which funds are being withdrawn.
+	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// amount is the amount of funds to withdraw.
+	Amount types.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount"`
+}
+
+func (m *MsgWithdrawInterestFundsRequest) Reset()         { *m = MsgWithdrawInterestFundsRequest{} }
+func (m *MsgWithdrawInterestFundsRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgWithdrawInterestFundsRequest) ProtoMessage()    {}
+func (*MsgWithdrawInterestFundsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_311d0123a4881c5c, []int{18}
+}
+func (m *MsgWithdrawInterestFundsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgWithdrawInterestFundsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgWithdrawInterestFundsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgWithdrawInterestFundsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgWithdrawInterestFundsRequest.Merge(m, src)
+}
+func (m *MsgWithdrawInterestFundsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgWithdrawInterestFundsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgWithdrawInterestFundsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgWithdrawInterestFundsRequest proto.InternalMessageInfo
+
+func (m *MsgWithdrawInterestFundsRequest) GetAdmin() string {
+	if m != nil {
+		return m.Admin
+	}
+	return ""
+}
+
+func (m *MsgWithdrawInterestFundsRequest) GetVaultAddress() string {
+	if m != nil {
+		return m.VaultAddress
+	}
+	return ""
+}
+
+func (m *MsgWithdrawInterestFundsRequest) GetAmount() types.Coin {
+	if m != nil {
+		return m.Amount
+	}
+	return types.Coin{}
+}
+
+// MsgWithdrawInterestFundsResponse is the response message for the WithdrawInterestFunds endpoint.
+type MsgWithdrawInterestFundsResponse struct {
+}
+
+func (m *MsgWithdrawInterestFundsResponse) Reset()         { *m = MsgWithdrawInterestFundsResponse{} }
+func (m *MsgWithdrawInterestFundsResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgWithdrawInterestFundsResponse) ProtoMessage()    {}
+func (*MsgWithdrawInterestFundsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_311d0123a4881c5c, []int{19}
+}
+func (m *MsgWithdrawInterestFundsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgWithdrawInterestFundsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgWithdrawInterestFundsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgWithdrawInterestFundsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgWithdrawInterestFundsResponse.Merge(m, src)
+}
+func (m *MsgWithdrawInterestFundsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgWithdrawInterestFundsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgWithdrawInterestFundsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgWithdrawInterestFundsResponse proto.InternalMessageInfo
 
 // MsgDepositPrincipalFundsRequest is the request message for depositing principal funds into a vault.
 type MsgDepositPrincipalFundsRequest struct {
@@ -1281,14 +1285,14 @@ func init() {
 	proto.RegisterType((*MsgUpdateMaxInterestRateResponse)(nil), "vault.v1.MsgUpdateMaxInterestRateResponse")
 	proto.RegisterType((*MsgUpdateInterestRateRequest)(nil), "vault.v1.MsgUpdateInterestRateRequest")
 	proto.RegisterType((*MsgUpdateInterestRateResponse)(nil), "vault.v1.MsgUpdateInterestRateResponse")
-	proto.RegisterType((*MsgDepositInterestFundsRequest)(nil), "vault.v1.MsgDepositInterestFundsRequest")
-	proto.RegisterType((*MsgDepositInterestFundsResponse)(nil), "vault.v1.MsgDepositInterestFundsResponse")
-	proto.RegisterType((*MsgWithdrawInterestFundsRequest)(nil), "vault.v1.MsgWithdrawInterestFundsRequest")
-	proto.RegisterType((*MsgWithdrawInterestFundsResponse)(nil), "vault.v1.MsgWithdrawInterestFundsResponse")
 	proto.RegisterType((*MsgToggleSwapInRequest)(nil), "vault.v1.MsgToggleSwapInRequest")
 	proto.RegisterType((*MsgToggleSwapInResponse)(nil), "vault.v1.MsgToggleSwapInResponse")
 	proto.RegisterType((*MsgToggleSwapOutRequest)(nil), "vault.v1.MsgToggleSwapOutRequest")
 	proto.RegisterType((*MsgToggleSwapOutResponse)(nil), "vault.v1.MsgToggleSwapOutResponse")
+	proto.RegisterType((*MsgDepositInterestFundsRequest)(nil), "vault.v1.MsgDepositInterestFundsRequest")
+	proto.RegisterType((*MsgDepositInterestFundsResponse)(nil), "vault.v1.MsgDepositInterestFundsResponse")
+	proto.RegisterType((*MsgWithdrawInterestFundsRequest)(nil), "vault.v1.MsgWithdrawInterestFundsRequest")
+	proto.RegisterType((*MsgWithdrawInterestFundsResponse)(nil), "vault.v1.MsgWithdrawInterestFundsResponse")
 	proto.RegisterType((*MsgDepositPrincipalFundsRequest)(nil), "vault.v1.MsgDepositPrincipalFundsRequest")
 	proto.RegisterType((*MsgDepositPrincipalFundsResponse)(nil), "vault.v1.MsgDepositPrincipalFundsResponse")
 	proto.RegisterType((*MsgWithdrawPrincipalFundsRequest)(nil), "vault.v1.MsgWithdrawPrincipalFundsRequest")
@@ -1298,66 +1302,66 @@ func init() {
 func init() { proto.RegisterFile("vault/v1/tx.proto", fileDescriptor_311d0123a4881c5c) }
 
 var fileDescriptor_311d0123a4881c5c = []byte{
-	// 930 bytes of a gzipped FileDescriptorProto
+	// 929 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x57, 0x41, 0x6f, 0xdc, 0x44,
 	0x14, 0x8e, 0x5b, 0x9a, 0xa4, 0x2f, 0x09, 0x6d, 0x47, 0x69, 0xbb, 0x31, 0xc5, 0x9b, 0xb8, 0x12,
-	0x34, 0x41, 0xd8, 0x4a, 0x39, 0x20, 0x90, 0x38, 0x64, 0x1b, 0x21, 0x7a, 0x58, 0x51, 0x39, 0x50,
-	0xa4, 0x4a, 0x68, 0x35, 0xbb, 0x1e, 0x39, 0x16, 0xeb, 0x19, 0xd7, 0x33, 0xde, 0xdd, 0xde, 0x10,
-	0xbf, 0x00, 0x09, 0x4e, 0x20, 0xc4, 0x1f, 0x00, 0xa9, 0x07, 0x4e, 0xc0, 0x0f, 0xe8, 0xb1, 0xe2,
-	0xc4, 0x09, 0xa1, 0xe4, 0xd0, 0xbf, 0x81, 0x3c, 0x33, 0xc9, 0xae, 0xd7, 0xb3, 0xee, 0x0a, 0x41,
-	0x21, 0xb7, 0x9d, 0x37, 0xdf, 0xbc, 0xf7, 0x7d, 0x6f, 0xdf, 0xbc, 0x37, 0x86, 0x2b, 0x03, 0x9c,
-	0xf7, 0x85, 0x3f, 0xd8, 0xf5, 0xc5, 0xc8, 0x4b, 0x33, 0x26, 0x18, 0x5a, 0x96, 0x26, 0x6f, 0xb0,
-	0x6b, 0x3b, 0x3d, 0xc6, 0x13, 0xc6, 0xfd, 0x2e, 0xe6, 0xc4, 0x1f, 0xec, 0x76, 0x89, 0xc0, 0xbb,
-	0x7e, 0x8f, 0xc5, 0x54, 0x21, 0xed, 0xeb, 0x7a, 0x3f, 0xe1, 0x51, 0xe1, 0x21, 0xe1, 0x91, 0xde,
-	0xd8, 0x50, 0x1b, 0x1d, 0xb9, 0xf2, 0xd5, 0x42, 0x6f, 0xad, 0x47, 0x2c, 0x62, 0xca, 0x5e, 0xfc,
-	0x52, 0x56, 0xf7, 0x7b, 0x0b, 0xae, 0xb6, 0x79, 0x74, 0x27, 0x23, 0x58, 0x90, 0xfb, 0x45, 0xfc,
+	0x34, 0x41, 0xd8, 0xda, 0x72, 0x40, 0x20, 0x71, 0xc8, 0x36, 0x42, 0xf4, 0xb0, 0xa2, 0x72, 0xa0,
+	0x48, 0x95, 0xd0, 0x6a, 0x76, 0x3d, 0x72, 0x2c, 0xd6, 0x33, 0xae, 0x67, 0xbc, 0xbb, 0xbd, 0x21,
+	0x7e, 0x01, 0x12, 0x9c, 0x40, 0x88, 0x3f, 0x00, 0x52, 0x0f, 0x9c, 0x80, 0x1f, 0xd0, 0x63, 0xc5,
+	0x89, 0x13, 0x42, 0xc9, 0xa1, 0x7f, 0x03, 0x79, 0x66, 0x92, 0xac, 0xd7, 0xb3, 0xee, 0x0a, 0x41,
+	0x21, 0xb7, 0x78, 0xe6, 0x7b, 0xef, 0x7d, 0xdf, 0x9b, 0xcc, 0xf7, 0x66, 0xe1, 0xca, 0x10, 0xe7,
+	0x03, 0xe1, 0x0f, 0x5b, 0xbe, 0x18, 0x7b, 0x69, 0xc6, 0x04, 0x43, 0xcb, 0x72, 0xc9, 0x1b, 0xb6,
+	0x6c, 0xa7, 0xcf, 0x78, 0xc2, 0xb8, 0xdf, 0xc3, 0x9c, 0xf8, 0xc3, 0x56, 0x8f, 0x08, 0xdc, 0xf2,
+	0xfb, 0x2c, 0xa6, 0x0a, 0x69, 0x5f, 0xd7, 0xfb, 0x09, 0x8f, 0x8a, 0x0c, 0x09, 0x8f, 0xf4, 0xc6,
+	0x86, 0xda, 0xe8, 0xca, 0x2f, 0x5f, 0x7d, 0xe8, 0xad, 0xf5, 0x88, 0x45, 0x4c, 0xad, 0x17, 0x7f,
+	0xa9, 0x55, 0xf7, 0x7b, 0x0b, 0xae, 0x76, 0x78, 0x74, 0x27, 0x23, 0x58, 0x90, 0xfb, 0x45, 0xfd,
 	0x80, 0x3c, 0xcc, 0x09, 0x17, 0xc8, 0x83, 0x0b, 0x38, 0x4c, 0x62, 0xda, 0xb0, 0x36, 0xad, 0x5b,
-	0x17, 0x5b, 0x8d, 0xdf, 0x7e, 0x7a, 0x73, 0x5d, 0x3b, 0xdc, 0x0b, 0xc3, 0x8c, 0x70, 0x7e, 0x20,
-	0xb2, 0x98, 0x46, 0x81, 0x82, 0xa1, 0x26, 0xac, 0xf0, 0x43, 0x9c, 0x91, 0x4e, 0x48, 0x28, 0x4b,
-	0x1a, 0xe7, 0x8a, 0x53, 0x01, 0x48, 0xd3, 0x7e, 0x61, 0x41, 0xdb, 0x70, 0x39, 0xa7, 0x21, 0xc9,
-	0xfa, 0x8f, 0x62, 0x1a, 0x75, 0x30, 0xe7, 0x44, 0x34, 0xce, 0x4b, 0xd4, 0xa5, 0xb1, 0x7d, 0xaf,
-	0x30, 0xbf, 0x0b, 0x5f, 0x3c, 0x7b, 0xbc, 0xa3, 0xfc, 0xba, 0xef, 0xc1, 0xb5, 0x69, 0x82, 0x3c,
-	0x65, 0x94, 0x13, 0x74, 0x13, 0xd6, 0x64, 0xc6, 0x3a, 0x58, 0xf1, 0x51, 0x4c, 0x83, 0x55, 0x69,
-	0xd4, 0x1c, 0xdd, 0x1f, 0x2c, 0xb8, 0xdc, 0xe6, 0xd1, 0xc1, 0x10, 0xa7, 0x77, 0xe9, 0x84, 0x36,
-	0x36, 0xa4, 0x24, 0x7b, 0xbe, 0x36, 0x09, 0xab, 0x46, 0x3a, 0x57, 0x8d, 0x84, 0xde, 0x86, 0x45,
-	0x29, 0x8a, 0x4b, 0x55, 0x2b, 0xb7, 0x37, 0x3c, 0xed, 0xb2, 0xf8, 0x17, 0x3d, 0xfd, 0x2f, 0x7a,
-	0x77, 0x58, 0x4c, 0x5b, 0x2f, 0x3d, 0xf9, 0xa3, 0xb9, 0x10, 0x68, 0xb8, 0x56, 0x2b, 0x23, 0xb9,
-	0x9f, 0xc2, 0x95, 0x09, 0xb6, 0x5a, 0xe8, 0x07, 0x70, 0x49, 0xe6, 0x91, 0x77, 0x32, 0xd2, 0x23,
-	0xf1, 0x80, 0x84, 0x92, 0xf8, 0x1c, 0x21, 0x5e, 0x56, 0xe7, 0x02, 0x7d, 0xcc, 0xfd, 0xd1, 0x3a,
-	0xf5, 0xff, 0x61, 0x2e, 0xfe, 0xff, 0xe9, 0x78, 0x00, 0x68, 0x92, 0xae, 0xce, 0xc7, 0x3e, 0xac,
-	0xe9, 0x7c, 0x74, 0xf3, 0x8c, 0xce, 0x9f, 0x8d, 0x55, 0x75, 0xaa, 0x25, 0x0f, 0xb9, 0xdf, 0x59,
-	0xd0, 0x6c, 0xf3, 0xe8, 0xe3, 0x34, 0xc4, 0x82, 0xb4, 0x63, 0x7a, 0x97, 0x0a, 0x92, 0x11, 0x2e,
-	0x02, 0x2c, 0xc8, 0xdf, 0xbd, 0x04, 0x73, 0x65, 0x66, 0x03, 0x96, 0x93, 0x98, 0x76, 0x32, 0x2c,
-	0x88, 0xbe, 0x00, 0x4b, 0x49, 0x4c, 0x8b, 0xb0, 0xa5, 0xc2, 0x77, 0x61, 0x73, 0x36, 0x3d, 0x95,
-	0x89, 0x29, 0x0d, 0x78, 0xf4, 0x42, 0x35, 0xe0, 0x51, 0x59, 0x03, 0x1e, 0xd5, 0x6b, 0x98, 0xa6,
-	0xa7, 0x35, 0x7c, 0x63, 0xc1, 0x8d, 0x53, 0xd0, 0x8b, 0x14, 0x40, 0xc9, 0xb0, 0x24, 0x80, 0x92,
-	0x61, 0x45, 0x40, 0x13, 0x5e, 0x9d, 0xc1, 0x4d, 0xb3, 0xff, 0xd9, 0x02, 0xa7, 0xcd, 0xa3, 0x7d,
-	0x92, 0x32, 0x1e, 0x8b, 0x13, 0xc8, 0xfb, 0x39, 0x0d, 0xf9, 0xbf, 0xca, 0xbf, 0xb8, 0x5e, 0x09,
-	0xcb, 0xa9, 0x98, 0xff, 0x7a, 0x49, 0x78, 0x49, 0xdd, 0x96, 0xac, 0x1e, 0x33, 0x77, 0xad, 0xef,
-	0x17, 0x55, 0x61, 0x9f, 0xc4, 0xe2, 0x30, 0xcc, 0xf0, 0xf0, 0x8c, 0x09, 0x54, 0xf5, 0x37, 0x83,
-	0xbc, 0x56, 0xf8, 0x95, 0x25, 0x27, 0xcc, 0x47, 0x2c, 0x8a, 0xfa, 0xa4, 0x32, 0x27, 0xfe, 0x79,
-	0x61, 0x0d, 0x58, 0x22, 0x14, 0x77, 0xfb, 0x24, 0x94, 0xca, 0x96, 0x83, 0x93, 0x65, 0x89, 0xf9,
-	0x06, 0x5c, 0xaf, 0x90, 0xd2, 0x84, 0xbf, 0xb6, 0xa6, 0xf6, 0xca, 0xad, 0xfc, 0xbf, 0x62, 0x6c,
-	0x43, 0xa3, 0xca, 0xaa, 0x5c, 0x45, 0xba, 0xd2, 0xee, 0x65, 0x31, 0xed, 0xc5, 0x29, 0xee, 0x9f,
-	0xa9, 0x2a, 0x9a, 0x41, 0x5e, 0x2b, 0xfc, 0xd5, 0x2a, 0x95, 0xda, 0x59, 0x93, 0x78, 0x13, 0xb6,
-	0x6a, 0xd8, 0x2b, 0x8d, 0xb7, 0xbf, 0xbd, 0x08, 0xe7, 0xdb, 0x3c, 0x42, 0xf7, 0x60, 0x65, 0xe2,
-	0x3d, 0x86, 0x9a, 0xde, 0xc9, 0xc3, 0xd5, 0x33, 0x3e, 0x25, 0xed, 0xcd, 0xd9, 0x00, 0x3d, 0xd1,
-	0xf7, 0x60, 0x51, 0x15, 0x39, 0xb2, 0x4b, 0xd8, 0xd2, 0x75, 0xb4, 0x5f, 0x31, 0xee, 0x9d, 0x3e,
-	0x0a, 0x96, 0x74, 0xd5, 0xa1, 0x2a, 0x6e, 0x7c, 0x43, 0xec, 0x1b, 0xe6, 0x4d, 0xed, 0x85, 0xc2,
-	0x55, 0xe3, 0xc4, 0x45, 0xdb, 0xa5, 0x63, 0x75, 0x8f, 0x06, 0x7b, 0x67, 0x1e, 0x68, 0x25, 0x5e,
-	0x79, 0x3a, 0x9a, 0xe3, 0x19, 0x07, 0xbc, 0x39, 0x9e, 0x79, 0xd8, 0x22, 0x02, 0xa8, 0x3a, 0xcc,
-	0xd0, 0x6b, 0x06, 0x0f, 0xa6, 0x48, 0xaf, 0x3f, 0x17, 0xa7, 0xc3, 0x7c, 0x06, 0xeb, 0xa6, 0xa9,
-	0x82, 0x6e, 0x95, 0x1c, 0xd4, 0x0c, 0x4d, 0x7b, 0x7b, 0x0e, 0xe4, 0x38, 0x87, 0xc6, 0x0e, 0x3f,
-	0x95, 0xc3, 0xba, 0x11, 0x36, 0x95, 0xc3, 0xda, 0x81, 0x81, 0x0e, 0x60, 0x75, 0xb2, 0x2f, 0xa3,
-	0x72, 0x79, 0x1b, 0xe6, 0x88, 0xbd, 0x55, 0x83, 0xd0, 0x4e, 0xef, 0xc3, 0x5a, 0xa9, 0x75, 0xa2,
-	0x59, 0x67, 0x26, 0x4a, 0xd9, 0xad, 0x83, 0x8c, 0x93, 0x63, 0x6c, 0x5c, 0xc8, 0x98, 0x60, 0x63,
-	0xdb, 0x9a, 0x4a, 0x4e, 0x6d, 0x1f, 0x44, 0x0f, 0xe1, 0x9a, 0xb9, 0x8b, 0x20, 0x73, 0x8a, 0xcd,
-	0x11, 0xdf, 0x98, 0x0b, 0xab, 0x42, 0xda, 0x17, 0x3e, 0x7f, 0xf6, 0x78, 0xc7, 0x6a, 0xbd, 0xf3,
-	0xe4, 0xc8, 0xb1, 0x9e, 0x1e, 0x39, 0xd6, 0x9f, 0x47, 0x8e, 0xf5, 0xe5, 0xb1, 0xb3, 0xf0, 0xf4,
-	0xd8, 0x59, 0xf8, 0xfd, 0xd8, 0x59, 0x78, 0xd0, 0x8c, 0x62, 0x71, 0x98, 0x77, 0xbd, 0x1e, 0x4b,
-	0xfc, 0x34, 0x63, 0x83, 0x3e, 0xee, 0x72, 0x5f, 0x7d, 0x7f, 0x8b, 0x47, 0x29, 0xe1, 0xdd, 0x45,
-	0xf9, 0x31, 0xfc, 0xd6, 0x5f, 0x01, 0x00, 0x00, 0xff, 0xff, 0xda, 0x1a, 0x59, 0x24, 0x95, 0x0f,
-	0x00, 0x00,
+	0x17, 0xdb, 0x8d, 0xdf, 0x7e, 0x7a, 0x73, 0x5d, 0x27, 0xdc, 0x0d, 0xc3, 0x8c, 0x70, 0xbe, 0x2f,
+	0xb2, 0x98, 0x46, 0x81, 0x82, 0xa1, 0x26, 0xac, 0xf0, 0x03, 0x9c, 0x91, 0x6e, 0x48, 0x28, 0x4b,
+	0x1a, 0xe7, 0x8a, 0xa8, 0x00, 0xe4, 0xd2, 0x5e, 0xb1, 0x82, 0xb6, 0xe1, 0x72, 0x4e, 0x43, 0x92,
+	0x0d, 0x1e, 0xc5, 0x34, 0xea, 0x62, 0xce, 0x89, 0x68, 0x9c, 0x97, 0xa8, 0x4b, 0xa7, 0xeb, 0xbb,
+	0xc5, 0xf2, 0xbb, 0xf0, 0xc5, 0xb3, 0xc7, 0x3b, 0x2a, 0xaf, 0xfb, 0x1e, 0x5c, 0x9b, 0x26, 0xc8,
+	0x53, 0x46, 0x39, 0x41, 0x37, 0x61, 0x4d, 0x76, 0xac, 0x8b, 0x15, 0x1f, 0xc5, 0x34, 0x58, 0x95,
+	0x8b, 0x9a, 0xa3, 0xfb, 0x83, 0x05, 0x97, 0x3b, 0x3c, 0xda, 0x1f, 0xe1, 0xf4, 0x2e, 0x9d, 0xd0,
+	0xc6, 0x46, 0x94, 0x64, 0xcf, 0xd7, 0x26, 0x61, 0xd5, 0x4a, 0xe7, 0xaa, 0x95, 0xd0, 0xdb, 0xb0,
+	0x28, 0x45, 0x71, 0xa9, 0x6a, 0xe5, 0xf6, 0x86, 0xa7, 0x53, 0x16, 0xa7, 0xe8, 0xe9, 0x53, 0xf4,
+	0xee, 0xb0, 0x98, 0xb6, 0x5f, 0x7a, 0xf2, 0x47, 0x73, 0x21, 0xd0, 0x70, 0xad, 0x56, 0x56, 0x72,
+	0x3f, 0x85, 0x2b, 0x13, 0x6c, 0xb5, 0xd0, 0x0f, 0xe0, 0x92, 0xec, 0x23, 0xef, 0x66, 0xa4, 0x4f,
+	0xe2, 0x21, 0x09, 0x25, 0xf1, 0x39, 0x4a, 0xbc, 0xac, 0xe2, 0x02, 0x1d, 0xe6, 0xfe, 0x68, 0x9d,
+	0xe4, 0xff, 0x30, 0x17, 0xff, 0xff, 0x76, 0x3c, 0x00, 0x34, 0x49, 0x57, 0xf7, 0x63, 0x0f, 0xd6,
+	0x74, 0x3f, 0x7a, 0x79, 0x46, 0xe7, 0xef, 0xc6, 0xaa, 0x8a, 0x6a, 0xcb, 0x20, 0xf7, 0x3b, 0x0b,
+	0x9a, 0x1d, 0x1e, 0x7d, 0x9c, 0x86, 0x58, 0x90, 0x4e, 0x4c, 0xef, 0x52, 0x41, 0x32, 0xc2, 0x45,
+	0x80, 0x05, 0xf9, 0xbb, 0x97, 0x60, 0xae, 0xce, 0x6c, 0xc0, 0x72, 0x12, 0xd3, 0x6e, 0x86, 0x05,
+	0xd1, 0x17, 0x60, 0x29, 0x89, 0x69, 0x51, 0xb6, 0xf4, 0x8f, 0xef, 0xc2, 0xe6, 0x6c, 0x7a, 0xaa,
+	0x13, 0x53, 0x1a, 0xf0, 0xf8, 0x85, 0x6a, 0xc0, 0xe3, 0xb2, 0x06, 0x3c, 0xae, 0xd7, 0x30, 0x4d,
+	0x4f, 0x6b, 0xf8, 0xc6, 0x82, 0x1b, 0x27, 0xa0, 0x17, 0x29, 0x80, 0x92, 0x51, 0x49, 0x00, 0x25,
+	0xa3, 0x8a, 0x80, 0x26, 0xbc, 0x3a, 0x83, 0x9b, 0x66, 0xff, 0x95, 0x25, 0xfd, 0xe9, 0x23, 0x16,
+	0x45, 0x03, 0x52, 0x71, 0x99, 0x7f, 0x9e, 0x77, 0x03, 0x96, 0x08, 0xc5, 0xbd, 0x01, 0x09, 0x25,
+	0xed, 0xe5, 0xe0, 0xf8, 0xb3, 0x44, 0x7b, 0x03, 0xae, 0x57, 0x48, 0x69, 0xc2, 0x5f, 0x5b, 0x53,
+	0x7b, 0x65, 0x23, 0xf8, 0xaf, 0x18, 0xdb, 0xd0, 0xa8, 0xb2, 0xd2, 0x94, 0x7f, 0xb6, 0xc0, 0xe9,
+	0xf0, 0x68, 0x8f, 0xa4, 0x8c, 0xc7, 0xe2, 0xf8, 0x18, 0xde, 0xcf, 0x69, 0xc8, 0xff, 0x55, 0xe6,
+	0x85, 0x85, 0x25, 0x2c, 0xa7, 0x62, 0x7e, 0x0b, 0x93, 0xf0, 0x92, 0xb0, 0x2d, 0x79, 0x43, 0xcd,
+	0xdc, 0xb5, 0xbe, 0x5f, 0xd4, 0x2d, 0xfe, 0x24, 0x16, 0x07, 0x61, 0x86, 0x47, 0x67, 0x4c, 0xa0,
+	0xba, 0xe3, 0x33, 0xc8, 0x97, 0x15, 0xea, 0x2e, 0xdc, 0xcb, 0x62, 0xda, 0x8f, 0x53, 0x3c, 0x38,
+	0x53, 0x0a, 0x67, 0x90, 0xd7, 0x0a, 0x7f, 0xb5, 0x4a, 0x6d, 0x38, 0x6b, 0x12, 0x6f, 0xc2, 0x56,
+	0x0d, 0x7b, 0xa5, 0xf1, 0xf6, 0xb7, 0x17, 0xe1, 0x7c, 0x87, 0x47, 0xe8, 0x1e, 0xac, 0x4c, 0xbc,
+	0xc7, 0x50, 0xd3, 0x3b, 0x7e, 0xb8, 0x7a, 0xc6, 0xa7, 0xa4, 0xbd, 0x39, 0x1b, 0xa0, 0x27, 0xfa,
+	0x2e, 0x2c, 0x2a, 0x9b, 0x42, 0x76, 0x09, 0x5b, 0x32, 0x54, 0xfb, 0x15, 0xe3, 0xde, 0xc9, 0xa3,
+	0x60, 0x49, 0xfb, 0x06, 0xaa, 0xe2, 0x4e, 0x3d, 0xce, 0xbe, 0x61, 0xde, 0xd4, 0x59, 0x28, 0x5c,
+	0x35, 0x4e, 0x5c, 0xb4, 0x5d, 0x0a, 0xab, 0x7b, 0x34, 0xd8, 0x3b, 0xf3, 0x40, 0x2b, 0xf5, 0xca,
+	0xd3, 0xd1, 0x5c, 0xcf, 0x38, 0xe0, 0xcd, 0xf5, 0xcc, 0xc3, 0x16, 0x11, 0x40, 0xd5, 0x61, 0x86,
+	0x5e, 0x33, 0x64, 0x30, 0x55, 0x7a, 0xfd, 0xb9, 0x38, 0x5d, 0x66, 0x1f, 0x56, 0x27, 0x87, 0x0f,
+	0x2a, 0xff, 0x07, 0x18, 0x86, 0xa5, 0xbd, 0x55, 0x83, 0xd0, 0x49, 0xef, 0xc3, 0x5a, 0x69, 0x3e,
+	0xa0, 0x59, 0x31, 0x13, 0xa7, 0xed, 0xd6, 0x41, 0x74, 0xde, 0xcf, 0x60, 0xdd, 0x64, 0xcf, 0xe8,
+	0x56, 0x29, 0xb6, 0x66, 0xfa, 0xd8, 0xdb, 0x73, 0x20, 0x4f, 0x0f, 0xdc, 0x68, 0x95, 0x53, 0x07,
+	0x5e, 0x37, 0x0b, 0xa6, 0x0e, 0xbc, 0xd6, 0x79, 0x8b, 0x7a, 0x46, 0xe3, 0x42, 0x46, 0xce, 0x46,
+	0xdb, 0x9a, 0xaa, 0x57, 0xeb, 0x83, 0xe8, 0x21, 0x5c, 0x33, 0xbb, 0x08, 0x32, 0xb3, 0x36, 0x57,
+	0x7c, 0x63, 0x2e, 0xac, 0x2a, 0x69, 0x5f, 0xf8, 0xfc, 0xd9, 0xe3, 0x1d, 0xab, 0xfd, 0xce, 0x93,
+	0x43, 0xc7, 0x7a, 0x7a, 0xe8, 0x58, 0x7f, 0x1e, 0x3a, 0xd6, 0x97, 0x47, 0xce, 0xc2, 0xd3, 0x23,
+	0x67, 0xe1, 0xf7, 0x23, 0x67, 0xe1, 0x41, 0x33, 0x8a, 0xc5, 0x41, 0xde, 0xf3, 0xfa, 0x2c, 0xf1,
+	0xd3, 0x8c, 0x0d, 0x07, 0xb8, 0xc7, 0x7d, 0xf5, 0xfb, 0x5b, 0x3c, 0x4a, 0x09, 0xef, 0x2d, 0xca,
+	0x1f, 0xc3, 0x6f, 0xfd, 0x15, 0x00, 0x00, 0xff, 0xff, 0x2a, 0xda, 0x55, 0xb3, 0x95, 0x0f, 0x00,
+	0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1384,14 +1388,14 @@ type MsgClient interface {
 	UpdateMaxInterestRate(ctx context.Context, in *MsgUpdateMaxInterestRateRequest, opts ...grpc.CallOption) (*MsgUpdateMaxInterestRateResponse, error)
 	// UpdateInterestRate allows the interest admin to update the current annual interest rate within limits.
 	UpdateInterestRate(ctx context.Context, in *MsgUpdateInterestRateRequest, opts ...grpc.CallOption) (*MsgUpdateInterestRateResponse, error)
-	// DepositInterestFunds allows depositing funds into the vault for paying interest.
-	DepositInterestFunds(ctx context.Context, in *MsgDepositInterestFundsRequest, opts ...grpc.CallOption) (*MsgDepositInterestFundsResponse, error)
-	// WithdrawInterestFunds allows withdrawing unused interest funds (admin only).
-	WithdrawInterestFunds(ctx context.Context, in *MsgWithdrawInterestFundsRequest, opts ...grpc.CallOption) (*MsgWithdrawInterestFundsResponse, error)
 	// ToggleSwapIn allows enabling or disabling swap-in operations for a vault.
 	ToggleSwapIn(ctx context.Context, in *MsgToggleSwapInRequest, opts ...grpc.CallOption) (*MsgToggleSwapInResponse, error)
 	// ToggleSwapOut allows enabling or disabling swap-out operations for a vault.
 	ToggleSwapOut(ctx context.Context, in *MsgToggleSwapOutRequest, opts ...grpc.CallOption) (*MsgToggleSwapOutResponse, error)
+	// DepositInterestFunds allows depositing funds into the vault for paying interest.
+	DepositInterestFunds(ctx context.Context, in *MsgDepositInterestFundsRequest, opts ...grpc.CallOption) (*MsgDepositInterestFundsResponse, error)
+	// WithdrawInterestFunds allows withdrawing unused interest funds (admin only).
+	WithdrawInterestFunds(ctx context.Context, in *MsgWithdrawInterestFundsRequest, opts ...grpc.CallOption) (*MsgWithdrawInterestFundsResponse, error)
 	// DepositPrincipalFunds allows depositing principal funds into a vault.
 	DepositPrincipalFunds(ctx context.Context, in *MsgDepositPrincipalFundsRequest, opts ...grpc.CallOption) (*MsgDepositPrincipalFundsResponse, error)
 	// WithdrawPrincipalFunds allows withdrawing principal funds from a vault.
@@ -1460,24 +1464,6 @@ func (c *msgClient) UpdateInterestRate(ctx context.Context, in *MsgUpdateInteres
 	return out, nil
 }
 
-func (c *msgClient) DepositInterestFunds(ctx context.Context, in *MsgDepositInterestFundsRequest, opts ...grpc.CallOption) (*MsgDepositInterestFundsResponse, error) {
-	out := new(MsgDepositInterestFundsResponse)
-	err := c.cc.Invoke(ctx, "/vault.v1.Msg/DepositInterestFunds", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *msgClient) WithdrawInterestFunds(ctx context.Context, in *MsgWithdrawInterestFundsRequest, opts ...grpc.CallOption) (*MsgWithdrawInterestFundsResponse, error) {
-	out := new(MsgWithdrawInterestFundsResponse)
-	err := c.cc.Invoke(ctx, "/vault.v1.Msg/WithdrawInterestFunds", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *msgClient) ToggleSwapIn(ctx context.Context, in *MsgToggleSwapInRequest, opts ...grpc.CallOption) (*MsgToggleSwapInResponse, error) {
 	out := new(MsgToggleSwapInResponse)
 	err := c.cc.Invoke(ctx, "/vault.v1.Msg/ToggleSwapIn", in, out, opts...)
@@ -1490,6 +1476,24 @@ func (c *msgClient) ToggleSwapIn(ctx context.Context, in *MsgToggleSwapInRequest
 func (c *msgClient) ToggleSwapOut(ctx context.Context, in *MsgToggleSwapOutRequest, opts ...grpc.CallOption) (*MsgToggleSwapOutResponse, error) {
 	out := new(MsgToggleSwapOutResponse)
 	err := c.cc.Invoke(ctx, "/vault.v1.Msg/ToggleSwapOut", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) DepositInterestFunds(ctx context.Context, in *MsgDepositInterestFundsRequest, opts ...grpc.CallOption) (*MsgDepositInterestFundsResponse, error) {
+	out := new(MsgDepositInterestFundsResponse)
+	err := c.cc.Invoke(ctx, "/vault.v1.Msg/DepositInterestFunds", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) WithdrawInterestFunds(ctx context.Context, in *MsgWithdrawInterestFundsRequest, opts ...grpc.CallOption) (*MsgWithdrawInterestFundsResponse, error) {
+	out := new(MsgWithdrawInterestFundsResponse)
+	err := c.cc.Invoke(ctx, "/vault.v1.Msg/WithdrawInterestFunds", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1528,14 +1532,14 @@ type MsgServer interface {
 	UpdateMaxInterestRate(context.Context, *MsgUpdateMaxInterestRateRequest) (*MsgUpdateMaxInterestRateResponse, error)
 	// UpdateInterestRate allows the interest admin to update the current annual interest rate within limits.
 	UpdateInterestRate(context.Context, *MsgUpdateInterestRateRequest) (*MsgUpdateInterestRateResponse, error)
-	// DepositInterestFunds allows depositing funds into the vault for paying interest.
-	DepositInterestFunds(context.Context, *MsgDepositInterestFundsRequest) (*MsgDepositInterestFundsResponse, error)
-	// WithdrawInterestFunds allows withdrawing unused interest funds (admin only).
-	WithdrawInterestFunds(context.Context, *MsgWithdrawInterestFundsRequest) (*MsgWithdrawInterestFundsResponse, error)
 	// ToggleSwapIn allows enabling or disabling swap-in operations for a vault.
 	ToggleSwapIn(context.Context, *MsgToggleSwapInRequest) (*MsgToggleSwapInResponse, error)
 	// ToggleSwapOut allows enabling or disabling swap-out operations for a vault.
 	ToggleSwapOut(context.Context, *MsgToggleSwapOutRequest) (*MsgToggleSwapOutResponse, error)
+	// DepositInterestFunds allows depositing funds into the vault for paying interest.
+	DepositInterestFunds(context.Context, *MsgDepositInterestFundsRequest) (*MsgDepositInterestFundsResponse, error)
+	// WithdrawInterestFunds allows withdrawing unused interest funds (admin only).
+	WithdrawInterestFunds(context.Context, *MsgWithdrawInterestFundsRequest) (*MsgWithdrawInterestFundsResponse, error)
 	// DepositPrincipalFunds allows depositing principal funds into a vault.
 	DepositPrincipalFunds(context.Context, *MsgDepositPrincipalFundsRequest) (*MsgDepositPrincipalFundsResponse, error)
 	// WithdrawPrincipalFunds allows withdrawing principal funds from a vault.
@@ -1564,17 +1568,17 @@ func (*UnimplementedMsgServer) UpdateMaxInterestRate(ctx context.Context, req *M
 func (*UnimplementedMsgServer) UpdateInterestRate(ctx context.Context, req *MsgUpdateInterestRateRequest) (*MsgUpdateInterestRateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateInterestRate not implemented")
 }
-func (*UnimplementedMsgServer) DepositInterestFunds(ctx context.Context, req *MsgDepositInterestFundsRequest) (*MsgDepositInterestFundsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DepositInterestFunds not implemented")
-}
-func (*UnimplementedMsgServer) WithdrawInterestFunds(ctx context.Context, req *MsgWithdrawInterestFundsRequest) (*MsgWithdrawInterestFundsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method WithdrawInterestFunds not implemented")
-}
 func (*UnimplementedMsgServer) ToggleSwapIn(ctx context.Context, req *MsgToggleSwapInRequest) (*MsgToggleSwapInResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ToggleSwapIn not implemented")
 }
 func (*UnimplementedMsgServer) ToggleSwapOut(ctx context.Context, req *MsgToggleSwapOutRequest) (*MsgToggleSwapOutResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ToggleSwapOut not implemented")
+}
+func (*UnimplementedMsgServer) DepositInterestFunds(ctx context.Context, req *MsgDepositInterestFundsRequest) (*MsgDepositInterestFundsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DepositInterestFunds not implemented")
+}
+func (*UnimplementedMsgServer) WithdrawInterestFunds(ctx context.Context, req *MsgWithdrawInterestFundsRequest) (*MsgWithdrawInterestFundsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method WithdrawInterestFunds not implemented")
 }
 func (*UnimplementedMsgServer) DepositPrincipalFunds(ctx context.Context, req *MsgDepositPrincipalFundsRequest) (*MsgDepositPrincipalFundsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DepositPrincipalFunds not implemented")
@@ -1695,42 +1699,6 @@ func _Msg_UpdateInterestRate_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_DepositInterestFunds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgDepositInterestFundsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).DepositInterestFunds(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/vault.v1.Msg/DepositInterestFunds",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).DepositInterestFunds(ctx, req.(*MsgDepositInterestFundsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Msg_WithdrawInterestFunds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgWithdrawInterestFundsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).WithdrawInterestFunds(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/vault.v1.Msg/WithdrawInterestFunds",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).WithdrawInterestFunds(ctx, req.(*MsgWithdrawInterestFundsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Msg_ToggleSwapIn_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgToggleSwapInRequest)
 	if err := dec(in); err != nil {
@@ -1763,6 +1731,42 @@ func _Msg_ToggleSwapOut_Handler(srv interface{}, ctx context.Context, dec func(i
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).ToggleSwapOut(ctx, req.(*MsgToggleSwapOutRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_DepositInterestFunds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgDepositInterestFundsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).DepositInterestFunds(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/vault.v1.Msg/DepositInterestFunds",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).DepositInterestFunds(ctx, req.(*MsgDepositInterestFundsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_WithdrawInterestFunds_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgWithdrawInterestFundsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).WithdrawInterestFunds(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/vault.v1.Msg/WithdrawInterestFunds",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).WithdrawInterestFunds(ctx, req.(*MsgWithdrawInterestFundsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1833,20 +1837,20 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_UpdateInterestRate_Handler,
 		},
 		{
-			MethodName: "DepositInterestFunds",
-			Handler:    _Msg_DepositInterestFunds_Handler,
-		},
-		{
-			MethodName: "WithdrawInterestFunds",
-			Handler:    _Msg_WithdrawInterestFunds_Handler,
-		},
-		{
 			MethodName: "ToggleSwapIn",
 			Handler:    _Msg_ToggleSwapIn_Handler,
 		},
 		{
 			MethodName: "ToggleSwapOut",
 			Handler:    _Msg_ToggleSwapOut_Handler,
+		},
+		{
+			MethodName: "DepositInterestFunds",
+			Handler:    _Msg_DepositInterestFunds_Handler,
+		},
+		{
+			MethodName: "WithdrawInterestFunds",
+			Handler:    _Msg_WithdrawInterestFunds_Handler,
 		},
 		{
 			MethodName: "DepositPrincipalFunds",
@@ -2296,146 +2300,6 @@ func (m *MsgUpdateInterestRateResponse) MarshalToSizedBuffer(dAtA []byte) (int, 
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgDepositInterestFundsRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgDepositInterestFundsRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgDepositInterestFundsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	{
-		size, err := m.Amount.MarshalToSizedBuffer(dAtA[:i])
-		if err != nil {
-			return 0, err
-		}
-		i -= size
-		i = encodeVarintTx(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0x1a
-	if len(m.VaultAddress) > 0 {
-		i -= len(m.VaultAddress)
-		copy(dAtA[i:], m.VaultAddress)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.VaultAddress)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.Admin) > 0 {
-		i -= len(m.Admin)
-		copy(dAtA[i:], m.Admin)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Admin)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgDepositInterestFundsResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgDepositInterestFundsResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgDepositInterestFundsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgWithdrawInterestFundsRequest) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgWithdrawInterestFundsRequest) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgWithdrawInterestFundsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	{
-		size, err := m.Amount.MarshalToSizedBuffer(dAtA[:i])
-		if err != nil {
-			return 0, err
-		}
-		i -= size
-		i = encodeVarintTx(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0x1a
-	if len(m.VaultAddress) > 0 {
-		i -= len(m.VaultAddress)
-		copy(dAtA[i:], m.VaultAddress)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.VaultAddress)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.Admin) > 0 {
-		i -= len(m.Admin)
-		copy(dAtA[i:], m.Admin)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Admin)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgWithdrawInterestFundsResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgWithdrawInterestFundsResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgWithdrawInterestFundsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	return len(dAtA) - i, nil
-}
-
 func (m *MsgToggleSwapInRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -2569,6 +2433,146 @@ func (m *MsgToggleSwapOutResponse) MarshalTo(dAtA []byte) (int, error) {
 }
 
 func (m *MsgToggleSwapOutResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgDepositInterestFundsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgDepositInterestFundsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgDepositInterestFundsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Amount.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	if len(m.VaultAddress) > 0 {
+		i -= len(m.VaultAddress)
+		copy(dAtA[i:], m.VaultAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.VaultAddress)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Admin) > 0 {
+		i -= len(m.Admin)
+		copy(dAtA[i:], m.Admin)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Admin)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgDepositInterestFundsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgDepositInterestFundsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgDepositInterestFundsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgWithdrawInterestFundsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgWithdrawInterestFundsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgWithdrawInterestFundsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Amount.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	if len(m.VaultAddress) > 0 {
+		i -= len(m.VaultAddress)
+		copy(dAtA[i:], m.VaultAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.VaultAddress)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Admin) > 0 {
+		i -= len(m.Admin)
+		copy(dAtA[i:], m.Admin)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Admin)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgWithdrawInterestFundsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgWithdrawInterestFundsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgWithdrawInterestFundsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -2911,62 +2915,6 @@ func (m *MsgUpdateInterestRateResponse) Size() (n int) {
 	return n
 }
 
-func (m *MsgDepositInterestFundsRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Admin)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	l = len(m.VaultAddress)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	l = m.Amount.Size()
-	n += 1 + l + sovTx(uint64(l))
-	return n
-}
-
-func (m *MsgDepositInterestFundsResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	return n
-}
-
-func (m *MsgWithdrawInterestFundsRequest) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Admin)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	l = len(m.VaultAddress)
-	if l > 0 {
-		n += 1 + l + sovTx(uint64(l))
-	}
-	l = m.Amount.Size()
-	n += 1 + l + sovTx(uint64(l))
-	return n
-}
-
-func (m *MsgWithdrawInterestFundsResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	return n
-}
-
 func (m *MsgToggleSwapInRequest) Size() (n int) {
 	if m == nil {
 		return 0
@@ -3017,6 +2965,62 @@ func (m *MsgToggleSwapOutRequest) Size() (n int) {
 }
 
 func (m *MsgToggleSwapOutResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgDepositInterestFundsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Admin)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.VaultAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.Amount.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgDepositInterestFundsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgWithdrawInterestFundsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Admin)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.VaultAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.Amount.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgWithdrawInterestFundsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -4363,6 +4367,374 @@ func (m *MsgUpdateInterestRateResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *MsgToggleSwapInRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgToggleSwapInRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgToggleSwapInRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Admin = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VaultAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VaultAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Enabled", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Enabled = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgToggleSwapInResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgToggleSwapInResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgToggleSwapInResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgToggleSwapOutRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgToggleSwapOutRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgToggleSwapOutRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Admin = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VaultAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VaultAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Enabled", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Enabled = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgToggleSwapOutResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgToggleSwapOutResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgToggleSwapOutResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *MsgDepositInterestFundsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -4734,374 +5106,6 @@ func (m *MsgWithdrawInterestFundsResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgWithdrawInterestFundsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgToggleSwapInRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgToggleSwapInRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgToggleSwapInRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Admin = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field VaultAddress", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.VaultAddress = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Enabled", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.Enabled = bool(v != 0)
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgToggleSwapInResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgToggleSwapInResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgToggleSwapInResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgToggleSwapOutRequest) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgToggleSwapOutRequest: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgToggleSwapOutRequest: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Admin = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field VaultAddress", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.VaultAddress = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Enabled", wireType)
-			}
-			var v int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				v |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			m.Enabled = bool(v != 0)
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgToggleSwapOutResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgToggleSwapOutResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgToggleSwapOutResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

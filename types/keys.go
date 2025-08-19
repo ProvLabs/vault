@@ -24,20 +24,16 @@ const (
 )
 
 var (
-	// ParamsKeyPrefix is the prefix to retrieve all Params
-	ParamsKeyPrefix = collections.NewPrefix(0)
-	// ParamsName is a human-readable name for the params collection.
-	ParamsName = "params"
 	// VaultsKeyPrefix is the prefix to retrieve all Vaults
-	VaultsKeyPrefix = collections.NewPrefix(1)
+	VaultsKeyPrefix = collections.NewPrefix(0)
 	// VaultsName is a human-readable name for the vaults collection.
 	VaultsName = "vaults"
 	// VaultStartQueuePrefix is the prefix to retrieve all VaultStartQueue
-	VaultStartQueuePrefix = collections.NewPrefix(2)
+	VaultStartQueuePrefix = collections.NewPrefix(1)
 	// VaultStartQueueName is a human-readable name for the vault start queue collection
 	VaultStartQueueName = "vault_start_queue"
 
-	VaultEndQueuePrefix = collections.NewPrefix(3)
+	VaultEndQueuePrefix = collections.NewPrefix(2)
 	// VaultEndQueueName is a human-readable name for the vault end queue collection
 	VaultEndQueueName = "vault_end_queue"
 )

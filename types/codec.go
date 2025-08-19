@@ -1,47 +1,32 @@
 package types
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )
 
-// RegisterLegacyAminoCodec registers the vault module's concrete message types for Amino.
-func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
-	cdc.RegisterConcrete(&MsgCreateVaultRequest{}, "vault/CreateVault", nil)
-	cdc.RegisterConcrete(&MsgSwapInRequest{}, "vault/SwapIn", nil)
-	cdc.RegisterConcrete(&MsgSwapOutRequest{}, "vault/SwapOut", nil)
-	cdc.RegisterConcrete(&MsgUpdateMinInterestRateRequest{}, "vault/UpdateMinInterestRate", nil)
-	cdc.RegisterConcrete(&MsgUpdateMaxInterestRateRequest{}, "vault/UpdateMaxInterestRate", nil)
-	cdc.RegisterConcrete(&MsgUpdateInterestRateRequest{}, "vault/UpdateInterestRate", nil)
-	cdc.RegisterConcrete(&MsgDepositInterestFundsRequest{}, "vault/DepositInterestFunds", nil)
-	cdc.RegisterConcrete(&MsgWithdrawInterestFundsRequest{}, "vault/WithdrawInterestFunds", nil)
-	cdc.RegisterConcrete(&MsgToggleSwapInRequest{}, "vault/ToggleSwapIn", nil)
-	cdc.RegisterConcrete(&MsgToggleSwapOutRequest{}, "vault/ToggleSwapOut", nil)
-}
-
 // RegisterInterfaces registers the vault module's message types for protobuf interface compatibility.
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
-	registry.RegisterImplementations((*sdk.Msg)(nil),
-		&MsgCreateVaultRequest{},
-		&MsgSwapInRequest{},
-		&MsgSwapOutRequest{},
-		&MsgUpdateMinInterestRateRequest{},
-		&MsgUpdateMaxInterestRateRequest{},
-		&MsgUpdateInterestRateRequest{},
-		&MsgDepositInterestFundsRequest{},
-		&MsgWithdrawInterestFundsRequest{},
-		&MsgToggleSwapInRequest{},
-		&MsgToggleSwapOutRequest{},
+	messages := make([]proto.Message, len(AllRequestMsgs))
+	copy(messages, AllRequestMsgs)
+	registry.RegisterImplementations((*sdk.Msg)(nil), messages...)
+
+	registry.RegisterInterface(
+		"vault.v1.VaultAccount",
+		(*sdk.AccountI)(nil),
+		&VaultAccount{},
+	)
+
+	registry.RegisterInterface(
+		"vault.v1.VaultAccount",
+		(*authtypes.GenesisAccount)(nil),
+		&VaultAccount{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }
 
-var amino = codec.NewLegacyAmino()
 
-func init() {
-	RegisterLegacyAminoCodec(amino)
-	amino.Seal()
+	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)
 }

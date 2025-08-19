@@ -8,6 +8,20 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// AllRequestMsgs defines all the Msg*Request messages.
+var AllRequestMsgs = []sdk.Msg{
+	(*MsgCreateVaultRequest)(nil),
+	(*MsgSwapInRequest)(nil),
+	(*MsgSwapOutRequest)(nil),
+	(*MsgUpdateMinInterestRateRequest)(nil),
+	(*MsgUpdateMaxInterestRateRequest)(nil),
+	(*MsgUpdateInterestRateRequest)(nil),
+	(*MsgToggleSwapInRequest)(nil),
+	(*MsgToggleSwapOutRequest)(nil),
+	(*MsgDepositInterestFundsRequest)(nil),
+	(*MsgWithdrawInterestFundsRequest)(nil),
+}
+
 // ValidateBasic returns a not implemented error for MsgCreateVaultRequest.
 func (m MsgCreateVaultRequest) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Admin)

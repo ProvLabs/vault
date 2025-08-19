@@ -7,11 +7,15 @@ import "vault/v1/vault.proto";
 
 option go_package = "github.com/provlabs/vault/types";
 
+message QueueEntry {
+  uint64 time = 1;
+  string addr = 2;
+}
+
 // GenesisState defines the vault module's genesis state.
 message GenesisState {
-  // params defines all the parameters of the module.
-  Params params = 1 [(gogoproto.nullable) = false];
-
   // vaults defines the vaults that exist at genesis.
-  repeated VaultAccount vaults = 2 [(gogoproto.nullable) = false];
+  repeated VaultAccount vaults = 1 [(gogoproto.nullable) = false];
+   repeated QueueEntry start_queue = 2 [(gogoproto.nullable) = false];
+  repeated QueueEntry timeout_queue = 3 [(gogoproto.nullable) = false];
 }

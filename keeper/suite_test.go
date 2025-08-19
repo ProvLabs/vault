@@ -68,9 +68,25 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (s *TestSuite) assertVaultInterestPeriod(vaultAddr sdk.AccAddress, expectedPeriod int64) {
-	interestDetails, err := s.k.VaultInterestDetails.Get(s.ctx, vaultAddr)
-	s.Require().NoError(err, "failed to get interest details")
-	s.Assert().Equal(expectedPeriod, interestDetails.PeriodStart, "unexpected interest period start")
+	it, err := s.k.VaultStartQueue.Iterate(s.ctx, nil)
+	s.Require().NoError(err)
+	defer it.Close()
+
+	found := false
+	count := 0
+	for ; it.Valid(); it.Next() {
+		kv, err := it.KeyValue()
+		s.Require().NoError(err)
+		if kv.Key.K2().Equals(vaultAddr) {
+			count++
+			if kv.Key.K1() == uint64(expectedPeriod) {
+				found = true
+			}
+		}
+	}
+
+	s.Assert().True(found, "missing start-queue entry at expected period")
+	s.Assert().Equal(1, count, "should be exactly one start-queue entry for vault")
 }
 
 func (s *TestSuite) assertBalance(addr sdk.AccAddress, denom string, expectedAmt sdkmath.Int) {

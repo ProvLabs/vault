@@ -822,16 +822,29 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 			s.Assert().Equal(args.ExpectedRate, vault.CurrentInterestRate, "vault current interest rate should match expected rate")
 			s.Assert().Equal(args.ExpectedRate, vault.DesiredInterestRate, "vault desired interest rate should match expected rate")
 
-			if args.HasNewInterestDetails {
-				v, err := s.k.VaultInterestDetails.Get(s.ctx, args.VaultAddress)
-				s.Require().NoError(err, "should be able to get vault interest details")
-				s.Assert().Equal(args.ExpectedPeriodStart, v.PeriodStart, "vault interest details period start should be current block time")
-				s.Assert().Equal(int64(0), v.ExpireTime, " vault interest details expire time should be zero")
-			} else {
-				_, err := s.k.VaultInterestDetails.Get(s.ctx, args.VaultAddress)
-				s.Require().ErrorContains(err, "not found", "should not find vault interest details")
-			}
+			it, err := s.k.VaultStartQueue.Iterate(s.ctx, nil)
+			s.Require().NoError(err, "iterate start queue")
+			defer it.Close()
 
+			found := false
+			count := 0
+			for ; it.Valid(); it.Next() {
+				kv, err := it.KeyValue()
+				s.Require().NoError(err, "read start queue kv")
+				if kv.Key.K2().Equals(args.VaultAddress) {
+					count++
+					if kv.Key.K1() == uint64(args.ExpectedPeriodStart) {
+						found = true
+					}
+				}
+			}
+			if args.HasNewInterestDetails {
+				s.Assert().True(found, "vault should be enqueued in start queue at expected period start")
+				s.Assert().Equal(1, count, "vault should only have one entry in start queue")
+			} else {
+				s.Assert().False(found, "vault should not be enqueued in start queue")
+				s.Assert().Equal(0, count, "vault should not appear in start queue")
+			}
 		},
 	}
 
@@ -884,7 +897,7 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 				vaultAcc, err := s.k.GetVault(s.ctx, vaultAddr)
 				s.Require().NoError(err, "should be able to get vault")
 				s.k.UpdateInterestRates(s.ctx, vaultAcc, "4.20", "4.20")
-				s.k.VaultInterestDetails.Set(s.ctx, vaultAddr, types.VaultInterestDetails{PeriodStart: currentBlockTime.Unix() - 10000})
+				s.k.EnqueueVaultTimeout(s.ctx, currentBlockTime.Unix()-1000, vaultAddr)
 			},
 			postCheckArgs: postCheckArgs{
 				VaultAddress:          vaultAddr,
@@ -915,7 +928,7 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 				vaultAcc, err := s.k.GetVault(s.ctx, vaultAddr)
 				s.Require().NoError(err, "should be able to get vault")
 				s.k.UpdateInterestRates(s.ctx, vaultAcc, "6.12", "6.12")
-				s.k.VaultInterestDetails.Set(s.ctx, vaultAddr, types.VaultInterestDetails{PeriodStart: currentBlockTime.Unix() - 10000})
+				s.k.EnqueueVaultTimeout(s.ctx, currentBlockTime.Unix()-1000, vaultAddr)
 			},
 			postCheckArgs: postCheckArgs{
 				VaultAddress:          vaultAddr,
@@ -1386,10 +1399,30 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds() {
 		postCheck: func(msg *types.MsgDepositInterestFundsRequest, args postCheckArgs) {
 			vaultBal := s.k.BankKeeper.GetBalance(s.ctx, args.VaultAddress, args.ExpectedDepositAmount.Denom)
 			s.Assert().Equal(args.ExpectedVaultBalance.Amount.Int64(), vaultBal.Amount.Int64())
-			if args.HasNewInterestDetails {
-				v, err := s.k.VaultInterestDetails.Get(s.ctx, args.VaultAddress)
+
+			it, err := s.k.VaultStartQueue.Iterate(s.ctx, nil)
+			s.Require().NoError(err)
+			defer it.Close()
+
+			found := false
+			count := 0
+			for ; it.Valid(); it.Next() {
+				kv, err := it.KeyValue()
 				s.Require().NoError(err)
-				s.Assert().Equal(args.ExpectedPeriodStart, v.PeriodStart)
+				if kv.Key.K2().Equals(args.VaultAddress) {
+					count++
+					if kv.Key.K1() == uint64(args.ExpectedPeriodStart) {
+						found = true
+					}
+				}
+			}
+
+			if args.HasNewInterestDetails {
+				s.Assert().True(found, "vault should be enqueued in start queue at expected period start")
+				s.Assert().Equal(1, count, "vault should have exactly one start-queue entry")
+			} else {
+				s.Assert().False(found, "vault should not be enqueued in start queue")
+				s.Assert().Equal(0, count, "vault should not appear in start queue")
 			}
 		},
 	}

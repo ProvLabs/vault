@@ -32,10 +32,14 @@ var (
 	VaultsKeyPrefix = collections.NewPrefix(1)
 	// VaultsName is a human-readable name for the vaults collection.
 	VaultsName = "vaults"
-	// VaultInterestDetailsPrefix is the prefix to retrieve all VaultInterestDetails
-	VaultInterestDetailsPrefix = collections.NewPrefix(2)
-	// VaultInterestDetailsName is a human-readable name for the vault interest details collection
-	VaultInterestDetailsName = "vault_interest_details"
+	// VaultStartQueuePrefix is the prefix to retrieve all VaultStartQueue
+	VaultStartQueuePrefix = collections.NewPrefix(2)
+	// VaultStartQueueName is a human-readable name for the vault start queue collection
+	VaultStartQueueName = "vault_start_queue"
+
+	VaultEndQueuePrefix = collections.NewPrefix(3)
+	// VaultEndQueueName is a human-readable name for the vault end queue collection
+	VaultEndQueueName = "vault_end_queue"
 )
 
 // GetVaultAddress returns the module account address for the given shareDenom.

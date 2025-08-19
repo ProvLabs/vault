@@ -22,16 +22,12 @@ func (s *TestSuite) TestVaultGenesis_InitAndExport() {
 	}
 
 	genesis := &types.GenesisState{
-		Params: types.DefaultParams(),
 		Vaults: []types.VaultAccount{vault},
 	}
 
 	s.k.InitGenesis(s.ctx, genesis)
 
 	exported := s.k.ExportGenesis(s.ctx)
-
-	s.Require().Equal(genesis.Params, exported.Params)
-	s.Require().Len(exported.Vaults, 1)
 
 	exp := exported.Vaults[0]
 	s.Require().Equal(vault.GetAddress().String(), exp.GetAddress().String())

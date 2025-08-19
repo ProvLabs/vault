@@ -160,12 +160,12 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 	k.UpdateInterestRates(ctx, vault, msg.NewRate, msg.NewRate)
 
 	if !reconciled && vault.InterestEnabled() {
-		err := k.VaultInterestDetails.Set(ctx, vault.GetAddress(), types.VaultInterestDetails{PeriodStart: ctx.BlockTime().Unix()})
+		err := k.EnqueueVaultStart(ctx, ctx.BlockTime().Unix(), vault.GetAddress())
 		if err != nil {
 			return nil, fmt.Errorf("failed to set vault interest details: %w", err)
 		}
 	} else if reconciled && !vault.InterestEnabled() {
-		err := k.VaultInterestDetails.Remove(ctx, vault.GetAddress())
+		err := k.RemoveAllTimeoutsForVault(ctx, vault.GetAddress())
 		if err != nil {
 			return nil, fmt.Errorf("failed to remove vault interest details: %w", err)
 		}

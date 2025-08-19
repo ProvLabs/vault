@@ -21,13 +21,13 @@ service Msg {
   // SwapOut exchanges vault shares for underlying assets by withdrawing from a vault.
   rpc SwapOut(MsgSwapOutRequest) returns (MsgSwapOutResponse);
 
-  // UpdateMinInterestRate sets the minimum allowed interest rate for a vault.
+  // UpdateMinInterestRate sets the minimum allowed annual interest rate for a vault.
   rpc UpdateMinInterestRate(MsgUpdateMinInterestRateRequest) returns (MsgUpdateMinInterestRateResponse);
 
-  // UpdateMaxInterestRate sets the maximum allowed interest rate for a vault.
+  // UpdateMaxInterestRate sets the maximum allowed annual interest rate for a vault.
   rpc UpdateMaxInterestRate(MsgUpdateMaxInterestRateRequest) returns (MsgUpdateMaxInterestRateResponse);
 
-  // UpdateInterestRate allows the interest admin to update the current interest rate within limits.
+  // UpdateInterestRate allows the interest admin to update the current annual interest rate within limits.
   rpc UpdateInterestRate(MsgUpdateInterestRateRequest) returns (MsgUpdateInterestRateResponse);
 
   // ToggleSwapIn allows enabling or disabling swap-in operations for a vault.
@@ -111,8 +111,8 @@ message MsgUpdateMinInterestRateRequest {
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // The bech32 address of the vault whose minimum interest rate is being updated.
   string vault_address = 2;
-  // The minimum allowable interest rate for the vault.
-  // Provide an empty string ("") to disable the minimum interest rate limit.
+  // min_rate is the minimum allowable interest rate(APY) for the vault as a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%).
+  // An empty string "" represents no minimum.
   string min_rate = 3;
 }
 
@@ -127,15 +127,15 @@ message MsgUpdateMaxInterestRateRequest {
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // The bech32 address of the vault whose maximum interest rate is being updated.
   string vault_address = 2;
-  // The maximum allowable interest rate for the vault.
-  // Provide an empty string ("") to disable the maximum interest rate limit.
+  // max_rate is the maximum allowable annual interest rate for the vault as a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%).
+  // An empty string "" represents no maximum.
   string max_rate = 3;
 }
 
 // MsgUpdateMaxInterestRateResponse is the response message for the UpdateMaxInterestRate endpoint.
 message MsgUpdateMaxInterestRateResponse {}
 
-// MsgUpdateInterestRateRequest is the request message for updating the interest rate of a vault.
+// MsgUpdateInterestRateRequest is the request message for updating the annual interest rate of a vault.
 message MsgUpdateInterestRateRequest {
   option (cosmos.msg.v1.signer) = "admin";
 
@@ -143,7 +143,7 @@ message MsgUpdateInterestRateRequest {
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // vault_address is the bech32 address of the vault.
   string vault_address = 2;
-  // new_rate is the new interest rate for the vault, expressed as an APY string (e.g., "-5.00" for -5%).
+  // new_rate is the new annual interest rate for the the vault as a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%).
   string new_rate = 3;
 }
 

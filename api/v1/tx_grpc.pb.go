@@ -45,11 +45,11 @@ type MsgClient interface {
 	SwapIn(ctx context.Context, in *MsgSwapInRequest, opts ...grpc.CallOption) (*MsgSwapInResponse, error)
 	// SwapOut exchanges vault shares for underlying assets by withdrawing from a vault.
 	SwapOut(ctx context.Context, in *MsgSwapOutRequest, opts ...grpc.CallOption) (*MsgSwapOutResponse, error)
-	// UpdateMinInterestRate sets the minimum allowed interest rate for a vault.
+	// UpdateMinInterestRate sets the minimum allowed annual interest rate for a vault.
 	UpdateMinInterestRate(ctx context.Context, in *MsgUpdateMinInterestRateRequest, opts ...grpc.CallOption) (*MsgUpdateMinInterestRateResponse, error)
-	// UpdateMaxInterestRate sets the maximum allowed interest rate for a vault.
+	// UpdateMaxInterestRate sets the maximum allowed annual interest rate for a vault.
 	UpdateMaxInterestRate(ctx context.Context, in *MsgUpdateMaxInterestRateRequest, opts ...grpc.CallOption) (*MsgUpdateMaxInterestRateResponse, error)
-	// UpdateInterestRate allows the interest admin to update the current interest rate within limits.
+	// UpdateInterestRate allows the interest admin to update the current annual interest rate within limits.
 	UpdateInterestRate(ctx context.Context, in *MsgUpdateInterestRateRequest, opts ...grpc.CallOption) (*MsgUpdateInterestRateResponse, error)
 	// ToggleSwapIn allows enabling or disabling swap-in operations for a vault.
 	ToggleSwapIn(ctx context.Context, in *MsgToggleSwapInRequest, opts ...grpc.CallOption) (*MsgToggleSwapInResponse, error)
@@ -205,11 +205,11 @@ type MsgServer interface {
 	SwapIn(context.Context, *MsgSwapInRequest) (*MsgSwapInResponse, error)
 	// SwapOut exchanges vault shares for underlying assets by withdrawing from a vault.
 	SwapOut(context.Context, *MsgSwapOutRequest) (*MsgSwapOutResponse, error)
-	// UpdateMinInterestRate sets the minimum allowed interest rate for a vault.
+	// UpdateMinInterestRate sets the minimum allowed annual interest rate for a vault.
 	UpdateMinInterestRate(context.Context, *MsgUpdateMinInterestRateRequest) (*MsgUpdateMinInterestRateResponse, error)
-	// UpdateMaxInterestRate sets the maximum allowed interest rate for a vault.
+	// UpdateMaxInterestRate sets the maximum allowed annual interest rate for a vault.
 	UpdateMaxInterestRate(context.Context, *MsgUpdateMaxInterestRateRequest) (*MsgUpdateMaxInterestRateResponse, error)
-	// UpdateInterestRate allows the interest admin to update the current interest rate within limits.
+	// UpdateInterestRate allows the interest admin to update the current annual interest rate within limits.
 	UpdateInterestRate(context.Context, *MsgUpdateInterestRateRequest) (*MsgUpdateInterestRateResponse, error)
 	// ToggleSwapIn allows enabling or disabling swap-in operations for a vault.
 	ToggleSwapIn(context.Context, *MsgToggleSwapInRequest) (*MsgToggleSwapInResponse, error)

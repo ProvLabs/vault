@@ -35,24 +35,22 @@ const (
 func (k *Keeper) ReconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccount) error {
 	currentBlockTime := ctx.BlockTime().Unix()
 
-	// interestDetails, err := k.VaultInterestDetails.Get(ctx, vault.GetAddress())
-	// if err != nil {
-	// 	if errors.Is(err, collections.ErrNotFound) {
-	// 		return k.VaultInterestDetails.Set(ctx, vault.GetAddress(), types.VaultInterestDetails{
-	// 			PeriodStart: currentBlockTime,
-	// 		})
-	// 	}
-	// 	return fmt.Errorf("failed to get vault interest details: %w", err)
-	// }
+	if vault.PeriodStart == 0 {
+		vault.PeriodStart = currentBlockTime
+		err := k.SetVaultAccount(ctx, vault)
+		if err != nil {
+			return err
+		}
+	} else {
 
-	if currentBlockTime <= vault.PeriodStart {
-		return nil
+		if currentBlockTime <= vault.PeriodStart {
+			return nil
+		}
+
+		if err := k.PerformVaultInterestTransfer(ctx, vault); err != nil {
+			return err
+		}
 	}
-
-	if err := k.PerformVaultInterestTransfer(ctx, vault); err != nil {
-		return err
-	}
-
 	return k.EnqueueVaultStart(ctx, currentBlockTime, vault.GetAddress())
 }
 
@@ -188,17 +186,9 @@ func (k *Keeper) UpdateInterestRates(ctx context.Context, vault *types.VaultAcco
 func (k Keeper) CalculateVaultTotalAssets(ctx sdk.Context, vault *types.VaultAccount, principal sdk.Coin) (sdkmath.Int, error) {
 	estimated := principal.Amount
 
-	if vault.CurrentInterestRate == "" {
+	if vault.CurrentInterestRate == "" || vault.PeriodStart == 0 {
 		return estimated, nil
 	}
-
-	// interestDetails, err := k.VaultInterestDetails.Get(ctx, vault.GetAddress())
-	// if err != nil {
-	// 	if !errors.Is(err, collections.ErrNotFound) {
-	// 		return sdkmath.Int{}, fmt.Errorf("error getting interest details: %w", err)
-	// 	}
-	// 	return estimated, nil
-	// }
 
 	duration := ctx.BlockTime().Unix() - vault.PeriodStart
 	if duration <= 0 {
@@ -231,21 +221,21 @@ func (k *Keeper) handleVaultInterestTimeouts(ctx context.Context) error {
 	var depleted []*types.VaultAccount
 	var reconciled []sdk.AccAddress
 
-	err := k.WalkDueTimeouts(ctx, now, func(t uint64, addr sdk.AccAddress) (bool, error) {
+	err := k.VaultTimeoutQueue.Walk(ctx, nil, func(key collections.Pair[uint64, sdk.AccAddress], _ collections.NoValue) (bool, error) {
+		t := int64(key.K1())
+		addr := key.K2()
+
+		if t > now {
+			return true, nil
+		}
+
 		vault, ok := k.tryGetVault(sdkCtx, addr)
 		if !ok {
-			processed = append(processed, collections.Join(t, addr))
+			processed = append(processed, key)
 			return false, nil
 		}
 
-		// details, err := k.VaultInterestDetails.Get(ctx, addr)
-		// if err != nil {
-		// 	sdkCtx.Logger().Error("failed to get interest details", "vault", addr.String(), "err", err)
-		// 	processed = append(processed, collections.Join(t, addr))
-		// 	return false, nil
-		// }
-
-		periodDuration := int64(t) - vault.PeriodStart
+		periodDuration := t - vault.PeriodStart
 		if periodDuration < 0 {
 			periodDuration = now - vault.PeriodStart
 		}
@@ -253,24 +243,24 @@ func (k *Keeper) handleVaultInterestTimeouts(ctx context.Context) error {
 		canPay, err := k.CanPayoutDuration(sdkCtx, vault, periodDuration)
 		if err != nil {
 			sdkCtx.Logger().Error("failed to check payout ability", "vault", addr.String(), "err", err)
-			processed = append(processed, collections.Join(t, addr))
+			processed = append(processed, key)
 			return false, nil
 		}
 
 		if !canPay {
 			depleted = append(depleted, vault)
-			processed = append(processed, collections.Join(t, addr))
+			processed = append(processed, key)
 			return false, nil
 		}
 
 		if err := k.PerformVaultInterestTransfer(sdkCtx, vault); err != nil {
 			sdkCtx.Logger().Error("failed to reconcile interest", "vault", addr.String(), "err", err)
-			processed = append(processed, collections.Join(t, addr))
+			processed = append(processed, key)
 			return false, nil
 		}
 
 		reconciled = append(reconciled, addr)
-		processed = append(processed, collections.Join(t, addr))
+		processed = append(processed, key)
 		return false, nil
 	})
 	if err != nil {

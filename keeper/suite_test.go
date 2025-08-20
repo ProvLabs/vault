@@ -67,7 +67,7 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(TestSuite))
 }
 
-func (s *TestSuite) assertVaultInterestPeriod(vaultAddr sdk.AccAddress, expectedPeriod int64) {
+func (s *TestSuite) assertInStartQueue(vaultAddr sdk.AccAddress, expectedPeriod int64, shouldContain bool) {
 	it, err := s.k.VaultStartQueue.Iterate(s.ctx, nil)
 	s.Require().NoError(err)
 	defer it.Close()
@@ -84,9 +84,12 @@ func (s *TestSuite) assertVaultInterestPeriod(vaultAddr sdk.AccAddress, expected
 			}
 		}
 	}
-
-	s.Assert().True(found, "missing start-queue entry at expected period")
-	s.Assert().Equal(1, count, "should be exactly one start-queue entry for vault")
+	if shouldContain {
+		s.Assert().True(found, "missing start-queue entry at expected period")
+		s.Assert().Equal(1, count, "should be exactly one start-queue entry for vault")
+	} else {
+		s.Assert().False(found, "should not find in period start queue")
+	}
 }
 
 func (s *TestSuite) assertBalance(addr sdk.AccAddress, denom string, expectedAmt sdkmath.Int) {

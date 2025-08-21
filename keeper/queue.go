@@ -31,7 +31,7 @@ func (k Keeper) EnqueueVaultTimeout(ctx context.Context, periodTimeout int64, va
 
 // DequeueVaultStart removes a vault entry from the VaultStartQueue for the given
 // period start and vault address.
-func (k Keeper) DequeueVaultStart(ctx context.Context, periodStart int64, vaultAddr sdk.AccAddress) error {
+func (k Keeper) DequeueVaultStart(ctx context.Context, vaultAddr sdk.AccAddress) error {
 	return k.VaultStartQueue.Remove(ctx, vaultAddr)
 }
 
@@ -156,10 +156,7 @@ func (k Keeper) SafeEnqueueStart(ctx context.Context, vault *types.VaultAccount)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	currentBlockTime := sdkCtx.BlockTime().Unix()
 
-	if err := k.RemoveAllTimeoutsForVault(ctx, vault.GetAddress()); err != nil {
-		return err
-	}
-	if err := k.RemoveAllStartsForVault(ctx, vault.GetAddress()); err != nil {
+	if err := k.DequeueVaultTimeout(ctx, vault.PeriodTimeout, vault.GetAddress()); err != nil {
 		return err
 	}
 
@@ -181,7 +178,7 @@ func (k Keeper) SafeEnqueueStart(ctx context.Context, vault *types.VaultAccount)
 func (k Keeper) SafeEnqueueTimeout(ctx context.Context, vault *types.VaultAccount) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	if err := k.RemoveAllTimeoutsForVault(ctx, vault.GetAddress()); err != nil {
+	if err := k.DequeueVaultTimeout(ctx, vault.PeriodTimeout, vault.GetAddress()); err != nil {
 		return err
 	}
 

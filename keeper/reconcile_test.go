@@ -188,24 +188,24 @@ func (s *TestSuite) TestKeeper_CalculateVaultTotalAssets() {
 		expectedIncrease sdkmath.Int
 		expectErr        bool
 	}{
-		// {
-		// 	name:             "no interest rate set",
-		// 	rate:             "",
-		// 	startTime:        pastTime.Unix(),
-		// 	expectedIncrease: sdkmath.NewInt(1_000_000_000),
-		// },
-		// {
-		// 	name:             "zero interest rate",
-		// 	rate:             types.ZeroInterestRate,
-		// 	startTime:        pastTime.Unix(),
-		// 	expectedIncrease: sdkmath.NewInt(1_000_000_000),
-		// },
-		// {
-		// 	name:             "no start time",
-		// 	rate:             "1.0",
-		// 	startTime:        0,
-		// 	expectedIncrease: sdkmath.NewInt(1_000_000_000),
-		// },
+		{
+			name:             "no interest rate set",
+			rate:             "",
+			startTime:        pastTime.Unix(),
+			expectedIncrease: sdkmath.NewInt(1_000_000_000),
+		},
+		{
+			name:             "zero interest rate",
+			rate:             types.ZeroInterestRate,
+			startTime:        pastTime.Unix(),
+			expectedIncrease: sdkmath.NewInt(1_000_000_000),
+		},
+		{
+			name:             "no start time",
+			rate:             "1.0",
+			startTime:        0,
+			expectedIncrease: sdkmath.NewInt(1_000_000_000),
+		},
 		{
 			name:             "interest accrues positively",
 			rate:             "0.25",
@@ -850,7 +850,7 @@ func createVaultWithInterest(s *TestSuite, info VaultInfo, interestRate string, 
 	}
 
 	s.Require().NoError(s.k.EnqueueVaultStart(s.ctx, periodStart, vault.GetAddress()))
-	s.Require().NoError(s.k.EnqueueVaultTimeout(s.ctx, periodTimeout, vault.GetAddress()))
+	// s.Require().NoError(s.k.EnqueueVaultTimeout(s.ctx, periodTimeout, vault.GetAddress()))
 	// s.Require().NoError(s.k.VaultInterestDetails.Set(s.ctx, info.vaultAddr, types.VaultInterestDetails{
 	// 	PeriodStart: periodStart,
 	// 	ExpireTime:  periodTimeout,

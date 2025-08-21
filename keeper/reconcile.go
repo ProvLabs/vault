@@ -217,25 +217,20 @@ func (k *Keeper) handleVaultInterestTimeouts(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	now := sdkCtx.BlockTime().Unix()
 
-	var processed []collections.Pair[uint64, sdk.AccAddress]
+	var toRemove []collections.Pair[uint64, sdk.AccAddress]
 	var depleted []*types.VaultAccount
-	var reconciled []sdk.AccAddress
+	var reconciled []*types.VaultAccount
 
-	err := k.VaultTimeoutQueue.Walk(ctx, nil, func(key collections.Pair[uint64, sdk.AccAddress], _ collections.NoValue) (bool, error) {
-		t := int64(key.K1())
-		addr := key.K2()
-
-		if t > now {
-			return true, nil
-		}
+	err := k.WalkDueTimeouts(ctx, now, func(t uint64, addr sdk.AccAddress) (bool, error) {
+		key := collections.Join(t, addr)
 
 		vault, ok := k.tryGetVault(sdkCtx, addr)
 		if !ok {
-			processed = append(processed, key)
+			toRemove = append(toRemove, key)
 			return false, nil
 		}
 
-		periodDuration := t - vault.PeriodStart
+		periodDuration := int64(t) - vault.PeriodStart
 		if periodDuration < 0 {
 			periodDuration = now - vault.PeriodStart
 		}
@@ -243,31 +238,31 @@ func (k *Keeper) handleVaultInterestTimeouts(ctx context.Context) error {
 		canPay, err := k.CanPayoutDuration(sdkCtx, vault, periodDuration)
 		if err != nil {
 			sdkCtx.Logger().Error("failed to check payout ability", "vault", addr.String(), "err", err)
-			processed = append(processed, key)
+			toRemove = append(toRemove, key)
 			return false, nil
 		}
 
 		if !canPay {
 			depleted = append(depleted, vault)
-			processed = append(processed, key)
+			toRemove = append(toRemove, key)
 			return false, nil
 		}
 
 		if err := k.PerformVaultInterestTransfer(sdkCtx, vault); err != nil {
 			sdkCtx.Logger().Error("failed to reconcile interest", "vault", addr.String(), "err", err)
-			processed = append(processed, key)
+			toRemove = append(toRemove, key)
 			return false, nil
 		}
 
-		reconciled = append(reconciled, addr)
-		processed = append(processed, key)
+		reconciled = append(reconciled, vault)
+		toRemove = append(toRemove, key)
 		return false, nil
 	})
 	if err != nil {
 		return fmt.Errorf("walk failed: %w", err)
 	}
 
-	for _, key := range processed {
+	for _, key := range toRemove {
 		if err := k.VaultTimeoutQueue.Remove(ctx, key); err != nil {
 			sdkCtx.Logger().Error("failed to remove processed timeout", "err", err)
 		}
@@ -297,7 +292,7 @@ func (k *Keeper) handleReconciledVaults(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	now := sdkCtx.BlockTime().Unix()
 
-	var processed []collections.Pair[uint64, sdk.AccAddress]
+	var toRemove []collections.Pair[uint64, sdk.AccAddress]
 	var vaults []*types.VaultAccount
 
 	err := k.WalkDueStarts(ctx, now, func(t uint64, addr sdk.AccAddress) (bool, error) {
@@ -305,14 +300,14 @@ func (k *Keeper) handleReconciledVaults(ctx context.Context) error {
 		if ok {
 			vaults = append(vaults, v)
 		}
-		processed = append(processed, collections.Join(t, addr))
+		toRemove = append(toRemove, collections.Join(t, addr))
 		return false, nil
 	})
 	if err != nil {
 		return fmt.Errorf("walk failed: %w", err)
 	}
 
-	for _, key := range processed {
+	for _, key := range toRemove {
 		_ = k.VaultStartQueue.Remove(ctx, key)
 	}
 
@@ -348,7 +343,7 @@ func (k *Keeper) handlePayableVaults(ctx context.Context, payouts []*types.Vault
 	for _, v := range payouts {
 		v.PeriodTimeout = now + AutoReconcileTimeout
 
-		if err := k.SetVault(sdkCtx, v); err != nil {
+		if err := k.SetVaultAccount(sdkCtx, v); err != nil {
 			sdkCtx.Logger().Error("failed to persist vault", "vault", v.GetAddress().String(), "err", err)
 			continue
 		}
@@ -366,13 +361,17 @@ func (k *Keeper) handleDepletedVaults(ctx context.Context, failedPayouts []*type
 }
 
 // resetVaultInterestPeriods sets a new PeriodStart for the given vaults in VaultInterestDetails.
-func (k *Keeper) resetVaultInterestPeriods(ctx context.Context, vaultAddrs []sdk.AccAddress, periodStart int64) {
+func (k *Keeper) resetVaultInterestPeriods(ctx context.Context, vaults []*types.VaultAccount, periodStart int64) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	for _, addr := range vaultAddrs {
-		expire := periodStart + AutoReconcileTimeout
-		if err := k.EnqueueVaultTimeout(ctx, expire, addr); err != nil {
-			sdkCtx.Logger().Error("failed to enqueue vault timeout", "vault", addr.String(), "err", err)
+	for _, vault := range vaults {
+		vault.PeriodStart = periodStart
+		vault.PeriodTimeout = periodStart + AutoReconcileTimeout
+		if err := k.SetVaultAccount(sdkCtx, vault); err != nil {
+			sdkCtx.Logger().Error("failed to set vault", "vault", vault.GetAddress().String(), "err", err)
+		}
+		if err := k.EnqueueVaultTimeout(ctx, vault.PeriodTimeout, vault.GetAddress()); err != nil {
+			sdkCtx.Logger().Error("failed to enqueue vault timeout", "vault", vault.GetAddress().String(), "err", err)
 		}
 	}
 }

@@ -54,7 +54,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 		if err != nil {
 			panic(fmt.Errorf("invalid address in start queue: %w", err))
 		}
-		if err := k.EnqueueVaultStart(ctx, int64(entry.Time), addr); err != nil {
+		if err := k.EnqueueVaultStart(ctx, addr); err != nil {
 			panic(fmt.Errorf("failed to enqueue vault start for %s: %w", entry.Addr, err))
 		}
 	}
@@ -81,9 +81,8 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	}
 
 	startQueue := make([]types.QueueEntry, 0)
-	err := k.WalkDueStarts(ctx, ctx.BlockTime().Unix(), func(t uint64, addr sdk.AccAddress) (stop bool, err error) {
+	err := k.WalkDueStarts(ctx, ctx.BlockTime().Unix(), func(addr sdk.AccAddress) (stop bool, err error) {
 		startQueue = append(startQueue, types.QueueEntry{
-			Time: t,
 			Addr: addr.String(),
 		})
 		return false, nil

@@ -184,7 +184,7 @@ func (k Keeper) SafeEnqueueStart(ctx context.Context, vault *types.VaultAccount)
 func (k Keeper) SafeEnqueueTimeout(ctx context.Context, vault *types.VaultAccount) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	if err := k.RemoveAllStartsForVault(ctx, vault.GetAddress()); err != nil {
+	if err := k.RemoveAllTimeoutsForVault(ctx, vault.GetAddress()); err != nil {
 		return err
 	}
 

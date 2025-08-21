@@ -218,3 +218,77 @@ func TestRemoveAllTimeoutsForVault(t *testing.T) {
 		require.False(t, kv.Key.K2().Equals(a1), "expected no timeout queue entries for a1")
 	}
 }
+
+func TestSafeEnqueueStart_ClearsTimeoutsAndSetsStart(t *testing.T) {
+	ctx, k := mocks.NewVaultKeeper(t)
+
+	addr := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
+	other := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
+
+	require.NoError(t, k.EnqueueVaultTimeout(ctx, 50, addr), "expected initial timeout enqueue for addr to succeed")
+	require.NoError(t, k.EnqueueVaultTimeout(ctx, 60, other), "expected initial timeout enqueue for other to succeed")
+
+	startTS := int64(100)
+	require.NoError(t, k.SafeEnqueueStart(ctx, startTS, addr), "expected SafeEnqueueStart to succeed")
+
+	itS, err := k.VaultStartQueue.Iterate(ctx, nil)
+	require.NoError(t, err, "expected no error iterating start queue")
+	defer itS.Close()
+
+	foundStart := false
+	for ; itS.Valid(); itS.Next() {
+		kv, err := itS.KeyValue()
+		require.NoError(t, err, "expected no error reading start queue key")
+		if kv.Key.K2().Equals(addr) && kv.Key.K1() == uint64(startTS) {
+			foundStart = true
+		}
+	}
+	require.True(t, foundStart, "expected exactly one start entry for addr at requested timestamp")
+
+	itT, err := k.VaultTimeoutQueue.Iterate(ctx, nil)
+	require.NoError(t, err, "expected no error iterating timeout queue")
+	defer itT.Close()
+
+	for ; itT.Valid(); itT.Next() {
+		kv, err := itT.KeyValue()
+		require.NoError(t, err, "expected no error reading timeout queue key")
+		require.False(t, kv.Key.K2().Equals(addr), "expected no remaining timeout entries for addr after SafeEnqueueStart")
+	}
+}
+
+func TestSafeEnqueueTimeout_ClearsStartsAndSetsTimeout(t *testing.T) {
+	ctx, k := mocks.NewVaultKeeper(t)
+
+	addr := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
+	other := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
+
+	require.NoError(t, k.EnqueueVaultStart(ctx, 40, addr), "expected initial start enqueue for addr to succeed")
+	require.NoError(t, k.EnqueueVaultStart(ctx, 45, other), "expected initial start enqueue for other to succeed")
+
+	timeoutTS := int64(120)
+	require.NoError(t, k.SafeEnqueueTimeout(ctx, timeoutTS, addr), "expected SafeEnqueueTimeout to succeed")
+
+	itT, err := k.VaultTimeoutQueue.Iterate(ctx, nil)
+	require.NoError(t, err, "expected no error iterating timeout queue")
+	defer itT.Close()
+
+	foundTimeout := false
+	for ; itT.Valid(); itT.Next() {
+		kv, err := itT.KeyValue()
+		require.NoError(t, err, "expected no error reading timeout queue key")
+		if kv.Key.K2().Equals(addr) && kv.Key.K1() == uint64(timeoutTS) {
+			foundTimeout = true
+		}
+	}
+	require.True(t, foundTimeout, "expected exactly one timeout entry for addr at requested timestamp")
+
+	itS, err := k.VaultStartQueue.Iterate(ctx, nil)
+	require.NoError(t, err, "expected no error iterating start queue")
+	defer itS.Close()
+
+	for ; itS.Valid(); itS.Next() {
+		kv, err := itS.KeyValue()
+		require.NoError(t, err, "expected no error reading start queue key")
+		require.False(t, kv.Key.K2().Equals(addr), "expected no remaining start entries for addr after SafeEnqueueTimeout")
+	}
+}

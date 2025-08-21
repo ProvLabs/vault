@@ -27,7 +27,7 @@ type Keeper struct {
 	BankKeeper   types.BankKeeper
 
 	Vaults            collections.Map[sdk.AccAddress, []byte]
-	VaultStartQueue   collections.Map[collections.Pair[uint64, sdk.AccAddress], collections.NoValue]
+	VaultStartQueue   collections.Map[sdk.AccAddress, collections.NoValue]
 	VaultTimeoutQueue collections.Map[collections.Pair[uint64, sdk.AccAddress], collections.NoValue]
 }
 
@@ -47,10 +47,6 @@ func NewKeeper(
 	}
 
 	builder := collections.NewSchemaBuilder(storeService)
-	startKeyCodec := collections.PairKeyCodec(
-		collections.Uint64Key,
-		sdk.AccAddressKey,
-	)
 	endKeyCodec := collections.PairKeyCodec(
 		collections.Uint64Key,
 		sdk.AccAddressKey,
@@ -61,7 +57,7 @@ func NewKeeper(
 		addressCodec:      addressCodec,
 		authority:         authority,
 		Vaults:            collections.NewMap(builder, types.VaultsKeyPrefix, types.VaultsName, sdk.AccAddressKey, collections.BytesValue),
-		VaultStartQueue:   collections.NewMap[collections.Pair[uint64, sdk.AccAddress], collections.NoValue](builder, types.VaultStartQueuePrefix, types.VaultStartQueueName, startKeyCodec, collections.NoValue{}),
+		VaultStartQueue:   collections.NewMap[sdk.AccAddress, collections.NoValue](builder, types.VaultStartQueuePrefix, types.VaultStartQueueName, sdk.AccAddressKey, collections.NoValue{}),
 		VaultTimeoutQueue: collections.NewMap[collections.Pair[uint64, sdk.AccAddress], collections.NoValue](builder, types.VaultEndQueuePrefix, types.VaultEndQueueName, endKeyCodec, collections.NoValue{}),
 		AuthKeeper:        authKeeper,
 		MarkerKeeper:      markerkeeper,

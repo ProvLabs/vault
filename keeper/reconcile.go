@@ -272,15 +272,15 @@ func (k *Keeper) handleReconciledVaults(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	now := sdkCtx.BlockTime().Unix()
 
-	var toRemove []collections.Pair[uint64, sdk.AccAddress]
+	var toRemove []sdk.AccAddress
 	var vaults []*types.VaultAccount
 
-	err := k.WalkDueStarts(ctx, now, func(t uint64, addr sdk.AccAddress) (bool, error) {
+	err := k.WalkDueStarts(ctx, now, func(addr sdk.AccAddress) (bool, error) {
 		v, ok := k.tryGetVault(sdkCtx, addr)
 		if ok {
 			vaults = append(vaults, v)
 		}
-		toRemove = append(toRemove, collections.Join(t, addr))
+		toRemove = append(toRemove, addr)
 		return false, nil
 	})
 	if err != nil {

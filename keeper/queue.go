@@ -19,8 +19,8 @@ const (
 
 // EnqueueVaultStart schedules a vault for reconciliation by adding an entry
 // to the VaultStartQueue keyed by the given period start and vault address.
-func (k Keeper) EnqueueVaultStart(ctx context.Context, periodStart int64, vaultAddr sdk.AccAddress) error {
-	return k.VaultStartQueue.Set(ctx, collections.Join(uint64(periodStart), vaultAddr), collections.NoValue{})
+func (k Keeper) EnqueueVaultStart(ctx context.Context, vaultAddr sdk.AccAddress) error {
+	return k.VaultStartQueue.Set(ctx, vaultAddr, collections.NoValue{})
 }
 
 // EnqueueVaultTimeout schedules a vault for timeout processing by adding an entry
@@ -32,7 +32,7 @@ func (k Keeper) EnqueueVaultTimeout(ctx context.Context, periodTimeout int64, va
 // DequeueVaultStart removes a vault entry from the VaultStartQueue for the given
 // period start and vault address.
 func (k Keeper) DequeueVaultStart(ctx context.Context, periodStart int64, vaultAddr sdk.AccAddress) error {
-	return k.VaultStartQueue.Remove(ctx, collections.Join(uint64(periodStart), vaultAddr))
+	return k.VaultStartQueue.Remove(ctx, vaultAddr)
 }
 
 // DequeueVaultTimeout removes a vault entry from the VaultTimeoutQueue for the given
@@ -44,7 +44,7 @@ func (k Keeper) DequeueVaultTimeout(ctx context.Context, periodTimeout int64, va
 // WalkDueStarts iterates over all entries in the VaultStartQueue with periodStart <= nowSec.
 // For each due entry, it calls the provided callback function. Iteration stops if the
 // callback returns stop=true or an error.
-func (k Keeper) WalkDueStarts(ctx context.Context, nowSec int64, fn func(periodStart uint64, vaultAddr sdk.AccAddress) (stop bool, err error)) error {
+func (k Keeper) WalkDueStarts(ctx context.Context, nowSec int64, fn func(vaultAddr sdk.AccAddress) (stop bool, err error)) error {
 	it, err := k.VaultStartQueue.Iterate(ctx, nil)
 	if err != nil {
 		return err
@@ -56,10 +56,7 @@ func (k Keeper) WalkDueStarts(ctx context.Context, nowSec int64, fn func(periodS
 		if err != nil {
 			return err
 		}
-		if kv.Key.K1() > uint64(nowSec) {
-			break
-		}
-		stop, err := fn(kv.Key.K1(), kv.Key.K2())
+		stop, err := fn(kv.Key)
 		if err != nil || stop {
 			return err
 		}
@@ -96,7 +93,7 @@ func (k Keeper) WalkDueTimeouts(ctx context.Context, nowSec int64, fn func(perio
 // RemoveAllStartsForVault deletes all start entries in the VaultStartQueue
 // for the given vault address.
 func (k Keeper) RemoveAllStartsForVault(ctx context.Context, vaultAddr sdk.AccAddress) error {
-	var keys []collections.Pair[uint64, sdk.AccAddress]
+	var keys []sdk.AccAddress
 
 	it, err := k.VaultStartQueue.Iterate(ctx, nil)
 	if err != nil {
@@ -109,7 +106,7 @@ func (k Keeper) RemoveAllStartsForVault(ctx context.Context, vaultAddr sdk.AccAd
 		if err != nil {
 			return err
 		}
-		if kv.Key.K2().Equals(vaultAddr) {
+		if kv.Key.Equals(vaultAddr) {
 			keys = append(keys, kv.Key)
 		}
 	}
@@ -172,7 +169,7 @@ func (k Keeper) SafeEnqueueStart(ctx context.Context, vault *types.VaultAccount)
 		return err
 	}
 
-	return k.EnqueueVaultStart(ctx, vault.PeriodStart, vault.GetAddress())
+	return k.EnqueueVaultStart(ctx, vault.GetAddress())
 }
 
 // SafeEnqueueTimeout clears any existing start or timeout entries for the given vault,

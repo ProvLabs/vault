@@ -24,7 +24,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 			if err := v.Validate(); err == nil {
 				panic(err)
 			}
-			k.SetVault(ctx, v.Clone())
+			k.SetVaultLookup(ctx, v.Clone())
 		}
 	}
 
@@ -45,7 +45,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 			panic(fmt.Errorf("invalid vault at index %d: %w", i, err))
 		}
 
-		if err := k.SetVault(ctx, v); err != nil {
+		if err := k.SetVaultLookup(ctx, v); err != nil {
 			panic(fmt.Errorf("failed to store vault %s: %w", v.Address, err))
 		}
 	}

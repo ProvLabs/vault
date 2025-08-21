@@ -160,14 +160,30 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 	k.UpdateInterestRates(ctx, vault, msg.NewRate, msg.NewRate)
 
 	if !reconciled && vault.InterestEnabled() {
-		err := k.EnqueueVaultStart(ctx, ctx.BlockTime().Unix(), vault.GetAddress())
+		vault.PeriodStart = ctx.BlockTime().Unix()
+		vault.PeriodTimeout = 0
+		err := k.SetVaultAccount(ctx, vault)
+		if err != nil {
+			return nil, fmt.Errorf("failed to set vault account: %w", err)
+		}
+		err = k.EnqueueVaultStart(ctx, ctx.BlockTime().Unix(), vault.GetAddress())
 		if err != nil {
 			return nil, fmt.Errorf("failed to set vault interest details: %w", err)
 		}
 	} else if reconciled && !vault.InterestEnabled() {
-		err := k.RemoveAllTimeoutsForVault(ctx, vault.GetAddress())
+		vault.PeriodStart = 0
+		vault.PeriodTimeout = 0
+		err := k.SetVaultAccount(ctx, vault)
 		if err != nil {
-			return nil, fmt.Errorf("failed to remove vault interest details: %w", err)
+			return nil, fmt.Errorf("failed to set vault account: %w", err)
+		}
+		err = k.RemoveAllStartsForVault(ctx, vault.GetAddress())
+		if err != nil {
+			return nil, fmt.Errorf("failed to remove vault from period start queue: %w", err)
+		}
+		err = k.RemoveAllTimeoutsForVault(ctx, vault.GetAddress())
+		if err != nil {
+			return nil, fmt.Errorf("failed to remove vault from period timeout queue: %w", err)
 		}
 	}
 

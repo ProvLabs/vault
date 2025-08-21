@@ -807,10 +807,10 @@ func (s *TestSuite) TestMsgServer_ToggleSwapIn() {
 
 func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 	type postCheckArgs struct {
-		VaultAddress          sdk.AccAddress
-		ExpectedRate          string
-		ExpectedPeriodStart   int64
-		HasNewInterestDetails bool
+		VaultAddress        sdk.AccAddress
+		ExpectedRate        string
+		ExpectedPeriodStart int64
+		ExpectInStartQueue  bool
 	}
 
 	testDef := msgServerTestDef[types.MsgUpdateInterestRateRequest, types.MsgUpdateInterestRateResponse, postCheckArgs]{
@@ -838,7 +838,7 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 					}
 				}
 			}
-			if args.HasNewInterestDetails {
+			if args.ExpectInStartQueue {
 				s.Assert().True(found, "vault should be enqueued in start queue at expected period start")
 				s.Assert().Equal(1, count, "vault should only have one entry in start queue")
 			} else {
@@ -877,10 +877,10 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 			interestRate: "0.05",
 			setup:        setup,
 			postCheckArgs: postCheckArgs{
-				VaultAddress:          vaultAddr,
-				ExpectedRate:          "0.05",
-				HasNewInterestDetails: true,
-				ExpectedPeriodStart:   currentBlockTime.Unix(),
+				VaultAddress:        vaultAddr,
+				ExpectedRate:        "0.05",
+				ExpectInStartQueue:  true,
+				ExpectedPeriodStart: currentBlockTime.Unix(),
 			},
 			expectedEvents: sdk.Events{
 				sdk.NewEvent("vault.v1.EventVaultInterestChange",
@@ -897,13 +897,14 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 				vaultAcc, err := s.k.GetVault(s.ctx, vaultAddr)
 				s.Require().NoError(err, "should be able to get vault")
 				s.k.UpdateInterestRates(s.ctx, vaultAcc, "4.20", "4.20")
-				s.k.EnqueueVaultTimeout(s.ctx, currentBlockTime.Unix()-1000, vaultAddr)
+				vaultAcc.PeriodStart = currentBlockTime.Unix() - 10000
+				s.Require().NoError(s.k.SetVaultAccount(s.ctx, vaultAcc), "error updating vault account period start")
 			},
 			postCheckArgs: postCheckArgs{
-				VaultAddress:          vaultAddr,
-				ExpectedRate:          "4.06",
-				HasNewInterestDetails: true,
-				ExpectedPeriodStart:   currentBlockTime.Unix(),
+				VaultAddress:        vaultAddr,
+				ExpectedRate:        "4.06",
+				ExpectInStartQueue:  true,
+				ExpectedPeriodStart: currentBlockTime.Unix(),
 			},
 			expectedEvents: sdk.Events{
 				sdk.NewEvent("vault.v1.EventVaultReconcile",
@@ -928,12 +929,13 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 				vaultAcc, err := s.k.GetVault(s.ctx, vaultAddr)
 				s.Require().NoError(err, "should be able to get vault")
 				s.k.UpdateInterestRates(s.ctx, vaultAcc, "6.12", "6.12")
-				s.k.EnqueueVaultTimeout(s.ctx, currentBlockTime.Unix()-1000, vaultAddr)
+				vaultAcc.PeriodStart = currentBlockTime.Unix() - 10000
+				s.Require().NoError(s.k.SetVaultAccount(s.ctx, vaultAcc), "error updating vault account period start")
 			},
 			postCheckArgs: postCheckArgs{
-				VaultAddress:          vaultAddr,
-				ExpectedRate:          types.ZeroInterestRate,
-				HasNewInterestDetails: false,
+				VaultAddress:       vaultAddr,
+				ExpectedRate:       types.ZeroInterestRate,
+				ExpectInStartQueue: false,
 			},
 			expectedEvents: sdk.Events{
 				sdk.NewEvent("vault.v1.EventVaultReconcile",

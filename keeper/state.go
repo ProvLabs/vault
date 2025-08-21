@@ -125,6 +125,34 @@ func (k Keeper) WalkDueTimeouts(ctx context.Context, nowSec int64, fn func(perio
 	return nil
 }
 
+// RemoveAllStartsForVault deletes all start entries in the VaultStartQueue
+// for the given vault address.
+func (k Keeper) RemoveAllStartsForVault(ctx context.Context, vaultAddr sdk.AccAddress) error {
+	var keys []collections.Pair[uint64, sdk.AccAddress]
+
+	it, err := k.VaultStartQueue.Iterate(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer it.Close()
+
+	for ; it.Valid(); it.Next() {
+		kv, err := it.KeyValue()
+		if err != nil {
+			return err
+		}
+		if kv.Key.K2().Equals(vaultAddr) {
+			keys = append(keys, kv.Key)
+		}
+	}
+	for _, key := range keys {
+		if err := k.VaultStartQueue.Remove(ctx, key); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // RemoveAllTimeoutsForVault deletes all timeout entries in the VaultTimeoutQueue
 // for the given vault address.
 func (k Keeper) RemoveAllTimeoutsForVault(ctx context.Context, vaultAddr sdk.AccAddress) error {

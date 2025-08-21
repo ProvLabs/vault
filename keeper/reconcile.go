@@ -16,10 +16,6 @@ import (
 )
 
 const (
-	// AutoReconcileTimeout is the duration (in seconds) that a vault is considered recently reconciled
-	// and is exempt from automatic interest checks in the BeginBlocker.
-	AutoReconcileTimeout = 20 * interest.SecondsPerHour
-
 	// AutoReconcilePayoutDuration is the time period (in seconds) used to forecast if a vault has
 	// sufficient funds to cover future interest payments.
 	AutoReconcilePayoutDuration = 24 * interest.SecondsPerHour
@@ -45,12 +41,8 @@ func (k *Keeper) ReconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccou
 			return err
 		}
 	}
-	vault.PeriodStart = currentBlockTime
-	vault.PeriodTimeout = 0
-	if err := k.SetVaultAccount(ctx, vault); err != nil {
-		return err
-	}
-	return k.SafeEnqueueStart(ctx, currentBlockTime, vault.GetAddress())
+
+	return k.SafeEnqueueStart(ctx, vault)
 }
 
 // PerformVaultInterestTransfer applies accrued interest between the vault and the marker account
@@ -251,7 +243,7 @@ func (k *Keeper) handleVaultInterestTimeouts(ctx context.Context) error {
 		}
 	}
 
-	k.resetVaultInterestPeriods(ctx, reconciled, now)
+	k.resetVaultInterestPeriods(ctx, reconciled)
 	k.handleDepletedVaults(ctx, depleted)
 	return nil
 }
@@ -329,16 +321,9 @@ func (k *Keeper) partitionVaults(sdkCtx sdk.Context, vaults []*types.VaultAccoun
 // It sets PeriodTimeout to now + AutoReconcileTimeout, persists the vault, and enqueues the timeout.
 func (k *Keeper) handlePayableVaults(ctx context.Context, payouts []*types.VaultAccount) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	now := sdkCtx.BlockTime().Unix()
 
 	for _, v := range payouts {
-		v.PeriodTimeout = now + AutoReconcileTimeout
-
-		if err := k.SetVaultAccount(sdkCtx, v); err != nil {
-			sdkCtx.Logger().Error("failed to persist vault", "vault", v.GetAddress().String(), "err", err)
-			continue
-		}
-		if err := k.SafeEnqueueTimeout(ctx, v.PeriodTimeout, v.GetAddress()); err != nil {
+		if err := k.SafeEnqueueTimeout(ctx, v); err != nil {
 			sdkCtx.Logger().Error("failed to enqueue timeout", "vault", v.GetAddress().String(), "err", err)
 		}
 	}
@@ -356,17 +341,11 @@ func (k *Keeper) handleDepletedVaults(ctx context.Context, failedPayouts []*type
 // persists them, then enqueues the corresponding timeout entries.
 //
 // This is called after a successful interest reconciliation to start a new accrual period.
-func (k *Keeper) resetVaultInterestPeriods(ctx context.Context, vaults []*types.VaultAccount, periodStart int64) {
+func (k *Keeper) resetVaultInterestPeriods(ctx context.Context, vaults []*types.VaultAccount) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	for _, vault := range vaults {
-		vault.PeriodStart = periodStart
-		vault.PeriodTimeout = periodStart + AutoReconcileTimeout
-		if err := k.SetVaultAccount(sdkCtx, vault); err != nil {
-			sdkCtx.Logger().Error("failed to set vault", "vault", vault.GetAddress().String(), "err", err)
-			return
-		}
-		if err := k.SafeEnqueueTimeout(ctx, vault.PeriodTimeout, vault.GetAddress()); err != nil {
+		if err := k.SafeEnqueueTimeout(ctx, vault); err != nil {
 			sdkCtx.Logger().Error("failed to enqueue vault timeout", "vault", vault.GetAddress().String(), "err", err)
 		}
 	}

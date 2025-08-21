@@ -67,7 +67,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 			panic(fmt.Errorf("failed to enqueue vault timeout for %s: %w", entry.Addr, err))
 		}
 	}
-
 }
 
 // ExportGenesis exports the current state of the vault module.

@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/provlabs/vault/types"
@@ -12,42 +13,208 @@ import (
 	"github.com/provlabs/vault/utils/mocks"
 )
 
-func TestGetVaults(t *testing.T) {
+func TestSetVaultLookup_ErrorsAndSuccess(t *testing.T) {
 	ctx, k := mocks.NewVaultKeeper(t)
 
-	vaults, err := k.GetVaults(ctx)
+	err := k.SetVaultLookup(ctx, nil)
+	require.Error(t, err, "expected error when vault is nil")
 
-	require.NoError(t, err, "expected no error when the vaults map is empty")
-	require.Empty(t, vaults, "expected empty vaults map")
+	vBad := &types.VaultAccount{BaseAccount: &authtypes.BaseAccount{Address: "not-bech32"}}
+	err = k.SetVaultLookup(ctx, vBad)
+	require.Error(t, err, "expected error when vault address is not bech32")
 
-	// Generate unique addresses for vault keys
-	vault1Addr := utils.TestAddress().Bech32
-	vault2Addr := utils.TestAddress().Bech32
-	// Ensure they are different for testing distinct entries
-	for vault1Addr == vault2Addr {
-		vault2Addr = utils.TestAddress().Bech32
+	addr := utils.TestAddress().Bech32
+	v := &types.VaultAccount{BaseAccount: authtypes.NewBaseAccountWithAddress(sdk.MustAccAddressFromBech32(addr))}
+	err = k.SetVaultLookup(ctx, v)
+	require.NoError(t, err, "expected no error when vault is valid")
+
+	got, err := k.GetVaults(ctx)
+	require.NoError(t, err, "expected no error retrieving vaults after setting")
+	require.Len(t, got, 1, "expected exactly one vault stored")
+	assert.True(t, got[0].Equals(sdk.MustAccAddressFromBech32(addr)), "expected stored vault address to match input")
+}
+
+func TestSetVaultAccount_ValidateError(t *testing.T) {
+	_, k := mocks.NewVaultKeeper(t)
+
+	err := k.SetVaultAccount(sdk.Context{}, &types.VaultAccount{})
+	require.Error(t, err, "expected error when vault validation fails")
+}
+
+func TestEnqueueDequeue_Start(t *testing.T) {
+	ctx, k := mocks.NewVaultKeeper(t)
+
+	addr := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
+	ts := int64(100)
+
+	require.NoError(t, k.EnqueueVaultStart(ctx, ts, addr), "expected enqueue start to succeed")
+
+	it, err := k.VaultStartQueue.Iterate(ctx, nil)
+	require.NoError(t, err, "expected no error iterating start queue")
+	defer it.Close()
+
+	found := false
+	for ; it.Valid(); it.Next() {
+		kv, err := it.KeyValue()
+		require.NoError(t, err, "expected no error getting start queue key")
+		if kv.Key.K1() == uint64(ts) && kv.Key.K2().Equals(addr) {
+			found = true
+			break
+		}
 	}
+	require.True(t, found, "expected to find enqueued start entry in queue")
 
-	vault1 := types.VaultAccount{
-		BaseAccount: authtypes.NewBaseAccountWithAddress(types.GetVaultAddress("address1")),
-		Admin:       utils.TestAddress().Bech32,
+	require.NoError(t, k.DequeueVaultStart(ctx, ts, addr), "expected dequeue start to succeed")
+
+	it2, err := k.VaultStartQueue.Iterate(ctx, nil)
+	require.NoError(t, err, "expected no error iterating start queue after dequeue")
+	defer it2.Close()
+	require.False(t, it2.Valid(), "expected start queue to be empty after dequeue")
+}
+
+func TestEnqueueDequeue_Timeout(t *testing.T) {
+	ctx, k := mocks.NewVaultKeeper(t)
+
+	addr := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
+	ts := int64(200)
+
+	require.NoError(t, k.EnqueueVaultTimeout(ctx, ts, addr), "expected enqueue timeout to succeed")
+
+	it, err := k.VaultTimeoutQueue.Iterate(ctx, nil)
+	require.NoError(t, err, "expected no error iterating timeout queue")
+	defer it.Close()
+
+	found := false
+	for ; it.Valid(); it.Next() {
+		kv, err := it.KeyValue()
+		require.NoError(t, err, "expected no error getting timeout queue key")
+		if kv.Key.K1() == uint64(ts) && kv.Key.K2().Equals(addr) {
+			found = true
+			break
+		}
 	}
-	vault2 := types.VaultAccount{
-		BaseAccount: authtypes.NewBaseAccountWithAddress(types.GetVaultAddress("address2")),
-		Admin:       utils.TestAddress().Bech32,
+	require.True(t, found, "expected to find enqueued timeout entry in queue")
+
+	require.NoError(t, k.DequeueVaultTimeout(ctx, ts, addr), "expected dequeue timeout to succeed")
+
+	it2, err := k.VaultTimeoutQueue.Iterate(ctx, nil)
+	require.NoError(t, err, "expected no error iterating timeout queue after dequeue")
+	defer it2.Close()
+	require.False(t, it2.Valid(), "expected timeout queue to be empty after dequeue")
+}
+
+func TestWalkDueStarts(t *testing.T) {
+	ctx, k := mocks.NewVaultKeeper(t)
+
+	a1 := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
+	a2 := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
+
+	require.NoError(t, k.EnqueueVaultStart(ctx, 100, a1), "expected enqueue start to succeed")
+	require.NoError(t, k.EnqueueVaultStart(ctx, 150, a2), "expected enqueue start to succeed")
+	require.NoError(t, k.EnqueueVaultStart(ctx, 300, a1), "expected enqueue start to succeed")
+
+	var seen []uint64
+	err := k.WalkDueStarts(ctx, 200, func(ts uint64, addr sdk.AccAddress) (bool, error) {
+		seen = append(seen, ts)
+		return false, nil
+	})
+	require.NoError(t, err, "expected walk due starts to complete without error")
+	assert.ElementsMatch(t, []uint64{100, 150}, seen, "expected to see only entries <= 200")
+}
+
+func TestWalkDueStarts_StopEarly(t *testing.T) {
+	ctx, k := mocks.NewVaultKeeper(t)
+
+	a := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
+	require.NoError(t, k.EnqueueVaultStart(ctx, 100, a), "expected enqueue start to succeed")
+	require.NoError(t, k.EnqueueVaultStart(ctx, 150, a), "expected enqueue start to succeed")
+
+	calls := 0
+	err := k.WalkDueStarts(ctx, 200, func(ts uint64, addr sdk.AccAddress) (bool, error) {
+		calls++
+		return true, nil
+	})
+	require.NoError(t, err, "expected walk due starts to complete without error")
+	assert.Equal(t, 1, calls, "expected walk to stop early after first callback")
+}
+
+func TestWalkDueTimeouts(t *testing.T) {
+	ctx, k := mocks.NewVaultKeeper(t)
+
+	a1 := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
+	a2 := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
+
+	require.NoError(t, k.EnqueueVaultTimeout(ctx, 50, a1), "expected enqueue timeout to succeed")
+	require.NoError(t, k.EnqueueVaultTimeout(ctx, 75, a2), "expected enqueue timeout to succeed")
+	require.NoError(t, k.EnqueueVaultTimeout(ctx, 500, a1), "expected enqueue timeout to succeed")
+
+	var seen []uint64
+	err := k.WalkDueTimeouts(ctx, 100, func(ts uint64, addr sdk.AccAddress) (bool, error) {
+		seen = append(seen, ts)
+		return false, nil
+	})
+	require.NoError(t, err, "expected walk due timeouts to complete without error")
+	assert.ElementsMatch(t, []uint64{50, 75}, seen, "expected to see only timeout entries <= 100")
+}
+
+func TestWalkDueTimeouts_StopEarly(t *testing.T) {
+	ctx, k := mocks.NewVaultKeeper(t)
+
+	a := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
+	require.NoError(t, k.EnqueueVaultTimeout(ctx, 10, a), "expected enqueue timeout to succeed")
+	require.NoError(t, k.EnqueueVaultTimeout(ctx, 20, a), "expected enqueue timeout to succeed")
+
+	calls := 0
+	err := k.WalkDueTimeouts(ctx, 25, func(ts uint64, addr sdk.AccAddress) (bool, error) {
+		calls++
+		return true, nil
+	})
+	require.NoError(t, err, "expected walk due timeouts to complete without error")
+	assert.Equal(t, 1, calls, "expected walk to stop early after first callback")
+}
+
+func TestRemoveAllStartsForVault(t *testing.T) {
+	ctx, k := mocks.NewVaultKeeper(t)
+
+	a1 := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
+	a2 := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
+
+	require.NoError(t, k.EnqueueVaultStart(ctx, 100, a1), "expected enqueue start to succeed")
+	require.NoError(t, k.EnqueueVaultStart(ctx, 150, a1), "expected enqueue start to succeed")
+	require.NoError(t, k.EnqueueVaultStart(ctx, 200, a2), "expected enqueue start to succeed")
+
+	require.NoError(t, k.RemoveAllStartsForVault(ctx, a1), "expected remove all starts to succeed")
+
+	it, err := k.VaultStartQueue.Iterate(ctx, nil)
+	require.NoError(t, err, "expected no error iterating start queue after removal")
+	defer it.Close()
+
+	for ; it.Valid(); it.Next() {
+		kv, err := it.KeyValue()
+		require.NoError(t, err, "expected no error reading key")
+		require.False(t, kv.Key.K2().Equals(a1), "expected no start queue entries for a1")
 	}
+}
 
-	// Set vaults using their Bech32 addresses as keys
-	err = k.Vaults.Set(ctx, sdk.MustAccAddressFromBech32(vault1.Address), []byte{})
-	require.NoError(t, err, "expected no error setting the first vault")
-	err = k.Vaults.Set(ctx, sdk.MustAccAddressFromBech32(vault2.Address), []byte{})
-	require.NoError(t, err, "expected no error setting the second vault")
+func TestRemoveAllTimeoutsForVault(t *testing.T) {
+	ctx, k := mocks.NewVaultKeeper(t)
 
-	vaults, err = k.GetVaults(ctx)
+	a1 := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
+	a2 := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
 
-	require.NoError(t, err, "expected no error when vaults are present")
-	require.Len(t, vaults, 2, "expected two vaults")
-	// Assert using the vault addresses as keys
-	require.Contains(t, vaults, sdk.MustAccAddressFromBech32(vault1.Address), "expected the first vault")
-	require.Contains(t, vaults, sdk.MustAccAddressFromBech32(vault2.Address), "expected the second vault")
+	require.NoError(t, k.EnqueueVaultTimeout(ctx, 100, a1), "expected enqueue timeout to succeed")
+	require.NoError(t, k.EnqueueVaultTimeout(ctx, 150, a1), "expected enqueue timeout to succeed")
+	require.NoError(t, k.EnqueueVaultTimeout(ctx, 200, a2), "expected enqueue timeout to succeed")
+
+	require.NoError(t, k.RemoveAllTimeoutsForVault(ctx, a1), "expected remove all timeouts to succeed")
+
+	it, err := k.VaultTimeoutQueue.Iterate(ctx, nil)
+	require.NoError(t, err, "expected no error iterating timeout queue after removal")
+	defer it.Close()
+
+	for ; it.Valid(); it.Next() {
+		kv, err := it.KeyValue()
+		require.NoError(t, err, "expected no error reading key")
+		require.False(t, kv.Key.K2().Equals(a1), "expected no timeout queue entries for a1")
+	}
 }

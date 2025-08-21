@@ -36,14 +36,7 @@ const (
 func (k *Keeper) ReconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccount) error {
 	currentBlockTime := ctx.BlockTime().Unix()
 
-	if vault.PeriodStart == 0 {
-		vault.PeriodStart = currentBlockTime
-		err := k.SetVaultAccount(ctx, vault)
-		if err != nil {
-			return err
-		}
-	} else {
-
+	if vault.PeriodStart != 0 {
 		if currentBlockTime <= vault.PeriodStart {
 			return nil
 		}
@@ -51,6 +44,11 @@ func (k *Keeper) ReconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccou
 		if err := k.PerformVaultInterestTransfer(ctx, vault); err != nil {
 			return err
 		}
+	}
+	vault.PeriodStart = currentBlockTime
+	vault.PeriodTimeout = 0
+	if err := k.SetVaultAccount(ctx, vault); err != nil {
+		return err
 	}
 	return k.SafeEnqueueStart(ctx, currentBlockTime, vault.GetAddress())
 }

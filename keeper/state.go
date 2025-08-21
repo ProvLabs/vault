@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"cosmossdk.io/collections"
 
@@ -179,4 +180,36 @@ func (k Keeper) RemoveAllTimeoutsForVault(ctx context.Context, vaultAddr sdk.Acc
 		}
 	}
 	return nil
+}
+
+// SafeEnqueueStart clears any existing start or timeout entries for the given vault,
+// then enqueues a new start entry at the provided periodStart.
+//
+// This ensures a vault is never present in both the start and timeout queues at once.
+// Typically called after enabling interest or performing a reconciliation so that
+// the next accrual cycle begins cleanly.
+func (k Keeper) SafeEnqueueStart(ctx context.Context, periodStart int64, vaultAddr sdk.AccAddress) error {
+	if err := k.RemoveAllTimeoutsForVault(ctx, vaultAddr); err != nil {
+		return fmt.Errorf("remove timeouts: %w", err)
+	}
+	if err := k.RemoveAllStartsForVault(ctx, vaultAddr); err != nil {
+		return fmt.Errorf("remove starts: %w", err)
+	}
+	return k.EnqueueVaultStart(ctx, periodStart, vaultAddr)
+}
+
+// SafeEnqueueTimeout clears any existing start or timeout entries for the given vault,
+// then enqueues a new timeout entry at the provided periodTimeout.
+//
+// This ensures a vault is never present in both the timeout and start queues at once.
+// Typically called after marking a vault as payable, so it will be revisited only
+// after the configured auto-reconcile timeout window expires.
+func (k Keeper) SafeEnqueueTimeout(ctx context.Context, periodTimeout int64, vaultAddr sdk.AccAddress) error {
+	if err := k.RemoveAllStartsForVault(ctx, vaultAddr); err != nil {
+		return fmt.Errorf("remove starts: %w", err)
+	}
+	if err := k.RemoveAllTimeoutsForVault(ctx, vaultAddr); err != nil {
+		return fmt.Errorf("remove timeouts: %w", err)
+	}
+	return k.EnqueueVaultTimeout(ctx, periodTimeout, vaultAddr)
 }

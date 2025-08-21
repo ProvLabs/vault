@@ -52,7 +52,7 @@ func (k *Keeper) ReconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccou
 			return err
 		}
 	}
-	return k.EnqueueVaultStart(ctx, currentBlockTime, vault.GetAddress())
+	return k.SafeEnqueueStart(ctx, currentBlockTime, vault.GetAddress())
 }
 
 // PerformVaultInterestTransfer applies accrued interest between the vault and the marker account
@@ -340,7 +340,7 @@ func (k *Keeper) handlePayableVaults(ctx context.Context, payouts []*types.Vault
 			sdkCtx.Logger().Error("failed to persist vault", "vault", v.GetAddress().String(), "err", err)
 			continue
 		}
-		if err := k.EnqueueVaultTimeout(ctx, v.PeriodTimeout, v.GetAddress()); err != nil {
+		if err := k.SafeEnqueueTimeout(ctx, v.PeriodTimeout, v.GetAddress()); err != nil {
 			sdkCtx.Logger().Error("failed to enqueue timeout", "vault", v.GetAddress().String(), "err", err)
 		}
 	}
@@ -368,7 +368,7 @@ func (k *Keeper) resetVaultInterestPeriods(ctx context.Context, vaults []*types.
 			sdkCtx.Logger().Error("failed to set vault", "vault", vault.GetAddress().String(), "err", err)
 			return
 		}
-		if err := k.EnqueueVaultTimeout(ctx, vault.PeriodTimeout, vault.GetAddress()); err != nil {
+		if err := k.SafeEnqueueTimeout(ctx, vault.PeriodTimeout, vault.GetAddress()); err != nil {
 			sdkCtx.Logger().Error("failed to enqueue vault timeout", "vault", vault.GetAddress().String(), "err", err)
 		}
 	}

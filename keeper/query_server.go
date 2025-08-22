@@ -39,7 +39,7 @@ func (k queryServer) Vaults(goCtx context.Context, req *types.QueryVaultsRequest
 		ctx,
 		k.Keeper.Vaults,
 		req.Pagination,
-		func(key sdk.AccAddress, val []byte) (include bool, err error) {
+		func(key sdk.AccAddress, _ []byte) (include bool, err error) {
 			vault, _ := k.GetVault(ctx, key)
 			vaults = append(vaults, *vault)
 			return true, nil
@@ -60,24 +60,34 @@ func (k queryServer) Vaults(goCtx context.Context, req *types.QueryVaultsRequest
 
 // Vault returns the configuration and state of a specific vault.
 func (k queryServer) Vault(goCtx context.Context, req *types.QueryVaultRequest) (*types.QueryVaultResponse, error) {
-	if req == nil || req.VaultAddress == "" {
-		return nil, status.Error(codes.InvalidArgument, "vault_address must be provided")
+	if req == nil || req.Id == "" {
+		return nil, status.Error(codes.InvalidArgument, "id must be provided")
 	}
-
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	vaultAddr, err := sdk.AccAddressFromBech32(req.VaultAddress)
+	vault, err := k.FindVaultAccount(ctx, req.Id)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid vault_address: %v", err)
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	vault, err := k.GetVault(ctx, vaultAddr)
-	if err != nil || vault == nil {
-		return nil, status.Errorf(codes.NotFound, "vault with address %q not found", req.VaultAddress)
+	marker, err := k.MarkerKeeper.GetMarkerByDenom(ctx, vault.ShareDenom)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
 	}
+
+	principal := k.BankKeeper.GetAllBalances(goCtx, marker.GetAddress())
+	reserves := k.BankKeeper.GetAllBalances(goCtx, vault.GetAddress())
 
 	return &types.QueryVaultResponse{
 		Vault: *vault,
+		Principal: types.AccountBalance{
+			Address: marker.GetAddress().String(),
+			Coins:   principal,
+		},
+		Reserves: types.AccountBalance{
+			Address: vault.GetAddress().String(),
+			Coins:   reserves,
+		},
 	}, nil
 }
 

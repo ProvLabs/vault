@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/require"
@@ -50,4 +51,187 @@ func TestGetVaults(t *testing.T) {
 	// Assert using the vault addresses as keys
 	require.Contains(t, vaults, sdk.MustAccAddressFromBech32(vault1.Address), "expected the first vault")
 	require.Contains(t, vaults, sdk.MustAccAddressFromBech32(vault2.Address), "expected the second vault")
+}
+
+func (s *TestSuite) TestGetVaultAccounts() {
+	testCases := []struct {
+		name           string
+		setup          func() []*types.VaultAccount
+		expectErr      bool
+		errContains    string
+		expectedLength int
+	}{
+		{
+			name: "success - multiple vaults",
+			setup: func() []*types.VaultAccount {
+				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("underlying1", 1000), s.adminAddr)
+				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("underlying2", 1000), s.adminAddr)
+
+				vault1, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: s.adminAddr.String(), ShareDenom: "share1", UnderlyingAsset: "underlying1"})
+				s.Require().NoError(err)
+				vault2, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: s.adminAddr.String(), ShareDenom: "share2", UnderlyingAsset: "underlying2"})
+				s.Require().NoError(err)
+
+				// Re-fetch from state to get latest account numbers, etc.
+				v1, err := s.k.GetVault(s.ctx, vault1.GetAddress())
+				s.Require().NoError(err)
+				v2, err := s.k.GetVault(s.ctx, vault2.GetAddress())
+				s.Require().NoError(err)
+
+				return []*types.VaultAccount{v1, v2}
+			},
+			expectErr:      false,
+			expectedLength: 2,
+		},
+		{
+			name: "success - single vault",
+			setup: func() []*types.VaultAccount {
+				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("underlying1", 1000), s.adminAddr)
+
+				vault1, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: s.adminAddr.String(), ShareDenom: "share1", UnderlyingAsset: "underlying1"})
+				s.Require().NoError(err)
+
+				v1, err := s.k.GetVault(s.ctx, vault1.GetAddress())
+				s.Require().NoError(err)
+
+				return []*types.VaultAccount{v1}
+			},
+			expectErr:      false,
+			expectedLength: 1,
+		},
+		{
+			name: "success - no vaults",
+			setup: func() []*types.VaultAccount {
+				return []*types.VaultAccount{}
+			},
+			expectErr:      false,
+			expectedLength: 0,
+		},
+		{
+			name: "failure - inconsistent state with non-vault account",
+			setup: func() []*types.VaultAccount {
+				// Create a standard account, not a vault account
+				senderPrivKey := secp256k1.GenPrivKey()
+				acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 100, 0)
+				s.k.AuthKeeper.SetAccount(s.ctx, acc)
+
+				// Manually add it to the vault index to create an inconsistent state
+				err := s.k.Vaults.Set(s.ctx, acc.GetAddress(), []byte{})
+				s.Require().NoError(err)
+
+				return nil // We don't expect any vaults back, just an error
+			},
+			expectErr:   true,
+			errContains: "is not a vault account",
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			expectedVaults := tc.setup()
+
+			// Call the function under test
+			actualVaults, err := s.k.GetVaultAccounts(s.ctx)
+
+			if tc.expectErr {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, tc.errContains)
+				s.Require().Nil(actualVaults)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NotNil(actualVaults)
+				s.Require().Len(actualVaults, tc.expectedLength)
+				// Using ElementsMatch to compare slices without regard to order
+				s.Require().ElementsMatch(expectedVaults, actualVaults)
+			}
+		})
+	}
+}
+
+func (s *TestSuite) TestFindVaultAccount() {
+	// Vaults to be created during setup
+	shareDenom1 := "share1"
+	underlying1 := "underlying1"
+	var vault1 *types.VaultAccount
+
+	// An address that doesn't correspond to any created vault
+	nonExistentAddr := sdk.AccAddress(secp256k1.GenPrivKey().PubKey().Address())
+
+	testCases := []struct {
+		name          string
+		setup         func()
+		idToFind      func() string
+		expectedVault func() *types.VaultAccount
+		expectErr     bool
+		errContains   string
+	}{
+		{
+			name: "success - find by address",
+			setup: func() {
+				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlying1, 1000), s.adminAddr)
+				created, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: s.adminAddr.String(), ShareDenom: shareDenom1, UnderlyingAsset: underlying1})
+				s.Require().NoError(err)
+				// Re-fetch to get full account details
+				vault1, err = s.k.GetVault(s.ctx, created.GetAddress())
+				s.Require().NoError(err)
+			},
+			idToFind:      func() string { return vault1.GetAddress().String() },
+			expectedVault: func() *types.VaultAccount { return vault1 },
+			expectErr:     false,
+		},
+		{
+			name: "success - find by share denom",
+			setup: func() {
+				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlying1, 1000), s.adminAddr)
+				created, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: s.adminAddr.String(), ShareDenom: shareDenom1, UnderlyingAsset: underlying1})
+				s.Require().NoError(err)
+				vault1, err = s.k.GetVault(s.ctx, created.GetAddress())
+				s.Require().NoError(err)
+			},
+			idToFind:      func() string { return shareDenom1 },
+			expectedVault: func() *types.VaultAccount { return vault1 },
+			expectErr:     false,
+		},
+		{
+			name: "failure - not found by address",
+			setup: func() {
+				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlying1, 1000), s.adminAddr)
+				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: s.adminAddr.String(), ShareDenom: shareDenom1, UnderlyingAsset: underlying1})
+				s.Require().NoError(err)
+			},
+			idToFind:      func() string { return nonExistentAddr.String() },
+			expectedVault: func() *types.VaultAccount { return nil },
+			expectErr:     true,
+			errContains:   "not found",
+		},
+		{
+			name:          "failure - not found by share denom",
+			idToFind:      func() string { return "nonexistentshare" },
+			expectedVault: func() *types.VaultAccount { return nil },
+			expectErr:     true,
+			errContains:   "not found",
+		},
+	}
+
+	for _, tc := range testCases {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			if tc.setup != nil {
+				tc.setup()
+			}
+
+			actualVault, err := s.k.FindVaultAccount(s.ctx, tc.idToFind())
+
+			if tc.expectErr {
+				s.Require().Error(err)
+				s.Require().ErrorContains(err, tc.errContains)
+				s.Require().Nil(actualVault)
+			} else {
+				s.Require().NoError(err)
+				s.Require().NotNil(actualVault)
+				s.Require().Equal(tc.expectedVault(), actualVault)
+			}
+		})
+	}
 }

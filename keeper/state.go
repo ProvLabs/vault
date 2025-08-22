@@ -48,7 +48,7 @@ func (k *Keeper) SetVaultAccount(ctx sdk.Context, vault *types.VaultAccount) err
 // GetVaultAccounts is a helper function for retrieving all vault accounts from state.
 func (k *Keeper) GetVaultAccounts(ctx sdk.Context) ([]*types.VaultAccount, error) {
 	accounts := []*types.VaultAccount{}
-	err := k.Vaults.Walk(ctx, nil, func(addr sdk.AccAddress, val []byte) (stop bool, err error) {
+	err := k.Vaults.Walk(ctx, nil, func(addr sdk.AccAddress, _ []byte) (stop bool, err error) {
 		account, err := k.GetVault(ctx, addr)
 		if err != nil {
 			return true, err

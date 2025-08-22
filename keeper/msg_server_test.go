@@ -821,8 +821,8 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 			s.Require().NoError(err, "should be able to get vault")
 			s.Assert().Equal(args.ExpectedRate, vault.CurrentInterestRate, "vault current interest rate should match expected rate")
 			s.Assert().Equal(args.ExpectedRate, vault.DesiredInterestRate, "vault desired interest rate should match expected rate")
-
-			isInQueue, err := s.k.VaultStartQueue.Has(s.ctx, args.VaultAddress)
+			s.assertInStartQueue(vault.GetAddress(), args.ExpectInStartQueue)
+			isInQueue, err := s.k.VaultPayoutVerificationQueue.Has(s.ctx, args.VaultAddress)
 			s.Require().NoError(err, "should not error checking queue")
 			s.Assert().Equal(args.ExpectInStartQueue, isInQueue, "vault should be enqueued in start queue at expected period start")
 		},
@@ -1382,7 +1382,7 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds() {
 			vaultBal := s.k.BankKeeper.GetBalance(s.ctx, args.VaultAddress, args.ExpectedDepositAmount.Denom)
 			s.Assert().Equal(args.ExpectedVaultBalance.Amount.Int64(), vaultBal.Amount.Int64())
 
-			isInQueue, err := s.k.VaultStartQueue.Has(s.ctx, args.VaultAddress)
+			isInQueue, err := s.k.VaultPayoutVerificationQueue.Has(s.ctx, args.VaultAddress)
 			s.Require().NoError(err, "should not error checking queue")
 			s.Assert().Equal(args.HasNewInterestDetails, isInQueue, "vault should be enqueued in start queue at expected period start")
 		},

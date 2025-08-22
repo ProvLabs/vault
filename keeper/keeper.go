@@ -26,9 +26,9 @@ type Keeper struct {
 	MarkerKeeper types.MarkerKeeper
 	BankKeeper   types.BankKeeper
 
-	Vaults            collections.Map[sdk.AccAddress, []byte]
-	VaultStartQueue   collections.Map[sdk.AccAddress, collections.NoValue]
-	VaultTimeoutQueue collections.Map[collections.Pair[uint64, sdk.AccAddress], collections.NoValue]
+	Vaults                       collections.Map[sdk.AccAddress, []byte]
+	VaultPayoutVerificationQueue collections.Map[sdk.AccAddress, collections.NoValue]
+	VaultTimeoutQueue            collections.Map[collections.Pair[uint64, sdk.AccAddress], collections.NoValue]
 }
 
 // NewMsgServer creates a new Keeper for the module.
@@ -53,15 +53,15 @@ func NewKeeper(
 	)
 
 	keeper := &Keeper{
-		eventService:      eventService,
-		addressCodec:      addressCodec,
-		authority:         authority,
-		Vaults:            collections.NewMap(builder, types.VaultsKeyPrefix, types.VaultsName, sdk.AccAddressKey, collections.BytesValue),
-		VaultStartQueue:   collections.NewMap[sdk.AccAddress, collections.NoValue](builder, types.VaultStartQueuePrefix, types.VaultStartQueueName, sdk.AccAddressKey, collections.NoValue{}),
-		VaultTimeoutQueue: collections.NewMap[collections.Pair[uint64, sdk.AccAddress], collections.NoValue](builder, types.VaultEndQueuePrefix, types.VaultEndQueueName, endKeyCodec, collections.NoValue{}),
-		AuthKeeper:        authKeeper,
-		MarkerKeeper:      markerkeeper,
-		BankKeeper:        bankkeeper,
+		eventService:                 eventService,
+		addressCodec:                 addressCodec,
+		authority:                    authority,
+		Vaults:                       collections.NewMap(builder, types.VaultsKeyPrefix, types.VaultsName, sdk.AccAddressKey, collections.BytesValue),
+		VaultPayoutVerificationQueue: collections.NewMap[sdk.AccAddress, collections.NoValue](builder, types.VaultStartQueuePrefix, types.VaultStartQueueName, sdk.AccAddressKey, collections.NoValue{}),
+		VaultTimeoutQueue:            collections.NewMap[collections.Pair[uint64, sdk.AccAddress], collections.NoValue](builder, types.VaultEndQueuePrefix, types.VaultEndQueueName, endKeyCodec, collections.NoValue{}),
+		AuthKeeper:                   authKeeper,
+		MarkerKeeper:                 markerkeeper,
+		BankKeeper:                   bankkeeper,
 	}
 
 	schema, err := builder.Build()

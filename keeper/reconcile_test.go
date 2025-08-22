@@ -58,7 +58,7 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 				setup("0.25", 0)
 			},
 			posthander: func() {
-				s.assertInStartQueue(vaultAddress, testBlockTime.Unix(), true)
+				s.assertInStartQueue(vaultAddress, true)
 				s.assertVaultAndMarkerBalances(vaultAddress, shareDenom, underlying.Denom, underlying.Amount, underlying.Amount)
 			},
 			expectedEvents: sdk.Events{},
@@ -69,7 +69,7 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 				setup("0.25", futureTime.Unix())
 			},
 			posthander: func() {
-				s.assertInStartQueue(vaultAddress, futureTime.Unix(), false)
+				s.assertInStartQueue(vaultAddress, false)
 				s.assertVaultAndMarkerBalances(vaultAddress, shareDenom, underlying.Denom, underlying.Amount, underlying.Amount)
 			},
 			expectedEvents: sdk.Events{},
@@ -80,7 +80,7 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 				setup("0.25", pastTime.Unix())
 			},
 			posthander: func() {
-				s.assertInStartQueue(vaultAddress, testBlockTime.Unix(), true)
+				s.assertInStartQueue(vaultAddress, true)
 				s.assertVaultAndMarkerBalances(vaultAddress, shareDenom, underlying.Denom, sdkmath.NewInt(958047987), sdkmath.NewInt(1041952013))
 			},
 			expectedEvents: createReconcileEvents(vaultAddress, markertypes.MustGetMarkerAddress(shareDenom), sdkmath.NewInt(41952013), sdkmath.NewInt(1_000_000_000), sdkmath.NewInt(1041952013), underlying.Denom, "0.25", 5_184_000),
@@ -91,7 +91,7 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 				setup("-0.25", pastTime.Unix())
 			},
 			posthander: func() {
-				s.assertInStartQueue(vaultAddress, testBlockTime.Unix(), true)
+				s.assertInStartQueue(vaultAddress, true)
 				s.assertVaultAndMarkerBalances(vaultAddress, shareDenom, underlying.Denom, sdkmath.NewInt(1040262904), sdkmath.NewInt(959737096))
 			},
 			expectedEvents: createReconcileEvents(vaultAddress, markertypes.MustGetMarkerAddress(shareDenom), sdkmath.NewInt(-40262904), sdkmath.NewInt(1_000_000_000), sdkmath.NewInt(959737096), underlying.Denom, "-0.25", 5_184_000),
@@ -328,7 +328,7 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 				vault.DesiredInterestRate = "0.25"
 				s.k.AuthKeeper.SetAccount(s.ctx, vault)
 				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, sdk.NewCoins(underlying)))
-				s.Require().NoError(s.k.EnqueueVaultStart(s.ctx, twoMonthsAgo, vault.GetAddress()))
+				s.Require().NoError(s.k.SafeEnqueueStart(s.ctx, vault))
 				s.Require().NoError(s.k.EnqueueVaultTimeout(s.ctx, testBlockTime.Unix(), vault.GetAddress()))
 				s.ctx = s.ctx.WithBlockTime(testBlockTime).WithEventManager(sdk.NewEventManager())
 			},
@@ -347,7 +347,7 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 		{
 			name: "non-vault address in interest details does nothing",
 			setup: func() {
-				s.Require().NoError(s.k.EnqueueVaultStart(s.ctx, twoMonthsAgo, markerAddr))
+				s.Require().NoError(s.k.EnqueueVaultStart(s.ctx, markerAddr))
 				s.Require().NoError(s.k.EnqueueVaultTimeout(s.ctx, testBlockTime.Unix(), markerAddr))
 				s.ctx = s.ctx.WithBlockTime(testBlockTime).WithEventManager(sdk.NewEventManager())
 			},
@@ -849,12 +849,7 @@ func createVaultWithInterest(s *TestSuite, info VaultInfo, interestRate string, 
 		s.Require().NoError(err)
 	}
 
-	s.Require().NoError(s.k.EnqueueVaultStart(s.ctx, periodStart, vault.GetAddress()))
-	// s.Require().NoError(s.k.EnqueueVaultTimeout(s.ctx, periodTimeout, vault.GetAddress()))
-	// s.Require().NoError(s.k.VaultInterestDetails.Set(s.ctx, info.vaultAddr, types.VaultInterestDetails{
-	// 	PeriodStart: periodStart,
-	// 	ExpireTime:  periodTimeout,
-	// }))
+	s.Require().NoError(s.k.SafeEnqueueStart(s.ctx, vault))
 	return vault
 }
 

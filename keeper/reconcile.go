@@ -288,7 +288,7 @@ func (k *Keeper) handleReconciledVaults(ctx context.Context) error {
 	}
 
 	for _, key := range toRemove {
-		_ = k.VaultStartQueue.Remove(ctx, key)
+		_ = k.VaultPayoutVerificationQueue.Remove(ctx, key)
 	}
 
 	payable, depleted := k.partitionVaults(sdkCtx, vaults)

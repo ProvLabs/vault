@@ -79,10 +79,15 @@ func (k queryServer) Vault(goCtx context.Context, req *types.QueryVaultRequest) 
 	reserves := k.BankKeeper.GetAllBalances(goCtx, vault.GetAddress())
 
 	return &types.QueryVaultResponse{
-		Vault:         *vault,
-		MarkerAddress: marker.GetAddress().String(),
-		Principal:     principal,
-		Reserves:      reserves,
+		Vault: *vault,
+		Principal: types.AccountBalance{
+			Address: marker.GetAddress().String(),
+			Coins:   principal,
+		},
+		Reserves: types.AccountBalance{
+			Address: vault.GetAddress().String(),
+			Coins:   reserves,
+		},
 	}, nil
 }
 

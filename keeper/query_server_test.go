@@ -27,9 +27,11 @@ func (s *TestSuite) TestQueryServer_Vault() {
 			s.Assert().Equal(expected.Vault.Admin, actual.Vault.Admin, "vault admin")
 			s.Assert().Equal(expected.Vault.ShareDenom, actual.Vault.ShareDenom, "vault share denom")
 			s.Assert().Equal(expected.Vault.UnderlyingAssets, actual.Vault.UnderlyingAssets, "vault underlying assets")
-			s.Assert().Equal(expected.MarkerAddress, actual.MarkerAddress, "marker address")
-			s.Assert().Equal(expected.Principal, actual.Principal, "principal")
-			s.Assert().Equal(expected.Reserves, actual.Reserves, "reserves")
+
+			s.Assert().Equal(expected.Principal.Address, actual.Principal.Address, "principal address")
+			s.Assert().Equal(expected.Principal.Coins, actual.Principal.Coins, "principal coins")
+			s.Assert().Equal(expected.Reserves.Address, actual.Reserves.Address, "reserves address")
+			s.Assert().Equal(expected.Reserves.Coins, actual.Reserves.Coins, "reserves coins")
 		},
 	}
 
@@ -66,10 +68,15 @@ func (s *TestSuite) TestQueryServer_Vault() {
 			Setup: setupVaults,
 			Req:   &types.QueryVaultRequest{Id: addr1.String()},
 			ExpectedResp: &types.QueryVaultResponse{
-				Vault:         *types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, []string{"stake1"}),
-				MarkerAddress: markerAddr1.String(),
-				Principal:     sdk.NewCoins(sdk.NewInt64Coin("stake1", 1000)),
-				Reserves:      sdk.NewCoins(sdk.NewInt64Coin("stake1", 100)),
+				Vault: *types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, []string{"stake1"}),
+				Principal: types.AccountBalance{
+					Address: markerAddr1.String(),
+					Coins:   sdk.NewCoins(sdk.NewInt64Coin("stake1", 1000)),
+				},
+				Reserves: types.AccountBalance{
+					Address: addr1.String(),
+					Coins:   sdk.NewCoins(sdk.NewInt64Coin("stake1", 100)),
+				},
 			},
 		},
 		{
@@ -77,10 +84,15 @@ func (s *TestSuite) TestQueryServer_Vault() {
 			Setup: setupVaults,
 			Req:   &types.QueryVaultRequest{Id: shareDenom2},
 			ExpectedResp: &types.QueryVaultResponse{
-				Vault:         *types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, []string{"stake2"}),
-				MarkerAddress: markerAddr2.String(),
-				Principal:     sdk.NewCoins(sdk.NewInt64Coin("stake2", 2000)),
-				Reserves:      sdk.NewCoins(sdk.NewInt64Coin("stake2", 200)),
+				Vault: *types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, []string{"stake2"}),
+				Principal: types.AccountBalance{
+					Address: markerAddr2.String(),
+					Coins:   sdk.NewCoins(sdk.NewInt64Coin("stake2", 2000)),
+				},
+				Reserves: types.AccountBalance{
+					Address: addr2.String(),
+					Coins:   sdk.NewCoins(sdk.NewInt64Coin("stake2", 200)),
+				},
 			},
 		},
 		{

@@ -57,18 +57,10 @@ message QueryVaultRequest {
 message QueryVaultResponse {
   // vault is the requested vault.
   VaultAccount vault = 1 [(gogoproto.nullable) = false];
-  // marker_address is the bech32 address of the vault's marker account.
-  string marker_address = 2;
-  // principal is the total amount of principal in the vault.
-  repeated cosmos.base.v1beta1.Coin principal = 3 [
-    (gogoproto.nullable) = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
-  // reserves is the total amount of reserves in the vault.
-  repeated cosmos.base.v1beta1.Coin reserves = 4 [
-    (gogoproto.nullable) = false,
-    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
-  ];
+  // principal is the total amount of principal held in the vault's marker.
+  AccountBalance principal = 2 [(gogoproto.nullable) = false];
+  // reserves is the total amount of reserves held in the vault account for interest payments.
+  AccountBalance reserves = 3 [(gogoproto.nullable) = false];
 }
 
 // QueryEstimateSwapInRequest is the request message for the Query/EstimateSwapIn endpoint.

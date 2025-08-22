@@ -27,7 +27,7 @@ func (s *TestSuite) TestVaultGenesis_InitAndExport() {
 	past := time.Now().Add(-5 * time.Minute).Unix()
 	genesis := &types.GenesisState{
 		Vaults: []types.VaultAccount{vault},
-		TimeoutQueue: []types.QueueEntry{
+		PayoutTimeoutQueue: []types.QueueEntry{
 			{Time: uint64(past), Addr: vaultAddr.String()},
 		},
 	}
@@ -43,9 +43,9 @@ func (s *TestSuite) TestVaultGenesis_InitAndExport() {
 	s.Require().Equal(vault.ShareDenom, exp.ShareDenom)
 	s.Require().Equal(vault.UnderlyingAssets, exp.UnderlyingAssets)
 
-	s.Require().Len(exported.TimeoutQueue, 1)
-	s.Require().Equal(vaultAddr.String(), exported.TimeoutQueue[0].Addr)
-	s.Require().Equal(uint64(past), exported.TimeoutQueue[0].Time)
+	s.Require().Len(exported.PayoutTimeoutQueue, 1)
+	s.Require().Equal(vaultAddr.String(), exported.PayoutTimeoutQueue[0].Addr)
+	s.Require().Equal(uint64(past), exported.PayoutTimeoutQueue[0].Time)
 
 	got, err := s.k.GetVault(s.ctx, vaultAddr)
 	s.Require().NoError(err)
@@ -74,7 +74,7 @@ func (s *TestSuite) TestVaultGenesis_RoundTrip_PastAndFutureTimeouts() {
 
 	genesis := &types.GenesisState{
 		Vaults: []types.VaultAccount{vault},
-		TimeoutQueue: []types.QueueEntry{
+		PayoutTimeoutQueue: []types.QueueEntry{
 			{Time: uint64(past), Addr: vaultAddr.String()},
 			{Time: uint64(future), Addr: vaultAddr.String()},
 		},
@@ -84,9 +84,9 @@ func (s *TestSuite) TestVaultGenesis_RoundTrip_PastAndFutureTimeouts() {
 	s.ctx = s.ctx.WithBlockTime(now)
 
 	exported := s.k.ExportGenesis(s.ctx)
-	s.Require().Len(exported.TimeoutQueue, 1)
-	s.Require().Equal(vaultAddr.String(), exported.TimeoutQueue[0].Addr)
-	s.Require().Equal(uint64(past), exported.TimeoutQueue[0].Time)
+	s.Require().Len(exported.PayoutTimeoutQueue, 1)
+	s.Require().Equal(vaultAddr.String(), exported.PayoutTimeoutQueue[0].Addr)
+	s.Require().Equal(uint64(past), exported.PayoutTimeoutQueue[0].Time)
 }
 
 func (s *TestSuite) TestVaultGenesis_InvalidTimeoutAddressPanics() {
@@ -106,7 +106,7 @@ func (s *TestSuite) TestVaultGenesis_InvalidTimeoutAddressPanics() {
 
 	genesis := &types.GenesisState{
 		Vaults: []types.VaultAccount{vault},
-		TimeoutQueue: []types.QueueEntry{
+		PayoutTimeoutQueue: []types.QueueEntry{
 			{Time: uint64(time.Now().Unix()), Addr: "not-bech32"},
 		},
 	}
@@ -147,7 +147,7 @@ func (s *TestSuite) TestVaultGenesis_InitNilDoesNothing() {
 	s.k.InitGenesis(s.ctx, nil)
 	exported := s.k.ExportGenesis(s.ctx)
 	s.Require().Len(exported.Vaults, 0)
-	s.Require().Len(exported.TimeoutQueue, 0)
+	s.Require().Len(exported.PayoutTimeoutQueue, 0)
 }
 
 func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidVault() {

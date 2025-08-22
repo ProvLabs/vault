@@ -52,7 +52,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 			panic(fmt.Errorf("failed to store vault %s: %w", v.Address, err))
 		}
 	}
-	for _, entry := range genState.TimeoutQueue {
+	for _, entry := range genState.PayoutTimeoutQueue {
 		addr, err := sdk.AccAddressFromBech32(entry.Addr)
 		if err != nil {
 			panic(fmt.Errorf("invalid address in timeout queue: %w", err))
@@ -74,9 +74,9 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		}
 	}
 
-	timeoutQueue := make([]types.QueueEntry, 0)
+	paymentTimeoutQueue := make([]types.QueueEntry, 0)
 	err := k.WalkDuePayoutTimeouts(ctx, ctx.BlockTime().Unix(), func(t uint64, addr sdk.AccAddress) (stop bool, err error) {
-		timeoutQueue = append(timeoutQueue, types.QueueEntry{
+		paymentTimeoutQueue = append(paymentTimeoutQueue, types.QueueEntry{
 			Time: t,
 			Addr: addr.String(),
 		})
@@ -87,7 +87,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	}
 
 	return &types.GenesisState{
-		Vaults:       vaults,
-		TimeoutQueue: timeoutQueue,
+		Vaults:             vaults,
+		PayoutTimeoutQueue: paymentTimeoutQueue,
 	}
 }

@@ -584,16 +584,16 @@ func (x *_GenesisState_2_list) IsValid() bool {
 }
 
 var (
-	md_GenesisState               protoreflect.MessageDescriptor
-	fd_GenesisState_vaults        protoreflect.FieldDescriptor
-	fd_GenesisState_timeout_queue protoreflect.FieldDescriptor
+	md_GenesisState                      protoreflect.MessageDescriptor
+	fd_GenesisState_vaults               protoreflect.FieldDescriptor
+	fd_GenesisState_payout_timeout_queue protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_vault_v1_genesis_proto_init()
 	md_GenesisState = File_vault_v1_genesis_proto.Messages().ByName("GenesisState")
 	fd_GenesisState_vaults = md_GenesisState.Fields().ByName("vaults")
-	fd_GenesisState_timeout_queue = md_GenesisState.Fields().ByName("timeout_queue")
+	fd_GenesisState_payout_timeout_queue = md_GenesisState.Fields().ByName("payout_timeout_queue")
 }
 
 var _ protoreflect.Message = (*fastReflection_GenesisState)(nil)
@@ -667,9 +667,9 @@ func (x *fastReflection_GenesisState) Range(f func(protoreflect.FieldDescriptor,
 			return
 		}
 	}
-	if len(x.TimeoutQueue) != 0 {
-		value := protoreflect.ValueOfList(&_GenesisState_2_list{list: &x.TimeoutQueue})
-		if !f(fd_GenesisState_timeout_queue, value) {
+	if len(x.PayoutTimeoutQueue) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_2_list{list: &x.PayoutTimeoutQueue})
+		if !f(fd_GenesisState_payout_timeout_queue, value) {
 			return
 		}
 	}
@@ -690,8 +690,8 @@ func (x *fastReflection_GenesisState) Has(fd protoreflect.FieldDescriptor) bool 
 	switch fd.FullName() {
 	case "vault.v1.GenesisState.vaults":
 		return len(x.Vaults) != 0
-	case "vault.v1.GenesisState.timeout_queue":
-		return len(x.TimeoutQueue) != 0
+	case "vault.v1.GenesisState.payout_timeout_queue":
+		return len(x.PayoutTimeoutQueue) != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.GenesisState"))
@@ -710,8 +710,8 @@ func (x *fastReflection_GenesisState) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	case "vault.v1.GenesisState.vaults":
 		x.Vaults = nil
-	case "vault.v1.GenesisState.timeout_queue":
-		x.TimeoutQueue = nil
+	case "vault.v1.GenesisState.payout_timeout_queue":
+		x.PayoutTimeoutQueue = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.GenesisState"))
@@ -734,11 +734,11 @@ func (x *fastReflection_GenesisState) Get(descriptor protoreflect.FieldDescripto
 		}
 		listValue := &_GenesisState_1_list{list: &x.Vaults}
 		return protoreflect.ValueOfList(listValue)
-	case "vault.v1.GenesisState.timeout_queue":
-		if len(x.TimeoutQueue) == 0 {
+	case "vault.v1.GenesisState.payout_timeout_queue":
+		if len(x.PayoutTimeoutQueue) == 0 {
 			return protoreflect.ValueOfList(&_GenesisState_2_list{})
 		}
-		listValue := &_GenesisState_2_list{list: &x.TimeoutQueue}
+		listValue := &_GenesisState_2_list{list: &x.PayoutTimeoutQueue}
 		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
@@ -764,10 +764,10 @@ func (x *fastReflection_GenesisState) Set(fd protoreflect.FieldDescriptor, value
 		lv := value.List()
 		clv := lv.(*_GenesisState_1_list)
 		x.Vaults = *clv.list
-	case "vault.v1.GenesisState.timeout_queue":
+	case "vault.v1.GenesisState.payout_timeout_queue":
 		lv := value.List()
 		clv := lv.(*_GenesisState_2_list)
-		x.TimeoutQueue = *clv.list
+		x.PayoutTimeoutQueue = *clv.list
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.GenesisState"))
@@ -794,11 +794,11 @@ func (x *fastReflection_GenesisState) Mutable(fd protoreflect.FieldDescriptor) p
 		}
 		value := &_GenesisState_1_list{list: &x.Vaults}
 		return protoreflect.ValueOfList(value)
-	case "vault.v1.GenesisState.timeout_queue":
-		if x.TimeoutQueue == nil {
-			x.TimeoutQueue = []*QueueEntry{}
+	case "vault.v1.GenesisState.payout_timeout_queue":
+		if x.PayoutTimeoutQueue == nil {
+			x.PayoutTimeoutQueue = []*QueueEntry{}
 		}
-		value := &_GenesisState_2_list{list: &x.TimeoutQueue}
+		value := &_GenesisState_2_list{list: &x.PayoutTimeoutQueue}
 		return protoreflect.ValueOfList(value)
 	default:
 		if fd.IsExtension() {
@@ -816,7 +816,7 @@ func (x *fastReflection_GenesisState) NewField(fd protoreflect.FieldDescriptor) 
 	case "vault.v1.GenesisState.vaults":
 		list := []*VaultAccount{}
 		return protoreflect.ValueOfList(&_GenesisState_1_list{list: &list})
-	case "vault.v1.GenesisState.timeout_queue":
+	case "vault.v1.GenesisState.payout_timeout_queue":
 		list := []*QueueEntry{}
 		return protoreflect.ValueOfList(&_GenesisState_2_list{list: &list})
 	default:
@@ -894,8 +894,8 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 				n += 1 + l + runtime.Sov(uint64(l))
 			}
 		}
-		if len(x.TimeoutQueue) > 0 {
-			for _, e := range x.TimeoutQueue {
+		if len(x.PayoutTimeoutQueue) > 0 {
+			for _, e := range x.PayoutTimeoutQueue {
 				l = options.Size(e)
 				n += 1 + l + runtime.Sov(uint64(l))
 			}
@@ -929,9 +929,9 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if len(x.TimeoutQueue) > 0 {
-			for iNdEx := len(x.TimeoutQueue) - 1; iNdEx >= 0; iNdEx-- {
-				encoded, err := options.Marshal(x.TimeoutQueue[iNdEx])
+		if len(x.PayoutTimeoutQueue) > 0 {
+			for iNdEx := len(x.PayoutTimeoutQueue) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.PayoutTimeoutQueue[iNdEx])
 				if err != nil {
 					return protoiface.MarshalOutput{
 						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1046,7 +1046,7 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 				iNdEx = postIndex
 			case 2:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field TimeoutQueue", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PayoutTimeoutQueue", wireType)
 				}
 				var msglen int
 				for shift := uint(0); ; shift += 7 {
@@ -1073,8 +1073,8 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.TimeoutQueue = append(x.TimeoutQueue, &QueueEntry{})
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.TimeoutQueue[len(x.TimeoutQueue)-1]); err != nil {
+				x.PayoutTimeoutQueue = append(x.PayoutTimeoutQueue, &QueueEntry{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.PayoutTimeoutQueue[len(x.PayoutTimeoutQueue)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
@@ -1170,14 +1170,18 @@ func (x *QueueEntry) GetAddr() string {
 }
 
 // GenesisState defines the vault module's genesis state.
+// NOTE: payout verification queue is not imported or exported.  It will always be empty after endblocker processes it.
 type GenesisState struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
 	// vaults defines the vaults that exist at genesis.
-	Vaults       []*VaultAccount `protobuf:"bytes,1,rep,name=vaults,proto3" json:"vaults,omitempty"`
-	TimeoutQueue []*QueueEntry   `protobuf:"bytes,2,rep,name=timeout_queue,json=timeoutQueue,proto3" json:"timeout_queue,omitempty"`
+	Vaults []*VaultAccount `protobuf:"bytes,1,rep,name=vaults,proto3" json:"vaults,omitempty"`
+	// payout_timeout_queue contains (time, addr) entries for vaults that are
+	// temporarily deferred from automatic payout/interest verification until the
+	// given UNIX timestamp (seconds). These entries are re-enqueued on InitGenesis.
+	PayoutTimeoutQueue []*QueueEntry `protobuf:"bytes,2,rep,name=payout_timeout_queue,json=payoutTimeoutQueue,proto3" json:"payout_timeout_queue,omitempty"`
 }
 
 func (x *GenesisState) Reset() {
@@ -1207,9 +1211,9 @@ func (x *GenesisState) GetVaults() []*VaultAccount {
 	return nil
 }
 
-func (x *GenesisState) GetTimeoutQueue() []*QueueEntry {
+func (x *GenesisState) GetPayoutTimeoutQueue() []*QueueEntry {
 	if x != nil {
-		return x.TimeoutQueue
+		return x.PayoutTimeoutQueue
 	}
 	return nil
 }
@@ -1226,25 +1230,26 @@ var file_vault_v1_genesis_proto_rawDesc = []byte{
 	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x34, 0x0a, 0x0a, 0x51, 0x75, 0x65, 0x75, 0x65, 0x45, 0x6e,
 	0x74, 0x72, 0x79, 0x12, 0x12, 0x0a, 0x04, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28,
 	0x04, 0x52, 0x04, 0x74, 0x69, 0x6d, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x61, 0x64, 0x64, 0x72, 0x18,
-	0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x61, 0x64, 0x64, 0x72, 0x22, 0x85, 0x01, 0x0a, 0x0c,
+	0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x61, 0x64, 0x64, 0x72, 0x22, 0x92, 0x01, 0x0a, 0x0c,
 	0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x53, 0x74, 0x61, 0x74, 0x65, 0x12, 0x34, 0x0a, 0x06,
 	0x76, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x16, 0x2e, 0x76,
 	0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x63, 0x63,
 	0x6f, 0x75, 0x6e, 0x74, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x76, 0x61, 0x75, 0x6c,
-	0x74, 0x73, 0x12, 0x3f, 0x0a, 0x0d, 0x74, 0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x5f, 0x71, 0x75,
-	0x65, 0x75, 0x65, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x76, 0x61, 0x75, 0x6c,
-	0x74, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x75, 0x65, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x42,
-	0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x0c, 0x74, 0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x51, 0x75,
-	0x65, 0x75, 0x65, 0x42, 0x8d, 0x01, 0x0a, 0x0c, 0x63, 0x6f, 0x6d, 0x2e, 0x76, 0x61, 0x75, 0x6c,
-	0x74, 0x2e, 0x76, 0x31, 0x42, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x50, 0x72, 0x6f,
-	0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2e, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
-	0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f,
-	0x61, 0x70, 0x69, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61, 0x75,
-	0x6c, 0x74, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x56, 0x58, 0x58, 0xaa, 0x02, 0x08, 0x56, 0x61, 0x75,
-	0x6c, 0x74, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31,
-	0xe2, 0x02, 0x14, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d,
-	0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x09, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a,
-	0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x74, 0x73, 0x12, 0x4c, 0x0a, 0x14, 0x70, 0x61, 0x79, 0x6f, 0x75, 0x74, 0x5f, 0x74, 0x69, 0x6d,
+	0x65, 0x6f, 0x75, 0x74, 0x5f, 0x71, 0x75, 0x65, 0x75, 0x65, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b,
+	0x32, 0x14, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x75,
+	0x65, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x12, 0x70, 0x61,
+	0x79, 0x6f, 0x75, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x51, 0x75, 0x65, 0x75, 0x65,
+	0x42, 0x8d, 0x01, 0x0a, 0x0c, 0x63, 0x6f, 0x6d, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76,
+	0x31, 0x42, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50,
+	0x01, 0x5a, 0x2e, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72,
+	0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69,
+	0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x76,
+	0x31, 0xa2, 0x02, 0x03, 0x56, 0x58, 0x58, 0xaa, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e,
+	0x56, 0x31, 0xca, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x14,
+	0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61,
+	0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x09, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31,
+	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1267,7 +1272,7 @@ var file_vault_v1_genesis_proto_goTypes = []interface{}{
 }
 var file_vault_v1_genesis_proto_depIdxs = []int32{
 	2, // 0: vault.v1.GenesisState.vaults:type_name -> vault.v1.VaultAccount
-	0, // 1: vault.v1.GenesisState.timeout_queue:type_name -> vault.v1.QueueEntry
+	0, // 1: vault.v1.GenesisState.payout_timeout_queue:type_name -> vault.v1.QueueEntry
 	2, // [2:2] is the sub-list for method output_type
 	2, // [2:2] is the sub-list for method input_type
 	2, // [2:2] is the sub-list for extension type_name

@@ -93,6 +93,10 @@ func NewVaultKeeper(
 	tkey := storetypes.NewTransientStoreKey(fmt.Sprintf("transient_%s", types.ModuleName))
 	wrapper := testutil.DefaultContextWithDB(t, key, tkey)
 	cfg := MakeTestEncodingConfig("provlabs")
+	sdkCfg := sdk.GetConfig()
+	sdkCfg.SetBech32PrefixForAccount("provlabs", "provlabspub")
+	sdkCfg.SetBech32PrefixForValidator("provlabsvaloper", "provlabsvaloperpub")
+	sdkCfg.SetBech32PrefixForConsensusNode("provlabsvalcons", "provlabsvalconspub")
 	types.RegisterInterfaces(cfg.InterfaceRegistry)
 	authMock := NewMockAuthKeeper()
 

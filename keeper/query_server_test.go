@@ -48,7 +48,7 @@ func (s *TestSuite) TestQueryServer_Vault() {
 				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: admin, ShareDenom: shareDenom2, UnderlyingAsset: "stake3"})
 				s.Require().NoError(err)
 			},
-			Req: &types.QueryVaultRequest{VaultAddress: addr2.String()},
+			Req: &types.QueryVaultRequest{Id: addr2.String()},
 			ExpectedResp: &types.QueryVaultResponse{
 				Vault: *types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, []string{"stake3"}),
 			},
@@ -60,17 +60,17 @@ func (s *TestSuite) TestQueryServer_Vault() {
 		},
 		{
 			Name:               "empty vault address",
-			Req:                &types.QueryVaultRequest{VaultAddress: ""},
+			Req:                &types.QueryVaultRequest{Id: ""},
 			ExpectedErrSubstrs: []string{"vault_address must be provided"},
 		},
 		{
 			Name:               "invalid vault address",
-			Req:                &types.QueryVaultRequest{VaultAddress: "invalid-bech32-address"},
+			Req:                &types.QueryVaultRequest{Id: "invalid-bech32-address"},
 			ExpectedErrSubstrs: []string{"invalid vault_address", "decoding bech32 failed"},
 		},
 		{
 			Name:               "vault not found",
-			Req:                &types.QueryVaultRequest{VaultAddress: addr3.String()},
+			Req:                &types.QueryVaultRequest{Id: addr3.String()},
 			ExpectedErrSubstrs: []string{"vault with address", "not found"},
 		},
 	}

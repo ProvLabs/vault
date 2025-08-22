@@ -320,12 +320,12 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod: "Vault",
-					Use:       "get [vault_address]",
+					Use:       "get [id]",
 					Alias:     []string{"g"},
-					Short:     "Query a specific vault's configuration and state",
+					Short:     "Query a specific vault's configuration and state by vault address or share denom",
 					Example:   fmt.Sprintf("%s get %s", queryStart, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "vault_address"},
+						{ProtoField: "id"},
 					},
 				},
 				{

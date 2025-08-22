@@ -36,6 +36,9 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 			if err := v.SetAccountNumber(existing.GetAccountNumber()); err != nil {
 				panic(fmt.Errorf("failed to set account number for vault %s: %w", v.Address, err))
 			}
+			if err := k.SetVaultAccount(ctx, v); err != nil {
+				panic(fmt.Errorf("unable to set vault account %s: %w", v.Address, err))
+			}
 		} else {
 			vaultAcc := k.AuthKeeper.NewAccount(ctx, v).(types.VaultAccountI)
 			k.AuthKeeper.SetAccount(ctx, vaultAcc)

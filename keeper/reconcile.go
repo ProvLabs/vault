@@ -238,7 +238,7 @@ func (k *Keeper) handleVaultInterestTimeouts(ctx context.Context) error {
 	}
 
 	for _, key := range toRemove {
-		if err := k.VaultTimeoutQueue.Remove(ctx, key); err != nil {
+		if err := k.PayoutTimeoutQueue.Remove(ctx, key); err != nil {
 			sdkCtx.Logger().Error("failed to remove processed timeout", "err", err)
 		}
 	}
@@ -288,7 +288,7 @@ func (k *Keeper) handleReconciledVaults(ctx context.Context) error {
 	}
 
 	for _, key := range toRemove {
-		_ = k.VaultPayoutVerificationQueue.Remove(ctx, key)
+		_ = k.PayoutVerificationQueue.Remove(ctx, key)
 	}
 
 	payable, depleted := k.partitionVaults(sdkCtx, vaults)

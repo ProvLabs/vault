@@ -20,32 +20,32 @@ const (
 // EnqueueVaultStart schedules a vault for reconciliation by adding an entry
 // to the VaultStartQueue keyed by the given period start and vault address.
 func (k Keeper) EnqueueVaultStart(ctx context.Context, vaultAddr sdk.AccAddress) error {
-	return k.VaultPayoutVerificationQueue.Set(ctx, vaultAddr, collections.NoValue{})
+	return k.PayoutVerificationQueue.Set(ctx, vaultAddr, collections.NoValue{})
 }
 
 // EnqueueVaultTimeout schedules a vault for timeout processing by adding an entry
 // to the VaultTimeoutQueue keyed by the given timeout and vault address.
 func (k Keeper) EnqueueVaultTimeout(ctx context.Context, periodTimeout int64, vaultAddr sdk.AccAddress) error {
-	return k.VaultTimeoutQueue.Set(ctx, collections.Join(uint64(periodTimeout), vaultAddr), collections.NoValue{})
+	return k.PayoutTimeoutQueue.Set(ctx, collections.Join(uint64(periodTimeout), vaultAddr), collections.NoValue{})
 }
 
 // DequeueVaultStart removes a vault entry from the VaultStartQueue for the given
 // period start and vault address.
 func (k Keeper) DequeueVaultStart(ctx context.Context, vaultAddr sdk.AccAddress) error {
-	return k.VaultPayoutVerificationQueue.Remove(ctx, vaultAddr)
+	return k.PayoutVerificationQueue.Remove(ctx, vaultAddr)
 }
 
 // DequeueVaultTimeout removes a vault entry from the VaultTimeoutQueue for the given
 // period timeout and vault address.
 func (k Keeper) DequeueVaultTimeout(ctx context.Context, periodTimeout int64, vaultAddr sdk.AccAddress) error {
-	return k.VaultTimeoutQueue.Remove(ctx, collections.Join(uint64(periodTimeout), vaultAddr))
+	return k.PayoutTimeoutQueue.Remove(ctx, collections.Join(uint64(periodTimeout), vaultAddr))
 }
 
 // WalkDueStarts iterates over all entries in the VaultStartQueue with periodStart <= nowSec.
 // For each due entry, it calls the provided callback function. Iteration stops if the
 // callback returns stop=true or an error.
 func (k Keeper) WalkDueStarts(ctx context.Context, nowSec int64, fn func(vaultAddr sdk.AccAddress) (stop bool, err error)) error {
-	it, err := k.VaultPayoutVerificationQueue.Iterate(ctx, nil)
+	it, err := k.PayoutVerificationQueue.Iterate(ctx, nil)
 	if err != nil {
 		return err
 	}
@@ -68,7 +68,7 @@ func (k Keeper) WalkDueStarts(ctx context.Context, nowSec int64, fn func(vaultAd
 // For each due entry, it calls the provided callback function. Iteration stops if the
 // callback returns stop=true or an error.
 func (k Keeper) WalkDueTimeouts(ctx context.Context, nowSec int64, fn func(periodTimeout uint64, vaultAddr sdk.AccAddress) (stop bool, err error)) error {
-	it, err := k.VaultTimeoutQueue.Iterate(ctx, nil)
+	it, err := k.PayoutTimeoutQueue.Iterate(ctx, nil)
 	if err != nil {
 		return err
 	}
@@ -95,7 +95,7 @@ func (k Keeper) WalkDueTimeouts(ctx context.Context, nowSec int64, fn func(perio
 func (k Keeper) RemoveAllStartsForVault(ctx context.Context, vaultAddr sdk.AccAddress) error {
 	var keys []sdk.AccAddress
 
-	it, err := k.VaultPayoutVerificationQueue.Iterate(ctx, nil)
+	it, err := k.PayoutVerificationQueue.Iterate(ctx, nil)
 	if err != nil {
 		return err
 	}
@@ -111,7 +111,7 @@ func (k Keeper) RemoveAllStartsForVault(ctx context.Context, vaultAddr sdk.AccAd
 		}
 	}
 	for _, key := range keys {
-		if err := k.VaultPayoutVerificationQueue.Remove(ctx, key); err != nil {
+		if err := k.PayoutVerificationQueue.Remove(ctx, key); err != nil {
 			return err
 		}
 	}
@@ -123,7 +123,7 @@ func (k Keeper) RemoveAllStartsForVault(ctx context.Context, vaultAddr sdk.AccAd
 func (k Keeper) RemoveAllTimeoutsForVault(ctx context.Context, vaultAddr sdk.AccAddress) error {
 	var keys []collections.Pair[uint64, sdk.AccAddress]
 
-	it, err := k.VaultTimeoutQueue.Iterate(ctx, nil)
+	it, err := k.PayoutTimeoutQueue.Iterate(ctx, nil)
 	if err != nil {
 		return err
 	}
@@ -139,7 +139,7 @@ func (k Keeper) RemoveAllTimeoutsForVault(ctx context.Context, vaultAddr sdk.Acc
 		}
 	}
 	for _, key := range keys {
-		if err := k.VaultTimeoutQueue.Remove(ctx, key); err != nil {
+		if err := k.PayoutTimeoutQueue.Remove(ctx, key); err != nil {
 			return err
 		}
 	}

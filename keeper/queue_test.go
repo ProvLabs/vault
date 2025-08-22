@@ -22,7 +22,7 @@ func TestEnqueueDequeue_Start(t *testing.T) {
 
 	require.NoError(t, k.EnqueueVaultStart(ctx, addr))
 
-	it, err := k.VaultPayoutVerificationQueue.Iterate(ctx, nil)
+	it, err := k.PayoutVerificationQueue.Iterate(ctx, nil)
 	require.NoError(t, err)
 	defer it.Close()
 
@@ -39,7 +39,7 @@ func TestEnqueueDequeue_Start(t *testing.T) {
 
 	require.NoError(t, k.DequeueVaultStart(ctx, addr))
 
-	it2, err := k.VaultPayoutVerificationQueue.Iterate(ctx, nil)
+	it2, err := k.PayoutVerificationQueue.Iterate(ctx, nil)
 	require.NoError(t, err)
 	defer it2.Close()
 	require.False(t, it2.Valid())
@@ -52,7 +52,7 @@ func TestEnqueueDequeue_Timeout(t *testing.T) {
 
 	require.NoError(t, k.EnqueueVaultTimeout(ctx, ts, addr))
 
-	it, err := k.VaultTimeoutQueue.Iterate(ctx, nil)
+	it, err := k.PayoutTimeoutQueue.Iterate(ctx, nil)
 	require.NoError(t, err)
 	defer it.Close()
 
@@ -69,7 +69,7 @@ func TestEnqueueDequeue_Timeout(t *testing.T) {
 
 	require.NoError(t, k.DequeueVaultTimeout(ctx, ts, addr))
 
-	it2, err := k.VaultTimeoutQueue.Iterate(ctx, nil)
+	it2, err := k.PayoutTimeoutQueue.Iterate(ctx, nil)
 	require.NoError(t, err)
 	defer it2.Close()
 	require.False(t, it2.Valid())
@@ -172,7 +172,7 @@ func TestRemoveAllStartsForVault(t *testing.T) {
 
 	require.NoError(t, k.RemoveAllStartsForVault(ctx, a1))
 
-	it, err := k.VaultPayoutVerificationQueue.Iterate(ctx, nil)
+	it, err := k.PayoutVerificationQueue.Iterate(ctx, nil)
 	require.NoError(t, err)
 	defer it.Close()
 
@@ -194,7 +194,7 @@ func TestRemoveAllTimeoutsForVault(t *testing.T) {
 
 	require.NoError(t, k.RemoveAllTimeoutsForVault(ctx, a1))
 
-	it, err := k.VaultTimeoutQueue.Iterate(ctx, nil)
+	it, err := k.PayoutTimeoutQueue.Iterate(ctx, nil)
 	require.NoError(t, err)
 	defer it.Close()
 
@@ -227,7 +227,7 @@ func TestSafeEnqueueStart_UpdatesVaultAndQueues(t *testing.T) {
 
 	require.NoError(t, k.SafeEnqueueStart(ctx, v))
 
-	itS, err := k.VaultPayoutVerificationQueue.Iterate(ctx, nil)
+	itS, err := k.PayoutVerificationQueue.Iterate(ctx, nil)
 	require.NoError(t, err)
 	defer itS.Close()
 
@@ -241,7 +241,7 @@ func TestSafeEnqueueStart_UpdatesVaultAndQueues(t *testing.T) {
 	}
 	require.True(t, foundStart)
 
-	itT, err := k.VaultTimeoutQueue.Iterate(ctx, nil)
+	itT, err := k.PayoutTimeoutQueue.Iterate(ctx, nil)
 	require.NoError(t, err)
 	defer itT.Close()
 
@@ -285,7 +285,7 @@ func TestSafeEnqueueTimeout_UpdatesVaultAndQueues(t *testing.T) {
 	expectTimeout := uint64(now.Unix() + kpr.AutoReconcileTimeout)
 
 	var times []uint64
-	itT, err := k.VaultTimeoutQueue.Iterate(ctx, nil)
+	itT, err := k.PayoutTimeoutQueue.Iterate(ctx, nil)
 	require.NoError(t, err)
 	defer itT.Close()
 	for ; itT.Valid(); itT.Next() {

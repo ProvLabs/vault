@@ -58,7 +58,7 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 				setup("0.25", 0)
 			},
 			posthander: func() {
-				s.assertInStartQueue(vaultAddress, true)
+				s.assertInPayoutVerificationQueue(vaultAddress, true)
 				s.assertVaultAndMarkerBalances(vaultAddress, shareDenom, underlying.Denom, underlying.Amount, underlying.Amount)
 			},
 			expectedEvents: sdk.Events{},
@@ -69,7 +69,7 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 				setup("0.25", futureTime.Unix())
 			},
 			posthander: func() {
-				s.assertInStartQueue(vaultAddress, false)
+				s.assertInPayoutVerificationQueue(vaultAddress, false)
 				s.assertVaultAndMarkerBalances(vaultAddress, shareDenom, underlying.Denom, underlying.Amount, underlying.Amount)
 			},
 			expectedEvents: sdk.Events{},
@@ -80,7 +80,7 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 				setup("0.25", pastTime.Unix())
 			},
 			posthander: func() {
-				s.assertInStartQueue(vaultAddress, true)
+				s.assertInPayoutVerificationQueue(vaultAddress, true)
 				s.assertVaultAndMarkerBalances(vaultAddress, shareDenom, underlying.Denom, sdkmath.NewInt(958047987), sdkmath.NewInt(1041952013))
 			},
 			expectedEvents: createReconcileEvents(vaultAddress, markertypes.MustGetMarkerAddress(shareDenom), sdkmath.NewInt(41952013), sdkmath.NewInt(1_000_000_000), sdkmath.NewInt(1041952013), underlying.Denom, "0.25", 5_184_000),
@@ -91,7 +91,7 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 				setup("-0.25", pastTime.Unix())
 			},
 			posthander: func() {
-				s.assertInStartQueue(vaultAddress, true)
+				s.assertInPayoutVerificationQueue(vaultAddress, true)
 				s.assertVaultAndMarkerBalances(vaultAddress, shareDenom, underlying.Denom, sdkmath.NewInt(1040262904), sdkmath.NewInt(959737096))
 			},
 			expectedEvents: createReconcileEvents(vaultAddress, markertypes.MustGetMarkerAddress(shareDenom), sdkmath.NewInt(-40262904), sdkmath.NewInt(1_000_000_000), sdkmath.NewInt(959737096), underlying.Denom, "-0.25", 5_184_000),

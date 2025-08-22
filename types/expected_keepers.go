@@ -3,10 +3,7 @@ package types
 import (
 	context "context"
 
-	"cosmossdk.io/core/address"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/provenance-io/provenance/x/marker/types"
 )
@@ -22,7 +19,7 @@ type MarkerKeeper interface {
 }
 
 type AccountKeeper interface {
-	AddressCodec() address.Codec
+	// AddressCodec() address.Codec
 
 	NewAccount(context.Context, sdk.AccountI) sdk.AccountI
 	NewAccountWithAddress(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
@@ -32,16 +29,16 @@ type AccountKeeper interface {
 	HasAccount(ctx context.Context, addr sdk.AccAddress) bool
 	SetAccount(ctx context.Context, acc sdk.AccountI)
 
-	IterateAccounts(ctx context.Context, process func(sdk.AccountI) bool)
+	// IterateAccounts(ctx context.Context, process func(sdk.AccountI) bool)
 
-	ValidatePermissions(macc sdk.ModuleAccountI) error
+	// ValidatePermissions(macc sdk.ModuleAccountI) error
 
-	GetModuleAddress(moduleName string) sdk.AccAddress
-	GetModuleAddressAndPermissions(moduleName string) (addr sdk.AccAddress, permissions []string)
-	GetModuleAccountAndPermissions(ctx context.Context, moduleName string) (sdk.ModuleAccountI, []string)
-	GetModuleAccount(ctx context.Context, moduleName string) sdk.ModuleAccountI
-	SetModuleAccount(ctx context.Context, macc sdk.ModuleAccountI)
-	GetModulePermissions() map[string]authtypes.PermissionsForAddress
+	// GetModuleAddress(moduleName string) sdk.AccAddress
+	// GetModuleAddressAndPermissions(moduleName string) (addr sdk.AccAddress, permissions []string)
+	// GetModuleAccountAndPermissions(ctx context.Context, moduleName string) (sdk.ModuleAccountI, []string)
+	// GetModuleAccount(ctx context.Context, moduleName string) sdk.ModuleAccountI
+	// SetModuleAccount(ctx context.Context, macc sdk.ModuleAccountI)
+	// GetModulePermissions() map[string]authtypes.PermissionsForAddress
 }
 
 // BankKeeper defines the bank functionality needed from within the quarantine module.

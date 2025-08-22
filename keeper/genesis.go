@@ -57,7 +57,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 		if err != nil {
 			panic(fmt.Errorf("invalid address in timeout queue: %w", err))
 		}
-		if err := k.EnqueueVaultTimeout(ctx, int64(entry.Time), addr); err != nil {
+		if err := k.EnqueuePayoutTimeout(ctx, int64(entry.Time), addr); err != nil {
 			panic(fmt.Errorf("failed to enqueue vault timeout for %s: %w", entry.Addr, err))
 		}
 	}
@@ -74,19 +74,8 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		}
 	}
 
-	startQueue := make([]types.QueueEntry, 0)
-	err := k.WalkDueStarts(ctx, ctx.BlockTime().Unix(), func(addr sdk.AccAddress) (stop bool, err error) {
-		startQueue = append(startQueue, types.QueueEntry{
-			Addr: addr.String(),
-		})
-		return false, nil
-	})
-	if err != nil {
-		panic(fmt.Errorf("failed to walk vault start queue: %w", err))
-	}
-
 	timeoutQueue := make([]types.QueueEntry, 0)
-	err = k.WalkDueTimeouts(ctx, ctx.BlockTime().Unix(), func(t uint64, addr sdk.AccAddress) (stop bool, err error) {
+	err := k.WalkDuePayoutTimeouts(ctx, ctx.BlockTime().Unix(), func(t uint64, addr sdk.AccAddress) (stop bool, err error) {
 		timeoutQueue = append(timeoutQueue, types.QueueEntry{
 			Time: t,
 			Addr: addr.String(),

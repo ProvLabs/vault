@@ -17,34 +17,34 @@ const (
 	AutoReconcileTimeout = 20 * interest.SecondsPerHour
 )
 
-// EnqueueVaultStart schedules a vault for reconciliation by adding an entry
+// EnqueuePayoutVerification schedules a vault for reconciliation by adding an entry
 // to the VaultStartQueue keyed by the given period start and vault address.
-func (k Keeper) EnqueueVaultStart(ctx context.Context, vaultAddr sdk.AccAddress) error {
+func (k Keeper) EnqueuePayoutVerification(ctx context.Context, vaultAddr sdk.AccAddress) error {
 	return k.PayoutVerificationQueue.Set(ctx, vaultAddr, collections.NoValue{})
 }
 
-// EnqueueVaultTimeout schedules a vault for timeout processing by adding an entry
+// EnqueuePayoutTimeout schedules a vault for timeout processing by adding an entry
 // to the VaultTimeoutQueue keyed by the given timeout and vault address.
-func (k Keeper) EnqueueVaultTimeout(ctx context.Context, periodTimeout int64, vaultAddr sdk.AccAddress) error {
+func (k Keeper) EnqueuePayoutTimeout(ctx context.Context, periodTimeout int64, vaultAddr sdk.AccAddress) error {
 	return k.PayoutTimeoutQueue.Set(ctx, collections.Join(uint64(periodTimeout), vaultAddr), collections.NoValue{})
 }
 
-// DequeueVaultStart removes a vault entry from the VaultStartQueue for the given
+// DequeuePayoutVerification removes a vault entry from the VaultStartQueue for the given
 // period start and vault address.
-func (k Keeper) DequeueVaultStart(ctx context.Context, vaultAddr sdk.AccAddress) error {
+func (k Keeper) DequeuePayoutVerification(ctx context.Context, vaultAddr sdk.AccAddress) error {
 	return k.PayoutVerificationQueue.Remove(ctx, vaultAddr)
 }
 
-// DequeueVaultTimeout removes a vault entry from the VaultTimeoutQueue for the given
+// DequeuePayoutTimeout removes a vault entry from the VaultTimeoutQueue for the given
 // period timeout and vault address.
-func (k Keeper) DequeueVaultTimeout(ctx context.Context, periodTimeout int64, vaultAddr sdk.AccAddress) error {
+func (k Keeper) DequeuePayoutTimeout(ctx context.Context, periodTimeout int64, vaultAddr sdk.AccAddress) error {
 	return k.PayoutTimeoutQueue.Remove(ctx, collections.Join(uint64(periodTimeout), vaultAddr))
 }
 
-// WalkDueStarts iterates over all entries in the VaultStartQueue with periodStart <= nowSec.
+// WalkPayoutVerifications iterates over all entries in the VaultStartQueue with periodStart <= nowSec.
 // For each due entry, it calls the provided callback function. Iteration stops if the
 // callback returns stop=true or an error.
-func (k Keeper) WalkDueStarts(ctx context.Context, nowSec int64, fn func(vaultAddr sdk.AccAddress) (stop bool, err error)) error {
+func (k Keeper) WalkPayoutVerifications(ctx context.Context, fn func(vaultAddr sdk.AccAddress) (stop bool, err error)) error {
 	it, err := k.PayoutVerificationQueue.Iterate(ctx, nil)
 	if err != nil {
 		return err
@@ -64,10 +64,10 @@ func (k Keeper) WalkDueStarts(ctx context.Context, nowSec int64, fn func(vaultAd
 	return nil
 }
 
-// WalkDueTimeouts iterates over all entries in the VaultTimeoutQueue with periodTimeout <= nowSec.
+// WalkDuePayoutTimeouts iterates over all entries in the VaultTimeoutQueue with periodTimeout <= nowSec.
 // For each due entry, it calls the provided callback function. Iteration stops if the
 // callback returns stop=true or an error.
-func (k Keeper) WalkDueTimeouts(ctx context.Context, nowSec int64, fn func(periodTimeout uint64, vaultAddr sdk.AccAddress) (stop bool, err error)) error {
+func (k Keeper) WalkDuePayoutTimeouts(ctx context.Context, nowSec int64, fn func(periodTimeout uint64, vaultAddr sdk.AccAddress) (stop bool, err error)) error {
 	it, err := k.PayoutTimeoutQueue.Iterate(ctx, nil)
 	if err != nil {
 		return err
@@ -84,34 +84,6 @@ func (k Keeper) WalkDueTimeouts(ctx context.Context, nowSec int64, fn func(perio
 		}
 		stop, err := fn(kv.Key.K1(), kv.Key.K2())
 		if err != nil || stop {
-			return err
-		}
-	}
-	return nil
-}
-
-// RemoveAllStartsForVault deletes all start entries in the VaultStartQueue
-// for the given vault address.
-func (k Keeper) RemoveAllStartsForVault(ctx context.Context, vaultAddr sdk.AccAddress) error {
-	var keys []sdk.AccAddress
-
-	it, err := k.PayoutVerificationQueue.Iterate(ctx, nil)
-	if err != nil {
-		return err
-	}
-	defer it.Close()
-
-	for ; it.Valid(); it.Next() {
-		kv, err := it.KeyValue()
-		if err != nil {
-			return err
-		}
-		if kv.Key.Equals(vaultAddr) {
-			keys = append(keys, kv.Key)
-		}
-	}
-	for _, key := range keys {
-		if err := k.PayoutVerificationQueue.Remove(ctx, key); err != nil {
 			return err
 		}
 	}
@@ -156,7 +128,7 @@ func (k Keeper) SafeEnqueueStart(ctx context.Context, vault *types.VaultAccount)
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	currentBlockTime := sdkCtx.BlockTime().Unix()
 
-	if err := k.DequeueVaultTimeout(ctx, vault.PeriodTimeout, vault.GetAddress()); err != nil {
+	if err := k.DequeuePayoutTimeout(ctx, vault.PeriodTimeout, vault.GetAddress()); err != nil {
 		return err
 	}
 
@@ -166,7 +138,7 @@ func (k Keeper) SafeEnqueueStart(ctx context.Context, vault *types.VaultAccount)
 		return err
 	}
 
-	return k.EnqueueVaultStart(ctx, vault.GetAddress())
+	return k.EnqueuePayoutVerification(ctx, vault.GetAddress())
 }
 
 // SafeEnqueueTimeout clears any existing start or timeout entries for the given vault,
@@ -178,7 +150,7 @@ func (k Keeper) SafeEnqueueStart(ctx context.Context, vault *types.VaultAccount)
 func (k Keeper) SafeEnqueueTimeout(ctx context.Context, vault *types.VaultAccount) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	if err := k.DequeueVaultTimeout(ctx, vault.PeriodTimeout, vault.GetAddress()); err != nil {
+	if err := k.DequeuePayoutTimeout(ctx, vault.PeriodTimeout, vault.GetAddress()); err != nil {
 		return err
 	}
 
@@ -189,5 +161,5 @@ func (k Keeper) SafeEnqueueTimeout(ctx context.Context, vault *types.VaultAccoun
 		sdkCtx.Logger().Error("failed to set vault", "vault", vault.GetAddress().String(), "err", err)
 		return err
 	}
-	return k.EnqueueVaultTimeout(ctx, vault.PeriodTimeout, vault.GetAddress())
+	return k.EnqueuePayoutTimeout(ctx, vault.PeriodTimeout, vault.GetAddress())
 }

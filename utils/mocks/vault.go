@@ -1,6 +1,7 @@
 package mocks
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -25,6 +26,63 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
+var _ types.AccountKeeper = (*MockAuthKeeper)(nil)
+
+type MockAuthKeeper struct {
+	accounts      map[string]sdk.AccountI // address string -> account
+	nextAccNumber uint64
+}
+
+func NewMockAuthKeeper() *MockAuthKeeper {
+	return &MockAuthKeeper{
+		accounts:      make(map[string]sdk.AccountI),
+		nextAccNumber: 1,
+	}
+}
+
+// NewAccount assigns an account number if needed and returns the (possibly updated) account.
+func (m *MockAuthKeeper) NewAccount(_ context.Context, acc sdk.AccountI) sdk.AccountI {
+	if acc.GetAccountNumber() == 0 {
+		if ba, ok := acc.(*authtypes.BaseAccount); ok {
+			_ = ba.SetAccountNumber(m.nextAccNumber)
+			m.nextAccNumber++
+			return ba
+		}
+		if withNum, ok := acc.(interface{ SetAccountNumber(uint64) error }); ok {
+			_ = withNum.SetAccountNumber(m.nextAccNumber)
+			m.nextAccNumber++
+			return acc
+		}
+		m.nextAccNumber++
+	}
+	return acc
+}
+
+func (m *MockAuthKeeper) NewAccountWithAddress(_ context.Context, addr sdk.AccAddress) sdk.AccountI {
+	return authtypes.NewBaseAccountWithAddress(addr)
+}
+
+func (m *MockAuthKeeper) GetAccount(_ context.Context, addr sdk.AccAddress) sdk.AccountI {
+	return m.accounts[addr.String()]
+}
+
+func (m *MockAuthKeeper) GetAllAccounts(_ context.Context) []sdk.AccountI {
+	out := make([]sdk.AccountI, 0, len(m.accounts))
+	for _, a := range m.accounts {
+		out = append(out, a)
+	}
+	return out
+}
+
+func (m *MockAuthKeeper) HasAccount(_ context.Context, addr sdk.AccAddress) bool {
+	_, ok := m.accounts[addr.String()]
+	return ok
+}
+
+func (m *MockAuthKeeper) SetAccount(_ context.Context, acc sdk.AccountI) {
+	m.accounts[acc.GetAddress().String()] = acc
+}
+
 // NewVaultKeeper returns an instance of the Keeper with all dependencies mocked.
 func NewVaultKeeper(
 	t testing.TB,
@@ -35,6 +93,7 @@ func NewVaultKeeper(
 
 	cfg := MakeTestEncodingConfig("provlabs")
 	types.RegisterInterfaces(cfg.InterfaceRegistry)
+	authMock := NewMockAuthKeeper()
 
 	k := keeper.NewKeeper(
 		cfg.Codec,
@@ -43,7 +102,7 @@ func NewVaultKeeper(
 		runtime.ProvideEventService(),
 		addresscodec.NewBech32Codec("provlabs"),
 		authtypes.NewModuleAddress(govtypes.ModuleName),
-		nil,
+		authMock,
 		nil,
 		nil,
 	)

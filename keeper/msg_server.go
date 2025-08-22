@@ -170,7 +170,7 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 		if err := k.SetVaultAccount(ctx, vault); err != nil {
 			return nil, fmt.Errorf("failed to set vault account: %w", err)
 		}
-		if err := k.EnqueueVaultStart(ctx, vault.GetAddress()); err != nil {
+		if err := k.EnqueuePayoutVerification(ctx, vault.GetAddress()); err != nil {
 			return nil, fmt.Errorf("failed to enqueue vault start: %w", err)
 		}
 	case reconciled && !vault.InterestEnabled():
@@ -179,7 +179,7 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 		if err := k.SetVaultAccount(ctx, vault); err != nil {
 			return nil, fmt.Errorf("failed to set vault account: %w", err)
 		}
-		if err := k.RemoveAllStartsForVault(ctx, vault.GetAddress()); err != nil {
+		if err := k.DequeuePayoutVerification(ctx, vault.GetAddress()); err != nil {
 			return nil, fmt.Errorf("failed to remove start entries: %w", err)
 		}
 		if err := k.RemoveAllTimeoutsForVault(ctx, vault.GetAddress()); err != nil {

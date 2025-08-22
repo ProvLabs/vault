@@ -196,7 +196,7 @@ func (k *Keeper) handleVaultInterestTimeouts(ctx context.Context) error {
 	var depleted []*types.VaultAccount
 	var reconciled []*types.VaultAccount
 
-	err := k.WalkDueTimeouts(ctx, now, func(timeout uint64, addr sdk.AccAddress) (bool, error) {
+	err := k.WalkDuePayoutTimeouts(ctx, now, func(timeout uint64, addr sdk.AccAddress) (bool, error) {
 		key := collections.Join(timeout, addr)
 
 		vault, ok := k.tryGetVault(sdkCtx, addr)
@@ -270,12 +270,10 @@ func (k *Keeper) tryGetVault(ctx sdk.Context, addr sdk.AccAddress) (*types.Vault
 // timeouts, and disables interest for depleted vaults.
 func (k *Keeper) handleReconciledVaults(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	now := sdkCtx.BlockTime().Unix()
-
 	var toRemove []sdk.AccAddress
 	var vaults []*types.VaultAccount
 
-	err := k.WalkDueStarts(ctx, now, func(addr sdk.AccAddress) (bool, error) {
+	err := k.WalkPayoutVerifications(ctx, func(addr sdk.AccAddress) (bool, error) {
 		v, ok := k.tryGetVault(sdkCtx, addr)
 		if ok {
 			vaults = append(vaults, v)

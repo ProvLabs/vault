@@ -278,7 +278,7 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 				s.k.AuthKeeper.SetAccount(s.ctx, vault)
 				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(underlying)))
 				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, sdk.NewCoins(underlying)))
-				s.Require().NoError(s.k.EnqueueVaultTimeout(s.ctx, testBlockTime.Unix(), vault.GetAddress()))
+				s.Require().NoError(s.k.EnqueuePayoutTimeout(s.ctx, testBlockTime.Unix(), vault.GetAddress()))
 				s.ctx = s.ctx.WithBlockTime(testBlockTime).WithEventManager(sdk.NewEventManager())
 			},
 			checkAddr:     vaultAddr,
@@ -329,7 +329,7 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 				s.k.AuthKeeper.SetAccount(s.ctx, vault)
 				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, sdk.NewCoins(underlying)))
 				s.Require().NoError(s.k.SafeEnqueueStart(s.ctx, vault))
-				s.Require().NoError(s.k.EnqueueVaultTimeout(s.ctx, testBlockTime.Unix(), vault.GetAddress()))
+				s.Require().NoError(s.k.EnqueuePayoutTimeout(s.ctx, testBlockTime.Unix(), vault.GetAddress()))
 				s.ctx = s.ctx.WithBlockTime(testBlockTime).WithEventManager(sdk.NewEventManager())
 			},
 			checkAddr:     vaultAddr,
@@ -347,8 +347,8 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 		{
 			name: "non-vault address in interest details does nothing",
 			setup: func() {
-				s.Require().NoError(s.k.EnqueueVaultStart(s.ctx, markerAddr))
-				s.Require().NoError(s.k.EnqueueVaultTimeout(s.ctx, testBlockTime.Unix(), markerAddr))
+				s.Require().NoError(s.k.EnqueuePayoutVerification(s.ctx, markerAddr))
+				s.Require().NoError(s.k.EnqueuePayoutTimeout(s.ctx, testBlockTime.Unix(), markerAddr))
 				s.ctx = s.ctx.WithBlockTime(testBlockTime).WithEventManager(sdk.NewEventManager())
 			},
 			checkAddr:      markerAddr,
@@ -365,9 +365,6 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 			tc.setup()
 			err := s.k.TestAccessor_handleVaultInterestTimeouts(s.T(), s.ctx)
 			s.Require().NoError(err)
-			// exists, err := s.k.VaultInterestDetails.Has(s.ctx, tc.checkAddr)
-			// s.Require().NoError(err)
-			// s.Require().Equal(tc.expectExists, exists)
 			if tc.expectRate != "" {
 				vault, err := s.k.GetVault(s.ctx, vaultAddr)
 				s.Require().NoError(err)
@@ -608,7 +605,7 @@ func (s *TestSuite) TestKeeper_handlePayableVaults() {
 	assertSingleTimeoutAt := func(addr sdk.AccAddress, expected int64) {
 		count := 0
 		found := false
-		err := s.k.WalkDueTimeouts(s.ctx, math.MaxInt64, func(t uint64, a sdk.AccAddress) (bool, error) {
+		err := s.k.WalkDuePayoutTimeouts(s.ctx, math.MaxInt64, func(t uint64, a sdk.AccAddress) (bool, error) {
 			if a.Equals(addr) {
 				count++
 				if t == uint64(expected) {

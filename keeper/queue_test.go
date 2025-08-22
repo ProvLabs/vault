@@ -20,7 +20,7 @@ func TestEnqueueDequeue_Start(t *testing.T) {
 	ctx, k := mocks.NewVaultKeeper(t)
 	addr := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
 
-	require.NoError(t, k.EnqueueVaultStart(ctx, addr))
+	require.NoError(t, k.EnqueuePayoutVerification(ctx, addr))
 
 	it, err := k.PayoutVerificationQueue.Iterate(ctx, nil)
 	require.NoError(t, err)
@@ -37,7 +37,7 @@ func TestEnqueueDequeue_Start(t *testing.T) {
 	}
 	require.True(t, found)
 
-	require.NoError(t, k.DequeueVaultStart(ctx, addr))
+	require.NoError(t, k.DequeuePayoutVerification(ctx, addr))
 
 	it2, err := k.PayoutVerificationQueue.Iterate(ctx, nil)
 	require.NoError(t, err)
@@ -50,7 +50,7 @@ func TestEnqueueDequeue_Timeout(t *testing.T) {
 	addr := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
 	ts := int64(200)
 
-	require.NoError(t, k.EnqueueVaultTimeout(ctx, ts, addr))
+	require.NoError(t, k.EnqueuePayoutTimeout(ctx, ts, addr))
 
 	it, err := k.PayoutTimeoutQueue.Iterate(ctx, nil)
 	require.NoError(t, err)
@@ -67,7 +67,7 @@ func TestEnqueueDequeue_Timeout(t *testing.T) {
 	}
 	require.True(t, found)
 
-	require.NoError(t, k.DequeueVaultTimeout(ctx, ts, addr))
+	require.NoError(t, k.DequeuePayoutTimeout(ctx, ts, addr))
 
 	it2, err := k.PayoutTimeoutQueue.Iterate(ctx, nil)
 	require.NoError(t, err)
@@ -80,12 +80,12 @@ func TestWalkDueStarts(t *testing.T) {
 	a1 := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
 	a2 := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
 
-	require.NoError(t, k.EnqueueVaultStart(ctx, a1))
-	require.NoError(t, k.EnqueueVaultStart(ctx, a2))
-	require.NoError(t, k.EnqueueVaultStart(ctx, a1))
+	require.NoError(t, k.EnqueuePayoutVerification(ctx, a1))
+	require.NoError(t, k.EnqueuePayoutVerification(ctx, a2))
+	require.NoError(t, k.EnqueuePayoutVerification(ctx, a1))
 
 	var seen []string
-	require.NoError(t, k.WalkDueStarts(ctx, 0, func(addr sdk.AccAddress) (bool, error) {
+	require.NoError(t, k.WalkPayoutVerifications(ctx, func(addr sdk.AccAddress) (bool, error) {
 		seen = append(seen, addr.String())
 		return false, nil
 	}))
@@ -96,11 +96,11 @@ func TestWalkDueStarts_StopEarly(t *testing.T) {
 	ctx, k := mocks.NewVaultKeeper(t)
 	a := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
 	b := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
-	require.NoError(t, k.EnqueueVaultStart(ctx, a))
-	require.NoError(t, k.EnqueueVaultStart(ctx, b))
+	require.NoError(t, k.EnqueuePayoutVerification(ctx, a))
+	require.NoError(t, k.EnqueuePayoutVerification(ctx, b))
 
 	calls := 0
-	require.NoError(t, k.WalkDueStarts(ctx, 0, func(_ sdk.AccAddress) (bool, error) {
+	require.NoError(t, k.WalkPayoutVerifications(ctx, func(_ sdk.AccAddress) (bool, error) {
 		calls++
 		return true, nil
 	}))
@@ -110,10 +110,10 @@ func TestWalkDueStarts_StopEarly(t *testing.T) {
 func TestWalkDueStarts_ErrorPropagates(t *testing.T) {
 	ctx, k := mocks.NewVaultKeeper(t)
 	a := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
-	require.NoError(t, k.EnqueueVaultStart(ctx, a))
+	require.NoError(t, k.EnqueuePayoutVerification(ctx, a))
 
 	errBoom := errors.New("boom")
-	err := k.WalkDueStarts(ctx, 0, func(_ sdk.AccAddress) (bool, error) {
+	err := k.WalkPayoutVerifications(ctx, func(_ sdk.AccAddress) (bool, error) {
 		return false, errBoom
 	})
 	require.ErrorIs(t, err, errBoom)
@@ -124,12 +124,12 @@ func TestWalkDueTimeouts(t *testing.T) {
 	a1 := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
 	a2 := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
 
-	require.NoError(t, k.EnqueueVaultTimeout(ctx, 50, a1))
-	require.NoError(t, k.EnqueueVaultTimeout(ctx, 75, a2))
-	require.NoError(t, k.EnqueueVaultTimeout(ctx, 500, a1))
+	require.NoError(t, k.EnqueuePayoutTimeout(ctx, 50, a1))
+	require.NoError(t, k.EnqueuePayoutTimeout(ctx, 75, a2))
+	require.NoError(t, k.EnqueuePayoutTimeout(ctx, 500, a1))
 
 	var seen []uint64
-	require.NoError(t, k.WalkDueTimeouts(ctx, 100, func(ts uint64, _ sdk.AccAddress) (bool, error) {
+	require.NoError(t, k.WalkDuePayoutTimeouts(ctx, 100, func(ts uint64, _ sdk.AccAddress) (bool, error) {
 		seen = append(seen, ts)
 		return false, nil
 	}))
@@ -139,11 +139,11 @@ func TestWalkDueTimeouts(t *testing.T) {
 func TestWalkDueTimeouts_StopEarly(t *testing.T) {
 	ctx, k := mocks.NewVaultKeeper(t)
 	a := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
-	require.NoError(t, k.EnqueueVaultTimeout(ctx, 10, a))
-	require.NoError(t, k.EnqueueVaultTimeout(ctx, 20, a))
+	require.NoError(t, k.EnqueuePayoutTimeout(ctx, 10, a))
+	require.NoError(t, k.EnqueuePayoutTimeout(ctx, 20, a))
 
 	calls := 0
-	require.NoError(t, k.WalkDueTimeouts(ctx, 25, func(_ uint64, _ sdk.AccAddress) (bool, error) {
+	require.NoError(t, k.WalkDuePayoutTimeouts(ctx, 25, func(_ uint64, _ sdk.AccAddress) (bool, error) {
 		calls++
 		return true, nil
 	}))
@@ -153,10 +153,10 @@ func TestWalkDueTimeouts_StopEarly(t *testing.T) {
 func TestWalkDueTimeouts_ErrorPropagates(t *testing.T) {
 	ctx, k := mocks.NewVaultKeeper(t)
 	a := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
-	require.NoError(t, k.EnqueueVaultTimeout(ctx, 10, a))
+	require.NoError(t, k.EnqueuePayoutTimeout(ctx, 10, a))
 
 	errBoom := errors.New("boom")
-	err := k.WalkDueTimeouts(ctx, 25, func(_ uint64, _ sdk.AccAddress) (bool, error) {
+	err := k.WalkDuePayoutTimeouts(ctx, 25, func(_ uint64, _ sdk.AccAddress) (bool, error) {
 		return false, errBoom
 	})
 	require.ErrorIs(t, err, errBoom)
@@ -167,10 +167,10 @@ func TestRemoveAllStartsForVault(t *testing.T) {
 	a1 := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
 	a2 := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
 
-	require.NoError(t, k.EnqueueVaultStart(ctx, a1))
-	require.NoError(t, k.EnqueueVaultStart(ctx, a2))
+	require.NoError(t, k.EnqueuePayoutVerification(ctx, a1))
+	require.NoError(t, k.EnqueuePayoutVerification(ctx, a2))
 
-	require.NoError(t, k.RemoveAllStartsForVault(ctx, a1))
+	require.NoError(t, k.DequeuePayoutVerification(ctx, a1))
 
 	it, err := k.PayoutVerificationQueue.Iterate(ctx, nil)
 	require.NoError(t, err)
@@ -188,9 +188,9 @@ func TestRemoveAllTimeoutsForVault(t *testing.T) {
 	a1 := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
 	a2 := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
 
-	require.NoError(t, k.EnqueueVaultTimeout(ctx, 100, a1))
-	require.NoError(t, k.EnqueueVaultTimeout(ctx, 150, a1))
-	require.NoError(t, k.EnqueueVaultTimeout(ctx, 200, a2))
+	require.NoError(t, k.EnqueuePayoutTimeout(ctx, 100, a1))
+	require.NoError(t, k.EnqueuePayoutTimeout(ctx, 150, a1))
+	require.NoError(t, k.EnqueuePayoutTimeout(ctx, 200, a2))
 
 	require.NoError(t, k.RemoveAllTimeoutsForVault(ctx, a1))
 
@@ -212,18 +212,20 @@ func TestSafeEnqueueStart_UpdatesVaultAndQueues(t *testing.T) {
 	vaultAddr := types.GetVaultAddress(share)
 
 	v := &types.VaultAccount{
-		BaseAccount:      authtypes.NewBaseAccountWithAddress(vaultAddr),
-		Admin:            admin.String(),
-		ShareDenom:       share,
-		UnderlyingAssets: []string{"under"},
-		PeriodStart:      0,
-		PeriodTimeout:    50,
+		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
+		Admin:               admin.String(),
+		ShareDenom:          share,
+		UnderlyingAssets:    []string{"under"},
+		CurrentInterestRate: types.ZeroInterestRate,
+		DesiredInterestRate: types.ZeroInterestRate,
+		PeriodStart:         0,
+		PeriodTimeout:       50,
 	}
 
-	require.NoError(t, k.EnqueueVaultTimeout(ctx, 50, vaultAddr))
+	require.NoError(t, k.EnqueuePayoutTimeout(ctx, 50, vaultAddr))
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	sdkCtx = sdkCtx.WithBlockTime(time.Unix(1000, 0))
+	ctx = sdkCtx.WithBlockTime(time.Unix(1000, 0))
 
 	require.NoError(t, k.SafeEnqueueStart(ctx, v))
 
@@ -266,19 +268,21 @@ func TestSafeEnqueueTimeout_UpdatesVaultAndQueues(t *testing.T) {
 	vaultAddr := types.GetVaultAddress(share)
 
 	v := &types.VaultAccount{
-		BaseAccount:      authtypes.NewBaseAccountWithAddress(vaultAddr),
-		Admin:            admin.String(),
-		ShareDenom:       share,
-		UnderlyingAssets: []string{"under"},
-		PeriodStart:      0,
-		PeriodTimeout:    30,
+		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
+		Admin:               admin.String(),
+		ShareDenom:          share,
+		UnderlyingAssets:    []string{"under"},
+		CurrentInterestRate: types.ZeroInterestRate,
+		DesiredInterestRate: types.ZeroInterestRate,
+		PeriodStart:         0,
+		PeriodTimeout:       30,
 	}
 
-	require.NoError(t, k.EnqueueVaultTimeout(ctx, 30, vaultAddr))
+	require.NoError(t, k.EnqueuePayoutTimeout(ctx, 30, vaultAddr))
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	now := time.Unix(2000, 0)
-	sdkCtx = sdkCtx.WithBlockTime(now)
+	ctx = sdkCtx.WithBlockTime(now)
 
 	require.NoError(t, k.SafeEnqueueTimeout(sdkCtx, v))
 

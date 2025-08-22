@@ -27,51 +27,83 @@ func (s *TestSuite) TestQueryServer_Vault() {
 			s.Assert().Equal(expected.Vault.Admin, actual.Vault.Admin, "vault admin")
 			s.Assert().Equal(expected.Vault.ShareDenom, actual.Vault.ShareDenom, "vault share denom")
 			s.Assert().Equal(expected.Vault.UnderlyingAssets, actual.Vault.UnderlyingAssets, "vault underlying assets")
+			s.Assert().Equal(expected.MarkerAddress, actual.MarkerAddress, "marker address")
+			s.Assert().Equal(expected.Principal, actual.Principal, "principal")
+			s.Assert().Equal(expected.Reserves, actual.Reserves, "reserves")
 		},
 	}
 
 	shareDenom1 := "vault1"
+	addr1 := types.GetVaultAddress(shareDenom1)
 	shareDenom2 := "vault2"
-	shareDenom3 := "vault3"
 	addr2 := types.GetVaultAddress(shareDenom2)
-	addr3 := types.GetVaultAddress(shareDenom3)
+	markerAddr1 := markertypes.MustGetMarkerAddress(shareDenom1)
+	markerAddr2 := markertypes.MustGetMarkerAddress(shareDenom2)
+	nonExistentAddr := sdk.AccAddress("nonExistentAddr_____")
 	admin := s.adminAddr.String()
+
+	// Common setup for tests that need existing vaults.
+	setupVaults := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("stake1", 1), s.adminAddr)
+		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("stake2", 1), s.adminAddr)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: admin, ShareDenom: shareDenom1, UnderlyingAsset: "stake1"})
+		s.Require().NoError(err)
+		_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: admin, ShareDenom: shareDenom2, UnderlyingAsset: "stake2"})
+		s.Require().NoError(err)
+
+		// Fund vault 1 reserves and principal
+		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("stake1", 100))))
+		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr1, sdk.NewCoins(sdk.NewInt64Coin("stake1", 1000))))
+
+		// Fund vault 2 reserves and principal
+		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, addr2, sdk.NewCoins(sdk.NewInt64Coin("stake2", 200))))
+		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr2, sdk.NewCoins(sdk.NewInt64Coin("stake2", 2000))))
+	}
 
 	tests := []querytest.TestCase[types.QueryVaultRequest, types.QueryVaultResponse]{
 		{
-			Name: "vault found",
-			Setup: func() {
-				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("stake2", 1), s.adminAddr)
-				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("stake3", 1), s.adminAddr)
-				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: admin, ShareDenom: shareDenom1, UnderlyingAsset: "stake2"})
-				s.Require().NoError(err)
-				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: admin, ShareDenom: shareDenom2, UnderlyingAsset: "stake3"})
-				s.Require().NoError(err)
-			},
-			Req: &types.QueryVaultRequest{Id: addr2.String()},
+			Name:  "vault found by address",
+			Setup: setupVaults,
+			Req:   &types.QueryVaultRequest{Id: addr1.String()},
 			ExpectedResp: &types.QueryVaultResponse{
-				Vault: *types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, []string{"stake3"}),
+				Vault:         *types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, []string{"stake1"}),
+				MarkerAddress: markerAddr1.String(),
+				Principal:     sdk.NewCoins(sdk.NewInt64Coin("stake1", 1000)),
+				Reserves:      sdk.NewCoins(sdk.NewInt64Coin("stake1", 100)),
+			},
+		},
+		{
+			Name:  "vault found by share denom",
+			Setup: setupVaults,
+			Req:   &types.QueryVaultRequest{Id: shareDenom2},
+			ExpectedResp: &types.QueryVaultResponse{
+				Vault:         *types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, []string{"stake2"}),
+				MarkerAddress: markerAddr2.String(),
+				Principal:     sdk.NewCoins(sdk.NewInt64Coin("stake2", 2000)),
+				Reserves:      sdk.NewCoins(sdk.NewInt64Coin("stake2", 200)),
 			},
 		},
 		{
 			Name:               "nil request",
 			Req:                nil,
-			ExpectedErrSubstrs: []string{"vault_address must be provided"},
+			ExpectedErrSubstrs: []string{"id must be provided"},
 		},
 		{
-			Name:               "empty vault address",
+			Name:               "empty vault id",
 			Req:                &types.QueryVaultRequest{Id: ""},
-			ExpectedErrSubstrs: []string{"vault_address must be provided"},
+			ExpectedErrSubstrs: []string{"id must be provided"},
 		},
 		{
-			Name:               "invalid vault address",
-			Req:                &types.QueryVaultRequest{Id: "invalid-bech32-address"},
-			ExpectedErrSubstrs: []string{"invalid vault_address", "decoding bech32 failed"},
+			Name:               "vault not found by address",
+			Setup:              setupVaults,
+			Req:                &types.QueryVaultRequest{Id: nonExistentAddr.String()},
+			ExpectedErrSubstrs: []string{"not found"},
 		},
 		{
-			Name:               "vault not found",
-			Req:                &types.QueryVaultRequest{Id: addr3.String()},
-			ExpectedErrSubstrs: []string{"vault with address", "not found"},
+			Name:               "vault not found by share denom",
+			Setup:              setupVaults,
+			Req:                &types.QueryVaultRequest{Id: "nonexistent-share"},
+			ExpectedErrSubstrs: []string{"not found"},
 		},
 	}
 

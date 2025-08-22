@@ -210,6 +210,7 @@ func (m *VaultInterestDetails) GetExpireTime() int64 {
 	return 0
 }
 
+// AccountBalance represents the coin balance of a single account.
 type AccountBalance struct {
 	// address is the account address.
 	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`

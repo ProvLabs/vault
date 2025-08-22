@@ -2262,6 +2262,7 @@ func (x *VaultInterestDetails) GetExpireTime() int64 {
 	return 0
 }
 
+// AccountBalance represents the coin balance of a single account.
 type AccountBalance struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

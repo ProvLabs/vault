@@ -48,6 +48,7 @@ message VaultInterestDetails {
   int64 expire_time = 2;
 }
 
+// AccountBalance represents the coin balance of a single account.
 message AccountBalance {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;

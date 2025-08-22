@@ -67,12 +67,12 @@ func (k queryServer) Vault(goCtx context.Context, req *types.QueryVaultRequest) 
 
 	vault, err := k.FindVaultAccount(ctx, req.Id)
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	marker, err := k.MarkerKeeper.GetMarkerByDenom(ctx, vault.ShareDenom)
 	if err != nil {
-		return nil, err
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	principal := k.BankKeeper.GetAllBalances(goCtx, marker.GetAddress())

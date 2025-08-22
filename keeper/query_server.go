@@ -39,7 +39,7 @@ func (k queryServer) Vaults(goCtx context.Context, req *types.QueryVaultsRequest
 		ctx,
 		k.Keeper.Vaults,
 		req.Pagination,
-		func(key sdk.AccAddress, val []byte) (include bool, err error) {
+		func(key sdk.AccAddress, _ []byte) (include bool, err error) {
 			vault, _ := k.GetVault(ctx, key)
 			vaults = append(vaults, *vault)
 			return true, nil
@@ -70,7 +70,7 @@ func (k queryServer) Vault(goCtx context.Context, req *types.QueryVaultRequest) 
 		return nil, err
 	}
 
-	marker, err := k.MarkerKeeper.GetMarkerByDenom(ctx, req.Id)
+	marker, err := k.MarkerKeeper.GetMarkerByDenom(ctx, vault.ShareDenom)
 	if err != nil {
 		return nil, err
 	}

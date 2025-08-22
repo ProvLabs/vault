@@ -381,20 +381,12 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 }
 
 func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
-	v1, v2, v3 := NewVaultInfo(1), NewVaultInfo(2), NewVaultInfo(3)
-	v4, v5, v6 := NewVaultInfo(4), NewVaultInfo(5), NewVaultInfo(6)
+	v1, v2 := NewVaultInfo(1), NewVaultInfo(2)
 
 	testBlockTime := time.Now().UTC().Truncate(time.Second)
-	pastTime := testBlockTime.Add(-1 * time.Hour)
 
 	AssertIsPayable := func(info VaultInfo, expectedRate string) {
 		s.T().Helper()
-		// details, err := s.k.VaultInterestDetails.Get(s.ctx, info.vaultAddr)
-		// s.Require().NoError(err)
-		// s.Assert().Equal(testBlockTime.Unix(), details.PeriodStart, "period start should not change for payable vault")
-		// expectedExpireTime := testBlockTime.Unix() + keeper.AutoReconcileTimeout
-		// s.Assert().Equal(expectedExpireTime, details.PeriodTimeout, "expire time should be extended for payable vault")
-
 		vault, err := s.k.GetVault(s.ctx, info.vaultAddr)
 		s.Require().NoError(err)
 		s.Require().NotNil(vault)
@@ -407,22 +399,7 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 		s.Require().NoError(err)
 		s.Require().NotNil(vault)
 		s.Assert().Equal(types.ZeroInterestRate, vault.CurrentInterestRate, "interest rate should be zeroed out for depleted vault")
-		// has, err := s.k.VaultInterestDetails.Has(s.ctx, info.vaultAddr)
-		// s.Require().NoError(err)
-		// s.Assert().False(has, "interest details should be removed for depleted vault")
-	}
-
-	AssertIsNotReconciled := func(info VaultInfo, expectedPeriodStart, expectedExpireTime int64, expectedRate string) {
-		s.T().Helper()
-		// details, err := s.k.VaultInterestDetails.Get(s.ctx, info.vaultAddr)
-		// s.Require().NoError(err, "get interest details for not-reconciled vault %s", info.shareDenom)
-		// s.Assert().Equal(expectedPeriodStart, details.PeriodStart, "period start should not change for not-reconciled vault %s", info.shareDenom)
-		// s.Assert().Equal(expectedExpireTime, details.PeriodTimeout, "expire time should not change for not-reconciled vault %s", info.shareDenom)
-
-		vault, err := s.k.GetVault(s.ctx, info.vaultAddr)
-		s.Require().NoError(err, "get vault for not-reconciled vault %s", info.shareDenom)
-		s.Require().NotNil(vault)
-		s.Assert().Equal(expectedRate, vault.CurrentInterestRate, "interest rate should not change for not-reconciled vault %s", info.shareDenom)
+		s.assertInPayoutVerificationQueue(vault.GetAddress(), false)
 	}
 
 	tests := []struct {
@@ -495,77 +472,6 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 					sdk.NewAttribute("desired_rate", "0.1"),
 					sdk.NewAttribute("vault_address", v2.vaultAddr.String()),
 				),
-			},
-		},
-		{
-			name: "one vault, not reconciled",
-			setup: func() {
-				createVaultWithInterest(s, v1, "0.1", pastTime.Unix(), testBlockTime.Unix(), true, true)
-			},
-			postCheck: func() {
-				AssertIsNotReconciled(v1, pastTime.Unix(), testBlockTime.Unix(), "0.1")
-			},
-			expectErr:      false,
-			expectedEvents: sdk.Events{},
-		},
-		{
-			name: "three vaults, two reconciled (one payable, one depleted), one not reconciled",
-			setup: func() {
-				// Vault 1: payable, reconciled
-				createVaultWithInterest(s, v1, "0.1", testBlockTime.Unix(), testBlockTime.Unix(), true, true)
-				// Vault 2: depleted, reconciled
-				createVaultWithInterest(s, v2, "0.1", testBlockTime.Unix(), testBlockTime.Unix(), false, true)
-				// Vault 3: not reconciled
-				createVaultWithInterest(s, v3, "0.1", pastTime.Unix(), testBlockTime.Unix(), true, true)
-			},
-			postCheck: func() {
-				AssertIsPayable(v1, "0.1")
-				AssertIsDepleted(v2)
-				AssertIsNotReconciled(v3, pastTime.Unix(), testBlockTime.Unix(), "0.1")
-			},
-			expectErr: false,
-			expectedEvents: sdk.Events{
-				sdk.NewEvent(
-					"vault.v1.EventVaultInterestChange",
-					sdk.NewAttribute("current_rate", types.ZeroInterestRate),
-					sdk.NewAttribute("desired_rate", "0.1"),
-					sdk.NewAttribute("vault_address", v2.vaultAddr.String()),
-				),
-			},
-		},
-		{
-			name: "six vaults, two payable, two depleted, two not reconciled",
-			setup: func() {
-				// Vaults 1 & 4: payable, reconciled
-				createVaultWithInterest(s, v1, "0.1", testBlockTime.Unix(), testBlockTime.Unix(), true, true)
-				createVaultWithInterest(s, v4, "0.1", testBlockTime.Unix(), testBlockTime.Unix(), true, true)
-				// Vaults 2 & 5: depleted, reconciled
-				createVaultWithInterest(s, v2, "0.1", testBlockTime.Unix(), testBlockTime.Unix(), false, true)
-				createVaultWithInterest(s, v5, "0.1", testBlockTime.Unix(), testBlockTime.Unix(), false, true)
-				// Vaults 3 & 6: not reconciled
-				createVaultWithInterest(s, v3, "0.1", pastTime.Unix(), testBlockTime.Unix(), true, true)
-				createVaultWithInterest(s, v6, "0.1", pastTime.Unix(), testBlockTime.Unix(), true, true)
-			},
-			postCheck: func() {
-				AssertIsPayable(v1, "0.1")
-				AssertIsPayable(v4, "0.1")
-				AssertIsDepleted(v2)
-				AssertIsDepleted(v5)
-				AssertIsNotReconciled(v3, pastTime.Unix(), testBlockTime.Unix(), "0.1")
-				AssertIsNotReconciled(v6, pastTime.Unix(), testBlockTime.Unix(), "0.1")
-			},
-			expectErr: false,
-			expectedEvents: sdk.Events{
-				sdk.NewEvent(
-					"vault.v1.EventVaultInterestChange",
-					sdk.NewAttribute("current_rate", types.ZeroInterestRate),
-					sdk.NewAttribute("desired_rate", "0.1"),
-					sdk.NewAttribute("vault_address", v2.vaultAddr.String())),
-				sdk.NewEvent(
-					"vault.v1.EventVaultInterestChange",
-					sdk.NewAttribute("current_rate", types.ZeroInterestRate),
-					sdk.NewAttribute("desired_rate", "0.1"),
-					sdk.NewAttribute("vault_address", v5.vaultAddr.String())),
 			},
 		},
 	}

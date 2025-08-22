@@ -29,7 +29,7 @@ import (
 var _ types.AccountKeeper = (*MockAuthKeeper)(nil)
 
 type MockAuthKeeper struct {
-	accounts      map[string]sdk.AccountI // address string -> account
+	accounts      map[string]sdk.AccountI
 	nextAccNumber uint64
 }
 
@@ -39,6 +39,8 @@ func NewMockAuthKeeper() *MockAuthKeeper {
 		nextAccNumber: 1,
 	}
 }
+
+func addrKey(addr sdk.AccAddress) string { return string(addr) }
 
 // NewAccount assigns an account number if needed and returns the (possibly updated) account.
 func (m *MockAuthKeeper) NewAccount(_ context.Context, acc sdk.AccountI) sdk.AccountI {
@@ -63,7 +65,7 @@ func (m *MockAuthKeeper) NewAccountWithAddress(_ context.Context, addr sdk.AccAd
 }
 
 func (m *MockAuthKeeper) GetAccount(_ context.Context, addr sdk.AccAddress) sdk.AccountI {
-	return m.accounts[addr.String()]
+	return m.accounts[addrKey(addr)]
 }
 
 func (m *MockAuthKeeper) GetAllAccounts(_ context.Context) []sdk.AccountI {
@@ -75,12 +77,12 @@ func (m *MockAuthKeeper) GetAllAccounts(_ context.Context) []sdk.AccountI {
 }
 
 func (m *MockAuthKeeper) HasAccount(_ context.Context, addr sdk.AccAddress) bool {
-	_, ok := m.accounts[addr.String()]
+	_, ok := m.accounts[addrKey(addr)]
 	return ok
 }
 
 func (m *MockAuthKeeper) SetAccount(_ context.Context, acc sdk.AccountI) {
-	m.accounts[acc.GetAddress().String()] = acc
+	m.accounts[addrKey(acc.GetAddress())] = acc
 }
 
 // NewVaultKeeper returns an instance of the Keeper with all dependencies mocked.
@@ -90,7 +92,6 @@ func NewVaultKeeper(
 	key := storetypes.NewKVStoreKey(types.ModuleName)
 	tkey := storetypes.NewTransientStoreKey(fmt.Sprintf("transient_%s", types.ModuleName))
 	wrapper := testutil.DefaultContextWithDB(t, key, tkey)
-
 	cfg := MakeTestEncodingConfig("provlabs")
 	types.RegisterInterfaces(cfg.InterfaceRegistry)
 	authMock := NewMockAuthKeeper()

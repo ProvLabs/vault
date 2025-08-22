@@ -83,7 +83,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		return false, nil
 	})
 	if err != nil {
-		panic(fmt.Errorf("failed to walk vault timeout queue: %w", err))
+		panic(fmt.Errorf("failed to walk payout timeout queue: %w", err))
 	}
 
 	return &types.GenesisState{

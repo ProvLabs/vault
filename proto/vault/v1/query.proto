@@ -19,7 +19,7 @@ service Query {
 
   // Vault returns the configuration and state of a specific vault.
   rpc Vault(QueryVaultRequest) returns (QueryVaultResponse) {
-    option (google.api.http).get = "/vault/v1/vaults/{vault_address}";
+    option (google.api.http).get = "/vault/v1/vaults/{id}";
   }
 
   // EstimateSwapIn estimates the amount of shares that would be received for a given amount of underlying assets.
@@ -49,14 +49,26 @@ message QueryVaultsResponse {
 
 // QueryVaultRequest is the request message for the Query/Vault endpoint.
 message QueryVaultRequest {
-  // vault_address is the bech32 address of the vault to query.
-  string vault_address = 1;
+  // id is the bech32 address of the vault or the vault's share denom to query.
+  string id = 1;
 }
 
 // QueryVaultResponse is the response message for the Query/Vault endpoint.
 message QueryVaultResponse {
   // vault is the requested vault.
   VaultAccount vault = 1 [(gogoproto.nullable) = false];
+  // marker_address is the bech32 address of the vault's marker account.
+  string marker_address = 2;
+  // principal is the total amount of principal in the vault.
+  repeated cosmos.base.v1beta1.Coin principal = 3 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+  // reserves is the total amount of reserves in the vault.
+  repeated cosmos.base.v1beta1.Coin reserves = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 }
 
 // QueryEstimateSwapInRequest is the request message for the Query/EstimateSwapIn endpoint.

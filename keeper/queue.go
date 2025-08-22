@@ -12,38 +12,37 @@ import (
 )
 
 const (
-	// AutoReconcileTimeout is the duration (in seconds) that a vault is considered recently reconciled
-	// and is exempt from automatic interest checks in the BeginBlocker.
+	// AutoReconcileTimeout is the duration (in seconds) that a vault is considered
+	// recently reconciled and is exempt from automatic interest checks.
 	AutoReconcileTimeout = 20 * interest.SecondsPerHour
 )
 
-// EnqueuePayoutVerification schedules a vault for reconciliation by adding an entry
-// to the VaultStartQueue keyed by the given period start and vault address.
+// EnqueuePayoutVerification schedules a vault for payout verification by inserting
+// its address into the PayoutVerificationQueue (a set keyed only by vault address).
 func (k Keeper) EnqueuePayoutVerification(ctx context.Context, vaultAddr sdk.AccAddress) error {
 	return k.PayoutVerificationQueue.Set(ctx, vaultAddr, collections.NoValue{})
 }
 
-// EnqueuePayoutTimeout schedules a vault for timeout processing by adding an entry
-// to the VaultTimeoutQueue keyed by the given timeout and vault address.
+// EnqueuePayoutTimeout schedules a vault for timeout processing by inserting an
+// entry into the PayoutTimeoutQueue keyed by (periodTimeout, vault address).
 func (k Keeper) EnqueuePayoutTimeout(ctx context.Context, periodTimeout int64, vaultAddr sdk.AccAddress) error {
 	return k.PayoutTimeoutQueue.Set(ctx, collections.Join(uint64(periodTimeout), vaultAddr), collections.NoValue{})
 }
 
-// DequeuePayoutVerification removes a vault entry from the VaultStartQueue for the given
-// period start and vault address.
+// DequeuePayoutVerification removes a vault from the PayoutVerificationQueue.
 func (k Keeper) DequeuePayoutVerification(ctx context.Context, vaultAddr sdk.AccAddress) error {
 	return k.PayoutVerificationQueue.Remove(ctx, vaultAddr)
 }
 
-// DequeuePayoutTimeout removes a vault entry from the VaultTimeoutQueue for the given
-// period timeout and vault address.
+// DequeuePayoutTimeout removes a specific timeout entry (periodTimeout, vault)
+// from the PayoutTimeoutQueue.
 func (k Keeper) DequeuePayoutTimeout(ctx context.Context, periodTimeout int64, vaultAddr sdk.AccAddress) error {
 	return k.PayoutTimeoutQueue.Remove(ctx, collections.Join(uint64(periodTimeout), vaultAddr))
 }
 
-// WalkPayoutVerifications iterates over all entries in the VaultStartQueue with periodStart <= nowSec.
-// For each due entry, it calls the provided callback function. Iteration stops if the
-// callback returns stop=true or an error.
+// WalkPayoutVerifications iterates over all entries in the PayoutVerificationQueue.
+// For each entry, the provided callback is invoked. Iteration stops if the callback
+// returns stop=true or an error.
 func (k Keeper) WalkPayoutVerifications(ctx context.Context, fn func(vaultAddr sdk.AccAddress) (stop bool, err error)) error {
 	it, err := k.PayoutVerificationQueue.Iterate(ctx, nil)
 	if err != nil {
@@ -64,9 +63,10 @@ func (k Keeper) WalkPayoutVerifications(ctx context.Context, fn func(vaultAddr s
 	return nil
 }
 
-// WalkDuePayoutTimeouts iterates over all entries in the VaultTimeoutQueue with periodTimeout <= nowSec.
-// For each due entry, it calls the provided callback function. Iteration stops if the
-// callback returns stop=true or an error.
+// WalkDuePayoutTimeouts iterates over all entries in the PayoutTimeoutQueue with
+// a timeout timestamp <= nowSec. For each due entry, the callback is invoked.
+// Iteration stops when a key with time > nowSec is encountered (since keys are
+// ordered) or when the callback returns stop=true or an error.
 func (k Keeper) WalkDuePayoutTimeouts(ctx context.Context, nowSec int64, fn func(periodTimeout uint64, vaultAddr sdk.AccAddress) (stop bool, err error)) error {
 	it, err := k.PayoutTimeoutQueue.Iterate(ctx, nil)
 	if err != nil {
@@ -90,9 +90,9 @@ func (k Keeper) WalkDuePayoutTimeouts(ctx context.Context, nowSec int64, fn func
 	return nil
 }
 
-// RemoveAllTimeoutsForVault deletes all timeout entries in the VaultTimeoutQueue
-// for the given vault address.
-func (k Keeper) RemoveAllTimeoutsForVault(ctx context.Context, vaultAddr sdk.AccAddress) error {
+// RemoveAllPayoutTimeoutsForVault deletes all timeout entries in the
+// PayoutTimeoutQueue for the given vault address.
+func (k Keeper) RemoveAllPayoutTimeoutsForVault(ctx context.Context, vaultAddr sdk.AccAddress) error {
 	var keys []collections.Pair[uint64, sdk.AccAddress]
 
 	it, err := k.PayoutTimeoutQueue.Iterate(ctx, nil)
@@ -118,12 +118,13 @@ func (k Keeper) RemoveAllTimeoutsForVault(ctx context.Context, vaultAddr sdk.Acc
 	return nil
 }
 
-// SafeEnqueueStart clears any existing start or timeout entries for the given vault,
-// then enqueues a new start entry at the provided periodStart.
+// SafeEnqueueStart clears any existing timeout entry for the given vault (if any),
+// sets the vault's period start to the current block time, clears the period timeout,
+// persists the vault, and enqueues the vault in the PayoutVerificationQueue.
 //
-// This ensures a vault is never present in both the start and timeout queues at once.
-// Typically called after enabling interest or performing a reconciliation so that
-// the next accrual cycle begins cleanly.
+// This ensures a vault is not present in both the verification and timeout queues
+// at the same time. Typically called after enabling interest or completing a
+// reconciliation so the next accrual cycle begins cleanly.
 func (k Keeper) SafeEnqueueStart(ctx context.Context, vault *types.VaultAccount) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	currentBlockTime := sdkCtx.BlockTime().Unix()
@@ -141,12 +142,14 @@ func (k Keeper) SafeEnqueueStart(ctx context.Context, vault *types.VaultAccount)
 	return k.EnqueuePayoutVerification(ctx, vault.GetAddress())
 }
 
-// SafeEnqueueTimeout clears any existing start or timeout entries for the given vault,
-// then enqueues a new timeout entry at the provided periodTimeout.
+// SafeEnqueueTimeout clears any existing timeout entry for the given vault (if any),
+// sets the vault's period start to the current block time, sets a new period timeout
+// at (now + AutoReconcileTimeout), persists the vault, and enqueues the timeout entry
+// in the PayoutTimeoutQueue.
 //
-// This ensures a vault is never present in both the timeout and start queues at once.
-// Typically called after marking a vault as payable, so it will be revisited only
-// after the configured auto-reconcile timeout window expires.
+// This ensures a vault is not present in both the timeout and verification queues
+// at the same time. Typically called after a vault has been marked as payable so it
+// will be revisited after the auto-reconcile window.
 func (k Keeper) SafeEnqueueTimeout(ctx context.Context, vault *types.VaultAccount) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 

@@ -75,15 +75,22 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	}
 
 	paymentTimeoutQueue := make([]types.QueueEntry, 0)
-	err := k.WalkDuePayoutTimeouts(ctx, ctx.BlockTime().Unix(), func(t uint64, addr sdk.AccAddress) (stop bool, err error) {
-		paymentTimeoutQueue = append(paymentTimeoutQueue, types.QueueEntry{
-			Time: t,
-			Addr: addr.String(),
-		})
-		return false, nil
-	})
+
+	it, err := k.PayoutTimeoutQueue.Iterate(ctx, nil)
 	if err != nil {
-		panic(fmt.Errorf("failed to walk payout timeout queue: %w", err))
+		panic(fmt.Errorf("failed to iterate payout timeout queue: %w", err))
+	}
+	defer it.Close()
+
+	for ; it.Valid(); it.Next() {
+		kv, err := it.KeyValue()
+		if err != nil {
+			panic(fmt.Errorf("failed to read payout timeout queue entry: %w", err))
+		}
+		paymentTimeoutQueue = append(paymentTimeoutQueue, types.QueueEntry{
+			Time: kv.Key.K1(),
+			Addr: kv.Key.K2().String(),
+		})
 	}
 
 	return &types.GenesisState{

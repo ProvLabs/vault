@@ -38,7 +38,7 @@ func TestAddress() Address {
 
 	return Address{
 		Bytes:  bytes,
-		Bech32: generateAddress("provlabs", bytes),
+		Bech32: generateAddress("cosmos", bytes),
 	}
 }
 

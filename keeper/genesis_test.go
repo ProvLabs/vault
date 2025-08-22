@@ -84,9 +84,11 @@ func (s *TestSuite) TestVaultGenesis_RoundTrip_PastAndFutureTimeouts() {
 	s.ctx = s.ctx.WithBlockTime(now)
 
 	exported := s.k.ExportGenesis(s.ctx)
-	s.Require().Len(exported.PayoutTimeoutQueue, 1)
+	s.Require().Len(exported.PayoutTimeoutQueue, 2)
 	s.Require().Equal(vaultAddr.String(), exported.PayoutTimeoutQueue[0].Addr)
 	s.Require().Equal(uint64(past), exported.PayoutTimeoutQueue[0].Time)
+	s.Require().Equal(vaultAddr.String(), exported.PayoutTimeoutQueue[1].Addr)
+	s.Require().Equal(uint64(future), exported.PayoutTimeoutQueue[1].Time)
 }
 
 func (s *TestSuite) TestVaultGenesis_InvalidTimeoutAddressPanics() {

@@ -19,7 +19,7 @@ import (
 func TestEnqueueDequeue_Start(t *testing.T) {
 	ctx, k := mocks.NewVaultKeeper(t)
 
-	addr := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
+	addr := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
 
 	require.NoError(t, k.EnqueuePayoutVerification(ctx, addr), "enqueue payout verification for %s should succeed", addr.String())
 
@@ -49,7 +49,7 @@ func TestEnqueueDequeue_Start(t *testing.T) {
 func TestEnqueueDequeue_Timeout(t *testing.T) {
 	ctx, k := mocks.NewVaultKeeper(t)
 
-	addr := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
+	addr := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
 	ts := int64(200)
 
 	require.NoError(t, k.EnqueuePayoutTimeout(ctx, ts, addr), "enqueue payout timeout (%d) for %s should succeed", ts, addr.String())
@@ -80,8 +80,8 @@ func TestEnqueueDequeue_Timeout(t *testing.T) {
 func TestWalkDueStarts(t *testing.T) {
 	ctx, k := mocks.NewVaultKeeper(t)
 
-	a1 := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
-	a2 := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
+	a1 := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
+	a2 := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
 
 	require.NoError(t, k.EnqueuePayoutVerification(ctx, a1), "enqueue payout verification for a1 should succeed")
 	require.NoError(t, k.EnqueuePayoutVerification(ctx, a2), "enqueue payout verification for a2 should succeed")
@@ -98,8 +98,8 @@ func TestWalkDueStarts(t *testing.T) {
 func TestWalkDueStarts_StopEarly(t *testing.T) {
 	ctx, k := mocks.NewVaultKeeper(t)
 
-	a := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
-	b := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
+	a := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
+	b := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
 
 	require.NoError(t, k.EnqueuePayoutVerification(ctx, a), "enqueue payout verification for a should succeed")
 	require.NoError(t, k.EnqueuePayoutVerification(ctx, b), "enqueue payout verification for b should succeed")
@@ -115,7 +115,7 @@ func TestWalkDueStarts_StopEarly(t *testing.T) {
 func TestWalkDueStarts_ErrorPropagates(t *testing.T) {
 	ctx, k := mocks.NewVaultKeeper(t)
 
-	a := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
+	a := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
 	require.NoError(t, k.EnqueuePayoutVerification(ctx, a), "enqueue payout verification for a should succeed")
 
 	errBoom := errors.New("boom")
@@ -128,8 +128,8 @@ func TestWalkDueStarts_ErrorPropagates(t *testing.T) {
 func TestWalkDueTimeouts(t *testing.T) {
 	ctx, k := mocks.NewVaultKeeper(t)
 
-	a1 := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
-	a2 := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
+	a1 := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
+	a2 := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
 
 	require.NoError(t, k.EnqueuePayoutTimeout(ctx, 50, a1), "enqueue payout timeout (50) for a1 should succeed")
 	require.NoError(t, k.EnqueuePayoutTimeout(ctx, 75, a2), "enqueue payout timeout (75) for a2 should succeed")
@@ -146,7 +146,7 @@ func TestWalkDueTimeouts(t *testing.T) {
 func TestWalkDueTimeouts_StopEarly(t *testing.T) {
 	ctx, k := mocks.NewVaultKeeper(t)
 
-	a := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
+	a := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
 	require.NoError(t, k.EnqueuePayoutTimeout(ctx, 10, a), "enqueue payout timeout (10) should succeed")
 	require.NoError(t, k.EnqueuePayoutTimeout(ctx, 20, a), "enqueue payout timeout (20) should succeed")
 
@@ -161,7 +161,7 @@ func TestWalkDueTimeouts_StopEarly(t *testing.T) {
 func TestWalkDueTimeouts_ErrorPropagates(t *testing.T) {
 	ctx, k := mocks.NewVaultKeeper(t)
 
-	a := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
+	a := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
 	require.NoError(t, k.EnqueuePayoutTimeout(ctx, 10, a), "enqueue payout timeout (10) should succeed")
 
 	errBoom := errors.New("boom")
@@ -174,8 +174,8 @@ func TestWalkDueTimeouts_ErrorPropagates(t *testing.T) {
 func TestRemoveAllStartsForVault(t *testing.T) {
 	ctx, k := mocks.NewVaultKeeper(t)
 
-	a1 := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
-	a2 := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
+	a1 := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
+	a2 := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
 
 	require.NoError(t, k.EnqueuePayoutVerification(ctx, a1), "enqueue payout verification for a1 should succeed")
 	require.NoError(t, k.EnqueuePayoutVerification(ctx, a2), "enqueue payout verification for a2 should succeed")
@@ -197,14 +197,14 @@ func TestRemoveAllTimeoutsForVault(t *testing.T) {
 	ctx, k := mocks.NewVaultKeeper(t)
 	stdCtx := sdk.WrapSDKContext(ctx)
 
-	a1 := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
-	a2 := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
+	a1 := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
+	a2 := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
 
 	require.NoError(t, k.EnqueuePayoutTimeout(stdCtx, 100, a1), "enqueue payout timeout (100) for a1 should succeed")
 	require.NoError(t, k.EnqueuePayoutTimeout(stdCtx, 150, a1), "enqueue payout timeout (150) for a1 should succeed")
 	require.NoError(t, k.EnqueuePayoutTimeout(stdCtx, 200, a2), "enqueue payout timeout (200) for a2 should succeed")
 
-	require.NoError(t, k.RemoveAllTimeoutsForVault(stdCtx, a1), "remove all timeouts for a1 should succeed")
+	require.NoError(t, k.RemoveAllPayoutTimeoutsForVault(stdCtx, a1), "remove all timeouts for a1 should succeed")
 
 	it, err := k.PayoutTimeoutQueue.Iterate(stdCtx, nil)
 	require.NoError(t, err, "iterate payout timeout queue after removal should not error")
@@ -220,7 +220,7 @@ func TestRemoveAllTimeoutsForVault(t *testing.T) {
 func TestSafeEnqueueStart_UpdatesVaultAndQueues(t *testing.T) {
 	ctx, k := mocks.NewVaultKeeper(t)
 
-	admin := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
+	admin := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
 	share := "vaultshares"
 	vaultAddr := types.GetVaultAddress(share)
 
@@ -277,7 +277,7 @@ func TestSafeEnqueueStart_UpdatesVaultAndQueues(t *testing.T) {
 func TestSafeEnqueueTimeout_UpdatesVaultAndQueues(t *testing.T) {
 	ctx, k := mocks.NewVaultKeeper(t)
 
-	admin := sdk.MustAccAddressFromBech32(utils.TestAddress().Bech32)
+	admin := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
 	share := "vaultshares2"
 	vaultAddr := types.GetVaultAddress(share)
 

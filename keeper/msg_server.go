@@ -171,7 +171,7 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 			return nil, fmt.Errorf("failed to set vault account: %w", err)
 		}
 		if err := k.EnqueuePayoutVerification(ctx, vault.GetAddress()); err != nil {
-			return nil, fmt.Errorf("failed to enqueue vault start: %w", err)
+			return nil, fmt.Errorf("failed to enqueue vault payout verification: %w", err)
 		}
 	case reconciled && !vault.InterestEnabled():
 		vault.PeriodStart = 0
@@ -180,10 +180,10 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 			return nil, fmt.Errorf("failed to set vault account: %w", err)
 		}
 		if err := k.DequeuePayoutVerification(ctx, vault.GetAddress()); err != nil {
-			return nil, fmt.Errorf("failed to remove start entries: %w", err)
+			return nil, fmt.Errorf("failed to remove payout verification entries: %w", err)
 		}
-		if err := k.RemoveAllTimeoutsForVault(ctx, vault.GetAddress()); err != nil {
-			return nil, fmt.Errorf("failed to remove timeout entries: %w", err)
+		if err := k.RemoveAllPayoutTimeoutsForVault(ctx, vault.GetAddress()); err != nil {
+			return nil, fmt.Errorf("failed to remove payout timeout entries: %w", err)
 		}
 	}
 

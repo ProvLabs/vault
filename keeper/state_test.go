@@ -23,7 +23,7 @@ func TestSetVaultLookup_ErrorsAndSuccess(t *testing.T) {
 	err = k.SetVaultLookup(ctx, vBad)
 	require.Error(t, err, "expected error when vault address is not bech32")
 
-	addr := utils.TestAddress().Bech32
+	addr := utils.TestProvlabsAddress().Bech32
 	v := &types.VaultAccount{BaseAccount: authtypes.NewBaseAccountWithAddress(sdk.MustAccAddressFromBech32(addr))}
 	err = k.SetVaultLookup(ctx, v)
 	require.NoError(t, err, "expected no error when vault is valid")

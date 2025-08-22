@@ -16,6 +16,5 @@ message QueueEntry {
 message GenesisState {
   // vaults defines the vaults that exist at genesis.
   repeated VaultAccount vaults = 1 [(gogoproto.nullable) = false];
-   repeated QueueEntry start_queue = 2 [(gogoproto.nullable) = false];
-  repeated QueueEntry timeout_queue = 3 [(gogoproto.nullable) = false];
+  repeated QueueEntry timeout_queue = 2 [(gogoproto.nullable) = false];
 }

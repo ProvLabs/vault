@@ -28,14 +28,14 @@ var (
 	VaultsKeyPrefix = collections.NewPrefix(0)
 	// VaultsName is a human-readable name for the vaults collection.
 	VaultsName = "vaults"
-	// VaultStartQueuePrefix is the prefix to retrieve all VaultStartQueue
-	VaultStartQueuePrefix = collections.NewPrefix(1)
-	// VaultStartQueueName is a human-readable name for the vault start queue collection
-	VaultStartQueueName = "vault_start_queue"
-
-	VaultEndQueuePrefix = collections.NewPrefix(2)
-	// VaultEndQueueName is a human-readable name for the vault end queue collection
-	VaultEndQueueName = "vault_end_queue"
+	// VaultPayoutVerificationQueuePrefix is the prefix to retrieve all VaultPayoutVerificationQueue.
+	VaultPayoutVerificationQueuePrefix = collections.NewPrefix(1)
+	// VaultPayoutVerificationQueueName is a human-readable name for the vault payout verification queue collection.
+	VaultPayoutVerificationQueueName = "vault_payout_verification_queue"
+	// VaultPayoutTimeoutQueuePrefix is the prefix to retrieve all VaultPayoutTimeoutQueue.
+	VaultPayoutTimeoutQueuePrefix = collections.NewPrefix(2)
+	// VaultPayoutTimeoutQueueName is a human-readable name for the payout timeout queue collection.
+	VaultPayoutTimeoutQueueName = "vault_payout_timeout_queue"
 )
 
 // GetVaultAddress returns the module account address for the given shareDenom.

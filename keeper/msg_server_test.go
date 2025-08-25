@@ -850,7 +850,7 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 		postCheckArgs  postCheckArgs
 		expectedEvents sdk.Events
 	}{
-		{name: "initial setting of interest rate",
+		{name: "transition from disabled interest to enabled",
 			interestRate: "0.05",
 			setup:        setup,
 			postCheckArgs: postCheckArgs{

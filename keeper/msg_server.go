@@ -149,22 +149,24 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 		msg.NewRate = types.ZeroInterestRate
 	}
 
-	reconciled := false
 	curRate, err := sdkmath.LegacyNewDecFromStr(vault.CurrentInterestRate)
 	if err != nil {
 		return nil, fmt.Errorf("invalid current rate: %w", err)
 	}
+
+	prevEnabled := vault.InterestEnabled()
 	if !curRate.IsZero() {
 		if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
 			return nil, fmt.Errorf("failed to reconcile before rate change: %w", err)
 		}
-		reconciled = true
 	}
 
 	k.UpdateInterestRates(ctx, vault, msg.NewRate, msg.NewRate)
 
+	nextEnabled := vault.InterestEnabled()
+
 	switch {
-	case !reconciled && vault.InterestEnabled():
+	case !prevEnabled && nextEnabled:
 		vault.PeriodStart = ctx.BlockTime().Unix()
 		vault.PeriodTimeout = 0
 		if err := k.SetVaultAccount(ctx, vault); err != nil {
@@ -173,7 +175,7 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 		if err := k.EnqueuePayoutVerification(ctx, vault.GetAddress()); err != nil {
 			return nil, fmt.Errorf("failed to enqueue vault payout verification: %w", err)
 		}
-	case reconciled && !vault.InterestEnabled():
+	case prevEnabled && !nextEnabled:
 		vault.PeriodStart = 0
 		vault.PeriodTimeout = 0
 		if err := k.SetVaultAccount(ctx, vault); err != nil {

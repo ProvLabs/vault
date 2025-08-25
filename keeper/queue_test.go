@@ -217,7 +217,7 @@ func TestRemoveAllTimeoutsForVault(t *testing.T) {
 	}
 }
 
-func TestSafeEnqueueStart_UpdatesVaultAndQueues(t *testing.T) {
+func TestSafeEnqueueVerification_UpdatesVaultAndQueues(t *testing.T) {
 	ctx, k := mocks.NewVaultKeeper(t)
 
 	admin := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
@@ -240,10 +240,10 @@ func TestSafeEnqueueStart_UpdatesVaultAndQueues(t *testing.T) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	ctx = sdkCtx.WithBlockTime(time.Unix(1000, 0))
 
-	require.NoError(t, k.SafeEnqueueStart(ctx, v), "SafeEnqueueStart should clear timeouts, set start, and enqueue verification")
+	require.NoError(t, k.SafeEnqueueVerification(ctx, v), "SafeEnqueueVerification should clear timeouts, set start, and enqueue verification")
 
 	itS, err := k.PayoutVerificationQueue.Iterate(ctx, nil)
-	require.NoError(t, err, "iterate payout verification queue should not error after SafeEnqueueStart")
+	require.NoError(t, err, "iterate payout verification queue should not error after SafeEnqueueVerification")
 	defer itS.Close()
 
 	foundStart := false
@@ -254,20 +254,20 @@ func TestSafeEnqueueStart_UpdatesVaultAndQueues(t *testing.T) {
 			foundStart = true
 		}
 	}
-	require.True(t, foundStart, "payout verification queue should contain vault %s after SafeEnqueueStart", vaultAddr.String())
+	require.True(t, foundStart, "payout verification queue should contain vault %s after SafeEnqueueVerification", vaultAddr.String())
 
 	itT, err := k.PayoutTimeoutQueue.Iterate(ctx, nil)
-	require.NoError(t, err, "iterate payout timeout queue should not error after SafeEnqueueStart")
+	require.NoError(t, err, "iterate payout timeout queue should not error after SafeEnqueueVerification")
 	defer itT.Close()
 
 	for ; itT.Valid(); itT.Next() {
 		kv, err := itT.KeyValue()
 		require.NoError(t, err, "reading key/value from payout timeout iterator should not error")
-		require.False(t, kv.Key.K2().Equals(vaultAddr), "payout timeout queue should not contain vault %s after SafeEnqueueStart", vaultAddr.String())
+		require.False(t, kv.Key.K2().Equals(vaultAddr), "payout timeout queue should not contain vault %s after SafeEnqueueVerification", vaultAddr.String())
 	}
 
 	acc := k.AuthKeeper.GetAccount(ctx, vaultAddr)
-	require.NotNil(t, acc, "vault account should exist in state after SafeEnqueueStart")
+	require.NotNil(t, acc, "vault account should exist in state after SafeEnqueueVerification")
 	va, ok := acc.(*types.VaultAccount)
 	require.True(t, ok, "retrieved account should be *types.VaultAccount; got %T", acc)
 	require.Equal(t, int64(1000), va.PeriodStart, "vault PeriodStart should be set to block time; expected 1000, got %d", va.PeriodStart)

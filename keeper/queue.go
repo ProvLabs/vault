@@ -118,14 +118,14 @@ func (k Keeper) RemoveAllPayoutTimeoutsForVault(ctx context.Context, vaultAddr s
 	return nil
 }
 
-// SafeEnqueueStart clears any existing timeout entry for the given vault (if any),
+// SafeEnqueueVerification clears any existing timeout entry for the given vault (if any),
 // sets the vault's period start to the current block time, clears the period timeout,
 // persists the vault, and enqueues the vault in the PayoutVerificationQueue.
 //
 // This ensures a vault is not present in both the verification and timeout queues
 // at the same time. Typically called after enabling interest or completing a
 // reconciliation so the next accrual cycle begins cleanly.
-func (k Keeper) SafeEnqueueStart(ctx context.Context, vault *types.VaultAccount) error {
+func (k Keeper) SafeEnqueueVerification(ctx context.Context, vault *types.VaultAccount) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	currentBlockTime := sdkCtx.BlockTime().Unix()
 

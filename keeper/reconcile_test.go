@@ -328,7 +328,7 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 				vault.DesiredInterestRate = "0.25"
 				s.k.AuthKeeper.SetAccount(s.ctx, vault)
 				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, sdk.NewCoins(underlying)))
-				s.Require().NoError(s.k.SafeEnqueueStart(s.ctx, vault))
+				s.Require().NoError(s.k.SafeEnqueueVerification(s.ctx, vault))
 				s.Require().NoError(s.k.EnqueuePayoutTimeout(s.ctx, testBlockTime.Unix(), vault.GetAddress()))
 				s.ctx = s.ctx.WithBlockTime(testBlockTime).WithEventManager(sdk.NewEventManager())
 			},
@@ -752,7 +752,7 @@ func createVaultWithInterest(s *TestSuite, info VaultInfo, interestRate string, 
 		s.Require().NoError(err)
 	}
 
-	s.Require().NoError(s.k.SafeEnqueueStart(s.ctx, vault))
+	s.Require().NoError(s.k.SafeEnqueueVerification(s.ctx, vault))
 	return vault
 }
 

@@ -42,7 +42,7 @@ func (k *Keeper) ReconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccou
 		}
 	}
 
-	return k.SafeEnqueueStart(ctx, vault)
+	return k.SafeEnqueueVerification(ctx, vault)
 }
 
 // PerformVaultInterestTransfer applies accrued interest between the vault and the marker account

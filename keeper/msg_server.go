@@ -167,12 +167,7 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 
 	switch {
 	case !prevEnabled && nextEnabled:
-		vault.PeriodStart = ctx.BlockTime().Unix()
-		vault.PeriodTimeout = 0
-		if err := k.SetVaultAccount(ctx, vault); err != nil {
-			return nil, fmt.Errorf("failed to set vault account: %w", err)
-		}
-		if err := k.EnqueuePayoutVerification(ctx, vault.GetAddress()); err != nil {
+		if err := k.SafeEnqueueVerification(ctx, vault); err != nil {
 			return nil, fmt.Errorf("failed to enqueue vault payout verification: %w", err)
 		}
 	case prevEnabled && !nextEnabled:

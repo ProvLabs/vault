@@ -21,8 +21,10 @@ func (k *Keeper) GetVaults(ctx context.Context) ([]sdk.AccAddress, error) {
 	return vaults, err
 }
 
-// Sets a vault in the store, using its address as the key.
-func (k *Keeper) SetVault(ctx context.Context, vault *types.VaultAccount) error {
+// SetVaultLookup stores a vault in the Vaults collection, keyed by its bech32 address.
+// NOTE: should only be called by genesis and at vault creation.
+// Returns an error if the vault is nil or the address cannot be parsed.
+func (k *Keeper) SetVaultLookup(ctx context.Context, vault *types.VaultAccount) error {
 	if vault == nil {
 		return errors.New("vault cannot be nil")
 	}
@@ -35,21 +37,12 @@ func (k *Keeper) SetVault(ctx context.Context, vault *types.VaultAccount) error 
 	return k.Vaults.Set(ctx, addr, []byte{})
 }
 
-// SetVaultAccount persists a vault account after validating it.
+// SetVaultAccount validates and persists a VaultAccount using the auth keeper.
+// Returns an error if validation fails.
 func (k *Keeper) SetVaultAccount(ctx sdk.Context, vault *types.VaultAccount) error {
 	if err := vault.Validate(); err != nil {
 		return err
 	}
 	k.AuthKeeper.SetAccount(ctx, vault)
 	return nil
-}
-
-// GetVaults is a helper function for retrieving all vaults from state.
-func (k *Keeper) GetParams(ctx context.Context) (types.Params, error) {
-	params, err := k.Params.Get(ctx)
-	if err != nil {
-		return types.Params{}, errors.New("unable to get params from state")
-	}
-
-	return params, nil
 }

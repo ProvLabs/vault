@@ -74,14 +74,13 @@ func (k Keeper) GetVault(ctx sdk.Context, address sdk.AccAddress) (*types.VaultA
 func (k *Keeper) createVaultAccount(ctx sdk.Context, admin, shareDenom, underlyingAsset string) (*types.VaultAccount, error) {
 	vaultAddr := types.GetVaultAddress(shareDenom)
 
-	// TODO: determine how to handle setting interest rates with management issue: https://github.com/ProvLabs/vault/issues/8
 	vault := types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(vaultAddr), admin, shareDenom, []string{underlyingAsset})
 
 	if err := vault.Validate(); err != nil {
 		return nil, fmt.Errorf("failed to validate vault account: %w", err)
 	}
 
-	if err := k.SetVault(ctx, vault); err != nil {
+	if err := k.SetVaultLookup(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to store new vault: %w", err)
 	}
 

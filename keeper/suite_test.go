@@ -67,10 +67,10 @@ func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(TestSuite))
 }
 
-func (s *TestSuite) assertVaultInterestPeriod(vaultAddr sdk.AccAddress, expectedPeriod int64) {
-	interestDetails, err := s.k.VaultInterestDetails.Get(s.ctx, vaultAddr)
-	s.Require().NoError(err, "failed to get interest details")
-	s.Assert().Equal(expectedPeriod, interestDetails.PeriodStart, "unexpected interest period start")
+func (s *TestSuite) assertInPayoutVerificationQueue(vaultAddr sdk.AccAddress, shouldContain bool) {
+	isInQueue, err := s.k.PayoutVerificationQueue.Has(s.ctx, vaultAddr)
+	s.Require().NoError(err, "should not error checking queue")
+	s.Assert().Equal(shouldContain, isInQueue, "vault should be enqueued in payout verification queue at expected period start")
 }
 
 func (s *TestSuite) assertBalance(addr sdk.AccAddress, denom string, expectedAmt sdkmath.Int) {

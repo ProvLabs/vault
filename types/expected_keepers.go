@@ -15,6 +15,7 @@ type MarkerKeeper interface {
 	TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, amount sdk.Coin) error
 	WithdrawCoins(ctx sdk.Context, caller sdk.AccAddress, recipient sdk.AccAddress, denom string, coins sdk.Coins) error
 	GetMarker(ctx sdk.Context, address sdk.AccAddress) (types.MarkerAccountI, error)
+	GetMarkerByDenom(ctx sdk.Context, denom string) (types.MarkerAccountI, error)
 	IsMarkerAccount(ctx sdk.Context, addr sdk.AccAddress) bool
 }
 

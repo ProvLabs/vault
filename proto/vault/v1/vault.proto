@@ -2,6 +2,7 @@ syntax = "proto3";
 package vault.v1;
 
 import "cosmos/auth/v1beta1/auth.proto";
+import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 
@@ -37,4 +38,19 @@ message VaultAccount {
   bool swap_in_enabled = 11;
   // swap_out_enabled indicates whether users are allowed to withdraw from the vault.
   bool swap_out_enabled = 12;
+}
+
+// AccountBalance represents the coin balance of a single account.
+message AccountBalance {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // address is the account address.
+  string address = 1;
+
+  // coins is the balance of the account.
+  repeated cosmos.base.v1beta1.Coin coins = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 }

@@ -45,44 +45,17 @@ func (k *Keeper) SetVaultAccount(ctx sdk.Context, vault *types.VaultAccount) err
 	return nil
 }
 
-// GetVaultAccounts is a helper function for retrieving all vault accounts from state.
-func (k *Keeper) GetVaultAccounts(ctx sdk.Context) ([]*types.VaultAccount, error) {
-	accounts := []*types.VaultAccount{}
-	err := k.Vaults.Walk(ctx, nil, func(addr sdk.AccAddress, _ []byte) (stop bool, err error) {
-		account, err := k.GetVault(ctx, addr)
-		if err != nil {
-			return true, err
-		}
-		if account != nil {
-			accounts = append(accounts, account)
-		}
-		return false, nil
-	})
-	if err != nil {
-		return nil, err
-	}
-	return accounts, nil
-}
-
 // FindVault retrieves a vault by its address or share denomination.
 func (k *Keeper) FindVaultAccount(ctx sdk.Context, id string) (*types.VaultAccount, error) {
-	// Attempt to find by address first.
 	if addr, err := sdk.AccAddressFromBech32(id); err == nil {
 		if vault, err := k.GetVault(ctx, addr); err != nil || vault != nil {
 			return vault, err
 		}
 	}
 
-	// If not found by address, try to find by share denomination.
-	allVaults, err := k.GetVaultAccounts(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, vault := range allVaults {
-		if vault.ShareDenom == id {
-			return vault, nil
-		}
+	addr := types.GetVaultAddress(id)
+	if vault, err := k.GetVault(ctx, addr); err != nil || vault != nil {
+		return vault, err
 	}
 
 	return nil, fmt.Errorf("vault with id '%s' not found", id)

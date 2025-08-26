@@ -2,6 +2,7 @@ syntax = "proto3";
 package vault.v1;
 
 import "cosmos/auth/v1beta1/auth.proto";
+import "cosmos/base/v1beta1/coin.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 
@@ -45,4 +46,19 @@ message VaultInterestDetails {
   int64 period_start = 1;
   // The expire time (in Unix seconds) of the current interest accrual period.
   int64 expire_time = 2;
+}
+
+// AccountBalance represents the coin balance of a single account.
+message AccountBalance {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  // address is the account address.
+  string address = 1;
+
+  // coins is the balance of the account.
+  repeated cosmos.base.v1beta1.Coin coins = 2 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
 }

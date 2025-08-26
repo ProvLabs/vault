@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/provlabs/vault/types"
 
@@ -44,7 +45,23 @@ func (k *Keeper) SetVaultAccount(ctx sdk.Context, vault *types.VaultAccount) err
 	return nil
 }
 
-// GetVaults is a helper function for retrieving all vaults from state.
+// FindVault retrieves a vault by its address or share denomination.
+func (k *Keeper) FindVaultAccount(ctx sdk.Context, id string) (*types.VaultAccount, error) {
+	if addr, err := sdk.AccAddressFromBech32(id); err == nil {
+		if vault, err := k.GetVault(ctx, addr); err != nil || vault != nil {
+			return vault, err
+		}
+	}
+
+	addr := types.GetVaultAddress(id)
+	if vault, err := k.GetVault(ctx, addr); err != nil || vault != nil {
+		return vault, err
+	}
+
+	return nil, fmt.Errorf("vault with id '%s' not found", id)
+}
+
+// GetParams is a helper function for retrieving module parameters from state.
 func (k *Keeper) GetParams(ctx context.Context) (types.Params, error) {
 	params, err := k.Params.Get(ctx)
 	if err != nil {

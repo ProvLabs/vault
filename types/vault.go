@@ -38,9 +38,6 @@ type VaultAccountI interface {
 
 	// GetShareDenom returns the denom used for shares in the vault.
 	GetShareDenom() string
-
-	// GetUnderlyingAssets returns the list of assets backing the vault.
-	GetUnderlyingAssets() []string
 }
 
 // NewVaultAccount creates a new vault.

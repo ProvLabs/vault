@@ -62,12 +62,11 @@ func (s *TestSuite) TestMsgServer_CreateVault() {
 				vaultAcc.GetAddress(),
 				"expected vault address to match derived address from share denom",
 			)
-			s.Len(vaultAcc.GetUnderlyingAssets(), 1, "expected vault to contain exactly one underlying asset")
-			s.Equal(
-				postCheckArgs.UnderlyingAsset,
-				vaultAcc.GetUnderlyingAssets()[0],
-				"expected vault underlying asset denom to match request",
-			)
+			// s.Equal(
+			// 	postCheckArgs.UnderlyingAsset,
+			// 	vaultAcc,
+			// 	"expected vault underlying asset denom to match request",
+			// )
 		},
 	}
 

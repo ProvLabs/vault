@@ -30,22 +30,14 @@ message VaultAccount {
   // max_interest_rate is a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%) representing the highest annual interest rate the admin is allowed to set.
   // If unset (empty string), there is no upper limit.
   string max_interest_rate = 8 [(cosmos_proto.scalar) = "cosmos.DecString"];
-  // swap_in_enabled indicates whether users are allowed to deposit into the vault.
-  bool swap_in_enabled = 9;
-  // swap_out_enabled indicates whether users are allowed to withdraw from the vault.
-  bool swap_out_enabled = 10;
-}
-
-// VaultInterestDetails stores metadata related to interest accrual and payment for a vault.
-//
-// period_start represents the Unix timestamp (in seconds) when the current interest
-// accrual period began. This value is updated when interest is successfully paid out.
-// If multiple transactions occur in the same block, only the first will trigger interest reconciliation.
-message VaultInterestDetails {
-  // The start time (in Unix seconds) of the current interest accrual period.
-  int64 period_start = 1;
+   // The start time (in Unix seconds) of the current interest accrual period.
+  int64 period_start = 9;
   // The expire time (in Unix seconds) of the current interest accrual period.
-  int64 expire_time = 2;
+  int64 period_timeout = 10; 
+  // swap_in_enabled indicates whether users are allowed to deposit into the vault.
+  bool swap_in_enabled = 11;
+  // swap_out_enabled indicates whether users are allowed to withdraw from the vault.
+  bool swap_out_enabled = 12;
 }
 
 // AccountBalance represents the coin balance of a single account.

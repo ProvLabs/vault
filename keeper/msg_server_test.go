@@ -807,10 +807,10 @@ func (s *TestSuite) TestMsgServer_ToggleSwapIn() {
 
 func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 	type postCheckArgs struct {
-		VaultAddress          sdk.AccAddress
-		ExpectedRate          string
-		ExpectedPeriodStart   int64
-		HasNewInterestDetails bool
+		VaultAddress              sdk.AccAddress
+		ExpectedRate              string
+		ExpectedPeriodStart       int64
+		ExpectInVerificationQueue bool
 	}
 
 	testDef := msgServerTestDef[types.MsgUpdateInterestRateRequest, types.MsgUpdateInterestRateResponse, postCheckArgs]{
@@ -821,17 +821,10 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 			s.Require().NoError(err, "should be able to get vault")
 			s.Assert().Equal(args.ExpectedRate, vault.CurrentInterestRate, "vault current interest rate should match expected rate")
 			s.Assert().Equal(args.ExpectedRate, vault.DesiredInterestRate, "vault desired interest rate should match expected rate")
-
-			if args.HasNewInterestDetails {
-				v, err := s.k.VaultInterestDetails.Get(s.ctx, args.VaultAddress)
-				s.Require().NoError(err, "should be able to get vault interest details")
-				s.Assert().Equal(args.ExpectedPeriodStart, v.PeriodStart, "vault interest details period start should be current block time")
-				s.Assert().Equal(int64(0), v.ExpireTime, " vault interest details expire time should be zero")
-			} else {
-				_, err := s.k.VaultInterestDetails.Get(s.ctx, args.VaultAddress)
-				s.Require().ErrorContains(err, "not found", "should not find vault interest details")
+			if args.ExpectedPeriodStart > 0 {
+				s.Assert().Equal(args.ExpectedPeriodStart, vault.PeriodStart, "unexpected period start")
 			}
-
+			s.assertInPayoutVerificationQueue(vault.GetAddress(), args.ExpectInVerificationQueue)
 		},
 	}
 
@@ -860,14 +853,15 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 		postCheckArgs  postCheckArgs
 		expectedEvents sdk.Events
 	}{
-		{name: "initial setting of interest rate",
+		{
+			name:         "enable interest from zero to non-zero (disabled → enabled)",
 			interestRate: "0.05",
 			setup:        setup,
 			postCheckArgs: postCheckArgs{
-				VaultAddress:          vaultAddr,
-				ExpectedRate:          "0.05",
-				HasNewInterestDetails: true,
-				ExpectedPeriodStart:   currentBlockTime.Unix(),
+				VaultAddress:              vaultAddr,
+				ExpectedRate:              "0.05",
+				ExpectInVerificationQueue: true,
+				ExpectedPeriodStart:       currentBlockTime.Unix(),
 			},
 			expectedEvents: sdk.Events{
 				sdk.NewEvent("vault.v1.EventVaultInterestChange",
@@ -877,20 +871,22 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 				),
 			},
 		},
-		{name: "update current interest rate to non zero, needs to reconcile previous rate",
+		{
+			name:         "change non-zero rate with reconcile (enabled → enabled)",
 			interestRate: "4.06",
 			setup: func() {
 				setup()
 				vaultAcc, err := s.k.GetVault(s.ctx, vaultAddr)
-				s.Require().NoError(err, "should be able to get vault")
+				s.Require().NoError(err)
 				s.k.UpdateInterestRates(s.ctx, vaultAcc, "4.20", "4.20")
-				s.k.VaultInterestDetails.Set(s.ctx, vaultAddr, types.VaultInterestDetails{PeriodStart: currentBlockTime.Unix() - 10000})
+				vaultAcc.PeriodStart = currentBlockTime.Unix() - 10000
+				s.Require().NoError(s.k.SetVaultAccount(s.ctx, vaultAcc))
 			},
 			postCheckArgs: postCheckArgs{
-				VaultAddress:          vaultAddr,
-				ExpectedRate:          "4.06",
-				HasNewInterestDetails: true,
-				ExpectedPeriodStart:   currentBlockTime.Unix(),
+				VaultAddress:              vaultAddr,
+				ExpectedRate:              "4.06",
+				ExpectInVerificationQueue: true,
+				ExpectedPeriodStart:       currentBlockTime.Unix(),
 			},
 			expectedEvents: sdk.Events{
 				sdk.NewEvent("vault.v1.EventVaultReconcile",
@@ -908,19 +904,21 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 				),
 			},
 		},
-		{name: "update current interest rate to zero, needs to reconcile previous non zero rate",
+		{
+			name:         "disable interest by setting zero (enabled → disabled)",
 			interestRate: "0",
 			setup: func() {
 				setup()
 				vaultAcc, err := s.k.GetVault(s.ctx, vaultAddr)
-				s.Require().NoError(err, "should be able to get vault")
+				s.Require().NoError(err)
 				s.k.UpdateInterestRates(s.ctx, vaultAcc, "6.12", "6.12")
-				s.k.VaultInterestDetails.Set(s.ctx, vaultAddr, types.VaultInterestDetails{PeriodStart: currentBlockTime.Unix() - 10000})
+				vaultAcc.PeriodStart = currentBlockTime.Unix() - 10000
+				s.Require().NoError(s.k.SetVaultAccount(s.ctx, vaultAcc))
 			},
 			postCheckArgs: postCheckArgs{
-				VaultAddress:          vaultAddr,
-				ExpectedRate:          types.ZeroInterestRate,
-				HasNewInterestDetails: false,
+				VaultAddress:              vaultAddr,
+				ExpectedRate:              types.ZeroInterestRate,
+				ExpectInVerificationQueue: false,
 			},
 			expectedEvents: sdk.Events{
 				sdk.NewEvent("vault.v1.EventVaultReconcile",
@@ -938,7 +936,84 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 				),
 			},
 		},
+		{
+			name:         "no-op update with same non-zero rate (enabled → enabled unchanged)",
+			interestRate: "3.33",
+			setup: func() {
+				setup()
+				vaultAcc, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err)
+				s.k.UpdateInterestRates(s.ctx, vaultAcc, "3.33", "3.33")
+				vaultAcc.PeriodStart = currentBlockTime.Unix() - 5000
+				s.Require().NoError(s.k.SetVaultAccount(s.ctx, vaultAcc))
+			},
+			postCheckArgs: postCheckArgs{
+				VaultAddress:              vaultAddr,
+				ExpectedRate:              "3.33",
+				ExpectInVerificationQueue: true,
+				ExpectedPeriodStart:       currentBlockTime.Unix(),
+			},
+			expectedEvents: sdk.Events{
+				sdk.NewEvent("vault.v1.EventVaultReconcile",
+					sdk.NewAttribute("interest_earned", CoinToJSON(sdk.NewInt64Coin(underlyingDenom, 0))),
+					sdk.NewAttribute("principal_after", CoinToJSON(sdk.NewInt64Coin(underlyingDenom, 0))),
+					sdk.NewAttribute("principal_before", CoinToJSON(sdk.NewInt64Coin(underlyingDenom, 0))),
+					sdk.NewAttribute("rate", "3.33"),
+					sdk.NewAttribute("time", "5000"),
+					sdk.NewAttribute("vault_address", vaultAddr.String()),
+				),
+				sdk.NewEvent("vault.v1.EventVaultInterestChange",
+					sdk.NewAttribute("current_rate", "3.33"),
+					sdk.NewAttribute("desired_rate", "3.33"),
+					sdk.NewAttribute("vault_address", vaultAddr.String()),
+				),
+			},
+		},
+		{
+			name:         "no-op update with zero rate (disabled → disabled unchanged)",
+			interestRate: "0.0",
+			setup:        setup,
+			postCheckArgs: postCheckArgs{
+				VaultAddress:              vaultAddr,
+				ExpectedRate:              types.ZeroInterestRate,
+				ExpectInVerificationQueue: false,
+			},
+			expectedEvents: sdk.Events{
+				sdk.NewEvent("vault.v1.EventVaultInterestChange",
+					sdk.NewAttribute("current_rate", "0.0"),
+					sdk.NewAttribute("desired_rate", "0.0"),
+					sdk.NewAttribute("vault_address", vaultAddr.String()),
+				),
+			},
+		},
+		{
+			name:         "re-enable after prior disable with stale period fields present (disabled → enabled)",
+			interestRate: "1.25",
+			setup: func() {
+				setup()
+				vaultAcc, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err)
+				s.k.UpdateInterestRates(s.ctx, vaultAcc, "0.0", "0.0")
+				vaultAcc.PeriodStart = currentBlockTime.Unix() - 1234
+				vaultAcc.PeriodTimeout = currentBlockTime.Unix() + 9999
+				s.Require().NoError(s.k.SetVaultAccount(s.ctx, vaultAcc))
+			},
+			postCheckArgs: postCheckArgs{
+				VaultAddress:              vaultAddr,
+				ExpectedRate:              "1.25",
+				ExpectInVerificationQueue: true,
+				ExpectedPeriodStart:       currentBlockTime.Unix(),
+			},
+			expectedEvents: sdk.Events{
+				sdk.NewEvent("vault.v1.EventVaultInterestChange",
+					sdk.NewAttribute("current_rate", "1.25"),
+					sdk.NewAttribute("desired_rate", "1.25"),
+					sdk.NewAttribute("vault_address", vaultAddr.String()),
+				),
+			},
+		},
 	}
+
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			updateInterestRateReq := types.MsgUpdateInterestRateRequest{
@@ -1376,7 +1451,7 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds() {
 		VaultAddress          sdk.AccAddress
 		ExpectedDepositAmount sdk.Coin
 		ExpectedVaultBalance  sdk.Coin
-		HasNewInterestDetails bool
+		InVerificationQueue   bool
 		ExpectedPeriodStart   int64
 	}
 
@@ -1386,11 +1461,8 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds() {
 		postCheck: func(msg *types.MsgDepositInterestFundsRequest, args postCheckArgs) {
 			vaultBal := s.k.BankKeeper.GetBalance(s.ctx, args.VaultAddress, args.ExpectedDepositAmount.Denom)
 			s.Assert().Equal(args.ExpectedVaultBalance.Amount.Int64(), vaultBal.Amount.Int64())
-			if args.HasNewInterestDetails {
-				v, err := s.k.VaultInterestDetails.Get(s.ctx, args.VaultAddress)
-				s.Require().NoError(err)
-				s.Assert().Equal(args.ExpectedPeriodStart, v.PeriodStart)
-			}
+
+			s.assertInPayoutVerificationQueue(args.VaultAddress, args.InVerificationQueue)
 		},
 	}
 
@@ -1435,7 +1507,7 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds() {
 				VaultAddress:          vaultAddr,
 				ExpectedDepositAmount: amount,
 				ExpectedVaultBalance:  amount,
-				HasNewInterestDetails: true,
+				InVerificationQueue:   true,
 				ExpectedPeriodStart:   blockTime.Unix(),
 			},
 			expectedEvents: ev,

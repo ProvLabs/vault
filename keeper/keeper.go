@@ -26,9 +26,9 @@ type Keeper struct {
 	MarkerKeeper types.MarkerKeeper
 	BankKeeper   types.BankKeeper
 
-	Params               collections.Item[types.Params]
-	Vaults               collections.Map[sdk.AccAddress, []byte]
-	VaultInterestDetails collections.Map[sdk.AccAddress, types.VaultInterestDetails]
+	Vaults                  collections.Map[sdk.AccAddress, []byte]
+	PayoutVerificationQueue collections.Map[sdk.AccAddress, collections.NoValue]
+	PayoutTimeoutQueue      collections.Map[collections.Pair[uint64, sdk.AccAddress], collections.NoValue]
 }
 
 // NewMsgServer creates a new Keeper for the module.
@@ -47,17 +47,21 @@ func NewKeeper(
 	}
 
 	builder := collections.NewSchemaBuilder(storeService)
+	endKeyCodec := collections.PairKeyCodec(
+		collections.Uint64Key,
+		sdk.AccAddressKey,
+	)
 
 	keeper := &Keeper{
-		eventService:         eventService,
-		addressCodec:         addressCodec,
-		authority:            authority,
-		Params:               collections.NewItem(builder, types.ParamsKeyPrefix, types.ParamsName, codec.CollValue[types.Params](cdc)),
-		Vaults:               collections.NewMap(builder, types.VaultsKeyPrefix, types.VaultsName, sdk.AccAddressKey, collections.BytesValue),
-		VaultInterestDetails: collections.NewMap(builder, types.VaultInterestDetailsPrefix, types.VaultInterestDetailsName, sdk.AccAddressKey, codec.CollValue[types.VaultInterestDetails](cdc)),
-		AuthKeeper:           authKeeper,
-		MarkerKeeper:         markerkeeper,
-		BankKeeper:           bankkeeper,
+		eventService:            eventService,
+		addressCodec:            addressCodec,
+		authority:               authority,
+		Vaults:                  collections.NewMap(builder, types.VaultsKeyPrefix, types.VaultsName, sdk.AccAddressKey, collections.BytesValue),
+		PayoutVerificationQueue: collections.NewMap[sdk.AccAddress, collections.NoValue](builder, types.VaultPayoutVerificationQueuePrefix, types.VaultPayoutVerificationQueueName, sdk.AccAddressKey, collections.NoValue{}),
+		PayoutTimeoutQueue:      collections.NewMap[collections.Pair[uint64, sdk.AccAddress], collections.NoValue](builder, types.VaultPayoutTimeoutQueuePrefix, types.VaultPayoutTimeoutQueueName, endKeyCodec, collections.NoValue{}),
+		AuthKeeper:              authKeeper,
+		MarkerKeeper:            markerkeeper,
+		BankKeeper:              bankkeeper,
 	}
 
 	schema, err := builder.Build()

@@ -130,44 +130,57 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 	if vault == nil {
 		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
 	}
-
 	if err := vault.ValidateAdmin(msg.Admin); err != nil {
 		return nil, err
 	}
 
-	newRate := sdkmath.LegacyMustNewDecFromStr(msg.NewRate)
-	isValidRate, err := vault.IsInterestRateInRange(newRate)
+	newRate, err := sdkmath.LegacyNewDecFromStr(msg.NewRate)
 	if err != nil {
-		return nil, fmt.Errorf("failed to validate interest rate: %w", err)
+		return nil, fmt.Errorf("invalid new rate: %w", err)
 	}
-	if !isValidRate {
+	ok, err := vault.IsInterestRateInRange(newRate)
+	if err != nil {
+		return nil, fmt.Errorf("failed to validate interest range: %w", err)
+	}
+	if !ok {
 		return nil, fmt.Errorf("interest rate %s is out of bounds for vault %s", newRate, vault.GetAddress())
 	}
-
 	if newRate.IsZero() {
 		msg.NewRate = types.ZeroInterestRate
 	}
 
-	reconciled := false
-	currRate := sdkmath.LegacyMustNewDecFromStr(vault.CurrentInterestRate)
-	if !currRate.IsZero() {
+	curRate, err := sdkmath.LegacyNewDecFromStr(vault.CurrentInterestRate)
+	if err != nil {
+		return nil, fmt.Errorf("invalid current rate: %w", err)
+	}
+
+	prevEnabled := vault.InterestEnabled()
+	if !curRate.IsZero() {
 		if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
 			return nil, fmt.Errorf("failed to reconcile before rate change: %w", err)
 		}
-		reconciled = true
 	}
 
 	k.UpdateInterestRates(ctx, vault, msg.NewRate, msg.NewRate)
 
-	if !reconciled && vault.InterestEnabled() {
-		err := k.VaultInterestDetails.Set(ctx, vault.GetAddress(), types.VaultInterestDetails{PeriodStart: ctx.BlockTime().Unix()})
-		if err != nil {
-			return nil, fmt.Errorf("failed to set vault interest details: %w", err)
+	nextEnabled := vault.InterestEnabled()
+
+	switch {
+	case !prevEnabled && nextEnabled:
+		if err := k.SafeEnqueueVerification(ctx, vault); err != nil {
+			return nil, fmt.Errorf("failed to enqueue vault payout verification: %w", err)
 		}
-	} else if reconciled && !vault.InterestEnabled() {
-		err := k.VaultInterestDetails.Remove(ctx, vault.GetAddress())
-		if err != nil {
-			return nil, fmt.Errorf("failed to remove vault interest details: %w", err)
+	case prevEnabled && !nextEnabled:
+		vault.PeriodStart = 0
+		vault.PeriodTimeout = 0
+		if err := k.SetVaultAccount(ctx, vault); err != nil {
+			return nil, fmt.Errorf("failed to set vault account: %w", err)
+		}
+		if err := k.DequeuePayoutVerification(ctx, vault.GetAddress()); err != nil {
+			return nil, fmt.Errorf("failed to remove payout verification entries: %w", err)
+		}
+		if err := k.RemoveAllPayoutTimeoutsForVault(ctx, vault.GetAddress()); err != nil {
+			return nil, fmt.Errorf("failed to remove payout timeout entries: %w", err)
 		}
 	}
 

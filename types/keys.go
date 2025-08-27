@@ -24,18 +24,18 @@ const (
 )
 
 var (
-	// ParamsKeyPrefix is the prefix to retrieve all Params
-	ParamsKeyPrefix = collections.NewPrefix(0)
-	// ParamsName is a human-readable name for the params collection.
-	ParamsName = "params"
 	// VaultsKeyPrefix is the prefix to retrieve all Vaults
-	VaultsKeyPrefix = collections.NewPrefix(1)
+	VaultsKeyPrefix = collections.NewPrefix(0)
 	// VaultsName is a human-readable name for the vaults collection.
 	VaultsName = "vaults"
-	// VaultInterestDetailsPrefix is the prefix to retrieve all VaultInterestDetails
-	VaultInterestDetailsPrefix = collections.NewPrefix(2)
-	// VaultInterestDetailsName is a human-readable name for the vault interest details collection
-	VaultInterestDetailsName = "vault_interest_details"
+	// VaultPayoutVerificationQueuePrefix is the prefix to retrieve all VaultPayoutVerificationQueue.
+	VaultPayoutVerificationQueuePrefix = collections.NewPrefix(1)
+	// VaultPayoutVerificationQueueName is a human-readable name for the vault payout verification queue collection.
+	VaultPayoutVerificationQueueName = "vault_payout_verification_queue"
+	// VaultPayoutTimeoutQueuePrefix is the prefix to retrieve all VaultPayoutTimeoutQueue.
+	VaultPayoutTimeoutQueuePrefix = collections.NewPrefix(2)
+	// VaultPayoutTimeoutQueueName is a human-readable name for the payout timeout queue collection.
+	VaultPayoutTimeoutQueueName = "vault_payout_timeout_queue"
 )
 
 // GetVaultAddress returns the module account address for the given shareDenom.

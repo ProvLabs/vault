@@ -6,6 +6,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/provlabs/vault/types"
@@ -13,44 +14,32 @@ import (
 	"github.com/provlabs/vault/utils/mocks"
 )
 
-func TestGetVaults(t *testing.T) {
+func TestSetVaultLookup_ErrorsAndSuccess(t *testing.T) {
 	ctx, k := mocks.NewVaultKeeper(t)
 
-	vaults, err := k.GetVaults(ctx)
+	err := k.SetVaultLookup(ctx, nil)
+	require.Error(t, err, "expected error when vault is nil")
 
-	require.NoError(t, err, "expected no error when the vaults map is empty")
-	require.Empty(t, vaults, "expected empty vaults map")
+	vBad := &types.VaultAccount{BaseAccount: &authtypes.BaseAccount{Address: "not-bech32"}}
+	err = k.SetVaultLookup(ctx, vBad)
+	require.Error(t, err, "expected error when vault address is not bech32")
 
-	// Generate unique addresses for vault keys
-	vault1Addr := utils.TestAddress().Bech32
-	vault2Addr := utils.TestAddress().Bech32
-	// Ensure they are different for testing distinct entries
-	for vault1Addr == vault2Addr {
-		vault2Addr = utils.TestAddress().Bech32
-	}
+	addr := utils.TestProvlabsAddress().Bech32
+	v := &types.VaultAccount{BaseAccount: authtypes.NewBaseAccountWithAddress(sdk.MustAccAddressFromBech32(addr))}
+	err = k.SetVaultLookup(ctx, v)
+	require.NoError(t, err, "expected no error when vault is valid")
 
-	vault1 := types.VaultAccount{
-		BaseAccount: authtypes.NewBaseAccountWithAddress(types.GetVaultAddress("address1")),
-		Admin:       utils.TestAddress().Bech32,
-	}
-	vault2 := types.VaultAccount{
-		BaseAccount: authtypes.NewBaseAccountWithAddress(types.GetVaultAddress("address2")),
-		Admin:       utils.TestAddress().Bech32,
-	}
+	got, err := k.GetVaults(ctx)
+	require.NoError(t, err, "expected no error retrieving vaults after setting")
+	require.Len(t, got, 1, "expected exactly one vault stored")
+	assert.True(t, got[0].Equals(sdk.MustAccAddressFromBech32(addr)), "expected stored vault address to match input")
+}
 
-	// Set vaults using their Bech32 addresses as keys
-	err = k.Vaults.Set(ctx, sdk.MustAccAddressFromBech32(vault1.Address), []byte{})
-	require.NoError(t, err, "expected no error setting the first vault")
-	err = k.Vaults.Set(ctx, sdk.MustAccAddressFromBech32(vault2.Address), []byte{})
-	require.NoError(t, err, "expected no error setting the second vault")
+func TestSetVaultAccount_ValidateError(t *testing.T) {
+	_, k := mocks.NewVaultKeeper(t)
 
-	vaults, err = k.GetVaults(ctx)
-
-	require.NoError(t, err, "expected no error when vaults are present")
-	require.Len(t, vaults, 2, "expected two vaults")
-	// Assert using the vault addresses as keys
-	require.Contains(t, vaults, sdk.MustAccAddressFromBech32(vault1.Address), "expected the first vault")
-	require.Contains(t, vaults, sdk.MustAccAddressFromBech32(vault2.Address), "expected the second vault")
+	err := k.SetVaultAccount(sdk.Context{}, &types.VaultAccount{})
+	require.Error(t, err, "expected error when vault validation fails")
 }
 
 func (s *TestSuite) TestFindVaultAccount() {

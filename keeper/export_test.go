@@ -4,14 +4,8 @@ import (
 	"context"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/provlabs/vault/types"
 )
-
-// TestAccessor_partitionReconciledVaults exposes this keeper's partitionReconciledVaults function for unit tests.
-func (k Keeper) TestAccessor_partitionReconciledVaults(t *testing.T, ctx sdk.Context, vaults []ReconciledVault) ([]ReconciledVault, []ReconciledVault) {
-	t.Helper()
-	return k.partitionReconciledVaults(ctx, vaults)
-}
 
 // TestAccessor_handleReconciledVaults exposes this keeper's handleReconciledVaults function for unit tests.
 func (k Keeper) TestAccessor_handleReconciledVaults(t *testing.T, ctx context.Context) error {
@@ -20,13 +14,13 @@ func (k Keeper) TestAccessor_handleReconciledVaults(t *testing.T, ctx context.Co
 }
 
 // TestAccessor_handlePayableVaults exposes this keeper's handlePayableVaults function for unit tests.
-func (k Keeper) TestAccessor_handlePayableVaults(t *testing.T, ctx context.Context, payouts []ReconciledVault) {
+func (k Keeper) TestAccessor_handlePayableVaults(t *testing.T, ctx context.Context, payouts []*types.VaultAccount) {
 	t.Helper()
 	k.handlePayableVaults(ctx, payouts)
 }
 
 // TestAccessor_handleDepletedVaults exposes this keeper's handleDepletedVaults function for unit tests.
-func (k Keeper) TestAccessor_handleDepletedVaults(t *testing.T, ctx context.Context, failedPayouts []ReconciledVault) {
+func (k Keeper) TestAccessor_handleDepletedVaults(t *testing.T, ctx context.Context, failedPayouts []*types.VaultAccount) {
 	t.Helper()
 	k.handleDepletedVaults(ctx, failedPayouts)
 }

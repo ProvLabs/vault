@@ -30,7 +30,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 	}
 
 	vaultGenesis := types.GenesisState{
-		Params: types.Params{},
 		Vaults: vaults,
 	}
 

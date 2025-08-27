@@ -45,7 +45,7 @@ func TestAddress() Address {
 func generateAddress(prefix string, bytes []byte) string {
 	address, err := sdk.Bech32ifyAddressBytes(prefix, bytes)
 	if err != nil {
-		panic("error during cosmos address creation")
+		panic("error during provlabs address creation")
 	}
 	return address
 }

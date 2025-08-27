@@ -95,6 +95,8 @@ message MsgSwapOutRequest {
   string vault_address = 2;
   // assets is the amount of underlying assets to withdraw.
   cosmos.base.v1beta1.Coin assets = 3 [(gogoproto.nullable) = false];
+
+   string redeem_denom = 4;
 }
 
 // MsgSwapOutResponse is the response message for a successful SwapOut.

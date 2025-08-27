@@ -19,7 +19,7 @@ func (s *TestSuite) TestVaultGenesis_InitAndExport() {
 		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
 		Admin:               admin,
 		ShareDenom:          shareDenom,
-		UnderlyingAssets:    []string{underlying},
+		UnderlyingAsset:     underlying,
 		CurrentInterestRate: types.ZeroInterestRate,
 		DesiredInterestRate: types.ZeroInterestRate,
 	}
@@ -41,7 +41,7 @@ func (s *TestSuite) TestVaultGenesis_InitAndExport() {
 	s.Require().Equal(vault.GetAddress().String(), exp.GetAddress().String())
 	s.Require().Equal(vault.Admin, exp.Admin)
 	s.Require().Equal(vault.ShareDenom, exp.ShareDenom)
-	s.Require().Equal(vault.UnderlyingAssets, exp.UnderlyingAssets)
+	s.Require().Equal(vault.UnderlyingAsset, exp.UnderlyingAsset)
 
 	s.Require().Len(exported.PayoutTimeoutQueue, 1)
 	s.Require().Equal(vaultAddr.String(), exported.PayoutTimeoutQueue[0].Addr)
@@ -63,7 +63,7 @@ func (s *TestSuite) TestVaultGenesis_RoundTrip_PastAndFutureTimeouts() {
 		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
 		Admin:               admin,
 		ShareDenom:          shareDenom,
-		UnderlyingAssets:    []string{underlying},
+		UnderlyingAsset:     underlying,
 		CurrentInterestRate: types.ZeroInterestRate,
 		DesiredInterestRate: types.ZeroInterestRate,
 	}
@@ -101,7 +101,7 @@ func (s *TestSuite) TestVaultGenesis_InvalidTimeoutAddressPanics() {
 		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
 		Admin:               admin,
 		ShareDenom:          shareDenom,
-		UnderlyingAssets:    []string{underlying},
+		UnderlyingAsset:     underlying,
 		CurrentInterestRate: types.ZeroInterestRate,
 		DesiredInterestRate: types.ZeroInterestRate,
 	}
@@ -130,7 +130,7 @@ func (s *TestSuite) TestVaultGenesis_ExistingAccountNumberCopied() {
 		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
 		Admin:               admin,
 		ShareDenom:          shareDenom,
-		UnderlyingAssets:    []string{underlying},
+		UnderlyingAsset:     underlying,
 		CurrentInterestRate: types.ZeroInterestRate,
 		DesiredInterestRate: types.ZeroInterestRate,
 	}
@@ -158,7 +158,7 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidVault() {
 		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
 		Admin:               "",
 		ShareDenom:          "invalid denom!",
-		UnderlyingAssets:    []string{"underX"},
+		UnderlyingAsset:     "underX",
 		CurrentInterestRate: types.ZeroInterestRate,
 		DesiredInterestRate: types.ZeroInterestRate,
 	}

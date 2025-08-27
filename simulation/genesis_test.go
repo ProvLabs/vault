@@ -45,7 +45,7 @@ func TestRandomizedGenState(t *testing.T) {
 		require.NotEmpty(t, v.Admin)
 		require.NotEmpty(t, v.ShareDenom)
 		require.NotEmpty(t, v.GetAddress())
-		require.Len(t, v.UnderlyingAssets, 1)
+		require.NotEmpty(t, v.UnderlyingAsset)
 	}
 }
 

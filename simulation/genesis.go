@@ -22,10 +22,10 @@ func RandomizedGenState(simState *module.SimulationState) {
 		addr := types.GetVaultAddress(denom)
 
 		vaults = append(vaults, types.VaultAccount{
-			BaseAccount:      authtypes.NewBaseAccountWithAddress(addr),
-			Admin:            admin,
-			ShareDenom:       denom,
-			UnderlyingAssets: []string{underlying},
+			BaseAccount:     authtypes.NewBaseAccountWithAddress(addr),
+			Admin:           admin,
+			ShareDenom:      denom,
+			UnderlyingAsset: underlying,
 		})
 	}
 

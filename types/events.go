@@ -9,10 +9,10 @@ import (
 // NewEventVaultCreated creates a new EventVaultCreated event.
 func NewEventVaultCreated(vault *VaultAccount) *EventVaultCreated {
 	return &EventVaultCreated{
-		VaultAddress:     vault.GetAddress().String(),
-		Admin:            vault.Admin,
-		ShareDenom:       vault.ShareDenom,
-		UnderlyingAssets: vault.UnderlyingAssets,
+		VaultAddress:    vault.GetAddress().String(),
+		Admin:           vault.Admin,
+		ShareDenom:      vault.ShareDenom,
+		UnderlyingAsset: vault.UnderlyingAsset,
 	}
 }
 

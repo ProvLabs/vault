@@ -250,8 +250,8 @@ func (k msgServer) DepositInterestFunds(goCtx context.Context, msg *types.MsgDep
 		return nil, err
 	}
 
-	if err := vault.ValidateUnderlyingAssets(msg.Amount); err != nil {
-		return nil, err
+	if vault.UnderlyingAsset != msg.Amount.Denom {
+		return nil, fmt.Errorf("denom must be of type %s : %s", vault.UnderlyingAsset, msg.Amount.Denom)
 	}
 
 	if err := k.BankKeeper.SendCoins(ctx, adminAddr, vaultAddr, sdk.NewCoins(msg.Amount)); err != nil {
@@ -286,8 +286,8 @@ func (k msgServer) WithdrawInterestFunds(goCtx context.Context, msg *types.MsgWi
 		return nil, err
 	}
 
-	if err := vault.ValidateUnderlyingAssets(msg.Amount); err != nil {
-		return nil, err
+	if vault.UnderlyingAsset != msg.Amount.Denom {
+		return nil, fmt.Errorf("denom must be of type %s : %s", vault.UnderlyingAsset, msg.Amount.Denom)
 	}
 
 	if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
@@ -325,8 +325,8 @@ func (k msgServer) DepositPrincipalFunds(goCtx context.Context, msg *types.MsgDe
 
 	depositFromAddress := sdk.MustAccAddressFromBech32(msg.Admin)
 	markerAddress := markertypes.MustGetMarkerAddress(vault.ShareDenom)
-	if err := vault.ValidateUnderlyingAssets(msg.Amount); err != nil {
-		return nil, fmt.Errorf("invalid asset for vault: %w", err)
+	if vault.UnderlyingAsset != msg.Amount.Denom {
+		return nil, fmt.Errorf("denom must be of type %s : %s", vault.UnderlyingAsset, msg.Amount.Denom)
 	}
 	if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx),
 		depositFromAddress,
@@ -362,8 +362,8 @@ func (k msgServer) WithdrawPrincipalFunds(goCtx context.Context, msg *types.MsgW
 
 	withdrawAddress := sdk.MustAccAddressFromBech32(msg.Admin)
 	markerAddress := markertypes.MustGetMarkerAddress(vault.ShareDenom)
-	if err := vault.ValidateUnderlyingAssets(msg.Amount); err != nil {
-		return nil, fmt.Errorf("invalid asset for vault: %w", err)
+	if vault.UnderlyingAsset != msg.Amount.Denom {
+		return nil, fmt.Errorf("denom must be of type %s : %s", vault.UnderlyingAsset, msg.Amount.Denom)
 	}
 	if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx),
 		markerAddress,

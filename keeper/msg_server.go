@@ -365,7 +365,7 @@ func (k msgServer) WithdrawPrincipalFunds(goCtx context.Context, msg *types.MsgW
 	if err := vault.ValidateUnderlyingAssets(msg.Amount); err != nil {
 		return nil, fmt.Errorf("invalid asset for vault: %w", err)
 	}
-	if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx),
+	if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, vaultAddr),
 		markerAddress,
 		withdrawAddress,
 		sdk.NewCoins(msg.Amount),

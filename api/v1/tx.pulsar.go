@@ -21,6 +21,7 @@ var (
 	fd_MsgCreateVaultRequest_admin            protoreflect.FieldDescriptor
 	fd_MsgCreateVaultRequest_share_denom      protoreflect.FieldDescriptor
 	fd_MsgCreateVaultRequest_underlying_asset protoreflect.FieldDescriptor
+	fd_MsgCreateVaultRequest_payment_denom    protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -29,6 +30,7 @@ func init() {
 	fd_MsgCreateVaultRequest_admin = md_MsgCreateVaultRequest.Fields().ByName("admin")
 	fd_MsgCreateVaultRequest_share_denom = md_MsgCreateVaultRequest.Fields().ByName("share_denom")
 	fd_MsgCreateVaultRequest_underlying_asset = md_MsgCreateVaultRequest.Fields().ByName("underlying_asset")
+	fd_MsgCreateVaultRequest_payment_denom = md_MsgCreateVaultRequest.Fields().ByName("payment_denom")
 }
 
 var _ protoreflect.Message = (*fastReflection_MsgCreateVaultRequest)(nil)
@@ -114,6 +116,12 @@ func (x *fastReflection_MsgCreateVaultRequest) Range(f func(protoreflect.FieldDe
 			return
 		}
 	}
+	if x.PaymentDenom != "" {
+		value := protoreflect.ValueOfString(x.PaymentDenom)
+		if !f(fd_MsgCreateVaultRequest_payment_denom, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -135,6 +143,8 @@ func (x *fastReflection_MsgCreateVaultRequest) Has(fd protoreflect.FieldDescript
 		return x.ShareDenom != ""
 	case "vault.v1.MsgCreateVaultRequest.underlying_asset":
 		return x.UnderlyingAsset != ""
+	case "vault.v1.MsgCreateVaultRequest.payment_denom":
+		return x.PaymentDenom != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgCreateVaultRequest"))
@@ -157,6 +167,8 @@ func (x *fastReflection_MsgCreateVaultRequest) Clear(fd protoreflect.FieldDescri
 		x.ShareDenom = ""
 	case "vault.v1.MsgCreateVaultRequest.underlying_asset":
 		x.UnderlyingAsset = ""
+	case "vault.v1.MsgCreateVaultRequest.payment_denom":
+		x.PaymentDenom = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgCreateVaultRequest"))
@@ -181,6 +193,9 @@ func (x *fastReflection_MsgCreateVaultRequest) Get(descriptor protoreflect.Field
 		return protoreflect.ValueOfString(value)
 	case "vault.v1.MsgCreateVaultRequest.underlying_asset":
 		value := x.UnderlyingAsset
+		return protoreflect.ValueOfString(value)
+	case "vault.v1.MsgCreateVaultRequest.payment_denom":
+		value := x.PaymentDenom
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
@@ -208,6 +223,8 @@ func (x *fastReflection_MsgCreateVaultRequest) Set(fd protoreflect.FieldDescript
 		x.ShareDenom = value.Interface().(string)
 	case "vault.v1.MsgCreateVaultRequest.underlying_asset":
 		x.UnderlyingAsset = value.Interface().(string)
+	case "vault.v1.MsgCreateVaultRequest.payment_denom":
+		x.PaymentDenom = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgCreateVaultRequest"))
@@ -234,6 +251,8 @@ func (x *fastReflection_MsgCreateVaultRequest) Mutable(fd protoreflect.FieldDesc
 		panic(fmt.Errorf("field share_denom of message vault.v1.MsgCreateVaultRequest is not mutable"))
 	case "vault.v1.MsgCreateVaultRequest.underlying_asset":
 		panic(fmt.Errorf("field underlying_asset of message vault.v1.MsgCreateVaultRequest is not mutable"))
+	case "vault.v1.MsgCreateVaultRequest.payment_denom":
+		panic(fmt.Errorf("field payment_denom of message vault.v1.MsgCreateVaultRequest is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgCreateVaultRequest"))
@@ -252,6 +271,8 @@ func (x *fastReflection_MsgCreateVaultRequest) NewField(fd protoreflect.FieldDes
 	case "vault.v1.MsgCreateVaultRequest.share_denom":
 		return protoreflect.ValueOfString("")
 	case "vault.v1.MsgCreateVaultRequest.underlying_asset":
+		return protoreflect.ValueOfString("")
+	case "vault.v1.MsgCreateVaultRequest.payment_denom":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
@@ -334,6 +355,10 @@ func (x *fastReflection_MsgCreateVaultRequest) ProtoMethods() *protoiface.Method
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
+		l = len(x.PaymentDenom)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -362,6 +387,13 @@ func (x *fastReflection_MsgCreateVaultRequest) ProtoMethods() *protoiface.Method
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.PaymentDenom) > 0 {
+			i -= len(x.PaymentDenom)
+			copy(dAtA[i:], x.PaymentDenom)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.PaymentDenom)))
+			i--
+			dAtA[i] = 0x22
 		}
 		if len(x.UnderlyingAsset) > 0 {
 			i -= len(x.UnderlyingAsset)
@@ -529,6 +561,38 @@ func (x *fastReflection_MsgCreateVaultRequest) ProtoMethods() *protoiface.Method
 				}
 				x.UnderlyingAsset = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
+			case 4:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PaymentDenom", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.PaymentDenom = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -565,14 +629,12 @@ func (x *fastReflection_MsgCreateVaultRequest) ProtoMethods() *protoiface.Method
 }
 
 var (
-	md_MsgCreateVaultResponse               protoreflect.MessageDescriptor
-	fd_MsgCreateVaultResponse_vault_address protoreflect.FieldDescriptor
+	md_MsgCreateVaultResponse protoreflect.MessageDescriptor
 )
 
 func init() {
 	file_vault_v1_tx_proto_init()
 	md_MsgCreateVaultResponse = File_vault_v1_tx_proto.Messages().ByName("MsgCreateVaultResponse")
-	fd_MsgCreateVaultResponse_vault_address = md_MsgCreateVaultResponse.Fields().ByName("vault_address")
 }
 
 var _ protoreflect.Message = (*fastReflection_MsgCreateVaultResponse)(nil)
@@ -640,12 +702,6 @@ func (x *fastReflection_MsgCreateVaultResponse) Interface() protoreflect.ProtoMe
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_MsgCreateVaultResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.VaultAddress != "" {
-		value := protoreflect.ValueOfString(x.VaultAddress)
-		if !f(fd_MsgCreateVaultResponse_vault_address, value) {
-			return
-		}
-	}
 }
 
 // Has reports whether a field is populated.
@@ -661,8 +717,6 @@ func (x *fastReflection_MsgCreateVaultResponse) Range(f func(protoreflect.FieldD
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_MsgCreateVaultResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.MsgCreateVaultResponse.vault_address":
-		return x.VaultAddress != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgCreateVaultResponse"))
@@ -679,8 +733,6 @@ func (x *fastReflection_MsgCreateVaultResponse) Has(fd protoreflect.FieldDescrip
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_MsgCreateVaultResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.MsgCreateVaultResponse.vault_address":
-		x.VaultAddress = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgCreateVaultResponse"))
@@ -697,9 +749,6 @@ func (x *fastReflection_MsgCreateVaultResponse) Clear(fd protoreflect.FieldDescr
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_MsgCreateVaultResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.MsgCreateVaultResponse.vault_address":
-		value := x.VaultAddress
-		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgCreateVaultResponse"))
@@ -720,8 +769,6 @@ func (x *fastReflection_MsgCreateVaultResponse) Get(descriptor protoreflect.Fiel
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_MsgCreateVaultResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.MsgCreateVaultResponse.vault_address":
-		x.VaultAddress = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgCreateVaultResponse"))
@@ -742,8 +789,6 @@ func (x *fastReflection_MsgCreateVaultResponse) Set(fd protoreflect.FieldDescrip
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_MsgCreateVaultResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.MsgCreateVaultResponse.vault_address":
-		panic(fmt.Errorf("field vault_address of message vault.v1.MsgCreateVaultResponse is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgCreateVaultResponse"))
@@ -757,8 +802,6 @@ func (x *fastReflection_MsgCreateVaultResponse) Mutable(fd protoreflect.FieldDes
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_MsgCreateVaultResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.MsgCreateVaultResponse.vault_address":
-		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgCreateVaultResponse"))
@@ -828,10 +871,6 @@ func (x *fastReflection_MsgCreateVaultResponse) ProtoMethods() *protoiface.Metho
 		var n int
 		var l int
 		_ = l
-		l = len(x.VaultAddress)
-		if l > 0 {
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -860,13 +899,6 @@ func (x *fastReflection_MsgCreateVaultResponse) ProtoMethods() *protoiface.Metho
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
-		}
-		if len(x.VaultAddress) > 0 {
-			i -= len(x.VaultAddress)
-			copy(dAtA[i:], x.VaultAddress)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.VaultAddress)))
-			i--
-			dAtA[i] = 0xa
 		}
 		if input.Buf != nil {
 			input.Buf = append(input.Buf, dAtA...)
@@ -917,38 +949,6 @@ func (x *fastReflection_MsgCreateVaultResponse) ProtoMethods() *protoiface.Metho
 				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateVaultResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
-			case 1:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field VaultAddress", wireType)
-				}
-				var stringLen uint64
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					stringLen |= uint64(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				intStringLen := int(stringLen)
-				if intStringLen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + intStringLen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.VaultAddress = string(dAtA[iNdEx:postIndex])
-				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -1548,14 +1548,12 @@ func (x *fastReflection_MsgSwapInRequest) ProtoMethods() *protoiface.Methods {
 }
 
 var (
-	md_MsgSwapInResponse                 protoreflect.MessageDescriptor
-	fd_MsgSwapInResponse_shares_received protoreflect.FieldDescriptor
+	md_MsgSwapInResponse protoreflect.MessageDescriptor
 )
 
 func init() {
 	file_vault_v1_tx_proto_init()
 	md_MsgSwapInResponse = File_vault_v1_tx_proto.Messages().ByName("MsgSwapInResponse")
-	fd_MsgSwapInResponse_shares_received = md_MsgSwapInResponse.Fields().ByName("shares_received")
 }
 
 var _ protoreflect.Message = (*fastReflection_MsgSwapInResponse)(nil)
@@ -1623,12 +1621,6 @@ func (x *fastReflection_MsgSwapInResponse) Interface() protoreflect.ProtoMessage
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_MsgSwapInResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.SharesReceived != nil {
-		value := protoreflect.ValueOfMessage(x.SharesReceived.ProtoReflect())
-		if !f(fd_MsgSwapInResponse_shares_received, value) {
-			return
-		}
-	}
 }
 
 // Has reports whether a field is populated.
@@ -1644,8 +1636,6 @@ func (x *fastReflection_MsgSwapInResponse) Range(f func(protoreflect.FieldDescri
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_MsgSwapInResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.MsgSwapInResponse.shares_received":
-		return x.SharesReceived != nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgSwapInResponse"))
@@ -1662,8 +1652,6 @@ func (x *fastReflection_MsgSwapInResponse) Has(fd protoreflect.FieldDescriptor) 
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_MsgSwapInResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.MsgSwapInResponse.shares_received":
-		x.SharesReceived = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgSwapInResponse"))
@@ -1680,9 +1668,6 @@ func (x *fastReflection_MsgSwapInResponse) Clear(fd protoreflect.FieldDescriptor
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_MsgSwapInResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.MsgSwapInResponse.shares_received":
-		value := x.SharesReceived
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgSwapInResponse"))
@@ -1703,8 +1688,6 @@ func (x *fastReflection_MsgSwapInResponse) Get(descriptor protoreflect.FieldDesc
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_MsgSwapInResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.MsgSwapInResponse.shares_received":
-		x.SharesReceived = value.Message().Interface().(*v1beta1.Coin)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgSwapInResponse"))
@@ -1725,11 +1708,6 @@ func (x *fastReflection_MsgSwapInResponse) Set(fd protoreflect.FieldDescriptor, 
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_MsgSwapInResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.MsgSwapInResponse.shares_received":
-		if x.SharesReceived == nil {
-			x.SharesReceived = new(v1beta1.Coin)
-		}
-		return protoreflect.ValueOfMessage(x.SharesReceived.ProtoReflect())
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgSwapInResponse"))
@@ -1743,9 +1721,6 @@ func (x *fastReflection_MsgSwapInResponse) Mutable(fd protoreflect.FieldDescript
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_MsgSwapInResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.MsgSwapInResponse.shares_received":
-		m := new(v1beta1.Coin)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgSwapInResponse"))
@@ -1815,10 +1790,6 @@ func (x *fastReflection_MsgSwapInResponse) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		if x.SharesReceived != nil {
-			l = options.Size(x.SharesReceived)
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -1847,20 +1818,6 @@ func (x *fastReflection_MsgSwapInResponse) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
-		}
-		if x.SharesReceived != nil {
-			encoded, err := options.Marshal(x.SharesReceived)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
-			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-			i--
-			dAtA[i] = 0xa
 		}
 		if input.Buf != nil {
 			input.Buf = append(input.Buf, dAtA...)
@@ -1911,42 +1868,6 @@ func (x *fastReflection_MsgSwapInResponse) ProtoMethods() *protoiface.Methods {
 				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgSwapInResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
-			case 1:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field SharesReceived", wireType)
-				}
-				var msglen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					msglen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if msglen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + msglen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if x.SharesReceived == nil {
-					x.SharesReceived = &v1beta1.Coin{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.SharesReceived); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -2610,14 +2531,12 @@ func (x *fastReflection_MsgSwapOutRequest) ProtoMethods() *protoiface.Methods {
 }
 
 var (
-	md_MsgSwapOutResponse               protoreflect.MessageDescriptor
-	fd_MsgSwapOutResponse_shares_burned protoreflect.FieldDescriptor
+	md_MsgSwapOutResponse protoreflect.MessageDescriptor
 )
 
 func init() {
 	file_vault_v1_tx_proto_init()
 	md_MsgSwapOutResponse = File_vault_v1_tx_proto.Messages().ByName("MsgSwapOutResponse")
-	fd_MsgSwapOutResponse_shares_burned = md_MsgSwapOutResponse.Fields().ByName("shares_burned")
 }
 
 var _ protoreflect.Message = (*fastReflection_MsgSwapOutResponse)(nil)
@@ -2685,12 +2604,6 @@ func (x *fastReflection_MsgSwapOutResponse) Interface() protoreflect.ProtoMessag
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_MsgSwapOutResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.SharesBurned != nil {
-		value := protoreflect.ValueOfMessage(x.SharesBurned.ProtoReflect())
-		if !f(fd_MsgSwapOutResponse_shares_burned, value) {
-			return
-		}
-	}
 }
 
 // Has reports whether a field is populated.
@@ -2706,8 +2619,6 @@ func (x *fastReflection_MsgSwapOutResponse) Range(f func(protoreflect.FieldDescr
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_MsgSwapOutResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.MsgSwapOutResponse.shares_burned":
-		return x.SharesBurned != nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgSwapOutResponse"))
@@ -2724,8 +2635,6 @@ func (x *fastReflection_MsgSwapOutResponse) Has(fd protoreflect.FieldDescriptor)
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_MsgSwapOutResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.MsgSwapOutResponse.shares_burned":
-		x.SharesBurned = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgSwapOutResponse"))
@@ -2742,9 +2651,6 @@ func (x *fastReflection_MsgSwapOutResponse) Clear(fd protoreflect.FieldDescripto
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_MsgSwapOutResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.MsgSwapOutResponse.shares_burned":
-		value := x.SharesBurned
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgSwapOutResponse"))
@@ -2765,8 +2671,6 @@ func (x *fastReflection_MsgSwapOutResponse) Get(descriptor protoreflect.FieldDes
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_MsgSwapOutResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.MsgSwapOutResponse.shares_burned":
-		x.SharesBurned = value.Message().Interface().(*v1beta1.Coin)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgSwapOutResponse"))
@@ -2787,11 +2691,6 @@ func (x *fastReflection_MsgSwapOutResponse) Set(fd protoreflect.FieldDescriptor,
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_MsgSwapOutResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.MsgSwapOutResponse.shares_burned":
-		if x.SharesBurned == nil {
-			x.SharesBurned = new(v1beta1.Coin)
-		}
-		return protoreflect.ValueOfMessage(x.SharesBurned.ProtoReflect())
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgSwapOutResponse"))
@@ -2805,9 +2704,6 @@ func (x *fastReflection_MsgSwapOutResponse) Mutable(fd protoreflect.FieldDescrip
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_MsgSwapOutResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.MsgSwapOutResponse.shares_burned":
-		m := new(v1beta1.Coin)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgSwapOutResponse"))
@@ -2877,10 +2773,6 @@ func (x *fastReflection_MsgSwapOutResponse) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		if x.SharesBurned != nil {
-			l = options.Size(x.SharesBurned)
-			n += 1 + l + runtime.Sov(uint64(l))
-		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -2909,20 +2801,6 @@ func (x *fastReflection_MsgSwapOutResponse) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
-		}
-		if x.SharesBurned != nil {
-			encoded, err := options.Marshal(x.SharesBurned)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
-			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-			i--
-			dAtA[i] = 0xa
 		}
 		if input.Buf != nil {
 			input.Buf = append(input.Buf, dAtA...)
@@ -2973,42 +2851,6 @@ func (x *fastReflection_MsgSwapOutResponse) ProtoMethods() *protoiface.Methods {
 				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgSwapOutResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
-			case 1:
-				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field SharesBurned", wireType)
-				}
-				var msglen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					msglen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if msglen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + msglen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				if x.SharesBurned == nil {
-					x.SharesBurned = &v1beta1.Coin{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.SharesBurned); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -11245,6 +11087,7 @@ type MsgCreateVaultRequest struct {
 	ShareDenom string `protobuf:"bytes,2,opt,name=share_denom,json=shareDenom,proto3" json:"share_denom,omitempty"`
 	// underlying_asset is the denomination of the asset supported by the vault.
 	UnderlyingAsset string `protobuf:"bytes,3,opt,name=underlying_asset,json=underlyingAsset,proto3" json:"underlying_asset,omitempty"`
+	PaymentDenom    string `protobuf:"bytes,4,opt,name=payment_denom,json=paymentDenom,proto3" json:"payment_denom,omitempty"`
 }
 
 func (x *MsgCreateVaultRequest) Reset() {
@@ -11288,14 +11131,18 @@ func (x *MsgCreateVaultRequest) GetUnderlyingAsset() string {
 	return ""
 }
 
+func (x *MsgCreateVaultRequest) GetPaymentDenom() string {
+	if x != nil {
+		return x.PaymentDenom
+	}
+	return ""
+}
+
 // MsgCreateVaultResponse is the response message for the CreateVault endpoint.
 type MsgCreateVaultResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
-
-	// vault_address is the bech32 address of the newly created vault.
-	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 }
 
 func (x *MsgCreateVaultResponse) Reset() {
@@ -11316,13 +11163,6 @@ func (*MsgCreateVaultResponse) ProtoMessage() {}
 // Deprecated: Use MsgCreateVaultResponse.ProtoReflect.Descriptor instead.
 func (*MsgCreateVaultResponse) Descriptor() ([]byte, []int) {
 	return file_vault_v1_tx_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *MsgCreateVaultResponse) GetVaultAddress() string {
-	if x != nil {
-		return x.VaultAddress
-	}
-	return ""
 }
 
 // MsgSwapInRequest is the request message for depositing underlying assets into a vault in exchange for shares.
@@ -11385,9 +11225,6 @@ type MsgSwapInResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
-
-	// shares_received is the amount of vault shares minted.
-	SharesReceived *v1beta1.Coin `protobuf:"bytes,1,opt,name=shares_received,json=sharesReceived,proto3" json:"shares_received,omitempty"`
 }
 
 func (x *MsgSwapInResponse) Reset() {
@@ -11408,13 +11245,6 @@ func (*MsgSwapInResponse) ProtoMessage() {}
 // Deprecated: Use MsgSwapInResponse.ProtoReflect.Descriptor instead.
 func (*MsgSwapInResponse) Descriptor() ([]byte, []int) {
 	return file_vault_v1_tx_proto_rawDescGZIP(), []int{3}
-}
-
-func (x *MsgSwapInResponse) GetSharesReceived() *v1beta1.Coin {
-	if x != nil {
-		return x.SharesReceived
-	}
-	return nil
 }
 
 // MsgSwapOutRequest is the request message for redeeming vault shares in exchange for underlying assets.
@@ -11485,9 +11315,6 @@ type MsgSwapOutResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
-
-	// shares_burned is the amount of shares burned in exchange for assets.
-	SharesBurned *v1beta1.Coin `protobuf:"bytes,1,opt,name=shares_burned,json=sharesBurned,proto3" json:"shares_burned,omitempty"`
 }
 
 func (x *MsgSwapOutResponse) Reset() {
@@ -11508,13 +11335,6 @@ func (*MsgSwapOutResponse) ProtoMessage() {}
 // Deprecated: Use MsgSwapOutResponse.ProtoReflect.Descriptor instead.
 func (*MsgSwapOutResponse) Descriptor() ([]byte, []int) {
 	return file_vault_v1_tx_proto_rawDescGZIP(), []int{5}
-}
-
-func (x *MsgSwapOutResponse) GetSharesBurned() *v1beta1.Coin {
-	if x != nil {
-		return x.SharesBurned
-	}
-	return nil
 }
 
 // MsgUpdateMinInterestRateRequest is the request message for updating the minimum interest rate of a vault.
@@ -12268,7 +12088,7 @@ var file_vault_v1_tx_proto_rawDesc = []byte{
 	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x19, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5f, 0x70,
 	0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74,
 	0x6f, 0x1a, 0x14, 0x67, 0x6f, 0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67,
-	0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x9f, 0x01, 0x0a, 0x15, 0x4d, 0x73, 0x67, 0x43,
+	0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xc4, 0x01, 0x0a, 0x15, 0x4d, 0x73, 0x67, 0x43,
 	0x72, 0x65, 0x61, 0x74, 0x65, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
 	0x74, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
 	0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64,
@@ -12277,12 +12097,12 @@ var file_vault_v1_tx_proto_rawDesc = []byte{
 	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x73, 0x68, 0x61, 0x72, 0x65, 0x44, 0x65, 0x6e,
 	0x6f, 0x6d, 0x12, 0x29, 0x0a, 0x10, 0x75, 0x6e, 0x64, 0x65, 0x72, 0x6c, 0x79, 0x69, 0x6e, 0x67,
 	0x5f, 0x61, 0x73, 0x73, 0x65, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0f, 0x75, 0x6e,
-	0x64, 0x65, 0x72, 0x6c, 0x79, 0x69, 0x6e, 0x67, 0x41, 0x73, 0x73, 0x65, 0x74, 0x3a, 0x0a, 0x82,
-	0xe7, 0xb0, 0x2a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x22, 0x3d, 0x0a, 0x16, 0x4d, 0x73, 0x67,
-	0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64,
-	0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c,
-	0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x22, 0xac, 0x01, 0x0a, 0x10, 0x4d, 0x73, 0x67,
+	0x64, 0x65, 0x72, 0x6c, 0x79, 0x69, 0x6e, 0x67, 0x41, 0x73, 0x73, 0x65, 0x74, 0x12, 0x23, 0x0a,
+	0x0d, 0x70, 0x61, 0x79, 0x6d, 0x65, 0x6e, 0x74, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x04,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x70, 0x61, 0x79, 0x6d, 0x65, 0x6e, 0x74, 0x44, 0x65, 0x6e,
+	0x6f, 0x6d, 0x3a, 0x0a, 0x82, 0xe7, 0xb0, 0x2a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x22, 0x18,
+	0x0a, 0x16, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x56, 0x61, 0x75, 0x6c, 0x74,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xac, 0x01, 0x0a, 0x10, 0x4d, 0x73, 0x67,
 	0x53, 0x77, 0x61, 0x70, 0x49, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x2e, 0x0a,
 	0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4,
 	0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
@@ -12293,32 +12113,23 @@ var file_vault_v1_tx_proto_rawDesc = []byte{
 	0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65,
 	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8,
 	0xde, 0x1f, 0x00, 0x52, 0x06, 0x61, 0x73, 0x73, 0x65, 0x74, 0x73, 0x3a, 0x0a, 0x82, 0xe7, 0xb0,
-	0x2a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x22, 0x5d, 0x0a, 0x11, 0x4d, 0x73, 0x67, 0x53, 0x77,
-	0x61, 0x70, 0x49, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x48, 0x0a, 0x0f,
-	0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x5f, 0x72, 0x65, 0x63, 0x65, 0x69, 0x76, 0x65, 0x64, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62,
-	0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e,
-	0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x0e, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x52, 0x65,
-	0x63, 0x65, 0x69, 0x76, 0x65, 0x64, 0x22, 0xd0, 0x01, 0x0a, 0x11, 0x4d, 0x73, 0x67, 0x53, 0x77,
-	0x61, 0x70, 0x4f, 0x75, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x2e, 0x0a, 0x05,
-	0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d,
-	0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53,
-	0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x12, 0x23, 0x0a, 0x0d,
-	0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
-	0x73, 0x12, 0x37, 0x0a, 0x06, 0x61, 0x73, 0x73, 0x65, 0x74, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28,
-	0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e,
-	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde,
-	0x1f, 0x00, 0x52, 0x06, 0x61, 0x73, 0x73, 0x65, 0x74, 0x73, 0x12, 0x21, 0x0a, 0x0c, 0x72, 0x65,
-	0x64, 0x65, 0x65, 0x6d, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x0b, 0x72, 0x65, 0x64, 0x65, 0x65, 0x6d, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x3a, 0x0a, 0x82,
-	0xe7, 0xb0, 0x2a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x22, 0x5a, 0x0a, 0x12, 0x4d, 0x73, 0x67,
-	0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
-	0x44, 0x0a, 0x0d, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x5f, 0x62, 0x75, 0x72, 0x6e, 0x65, 0x64,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
-	0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69,
-	0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x0c, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x42,
-	0x75, 0x72, 0x6e, 0x65, 0x64, 0x22, 0x9d, 0x01, 0x0a, 0x1f, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64,
+	0x2a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x22, 0x13, 0x0a, 0x11, 0x4d, 0x73, 0x67, 0x53, 0x77,
+	0x61, 0x70, 0x49, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xd0, 0x01, 0x0a,
+	0x11, 0x4d, 0x73, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x12, 0x2e, 0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x6f, 0x77, 0x6e,
+	0x65, 0x72, 0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72,
+	0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74,
+	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x37, 0x0a, 0x06, 0x61, 0x73, 0x73, 0x65, 0x74,
+	0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f,
+	0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x61, 0x73, 0x73, 0x65, 0x74, 0x73,
+	0x12, 0x21, 0x0a, 0x0c, 0x72, 0x65, 0x64, 0x65, 0x65, 0x6d, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d,
+	0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x72, 0x65, 0x64, 0x65, 0x65, 0x6d, 0x44, 0x65,
+	0x6e, 0x6f, 0x6d, 0x3a, 0x0a, 0x82, 0xe7, 0xb0, 0x2a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x22,
+	0x14, 0x0a, 0x12, 0x4d, 0x73, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x9d, 0x01, 0x0a, 0x1f, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64,
 	0x61, 0x74, 0x65, 0x4d, 0x69, 0x6e, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61,
 	0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d,
 	0x69, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f,
@@ -12561,42 +12372,40 @@ var file_vault_v1_tx_proto_goTypes = []interface{}{
 }
 var file_vault_v1_tx_proto_depIdxs = []int32{
 	24, // 0: vault.v1.MsgSwapInRequest.assets:type_name -> cosmos.base.v1beta1.Coin
-	24, // 1: vault.v1.MsgSwapInResponse.shares_received:type_name -> cosmos.base.v1beta1.Coin
-	24, // 2: vault.v1.MsgSwapOutRequest.assets:type_name -> cosmos.base.v1beta1.Coin
-	24, // 3: vault.v1.MsgSwapOutResponse.shares_burned:type_name -> cosmos.base.v1beta1.Coin
-	24, // 4: vault.v1.MsgDepositInterestFundsRequest.amount:type_name -> cosmos.base.v1beta1.Coin
-	24, // 5: vault.v1.MsgWithdrawInterestFundsRequest.amount:type_name -> cosmos.base.v1beta1.Coin
-	24, // 6: vault.v1.MsgDepositPrincipalFundsRequest.amount:type_name -> cosmos.base.v1beta1.Coin
-	24, // 7: vault.v1.MsgWithdrawPrincipalFundsRequest.amount:type_name -> cosmos.base.v1beta1.Coin
-	0,  // 8: vault.v1.Msg.CreateVault:input_type -> vault.v1.MsgCreateVaultRequest
-	2,  // 9: vault.v1.Msg.SwapIn:input_type -> vault.v1.MsgSwapInRequest
-	4,  // 10: vault.v1.Msg.SwapOut:input_type -> vault.v1.MsgSwapOutRequest
-	6,  // 11: vault.v1.Msg.UpdateMinInterestRate:input_type -> vault.v1.MsgUpdateMinInterestRateRequest
-	8,  // 12: vault.v1.Msg.UpdateMaxInterestRate:input_type -> vault.v1.MsgUpdateMaxInterestRateRequest
-	10, // 13: vault.v1.Msg.UpdateInterestRate:input_type -> vault.v1.MsgUpdateInterestRateRequest
-	12, // 14: vault.v1.Msg.ToggleSwapIn:input_type -> vault.v1.MsgToggleSwapInRequest
-	14, // 15: vault.v1.Msg.ToggleSwapOut:input_type -> vault.v1.MsgToggleSwapOutRequest
-	16, // 16: vault.v1.Msg.DepositInterestFunds:input_type -> vault.v1.MsgDepositInterestFundsRequest
-	18, // 17: vault.v1.Msg.WithdrawInterestFunds:input_type -> vault.v1.MsgWithdrawInterestFundsRequest
-	20, // 18: vault.v1.Msg.DepositPrincipalFunds:input_type -> vault.v1.MsgDepositPrincipalFundsRequest
-	22, // 19: vault.v1.Msg.WithdrawPrincipalFunds:input_type -> vault.v1.MsgWithdrawPrincipalFundsRequest
-	1,  // 20: vault.v1.Msg.CreateVault:output_type -> vault.v1.MsgCreateVaultResponse
-	3,  // 21: vault.v1.Msg.SwapIn:output_type -> vault.v1.MsgSwapInResponse
-	5,  // 22: vault.v1.Msg.SwapOut:output_type -> vault.v1.MsgSwapOutResponse
-	7,  // 23: vault.v1.Msg.UpdateMinInterestRate:output_type -> vault.v1.MsgUpdateMinInterestRateResponse
-	9,  // 24: vault.v1.Msg.UpdateMaxInterestRate:output_type -> vault.v1.MsgUpdateMaxInterestRateResponse
-	11, // 25: vault.v1.Msg.UpdateInterestRate:output_type -> vault.v1.MsgUpdateInterestRateResponse
-	13, // 26: vault.v1.Msg.ToggleSwapIn:output_type -> vault.v1.MsgToggleSwapInResponse
-	15, // 27: vault.v1.Msg.ToggleSwapOut:output_type -> vault.v1.MsgToggleSwapOutResponse
-	17, // 28: vault.v1.Msg.DepositInterestFunds:output_type -> vault.v1.MsgDepositInterestFundsResponse
-	19, // 29: vault.v1.Msg.WithdrawInterestFunds:output_type -> vault.v1.MsgWithdrawInterestFundsResponse
-	21, // 30: vault.v1.Msg.DepositPrincipalFunds:output_type -> vault.v1.MsgDepositPrincipalFundsResponse
-	23, // 31: vault.v1.Msg.WithdrawPrincipalFunds:output_type -> vault.v1.MsgWithdrawPrincipalFundsResponse
-	20, // [20:32] is the sub-list for method output_type
-	8,  // [8:20] is the sub-list for method input_type
-	8,  // [8:8] is the sub-list for extension type_name
-	8,  // [8:8] is the sub-list for extension extendee
-	0,  // [0:8] is the sub-list for field type_name
+	24, // 1: vault.v1.MsgSwapOutRequest.assets:type_name -> cosmos.base.v1beta1.Coin
+	24, // 2: vault.v1.MsgDepositInterestFundsRequest.amount:type_name -> cosmos.base.v1beta1.Coin
+	24, // 3: vault.v1.MsgWithdrawInterestFundsRequest.amount:type_name -> cosmos.base.v1beta1.Coin
+	24, // 4: vault.v1.MsgDepositPrincipalFundsRequest.amount:type_name -> cosmos.base.v1beta1.Coin
+	24, // 5: vault.v1.MsgWithdrawPrincipalFundsRequest.amount:type_name -> cosmos.base.v1beta1.Coin
+	0,  // 6: vault.v1.Msg.CreateVault:input_type -> vault.v1.MsgCreateVaultRequest
+	2,  // 7: vault.v1.Msg.SwapIn:input_type -> vault.v1.MsgSwapInRequest
+	4,  // 8: vault.v1.Msg.SwapOut:input_type -> vault.v1.MsgSwapOutRequest
+	6,  // 9: vault.v1.Msg.UpdateMinInterestRate:input_type -> vault.v1.MsgUpdateMinInterestRateRequest
+	8,  // 10: vault.v1.Msg.UpdateMaxInterestRate:input_type -> vault.v1.MsgUpdateMaxInterestRateRequest
+	10, // 11: vault.v1.Msg.UpdateInterestRate:input_type -> vault.v1.MsgUpdateInterestRateRequest
+	12, // 12: vault.v1.Msg.ToggleSwapIn:input_type -> vault.v1.MsgToggleSwapInRequest
+	14, // 13: vault.v1.Msg.ToggleSwapOut:input_type -> vault.v1.MsgToggleSwapOutRequest
+	16, // 14: vault.v1.Msg.DepositInterestFunds:input_type -> vault.v1.MsgDepositInterestFundsRequest
+	18, // 15: vault.v1.Msg.WithdrawInterestFunds:input_type -> vault.v1.MsgWithdrawInterestFundsRequest
+	20, // 16: vault.v1.Msg.DepositPrincipalFunds:input_type -> vault.v1.MsgDepositPrincipalFundsRequest
+	22, // 17: vault.v1.Msg.WithdrawPrincipalFunds:input_type -> vault.v1.MsgWithdrawPrincipalFundsRequest
+	1,  // 18: vault.v1.Msg.CreateVault:output_type -> vault.v1.MsgCreateVaultResponse
+	3,  // 19: vault.v1.Msg.SwapIn:output_type -> vault.v1.MsgSwapInResponse
+	5,  // 20: vault.v1.Msg.SwapOut:output_type -> vault.v1.MsgSwapOutResponse
+	7,  // 21: vault.v1.Msg.UpdateMinInterestRate:output_type -> vault.v1.MsgUpdateMinInterestRateResponse
+	9,  // 22: vault.v1.Msg.UpdateMaxInterestRate:output_type -> vault.v1.MsgUpdateMaxInterestRateResponse
+	11, // 23: vault.v1.Msg.UpdateInterestRate:output_type -> vault.v1.MsgUpdateInterestRateResponse
+	13, // 24: vault.v1.Msg.ToggleSwapIn:output_type -> vault.v1.MsgToggleSwapInResponse
+	15, // 25: vault.v1.Msg.ToggleSwapOut:output_type -> vault.v1.MsgToggleSwapOutResponse
+	17, // 26: vault.v1.Msg.DepositInterestFunds:output_type -> vault.v1.MsgDepositInterestFundsResponse
+	19, // 27: vault.v1.Msg.WithdrawInterestFunds:output_type -> vault.v1.MsgWithdrawInterestFundsResponse
+	21, // 28: vault.v1.Msg.DepositPrincipalFunds:output_type -> vault.v1.MsgDepositPrincipalFundsResponse
+	23, // 29: vault.v1.Msg.WithdrawPrincipalFunds:output_type -> vault.v1.MsgWithdrawPrincipalFundsResponse
+	18, // [18:30] is the sub-list for method output_type
+	6,  // [6:18] is the sub-list for method input_type
+	6,  // [6:6] is the sub-list for extension type_name
+	6,  // [6:6] is the sub-list for extension extendee
+	0,  // [0:6] is the sub-list for field type_name
 }
 
 func init() { file_vault_v1_tx_proto_init() }

@@ -31,10 +31,10 @@ message VaultAccount {
   // max_interest_rate is a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%) representing the highest annual interest rate the admin is allowed to set.
   // If unset (empty string), there is no upper limit.
   string max_interest_rate = 9 [(cosmos_proto.scalar) = "cosmos.DecString"];
-   // The start time (in Unix seconds) of the current interest accrual period.
+  // The start time (in Unix seconds) of the current interest accrual period.
   int64 period_start = 10;
   // The expire time (in Unix seconds) of the current interest accrual period.
-  int64 period_timeout = 11; 
+  int64 period_timeout = 11;
   // swap_in_enabled indicates whether users are allowed to deposit into the vault.
   bool swap_in_enabled = 12;
   // swap_out_enabled indicates whether users are allowed to withdraw from the vault.

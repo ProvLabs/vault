@@ -82,7 +82,7 @@ func (s *TestSuite) TestToAssetAmount() {
 
 	valueInAsset, err := testKeeper.ToAssetAmount(s.ctx, vaultMeta, sdk.NewInt64Coin(paymentDenom, 4))
 	s.Require().NoError(err, "toAssetAmount should succeed for valid NAV")
-	s.Require().Equal(2, valueInAsset, "4 usdc at 1/2 should be 2 ylds")
+	s.Require().Equal(math.NewInt(2), valueInAsset, "4 usdc at 1/2 should be 2 ylds")
 }
 
 func (s *TestSuite) TestGetTVVInAsset_ExcludesSharesAndSumsInAsset() {
@@ -102,7 +102,7 @@ func (s *TestSuite) TestGetTVVInAsset_ExcludesSharesAndSumsInAsset() {
 		Volume: 2,
 	}, "test"), "should set NAV usdc->ylds=1/2")
 
-	vaultCfg := vaultAttrs{admin: s.adminAddr.String(), share: shareDenom, base: underlyingDenom}
+	vaultCfg := vaultAttrs{admin: s.adminAddr.String(), share: shareDenom, underlying: underlyingDenom}
 	vault, err := s.k.CreateVault(s.ctx, vaultCfg)
 	s.Require().NoError(err, "vault creation should succeed")
 
@@ -135,7 +135,7 @@ func (s *TestSuite) TestGetNAVPerShareInAsset_FloorsToZeroForTinyPerShare() {
 		Volume: 2,
 	}, "test"), "should set NAV usdc->ylds=1/2")
 
-	vaultCfg := vaultAttrs{admin: s.adminAddr.String(), share: shareDenom, base: underlyingDenom}
+	vaultCfg := vaultAttrs{admin: s.adminAddr.String(), share: shareDenom, underlying: underlyingDenom}
 	vault, err := s.k.CreateVault(s.ctx, vaultCfg)
 	s.Require().NoError(err, "vault creation should succeed")
 
@@ -172,7 +172,7 @@ func (s *TestSuite) TestConvertDepositToSharesInAsset_UsesNAV() {
 		Volume: 2,
 	}, "test"), "should set NAV usdc->ylds=1/2")
 
-	vaultCfg := vaultAttrs{admin: s.adminAddr.String(), share: shareDenom, base: underlyingDenom}
+	vaultCfg := vaultAttrs{admin: s.adminAddr.String(), share: shareDenom, underlying: underlyingDenom}
 	vault, err := s.k.CreateVault(s.ctx, vaultCfg)
 	s.Require().NoError(err, "vault creation should succeed")
 
@@ -206,7 +206,7 @@ func (s *TestSuite) TestConvertSharesToRedeemCoinInAsset_AssetAndPaymentPaths() 
 		Volume: 2,
 	}, "test"), "should set NAV usdc->ylds=1/2")
 
-	vaultCfg := vaultAttrs{admin: s.adminAddr.String(), share: shareDenom, base: underlyingDenom}
+	vaultCfg := vaultAttrs{admin: s.adminAddr.String(), share: shareDenom, underlying: underlyingDenom}
 	vault, err := s.k.CreateVault(s.ctx, vaultCfg)
 	s.Require().NoError(err, "vault creation should succeed")
 

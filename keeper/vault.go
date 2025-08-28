@@ -27,6 +27,7 @@ type VaultAttributer interface {
 	GetAdmin() string
 	GetShareDenom() string
 	GetUnderlyingAsset() string
+	GetPaymentDenom() string
 }
 
 // CreateVault creates the vault based on the provided attributes.

@@ -1929,7 +1929,6 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds() {
 	underlying := "under"
 	share := "vaultshares"
 	admin := s.adminAddr
-
 	vaultAddr := types.GetVaultAddress(share)
 	markerAddr := markertypes.MustGetMarkerAddress(share)
 	amount := sdk.NewInt64Coin(underlying, 500)

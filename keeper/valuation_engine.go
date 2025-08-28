@@ -60,12 +60,12 @@ func (k Keeper) GetTVVInAsset(ctx sdk.Context, vault types.VaultAccount) (math.I
 }
 
 // GetNAVPerShareInAsset = TVV(asset) / totalShares (floored).
-func (k Keeper) GetNAVPerShareInAsset(ctx sdk.Context, v types.VaultAccount) (math.Int, error) {
-	tvv, err := k.GetTVVInAsset(ctx, v)
+func (k Keeper) GetNAVPerShareInAsset(ctx sdk.Context, vault types.VaultAccount) (math.Int, error) {
+	tvv, err := k.GetTVVInAsset(ctx, vault)
 	if err != nil {
 		return math.Int{}, err
 	}
-	totalShares := k.BankKeeper.GetSupply(ctx, v.ShareDenom).Amount
+	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
 	if totalShares.IsZero() {
 		return math.ZeroInt(), nil
 	}
@@ -73,49 +73,49 @@ func (k Keeper) GetNAVPerShareInAsset(ctx sdk.Context, v types.VaultAccount) (ma
 }
 
 // ConvertDepositToSharesInAsset: value deposit in underlyingAsset, then apply your share math.
-func (k Keeper) ConvertDepositToSharesInAsset(ctx sdk.Context, v types.VaultAccount, in sdk.Coin) (sdk.Coin, error) {
-	valInAsset, err := k.ToAssetAmount(ctx, v, in)
+func (k Keeper) ConvertDepositToSharesInAsset(ctx sdk.Context, vault types.VaultAccount, in sdk.Coin) (sdk.Coin, error) {
+	valInAsset, err := k.ToAssetAmount(ctx, vault, in)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
-	tvv, err := k.GetTVVInAsset(ctx, v)
+	tvv, err := k.GetTVVInAsset(ctx, vault)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
-	totalShares := k.BankKeeper.GetSupply(ctx, v.ShareDenom).Amount
-	return utils.CalculateSharesFromAssets(valInAsset, tvv, totalShares, v.ShareDenom)
+	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
+	return utils.CalculateSharesFromAssets(valInAsset, tvv, totalShares, vault.ShareDenom)
 }
 
 // ConvertSharesToRedeemCoinInAsset: shares -> asset amount -> redeem denom amount.
 // If redeemDenom == underlyingAsset, return asset amount directly.
 // Otherwise use reciprocal of unitPriceFraction: out = assetAmt * den / num.
-func (k Keeper) ConvertSharesToRedeemCoinInAsset(ctx sdk.Context, v types.VaultAccount, shares math.Int, redeemDenom string) (sdk.Coin, error) {
+func (k Keeper) ConvertSharesToRedeemCoinInAsset(ctx sdk.Context, vault types.VaultAccount, shares math.Int, redeemDenom string) (sdk.Coin, error) {
 	if !shares.IsPositive() {
 		return sdk.NewCoin(redeemDenom, math.ZeroInt()), nil
 	}
 
-	tvv, err := k.GetTVVInAsset(ctx, v)
+	tvv, err := k.GetTVVInAsset(ctx, vault)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
-	totalShares := k.BankKeeper.GetSupply(ctx, v.ShareDenom).Amount
+	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
 
-	assetCoin, err := utils.CalculateAssetsFromShares(shares, totalShares, tvv, v.UnderlyingAsset)
+	assetCoin, err := utils.CalculateAssetsFromShares(shares, totalShares, tvv, vault.UnderlyingAsset)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
 
-	if redeemDenom == v.UnderlyingAsset {
+	if redeemDenom == vault.UnderlyingAsset {
 		return sdk.NewCoin(redeemDenom, assetCoin.Amount), nil
 	}
 
-	priceAmount, volume, err := k.UnitPriceFraction(ctx, redeemDenom, v.UnderlyingAsset)
+	priceAmount, volume, err := k.UnitPriceFraction(ctx, redeemDenom, vault.UnderlyingAsset)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
 	if priceAmount.IsZero() {
-		return sdk.Coin{}, fmt.Errorf("zero price for %s/%s", redeemDenom, v.UnderlyingAsset)
+		return sdk.Coin{}, fmt.Errorf("zero price for %s/%s", redeemDenom, vault.UnderlyingAsset)
 	}
-	out := assetCoin.Amount.Mul(volume).Quo(priceAmount)
-	return sdk.NewCoin(redeemDenom, out), nil
+	redeemAmount := assetCoin.Amount.Mul(volume).Quo(priceAmount)
+	return sdk.NewCoin(redeemDenom, redeemAmount), nil
 }

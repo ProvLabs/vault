@@ -9216,7 +9216,7 @@ type EventVaultCreated struct {
 	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
 	// share_denom is the name of the assets created by the vault used for distribution.
 	ShareDenom string `protobuf:"bytes,3,opt,name=share_denom,json=shareDenom,proto3" json:"share_denom,omitempty"`
-	// underlying_asset is the denominations of the assets supported by the vault.
+	// underlying_asset is the vault’s primary collateral and valuation/base denomination.
 	UnderlyingAsset string `protobuf:"bytes,4,opt,name=underlying_asset,json=underlyingAsset,proto3" json:"underlying_asset,omitempty"`
 }
 

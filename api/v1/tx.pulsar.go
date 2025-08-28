@@ -11258,8 +11258,11 @@ type MsgSwapOutRequest struct {
 	// vault_address is the address of the vault to redeem from.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// assets is the amount of underlying assets to withdraw.
-	Assets      *v1beta1.Coin `protobuf:"bytes,3,opt,name=assets,proto3" json:"assets,omitempty"`
-	RedeemDenom string        `protobuf:"bytes,4,opt,name=redeem_denom,json=redeemDenom,proto3" json:"redeem_denom,omitempty"`
+	Assets *v1beta1.Coin `protobuf:"bytes,3,opt,name=assets,proto3" json:"assets,omitempty"`
+	// redeem_denom selects the payout coin.
+	// - If empty, defaults to the vault’s underlying_asset.
+	// - Must be either the vault’s underlying_asset or its payment_denom.
+	RedeemDenom string `protobuf:"bytes,4,opt,name=redeem_denom,json=redeemDenom,proto3" json:"redeem_denom,omitempty"`
 }
 
 func (x *MsgSwapOutRequest) Reset() {

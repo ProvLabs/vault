@@ -45,7 +45,7 @@ message EventVaultCreated {
   string admin = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // share_denom is the name of the assets created by the vault used for distribution.
   string share_denom = 3;
-  // underlying_asset is the denominations of the assets supported by the vault.
+  // underlying_asset is the vault’s primary collateral and valuation/base denomination.
   string underlying_asset = 4;
 }
 

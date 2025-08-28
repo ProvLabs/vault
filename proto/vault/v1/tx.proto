@@ -75,7 +75,7 @@ message MsgSwapInRequest {
   // vault_address is the address of the target vault.
   string vault_address = 2;
   // assets is the amount of underlying assets to deposit.
-  cosmos.base.v1beta1.Coin assets = 3 [(gogoproto.nullable) = false];;
+  cosmos.base.v1beta1.Coin assets = 3 [(gogoproto.nullable) = false];
 }
 
 // MsgSwapInResponse is the response message for a successful SwapIn.
@@ -91,7 +91,9 @@ message MsgSwapOutRequest {
   string vault_address = 2;
   // assets is the amount of underlying assets to withdraw.
   cosmos.base.v1beta1.Coin assets = 3 [(gogoproto.nullable) = false];
-
+  // redeem_denom selects the payout coin.
+  // - If empty, defaults to the vault’s underlying_asset.
+  // - Must be either the vault’s underlying_asset or its payment_denom.
   string redeem_denom = 4;
 }
 

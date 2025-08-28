@@ -34,9 +34,20 @@ type VaultAccount struct {
 	*types.BaseAccount `protobuf:"bytes,1,opt,name=base_account,json=baseAccount,proto3,embedded=base_account" json:"base_account,omitempty"`
 	// share_denom is the denomination used to represent shares in the vault (e.g., vault tokens).
 	ShareDenom string `protobuf:"bytes,2,opt,name=share_denom,json=shareDenom,proto3" json:"share_denom,omitempty"`
-	// underlying_asset specifies the denomination(s) of the asset(s) managed by the vault.
+	// underlying_asset is the vault’s single principal collateral AND valuation/base unit.
+	// - Exactly one denom.
+	// - Total Vault Value (TVV) and NAV-per-share are computed and reported in this denom.
+	// - Interest accrual and internal accounting are measured in this denom.
+	// - Any other coin accepted for I/O must have a NAV record priced INTO this denom.
 	UnderlyingAsset string `protobuf:"bytes,3,opt,name=underlying_asset,json=underlyingAsset,proto3" json:"underlying_asset,omitempty"`
-	PaymentDenom    string `protobuf:"bytes,4,opt,name=payment_denom,json=paymentDenom,proto3" json:"payment_denom,omitempty"`
+	// payment_denom is the single optional external payment coin supported for user I/O
+	// alongside the underlying_asset.
+	// - If unset, the vault operates single-denom: deposits/withdrawals only in underlying_asset.
+	// - If set, swap-in/out accept either underlying_asset OR payment_denom (one denom per call).
+	// - Must differ from share_denom and underlying_asset.
+	// - Requires an on-chain NAV record mapping payment_denom -> underlying_asset to value deposits
+	//   and redemptions.
+	PaymentDenom string `protobuf:"bytes,4,opt,name=payment_denom,json=paymentDenom,proto3" json:"payment_denom,omitempty"`
 	// admin is the address that has administrative privileges over the vault.
 	Admin string `protobuf:"bytes,5,opt,name=admin,proto3" json:"admin,omitempty"`
 	// current_interest_rate is a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%) representing the actual annual interest rate currently being applied.

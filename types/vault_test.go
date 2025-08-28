@@ -98,7 +98,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 				CurrentInterestRate: validInterest,
 				DesiredInterestRate: validInterest,
 			},
-			expectedErr: "at least one underlying asset is required",
+			expectedErr: "invalid underlying asset denom: ",
 		},
 		{
 			name: "invalid underlying asset denom",

@@ -434,7 +434,7 @@ func (s *TestSuite) TestQueryServer_EstimateSwapIn() {
 				VaultAddress: vaultAddr.String(),
 				Assets:       sdk.NewInt64Coin("wrongdenom", 100),
 			},
-			ExpectedErrSubstrs: []string{"invalid asset for vault", "asset denom not supported for vault"},
+			ExpectedErrSubstrs: []string{"denom not supported for vault must be of type"},
 		},
 	}
 

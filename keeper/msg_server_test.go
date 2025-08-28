@@ -318,7 +318,7 @@ func (s *TestSuite) TestMsgServer_SwapIn_Failures() {
 				VaultAddress: vaultAddr.String(),
 				Assets:       sdk.NewInt64Coin("othercoin", 100),
 			},
-			expectedErrSubstrs: []string{"othercoin asset denom not supported for vault, expected one of [underlying]"},
+			expectedErrSubstrs: []string{"denom not supported for vault must be of type \"underlying\" : got \"othercoin\""},
 		},
 		{
 			name: "insufficient owner funds is rejected",
@@ -1747,7 +1747,7 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds_Failures() {
 				VaultAddress: vaultAddr.String(),
 				Amount:       sdk.NewInt64Coin(unsupportedDenom, 9_999_999),
 			},
-			expectedErrSubstrs: []string{"asset denom not supported for vault"},
+			expectedErrSubstrs: []string{"denom not supported for vault must be of type \"under\" : got \"unsupportedDenom\""},
 		},
 	}
 
@@ -2036,7 +2036,7 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds_Failures() {
 				VaultAddress: vaultAddr.String(),
 				Amount:       sdk.NewInt64Coin("wrongdenom", 500),
 			},
-			expectedErrSubstrs: []string{"invalid asset for vault"},
+			expectedErrSubstrs: []string{"enom not supported for vault must be of type \"under\" : got \"wrongdenom\""},
 		},
 		{
 			name:  "insufficient marker balance",

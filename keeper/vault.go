@@ -174,9 +174,9 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 
 	markerAddr := markertypes.MustGetMarkerAddress(vault.ShareDenom)
 
-	// if err := vault.ValidateUnderlyingAssets(asset); err != nil {
-	// 	return nil, err
-	// }
+	if vault.UnderlyingAsset != asset.Denom {
+		return nil, fmt.Errorf("denom not supported for vault must be of type \"%s\" : got \"%s\"", vault.UnderlyingAsset, asset.Denom)
+	}
 
 	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
 	totalAssets := k.BankKeeper.GetBalance(ctx, markerAddr, vault.UnderlyingAsset).Amount

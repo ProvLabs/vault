@@ -112,9 +112,9 @@ func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstim
 		return nil, status.Errorf(codes.NotFound, "vault with address %q not found", req.VaultAddress)
 	}
 
-	// if err := vault.ValidateUnderlyingAssets(req.Assets); err != nil {
-	// 	return nil, status.Errorf(codes.InvalidArgument, "invalid asset for vault: %v", err)
-	// }
+	if vault.UnderlyingAsset != req.Assets.Denom {
+		return nil, status.Errorf(codes.InvalidArgument, "denom not supported for vault must be of type \"%s\" : got \"%s\"", vault.UnderlyingAsset, req.Assets.Denom)
+	}
 
 	markerAddr := markertypes.MustGetMarkerAddress(vault.ShareDenom)
 	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount

@@ -285,7 +285,7 @@ func (k msgServer) WithdrawInterestFunds(goCtx context.Context, msg *types.MsgWi
 	}
 
 	if vault.UnderlyingAsset != msg.Amount.Denom {
-		return nil, fmt.Errorf("denom must be of type %s : %s", vault.UnderlyingAsset, msg.Amount.Denom)
+		return nil, fmt.Errorf("denom not supported for vault must be of type \"%s\" : got \"%s\"", vault.UnderlyingAsset, msg.Amount.Denom)
 	}
 
 	if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
@@ -362,7 +362,7 @@ func (k msgServer) WithdrawPrincipalFunds(goCtx context.Context, msg *types.MsgW
 	withdrawAddress := sdk.MustAccAddressFromBech32(msg.Admin)
 	markerAddress := markertypes.MustGetMarkerAddress(vault.ShareDenom)
 	if vault.UnderlyingAsset != msg.Amount.Denom {
-		return nil, fmt.Errorf("denom must be of type %s : %s", vault.UnderlyingAsset, msg.Amount.Denom)
+		return nil, fmt.Errorf("denom not supported for vault must be of type \"%s\" : got \"%s\"", vault.UnderlyingAsset, msg.Amount.Denom)
 	}
 	if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx),
 		markerAddress,

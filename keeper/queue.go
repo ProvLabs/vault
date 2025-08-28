@@ -20,13 +20,13 @@ const (
 // EnqueuePayoutVerification schedules a vault for payout verification by inserting
 // its address into the PayoutVerificationQueue (a set keyed only by vault address).
 func (k Keeper) EnqueuePayoutVerification(ctx context.Context, vaultAddr sdk.AccAddress) error {
-	return k.PayoutVerificationQueue.Set(ctx, vaultAddr, collections.NoValue{})
+	return k.PayoutVerificationQueue.Set(ctx, vaultAddr)
 }
 
 // EnqueuePayoutTimeout schedules a vault for timeout processing by inserting an
 // entry into the PayoutTimeoutQueue keyed by (periodTimeout, vault address).
 func (k Keeper) EnqueuePayoutTimeout(ctx context.Context, periodTimeout int64, vaultAddr sdk.AccAddress) error {
-	return k.PayoutTimeoutQueue.Set(ctx, collections.Join(uint64(periodTimeout), vaultAddr), collections.NoValue{})
+	return k.PayoutTimeoutQueue.Set(ctx, collections.Join(uint64(periodTimeout), vaultAddr))
 }
 
 // DequeuePayoutVerification removes a vault from the PayoutVerificationQueue.
@@ -51,11 +51,11 @@ func (k Keeper) WalkPayoutVerifications(ctx context.Context, fn func(vaultAddr s
 	defer it.Close()
 
 	for ; it.Valid(); it.Next() {
-		kv, err := it.KeyValue()
+		kv, err := it.Key()
 		if err != nil {
 			return err
 		}
-		stop, err := fn(kv.Key)
+		stop, err := fn(kv)
 		if err != nil || stop {
 			return err
 		}
@@ -75,14 +75,14 @@ func (k Keeper) WalkDuePayoutTimeouts(ctx context.Context, nowSec int64, fn func
 	defer it.Close()
 
 	for ; it.Valid(); it.Next() {
-		kv, err := it.KeyValue()
+		kv, err := it.Key()
 		if err != nil {
 			return err
 		}
-		if kv.Key.K1() > uint64(nowSec) {
+		if kv.K1() > uint64(nowSec) {
 			break
 		}
-		stop, err := fn(kv.Key.K1(), kv.Key.K2())
+		stop, err := fn(kv.K1(), kv.K2())
 		if err != nil || stop {
 			return err
 		}
@@ -102,12 +102,12 @@ func (k Keeper) RemoveAllPayoutTimeoutsForVault(ctx context.Context, vaultAddr s
 	defer it.Close()
 
 	for ; it.Valid(); it.Next() {
-		kv, err := it.KeyValue()
+		kv, err := it.Key()
 		if err != nil {
 			return err
 		}
-		if kv.Key.K2().Equals(vaultAddr) {
-			keys = append(keys, kv.Key)
+		if kv.K2().Equals(vaultAddr) {
+			keys = append(keys, kv)
 		}
 	}
 	for _, key := range keys {

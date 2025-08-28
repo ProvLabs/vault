@@ -29,9 +29,9 @@ func TestEnqueueDequeue_Start(t *testing.T) {
 
 	found := false
 	for ; it.Valid(); it.Next() {
-		kv, err := it.KeyValue()
+		kv, err := it.Key()
 		require.NoError(t, err, "reading key/value from payout verification iterator should not error")
-		if kv.Key.Equals(addr) {
+		if kv.Equals(addr) {
 			found = true
 			break
 		}
@@ -60,9 +60,9 @@ func TestEnqueueDequeue_Timeout(t *testing.T) {
 
 	found := false
 	for ; it.Valid(); it.Next() {
-		kv, err := it.KeyValue()
+		kv, err := it.Key()
 		require.NoError(t, err, "reading key/value from payout timeout iterator should not error")
-		if kv.Key.K1() == uint64(ts) && kv.Key.K2().Equals(addr) {
+		if kv.K1() == uint64(ts) && kv.K2().Equals(addr) {
 			found = true
 			break
 		}
@@ -187,9 +187,9 @@ func TestRemoveAllStartsForVault(t *testing.T) {
 	defer it.Close()
 
 	for ; it.Valid(); it.Next() {
-		kv, err := it.KeyValue()
+		kv, err := it.Key()
 		require.NoError(t, err, "reading key/value from payout verification iterator should not error")
-		require.False(t, kv.Key.Equals(a1), "payout verification queue should not include a1 after dequeue")
+		require.False(t, kv.Equals(a1), "payout verification queue should not include a1 after dequeue")
 	}
 }
 
@@ -211,9 +211,9 @@ func TestRemoveAllTimeoutsForVault(t *testing.T) {
 	defer it.Close()
 
 	for ; it.Valid(); it.Next() {
-		kv, err := it.KeyValue()
+		kv, err := it.Key()
 		require.NoError(t, err, "reading key/value from payout timeout iterator should not error")
-		require.False(t, kv.Key.K2().Equals(a1), "payout timeout queue should not include any entries for a1 after removal")
+		require.False(t, kv.K2().Equals(a1), "payout timeout queue should not include any entries for a1 after removal")
 	}
 }
 
@@ -248,9 +248,9 @@ func TestSafeEnqueueVerification_UpdatesVaultAndQueues(t *testing.T) {
 
 	foundStart := false
 	for ; itS.Valid(); itS.Next() {
-		kv, err := itS.KeyValue()
+		kv, err := itS.Key()
 		require.NoError(t, err, "reading key/value from payout verification iterator should not error")
-		if kv.Key.Equals(vaultAddr) {
+		if kv.Equals(vaultAddr) {
 			foundStart = true
 		}
 	}
@@ -261,9 +261,9 @@ func TestSafeEnqueueVerification_UpdatesVaultAndQueues(t *testing.T) {
 	defer itT.Close()
 
 	for ; itT.Valid(); itT.Next() {
-		kv, err := itT.KeyValue()
+		kv, err := itT.Key()
 		require.NoError(t, err, "reading key/value from payout timeout iterator should not error")
-		require.False(t, kv.Key.K2().Equals(vaultAddr), "payout timeout queue should not contain vault %s after SafeEnqueueVerification", vaultAddr.String())
+		require.False(t, kv.K2().Equals(vaultAddr), "payout timeout queue should not contain vault %s after SafeEnqueueVerification", vaultAddr.String())
 	}
 
 	acc := k.AuthKeeper.GetAccount(ctx, vaultAddr)
@@ -307,10 +307,10 @@ func TestSafeEnqueueTimeout_UpdatesVaultAndQueues(t *testing.T) {
 	require.NoError(t, err, "iterate payout timeout queue should not error after SafeEnqueueTimeout")
 	defer itT.Close()
 	for ; itT.Valid(); itT.Next() {
-		kv, err := itT.KeyValue()
+		kv, err := itT.Key()
 		require.NoError(t, err, "reading key/value from payout timeout iterator should not error")
-		if kv.Key.K2().Equals(vaultAddr) {
-			times = append(times, kv.Key.K1())
+		if kv.K2().Equals(vaultAddr) {
+			times = append(times, kv.K1())
 		}
 	}
 	require.ElementsMatch(t, []uint64{expectTimeout}, times, "timeout queue should include exactly one entry for vault at %d; got %v", expectTimeout, times)

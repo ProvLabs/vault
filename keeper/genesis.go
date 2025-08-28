@@ -83,13 +83,13 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	defer it.Close()
 
 	for ; it.Valid(); it.Next() {
-		kv, err := it.KeyValue()
+		kv, err := it.Key()
 		if err != nil {
 			panic(fmt.Errorf("failed to read payout timeout queue entry: %w", err))
 		}
 		paymentTimeoutQueue = append(paymentTimeoutQueue, types.QueueEntry{
-			Time: kv.Key.K1(),
-			Addr: kv.Key.K2().String(),
+			Time: kv.K1(),
+			Addr: kv.K2().String(),
 		})
 	}
 

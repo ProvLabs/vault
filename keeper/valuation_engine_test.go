@@ -80,7 +80,7 @@ func (s *TestSuite) TestToAssetAmount() {
 	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
 	vaultMeta := types.VaultAccount{ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom}
 
-	valueInAsset, err := testKeeper.ToAssetAmount(s.ctx, vaultMeta, sdk.NewInt64Coin(paymentDenom, 4))
+	valueInAsset, err := testKeeper.ToUnderlyingAssetAmount(s.ctx, vaultMeta, sdk.NewInt64Coin(paymentDenom, 4))
 	s.Require().NoError(err, "toAssetAmount should succeed for valid NAV")
 	s.Require().Equal(math.NewInt(2), valueInAsset, "4 usdc at 1/2 should be 2 ylds")
 }
@@ -113,7 +113,7 @@ func (s *TestSuite) TestGetTVVInAsset_ExcludesSharesAndSumsInAsset() {
 	)), "should fund vault with base and payment coins")
 
 	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
-	totalVaultValueInAsset, err := testKeeper.GetTVVInAsset(s.ctx, *vault)
+	totalVaultValueInAsset, err := testKeeper.GetTVVInUnderlyingAsset(s.ctx, *vault)
 	s.Require().NoError(err, "get TVV should succeed")
 	s.Require().Equal(math.NewInt(1005), totalVaultValueInAsset, "1000 ylds + 10 usdc at 1/2 should equal 1005 ylds")
 }
@@ -150,7 +150,7 @@ func (s *TestSuite) TestGetNAVPerShareInAsset_FloorsToZeroForTinyPerShare() {
 	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), shareSupplyMint), "should mint share supply matching tvv*ShareScalar")
 
 	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
-	navPerShareAsset, err := testKeeper.GetNAVPerShareInAsset(s.ctx, *vault)
+	navPerShareAsset, err := testKeeper.GetNAVPerShareInUnderlyingAsset(s.ctx, *vault)
 	s.Require().NoError(err, "nav per share should compute without error")
 	s.Require().Equal(math.ZeroInt(), navPerShareAsset, "with scaled shares, integer NAV/share should floor to 0")
 }
@@ -183,7 +183,7 @@ func (s *TestSuite) TestConvertDepositToSharesInAsset_UsesNAV() {
 	)), "should fund vault marker for TVV")
 
 	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
-	mintedShares, err := testKeeper.ConvertDepositToSharesInAsset(s.ctx, *vault, sdk.NewInt64Coin(paymentDenom, 4))
+	mintedShares, err := testKeeper.ConvertDepositToSharesInUnderlyingAsset(s.ctx, *vault, sdk.NewInt64Coin(paymentDenom, 4))
 	s.Require().NoError(err, "deposit conversion should succeed")
 	s.Require().Equal(shareDenom, mintedShares.Denom, "minted shares denom should match vault share denom")
 	s.Require().Equal(utils.ShareScalar.Mul(math.NewInt(2)), mintedShares.Amount, "4 usdc at 1/2 should mint 2*ShareScalar shares")
@@ -221,12 +221,12 @@ func (s *TestSuite) TestConvertSharesToRedeemCoinInAsset_AssetAndPaymentPaths() 
 	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), sdk.NewCoin(shareDenom, shareSupply)), "should mint share supply equal to tvv*ShareScalar")
 
 	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
-	outAssetCoin, err := testKeeper.ConvertSharesToRedeemCoinInAsset(s.ctx, *vault, utils.ShareScalar, underlyingDenom)
+	outAssetCoin, err := testKeeper.ConvertSharesToRedeemCoin(s.ctx, *vault, utils.ShareScalar, underlyingDenom)
 	s.Require().NoError(err, "shares->asset conversion should succeed")
 	s.Require().Equal(underlyingDenom, outAssetCoin.Denom, "redeem denom should be asset")
 	s.Require().Equal(math.NewInt(1), outAssetCoin.Amount, "ShareScalar shares should redeem to 1 asset unit at parity")
 
-	outPaymentCoin, err := testKeeper.ConvertSharesToRedeemCoinInAsset(s.ctx, *vault, utils.ShareScalar, paymentDenom)
+	outPaymentCoin, err := testKeeper.ConvertSharesToRedeemCoin(s.ctx, *vault, utils.ShareScalar, paymentDenom)
 	s.Require().NoError(err, "shares->payment conversion should succeed")
 	s.Require().Equal(paymentDenom, outPaymentCoin.Denom, "redeem denom should be payment")
 	s.Require().Equal(math.NewInt(2), outPaymentCoin.Amount, "1 asset at 1/2 asset per 1 payment should yield 2 payment units")

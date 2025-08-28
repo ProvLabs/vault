@@ -10,9 +10,18 @@ import (
 	"github.com/provlabs/vault/utils"
 )
 
-// UnitPriceFraction returns a ratio (num, den) = underlyingAsset_units per 1 srcDenom,
-// derived from NAV where NAV.Price is the value of NAV.Volume srcDenom in underlyingAsset.
-// Special-case identity: srcDenom == underlyingAsset => 1/1.
+// UnitPriceFraction returns a price ratio (priceNumerator, priceDenominator) that expresses
+// how many units of underlyingAsset are worth one unit of srcDenom, derived from the NAV.
+//
+// Semantics:
+//   - NAV.Price is the total value (in underlyingAsset) for NAV.Volume units of srcDenom.
+//   - Therefore, unit price = NAV.Price.Amount / NAV.Volume (underlying per 1 src).
+//   - This function returns that unit price as an integer fraction (num, den).
+//
+// Special cases and errors:
+//   - If srcDenom == underlyingAsset, returns (1, 1).
+//   - Errors if no NAV exists for (srcDenom → underlyingAsset).
+//   - Errors if NAV.Volume == 0.
 func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom, underlyingAsset string) (num, den math.Int, err error) {
 	if srcDenom == underlyingAsset {
 		return math.NewInt(1), math.NewInt(1), nil
@@ -32,9 +41,13 @@ func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom, underlyingAsset str
 	return priceAmt, volAmt, nil
 }
 
-// ToAssetAmount converts an arbitrary coin into its value expressed in underlyingAsset,
-// using integer math with floor: amt * (price/volume).
-func (k Keeper) ToAssetAmount(ctx sdk.Context, vault types.VaultAccount, in sdk.Coin) (math.Int, error) {
+// ToUnderlyingAssetAmount converts an input coin into its value expressed in vault.UnderlyingAsset,
+// using integer floor arithmetic:
+//
+//	value_in_underlying = in.Amount * priceNumerator / priceDenominator
+//
+// where (priceNumerator, priceDenominator) come from UnitPriceFraction(in.Denom → underlying).
+func (k Keeper) ToUnderlyingAssetAmount(ctx sdk.Context, vault types.VaultAccount, in sdk.Coin) (math.Int, error) {
 	priceAmount, volume, err := k.UnitPriceFraction(ctx, in.Denom, vault.UnderlyingAsset)
 	if err != nil {
 		return math.Int{}, err
@@ -42,15 +55,17 @@ func (k Keeper) ToAssetAmount(ctx sdk.Context, vault types.VaultAccount, in sdk.
 	return in.Amount.Mul(priceAmount).Quo(volume), nil
 }
 
-// GetTVVInAsset sums all pool balances (excluding the share denom) into underlyingAsset.
-func (k Keeper) GetTVVInAsset(ctx sdk.Context, vault types.VaultAccount) (math.Int, error) {
+// GetTVVInUnderlyingAsset returns the Total Vault Value (TVV) expressed in vault.UnderlyingAsset.
+// It sums all balances at the vault address (excluding share_denom) after converting each
+// balance into underlying units via ToAssetAmount. Result is floored integer units.
+func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccount) (math.Int, error) {
 	balances := k.BankKeeper.GetAllBalances(ctx, vault.GetAddress())
 	total := math.ZeroInt()
 	for _, balance := range balances {
 		if balance.Denom == vault.ShareDenom {
 			continue
 		}
-		val, err := k.ToAssetAmount(ctx, vault, balance)
+		val, err := k.ToUnderlyingAssetAmount(ctx, vault, balance)
 		if err != nil {
 			return math.Int{}, err
 		}
@@ -59,9 +74,11 @@ func (k Keeper) GetTVVInAsset(ctx sdk.Context, vault types.VaultAccount) (math.I
 	return total, nil
 }
 
-// GetNAVPerShareInAsset = TVV(asset) / totalShares (floored).
-func (k Keeper) GetNAVPerShareInAsset(ctx sdk.Context, vault types.VaultAccount) (math.Int, error) {
-	tvv, err := k.GetTVVInAsset(ctx, vault)
+// GetNAVPerShareInUnderlyingAsset returns the floor NAV-per-share in units of vault.UnderlyingAsset.
+// Computation: NAV_per_share = TVV(underlying) / totalShareSupply. If total shares == 0,
+// returns 0. All values are integer and use floor division.
+func (k Keeper) GetNAVPerShareInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccount) (math.Int, error) {
+	tvv, err := k.GetTVVInUnderlyingAsset(ctx, vault)
 	if err != nil {
 		return math.Int{}, err
 	}
@@ -72,13 +89,18 @@ func (k Keeper) GetNAVPerShareInAsset(ctx sdk.Context, vault types.VaultAccount)
 	return tvv.Quo(totalShares), nil
 }
 
-// ConvertDepositToSharesInAsset: value deposit in underlyingAsset, then apply your share math.
-func (k Keeper) ConvertDepositToSharesInAsset(ctx sdk.Context, vault types.VaultAccount, in sdk.Coin) (sdk.Coin, error) {
-	valInAsset, err := k.ToAssetAmount(ctx, vault, in)
+// ConvertDepositToSharesInUnderlyingAsset converts a deposit coin into vault shares.
+// Steps:
+//  1. Convert the deposit into underlying-asset value via ToAssetAmount.
+//  2. Compute shares using CalculateSharesFromAssets(value_in_underlying, TVV, totalShares).
+//
+// The returned coin is the minted shares in vault.ShareDenom.
+func (k Keeper) ConvertDepositToSharesInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccount, in sdk.Coin) (sdk.Coin, error) {
+	valInAsset, err := k.ToUnderlyingAssetAmount(ctx, vault, in)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
-	tvv, err := k.GetTVVInAsset(ctx, vault)
+	tvv, err := k.GetTVVInUnderlyingAsset(ctx, vault)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -86,15 +108,20 @@ func (k Keeper) ConvertDepositToSharesInAsset(ctx sdk.Context, vault types.Vault
 	return utils.CalculateSharesFromAssets(valInAsset, tvv, totalShares, vault.ShareDenom)
 }
 
-// ConvertSharesToRedeemCoinInAsset: shares -> asset amount -> redeem denom amount.
-// If redeemDenom == underlyingAsset, return asset amount directly.
-// Otherwise use reciprocal of unitPriceFraction: out = assetAmt * den / num.
-func (k Keeper) ConvertSharesToRedeemCoinInAsset(ctx sdk.Context, vault types.VaultAccount, shares math.Int, redeemDenom string) (sdk.Coin, error) {
+// ConvertSharesToRedeemCoin converts a share amount into a payout coin in redeemDenom.
+// Steps:
+//  1. Convert shares → underlying amount via CalculateAssetsFromShares(shares, totalShares, TVV).
+//  2. If redeemDenom == underlying, return that underlying amount.
+//  3. Otherwise convert underlying → redeemDenom using the reciprocal of UnitPriceFraction:
+//     amount_redeem = amount_underlying * denominator / numerator
+//
+// All arithmetic is integer with floor. If shares <= 0, returns a zero-amount coin.
+func (k Keeper) ConvertSharesToRedeemCoin(ctx sdk.Context, vault types.VaultAccount, shares math.Int, redeemDenom string) (sdk.Coin, error) {
 	if !shares.IsPositive() {
 		return sdk.NewCoin(redeemDenom, math.ZeroInt()), nil
 	}
 
-	tvv, err := k.GetTVVInAsset(ctx, vault)
+	tvv, err := k.GetTVVInUnderlyingAsset(ctx, vault)
 	if err != nil {
 		return sdk.Coin{}, err
 	}

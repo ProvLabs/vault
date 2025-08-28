@@ -3,18 +3,11 @@ package container
 import (
 	"context"
 
-	"github.com/provlabs/vault/interest"
 	"github.com/provlabs/vault/types"
 
 	"cosmossdk.io/collections"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-)
-
-const (
-	// AutoReconcileTimeout is the duration (in seconds) that a vault is considered
-	// recently reconciled and is exempt from automatic interest checks.
-	AutoReconcileTimeout = 20 * interest.SecondsPerHour
 )
 
 type PayoutTimeout struct {
@@ -52,6 +45,14 @@ func (p *PayoutTimeout) WalkDue(ctx context.Context, nowSec int64, fn func(perio
 		if key.K1() > uint64(nowSec) {
 			return true, nil
 		}
+		return fn(key.K1(), key.K2())
+	})
+}
+
+// Walk iterates over all entries in the PayoutTimeoutQueue.
+// Iteration stops when the callback returns stop=true or an error.
+func (p *PayoutTimeout) Walk(ctx context.Context, fn func(periodTimeout uint64, vaultAddr sdk.AccAddress) (stop bool, err error)) error {
+	return p.queue.Walk(ctx, nil, func(key collections.Pair[uint64, sdk.AccAddress]) (stop bool, err error) {
 		return fn(key.K1(), key.K2())
 	})
 }

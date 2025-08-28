@@ -18,19 +18,17 @@ import (
 )
 
 type Keeper struct {
-	schema                     collections.Schema
-	eventService               event.Service
-	addressCodec               address.Codec
-	authority                  []byte
+	schema       collections.Schema
+	eventService event.Service
+	addressCodec address.Codec
+	authority    []byte
 
 	AuthKeeper   types.AccountKeeper
 	MarkerKeeper types.MarkerKeeper
 	BankKeeper   types.BankKeeper
 
 	Vaults                     collections.Map[sdk.AccAddress, []byte]
-	PayoutVerificationQueue    collections.KeySet[sdk.AccAddress]
 	NewPayoutVerificationQueue *container.PayoutVerificationQueue
-	PayoutTimeoutQueue         collections.KeySet[collections.Pair[uint64, sdk.AccAddress]]
 	NewPayoutTimeoutQueue      *container.PayoutTimeout
 }
 
@@ -50,19 +48,13 @@ func NewKeeper(
 	}
 
 	builder := collections.NewSchemaBuilder(storeService)
-	endKeyCodec := collections.PairKeyCodec(
-		collections.Uint64Key,
-		sdk.AccAddressKey,
-	)
 
 	keeper := &Keeper{
 		eventService:               eventService,
 		addressCodec:               addressCodec,
 		authority:                  authority,
 		Vaults:                     collections.NewMap(builder, types.VaultsKeyPrefix, types.VaultsName, sdk.AccAddressKey, collections.BytesValue),
-		PayoutVerificationQueue:    collections.NewKeySet(builder, types.VaultPayoutVerificationQueuePrefix, types.VaultPayoutVerificationQueueName, sdk.AccAddressKey),
 		NewPayoutVerificationQueue: container.NewPayoutVerificationQueue(builder),
-		PayoutTimeoutQueue:         collections.NewKeySet(builder, types.VaultPayoutTimeoutQueuePrefix, types.VaultPayoutTimeoutQueueName, endKeyCodec),
 		NewPayoutTimeoutQueue:      container.NewPayoutTimeout(builder),
 		AuthKeeper:                 authKeeper,
 		MarkerKeeper:               markerkeeper,

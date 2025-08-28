@@ -196,7 +196,7 @@ func (k *Keeper) handleVaultInterestTimeouts(ctx context.Context) error {
 	var depleted []*types.VaultAccount
 	var reconciled []*types.VaultAccount
 
-	err := k.WalkDuePayoutTimeouts(ctx, now, func(timeout uint64, addr sdk.AccAddress) (bool, error) {
+	err := k.NewPayoutTimeoutQueue.WalkDue(ctx, now, func(timeout uint64, addr sdk.AccAddress) (bool, error) {
 		key := collections.Join(timeout, addr)
 
 		vault, ok := k.tryGetVault(sdkCtx, addr)
@@ -238,7 +238,7 @@ func (k *Keeper) handleVaultInterestTimeouts(ctx context.Context) error {
 	}
 
 	for _, key := range toRemove {
-		if err := k.DequeuePayoutTimeout(ctx, int64(key.K1()), key.K2()); err != nil {
+		if err := k.NewPayoutTimeoutQueue.Dequeue(ctx, int64(key.K1()), key.K2()); err != nil {
 			sdkCtx.Logger().Error("failed to remove processed timeout", "err", err)
 		}
 	}
@@ -273,7 +273,7 @@ func (k *Keeper) handleReconciledVaults(ctx context.Context) error {
 	var toRemove []sdk.AccAddress
 	var vaults []*types.VaultAccount
 
-	err := k.WalkPayoutVerifications(ctx, func(addr sdk.AccAddress) (bool, error) {
+	err := k.NewPayoutVerificationQueue.Walk(ctx, func(addr sdk.AccAddress) (bool, error) {
 		v, ok := k.tryGetVault(sdkCtx, addr)
 		if ok {
 			vaults = append(vaults, v)
@@ -286,7 +286,7 @@ func (k *Keeper) handleReconciledVaults(ctx context.Context) error {
 	}
 
 	for _, key := range toRemove {
-		_ = k.DequeuePayoutVerification(ctx, key)
+		_ = k.NewPayoutVerificationQueue.Dequeue(ctx, key)
 	}
 
 	payable, depleted := k.partitionVaults(sdkCtx, vaults)

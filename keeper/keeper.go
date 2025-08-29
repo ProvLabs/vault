@@ -27,9 +27,9 @@ type Keeper struct {
 	MarkerKeeper types.MarkerKeeper
 	BankKeeper   types.BankKeeper
 
-	Vaults                     collections.Map[sdk.AccAddress, []byte]
-	NewPayoutVerificationQueue *container.PayoutVerificationQueue
-	NewPayoutTimeoutQueue      *container.PayoutTimeout
+	Vaults                  collections.Map[sdk.AccAddress, []byte]
+	PayoutVerificationQueue *container.PayoutVerificationQueue
+	PayoutTimeoutQueue      *container.PayoutTimeoutQueue
 }
 
 // NewMsgServer creates a new Keeper for the module.
@@ -50,15 +50,15 @@ func NewKeeper(
 	builder := collections.NewSchemaBuilder(storeService)
 
 	keeper := &Keeper{
-		eventService:               eventService,
-		addressCodec:               addressCodec,
-		authority:                  authority,
-		Vaults:                     collections.NewMap(builder, types.VaultsKeyPrefix, types.VaultsName, sdk.AccAddressKey, collections.BytesValue),
-		NewPayoutVerificationQueue: container.NewPayoutVerificationQueue(builder),
-		NewPayoutTimeoutQueue:      container.NewPayoutTimeout(builder),
-		AuthKeeper:                 authKeeper,
-		MarkerKeeper:               markerkeeper,
-		BankKeeper:                 bankkeeper,
+		eventService:            eventService,
+		addressCodec:            addressCodec,
+		authority:               authority,
+		Vaults:                  collections.NewMap(builder, types.VaultsKeyPrefix, types.VaultsName, sdk.AccAddressKey, collections.BytesValue),
+		PayoutVerificationQueue: container.NewPayoutVerificationQueue(builder),
+		PayoutTimeoutQueue:      container.NewPayoutTimeoutQueue(builder),
+		AuthKeeper:              authKeeper,
+		MarkerKeeper:            markerkeeper,
+		BankKeeper:              bankkeeper,
 	}
 
 	schema, err := builder.Build()

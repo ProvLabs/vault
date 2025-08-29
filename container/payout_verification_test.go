@@ -16,9 +16,9 @@ func TestEnqueueDequeue(t *testing.T) {
 
 	addr := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
 
-	require.NoError(t, k.NewPayoutVerificationQueue.Enqueue(ctx, addr), "enqueue payout verification for %s should succeed", addr.String())
+	require.NoError(t, k.PayoutVerificationQueue.Enqueue(ctx, addr), "enqueue payout verification for %s should succeed", addr.String())
 
-	it, err := k.NewPayoutVerificationQueue.Iterate(ctx, nil)
+	it, err := k.PayoutVerificationQueue.Iterate(ctx, nil)
 	require.NoError(t, err, "iterate payout verification queue should not error")
 	defer it.Close()
 
@@ -33,9 +33,9 @@ func TestEnqueueDequeue(t *testing.T) {
 	}
 	require.True(t, found, "expected to find %s in payout verification queue after enqueue", addr.String())
 
-	require.NoError(t, k.NewPayoutVerificationQueue.Dequeue(ctx, addr), "dequeue payout verification for %s should succeed", addr.String())
+	require.NoError(t, k.PayoutVerificationQueue.Dequeue(ctx, addr), "dequeue payout verification for %s should succeed", addr.String())
 
-	it2, err := k.NewPayoutVerificationQueue.Iterate(ctx, nil)
+	it2, err := k.PayoutVerificationQueue.Iterate(ctx, nil)
 	require.NoError(t, err, "iterate payout verification queue after dequeue should not error")
 	defer it2.Close()
 	require.False(t, it2.Valid(), "payout verification queue should be empty after dequeue of %s", addr.String())
@@ -47,12 +47,12 @@ func TestWalkDue(t *testing.T) {
 	a1 := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
 	a2 := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
 
-	require.NoError(t, k.NewPayoutVerificationQueue.Enqueue(ctx, a1), "enqueue payout verification for a1 should succeed")
-	require.NoError(t, k.NewPayoutVerificationQueue.Enqueue(ctx, a2), "enqueue payout verification for a2 should succeed")
-	require.NoError(t, k.NewPayoutVerificationQueue.Enqueue(ctx, a1), "enqueue payout verification duplicate for a1 should succeed (set semantics)")
+	require.NoError(t, k.PayoutVerificationQueue.Enqueue(ctx, a1), "enqueue payout verification for a1 should succeed")
+	require.NoError(t, k.PayoutVerificationQueue.Enqueue(ctx, a2), "enqueue payout verification for a2 should succeed")
+	require.NoError(t, k.PayoutVerificationQueue.Enqueue(ctx, a1), "enqueue payout verification duplicate for a1 should succeed (set semantics)")
 
 	var seen []string
-	require.NoError(t, k.NewPayoutVerificationQueue.Walk(ctx, func(addr sdk.AccAddress) (bool, error) {
+	require.NoError(t, k.PayoutVerificationQueue.Walk(ctx, func(addr sdk.AccAddress) (bool, error) {
 		seen = append(seen, addr.String())
 		return false, nil
 	}), "walking payout verifications should not error")
@@ -65,11 +65,11 @@ func TestWalkDue_StopEarly(t *testing.T) {
 	a := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
 	b := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
 
-	require.NoError(t, k.NewPayoutVerificationQueue.Enqueue(ctx, a), "enqueue payout verification for a should succeed")
-	require.NoError(t, k.NewPayoutVerificationQueue.Enqueue(ctx, b), "enqueue payout verification for b should succeed")
+	require.NoError(t, k.PayoutVerificationQueue.Enqueue(ctx, a), "enqueue payout verification for a should succeed")
+	require.NoError(t, k.PayoutVerificationQueue.Enqueue(ctx, b), "enqueue payout verification for b should succeed")
 
 	calls := 0
-	require.NoError(t, k.NewPayoutVerificationQueue.Walk(ctx, func(_ sdk.AccAddress) (bool, error) {
+	require.NoError(t, k.PayoutVerificationQueue.Walk(ctx, func(_ sdk.AccAddress) (bool, error) {
 		calls++
 		return true, nil
 	}), "walking payout verifications (stop early) should not error")
@@ -80,10 +80,10 @@ func TestWalkDue_ErrorPropagates(t *testing.T) {
 	ctx, k := mocks.NewVaultKeeper(t)
 
 	a := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
-	require.NoError(t, k.NewPayoutVerificationQueue.Enqueue(ctx, a), "enqueue payout verification for a should succeed")
+	require.NoError(t, k.PayoutVerificationQueue.Enqueue(ctx, a), "enqueue payout verification for a should succeed")
 
 	errBoom := errors.New("boom")
-	err := k.NewPayoutVerificationQueue.Walk(ctx, func(_ sdk.AccAddress) (bool, error) {
+	err := k.PayoutVerificationQueue.Walk(ctx, func(_ sdk.AccAddress) (bool, error) {
 		return false, errBoom
 	})
 	require.ErrorIs(t, err, errBoom, "walk should propagate callback error")
@@ -95,12 +95,12 @@ func TestRemoveAllStartsForVault(t *testing.T) {
 	a1 := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
 	a2 := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
 
-	require.NoError(t, k.NewPayoutVerificationQueue.Enqueue(ctx, a1), "enqueue payout verification for a1 should succeed")
-	require.NoError(t, k.NewPayoutVerificationQueue.Enqueue(ctx, a2), "enqueue payout verification for a2 should succeed")
+	require.NoError(t, k.PayoutVerificationQueue.Enqueue(ctx, a1), "enqueue payout verification for a1 should succeed")
+	require.NoError(t, k.PayoutVerificationQueue.Enqueue(ctx, a2), "enqueue payout verification for a2 should succeed")
 
-	require.NoError(t, k.NewPayoutVerificationQueue.Enqueue(ctx, a1), "dequeue payout verification for a1 should succeed")
+	require.NoError(t, k.PayoutVerificationQueue.Enqueue(ctx, a1), "dequeue payout verification for a1 should succeed")
 
-	it, err := k.NewPayoutVerificationQueue.Iterate(ctx, nil)
+	it, err := k.PayoutVerificationQueue.Iterate(ctx, nil)
 	require.NoError(t, err, "iterate payout verification queue should not error")
 	defer it.Close()
 

@@ -57,7 +57,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 		if err != nil {
 			panic(fmt.Errorf("invalid address in timeout queue: %w", err))
 		}
-		if err := k.NewPayoutTimeoutQueue.Enqueue(ctx, int64(entry.Time), addr); err != nil {
+		if err := k.PayoutTimeoutQueue.Enqueue(ctx, int64(entry.Time), addr); err != nil {
 			panic(fmt.Errorf("failed to enqueue vault timeout for %s: %w", entry.Addr, err))
 		}
 	}
@@ -76,7 +76,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 
 	paymentTimeoutQueue := make([]types.QueueEntry, 0)
 
-	err := k.NewPayoutTimeoutQueue.Walk(ctx, func(periodTimeout uint64, vaultAddr sdk.AccAddress) (stop bool, err error) {
+	err := k.PayoutTimeoutQueue.Walk(ctx, func(periodTimeout uint64, vaultAddr sdk.AccAddress) (stop bool, err error) {
 		paymentTimeoutQueue = append(paymentTimeoutQueue, types.QueueEntry{
 			Time: periodTimeout,
 			Addr: vaultAddr.String(),

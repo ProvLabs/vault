@@ -26,7 +26,7 @@ func (k Keeper) SafeEnqueueVerification(ctx context.Context, vault *types.VaultA
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	currentBlockTime := sdkCtx.BlockTime().Unix()
 
-	if err := k.NewPayoutTimeoutQueue.Dequeue(ctx, vault.PeriodTimeout, vault.GetAddress()); err != nil {
+	if err := k.PayoutTimeoutQueue.Dequeue(ctx, vault.PeriodTimeout, vault.GetAddress()); err != nil {
 		return err
 	}
 
@@ -36,7 +36,7 @@ func (k Keeper) SafeEnqueueVerification(ctx context.Context, vault *types.VaultA
 		return err
 	}
 
-	return k.NewPayoutVerificationQueue.Enqueue(ctx, vault.GetAddress())
+	return k.PayoutVerificationQueue.Enqueue(ctx, vault.GetAddress())
 }
 
 // SafeEnqueueTimeout clears any existing timeout entry for the given vault (if any),
@@ -50,7 +50,7 @@ func (k Keeper) SafeEnqueueVerification(ctx context.Context, vault *types.VaultA
 func (k Keeper) SafeEnqueueTimeout(ctx context.Context, vault *types.VaultAccount) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	if err := k.NewPayoutTimeoutQueue.Dequeue(ctx, vault.PeriodTimeout, vault.GetAddress()); err != nil {
+	if err := k.PayoutTimeoutQueue.Dequeue(ctx, vault.PeriodTimeout, vault.GetAddress()); err != nil {
 		return err
 	}
 
@@ -61,5 +61,5 @@ func (k Keeper) SafeEnqueueTimeout(ctx context.Context, vault *types.VaultAccoun
 		sdkCtx.Logger().Error("failed to set vault", "vault", vault.GetAddress().String(), "err", err)
 		return err
 	}
-	return k.NewPayoutTimeoutQueue.Enqueue(ctx, vault.PeriodTimeout, vault.GetAddress())
+	return k.PayoutTimeoutQueue.Enqueue(ctx, vault.PeriodTimeout, vault.GetAddress())
 }

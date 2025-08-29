@@ -32,14 +32,14 @@ func TestSafeEnqueueVerification_UpdatesVaultAndQueues(t *testing.T) {
 		PeriodTimeout:       50,
 	}
 
-	require.NoError(t, k.NewPayoutTimeoutQueue.Enqueue(ctx, 50, vaultAddr), "precondition: enqueue payout timeout (50) for vault should succeed")
+	require.NoError(t, k.PayoutTimeoutQueue.Enqueue(ctx, 50, vaultAddr), "precondition: enqueue payout timeout (50) for vault should succeed")
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	ctx = sdkCtx.WithBlockTime(time.Unix(1000, 0))
 
 	require.NoError(t, k.SafeEnqueueVerification(ctx, v), "SafeEnqueueVerification should clear timeouts, set start, and enqueue verification")
 
-	itS, err := k.NewPayoutVerificationQueue.Iterate(ctx, nil)
+	itS, err := k.PayoutVerificationQueue.Iterate(ctx, nil)
 	require.NoError(t, err, "iterate payout verification queue should not error after SafeEnqueueVerification")
 	defer itS.Close()
 
@@ -53,7 +53,7 @@ func TestSafeEnqueueVerification_UpdatesVaultAndQueues(t *testing.T) {
 	}
 	require.True(t, foundStart, "payout verification queue should contain vault %s after SafeEnqueueVerification", vaultAddr.String())
 
-	itT, err := k.NewPayoutTimeoutQueue.Iterate(ctx, nil)
+	itT, err := k.PayoutTimeoutQueue.Iterate(ctx, nil)
 	require.NoError(t, err, "iterate payout timeout queue should not error after SafeEnqueueVerification")
 	defer itT.Close()
 
@@ -89,7 +89,7 @@ func TestSafeEnqueueTimeout_UpdatesVaultAndQueues(t *testing.T) {
 		PeriodTimeout:       30,
 	}
 
-	require.NoError(t, k.NewPayoutTimeoutQueue.Enqueue(ctx, 30, vaultAddr), "precondition: enqueue payout timeout (30) for vault should succeed")
+	require.NoError(t, k.PayoutTimeoutQueue.Enqueue(ctx, 30, vaultAddr), "precondition: enqueue payout timeout (30) for vault should succeed")
 
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	now := time.Unix(2000, 0)
@@ -100,7 +100,7 @@ func TestSafeEnqueueTimeout_UpdatesVaultAndQueues(t *testing.T) {
 	expectTimeout := uint64(now.Unix() + kpr.AutoReconcileTimeout)
 
 	var times []uint64
-	itT, err := k.NewPayoutTimeoutQueue.Iterate(ctx, nil)
+	itT, err := k.PayoutTimeoutQueue.Iterate(ctx, nil)
 	require.NoError(t, err, "iterate payout timeout queue should not error after SafeEnqueueTimeout")
 	defer itT.Close()
 	for ; itT.Valid(); itT.Next() {

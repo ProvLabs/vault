@@ -17,9 +17,9 @@ func TestEnqueueDequeue_Timeout(t *testing.T) {
 	addr := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
 	ts := int64(200)
 
-	require.NoError(t, k.NewPayoutTimeoutQueue.Enqueue(ctx, ts, addr), "enqueue payout timeout (%d) for %s should succeed", ts, addr.String())
+	require.NoError(t, k.PayoutTimeoutQueue.Enqueue(ctx, ts, addr), "enqueue payout timeout (%d) for %s should succeed", ts, addr.String())
 
-	it, err := k.NewPayoutTimeoutQueue.Iterate(ctx, nil)
+	it, err := k.PayoutTimeoutQueue.Iterate(ctx, nil)
 	require.NoError(t, err, "iterate payout timeout queue should not error")
 	defer it.Close()
 
@@ -34,9 +34,9 @@ func TestEnqueueDequeue_Timeout(t *testing.T) {
 	}
 	require.True(t, found, "expected to find timeout (%d) for %s in payout timeout queue after enqueue", ts, addr.String())
 
-	require.NoError(t, k.NewPayoutTimeoutQueue.Dequeue(ctx, ts, addr), "dequeue payout timeout (%d) for %s should succeed", ts, addr.String())
+	require.NoError(t, k.PayoutTimeoutQueue.Dequeue(ctx, ts, addr), "dequeue payout timeout (%d) for %s should succeed", ts, addr.String())
 
-	it2, err := k.NewPayoutTimeoutQueue.Iterate(ctx, nil)
+	it2, err := k.PayoutTimeoutQueue.Iterate(ctx, nil)
 	require.NoError(t, err, "iterate payout timeout queue after dequeue should not error")
 	defer it2.Close()
 	require.False(t, it2.Valid(), "payout timeout queue should be empty after dequeue of (%d, %s)", ts, addr.String())
@@ -48,12 +48,12 @@ func TestWalkDueTimeouts(t *testing.T) {
 	a1 := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
 	a2 := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
 
-	require.NoError(t, k.NewPayoutTimeoutQueue.Enqueue(ctx, 50, a1), "enqueue payout timeout (50) for a1 should succeed")
-	require.NoError(t, k.NewPayoutTimeoutQueue.Enqueue(ctx, 75, a2), "enqueue payout timeout (75) for a2 should succeed")
-	require.NoError(t, k.NewPayoutTimeoutQueue.Enqueue(ctx, 500, a1), "enqueue payout timeout (500) for a1 should succeed")
+	require.NoError(t, k.PayoutTimeoutQueue.Enqueue(ctx, 50, a1), "enqueue payout timeout (50) for a1 should succeed")
+	require.NoError(t, k.PayoutTimeoutQueue.Enqueue(ctx, 75, a2), "enqueue payout timeout (75) for a2 should succeed")
+	require.NoError(t, k.PayoutTimeoutQueue.Enqueue(ctx, 500, a1), "enqueue payout timeout (500) for a1 should succeed")
 
 	var seen []uint64
-	require.NoError(t, k.NewPayoutTimeoutQueue.WalkDue(ctx, 100, func(ts uint64, _ sdk.AccAddress) (bool, error) {
+	require.NoError(t, k.PayoutTimeoutQueue.WalkDue(ctx, 100, func(ts uint64, _ sdk.AccAddress) (bool, error) {
 		seen = append(seen, ts)
 		return false, nil
 	}), "walking due payout timeouts <= 100 should not error")
@@ -64,10 +64,10 @@ func TestWalkDueTimeouts_ErrorPropagates(t *testing.T) {
 	ctx, k := mocks.NewVaultKeeper(t)
 
 	a := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
-	require.NoError(t, k.NewPayoutTimeoutQueue.Enqueue(ctx, 10, a), "enqueue payout timeout (10) should succeed")
+	require.NoError(t, k.PayoutTimeoutQueue.Enqueue(ctx, 10, a), "enqueue payout timeout (10) should succeed")
 
 	errBoom := errors.New("boom")
-	err := k.NewPayoutTimeoutQueue.WalkDue(ctx, 25, func(_ uint64, _ sdk.AccAddress) (bool, error) {
+	err := k.PayoutTimeoutQueue.WalkDue(ctx, 25, func(_ uint64, _ sdk.AccAddress) (bool, error) {
 		return false, errBoom
 	})
 	require.ErrorIs(t, err, errBoom, "walk should propagate callback error")
@@ -77,11 +77,11 @@ func TestWalkDueTimeouts_StopEarly(t *testing.T) {
 	ctx, k := mocks.NewVaultKeeper(t)
 
 	a := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
-	require.NoError(t, k.NewPayoutTimeoutQueue.Enqueue(ctx, 10, a), "enqueue payout timeout (10) should succeed")
-	require.NoError(t, k.NewPayoutTimeoutQueue.Enqueue(ctx, 20, a), "enqueue payout timeout (20) should succeed")
+	require.NoError(t, k.PayoutTimeoutQueue.Enqueue(ctx, 10, a), "enqueue payout timeout (10) should succeed")
+	require.NoError(t, k.PayoutTimeoutQueue.Enqueue(ctx, 20, a), "enqueue payout timeout (20) should succeed")
 
 	calls := 0
-	require.NoError(t, k.NewPayoutTimeoutQueue.WalkDue(ctx, 25, func(_ uint64, _ sdk.AccAddress) (bool, error) {
+	require.NoError(t, k.PayoutTimeoutQueue.WalkDue(ctx, 25, func(_ uint64, _ sdk.AccAddress) (bool, error) {
 		calls++
 		return true, nil
 	}), "walking due payout timeouts (stop early) should not error")
@@ -95,13 +95,13 @@ func TestRemoveAllTimeoutsForVault(t *testing.T) {
 	a1 := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
 	a2 := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
 
-	require.NoError(t, k.NewPayoutTimeoutQueue.Enqueue(stdCtx, 100, a1), "enqueue payout timeout (100) for a1 should succeed")
-	require.NoError(t, k.NewPayoutTimeoutQueue.Enqueue(stdCtx, 150, a1), "enqueue payout timeout (150) for a1 should succeed")
-	require.NoError(t, k.NewPayoutTimeoutQueue.Enqueue(stdCtx, 200, a2), "enqueue payout timeout (200) for a2 should succeed")
+	require.NoError(t, k.PayoutTimeoutQueue.Enqueue(stdCtx, 100, a1), "enqueue payout timeout (100) for a1 should succeed")
+	require.NoError(t, k.PayoutTimeoutQueue.Enqueue(stdCtx, 150, a1), "enqueue payout timeout (150) for a1 should succeed")
+	require.NoError(t, k.PayoutTimeoutQueue.Enqueue(stdCtx, 200, a2), "enqueue payout timeout (200) for a2 should succeed")
 
-	require.NoError(t, k.NewPayoutTimeoutQueue.RemoveAllForVault(stdCtx, a1), "remove all timeouts for a1 should succeed")
+	require.NoError(t, k.PayoutTimeoutQueue.RemoveAllForVault(stdCtx, a1), "remove all timeouts for a1 should succeed")
 
-	it, err := k.NewPayoutTimeoutQueue.Iterate(stdCtx, nil)
+	it, err := k.PayoutTimeoutQueue.Iterate(stdCtx, nil)
 	require.NoError(t, err, "iterate payout timeout queue after removal should not error")
 	defer it.Close()
 

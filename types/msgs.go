@@ -22,7 +22,7 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgWithdrawInterestFundsRequest)(nil),
 }
 
-// ValidateBasic returns a not implemented error for MsgCreateVaultRequest.
+// ValidateBasic performs stateless validation on MsgCreateVaultRequest.
 func (m MsgCreateVaultRequest) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.Admin)
 	if err != nil {
@@ -45,21 +45,20 @@ func (m MsgCreateVaultRequest) ValidateBasic() error {
 
 	if m.UnderlyingAsset == m.PaymentDenom {
 		return fmt.Errorf("payment (%q) denom cannot equal underlying asset denom (%q)", m.PaymentDenom, m.UnderlyingAsset)
-
 	}
 
 	return nil
 }
 
-// ValidateBasic returns a not implemented error for MsgSwapInRequest.
+// ValidateBasic performs stateless validation on MsgSwapInRequest.
 func (m MsgSwapInRequest) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.VaultAddress)
 	if err != nil {
-		return fmt.Errorf("invalid vault address %s : %w", m.VaultAddress, err)
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
 	}
 	_, err = sdk.AccAddressFromBech32(m.Owner)
 	if err != nil {
-		return fmt.Errorf("invalid owner address %s : %w", m.VaultAddress, err)
+		return fmt.Errorf("invalid owner address: %q: %w", m.Owner, err)
 	}
 
 	err = m.Assets.Validate()
@@ -74,15 +73,15 @@ func (m MsgSwapInRequest) ValidateBasic() error {
 	return nil
 }
 
-// ValidateBasic performs stateless validation on MsgSwapOutRequest fields.
+// ValidateBasic performs stateless validation on MsgSwapOutRequest.
 func (m MsgSwapOutRequest) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(m.VaultAddress)
 	if err != nil {
-		return fmt.Errorf("invalid vault address %s : %w", m.VaultAddress, err)
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
 	}
 	_, err = sdk.AccAddressFromBech32(m.Owner)
 	if err != nil {
-		return fmt.Errorf("invalid owner address %s : %w", m.Owner, err)
+		return fmt.Errorf("invalid owner address: %q: %w", m.Owner, err)
 	}
 
 	err = m.Assets.Validate()

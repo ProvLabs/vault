@@ -32,7 +32,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
 				ShareDenom:          validDenom,
-				UnderlyingAssets:    []string{"uusd"},
+				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: validInterest,
 				DesiredInterestRate: validInterest,
 			},
@@ -44,7 +44,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
 				ShareDenom:          validDenom,
-				UnderlyingAssets:    []string{"uusd"},
+				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: "0.00",
 				DesiredInterestRate: "0.04",
 				MinInterestRate:     "0.03",
@@ -58,7 +58,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 				BaseAccount:         baseAcc,
 				Admin:               "invalid-address",
 				ShareDenom:          validDenom,
-				UnderlyingAssets:    []string{"uusd"},
+				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: validInterest,
 				DesiredInterestRate: validInterest,
 			},
@@ -70,7 +70,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
 				ShareDenom:          "",
-				UnderlyingAssets:    []string{"uusd"},
+				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: validInterest,
 				DesiredInterestRate: validInterest,
 			},
@@ -82,7 +82,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
 				ShareDenom:          invalidDenom,
-				UnderlyingAssets:    []string{"uusd"},
+				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: validInterest,
 				DesiredInterestRate: validInterest,
 			},
@@ -94,11 +94,11 @@ func TestVaultAccount_Validate(t *testing.T) {
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
 				ShareDenom:          validDenom,
-				UnderlyingAssets:    []string{},
+				UnderlyingAsset:     "",
 				CurrentInterestRate: validInterest,
 				DesiredInterestRate: validInterest,
 			},
-			expectedErr: "at least one underlying asset is required",
+			expectedErr: "invalid underlying asset denom: ",
 		},
 		{
 			name: "invalid underlying asset denom",
@@ -106,7 +106,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
 				ShareDenom:          validDenom,
-				UnderlyingAssets:    []string{invalidDenom},
+				UnderlyingAsset:     invalidDenom,
 				CurrentInterestRate: validInterest,
 				DesiredInterestRate: validInterest,
 			},
@@ -118,7 +118,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
 				ShareDenom:          validDenom,
-				UnderlyingAssets:    []string{"uusd"},
+				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: invalidInterest,
 				DesiredInterestRate: validInterest,
 			},
@@ -130,7 +130,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
 				ShareDenom:          validDenom,
-				UnderlyingAssets:    []string{"uusd"},
+				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: validInterest,
 				DesiredInterestRate: invalidInterest,
 			},
@@ -142,7 +142,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
 				ShareDenom:          validDenom,
-				UnderlyingAssets:    []string{"uusd"},
+				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: "0.00",
 				DesiredInterestRate: "0.10",
 				MinInterestRate:     "0.10",
@@ -156,7 +156,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
 				ShareDenom:          validDenom,
-				UnderlyingAssets:    []string{"uusd"},
+				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: "0.00",
 				DesiredInterestRate: "0.03",
 				MinInterestRate:     "0.01",
@@ -170,7 +170,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
 				ShareDenom:          validDenom,
-				UnderlyingAssets:    []string{"uusd"},
+				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: "0.00",
 				DesiredInterestRate: "0.00",
 				MinInterestRate:     "nope",
@@ -184,7 +184,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
 				ShareDenom:          validDenom,
-				UnderlyingAssets:    []string{"uusd"},
+				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: "0.00",
 				DesiredInterestRate: "0.00",
 				MinInterestRate:     "",
@@ -198,7 +198,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
 				ShareDenom:          validDenom,
-				UnderlyingAssets:    []string{"uusd"},
+				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: "0.00",
 				DesiredInterestRate: "0.07",
 				MinInterestRate:     "0.08",
@@ -212,7 +212,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
 				ShareDenom:          validDenom,
-				UnderlyingAssets:    []string{"uusd"},
+				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: "0.00",
 				DesiredInterestRate: "0.02",
 				MinInterestRate:     "0.03",
@@ -226,7 +226,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
 				ShareDenom:          validDenom,
-				UnderlyingAssets:    []string{"uusd"},
+				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: "0.00",
 				DesiredInterestRate: "0.06",
 				MinInterestRate:     "",
@@ -240,7 +240,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
 				ShareDenom:          validDenom,
-				UnderlyingAssets:    []string{"uusd"},
+				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: "0.03",
 				DesiredInterestRate: "0.04",
 			},
@@ -252,7 +252,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
 				ShareDenom:          validDenom,
-				UnderlyingAssets:    []string{"uusd"},
+				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: "0.00",
 				DesiredInterestRate: "0.03",
 				MinInterestRate:     "0.03",
@@ -265,7 +265,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
 				ShareDenom:          validDenom,
-				UnderlyingAssets:    []string{"uusd"},
+				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: "0.00",
 				DesiredInterestRate: "0.07",
 				MaxInterestRate:     "0.07",
@@ -277,46 +277,6 @@ func TestVaultAccount_Validate(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.account.Validate()
-			if tc.expectedErr != "" {
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), tc.expectedErr)
-			} else {
-				assert.NoError(t, err)
-			}
-		})
-	}
-}
-
-func TestVaultAccount_ValidateUnderlyingAssets(t *testing.T) {
-	vault := types.VaultAccount{
-		UnderlyingAssets: []string{"jackthecat", "georgethedog"},
-	}
-
-	tests := []struct {
-		name        string
-		asset       sdk.Coin
-		expectedErr string
-	}{
-		{
-			name:        "valid asset denom match (jackthecat)",
-			asset:       sdk.NewInt64Coin("jackthecat", 100),
-			expectedErr: "",
-		},
-		{
-			name:        "valid asset denom match (georgethedog)",
-			asset:       sdk.NewInt64Coin("georgethedog", 50),
-			expectedErr: "",
-		},
-		{
-			name:        "unsupported asset denom",
-			asset:       sdk.NewInt64Coin("btc", 10),
-			expectedErr: "btc asset denom not supported for vault",
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			err := vault.ValidateUnderlyingAssets(tc.asset)
 			if tc.expectedErr != "" {
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(), tc.expectedErr)

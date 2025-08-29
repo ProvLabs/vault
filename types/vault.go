@@ -39,17 +39,18 @@ type VaultAccountI interface {
 	// GetShareDenom returns the denom used for shares in the vault.
 	GetShareDenom() string
 
-	// GetUnderlyingAssets returns the list of assets backing the vault.
-	GetUnderlyingAssets() []string
+	GetUnderlyingAsset() string
+
+	GetPaymentDenom() string
 }
 
 // NewVaultAccount creates a new vault.
-func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin string, shareDenom string, underlyingAssets []string) *VaultAccount {
+func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyingAssets string) *VaultAccount {
 	return &VaultAccount{
 		BaseAccount:         baseAcc,
 		Admin:               admin,
 		ShareDenom:          shareDenom,
-		UnderlyingAssets:    underlyingAssets,
+		UnderlyingAsset:     underlyingAssets,
 		CurrentInterestRate: ZeroInterestRate,
 		DesiredInterestRate: ZeroInterestRate,
 		SwapInEnabled:       true,
@@ -80,13 +81,13 @@ func (va VaultAccount) Validate() error {
 	if err := sdk.ValidateDenom(va.ShareDenom); err != nil {
 		return fmt.Errorf("invalid share denom: %w", err)
 	}
-	if len(va.UnderlyingAssets) < 1 {
-		return fmt.Errorf("at least one underlying asset is required")
+
+	if va.PaymentDenom != "" && (va.PaymentDenom == va.ShareDenom || va.PaymentDenom == va.UnderlyingAsset) {
+		return fmt.Errorf("payment_denom must not equal share_denom | underlying_asset")
 	}
-	for _, denom := range va.UnderlyingAssets {
-		if err := sdk.ValidateDenom(denom); err != nil {
-			return fmt.Errorf("invalid underlying asset denom: %s", denom)
-		}
+
+	if err := sdk.ValidateDenom(va.UnderlyingAsset); err != nil {
+		return fmt.Errorf("invalid underlying asset denom: %s", va.UnderlyingAsset)
 	}
 
 	cur, err := sdkmath.LegacyNewDecFromStr(va.CurrentInterestRate)
@@ -133,16 +134,6 @@ func (va VaultAccount) Validate() error {
 	return nil
 }
 
-// ValidateUnderlyingAssets checks if the given asset's denomination is supported by the vault.
-func (va VaultAccount) ValidateUnderlyingAssets(asset sdk.Coin) error {
-	for _, denom := range va.UnderlyingAssets {
-		if asset.Denom == denom {
-			return nil
-		}
-	}
-	return fmt.Errorf("%s asset denom not supported for vault, expected one of %v", asset.Denom, va.UnderlyingAssets)
-}
-
 func (va VaultAccount) InterestEnabled() bool {
 	current, err := sdkmath.LegacyNewDecFromStr(va.CurrentInterestRate)
 	if err != nil {
@@ -180,6 +171,34 @@ func (v *VaultAccount) IsInterestRateInRange(rate sdkmath.LegacyDec) (bool, erro
 func (v *VaultAccount) ValidateAdmin(admin string) error {
 	if v.Admin != admin {
 		return fmt.Errorf("unauthorized: %s is not the vault admin", admin)
+	}
+	return nil
+}
+
+func (v *VaultAccount) ValuationDenom() string {
+	return v.UnderlyingAsset
+}
+
+func (v *VaultAccount) IsPaymentOrAssetDenom(denom string) bool {
+	return denom == v.UnderlyingAsset || (v.PaymentDenom != "" && denom == v.PaymentDenom)
+}
+
+func (v *VaultAccount) ValidateDepositCoin(c sdk.Coin) error {
+	if c.IsZero() {
+		return fmt.Errorf("zero deposit")
+	}
+	if !v.IsPaymentOrAssetDenom(c.Denom) {
+		return fmt.Errorf("deposit denom %s not accepted", c.Denom)
+	}
+	return nil
+}
+
+func (v *VaultAccount) ValidateRedeemDenom(denom string) error {
+	if denom == "" {
+		return fmt.Errorf("empty redeem denom")
+	}
+	if !v.IsPaymentOrAssetDenom(denom) {
+		return fmt.Errorf("redeem denom %s not accepted", denom)
 	}
 	return nil
 }

@@ -61,8 +61,8 @@ func (k *Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vaul
 	periodDuration := currentBlockTime - vault.PeriodStart
 	markerAddress := markertypes.MustGetMarkerAddress(vault.ShareDenom)
 
-	reserves := k.BankKeeper.GetBalance(ctx, vault.GetAddress(), vault.UnderlyingAssets[0])
-	principal := k.BankKeeper.GetBalance(ctx, markerAddress, vault.UnderlyingAssets[0])
+	reserves := k.BankKeeper.GetBalance(ctx, vault.GetAddress(), vault.UnderlyingAsset)
+	principal := k.BankKeeper.GetBalance(ctx, markerAddress, vault.UnderlyingAsset)
 
 	interestEarned, err := interest.CalculateInterestEarned(principal, vault.CurrentInterestRate, periodDuration)
 	if err != nil {
@@ -77,7 +77,7 @@ func (k *Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vaul
 		if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx),
 			vault.GetAddress(),
 			markerAddress,
-			sdk.NewCoins(sdk.NewCoin(vault.UnderlyingAssets[0], interestEarned)),
+			sdk.NewCoins(sdk.NewCoin(vault.UnderlyingAsset, interestEarned)),
 		); err != nil {
 			return fmt.Errorf("failed to pay interest: %w", err)
 		}
@@ -90,13 +90,13 @@ func (k *Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vaul
 		if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx),
 			markerAddress,
 			vault.GetAddress(),
-			sdk.NewCoins(sdk.NewCoin(vault.UnderlyingAssets[0], owed)),
+			sdk.NewCoins(sdk.NewCoin(vault.UnderlyingAsset, owed)),
 		); err != nil {
 			return fmt.Errorf("failed to reclaim negative interest: %w", err)
 		}
 	}
 
-	principalAfter := k.BankKeeper.GetBalance(ctx, markerAddress, vault.UnderlyingAssets[0])
+	principalAfter := k.BankKeeper.GetBalance(ctx, markerAddress, vault.UnderlyingAsset)
 
 	k.emitEvent(ctx, types.NewEventVaultReconcile(
 		vault.GetAddress().String(),
@@ -121,7 +121,7 @@ func (k *Keeper) CanPayoutDuration(ctx sdk.Context, vault *types.VaultAccount, d
 		return true, nil
 	}
 
-	denom := vault.UnderlyingAssets[0]
+	denom := vault.UnderlyingAsset
 	vaultAddr := vault.GetAddress()
 	markerAddr := markertypes.MustGetMarkerAddress(vault.ShareDenom)
 

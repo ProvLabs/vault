@@ -28,14 +28,12 @@ func NewMsgServer(keeper *Keeper) types.MsgServer {
 func (k msgServer) CreateVault(goCtx context.Context, msg *types.MsgCreateVaultRequest) (*types.MsgCreateVaultResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	vault, err := k.Keeper.CreateVault(ctx, msg)
+	_, err := k.Keeper.CreateVault(ctx, msg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create vault: %w", err)
 	}
 
-	return &types.MsgCreateVaultResponse{
-		VaultAddress: vault.Address,
-	}, nil
+	return &types.MsgCreateVaultResponse{}, nil
 }
 
 // SwapIn handles depositing underlying assets into a vault and mints vault shares to the recipient.
@@ -45,12 +43,12 @@ func (k msgServer) SwapIn(goCtx context.Context, msg *types.MsgSwapInRequest) (*
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
 	ownerAddr := sdk.MustAccAddressFromBech32(msg.Owner)
 
-	shares, err := k.Keeper.SwapIn(ctx, vaultAddr, ownerAddr, msg.Assets)
+	_, err := k.Keeper.SwapIn(ctx, vaultAddr, ownerAddr, msg.Assets)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.MsgSwapInResponse{SharesReceived: *shares}, nil
+	return &types.MsgSwapInResponse{}, nil
 }
 
 // SwapOut handles redeeming vault shares for underlying assets and transfers the assets to the recipient.
@@ -60,12 +58,12 @@ func (k msgServer) SwapOut(goCtx context.Context, msg *types.MsgSwapOutRequest) 
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
 	ownerAddr := sdk.MustAccAddressFromBech32(msg.Owner)
 
-	shares, err := k.Keeper.SwapOut(ctx, vaultAddr, ownerAddr, msg.Assets)
+	_, err := k.Keeper.SwapOut(ctx, vaultAddr, ownerAddr, msg.Assets)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.MsgSwapOutResponse{SharesBurned: *shares}, nil
+	return &types.MsgSwapOutResponse{}, nil
 }
 
 // UpdateMinInterestRate sets the minimum allowable interest rate for a vault.
@@ -250,8 +248,8 @@ func (k msgServer) DepositInterestFunds(goCtx context.Context, msg *types.MsgDep
 		return nil, err
 	}
 
-	if err := vault.ValidateUnderlyingAssets(msg.Amount); err != nil {
-		return nil, err
+	if vault.UnderlyingAsset != msg.Amount.Denom {
+		return nil, fmt.Errorf("denom not supported for vault must be of type \"%s\" : got \"%s\"", vault.UnderlyingAsset, msg.Amount.Denom)
 	}
 
 	if err := k.BankKeeper.SendCoins(ctx, adminAddr, vaultAddr, sdk.NewCoins(msg.Amount)); err != nil {
@@ -286,8 +284,8 @@ func (k msgServer) WithdrawInterestFunds(goCtx context.Context, msg *types.MsgWi
 		return nil, err
 	}
 
-	if err := vault.ValidateUnderlyingAssets(msg.Amount); err != nil {
-		return nil, err
+	if vault.UnderlyingAsset != msg.Amount.Denom {
+		return nil, fmt.Errorf("denom not supported for vault must be of type \"%s\" : got \"%s\"", vault.UnderlyingAsset, msg.Amount.Denom)
 	}
 
 	if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
@@ -325,8 +323,9 @@ func (k msgServer) DepositPrincipalFunds(goCtx context.Context, msg *types.MsgDe
 
 	depositFromAddress := sdk.MustAccAddressFromBech32(msg.Admin)
 	markerAddress := markertypes.MustGetMarkerAddress(vault.ShareDenom)
-	if err := vault.ValidateUnderlyingAssets(msg.Amount); err != nil {
-		return nil, fmt.Errorf("invalid asset for vault: %w", err)
+	// TODO: support payment asset here
+	if vault.UnderlyingAsset != msg.Amount.Denom {
+		return nil, fmt.Errorf("denom not supported for vault must be of type \"%s\" : got \"%s\"", vault.UnderlyingAsset, msg.Amount.Denom)
 	}
 	if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx),
 		depositFromAddress,
@@ -362,8 +361,8 @@ func (k msgServer) WithdrawPrincipalFunds(goCtx context.Context, msg *types.MsgW
 
 	withdrawAddress := sdk.MustAccAddressFromBech32(msg.Admin)
 	markerAddress := markertypes.MustGetMarkerAddress(vault.ShareDenom)
-	if err := vault.ValidateUnderlyingAssets(msg.Amount); err != nil {
-		return nil, fmt.Errorf("invalid asset for vault: %w", err)
+	if vault.UnderlyingAsset != msg.Amount.Denom {
+		return nil, fmt.Errorf("denom not supported for vault must be of type \"%s\" : got \"%s\"", vault.UnderlyingAsset, msg.Amount.Denom)
 	}
 	if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx),
 		markerAddress,

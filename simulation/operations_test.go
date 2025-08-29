@@ -5,12 +5,9 @@ import (
 	"math/rand"
 	"testing"
 
-	sdkmath "cosmossdk.io/math"
-
 	"github.com/provlabs/vault/simapp"
 	"github.com/provlabs/vault/simulation"
 	"github.com/provlabs/vault/types"
-	"github.com/provlabs/vault/utils"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -137,8 +134,8 @@ func (s *VaultSimTestSuite) TestSimulateMsgSwapOut() {
 		Assets:       sdk.NewInt64Coin("underlying", 100),
 	}
 	resp, err := msgServer.SwapIn(s.ctx, swapIn)
-	s.Require().Equal(sdkmath.NewInt(100).Mul(utils.ShareScalar).Int64(), resp.SharesReceived.Amount.Int64(), "SwapIn")
 	s.Require().NoError(err, "SwapIn")
+	s.Require().NotNil(resp, "SwapIn Response not nil")
 
 	op := simulation.SimulateMsgSwapOut(*s.app.VaultKeeper)
 	opMsg, futureOps, err := op(r, s.app.BaseApp, s.ctx, accs, "")

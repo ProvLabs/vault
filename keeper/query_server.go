@@ -112,13 +112,13 @@ func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstim
 		return nil, status.Errorf(codes.NotFound, "vault with address %q not found", req.VaultAddress)
 	}
 
-	if err := vault.ValidateUnderlyingAssets(req.Assets); err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid asset for vault: %v", err)
+	if vault.UnderlyingAsset != req.Assets.Denom {
+		return nil, status.Errorf(codes.InvalidArgument, "denom not supported for vault must be of type \"%s\" : got \"%s\"", vault.UnderlyingAsset, req.Assets.Denom)
 	}
 
 	markerAddr := markertypes.MustGetMarkerAddress(vault.ShareDenom)
 	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
-	totalAssets := k.BankKeeper.GetBalance(ctx, markerAddr, vault.UnderlyingAssets[0])
+	totalAssets := k.BankKeeper.GetBalance(ctx, markerAddr, vault.UnderlyingAsset)
 
 	estimatedTotalAssets, err := k.CalculateVaultTotalAssets(ctx, vault, totalAssets)
 	if err != nil {
@@ -164,14 +164,14 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 
 	markerAddr := markertypes.MustGetMarkerAddress(vault.ShareDenom)
 	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
-	totalAssets := k.BankKeeper.GetBalance(ctx, markerAddr, vault.UnderlyingAssets[0])
+	totalAssets := k.BankKeeper.GetBalance(ctx, markerAddr, vault.UnderlyingAsset)
 
 	estimatedTotalAssets, err := k.CalculateVaultTotalAssets(ctx, vault, totalAssets)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to estimate total assets: %v", err)
 	}
 
-	estimatedAssets, err := utils.CalculateAssetsFromShares(req.Assets.Amount, totalShares, estimatedTotalAssets, vault.UnderlyingAssets[0])
+	estimatedAssets, err := utils.CalculateAssetsFromShares(req.Assets.Amount, totalShares, estimatedTotalAssets, vault.UnderlyingAsset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate assets from shares: %w", err)
 	}

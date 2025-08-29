@@ -364,7 +364,7 @@ func (k msgServer) WithdrawPrincipalFunds(goCtx context.Context, msg *types.MsgW
 	if vault.UnderlyingAsset != msg.Amount.Denom {
 		return nil, fmt.Errorf("denom not supported for vault must be of type \"%s\" : got \"%s\"", vault.UnderlyingAsset, msg.Amount.Denom)
 	}
-	if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx),
+	if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, vaultAddr),
 		markerAddress,
 		withdrawAddress,
 		sdk.NewCoins(msg.Amount),

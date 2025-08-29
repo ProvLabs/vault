@@ -202,3 +202,44 @@ func (v *VaultAccount) ValidateRedeemDenom(denom string) error {
 	}
 	return nil
 }
+
+// AcceptedDenoms returns the list of coin denoms this vault will accept for I/O.
+// Always includes the underlying asset; includes payment_denom only if set and distinct.
+func (v *VaultAccount) AcceptedDenoms() []string {
+	if v.PaymentDenom != "" && v.PaymentDenom != v.UnderlyingAsset {
+		return []string{v.UnderlyingAsset, v.PaymentDenom}
+	}
+	return []string{v.UnderlyingAsset}
+}
+
+// IsAcceptedDenom reports whether denom is allowed by the vault configuration
+// (either the underlying_asset or, if configured, the payment_denom).
+func (v *VaultAccount) IsAcceptedDenom(denom string) bool {
+	if denom == v.UnderlyingAsset {
+		return true
+	}
+	return v.PaymentDenom != "" && denom == v.PaymentDenom
+}
+
+// ValidateAcceptedDenom returns an error if denom is not supported by the vault.
+// If payment_denom is configured, both underlying_asset and payment_denom are allowed;
+// otherwise only underlying_asset is allowed.
+func (v *VaultAccount) ValidateAcceptedDenom(denom string) error {
+	if v.IsAcceptedDenom(denom) {
+		return nil
+	}
+	allowed := v.AcceptedDenoms()
+	if len(allowed) == 1 {
+		return fmt.Errorf(`denom not supported for vault; must be "%s": got "%s"`, allowed[0], denom)
+	}
+	return fmt.Errorf(`denom not supported for vault; must be one of "%s" or "%s": got "%s"`, allowed[0], allowed[1], denom)
+}
+
+// ValidateAcceptedCoin returns an error if the coin amount is zero or its denom
+// is not supported by the vault configuration.
+func (v *VaultAccount) ValidateAcceptedCoin(c sdk.Coin) error {
+	if c.IsZero() {
+		return fmt.Errorf("amount must be greater than zero")
+	}
+	return v.ValidateAcceptedDenom(c.Denom)
+}

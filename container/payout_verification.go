@@ -34,21 +34,5 @@ func (q *PayoutVerificationQueue) Dequeue(ctx context.Context, vaultAddr sdk.Acc
 
 // Walk iterates over all entries in the queue.
 func (q *PayoutVerificationQueue) Walk(ctx context.Context, fn func(vaultAddr sdk.AccAddress) (stop bool, err error)) error {
-	it, err := q.Iterate(ctx, nil)
-	if err != nil {
-		return err
-	}
-	defer it.Close()
-
-	for ; it.Valid(); it.Next() {
-		kv, err := it.Key()
-		if err != nil {
-			return err
-		}
-		stop, err := fn(kv)
-		if err != nil || stop {
-			return err
-		}
-	}
-	return nil
+	return q.KeySet.Walk(ctx, nil, fn)
 }

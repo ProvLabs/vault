@@ -11,8 +11,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 var _ types.QueryServer = &queryServer{}
@@ -116,9 +114,9 @@ func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstim
 		return nil, status.Errorf(codes.InvalidArgument, "denom not supported for vault must be of type \"%s\" : got \"%s\"", vault.UnderlyingAsset, req.Assets.Denom)
 	}
 
-	markerAddr := markertypes.MustGetMarkerAddress(vault.ShareDenom)
+	principalAddress := vault.PrincipalMarkerAddress()
 	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
-	totalAssets := k.BankKeeper.GetBalance(ctx, markerAddr, vault.UnderlyingAsset)
+	totalAssets := k.BankKeeper.GetBalance(ctx, principalAddress, vault.UnderlyingAsset)
 
 	estimatedTotalAssets, err := k.CalculateVaultTotalAssets(ctx, vault, totalAssets)
 	if err != nil {
@@ -162,7 +160,7 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 		return nil, status.Errorf(codes.InvalidArgument, "asset denom %s does not match vault share denom %s", req.Assets.Denom, vault.ShareDenom)
 	}
 
-	markerAddr := markertypes.MustGetMarkerAddress(vault.ShareDenom)
+	markerAddr := vault.PrincipalMarkerAddress()
 	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
 	totalAssets := k.BankKeeper.GetBalance(ctx, markerAddr, vault.UnderlyingAsset)
 

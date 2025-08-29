@@ -322,7 +322,7 @@ func (k msgServer) DepositPrincipalFunds(goCtx context.Context, msg *types.MsgDe
 	}
 
 	depositFromAddress := sdk.MustAccAddressFromBech32(msg.Admin)
-	markerAddress := markertypes.MustGetMarkerAddress(vault.ShareDenom)
+	principalAddress := vault.PrincipalMarkerAddress()
 
 	if err := vault.ValidateAcceptedCoin(msg.Amount); err != nil {
 		return nil, err
@@ -330,7 +330,7 @@ func (k msgServer) DepositPrincipalFunds(goCtx context.Context, msg *types.MsgDe
 
 	if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx),
 		depositFromAddress,
-		markerAddress,
+		principalAddress,
 		sdk.NewCoins(msg.Amount),
 	); err != nil {
 		return nil, fmt.Errorf("failed to deposit principal funds: %w", err)
@@ -361,14 +361,14 @@ func (k msgServer) WithdrawPrincipalFunds(goCtx context.Context, msg *types.MsgW
 	}
 
 	withdrawAddress := sdk.MustAccAddressFromBech32(msg.Admin)
-	markerAddress := markertypes.MustGetMarkerAddress(vault.ShareDenom)
+	principalAddress := vault.PrincipalMarkerAddress()
 
 	if err := vault.ValidateAcceptedCoin(msg.Amount); err != nil {
 		return nil, err
 	}
 
 	if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, vaultAddr),
-		markerAddress,
+		principalAddress,
 		withdrawAddress,
 		sdk.NewCoins(msg.Amount),
 	); err != nil {

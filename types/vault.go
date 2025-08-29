@@ -8,6 +8,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	proto "github.com/cosmos/gogoproto/proto"
+
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 const (
@@ -209,4 +211,10 @@ func (v *VaultAccount) ValidateAcceptedCoin(c sdk.Coin) error {
 		return fmt.Errorf("amount must be greater than zero")
 	}
 	return v.ValidateAcceptedDenom(c.Denom)
+}
+
+// PrincipalMarkerAddress returns the share-denom marker address that holds the
+// vault’s principal (i.e., the marker account backing the vault’s shares).
+func (v VaultAccount) PrincipalMarkerAddress() sdk.AccAddress {
+	return markertypes.MustGetMarkerAddress(v.ShareDenom)
 }

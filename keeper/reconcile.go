@@ -59,10 +59,10 @@ func (k *Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vaul
 	}
 
 	periodDuration := currentBlockTime - vault.PeriodStart
-	markerAddress := markertypes.MustGetMarkerAddress(vault.ShareDenom)
+	principalAddress := vault.PrincipalMarkerAddress()
 
 	reserves := k.BankKeeper.GetBalance(ctx, vault.GetAddress(), vault.UnderlyingAsset)
-	principal := k.BankKeeper.GetBalance(ctx, markerAddress, vault.UnderlyingAsset)
+	principal := k.BankKeeper.GetBalance(ctx, principalAddress, vault.UnderlyingAsset)
 
 	interestEarned, err := interest.CalculateInterestEarned(principal, vault.CurrentInterestRate, periodDuration)
 	if err != nil {
@@ -76,7 +76,7 @@ func (k *Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vaul
 
 		if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx),
 			vault.GetAddress(),
-			markerAddress,
+			principalAddress,
 			sdk.NewCoins(sdk.NewCoin(vault.UnderlyingAsset, interestEarned)),
 		); err != nil {
 			return fmt.Errorf("failed to pay interest: %w", err)
@@ -88,7 +88,7 @@ func (k *Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vaul
 		}
 
 		if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx),
-			markerAddress,
+			principalAddress,
 			vault.GetAddress(),
 			sdk.NewCoins(sdk.NewCoin(vault.UnderlyingAsset, owed)),
 		); err != nil {
@@ -96,7 +96,7 @@ func (k *Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vaul
 		}
 	}
 
-	principalAfter := k.BankKeeper.GetBalance(ctx, markerAddress, vault.UnderlyingAsset)
+	principalAfter := k.BankKeeper.GetBalance(ctx, principalAddress, vault.UnderlyingAsset)
 
 	k.emitEvent(ctx, types.NewEventVaultReconcile(
 		vault.GetAddress().String(),
@@ -123,10 +123,10 @@ func (k *Keeper) CanPayoutDuration(ctx sdk.Context, vault *types.VaultAccount, d
 
 	denom := vault.UnderlyingAsset
 	vaultAddr := vault.GetAddress()
-	markerAddr := markertypes.MustGetMarkerAddress(vault.ShareDenom)
+	principalAddress := vault.PrincipalMarkerAddress()
 
 	reserves := k.BankKeeper.GetBalance(ctx, vaultAddr, denom)
-	principal := k.BankKeeper.GetBalance(ctx, markerAddr, denom)
+	principal := k.BankKeeper.GetBalance(ctx, principalAddress, denom)
 
 	interestEarned, err := interest.CalculateInterestEarned(principal, vault.CurrentInterestRate, duration)
 	if err != nil {

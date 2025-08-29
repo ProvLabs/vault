@@ -183,7 +183,7 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 		return nil, fmt.Errorf("failed to reconcile vault interest: %w", err)
 	}
 
-	markerAddr := markertypes.MustGetMarkerAddress(vault.ShareDenom)
+	markerAddr := vault.PrincipalMarkerAddress()
 
 	shares, err := k.ConvertDepositToSharesInUnderlyingAsset(ctx, *vault, asset)
 	if err != nil {

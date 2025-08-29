@@ -27,30 +27,36 @@ type VaultAccountI interface {
 	// sdk.AccountI provides standard Cosmos SDK account behavior.
 	sdk.AccountI
 
-	// Clone returns a deep copy of the vault.
+	// Clone returns a deep copy of the underlying VaultAccount implementation.
+	// The returned value shares no state with the receiver.
 	Clone() *VaultAccount
 
-	// Validate verifies the vault’s integrity and internal fields.
+	// Validate performs stateless validation of the vault's fields and invariants.
+	// It should return an error if any field is malformed or inconsistent.
 	Validate() error
 
-	// GetAdmin returns the vault administrator address as a string.
+	// GetAdmin returns the bech32-encoded address string of the vault administrator.
 	GetAdmin() string
 
-	// GetShareDenom returns the denom used for shares in the vault.
+	// GetShareDenom returns the share token denom that the vault mints/burns to
+	// represent proportional ownership in the vault's underlying assets.
 	GetShareDenom() string
 
+	// GetUnderlyingAsset returns the denom of the asset the vault actually holds.
 	GetUnderlyingAsset() string
 
+	// GetPaymentDenom returns the denom used for fees/interest payments, if any.
 	GetPaymentDenom() string
 }
 
-// NewVaultAccount creates a new vault.
-func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyingAssets string) *VaultAccount {
+// NewVaultAccount creates a new vault with an optional payment denom allowed for I/O alongside the underlying asset.
+func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyingAsset, paymentDenom string) *VaultAccount {
 	return &VaultAccount{
 		BaseAccount:         baseAcc,
 		Admin:               admin,
 		ShareDenom:          shareDenom,
-		UnderlyingAsset:     underlyingAssets,
+		UnderlyingAsset:     underlyingAsset,
+		PaymentDenom:        paymentDenom,
 		CurrentInterestRate: ZeroInterestRate,
 		DesiredInterestRate: ZeroInterestRate,
 		SwapInEnabled:       true,
@@ -58,22 +64,12 @@ func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyi
 	}
 }
 
-// Clone makes a MarkerAccount instance copy
+// Clone makes a MarkerAccount instance copy.
 func (va VaultAccount) Clone() *VaultAccount {
 	return proto.Clone(&va).(*VaultAccount)
 }
 
 // Validate performs a series of checks to ensure the VaultAccount is correctly configured.
-// It validates the following:
-//   - The admin address is a valid bech32 address.
-//   - The share denom is valid.
-//   - At least one underlying asset is specified, and each has a valid denom.
-//   - The current, desired, minimum, and maximum interest rates (if provided) are valid decimals.
-//   - The minimum interest rate is not greater than the maximum interest rate.
-//   - The desired interest rate falls within the min/max bounds (if set).
-//   - The current interest rate is either zero or equal to the desired interest rate.
-//
-// Returns an error describing the first validation failure encountered, or nil if the VaultAccount is valid.
 func (va VaultAccount) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(va.Admin); err != nil {
 		return fmt.Errorf("invalid admin address: %w", err)
@@ -81,13 +77,17 @@ func (va VaultAccount) Validate() error {
 	if err := sdk.ValidateDenom(va.ShareDenom); err != nil {
 		return fmt.Errorf("invalid share denom: %w", err)
 	}
-
-	if va.PaymentDenom != "" && (va.PaymentDenom == va.ShareDenom || va.PaymentDenom == va.UnderlyingAsset) {
-		return fmt.Errorf("payment_denom must not equal share_denom | underlying_asset")
-	}
-
 	if err := sdk.ValidateDenom(va.UnderlyingAsset); err != nil {
 		return fmt.Errorf("invalid underlying asset denom: %s", va.UnderlyingAsset)
+	}
+
+	if va.PaymentDenom != "" {
+		if err := sdk.ValidateDenom(va.PaymentDenom); err != nil {
+			return fmt.Errorf("invalid payment denom: %q: %w", va.PaymentDenom, err)
+		}
+		if va.PaymentDenom == va.UnderlyingAsset {
+			return fmt.Errorf("payment (%q) denom cannot equal underlying asset denom (%q)", va.PaymentDenom, va.UnderlyingAsset)
+		}
 	}
 
 	cur, err := sdkmath.LegacyNewDecFromStr(va.CurrentInterestRate)
@@ -119,14 +119,12 @@ func (va VaultAccount) Validate() error {
 	if hasMin && hasMax && min.GT(max) {
 		return fmt.Errorf("minimum interest rate %s cannot be greater than maximum interest rate %s", min, max)
 	}
-
 	if hasMin && des.LT(min) {
 		return fmt.Errorf("desired interest rate %s is less than minimum interest rate %s", des, min)
 	}
 	if hasMax && des.GT(max) {
 		return fmt.Errorf("desired interest rate %s is greater than maximum interest rate %s", des, max)
 	}
-
 	if !cur.IsZero() && !cur.Equal(des) {
 		return fmt.Errorf("current interest rate must be zero or equal to desired (current=%s desired=%s)", cur, des)
 	}
@@ -143,7 +141,6 @@ func (va VaultAccount) InterestEnabled() bool {
 }
 
 // IsInterestRateInRange returns true if the given rate is within the configured min/max bounds.
-// If either bound is unset (""), it is treated as unbounded in that direction.
 func (v *VaultAccount) IsInterestRateInRange(rate sdkmath.LegacyDec) (bool, error) {
 	if v.MinInterestRate != "" {
 		minRate, err := sdkmath.LegacyNewDecFromStr(v.MinInterestRate)
@@ -154,7 +151,6 @@ func (v *VaultAccount) IsInterestRateInRange(rate sdkmath.LegacyDec) (bool, erro
 			return false, nil
 		}
 	}
-
 	if v.MaxInterestRate != "" {
 		maxRate, err := sdkmath.LegacyNewDecFromStr(v.MaxInterestRate)
 		if err != nil {
@@ -164,7 +160,6 @@ func (v *VaultAccount) IsInterestRateInRange(rate sdkmath.LegacyDec) (bool, erro
 			return false, nil
 		}
 	}
-
 	return true, nil
 }
 
@@ -203,7 +198,7 @@ func (v *VaultAccount) ValidateRedeemDenom(denom string) error {
 	return nil
 }
 
-// AcceptedDenoms returns the list of coin denoms this vault will accept for I/O.
+// AcceptedDenoms returns the list of coin denoms accepted for I/O.
 // Always includes the underlying asset; includes payment_denom only if set and distinct.
 func (v *VaultAccount) AcceptedDenoms() []string {
 	if v.PaymentDenom != "" && v.PaymentDenom != v.UnderlyingAsset {
@@ -212,8 +207,7 @@ func (v *VaultAccount) AcceptedDenoms() []string {
 	return []string{v.UnderlyingAsset}
 }
 
-// IsAcceptedDenom reports whether denom is allowed by the vault configuration
-// (either the underlying_asset or, if configured, the payment_denom).
+// IsAcceptedDenom reports whether denom is allowed by the vault configuration.
 func (v *VaultAccount) IsAcceptedDenom(denom string) bool {
 	if denom == v.UnderlyingAsset {
 		return true
@@ -222,8 +216,6 @@ func (v *VaultAccount) IsAcceptedDenom(denom string) bool {
 }
 
 // ValidateAcceptedDenom returns an error if denom is not supported by the vault.
-// If payment_denom is configured, both underlying_asset and payment_denom are allowed;
-// otherwise only underlying_asset is allowed.
 func (v *VaultAccount) ValidateAcceptedDenom(denom string) error {
 	if v.IsAcceptedDenom(denom) {
 		return nil
@@ -235,8 +227,7 @@ func (v *VaultAccount) ValidateAcceptedDenom(denom string) error {
 	return fmt.Errorf(`denom not supported for vault; must be one of "%s" or "%s": got "%s"`, allowed[0], allowed[1], denom)
 }
 
-// ValidateAcceptedCoin returns an error if the coin amount is zero or its denom
-// is not supported by the vault configuration.
+// ValidateAcceptedCoin returns an error if the coin amount is zero or its denom is not supported.
 func (v *VaultAccount) ValidateAcceptedCoin(c sdk.Coin) error {
 	if c.IsZero() {
 		return fmt.Errorf("amount must be greater than zero")

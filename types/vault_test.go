@@ -113,6 +113,58 @@ func TestVaultAccount_Validate(t *testing.T) {
 			expectedErr: fmt.Sprintf("invalid underlying asset denom: %s", invalidDenom),
 		},
 		{
+			name: "payment denom omitted => ok",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				ShareDenom:          validDenom,
+				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "",
+				CurrentInterestRate: validInterest,
+				DesiredInterestRate: validInterest,
+			},
+			expectedErr: "",
+		},
+		{
+			name: "payment denom valid and distinct => ok",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				ShareDenom:          validDenom,
+				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "usdc",
+				CurrentInterestRate: validInterest,
+				DesiredInterestRate: validInterest,
+			},
+			expectedErr: "",
+		},
+		{
+			name: "payment denom invalid format => error",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				ShareDenom:          validDenom,
+				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "inv@lid$",
+				CurrentInterestRate: validInterest,
+				DesiredInterestRate: validInterest,
+			},
+			expectedErr: "invalid payment denom",
+		},
+		{
+			name: "payment denom equals underlying => error",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				ShareDenom:          validDenom,
+				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
+				CurrentInterestRate: validInterest,
+				DesiredInterestRate: validInterest,
+			},
+			expectedErr: "cannot equal underlying asset denom",
+		},
+		{
 			name: "invalid current interest rate",
 			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,

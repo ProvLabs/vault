@@ -30,6 +30,7 @@ type Keeper struct {
 	Vaults                  collections.Map[sdk.AccAddress, []byte]
 	PayoutVerificationQueue *container.PayoutVerificationQueue
 	PayoutTimeoutQueue      *container.PayoutTimeoutQueue
+	PendingWithdrawalQueue  *container.PendingWithdrawalQueue
 }
 
 // NewMsgServer creates a new Keeper for the module.
@@ -56,6 +57,7 @@ func NewKeeper(
 		Vaults:                  collections.NewMap(builder, types.VaultsKeyPrefix, types.VaultsName, sdk.AccAddressKey, collections.BytesValue),
 		PayoutVerificationQueue: container.NewPayoutVerificationQueue(builder),
 		PayoutTimeoutQueue:      container.NewPayoutTimeoutQueue(builder),
+		PendingWithdrawalQueue:  container.NewPendingWithdrawalQueue(builder, cdc),
 		AuthKeeper:              authKeeper,
 		MarkerKeeper:            markerkeeper,
 		BankKeeper:              bankkeeper,

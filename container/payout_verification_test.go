@@ -13,6 +13,7 @@ import (
 	"github.com/provlabs/vault/container"
 	"github.com/provlabs/vault/types"
 	"github.com/provlabs/vault/utils"
+	"github.com/provlabs/vault/utils/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -21,6 +22,14 @@ func newTestPayoutVerificationQueue(t *testing.T) (sdk.Context, *container.Payou
 	t.Helper()
 	storeKey := storetypes.NewKVStoreKey(types.ModuleName)
 	testCtx := testutil.DefaultContextWithDB(t, storeKey, storetypes.NewTransientStoreKey("transient_test"))
+
+	cfg := mocks.MakeTestEncodingConfig("provlabs")
+	sdkCfg := sdk.GetConfig()
+	sdkCfg.SetBech32PrefixForAccount("provlabs", "provlabspub")
+	sdkCfg.SetBech32PrefixForValidator("provlabsvaloper", "provlabsvaloperpub")
+	sdkCfg.SetBech32PrefixForConsensusNode("provlabsvalcons", "provlabsvalconspub")
+	types.RegisterInterfaces(cfg.InterfaceRegistry)
+
 	kvStoreService := runtime.NewKVStoreService(storeKey)
 	sb := collections.NewSchemaBuilder(kvStoreService)
 	q := container.NewPayoutVerificationQueue(sb)

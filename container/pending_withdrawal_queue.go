@@ -52,10 +52,16 @@ func (p *PendingWithdrawalQueue) Dequeue(ctx context.Context, timestamp int64, v
 // Iteration stops when a key with time > now is encountered (since keys are
 // ordered) or when the callback returns stop=true or an error.
 func (p *PendingWithdrawalQueue) WalkDue(ctx context.Context, now int64, fn func(timestamp int64, vault sdk.AccAddress, id uint64, req types.PendingWithdrawal) (stop bool, err error)) error {
-	return p.Walk(ctx, nil, func(key collections.Triple[int64, sdk.AccAddress, uint64], value types.PendingWithdrawal) (stop bool, err error) {
+	return p.Map.Walk(ctx, nil, func(key collections.Triple[int64, sdk.AccAddress, uint64], value types.PendingWithdrawal) (stop bool, err error) {
 		if key.K1() > now {
 			return true, nil
 		}
+		return fn(key.K1(), key.K2(), key.K3(), value)
+	})
+}
+
+func (p *PendingWithdrawalQueue) Walk(ctx context.Context, fn func(timestamp int64, vault sdk.AccAddress, id uint64, req types.PendingWithdrawal) (stop bool, err error)) error {
+	return p.Map.Walk(ctx, nil, func(key collections.Triple[int64, sdk.AccAddress, uint64], value types.PendingWithdrawal) (stop bool, err error) {
 		return fn(key.K1(), key.K2(), key.K3(), value)
 	})
 }

@@ -176,8 +176,8 @@ func (s *TestSuite) TestGetTVVInUnderlyingAsset_ExcludesSharesAndSumsInAsset() {
 	vault, err := s.k.CreateVault(s.ctx, vaultCfg)
 	s.Require().NoError(err, "vault creation should succeed")
 
-	vaultAddress := types.GetVaultAddress(shareDenom)
-	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vaultAddress, sdk.NewCoins(
+	principalAddress := markertypes.MustGetMarkerAddress(shareDenom)
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, principalAddress, sdk.NewCoins(
 		sdk.NewInt64Coin(underlyingDenom, 1000),
 		sdk.NewInt64Coin(paymentDenom, 10),
 	)), "should fund vault with base and payment coins")
@@ -209,8 +209,8 @@ func (s *TestSuite) TestGetNAVPerShareInUnderlyingAsset_FloorsToZeroForTinyPerSh
 	vault, err := s.k.CreateVault(s.ctx, vaultCfg)
 	s.Require().NoError(err, "vault creation should succeed")
 
-	vaultAddress := types.GetVaultAddress(shareDenom)
-	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vaultAddress, sdk.NewCoins(
+	vaultMarkerAddress := markertypes.MustGetMarkerAddress(shareDenom)
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vaultMarkerAddress, sdk.NewCoins(
 		sdk.NewInt64Coin(underlyingDenom, 1000),
 		sdk.NewInt64Coin(paymentDenom, 10),
 	)), "should fund vault marker for NAV calc")
@@ -229,6 +229,7 @@ func (s *TestSuite) TestConvertDepositToSharesInUnderlyingAsset_UsesNAV() {
 	underlyingDenom := "ylds"
 	paymentDenom := "usdc"
 	shareDenom := "vshare"
+
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingDenom, 2_000_000), s.adminAddr)
 	s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, underlyingDenom, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 100_000)))
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 2_000_000), s.adminAddr)
@@ -253,6 +254,15 @@ func (s *TestSuite) TestConvertDepositToSharesInUnderlyingAsset_UsesNAV() {
 	)), "should fund vault marker for TVV")
 
 	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
+	tvv, err := testKeeper.GetTVVInUnderlyingAsset(s.ctx, *vault) // 1000 ylds + 10 usdc @ 1/2 = 1005 ylds
+	s.Require().NoError(err, "should compute TVV")
+
+	initialShares := tvv.Mul(utils.ShareScalar)
+	s.Require().NoError(
+		s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), sdk.NewCoin(shareDenom, initialShares)),
+		"should mint initial shares to match TVV",
+	)
+
 	mintedShares, err := testKeeper.ConvertDepositToSharesInUnderlyingAsset(s.ctx, *vault, sdk.NewInt64Coin(paymentDenom, 4))
 	s.Require().NoError(err, "deposit conversion should succeed")
 	s.Require().Equal(shareDenom, mintedShares.Denom, "minted shares denom should match vault share denom")
@@ -280,8 +290,8 @@ func (s *TestSuite) TestConvertSharesToRedeemCoin_AssetAndPaymentPaths() {
 	vault, err := s.k.CreateVault(s.ctx, vaultCfg)
 	s.Require().NoError(err, "vault creation should succeed")
 
-	vaultAddress := types.GetVaultAddress(shareDenom)
-	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vaultAddress, sdk.NewCoins(
+	vaultPrincipalAddress := markertypes.MustGetMarkerAddress(shareDenom)
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vaultPrincipalAddress, sdk.NewCoins(
 		sdk.NewInt64Coin(underlyingDenom, 1000),
 		sdk.NewInt64Coin(paymentDenom, 10),
 	)), "should fund vault with base and payment coins")

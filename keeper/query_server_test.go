@@ -68,7 +68,7 @@ func (s *TestSuite) TestQueryServer_Vault() {
 			Setup: setupVaults,
 			Req:   &types.QueryVaultRequest{Id: addr1.String()},
 			ExpectedResp: &types.QueryVaultResponse{
-				Vault: *types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake1"),
+				Vault: *types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake1", "usdc"),
 				Principal: types.AccountBalance{
 					Address: markerAddr1.String(),
 					Coins:   sdk.NewCoins(sdk.NewInt64Coin("stake1", 1000)),
@@ -84,7 +84,7 @@ func (s *TestSuite) TestQueryServer_Vault() {
 			Setup: setupVaults,
 			Req:   &types.QueryVaultRequest{Id: shareDenom2},
 			ExpectedResp: &types.QueryVaultResponse{
-				Vault: *types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "stake2"),
+				Vault: *types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "stake2", "usdc"),
 				Principal: types.AccountBalance{
 					Address: markerAddr2.String(),
 					Coins:   sdk.NewCoins(sdk.NewInt64Coin("stake2", 2000)),
@@ -185,13 +185,18 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 			Name: "happy path - single vault",
 			Setup: func() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("stake2", 1), s.adminAddr)
-				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: admin, ShareDenom: shareDenom1, UnderlyingAsset: "stake2"})
+				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin:           admin,
+					ShareDenom:      shareDenom1,
+					UnderlyingAsset: "stake2",
+					PaymentDenom:    "usdc",
+				})
 				s.Require().NoError(err)
 			},
 			Req: &types.QueryVaultsRequest{},
 			ExpectedResp: &types.QueryVaultsResponse{
 				Vaults: []types.VaultAccount{
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2"),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", "usdc"),
 				},
 				Pagination: &query.PageResponse{Total: 1},
 			},
@@ -202,19 +207,34 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("stake2", 1), s.adminAddr)
 				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("nhash", 1), s.adminAddr)
 				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("usdf", 1), s.adminAddr)
-				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: admin, ShareDenom: shareDenom1, UnderlyingAsset: "stake2"})
+				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin:           admin,
+					ShareDenom:      shareDenom1,
+					UnderlyingAsset: "stake2",
+					PaymentDenom:    "usdc",
+				})
 				s.Require().NoError(err)
-				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: admin, ShareDenom: shareDenom2, UnderlyingAsset: "nhash"})
+				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin:           admin,
+					ShareDenom:      shareDenom2,
+					UnderlyingAsset: "nhash",
+					PaymentDenom:    "usdc",
+				})
 				s.Require().NoError(err)
-				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: admin, ShareDenom: shareDenom3, UnderlyingAsset: "usdf"})
+				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin:           admin,
+					ShareDenom:      shareDenom3,
+					UnderlyingAsset: "usdf",
+					PaymentDenom:    "usdc",
+				})
 				s.Require().NoError(err)
 			},
 			Req: &types.QueryVaultsRequest{},
 			ExpectedResp: &types.QueryVaultsResponse{
 				Vaults: []types.VaultAccount{
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2"),
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash"),
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr3), admin, shareDenom3, "usdf"),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", "usdc"),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash", "usdc"),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr3), admin, shareDenom3, "usdf", "usdc"),
 				},
 				Pagination: &query.PageResponse{Total: 3},
 			},
@@ -225,11 +245,26 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("stake2", 1), s.adminAddr)
 				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("nhash", 1), s.adminAddr)
 				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("usdf", 1), s.adminAddr)
-				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: admin, ShareDenom: shareDenom1, UnderlyingAsset: "stake2"})
+				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin:           admin,
+					ShareDenom:      shareDenom1,
+					UnderlyingAsset: "stake2",
+					PaymentDenom:    "usdc",
+				})
 				s.Require().NoError(err)
-				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: admin, ShareDenom: shareDenom2, UnderlyingAsset: "nhash"})
+				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin:           admin,
+					ShareDenom:      shareDenom2,
+					UnderlyingAsset: "nhash",
+					PaymentDenom:    "usdc",
+				})
 				s.Require().NoError(err)
-				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: admin, ShareDenom: shareDenom3, UnderlyingAsset: "usdf"})
+				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin:           admin,
+					ShareDenom:      shareDenom3,
+					UnderlyingAsset: "usdf",
+					PaymentDenom:    "usdc",
+				})
 				s.Require().NoError(err)
 			},
 			Req: &types.QueryVaultsRequest{
@@ -237,8 +272,8 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 			},
 			ExpectedResp: &types.QueryVaultsResponse{
 				Vaults: []types.VaultAccount{
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr3), admin, shareDenom3, "usdf"),
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2"),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr3), admin, shareDenom3, "usdf", "usdc"),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", "usdc"),
 				},
 				Pagination: &query.PageResponse{
 					NextKey: []byte("not nil"),
@@ -251,11 +286,26 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("stake2", 1), s.adminAddr)
 				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("nhash", 1), s.adminAddr)
 				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("usdf", 1), s.adminAddr)
-				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: admin, ShareDenom: shareDenom1, UnderlyingAsset: "stake2"})
+				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin:           admin,
+					ShareDenom:      shareDenom1,
+					UnderlyingAsset: "stake2",
+					PaymentDenom:    "usdc",
+				})
 				s.Require().NoError(err)
-				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: admin, ShareDenom: shareDenom2, UnderlyingAsset: "nhash"})
+				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin:           admin,
+					ShareDenom:      shareDenom2,
+					UnderlyingAsset: "nhash",
+					PaymentDenom:    "usdc",
+				})
 				s.Require().NoError(err)
-				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: admin, ShareDenom: shareDenom3, UnderlyingAsset: "usdf"})
+				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin:           admin,
+					ShareDenom:      shareDenom3,
+					UnderlyingAsset: "usdf",
+					PaymentDenom:    "usdc",
+				})
 				s.Require().NoError(err)
 			},
 			Req: &types.QueryVaultsRequest{
@@ -263,8 +313,8 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 			},
 			ExpectedResp: &types.QueryVaultsResponse{
 				Vaults: []types.VaultAccount{
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2"),
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash"),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", "usdc"),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash", "usdc"),
 				},
 				Pagination: &query.PageResponse{Total: 3},
 			},
@@ -275,11 +325,26 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("stake2", 1), s.adminAddr)
 				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("nhash", 1), s.adminAddr)
 				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("usdf", 1), s.adminAddr)
-				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: admin, ShareDenom: shareDenom1, UnderlyingAsset: "stake2"})
+				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin:           admin,
+					ShareDenom:      shareDenom1,
+					UnderlyingAsset: "stake2",
+					PaymentDenom:    "usdc",
+				})
 				s.Require().NoError(err)
-				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: admin, ShareDenom: shareDenom2, UnderlyingAsset: "nhash"})
+				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin:           admin,
+					ShareDenom:      shareDenom2,
+					UnderlyingAsset: "nhash",
+					PaymentDenom:    "usdc",
+				})
 				s.Require().NoError(err)
-				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: admin, ShareDenom: shareDenom3, UnderlyingAsset: "usdf"})
+				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin:           admin,
+					ShareDenom:      shareDenom3,
+					UnderlyingAsset: "usdf",
+					PaymentDenom:    "usdc",
+				})
 				s.Require().NoError(err)
 			},
 			Req: &types.QueryVaultsRequest{
@@ -287,7 +352,7 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 			},
 			ExpectedResp: &types.QueryVaultsResponse{
 				Vaults: []types.VaultAccount{
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash"),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash", "usdc"),
 				},
 				Pagination: &query.PageResponse{},
 			},
@@ -298,11 +363,26 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("stake2", 1), s.adminAddr)
 				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("nhash", 1), s.adminAddr)
 				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("usdf", 1), s.adminAddr)
-				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: admin, ShareDenom: shareDenom1, UnderlyingAsset: "stake2"})
+				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin:           admin,
+					ShareDenom:      shareDenom1,
+					UnderlyingAsset: "stake2",
+					PaymentDenom:    "usdc",
+				})
 				s.Require().NoError(err)
-				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: admin, ShareDenom: shareDenom2, UnderlyingAsset: "nhash"})
+				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin:           admin,
+					ShareDenom:      shareDenom2,
+					UnderlyingAsset: "nhash",
+					PaymentDenom:    "usdc",
+				})
 				s.Require().NoError(err)
-				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: admin, ShareDenom: shareDenom3, UnderlyingAsset: "usdf"})
+				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin:           admin,
+					ShareDenom:      shareDenom3,
+					UnderlyingAsset: "usdf",
+					PaymentDenom:    "usdc",
+				})
 				s.Require().NoError(err)
 			},
 			Req: &types.QueryVaultsRequest{
@@ -310,9 +390,9 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 			},
 			ExpectedResp: &types.QueryVaultsResponse{
 				Vaults: []types.VaultAccount{
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2"),
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash"),
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr3), admin, shareDenom3, "usdf"),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", "usdc"),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash", "usdc"),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr3), admin, shareDenom3, "usdf", "usdc"),
 				},
 				Pagination: &query.PageResponse{Total: 3},
 			},
@@ -323,11 +403,26 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("stake2", 1), s.adminAddr)
 				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("nhash", 1), s.adminAddr)
 				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("usdf", 1), s.adminAddr)
-				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: admin, ShareDenom: shareDenom1, UnderlyingAsset: "stake2"})
+				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin:           admin,
+					ShareDenom:      shareDenom1,
+					UnderlyingAsset: "stake2",
+					PaymentDenom:    "usdc",
+				})
 				s.Require().NoError(err)
-				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: admin, ShareDenom: shareDenom2, UnderlyingAsset: "nhash"})
+				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin:           admin,
+					ShareDenom:      shareDenom2,
+					UnderlyingAsset: "nhash",
+					PaymentDenom:    "usdc",
+				})
 				s.Require().NoError(err)
-				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: admin, ShareDenom: shareDenom3, UnderlyingAsset: "usdf"})
+				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin:           admin,
+					ShareDenom:      shareDenom3,
+					UnderlyingAsset: "usdf",
+					PaymentDenom:    "usdc",
+				})
 				s.Require().NoError(err)
 			},
 			Req: &types.QueryVaultsRequest{
@@ -335,8 +430,8 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 			},
 			ExpectedResp: &types.QueryVaultsResponse{
 				Vaults: []types.VaultAccount{
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash"),
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2"),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash", "usdc"),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", "usdc"),
 				},
 				Pagination: &query.PageResponse{
 					NextKey: []byte("not nil"),

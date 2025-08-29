@@ -36,7 +36,7 @@ func (k msgServer) CreateVault(goCtx context.Context, msg *types.MsgCreateVaultR
 	return &types.MsgCreateVaultResponse{}, nil
 }
 
-// SwapIn handles depositing underlying assets into a vault and mints vault shares to the recipient.
+// SwapIn handles depositing assets accepted by the vault and mints vault shares to the recipient.
 func (k msgServer) SwapIn(goCtx context.Context, msg *types.MsgSwapInRequest) (*types.MsgSwapInResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -51,14 +51,14 @@ func (k msgServer) SwapIn(goCtx context.Context, msg *types.MsgSwapInRequest) (*
 	return &types.MsgSwapInResponse{}, nil
 }
 
-// SwapOut handles redeeming vault shares for underlying assets and transfers the assets to the recipient.
+// SwapOut handles redeeming vault shares for assets accepted by the vault and transfers them to the recipient.
 func (k msgServer) SwapOut(goCtx context.Context, msg *types.MsgSwapOutRequest) (*types.MsgSwapOutResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
 	ownerAddr := sdk.MustAccAddressFromBech32(msg.Owner)
 
-	_, err := k.Keeper.SwapOut(ctx, vaultAddr, ownerAddr, msg.Assets)
+	_, err := k.Keeper.SwapOut(ctx, vaultAddr, ownerAddr, msg.Assets, msg.RedeemDenom)
 	if err != nil {
 		return nil, err
 	}
@@ -322,14 +322,15 @@ func (k msgServer) DepositPrincipalFunds(goCtx context.Context, msg *types.MsgDe
 	}
 
 	depositFromAddress := sdk.MustAccAddressFromBech32(msg.Admin)
-	markerAddress := markertypes.MustGetMarkerAddress(vault.ShareDenom)
-	// TODO: support payment asset here
-	if vault.UnderlyingAsset != msg.Amount.Denom {
-		return nil, fmt.Errorf("denom not supported for vault must be of type \"%s\" : got \"%s\"", vault.UnderlyingAsset, msg.Amount.Denom)
+	principalAddress := vault.PrincipalMarkerAddress()
+
+	if err := vault.ValidateAcceptedCoin(msg.Amount); err != nil {
+		return nil, err
 	}
+
 	if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx),
 		depositFromAddress,
-		markerAddress,
+		principalAddress,
 		sdk.NewCoins(msg.Amount),
 	); err != nil {
 		return nil, fmt.Errorf("failed to deposit principal funds: %w", err)
@@ -360,12 +361,14 @@ func (k msgServer) WithdrawPrincipalFunds(goCtx context.Context, msg *types.MsgW
 	}
 
 	withdrawAddress := sdk.MustAccAddressFromBech32(msg.Admin)
-	markerAddress := markertypes.MustGetMarkerAddress(vault.ShareDenom)
-	if vault.UnderlyingAsset != msg.Amount.Denom {
-		return nil, fmt.Errorf("denom not supported for vault must be of type \"%s\" : got \"%s\"", vault.UnderlyingAsset, msg.Amount.Denom)
+	principalAddress := vault.PrincipalMarkerAddress()
+
+	if err := vault.ValidateAcceptedCoin(msg.Amount); err != nil {
+		return nil, err
 	}
+
 	if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, vaultAddr),
-		markerAddress,
+		principalAddress,
 		withdrawAddress,
 		sdk.NewCoins(msg.Amount),
 	); err != nil {

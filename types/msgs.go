@@ -37,6 +37,17 @@ func (m MsgCreateVaultRequest) ValidateBasic() error {
 		return fmt.Errorf("invalid underlying asset: %q: %w", m.UnderlyingAsset, err)
 	}
 
+	if len(m.PaymentDenom) > 0 {
+		if err := sdk.ValidateDenom(m.PaymentDenom); err != nil {
+			return fmt.Errorf("invalid payment denom: %q: %w", m.PaymentDenom, err)
+		}
+	}
+
+	if m.UnderlyingAsset == m.PaymentDenom {
+		return fmt.Errorf("payment (%q) denom cannot equal underlying asset denom (%q)", m.PaymentDenom, m.UnderlyingAsset)
+
+	}
+
 	return nil
 }
 

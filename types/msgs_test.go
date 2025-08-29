@@ -15,6 +15,7 @@ import (
 
 func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 	admin := utils.TestAddress().Bech32
+
 	tests := []struct {
 		name        string
 		msg         types.MsgCreateVaultRequest
@@ -81,7 +82,47 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 				ShareDenom:      "uatom",
 				UnderlyingAsset: "inv@lid$",
 			},
-			expectedErr: fmt.Errorf("invalid underlying asset: %q: %w", "inv@lid$", fmt.Errorf("invalid denom: %s", "inv@lid$")),
+			expectedErr: fmt.Errorf("invalid underlying asset: %q", "inv@lid$"),
+		},
+		{
+			name: "PaymentDenom omitted (valid)",
+			msg: types.MsgCreateVaultRequest{
+				Admin:           admin,
+				ShareDenom:      "vaultshare",
+				UnderlyingAsset: "uusd",
+				PaymentDenom:    "",
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "PaymentDenom present and valid (distinct from underlying)",
+			msg: types.MsgCreateVaultRequest{
+				Admin:           admin,
+				ShareDenom:      "vaultshare",
+				UnderlyingAsset: "uusd",
+				PaymentDenom:    "usdc",
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "PaymentDenom invalid format",
+			msg: types.MsgCreateVaultRequest{
+				Admin:           admin,
+				ShareDenom:      "vaultshare",
+				UnderlyingAsset: "uusd",
+				PaymentDenom:    "inv@lid$",
+			},
+			expectedErr: fmt.Errorf("invalid payment denom: %q", "inv@lid$"),
+		},
+		{
+			name: "PaymentDenom equals UnderlyingAsset (not allowed)",
+			msg: types.MsgCreateVaultRequest{
+				Admin:           admin,
+				ShareDenom:      "vaultshare",
+				UnderlyingAsset: "uusd",
+				PaymentDenom:    "uusd",
+			},
+			expectedErr: fmt.Errorf("cannot equal underlying asset denom"),
 		},
 	}
 
@@ -90,11 +131,10 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 			err := tc.msg.ValidateBasic()
 
 			if tc.expectedErr != nil {
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), tc.expectedErr.Error())
+				assert.Error(t, err, "expected an error for %q", tc.name)
+				assert.Contains(t, err.Error(), tc.expectedErr.Error(), "error should contain expected message for %q", tc.name)
 			} else {
-				// We expect no error
-				assert.NoError(t, err)
+				assert.NoError(t, err, "expected no error for %q", tc.name)
 			}
 		})
 	}

@@ -36,6 +36,10 @@ var (
 	VaultPayoutTimeoutQueuePrefix = collections.NewPrefix(2)
 	// VaultPayoutTimeoutQueueName is a human-readable name for the payout timeout queue collection.
 	VaultPayoutTimeoutQueueName = "vault_payout_timeout_queue"
+	// VaultPendingWithdrawalQueuePrefix is the prefix to retrieve all VaultPendingWithdrawalQueue.
+	VaultPendingWithdrawalQueuePrefix = collections.NewPrefix(3)
+	// VaultPendingWithdrawalQueueName is a human-readable name for the pending withdrawal queue collection.
+	VaultPendingWithdrawalQueueName = "pending_withdrawal_queue"
 )
 
 // GetVaultAddress returns the module account address for the given shareDenom.

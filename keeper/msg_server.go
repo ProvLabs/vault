@@ -58,7 +58,7 @@ func (k msgServer) SwapOut(goCtx context.Context, msg *types.MsgSwapOutRequest) 
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
 	ownerAddr := sdk.MustAccAddressFromBech32(msg.Owner)
 
-	_, err := k.Keeper.SwapOut(ctx, vaultAddr, ownerAddr, msg.Assets)
+	_, err := k.Keeper.SwapOut(ctx, vaultAddr, ownerAddr, msg.Assets, msg.RedeemDenom)
 	if err != nil {
 		return nil, err
 	}

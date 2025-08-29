@@ -174,30 +174,6 @@ func (v *VaultAccount) ValuationDenom() string {
 	return v.UnderlyingAsset
 }
 
-func (v *VaultAccount) IsPaymentOrAssetDenom(denom string) bool {
-	return denom == v.UnderlyingAsset || (v.PaymentDenom != "" && denom == v.PaymentDenom)
-}
-
-func (v *VaultAccount) ValidateDepositCoin(c sdk.Coin) error {
-	if c.IsZero() {
-		return fmt.Errorf("zero deposit")
-	}
-	if !v.IsPaymentOrAssetDenom(c.Denom) {
-		return fmt.Errorf("deposit denom %s not accepted", c.Denom)
-	}
-	return nil
-}
-
-func (v *VaultAccount) ValidateRedeemDenom(denom string) error {
-	if denom == "" {
-		return fmt.Errorf("empty redeem denom")
-	}
-	if !v.IsPaymentOrAssetDenom(denom) {
-		return fmt.Errorf("redeem denom %s not accepted", denom)
-	}
-	return nil
-}
-
 // AcceptedDenoms returns the list of coin denoms accepted for I/O.
 // Always includes the underlying asset; includes payment_denom only if set and distinct.
 func (v *VaultAccount) AcceptedDenoms() []string {

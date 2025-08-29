@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/provlabs/vault/types"
-	"github.com/provlabs/vault/utils"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -159,7 +158,8 @@ func (k *Keeper) createVaultMarker(ctx sdk.Context, markerManager sdk.AccAddress
 //  7. Mints the computed amount of shares under the vault’s admin authority.
 //  8. Withdraws the minted shares from the vault to the recipient address.
 //  9. Sends the underlying asset from the recipient to the vault’s marker account.
-//  10. Emits a SwapIn event with metadata for indexing and audit.
+//
+// 10. Emits a SwapIn event with metadata for indexing and audit.
 //
 // Returns the minted share amount on success, or an error if any step fails.
 func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, asset sdk.Coin) (*sdk.Coin, error) {
@@ -175,20 +175,17 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 		return nil, fmt.Errorf("swaps are not enabled for vault %s", vaultAddr.String())
 	}
 
+	if err := vault.ValidateAcceptedCoin(asset); err != nil {
+		return nil, err
+	}
+
 	if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to reconcile vault interest: %w", err)
 	}
 
 	markerAddr := markertypes.MustGetMarkerAddress(vault.ShareDenom)
 
-	if vault.UnderlyingAsset != asset.Denom {
-		return nil, fmt.Errorf("denom not supported for vault must be of type \"%s\" : got \"%s\"", vault.UnderlyingAsset, asset.Denom)
-	}
-
-	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
-	totalAssets := k.BankKeeper.GetBalance(ctx, markerAddr, vault.UnderlyingAsset).Amount
-
-	shares, err := utils.CalculateSharesFromAssets(asset.Amount, totalAssets, totalShares, vault.ShareDenom)
+	shares, err := k.ConvertDepositToSharesInUnderlyingAsset(ctx, *vault, asset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate shares from assets: %w", err)
 	}
@@ -213,24 +210,10 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 	return &shares, nil
 }
 
-// SwapOut handles the process of redeeming vault shares in exchange for
-// underlying assets.
-//
-// It performs the following steps:
-//  1. Retrieves the vault configuration for the given vault address.
-//  2. Verifies that swap-out is enabled for the vault.
-//  3. Validates that the provided share denomination matches the vault's share denom.
-//  4. Reconciles any accrued interest from the vault to the marker module (if due).
-//  5. Resolves the vault share marker address.
-//  6. Calculates the amount of underlying assets to return based on the shares, current supply, and vault balance.
-//  7. Validates the computed assets coin.
-//  8. Transfers the shares from the owner to the vault's marker account.
-//  9. Burns the received shares under the vault’s admin authority.
-//  10. Sends the equivalent amount of underlying assets from the marker to the owner (using transfer agent auth).
-//  11. Emits a SwapOut event with metadata for indexing and audit.
+// SwapOut handles the process of redeeming vault shares in exchange for underlying assets.
 //
 // Returns the burned share amount on success, or an error if any step fails.
-func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, shares sdk.Coin) (*sdk.Coin, error) {
+func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, shares sdk.Coin, redeemDenom string) (*sdk.Coin, error) {
 	vault, err := k.GetVault(ctx, vaultAddr)
 	if err != nil {
 		return nil, err
@@ -247,16 +230,21 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 		return nil, fmt.Errorf("swap out denom must be share denom %v : %v", shares.Denom, vault.ShareDenom)
 	}
 
+	if redeemDenom == "" {
+		redeemDenom = vault.UnderlyingAsset
+	}
+
+	if err := vault.ValidateAcceptedDenom(redeemDenom); err != nil {
+		return nil, err
+	}
+
 	if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to reconcile vault interest: %w", err)
 	}
 
 	markerAddr := markertypes.MustGetMarkerAddress(vault.ShareDenom)
 
-	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
-	totalAssets := k.BankKeeper.GetBalance(ctx, markerAddr, vault.UnderlyingAsset).Amount
-
-	assets, err := utils.CalculateAssetsFromShares(shares.Amount, totalShares, totalAssets, vault.UnderlyingAsset)
+	assets, err := k.ConvertSharesToRedeemCoin(ctx, *vault, shares.Amount, redeemDenom)
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate assets from shares: %w", err)
 	}

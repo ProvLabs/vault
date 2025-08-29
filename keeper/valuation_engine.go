@@ -8,6 +8,8 @@ import (
 
 	"github.com/provlabs/vault/types"
 	"github.com/provlabs/vault/utils"
+
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 // UnitPriceFraction returns a price ratio (priceNumerator, priceDenominator) that expresses
@@ -87,7 +89,7 @@ func (k Keeper) FromUnderlyingAssetAmount(ctx sdk.Context, vault types.VaultAcco
 // It sums all balances at the vault address (excluding share_denom) after converting each
 // balance into underlying units via ToUnderlyingAssetAmount. Result is floored integer units.
 func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccount) (math.Int, error) {
-	balances := k.BankKeeper.GetAllBalances(ctx, vault.GetAddress())
+	balances := k.BankKeeper.GetAllBalances(ctx, markertypes.MustGetMarkerAddress(vault.ShareDenom))
 	total := math.ZeroInt()
 	for _, balance := range balances {
 		if balance.Denom == vault.ShareDenom {

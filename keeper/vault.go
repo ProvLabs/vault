@@ -27,6 +27,7 @@ type VaultAttributer interface {
 	GetAdmin() string
 	GetShareDenom() string
 	GetUnderlyingAsset() string
+	GetPaymentDenom() string
 }
 
 // CreateVault creates the vault based on the provided attributes.
@@ -45,7 +46,7 @@ func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*type
 		return nil, fmt.Errorf("failed to create vault account: %w", err)
 	}
 
-	_, err = k.createVaultMarker(ctx, vault.GetAddress(), vault.ShareDenom, vault.UnderlyingAssets[0])
+	_, err = k.createVaultMarker(ctx, vault.GetAddress(), vault.ShareDenom, vault.UnderlyingAsset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create vault marker: %w", err)
 	}
@@ -74,7 +75,7 @@ func (k Keeper) GetVault(ctx sdk.Context, address sdk.AccAddress) (*types.VaultA
 func (k *Keeper) createVaultAccount(ctx sdk.Context, admin, shareDenom, underlyingAsset string) (*types.VaultAccount, error) {
 	vaultAddr := types.GetVaultAddress(shareDenom)
 
-	vault := types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(vaultAddr), admin, shareDenom, []string{underlyingAsset})
+	vault := types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(vaultAddr), admin, shareDenom, underlyingAsset)
 
 	if err := vault.Validate(); err != nil {
 		return nil, fmt.Errorf("failed to validate vault account: %w", err)
@@ -173,12 +174,12 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 
 	markerAddr := markertypes.MustGetMarkerAddress(vault.ShareDenom)
 
-	if err := vault.ValidateUnderlyingAssets(asset); err != nil {
-		return nil, err
+	if vault.UnderlyingAsset != asset.Denom {
+		return nil, fmt.Errorf("denom not supported for vault must be of type \"%s\" : got \"%s\"", vault.UnderlyingAsset, asset.Denom)
 	}
 
 	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
-	totalAssets := k.BankKeeper.GetBalance(ctx, markerAddr, vault.UnderlyingAssets[0]).Amount
+	totalAssets := k.BankKeeper.GetBalance(ctx, markerAddr, vault.UnderlyingAsset).Amount
 
 	shares, err := utils.CalculateSharesFromAssets(asset.Amount, totalAssets, totalShares, vault.ShareDenom)
 	if err != nil {
@@ -242,9 +243,9 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 	markerAddr := markertypes.MustGetMarkerAddress(vault.ShareDenom)
 
 	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
-	totalAssets := k.BankKeeper.GetBalance(ctx, markerAddr, vault.UnderlyingAssets[0]).Amount
+	totalAssets := k.BankKeeper.GetBalance(ctx, markerAddr, vault.UnderlyingAsset).Amount
 
-	assets, err := utils.CalculateAssetsFromShares(shares.Amount, totalShares, totalAssets, vault.UnderlyingAssets[0])
+	assets, err := utils.CalculateAssetsFromShares(shares.Amount, totalShares, totalAssets, vault.UnderlyingAsset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate assets from shares: %w", err)
 	}

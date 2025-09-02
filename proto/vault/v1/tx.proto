@@ -59,13 +59,12 @@ message MsgCreateVaultRequest {
   string share_denom = 2;
   // underlying_asset is the denomination of the asset supported by the vault.
   string underlying_asset = 3;
+
+  string payment_denom = 4;
 }
 
 // MsgCreateVaultResponse is the response message for the CreateVault endpoint.
-message MsgCreateVaultResponse {
-  // vault_address is the bech32 address of the newly created vault.
-  string vault_address = 1;
-}
+message MsgCreateVaultResponse {}
 
 // MsgSwapInRequest is the request message for depositing underlying assets into a vault in exchange for shares.
 message MsgSwapInRequest {
@@ -80,10 +79,7 @@ message MsgSwapInRequest {
 }
 
 // MsgSwapInResponse is the response message for a successful SwapIn.
-message MsgSwapInResponse {
-  // shares_received is the amount of vault shares minted.
-  cosmos.base.v1beta1.Coin shares_received = 1 [(gogoproto.nullable) = false];
-}
+message MsgSwapInResponse {}
 
 // MsgSwapOutRequest is the request message for redeeming vault shares in exchange for underlying assets.
 message MsgSwapOutRequest {
@@ -95,13 +91,14 @@ message MsgSwapOutRequest {
   string vault_address = 2;
   // assets is the amount of underlying assets to withdraw.
   cosmos.base.v1beta1.Coin assets = 3 [(gogoproto.nullable) = false];
+  // redeem_denom selects the payout coin.
+  // - If empty, defaults to the vault’s underlying_asset.
+  // - Must be either the vault’s underlying_asset or its payment_denom.
+  string redeem_denom = 4;
 }
 
 // MsgSwapOutResponse is the response message for a successful SwapOut.
-message MsgSwapOutResponse {
-  // shares_burned is the amount of shares burned in exchange for assets.
-  cosmos.base.v1beta1.Coin shares_burned = 1 [(gogoproto.nullable) = false];
-}
+message MsgSwapOutResponse {}
 
 // MsgUpdateMinInterestRateRequest is the request message for updating the minimum interest rate of a vault.
 message MsgUpdateMinInterestRateRequest {

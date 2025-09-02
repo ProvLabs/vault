@@ -17,6 +17,8 @@ type MarkerKeeper interface {
 	GetMarker(ctx sdk.Context, address sdk.AccAddress) (types.MarkerAccountI, error)
 	GetMarkerByDenom(ctx sdk.Context, denom string) (types.MarkerAccountI, error)
 	IsMarkerAccount(ctx sdk.Context, addr sdk.AccAddress) bool
+	GetNetAssetValue(ctx sdk.Context, markerDenom, priceDenom string) (*types.NetAssetValue, error)
+	SetNetAssetValue(ctx sdk.Context, marker types.MarkerAccountI, netAssetValue types.NetAssetValue, source string) error
 }
 
 type AccountKeeper interface {

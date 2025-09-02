@@ -10,15 +10,17 @@ import (
 )
 
 type vaultAttrs struct {
-	admin    string
-	share    string
-	base     string
-	expected types.VaultAccount
+	admin      string
+	share      string
+	underlying string
+	payment    string
+	expected   types.VaultAccount
 }
 
 func (v vaultAttrs) GetAdmin() string           { return v.admin }
 func (v vaultAttrs) GetShareDenom() string      { return v.share }
-func (v vaultAttrs) GetUnderlyingAsset() string { return v.base }
+func (v vaultAttrs) GetUnderlyingAsset() string { return v.underlying }
+func (v vaultAttrs) GetPaymentDenom() string    { return v.payment }
 
 func (s *TestSuite) TestCreateVault_Success() {
 	share := "vaultshare"
@@ -26,16 +28,16 @@ func (s *TestSuite) TestCreateVault_Success() {
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(base, 1_000_000), s.adminAddr)
 
 	attrs := vaultAttrs{
-		admin: s.adminAddr.String(),
-		share: share,
-		base:  base,
+		admin:      s.adminAddr.String(),
+		share:      share,
+		underlying: base,
 	}
 
 	vault, err := s.k.CreateVault(s.ctx, attrs)
 	s.Require().NoError(err)
 	s.Require().Equal(attrs.admin, vault.Admin)
 	s.Require().Equal(attrs.share, vault.ShareDenom)
-	s.Require().Equal([]string{attrs.base}, vault.UnderlyingAssets)
+	s.Require().Equal(attrs.underlying, vault.UnderlyingAsset)
 
 	addr := types.GetVaultAddress(share)
 	stored, err := s.k.GetVault(s.ctx, addr)
@@ -48,9 +50,9 @@ func (s *TestSuite) TestCreateVault_AssetMarkerMissing() {
 	base := "missingasset"
 
 	attrs := vaultAttrs{
-		admin: s.adminAddr.String(),
-		share: share,
-		base:  base,
+		admin:      s.adminAddr.String(),
+		share:      share,
+		underlying: base,
 	}
 
 	_, err := s.k.CreateVault(s.ctx, attrs)
@@ -65,9 +67,9 @@ func (s *TestSuite) TestCreateVault_DuplicateMarkerFails() {
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(denom, 1), s.adminAddr)
 
 	attrs := vaultAttrs{
-		admin: s.adminAddr.String(),
-		share: denom,
-		base:  base,
+		admin:      s.adminAddr.String(),
+		share:      denom,
+		underlying: base,
 	}
 
 	_, err := s.k.CreateVault(s.ctx, attrs)
@@ -76,11 +78,11 @@ func (s *TestSuite) TestCreateVault_DuplicateMarkerFails() {
 
 func (s *TestSuite) TestCreateVault_InvalidDenomFails() {
 	attrs := vaultAttrs{
-		admin: s.adminAddr.String(),
-		share: "!!bad!!",
-		base:  "under",
+		admin:      s.adminAddr.String(),
+		share:      "!!bad!!",
+		underlying: "under",
 	}
-	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(attrs.base, 1000), s.adminAddr)
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(attrs.underlying, 1000), s.adminAddr)
 
 	_, err := s.k.CreateVault(s.ctx, attrs)
 	s.Require().ErrorContains(err, "invalid denom")
@@ -92,9 +94,9 @@ func (s *TestSuite) TestCreateVault_InvalidAdminFails() {
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(base, 500), s.adminAddr)
 
 	attrs := vaultAttrs{
-		admin: "not-a-valid-bech32",
-		share: share,
-		base:  base,
+		admin:      "not-a-valid-bech32",
+		share:      share,
+		underlying: base,
 	}
 
 	_, err := s.k.CreateVault(s.ctx, attrs)
@@ -186,7 +188,7 @@ func (s *TestSuite) TestSetMinMaxInterestRate_NoOp_NoEvent() {
 	base := "undercoin-np"
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(base, 1_000), s.adminAddr)
 
-	attrs := vaultAttrs{admin: s.adminAddr.String(), share: share, base: base}
+	attrs := vaultAttrs{admin: s.adminAddr.String(), share: share, underlying: base}
 	v, err := s.k.CreateVault(s.ctx, attrs)
 	s.Require().NoError(err)
 
@@ -217,7 +219,7 @@ func (s *TestSuite) TestSetMinInterestRate_ValidationBlocksWhenAboveExistingMax(
 	base := "undercoin-min-gt-max"
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(base, 1_000), s.adminAddr)
 
-	attrs := vaultAttrs{admin: s.adminAddr.String(), share: share, base: base}
+	attrs := vaultAttrs{admin: s.adminAddr.String(), share: share, underlying: base}
 	v, err := s.k.CreateVault(s.ctx, attrs)
 	s.Require().NoError(err)
 
@@ -237,7 +239,7 @@ func (s *TestSuite) TestSetMaxInterestRate_ValidationBlocksWhenBelowExistingMin(
 	base := "undercoin-max-lt-min"
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(base, 1_000), s.adminAddr)
 
-	attrs := vaultAttrs{admin: s.adminAddr.String(), share: share, base: base}
+	attrs := vaultAttrs{admin: s.adminAddr.String(), share: share, underlying: base}
 	v, err := s.k.CreateVault(s.ctx, attrs)
 	s.Require().NoError(err)
 
@@ -257,7 +259,7 @@ func (s *TestSuite) TestUpdateInterestRate_BoundsEnforced() {
 	base := "undercoin-rate"
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(base, 1_000_000), s.adminAddr)
 
-	attrs := vaultAttrs{admin: s.adminAddr.String(), share: share, base: base}
+	attrs := vaultAttrs{admin: s.adminAddr.String(), share: share, underlying: base}
 	_, err := s.k.CreateVault(s.ctx, attrs)
 	s.Require().NoError(err)
 	addr := types.GetVaultAddress(share)

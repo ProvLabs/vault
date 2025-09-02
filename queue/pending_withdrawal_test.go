@@ -70,7 +70,7 @@ func TestPendingWithdrawalQueue_Codec(t *testing.T) {
 	require.Equal(t, originalReq.Assets, retrievedReq.Assets)
 }
 
-func TestWalk_Success(t *testing.T) {
+func TestPendingWithdrawalQueueWalk_Success(t *testing.T) {
 	ctx, q := newTestPendingWithdrawalQueue(t)
 	addr1 := utils.TestProvlabsAddress()
 	addr2 := utils.TestProvlabsAddress()
@@ -91,7 +91,7 @@ func TestWalk_Success(t *testing.T) {
 	require.ElementsMatch(t, []string{addr1.Bech32, addr2.Bech32}, seen)
 }
 
-func TestWalk_Empty(t *testing.T) {
+func TestPendingWithdrawalQueueWalk_Empty(t *testing.T) {
 	ctx, q := newTestPendingWithdrawalQueue(t)
 
 	calls := 0
@@ -103,7 +103,7 @@ func TestWalk_Empty(t *testing.T) {
 	require.Equal(t, 0, calls)
 }
 
-func TestWalk_Error(t *testing.T) {
+func TestPendingWithdrawalQueueWalk_Error(t *testing.T) {
 	ctx, q := newTestPendingWithdrawalQueue(t)
 	addr1 := utils.TestProvlabsAddress()
 	addr2 := utils.TestProvlabsAddress()
@@ -128,40 +128,99 @@ func TestWalk_Error(t *testing.T) {
 	require.Equal(t, 2, calls)
 }
 
-func TestEnqueueAndDequeue(t *testing.T) {
-	ctx, q := newTestPendingWithdrawalQueue(t)
-
-	// Dequeue with a non-existent key should not error.
-	addr := utils.TestProvlabsAddress()
-	err := q.Dequeue(ctx, 1, sdk.MustAccAddressFromBech32(addr.Bech32), 1)
-	require.NoError(t, err)
-
+func TestPendingWithdrawalQueueEnqueueAndDequeue(t *testing.T) {
 	addr1 := utils.TestProvlabsAddress()
 	addr2 := utils.TestProvlabsAddress()
-	req1 := vtypes.PendingWithdrawal{VaultAddress: addr1.Bech32, Owner: addr1.Bech32}
-	req2 := vtypes.PendingWithdrawal{VaultAddress: addr2.Bech32, Owner: addr2.Bech32}
 
-	// Enqueue two items
-	id1, err := q.Enqueue(ctx, 1, req1)
-	require.NoError(t, err)
-	id2, err := q.Enqueue(ctx, 2, req2)
-	require.NoError(t, err)
+	tests := []struct {
+		name        string
+		setup       func(t *testing.T, ctx sdk.Context, q *queue.PendingWithdrawalQueue) (int64, sdk.AccAddress, uint64)
+		timestamp   int64
+		req         vtypes.PendingWithdrawal
+		dequeue     bool
+		expectError bool
+		errorMsg    string
+	}{
+		{
+			name: "successful enqueue and dequeue",
+			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingWithdrawalQueue) (int64, sdk.AccAddress, uint64) {
+				req := vtypes.PendingWithdrawal{VaultAddress: addr1.Bech32, Owner: addr1.Bech32}
+				id, err := q.Enqueue(ctx, 1, req)
+				require.NoError(t, err)
+				return 1, sdk.MustAccAddressFromBech32(addr1.Bech32), id
+			},
+			dequeue:     true,
+			expectError: false,
+		},
+		{
+			name: "dequeue non-existent key",
+			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingWithdrawalQueue) (int64, sdk.AccAddress, uint64) {
+				return 1, sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32), 999
+			},
+			dequeue:     true,
+			expectError: false, // Dequeue with a non-existent key should not error.
+		},
+		{
+			name: "enqueue with invalid vault address",
+			req: vtypes.PendingWithdrawal{
+				VaultAddress: "invalid",
+			},
+			timestamp:   1,
+			dequeue:     false,
+			expectError: true,
+		},
+		{
+			name: "enqueue with negative timestamp",
+			req: vtypes.PendingWithdrawal{
+				VaultAddress: addr2.Bech32,
+			},
+			timestamp:   -1,
+			dequeue:     false,
+			expectError: true,
+			errorMsg:    "timestamp cannot be negative",
+		},
+		{
+			name: "dequeue with negative timestamp",
+			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingWithdrawalQueue) (int64, sdk.AccAddress, uint64) {
+				return -1, sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32), 1
+			},
+			dequeue:     true,
+			expectError: true,
+			errorMsg:    "timestamp cannot be negative",
+		},
+	}
 
-	// Dequeue first item
-	err = q.Dequeue(ctx, 1, sdk.MustAccAddressFromBech32(addr1.Bech32), id1)
-	require.NoError(t, err)
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, q := newTestPendingWithdrawalQueue(t)
 
-	// Verify first item is removed
-	_, err = q.Get(ctx, collections.Join3(int64(1), sdk.MustAccAddressFromBech32(addr1.Bech32), id1))
-	require.Error(t, err)
-	require.ErrorIs(t, err, collections.ErrNotFound)
-
-	// Dequeue second item
-	err = q.Dequeue(ctx, 2, sdk.MustAccAddressFromBech32(addr2.Bech32), id2)
-	require.NoError(t, err)
-
-	// Verify second item is removed
-	_, err = q.Get(ctx, collections.Join3(int64(2), sdk.MustAccAddressFromBech32(addr2.Bech32), id2))
-	require.Error(t, err)
-	require.ErrorIs(t, err, collections.ErrNotFound)
+			if tc.dequeue {
+				timestamp, addr, id := tc.setup(t, ctx, q)
+				err := q.Dequeue(ctx, timestamp, addr, id)
+				if tc.expectError {
+					require.Error(t, err)
+					if tc.errorMsg != "" {
+						require.Contains(t, err.Error(), tc.errorMsg)
+					}
+				} else {
+					require.NoError(t, err)
+					// Verify item is removed
+					_, err = q.Get(ctx, collections.Join3(timestamp, addr, id))
+					require.Error(t, err)
+					require.ErrorIs(t, err, collections.ErrNotFound)
+				}
+			} else {
+				_, err := q.Enqueue(ctx, tc.timestamp, tc.req)
+				if tc.expectError {
+					require.Error(t, err)
+					if tc.errorMsg != "" {
+						require.Contains(t, err.Error(), tc.errorMsg)
+					}
+				} else {
+					require.NoError(t, err)
+				}
+			}
+		})
+	}
 }
+

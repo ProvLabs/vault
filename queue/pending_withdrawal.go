@@ -2,6 +2,7 @@ package queue
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/provlabs/vault/types"
 
@@ -31,6 +32,9 @@ func NewPendingWithdrawalQueue(builder *collections.SchemaBuilder, cdc codec.Bin
 
 // Enqueue adds a pending withdrawal to the queue.
 func (p *PendingWithdrawalQueue) Enqueue(ctx context.Context, timestamp int64, req types.PendingWithdrawal) (uint64, error) {
+	if timestamp < 0 {
+		return 0, fmt.Errorf("timestamp cannot be negative")
+	}
 	vault, err := sdk.AccAddressFromBech32(req.VaultAddress)
 	if err != nil {
 		return 0, err
@@ -44,6 +48,9 @@ func (p *PendingWithdrawalQueue) Enqueue(ctx context.Context, timestamp int64, r
 
 // Dequeue removes a pending withdrawal from the queue.
 func (p *PendingWithdrawalQueue) Dequeue(ctx context.Context, timestamp int64, vault sdk.AccAddress, id uint64) error {
+	if timestamp < 0 {
+		return fmt.Errorf("timestamp cannot be negative")
+	}
 	return p.Remove(ctx, collections.Join3(timestamp, vault, id))
 }
 

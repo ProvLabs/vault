@@ -103,6 +103,141 @@ func (s *TestSuite) TestCreateVault_InvalidAdminFails() {
 	s.Require().ErrorContains(err, "invalid admin address")
 }
 
+func (s *TestSuite) TestSwapIn_MultiAsset() {
+	underlyingDenom := "ylds"
+	paymentDenom := "usdc"
+	unacceptedDenom := "junk"
+	shareDenom := "vshare"
+	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
+	vault.SwapInEnabled = true
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	depositorAddr := s.CreateAndFundAccount(sdk.NewInt64Coin(paymentDenom, 1000))
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, depositorAddr, sdk.NewCoins(sdk.NewInt64Coin(unacceptedDenom, 1000))), "should fund depositor with unaccepted denom")
+
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1000))), "should fund vault principal with initial TVV")
+	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(1000))), "should mint initial share supply")
+
+	depositCoin := sdk.NewInt64Coin(paymentDenom, 10)
+	mintedShares, err := s.k.SwapIn(s.ctx, vault.GetAddress(), depositorAddr, depositCoin)
+	s.Require().NoError(err, "should successfully swap in an accepted payment denom")
+
+	expectedShares := utils.ShareScalar.MulRaw(5)
+	s.Require().Equal(expectedShares, mintedShares.Amount, "minted shares should be proportional to the payment denom's value in the underlying asset")
+	s.assertBalance(depositorAddr, shareDenom, expectedShares)
+	s.assertBalance(vault.PrincipalMarkerAddress(), paymentDenom, math.NewInt(10))
+
+	unacceptedCoin := sdk.NewInt64Coin(unacceptedDenom, 50)
+	_, err = s.k.SwapIn(s.ctx, vault.GetAddress(), depositorAddr, unacceptedCoin)
+	s.Require().Error(err, "should fail to swap in an unaccepted asset")
+	s.Require().ErrorContains(err, "denom not supported for vault", "error should indicate the denom is not accepted")
+}
+
+func (s *TestSuite) TestSwapOut_MultiAsset() {
+	underlyingDenom := "ylds"
+	paymentDenom := "usdc"
+	unacceptedDenom := "junk"
+	shareDenom := "vshare"
+	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
+	vault.SwapOutEnabled = true
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	initialShares := utils.ShareScalar.MulRaw(100)
+	redeemerAddr := s.CreateAndFundAccount(sdk.NewCoin(shareDenom, initialShares))
+
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(
+		sdk.NewInt64Coin(underlyingDenom, 500),
+		sdk.NewInt64Coin(paymentDenom, 500),
+	)), "should fund vault principal with liquidity")
+	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(500))), "should mint initial share supply")
+
+	sharesToRedeemForPayment := sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(10))
+	_, err := s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sharesToRedeemForPayment, paymentDenom)
+	s.Require().NoError(err, "should successfully swap out for an accepted payment denom")
+	s.assertBalance(redeemerAddr, paymentDenom, math.NewInt(24))
+	s.assertBalance(redeemerAddr, shareDenom, initialShares.Sub(sharesToRedeemForPayment.Amount))
+
+	sharesToRedeemForUnderlying := sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(5))
+	_, err = s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sharesToRedeemForUnderlying, "")
+	s.Require().NoError(err, "should successfully swap out for the default underlying asset when redeem denom is empty")
+	s.assertBalance(redeemerAddr, underlyingDenom, math.NewInt(6))
+
+	_, err = s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sharesToRedeemForUnderlying, unacceptedDenom)
+	s.Require().Error(err, "should fail to swap out for an unaccepted asset")
+	s.Require().ErrorContains(err, "denom not supported for vault", "error should indicate the denom is not accepted")
+}
+
+func (s *TestSuite) TestSetMinMaxInterestRate_NoOp_NoEvent() {
+	share := "vaultshare-np"
+	base := "undercoin-np"
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(base, 1_000), s.adminAddr)
+
+	attrs := vaultAttrs{admin: s.adminAddr.String(), share: share, underlying: base}
+	v, err := s.k.CreateVault(s.ctx, attrs)
+	s.Require().NoError(err)
+
+	s.k.UpdateInterestRates(s.ctx, v, "0.10", "0.10")
+	s.k.AuthKeeper.SetAccount(s.ctx, v)
+
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	err = s.k.SetMinInterestRate(s.ctx, v, "0.10")
+	s.Require().NoError(err)
+
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	err = s.k.SetMinInterestRate(s.ctx, v, "0.10")
+	s.Require().NoError(err)
+	s.Require().Len(s.ctx.EventManager().Events(), 0)
+
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	err = s.k.SetMaxInterestRate(s.ctx, v, "0.25")
+	s.Require().NoError(err)
+
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	err = s.k.SetMaxInterestRate(s.ctx, v, "0.25")
+	s.Require().NoError(err)
+	s.Require().Len(s.ctx.EventManager().Events(), 0)
+}
+
+func (s *TestSuite) TestSetMinInterestRate_ValidationBlocksWhenAboveExistingMax() {
+	share := "vaultshare-min-gt-max"
+	base := "undercoin-min-gt-max"
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(base, 1_000), s.adminAddr)
+
+	attrs := vaultAttrs{admin: s.adminAddr.String(), share: share, underlying: base}
+	v, err := s.k.CreateVault(s.ctx, attrs)
+	s.Require().NoError(err)
+
+	s.Require().NoError(s.k.SetMaxInterestRate(s.ctx, v, "0.40"))
+
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	err = s.k.SetMinInterestRate(s.ctx, v, "0.50")
+	s.Require().Error(err)
+	s.Require().Contains(err.Error(), "minimum interest rate")
+	s.Require().Equal("0.40", v.MaxInterestRate)
+	s.Require().Equal("", v.MinInterestRate)
+	s.Require().Len(s.ctx.EventManager().Events(), 0)
+}
+
+func (s *TestSuite) TestSetMaxInterestRate_ValidationBlocksWhenBelowExistingMin() {
+	share := "vaultshare-max-lt-min"
+	base := "undercoin-max-lt-min"
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(base, 1_000), s.adminAddr)
+
+	attrs := vaultAttrs{admin: s.adminAddr.String(), share: share, underlying: base}
+	v, err := s.k.CreateVault(s.ctx, attrs)
+	s.Require().NoError(err)
+
+	s.Require().NoError(s.k.SetMinInterestRate(s.ctx, v, "-0.50"))
+
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	err = s.k.SetMaxInterestRate(s.ctx, v, "-0.60")
+	s.Require().Error(err)
+	s.Require().Contains(err.Error(), "minimum interest rate")
+	s.Require().Equal("-0.50", v.MinInterestRate)
+	s.Require().Equal("", v.MaxInterestRate)
+	s.Require().Len(s.ctx.EventManager().Events(), 0)
+}
+
 func (s *TestSuite) TestValidateInterestRateLimits() {
 	tests := []struct {
 		name      string
@@ -183,77 +318,6 @@ func (s *TestSuite) TestValidateInterestRateLimits() {
 	}
 }
 
-func (s *TestSuite) TestSetMinMaxInterestRate_NoOp_NoEvent() {
-	share := "vaultshare-np"
-	base := "undercoin-np"
-	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(base, 1_000), s.adminAddr)
-
-	attrs := vaultAttrs{admin: s.adminAddr.String(), share: share, underlying: base}
-	v, err := s.k.CreateVault(s.ctx, attrs)
-	s.Require().NoError(err)
-
-	s.k.UpdateInterestRates(s.ctx, v, "0.10", "0.10")
-	s.k.AuthKeeper.SetAccount(s.ctx, v)
-
-	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
-	err = s.k.SetMinInterestRate(s.ctx, v, "0.10")
-	s.Require().NoError(err)
-
-	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
-	err = s.k.SetMinInterestRate(s.ctx, v, "0.10")
-	s.Require().NoError(err)
-	s.Require().Len(s.ctx.EventManager().Events(), 0)
-
-	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
-	err = s.k.SetMaxInterestRate(s.ctx, v, "0.25")
-	s.Require().NoError(err)
-
-	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
-	err = s.k.SetMaxInterestRate(s.ctx, v, "0.25")
-	s.Require().NoError(err)
-	s.Require().Len(s.ctx.EventManager().Events(), 0)
-}
-
-func (s *TestSuite) TestSetMinInterestRate_ValidationBlocksWhenAboveExistingMax() {
-	share := "vaultshare-min-gt-max"
-	base := "undercoin-min-gt-max"
-	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(base, 1_000), s.adminAddr)
-
-	attrs := vaultAttrs{admin: s.adminAddr.String(), share: share, underlying: base}
-	v, err := s.k.CreateVault(s.ctx, attrs)
-	s.Require().NoError(err)
-
-	s.Require().NoError(s.k.SetMaxInterestRate(s.ctx, v, "0.40"))
-
-	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
-	err = s.k.SetMinInterestRate(s.ctx, v, "0.50")
-	s.Require().Error(err)
-	s.Require().Contains(err.Error(), "minimum interest rate")
-	s.Require().Equal("0.40", v.MaxInterestRate)
-	s.Require().Equal("", v.MinInterestRate)
-	s.Require().Len(s.ctx.EventManager().Events(), 0)
-}
-
-func (s *TestSuite) TestSetMaxInterestRate_ValidationBlocksWhenBelowExistingMin() {
-	share := "vaultshare-max-lt-min"
-	base := "undercoin-max-lt-min"
-	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(base, 1_000), s.adminAddr)
-
-	attrs := vaultAttrs{admin: s.adminAddr.String(), share: share, underlying: base}
-	v, err := s.k.CreateVault(s.ctx, attrs)
-	s.Require().NoError(err)
-
-	s.Require().NoError(s.k.SetMinInterestRate(s.ctx, v, "-0.50"))
-
-	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
-	err = s.k.SetMaxInterestRate(s.ctx, v, "-0.60")
-	s.Require().Error(err)
-	s.Require().Contains(err.Error(), "minimum interest rate")
-	s.Require().Equal("-0.50", v.MinInterestRate)
-	s.Require().Equal("", v.MaxInterestRate)
-	s.Require().Len(s.ctx.EventManager().Events(), 0)
-}
-
 func (s *TestSuite) TestUpdateInterestRate_BoundsEnforced() {
 	share := "vaultshare-rate"
 	base := "undercoin-rate"
@@ -302,68 +366,4 @@ func (s *TestSuite) TestUpdateInterestRate_BoundsEnforced() {
 		NewRate:      "0.60",
 	})
 	s.Require().Error(err)
-}
-
-func (s *TestSuite) TestSwapIn_MultiAsset() {
-	underlyingDenom := "ylds"
-	paymentDenom := "usdc"
-	unacceptedDenom := "junk"
-	shareDenom := "vshare"
-	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
-	vault.SwapInEnabled = true
-	s.k.AuthKeeper.SetAccount(s.ctx, vault)
-
-	depositorAddr := s.CreateAndFundAccount(sdk.NewInt64Coin(paymentDenom, 1000))
-	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, depositorAddr, sdk.NewCoins(sdk.NewInt64Coin(unacceptedDenom, 1000))), "should fund depositor with unaccepted denom")
-
-	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1000))), "should fund vault principal with initial TVV")
-	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(1000))), "should mint initial share supply")
-
-	depositCoin := sdk.NewInt64Coin(paymentDenom, 10)
-	mintedShares, err := s.k.SwapIn(s.ctx, vault.GetAddress(), depositorAddr, depositCoin)
-	s.Require().NoError(err, "should successfully swap in an accepted payment denom")
-
-	expectedShares := utils.ShareScalar.MulRaw(5)
-	s.Require().Equal(expectedShares, mintedShares.Amount, "minted shares should be proportional to the payment denom's value in the underlying asset")
-	s.assertBalance(depositorAddr, shareDenom, expectedShares)
-	s.assertBalance(vault.PrincipalMarkerAddress(), paymentDenom, math.NewInt(10))
-
-	unacceptedCoin := sdk.NewInt64Coin(unacceptedDenom, 50)
-	_, err = s.k.SwapIn(s.ctx, vault.GetAddress(), depositorAddr, unacceptedCoin)
-	s.Require().Error(err, "should fail to swap in an unaccepted asset")
-	s.Require().ErrorContains(err, "denom not supported for vault", "error should indicate the denom is not accepted")
-}
-
-func (s *TestSuite) TestSwapOut_MultiAsset() {
-	underlyingDenom := "ylds"
-	paymentDenom := "usdc"
-	unacceptedDenom := "junk"
-	shareDenom := "vshare"
-	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
-	vault.SwapOutEnabled = true
-	s.k.AuthKeeper.SetAccount(s.ctx, vault)
-
-	initialShares := utils.ShareScalar.MulRaw(100)
-	redeemerAddr := s.CreateAndFundAccount(sdk.NewCoin(shareDenom, initialShares))
-
-	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(
-		sdk.NewInt64Coin(underlyingDenom, 500),
-		sdk.NewInt64Coin(paymentDenom, 500),
-	)), "should fund vault principal with liquidity")
-	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(500))), "should mint initial share supply")
-
-	sharesToRedeemForPayment := sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(10))
-	_, err := s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sharesToRedeemForPayment, paymentDenom)
-	s.Require().NoError(err, "should successfully swap out for an accepted payment denom")
-	s.assertBalance(redeemerAddr, paymentDenom, math.NewInt(24))
-	s.assertBalance(redeemerAddr, shareDenom, initialShares.Sub(sharesToRedeemForPayment.Amount))
-
-	sharesToRedeemForUnderlying := sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(5))
-	_, err = s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sharesToRedeemForUnderlying, "")
-	s.Require().NoError(err, "should successfully swap out for the default underlying asset when redeem denom is empty")
-	s.assertBalance(redeemerAddr, underlyingDenom, math.NewInt(6))
-
-	_, err = s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sharesToRedeemForUnderlying, unacceptedDenom)
-	s.Require().Error(err, "should fail to swap out for an unaccepted asset")
-	s.Require().ErrorContains(err, "denom not supported for vault", "error should indicate the denom is not accepted")
 }

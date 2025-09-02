@@ -253,6 +253,10 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 		return nil, err
 	}
 
+	if assets.Amount.IsZero() && shares.Amount.IsPositive() {
+		return nil, fmt.Errorf("redeem amount of %s is too small and results in zero assets", shares.String())
+	}
+
 	if err := k.BankKeeper.SendCoins(ctx, owner, principalAddress, sdk.NewCoins(shares)); err != nil {
 		return nil, fmt.Errorf("failed to send shares to marker: %w", err)
 	}

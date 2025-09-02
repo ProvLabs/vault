@@ -60,6 +60,8 @@ func (p *PendingWithdrawalQueue) WalkDue(ctx context.Context, now int64, fn func
 	})
 }
 
+// Walk iterates over all entries in the PendingWithdrawalQueue.
+// Iteration stops when the callback returns stop=true or an error.
 func (p *PendingWithdrawalQueue) Walk(ctx context.Context, fn func(timestamp int64, vault sdk.AccAddress, id uint64, req types.PendingWithdrawal) (stop bool, err error)) error {
 	return p.Map.Walk(ctx, nil, func(key collections.Triple[int64, sdk.AccAddress, uint64], value types.PendingWithdrawal) (stop bool, err error) {
 		return fn(key.K1(), key.K2(), key.K3(), value)

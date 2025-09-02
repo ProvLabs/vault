@@ -183,7 +183,7 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 		return nil, fmt.Errorf("failed to reconcile vault interest: %w", err)
 	}
 
-	markerAddr := vault.PrincipalMarkerAddress()
+	principalAddress := vault.PrincipalMarkerAddress()
 
 	shares, err := k.ConvertDepositToSharesInUnderlyingAsset(ctx, *vault, asset)
 	if err != nil {
@@ -202,7 +202,7 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 		return nil, err
 	}
 
-	if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx), recipient, markerAddr, sdk.NewCoins(asset)); err != nil {
+	if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx), recipient, principalAddress, sdk.NewCoins(asset)); err != nil {
 		return nil, err
 	}
 
@@ -242,7 +242,7 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 		return nil, fmt.Errorf("failed to reconcile vault interest: %w", err)
 	}
 
-	markerAddr := markertypes.MustGetMarkerAddress(vault.ShareDenom)
+	principalAddress := vault.PrincipalMarkerAddress()
 
 	assets, err := k.ConvertSharesToRedeemCoin(ctx, *vault, shares.Amount, redeemDenom)
 	if err != nil {
@@ -253,7 +253,7 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 		return nil, err
 	}
 
-	if err := k.BankKeeper.SendCoins(ctx, owner, markerAddr, sdk.NewCoins(shares)); err != nil {
+	if err := k.BankKeeper.SendCoins(ctx, owner, principalAddress, sdk.NewCoins(shares)); err != nil {
 		return nil, fmt.Errorf("failed to send shares to marker: %w", err)
 	}
 
@@ -261,7 +261,7 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 		return nil, fmt.Errorf("failed to burn shares: %w", err)
 	}
 
-	if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, vaultAddr), markerAddr, owner, sdk.NewCoins(assets)); err != nil {
+	if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, vaultAddr), principalAddress, owner, sdk.NewCoins(assets)); err != nil {
 		return nil, fmt.Errorf("failed to send underlying asset: %w", err)
 	}
 

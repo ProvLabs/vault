@@ -160,9 +160,9 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 		return nil, status.Errorf(codes.InvalidArgument, "asset denom %s does not match vault share denom %s", req.Assets.Denom, vault.ShareDenom)
 	}
 
-	markerAddr := vault.PrincipalMarkerAddress()
+	principalAddress := vault.PrincipalMarkerAddress()
 	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
-	totalAssets := k.BankKeeper.GetBalance(ctx, markerAddr, vault.UnderlyingAsset)
+	totalAssets := k.BankKeeper.GetBalance(ctx, principalAddress, vault.UnderlyingAsset)
 
 	estimatedTotalAssets, err := k.CalculateVaultTotalAssets(ctx, vault, totalAssets)
 	if err != nil {

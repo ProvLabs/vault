@@ -1,12 +1,12 @@
 package keeper_test
 
 import (
-	"testing"
-
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
+	"github.com/provlabs/vault/utils"
 )
 
 type vaultAttrs struct {
@@ -304,5 +304,66 @@ func (s *TestSuite) TestUpdateInterestRate_BoundsEnforced() {
 	s.Require().Error(err)
 }
 
-// Ensure this compiles under go test without “unused import” issues.
-func TestDummy(t *testing.T) {}
+func (s *TestSuite) TestSwapIn_MultiAsset() {
+	underlyingDenom := "ylds"
+	paymentDenom := "usdc"
+	unacceptedDenom := "junk"
+	shareDenom := "vshare"
+	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
+	vault.SwapInEnabled = true
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	depositorAddr := s.CreateAndFundAccount(sdk.NewInt64Coin(paymentDenom, 1000))
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, depositorAddr, sdk.NewCoins(sdk.NewInt64Coin(unacceptedDenom, 1000))), "should fund depositor with unaccepted denom")
+
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1000))), "should fund vault principal with initial TVV")
+	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(1000))), "should mint initial share supply")
+
+	depositCoin := sdk.NewInt64Coin(paymentDenom, 10)
+	mintedShares, err := s.k.SwapIn(s.ctx, vault.GetAddress(), depositorAddr, depositCoin)
+	s.Require().NoError(err, "should successfully swap in an accepted payment denom")
+
+	expectedShares := utils.ShareScalar.MulRaw(5)
+	s.Require().Equal(expectedShares, mintedShares.Amount, "minted shares should be proportional to the payment denom's value in the underlying asset")
+	s.assertBalance(depositorAddr, shareDenom, expectedShares)
+	s.assertBalance(vault.PrincipalMarkerAddress(), paymentDenom, math.NewInt(10))
+
+	unacceptedCoin := sdk.NewInt64Coin(unacceptedDenom, 50)
+	_, err = s.k.SwapIn(s.ctx, vault.GetAddress(), depositorAddr, unacceptedCoin)
+	s.Require().Error(err, "should fail to swap in an unaccepted asset")
+	s.Require().ErrorContains(err, "denom not supported for vault", "error should indicate the denom is not accepted")
+}
+
+func (s *TestSuite) TestSwapOut_MultiAsset() {
+	underlyingDenom := "ylds"
+	paymentDenom := "usdc"
+	unacceptedDenom := "junk"
+	shareDenom := "vshare"
+	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
+	vault.SwapOutEnabled = true
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	initialShares := utils.ShareScalar.MulRaw(100)
+	redeemerAddr := s.CreateAndFundAccount(sdk.NewCoin(shareDenom, initialShares))
+
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(
+		sdk.NewInt64Coin(underlyingDenom, 500),
+		sdk.NewInt64Coin(paymentDenom, 500),
+	)), "should fund vault principal with liquidity")
+	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(500))), "should mint initial share supply")
+
+	sharesToRedeemForPayment := sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(10))
+	_, err := s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sharesToRedeemForPayment, paymentDenom)
+	s.Require().NoError(err, "should successfully swap out for an accepted payment denom")
+	s.assertBalance(redeemerAddr, paymentDenom, math.NewInt(24))
+	s.assertBalance(redeemerAddr, shareDenom, initialShares.Sub(sharesToRedeemForPayment.Amount))
+
+	sharesToRedeemForUnderlying := sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(5))
+	_, err = s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sharesToRedeemForUnderlying, "")
+	s.Require().NoError(err, "should successfully swap out for the default underlying asset when redeem denom is empty")
+	s.assertBalance(redeemerAddr, underlyingDenom, math.NewInt(6))
+
+	_, err = s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sharesToRedeemForUnderlying, unacceptedDenom)
+	s.Require().Error(err, "should fail to swap out for an unaccepted asset")
+	s.Require().ErrorContains(err, "denom not supported for vault", "error should indicate the denom is not accepted")
+}

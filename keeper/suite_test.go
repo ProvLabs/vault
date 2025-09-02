@@ -170,12 +170,23 @@ func createSendCoinEvents(fromAddress, toAddress string, amount string) []sdk.Ev
 
 // setupBaseVault creates and activates markers for the underlying and share denoms,
 // withdraws some underlying coins to the admin, and creates the vault.
+// It can optionally accept a paymentDenom for the vault's configuration.
 // It returns the newly created vault account.
-func (s *TestSuite) setupBaseVault(underlyingDenom, shareDenom string) *types.VaultAccount {
+func (s *TestSuite) setupBaseVault(underlyingDenom, shareDenom string, paymentDenom ...string) *types.VaultAccount {
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingDenom, 2_000_000), s.adminAddr)
 	s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, underlyingDenom, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 100_000)))
 
-	vaultCfg := vaultAttrs{admin: s.adminAddr.String(), share: shareDenom, underlying: underlyingDenom}
+	var pDenom string
+	if len(paymentDenom) > 0 {
+		pDenom = paymentDenom[0]
+	}
+
+	vaultCfg := vaultAttrs{
+		admin:      s.adminAddr.String(),
+		share:      shareDenom,
+		underlying: underlyingDenom,
+		payment:    pDenom,
+	}
 	vault, err := s.k.CreateVault(s.ctx, vaultCfg)
 	s.Require().NoError(err, "vault creation should succeed")
 	return vault
@@ -183,12 +194,13 @@ func (s *TestSuite) setupBaseVault(underlyingDenom, shareDenom string) *types.Va
 
 // setupSinglePaymentDenomVault is a comprehensive helper that creates a vault with
 // an underlying asset, a share denom, and a single payment denom. It creates all markers,
-// withdraws funds to the admin, creates the vault, and sets a custom NAV
-// for the payment denom to the underlying denom.
+// withdraws funds to the admin, creates the vault with the paymentDenom configured,
+// and sets a custom NAV for the payment denom to the underlying denom.
 func (s *TestSuite) setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom string, price, volume int64) *types.VaultAccount {
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 2_000_000), s.adminAddr)
 	s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, paymentDenom, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 100_000)))
-	vault := s.setupBaseVault(underlyingDenom, shareDenom)
+	// Pass the paymentDenom here so the vault is created with it.
+	vault := s.setupBaseVault(underlyingDenom, shareDenom, paymentDenom)
 
 	paymentMarkerAddr := markertypes.MustGetMarkerAddress(paymentDenom)
 	paymentMarkerAccount, err := s.k.MarkerKeeper.GetMarker(s.ctx, paymentMarkerAddr)

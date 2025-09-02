@@ -133,6 +133,25 @@ func (s *TestSuite) TestSwapIn_MultiAsset() {
 	s.Require().ErrorContains(err, "denom not supported for vault", "error should indicate the denom is not accepted")
 }
 
+func (s *TestSuite) TestSwapIn_Failures() {
+	underlyingDenom := "ylds"
+	shareDenom := "vshare"
+	vault := s.setupBaseVault(underlyingDenom, shareDenom)
+	depositorAddr := s.CreateAndFundAccount(sdk.NewInt64Coin(underlyingDenom, 100))
+
+	vault.SwapInEnabled = false
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+	_, err := s.k.SwapIn(s.ctx, vault.GetAddress(), depositorAddr, sdk.NewInt64Coin(underlyingDenom, 10))
+	s.Require().Error(err, "swap in should fail when disabled")
+	s.Require().ErrorContains(err, "swaps are not enabled", "error should mention swaps are disabled")
+
+	vault.SwapInEnabled = true
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+	_, err = s.k.SwapIn(s.ctx, vault.GetAddress(), depositorAddr, sdk.NewInt64Coin(underlyingDenom, 101))
+	s.Require().Error(err, "swap in should fail with insufficient funds")
+	s.Require().ErrorContains(err, "insufficient funds", "error should mention insufficient funds")
+}
+
 func (s *TestSuite) TestSwapOut_MultiAsset() {
 	underlyingDenom := "ylds"
 	paymentDenom := "usdc"
@@ -165,6 +184,34 @@ func (s *TestSuite) TestSwapOut_MultiAsset() {
 	_, err = s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sharesToRedeemForUnderlying, unacceptedDenom)
 	s.Require().Error(err, "should fail to swap out for an unaccepted asset")
 	s.Require().ErrorContains(err, "denom not supported for vault", "error should indicate the denom is not accepted")
+}
+
+func (s *TestSuite) TestSwapOut_Failures() {
+	underlyingDenom := "ylds"
+	shareDenom := "vshare"
+	vault := s.setupBaseVault(underlyingDenom, shareDenom)
+	redeemerAddr := s.CreateAndFundAccount(sdk.NewCoin(shareDenom, math.NewInt(100)))
+
+	vault.SwapOutEnabled = false
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+	_, err := s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sdk.NewInt64Coin(shareDenom, 10), "")
+	s.Require().Error(err, "swap out should fail when disabled")
+	s.Require().ErrorContains(err, "swaps are not enabled", "error should mention swaps are disabled")
+
+	vault.SwapOutEnabled = true
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+	_, err = s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sdk.NewInt64Coin(shareDenom, 101), "")
+	s.Require().Error(err, "swap out should fail with insufficient shares")
+	s.Require().ErrorContains(err, "insufficient funds", "error should mention insufficient funds for shares")
+
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 10))), "should fund vault principal with a small amount of liquidity")
+	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(1000))), "should mint a large supply of shares")
+
+	// Corrected test logic: Expect NO error, but a ZERO payout.
+	redeemerBalanceBefore := s.simApp.BankKeeper.GetBalance(s.ctx, redeemerAddr, underlyingDenom)
+	_, err = s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sdk.NewInt64Coin(shareDenom, 50), "")
+	s.Require().NoError(err, "swap out should succeed even with low liquidity, yielding a zero payout")
+	s.assertBalance(redeemerAddr, underlyingDenom, redeemerBalanceBefore.Amount) //expect no change
 }
 
 func (s *TestSuite) TestSetMinMaxInterestRate_NoOp_NoEvent() {

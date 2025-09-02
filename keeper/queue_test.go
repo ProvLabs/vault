@@ -37,9 +37,9 @@ func TestSafeEnqueueVerification_UpdatesVaultAndQueues(t *testing.T) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	ctx = sdkCtx.WithBlockTime(time.Unix(1000, 0))
 
-	require.NoError(t, k.SafeEnqueueVerification(ctx, v), "SafeEnqueueVerification should clear timeouts, set start, and enqueue verification")
+	require.NoError(t, k.SafeAddVerification(ctx, v), "SafeEnqueueVerification should clear timeouts, set start, and enqueue verification")
 
-	itS, err := k.PayoutVerificationQueue.Iterate(ctx, nil)
+	itS, err := k.PayoutVerificationSet.Iterate(ctx, nil)
 	require.NoError(t, err, "iterate payout verification queue should not error after SafeEnqueueVerification")
 	defer itS.Close()
 

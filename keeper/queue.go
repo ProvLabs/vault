@@ -15,14 +15,14 @@ const (
 	AutoReconcileTimeout = 20 * interest.SecondsPerHour
 )
 
-// SafeEnqueueVerification clears any existing timeout entry for the given vault (if any),
+// SafeAddVerification clears any existing timeout entry for the given vault (if any),
 // sets the vault's period start to the current block time, clears the period timeout,
-// persists the vault, and enqueues the vault in the PayoutVerificationQueue.
+// persists the vault, and stores the vault in the PayoutVerificationSet.
 //
-// This ensures a vault is not present in both the verification and timeout queues
+// This ensures a vault is not present in both the verification set and timeout queues
 // at the same time. Typically called after enabling interest or completing a
 // reconciliation so the next accrual cycle begins cleanly.
-func (k Keeper) SafeEnqueueVerification(ctx context.Context, vault *types.VaultAccount) error {
+func (k Keeper) SafeAddVerification(ctx context.Context, vault *types.VaultAccount) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	currentBlockTime := sdkCtx.BlockTime().Unix()
 
@@ -36,7 +36,7 @@ func (k Keeper) SafeEnqueueVerification(ctx context.Context, vault *types.VaultA
 		return err
 	}
 
-	return k.PayoutVerificationQueue.Enqueue(ctx, vault.GetAddress())
+	return k.PayoutVerificationSet.Set(ctx, vault.GetAddress())
 }
 
 // SafeEnqueueTimeout clears any existing timeout entry for the given vault (if any),

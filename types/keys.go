@@ -28,10 +28,10 @@ var (
 	VaultsKeyPrefix = collections.NewPrefix(0)
 	// VaultsName is a human-readable name for the vaults collection.
 	VaultsName = "vaults"
-	// VaultPayoutVerificationQueuePrefix is the prefix to retrieve all VaultPayoutVerificationQueue.
-	VaultPayoutVerificationQueuePrefix = collections.NewPrefix(1)
-	// VaultPayoutVerificationQueueName is a human-readable name for the vault payout verification queue collection.
-	VaultPayoutVerificationQueueName = "vault_payout_verification_queue"
+	// VaultPayoutVerificationSetPrefix is the prefix to retrieve all VaultPayoutVerificationQueue.
+	VaultPayoutVerificationSetPrefix = collections.NewPrefix(1)
+	// VaultPayoutVerificationSetName is a human-readable name for the vault payout verification set collection.
+	VaultPayoutVerificationSetName = "vault_payout_verification_set"
 	// VaultPayoutTimeoutQueuePrefix is the prefix to retrieve all VaultPayoutTimeoutQueue.
 	VaultPayoutTimeoutQueuePrefix = collections.NewPrefix(2)
 	// VaultPayoutTimeoutQueueName is a human-readable name for the payout timeout queue collection.

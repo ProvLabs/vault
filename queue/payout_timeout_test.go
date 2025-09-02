@@ -1,4 +1,4 @@
-package container_test
+package queue_test
 
 import (
 	"errors"
@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/provlabs/vault/container"
+	"github.com/provlabs/vault/queue"
 	"github.com/provlabs/vault/types"
 	"github.com/provlabs/vault/utils"
 	"github.com/provlabs/vault/utils/mocks"
@@ -18,7 +18,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func newTestPayoutTimeoutQueue(t *testing.T) (sdk.Context, *container.PayoutTimeoutQueue) {
+func newTestPayoutTimeoutQueue(t *testing.T) (sdk.Context, *queue.PayoutTimeoutQueue) {
 	t.Helper()
 	storeKey := storetypes.NewKVStoreKey(types.ModuleName)
 	testCtx := testutil.DefaultContextWithDB(t, storeKey, storetypes.NewTransientStoreKey("transient_test"))
@@ -32,7 +32,7 @@ func newTestPayoutTimeoutQueue(t *testing.T) (sdk.Context, *container.PayoutTime
 
 	kvStoreService := runtime.NewKVStoreService(storeKey)
 	sb := collections.NewSchemaBuilder(kvStoreService)
-	q := container.NewPayoutTimeoutQueue(sb)
+	q := queue.NewPayoutTimeoutQueue(sb)
 	_, err := sb.Build()
 	require.NoError(t, err)
 	return testCtx.Ctx.WithLogger(log.NewNopLogger()), q

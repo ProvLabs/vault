@@ -1,4 +1,4 @@
-package container_test
+package queue_test
 
 import (
 	"errors"
@@ -13,13 +13,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	"github.com/provlabs/vault/container"
+	"github.com/provlabs/vault/queue"
 	vtypes "github.com/provlabs/vault/types"
 	"github.com/provlabs/vault/utils"
 	"github.com/provlabs/vault/utils/mocks"
 )
 
-func newTestPendingWithdrawalQueue(t *testing.T) (sdk.Context, *container.PendingWithdrawalQueue) {
+func newTestPendingWithdrawalQueue(t *testing.T) (sdk.Context, *queue.PendingWithdrawalQueue) {
 	t.Helper()
 	storeKey := storetypes.NewKVStoreKey(vtypes.ModuleName)
 	testCtx := testutil.DefaultContextWithDB(t, storeKey, storetypes.NewTransientStoreKey("transient_test"))
@@ -34,7 +34,7 @@ func newTestPendingWithdrawalQueue(t *testing.T) (sdk.Context, *container.Pendin
 	kvStoreService := runtime.NewKVStoreService(storeKey)
 	sb := collections.NewSchemaBuilder(kvStoreService)
 
-	q := container.NewPendingWithdrawalQueue(sb, cfg.Codec)
+	q := queue.NewPendingWithdrawalQueue(sb, cfg.Codec)
 	_, err := sb.Build()
 	require.NoError(t, err)
 	return testCtx.Ctx.WithLogger(log.NewNopLogger()), q

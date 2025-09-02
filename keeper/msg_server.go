@@ -167,7 +167,7 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 
 	switch {
 	case !prevEnabled && nextEnabled:
-		if err := k.SafeEnqueueVerification(ctx, vault); err != nil {
+		if err := k.SafeAddVerification(ctx, vault); err != nil {
 			return nil, fmt.Errorf("failed to enqueue vault payout verification: %w", err)
 		}
 	case prevEnabled && !nextEnabled:
@@ -176,7 +176,7 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 		if err := k.SetVaultAccount(ctx, vault); err != nil {
 			return nil, fmt.Errorf("failed to set vault account: %w", err)
 		}
-		if err := k.PayoutVerificationQueue.Dequeue(ctx, vault.GetAddress()); err != nil {
+		if err := k.PayoutVerificationSet.Remove(ctx, vault.GetAddress()); err != nil {
 			return nil, fmt.Errorf("failed to remove payout verification entries: %w", err)
 		}
 		if err := k.PayoutTimeoutQueue.RemoveAllForVault(ctx, vault.GetAddress()); err != nil {

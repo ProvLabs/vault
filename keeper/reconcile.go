@@ -42,7 +42,7 @@ func (k *Keeper) ReconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccou
 		}
 	}
 
-	return k.SafeEnqueueVerification(ctx, vault)
+	return k.SafeAddVerification(ctx, vault)
 }
 
 // PerformVaultInterestTransfer applies accrued interest between the vault and the marker account
@@ -273,7 +273,7 @@ func (k *Keeper) handleReconciledVaults(ctx context.Context) error {
 	var toRemove []sdk.AccAddress
 	var vaults []*types.VaultAccount
 
-	err := k.PayoutVerificationQueue.Walk(ctx, func(addr sdk.AccAddress) (bool, error) {
+	err := k.PayoutVerificationSet.Walk(ctx, nil, func(addr sdk.AccAddress) (bool, error) {
 		v, ok := k.tryGetVault(sdkCtx, addr)
 		if ok {
 			vaults = append(vaults, v)
@@ -286,7 +286,7 @@ func (k *Keeper) handleReconciledVaults(ctx context.Context) error {
 	}
 
 	for _, key := range toRemove {
-		_ = k.PayoutVerificationQueue.Dequeue(ctx, key)
+		_ = k.PayoutVerificationSet.Remove(ctx, key)
 	}
 
 	payable, depleted := k.partitionVaults(sdkCtx, vaults)

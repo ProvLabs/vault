@@ -68,7 +68,7 @@ func TestKeeperTestSuite(t *testing.T) {
 }
 
 func (s *TestSuite) assertInPayoutVerificationQueue(vaultAddr sdk.AccAddress, shouldContain bool) {
-	isInQueue, err := s.k.PayoutVerificationQueue.Has(s.ctx, vaultAddr)
+	isInQueue, err := s.k.PayoutVerificationSet.Has(s.ctx, vaultAddr)
 	s.Require().NoError(err, "should not error checking queue")
 	s.Assert().Equal(shouldContain, isInQueue, "vault should be enqueued in payout verification queue at expected period start")
 }

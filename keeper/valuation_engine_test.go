@@ -483,3 +483,149 @@ func (s *TestSuite) TestConvertSharesToRedeemCoin_ZeroAndDustRedemption() {
 	s.Require().NoError(err, "dust redemption should not error")
 	s.Require().True(dustCoin.IsZero(), "dust redemption should floor to a zero coin")
 }
+
+func (s *TestSuite) TestToUnderlyingAssetAmount_IdentityFastPath() {
+	underlyingDenom := "ylds"
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingDenom, 1_000_000), s.adminAddr)
+
+	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
+	vaultAccount := types.VaultAccount{ShareDenom: "vshare", UnderlyingAsset: underlyingDenom}
+
+	inputAmount := int64(123456789)
+	outAmount, err := testKeeper.ToUnderlyingAssetAmount(s.ctx, vaultAccount, sdk.NewInt64Coin(underlyingDenom, inputAmount))
+	s.Require().NoError(err, "identity conversion to underlying should not error for denom %s", underlyingDenom)
+	s.Require().Equal(math.NewInt(inputAmount), outAmount, "identity conversion should preserve the input amount for denom %s", underlyingDenom)
+}
+
+func (s *TestSuite) TestConvertSharesToRedeemCoin_TVVZero_SupplyNonzero() {
+	underlyingDenom := "ylds"
+	shareDenom := "vshare"
+
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingDenom, 2_000_000), s.adminAddr)
+
+	vaultAccount, err := s.k.CreateVault(s.ctx, vaultAttrs{admin: s.adminAddr.String(), share: shareDenom, underlying: underlyingDenom})
+	s.Require().NoError(err, "vault creation should succeed for share %s and underlying %s", shareDenom, underlyingDenom)
+
+	initialShareSupply := sdk.NewCoin(shareDenom, utils.ShareScalar)
+	s.Require().NoError(
+		s.k.MarkerKeeper.MintCoin(s.ctx, vaultAccount.GetAddress(), initialShareSupply),
+		"minting initial shares while TVV is zero should succeed",
+	)
+
+	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
+	redeemCoin, err := testKeeper.ConvertSharesToRedeemCoin(s.ctx, *vaultAccount, utils.ShareScalar, underlyingDenom)
+	s.Require().NoError(err, "redeeming with TVV=0 and shares>0 should not error")
+	s.Require().Equal(underlyingDenom, redeemCoin.Denom, "redeem denom should be the underlying asset")
+	s.Require().True(redeemCoin.Amount.IsZero(), "redeemed amount should be zero when TVV is zero")
+}
+
+func (s *TestSuite) TestGetTVVInUnderlyingAsset_MultiDenomFlooring() {
+	underlyingDenom := "ylds"
+	paymentADenom := "usdc"
+	paymentBDenom := "eurc"
+	shareDenom := "vshare"
+
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingDenom, 2_000_000), s.adminAddr)
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentADenom, 2_000_000), s.adminAddr)
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentBDenom, 2_000_000), s.adminAddr)
+
+	paymentAMarkerAddr := markertypes.MustGetMarkerAddress(paymentADenom)
+	paymentAMarkerAccount, err := s.k.MarkerKeeper.GetMarker(s.ctx, paymentAMarkerAddr)
+	s.Require().NoError(err, "fetching payment A marker account should succeed")
+
+	paymentBMarkerAddr := markertypes.MustGetMarkerAddress(paymentBDenom)
+	paymentBMarkerAccount, err := s.k.MarkerKeeper.GetMarker(s.ctx, paymentBMarkerAddr)
+	s.Require().NoError(err, "fetching payment B marker account should succeed")
+
+	s.Require().NoError(
+		s.k.MarkerKeeper.SetNetAssetValue(s.ctx, paymentAMarkerAccount, markertypes.NetAssetValue{Price: sdk.NewInt64Coin(underlyingDenom, 1), Volume: 3}, "set NAV A 1/3"),
+		"setting NAV for %s should succeed", paymentADenom,
+	)
+	s.Require().NoError(
+		s.k.MarkerKeeper.SetNetAssetValue(s.ctx, paymentBMarkerAccount, markertypes.NetAssetValue{Price: sdk.NewInt64Coin(underlyingDenom, 2), Volume: 3}, "set NAV B 2/3"),
+		"setting NAV for %s should succeed", paymentBDenom,
+	)
+
+	vaultAccount, err := s.k.CreateVault(s.ctx, vaultAttrs{admin: s.adminAddr.String(), share: shareDenom, underlying: underlyingDenom})
+	s.Require().NoError(err, "vault creation should succeed for multi-denom TVV test")
+
+	withdrawForFunding := sdk.NewCoins(
+		sdk.NewInt64Coin(underlyingDenom, 1),
+		sdk.NewInt64Coin(paymentADenom, 4),
+		sdk.NewInt64Coin(paymentBDenom, 5),
+	)
+	s.Require().NoError(
+		s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, underlyingDenom, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1))),
+		"withdrawing underlying to admin should succeed for TVV funding",
+	)
+	s.Require().NoError(
+		s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, paymentADenom, sdk.NewCoins(sdk.NewInt64Coin(paymentADenom, 4))),
+		"withdrawing payment A to admin should succeed for TVV funding",
+	)
+	s.Require().NoError(
+		s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, paymentBDenom, sdk.NewCoins(sdk.NewInt64Coin(paymentBDenom, 5))),
+		"withdrawing payment B to admin should succeed for TVV funding",
+	)
+	s.Require().NoError(
+		s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vaultAccount.PrincipalMarkerAddress(), withdrawForFunding),
+		"sending mixed funding to principal should succeed",
+	)
+
+	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
+	tvv, err := testKeeper.GetTVVInUnderlyingAsset(s.ctx, *vaultAccount)
+	s.Require().NoError(err, "computing TVV with multiple NAV mappings should not error")
+	s.Require().Equal(
+		math.NewInt(5),
+		tvv,
+		"TVV should equal 1 underlying + floor(4*1/3)=1 + floor(5*2/3)=3 => total 5",
+	)
+}
+
+func (s *TestSuite) TestGetTVVInUnderlyingAsset_ExcludesReserves() {
+	underlyingDenom := "ylds"
+	shareDenom := "vshare"
+
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingDenom, 2_000_000), s.adminAddr)
+
+	vaultAccount, err := s.k.CreateVault(s.ctx, vaultAttrs{admin: s.adminAddr.String(), share: shareDenom, underlying: underlyingDenom})
+	s.Require().NoError(err, "vault creation should succeed for reserves exclusion test")
+
+	s.Require().NoError(
+		s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, underlyingDenom, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 999))),
+		"withdrawing underlying to admin should succeed to fund reserves",
+	)
+	s.Require().NoError(
+		s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vaultAccount.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 999))),
+		"sending funds to the vault account (reserves) should succeed",
+	)
+
+	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
+	tvv, err := testKeeper.GetTVVInUnderlyingAsset(s.ctx, *vaultAccount)
+	s.Require().NoError(err, "computing TVV should not error when only reserves are funded")
+	s.Require().True(tvv.IsZero(), "TVV should be zero because reserves are excluded and principal is unfunded")
+}
+
+func (s *TestSuite) TestFromUnderlyingAssetAmount_NegativeUnderlyingYieldsZero() {
+	underlyingDenom := "ylds"
+	paymentDenom := "usdc"
+
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingDenom, 2_000_000), s.adminAddr)
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 2_000_000), s.adminAddr)
+
+	paymentMarkerAddr := markertypes.MustGetMarkerAddress(paymentDenom)
+	paymentMarkerAccount, err := s.k.MarkerKeeper.GetMarker(s.ctx, paymentMarkerAddr)
+	s.Require().NoError(err, "fetching payment marker account should succeed")
+
+	s.Require().NoError(
+		s.k.MarkerKeeper.SetNetAssetValue(s.ctx, paymentMarkerAccount, markertypes.NetAssetValue{Price: sdk.NewInt64Coin(underlyingDenom, 1), Volume: 2}, "set NAV 1/2"),
+		"setting NAV for %s should succeed", paymentDenom,
+	)
+
+	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
+	vaultAccount := types.VaultAccount{ShareDenom: "vshare", UnderlyingAsset: underlyingDenom}
+
+	outCoin, err := testKeeper.FromUnderlyingAssetAmount(s.ctx, vaultAccount, math.NewInt(-5), paymentDenom)
+	s.Require().NoError(err, "converting negative underlying amount should not error and should yield a zero coin")
+	s.Require().Equal(paymentDenom, outCoin.Denom, "output denom should match requested payout denom")
+	s.Require().True(outCoin.IsZero(), "output coin should be zero when underlying amount is non-positive")
+}

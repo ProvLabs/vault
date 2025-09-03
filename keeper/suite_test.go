@@ -199,7 +199,6 @@ func (s *TestSuite) setupBaseVault(underlyingDenom, shareDenom string, paymentDe
 func (s *TestSuite) setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom string, price, volume int64) *types.VaultAccount {
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 2_000_000), s.adminAddr)
 	s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, paymentDenom, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 100_000)))
-	// Pass the paymentDenom here so the vault is created with it.
 	vault := s.setupBaseVault(underlyingDenom, shareDenom, paymentDenom)
 
 	paymentMarkerAddr := markertypes.MustGetMarkerAddress(paymentDenom)

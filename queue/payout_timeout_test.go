@@ -38,7 +38,39 @@ func newTestPayoutTimeoutQueue(t *testing.T) (sdk.Context, *queue.PayoutTimeoutQ
 	return testCtx.Ctx.WithLogger(log.NewNopLogger()), q
 }
 
-func TestEnqueueDequeue_Timeout(t *testing.T) {
+func TestPayoutTimeoutQueueEnqueueDequeue(t *testing.T) {
+	ctx, q := newTestPayoutTimeoutQueue(t)
+
+	addr := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
+	ts := int64(200)
+
+	require.EqualError(t, q.Enqueue(ctx, -1, addr), "periodTimeout cannot be negative", addr.String())
+	require.NoError(t, q.Enqueue(ctx, ts, addr), "enqueue payout timeout (%d) for %s should succeed", ts, addr.String())
+
+	found := false
+	err := q.Walk(ctx, func(timestamp uint64, address sdk.AccAddress) (bool, error) {
+		if timestamp == uint64(ts) && address.Equals(addr) {
+			found = true
+			return true, nil // stop walking
+		}
+		return false, nil
+	})
+	require.NoError(t, err)
+	require.True(t, found, "expected to find timeout (%d) for %s in payout timeout queue after enqueue", ts, addr.String())
+
+	require.EqualError(t, q.Dequeue(ctx, -1, addr), "periodTimeout cannot be negative", ts, addr.String())
+	require.NoError(t, q.Dequeue(ctx, ts, addr), "dequeue payout timeout (%d) for %s should succeed", ts, addr.String())
+
+	found = false
+	err = q.Walk(ctx, func(timestamp uint64, address sdk.AccAddress) (bool, error) {
+		found = true
+		return true, nil // stop walking
+	})
+	require.NoError(t, err)
+	require.False(t, found, "payout timeout queue should be empty after dequeue")
+}
+
+func TestPayoutTimeoutQueueEnqueueDequeue_Timeout(t *testing.T) {
 	ctx, q := newTestPayoutTimeoutQueue(t)
 
 	addr := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
@@ -68,7 +100,7 @@ func TestEnqueueDequeue_Timeout(t *testing.T) {
 	require.False(t, found, "payout timeout queue should be empty after dequeue")
 }
 
-func TestWalkDueTimeouts(t *testing.T) {
+func TestPayoutTimeoutQueueWalkDueTimeouts(t *testing.T) {
 	ctx, q := newTestPayoutTimeoutQueue(t)
 
 	a1 := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
@@ -86,7 +118,7 @@ func TestWalkDueTimeouts(t *testing.T) {
 	assert.ElementsMatch(t, []uint64{50, 75}, seen, "walk should visit exactly timeouts <= 100; got %v", seen)
 }
 
-func TestWalkDueTimeouts_ErrorPropagates(t *testing.T) {
+func TestPayoutTimeoutQueueWalkDueTimeouts_ErrorPropagates(t *testing.T) {
 	ctx, q := newTestPayoutTimeoutQueue(t)
 
 	a := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
@@ -99,7 +131,7 @@ func TestWalkDueTimeouts_ErrorPropagates(t *testing.T) {
 	require.ErrorIs(t, err, errBoom, "walk should propagate callback error")
 }
 
-func TestWalkDueTimeouts_StopEarly(t *testing.T) {
+func TestPayoutTimeoutQueueWalkDueTimeouts_StopEarly(t *testing.T) {
 	ctx, q := newTestPayoutTimeoutQueue(t)
 
 	a := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
@@ -114,7 +146,7 @@ func TestWalkDueTimeouts_StopEarly(t *testing.T) {
 	assert.Equal(t, 1, calls, "walk should stop after first callback; got %d calls", calls)
 }
 
-func TestRemoveAllTimeoutsForVault(t *testing.T) {
+func TestPayoutTimeoutQueueRemoveAllTimeoutsForVault(t *testing.T) {
 	ctx, q := newTestPayoutTimeoutQueue(t)
 
 	a1 := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)

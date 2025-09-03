@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/provlabs/vault/queue"
 	"github.com/provlabs/vault/types"
 
 	"cosmossdk.io/collections"
@@ -26,9 +27,10 @@ type Keeper struct {
 	MarkerKeeper types.MarkerKeeper
 	BankKeeper   types.BankKeeper
 
-	Vaults                  collections.Map[sdk.AccAddress, []byte]
-	PayoutVerificationQueue collections.Map[sdk.AccAddress, collections.NoValue]
-	PayoutTimeoutQueue      collections.Map[collections.Pair[uint64, sdk.AccAddress], collections.NoValue]
+	Vaults                 collections.Map[sdk.AccAddress, []byte]
+	PayoutVerificationSet  collections.KeySet[sdk.AccAddress]
+	PayoutTimeoutQueue     *queue.PayoutTimeoutQueue
+	PendingWithdrawalQueue *queue.PendingWithdrawalQueue
 }
 
 // NewMsgServer creates a new Keeper for the module.
@@ -47,21 +49,18 @@ func NewKeeper(
 	}
 
 	builder := collections.NewSchemaBuilder(storeService)
-	endKeyCodec := collections.PairKeyCodec(
-		collections.Uint64Key,
-		sdk.AccAddressKey,
-	)
 
 	keeper := &Keeper{
-		eventService:            eventService,
-		addressCodec:            addressCodec,
-		authority:               authority,
-		Vaults:                  collections.NewMap(builder, types.VaultsKeyPrefix, types.VaultsName, sdk.AccAddressKey, collections.BytesValue),
-		PayoutVerificationQueue: collections.NewMap[sdk.AccAddress, collections.NoValue](builder, types.VaultPayoutVerificationQueuePrefix, types.VaultPayoutVerificationQueueName, sdk.AccAddressKey, collections.NoValue{}),
-		PayoutTimeoutQueue:      collections.NewMap[collections.Pair[uint64, sdk.AccAddress], collections.NoValue](builder, types.VaultPayoutTimeoutQueuePrefix, types.VaultPayoutTimeoutQueueName, endKeyCodec, collections.NoValue{}),
-		AuthKeeper:              authKeeper,
-		MarkerKeeper:            markerkeeper,
-		BankKeeper:              bankkeeper,
+		eventService:           eventService,
+		addressCodec:           addressCodec,
+		authority:              authority,
+		Vaults:                 collections.NewMap(builder, types.VaultsKeyPrefix, types.VaultsName, sdk.AccAddressKey, collections.BytesValue),
+		PayoutVerificationSet:  collections.NewKeySet(builder, types.VaultPayoutVerificationSetPrefix, types.VaultPayoutVerificationSetName, sdk.AccAddressKey),
+		PayoutTimeoutQueue:     queue.NewPayoutTimeoutQueue(builder),
+		PendingWithdrawalQueue: queue.NewPendingWithdrawalQueue(builder, cdc),
+		AuthKeeper:             authKeeper,
+		MarkerKeeper:           markerkeeper,
+		BankKeeper:             bankkeeper,
 	}
 
 	schema, err := builder.Build()

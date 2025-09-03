@@ -6,7 +6,6 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/stretchr/testify/assert"
 
 	"github.com/provlabs/vault/types"
@@ -15,40 +14,51 @@ import (
 
 func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 	admin := utils.TestAddress().Bech32
+
 	tests := []struct {
 		name        string
 		msg         types.MsgCreateVaultRequest
 		expectedErr error
 	}{
 		{
-			name: "A successful MsgCreateVault",
+			name: "success without payment denom",
 			msg: types.MsgCreateVaultRequest{
 				Admin:           admin,
-				ShareDenom:      "uatom",
+				ShareDenom:      "vaultshare",
 				UnderlyingAsset: "uusd",
 			},
 			expectedErr: nil,
 		},
 		{
-			name: "Admin is empty",
+			name: "success with distinct payment denom",
+			msg: types.MsgCreateVaultRequest{
+				Admin:           admin,
+				ShareDenom:      "vaultshare",
+				UnderlyingAsset: "uusd",
+				PaymentDenom:    "usdc",
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "admin empty",
 			msg: types.MsgCreateVaultRequest{
 				Admin:           "",
-				ShareDenom:      "uatom",
+				ShareDenom:      "vaultshare",
 				UnderlyingAsset: "uusd",
 			},
 			expectedErr: fmt.Errorf("invalid admin address: %q", ""),
 		},
 		{
-			name: "Admin with invalid address",
+			name: "admin invalid",
 			msg: types.MsgCreateVaultRequest{
-				Admin:           "invalid address",
-				ShareDenom:      "uatom",
+				Admin:           "bad",
+				ShareDenom:      "vaultshare",
 				UnderlyingAsset: "uusd",
 			},
-			expectedErr: fmt.Errorf("invalid admin address: %q", "invalid address"),
+			expectedErr: fmt.Errorf("invalid admin address: %q", "bad"),
 		},
 		{
-			name: "ShareDenom is empty",
+			name: "share denom empty",
 			msg: types.MsgCreateVaultRequest{
 				Admin:           admin,
 				ShareDenom:      "",
@@ -57,7 +67,7 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 			expectedErr: fmt.Errorf("invalid share denom: %q", ""),
 		},
 		{
-			name: "ShareDenom with invalid denom",
+			name: "share denom invalid",
 			msg: types.MsgCreateVaultRequest{
 				Admin:           admin,
 				ShareDenom:      "inv@lid$",
@@ -66,35 +76,53 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 			expectedErr: fmt.Errorf("invalid share denom: %q", "inv@lid$"),
 		},
 		{
-			name: "UnderlyingAsset is empty",
+			name: "underlying empty",
 			msg: types.MsgCreateVaultRequest{
 				Admin:           admin,
-				ShareDenom:      "uatom",
+				ShareDenom:      "vaultshare",
 				UnderlyingAsset: "",
 			},
 			expectedErr: fmt.Errorf("invalid underlying asset: %q", ""),
 		},
 		{
-			name: "UnderlyingAsset with invalid denom",
+			name: "underlying invalid",
 			msg: types.MsgCreateVaultRequest{
 				Admin:           admin,
-				ShareDenom:      "uatom",
+				ShareDenom:      "vaultshare",
 				UnderlyingAsset: "inv@lid$",
 			},
 			expectedErr: fmt.Errorf("invalid underlying asset: %q: %w", "inv@lid$", fmt.Errorf("invalid denom: %s", "inv@lid$")),
+		},
+		{
+			name: "payment denom invalid",
+			msg: types.MsgCreateVaultRequest{
+				Admin:           admin,
+				ShareDenom:      "vaultshare",
+				UnderlyingAsset: "uusd",
+				PaymentDenom:    "inv@lid$",
+			},
+			expectedErr: fmt.Errorf("invalid payment denom: %q: %w", "inv@lid$", fmt.Errorf("invalid denom: %s", "inv@lid$")),
+		},
+		{
+			name: "payment denom equals underlying (not allowed)",
+			msg: types.MsgCreateVaultRequest{
+				Admin:           admin,
+				ShareDenom:      "vaultshare",
+				UnderlyingAsset: "uusd",
+				PaymentDenom:    "uusd",
+			},
+			expectedErr: fmt.Errorf("payment (%q) denom cannot equal underlying asset denom (%q)", "uusd", "uusd"),
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
-
 			if tc.expectedErr != nil {
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), tc.expectedErr.Error())
+				assert.Error(t, err, "expected error for case %q", tc.name)
+				assert.Contains(t, err.Error(), tc.expectedErr.Error(), "error should contain expected substring for case %q", tc.name)
 			} else {
-				// We expect no error
-				assert.NoError(t, err)
+				assert.NoError(t, err, "expected no error for case %q", tc.name)
 			}
 		})
 	}
@@ -107,43 +135,43 @@ func TestMsgSwapInRequest_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name        string
 		msg         types.MsgSwapInRequest
-		expectedErr string
+		expectedErr error
 	}{
 		{
-			name: "valid request",
+			name: "valid",
 			msg: types.MsgSwapInRequest{
 				Owner:        owner,
 				VaultAddress: vault,
 				Assets:       sdk.NewInt64Coin("uusd", 100),
 			},
-			expectedErr: "",
+			expectedErr: nil,
 		},
 		{
 			name: "invalid vault address",
 			msg: types.MsgSwapInRequest{
 				Owner:        owner,
-				VaultAddress: "invalid",
+				VaultAddress: "bad",
 				Assets:       sdk.NewInt64Coin("uusd", 100),
 			},
-			expectedErr: "invalid vault address",
+			expectedErr: fmt.Errorf("invalid vault address: %q", "bad"),
 		},
 		{
 			name: "invalid owner address",
 			msg: types.MsgSwapInRequest{
-				Owner:        "invalid",
+				Owner:        "bad",
 				VaultAddress: vault,
 				Assets:       sdk.NewInt64Coin("uusd", 100),
 			},
-			expectedErr: "invalid owner address",
+			expectedErr: fmt.Errorf("invalid owner address: %q", "bad"),
 		},
 		{
-			name: "invalid denom",
+			name: "invalid asset denom",
 			msg: types.MsgSwapInRequest{
 				Owner:        owner,
 				VaultAddress: vault,
 				Assets:       sdk.Coin{Denom: "inv@lid$", Amount: sdkmath.NewInt(100)},
 			},
-			expectedErr: "invalid assets coin",
+			expectedErr: fmt.Errorf("invalid assets coin %v: %w", sdk.Coin{Denom: "inv@lid$", Amount: sdkmath.NewInt(100)}, fmt.Errorf("invalid denom: %s", "inv@lid$")),
 		},
 		{
 			name: "zero amount",
@@ -152,19 +180,18 @@ func TestMsgSwapInRequest_ValidateBasic(t *testing.T) {
 				VaultAddress: vault,
 				Assets:       sdk.NewInt64Coin("uusd", 0),
 			},
-			expectedErr: "must be greater than zero",
+			expectedErr: fmt.Errorf("invalid amount: assets %s must be greater than zero", "uusd"),
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
-
-			if tc.expectedErr != "" {
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), tc.expectedErr)
+			if tc.expectedErr != nil {
+				assert.Error(t, err, "expected error for case %q", tc.name)
+				assert.Contains(t, err.Error(), tc.expectedErr.Error(), "error should contain expected substring for case %q", tc.name)
 			} else {
-				assert.NoError(t, err)
+				assert.NoError(t, err, "expected no error for case %q", tc.name)
 			}
 		})
 	}
@@ -177,43 +204,43 @@ func TestMsgSwapOutRequest_ValidateBasic(t *testing.T) {
 	tests := []struct {
 		name        string
 		msg         types.MsgSwapOutRequest
-		expectedErr string
+		expectedErr error
 	}{
 		{
-			name: "valid request",
+			name: "valid",
 			msg: types.MsgSwapOutRequest{
 				Owner:        owner,
 				VaultAddress: vault,
 				Assets:       sdk.NewInt64Coin("uusd", 100),
 			},
-			expectedErr: "",
+			expectedErr: nil,
 		},
 		{
 			name: "invalid vault address",
 			msg: types.MsgSwapOutRequest{
 				Owner:        owner,
-				VaultAddress: "invalid",
+				VaultAddress: "bad",
 				Assets:       sdk.NewInt64Coin("uusd", 100),
 			},
-			expectedErr: "invalid vault address",
+			expectedErr: fmt.Errorf("invalid vault address: %q", "bad"),
 		},
 		{
 			name: "invalid owner address",
 			msg: types.MsgSwapOutRequest{
-				Owner:        "invalid",
+				Owner:        "bad",
 				VaultAddress: vault,
 				Assets:       sdk.NewInt64Coin("uusd", 100),
 			},
-			expectedErr: "invalid owner address",
+			expectedErr: fmt.Errorf("invalid owner address: %q", "bad"),
 		},
 		{
-			name: "invalid denom",
+			name: "invalid asset denom",
 			msg: types.MsgSwapOutRequest{
 				Owner:        owner,
 				VaultAddress: vault,
 				Assets:       sdk.Coin{Denom: "inv@lid$", Amount: sdkmath.NewInt(100)},
 			},
-			expectedErr: "invalid assets coin",
+			expectedErr: fmt.Errorf("invalid assets coin %v: %w", sdk.Coin{Denom: "inv@lid$", Amount: sdkmath.NewInt(100)}, fmt.Errorf("invalid denom: %s", "inv@lid$")),
 		},
 		{
 			name: "zero amount",
@@ -222,268 +249,18 @@ func TestMsgSwapOutRequest_ValidateBasic(t *testing.T) {
 				VaultAddress: vault,
 				Assets:       sdk.NewInt64Coin("uusd", 0),
 			},
-			expectedErr: "must be greater than zero",
+			expectedErr: fmt.Errorf("invalid amount: assets %s must be greater than zero", "uusd"),
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
-
-			if tc.expectedErr != "" {
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), tc.expectedErr)
+			if tc.expectedErr != nil {
+				assert.Error(t, err, "expected error for case %q", tc.name)
+				assert.Contains(t, err.Error(), tc.expectedErr.Error(), "error should contain expected substring for case %q", tc.name)
 			} else {
-				assert.NoError(t, err)
-			}
-		})
-	}
-}
-
-func TestMsgUpdateInterestRateRequest_ValidateBasic(t *testing.T) {
-	addr := utils.TestAddress().Bech32
-
-	tests := []struct {
-		name    string
-		msg     types.MsgUpdateInterestRateRequest
-		wantErr string
-	}{
-		{
-			name: "valid",
-			msg: types.MsgUpdateInterestRateRequest{
-				Admin:        addr,
-				VaultAddress: addr,
-				NewRate:      "1.5",
-			},
-		},
-		{
-			name: "invalid admin",
-			msg: types.MsgUpdateInterestRateRequest{
-				Admin:        "bad",
-				VaultAddress: addr,
-				NewRate:      "1.5",
-			},
-			wantErr: "invalid admin address",
-		},
-		{
-			name: "invalid vault address",
-			msg: types.MsgUpdateInterestRateRequest{
-				Admin:        addr,
-				VaultAddress: "bad",
-				NewRate:      "1.5",
-			},
-			wantErr: "invalid vault address",
-		},
-		{
-			name: "invalid new rate",
-			msg: types.MsgUpdateInterestRateRequest{
-				Admin:        addr,
-				VaultAddress: addr,
-				NewRate:      "bad",
-			},
-			wantErr: "invalid interest rate",
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			err := tc.msg.ValidateBasic()
-			if tc.wantErr != "" {
-				assert.ErrorContains(t, err, tc.wantErr)
-			} else {
-				assert.NoError(t, err)
-			}
-		})
-	}
-}
-
-func TestMsgDepositInterestFundsRequest_ValidateBasic(t *testing.T) {
-	addr := utils.TestAddress().Bech32
-
-	tests := []struct {
-		name    string
-		msg     types.MsgDepositInterestFundsRequest
-		wantErr string
-	}{
-		{
-			name: "valid",
-			msg: types.MsgDepositInterestFundsRequest{
-				Admin:        addr,
-				VaultAddress: addr,
-				Amount:       sdk.NewInt64Coin("uusd", 1000),
-			},
-		},
-		{
-			name: "zero amount",
-			msg: types.MsgDepositInterestFundsRequest{
-				Admin:        addr,
-				VaultAddress: addr,
-				Amount:       sdk.NewInt64Coin("uusd", 0),
-			},
-			wantErr: "greater than zero",
-		},
-		{
-			name: "invalid admin",
-			msg: types.MsgDepositInterestFundsRequest{
-				Admin:        "bad",
-				VaultAddress: addr,
-				Amount:       sdk.NewInt64Coin("uusd", 1000),
-			},
-			wantErr: "invalid admin address",
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			err := tc.msg.ValidateBasic()
-			if tc.wantErr != "" {
-				assert.ErrorContains(t, err, tc.wantErr)
-			} else {
-				assert.NoError(t, err)
-			}
-		})
-	}
-}
-
-func TestMsgWithdrawInterestFundsRequest_ValidateBasic(t *testing.T) {
-	addr := utils.TestAddress().Bech32
-
-	tests := []struct {
-		name    string
-		msg     types.MsgWithdrawInterestFundsRequest
-		wantErr string
-	}{
-		{
-			name: "valid",
-			msg: types.MsgWithdrawInterestFundsRequest{
-				Admin:        addr,
-				VaultAddress: addr,
-				Amount:       sdk.NewInt64Coin("uusd", 1000),
-			},
-		},
-		{
-			name: "zero amount",
-			msg: types.MsgWithdrawInterestFundsRequest{
-				Admin:        addr,
-				VaultAddress: addr,
-				Amount:       sdk.NewInt64Coin("uusd", 0),
-			},
-			wantErr: "greater than zero",
-		},
-		{
-			name: "invalid interest admin",
-			msg: types.MsgWithdrawInterestFundsRequest{
-				Admin:        "bad",
-				VaultAddress: addr,
-				Amount:       sdk.NewInt64Coin("uusd", 1000),
-			},
-			wantErr: "invalid interest admin address",
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			err := tc.msg.ValidateBasic()
-			if tc.wantErr != "" {
-				assert.ErrorContains(t, err, tc.wantErr)
-			} else {
-				assert.NoError(t, err)
-			}
-		})
-	}
-}
-
-func TestMsgToggleSwapInRequest_ValidateBasic(t *testing.T) {
-	addr := utils.TestAddress().Bech32
-
-	tests := []struct {
-		name    string
-		msg     types.MsgToggleSwapInRequest
-		wantErr string
-	}{
-		{
-			name: "valid",
-			msg: types.MsgToggleSwapInRequest{
-				Admin:        addr,
-				VaultAddress: addr,
-				Enabled:      true,
-			},
-		},
-		{
-			name: "invalid admin",
-			msg: types.MsgToggleSwapInRequest{
-				Admin:        "bad",
-				VaultAddress: addr,
-				Enabled:      false,
-			},
-			wantErr: "invalid admin address",
-		},
-		{
-			name: "invalid vault address",
-			msg: types.MsgToggleSwapInRequest{
-				Admin:        addr,
-				VaultAddress: "bad",
-				Enabled:      true,
-			},
-			wantErr: "invalid vault address",
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			err := tc.msg.ValidateBasic()
-			if tc.wantErr != "" {
-				assert.ErrorContains(t, err, tc.wantErr)
-			} else {
-				assert.NoError(t, err)
-			}
-		})
-	}
-}
-
-func TestMsgToggleSwapOutRequest_ValidateBasic(t *testing.T) {
-	addr := utils.TestAddress().Bech32
-
-	tests := []struct {
-		name    string
-		msg     types.MsgToggleSwapOutRequest
-		wantErr string
-	}{
-		{
-			name: "valid",
-			msg: types.MsgToggleSwapOutRequest{
-				Admin:        addr,
-				VaultAddress: addr,
-				Enabled:      true,
-			},
-		},
-		{
-			name: "invalid admin",
-			msg: types.MsgToggleSwapOutRequest{
-				Admin:        "bad",
-				VaultAddress: addr,
-				Enabled:      false,
-			},
-			wantErr: "invalid admin address",
-		},
-		{
-			name: "invalid vault address",
-			msg: types.MsgToggleSwapOutRequest{
-				Admin:        addr,
-				VaultAddress: "bad",
-				Enabled:      true,
-			},
-			wantErr: "invalid vault address",
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			err := tc.msg.ValidateBasic()
-			if tc.wantErr != "" {
-				assert.ErrorContains(t, err, tc.wantErr)
-			} else {
-				assert.NoError(t, err)
+				assert.NoError(t, err, "expected no error for case %q", tc.name)
 			}
 		})
 	}
@@ -493,43 +270,45 @@ func TestMsgUpdateMinInterestRateRequest_ValidateBasic(t *testing.T) {
 	addr := utils.TestAddress().Bech32
 
 	tests := []struct {
-		name    string
-		msg     types.MsgUpdateMinInterestRateRequest
-		wantErr string
+		name        string
+		msg         types.MsgUpdateMinInterestRateRequest
+		expectedErr error
 	}{
 		{
-			name: "valid min rate",
+			name: "valid with negative min rate",
 			msg: types.MsgUpdateMinInterestRateRequest{
 				Admin:        addr,
 				VaultAddress: addr,
 				MinRate:      "-0.75",
 			},
+			expectedErr: nil,
 		},
 		{
-			name: "empty min rate allowed (clears limit)",
+			name: "empty min rate clears",
 			msg: types.MsgUpdateMinInterestRateRequest{
 				Admin:        addr,
 				VaultAddress: addr,
 				MinRate:      "",
 			},
+			expectedErr: nil,
 		},
 		{
-			name: "invalid admin address",
+			name: "invalid admin",
 			msg: types.MsgUpdateMinInterestRateRequest{
 				Admin:        "bad",
 				VaultAddress: addr,
-				MinRate:      "-1.0",
+				MinRate:      "0.10",
 			},
-			wantErr: "invalid admin address",
+			expectedErr: fmt.Errorf("invalid admin address: %q", "bad"),
 		},
 		{
-			name: "invalid vault address",
+			name: "invalid vault",
 			msg: types.MsgUpdateMinInterestRateRequest{
 				Admin:        addr,
 				VaultAddress: "bad",
-				MinRate:      "-1.0",
+				MinRate:      "0.10",
 			},
-			wantErr: "invalid vault address",
+			expectedErr: fmt.Errorf("invalid vault address: %q", "bad"),
 		},
 		{
 			name: "invalid min rate",
@@ -538,17 +317,18 @@ func TestMsgUpdateMinInterestRateRequest_ValidateBasic(t *testing.T) {
 				VaultAddress: addr,
 				MinRate:      "abc",
 			},
-			wantErr: "invalid min rate",
+			expectedErr: fmt.Errorf("invalid min rate: %q", "abc"),
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
-			if tc.wantErr != "" {
-				assert.ErrorContains(t, err, tc.wantErr)
+			if tc.expectedErr != nil {
+				assert.Error(t, err, "expected error for case %q", tc.name)
+				assert.Contains(t, err.Error(), tc.expectedErr.Error(), "error should contain expected substring for case %q", tc.name)
 			} else {
-				assert.NoError(t, err)
+				assert.NoError(t, err, "expected no error for case %q", tc.name)
 			}
 		})
 	}
@@ -558,43 +338,45 @@ func TestMsgUpdateMaxInterestRateRequest_ValidateBasic(t *testing.T) {
 	addr := utils.TestAddress().Bech32
 
 	tests := []struct {
-		name    string
-		msg     types.MsgUpdateMaxInterestRateRequest
-		wantErr string
+		name        string
+		msg         types.MsgUpdateMaxInterestRateRequest
+		expectedErr error
 	}{
 		{
-			name: "valid max rate",
+			name: "valid with positive max rate",
 			msg: types.MsgUpdateMaxInterestRateRequest{
 				Admin:        addr,
 				VaultAddress: addr,
 				MaxRate:      "3.25",
 			},
+			expectedErr: nil,
 		},
 		{
-			name: "empty max rate allowed (clears limit)",
+			name: "empty max rate clears",
 			msg: types.MsgUpdateMaxInterestRateRequest{
 				Admin:        addr,
 				VaultAddress: addr,
 				MaxRate:      "",
 			},
+			expectedErr: nil,
 		},
 		{
-			name: "invalid admin address",
+			name: "invalid admin",
 			msg: types.MsgUpdateMaxInterestRateRequest{
 				Admin:        "bad",
 				VaultAddress: addr,
 				MaxRate:      "2.0",
 			},
-			wantErr: "invalid admin address",
+			expectedErr: fmt.Errorf("invalid admin address: %q", "bad"),
 		},
 		{
-			name: "invalid vault address",
+			name: "invalid vault",
 			msg: types.MsgUpdateMaxInterestRateRequest{
 				Admin:        addr,
 				VaultAddress: "bad",
 				MaxRate:      "2.0",
 			},
-			wantErr: "invalid vault address",
+			expectedErr: fmt.Errorf("invalid vault address: %q", "bad"),
 		},
 		{
 			name: "invalid max rate",
@@ -603,17 +385,449 @@ func TestMsgUpdateMaxInterestRateRequest_ValidateBasic(t *testing.T) {
 				VaultAddress: addr,
 				MaxRate:      "notanumber",
 			},
-			wantErr: "invalid max rate",
+			expectedErr: fmt.Errorf("invalid max rate: %q", "notanumber"),
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
-			if tc.wantErr != "" {
-				assert.ErrorContains(t, err, tc.wantErr)
+			if tc.expectedErr != nil {
+				assert.Error(t, err, "expected error for case %q", tc.name)
+				assert.Contains(t, err.Error(), tc.expectedErr.Error(), "error should contain expected substring for case %q", tc.name)
 			} else {
-				assert.NoError(t, err)
+				assert.NoError(t, err, "expected no error for case %q", tc.name)
+			}
+		})
+	}
+}
+
+func TestMsgUpdateInterestRateRequest_ValidateBasic(t *testing.T) {
+	addr := utils.TestAddress().Bech32
+
+	tests := []struct {
+		name        string
+		msg         types.MsgUpdateInterestRateRequest
+		expectedErr error
+	}{
+		{
+			name: "valid",
+			msg: types.MsgUpdateInterestRateRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				NewRate:      "1.5",
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "invalid admin",
+			msg: types.MsgUpdateInterestRateRequest{
+				Admin:        "bad",
+				VaultAddress: addr,
+				NewRate:      "1.5",
+			},
+			expectedErr: fmt.Errorf("invalid admin address: %q", "bad"),
+		},
+		{
+			name: "invalid vault address",
+			msg: types.MsgUpdateInterestRateRequest{
+				Admin:        addr,
+				VaultAddress: "bad",
+				NewRate:      "1.5",
+			},
+			expectedErr: fmt.Errorf("invalid vault address: %q", "bad"),
+		},
+		{
+			name: "invalid new rate",
+			msg: types.MsgUpdateInterestRateRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				NewRate:      "bad",
+			},
+			expectedErr: fmt.Errorf("invalid interest rate: %q", "bad"),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.expectedErr != nil {
+				assert.Error(t, err, "expected error for case %q", tc.name)
+				assert.Contains(t, err.Error(), tc.expectedErr.Error(), "error should contain expected substring for case %q", tc.name)
+			} else {
+				assert.NoError(t, err, "expected no error for case %q", tc.name)
+			}
+		})
+	}
+}
+
+func TestMsgToggleSwapInRequest_ValidateBasic(t *testing.T) {
+	addr := utils.TestAddress().Bech32
+
+	tests := []struct {
+		name        string
+		msg         types.MsgToggleSwapInRequest
+		expectedErr error
+	}{
+		{
+			name: "valid",
+			msg: types.MsgToggleSwapInRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				Enabled:      true,
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "invalid admin",
+			msg: types.MsgToggleSwapInRequest{
+				Admin:        "bad",
+				VaultAddress: addr,
+				Enabled:      false,
+			},
+			expectedErr: fmt.Errorf("invalid admin address: %q", "bad"),
+		},
+		{
+			name: "invalid vault address",
+			msg: types.MsgToggleSwapInRequest{
+				Admin:        addr,
+				VaultAddress: "bad",
+				Enabled:      true,
+			},
+			expectedErr: fmt.Errorf("invalid vault address: %q", "bad"),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.expectedErr != nil {
+				assert.Error(t, err, "expected error for case %q", tc.name)
+				assert.Contains(t, err.Error(), tc.expectedErr.Error(), "error should contain expected substring for case %q", tc.name)
+			} else {
+				assert.NoError(t, err, "expected no error for case %q", tc.name)
+			}
+		})
+	}
+}
+
+func TestMsgToggleSwapOutRequest_ValidateBasic(t *testing.T) {
+	addr := utils.TestAddress().Bech32
+
+	tests := []struct {
+		name        string
+		msg         types.MsgToggleSwapOutRequest
+		expectedErr error
+	}{
+		{
+			name: "valid",
+			msg: types.MsgToggleSwapOutRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				Enabled:      true,
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "invalid admin",
+			msg: types.MsgToggleSwapOutRequest{
+				Admin:        "bad",
+				VaultAddress: addr,
+				Enabled:      false,
+			},
+			expectedErr: fmt.Errorf("invalid admin address: %q", "bad"),
+		},
+		{
+			name: "invalid vault address",
+			msg: types.MsgToggleSwapOutRequest{
+				Admin:        addr,
+				VaultAddress: "bad",
+				Enabled:      true,
+			},
+			expectedErr: fmt.Errorf("invalid vault address: %q", "bad"),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.expectedErr != nil {
+				assert.Error(t, err, "expected error for case %q", tc.name)
+				assert.Contains(t, err.Error(), tc.expectedErr.Error(), "error should contain expected substring for case %q", tc.name)
+			} else {
+				assert.NoError(t, err, "expected no error for case %q", tc.name)
+			}
+		})
+	}
+}
+
+func TestMsgDepositInterestFundsRequest_ValidateBasic(t *testing.T) {
+	addr := utils.TestAddress().Bech32
+
+	tests := []struct {
+		name        string
+		msg         types.MsgDepositInterestFundsRequest
+		expectedErr error
+	}{
+		{
+			name: "valid",
+			msg: types.MsgDepositInterestFundsRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				Amount:       sdk.NewInt64Coin("uusd", 1000),
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "zero amount",
+			msg: types.MsgDepositInterestFundsRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				Amount:       sdk.NewInt64Coin("uusd", 0),
+			},
+			expectedErr: fmt.Errorf("deposit amount must be greater than zero"),
+		},
+		{
+			name: "invalid admin",
+			msg: types.MsgDepositInterestFundsRequest{
+				Admin:        "bad",
+				VaultAddress: addr,
+				Amount:       sdk.NewInt64Coin("uusd", 1000),
+			},
+			expectedErr: fmt.Errorf("invalid admin address: %q", "bad"),
+		},
+		{
+			name: "invalid vault",
+			msg: types.MsgDepositInterestFundsRequest{
+				Admin:        addr,
+				VaultAddress: "bad",
+				Amount:       sdk.NewInt64Coin("uusd", 1000),
+			},
+			expectedErr: fmt.Errorf("invalid vault address: %q", "bad"),
+		},
+		{
+			name: "invalid denom",
+			msg: types.MsgDepositInterestFundsRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				Amount:       sdk.Coin{Denom: "inv@lid$", Amount: sdkmath.NewInt(1000)},
+			},
+			expectedErr: fmt.Errorf("invalid deposit amount: %w", fmt.Errorf("invalid denom: %s", "inv@lid$")),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.expectedErr != nil {
+				assert.Error(t, err, "expected error for case %q", tc.name)
+				assert.Contains(t, err.Error(), tc.expectedErr.Error(), "error should contain expected substring for case %q", tc.name)
+			} else {
+				assert.NoError(t, err, "expected no error for case %q", tc.name)
+			}
+		})
+	}
+}
+
+func TestMsgWithdrawInterestFundsRequest_ValidateBasic(t *testing.T) {
+	addr := utils.TestAddress().Bech32
+
+	tests := []struct {
+		name        string
+		msg         types.MsgWithdrawInterestFundsRequest
+		expectedErr error
+	}{
+		{
+			name: "valid",
+			msg: types.MsgWithdrawInterestFundsRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				Amount:       sdk.NewInt64Coin("uusd", 1000),
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "zero amount",
+			msg: types.MsgWithdrawInterestFundsRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				Amount:       sdk.NewInt64Coin("uusd", 0),
+			},
+			expectedErr: fmt.Errorf("withdrawal amount must be greater than zero"),
+		},
+		{
+			name: "invalid interest admin",
+			msg: types.MsgWithdrawInterestFundsRequest{
+				Admin:        "bad",
+				VaultAddress: addr,
+				Amount:       sdk.NewInt64Coin("uusd", 1000),
+			},
+			expectedErr: fmt.Errorf("invalid interest admin address: %q", "bad"),
+		},
+		{
+			name: "invalid vault",
+			msg: types.MsgWithdrawInterestFundsRequest{
+				Admin:        addr,
+				VaultAddress: "bad",
+				Amount:       sdk.NewInt64Coin("uusd", 1000),
+			},
+			expectedErr: fmt.Errorf("invalid vault address: %q", "bad"),
+		},
+		{
+			name: "invalid denom",
+			msg: types.MsgWithdrawInterestFundsRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				Amount:       sdk.Coin{Denom: "inv@lid$", Amount: sdkmath.NewInt(1000)},
+			},
+			expectedErr: fmt.Errorf("invalid withdrawal amount: %w", fmt.Errorf("invalid denom: %s", "inv@lid$")),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.expectedErr != nil {
+				assert.Error(t, err, "expected error for case %q", tc.name)
+				assert.Contains(t, err.Error(), tc.expectedErr.Error(), "error should contain expected substring for case %q", tc.name)
+			} else {
+				assert.NoError(t, err, "expected no error for case %q", tc.name)
+			}
+		})
+	}
+}
+
+func TestMsgDepositPrincipalFundsRequest_ValidateBasic(t *testing.T) {
+	addr := utils.TestAddress().Bech32
+
+	tests := []struct {
+		name        string
+		msg         types.MsgDepositPrincipalFundsRequest
+		expectedErr error
+	}{
+		{
+			name: "valid",
+			msg: types.MsgDepositPrincipalFundsRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				Amount:       sdk.NewInt64Coin("uusd", 1000),
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "zero amount",
+			msg: types.MsgDepositPrincipalFundsRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				Amount:       sdk.NewInt64Coin("uusd", 0),
+			},
+			expectedErr: fmt.Errorf("deposit amount must be greater than zero"),
+		},
+		{
+			name: "invalid admin",
+			msg: types.MsgDepositPrincipalFundsRequest{
+				Admin:        "bad",
+				VaultAddress: addr,
+				Amount:       sdk.NewInt64Coin("uusd", 1000),
+			},
+			expectedErr: fmt.Errorf("invalid admin address: %q", "bad"),
+		},
+		{
+			name: "invalid vault",
+			msg: types.MsgDepositPrincipalFundsRequest{
+				Admin:        addr,
+				VaultAddress: "bad",
+				Amount:       sdk.NewInt64Coin("uusd", 1000),
+			},
+			expectedErr: fmt.Errorf("invalid vault address: %q", "bad"),
+		},
+		{
+			name: "invalid denom",
+			msg: types.MsgDepositPrincipalFundsRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				Amount:       sdk.Coin{Denom: "inv@lid$", Amount: sdkmath.NewInt(1000)},
+			},
+			expectedErr: fmt.Errorf("invalid deposit amount: %w", fmt.Errorf("invalid denom: %s", "inv@lid$")),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.expectedErr != nil {
+				assert.Error(t, err, "expected error for case %q", tc.name)
+				assert.Contains(t, err.Error(), tc.expectedErr.Error(), "error should contain expected substring for case %q", tc.name)
+			} else {
+				assert.NoError(t, err, "expected no error for case %q", tc.name)
+			}
+		})
+	}
+}
+
+func TestMsgWithdrawPrincipalFundsRequest_ValidateBasic(t *testing.T) {
+	addr := utils.TestAddress().Bech32
+
+	tests := []struct {
+		name        string
+		msg         types.MsgWithdrawPrincipalFundsRequest
+		expectedErr error
+	}{
+		{
+			name: "valid",
+			msg: types.MsgWithdrawPrincipalFundsRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				Amount:       sdk.NewInt64Coin("uusd", 1000),
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "zero amount",
+			msg: types.MsgWithdrawPrincipalFundsRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				Amount:       sdk.NewInt64Coin("uusd", 0),
+			},
+			expectedErr: fmt.Errorf("withdrawal amount must be greater than zero"),
+		},
+		{
+			name: "invalid admin",
+			msg: types.MsgWithdrawPrincipalFundsRequest{
+				Admin:        "bad",
+				VaultAddress: addr,
+				Amount:       sdk.NewInt64Coin("uusd", 1000),
+			},
+			expectedErr: fmt.Errorf("invalid admin address: %q", "bad"),
+		},
+		{
+			name: "invalid vault",
+			msg: types.MsgWithdrawPrincipalFundsRequest{
+				Admin:        addr,
+				VaultAddress: "bad",
+				Amount:       sdk.NewInt64Coin("uusd", 1000),
+			},
+			expectedErr: fmt.Errorf("invalid vault address: %q", "bad"),
+		},
+		{
+			name: "invalid denom",
+			msg: types.MsgWithdrawPrincipalFundsRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				Amount:       sdk.Coin{Denom: "inv@lid$", Amount: sdkmath.NewInt(1000)},
+			},
+			expectedErr: fmt.Errorf("invalid withdrawal amount: %w", fmt.Errorf("invalid denom: %s", "inv@lid$")),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.expectedErr != nil {
+				assert.Error(t, err, "expected error for case %q", tc.name)
+				assert.Contains(t, err.Error(), tc.expectedErr.Error(), "error should contain expected substring for case %q", tc.name)
+			} else {
+				assert.NoError(t, err, "expected no error for case %q", tc.name)
 			}
 		})
 	}

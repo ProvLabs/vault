@@ -18,6 +18,7 @@ import (
 
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/simapp"
+	"github.com/provlabs/vault/types"
 )
 
 type TestSuite struct {
@@ -165,4 +166,48 @@ func createSendCoinEvents(fromAddress, toAddress string, amount string) []sdk.Ev
 	))
 
 	return events
+}
+
+// setupBaseVault creates and activates markers for the underlying and share denoms,
+// withdraws some underlying coins to the admin, and creates the vault.
+// It can optionally accept a paymentDenom for the vault's configuration.
+// It returns the newly created vault account.
+func (s *TestSuite) setupBaseVault(underlyingDenom, shareDenom string, paymentDenom ...string) *types.VaultAccount {
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingDenom, 2_000_000), s.adminAddr)
+	s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, underlyingDenom, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 100_000)))
+
+	var pDenom string
+	if len(paymentDenom) > 0 {
+		pDenom = paymentDenom[0]
+	}
+
+	vaultCfg := vaultAttrs{
+		admin:      s.adminAddr.String(),
+		share:      shareDenom,
+		underlying: underlyingDenom,
+		payment:    pDenom,
+	}
+	vault, err := s.k.CreateVault(s.ctx, vaultCfg)
+	s.Require().NoError(err, "vault creation should succeed")
+	return vault
+}
+
+// setupSinglePaymentDenomVault is a comprehensive helper that creates a vault with
+// an underlying asset, a share denom, and a single payment denom. It creates all markers,
+// withdraws funds to the admin, creates the vault with the paymentDenom configured,
+// and sets a custom NAV for the payment denom to the underlying denom.
+func (s *TestSuite) setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom string, price, volume int64) *types.VaultAccount {
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 2_000_000), s.adminAddr)
+	s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, paymentDenom, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 100_000)))
+	vault := s.setupBaseVault(underlyingDenom, shareDenom, paymentDenom)
+
+	paymentMarkerAddr := markertypes.MustGetMarkerAddress(paymentDenom)
+	paymentMarkerAccount, err := s.k.MarkerKeeper.GetMarker(s.ctx, paymentMarkerAddr)
+	s.Require().NoError(err, "should fetch payment marker for NAV setup")
+	s.Require().NoError(s.k.MarkerKeeper.SetNetAssetValue(s.ctx, paymentMarkerAccount, markertypes.NetAssetValue{
+		Price:  sdk.NewInt64Coin(underlyingDenom, price),
+		Volume: uint64(volume),
+	}, "test"), "should set NAV %s->%s=%d/%d", paymentDenom, underlyingDenom, price, volume)
+
+	return vault
 }

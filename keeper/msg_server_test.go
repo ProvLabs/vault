@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	"github.com/cometbft/cometbft/crypto/secp256k1"
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -318,7 +318,7 @@ func (s *TestSuite) TestMsgServer_SwapIn_Failures() {
 				VaultAddress: vaultAddr.String(),
 				Assets:       sdk.NewInt64Coin("othercoin", 100),
 			},
-			expectedErrSubstrs: []string{"denom not supported for vault must be of type \"underlying\" : got \"othercoin\""},
+			expectedErrSubstrs: []string{"denom not supported for vault; must be \"underlying\": got \"othercoin\""},
 		},
 		{
 			name: "insufficient owner funds is rejected",
@@ -1584,7 +1584,7 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds_Failures() {
 				VaultAddress: vaultAddr.String(),
 				Amount:       sdk.NewInt64Coin(unsupportedDenom, 9_999_999),
 			},
-			expectedErrSubstrs: []string{"denom not supported for vault must be of type \"under\" : got \"unsupportedDenom\""},
+			expectedErrSubstrs: []string{"denom not supported for vault", "under", unsupportedDenom},
 		},
 		{
 			name:  "insufficient admin balance",
@@ -1747,7 +1747,7 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds_Failures() {
 				VaultAddress: vaultAddr.String(),
 				Amount:       sdk.NewInt64Coin(unsupportedDenom, 9_999_999),
 			},
-			expectedErrSubstrs: []string{"denom not supported for vault must be of type \"under\" : got \"unsupportedDenom\""},
+			expectedErrSubstrs: []string{"denom not supported for vault", "under", unsupportedDenom},
 		},
 	}
 
@@ -1886,7 +1886,7 @@ func (s *TestSuite) TestMsgServer_DepositPrincipalFunds_Failures() {
 				VaultAddress: vaultAddr.String(),
 				Amount:       sdk.NewInt64Coin("wrongdenom", 500),
 			},
-			expectedErrSubstrs: []string{"denom not supported for vault must be of type \"under\" : got \"wrongdenom\""},
+			expectedErrSubstrs: []string{"denom not supported for vault", "under", "wrongdenom"},
 		},
 		{
 			name:  "insufficient admin balance",
@@ -2036,7 +2036,7 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds_Failures() {
 				VaultAddress: vaultAddr.String(),
 				Amount:       sdk.NewInt64Coin("wrongdenom", 500),
 			},
-			expectedErrSubstrs: []string{"enom not supported for vault must be of type \"under\" : got \"wrongdenom\""},
+			expectedErrSubstrs: []string{"denom not supported for vault", "under", "wrongdenom"},
 		},
 		{
 			name:  "insufficient marker balance",

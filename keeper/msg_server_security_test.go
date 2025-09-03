@@ -75,7 +75,7 @@ func (s *TestSuite) TestMsgServer_SmallFirstSwapIn_HugeDonation_SwapOut() {
 
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	sharesToBurn := sdk.NewCoin(shareDenom, respIn.Amount)
-	respOut, err := s.k.SwapOut(s.ctx, vaultAddr, owner, sharesToBurn)
+	respOut, err := s.k.SwapOut(s.ctx, vaultAddr, owner, sharesToBurn, "")
 	s.Require().NoError(err, "swap-out of all tiny depositor shares should succeed")
 
 	s.Require().True(

@@ -23,9 +23,9 @@ const (
 
 // ReconcileVaultInterest updates interest accounting for a vault if a new interest period has started.
 //
-// If this is the first time the vault accrues interest, it initializes PeriodStart and persists the
-// vault account. If the current block time is after PeriodStart, it applies the interest transfer
-// and enqueues the next period start. If the current time has not advanced past PeriodStart, it is a no-op.
+// If this is the first time the vault accrues interest, it triggers the start of a new period.
+// If the current block time is after PeriodStart, it applies the interest transfer.
+// If the current time has not advanced past PeriodStart, it is a no-op.
 //
 // This should be called before any transaction that changes vault principal/reserves or depends on the
 // current interest state.
@@ -59,10 +59,10 @@ func (k *Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vaul
 	}
 
 	periodDuration := currentBlockTime - vault.PeriodStart
-	markerAddress := markertypes.MustGetMarkerAddress(vault.ShareDenom)
+	principalAddress := vault.PrincipalMarkerAddress()
 
 	reserves := k.BankKeeper.GetBalance(ctx, vault.GetAddress(), vault.UnderlyingAsset)
-	principal := k.BankKeeper.GetBalance(ctx, markerAddress, vault.UnderlyingAsset)
+	principal := k.BankKeeper.GetBalance(ctx, principalAddress, vault.UnderlyingAsset)
 
 	interestEarned, err := interest.CalculateInterestEarned(principal, vault.CurrentInterestRate, periodDuration)
 	if err != nil {
@@ -76,7 +76,7 @@ func (k *Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vaul
 
 		if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx),
 			vault.GetAddress(),
-			markerAddress,
+			principalAddress,
 			sdk.NewCoins(sdk.NewCoin(vault.UnderlyingAsset, interestEarned)),
 		); err != nil {
 			return fmt.Errorf("failed to pay interest: %w", err)
@@ -88,7 +88,7 @@ func (k *Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vaul
 		}
 
 		if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx),
-			markerAddress,
+			principalAddress,
 			vault.GetAddress(),
 			sdk.NewCoins(sdk.NewCoin(vault.UnderlyingAsset, owed)),
 		); err != nil {
@@ -96,7 +96,7 @@ func (k *Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vaul
 		}
 	}
 
-	principalAfter := k.BankKeeper.GetBalance(ctx, markerAddress, vault.UnderlyingAsset)
+	principalAfter := k.BankKeeper.GetBalance(ctx, principalAddress, vault.UnderlyingAsset)
 
 	k.emitEvent(ctx, types.NewEventVaultReconcile(
 		vault.GetAddress().String(),
@@ -123,10 +123,10 @@ func (k *Keeper) CanPayoutDuration(ctx sdk.Context, vault *types.VaultAccount, d
 
 	denom := vault.UnderlyingAsset
 	vaultAddr := vault.GetAddress()
-	markerAddr := markertypes.MustGetMarkerAddress(vault.ShareDenom)
+	principalAddress := vault.PrincipalMarkerAddress()
 
 	reserves := k.BankKeeper.GetBalance(ctx, vaultAddr, denom)
-	principal := k.BankKeeper.GetBalance(ctx, markerAddr, denom)
+	principal := k.BankKeeper.GetBalance(ctx, principalAddress, denom)
 
 	interestEarned, err := interest.CalculateInterestEarned(principal, vault.CurrentInterestRate, duration)
 	if err != nil {
@@ -263,9 +263,9 @@ func (k *Keeper) tryGetVault(ctx sdk.Context, addr sdk.AccAddress) (*types.Vault
 	return vault, true
 }
 
-// handleReconciledVaults processes vaults whose start times are due (time <= now).
+// handleReconciledVaults processes vaults from the payout verification queue.
 //
-// It collects due entries using WalkDueStarts, removes them from the start queue, partitions the
+// It collects due entries using WalkPayoutVerifications, removes them from the verification queue, partitions the
 // corresponding vaults into payable vs depleted for the forecast window, updates payable vaults'
 // timeouts, and disables interest for depleted vaults.
 func (k *Keeper) handleReconciledVaults(ctx context.Context) error {
@@ -335,10 +335,11 @@ func (k *Keeper) handleDepletedVaults(ctx context.Context, failedPayouts []*type
 	}
 }
 
-// resetVaultInterestPeriods updates PeriodStart and PeriodTimeout for the provided vaults and
-// persists them, then enqueues the corresponding timeout entries.
+// resetVaultInterestPeriods starts a new accrual period for the provided vaults after a successful
+// interest reconciliation by calling SafeEnqueueTimeout for each.
 //
-// This is called after a successful interest reconciliation to start a new accrual period.
+// This updates PeriodStart and PeriodTimeout, persists the vault, and enqueues the corresponding timeout entry.
+
 func (k *Keeper) resetVaultInterestPeriods(ctx context.Context, vaults []*types.VaultAccount) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 

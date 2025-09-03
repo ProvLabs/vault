@@ -27,12 +27,14 @@ type VaultAttributer interface {
 	GetShareDenom() string
 	GetUnderlyingAsset() string
 	GetPaymentDenom() string
+	GetWithdrawalDelaySeconds() uint64
 }
 
 // CreateVault creates the vault based on the provided attributes.
 func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*types.VaultAccount, error) {
 	underlying := attributes.GetUnderlyingAsset()
 	payment := attributes.GetPaymentDenom()
+	withdrawalDelay := attributes.GetWithdrawalDelaySeconds()
 
 	underlyingAssetAddr, err := markertypes.MarkerAddress(underlying)
 	if err != nil {
@@ -42,7 +44,7 @@ func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*type
 		return nil, fmt.Errorf("underlying asset marker %q not found", underlying)
 	}
 
-	vault, err := k.createVaultAccount(ctx, attributes.GetAdmin(), attributes.GetShareDenom(), underlying, payment)
+	vault, err := k.createVaultAccount(ctx, attributes.GetAdmin(), attributes.GetShareDenom(), underlying, payment, withdrawalDelay)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create vault account: %w", err)
 	}
@@ -71,7 +73,7 @@ func (k Keeper) GetVault(ctx sdk.Context, address sdk.AccAddress) (*types.VaultA
 }
 
 // createVaultAccount creates and stores a new vault account.
-func (k *Keeper) createVaultAccount(ctx sdk.Context, admin, shareDenom, underlyingAsset, paymentDenom string) (*types.VaultAccount, error) {
+func (k *Keeper) createVaultAccount(ctx sdk.Context, admin, shareDenom, underlyingAsset, paymentDenom string, withdrawalDelay uint64) (*types.VaultAccount, error) {
 	vaultAddr := types.GetVaultAddress(shareDenom)
 
 	vault := types.NewVaultAccount(
@@ -80,6 +82,7 @@ func (k *Keeper) createVaultAccount(ctx sdk.Context, admin, shareDenom, underlyi
 		shareDenom,
 		underlyingAsset,
 		paymentDenom,
+		withdrawalDelay,
 	)
 
 	if err := vault.Validate(); err != nil {

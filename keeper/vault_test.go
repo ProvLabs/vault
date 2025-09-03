@@ -16,17 +16,19 @@ import (
 )
 
 type vaultAttrs struct {
-	admin      string
-	share      string
-	underlying string
-	payment    string
-	expected   types.VaultAccount
+	admin                  string
+	share                  string
+	underlying             string
+	payment                string
+	withdrawalDelaySeconds uint64
+	expected               types.VaultAccount
 }
 
-func (v vaultAttrs) GetAdmin() string           { return v.admin }
-func (v vaultAttrs) GetShareDenom() string      { return v.share }
-func (v vaultAttrs) GetUnderlyingAsset() string { return v.underlying }
-func (v vaultAttrs) GetPaymentDenom() string    { return v.payment }
+func (v vaultAttrs) GetAdmin() string                  { return v.admin }
+func (v vaultAttrs) GetShareDenom() string             { return v.share }
+func (v vaultAttrs) GetUnderlyingAsset() string        { return v.underlying }
+func (v vaultAttrs) GetPaymentDenom() string           { return v.payment }
+func (v vaultAttrs) GetWithdrawalDelaySeconds() uint64 { return v.withdrawalDelaySeconds }
 
 func (s *TestSuite) TestCreateVault_Success() {
 	share := "vaultshare"

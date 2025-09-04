@@ -31,6 +31,7 @@ const (
 	Msg_WithdrawInterestFunds_FullMethodName  = "/vault.v1.Msg/WithdrawInterestFunds"
 	Msg_DepositPrincipalFunds_FullMethodName  = "/vault.v1.Msg/DepositPrincipalFunds"
 	Msg_WithdrawPrincipalFunds_FullMethodName = "/vault.v1.Msg/WithdrawPrincipalFunds"
+	Msg_ExpediteWithdrawal_FullMethodName     = "/vault.v1.Msg/ExpediteWithdrawal"
 )
 
 // MsgClient is the client API for Msg service.
@@ -63,6 +64,8 @@ type MsgClient interface {
 	DepositPrincipalFunds(ctx context.Context, in *MsgDepositPrincipalFundsRequest, opts ...grpc.CallOption) (*MsgDepositPrincipalFundsResponse, error)
 	// WithdrawPrincipalFunds allows withdrawing principal funds from a vault.
 	WithdrawPrincipalFunds(ctx context.Context, in *MsgWithdrawPrincipalFundsRequest, opts ...grpc.CallOption) (*MsgWithdrawPrincipalFundsResponse, error)
+	// ExpediteWithdrawal expedites a pending withdrawal from a vault.
+	ExpediteWithdrawal(ctx context.Context, in *MsgExpediteWithdrawalRequest, opts ...grpc.CallOption) (*MsgExpediteWithdrawalResponse, error)
 }
 
 type msgClient struct {
@@ -193,6 +196,16 @@ func (c *msgClient) WithdrawPrincipalFunds(ctx context.Context, in *MsgWithdrawP
 	return out, nil
 }
 
+func (c *msgClient) ExpediteWithdrawal(ctx context.Context, in *MsgExpediteWithdrawalRequest, opts ...grpc.CallOption) (*MsgExpediteWithdrawalResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgExpediteWithdrawalResponse)
+	err := c.cc.Invoke(ctx, Msg_ExpediteWithdrawal_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility.
@@ -223,6 +236,8 @@ type MsgServer interface {
 	DepositPrincipalFunds(context.Context, *MsgDepositPrincipalFundsRequest) (*MsgDepositPrincipalFundsResponse, error)
 	// WithdrawPrincipalFunds allows withdrawing principal funds from a vault.
 	WithdrawPrincipalFunds(context.Context, *MsgWithdrawPrincipalFundsRequest) (*MsgWithdrawPrincipalFundsResponse, error)
+	// ExpediteWithdrawal expedites a pending withdrawal from a vault.
+	ExpediteWithdrawal(context.Context, *MsgExpediteWithdrawalRequest) (*MsgExpediteWithdrawalResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -268,6 +283,9 @@ func (UnimplementedMsgServer) DepositPrincipalFunds(context.Context, *MsgDeposit
 }
 func (UnimplementedMsgServer) WithdrawPrincipalFunds(context.Context, *MsgWithdrawPrincipalFundsRequest) (*MsgWithdrawPrincipalFundsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method WithdrawPrincipalFunds not implemented")
+}
+func (UnimplementedMsgServer) ExpediteWithdrawal(context.Context, *MsgExpediteWithdrawalRequest) (*MsgExpediteWithdrawalResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExpediteWithdrawal not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 func (UnimplementedMsgServer) testEmbeddedByValue()             {}
@@ -506,6 +524,24 @@ func _Msg_WithdrawPrincipalFunds_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_ExpediteWithdrawal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgExpediteWithdrawalRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ExpediteWithdrawal(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_ExpediteWithdrawal_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ExpediteWithdrawal(ctx, req.(*MsgExpediteWithdrawalRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -560,6 +596,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "WithdrawPrincipalFunds",
 			Handler:    _Msg_WithdrawPrincipalFunds_Handler,
+		},
+		{
+			MethodName: "ExpediteWithdrawal",
+			Handler:    _Msg_ExpediteWithdrawal_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -47,6 +47,9 @@ service Msg {
 
   // WithdrawPrincipalFunds allows withdrawing principal funds from a vault.
   rpc WithdrawPrincipalFunds(MsgWithdrawPrincipalFundsRequest) returns (MsgWithdrawPrincipalFundsResponse);
+
+  // ExpediteWithdrawal expedites a pending withdrawal from a vault.
+  rpc ExpediteWithdrawal(MsgExpediteWithdrawalRequest) returns (MsgExpediteWithdrawalResponse);
 }
 
 // MsgCreateVaultRequest is the request message for the CreateVault endpoint.
@@ -236,3 +239,16 @@ message MsgWithdrawPrincipalFundsRequest {
 
 // MsgWithdrawPrincipalFundsResponse is the response message for the WithdrawPrincipalFunds endpoint.
 message MsgWithdrawPrincipalFundsResponse {}
+
+// MsgExpediteWithdrawalRequest is the request message for expediting a withdrawal from a vault.
+message MsgExpediteWithdrawalRequest {
+  option (cosmos.msg.v1.signer) = "admin";
+
+  // admin is the address of the vault administrator initiating the withdrawal.
+  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // id is the id of the pending withdrawal to expedite.
+  uint64 id = 2;
+}
+
+// MsgExpediteWithdrawalResponse is the response message for the ExpediteWithdrawal endpoint.
+message MsgExpediteWithdrawalResponse {}

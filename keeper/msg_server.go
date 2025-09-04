@@ -378,3 +378,8 @@ func (k msgServer) WithdrawPrincipalFunds(goCtx context.Context, msg *types.MsgW
 	k.emitEvent(ctx, types.NewEventWithdrawPrincipalFunds(msg.VaultAddress, msg.Admin, msg.Amount))
 	return &types.MsgWithdrawPrincipalFundsResponse{}, nil
 }
+
+// ExpediteWithdrawal expedites a pending withdrawal from a vault.
+func (k msgServer) ExpediteWithdrawal(goCtx context.Context, msg *types.MsgExpediteWithdrawalRequest) (*types.MsgExpediteWithdrawalResponse, error) {
+	return &types.MsgExpediteWithdrawalResponse{}, nil
+}

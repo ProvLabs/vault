@@ -13,16 +13,19 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// PendingWithdrawalIndexes defines the indexes for the pending withdrawal queue.
 type PendingWithdrawalIndexes struct {
 	ByVault *indexes.Multi[sdk.AccAddress, collections.Triple[int64, sdk.AccAddress, uint64], types.PendingWithdrawal]
 	ByID    *indexes.Unique[uint64, collections.Triple[int64, sdk.AccAddress, uint64], types.PendingWithdrawal]
 }
 
+// IndexesList returns the list of indexes for the pending withdrawal queue.
 func (i PendingWithdrawalIndexes) IndexesList() []collections.Index[collections.Triple[int64, sdk.AccAddress, uint64], types.PendingWithdrawal] {
 	return []collections.Index[
 		collections.Triple[int64, sdk.AccAddress, uint64], types.PendingWithdrawal]{i.ByVault, i.ByID}
 }
 
+// NewPendingWithdrawalIndexes creates a new PendingWithdrawalIndexes object.
 func NewPendingWithdrawalIndexes(sb *collections.SchemaBuilder) PendingWithdrawalIndexes {
 	return PendingWithdrawalIndexes{
 		ByVault: indexes.NewMulti(
@@ -48,11 +51,15 @@ func NewPendingWithdrawalIndexes(sb *collections.SchemaBuilder) PendingWithdrawa
 	}
 }
 
+// PendingWithdrawalQueue is a queue for pending withdrawals.
 type PendingWithdrawalQueue struct {
+	// IndexedMap is the indexed map of pending withdrawals. The key is a triple of (timestamp, vault, id).
 	IndexedMap *collections.IndexedMap[collections.Triple[int64, sdk.AccAddress, uint64], types.PendingWithdrawal, PendingWithdrawalIndexes]
-	Sequence   collections.Sequence
+	// Sequence is the sequence for generating unique withdrawal IDs.
+	Sequence collections.Sequence
 }
 
+// NewPendingWithdrawalQueue creates a new PendingWithdrawalQueue.
 func NewPendingWithdrawalQueue(builder *collections.SchemaBuilder, cdc codec.BinaryCodec) *PendingWithdrawalQueue {
 	keyCodec := collections.TripleKeyCodec(
 		collections.Int64Key,
@@ -108,18 +115,15 @@ func (p *PendingWithdrawalQueue) ExpediteWithdrawal(ctx context.Context, id uint
 		return err
 	}
 
-	// Get the pending withdrawal request
 	req, err := p.IndexedMap.Get(ctx, pk)
 	if err != nil {
 		return err
 	}
 
-	// Remove the existing entry
 	if err := p.IndexedMap.Remove(ctx, pk); err != nil {
 		return err
 	}
 
-	// Re-add the entry with a timestamp of 0
 	return p.IndexedMap.Set(ctx, collections.Join3(int64(0), pk.K2(), pk.K3()), req)
 }
 

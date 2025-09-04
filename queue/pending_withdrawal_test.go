@@ -205,7 +205,7 @@ func TestPendingWithdrawalQueueEnqueueAndDequeue(t *testing.T) {
 				} else {
 					require.NoError(t, err)
 					// Verify item is removed
-					_, err = q.Get(ctx, collections.Join3(timestamp, addr, id))
+					_, err = q.IndexedMap.Get(ctx, collections.Join3(timestamp, addr, id))
 					require.Error(t, err)
 					require.ErrorIs(t, err, collections.ErrNotFound)
 				}
@@ -223,4 +223,3 @@ func TestPendingWithdrawalQueueEnqueueAndDequeue(t *testing.T) {
 		})
 	}
 }
-

@@ -44,6 +44,10 @@ var (
 	VaultPendingWithdrawalQueueSeqPrefix = collections.NewPrefix(4)
 	// VaultPendingWithdrawalQueueName is a human-readable name for the pending withdrawal queue collection.
 	VaultPendingWithdrawalQueueSeqName = "pending_withdrawal_seq"
+	// VaultPendingWithdrawalByVaultIndexPrefix is the prefix for the pending withdrawal queue vault index.
+	VaultPendingWithdrawalByVaultIndexPrefix = collections.NewPrefix(5)
+	// VaultPendingWithdrawalByVaultIndexName is a human-readable name for the pending withdrawal queue vault index.
+	VaultPendingWithdrawalByVaultIndexName = "pending_withdrawal_by_vault"
 )
 
 // GetVaultAddress returns the module account address for the given shareDenom.

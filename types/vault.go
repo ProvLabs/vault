@@ -49,20 +49,23 @@ type VaultAccountI interface {
 
 	// GetPaymentDenom returns the denom used for fees/interest payments, if any.
 	GetPaymentDenom() string
+
+	GetWithdrawalDelaySeconds() uint64
 }
 
 // NewVaultAccount creates a new vault with an optional payment denom allowed for I/O alongside the underlying asset.
-func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyingAsset, paymentDenom string) *VaultAccount {
+func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyingAsset, paymentDenom string, withdrawalDelay uint64) *VaultAccount {
 	return &VaultAccount{
-		BaseAccount:         baseAcc,
-		Admin:               admin,
-		ShareDenom:          shareDenom,
-		UnderlyingAsset:     underlyingAsset,
-		PaymentDenom:        paymentDenom,
-		CurrentInterestRate: ZeroInterestRate,
-		DesiredInterestRate: ZeroInterestRate,
-		SwapInEnabled:       true,
-		SwapOutEnabled:      true,
+		BaseAccount:            baseAcc,
+		Admin:                  admin,
+		ShareDenom:             shareDenom,
+		UnderlyingAsset:        underlyingAsset,
+		PaymentDenom:           paymentDenom,
+		CurrentInterestRate:    ZeroInterestRate,
+		DesiredInterestRate:    ZeroInterestRate,
+		SwapInEnabled:          true,
+		SwapOutEnabled:         true,
+		WithdrawalDelaySeconds: withdrawalDelay,
 	}
 }
 

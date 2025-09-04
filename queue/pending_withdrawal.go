@@ -15,10 +15,12 @@ import (
 
 type PendingWithdrawalIndexes struct {
 	ByVault *indexes.Multi[sdk.AccAddress, collections.Triple[int64, sdk.AccAddress, uint64], types.PendingWithdrawal]
+	ByID    *indexes.Unique[uint64, collections.Triple[int64, sdk.AccAddress, uint64], types.PendingWithdrawal]
 }
 
 func (i PendingWithdrawalIndexes) IndexesList() []collections.Index[collections.Triple[int64, sdk.AccAddress, uint64], types.PendingWithdrawal] {
-	return []collections.Index[collections.Triple[int64, sdk.AccAddress, uint64], types.PendingWithdrawal]{i.ByVault}
+	return []collections.Index[
+		collections.Triple[int64, sdk.AccAddress, uint64], types.PendingWithdrawal]{i.ByVault, i.ByID}
 }
 
 func NewPendingWithdrawalIndexes(sb *collections.SchemaBuilder) PendingWithdrawalIndexes {
@@ -31,6 +33,16 @@ func NewPendingWithdrawalIndexes(sb *collections.SchemaBuilder) PendingWithdrawa
 			collections.TripleKeyCodec(collections.Int64Key, sdk.AccAddressKey, collections.Uint64Key),
 			func(pk collections.Triple[int64, sdk.AccAddress, uint64], _ types.PendingWithdrawal) (sdk.AccAddress, error) {
 				return pk.K2(), nil
+			},
+		),
+		ByID: indexes.NewUnique(
+			sb,
+			types.VaultPendingWithdrawalByIdIndexPrefix,
+			types.VaultPendingWithdrawalByIdIndexName,
+			collections.Uint64Key,
+			collections.TripleKeyCodec(collections.Int64Key, sdk.AccAddressKey, collections.Uint64Key),
+			func(pk collections.Triple[int64, sdk.AccAddress, uint64], _ types.PendingWithdrawal) (uint64, error) {
+				return pk.K3(), nil
 			},
 		),
 	}
@@ -82,10 +94,33 @@ func (p *PendingWithdrawalQueue) Dequeue(ctx context.Context, timestamp int64, v
 	if timestamp < 0 {
 		return fmt.Errorf("timestamp cannot be negative")
 	}
-	if ok, _ := p.IndexedMap.Has(ctx, collections.Join3(timestamp, vault, id)); !ok {
+	key := collections.Join3(timestamp, vault, id)
+	if ok, _ := p.IndexedMap.Has(ctx, key); !ok {
 		return nil
 	}
-	return p.IndexedMap.Remove(ctx, collections.Join3(timestamp, vault, id))
+	return p.IndexedMap.Remove(ctx, key)
+}
+
+// ExpediteWithdrawal sets the timestamp of a pending withdrawal to 0.
+func (p *PendingWithdrawalQueue) ExpediteWithdrawal(ctx context.Context, id uint64) error {
+	pk, err := p.IndexedMap.Indexes.ByID.MatchExact(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	// Get the pending withdrawal request
+	req, err := p.IndexedMap.Get(ctx, pk)
+	if err != nil {
+		return err
+	}
+
+	// Remove the existing entry
+	if err := p.IndexedMap.Remove(ctx, pk); err != nil {
+		return err
+	}
+
+	// Re-add the entry with a timestamp of 0
+	return p.IndexedMap.Set(ctx, collections.Join3(int64(0), pk.K2(), pk.K3()), req)
 }
 
 // WalkDue iterates over all entries in the PendingWithdrawalQueue with

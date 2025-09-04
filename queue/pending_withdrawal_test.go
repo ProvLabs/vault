@@ -223,3 +223,76 @@ func TestPendingWithdrawalQueueEnqueueAndDequeue(t *testing.T) {
 		})
 	}
 }
+
+func TestPendingWithdrawalQueue_ExpediteWithdrawal(t *testing.T) {
+	addr1 := utils.TestProvlabsAddress()
+	addr2 := utils.TestProvlabsAddress()
+	req1 := vtypes.PendingWithdrawal{VaultAddress: addr1.Bech32, Owner: addr1.Bech32}
+	req2 := vtypes.PendingWithdrawal{VaultAddress: addr2.Bech32, Owner: addr2.Bech32}
+
+	tests := map[string]struct {
+		setup      func(t *testing.T, ctx sdk.Context, q *queue.PendingWithdrawalQueue) (uint64, int64, sdk.AccAddress)
+		expediteId uint64
+		errorMsg   string
+	}{
+		"success with one entry": {
+			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingWithdrawalQueue) (uint64, int64, sdk.AccAddress) {
+				id, err := q.Enqueue(ctx, 123, req1)
+				require.NoError(t, err)
+				return id, 123, sdk.MustAccAddressFromBech32(addr1.Bech32)
+			},
+		},
+		"success with two entries, second is expedited": {
+			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingWithdrawalQueue) (uint64, int64, sdk.AccAddress) {
+				_, err := q.Enqueue(ctx, 123, req1)
+				require.NoError(t, err)
+				id2, err := q.Enqueue(ctx, 456, req2)
+				require.NoError(t, err)
+				return id2, 456, sdk.MustAccAddressFromBech32(addr2.Bech32)
+			},
+		},
+		"success on entry with timestamp 0": {
+			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingWithdrawalQueue) (uint64, int64, sdk.AccAddress) {
+				id, err := q.Enqueue(ctx, 0, req1)
+				require.NoError(t, err)
+				return id, 0, sdk.MustAccAddressFromBech32(addr1.Bech32)
+			},
+		},
+		"failure if entry does not exist": {
+			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingWithdrawalQueue) (uint64, int64, sdk.AccAddress) {
+				return 999, 0, nil
+			},
+			expediteId: 999,
+			errorMsg:   "not found",
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx, q := newTestPendingWithdrawalQueue(t)
+			id, oldTimestamp, addr := tc.setup(t, ctx, q)
+			if tc.expediteId != 0 {
+				id = tc.expediteId
+			}
+
+			err := q.ExpediteWithdrawal(ctx, id)
+
+			if len(tc.errorMsg) > 0 {
+				require.Error(t, err)
+				require.ErrorContains(t, err, tc.errorMsg)
+			} else {
+				require.NoError(t, err)
+
+				// Verify old entry is removed
+				if oldTimestamp != 0 {
+					_, err = q.IndexedMap.Get(ctx, collections.Join3(oldTimestamp, addr, id))
+					require.ErrorContains(t, err, "not found")
+				}
+
+				// Verify new entry exists with timestamp 0
+				_, err = q.IndexedMap.Get(ctx, collections.Join3(int64(0), addr, id))
+				require.NoError(t, err)
+			}
+		})
+	}
+}

@@ -20,7 +20,7 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgToggleSwapOutRequest)(nil),
 	(*MsgDepositInterestFundsRequest)(nil),
 	(*MsgWithdrawInterestFundsRequest)(nil),
-	(*MsgExpediteWithdrawalRequest)(nil),
+	(*MsgExpeditePendingWithdrawalRequest)(nil),
 }
 
 // ValidateBasic performs stateless validation on MsgCreateVaultRequest.
@@ -234,7 +234,7 @@ func (m MsgWithdrawPrincipalFundsRequest) ValidateBasic() error {
 }
 
 // ValidateBasic performs stateless validation on MsgExpediteWithdrawalRequest.
-func (m MsgExpediteWithdrawalRequest) ValidateBasic() error {
+func (m MsgExpeditePendingWithdrawalRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
 		return fmt.Errorf("invalid admin address: %q: %w", m.Admin, err)
 	}

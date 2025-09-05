@@ -305,6 +305,17 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						{ProtoField: "amount"},
 					},
 				},
+				{
+					RpcMethod: "ExpeditePendingWithdrawal",
+					Use:       "expedite-pending-withdrawal [admin] [id]",
+					Alias:     []string{"epw"},
+					Short:     "Expedite a pending withdrawal from a vault",
+					Example:   fmt.Sprintf("%s expedite-pending-withdrawal %s 1", txStart, exampleAdminAddr),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "admin"},
+						{ProtoField: "id"},
+					},
+				},
 			},
 		},
 
@@ -349,6 +360,13 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						{ProtoField: "vault_address"},
 						{ProtoField: "assets"},
 					},
+				},
+				{
+					RpcMethod: "PendingWithdrawals",
+					Use:       "pending-withdrawals",
+					Alias:     []string{"pw"},
+					Short:     "Query all pending withdrawals",
+					Example:   fmt.Sprintf("%s pending-withdrawals", queryStart),
 				},
 			},
 		},

@@ -81,7 +81,7 @@ func NewPendingWithdrawalQueue(builder *collections.SchemaBuilder, cdc codec.Bin
 }
 
 // Enqueue adds a pending withdrawal to the queue.
-func (p *PendingWithdrawalQueue) Enqueue(ctx context.Context, timestamp int64, req types.PendingWithdrawal) (uint64, error) {
+func (p *PendingWithdrawalQueue) Enqueue(ctx context.Context, timestamp int64, req *types.PendingWithdrawal) (uint64, error) {
 	if timestamp < 0 {
 		return 0, fmt.Errorf("timestamp cannot be negative")
 	}
@@ -93,7 +93,7 @@ func (p *PendingWithdrawalQueue) Enqueue(ctx context.Context, timestamp int64, r
 	if err != nil {
 		return 0, err
 	}
-	return id, p.IndexedMap.Set(ctx, collections.Join3(timestamp, vault, id), req)
+	return id, p.IndexedMap.Set(ctx, collections.Join3(timestamp, vault, id), *req)
 }
 
 // Dequeue removes a pending withdrawal from the queue.
@@ -106,6 +106,21 @@ func (p *PendingWithdrawalQueue) Dequeue(ctx context.Context, timestamp int64, v
 		return nil
 	}
 	return p.IndexedMap.Remove(ctx, key)
+}
+
+// GetByID gets the pending withdrawal by ID.
+func (p *PendingWithdrawalQueue) GetByID(ctx context.Context, id uint64) (*types.PendingWithdrawal, error) {
+	pk, err := p.IndexedMap.Indexes.ByID.MatchExact(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := p.IndexedMap.Get(ctx, pk)
+	if err != nil {
+		return nil, err
+	}
+
+	return &req, nil
 }
 
 // ExpediteWithdrawal sets the timestamp of a pending withdrawal to 0.

@@ -361,6 +361,13 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						{ProtoField: "assets"},
 					},
 				},
+				{
+					RpcMethod: "PendingWithdrawals",
+					Use:       "pending-withdrawals",
+					Alias:     []string{"pw"},
+					Short:     "Query all pending withdrawals",
+					Example:   fmt.Sprintf("%s pending-withdrawals", queryStart),
+				},
 			},
 		},
 	}

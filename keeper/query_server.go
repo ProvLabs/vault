@@ -3,11 +3,14 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/provlabs/vault/types"
 	"github.com/provlabs/vault/utils"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"cosmossdk.io/collections"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -21,6 +24,38 @@ type queryServer struct {
 
 func NewQueryServer(keeper *Keeper) types.QueryServer {
 	return &queryServer{Keeper: keeper}
+}
+
+// PendingWithdrawals returns a paginated list of all pending withdrawals.
+func (k queryServer) PendingWithdrawals(goCtx context.Context, req *types.QueryPendingWithdrawalsRequest) (*types.QueryPendingWithdrawalsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	withdrawals := []types.PendingWithdrawalWithTimeout{}
+
+	_, pageRes, err := query.CollectionPaginate(
+		ctx,
+		k.PendingWithdrawalQueue.IndexedMap,
+		req.Pagination,
+		func(key collections.Triple[int64, sdk.AccAddress, uint64], value types.PendingWithdrawal) (include bool, err error) {
+			withdrawals = append(withdrawals, types.PendingWithdrawalWithTimeout{
+				Timeout:           time.Unix(key.K1(), 0),
+				PendingWithdrawal: value,
+			})
+			return true, nil
+		},
+	)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryPendingWithdrawalsResponse{
+		PendingWithdrawals: withdrawals,
+		Pagination:         pageRes,
+	}, nil
 }
 
 // Vaults returns a paginated list of all vaults.

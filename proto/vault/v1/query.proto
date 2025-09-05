@@ -31,6 +31,34 @@ service Query {
   rpc EstimateSwapOut(QueryEstimateSwapOutRequest) returns (QueryEstimateSwapOutResponse) {
     option (google.api.http).get = "/vault/v1/vaults/{vault_address}/estimate_swap_out";
   }
+
+  // PendingWithdrawals returns a paginated list of all pending withdrawals.
+  rpc PendingWithdrawals(QueryPendingWithdrawalsRequest) returns (QueryPendingWithdrawalsResponse) {
+    option (google.api.http).get = "/vault/v1/pending_withdrawals";
+  }
+}
+
+// QueryPendingWithdrawalsRequest is the request message for the Query/PendingWithdrawals endpoint.
+message QueryPendingWithdrawalsRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryPendingWithdrawalsResponse is the response message for the Query/PendingWithdrawals endpoint.
+message QueryPendingWithdrawalsResponse {
+  // pending_withdrawals is a list of all pending withdrawals.
+  repeated PendingWithdrawalWithTimeout pending_withdrawals = 1 [(gogoproto.nullable) = false];
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// PendingWithdrawalWithTimeout is a pending withdrawal with its timeout.
+message PendingWithdrawalWithTimeout {
+  PendingWithdrawal pending_withdrawal = 1 [(gogoproto.nullable) = false];
+  google.protobuf.Timestamp timeout = 2 [
+    (gogoproto.stdtime) = true,
+    (gogoproto.nullable) = false
+  ];
 }
 
 // QueryVaultsRequest is the request message for the Query/Vaults endpoint.

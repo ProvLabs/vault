@@ -35,6 +35,160 @@ var _ = time.Kitchen
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// QueryPendingWithdrawalsRequest is the request message for the Query/PendingWithdrawals endpoint.
+type QueryPendingWithdrawalsRequest struct {
+	// pagination defines an optional pagination for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryPendingWithdrawalsRequest) Reset()         { *m = QueryPendingWithdrawalsRequest{} }
+func (m *QueryPendingWithdrawalsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryPendingWithdrawalsRequest) ProtoMessage()    {}
+func (*QueryPendingWithdrawalsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e6d49a2800ab3e4b, []int{0}
+}
+func (m *QueryPendingWithdrawalsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryPendingWithdrawalsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryPendingWithdrawalsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryPendingWithdrawalsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryPendingWithdrawalsRequest.Merge(m, src)
+}
+func (m *QueryPendingWithdrawalsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryPendingWithdrawalsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryPendingWithdrawalsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryPendingWithdrawalsRequest proto.InternalMessageInfo
+
+func (m *QueryPendingWithdrawalsRequest) GetPagination() *query.PageRequest {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// QueryPendingWithdrawalsResponse is the response message for the Query/PendingWithdrawals endpoint.
+type QueryPendingWithdrawalsResponse struct {
+	// pending_withdrawals is a list of all pending withdrawals.
+	PendingWithdrawals []PendingWithdrawalWithTimeout `protobuf:"bytes,1,rep,name=pending_withdrawals,json=pendingWithdrawals,proto3" json:"pending_withdrawals"`
+	// pagination defines the pagination in the response.
+	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryPendingWithdrawalsResponse) Reset()         { *m = QueryPendingWithdrawalsResponse{} }
+func (m *QueryPendingWithdrawalsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryPendingWithdrawalsResponse) ProtoMessage()    {}
+func (*QueryPendingWithdrawalsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e6d49a2800ab3e4b, []int{1}
+}
+func (m *QueryPendingWithdrawalsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryPendingWithdrawalsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryPendingWithdrawalsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryPendingWithdrawalsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryPendingWithdrawalsResponse.Merge(m, src)
+}
+func (m *QueryPendingWithdrawalsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryPendingWithdrawalsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryPendingWithdrawalsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryPendingWithdrawalsResponse proto.InternalMessageInfo
+
+func (m *QueryPendingWithdrawalsResponse) GetPendingWithdrawals() []PendingWithdrawalWithTimeout {
+	if m != nil {
+		return m.PendingWithdrawals
+	}
+	return nil
+}
+
+func (m *QueryPendingWithdrawalsResponse) GetPagination() *query.PageResponse {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// PendingWithdrawalWithTimeout is a pending withdrawal with its timeout.
+type PendingWithdrawalWithTimeout struct {
+	PendingWithdrawal PendingWithdrawal `protobuf:"bytes,1,opt,name=pending_withdrawal,json=pendingWithdrawal,proto3" json:"pending_withdrawal"`
+	Timeout           time.Time         `protobuf:"bytes,2,opt,name=timeout,proto3,stdtime" json:"timeout"`
+}
+
+func (m *PendingWithdrawalWithTimeout) Reset()         { *m = PendingWithdrawalWithTimeout{} }
+func (m *PendingWithdrawalWithTimeout) String() string { return proto.CompactTextString(m) }
+func (*PendingWithdrawalWithTimeout) ProtoMessage()    {}
+func (*PendingWithdrawalWithTimeout) Descriptor() ([]byte, []int) {
+	return fileDescriptor_e6d49a2800ab3e4b, []int{2}
+}
+func (m *PendingWithdrawalWithTimeout) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *PendingWithdrawalWithTimeout) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_PendingWithdrawalWithTimeout.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *PendingWithdrawalWithTimeout) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PendingWithdrawalWithTimeout.Merge(m, src)
+}
+func (m *PendingWithdrawalWithTimeout) XXX_Size() int {
+	return m.Size()
+}
+func (m *PendingWithdrawalWithTimeout) XXX_DiscardUnknown() {
+	xxx_messageInfo_PendingWithdrawalWithTimeout.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PendingWithdrawalWithTimeout proto.InternalMessageInfo
+
+func (m *PendingWithdrawalWithTimeout) GetPendingWithdrawal() PendingWithdrawal {
+	if m != nil {
+		return m.PendingWithdrawal
+	}
+	return PendingWithdrawal{}
+}
+
+func (m *PendingWithdrawalWithTimeout) GetTimeout() time.Time {
+	if m != nil {
+		return m.Timeout
+	}
+	return time.Time{}
+}
+
 // QueryVaultsRequest is the request message for the Query/Vaults endpoint.
 type QueryVaultsRequest struct {
 	// pagination defines an optional pagination for the request.
@@ -45,7 +199,7 @@ func (m *QueryVaultsRequest) Reset()         { *m = QueryVaultsRequest{} }
 func (m *QueryVaultsRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryVaultsRequest) ProtoMessage()    {}
 func (*QueryVaultsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e6d49a2800ab3e4b, []int{0}
+	return fileDescriptor_e6d49a2800ab3e4b, []int{3}
 }
 func (m *QueryVaultsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -93,7 +247,7 @@ func (m *QueryVaultsResponse) Reset()         { *m = QueryVaultsResponse{} }
 func (m *QueryVaultsResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryVaultsResponse) ProtoMessage()    {}
 func (*QueryVaultsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e6d49a2800ab3e4b, []int{1}
+	return fileDescriptor_e6d49a2800ab3e4b, []int{4}
 }
 func (m *QueryVaultsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -146,7 +300,7 @@ func (m *QueryVaultRequest) Reset()         { *m = QueryVaultRequest{} }
 func (m *QueryVaultRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryVaultRequest) ProtoMessage()    {}
 func (*QueryVaultRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e6d49a2800ab3e4b, []int{2}
+	return fileDescriptor_e6d49a2800ab3e4b, []int{5}
 }
 func (m *QueryVaultRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -196,7 +350,7 @@ func (m *QueryVaultResponse) Reset()         { *m = QueryVaultResponse{} }
 func (m *QueryVaultResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryVaultResponse) ProtoMessage()    {}
 func (*QueryVaultResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e6d49a2800ab3e4b, []int{3}
+	return fileDescriptor_e6d49a2800ab3e4b, []int{6}
 }
 func (m *QueryVaultResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -258,7 +412,7 @@ func (m *QueryEstimateSwapInRequest) Reset()         { *m = QueryEstimateSwapInR
 func (m *QueryEstimateSwapInRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryEstimateSwapInRequest) ProtoMessage()    {}
 func (*QueryEstimateSwapInRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e6d49a2800ab3e4b, []int{4}
+	return fileDescriptor_e6d49a2800ab3e4b, []int{7}
 }
 func (m *QueryEstimateSwapInRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -315,7 +469,7 @@ func (m *QueryEstimateSwapInResponse) Reset()         { *m = QueryEstimateSwapIn
 func (m *QueryEstimateSwapInResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryEstimateSwapInResponse) ProtoMessage()    {}
 func (*QueryEstimateSwapInResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e6d49a2800ab3e4b, []int{5}
+	return fileDescriptor_e6d49a2800ab3e4b, []int{8}
 }
 func (m *QueryEstimateSwapInResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -377,7 +531,7 @@ func (m *QueryEstimateSwapOutRequest) Reset()         { *m = QueryEstimateSwapOu
 func (m *QueryEstimateSwapOutRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryEstimateSwapOutRequest) ProtoMessage()    {}
 func (*QueryEstimateSwapOutRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e6d49a2800ab3e4b, []int{6}
+	return fileDescriptor_e6d49a2800ab3e4b, []int{9}
 }
 func (m *QueryEstimateSwapOutRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -434,7 +588,7 @@ func (m *QueryEstimateSwapOutResponse) Reset()         { *m = QueryEstimateSwapO
 func (m *QueryEstimateSwapOutResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryEstimateSwapOutResponse) ProtoMessage()    {}
 func (*QueryEstimateSwapOutResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_e6d49a2800ab3e4b, []int{7}
+	return fileDescriptor_e6d49a2800ab3e4b, []int{10}
 }
 func (m *QueryEstimateSwapOutResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -485,6 +639,9 @@ func (m *QueryEstimateSwapOutResponse) GetTime() time.Time {
 }
 
 func init() {
+	proto.RegisterType((*QueryPendingWithdrawalsRequest)(nil), "vault.v1.QueryPendingWithdrawalsRequest")
+	proto.RegisterType((*QueryPendingWithdrawalsResponse)(nil), "vault.v1.QueryPendingWithdrawalsResponse")
+	proto.RegisterType((*PendingWithdrawalWithTimeout)(nil), "vault.v1.PendingWithdrawalWithTimeout")
 	proto.RegisterType((*QueryVaultsRequest)(nil), "vault.v1.QueryVaultsRequest")
 	proto.RegisterType((*QueryVaultsResponse)(nil), "vault.v1.QueryVaultsResponse")
 	proto.RegisterType((*QueryVaultRequest)(nil), "vault.v1.QueryVaultRequest")
@@ -498,51 +655,59 @@ func init() {
 func init() { proto.RegisterFile("vault/v1/query.proto", fileDescriptor_e6d49a2800ab3e4b) }
 
 var fileDescriptor_e6d49a2800ab3e4b = []byte{
-	// 695 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x95, 0x4f, 0x4f, 0x13, 0x4f,
-	0x18, 0xc7, 0x3b, 0x05, 0x1a, 0x18, 0x7e, 0x3f, 0xd4, 0x11, 0xb1, 0x2e, 0x65, 0x4b, 0x16, 0x45,
-	0xe2, 0x61, 0x37, 0x2d, 0x24, 0x0a, 0xf1, 0x02, 0x46, 0x8d, 0x27, 0xb5, 0x1a, 0x0f, 0xc6, 0xa4,
-	0x99, 0x6e, 0xc7, 0x65, 0x92, 0x76, 0x67, 0xe9, 0xcc, 0x96, 0x20, 0xe1, 0x62, 0xe2, 0x9d, 0x44,
-	0x0f, 0x1e, 0x7c, 0x01, 0xfa, 0x36, 0x3c, 0x71, 0x24, 0xf1, 0xe2, 0x49, 0x0d, 0xf8, 0x42, 0xcc,
-	0xce, 0x1f, 0x96, 0x85, 0x15, 0xe4, 0x62, 0xbc, 0xed, 0x3e, 0xf3, 0x7d, 0xbe, 0xcf, 0xe7, 0x79,
-	0xfa, 0xcc, 0x16, 0x8e, 0xf7, 0x71, 0xdc, 0x11, 0x5e, 0xbf, 0xe6, 0xad, 0xc5, 0xa4, 0xb7, 0xe1,
-	0x46, 0x3d, 0x26, 0x18, 0x1a, 0x96, 0x51, 0xb7, 0x5f, 0xb3, 0x6e, 0xf8, 0x8c, 0x77, 0x19, 0xf7,
-	0x5a, 0x98, 0x13, 0x25, 0xf1, 0xfa, 0xb5, 0x16, 0x11, 0xb8, 0xe6, 0x45, 0x38, 0xa0, 0x21, 0x16,
-	0x94, 0x85, 0x2a, 0xcb, 0xb2, 0x0f, 0x6b, 0x8d, 0xca, 0x67, 0xd4, 0x9c, 0x8f, 0x07, 0x2c, 0x60,
-	0xf2, 0xd1, 0x4b, 0x9e, 0x74, 0xb4, 0x12, 0x30, 0x16, 0x74, 0x88, 0x87, 0x23, 0xea, 0xe1, 0x30,
-	0x64, 0x42, 0x5a, 0x72, 0x7d, 0x5a, 0xd5, 0xa7, 0xf2, 0xad, 0x15, 0xbf, 0xf4, 0x04, 0xed, 0x12,
-	0x2e, 0x70, 0x37, 0x32, 0xa6, 0x07, 0x0d, 0x28, 0x66, 0x19, 0x75, 0x5e, 0x40, 0xf4, 0x38, 0x81,
-	0x7d, 0x96, 0xc4, 0x78, 0x83, 0xac, 0xc5, 0x84, 0x0b, 0x74, 0x0f, 0xc2, 0x14, 0xba, 0x0c, 0xa6,
-	0xc1, 0xdc, 0x68, 0x7d, 0xd6, 0x55, 0xd4, 0x6e, 0x42, 0xed, 0xaa, 0x21, 0x68, 0x76, 0xf7, 0x11,
-	0x0e, 0x88, 0xce, 0x6d, 0x1c, 0xca, 0x74, 0xde, 0x01, 0x78, 0x31, 0x63, 0xcf, 0x23, 0x16, 0x72,
-	0x82, 0x16, 0x60, 0x49, 0x42, 0xf0, 0x32, 0x98, 0x1e, 0x98, 0x1b, 0xad, 0x4f, 0xb8, 0x66, 0x8e,
-	0xae, 0x54, 0x2e, 0xfb, 0x3e, 0x8b, 0x43, 0xb1, 0x32, 0xb8, 0xf3, 0xad, 0x5a, 0x68, 0x68, 0x2d,
-	0xba, 0x9f, 0xa1, 0x2a, 0x4a, 0xaa, 0xeb, 0xa7, 0x52, 0xa9, 0x92, 0x19, 0xac, 0x19, 0x78, 0x21,
-	0xa5, 0x32, 0x3d, 0x8f, 0xc1, 0x22, 0x6d, 0xcb, 0x5e, 0x47, 0x1a, 0x45, 0xda, 0x76, 0x3e, 0x83,
-	0xc3, 0xa3, 0x39, 0x40, 0xaf, 0xc3, 0x21, 0x89, 0xa3, 0xa7, 0x72, 0x32, 0xb9, 0x92, 0xa2, 0xdb,
-	0x70, 0x24, 0xea, 0xd1, 0xd0, 0xa7, 0x11, 0xee, 0x68, 0xee, 0x72, 0x9a, 0x67, 0x52, 0x70, 0x07,
-	0x87, 0x3e, 0xd1, 0x99, 0x69, 0x02, 0x5a, 0x82, 0xc3, 0x3d, 0xc2, 0x49, 0xaf, 0x4f, 0x78, 0x79,
-	0xe0, 0x8f, 0x92, 0x0f, 0xf4, 0xce, 0x2b, 0x68, 0xc9, 0x1e, 0xee, 0x72, 0x41, 0xbb, 0x58, 0x90,
-	0x27, 0xeb, 0x38, 0x7a, 0x10, 0x9a, 0x96, 0x67, 0xe0, 0xff, 0xd2, 0xa8, 0x89, 0xdb, 0xed, 0x1e,
-	0xe1, 0x5c, 0x77, 0xff, 0x9f, 0x0c, 0x2e, 0xab, 0x18, 0xba, 0x09, 0x4b, 0x98, 0x73, 0x22, 0xb8,
-	0x26, 0xbf, 0x92, 0x99, 0xb8, 0x99, 0xf5, 0x1d, 0x46, 0x43, 0xf3, 0x73, 0x29, 0xb9, 0xf3, 0x11,
-	0xc0, 0xc9, 0xdc, 0xe2, 0x7a, 0x92, 0xa9, 0x31, 0x38, 0x93, 0x31, 0x9a, 0x80, 0xa5, 0x55, 0x42,
-	0x83, 0x55, 0x21, 0x89, 0x06, 0x1a, 0xfa, 0x0d, 0xdd, 0x82, 0x83, 0xc9, 0xd2, 0xeb, 0x21, 0x59,
-	0xae, 0xba, 0x11, 0xae, 0xb9, 0x11, 0xee, 0x53, 0x73, 0x23, 0x56, 0x86, 0x13, 0xbf, 0xed, 0xef,
-	0x55, 0xd0, 0x90, 0x19, 0xce, 0x66, 0x0e, 0xe9, 0xc3, 0x58, 0xfc, 0x9d, 0x39, 0x7d, 0x02, 0xb0,
-	0x92, 0x5f, 0xfd, 0x9f, 0x1b, 0x54, 0xfd, 0xcd, 0x20, 0x1c, 0x92, 0xac, 0xa8, 0x09, 0x4b, 0xea,
-	0x52, 0xa3, 0x4a, 0xba, 0x8d, 0xc7, 0x3f, 0x25, 0xd6, 0xd4, 0x6f, 0x4e, 0x55, 0x6f, 0x4e, 0xf9,
-	0xf5, 0x97, 0x9f, 0x6f, 0x8b, 0x08, 0x9d, 0xf7, 0xb2, 0x9f, 0x27, 0x8e, 0x30, 0x1c, 0x92, 0x5a,
-	0x34, 0x99, 0xe7, 0x60, 0xec, 0x2b, 0xf9, 0x87, 0xda, 0x7d, 0x4a, 0xba, 0x5f, 0x46, 0x97, 0x8e,
-	0xba, 0x7b, 0x9b, 0xb4, 0xbd, 0x85, 0xde, 0x03, 0x38, 0x96, 0x5d, 0x4e, 0x74, 0xf5, 0x88, 0x5f,
-	0xee, 0xc5, 0xb1, 0xae, 0x9d, 0xa2, 0xd2, 0xe5, 0x17, 0x65, 0xf9, 0x79, 0x54, 0x3b, 0x5e, 0x3e,
-	0xb3, 0x4f, 0x5b, 0x1e, 0xd1, 0x06, 0x4d, 0xbe, 0x8e, 0xa3, 0x26, 0x0d, 0xd1, 0x07, 0x00, 0xcf,
-	0x1d, 0xd9, 0x07, 0x74, 0x52, 0xd5, 0x74, 0x5b, 0xad, 0xd9, 0xd3, 0x64, 0x9a, 0x6e, 0x49, 0xd2,
-	0x2d, 0xa0, 0xfa, 0x19, 0xe9, 0x58, 0x2c, 0x56, 0x16, 0x77, 0xf6, 0x6c, 0xb0, 0xbb, 0x67, 0x83,
-	0x1f, 0x7b, 0x36, 0xd8, 0xde, 0xb7, 0x0b, 0xbb, 0xfb, 0x76, 0xe1, 0xeb, 0xbe, 0x5d, 0x78, 0x5e,
-	0x0d, 0xa8, 0x58, 0x8d, 0x5b, 0xae, 0xcf, 0xba, 0xc9, 0x7f, 0x51, 0xbf, 0x83, 0x5b, 0x5c, 0x17,
-	0x10, 0x1b, 0x11, 0xe1, 0xad, 0x92, 0x5c, 0xb3, 0xf9, 0x5f, 0x01, 0x00, 0x00, 0xff, 0xff, 0x69,
-	0x7b, 0x0f, 0xcc, 0x51, 0x07, 0x00, 0x00,
+	// 817 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x56, 0x4f, 0x4f, 0x13, 0x41,
+	0x14, 0xef, 0x14, 0x5a, 0x61, 0x54, 0x94, 0x01, 0xb1, 0x2e, 0x65, 0x4b, 0x16, 0x41, 0xf4, 0xb0,
+	0x9b, 0x16, 0x12, 0x85, 0x18, 0x13, 0x30, 0x6a, 0x3c, 0x89, 0x95, 0x68, 0x62, 0x34, 0xcd, 0xb4,
+	0x1d, 0xb7, 0x93, 0xb4, 0x3b, 0x4b, 0x67, 0xb6, 0x0d, 0x12, 0x2e, 0x7e, 0x02, 0x12, 0x3d, 0x70,
+	0xf0, 0x03, 0xe8, 0xcd, 0xcf, 0xe0, 0x09, 0x6f, 0x24, 0x5e, 0x3c, 0xa9, 0x01, 0x3f, 0x88, 0xd9,
+	0xd9, 0x59, 0x96, 0xfe, 0xa1, 0x40, 0x42, 0x8c, 0xb7, 0xed, 0xbc, 0xf7, 0x7e, 0xef, 0xf7, 0xfb,
+	0xbd, 0xb7, 0xdd, 0x81, 0xa3, 0x0d, 0xec, 0x55, 0x85, 0xd5, 0xc8, 0x5a, 0x6b, 0x1e, 0xa9, 0xaf,
+	0x9b, 0x6e, 0x9d, 0x09, 0x86, 0x06, 0xe4, 0xa9, 0xd9, 0xc8, 0x6a, 0xb7, 0x4a, 0x8c, 0xd7, 0x18,
+	0xb7, 0x8a, 0x98, 0x93, 0x20, 0xc5, 0x6a, 0x64, 0x8b, 0x44, 0xe0, 0xac, 0xe5, 0x62, 0x9b, 0x3a,
+	0x58, 0x50, 0xe6, 0x04, 0x55, 0x9a, 0x7e, 0x38, 0x37, 0xcc, 0x2a, 0x31, 0x1a, 0xc6, 0x47, 0x6d,
+	0x66, 0x33, 0xf9, 0x68, 0xf9, 0x4f, 0xea, 0x34, 0x6d, 0x33, 0x66, 0x57, 0x89, 0x85, 0x5d, 0x6a,
+	0x61, 0xc7, 0x61, 0x42, 0x42, 0x72, 0x15, 0xcd, 0xa8, 0xa8, 0xfc, 0x55, 0xf4, 0xde, 0x58, 0x82,
+	0xd6, 0x08, 0x17, 0xb8, 0xe6, 0x86, 0xa0, 0x07, 0x02, 0x02, 0xce, 0xf2, 0xd4, 0xa8, 0x40, 0xfd,
+	0xa9, 0x4f, 0x76, 0x85, 0x38, 0x65, 0xea, 0xd8, 0x2f, 0xa8, 0xa8, 0x94, 0xeb, 0xb8, 0x89, 0xab,
+	0x3c, 0x4f, 0xd6, 0x3c, 0xc2, 0x05, 0x7a, 0x08, 0x61, 0x24, 0x20, 0x05, 0x26, 0xc1, 0xec, 0xf9,
+	0xdc, 0x8c, 0x19, 0x28, 0x30, 0x7d, 0x05, 0x66, 0x60, 0x88, 0xd2, 0x61, 0xae, 0x60, 0x9b, 0xa8,
+	0xda, 0xfc, 0xa1, 0x4a, 0xe3, 0x1b, 0x80, 0x99, 0x23, 0x5b, 0x71, 0x97, 0x39, 0x9c, 0xa0, 0xd7,
+	0x70, 0xc4, 0x0d, 0xa2, 0x85, 0x66, 0x14, 0x4e, 0x81, 0xc9, 0x3e, 0xd9, 0x34, 0x34, 0xdb, 0xec,
+	0x80, 0xf0, 0x9f, 0x56, 0x69, 0x8d, 0x30, 0x4f, 0x2c, 0xf7, 0xef, 0xfc, 0xcc, 0xc4, 0xf2, 0xc8,
+	0xed, 0x68, 0x83, 0x1e, 0xb5, 0x48, 0x89, 0x4b, 0x29, 0x37, 0x8e, 0x95, 0x12, 0x70, 0x6b, 0xd1,
+	0xf2, 0x05, 0xc0, 0x74, 0x2f, 0x0e, 0x68, 0x05, 0xa2, 0x4e, 0x21, 0xca, 0xbc, 0xf1, 0x1e, 0x3a,
+	0x14, 0xf9, 0xe1, 0x0e, 0xf2, 0xe8, 0x1e, 0x3c, 0x27, 0x02, 0x70, 0x45, 0x5c, 0x33, 0x83, 0x89,
+	0x9b, 0xe1, 0xc4, 0xcd, 0xd5, 0x70, 0xe2, 0xcb, 0x03, 0x3e, 0xca, 0xd6, 0xaf, 0x0c, 0xc8, 0x87,
+	0x45, 0xc6, 0x2b, 0x88, 0xa4, 0xfb, 0xcf, 0xfd, 0xde, 0x67, 0x3e, 0xdc, 0x0f, 0x00, 0x8e, 0xb4,
+	0xc0, 0xab, 0x81, 0xce, 0xc3, 0xa4, 0x14, 0x1b, 0xce, 0x70, 0x2c, 0xd2, 0x2e, 0x33, 0x97, 0x4a,
+	0x25, 0xe6, 0x39, 0xe1, 0xcc, 0x54, 0xee, 0xd9, 0xcd, 0x69, 0x0a, 0x0e, 0x47, 0xac, 0x42, 0xcd,
+	0x43, 0x30, 0x4e, 0xcb, 0x52, 0xeb, 0x60, 0x3e, 0x4e, 0xcb, 0xc6, 0x57, 0x70, 0xd8, 0x9a, 0x03,
+	0xea, 0x39, 0x98, 0x90, 0x74, 0x94, 0x2b, 0xbd, 0x99, 0x07, 0xa9, 0xe8, 0x2e, 0x1c, 0x74, 0xeb,
+	0xd4, 0x29, 0x51, 0x17, 0x57, 0x15, 0xef, 0x54, 0x54, 0x17, 0x96, 0xe0, 0x2a, 0x76, 0x4a, 0x44,
+	0x55, 0x46, 0x05, 0x68, 0x11, 0x0e, 0xd4, 0x09, 0x27, 0xf5, 0x06, 0xe1, 0xa9, 0xbe, 0x13, 0x15,
+	0x1f, 0xe4, 0x1b, 0x6f, 0xa1, 0x26, 0x35, 0x3c, 0xe0, 0x82, 0xd6, 0xb0, 0x20, 0xcf, 0x9a, 0xd8,
+	0x7d, 0xec, 0x84, 0x92, 0xa7, 0xe0, 0x45, 0x09, 0x54, 0xc0, 0xe5, 0x72, 0x9d, 0x70, 0xae, 0xd4,
+	0x5f, 0x90, 0x87, 0x4b, 0xc1, 0x19, 0xba, 0x0d, 0x93, 0x98, 0x73, 0x22, 0xb8, 0x62, 0x7e, 0xad,
+	0xc5, 0xf1, 0xd0, 0xeb, 0xfb, 0x8c, 0x3a, 0xe1, 0xb8, 0x82, 0x74, 0xe3, 0x13, 0x80, 0xe3, 0x5d,
+	0x9b, 0x2b, 0x27, 0x23, 0x60, 0x70, 0x2a, 0x60, 0x34, 0x06, 0x93, 0x15, 0x42, 0xed, 0x4a, 0xb0,
+	0xf2, 0x7d, 0x79, 0xf5, 0x0b, 0xdd, 0x81, 0xfd, 0xfe, 0x5a, 0x2b, 0x93, 0x4e, 0xf6, 0x22, 0xc8,
+	0x0a, 0x63, 0xa3, 0x0b, 0xd3, 0x27, 0x9e, 0xf8, 0x37, 0x3e, 0x7d, 0x06, 0x30, 0xdd, 0xbd, 0xfb,
+	0x7f, 0x67, 0x54, 0x6e, 0x3b, 0x01, 0x13, 0x92, 0x2b, 0x2a, 0xc0, 0x64, 0xf0, 0x52, 0xa3, 0x74,
+	0xb4, 0x8d, 0x9d, 0x7f, 0x25, 0xda, 0xc4, 0x11, 0xd1, 0x40, 0x9b, 0x91, 0x7a, 0xf7, 0xfd, 0xcf,
+	0xfb, 0x38, 0x42, 0x97, 0xad, 0xd6, 0xef, 0x10, 0x47, 0x18, 0x26, 0x64, 0x2e, 0x1a, 0xef, 0x86,
+	0x10, 0xc2, 0xa7, 0xbb, 0x07, 0x15, 0xfa, 0x84, 0x44, 0xbf, 0x8a, 0xae, 0xb4, 0xa3, 0x5b, 0x1b,
+	0xb4, 0xbc, 0x89, 0xb6, 0x01, 0x1c, 0x6a, 0x5d, 0x4e, 0x74, 0xbd, 0x0d, 0xaf, 0xeb, 0x8b, 0xa3,
+	0x4d, 0x1f, 0x93, 0xa5, 0xda, 0x2f, 0xc8, 0xf6, 0x73, 0x28, 0xdb, 0xd9, 0xbe, 0x65, 0x9f, 0x36,
+	0x2d, 0xa2, 0x00, 0x0a, 0xbc, 0x89, 0xdd, 0x02, 0x75, 0xd0, 0x47, 0x00, 0x2f, 0xb5, 0xed, 0x03,
+	0xea, 0xd5, 0x35, 0xda, 0x56, 0x6d, 0xe6, 0xb8, 0x34, 0xc5, 0x6e, 0x51, 0xb2, 0x9b, 0x47, 0xb9,
+	0x53, 0xb2, 0xf3, 0x3f, 0x64, 0x5b, 0x00, 0xa2, 0xce, 0x0f, 0x36, 0x9a, 0x6d, 0x6b, 0x7d, 0xe4,
+	0xf5, 0x41, 0xbb, 0x79, 0x82, 0x4c, 0xc5, 0x73, 0x5a, 0xf2, 0xcc, 0xa0, 0x89, 0x88, 0x67, 0x97,
+	0xdb, 0xc0, 0xf2, 0xc2, 0xce, 0x9e, 0x0e, 0x76, 0xf7, 0x74, 0xf0, 0x7b, 0x4f, 0x07, 0x5b, 0xfb,
+	0x7a, 0x6c, 0x77, 0x5f, 0x8f, 0xfd, 0xd8, 0xd7, 0x63, 0x2f, 0x33, 0x36, 0x15, 0x15, 0xaf, 0x68,
+	0x96, 0x58, 0xcd, 0xbf, 0x07, 0x35, 0xaa, 0xb8, 0xc8, 0x15, 0x96, 0x58, 0x77, 0x09, 0x2f, 0x26,
+	0xe5, 0xe6, 0xcf, 0xfd, 0x0d, 0x00, 0x00, 0xff, 0xff, 0x2e, 0xdc, 0xd1, 0x83, 0xcd, 0x09, 0x00,
+	0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -565,6 +730,8 @@ type QueryClient interface {
 	EstimateSwapIn(ctx context.Context, in *QueryEstimateSwapInRequest, opts ...grpc.CallOption) (*QueryEstimateSwapInResponse, error)
 	// EstimateSwapOut estimates the amount of underlying assets that would be received for a given amount of shares.
 	EstimateSwapOut(ctx context.Context, in *QueryEstimateSwapOutRequest, opts ...grpc.CallOption) (*QueryEstimateSwapOutResponse, error)
+	// PendingWithdrawals returns a paginated list of all pending withdrawals.
+	PendingWithdrawals(ctx context.Context, in *QueryPendingWithdrawalsRequest, opts ...grpc.CallOption) (*QueryPendingWithdrawalsResponse, error)
 }
 
 type queryClient struct {
@@ -611,6 +778,15 @@ func (c *queryClient) EstimateSwapOut(ctx context.Context, in *QueryEstimateSwap
 	return out, nil
 }
 
+func (c *queryClient) PendingWithdrawals(ctx context.Context, in *QueryPendingWithdrawalsRequest, opts ...grpc.CallOption) (*QueryPendingWithdrawalsResponse, error) {
+	out := new(QueryPendingWithdrawalsResponse)
+	err := c.cc.Invoke(ctx, "/vault.v1.Query/PendingWithdrawals", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Vaults returns a paginated list of all vaults.
@@ -621,6 +797,8 @@ type QueryServer interface {
 	EstimateSwapIn(context.Context, *QueryEstimateSwapInRequest) (*QueryEstimateSwapInResponse, error)
 	// EstimateSwapOut estimates the amount of underlying assets that would be received for a given amount of shares.
 	EstimateSwapOut(context.Context, *QueryEstimateSwapOutRequest) (*QueryEstimateSwapOutResponse, error)
+	// PendingWithdrawals returns a paginated list of all pending withdrawals.
+	PendingWithdrawals(context.Context, *QueryPendingWithdrawalsRequest) (*QueryPendingWithdrawalsResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -638,6 +816,9 @@ func (*UnimplementedQueryServer) EstimateSwapIn(ctx context.Context, req *QueryE
 }
 func (*UnimplementedQueryServer) EstimateSwapOut(ctx context.Context, req *QueryEstimateSwapOutRequest) (*QueryEstimateSwapOutResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method EstimateSwapOut not implemented")
+}
+func (*UnimplementedQueryServer) PendingWithdrawals(ctx context.Context, req *QueryPendingWithdrawalsRequest) (*QueryPendingWithdrawalsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PendingWithdrawals not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -716,6 +897,24 @@ func _Query_EstimateSwapOut_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_PendingWithdrawals_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryPendingWithdrawalsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).PendingWithdrawals(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/vault.v1.Query/PendingWithdrawals",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).PendingWithdrawals(ctx, req.(*QueryPendingWithdrawalsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var Query_serviceDesc = _Query_serviceDesc
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "vault.v1.Query",
@@ -737,9 +936,138 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			MethodName: "EstimateSwapOut",
 			Handler:    _Query_EstimateSwapOut_Handler,
 		},
+		{
+			MethodName: "PendingWithdrawals",
+			Handler:    _Query_PendingWithdrawals_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "vault/v1/query.proto",
+}
+
+func (m *QueryPendingWithdrawalsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryPendingWithdrawalsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryPendingWithdrawalsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryPendingWithdrawalsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryPendingWithdrawalsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryPendingWithdrawalsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.PendingWithdrawals) > 0 {
+		for iNdEx := len(m.PendingWithdrawals) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.PendingWithdrawals[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *PendingWithdrawalWithTimeout) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PendingWithdrawalWithTimeout) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *PendingWithdrawalWithTimeout) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	n3, err3 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.Timeout, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.Timeout):])
+	if err3 != nil {
+		return 0, err3
+	}
+	i -= n3
+	i = encodeVarintQuery(dAtA, i, uint64(n3))
+	i--
+	dAtA[i] = 0x12
+	{
+		size, err := m.PendingWithdrawal.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
 }
 
 func (m *QueryVaultsRequest) Marshal() (dAtA []byte, err error) {
@@ -969,12 +1297,12 @@ func (m *QueryEstimateSwapInResponse) MarshalToSizedBuffer(dAtA []byte) (int, er
 	_ = i
 	var l int
 	_ = l
-	n7, err7 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.Time, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.Time):])
-	if err7 != nil {
-		return 0, err7
+	n11, err11 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.Time, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.Time):])
+	if err11 != nil {
+		return 0, err11
 	}
-	i -= n7
-	i = encodeVarintQuery(dAtA, i, uint64(n7))
+	i -= n11
+	i = encodeVarintQuery(dAtA, i, uint64(n11))
 	i--
 	dAtA[i] = 0x1a
 	if m.Height != 0 {
@@ -1055,12 +1383,12 @@ func (m *QueryEstimateSwapOutResponse) MarshalToSizedBuffer(dAtA []byte) (int, e
 	_ = i
 	var l int
 	_ = l
-	n10, err10 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.Time, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.Time):])
-	if err10 != nil {
-		return 0, err10
+	n14, err14 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.Time, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.Time):])
+	if err14 != nil {
+		return 0, err14
 	}
-	i -= n10
-	i = encodeVarintQuery(dAtA, i, uint64(n10))
+	i -= n14
+	i = encodeVarintQuery(dAtA, i, uint64(n14))
 	i--
 	dAtA[i] = 0x1a
 	if m.Height != 0 {
@@ -1092,6 +1420,51 @@ func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
+func (m *QueryPendingWithdrawalsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryPendingWithdrawalsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.PendingWithdrawals) > 0 {
+		for _, e := range m.PendingWithdrawals {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *PendingWithdrawalWithTimeout) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.PendingWithdrawal.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.Timeout)
+	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
 func (m *QueryVaultsRequest) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1219,6 +1592,328 @@ func sovQuery(x uint64) (n int) {
 }
 func sozQuery(x uint64) (n int) {
 	return sovQuery(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *QueryPendingWithdrawalsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryPendingWithdrawalsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryPendingWithdrawalsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageRequest{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryPendingWithdrawalsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryPendingWithdrawalsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryPendingWithdrawalsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PendingWithdrawals", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PendingWithdrawals = append(m.PendingWithdrawals, PendingWithdrawalWithTimeout{})
+			if err := m.PendingWithdrawals[len(m.PendingWithdrawals)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageResponse{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PendingWithdrawalWithTimeout) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PendingWithdrawalWithTimeout: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PendingWithdrawalWithTimeout: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PendingWithdrawal", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.PendingWithdrawal.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Timeout", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := github_com_cosmos_gogoproto_types.StdTimeUnmarshal(&m.Timeout, dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
 }
 func (m *QueryVaultsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)

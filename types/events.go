@@ -129,3 +129,44 @@ func NewEventMaxInterestRateUpdated(vaultAddress, admin, maxRate string) *EventM
 		MaxRate:      maxRate,
 	}
 }
+
+// NewEventSwapOutRequested creates a new EventSwapOutRequested event.
+func NewEventSwapOutRequested(vaultAddress, owner string, assets, shares sdk.Coin, requestID uint64) *EventSwapOutRequested {
+	return &EventSwapOutRequested{
+		VaultAddress: vaultAddress,
+		Owner:        owner,
+		Assets:       assets,
+		Shares:       shares,
+		RequestId:    requestID,
+	}
+}
+
+// NewEventWithdrawalCompleted creates a new EventWithdrawalCompleted event.
+func NewEventWithdrawalCompleted(vaultAddress, owner string, assets sdk.Coin, requestID uint64) *EventWithdrawalCompleted {
+	return &EventWithdrawalCompleted{
+		VaultAddress: vaultAddress,
+		Owner:        owner,
+		Assets:       assets,
+		RequestId:    requestID,
+	}
+}
+
+// NewEventWithdrawalRefunded creates a new EventWithdrawalRefunded event.
+func NewEventWithdrawalRefunded(vaultAddress, owner string, shares sdk.Coin, requestID uint64, reason string) *EventWithdrawalRefunded {
+	return &EventWithdrawalRefunded{
+		VaultAddress: vaultAddress,
+		Owner:        owner,
+		Shares:       shares,
+		RequestId:    requestID,
+		Reason:       reason,
+	}
+}
+
+// NewEventWithdrawalAccelerated creates a new EventWithdrawalAccelerated event.
+func NewEventWithdrawalAccelerated(vaultAddress, admin string, requestID uint64) *EventWithdrawalAccelerated {
+	return &EventWithdrawalAccelerated{
+		VaultAddress: vaultAddress,
+		Admin:        admin,
+		RequestId:    requestID,
+	}
+}

@@ -180,3 +180,55 @@ message EventMaxInterestRateUpdated {
   // An empty string "" represents no maximum.
   string max_rate = 3;
 }
+
+// EventSwapOutRequested is emitted when a user successfully queues a withdrawal.
+message EventSwapOutRequested {
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 1;
+  // owner is the bech32 address of the user who initiated the swap out.
+  string owner = 2;
+  // assets is the amount of assets calculated to be paid out upon completion.
+  cosmos.base.v1beta1.Coin assets = 3 [(gogoproto.nullable) = false];
+  // shares is the amount of vault shares the user escrowed for this request.
+  cosmos.base.v1beta1.Coin shares = 4 [(gogoproto.nullable) = false];
+  // request_id is the unique identifier for this pending withdrawal request.
+  uint64 request_id = 5;
+}
+
+// EventWithdrawalCompleted is emitted when a pending withdrawal is successfully processed.
+message EventWithdrawalCompleted {
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 1;
+  // owner is the bech32 address of the user who received the payout.
+  string owner = 2;
+  // assets is the amount of assets paid out to the user.
+  cosmos.base.v1beta1.Coin assets = 3 [(gogoproto.nullable) = false];
+  // request_id is the unique identifier of the withdrawal request that was completed.
+  uint64 request_id = 4;
+}
+
+// EventWithdrawalRefunded is emitted when a pending withdrawal fails and the user's
+// escrowed shares are returned.
+message EventWithdrawalRefunded {
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 1;
+  // owner is the bech32 address of the user whose shares were refunded.
+  string owner = 2;
+  // shares is the amount of vault shares that were returned to the user.
+  cosmos.base.v1beta1.Coin shares = 3 [(gogoproto.nullable) = false];
+  // request_id is the unique identifier of the withdrawal request that failed.
+  uint64 request_id = 4;
+  // reason is a string detailing why the withdrawal failed.
+  string reason = 5;
+}
+
+// EventWithdrawalAccelerated is emitted when an admin successfully accelerates a
+// pending withdrawal request.
+message EventWithdrawalAccelerated {
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 1;
+  // admin is the bech32 address of the admin who accelerated the request.
+  string admin = 2;
+  // request_id is the unique identifier of the withdrawal request that was accelerated.
+  uint64 request_id = 3;
+}

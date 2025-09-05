@@ -11,5 +11,13 @@ func (k *Keeper) BeginBlocker(ctx context.Context) error {
 
 // EndBlocker is a hook that is called at the end of every block.
 func (k *Keeper) EndBlocker(ctx context.Context) error {
-	return k.handleReconciledVaults(ctx)
+	if err := k.ProcessPendingWithdrawals(ctx); err != nil {
+		return err
+	}
+
+	if err := k.handleReconciledVaults(ctx); err != nil {
+		return err
+	}
+
+	return nil
 }

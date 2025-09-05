@@ -336,7 +336,7 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 		return 0, fmt.Errorf("failed to enqueue pending withdrawal: %w", err)
 	}
 
-	// k.emitEvent(ctx, types.NewEventSwapOutRequested(vaultAddr.String(), owner.String(), assets, shares, requestID))
+	k.emitEvent(ctx, types.NewEventSwapOutRequested(vaultAddr.String(), owner.String(), assets, shares, requestID))
 	return requestID, nil
 }
 

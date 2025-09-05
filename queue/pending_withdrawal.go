@@ -15,14 +15,14 @@ import (
 
 // PendingWithdrawalIndexes defines the indexes for the pending withdrawal queue.
 type PendingWithdrawalIndexes struct {
-	ByVault *indexes.Multi[sdk.AccAddress, collections.Triple[int64, sdk.AccAddress, uint64], types.PendingWithdrawal]
-	ByID    *indexes.Unique[uint64, collections.Triple[int64, sdk.AccAddress, uint64], types.PendingWithdrawal]
+	ByVault *indexes.Multi[sdk.AccAddress, collections.Triple[int64, uint64, sdk.AccAddress], types.PendingWithdrawal]
+	ByID    *indexes.Unique[uint64, collections.Triple[int64, uint64, sdk.AccAddress], types.PendingWithdrawal]
 }
 
 // IndexesList returns the list of indexes for the pending withdrawal queue.
-func (i PendingWithdrawalIndexes) IndexesList() []collections.Index[collections.Triple[int64, sdk.AccAddress, uint64], types.PendingWithdrawal] {
+func (i PendingWithdrawalIndexes) IndexesList() []collections.Index[collections.Triple[int64, uint64, sdk.AccAddress], types.PendingWithdrawal] {
 	return []collections.Index[
-		collections.Triple[int64, sdk.AccAddress, uint64], types.PendingWithdrawal]{i.ByVault, i.ByID}
+		collections.Triple[int64, uint64, sdk.AccAddress], types.PendingWithdrawal]{i.ByVault, i.ByID}
 }
 
 // NewPendingWithdrawalIndexes creates a new PendingWithdrawalIndexes object.
@@ -33,9 +33,9 @@ func NewPendingWithdrawalIndexes(sb *collections.SchemaBuilder) PendingWithdrawa
 			types.VaultPendingWithdrawalByVaultIndexPrefix,
 			types.VaultPendingWithdrawalByVaultIndexName,
 			sdk.AccAddressKey,
-			collections.TripleKeyCodec(collections.Int64Key, sdk.AccAddressKey, collections.Uint64Key),
-			func(pk collections.Triple[int64, sdk.AccAddress, uint64], _ types.PendingWithdrawal) (sdk.AccAddress, error) {
-				return pk.K2(), nil
+			collections.TripleKeyCodec(collections.Int64Key, collections.Uint64Key, sdk.AccAddressKey),
+			func(pk collections.Triple[int64, uint64, sdk.AccAddress], _ types.PendingWithdrawal) (sdk.AccAddress, error) {
+				return pk.K3(), nil
 			},
 		),
 		ByID: indexes.NewUnique(
@@ -43,9 +43,9 @@ func NewPendingWithdrawalIndexes(sb *collections.SchemaBuilder) PendingWithdrawa
 			types.VaultPendingWithdrawalByIdIndexPrefix,
 			types.VaultPendingWithdrawalByIdIndexName,
 			collections.Uint64Key,
-			collections.TripleKeyCodec(collections.Int64Key, sdk.AccAddressKey, collections.Uint64Key),
-			func(pk collections.Triple[int64, sdk.AccAddress, uint64], _ types.PendingWithdrawal) (uint64, error) {
-				return pk.K3(), nil
+			collections.TripleKeyCodec(collections.Int64Key, collections.Uint64Key, sdk.AccAddressKey),
+			func(pk collections.Triple[int64, uint64, sdk.AccAddress], _ types.PendingWithdrawal) (uint64, error) {
+				return pk.K2(), nil
 			},
 		),
 	}
@@ -53,8 +53,8 @@ func NewPendingWithdrawalIndexes(sb *collections.SchemaBuilder) PendingWithdrawa
 
 // PendingWithdrawalQueue is a queue for pending withdrawals.
 type PendingWithdrawalQueue struct {
-	// IndexedMap is the indexed map of pending withdrawals. The key is a triple of (timestamp, vault, id).
-	IndexedMap *collections.IndexedMap[collections.Triple[int64, sdk.AccAddress, uint64], types.PendingWithdrawal, PendingWithdrawalIndexes]
+	// IndexedMap is the indexed map of pending withdrawals. The key is a triple of (timestamp, id, vault).
+	IndexedMap *collections.IndexedMap[collections.Triple[int64, uint64, sdk.AccAddress], types.PendingWithdrawal, PendingWithdrawalIndexes]
 	// Sequence is the sequence for generating unique withdrawal IDs.
 	Sequence collections.Sequence
 }
@@ -63,8 +63,8 @@ type PendingWithdrawalQueue struct {
 func NewPendingWithdrawalQueue(builder *collections.SchemaBuilder, cdc codec.BinaryCodec) *PendingWithdrawalQueue {
 	keyCodec := collections.TripleKeyCodec(
 		collections.Int64Key,
-		sdk.AccAddressKey,
 		collections.Uint64Key,
+		sdk.AccAddressKey,
 	)
 	valueCodec := codec.CollValue[types.PendingWithdrawal](cdc)
 	return &PendingWithdrawalQueue{
@@ -93,7 +93,7 @@ func (p *PendingWithdrawalQueue) Enqueue(ctx context.Context, pendingTime int64,
 	if err != nil {
 		return 0, err
 	}
-	return id, p.IndexedMap.Set(ctx, collections.Join3(pendingTime, vault, id), *req)
+	return id, p.IndexedMap.Set(ctx, collections.Join3(pendingTime, id, vault), *req)
 }
 
 // Dequeue removes a pending withdrawal from the queue.
@@ -101,7 +101,7 @@ func (p *PendingWithdrawalQueue) Dequeue(ctx context.Context, timestamp int64, v
 	if timestamp < 0 {
 		return fmt.Errorf("timestamp cannot be negative")
 	}
-	key := collections.Join3(timestamp, vault, id)
+	key := collections.Join3(timestamp, id, vault)
 	if ok, _ := p.IndexedMap.Has(ctx, key); !ok {
 		return nil
 	}
@@ -146,8 +146,8 @@ func (p *PendingWithdrawalQueue) ExpediteWithdrawal(ctx context.Context, id uint
 // a timestamp <= now. For each due entry, the callback is invoked.
 // Iteration stops when a key with time > now is encountered (since keys are
 // ordered) or when the callback returns stop=true or an error.
-func (p *PendingWithdrawalQueue) WalkDue(ctx context.Context, now int64, fn func(timestamp int64, vault sdk.AccAddress, id uint64, req types.PendingWithdrawal) (stop bool, err error)) error {
-	return p.IndexedMap.Walk(ctx, nil, func(key collections.Triple[int64, sdk.AccAddress, uint64], value types.PendingWithdrawal) (stop bool, err error) {
+func (p *PendingWithdrawalQueue) WalkDue(ctx context.Context, now int64, fn func(timestamp int64, id uint64, vault sdk.AccAddress, req types.PendingWithdrawal) (stop bool, err error)) error {
+	return p.IndexedMap.Walk(ctx, nil, func(key collections.Triple[int64, uint64, sdk.AccAddress], value types.PendingWithdrawal) (stop bool, err error) {
 		if key.K1() > now {
 			return true, nil
 		}
@@ -157,8 +157,8 @@ func (p *PendingWithdrawalQueue) WalkDue(ctx context.Context, now int64, fn func
 
 // Walk iterates over all entries in the PendingWithdrawalQueue.
 // Iteration stops when the callback returns stop=true or an error.
-func (p *PendingWithdrawalQueue) Walk(ctx context.Context, fn func(timestamp int64, vault sdk.AccAddress, id uint64, req types.PendingWithdrawal) (stop bool, err error)) error {
-	return p.IndexedMap.Walk(ctx, nil, func(key collections.Triple[int64, sdk.AccAddress, uint64], value types.PendingWithdrawal) (stop bool, err error) {
+func (p *PendingWithdrawalQueue) Walk(ctx context.Context, fn func(timestamp int64, id uint64, vault sdk.AccAddress, req types.PendingWithdrawal) (stop bool, err error)) error {
+	return p.IndexedMap.Walk(ctx, nil, func(key collections.Triple[int64, uint64, sdk.AccAddress], value types.PendingWithdrawal) (stop bool, err error) {
 		return fn(key.K1(), key.K2(), key.K3(), value)
 	})
 }
@@ -181,7 +181,7 @@ func (p *PendingWithdrawalQueue) WalkByVault(ctx context.Context, vaultAddr sdk.
 		if err != nil {
 			return err
 		}
-		if stop, err := fn(pk.K1(), pk.K3(), req); stop || err != nil {
+		if stop, err := fn(pk.K1(), pk.K2(), req); stop || err != nil {
 			return err
 		}
 	}

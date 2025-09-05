@@ -216,7 +216,7 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 // SwapOut handles the process of redeeming vault shares in exchange for underlying assets.
 //
 // Returns the burned share amount on success, or an error if any step fails.
-func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, shares sdk.Coin, redeemDenom string) (*sdk.Coin, error) {
+func (k *Keeper) SwapOutLegacy(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, shares sdk.Coin, redeemDenom string) (*sdk.Coin, error) {
 	vault, err := k.GetVault(ctx, vaultAddr)
 	if err != nil {
 		return nil, err
@@ -268,12 +268,76 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 		return nil, fmt.Errorf("failed to burn shares: %w", err)
 	}
 
+	// share marker
 	if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, vaultAddr), principalAddress, owner, sdk.NewCoins(assets)); err != nil {
 		return nil, fmt.Errorf("failed to send underlying asset: %w", err)
 	}
 
 	k.emitEvent(ctx, types.NewEventSwapOut(vaultAddr.String(), owner.String(), assets, shares))
 	return &shares, nil
+}
+
+// SwapOut validates a withdrawal request, escrows the user's shares, and enqueues a pending withdrawal.
+func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, shares sdk.Coin, redeemDenom string) (uint64, error) {
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return 0, err
+	}
+	if vault == nil {
+		return 0, fmt.Errorf("vault with address %v not found", vaultAddr.String())
+	}
+
+	if !vault.SwapOutEnabled {
+		return 0, fmt.Errorf("swaps are not enabled for vault %s", vaultAddr.String())
+	}
+
+	if shares.Denom != vault.ShareDenom {
+		return 0, fmt.Errorf("swap out denom must be share denom %v : %v", shares.Denom, vault.ShareDenom)
+	}
+
+	if redeemDenom == "" {
+		redeemDenom = vault.UnderlyingAsset
+	}
+
+	if err := vault.ValidateAcceptedDenom(redeemDenom); err != nil {
+		return 0, err
+	}
+
+	if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
+		return 0, fmt.Errorf("failed to reconcile vault interest: %w", err)
+	}
+
+	assets, err := k.ConvertSharesToRedeemCoin(ctx, *vault, shares.Amount, redeemDenom)
+	if err != nil {
+		return 0, fmt.Errorf("failed to calculate assets from shares: %w", err)
+	}
+	if assets.Amount.IsZero() && shares.Amount.IsPositive() {
+		return 0, fmt.Errorf("redeem amount of %s is too small and results in zero assets", shares.String())
+	}
+
+	if err := k.BankKeeper.SendCoins(ctx, owner, vault.GetAddress(), sdk.NewCoins(shares)); err != nil {
+		return 0, fmt.Errorf("failed to escrow shares: %w", err)
+	}
+
+	// run send restricition function on from -> to address with assets as coins
+
+	payoutTime := ctx.BlockTime().Unix() + int64(vault.WithdrawalDelaySeconds)
+	pendingReq := types.PendingWithdrawal{
+		Owner:        owner.String(),
+		VaultAddress: vaultAddr.String(),
+		Assets:       assets,
+		Shares:       shares,
+	}
+	requestID, err := k.PendingWithdrawalQueue.Enqueue(ctx, payoutTime, pendingReq)
+	if err != nil {
+		if refundErr := k.BankKeeper.SendCoins(ctx, vault.GetAddress(), owner, sdk.NewCoins(shares)); refundErr != nil {
+			ctx.Logger().Error("CRITICAL: failed to refund escrowed shares after enqueue failure", "error", refundErr)
+		}
+		return 0, fmt.Errorf("failed to enqueue pending withdrawal: %w", err)
+	}
+
+	// k.emitEvent(ctx, types.NewEventSwapOutRequested(vaultAddr.String(), owner.String(), assets, shares, requestID))
+	return requestID, nil
 }
 
 // SetSwapInEnable updates the SwapInEnabled flag for a given vault. It updates the vault account in the state and

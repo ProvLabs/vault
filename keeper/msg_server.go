@@ -381,5 +381,28 @@ func (k msgServer) WithdrawPrincipalFunds(goCtx context.Context, msg *types.MsgW
 
 // ExpeditePendingWithdrawal expedites a pending withdrawal from a vault.
 func (k msgServer) ExpeditePendingWithdrawal(goCtx context.Context, msg *types.MsgExpeditePendingWithdrawalRequest) (*types.MsgExpeditePendingWithdrawalResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	withdrawal, err := k.PendingWithdrawalQueue.GetByID(ctx, msg.Id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get pending withdrawal: %w", err)
+	}
+
+	vaultAddr := sdk.MustAccAddressFromBech32(withdrawal.VaultAddress)
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault: %w", err)
+	}
+	if vault == nil {
+		return nil, fmt.Errorf("vault not found: %s", vaultAddr)
+	}
+	if err := vault.ValidateAdmin(msg.Admin); err != nil {
+		return nil, err
+	}
+
+	if err := k.PendingWithdrawalQueue.ExpediteWithdrawal(ctx, msg.Id); err != nil {
+		return nil, fmt.Errorf("failed to expedite withdrawal: %w", err)
+	}
+
 	return &types.MsgExpeditePendingWithdrawalResponse{}, nil
 }

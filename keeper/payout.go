@@ -52,15 +52,20 @@ func (k *Keeper) ProcessPendingWithdrawals(ctx context.Context) error {
 }
 
 // processSingleWithdrawal handles the successful state changes for a pending withdrawal.
-// It sends the pre-calculated assets from the vault's principal to the owner and then
-// burns the owner's escrowed shares from the vault's own account. An event is emitted on success.
-// A critical error is logged if the share burning fails after the payout has already succeeded.
+// It sends the pre-calculated assets from the vault's principal account to the owner.
+// It then transfers the escrowed shares from the vault's operational account to the
+// principal account before burning them to reduce the total supply. An event is emitted on success.
 func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.PendingWithdrawal) error {
 	vaultAddr := sdk.MustAccAddressFromBech32(req.VaultAddress)
 	ownerAddr := sdk.MustAccAddressFromBech32(req.Owner)
 	principalAddress := markertypes.MustGetMarkerAddress(req.Shares.Denom)
 
 	if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx), principalAddress, ownerAddr, sdk.NewCoins(req.Assets)); err != nil {
+		return err
+	}
+
+	if err := k.BankKeeper.SendCoins(ctx, vaultAddr, principalAddress, sdk.NewCoins(req.Shares)); err != nil {
+		ctx.Logger().Error("CRITICAL: failed to transfer escrowed shares to principal for burning", "error", err)
 		return err
 	}
 

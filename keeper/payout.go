@@ -23,6 +23,12 @@ func (k *Keeper) ProcessPendingWithdrawals(ctx context.Context) error {
 	err := k.PendingWithdrawalQueue.WalkDue(ctx, now, func(timestamp int64, vaultAddr sdk.AccAddress, id uint64, req types.PendingWithdrawal) (stop bool, err error) {
 		processedKeys = append(processedKeys, collections.Join3(timestamp, vaultAddr, id))
 
+		_, ok := k.tryGetVault(sdkCtx, vaultAddr)
+		if !ok {
+			sdkCtx.Logger().Error("skipping pending withdrawal for non-existent vault", "request_id", id, "vault_address", vaultAddr.String())
+			return false, nil
+		}
+
 		err = k.processSingleWithdrawal(sdkCtx, id, req)
 		if err != nil {
 			if refundErr := k.refundWithdrawal(sdkCtx, id, req, err.Error()); refundErr != nil {

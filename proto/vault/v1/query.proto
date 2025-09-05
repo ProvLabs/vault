@@ -31,6 +31,11 @@ service Query {
   rpc EstimateSwapOut(QueryEstimateSwapOutRequest) returns (QueryEstimateSwapOutResponse) {
     option (google.api.http).get = "/vault/v1/vaults/{vault_address}/estimate_swap_out";
   }
+
+  // PendingWithdrawals returns a paginated list of all pending withdrawal requests.
+  rpc PendingWithdrawals(QueryPendingWithdrawalsRequest) returns (QueryPendingWithdrawalsResponse) {
+    option (google.api.http).get = "/vault/v1/pending_withdrawals";
+  }
 }
 
 // QueryVaultsRequest is the request message for the Query/Vaults endpoint.
@@ -103,4 +108,31 @@ message QueryEstimateSwapOutResponse {
     (gogoproto.stdtime) = true,
     (gogoproto.nullable) = false
   ];
+}
+
+// QueryPendingWithdrawalsRequest is the request message for the Query/PendingWithdrawals endpoint.
+message QueryPendingWithdrawalsRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// PendingWithdrawalQueueEntry represents a single entry in the pending withdrawal queue.
+message PendingWithdrawalQueueEntry {
+  // request is the pending withdrawal request.
+  PendingWithdrawal request = 1 [(gogoproto.nullable) = false];
+  // id is the unique identifier of the request in the queue.
+  uint64 id = 2;
+  // payout_time is the unix timestamp at which the withdrawal is scheduled to be processed.
+  google.protobuf.Timestamp payout_time = 3 [
+    (gogoproto.stdtime) = true,
+    (gogoproto.nullable) = false
+  ];
+}
+
+// QueryPendingWithdrawalsResponse is the response message for the Query/PendingWithdrawals endpoint.
+message QueryPendingWithdrawalsResponse {
+  // pending_withdrawals is the list of all pending withdrawal requests.
+  repeated PendingWithdrawalQueueEntry pending_withdrawals = 1 [(gogoproto.nullable) = false];
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }

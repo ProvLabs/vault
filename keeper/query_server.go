@@ -3,7 +3,9 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"time"
 
+	"cosmossdk.io/collections"
 	"github.com/provlabs/vault/types"
 	"github.com/provlabs/vault/utils"
 	"google.golang.org/grpc/codes"
@@ -178,5 +180,37 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 		Assets: estimatedAssets,
 		Height: ctx.BlockHeight(),
 		Time:   ctx.BlockTime().UTC(),
+	}, nil
+}
+
+// PendingWithdrawals returns a paginated list of all pending withdrawal requests.
+func (k queryServer) PendingWithdrawals(goCtx context.Context, req *types.QueryPendingWithdrawalsRequest) (*types.QueryPendingWithdrawalsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	entries, pageRes, err := query.CollectionPaginate(
+		ctx,
+		k.PendingWithdrawalQueue.Map,
+		req.Pagination,
+		func(key collections.Triple[int64, sdk.AccAddress, uint64], value types.PendingWithdrawal) (types.PendingWithdrawalQueueEntry, error) {
+			payoutTime := time.Unix(0, key.K1()).UTC()
+			entry := types.PendingWithdrawalQueueEntry{
+				Request:    value,
+				Id:         key.K3(),
+				PayoutTime: payoutTime,
+			}
+			return entry, nil
+		},
+	)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryPendingWithdrawalsResponse{
+		PendingWithdrawals: entries,
+		Pagination:         pageRes,
 	}, nil
 }

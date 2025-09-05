@@ -253,15 +253,17 @@ func TestPendingWithdrawalQueue_GetByID(t *testing.T) {
 			ctx, q := newTestPendingWithdrawalQueue(t)
 			id := tc.setup(t, ctx, q)
 
-			req, err := q.GetByID(ctx, id)
+			pendingTime, req, err := q.GetByID(ctx, id)
 
 			if len(tc.errorMsg) > 0 {
 				require.Error(t, err)
 				require.ErrorContains(t, err, tc.errorMsg)
+				require.Equal(t, int64(0), pendingTime)
 			} else {
 				require.NoError(t, err)
 				require.Equal(t, req1.VaultAddress, req.VaultAddress)
 				require.Equal(t, req1.Owner, req.Owner)
+				require.Equal(t, int64(123), pendingTime)
 			}
 		})
 	}

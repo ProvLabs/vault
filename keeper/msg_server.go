@@ -383,7 +383,7 @@ func (k msgServer) WithdrawPrincipalFunds(goCtx context.Context, msg *types.MsgW
 func (k msgServer) ExpeditePendingWithdrawal(goCtx context.Context, msg *types.MsgExpeditePendingWithdrawalRequest) (*types.MsgExpeditePendingWithdrawalResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	withdrawal, err := k.PendingWithdrawalQueue.GetByID(ctx, msg.Id)
+	_, withdrawal, err := k.PendingWithdrawalQueue.GetByID(ctx, msg.Id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get pending withdrawal: %w", err)
 	}
@@ -403,6 +403,8 @@ func (k msgServer) ExpeditePendingWithdrawal(goCtx context.Context, msg *types.M
 	if err := k.PendingWithdrawalQueue.ExpediteWithdrawal(ctx, msg.Id); err != nil {
 		return nil, fmt.Errorf("failed to expedite withdrawal: %w", err)
 	}
+
+	k.emitEvent(ctx, types.NewEventPendingWithdrawalExpedited(msg.Id, withdrawal.VaultAddress, msg.Admin))
 
 	return &types.MsgExpeditePendingWithdrawalResponse{}, nil
 }

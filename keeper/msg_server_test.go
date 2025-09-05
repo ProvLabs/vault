@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"cosmossdk.io/math"
@@ -2052,6 +2053,94 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds_Failures() {
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_ExpeditePendingWithdrawal() {
+	type postCheckArgs struct {
+		ID uint64
+	}
+
+	testDef := msgServerTestDef[types.MsgExpeditePendingWithdrawalRequest, types.MsgExpeditePendingWithdrawalResponse, postCheckArgs]{
+		endpointName: "ExpeditePendingWithdrawal",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).ExpeditePendingWithdrawal,
+		postCheck: func(msg *types.MsgExpeditePendingWithdrawalRequest, args postCheckArgs) {
+			release, withdrawal, err := s.k.PendingWithdrawalQueue.GetByID(s.ctx, args.ID)
+			s.Require().NoError(err, "should be able to get withdrawal")
+			s.Assert().Equal(int64(0), release, "release time should be expedited to 0")
+			s.Assert().NotNil(withdrawal, "withdrawal should not be nil")
+		},
+	}
+
+	underlying := "under"
+	share := "vaultshares"
+	admin := s.adminAddr
+	other := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1000))
+	vaultAddr := types.GetVaultAddress(share)
+	blockTime := time.Now()
+
+	var id uint64
+	setup := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      share,
+			UnderlyingAsset: underlying,
+		})
+		s.Require().NoError(err)
+
+		id, err = s.k.PendingWithdrawalQueue.Enqueue(s.ctx, blockTime.Unix(), &types.PendingWithdrawal{
+			VaultAddress: vaultAddr.String(),
+		})
+		s.Require().NoError(err)
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	tests := []msgServerTestCase[types.MsgExpeditePendingWithdrawalRequest, postCheckArgs]{
+		{
+			name:  "happy path",
+			setup: setup,
+			msg: types.MsgExpeditePendingWithdrawalRequest{
+				Admin: admin.String(),
+				Id:    id,
+			},
+			postCheckArgs: postCheckArgs{
+				ID: id,
+			},
+			expectedEvents: sdk.Events{
+				sdk.NewEvent(
+					"vault.v1.EventPendingWithdrawalExpedited",
+					sdk.NewAttribute("admin", admin.String()),
+					sdk.NewAttribute("id", fmt.Sprintf("%d", id)),
+					sdk.NewAttribute("vault", vaultAddr.String()),
+				),
+			},
+		},
+		{
+			name:  "unauthorized admin",
+			setup: setup,
+			msg: types.MsgExpeditePendingWithdrawalRequest{
+				Admin: other.String(),
+				Id:    id,
+			},
+			expectedErrSubstrs: []string{"unauthorized"},
+		},
+		{
+			name:  "id does not exist",
+			setup: setup,
+			msg: types.MsgExpeditePendingWithdrawalRequest{
+				Admin: admin.String(),
+				Id:    999,
+			},
+			expectedErrSubstrs: []string{"failed to get pending withdrawal"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			testDef.expectedResponse = &types.MsgExpeditePendingWithdrawalResponse{}
 			runMsgServerTestCase(s, testDef, tc)
 		})
 	}

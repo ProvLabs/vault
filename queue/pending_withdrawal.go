@@ -109,18 +109,18 @@ func (p *PendingWithdrawalQueue) Dequeue(ctx context.Context, timestamp int64, v
 }
 
 // GetByID gets the pending withdrawal by ID.
-func (p *PendingWithdrawalQueue) GetByID(ctx context.Context, id uint64) (*types.PendingWithdrawal, error) {
+func (p *PendingWithdrawalQueue) GetByID(ctx context.Context, id uint64) (int64, *types.PendingWithdrawal, error) {
 	pk, err := p.IndexedMap.Indexes.ByID.MatchExact(ctx, id)
 	if err != nil {
-		return nil, err
+		return 0, nil, err
 	}
 
 	req, err := p.IndexedMap.Get(ctx, pk)
 	if err != nil {
-		return nil, err
+		return 0, nil, err
 	}
 
-	return &req, nil
+	return pk.K1(), &req, nil
 }
 
 // ExpediteWithdrawal sets the timestamp of a pending withdrawal to 0.

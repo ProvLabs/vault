@@ -129,3 +129,12 @@ func NewEventMaxInterestRateUpdated(vaultAddress, admin, maxRate string) *EventM
 		MaxRate:      maxRate,
 	}
 }
+
+// NewEventPendingWithdrawalExpedited creates a new EventPendingWithdrawalExpedited event.
+func NewEventPendingWithdrawalExpedited(id uint64, vault, admin string) *EventPendingWithdrawalExpedited {
+	return &EventPendingWithdrawalExpedited{
+		Id:    id,
+		Vault: vault,
+		Admin: admin,
+	}
+}

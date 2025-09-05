@@ -81,9 +81,9 @@ func NewPendingWithdrawalQueue(builder *collections.SchemaBuilder, cdc codec.Bin
 }
 
 // Enqueue adds a pending withdrawal to the queue.
-func (p *PendingWithdrawalQueue) Enqueue(ctx context.Context, timestamp int64, req *types.PendingWithdrawal) (uint64, error) {
-	if timestamp < 0 {
-		return 0, fmt.Errorf("timestamp cannot be negative")
+func (p *PendingWithdrawalQueue) Enqueue(ctx context.Context, pendingTime int64, req *types.PendingWithdrawal) (uint64, error) {
+	if pendingTime < 0 {
+		return 0, fmt.Errorf("pending time cannot be negative")
 	}
 	vault, err := sdk.AccAddressFromBech32(req.VaultAddress)
 	if err != nil {
@@ -93,7 +93,7 @@ func (p *PendingWithdrawalQueue) Enqueue(ctx context.Context, timestamp int64, r
 	if err != nil {
 		return 0, err
 	}
-	return id, p.IndexedMap.Set(ctx, collections.Join3(timestamp, vault, id), *req)
+	return id, p.IndexedMap.Set(ctx, collections.Join3(pendingTime, vault, id), *req)
 }
 
 // Dequeue removes a pending withdrawal from the queue.

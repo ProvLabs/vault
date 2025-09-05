@@ -177,7 +177,7 @@ func TestPendingWithdrawalQueueEnqueueAndDequeue(t *testing.T) {
 			timestamp:   -1,
 			dequeue:     false,
 			expectError: true,
-			errorMsg:    "timestamp cannot be negative",
+			errorMsg:    "pending time cannot be negative",
 		},
 		{
 			name: "dequeue with negative timestamp",

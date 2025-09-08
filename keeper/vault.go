@@ -315,11 +315,14 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 		return 0, fmt.Errorf("redeem amount of %s is too small and results in zero assets", shares.String())
 	}
 
+	_, err = k.MarkerKeeper.SendRestrictionFn(markertypes.WithTransferAgents(ctx, vaultAddr), vault.PrincipalMarkerAddress(), owner, sdk.NewCoins(assets))
+	if err != nil {
+		return 0, fmt.Errorf("failed to pass send restrictions: %w", err)
+	}
+
 	if err := k.BankKeeper.SendCoins(ctx, owner, vault.GetAddress(), sdk.NewCoins(shares)); err != nil {
 		return 0, fmt.Errorf("failed to escrow shares: %w", err)
 	}
-
-	// run send restricition function on from -> to address with assets as coins
 
 	payoutTime := ctx.BlockTime().Unix() + int64(vault.WithdrawalDelaySeconds)
 	pendingReq := types.PendingWithdrawal{

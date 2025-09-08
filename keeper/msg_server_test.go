@@ -414,6 +414,7 @@ func (s *TestSuite) TestMsgServer_SwapOut() {
 		s.Require().Equal(resp.Amount, deposit.Amount.Mul(utils.ShareScalar), "minted shares must equal deposit * ShareScalar")
 
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+		s.ctx = s.ctx.WithBlockTime(time.Now())
 	}
 
 	testCases := []struct {
@@ -581,6 +582,7 @@ func (s *TestSuite) TestMsgServer_ToggleSwapOut() {
 		})
 		s.Require().NoError(err)
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+		s.ctx = s.ctx.WithBlockTime(time.Now())
 	}
 
 	tests := []struct {

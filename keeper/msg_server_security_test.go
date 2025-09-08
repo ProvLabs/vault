@@ -82,19 +82,7 @@ func (s *TestSuite) TestMsgServer_SmallFirstSwapIn_HugeDonation_SwapOut() {
 	_, err = s.k.SwapOut(s.ctx, vaultAddr, owner, sharesToBurn, "")
 	s.Require().NoError(err, "swap-out of all tiny depositor shares should succeed")
 
-	// s.Require().True(
-	// 	respOut.Amount.GTE(tiny.Amount),
-	// 	"payout should be >= original tiny swap-in (got=%s want>=%s)",
-	// 	respOut.Amount, tiny.Amount,
-	// )
-
-	// currentVaultAssets := s.simApp.BankKeeper.GetBalance(s.ctx, markerAddr, underlying).Amount
-	// s.Require().True(
-	// 	respOut.Amount.LTE(currentVaultAssets),
-	// 	"payout should be <= current vault assets (got=%s vault=%s)",
-	// 	respOut.Amount, currentVaultAssets,
-	// )
-
+	s.simApp.VaultKeeper.ProcessPendingWithdrawals(s.ctx)
 	postTotalShares := s.simApp.BankKeeper.GetSupply(s.ctx, shareDenom).Amount
 	postTotalAssets := s.simApp.BankKeeper.GetBalance(s.ctx, markerAddr, underlying).Amount
 	if !postTotalShares.IsZero() {

@@ -187,3 +187,53 @@ func (p *PendingWithdrawalQueue) WalkByVault(ctx context.Context, vaultAddr sdk.
 	}
 	return nil
 }
+
+// Import imports the pending withdrawal queue from genesis.
+func (p *PendingWithdrawalQueue) Import(ctx context.Context, genQueue types.PendingWithdrawalQueue) error {
+	for _, entry := range genQueue.Entries {
+		vaultAddr, err := sdk.AccAddressFromBech32(entry.Withdrawal.VaultAddress)
+		if err != nil {
+			return fmt.Errorf("invalid vault address in pending withdrawal queue: %w", err)
+		}
+		withdrawal := types.PendingWithdrawal{
+			Owner:        entry.Withdrawal.Owner,
+			Assets:       entry.Withdrawal.Assets,
+			VaultAddress: entry.Withdrawal.VaultAddress,
+		}
+
+		if err := p.IndexedMap.Set(ctx, collections.Join3(entry.Time, entry.Id, vaultAddr), withdrawal); err != nil {
+			return fmt.Errorf("failed to enqueue pending withdrawal: %w", err)
+		}
+	}
+	if err := p.Sequence.Set(ctx, genQueue.LatestSequenceNumber); err != nil {
+		return fmt.Errorf("failed to set latest sequence number for pending withdrawal queue: %w", err)
+	}
+	return nil
+}
+
+// Export exports the pending withdrawal queue to genesis.
+func (p *PendingWithdrawalQueue) Export(ctx context.Context) (types.PendingWithdrawalQueue, error) {
+	pendingWithdrawalQueue := make([]types.PendingWithdrawalQueueEntry, 0)
+	err := p.Walk(ctx, func(timestamp int64, id uint64, _ sdk.AccAddress, req types.PendingWithdrawal) (stop bool, err error) {
+		pendingWithdrawalQueue = append(pendingWithdrawalQueue, types.PendingWithdrawalQueueEntry{
+			Time:       timestamp,
+			Id:         id,
+			Withdrawal: req,
+		})
+		return false, nil
+	})
+	if err != nil {
+		return types.PendingWithdrawalQueue{}, fmt.Errorf("failed to walk pending withdrawal queue: %w", err)
+	}
+
+	latestSequenceNumber, err := p.Sequence.Peek(ctx)
+	if err != nil {
+		return types.PendingWithdrawalQueue{}, fmt.Errorf("failed to get latest sequence number for pending withdrawal queue: %w", err)
+	}
+
+	return types.PendingWithdrawalQueue{
+			LatestSequenceNumber: latestSequenceNumber,
+			Entries:              pendingWithdrawalQueue,
+		},
+		nil
+}

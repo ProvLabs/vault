@@ -61,6 +61,10 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 			panic(fmt.Errorf("failed to enqueue vault timeout for %s: %w", entry.Addr, err))
 		}
 	}
+
+	if err := k.PendingWithdrawalQueue.Import(ctx, genState.PendingWithdrawalQueue); err != nil {
+		panic(fmt.Errorf("failed to import pending withdrawal queue: %w", err))
+	}
 }
 
 // ExportGenesis exports the current state of the vault module.
@@ -87,8 +91,14 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		panic(fmt.Errorf("failed to walk payout timeout queue: %w", err))
 	}
 
+	pendingWithdrawalQueue, err := k.PendingWithdrawalQueue.Export(ctx)
+	if err != nil {
+		panic(fmt.Errorf("failed to export pending withdrawal queue: %w", err))
+	}
+
 	return &types.GenesisState{
-		Vaults:             vaults,
-		PayoutTimeoutQueue: paymentTimeoutQueue,
+		Vaults:                 vaults,
+		PayoutTimeoutQueue:     paymentTimeoutQueue,
+		PendingWithdrawalQueue: pendingWithdrawalQueue,
 	}
 }

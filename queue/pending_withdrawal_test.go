@@ -481,6 +481,26 @@ func TestPendingWithdrawalQueue_Import(t *testing.T) {
 			genQueue: nil,
 			errorMsg: "genesis queue is nil",
 		},
+		{
+			name: "bad vault address",
+			genQueue: &vtypes.PendingWithdrawalQueue{
+				LatestSequenceNumber: 1,
+				Entries: []vtypes.PendingWithdrawalQueueEntry{
+					{Time: 1, Id: 0, Withdrawal: vtypes.PendingWithdrawal{VaultAddress: "badaddress", Owner: addr1.Bech32, Assets: sdk.NewInt64Coin("usd", 100)}},
+				},
+			},
+			errorMsg: "invalid vault address in pending withdrawal queue",
+		},
+		{
+			name: "bad owner address",
+			genQueue: &vtypes.PendingWithdrawalQueue{
+				LatestSequenceNumber: 1,
+				Entries: []vtypes.PendingWithdrawalQueueEntry{
+					{Time: 1, Id: 0, Withdrawal: vtypes.PendingWithdrawal{VaultAddress: addr1.Bech32, Owner: "badaddress", Assets: sdk.NewInt64Coin("usd", 100)}},
+				},
+			},
+			errorMsg: "invalid owner address in pending withdrawal queue",
+		},
 	}
 
 	for _, tc := range tests {

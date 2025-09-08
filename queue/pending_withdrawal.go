@@ -198,6 +198,9 @@ func (p *PendingWithdrawalQueue) Import(ctx context.Context, genQueue *types.Pen
 		if err != nil {
 			return fmt.Errorf("invalid vault address in pending withdrawal queue: %w", err)
 		}
+		if _, err := sdk.AccAddressFromBech32(entry.Withdrawal.Owner); err != nil {
+			return fmt.Errorf("invalid owner address in pending withdrawal queue: %w", err)
+		}
 		withdrawal := types.PendingWithdrawal{
 			Owner:        entry.Withdrawal.Owner,
 			Assets:       entry.Withdrawal.Assets,

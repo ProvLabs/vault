@@ -62,6 +62,16 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 		}
 	}
 
+	for _, entry := range genState.PendingWithdrawalQueue.Entries {
+		vaultAddr, err := sdk.AccAddressFromBech32(entry.Withdrawal.VaultAddress)
+		if err != nil {
+			panic(fmt.Errorf("invalid vault address in pending withdrawal queue: %w", err))
+		}
+		if _, ok := k.tryGetVault(ctx, vaultAddr); !ok {
+			panic(fmt.Errorf("pending queue entry for unknown vault %s", entry.Withdrawal.VaultAddress))
+		}
+	}
+
 	if err := k.PendingWithdrawalQueue.Import(ctx, &genState.PendingWithdrawalQueue); err != nil {
 		panic(fmt.Errorf("failed to import pending withdrawal queue: %w", err))
 	}
@@ -101,4 +111,9 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		PayoutTimeoutQueue:     paymentTimeoutQueue,
 		PendingWithdrawalQueue: *pendingWithdrawalQueue,
 	}
+}
+
+func vaultExists(ctx sdk.Context, k Keeper, addr sdk.AccAddress) bool {
+	_, err := k.GetVault(ctx, addr)
+	return err == nil
 }

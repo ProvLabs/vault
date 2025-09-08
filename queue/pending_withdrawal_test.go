@@ -446,8 +446,12 @@ func TestPendingWithdrawalQueue_Export(t *testing.T) {
 func TestPendingWithdrawalQueue_Import(t *testing.T) {
 	addr1 := utils.TestProvlabsAddress()
 	addr2 := utils.TestProvlabsAddress()
+	if addr1.Bech32 > addr2.Bech32 {
+		addr1, addr2 = addr2, addr1
+	}
 	req1 := vtypes.PendingWithdrawal{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, Assets: sdk.NewInt64Coin("usd", 100)}
 	req2 := vtypes.PendingWithdrawal{VaultAddress: addr2.Bech32, Owner: addr2.Bech32, Assets: sdk.NewInt64Coin("usd", 200)}
+	req3 := vtypes.PendingWithdrawal{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, Assets: sdk.NewInt64Coin("usd", 300)}
 
 	tests := []struct {
 		name     string
@@ -457,10 +461,11 @@ func TestPendingWithdrawalQueue_Import(t *testing.T) {
 		{
 			name: "multiple elements",
 			genQueue: &vtypes.PendingWithdrawalQueue{
-				LatestSequenceNumber: 1,
+				LatestSequenceNumber: 2,
 				Entries: []vtypes.PendingWithdrawalQueueEntry{
 					{Time: 1, Id: 0, Withdrawal: req1},
 					{Time: 2, Id: 1, Withdrawal: req2},
+					{Time: 1, Id: 2, Withdrawal: req3},
 				},
 			},
 		},

@@ -442,3 +442,66 @@ func TestPendingWithdrawalQueue_Export(t *testing.T) {
 		})
 	}
 }
+
+func TestPendingWithdrawalQueue_Import(t *testing.T) {
+	addr1 := utils.TestProvlabsAddress()
+	addr2 := utils.TestProvlabsAddress()
+	req1 := vtypes.PendingWithdrawal{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, Assets: sdk.NewInt64Coin("usd", 100)}
+	req2 := vtypes.PendingWithdrawal{VaultAddress: addr2.Bech32, Owner: addr2.Bech32, Assets: sdk.NewInt64Coin("usd", 200)}
+
+	tests := []struct {
+		name     string
+		genQueue *vtypes.PendingWithdrawalQueue
+		errorMsg string
+	}{
+		{
+			name: "multiple elements",
+			genQueue: &vtypes.PendingWithdrawalQueue{
+				LatestSequenceNumber: 1,
+				Entries: []vtypes.PendingWithdrawalQueueEntry{
+					{Time: 1, Id: 0, Withdrawal: req1},
+					{Time: 2, Id: 1, Withdrawal: req2},
+				},
+			},
+		},
+		{
+			name: "empty list",
+			genQueue: &vtypes.PendingWithdrawalQueue{
+				LatestSequenceNumber: 5,
+				Entries:              []vtypes.PendingWithdrawalQueueEntry{},
+			},
+		},
+		{
+			name:     "nil queue",
+			genQueue: nil,
+			errorMsg: "genesis queue is nil",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, q := newTestPendingWithdrawalQueue(t)
+
+			err := q.Import(ctx, tc.genQueue)
+
+			if len(tc.errorMsg) > 0 {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tc.errorMsg)
+			} else {
+				require.NoError(t, err)
+
+				seq, err := q.Sequence.Peek(ctx)
+				require.NoError(t, err)
+				require.Equal(t, tc.genQueue.LatestSequenceNumber, seq)
+
+				for _, entry := range tc.genQueue.Entries {
+					vaultAddr, err := sdk.AccAddressFromBech32(entry.Withdrawal.VaultAddress)
+					require.NoError(t, err)
+					req, err := q.IndexedMap.Get(ctx, collections.Join3(entry.Time, entry.Id, vaultAddr))
+					require.NoError(t, err)
+					require.Equal(t, entry.Withdrawal, req)
+				}
+			}
+		})
+	}
+}

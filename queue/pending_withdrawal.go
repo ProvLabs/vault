@@ -190,6 +190,9 @@ func (p *PendingWithdrawalQueue) WalkByVault(ctx context.Context, vaultAddr sdk.
 
 // Import imports the pending withdrawal queue from genesis.
 func (p *PendingWithdrawalQueue) Import(ctx context.Context, genQueue *types.PendingWithdrawalQueue) error {
+	if genQueue == nil {
+		return fmt.Errorf("genesis queue is nil")
+	}
 	for _, entry := range genQueue.Entries {
 		vaultAddr, err := sdk.AccAddressFromBech32(entry.Withdrawal.VaultAddress)
 		if err != nil {

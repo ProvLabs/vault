@@ -62,7 +62,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 		}
 	}
 
-	if err := k.PendingWithdrawalQueue.Import(ctx, genState.PendingWithdrawalQueue); err != nil {
+	if err := k.PendingWithdrawalQueue.Import(ctx, &genState.PendingWithdrawalQueue); err != nil {
 		panic(fmt.Errorf("failed to import pending withdrawal queue: %w", err))
 	}
 }
@@ -99,6 +99,6 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	return &types.GenesisState{
 		Vaults:                 vaults,
 		PayoutTimeoutQueue:     paymentTimeoutQueue,
-		PendingWithdrawalQueue: pendingWithdrawalQueue,
+		PendingWithdrawalQueue: *pendingWithdrawalQueue,
 	}
 }

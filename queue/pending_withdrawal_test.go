@@ -368,3 +368,77 @@ func TestPendingWithdrawalQueue_ExpediteWithdrawal(t *testing.T) {
 		})
 	}
 }
+
+func TestPendingWithdrawalQueue_Export(t *testing.T) {
+	addr1 := utils.TestProvlabsAddress()
+	addr2 := utils.TestProvlabsAddress()
+	if addr1.Bech32 > addr2.Bech32 {
+		addr1, addr2 = addr2, addr1
+	}
+	req1 := &vtypes.PendingWithdrawal{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, Assets: sdk.NewInt64Coin("usd", 100)}
+	req2 := &vtypes.PendingWithdrawal{VaultAddress: addr2.Bech32, Owner: addr2.Bech32, Assets: sdk.NewInt64Coin("usd", 200)}
+	req3 := &vtypes.PendingWithdrawal{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, Assets: sdk.NewInt64Coin("usd", 300)}
+
+	tests := []struct {
+		name          string
+		setup         func(t *testing.T, ctx sdk.Context, q *queue.PendingWithdrawalQueue)
+		expectedQueue vtypes.PendingWithdrawalQueue
+		expectError   bool
+	}{
+		{
+			name: "multiple elements",
+			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingWithdrawalQueue) {
+				_, err := q.Enqueue(ctx, 1, req1)
+				require.NoError(t, err)
+				_, err = q.Enqueue(ctx, 2, req2)
+				require.NoError(t, err)
+				_, err = q.Enqueue(ctx, 1, req3)
+				require.NoError(t, err)
+			},
+			expectedQueue: vtypes.PendingWithdrawalQueue{
+				LatestSequenceNumber: 3,
+				Entries: []vtypes.PendingWithdrawalQueueEntry{
+					{Time: 1, Id: 0, Withdrawal: *req1},
+					{Time: 1, Id: 2, Withdrawal: *req3},
+					{Time: 2, Id: 1, Withdrawal: *req2},
+				},
+			},
+			expectError: false,
+		},
+		{
+			name: "no elements",
+			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingWithdrawalQueue) {
+				// No elements enqueued
+			},
+			expectedQueue: vtypes.PendingWithdrawalQueue{
+				LatestSequenceNumber: 0,
+				Entries:              []vtypes.PendingWithdrawalQueueEntry{},
+			},
+			expectError: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, q := newTestPendingWithdrawalQueue(t)
+			tc.setup(t, ctx, q)
+
+			exportedQueue, err := q.Export(ctx)
+
+			if tc.expectError {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.expectedQueue.LatestSequenceNumber, exportedQueue.LatestSequenceNumber)
+				require.Equal(t, len(tc.expectedQueue.Entries), len(exportedQueue.Entries))
+				for i, entry := range tc.expectedQueue.Entries {
+					require.Equal(t, entry.Time, exportedQueue.Entries[i].Time)
+					require.Equal(t, entry.Id, exportedQueue.Entries[i].Id)
+					require.Equal(t, entry.Withdrawal.Owner, exportedQueue.Entries[i].Withdrawal.Owner)
+					require.Equal(t, entry.Withdrawal.VaultAddress, exportedQueue.Entries[i].Withdrawal.VaultAddress)
+					require.Equal(t, entry.Withdrawal.Assets.String(), exportedQueue.Entries[i].Withdrawal.Assets.String())
+				}
+			}
+		})
+	}
+}

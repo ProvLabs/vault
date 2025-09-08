@@ -189,7 +189,7 @@ func (p *PendingWithdrawalQueue) WalkByVault(ctx context.Context, vaultAddr sdk.
 }
 
 // Import imports the pending withdrawal queue from genesis.
-func (p *PendingWithdrawalQueue) Import(ctx context.Context, genQueue types.PendingWithdrawalQueue) error {
+func (p *PendingWithdrawalQueue) Import(ctx context.Context, genQueue *types.PendingWithdrawalQueue) error {
 	for _, entry := range genQueue.Entries {
 		vaultAddr, err := sdk.AccAddressFromBech32(entry.Withdrawal.VaultAddress)
 		if err != nil {
@@ -212,7 +212,7 @@ func (p *PendingWithdrawalQueue) Import(ctx context.Context, genQueue types.Pend
 }
 
 // Export exports the pending withdrawal queue to genesis.
-func (p *PendingWithdrawalQueue) Export(ctx context.Context) (types.PendingWithdrawalQueue, error) {
+func (p *PendingWithdrawalQueue) Export(ctx context.Context) (*types.PendingWithdrawalQueue, error) {
 	pendingWithdrawalQueue := make([]types.PendingWithdrawalQueueEntry, 0)
 	err := p.Walk(ctx, func(timestamp int64, id uint64, _ sdk.AccAddress, req types.PendingWithdrawal) (stop bool, err error) {
 		pendingWithdrawalQueue = append(pendingWithdrawalQueue, types.PendingWithdrawalQueueEntry{
@@ -223,15 +223,15 @@ func (p *PendingWithdrawalQueue) Export(ctx context.Context) (types.PendingWithd
 		return false, nil
 	})
 	if err != nil {
-		return types.PendingWithdrawalQueue{}, fmt.Errorf("failed to walk pending withdrawal queue: %w", err)
+		return nil, fmt.Errorf("failed to walk pending withdrawal queue: %w", err)
 	}
 
 	latestSequenceNumber, err := p.Sequence.Peek(ctx)
 	if err != nil {
-		return types.PendingWithdrawalQueue{}, fmt.Errorf("failed to get latest sequence number for pending withdrawal queue: %w", err)
+		return nil, fmt.Errorf("failed to get latest sequence number for pending withdrawal queue: %w", err)
 	}
 
-	return types.PendingWithdrawalQueue{
+	return &types.PendingWithdrawalQueue{
 			LatestSequenceNumber: latestSequenceNumber,
 			Entries:              pendingWithdrawalQueue,
 		},

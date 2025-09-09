@@ -161,3 +161,12 @@ func NewEventSwapOutRefunded(vaultAddress, owner string, shares sdk.Coin, reques
 		Reason:       reason,
 	}
 }
+
+// NewEventPendingSwapOutExpedited creates a new EventPendingSwapOutExpedited event.
+func NewEventPendingSwapOutExpedited(requestID uint64, vault, admin string) *EventPendingSwapOutExpedited {
+	return &EventPendingSwapOutExpedited{
+		RequestId: requestID,
+		Vault:     vault,
+		Admin:     admin,
+	}
+}

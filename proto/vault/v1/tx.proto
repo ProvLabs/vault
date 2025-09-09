@@ -47,6 +47,9 @@ service Msg {
 
   // WithdrawPrincipalFunds allows withdrawing principal funds from a vault.
   rpc WithdrawPrincipalFunds(MsgWithdrawPrincipalFundsRequest) returns (MsgWithdrawPrincipalFundsResponse);
+
+  // ExpeditePendingSwapOut expedites a pending swap out from a vault.
+  rpc ExpeditePendingSwapOut(MsgExpeditePendingSwapOutRequest) returns (MsgExpeditePendingSwapOutResponse);
 }
 
 // MsgCreateVaultRequest is the request message for the CreateVault endpoint.
@@ -242,3 +245,16 @@ message MsgWithdrawPrincipalFundsRequest {
 
 // MsgWithdrawPrincipalFundsResponse is the response message for the WithdrawPrincipalFunds endpoint.
 message MsgWithdrawPrincipalFundsResponse {}
+
+// MsgExpeditePendingSwapOutRequest is the request message for expediting a swap out from a vault.
+message MsgExpeditePendingSwapOutRequest {
+  option (cosmos.msg.v1.signer) = "admin";
+
+  // admin is the address of the vault administrator initiating the swap out.
+  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // request_id is the id of the pending swap out to expedite.
+  uint64 request_id = 2;
+}
+
+// MsgExpeditePendingSwapOutResponse is the response message for the ExpeditePendingSwapOut endpoint.
+message MsgExpeditePendingSwapOutResponse {}

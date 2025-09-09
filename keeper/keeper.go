@@ -27,10 +27,10 @@ type Keeper struct {
 	MarkerKeeper types.MarkerKeeper
 	BankKeeper   types.BankKeeper
 
-	Vaults                 collections.Map[sdk.AccAddress, []byte]
-	PayoutVerificationSet  collections.KeySet[sdk.AccAddress]
-	PayoutTimeoutQueue     *queue.PayoutTimeoutQueue
-	PendingWithdrawalQueue *queue.PendingWithdrawalQueue
+	Vaults                collections.Map[sdk.AccAddress, []byte]
+	PayoutVerificationSet collections.KeySet[sdk.AccAddress]
+	PayoutTimeoutQueue    *queue.PayoutTimeoutQueue
+	PendingSwapOutQueue   *queue.PendingSwapOutQueue
 }
 
 // NewMsgServer creates a new Keeper for the module.
@@ -51,16 +51,16 @@ func NewKeeper(
 	builder := collections.NewSchemaBuilder(storeService)
 
 	keeper := &Keeper{
-		eventService:           eventService,
-		addressCodec:           addressCodec,
-		authority:              authority,
-		Vaults:                 collections.NewMap(builder, types.VaultsKeyPrefix, types.VaultsName, sdk.AccAddressKey, collections.BytesValue),
-		PayoutVerificationSet:  collections.NewKeySet(builder, types.VaultPayoutVerificationSetPrefix, types.VaultPayoutVerificationSetName, sdk.AccAddressKey),
-		PayoutTimeoutQueue:     queue.NewPayoutTimeoutQueue(builder),
-		PendingWithdrawalQueue: queue.NewPendingWithdrawalQueue(builder, cdc),
-		AuthKeeper:             authKeeper,
-		MarkerKeeper:           markerkeeper,
-		BankKeeper:             bankkeeper,
+		eventService:          eventService,
+		addressCodec:          addressCodec,
+		authority:             authority,
+		Vaults:                collections.NewMap(builder, types.VaultsKeyPrefix, types.VaultsName, sdk.AccAddressKey, collections.BytesValue),
+		PayoutVerificationSet: collections.NewKeySet(builder, types.VaultPayoutVerificationSetPrefix, types.VaultPayoutVerificationSetName, sdk.AccAddressKey),
+		PayoutTimeoutQueue:    queue.NewPayoutTimeoutQueue(builder),
+		PendingSwapOutQueue:   queue.NewPendingSwapOutQueue(builder, cdc),
+		AuthKeeper:            authKeeper,
+		MarkerKeeper:          markerkeeper,
+		BankKeeper:            bankkeeper,
 	}
 
 	schema, err := builder.Build()

@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"time"
+
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -446,6 +448,213 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 			ExpectedResp: &types.QueryVaultsResponse{
 				Vaults:     []types.VaultAccount{},
 				Pagination: &query.PageResponse{},
+			},
+		},
+		{
+			Name:               "nil request",
+			Req:                nil,
+			ExpectedErrSubstrs: []string{"invalid request"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.Name, func() {
+			querytest.RunTestCase(s, testDef, tc)
+		})
+	}
+}
+
+// TestQueryServer_PendingSwapOuts tests the PendingSwapOuts query endpoint.
+func (s *TestSuite) TestQueryServer_PendingSwapOuts() {
+	testDef := querytest.TestDef[types.QueryPendingSwapOutsRequest, types.QueryPendingSwapOutsResponse]{
+		QueryName: "PendingSwapOuts",
+		Query:     keeper.NewQueryServer(s.simApp.VaultKeeper).PendingSwapOuts,
+		ManualEquality: func(s querytest.TestSuiter, expected, actual *types.QueryPendingSwapOutsResponse) {
+			s.Require().NotNil(actual, "actual response should not be nil")
+			s.Require().NotNil(expected, "expected response should not be nil")
+
+			s.Require().Len(actual.PendingSwapOuts, len(expected.PendingSwapOuts), "unexpected number of pending swap outs returned")
+
+			s.Assert().ElementsMatch(expected.PendingSwapOuts, actual.PendingSwapOuts, "pending swap outs do not match")
+
+			if expected.Pagination != nil {
+				if expected.Pagination.Total > 0 {
+					s.Assert().Equal(expected.Pagination.Total, actual.Pagination.Total, "pagination total")
+				}
+				if len(expected.Pagination.NextKey) > 0 {
+					s.Assert().NotEmpty(actual.Pagination.NextKey, "pagination next_key should not be empty")
+				} else {
+					s.Assert().Empty(actual.Pagination.NextKey, "pagination next_key should be empty")
+				}
+			}
+		},
+	}
+
+	// Define some swap outs for consistent testing
+	addr1 := sdk.AccAddress("addr1_______________")
+	addr2 := sdk.AccAddress("addr2_______________")
+	addr3 := sdk.AccAddress("addr3_______________")
+	vaultAddr := sdk.AccAddress("vault_address______")
+	swapOut1 := &types.PendingSwapOut{Owner: addr1.String(), VaultAddress: vaultAddr.String(), Assets: sdk.NewInt64Coin("v_usdc", 100)}
+	swapOut2 := &types.PendingSwapOut{Owner: addr2.String(), VaultAddress: vaultAddr.String(), Assets: sdk.NewInt64Coin("v_usdc", 200)}
+	swapOut3 := &types.PendingSwapOut{Owner: addr3.String(), VaultAddress: vaultAddr.String(), Assets: sdk.NewInt64Coin("v_usdc", 300)}
+
+	tests := []querytest.TestCase[types.QueryPendingSwapOutsRequest, types.QueryPendingSwapOutsResponse]{
+		{
+			Name: "happy path - single swap out",
+			Setup: func() {
+				_, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, 0, swapOut1)
+				s.Require().NoError(err)
+			},
+			Req: &types.QueryPendingSwapOutsRequest{},
+			ExpectedResp: &types.QueryPendingSwapOutsResponse{
+				PendingSwapOuts: []types.PendingSwapOutWithTimeout{
+					{
+						RequestId:      0,
+						PendingSwapOut: *swapOut1,
+						Timeout:        time.Unix(0, 0),
+					},
+				},
+				Pagination: &query.PageResponse{Total: 1},
+			},
+		},
+		{
+			Name: "happy path - multiple swap outs",
+			Setup: func() {
+				_, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, 0, swapOut1)
+				s.Require().NoError(err)
+				_, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, 0, swapOut2)
+				s.Require().NoError(err)
+				_, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, 0, swapOut3)
+				s.Require().NoError(err)
+			},
+			Req: &types.QueryPendingSwapOutsRequest{},
+			ExpectedResp: &types.QueryPendingSwapOutsResponse{
+				PendingSwapOuts: []types.PendingSwapOutWithTimeout{
+					{RequestId: 0, PendingSwapOut: *swapOut1, Timeout: time.Unix(0, 0)},
+					{RequestId: 1, PendingSwapOut: *swapOut2, Timeout: time.Unix(0, 0)},
+					{RequestId: 2, PendingSwapOut: *swapOut3, Timeout: time.Unix(0, 0)},
+				},
+				Pagination: &query.PageResponse{Total: 3},
+			},
+		},
+		{
+			Name: "pagination - limits the number of outputs",
+			Setup: func() {
+				_, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, 0, swapOut1)
+				s.Require().NoError(err)
+				_, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, 0, swapOut2)
+				s.Require().NoError(err)
+				_, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, 0, swapOut3)
+				s.Require().NoError(err)
+			},
+			Req: &types.QueryPendingSwapOutsRequest{
+				Pagination: &query.PageRequest{Limit: 2},
+			},
+			ExpectedResp: &types.QueryPendingSwapOutsResponse{
+				PendingSwapOuts: []types.PendingSwapOutWithTimeout{
+					{RequestId: 0, PendingSwapOut: *swapOut1, Timeout: time.Unix(0, 0)},
+					{RequestId: 1, PendingSwapOut: *swapOut2, Timeout: time.Unix(0, 0)},
+				},
+				Pagination: &query.PageResponse{
+					NextKey: []byte("not nil"),
+				},
+			},
+		},
+		{
+			Name: "pagination - offset starts at correct location",
+			Setup: func() {
+				_, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, 0, swapOut1)
+				s.Require().NoError(err)
+				_, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, 0, swapOut2)
+				s.Require().NoError(err)
+				_, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, 0, swapOut3)
+				s.Require().NoError(err)
+			},
+			Req: &types.QueryPendingSwapOutsRequest{
+				Pagination: &query.PageRequest{Offset: 1},
+			},
+			ExpectedResp: &types.QueryPendingSwapOutsResponse{
+				PendingSwapOuts: []types.PendingSwapOutWithTimeout{
+					{RequestId: 1, PendingSwapOut: *swapOut2, Timeout: time.Unix(0, 0)},
+					{RequestId: 2, PendingSwapOut: *swapOut3, Timeout: time.Unix(0, 0)},
+				},
+				Pagination: &query.PageResponse{Total: 3},
+			},
+		},
+		{
+			Name: "pagination - offset starts at correct location and enforces limit",
+			Setup: func() {
+				_, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, 0, swapOut1)
+				s.Require().NoError(err)
+				_, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, 0, swapOut2)
+				s.Require().NoError(err)
+				_, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, 0, swapOut3)
+				s.Require().NoError(err)
+			},
+			Req: &types.QueryPendingSwapOutsRequest{
+				Pagination: &query.PageRequest{Offset: 2, Limit: 1},
+			},
+			ExpectedResp: &types.QueryPendingSwapOutsResponse{
+				PendingSwapOuts: []types.PendingSwapOutWithTimeout{
+					{RequestId: 2, PendingSwapOut: *swapOut3, Timeout: time.Unix(0, 0)},
+				},
+				Pagination: &query.PageResponse{},
+			},
+		},
+		{
+			Name: "pagination - enabled count total",
+			Setup: func() {
+				_, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, 0, swapOut1)
+				s.Require().NoError(err)
+				_, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, 0, swapOut2)
+				s.Require().NoError(err)
+				_, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, 0, swapOut3)
+				s.Require().NoError(err)
+			},
+			Req: &types.QueryPendingSwapOutsRequest{
+				Pagination: &query.PageRequest{CountTotal: true},
+			},
+			ExpectedResp: &types.QueryPendingSwapOutsResponse{
+				PendingSwapOuts: []types.PendingSwapOutWithTimeout{
+					{RequestId: 0, PendingSwapOut: *swapOut1, Timeout: time.Unix(0, 0)},
+					{RequestId: 1, PendingSwapOut: *swapOut2, Timeout: time.Unix(0, 0)},
+					{RequestId: 2, PendingSwapOut: *swapOut3, Timeout: time.Unix(0, 0)},
+				},
+				Pagination: &query.PageResponse{Total: 3},
+			},
+		},
+		{
+			Name: "pagination - reverse provides the results in reverse order",
+			Setup: func() {
+				_, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, 0, swapOut1)
+				s.Require().NoError(err)
+				_, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, 0, swapOut2)
+				s.Require().NoError(err)
+				_, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, 0, swapOut3)
+				s.Require().NoError(err)
+			},
+			Req: &types.QueryPendingSwapOutsRequest{
+				Pagination: &query.PageRequest{Reverse: true, Limit: 2},
+			},
+			ExpectedResp: &types.QueryPendingSwapOutsResponse{
+				PendingSwapOuts: []types.PendingSwapOutWithTimeout{
+					{RequestId: 2, PendingSwapOut: *swapOut3, Timeout: time.Unix(0, 0)},
+					{RequestId: 1, PendingSwapOut: *swapOut2, Timeout: time.Unix(0, 0)},
+				},
+				Pagination: &query.PageResponse{
+					NextKey: []byte("not nil"),
+				},
+			},
+		},
+		{
+			Name: "empty state",
+			Setup: func() {
+			},
+			Req: &types.QueryPendingSwapOutsRequest{},
+			ExpectedResp: &types.QueryPendingSwapOutsResponse{
+				PendingSwapOuts: []types.PendingSwapOutWithTimeout{},
+				Pagination:      &query.PageResponse{},
 			},
 		},
 		{

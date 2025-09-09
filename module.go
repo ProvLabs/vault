@@ -305,6 +305,17 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						{ProtoField: "amount"},
 					},
 				},
+				{
+					RpcMethod: "ExpeditePendingSwapOut",
+					Use:       "expedite-pending-swap-out [admin] [request_id]",
+					Alias:     []string{"epso"},
+					Short:     "Expedite a pending swap out from a vault",
+					Example:   fmt.Sprintf("%s expedite-pending-swap-out %s 1", txStart, exampleAdminAddr),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "admin"},
+						{ProtoField: "request_id"},
+					},
+				},
 			},
 		},
 
@@ -349,6 +360,13 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						{ProtoField: "vault_address"},
 						{ProtoField: "assets"},
 					},
+				},
+				{
+					RpcMethod: "PendingSwapOuts",
+					Use:       "pending-swap-outs",
+					Alias:     []string{"pso"},
+					Short:     "Query all pending swap outs",
+					Example:   fmt.Sprintf("%s pending-swap-outs", queryStart),
 				},
 			},
 		},

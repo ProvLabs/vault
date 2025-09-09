@@ -61,6 +61,20 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 			panic(fmt.Errorf("failed to enqueue vault timeout for %s: %w", entry.Addr, err))
 		}
 	}
+
+	for _, entry := range genState.PendingSwapOutQueue.Entries {
+		vaultAddr, err := sdk.AccAddressFromBech32(entry.SwapOut.VaultAddress)
+		if err != nil {
+			panic(fmt.Errorf("invalid vault address in pending swap out queue: %w", err))
+		}
+		if _, ok := k.tryGetVault(ctx, vaultAddr); !ok {
+			panic(fmt.Errorf("pending queue entry for unknown vault %s", entry.SwapOut.VaultAddress))
+		}
+	}
+
+	if err := k.PendingSwapOutQueue.Import(ctx, &genState.PendingSwapOutQueue); err != nil {
+		panic(fmt.Errorf("failed to import pending swap out queue: %w", err))
+	}
 }
 
 // ExportGenesis exports the current state of the vault module.
@@ -87,8 +101,19 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		panic(fmt.Errorf("failed to walk payout timeout queue: %w", err))
 	}
 
-	return &types.GenesisState{
-		Vaults:             vaults,
-		PayoutTimeoutQueue: paymentTimeoutQueue,
+	pendingSwapOutQueue, err := k.PendingSwapOutQueue.Export(ctx)
+	if err != nil {
+		panic(fmt.Errorf("failed to export pending swap out queue: %w", err))
 	}
+
+	return &types.GenesisState{
+		Vaults:              vaults,
+		PayoutTimeoutQueue:  paymentTimeoutQueue,
+		PendingSwapOutQueue: *pendingSwapOutQueue,
+	}
+}
+
+func vaultExists(ctx sdk.Context, k Keeper, addr sdk.AccAddress) bool {
+	_, err := k.GetVault(ctx, addr)
+	return err == nil
 }

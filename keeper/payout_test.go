@@ -10,7 +10,7 @@ import (
 	"github.com/provlabs/vault/types"
 )
 
-func (s *TestSuite) TestKeeper_ProcessPendingWithdrawals() {
+func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 	shareDenom := "vshare"
 	underlyingDenom := "ylds"
 	vaultAddr := types.GetVaultAddress(shareDenom)
@@ -20,7 +20,7 @@ func (s *TestSuite) TestKeeper_ProcessPendingWithdrawals() {
 	shares := sdk.NewInt64Coin(shareDenom, 100)
 
 	testBlockTime := time.Now().UTC()
-	duePayoutTime := testBlockTime.Add(-1 * time.Hour).Unix()
+	duePayoutTime := testBlockTime.Add(-1 * time.Hour).UnixNano()
 
 	tests := []struct {
 		name          string
@@ -37,13 +37,13 @@ func (s *TestSuite) TestKeeper_ProcessPendingWithdrawals() {
 				s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), shares), "should mint shares to the vault account")
 				s.Require().NoError(s.k.MarkerKeeper.WithdrawCoins(s.ctx, vault.GetAddress(), vault.GetAddress(), shares.Denom, sdk.NewCoins(shares)), "should escrow shares into vault account")
 
-				req := types.PendingWithdrawal{
+				req := types.PendingSwapOut{
 					Owner:        ownerAddr.String(),
 					VaultAddress: vaultAddr.String(),
 					Assets:       assets,
 					Shares:       shares,
 				}
-				id, err := s.k.PendingWithdrawalQueue.Enqueue(s.ctx, duePayoutTime, req)
+				id, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, duePayoutTime, &req)
 				s.Require().NoError(err, "should successfully enqueue request")
 				return ownerAddr, id
 			},
@@ -57,12 +57,12 @@ func (s *TestSuite) TestKeeper_ProcessPendingWithdrawals() {
 				expectedEvents = append(expectedEvents, createSendCoinEvents(vaultAddr.String(), principalAddress.String(), shares.String())...)
 				expectedEvents = append(expectedEvents, createMarkerBurn(vaultAddr, principalAddress, shares)...)
 				typedEvent, err := sdk.TypedEventToEvent(types.NewEventSwapOutCompleted(vaultAddr.String(), ownerAddr.String(), assets, reqID))
-				s.Require().NoError(err, "should not error converting typed EventWithdrawalCompleted")
+				s.Require().NoError(err, "should not error converting typed EventSwapOutCompleted")
 				expectedEvents = append(expectedEvents, typedEvent)
 				s.Assert().Equal(
 					normalizeEvents(expectedEvents),
 					normalizeEvents(s.ctx.EventManager().Events()),
-					"a single EventWithdrawalCompleted should be emitted",
+					"a single EventSwapOutCompleted should be emitted",
 				)
 			},
 		},
@@ -74,13 +74,13 @@ func (s *TestSuite) TestKeeper_ProcessPendingWithdrawals() {
 				s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), shares), "should mint shares to the vault account")
 				s.Require().NoError(s.k.MarkerKeeper.WithdrawCoins(s.ctx, vault.GetAddress(), vault.GetAddress(), shares.Denom, sdk.NewCoins(shares)), "should escrow shares into vault account")
 
-				req := types.PendingWithdrawal{
+				req := types.PendingSwapOut{
 					Owner:        ownerAddr.String(),
 					VaultAddress: vaultAddr.String(),
 					Assets:       assets,
 					Shares:       shares,
 				}
-				id, err := s.k.PendingWithdrawalQueue.Enqueue(s.ctx, duePayoutTime, req)
+				id, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, duePayoutTime, &req)
 				s.Require().NoError(err)
 				return ownerAddr, id
 			},
@@ -91,12 +91,12 @@ func (s *TestSuite) TestKeeper_ProcessPendingWithdrawals() {
 				expectedEvents := sdk.Events{}
 				expectedEvents = append(expectedEvents, createSendCoinEvents(vaultAddr.String(), ownerAddr.String(), shares.String())...)
 				expectedEvent, err := sdk.TypedEventToEvent(types.NewEventSwapOutRefunded(vaultAddr.String(), ownerAddr.String(), shares, reqID, reason))
-				s.Require().NoError(err, "should not error converting typed EventWithdrawalRefunded")
+				s.Require().NoError(err, "should not error converting typed EventSwapOutRefunded")
 				expectedEvents = append(expectedEvents, expectedEvent)
 				s.Assert().Equal(
 					normalizeEvents(expectedEvents),
 					normalizeEvents(s.ctx.EventManager().Events()),
-					"a single EventWithdrawalRefunded should be emitted",
+					"a single EventSwapOutRefunded should be emitted",
 				)
 			},
 		},
@@ -104,22 +104,23 @@ func (s *TestSuite) TestKeeper_ProcessPendingWithdrawals() {
 			name: "request for non-existent vault is skipped and dequeued",
 			setup: func() (sdk.AccAddress, uint64) {
 				ownerAddr := s.CreateAndFundAccount(sdk.Coin{})
-				req := types.PendingWithdrawal{
+				req := types.PendingSwapOut{
 					Owner:        ownerAddr.String(),
 					VaultAddress: vaultAddr.String(),
 					Assets:       assets,
 					Shares:       shares,
 				}
-				id, err := s.k.PendingWithdrawalQueue.Enqueue(s.ctx, duePayoutTime, req)
+				id, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, duePayoutTime, &req)
 				s.Require().NoError(err, "should successfully enqueue request for non-existent vault")
 				return ownerAddr, id
 			},
 			posthandler: func(ownerAddr sdk.AccAddress, reqID uint64) {
-				var entries []types.PendingWithdrawal
-				s.k.PendingWithdrawalQueue.Walk(s.ctx, func(_ int64, _ sdk.AccAddress, _ uint64, req types.PendingWithdrawal) (bool, error) {
+				var entries []types.PendingSwapOut
+				err := s.k.PendingSwapOutQueue.Walk(s.ctx, func(_ int64, _ uint64, _ sdk.AccAddress, req types.PendingSwapOut) (bool, error) {
 					entries = append(entries, req)
 					return false, nil
 				})
+				s.Require().NoError(err)
 				s.Require().Empty(entries, "queue should be empty after processing the non-existent vault request")
 			},
 		},
@@ -136,7 +137,7 @@ func (s *TestSuite) TestKeeper_ProcessPendingWithdrawals() {
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 			s.ctx = s.ctx.WithBlockTime(testBlockTime)
 
-			err := s.k.ProcessPendingWithdrawals(s.ctx)
+			err := s.k.ProcessPendingSwapOuts(s.ctx)
 
 			if tc.expectedError != "" {
 				s.Require().Error(err)

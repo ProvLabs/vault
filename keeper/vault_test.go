@@ -195,7 +195,7 @@ func (s *TestSuite) TestSwapOut_MultiAsset() {
 	s.Require().NoError(err, "should successfully queue swap out for the default underlying asset")
 	s.Require().Equal(uint64(1), reqID2, "second request id should be 1")
 
-	err = s.k.ProcessPendingWithdrawals(s.ctx)
+	err = s.k.ProcessPendingSwapOuts(s.ctx)
 	s.Require().NoError(err, "processing pending withdrawals should not fail")
 
 	// --- Assert Final Balances ---
@@ -392,7 +392,7 @@ func (s *TestSuite) TestSwapOut_SucceedsWithRestrictedUnderlyingAssetRequiredAtt
 
 	s.assertBalance(redeemerAddr, shareDenom, sharesForRedeemer.Sub(sharesToRedeem.Amount))
 	s.assertBalance(vault.GetAddress(), shareDenom, sharesToRedeem.Amount)
-	err = s.k.ProcessPendingWithdrawals(s.ctx)
+	err = s.k.ProcessPendingSwapOuts(s.ctx)
 	s.Require().NoError(err, "processing pending withdrawals should not fail")
 
 	s.assertBalance(redeemerAddr, restrictedUnderlyingDenom, math.NewInt(50))

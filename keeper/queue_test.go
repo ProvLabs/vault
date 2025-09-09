@@ -53,15 +53,11 @@ func TestSafeEnqueueVerification_UpdatesVaultAndQueues(t *testing.T) {
 	}
 	require.True(t, foundStart, "payout verification queue should contain vault %s after SafeEnqueueVerification", vaultAddr.String())
 
-	itT, err := k.PayoutTimeoutQueue.Iterate(ctx, nil)
-	require.NoError(t, err, "iterate payout timeout queue should not error after SafeEnqueueVerification")
-	defer itT.Close()
-
-	for ; itT.Valid(); itT.Next() {
-		kv, err := itT.Key()
-		require.NoError(t, err, "reading key/value from payout timeout iterator should not error")
-		require.False(t, kv.K2().Equals(vaultAddr), "payout timeout queue should not contain vault %s after SafeEnqueueVerification", vaultAddr.String())
-	}
+	err = k.PayoutTimeoutQueue.Walk(ctx, func(timestamp uint64, address sdk.AccAddress) (bool, error) {
+		require.False(t, address.Equals(vaultAddr), "payout timeout queue should not contain vault %s after SafeEnqueueVerification", vaultAddr.String())
+		return false, nil
+	})
+	require.NoError(t, err, "walk payout timeout queue should not error after SafeEnqueueVerification")
 
 	acc := k.AuthKeeper.GetAccount(ctx, vaultAddr)
 	require.NotNil(t, acc, "vault account should exist in state after SafeEnqueueVerification")
@@ -100,16 +96,13 @@ func TestSafeEnqueueTimeout_UpdatesVaultAndQueues(t *testing.T) {
 	expectTimeout := uint64(now.Unix() + kpr.AutoReconcileTimeout)
 
 	var times []uint64
-	itT, err := k.PayoutTimeoutQueue.Iterate(ctx, nil)
-	require.NoError(t, err, "iterate payout timeout queue should not error after SafeEnqueueTimeout")
-	defer itT.Close()
-	for ; itT.Valid(); itT.Next() {
-		kv, err := itT.Key()
-		require.NoError(t, err, "reading key/value from payout timeout iterator should not error")
-		if kv.K2().Equals(vaultAddr) {
-			times = append(times, kv.K1())
+	err := k.PayoutTimeoutQueue.Walk(ctx, func(timestamp uint64, address sdk.AccAddress) (bool, error) {
+		if address.Equals(vaultAddr) {
+			times = append(times, timestamp)
 		}
-	}
+		return false, nil
+	})
+	require.NoError(t, err, "walk timeout queue should not error after SafeEnqueueTimeout")
 	require.ElementsMatch(t, []uint64{expectTimeout}, times, "timeout queue should include exactly one entry for vault at %d; got %v", expectTimeout, times)
 
 	acc := k.AuthKeeper.GetAccount(ctx, vaultAddr)

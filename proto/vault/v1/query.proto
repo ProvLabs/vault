@@ -31,6 +31,38 @@ service Query {
   rpc EstimateSwapOut(QueryEstimateSwapOutRequest) returns (QueryEstimateSwapOutResponse) {
     option (google.api.http).get = "/vault/v1/vaults/{vault_address}/estimate_swap_out";
   }
+
+  // PendingSwapOuts returns a paginated list of all pending swap outs.
+  rpc PendingSwapOuts(QueryPendingSwapOutsRequest) returns (QueryPendingSwapOutsResponse) {
+    option (google.api.http).get = "/vault/v1/pending_swap_outs";
+  }
+}
+
+// QueryPendingSwapOutsRequest is the request message for the Query/PendingSwapOuts endpoint.
+message QueryPendingSwapOutsRequest {
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryPendingSwapOutsResponse is the response message for the Query/PendingSwapOuts endpoint.
+message QueryPendingSwapOutsResponse {
+  // pending_swap_outs is a list of all pending swap outs.
+  repeated PendingSwapOutWithTimeout pending_swap_outs = 1 [(gogoproto.nullable) = false];
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// PendingSwapOutWithTimeout is a pending swap out with its timeout.
+message PendingSwapOutWithTimeout {
+  // request_id is the unique identifier for the pending swap out request.
+  uint64 request_id = 1;
+  // pending_swap_out contains the details of the swap out request.
+  PendingSwapOut pending_swap_out = 2 [(gogoproto.nullable) = false];
+  // timeout is the time at which the pending swap out will expire if not processed.
+  google.protobuf.Timestamp timeout = 3 [
+    (gogoproto.stdtime) = true,
+    (gogoproto.nullable) = false
+  ];
 }
 
 // QueryVaultsRequest is the request message for the Query/Vaults endpoint.

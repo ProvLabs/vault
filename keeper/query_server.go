@@ -3,11 +3,14 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/provlabs/vault/types"
 	"github.com/provlabs/vault/utils"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"cosmossdk.io/collections"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -21,6 +24,39 @@ type queryServer struct {
 
 func NewQueryServer(keeper *Keeper) types.QueryServer {
 	return &queryServer{Keeper: keeper}
+}
+
+// PendingSwapOuts returns a paginated list of all pending swap outs.
+func (k queryServer) PendingSwapOuts(goCtx context.Context, req *types.QueryPendingSwapOutsRequest) (*types.QueryPendingSwapOutsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	swapOuts := []types.PendingSwapOutWithTimeout{}
+
+	_, pageRes, err := query.CollectionPaginate(
+		ctx,
+		k.PendingSwapOutQueue.IndexedMap,
+		req.Pagination,
+		func(key collections.Triple[int64, uint64, sdk.AccAddress], value types.PendingSwapOut) (include bool, err error) {
+			swapOuts = append(swapOuts, types.PendingSwapOutWithTimeout{
+				RequestId:      key.K2(),
+				Timeout:        time.Unix(key.K1(), 0),
+				PendingSwapOut: value,
+			})
+			return true, nil
+		},
+	)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryPendingSwapOutsResponse{
+		PendingSwapOuts: swapOuts,
+		Pagination:      pageRes,
+	}, nil
 }
 
 // Vaults returns a paginated list of all vaults.

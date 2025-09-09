@@ -378,3 +378,33 @@ func (k msgServer) WithdrawPrincipalFunds(goCtx context.Context, msg *types.MsgW
 	k.emitEvent(ctx, types.NewEventWithdrawPrincipalFunds(msg.VaultAddress, msg.Admin, msg.Amount))
 	return &types.MsgWithdrawPrincipalFundsResponse{}, nil
 }
+
+// ExpeditePendingSwapOut expedites a pending swap out from a vault.
+func (k msgServer) ExpeditePendingSwapOut(goCtx context.Context, msg *types.MsgExpeditePendingSwapOutRequest) (*types.MsgExpeditePendingSwapOutResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	_, swapOut, err := k.PendingSwapOutQueue.GetByID(ctx, msg.RequestId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get pending swap out: %w", err)
+	}
+
+	vaultAddr := sdk.MustAccAddressFromBech32(swapOut.VaultAddress)
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault: %w", err)
+	}
+	if vault == nil {
+		return nil, fmt.Errorf("vault not found: %s", vaultAddr)
+	}
+	if err := vault.ValidateAdmin(msg.Admin); err != nil {
+		return nil, err
+	}
+
+	if err := k.PendingSwapOutQueue.ExpediteSwapOut(ctx, msg.RequestId); err != nil {
+		return nil, fmt.Errorf("failed to expedite swap out: %w", err)
+	}
+
+	k.emitEvent(ctx, types.NewEventPendingSwapOutExpedited(msg.RequestId, swapOut.VaultAddress, msg.Admin))
+
+	return &types.MsgExpeditePendingSwapOutResponse{}, nil
+}

@@ -832,3 +832,42 @@ func TestMsgWithdrawPrincipalFundsRequest_ValidateBasic(t *testing.T) {
 		})
 	}
 }
+
+func TestMsgExpeditePendingSwapOutRequest_ValidateBasic(t *testing.T) {
+	addr := utils.TestAddress().Bech32
+
+	tests := []struct {
+		name        string
+		msg         types.MsgExpeditePendingSwapOutRequest
+		expectedErr error
+	}{
+		{
+			name: "valid",
+			msg: types.MsgExpeditePendingSwapOutRequest{
+				Admin: addr,
+				RequestId:    1,
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "invalid admin",
+			msg: types.MsgExpeditePendingSwapOutRequest{
+				Admin: "bad",
+				RequestId:    1,
+			},
+			expectedErr: fmt.Errorf("invalid admin address: %q", "bad"),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.expectedErr != nil {
+				assert.Error(t, err, "expected error for case %q", tc.name)
+				assert.Contains(t, err.Error(), tc.expectedErr.Error(), "error should contain expected substring for case %q", tc.name)
+			} else {
+				assert.NoError(t, err, "expected no error for case %q", tc.name)
+			}
+		})
+	}
+}

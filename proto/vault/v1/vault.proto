@@ -67,9 +67,9 @@ message AccountBalance {
   ];
 }
 
-// PendingWithdrawal are withdrawals that have not yet been processed and completed.
-message PendingWithdrawal {
-  // owner is the address initiating the swap out (withdraw).
+// PendingSwapOut are swap outs that have not yet been processed and completed.
+message PendingSwapOut {
+  // owner is the address initiating the swap out.
   string owner = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // vault_address is the address of the vault to redeem from.
   string vault_address = 2;

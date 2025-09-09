@@ -31,6 +31,7 @@ const (
 	Msg_WithdrawInterestFunds_FullMethodName  = "/vault.v1.Msg/WithdrawInterestFunds"
 	Msg_DepositPrincipalFunds_FullMethodName  = "/vault.v1.Msg/DepositPrincipalFunds"
 	Msg_WithdrawPrincipalFunds_FullMethodName = "/vault.v1.Msg/WithdrawPrincipalFunds"
+	Msg_ExpeditePendingSwapOut_FullMethodName = "/vault.v1.Msg/ExpeditePendingSwapOut"
 )
 
 // MsgClient is the client API for Msg service.
@@ -63,6 +64,8 @@ type MsgClient interface {
 	DepositPrincipalFunds(ctx context.Context, in *MsgDepositPrincipalFundsRequest, opts ...grpc.CallOption) (*MsgDepositPrincipalFundsResponse, error)
 	// WithdrawPrincipalFunds allows withdrawing principal funds from a vault.
 	WithdrawPrincipalFunds(ctx context.Context, in *MsgWithdrawPrincipalFundsRequest, opts ...grpc.CallOption) (*MsgWithdrawPrincipalFundsResponse, error)
+	// ExpeditePendingSwapOut expedites a pending swap out from a vault.
+	ExpeditePendingSwapOut(ctx context.Context, in *MsgExpeditePendingSwapOutRequest, opts ...grpc.CallOption) (*MsgExpeditePendingSwapOutResponse, error)
 }
 
 type msgClient struct {
@@ -193,6 +196,16 @@ func (c *msgClient) WithdrawPrincipalFunds(ctx context.Context, in *MsgWithdrawP
 	return out, nil
 }
 
+func (c *msgClient) ExpeditePendingSwapOut(ctx context.Context, in *MsgExpeditePendingSwapOutRequest, opts ...grpc.CallOption) (*MsgExpeditePendingSwapOutResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgExpeditePendingSwapOutResponse)
+	err := c.cc.Invoke(ctx, Msg_ExpeditePendingSwapOut_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility.
@@ -223,6 +236,8 @@ type MsgServer interface {
 	DepositPrincipalFunds(context.Context, *MsgDepositPrincipalFundsRequest) (*MsgDepositPrincipalFundsResponse, error)
 	// WithdrawPrincipalFunds allows withdrawing principal funds from a vault.
 	WithdrawPrincipalFunds(context.Context, *MsgWithdrawPrincipalFundsRequest) (*MsgWithdrawPrincipalFundsResponse, error)
+	// ExpeditePendingSwapOut expedites a pending swap out from a vault.
+	ExpeditePendingSwapOut(context.Context, *MsgExpeditePendingSwapOutRequest) (*MsgExpeditePendingSwapOutResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -268,6 +283,9 @@ func (UnimplementedMsgServer) DepositPrincipalFunds(context.Context, *MsgDeposit
 }
 func (UnimplementedMsgServer) WithdrawPrincipalFunds(context.Context, *MsgWithdrawPrincipalFundsRequest) (*MsgWithdrawPrincipalFundsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method WithdrawPrincipalFunds not implemented")
+}
+func (UnimplementedMsgServer) ExpeditePendingSwapOut(context.Context, *MsgExpeditePendingSwapOutRequest) (*MsgExpeditePendingSwapOutResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExpeditePendingSwapOut not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 func (UnimplementedMsgServer) testEmbeddedByValue()             {}
@@ -506,6 +524,24 @@ func _Msg_WithdrawPrincipalFunds_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_ExpeditePendingSwapOut_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgExpeditePendingSwapOutRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ExpeditePendingSwapOut(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_ExpeditePendingSwapOut_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ExpeditePendingSwapOut(ctx, req.(*MsgExpeditePendingSwapOutRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -560,6 +596,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "WithdrawPrincipalFunds",
 			Handler:    _Msg_WithdrawPrincipalFunds_Handler,
+		},
+		{
+			MethodName: "ExpeditePendingSwapOut",
+			Handler:    _Msg_ExpeditePendingSwapOut_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -180,3 +180,13 @@ message EventMaxInterestRateUpdated {
   // An empty string "" represents no maximum.
   string max_rate = 3;
 }
+
+// EventPendingSwapOutExpedited is an event emitted when a pending swap-out is expedited by the admin.
+message EventPendingSwapOutExpedited {
+  // request_id is the numerical identifier of the pending swap-out.
+  uint64 request_id = 1;
+  // vault is the bech32 address of the vault.
+  string vault = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // admin is the address of the account that expedited the swap-out.
+  string admin = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}

@@ -3,11 +3,12 @@ package keeper
 import (
 	"fmt"
 
-	"cosmossdk.io/math"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/provlabs/vault/types"
 	"github.com/provlabs/vault/utils"
+
+	"cosmossdk.io/math"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // UnitPriceFraction returns the unit price of srcDenom expressed in vault.UnderlyingAsset

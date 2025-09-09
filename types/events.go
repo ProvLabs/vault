@@ -129,3 +129,12 @@ func NewEventMaxInterestRateUpdated(vaultAddress, admin, maxRate string) *EventM
 		MaxRate:      maxRate,
 	}
 }
+
+// NewEventPendingSwapOutExpedited creates a new EventPendingSwapOutExpedited event.
+func NewEventPendingSwapOutExpedited(requestID uint64, vault, admin string) *EventPendingSwapOutExpedited {
+	return &EventPendingSwapOutExpedited{
+		RequestId: requestID,
+		Vault:     vault,
+		Admin:     admin,
+	}
+}

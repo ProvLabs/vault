@@ -36,14 +36,22 @@ var (
 	VaultPayoutTimeoutQueuePrefix = collections.NewPrefix(2)
 	// VaultPayoutTimeoutQueueName is a human-readable name for the payout timeout queue collection.
 	VaultPayoutTimeoutQueueName = "vault_payout_timeout_queue"
-	// VaultPendingWithdrawalQueuePrefix is the prefix to retrieve all VaultPendingWithdrawalQueue.
-	VaultPendingWithdrawalQueuePrefix = collections.NewPrefix(3)
-	// VaultPendingWithdrawalQueueName is a human-readable name for the pending withdrawal queue collection.
-	VaultPendingWithdrawalQueueName = "pending_withdrawal_queue"
-	// VaultPendingWithdrawalQueueSeqPrefix is the prefix for the pending withdrawal queue sequence.
-	VaultPendingWithdrawalQueueSeqPrefix = collections.NewPrefix(4)
-	// VaultPendingWithdrawalQueueName is a human-readable name for the pending withdrawal queue collection.
-	VaultPendingWithdrawalQueueSeqName = "pending_withdrawal_seq"
+	// VaultPendingSwapOutQueuePrefix is the prefix to retrieve all VaultPendingSwapOutQueue.
+	VaultPendingSwapOutQueuePrefix = collections.NewPrefix(3)
+	// VaultPendingSwapOutQueueName is a human-readable name for the pending swap out queue collection.
+	VaultPendingSwapOutQueueName = "pending_swap_out_queue"
+	// VaultPendingSwapOutQueueSeqPrefix is the prefix for the pending swap out queue sequence.
+	VaultPendingSwapOutQueueSeqPrefix = collections.NewPrefix(4)
+	// VaultPendingSwapOutQueueSeqName is a human-readable name for the pending swap out queue collection.
+	VaultPendingSwapOutQueueSeqName = "pending_swap_out_seq"
+	// VaultPendingSwapOutByVaultIndexPrefix is the prefix for the pending swap out queue vault index.
+	VaultPendingSwapOutByVaultIndexPrefix = collections.NewPrefix(5)
+	// VaultPendingSwapOutByVaultIndexName is a human-readable name for the pending swap out queue vault index.
+	VaultPendingSwapOutByVaultIndexName = "pending_swap_out_by_vault"
+	// VaultPendingSwapOutByIdIndexPrefix is the prefix for the pending swap out queue by id index.
+	VaultPendingSwapOutByIdIndexPrefix = collections.NewPrefix(6)
+	// VaultPendingSwapOutByIdIndexName is a human-readable name for the pending swap out queue by id index.
+	VaultPendingSwapOutByIdIndexName = "pending_swap_out_by_id"
 )
 
 // GetVaultAddress returns the module account address for the given shareDenom.

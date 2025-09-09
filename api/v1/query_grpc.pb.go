@@ -23,6 +23,7 @@ const (
 	Query_Vault_FullMethodName           = "/vault.v1.Query/Vault"
 	Query_EstimateSwapIn_FullMethodName  = "/vault.v1.Query/EstimateSwapIn"
 	Query_EstimateSwapOut_FullMethodName = "/vault.v1.Query/EstimateSwapOut"
+	Query_PendingSwapOuts_FullMethodName = "/vault.v1.Query/PendingSwapOuts"
 )
 
 // QueryClient is the client API for Query service.
@@ -39,6 +40,8 @@ type QueryClient interface {
 	EstimateSwapIn(ctx context.Context, in *QueryEstimateSwapInRequest, opts ...grpc.CallOption) (*QueryEstimateSwapInResponse, error)
 	// EstimateSwapOut estimates the amount of underlying assets that would be received for a given amount of shares.
 	EstimateSwapOut(ctx context.Context, in *QueryEstimateSwapOutRequest, opts ...grpc.CallOption) (*QueryEstimateSwapOutResponse, error)
+	// PendingSwapOuts returns a paginated list of all pending swap outs.
+	PendingSwapOuts(ctx context.Context, in *QueryPendingSwapOutsRequest, opts ...grpc.CallOption) (*QueryPendingSwapOutsResponse, error)
 }
 
 type queryClient struct {
@@ -89,6 +92,16 @@ func (c *queryClient) EstimateSwapOut(ctx context.Context, in *QueryEstimateSwap
 	return out, nil
 }
 
+func (c *queryClient) PendingSwapOuts(ctx context.Context, in *QueryPendingSwapOutsRequest, opts ...grpc.CallOption) (*QueryPendingSwapOutsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(QueryPendingSwapOutsResponse)
+	err := c.cc.Invoke(ctx, Query_PendingSwapOuts_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility.
@@ -103,6 +116,8 @@ type QueryServer interface {
 	EstimateSwapIn(context.Context, *QueryEstimateSwapInRequest) (*QueryEstimateSwapInResponse, error)
 	// EstimateSwapOut estimates the amount of underlying assets that would be received for a given amount of shares.
 	EstimateSwapOut(context.Context, *QueryEstimateSwapOutRequest) (*QueryEstimateSwapOutResponse, error)
+	// PendingSwapOuts returns a paginated list of all pending swap outs.
+	PendingSwapOuts(context.Context, *QueryPendingSwapOutsRequest) (*QueryPendingSwapOutsResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -124,6 +139,9 @@ func (UnimplementedQueryServer) EstimateSwapIn(context.Context, *QueryEstimateSw
 }
 func (UnimplementedQueryServer) EstimateSwapOut(context.Context, *QueryEstimateSwapOutRequest) (*QueryEstimateSwapOutResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method EstimateSwapOut not implemented")
+}
+func (UnimplementedQueryServer) PendingSwapOuts(context.Context, *QueryPendingSwapOutsRequest) (*QueryPendingSwapOutsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PendingSwapOuts not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 func (UnimplementedQueryServer) testEmbeddedByValue()               {}
@@ -218,6 +236,24 @@ func _Query_EstimateSwapOut_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_PendingSwapOuts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryPendingSwapOutsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).PendingSwapOuts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_PendingSwapOuts_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).PendingSwapOuts(ctx, req.(*QueryPendingSwapOutsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -240,6 +276,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "EstimateSwapOut",
 			Handler:    _Query_EstimateSwapOut_Handler,
+		},
+		{
+			MethodName: "PendingSwapOuts",
+			Handler:    _Query_PendingSwapOuts_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

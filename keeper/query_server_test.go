@@ -510,8 +510,9 @@ func (s *TestSuite) TestQueryServer_PendingWithdrawals() {
 			ExpectedResp: &types.QueryPendingWithdrawalsResponse{
 				PendingWithdrawals: []types.PendingWithdrawalWithTimeout{
 					{
+						RequestId:         0,
 						PendingWithdrawal: *withdrawal1,
-						Timeout:           time.Unix(int64(0), 0),
+						Timeout:           time.Unix(0, 0),
 					},
 				},
 				Pagination: &query.PageResponse{Total: 1},
@@ -530,9 +531,9 @@ func (s *TestSuite) TestQueryServer_PendingWithdrawals() {
 			Req: &types.QueryPendingWithdrawalsRequest{},
 			ExpectedResp: &types.QueryPendingWithdrawalsResponse{
 				PendingWithdrawals: []types.PendingWithdrawalWithTimeout{
-					{PendingWithdrawal: *withdrawal1, Timeout: time.Unix(int64(0), 0)},
-					{PendingWithdrawal: *withdrawal2, Timeout: time.Unix(int64(0), 0)},
-					{PendingWithdrawal: *withdrawal3, Timeout: time.Unix(int64(0), 0)},
+					{RequestId: 0, PendingWithdrawal: *withdrawal1, Timeout: time.Unix(0, 0)},
+					{RequestId: 1, PendingWithdrawal: *withdrawal2, Timeout: time.Unix(0, 0)},
+					{RequestId: 2, PendingWithdrawal: *withdrawal3, Timeout: time.Unix(0, 0)},
 				},
 				Pagination: &query.PageResponse{Total: 3},
 			},
@@ -552,8 +553,8 @@ func (s *TestSuite) TestQueryServer_PendingWithdrawals() {
 			},
 			ExpectedResp: &types.QueryPendingWithdrawalsResponse{
 				PendingWithdrawals: []types.PendingWithdrawalWithTimeout{
-					{PendingWithdrawal: *withdrawal1, Timeout: time.Unix(int64(0), 0)},
-					{PendingWithdrawal: *withdrawal2, Timeout: time.Unix(int64(0), 0)},
+					{RequestId: 0, PendingWithdrawal: *withdrawal1, Timeout: time.Unix(0, 0)},
+					{RequestId: 1, PendingWithdrawal: *withdrawal2, Timeout: time.Unix(0, 0)},
 				},
 				Pagination: &query.PageResponse{
 					NextKey: []byte("not nil"),
@@ -575,8 +576,8 @@ func (s *TestSuite) TestQueryServer_PendingWithdrawals() {
 			},
 			ExpectedResp: &types.QueryPendingWithdrawalsResponse{
 				PendingWithdrawals: []types.PendingWithdrawalWithTimeout{
-					{PendingWithdrawal: *withdrawal2, Timeout: time.Unix(int64(0), 0)},
-					{PendingWithdrawal: *withdrawal3, Timeout: time.Unix(int64(0), 0)},
+					{RequestId: 1, PendingWithdrawal: *withdrawal2, Timeout: time.Unix(0, 0)},
+					{RequestId: 2, PendingWithdrawal: *withdrawal3, Timeout: time.Unix(0, 0)},
 				},
 				Pagination: &query.PageResponse{Total: 3},
 			},
@@ -596,7 +597,7 @@ func (s *TestSuite) TestQueryServer_PendingWithdrawals() {
 			},
 			ExpectedResp: &types.QueryPendingWithdrawalsResponse{
 				PendingWithdrawals: []types.PendingWithdrawalWithTimeout{
-					{PendingWithdrawal: *withdrawal3, Timeout: time.Unix(int64(0), 0)},
+					{RequestId: 2, PendingWithdrawal: *withdrawal3, Timeout: time.Unix(0, 0)},
 				},
 				Pagination: &query.PageResponse{},
 			},
@@ -616,9 +617,9 @@ func (s *TestSuite) TestQueryServer_PendingWithdrawals() {
 			},
 			ExpectedResp: &types.QueryPendingWithdrawalsResponse{
 				PendingWithdrawals: []types.PendingWithdrawalWithTimeout{
-					{PendingWithdrawal: *withdrawal1, Timeout: time.Unix(int64(0), 0)},
-					{PendingWithdrawal: *withdrawal2, Timeout: time.Unix(int64(0), 0)},
-					{PendingWithdrawal: *withdrawal3, Timeout: time.Unix(int64(0), 0)},
+					{RequestId: 0, PendingWithdrawal: *withdrawal1, Timeout: time.Unix(0, 0)},
+					{RequestId: 1, PendingWithdrawal: *withdrawal2, Timeout: time.Unix(0, 0)},
+					{RequestId: 2, PendingWithdrawal: *withdrawal3, Timeout: time.Unix(0, 0)},
 				},
 				Pagination: &query.PageResponse{Total: 3},
 			},
@@ -638,8 +639,8 @@ func (s *TestSuite) TestQueryServer_PendingWithdrawals() {
 			},
 			ExpectedResp: &types.QueryPendingWithdrawalsResponse{
 				PendingWithdrawals: []types.PendingWithdrawalWithTimeout{
-					{PendingWithdrawal: *withdrawal3, Timeout: time.Unix(int64(0), 0)},
-					{PendingWithdrawal: *withdrawal2, Timeout: time.Unix(int64(0), 0)},
+					{RequestId: 2, PendingWithdrawal: *withdrawal3, Timeout: time.Unix(0, 0)},
+					{RequestId: 1, PendingWithdrawal: *withdrawal2, Timeout: time.Unix(0, 0)},
 				},
 				Pagination: &query.PageResponse{
 					NextKey: []byte("not nil"),

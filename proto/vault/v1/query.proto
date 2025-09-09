@@ -54,8 +54,12 @@ message QueryPendingWithdrawalsResponse {
 
 // PendingWithdrawalWithTimeout is a pending withdrawal with its timeout.
 message PendingWithdrawalWithTimeout {
-  PendingWithdrawal pending_withdrawal = 1 [(gogoproto.nullable) = false];
-  google.protobuf.Timestamp timeout = 2 [
+  // request_id is the unique identifier for the pending withdrawal request.
+  uint64 request_id = 1;
+  // pending_withdrawal contains the details of the withdrawal request.
+  PendingWithdrawal pending_withdrawal = 2 [(gogoproto.nullable) = false];
+  // timeout is the time at which the pending withdrawal will expire if not processed.
+  google.protobuf.Timestamp timeout = 3 [
     (gogoproto.stdtime) = true,
     (gogoproto.nullable) = false
   ];

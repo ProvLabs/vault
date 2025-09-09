@@ -42,6 +42,7 @@ func (k queryServer) PendingWithdrawals(goCtx context.Context, req *types.QueryP
 		req.Pagination,
 		func(key collections.Triple[int64, uint64, sdk.AccAddress], value types.PendingWithdrawal) (include bool, err error) {
 			withdrawals = append(withdrawals, types.PendingWithdrawalWithTimeout{
+				RequestId:         key.K2(),
 				Timeout:           time.Unix(key.K1(), 0),
 				PendingWithdrawal: value,
 			})

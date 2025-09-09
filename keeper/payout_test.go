@@ -56,7 +56,7 @@ func (s *TestSuite) TestKeeper_ProcessPendingWithdrawals() {
 				expectedEvents = append(expectedEvents, createSendCoinEvents(principalAddress.String(), ownerAddr.String(), assets.String())...)
 				expectedEvents = append(expectedEvents, createSendCoinEvents(vaultAddr.String(), principalAddress.String(), shares.String())...)
 				expectedEvents = append(expectedEvents, createMarkerBurn(vaultAddr, principalAddress, shares)...)
-				typedEvent, err := sdk.TypedEventToEvent(types.NewEventWithdrawalCompleted(vaultAddr.String(), ownerAddr.String(), assets, reqID))
+				typedEvent, err := sdk.TypedEventToEvent(types.NewEventSwapOutCompleted(vaultAddr.String(), ownerAddr.String(), assets, reqID))
 				s.Require().NoError(err, "should not error converting typed EventWithdrawalCompleted")
 				expectedEvents = append(expectedEvents, typedEvent)
 				s.Assert().Equal(
@@ -90,7 +90,7 @@ func (s *TestSuite) TestKeeper_ProcessPendingWithdrawals() {
 
 				expectedEvents := sdk.Events{}
 				expectedEvents = append(expectedEvents, createSendCoinEvents(vaultAddr.String(), ownerAddr.String(), shares.String())...)
-				expectedEvent, err := sdk.TypedEventToEvent(types.NewEventWithdrawalRefunded(vaultAddr.String(), ownerAddr.String(), shares, reqID, reason))
+				expectedEvent, err := sdk.TypedEventToEvent(types.NewEventSwapOutRefunded(vaultAddr.String(), ownerAddr.String(), shares, reqID, reason))
 				s.Require().NoError(err, "should not error converting typed EventWithdrawalRefunded")
 				expectedEvents = append(expectedEvents, expectedEvent)
 				s.Assert().Equal(

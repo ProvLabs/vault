@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	"cosmossdk.io/collections"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -31,9 +32,7 @@ func (k *Keeper) ProcessPendingWithdrawals(ctx context.Context) error {
 
 		err = k.processSingleWithdrawal(sdkCtx, id, req)
 		if err != nil {
-			if refundErr := k.refundWithdrawal(sdkCtx, id, req, err.Error()); refundErr != nil {
-				sdkCtx.Logger().Error("CRITICAL: failed to refund shares for failed withdrawal", "request_id", id, "error", refundErr)
-			}
+			k.refundWithdrawal(sdkCtx, id, req, err.Error())
 		}
 		return false, nil
 	})
@@ -60,35 +59,32 @@ func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.P
 	ownerAddr := sdk.MustAccAddressFromBech32(req.Owner)
 	principalAddress := markertypes.MustGetMarkerAddress(req.Shares.Denom)
 
-	if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx), principalAddress, ownerAddr, sdk.NewCoins(req.Assets)); err != nil {
+	if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, vaultAddr), principalAddress, ownerAddr, sdk.NewCoins(req.Assets)); err != nil {
 		return err
 	}
 
 	if err := k.BankKeeper.SendCoins(ctx, vaultAddr, principalAddress, sdk.NewCoins(req.Shares)); err != nil {
-		ctx.Logger().Error("CRITICAL: failed to transfer escrowed shares to principal for burning", "error", err)
-		return err
+		panic(fmt.Errorf("CRITICAL: failed to transfer escrowed shares to principal for burning %w", err))
 	}
 
 	if err := k.MarkerKeeper.BurnCoin(ctx, vaultAddr, req.Shares); err != nil {
-		ctx.Logger().Error("CRITICAL: failed to burn shares after successful withdrawal payout", "error", err)
-		return err
+		panic(fmt.Errorf("CRITICAL: failed to burn shares after successful swap out payout %w", err))
 	}
 
-	k.emitEvent(ctx, types.NewEventWithdrawalCompleted(req.VaultAddress, req.Owner, req.Assets, id))
+	k.emitEvent(ctx, types.NewEventSwapOutCompleted(req.VaultAddress, req.Owner, req.Assets, id))
 	return nil
 }
 
 // refundWithdrawal handles the failure case for a pending withdrawal. It returns the user's
 // escrowed shares from the vault's own account back to the owner and emits an event detailing
 // the refund and the reason for the failure.
-func (k *Keeper) refundWithdrawal(ctx sdk.Context, id uint64, req types.PendingWithdrawal, reason string) error {
+func (k *Keeper) refundWithdrawal(ctx sdk.Context, id uint64, req types.PendingWithdrawal, reason string) {
 	vaultAddr := sdk.MustAccAddressFromBech32(req.VaultAddress)
 	ownerAddr := sdk.MustAccAddressFromBech32(req.Owner)
 
 	if err := k.BankKeeper.SendCoins(ctx, vaultAddr, ownerAddr, sdk.NewCoins(req.Shares)); err != nil {
-		return err
+		panic(fmt.Errorf("CRITICAL: failed to refund shares for failed withdrawal %w", err))
 	}
 
-	k.emitEvent(ctx, types.NewEventWithdrawalRefunded(req.VaultAddress, req.Owner, req.Shares, id, reason))
-	return nil
+	k.emitEvent(ctx, types.NewEventSwapOutRefunded(req.VaultAddress, req.Owner, req.Shares, id, reason))
 }

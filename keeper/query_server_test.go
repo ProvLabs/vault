@@ -1,8 +1,6 @@
 package keeper_test
 
 import (
-	"time"
-
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -616,121 +614,6 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 				Assets:       sdk.NewInt64Coin("wrongdenom", 100),
 			},
 			ExpectedErrSubstrs: []string{"asset denom", "does not match vault share denom"},
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.Name, func() {
-			querytest.RunTestCase(s, testDef, tc)
-		})
-	}
-}
-
-func (s *TestSuite) TestQueryServer_PendingWithdrawals() {
-	testDef := querytest.TestDef[types.QueryPendingWithdrawalsRequest, types.QueryPendingWithdrawalsResponse]{
-		QueryName: "PendingWithdrawals",
-		Query:     keeper.NewQueryServer(s.simApp.VaultKeeper).PendingWithdrawals,
-		ManualEquality: func(s querytest.TestSuiter, expected, actual *types.QueryPendingWithdrawalsResponse) {
-			s.Require().NotNil(actual, "actual response should not be nil")
-			s.Require().NotNil(expected, "expected response should not be nil")
-
-			s.Assert().Equal(expected.PendingWithdrawals, actual.PendingWithdrawals, "pending withdrawals do not match")
-
-			if expected.Pagination != nil {
-				s.Require().NotNil(actual.Pagination, "actual pagination should not be nil")
-				s.Assert().Equal(expected.Pagination.Total, actual.Pagination.Total, "pagination total")
-				if len(expected.Pagination.NextKey) > 0 {
-					s.Assert().NotEmpty(actual.Pagination.NextKey, "pagination next_key should not be empty")
-				} else {
-					s.Assert().Empty(actual.Pagination.NextKey, "pagination next_key should be empty")
-				}
-			} else {
-				s.Assert().Nil(actual.Pagination, "pagination should be nil")
-			}
-		},
-	}
-
-	shareDenom := "vshare"
-	underlyingDenom := "atom"
-	vaultAddr := types.GetVaultAddress(shareDenom)
-	ownerAddr := s.adminAddr
-
-	req1 := types.PendingWithdrawal{
-		Owner:        ownerAddr.String(),
-		VaultAddress: vaultAddr.String(),
-		Assets:       sdk.NewInt64Coin(underlyingDenom, 100),
-		Shares:       sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(100)),
-	}
-	req2 := types.PendingWithdrawal{
-		Owner:        ownerAddr.String(),
-		VaultAddress: vaultAddr.String(),
-		Assets:       sdk.NewInt64Coin(underlyingDenom, 200),
-		Shares:       sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(200)),
-	}
-	req3 := types.PendingWithdrawal{
-		Owner:        ownerAddr.String(),
-		VaultAddress: vaultAddr.String(),
-		Assets:       sdk.NewInt64Coin(underlyingDenom, 300),
-		Shares:       sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(300)),
-	}
-
-	now := time.Now().UTC()
-	payoutTime1 := now.Add(1 * time.Hour)
-	payoutTime2 := now.Add(2 * time.Hour)
-	payoutTime3 := now.Add(3 * time.Hour)
-
-	setupQueue := func() {
-		_, err := s.k.PendingWithdrawalQueue.Enqueue(s.ctx, payoutTime1.UnixNano(), req1)
-		s.Require().NoError(err)
-		_, err = s.k.PendingWithdrawalQueue.Enqueue(s.ctx, payoutTime2.UnixNano(), req2)
-		s.Require().NoError(err)
-		_, err = s.k.PendingWithdrawalQueue.Enqueue(s.ctx, payoutTime3.UnixNano(), req3)
-		s.Require().NoError(err)
-	}
-
-	tests := []querytest.TestCase[types.QueryPendingWithdrawalsRequest, types.QueryPendingWithdrawalsResponse]{
-		{
-			Name:  "happy path - get all pending withdrawals",
-			Setup: setupQueue,
-			Req:   &types.QueryPendingWithdrawalsRequest{},
-			ExpectedResp: &types.QueryPendingWithdrawalsResponse{
-				PendingWithdrawals: []types.PendingWithdrawalQueueEntry{
-					{Request: req1, Id: 0, PayoutTime: payoutTime1},
-					{Request: req2, Id: 1, PayoutTime: payoutTime2},
-					{Request: req3, Id: 2, PayoutTime: payoutTime3},
-				},
-				Pagination: &query.PageResponse{Total: 3},
-			},
-		},
-		{
-			Name:  "pagination - limit results",
-			Setup: setupQueue,
-			Req: &types.QueryPendingWithdrawalsRequest{
-				Pagination: &query.PageRequest{Limit: 2, CountTotal: true},
-			},
-			ExpectedResp: &types.QueryPendingWithdrawalsResponse{
-				PendingWithdrawals: []types.PendingWithdrawalQueueEntry{
-					{Request: req1, Id: 0, PayoutTime: payoutTime1},
-					{Request: req2, Id: 1, PayoutTime: payoutTime2},
-				},
-				Pagination: &query.PageResponse{
-					NextKey: []byte("any non-empty key"),
-					Total:   3,
-				},
-			},
-		},
-		{
-			Name: "empty queue",
-			Req:  &types.QueryPendingWithdrawalsRequest{},
-			ExpectedResp: &types.QueryPendingWithdrawalsResponse{
-				PendingWithdrawals: nil,
-				Pagination:         &query.PageResponse{},
-			},
-		},
-		{
-			Name:               "nil request",
-			Req:                nil,
-			ExpectedErrSubstrs: []string{"invalid request"},
 		},
 	}
 

@@ -253,7 +253,7 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 
 	_, err = k.MarkerKeeper.SendRestrictionFn(markertypes.WithTransferAgents(ctx, vaultAddr), vault.PrincipalMarkerAddress(), owner, sdk.NewCoins(assets))
 	if err != nil {
-		return 0, fmt.Errorf("failed to pass send restrictions: %w", err)
+		return 0, fmt.Errorf("failed to pass send restrictions test: %w", err)
 	}
 
 	if err := k.BankKeeper.SendCoins(ctx, owner, vault.GetAddress(), sdk.NewCoins(shares)); err != nil {
@@ -269,9 +269,6 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 	}
 	requestID, err := k.PendingWithdrawalQueue.Enqueue(ctx, payoutTime, pendingReq)
 	if err != nil {
-		if refundErr := k.BankKeeper.SendCoins(ctx, vault.GetAddress(), owner, sdk.NewCoins(shares)); refundErr != nil {
-			ctx.Logger().Error("CRITICAL: failed to refund escrowed shares after enqueue failure", "error", refundErr)
-		}
 		return 0, fmt.Errorf("failed to enqueue pending withdrawal: %w", err)
 	}
 

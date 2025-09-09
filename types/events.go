@@ -141,9 +141,9 @@ func NewEventSwapOutRequested(vaultAddress, owner string, assets, shares sdk.Coi
 	}
 }
 
-// NewEventWithdrawalCompleted creates a new EventWithdrawalCompleted event.
-func NewEventWithdrawalCompleted(vaultAddress, owner string, assets sdk.Coin, requestID uint64) *EventWithdrawalCompleted {
-	return &EventWithdrawalCompleted{
+// NewEventSwapOutCompleted creates a new EventSwapOutCompleted event.
+func NewEventSwapOutCompleted(vaultAddress, owner string, assets sdk.Coin, requestID uint64) *EventSwapOutCompleted {
+	return &EventSwapOutCompleted{
 		VaultAddress: vaultAddress,
 		Owner:        owner,
 		Assets:       assets,
@@ -151,22 +151,13 @@ func NewEventWithdrawalCompleted(vaultAddress, owner string, assets sdk.Coin, re
 	}
 }
 
-// NewEventWithdrawalRefunded creates a new EventWithdrawalRefunded event.
-func NewEventWithdrawalRefunded(vaultAddress, owner string, shares sdk.Coin, requestID uint64, reason string) *EventWithdrawalRefunded {
-	return &EventWithdrawalRefunded{
+// NewEventSwapOutRefunded creates a new EventSwapOutRefunded event.
+func NewEventSwapOutRefunded(vaultAddress, owner string, shares sdk.Coin, requestID uint64, reason string) *EventSwapOutRefunded {
+	return &EventSwapOutRefunded{
 		VaultAddress: vaultAddress,
 		Owner:        owner,
 		Shares:       shares,
 		RequestId:    requestID,
 		Reason:       reason,
-	}
-}
-
-// NewEventWithdrawalAccelerated creates a new EventWithdrawalAccelerated event.
-func NewEventWithdrawalAccelerated(vaultAddress, admin string, requestID uint64) *EventWithdrawalAccelerated {
-	return &EventWithdrawalAccelerated{
-		VaultAddress: vaultAddress,
-		Admin:        admin,
-		RequestId:    requestID,
 	}
 }

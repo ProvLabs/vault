@@ -379,16 +379,16 @@ func (k msgServer) WithdrawPrincipalFunds(goCtx context.Context, msg *types.MsgW
 	return &types.MsgWithdrawPrincipalFundsResponse{}, nil
 }
 
-// ExpeditePendingWithdrawal expedites a pending withdrawal from a vault.
-func (k msgServer) ExpeditePendingWithdrawal(goCtx context.Context, msg *types.MsgExpeditePendingWithdrawalRequest) (*types.MsgExpeditePendingWithdrawalResponse, error) {
+// ExpeditePendingSwapOut expedites a pending swap out from a vault.
+func (k msgServer) ExpeditePendingSwapOut(goCtx context.Context, msg *types.MsgExpeditePendingSwapOutRequest) (*types.MsgExpeditePendingSwapOutResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	_, withdrawal, err := k.PendingWithdrawalQueue.GetByID(ctx, msg.Id)
+	_, swapOut, err := k.PendingSwapOutQueue.GetByID(ctx, msg.RequestId)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get pending withdrawal: %w", err)
+		return nil, fmt.Errorf("failed to get pending swap out: %w", err)
 	}
 
-	vaultAddr := sdk.MustAccAddressFromBech32(withdrawal.VaultAddress)
+	vaultAddr := sdk.MustAccAddressFromBech32(swapOut.VaultAddress)
 	vault, err := k.GetVault(ctx, vaultAddr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get vault: %w", err)
@@ -400,11 +400,11 @@ func (k msgServer) ExpeditePendingWithdrawal(goCtx context.Context, msg *types.M
 		return nil, err
 	}
 
-	if err := k.PendingWithdrawalQueue.ExpediteWithdrawal(ctx, msg.Id); err != nil {
-		return nil, fmt.Errorf("failed to expedite withdrawal: %w", err)
+	if err := k.PendingSwapOutQueue.ExpediteSwapOut(ctx, msg.RequestId); err != nil {
+		return nil, fmt.Errorf("failed to expedite swap out: %w", err)
 	}
 
-	k.emitEvent(ctx, types.NewEventPendingSwapOutExpedited(msg.Id, withdrawal.VaultAddress, msg.Admin))
+	k.emitEvent(ctx, types.NewEventPendingSwapOutExpedited(msg.RequestId, swapOut.VaultAddress, msg.Admin))
 
-	return &types.MsgExpeditePendingWithdrawalResponse{}, nil
+	return &types.MsgExpeditePendingSwapOutResponse{}, nil
 }

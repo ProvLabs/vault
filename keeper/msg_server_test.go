@@ -2058,19 +2058,19 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds_Failures() {
 	}
 }
 
-func (s *TestSuite) TestMsgServer_ExpeditePendingWithdrawal() {
+func (s *TestSuite) TestMsgServer_ExpeditePendingSwapOut() {
 	type postCheckArgs struct {
-		ID uint64
+		RequestId uint64
 	}
 
-	testDef := msgServerTestDef[types.MsgExpeditePendingWithdrawalRequest, types.MsgExpeditePendingWithdrawalResponse, postCheckArgs]{
-		endpointName: "ExpeditePendingWithdrawal",
-		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).ExpeditePendingWithdrawal,
-		postCheck: func(msg *types.MsgExpeditePendingWithdrawalRequest, args postCheckArgs) {
-			release, withdrawal, err := s.k.PendingWithdrawalQueue.GetByID(s.ctx, args.ID)
-			s.Require().NoError(err, "should be able to get withdrawal")
+	testDef := msgServerTestDef[types.MsgExpeditePendingSwapOutRequest, types.MsgExpeditePendingSwapOutResponse, postCheckArgs]{
+		endpointName: "ExpeditePendingSwapOut",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).ExpeditePendingSwapOut,
+		postCheck: func(msg *types.MsgExpeditePendingSwapOutRequest, args postCheckArgs) {
+			release, withdrawal, err := s.k.PendingSwapOutQueue.GetByID(s.ctx, args.RequestId)
+			s.Require().NoError(err, "should be able to get swap out")
 			s.Assert().Equal(int64(0), release, "release time should be expedited to 0")
-			s.Assert().NotNil(withdrawal, "withdrawal should not be nil")
+			s.Assert().NotNil(withdrawal, "swap out should not be nil")
 		},
 	}
 
@@ -2091,29 +2091,29 @@ func (s *TestSuite) TestMsgServer_ExpeditePendingWithdrawal() {
 		})
 		s.Require().NoError(err)
 
-		id, err = s.k.PendingWithdrawalQueue.Enqueue(s.ctx, blockTime.Unix(), &types.PendingWithdrawal{
+		id, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, blockTime.Unix(), &types.PendingSwapOut{
 			VaultAddress: vaultAddr.String(),
 		})
 		s.Require().NoError(err)
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	}
 
-	tests := []msgServerTestCase[types.MsgExpeditePendingWithdrawalRequest, postCheckArgs]{
+	tests := []msgServerTestCase[types.MsgExpeditePendingSwapOutRequest, postCheckArgs]{
 		{
 			name:  "happy path",
 			setup: setup,
-			msg: types.MsgExpeditePendingWithdrawalRequest{
-				Admin: admin.String(),
-				Id:    id,
+			msg: types.MsgExpeditePendingSwapOutRequest{
+				Admin:     admin.String(),
+				RequestId: id,
 			},
 			postCheckArgs: postCheckArgs{
-				ID: id,
+				RequestId: id,
 			},
 			expectedEvents: sdk.Events{
 				sdk.NewEvent(
-					"vault.v1.EventPendingWithdrawalExpedited",
+					"vault.v1.EventPendingSwapOutExpedited",
 					sdk.NewAttribute("admin", admin.String()),
-					sdk.NewAttribute("id", fmt.Sprintf("%d", id)),
+					sdk.NewAttribute("request_id", fmt.Sprintf("%d", id)),
 					sdk.NewAttribute("vault", vaultAddr.String()),
 				),
 			},
@@ -2121,26 +2121,26 @@ func (s *TestSuite) TestMsgServer_ExpeditePendingWithdrawal() {
 		{
 			name:  "unauthorized admin",
 			setup: setup,
-			msg: types.MsgExpeditePendingWithdrawalRequest{
-				Admin: other.String(),
-				Id:    id,
+			msg: types.MsgExpeditePendingSwapOutRequest{
+				Admin:     other.String(),
+				RequestId: id,
 			},
 			expectedErrSubstrs: []string{"unauthorized"},
 		},
 		{
-			name:  "id does not exist",
+			name:  "request id does not exist",
 			setup: setup,
-			msg: types.MsgExpeditePendingWithdrawalRequest{
-				Admin: admin.String(),
-				Id:    999,
+			msg: types.MsgExpeditePendingSwapOutRequest{
+				Admin:     admin.String(),
+				RequestId: 999,
 			},
-			expectedErrSubstrs: []string{"failed to get pending withdrawal"},
+			expectedErrSubstrs: []string{"failed to get pending swap out"},
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
-			testDef.expectedResponse = &types.MsgExpeditePendingWithdrawalResponse{}
+			testDef.expectedResponse = &types.MsgExpeditePendingSwapOutResponse{}
 			runMsgServerTestCase(s, testDef, tc)
 		})
 	}

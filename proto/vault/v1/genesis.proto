@@ -11,15 +11,15 @@ message QueueEntry {
   string addr = 2;
 }
 
-message PendingWithdrawalQueueEntry {
+message PendingSwapOutQueueEntry {
   int64 time = 1;
   uint64 id = 2;
-  PendingWithdrawal withdrawal = 3 [(gogoproto.nullable) = false];
+  PendingSwapOut swap_out = 3 [(gogoproto.nullable) = false];
 }
 
-message PendingWithdrawalQueue {
+message PendingSwapOutQueue {
   uint64 latest_sequence_number = 1;
-  repeated PendingWithdrawalQueueEntry entries = 2 [(gogoproto.nullable) = false];
+  repeated PendingSwapOutQueueEntry entries = 2 [(gogoproto.nullable) = false];
 }
 
 // GenesisState defines the vault module's genesis state.
@@ -33,6 +33,6 @@ message GenesisState {
   // given UNIX timestamp (seconds). These entries are re-enqueued on InitGenesis.
   repeated QueueEntry payout_timeout_queue = 2 [(gogoproto.nullable) = false];
 
-  // pending_withdrawal_queue contains entries for pending withdrawals.
-  PendingWithdrawalQueue pending_withdrawal_queue = 3 [(gogoproto.nullable) = false];
+  // pending_swap_out_queue contains entries for pending swap outs.
+  PendingSwapOutQueue pending_swap_out_queue = 3 [(gogoproto.nullable) = false];
 }

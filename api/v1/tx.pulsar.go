@@ -11063,27 +11063,27 @@ func (x *fastReflection_MsgWithdrawPrincipalFundsResponse) ProtoMethods() *proto
 }
 
 var (
-	md_MsgExpeditePendingWithdrawalRequest       protoreflect.MessageDescriptor
-	fd_MsgExpeditePendingWithdrawalRequest_admin protoreflect.FieldDescriptor
-	fd_MsgExpeditePendingWithdrawalRequest_id    protoreflect.FieldDescriptor
+	md_MsgExpeditePendingSwapOutRequest            protoreflect.MessageDescriptor
+	fd_MsgExpeditePendingSwapOutRequest_admin      protoreflect.FieldDescriptor
+	fd_MsgExpeditePendingSwapOutRequest_request_id protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_vault_v1_tx_proto_init()
-	md_MsgExpeditePendingWithdrawalRequest = File_vault_v1_tx_proto.Messages().ByName("MsgExpeditePendingWithdrawalRequest")
-	fd_MsgExpeditePendingWithdrawalRequest_admin = md_MsgExpeditePendingWithdrawalRequest.Fields().ByName("admin")
-	fd_MsgExpeditePendingWithdrawalRequest_id = md_MsgExpeditePendingWithdrawalRequest.Fields().ByName("id")
+	md_MsgExpeditePendingSwapOutRequest = File_vault_v1_tx_proto.Messages().ByName("MsgExpeditePendingSwapOutRequest")
+	fd_MsgExpeditePendingSwapOutRequest_admin = md_MsgExpeditePendingSwapOutRequest.Fields().ByName("admin")
+	fd_MsgExpeditePendingSwapOutRequest_request_id = md_MsgExpeditePendingSwapOutRequest.Fields().ByName("request_id")
 }
 
-var _ protoreflect.Message = (*fastReflection_MsgExpeditePendingWithdrawalRequest)(nil)
+var _ protoreflect.Message = (*fastReflection_MsgExpeditePendingSwapOutRequest)(nil)
 
-type fastReflection_MsgExpeditePendingWithdrawalRequest MsgExpeditePendingWithdrawalRequest
+type fastReflection_MsgExpeditePendingSwapOutRequest MsgExpeditePendingSwapOutRequest
 
-func (x *MsgExpeditePendingWithdrawalRequest) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgExpeditePendingWithdrawalRequest)(x)
+func (x *MsgExpeditePendingSwapOutRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgExpeditePendingSwapOutRequest)(x)
 }
 
-func (x *MsgExpeditePendingWithdrawalRequest) slowProtoReflect() protoreflect.Message {
+func (x *MsgExpeditePendingSwapOutRequest) slowProtoReflect() protoreflect.Message {
 	mi := &file_vault_v1_tx_proto_msgTypes[24]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -11095,43 +11095,43 @@ func (x *MsgExpeditePendingWithdrawalRequest) slowProtoReflect() protoreflect.Me
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_MsgExpeditePendingWithdrawalRequest_messageType fastReflection_MsgExpeditePendingWithdrawalRequest_messageType
-var _ protoreflect.MessageType = fastReflection_MsgExpeditePendingWithdrawalRequest_messageType{}
+var _fastReflection_MsgExpeditePendingSwapOutRequest_messageType fastReflection_MsgExpeditePendingSwapOutRequest_messageType
+var _ protoreflect.MessageType = fastReflection_MsgExpeditePendingSwapOutRequest_messageType{}
 
-type fastReflection_MsgExpeditePendingWithdrawalRequest_messageType struct{}
+type fastReflection_MsgExpeditePendingSwapOutRequest_messageType struct{}
 
-func (x fastReflection_MsgExpeditePendingWithdrawalRequest_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgExpeditePendingWithdrawalRequest)(nil)
+func (x fastReflection_MsgExpeditePendingSwapOutRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgExpeditePendingSwapOutRequest)(nil)
 }
-func (x fastReflection_MsgExpeditePendingWithdrawalRequest_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgExpeditePendingWithdrawalRequest)
+func (x fastReflection_MsgExpeditePendingSwapOutRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgExpeditePendingSwapOutRequest)
 }
-func (x fastReflection_MsgExpeditePendingWithdrawalRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgExpeditePendingWithdrawalRequest
+func (x fastReflection_MsgExpeditePendingSwapOutRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgExpeditePendingSwapOutRequest
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_MsgExpeditePendingWithdrawalRequest) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgExpeditePendingWithdrawalRequest
+func (x *fastReflection_MsgExpeditePendingSwapOutRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgExpeditePendingSwapOutRequest
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgExpeditePendingWithdrawalRequest) Type() protoreflect.MessageType {
-	return _fastReflection_MsgExpeditePendingWithdrawalRequest_messageType
+func (x *fastReflection_MsgExpeditePendingSwapOutRequest) Type() protoreflect.MessageType {
+	return _fastReflection_MsgExpeditePendingSwapOutRequest_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgExpeditePendingWithdrawalRequest) New() protoreflect.Message {
-	return new(fastReflection_MsgExpeditePendingWithdrawalRequest)
+func (x *fastReflection_MsgExpeditePendingSwapOutRequest) New() protoreflect.Message {
+	return new(fastReflection_MsgExpeditePendingSwapOutRequest)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgExpeditePendingWithdrawalRequest) Interface() protoreflect.ProtoMessage {
-	return (*MsgExpeditePendingWithdrawalRequest)(x)
+func (x *fastReflection_MsgExpeditePendingSwapOutRequest) Interface() protoreflect.ProtoMessage {
+	return (*MsgExpeditePendingSwapOutRequest)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -11139,16 +11139,16 @@ func (x *fastReflection_MsgExpeditePendingWithdrawalRequest) Interface() protore
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_MsgExpeditePendingWithdrawalRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_MsgExpeditePendingSwapOutRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.Admin != "" {
 		value := protoreflect.ValueOfString(x.Admin)
-		if !f(fd_MsgExpeditePendingWithdrawalRequest_admin, value) {
+		if !f(fd_MsgExpeditePendingSwapOutRequest_admin, value) {
 			return
 		}
 	}
-	if x.Id != uint64(0) {
-		value := protoreflect.ValueOfUint64(x.Id)
-		if !f(fd_MsgExpeditePendingWithdrawalRequest_id, value) {
+	if x.RequestId != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.RequestId)
+		if !f(fd_MsgExpeditePendingSwapOutRequest_request_id, value) {
 			return
 		}
 	}
@@ -11165,17 +11165,17 @@ func (x *fastReflection_MsgExpeditePendingWithdrawalRequest) Range(f func(protor
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgExpeditePendingWithdrawalRequest) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_MsgExpeditePendingSwapOutRequest) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.MsgExpeditePendingWithdrawalRequest.admin":
+	case "vault.v1.MsgExpeditePendingSwapOutRequest.admin":
 		return x.Admin != ""
-	case "vault.v1.MsgExpeditePendingWithdrawalRequest.id":
-		return x.Id != uint64(0)
+	case "vault.v1.MsgExpeditePendingSwapOutRequest.request_id":
+		return x.RequestId != uint64(0)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgExpeditePendingWithdrawalRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgExpeditePendingSwapOutRequest"))
 		}
-		panic(fmt.Errorf("message vault.v1.MsgExpeditePendingWithdrawalRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.MsgExpeditePendingSwapOutRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -11185,17 +11185,17 @@ func (x *fastReflection_MsgExpeditePendingWithdrawalRequest) Has(fd protoreflect
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgExpeditePendingWithdrawalRequest) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_MsgExpeditePendingSwapOutRequest) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.MsgExpeditePendingWithdrawalRequest.admin":
+	case "vault.v1.MsgExpeditePendingSwapOutRequest.admin":
 		x.Admin = ""
-	case "vault.v1.MsgExpeditePendingWithdrawalRequest.id":
-		x.Id = uint64(0)
+	case "vault.v1.MsgExpeditePendingSwapOutRequest.request_id":
+		x.RequestId = uint64(0)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgExpeditePendingWithdrawalRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgExpeditePendingSwapOutRequest"))
 		}
-		panic(fmt.Errorf("message vault.v1.MsgExpeditePendingWithdrawalRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.MsgExpeditePendingSwapOutRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -11205,19 +11205,19 @@ func (x *fastReflection_MsgExpeditePendingWithdrawalRequest) Clear(fd protorefle
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgExpeditePendingWithdrawalRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgExpeditePendingSwapOutRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.MsgExpeditePendingWithdrawalRequest.admin":
+	case "vault.v1.MsgExpeditePendingSwapOutRequest.admin":
 		value := x.Admin
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.MsgExpeditePendingWithdrawalRequest.id":
-		value := x.Id
+	case "vault.v1.MsgExpeditePendingSwapOutRequest.request_id":
+		value := x.RequestId
 		return protoreflect.ValueOfUint64(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgExpeditePendingWithdrawalRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgExpeditePendingSwapOutRequest"))
 		}
-		panic(fmt.Errorf("message vault.v1.MsgExpeditePendingWithdrawalRequest does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message vault.v1.MsgExpeditePendingSwapOutRequest does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -11231,17 +11231,17 @@ func (x *fastReflection_MsgExpeditePendingWithdrawalRequest) Get(descriptor prot
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgExpeditePendingWithdrawalRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_MsgExpeditePendingSwapOutRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.MsgExpeditePendingWithdrawalRequest.admin":
+	case "vault.v1.MsgExpeditePendingSwapOutRequest.admin":
 		x.Admin = value.Interface().(string)
-	case "vault.v1.MsgExpeditePendingWithdrawalRequest.id":
-		x.Id = value.Uint()
+	case "vault.v1.MsgExpeditePendingSwapOutRequest.request_id":
+		x.RequestId = value.Uint()
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgExpeditePendingWithdrawalRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgExpeditePendingSwapOutRequest"))
 		}
-		panic(fmt.Errorf("message vault.v1.MsgExpeditePendingWithdrawalRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.MsgExpeditePendingSwapOutRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -11255,44 +11255,44 @@ func (x *fastReflection_MsgExpeditePendingWithdrawalRequest) Set(fd protoreflect
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgExpeditePendingWithdrawalRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgExpeditePendingSwapOutRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.MsgExpeditePendingWithdrawalRequest.admin":
-		panic(fmt.Errorf("field admin of message vault.v1.MsgExpeditePendingWithdrawalRequest is not mutable"))
-	case "vault.v1.MsgExpeditePendingWithdrawalRequest.id":
-		panic(fmt.Errorf("field id of message vault.v1.MsgExpeditePendingWithdrawalRequest is not mutable"))
+	case "vault.v1.MsgExpeditePendingSwapOutRequest.admin":
+		panic(fmt.Errorf("field admin of message vault.v1.MsgExpeditePendingSwapOutRequest is not mutable"))
+	case "vault.v1.MsgExpeditePendingSwapOutRequest.request_id":
+		panic(fmt.Errorf("field request_id of message vault.v1.MsgExpeditePendingSwapOutRequest is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgExpeditePendingWithdrawalRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgExpeditePendingSwapOutRequest"))
 		}
-		panic(fmt.Errorf("message vault.v1.MsgExpeditePendingWithdrawalRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.MsgExpeditePendingSwapOutRequest does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgExpeditePendingWithdrawalRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgExpeditePendingSwapOutRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.MsgExpeditePendingWithdrawalRequest.admin":
+	case "vault.v1.MsgExpeditePendingSwapOutRequest.admin":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.MsgExpeditePendingWithdrawalRequest.id":
+	case "vault.v1.MsgExpeditePendingSwapOutRequest.request_id":
 		return protoreflect.ValueOfUint64(uint64(0))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgExpeditePendingWithdrawalRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgExpeditePendingSwapOutRequest"))
 		}
-		panic(fmt.Errorf("message vault.v1.MsgExpeditePendingWithdrawalRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.MsgExpeditePendingSwapOutRequest does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgExpeditePendingWithdrawalRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_MsgExpeditePendingSwapOutRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.MsgExpeditePendingWithdrawalRequest", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in vault.v1.MsgExpeditePendingSwapOutRequest", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -11300,7 +11300,7 @@ func (x *fastReflection_MsgExpeditePendingWithdrawalRequest) WhichOneof(d protor
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgExpeditePendingWithdrawalRequest) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_MsgExpeditePendingSwapOutRequest) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -11311,7 +11311,7 @@ func (x *fastReflection_MsgExpeditePendingWithdrawalRequest) GetUnknown() protor
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgExpeditePendingWithdrawalRequest) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_MsgExpeditePendingSwapOutRequest) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -11323,7 +11323,7 @@ func (x *fastReflection_MsgExpeditePendingWithdrawalRequest) SetUnknown(fields p
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_MsgExpeditePendingWithdrawalRequest) IsValid() bool {
+func (x *fastReflection_MsgExpeditePendingSwapOutRequest) IsValid() bool {
 	return x != nil
 }
 
@@ -11333,9 +11333,9 @@ func (x *fastReflection_MsgExpeditePendingWithdrawalRequest) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgExpeditePendingWithdrawalRequest) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_MsgExpeditePendingSwapOutRequest) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgExpeditePendingWithdrawalRequest)
+		x := input.Message.Interface().(*MsgExpeditePendingSwapOutRequest)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -11351,8 +11351,8 @@ func (x *fastReflection_MsgExpeditePendingWithdrawalRequest) ProtoMethods() *pro
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		if x.Id != 0 {
-			n += 1 + runtime.Sov(uint64(x.Id))
+		if x.RequestId != 0 {
+			n += 1 + runtime.Sov(uint64(x.RequestId))
 		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
@@ -11364,7 +11364,7 @@ func (x *fastReflection_MsgExpeditePendingWithdrawalRequest) ProtoMethods() *pro
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgExpeditePendingWithdrawalRequest)
+		x := input.Message.Interface().(*MsgExpeditePendingSwapOutRequest)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -11383,8 +11383,8 @@ func (x *fastReflection_MsgExpeditePendingWithdrawalRequest) ProtoMethods() *pro
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if x.Id != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.Id))
+		if x.RequestId != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.RequestId))
 			i--
 			dAtA[i] = 0x10
 		}
@@ -11406,7 +11406,7 @@ func (x *fastReflection_MsgExpeditePendingWithdrawalRequest) ProtoMethods() *pro
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgExpeditePendingWithdrawalRequest)
+		x := input.Message.Interface().(*MsgExpeditePendingSwapOutRequest)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -11438,10 +11438,10 @@ func (x *fastReflection_MsgExpeditePendingWithdrawalRequest) ProtoMethods() *pro
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgExpeditePendingWithdrawalRequest: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgExpeditePendingSwapOutRequest: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgExpeditePendingWithdrawalRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgExpeditePendingSwapOutRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -11478,9 +11478,9 @@ func (x *fastReflection_MsgExpeditePendingWithdrawalRequest) ProtoMethods() *pro
 				iNdEx = postIndex
 			case 2:
 				if wireType != 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field RequestId", wireType)
 				}
-				x.Id = 0
+				x.RequestId = 0
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -11490,7 +11490,7 @@ func (x *fastReflection_MsgExpeditePendingWithdrawalRequest) ProtoMethods() *pro
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.Id |= uint64(b&0x7F) << shift
+					x.RequestId |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -11531,23 +11531,23 @@ func (x *fastReflection_MsgExpeditePendingWithdrawalRequest) ProtoMethods() *pro
 }
 
 var (
-	md_MsgExpeditePendingWithdrawalResponse protoreflect.MessageDescriptor
+	md_MsgExpeditePendingSwapOutResponse protoreflect.MessageDescriptor
 )
 
 func init() {
 	file_vault_v1_tx_proto_init()
-	md_MsgExpeditePendingWithdrawalResponse = File_vault_v1_tx_proto.Messages().ByName("MsgExpeditePendingWithdrawalResponse")
+	md_MsgExpeditePendingSwapOutResponse = File_vault_v1_tx_proto.Messages().ByName("MsgExpeditePendingSwapOutResponse")
 }
 
-var _ protoreflect.Message = (*fastReflection_MsgExpeditePendingWithdrawalResponse)(nil)
+var _ protoreflect.Message = (*fastReflection_MsgExpeditePendingSwapOutResponse)(nil)
 
-type fastReflection_MsgExpeditePendingWithdrawalResponse MsgExpeditePendingWithdrawalResponse
+type fastReflection_MsgExpeditePendingSwapOutResponse MsgExpeditePendingSwapOutResponse
 
-func (x *MsgExpeditePendingWithdrawalResponse) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_MsgExpeditePendingWithdrawalResponse)(x)
+func (x *MsgExpeditePendingSwapOutResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgExpeditePendingSwapOutResponse)(x)
 }
 
-func (x *MsgExpeditePendingWithdrawalResponse) slowProtoReflect() protoreflect.Message {
+func (x *MsgExpeditePendingSwapOutResponse) slowProtoReflect() protoreflect.Message {
 	mi := &file_vault_v1_tx_proto_msgTypes[25]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -11559,43 +11559,43 @@ func (x *MsgExpeditePendingWithdrawalResponse) slowProtoReflect() protoreflect.M
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_MsgExpeditePendingWithdrawalResponse_messageType fastReflection_MsgExpeditePendingWithdrawalResponse_messageType
-var _ protoreflect.MessageType = fastReflection_MsgExpeditePendingWithdrawalResponse_messageType{}
+var _fastReflection_MsgExpeditePendingSwapOutResponse_messageType fastReflection_MsgExpeditePendingSwapOutResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgExpeditePendingSwapOutResponse_messageType{}
 
-type fastReflection_MsgExpeditePendingWithdrawalResponse_messageType struct{}
+type fastReflection_MsgExpeditePendingSwapOutResponse_messageType struct{}
 
-func (x fastReflection_MsgExpeditePendingWithdrawalResponse_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_MsgExpeditePendingWithdrawalResponse)(nil)
+func (x fastReflection_MsgExpeditePendingSwapOutResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgExpeditePendingSwapOutResponse)(nil)
 }
-func (x fastReflection_MsgExpeditePendingWithdrawalResponse_messageType) New() protoreflect.Message {
-	return new(fastReflection_MsgExpeditePendingWithdrawalResponse)
+func (x fastReflection_MsgExpeditePendingSwapOutResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgExpeditePendingSwapOutResponse)
 }
-func (x fastReflection_MsgExpeditePendingWithdrawalResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgExpeditePendingWithdrawalResponse
+func (x fastReflection_MsgExpeditePendingSwapOutResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgExpeditePendingSwapOutResponse
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_MsgExpeditePendingWithdrawalResponse) Descriptor() protoreflect.MessageDescriptor {
-	return md_MsgExpeditePendingWithdrawalResponse
+func (x *fastReflection_MsgExpeditePendingSwapOutResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgExpeditePendingSwapOutResponse
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_MsgExpeditePendingWithdrawalResponse) Type() protoreflect.MessageType {
-	return _fastReflection_MsgExpeditePendingWithdrawalResponse_messageType
+func (x *fastReflection_MsgExpeditePendingSwapOutResponse) Type() protoreflect.MessageType {
+	return _fastReflection_MsgExpeditePendingSwapOutResponse_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_MsgExpeditePendingWithdrawalResponse) New() protoreflect.Message {
-	return new(fastReflection_MsgExpeditePendingWithdrawalResponse)
+func (x *fastReflection_MsgExpeditePendingSwapOutResponse) New() protoreflect.Message {
+	return new(fastReflection_MsgExpeditePendingSwapOutResponse)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_MsgExpeditePendingWithdrawalResponse) Interface() protoreflect.ProtoMessage {
-	return (*MsgExpeditePendingWithdrawalResponse)(x)
+func (x *fastReflection_MsgExpeditePendingSwapOutResponse) Interface() protoreflect.ProtoMessage {
+	return (*MsgExpeditePendingSwapOutResponse)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -11603,7 +11603,7 @@ func (x *fastReflection_MsgExpeditePendingWithdrawalResponse) Interface() protor
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_MsgExpeditePendingWithdrawalResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_MsgExpeditePendingSwapOutResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 }
 
 // Has reports whether a field is populated.
@@ -11617,13 +11617,13 @@ func (x *fastReflection_MsgExpeditePendingWithdrawalResponse) Range(f func(proto
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_MsgExpeditePendingWithdrawalResponse) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_MsgExpeditePendingSwapOutResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgExpeditePendingWithdrawalResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgExpeditePendingSwapOutResponse"))
 		}
-		panic(fmt.Errorf("message vault.v1.MsgExpeditePendingWithdrawalResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.MsgExpeditePendingSwapOutResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -11633,13 +11633,13 @@ func (x *fastReflection_MsgExpeditePendingWithdrawalResponse) Has(fd protoreflec
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgExpeditePendingWithdrawalResponse) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_MsgExpeditePendingSwapOutResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgExpeditePendingWithdrawalResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgExpeditePendingSwapOutResponse"))
 		}
-		panic(fmt.Errorf("message vault.v1.MsgExpeditePendingWithdrawalResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.MsgExpeditePendingSwapOutResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -11649,13 +11649,13 @@ func (x *fastReflection_MsgExpeditePendingWithdrawalResponse) Clear(fd protorefl
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_MsgExpeditePendingWithdrawalResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgExpeditePendingSwapOutResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgExpeditePendingWithdrawalResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgExpeditePendingSwapOutResponse"))
 		}
-		panic(fmt.Errorf("message vault.v1.MsgExpeditePendingWithdrawalResponse does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message vault.v1.MsgExpeditePendingSwapOutResponse does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -11669,13 +11669,13 @@ func (x *fastReflection_MsgExpeditePendingWithdrawalResponse) Get(descriptor pro
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgExpeditePendingWithdrawalResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_MsgExpeditePendingSwapOutResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgExpeditePendingWithdrawalResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgExpeditePendingSwapOutResponse"))
 		}
-		panic(fmt.Errorf("message vault.v1.MsgExpeditePendingWithdrawalResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.MsgExpeditePendingSwapOutResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -11689,36 +11689,36 @@ func (x *fastReflection_MsgExpeditePendingWithdrawalResponse) Set(fd protoreflec
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgExpeditePendingWithdrawalResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgExpeditePendingSwapOutResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgExpeditePendingWithdrawalResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgExpeditePendingSwapOutResponse"))
 		}
-		panic(fmt.Errorf("message vault.v1.MsgExpeditePendingWithdrawalResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.MsgExpeditePendingSwapOutResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_MsgExpeditePendingWithdrawalResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_MsgExpeditePendingSwapOutResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgExpeditePendingWithdrawalResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.MsgExpeditePendingSwapOutResponse"))
 		}
-		panic(fmt.Errorf("message vault.v1.MsgExpeditePendingWithdrawalResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.MsgExpeditePendingSwapOutResponse does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_MsgExpeditePendingWithdrawalResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_MsgExpeditePendingSwapOutResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.MsgExpeditePendingWithdrawalResponse", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in vault.v1.MsgExpeditePendingSwapOutResponse", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -11726,7 +11726,7 @@ func (x *fastReflection_MsgExpeditePendingWithdrawalResponse) WhichOneof(d proto
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_MsgExpeditePendingWithdrawalResponse) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_MsgExpeditePendingSwapOutResponse) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -11737,7 +11737,7 @@ func (x *fastReflection_MsgExpeditePendingWithdrawalResponse) GetUnknown() proto
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_MsgExpeditePendingWithdrawalResponse) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_MsgExpeditePendingSwapOutResponse) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -11749,7 +11749,7 @@ func (x *fastReflection_MsgExpeditePendingWithdrawalResponse) SetUnknown(fields 
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_MsgExpeditePendingWithdrawalResponse) IsValid() bool {
+func (x *fastReflection_MsgExpeditePendingSwapOutResponse) IsValid() bool {
 	return x != nil
 }
 
@@ -11759,9 +11759,9 @@ func (x *fastReflection_MsgExpeditePendingWithdrawalResponse) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_MsgExpeditePendingWithdrawalResponse) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_MsgExpeditePendingSwapOutResponse) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*MsgExpeditePendingWithdrawalResponse)
+		x := input.Message.Interface().(*MsgExpeditePendingSwapOutResponse)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -11783,7 +11783,7 @@ func (x *fastReflection_MsgExpeditePendingWithdrawalResponse) ProtoMethods() *pr
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*MsgExpeditePendingWithdrawalResponse)
+		x := input.Message.Interface().(*MsgExpeditePendingSwapOutResponse)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -11813,7 +11813,7 @@ func (x *fastReflection_MsgExpeditePendingWithdrawalResponse) ProtoMethods() *pr
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*MsgExpeditePendingWithdrawalResponse)
+		x := input.Message.Interface().(*MsgExpeditePendingSwapOutResponse)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -11845,10 +11845,10 @@ func (x *fastReflection_MsgExpeditePendingWithdrawalResponse) ProtoMethods() *pr
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgExpeditePendingWithdrawalResponse: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgExpeditePendingSwapOutResponse: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgExpeditePendingWithdrawalResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgExpeditePendingSwapOutResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			default:
@@ -12904,20 +12904,20 @@ func (*MsgWithdrawPrincipalFundsResponse) Descriptor() ([]byte, []int) {
 	return file_vault_v1_tx_proto_rawDescGZIP(), []int{23}
 }
 
-// MsgExpeditePendingWithdrawalRequest is the request message for expediting a withdrawal from a vault.
-type MsgExpeditePendingWithdrawalRequest struct {
+// MsgExpeditePendingSwapOutRequest is the request message for expediting a swap out from a vault.
+type MsgExpeditePendingSwapOutRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// admin is the address of the vault administrator initiating the withdrawal.
+	// admin is the address of the vault administrator initiating the swap out.
 	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
-	// id is the id of the pending withdrawal to expedite.
-	Id uint64 `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
+	// request_id is the id of the pending swap out to expedite.
+	RequestId uint64 `protobuf:"varint,2,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
 }
 
-func (x *MsgExpeditePendingWithdrawalRequest) Reset() {
-	*x = MsgExpeditePendingWithdrawalRequest{}
+func (x *MsgExpeditePendingSwapOutRequest) Reset() {
+	*x = MsgExpeditePendingSwapOutRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_vault_v1_tx_proto_msgTypes[24]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -12925,40 +12925,40 @@ func (x *MsgExpeditePendingWithdrawalRequest) Reset() {
 	}
 }
 
-func (x *MsgExpeditePendingWithdrawalRequest) String() string {
+func (x *MsgExpeditePendingSwapOutRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MsgExpeditePendingWithdrawalRequest) ProtoMessage() {}
+func (*MsgExpeditePendingSwapOutRequest) ProtoMessage() {}
 
-// Deprecated: Use MsgExpeditePendingWithdrawalRequest.ProtoReflect.Descriptor instead.
-func (*MsgExpeditePendingWithdrawalRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use MsgExpeditePendingSwapOutRequest.ProtoReflect.Descriptor instead.
+func (*MsgExpeditePendingSwapOutRequest) Descriptor() ([]byte, []int) {
 	return file_vault_v1_tx_proto_rawDescGZIP(), []int{24}
 }
 
-func (x *MsgExpeditePendingWithdrawalRequest) GetAdmin() string {
+func (x *MsgExpeditePendingSwapOutRequest) GetAdmin() string {
 	if x != nil {
 		return x.Admin
 	}
 	return ""
 }
 
-func (x *MsgExpeditePendingWithdrawalRequest) GetId() uint64 {
+func (x *MsgExpeditePendingSwapOutRequest) GetRequestId() uint64 {
 	if x != nil {
-		return x.Id
+		return x.RequestId
 	}
 	return 0
 }
 
-// MsgExpeditePendingWithdrawalResponse is the response message for the ExpeditePendingWithdrawal endpoint.
-type MsgExpeditePendingWithdrawalResponse struct {
+// MsgExpeditePendingSwapOutResponse is the response message for the ExpeditePendingSwapOut endpoint.
+type MsgExpeditePendingSwapOutResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 }
 
-func (x *MsgExpeditePendingWithdrawalResponse) Reset() {
-	*x = MsgExpeditePendingWithdrawalResponse{}
+func (x *MsgExpeditePendingSwapOutResponse) Reset() {
+	*x = MsgExpeditePendingSwapOutResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_vault_v1_tx_proto_msgTypes[25]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -12966,14 +12966,14 @@ func (x *MsgExpeditePendingWithdrawalResponse) Reset() {
 	}
 }
 
-func (x *MsgExpeditePendingWithdrawalResponse) String() string {
+func (x *MsgExpeditePendingSwapOutResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*MsgExpeditePendingWithdrawalResponse) ProtoMessage() {}
+func (*MsgExpeditePendingSwapOutResponse) ProtoMessage() {}
 
-// Deprecated: Use MsgExpeditePendingWithdrawalResponse.ProtoReflect.Descriptor instead.
-func (*MsgExpeditePendingWithdrawalResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use MsgExpeditePendingSwapOutResponse.ProtoReflect.Descriptor instead.
+func (*MsgExpeditePendingSwapOutResponse) Descriptor() ([]byte, []int) {
 	return file_vault_v1_tx_proto_rawDescGZIP(), []int{25}
 }
 
@@ -13144,97 +13144,97 @@ var file_vault_v1_tx_proto_rawDesc = []byte{
 	0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x3a, 0x0a, 0x82, 0xe7, 0xb0, 0x2a, 0x05, 0x61, 0x64, 0x6d,
 	0x69, 0x6e, 0x22, 0x23, 0x0a, 0x21, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61,
 	0x77, 0x50, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x71, 0x0a, 0x23, 0x4d, 0x73, 0x67, 0x45, 0x78,
-	0x70, 0x65, 0x64, 0x69, 0x74, 0x65, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x57, 0x69, 0x74,
-	0x68, 0x64, 0x72, 0x61, 0x77, 0x61, 0x6c, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x2e,
-	0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2,
-	0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
-	0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x0e,
-	0x0a, 0x02, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x02, 0x69, 0x64, 0x3a, 0x0a,
-	0x82, 0xe7, 0xb0, 0x2a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x22, 0x26, 0x0a, 0x24, 0x4d, 0x73,
-	0x67, 0x45, 0x78, 0x70, 0x65, 0x64, 0x69, 0x74, 0x65, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67,
-	0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x61, 0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x32, 0x97, 0x0a, 0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x50, 0x0a, 0x0b, 0x43, 0x72,
-	0x65, 0x61, 0x74, 0x65, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x12, 0x1f, 0x2e, 0x76, 0x61, 0x75, 0x6c,
-	0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x56, 0x61,
-	0x75, 0x6c, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x20, 0x2e, 0x76, 0x61, 0x75,
-	0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x56,
-	0x61, 0x75, 0x6c, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x41, 0x0a, 0x06,
-	0x53, 0x77, 0x61, 0x70, 0x49, 0x6e, 0x12, 0x1a, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76,
-	0x31, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x77, 0x61, 0x70, 0x49, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x1a, 0x1b, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73,
-	0x67, 0x53, 0x77, 0x61, 0x70, 0x49, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
-	0x44, 0x0a, 0x07, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x12, 0x1b, 0x2e, 0x76, 0x61, 0x75,
-	0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74,
-	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1c, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e,
-	0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x6e, 0x0a, 0x15, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x4d,
-	0x69, 0x6e, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x12, 0x29,
-	0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64,
-	0x61, 0x74, 0x65, 0x4d, 0x69, 0x6e, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61,
-	0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2a, 0x2e, 0x76, 0x61, 0x75, 0x6c,
-	0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x4d, 0x69,
-	0x6e, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x6e, 0x0a, 0x15, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x4d,
-	0x61, 0x78, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x12, 0x29,
-	0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64,
-	0x61, 0x74, 0x65, 0x4d, 0x61, 0x78, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61,
-	0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2a, 0x2e, 0x76, 0x61, 0x75, 0x6c,
-	0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x4d, 0x61,
-	0x78, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x65, 0x0a, 0x12, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x49,
-	0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x12, 0x26, 0x2e, 0x76, 0x61,
-	0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65,
-	0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x1a, 0x27, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d,
-	0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74,
-	0x52, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x53, 0x0a, 0x0c,
-	0x54, 0x6f, 0x67, 0x67, 0x6c, 0x65, 0x53, 0x77, 0x61, 0x70, 0x49, 0x6e, 0x12, 0x20, 0x2e, 0x76,
-	0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x54, 0x6f, 0x67, 0x67, 0x6c,
-	0x65, 0x53, 0x77, 0x61, 0x70, 0x49, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x21,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x7d, 0x0a, 0x20, 0x4d, 0x73, 0x67, 0x45, 0x78,
+	0x70, 0x65, 0x64, 0x69, 0x74, 0x65, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61,
+	0x70, 0x4f, 0x75, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x2e, 0x0a, 0x05, 0x61,
+	0x64, 0x6d, 0x69, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74,
+	0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x1d, 0x0a, 0x0a, 0x72,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52,
+	0x09, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x49, 0x64, 0x3a, 0x0a, 0x82, 0xe7, 0xb0, 0x2a,
+	0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x22, 0x23, 0x0a, 0x21, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x70,
+	0x65, 0x64, 0x69, 0x74, 0x65, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61, 0x70,
+	0x4f, 0x75, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x32, 0x8e, 0x0a, 0x0a, 0x03,
+	0x4d, 0x73, 0x67, 0x12, 0x50, 0x0a, 0x0b, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x56, 0x61, 0x75,
+	0x6c, 0x74, 0x12, 0x1f, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73,
+	0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x1a, 0x20, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d,
+	0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x41, 0x0a, 0x06, 0x53, 0x77, 0x61, 0x70, 0x49, 0x6e, 0x12,
+	0x1a, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x77,
+	0x61, 0x70, 0x49, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1b, 0x2e, 0x76, 0x61,
+	0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x77, 0x61, 0x70, 0x49, 0x6e,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x44, 0x0a, 0x07, 0x53, 0x77, 0x61, 0x70,
+	0x4f, 0x75, 0x74, 0x12, 0x1b, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d,
+	0x73, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x1a, 0x1c, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x53,
+	0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x6e,
+	0x0a, 0x15, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x4d, 0x69, 0x6e, 0x49, 0x6e, 0x74, 0x65, 0x72,
+	0x65, 0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x12, 0x29, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e,
+	0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x4d, 0x69, 0x6e, 0x49,
+	0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x1a, 0x2a, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73,
+	0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x4d, 0x69, 0x6e, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65,
+	0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x6e,
+	0x0a, 0x15, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x4d, 0x61, 0x78, 0x49, 0x6e, 0x74, 0x65, 0x72,
+	0x65, 0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x12, 0x29, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e,
+	0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x4d, 0x61, 0x78, 0x49,
+	0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x1a, 0x2a, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73,
+	0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x4d, 0x61, 0x78, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65,
+	0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x65,
+	0x0a, 0x12, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74,
+	0x52, 0x61, 0x74, 0x65, 0x12, 0x26, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e,
+	0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73,
+	0x74, 0x52, 0x61, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x27, 0x2e, 0x76,
+	0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74,
+	0x65, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x53, 0x0a, 0x0c, 0x54, 0x6f, 0x67, 0x67, 0x6c, 0x65, 0x53,
+	0x77, 0x61, 0x70, 0x49, 0x6e, 0x12, 0x20, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31,
+	0x2e, 0x4d, 0x73, 0x67, 0x54, 0x6f, 0x67, 0x67, 0x6c, 0x65, 0x53, 0x77, 0x61, 0x70, 0x49, 0x6e,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x21, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e,
+	0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x54, 0x6f, 0x67, 0x67, 0x6c, 0x65, 0x53, 0x77, 0x61, 0x70,
+	0x49, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x56, 0x0a, 0x0d, 0x54, 0x6f,
+	0x67, 0x67, 0x6c, 0x65, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x12, 0x21, 0x2e, 0x76, 0x61,
+	0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x54, 0x6f, 0x67, 0x67, 0x6c, 0x65,
+	0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x22,
 	0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x54, 0x6f, 0x67,
-	0x67, 0x6c, 0x65, 0x53, 0x77, 0x61, 0x70, 0x49, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x12, 0x56, 0x0a, 0x0d, 0x54, 0x6f, 0x67, 0x67, 0x6c, 0x65, 0x53, 0x77, 0x61, 0x70, 0x4f,
-	0x75, 0x74, 0x12, 0x21, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73,
-	0x67, 0x54, 0x6f, 0x67, 0x67, 0x6c, 0x65, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x52, 0x65,
-	0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x22, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31,
-	0x2e, 0x4d, 0x73, 0x67, 0x54, 0x6f, 0x67, 0x67, 0x6c, 0x65, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75,
-	0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x6b, 0x0a, 0x14, 0x44, 0x65, 0x70,
-	0x6f, 0x73, 0x69, 0x74, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x46, 0x75, 0x6e, 0x64,
-	0x73, 0x12, 0x28, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67,
-	0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x46,
-	0x75, 0x6e, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x29, 0x2e, 0x76, 0x61,
-	0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69,
-	0x74, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x6e, 0x0a, 0x15, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72,
-	0x61, 0x77, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x12,
-	0x29, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x57, 0x69,
-	0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x46, 0x75,
-	0x6e, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2a, 0x2e, 0x76, 0x61, 0x75,
-	0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61,
-	0x77, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x6e, 0x0a, 0x15, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69,
-	0x74, 0x50, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x12,
-	0x29, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x44, 0x65,
-	0x70, 0x6f, 0x73, 0x69, 0x74, 0x50, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x46, 0x75,
-	0x6e, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2a, 0x2e, 0x76, 0x61, 0x75,
+	0x67, 0x6c, 0x65, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x12, 0x6b, 0x0a, 0x14, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x49, 0x6e, 0x74,
+	0x65, 0x72, 0x65, 0x73, 0x74, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x12, 0x28, 0x2e, 0x76, 0x61, 0x75,
 	0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74,
+	0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x52, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x1a, 0x29, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e,
+	0x4d, 0x73, 0x67, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65,
+	0x73, 0x74, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
+	0x6e, 0x0a, 0x15, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x49, 0x6e, 0x74, 0x65, 0x72,
+	0x65, 0x73, 0x74, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x12, 0x29, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74,
+	0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x49,
+	0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x1a, 0x2a, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d,
+	0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65,
+	0x73, 0x74, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
+	0x6e, 0x0a, 0x15, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x50, 0x72, 0x69, 0x6e, 0x63, 0x69,
+	0x70, 0x61, 0x6c, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x12, 0x29, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74,
+	0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x50, 0x72,
+	0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x1a, 0x2a, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d,
+	0x73, 0x67, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x50, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70,
+	0x61, 0x6c, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
+	0x71, 0x0a, 0x16, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x50, 0x72, 0x69, 0x6e, 0x63,
+	0x69, 0x70, 0x61, 0x6c, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x12, 0x2a, 0x2e, 0x76, 0x61, 0x75, 0x6c,
+	0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77,
 	0x50, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x71, 0x0a, 0x16, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72,
-	0x61, 0x77, 0x50, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x46, 0x75, 0x6e, 0x64, 0x73,
-	0x12, 0x2a, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x57,
-	0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x50, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c,
-	0x46, 0x75, 0x6e, 0x64, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2b, 0x2e, 0x76,
-	0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64,
-	0x72, 0x61, 0x77, 0x50, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x46, 0x75, 0x6e, 0x64,
-	0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x7a, 0x0a, 0x19, 0x45, 0x78, 0x70,
-	0x65, 0x64, 0x69, 0x74, 0x65, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x57, 0x69, 0x74, 0x68,
-	0x64, 0x72, 0x61, 0x77, 0x61, 0x6c, 0x12, 0x2d, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76,
-	0x31, 0x2e, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x70, 0x65, 0x64, 0x69, 0x74, 0x65, 0x50, 0x65, 0x6e,
-	0x64, 0x69, 0x6e, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x61, 0x6c, 0x52, 0x65,
-	0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2e, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31,
-	0x2e, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x70, 0x65, 0x64, 0x69, 0x74, 0x65, 0x50, 0x65, 0x6e, 0x64,
-	0x69, 0x6e, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x61, 0x6c, 0x52, 0x65, 0x73,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2b, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31,
+	0x2e, 0x4d, 0x73, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x50, 0x72, 0x69, 0x6e,
+	0x63, 0x69, 0x70, 0x61, 0x6c, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x12, 0x71, 0x0a, 0x16, 0x45, 0x78, 0x70, 0x65, 0x64, 0x69, 0x74, 0x65, 0x50, 0x65,
+	0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x12, 0x2a, 0x2e, 0x76,
+	0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x70, 0x65, 0x64,
+	0x69, 0x74, 0x65, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75,
+	0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2b, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74,
+	0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x45, 0x78, 0x70, 0x65, 0x64, 0x69, 0x74, 0x65, 0x50,
+	0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x52, 0x65, 0x73,
 	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x1a, 0x05, 0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0x88, 0x01, 0x0a,
 	0x0c, 0x63, 0x6f, 0x6d, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x42, 0x07, 0x54,
 	0x78, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2e, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62,
@@ -13261,33 +13261,33 @@ func file_vault_v1_tx_proto_rawDescGZIP() []byte {
 
 var file_vault_v1_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 26)
 var file_vault_v1_tx_proto_goTypes = []interface{}{
-	(*MsgCreateVaultRequest)(nil),                // 0: vault.v1.MsgCreateVaultRequest
-	(*MsgCreateVaultResponse)(nil),               // 1: vault.v1.MsgCreateVaultResponse
-	(*MsgSwapInRequest)(nil),                     // 2: vault.v1.MsgSwapInRequest
-	(*MsgSwapInResponse)(nil),                    // 3: vault.v1.MsgSwapInResponse
-	(*MsgSwapOutRequest)(nil),                    // 4: vault.v1.MsgSwapOutRequest
-	(*MsgSwapOutResponse)(nil),                   // 5: vault.v1.MsgSwapOutResponse
-	(*MsgUpdateMinInterestRateRequest)(nil),      // 6: vault.v1.MsgUpdateMinInterestRateRequest
-	(*MsgUpdateMinInterestRateResponse)(nil),     // 7: vault.v1.MsgUpdateMinInterestRateResponse
-	(*MsgUpdateMaxInterestRateRequest)(nil),      // 8: vault.v1.MsgUpdateMaxInterestRateRequest
-	(*MsgUpdateMaxInterestRateResponse)(nil),     // 9: vault.v1.MsgUpdateMaxInterestRateResponse
-	(*MsgUpdateInterestRateRequest)(nil),         // 10: vault.v1.MsgUpdateInterestRateRequest
-	(*MsgUpdateInterestRateResponse)(nil),        // 11: vault.v1.MsgUpdateInterestRateResponse
-	(*MsgToggleSwapInRequest)(nil),               // 12: vault.v1.MsgToggleSwapInRequest
-	(*MsgToggleSwapInResponse)(nil),              // 13: vault.v1.MsgToggleSwapInResponse
-	(*MsgToggleSwapOutRequest)(nil),              // 14: vault.v1.MsgToggleSwapOutRequest
-	(*MsgToggleSwapOutResponse)(nil),             // 15: vault.v1.MsgToggleSwapOutResponse
-	(*MsgDepositInterestFundsRequest)(nil),       // 16: vault.v1.MsgDepositInterestFundsRequest
-	(*MsgDepositInterestFundsResponse)(nil),      // 17: vault.v1.MsgDepositInterestFundsResponse
-	(*MsgWithdrawInterestFundsRequest)(nil),      // 18: vault.v1.MsgWithdrawInterestFundsRequest
-	(*MsgWithdrawInterestFundsResponse)(nil),     // 19: vault.v1.MsgWithdrawInterestFundsResponse
-	(*MsgDepositPrincipalFundsRequest)(nil),      // 20: vault.v1.MsgDepositPrincipalFundsRequest
-	(*MsgDepositPrincipalFundsResponse)(nil),     // 21: vault.v1.MsgDepositPrincipalFundsResponse
-	(*MsgWithdrawPrincipalFundsRequest)(nil),     // 22: vault.v1.MsgWithdrawPrincipalFundsRequest
-	(*MsgWithdrawPrincipalFundsResponse)(nil),    // 23: vault.v1.MsgWithdrawPrincipalFundsResponse
-	(*MsgExpeditePendingWithdrawalRequest)(nil),  // 24: vault.v1.MsgExpeditePendingWithdrawalRequest
-	(*MsgExpeditePendingWithdrawalResponse)(nil), // 25: vault.v1.MsgExpeditePendingWithdrawalResponse
-	(*v1beta1.Coin)(nil),                         // 26: cosmos.base.v1beta1.Coin
+	(*MsgCreateVaultRequest)(nil),             // 0: vault.v1.MsgCreateVaultRequest
+	(*MsgCreateVaultResponse)(nil),            // 1: vault.v1.MsgCreateVaultResponse
+	(*MsgSwapInRequest)(nil),                  // 2: vault.v1.MsgSwapInRequest
+	(*MsgSwapInResponse)(nil),                 // 3: vault.v1.MsgSwapInResponse
+	(*MsgSwapOutRequest)(nil),                 // 4: vault.v1.MsgSwapOutRequest
+	(*MsgSwapOutResponse)(nil),                // 5: vault.v1.MsgSwapOutResponse
+	(*MsgUpdateMinInterestRateRequest)(nil),   // 6: vault.v1.MsgUpdateMinInterestRateRequest
+	(*MsgUpdateMinInterestRateResponse)(nil),  // 7: vault.v1.MsgUpdateMinInterestRateResponse
+	(*MsgUpdateMaxInterestRateRequest)(nil),   // 8: vault.v1.MsgUpdateMaxInterestRateRequest
+	(*MsgUpdateMaxInterestRateResponse)(nil),  // 9: vault.v1.MsgUpdateMaxInterestRateResponse
+	(*MsgUpdateInterestRateRequest)(nil),      // 10: vault.v1.MsgUpdateInterestRateRequest
+	(*MsgUpdateInterestRateResponse)(nil),     // 11: vault.v1.MsgUpdateInterestRateResponse
+	(*MsgToggleSwapInRequest)(nil),            // 12: vault.v1.MsgToggleSwapInRequest
+	(*MsgToggleSwapInResponse)(nil),           // 13: vault.v1.MsgToggleSwapInResponse
+	(*MsgToggleSwapOutRequest)(nil),           // 14: vault.v1.MsgToggleSwapOutRequest
+	(*MsgToggleSwapOutResponse)(nil),          // 15: vault.v1.MsgToggleSwapOutResponse
+	(*MsgDepositInterestFundsRequest)(nil),    // 16: vault.v1.MsgDepositInterestFundsRequest
+	(*MsgDepositInterestFundsResponse)(nil),   // 17: vault.v1.MsgDepositInterestFundsResponse
+	(*MsgWithdrawInterestFundsRequest)(nil),   // 18: vault.v1.MsgWithdrawInterestFundsRequest
+	(*MsgWithdrawInterestFundsResponse)(nil),  // 19: vault.v1.MsgWithdrawInterestFundsResponse
+	(*MsgDepositPrincipalFundsRequest)(nil),   // 20: vault.v1.MsgDepositPrincipalFundsRequest
+	(*MsgDepositPrincipalFundsResponse)(nil),  // 21: vault.v1.MsgDepositPrincipalFundsResponse
+	(*MsgWithdrawPrincipalFundsRequest)(nil),  // 22: vault.v1.MsgWithdrawPrincipalFundsRequest
+	(*MsgWithdrawPrincipalFundsResponse)(nil), // 23: vault.v1.MsgWithdrawPrincipalFundsResponse
+	(*MsgExpeditePendingSwapOutRequest)(nil),  // 24: vault.v1.MsgExpeditePendingSwapOutRequest
+	(*MsgExpeditePendingSwapOutResponse)(nil), // 25: vault.v1.MsgExpeditePendingSwapOutResponse
+	(*v1beta1.Coin)(nil),                      // 26: cosmos.base.v1beta1.Coin
 }
 var file_vault_v1_tx_proto_depIdxs = []int32{
 	26, // 0: vault.v1.MsgSwapInRequest.assets:type_name -> cosmos.base.v1beta1.Coin
@@ -13308,7 +13308,7 @@ var file_vault_v1_tx_proto_depIdxs = []int32{
 	18, // 15: vault.v1.Msg.WithdrawInterestFunds:input_type -> vault.v1.MsgWithdrawInterestFundsRequest
 	20, // 16: vault.v1.Msg.DepositPrincipalFunds:input_type -> vault.v1.MsgDepositPrincipalFundsRequest
 	22, // 17: vault.v1.Msg.WithdrawPrincipalFunds:input_type -> vault.v1.MsgWithdrawPrincipalFundsRequest
-	24, // 18: vault.v1.Msg.ExpeditePendingWithdrawal:input_type -> vault.v1.MsgExpeditePendingWithdrawalRequest
+	24, // 18: vault.v1.Msg.ExpeditePendingSwapOut:input_type -> vault.v1.MsgExpeditePendingSwapOutRequest
 	1,  // 19: vault.v1.Msg.CreateVault:output_type -> vault.v1.MsgCreateVaultResponse
 	3,  // 20: vault.v1.Msg.SwapIn:output_type -> vault.v1.MsgSwapInResponse
 	5,  // 21: vault.v1.Msg.SwapOut:output_type -> vault.v1.MsgSwapOutResponse
@@ -13321,7 +13321,7 @@ var file_vault_v1_tx_proto_depIdxs = []int32{
 	19, // 28: vault.v1.Msg.WithdrawInterestFunds:output_type -> vault.v1.MsgWithdrawInterestFundsResponse
 	21, // 29: vault.v1.Msg.DepositPrincipalFunds:output_type -> vault.v1.MsgDepositPrincipalFundsResponse
 	23, // 30: vault.v1.Msg.WithdrawPrincipalFunds:output_type -> vault.v1.MsgWithdrawPrincipalFundsResponse
-	25, // 31: vault.v1.Msg.ExpeditePendingWithdrawal:output_type -> vault.v1.MsgExpeditePendingWithdrawalResponse
+	25, // 31: vault.v1.Msg.ExpeditePendingSwapOut:output_type -> vault.v1.MsgExpeditePendingSwapOutResponse
 	19, // [19:32] is the sub-list for method output_type
 	6,  // [6:19] is the sub-list for method input_type
 	6,  // [6:6] is the sub-list for extension type_name
@@ -13624,7 +13624,7 @@ func file_vault_v1_tx_proto_init() {
 			}
 		}
 		file_vault_v1_tx_proto_msgTypes[24].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgExpeditePendingWithdrawalRequest); i {
+			switch v := v.(*MsgExpeditePendingSwapOutRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -13636,7 +13636,7 @@ func file_vault_v1_tx_proto_init() {
 			}
 		}
 		file_vault_v1_tx_proto_msgTypes[25].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgExpeditePendingWithdrawalResponse); i {
+			switch v := v.(*MsgExpeditePendingSwapOutResponse); i {
 			case 0:
 				return &v.state
 			case 1:

@@ -19,7 +19,7 @@ import (
 	"github.com/provlabs/vault/utils/mocks"
 )
 
-func newTestPendingWithdrawalQueue(t *testing.T) (sdk.Context, *queue.PendingWithdrawalQueue) {
+func newTestPendingSwapOutQueue(t *testing.T) (sdk.Context, *queue.PendingSwapOutQueue) {
 	t.Helper()
 	storeKey := storetypes.NewKVStoreKey(vtypes.ModuleName)
 	testCtx := testutil.DefaultContextWithDB(t, storeKey, storetypes.NewTransientStoreKey("transient_test"))
@@ -34,18 +34,18 @@ func newTestPendingWithdrawalQueue(t *testing.T) (sdk.Context, *queue.PendingWit
 	kvStoreService := runtime.NewKVStoreService(storeKey)
 	sb := collections.NewSchemaBuilder(kvStoreService)
 
-	q := queue.NewPendingWithdrawalQueue(sb, cfg.Codec)
+	q := queue.NewPendingSwapOutQueue(sb, cfg.Codec)
 	_, err := sb.Build()
 	require.NoError(t, err)
 	return testCtx.Ctx.WithLogger(log.NewNopLogger()), q
 }
 
-func TestPendingWithdrawalQueue_Codec(t *testing.T) {
-	ctx, q := newTestPendingWithdrawalQueue(t)
+func TestPendingSwapOutQueue_Codec(t *testing.T) {
+	ctx, q := newTestPendingSwapOutQueue(t)
 
 	addr := utils.TestProvlabsAddress()
 	assets := sdk.NewInt64Coin("usd", 100)
-	originalReq := &vtypes.PendingWithdrawal{
+	originalReq := &vtypes.PendingSwapOut{
 		Owner:        addr.Bech32,
 		VaultAddress: addr.Bech32,
 		Assets:       assets,
@@ -54,9 +54,9 @@ func TestPendingWithdrawalQueue_Codec(t *testing.T) {
 	_, err := q.Enqueue(ctx, time.Now().UnixNano(), originalReq)
 	require.NoError(t, err)
 
-	var retrievedReq vtypes.PendingWithdrawal
+	var retrievedReq vtypes.PendingSwapOut
 	retrieved := false
-	err = q.Walk(ctx, func(timestamp int64, id uint64, vault sdk.AccAddress, req vtypes.PendingWithdrawal) (stop bool, err error) {
+	err = q.Walk(ctx, func(timestamp int64, id uint64, vault sdk.AccAddress, req vtypes.PendingSwapOut) (stop bool, err error) {
 		retrievedReq = req
 		retrieved = true
 		return true, nil // stop after first item
@@ -70,36 +70,36 @@ func TestPendingWithdrawalQueue_Codec(t *testing.T) {
 	require.Equal(t, originalReq.Assets, retrievedReq.Assets)
 }
 
-func TestPendingWithdrawalQueueWalk(t *testing.T) {
+func TestPendingSwapOutQueueWalk(t *testing.T) {
 	addr1 := utils.TestProvlabsAddress()
 	addr2 := utils.TestProvlabsAddress()
 	if addr1.Bech32 > addr2.Bech32 {
 		addr1, addr2 = addr2, addr1
 	}
-	req1 := &vtypes.PendingWithdrawal{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, Assets: sdk.NewInt64Coin("ylds", 25)}
-	req2 := &vtypes.PendingWithdrawal{VaultAddress: addr2.Bech32, Owner: addr2.Bech32, Assets: sdk.NewInt64Coin("ylds", 50)}
-	req3 := &vtypes.PendingWithdrawal{VaultAddress: addr1.Bech32, Owner: addr2.Bech32, Assets: sdk.NewInt64Coin("ylds", 100)}
+	req1 := &vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, Assets: sdk.NewInt64Coin("ylds", 25)}
+	req2 := &vtypes.PendingSwapOut{VaultAddress: addr2.Bech32, Owner: addr2.Bech32, Assets: sdk.NewInt64Coin("ylds", 50)}
+	req3 := &vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr2.Bech32, Assets: sdk.NewInt64Coin("ylds", 100)}
 	boom := errors.New("boom")
 
 	tests := []struct {
 		name         string
-		setup        func(t *testing.T, ctx sdk.Context, q *queue.PendingWithdrawalQueue)
+		setup        func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue)
 		expectedErr  error
-		expectedSeen []vtypes.PendingWithdrawal
+		expectedSeen []vtypes.PendingSwapOut
 	}{
 		{
 			name: "success",
-			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingWithdrawalQueue) {
+			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) {
 				_, err := q.Enqueue(ctx, 1, req1)
 				require.NoError(t, err)
 				_, err = q.Enqueue(ctx, 2, req2)
 				require.NoError(t, err)
 			},
-			expectedSeen: []vtypes.PendingWithdrawal{*req1, *req2},
+			expectedSeen: []vtypes.PendingSwapOut{*req1, *req2},
 		},
 		{
 			name: "success with order preservation",
-			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingWithdrawalQueue) {
+			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) {
 				_, err := q.Enqueue(ctx, 1, req1)
 				require.NoError(t, err)
 				_, err = q.Enqueue(ctx, 2, req2)
@@ -107,36 +107,36 @@ func TestPendingWithdrawalQueueWalk(t *testing.T) {
 				_, err = q.Enqueue(ctx, 3, req3)
 				require.NoError(t, err)
 			},
-			expectedSeen: []vtypes.PendingWithdrawal{*req1, *req2, *req3},
+			expectedSeen: []vtypes.PendingSwapOut{*req1, *req2, *req3},
 		},
 		{
 			name:         "empty",
-			setup:        func(t *testing.T, ctx sdk.Context, q *queue.PendingWithdrawalQueue) {},
-			expectedSeen: []vtypes.PendingWithdrawal{},
+			setup:        func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) {},
+			expectedSeen: []vtypes.PendingSwapOut{},
 		},
 		{
 			name: "error",
-			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingWithdrawalQueue) {
+			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) {
 				_, err := q.Enqueue(ctx, 1, req1)
 				require.NoError(t, err)
 				_, err = q.Enqueue(ctx, 2, req2)
 				require.NoError(t, err)
 			},
 			expectedErr:  boom,
-			expectedSeen: []vtypes.PendingWithdrawal{*req1, *req2},
+			expectedSeen: []vtypes.PendingSwapOut{*req1, *req2},
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			ctx, q := newTestPendingWithdrawalQueue(t)
+			ctx, q := newTestPendingSwapOutQueue(t)
 			if tc.setup != nil {
 				tc.setup(t, ctx, q)
 			}
 
-			seen := []vtypes.PendingWithdrawal{}
+			seen := []vtypes.PendingSwapOut{}
 			calls := 0
-			err := q.Walk(ctx, func(timestamp int64, id uint64, vault sdk.AccAddress, req vtypes.PendingWithdrawal) (stop bool, err error) {
+			err := q.Walk(ctx, func(timestamp int64, id uint64, vault sdk.AccAddress, req vtypes.PendingSwapOut) (stop bool, err error) {
 				calls++
 				seen = append(seen, req)
 				if tc.expectedErr != nil && calls == len(tc.expectedSeen) {
@@ -155,23 +155,23 @@ func TestPendingWithdrawalQueueWalk(t *testing.T) {
 	}
 }
 
-func TestPendingWithdrawalQueueEnqueueAndDequeue(t *testing.T) {
+func TestPendingSwapOutQueueEnqueueAndDequeue(t *testing.T) {
 	addr1 := utils.TestProvlabsAddress()
 	addr2 := utils.TestProvlabsAddress()
 
 	tests := []struct {
 		name        string
-		setup       func(t *testing.T, ctx sdk.Context, q *queue.PendingWithdrawalQueue) (int64, sdk.AccAddress, uint64)
+		setup       func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) (int64, sdk.AccAddress, uint64)
 		timestamp   int64
-		req         *vtypes.PendingWithdrawal
+		req         *vtypes.PendingSwapOut
 		dequeue     bool
 		expectError bool
 		errorMsg    string
 	}{
 		{
 			name: "successful enqueue and dequeue",
-			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingWithdrawalQueue) (int64, sdk.AccAddress, uint64) {
-				req := &vtypes.PendingWithdrawal{VaultAddress: addr1.Bech32, Owner: addr1.Bech32}
+			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) (int64, sdk.AccAddress, uint64) {
+				req := &vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32}
 				id, err := q.Enqueue(ctx, 1, req)
 				require.NoError(t, err)
 				return 1, sdk.MustAccAddressFromBech32(addr1.Bech32), id
@@ -181,7 +181,7 @@ func TestPendingWithdrawalQueueEnqueueAndDequeue(t *testing.T) {
 		},
 		{
 			name: "dequeue non-existent key",
-			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingWithdrawalQueue) (int64, sdk.AccAddress, uint64) {
+			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) (int64, sdk.AccAddress, uint64) {
 				return 1, sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32), 999
 			},
 			dequeue:     true,
@@ -189,7 +189,7 @@ func TestPendingWithdrawalQueueEnqueueAndDequeue(t *testing.T) {
 		},
 		{
 			name: "enqueue with invalid vault address",
-			req: &vtypes.PendingWithdrawal{
+			req: &vtypes.PendingSwapOut{
 				VaultAddress: "invalid",
 			},
 			timestamp:   1,
@@ -198,7 +198,7 @@ func TestPendingWithdrawalQueueEnqueueAndDequeue(t *testing.T) {
 		},
 		{
 			name: "enqueue with negative timestamp",
-			req: &vtypes.PendingWithdrawal{
+			req: &vtypes.PendingSwapOut{
 				VaultAddress: addr2.Bech32,
 			},
 			timestamp:   -1,
@@ -208,7 +208,7 @@ func TestPendingWithdrawalQueueEnqueueAndDequeue(t *testing.T) {
 		},
 		{
 			name: "dequeue with negative timestamp",
-			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingWithdrawalQueue) (int64, sdk.AccAddress, uint64) {
+			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) (int64, sdk.AccAddress, uint64) {
 				return -1, sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32), 1
 			},
 			dequeue:     true,
@@ -219,7 +219,7 @@ func TestPendingWithdrawalQueueEnqueueAndDequeue(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			ctx, q := newTestPendingWithdrawalQueue(t)
+			ctx, q := newTestPendingSwapOutQueue(t)
 
 			if tc.dequeue {
 				timestamp, addr, id := tc.setup(t, ctx, q)
@@ -251,24 +251,24 @@ func TestPendingWithdrawalQueueEnqueueAndDequeue(t *testing.T) {
 	}
 }
 
-func TestPendingWithdrawalQueue_GetByID(t *testing.T) {
+func TestPendingSwapOutQueue_GetByID(t *testing.T) {
 	addr1 := utils.TestProvlabsAddress()
-	req1 := &vtypes.PendingWithdrawal{VaultAddress: addr1.Bech32, Owner: addr1.Bech32}
+	req1 := &vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32}
 
 	tests := map[string]struct {
-		setup    func(t *testing.T, ctx sdk.Context, q *queue.PendingWithdrawalQueue) uint64
+		setup    func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) uint64
 		id       uint64
 		errorMsg string
 	}{
 		"success": {
-			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingWithdrawalQueue) uint64 {
+			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) uint64 {
 				id, err := q.Enqueue(ctx, 123, req1)
 				require.NoError(t, err)
 				return id
 			},
 		},
 		"failure - invalid id": {
-			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingWithdrawalQueue) uint64 {
+			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) uint64 {
 				return 999
 			},
 			errorMsg: "not found",
@@ -277,7 +277,7 @@ func TestPendingWithdrawalQueue_GetByID(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, q := newTestPendingWithdrawalQueue(t)
+			ctx, q := newTestPendingSwapOutQueue(t)
 			id := tc.setup(t, ctx, q)
 
 			pendingTime, req, err := q.GetByID(ctx, id)
@@ -296,26 +296,26 @@ func TestPendingWithdrawalQueue_GetByID(t *testing.T) {
 	}
 }
 
-func TestPendingWithdrawalQueue_ExpediteWithdrawal(t *testing.T) {
+func TestPendingSwapOutQueue_ExpediteSwapOut(t *testing.T) {
 	addr1 := utils.TestProvlabsAddress()
 	addr2 := utils.TestProvlabsAddress()
-	req1 := &vtypes.PendingWithdrawal{VaultAddress: addr1.Bech32, Owner: addr1.Bech32}
-	req2 := &vtypes.PendingWithdrawal{VaultAddress: addr2.Bech32, Owner: addr2.Bech32}
+	req1 := &vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32}
+	req2 := &vtypes.PendingSwapOut{VaultAddress: addr2.Bech32, Owner: addr2.Bech32}
 
 	tests := map[string]struct {
-		setup      func(t *testing.T, ctx sdk.Context, q *queue.PendingWithdrawalQueue) (uint64, int64, sdk.AccAddress)
+		setup      func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) (uint64, int64, sdk.AccAddress)
 		expediteId uint64
 		errorMsg   string
 	}{
 		"success with one entry": {
-			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingWithdrawalQueue) (uint64, int64, sdk.AccAddress) {
+			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) (uint64, int64, sdk.AccAddress) {
 				id, err := q.Enqueue(ctx, 123, req1)
 				require.NoError(t, err)
 				return id, 123, sdk.MustAccAddressFromBech32(addr1.Bech32)
 			},
 		},
 		"success with two entries, second is expedited": {
-			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingWithdrawalQueue) (uint64, int64, sdk.AccAddress) {
+			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) (uint64, int64, sdk.AccAddress) {
 				_, err := q.Enqueue(ctx, 123, req1)
 				require.NoError(t, err)
 				id2, err := q.Enqueue(ctx, 456, req2)
@@ -324,14 +324,14 @@ func TestPendingWithdrawalQueue_ExpediteWithdrawal(t *testing.T) {
 			},
 		},
 		"success on entry with timestamp 0": {
-			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingWithdrawalQueue) (uint64, int64, sdk.AccAddress) {
+			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) (uint64, int64, sdk.AccAddress) {
 				id, err := q.Enqueue(ctx, 0, req1)
 				require.NoError(t, err)
 				return id, 0, sdk.MustAccAddressFromBech32(addr1.Bech32)
 			},
 		},
 		"failure if entry does not exist": {
-			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingWithdrawalQueue) (uint64, int64, sdk.AccAddress) {
+			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) (uint64, int64, sdk.AccAddress) {
 				return 999, 0, nil
 			},
 			expediteId: 999,
@@ -341,13 +341,13 @@ func TestPendingWithdrawalQueue_ExpediteWithdrawal(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, q := newTestPendingWithdrawalQueue(t)
+			ctx, q := newTestPendingSwapOutQueue(t)
 			id, oldTimestamp, addr := tc.setup(t, ctx, q)
 			if tc.expediteId != 0 {
 				id = tc.expediteId
 			}
 
-			err := q.ExpediteWithdrawal(ctx, id)
+			err := q.ExpediteSwapOut(ctx, id)
 
 			if len(tc.errorMsg) > 0 {
 				require.Error(t, err)
@@ -369,25 +369,25 @@ func TestPendingWithdrawalQueue_ExpediteWithdrawal(t *testing.T) {
 	}
 }
 
-func TestPendingWithdrawalQueue_Export(t *testing.T) {
+func TestPendingSwapOutQueue_Export(t *testing.T) {
 	addr1 := utils.TestProvlabsAddress()
 	addr2 := utils.TestProvlabsAddress()
 	if addr1.Bech32 > addr2.Bech32 {
 		addr1, addr2 = addr2, addr1
 	}
-	req1 := &vtypes.PendingWithdrawal{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, Assets: sdk.NewInt64Coin("usd", 100)}
-	req2 := &vtypes.PendingWithdrawal{VaultAddress: addr2.Bech32, Owner: addr2.Bech32, Assets: sdk.NewInt64Coin("usd", 200)}
-	req3 := &vtypes.PendingWithdrawal{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, Assets: sdk.NewInt64Coin("usd", 300)}
+	req1 := &vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, Assets: sdk.NewInt64Coin("usd", 100)}
+	req2 := &vtypes.PendingSwapOut{VaultAddress: addr2.Bech32, Owner: addr2.Bech32, Assets: sdk.NewInt64Coin("usd", 200)}
+	req3 := &vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, Assets: sdk.NewInt64Coin("usd", 300)}
 
 	tests := []struct {
 		name          string
-		setup         func(t *testing.T, ctx sdk.Context, q *queue.PendingWithdrawalQueue)
-		expectedQueue vtypes.PendingWithdrawalQueue
+		setup         func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue)
+		expectedQueue vtypes.PendingSwapOutQueue
 		expectError   bool
 	}{
 		{
 			name: "multiple elements",
-			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingWithdrawalQueue) {
+			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) {
 				_, err := q.Enqueue(ctx, 1, req1)
 				require.NoError(t, err)
 				_, err = q.Enqueue(ctx, 2, req2)
@@ -395,24 +395,24 @@ func TestPendingWithdrawalQueue_Export(t *testing.T) {
 				_, err = q.Enqueue(ctx, 1, req3)
 				require.NoError(t, err)
 			},
-			expectedQueue: vtypes.PendingWithdrawalQueue{
+			expectedQueue: vtypes.PendingSwapOutQueue{
 				LatestSequenceNumber: 3,
-				Entries: []vtypes.PendingWithdrawalQueueEntry{
-					{Time: 1, Id: 0, Withdrawal: *req1},
-					{Time: 1, Id: 2, Withdrawal: *req3},
-					{Time: 2, Id: 1, Withdrawal: *req2},
+				Entries: []vtypes.PendingSwapOutQueueEntry{
+					{Time: 1, Id: 0, SwapOut: *req1},
+					{Time: 1, Id: 2, SwapOut: *req3},
+					{Time: 2, Id: 1, SwapOut: *req2},
 				},
 			},
 			expectError: false,
 		},
 		{
 			name: "no elements",
-			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingWithdrawalQueue) {
+			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) {
 				// No elements enqueued
 			},
-			expectedQueue: vtypes.PendingWithdrawalQueue{
+			expectedQueue: vtypes.PendingSwapOutQueue{
 				LatestSequenceNumber: 0,
-				Entries:              []vtypes.PendingWithdrawalQueueEntry{},
+				Entries:              []vtypes.PendingSwapOutQueueEntry{},
 			},
 			expectError: false,
 		},
@@ -420,7 +420,7 @@ func TestPendingWithdrawalQueue_Export(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			ctx, q := newTestPendingWithdrawalQueue(t)
+			ctx, q := newTestPendingSwapOutQueue(t)
 			tc.setup(t, ctx, q)
 
 			exportedQueue, err := q.Export(ctx)
@@ -434,46 +434,46 @@ func TestPendingWithdrawalQueue_Export(t *testing.T) {
 				for i, entry := range tc.expectedQueue.Entries {
 					require.Equal(t, entry.Time, exportedQueue.Entries[i].Time)
 					require.Equal(t, entry.Id, exportedQueue.Entries[i].Id)
-					require.Equal(t, entry.Withdrawal.Owner, exportedQueue.Entries[i].Withdrawal.Owner)
-					require.Equal(t, entry.Withdrawal.VaultAddress, exportedQueue.Entries[i].Withdrawal.VaultAddress)
-					require.Equal(t, entry.Withdrawal.Assets.String(), exportedQueue.Entries[i].Withdrawal.Assets.String())
+					require.Equal(t, entry.SwapOut.Owner, exportedQueue.Entries[i].SwapOut.Owner)
+					require.Equal(t, entry.SwapOut.VaultAddress, exportedQueue.Entries[i].SwapOut.VaultAddress)
+					require.Equal(t, entry.SwapOut.Assets.String(), exportedQueue.Entries[i].SwapOut.Assets.String())
 				}
 			}
 		})
 	}
 }
 
-func TestPendingWithdrawalQueue_Import(t *testing.T) {
+func TestPendingSwapOutQueue_Import(t *testing.T) {
 	addr1 := utils.TestProvlabsAddress()
 	addr2 := utils.TestProvlabsAddress()
 	if addr1.Bech32 > addr2.Bech32 {
 		addr1, addr2 = addr2, addr1
 	}
-	req1 := vtypes.PendingWithdrawal{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, Assets: sdk.NewInt64Coin("usd", 100)}
-	req2 := vtypes.PendingWithdrawal{VaultAddress: addr2.Bech32, Owner: addr2.Bech32, Assets: sdk.NewInt64Coin("usd", 200)}
-	req3 := vtypes.PendingWithdrawal{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, Assets: sdk.NewInt64Coin("usd", 300)}
+	req1 := vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, Assets: sdk.NewInt64Coin("usd", 100)}
+	req2 := vtypes.PendingSwapOut{VaultAddress: addr2.Bech32, Owner: addr2.Bech32, Assets: sdk.NewInt64Coin("usd", 200)}
+	req3 := vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, Assets: sdk.NewInt64Coin("usd", 300)}
 
 	tests := []struct {
 		name     string
-		genQueue *vtypes.PendingWithdrawalQueue
+		genQueue *vtypes.PendingSwapOutQueue
 		errorMsg string
 	}{
 		{
 			name: "multiple elements",
-			genQueue: &vtypes.PendingWithdrawalQueue{
+			genQueue: &vtypes.PendingSwapOutQueue{
 				LatestSequenceNumber: 2,
-				Entries: []vtypes.PendingWithdrawalQueueEntry{
-					{Time: 1, Id: 0, Withdrawal: req1},
-					{Time: 2, Id: 1, Withdrawal: req2},
-					{Time: 1, Id: 2, Withdrawal: req3},
+				Entries: []vtypes.PendingSwapOutQueueEntry{
+					{Time: 1, Id: 0, SwapOut: req1},
+					{Time: 2, Id: 1, SwapOut: req2},
+					{Time: 1, Id: 2, SwapOut: req3},
 				},
 			},
 		},
 		{
 			name: "empty list",
-			genQueue: &vtypes.PendingWithdrawalQueue{
+			genQueue: &vtypes.PendingSwapOutQueue{
 				LatestSequenceNumber: 5,
-				Entries:              []vtypes.PendingWithdrawalQueueEntry{},
+				Entries:              []vtypes.PendingSwapOutQueueEntry{},
 			},
 		},
 		{
@@ -483,29 +483,29 @@ func TestPendingWithdrawalQueue_Import(t *testing.T) {
 		},
 		{
 			name: "bad vault address",
-			genQueue: &vtypes.PendingWithdrawalQueue{
+			genQueue: &vtypes.PendingSwapOutQueue{
 				LatestSequenceNumber: 1,
-				Entries: []vtypes.PendingWithdrawalQueueEntry{
-					{Time: 1, Id: 0, Withdrawal: vtypes.PendingWithdrawal{VaultAddress: "badaddress", Owner: addr1.Bech32, Assets: sdk.NewInt64Coin("usd", 100)}},
+				Entries: []vtypes.PendingSwapOutQueueEntry{
+					{Time: 1, Id: 0, SwapOut: vtypes.PendingSwapOut{VaultAddress: "badaddress", Owner: addr1.Bech32, Assets: sdk.NewInt64Coin("usd", 100)}},
 				},
 			},
-			errorMsg: "invalid vault address in pending withdrawal queue",
+			errorMsg: "invalid vault address in pending swap out queue",
 		},
 		{
 			name: "bad owner address",
-			genQueue: &vtypes.PendingWithdrawalQueue{
+			genQueue: &vtypes.PendingSwapOutQueue{
 				LatestSequenceNumber: 1,
-				Entries: []vtypes.PendingWithdrawalQueueEntry{
-					{Time: 1, Id: 0, Withdrawal: vtypes.PendingWithdrawal{VaultAddress: addr1.Bech32, Owner: "badaddress", Assets: sdk.NewInt64Coin("usd", 100)}},
+				Entries: []vtypes.PendingSwapOutQueueEntry{
+					{Time: 1, Id: 0, SwapOut: vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: "badaddress", Assets: sdk.NewInt64Coin("usd", 100)}},
 				},
 			},
-			errorMsg: "invalid owner address in pending withdrawal queue",
+			errorMsg: "invalid owner address in pending swap out queue",
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			ctx, q := newTestPendingWithdrawalQueue(t)
+			ctx, q := newTestPendingSwapOutQueue(t)
 
 			err := q.Import(ctx, tc.genQueue)
 
@@ -520,11 +520,11 @@ func TestPendingWithdrawalQueue_Import(t *testing.T) {
 				require.Equal(t, tc.genQueue.LatestSequenceNumber, seq)
 
 				for _, entry := range tc.genQueue.Entries {
-					vaultAddr, err := sdk.AccAddressFromBech32(entry.Withdrawal.VaultAddress)
+					vaultAddr, err := sdk.AccAddressFromBech32(entry.SwapOut.VaultAddress)
 					require.NoError(t, err)
 					req, err := q.IndexedMap.Get(ctx, collections.Join3(entry.Time, entry.Id, vaultAddr))
 					require.NoError(t, err)
-					require.Equal(t, entry.Withdrawal, req)
+					require.Equal(t, entry.SwapOut, req)
 				}
 			}
 		})

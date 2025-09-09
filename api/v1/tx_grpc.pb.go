@@ -19,19 +19,19 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Msg_CreateVault_FullMethodName               = "/vault.v1.Msg/CreateVault"
-	Msg_SwapIn_FullMethodName                    = "/vault.v1.Msg/SwapIn"
-	Msg_SwapOut_FullMethodName                   = "/vault.v1.Msg/SwapOut"
-	Msg_UpdateMinInterestRate_FullMethodName     = "/vault.v1.Msg/UpdateMinInterestRate"
-	Msg_UpdateMaxInterestRate_FullMethodName     = "/vault.v1.Msg/UpdateMaxInterestRate"
-	Msg_UpdateInterestRate_FullMethodName        = "/vault.v1.Msg/UpdateInterestRate"
-	Msg_ToggleSwapIn_FullMethodName              = "/vault.v1.Msg/ToggleSwapIn"
-	Msg_ToggleSwapOut_FullMethodName             = "/vault.v1.Msg/ToggleSwapOut"
-	Msg_DepositInterestFunds_FullMethodName      = "/vault.v1.Msg/DepositInterestFunds"
-	Msg_WithdrawInterestFunds_FullMethodName     = "/vault.v1.Msg/WithdrawInterestFunds"
-	Msg_DepositPrincipalFunds_FullMethodName     = "/vault.v1.Msg/DepositPrincipalFunds"
-	Msg_WithdrawPrincipalFunds_FullMethodName    = "/vault.v1.Msg/WithdrawPrincipalFunds"
-	Msg_ExpeditePendingWithdrawal_FullMethodName = "/vault.v1.Msg/ExpeditePendingWithdrawal"
+	Msg_CreateVault_FullMethodName            = "/vault.v1.Msg/CreateVault"
+	Msg_SwapIn_FullMethodName                 = "/vault.v1.Msg/SwapIn"
+	Msg_SwapOut_FullMethodName                = "/vault.v1.Msg/SwapOut"
+	Msg_UpdateMinInterestRate_FullMethodName  = "/vault.v1.Msg/UpdateMinInterestRate"
+	Msg_UpdateMaxInterestRate_FullMethodName  = "/vault.v1.Msg/UpdateMaxInterestRate"
+	Msg_UpdateInterestRate_FullMethodName     = "/vault.v1.Msg/UpdateInterestRate"
+	Msg_ToggleSwapIn_FullMethodName           = "/vault.v1.Msg/ToggleSwapIn"
+	Msg_ToggleSwapOut_FullMethodName          = "/vault.v1.Msg/ToggleSwapOut"
+	Msg_DepositInterestFunds_FullMethodName   = "/vault.v1.Msg/DepositInterestFunds"
+	Msg_WithdrawInterestFunds_FullMethodName  = "/vault.v1.Msg/WithdrawInterestFunds"
+	Msg_DepositPrincipalFunds_FullMethodName  = "/vault.v1.Msg/DepositPrincipalFunds"
+	Msg_WithdrawPrincipalFunds_FullMethodName = "/vault.v1.Msg/WithdrawPrincipalFunds"
+	Msg_ExpeditePendingSwapOut_FullMethodName = "/vault.v1.Msg/ExpeditePendingSwapOut"
 )
 
 // MsgClient is the client API for Msg service.
@@ -64,8 +64,8 @@ type MsgClient interface {
 	DepositPrincipalFunds(ctx context.Context, in *MsgDepositPrincipalFundsRequest, opts ...grpc.CallOption) (*MsgDepositPrincipalFundsResponse, error)
 	// WithdrawPrincipalFunds allows withdrawing principal funds from a vault.
 	WithdrawPrincipalFunds(ctx context.Context, in *MsgWithdrawPrincipalFundsRequest, opts ...grpc.CallOption) (*MsgWithdrawPrincipalFundsResponse, error)
-	// ExpeditePendingWithdrawal expedites a pending withdrawal from a vault.
-	ExpeditePendingWithdrawal(ctx context.Context, in *MsgExpeditePendingWithdrawalRequest, opts ...grpc.CallOption) (*MsgExpeditePendingWithdrawalResponse, error)
+	// ExpeditePendingSwapOut expedites a pending swap out from a vault.
+	ExpeditePendingSwapOut(ctx context.Context, in *MsgExpeditePendingSwapOutRequest, opts ...grpc.CallOption) (*MsgExpeditePendingSwapOutResponse, error)
 }
 
 type msgClient struct {
@@ -196,10 +196,10 @@ func (c *msgClient) WithdrawPrincipalFunds(ctx context.Context, in *MsgWithdrawP
 	return out, nil
 }
 
-func (c *msgClient) ExpeditePendingWithdrawal(ctx context.Context, in *MsgExpeditePendingWithdrawalRequest, opts ...grpc.CallOption) (*MsgExpeditePendingWithdrawalResponse, error) {
+func (c *msgClient) ExpeditePendingSwapOut(ctx context.Context, in *MsgExpeditePendingSwapOutRequest, opts ...grpc.CallOption) (*MsgExpeditePendingSwapOutResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(MsgExpeditePendingWithdrawalResponse)
-	err := c.cc.Invoke(ctx, Msg_ExpeditePendingWithdrawal_FullMethodName, in, out, cOpts...)
+	out := new(MsgExpeditePendingSwapOutResponse)
+	err := c.cc.Invoke(ctx, Msg_ExpeditePendingSwapOut_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -236,8 +236,8 @@ type MsgServer interface {
 	DepositPrincipalFunds(context.Context, *MsgDepositPrincipalFundsRequest) (*MsgDepositPrincipalFundsResponse, error)
 	// WithdrawPrincipalFunds allows withdrawing principal funds from a vault.
 	WithdrawPrincipalFunds(context.Context, *MsgWithdrawPrincipalFundsRequest) (*MsgWithdrawPrincipalFundsResponse, error)
-	// ExpeditePendingWithdrawal expedites a pending withdrawal from a vault.
-	ExpeditePendingWithdrawal(context.Context, *MsgExpeditePendingWithdrawalRequest) (*MsgExpeditePendingWithdrawalResponse, error)
+	// ExpeditePendingSwapOut expedites a pending swap out from a vault.
+	ExpeditePendingSwapOut(context.Context, *MsgExpeditePendingSwapOutRequest) (*MsgExpeditePendingSwapOutResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -284,8 +284,8 @@ func (UnimplementedMsgServer) DepositPrincipalFunds(context.Context, *MsgDeposit
 func (UnimplementedMsgServer) WithdrawPrincipalFunds(context.Context, *MsgWithdrawPrincipalFundsRequest) (*MsgWithdrawPrincipalFundsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method WithdrawPrincipalFunds not implemented")
 }
-func (UnimplementedMsgServer) ExpeditePendingWithdrawal(context.Context, *MsgExpeditePendingWithdrawalRequest) (*MsgExpeditePendingWithdrawalResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ExpeditePendingWithdrawal not implemented")
+func (UnimplementedMsgServer) ExpeditePendingSwapOut(context.Context, *MsgExpeditePendingSwapOutRequest) (*MsgExpeditePendingSwapOutResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ExpeditePendingSwapOut not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 func (UnimplementedMsgServer) testEmbeddedByValue()             {}
@@ -524,20 +524,20 @@ func _Msg_WithdrawPrincipalFunds_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_ExpeditePendingWithdrawal_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgExpeditePendingWithdrawalRequest)
+func _Msg_ExpeditePendingSwapOut_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgExpeditePendingSwapOutRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).ExpeditePendingWithdrawal(ctx, in)
+		return srv.(MsgServer).ExpeditePendingSwapOut(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Msg_ExpeditePendingWithdrawal_FullMethodName,
+		FullMethod: Msg_ExpeditePendingSwapOut_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).ExpeditePendingWithdrawal(ctx, req.(*MsgExpeditePendingWithdrawalRequest))
+		return srv.(MsgServer).ExpeditePendingSwapOut(ctx, req.(*MsgExpeditePendingSwapOutRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -598,8 +598,8 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_WithdrawPrincipalFunds_Handler,
 		},
 		{
-			MethodName: "ExpeditePendingWithdrawal",
-			Handler:    _Msg_ExpeditePendingWithdrawal_Handler,
+			MethodName: "ExpeditePendingSwapOut",
+			Handler:    _Msg_ExpeditePendingSwapOut_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

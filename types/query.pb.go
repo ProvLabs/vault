@@ -35,24 +35,24 @@ var _ = time.Kitchen
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// QueryPendingWithdrawalsRequest is the request message for the Query/PendingWithdrawals endpoint.
-type QueryPendingWithdrawalsRequest struct {
+// QueryPendingSwapOutsRequest is the request message for the Query/PendingSwapOuts endpoint.
+type QueryPendingSwapOutsRequest struct {
 	// pagination defines an optional pagination for the request.
 	Pagination *query.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *QueryPendingWithdrawalsRequest) Reset()         { *m = QueryPendingWithdrawalsRequest{} }
-func (m *QueryPendingWithdrawalsRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryPendingWithdrawalsRequest) ProtoMessage()    {}
-func (*QueryPendingWithdrawalsRequest) Descriptor() ([]byte, []int) {
+func (m *QueryPendingSwapOutsRequest) Reset()         { *m = QueryPendingSwapOutsRequest{} }
+func (m *QueryPendingSwapOutsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryPendingSwapOutsRequest) ProtoMessage()    {}
+func (*QueryPendingSwapOutsRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_e6d49a2800ab3e4b, []int{0}
 }
-func (m *QueryPendingWithdrawalsRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryPendingSwapOutsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryPendingWithdrawalsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryPendingSwapOutsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryPendingWithdrawalsRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryPendingSwapOutsRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -62,45 +62,45 @@ func (m *QueryPendingWithdrawalsRequest) XXX_Marshal(b []byte, deterministic boo
 		return b[:n], nil
 	}
 }
-func (m *QueryPendingWithdrawalsRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryPendingWithdrawalsRequest.Merge(m, src)
+func (m *QueryPendingSwapOutsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryPendingSwapOutsRequest.Merge(m, src)
 }
-func (m *QueryPendingWithdrawalsRequest) XXX_Size() int {
+func (m *QueryPendingSwapOutsRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryPendingWithdrawalsRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryPendingWithdrawalsRequest.DiscardUnknown(m)
+func (m *QueryPendingSwapOutsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryPendingSwapOutsRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryPendingWithdrawalsRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryPendingSwapOutsRequest proto.InternalMessageInfo
 
-func (m *QueryPendingWithdrawalsRequest) GetPagination() *query.PageRequest {
+func (m *QueryPendingSwapOutsRequest) GetPagination() *query.PageRequest {
 	if m != nil {
 		return m.Pagination
 	}
 	return nil
 }
 
-// QueryPendingWithdrawalsResponse is the response message for the Query/PendingWithdrawals endpoint.
-type QueryPendingWithdrawalsResponse struct {
-	// pending_withdrawals is a list of all pending withdrawals.
-	PendingWithdrawals []PendingWithdrawalWithTimeout `protobuf:"bytes,1,rep,name=pending_withdrawals,json=pendingWithdrawals,proto3" json:"pending_withdrawals"`
+// QueryPendingSwapOutsResponse is the response message for the Query/PendingSwapOuts endpoint.
+type QueryPendingSwapOutsResponse struct {
+	// pending_swap_outs is a list of all pending swap outs.
+	PendingSwapOuts []PendingSwapOutWithTimeout `protobuf:"bytes,1,rep,name=pending_swap_outs,json=pendingSwapOuts,proto3" json:"pending_swap_outs"`
 	// pagination defines the pagination in the response.
 	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
 }
 
-func (m *QueryPendingWithdrawalsResponse) Reset()         { *m = QueryPendingWithdrawalsResponse{} }
-func (m *QueryPendingWithdrawalsResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryPendingWithdrawalsResponse) ProtoMessage()    {}
-func (*QueryPendingWithdrawalsResponse) Descriptor() ([]byte, []int) {
+func (m *QueryPendingSwapOutsResponse) Reset()         { *m = QueryPendingSwapOutsResponse{} }
+func (m *QueryPendingSwapOutsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryPendingSwapOutsResponse) ProtoMessage()    {}
+func (*QueryPendingSwapOutsResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_e6d49a2800ab3e4b, []int{1}
 }
-func (m *QueryPendingWithdrawalsResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryPendingSwapOutsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryPendingWithdrawalsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryPendingSwapOutsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryPendingWithdrawalsResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryPendingSwapOutsResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -110,54 +110,54 @@ func (m *QueryPendingWithdrawalsResponse) XXX_Marshal(b []byte, deterministic bo
 		return b[:n], nil
 	}
 }
-func (m *QueryPendingWithdrawalsResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryPendingWithdrawalsResponse.Merge(m, src)
+func (m *QueryPendingSwapOutsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryPendingSwapOutsResponse.Merge(m, src)
 }
-func (m *QueryPendingWithdrawalsResponse) XXX_Size() int {
+func (m *QueryPendingSwapOutsResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryPendingWithdrawalsResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryPendingWithdrawalsResponse.DiscardUnknown(m)
+func (m *QueryPendingSwapOutsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryPendingSwapOutsResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryPendingWithdrawalsResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryPendingSwapOutsResponse proto.InternalMessageInfo
 
-func (m *QueryPendingWithdrawalsResponse) GetPendingWithdrawals() []PendingWithdrawalWithTimeout {
+func (m *QueryPendingSwapOutsResponse) GetPendingSwapOuts() []PendingSwapOutWithTimeout {
 	if m != nil {
-		return m.PendingWithdrawals
+		return m.PendingSwapOuts
 	}
 	return nil
 }
 
-func (m *QueryPendingWithdrawalsResponse) GetPagination() *query.PageResponse {
+func (m *QueryPendingSwapOutsResponse) GetPagination() *query.PageResponse {
 	if m != nil {
 		return m.Pagination
 	}
 	return nil
 }
 
-// PendingWithdrawalWithTimeout is a pending withdrawal with its timeout.
-type PendingWithdrawalWithTimeout struct {
-	// request_id is the unique identifier for the pending withdrawal request.
+// PendingSwapOutWithTimeout is a pending swap out with its timeout.
+type PendingSwapOutWithTimeout struct {
+	// request_id is the unique identifier for the pending swap out request.
 	RequestId uint64 `protobuf:"varint,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
-	// pending_withdrawal contains the details of the withdrawal request.
-	PendingWithdrawal PendingWithdrawal `protobuf:"bytes,2,opt,name=pending_withdrawal,json=pendingWithdrawal,proto3" json:"pending_withdrawal"`
-	// timeout is the time at which the pending withdrawal will expire if not processed.
+	// pending_swap_out contains the details of the swap out request.
+	PendingSwapOut PendingSwapOut `protobuf:"bytes,2,opt,name=pending_swap_out,json=pendingSwapOut,proto3" json:"pending_swap_out"`
+	// timeout is the time at which the pending swap out will expire if not processed.
 	Timeout time.Time `protobuf:"bytes,3,opt,name=timeout,proto3,stdtime" json:"timeout"`
 }
 
-func (m *PendingWithdrawalWithTimeout) Reset()         { *m = PendingWithdrawalWithTimeout{} }
-func (m *PendingWithdrawalWithTimeout) String() string { return proto.CompactTextString(m) }
-func (*PendingWithdrawalWithTimeout) ProtoMessage()    {}
-func (*PendingWithdrawalWithTimeout) Descriptor() ([]byte, []int) {
+func (m *PendingSwapOutWithTimeout) Reset()         { *m = PendingSwapOutWithTimeout{} }
+func (m *PendingSwapOutWithTimeout) String() string { return proto.CompactTextString(m) }
+func (*PendingSwapOutWithTimeout) ProtoMessage()    {}
+func (*PendingSwapOutWithTimeout) Descriptor() ([]byte, []int) {
 	return fileDescriptor_e6d49a2800ab3e4b, []int{2}
 }
-func (m *PendingWithdrawalWithTimeout) XXX_Unmarshal(b []byte) error {
+func (m *PendingSwapOutWithTimeout) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *PendingWithdrawalWithTimeout) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *PendingSwapOutWithTimeout) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_PendingWithdrawalWithTimeout.Marshal(b, m, deterministic)
+		return xxx_messageInfo_PendingSwapOutWithTimeout.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -167,33 +167,33 @@ func (m *PendingWithdrawalWithTimeout) XXX_Marshal(b []byte, deterministic bool)
 		return b[:n], nil
 	}
 }
-func (m *PendingWithdrawalWithTimeout) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PendingWithdrawalWithTimeout.Merge(m, src)
+func (m *PendingSwapOutWithTimeout) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PendingSwapOutWithTimeout.Merge(m, src)
 }
-func (m *PendingWithdrawalWithTimeout) XXX_Size() int {
+func (m *PendingSwapOutWithTimeout) XXX_Size() int {
 	return m.Size()
 }
-func (m *PendingWithdrawalWithTimeout) XXX_DiscardUnknown() {
-	xxx_messageInfo_PendingWithdrawalWithTimeout.DiscardUnknown(m)
+func (m *PendingSwapOutWithTimeout) XXX_DiscardUnknown() {
+	xxx_messageInfo_PendingSwapOutWithTimeout.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_PendingWithdrawalWithTimeout proto.InternalMessageInfo
+var xxx_messageInfo_PendingSwapOutWithTimeout proto.InternalMessageInfo
 
-func (m *PendingWithdrawalWithTimeout) GetRequestId() uint64 {
+func (m *PendingSwapOutWithTimeout) GetRequestId() uint64 {
 	if m != nil {
 		return m.RequestId
 	}
 	return 0
 }
 
-func (m *PendingWithdrawalWithTimeout) GetPendingWithdrawal() PendingWithdrawal {
+func (m *PendingSwapOutWithTimeout) GetPendingSwapOut() PendingSwapOut {
 	if m != nil {
-		return m.PendingWithdrawal
+		return m.PendingSwapOut
 	}
-	return PendingWithdrawal{}
+	return PendingSwapOut{}
 }
 
-func (m *PendingWithdrawalWithTimeout) GetTimeout() time.Time {
+func (m *PendingSwapOutWithTimeout) GetTimeout() time.Time {
 	if m != nil {
 		return m.Timeout
 	}
@@ -650,9 +650,9 @@ func (m *QueryEstimateSwapOutResponse) GetTime() time.Time {
 }
 
 func init() {
-	proto.RegisterType((*QueryPendingWithdrawalsRequest)(nil), "vault.v1.QueryPendingWithdrawalsRequest")
-	proto.RegisterType((*QueryPendingWithdrawalsResponse)(nil), "vault.v1.QueryPendingWithdrawalsResponse")
-	proto.RegisterType((*PendingWithdrawalWithTimeout)(nil), "vault.v1.PendingWithdrawalWithTimeout")
+	proto.RegisterType((*QueryPendingSwapOutsRequest)(nil), "vault.v1.QueryPendingSwapOutsRequest")
+	proto.RegisterType((*QueryPendingSwapOutsResponse)(nil), "vault.v1.QueryPendingSwapOutsResponse")
+	proto.RegisterType((*PendingSwapOutWithTimeout)(nil), "vault.v1.PendingSwapOutWithTimeout")
 	proto.RegisterType((*QueryVaultsRequest)(nil), "vault.v1.QueryVaultsRequest")
 	proto.RegisterType((*QueryVaultsResponse)(nil), "vault.v1.QueryVaultsResponse")
 	proto.RegisterType((*QueryVaultRequest)(nil), "vault.v1.QueryVaultRequest")
@@ -666,60 +666,60 @@ func init() {
 func init() { proto.RegisterFile("vault/v1/query.proto", fileDescriptor_e6d49a2800ab3e4b) }
 
 var fileDescriptor_e6d49a2800ab3e4b = []byte{
-	// 833 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x56, 0x4f, 0x6f, 0xeb, 0x44,
-	0x10, 0xcf, 0xa6, 0x4d, 0x68, 0x07, 0x78, 0xf0, 0xf6, 0x3d, 0x1e, 0xc1, 0x4d, 0x9c, 0xca, 0xa5,
-	0xa5, 0x70, 0xb0, 0x95, 0xb4, 0x12, 0xb4, 0x42, 0x48, 0x2d, 0x02, 0xd4, 0x13, 0x25, 0x54, 0x20,
-	0x21, 0x50, 0xb4, 0x89, 0x17, 0x67, 0xa5, 0xc4, 0xeb, 0x7a, 0xd7, 0x89, 0x4a, 0xd5, 0x0b, 0x9f,
-	0xa0, 0x12, 0x1c, 0x7a, 0xe0, 0x03, 0xc0, 0xd7, 0xe0, 0x54, 0x4e, 0x54, 0xe2, 0xc2, 0x09, 0x50,
-	0xcb, 0x07, 0x41, 0x5e, 0xaf, 0xe3, 0xe6, 0x4f, 0x13, 0x2a, 0x55, 0x88, 0x9b, 0xb3, 0x33, 0xf3,
-	0xfb, 0x33, 0x33, 0x8e, 0x17, 0x9e, 0xf6, 0x49, 0xd4, 0x95, 0x4e, 0xbf, 0xe6, 0x1c, 0x47, 0x34,
-	0x3c, 0xb1, 0x83, 0x90, 0x4b, 0x8e, 0x97, 0xd4, 0xa9, 0xdd, 0xaf, 0x19, 0x6f, 0xb5, 0xb9, 0xe8,
-	0x71, 0xe1, 0xb4, 0x88, 0xa0, 0x49, 0x8a, 0xd3, 0xaf, 0xb5, 0xa8, 0x24, 0x35, 0x27, 0x20, 0x1e,
-	0xf3, 0x89, 0x64, 0xdc, 0x4f, 0xaa, 0x0c, 0xf3, 0x76, 0x6e, 0x9a, 0xd5, 0xe6, 0x2c, 0x8d, 0x3f,
-	0xf5, 0xb8, 0xc7, 0xd5, 0xa3, 0x13, 0x3f, 0xe9, 0xd3, 0xb2, 0xc7, 0xb9, 0xd7, 0xa5, 0x0e, 0x09,
-	0x98, 0x43, 0x7c, 0x9f, 0x4b, 0x05, 0x29, 0x74, 0xb4, 0xaa, 0xa3, 0xea, 0x57, 0x2b, 0xfa, 0xda,
-	0x91, 0xac, 0x47, 0x85, 0x24, 0xbd, 0x20, 0x05, 0x1d, 0x1a, 0x48, 0x34, 0xab, 0x53, 0xab, 0x03,
-	0xe6, 0x27, 0xb1, 0xd8, 0x43, 0xea, 0xbb, 0xcc, 0xf7, 0x3e, 0x67, 0xb2, 0xe3, 0x86, 0x64, 0x40,
-	0xba, 0xa2, 0x41, 0x8f, 0x23, 0x2a, 0x24, 0xfe, 0x10, 0x20, 0x33, 0x50, 0x42, 0xab, 0x68, 0xf3,
-	0xf9, 0xfa, 0x86, 0x9d, 0x38, 0xb0, 0x63, 0x07, 0x76, 0xd2, 0x10, 0xed, 0xc3, 0x3e, 0x24, 0x1e,
-	0xd5, 0xb5, 0x8d, 0x5b, 0x95, 0xd6, 0x2f, 0x08, 0xaa, 0x77, 0x52, 0x89, 0x80, 0xfb, 0x82, 0xe2,
-	0xaf, 0xe0, 0x49, 0x90, 0x44, 0x9b, 0x83, 0x2c, 0x5c, 0x42, 0xab, 0x0b, 0x8a, 0x34, 0x6d, 0xb6,
-	0x3d, 0x01, 0x11, 0x3f, 0x1d, 0xb1, 0x1e, 0xe5, 0x91, 0xdc, 0x5f, 0xbc, 0xfc, 0xa3, 0x9a, 0x6b,
-	0xe0, 0x60, 0x82, 0x06, 0x7f, 0x34, 0x62, 0x25, 0xaf, 0xac, 0xbc, 0x31, 0xd7, 0x4a, 0xa2, 0x6d,
-	0xc4, 0xcb, 0xaf, 0x08, 0xca, 0xb3, 0x34, 0xe0, 0x0a, 0x40, 0x98, 0xf4, 0xa0, 0xc9, 0x5c, 0xd5,
-	0xb4, 0xc5, 0xc6, 0xb2, 0x3e, 0x39, 0x70, 0xf1, 0x21, 0xe0, 0x49, 0x9f, 0x5a, 0xd0, 0xca, 0x0c,
-	0x9b, 0xda, 0xdb, 0xe3, 0x09, 0x6f, 0xf8, 0x3d, 0x78, 0x4e, 0x26, 0xdc, 0xa5, 0x05, 0x05, 0x63,
-	0xd8, 0xc9, 0x42, 0xd8, 0xe9, 0x42, 0xd8, 0x47, 0xe9, 0x42, 0xec, 0x2f, 0xc5, 0x28, 0xe7, 0x7f,
-	0x56, 0x51, 0x23, 0x2d, 0xb2, 0xbe, 0x04, 0xac, 0x86, 0xf3, 0x59, 0xcc, 0xfd, 0xe0, 0xb3, 0xff,
-	0x1e, 0xc1, 0x93, 0x11, 0x78, 0x3d, 0xef, 0x6d, 0x28, 0x2a, 0xb3, 0xe9, 0x88, 0x9f, 0x65, 0xde,
-	0x55, 0xe6, 0x5e, 0xbb, 0xcd, 0x23, 0x3f, 0x1d, 0xa9, 0xce, 0x7d, 0xb8, 0x31, 0xae, 0xc1, 0xe3,
-	0x4c, 0x55, 0xea, 0xf9, 0x11, 0xe4, 0xf5, 0xc8, 0x96, 0x1b, 0x79, 0xe6, 0x5a, 0x3f, 0xa3, 0xdb,
-	0xad, 0x19, 0x4a, 0xaf, 0x43, 0x41, 0xc9, 0xd1, 0x5d, 0x99, 0xad, 0x3c, 0x49, 0xc5, 0xef, 0xc2,
-	0x72, 0x10, 0x32, 0xbf, 0xcd, 0x82, 0xe1, 0xb4, 0x4b, 0x59, 0x5d, 0x5a, 0x42, 0xba, 0xc4, 0x6f,
-	0x53, 0x5d, 0x99, 0x15, 0xe0, 0x5d, 0x58, 0x0a, 0xa9, 0xa0, 0x61, 0x9f, 0x0a, 0x3d, 0xe3, 0x79,
-	0xc5, 0xc3, 0x7c, 0xeb, 0x1b, 0x30, 0x94, 0x87, 0x0f, 0x84, 0x64, 0x3d, 0x22, 0xe9, 0xa7, 0x03,
-	0x12, 0x1c, 0xf8, 0xa9, 0xe5, 0x35, 0x78, 0x51, 0x01, 0x35, 0x89, 0xeb, 0x86, 0x54, 0x08, 0xed,
-	0xfe, 0x05, 0x75, 0xb8, 0x97, 0x9c, 0xe1, 0xb7, 0xa1, 0x48, 0x84, 0xa0, 0x52, 0x68, 0xe5, 0xaf,
-	0x8d, 0x74, 0x3c, 0xed, 0xf5, 0xfb, 0x9c, 0xf9, 0xe9, 0xb8, 0x92, 0x74, 0xeb, 0x47, 0x04, 0x2b,
-	0x53, 0xc9, 0x75, 0x27, 0x33, 0x60, 0x74, 0x2f, 0x60, 0xfc, 0x0c, 0x8a, 0x1d, 0xca, 0xbc, 0x8e,
-	0x54, 0x8a, 0x16, 0x1a, 0xfa, 0x17, 0x7e, 0x07, 0x16, 0xe3, 0xb5, 0xbe, 0xd7, 0x8b, 0xa0, 0x2a,
-	0xac, 0xd3, 0x29, 0x4a, 0x3f, 0x8e, 0xe4, 0x7f, 0xd3, 0xa7, 0x9f, 0x10, 0x94, 0xa7, 0xb3, 0xff,
-	0xef, 0x1a, 0x55, 0xbf, 0x28, 0x40, 0x41, 0x69, 0xc5, 0x4d, 0x28, 0x26, 0x2f, 0x35, 0x2e, 0x67,
-	0xdb, 0x38, 0xf9, 0x57, 0x62, 0x54, 0xee, 0x88, 0x26, 0xde, 0xac, 0xd2, 0xb7, 0xbf, 0xfd, 0xfd,
-	0x5d, 0x1e, 0xe3, 0x97, 0x9d, 0xd1, 0xcf, 0x94, 0xc0, 0x04, 0x0a, 0x2a, 0x17, 0xaf, 0x4c, 0x43,
-	0x48, 0xe1, 0xcb, 0xd3, 0x83, 0x1a, 0xbd, 0xa2, 0xd0, 0x5f, 0xc5, 0xaf, 0x8c, 0xa3, 0x3b, 0xa7,
-	0xcc, 0x3d, 0xc3, 0x17, 0x08, 0x1e, 0x8d, 0x2e, 0x27, 0x7e, 0x7d, 0x0c, 0x6f, 0xea, 0x8b, 0x63,
-	0xac, 0xcf, 0xc9, 0xd2, 0xf4, 0x3b, 0x8a, 0x7e, 0x0b, 0xd7, 0x26, 0xe9, 0x47, 0xf6, 0xe9, 0xcc,
-	0xa1, 0x1a, 0xa0, 0x29, 0x06, 0x24, 0x68, 0x32, 0x1f, 0xff, 0x80, 0xe0, 0xa5, 0xb1, 0x7d, 0xc0,
-	0xb3, 0x58, 0xb3, 0x6d, 0x35, 0x36, 0xe6, 0xa5, 0x69, 0x75, 0xbb, 0x4a, 0xdd, 0x36, 0xae, 0xdf,
-	0x53, 0x5d, 0xfc, 0x9d, 0x3b, 0x47, 0x80, 0x27, 0xbf, 0xe7, 0x78, 0x73, 0x8c, 0xfa, 0xce, 0xdb,
-	0x85, 0xf1, 0xe6, 0xbf, 0xc8, 0xd4, 0x3a, 0xd7, 0x95, 0xce, 0x2a, 0xae, 0x64, 0x3a, 0xa7, 0x5c,
-	0x16, 0xf6, 0x77, 0x2e, 0xaf, 0x4d, 0x74, 0x75, 0x6d, 0xa2, 0xbf, 0xae, 0x4d, 0x74, 0x7e, 0x63,
-	0xe6, 0xae, 0x6e, 0xcc, 0xdc, 0xef, 0x37, 0x66, 0xee, 0x8b, 0xaa, 0xc7, 0x64, 0x27, 0x6a, 0xd9,
-	0x6d, 0xde, 0x8b, 0xaf, 0x49, 0xfd, 0x2e, 0x69, 0x09, 0x8d, 0x25, 0x4f, 0x02, 0x2a, 0x5a, 0x45,
-	0xb5, 0xf9, 0x5b, 0xff, 0x04, 0x00, 0x00, 0xff, 0xff, 0x7c, 0x41, 0xfb, 0x80, 0xec, 0x09, 0x00,
-	0x00,
+	// 839 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x56, 0x4b, 0x4f, 0x23, 0x47,
+	0x10, 0x76, 0x1b, 0xec, 0x40, 0x93, 0xf0, 0xe8, 0x10, 0x62, 0x8c, 0x1f, 0x68, 0x9c, 0x10, 0x94,
+	0xc3, 0x8c, 0x6c, 0x90, 0x12, 0x50, 0x14, 0x09, 0xa2, 0x3c, 0x38, 0x41, 0x1c, 0x92, 0x48, 0x51,
+	0x24, 0xab, 0x6d, 0x77, 0xc6, 0x2d, 0xd9, 0xd3, 0x83, 0xbb, 0xc7, 0x88, 0x20, 0x2e, 0x91, 0x72,
+	0x8c, 0x84, 0x94, 0x1c, 0x72, 0xc8, 0x0f, 0x48, 0xfe, 0x44, 0x0e, 0xab, 0x3d, 0x70, 0x44, 0xda,
+	0xcb, 0x9e, 0x76, 0x57, 0xb0, 0x3f, 0x64, 0x35, 0xfd, 0x60, 0x18, 0x3f, 0xb0, 0x90, 0xd0, 0x6a,
+	0x6f, 0x33, 0x5d, 0x55, 0x5f, 0x7d, 0x5f, 0x55, 0xf5, 0x03, 0x2e, 0xf6, 0x70, 0xd0, 0x16, 0x4e,
+	0xaf, 0xec, 0x1c, 0x05, 0xa4, 0x7b, 0x62, 0xfb, 0x5d, 0x26, 0x18, 0x9a, 0x92, 0xab, 0x76, 0xaf,
+	0x9c, 0xfd, 0xb8, 0xc1, 0x78, 0x87, 0x71, 0xa7, 0x8e, 0x39, 0x51, 0x2e, 0x4e, 0xaf, 0x5c, 0x27,
+	0x02, 0x97, 0x1d, 0x1f, 0xbb, 0xd4, 0xc3, 0x82, 0x32, 0x4f, 0x45, 0x65, 0x0b, 0xb7, 0x7d, 0x8d,
+	0x57, 0x83, 0x51, 0x63, 0x5f, 0x74, 0x99, 0xcb, 0xe4, 0xa7, 0x13, 0x7e, 0xe9, 0xd5, 0x9c, 0xcb,
+	0x98, 0xdb, 0x26, 0x0e, 0xf6, 0xa9, 0x83, 0x3d, 0x8f, 0x09, 0x09, 0xc9, 0xb5, 0xb5, 0xa8, 0xad,
+	0xf2, 0xaf, 0x1e, 0xfc, 0xe2, 0x08, 0xda, 0x21, 0x5c, 0xe0, 0x8e, 0x6f, 0x40, 0x6f, 0x04, 0x28,
+	0xce, 0x72, 0xd5, 0x22, 0x70, 0xe5, 0xdb, 0x90, 0xec, 0x01, 0xf1, 0x9a, 0xd4, 0x73, 0xbf, 0x3b,
+	0xc6, 0xfe, 0x7e, 0x20, 0x78, 0x95, 0x1c, 0x05, 0x84, 0x0b, 0xf4, 0x15, 0x84, 0x11, 0xfb, 0x0c,
+	0x58, 0x05, 0xeb, 0x33, 0x95, 0x35, 0x5b, 0xd1, 0xb7, 0x43, 0xfa, 0xb6, 0xaa, 0x86, 0x16, 0x61,
+	0x1f, 0x60, 0x97, 0xe8, 0xd8, 0xea, 0xad, 0x48, 0xeb, 0x7f, 0x00, 0x73, 0xc3, 0xf3, 0x70, 0x9f,
+	0x79, 0x9c, 0xa0, 0xef, 0xe1, 0x82, 0xaf, 0x4c, 0x35, 0x7e, 0x8c, 0xfd, 0x1a, 0x0b, 0x04, 0xcf,
+	0x80, 0xd5, 0x89, 0xf5, 0x99, 0x4a, 0xc9, 0x36, 0x45, 0xb6, 0xe3, 0xd1, 0x3f, 0x52, 0xd1, 0x3a,
+	0xa4, 0x1d, 0xc2, 0x02, 0xb1, 0x3b, 0x79, 0xf1, 0xac, 0x98, 0xa8, 0xce, 0xf9, 0x71, 0x78, 0xf4,
+	0x75, 0x8c, 0x7f, 0x52, 0xf2, 0xff, 0x68, 0x2c, 0x7f, 0xc5, 0x29, 0x26, 0xe0, 0x31, 0x80, 0xcb,
+	0x23, 0xb3, 0xa3, 0x3c, 0x84, 0x5d, 0xa5, 0xba, 0x46, 0x9b, 0xb2, 0x4c, 0x93, 0xd5, 0x69, 0xbd,
+	0xb2, 0xd7, 0x44, 0xdf, 0xc0, 0xf9, 0x7e, 0x71, 0x9a, 0x4b, 0x66, 0x94, 0x36, 0x2d, 0x68, 0x36,
+	0x2e, 0x08, 0x7d, 0x0e, 0xdf, 0x12, 0x2a, 0x67, 0x66, 0x42, 0x02, 0x64, 0x6d, 0xd5, 0x77, 0xdb,
+	0xf4, 0xdd, 0x3e, 0x34, 0x7d, 0xdf, 0x9d, 0x0a, 0x21, 0xce, 0x9f, 0x17, 0x41, 0xd5, 0x04, 0x59,
+	0x3f, 0x43, 0x24, 0xdb, 0xf0, 0x43, 0x98, 0xf5, 0xc1, 0xbb, 0xfc, 0x17, 0x80, 0xef, 0xc6, 0xe0,
+	0x75, 0x73, 0x37, 0x61, 0x5a, 0xca, 0x34, 0x1d, 0x5d, 0x8a, 0x54, 0x4b, 0xcf, 0x9d, 0x46, 0x83,
+	0x05, 0x9e, 0xd1, 0xac, 0x7d, 0x1f, 0xae, 0x77, 0x25, 0xb8, 0x10, 0xb1, 0x32, 0x9a, 0x67, 0x61,
+	0x52, 0xb7, 0x6a, 0xba, 0x9a, 0xa4, 0x4d, 0xeb, 0x11, 0xb8, 0x5d, 0x9a, 0x1b, 0xea, 0x15, 0x98,
+	0x92, 0x74, 0x74, 0x55, 0xee, 0x66, 0xae, 0x5c, 0xd1, 0x67, 0x70, 0xda, 0xef, 0x52, 0xaf, 0x41,
+	0x7d, 0xdc, 0x1e, 0xec, 0xb3, 0x09, 0xc1, 0x6d, 0xec, 0x35, 0x88, 0x8e, 0x8c, 0x02, 0xd0, 0x36,
+	0x9c, 0xea, 0x12, 0x4e, 0xba, 0x3d, 0xc2, 0x75, 0x8f, 0xc7, 0x05, 0xdf, 0xf8, 0x5b, 0xbf, 0xc2,
+	0xac, 0xd4, 0xf0, 0x25, 0x17, 0xb4, 0x83, 0x05, 0x09, 0xc7, 0x66, 0xcf, 0x33, 0x92, 0x4b, 0xf0,
+	0x1d, 0x09, 0x54, 0xc3, 0xcd, 0x66, 0x97, 0x70, 0xae, 0xd5, 0xbf, 0x2d, 0x17, 0x77, 0xd4, 0x1a,
+	0xfa, 0x04, 0xa6, 0x31, 0xe7, 0x44, 0x70, 0xcd, 0x7c, 0x39, 0x56, 0x71, 0x53, 0xeb, 0x2f, 0x18,
+	0xf5, 0x4c, 0xbb, 0x94, 0xbb, 0xf5, 0x2f, 0xd0, 0x47, 0x49, 0x7f, 0x72, 0x5d, 0xc9, 0x08, 0x18,
+	0xdc, 0x0b, 0x18, 0x2d, 0xc1, 0x74, 0x8b, 0x50, 0xb7, 0xa5, 0xf6, 0xcc, 0x44, 0x55, 0xff, 0xa1,
+	0x4f, 0xe1, 0x64, 0x38, 0xd6, 0xf7, 0xda, 0x08, 0x32, 0xc2, 0x3a, 0x1d, 0xc2, 0x74, 0x3f, 0x10,
+	0xaf, 0xa7, 0x4e, 0xff, 0x99, 0xa3, 0x70, 0x20, 0xfb, 0x1b, 0x57, 0xa8, 0xca, 0x1f, 0x29, 0x98,
+	0x92, 0x5c, 0x51, 0x0d, 0xa6, 0xd5, 0xa6, 0x46, 0xb9, 0x68, 0x1a, 0x07, 0x8f, 0x92, 0x6c, 0x7e,
+	0x84, 0x55, 0x69, 0xb3, 0x32, 0xbf, 0x3d, 0x79, 0xf9, 0x67, 0x12, 0xa1, 0x79, 0x27, 0x7e, 0x1b,
+	0x71, 0x84, 0x61, 0x4a, 0xfa, 0xa2, 0x95, 0x61, 0x08, 0x06, 0x3e, 0x37, 0xdc, 0xa8, 0xd1, 0xf3,
+	0x12, 0xfd, 0x7d, 0xf4, 0x5e, 0x3f, 0xba, 0x73, 0x4a, 0x9b, 0x67, 0xe8, 0x6f, 0x00, 0x67, 0xe3,
+	0xc3, 0x89, 0x3e, 0xe8, 0xc3, 0x1b, 0xba, 0x71, 0xb2, 0x1f, 0x8e, 0xf1, 0xd2, 0xe9, 0xb7, 0x64,
+	0xfa, 0x0d, 0x54, 0x1e, 0x4c, 0x1f, 0x9b, 0xa7, 0x33, 0x87, 0x68, 0x00, 0x75, 0x1d, 0x50, 0x0f,
+	0xfd, 0x03, 0xe0, 0x5c, 0xdf, 0x3c, 0xa0, 0xbb, 0xb2, 0x46, 0xd3, 0x9a, 0x5d, 0x1b, 0xe7, 0xa6,
+	0xd9, 0x6d, 0x4b, 0x76, 0x9b, 0xa8, 0x72, 0x4f, 0x76, 0xe1, 0xfd, 0xf6, 0x3b, 0x80, 0x73, 0x7d,
+	0x37, 0xf7, 0x00, 0xbd, 0xe1, 0x2f, 0x88, 0x01, 0x7a, 0x23, 0x1e, 0x00, 0x56, 0x49, 0xd2, 0xcb,
+	0xa3, 0x95, 0x88, 0xde, 0xc0, 0x83, 0x60, 0x77, 0xeb, 0xe2, 0xaa, 0x00, 0x2e, 0xaf, 0x0a, 0xe0,
+	0xc5, 0x55, 0x01, 0x9c, 0x5f, 0x17, 0x12, 0x97, 0xd7, 0x85, 0xc4, 0xd3, 0xeb, 0x42, 0xe2, 0xa7,
+	0xa2, 0x4b, 0x45, 0x2b, 0xa8, 0xdb, 0x0d, 0xd6, 0x09, 0x9f, 0x40, 0xbd, 0x36, 0xae, 0x73, 0x8d,
+	0x24, 0x4e, 0x7c, 0xc2, 0xeb, 0x69, 0x39, 0xee, 0x1b, 0xaf, 0x02, 0x00, 0x00, 0xff, 0xff, 0xdf,
+	0xd6, 0xfd, 0xc7, 0xc8, 0x09, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -742,8 +742,8 @@ type QueryClient interface {
 	EstimateSwapIn(ctx context.Context, in *QueryEstimateSwapInRequest, opts ...grpc.CallOption) (*QueryEstimateSwapInResponse, error)
 	// EstimateSwapOut estimates the amount of underlying assets that would be received for a given amount of shares.
 	EstimateSwapOut(ctx context.Context, in *QueryEstimateSwapOutRequest, opts ...grpc.CallOption) (*QueryEstimateSwapOutResponse, error)
-	// PendingWithdrawals returns a paginated list of all pending withdrawals.
-	PendingWithdrawals(ctx context.Context, in *QueryPendingWithdrawalsRequest, opts ...grpc.CallOption) (*QueryPendingWithdrawalsResponse, error)
+	// PendingSwapOuts returns a paginated list of all pending swap outs.
+	PendingSwapOuts(ctx context.Context, in *QueryPendingSwapOutsRequest, opts ...grpc.CallOption) (*QueryPendingSwapOutsResponse, error)
 }
 
 type queryClient struct {
@@ -790,9 +790,9 @@ func (c *queryClient) EstimateSwapOut(ctx context.Context, in *QueryEstimateSwap
 	return out, nil
 }
 
-func (c *queryClient) PendingWithdrawals(ctx context.Context, in *QueryPendingWithdrawalsRequest, opts ...grpc.CallOption) (*QueryPendingWithdrawalsResponse, error) {
-	out := new(QueryPendingWithdrawalsResponse)
-	err := c.cc.Invoke(ctx, "/vault.v1.Query/PendingWithdrawals", in, out, opts...)
+func (c *queryClient) PendingSwapOuts(ctx context.Context, in *QueryPendingSwapOutsRequest, opts ...grpc.CallOption) (*QueryPendingSwapOutsResponse, error) {
+	out := new(QueryPendingSwapOutsResponse)
+	err := c.cc.Invoke(ctx, "/vault.v1.Query/PendingSwapOuts", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -809,8 +809,8 @@ type QueryServer interface {
 	EstimateSwapIn(context.Context, *QueryEstimateSwapInRequest) (*QueryEstimateSwapInResponse, error)
 	// EstimateSwapOut estimates the amount of underlying assets that would be received for a given amount of shares.
 	EstimateSwapOut(context.Context, *QueryEstimateSwapOutRequest) (*QueryEstimateSwapOutResponse, error)
-	// PendingWithdrawals returns a paginated list of all pending withdrawals.
-	PendingWithdrawals(context.Context, *QueryPendingWithdrawalsRequest) (*QueryPendingWithdrawalsResponse, error)
+	// PendingSwapOuts returns a paginated list of all pending swap outs.
+	PendingSwapOuts(context.Context, *QueryPendingSwapOutsRequest) (*QueryPendingSwapOutsResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -829,8 +829,8 @@ func (*UnimplementedQueryServer) EstimateSwapIn(ctx context.Context, req *QueryE
 func (*UnimplementedQueryServer) EstimateSwapOut(ctx context.Context, req *QueryEstimateSwapOutRequest) (*QueryEstimateSwapOutResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method EstimateSwapOut not implemented")
 }
-func (*UnimplementedQueryServer) PendingWithdrawals(ctx context.Context, req *QueryPendingWithdrawalsRequest) (*QueryPendingWithdrawalsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method PendingWithdrawals not implemented")
+func (*UnimplementedQueryServer) PendingSwapOuts(ctx context.Context, req *QueryPendingSwapOutsRequest) (*QueryPendingSwapOutsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PendingSwapOuts not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -909,20 +909,20 @@ func _Query_EstimateSwapOut_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Query_PendingWithdrawals_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryPendingWithdrawalsRequest)
+func _Query_PendingSwapOuts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryPendingSwapOutsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).PendingWithdrawals(ctx, in)
+		return srv.(QueryServer).PendingSwapOuts(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/vault.v1.Query/PendingWithdrawals",
+		FullMethod: "/vault.v1.Query/PendingSwapOuts",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).PendingWithdrawals(ctx, req.(*QueryPendingWithdrawalsRequest))
+		return srv.(QueryServer).PendingSwapOuts(ctx, req.(*QueryPendingSwapOutsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -949,15 +949,15 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Query_EstimateSwapOut_Handler,
 		},
 		{
-			MethodName: "PendingWithdrawals",
-			Handler:    _Query_PendingWithdrawals_Handler,
+			MethodName: "PendingSwapOuts",
+			Handler:    _Query_PendingSwapOuts_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "vault/v1/query.proto",
 }
 
-func (m *QueryPendingWithdrawalsRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryPendingSwapOutsRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -967,12 +967,12 @@ func (m *QueryPendingWithdrawalsRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryPendingWithdrawalsRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryPendingSwapOutsRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryPendingWithdrawalsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryPendingSwapOutsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -992,7 +992,7 @@ func (m *QueryPendingWithdrawalsRequest) MarshalToSizedBuffer(dAtA []byte) (int,
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryPendingWithdrawalsResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryPendingSwapOutsResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1002,12 +1002,12 @@ func (m *QueryPendingWithdrawalsResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryPendingWithdrawalsResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryPendingSwapOutsResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryPendingWithdrawalsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryPendingSwapOutsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1024,10 +1024,10 @@ func (m *QueryPendingWithdrawalsResponse) MarshalToSizedBuffer(dAtA []byte) (int
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.PendingWithdrawals) > 0 {
-		for iNdEx := len(m.PendingWithdrawals) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.PendingSwapOuts) > 0 {
+		for iNdEx := len(m.PendingSwapOuts) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.PendingWithdrawals[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.PendingSwapOuts[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -1041,7 +1041,7 @@ func (m *QueryPendingWithdrawalsResponse) MarshalToSizedBuffer(dAtA []byte) (int
 	return len(dAtA) - i, nil
 }
 
-func (m *PendingWithdrawalWithTimeout) Marshal() (dAtA []byte, err error) {
+func (m *PendingSwapOutWithTimeout) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -1051,12 +1051,12 @@ func (m *PendingWithdrawalWithTimeout) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *PendingWithdrawalWithTimeout) MarshalTo(dAtA []byte) (int, error) {
+func (m *PendingSwapOutWithTimeout) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *PendingWithdrawalWithTimeout) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *PendingSwapOutWithTimeout) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -1070,7 +1070,7 @@ func (m *PendingWithdrawalWithTimeout) MarshalToSizedBuffer(dAtA []byte) (int, e
 	i--
 	dAtA[i] = 0x1a
 	{
-		size, err := m.PendingWithdrawal.MarshalToSizedBuffer(dAtA[:i])
+		size, err := m.PendingSwapOut.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -1437,7 +1437,7 @@ func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *QueryPendingWithdrawalsRequest) Size() (n int) {
+func (m *QueryPendingSwapOutsRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1450,14 +1450,14 @@ func (m *QueryPendingWithdrawalsRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryPendingWithdrawalsResponse) Size() (n int) {
+func (m *QueryPendingSwapOutsResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if len(m.PendingWithdrawals) > 0 {
-		for _, e := range m.PendingWithdrawals {
+	if len(m.PendingSwapOuts) > 0 {
+		for _, e := range m.PendingSwapOuts {
 			l = e.Size()
 			n += 1 + l + sovQuery(uint64(l))
 		}
@@ -1469,7 +1469,7 @@ func (m *QueryPendingWithdrawalsResponse) Size() (n int) {
 	return n
 }
 
-func (m *PendingWithdrawalWithTimeout) Size() (n int) {
+func (m *PendingSwapOutWithTimeout) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -1478,7 +1478,7 @@ func (m *PendingWithdrawalWithTimeout) Size() (n int) {
 	if m.RequestId != 0 {
 		n += 1 + sovQuery(uint64(m.RequestId))
 	}
-	l = m.PendingWithdrawal.Size()
+	l = m.PendingSwapOut.Size()
 	n += 1 + l + sovQuery(uint64(l))
 	l = github_com_cosmos_gogoproto_types.SizeOfStdTime(m.Timeout)
 	n += 1 + l + sovQuery(uint64(l))
@@ -1613,7 +1613,7 @@ func sovQuery(x uint64) (n int) {
 func sozQuery(x uint64) (n int) {
 	return sovQuery(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *QueryPendingWithdrawalsRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryPendingSwapOutsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1636,10 +1636,10 @@ func (m *QueryPendingWithdrawalsRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryPendingWithdrawalsRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryPendingSwapOutsRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryPendingWithdrawalsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryPendingSwapOutsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1699,7 +1699,7 @@ func (m *QueryPendingWithdrawalsRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryPendingWithdrawalsResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryPendingSwapOutsResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1722,15 +1722,15 @@ func (m *QueryPendingWithdrawalsResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryPendingWithdrawalsResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryPendingSwapOutsResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryPendingWithdrawalsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryPendingSwapOutsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PendingWithdrawals", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field PendingSwapOuts", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1757,8 +1757,8 @@ func (m *QueryPendingWithdrawalsResponse) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.PendingWithdrawals = append(m.PendingWithdrawals, PendingWithdrawalWithTimeout{})
-			if err := m.PendingWithdrawals[len(m.PendingWithdrawals)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.PendingSwapOuts = append(m.PendingSwapOuts, PendingSwapOutWithTimeout{})
+			if err := m.PendingSwapOuts[len(m.PendingSwapOuts)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -1819,7 +1819,7 @@ func (m *QueryPendingWithdrawalsResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *PendingWithdrawalWithTimeout) Unmarshal(dAtA []byte) error {
+func (m *PendingSwapOutWithTimeout) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -1842,10 +1842,10 @@ func (m *PendingWithdrawalWithTimeout) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: PendingWithdrawalWithTimeout: wiretype end group for non-group")
+			return fmt.Errorf("proto: PendingSwapOutWithTimeout: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: PendingWithdrawalWithTimeout: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: PendingSwapOutWithTimeout: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
@@ -1869,7 +1869,7 @@ func (m *PendingWithdrawalWithTimeout) Unmarshal(dAtA []byte) error {
 			}
 		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PendingWithdrawal", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field PendingSwapOut", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -1896,7 +1896,7 @@ func (m *PendingWithdrawalWithTimeout) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			if err := m.PendingWithdrawal.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			if err := m.PendingSwapOut.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

@@ -30,13 +30,13 @@ func (s *TestSuite) TestVaultGenesis_InitAndExport() {
 		PayoutTimeoutQueue: []types.QueueEntry{
 			{Time: uint64(past), Addr: vaultAddr.String()},
 		},
-		PendingWithdrawalQueue: types.PendingWithdrawalQueue{
+		PendingSwapOutQueue: types.PendingSwapOutQueue{
 			LatestSequenceNumber: 55,
-			Entries: []types.PendingWithdrawalQueueEntry{
+			Entries: []types.PendingSwapOutQueueEntry{
 				{
 					Time: 10000,
 					Id:   1,
-					Withdrawal: types.PendingWithdrawal{
+					SwapOut: types.PendingSwapOut{
 						Owner:        admin,
 						VaultAddress: vault.Address,
 						Assets:       sdk.NewInt64Coin("ylds", 100),
@@ -66,13 +66,13 @@ func (s *TestSuite) TestVaultGenesis_InitAndExport() {
 	s.Require().NotNil(got)
 	s.Require().Equal(vaultAddr.String(), got.GetAddress().String())
 
-	s.Require().Len(exported.PendingWithdrawalQueue.Entries, 1)
-	s.Require().Equal(uint64(55), exported.PendingWithdrawalQueue.LatestSequenceNumber)
-	s.Require().Equal(uint64(1), exported.PendingWithdrawalQueue.Entries[0].Id)
-	s.Require().Equal(int64(10000), exported.PendingWithdrawalQueue.Entries[0].Time)
-	s.Require().Equal(admin, exported.PendingWithdrawalQueue.Entries[0].Withdrawal.Owner)
-	s.Require().Equal(vault.Address, exported.PendingWithdrawalQueue.Entries[0].Withdrawal.VaultAddress)
-	s.Require().Equal(sdk.NewInt64Coin("ylds", 100), exported.PendingWithdrawalQueue.Entries[0].Withdrawal.Assets)
+	s.Require().Len(exported.PendingSwapOutQueue.Entries, 1)
+	s.Require().Equal(uint64(55), exported.PendingSwapOutQueue.LatestSequenceNumber)
+	s.Require().Equal(uint64(1), exported.PendingSwapOutQueue.Entries[0].Id)
+	s.Require().Equal(int64(10000), exported.PendingSwapOutQueue.Entries[0].Time)
+	s.Require().Equal(admin, exported.PendingSwapOutQueue.Entries[0].SwapOut.Owner)
+	s.Require().Equal(vault.Address, exported.PendingSwapOutQueue.Entries[0].SwapOut.VaultAddress)
+	s.Require().Equal(sdk.NewInt64Coin("ylds", 100), exported.PendingSwapOutQueue.Entries[0].SwapOut.Assets)
 }
 
 func (s *TestSuite) TestVaultGenesis_RoundTrip_PastAndFutureTimeouts() {
@@ -100,7 +100,7 @@ func (s *TestSuite) TestVaultGenesis_RoundTrip_PastAndFutureTimeouts() {
 			{Time: uint64(past), Addr: vaultAddr.String()},
 			{Time: uint64(future), Addr: vaultAddr.String()},
 		},
-		PendingWithdrawalQueue: types.PendingWithdrawalQueue{},
+		PendingSwapOutQueue: types.PendingSwapOutQueue{},
 	}
 
 	s.k.InitGenesis(s.ctx, genesis)
@@ -134,7 +134,7 @@ func (s *TestSuite) TestVaultGenesis_InvalidTimeoutAddressPanics() {
 		PayoutTimeoutQueue: []types.QueueEntry{
 			{Time: uint64(time.Now().Unix()), Addr: "not-bech32"},
 		},
-		PendingWithdrawalQueue: types.PendingWithdrawalQueue{},
+		PendingSwapOutQueue: types.PendingSwapOutQueue{},
 	}
 
 	s.Require().Panics(func() { s.k.InitGenesis(s.ctx, genesis) })
@@ -160,8 +160,8 @@ func (s *TestSuite) TestVaultGenesis_ExistingAccountNumberCopied() {
 	}
 
 	genesis := &types.GenesisState{
-		Vaults:                 []types.VaultAccount{vault},
-		PendingWithdrawalQueue: types.PendingWithdrawalQueue{},
+		Vaults:              []types.VaultAccount{vault},
+		PendingSwapOutQueue: types.PendingSwapOutQueue{},
 	}
 
 	s.k.InitGenesis(s.ctx, genesis)
@@ -191,7 +191,7 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidVault() {
 	s.Require().Panics(func() { s.k.InitGenesis(s.ctx, genesis) })
 }
 
-func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidPendingWithdrawal() {
+func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidPendingSwapOut() {
 	shareDenom := "vaultshare"
 	underlying := "undercoin"
 	admin := s.adminAddr.String()
@@ -207,13 +207,13 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidPendingWithdrawal() {
 	}
 
 	genesis := &types.GenesisState{
-		PendingWithdrawalQueue: types.PendingWithdrawalQueue{
+		PendingSwapOutQueue: types.PendingSwapOutQueue{
 			LatestSequenceNumber: 55,
-			Entries: []types.PendingWithdrawalQueueEntry{
+			Entries: []types.PendingSwapOutQueueEntry{
 				{
 					Time: 10000,
 					Id:   1,
-					Withdrawal: types.PendingWithdrawal{
+					SwapOut: types.PendingSwapOut{
 						Owner:        "badaddress",
 						VaultAddress: vault.Address,
 						Assets:       sdk.NewInt64Coin("ylds", 100),
@@ -225,7 +225,7 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidPendingWithdrawal() {
 	s.Require().Panics(func() { s.k.InitGenesis(s.ctx, genesis) })
 }
 
-func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPendingWithdrawalHasUnknownVault() {
+func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPendingSwapOutHasUnknownVault() {
 	shareDenom := "vaultshare"
 	underlying := "undercoin"
 	admin := s.adminAddr.String()
@@ -243,13 +243,13 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPendingWithdrawalHasUnknownVa
 
 	genesis := &types.GenesisState{
 		Vaults: []types.VaultAccount{vault},
-		PendingWithdrawalQueue: types.PendingWithdrawalQueue{
+		PendingSwapOutQueue: types.PendingSwapOutQueue{
 			LatestSequenceNumber: 55,
-			Entries: []types.PendingWithdrawalQueueEntry{
+			Entries: []types.PendingSwapOutQueueEntry{
 				{
 					Time: 10000,
 					Id:   1,
-					Withdrawal: types.PendingWithdrawal{
+					SwapOut: types.PendingSwapOut{
 						Owner:        admin,
 						VaultAddress: badVaultAddr.String(),
 						Assets:       sdk.NewInt64Coin("ylds", 100),
@@ -261,7 +261,7 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPendingWithdrawalHasUnknownVa
 	s.Require().Panics(func() { s.k.InitGenesis(s.ctx, genesis) })
 }
 
-func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPendingWithdrawalHasBadVaultAddress() {
+func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPendingSwapOutHasBadVaultAddress() {
 	shareDenom := "vaultshare"
 	underlying := "undercoin"
 	admin := s.adminAddr.String()
@@ -278,13 +278,13 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPendingWithdrawalHasBadVaultA
 
 	genesis := &types.GenesisState{
 		Vaults: []types.VaultAccount{vault},
-		PendingWithdrawalQueue: types.PendingWithdrawalQueue{
+		PendingSwapOutQueue: types.PendingSwapOutQueue{
 			LatestSequenceNumber: 55,
-			Entries: []types.PendingWithdrawalQueueEntry{
+			Entries: []types.PendingSwapOutQueueEntry{
 				{
 					Time: 10000,
 					Id:   1,
-					Withdrawal: types.PendingWithdrawal{
+					SwapOut: types.PendingSwapOut{
 						Owner:        admin,
 						VaultAddress: "badaddress",
 						Assets:       sdk.NewInt64Coin("ylds", 100),

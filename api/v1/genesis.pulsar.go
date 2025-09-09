@@ -482,29 +482,29 @@ func (x *fastReflection_QueueEntry) ProtoMethods() *protoiface.Methods {
 }
 
 var (
-	md_PendingWithdrawalQueueEntry            protoreflect.MessageDescriptor
-	fd_PendingWithdrawalQueueEntry_time       protoreflect.FieldDescriptor
-	fd_PendingWithdrawalQueueEntry_id         protoreflect.FieldDescriptor
-	fd_PendingWithdrawalQueueEntry_withdrawal protoreflect.FieldDescriptor
+	md_PendingSwapOutQueueEntry          protoreflect.MessageDescriptor
+	fd_PendingSwapOutQueueEntry_time     protoreflect.FieldDescriptor
+	fd_PendingSwapOutQueueEntry_id       protoreflect.FieldDescriptor
+	fd_PendingSwapOutQueueEntry_swap_out protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_vault_v1_genesis_proto_init()
-	md_PendingWithdrawalQueueEntry = File_vault_v1_genesis_proto.Messages().ByName("PendingWithdrawalQueueEntry")
-	fd_PendingWithdrawalQueueEntry_time = md_PendingWithdrawalQueueEntry.Fields().ByName("time")
-	fd_PendingWithdrawalQueueEntry_id = md_PendingWithdrawalQueueEntry.Fields().ByName("id")
-	fd_PendingWithdrawalQueueEntry_withdrawal = md_PendingWithdrawalQueueEntry.Fields().ByName("withdrawal")
+	md_PendingSwapOutQueueEntry = File_vault_v1_genesis_proto.Messages().ByName("PendingSwapOutQueueEntry")
+	fd_PendingSwapOutQueueEntry_time = md_PendingSwapOutQueueEntry.Fields().ByName("time")
+	fd_PendingSwapOutQueueEntry_id = md_PendingSwapOutQueueEntry.Fields().ByName("id")
+	fd_PendingSwapOutQueueEntry_swap_out = md_PendingSwapOutQueueEntry.Fields().ByName("swap_out")
 }
 
-var _ protoreflect.Message = (*fastReflection_PendingWithdrawalQueueEntry)(nil)
+var _ protoreflect.Message = (*fastReflection_PendingSwapOutQueueEntry)(nil)
 
-type fastReflection_PendingWithdrawalQueueEntry PendingWithdrawalQueueEntry
+type fastReflection_PendingSwapOutQueueEntry PendingSwapOutQueueEntry
 
-func (x *PendingWithdrawalQueueEntry) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_PendingWithdrawalQueueEntry)(x)
+func (x *PendingSwapOutQueueEntry) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_PendingSwapOutQueueEntry)(x)
 }
 
-func (x *PendingWithdrawalQueueEntry) slowProtoReflect() protoreflect.Message {
+func (x *PendingSwapOutQueueEntry) slowProtoReflect() protoreflect.Message {
 	mi := &file_vault_v1_genesis_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -516,43 +516,43 @@ func (x *PendingWithdrawalQueueEntry) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_PendingWithdrawalQueueEntry_messageType fastReflection_PendingWithdrawalQueueEntry_messageType
-var _ protoreflect.MessageType = fastReflection_PendingWithdrawalQueueEntry_messageType{}
+var _fastReflection_PendingSwapOutQueueEntry_messageType fastReflection_PendingSwapOutQueueEntry_messageType
+var _ protoreflect.MessageType = fastReflection_PendingSwapOutQueueEntry_messageType{}
 
-type fastReflection_PendingWithdrawalQueueEntry_messageType struct{}
+type fastReflection_PendingSwapOutQueueEntry_messageType struct{}
 
-func (x fastReflection_PendingWithdrawalQueueEntry_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_PendingWithdrawalQueueEntry)(nil)
+func (x fastReflection_PendingSwapOutQueueEntry_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_PendingSwapOutQueueEntry)(nil)
 }
-func (x fastReflection_PendingWithdrawalQueueEntry_messageType) New() protoreflect.Message {
-	return new(fastReflection_PendingWithdrawalQueueEntry)
+func (x fastReflection_PendingSwapOutQueueEntry_messageType) New() protoreflect.Message {
+	return new(fastReflection_PendingSwapOutQueueEntry)
 }
-func (x fastReflection_PendingWithdrawalQueueEntry_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_PendingWithdrawalQueueEntry
+func (x fastReflection_PendingSwapOutQueueEntry_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_PendingSwapOutQueueEntry
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_PendingWithdrawalQueueEntry) Descriptor() protoreflect.MessageDescriptor {
-	return md_PendingWithdrawalQueueEntry
+func (x *fastReflection_PendingSwapOutQueueEntry) Descriptor() protoreflect.MessageDescriptor {
+	return md_PendingSwapOutQueueEntry
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_PendingWithdrawalQueueEntry) Type() protoreflect.MessageType {
-	return _fastReflection_PendingWithdrawalQueueEntry_messageType
+func (x *fastReflection_PendingSwapOutQueueEntry) Type() protoreflect.MessageType {
+	return _fastReflection_PendingSwapOutQueueEntry_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_PendingWithdrawalQueueEntry) New() protoreflect.Message {
-	return new(fastReflection_PendingWithdrawalQueueEntry)
+func (x *fastReflection_PendingSwapOutQueueEntry) New() protoreflect.Message {
+	return new(fastReflection_PendingSwapOutQueueEntry)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_PendingWithdrawalQueueEntry) Interface() protoreflect.ProtoMessage {
-	return (*PendingWithdrawalQueueEntry)(x)
+func (x *fastReflection_PendingSwapOutQueueEntry) Interface() protoreflect.ProtoMessage {
+	return (*PendingSwapOutQueueEntry)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -560,22 +560,22 @@ func (x *fastReflection_PendingWithdrawalQueueEntry) Interface() protoreflect.Pr
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_PendingWithdrawalQueueEntry) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_PendingSwapOutQueueEntry) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.Time != int64(0) {
 		value := protoreflect.ValueOfInt64(x.Time)
-		if !f(fd_PendingWithdrawalQueueEntry_time, value) {
+		if !f(fd_PendingSwapOutQueueEntry_time, value) {
 			return
 		}
 	}
 	if x.Id != uint64(0) {
 		value := protoreflect.ValueOfUint64(x.Id)
-		if !f(fd_PendingWithdrawalQueueEntry_id, value) {
+		if !f(fd_PendingSwapOutQueueEntry_id, value) {
 			return
 		}
 	}
-	if x.Withdrawal != nil {
-		value := protoreflect.ValueOfMessage(x.Withdrawal.ProtoReflect())
-		if !f(fd_PendingWithdrawalQueueEntry_withdrawal, value) {
+	if x.SwapOut != nil {
+		value := protoreflect.ValueOfMessage(x.SwapOut.ProtoReflect())
+		if !f(fd_PendingSwapOutQueueEntry_swap_out, value) {
 			return
 		}
 	}
@@ -592,19 +592,19 @@ func (x *fastReflection_PendingWithdrawalQueueEntry) Range(f func(protoreflect.F
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_PendingWithdrawalQueueEntry) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_PendingSwapOutQueueEntry) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.PendingWithdrawalQueueEntry.time":
+	case "vault.v1.PendingSwapOutQueueEntry.time":
 		return x.Time != int64(0)
-	case "vault.v1.PendingWithdrawalQueueEntry.id":
+	case "vault.v1.PendingSwapOutQueueEntry.id":
 		return x.Id != uint64(0)
-	case "vault.v1.PendingWithdrawalQueueEntry.withdrawal":
-		return x.Withdrawal != nil
+	case "vault.v1.PendingSwapOutQueueEntry.swap_out":
+		return x.SwapOut != nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingWithdrawalQueueEntry"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOutQueueEntry"))
 		}
-		panic(fmt.Errorf("message vault.v1.PendingWithdrawalQueueEntry does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.PendingSwapOutQueueEntry does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -614,19 +614,19 @@ func (x *fastReflection_PendingWithdrawalQueueEntry) Has(fd protoreflect.FieldDe
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_PendingWithdrawalQueueEntry) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_PendingSwapOutQueueEntry) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.PendingWithdrawalQueueEntry.time":
+	case "vault.v1.PendingSwapOutQueueEntry.time":
 		x.Time = int64(0)
-	case "vault.v1.PendingWithdrawalQueueEntry.id":
+	case "vault.v1.PendingSwapOutQueueEntry.id":
 		x.Id = uint64(0)
-	case "vault.v1.PendingWithdrawalQueueEntry.withdrawal":
-		x.Withdrawal = nil
+	case "vault.v1.PendingSwapOutQueueEntry.swap_out":
+		x.SwapOut = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingWithdrawalQueueEntry"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOutQueueEntry"))
 		}
-		panic(fmt.Errorf("message vault.v1.PendingWithdrawalQueueEntry does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.PendingSwapOutQueueEntry does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -636,22 +636,22 @@ func (x *fastReflection_PendingWithdrawalQueueEntry) Clear(fd protoreflect.Field
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_PendingWithdrawalQueueEntry) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_PendingSwapOutQueueEntry) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.PendingWithdrawalQueueEntry.time":
+	case "vault.v1.PendingSwapOutQueueEntry.time":
 		value := x.Time
 		return protoreflect.ValueOfInt64(value)
-	case "vault.v1.PendingWithdrawalQueueEntry.id":
+	case "vault.v1.PendingSwapOutQueueEntry.id":
 		value := x.Id
 		return protoreflect.ValueOfUint64(value)
-	case "vault.v1.PendingWithdrawalQueueEntry.withdrawal":
-		value := x.Withdrawal
+	case "vault.v1.PendingSwapOutQueueEntry.swap_out":
+		value := x.SwapOut
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingWithdrawalQueueEntry"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOutQueueEntry"))
 		}
-		panic(fmt.Errorf("message vault.v1.PendingWithdrawalQueueEntry does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message vault.v1.PendingSwapOutQueueEntry does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -665,19 +665,19 @@ func (x *fastReflection_PendingWithdrawalQueueEntry) Get(descriptor protoreflect
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_PendingWithdrawalQueueEntry) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_PendingSwapOutQueueEntry) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.PendingWithdrawalQueueEntry.time":
+	case "vault.v1.PendingSwapOutQueueEntry.time":
 		x.Time = value.Int()
-	case "vault.v1.PendingWithdrawalQueueEntry.id":
+	case "vault.v1.PendingSwapOutQueueEntry.id":
 		x.Id = value.Uint()
-	case "vault.v1.PendingWithdrawalQueueEntry.withdrawal":
-		x.Withdrawal = value.Message().Interface().(*PendingWithdrawal)
+	case "vault.v1.PendingSwapOutQueueEntry.swap_out":
+		x.SwapOut = value.Message().Interface().(*PendingSwapOut)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingWithdrawalQueueEntry"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOutQueueEntry"))
 		}
-		panic(fmt.Errorf("message vault.v1.PendingWithdrawalQueueEntry does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.PendingSwapOutQueueEntry does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -691,52 +691,52 @@ func (x *fastReflection_PendingWithdrawalQueueEntry) Set(fd protoreflect.FieldDe
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_PendingWithdrawalQueueEntry) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_PendingSwapOutQueueEntry) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.PendingWithdrawalQueueEntry.withdrawal":
-		if x.Withdrawal == nil {
-			x.Withdrawal = new(PendingWithdrawal)
+	case "vault.v1.PendingSwapOutQueueEntry.swap_out":
+		if x.SwapOut == nil {
+			x.SwapOut = new(PendingSwapOut)
 		}
-		return protoreflect.ValueOfMessage(x.Withdrawal.ProtoReflect())
-	case "vault.v1.PendingWithdrawalQueueEntry.time":
-		panic(fmt.Errorf("field time of message vault.v1.PendingWithdrawalQueueEntry is not mutable"))
-	case "vault.v1.PendingWithdrawalQueueEntry.id":
-		panic(fmt.Errorf("field id of message vault.v1.PendingWithdrawalQueueEntry is not mutable"))
+		return protoreflect.ValueOfMessage(x.SwapOut.ProtoReflect())
+	case "vault.v1.PendingSwapOutQueueEntry.time":
+		panic(fmt.Errorf("field time of message vault.v1.PendingSwapOutQueueEntry is not mutable"))
+	case "vault.v1.PendingSwapOutQueueEntry.id":
+		panic(fmt.Errorf("field id of message vault.v1.PendingSwapOutQueueEntry is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingWithdrawalQueueEntry"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOutQueueEntry"))
 		}
-		panic(fmt.Errorf("message vault.v1.PendingWithdrawalQueueEntry does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.PendingSwapOutQueueEntry does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_PendingWithdrawalQueueEntry) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_PendingSwapOutQueueEntry) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.PendingWithdrawalQueueEntry.time":
+	case "vault.v1.PendingSwapOutQueueEntry.time":
 		return protoreflect.ValueOfInt64(int64(0))
-	case "vault.v1.PendingWithdrawalQueueEntry.id":
+	case "vault.v1.PendingSwapOutQueueEntry.id":
 		return protoreflect.ValueOfUint64(uint64(0))
-	case "vault.v1.PendingWithdrawalQueueEntry.withdrawal":
-		m := new(PendingWithdrawal)
+	case "vault.v1.PendingSwapOutQueueEntry.swap_out":
+		m := new(PendingSwapOut)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingWithdrawalQueueEntry"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOutQueueEntry"))
 		}
-		panic(fmt.Errorf("message vault.v1.PendingWithdrawalQueueEntry does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.PendingSwapOutQueueEntry does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_PendingWithdrawalQueueEntry) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_PendingSwapOutQueueEntry) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.PendingWithdrawalQueueEntry", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in vault.v1.PendingSwapOutQueueEntry", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -744,7 +744,7 @@ func (x *fastReflection_PendingWithdrawalQueueEntry) WhichOneof(d protoreflect.O
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_PendingWithdrawalQueueEntry) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_PendingSwapOutQueueEntry) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -755,7 +755,7 @@ func (x *fastReflection_PendingWithdrawalQueueEntry) GetUnknown() protoreflect.R
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_PendingWithdrawalQueueEntry) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_PendingSwapOutQueueEntry) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -767,7 +767,7 @@ func (x *fastReflection_PendingWithdrawalQueueEntry) SetUnknown(fields protorefl
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_PendingWithdrawalQueueEntry) IsValid() bool {
+func (x *fastReflection_PendingSwapOutQueueEntry) IsValid() bool {
 	return x != nil
 }
 
@@ -777,9 +777,9 @@ func (x *fastReflection_PendingWithdrawalQueueEntry) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_PendingWithdrawalQueueEntry) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_PendingSwapOutQueueEntry) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*PendingWithdrawalQueueEntry)
+		x := input.Message.Interface().(*PendingSwapOutQueueEntry)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -797,8 +797,8 @@ func (x *fastReflection_PendingWithdrawalQueueEntry) ProtoMethods() *protoiface.
 		if x.Id != 0 {
 			n += 1 + runtime.Sov(uint64(x.Id))
 		}
-		if x.Withdrawal != nil {
-			l = options.Size(x.Withdrawal)
+		if x.SwapOut != nil {
+			l = options.Size(x.SwapOut)
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		if x.unknownFields != nil {
@@ -811,7 +811,7 @@ func (x *fastReflection_PendingWithdrawalQueueEntry) ProtoMethods() *protoiface.
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*PendingWithdrawalQueueEntry)
+		x := input.Message.Interface().(*PendingSwapOutQueueEntry)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -830,8 +830,8 @@ func (x *fastReflection_PendingWithdrawalQueueEntry) ProtoMethods() *protoiface.
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if x.Withdrawal != nil {
-			encoded, err := options.Marshal(x.Withdrawal)
+		if x.SwapOut != nil {
+			encoded, err := options.Marshal(x.SwapOut)
 			if err != nil {
 				return protoiface.MarshalOutput{
 					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -865,7 +865,7 @@ func (x *fastReflection_PendingWithdrawalQueueEntry) ProtoMethods() *protoiface.
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*PendingWithdrawalQueueEntry)
+		x := input.Message.Interface().(*PendingSwapOutQueueEntry)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -897,10 +897,10 @@ func (x *fastReflection_PendingWithdrawalQueueEntry) ProtoMethods() *protoiface.
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: PendingWithdrawalQueueEntry: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: PendingSwapOutQueueEntry: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: PendingWithdrawalQueueEntry: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: PendingSwapOutQueueEntry: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -943,7 +943,7 @@ func (x *fastReflection_PendingWithdrawalQueueEntry) ProtoMethods() *protoiface.
 				}
 			case 3:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Withdrawal", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field SwapOut", wireType)
 				}
 				var msglen int
 				for shift := uint(0); ; shift += 7 {
@@ -970,10 +970,10 @@ func (x *fastReflection_PendingWithdrawalQueueEntry) ProtoMethods() *protoiface.
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				if x.Withdrawal == nil {
-					x.Withdrawal = &PendingWithdrawal{}
+				if x.SwapOut == nil {
+					x.SwapOut = &PendingSwapOut{}
 				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Withdrawal); err != nil {
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.SwapOut); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
@@ -1012,79 +1012,79 @@ func (x *fastReflection_PendingWithdrawalQueueEntry) ProtoMethods() *protoiface.
 	}
 }
 
-var _ protoreflect.List = (*_PendingWithdrawalQueue_2_list)(nil)
+var _ protoreflect.List = (*_PendingSwapOutQueue_2_list)(nil)
 
-type _PendingWithdrawalQueue_2_list struct {
-	list *[]*PendingWithdrawalQueueEntry
+type _PendingSwapOutQueue_2_list struct {
+	list *[]*PendingSwapOutQueueEntry
 }
 
-func (x *_PendingWithdrawalQueue_2_list) Len() int {
+func (x *_PendingSwapOutQueue_2_list) Len() int {
 	if x.list == nil {
 		return 0
 	}
 	return len(*x.list)
 }
 
-func (x *_PendingWithdrawalQueue_2_list) Get(i int) protoreflect.Value {
+func (x *_PendingSwapOutQueue_2_list) Get(i int) protoreflect.Value {
 	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
 }
 
-func (x *_PendingWithdrawalQueue_2_list) Set(i int, value protoreflect.Value) {
+func (x *_PendingSwapOutQueue_2_list) Set(i int, value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*PendingWithdrawalQueueEntry)
+	concreteValue := valueUnwrapped.Interface().(*PendingSwapOutQueueEntry)
 	(*x.list)[i] = concreteValue
 }
 
-func (x *_PendingWithdrawalQueue_2_list) Append(value protoreflect.Value) {
+func (x *_PendingSwapOutQueue_2_list) Append(value protoreflect.Value) {
 	valueUnwrapped := value.Message()
-	concreteValue := valueUnwrapped.Interface().(*PendingWithdrawalQueueEntry)
+	concreteValue := valueUnwrapped.Interface().(*PendingSwapOutQueueEntry)
 	*x.list = append(*x.list, concreteValue)
 }
 
-func (x *_PendingWithdrawalQueue_2_list) AppendMutable() protoreflect.Value {
-	v := new(PendingWithdrawalQueueEntry)
+func (x *_PendingSwapOutQueue_2_list) AppendMutable() protoreflect.Value {
+	v := new(PendingSwapOutQueueEntry)
 	*x.list = append(*x.list, v)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
-func (x *_PendingWithdrawalQueue_2_list) Truncate(n int) {
+func (x *_PendingSwapOutQueue_2_list) Truncate(n int) {
 	for i := n; i < len(*x.list); i++ {
 		(*x.list)[i] = nil
 	}
 	*x.list = (*x.list)[:n]
 }
 
-func (x *_PendingWithdrawalQueue_2_list) NewElement() protoreflect.Value {
-	v := new(PendingWithdrawalQueueEntry)
+func (x *_PendingSwapOutQueue_2_list) NewElement() protoreflect.Value {
+	v := new(PendingSwapOutQueueEntry)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
-func (x *_PendingWithdrawalQueue_2_list) IsValid() bool {
+func (x *_PendingSwapOutQueue_2_list) IsValid() bool {
 	return x.list != nil
 }
 
 var (
-	md_PendingWithdrawalQueue                        protoreflect.MessageDescriptor
-	fd_PendingWithdrawalQueue_latest_sequence_number protoreflect.FieldDescriptor
-	fd_PendingWithdrawalQueue_entries                protoreflect.FieldDescriptor
+	md_PendingSwapOutQueue                        protoreflect.MessageDescriptor
+	fd_PendingSwapOutQueue_latest_sequence_number protoreflect.FieldDescriptor
+	fd_PendingSwapOutQueue_entries                protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_vault_v1_genesis_proto_init()
-	md_PendingWithdrawalQueue = File_vault_v1_genesis_proto.Messages().ByName("PendingWithdrawalQueue")
-	fd_PendingWithdrawalQueue_latest_sequence_number = md_PendingWithdrawalQueue.Fields().ByName("latest_sequence_number")
-	fd_PendingWithdrawalQueue_entries = md_PendingWithdrawalQueue.Fields().ByName("entries")
+	md_PendingSwapOutQueue = File_vault_v1_genesis_proto.Messages().ByName("PendingSwapOutQueue")
+	fd_PendingSwapOutQueue_latest_sequence_number = md_PendingSwapOutQueue.Fields().ByName("latest_sequence_number")
+	fd_PendingSwapOutQueue_entries = md_PendingSwapOutQueue.Fields().ByName("entries")
 }
 
-var _ protoreflect.Message = (*fastReflection_PendingWithdrawalQueue)(nil)
+var _ protoreflect.Message = (*fastReflection_PendingSwapOutQueue)(nil)
 
-type fastReflection_PendingWithdrawalQueue PendingWithdrawalQueue
+type fastReflection_PendingSwapOutQueue PendingSwapOutQueue
 
-func (x *PendingWithdrawalQueue) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_PendingWithdrawalQueue)(x)
+func (x *PendingSwapOutQueue) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_PendingSwapOutQueue)(x)
 }
 
-func (x *PendingWithdrawalQueue) slowProtoReflect() protoreflect.Message {
+func (x *PendingSwapOutQueue) slowProtoReflect() protoreflect.Message {
 	mi := &file_vault_v1_genesis_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1096,43 +1096,43 @@ func (x *PendingWithdrawalQueue) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_PendingWithdrawalQueue_messageType fastReflection_PendingWithdrawalQueue_messageType
-var _ protoreflect.MessageType = fastReflection_PendingWithdrawalQueue_messageType{}
+var _fastReflection_PendingSwapOutQueue_messageType fastReflection_PendingSwapOutQueue_messageType
+var _ protoreflect.MessageType = fastReflection_PendingSwapOutQueue_messageType{}
 
-type fastReflection_PendingWithdrawalQueue_messageType struct{}
+type fastReflection_PendingSwapOutQueue_messageType struct{}
 
-func (x fastReflection_PendingWithdrawalQueue_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_PendingWithdrawalQueue)(nil)
+func (x fastReflection_PendingSwapOutQueue_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_PendingSwapOutQueue)(nil)
 }
-func (x fastReflection_PendingWithdrawalQueue_messageType) New() protoreflect.Message {
-	return new(fastReflection_PendingWithdrawalQueue)
+func (x fastReflection_PendingSwapOutQueue_messageType) New() protoreflect.Message {
+	return new(fastReflection_PendingSwapOutQueue)
 }
-func (x fastReflection_PendingWithdrawalQueue_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_PendingWithdrawalQueue
+func (x fastReflection_PendingSwapOutQueue_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_PendingSwapOutQueue
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_PendingWithdrawalQueue) Descriptor() protoreflect.MessageDescriptor {
-	return md_PendingWithdrawalQueue
+func (x *fastReflection_PendingSwapOutQueue) Descriptor() protoreflect.MessageDescriptor {
+	return md_PendingSwapOutQueue
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_PendingWithdrawalQueue) Type() protoreflect.MessageType {
-	return _fastReflection_PendingWithdrawalQueue_messageType
+func (x *fastReflection_PendingSwapOutQueue) Type() protoreflect.MessageType {
+	return _fastReflection_PendingSwapOutQueue_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_PendingWithdrawalQueue) New() protoreflect.Message {
-	return new(fastReflection_PendingWithdrawalQueue)
+func (x *fastReflection_PendingSwapOutQueue) New() protoreflect.Message {
+	return new(fastReflection_PendingSwapOutQueue)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_PendingWithdrawalQueue) Interface() protoreflect.ProtoMessage {
-	return (*PendingWithdrawalQueue)(x)
+func (x *fastReflection_PendingSwapOutQueue) Interface() protoreflect.ProtoMessage {
+	return (*PendingSwapOutQueue)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -1140,16 +1140,16 @@ func (x *fastReflection_PendingWithdrawalQueue) Interface() protoreflect.ProtoMe
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_PendingWithdrawalQueue) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_PendingSwapOutQueue) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.LatestSequenceNumber != uint64(0) {
 		value := protoreflect.ValueOfUint64(x.LatestSequenceNumber)
-		if !f(fd_PendingWithdrawalQueue_latest_sequence_number, value) {
+		if !f(fd_PendingSwapOutQueue_latest_sequence_number, value) {
 			return
 		}
 	}
 	if len(x.Entries) != 0 {
-		value := protoreflect.ValueOfList(&_PendingWithdrawalQueue_2_list{list: &x.Entries})
-		if !f(fd_PendingWithdrawalQueue_entries, value) {
+		value := protoreflect.ValueOfList(&_PendingSwapOutQueue_2_list{list: &x.Entries})
+		if !f(fd_PendingSwapOutQueue_entries, value) {
 			return
 		}
 	}
@@ -1166,17 +1166,17 @@ func (x *fastReflection_PendingWithdrawalQueue) Range(f func(protoreflect.FieldD
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_PendingWithdrawalQueue) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_PendingSwapOutQueue) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.PendingWithdrawalQueue.latest_sequence_number":
+	case "vault.v1.PendingSwapOutQueue.latest_sequence_number":
 		return x.LatestSequenceNumber != uint64(0)
-	case "vault.v1.PendingWithdrawalQueue.entries":
+	case "vault.v1.PendingSwapOutQueue.entries":
 		return len(x.Entries) != 0
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingWithdrawalQueue"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOutQueue"))
 		}
-		panic(fmt.Errorf("message vault.v1.PendingWithdrawalQueue does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.PendingSwapOutQueue does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1186,17 +1186,17 @@ func (x *fastReflection_PendingWithdrawalQueue) Has(fd protoreflect.FieldDescrip
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_PendingWithdrawalQueue) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_PendingSwapOutQueue) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.PendingWithdrawalQueue.latest_sequence_number":
+	case "vault.v1.PendingSwapOutQueue.latest_sequence_number":
 		x.LatestSequenceNumber = uint64(0)
-	case "vault.v1.PendingWithdrawalQueue.entries":
+	case "vault.v1.PendingSwapOutQueue.entries":
 		x.Entries = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingWithdrawalQueue"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOutQueue"))
 		}
-		panic(fmt.Errorf("message vault.v1.PendingWithdrawalQueue does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.PendingSwapOutQueue does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1206,22 +1206,22 @@ func (x *fastReflection_PendingWithdrawalQueue) Clear(fd protoreflect.FieldDescr
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_PendingWithdrawalQueue) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_PendingSwapOutQueue) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.PendingWithdrawalQueue.latest_sequence_number":
+	case "vault.v1.PendingSwapOutQueue.latest_sequence_number":
 		value := x.LatestSequenceNumber
 		return protoreflect.ValueOfUint64(value)
-	case "vault.v1.PendingWithdrawalQueue.entries":
+	case "vault.v1.PendingSwapOutQueue.entries":
 		if len(x.Entries) == 0 {
-			return protoreflect.ValueOfList(&_PendingWithdrawalQueue_2_list{})
+			return protoreflect.ValueOfList(&_PendingSwapOutQueue_2_list{})
 		}
-		listValue := &_PendingWithdrawalQueue_2_list{list: &x.Entries}
+		listValue := &_PendingSwapOutQueue_2_list{list: &x.Entries}
 		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingWithdrawalQueue"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOutQueue"))
 		}
-		panic(fmt.Errorf("message vault.v1.PendingWithdrawalQueue does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message vault.v1.PendingSwapOutQueue does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -1235,19 +1235,19 @@ func (x *fastReflection_PendingWithdrawalQueue) Get(descriptor protoreflect.Fiel
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_PendingWithdrawalQueue) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_PendingSwapOutQueue) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.PendingWithdrawalQueue.latest_sequence_number":
+	case "vault.v1.PendingSwapOutQueue.latest_sequence_number":
 		x.LatestSequenceNumber = value.Uint()
-	case "vault.v1.PendingWithdrawalQueue.entries":
+	case "vault.v1.PendingSwapOutQueue.entries":
 		lv := value.List()
-		clv := lv.(*_PendingWithdrawalQueue_2_list)
+		clv := lv.(*_PendingSwapOutQueue_2_list)
 		x.Entries = *clv.list
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingWithdrawalQueue"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOutQueue"))
 		}
-		panic(fmt.Errorf("message vault.v1.PendingWithdrawalQueue does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.PendingSwapOutQueue does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1261,49 +1261,49 @@ func (x *fastReflection_PendingWithdrawalQueue) Set(fd protoreflect.FieldDescrip
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_PendingWithdrawalQueue) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_PendingSwapOutQueue) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.PendingWithdrawalQueue.entries":
+	case "vault.v1.PendingSwapOutQueue.entries":
 		if x.Entries == nil {
-			x.Entries = []*PendingWithdrawalQueueEntry{}
+			x.Entries = []*PendingSwapOutQueueEntry{}
 		}
-		value := &_PendingWithdrawalQueue_2_list{list: &x.Entries}
+		value := &_PendingSwapOutQueue_2_list{list: &x.Entries}
 		return protoreflect.ValueOfList(value)
-	case "vault.v1.PendingWithdrawalQueue.latest_sequence_number":
-		panic(fmt.Errorf("field latest_sequence_number of message vault.v1.PendingWithdrawalQueue is not mutable"))
+	case "vault.v1.PendingSwapOutQueue.latest_sequence_number":
+		panic(fmt.Errorf("field latest_sequence_number of message vault.v1.PendingSwapOutQueue is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingWithdrawalQueue"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOutQueue"))
 		}
-		panic(fmt.Errorf("message vault.v1.PendingWithdrawalQueue does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.PendingSwapOutQueue does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_PendingWithdrawalQueue) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_PendingSwapOutQueue) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.PendingWithdrawalQueue.latest_sequence_number":
+	case "vault.v1.PendingSwapOutQueue.latest_sequence_number":
 		return protoreflect.ValueOfUint64(uint64(0))
-	case "vault.v1.PendingWithdrawalQueue.entries":
-		list := []*PendingWithdrawalQueueEntry{}
-		return protoreflect.ValueOfList(&_PendingWithdrawalQueue_2_list{list: &list})
+	case "vault.v1.PendingSwapOutQueue.entries":
+		list := []*PendingSwapOutQueueEntry{}
+		return protoreflect.ValueOfList(&_PendingSwapOutQueue_2_list{list: &list})
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingWithdrawalQueue"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOutQueue"))
 		}
-		panic(fmt.Errorf("message vault.v1.PendingWithdrawalQueue does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.PendingSwapOutQueue does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_PendingWithdrawalQueue) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_PendingSwapOutQueue) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.PendingWithdrawalQueue", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in vault.v1.PendingSwapOutQueue", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -1311,7 +1311,7 @@ func (x *fastReflection_PendingWithdrawalQueue) WhichOneof(d protoreflect.OneofD
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_PendingWithdrawalQueue) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_PendingSwapOutQueue) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -1322,7 +1322,7 @@ func (x *fastReflection_PendingWithdrawalQueue) GetUnknown() protoreflect.RawFie
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_PendingWithdrawalQueue) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_PendingSwapOutQueue) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -1334,7 +1334,7 @@ func (x *fastReflection_PendingWithdrawalQueue) SetUnknown(fields protoreflect.R
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_PendingWithdrawalQueue) IsValid() bool {
+func (x *fastReflection_PendingSwapOutQueue) IsValid() bool {
 	return x != nil
 }
 
@@ -1344,9 +1344,9 @@ func (x *fastReflection_PendingWithdrawalQueue) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_PendingWithdrawalQueue) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_PendingSwapOutQueue) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*PendingWithdrawalQueue)
+		x := input.Message.Interface().(*PendingSwapOutQueue)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1377,7 +1377,7 @@ func (x *fastReflection_PendingWithdrawalQueue) ProtoMethods() *protoiface.Metho
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*PendingWithdrawalQueue)
+		x := input.Message.Interface().(*PendingSwapOutQueue)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1428,7 +1428,7 @@ func (x *fastReflection_PendingWithdrawalQueue) ProtoMethods() *protoiface.Metho
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*PendingWithdrawalQueue)
+		x := input.Message.Interface().(*PendingSwapOutQueue)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -1460,10 +1460,10 @@ func (x *fastReflection_PendingWithdrawalQueue) ProtoMethods() *protoiface.Metho
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: PendingWithdrawalQueue: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: PendingSwapOutQueue: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: PendingWithdrawalQueue: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: PendingSwapOutQueue: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -1514,7 +1514,7 @@ func (x *fastReflection_PendingWithdrawalQueue) ProtoMethods() *protoiface.Metho
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Entries = append(x.Entries, &PendingWithdrawalQueueEntry{})
+				x.Entries = append(x.Entries, &PendingSwapOutQueueEntry{})
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Entries[len(x.Entries)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
@@ -1657,10 +1657,10 @@ func (x *_GenesisState_2_list) IsValid() bool {
 }
 
 var (
-	md_GenesisState                          protoreflect.MessageDescriptor
-	fd_GenesisState_vaults                   protoreflect.FieldDescriptor
-	fd_GenesisState_payout_timeout_queue     protoreflect.FieldDescriptor
-	fd_GenesisState_pending_withdrawal_queue protoreflect.FieldDescriptor
+	md_GenesisState                        protoreflect.MessageDescriptor
+	fd_GenesisState_vaults                 protoreflect.FieldDescriptor
+	fd_GenesisState_payout_timeout_queue   protoreflect.FieldDescriptor
+	fd_GenesisState_pending_swap_out_queue protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -1668,7 +1668,7 @@ func init() {
 	md_GenesisState = File_vault_v1_genesis_proto.Messages().ByName("GenesisState")
 	fd_GenesisState_vaults = md_GenesisState.Fields().ByName("vaults")
 	fd_GenesisState_payout_timeout_queue = md_GenesisState.Fields().ByName("payout_timeout_queue")
-	fd_GenesisState_pending_withdrawal_queue = md_GenesisState.Fields().ByName("pending_withdrawal_queue")
+	fd_GenesisState_pending_swap_out_queue = md_GenesisState.Fields().ByName("pending_swap_out_queue")
 }
 
 var _ protoreflect.Message = (*fastReflection_GenesisState)(nil)
@@ -1748,9 +1748,9 @@ func (x *fastReflection_GenesisState) Range(f func(protoreflect.FieldDescriptor,
 			return
 		}
 	}
-	if x.PendingWithdrawalQueue != nil {
-		value := protoreflect.ValueOfMessage(x.PendingWithdrawalQueue.ProtoReflect())
-		if !f(fd_GenesisState_pending_withdrawal_queue, value) {
+	if x.PendingSwapOutQueue != nil {
+		value := protoreflect.ValueOfMessage(x.PendingSwapOutQueue.ProtoReflect())
+		if !f(fd_GenesisState_pending_swap_out_queue, value) {
 			return
 		}
 	}
@@ -1773,8 +1773,8 @@ func (x *fastReflection_GenesisState) Has(fd protoreflect.FieldDescriptor) bool 
 		return len(x.Vaults) != 0
 	case "vault.v1.GenesisState.payout_timeout_queue":
 		return len(x.PayoutTimeoutQueue) != 0
-	case "vault.v1.GenesisState.pending_withdrawal_queue":
-		return x.PendingWithdrawalQueue != nil
+	case "vault.v1.GenesisState.pending_swap_out_queue":
+		return x.PendingSwapOutQueue != nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.GenesisState"))
@@ -1795,8 +1795,8 @@ func (x *fastReflection_GenesisState) Clear(fd protoreflect.FieldDescriptor) {
 		x.Vaults = nil
 	case "vault.v1.GenesisState.payout_timeout_queue":
 		x.PayoutTimeoutQueue = nil
-	case "vault.v1.GenesisState.pending_withdrawal_queue":
-		x.PendingWithdrawalQueue = nil
+	case "vault.v1.GenesisState.pending_swap_out_queue":
+		x.PendingSwapOutQueue = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.GenesisState"))
@@ -1825,8 +1825,8 @@ func (x *fastReflection_GenesisState) Get(descriptor protoreflect.FieldDescripto
 		}
 		listValue := &_GenesisState_2_list{list: &x.PayoutTimeoutQueue}
 		return protoreflect.ValueOfList(listValue)
-	case "vault.v1.GenesisState.pending_withdrawal_queue":
-		value := x.PendingWithdrawalQueue
+	case "vault.v1.GenesisState.pending_swap_out_queue":
+		value := x.PendingSwapOutQueue
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
@@ -1856,8 +1856,8 @@ func (x *fastReflection_GenesisState) Set(fd protoreflect.FieldDescriptor, value
 		lv := value.List()
 		clv := lv.(*_GenesisState_2_list)
 		x.PayoutTimeoutQueue = *clv.list
-	case "vault.v1.GenesisState.pending_withdrawal_queue":
-		x.PendingWithdrawalQueue = value.Message().Interface().(*PendingWithdrawalQueue)
+	case "vault.v1.GenesisState.pending_swap_out_queue":
+		x.PendingSwapOutQueue = value.Message().Interface().(*PendingSwapOutQueue)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.GenesisState"))
@@ -1890,11 +1890,11 @@ func (x *fastReflection_GenesisState) Mutable(fd protoreflect.FieldDescriptor) p
 		}
 		value := &_GenesisState_2_list{list: &x.PayoutTimeoutQueue}
 		return protoreflect.ValueOfList(value)
-	case "vault.v1.GenesisState.pending_withdrawal_queue":
-		if x.PendingWithdrawalQueue == nil {
-			x.PendingWithdrawalQueue = new(PendingWithdrawalQueue)
+	case "vault.v1.GenesisState.pending_swap_out_queue":
+		if x.PendingSwapOutQueue == nil {
+			x.PendingSwapOutQueue = new(PendingSwapOutQueue)
 		}
-		return protoreflect.ValueOfMessage(x.PendingWithdrawalQueue.ProtoReflect())
+		return protoreflect.ValueOfMessage(x.PendingSwapOutQueue.ProtoReflect())
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.GenesisState"))
@@ -1914,8 +1914,8 @@ func (x *fastReflection_GenesisState) NewField(fd protoreflect.FieldDescriptor) 
 	case "vault.v1.GenesisState.payout_timeout_queue":
 		list := []*QueueEntry{}
 		return protoreflect.ValueOfList(&_GenesisState_2_list{list: &list})
-	case "vault.v1.GenesisState.pending_withdrawal_queue":
-		m := new(PendingWithdrawalQueue)
+	case "vault.v1.GenesisState.pending_swap_out_queue":
+		m := new(PendingSwapOutQueue)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
@@ -1998,8 +1998,8 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 				n += 1 + l + runtime.Sov(uint64(l))
 			}
 		}
-		if x.PendingWithdrawalQueue != nil {
-			l = options.Size(x.PendingWithdrawalQueue)
+		if x.PendingSwapOutQueue != nil {
+			l = options.Size(x.PendingSwapOutQueue)
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		if x.unknownFields != nil {
@@ -2031,8 +2031,8 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if x.PendingWithdrawalQueue != nil {
-			encoded, err := options.Marshal(x.PendingWithdrawalQueue)
+		if x.PendingSwapOutQueue != nil {
+			encoded, err := options.Marshal(x.PendingSwapOutQueue)
 			if err != nil {
 				return protoiface.MarshalOutput{
 					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -2196,7 +2196,7 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 				iNdEx = postIndex
 			case 3:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PendingWithdrawalQueue", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PendingSwapOutQueue", wireType)
 				}
 				var msglen int
 				for shift := uint(0); ; shift += 7 {
@@ -2223,10 +2223,10 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				if x.PendingWithdrawalQueue == nil {
-					x.PendingWithdrawalQueue = &PendingWithdrawalQueue{}
+				if x.PendingSwapOutQueue == nil {
+					x.PendingSwapOutQueue = &PendingSwapOutQueue{}
 				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.PendingWithdrawalQueue); err != nil {
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.PendingSwapOutQueue); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
@@ -2321,18 +2321,18 @@ func (x *QueueEntry) GetAddr() string {
 	return ""
 }
 
-type PendingWithdrawalQueueEntry struct {
+type PendingSwapOutQueueEntry struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Time       int64              `protobuf:"varint,1,opt,name=time,proto3" json:"time,omitempty"`
-	Id         uint64             `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
-	Withdrawal *PendingWithdrawal `protobuf:"bytes,3,opt,name=withdrawal,proto3" json:"withdrawal,omitempty"`
+	Time    int64           `protobuf:"varint,1,opt,name=time,proto3" json:"time,omitempty"`
+	Id      uint64          `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
+	SwapOut *PendingSwapOut `protobuf:"bytes,3,opt,name=swap_out,json=swapOut,proto3" json:"swap_out,omitempty"`
 }
 
-func (x *PendingWithdrawalQueueEntry) Reset() {
-	*x = PendingWithdrawalQueueEntry{}
+func (x *PendingSwapOutQueueEntry) Reset() {
+	*x = PendingSwapOutQueueEntry{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_vault_v1_genesis_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2340,49 +2340,49 @@ func (x *PendingWithdrawalQueueEntry) Reset() {
 	}
 }
 
-func (x *PendingWithdrawalQueueEntry) String() string {
+func (x *PendingSwapOutQueueEntry) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*PendingWithdrawalQueueEntry) ProtoMessage() {}
+func (*PendingSwapOutQueueEntry) ProtoMessage() {}
 
-// Deprecated: Use PendingWithdrawalQueueEntry.ProtoReflect.Descriptor instead.
-func (*PendingWithdrawalQueueEntry) Descriptor() ([]byte, []int) {
+// Deprecated: Use PendingSwapOutQueueEntry.ProtoReflect.Descriptor instead.
+func (*PendingSwapOutQueueEntry) Descriptor() ([]byte, []int) {
 	return file_vault_v1_genesis_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *PendingWithdrawalQueueEntry) GetTime() int64 {
+func (x *PendingSwapOutQueueEntry) GetTime() int64 {
 	if x != nil {
 		return x.Time
 	}
 	return 0
 }
 
-func (x *PendingWithdrawalQueueEntry) GetId() uint64 {
+func (x *PendingSwapOutQueueEntry) GetId() uint64 {
 	if x != nil {
 		return x.Id
 	}
 	return 0
 }
 
-func (x *PendingWithdrawalQueueEntry) GetWithdrawal() *PendingWithdrawal {
+func (x *PendingSwapOutQueueEntry) GetSwapOut() *PendingSwapOut {
 	if x != nil {
-		return x.Withdrawal
+		return x.SwapOut
 	}
 	return nil
 }
 
-type PendingWithdrawalQueue struct {
+type PendingSwapOutQueue struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	LatestSequenceNumber uint64                         `protobuf:"varint,1,opt,name=latest_sequence_number,json=latestSequenceNumber,proto3" json:"latest_sequence_number,omitempty"`
-	Entries              []*PendingWithdrawalQueueEntry `protobuf:"bytes,2,rep,name=entries,proto3" json:"entries,omitempty"`
+	LatestSequenceNumber uint64                      `protobuf:"varint,1,opt,name=latest_sequence_number,json=latestSequenceNumber,proto3" json:"latest_sequence_number,omitempty"`
+	Entries              []*PendingSwapOutQueueEntry `protobuf:"bytes,2,rep,name=entries,proto3" json:"entries,omitempty"`
 }
 
-func (x *PendingWithdrawalQueue) Reset() {
-	*x = PendingWithdrawalQueue{}
+func (x *PendingSwapOutQueue) Reset() {
+	*x = PendingSwapOutQueue{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_vault_v1_genesis_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2390,25 +2390,25 @@ func (x *PendingWithdrawalQueue) Reset() {
 	}
 }
 
-func (x *PendingWithdrawalQueue) String() string {
+func (x *PendingSwapOutQueue) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*PendingWithdrawalQueue) ProtoMessage() {}
+func (*PendingSwapOutQueue) ProtoMessage() {}
 
-// Deprecated: Use PendingWithdrawalQueue.ProtoReflect.Descriptor instead.
-func (*PendingWithdrawalQueue) Descriptor() ([]byte, []int) {
+// Deprecated: Use PendingSwapOutQueue.ProtoReflect.Descriptor instead.
+func (*PendingSwapOutQueue) Descriptor() ([]byte, []int) {
 	return file_vault_v1_genesis_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *PendingWithdrawalQueue) GetLatestSequenceNumber() uint64 {
+func (x *PendingSwapOutQueue) GetLatestSequenceNumber() uint64 {
 	if x != nil {
 		return x.LatestSequenceNumber
 	}
 	return 0
 }
 
-func (x *PendingWithdrawalQueue) GetEntries() []*PendingWithdrawalQueueEntry {
+func (x *PendingSwapOutQueue) GetEntries() []*PendingSwapOutQueueEntry {
 	if x != nil {
 		return x.Entries
 	}
@@ -2428,8 +2428,8 @@ type GenesisState struct {
 	// temporarily deferred from automatic payout/interest verification until the
 	// given UNIX timestamp (seconds). These entries are re-enqueued on InitGenesis.
 	PayoutTimeoutQueue []*QueueEntry `protobuf:"bytes,2,rep,name=payout_timeout_queue,json=payoutTimeoutQueue,proto3" json:"payout_timeout_queue,omitempty"`
-	// pending_withdrawal_queue contains entries for pending withdrawals.
-	PendingWithdrawalQueue *PendingWithdrawalQueue `protobuf:"bytes,3,opt,name=pending_withdrawal_queue,json=pendingWithdrawalQueue,proto3" json:"pending_withdrawal_queue,omitempty"`
+	// pending_swap_out_queue contains entries for pending swap outs.
+	PendingSwapOutQueue *PendingSwapOutQueue `protobuf:"bytes,3,opt,name=pending_swap_out_queue,json=pendingSwapOutQueue,proto3" json:"pending_swap_out_queue,omitempty"`
 }
 
 func (x *GenesisState) Reset() {
@@ -2466,9 +2466,9 @@ func (x *GenesisState) GetPayoutTimeoutQueue() []*QueueEntry {
 	return nil
 }
 
-func (x *GenesisState) GetPendingWithdrawalQueue() *PendingWithdrawalQueue {
+func (x *GenesisState) GetPendingSwapOutQueue() *PendingSwapOutQueue {
 	if x != nil {
-		return x.PendingWithdrawalQueue
+		return x.PendingSwapOutQueue
 	}
 	return nil
 }
@@ -2484,50 +2484,48 @@ var file_vault_v1_genesis_proto_rawDesc = []byte{
 	0x0a, 0x0a, 0x51, 0x75, 0x65, 0x75, 0x65, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x12, 0x0a, 0x04,
 	0x74, 0x69, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x04, 0x74, 0x69, 0x6d, 0x65,
 	0x12, 0x12, 0x0a, 0x04, 0x61, 0x64, 0x64, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04,
-	0x61, 0x64, 0x64, 0x72, 0x22, 0x84, 0x01, 0x0a, 0x1b, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67,
-	0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x61, 0x6c, 0x51, 0x75, 0x65, 0x75, 0x65, 0x45,
-	0x6e, 0x74, 0x72, 0x79, 0x12, 0x12, 0x0a, 0x04, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x03, 0x52, 0x04, 0x74, 0x69, 0x6d, 0x65, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x02,
-	0x20, 0x01, 0x28, 0x04, 0x52, 0x02, 0x69, 0x64, 0x12, 0x41, 0x0a, 0x0a, 0x77, 0x69, 0x74, 0x68,
-	0x64, 0x72, 0x61, 0x77, 0x61, 0x6c, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1b, 0x2e, 0x76,
-	0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x57,
-	0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x61, 0x6c, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52,
-	0x0a, 0x77, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x61, 0x6c, 0x22, 0x95, 0x01, 0x0a, 0x16,
-	0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x61,
-	0x6c, 0x51, 0x75, 0x65, 0x75, 0x65, 0x12, 0x34, 0x0a, 0x16, 0x6c, 0x61, 0x74, 0x65, 0x73, 0x74,
-	0x5f, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x5f, 0x6e, 0x75, 0x6d, 0x62, 0x65, 0x72,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x14, 0x6c, 0x61, 0x74, 0x65, 0x73, 0x74, 0x53, 0x65,
-	0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x4e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x12, 0x45, 0x0a, 0x07,
-	0x65, 0x6e, 0x74, 0x72, 0x69, 0x65, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x25, 0x2e,
-	0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67,
-	0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x61, 0x6c, 0x51, 0x75, 0x65, 0x75, 0x65, 0x45,
-	0x6e, 0x74, 0x72, 0x79, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x07, 0x65, 0x6e, 0x74, 0x72,
-	0x69, 0x65, 0x73, 0x22, 0xf4, 0x01, 0x0a, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x53,
-	0x74, 0x61, 0x74, 0x65, 0x12, 0x34, 0x0a, 0x06, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x18, 0x01,
-	0x20, 0x03, 0x28, 0x0b, 0x32, 0x16, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e,
-	0x56, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x42, 0x04, 0xc8, 0xde,
-	0x1f, 0x00, 0x52, 0x06, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x12, 0x4c, 0x0a, 0x14, 0x70, 0x61,
-	0x79, 0x6f, 0x75, 0x74, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x5f, 0x71, 0x75, 0x65,
-	0x75, 0x65, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74,
-	0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x75, 0x65, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x42, 0x04,
-	0xc8, 0xde, 0x1f, 0x00, 0x52, 0x12, 0x70, 0x61, 0x79, 0x6f, 0x75, 0x74, 0x54, 0x69, 0x6d, 0x65,
-	0x6f, 0x75, 0x74, 0x51, 0x75, 0x65, 0x75, 0x65, 0x12, 0x60, 0x0a, 0x18, 0x70, 0x65, 0x6e, 0x64,
-	0x69, 0x6e, 0x67, 0x5f, 0x77, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x61, 0x6c, 0x5f, 0x71,
-	0x75, 0x65, 0x75, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x76, 0x61, 0x75,
-	0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x57, 0x69, 0x74,
-	0x68, 0x64, 0x72, 0x61, 0x77, 0x61, 0x6c, 0x51, 0x75, 0x65, 0x75, 0x65, 0x42, 0x04, 0xc8, 0xde,
-	0x1f, 0x00, 0x52, 0x16, 0x70, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x57, 0x69, 0x74, 0x68, 0x64,
-	0x72, 0x61, 0x77, 0x61, 0x6c, 0x51, 0x75, 0x65, 0x75, 0x65, 0x42, 0x8d, 0x01, 0x0a, 0x0c, 0x63,
-	0x6f, 0x6d, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x42, 0x0c, 0x47, 0x65, 0x6e,
-	0x65, 0x73, 0x69, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2e, 0x67, 0x69, 0x74,
-	0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73,
-	0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74,
-	0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x56, 0x58,
-	0x58, 0xaa, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x08, 0x56,
-	0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x14, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c,
-	0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02,
-	0x09, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x33,
+	0x61, 0x64, 0x64, 0x72, 0x22, 0x79, 0x0a, 0x18, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53,
+	0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x51, 0x75, 0x65, 0x75, 0x65, 0x45, 0x6e, 0x74, 0x72, 0x79,
+	0x12, 0x12, 0x0a, 0x04, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x04,
+	0x74, 0x69, 0x6d, 0x65, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04,
+	0x52, 0x02, 0x69, 0x64, 0x12, 0x39, 0x0a, 0x08, 0x73, 0x77, 0x61, 0x70, 0x5f, 0x6f, 0x75, 0x74,
+	0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76,
+	0x31, 0x2e, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74,
+	0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x07, 0x73, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x22,
+	0x8f, 0x01, 0x0a, 0x13, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f,
+	0x75, 0x74, 0x51, 0x75, 0x65, 0x75, 0x65, 0x12, 0x34, 0x0a, 0x16, 0x6c, 0x61, 0x74, 0x65, 0x73,
+	0x74, 0x5f, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x5f, 0x6e, 0x75, 0x6d, 0x62, 0x65,
+	0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x14, 0x6c, 0x61, 0x74, 0x65, 0x73, 0x74, 0x53,
+	0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x4e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x12, 0x42, 0x0a,
+	0x07, 0x65, 0x6e, 0x74, 0x72, 0x69, 0x65, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x22,
+	0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e,
+	0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x51, 0x75, 0x65, 0x75, 0x65, 0x45, 0x6e, 0x74,
+	0x72, 0x79, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x07, 0x65, 0x6e, 0x74, 0x72, 0x69, 0x65,
+	0x73, 0x22, 0xec, 0x01, 0x0a, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x53, 0x74, 0x61,
+	0x74, 0x65, 0x12, 0x34, 0x0a, 0x06, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x18, 0x01, 0x20, 0x03,
+	0x28, 0x0b, 0x32, 0x16, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x56, 0x61,
+	0x75, 0x6c, 0x74, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00,
+	0x52, 0x06, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x12, 0x4c, 0x0a, 0x14, 0x70, 0x61, 0x79, 0x6f,
+	0x75, 0x74, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x5f, 0x71, 0x75, 0x65, 0x75, 0x65,
+	0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76,
+	0x31, 0x2e, 0x51, 0x75, 0x65, 0x75, 0x65, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x42, 0x04, 0xc8, 0xde,
+	0x1f, 0x00, 0x52, 0x12, 0x70, 0x61, 0x79, 0x6f, 0x75, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x6f, 0x75,
+	0x74, 0x51, 0x75, 0x65, 0x75, 0x65, 0x12, 0x58, 0x0a, 0x16, 0x70, 0x65, 0x6e, 0x64, 0x69, 0x6e,
+	0x67, 0x5f, 0x73, 0x77, 0x61, 0x70, 0x5f, 0x6f, 0x75, 0x74, 0x5f, 0x71, 0x75, 0x65, 0x75, 0x65,
+	0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76,
+	0x31, 0x2e, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74,
+	0x51, 0x75, 0x65, 0x75, 0x65, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x13, 0x70, 0x65, 0x6e,
+	0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x51, 0x75, 0x65, 0x75, 0x65,
+	0x42, 0x8d, 0x01, 0x0a, 0x0c, 0x63, 0x6f, 0x6d, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76,
+	0x31, 0x42, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50,
+	0x01, 0x5a, 0x2e, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72,
+	0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69,
+	0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x76,
+	0x31, 0xa2, 0x02, 0x03, 0x56, 0x58, 0x58, 0xaa, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e,
+	0x56, 0x31, 0xca, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x14,
+	0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61,
+	0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x09, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31,
+	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -2544,19 +2542,19 @@ func file_vault_v1_genesis_proto_rawDescGZIP() []byte {
 
 var file_vault_v1_genesis_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_vault_v1_genesis_proto_goTypes = []interface{}{
-	(*QueueEntry)(nil),                  // 0: vault.v1.QueueEntry
-	(*PendingWithdrawalQueueEntry)(nil), // 1: vault.v1.PendingWithdrawalQueueEntry
-	(*PendingWithdrawalQueue)(nil),      // 2: vault.v1.PendingWithdrawalQueue
-	(*GenesisState)(nil),                // 3: vault.v1.GenesisState
-	(*PendingWithdrawal)(nil),           // 4: vault.v1.PendingWithdrawal
-	(*VaultAccount)(nil),                // 5: vault.v1.VaultAccount
+	(*QueueEntry)(nil),               // 0: vault.v1.QueueEntry
+	(*PendingSwapOutQueueEntry)(nil), // 1: vault.v1.PendingSwapOutQueueEntry
+	(*PendingSwapOutQueue)(nil),      // 2: vault.v1.PendingSwapOutQueue
+	(*GenesisState)(nil),             // 3: vault.v1.GenesisState
+	(*PendingSwapOut)(nil),           // 4: vault.v1.PendingSwapOut
+	(*VaultAccount)(nil),             // 5: vault.v1.VaultAccount
 }
 var file_vault_v1_genesis_proto_depIdxs = []int32{
-	4, // 0: vault.v1.PendingWithdrawalQueueEntry.withdrawal:type_name -> vault.v1.PendingWithdrawal
-	1, // 1: vault.v1.PendingWithdrawalQueue.entries:type_name -> vault.v1.PendingWithdrawalQueueEntry
+	4, // 0: vault.v1.PendingSwapOutQueueEntry.swap_out:type_name -> vault.v1.PendingSwapOut
+	1, // 1: vault.v1.PendingSwapOutQueue.entries:type_name -> vault.v1.PendingSwapOutQueueEntry
 	5, // 2: vault.v1.GenesisState.vaults:type_name -> vault.v1.VaultAccount
 	0, // 3: vault.v1.GenesisState.payout_timeout_queue:type_name -> vault.v1.QueueEntry
-	2, // 4: vault.v1.GenesisState.pending_withdrawal_queue:type_name -> vault.v1.PendingWithdrawalQueue
+	2, // 4: vault.v1.GenesisState.pending_swap_out_queue:type_name -> vault.v1.PendingSwapOutQueue
 	5, // [5:5] is the sub-list for method output_type
 	5, // [5:5] is the sub-list for method input_type
 	5, // [5:5] is the sub-list for extension type_name
@@ -2584,7 +2582,7 @@ func file_vault_v1_genesis_proto_init() {
 			}
 		}
 		file_vault_v1_genesis_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*PendingWithdrawalQueueEntry); i {
+			switch v := v.(*PendingSwapOutQueueEntry); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2596,7 +2594,7 @@ func file_vault_v1_genesis_proto_init() {
 			}
 		}
 		file_vault_v1_genesis_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*PendingWithdrawalQueue); i {
+			switch v := v.(*PendingSwapOutQueue); i {
 			case 0:
 				return &v.state
 			case 1:

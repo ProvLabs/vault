@@ -26,25 +26,25 @@ func NewQueryServer(keeper *Keeper) types.QueryServer {
 	return &queryServer{Keeper: keeper}
 }
 
-// PendingWithdrawals returns a paginated list of all pending withdrawals.
-func (k queryServer) PendingWithdrawals(goCtx context.Context, req *types.QueryPendingWithdrawalsRequest) (*types.QueryPendingWithdrawalsResponse, error) {
+// PendingSwapOuts returns a paginated list of all pending swap outs.
+func (k queryServer) PendingSwapOuts(goCtx context.Context, req *types.QueryPendingSwapOutsRequest) (*types.QueryPendingSwapOutsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	withdrawals := []types.PendingWithdrawalWithTimeout{}
+	swapOuts := []types.PendingSwapOutWithTimeout{}
 
 	_, pageRes, err := query.CollectionPaginate(
 		ctx,
-		k.PendingWithdrawalQueue.IndexedMap,
+		k.PendingSwapOutQueue.IndexedMap,
 		req.Pagination,
-		func(key collections.Triple[int64, uint64, sdk.AccAddress], value types.PendingWithdrawal) (include bool, err error) {
-			withdrawals = append(withdrawals, types.PendingWithdrawalWithTimeout{
-				RequestId:         key.K2(),
-				Timeout:           time.Unix(key.K1(), 0),
-				PendingWithdrawal: value,
+		func(key collections.Triple[int64, uint64, sdk.AccAddress], value types.PendingSwapOut) (include bool, err error) {
+			swapOuts = append(swapOuts, types.PendingSwapOutWithTimeout{
+				RequestId:      key.K2(),
+				Timeout:        time.Unix(key.K1(), 0),
+				PendingSwapOut: value,
 			})
 			return true, nil
 		},
@@ -53,9 +53,9 @@ func (k queryServer) PendingWithdrawals(goCtx context.Context, req *types.QueryP
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	return &types.QueryPendingWithdrawalsResponse{
-		PendingWithdrawals: withdrawals,
-		Pagination:         pageRes,
+	return &types.QueryPendingSwapOutsResponse{
+		PendingSwapOuts: swapOuts,
+		Pagination:      pageRes,
 	}, nil
 }
 

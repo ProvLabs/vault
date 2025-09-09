@@ -13,75 +13,75 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// PendingWithdrawalIndexes defines the indexes for the pending withdrawal queue.
-type PendingWithdrawalIndexes struct {
-	ByVault *indexes.Multi[sdk.AccAddress, collections.Triple[int64, uint64, sdk.AccAddress], types.PendingWithdrawal]
-	ByID    *indexes.Unique[uint64, collections.Triple[int64, uint64, sdk.AccAddress], types.PendingWithdrawal]
+// PendingSwapOutIndexes defines the indexes for the pending swap out queue.
+type PendingSwapOutIndexes struct {
+	ByVault *indexes.Multi[sdk.AccAddress, collections.Triple[int64, uint64, sdk.AccAddress], types.PendingSwapOut]
+	ByID    *indexes.Unique[uint64, collections.Triple[int64, uint64, sdk.AccAddress], types.PendingSwapOut]
 }
 
-// IndexesList returns the list of indexes for the pending withdrawal queue.
-func (i PendingWithdrawalIndexes) IndexesList() []collections.Index[collections.Triple[int64, uint64, sdk.AccAddress], types.PendingWithdrawal] {
+// IndexesList returns the list of indexes for the pending swap out queue.
+func (i PendingSwapOutIndexes) IndexesList() []collections.Index[collections.Triple[int64, uint64, sdk.AccAddress], types.PendingSwapOut] {
 	return []collections.Index[
-		collections.Triple[int64, uint64, sdk.AccAddress], types.PendingWithdrawal]{i.ByVault, i.ByID}
+		collections.Triple[int64, uint64, sdk.AccAddress], types.PendingSwapOut]{i.ByVault, i.ByID}
 }
 
-// NewPendingWithdrawalIndexes creates a new PendingWithdrawalIndexes object.
-func NewPendingWithdrawalIndexes(sb *collections.SchemaBuilder) PendingWithdrawalIndexes {
-	return PendingWithdrawalIndexes{
+// NewPendingSwapOutIndexes creates a new PendingSwapOutIndexes object.
+func NewPendingSwapOutIndexes(sb *collections.SchemaBuilder) PendingSwapOutIndexes {
+	return PendingSwapOutIndexes{
 		ByVault: indexes.NewMulti(
 			sb,
-			types.VaultPendingWithdrawalByVaultIndexPrefix,
-			types.VaultPendingWithdrawalByVaultIndexName,
+			types.VaultPendingSwapOutByVaultIndexPrefix,
+			types.VaultPendingSwapOutByVaultIndexName,
 			sdk.AccAddressKey,
 			collections.TripleKeyCodec(collections.Int64Key, collections.Uint64Key, sdk.AccAddressKey),
-			func(pk collections.Triple[int64, uint64, sdk.AccAddress], _ types.PendingWithdrawal) (sdk.AccAddress, error) {
+			func(pk collections.Triple[int64, uint64, sdk.AccAddress], _ types.PendingSwapOut) (sdk.AccAddress, error) {
 				return pk.K3(), nil
 			},
 		),
 		ByID: indexes.NewUnique(
 			sb,
-			types.VaultPendingWithdrawalByIdIndexPrefix,
-			types.VaultPendingWithdrawalByIdIndexName,
+			types.VaultPendingSwapOutByIdIndexPrefix,
+			types.VaultPendingSwapOutByIdIndexName,
 			collections.Uint64Key,
 			collections.TripleKeyCodec(collections.Int64Key, collections.Uint64Key, sdk.AccAddressKey),
-			func(pk collections.Triple[int64, uint64, sdk.AccAddress], _ types.PendingWithdrawal) (uint64, error) {
+			func(pk collections.Triple[int64, uint64, sdk.AccAddress], _ types.PendingSwapOut) (uint64, error) {
 				return pk.K2(), nil
 			},
 		),
 	}
 }
 
-// PendingWithdrawalQueue is a queue for pending withdrawals.
-type PendingWithdrawalQueue struct {
-	// IndexedMap is the indexed map of pending withdrawals. The key is a triple of (timestamp, id, vault).
-	IndexedMap *collections.IndexedMap[collections.Triple[int64, uint64, sdk.AccAddress], types.PendingWithdrawal, PendingWithdrawalIndexes]
-	// Sequence is the sequence for generating unique withdrawal IDs.
+// PendingSwapOutQueue is a queue for pending swap outs.
+type PendingSwapOutQueue struct {
+	// IndexedMap is the indexed map of pending swap outs. The key is a triple of (timestamp, id, vault).
+	IndexedMap *collections.IndexedMap[collections.Triple[int64, uint64, sdk.AccAddress], types.PendingSwapOut, PendingSwapOutIndexes]
+	// Sequence is the sequence for generating unique swap out IDs.
 	Sequence collections.Sequence
 }
 
-// NewPendingWithdrawalQueue creates a new PendingWithdrawalQueue.
-func NewPendingWithdrawalQueue(builder *collections.SchemaBuilder, cdc codec.BinaryCodec) *PendingWithdrawalQueue {
+// NewPendingSwapOutQueue creates a new PendingSwapOutQueue.
+func NewPendingSwapOutQueue(builder *collections.SchemaBuilder, cdc codec.BinaryCodec) *PendingSwapOutQueue {
 	keyCodec := collections.TripleKeyCodec(
 		collections.Int64Key,
 		collections.Uint64Key,
 		sdk.AccAddressKey,
 	)
-	valueCodec := codec.CollValue[types.PendingWithdrawal](cdc)
-	return &PendingWithdrawalQueue{
+	valueCodec := codec.CollValue[types.PendingSwapOut](cdc)
+	return &PendingSwapOutQueue{
 		IndexedMap: collections.NewIndexedMap(
 			builder,
-			types.VaultPendingWithdrawalQueuePrefix,
-			types.VaultPendingWithdrawalQueueName,
+			types.VaultPendingSwapOutQueuePrefix,
+			types.VaultPendingSwapOutQueueName,
 			keyCodec,
 			valueCodec,
-			NewPendingWithdrawalIndexes(builder),
+			NewPendingSwapOutIndexes(builder),
 		),
-		Sequence: collections.NewSequence(builder, types.VaultPendingWithdrawalQueueSeqPrefix, types.VaultPendingWithdrawalQueueSeqName),
+		Sequence: collections.NewSequence(builder, types.VaultPendingSwapOutQueueSeqPrefix, types.VaultPendingSwapOutQueueSeqName),
 	}
 }
 
-// Enqueue adds a pending withdrawal to the queue.
-func (p *PendingWithdrawalQueue) Enqueue(ctx context.Context, pendingTime int64, req *types.PendingWithdrawal) (uint64, error) {
+// Enqueue adds a pending swap out to the queue.
+func (p *PendingSwapOutQueue) Enqueue(ctx context.Context, pendingTime int64, req *types.PendingSwapOut) (uint64, error) {
 	if pendingTime < 0 {
 		return 0, fmt.Errorf("pending time cannot be negative")
 	}
@@ -96,8 +96,8 @@ func (p *PendingWithdrawalQueue) Enqueue(ctx context.Context, pendingTime int64,
 	return id, p.IndexedMap.Set(ctx, collections.Join3(pendingTime, id, vault), *req)
 }
 
-// Dequeue removes a pending withdrawal from the queue.
-func (p *PendingWithdrawalQueue) Dequeue(ctx context.Context, timestamp int64, vault sdk.AccAddress, id uint64) error {
+// Dequeue removes a pending swap out from the queue.
+func (p *PendingSwapOutQueue) Dequeue(ctx context.Context, timestamp int64, vault sdk.AccAddress, id uint64) error {
 	if timestamp < 0 {
 		return fmt.Errorf("timestamp cannot be negative")
 	}
@@ -108,8 +108,8 @@ func (p *PendingWithdrawalQueue) Dequeue(ctx context.Context, timestamp int64, v
 	return p.IndexedMap.Remove(ctx, key)
 }
 
-// GetByID gets the pending withdrawal by ID.
-func (p *PendingWithdrawalQueue) GetByID(ctx context.Context, id uint64) (int64, *types.PendingWithdrawal, error) {
+// GetByID gets the pending swap out by ID.
+func (p *PendingSwapOutQueue) GetByID(ctx context.Context, id uint64) (int64, *types.PendingSwapOut, error) {
 	pk, err := p.IndexedMap.Indexes.ByID.MatchExact(ctx, id)
 	if err != nil {
 		return 0, nil, err
@@ -123,8 +123,8 @@ func (p *PendingWithdrawalQueue) GetByID(ctx context.Context, id uint64) (int64,
 	return pk.K1(), &req, nil
 }
 
-// ExpediteWithdrawal sets the timestamp of a pending withdrawal to 0.
-func (p *PendingWithdrawalQueue) ExpediteWithdrawal(ctx context.Context, id uint64) error {
+// ExpediteSwapOut sets the timestamp of a pending swap out to 0.
+func (p *PendingSwapOutQueue) ExpediteSwapOut(ctx context.Context, id uint64) error {
 	pk, err := p.IndexedMap.Indexes.ByID.MatchExact(ctx, id)
 	if err != nil {
 		return err
@@ -142,12 +142,12 @@ func (p *PendingWithdrawalQueue) ExpediteWithdrawal(ctx context.Context, id uint
 	return p.IndexedMap.Set(ctx, collections.Join3(int64(0), pk.K2(), pk.K3()), req)
 }
 
-// WalkDue iterates over all entries in the PendingWithdrawalQueue with
+// WalkDue iterates over all entries in the PendingSwapOutQueue with
 // a timestamp <= now. For each due entry, the callback is invoked.
 // Iteration stops when a key with time > now is encountered (since keys are
 // ordered) or when the callback returns stop=true or an error.
-func (p *PendingWithdrawalQueue) WalkDue(ctx context.Context, now int64, fn func(timestamp int64, id uint64, vault sdk.AccAddress, req types.PendingWithdrawal) (stop bool, err error)) error {
-	return p.IndexedMap.Walk(ctx, nil, func(key collections.Triple[int64, uint64, sdk.AccAddress], value types.PendingWithdrawal) (stop bool, err error) {
+func (p *PendingSwapOutQueue) WalkDue(ctx context.Context, now int64, fn func(timestamp int64, id uint64, vault sdk.AccAddress, req types.PendingSwapOut) (stop bool, err error)) error {
+	return p.IndexedMap.Walk(ctx, nil, func(key collections.Triple[int64, uint64, sdk.AccAddress], value types.PendingSwapOut) (stop bool, err error) {
 		if key.K1() > now {
 			return true, nil
 		}
@@ -155,17 +155,17 @@ func (p *PendingWithdrawalQueue) WalkDue(ctx context.Context, now int64, fn func
 	})
 }
 
-// Walk iterates over all entries in the PendingWithdrawalQueue.
+// Walk iterates over all entries in the PendingSwapOutQueue.
 // Iteration stops when the callback returns stop=true or an error.
-func (p *PendingWithdrawalQueue) Walk(ctx context.Context, fn func(timestamp int64, id uint64, vault sdk.AccAddress, req types.PendingWithdrawal) (stop bool, err error)) error {
-	return p.IndexedMap.Walk(ctx, nil, func(key collections.Triple[int64, uint64, sdk.AccAddress], value types.PendingWithdrawal) (stop bool, err error) {
+func (p *PendingSwapOutQueue) Walk(ctx context.Context, fn func(timestamp int64, id uint64, vault sdk.AccAddress, req types.PendingSwapOut) (stop bool, err error)) error {
+	return p.IndexedMap.Walk(ctx, nil, func(key collections.Triple[int64, uint64, sdk.AccAddress], value types.PendingSwapOut) (stop bool, err error) {
 		return fn(key.K1(), key.K2(), key.K3(), value)
 	})
 }
 
-// WalkByVault iterates over all entries in the PendingWithdrawalQueue for a specific vault.
+// WalkByVault iterates over all entries in the PendingSwapOutQueue for a specific vault.
 // Iteration stops when the callback returns stop=true or an error.
-func (p *PendingWithdrawalQueue) WalkByVault(ctx context.Context, vaultAddr sdk.AccAddress, fn func(timestamp int64, id uint64, req types.PendingWithdrawal) (stop bool, err error)) error {
+func (p *PendingSwapOutQueue) WalkByVault(ctx context.Context, vaultAddr sdk.AccAddress, fn func(timestamp int64, id uint64, req types.PendingSwapOut) (stop bool, err error)) error {
 	iter, err := p.IndexedMap.Indexes.ByVault.MatchExact(ctx, vaultAddr)
 	if err != nil {
 		return err
@@ -188,58 +188,58 @@ func (p *PendingWithdrawalQueue) WalkByVault(ctx context.Context, vaultAddr sdk.
 	return nil
 }
 
-// Import imports the pending withdrawal queue from genesis.
-func (p *PendingWithdrawalQueue) Import(ctx context.Context, genQueue *types.PendingWithdrawalQueue) error {
+// Import imports the pending swap out queue from genesis.
+func (p *PendingSwapOutQueue) Import(ctx context.Context, genQueue *types.PendingSwapOutQueue) error {
 	if genQueue == nil {
 		return fmt.Errorf("genesis queue is nil")
 	}
 	for _, entry := range genQueue.Entries {
-		vaultAddr, err := sdk.AccAddressFromBech32(entry.Withdrawal.VaultAddress)
+		vaultAddr, err := sdk.AccAddressFromBech32(entry.SwapOut.VaultAddress)
 		if err != nil {
-			return fmt.Errorf("invalid vault address in pending withdrawal queue: %w", err)
+			return fmt.Errorf("invalid vault address in pending swap out queue: %w", err)
 		}
-		if _, err := sdk.AccAddressFromBech32(entry.Withdrawal.Owner); err != nil {
-			return fmt.Errorf("invalid owner address in pending withdrawal queue: %w", err)
+		if _, err := sdk.AccAddressFromBech32(entry.SwapOut.Owner); err != nil {
+			return fmt.Errorf("invalid owner address in pending swap out queue: %w", err)
 		}
-		withdrawal := types.PendingWithdrawal{
-			Owner:        entry.Withdrawal.Owner,
-			Assets:       entry.Withdrawal.Assets,
-			VaultAddress: entry.Withdrawal.VaultAddress,
+		swapOut := types.PendingSwapOut{
+			Owner:        entry.SwapOut.Owner,
+			Assets:       entry.SwapOut.Assets,
+			VaultAddress: entry.SwapOut.VaultAddress,
 		}
 
-		if err := p.IndexedMap.Set(ctx, collections.Join3(entry.Time, entry.Id, vaultAddr), withdrawal); err != nil {
-			return fmt.Errorf("failed to enqueue pending withdrawal: %w", err)
+		if err := p.IndexedMap.Set(ctx, collections.Join3(entry.Time, entry.Id, vaultAddr), swapOut); err != nil {
+			return fmt.Errorf("failed to enqueue pending swap out: %w", err)
 		}
 	}
 	if err := p.Sequence.Set(ctx, genQueue.LatestSequenceNumber); err != nil {
-		return fmt.Errorf("failed to set latest sequence number for pending withdrawal queue: %w", err)
+		return fmt.Errorf("failed to set latest sequence number for pending swap out queue: %w", err)
 	}
 	return nil
 }
 
-// Export exports the pending withdrawal queue to genesis.
-func (p *PendingWithdrawalQueue) Export(ctx context.Context) (*types.PendingWithdrawalQueue, error) {
-	pendingWithdrawalQueue := make([]types.PendingWithdrawalQueueEntry, 0)
-	err := p.Walk(ctx, func(timestamp int64, id uint64, _ sdk.AccAddress, req types.PendingWithdrawal) (stop bool, err error) {
-		pendingWithdrawalQueue = append(pendingWithdrawalQueue, types.PendingWithdrawalQueueEntry{
-			Time:       timestamp,
-			Id:         id,
-			Withdrawal: req,
+// Export exports the pending swap out queue to genesis.
+func (p *PendingSwapOutQueue) Export(ctx context.Context) (*types.PendingSwapOutQueue, error) {
+	pendingSwapOutQueue := make([]types.PendingSwapOutQueueEntry, 0)
+	err := p.Walk(ctx, func(timestamp int64, id uint64, _ sdk.AccAddress, req types.PendingSwapOut) (stop bool, err error) {
+		pendingSwapOutQueue = append(pendingSwapOutQueue, types.PendingSwapOutQueueEntry{
+			Time:    timestamp,
+			Id:      id,
+			SwapOut: req,
 		})
 		return false, nil
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to walk pending withdrawal queue: %w", err)
+		return nil, fmt.Errorf("failed to walk pending swap out queue: %w", err)
 	}
 
 	latestSequenceNumber, err := p.Sequence.Peek(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get latest sequence number for pending withdrawal queue: %w", err)
+		return nil, fmt.Errorf("failed to get latest sequence number for pending swap out queue: %w", err)
 	}
 
-	return &types.PendingWithdrawalQueue{
+	return &types.PendingSwapOutQueue{
 			LatestSequenceNumber: latestSequenceNumber,
-			Entries:              pendingWithdrawalQueue,
+			Entries:              pendingSwapOutQueue,
 		},
 		nil
 }

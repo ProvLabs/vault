@@ -32,33 +32,33 @@ service Query {
     option (google.api.http).get = "/vault/v1/vaults/{vault_address}/estimate_swap_out";
   }
 
-  // PendingWithdrawals returns a paginated list of all pending withdrawals.
-  rpc PendingWithdrawals(QueryPendingWithdrawalsRequest) returns (QueryPendingWithdrawalsResponse) {
-    option (google.api.http).get = "/vault/v1/pending_withdrawals";
+  // PendingSwapOuts returns a paginated list of all pending swap outs.
+  rpc PendingSwapOuts(QueryPendingSwapOutsRequest) returns (QueryPendingSwapOutsResponse) {
+    option (google.api.http).get = "/vault/v1/pending_swap_outs";
   }
 }
 
-// QueryPendingWithdrawalsRequest is the request message for the Query/PendingWithdrawals endpoint.
-message QueryPendingWithdrawalsRequest {
+// QueryPendingSwapOutsRequest is the request message for the Query/PendingSwapOuts endpoint.
+message QueryPendingSwapOutsRequest {
   // pagination defines an optional pagination for the request.
   cosmos.base.query.v1beta1.PageRequest pagination = 1;
 }
 
-// QueryPendingWithdrawalsResponse is the response message for the Query/PendingWithdrawals endpoint.
-message QueryPendingWithdrawalsResponse {
-  // pending_withdrawals is a list of all pending withdrawals.
-  repeated PendingWithdrawalWithTimeout pending_withdrawals = 1 [(gogoproto.nullable) = false];
+// QueryPendingSwapOutsResponse is the response message for the Query/PendingSwapOuts endpoint.
+message QueryPendingSwapOutsResponse {
+  // pending_swap_outs is a list of all pending swap outs.
+  repeated PendingSwapOutWithTimeout pending_swap_outs = 1 [(gogoproto.nullable) = false];
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
-// PendingWithdrawalWithTimeout is a pending withdrawal with its timeout.
-message PendingWithdrawalWithTimeout {
-  // request_id is the unique identifier for the pending withdrawal request.
+// PendingSwapOutWithTimeout is a pending swap out with its timeout.
+message PendingSwapOutWithTimeout {
+  // request_id is the unique identifier for the pending swap out request.
   uint64 request_id = 1;
-  // pending_withdrawal contains the details of the withdrawal request.
-  PendingWithdrawal pending_withdrawal = 2 [(gogoproto.nullable) = false];
-  // timeout is the time at which the pending withdrawal will expire if not processed.
+  // pending_swap_out contains the details of the swap out request.
+  PendingSwapOut pending_swap_out = 2 [(gogoproto.nullable) = false];
+  // timeout is the time at which the pending swap out will expire if not processed.
   google.protobuf.Timestamp timeout = 3 [
     (gogoproto.stdtime) = true,
     (gogoproto.nullable) = false

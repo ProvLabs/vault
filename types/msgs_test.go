@@ -833,27 +833,27 @@ func TestMsgWithdrawPrincipalFundsRequest_ValidateBasic(t *testing.T) {
 	}
 }
 
-func TestMsgExpeditePendingWithdrawalRequest_ValidateBasic(t *testing.T) {
+func TestMsgExpeditePendingSwapOutRequest_ValidateBasic(t *testing.T) {
 	addr := utils.TestAddress().Bech32
 
 	tests := []struct {
 		name        string
-		msg         types.MsgExpeditePendingWithdrawalRequest
+		msg         types.MsgExpeditePendingSwapOutRequest
 		expectedErr error
 	}{
 		{
 			name: "valid",
-			msg: types.MsgExpeditePendingWithdrawalRequest{
+			msg: types.MsgExpeditePendingSwapOutRequest{
 				Admin: addr,
-				Id:    1,
+				RequestId:    1,
 			},
 			expectedErr: nil,
 		},
 		{
 			name: "invalid admin",
-			msg: types.MsgExpeditePendingWithdrawalRequest{
+			msg: types.MsgExpeditePendingSwapOutRequest{
 				Admin: "bad",
-				Id:    1,
+				RequestId:    1,
 			},
 			expectedErr: fmt.Errorf("invalid admin address: %q", "bad"),
 		},

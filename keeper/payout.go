@@ -10,11 +10,12 @@ import (
 	"github.com/provlabs/vault/types"
 )
 
-// ProcessPendingWithdrawals iterates through the queue of withdrawal requests that are due to be
-// processed at the current block time. For each due request, it attempts to pay out the assets.
-// If a payout fails (e.g., due to insufficient liquidity), it refunds the user's escrowed shares.
-// All processed requests (both successful and failed) are dequeued. Errors during the queue walk
-// are returned, but individual payout/refund failures are logged and do not halt the process.
+// ProcessPendingWithdrawals processes the queue of pending swap-out requests. Called from the EndBlocker,
+// it iterates through requests due for payout at the current block time.
+// For each request, it attempts a payout. If the payout fails due to a recoverable error (e.g., insufficient liquidity),
+// it refunds the user's escrowed shares. All processed requests are dequeued, regardless of success or failure.
+// This function returns an error only if the queue walk itself fails; it does not return errors from individual
+// payout/refund operations.
 func (k *Keeper) ProcessPendingWithdrawals(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	now := sdkCtx.BlockTime().Unix()
@@ -50,10 +51,10 @@ func (k *Keeper) ProcessPendingWithdrawals(ctx context.Context) error {
 	return nil
 }
 
-// processSingleWithdrawal handles the successful state changes for a pending withdrawal.
-// It sends the pre-calculated assets from the vault's principal account to the owner.
-// It then transfers the escrowed shares from the vault's operational account to the
-// principal account before burning them to reduce the total supply. An event is emitted on success.
+// processSingleWithdrawal executes a pending swap-out, paying out assets to the owner and burning their escrowed shares.
+// It returns a non-nil error only for recoverable failures (e.g., insufficient liquidity for payout), which signals
+// the caller to issue a refund. It panics for any critical, unrecoverable state inconsistencies that occur *after* the
+// user has been paid, such as failing to burn the escrowed shares. An EventSwapOutCompleted is emitted on success.
 func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.PendingWithdrawal) error {
 	vaultAddr := sdk.MustAccAddressFromBech32(req.VaultAddress)
 	ownerAddr := sdk.MustAccAddressFromBech32(req.Owner)
@@ -75,9 +76,10 @@ func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.P
 	return nil
 }
 
-// refundWithdrawal handles the failure case for a pending withdrawal. It returns the user's
-// escrowed shares from the vault's own account back to the owner and emits an event detailing
-// the refund and the reason for the failure.
+// refundWithdrawal handles the failure case for a pending swap out. It returns the user's
+// escrowed shares from the vault's own account back to the owner and emits an EventSwapOutRefunded.
+// This function panics if the refund transfer fails, as this represents a critical state inconsistency
+// where user funds would otherwise be lost.
 func (k *Keeper) refundWithdrawal(ctx sdk.Context, id uint64, req types.PendingWithdrawal, reason string) {
 	vaultAddr := sdk.MustAccAddressFromBech32(req.VaultAddress)
 	ownerAddr := sdk.MustAccAddressFromBech32(req.Owner)

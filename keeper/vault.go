@@ -213,7 +213,25 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 	return &shares, nil
 }
 
-// SwapOut validates a withdrawal request, escrows the user's shares, and enqueues a pending withdrawal.
+// checkPayoutRestrictions performs a pre-flight check to ensure a user is permissioned to receive
+// the assets from a vault's principal marker. This prevents queueing a withdrawal that is guaranteed
+// to fail later due to marker transfer restrictions (e.g., required attributes).
+func (k *Keeper) checkPayoutRestrictions(ctx sdk.Context, vault *types.VaultAccount, owner sdk.AccAddress, assets sdk.Coin) error {
+	_, err := k.MarkerKeeper.SendRestrictionFn(
+		markertypes.WithTransferAgents(ctx, vault.GetAddress()),
+		vault.PrincipalMarkerAddress(),
+		owner,
+		sdk.NewCoins(assets),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to pass send restrictions test: %w", err)
+	}
+	return nil
+}
+
+// SwapOut validates a swap-out request, calculates the resulting assets, escrows the user's shares,
+// and enqueues a pending withdrawal request to be processed by the EndBlocker.
+// It returns the unique ID of the newly queued request.
 func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, shares sdk.Coin, redeemDenom string) (uint64, error) {
 	vault, err := k.GetVault(ctx, vaultAddr)
 	if err != nil {
@@ -251,9 +269,8 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 		return 0, fmt.Errorf("redeem amount of %s is too small and results in zero assets", shares.String())
 	}
 
-	_, err = k.MarkerKeeper.SendRestrictionFn(markertypes.WithTransferAgents(ctx, vaultAddr), vault.PrincipalMarkerAddress(), owner, sdk.NewCoins(assets))
-	if err != nil {
-		return 0, fmt.Errorf("failed to pass send restrictions test: %w", err)
+	if err := k.checkPayoutRestrictions(ctx, vault, owner, assets); err != nil {
+		return 0, err
 	}
 
 	if err := k.BankKeeper.SendCoins(ctx, owner, vault.GetAddress(), sdk.NewCoins(shares)); err != nil {

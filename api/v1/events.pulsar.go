@@ -9037,29 +9037,29 @@ func (x *fastReflection_EventMaxInterestRateUpdated) ProtoMethods() *protoiface.
 }
 
 var (
-	md_EventPendingWithdrawalExpedited       protoreflect.MessageDescriptor
-	fd_EventPendingWithdrawalExpedited_id    protoreflect.FieldDescriptor
-	fd_EventPendingWithdrawalExpedited_vault protoreflect.FieldDescriptor
-	fd_EventPendingWithdrawalExpedited_admin protoreflect.FieldDescriptor
+	md_EventPendingSwapOutExpedited            protoreflect.MessageDescriptor
+	fd_EventPendingSwapOutExpedited_request_id protoreflect.FieldDescriptor
+	fd_EventPendingSwapOutExpedited_vault      protoreflect.FieldDescriptor
+	fd_EventPendingSwapOutExpedited_admin      protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_vault_v1_events_proto_init()
-	md_EventPendingWithdrawalExpedited = File_vault_v1_events_proto.Messages().ByName("EventPendingWithdrawalExpedited")
-	fd_EventPendingWithdrawalExpedited_id = md_EventPendingWithdrawalExpedited.Fields().ByName("id")
-	fd_EventPendingWithdrawalExpedited_vault = md_EventPendingWithdrawalExpedited.Fields().ByName("vault")
-	fd_EventPendingWithdrawalExpedited_admin = md_EventPendingWithdrawalExpedited.Fields().ByName("admin")
+	md_EventPendingSwapOutExpedited = File_vault_v1_events_proto.Messages().ByName("EventPendingSwapOutExpedited")
+	fd_EventPendingSwapOutExpedited_request_id = md_EventPendingSwapOutExpedited.Fields().ByName("request_id")
+	fd_EventPendingSwapOutExpedited_vault = md_EventPendingSwapOutExpedited.Fields().ByName("vault")
+	fd_EventPendingSwapOutExpedited_admin = md_EventPendingSwapOutExpedited.Fields().ByName("admin")
 }
 
-var _ protoreflect.Message = (*fastReflection_EventPendingWithdrawalExpedited)(nil)
+var _ protoreflect.Message = (*fastReflection_EventPendingSwapOutExpedited)(nil)
 
-type fastReflection_EventPendingWithdrawalExpedited EventPendingWithdrawalExpedited
+type fastReflection_EventPendingSwapOutExpedited EventPendingSwapOutExpedited
 
-func (x *EventPendingWithdrawalExpedited) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_EventPendingWithdrawalExpedited)(x)
+func (x *EventPendingSwapOutExpedited) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_EventPendingSwapOutExpedited)(x)
 }
 
-func (x *EventPendingWithdrawalExpedited) slowProtoReflect() protoreflect.Message {
+func (x *EventPendingSwapOutExpedited) slowProtoReflect() protoreflect.Message {
 	mi := &file_vault_v1_events_proto_msgTypes[15]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -9071,43 +9071,43 @@ func (x *EventPendingWithdrawalExpedited) slowProtoReflect() protoreflect.Messag
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_EventPendingWithdrawalExpedited_messageType fastReflection_EventPendingWithdrawalExpedited_messageType
-var _ protoreflect.MessageType = fastReflection_EventPendingWithdrawalExpedited_messageType{}
+var _fastReflection_EventPendingSwapOutExpedited_messageType fastReflection_EventPendingSwapOutExpedited_messageType
+var _ protoreflect.MessageType = fastReflection_EventPendingSwapOutExpedited_messageType{}
 
-type fastReflection_EventPendingWithdrawalExpedited_messageType struct{}
+type fastReflection_EventPendingSwapOutExpedited_messageType struct{}
 
-func (x fastReflection_EventPendingWithdrawalExpedited_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_EventPendingWithdrawalExpedited)(nil)
+func (x fastReflection_EventPendingSwapOutExpedited_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_EventPendingSwapOutExpedited)(nil)
 }
-func (x fastReflection_EventPendingWithdrawalExpedited_messageType) New() protoreflect.Message {
-	return new(fastReflection_EventPendingWithdrawalExpedited)
+func (x fastReflection_EventPendingSwapOutExpedited_messageType) New() protoreflect.Message {
+	return new(fastReflection_EventPendingSwapOutExpedited)
 }
-func (x fastReflection_EventPendingWithdrawalExpedited_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_EventPendingWithdrawalExpedited
+func (x fastReflection_EventPendingSwapOutExpedited_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_EventPendingSwapOutExpedited
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_EventPendingWithdrawalExpedited) Descriptor() protoreflect.MessageDescriptor {
-	return md_EventPendingWithdrawalExpedited
+func (x *fastReflection_EventPendingSwapOutExpedited) Descriptor() protoreflect.MessageDescriptor {
+	return md_EventPendingSwapOutExpedited
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_EventPendingWithdrawalExpedited) Type() protoreflect.MessageType {
-	return _fastReflection_EventPendingWithdrawalExpedited_messageType
+func (x *fastReflection_EventPendingSwapOutExpedited) Type() protoreflect.MessageType {
+	return _fastReflection_EventPendingSwapOutExpedited_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_EventPendingWithdrawalExpedited) New() protoreflect.Message {
-	return new(fastReflection_EventPendingWithdrawalExpedited)
+func (x *fastReflection_EventPendingSwapOutExpedited) New() protoreflect.Message {
+	return new(fastReflection_EventPendingSwapOutExpedited)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_EventPendingWithdrawalExpedited) Interface() protoreflect.ProtoMessage {
-	return (*EventPendingWithdrawalExpedited)(x)
+func (x *fastReflection_EventPendingSwapOutExpedited) Interface() protoreflect.ProtoMessage {
+	return (*EventPendingSwapOutExpedited)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -9115,22 +9115,22 @@ func (x *fastReflection_EventPendingWithdrawalExpedited) Interface() protoreflec
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_EventPendingWithdrawalExpedited) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.Id != uint64(0) {
-		value := protoreflect.ValueOfUint64(x.Id)
-		if !f(fd_EventPendingWithdrawalExpedited_id, value) {
+func (x *fastReflection_EventPendingSwapOutExpedited) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.RequestId != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.RequestId)
+		if !f(fd_EventPendingSwapOutExpedited_request_id, value) {
 			return
 		}
 	}
 	if x.Vault != "" {
 		value := protoreflect.ValueOfString(x.Vault)
-		if !f(fd_EventPendingWithdrawalExpedited_vault, value) {
+		if !f(fd_EventPendingSwapOutExpedited_vault, value) {
 			return
 		}
 	}
 	if x.Admin != "" {
 		value := protoreflect.ValueOfString(x.Admin)
-		if !f(fd_EventPendingWithdrawalExpedited_admin, value) {
+		if !f(fd_EventPendingSwapOutExpedited_admin, value) {
 			return
 		}
 	}
@@ -9147,19 +9147,19 @@ func (x *fastReflection_EventPendingWithdrawalExpedited) Range(f func(protorefle
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_EventPendingWithdrawalExpedited) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_EventPendingSwapOutExpedited) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.EventPendingWithdrawalExpedited.id":
-		return x.Id != uint64(0)
-	case "vault.v1.EventPendingWithdrawalExpedited.vault":
+	case "vault.v1.EventPendingSwapOutExpedited.request_id":
+		return x.RequestId != uint64(0)
+	case "vault.v1.EventPendingSwapOutExpedited.vault":
 		return x.Vault != ""
-	case "vault.v1.EventPendingWithdrawalExpedited.admin":
+	case "vault.v1.EventPendingSwapOutExpedited.admin":
 		return x.Admin != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventPendingWithdrawalExpedited"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventPendingSwapOutExpedited"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventPendingWithdrawalExpedited does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.EventPendingSwapOutExpedited does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -9169,19 +9169,19 @@ func (x *fastReflection_EventPendingWithdrawalExpedited) Has(fd protoreflect.Fie
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_EventPendingWithdrawalExpedited) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_EventPendingSwapOutExpedited) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.EventPendingWithdrawalExpedited.id":
-		x.Id = uint64(0)
-	case "vault.v1.EventPendingWithdrawalExpedited.vault":
+	case "vault.v1.EventPendingSwapOutExpedited.request_id":
+		x.RequestId = uint64(0)
+	case "vault.v1.EventPendingSwapOutExpedited.vault":
 		x.Vault = ""
-	case "vault.v1.EventPendingWithdrawalExpedited.admin":
+	case "vault.v1.EventPendingSwapOutExpedited.admin":
 		x.Admin = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventPendingWithdrawalExpedited"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventPendingSwapOutExpedited"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventPendingWithdrawalExpedited does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.EventPendingSwapOutExpedited does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -9191,22 +9191,22 @@ func (x *fastReflection_EventPendingWithdrawalExpedited) Clear(fd protoreflect.F
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_EventPendingWithdrawalExpedited) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_EventPendingSwapOutExpedited) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.EventPendingWithdrawalExpedited.id":
-		value := x.Id
+	case "vault.v1.EventPendingSwapOutExpedited.request_id":
+		value := x.RequestId
 		return protoreflect.ValueOfUint64(value)
-	case "vault.v1.EventPendingWithdrawalExpedited.vault":
+	case "vault.v1.EventPendingSwapOutExpedited.vault":
 		value := x.Vault
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventPendingWithdrawalExpedited.admin":
+	case "vault.v1.EventPendingSwapOutExpedited.admin":
 		value := x.Admin
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventPendingWithdrawalExpedited"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventPendingSwapOutExpedited"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventPendingWithdrawalExpedited does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message vault.v1.EventPendingSwapOutExpedited does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -9220,19 +9220,19 @@ func (x *fastReflection_EventPendingWithdrawalExpedited) Get(descriptor protoref
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_EventPendingWithdrawalExpedited) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_EventPendingSwapOutExpedited) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.EventPendingWithdrawalExpedited.id":
-		x.Id = value.Uint()
-	case "vault.v1.EventPendingWithdrawalExpedited.vault":
+	case "vault.v1.EventPendingSwapOutExpedited.request_id":
+		x.RequestId = value.Uint()
+	case "vault.v1.EventPendingSwapOutExpedited.vault":
 		x.Vault = value.Interface().(string)
-	case "vault.v1.EventPendingWithdrawalExpedited.admin":
+	case "vault.v1.EventPendingSwapOutExpedited.admin":
 		x.Admin = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventPendingWithdrawalExpedited"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventPendingSwapOutExpedited"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventPendingWithdrawalExpedited does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.EventPendingSwapOutExpedited does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -9246,48 +9246,48 @@ func (x *fastReflection_EventPendingWithdrawalExpedited) Set(fd protoreflect.Fie
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_EventPendingWithdrawalExpedited) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_EventPendingSwapOutExpedited) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventPendingWithdrawalExpedited.id":
-		panic(fmt.Errorf("field id of message vault.v1.EventPendingWithdrawalExpedited is not mutable"))
-	case "vault.v1.EventPendingWithdrawalExpedited.vault":
-		panic(fmt.Errorf("field vault of message vault.v1.EventPendingWithdrawalExpedited is not mutable"))
-	case "vault.v1.EventPendingWithdrawalExpedited.admin":
-		panic(fmt.Errorf("field admin of message vault.v1.EventPendingWithdrawalExpedited is not mutable"))
+	case "vault.v1.EventPendingSwapOutExpedited.request_id":
+		panic(fmt.Errorf("field request_id of message vault.v1.EventPendingSwapOutExpedited is not mutable"))
+	case "vault.v1.EventPendingSwapOutExpedited.vault":
+		panic(fmt.Errorf("field vault of message vault.v1.EventPendingSwapOutExpedited is not mutable"))
+	case "vault.v1.EventPendingSwapOutExpedited.admin":
+		panic(fmt.Errorf("field admin of message vault.v1.EventPendingSwapOutExpedited is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventPendingWithdrawalExpedited"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventPendingSwapOutExpedited"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventPendingWithdrawalExpedited does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.EventPendingSwapOutExpedited does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_EventPendingWithdrawalExpedited) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_EventPendingSwapOutExpedited) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventPendingWithdrawalExpedited.id":
+	case "vault.v1.EventPendingSwapOutExpedited.request_id":
 		return protoreflect.ValueOfUint64(uint64(0))
-	case "vault.v1.EventPendingWithdrawalExpedited.vault":
+	case "vault.v1.EventPendingSwapOutExpedited.vault":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventPendingWithdrawalExpedited.admin":
+	case "vault.v1.EventPendingSwapOutExpedited.admin":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventPendingWithdrawalExpedited"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventPendingSwapOutExpedited"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventPendingWithdrawalExpedited does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.EventPendingSwapOutExpedited does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_EventPendingWithdrawalExpedited) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_EventPendingSwapOutExpedited) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.EventPendingWithdrawalExpedited", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in vault.v1.EventPendingSwapOutExpedited", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -9295,7 +9295,7 @@ func (x *fastReflection_EventPendingWithdrawalExpedited) WhichOneof(d protorefle
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_EventPendingWithdrawalExpedited) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_EventPendingSwapOutExpedited) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -9306,7 +9306,7 @@ func (x *fastReflection_EventPendingWithdrawalExpedited) GetUnknown() protorefle
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_EventPendingWithdrawalExpedited) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_EventPendingSwapOutExpedited) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -9318,7 +9318,7 @@ func (x *fastReflection_EventPendingWithdrawalExpedited) SetUnknown(fields proto
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_EventPendingWithdrawalExpedited) IsValid() bool {
+func (x *fastReflection_EventPendingSwapOutExpedited) IsValid() bool {
 	return x != nil
 }
 
@@ -9328,9 +9328,9 @@ func (x *fastReflection_EventPendingWithdrawalExpedited) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_EventPendingWithdrawalExpedited) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_EventPendingSwapOutExpedited) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*EventPendingWithdrawalExpedited)
+		x := input.Message.Interface().(*EventPendingSwapOutExpedited)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -9342,8 +9342,8 @@ func (x *fastReflection_EventPendingWithdrawalExpedited) ProtoMethods() *protoif
 		var n int
 		var l int
 		_ = l
-		if x.Id != 0 {
-			n += 1 + runtime.Sov(uint64(x.Id))
+		if x.RequestId != 0 {
+			n += 1 + runtime.Sov(uint64(x.RequestId))
 		}
 		l = len(x.Vault)
 		if l > 0 {
@@ -9363,7 +9363,7 @@ func (x *fastReflection_EventPendingWithdrawalExpedited) ProtoMethods() *protoif
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*EventPendingWithdrawalExpedited)
+		x := input.Message.Interface().(*EventPendingSwapOutExpedited)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -9396,8 +9396,8 @@ func (x *fastReflection_EventPendingWithdrawalExpedited) ProtoMethods() *protoif
 			i--
 			dAtA[i] = 0x12
 		}
-		if x.Id != 0 {
-			i = runtime.EncodeVarint(dAtA, i, uint64(x.Id))
+		if x.RequestId != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.RequestId))
 			i--
 			dAtA[i] = 0x8
 		}
@@ -9412,7 +9412,7 @@ func (x *fastReflection_EventPendingWithdrawalExpedited) ProtoMethods() *protoif
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*EventPendingWithdrawalExpedited)
+		x := input.Message.Interface().(*EventPendingSwapOutExpedited)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -9444,17 +9444,17 @@ func (x *fastReflection_EventPendingWithdrawalExpedited) ProtoMethods() *protoif
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EventPendingWithdrawalExpedited: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EventPendingSwapOutExpedited: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EventPendingWithdrawalExpedited: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EventPendingSwapOutExpedited: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
 				if wireType != 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field RequestId", wireType)
 				}
-				x.Id = 0
+				x.RequestId = 0
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -9464,7 +9464,7 @@ func (x *fastReflection_EventPendingWithdrawalExpedited) ProtoMethods() *protoif
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					x.Id |= uint64(b&0x7F) << shift
+					x.RequestId |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
@@ -10507,22 +10507,22 @@ func (x *EventMaxInterestRateUpdated) GetMaxRate() string {
 	return ""
 }
 
-// EventPendingWithdrawalExpedited is an event emitted when a pending withdrawal is expedited by the admin.
-type EventPendingWithdrawalExpedited struct {
+// EventPendingSwapOutExpedited is an event emitted when a pending swap-out is expedited by the admin.
+type EventPendingSwapOutExpedited struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// id is the numerical identifier of the pending withdrawal.
-	Id uint64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	// request_id is the numerical identifier of the pending swap-out.
+	RequestId uint64 `protobuf:"varint,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
 	// vault is the bech32 address of the vault.
 	Vault string `protobuf:"bytes,2,opt,name=vault,proto3" json:"vault,omitempty"`
-	// admin is the address of the account that expedited the withdrawal.
+	// admin is the address of the account that expedited the swap-out.
 	Admin string `protobuf:"bytes,3,opt,name=admin,proto3" json:"admin,omitempty"`
 }
 
-func (x *EventPendingWithdrawalExpedited) Reset() {
-	*x = EventPendingWithdrawalExpedited{}
+func (x *EventPendingSwapOutExpedited) Reset() {
+	*x = EventPendingSwapOutExpedited{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_vault_v1_events_proto_msgTypes[15]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -10530,32 +10530,32 @@ func (x *EventPendingWithdrawalExpedited) Reset() {
 	}
 }
 
-func (x *EventPendingWithdrawalExpedited) String() string {
+func (x *EventPendingSwapOutExpedited) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*EventPendingWithdrawalExpedited) ProtoMessage() {}
+func (*EventPendingSwapOutExpedited) ProtoMessage() {}
 
-// Deprecated: Use EventPendingWithdrawalExpedited.ProtoReflect.Descriptor instead.
-func (*EventPendingWithdrawalExpedited) Descriptor() ([]byte, []int) {
+// Deprecated: Use EventPendingSwapOutExpedited.ProtoReflect.Descriptor instead.
+func (*EventPendingSwapOutExpedited) Descriptor() ([]byte, []int) {
 	return file_vault_v1_events_proto_rawDescGZIP(), []int{15}
 }
 
-func (x *EventPendingWithdrawalExpedited) GetId() uint64 {
+func (x *EventPendingSwapOutExpedited) GetRequestId() uint64 {
 	if x != nil {
-		return x.Id
+		return x.RequestId
 	}
 	return 0
 }
 
-func (x *EventPendingWithdrawalExpedited) GetVault() string {
+func (x *EventPendingSwapOutExpedited) GetVault() string {
 	if x != nil {
 		return x.Vault
 	}
 	return ""
 }
 
-func (x *EventPendingWithdrawalExpedited) GetAdmin() string {
+func (x *EventPendingSwapOutExpedited) GetAdmin() string {
 	if x != nil {
 		return x.Admin
 	}
@@ -10767,26 +10767,27 @@ var file_vault_v1_events_proto_rawDesc = []byte{
 	0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72,
 	0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e,
 	0x12, 0x19, 0x0a, 0x08, 0x6d, 0x61, 0x78, 0x5f, 0x72, 0x61, 0x74, 0x65, 0x18, 0x03, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x07, 0x6d, 0x61, 0x78, 0x52, 0x61, 0x74, 0x65, 0x22, 0x91, 0x01, 0x0a, 0x1f,
-	0x45, 0x76, 0x65, 0x6e, 0x74, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x57, 0x69, 0x74, 0x68,
-	0x64, 0x72, 0x61, 0x77, 0x61, 0x6c, 0x45, 0x78, 0x70, 0x65, 0x64, 0x69, 0x74, 0x65, 0x64, 0x12,
-	0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x02, 0x69, 0x64, 0x12,
-	0x2e, 0x0a, 0x05, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18,
-	0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65,
-	0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x12,
-	0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18,
-	0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65,
-	0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x42,
-	0x8c, 0x01, 0x0a, 0x0c, 0x63, 0x6f, 0x6d, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31,
-	0x42, 0x0b, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a,
-	0x2e, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x6f, 0x76,
-	0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76,
-	0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2,
-	0x02, 0x03, 0x56, 0x58, 0x58, 0xaa, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56, 0x31,
-	0xca, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x14, 0x56, 0x61,
-	0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61,
-	0x74, 0x61, 0xea, 0x02, 0x09, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x28, 0x09, 0x52, 0x07, 0x6d, 0x61, 0x78, 0x52, 0x61, 0x74, 0x65, 0x22, 0x9d, 0x01, 0x0a, 0x1c,
+	0x45, 0x76, 0x65, 0x6e, 0x74, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61, 0x70,
+	0x4f, 0x75, 0x74, 0x45, 0x78, 0x70, 0x65, 0x64, 0x69, 0x74, 0x65, 0x64, 0x12, 0x1d, 0x0a, 0x0a,
+	0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04,
+	0x52, 0x09, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x49, 0x64, 0x12, 0x2e, 0x0a, 0x05, 0x76,
+	0x61, 0x75, 0x6c, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74,
+	0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x12, 0x2e, 0x0a, 0x05, 0x61,
+	0x64, 0x6d, 0x69, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74,
+	0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x42, 0x8c, 0x01, 0x0a, 0x0c,
+	0x63, 0x6f, 0x6d, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x42, 0x0b, 0x45, 0x76,
+	0x65, 0x6e, 0x74, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2e, 0x67, 0x69, 0x74,
+	0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73,
+	0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74,
+	0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x56, 0x58,
+	0x58, 0xaa, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x08, 0x56,
+	0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x14, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c,
+	0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02,
+	0x09, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x33,
 }
 
 var (
@@ -10803,23 +10804,23 @@ func file_vault_v1_events_proto_rawDescGZIP() []byte {
 
 var file_vault_v1_events_proto_msgTypes = make([]protoimpl.MessageInfo, 16)
 var file_vault_v1_events_proto_goTypes = []interface{}{
-	(*EventDeposit)(nil),                    // 0: vault.v1.EventDeposit
-	(*EventWithdraw)(nil),                   // 1: vault.v1.EventWithdraw
-	(*EventVaultCreated)(nil),               // 2: vault.v1.EventVaultCreated
-	(*EventSwapIn)(nil),                     // 3: vault.v1.EventSwapIn
-	(*EventSwapOut)(nil),                    // 4: vault.v1.EventSwapOut
-	(*EventVaultReconcile)(nil),             // 5: vault.v1.EventVaultReconcile
-	(*EventVaultInterestChange)(nil),        // 6: vault.v1.EventVaultInterestChange
-	(*EventInterestDeposit)(nil),            // 7: vault.v1.EventInterestDeposit
-	(*EventInterestWithdrawal)(nil),         // 8: vault.v1.EventInterestWithdrawal
-	(*EventToggleSwapIn)(nil),               // 9: vault.v1.EventToggleSwapIn
-	(*EventToggleSwapOut)(nil),              // 10: vault.v1.EventToggleSwapOut
-	(*EventDepositPrincipalFunds)(nil),      // 11: vault.v1.EventDepositPrincipalFunds
-	(*EventWithdrawPrincipalFunds)(nil),     // 12: vault.v1.EventWithdrawPrincipalFunds
-	(*EventMinInterestRateUpdated)(nil),     // 13: vault.v1.EventMinInterestRateUpdated
-	(*EventMaxInterestRateUpdated)(nil),     // 14: vault.v1.EventMaxInterestRateUpdated
-	(*EventPendingWithdrawalExpedited)(nil), // 15: vault.v1.EventPendingWithdrawalExpedited
-	(*v1beta1.Coin)(nil),                    // 16: cosmos.base.v1beta1.Coin
+	(*EventDeposit)(nil),                 // 0: vault.v1.EventDeposit
+	(*EventWithdraw)(nil),                // 1: vault.v1.EventWithdraw
+	(*EventVaultCreated)(nil),            // 2: vault.v1.EventVaultCreated
+	(*EventSwapIn)(nil),                  // 3: vault.v1.EventSwapIn
+	(*EventSwapOut)(nil),                 // 4: vault.v1.EventSwapOut
+	(*EventVaultReconcile)(nil),          // 5: vault.v1.EventVaultReconcile
+	(*EventVaultInterestChange)(nil),     // 6: vault.v1.EventVaultInterestChange
+	(*EventInterestDeposit)(nil),         // 7: vault.v1.EventInterestDeposit
+	(*EventInterestWithdrawal)(nil),      // 8: vault.v1.EventInterestWithdrawal
+	(*EventToggleSwapIn)(nil),            // 9: vault.v1.EventToggleSwapIn
+	(*EventToggleSwapOut)(nil),           // 10: vault.v1.EventToggleSwapOut
+	(*EventDepositPrincipalFunds)(nil),   // 11: vault.v1.EventDepositPrincipalFunds
+	(*EventWithdrawPrincipalFunds)(nil),  // 12: vault.v1.EventWithdrawPrincipalFunds
+	(*EventMinInterestRateUpdated)(nil),  // 13: vault.v1.EventMinInterestRateUpdated
+	(*EventMaxInterestRateUpdated)(nil),  // 14: vault.v1.EventMaxInterestRateUpdated
+	(*EventPendingSwapOutExpedited)(nil), // 15: vault.v1.EventPendingSwapOutExpedited
+	(*v1beta1.Coin)(nil),                 // 16: cosmos.base.v1beta1.Coin
 }
 var file_vault_v1_events_proto_depIdxs = []int32{
 	16, // 0: vault.v1.EventSwapIn.amount_in:type_name -> cosmos.base.v1beta1.Coin
@@ -11027,7 +11028,7 @@ func file_vault_v1_events_proto_init() {
 			}
 		}
 		file_vault_v1_events_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*EventPendingWithdrawalExpedited); i {
+			switch v := v.(*EventPendingSwapOutExpedited); i {
 			case 0:
 				return &v.state
 			case 1:

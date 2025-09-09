@@ -404,7 +404,7 @@ func (k msgServer) ExpeditePendingWithdrawal(goCtx context.Context, msg *types.M
 		return nil, fmt.Errorf("failed to expedite withdrawal: %w", err)
 	}
 
-	k.emitEvent(ctx, types.NewEventPendingWithdrawalExpedited(msg.Id, withdrawal.VaultAddress, msg.Admin))
+	k.emitEvent(ctx, types.NewEventPendingSwapOutExpedited(msg.Id, withdrawal.VaultAddress, msg.Admin))
 
 	return &types.MsgExpeditePendingWithdrawalResponse{}, nil
 }

@@ -441,7 +441,7 @@ func (s *TestSuite) TestMsgServer_SwapOut() {
 				expectedEvents: createSwapOutEvents(ownerAddr, vaultAddr, expectedPayout, escrowedShares),
 			}
 
-			testDef.expectedResponse = &types.MsgSwapOutResponse{}
+			testDef.expectedResponse = &types.MsgSwapOutResponse{RequestId: 0}
 			runMsgServerTestCase(s, testDef, tcDef)
 		})
 	}

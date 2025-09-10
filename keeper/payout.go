@@ -2,10 +2,13 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strings"
 
 	"cosmossdk.io/collections"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provlabs/vault/types"
 )
@@ -33,7 +36,7 @@ func (k *Keeper) ProcessPendingSwapOuts(ctx context.Context) error {
 
 		err = k.processSingleWithdrawal(sdkCtx, id, req)
 		if err != nil {
-			k.refundWithdrawal(sdkCtx, id, req, err.Error())
+			k.refundWithdrawal(sdkCtx, id, req, k.getRefundReason(err))
 		}
 		return false, nil
 	})
@@ -89,4 +92,28 @@ func (k *Keeper) refundWithdrawal(ctx sdk.Context, id uint64, req types.PendingS
 	}
 
 	k.emitEvent(ctx, types.NewEventSwapOutRefunded(req.VaultAddress, req.Owner, req.Shares, id, reason))
+}
+
+// getRefundReason translates a processing error into a standardized reason string for events.
+func (k Keeper) getRefundReason(err error) string {
+	if errors.Is(err, sdkerrors.ErrInsufficientFunds) {
+		return types.RefundReasonInsufficientFunds
+	}
+
+	errMsg := err.Error()
+
+	switch {
+	case strings.Contains(errMsg, "marker status is not active"):
+		return types.RefundReasonMarkerNotActive
+	case strings.Contains(errMsg, "does not contain the required attribute"):
+		return types.RefundReasonRecipientMissingAttributes
+	case strings.Contains(errMsg, "is on deny list"),
+		strings.Contains(errMsg, "does not have transfer permissions"),
+		strings.Contains(errMsg, "does not have access"):
+		return types.RefundReasonPermissionDenied
+	case strings.Contains(errMsg, "cannot be sent to the fee collector"):
+		return types.RefundReasonRecipientInvalid
+	}
+
+	return types.RefundReasonUnknown
 }

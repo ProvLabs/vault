@@ -6,6 +6,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const (
+	RefundReasonInsufficientFunds          = "insufficient_funds"
+	RefundReasonPermissionDenied           = "permission_denied"
+	RefundReasonMarkerNotActive            = "marker_not_active"
+	RefundReasonRecipientMissingAttributes = "recipient_missing_required_attributes"
+	RefundReasonRecipientInvalid           = "recipient_invalid"
+	RefundReasonUnknown                    = "unknown_error"
+)
+
 // NewEventVaultCreated creates a new EventVaultCreated event.
 func NewEventVaultCreated(vault *VaultAccount) *EventVaultCreated {
 	return &EventVaultCreated{

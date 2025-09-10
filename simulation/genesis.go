@@ -3,6 +3,7 @@ package simulation
 import (
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/provlabs/vault/types"
 
@@ -14,6 +15,7 @@ import (
 func RandomizedGenState(simState *module.SimulationState) {
 	admin := simState.Accounts[0].Address.String()
 	underlying := "underlying"
+	payment := ""
 
 	vaults := []types.VaultAccount{}
 
@@ -21,11 +23,35 @@ func RandomizedGenState(simState *module.SimulationState) {
 		denom := fmt.Sprintf("vaultshare%d", i)
 		addr := types.GetVaultAddress(denom)
 
+		minRate := simState.Rand.Float64() * 0.1
+		maxRate := minRate + simState.Rand.Float64()*0.1
+		desiredRate := minRate + simState.Rand.Float64()*(maxRate-minRate)
+		currentRate := desiredRate
+		minInterestRate := fmt.Sprintf("%f", minRate)
+		maxInterestRate := fmt.Sprintf("%f", maxRate)
+		desiredInterestRate := fmt.Sprintf("%f", desiredRate)
+		currentInterestRate := fmt.Sprintf("%f", currentRate)
+		periodStart := simState.GenTimestamp.Unix()
+		periodTimeout := time.Duration(simState.Rand.Int63n(int64(time.Hour) * 24 * 7)).
+		swapInEnabled := simState.Rand.Intn(2) == 1
+		swapOutEnabled := simState.Rand.Intn(2) == 1
+		withdrawalDelaySeconds := uint64(simState.Rand.Int63n(int64(time.Hour) * 24 * 7))
+
 		vaults = append(vaults, types.VaultAccount{
-			BaseAccount:     authtypes.NewBaseAccountWithAddress(addr),
-			Admin:           admin,
-			ShareDenom:      denom,
-			UnderlyingAsset: underlying,
+			BaseAccount:            authtypes.NewBaseAccountWithAddress(addr),
+			Admin:                  admin,
+			ShareDenom:             denom,
+			UnderlyingAsset:        underlying,
+			PaymentDenom:           payment,
+			CurrentInterestRate:    currentInterestRate,
+			DesiredInterestRate:    desiredInterestRate,
+			MinInterestRate:        minInterestRate,
+			MaxInterestRate:        maxInterestRate,
+			PeriodStart:            periodStart,
+			PeriodTimeout:          periodTimeout,
+			SwapInEnabled:          swapInEnabled,
+			SwapOutEnabled:         swapOutEnabled,
+			WithdrawalDelaySeconds: withdrawalDelaySeconds,
 		})
 	}
 

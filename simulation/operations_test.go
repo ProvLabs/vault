@@ -4,6 +4,7 @@ import (
 	"context"
 	"math/rand"
 	"testing"
+	"time"
 
 	"github.com/provlabs/vault/simapp"
 	"github.com/provlabs/vault/simulation"
@@ -100,6 +101,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgSwapIn() {
 
 func (s *VaultSimTestSuite) TestSimulateMsgSwapOut() {
 	r := rand.New(rand.NewSource(1))
+	s.ctx = s.ctx.WithBlockTime(time.Now())
 
 	// TODO We need to run this twice to fix the prefix issue. We will have to look into this some more.
 	_ = s.getTestingAccounts(r, 3)

@@ -6,6 +6,15 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const (
+	RefundReasonInsufficientFunds          = "insufficient_funds"
+	RefundReasonPermissionDenied           = "permission_denied"
+	RefundReasonMarkerNotActive            = "marker_not_active"
+	RefundReasonRecipientMissingAttributes = "recipient_missing_required_attributes"
+	RefundReasonRecipientInvalid           = "recipient_invalid"
+	RefundReasonUnknown                    = "unknown_error"
+)
+
 // NewEventVaultCreated creates a new EventVaultCreated event.
 func NewEventVaultCreated(vault *VaultAccount) *EventVaultCreated {
 	return &EventVaultCreated{
@@ -127,6 +136,38 @@ func NewEventMaxInterestRateUpdated(vaultAddress, admin, maxRate string) *EventM
 		VaultAddress: vaultAddress,
 		Admin:        admin,
 		MaxRate:      maxRate,
+	}
+}
+
+// NewEventSwapOutRequested creates a new EventSwapOutRequested event.
+func NewEventSwapOutRequested(vaultAddress, owner string, assets, shares sdk.Coin, requestID uint64) *EventSwapOutRequested {
+	return &EventSwapOutRequested{
+		VaultAddress: vaultAddress,
+		Owner:        owner,
+		Assets:       assets,
+		Shares:       shares,
+		RequestId:    requestID,
+	}
+}
+
+// NewEventSwapOutCompleted creates a new EventSwapOutCompleted event.
+func NewEventSwapOutCompleted(vaultAddress, owner string, assets sdk.Coin, requestID uint64) *EventSwapOutCompleted {
+	return &EventSwapOutCompleted{
+		VaultAddress: vaultAddress,
+		Owner:        owner,
+		Assets:       assets,
+		RequestId:    requestID,
+	}
+}
+
+// NewEventSwapOutRefunded creates a new EventSwapOutRefunded event.
+func NewEventSwapOutRefunded(vaultAddress, owner string, shares sdk.Coin, requestID uint64, reason string) *EventSwapOutRefunded {
+	return &EventSwapOutRefunded{
+		VaultAddress: vaultAddress,
+		Owner:        owner,
+		Shares:       shares,
+		RequestId:    requestID,
+		Reason:       reason,
 	}
 }
 

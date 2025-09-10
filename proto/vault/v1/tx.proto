@@ -62,8 +62,11 @@ message MsgCreateVaultRequest {
   string share_denom = 2;
   // underlying_asset is the denomination of the asset supported by the vault.
   string underlying_asset = 3;
-
+  // payment_denom is an optional secondary denomination the vault can accept.
   string payment_denom = 4;
+  // withdrawal_delay_seconds is the time period (in seconds) that a withdrawal
+  // must wait in the pending queue before being processed.
+  uint64 withdrawal_delay_seconds = 5;
 }
 
 // MsgCreateVaultResponse is the response message for the CreateVault endpoint.
@@ -100,8 +103,11 @@ message MsgSwapOutRequest {
   string redeem_denom = 4;
 }
 
-// MsgSwapOutResponse is the response message for a successful SwapOut.
-message MsgSwapOutResponse {}
+// MsgSwapOutResponse is the response message for the SwapOut endpoint.
+message MsgSwapOutResponse {
+  // request_id is the unique identifier for the newly queued swap out request.
+  uint64 request_id = 1;
+}
 
 // MsgUpdateMinInterestRateRequest is the request message for updating the minimum interest rate of a vault.
 message MsgUpdateMinInterestRateRequest {

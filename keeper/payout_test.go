@@ -20,7 +20,7 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 	shares := sdk.NewInt64Coin(shareDenom, 100)
 
 	testBlockTime := time.Now().UTC()
-	duePayoutTime := testBlockTime.Add(-1 * time.Hour).UnixNano()
+	duePayoutTime := testBlockTime.Add(-1 * time.Hour).Unix()
 
 	tests := []struct {
 		name          string

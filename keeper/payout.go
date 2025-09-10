@@ -20,10 +20,10 @@ func (k *Keeper) ProcessPendingSwapOuts(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	now := sdkCtx.BlockTime().Unix()
 
-	var processedKeys []collections.Triple[int64, uint64, sdk.AccAddress]
+	var processedKeys []collections.Triple[int64, sdk.AccAddress, uint64]
 
 	err := k.PendingSwapOutQueue.WalkDue(ctx, now, func(timestamp int64, id uint64, vaultAddr sdk.AccAddress, req types.PendingSwapOut) (stop bool, err error) {
-		processedKeys = append(processedKeys, collections.Join3(timestamp, id, vaultAddr))
+		processedKeys = append(processedKeys, collections.Join3(timestamp, vaultAddr, id))
 
 		_, ok := k.tryGetVault(sdkCtx, vaultAddr)
 		if !ok {
@@ -44,7 +44,7 @@ func (k *Keeper) ProcessPendingSwapOuts(ctx context.Context) error {
 	}
 
 	for _, key := range processedKeys {
-		if err := k.PendingSwapOutQueue.Dequeue(ctx, key.K1(), key.K3(), key.K2()); err != nil {
+		if err := k.PendingSwapOutQueue.Dequeue(ctx, key.K1(), key.K2(), key.K3()); err != nil {
 			sdkCtx.Logger().Error("CRITICAL: failed to dequeue processed withdrawal", "key", key, "error", err)
 		}
 	}

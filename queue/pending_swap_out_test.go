@@ -51,7 +51,7 @@ func TestPendingSwapOutQueue_Codec(t *testing.T) {
 		Assets:       assets,
 	}
 
-	_, err := q.Enqueue(ctx, time.Now().UnixNano(), originalReq)
+	_, err := q.Enqueue(ctx, time.Now().Unix(), originalReq)
 	require.NoError(t, err)
 
 	var retrievedReq vtypes.PendingSwapOut

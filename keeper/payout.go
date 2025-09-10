@@ -36,7 +36,13 @@ func (k *Keeper) ProcessPendingSwapOuts(ctx context.Context) error {
 
 		err = k.processSingleWithdrawal(sdkCtx, id, req)
 		if err != nil {
-			k.refundWithdrawal(sdkCtx, id, req, k.getRefundReason(err))
+			reason := k.getRefundReason(err)
+			sdkCtx.Logger().Error("Failed to process withdrawal",
+				"withdrawal_id", id,
+				"reason", reason,
+				"error", err,
+			)
+			k.refundWithdrawal(sdkCtx, id, req, reason)
 		}
 		return false, nil
 	})

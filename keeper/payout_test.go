@@ -86,7 +86,7 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 			},
 			posthandler: func(ownerAddr sdk.AccAddress, reqID uint64) {
 				s.assertBalance(ownerAddr, shareDenom, shares.Amount)
-				reason := "spendable balance 0ylds is smaller than 50ylds: insufficient funds"
+				reason := types.RefundReasonInsufficientFunds
 
 				expectedEvents := sdk.Events{}
 				expectedEvents = append(expectedEvents, createSendCoinEvents(vaultAddr.String(), ownerAddr.String(), shares.String())...)

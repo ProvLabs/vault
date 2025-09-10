@@ -10,7 +10,7 @@ import (
 	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdk "github.comcom/cosmos/cosmos-sdk/types"
 
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
@@ -26,10 +26,14 @@ const (
 // If this is the first time the vault accrues interest, it triggers the start of a new period.
 // If the current block time is after PeriodStart, it applies the interest transfer.
 // If the current time has not advanced past PeriodStart, it is a no-op.
+// This function will do nothing if the vault is paused.
 //
 // This should be called before any transaction that changes vault principal/reserves or depends on the
 // current interest state.
 func (k *Keeper) ReconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccount) error {
+	if vault.Paused {
+		return nil
+	}
 	currentBlockTime := ctx.BlockTime().Unix()
 
 	if vault.PeriodStart != 0 {
@@ -182,7 +186,7 @@ func (k Keeper) CalculateVaultTotalAssets(ctx sdk.Context, vault *types.VaultAcc
 // handleVaultInterestTimeouts checks vaults with expired interest periods and reconciles or disables them.
 //
 // For each due timeout entry:
-//   - Missing vaults are skipped.
+//   - Missing or paused vaults are skipped.
 //   - Vaults that cannot cover the required interest are marked depleted.
 //   - Otherwise, interest is reconciled.
 //
@@ -200,7 +204,7 @@ func (k *Keeper) handleVaultInterestTimeouts(ctx context.Context) error {
 		key := collections.Join(timeout, addr)
 
 		vault, ok := k.tryGetVault(sdkCtx, addr)
-		if !ok {
+		if !ok || vault.Paused {
 			toRemove = append(toRemove, key)
 			return false, nil
 		}
@@ -264,6 +268,7 @@ func (k *Keeper) tryGetVault(ctx sdk.Context, addr sdk.AccAddress) (*types.Vault
 }
 
 // handleReconciledVaults processes vaults from the payout verification queue.
+// It skips any vaults that are currently paused.
 //
 // It collects due entries using WalkPayoutVerifications, removes them from the verification queue, partitions the
 // corresponding vaults into payable vs depleted for the forecast window, updates payable vaults'
@@ -275,7 +280,7 @@ func (k *Keeper) handleReconciledVaults(ctx context.Context) error {
 
 	err := k.PayoutVerificationSet.Walk(ctx, nil, func(addr sdk.AccAddress) (bool, error) {
 		v, ok := k.tryGetVault(sdkCtx, addr)
-		if ok {
+		if ok && !v.Paused {
 			vaults = append(vaults, v)
 		}
 		toRemove = append(toRemove, addr)
@@ -339,7 +344,6 @@ func (k *Keeper) handleDepletedVaults(ctx context.Context, failedPayouts []*type
 // interest reconciliation by calling SafeEnqueueTimeout for each.
 //
 // This updates PeriodStart and PeriodTimeout, persists the vault, and enqueues the corresponding timeout entry.
-
 func (k *Keeper) resetVaultInterestPeriods(ctx context.Context, vaults []*types.VaultAccount) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 

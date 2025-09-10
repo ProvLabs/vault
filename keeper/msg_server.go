@@ -83,6 +83,9 @@ func (k msgServer) UpdateMinInterestRate(goCtx context.Context, msg *types.MsgUp
 	if err := vault.ValidateAdmin(msg.Admin); err != nil {
 		return nil, err
 	}
+	if vault.Paused {
+		return nil, fmt.Errorf("vault %s is paused", msg.VaultAddress)
+	}
 
 	if err := k.SetMinInterestRate(ctx, vault, msg.MinRate); err != nil {
 		return nil, fmt.Errorf("failed to set min interest rate: %w", err)
@@ -108,6 +111,9 @@ func (k msgServer) UpdateMaxInterestRate(goCtx context.Context, msg *types.MsgUp
 	if err := vault.ValidateAdmin(msg.Admin); err != nil {
 		return nil, err
 	}
+	if vault.Paused {
+		return nil, fmt.Errorf("vault %s is paused", msg.VaultAddress)
+	}
 
 	if err := k.SetMaxInterestRate(ctx, vault, msg.MaxRate); err != nil {
 		return nil, fmt.Errorf("failed to set max interest rate: %w", err)
@@ -130,6 +136,9 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 	}
 	if err := vault.ValidateAdmin(msg.Admin); err != nil {
 		return nil, err
+	}
+	if vault.Paused {
+		return nil, fmt.Errorf("vault %s is paused", msg.VaultAddress)
 	}
 
 	newRate, err := sdkmath.LegacyNewDecFromStr(msg.NewRate)
@@ -201,6 +210,9 @@ func (k msgServer) ToggleSwapIn(goCtx context.Context, msg *types.MsgToggleSwapI
 	if err := vault.ValidateAdmin(msg.Admin); err != nil {
 		return nil, err
 	}
+	if vault.Paused {
+		return nil, fmt.Errorf("vault %s is paused", msg.VaultAddress)
+	}
 
 	k.SetSwapInEnable(ctx, vault, msg.Enabled)
 
@@ -222,6 +234,9 @@ func (k msgServer) ToggleSwapOut(goCtx context.Context, msg *types.MsgToggleSwap
 	}
 	if err := vault.ValidateAdmin(msg.Admin); err != nil {
 		return nil, err
+	}
+	if vault.Paused {
+		return nil, fmt.Errorf("vault %s is paused", msg.VaultAddress)
 	}
 
 	k.SetSwapOutEnable(ctx, vault, msg.Enabled)
@@ -246,6 +261,9 @@ func (k msgServer) DepositInterestFunds(goCtx context.Context, msg *types.MsgDep
 
 	if err := vault.ValidateAdmin(msg.Admin); err != nil {
 		return nil, err
+	}
+	if vault.Paused {
+		return nil, fmt.Errorf("vault %s is paused", msg.VaultAddress)
 	}
 
 	if vault.UnderlyingAsset != msg.Amount.Denom {
@@ -283,6 +301,9 @@ func (k msgServer) WithdrawInterestFunds(goCtx context.Context, msg *types.MsgWi
 	if err := vault.ValidateAdmin(msg.Admin); err != nil {
 		return nil, err
 	}
+	if vault.Paused {
+		return nil, fmt.Errorf("vault %s is paused", msg.VaultAddress)
+	}
 
 	if vault.UnderlyingAsset != msg.Amount.Denom {
 		return nil, fmt.Errorf("denom not supported for vault must be of type \"%s\" : got \"%s\"", vault.UnderlyingAsset, msg.Amount.Denom)
@@ -315,6 +336,10 @@ func (k msgServer) DepositPrincipalFunds(goCtx context.Context, msg *types.MsgDe
 	}
 	if err := vault.ValidateAdmin(msg.Admin); err != nil {
 		return nil, err
+	}
+
+	if !vault.Paused {
+		return nil, fmt.Errorf("vault must be paused to deposit principal funds")
 	}
 
 	if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
@@ -354,6 +379,10 @@ func (k msgServer) WithdrawPrincipalFunds(goCtx context.Context, msg *types.MsgW
 	}
 	if err := vault.ValidateAdmin(msg.Admin); err != nil {
 		return nil, err
+	}
+
+	if !vault.Paused {
+		return nil, fmt.Errorf("vault must be paused to withdraw principal funds")
 	}
 
 	if err := k.ReconcileVaultInterest(ctx, vault); err != nil {

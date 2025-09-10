@@ -231,3 +231,14 @@ message EventPendingSwapOutExpedited {
   // admin is the address of the account that expedited the swap-out.
   string admin = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
+
+message EventVaultPaused {
+  string vault_address = 1;
+  string admin = 2;
+  string reason = 3;
+}
+
+message EventVaultUnpaused {
+  string vault_address = 1;
+  string admin = 2;
+}

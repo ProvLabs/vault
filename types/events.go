@@ -179,3 +179,20 @@ func NewEventPendingSwapOutExpedited(requestID uint64, vault, admin string) *Eve
 		Admin:     admin,
 	}
 }
+
+// NewEventVaultPaused creates a new EventVaultPaused event.
+func NewEventVaultPaused(vaultAddress, admin, reason string) *EventVaultPaused {
+	return &EventVaultPaused{
+		VaultAddress: vaultAddress,
+		Admin:        admin,
+		Reason:       reason,
+	}
+}
+
+// NewEventVaultUnpaused creates a new EventVaultUnpaused event.
+func NewEventVaultUnpaused(vaultAddress, admin string) *EventVaultUnpaused {
+	return &EventVaultUnpaused{
+		VaultAddress: vaultAddress,
+		Admin:        admin,
+	}
+}

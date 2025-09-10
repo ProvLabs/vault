@@ -53,6 +53,7 @@ message VaultAccount {
   // withdrawal_delay_seconds is the configured time period (in seconds) that a withdrawal
   // request must wait in the pending queue before being processed.
   uint64 withdrawal_delay_seconds = 14;
+  bool paused = 15;
 }
 
 // AccountBalance represents the coin balance of a single account.

@@ -2131,6 +2131,303 @@ func (s *TestSuite) TestMsgServer_ExpeditePendingSwapOut() {
 	}
 }
 
+func (s *TestSuite) TestMsgServer_PauseVault() {
+	type postCheckArgs struct {
+		VaultAddress       sdk.AccAddress
+		ExpectedPaused     bool
+		ExpectedPauseDenom string
+		ExpectedPauseAmt   int64
+	}
+
+	testDef := msgServerTestDef[types.MsgPauseVaultRequest, types.MsgPauseVaultResponse, postCheckArgs]{
+		endpointName: "PauseVault",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).PauseVault,
+		postCheck: func(msg *types.MsgPauseVaultRequest, args postCheckArgs) {
+			v, err := s.k.GetVault(s.ctx, args.VaultAddress)
+			s.Require().NoError(err)
+			s.Assert().Equal(args.ExpectedPaused, v.Paused)
+			s.Assert().Equal(args.ExpectedPauseDenom, v.PausedBalance.Denom)
+			s.Assert().Equal(args.ExpectedPauseAmt, v.PausedBalance.Amount.Int64())
+		},
+	}
+
+	underlying := "under"
+	share := "vaultshares"
+	admin := s.adminAddr
+	reason := "maintenance"
+	vaultAddr := types.GetVaultAddress(share)
+
+	setup := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(10_000)), admin)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      share,
+			UnderlyingAsset: underlying,
+		})
+		s.Require().NoError(err)
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	tc := msgServerTestCase[types.MsgPauseVaultRequest, postCheckArgs]{
+		name:  "happy path",
+		setup: setup,
+		msg: types.MsgPauseVaultRequest{
+			Admin:        admin.String(),
+			VaultAddress: vaultAddr.String(),
+			Reason:       reason,
+		},
+		postCheckArgs: postCheckArgs{
+			VaultAddress:       vaultAddr,
+			ExpectedPaused:     true,
+			ExpectedPauseDenom: underlying,
+			ExpectedPauseAmt:   0,
+		},
+		expectedEvents: sdk.Events{
+			sdk.NewEvent(
+				"vault.v1.EventVaultPaused",
+				sdk.NewAttribute("admin", admin.String()),
+				sdk.NewAttribute("reason", reason),
+				sdk.NewAttribute("vault_address", vaultAddr.String()),
+			),
+		},
+	}
+
+	testDef.expectedResponse = &types.MsgPauseVaultResponse{}
+	runMsgServerTestCase(s, testDef, tc)
+}
+
+func (s *TestSuite) TestMsgServer_PauseVault_Failures() {
+	testDef := msgServerTestDef[types.MsgPauseVaultRequest, types.MsgPauseVaultResponse, any]{
+		endpointName: "PauseVault",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).PauseVault,
+		postCheck:    nil,
+	}
+
+	underlying := "under"
+	share := "vaultshares"
+	admin := s.adminAddr
+	other := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1000))
+	vaultAddr := types.GetVaultAddress(share)
+	markerAddr := markertypes.MustGetMarkerAddress(share)
+
+	base := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(10_000)), admin)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      share,
+			UnderlyingAsset: underlying,
+		})
+		s.Require().NoError(err)
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	tests := []msgServerTestCase[types.MsgPauseVaultRequest, any]{
+		{
+			name: "vault not found",
+			msg: types.MsgPauseVaultRequest{
+				Admin:        admin.String(),
+				VaultAddress: types.GetVaultAddress("nope").String(),
+				Reason:       "x",
+			},
+			expectedErrSubstrs: []string{"not found"},
+		},
+		{
+			name:  "invalid vault address (not a vault account)",
+			setup: base,
+			msg: types.MsgPauseVaultRequest{
+				Admin:        admin.String(),
+				VaultAddress: markerAddr.String(),
+				Reason:       "x",
+			},
+			expectedErrSubstrs: []string{"failed to get vault", "is not a vault account"},
+		},
+		{
+			name:  "unauthorized admin",
+			setup: base,
+			msg: types.MsgPauseVaultRequest{
+				Admin:        other.String(),
+				VaultAddress: vaultAddr.String(),
+				Reason:       "x",
+			},
+			expectedErrSubstrs: []string{"unauthorized", "is not the vault admin"},
+		},
+		{
+			name: "already paused",
+			setup: func() {
+				base()
+				_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).PauseVault(s.ctx, &types.MsgPauseVaultRequest{
+					Admin:        admin.String(),
+					VaultAddress: vaultAddr.String(),
+					Reason:       "first",
+				})
+				s.Require().NoError(err)
+				s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			},
+			msg: types.MsgPauseVaultRequest{
+				Admin:        admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Reason:       "second",
+			},
+			expectedErrSubstrs: []string{"already paused"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_UnpauseVault() {
+	type postCheckArgs struct {
+		VaultAddress     sdk.AccAddress
+		ExpectedPaused   bool
+		ExpectedEmptyDen string
+		ExpectedEmptyAmt int64
+	}
+
+	testDef := msgServerTestDef[types.MsgUnpauseVaultRequest, types.MsgUnpauseVaultResponse, postCheckArgs]{
+		endpointName: "UnpauseVault",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).UnpauseVault,
+		postCheck: func(msg *types.MsgUnpauseVaultRequest, args postCheckArgs) {
+			v, err := s.k.GetVault(s.ctx, args.VaultAddress)
+			s.Require().NoError(err)
+			s.Assert().Equal(args.ExpectedPaused, v.Paused)
+			s.Assert().Equal(args.ExpectedEmptyDen, v.PausedBalance.Denom)
+			s.Assert().Equal(args.ExpectedEmptyAmt, v.PausedBalance.Amount.Int64())
+		},
+	}
+
+	underlying := "under"
+	share := "vaultshares"
+	admin := s.adminAddr
+	vaultAddr := types.GetVaultAddress(share)
+
+	setup := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(10_000)), admin)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      share,
+			UnderlyingAsset: underlying,
+		})
+		s.Require().NoError(err)
+		_, err = keeper.NewMsgServer(s.simApp.VaultKeeper).PauseVault(s.ctx, &types.MsgPauseVaultRequest{
+			Admin:        admin.String(),
+			VaultAddress: vaultAddr.String(),
+			Reason:       "maintenance",
+		})
+		s.Require().NoError(err)
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	tc := msgServerTestCase[types.MsgUnpauseVaultRequest, postCheckArgs]{
+		name:  "happy path",
+		setup: setup,
+		msg: types.MsgUnpauseVaultRequest{
+			Admin:        admin.String(),
+			VaultAddress: vaultAddr.String(),
+		},
+		postCheckArgs: postCheckArgs{
+			VaultAddress:     vaultAddr,
+			ExpectedPaused:   false,
+			ExpectedEmptyDen: "",
+			ExpectedEmptyAmt: 0,
+		},
+		expectedEvents: sdk.Events{
+			sdk.NewEvent(
+				"vault.v1.EventVaultUnpaused",
+				sdk.NewAttribute("admin", admin.String()),
+				sdk.NewAttribute("vault_address", vaultAddr.String()),
+			),
+		},
+	}
+
+	testDef.expectedResponse = &types.MsgUnpauseVaultResponse{}
+	runMsgServerTestCase(s, testDef, tc)
+}
+
+func (s *TestSuite) TestMsgServer_UnpauseVault_Failures() {
+	testDef := msgServerTestDef[types.MsgUnpauseVaultRequest, types.MsgUnpauseVaultResponse, any]{
+		endpointName: "UnpauseVault",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).UnpauseVault,
+		postCheck:    nil,
+	}
+
+	underlying := "under"
+	share := "vaultshares"
+	admin := s.adminAddr
+	other := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1000))
+	vaultAddr := types.GetVaultAddress(share)
+	markerAddr := markertypes.MustGetMarkerAddress(share)
+
+	base := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(10_000)), admin)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      share,
+			UnderlyingAsset: underlying,
+		})
+		s.Require().NoError(err)
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	paused := func() {
+		base()
+		_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).PauseVault(s.ctx, &types.MsgPauseVaultRequest{
+			Admin:        admin.String(),
+			VaultAddress: vaultAddr.String(),
+			Reason:       "maintenance",
+		})
+		s.Require().NoError(err)
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	tests := []msgServerTestCase[types.MsgUnpauseVaultRequest, any]{
+		{
+			name: "vault not found",
+			msg: types.MsgUnpauseVaultRequest{
+				Admin:        admin.String(),
+				VaultAddress: types.GetVaultAddress("missing").String(),
+			},
+			expectedErrSubstrs: []string{"not found"},
+		},
+		{
+			name:  "invalid vault address (not a vault account)",
+			setup: base,
+			msg: types.MsgUnpauseVaultRequest{
+				Admin:        admin.String(),
+				VaultAddress: markerAddr.String(),
+			},
+			expectedErrSubstrs: []string{"failed to get vault", "is not a vault account"},
+		},
+		{
+			name:  "unauthorized admin",
+			setup: paused,
+			msg: types.MsgUnpauseVaultRequest{
+				Admin:        other.String(),
+				VaultAddress: vaultAddr.String(),
+			},
+			expectedErrSubstrs: []string{"unauthorized", "is not the vault admin"},
+		},
+		{
+			name:  "not paused",
+			setup: base,
+			msg: types.MsgUnpauseVaultRequest{
+				Admin:        admin.String(),
+				VaultAddress: vaultAddr.String(),
+			},
+			expectedErrSubstrs: []string{"is not paused"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
 // createMarkerMintCoinEvents creates events for minting a coin and sending it to a recipient.
 func createMarkerMintCoinEvents(markerModule, admin, recipient sdk.AccAddress, coin sdk.Coin) []sdk.Event {
 	events := createReceiveCoinsEvents(markerModule.String(), sdk.NewCoins(coin).String())

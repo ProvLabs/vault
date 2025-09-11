@@ -6,11 +6,14 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/provlabs/vault/types"
+
 	"cosmossdk.io/collections"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
-	"github.com/provlabs/vault/types"
 )
 
 // ProcessPendingSwapOuts processes the queue of pending swap-out requests. Called from the EndBlocker,
@@ -69,7 +72,19 @@ func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.P
 	ownerAddr := sdk.MustAccAddressFromBech32(req.Owner)
 	principalAddress := markertypes.MustGetMarkerAddress(req.Shares.Denom)
 
-	if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, vaultAddr), principalAddress, ownerAddr, sdk.NewCoins(req.Assets)); err != nil {
+	vault, ok := k.tryGetVault(ctx, vaultAddr)
+	if !ok {
+		// TODO Is this an error or a panic
+		return fmt.Errorf("vault for single withdrawal not found at address: %s", vaultAddr.String())
+	}
+
+	assets, err := k.ConvertSharesToRedeemCoin(ctx, *vault, req.Shares.Amount, req.RedeemDenom)
+	if err != nil {
+		// TODO Is this an error or a panic.
+		return err
+	}
+
+	if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, vaultAddr), principalAddress, ownerAddr, sdk.NewCoins(assets)); err != nil {
 		return err
 	}
 
@@ -81,7 +96,7 @@ func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.P
 		panic(fmt.Errorf("CRITICAL: failed to burn shares after successful swap out payout %w", err))
 	}
 
-	k.emitEvent(ctx, types.NewEventSwapOutCompleted(req.VaultAddress, req.Owner, req.Assets, id))
+	k.emitEvent(ctx, types.NewEventSwapOutCompleted(req.VaultAddress, req.Owner, assets, id))
 	return nil
 }
 

@@ -40,7 +40,7 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 				req := types.PendingSwapOut{
 					Owner:        ownerAddr.String(),
 					VaultAddress: vaultAddr.String(),
-					Assets:       assets,
+					RedeemDenom:  underlyingDenom,
 					Shares:       shares,
 				}
 				id, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, duePayoutTime, &req)
@@ -77,7 +77,7 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 				req := types.PendingSwapOut{
 					Owner:        ownerAddr.String(),
 					VaultAddress: vaultAddr.String(),
-					Assets:       assets,
+					RedeemDenom:  underlyingDenom,
 					Shares:       shares,
 				}
 				id, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, duePayoutTime, &req)
@@ -107,7 +107,7 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 				req := types.PendingSwapOut{
 					Owner:        ownerAddr.String(),
 					VaultAddress: vaultAddr.String(),
-					Assets:       assets,
+					RedeemDenom:  underlyingDenom,
 					Shares:       shares,
 				}
 				id, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, duePayoutTime, &req)

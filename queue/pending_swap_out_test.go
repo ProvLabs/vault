@@ -44,12 +44,12 @@ func TestPendingSwapOutQueue_Codec(t *testing.T) {
 	ctx, q := newTestPendingSwapOutQueue(t)
 
 	addr := utils.TestProvlabsAddress()
-	assets := sdk.NewInt64Coin("usd", 100)
+	redeemDenom := "usd"
 	shares := sdk.NewInt64Coin("vshares", 100)
 	originalReq := &vtypes.PendingSwapOut{
 		Owner:        addr.Bech32,
 		VaultAddress: addr.Bech32,
-		Assets:       assets,
+		RedeemDenom:  redeemDenom,
 		Shares:       shares,
 	}
 
@@ -69,7 +69,7 @@ func TestPendingSwapOutQueue_Codec(t *testing.T) {
 
 	require.Equal(t, originalReq.Owner, retrievedReq.Owner)
 	require.Equal(t, originalReq.VaultAddress, retrievedReq.VaultAddress)
-	require.Equal(t, originalReq.Assets, retrievedReq.Assets)
+	require.Equal(t, originalReq.RedeemDenom, retrievedReq.RedeemDenom)
 }
 
 func TestPendingSwapOutQueueWalk(t *testing.T) {
@@ -78,9 +78,9 @@ func TestPendingSwapOutQueueWalk(t *testing.T) {
 	if addr1.Bech32 > addr2.Bech32 {
 		addr1, addr2 = addr2, addr1
 	}
-	req1 := &vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, Assets: sdk.NewInt64Coin("ylds", 25), Shares: sdk.NewInt64Coin("vshares", 25)}
-	req2 := &vtypes.PendingSwapOut{VaultAddress: addr2.Bech32, Owner: addr2.Bech32, Assets: sdk.NewInt64Coin("ylds", 50), Shares: sdk.NewInt64Coin("vshares", 50)}
-	req3 := &vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr2.Bech32, Assets: sdk.NewInt64Coin("ylds", 100), Shares: sdk.NewInt64Coin("vshares", 100)}
+	req1 := &vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, RedeemDenom: "ylds", Shares: sdk.NewInt64Coin("vshares", 25)}
+	req2 := &vtypes.PendingSwapOut{VaultAddress: addr2.Bech32, Owner: addr2.Bech32, RedeemDenom: "ylds", Shares: sdk.NewInt64Coin("vshares", 50)}
+	req3 := &vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr2.Bech32, RedeemDenom: "ylds", Shares: sdk.NewInt64Coin("vshares", 100)}
 	boom := errors.New("boom")
 
 	tests := []struct {
@@ -377,9 +377,9 @@ func TestPendingSwapOutQueue_Export(t *testing.T) {
 	if addr1.Bech32 > addr2.Bech32 {
 		addr1, addr2 = addr2, addr1
 	}
-	req1 := &vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, Assets: sdk.NewInt64Coin("usd", 100)}
-	req2 := &vtypes.PendingSwapOut{VaultAddress: addr2.Bech32, Owner: addr2.Bech32, Assets: sdk.NewInt64Coin("usd", 200)}
-	req3 := &vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, Assets: sdk.NewInt64Coin("usd", 300)}
+	req1 := &vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, RedeemDenom: "usd"}
+	req2 := &vtypes.PendingSwapOut{VaultAddress: addr2.Bech32, Owner: addr2.Bech32, RedeemDenom: "usd"}
+	req3 := &vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, RedeemDenom: "usd"}
 
 	tests := []struct {
 		name          string
@@ -438,7 +438,7 @@ func TestPendingSwapOutQueue_Export(t *testing.T) {
 					require.Equal(t, entry.Id, exportedQueue.Entries[i].Id)
 					require.Equal(t, entry.SwapOut.Owner, exportedQueue.Entries[i].SwapOut.Owner)
 					require.Equal(t, entry.SwapOut.VaultAddress, exportedQueue.Entries[i].SwapOut.VaultAddress)
-					require.Equal(t, entry.SwapOut.Assets.String(), exportedQueue.Entries[i].SwapOut.Assets.String())
+					require.Equal(t, entry.SwapOut.RedeemDenom, exportedQueue.Entries[i].SwapOut.RedeemDenom)
 				}
 			}
 		})
@@ -451,9 +451,9 @@ func TestPendingSwapOutQueue_Import(t *testing.T) {
 	if addr1.Bech32 > addr2.Bech32 {
 		addr1, addr2 = addr2, addr1
 	}
-	req1 := vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, Assets: sdk.NewInt64Coin("usd", 100), Shares: sdk.NewInt64Coin("vshares", 100)}
-	req2 := vtypes.PendingSwapOut{VaultAddress: addr2.Bech32, Owner: addr2.Bech32, Assets: sdk.NewInt64Coin("usd", 200), Shares: sdk.NewInt64Coin("vshares", 200)}
-	req3 := vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, Assets: sdk.NewInt64Coin("usd", 300), Shares: sdk.NewInt64Coin("vshares", 300)}
+	req1 := vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, RedeemDenom: "usd", Shares: sdk.NewInt64Coin("vshares", 100)}
+	req2 := vtypes.PendingSwapOut{VaultAddress: addr2.Bech32, Owner: addr2.Bech32, RedeemDenom: "usd", Shares: sdk.NewInt64Coin("vshares", 200)}
+	req3 := vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, RedeemDenom: "usd", Shares: sdk.NewInt64Coin("vshares", 300)}
 
 	tests := []struct {
 		name     string
@@ -488,7 +488,7 @@ func TestPendingSwapOutQueue_Import(t *testing.T) {
 			genQueue: &vtypes.PendingSwapOutQueue{
 				LatestSequenceNumber: 1,
 				Entries: []vtypes.PendingSwapOutQueueEntry{
-					{Time: 1, Id: 0, SwapOut: vtypes.PendingSwapOut{VaultAddress: "badaddress", Owner: addr1.Bech32, Assets: sdk.NewInt64Coin("usd", 100), Shares: sdk.NewInt64Coin("vshares", 100)}},
+					{Time: 1, Id: 0, SwapOut: vtypes.PendingSwapOut{VaultAddress: "badaddress", Owner: addr1.Bech32, RedeemDenom: "usd", Shares: sdk.NewInt64Coin("vshares", 100)}},
 				},
 			},
 			errorMsg: "invalid vault address in pending swap out queue",
@@ -498,7 +498,7 @@ func TestPendingSwapOutQueue_Import(t *testing.T) {
 			genQueue: &vtypes.PendingSwapOutQueue{
 				LatestSequenceNumber: 1,
 				Entries: []vtypes.PendingSwapOutQueueEntry{
-					{Time: 1, Id: 0, SwapOut: vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: "badaddress", Assets: sdk.NewInt64Coin("usd", 100), Shares: sdk.NewInt64Coin("vshares", 100)}},
+					{Time: 1, Id: 0, SwapOut: vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: "badaddress", RedeemDenom: "usd", Shares: sdk.NewInt64Coin("vshares", 100)}},
 				},
 			},
 			errorMsg: "invalid owner address in pending swap out queue",

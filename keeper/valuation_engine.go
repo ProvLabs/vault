@@ -125,6 +125,9 @@ func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccoun
 //   - totalShareSupply is fetched from BankKeeper.GetSupply(vault.ShareDenom) (the live supply).
 //   - If total shares == 0, returns 0. Otherwise returns TVV / totalShareSupply (floor).
 func (k Keeper) GetNAVPerShareInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccount) (math.Int, error) {
+	if vault.Paused {
+		return vault.PausedBalance.Amount, nil
+	}
 	tvv, err := k.GetTVVInUnderlyingAsset(ctx, vault)
 	if err != nil {
 		return math.Int{}, err

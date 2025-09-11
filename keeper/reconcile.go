@@ -10,7 +10,7 @@ import (
 	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 
-	sdk "github.comcom/cosmos/cosmos-sdk/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )

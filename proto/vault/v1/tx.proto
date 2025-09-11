@@ -267,7 +267,7 @@ message MsgPauseVaultRequest {
   option (cosmos.msg.v1.signer) = "admin";
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   string vault_address = 2;
-  string reason = 3; // For rebalancing, maintenance, etc.
+  string reason = 3;
 }
 message MsgPauseVaultResponse {}
 

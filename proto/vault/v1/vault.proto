@@ -53,7 +53,12 @@ message VaultAccount {
   // withdrawal_delay_seconds is the configured time period (in seconds) that a withdrawal
   // request must wait in the pending queue before being processed.
   uint64 withdrawal_delay_seconds = 14;
+  // paused indicates that all user-facing swap-in and swap-out operations are disabled.
   bool paused = 15;
+  // paused_balance is the total vault value snapshot taken at the moment of pausing.
+  // This value is used for all NAV calculations while the vault is paused to prevent
+  // apparent devaluation during collateral rebalancing. It is cleared upon unpausing.
+  cosmos.base.v1beta1.Coin paused_balance = 16 [(gogoproto.nullable) = false];
 }
 
 // AccountBalance represents the coin balance of a single account.

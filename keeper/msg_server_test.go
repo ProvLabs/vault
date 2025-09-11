@@ -62,11 +62,11 @@ func (s *TestSuite) TestMsgServer_CreateVault() {
 				vaultAcc.GetAddress(),
 				"expected vault address to match derived address from share denom",
 			)
-			// s.Equal(
-			// 	postCheckArgs.UnderlyingAsset,
-			// 	vaultAcc,
-			// 	"expected vault underlying asset denom to match request",
-			// )
+			s.Equal(
+				postCheckArgs.UnderlyingAsset,
+				vaultAcc.GetUnderlyingAsset(),
+				"expected vault underlying asset denom to match request",
+			)
 		},
 	}
 
@@ -273,7 +273,7 @@ func (s *TestSuite) TestMsgServer_SwapIn_Failures() {
 	vaultAddr := types.GetVaultAddress(shareDenom)
 	assets := sdk.NewInt64Coin(underlyingDenom, 100)
 
-	setup := func(swapInEnabled bool) func() {
+	setup := func(swapInEnabled, vaultPaused bool) func() {
 		return func() {
 			s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1_000_000_000_000_000_000)), owner)
 			vault, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
@@ -283,6 +283,7 @@ func (s *TestSuite) TestMsgServer_SwapIn_Failures() {
 			})
 			s.Require().NoError(err, "vault creation should succeed")
 			vault.SwapInEnabled = swapInEnabled
+			vault.Paused = vaultPaused
 			s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 			err = FundAccount(s.ctx, s.simApp.BankKeeper, owner, sdk.NewCoins(assets))
@@ -301,8 +302,18 @@ func (s *TestSuite) TestMsgServer_SwapIn_Failures() {
 			expectedErrSubstrs: []string{"vault with address", "not found"},
 		},
 		{
+			name:  "swap in enabled, vaulted paused",
+			setup: setup(true, true),
+			msg: types.MsgSwapInRequest{
+				Owner:        owner.String(),
+				VaultAddress: vaultAddr.String(),
+				Assets:       assets,
+			},
+			expectedErrSubstrs: []string{"vault", "is paused"},
+		},
+		{
 			name:  "swap in disabled is rejected",
-			setup: setup(false),
+			setup: setup(false, false),
 			msg: types.MsgSwapInRequest{
 				Owner:        owner.String(),
 				VaultAddress: vaultAddr.String(),
@@ -312,7 +323,7 @@ func (s *TestSuite) TestMsgServer_SwapIn_Failures() {
 		},
 		{
 			name:  "underlying denom mismatch is rejected",
-			setup: setup(true),
+			setup: setup(true, false),
 			msg: types.MsgSwapInRequest{
 				Owner:        owner.String(),
 				VaultAddress: vaultAddr.String(),
@@ -323,7 +334,7 @@ func (s *TestSuite) TestMsgServer_SwapIn_Failures() {
 		{
 			name: "insufficient owner funds is rejected",
 			setup: func() {
-				setup(true)()
+				setup(true, false)()
 				err := s.simApp.BankKeeper.SendCoins(s.ctx, owner, authtypes.NewModuleAddress("burn"),
 					sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 50)))
 				s.Require().NoError(err, "reducing owner's balance should succeed")
@@ -334,7 +345,7 @@ func (s *TestSuite) TestMsgServer_SwapIn_Failures() {
 		{
 			name: "swap in minted shares exceeding maximum mintable supply (precision-scaled above underlying assets) is rejected",
 			setup: func() {
-				setup(true)()
+				setup(true, false)()
 				err := FundAccount(s.ctx, s.simApp.BankKeeper, owner,
 					sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1_000_000_000_000_000)))
 				s.Require().NoError(err, "funding owner with very large underlying should succeed")
@@ -460,7 +471,7 @@ func (s *TestSuite) TestMsgServer_SwapOut_Failures() {
 	vaultAddr := types.GetVaultAddress(shareDenom)
 	initialAssets := sdk.NewInt64Coin(underlyingDenom, 100)
 
-	setup := func(swapOutEnabled bool) func() {
+	setup := func(swapOutEnabled, vaultPaused bool) func() {
 		return func() {
 			s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), owner)
 			vault, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
@@ -471,6 +482,7 @@ func (s *TestSuite) TestMsgServer_SwapOut_Failures() {
 			s.Require().NoError(err, "vault creation should succeed")
 			vault.SwapInEnabled = true
 			vault.SwapOutEnabled = swapOutEnabled
+
 			s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 			err = FundAccount(s.ctx, s.simApp.BankKeeper, owner, sdk.NewCoins(initialAssets))
@@ -478,6 +490,8 @@ func (s *TestSuite) TestMsgServer_SwapOut_Failures() {
 
 			_, err = s.k.SwapIn(s.ctx, vaultAddr, owner, initialAssets)
 			s.Require().NoError(err, "initial SwapIn should succeed")
+			vault.Paused = vaultPaused
+			s.k.AuthKeeper.SetAccount(s.ctx, vault)
 		}
 	}
 
@@ -497,7 +511,7 @@ func (s *TestSuite) TestMsgServer_SwapOut_Failures() {
 		},
 		{
 			name:  "wrong denom rejected",
-			setup: setup(true),
+			setup: setup(true, false),
 			msg: types.MsgSwapOutRequest{
 				Owner:        owner.String(),
 				VaultAddress: vaultAddr.String(),
@@ -507,7 +521,7 @@ func (s *TestSuite) TestMsgServer_SwapOut_Failures() {
 		},
 		{
 			name:  "insufficient share balance returns insufficient funds",
-			setup: setup(true),
+			setup: setup(true, false),
 			msg: types.MsgSwapOutRequest{
 				Owner:        owner.String(),
 				VaultAddress: vaultAddr.String(),
@@ -516,8 +530,18 @@ func (s *TestSuite) TestMsgServer_SwapOut_Failures() {
 			expectedErrSubstrs: []string{"failed to escrow shares", "insufficient funds"},
 		},
 		{
+			name:  "swap out enabled, vault is paused",
+			setup: setup(false, true),
+			msg: types.MsgSwapOutRequest{
+				Owner:        owner.String(),
+				VaultAddress: vaultAddr.String(),
+				Assets:       sdk.NewInt64Coin(shareDenom, 150_000_000),
+			},
+			expectedErrSubstrs: []string{"vault", "is paused"},
+		},
+		{
 			name:  "swap out disabled is rejected",
-			setup: setup(false),
+			setup: setup(false, false),
 			msg: types.MsgSwapOutRequest{
 				Owner:        owner.String(),
 				VaultAddress: vaultAddr.String(),

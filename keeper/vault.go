@@ -174,6 +174,10 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 		return nil, fmt.Errorf("vault with address %v not found", vaultAddr.String())
 	}
 
+	if vault.Paused {
+		return nil, fmt.Errorf("vault %s is paused", vaultAddr.String())
+	}
+
 	if !vault.SwapInEnabled {
 		return nil, fmt.Errorf("swaps are not enabled for vault %s", vaultAddr.String())
 	}
@@ -239,6 +243,10 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 	}
 	if vault == nil {
 		return 0, fmt.Errorf("vault with address %v not found", vaultAddr.String())
+	}
+
+	if vault.Paused {
+		return 0, fmt.Errorf("vault %s is paused", vaultAddr.String())
 	}
 
 	if !vault.SwapOutEnabled {

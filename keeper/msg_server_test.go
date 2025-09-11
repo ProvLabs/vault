@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
 	"github.com/provlabs/vault/keeper"
@@ -2133,10 +2132,10 @@ func (s *TestSuite) TestMsgServer_ExpeditePendingSwapOut() {
 
 func (s *TestSuite) TestMsgServer_PauseVault() {
 	type postCheckArgs struct {
-		VaultAddress       sdk.AccAddress
-		ExpectedPaused     bool
-		ExpectedPauseDenom string
-		ExpectedPauseAmt   int64
+		VaultAddress        sdk.AccAddress
+		ExpectedPaused      bool
+		ExpectedPauseDenom  string
+		ExpectedPauseAmount int64
 	}
 
 	testDef := msgServerTestDef[types.MsgPauseVaultRequest, types.MsgPauseVaultResponse, postCheckArgs]{
@@ -2147,7 +2146,7 @@ func (s *TestSuite) TestMsgServer_PauseVault() {
 			s.Require().NoError(err)
 			s.Assert().Equal(args.ExpectedPaused, v.Paused)
 			s.Assert().Equal(args.ExpectedPauseDenom, v.PausedBalance.Denom)
-			s.Assert().Equal(args.ExpectedPauseAmt, v.PausedBalance.Amount.Int64())
+			s.Assert().Equal(args.ExpectedPauseAmount, v.PausedBalance.Amount.Int64())
 		},
 	}
 
@@ -2177,10 +2176,10 @@ func (s *TestSuite) TestMsgServer_PauseVault() {
 			Reason:       reason,
 		},
 		postCheckArgs: postCheckArgs{
-			VaultAddress:       vaultAddr,
-			ExpectedPaused:     true,
-			ExpectedPauseDenom: underlying,
-			ExpectedPauseAmt:   0,
+			VaultAddress:        vaultAddr,
+			ExpectedPaused:      true,
+			ExpectedPauseDenom:  underlying,
+			ExpectedPauseAmount: 0,
 		},
 		expectedEvents: sdk.Events{
 			sdk.NewEvent(
@@ -2281,10 +2280,10 @@ func (s *TestSuite) TestMsgServer_PauseVault_Failures() {
 
 func (s *TestSuite) TestMsgServer_UnpauseVault() {
 	type postCheckArgs struct {
-		VaultAddress     sdk.AccAddress
-		ExpectedPaused   bool
-		ExpectedEmptyDen string
-		ExpectedEmptyAmt int64
+		VaultAddress        sdk.AccAddress
+		ExpectedPaused      bool
+		ExpectedEmptyDenom  string
+		ExpectedEmptyAmount int64
 	}
 
 	testDef := msgServerTestDef[types.MsgUnpauseVaultRequest, types.MsgUnpauseVaultResponse, postCheckArgs]{
@@ -2294,8 +2293,8 @@ func (s *TestSuite) TestMsgServer_UnpauseVault() {
 			v, err := s.k.GetVault(s.ctx, args.VaultAddress)
 			s.Require().NoError(err)
 			s.Assert().Equal(args.ExpectedPaused, v.Paused)
-			s.Assert().Equal(args.ExpectedEmptyDen, v.PausedBalance.Denom)
-			s.Assert().Equal(args.ExpectedEmptyAmt, v.PausedBalance.Amount.Int64())
+			s.Assert().Equal(args.ExpectedEmptyDenom, v.PausedBalance.Denom)
+			s.Assert().Equal(args.ExpectedEmptyAmount, v.PausedBalance.Amount.Int64())
 		},
 	}
 
@@ -2329,10 +2328,10 @@ func (s *TestSuite) TestMsgServer_UnpauseVault() {
 			VaultAddress: vaultAddr.String(),
 		},
 		postCheckArgs: postCheckArgs{
-			VaultAddress:     vaultAddr,
-			ExpectedPaused:   false,
-			ExpectedEmptyDen: "",
-			ExpectedEmptyAmt: 0,
+			VaultAddress:        vaultAddr,
+			ExpectedPaused:      false,
+			ExpectedEmptyDenom:  "",
+			ExpectedEmptyAmount: 0,
 		},
 		expectedEvents: sdk.Events{
 			sdk.NewEvent(
@@ -2426,125 +2425,6 @@ func (s *TestSuite) TestMsgServer_UnpauseVault_Failures() {
 			runMsgServerTestCase(s, testDef, tc)
 		})
 	}
-}
-
-// createMarkerMintCoinEvents creates events for minting a coin and sending it to a recipient.
-func createMarkerMintCoinEvents(markerModule, admin, recipient sdk.AccAddress, coin sdk.Coin) []sdk.Event {
-	events := createReceiveCoinsEvents(markerModule.String(), sdk.NewCoins(coin).String())
-
-	sendEvents := createSendCoinEvents(markerModule.String(), recipient.String(), sdk.NewCoins(coin).String())
-	events = append(events, sendEvents...)
-
-	// The specific marker mint event
-	markerMintEvent := sdk.NewEvent("provenance.marker.v1.EventMarkerMint",
-		sdk.NewAttribute("administrator", admin.String()),
-		sdk.NewAttribute("amount", coin.Amount.String()),
-		sdk.NewAttribute("denom", coin.Denom),
-	)
-	events = append(events, markerMintEvent)
-
-	return events
-}
-
-// createBurnCoinEvents creates events for minting a coin and sending it to a recipient.
-func createBurnCoinEvents(burner, amount string) []sdk.Event {
-	events := sdk.NewEventManager().Events()
-
-	events = events.AppendEvent(sdk.NewEvent(
-		banktypes.EventTypeCoinSpent,
-		sdk.NewAttribute(banktypes.AttributeKeySpender, burner),
-		sdk.NewAttribute(sdk.AttributeKeyAmount, amount),
-	))
-
-	events = events.AppendEvent(sdk.NewEvent(
-		banktypes.EventTypeCoinBurn,
-		sdk.NewAttribute(banktypes.AttributeKeyBurner, burner),
-		sdk.NewAttribute(sdk.AttributeKeyAmount, amount),
-	))
-
-	return events
-}
-
-// createMarkerWithdraw creates events for withdrawing a coin from a marker.
-func createMarkerWithdraw(administrator, sender sdk.AccAddress, recipient sdk.AccAddress, shares sdk.Coin) []sdk.Event {
-	events := createSendCoinEvents(sender.String(), recipient.String(), sdk.NewCoins(shares).String())
-
-	// The specific marker withdraw event
-	withdrawEvent := sdk.NewEvent("provenance.marker.v1.EventMarkerWithdraw",
-		sdk.NewAttribute("administrator", administrator.String()),
-		sdk.NewAttribute("coins", sdk.NewCoins(shares).String()),
-		sdk.NewAttribute("denom", shares.Denom),
-		sdk.NewAttribute("to_address", recipient.String()),
-	)
-
-	events = append(events, withdrawEvent)
-
-	return events
-}
-
-// createMarkerBurn creates events for burning a coin from a marker.
-func createMarkerBurn(admin, markerAddr sdk.AccAddress, shares sdk.Coin) []sdk.Event {
-	markerModule := authtypes.NewModuleAddress(markertypes.ModuleName)
-	events := createSendCoinEvents(markerAddr.String(), markerModule.String(), sdk.NewCoins(shares).String())
-
-	burnEvents := createBurnCoinEvents(markerModule.String(), shares.String())
-	events = append(events, burnEvents...)
-
-	// The specific marker burn event
-	markerBurnEvent := sdk.NewEvent("provenance.marker.v1.EventMarkerBurn",
-		sdk.NewAttribute("administrator", admin.String()),
-		sdk.NewAttribute("amount", shares.Amount.String()),
-		sdk.NewAttribute("denom", shares.Denom),
-	)
-	events = append(events, markerBurnEvent)
-
-	return events
-}
-
-// createSwapOutEvents creates the full set of expected events for a successful SwapOut.
-func createSwapOutEvents(owner, vaultAddr sdk.AccAddress, assets, shares sdk.Coin) []sdk.Event {
-	var allEvents []sdk.Event
-
-	// 1. owner sends shares to vault address for escrow
-	sendToMarkerEvents := createSendCoinEvents(owner.String(), vaultAddr.String(), shares.String())
-	allEvents = append(allEvents, sendToMarkerEvents...)
-
-	// 2. The vault's own SwapOut event
-	swapOutEvent := sdk.NewEvent("vault.v1.EventSwapOutRequested",
-		sdk.NewAttribute("assets", CoinToJSON(assets)),
-		sdk.NewAttribute("owner", owner.String()),
-		sdk.NewAttribute("request_id", "0"),
-		sdk.NewAttribute("shares", CoinToJSON(shares)),
-		sdk.NewAttribute("vault_address", vaultAddr.String()),
-	)
-	allEvents = append(allEvents, swapOutEvent)
-
-	return allEvents
-}
-
-// createSwapInEvents creates the full set of expected events for a successful SwapIn.
-func createSwapInEvents(owner, vaultAddr, markerAddr sdk.AccAddress, asset, shares sdk.Coin) []sdk.Event {
-	var allEvents []sdk.Event
-
-	markerModule := authtypes.NewModuleAddress(markertypes.ModuleName)
-	mintEvents := createMarkerMintCoinEvents(markerModule, vaultAddr, markerAddr, shares)
-	allEvents = append(allEvents, mintEvents...)
-
-	withdrawEvents := createMarkerWithdraw(vaultAddr, markerAddr, owner, shares)
-	allEvents = append(allEvents, withdrawEvents...)
-
-	sendAssetEvents := createSendCoinEvents(owner.String(), markerAddr.String(), sdk.NewCoins(asset).String())
-	allEvents = append(allEvents, sendAssetEvents...)
-
-	swapInEvent := sdk.NewEvent("vault.v1.EventSwapIn",
-		sdk.NewAttribute("amount_in", CoinToJSON(asset)),
-		sdk.NewAttribute("owner", owner.String()),
-		sdk.NewAttribute("shares_received", CoinToJSON(shares)),
-		sdk.NewAttribute("vault_address", vaultAddr.String()),
-	)
-	allEvents = append(allEvents, swapInEvent)
-
-	return allEvents
 }
 
 // msgServerTestDef defines the configuration for testing a specific MsgServer endpoint.

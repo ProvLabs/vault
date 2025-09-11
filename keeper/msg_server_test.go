@@ -2214,8 +2214,8 @@ func createSwapOutEvents(owner, vaultAddr sdk.AccAddress, assets, shares sdk.Coi
 
 	// 2. The vault's own SwapOut event
 	swapOutEvent := sdk.NewEvent("vault.v1.EventSwapOutRequested",
-		sdk.NewAttribute("assets", CoinToJSON(assets)),
 		sdk.NewAttribute("owner", owner.String()),
+		sdk.NewAttribute("redeem_denom", assets.Denom),
 		sdk.NewAttribute("request_id", "0"),
 		sdk.NewAttribute("shares", CoinToJSON(shares)),
 		sdk.NewAttribute("vault_address", vaultAddr.String()),

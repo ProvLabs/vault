@@ -18,6 +18,7 @@ import (
 
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/simapp"
+	"github.com/provlabs/vault/simulation"
 	"github.com/provlabs/vault/types"
 )
 
@@ -98,6 +99,10 @@ func normalizeEvents(events sdk.Events) sdk.Events {
 // requireAddFinalizeAndActivateMarker creates a restricted marker, requiring it to not error.
 func (s *TestSuite) requireAddFinalizeAndActivateMarker(coin sdk.Coin, manager sdk.AccAddress, reqAttrs ...string) {
 	markerAddr, err := markertypes.MarkerAddress(coin.Denom)
+	markerType := markertypes.MarkerType_Coin
+	if len(reqAttrs) > 0 {
+		markerType = markertypes.MarkerType_RestrictedCoin
+	}
 	s.Require().NoError(err, "MarkerAddress(%q)", coin.Denom)
 	marker := &markertypes.MarkerAccount{
 		BaseAccount: &authtypes.BaseAccount{Address: markerAddr.String()},
@@ -114,7 +119,7 @@ func (s *TestSuite) requireAddFinalizeAndActivateMarker(coin sdk.Coin, manager s
 		Status:                 markertypes.StatusProposed,
 		Denom:                  coin.Denom,
 		Supply:                 coin.Amount,
-		MarkerType:             markertypes.MarkerType_Coin,
+		MarkerType:             markerType,
 		SupplyFixed:            true,
 		AllowGovernanceControl: false,
 		RequiredAttributes:     reqAttrs,
@@ -166,6 +171,32 @@ func createSendCoinEvents(fromAddress, toAddress string, amount string) []sdk.Ev
 	))
 
 	return events
+}
+
+// setupBaseVaultRestricted creates a vault with a restricted underlying asset.
+// It establishes a marker for the underlying asset, requiring a specific attribute for transfers.
+// It then pre-funds the vault's principal account with some of this restricted asset.
+// An optional paymentDenom can be provided for the vault's configuration.
+// It returns the newly created vault account.
+func (s *TestSuite) setupBaseVaultRestricted(underlyingDenom, shareDenom string, paymentDenom ...string) *types.VaultAccount {
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingDenom, 2_000_000), s.adminAddr, simulation.RequiredMarkerAttribute)
+	s.Require().NoError(s.k.MarkerKeeper.WithdrawCoins(markertypes.WithBypass(s.ctx), s.adminAddr, markertypes.MustGetMarkerAddress(shareDenom), underlyingDenom, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 100_000))), "must fund principal")
+
+	var pDenom string
+	if len(paymentDenom) > 0 {
+		pDenom = paymentDenom[0]
+	}
+
+	vaultCfg := vaultAttrs{
+		admin:      s.adminAddr.String(),
+		share:      shareDenom,
+		underlying: underlyingDenom,
+		payment:    pDenom,
+	}
+	vault, err := s.k.CreateVault(s.ctx, vaultCfg)
+	s.Require().NoError(err, "vault creation should succeed")
+
+	return vault
 }
 
 // setupBaseVault creates and activates markers for the underlying and share denoms,

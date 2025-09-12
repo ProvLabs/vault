@@ -39,6 +39,7 @@ func (k *Keeper) ProcessPendingSwapOuts(ctx context.Context) error {
 
 		err = k.processSingleWithdrawal(sdkCtx, id, req)
 		if err != nil {
+			// TODO Do we have to rollback any events?
 			reason := k.getRefundReason(err)
 			sdkCtx.Logger().Error("Failed to process withdrawal",
 				"withdrawal_id", id,
@@ -75,14 +76,23 @@ func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.P
 	vault, ok := k.tryGetVault(ctx, vaultAddr)
 	if !ok {
 		// TODO Is this an error or a panic
+		// I'm under the assumption this is a panic because why would the shares exist without the vault?
+		// We do this before we run the function, so maybe we just want to pass in the vault.
 		return fmt.Errorf("vault for single withdrawal not found at address: %s", vaultAddr.String())
 	}
 
 	assets, err := k.ConvertSharesToRedeemCoin(ctx, *vault, req.Shares.Amount, req.RedeemDenom)
 	if err != nil {
 		// TODO Is this an error or a panic.
+		// I think this may be a panic because something went seriously wrong with conversion
 		return err
 	}
+	/*
+		if assets.IsZero() {
+			// TODO Is this still a concern? It sounds like it
+			return fmt.Errorf("assets for single withdrawal are zero")
+		}
+	*/
 
 	if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, vaultAddr), principalAddress, ownerAddr, sdk.NewCoins(assets)); err != nil {
 		return err
@@ -126,7 +136,7 @@ func (k Keeper) getRefundReason(err error) string {
 	switch {
 	case strings.Contains(errMsg, "marker status is not active"):
 		return types.RefundReasonMarkerNotActive
-	case strings.Contains(errMsg, "does not contain the required attribute"):
+	case strings.Contains(errMsg, "does not contain") && strings.Contains(errMsg, "required attribute"):
 		return types.RefundReasonRecipientMissingAttributes
 	case strings.Contains(errMsg, "is on deny list"),
 		strings.Contains(errMsg, "does not have transfer permissions"),

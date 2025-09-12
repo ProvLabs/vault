@@ -4,6 +4,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
@@ -17,7 +18,7 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 	principalAddress := markertypes.MustGetMarkerAddress(shareDenom)
 
 	assets := sdk.NewInt64Coin(underlyingDenom, 50)
-	shares := sdk.NewInt64Coin(shareDenom, 100)
+	shares := sdk.NewInt64Coin(shareDenom, 50_000_000)
 
 	testBlockTime := time.Now().UTC()
 	duePayoutTime := testBlockTime.Add(-1 * time.Hour).Unix()
@@ -31,17 +32,21 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 		{
 			name: "successful payout of due request",
 			setup: func() (sdk.AccAddress, uint64) {
-				ownerAddr := s.CreateAndFundAccount(sdk.Coin{})
+				ownerAddr := s.CreateAndFundAccount(assets)
 				vault := s.setupBaseVault(underlyingDenom, shareDenom)
-				s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(assets)), "should fund vault principal with assets for payout")
-				s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), shares), "should mint shares to the vault account")
-				s.Require().NoError(s.k.MarkerKeeper.WithdrawCoins(s.ctx, vault.GetAddress(), vault.GetAddress(), shares.Denom, sdk.NewCoins(shares)), "should escrow shares into vault account")
+
+				// Swap in to mint shares to the owner
+				minted, err := s.k.SwapIn(s.ctx, vaultAddr, ownerAddr, assets)
+				s.Require().NoError(err, "should successfully swap in assets")
+
+				// Escrow the shares for the swap out
+				s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, ownerAddr, vault.GetAddress(), sdk.NewCoins(*minted)), "should escrow shares into vault account")
 
 				req := types.PendingSwapOut{
 					Owner:        ownerAddr.String(),
 					VaultAddress: vaultAddr.String(),
 					RedeemDenom:  underlyingDenom,
-					Shares:       shares,
+					Shares:       *minted,
 				}
 				id, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, duePayoutTime, &req)
 				s.Require().NoError(err, "should successfully enqueue request")
@@ -70,7 +75,7 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 			name: "failed payout refunds shares",
 			setup: func() (sdk.AccAddress, uint64) {
 				ownerAddr := s.CreateAndFundAccount(sdk.Coin{})
-				vault := s.setupBaseVault(underlyingDenom, shareDenom)
+				vault := s.setupBaseVaultRestricted(underlyingDenom, shareDenom)
 				s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), shares), "should mint shares to the vault account")
 				s.Require().NoError(s.k.MarkerKeeper.WithdrawCoins(s.ctx, vault.GetAddress(), vault.GetAddress(), shares.Denom, sdk.NewCoins(shares)), "should escrow shares into vault account")
 
@@ -86,9 +91,16 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 			},
 			posthandler: func(ownerAddr sdk.AccAddress, reqID uint64) {
 				s.assertBalance(ownerAddr, shareDenom, shares.Amount)
-				reason := types.RefundReasonInsufficientFunds
+				reason := types.RefundReasonRecipientMissingAttributes
 
 				expectedEvents := sdk.Events{}
+				// TODO Check this event is correct
+				expectedEvents = append(expectedEvents, sdk.NewEvent(
+					banktypes.EventTypeCoinSpent,
+					sdk.NewAttribute(banktypes.AttributeKeySpender, markertypes.MustGetMarkerAddress(shareDenom).String()),
+					sdk.NewAttribute(sdk.AttributeKeyAmount, "98040ylds"),
+				))
+
 				expectedEvents = append(expectedEvents, createSendCoinEvents(vaultAddr.String(), ownerAddr.String(), shares.String())...)
 				expectedEvent, err := sdk.TypedEventToEvent(types.NewEventSwapOutRefunded(vaultAddr.String(), ownerAddr.String(), shares, reqID, reason))
 				s.Require().NoError(err, "should not error converting typed EventSwapOutRefunded")

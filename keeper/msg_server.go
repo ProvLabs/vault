@@ -473,7 +473,7 @@ func (k msgServer) PauseVault(goCtx context.Context, msg *types.MsgPauseVaultReq
 		return nil, fmt.Errorf("failed to set vault account: %w", err)
 	}
 
-	k.emitEvent(ctx, types.NewEventVaultPaused(msg.VaultAddress, msg.Admin, msg.Reason))
+	k.emitEvent(ctx, types.NewEventVaultPaused(msg.VaultAddress, msg.Admin, msg.Reason, vault.PausedBalance))
 
 	return &types.MsgPauseVaultResponse{}, nil
 }
@@ -504,7 +504,13 @@ func (k msgServer) UnpauseVault(goCtx context.Context, msg *types.MsgUnpauseVaul
 		return nil, fmt.Errorf("failed to set vault account: %w", err)
 	}
 
-	k.emitEvent(ctx, types.NewEventVaultUnpaused(msg.VaultAddress, msg.Admin))
+	// TODO: Not sure if it is worth possibly erroring out for an event property?
+	tvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get TVV before pausing: %w", err)
+	}
+
+	k.emitEvent(ctx, types.NewEventVaultUnpaused(msg.VaultAddress, msg.Admin, sdk.NewCoin(vault.UnderlyingAsset, tvv)))
 
 	return &types.MsgUnpauseVaultResponse{}, nil
 }

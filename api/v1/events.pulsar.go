@@ -11545,10 +11545,11 @@ func (x *fastReflection_EventPendingSwapOutExpedited) ProtoMethods() *protoiface
 }
 
 var (
-	md_EventVaultPaused               protoreflect.MessageDescriptor
-	fd_EventVaultPaused_vault_address protoreflect.FieldDescriptor
-	fd_EventVaultPaused_admin         protoreflect.FieldDescriptor
-	fd_EventVaultPaused_reason        protoreflect.FieldDescriptor
+	md_EventVaultPaused                   protoreflect.MessageDescriptor
+	fd_EventVaultPaused_vault_address     protoreflect.FieldDescriptor
+	fd_EventVaultPaused_admin             protoreflect.FieldDescriptor
+	fd_EventVaultPaused_reason            protoreflect.FieldDescriptor
+	fd_EventVaultPaused_total_vault_value protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -11557,6 +11558,7 @@ func init() {
 	fd_EventVaultPaused_vault_address = md_EventVaultPaused.Fields().ByName("vault_address")
 	fd_EventVaultPaused_admin = md_EventVaultPaused.Fields().ByName("admin")
 	fd_EventVaultPaused_reason = md_EventVaultPaused.Fields().ByName("reason")
+	fd_EventVaultPaused_total_vault_value = md_EventVaultPaused.Fields().ByName("total_vault_value")
 }
 
 var _ protoreflect.Message = (*fastReflection_EventVaultPaused)(nil)
@@ -11642,6 +11644,12 @@ func (x *fastReflection_EventVaultPaused) Range(f func(protoreflect.FieldDescrip
 			return
 		}
 	}
+	if x.TotalVaultValue != nil {
+		value := protoreflect.ValueOfMessage(x.TotalVaultValue.ProtoReflect())
+		if !f(fd_EventVaultPaused_total_vault_value, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -11663,6 +11671,8 @@ func (x *fastReflection_EventVaultPaused) Has(fd protoreflect.FieldDescriptor) b
 		return x.Admin != ""
 	case "vault.v1.EventVaultPaused.reason":
 		return x.Reason != ""
+	case "vault.v1.EventVaultPaused.total_vault_value":
+		return x.TotalVaultValue != nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultPaused"))
@@ -11685,6 +11695,8 @@ func (x *fastReflection_EventVaultPaused) Clear(fd protoreflect.FieldDescriptor)
 		x.Admin = ""
 	case "vault.v1.EventVaultPaused.reason":
 		x.Reason = ""
+	case "vault.v1.EventVaultPaused.total_vault_value":
+		x.TotalVaultValue = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultPaused"))
@@ -11710,6 +11722,9 @@ func (x *fastReflection_EventVaultPaused) Get(descriptor protoreflect.FieldDescr
 	case "vault.v1.EventVaultPaused.reason":
 		value := x.Reason
 		return protoreflect.ValueOfString(value)
+	case "vault.v1.EventVaultPaused.total_vault_value":
+		value := x.TotalVaultValue
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultPaused"))
@@ -11736,6 +11751,8 @@ func (x *fastReflection_EventVaultPaused) Set(fd protoreflect.FieldDescriptor, v
 		x.Admin = value.Interface().(string)
 	case "vault.v1.EventVaultPaused.reason":
 		x.Reason = value.Interface().(string)
+	case "vault.v1.EventVaultPaused.total_vault_value":
+		x.TotalVaultValue = value.Message().Interface().(*v1beta1.Coin)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultPaused"))
@@ -11756,6 +11773,11 @@ func (x *fastReflection_EventVaultPaused) Set(fd protoreflect.FieldDescriptor, v
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventVaultPaused) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
+	case "vault.v1.EventVaultPaused.total_vault_value":
+		if x.TotalVaultValue == nil {
+			x.TotalVaultValue = new(v1beta1.Coin)
+		}
+		return protoreflect.ValueOfMessage(x.TotalVaultValue.ProtoReflect())
 	case "vault.v1.EventVaultPaused.vault_address":
 		panic(fmt.Errorf("field vault_address of message vault.v1.EventVaultPaused is not mutable"))
 	case "vault.v1.EventVaultPaused.admin":
@@ -11781,6 +11803,9 @@ func (x *fastReflection_EventVaultPaused) NewField(fd protoreflect.FieldDescript
 		return protoreflect.ValueOfString("")
 	case "vault.v1.EventVaultPaused.reason":
 		return protoreflect.ValueOfString("")
+	case "vault.v1.EventVaultPaused.total_vault_value":
+		m := new(v1beta1.Coin)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultPaused"))
@@ -11862,6 +11887,10 @@ func (x *fastReflection_EventVaultPaused) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
+		if x.TotalVaultValue != nil {
+			l = options.Size(x.TotalVaultValue)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -11890,6 +11919,20 @@ func (x *fastReflection_EventVaultPaused) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.TotalVaultValue != nil {
+			encoded, err := options.Marshal(x.TotalVaultValue)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x22
 		}
 		if len(x.Reason) > 0 {
 			i -= len(x.Reason)
@@ -12057,6 +12100,42 @@ func (x *fastReflection_EventVaultPaused) ProtoMethods() *protoiface.Methods {
 				}
 				x.Reason = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
+			case 4:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field TotalVaultValue", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.TotalVaultValue == nil {
+					x.TotalVaultValue = &v1beta1.Coin{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.TotalVaultValue); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -12093,9 +12172,10 @@ func (x *fastReflection_EventVaultPaused) ProtoMethods() *protoiface.Methods {
 }
 
 var (
-	md_EventVaultUnpaused               protoreflect.MessageDescriptor
-	fd_EventVaultUnpaused_vault_address protoreflect.FieldDescriptor
-	fd_EventVaultUnpaused_admin         protoreflect.FieldDescriptor
+	md_EventVaultUnpaused                   protoreflect.MessageDescriptor
+	fd_EventVaultUnpaused_vault_address     protoreflect.FieldDescriptor
+	fd_EventVaultUnpaused_admin             protoreflect.FieldDescriptor
+	fd_EventVaultUnpaused_total_vault_value protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -12103,6 +12183,7 @@ func init() {
 	md_EventVaultUnpaused = File_vault_v1_events_proto.Messages().ByName("EventVaultUnpaused")
 	fd_EventVaultUnpaused_vault_address = md_EventVaultUnpaused.Fields().ByName("vault_address")
 	fd_EventVaultUnpaused_admin = md_EventVaultUnpaused.Fields().ByName("admin")
+	fd_EventVaultUnpaused_total_vault_value = md_EventVaultUnpaused.Fields().ByName("total_vault_value")
 }
 
 var _ protoreflect.Message = (*fastReflection_EventVaultUnpaused)(nil)
@@ -12182,6 +12263,12 @@ func (x *fastReflection_EventVaultUnpaused) Range(f func(protoreflect.FieldDescr
 			return
 		}
 	}
+	if x.TotalVaultValue != nil {
+		value := protoreflect.ValueOfMessage(x.TotalVaultValue.ProtoReflect())
+		if !f(fd_EventVaultUnpaused_total_vault_value, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -12201,6 +12288,8 @@ func (x *fastReflection_EventVaultUnpaused) Has(fd protoreflect.FieldDescriptor)
 		return x.VaultAddress != ""
 	case "vault.v1.EventVaultUnpaused.admin":
 		return x.Admin != ""
+	case "vault.v1.EventVaultUnpaused.total_vault_value":
+		return x.TotalVaultValue != nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultUnpaused"))
@@ -12221,6 +12310,8 @@ func (x *fastReflection_EventVaultUnpaused) Clear(fd protoreflect.FieldDescripto
 		x.VaultAddress = ""
 	case "vault.v1.EventVaultUnpaused.admin":
 		x.Admin = ""
+	case "vault.v1.EventVaultUnpaused.total_vault_value":
+		x.TotalVaultValue = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultUnpaused"))
@@ -12243,6 +12334,9 @@ func (x *fastReflection_EventVaultUnpaused) Get(descriptor protoreflect.FieldDes
 	case "vault.v1.EventVaultUnpaused.admin":
 		value := x.Admin
 		return protoreflect.ValueOfString(value)
+	case "vault.v1.EventVaultUnpaused.total_vault_value":
+		value := x.TotalVaultValue
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultUnpaused"))
@@ -12267,6 +12361,8 @@ func (x *fastReflection_EventVaultUnpaused) Set(fd protoreflect.FieldDescriptor,
 		x.VaultAddress = value.Interface().(string)
 	case "vault.v1.EventVaultUnpaused.admin":
 		x.Admin = value.Interface().(string)
+	case "vault.v1.EventVaultUnpaused.total_vault_value":
+		x.TotalVaultValue = value.Message().Interface().(*v1beta1.Coin)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultUnpaused"))
@@ -12287,6 +12383,11 @@ func (x *fastReflection_EventVaultUnpaused) Set(fd protoreflect.FieldDescriptor,
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventVaultUnpaused) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
+	case "vault.v1.EventVaultUnpaused.total_vault_value":
+		if x.TotalVaultValue == nil {
+			x.TotalVaultValue = new(v1beta1.Coin)
+		}
+		return protoreflect.ValueOfMessage(x.TotalVaultValue.ProtoReflect())
 	case "vault.v1.EventVaultUnpaused.vault_address":
 		panic(fmt.Errorf("field vault_address of message vault.v1.EventVaultUnpaused is not mutable"))
 	case "vault.v1.EventVaultUnpaused.admin":
@@ -12308,6 +12409,9 @@ func (x *fastReflection_EventVaultUnpaused) NewField(fd protoreflect.FieldDescri
 		return protoreflect.ValueOfString("")
 	case "vault.v1.EventVaultUnpaused.admin":
 		return protoreflect.ValueOfString("")
+	case "vault.v1.EventVaultUnpaused.total_vault_value":
+		m := new(v1beta1.Coin)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultUnpaused"))
@@ -12385,6 +12489,10 @@ func (x *fastReflection_EventVaultUnpaused) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
+		if x.TotalVaultValue != nil {
+			l = options.Size(x.TotalVaultValue)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -12413,6 +12521,20 @@ func (x *fastReflection_EventVaultUnpaused) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.TotalVaultValue != nil {
+			encoded, err := options.Marshal(x.TotalVaultValue)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x1a
 		}
 		if len(x.Admin) > 0 {
 			i -= len(x.Admin)
@@ -12540,6 +12662,42 @@ func (x *fastReflection_EventVaultUnpaused) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				x.Admin = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field TotalVaultValue", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.TotalVaultValue == nil {
+					x.TotalVaultValue = &v1beta1.Coin{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.TotalVaultValue); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -13781,14 +13939,20 @@ func (x *EventPendingSwapOutExpedited) GetAdmin() string {
 	return ""
 }
 
+// EventVaultPaused is emitted when a vault is paused.
 type EventVaultPaused struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// vault_address is the bech32 address of the vault.
 	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	Admin        string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
-	Reason       string `protobuf:"bytes,3,opt,name=reason,proto3" json:"reason,omitempty"`
+	// admin is the address of the account that paused the vault.
+	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
+	// reason is the reason for pausing the vault.
+	Reason string `protobuf:"bytes,3,opt,name=reason,proto3" json:"reason,omitempty"`
+	// total_vault_value is the total value of the vault's assets at the time of pausing.
+	TotalVaultValue *v1beta1.Coin `protobuf:"bytes,4,opt,name=total_vault_value,json=totalVaultValue,proto3" json:"total_vault_value,omitempty"`
 }
 
 func (x *EventVaultPaused) Reset() {
@@ -13832,13 +13996,25 @@ func (x *EventVaultPaused) GetReason() string {
 	return ""
 }
 
+func (x *EventVaultPaused) GetTotalVaultValue() *v1beta1.Coin {
+	if x != nil {
+		return x.TotalVaultValue
+	}
+	return nil
+}
+
+// EventVaultUnpaused is emitted when a vault is unpaused.
 type EventVaultUnpaused struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
+	// vault_address is the bech32 address of the vault.
 	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	Admin        string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
+	// admin is the address of the account that unpaused the vault.
+	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
+	// total_vault_value is the new total value of the vault's assets at the time of unpausing.
+	TotalVaultValue *v1beta1.Coin `protobuf:"bytes,3,opt,name=total_vault_value,json=totalVaultValue,proto3" json:"total_vault_value,omitempty"`
 }
 
 func (x *EventVaultUnpaused) Reset() {
@@ -13873,6 +14049,13 @@ func (x *EventVaultUnpaused) GetAdmin() string {
 		return x.Admin
 	}
 	return ""
+}
+
+func (x *EventVaultUnpaused) GetTotalVaultValue() *v1beta1.Coin {
+	if x != nil {
+		return x.TotalVaultValue
+	}
+	return nil
 }
 
 var File_vault_v1_events_proto protoreflect.FileDescriptor
@@ -14128,28 +14311,37 @@ var file_vault_v1_events_proto_rawDesc = []byte{
 	0x6c, 0x74, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28,
 	0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64,
 	0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d,
-	0x69, 0x6e, 0x22, 0x65, 0x0a, 0x10, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x56, 0x61, 0x75, 0x6c, 0x74,
-	0x50, 0x61, 0x75, 0x73, 0x65, 0x64, 0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f,
-	0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76,
-	0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x14, 0x0a, 0x05, 0x61,
-	0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69,
-	0x6e, 0x12, 0x16, 0x0a, 0x06, 0x72, 0x65, 0x61, 0x73, 0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x06, 0x72, 0x65, 0x61, 0x73, 0x6f, 0x6e, 0x22, 0x4f, 0x0a, 0x12, 0x45, 0x76, 0x65,
-	0x6e, 0x74, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x55, 0x6e, 0x70, 0x61, 0x75, 0x73, 0x65, 0x64, 0x12,
-	0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64,
-	0x72, 0x65, 0x73, 0x73, 0x12, 0x14, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x42, 0x8c, 0x01, 0x0a, 0x0c, 0x63,
-	0x6f, 0x6d, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x42, 0x0b, 0x45, 0x76, 0x65,
-	0x6e, 0x74, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2e, 0x67, 0x69, 0x74, 0x68,
-	0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f,
-	0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f,
-	0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x56, 0x58, 0x58,
-	0xaa, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x08, 0x56, 0x61,
-	0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x14, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56,
-	0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x09,
-	0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x33,
+	0x69, 0x6e, 0x22, 0xb2, 0x01, 0x0a, 0x10, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x56, 0x61, 0x75, 0x6c,
+	0x74, 0x50, 0x61, 0x75, 0x73, 0x65, 0x64, 0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74,
+	0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c,
+	0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x14, 0x0a, 0x05,
+	0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x61, 0x64, 0x6d,
+	0x69, 0x6e, 0x12, 0x16, 0x0a, 0x06, 0x72, 0x65, 0x61, 0x73, 0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x06, 0x72, 0x65, 0x61, 0x73, 0x6f, 0x6e, 0x12, 0x4b, 0x0a, 0x11, 0x74, 0x6f,
+	0x74, 0x61, 0x6c, 0x5f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18,
+	0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62,
+	0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e,
+	0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x0f, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x56, 0x61, 0x75,
+	0x6c, 0x74, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x22, 0x9c, 0x01, 0x0a, 0x12, 0x45, 0x76, 0x65, 0x6e,
+	0x74, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x55, 0x6e, 0x70, 0x61, 0x75, 0x73, 0x65, 0x64, 0x12, 0x23,
+	0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72,
+	0x65, 0x73, 0x73, 0x12, 0x14, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x4b, 0x0a, 0x11, 0x74, 0x6f, 0x74,
+	0x61, 0x6c, 0x5f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x03,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61,
+	0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42,
+	0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x0f, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x56, 0x61, 0x75, 0x6c,
+	0x74, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x42, 0x8c, 0x01, 0x0a, 0x0c, 0x63, 0x6f, 0x6d, 0x2e, 0x76,
+	0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x42, 0x0b, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x50,
+	0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2e, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63,
+	0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c,
+	0x74, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76,
+	0x61, 0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x56, 0x58, 0x58, 0xaa, 0x02, 0x08, 0x56,
+	0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c,
+	0x56, 0x31, 0xe2, 0x02, 0x14, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50,
+	0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x09, 0x56, 0x61, 0x75, 0x6c,
+	0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -14205,11 +14397,13 @@ var file_vault_v1_events_proto_depIdxs = []int32{
 	21, // 12: vault.v1.EventSwapOutRequested.shares:type_name -> cosmos.base.v1beta1.Coin
 	21, // 13: vault.v1.EventSwapOutCompleted.assets:type_name -> cosmos.base.v1beta1.Coin
 	21, // 14: vault.v1.EventSwapOutRefunded.shares:type_name -> cosmos.base.v1beta1.Coin
-	15, // [15:15] is the sub-list for method output_type
-	15, // [15:15] is the sub-list for method input_type
-	15, // [15:15] is the sub-list for extension type_name
-	15, // [15:15] is the sub-list for extension extendee
-	0,  // [0:15] is the sub-list for field type_name
+	21, // 15: vault.v1.EventVaultPaused.total_vault_value:type_name -> cosmos.base.v1beta1.Coin
+	21, // 16: vault.v1.EventVaultUnpaused.total_vault_value:type_name -> cosmos.base.v1beta1.Coin
+	17, // [17:17] is the sub-list for method output_type
+	17, // [17:17] is the sub-list for method input_type
+	17, // [17:17] is the sub-list for extension type_name
+	17, // [17:17] is the sub-list for extension extendee
+	0,  // [0:17] is the sub-list for field type_name
 }
 
 func init() { file_vault_v1_events_proto_init() }

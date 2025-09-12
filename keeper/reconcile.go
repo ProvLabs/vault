@@ -204,8 +204,11 @@ func (k *Keeper) handleVaultInterestTimeouts(ctx context.Context) error {
 		key := collections.Join(timeout, addr)
 
 		vault, ok := k.tryGetVault(sdkCtx, addr)
-		if !ok || vault.Paused {
+		if !ok {
 			toRemove = append(toRemove, key)
+			return false, nil
+		}
+		if vault.Paused {
 			return false, nil
 		}
 
@@ -282,8 +285,10 @@ func (k *Keeper) handleReconciledVaults(ctx context.Context) error {
 		v, ok := k.tryGetVault(sdkCtx, addr)
 		if ok && !v.Paused {
 			vaults = append(vaults, v)
+			toRemove = append(toRemove, addr)
+		} else if !ok {
+			toRemove = append(toRemove, addr)
 		}
-		toRemove = append(toRemove, addr)
 		return false, nil
 	})
 	if err != nil {

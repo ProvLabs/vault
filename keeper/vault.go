@@ -102,6 +102,7 @@ func (k *Keeper) createVaultAccount(ctx sdk.Context, admin, shareDenom, underlyi
 		}
 	}
 	vaultAcc = k.AuthKeeper.NewAccount(ctx, vault).(types.VaultAccountI)
+	vault.PausedBalance = sdk.Coin{}
 	k.AuthKeeper.SetAccount(ctx, vaultAcc)
 
 	return vault, nil

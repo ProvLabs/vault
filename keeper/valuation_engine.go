@@ -102,6 +102,9 @@ func (k Keeper) FromUnderlyingAssetAmount(ctx sdk.Context, vault types.VaultAcco
 //   - Convert each balance to underlying units via ToUnderlyingAssetAmount.
 //   - Sum the converted amounts (floor at each multiplication/division step).
 func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccount) (math.Int, error) {
+	if vault.Paused {
+		return vault.PausedBalance.Amount, nil
+	}
 	balances := k.BankKeeper.GetAllBalances(ctx, vault.PrincipalMarkerAddress())
 	total := math.ZeroInt()
 	for _, balance := range balances {

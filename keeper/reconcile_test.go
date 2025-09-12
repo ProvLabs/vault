@@ -22,7 +22,7 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 	futureTime := testBlockTime.Add(100 * time.Second)
 	pastTime := testBlockTime.Add(twoMonths)
 
-	setup := func(interestRate string, periodStartSeconds int64) {
+	setup := func(interestRate string, periodStartSeconds int64, paused bool) {
 		s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
 		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 			Admin:           s.adminAddr.String(),
@@ -36,6 +36,7 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 		vault.CurrentInterestRate = interestRate
 		vault.DesiredInterestRate = interestRate
 		vault.PeriodStart = periodStartSeconds
+		vault.Paused = paused
 		s.k.AuthKeeper.SetAccount(s.ctx, vault)
 		err = FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddress, sdk.NewCoins(underlying))
 		s.Require().NoError(err)
@@ -55,7 +56,7 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 		{
 			name: "no start period found, should set period start and return no error",
 			setup: func() {
-				setup("0.25", 0)
+				setup("0.25", 0, false)
 			},
 			posthander: func() {
 				s.assertInPayoutVerificationQueue(vaultAddress, true)
@@ -66,7 +67,7 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 		{
 			name: "interest period start in future, should return nil and do nothing",
 			setup: func() {
-				setup("0.25", futureTime.Unix())
+				setup("0.25", futureTime.Unix(), false)
 			},
 			posthander: func() {
 				s.assertInPayoutVerificationQueue(vaultAddress, false)
@@ -77,7 +78,7 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 		{
 			name: "interest period has elasped, should pay interest and update period start",
 			setup: func() {
-				setup("0.25", pastTime.Unix())
+				setup("0.25", pastTime.Unix(), false)
 			},
 			posthander: func() {
 				s.assertInPayoutVerificationQueue(vaultAddress, true)
@@ -88,13 +89,26 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 		{
 			name: "interest period has elasped, should pay negative interest and update period start",
 			setup: func() {
-				setup("-0.25", pastTime.Unix())
+				setup("-0.25", pastTime.Unix(), false)
 			},
 			posthander: func() {
 				s.assertInPayoutVerificationQueue(vaultAddress, true)
 				s.assertVaultAndMarkerBalances(vaultAddress, shareDenom, underlying.Denom, sdkmath.NewInt(1040262904), sdkmath.NewInt(959737096))
 			},
 			expectedEvents: createReconcileEvents(vaultAddress, markertypes.MustGetMarkerAddress(shareDenom), sdkmath.NewInt(-40262904), sdkmath.NewInt(1_000_000_000), sdkmath.NewInt(959737096), underlying.Denom, "-0.25", 5_184_000),
+		},
+		{
+			name: "paused vault, should do nothing",
+			setup: func() {
+				setup("0.25", pastTime.Unix(), true)
+			},
+			posthander: func() {
+				s.assertInPayoutVerificationQueue(vaultAddress, false)
+				vault, err := s.k.GetVault(s.ctx, vaultAddress)
+				s.Require().NoError(err)
+				s.Require().Equal(pastTime.Unix(), vault.PeriodStart, "PeriodStart should not be updated for paused vault")
+			},
+			expectedEvents: sdk.Events{},
 		},
 	}
 
@@ -115,6 +129,8 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 			if len(tc.expectedErrSubstr) > 0 {
 				s.Require().Error(err)
 				s.Require().Contains(err.Error(), tc.expectedErrSubstr)
+			} else {
+				s.Require().NoError(err)
 			}
 
 			s.Assert().Equal(
@@ -345,6 +361,28 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 			},
 		},
 		{
+			name: "paused vault is skipped and remains in queue",
+			setup: func() {
+				s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
+				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin:           s.adminAddr.String(),
+					ShareDenom:      shareDenom,
+					UnderlyingAsset: underlying.Denom,
+				})
+				s.Require().NoError(err)
+				vault, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err)
+				vault.Paused = true
+				s.k.AuthKeeper.SetAccount(s.ctx, vault)
+				s.Require().NoError(s.k.PayoutTimeoutQueue.Enqueue(s.ctx, testBlockTime.Unix(), vault.GetAddress()))
+				s.ctx = s.ctx.WithBlockTime(testBlockTime).WithEventManager(sdk.NewEventManager())
+			},
+			checkAddr:      vaultAddr,
+			expectExists:   true,
+			expectDeleted:  false,
+			expectedEvents: sdk.Events{},
+		},
+		{
 			name: "non-vault address in interest details does nothing",
 			setup: func() {
 				s.Require().NoError(s.k.PayoutVerificationSet.Set(s.ctx, markerAddr))
@@ -473,6 +511,19 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 					sdk.NewAttribute("vault_address", v2.vaultAddr.String()),
 				),
 			},
+		},
+		{
+			name: "paused vault is skipped",
+			setup: func() {
+				vault := createVaultWithInterest(s, v1, "0.1", testBlockTime.Unix(), testBlockTime.Unix(), true, true)
+				vault.Paused = true
+				s.k.AuthKeeper.SetAccount(s.ctx, vault)
+			},
+			postCheck: func() {
+				s.assertInPayoutVerificationQueue(v1.vaultAddr, true) // Should still be in the queue
+			},
+			expectErr:      false,
+			expectedEvents: sdk.Events{},
 		},
 	}
 

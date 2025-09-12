@@ -32,6 +32,8 @@ const (
 	Msg_DepositPrincipalFunds_FullMethodName  = "/vault.v1.Msg/DepositPrincipalFunds"
 	Msg_WithdrawPrincipalFunds_FullMethodName = "/vault.v1.Msg/WithdrawPrincipalFunds"
 	Msg_ExpeditePendingSwapOut_FullMethodName = "/vault.v1.Msg/ExpeditePendingSwapOut"
+	Msg_PauseVault_FullMethodName             = "/vault.v1.Msg/PauseVault"
+	Msg_UnpauseVault_FullMethodName           = "/vault.v1.Msg/UnpauseVault"
 )
 
 // MsgClient is the client API for Msg service.
@@ -66,6 +68,8 @@ type MsgClient interface {
 	WithdrawPrincipalFunds(ctx context.Context, in *MsgWithdrawPrincipalFundsRequest, opts ...grpc.CallOption) (*MsgWithdrawPrincipalFundsResponse, error)
 	// ExpeditePendingSwapOut expedites a pending swap out from a vault.
 	ExpeditePendingSwapOut(ctx context.Context, in *MsgExpeditePendingSwapOutRequest, opts ...grpc.CallOption) (*MsgExpeditePendingSwapOutResponse, error)
+	PauseVault(ctx context.Context, in *MsgPauseVaultRequest, opts ...grpc.CallOption) (*MsgPauseVaultResponse, error)
+	UnpauseVault(ctx context.Context, in *MsgUnpauseVaultRequest, opts ...grpc.CallOption) (*MsgUnpauseVaultResponse, error)
 }
 
 type msgClient struct {
@@ -206,6 +210,26 @@ func (c *msgClient) ExpeditePendingSwapOut(ctx context.Context, in *MsgExpediteP
 	return out, nil
 }
 
+func (c *msgClient) PauseVault(ctx context.Context, in *MsgPauseVaultRequest, opts ...grpc.CallOption) (*MsgPauseVaultResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgPauseVaultResponse)
+	err := c.cc.Invoke(ctx, Msg_PauseVault_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UnpauseVault(ctx context.Context, in *MsgUnpauseVaultRequest, opts ...grpc.CallOption) (*MsgUnpauseVaultResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgUnpauseVaultResponse)
+	err := c.cc.Invoke(ctx, Msg_UnpauseVault_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility.
@@ -238,6 +262,8 @@ type MsgServer interface {
 	WithdrawPrincipalFunds(context.Context, *MsgWithdrawPrincipalFundsRequest) (*MsgWithdrawPrincipalFundsResponse, error)
 	// ExpeditePendingSwapOut expedites a pending swap out from a vault.
 	ExpeditePendingSwapOut(context.Context, *MsgExpeditePendingSwapOutRequest) (*MsgExpeditePendingSwapOutResponse, error)
+	PauseVault(context.Context, *MsgPauseVaultRequest) (*MsgPauseVaultResponse, error)
+	UnpauseVault(context.Context, *MsgUnpauseVaultRequest) (*MsgUnpauseVaultResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -286,6 +312,12 @@ func (UnimplementedMsgServer) WithdrawPrincipalFunds(context.Context, *MsgWithdr
 }
 func (UnimplementedMsgServer) ExpeditePendingSwapOut(context.Context, *MsgExpeditePendingSwapOutRequest) (*MsgExpeditePendingSwapOutResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ExpeditePendingSwapOut not implemented")
+}
+func (UnimplementedMsgServer) PauseVault(context.Context, *MsgPauseVaultRequest) (*MsgPauseVaultResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PauseVault not implemented")
+}
+func (UnimplementedMsgServer) UnpauseVault(context.Context, *MsgUnpauseVaultRequest) (*MsgUnpauseVaultResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UnpauseVault not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 func (UnimplementedMsgServer) testEmbeddedByValue()             {}
@@ -542,6 +574,42 @@ func _Msg_ExpeditePendingSwapOut_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_PauseVault_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgPauseVaultRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).PauseVault(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_PauseVault_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).PauseVault(ctx, req.(*MsgPauseVaultRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UnpauseVault_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUnpauseVaultRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UnpauseVault(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_UnpauseVault_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UnpauseVault(ctx, req.(*MsgUnpauseVaultRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -600,6 +668,14 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ExpeditePendingSwapOut",
 			Handler:    _Msg_ExpeditePendingSwapOut_Handler,
+		},
+		{
+			MethodName: "PauseVault",
+			Handler:    _Msg_PauseVault_Handler,
+		},
+		{
+			MethodName: "UnpauseVault",
+			Handler:    _Msg_UnpauseVault_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

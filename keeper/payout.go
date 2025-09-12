@@ -14,7 +14,8 @@ import (
 )
 
 // ProcessPendingSwapOuts processes the queue of pending swap-out requests. Called from the EndBlocker,
-// it iterates through requests due for payout at the current block time.
+// it iterates through requests due for payout at the current block time. It skips any requests for
+// vaults that are currently paused.
 // For each request, it attempts a payout. If the payout fails due to a recoverable error (e.g., insufficient liquidity),
 // it refunds the user's escrowed shares. All processed requests are dequeued, regardless of success or failure.
 // This function returns an error only if the queue walk itself fails; it does not return errors from individual
@@ -26,14 +27,20 @@ func (k *Keeper) ProcessPendingSwapOuts(ctx context.Context) error {
 	var processedKeys []collections.Triple[int64, sdk.AccAddress, uint64]
 
 	err := k.PendingSwapOutQueue.WalkDue(ctx, now, func(timestamp int64, id uint64, vaultAddr sdk.AccAddress, req types.PendingSwapOut) (stop bool, err error) {
-		processedKeys = append(processedKeys, collections.Join3(timestamp, vaultAddr, id))
+		key := collections.Join3(timestamp, vaultAddr, id)
 
-		_, ok := k.tryGetVault(sdkCtx, vaultAddr)
+		vault, ok := k.tryGetVault(sdkCtx, vaultAddr)
 		if !ok {
 			sdkCtx.Logger().Error("skipping pending withdrawal for non-existent vault", "request_id", id, "vault_address", vaultAddr.String())
+			processedKeys = append(processedKeys, key)
 			return false, nil
 		}
 
+		if vault.Paused {
+			return false, nil
+		}
+
+		processedKeys = append(processedKeys, key)
 		err = k.processSingleWithdrawal(sdkCtx, id, req)
 		if err != nil {
 			reason := k.getRefundReason(err)

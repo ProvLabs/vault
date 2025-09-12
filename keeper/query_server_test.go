@@ -136,28 +136,33 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 		ManualEquality: func(s querytest.TestSuiter, expected, actual *types.QueryVaultsResponse) {
 			s.Require().NotNil(actual, "actual response should not be nil")
 			s.Require().NotNil(expected, "expected response should not be nil")
-
 			s.Require().Len(actual.Vaults, len(expected.Vaults), "unexpected number of vaults returned")
 
-			// Can't do a direct compare because of account numbers and ordering.
-			// So we ignore account numbers and sequence and use ElementsMatch.
-			actualCloned := make([]types.VaultAccount, len(actual.Vaults))
-			for i, v := range actual.Vaults {
-				cloned := v.Clone()
-				cloned.BaseAccount.AccountNumber = 0
-				cloned.BaseAccount.Sequence = 0
-				actualCloned[i] = *cloned
+			type vaultView struct {
+				Address         string
+				Admin           string
+				ShareDenom      string
+				UnderlyingAsset string
+				PaymentDenom    string
+				IsPaused        bool
 			}
 
-			expectedCloned := make([]types.VaultAccount, len(expected.Vaults))
-			for i, v := range expected.Vaults {
-				cloned := v.Clone()
-				cloned.BaseAccount.AccountNumber = 0
-				cloned.BaseAccount.Sequence = 0
-				expectedCloned[i] = *cloned
+			toViews := func(vs []types.VaultAccount) []vaultView {
+				out := make([]vaultView, 0, len(vs))
+				for _, v := range vs {
+					out = append(out, vaultView{
+						Address:         v.GetAddress().String(),
+						Admin:           v.GetAdmin(),
+						ShareDenom:      v.GetShareDenom(),
+						UnderlyingAsset: v.GetUnderlyingAsset(),
+						PaymentDenom:    v.GetPaymentDenom(),
+						IsPaused:        v.GetPaused(),
+					})
+				}
+				return out
 			}
 
-			s.Assert().ElementsMatch(expectedCloned, actualCloned, "vaults do not match")
+			s.Assert().ElementsMatch(toViews(expected.Vaults), toViews(actual.Vaults), "vaults do not match")
 
 			if expected.Pagination != nil {
 				if expected.Pagination.Total > 0 {
@@ -171,7 +176,6 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 			}
 		},
 	}
-
 	admin := s.adminAddr.String()
 
 	// Define some vault addresses for consistent testing

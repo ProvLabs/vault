@@ -316,6 +316,29 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						{ProtoField: "request_id"},
 					},
 				},
+				{
+					RpcMethod: "PauseVault",
+					Use:       "pause [admin] [vault_address] [reason]",
+					Alias:     []string{"pv"},
+					Short:     "Pause a vault, disabling all user-facing operations",
+					Example:   fmt.Sprintf("%s pause %s %s 'rebalancing collateral'", txStart, exampleAdminAddr, exampleVaultAddr),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "admin"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "reason"},
+					},
+				},
+				{
+					RpcMethod: "UnpauseVault",
+					Use:       "unpause [admin] [vault_address]",
+					Alias:     []string{"upv"},
+					Short:     "Unpause a vault, re-enabling all user-facing operations",
+					Example:   fmt.Sprintf("%s unpause %s %s", txStart, exampleAdminAddr, exampleVaultAddr),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "admin"},
+						{ProtoField: "vault_address"},
+					},
+				},
 			},
 		},
 

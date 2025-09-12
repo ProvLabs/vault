@@ -50,7 +50,19 @@ type VaultAccountI interface {
 	// GetPaymentDenom returns the denom used for fees/interest payments, if any.
 	GetPaymentDenom() string
 
+	// GetWithdrawalDelaySeconds returns the number of seconds that
+	// withdrawals from this vault are delayed after a swap-out request.
+	// A value of 0 means withdrawals are processed immediately in the end blocker.
 	GetWithdrawalDelaySeconds() uint64
+
+	// GetPaused reports whether the vault is currently paused.
+	// A paused vault disables user operations such as swaps or reconciles.
+	GetPaused() bool
+
+	// GetPausedBalance returns the balance snapshot held when the vault
+	// was paused. This is used to track the reserves or assets that are
+	// locked during the pause state.
+	GetPausedBalance() sdk.Coin
 }
 
 // NewVaultAccount creates a new vault with an optional payment denom allowed for I/O alongside the underlying asset.
@@ -66,6 +78,8 @@ func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyi
 		SwapInEnabled:          true,
 		SwapOutEnabled:         true,
 		WithdrawalDelaySeconds: withdrawalDelay,
+		Paused:                 false,
+		PausedBalance:          sdk.Coin{},
 	}
 }
 

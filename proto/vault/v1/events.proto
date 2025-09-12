@@ -236,7 +236,6 @@ message EventVaultPaused {
   string vault_address = 1;
   string admin = 2;
   string reason = 3;
-   cosmos.base.v1beta1.Coin total_vault_value = 4 [(gogoproto.nullable) = false];
 }
 
 message EventVaultUnpaused {

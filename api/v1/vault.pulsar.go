@@ -1778,7 +1778,7 @@ var (
 	fd_PendingSwapOut_owner         protoreflect.FieldDescriptor
 	fd_PendingSwapOut_vault_address protoreflect.FieldDescriptor
 	fd_PendingSwapOut_shares        protoreflect.FieldDescriptor
-	fd_PendingSwapOut_assets        protoreflect.FieldDescriptor
+	fd_PendingSwapOut_redeem_denom  protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -1787,7 +1787,7 @@ func init() {
 	fd_PendingSwapOut_owner = md_PendingSwapOut.Fields().ByName("owner")
 	fd_PendingSwapOut_vault_address = md_PendingSwapOut.Fields().ByName("vault_address")
 	fd_PendingSwapOut_shares = md_PendingSwapOut.Fields().ByName("shares")
-	fd_PendingSwapOut_assets = md_PendingSwapOut.Fields().ByName("assets")
+	fd_PendingSwapOut_redeem_denom = md_PendingSwapOut.Fields().ByName("redeem_denom")
 }
 
 var _ protoreflect.Message = (*fastReflection_PendingSwapOut)(nil)
@@ -1873,9 +1873,9 @@ func (x *fastReflection_PendingSwapOut) Range(f func(protoreflect.FieldDescripto
 			return
 		}
 	}
-	if x.Assets != nil {
-		value := protoreflect.ValueOfMessage(x.Assets.ProtoReflect())
-		if !f(fd_PendingSwapOut_assets, value) {
+	if x.RedeemDenom != "" {
+		value := protoreflect.ValueOfString(x.RedeemDenom)
+		if !f(fd_PendingSwapOut_redeem_denom, value) {
 			return
 		}
 	}
@@ -1900,8 +1900,8 @@ func (x *fastReflection_PendingSwapOut) Has(fd protoreflect.FieldDescriptor) boo
 		return x.VaultAddress != ""
 	case "vault.v1.PendingSwapOut.shares":
 		return x.Shares != nil
-	case "vault.v1.PendingSwapOut.assets":
-		return x.Assets != nil
+	case "vault.v1.PendingSwapOut.redeem_denom":
+		return x.RedeemDenom != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOut"))
@@ -1924,8 +1924,8 @@ func (x *fastReflection_PendingSwapOut) Clear(fd protoreflect.FieldDescriptor) {
 		x.VaultAddress = ""
 	case "vault.v1.PendingSwapOut.shares":
 		x.Shares = nil
-	case "vault.v1.PendingSwapOut.assets":
-		x.Assets = nil
+	case "vault.v1.PendingSwapOut.redeem_denom":
+		x.RedeemDenom = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOut"))
@@ -1951,9 +1951,9 @@ func (x *fastReflection_PendingSwapOut) Get(descriptor protoreflect.FieldDescrip
 	case "vault.v1.PendingSwapOut.shares":
 		value := x.Shares
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "vault.v1.PendingSwapOut.assets":
-		value := x.Assets
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "vault.v1.PendingSwapOut.redeem_denom":
+		value := x.RedeemDenom
+		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOut"))
@@ -1980,8 +1980,8 @@ func (x *fastReflection_PendingSwapOut) Set(fd protoreflect.FieldDescriptor, val
 		x.VaultAddress = value.Interface().(string)
 	case "vault.v1.PendingSwapOut.shares":
 		x.Shares = value.Message().Interface().(*v1beta11.Coin)
-	case "vault.v1.PendingSwapOut.assets":
-		x.Assets = value.Message().Interface().(*v1beta11.Coin)
+	case "vault.v1.PendingSwapOut.redeem_denom":
+		x.RedeemDenom = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOut"))
@@ -2007,15 +2007,12 @@ func (x *fastReflection_PendingSwapOut) Mutable(fd protoreflect.FieldDescriptor)
 			x.Shares = new(v1beta11.Coin)
 		}
 		return protoreflect.ValueOfMessage(x.Shares.ProtoReflect())
-	case "vault.v1.PendingSwapOut.assets":
-		if x.Assets == nil {
-			x.Assets = new(v1beta11.Coin)
-		}
-		return protoreflect.ValueOfMessage(x.Assets.ProtoReflect())
 	case "vault.v1.PendingSwapOut.owner":
 		panic(fmt.Errorf("field owner of message vault.v1.PendingSwapOut is not mutable"))
 	case "vault.v1.PendingSwapOut.vault_address":
 		panic(fmt.Errorf("field vault_address of message vault.v1.PendingSwapOut is not mutable"))
+	case "vault.v1.PendingSwapOut.redeem_denom":
+		panic(fmt.Errorf("field redeem_denom of message vault.v1.PendingSwapOut is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOut"))
@@ -2036,9 +2033,8 @@ func (x *fastReflection_PendingSwapOut) NewField(fd protoreflect.FieldDescriptor
 	case "vault.v1.PendingSwapOut.shares":
 		m := new(v1beta11.Coin)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "vault.v1.PendingSwapOut.assets":
-		m := new(v1beta11.Coin)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "vault.v1.PendingSwapOut.redeem_denom":
+		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOut"))
@@ -2120,8 +2116,8 @@ func (x *fastReflection_PendingSwapOut) ProtoMethods() *protoiface.Methods {
 			l = options.Size(x.Shares)
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		if x.Assets != nil {
-			l = options.Size(x.Assets)
+		l = len(x.RedeemDenom)
+		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		if x.unknownFields != nil {
@@ -2153,17 +2149,10 @@ func (x *fastReflection_PendingSwapOut) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if x.Assets != nil {
-			encoded, err := options.Marshal(x.Assets)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
-			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+		if len(x.RedeemDenom) > 0 {
+			i -= len(x.RedeemDenom)
+			copy(dAtA[i:], x.RedeemDenom)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.RedeemDenom)))
 			i--
 			dAtA[i] = 0x22
 		}
@@ -2346,9 +2335,9 @@ func (x *fastReflection_PendingSwapOut) ProtoMethods() *protoiface.Methods {
 				iNdEx = postIndex
 			case 4:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Assets", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field RedeemDenom", wireType)
 				}
-				var msglen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -2358,27 +2347,23 @@ func (x *fastReflection_PendingSwapOut) ProtoMethods() *protoiface.Methods {
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					msglen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if msglen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + msglen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				if x.Assets == nil {
-					x.Assets = &v1beta11.Coin{}
-				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Assets); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
+				x.RedeemDenom = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -2655,8 +2640,8 @@ type PendingSwapOut struct {
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// shares are the shares that were escrowed by the user.
 	Shares *v1beta11.Coin `protobuf:"bytes,3,opt,name=shares,proto3" json:"shares,omitempty"`
-	// assets are the calculated assets to be paid out to the user.
-	Assets *v1beta11.Coin `protobuf:"bytes,4,opt,name=assets,proto3" json:"assets,omitempty"`
+	// redeem_denom is the denomination of the asset to be redeemed.
+	RedeemDenom string `protobuf:"bytes,4,opt,name=redeem_denom,json=redeemDenom,proto3" json:"redeem_denom,omitempty"`
 }
 
 func (x *PendingSwapOut) Reset() {
@@ -2700,11 +2685,11 @@ func (x *PendingSwapOut) GetShares() *v1beta11.Coin {
 	return nil
 }
 
-func (x *PendingSwapOut) GetAssets() *v1beta11.Coin {
+func (x *PendingSwapOut) GetRedeemDenom() string {
 	if x != nil {
-		return x.Assets
+		return x.RedeemDenom
 	}
-	return nil
+	return ""
 }
 
 var File_vault_v1_vault_proto protoreflect.FileDescriptor
@@ -2775,7 +2760,7 @@ var file_vault_v1_vault_proto_rawDesc = []byte{
 	0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63,
 	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e,
 	0x43, 0x6f, 0x69, 0x6e, 0x73, 0x52, 0x05, 0x63, 0x6f, 0x69, 0x6e, 0x73, 0x3a, 0x08, 0x88, 0xa0,
-	0x1f, 0x00, 0xe8, 0xa0, 0x1f, 0x00, 0x22, 0xf1, 0x01, 0x0a, 0x0e, 0x50, 0x65, 0x6e, 0x64, 0x69,
+	0x1f, 0x00, 0xe8, 0xa0, 0x1f, 0x00, 0x22, 0xdb, 0x01, 0x0a, 0x0e, 0x50, 0x65, 0x6e, 0x64, 0x69,
 	0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x12, 0x2e, 0x0a, 0x05, 0x6f, 0x77, 0x6e,
 	0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f,
 	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69,
@@ -2787,19 +2772,18 @@ var file_vault_v1_vault_proto_rawDesc = []byte{
 	0x65, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
 	0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43,
 	0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65,
-	0x73, 0x12, 0x37, 0x0a, 0x06, 0x61, 0x73, 0x73, 0x65, 0x74, 0x73, 0x18, 0x04, 0x20, 0x01, 0x28,
-	0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e,
-	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde,
-	0x1f, 0x00, 0x52, 0x06, 0x61, 0x73, 0x73, 0x65, 0x74, 0x73, 0x42, 0x8b, 0x01, 0x0a, 0x0c, 0x63,
-	0x6f, 0x6d, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x42, 0x0a, 0x56, 0x61, 0x75,
-	0x6c, 0x74, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2e, 0x67, 0x69, 0x74, 0x68, 0x75,
-	0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76,
-	0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76,
-	0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x56, 0x58, 0x58, 0xaa,
-	0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x08, 0x56, 0x61, 0x75,
-	0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x14, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31,
-	0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x09, 0x56,
-	0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x73, 0x12, 0x21, 0x0a, 0x0c, 0x72, 0x65, 0x64, 0x65, 0x65, 0x6d, 0x5f, 0x64, 0x65, 0x6e, 0x6f,
+	0x6d, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x72, 0x65, 0x64, 0x65, 0x65, 0x6d, 0x44,
+	0x65, 0x6e, 0x6f, 0x6d, 0x42, 0x8b, 0x01, 0x0a, 0x0c, 0x63, 0x6f, 0x6d, 0x2e, 0x76, 0x61, 0x75,
+	0x6c, 0x74, 0x2e, 0x76, 0x31, 0x42, 0x0a, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x50, 0x72, 0x6f, 0x74,
+	0x6f, 0x50, 0x01, 0x5a, 0x2e, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f,
+	0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61,
+	0x70, 0x69, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c,
+	0x74, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x56, 0x58, 0x58, 0xaa, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c,
+	0x74, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2,
+	0x02, 0x14, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65,
+	0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x09, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a,
+	0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -2826,12 +2810,11 @@ var file_vault_v1_vault_proto_depIdxs = []int32{
 	3, // 0: vault.v1.VaultAccount.base_account:type_name -> cosmos.auth.v1beta1.BaseAccount
 	4, // 1: vault.v1.AccountBalance.coins:type_name -> cosmos.base.v1beta1.Coin
 	4, // 2: vault.v1.PendingSwapOut.shares:type_name -> cosmos.base.v1beta1.Coin
-	4, // 3: vault.v1.PendingSwapOut.assets:type_name -> cosmos.base.v1beta1.Coin
-	4, // [4:4] is the sub-list for method output_type
-	4, // [4:4] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	3, // [3:3] is the sub-list for method output_type
+	3, // [3:3] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_vault_v1_vault_proto_init() }

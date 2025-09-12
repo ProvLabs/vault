@@ -39,7 +39,7 @@ func (s *TestSuite) TestVaultGenesis_InitAndExport() {
 					SwapOut: types.PendingSwapOut{
 						Owner:        admin,
 						VaultAddress: vault.Address,
-						Assets:       sdk.NewInt64Coin("ylds", 100),
+						RedeemDenom:  "ylds",
 						Shares:       sdk.NewInt64Coin("vshares", 100),
 					},
 				},
@@ -73,7 +73,7 @@ func (s *TestSuite) TestVaultGenesis_InitAndExport() {
 	s.Require().Equal(int64(10000), exported.PendingSwapOutQueue.Entries[0].Time)
 	s.Require().Equal(admin, exported.PendingSwapOutQueue.Entries[0].SwapOut.Owner)
 	s.Require().Equal(vault.Address, exported.PendingSwapOutQueue.Entries[0].SwapOut.VaultAddress)
-	s.Require().Equal(sdk.NewInt64Coin("ylds", 100), exported.PendingSwapOutQueue.Entries[0].SwapOut.Assets)
+	s.Require().Equal("ylds", exported.PendingSwapOutQueue.Entries[0].SwapOut.RedeemDenom)
 }
 
 func (s *TestSuite) TestVaultGenesis_RoundTrip_PastAndFutureTimeouts() {
@@ -217,7 +217,7 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidPendingSwapOut() {
 					SwapOut: types.PendingSwapOut{
 						Owner:        "badaddress",
 						VaultAddress: vault.Address,
-						Assets:       sdk.NewInt64Coin("ylds", 100),
+						RedeemDenom:  "ylds",
 						Shares:       sdk.NewInt64Coin("vshares", 100),
 					},
 				},
@@ -254,7 +254,7 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPendingSwapOutHasUnknownVault
 					SwapOut: types.PendingSwapOut{
 						Owner:        admin,
 						VaultAddress: badVaultAddr.String(),
-						Assets:       sdk.NewInt64Coin("ylds", 100),
+						RedeemDenom:  "ylds",
 						Shares:       sdk.NewInt64Coin("vshares", 100),
 					},
 				},
@@ -290,7 +290,7 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPendingSwapOutHasBadVaultAddr
 					SwapOut: types.PendingSwapOut{
 						Owner:        admin,
 						VaultAddress: "badaddress",
-						Assets:       sdk.NewInt64Coin("ylds", 100),
+						RedeemDenom:  "ylds",
 						Shares:       sdk.NewInt64Coin("vshares", 100),
 					},
 				},

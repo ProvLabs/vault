@@ -203,7 +203,7 @@ func (p *PendingSwapOutQueue) Import(ctx context.Context, genQueue *types.Pendin
 		}
 		swapOut := types.PendingSwapOut{
 			Owner:        entry.SwapOut.Owner,
-			Assets:       entry.SwapOut.Assets,
+			RedeemDenom:  entry.SwapOut.RedeemDenom,
 			Shares:       entry.SwapOut.Shares,
 			VaultAddress: entry.SwapOut.VaultAddress,
 		}

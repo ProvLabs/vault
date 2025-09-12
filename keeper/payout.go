@@ -6,11 +6,14 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/provlabs/vault/types"
+
 	"cosmossdk.io/collections"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
-	"github.com/provlabs/vault/types"
 )
 
 // ProcessPendingSwapOuts processes the queue of pending swap-out requests. Called from the EndBlocker,
@@ -28,13 +31,13 @@ func (k *Keeper) ProcessPendingSwapOuts(ctx context.Context) error {
 	err := k.PendingSwapOutQueue.WalkDue(ctx, now, func(timestamp int64, id uint64, vaultAddr sdk.AccAddress, req types.PendingSwapOut) (stop bool, err error) {
 		processedKeys = append(processedKeys, collections.Join3(timestamp, vaultAddr, id))
 
-		_, ok := k.tryGetVault(sdkCtx, vaultAddr)
+		vault, ok := k.tryGetVault(sdkCtx, vaultAddr)
 		if !ok {
 			sdkCtx.Logger().Error("skipping pending withdrawal for non-existent vault", "request_id", id, "vault_address", vaultAddr.String())
 			return false, nil
 		}
 
-		err = k.processSingleWithdrawal(sdkCtx, id, req)
+		err = k.processSingleWithdrawal(sdkCtx, id, req, *vault)
 		if err != nil {
 			reason := k.getRefundReason(err)
 			sdkCtx.Logger().Error("Failed to process withdrawal",
@@ -64,12 +67,27 @@ func (k *Keeper) ProcessPendingSwapOuts(ctx context.Context) error {
 // It returns a non-nil error only for recoverable failures (e.g., insufficient liquidity for payout), which signals
 // the caller to issue a refund. It panics for any critical, unrecoverable state inconsistencies that occur *after* the
 // user has been paid, such as failing to burn the escrowed shares. An EventSwapOutCompleted is emitted on success.
-func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.PendingSwapOut) error {
+func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.PendingSwapOut, vault types.VaultAccount) error {
 	vaultAddr := sdk.MustAccAddressFromBech32(req.VaultAddress)
 	ownerAddr := sdk.MustAccAddressFromBech32(req.Owner)
 	principalAddress := markertypes.MustGetMarkerAddress(req.Shares.Denom)
 
-	if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, vaultAddr), principalAddress, ownerAddr, sdk.NewCoins(req.Assets)); err != nil {
+	// TODO Does a Reconcile need to happen here?
+
+	assets, err := k.ConvertSharesToRedeemCoin(ctx, vault, req.Shares.Amount, req.RedeemDenom)
+	if err != nil {
+		return fmt.Errorf("failed to convert shares to redeem coin for single withdrawal: %w", err)
+	}
+
+	// TODO This used to be in the tx to verify at least some assets were given. Does this need to be considered again?
+	/*
+		if assets.IsZero() {
+			// TODO Is this still a concern? It sounds like it
+			return fmt.Errorf("assets for single withdrawal are zero")
+		}
+	*/
+
+	if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, vaultAddr), principalAddress, ownerAddr, sdk.NewCoins(assets)); err != nil {
 		return err
 	}
 
@@ -81,7 +99,7 @@ func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.P
 		panic(fmt.Errorf("CRITICAL: failed to burn shares after successful swap out payout %w", err))
 	}
 
-	k.emitEvent(ctx, types.NewEventSwapOutCompleted(req.VaultAddress, req.Owner, req.Assets, id))
+	k.emitEvent(ctx, types.NewEventSwapOutCompleted(req.VaultAddress, req.Owner, assets, id))
 	return nil
 }
 
@@ -111,7 +129,7 @@ func (k Keeper) getRefundReason(err error) string {
 	switch {
 	case strings.Contains(errMsg, "marker status is not active"):
 		return types.RefundReasonMarkerNotActive
-	case strings.Contains(errMsg, "does not contain the required attribute"):
+	case strings.Contains(errMsg, "does not contain") && strings.Contains(errMsg, "required attribute"):
 		return types.RefundReasonRecipientMissingAttributes
 	case strings.Contains(errMsg, "is on deny list"),
 		strings.Contains(errMsg, "does not have transfer permissions"),
@@ -119,6 +137,8 @@ func (k Keeper) getRefundReason(err error) string {
 		return types.RefundReasonPermissionDenied
 	case strings.Contains(errMsg, "cannot be sent to the fee collector"):
 		return types.RefundReasonRecipientInvalid
+	case strings.Contains(errMsg, "nav not found"):
+		return types.RefundReasonNavNotFound
 	}
 
 	return types.RefundReasonUnknown

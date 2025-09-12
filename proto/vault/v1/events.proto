@@ -187,8 +187,8 @@ message EventSwapOutRequested {
   string vault_address = 1;
   // owner is the bech32 address of the user who initiated the swap out.
   string owner = 2;
-  // assets is the amount of assets calculated to be paid out upon completion.
-  cosmos.base.v1beta1.Coin assets = 3 [(gogoproto.nullable) = false];
+  // redeem_denom is the denomination of the asset to be redeemed.
+  string redeem_denom = 3;
   // shares is the amount of vault shares the user escrowed for this request.
   cosmos.base.v1beta1.Coin shares = 4 [(gogoproto.nullable) = false];
   // request_id is the unique identifier for this pending swap out request.

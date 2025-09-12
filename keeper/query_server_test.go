@@ -661,9 +661,9 @@ func (s *TestSuite) TestQueryServer_PendingSwapOuts() {
 	addr2 := sdk.AccAddress("addr2_______________")
 	addr3 := sdk.AccAddress("addr3_______________")
 	vaultAddr := sdk.AccAddress("vault_address______")
-	swapOut1 := &types.PendingSwapOut{Owner: addr1.String(), VaultAddress: vaultAddr.String(), Assets: sdk.NewInt64Coin("v_usdc", 100), Shares: sdk.NewInt64Coin("v_share", 100)}
-	swapOut2 := &types.PendingSwapOut{Owner: addr2.String(), VaultAddress: vaultAddr.String(), Assets: sdk.NewInt64Coin("v_usdc", 200), Shares: sdk.NewInt64Coin("v_share", 200)}
-	swapOut3 := &types.PendingSwapOut{Owner: addr3.String(), VaultAddress: vaultAddr.String(), Assets: sdk.NewInt64Coin("v_usdc", 300), Shares: sdk.NewInt64Coin("v_share", 300)}
+	swapOut1 := &types.PendingSwapOut{Owner: addr1.String(), VaultAddress: vaultAddr.String(), RedeemDenom: "v_usdc", Shares: sdk.NewInt64Coin("v_share", 100)}
+	swapOut2 := &types.PendingSwapOut{Owner: addr2.String(), VaultAddress: vaultAddr.String(), RedeemDenom: "v_usdc", Shares: sdk.NewInt64Coin("v_share", 200)}
+	swapOut3 := &types.PendingSwapOut{Owner: addr3.String(), VaultAddress: vaultAddr.String(), RedeemDenom: "v_usdc", Shares: sdk.NewInt64Coin("v_share", 300)}
 
 	payoutTime1 := time.Now().Add(1 * time.Hour)
 	payoutTime2 := time.Now().Add(2 * time.Hour)

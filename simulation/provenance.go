@@ -42,7 +42,10 @@ func CreateMarker(ctx context.Context, coin sdk.Coin, admin sdk.AccAddress, keep
 }
 
 func AddAttribute(ctx context.Context, acc sdk.AccAddress, attr string, nk namekeeper.Keeper, ak attrkeeper.Keeper) error {
-	nk.SetNameRecord(sdk.UnwrapSDKContext(ctx), attr, acc, false)
+	err := nk.SetNameRecord(sdk.UnwrapSDKContext(ctx), attr, acc, false)
+	if err != nil {
+		return err
+	}
 
 	newAttr := &attrtypes.MsgAddAttributeRequest{
 		Name:          attr,
@@ -52,6 +55,6 @@ func AddAttribute(ctx context.Context, acc sdk.AccAddress, attr string, nk namek
 		Owner:         acc.String(),
 	}
 	attrMsgServer := attrkeeper.NewMsgServerImpl(ak)
-	_, err := attrMsgServer.AddAttribute(ctx, newAttr)
+	_, err = attrMsgServer.AddAttribute(ctx, newAttr)
 	return err
 }

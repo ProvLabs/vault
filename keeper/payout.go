@@ -72,6 +72,8 @@ func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.P
 	ownerAddr := sdk.MustAccAddressFromBech32(req.Owner)
 	principalAddress := markertypes.MustGetMarkerAddress(req.Shares.Denom)
 
+	// TODO Does a Reconcile need to happen here?
+
 	assets, err := k.ConvertSharesToRedeemCoin(ctx, vault, req.Shares.Amount, req.RedeemDenom)
 	if err != nil {
 		return fmt.Errorf("failed to convert shares to redeem coin for single withdrawal: %w", err)

@@ -175,12 +175,10 @@ func createSendCoinEvents(fromAddress, toAddress string, amount string) []sdk.Ev
 
 // setupBaseVaultRestricted creates a vault with a restricted underlying asset.
 // It establishes a marker for the underlying asset, requiring a specific attribute for transfers.
-// It then pre-funds the vault's principal account with some of this restricted asset.
 // An optional paymentDenom can be provided for the vault's configuration.
 // It returns the newly created vault account.
 func (s *TestSuite) setupBaseVaultRestricted(underlyingDenom, shareDenom string, paymentDenom ...string) *types.VaultAccount {
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingDenom, 2_000_000), s.adminAddr, simulation.RequiredMarkerAttribute)
-	s.Require().NoError(s.k.MarkerKeeper.WithdrawCoins(markertypes.WithBypass(s.ctx), s.adminAddr, markertypes.MustGetMarkerAddress(shareDenom), underlyingDenom, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 100_000))), "must fund principal")
 
 	var pDenom string
 	if len(paymentDenom) > 0 {

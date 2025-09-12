@@ -2388,6 +2388,7 @@ func (s *TestSuite) TestMsgServer_PauseVault() {
 				"vault.v1.EventVaultPaused",
 				sdk.NewAttribute("admin", admin.String()),
 				sdk.NewAttribute("reason", reason),
+				sdk.NewAttribute("total_vault_value", CoinToJSON(sdk.NewInt64Coin(underlying, 0))),
 				sdk.NewAttribute("vault_address", vaultAddr.String()),
 			),
 		},
@@ -2539,6 +2540,7 @@ func (s *TestSuite) TestMsgServer_UnpauseVault() {
 			sdk.NewEvent(
 				"vault.v1.EventVaultUnpaused",
 				sdk.NewAttribute("admin", admin.String()),
+				sdk.NewAttribute("total_vault_value", CoinToJSON(sdk.NewInt64Coin(underlying, 0))),
 				sdk.NewAttribute("vault_address", vaultAddr.String()),
 			),
 		},

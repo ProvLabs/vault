@@ -592,6 +592,14 @@ func (s *TestSuite) TestMsgServer_ToggleSwapOut() {
 		s.ctx = s.ctx.WithBlockTime(time.Now())
 	}
 
+	setupPaused := func() {
+		setup()
+		vault, err := s.k.GetVault(s.ctx, vaultAddr)
+		s.Require().NoError(err)
+		vault.Paused = true
+		s.k.AuthKeeper.SetAccount(s.ctx, vault)
+	}
+
 	tests := []struct {
 		name               string
 		setup              func()
@@ -666,6 +674,16 @@ func (s *TestSuite) TestMsgServer_ToggleSwapOut() {
 			},
 			expectedErrSubstrs: []string{"unauthorized", otherUser.String(), "is not the vault admin"},
 		},
+		{
+			name:  "failure - vault is paused",
+			setup: setupPaused,
+			msg: types.MsgToggleSwapOutRequest{
+				Admin:        owner.String(),
+				VaultAddress: vaultAddr.String(),
+				Enabled:      true,
+			},
+			expectedErrSubstrs: []string{"vault ", " is paused"},
+		},
 	}
 
 	for _, tt := range tests {
@@ -716,6 +734,14 @@ func (s *TestSuite) TestMsgServer_ToggleSwapIn() {
 		})
 		s.Require().NoError(err)
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	setupPaused := func() {
+		setup()
+		vault, err := s.k.GetVault(s.ctx, vaultAddr)
+		s.Require().NoError(err)
+		vault.Paused = true
+		s.k.AuthKeeper.SetAccount(s.ctx, vault)
 	}
 
 	tests := []struct {
@@ -791,6 +817,16 @@ func (s *TestSuite) TestMsgServer_ToggleSwapIn() {
 				Enabled:      true,
 			},
 			expectedErrSubstrs: []string{"unauthorized", otherUser.String(), "is not the vault admin"},
+		},
+		{
+			name:  "failure - vault is paused",
+			setup: setupPaused,
+			msg: types.MsgToggleSwapInRequest{
+				Admin:        owner.String(),
+				VaultAddress: vaultAddr.String(),
+				Enabled:      true,
+			},
+			expectedErrSubstrs: []string{"vault ", " is paused"},
 		},
 	}
 

@@ -13,6 +13,7 @@ const (
 	RefundReasonRecipientMissingAttributes = "recipient_missing_required_attributes"
 	RefundReasonRecipientInvalid           = "recipient_invalid"
 	RefundReasonNavNotFound                = "nav_not_found"
+	RefundReasonReconcileFailure           = "reconcile_failure"
 	RefundReasonUnknown                    = "unknown_error"
 )
 

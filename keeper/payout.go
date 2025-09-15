@@ -72,7 +72,10 @@ func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.P
 	ownerAddr := sdk.MustAccAddressFromBech32(req.Owner)
 	principalAddress := markertypes.MustGetMarkerAddress(req.Shares.Denom)
 
-	// TODO Does a Reconcile need to happen here?
+	if err := k.ReconcileVaultInterest(ctx, &vault); err != nil {
+		// TODO What to do if this fails
+		return fmt.Errorf("failed to reconcile vault interest: %w", err)
+	}
 
 	assets, err := k.ConvertSharesToRedeemCoin(ctx, vault, req.Shares.Amount, req.RedeemDenom)
 	if err != nil {
@@ -139,6 +142,8 @@ func (k Keeper) getRefundReason(err error) string {
 		return types.RefundReasonRecipientInvalid
 	case strings.Contains(errMsg, "nav not found"):
 		return types.RefundReasonNavNotFound
+	case strings.Contains(errMsg, "failed to reconcile"):
+		return types.RefundReasonReconcileFailure
 	}
 
 	return types.RefundReasonUnknown

@@ -257,11 +257,6 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 		return 0, err
 	}
 
-	// TODO Do we still need to Reconcile here?
-	if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
-		return 0, fmt.Errorf("failed to reconcile vault interest: %w", err)
-	}
-
 	if err := k.checkPayoutRestrictions(ctx, vault, owner, sdk.NewCoin(redeemDenom, sdkmath.NewInt(1))); err != nil {
 		return 0, err
 	}

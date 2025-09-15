@@ -63,9 +63,10 @@ func (k *Keeper) ProcessPendingSwapOuts(ctx context.Context) error {
 	return nil
 }
 
-// processSingleWithdrawal executes a pending swap-out, paying out assets to the owner and burning their escrowed shares.
-// It returns a non-nil error only for recoverable failures (e.g., insufficient liquidity for payout), which signals
-// the caller to issue a refund. It panics for any critical, unrecoverable state inconsistencies that occur *after* the
+// processSingleWithdrawal executes a pending swap-out. It first reconciles vault interest, then converts the user's
+// shares to the redeemable asset amount. It then pays out those assets to the owner and burns their escrowed shares.
+// It returns a non-nil error for recoverable failures (e.g., insufficient liquidity), which signals
+// the caller to issue a refund. It panics for critical, unrecoverable state inconsistencies that occur *after* the
 // user has been paid, such as failing to burn the escrowed shares. An EventSwapOutCompleted is emitted on success.
 func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.PendingSwapOut, vault types.VaultAccount) error {
 	vaultAddr := sdk.MustAccAddressFromBech32(req.VaultAddress)

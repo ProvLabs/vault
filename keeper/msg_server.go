@@ -153,7 +153,7 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 	}
 
 	prevEnabled := vault.InterestEnabled()
-	if !curRate.IsZero() {
+	if !curRate.IsZero() && !vault.Paused {
 		if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
 			return nil, fmt.Errorf("failed to reconcile before rate change: %w", err)
 		}
@@ -441,9 +441,10 @@ func (k msgServer) PauseVault(goCtx context.Context, msg *types.MsgPauseVaultReq
 	if vault.Paused {
 		return nil, fmt.Errorf("vault %s is already paused", msg.VaultAddress)
 	}
-
-	if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
-		return nil, fmt.Errorf("failed to reconcile interest before pausing: %w", err)
+	if vault.InterestEnabled() {
+		if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
+			return nil, fmt.Errorf("failed to reconcile interest before pausing: %w", err)
+		}
 	}
 
 	tvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)

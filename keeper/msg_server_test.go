@@ -1055,6 +1055,86 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 				),
 			},
 		},
+		{
+			name:         "paused: change non-zero rate (enabled → enabled) skips reconcile and keeps period start unchanged",
+			interestRate: "4.06",
+			setup: func() {
+				setup()
+				vaultAcc, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err)
+				s.k.UpdateInterestRates(s.ctx, vaultAcc, "4.20", "4.20")
+				priorStart := currentBlockTime.Unix() - 7777
+				vaultAcc.PeriodStart = priorStart
+				vaultAcc.Paused = true
+				s.Require().NoError(s.k.SetVaultAccount(s.ctx, vaultAcc))
+				s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			},
+			postCheckArgs: postCheckArgs{
+				VaultAddress:              vaultAddr,
+				ExpectedRate:              "4.06",
+				ExpectInVerificationQueue: false,
+				ExpectedPeriodStart:       currentBlockTime.Unix() - 7777,
+			},
+			expectedEvents: sdk.Events{
+				sdk.NewEvent("vault.v1.EventVaultInterestChange",
+					sdk.NewAttribute("current_rate", "4.06"),
+					sdk.NewAttribute("desired_rate", "4.06"),
+					sdk.NewAttribute("vault_address", vaultAddr.String()),
+				),
+			},
+		},
+		{
+			name:         "paused: enable from zero (disabled → enabled) enqueues verification, no reconcile",
+			interestRate: "1.25",
+			setup: func() {
+				setup()
+				vaultAcc, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err)
+				s.k.UpdateInterestRates(s.ctx, vaultAcc, "0.0", "0.0")
+				vaultAcc.Paused = true
+				s.Require().NoError(s.k.SetVaultAccount(s.ctx, vaultAcc))
+				s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			},
+			postCheckArgs: postCheckArgs{
+				VaultAddress:              vaultAddr,
+				ExpectedRate:              "1.25",
+				ExpectInVerificationQueue: true,
+			},
+			expectedEvents: sdk.Events{
+				sdk.NewEvent("vault.v1.EventVaultInterestChange",
+					sdk.NewAttribute("current_rate", "1.25"),
+					sdk.NewAttribute("desired_rate", "1.25"),
+					sdk.NewAttribute("vault_address", vaultAddr.String()),
+				),
+			},
+		},
+		{
+			name:         "paused: disable interest (enabled → disabled) clears period fields and removes verification",
+			interestRate: "0.0",
+			setup: func() {
+				setup()
+				vaultAcc, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err)
+				s.k.UpdateInterestRates(s.ctx, vaultAcc, "2.50", "2.50")
+				vaultAcc.PeriodStart = currentBlockTime.Unix() - 5000
+				vaultAcc.PeriodTimeout = currentBlockTime.Unix() + 3600
+				vaultAcc.Paused = true
+				s.Require().NoError(s.k.SetVaultAccount(s.ctx, vaultAcc))
+				s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			},
+			postCheckArgs: postCheckArgs{
+				VaultAddress:              vaultAddr,
+				ExpectedRate:              types.ZeroInterestRate,
+				ExpectInVerificationQueue: false,
+			},
+			expectedEvents: sdk.Events{
+				sdk.NewEvent("vault.v1.EventVaultInterestChange",
+					sdk.NewAttribute("current_rate", "0.0"),
+					sdk.NewAttribute("desired_rate", "0.0"),
+					sdk.NewAttribute("vault_address", vaultAddr.String()),
+				),
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -2307,6 +2387,61 @@ func (s *TestSuite) TestMsgServer_PauseVault() {
 
 	testDef.expectedResponse = &types.MsgPauseVaultResponse{}
 	runMsgServerTestCase(s, testDef, tc)
+
+	setupWithInterest := func() {
+		setup()
+		now := time.Now()
+		s.ctx = s.ctx.WithBlockTime(now)
+		vaultAcc, err := s.k.GetVault(s.ctx, vaultAddr)
+		s.Require().NoError(err)
+		_, err = keeper.NewMsgServer(s.simApp.VaultKeeper).UpdateInterestRate(s.ctx, &types.MsgUpdateInterestRateRequest{
+			Admin:        admin.String(),
+			VaultAddress: vaultAddr.String(),
+			NewRate:      "1.23",
+		})
+		s.Require().NoError(err)
+		vaultAcc, err = s.k.GetVault(s.ctx, vaultAddr)
+		s.Require().NoError(err)
+		vaultAcc.PeriodStart = now.Unix() - 10000
+		s.Require().NoError(s.k.SetVaultAccount(s.ctx, vaultAcc))
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+		s.ctx = s.ctx.WithBlockTime(now)
+	}
+
+	tc2 := msgServerTestCase[types.MsgPauseVaultRequest, postCheckArgs]{
+		name:  "happy path with interest",
+		setup: setupWithInterest,
+		msg: types.MsgPauseVaultRequest{
+			Admin:        admin.String(),
+			VaultAddress: vaultAddr.String(),
+			Reason:       "maintenance",
+		},
+		postCheckArgs: postCheckArgs{
+			VaultAddress:        vaultAddr,
+			ExpectedPaused:      true,
+			ExpectedPauseDenom:  underlying,
+			ExpectedPauseAmount: 0,
+		},
+		expectedEvents: sdk.Events{
+			sdk.NewEvent("vault.v1.EventVaultReconcile",
+				sdk.NewAttribute("interest_earned", CoinToJSON(sdk.NewInt64Coin(underlying, 0))),
+				sdk.NewAttribute("principal_after", CoinToJSON(sdk.NewInt64Coin(underlying, 0))),
+				sdk.NewAttribute("principal_before", CoinToJSON(sdk.NewInt64Coin(underlying, 0))),
+				sdk.NewAttribute("rate", "1.23"),
+				sdk.NewAttribute("time", "10000"),
+				sdk.NewAttribute("vault_address", vaultAddr.String()),
+			),
+			sdk.NewEvent(
+				"vault.v1.EventVaultPaused",
+				sdk.NewAttribute("admin", admin.String()),
+				sdk.NewAttribute("reason", "maintenance"),
+				sdk.NewAttribute("total_vault_value", CoinToJSON(sdk.NewInt64Coin(underlying, 0))),
+				sdk.NewAttribute("vault_address", vaultAddr.String()),
+			),
+		},
+	}
+
+	runMsgServerTestCase(s, testDef, tc2)
 }
 
 func (s *TestSuite) TestMsgServer_PauseVault_Failures() {

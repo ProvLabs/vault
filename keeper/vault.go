@@ -257,10 +257,6 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 		return 0, err
 	}
 
-	if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
-		return 0, fmt.Errorf("failed to reconcile vault interest: %w", err)
-	}
-
 	assets, err := k.ConvertSharesToRedeemCoin(ctx, *vault, shares.Amount, redeemDenom)
 	if err != nil {
 		return 0, fmt.Errorf("failed to calculate assets from shares: %w", err)

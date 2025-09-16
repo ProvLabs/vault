@@ -84,6 +84,6 @@ message PendingSwapOut {
   string vault_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // shares are the shares that were escrowed by the user.
   cosmos.base.v1beta1.Coin shares = 3 [(gogoproto.nullable) = false];
-  // assets are the calculated assets to be paid out to the user.
-  cosmos.base.v1beta1.Coin assets = 4 [(gogoproto.nullable) = false];
+  // redeem_denom is the denomination of the asset to be redeemed.
+  string redeem_denom = 4;
 }

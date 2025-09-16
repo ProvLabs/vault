@@ -12,6 +12,8 @@ const (
 	RefundReasonMarkerNotActive            = "marker_not_active"
 	RefundReasonRecipientMissingAttributes = "recipient_missing_required_attributes"
 	RefundReasonRecipientInvalid           = "recipient_invalid"
+	RefundReasonNavNotFound                = "nav_not_found"
+	RefundReasonReconcileFailure           = "reconcile_failure"
 	RefundReasonUnknown                    = "unknown_error"
 )
 
@@ -140,11 +142,11 @@ func NewEventMaxInterestRateUpdated(vaultAddress, admin, maxRate string) *EventM
 }
 
 // NewEventSwapOutRequested creates a new EventSwapOutRequested event.
-func NewEventSwapOutRequested(vaultAddress, owner string, assets, shares sdk.Coin, requestID uint64) *EventSwapOutRequested {
+func NewEventSwapOutRequested(vaultAddress, owner, redeemDenom string, shares sdk.Coin, requestID uint64) *EventSwapOutRequested {
 	return &EventSwapOutRequested{
 		VaultAddress: vaultAddress,
 		Owner:        owner,
-		Assets:       assets,
+		RedeemDenom:  redeemDenom,
 		Shares:       shares,
 		RequestId:    requestID,
 	}

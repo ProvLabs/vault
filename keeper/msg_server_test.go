@@ -2675,6 +2675,7 @@ func (s *TestSuite) TestMsgServer_UnpauseVault_Failures() {
 			runMsgServerTestCase(s, testDef, tc)
 		})
 	}
+
 }
 
 // msgServerTestDef defines the configuration for testing a specific MsgServer endpoint.

@@ -20,7 +20,11 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgToggleSwapOutRequest)(nil),
 	(*MsgDepositInterestFundsRequest)(nil),
 	(*MsgWithdrawInterestFundsRequest)(nil),
+	(*MsgDepositPrincipalFundsRequest)(nil),
+	(*MsgWithdrawPrincipalFundsRequest)(nil),
 	(*MsgExpeditePendingSwapOutRequest)(nil),
+	(*MsgPauseVaultRequest)(nil),
+	(*MsgUnpauseVaultRequest)(nil),
 }
 
 // ValidateBasic performs stateless validation on MsgCreateVaultRequest.
@@ -237,6 +241,31 @@ func (m MsgWithdrawPrincipalFundsRequest) ValidateBasic() error {
 func (m MsgExpeditePendingSwapOutRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
 		return fmt.Errorf("invalid admin address: %q: %w", m.Admin, err)
+	}
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgPauseVaultRequest.
+func (m MsgPauseVaultRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
+		return fmt.Errorf("invalid admin address: %q: %w", m.Admin, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	if m.Reason == "" {
+		return fmt.Errorf("reason cannot be empty")
+	}
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgUnpauseVaultRequest.
+func (m MsgUnpauseVaultRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
+		return fmt.Errorf("invalid admin address: %q: %w", m.Admin, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
 	}
 	return nil
 }

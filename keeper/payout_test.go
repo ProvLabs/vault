@@ -55,10 +55,55 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 				s.Require().NotNil(vault, "vault should not be nil")
 
 				expectedEvents := sdk.Events{}
-				expectedEvents = append(expectedEvents, createSendCoinEvents(principalAddress.String(), ownerAddr.String(), assets.String())...)
+				expectedEvents = append(expectedEvents, createSendCoinEvents(principalAddress.String(), ownerAddr.String(), sdk.NewCoins(assets).String())...)
 				expectedEvents = append(expectedEvents, createSendCoinEvents(vaultAddr.String(), principalAddress.String(), shares.String())...)
 				expectedEvents = append(expectedEvents, createMarkerBurn(vaultAddr, principalAddress, shares)...)
 				typedEvent, err := sdk.TypedEventToEvent(types.NewEventSwapOutCompleted(vaultAddr.String(), ownerAddr.String(), assets, reqID))
+				s.Require().NoError(err, "should not error converting typed EventSwapOutCompleted")
+				expectedEvents = append(expectedEvents, typedEvent)
+				s.Assert().Equal(
+					normalizeEvents(expectedEvents),
+					normalizeEvents(s.ctx.EventManager().Events()),
+					"a single EventSwapOutCompleted should be emitted",
+				)
+			},
+		},
+		{
+			name: "successful payout of due request with 0 assets",
+			setup: func(shareDenom string, vaultAddr sdk.AccAddress, shares sdk.Coin) (sdk.AccAddress, uint64) {
+				ownerAddr := s.CreateAndFundAccount(assets)
+				vault := s.setupBaseVault(underlyingDenom, shareDenom)
+
+				minted, err := s.k.SwapIn(s.ctx, vaultAddr, ownerAddr, assets)
+				s.Require().NoError(err, "should successfully swap in assets")
+				s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, ownerAddr, vault.GetAddress(), sdk.NewCoins(*minted)), "should escrow shares into vault account")
+
+				req := types.PendingSwapOut{
+					Owner:        ownerAddr.String(),
+					VaultAddress: vaultAddr.String(),
+					RedeemDenom:  underlyingDenom,
+					Shares:       sdk.NewInt64Coin(shareDenom, 1),
+				}
+				id, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, duePayoutTime, &req)
+				s.Require().NoError(err, "should successfully enqueue request")
+				return ownerAddr, id
+			},
+			posthandler: func(ownerAddr sdk.AccAddress, reqID uint64, shareDenom string, vaultAddr sdk.AccAddress, principalAddress sdk.AccAddress, shares sdk.Coin, testBlockTime time.Time) {
+				expectedAssets := sdk.NewInt64Coin(underlyingDenom, 0)
+				sharesBurned := sdk.NewInt64Coin(shareDenom, 1)
+				s.assertBalance(ownerAddr, underlyingDenom, math.ZeroInt())
+				supply := s.k.BankKeeper.GetSupply(s.ctx, shareDenom)
+				s.Require().Equal(supply.Amount, shares.Sub(sharesBurned).Amount, "the single submitted share should be burned")
+
+				vault, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err, "should successfully get vault")
+				s.Require().NotNil(vault, "vault should not be nil")
+
+				expectedEvents := sdk.Events{}
+				expectedEvents = append(expectedEvents, createSendCoinEvents(principalAddress.String(), ownerAddr.String(), sdk.NewCoins(expectedAssets).String())...)
+				expectedEvents = append(expectedEvents, createSendCoinEvents(vaultAddr.String(), principalAddress.String(), sharesBurned.String())...)
+				expectedEvents = append(expectedEvents, createMarkerBurn(vaultAddr, principalAddress, sharesBurned)...)
+				typedEvent, err := sdk.TypedEventToEvent(types.NewEventSwapOutCompleted(vaultAddr.String(), ownerAddr.String(), expectedAssets, reqID))
 				s.Require().NoError(err, "should not error converting typed EventSwapOutCompleted")
 				expectedEvents = append(expectedEvents, typedEvent)
 				s.Assert().Equal(
@@ -104,7 +149,7 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 				reconcileEvent, err := sdk.TypedEventToEvent(types.NewEventVaultReconcile(vaultAddr.String(), assets, assets, vault.CurrentInterestRate, testBlockTime.Unix()-1, math.NewInt(0)))
 				s.Require().NoError(err, "should not error converting typed EventVaultReconciled")
 				expectedEvents = append(expectedEvents, reconcileEvent)
-				expectedEvents = append(expectedEvents, createSendCoinEvents(principalAddress.String(), ownerAddr.String(), assets.String())...)
+				expectedEvents = append(expectedEvents, createSendCoinEvents(principalAddress.String(), ownerAddr.String(), sdk.NewCoins(assets).String())...)
 				expectedEvents = append(expectedEvents, createSendCoinEvents(vaultAddr.String(), principalAddress.String(), shares.String())...)
 				expectedEvents = append(expectedEvents, createMarkerBurn(vaultAddr, principalAddress, shares)...)
 				typedEvent, err := sdk.TypedEventToEvent(types.NewEventSwapOutCompleted(vaultAddr.String(), ownerAddr.String(), assets, reqID))

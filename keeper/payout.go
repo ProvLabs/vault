@@ -74,7 +74,6 @@ func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.P
 	principalAddress := markertypes.MustGetMarkerAddress(req.Shares.Denom)
 
 	if err := k.ReconcileVaultInterest(ctx, &vault); err != nil {
-		// TODO What to do if this fails
 		return fmt.Errorf("failed to reconcile vault interest: %w", err)
 	}
 
@@ -82,14 +81,6 @@ func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.P
 	if err != nil {
 		return fmt.Errorf("failed to convert shares to redeem coin for single withdrawal: %w", err)
 	}
-
-	// TODO This used to be in the tx to verify at least some assets were given. Does this need to be considered again?
-	/*
-		if assets.IsZero() {
-			// TODO Is this still a concern? It sounds like it
-			return fmt.Errorf("assets for single withdrawal are zero")
-		}
-	*/
 
 	if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, vaultAddr), principalAddress, ownerAddr, sdk.NewCoins(assets)); err != nil {
 		return err

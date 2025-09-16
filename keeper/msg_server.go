@@ -83,9 +83,6 @@ func (k msgServer) UpdateMinInterestRate(goCtx context.Context, msg *types.MsgUp
 	if err := vault.ValidateAdmin(msg.Admin); err != nil {
 		return nil, err
 	}
-	if vault.Paused {
-		return nil, fmt.Errorf("vault %s is paused", msg.VaultAddress)
-	}
 
 	if err := k.SetMinInterestRate(ctx, vault, msg.MinRate); err != nil {
 		return nil, fmt.Errorf("failed to set min interest rate: %w", err)
@@ -111,9 +108,6 @@ func (k msgServer) UpdateMaxInterestRate(goCtx context.Context, msg *types.MsgUp
 	if err := vault.ValidateAdmin(msg.Admin); err != nil {
 		return nil, err
 	}
-	if vault.Paused {
-		return nil, fmt.Errorf("vault %s is paused", msg.VaultAddress)
-	}
 
 	if err := k.SetMaxInterestRate(ctx, vault, msg.MaxRate); err != nil {
 		return nil, fmt.Errorf("failed to set max interest rate: %w", err)
@@ -136,9 +130,6 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 	}
 	if err := vault.ValidateAdmin(msg.Admin); err != nil {
 		return nil, err
-	}
-	if vault.Paused {
-		return nil, fmt.Errorf("vault %s is paused", msg.VaultAddress)
 	}
 
 	newRate, err := sdkmath.LegacyNewDecFromStr(msg.NewRate)
@@ -261,9 +252,6 @@ func (k msgServer) DepositInterestFunds(goCtx context.Context, msg *types.MsgDep
 
 	if err := vault.ValidateAdmin(msg.Admin); err != nil {
 		return nil, err
-	}
-	if vault.Paused {
-		return nil, fmt.Errorf("vault %s is paused", msg.VaultAddress)
 	}
 
 	if vault.UnderlyingAsset != msg.Amount.Denom {

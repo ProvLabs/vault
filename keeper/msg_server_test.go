@@ -1104,14 +1104,6 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate_Failures() {
 		s.ctx = s.ctx.WithBlockTime(currentBlockTime)
 	}
 
-	setupPaused := func() {
-		setup()
-		vault, err := s.k.GetVault(s.ctx, vaultAddr)
-		s.Require().NoError(err)
-		vault.Paused = true
-		s.k.AuthKeeper.SetAccount(s.ctx, vault)
-	}
-
 	tests := []msgServerTestCase[types.MsgUpdateInterestRateRequest, any]{
 		{
 			name: "vault does not exist",
@@ -1142,15 +1134,6 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate_Failures() {
 			},
 			setup:              setup,
 			expectedErrSubstrs: []string{"unauthorized", "is not the vault admin"},
-		},
-		{name: "vault is paused",
-			msg: types.MsgUpdateInterestRateRequest{
-				Admin:        owner.String(),
-				VaultAddress: vaultAddr.String(),
-				NewRate:      "0.05",
-			},
-			setup:              setupPaused,
-			expectedErrSubstrs: []string{"vault", "is paused"},
 		},
 	}
 	for _, tc := range tests {
@@ -1267,14 +1250,6 @@ func (s *TestSuite) TestMsgServer_UpdateMinInterestRate_Failures() {
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	}
 
-	setupPaused := func() {
-		setup()
-		vault, err := s.k.GetVault(s.ctx, vaultAddr)
-		s.Require().NoError(err)
-		vault.Paused = true
-		s.k.AuthKeeper.SetAccount(s.ctx, vault)
-	}
-
 	tests := []msgServerTestCase[types.MsgUpdateMinInterestRateRequest, any]{
 		{
 			name: "vault does not exist",
@@ -1322,16 +1297,6 @@ func (s *TestSuite) TestMsgServer_UpdateMinInterestRate_Failures() {
 				MinRate:      "0.06",
 			},
 			expectedErrSubstrs: []string{"minimum interest rate", "greater than", "maximum"},
-		},
-		{
-			name:  "vault is paused",
-			setup: setupPaused,
-			msg: types.MsgUpdateMinInterestRateRequest{
-				Admin:        admin.String(),
-				VaultAddress: vaultAddr.String(),
-				MinRate:      "0.01",
-			},
-			expectedErrSubstrs: []string{"vault", "is paused"},
 		},
 	}
 
@@ -1449,14 +1414,6 @@ func (s *TestSuite) TestMsgServer_UpdateMaxInterestRate_Failures() {
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	}
 
-	setupPaused := func() {
-		baseSetup()
-		vault, err := s.k.GetVault(s.ctx, vaultAddr)
-		s.Require().NoError(err)
-		vault.Paused = true
-		s.k.AuthKeeper.SetAccount(s.ctx, vault)
-	}
-
 	tests := []msgServerTestCase[types.MsgUpdateMaxInterestRateRequest, any]{
 		{
 			name:  "vault does not exist",
@@ -1487,16 +1444,6 @@ func (s *TestSuite) TestMsgServer_UpdateMaxInterestRate_Failures() {
 				MaxRate:      "0.33",
 			},
 			expectedErrSubstrs: []string{"unauthorized", "is not the vault admin"},
-		},
-		{
-			name:  "vault is paused",
-			setup: setupPaused,
-			msg: types.MsgUpdateMaxInterestRateRequest{
-				Admin:        admin.String(),
-				VaultAddress: vaultAddr.String(),
-				MaxRate:      "0.33",
-			},
-			expectedErrSubstrs: []string{"vault", "is paused"},
 		},
 		{
 			name: "validation_failure: max < existing min",
@@ -1640,14 +1587,6 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds_Failures() {
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	}
 
-	setupPaused := func() {
-		setup()
-		vault, err := s.k.GetVault(s.ctx, vaultAddr)
-		s.Require().NoError(err)
-		vault.Paused = true
-		s.k.AuthKeeper.SetAccount(s.ctx, vault)
-	}
-
 	setupWithAdminFunds := func() {
 		setup()
 		FundAccount(s.ctx, s.simApp.BankKeeper, admin, sdk.NewCoins(amount))
@@ -1682,16 +1621,6 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds_Failures() {
 				Amount:       amount,
 			},
 			expectedErrSubstrs: []string{"unauthorized", "is not the vault admin"},
-		},
-		{
-			name:  "vault is paused",
-			setup: setupPaused,
-			msg: types.MsgDepositInterestFundsRequest{
-				Admin:        admin.String(),
-				VaultAddress: vaultAddr.String(),
-				Amount:       amount,
-			},
-			expectedErrSubstrs: []string{"vault", "is paused"},
 		},
 		{
 			name:  "incorrect underlying asset",

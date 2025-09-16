@@ -1740,14 +1740,6 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds_Failures() {
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	}
 
-	setupPaused := func() {
-		setup()
-		vault, err := s.k.GetVault(s.ctx, vaultAddr)
-		s.Require().NoError(err)
-		vault.Paused = true
-		s.k.AuthKeeper.SetAccount(s.ctx, vault)
-	}
-
 	setupWithVaultFunds := func() {
 		setup()
 		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(amount)))
@@ -1782,16 +1774,6 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds_Failures() {
 				Amount:       amount,
 			},
 			expectedErrSubstrs: []string{"unauthorized", "is not the vault admin"},
-		},
-		{
-			name:  "vault is paused",
-			setup: setupPaused,
-			msg: types.MsgWithdrawInterestFundsRequest{
-				Admin:        admin.String(),
-				VaultAddress: vaultAddr.String(),
-				Amount:       amount,
-			},
-			expectedErrSubstrs: []string{"vault", "is paused"},
 		},
 		{
 			name:  "insufficient vault balance",

@@ -289,10 +289,6 @@ func (k msgServer) WithdrawInterestFunds(goCtx context.Context, msg *types.MsgWi
 	if err := vault.ValidateAdmin(msg.Admin); err != nil {
 		return nil, err
 	}
-	if vault.Paused {
-		return nil, fmt.Errorf("vault %s is paused", msg.VaultAddress)
-	}
-
 	if vault.UnderlyingAsset != msg.Amount.Denom {
 		return nil, fmt.Errorf("denom not supported for vault must be of type \"%s\" : got \"%s\"", vault.UnderlyingAsset, msg.Amount.Denom)
 	}

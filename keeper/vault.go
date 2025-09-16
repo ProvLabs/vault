@@ -257,7 +257,12 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 		return 0, err
 	}
 
-	if err := k.checkPayoutRestrictions(ctx, vault, owner, sdk.NewCoin(redeemDenom, sdkmath.NewInt(1))); err != nil {
+	assets, err := k.ConvertSharesToRedeemCoin(ctx, *vault, shares.Amount, redeemDenom)
+	if err != nil {
+		return 0, fmt.Errorf("failed to calculate assets from shares: %w", err)
+	}
+
+	if err := k.checkPayoutRestrictions(ctx, vault, owner, assets); err != nil {
 		return 0, err
 	}
 

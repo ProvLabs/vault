@@ -92,12 +92,16 @@ func (k Keeper) FromUnderlyingAssetAmount(ctx sdk.Context, vault types.VaultAcco
 // GetTVVInUnderlyingAsset returns the Total Vault Value (TVV) expressed in
 // vault.UnderlyingAsset using floor arithmetic.
 //
-// Source of truth:
+// Paused fast-path:
+//   - If vault.Paused is true, this function short-circuits and returns
+//     vault.PausedBalance.Amount (no balance iteration or NAV conversion).
+//
+// Source of truth (when not paused):
 //   - TVV sums the balances held at the vault’s *principal* account, i.e. the marker
 //     address for vault.PrincipalMarkerAddress().
 //   - The vault account’s own balances are treated as *reserves* and are not included here.
 //
-// Computation:
+// Computation (when not paused):
 //   - Iterate all non-share-denom balances at the marker (principal) account.
 //   - Convert each balance to underlying units via ToUnderlyingAssetAmount.
 //   - Sum the converted amounts (floor at each multiplication/division step).
@@ -123,7 +127,11 @@ func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccoun
 // GetNAVPerShareInUnderlyingAsset returns the floor NAV-per-share in units of
 // vault.UnderlyingAsset.
 //
-// Computation:
+// Paused fast-path:
+//   - If vault.Paused is true, this function short-circuits and returns
+//     vault.PausedBalance.Amount (ignores live TVV and share supply).
+//
+// Computation (when not paused):
 //   - TVV(underlying) is obtained from GetTVVInUnderlyingAsset (principal/marker balances only).
 //   - totalShareSupply is fetched from BankKeeper.GetSupply(vault.ShareDenom) (the live supply).
 //   - If total shares == 0, returns 0. Otherwise returns TVV / totalShareSupply (floor).

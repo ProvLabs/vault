@@ -431,3 +431,43 @@ func (s *TestSuite) TestConvertSharesToRedeemCoin_TVVZero_SupplyNonzero() {
 	s.Require().Equal(underlyingDenom, redeemCoin.Denom, "redeem denom should be the underlying asset")
 	s.Require().True(redeemCoin.Amount.IsZero(), "redeemed amount should be zero when TVV is zero")
 }
+
+func (s *TestSuite) TestGetTVVInUnderlyingAsset_PausedUsesPausedBalance() {
+	underlyingDenom := "ylds"
+	paymentDenom := "usdc"
+	shareDenom := "vshare"
+	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
+
+	principal := vault.PrincipalMarkerAddress()
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, principal, sdk.NewCoins(
+		sdk.NewInt64Coin(underlyingDenom, 9999),
+		sdk.NewInt64Coin(paymentDenom, 9999),
+	)), "funding principal balances before pause should succeed")
+
+	vault.Paused = true
+	vault.PausedBalance = sdk.NewInt64Coin(underlyingDenom, 42)
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
+	tvv, err := testKeeper.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	s.Require().NoError(err, "GetTVVInUnderlyingAsset should not error when paused")
+	s.Require().Equal(math.NewInt(42), tvv, "when paused, TVV should equal vault.PausedBalance.Amount regardless of principal contents")
+}
+
+func (s *TestSuite) TestGetNAVPerShareInUnderlyingAsset_PausedUsesPausedBalance() {
+	underlyingDenom := "ylds"
+	shareDenom := "vshare"
+	vault := s.setupBaseVault(underlyingDenom, shareDenom)
+
+	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), sdk.NewInt64Coin(shareDenom, 1_000_000)),
+		"minting shares before paused NAV test should succeed")
+
+	vault.Paused = true
+	vault.PausedBalance = sdk.NewInt64Coin(underlyingDenom, 1234)
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
+	navPerShare, err := testKeeper.GetNAVPerShareInUnderlyingAsset(s.ctx, *vault)
+	s.Require().NoError(err, "GetNAVPerShareInUnderlyingAsset should not error when paused")
+	s.Require().Equal(math.NewInt(1234), navPerShare, "when paused, NAV-per-share should equal vault.PausedBalance.Amount by contract")
+}

@@ -77,7 +77,6 @@ func (k Keeper) FromUnderlyingAssetAmount(ctx sdk.Context, vault types.VaultAcco
 	if outDenom == vault.UnderlyingAsset {
 		return sdk.NewCoin(outDenom, underlyingAmount), nil
 	}
-
 	priceAmount, volume, err := k.UnitPriceFraction(ctx, outDenom, vault.UnderlyingAsset)
 	if err != nil {
 		return sdk.Coin{}, err
@@ -163,7 +162,7 @@ func (k Keeper) GetNAVPerShareInUnderlyingAsset(ctx sdk.Context, vault types.Vau
 // performs calculation only; callers mint/burn/transfer as needed. Very small deposits
 // may floor to zero shares.
 func (k Keeper) ConvertDepositToSharesInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccount, in sdk.Coin) (sdk.Coin, error) {
-	valInAsset, err := k.ToUnderlyingAssetAmount(ctx, vault, in)
+	priceNum, priceDen, err := k.UnitPriceFraction(ctx, in.Denom, vault.UnderlyingAsset)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -172,7 +171,8 @@ func (k Keeper) ConvertDepositToSharesInUnderlyingAsset(ctx sdk.Context, vault t
 		return sdk.Coin{}, err
 	}
 	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
-	return utils.CalculateSharesFromAssets(valInAsset, tvv, totalShares, vault.ShareDenom)
+	amountNumerator := in.Amount.Mul(priceNum)
+	return utils.CalculateSharesFromNonUnderlyingOneStep(amountNumerator, priceDen, tvv, totalShares, vault.ShareDenom)
 }
 
 // ConvertSharesToRedeemCoin converts a share amount into a payout coin in redeemDenom
@@ -191,17 +191,14 @@ func (k Keeper) ConvertSharesToRedeemCoin(ctx sdk.Context, vault types.VaultAcco
 	if !shares.IsPositive() {
 		return sdk.NewCoin(redeemDenom, math.ZeroInt()), nil
 	}
-
 	tvv, err := k.GetTVVInUnderlyingAsset(ctx, vault)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
 	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
-
 	assetCoin, err := utils.CalculateAssetsFromShares(shares, totalShares, tvv, vault.UnderlyingAsset)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
-
 	return k.FromUnderlyingAssetAmount(ctx, vault, assetCoin.Amount, redeemDenom)
 }

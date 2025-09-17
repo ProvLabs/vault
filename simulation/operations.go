@@ -23,13 +23,17 @@ const (
 	OpWeightMsgSwapIn          = "op_weight_msg_swap_in"
 	OpWeightMsgSwapOut         = "op_weight_msg_swap_out"
 	OpWeightMsgSetInterestRate = "op_weight_msg_set_interest_rate"
+	OpWeightMsgToggleSwapIn    = "op_weight_msg_toggle_swap_in"
+	OpWeightMsgToggleSwapOut   = "op_weight_msg_toggle_swap_out"
 )
 
 const (
 	DefaultWeightMsgCreateVault     = 5
-	DefaultWeightMsgSwapIn          = 50
-	DefaultWeightMsgSwapOut         = 25
-	DefaultWeightMsgSetInterestRate = 20
+	DefaultWeightMsgSwapIn          = 40
+	DefaultWeightMsgSwapOut         = 20
+	DefaultWeightMsgSetInterestRate = 15
+	DefaultWeightMsgToggleSwapIn    = 10
+	DefaultWeightMsgToggleSwapOut   = 10
 )
 
 func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simulation.WeightedOperations {
@@ -38,6 +42,8 @@ func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simula
 		wSwapIn             int
 		wSwapOut            int
 		wUpdateInterestRate int
+		wToggleSwapIn       int
+		wToggleSwapOut      int
 	)
 
 	simState.AppParams.GetOrGenerate(
@@ -76,11 +82,31 @@ func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simula
 		},
 	)
 
+	simState.AppParams.GetOrGenerate(
+		OpWeightMsgToggleSwapIn,
+		&wToggleSwapIn,
+		simState.Rand,
+		func(r *rand.Rand) {
+			wToggleSwapIn = DefaultWeightMsgToggleSwapIn
+		},
+	)
+
+	simState.AppParams.GetOrGenerate(
+		OpWeightMsgToggleSwapOut,
+		&wToggleSwapOut,
+		simState.Rand,
+		func(r *rand.Rand) {
+			wToggleSwapOut = DefaultWeightMsgToggleSwapOut
+		},
+	)
+
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(wCreateVault, SimulateMsgCreateVault(k)),
 		simulation.NewWeightedOperation(wSwapIn, SimulateMsgSwapIn(k)),
 		simulation.NewWeightedOperation(wSwapOut, SimulateMsgSwapOut(k)),
 		simulation.NewWeightedOperation(wUpdateInterestRate, SimulateMsgUpdateInterestRate(k)),
+		simulation.NewWeightedOperation(wToggleSwapIn, SimulateMsgToggleSwapIn(k)),
+		simulation.NewWeightedOperation(wToggleSwapOut, SimulateMsgToggleSwapOut(k)),
 	}
 }
 
@@ -260,5 +286,89 @@ func SimulateMsgUpdateInterestRate(k keeper.Keeper) simtypes.Operation {
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "successfully set interest rate"), nil, nil
+	}
+}
+
+func SimulateMsgToggleSwapIn(k keeper.Keeper) simtypes.Operation {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		// Get a random vault
+		vaults, err := k.GetVaults(ctx)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleSwapInRequest{}), "unable to get vaults"), nil, err
+		}
+		if len(vaults) == 0 {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleSwapInRequest{}), "no vaults found"), nil, nil
+		}
+		vaultAddr := vaults[r.Intn(len(vaults))]
+		vault, err := k.GetVault(ctx, vaultAddr)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleSwapInRequest{}), "unable to get vault"), nil, err
+		}
+		if vault == nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleSwapInRequest{}), "received nil vault"), nil, nil
+		}
+
+		// Use the vault admin to sign
+		adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleSwapInRequest{}), "invalid admin address"), nil, err
+		}
+
+		msg := &types.MsgToggleSwapInRequest{
+			VaultAddress: vaultAddr.String(),
+			Admin:        adminAddr.String(),
+		}
+
+		handler := keeper.NewMsgServer(&k)
+		_, err = handler.ToggleSwapIn(sdk.WrapSDKContext(ctx), msg)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
+		}
+
+		return simtypes.NewOperationMsg(msg, true, "successfully toggled swap in"), nil, nil
+	}
+}
+
+func SimulateMsgToggleSwapOut(k keeper.Keeper) simtypes.Operation {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		// Get a random vault
+		vaults, err := k.GetVaults(ctx)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleSwapOutRequest{}), "unable to get vaults"), nil, err
+		}
+		if len(vaults) == 0 {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleSwapOutRequest{}), "no vaults found"), nil, nil
+		}
+		vaultAddr := vaults[r.Intn(len(vaults))]
+		vault, err := k.GetVault(ctx, vaultAddr)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleSwapOutRequest{}), "unable to get vault"), nil, err
+		}
+		if vault == nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleSwapOutRequest{}), "received nil vault"), nil, nil
+		}
+
+		// Use the vault admin to sign
+		adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleSwapOutRequest{}), "invalid admin address"), nil, err
+		}
+
+		msg := &types.MsgToggleSwapOutRequest{
+			VaultAddress: vaultAddr.String(),
+			Admin:        adminAddr.String(),
+		}
+
+		handler := keeper.NewMsgServer(&k)
+		_, err = handler.ToggleSwapOut(sdk.WrapSDKContext(ctx), msg)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
+		}
+
+		return simtypes.NewOperationMsg(msg, true, "successfully toggled swap out"), nil, nil
 	}
 }

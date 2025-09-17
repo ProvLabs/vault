@@ -51,6 +51,7 @@ func CalculateSharesFromAssets(
 	if assets.IsNegative() || totalAssets.IsNegative() || totalShares.IsNegative() {
 		return sdk.Coin{}, fmt.Errorf("invalid input: negative values not allowed")
 	}
+	// Neutral first deposit: mint assets * ShareScalar
 	if assets.IsZero() {
 		return sdk.NewCoin(shareDenom, math.ZeroInt()), nil
 	}
@@ -102,7 +103,7 @@ func CalculateAssetsFromShares(
 	return sdk.NewCoin(assetDenom, assetsOut), nil
 }
 
-func CalculateSharesFromNonUnderlyingOneStep(
+func CalculateSharesOneStep(
 	amountNumerator math.Int,
 	amountDenominator math.Int,
 	totalAssets math.Int,
@@ -127,4 +128,25 @@ func CalculateSharesFromNonUnderlyingOneStep(
 	den := amountDenominator.Mul(ta)
 	shares := amountNumerator.Mul(ts).Quo(den)
 	return sdk.NewCoin(shareDenom, shares), nil
+}
+
+func CalculateRedeemOneStep(shares math.Int, totalShares math.Int, totalAssets math.Int, priceNumerator math.Int, priceDenominator math.Int, payoutDenom string) (sdk.Coin, error) {
+	if shares.IsNegative() || totalShares.IsNegative() || totalAssets.IsNegative() || priceNumerator.IsNegative() || priceDenominator.IsNegative() {
+		return sdk.Coin{}, fmt.Errorf("invalid input: negative values not allowed")
+	}
+	if shares.IsZero() {
+		return sdk.NewCoin(payoutDenom, math.ZeroInt()), nil
+	}
+	ts := totalShares.Add(VirtualShares)
+	if ts.IsZero() {
+		return sdk.NewCoin(payoutDenom, math.ZeroInt()), nil
+	}
+	if priceNumerator.IsZero() {
+		return sdk.Coin{}, fmt.Errorf("invalid input: zero price numerator")
+	}
+	ta := totalAssets.Add(VirtualAssets)
+	num := shares.Mul(ta).Mul(priceDenominator)
+	den := ts.Mul(priceNumerator)
+	out := num.Quo(den)
+	return sdk.NewCoin(payoutDenom, out), nil
 }

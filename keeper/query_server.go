@@ -11,6 +11,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -172,9 +173,16 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 		return nil, status.Errorf(codes.Internal, "failed to estimate total assets: %v", err)
 	}
 
-	estimatedAssets, err := utils.CalculateAssetsFromShares(req.Assets.Amount, totalShares, estimatedTotalAssets, vault.UnderlyingAsset)
+	estimatedAssets, err := utils.CalculateRedeemOneStep(
+		req.Assets.Amount,
+		totalShares,
+		estimatedTotalAssets,
+		math.NewInt(1),
+		math.NewInt(1),
+		vault.UnderlyingAsset,
+	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to calculate assets from shares: %w", err)
+		return nil, fmt.Errorf("failed to calculate redeem estimate: %w", err)
 	}
 
 	return &types.QueryEstimateSwapOutResponse{

@@ -153,7 +153,7 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 	}
 
 	prevEnabled := vault.InterestEnabled()
-	if !curRate.IsZero() {
+	if !curRate.IsZero() && !vault.Paused {
 		if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
 			return nil, fmt.Errorf("failed to reconcile before rate change: %w", err)
 		}
@@ -201,6 +201,9 @@ func (k msgServer) ToggleSwapIn(goCtx context.Context, msg *types.MsgToggleSwapI
 	if err := vault.ValidateAdmin(msg.Admin); err != nil {
 		return nil, err
 	}
+	if vault.Paused {
+		return nil, fmt.Errorf("vault %s is paused", msg.VaultAddress)
+	}
 
 	k.SetSwapInEnable(ctx, vault, msg.Enabled)
 
@@ -222,6 +225,9 @@ func (k msgServer) ToggleSwapOut(goCtx context.Context, msg *types.MsgToggleSwap
 	}
 	if err := vault.ValidateAdmin(msg.Admin); err != nil {
 		return nil, err
+	}
+	if vault.Paused {
+		return nil, fmt.Errorf("vault %s is paused", msg.VaultAddress)
 	}
 
 	k.SetSwapOutEnable(ctx, vault, msg.Enabled)
@@ -283,7 +289,6 @@ func (k msgServer) WithdrawInterestFunds(goCtx context.Context, msg *types.MsgWi
 	if err := vault.ValidateAdmin(msg.Admin); err != nil {
 		return nil, err
 	}
-
 	if vault.UnderlyingAsset != msg.Amount.Denom {
 		return nil, fmt.Errorf("denom not supported for vault must be of type \"%s\" : got \"%s\"", vault.UnderlyingAsset, msg.Amount.Denom)
 	}
@@ -315,6 +320,10 @@ func (k msgServer) DepositPrincipalFunds(goCtx context.Context, msg *types.MsgDe
 	}
 	if err := vault.ValidateAdmin(msg.Admin); err != nil {
 		return nil, err
+	}
+
+	if !vault.Paused {
+		return nil, fmt.Errorf("vault must be paused to deposit principal funds")
 	}
 
 	if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
@@ -354,6 +363,10 @@ func (k msgServer) WithdrawPrincipalFunds(goCtx context.Context, msg *types.MsgW
 	}
 	if err := vault.ValidateAdmin(msg.Admin); err != nil {
 		return nil, err
+	}
+
+	if !vault.Paused {
+		return nil, fmt.Errorf("vault must be paused to withdraw principal funds")
 	}
 
 	if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
@@ -407,4 +420,80 @@ func (k msgServer) ExpeditePendingSwapOut(goCtx context.Context, msg *types.MsgE
 	k.emitEvent(ctx, types.NewEventPendingSwapOutExpedited(msg.RequestId, swapOut.VaultAddress, msg.Admin))
 
 	return &types.MsgExpeditePendingSwapOutResponse{}, nil
+}
+
+// PauseVault pauses a vault, disabling all user-facing operations.
+func (k msgServer) PauseVault(goCtx context.Context, msg *types.MsgPauseVaultRequest) (*types.MsgPauseVaultResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault: %w", err)
+	}
+	if vault == nil {
+		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+	}
+	if err := vault.ValidateAdmin(msg.Admin); err != nil {
+		return nil, err
+	}
+
+	if vault.Paused {
+		return nil, fmt.Errorf("vault %s is already paused", msg.VaultAddress)
+	}
+	if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
+		return nil, fmt.Errorf("failed to reconcile interest before pausing: %w", err)
+	}
+
+	tvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get TVV before pausing: %w", err)
+	}
+
+	vault.PausedBalance = sdk.NewCoin(vault.UnderlyingAsset, tvv)
+	vault.Paused = true
+	if err := k.SetVaultAccount(ctx, vault); err != nil {
+		return nil, fmt.Errorf("failed to set vault account: %w", err)
+	}
+
+	k.emitEvent(ctx, types.NewEventVaultPaused(msg.VaultAddress, msg.Admin, msg.Reason, vault.PausedBalance))
+
+	return &types.MsgPauseVaultResponse{}, nil
+}
+
+// UnpauseVault unpauses a vault, re-enabling all user-facing operations after a NAV recalculation.
+func (k msgServer) UnpauseVault(goCtx context.Context, msg *types.MsgUnpauseVaultRequest) (*types.MsgUnpauseVaultResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault: %w", err)
+	}
+	if vault == nil {
+		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+	}
+	if err := vault.ValidateAdmin(msg.Admin); err != nil {
+		return nil, err
+	}
+
+	if !vault.Paused {
+		return nil, fmt.Errorf("vault %s is not paused", msg.VaultAddress)
+	}
+
+	vault.PausedBalance = sdk.Coin{}
+	vault.Paused = false
+	if err := k.SetVaultAccount(ctx, vault); err != nil {
+		return nil, fmt.Errorf("failed to set vault account: %w", err)
+	}
+
+	// TODO: Not sure if it is worth possibly erroring out for an event property?
+	tvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get TVV before pausing: %w", err)
+	}
+
+	k.emitEvent(ctx, types.NewEventVaultUnpaused(msg.VaultAddress, msg.Admin, sdk.NewCoin(vault.UnderlyingAsset, tvv)))
+
+	return &types.MsgUnpauseVaultResponse{}, nil
 }

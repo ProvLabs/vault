@@ -187,8 +187,8 @@ message EventSwapOutRequested {
   string vault_address = 1;
   // owner is the bech32 address of the user who initiated the swap out.
   string owner = 2;
-  // assets is the amount of assets calculated to be paid out upon completion.
-  cosmos.base.v1beta1.Coin assets = 3 [(gogoproto.nullable) = false];
+  // redeem_denom is the denomination of the asset to be redeemed.
+  string redeem_denom = 3;
   // shares is the amount of vault shares the user escrowed for this request.
   cosmos.base.v1beta1.Coin shares = 4 [(gogoproto.nullable) = false];
   // request_id is the unique identifier for this pending swap out request.
@@ -230,4 +230,26 @@ message EventPendingSwapOutExpedited {
   string vault = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // admin is the address of the account that expedited the swap-out.
   string admin = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// EventVaultPaused is emitted when a vault is paused.
+message EventVaultPaused {
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 1;
+  // admin is the address of the account that paused the vault.
+  string admin = 2;
+  // reason is the reason for pausing the vault.
+  string reason = 3;
+  // total_vault_value is the total value of the vault's assets at the time of pausing.
+  cosmos.base.v1beta1.Coin total_vault_value = 4 [(gogoproto.nullable) = false];
+}
+
+// EventVaultUnpaused is emitted when a vault is unpaused.
+message EventVaultUnpaused {
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 1;
+  // admin is the address of the account that unpaused the vault.
+  string admin = 2;
+  // total_vault_value is the new total value of the vault's assets at the time of unpausing.
+  cosmos.base.v1beta1.Coin total_vault_value = 3 [(gogoproto.nullable) = false];
 }

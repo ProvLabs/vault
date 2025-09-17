@@ -102,6 +102,7 @@ func (k *Keeper) createVaultAccount(ctx sdk.Context, admin, shareDenom, underlyi
 		}
 	}
 	vaultAcc = k.AuthKeeper.NewAccount(ctx, vault).(types.VaultAccountI)
+	vault.PausedBalance = sdk.Coin{}
 	k.AuthKeeper.SetAccount(ctx, vaultAcc)
 
 	return vault, nil
@@ -174,6 +175,10 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 		return nil, fmt.Errorf("vault with address %v not found", vaultAddr.String())
 	}
 
+	if vault.Paused {
+		return nil, fmt.Errorf("vault %s is paused", vaultAddr.String())
+	}
+
 	if !vault.SwapInEnabled {
 		return nil, fmt.Errorf("swaps are not enabled for vault %s", vaultAddr.String())
 	}
@@ -241,6 +246,10 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 		return 0, fmt.Errorf("vault with address %v not found", vaultAddr.String())
 	}
 
+	if vault.Paused {
+		return 0, fmt.Errorf("vault %s is paused", vaultAddr.String())
+	}
+
 	if !vault.SwapOutEnabled {
 		return 0, fmt.Errorf("swaps are not enabled for vault %s", vaultAddr.String())
 	}
@@ -257,16 +266,9 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 		return 0, err
 	}
 
-	if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
-		return 0, fmt.Errorf("failed to reconcile vault interest: %w", err)
-	}
-
 	assets, err := k.ConvertSharesToRedeemCoin(ctx, *vault, shares.Amount, redeemDenom)
 	if err != nil {
 		return 0, fmt.Errorf("failed to calculate assets from shares: %w", err)
-	}
-	if assets.Amount.IsZero() && shares.Amount.IsPositive() {
-		return 0, fmt.Errorf("redeem amount of %s is too small and results in zero assets", shares.String())
 	}
 
 	if err := k.checkPayoutRestrictions(ctx, vault, owner, assets); err != nil {
@@ -281,7 +283,7 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 	pendingReq := types.PendingSwapOut{
 		Owner:        owner.String(),
 		VaultAddress: vaultAddr.String(),
-		Assets:       assets,
+		RedeemDenom:  redeemDenom,
 		Shares:       shares,
 	}
 	requestID, err := k.PendingSwapOutQueue.Enqueue(ctx, payoutTime, &pendingReq)
@@ -289,7 +291,7 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 		return 0, fmt.Errorf("failed to enqueue pending swap out request: %w", err)
 	}
 
-	k.emitEvent(ctx, types.NewEventSwapOutRequested(vaultAddr.String(), owner.String(), assets, shares, requestID))
+	k.emitEvent(ctx, types.NewEventSwapOutRequested(vaultAddr.String(), owner.String(), redeemDenom, shares, requestID))
 	return requestID, nil
 }
 

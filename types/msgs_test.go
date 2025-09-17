@@ -844,18 +844,124 @@ func TestMsgExpeditePendingSwapOutRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "valid",
 			msg: types.MsgExpeditePendingSwapOutRequest{
-				Admin: addr,
-				RequestId:    1,
+				Admin:     addr,
+				RequestId: 1,
 			},
 			expectedErr: nil,
 		},
 		{
 			name: "invalid admin",
 			msg: types.MsgExpeditePendingSwapOutRequest{
-				Admin: "bad",
-				RequestId:    1,
+				Admin:     "bad",
+				RequestId: 1,
 			},
 			expectedErr: fmt.Errorf("invalid admin address: %q", "bad"),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.expectedErr != nil {
+				assert.Error(t, err, "expected error for case %q", tc.name)
+				assert.Contains(t, err.Error(), tc.expectedErr.Error(), "error should contain expected substring for case %q", tc.name)
+			} else {
+				assert.NoError(t, err, "expected no error for case %q", tc.name)
+			}
+		})
+	}
+}
+
+func TestMsgPauseVaultRequest_ValidateBasic(t *testing.T) {
+	addr := utils.TestAddress().Bech32
+
+	tests := []struct {
+		name        string
+		msg         types.MsgPauseVaultRequest
+		expectedErr error
+	}{
+		{
+			name: "valid",
+			msg: types.MsgPauseVaultRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				Reason:       "rebalancing",
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "invalid admin",
+			msg: types.MsgPauseVaultRequest{
+				Admin:        "bad",
+				VaultAddress: addr,
+				Reason:       "rebalancing",
+			},
+			expectedErr: fmt.Errorf("invalid admin address: %q", "bad"),
+		},
+		{
+			name: "invalid vault address",
+			msg: types.MsgPauseVaultRequest{
+				Admin:        addr,
+				VaultAddress: "bad",
+				Reason:       "rebalancing",
+			},
+			expectedErr: fmt.Errorf("invalid vault address: %q", "bad"),
+		},
+		{
+			name: "empty reason",
+			msg: types.MsgPauseVaultRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				Reason:       "",
+			},
+			expectedErr: fmt.Errorf("reason cannot be empty"),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.expectedErr != nil {
+				assert.Error(t, err, "expected error for case %q", tc.name)
+				assert.Contains(t, err.Error(), tc.expectedErr.Error(), "error should contain expected substring for case %q", tc.name)
+			} else {
+				assert.NoError(t, err, "expected no error for case %q", tc.name)
+			}
+		})
+	}
+}
+
+func TestMsgUnpauseVaultRequest_ValidateBasic(t *testing.T) {
+	addr := utils.TestAddress().Bech32
+
+	tests := []struct {
+		name        string
+		msg         types.MsgUnpauseVaultRequest
+		expectedErr error
+	}{
+		{
+			name: "valid",
+			msg: types.MsgUnpauseVaultRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "invalid admin",
+			msg: types.MsgUnpauseVaultRequest{
+				Admin:        "bad",
+				VaultAddress: addr,
+			},
+			expectedErr: fmt.Errorf("invalid admin address: %q", "bad"),
+		},
+		{
+			name: "invalid vault address",
+			msg: types.MsgUnpauseVaultRequest{
+				Admin:        addr,
+				VaultAddress: "bad",
+			},
+			expectedErr: fmt.Errorf("invalid vault address: %q", "bad"),
 		},
 	}
 

@@ -8,8 +8,6 @@ import (
 
 	"github.com/provlabs/vault/types"
 
-	"cosmossdk.io/collections"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -18,36 +16,36 @@ import (
 
 // ProcessPendingSwapOuts processes the queue of pending swap-out requests. Called from the EndBlocker,
 // it iterates through requests due for payout at the current block time. It skips any requests for
-// vaults that are currently paused.
-// For each request, it attempts a payout. If the payout fails due to a recoverable error (e.g., insufficient liquidity),
-// it refunds the user's escrowed shares. All processed requests are dequeued, regardless of success or failure.
-// This function returns an error only if the queue walk itself fails; it does not return errors from individual
-// payout/refund operations.
+// vaults that are currently paused, leaving them in the queue to be re-evaluated in the next block.
+// For each due request, it first attempts to dequeue it. If the dequeue fails, an error is logged, and the
+// item is skipped to prevent duplicate processing. If the dequeue is successful, the payout is attempted.
+// If the payout fails due to a recoverable error (e.g., insufficient liquidity), it refunds the
+// user's escrowed shares. This function returns an error only if the queue walk itself fails; it does not
+// return errors from individual payout/refund operations.
 func (k *Keeper) ProcessPendingSwapOuts(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	now := sdkCtx.BlockTime().Unix()
 
-	var processedKeys []collections.Triple[int64, sdk.AccAddress, uint64]
-
 	err := k.PendingSwapOutQueue.WalkDue(ctx, now, func(timestamp int64, id uint64, vaultAddr sdk.AccAddress, req types.PendingSwapOut) (stop bool, err error) {
-		key := collections.Join3(timestamp, vaultAddr, id)
-
 		vault, ok := k.tryGetVault(sdkCtx, vaultAddr)
+		if ok && vault.Paused {
+			return false, nil
+		}
+
+		if err := k.PendingSwapOutQueue.Dequeue(ctx, timestamp, vaultAddr, id); err != nil {
+			sdkCtx.Logger().Error("CRITICAL: failed to dequeue pending withdrawal, skipping processing to prevent re-execution", "id", id, "error", err)
+			return false, nil
+		}
+
 		if !ok {
-			sdkCtx.Logger().Error("skipping pending withdrawal for non-existent vault", "request_id", id, "vault_address", vaultAddr.String())
-			processedKeys = append(processedKeys, key)
+			sdkCtx.Logger().Error("dequeued and skipped pending withdrawal for non-existent vault", "request_id", id, "vault_address", vaultAddr.String())
 			return false, nil
 		}
 
-		if vault.Paused {
-			return false, nil
-		}
-
-		processedKeys = append(processedKeys, key)
 		err = k.processSingleWithdrawal(sdkCtx, id, req, *vault)
 		if err != nil {
 			reason := k.getRefundReason(err)
-			sdkCtx.Logger().Error("Failed to process withdrawal",
+			sdkCtx.Logger().Error("Failed to process withdrawal, issuing refund",
 				"withdrawal_id", id,
 				"reason", reason,
 				"error", err,
@@ -62,11 +60,6 @@ func (k *Keeper) ProcessPendingSwapOuts(ctx context.Context) error {
 		return err
 	}
 
-	for _, key := range processedKeys {
-		if err := k.PendingSwapOutQueue.Dequeue(ctx, key.K1(), key.K2(), key.K3()); err != nil {
-			sdkCtx.Logger().Error("CRITICAL: failed to dequeue processed withdrawal", "key", key, "error", err)
-		}
-	}
 	return nil
 }
 

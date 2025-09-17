@@ -15,49 +15,64 @@ import (
 )
 
 // ProcessPendingSwapOuts processes the queue of pending swap-out requests. Called from the EndBlocker,
-// it iterates through requests due for payout at the current block time. It skips any requests for
-// vaults that are currently paused, leaving them in the queue to be re-evaluated in the next block.
-// For each due request, it first attempts to dequeue it. If the dequeue fails, an error is logged, and the
-// item is skipped to prevent duplicate processing. If the dequeue is successful, the payout is attempted.
-// If the payout fails due to a recoverable error (e.g., insufficient liquidity), it refunds the
-// user's escrowed shares. This function returns an error only if the queue walk itself fails; it does not
-// return errors from individual payout/refund operations.
+// it iterates through requests due for payout at the current block time. It uses a safe "collect-then-mutate"
+// pattern to comply with the SDK iterator contract. It first collects all due requests, then iterates
+// the collected list, dequeuing each item before attempting the payout. If the payout fails due to a
+// recoverable error (e.g., insufficient liquidity), it refunds the user's escrowed shares.
 func (k *Keeper) ProcessPendingSwapOuts(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	now := sdkCtx.BlockTime().Unix()
 
+	type job struct {
+		Timestamp int64
+		ID        uint64
+		VaultAddr sdk.AccAddress
+		Req       types.PendingSwapOut
+	}
+	var jobsToProcess []job
+
+	// Step 1: Walk and Collect jobs. No writes are performed here.
 	err := k.PendingSwapOutQueue.WalkDue(ctx, now, func(timestamp int64, id uint64, vaultAddr sdk.AccAddress, req types.PendingSwapOut) (stop bool, err error) {
 		vault, ok := k.tryGetVault(sdkCtx, vaultAddr)
 		if ok && vault.Paused {
 			return false, nil
 		}
-
-		if err := k.PendingSwapOutQueue.Dequeue(ctx, timestamp, vaultAddr, id); err != nil {
-			sdkCtx.Logger().Error("CRITICAL: failed to dequeue pending withdrawal, skipping processing to prevent re-execution", "id", id, "error", err)
-			return false, nil
-		}
-
-		if !ok {
-			sdkCtx.Logger().Error("dequeued and skipped pending withdrawal for non-existent vault", "request_id", id, "vault_address", vaultAddr.String())
-			return false, nil
-		}
-
-		err = k.processSingleWithdrawal(sdkCtx, id, req, *vault)
-		if err != nil {
-			reason := k.getRefundReason(err)
-			sdkCtx.Logger().Error("Failed to process withdrawal, issuing refund",
-				"withdrawal_id", id,
-				"reason", reason,
-				"error", err,
-			)
-			k.refundWithdrawal(sdkCtx, id, req, reason)
-		}
+		jobsToProcess = append(jobsToProcess, job{
+			Timestamp: timestamp,
+			ID:        id,
+			VaultAddr: vaultAddr,
+			Req:       req,
+		})
 		return false, nil
 	})
-
 	if err != nil {
 		sdkCtx.Logger().Error("error during pending withdrawal queue walk", "error", err)
 		return err
+	}
+
+	// Step 2: Loop over collected jobs, dequeue first, then process.
+	for _, j := range jobsToProcess {
+		if err := k.PendingSwapOutQueue.Dequeue(ctx, j.Timestamp, j.VaultAddr, j.ID); err != nil {
+			sdkCtx.Logger().Error("CRITICAL: failed to dequeue processed withdrawal, skipping", "id", j.ID, "error", err)
+			continue
+		}
+
+		vault, ok := k.tryGetVault(sdkCtx, j.VaultAddr)
+		if !ok {
+			sdkCtx.Logger().Error("dequeued and skipped pending withdrawal for non-existent vault", "request_id", j.ID, "vault_address", j.VaultAddr.String())
+			continue
+		}
+
+		err = k.processSingleWithdrawal(sdkCtx, j.ID, j.Req, *vault)
+		if err != nil {
+			reason := k.getRefundReason(err)
+			sdkCtx.Logger().Error("Failed to process withdrawal, issuing refund",
+				"withdrawal_id", j.ID,
+				"reason", reason,
+				"error", err,
+			)
+			k.refundWithdrawal(sdkCtx, j.ID, j.Req, reason)
+		}
 	}
 
 	return nil

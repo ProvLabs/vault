@@ -121,18 +121,17 @@ func (k Keeper) GetNAVPerShareInUnderlyingAsset(ctx sdk.Context, vault types.Vau
 	return tvv.Quo(totalShares), nil
 }
 
-// ConvertDepositToSharesInUnderlyingAsset converts a deposit coin into vault shares
-// using the current TVV and total share supply (both pro-rata, floor arithmetic).
+// ConvertSharesToRedeemCoin converts a share amount into a payout coin in redeemDenom
+// using the current TVV and total share supply (pro-rata, single-floor arithmetic).
 //
 // Steps:
-//  1. Convert the deposit into underlying-asset value via ToUnderlyingAssetAmount.
-//  2. Compute the share amount using
-//     CalculateSharesFromAssets(value_in_underlying, TVV, totalShares)
+//  1. Look up the unit price fraction for redeemDenom → underlying via UnitPriceFraction.
+//  2. Compute the payout in one step using
+//     CalculateRedeemProRataFraction(shares, totalShares, TVV, priceNum, priceDen)
 //     where TVV is from principal (marker) balances.
 //
-// Returns a coin in vault.ShareDenom representing the minted shares. This function
-// performs calculation only; callers mint/burn/transfer as needed. Very small deposits
-// may floor to zero shares.
+// Returns a coin in redeemDenom. This function performs calculation only; callers
+// must enforce liquidity/policy. If shares <= 0, returns a zero-amount coin.
 func (k Keeper) ConvertDepositToSharesInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccount, in sdk.Coin) (sdk.Coin, error) {
 	priceNum, priceDen, err := k.UnitPriceFraction(ctx, in.Denom, vault.UnderlyingAsset)
 	if err != nil {
@@ -144,7 +143,7 @@ func (k Keeper) ConvertDepositToSharesInUnderlyingAsset(ctx sdk.Context, vault t
 	}
 	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
 	amountNumerator := in.Amount.Mul(priceNum)
-	return utils.CalculateSharesOneStep(amountNumerator, priceDen, tvv, totalShares, vault.ShareDenom)
+	return utils.CalculateSharesProRataFraction(amountNumerator, priceDen, tvv, totalShares, vault.ShareDenom)
 }
 
 // ConvertSharesToRedeemCoin converts a share amount into a payout coin in redeemDenom
@@ -175,5 +174,5 @@ func (k Keeper) ConvertSharesToRedeemCoin(ctx sdk.Context, vault types.VaultAcco
 	if priceNum.IsZero() {
 		return sdk.Coin{}, fmt.Errorf("zero price for %s/%s", redeemDenom, vault.UnderlyingAsset)
 	}
-	return utils.CalculateRedeemOneStep(shares, totalShares, tvv, priceNum, priceDen, redeemDenom)
+	return utils.CalculateRedeemProRataFraction(shares, totalShares, tvv, priceNum, priceDen, redeemDenom)
 }

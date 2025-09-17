@@ -535,7 +535,7 @@ func (s *TestSuite) TestQueryServer_EstimateSwapIn() {
 				VaultAddress: vaultAddr.String(),
 				Assets:       sdk.NewInt64Coin("wrongdenom", 100),
 			},
-			ExpectedErrSubstrs: []string{"denom not supported for vault must be of type"},
+			ExpectedErrSubstrs: []string{"unsupported deposit denom:"},
 		},
 	}
 
@@ -578,7 +578,7 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 			},
 			Req: &types.QueryEstimateSwapOutRequest{
 				VaultAddress: vaultAddr.String(),
-				Assets:       sharesToSwap,
+				Shares:       sharesToSwap.Amount,
 			},
 			ExpectedResp: &types.QueryEstimateSwapOutResponse{
 				Assets: sdk.NewInt64Coin(underlyingDenom, 100), // ~exact with current offsets
@@ -617,9 +617,10 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 			},
 			Req: &types.QueryEstimateSwapOutRequest{
 				VaultAddress: vaultAddr.String(),
-				Assets:       sdk.NewInt64Coin("wrongdenom", 100),
+				Shares:       math.NewInt(100),
+				RedeemDenom:  "wrongdenom",
 			},
-			ExpectedErrSubstrs: []string{"asset denom", "does not match vault share denom"},
+			ExpectedErrSubstrs: []string{"unsupported redeem denom"},
 		},
 	}
 

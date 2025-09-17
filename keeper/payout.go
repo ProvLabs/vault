@@ -31,7 +31,6 @@ func (k *Keeper) ProcessPendingSwapOuts(ctx context.Context) error {
 	}
 	var jobsToProcess []job
 
-	// Step 1: Walk and Collect jobs. No writes are performed here.
 	err := k.PendingSwapOutQueue.WalkDue(ctx, now, func(timestamp int64, id uint64, vaultAddr sdk.AccAddress, req types.PendingSwapOut) (stop bool, err error) {
 		vault, ok := k.tryGetVault(sdkCtx, vaultAddr)
 		if ok && vault.Paused {
@@ -50,7 +49,6 @@ func (k *Keeper) ProcessPendingSwapOuts(ctx context.Context) error {
 		return err
 	}
 
-	// Step 2: Loop over collected jobs, dequeue first, then process.
 	for _, j := range jobsToProcess {
 		if err := k.PendingSwapOutQueue.Dequeue(ctx, j.Timestamp, j.VaultAddr, j.ID); err != nil {
 			sdkCtx.Logger().Error("CRITICAL: failed to dequeue processed withdrawal, skipping", "id", j.ID, "error", err)

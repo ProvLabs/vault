@@ -19,19 +19,25 @@ import (
 )
 
 const (
-	OpWeightMsgCreateVault = "op_weight_msg_create_vault"
-	OpWeightMsgSwapIn      = "op_weight_msg_swap_in"
+	OpWeightMsgCreateVault     = "op_weight_msg_create_vault"
+	OpWeightMsgSwapIn          = "op_weight_msg_swap_in"
+	OpWeightMsgSwapOut         = "op_weight_msg_swap_out"
+	OpWeightMsgSetInterestRate = "op_weight_msg_set_interest_rate"
 )
 
 const (
-	DefaultWeightMsgCreateVault = 5
-	DefaultWeightMsgSwapIn      = 95
+	DefaultWeightMsgCreateVault     = 5
+	DefaultWeightMsgSwapIn          = 50
+	DefaultWeightMsgSwapOut         = 25
+	DefaultWeightMsgSetInterestRate = 20
 )
 
 func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simulation.WeightedOperations {
 	var (
-		wCreateVault int
-		wSwapIn      int
+		wCreateVault        int
+		wSwapIn             int
+		wSwapOut            int
+		wUpdateInterestRate int
 	)
 
 	simState.AppParams.GetOrGenerate(
@@ -52,9 +58,29 @@ func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simula
 		},
 	)
 
+	simState.AppParams.GetOrGenerate(
+		OpWeightMsgSwapOut,
+		&wSwapOut,
+		simState.Rand,
+		func(r *rand.Rand) {
+			wSwapOut = DefaultWeightMsgSwapOut
+		},
+	)
+
+	simState.AppParams.GetOrGenerate(
+		OpWeightMsgSetInterestRate,
+		&wUpdateInterestRate,
+		simState.Rand,
+		func(r *rand.Rand) {
+			wUpdateInterestRate = DefaultWeightMsgSetInterestRate
+		},
+	)
+
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(wCreateVault, SimulateMsgCreateVault(k)),
 		simulation.NewWeightedOperation(wSwapIn, SimulateMsgSwapIn(k)),
+		simulation.NewWeightedOperation(wSwapOut, SimulateMsgSwapOut(k)),
+		simulation.NewWeightedOperation(wUpdateInterestRate, SimulateMsgUpdateInterestRate(k)),
 	}
 }
 
@@ -189,5 +215,50 @@ func SimulateMsgSwapOut(k keeper.Keeper) simtypes.Operation {
 		}
 
 		return simtypes.NewOperationMsg(msg, true, ""), nil, nil
+	}
+}
+
+func SimulateMsgUpdateInterestRate(k keeper.Keeper) simtypes.Operation {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		// Get a random vault
+		vaults, err := k.GetVaults(ctx)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateInterestRateRequest{}), "unable to get vaults"), nil, err
+		}
+		if len(vaults) == 0 {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateInterestRateRequest{}), "no vaults found"), nil, nil
+		}
+		vaultAddr := vaults[r.Intn(len(vaults))]
+		vault, err := k.GetVault(ctx, vaultAddr)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateInterestRateRequest{}), "unable to get vault"), nil, err
+		}
+		if vault == nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateInterestRateRequest{}), "received nil vault"), nil, err
+		}
+
+		// Use the vault admin to sign
+		adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateInterestRateRequest{}), "invalid admin address for vault"), nil, err
+		}
+
+		rate := r.Float64()*3 - 1
+
+		msg := &types.MsgUpdateInterestRateRequest{
+			VaultAddress: vaultAddr.String(),
+			Admin:        adminAddr.String(),
+			NewRate:      fmt.Sprintf("%f", rate),
+		}
+
+		handler := keeper.NewMsgServer(&k)
+		_, err = handler.UpdateInterestRate(sdk.WrapSDKContext(ctx), msg)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
+		}
+
+		return simtypes.NewOperationMsg(msg, true, "successfully set interest rate"), nil, nil
 	}
 }

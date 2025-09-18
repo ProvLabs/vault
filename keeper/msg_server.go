@@ -452,6 +452,7 @@ func (k msgServer) PauseVault(goCtx context.Context, msg *types.MsgPauseVaultReq
 
 	vault.PausedBalance = sdk.NewCoin(vault.UnderlyingAsset, tvv)
 	vault.Paused = true
+	vault.PauseReason = msg.Reason
 	if err := k.SetVaultAccount(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to set vault account: %w", err)
 	}
@@ -483,6 +484,7 @@ func (k msgServer) UnpauseVault(goCtx context.Context, msg *types.MsgUnpauseVaul
 
 	vault.PausedBalance = sdk.Coin{}
 	vault.Paused = false
+	vault.PauseReason = ""
 	if err := k.SetVaultAccount(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to set vault account: %w", err)
 	}

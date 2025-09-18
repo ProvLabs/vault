@@ -375,13 +375,14 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod: "EstimateSwapOut",
-					Use:       "estimate-swap-out [vault_address] [assets]",
+					Use:       "estimate-swap-out [vault_address] [shares] [redeem_denom]",
 					Alias:     []string{"eso"},
-					Short:     "Estimate the amount of underlying assets received for a given withdrawal",
-					Example:   fmt.Sprintf("%s estimate-swap-out %s 100svnhash", queryStart, exampleVaultAddr),
+					Short:     "Estimate assets received for withdrawing shares",
+					Example:   fmt.Sprintf("%s estimate-swap-out %s 1000000 nhash", queryStart, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "vault_address"},
-						{ProtoField: "assets"},
+						{ProtoField: "shares"},
+						{ProtoField: "redeem_denom"},
 					},
 				},
 				{

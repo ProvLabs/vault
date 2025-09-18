@@ -169,44 +169,59 @@ func SimulateMsgSwapIn(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		// Pick a random account
-		acc, _ := simtypes.RandomAcc(r, accs)
-		underlyingDenom := "underlying"
-
-		// Obtain Underlying Asset
-		balance := k.BankKeeper.GetBalance(ctx, acc.Address, underlyingDenom)
-		underlyingAsset := balance.Denom
-
-		// Pick a random vault with matching underlying asset
-		vaults, _ := k.GetVaults(ctx)
-		iter := utils.Filter(vaults, func(addr sdk.AccAddress) bool {
-			vault, _ := k.GetVault(ctx, addr)
-			return vault.UnderlyingAsset == underlyingAsset
-		})
-		vaults = slices.Collect(iter)
-		vaultAddr := sdk.AccAddress{}
-		if len(vaults) > 0 {
-			vaultAddr = vaults[r.Intn(len(vaults))]
+		// Get a random vault
+		vault, err := getRandomVault(r, k, ctx)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSwapInRequest{}), "unable to get random vault"), nil, nil
 		}
 
-		// Pick a random amount of the underlying asset
-		maxAmount := balance.Amount.Int64()
-		amount := rand.Int63n(maxAmount-1) + 1
-		assets := sdk.NewInt64Coin(underlyingAsset, amount)
+		if vault.Paused {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSwapInRequest{}), "vault is paused"), nil, nil
+		}
 
+		if !vault.SwapInEnabled {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSwapInRequest{}), "vault has swap-in disabled"), nil, nil
+		}
+
+		// Find an account that has the vault's underlying asset
+		var owner simtypes.Account
+		var balance sdk.Coin
+		found := false
+		for _, acc := range accs {
+			bal := k.BankKeeper.GetBalance(ctx, acc.Address, vault.UnderlyingAsset)
+			if !bal.IsZero() {
+				owner = acc
+				balance = bal
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSwapInRequest{}), "no account has funds for this vault's underlying asset"), nil, nil
+		}
+
+		// Pick a random amount of their balance
+		amount, err := simtypes.RandPositiveInt(r, balance.Amount)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSwapInRequest{}), "balance amount is not positive"), nil, nil
+		}
+		asset := sdk.NewCoin(vault.UnderlyingAsset, amount)
+
+		// Create and dispatch the message
 		msg := &types.MsgSwapInRequest{
-			Owner:        acc.Address.String(),
-			VaultAddress: vaultAddr.String(),
-			Assets:       assets,
+			Owner:        owner.Address.String(),
+			VaultAddress: vault.GetAddress().String(),
+			Assets:       asset,
 		}
 
 		handler := keeper.NewMsgServer(&k)
-		_, err := handler.SwapIn(sdk.WrapSDKContext(ctx), msg)
+		_, err = handler.SwapIn(sdk.WrapSDKContext(ctx), msg)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "failed to swap in"), nil, err
 		}
 
-		return simtypes.NewOperationMsg(msg, true, ""), nil, nil
+		return simtypes.NewOperationMsg(msg, true, "successfully swapped in"), nil, nil
 	}
 }
 

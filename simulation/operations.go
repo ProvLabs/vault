@@ -425,6 +425,11 @@ func SimulateMsgToggleSwapIn(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleSwapInRequest{}), "invalid admin address"), nil, err
 		}
 
+		// TODO Do I need to do these checks?
+		if vault.Paused {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleSwapInRequest{}), "vault is paused"), nil, nil
+		}
+
 		msg := &types.MsgToggleSwapInRequest{
 			VaultAddress: vault.GetAddress().String(),
 			Admin:        adminAddr.String(),
@@ -452,6 +457,11 @@ func SimulateMsgToggleSwapOut(k keeper.Keeper) simtypes.Operation {
 		adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleSwapOutRequest{}), "invalid admin address"), nil, err
+		}
+
+		// TODO Do I need to do these checks?
+		if vault.Paused {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleSwapOutRequest{}), "vault is paused"), nil, nil
 		}
 
 		msg := &types.MsgToggleSwapOutRequest{
@@ -566,6 +576,11 @@ func SimulateMsgDepositPrincipalFunds(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositPrincipalFundsRequest{}), "invalid admin address"), nil, err
 		}
 
+		// TODO Do I need to do these checks?
+		if !vault.Paused {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositPrincipalFundsRequest{}), "vault is not paused"), nil, nil
+		}
+
 		// Find the admin's balance of the underlying asset
 		balance := k.BankKeeper.GetBalance(ctx, adminAddr, vault.UnderlyingAsset)
 		if balance.IsZero() {
@@ -613,6 +628,11 @@ func SimulateMsgWithdrawPrincipalFunds(k keeper.Keeper) simtypes.Operation {
 		adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawPrincipalFundsRequest{}), "invalid admin address"), nil, err
+		}
+
+		// TODO Do I need to do these checks?
+		if !vault.Paused {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawPrincipalFundsRequest{}), "vault is not paused"), nil, nil
 		}
 
 		principalAddr := vault.PrincipalMarkerAddress()
@@ -706,7 +726,6 @@ func SimulateMsgUnpauseVault(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		// Get a random vault
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUnpauseVaultRequest{}), "unable to get random vault"), nil, err

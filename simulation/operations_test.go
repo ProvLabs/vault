@@ -46,6 +46,15 @@ func (s *VaultSimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.A
 	return GenerateTestingAccounts(s.T(), s.ctx, s.app, r, n)
 }
 
+func (s *VaultSimTestSuite) TestWeightedOperations() {
+	sum := 0
+	for _, w := range simulation.DefaultWeights {
+		sum += w
+	}
+
+	s.Require().Equal(100, sum, "sum of simulation weights must be 100")
+}
+
 func (s *VaultSimTestSuite) TestSimulateMsgCreateVault() {
 	r := rand.New(rand.NewSource(1))
 

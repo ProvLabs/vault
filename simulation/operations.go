@@ -7,6 +7,8 @@ import (
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
 
+	"cosmossdk.io/math"
+
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -454,7 +456,25 @@ func SimulateMsgDepositInterestFunds(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositInterestFundsRequest{}), "invalid admin address"), nil, err
 		}
 
-		amount := sdk.NewInt64Coin(vault.UnderlyingAsset, r.Int63n(100000))
+		// Find the admin's balance of the underlying asset
+		balance := k.BankKeeper.GetBalance(ctx, adminAddr, vault.UnderlyingAsset)
+		if balance.IsZero() {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositInterestFundsRequest{}), "admin has no funds to deposit"), nil, nil
+		}
+
+		// Calculate 10% of the balance
+		tenPercent := balance.Amount.Quo(math.NewInt(10))
+		if tenPercent.IsZero() {
+			// If 10% is zero, the balance is too low to deposit a meaningful portion.
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositInterestFundsRequest{}), "balance too low to deposit a portion"), nil, nil
+		}
+
+		// Deposit a random amount up to 10% of the admin's balance
+		amountInt, err := simtypes.RandPositiveInt(r, tenPercent)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositInterestFundsRequest{}), "error generating random amount"), nil, nil
+		}
+		amount := sdk.NewCoin(vault.UnderlyingAsset, amountInt)
 
 		msg := &types.MsgDepositInterestFundsRequest{
 			VaultAddress: vault.GetAddress().String(),

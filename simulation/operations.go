@@ -158,6 +158,7 @@ func SimulateMsgCreateVault(k keeper.Keeper) simtypes.Operation {
 
 		// TODO Should this just be underlying?
 		// TODO How do I fund these accounts?
+		// TODO What about NAV setup?
 		underlying := fmt.Sprintf("underlying%d", r.Intn(100000))
 
 		// Simulate the marker existing

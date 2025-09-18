@@ -23,31 +23,29 @@ func (k *Keeper) ProcessPendingSwapOuts(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	now := sdkCtx.BlockTime().Unix()
 
-	type job struct {
-		Timestamp int64
-		ID        uint64
-		VaultAddr sdk.AccAddress
-		Req       types.PendingSwapOut
-	}
-	var jobsToProcess []job
+	var jobsToProcess []types.PayoutJob
 
 	err := k.PendingSwapOutQueue.WalkDue(ctx, now, func(timestamp int64, id uint64, vaultAddr sdk.AccAddress, req types.PendingSwapOut) (stop bool, err error) {
 		vault, ok := k.tryGetVault(sdkCtx, vaultAddr)
 		if ok && vault.Paused {
 			return false, nil
 		}
-		jobsToProcess = append(jobsToProcess, job{
-			Timestamp: timestamp,
-			ID:        id,
-			VaultAddr: vaultAddr,
-			Req:       req,
-		})
+		jobsToProcess = append(jobsToProcess, types.NewPayoutJob(timestamp, id, vaultAddr, req))
 		return false, nil
 	})
 	if err != nil {
 		sdkCtx.Logger().Error("error during pending withdrawal queue walk", "error", err)
 		return err
 	}
+
+	k.processSwapOutJobs(ctx, jobsToProcess)
+
+	return nil
+}
+
+// processSwapOutJobs iterates a list of jobs, dequeuing and processing each one.
+func (k *Keeper) processSwapOutJobs(ctx context.Context, jobsToProcess []types.PayoutJob) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	for _, j := range jobsToProcess {
 		if err := k.PendingSwapOutQueue.Dequeue(ctx, j.Timestamp, j.VaultAddr, j.ID); err != nil {
@@ -61,7 +59,11 @@ func (k *Keeper) ProcessPendingSwapOuts(ctx context.Context) error {
 			continue
 		}
 
-		err = k.processSingleWithdrawal(sdkCtx, j.ID, j.Req, *vault)
+		if vault.Paused {
+			continue
+		}
+
+		err := k.processSingleWithdrawal(sdkCtx, j.ID, j.Req, *vault)
 		if err != nil {
 			reason := k.getRefundReason(err)
 			sdkCtx.Logger().Error("Failed to process withdrawal, issuing refund",
@@ -72,8 +74,6 @@ func (k *Keeper) ProcessPendingSwapOuts(ctx context.Context) error {
 			k.refundWithdrawal(sdkCtx, j.ID, j.Req, reason)
 		}
 	}
-
-	return nil
 }
 
 // processSingleWithdrawal executes a pending swap-out. It first reconciles vault interest, then converts the user's

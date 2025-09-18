@@ -58,7 +58,8 @@ func (k *Keeper) processSwapOutJobs(ctx context.Context, jobsToProcess []types.P
 			sdkCtx.Logger().Error("dequeued and skipped pending withdrawal for non-existent vault", "request_id", j.ID, "vault_address", j.VaultAddr.String())
 			continue
 		}
-
+		// TODO: https://github.com/ProvLabs/vault/issues/61 ... this pause was added here for a future fix of when processingSingleWithdrawal fails on critical
+		// step, we pause the vault.
 		if vault.Paused {
 			continue
 		}

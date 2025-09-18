@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/provlabs/vault/interest"
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
 
@@ -159,7 +160,8 @@ func SimulateMsgCreateVault(k keeper.Keeper) simtypes.Operation {
 		// TODO Should this just be underlying?
 		// TODO How do I fund these accounts?
 		// TODO What about NAV setup?
-		underlying := fmt.Sprintf("underlying%d", r.Intn(100000))
+		// TODO We also need the payment denom
+		underlying := fmt.Sprintf("underlying", r.Intn(100000))
 
 		// Simulate the marker existing
 		grants := []markertypes.AccessGrant{
@@ -179,9 +181,11 @@ func SimulateMsgCreateVault(k keeper.Keeper) simtypes.Operation {
 		}
 
 		msg := &types.MsgCreateVaultRequest{
-			Admin:           admin.Address.String(),
-			ShareDenom:      denom,
-			UnderlyingAsset: underlying,
+			Admin:                  admin.Address.String(),
+			ShareDenom:             denom,
+			UnderlyingAsset:        underlying,
+			PaymentDenom:           "",
+			WithdrawalDelaySeconds: interest.SecondsPerDay,
 		}
 
 		handler := keeper.NewMsgServer(&k)
@@ -426,11 +430,6 @@ func SimulateMsgToggleSwapIn(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleSwapInRequest{}), "invalid admin address"), nil, err
 		}
 
-		// TODO Do I need to do these checks?
-		if vault.Paused {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleSwapInRequest{}), "vault is paused"), nil, nil
-		}
-
 		msg := &types.MsgToggleSwapInRequest{
 			VaultAddress: vault.GetAddress().String(),
 			Admin:        adminAddr.String(),
@@ -458,11 +457,6 @@ func SimulateMsgToggleSwapOut(k keeper.Keeper) simtypes.Operation {
 		adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleSwapOutRequest{}), "invalid admin address"), nil, err
-		}
-
-		// TODO Do I need to do these checks?
-		if vault.Paused {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleSwapOutRequest{}), "vault is paused"), nil, nil
 		}
 
 		msg := &types.MsgToggleSwapOutRequest{

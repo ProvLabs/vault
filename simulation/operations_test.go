@@ -26,10 +26,11 @@ import (
 type VaultSimTestSuite struct {
 	suite.Suite
 
-	ctx  sdk.Context
-	app  *simapp.SimApp
-	cdc  codec.Codec
-	accs []simtypes.Account
+	ctx    sdk.Context
+	app    *simapp.SimApp
+	cdc    codec.Codec
+	accs   []simtypes.Account
+	random *rand.Rand
 }
 
 func TestVaultSimTestSuite(t *testing.T) {
@@ -40,6 +41,32 @@ func (s *VaultSimTestSuite) SetupTest() {
 	s.app = simapp.Setup(s.T())
 	s.ctx = s.app.BaseApp.NewContext(false)
 	s.cdc = s.app.AppCodec()
+	s.random = rand.New(rand.NewSource(1))
+	s.setupEnv()
+}
+
+func (s *VaultSimTestSuite) setupEnv() {
+	s.setupAccounts()
+	s.setupMarkers()
+	s.setupNavs()
+	s.setupBalances()
+}
+
+func (s *VaultSimTestSuite) setupMarkers() {
+
+}
+
+func (s *VaultSimTestSuite) setupNavs() {
+
+}
+
+func (s *VaultSimTestSuite) setupBalances() {
+
+}
+
+func (s *VaultSimTestSuite) setupAccounts() {
+	_ = s.getTestingAccounts(s.random, 3)
+	s.accs = s.getTestingAccounts(s.random, 3)
 }
 
 func (s *VaultSimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
@@ -56,15 +83,9 @@ func (s *VaultSimTestSuite) TestWeightedOperations() {
 }
 
 func (s *VaultSimTestSuite) TestSimulateMsgCreateVault() {
-	r := rand.New(rand.NewSource(1))
-
-	// TODO We need to run this twice to fix the prefix issue. We will have to look into this some more.
-	_ = s.getTestingAccounts(r, 3)
-	accs := s.getTestingAccounts(r, 3)
-
 	op := simulation.SimulateMsgCreateVault(*s.app.VaultKeeper)
 
-	opMsg, futureOps, err := op(r, s.app.BaseApp, s.ctx, accs, "")
+	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
 	s.Require().NoError(err, "SimulateMsgCreateVault")
 	s.Require().True(opMsg.OK, "operationMsg.OK")
 	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
@@ -73,18 +94,12 @@ func (s *VaultSimTestSuite) TestSimulateMsgCreateVault() {
 }
 
 func (s *VaultSimTestSuite) TestSimulateMsgSwapIn() {
-	r := rand.New(rand.NewSource(1))
-
-	// TODO We need to run this twice to fix the prefix issue. We will have to look into this some more.
-	_ = s.getTestingAccounts(r, 3)
-	accs := s.getTestingAccounts(r, 3)
-
-	selected := accs[0]
+	selected := s.accs[0]
 
 	// Create the marker and add it to every account
 	err := simulation.CreateMarker(s.ctx, sdk.NewInt64Coin("underlying", 1000), s.app.AccountKeeper.GetModuleAddress("mint"), s.app.MarkerKeeper)
 	s.Require().NoError(err, "CreateMarker")
-	for _, acc := range accs {
+	for _, acc := range s.accs {
 		err = FundAccount(s.ctx, s.app.BankKeeper, acc.Address, sdk.NewCoins(sdk.NewInt64Coin("underlying", 100)))
 		s.Require().NoError(err, "FundAccount")
 	}
@@ -100,7 +115,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgSwapIn() {
 	s.Require().NoError(err, "CreateVault")
 
 	op := simulation.SimulateMsgSwapIn(*s.app.VaultKeeper)
-	opMsg, futureOps, err := op(r, s.app.BaseApp, s.ctx, accs, "")
+	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
 	s.Require().NoError(err, "SimulateMsgSwapIn")
 	s.Require().True(opMsg.OK, "operationMsg.OK")
 	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
@@ -109,19 +124,13 @@ func (s *VaultSimTestSuite) TestSimulateMsgSwapIn() {
 }
 
 func (s *VaultSimTestSuite) TestSimulateMsgSwapOut() {
-	r := rand.New(rand.NewSource(1))
 	s.ctx = s.ctx.WithBlockTime(time.Now())
-
-	// TODO We need to run this twice to fix the prefix issue. We will have to look into this some more.
-	_ = s.getTestingAccounts(r, 3)
-	accs := s.getTestingAccounts(r, 3)
-
-	selected := accs[0]
+	selected := s.accs[0]
 
 	// Create the marker and add it to every account
 	err := simulation.CreateMarker(s.ctx, sdk.NewInt64Coin("underlying", 1000), s.app.AccountKeeper.GetModuleAddress("mint"), s.app.MarkerKeeper)
 	s.Require().NoError(err, "CreateMarker")
-	for _, acc := range accs {
+	for _, acc := range s.accs {
 		err = FundAccount(s.ctx, s.app.BankKeeper, acc.Address, sdk.NewCoins(sdk.NewInt64Coin("underlying", 100)))
 		s.Require().NoError(err, "FundAccount")
 	}
@@ -149,7 +158,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgSwapOut() {
 	s.Require().NotNil(resp, "SwapIn Response not nil")
 
 	op := simulation.SimulateMsgSwapOut(*s.app.VaultKeeper)
-	opMsg, futureOps, err := op(r, s.app.BaseApp, s.ctx, accs, "")
+	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
 	s.Require().NoError(err, "SimulateMsgSwapOut")
 	s.Require().True(opMsg.OK, "operationMsg.OK")
 	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")

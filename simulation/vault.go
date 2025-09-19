@@ -1,0 +1,58 @@
+package simulation
+
+import (
+	"fmt"
+
+	"github.com/provlabs/vault/interest"
+	"github.com/provlabs/vault/keeper"
+	"github.com/provlabs/vault/simapp"
+	"github.com/provlabs/vault/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+)
+
+// CreateVault creates a new vault with a marker and funds accounts.
+func CreateVault(ctx sdk.Context, app *simapp.SimApp, underlying, share string, admin simtypes.Account, accs []simtypes.Account) error {
+	if !MarkerExists(ctx, app, underlying) {
+		if err := CreateGlobalMarker(ctx, app, sdk.NewInt64Coin(underlying, 1000), accs); err != nil {
+			return fmt.Errorf("unable to create global marker: %w", err)
+		}
+	}
+
+	// Create a vault that uses the marker as an underlying asset
+	newVault := &types.MsgCreateVaultRequest{
+		Admin:                  admin.Address.String(),
+		ShareDenom:             share,
+		UnderlyingAsset:        underlying,
+		PaymentDenom:           "",
+		WithdrawalDelaySeconds: interest.SecondsPerDay,
+	}
+	msgServer := keeper.NewMsgServer(app.VaultKeeper)
+	_, err := msgServer.CreateVault(sdk.WrapSDKContext(ctx), newVault)
+	return err
+}
+
+// SwapIn performs a swap in for a user.
+func SwapIn(ctx sdk.Context, app *simapp.SimApp, user simtypes.Account, shareDenom string, amount sdk.Coin) (*types.MsgSwapInResponse, error) {
+	vaultAddress := types.GetVaultAddress(shareDenom)
+	swapIn := &types.MsgSwapInRequest{
+		Owner:        user.Address.String(),
+		VaultAddress: vaultAddress.String(),
+		Assets:       amount,
+	}
+	msgServer := keeper.NewMsgServer(app.VaultKeeper)
+	return msgServer.SwapIn(ctx, swapIn)
+}
+
+// PauseVault pauses a vault.
+func PauseVault(ctx sdk.Context, app *simapp.SimApp, shareDenom string) error {
+	vaultAddress := types.GetVaultAddress(shareDenom)
+	vault, err := app.VaultKeeper.GetVault(ctx, vaultAddress)
+	if err != nil {
+		return err
+	}
+	msgServer := keeper.NewMsgServer(app.VaultKeeper)
+	_, err = msgServer.PauseVault(ctx, &types.MsgPauseVaultRequest{Admin: vault.Admin, VaultAddress: vault.Address, Reason: "test"})
+	return err
+}

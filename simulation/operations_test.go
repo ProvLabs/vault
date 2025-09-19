@@ -218,6 +218,58 @@ func (s *VaultSimTestSuite) TestSimulateMsgUnpauseVault() {
 	s.Require().Len(futureOps, 0, "futureOperations")
 }
 
+func (s *VaultSimTestSuite) TestSimulateMsgExpeditePendingSwapOut() {
+	s.ctx = s.ctx.WithBlockTime(time.Now())
+	user := s.accs[0]
+	admin := s.accs[1]
+
+	// Create marker
+	err := simulation.CreateGlobalMarker(s.ctx, s.app, sdk.NewInt64Coin("underlying", 1000), s.accs)
+	s.Require().NoError(err, "CreateGlobalMarker")
+
+	// Create vault with admin
+	err = simulation.CreateVault(s.ctx, s.app, "underlying", "underlyingshare", admin, s.accs)
+	s.Require().NoError(err, "CreateVault")
+
+	vaultAddress := types.GetVaultAddress("underlyingshare")
+
+	// Add attribute to user
+	err = simulation.AddAttribute(s.ctx, user.Address, simulation.RequiredMarkerAttribute, s.app.NameKeeper, s.app.AttributeKeeper)
+	s.Require().NoError(err, "AddAttribute")
+
+	// User swaps in to get shares
+	swapIn := &types.MsgSwapInRequest{
+		Owner:        user.Address.String(),
+		VaultAddress: vaultAddress.String(),
+		Assets:       sdk.NewInt64Coin("underlying", 100),
+	}
+	msgServer := keeper.NewMsgServer(s.app.VaultKeeper)
+	swapInResp, err := msgServer.SwapIn(s.ctx, swapIn)
+	s.Require().NoError(err, "SwapIn")
+	s.Require().NotNil(swapInResp, "SwapIn Response not nil")
+
+	shares := s.app.BankKeeper.GetBalance(s.ctx, user.Address, "underlyingshare")
+
+	// User swaps out to create a pending request
+	swapOut := &types.MsgSwapOutRequest{
+		Owner:        user.Address.String(),
+		VaultAddress: vaultAddress.String(),
+		Assets:       shares,
+		RedeemDenom:  "underlying",
+	}
+	_, err = msgServer.SwapOut(s.ctx, swapOut)
+	s.Require().NoError(err, "SwapOut")
+
+	// Now run the simulation for Expedite
+	op := simulation.SimulateMsgExpeditePendingSwapOut(*s.app.VaultKeeper)
+	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
+	s.Require().NoError(err, "SimulateMsgExpediteSwapOut")
+	s.Require().True(opMsg.OK, "operationMsg.OK")
+	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
+	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
+	s.Require().Len(futureOps, 0, "futureOperations")
+}
+
 // GenerateTestingAccounts generates n new accounts, creates them (in state) and gives each 1 million power worth of bond tokens.
 func GenerateTestingAccounts(t *testing.T, ctx sdk.Context, app *simapp.SimApp, r *rand.Rand, n int) []simtypes.Account {
 	return GenerateTestingAccountsWithPower(t, ctx, app, r, n, 1_000_000)

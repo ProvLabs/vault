@@ -201,9 +201,6 @@ func (k msgServer) ToggleSwapIn(goCtx context.Context, msg *types.MsgToggleSwapI
 	if err := vault.ValidateAdmin(msg.Admin); err != nil {
 		return nil, err
 	}
-	if vault.Paused {
-		return nil, fmt.Errorf("vault %s is paused", msg.VaultAddress)
-	}
 
 	k.SetSwapInEnable(ctx, vault, msg.Enabled)
 
@@ -225,9 +222,6 @@ func (k msgServer) ToggleSwapOut(goCtx context.Context, msg *types.MsgToggleSwap
 	}
 	if err := vault.ValidateAdmin(msg.Admin); err != nil {
 		return nil, err
-	}
-	if vault.Paused {
-		return nil, fmt.Errorf("vault %s is paused", msg.VaultAddress)
 	}
 
 	k.SetSwapOutEnable(ctx, vault, msg.Enabled)

@@ -90,6 +90,18 @@ func CreateVault(ctx sdk.Context, app *simapp.SimApp, underlying, share string, 
 	return err
 }
 
+// SwapIn performs a swap in for a user.
+func SwapIn(ctx sdk.Context, app *simapp.SimApp, user simtypes.Account, shareDenom string, amount sdk.Coin) (*types.MsgSwapInResponse, error) {
+	vaultAddress := types.GetVaultAddress(shareDenom)
+	swapIn := &types.MsgSwapInRequest{
+		Owner:        user.Address.String(),
+		VaultAddress: vaultAddress.String(),
+		Assets:       amount,
+	}
+	msgServer := keeper.NewMsgServer(app.VaultKeeper)
+	return msgServer.SwapIn(ctx, swapIn)
+}
+
 func MarkerExists(ctx sdk.Context, app *simapp.SimApp, denom string) bool {
 	marker, err := app.MarkerKeeper.GetMarker(ctx, markertypes.MustGetMarkerAddress(denom))
 	return marker != nil && err == nil
@@ -118,4 +130,16 @@ func FundAccount(ctx context.Context, app *simapp.SimApp, addr sdk.AccAddress, a
 	}
 	ctx = markertypes.WithBypass(ctx) // Bypass marker checks for this operation.
 	return app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, amounts)
+}
+
+// PauseVault pauses a vault.
+func PauseVault(ctx sdk.Context, app *simapp.SimApp, shareDenom string) error {
+	vaultAddress := types.GetVaultAddress(shareDenom)
+	vault, err := app.VaultKeeper.GetVault(ctx, vaultAddress)
+	if err != nil {
+		return err
+	}
+	msgServer := keeper.NewMsgServer(app.VaultKeeper)
+	_, err = msgServer.PauseVault(ctx, &types.MsgPauseVaultRequest{Admin: vault.Admin, VaultAddress: vault.Address, Reason: "test"})
+	return err
 }

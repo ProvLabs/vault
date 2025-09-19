@@ -117,21 +117,10 @@ func (s *VaultSimTestSuite) TestSimulateMsgSwapOut() {
 	s.Require().NoError(err, "CreateGlobalMarker")
 	err = simulation.CreateVault(s.ctx, s.app, "underlying", "underlyingshare", selected, s.accs)
 	s.Require().NoError(err, "CreateVault")
-
 	err = simulation.AddAttribute(s.ctx, selected.Address, simulation.RequiredMarkerAttribute, s.app.NameKeeper, s.app.AttributeKeeper)
 	s.Require().NoError(err, "AddAttribute")
-
-	// Swap in for shares
-	swapIn := &types.MsgSwapInRequest{
-		Owner:        selected.Address.String(),
-		VaultAddress: types.GetVaultAddress("underlyingshare").String(),
-		Assets:       sdk.NewInt64Coin("underlying", 100),
-	}
-
-	msgServer := keeper.NewMsgServer(s.app.VaultKeeper)
-	resp, err := msgServer.SwapIn(s.ctx, swapIn)
-	s.Require().NoError(err, "SwapOut")
-	s.Require().NotNil(resp, "SwapOut Response not nil")
+	_, err = simulation.SwapIn(s.ctx, s.app, selected, "underlyingshare", sdk.NewInt64Coin("underlying", 100))
+	s.Require().NoError(err, "SwapIn")
 
 	op := simulation.SimulateMsgSwapOut(*s.app.VaultKeeper)
 	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
@@ -200,13 +189,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgUnpauseVault() {
 	s.Require().NoError(err, "CreateGlobalMarker")
 	err = simulation.CreateVault(s.ctx, s.app, "underlying", "underlyingshare", selected, s.accs)
 	s.Require().NoError(err, "CreateVault")
-
-	// must be paused to unpause
-	vaultAddress := types.GetVaultAddress("underlyingshare")
-	vault, err := s.app.VaultKeeper.GetVault(s.ctx, vaultAddress)
-	s.Require().NoError(err, "GetVault")
-	msgServer := keeper.NewMsgServer(s.app.VaultKeeper)
-	_, err = msgServer.PauseVault(s.ctx, &types.MsgPauseVaultRequest{Admin: vault.Admin, VaultAddress: vault.Address, Reason: "test"})
+	err = simulation.PauseVault(s.ctx, s.app, "underlyingshare")
 	s.Require().NoError(err, "PauseVault")
 
 	op := simulation.SimulateMsgUnpauseVault(*s.app.VaultKeeper)
@@ -223,40 +206,25 @@ func (s *VaultSimTestSuite) TestSimulateMsgExpeditePendingSwapOut() {
 	user := s.accs[0]
 	admin := s.accs[1]
 
-	// Create marker
 	err := simulation.CreateGlobalMarker(s.ctx, s.app, sdk.NewInt64Coin("underlying", 1000), s.accs)
 	s.Require().NoError(err, "CreateGlobalMarker")
-
-	// Create vault with admin
 	err = simulation.CreateVault(s.ctx, s.app, "underlying", "underlyingshare", admin, s.accs)
 	s.Require().NoError(err, "CreateVault")
-
-	vaultAddress := types.GetVaultAddress("underlyingshare")
-
-	// Add attribute to user
 	err = simulation.AddAttribute(s.ctx, user.Address, simulation.RequiredMarkerAttribute, s.app.NameKeeper, s.app.AttributeKeeper)
 	s.Require().NoError(err, "AddAttribute")
-
-	// User swaps in to get shares
-	swapIn := &types.MsgSwapInRequest{
-		Owner:        user.Address.String(),
-		VaultAddress: vaultAddress.String(),
-		Assets:       sdk.NewInt64Coin("underlying", 100),
-	}
-	msgServer := keeper.NewMsgServer(s.app.VaultKeeper)
-	swapInResp, err := msgServer.SwapIn(s.ctx, swapIn)
+	_, err = simulation.SwapIn(s.ctx, s.app, user, "underlyingshare", sdk.NewInt64Coin("underlying", 100))
 	s.Require().NoError(err, "SwapIn")
-	s.Require().NotNil(swapInResp, "SwapIn Response not nil")
 
 	shares := s.app.BankKeeper.GetBalance(s.ctx, user.Address, "underlyingshare")
 
 	// User swaps out to create a pending request
 	swapOut := &types.MsgSwapOutRequest{
 		Owner:        user.Address.String(),
-		VaultAddress: vaultAddress.String(),
+		VaultAddress: types.GetVaultAddress("underlyingshare").String(),
 		Assets:       shares,
 		RedeemDenom:  "underlying",
 	}
+	msgServer := keeper.NewMsgServer(s.app.VaultKeeper)
 	_, err = msgServer.SwapOut(s.ctx, swapOut)
 	s.Require().NoError(err, "SwapOut")
 
@@ -264,6 +232,42 @@ func (s *VaultSimTestSuite) TestSimulateMsgExpeditePendingSwapOut() {
 	op := simulation.SimulateMsgExpeditePendingSwapOut(*s.app.VaultKeeper)
 	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
 	s.Require().NoError(err, "SimulateMsgExpediteSwapOut")
+	s.Require().True(opMsg.OK, "operationMsg.OK")
+	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
+	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
+	s.Require().Len(futureOps, 0, "futureOperations")
+}
+
+func (s *VaultSimTestSuite) TestSimulateMsgDepositInterestFunds() {
+	admin := s.accs[0]
+
+	err := simulation.CreateGlobalMarker(s.ctx, s.app, sdk.NewInt64Coin("underlying", 1000), s.accs)
+	s.Require().NoError(err, "CreateGlobalMarker")
+	err = simulation.CreateVault(s.ctx, s.app, "underlying", "underlyingshare", admin, s.accs)
+	s.Require().NoError(err, "CreateVault")
+
+	op := simulation.SimulateMsgDepositInterestFunds(*s.app.VaultKeeper)
+	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
+	s.Require().NoError(err, "SimulateMsgDepositInterest")
+	s.Require().True(opMsg.OK, "operationMsg.OK")
+	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
+	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
+	s.Require().Len(futureOps, 0, "futureOperations")
+}
+
+func (s *VaultSimTestSuite) TestSimulateMsgDepositPrincipalFunds() {
+	admin := s.accs[0]
+
+	err := simulation.CreateGlobalMarker(s.ctx, s.app, sdk.NewInt64Coin("underlying", 1000), s.accs)
+	s.Require().NoError(err, "CreateGlobalMarker")
+	err = simulation.CreateVault(s.ctx, s.app, "underlying", "underlyingshare", admin, s.accs)
+	s.Require().NoError(err, "CreateVault")
+	err = simulation.PauseVault(s.ctx, s.app, "underlyingshare")
+	s.Require().NoError(err, "PauseVault")
+
+	op := simulation.SimulateMsgDepositPrincipalFunds(*s.app.VaultKeeper)
+	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
+	s.Require().NoError(err, "SimulateMsgDepositPrincipal")
 	s.Require().True(opMsg.OK, "operationMsg.OK")
 	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
 	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")

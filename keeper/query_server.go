@@ -112,7 +112,7 @@ func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstim
 		return nil, status.Errorf(codes.NotFound, "vault with address %q not found", req.VaultAddress)
 	}
 
-	if req.Assets.Denom != vault.UnderlyingAsset && (vault.PaymentDenom == "" || req.Assets.Denom != vault.PaymentDenom) {
+	if !vault.IsAcceptedDenom(req.Assets.Denom) {
 		return nil, status.Errorf(codes.InvalidArgument, "unsupported deposit denom: %q", req.Assets.Denom)
 	}
 
@@ -176,7 +176,7 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 	if redeemDenom == "" {
 		redeemDenom = vault.UnderlyingAsset
 	}
-	if redeemDenom != vault.UnderlyingAsset && (vault.PaymentDenom == "" || redeemDenom != vault.PaymentDenom) {
+	if !vault.IsAcceptedDenom(redeemDenom) {
 		return nil, status.Errorf(codes.InvalidArgument, "unsupported redeem denom: %q", redeemDenom)
 	}
 

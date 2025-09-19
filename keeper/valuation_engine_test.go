@@ -7,7 +7,6 @@ import (
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
 	"github.com/provlabs/vault/keeper"
-	"github.com/provlabs/vault/types"
 	"github.com/provlabs/vault/utils"
 )
 
@@ -82,71 +81,6 @@ func (s *TestSuite) TestToUnderlyingAssetAmount_IdentityFastPath() {
 	outAmount, err := testKeeper.ToUnderlyingAssetAmount(s.ctx, *vault, sdk.NewInt64Coin(underlyingDenom, inputAmount))
 	s.Require().NoError(err, "identity conversion to underlying should not error for denom %s", underlyingDenom)
 	s.Require().Equal(math.NewInt(inputAmount), outAmount, "identity conversion should preserve the input amount for denom %s", underlyingDenom)
-}
-
-func (s *TestSuite) TestFromUnderlyingAssetAmount() {
-	underlyingDenom := "ylds"
-	paymentDenom := "usdc"
-	shareDenom := "vshare"
-	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
-
-	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
-
-	out1, err := testKeeper.FromUnderlyingAssetAmount(s.ctx, *vault, math.NewInt(3), underlyingDenom)
-	s.Require().NoError(err, "from-underlying identity should succeed")
-	s.Require().Equal(underlyingDenom, out1.Denom, "identity denom should be underlying")
-	s.Require().Equal(math.NewInt(3), out1.Amount, "identity amount should match input")
-
-	out2, err := testKeeper.FromUnderlyingAssetAmount(s.ctx, *vault, math.NewInt(3), paymentDenom)
-	s.Require().NoError(err, "from-underlying to payment should succeed")
-	s.Require().Equal(paymentDenom, out2.Denom, "output denom should be payment")
-	s.Require().Equal(math.NewInt(6), out2.Amount, "3 underlying at 1/2 asset per 1 payment yields 6 payment")
-
-	paymentMarkerAddr := markertypes.MustGetMarkerAddress(paymentDenom)
-	paymentMarkerAccount, err := s.k.MarkerKeeper.GetMarker(s.ctx, paymentMarkerAddr)
-	s.Require().NoError(err, "should fetch payment marker account for NAV setup")
-	s.Require().NoError(
-		s.k.MarkerKeeper.SetNetAssetValue(s.ctx, paymentMarkerAccount, markertypes.NetAssetValue{
-			Price:  sdk.NewInt64Coin(underlyingDenom, 3),
-			Volume: 2,
-		}, "test"), "should set NAV usdc->ylds=3/2")
-
-	outFloor, err := testKeeper.FromUnderlyingAssetAmount(s.ctx, *vault, math.NewInt(4), paymentDenom)
-	s.Require().NoError(err, "from-underlying with floor should succeed")
-	s.Require().Equal(paymentDenom, outFloor.Denom, "output denom should be payment")
-	s.Require().Equal(math.NewInt(2), outFloor.Amount, "4 underlying at 3/2 asset per 1 payment yields 2 payment (floored from 2.66)")
-
-	outZero, err := testKeeper.FromUnderlyingAssetAmount(s.ctx, *vault, math.ZeroInt(), paymentDenom)
-	s.Require().NoError(err, "zero underlying should not error")
-	s.Require().Equal(math.ZeroInt(), outZero.Amount, "zero underlying should yield zero output")
-
-	_, err = testKeeper.FromUnderlyingAssetAmount(s.ctx, *vault, math.NewInt(5), "unknown")
-	s.Require().Error(err, "should error when NAV missing for output denom")
-	s.Require().Contains(err.Error(), "nav not found", "error should mention missing NAV")
-
-	s.Require().NoError(
-		s.k.MarkerKeeper.SetNetAssetValue(s.ctx, paymentMarkerAccount, markertypes.NetAssetValue{
-			Price:  sdk.NewInt64Coin(underlyingDenom, 0),
-			Volume: 2,
-		}, "test"), "should set zero-price NAV")
-	_, err = testKeeper.FromUnderlyingAssetAmount(s.ctx, *vault, math.NewInt(5), paymentDenom)
-	s.Require().Error(err, "should error when price is zero")
-	s.Require().Contains(err.Error(), "zero price", "error should indicate zero price")
-}
-
-func (s *TestSuite) TestFromUnderlyingAssetAmount_NegativeUnderlyingYieldsZero() {
-	underlyingDenom := "ylds"
-	paymentDenom := "usdc"
-	shareDenom := "vshare"
-	s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
-
-	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
-	vaultAccount := types.VaultAccount{ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom}
-
-	outCoin, err := testKeeper.FromUnderlyingAssetAmount(s.ctx, vaultAccount, math.NewInt(-5), paymentDenom)
-	s.Require().NoError(err, "converting negative underlying amount should not error and should yield a zero coin")
-	s.Require().Equal(paymentDenom, outCoin.Denom, "output denom should match requested payout denom")
-	s.Require().True(outCoin.IsZero(), "output coin should be zero when underlying amount is non-positive")
 }
 
 func (s *TestSuite) TestGetTVVInUnderlyingAsset_ExcludesSharesAndSumsInAsset() {

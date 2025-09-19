@@ -24,86 +24,84 @@ var (
 	VirtualShares = ShareScalar
 )
 
-// CalculateSharesFromAssets returns the number of shares that correspond
-// to a given amount of deposited assets, using fixed virtual offsets.
+// CalculateSharesProRataFraction computes minted shares for a deposit using a
+// single-floor, pro-rata formula with virtual offsets and an explicit price fraction.
 //
-// Formula (integer, floor):
+// Arguments:
+//   - amountNumerator / amountDenominator represent the deposit value expressed
+//     in underlying units as a rational (e.g., amount * priceNum / priceDen).
+//     For underlying deposits, pass (amount, 1).
+//   - totalAssets / totalShares are the vault-wide totals prior to the deposit.
+//   - shareDenom is the vault share denom for the resulting coin.
 //
-//	let ta' = totalAssets + VirtualAssets
-//	let ts' = totalShares + VirtualShares
-//	if totalAssets == 0:
-//	    shares = assets * ShareScalar
-//	else:
-//	    shares = floor( assets * ts' / ta' )
+// Behavior:
+//   - Applies virtual offsets: ta' = totalAssets + VirtualAssets, ts' = totalShares + VirtualShares.
+//   - First deposit mints amount * ShareScalar / amountDenominator.
+//   - Otherwise: shares = floor( amountNumerator * ts' / (amountDenominator * ta') ).
 //
-// Rationale:
-//   - First deposit mints assets * ShareScalar (neutral start).
-//   - For subsequent deposits, using ts'/ta' embeds the virtual offsets
-//     (security) and preserves precision without double-scaling.
-//
-// Returns sdk.Coin(shareDenom, shares). Error if any input is negative.
-func CalculateSharesFromAssets(
-	assets math.Int,
+// Errors if any input is negative or if amountDenominator == 0.
+func CalculateSharesProRataFraction(
+	amountNumerator math.Int,
+	amountDenominator math.Int,
 	totalAssets math.Int,
 	totalShares math.Int,
 	shareDenom string,
 ) (sdk.Coin, error) {
-	if assets.IsNegative() || totalAssets.IsNegative() || totalShares.IsNegative() {
+	if amountNumerator.IsNegative() || amountDenominator.IsNegative() || totalAssets.IsNegative() || totalShares.IsNegative() {
 		return sdk.Coin{}, fmt.Errorf("invalid input: negative values not allowed")
 	}
-	if assets.IsZero() {
+	if amountNumerator.IsZero() {
 		return sdk.NewCoin(shareDenom, math.ZeroInt()), nil
 	}
-
+	if amountDenominator.IsZero() {
+		return sdk.Coin{}, fmt.Errorf("invalid input: zero denominator")
+	}
+	if totalAssets.IsZero() {
+		shares := amountNumerator.Mul(ShareScalar).Quo(amountDenominator)
+		return sdk.NewCoin(shareDenom, shares), nil
+	}
 	ta := totalAssets.Add(VirtualAssets)
 	ts := totalShares.Add(VirtualShares)
-
-	// Neutral first deposit: mint assets * ShareScalar
-	if totalAssets.IsZero() {
-		return sdk.NewCoin(shareDenom, assets.Mul(ShareScalar)), nil
-	}
-
-	sharesOut := assets.Mul(ts).Quo(ta)
-	return sdk.NewCoin(shareDenom, sharesOut), nil
+	den := amountDenominator.Mul(ta)
+	shares := amountNumerator.Mul(ts).Quo(den)
+	return sdk.NewCoin(shareDenom, shares), nil
 }
 
-// CalculateAssetsFromShares returns the amount of assets that correspond
-// to a given number of shares being redeemed, using fixed virtual offsets.
+// CalculateRedeemProRataFraction computes the payout amount for redeeming shares
+// into an arbitrary payout denom using a single-floor, pro-rata formula with
+// virtual offsets and an explicit price fraction.
 //
-// Formula (integer, floor):
+// Arguments:
+//   - shares is the number of vault shares being redeemed.
+//   - totalShares / totalAssets are the vault-wide totals prior to redemption.
+//   - priceNumerator / priceDenominator encode the payout denom’s price in
+//     underlying units (1 payout = priceNum / priceDen underlying). For
+//     underlying payouts, pass (1, 1).
+//   - payoutDenom is the target payout denom for the resulting coin.
 //
-//	let ta' = totalAssets + VirtualAssets
-//	let ts' = totalShares + VirtualShares
-//	if totalShares == 0:
-//	    assets = 0
-//	else:
-//	    assets = floor( shares * ta' / ts' )
+// Behavior:
+//   - Applies virtual offsets: ta' = totalAssets + VirtualAssets, ts' = totalShares + VirtualShares.
+//   - Computes: payout = floor( shares * ta' * priceDen / (ts' * priceNum) ).
+//   - Returns sdk.Coin(payoutDenom, payout).
 //
-// Rationale:
-//   - Do NOT divide by ShareScalar here. The share supply (ts') is already in
-//     ShareScalar units, so the ratio ta'/ts' converts shares directly to assets.
-//   - This keeps an immediate deposit->redeem round-trip ~neutral (minus floor).
-//
-// Returns sdk.Coin(assetDenom, assets). Error if any input is negative.
-func CalculateAssetsFromShares(
-	shares math.Int,
-	totalShares math.Int,
-	totalAssets math.Int,
-	assetDenom string,
-) (sdk.Coin, error) {
-	if shares.IsNegative() || totalShares.IsNegative() || totalAssets.IsNegative() {
+// Errors if any input is negative or if priceNumerator == 0.
+func CalculateRedeemProRataFraction(shares math.Int, totalShares math.Int, totalAssets math.Int, priceNumerator math.Int, priceDenominator math.Int, payoutDenom string) (sdk.Coin, error) {
+	if shares.IsNegative() || totalShares.IsNegative() || totalAssets.IsNegative() || priceNumerator.IsNegative() || priceDenominator.IsNegative() {
 		return sdk.Coin{}, fmt.Errorf("invalid input: negative values not allowed")
 	}
 	if shares.IsZero() {
-		return sdk.NewCoin(assetDenom, math.ZeroInt()), nil
+		return sdk.NewCoin(payoutDenom, math.ZeroInt()), nil
 	}
-
 	ts := totalShares.Add(VirtualShares)
 	if ts.IsZero() {
-		return sdk.NewCoin(assetDenom, math.ZeroInt()), nil
+		return sdk.NewCoin(payoutDenom, math.ZeroInt()), nil
 	}
-
+	if priceNumerator.IsZero() {
+		return sdk.Coin{}, fmt.Errorf("invalid input: zero price numerator")
+	}
 	ta := totalAssets.Add(VirtualAssets)
-	assetsOut := shares.Mul(ta).Quo(ts)
-	return sdk.NewCoin(assetDenom, assetsOut), nil
+	num := shares.Mul(ta).Mul(priceDenominator)
+	den := ts.Mul(priceNumerator)
+	out := num.Quo(den)
+	return sdk.NewCoin(payoutDenom, out), nil
 }

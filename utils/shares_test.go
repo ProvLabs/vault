@@ -10,82 +10,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCalculateSharesFromAssets(t *testing.T) {
-	shareDenom := "vaultshare"
-
-	tests := []struct {
-		name        string
-		assets      sdkmath.Int
-		totalAssets sdkmath.Int
-		totalShares sdkmath.Int
-		expected    sdk.Coin
-		expectErr   bool
-		errMsg      string
-	}{
-		{
-			name:        "first deposit mints assets times ShareScalar",
-			assets:      sdkmath.NewInt(100),
-			totalAssets: sdkmath.NewInt(0),
-			totalShares: sdkmath.NewInt(0),
-			expected:    sdk.NewCoin(shareDenom, sdkmath.NewInt(100_000_000)),
-		},
-		{
-			name:        "proportional mint with virtual offsets",
-			assets:      sdkmath.NewInt(50),
-			totalAssets: sdkmath.NewInt(100),
-			totalShares: sdkmath.NewInt(200),
-			expected:    sdk.NewCoin(shareDenom, sdkmath.NewInt(495_148)),
-		},
-		{
-			name:        "small deposit precision and offsets",
-			assets:      sdkmath.NewInt(1),
-			totalAssets: sdkmath.NewInt(3),
-			totalShares: sdkmath.NewInt(10),
-			expected:    sdk.NewCoin(shareDenom, sdkmath.NewInt(250_002)),
-		},
-		{
-			name:        "reject negative assets",
-			assets:      sdkmath.NewInt(-100),
-			totalAssets: sdkmath.NewInt(1000),
-			totalShares: sdkmath.NewInt(1000),
-			expectErr:   true,
-			errMsg:      "invalid input: negative values not allowed",
-		},
-		{
-			name:        "reject negative total assets",
-			assets:      sdkmath.NewInt(100),
-			totalAssets: sdkmath.NewInt(-1000),
-			totalShares: sdkmath.NewInt(1000),
-			expectErr:   true,
-			errMsg:      "invalid input: negative values not allowed",
-		},
-		{
-			name:        "reject negative total shares",
-			assets:      sdkmath.NewInt(100),
-			totalAssets: sdkmath.NewInt(1000),
-			totalShares: sdkmath.NewInt(-1000),
-			expectErr:   true,
-			errMsg:      "invalid input: negative values not allowed",
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			coin, err := utils.CalculateSharesFromAssets(tc.assets, tc.totalAssets, tc.totalShares, shareDenom)
-			if tc.expectErr {
-				require.Error(t, err, "expected error for case: %s", tc.name)
-				require.EqualError(t, err, tc.errMsg)
-			} else {
-				require.NoError(t, err, "unexpected error for case: %s", tc.name)
-				require.Equal(t, tc.expected, coin, "unexpected shares for assets=%s totalAssets=%s totalShares=%s", tc.assets, tc.totalAssets, tc.totalShares)
-			}
-		})
-	}
-}
-
 func TestCalculateAssetsFromShares(t *testing.T) {
 	assetDenom := "asset"
 
+	// This test name is retained for continuity. Internally it now routes to the
+	// single-floor redeem path (CalculateRedeemProRataFraction) with price 1:1. The intent
+	// remains identical: “given shares and totals, how many assets do I get back?”
 	tests := []struct {
 		name        string
 		shares      sdkmath.Int
@@ -144,7 +74,14 @@ func TestCalculateAssetsFromShares(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			result, err := utils.CalculateAssetsFromShares(tc.shares, tc.totalShares, tc.totalAssets, assetDenom)
+			result, err := utils.CalculateRedeemProRataFraction(
+				tc.shares,
+				tc.totalShares,
+				tc.totalAssets,
+				sdkmath.NewInt(1), // price numerator (underlying->underlying)
+				sdkmath.NewInt(1), // price denominator
+				assetDenom,
+			)
 			if tc.expectErr {
 				require.Error(t, err, "expected error for case: %s", tc.name)
 				require.EqualError(t, err, tc.errMsg)
@@ -152,6 +89,106 @@ func TestCalculateAssetsFromShares(t *testing.T) {
 				require.NoError(t, err, "unexpected error for case: %s", tc.name)
 				require.Equal(t, tc.expected, result, fmt.Sprintf("unexpected assets for shares=%s totalShares=%s totalAssets=%s", tc.shares, tc.totalShares, tc.totalAssets))
 			}
+		})
+	}
+}
+
+func TestCalculateSharesProRataFraction(t *testing.T) {
+	shareDenom := "vaultshare"
+
+	// These cover the single-floor path directly with price fractions folded
+	// into (amountNumerator / amountDenominator). Keeping explicit priced cases
+	// ensures the new API is exercised beyond 1:1 underlying deposits.
+	tests := []struct {
+		name            string
+		amountNum       sdkmath.Int
+		amountDen       sdkmath.Int
+		totalAssets     sdkmath.Int
+		totalShares     sdkmath.Int
+		expected        sdk.Coin
+		expectErr       bool
+		expectedErrText string
+	}{
+		{
+			name:        "first deposit mints amount * ShareScalar (price 1:1)",
+			amountNum:   sdkmath.NewInt(100),
+			amountDen:   sdkmath.NewInt(1),
+			totalAssets: sdkmath.NewInt(0),
+			totalShares: sdkmath.NewInt(0),
+			expected:    sdk.NewCoin(shareDenom, sdkmath.NewInt(100_000_000)),
+		},
+		{
+			name:        "proportional mint with virtual offsets (price 1:1)",
+			amountNum:   sdkmath.NewInt(50),
+			amountDen:   sdkmath.NewInt(1),
+			totalAssets: sdkmath.NewInt(100),
+			totalShares: sdkmath.NewInt(200),
+			expected:    sdk.NewCoin(shareDenom, sdkmath.NewInt(495_148)),
+		},
+		{
+			name:        "small deposit precision and offsets (price 1:1)",
+			amountNum:   sdkmath.NewInt(1),
+			amountDen:   sdkmath.NewInt(1),
+			totalAssets: sdkmath.NewInt(3),
+			totalShares: sdkmath.NewInt(10),
+			expected:    sdk.NewCoin(shareDenom, sdkmath.NewInt(250_002)),
+		},
+		{
+			name:        "priced deposit 3/2 into non-empty vault",
+			amountNum:   sdkmath.NewInt(6), // 2 * 3 (amount * priceNum)
+			amountDen:   sdkmath.NewInt(2), // priceDen
+			totalAssets: sdkmath.NewInt(100),
+			totalShares: sdkmath.NewInt(200),
+			expected:    sdk.NewCoin(shareDenom, sdkmath.NewInt(29_708)),
+		},
+		{
+			name:            "reject negative amount numerator",
+			amountNum:       sdkmath.NewInt(-1),
+			amountDen:       sdkmath.NewInt(1),
+			totalAssets:     sdkmath.NewInt(0),
+			totalShares:     sdkmath.NewInt(0),
+			expectErr:       true,
+			expectedErrText: "invalid input: negative values not allowed",
+		},
+		{
+			name:            "reject negative denominator",
+			amountNum:       sdkmath.NewInt(1),
+			amountDen:       sdkmath.NewInt(-1),
+			totalAssets:     sdkmath.NewInt(0),
+			totalShares:     sdkmath.NewInt(0),
+			expectErr:       true,
+			expectedErrText: "invalid input: negative values not allowed",
+		},
+		{
+			name:            "reject zero denominator",
+			amountNum:       sdkmath.NewInt(1),
+			amountDen:       sdkmath.NewInt(0),
+			totalAssets:     sdkmath.NewInt(0),
+			totalShares:     sdkmath.NewInt(0),
+			expectErr:       true,
+			expectedErrText: "invalid input: zero denominator",
+		},
+		{
+			name:            "reject negative totals",
+			amountNum:       sdkmath.NewInt(1),
+			amountDen:       sdkmath.NewInt(1),
+			totalAssets:     sdkmath.NewInt(-1),
+			totalShares:     sdkmath.NewInt(0),
+			expectErr:       true,
+			expectedErrText: "invalid input: negative values not allowed",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got, err := utils.CalculateSharesProRataFraction(tc.amountNum, tc.amountDen, tc.totalAssets, tc.totalShares, shareDenom)
+			if tc.expectErr {
+				require.Error(t, err)
+				require.EqualError(t, err, tc.expectedErrText)
+				return
+			}
+			require.NoError(t, err)
+			require.Equal(t, tc.expected, got, fmt.Sprintf("unexpected shares for amount=%s/%s totalAssets=%s totalShares=%s", tc.amountNum, tc.amountDen, tc.totalAssets, tc.totalShares))
 		})
 	}
 }
@@ -172,7 +209,7 @@ func TestSmallFirstSwapInThenHugeSwapInThenSwapOut(t *testing.T) {
 	totalShares := sdkmath.ZeroInt()
 
 	shareDenom := "shares"
-	firstShares, err := utils.CalculateSharesFromAssets(firstIn, totalAssets, totalShares, shareDenom)
+	firstShares, err := utils.CalculateSharesProRataFraction(firstIn, sdkmath.NewInt(1), totalAssets, totalShares, shareDenom)
 	require.NoError(t, err, "first swap-in conversion should not error")
 	require.Equal(t, firstIn.Mul(utils.ShareScalar), firstShares.Amount, "first swap-in should mint amount * ShareScalar")
 
@@ -180,10 +217,11 @@ func TestSmallFirstSwapInThenHugeSwapInThenSwapOut(t *testing.T) {
 	totalShares = totalShares.Add(firstShares.Amount)
 
 	hugeIn := sdkmath.NewInt(1_000_000_000)
+	// Simulate a second participant swapping in a massive amount of underlying.
 	totalAssets = totalAssets.Add(hugeIn)
 
 	assetDenom := "underlying"
-	outAll, err := utils.CalculateAssetsFromShares(firstShares.Amount, totalShares, totalAssets, assetDenom)
+	outAll, err := utils.CalculateRedeemProRataFraction(firstShares.Amount, totalShares, totalAssets, sdkmath.NewInt(1), sdkmath.NewInt(1), assetDenom)
 	require.NoError(t, err, "swap-out conversion should not error")
 
 	require.Truef(t,
@@ -214,7 +252,7 @@ func TestVeryLargeInitialSwapInRoundTrip(t *testing.T) {
 	totalShares := sdkmath.ZeroInt()
 
 	shareDenom := "shares"
-	minted, err := utils.CalculateSharesFromAssets(largeIn, totalAssets, totalShares, shareDenom)
+	minted, err := utils.CalculateSharesProRataFraction(largeIn, sdkmath.NewInt(1), totalAssets, totalShares, shareDenom)
 	require.NoError(t, err, "large swap-in conversion should not error")
 	require.Equal(t, largeIn.Mul(utils.ShareScalar), minted.Amount, "minted shares should equal swap-in * ShareScalar")
 
@@ -222,7 +260,7 @@ func TestVeryLargeInitialSwapInRoundTrip(t *testing.T) {
 	totalShares = totalShares.Add(minted.Amount)
 
 	assetDenom := "underlying"
-	out, err := utils.CalculateAssetsFromShares(minted.Amount, totalShares, totalAssets, assetDenom)
+	out, err := utils.CalculateRedeemProRataFraction(minted.Amount, totalShares, totalAssets, sdkmath.NewInt(1), sdkmath.NewInt(1), assetDenom)
 	require.NoError(t, err, "swap-out conversion should not error")
 
 	price := totalAssets.Mul(utils.ShareScalar).Quo(totalShares)

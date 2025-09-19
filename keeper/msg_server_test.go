@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
 	"github.com/provlabs/vault/keeper"
@@ -1616,13 +1617,33 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds() {
 
 	setup := func() {
 		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin)
-		FundAccount(s.ctx, s.simApp.BankKeeper, admin, sdk.NewCoins(amount))
+		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, admin, sdk.NewCoins(amount)), "failed to fund account")
 		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 			Admin:           admin.String(),
 			ShareDenom:      shares,
 			UnderlyingAsset: underlying,
 		})
 		s.Require().NoError(err)
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+		s.ctx = s.ctx.WithBlockTime(blockTime)
+	}
+
+	setupRestricted := func() {
+		requiredAttribute := "thisisrequired"
+		s.simApp.AccountKeeper.SetAccount(s.ctx, s.simApp.AccountKeeper.NewAccountWithAddress(s.ctx, admin))
+		s.Require().NoError(s.simApp.NameKeeper.SetNameRecord(s.ctx, requiredAttribute, s.adminAddr, false), "should successfully bind the name to the redeemer's address")
+		expireTime := time.Now().Add(24 * time.Hour)
+		attribute := attrtypes.NewAttribute(requiredAttribute, admin.String(), attrtypes.AttributeType_String, []byte("true"), &expireTime)
+		s.Require().NoError(s.simApp.AttributeKeeper.SetAttribute(s.ctx, attribute, s.adminAddr), "should successfully set the required attribute on the redeemer")
+
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin, requiredAttribute)
+		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, admin, sdk.NewCoins(amount)), "failed to fund account")
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      shares,
+			UnderlyingAsset: underlying,
+		})
+		s.Require().NoError(err, "should successfully create restricted vault")
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 		s.ctx = s.ctx.WithBlockTime(blockTime)
 	}
@@ -1639,6 +1660,36 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds() {
 		tc := msgServerTestCase[types.MsgDepositInterestFundsRequest, postCheckArgs]{
 			name:  "happy path",
 			setup: setup,
+			msg: types.MsgDepositInterestFundsRequest{
+				Admin:        admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Amount:       amount,
+			},
+			postCheckArgs: postCheckArgs{
+				VaultAddress:          vaultAddr,
+				ExpectedDepositAmount: amount,
+				ExpectedVaultBalance:  amount,
+				InVerificationQueue:   true,
+				ExpectedPeriodStart:   blockTime.Unix(),
+			},
+			expectedEvents: ev,
+		}
+
+		testDef.expectedResponse = &types.MsgDepositInterestFundsResponse{}
+		runMsgServerTestCase(s, testDef, tc)
+	})
+	s.Run("happy path - deposit interest funds - restricted marker with attributes", func() {
+		ev := createSendCoinEvents(admin.String(), vaultAddr.String(), sdk.NewCoins(amount).String())
+		ev = append(ev, sdk.NewEvent(
+			"vault.v1.EventInterestDeposit",
+			sdk.NewAttribute("admin", admin.String()),
+			sdk.NewAttribute("amount", CoinToJSON(amount)),
+			sdk.NewAttribute("vault_address", vaultAddr.String()),
+		))
+
+		tc := msgServerTestCase[types.MsgDepositInterestFundsRequest, postCheckArgs]{
+			name:  "happy path restricted",
+			setup: setupRestricted,
 			msg: types.MsgDepositInterestFundsRequest{
 				Admin:        admin.String(),
 				VaultAddress: vaultAddr.String(),

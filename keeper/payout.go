@@ -16,9 +16,9 @@ import (
 
 // ProcessPendingSwapOuts processes the queue of pending swap-out requests. Called from the EndBlocker,
 // it iterates through requests due for payout at the current block time. It uses a safe "collect-then-mutate"
-// pattern to comply with the SDK iterator contract. It first collects all due requests, then iterates
-// the collected list, dequeuing each item before attempting the payout. If the payout fails due to a
-// recoverable error (e.g., insufficient liquidity), it refunds the user's escrowed shares.
+// pattern to comply with the SDK iterator contract. It first collects all due requests, then passes them to
+// `processSwapOutJobs` for execution. Critical, unrecoverable errors during job processing will cause the
+// associated vault to be automatically paused.
 func (k *Keeper) ProcessPendingSwapOuts(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	now := sdkCtx.BlockTime().Unix()
@@ -43,7 +43,13 @@ func (k *Keeper) ProcessPendingSwapOuts(ctx context.Context) error {
 	return nil
 }
 
-// processSwapOutJobs iterates a list of jobs, dequeuing and processing each one.
+// processSwapOutJobs iterates a list of jobs and executes them. For each job, it handles various states:
+//   - Non-existent vaults: The corresponding job is dequeued and skipped.
+//   - Paused vaults: The job is skipped but remains in the queue, allowing it to be re-processed in a future
+//     block if the vault is unpaused.
+//   - Active vaults: The job is dequeued and processed. If processing fails with a recoverable error, a refund is issued.
+//     If the refund itself fails, or if a critical unrecoverable error occurs during processing, the vault is
+//     automatically paused to contain the issue.
 func (k *Keeper) processSwapOutJobs(ctx context.Context, jobsToProcess []types.PayoutJob) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
@@ -57,8 +63,7 @@ func (k *Keeper) processSwapOutJobs(ctx context.Context, jobsToProcess []types.P
 			}
 			continue
 		}
-		// TODO: https://github.com/ProvLabs/vault/issues/61 ... this pause was added here for a future fix of when processingSingleWithdrawal fails on critical
-		// step, we pause the vault.
+
 		if vault.Paused {
 			continue
 		}
@@ -89,9 +94,9 @@ func (k *Keeper) processSwapOutJobs(ctx context.Context, jobsToProcess []types.P
 
 // processSingleWithdrawal executes a pending swap-out. It first reconciles vault interest, then converts the user's
 // shares to the redeemable asset amount. It then pays out those assets to the owner and burns their escrowed shares.
-// It returns a non-nil error for recoverable failures (e.g., insufficient liquidity), which signals
-// the caller to issue a refund. It panics for critical, unrecoverable state inconsistencies that occur *after* the
-// user has been paid, such as failing to burn the escrowed shares. An EventSwapOutCompleted is emitted on success.
+// It returns a non-nil error for failures. A second boolean return value, `isCritical`, is true for unrecoverable
+// state inconsistencies that occur *after* the user has been paid (e.g., failure to burn shares). Recoverable errors
+// (e.g., insufficient liquidity) return `isCritical` as false. An EventSwapOutCompleted is emitted on success.
 func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.PendingSwapOut, vault types.VaultAccount) (error, bool) {
 	vaultAddr := sdk.MustAccAddressFromBech32(req.VaultAddress)
 	ownerAddr := sdk.MustAccAddressFromBech32(req.Owner)
@@ -124,8 +129,8 @@ func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.P
 
 // refundWithdrawal handles the failure case for a pending swap out. It returns the user's
 // escrowed shares from the vault's own account back to the owner and emits an EventSwapOutRefunded.
-// This function panics if the refund transfer fails, as this represents a critical state inconsistency
-// where user funds would otherwise be lost.
+// This function returns an error if the refund transfer fails, allowing the caller to handle the
+// critical state inconsistency.
 func (k *Keeper) refundWithdrawal(ctx sdk.Context, id uint64, req types.PendingSwapOut, reason string) error {
 	vaultAddr := sdk.MustAccAddressFromBech32(req.VaultAddress)
 	ownerAddr := sdk.MustAccAddressFromBech32(req.Owner)

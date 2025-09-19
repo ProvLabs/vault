@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/simapp"
 	"github.com/provlabs/vault/simulation"
 	"github.com/provlabs/vault/types"
@@ -17,8 +18,6 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-
-	"github.com/provlabs/vault/keeper"
 
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
@@ -96,22 +95,9 @@ func (s *VaultSimTestSuite) TestSimulateMsgCreateVault() {
 func (s *VaultSimTestSuite) TestSimulateMsgSwapIn() {
 	selected := s.accs[0]
 
-	// Create the marker and add it to every account
-	err := simulation.CreateMarker(s.ctx, sdk.NewInt64Coin("underlying", 1000), s.app.AccountKeeper.GetModuleAddress("mint"), s.app.MarkerKeeper)
-	s.Require().NoError(err, "CreateMarker")
-	for _, acc := range s.accs {
-		err = FundAccount(s.ctx, s.app.BankKeeper, acc.Address, sdk.NewCoins(sdk.NewInt64Coin("underlying", 100)))
-		s.Require().NoError(err, "FundAccount")
-	}
-
-	// Create a vault that uses the marker as an underlying asset
-	newVault := &types.MsgCreateVaultRequest{
-		Admin:           selected.Address.String(),
-		ShareDenom:      "underlyingshare",
-		UnderlyingAsset: "underlying",
-	}
-	msgServer := keeper.NewMsgServer(s.app.VaultKeeper)
-	_, err = msgServer.CreateVault(s.ctx, newVault)
+	err := simulation.CreateGlobalMarker(s.ctx, s.app, sdk.NewInt64Coin("underlying", 1000), s.accs)
+	s.Require().NoError(err, "CreateGlobalMarker")
+	err = simulation.CreateVault(s.ctx, s.app, "underlying", "underlyingshare", selected, s.accs)
 	s.Require().NoError(err, "CreateVault")
 
 	op := simulation.SimulateMsgSwapIn(*s.app.VaultKeeper)
@@ -127,35 +113,25 @@ func (s *VaultSimTestSuite) TestSimulateMsgSwapOut() {
 	s.ctx = s.ctx.WithBlockTime(time.Now())
 	selected := s.accs[0]
 
-	// Create the marker and add it to every account
-	err := simulation.CreateMarker(s.ctx, sdk.NewInt64Coin("underlying", 1000), s.app.AccountKeeper.GetModuleAddress("mint"), s.app.MarkerKeeper)
-	s.Require().NoError(err, "CreateMarker")
-	for _, acc := range s.accs {
-		err = FundAccount(s.ctx, s.app.BankKeeper, acc.Address, sdk.NewCoins(sdk.NewInt64Coin("underlying", 100)))
-		s.Require().NoError(err, "FundAccount")
-	}
+	err := simulation.CreateGlobalMarker(s.ctx, s.app, sdk.NewInt64Coin("underlying", 1000), s.accs)
+	s.Require().NoError(err, "CreateGlobalMarker")
+	err = simulation.CreateVault(s.ctx, s.app, "underlying", "underlyingshare", selected, s.accs)
+	s.Require().NoError(err, "CreateVault")
+
 	err = simulation.AddAttribute(s.ctx, selected.Address, simulation.RequiredMarkerAttribute, s.app.NameKeeper, s.app.AttributeKeeper)
 	s.Require().NoError(err, "AddAttribute")
-
-	// Create a vault that uses the marker as an underlying asset
-	newVault := &types.MsgCreateVaultRequest{
-		Admin:           selected.Address.String(),
-		ShareDenom:      "underlyingshare",
-		UnderlyingAsset: "underlying",
-	}
-	msgServer := keeper.NewMsgServer(s.app.VaultKeeper)
-	_, err = msgServer.CreateVault(s.ctx, newVault)
-	s.Require().NoError(err, "CreateVault")
 
 	// Swap in for shares
 	swapIn := &types.MsgSwapInRequest{
 		Owner:        selected.Address.String(),
-		VaultAddress: types.GetVaultAddress(newVault.ShareDenom).String(),
+		VaultAddress: types.GetVaultAddress("underlyingshare").String(),
 		Assets:       sdk.NewInt64Coin("underlying", 100),
 	}
+
+	msgServer := keeper.NewMsgServer(s.app.VaultKeeper)
 	resp, err := msgServer.SwapIn(s.ctx, swapIn)
-	s.Require().NoError(err, "SwapIn")
-	s.Require().NotNil(resp, "SwapIn Response not nil")
+	s.Require().NoError(err, "SwapOut")
+	s.Require().NotNil(resp, "SwapOut Response not nil")
 
 	op := simulation.SimulateMsgSwapOut(*s.app.VaultKeeper)
 	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")

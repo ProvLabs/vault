@@ -161,7 +161,8 @@ func SimulateMsgCreateVault(k keeper.Keeper) simtypes.Operation {
 		// TODO How do I fund these accounts?
 		// TODO What about NAV setup?
 		// TODO We also need the payment denom
-		underlying := fmt.Sprintf("underlying", r.Intn(100000))
+		// underlying := fmt.Sprintf("underlying%d", r.Intn(100000))
+		underlying := "underlying"
 
 		// Simulate the marker existing
 		grants := []markertypes.AccessGrant{
@@ -325,8 +326,6 @@ func SimulateMsgUpdateInterestRate(k keeper.Keeper) simtypes.Operation {
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateInterestRateRequest{}), "unable to get random vault"), nil, err
 		}
-
-		// TODO Do I need pause check here
 
 		adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
 		if err != nil {

@@ -6,10 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/simapp"
 	"github.com/provlabs/vault/simulation"
-	"github.com/provlabs/vault/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -119,7 +117,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgSwapOut() {
 	s.Require().NoError(err, "CreateVault")
 	err = simulation.AddAttribute(s.ctx, selected.Address, simulation.RequiredMarkerAttribute, s.app.NameKeeper, s.app.AttributeKeeper)
 	s.Require().NoError(err, "AddAttribute")
-	_, err = simulation.SwapIn(s.ctx, s.app, selected, "underlyingshare", sdk.NewInt64Coin("underlying", 100))
+	err = simulation.SwapIn(s.ctx, s.app, selected, "underlyingshare", sdk.NewInt64Coin("underlying", 100))
 	s.Require().NoError(err, "SwapIn")
 
 	op := simulation.SimulateMsgSwapOut(*s.app.VaultKeeper)
@@ -212,20 +210,10 @@ func (s *VaultSimTestSuite) TestSimulateMsgExpeditePendingSwapOut() {
 	s.Require().NoError(err, "CreateVault")
 	err = simulation.AddAttribute(s.ctx, user.Address, simulation.RequiredMarkerAttribute, s.app.NameKeeper, s.app.AttributeKeeper)
 	s.Require().NoError(err, "AddAttribute")
-	_, err = simulation.SwapIn(s.ctx, s.app, user, "underlyingshare", sdk.NewInt64Coin("underlying", 100))
+	err = simulation.SwapIn(s.ctx, s.app, user, "underlyingshare", sdk.NewInt64Coin("underlying", 100))
 	s.Require().NoError(err, "SwapIn")
-
 	shares := s.app.BankKeeper.GetBalance(s.ctx, user.Address, "underlyingshare")
-
-	// User swaps out to create a pending request
-	swapOut := &types.MsgSwapOutRequest{
-		Owner:        user.Address.String(),
-		VaultAddress: types.GetVaultAddress("underlyingshare").String(),
-		Assets:       shares,
-		RedeemDenom:  "underlying",
-	}
-	msgServer := keeper.NewMsgServer(s.app.VaultKeeper)
-	_, err = msgServer.SwapOut(s.ctx, swapOut)
+	err = simulation.SwapOut(s.ctx, s.app, user, shares, "underlying")
 	s.Require().NoError(err, "SwapOut")
 
 	// Now run the simulation for Expedite

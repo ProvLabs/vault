@@ -34,7 +34,7 @@ func CreateVault(ctx sdk.Context, app *simapp.SimApp, underlying, share string, 
 }
 
 // SwapIn performs a swap in for a user.
-func SwapIn(ctx sdk.Context, app *simapp.SimApp, user simtypes.Account, shareDenom string, amount sdk.Coin) (*types.MsgSwapInResponse, error) {
+func SwapIn(ctx sdk.Context, app *simapp.SimApp, user simtypes.Account, shareDenom string, amount sdk.Coin) error {
 	vaultAddress := types.GetVaultAddress(shareDenom)
 	swapIn := &types.MsgSwapInRequest{
 		Owner:        user.Address.String(),
@@ -42,7 +42,22 @@ func SwapIn(ctx sdk.Context, app *simapp.SimApp, user simtypes.Account, shareDen
 		Assets:       amount,
 	}
 	msgServer := keeper.NewMsgServer(app.VaultKeeper)
-	return msgServer.SwapIn(ctx, swapIn)
+	_, err := msgServer.SwapIn(ctx, swapIn)
+	return err
+}
+
+// SwapOut performs a swap out for a user.
+func SwapOut(ctx sdk.Context, app *simapp.SimApp, user simtypes.Account, shares sdk.Coin, redeemDenom string) error {
+	vaultAddress := types.GetVaultAddress(shares.Denom)
+	swapOut := &types.MsgSwapOutRequest{
+		Owner:        user.Address.String(),
+		VaultAddress: vaultAddress.String(),
+		Assets:       shares,
+		RedeemDenom:  redeemDenom,
+	}
+	msgServer := keeper.NewMsgServer(app.VaultKeeper)
+	_, err := msgServer.SwapOut(sdk.WrapSDKContext(ctx), swapOut)
+	return err
 }
 
 // PauseVault pauses a vault.

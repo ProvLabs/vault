@@ -15,8 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 const (
@@ -161,25 +159,7 @@ func SimulateMsgCreateVault(k keeper.Keeper) simtypes.Operation {
 		// TODO How do I fund these accounts?
 		// TODO What about NAV setup?
 		// TODO We also need the payment denom
-		// underlying := fmt.Sprintf("underlying%d", r.Intn(100000))
 		underlying := "underlying"
-
-		// Simulate the marker existing
-		grants := []markertypes.AccessGrant{
-			{
-				Address: admin.Address.String(),
-				Permissions: markertypes.AccessList{
-					markertypes.Access_Mint, markertypes.Access_Burn,
-					markertypes.Access_Deposit, markertypes.Access_Withdraw, markertypes.Access_Delete,
-				},
-			},
-		}
-		underlyingMarker := markertypes.NewEmptyMarkerAccount(underlying, admin.Address.String(), grants)
-		underlyingMarker.MarkerType = markertypes.MarkerType_Coin
-		err := k.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, underlyingMarker)
-		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to create marker for underlying asset"), nil, nil
-		}
 
 		msg := &types.MsgCreateVaultRequest{
 			Admin:                  admin.Address.String(),
@@ -190,7 +170,7 @@ func SimulateMsgCreateVault(k keeper.Keeper) simtypes.Operation {
 		}
 
 		handler := keeper.NewMsgServer(&k)
-		_, err = handler.CreateVault(sdk.WrapSDKContext(ctx), msg)
+		_, err := handler.CreateVault(sdk.WrapSDKContext(ctx), msg)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 		}
@@ -332,6 +312,7 @@ func SimulateMsgUpdateInterestRate(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateInterestRateRequest{}), "invalid admin address for vault"), nil, err
 		}
 
+		// TODO This must be an interest rate between min and max.
 		rate := r.Float64()*3 - 1
 
 		msg := &types.MsgUpdateInterestRateRequest{
@@ -364,6 +345,7 @@ func SimulateMsgUpdateMinInterestRate(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateMinInterestRateRequest{}), "invalid admin address for vault"), nil, err
 		}
 
+		// TODO This must be less than current and desired interest rate
 		rate := r.Float64()*3 - 1
 
 		msg := &types.MsgUpdateMinInterestRateRequest{
@@ -397,6 +379,7 @@ func SimulateMsgUpdateMaxInterestRate(k keeper.Keeper) simtypes.Operation {
 		}
 
 		// Ensure max rate is > min rate if min rate is set
+		// TODO This must be greater than current and desired interest rate
 		rate := r.Float64()*3 - 1
 
 		msg := &types.MsgUpdateMaxInterestRateRequest{

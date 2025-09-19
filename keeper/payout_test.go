@@ -390,7 +390,7 @@ func (s *TestSuite) TestKeeper_ProcessSwapOutJobs() {
 					return false, nil
 				})
 				s.Require().NoError(err, "walking the queue should not error")
-				s.Require().Empty(entries, "queue should be empty because the job was dequeued")
+				s.Require().Len(entries, 1, "queue should not be empty because the vault was paused")
 
 				s.assertBalance(ownerAddr, underlyingDenom, math.ZeroInt())
 				s.assertBalance(vaultAddr, mintedShares.Denom, mintedShares.Amount)

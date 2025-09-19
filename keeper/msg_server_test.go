@@ -593,14 +593,6 @@ func (s *TestSuite) TestMsgServer_ToggleSwapOut() {
 		s.ctx = s.ctx.WithBlockTime(time.Now())
 	}
 
-	setupPaused := func() {
-		setup()
-		vault, err := s.k.GetVault(s.ctx, vaultAddr)
-		s.Require().NoError(err)
-		vault.Paused = true
-		s.k.AuthKeeper.SetAccount(s.ctx, vault)
-	}
-
 	tests := []struct {
 		name               string
 		setup              func()
@@ -656,6 +648,33 @@ func (s *TestSuite) TestMsgServer_ToggleSwapOut() {
 			},
 		},
 		{
+			name: "happy path - paused vault toggle swap out",
+			setup: func() {
+				setup()
+				vault, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err)
+				vault.SwapOutEnabled = true
+				vault.Paused = true
+				s.k.AuthKeeper.SetAccount(s.ctx, vault)
+			},
+			msg: types.MsgToggleSwapOutRequest{
+				Admin:        owner.String(),
+				VaultAddress: vaultAddr.String(),
+				Enabled:      false,
+			},
+			postCheckArgs: postCheckArgs{
+				VaultAddress:    vaultAddr,
+				ExpectedEnabled: false,
+			},
+			expectedEvents: sdk.Events{
+				sdk.NewEvent("vault.v1.EventToggleSwapOut",
+					sdk.NewAttribute("admin", owner.String()),
+					sdk.NewAttribute("enabled", "false"),
+					sdk.NewAttribute("vault_address", vaultAddr.String()),
+				),
+			},
+		},
+		{
 			name:  "failure - vault not found",
 			setup: func() { /* no setup, so vault doesn't exist */ },
 			msg: types.MsgToggleSwapOutRequest{
@@ -674,16 +693,6 @@ func (s *TestSuite) TestMsgServer_ToggleSwapOut() {
 				Enabled:      true,
 			},
 			expectedErrSubstrs: []string{"unauthorized", otherUser.String(), "is not the vault admin"},
-		},
-		{
-			name:  "failure - vault is paused",
-			setup: setupPaused,
-			msg: types.MsgToggleSwapOutRequest{
-				Admin:        owner.String(),
-				VaultAddress: vaultAddr.String(),
-				Enabled:      true,
-			},
-			expectedErrSubstrs: []string{"vault ", " is paused"},
 		},
 	}
 
@@ -735,14 +744,6 @@ func (s *TestSuite) TestMsgServer_ToggleSwapIn() {
 		})
 		s.Require().NoError(err)
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
-	}
-
-	setupPaused := func() {
-		setup()
-		vault, err := s.k.GetVault(s.ctx, vaultAddr)
-		s.Require().NoError(err)
-		vault.Paused = true
-		s.k.AuthKeeper.SetAccount(s.ctx, vault)
 	}
 
 	tests := []struct {
@@ -800,6 +801,33 @@ func (s *TestSuite) TestMsgServer_ToggleSwapIn() {
 			},
 		},
 		{
+			name: "happy path - vault paused toggle swap in",
+			setup: func() {
+				setup()
+				vault, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err)
+				vault.SwapInEnabled = true
+				vault.Paused = true
+				s.k.AuthKeeper.SetAccount(s.ctx, vault)
+			},
+			msg: types.MsgToggleSwapInRequest{
+				Admin:        owner.String(),
+				VaultAddress: vaultAddr.String(),
+				Enabled:      false,
+			},
+			postCheckArgs: postCheckArgs{
+				VaultAddress:    vaultAddr,
+				ExpectedEnabled: false,
+			},
+			expectedEvents: sdk.Events{
+				sdk.NewEvent("vault.v1.EventToggleSwapIn",
+					sdk.NewAttribute("admin", owner.String()),
+					sdk.NewAttribute("enabled", "false"),
+					sdk.NewAttribute("vault_address", vaultAddr.String()),
+				),
+			},
+		},
+		{
 			name:  "failure - vault not found",
 			setup: func() { /* no setup, so vault doesn't exist */ },
 			msg: types.MsgToggleSwapInRequest{
@@ -818,16 +846,6 @@ func (s *TestSuite) TestMsgServer_ToggleSwapIn() {
 				Enabled:      true,
 			},
 			expectedErrSubstrs: []string{"unauthorized", otherUser.String(), "is not the vault admin"},
-		},
-		{
-			name:  "failure - vault is paused",
-			setup: setupPaused,
-			msg: types.MsgToggleSwapInRequest{
-				Admin:        owner.String(),
-				VaultAddress: vaultAddr.String(),
-				Enabled:      true,
-			},
-			expectedErrSubstrs: []string{"vault ", " is paused"},
 		},
 	}
 

@@ -30,3 +30,9 @@ func (k Keeper) TestAccessor_handleVaultInterestTimeouts(t *testing.T, ctx conte
 	t.Helper()
 	return k.handleVaultInterestTimeouts(ctx)
 }
+
+// TestAccessor_processSwapOutJobs exposes this keeper's processSwapOutJobs function for unit tests.
+func (k Keeper) TestAccessor_processSwapOutJobs(t *testing.T, ctx context.Context, jobsToProcess []types.PayoutJob) {
+	t.Helper()
+	k.processSwapOutJobs(ctx, jobsToProcess)
+}

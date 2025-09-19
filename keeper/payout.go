@@ -8,8 +8,6 @@ import (
 
 	"github.com/provlabs/vault/types"
 
-	"cosmossdk.io/collections"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -17,57 +15,66 @@ import (
 )
 
 // ProcessPendingSwapOuts processes the queue of pending swap-out requests. Called from the EndBlocker,
-// it iterates through requests due for payout at the current block time. It skips any requests for
-// vaults that are currently paused.
-// For each request, it attempts a payout. If the payout fails due to a recoverable error (e.g., insufficient liquidity),
-// it refunds the user's escrowed shares. All processed requests are dequeued, regardless of success or failure.
-// This function returns an error only if the queue walk itself fails; it does not return errors from individual
-// payout/refund operations.
+// it iterates through requests due for payout at the current block time. It uses a safe "collect-then-mutate"
+// pattern to comply with the SDK iterator contract. It first collects all due requests, then iterates
+// the collected list, dequeuing each item before attempting the payout. If the payout fails due to a
+// recoverable error (e.g., insufficient liquidity), it refunds the user's escrowed shares.
 func (k *Keeper) ProcessPendingSwapOuts(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	now := sdkCtx.BlockTime().Unix()
 
-	var processedKeys []collections.Triple[int64, sdk.AccAddress, uint64]
+	var jobsToProcess []types.PayoutJob
 
 	err := k.PendingSwapOutQueue.WalkDue(ctx, now, func(timestamp int64, id uint64, vaultAddr sdk.AccAddress, req types.PendingSwapOut) (stop bool, err error) {
-		key := collections.Join3(timestamp, vaultAddr, id)
-
 		vault, ok := k.tryGetVault(sdkCtx, vaultAddr)
-		if !ok {
-			sdkCtx.Logger().Error("skipping pending withdrawal for non-existent vault", "request_id", id, "vault_address", vaultAddr.String())
-			processedKeys = append(processedKeys, key)
+		if ok && vault.Paused {
 			return false, nil
 		}
-
-		if vault.Paused {
-			return false, nil
-		}
-
-		processedKeys = append(processedKeys, key)
-		err = k.processSingleWithdrawal(sdkCtx, id, req, *vault)
-		if err != nil {
-			reason := k.getRefundReason(err)
-			sdkCtx.Logger().Error("Failed to process withdrawal",
-				"withdrawal_id", id,
-				"reason", reason,
-				"error", err,
-			)
-			k.refundWithdrawal(sdkCtx, id, req, reason)
-		}
+		jobsToProcess = append(jobsToProcess, types.NewPayoutJob(timestamp, id, vaultAddr, req))
 		return false, nil
 	})
-
 	if err != nil {
 		sdkCtx.Logger().Error("error during pending withdrawal queue walk", "error", err)
 		return err
 	}
 
-	for _, key := range processedKeys {
-		if err := k.PendingSwapOutQueue.Dequeue(ctx, key.K1(), key.K2(), key.K3()); err != nil {
-			sdkCtx.Logger().Error("CRITICAL: failed to dequeue processed withdrawal", "key", key, "error", err)
+	k.processSwapOutJobs(ctx, jobsToProcess)
+
+	return nil
+}
+
+// processSwapOutJobs iterates a list of jobs, dequeuing and processing each one.
+func (k *Keeper) processSwapOutJobs(ctx context.Context, jobsToProcess []types.PayoutJob) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	for _, j := range jobsToProcess {
+		if err := k.PendingSwapOutQueue.Dequeue(ctx, j.Timestamp, j.VaultAddr, j.ID); err != nil {
+			sdkCtx.Logger().Error("CRITICAL: failed to dequeue processed withdrawal, skipping", "id", j.ID, "error", err)
+			continue
+		}
+
+		vault, ok := k.tryGetVault(sdkCtx, j.VaultAddr)
+		if !ok {
+			sdkCtx.Logger().Error("dequeued and skipped pending withdrawal for non-existent vault", "request_id", j.ID, "vault_address", j.VaultAddr.String())
+			continue
+		}
+		// TODO: https://github.com/ProvLabs/vault/issues/61 ... this pause was added here for a future fix of when processingSingleWithdrawal fails on critical
+		// step, we pause the vault.
+		if vault.Paused {
+			continue
+		}
+
+		err := k.processSingleWithdrawal(sdkCtx, j.ID, j.Req, *vault)
+		if err != nil {
+			reason := k.getRefundReason(err)
+			sdkCtx.Logger().Error("Failed to process withdrawal, issuing refund",
+				"withdrawal_id", j.ID,
+				"reason", reason,
+				"error", err,
+			)
+			k.refundWithdrawal(sdkCtx, j.ID, j.Req, reason)
 		}
 	}
-	return nil
 }
 
 // processSingleWithdrawal executes a pending swap-out. It first reconciles vault interest, then converts the user's

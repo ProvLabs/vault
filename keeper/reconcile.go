@@ -184,32 +184,45 @@ func (k Keeper) CalculateVaultTotalAssets(ctx sdk.Context, vault *types.VaultAcc
 }
 
 // handleVaultInterestTimeouts checks vaults with expired interest periods and reconciles or disables them.
-//
+// It uses a safe "collect-then-mutate" pattern to comply with the SDK iterator contract.
 // For each due timeout entry:
-//   - Missing or paused vaults are skipped.
+//   - It collects keys for all non-paused vaults.
+//   - It then iterates the collected keys, dequeuing each item before processing it.
 //   - Vaults that cannot cover the required interest are marked depleted.
 //   - Otherwise, interest is reconciled.
-//
-// After processing, handled entries are removed, periods are reset for reconciled vaults,
-// and interest is disabled for depleted vaults. Intended for BeginBlock; individual errors are logged.
 func (k *Keeper) handleVaultInterestTimeouts(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	now := sdkCtx.BlockTime().Unix()
 
-	var toRemove []collections.Pair[uint64, sdk.AccAddress]
+	var keysToProcess []collections.Pair[uint64, sdk.AccAddress]
 	var depleted []*types.VaultAccount
 	var reconciled []*types.VaultAccount
 
 	err := k.PayoutTimeoutQueue.WalkDue(ctx, now, func(timeout uint64, addr sdk.AccAddress) (bool, error) {
 		key := collections.Join(timeout, addr)
+		vault, ok := k.tryGetVault(sdkCtx, addr)
+		if ok && vault.Paused {
+			return false, nil
+		}
+		keysToProcess = append(keysToProcess, key)
+		return false, nil
+	})
+	if err != nil {
+		return fmt.Errorf("walk failed: %w", err)
+	}
+
+	for _, key := range keysToProcess {
+		timeout := key.K1()
+		addr := key.K2()
+
+		if err := k.PayoutTimeoutQueue.Dequeue(ctx, int64(timeout), addr); err != nil {
+			sdkCtx.Logger().Error("CRITICAL: failed to dequeue interest timeout, skipping", "vault", addr.String(), "err", err)
+			continue
+		}
 
 		vault, ok := k.tryGetVault(sdkCtx, addr)
 		if !ok {
-			toRemove = append(toRemove, key)
-			return false, nil
-		}
-		if vault.Paused {
-			return false, nil
+			continue
 		}
 
 		periodDuration := int64(timeout) - vault.PeriodStart
@@ -220,34 +233,20 @@ func (k *Keeper) handleVaultInterestTimeouts(ctx context.Context) error {
 		canPay, err := k.CanPayoutDuration(sdkCtx, vault, periodDuration)
 		if err != nil {
 			sdkCtx.Logger().Error("failed to check payout ability", "vault", addr.String(), "err", err)
-			toRemove = append(toRemove, key)
-			return false, nil
+			continue
 		}
 
 		if !canPay {
 			depleted = append(depleted, vault)
-			toRemove = append(toRemove, key)
-			return false, nil
+			continue
 		}
 
 		if err := k.PerformVaultInterestTransfer(sdkCtx, vault); err != nil {
 			sdkCtx.Logger().Error("failed to reconcile interest", "vault", addr.String(), "err", err)
-			toRemove = append(toRemove, key)
-			return false, nil
+			continue
 		}
 
 		reconciled = append(reconciled, vault)
-		toRemove = append(toRemove, key)
-		return false, nil
-	})
-	if err != nil {
-		return fmt.Errorf("walk failed: %w", err)
-	}
-
-	for _, key := range toRemove {
-		if err := k.PayoutTimeoutQueue.Dequeue(ctx, int64(key.K1()), key.K2()); err != nil {
-			sdkCtx.Logger().Error("failed to remove processed timeout", "err", err)
-		}
 	}
 
 	k.resetVaultInterestPeriods(ctx, reconciled)
@@ -270,36 +269,41 @@ func (k *Keeper) tryGetVault(ctx sdk.Context, addr sdk.AccAddress) (*types.Vault
 	return vault, true
 }
 
-// handleReconciledVaults processes vaults from the payout verification queue.
-// It skips any vaults that are currently paused.
+// handleReconciledVaults processes vaults from the payout verification queue using a safe
+// "collect-then-mutate" pattern.
 //
-// It collects due entries using WalkPayoutVerifications, removes them from the verification queue, partitions the
-// corresponding vaults into payable vs depleted for the forecast window, updates payable vaults'
-// timeouts, and disables interest for depleted vaults.
+// It first collects keys for all non-paused vaults. It then iterates the collected keys, removing
+// each from the set before partitioning them into payable vs depleted groups.
 func (k *Keeper) handleReconciledVaults(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	var toRemove []sdk.AccAddress
-	var vaults []*types.VaultAccount
+	var keysToProcess []sdk.AccAddress
+	var vaultsToProcess []*types.VaultAccount
 
 	err := k.PayoutVerificationSet.Walk(ctx, nil, func(addr sdk.AccAddress) (bool, error) {
 		v, ok := k.tryGetVault(sdkCtx, addr)
-		if ok && !v.Paused {
-			vaults = append(vaults, v)
-			toRemove = append(toRemove, addr)
-		} else if !ok {
-			toRemove = append(toRemove, addr)
+		if ok && v.Paused {
+			return false, nil
 		}
+		keysToProcess = append(keysToProcess, addr)
 		return false, nil
 	})
 	if err != nil {
 		return fmt.Errorf("walk failed: %w", err)
 	}
 
-	for _, key := range toRemove {
-		_ = k.PayoutVerificationSet.Remove(ctx, key)
+	for _, addr := range keysToProcess {
+		if err := k.PayoutVerificationSet.Remove(ctx, addr); err != nil {
+			sdkCtx.Logger().Error("CRITICAL: failed to remove from payout verification set, skipping", "vault", addr.String(), "err", err)
+			continue
+		}
+
+		v, ok := k.tryGetVault(sdkCtx, addr)
+		if ok && !v.Paused {
+			vaultsToProcess = append(vaultsToProcess, v)
+		}
 	}
 
-	payable, depleted := k.partitionVaults(sdkCtx, vaults)
+	payable, depleted := k.partitionVaults(sdkCtx, vaultsToProcess)
 	k.handlePayableVaults(ctx, payable)
 	k.handleDepletedVaults(ctx, depleted)
 	return nil

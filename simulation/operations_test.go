@@ -306,6 +306,57 @@ func (s *VaultSimTestSuite) TestSimulateMsgWithdrawPrincipalFunds() {
 	s.Require().Len(futureOps, 0, "futureOperations")
 }
 
+func (s *VaultSimTestSuite) TestSimulateMsgUpdateInterestRate() {
+	selected := s.accs[0]
+
+	err := simulation.CreateGlobalMarker(s.ctx, s.app, sdk.NewInt64Coin("underlying", 1000), s.accs)
+	s.Require().NoError(err, "CreateGlobalMarker")
+	err = simulation.CreateVault(s.ctx, s.app, "underlying", "underlyingshare", selected, s.accs)
+	s.Require().NoError(err, "CreateVault")
+
+	op := simulation.SimulateMsgUpdateInterestRate(*s.app.VaultKeeper)
+	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
+	s.Require().NoError(err, "SimulateMsgUpdateInterestRate")
+	s.Require().True(opMsg.OK, "operationMsg.OK")
+	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
+	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
+	s.Require().Len(futureOps, 0, "futureOperations")
+}
+
+func (s *VaultSimTestSuite) TestSimulateMsgUpdateMinInterestRate() {
+	selected := s.accs[0]
+
+	err := simulation.CreateGlobalMarker(s.ctx, s.app, sdk.NewInt64Coin("underlying", 1000), s.accs)
+	s.Require().NoError(err, "CreateGlobalMarker")
+	err = simulation.CreateVault(s.ctx, s.app, "underlying", "underlyingshare", selected, s.accs)
+	s.Require().NoError(err, "CreateVault")
+
+	op := simulation.SimulateMsgUpdateMinInterestRate(*s.app.VaultKeeper)
+	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
+	s.Require().NoError(err, "SimulateMsgUpdateMinInterestRate")
+	s.Require().True(opMsg.OK, "operationMsg.OK")
+	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
+	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
+	s.Require().Len(futureOps, 0, "futureOperations")
+}
+
+func (s *VaultSimTestSuite) TestSimulateMsgUpdateMaxInterestRate() {
+	selected := s.accs[0]
+
+	err := simulation.CreateGlobalMarker(s.ctx, s.app, sdk.NewInt64Coin("underlying", 1000), s.accs)
+	s.Require().NoError(err, "CreateGlobalMarker")
+	err = simulation.CreateVault(s.ctx, s.app, "underlying", "underlyingshare", selected, s.accs)
+	s.Require().NoError(err, "CreateVault")
+
+	op := simulation.SimulateMsgUpdateMaxInterestRate(*s.app.VaultKeeper)
+	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
+	s.Require().NoError(err, "SimulateMsgUpdateMaxInterestRate")
+	s.Require().True(opMsg.OK, "operationMsg.OK")
+	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
+	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
+	s.Require().Len(futureOps, 0, "futureOperations")
+}
+
 // GenerateTestingAccounts generates n new accounts, creates them (in state) and gives each 1 million power worth of bond tokens.
 func GenerateTestingAccounts(t *testing.T, ctx sdk.Context, app *simapp.SimApp, r *rand.Rand, n int) []simtypes.Account {
 	return GenerateTestingAccountsWithPower(t, ctx, app, r, n, 1_000_000)

@@ -72,6 +72,141 @@ func getRandomVault(r *rand.Rand, k keeper.Keeper, ctx sdk.Context) (*types.Vaul
 	return vault, nil
 }
 
+func getRandomInterestRate(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, vaultAddr sdk.AccAddress) (string, error) {
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return "", err
+	}
+	if vault == nil {
+		return "", fmt.Errorf("received nil vault")
+	}
+
+	minStr := vault.GetMinInterestRate()
+	if minStr == "" {
+		minStr = "-1.0"
+	}
+	min := math.LegacyMustNewDecFromStr(minStr)
+
+	maxStr := vault.GetMaxInterestRate()
+	if maxStr == "" {
+		maxStr = "2.0"
+	}
+	max := math.LegacyMustNewDecFromStr(maxStr)
+
+	randomDec := simtypes.RandomDecAmount(r, max.Sub(min))
+	resultDec := min.Add(randomDec)
+
+	return resultDec.String(), nil
+}
+
+func getRandomMinInterestRate(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, vaultAddr sdk.AccAddress) (string, error) {
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return "", err
+	}
+	if vault == nil {
+		return "", fmt.Errorf("received nil vault")
+	}
+
+	// The lower bound for a new min interest rate can be the default -1.0
+	lowerBound := math.LegacyMustNewDecFromStr("-1.0")
+
+	// Get max rate
+	maxStr := vault.GetMaxInterestRate()
+	if maxStr == "" {
+		maxStr = "2.0"
+	}
+	maxRate := math.LegacyMustNewDecFromStr(maxStr)
+
+	// Get current rate
+	currentStr := vault.GetCurrentInterestRate()
+	if currentStr == "" {
+		currentStr = "0.0"
+	}
+	currentRate := math.LegacyMustNewDecFromStr(currentStr)
+
+	// Get desired rate
+	desiredStr := vault.DesiredInterestRate
+	if desiredStr == "" {
+		desiredStr = "0.0"
+	}
+	desiredRate := math.LegacyMustNewDecFromStr(desiredStr)
+
+	// The new upper bound is the minimum of current, desired, and max rates.
+	upperBound := maxRate
+	if currentRate.LT(upperBound) {
+		upperBound = currentRate
+	}
+	if desiredRate.LT(upperBound) {
+		upperBound = desiredRate
+	}
+
+	// Ensure the upper bound is not less than the lower bound
+	if upperBound.LTE(lowerBound) {
+		return lowerBound.String(), nil
+	}
+
+	// Generate a random rate between lowerBound and upperBound
+	randomDec := simtypes.RandomDecAmount(r, upperBound.Sub(lowerBound))
+	resultDec := lowerBound.Add(randomDec)
+
+	return resultDec.String(), nil
+}
+
+func getRandomMaxInterestRate(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, vaultAddr sdk.AccAddress) (string, error) {
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return "", err
+	}
+	if vault == nil {
+		return "", fmt.Errorf("received nil vault")
+	}
+
+	// The upper bound for a new max interest rate can be the default 2.0
+	upperBound := math.LegacyMustNewDecFromStr("2.0")
+
+	// Get min rate
+	minStr := vault.GetMinInterestRate()
+	if minStr == "" {
+		minStr = "-1.0"
+	}
+	minRate := math.LegacyMustNewDecFromStr(minStr)
+
+	// Get current rate
+	currentStr := vault.GetCurrentInterestRate()
+	if currentStr == "" {
+		currentStr = "0.0"
+	}
+	currentRate := math.LegacyMustNewDecFromStr(currentStr)
+
+	// Get desired rate
+	desiredStr := vault.DesiredInterestRate
+	if desiredStr == "" {
+		desiredStr = "0.0"
+	}
+	desiredRate := math.LegacyMustNewDecFromStr(desiredStr)
+
+	// The new lower bound is the maximum of current, desired, and min rates.
+	lowerBound := minRate
+	if currentRate.GT(lowerBound) {
+		lowerBound = currentRate
+	}
+	if desiredRate.GT(lowerBound) {
+		lowerBound = desiredRate
+	}
+
+	// Ensure the upper bound is not less than the lower bound
+	if upperBound.LTE(lowerBound) {
+		return upperBound.String(), nil
+	}
+
+	// Generate a random rate between lowerBound and upperBound
+	randomDec := simtypes.RandomDecAmount(r, upperBound.Sub(lowerBound))
+	resultDec := lowerBound.Add(randomDec)
+
+	return resultDec.String(), nil
+}
+
 func getRandomPendingSwapOut(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, vaultAddr sdk.AccAddress) (uint64, error) {
 	var swapIDs []uint64
 
@@ -155,16 +290,15 @@ func SimulateMsgCreateVault(k keeper.Keeper) simtypes.Operation {
 		admin, _ := simtypes.RandomAcc(r, accs)
 		denom := fmt.Sprintf("vaulttoken%d", r.Intn(100000))
 
-		// TODO Should this just be underlying?
-		// TODO How do I fund these accounts?
-		// TODO What about NAV setup?
-		// TODO We also need the payment denom
+		// TODO Nav setup
+		// TODO A random denom that they have
 		underlying := "underlying"
 
 		msg := &types.MsgCreateVaultRequest{
-			Admin:                  admin.Address.String(),
-			ShareDenom:             denom,
-			UnderlyingAsset:        underlying,
+			Admin:           admin.Address.String(),
+			ShareDenom:      denom,
+			UnderlyingAsset: underlying,
+			// TODO Either "" or a random denom that is not the same as underlying
 			PaymentDenom:           "",
 			WithdrawalDelaySeconds: interest.SecondsPerDay,
 		}
@@ -196,7 +330,7 @@ func SimulateMsgSwapIn(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSwapInRequest{}), "vault has swap-in disabled"), nil, nil
 		}
 
-		// Find an account that has the vault's underlying asset
+		// TODO Find an account that has the vault's underlying asset that is not the admin
 		var owner simtypes.Account
 		var balance sdk.Coin
 		found := false
@@ -257,6 +391,7 @@ func SimulateMsgSwapOut(k keeper.Keeper) simtypes.Operation {
 		}
 
 		// Find an account that has shares in this vault
+		// TODO Find an account that has the vault's shares
 		var owner simtypes.Account
 		var balance sdk.Coin
 		found := false
@@ -286,6 +421,8 @@ func SimulateMsgSwapOut(k keeper.Keeper) simtypes.Operation {
 			Owner:        owner.Address.String(),
 			VaultAddress: vault.GetAddress().String(),
 			Assets:       shares,
+			// TODO This should be "" or a random denom
+			RedeemDenom: "",
 		}
 
 		handler := keeper.NewMsgServer(&k)
@@ -312,13 +449,15 @@ func SimulateMsgUpdateInterestRate(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateInterestRateRequest{}), "invalid admin address for vault"), nil, err
 		}
 
-		// TODO This must be an interest rate between min and max.
-		rate := r.Float64()*3 - 1
+		rate, err := getRandomInterestRate(r, k, ctx, vault.GetAddress())
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateInterestRateRequest{}), "unable to get random interest rate"), nil, err
+		}
 
 		msg := &types.MsgUpdateInterestRateRequest{
 			VaultAddress: vault.GetAddress().String(),
 			Admin:        adminAddr.String(),
-			NewRate:      fmt.Sprintf("%f", rate),
+			NewRate:      rate,
 		}
 
 		handler := keeper.NewMsgServer(&k)
@@ -345,13 +484,15 @@ func SimulateMsgUpdateMinInterestRate(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateMinInterestRateRequest{}), "invalid admin address for vault"), nil, err
 		}
 
-		// TODO This must be less than current and desired interest rate
-		rate := r.Float64()*3 - 1
+		rate, err := getRandomMinInterestRate(r, k, ctx, vault.GetAddress())
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateMinInterestRateRequest{}), "unable to get random min interest rate"), nil, err
+		}
 
 		msg := &types.MsgUpdateMinInterestRateRequest{
 			VaultAddress: vault.GetAddress().String(),
 			Admin:        adminAddr.String(),
-			MinRate:      fmt.Sprintf("%f", rate),
+			MinRate:      rate,
 		}
 
 		handler := keeper.NewMsgServer(&k)
@@ -378,14 +519,15 @@ func SimulateMsgUpdateMaxInterestRate(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateMaxInterestRateRequest{}), "invalid admin address for vault"), nil, err
 		}
 
-		// Ensure max rate is > min rate if min rate is set
-		// TODO This must be greater than current and desired interest rate
-		rate := r.Float64()*3 - 1
+		rate, err := getRandomMaxInterestRate(r, k, ctx, vault.GetAddress())
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateMinInterestRateRequest{}), "unable to get random max interest rate"), nil, err
+		}
 
 		msg := &types.MsgUpdateMaxInterestRateRequest{
 			VaultAddress: vault.GetAddress().String(),
 			Admin:        adminAddr.String(),
-			MaxRate:      fmt.Sprintf("%f", rate),
+			MaxRate:      rate,
 		}
 
 		handler := keeper.NewMsgServer(&k)

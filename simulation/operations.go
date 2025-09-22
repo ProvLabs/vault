@@ -356,12 +356,10 @@ func SimulateMsgSwapIn(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSwapInRequest{}), "vault has swap-in disabled"), nil, nil
 		}
 
-		// TODO Find an account that has the vault's underlying asset that is not the admin
-		// Pick a random vault asset
+		assetDenom := getRandomVaultAsset(r, vault)
 		var owner simtypes.Account
 		var balance sdk.Coin
 		found := false
-		assetDenom := getRandomVaultAsset(r, vault)
 		for _, acc := range accs {
 			bal := k.BankKeeper.GetBalance(ctx, acc.Address, assetDenom)
 			if !bal.IsZero() {

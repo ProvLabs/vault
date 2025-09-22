@@ -521,7 +521,7 @@ func SimulateMsgUpdateMaxInterestRate(k keeper.Keeper) simtypes.Operation {
 
 		rate, err := getRandomMaxInterestRate(r, k, ctx, vault.GetAddress())
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateMinInterestRateRequest{}), "unable to get random max interest rate"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateMaxInterestRateRequest{}), "unable to get random max interest rate"), nil, err
 		}
 
 		msg := &types.MsgUpdateMaxInterestRateRequest{

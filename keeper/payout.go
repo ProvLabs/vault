@@ -43,13 +43,14 @@ func (k *Keeper) ProcessPendingSwapOuts(ctx context.Context) error {
 	return nil
 }
 
-// processSwapOutJobs iterates a list of jobs and executes them. For each job, it handles various states:
-//   - Non-existent vaults: The corresponding job is dequeued and skipped.
-//   - Paused vaults: The job is skipped but remains in the queue, allowing it to be re-processed in a future
-//     block if the vault is unpaused.
-//   - Active vaults: The job is dequeued and processed. If processing fails with a recoverable error, a refund is issued.
-//     If the refund itself fails, or if a critical unrecoverable error occurs during processing, the vault is
-//     automatically paused to contain the issue.
+// processSwapOutJobs iterates pending swap-out jobs collected for this block and executes them.
+// Behavior by case:
+//   - Missing vault: the job is dequeued and skipped.
+//   - Paused vault: the job remains queued (skipped for now) so it can be retried when unpaused.
+//   - Active vault: the job is dequeued and processed.
+//   - On recoverable failure, a refund is attempted. If the refund itself returns a critical error,
+//     the vault is auto-paused with a stable reason string.
+//   - On critical failure during processing, the vault is auto-paused with a stable reason string.
 func (k *Keeper) processSwapOutJobs(ctx context.Context, jobsToProcess []types.PayoutJob) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
@@ -62,7 +63,11 @@ func (k *Keeper) processSwapOutJobs(ctx context.Context, jobsToProcess []types.P
 					"error", err,
 				)
 			} else {
-				sdkCtx.Logger().Error("dequeued and skipped pending withdrawal for non-existent vault", "request_id", j.ID, "vault_address", j.VaultAddr.String())
+				sdkCtx.Logger().Error(
+					"dequeued and skipped pending withdrawal for non-existent vault",
+					"request_id", j.ID,
+					"vault_address", j.VaultAddr.String(),
+				)
 			}
 			continue
 		}
@@ -72,25 +77,35 @@ func (k *Keeper) processSwapOutJobs(ctx context.Context, jobsToProcess []types.P
 		}
 
 		if err := k.PendingSwapOutQueue.Dequeue(ctx, j.Timestamp, j.VaultAddr, j.ID); err != nil {
-			sdkCtx.Logger().Error(fmt.Sprintf("failed to dequeue withdrawal request %d for vault %s: %w", j.ID, j.VaultAddr, err))
+			sdkCtx.Logger().Error(
+				"failed to dequeue withdrawal request",
+				"request_id", j.ID,
+				"vault_address", j.VaultAddr.String(),
+				"error", err,
+			)
 			continue
 		}
 
-		err, isCritical := k.processSingleWithdrawal(sdkCtx, j.ID, j.Req, *vault)
-		if err != nil && !isCritical {
+		if err := k.processSingleWithdrawal(sdkCtx, j.ID, j.Req, *vault); err != nil {
+			var cErr *types.CriticalError
+			if errors.As(err, &cErr) {
+				k.autoPauseVault(sdkCtx, vault, cErr.Reason)
+				continue
+			}
+
 			reason := k.getRefundReason(err)
-			sdkCtx.Logger().Error("Failed to process withdrawal, issuing refund",
+			sdkCtx.Logger().Error(
+				"failed to process withdrawal, issuing refund",
 				"withdrawal_id", j.ID,
 				"reason", reason,
 				"error", err,
 			)
-			err = k.refundWithdrawal(sdkCtx, j.ID, j.Req, reason)
-			if err != nil {
-				k.autoPauseVault(sdkCtx, vault, err)
+
+			if rerr := k.refundWithdrawal(sdkCtx, j.ID, j.Req, reason); rerr != nil {
+				if errors.As(rerr, &cErr) {
+					k.autoPauseVault(sdkCtx, vault, cErr.Reason)
+				}
 			}
-		}
-		if err != nil && isCritical {
-			k.autoPauseVault(sdkCtx, vault, err)
 		}
 	}
 }
@@ -100,22 +115,22 @@ func (k *Keeper) processSwapOutJobs(ctx context.Context, jobsToProcess []types.P
 // It returns a non-nil error for failures. A second boolean return value, `isCritical`, is true for unrecoverable
 // state inconsistencies that occur *after* the user has been paid (e.g., failure to burn shares). Recoverable errors
 // (e.g., insufficient liquidity) return `isCritical` as false. An EventSwapOutCompleted is emitted on success.
-func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.PendingSwapOut, vault types.VaultAccount) (error, bool) {
+func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.PendingSwapOut, vault types.VaultAccount) error {
 	vaultAddr := sdk.MustAccAddressFromBech32(req.VaultAddress)
 	ownerAddr := sdk.MustAccAddressFromBech32(req.Owner)
 	principalAddress := markertypes.MustGetMarkerAddress(req.Shares.Denom)
 
 	if err := k.ReconcileVaultInterest(ctx, &vault); err != nil {
-		return fmt.Errorf("failed to reconcile vault interest: %w", err), false
+		return fmt.Errorf("failed to reconcile vault interest: %w", err)
 	}
 
 	assets, err := k.ConvertSharesToRedeemCoin(ctx, vault, req.Shares.Amount, req.RedeemDenom)
 	if err != nil {
-		return fmt.Errorf("failed to convert shares to redeem coin for single withdrawal: %w", err), false
+		return fmt.Errorf("failed to convert shares to redeem coin for single withdrawal: %w", err)
 	}
 
 	if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, vaultAddr), principalAddress, ownerAddr, sdk.NewCoins(assets)); err != nil {
-		return err, false
+		return err
 	}
 
 	if err := k.BankKeeper.SendCoins(ctx, vaultAddr, principalAddress, sdk.NewCoins(req.Shares)); err != nil {
@@ -124,7 +139,7 @@ func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.P
 			req.Shares, vaultAddr, principalAddress,
 		)
 		ctx.Logger().Error("CRITICAL: "+errMsg, "error", err)
-		return fmt.Errorf("%s: %w", errMsg, err), true
+		return types.CriticalErr(errMsg, fmt.Errorf("%s: %w", errMsg, err))
 	}
 
 	if err := k.MarkerKeeper.BurnCoin(ctx, vaultAddr, req.Shares); err != nil {
@@ -133,11 +148,11 @@ func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.P
 			req.Shares, vaultAddr,
 		)
 		ctx.Logger().Error("CRITICAL: "+errMsg, "error", err)
-		return fmt.Errorf("%s: %w", errMsg, err), true
+		return types.CriticalErr(errMsg, fmt.Errorf("%s: %w", errMsg, err))
 	}
 
 	k.emitEvent(ctx, types.NewEventSwapOutCompleted(req.VaultAddress, req.Owner, assets, id))
-	return nil, false
+	return nil
 }
 
 // refundWithdrawal handles the failure case for a pending swap out. It returns the user's
@@ -154,7 +169,7 @@ func (k *Keeper) refundWithdrawal(ctx sdk.Context, id uint64, req types.PendingS
 			req.Shares, vaultAddr, ownerAddr,
 		)
 		ctx.Logger().Error("CRITICAL: "+errMsg, "error", err)
-		return fmt.Errorf("%s: %w", errMsg, err)
+		return types.CriticalErr(errMsg, fmt.Errorf("%s: %w", errMsg, err))
 	}
 
 	k.emitEvent(ctx, types.NewEventSwapOutRefunded(req.VaultAddress, req.Owner, req.Shares, id, reason))

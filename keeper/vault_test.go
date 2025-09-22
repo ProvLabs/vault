@@ -610,13 +610,13 @@ func (s *TestSuite) TestAutoPauseVault_SetsPausedAndEmitsEvent() {
 
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 
-	reason := fmt.Errorf("critical failure")
+	reason := "critical failure"
 	s.k.TestAccessor_autoPauseVault(s.T(), s.ctx, v, reason)
 
 	got, err := s.k.GetVault(s.ctx, types.GetVaultAddress(share))
 	s.Require().NoError(err, "GetVault should succeed after autoPause")
 	s.Require().True(got.Paused, "vault should be marked paused")
-	s.Require().Equal(reason.Error(), got.PausedReason, "paused reason should match provided error")
+	s.Require().Equal(reason, got.PausedReason, "paused reason should match provided error")
 
 	evs := s.ctx.EventManager().Events()
 	s.Require().NotEmpty(evs, "an event should be emitted")
@@ -629,7 +629,7 @@ func (s *TestSuite) TestAutoPauseVault_SetsPausedAndEmitsEvent() {
 		if a.Key == "vault_address" && a.Value == fmt.Sprintf("\"%s\"", v.GetAddress().String()) {
 			hasAddr = true
 		}
-		if a.Key == "reason" && a.Value == fmt.Sprintf("\"%s\"", reason.Error()) {
+		if a.Key == "reason" && a.Value == fmt.Sprintf("\"%s\"", reason) {
 			hasReason = true
 		}
 	}

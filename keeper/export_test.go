@@ -38,7 +38,7 @@ func (k Keeper) TestAccessor_processSwapOutJobs(t *testing.T, ctx context.Contex
 }
 
 // TestAccessor_autoPauseVault exposes this keeper's autoPauseVault function for unit tests.
-func (k Keeper) TestAccessor_autoPauseVault(t *testing.T, ctx context.Context, vault *types.VaultAccount, reason error) {
+func (k Keeper) TestAccessor_autoPauseVault(t *testing.T, ctx context.Context, vault *types.VaultAccount, reason string) {
 	t.Helper()
 	k.autoPauseVault(ctx, vault, reason)
 }

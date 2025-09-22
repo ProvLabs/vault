@@ -366,7 +366,7 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "EstimateSwapIn",
 					Use:       "estimate-swap-in [vault_address] [assets]",
 					Alias:     []string{"esi"},
-					Short:     "Estimate the number of shares received for a given deposit",
+					Short:     "Estimate the number of shares received for assets",
 					Example:   fmt.Sprintf("%s estimate-swap-in %s 1000nhash", queryStart, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "vault_address"},
@@ -375,13 +375,14 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod: "EstimateSwapOut",
-					Use:       "estimate-swap-out [vault_address] [assets]",
+					Use:       "estimate-swap-out [vault_address] [shares] [redeem_denom]",
 					Alias:     []string{"eso"},
-					Short:     "Estimate the amount of underlying assets received for a given withdrawal",
-					Example:   fmt.Sprintf("%s estimate-swap-out %s 100svnhash", queryStart, exampleVaultAddr),
+					Short:     "Estimate assets received for redeeming shares",
+					Example:   fmt.Sprintf("%s estimate-swap-out %s 1000000 nhash", queryStart, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "vault_address"},
-						{ProtoField: "assets"},
+						{ProtoField: "shares"},
+						{ProtoField: "redeem_denom"},
 					},
 				},
 				{

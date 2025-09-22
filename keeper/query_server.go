@@ -92,7 +92,6 @@ func (k queryServer) Vault(goCtx context.Context, req *types.QueryVaultRequest) 
 	}, nil
 }
 
-// EstimateSwapIn estimates the amount of shares that would be received for a given amount of underlying assets.
 func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstimateSwapInRequest) (*types.QueryEstimateSwapInResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -113,8 +112,16 @@ func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstim
 		return nil, status.Errorf(codes.NotFound, "vault with address %q not found", req.VaultAddress)
 	}
 
-	if vault.UnderlyingAsset != req.Assets.Denom {
-		return nil, status.Errorf(codes.InvalidArgument, "denom not supported for vault must be of type \"%s\" : got \"%s\"", vault.UnderlyingAsset, req.Assets.Denom)
+	if !vault.IsAcceptedDenom(req.Assets.Denom) {
+		return nil, status.Errorf(codes.InvalidArgument, "unsupported deposit denom: %q", req.Assets.Denom)
+	}
+
+	priceNum, priceDen, err := k.UnitPriceFraction(ctx, req.Assets.Denom, vault.UnderlyingAsset)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "no NAV for %s/%s: %v", req.Assets.Denom, vault.UnderlyingAsset, err)
+	}
+	if priceDen.IsZero() {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid NAV: zero volume for %s/%s", req.Assets.Denom, vault.UnderlyingAsset)
 	}
 
 	principalAddress := vault.PrincipalMarkerAddress()
@@ -126,9 +133,16 @@ func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstim
 		return nil, status.Errorf(codes.Internal, "failed to estimate total assets: %v", err)
 	}
 
-	estimatedShares, err := utils.CalculateSharesFromAssets(req.Assets.Amount, estimatedTotalAssets, totalShares, vault.ShareDenom)
+	amountNum := req.Assets.Amount.Mul(priceNum)
+	estimatedShares, err := utils.CalculateSharesProRataFraction(
+		amountNum,
+		priceDen,
+		estimatedTotalAssets,
+		totalShares,
+		vault.ShareDenom,
+	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to calculate shares from assets: %w", err)
+		return nil, fmt.Errorf("failed to calculate shares: %w", err)
 	}
 
 	return &types.QueryEstimateSwapInResponse{
@@ -138,7 +152,7 @@ func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstim
 	}, nil
 }
 
-// EstimateSwapOut estimates the amount of underlying assets that would be received for a given amount of shares.
+// EstimateSwapOut estimates the amount of payout assets (underlying or payout denom) received for a given amount of shares.
 func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEstimateSwapOutRequest) (*types.QueryEstimateSwapOutResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -158,9 +172,12 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 	if err != nil || vault == nil {
 		return nil, status.Errorf(codes.NotFound, "vault with address %q not found", req.VaultAddress)
 	}
-
-	if req.Assets.Denom != vault.ShareDenom {
-		return nil, status.Errorf(codes.InvalidArgument, "asset denom %s does not match vault share denom %s", req.Assets.Denom, vault.ShareDenom)
+	redeemDenom := req.RedeemDenom
+	if redeemDenom == "" {
+		redeemDenom = vault.UnderlyingAsset
+	}
+	if !vault.IsAcceptedDenom(redeemDenom) {
+		return nil, status.Errorf(codes.InvalidArgument, "unsupported redeem denom: %q", redeemDenom)
 	}
 
 	principalAddress := vault.PrincipalMarkerAddress()
@@ -172,13 +189,28 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 		return nil, status.Errorf(codes.Internal, "failed to estimate total assets: %v", err)
 	}
 
-	estimatedAssets, err := utils.CalculateAssetsFromShares(req.Assets.Amount, totalShares, estimatedTotalAssets, vault.UnderlyingAsset)
+	priceNum, priceDen, err := k.UnitPriceFraction(ctx, redeemDenom, vault.UnderlyingAsset)
 	if err != nil {
-		return nil, fmt.Errorf("failed to calculate assets from shares: %w", err)
+		return nil, status.Errorf(codes.InvalidArgument, "no NAV for %s/%s: %v", redeemDenom, vault.UnderlyingAsset, err)
+	}
+	if priceNum.IsZero() {
+		return nil, status.Errorf(codes.InvalidArgument, "zero price for %s/%s", redeemDenom, vault.UnderlyingAsset)
+	}
+
+	estimatedPayout, err := utils.CalculateRedeemProRataFraction(
+		req.Shares,
+		totalShares,
+		estimatedTotalAssets,
+		priceNum,
+		priceDen,
+		redeemDenom,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to calculate redeem estimate: %w", err)
 	}
 
 	return &types.QueryEstimateSwapOutResponse{
-		Assets: estimatedAssets,
+		Assets: estimatedPayout,
 		Height: ctx.BlockHeight(),
 		Time:   ctx.BlockTime().UTC(),
 	}, nil

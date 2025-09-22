@@ -368,3 +368,24 @@ func (k Keeper) ValidateInterestRateLimits(minRateStr, maxRateStr string) error 
 
 	return nil
 }
+
+// autoPauseVault sets a vault's state to paused, records the reason, persists it to state,
+// and emits an EventVaultAutoPaused. This function is intended to be called in response to a
+// critical, unrecoverable error for a specific vault. The provided reason should be a stable,
+// hard-coded string suitable for persistence and later auditing.
+func (k *Keeper) autoPauseVault(ctx context.Context, vault *types.VaultAccount, reason string) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	sdkCtx.Logger().Error(
+		"Auto-pausing vault due to critical error",
+		"vault_address", vault.GetAddress().String(),
+		"reason", reason,
+	)
+
+	vault.Paused = true
+	vault.PausedReason = reason
+
+	k.AuthKeeper.SetAccount(ctx, vault)
+
+	k.emitEvent(sdkCtx, types.NewEventVaultAutoPaused(vault.GetAddress().String(), reason))
+}

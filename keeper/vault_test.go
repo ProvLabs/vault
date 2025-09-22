@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	"cosmossdk.io/math"
@@ -597,4 +598,41 @@ func (s *TestSuite) TestUpdateInterestRate_BoundsEnforced() {
 		NewRate:      "0.60",
 	})
 	s.Require().Error(err)
+}
+
+func (s *TestSuite) TestAutoPauseVault_SetsPausedAndEmitsEvent() {
+	under := "under-ap"
+	share := "share-ap"
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(under, 1_000), s.adminAddr)
+
+	v, err := s.k.CreateVault(s.ctx, vaultAttrs{admin: s.adminAddr.String(), share: share, underlying: under})
+	s.Require().NoError(err, "CreateVault should succeed")
+
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+
+	reason := "critical failure"
+	s.k.TestAccessor_autoPauseVault(s.T(), s.ctx, v, reason)
+
+	got, err := s.k.GetVault(s.ctx, types.GetVaultAddress(share))
+	s.Require().NoError(err, "GetVault should succeed after autoPause")
+	s.Require().True(got.Paused, "vault should be marked paused")
+	s.Require().Equal(reason, got.PausedReason, "paused reason should match provided error")
+
+	evs := s.ctx.EventManager().Events()
+	s.Require().NotEmpty(evs, "an event should be emitted")
+	last := evs[len(evs)-1]
+	s.Require().Equal("vault.v1.EventVaultAutoPaused", last.Type, "event type should be EventVaultAutoPaused")
+
+	hasAddr := false
+	hasReason := false
+	for _, a := range last.Attributes {
+		if a.Key == "vault_address" && a.Value == fmt.Sprintf("\"%s\"", v.GetAddress().String()) {
+			hasAddr = true
+		}
+		if a.Key == "reason" && a.Value == fmt.Sprintf("\"%s\"", reason) {
+			hasReason = true
+		}
+	}
+	s.Require().True(hasAddr, "event should include vault_address attribute")
+	s.Require().True(hasReason, "event should include reason attribute")
 }

@@ -59,6 +59,8 @@ message VaultAccount {
   // This value is used for all NAV calculations while the vault is paused to prevent
   // apparent devaluation during collateral rebalancing. It is cleared upon unpausing.
   cosmos.base.v1beta1.Coin paused_balance = 16 [(gogoproto.nullable) = false];
+  // paused_reason is a human-readable string explaining why the vault was paused, particularly for automatic pauses.
+  string paused_reason = 17;
 }
 
 // AccountBalance represents the coin balance of a single account.

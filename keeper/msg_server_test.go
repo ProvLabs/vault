@@ -2343,10 +2343,11 @@ func (s *TestSuite) TestMsgServer_ExpeditePendingSwapOut() {
 
 func (s *TestSuite) TestMsgServer_PauseVault() {
 	type postCheckArgs struct {
-		VaultAddress        sdk.AccAddress
-		ExpectedPaused      bool
-		ExpectedPauseDenom  string
-		ExpectedPauseAmount int64
+		VaultAddress         sdk.AccAddress
+		ExpectedPaused       bool
+		ExpectedPauseDenom   string
+		ExpectedPauseAmount  int64
+		ExpectedPausedReason string
 	}
 
 	testDef := msgServerTestDef[types.MsgPauseVaultRequest, types.MsgPauseVaultResponse, postCheckArgs]{
@@ -2358,6 +2359,7 @@ func (s *TestSuite) TestMsgServer_PauseVault() {
 			s.Assert().Equal(args.ExpectedPaused, v.Paused)
 			s.Assert().Equal(args.ExpectedPauseDenom, v.PausedBalance.Denom)
 			s.Assert().Equal(args.ExpectedPauseAmount, v.PausedBalance.Amount.Int64())
+			s.Assert().Equal(args.ExpectedPausedReason, v.PausedReason)
 		},
 	}
 
@@ -2387,10 +2389,11 @@ func (s *TestSuite) TestMsgServer_PauseVault() {
 			Reason:       reason,
 		},
 		postCheckArgs: postCheckArgs{
-			VaultAddress:        vaultAddr,
-			ExpectedPaused:      true,
-			ExpectedPauseDenom:  underlying,
-			ExpectedPauseAmount: 0,
+			VaultAddress:         vaultAddr,
+			ExpectedPaused:       true,
+			ExpectedPauseDenom:   underlying,
+			ExpectedPauseAmount:  0,
+			ExpectedPausedReason: reason,
 		},
 		expectedEvents: sdk.Events{
 			sdk.NewEvent(
@@ -2432,13 +2435,14 @@ func (s *TestSuite) TestMsgServer_PauseVault() {
 		msg: types.MsgPauseVaultRequest{
 			Admin:        admin.String(),
 			VaultAddress: vaultAddr.String(),
-			Reason:       "maintenance",
+			Reason:       reason,
 		},
 		postCheckArgs: postCheckArgs{
-			VaultAddress:        vaultAddr,
-			ExpectedPaused:      true,
-			ExpectedPauseDenom:  underlying,
-			ExpectedPauseAmount: 0,
+			VaultAddress:         vaultAddr,
+			ExpectedPaused:       true,
+			ExpectedPauseDenom:   underlying,
+			ExpectedPauseAmount:  0,
+			ExpectedPausedReason: reason,
 		},
 		expectedEvents: sdk.Events{
 			sdk.NewEvent("vault.v1.EventVaultReconcile",
@@ -2562,6 +2566,7 @@ func (s *TestSuite) TestMsgServer_UnpauseVault() {
 			s.Assert().Equal(args.ExpectedPaused, v.Paused)
 			s.Assert().Equal(args.ExpectedEmptyDenom, v.PausedBalance.Denom)
 			s.Assert().Equal(args.ExpectedEmptyAmount, v.PausedBalance.Amount.Int64())
+			s.Assert().Empty(v.PausedReason)
 		},
 	}
 

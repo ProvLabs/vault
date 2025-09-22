@@ -381,7 +381,7 @@ func (k *Keeper) autoPauseVault(ctx context.Context, vault *types.VaultAccount, 
 	)
 
 	vault.Paused = true
-	vault.PauseReason = reason.Error()
+	vault.PausedReason = reason.Error()
 
 	k.AuthKeeper.SetAccount(ctx, vault)
 

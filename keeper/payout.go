@@ -112,9 +112,10 @@ func (k *Keeper) processSwapOutJobs(ctx context.Context, jobsToProcess []types.P
 
 // processSingleWithdrawal executes a pending swap-out. It first reconciles vault interest, then converts the user's
 // shares to the redeemable asset amount. It then pays out those assets to the owner and burns their escrowed shares.
-// It returns a non-nil error for failures. A second boolean return value, `isCritical`, is true for unrecoverable
-// state inconsistencies that occur *after* the user has been paid (e.g., failure to burn shares). Recoverable errors
-// (e.g., insufficient liquidity) return `isCritical` as false. An EventSwapOutCompleted is emitted on success.
+// It returns nil on success and emits an EventSwapOutCompleted. If a failure occurs before payout (e.g., insufficient
+// liquidity), a normal error is returned and can be refunded. If a failure occurs after payout (e.g., transfer to
+// principal or burn failure), the error is wrapped in a *types.CriticalError with a stable reason so the vault
+// can be automatically paused.
 func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.PendingSwapOut, vault types.VaultAccount) error {
 	vaultAddr := sdk.MustAccAddressFromBech32(req.VaultAddress)
 	ownerAddr := sdk.MustAccAddressFromBech32(req.Owner)
@@ -157,8 +158,8 @@ func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.P
 
 // refundWithdrawal handles the failure case for a pending swap out. It returns the user's
 // escrowed shares from the vault's own account back to the owner and emits an EventSwapOutRefunded.
-// This function returns an error if the refund transfer fails, allowing the caller to handle the
-// critical state inconsistency.
+// It returns nil on success. If the refund transfer itself fails, the error is wrapped in a
+// *types.CriticalError with a stable reason so the vault can be automatically paused.
 func (k *Keeper) refundWithdrawal(ctx sdk.Context, id uint64, req types.PendingSwapOut, reason string) error {
 	vaultAddr := sdk.MustAccAddressFromBech32(req.VaultAddress)
 	ownerAddr := sdk.MustAccAddressFromBech32(req.Owner)

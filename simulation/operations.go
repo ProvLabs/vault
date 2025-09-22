@@ -248,6 +248,20 @@ func getRandomVaultAsset(r *rand.Rand, vault *types.VaultAccount) string {
 	return vault.PaymentDenom
 }
 
+func getRandomAccountWithDenom(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, accs []simtypes.Account, denom string) (simtypes.Account, sdk.Coin, error) {
+	r.Shuffle(len(accs), func(i, j int) {
+		accs[i], accs[j] = accs[j], accs[i]
+	})
+	for _, acc := range accs {
+		bal := k.BankKeeper.GetBalance(ctx, acc.Address, denom)
+		if !bal.IsZero() {
+			return acc, bal, nil
+		}
+	}
+
+	return simtypes.Account{}, sdk.Coin{}, fmt.Errorf("no account has positive %s balance", denom)
+}
+
 func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simulation.WeightedOperations {
 	var (
 		wCreateVault           int
@@ -357,20 +371,8 @@ func SimulateMsgSwapIn(k keeper.Keeper) simtypes.Operation {
 		}
 
 		assetDenom := getRandomVaultAsset(r, vault)
-		var owner simtypes.Account
-		var balance sdk.Coin
-		found := false
-		for _, acc := range accs {
-			bal := k.BankKeeper.GetBalance(ctx, acc.Address, assetDenom)
-			if !bal.IsZero() {
-				owner = acc
-				balance = bal
-				found = true
-				break
-			}
-		}
-
-		if !found {
+		owner, balance, err := getRandomAccountWithDenom(r, k, ctx, accs, assetDenom)
+		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSwapInRequest{}), "no account has funds for this vault's accepted assets"), nil, nil
 		}
 
@@ -417,21 +419,8 @@ func SimulateMsgSwapOut(k keeper.Keeper) simtypes.Operation {
 		}
 
 		// Find an account that has shares in this vault
-		// TODO Find an account that has the vault's shares
-		var owner simtypes.Account
-		var balance sdk.Coin
-		found := false
-		for _, acc := range accs {
-			bal := k.BankKeeper.GetBalance(ctx, acc.Address, vault.ShareDenom)
-			if !bal.IsZero() {
-				owner = acc
-				balance = bal
-				found = true
-				break
-			}
-		}
-
-		if !found {
+		owner, balance, err := getRandomAccountWithDenom(r, k, ctx, accs, vault.ShareDenom)
+		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSwapOutRequest{}), "no account has shares in this vault"), nil, nil
 		}
 
@@ -442,13 +431,15 @@ func SimulateMsgSwapOut(k keeper.Keeper) simtypes.Operation {
 		}
 		shares := sdk.NewCoin(vault.ShareDenom, amount)
 
+		// Pick a random asset to receive it in
+		redeemDenom := getRandomVaultAsset(r, vault)
+
 		// Create and dispatch the message
 		msg := &types.MsgSwapOutRequest{
 			Owner:        owner.Address.String(),
 			VaultAddress: vault.GetAddress().String(),
 			Assets:       shares,
-			// TODO This should be "" or a random denom
-			RedeemDenom: "",
+			RedeemDenom:  redeemDenom,
 		}
 
 		handler := keeper.NewMsgServer(&k)
@@ -726,8 +717,8 @@ func SimulateMsgDepositPrincipalFunds(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositPrincipalFundsRequest{}), "vault is not paused"), nil, nil
 		}
 
-		// TODO This should either be the underlying asset or the payment denom
-		balance := k.BankKeeper.GetBalance(ctx, adminAddr, vault.UnderlyingAsset)
+		asset := getRandomVaultAsset(r, vault)
+		balance := k.BankKeeper.GetBalance(ctx, adminAddr, asset)
 		if balance.IsZero() {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositPrincipalFundsRequest{}), "admin has no funds to deposit"), nil, nil
 		}
@@ -781,7 +772,8 @@ func SimulateMsgWithdrawPrincipalFunds(k keeper.Keeper) simtypes.Operation {
 		}
 
 		principalAddr := vault.PrincipalMarkerAddress()
-		balance := k.BankKeeper.GetBalance(ctx, principalAddr, vault.UnderlyingAsset)
+		asset := getRandomVaultAsset(r, vault)
+		balance := k.BankKeeper.GetBalance(ctx, principalAddr, asset)
 		amount := sdk.NewInt64Coin(vault.UnderlyingAsset, r.Int63n(balance.Amount.Int64()))
 
 		msg := &types.MsgWithdrawPrincipalFundsRequest{

@@ -200,11 +200,3 @@ func NewEventVaultUnpaused(vaultAddress, admin string, totalVaultValue sdk.Coin)
 		TotalVaultValue: totalVaultValue,
 	}
 }
-
-// NewEventVaultAutoPaused creates a new EventVaultAutoPaused event.
-func NewEventVaultAutoPaused(vaultAddress, reason string) *EventVaultAutoPaused {
-	return &EventVaultAutoPaused{
-		VaultAddress: vaultAddress,
-		Reason:       reason,
-	}
-}

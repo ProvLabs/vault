@@ -72,7 +72,7 @@ func (k *Keeper) processSwapOutJobs(ctx context.Context, jobsToProcess []types.P
 		}
 
 		if err := k.PendingSwapOutQueue.Dequeue(ctx, j.Timestamp, j.VaultAddr, j.ID); err != nil {
-			k.autoPauseVault(sdkCtx, vault, fmt.Errorf("failed to dequeue withdrawal request %d for vault %s: %w", j.ID, j.VaultAddr, err))
+			sdkCtx.Logger().Error(fmt.Sprintf("failed to dequeue withdrawal request %d for vault %s: %w", j.ID, j.VaultAddr, err))
 			continue
 		}
 

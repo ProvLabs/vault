@@ -535,7 +535,47 @@ func (s *TestSuite) TestQueryServer_EstimateSwapIn() {
 				VaultAddress: vaultAddr.String(),
 				Assets:       sdk.NewInt64Coin("wrongdenom", 100),
 			},
-			ExpectedErrSubstrs: []string{"denom not supported for vault must be of type"},
+			ExpectedErrSubstrs: []string{"unsupported deposit denom:"},
+		},
+		{
+			Name: "happy path with payment denom configured (underlying deposit)",
+			Setup: func() {
+				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
+				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin("usdc", math.NewInt(1)), s.adminAddr)
+				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin:           admin,
+					ShareDenom:      shareDenom,
+					UnderlyingAsset: underlyingDenom,
+					PaymentDenom:    "usdc",
+				})
+				s.Require().NoError(err, "vault creation should succeed")
+			},
+			Req: &types.QueryEstimateSwapInRequest{
+				VaultAddress: vaultAddr.String(),
+				Assets:       assets,
+			},
+			ExpectedResp: &types.QueryEstimateSwapInResponse{
+				Assets: sdk.NewCoin(shareDenom, assets.Amount.Mul(utils.ShareScalar)),
+			},
+		},
+		{
+			Name: "payment denom deposit without NAV",
+			Setup: func() {
+				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
+				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin("usdc", math.NewInt(1)), s.adminAddr)
+				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin:           admin,
+					ShareDenom:      shareDenom,
+					UnderlyingAsset: underlyingDenom,
+					PaymentDenom:    "usdc",
+				})
+				s.Require().NoError(err, "vault creation should succeed")
+			},
+			Req: &types.QueryEstimateSwapInRequest{
+				VaultAddress: vaultAddr.String(),
+				Assets:       sdk.NewInt64Coin("usdc", 100),
+			},
+			ExpectedErrSubstrs: []string{"no NAV for"},
 		},
 	}
 
@@ -578,7 +618,7 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 			},
 			Req: &types.QueryEstimateSwapOutRequest{
 				VaultAddress: vaultAddr.String(),
-				Assets:       sharesToSwap,
+				Shares:       sharesToSwap.Amount,
 			},
 			ExpectedResp: &types.QueryEstimateSwapOutResponse{
 				Assets: sdk.NewInt64Coin(underlyingDenom, 100), // ~exact with current offsets
@@ -617,9 +657,63 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 			},
 			Req: &types.QueryEstimateSwapOutRequest{
 				VaultAddress: vaultAddr.String(),
-				Assets:       sdk.NewInt64Coin("wrongdenom", 100),
+				Shares:       math.NewInt(100),
+				RedeemDenom:  "wrongdenom",
 			},
-			ExpectedErrSubstrs: []string{"asset denom", "does not match vault share denom"},
+			ExpectedErrSubstrs: []string{"unsupported redeem denom"},
+		},
+		{
+			Name: "happy path with payment denom configured (default underlying)",
+			Setup: func() {
+				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
+				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin("usdc", math.NewInt(1)), s.adminAddr)
+				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin:           admin,
+					ShareDenom:      shareDenom,
+					UnderlyingAsset: underlyingDenom,
+					PaymentDenom:    "usdc",
+				})
+				s.Require().NoError(err, "vault creation should succeed")
+
+				err = FundAccount(s.ctx, s.simApp.BankKeeper, markertypes.MustGetMarkerAddress(shareDenom), sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 100)))
+				s.Require().NoError(err, "funding marker with underlying should succeed")
+
+				err = FundAccount(s.ctx, s.simApp.BankKeeper, s.adminAddr, sdk.NewCoins(sharesToSwap))
+				s.Require().NoError(err, "funding owner with scaled shares should succeed")
+			},
+			Req: &types.QueryEstimateSwapOutRequest{
+				VaultAddress: vaultAddr.String(),
+				Shares:       sharesToSwap.Amount,
+			},
+			ExpectedResp: &types.QueryEstimateSwapOutResponse{
+				Assets: sdk.NewInt64Coin(underlyingDenom, 100),
+			},
+		},
+		{
+			Name: "payment denom redeem without NAV",
+			Setup: func() {
+				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
+				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin("usdc", math.NewInt(1)), s.adminAddr)
+				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin:           admin,
+					ShareDenom:      shareDenom,
+					UnderlyingAsset: underlyingDenom,
+					PaymentDenom:    "usdc",
+				})
+				s.Require().NoError(err, "vault creation should succeed")
+
+				err = FundAccount(s.ctx, s.simApp.BankKeeper, markertypes.MustGetMarkerAddress(shareDenom), sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 100)))
+				s.Require().NoError(err, "funding marker with underlying should succeed")
+
+				err = FundAccount(s.ctx, s.simApp.BankKeeper, s.adminAddr, sdk.NewCoins(sharesToSwap))
+				s.Require().NoError(err, "funding owner with scaled shares should succeed")
+			},
+			Req: &types.QueryEstimateSwapOutRequest{
+				VaultAddress: vaultAddr.String(),
+				Shares:       sharesToSwap.Amount,
+				RedeemDenom:  "usdc",
+			},
+			ExpectedErrSubstrs: []string{"no NAV for"},
 		},
 	}
 

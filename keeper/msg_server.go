@@ -252,7 +252,7 @@ func (k msgServer) DepositInterestFunds(goCtx context.Context, msg *types.MsgDep
 		return nil, fmt.Errorf("denom not supported for vault must be of type \"%s\" : got \"%s\"", vault.UnderlyingAsset, msg.Amount.Denom)
 	}
 
-	if err := k.BankKeeper.SendCoins(ctx, adminAddr, vaultAddr, sdk.NewCoins(msg.Amount)); err != nil {
+	if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx), adminAddr, vaultAddr, sdk.NewCoins(msg.Amount)); err != nil {
 		return nil, fmt.Errorf("failed to deposit funds: %w", err)
 	}
 

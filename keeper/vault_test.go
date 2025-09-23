@@ -621,11 +621,7 @@ func (s *TestSuite) TestAutoPauseVault_SetsPausedAndEmitsEvent() {
 	evs := s.ctx.EventManager().Events()
 	s.Require().NotEmpty(evs, "an event should be emitted")
 	last := evs[len(evs)-1]
-<<<<<<< HEAD
 	s.Require().Equal("vault.v1.EventVaultPaused", last.Type, "event type should be EventVaultAutoPaused")
-=======
-	s.Require().Equal("vault.v1.EventVaultAutoPaused", last.Type, "event type should be EventVaultAutoPaused")
->>>>>>> main
 
 	hasAddr := false
 	hasReason := false

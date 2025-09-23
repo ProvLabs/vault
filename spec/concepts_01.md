@@ -1,213 +1,70 @@
-# Vault Concepts
+# Vault Module Overview
 
-The `x/vault` module tokenizes a pool of underlying assets and issues vault shares. Users can swap underlying assets for shares (`SwapIn`) and redeem shares for underlying assets (`SwapOut`). The module supports configurable interest (positive or negative) funded and accounted directly on-chain. All transfers honor the Provenance `x/marker` send‑restriction model.
+The `x/vault` module provides a system for tokenized vaults built on Provenance’s marker and account model.  
+Vaults allow users to deposit underlying assets in exchange for vault shares, redeem those shares later, and participate in configurable interest accrual.  
+Each vault is configured with both an **underlying asset denom** (the backing collateral) and an optional **payment denom**.  
+The payment denom provides a secondary unit for payouts and redemptions: users can request to redeem shares into either the underlying asset or the configured payment denom (if supported), with conversions handled via on-chain NAV pricing.  
+The module manages vault lifecycle, share issuance, redemptions, dual-asset accounting, interest accrual, and time-based job queues for automated processing.
+
+
+
+## Keeper Responsibilities
+
+The keeper ties together state management, account operations, marker integration, interest reconciliation, and queued jobs.
+
+### Vault Lifecycle
+- **CreateVault**: validates an existing marker for the underlying asset, establishes a vault account, and creates the share marker with mint/burn/withdraw permissions.
+- **GetVault**: retrieves and validates a vault account by address.
+- **Pause/Unpause**: admins can pause a vault, freezing operations and fixing balances, or unpause to resume operations.
+
+### Swap Operations
+- **SwapIn**: deposit underlying assets, mint shares, and transfer them to the depositor.
+- **SwapOut**: escrow shares and queue a withdrawal job for later payout after a configured delay.  
+  - Withdrawals are processed safely in EndBlocker to avoid state conflicts.
+  - Refunds or auto-pauses are triggered on failures.
+
+### Interest Management
+- **ReconcileVaultInterest**: ensures accrued interest is applied before any balance-changing action.
+- **Positive Interest**: paid from vault reserves into the principal marker.
+- **Negative Interest**: refunded from the principal marker into reserves, capped by available funds.
+- **Rate Controls**: vaults have configurable current/desired rates, and optional min/max bounds.
+- **Queues**: vaults rotate between verification and timeout queues to forecast payout ability and auto-reconcile interest periodically.
+
+### Valuation
+- **NAV Calculations**: conversion functions based on Net Asset Value (NAV) between denominations.
+- **TVV (Total Vault Value)**: derived from balances at the principal marker, always expressed in underlying units.
+- **Pro-Rata Conversions**: deterministic share/asset calculations with floor arithmetic to avoid inflation or over-distribution.
+
+### Queues & Jobs
+- **Payout Timeout Queue**: tracks when vaults must be revisited for automatic interest reconciliation.
+- **Payout Verification Set**: temporary holding set for vaults awaiting validation after rate changes or reconciliations.
+- **Pending Swap-Out Queue**: time-ordered queue of withdrawal requests, processed in EndBlocker. Jobs include owner, vault, shares, redeem denom, and request ID.
+
+### Genesis
+- **InitGenesis**: loads vault accounts, queue entries, and validates stored state.
+- **ExportGenesis**: exports all vaults and active queue entries for chain restart or upgrades.
+
+### Block Hooks
+- **BeginBlocker**: checks vaults with expired timeouts and reconciles or disables interest.
+- **EndBlocker**: processes pending swap-out jobs and reconciled vaults safely.
+
+---
+
+## Error Handling & Safety
+
+- **Auto-Pause**: vaults encountering unrecoverable errors during processing are paused automatically, with a stable reason recorded and event emitted.
+- **Refund Path**: failed withdrawals attempt to return escrowed shares to the user, with reason codes emitted for transparency.
+- **Validation**: strict checks on denoms, admin permissions, share supply, and marker restrictions ensure consistency and prevent misconfiguration.
 
 ---
 
-<!-- TOC -->
+## High-Level Flow
 
-* [Accounts & Denoms](#accounts--denoms)
-* [State](#state)
-* [Lifecycle](#lifecycle)
-
-  * [CreateVault](#createvault)
-  * [SwapIn (assets → shares)](#swapin-assets--shares)
-  * [SwapOut (shares → assets)](#swapout-shares--assets)
-  * [Principal & Reserves Admin Flows](#principal--reserves-admin-flows)
-  * [Swap Toggles](#swap-toggles)
-* [Interest](#interest)
-
-  * [Rates & Limits](#rates--limits)
-  * [Accrual & Reconciliation](#accrual--reconciliation)
-  * [BeginBlocker / EndBlocker behavior](#beginblocker--endblocker-behavior)
-  * [Estimation (queries)](#estimation-queries)
-* [Queries](#queries)
-* [Events](#events)
-* [Params](#params)
-* [Errors & Validation](#errors--validation)
-* [Planned Additions](#planned-additions)
-
----
-
-## Accounts & Denoms
-
-Each vault uses two on‑chain locations for the single underlying asset denom:
-
-* **Principal (marker account for the vault’s share denom):** holds the underlying asset that backs shares. Address = `marker(share_denom)`.
-* **Reserves (vault account address):** funds used to pay **positive** interest (and to receive funds from the marker for **negative** interest).
-
-Denoms:
-
-* `underlying_asset`: the single supported asset denom for the vault.
-* `share_denom`: the vault’s share token denom (restricted marker).
-
-## State
-
-`VaultAccount`
-
-* `address` (from embedded `BaseAccount`)
-* `share_denom`
-* `underlying_assets[0]` (single supported denom)
-* `admin`
-* `current_interest_rate`, `desired_interest_rate`
-* `min_interest_rate`, `max_interest_rate`
-* `swap_in_enabled`, `swap_out_enabled`
-
-`VaultInterestDetails`
-
-* `period_start` (Unix seconds)
-* `expire_time` (Unix seconds; auto‑reconcile guard window)
-
-Module keeps a keyed set of vault addresses and a map of `VaultInterestDetails` by vault.
-
-## Lifecycle
-
-### CreateVault
-
-* Requires the **underlying asset marker** to already exist.
-* Creates a **share marker** for `share_denom` with the vault account as manager and grants:
-  * `Mint`, `Burn`, `Withdraw` to the vault account.
-* Finalizes and activates the share marker.
-* Stores the `VaultAccount`; emits `EventVaultCreated`.
-
-### SwapIn (assets → shares)
-
-High‑level flow:
-
-1. Load vault; require `swap_in_enabled`.
-2. `ReconcileVaultInterest` (applies any due interest before changing supply).
-3. Validate `assets` denom matches `underlying_asset`.
-4. Compute shares from current ratio:
-   `shares = f(assets_in, total_assets_at_marker, total_shares_supply)`
-5. Mint shares to the **vault account**, then withdraw to the **owner**.
-6. Send `assets` from **owner** to the **marker(principal)**.
-7. Emit `EventSwapIn`.
-
-### SwapOut (shares → assets)
-
-High‑level flow:
-
-1. Load vault; require `swap_out_enabled`.
-2. Require `shares.denom == share_denom`.
-3. `ReconcileVaultInterest`.
-4. Compute assets from shares:
-   `assets = f(shares_in, total_shares_supply, total_assets_at_marker)`
-5. Owner sends shares to **marker(principal)**.
-6. Burn shares from the **vault account**.
-7. Send `assets` from **marker(principal)** to owner using transfer‑agent context (`WithTransferAgents(ctx, vaultAddr)`).
-8. Emit `EventSwapOut`.
-
-### Principal & Reserves Admin Flows
-
-* **DepositInterestFunds:** admin → **vault account (reserves)**; validates denom; reconciles before event.
-* **WithdrawInterestFunds:** **vault account (reserves)** → admin; validates denom; reconciles before event.
-* **DepositPrincipalFunds:** admin → **marker(principal)**; validates denom; reconciles before event.
-* **WithdrawPrincipalFunds:** **marker(principal)** → admin; validates denom; reconciles before event.
-
-### Swap Toggles
-
-* **ToggleSwapIn / ToggleSwapOut**: admin‑gated flips that update `swap_in_enabled` / `swap_out_enabled` and emit toggle events.
-* Toggling does not affect existing supply; it only gates new swaps.
-
-## Interest
-
-### Rates & Limits
-
-* Admin can set **min**/**max** rate limits (empty string disables that bound).
-* Admin updates the **current** and **desired** rates with `UpdateInterestRate`.
-* On a rate change:
-
-  * If the previous `current_interest_rate` ≠ 0, reconcile first.
-  * Update `current_interest_rate` and `desired_interest_rate`.
-  * Manage `VaultInterestDetails` presence based on whether interest is enabled (non‑zero).
-
-### Accrual & Reconciliation
-
-* Accrual is **period‑based** from `VaultInterestDetails.period_start` to current block time.
-* Computation: `interest = CalculateInterestEarned(principal_amount, current_rate, duration_seconds)`.
-* Transfers:
-
-  * **Positive interest:** move `interest` from **reserves (vault account)** → **marker(principal)**.
-  * **Negative interest:** move `|interest|` from **marker(principal)** → **reserves (vault account)** (capped at available principal).
-* Emit `EventVaultReconcile(principal_before, principal_after, rate, time, interest_earned)`.
-* On successful transfer, reset `period_start` to current block time.
-
-`ReconcileVaultInterest` is called:
-
-* Before `SwapIn`, `SwapOut`.
-* Before principal/interest admin moves.
-* From BeginBlocker for scheduled checks.
-
-### BeginBlocker / EndBlocker behavior
-
-* **BeginBlocker:** `handleVaultInterestTimeouts`
-
-  * For each vault with `expire_time <= now` (or unset) where a new period has elapsed:
-
-    * Check ability to pay or refund over the elapsed duration (`CanPayoutDuration`):
-
-      * If payable/refundable, perform `PerformVaultInterestTransfer`.
-      * If not, mark for depletion handling.
-  * Reset `period_start` for reconciled vaults to current time.
-* **EndBlocker:** `handleReconciledVaults`
-
-  * Partition reconciled vaults:
-
-    * **Payable:** extend `expire_time = now + AutoReconcileTimeout`.
-    * **Depleted:** set `current_interest_rate = 0` (keep `desired_interest_rate`), remove `VaultInterestDetails`.
-
-### Estimation (queries)
-
-Estimates simulate accrual **without mutating state**:
-
-* `CalculateVaultTotalAssets` derives a notional `total_assets = principal + accrued_interest_since(period_start)` using block time.
-* `EstimateSwapIn`: computes **shares** for a given asset amount against estimated total assets.
-* `EstimateSwapOut`: computes **assets** for a given share amount against estimated total assets.
-* Both return the block `height` and UTC `time` used for the estimate.
-
-## Queries
-
-* `Vaults(pagination)` → list of `VaultAccount`.
-* `Vault(vault_address)` → `VaultAccount`.
-* `EstimateSwapIn(vault_address, assets)` → `shares`, `height`, `time`.
-* `EstimateSwapOut(vault_address, assets=shares)` → `assets`, `height`, `time`.
-
-## Events
-
-* `EventVaultCreated(vault_address, admin, share_denom, underlying_assets[])`
-* `EventSwapIn(owner, amount_in, shares_received, vault_address)`
-* `EventSwapOut(owner, shares_burned, amount_out, vault_address)`
-* `EventVaultReconcile(vault_address, principal_before, principal_after, rate, time, interest_earned)`
-* `EventVaultInterestChange(vault_address, current_rate, desired_rate)`
-* `EventInterestDeposit(vault_address, admin, amount)`
-* `EventInterestWithdrawal(vault_address, admin, amount)`
-* `EventToggleSwapIn(vault_address, admin, enabled)`
-* `EventToggleSwapOut(vault_address, admin, enabled)`
-* `EventDepositPrincipalFunds(vault_address, admin, amount)`
-* `EventWithdrawPrincipalFunds(vault_address, admin, amount)`
-* `EventMinInterestRateUpdated(vault_address, admin, min_rate)`
-* `EventMaxInterestRateUpdated(vault_address, admin, max_rate)`
-
-## Params
-
-`Params` currently has no fields; reserved for future module‑wide configuration.
-
-## Errors & Validation
-
-* **Marker existence:** `CreateVault` requires existing marker for the `underlying_asset`.
-* **Share denom uniqueness:** share marker must not already exist.
-* **Admin auth:** all admin endpoints validate `vault.admin`.
-* **Asset/denom checks:** swaps and fund moves must match `underlying_asset`; swap‑out shares must match `share_denom`.
-* **Toggles:** `swap_in_enabled` / `swap_out_enabled` must be true for respective flows.
-* **Interest funding:** positive interest requires sufficient **reserves**; insufficient reserves produce an error on reconciliation.
-* **Bounds:** new rate must satisfy optional `min_interest_rate` / `max_interest_rate`.
-* **Depletion handling:** if a vault cannot pay/refund during automated checks, interest is set to zero and period tracking is removed.
-
-## Planned Additions
-
-Not yet implemented but planned:
-
-* **AUM fee**: periodic fee in basis points against total assets.
-* **Swap‑out fee**: basis‑point fee applied to redemptions (shares → assets).
-
----
+1. **CreateVault**: admin sets up a new vault.
+2. **SwapIn**: users deposit assets → shares minted.
+3. **SwapOut**: users escrow shares → queued for payout.
+4. **Interest**: accrues over time, reconciled on actions or via queues.
+5. **Block Processing**:
+   - BeginBlocker: runs interest checks and timeouts.
+   - EndBlocker: finalizes swap-out jobs and reconciliations.
+6. **Admin Tools**: manage interest rates, deposits/withdrawals, pausing/unpausing, and queue interventions.

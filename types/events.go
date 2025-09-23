@@ -6,13 +6,24 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+const (
+	RefundReasonInsufficientFunds          = "insufficient_funds"
+	RefundReasonPermissionDenied           = "permission_denied"
+	RefundReasonMarkerNotActive            = "marker_not_active"
+	RefundReasonRecipientMissingAttributes = "recipient_missing_required_attributes"
+	RefundReasonRecipientInvalid           = "recipient_invalid"
+	RefundReasonNavNotFound                = "nav_not_found"
+	RefundReasonReconcileFailure           = "reconcile_failure"
+	RefundReasonUnknown                    = "unknown_error"
+)
+
 // NewEventVaultCreated creates a new EventVaultCreated event.
 func NewEventVaultCreated(vault *VaultAccount) *EventVaultCreated {
 	return &EventVaultCreated{
-		VaultAddress:     vault.GetAddress().String(),
-		Admin:            vault.Admin,
-		ShareDenom:       vault.ShareDenom,
-		UnderlyingAssets: vault.UnderlyingAssets,
+		VaultAddress:    vault.GetAddress().String(),
+		Admin:           vault.Admin,
+		ShareDenom:      vault.ShareDenom,
+		UnderlyingAsset: vault.UnderlyingAsset,
 	}
 }
 
@@ -127,5 +138,73 @@ func NewEventMaxInterestRateUpdated(vaultAddress, admin, maxRate string) *EventM
 		VaultAddress: vaultAddress,
 		Admin:        admin,
 		MaxRate:      maxRate,
+	}
+}
+
+// NewEventSwapOutRequested creates a new EventSwapOutRequested event.
+func NewEventSwapOutRequested(vaultAddress, owner, redeemDenom string, shares sdk.Coin, requestID uint64) *EventSwapOutRequested {
+	return &EventSwapOutRequested{
+		VaultAddress: vaultAddress,
+		Owner:        owner,
+		RedeemDenom:  redeemDenom,
+		Shares:       shares,
+		RequestId:    requestID,
+	}
+}
+
+// NewEventSwapOutCompleted creates a new EventSwapOutCompleted event.
+func NewEventSwapOutCompleted(vaultAddress, owner string, assets sdk.Coin, requestID uint64) *EventSwapOutCompleted {
+	return &EventSwapOutCompleted{
+		VaultAddress: vaultAddress,
+		Owner:        owner,
+		Assets:       assets,
+		RequestId:    requestID,
+	}
+}
+
+// NewEventSwapOutRefunded creates a new EventSwapOutRefunded event.
+func NewEventSwapOutRefunded(vaultAddress, owner string, shares sdk.Coin, requestID uint64, reason string) *EventSwapOutRefunded {
+	return &EventSwapOutRefunded{
+		VaultAddress: vaultAddress,
+		Owner:        owner,
+		Shares:       shares,
+		RequestId:    requestID,
+		Reason:       reason,
+	}
+}
+
+// NewEventPendingSwapOutExpedited creates a new EventPendingSwapOutExpedited event.
+func NewEventPendingSwapOutExpedited(requestID uint64, vault, admin string) *EventPendingSwapOutExpedited {
+	return &EventPendingSwapOutExpedited{
+		RequestId: requestID,
+		Vault:     vault,
+		Admin:     admin,
+	}
+}
+
+// NewEventVaultPaused creates a new EventVaultPaused event.
+func NewEventVaultPaused(vaultAddress, admin, reason string, totalVaultValue sdk.Coin) *EventVaultPaused {
+	return &EventVaultPaused{
+		VaultAddress:    vaultAddress,
+		Admin:           admin,
+		Reason:          reason,
+		TotalVaultValue: totalVaultValue,
+	}
+}
+
+// NewEventVaultUnpaused creates a new EventVaultUnpaused event.
+func NewEventVaultUnpaused(vaultAddress, admin string, totalVaultValue sdk.Coin) *EventVaultUnpaused {
+	return &EventVaultUnpaused{
+		VaultAddress:    vaultAddress,
+		Admin:           admin,
+		TotalVaultValue: totalVaultValue,
+	}
+}
+
+// NewEventVaultAutoPaused creates a new EventVaultAutoPaused event.
+func NewEventVaultAutoPaused(vaultAddress, reason string) *EventVaultAutoPaused {
+	return &EventVaultAutoPaused{
+		VaultAddress: vaultAddress,
+		Reason:       reason,
 	}
 }

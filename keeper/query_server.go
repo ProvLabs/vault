@@ -3,16 +3,17 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/provlabs/vault/types"
 	"github.com/provlabs/vault/utils"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"cosmossdk.io/collections"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 var _ types.QueryServer = &queryServer{}
@@ -39,7 +40,7 @@ func (k queryServer) Vaults(goCtx context.Context, req *types.QueryVaultsRequest
 		ctx,
 		k.Keeper.Vaults,
 		req.Pagination,
-		func(key sdk.AccAddress, val []byte) (include bool, err error) {
+		func(key sdk.AccAddress, _ []byte) (include bool, err error) {
 			vault, _ := k.GetVault(ctx, key)
 			vaults = append(vaults, *vault)
 			return true, nil
@@ -60,28 +61,37 @@ func (k queryServer) Vaults(goCtx context.Context, req *types.QueryVaultsRequest
 
 // Vault returns the configuration and state of a specific vault.
 func (k queryServer) Vault(goCtx context.Context, req *types.QueryVaultRequest) (*types.QueryVaultResponse, error) {
-	if req == nil || req.VaultAddress == "" {
-		return nil, status.Error(codes.InvalidArgument, "vault_address must be provided")
+	if req == nil || req.Id == "" {
+		return nil, status.Error(codes.InvalidArgument, "id must be provided")
 	}
-
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	vaultAddr, err := sdk.AccAddressFromBech32(req.VaultAddress)
+	vault, err := k.FindVaultAccount(ctx, req.Id)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid vault_address: %v", err)
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	vault, err := k.GetVault(ctx, vaultAddr)
-	if err != nil || vault == nil {
-		return nil, status.Errorf(codes.NotFound, "vault with address %q not found", req.VaultAddress)
+	marker, err := k.MarkerKeeper.GetMarkerByDenom(ctx, vault.ShareDenom)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
 	}
+
+	principal := k.BankKeeper.GetAllBalances(goCtx, marker.GetAddress())
+	reserves := k.BankKeeper.GetAllBalances(goCtx, vault.GetAddress())
 
 	return &types.QueryVaultResponse{
 		Vault: *vault,
+		Principal: types.AccountBalance{
+			Address: marker.GetAddress().String(),
+			Coins:   principal,
+		},
+		Reserves: types.AccountBalance{
+			Address: vault.GetAddress().String(),
+			Coins:   reserves,
+		},
 	}, nil
 }
 
-// EstimateSwapIn estimates the amount of shares that would be received for a given amount of underlying assets.
 func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstimateSwapInRequest) (*types.QueryEstimateSwapInResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -102,22 +112,37 @@ func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstim
 		return nil, status.Errorf(codes.NotFound, "vault with address %q not found", req.VaultAddress)
 	}
 
-	if err := vault.ValidateUnderlyingAssets(req.Assets); err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid asset for vault: %v", err)
+	if !vault.IsAcceptedDenom(req.Assets.Denom) {
+		return nil, status.Errorf(codes.InvalidArgument, "unsupported deposit denom: %q", req.Assets.Denom)
 	}
 
-	markerAddr := markertypes.MustGetMarkerAddress(vault.ShareDenom)
+	priceNum, priceDen, err := k.UnitPriceFraction(ctx, req.Assets.Denom, vault.UnderlyingAsset)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "no NAV for %s/%s: %v", req.Assets.Denom, vault.UnderlyingAsset, err)
+	}
+	if priceDen.IsZero() {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid NAV: zero volume for %s/%s", req.Assets.Denom, vault.UnderlyingAsset)
+	}
+
+	principalAddress := vault.PrincipalMarkerAddress()
 	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
-	totalAssets := k.BankKeeper.GetBalance(ctx, markerAddr, vault.UnderlyingAssets[0])
+	totalAssets := k.BankKeeper.GetBalance(ctx, principalAddress, vault.UnderlyingAsset)
 
 	estimatedTotalAssets, err := k.CalculateVaultTotalAssets(ctx, vault, totalAssets)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to estimate total assets: %v", err)
 	}
 
-	estimatedShares, err := utils.CalculateSharesFromAssets(req.Assets.Amount, estimatedTotalAssets, totalShares, vault.ShareDenom)
+	amountNum := req.Assets.Amount.Mul(priceNum)
+	estimatedShares, err := utils.CalculateSharesProRataFraction(
+		amountNum,
+		priceDen,
+		estimatedTotalAssets,
+		totalShares,
+		vault.ShareDenom,
+	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to calculate shares from assets: %w", err)
+		return nil, fmt.Errorf("failed to calculate shares: %w", err)
 	}
 
 	return &types.QueryEstimateSwapInResponse{
@@ -127,7 +152,7 @@ func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstim
 	}, nil
 }
 
-// EstimateSwapOut estimates the amount of underlying assets that would be received for a given amount of shares.
+// EstimateSwapOut estimates the amount of payout assets (underlying or payout denom) received for a given amount of shares.
 func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEstimateSwapOutRequest) (*types.QueryEstimateSwapOutResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -147,28 +172,79 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 	if err != nil || vault == nil {
 		return nil, status.Errorf(codes.NotFound, "vault with address %q not found", req.VaultAddress)
 	}
-
-	if req.Assets.Denom != vault.ShareDenom {
-		return nil, status.Errorf(codes.InvalidArgument, "asset denom %s does not match vault share denom %s", req.Assets.Denom, vault.ShareDenom)
+	redeemDenom := req.RedeemDenom
+	if redeemDenom == "" {
+		redeemDenom = vault.UnderlyingAsset
+	}
+	if !vault.IsAcceptedDenom(redeemDenom) {
+		return nil, status.Errorf(codes.InvalidArgument, "unsupported redeem denom: %q", redeemDenom)
 	}
 
-	markerAddr := markertypes.MustGetMarkerAddress(vault.ShareDenom)
+	principalAddress := vault.PrincipalMarkerAddress()
 	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
-	totalAssets := k.BankKeeper.GetBalance(ctx, markerAddr, vault.UnderlyingAssets[0])
+	totalAssets := k.BankKeeper.GetBalance(ctx, principalAddress, vault.UnderlyingAsset)
 
 	estimatedTotalAssets, err := k.CalculateVaultTotalAssets(ctx, vault, totalAssets)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to estimate total assets: %v", err)
 	}
 
-	estimatedAssets, err := utils.CalculateAssetsFromShares(req.Assets.Amount, totalShares, estimatedTotalAssets, vault.UnderlyingAssets[0])
+	priceNum, priceDen, err := k.UnitPriceFraction(ctx, redeemDenom, vault.UnderlyingAsset)
 	if err != nil {
-		return nil, fmt.Errorf("failed to calculate assets from shares: %w", err)
+		return nil, status.Errorf(codes.InvalidArgument, "no NAV for %s/%s: %v", redeemDenom, vault.UnderlyingAsset, err)
+	}
+	if priceNum.IsZero() {
+		return nil, status.Errorf(codes.InvalidArgument, "zero price for %s/%s", redeemDenom, vault.UnderlyingAsset)
+	}
+
+	estimatedPayout, err := utils.CalculateRedeemProRataFraction(
+		req.Shares,
+		totalShares,
+		estimatedTotalAssets,
+		priceNum,
+		priceDen,
+		redeemDenom,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to calculate redeem estimate: %w", err)
 	}
 
 	return &types.QueryEstimateSwapOutResponse{
-		Assets: estimatedAssets,
+		Assets: estimatedPayout,
 		Height: ctx.BlockHeight(),
 		Time:   ctx.BlockTime().UTC(),
+	}, nil
+}
+
+// PendingSwapOuts returns a paginated list of all pending swap outs.
+func (k queryServer) PendingSwapOuts(goCtx context.Context, req *types.QueryPendingSwapOutsRequest) (*types.QueryPendingSwapOutsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	swapOuts := []types.PendingSwapOutWithTimeout{}
+
+	_, pageRes, err := query.CollectionPaginate(
+		ctx,
+		k.PendingSwapOutQueue.IndexedMap,
+		req.Pagination,
+		func(key collections.Triple[int64, uint64, sdk.AccAddress], value types.PendingSwapOut) (include bool, err error) {
+			swapOuts = append(swapOuts, types.PendingSwapOutWithTimeout{
+				RequestId:      key.K2(),
+				Timeout:        time.Unix(key.K1(), 0),
+				PendingSwapOut: value,
+			})
+			return true, nil
+		},
+	)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryPendingSwapOutsResponse{
+		PendingSwapOuts: swapOuts,
+		Pagination:      pageRes,
 	}, nil
 }

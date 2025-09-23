@@ -112,7 +112,7 @@ func SimulateMsgSwapIn(k keeper.Keeper) simtypes.Operation {
 		vaults, _ := k.GetVaults(ctx)
 		iter := utils.Filter(vaults, func(addr sdk.AccAddress) bool {
 			vault, _ := k.GetVault(ctx, addr)
-			return vault.UnderlyingAssets[0] == underlyingAsset
+			return vault.UnderlyingAsset == underlyingAsset
 		})
 		vaults = slices.Collect(iter)
 		vaultAddr := sdk.AccAddress{}

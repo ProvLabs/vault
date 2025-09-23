@@ -4,14 +4,8 @@ import (
 	"context"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/provlabs/vault/types"
 )
-
-// TestAccessor_partitionReconciledVaults exposes this keeper's partitionReconciledVaults function for unit tests.
-func (k Keeper) TestAccessor_partitionReconciledVaults(t *testing.T, ctx sdk.Context, vaults []ReconciledVault) ([]ReconciledVault, []ReconciledVault) {
-	t.Helper()
-	return k.partitionReconciledVaults(ctx, vaults)
-}
 
 // TestAccessor_handleReconciledVaults exposes this keeper's handleReconciledVaults function for unit tests.
 func (k Keeper) TestAccessor_handleReconciledVaults(t *testing.T, ctx context.Context) error {
@@ -20,13 +14,13 @@ func (k Keeper) TestAccessor_handleReconciledVaults(t *testing.T, ctx context.Co
 }
 
 // TestAccessor_handlePayableVaults exposes this keeper's handlePayableVaults function for unit tests.
-func (k Keeper) TestAccessor_handlePayableVaults(t *testing.T, ctx context.Context, payouts []ReconciledVault) {
+func (k Keeper) TestAccessor_handlePayableVaults(t *testing.T, ctx context.Context, payouts []*types.VaultAccount) {
 	t.Helper()
 	k.handlePayableVaults(ctx, payouts)
 }
 
 // TestAccessor_handleDepletedVaults exposes this keeper's handleDepletedVaults function for unit tests.
-func (k Keeper) TestAccessor_handleDepletedVaults(t *testing.T, ctx context.Context, failedPayouts []ReconciledVault) {
+func (k Keeper) TestAccessor_handleDepletedVaults(t *testing.T, ctx context.Context, failedPayouts []*types.VaultAccount) {
 	t.Helper()
 	k.handleDepletedVaults(ctx, failedPayouts)
 }
@@ -35,4 +29,16 @@ func (k Keeper) TestAccessor_handleDepletedVaults(t *testing.T, ctx context.Cont
 func (k Keeper) TestAccessor_handleVaultInterestTimeouts(t *testing.T, ctx context.Context) error {
 	t.Helper()
 	return k.handleVaultInterestTimeouts(ctx)
+}
+
+// TestAccessor_processSwapOutJobs exposes this keeper's processSwapOutJobs function for unit tests.
+func (k Keeper) TestAccessor_processSwapOutJobs(t *testing.T, ctx context.Context, jobsToProcess []types.PayoutJob) {
+	t.Helper()
+	k.processSwapOutJobs(ctx, jobsToProcess)
+}
+
+// TestAccessor_autoPauseVault exposes this keeper's autoPauseVault function for unit tests.
+func (k Keeper) TestAccessor_autoPauseVault(t *testing.T, ctx context.Context, vault *types.VaultAccount, reason string) {
+	t.Helper()
+	k.autoPauseVault(ctx, vault, reason)
 }

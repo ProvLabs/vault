@@ -6,6 +6,8 @@ package types
 import (
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
+	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
+	types1 "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/x/auth/types"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
@@ -32,25 +34,52 @@ type VaultAccount struct {
 	*types.BaseAccount `protobuf:"bytes,1,opt,name=base_account,json=baseAccount,proto3,embedded=base_account" json:"base_account,omitempty"`
 	// share_denom is the denomination used to represent shares in the vault (e.g., vault tokens).
 	ShareDenom string `protobuf:"bytes,2,opt,name=share_denom,json=shareDenom,proto3" json:"share_denom,omitempty"`
-	// underlying_assets specifies the denomination(s) of the asset(s) managed by the vault.
-	UnderlyingAssets []string `protobuf:"bytes,3,rep,name=underlying_assets,json=underlyingAssets,proto3" json:"underlying_assets,omitempty"`
+	// underlying_asset is the vault’s single principal collateral AND valuation/base unit.
+	// - Exactly one denom.
+	// - Total Vault Value (TVV) and NAV-per-share are computed and reported in this denom.
+	// - Interest accrual and internal accounting are measured in this denom.
+	// - Any other coin accepted for I/O must have a NAV record priced INTO this denom.
+	UnderlyingAsset string `protobuf:"bytes,3,opt,name=underlying_asset,json=underlyingAsset,proto3" json:"underlying_asset,omitempty"`
+	// payment_denom is the single optional external payment coin supported for user I/O
+	// alongside the underlying_asset.
+	// - If unset, the vault operates single-denom: deposits/withdrawals only in underlying_asset.
+	// - If set, swap-in/out accept either underlying_asset OR payment_denom (one denom per call).
+	// - Must differ from share_denom and underlying_asset.
+	// - Requires an on-chain NAV record mapping payment_denom -> underlying_asset to value deposits
+	//   and redemptions.
+	PaymentDenom string `protobuf:"bytes,4,opt,name=payment_denom,json=paymentDenom,proto3" json:"payment_denom,omitempty"`
 	// admin is the address that has administrative privileges over the vault.
-	Admin string `protobuf:"bytes,4,opt,name=admin,proto3" json:"admin,omitempty"`
-	// current_interest_rate is the actual interest rate currently being applied.
+	Admin string `protobuf:"bytes,5,opt,name=admin,proto3" json:"admin,omitempty"`
+	// current_interest_rate is a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%) representing the actual annual interest rate currently being applied.
 	// This may be adjusted programmatically (e.g., due to lack of funds).
-	CurrentInterestRate string `protobuf:"bytes,5,opt,name=current_interest_rate,json=currentInterestRate,proto3" json:"current_interest_rate,omitempty"`
-	// desired_interest_rate is the target interest rate that the vault intends to apply.
-	DesiredInterestRate string `protobuf:"bytes,6,opt,name=desired_interest_rate,json=desiredInterestRate,proto3" json:"desired_interest_rate,omitempty"`
-	// min_interest_rate is the lowest interest rate the admin is allowed to set.
+	CurrentInterestRate string `protobuf:"bytes,6,opt,name=current_interest_rate,json=currentInterestRate,proto3" json:"current_interest_rate,omitempty"`
+	// desired_interest_rate is a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%) representing the target annual interest rate that the vault intends to apply.
+	DesiredInterestRate string `protobuf:"bytes,7,opt,name=desired_interest_rate,json=desiredInterestRate,proto3" json:"desired_interest_rate,omitempty"`
+	// min_interest_rate is a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%) representing the lowest annual interest rate the admin is allowed to set.
 	// If unset (empty string), there is no lower limit.
-	MinInterestRate string `protobuf:"bytes,7,opt,name=min_interest_rate,json=minInterestRate,proto3" json:"min_interest_rate,omitempty"`
-	// max_interest_rate is the highest interest rate the admin is allowed to set.
+	MinInterestRate string `protobuf:"bytes,8,opt,name=min_interest_rate,json=minInterestRate,proto3" json:"min_interest_rate,omitempty"`
+	// max_interest_rate is a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%) representing the highest annual interest rate the admin is allowed to set.
 	// If unset (empty string), there is no upper limit.
-	MaxInterestRate string `protobuf:"bytes,8,opt,name=max_interest_rate,json=maxInterestRate,proto3" json:"max_interest_rate,omitempty"`
+	MaxInterestRate string `protobuf:"bytes,9,opt,name=max_interest_rate,json=maxInterestRate,proto3" json:"max_interest_rate,omitempty"`
+	// The start time (in Unix seconds) of the current interest accrual period.
+	PeriodStart int64 `protobuf:"varint,10,opt,name=period_start,json=periodStart,proto3" json:"period_start,omitempty"`
+	// The expire time (in Unix seconds) of the current interest accrual period.
+	PeriodTimeout int64 `protobuf:"varint,11,opt,name=period_timeout,json=periodTimeout,proto3" json:"period_timeout,omitempty"`
 	// swap_in_enabled indicates whether users are allowed to deposit into the vault.
-	SwapInEnabled bool `protobuf:"varint,9,opt,name=swap_in_enabled,json=swapInEnabled,proto3" json:"swap_in_enabled,omitempty"`
+	SwapInEnabled bool `protobuf:"varint,12,opt,name=swap_in_enabled,json=swapInEnabled,proto3" json:"swap_in_enabled,omitempty"`
 	// swap_out_enabled indicates whether users are allowed to withdraw from the vault.
-	SwapOutEnabled bool `protobuf:"varint,10,opt,name=swap_out_enabled,json=swapOutEnabled,proto3" json:"swap_out_enabled,omitempty"`
+	SwapOutEnabled bool `protobuf:"varint,13,opt,name=swap_out_enabled,json=swapOutEnabled,proto3" json:"swap_out_enabled,omitempty"`
+	// withdrawal_delay_seconds is the configured time period (in seconds) that a withdrawal
+	// request must wait in the pending queue before being processed.
+	WithdrawalDelaySeconds uint64 `protobuf:"varint,14,opt,name=withdrawal_delay_seconds,json=withdrawalDelaySeconds,proto3" json:"withdrawal_delay_seconds,omitempty"`
+	// paused indicates that all user-facing swap-in and swap-out operations are disabled.
+	Paused bool `protobuf:"varint,15,opt,name=paused,proto3" json:"paused,omitempty"`
+	// paused_balance is the total vault value snapshot taken at the moment of pausing.
+	// This value is used for all NAV calculations while the vault is paused to prevent
+	// apparent devaluation during collateral rebalancing. It is cleared upon unpausing.
+	PausedBalance types1.Coin `protobuf:"bytes,16,opt,name=paused_balance,json=pausedBalance,proto3" json:"paused_balance"`
+	// paused_reason is a human-readable string explaining why the vault was paused, particularly for automatic pauses.
+	PausedReason string `protobuf:"bytes,17,opt,name=paused_reason,json=pausedReason,proto3" json:"paused_reason,omitempty"`
 }
 
 func (m *VaultAccount) Reset()         { *m = VaultAccount{} }
@@ -93,11 +122,18 @@ func (m *VaultAccount) GetShareDenom() string {
 	return ""
 }
 
-func (m *VaultAccount) GetUnderlyingAssets() []string {
+func (m *VaultAccount) GetUnderlyingAsset() string {
 	if m != nil {
-		return m.UnderlyingAssets
+		return m.UnderlyingAsset
 	}
-	return nil
+	return ""
+}
+
+func (m *VaultAccount) GetPaymentDenom() string {
+	if m != nil {
+		return m.PaymentDenom
+	}
+	return ""
 }
 
 func (m *VaultAccount) GetAdmin() string {
@@ -135,6 +171,20 @@ func (m *VaultAccount) GetMaxInterestRate() string {
 	return ""
 }
 
+func (m *VaultAccount) GetPeriodStart() int64 {
+	if m != nil {
+		return m.PeriodStart
+	}
+	return 0
+}
+
+func (m *VaultAccount) GetPeriodTimeout() int64 {
+	if m != nil {
+		return m.PeriodTimeout
+	}
+	return 0
+}
+
 func (m *VaultAccount) GetSwapInEnabled() bool {
 	if m != nil {
 		return m.SwapInEnabled
@@ -149,30 +199,54 @@ func (m *VaultAccount) GetSwapOutEnabled() bool {
 	return false
 }
 
-// VaultInterestDetails stores metadata related to interest accrual and payment for a vault.
-//
-// period_start represents the Unix timestamp (in seconds) when the current interest
-// accrual period began. This value is updated when interest is successfully paid out.
-// If multiple transactions occur in the same block, only the first will trigger interest reconciliation.
-type VaultInterestDetails struct {
-	// The start time (in Unix seconds) of the current interest accrual period.
-	PeriodStart int64 `protobuf:"varint,1,opt,name=period_start,json=periodStart,proto3" json:"period_start,omitempty"`
-	// The expire time (in Unix seconds) of the current interest accrual period.
-	ExpireTime int64 `protobuf:"varint,2,opt,name=expire_time,json=expireTime,proto3" json:"expire_time,omitempty"`
+func (m *VaultAccount) GetWithdrawalDelaySeconds() uint64 {
+	if m != nil {
+		return m.WithdrawalDelaySeconds
+	}
+	return 0
 }
 
-func (m *VaultInterestDetails) Reset()         { *m = VaultInterestDetails{} }
-func (m *VaultInterestDetails) String() string { return proto.CompactTextString(m) }
-func (*VaultInterestDetails) ProtoMessage()    {}
-func (*VaultInterestDetails) Descriptor() ([]byte, []int) {
+func (m *VaultAccount) GetPaused() bool {
+	if m != nil {
+		return m.Paused
+	}
+	return false
+}
+
+func (m *VaultAccount) GetPausedBalance() types1.Coin {
+	if m != nil {
+		return m.PausedBalance
+	}
+	return types1.Coin{}
+}
+
+func (m *VaultAccount) GetPausedReason() string {
+	if m != nil {
+		return m.PausedReason
+	}
+	return ""
+}
+
+// AccountBalance represents the coin balance of a single account.
+type AccountBalance struct {
+	// address is the account address.
+	Address string `protobuf:"bytes,1,opt,name=address,proto3" json:"address,omitempty"`
+	// coins is the balance of the account.
+	Coins github_com_cosmos_cosmos_sdk_types.Coins `protobuf:"bytes,2,rep,name=coins,proto3,castrepeated=github.com/cosmos/cosmos-sdk/types.Coins" json:"coins"`
+}
+
+func (m *AccountBalance) Reset()         { *m = AccountBalance{} }
+func (m *AccountBalance) String() string { return proto.CompactTextString(m) }
+func (*AccountBalance) ProtoMessage()    {}
+func (*AccountBalance) Descriptor() ([]byte, []int) {
 	return fileDescriptor_6c8870a404251180, []int{1}
 }
-func (m *VaultInterestDetails) XXX_Unmarshal(b []byte) error {
+func (m *AccountBalance) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *VaultInterestDetails) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *AccountBalance) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_VaultInterestDetails.Marshal(b, m, deterministic)
+		return xxx_messageInfo_AccountBalance.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -182,72 +256,148 @@ func (m *VaultInterestDetails) XXX_Marshal(b []byte, deterministic bool) ([]byte
 		return b[:n], nil
 	}
 }
-func (m *VaultInterestDetails) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_VaultInterestDetails.Merge(m, src)
+func (m *AccountBalance) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_AccountBalance.Merge(m, src)
 }
-func (m *VaultInterestDetails) XXX_Size() int {
+func (m *AccountBalance) XXX_Size() int {
 	return m.Size()
 }
-func (m *VaultInterestDetails) XXX_DiscardUnknown() {
-	xxx_messageInfo_VaultInterestDetails.DiscardUnknown(m)
+func (m *AccountBalance) XXX_DiscardUnknown() {
+	xxx_messageInfo_AccountBalance.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_VaultInterestDetails proto.InternalMessageInfo
+var xxx_messageInfo_AccountBalance proto.InternalMessageInfo
 
-func (m *VaultInterestDetails) GetPeriodStart() int64 {
-	if m != nil {
-		return m.PeriodStart
-	}
-	return 0
+// PendingSwapOut are swap outs that have not yet been processed and completed.
+type PendingSwapOut struct {
+	// owner is the address initiating the swap out.
+	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
+	// vault_address is the address of the vault processing the withdrawal.
+	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// shares are the shares that were escrowed by the user.
+	Shares types1.Coin `protobuf:"bytes,3,opt,name=shares,proto3" json:"shares"`
+	// redeem_denom is the denomination of the asset to be redeemed.
+	RedeemDenom string `protobuf:"bytes,4,opt,name=redeem_denom,json=redeemDenom,proto3" json:"redeem_denom,omitempty"`
 }
 
-func (m *VaultInterestDetails) GetExpireTime() int64 {
-	if m != nil {
-		return m.ExpireTime
+func (m *PendingSwapOut) Reset()         { *m = PendingSwapOut{} }
+func (m *PendingSwapOut) String() string { return proto.CompactTextString(m) }
+func (*PendingSwapOut) ProtoMessage()    {}
+func (*PendingSwapOut) Descriptor() ([]byte, []int) {
+	return fileDescriptor_6c8870a404251180, []int{2}
+}
+func (m *PendingSwapOut) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *PendingSwapOut) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_PendingSwapOut.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
 	}
-	return 0
+}
+func (m *PendingSwapOut) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PendingSwapOut.Merge(m, src)
+}
+func (m *PendingSwapOut) XXX_Size() int {
+	return m.Size()
+}
+func (m *PendingSwapOut) XXX_DiscardUnknown() {
+	xxx_messageInfo_PendingSwapOut.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PendingSwapOut proto.InternalMessageInfo
+
+func (m *PendingSwapOut) GetOwner() string {
+	if m != nil {
+		return m.Owner
+	}
+	return ""
+}
+
+func (m *PendingSwapOut) GetVaultAddress() string {
+	if m != nil {
+		return m.VaultAddress
+	}
+	return ""
+}
+
+func (m *PendingSwapOut) GetShares() types1.Coin {
+	if m != nil {
+		return m.Shares
+	}
+	return types1.Coin{}
+}
+
+func (m *PendingSwapOut) GetRedeemDenom() string {
+	if m != nil {
+		return m.RedeemDenom
+	}
+	return ""
 }
 
 func init() {
 	proto.RegisterType((*VaultAccount)(nil), "vault.v1.VaultAccount")
-	proto.RegisterType((*VaultInterestDetails)(nil), "vault.v1.VaultInterestDetails")
+	proto.RegisterType((*AccountBalance)(nil), "vault.v1.AccountBalance")
+	proto.RegisterType((*PendingSwapOut)(nil), "vault.v1.PendingSwapOut")
 }
 
 func init() { proto.RegisterFile("vault/v1/vault.proto", fileDescriptor_6c8870a404251180) }
 
 var fileDescriptor_6c8870a404251180 = []byte{
-	// 493 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x93, 0xc1, 0x6e, 0xd3, 0x30,
-	0x18, 0xc7, 0x17, 0xda, 0x8d, 0xd6, 0x2d, 0xac, 0x0b, 0x45, 0x0a, 0x3b, 0xa4, 0x65, 0x07, 0x54,
-	0x09, 0x2d, 0x51, 0xe1, 0xc4, 0x8d, 0x56, 0x45, 0xa2, 0x27, 0xa4, 0x0c, 0x71, 0xd8, 0xc5, 0x72,
-	0x92, 0x4f, 0xa9, 0xa5, 0xc4, 0x8e, 0x6c, 0x27, 0x74, 0x6f, 0xc1, 0xc3, 0xec, 0x05, 0xb8, 0x71,
-	0xac, 0x76, 0xe2, 0x84, 0x50, 0xfb, 0x22, 0x28, 0xb6, 0x61, 0x5a, 0x91, 0x7a, 0xf3, 0xf7, 0xf3,
-	0xff, 0xff, 0x73, 0x0e, 0x5f, 0xd0, 0xb0, 0x26, 0x55, 0xae, 0xc2, 0x7a, 0x1a, 0xea, 0x43, 0x50,
-	0x0a, 0xae, 0xb8, 0xdb, 0x31, 0x43, 0x3d, 0x3d, 0xf7, 0x13, 0x2e, 0x0b, 0x2e, 0x43, 0x52, 0xa9,
-	0x55, 0x58, 0x4f, 0x63, 0x50, 0x64, 0xaa, 0x07, 0x93, 0x3c, 0x7f, 0x61, 0xee, 0xb1, 0x9e, 0x42,
-	0x33, 0xd8, 0xab, 0x61, 0xc6, 0x33, 0x6e, 0x78, 0x73, 0x32, 0xf4, 0xe2, 0x7b, 0x1b, 0xf5, 0xbf,
-	0x34, 0xf6, 0x59, 0x92, 0xf0, 0x8a, 0x29, 0x77, 0x89, 0xfa, 0x31, 0x91, 0x80, 0x89, 0x99, 0x3d,
-	0x67, 0xec, 0x4c, 0x7a, 0x6f, 0xc6, 0x81, 0x75, 0xe9, 0xb7, 0xec, 0xc3, 0xc1, 0x9c, 0x48, 0xb0,
-	0xbd, 0x79, 0x7b, 0xf3, 0x6b, 0xe4, 0x44, 0xbd, 0xf8, 0x1e, 0xb9, 0x23, 0xd4, 0x93, 0x2b, 0x22,
-	0x00, 0xa7, 0xc0, 0x78, 0xe1, 0x3d, 0x1a, 0x3b, 0x93, 0x6e, 0x84, 0x34, 0x5a, 0x34, 0xc4, 0x7d,
-	0x8d, 0xce, 0x2a, 0x96, 0x82, 0xc8, 0x6f, 0x28, 0xcb, 0x30, 0x91, 0x12, 0x94, 0xf4, 0x5a, 0xe3,
-	0xd6, 0xa4, 0x1b, 0x0d, 0xee, 0x2f, 0x66, 0x9a, 0xbb, 0x01, 0x3a, 0x26, 0x69, 0x41, 0x99, 0xd7,
-	0x6e, 0x3c, 0x73, 0xef, 0xee, 0xf6, 0x72, 0x68, 0x3f, 0x6a, 0x96, 0xa6, 0x02, 0xa4, 0xbc, 0x52,
-	0x82, 0xb2, 0x2c, 0x32, 0x31, 0xf7, 0x23, 0x7a, 0x9e, 0x54, 0x42, 0x00, 0x53, 0x98, 0x32, 0x05,
-	0x02, 0xa4, 0xc2, 0x82, 0x28, 0xf0, 0x8e, 0x75, 0x7f, 0x78, 0x77, 0x7b, 0x39, 0xb0, 0xfd, 0x05,
-	0x24, 0xb6, 0xfb, 0xcc, 0x56, 0x96, 0xb6, 0x11, 0x11, 0x05, 0x8d, 0x29, 0x05, 0x49, 0x05, 0xa4,
-	0x7b, 0xa6, 0x93, 0x43, 0x26, 0x5b, 0x79, 0x60, 0x7a, 0x8f, 0xce, 0x0a, 0xca, 0xf6, 0x2c, 0x8f,
-	0x0f, 0x58, 0x4e, 0x0b, 0xca, 0xfe, 0x33, 0x90, 0xf5, 0x9e, 0xa1, 0x73, 0xd0, 0x40, 0xd6, 0x0f,
-	0x0c, 0xaf, 0xd0, 0xa9, 0xfc, 0x4a, 0x4a, 0x4c, 0x19, 0x06, 0x46, 0xe2, 0x1c, 0x52, 0xaf, 0x3b,
-	0x76, 0x26, 0x9d, 0xe8, 0x49, 0x83, 0x97, 0xec, 0x83, 0x81, 0xee, 0x04, 0x0d, 0x74, 0x8e, 0x57,
-	0xea, 0x5f, 0x10, 0xe9, 0xe0, 0xd3, 0x86, 0x7f, 0xaa, 0x94, 0x4d, 0x5e, 0x5c, 0xa3, 0xa1, 0x5e,
-	0xa1, 0xbf, 0xcf, 0x2c, 0x40, 0x11, 0x9a, 0x4b, 0xf7, 0x25, 0xea, 0x97, 0x20, 0x28, 0x4f, 0xb1,
-	0x54, 0x44, 0x98, 0x55, 0x6a, 0x45, 0x3d, 0xc3, 0xae, 0x1a, 0xd4, 0xac, 0x08, 0xac, 0x4b, 0x2a,
-	0x00, 0x2b, 0x5a, 0x80, 0x5e, 0x91, 0x56, 0x84, 0x0c, 0xfa, 0x4c, 0x0b, 0x98, 0xbf, 0xfb, 0xb1,
-	0xf5, 0x9d, 0xcd, 0xd6, 0x77, 0x7e, 0x6f, 0x7d, 0xe7, 0xdb, 0xce, 0x3f, 0xda, 0xec, 0xfc, 0xa3,
-	0x9f, 0x3b, 0xff, 0xe8, 0x7a, 0x94, 0x51, 0xb5, 0xaa, 0xe2, 0x20, 0xe1, 0x45, 0x58, 0x0a, 0x5e,
-	0xe7, 0x24, 0x96, 0xe6, 0xaf, 0x09, 0xd5, 0x4d, 0x09, 0x32, 0x3e, 0xd1, 0x1b, 0xfe, 0xf6, 0x4f,
-	0x00, 0x00, 0x00, 0xff, 0xff, 0x66, 0x3e, 0xae, 0x5b, 0x54, 0x03, 0x00, 0x00,
+	// 747 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x54, 0x3d, 0x6f, 0x1b, 0x47,
+	0x10, 0xe5, 0x49, 0x14, 0x45, 0x2d, 0x3f, 0x75, 0x61, 0x84, 0x55, 0x0a, 0x92, 0x51, 0x90, 0x80,
+	0x29, 0x44, 0x86, 0x49, 0x91, 0x0f, 0x20, 0x40, 0xc4, 0x28, 0x41, 0x54, 0x25, 0x38, 0x06, 0x2e,
+	0xdc, 0x1c, 0xf6, 0x6e, 0x07, 0xe4, 0xc1, 0xbc, 0x5d, 0x62, 0x77, 0x8f, 0x14, 0xff, 0x81, 0x4b,
+	0x77, 0x6e, 0x55, 0xbb, 0xd6, 0x8f, 0x50, 0x29, 0xa8, 0x32, 0x60, 0x40, 0x36, 0xa4, 0xc6, 0x8d,
+	0xff, 0x83, 0xb1, 0x1f, 0xa4, 0x2c, 0x19, 0xa0, 0x5d, 0x71, 0xe7, 0xcd, 0x7b, 0x6f, 0x87, 0x7b,
+	0x33, 0x83, 0x1a, 0x33, 0x92, 0x4d, 0x54, 0x6f, 0xd6, 0xef, 0x99, 0x43, 0x77, 0x2a, 0xb8, 0xe2,
+	0x7e, 0xd1, 0x06, 0xb3, 0xfe, 0x57, 0xcd, 0x98, 0xcb, 0x94, 0xcb, 0x1e, 0xc9, 0xd4, 0xb8, 0x37,
+	0xeb, 0x47, 0xa0, 0x48, 0xdf, 0x04, 0x96, 0xb9, 0xca, 0x47, 0x44, 0xc2, 0x2a, 0x1f, 0xf3, 0x84,
+	0xb9, 0xfc, 0xbe, 0xcd, 0x87, 0x26, 0xea, 0xd9, 0xc0, 0xa5, 0x1a, 0x23, 0x3e, 0xe2, 0x16, 0xd7,
+	0x27, 0x8b, 0x1e, 0xbc, 0x2b, 0xa0, 0xf2, 0x23, 0x7d, 0xfb, 0x51, 0x1c, 0xf3, 0x8c, 0x29, 0xff,
+	0x04, 0x95, 0xb5, 0x79, 0x48, 0x6c, 0x8c, 0xbd, 0xb6, 0xd7, 0x29, 0xfd, 0xd8, 0xee, 0x3a, 0x2f,
+	0x53, 0x8b, 0xbb, 0xb8, 0x3b, 0x20, 0x12, 0x9c, 0x6e, 0x90, 0xbf, 0xbc, 0x6e, 0x79, 0x41, 0x29,
+	0xba, 0x83, 0xfc, 0x16, 0x2a, 0xc9, 0x31, 0x11, 0x10, 0x52, 0x60, 0x3c, 0xc5, 0x1b, 0x6d, 0xaf,
+	0xb3, 0x13, 0x20, 0x03, 0x1d, 0x6b, 0xc4, 0xff, 0x1e, 0xd5, 0x33, 0x46, 0x41, 0x4c, 0x16, 0x09,
+	0x1b, 0x85, 0x44, 0x4a, 0x50, 0x78, 0xd3, 0xb0, 0x6a, 0x77, 0xf8, 0x91, 0x86, 0xfd, 0x6f, 0x50,
+	0x65, 0x4a, 0x16, 0x29, 0x30, 0xe5, 0xdc, 0xf2, 0x86, 0x57, 0x76, 0xa0, 0xf5, 0xeb, 0xa2, 0x2d,
+	0x42, 0xd3, 0x84, 0xe1, 0x2d, 0x9d, 0x1c, 0xe0, 0xab, 0xf3, 0xc3, 0x86, 0xab, 0xfb, 0x88, 0x52,
+	0x01, 0x52, 0x0e, 0x95, 0x48, 0xd8, 0x28, 0xb0, 0x34, 0xff, 0x1f, 0xf4, 0x65, 0x9c, 0x09, 0xa1,
+	0x4d, 0x13, 0xa6, 0x40, 0x80, 0x54, 0xa1, 0x20, 0x0a, 0x70, 0xc1, 0xe8, 0x1b, 0x57, 0xe7, 0x87,
+	0x75, 0xa7, 0x3f, 0x86, 0xd8, 0x69, 0xbf, 0x70, 0x92, 0x13, 0xa7, 0x08, 0x88, 0x02, 0xed, 0x44,
+	0x41, 0x26, 0x02, 0xe8, 0x03, 0xa7, 0xed, 0x75, 0x4e, 0x4e, 0x72, 0xcf, 0xe9, 0x0f, 0xb4, 0x9b,
+	0x26, 0xec, 0x81, 0x4b, 0x71, 0x8d, 0x4b, 0x2d, 0x4d, 0xd8, 0x47, 0x0e, 0xe4, 0xf4, 0x81, 0xc3,
+	0xce, 0x5a, 0x07, 0x72, 0x7a, 0xcf, 0xe1, 0x6b, 0x54, 0x9e, 0x82, 0x48, 0x38, 0x0d, 0xa5, 0x22,
+	0x42, 0x61, 0xd4, 0xf6, 0x3a, 0x9b, 0x41, 0xc9, 0x62, 0x43, 0x0d, 0xf9, 0xdf, 0xa2, 0xaa, 0xa3,
+	0xa8, 0x24, 0x05, 0x9e, 0x29, 0x5c, 0x32, 0xa4, 0x8a, 0x45, 0xff, 0xb7, 0xa0, 0xff, 0x1d, 0xaa,
+	0xc9, 0x39, 0x99, 0x86, 0x09, 0x0b, 0x81, 0x91, 0x68, 0x02, 0x14, 0x97, 0xdb, 0x5e, 0xa7, 0x18,
+	0x54, 0x34, 0x7c, 0xc2, 0xfe, 0xb2, 0xa0, 0xdf, 0x41, 0x75, 0xc3, 0xe3, 0x99, 0x5a, 0x11, 0x2b,
+	0x86, 0x58, 0xd5, 0xf8, 0xbf, 0x99, 0x5a, 0x32, 0x7f, 0x41, 0x78, 0x9e, 0xa8, 0x31, 0x15, 0x64,
+	0x4e, 0x26, 0x21, 0x85, 0x09, 0x59, 0x84, 0x12, 0x62, 0xce, 0xa8, 0xc4, 0xd5, 0xb6, 0xd7, 0xc9,
+	0x07, 0x7b, 0x77, 0xf9, 0x63, 0x9d, 0x1e, 0xda, 0xac, 0xbf, 0x87, 0x0a, 0x53, 0x92, 0x49, 0xa0,
+	0xb8, 0x66, 0x9c, 0x5d, 0xe4, 0xff, 0x8d, 0xaa, 0xf6, 0x14, 0x46, 0x64, 0x42, 0x58, 0x0c, 0xb8,
+	0x6e, 0x7a, 0x7e, 0x7f, 0xd9, 0xf3, 0xba, 0xa7, 0x57, 0x3d, 0xff, 0x27, 0x4f, 0xd8, 0x20, 0x7f,
+	0x71, 0xdd, 0xca, 0x05, 0x15, 0x2b, 0x1b, 0x58, 0x95, 0x6d, 0x51, 0xe3, 0x23, 0x80, 0x48, 0xce,
+	0xf0, 0xee, 0xb2, 0x45, 0x35, 0x18, 0x18, 0xec, 0xe0, 0xb9, 0x87, 0xaa, 0xcb, 0x91, 0x71, 0x3a,
+	0x8c, 0xb6, 0x89, 0xed, 0x4e, 0x33, 0x6c, 0x3b, 0xc1, 0x32, 0xf4, 0x09, 0xda, 0xd2, 0xb3, 0x2d,
+	0xf1, 0x46, 0x7b, 0x73, 0x7d, 0x41, 0x3f, 0xe8, 0x82, 0x5e, 0xbc, 0x6e, 0x75, 0x46, 0x89, 0x1a,
+	0x67, 0x51, 0x37, 0xe6, 0xa9, 0x9b, 0x7e, 0xf7, 0x73, 0x28, 0xe9, 0x93, 0x9e, 0x5a, 0x4c, 0x41,
+	0x1a, 0x81, 0x0c, 0xac, 0xf3, 0x6f, 0xc5, 0xa7, 0x67, 0xad, 0xdc, 0xdb, 0xb3, 0x56, 0xee, 0xe0,
+	0x95, 0x87, 0xaa, 0xff, 0x01, 0xa3, 0x09, 0x1b, 0x0d, 0xed, 0x93, 0xeb, 0x79, 0xe2, 0x73, 0x06,
+	0xc2, 0xd6, 0xb5, 0x6e, 0x9e, 0x0c, 0xcd, 0xff, 0x1d, 0x55, 0xcc, 0x26, 0x0b, 0x97, 0xff, 0x67,
+	0xe3, 0x13, 0xba, 0xb2, 0xa1, 0x3b, 0xcc, 0xff, 0x19, 0x15, 0xcc, 0x72, 0x90, 0x66, 0x09, 0x7c,
+	0xc6, 0x07, 0x70, 0x74, 0xdd, 0xaf, 0x02, 0x28, 0x40, 0x7a, 0x6f, 0x37, 0x94, 0x2c, 0x66, 0x56,
+	0xc3, 0xe0, 0xd7, 0x8b, 0x9b, 0xa6, 0x77, 0x79, 0xd3, 0xf4, 0xde, 0xdc, 0x34, 0xbd, 0x67, 0xb7,
+	0xcd, 0xdc, 0xe5, 0x6d, 0x33, 0xf7, 0xf2, 0xb6, 0x99, 0x7b, 0xdc, 0xfa, 0xe0, 0xc9, 0xa6, 0x82,
+	0xcf, 0x26, 0x24, 0x92, 0x76, 0x3b, 0xdb, 0xf7, 0x8a, 0x0a, 0x66, 0x53, 0xfe, 0xf4, 0x3e, 0x00,
+	0x00, 0xff, 0xff, 0x6c, 0xcc, 0xb5, 0xd4, 0xbc, 0x05, 0x00, 0x00,
 }
 
 func (m *VaultAccount) Marshal() (dAtA []byte, err error) {
@@ -270,6 +420,42 @@ func (m *VaultAccount) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.PausedReason) > 0 {
+		i -= len(m.PausedReason)
+		copy(dAtA[i:], m.PausedReason)
+		i = encodeVarintVault(dAtA, i, uint64(len(m.PausedReason)))
+		i--
+		dAtA[i] = 0x1
+		i--
+		dAtA[i] = 0x8a
+	}
+	{
+		size, err := m.PausedBalance.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintVault(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1
+	i--
+	dAtA[i] = 0x82
+	if m.Paused {
+		i--
+		if m.Paused {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x78
+	}
+	if m.WithdrawalDelaySeconds != 0 {
+		i = encodeVarintVault(dAtA, i, uint64(m.WithdrawalDelaySeconds))
+		i--
+		dAtA[i] = 0x70
+	}
 	if m.SwapOutEnabled {
 		i--
 		if m.SwapOutEnabled {
@@ -278,7 +464,7 @@ func (m *VaultAccount) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			dAtA[i] = 0
 		}
 		i--
-		dAtA[i] = 0x50
+		dAtA[i] = 0x68
 	}
 	if m.SwapInEnabled {
 		i--
@@ -288,51 +474,66 @@ func (m *VaultAccount) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 			dAtA[i] = 0
 		}
 		i--
-		dAtA[i] = 0x48
+		dAtA[i] = 0x60
+	}
+	if m.PeriodTimeout != 0 {
+		i = encodeVarintVault(dAtA, i, uint64(m.PeriodTimeout))
+		i--
+		dAtA[i] = 0x58
+	}
+	if m.PeriodStart != 0 {
+		i = encodeVarintVault(dAtA, i, uint64(m.PeriodStart))
+		i--
+		dAtA[i] = 0x50
 	}
 	if len(m.MaxInterestRate) > 0 {
 		i -= len(m.MaxInterestRate)
 		copy(dAtA[i:], m.MaxInterestRate)
 		i = encodeVarintVault(dAtA, i, uint64(len(m.MaxInterestRate)))
 		i--
-		dAtA[i] = 0x42
+		dAtA[i] = 0x4a
 	}
 	if len(m.MinInterestRate) > 0 {
 		i -= len(m.MinInterestRate)
 		copy(dAtA[i:], m.MinInterestRate)
 		i = encodeVarintVault(dAtA, i, uint64(len(m.MinInterestRate)))
 		i--
-		dAtA[i] = 0x3a
+		dAtA[i] = 0x42
 	}
 	if len(m.DesiredInterestRate) > 0 {
 		i -= len(m.DesiredInterestRate)
 		copy(dAtA[i:], m.DesiredInterestRate)
 		i = encodeVarintVault(dAtA, i, uint64(len(m.DesiredInterestRate)))
 		i--
-		dAtA[i] = 0x32
+		dAtA[i] = 0x3a
 	}
 	if len(m.CurrentInterestRate) > 0 {
 		i -= len(m.CurrentInterestRate)
 		copy(dAtA[i:], m.CurrentInterestRate)
 		i = encodeVarintVault(dAtA, i, uint64(len(m.CurrentInterestRate)))
 		i--
-		dAtA[i] = 0x2a
+		dAtA[i] = 0x32
 	}
 	if len(m.Admin) > 0 {
 		i -= len(m.Admin)
 		copy(dAtA[i:], m.Admin)
 		i = encodeVarintVault(dAtA, i, uint64(len(m.Admin)))
 		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.PaymentDenom) > 0 {
+		i -= len(m.PaymentDenom)
+		copy(dAtA[i:], m.PaymentDenom)
+		i = encodeVarintVault(dAtA, i, uint64(len(m.PaymentDenom)))
+		i--
 		dAtA[i] = 0x22
 	}
-	if len(m.UnderlyingAssets) > 0 {
-		for iNdEx := len(m.UnderlyingAssets) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.UnderlyingAssets[iNdEx])
-			copy(dAtA[i:], m.UnderlyingAssets[iNdEx])
-			i = encodeVarintVault(dAtA, i, uint64(len(m.UnderlyingAssets[iNdEx])))
-			i--
-			dAtA[i] = 0x1a
-		}
+	if len(m.UnderlyingAsset) > 0 {
+		i -= len(m.UnderlyingAsset)
+		copy(dAtA[i:], m.UnderlyingAsset)
+		i = encodeVarintVault(dAtA, i, uint64(len(m.UnderlyingAsset)))
+		i--
+		dAtA[i] = 0x1a
 	}
 	if len(m.ShareDenom) > 0 {
 		i -= len(m.ShareDenom)
@@ -356,7 +557,7 @@ func (m *VaultAccount) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *VaultInterestDetails) Marshal() (dAtA []byte, err error) {
+func (m *AccountBalance) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -366,25 +567,90 @@ func (m *VaultInterestDetails) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *VaultInterestDetails) MarshalTo(dAtA []byte) (int, error) {
+func (m *AccountBalance) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *VaultInterestDetails) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *AccountBalance) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if m.ExpireTime != 0 {
-		i = encodeVarintVault(dAtA, i, uint64(m.ExpireTime))
-		i--
-		dAtA[i] = 0x10
+	if len(m.Coins) > 0 {
+		for iNdEx := len(m.Coins) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Coins[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintVault(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
 	}
-	if m.PeriodStart != 0 {
-		i = encodeVarintVault(dAtA, i, uint64(m.PeriodStart))
+	if len(m.Address) > 0 {
+		i -= len(m.Address)
+		copy(dAtA[i:], m.Address)
+		i = encodeVarintVault(dAtA, i, uint64(len(m.Address)))
 		i--
-		dAtA[i] = 0x8
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *PendingSwapOut) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PendingSwapOut) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *PendingSwapOut) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.RedeemDenom) > 0 {
+		i -= len(m.RedeemDenom)
+		copy(dAtA[i:], m.RedeemDenom)
+		i = encodeVarintVault(dAtA, i, uint64(len(m.RedeemDenom)))
+		i--
+		dAtA[i] = 0x22
+	}
+	{
+		size, err := m.Shares.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintVault(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	if len(m.VaultAddress) > 0 {
+		i -= len(m.VaultAddress)
+		copy(dAtA[i:], m.VaultAddress)
+		i = encodeVarintVault(dAtA, i, uint64(len(m.VaultAddress)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Owner) > 0 {
+		i -= len(m.Owner)
+		copy(dAtA[i:], m.Owner)
+		i = encodeVarintVault(dAtA, i, uint64(len(m.Owner)))
+		i--
+		dAtA[i] = 0xa
 	}
 	return len(dAtA) - i, nil
 }
@@ -414,11 +680,13 @@ func (m *VaultAccount) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovVault(uint64(l))
 	}
-	if len(m.UnderlyingAssets) > 0 {
-		for _, s := range m.UnderlyingAssets {
-			l = len(s)
-			n += 1 + l + sovVault(uint64(l))
-		}
+	l = len(m.UnderlyingAsset)
+	if l > 0 {
+		n += 1 + l + sovVault(uint64(l))
+	}
+	l = len(m.PaymentDenom)
+	if l > 0 {
+		n += 1 + l + sovVault(uint64(l))
 	}
 	l = len(m.Admin)
 	if l > 0 {
@@ -440,26 +708,71 @@ func (m *VaultAccount) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovVault(uint64(l))
 	}
+	if m.PeriodStart != 0 {
+		n += 1 + sovVault(uint64(m.PeriodStart))
+	}
+	if m.PeriodTimeout != 0 {
+		n += 1 + sovVault(uint64(m.PeriodTimeout))
+	}
 	if m.SwapInEnabled {
 		n += 2
 	}
 	if m.SwapOutEnabled {
 		n += 2
 	}
+	if m.WithdrawalDelaySeconds != 0 {
+		n += 1 + sovVault(uint64(m.WithdrawalDelaySeconds))
+	}
+	if m.Paused {
+		n += 2
+	}
+	l = m.PausedBalance.Size()
+	n += 2 + l + sovVault(uint64(l))
+	l = len(m.PausedReason)
+	if l > 0 {
+		n += 2 + l + sovVault(uint64(l))
+	}
 	return n
 }
 
-func (m *VaultInterestDetails) Size() (n int) {
+func (m *AccountBalance) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if m.PeriodStart != 0 {
-		n += 1 + sovVault(uint64(m.PeriodStart))
+	l = len(m.Address)
+	if l > 0 {
+		n += 1 + l + sovVault(uint64(l))
 	}
-	if m.ExpireTime != 0 {
-		n += 1 + sovVault(uint64(m.ExpireTime))
+	if len(m.Coins) > 0 {
+		for _, e := range m.Coins {
+			l = e.Size()
+			n += 1 + l + sovVault(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *PendingSwapOut) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Owner)
+	if l > 0 {
+		n += 1 + l + sovVault(uint64(l))
+	}
+	l = len(m.VaultAddress)
+	if l > 0 {
+		n += 1 + l + sovVault(uint64(l))
+	}
+	l = m.Shares.Size()
+	n += 1 + l + sovVault(uint64(l))
+	l = len(m.RedeemDenom)
+	if l > 0 {
+		n += 1 + l + sovVault(uint64(l))
 	}
 	return n
 }
@@ -569,7 +882,7 @@ func (m *VaultAccount) Unmarshal(dAtA []byte) error {
 			iNdEx = postIndex
 		case 3:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field UnderlyingAssets", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field UnderlyingAsset", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -597,9 +910,41 @@ func (m *VaultAccount) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.UnderlyingAssets = append(m.UnderlyingAssets, string(dAtA[iNdEx:postIndex]))
+			m.UnderlyingAsset = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PaymentDenom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVault
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthVault
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthVault
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PaymentDenom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
 			}
@@ -631,7 +976,7 @@ func (m *VaultAccount) Unmarshal(dAtA []byte) error {
 			}
 			m.Admin = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 5:
+		case 6:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field CurrentInterestRate", wireType)
 			}
@@ -663,7 +1008,7 @@ func (m *VaultAccount) Unmarshal(dAtA []byte) error {
 			}
 			m.CurrentInterestRate = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 6:
+		case 7:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field DesiredInterestRate", wireType)
 			}
@@ -695,7 +1040,7 @@ func (m *VaultAccount) Unmarshal(dAtA []byte) error {
 			}
 			m.DesiredInterestRate = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 7:
+		case 8:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field MinInterestRate", wireType)
 			}
@@ -727,7 +1072,7 @@ func (m *VaultAccount) Unmarshal(dAtA []byte) error {
 			}
 			m.MinInterestRate = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 8:
+		case 9:
 			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field MaxInterestRate", wireType)
 			}
@@ -759,7 +1104,45 @@ func (m *VaultAccount) Unmarshal(dAtA []byte) error {
 			}
 			m.MaxInterestRate = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
-		case 9:
+		case 10:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PeriodStart", wireType)
+			}
+			m.PeriodStart = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVault
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PeriodStart |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 11:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PeriodTimeout", wireType)
+			}
+			m.PeriodTimeout = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVault
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.PeriodTimeout |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 12:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field SwapInEnabled", wireType)
 			}
@@ -779,7 +1162,7 @@ func (m *VaultAccount) Unmarshal(dAtA []byte) error {
 				}
 			}
 			m.SwapInEnabled = bool(v != 0)
-		case 10:
+		case 13:
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field SwapOutEnabled", wireType)
 			}
@@ -799,6 +1182,110 @@ func (m *VaultAccount) Unmarshal(dAtA []byte) error {
 				}
 			}
 			m.SwapOutEnabled = bool(v != 0)
+		case 14:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field WithdrawalDelaySeconds", wireType)
+			}
+			m.WithdrawalDelaySeconds = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVault
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.WithdrawalDelaySeconds |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 15:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Paused", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVault
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Paused = bool(v != 0)
+		case 16:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PausedBalance", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVault
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthVault
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthVault
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.PausedBalance.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 17:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PausedReason", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVault
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthVault
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthVault
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PausedReason = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipVault(dAtA[iNdEx:])
@@ -820,7 +1307,7 @@ func (m *VaultAccount) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *VaultInterestDetails) Unmarshal(dAtA []byte) error {
+func (m *AccountBalance) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -843,17 +1330,17 @@ func (m *VaultInterestDetails) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: VaultInterestDetails: wiretype end group for non-group")
+			return fmt.Errorf("proto: AccountBalance: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: VaultInterestDetails: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: AccountBalance: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field PeriodStart", wireType)
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Address", wireType)
 			}
-			m.PeriodStart = 0
+			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowVault
@@ -863,16 +1350,29 @@ func (m *VaultInterestDetails) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.PeriodStart |= int64(b&0x7F) << shift
+				stringLen |= uint64(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthVault
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthVault
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Address = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		case 2:
-			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field ExpireTime", wireType)
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Coins", wireType)
 			}
-			m.ExpireTime = 0
+			var msglen int
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowVault
@@ -882,11 +1382,205 @@ func (m *VaultInterestDetails) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.ExpireTime |= int64(b&0x7F) << shift
+				msglen |= int(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
+			if msglen < 0 {
+				return ErrInvalidLengthVault
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthVault
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Coins = append(m.Coins, types1.Coin{})
+			if err := m.Coins[len(m.Coins)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipVault(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthVault
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PendingSwapOut) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowVault
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PendingSwapOut: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PendingSwapOut: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Owner", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVault
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthVault
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthVault
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Owner = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VaultAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVault
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthVault
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthVault
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VaultAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Shares", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVault
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthVault
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthVault
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Shares.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field RedeemDenom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowVault
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthVault
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthVault
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.RedeemDenom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
 			skippy, err := skipVault(dAtA[iNdEx:])

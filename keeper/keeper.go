@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/provlabs/vault/queue"
 	"github.com/provlabs/vault/types"
 
 	"cosmossdk.io/collections"
@@ -26,9 +27,10 @@ type Keeper struct {
 	MarkerKeeper types.MarkerKeeper
 	BankKeeper   types.BankKeeper
 
-	Params               collections.Item[types.Params]
-	Vaults               collections.Map[sdk.AccAddress, []byte]
-	VaultInterestDetails collections.Map[sdk.AccAddress, types.VaultInterestDetails]
+	Vaults                collections.Map[sdk.AccAddress, []byte]
+	PayoutVerificationSet collections.KeySet[sdk.AccAddress]
+	PayoutTimeoutQueue    *queue.PayoutTimeoutQueue
+	PendingSwapOutQueue   *queue.PendingSwapOutQueue
 }
 
 // NewMsgServer creates a new Keeper for the module.
@@ -49,15 +51,16 @@ func NewKeeper(
 	builder := collections.NewSchemaBuilder(storeService)
 
 	keeper := &Keeper{
-		eventService:         eventService,
-		addressCodec:         addressCodec,
-		authority:            authority,
-		Params:               collections.NewItem(builder, types.ParamsKeyPrefix, types.ParamsName, codec.CollValue[types.Params](cdc)),
-		Vaults:               collections.NewMap(builder, types.VaultsKeyPrefix, types.VaultsName, sdk.AccAddressKey, collections.BytesValue),
-		VaultInterestDetails: collections.NewMap(builder, types.VaultInterestDetailsPrefix, types.VaultInterestDetailsName, sdk.AccAddressKey, codec.CollValue[types.VaultInterestDetails](cdc)),
-		AuthKeeper:           authKeeper,
-		MarkerKeeper:         markerkeeper,
-		BankKeeper:           bankkeeper,
+		eventService:          eventService,
+		addressCodec:          addressCodec,
+		authority:             authority,
+		Vaults:                collections.NewMap(builder, types.VaultsKeyPrefix, types.VaultsName, sdk.AccAddressKey, collections.BytesValue),
+		PayoutVerificationSet: collections.NewKeySet(builder, types.VaultPayoutVerificationSetPrefix, types.VaultPayoutVerificationSetName, sdk.AccAddressKey),
+		PayoutTimeoutQueue:    queue.NewPayoutTimeoutQueue(builder),
+		PendingSwapOutQueue:   queue.NewPendingSwapOutQueue(builder, cdc),
+		AuthKeeper:            authKeeper,
+		MarkerKeeper:          markerkeeper,
+		BankKeeper:            bankkeeper,
 	}
 
 	schema, err := builder.Build()

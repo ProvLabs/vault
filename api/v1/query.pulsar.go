@@ -18,6 +18,1576 @@ import (
 )
 
 var (
+	md_QueryPendingSwapOutsRequest            protoreflect.MessageDescriptor
+	fd_QueryPendingSwapOutsRequest_pagination protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_vault_v1_query_proto_init()
+	md_QueryPendingSwapOutsRequest = File_vault_v1_query_proto.Messages().ByName("QueryPendingSwapOutsRequest")
+	fd_QueryPendingSwapOutsRequest_pagination = md_QueryPendingSwapOutsRequest.Fields().ByName("pagination")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryPendingSwapOutsRequest)(nil)
+
+type fastReflection_QueryPendingSwapOutsRequest QueryPendingSwapOutsRequest
+
+func (x *QueryPendingSwapOutsRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryPendingSwapOutsRequest)(x)
+}
+
+func (x *QueryPendingSwapOutsRequest) slowProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_query_proto_msgTypes[0]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryPendingSwapOutsRequest_messageType fastReflection_QueryPendingSwapOutsRequest_messageType
+var _ protoreflect.MessageType = fastReflection_QueryPendingSwapOutsRequest_messageType{}
+
+type fastReflection_QueryPendingSwapOutsRequest_messageType struct{}
+
+func (x fastReflection_QueryPendingSwapOutsRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryPendingSwapOutsRequest)(nil)
+}
+func (x fastReflection_QueryPendingSwapOutsRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryPendingSwapOutsRequest)
+}
+func (x fastReflection_QueryPendingSwapOutsRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryPendingSwapOutsRequest
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryPendingSwapOutsRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryPendingSwapOutsRequest
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryPendingSwapOutsRequest) Type() protoreflect.MessageType {
+	return _fastReflection_QueryPendingSwapOutsRequest_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryPendingSwapOutsRequest) New() protoreflect.Message {
+	return new(fastReflection_QueryPendingSwapOutsRequest)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryPendingSwapOutsRequest) Interface() protoreflect.ProtoMessage {
+	return (*QueryPendingSwapOutsRequest)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryPendingSwapOutsRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Pagination != nil {
+		value := protoreflect.ValueOfMessage(x.Pagination.ProtoReflect())
+		if !f(fd_QueryPendingSwapOutsRequest_pagination, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryPendingSwapOutsRequest) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "vault.v1.QueryPendingSwapOutsRequest.pagination":
+		return x.Pagination != nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryPendingSwapOutsRequest"))
+		}
+		panic(fmt.Errorf("message vault.v1.QueryPendingSwapOutsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryPendingSwapOutsRequest) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "vault.v1.QueryPendingSwapOutsRequest.pagination":
+		x.Pagination = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryPendingSwapOutsRequest"))
+		}
+		panic(fmt.Errorf("message vault.v1.QueryPendingSwapOutsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryPendingSwapOutsRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "vault.v1.QueryPendingSwapOutsRequest.pagination":
+		value := x.Pagination
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryPendingSwapOutsRequest"))
+		}
+		panic(fmt.Errorf("message vault.v1.QueryPendingSwapOutsRequest does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryPendingSwapOutsRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "vault.v1.QueryPendingSwapOutsRequest.pagination":
+		x.Pagination = value.Message().Interface().(*v1beta1.PageRequest)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryPendingSwapOutsRequest"))
+		}
+		panic(fmt.Errorf("message vault.v1.QueryPendingSwapOutsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryPendingSwapOutsRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "vault.v1.QueryPendingSwapOutsRequest.pagination":
+		if x.Pagination == nil {
+			x.Pagination = new(v1beta1.PageRequest)
+		}
+		return protoreflect.ValueOfMessage(x.Pagination.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryPendingSwapOutsRequest"))
+		}
+		panic(fmt.Errorf("message vault.v1.QueryPendingSwapOutsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryPendingSwapOutsRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "vault.v1.QueryPendingSwapOutsRequest.pagination":
+		m := new(v1beta1.PageRequest)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryPendingSwapOutsRequest"))
+		}
+		panic(fmt.Errorf("message vault.v1.QueryPendingSwapOutsRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryPendingSwapOutsRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in vault.v1.QueryPendingSwapOutsRequest", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryPendingSwapOutsRequest) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryPendingSwapOutsRequest) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryPendingSwapOutsRequest) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryPendingSwapOutsRequest) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryPendingSwapOutsRequest)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.Pagination != nil {
+			l = options.Size(x.Pagination)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryPendingSwapOutsRequest)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Pagination != nil {
+			encoded, err := options.Marshal(x.Pagination)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryPendingSwapOutsRequest)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryPendingSwapOutsRequest: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryPendingSwapOutsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Pagination == nil {
+					x.Pagination = &v1beta1.PageRequest{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Pagination); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var _ protoreflect.List = (*_QueryPendingSwapOutsResponse_1_list)(nil)
+
+type _QueryPendingSwapOutsResponse_1_list struct {
+	list *[]*PendingSwapOutWithTimeout
+}
+
+func (x *_QueryPendingSwapOutsResponse_1_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_QueryPendingSwapOutsResponse_1_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_QueryPendingSwapOutsResponse_1_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*PendingSwapOutWithTimeout)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_QueryPendingSwapOutsResponse_1_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*PendingSwapOutWithTimeout)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_QueryPendingSwapOutsResponse_1_list) AppendMutable() protoreflect.Value {
+	v := new(PendingSwapOutWithTimeout)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_QueryPendingSwapOutsResponse_1_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_QueryPendingSwapOutsResponse_1_list) NewElement() protoreflect.Value {
+	v := new(PendingSwapOutWithTimeout)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_QueryPendingSwapOutsResponse_1_list) IsValid() bool {
+	return x.list != nil
+}
+
+var (
+	md_QueryPendingSwapOutsResponse                   protoreflect.MessageDescriptor
+	fd_QueryPendingSwapOutsResponse_pending_swap_outs protoreflect.FieldDescriptor
+	fd_QueryPendingSwapOutsResponse_pagination        protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_vault_v1_query_proto_init()
+	md_QueryPendingSwapOutsResponse = File_vault_v1_query_proto.Messages().ByName("QueryPendingSwapOutsResponse")
+	fd_QueryPendingSwapOutsResponse_pending_swap_outs = md_QueryPendingSwapOutsResponse.Fields().ByName("pending_swap_outs")
+	fd_QueryPendingSwapOutsResponse_pagination = md_QueryPendingSwapOutsResponse.Fields().ByName("pagination")
+}
+
+var _ protoreflect.Message = (*fastReflection_QueryPendingSwapOutsResponse)(nil)
+
+type fastReflection_QueryPendingSwapOutsResponse QueryPendingSwapOutsResponse
+
+func (x *QueryPendingSwapOutsResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_QueryPendingSwapOutsResponse)(x)
+}
+
+func (x *QueryPendingSwapOutsResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_query_proto_msgTypes[1]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_QueryPendingSwapOutsResponse_messageType fastReflection_QueryPendingSwapOutsResponse_messageType
+var _ protoreflect.MessageType = fastReflection_QueryPendingSwapOutsResponse_messageType{}
+
+type fastReflection_QueryPendingSwapOutsResponse_messageType struct{}
+
+func (x fastReflection_QueryPendingSwapOutsResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_QueryPendingSwapOutsResponse)(nil)
+}
+func (x fastReflection_QueryPendingSwapOutsResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_QueryPendingSwapOutsResponse)
+}
+func (x fastReflection_QueryPendingSwapOutsResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryPendingSwapOutsResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_QueryPendingSwapOutsResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_QueryPendingSwapOutsResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_QueryPendingSwapOutsResponse) Type() protoreflect.MessageType {
+	return _fastReflection_QueryPendingSwapOutsResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_QueryPendingSwapOutsResponse) New() protoreflect.Message {
+	return new(fastReflection_QueryPendingSwapOutsResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_QueryPendingSwapOutsResponse) Interface() protoreflect.ProtoMessage {
+	return (*QueryPendingSwapOutsResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_QueryPendingSwapOutsResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if len(x.PendingSwapOuts) != 0 {
+		value := protoreflect.ValueOfList(&_QueryPendingSwapOutsResponse_1_list{list: &x.PendingSwapOuts})
+		if !f(fd_QueryPendingSwapOutsResponse_pending_swap_outs, value) {
+			return
+		}
+	}
+	if x.Pagination != nil {
+		value := protoreflect.ValueOfMessage(x.Pagination.ProtoReflect())
+		if !f(fd_QueryPendingSwapOutsResponse_pagination, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_QueryPendingSwapOutsResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "vault.v1.QueryPendingSwapOutsResponse.pending_swap_outs":
+		return len(x.PendingSwapOuts) != 0
+	case "vault.v1.QueryPendingSwapOutsResponse.pagination":
+		return x.Pagination != nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryPendingSwapOutsResponse"))
+		}
+		panic(fmt.Errorf("message vault.v1.QueryPendingSwapOutsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryPendingSwapOutsResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "vault.v1.QueryPendingSwapOutsResponse.pending_swap_outs":
+		x.PendingSwapOuts = nil
+	case "vault.v1.QueryPendingSwapOutsResponse.pagination":
+		x.Pagination = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryPendingSwapOutsResponse"))
+		}
+		panic(fmt.Errorf("message vault.v1.QueryPendingSwapOutsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_QueryPendingSwapOutsResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "vault.v1.QueryPendingSwapOutsResponse.pending_swap_outs":
+		if len(x.PendingSwapOuts) == 0 {
+			return protoreflect.ValueOfList(&_QueryPendingSwapOutsResponse_1_list{})
+		}
+		listValue := &_QueryPendingSwapOutsResponse_1_list{list: &x.PendingSwapOuts}
+		return protoreflect.ValueOfList(listValue)
+	case "vault.v1.QueryPendingSwapOutsResponse.pagination":
+		value := x.Pagination
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryPendingSwapOutsResponse"))
+		}
+		panic(fmt.Errorf("message vault.v1.QueryPendingSwapOutsResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryPendingSwapOutsResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "vault.v1.QueryPendingSwapOutsResponse.pending_swap_outs":
+		lv := value.List()
+		clv := lv.(*_QueryPendingSwapOutsResponse_1_list)
+		x.PendingSwapOuts = *clv.list
+	case "vault.v1.QueryPendingSwapOutsResponse.pagination":
+		x.Pagination = value.Message().Interface().(*v1beta1.PageResponse)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryPendingSwapOutsResponse"))
+		}
+		panic(fmt.Errorf("message vault.v1.QueryPendingSwapOutsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryPendingSwapOutsResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "vault.v1.QueryPendingSwapOutsResponse.pending_swap_outs":
+		if x.PendingSwapOuts == nil {
+			x.PendingSwapOuts = []*PendingSwapOutWithTimeout{}
+		}
+		value := &_QueryPendingSwapOutsResponse_1_list{list: &x.PendingSwapOuts}
+		return protoreflect.ValueOfList(value)
+	case "vault.v1.QueryPendingSwapOutsResponse.pagination":
+		if x.Pagination == nil {
+			x.Pagination = new(v1beta1.PageResponse)
+		}
+		return protoreflect.ValueOfMessage(x.Pagination.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryPendingSwapOutsResponse"))
+		}
+		panic(fmt.Errorf("message vault.v1.QueryPendingSwapOutsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_QueryPendingSwapOutsResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "vault.v1.QueryPendingSwapOutsResponse.pending_swap_outs":
+		list := []*PendingSwapOutWithTimeout{}
+		return protoreflect.ValueOfList(&_QueryPendingSwapOutsResponse_1_list{list: &list})
+	case "vault.v1.QueryPendingSwapOutsResponse.pagination":
+		m := new(v1beta1.PageResponse)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryPendingSwapOutsResponse"))
+		}
+		panic(fmt.Errorf("message vault.v1.QueryPendingSwapOutsResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_QueryPendingSwapOutsResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in vault.v1.QueryPendingSwapOutsResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_QueryPendingSwapOutsResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_QueryPendingSwapOutsResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_QueryPendingSwapOutsResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_QueryPendingSwapOutsResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*QueryPendingSwapOutsResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if len(x.PendingSwapOuts) > 0 {
+			for _, e := range x.PendingSwapOuts {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if x.Pagination != nil {
+			l = options.Size(x.Pagination)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*QueryPendingSwapOutsResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Pagination != nil {
+			encoded, err := options.Marshal(x.Pagination)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.PendingSwapOuts) > 0 {
+			for iNdEx := len(x.PendingSwapOuts) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.PendingSwapOuts[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0xa
+			}
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*QueryPendingSwapOutsResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryPendingSwapOutsResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: QueryPendingSwapOutsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PendingSwapOuts", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.PendingSwapOuts = append(x.PendingSwapOuts, &PendingSwapOutWithTimeout{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.PendingSwapOuts[len(x.PendingSwapOuts)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Pagination == nil {
+					x.Pagination = &v1beta1.PageResponse{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Pagination); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_PendingSwapOutWithTimeout                  protoreflect.MessageDescriptor
+	fd_PendingSwapOutWithTimeout_request_id       protoreflect.FieldDescriptor
+	fd_PendingSwapOutWithTimeout_pending_swap_out protoreflect.FieldDescriptor
+	fd_PendingSwapOutWithTimeout_timeout          protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_vault_v1_query_proto_init()
+	md_PendingSwapOutWithTimeout = File_vault_v1_query_proto.Messages().ByName("PendingSwapOutWithTimeout")
+	fd_PendingSwapOutWithTimeout_request_id = md_PendingSwapOutWithTimeout.Fields().ByName("request_id")
+	fd_PendingSwapOutWithTimeout_pending_swap_out = md_PendingSwapOutWithTimeout.Fields().ByName("pending_swap_out")
+	fd_PendingSwapOutWithTimeout_timeout = md_PendingSwapOutWithTimeout.Fields().ByName("timeout")
+}
+
+var _ protoreflect.Message = (*fastReflection_PendingSwapOutWithTimeout)(nil)
+
+type fastReflection_PendingSwapOutWithTimeout PendingSwapOutWithTimeout
+
+func (x *PendingSwapOutWithTimeout) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_PendingSwapOutWithTimeout)(x)
+}
+
+func (x *PendingSwapOutWithTimeout) slowProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_query_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_PendingSwapOutWithTimeout_messageType fastReflection_PendingSwapOutWithTimeout_messageType
+var _ protoreflect.MessageType = fastReflection_PendingSwapOutWithTimeout_messageType{}
+
+type fastReflection_PendingSwapOutWithTimeout_messageType struct{}
+
+func (x fastReflection_PendingSwapOutWithTimeout_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_PendingSwapOutWithTimeout)(nil)
+}
+func (x fastReflection_PendingSwapOutWithTimeout_messageType) New() protoreflect.Message {
+	return new(fastReflection_PendingSwapOutWithTimeout)
+}
+func (x fastReflection_PendingSwapOutWithTimeout_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_PendingSwapOutWithTimeout
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_PendingSwapOutWithTimeout) Descriptor() protoreflect.MessageDescriptor {
+	return md_PendingSwapOutWithTimeout
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_PendingSwapOutWithTimeout) Type() protoreflect.MessageType {
+	return _fastReflection_PendingSwapOutWithTimeout_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_PendingSwapOutWithTimeout) New() protoreflect.Message {
+	return new(fastReflection_PendingSwapOutWithTimeout)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_PendingSwapOutWithTimeout) Interface() protoreflect.ProtoMessage {
+	return (*PendingSwapOutWithTimeout)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_PendingSwapOutWithTimeout) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.RequestId != uint64(0) {
+		value := protoreflect.ValueOfUint64(x.RequestId)
+		if !f(fd_PendingSwapOutWithTimeout_request_id, value) {
+			return
+		}
+	}
+	if x.PendingSwapOut != nil {
+		value := protoreflect.ValueOfMessage(x.PendingSwapOut.ProtoReflect())
+		if !f(fd_PendingSwapOutWithTimeout_pending_swap_out, value) {
+			return
+		}
+	}
+	if x.Timeout != nil {
+		value := protoreflect.ValueOfMessage(x.Timeout.ProtoReflect())
+		if !f(fd_PendingSwapOutWithTimeout_timeout, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_PendingSwapOutWithTimeout) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "vault.v1.PendingSwapOutWithTimeout.request_id":
+		return x.RequestId != uint64(0)
+	case "vault.v1.PendingSwapOutWithTimeout.pending_swap_out":
+		return x.PendingSwapOut != nil
+	case "vault.v1.PendingSwapOutWithTimeout.timeout":
+		return x.Timeout != nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOutWithTimeout"))
+		}
+		panic(fmt.Errorf("message vault.v1.PendingSwapOutWithTimeout does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_PendingSwapOutWithTimeout) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "vault.v1.PendingSwapOutWithTimeout.request_id":
+		x.RequestId = uint64(0)
+	case "vault.v1.PendingSwapOutWithTimeout.pending_swap_out":
+		x.PendingSwapOut = nil
+	case "vault.v1.PendingSwapOutWithTimeout.timeout":
+		x.Timeout = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOutWithTimeout"))
+		}
+		panic(fmt.Errorf("message vault.v1.PendingSwapOutWithTimeout does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_PendingSwapOutWithTimeout) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "vault.v1.PendingSwapOutWithTimeout.request_id":
+		value := x.RequestId
+		return protoreflect.ValueOfUint64(value)
+	case "vault.v1.PendingSwapOutWithTimeout.pending_swap_out":
+		value := x.PendingSwapOut
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "vault.v1.PendingSwapOutWithTimeout.timeout":
+		value := x.Timeout
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOutWithTimeout"))
+		}
+		panic(fmt.Errorf("message vault.v1.PendingSwapOutWithTimeout does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_PendingSwapOutWithTimeout) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "vault.v1.PendingSwapOutWithTimeout.request_id":
+		x.RequestId = value.Uint()
+	case "vault.v1.PendingSwapOutWithTimeout.pending_swap_out":
+		x.PendingSwapOut = value.Message().Interface().(*PendingSwapOut)
+	case "vault.v1.PendingSwapOutWithTimeout.timeout":
+		x.Timeout = value.Message().Interface().(*timestamppb.Timestamp)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOutWithTimeout"))
+		}
+		panic(fmt.Errorf("message vault.v1.PendingSwapOutWithTimeout does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_PendingSwapOutWithTimeout) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "vault.v1.PendingSwapOutWithTimeout.pending_swap_out":
+		if x.PendingSwapOut == nil {
+			x.PendingSwapOut = new(PendingSwapOut)
+		}
+		return protoreflect.ValueOfMessage(x.PendingSwapOut.ProtoReflect())
+	case "vault.v1.PendingSwapOutWithTimeout.timeout":
+		if x.Timeout == nil {
+			x.Timeout = new(timestamppb.Timestamp)
+		}
+		return protoreflect.ValueOfMessage(x.Timeout.ProtoReflect())
+	case "vault.v1.PendingSwapOutWithTimeout.request_id":
+		panic(fmt.Errorf("field request_id of message vault.v1.PendingSwapOutWithTimeout is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOutWithTimeout"))
+		}
+		panic(fmt.Errorf("message vault.v1.PendingSwapOutWithTimeout does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_PendingSwapOutWithTimeout) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "vault.v1.PendingSwapOutWithTimeout.request_id":
+		return protoreflect.ValueOfUint64(uint64(0))
+	case "vault.v1.PendingSwapOutWithTimeout.pending_swap_out":
+		m := new(PendingSwapOut)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "vault.v1.PendingSwapOutWithTimeout.timeout":
+		m := new(timestamppb.Timestamp)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOutWithTimeout"))
+		}
+		panic(fmt.Errorf("message vault.v1.PendingSwapOutWithTimeout does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_PendingSwapOutWithTimeout) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in vault.v1.PendingSwapOutWithTimeout", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_PendingSwapOutWithTimeout) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_PendingSwapOutWithTimeout) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_PendingSwapOutWithTimeout) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_PendingSwapOutWithTimeout) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*PendingSwapOutWithTimeout)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.RequestId != 0 {
+			n += 1 + runtime.Sov(uint64(x.RequestId))
+		}
+		if x.PendingSwapOut != nil {
+			l = options.Size(x.PendingSwapOut)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.Timeout != nil {
+			l = options.Size(x.Timeout)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*PendingSwapOutWithTimeout)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Timeout != nil {
+			encoded, err := options.Marshal(x.Timeout)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x1a
+		}
+		if x.PendingSwapOut != nil {
+			encoded, err := options.Marshal(x.PendingSwapOut)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if x.RequestId != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.RequestId))
+			i--
+			dAtA[i] = 0x8
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*PendingSwapOutWithTimeout)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: PendingSwapOutWithTimeout: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: PendingSwapOutWithTimeout: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field RequestId", wireType)
+				}
+				x.RequestId = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.RequestId |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PendingSwapOut", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.PendingSwapOut == nil {
+					x.PendingSwapOut = &PendingSwapOut{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.PendingSwapOut); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Timeout", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Timeout == nil {
+					x.Timeout = &timestamppb.Timestamp{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Timeout); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
 	md_QueryVaultsRequest            protoreflect.MessageDescriptor
 	fd_QueryVaultsRequest_pagination protoreflect.FieldDescriptor
 )
@@ -37,7 +1607,7 @@ func (x *QueryVaultsRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryVaultsRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_query_proto_msgTypes[0]
+	mi := &file_vault_v1_query_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -525,7 +2095,7 @@ func (x *QueryVaultsResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryVaultsResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_query_proto_msgTypes[1]
+	mi := &file_vault_v1_query_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1026,14 +2596,14 @@ func (x *fastReflection_QueryVaultsResponse) ProtoMethods() *protoiface.Methods 
 }
 
 var (
-	md_QueryVaultRequest               protoreflect.MessageDescriptor
-	fd_QueryVaultRequest_vault_address protoreflect.FieldDescriptor
+	md_QueryVaultRequest    protoreflect.MessageDescriptor
+	fd_QueryVaultRequest_id protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_vault_v1_query_proto_init()
 	md_QueryVaultRequest = File_vault_v1_query_proto.Messages().ByName("QueryVaultRequest")
-	fd_QueryVaultRequest_vault_address = md_QueryVaultRequest.Fields().ByName("vault_address")
+	fd_QueryVaultRequest_id = md_QueryVaultRequest.Fields().ByName("id")
 }
 
 var _ protoreflect.Message = (*fastReflection_QueryVaultRequest)(nil)
@@ -1045,7 +2615,7 @@ func (x *QueryVaultRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryVaultRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_query_proto_msgTypes[2]
+	mi := &file_vault_v1_query_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1101,9 +2671,9 @@ func (x *fastReflection_QueryVaultRequest) Interface() protoreflect.ProtoMessage
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
 func (x *fastReflection_QueryVaultRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
-	if x.VaultAddress != "" {
-		value := protoreflect.ValueOfString(x.VaultAddress)
-		if !f(fd_QueryVaultRequest_vault_address, value) {
+	if x.Id != "" {
+		value := protoreflect.ValueOfString(x.Id)
+		if !f(fd_QueryVaultRequest_id, value) {
 			return
 		}
 	}
@@ -1122,8 +2692,8 @@ func (x *fastReflection_QueryVaultRequest) Range(f func(protoreflect.FieldDescri
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_QueryVaultRequest) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.QueryVaultRequest.vault_address":
-		return x.VaultAddress != ""
+	case "vault.v1.QueryVaultRequest.id":
+		return x.Id != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryVaultRequest"))
@@ -1140,8 +2710,8 @@ func (x *fastReflection_QueryVaultRequest) Has(fd protoreflect.FieldDescriptor) 
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryVaultRequest) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.QueryVaultRequest.vault_address":
-		x.VaultAddress = ""
+	case "vault.v1.QueryVaultRequest.id":
+		x.Id = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryVaultRequest"))
@@ -1158,8 +2728,8 @@ func (x *fastReflection_QueryVaultRequest) Clear(fd protoreflect.FieldDescriptor
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_QueryVaultRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.QueryVaultRequest.vault_address":
-		value := x.VaultAddress
+	case "vault.v1.QueryVaultRequest.id":
+		value := x.Id
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
@@ -1181,8 +2751,8 @@ func (x *fastReflection_QueryVaultRequest) Get(descriptor protoreflect.FieldDesc
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryVaultRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.QueryVaultRequest.vault_address":
-		x.VaultAddress = value.Interface().(string)
+	case "vault.v1.QueryVaultRequest.id":
+		x.Id = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryVaultRequest"))
@@ -1203,8 +2773,8 @@ func (x *fastReflection_QueryVaultRequest) Set(fd protoreflect.FieldDescriptor, 
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryVaultRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.QueryVaultRequest.vault_address":
-		panic(fmt.Errorf("field vault_address of message vault.v1.QueryVaultRequest is not mutable"))
+	case "vault.v1.QueryVaultRequest.id":
+		panic(fmt.Errorf("field id of message vault.v1.QueryVaultRequest is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryVaultRequest"))
@@ -1218,7 +2788,7 @@ func (x *fastReflection_QueryVaultRequest) Mutable(fd protoreflect.FieldDescript
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_QueryVaultRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.QueryVaultRequest.vault_address":
+	case "vault.v1.QueryVaultRequest.id":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
@@ -1289,7 +2859,7 @@ func (x *fastReflection_QueryVaultRequest) ProtoMethods() *protoiface.Methods {
 		var n int
 		var l int
 		_ = l
-		l = len(x.VaultAddress)
+		l = len(x.Id)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
@@ -1322,10 +2892,10 @@ func (x *fastReflection_QueryVaultRequest) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if len(x.VaultAddress) > 0 {
-			i -= len(x.VaultAddress)
-			copy(dAtA[i:], x.VaultAddress)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.VaultAddress)))
+		if len(x.Id) > 0 {
+			i -= len(x.Id)
+			copy(dAtA[i:], x.Id)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Id)))
 			i--
 			dAtA[i] = 0xa
 		}
@@ -1380,7 +2950,7 @@ func (x *fastReflection_QueryVaultRequest) ProtoMethods() *protoiface.Methods {
 			switch fieldNum {
 			case 1:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field VaultAddress", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
 				}
 				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
@@ -1408,7 +2978,7 @@ func (x *fastReflection_QueryVaultRequest) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.VaultAddress = string(dAtA[iNdEx:postIndex])
+				x.Id = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -1446,14 +3016,18 @@ func (x *fastReflection_QueryVaultRequest) ProtoMethods() *protoiface.Methods {
 }
 
 var (
-	md_QueryVaultResponse       protoreflect.MessageDescriptor
-	fd_QueryVaultResponse_vault protoreflect.FieldDescriptor
+	md_QueryVaultResponse           protoreflect.MessageDescriptor
+	fd_QueryVaultResponse_vault     protoreflect.FieldDescriptor
+	fd_QueryVaultResponse_principal protoreflect.FieldDescriptor
+	fd_QueryVaultResponse_reserves  protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_vault_v1_query_proto_init()
 	md_QueryVaultResponse = File_vault_v1_query_proto.Messages().ByName("QueryVaultResponse")
 	fd_QueryVaultResponse_vault = md_QueryVaultResponse.Fields().ByName("vault")
+	fd_QueryVaultResponse_principal = md_QueryVaultResponse.Fields().ByName("principal")
+	fd_QueryVaultResponse_reserves = md_QueryVaultResponse.Fields().ByName("reserves")
 }
 
 var _ protoreflect.Message = (*fastReflection_QueryVaultResponse)(nil)
@@ -1465,7 +3039,7 @@ func (x *QueryVaultResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryVaultResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_query_proto_msgTypes[3]
+	mi := &file_vault_v1_query_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1527,6 +3101,18 @@ func (x *fastReflection_QueryVaultResponse) Range(f func(protoreflect.FieldDescr
 			return
 		}
 	}
+	if x.Principal != nil {
+		value := protoreflect.ValueOfMessage(x.Principal.ProtoReflect())
+		if !f(fd_QueryVaultResponse_principal, value) {
+			return
+		}
+	}
+	if x.Reserves != nil {
+		value := protoreflect.ValueOfMessage(x.Reserves.ProtoReflect())
+		if !f(fd_QueryVaultResponse_reserves, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -1544,6 +3130,10 @@ func (x *fastReflection_QueryVaultResponse) Has(fd protoreflect.FieldDescriptor)
 	switch fd.FullName() {
 	case "vault.v1.QueryVaultResponse.vault":
 		return x.Vault != nil
+	case "vault.v1.QueryVaultResponse.principal":
+		return x.Principal != nil
+	case "vault.v1.QueryVaultResponse.reserves":
+		return x.Reserves != nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryVaultResponse"))
@@ -1562,6 +3152,10 @@ func (x *fastReflection_QueryVaultResponse) Clear(fd protoreflect.FieldDescripto
 	switch fd.FullName() {
 	case "vault.v1.QueryVaultResponse.vault":
 		x.Vault = nil
+	case "vault.v1.QueryVaultResponse.principal":
+		x.Principal = nil
+	case "vault.v1.QueryVaultResponse.reserves":
+		x.Reserves = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryVaultResponse"))
@@ -1580,6 +3174,12 @@ func (x *fastReflection_QueryVaultResponse) Get(descriptor protoreflect.FieldDes
 	switch descriptor.FullName() {
 	case "vault.v1.QueryVaultResponse.vault":
 		value := x.Vault
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "vault.v1.QueryVaultResponse.principal":
+		value := x.Principal
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "vault.v1.QueryVaultResponse.reserves":
+		value := x.Reserves
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
@@ -1603,6 +3203,10 @@ func (x *fastReflection_QueryVaultResponse) Set(fd protoreflect.FieldDescriptor,
 	switch fd.FullName() {
 	case "vault.v1.QueryVaultResponse.vault":
 		x.Vault = value.Message().Interface().(*VaultAccount)
+	case "vault.v1.QueryVaultResponse.principal":
+		x.Principal = value.Message().Interface().(*AccountBalance)
+	case "vault.v1.QueryVaultResponse.reserves":
+		x.Reserves = value.Message().Interface().(*AccountBalance)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryVaultResponse"))
@@ -1628,6 +3232,16 @@ func (x *fastReflection_QueryVaultResponse) Mutable(fd protoreflect.FieldDescrip
 			x.Vault = new(VaultAccount)
 		}
 		return protoreflect.ValueOfMessage(x.Vault.ProtoReflect())
+	case "vault.v1.QueryVaultResponse.principal":
+		if x.Principal == nil {
+			x.Principal = new(AccountBalance)
+		}
+		return protoreflect.ValueOfMessage(x.Principal.ProtoReflect())
+	case "vault.v1.QueryVaultResponse.reserves":
+		if x.Reserves == nil {
+			x.Reserves = new(AccountBalance)
+		}
+		return protoreflect.ValueOfMessage(x.Reserves.ProtoReflect())
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryVaultResponse"))
@@ -1643,6 +3257,12 @@ func (x *fastReflection_QueryVaultResponse) NewField(fd protoreflect.FieldDescri
 	switch fd.FullName() {
 	case "vault.v1.QueryVaultResponse.vault":
 		m := new(VaultAccount)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "vault.v1.QueryVaultResponse.principal":
+		m := new(AccountBalance)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "vault.v1.QueryVaultResponse.reserves":
+		m := new(AccountBalance)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
@@ -1717,6 +3337,14 @@ func (x *fastReflection_QueryVaultResponse) ProtoMethods() *protoiface.Methods {
 			l = options.Size(x.Vault)
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
+		if x.Principal != nil {
+			l = options.Size(x.Principal)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.Reserves != nil {
+			l = options.Size(x.Reserves)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -1745,6 +3373,34 @@ func (x *fastReflection_QueryVaultResponse) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Reserves != nil {
+			encoded, err := options.Marshal(x.Reserves)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x1a
+		}
+		if x.Principal != nil {
+			encoded, err := options.Marshal(x.Principal)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x12
 		}
 		if x.Vault != nil {
 			encoded, err := options.Marshal(x.Vault)
@@ -1845,6 +3501,78 @@ func (x *fastReflection_QueryVaultResponse) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Principal", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Principal == nil {
+					x.Principal = &AccountBalance{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Principal); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Reserves", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Reserves == nil {
+					x.Reserves = &AccountBalance{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Reserves); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -1902,7 +3630,7 @@ func (x *QueryEstimateSwapInRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryEstimateSwapInRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_query_proto_msgTypes[4]
+	mi := &file_vault_v1_query_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2403,7 +4131,7 @@ func (x *QueryEstimateSwapInResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryEstimateSwapInResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_query_proto_msgTypes[5]
+	mi := &file_vault_v1_query_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2944,14 +4672,16 @@ func (x *fastReflection_QueryEstimateSwapInResponse) ProtoMethods() *protoiface.
 var (
 	md_QueryEstimateSwapOutRequest               protoreflect.MessageDescriptor
 	fd_QueryEstimateSwapOutRequest_vault_address protoreflect.FieldDescriptor
-	fd_QueryEstimateSwapOutRequest_assets        protoreflect.FieldDescriptor
+	fd_QueryEstimateSwapOutRequest_shares        protoreflect.FieldDescriptor
+	fd_QueryEstimateSwapOutRequest_redeem_denom  protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_vault_v1_query_proto_init()
 	md_QueryEstimateSwapOutRequest = File_vault_v1_query_proto.Messages().ByName("QueryEstimateSwapOutRequest")
 	fd_QueryEstimateSwapOutRequest_vault_address = md_QueryEstimateSwapOutRequest.Fields().ByName("vault_address")
-	fd_QueryEstimateSwapOutRequest_assets = md_QueryEstimateSwapOutRequest.Fields().ByName("assets")
+	fd_QueryEstimateSwapOutRequest_shares = md_QueryEstimateSwapOutRequest.Fields().ByName("shares")
+	fd_QueryEstimateSwapOutRequest_redeem_denom = md_QueryEstimateSwapOutRequest.Fields().ByName("redeem_denom")
 }
 
 var _ protoreflect.Message = (*fastReflection_QueryEstimateSwapOutRequest)(nil)
@@ -2963,7 +4693,7 @@ func (x *QueryEstimateSwapOutRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryEstimateSwapOutRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_query_proto_msgTypes[6]
+	mi := &file_vault_v1_query_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3025,9 +4755,15 @@ func (x *fastReflection_QueryEstimateSwapOutRequest) Range(f func(protoreflect.F
 			return
 		}
 	}
-	if x.Assets != nil {
-		value := protoreflect.ValueOfMessage(x.Assets.ProtoReflect())
-		if !f(fd_QueryEstimateSwapOutRequest_assets, value) {
+	if x.Shares != "" {
+		value := protoreflect.ValueOfString(x.Shares)
+		if !f(fd_QueryEstimateSwapOutRequest_shares, value) {
+			return
+		}
+	}
+	if x.RedeemDenom != "" {
+		value := protoreflect.ValueOfString(x.RedeemDenom)
+		if !f(fd_QueryEstimateSwapOutRequest_redeem_denom, value) {
 			return
 		}
 	}
@@ -3048,8 +4784,10 @@ func (x *fastReflection_QueryEstimateSwapOutRequest) Has(fd protoreflect.FieldDe
 	switch fd.FullName() {
 	case "vault.v1.QueryEstimateSwapOutRequest.vault_address":
 		return x.VaultAddress != ""
-	case "vault.v1.QueryEstimateSwapOutRequest.assets":
-		return x.Assets != nil
+	case "vault.v1.QueryEstimateSwapOutRequest.shares":
+		return x.Shares != ""
+	case "vault.v1.QueryEstimateSwapOutRequest.redeem_denom":
+		return x.RedeemDenom != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryEstimateSwapOutRequest"))
@@ -3068,8 +4806,10 @@ func (x *fastReflection_QueryEstimateSwapOutRequest) Clear(fd protoreflect.Field
 	switch fd.FullName() {
 	case "vault.v1.QueryEstimateSwapOutRequest.vault_address":
 		x.VaultAddress = ""
-	case "vault.v1.QueryEstimateSwapOutRequest.assets":
-		x.Assets = nil
+	case "vault.v1.QueryEstimateSwapOutRequest.shares":
+		x.Shares = ""
+	case "vault.v1.QueryEstimateSwapOutRequest.redeem_denom":
+		x.RedeemDenom = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryEstimateSwapOutRequest"))
@@ -3089,9 +4829,12 @@ func (x *fastReflection_QueryEstimateSwapOutRequest) Get(descriptor protoreflect
 	case "vault.v1.QueryEstimateSwapOutRequest.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.QueryEstimateSwapOutRequest.assets":
-		value := x.Assets
-		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "vault.v1.QueryEstimateSwapOutRequest.shares":
+		value := x.Shares
+		return protoreflect.ValueOfString(value)
+	case "vault.v1.QueryEstimateSwapOutRequest.redeem_denom":
+		value := x.RedeemDenom
+		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryEstimateSwapOutRequest"))
@@ -3114,8 +4857,10 @@ func (x *fastReflection_QueryEstimateSwapOutRequest) Set(fd protoreflect.FieldDe
 	switch fd.FullName() {
 	case "vault.v1.QueryEstimateSwapOutRequest.vault_address":
 		x.VaultAddress = value.Interface().(string)
-	case "vault.v1.QueryEstimateSwapOutRequest.assets":
-		x.Assets = value.Message().Interface().(*v1beta11.Coin)
+	case "vault.v1.QueryEstimateSwapOutRequest.shares":
+		x.Shares = value.Interface().(string)
+	case "vault.v1.QueryEstimateSwapOutRequest.redeem_denom":
+		x.RedeemDenom = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryEstimateSwapOutRequest"))
@@ -3136,13 +4881,12 @@ func (x *fastReflection_QueryEstimateSwapOutRequest) Set(fd protoreflect.FieldDe
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryEstimateSwapOutRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.QueryEstimateSwapOutRequest.assets":
-		if x.Assets == nil {
-			x.Assets = new(v1beta11.Coin)
-		}
-		return protoreflect.ValueOfMessage(x.Assets.ProtoReflect())
 	case "vault.v1.QueryEstimateSwapOutRequest.vault_address":
 		panic(fmt.Errorf("field vault_address of message vault.v1.QueryEstimateSwapOutRequest is not mutable"))
+	case "vault.v1.QueryEstimateSwapOutRequest.shares":
+		panic(fmt.Errorf("field shares of message vault.v1.QueryEstimateSwapOutRequest is not mutable"))
+	case "vault.v1.QueryEstimateSwapOutRequest.redeem_denom":
+		panic(fmt.Errorf("field redeem_denom of message vault.v1.QueryEstimateSwapOutRequest is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryEstimateSwapOutRequest"))
@@ -3158,9 +4902,10 @@ func (x *fastReflection_QueryEstimateSwapOutRequest) NewField(fd protoreflect.Fi
 	switch fd.FullName() {
 	case "vault.v1.QueryEstimateSwapOutRequest.vault_address":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.QueryEstimateSwapOutRequest.assets":
-		m := new(v1beta11.Coin)
-		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "vault.v1.QueryEstimateSwapOutRequest.shares":
+		return protoreflect.ValueOfString("")
+	case "vault.v1.QueryEstimateSwapOutRequest.redeem_denom":
+		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryEstimateSwapOutRequest"))
@@ -3234,8 +4979,12 @@ func (x *fastReflection_QueryEstimateSwapOutRequest) ProtoMethods() *protoiface.
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		if x.Assets != nil {
-			l = options.Size(x.Assets)
+		l = len(x.Shares)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.RedeemDenom)
+		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		if x.unknownFields != nil {
@@ -3267,17 +5016,17 @@ func (x *fastReflection_QueryEstimateSwapOutRequest) ProtoMethods() *protoiface.
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if x.Assets != nil {
-			encoded, err := options.Marshal(x.Assets)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
-			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+		if len(x.RedeemDenom) > 0 {
+			i -= len(x.RedeemDenom)
+			copy(dAtA[i:], x.RedeemDenom)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.RedeemDenom)))
+			i--
+			dAtA[i] = 0x1a
+		}
+		if len(x.Shares) > 0 {
+			i -= len(x.Shares)
+			copy(dAtA[i:], x.Shares)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Shares)))
 			i--
 			dAtA[i] = 0x12
 		}
@@ -3371,9 +5120,9 @@ func (x *fastReflection_QueryEstimateSwapOutRequest) ProtoMethods() *protoiface.
 				iNdEx = postIndex
 			case 2:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Assets", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Shares", wireType)
 				}
-				var msglen int
+				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
@@ -3383,27 +5132,55 @@ func (x *fastReflection_QueryEstimateSwapOutRequest) ProtoMethods() *protoiface.
 					}
 					b := dAtA[iNdEx]
 					iNdEx++
-					msglen |= int(b&0x7F) << shift
+					stringLen |= uint64(b&0x7F) << shift
 					if b < 0x80 {
 						break
 					}
 				}
-				if msglen < 0 {
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
-				postIndex := iNdEx + msglen
+				postIndex := iNdEx + intStringLen
 				if postIndex < 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
 				}
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				if x.Assets == nil {
-					x.Assets = &v1beta11.Coin{}
+				x.Shares = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field RedeemDenom", wireType)
 				}
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Assets); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
 				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.RedeemDenom = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -3464,7 +5241,7 @@ func (x *QueryEstimateSwapOutResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryEstimateSwapOutResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_query_proto_msgTypes[7]
+	mi := &file_vault_v1_query_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4015,6 +5792,144 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// QueryPendingSwapOutsRequest is the request message for the Query/PendingSwapOuts endpoint.
+type QueryPendingSwapOutsRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// pagination defines an optional pagination for the request.
+	Pagination *v1beta1.PageRequest `protobuf:"bytes,1,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (x *QueryPendingSwapOutsRequest) Reset() {
+	*x = QueryPendingSwapOutsRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_vault_v1_query_proto_msgTypes[0]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryPendingSwapOutsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryPendingSwapOutsRequest) ProtoMessage() {}
+
+// Deprecated: Use QueryPendingSwapOutsRequest.ProtoReflect.Descriptor instead.
+func (*QueryPendingSwapOutsRequest) Descriptor() ([]byte, []int) {
+	return file_vault_v1_query_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *QueryPendingSwapOutsRequest) GetPagination() *v1beta1.PageRequest {
+	if x != nil {
+		return x.Pagination
+	}
+	return nil
+}
+
+// QueryPendingSwapOutsResponse is the response message for the Query/PendingSwapOuts endpoint.
+type QueryPendingSwapOutsResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// pending_swap_outs is a list of all pending swap outs.
+	PendingSwapOuts []*PendingSwapOutWithTimeout `protobuf:"bytes,1,rep,name=pending_swap_outs,json=pendingSwapOuts,proto3" json:"pending_swap_outs,omitempty"`
+	// pagination defines the pagination in the response.
+	Pagination *v1beta1.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (x *QueryPendingSwapOutsResponse) Reset() {
+	*x = QueryPendingSwapOutsResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_vault_v1_query_proto_msgTypes[1]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *QueryPendingSwapOutsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QueryPendingSwapOutsResponse) ProtoMessage() {}
+
+// Deprecated: Use QueryPendingSwapOutsResponse.ProtoReflect.Descriptor instead.
+func (*QueryPendingSwapOutsResponse) Descriptor() ([]byte, []int) {
+	return file_vault_v1_query_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *QueryPendingSwapOutsResponse) GetPendingSwapOuts() []*PendingSwapOutWithTimeout {
+	if x != nil {
+		return x.PendingSwapOuts
+	}
+	return nil
+}
+
+func (x *QueryPendingSwapOutsResponse) GetPagination() *v1beta1.PageResponse {
+	if x != nil {
+		return x.Pagination
+	}
+	return nil
+}
+
+// PendingSwapOutWithTimeout is a pending swap out with its timeout.
+type PendingSwapOutWithTimeout struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// request_id is the unique identifier for the pending swap out request.
+	RequestId uint64 `protobuf:"varint,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	// pending_swap_out contains the details of the swap out request.
+	PendingSwapOut *PendingSwapOut `protobuf:"bytes,2,opt,name=pending_swap_out,json=pendingSwapOut,proto3" json:"pending_swap_out,omitempty"`
+	// timeout is the time at which the pending swap out will expire if not processed.
+	Timeout *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=timeout,proto3" json:"timeout,omitempty"`
+}
+
+func (x *PendingSwapOutWithTimeout) Reset() {
+	*x = PendingSwapOutWithTimeout{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_vault_v1_query_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *PendingSwapOutWithTimeout) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PendingSwapOutWithTimeout) ProtoMessage() {}
+
+// Deprecated: Use PendingSwapOutWithTimeout.ProtoReflect.Descriptor instead.
+func (*PendingSwapOutWithTimeout) Descriptor() ([]byte, []int) {
+	return file_vault_v1_query_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *PendingSwapOutWithTimeout) GetRequestId() uint64 {
+	if x != nil {
+		return x.RequestId
+	}
+	return 0
+}
+
+func (x *PendingSwapOutWithTimeout) GetPendingSwapOut() *PendingSwapOut {
+	if x != nil {
+		return x.PendingSwapOut
+	}
+	return nil
+}
+
+func (x *PendingSwapOutWithTimeout) GetTimeout() *timestamppb.Timestamp {
+	if x != nil {
+		return x.Timeout
+	}
+	return nil
+}
+
 // QueryVaultsRequest is the request message for the Query/Vaults endpoint.
 type QueryVaultsRequest struct {
 	state         protoimpl.MessageState
@@ -4028,7 +5943,7 @@ type QueryVaultsRequest struct {
 func (x *QueryVaultsRequest) Reset() {
 	*x = QueryVaultsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_query_proto_msgTypes[0]
+		mi := &file_vault_v1_query_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4042,7 +5957,7 @@ func (*QueryVaultsRequest) ProtoMessage() {}
 
 // Deprecated: Use QueryVaultsRequest.ProtoReflect.Descriptor instead.
 func (*QueryVaultsRequest) Descriptor() ([]byte, []int) {
-	return file_vault_v1_query_proto_rawDescGZIP(), []int{0}
+	return file_vault_v1_query_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *QueryVaultsRequest) GetPagination() *v1beta1.PageRequest {
@@ -4067,7 +5982,7 @@ type QueryVaultsResponse struct {
 func (x *QueryVaultsResponse) Reset() {
 	*x = QueryVaultsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_query_proto_msgTypes[1]
+		mi := &file_vault_v1_query_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4081,7 +5996,7 @@ func (*QueryVaultsResponse) ProtoMessage() {}
 
 // Deprecated: Use QueryVaultsResponse.ProtoReflect.Descriptor instead.
 func (*QueryVaultsResponse) Descriptor() ([]byte, []int) {
-	return file_vault_v1_query_proto_rawDescGZIP(), []int{1}
+	return file_vault_v1_query_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *QueryVaultsResponse) GetVaults() []*VaultAccount {
@@ -4104,14 +6019,14 @@ type QueryVaultRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// vault_address is the bech32 address of the vault to query.
-	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// id is the bech32 address of the vault or the vault's share denom to query.
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 }
 
 func (x *QueryVaultRequest) Reset() {
 	*x = QueryVaultRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_query_proto_msgTypes[2]
+		mi := &file_vault_v1_query_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4125,12 +6040,12 @@ func (*QueryVaultRequest) ProtoMessage() {}
 
 // Deprecated: Use QueryVaultRequest.ProtoReflect.Descriptor instead.
 func (*QueryVaultRequest) Descriptor() ([]byte, []int) {
-	return file_vault_v1_query_proto_rawDescGZIP(), []int{2}
+	return file_vault_v1_query_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *QueryVaultRequest) GetVaultAddress() string {
+func (x *QueryVaultRequest) GetId() string {
 	if x != nil {
-		return x.VaultAddress
+		return x.Id
 	}
 	return ""
 }
@@ -4143,12 +6058,16 @@ type QueryVaultResponse struct {
 
 	// vault is the requested vault.
 	Vault *VaultAccount `protobuf:"bytes,1,opt,name=vault,proto3" json:"vault,omitempty"`
+	// principal is the total amount of principal held in the vault's marker.
+	Principal *AccountBalance `protobuf:"bytes,2,opt,name=principal,proto3" json:"principal,omitempty"`
+	// reserves is the total amount of reserves held in the vault account for interest payments.
+	Reserves *AccountBalance `protobuf:"bytes,3,opt,name=reserves,proto3" json:"reserves,omitempty"`
 }
 
 func (x *QueryVaultResponse) Reset() {
 	*x = QueryVaultResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_query_proto_msgTypes[3]
+		mi := &file_vault_v1_query_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4162,12 +6081,26 @@ func (*QueryVaultResponse) ProtoMessage() {}
 
 // Deprecated: Use QueryVaultResponse.ProtoReflect.Descriptor instead.
 func (*QueryVaultResponse) Descriptor() ([]byte, []int) {
-	return file_vault_v1_query_proto_rawDescGZIP(), []int{3}
+	return file_vault_v1_query_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *QueryVaultResponse) GetVault() *VaultAccount {
 	if x != nil {
 		return x.Vault
+	}
+	return nil
+}
+
+func (x *QueryVaultResponse) GetPrincipal() *AccountBalance {
+	if x != nil {
+		return x.Principal
+	}
+	return nil
+}
+
+func (x *QueryVaultResponse) GetReserves() *AccountBalance {
+	if x != nil {
+		return x.Reserves
 	}
 	return nil
 }
@@ -4180,14 +6113,14 @@ type QueryEstimateSwapInRequest struct {
 
 	// vault_address is the bech32 address of the vault to query.
 	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// assets is the amount of underlying assets to swap in.
+	// assets is the amount of underlying or payment denom to swap in.
 	Assets *v1beta11.Coin `protobuf:"bytes,2,opt,name=assets,proto3" json:"assets,omitempty"`
 }
 
 func (x *QueryEstimateSwapInRequest) Reset() {
 	*x = QueryEstimateSwapInRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_query_proto_msgTypes[4]
+		mi := &file_vault_v1_query_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4201,7 +6134,7 @@ func (*QueryEstimateSwapInRequest) ProtoMessage() {}
 
 // Deprecated: Use QueryEstimateSwapInRequest.ProtoReflect.Descriptor instead.
 func (*QueryEstimateSwapInRequest) Descriptor() ([]byte, []int) {
-	return file_vault_v1_query_proto_rawDescGZIP(), []int{4}
+	return file_vault_v1_query_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *QueryEstimateSwapInRequest) GetVaultAddress() string {
@@ -4235,7 +6168,7 @@ type QueryEstimateSwapInResponse struct {
 func (x *QueryEstimateSwapInResponse) Reset() {
 	*x = QueryEstimateSwapInResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_query_proto_msgTypes[5]
+		mi := &file_vault_v1_query_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4249,7 +6182,7 @@ func (*QueryEstimateSwapInResponse) ProtoMessage() {}
 
 // Deprecated: Use QueryEstimateSwapInResponse.ProtoReflect.Descriptor instead.
 func (*QueryEstimateSwapInResponse) Descriptor() ([]byte, []int) {
-	return file_vault_v1_query_proto_rawDescGZIP(), []int{5}
+	return file_vault_v1_query_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *QueryEstimateSwapInResponse) GetAssets() *v1beta11.Coin {
@@ -4281,14 +6214,16 @@ type QueryEstimateSwapOutRequest struct {
 
 	// vault_address is the bech32 address of the vault to query.
 	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// assets is the amount of shares to swap out.
-	Assets *v1beta11.Coin `protobuf:"bytes,2,opt,name=assets,proto3" json:"assets,omitempty"`
+	// shares is the amount of shares to swap out.
+	Shares string `protobuf:"bytes,2,opt,name=shares,proto3" json:"shares,omitempty"`
+	// redeem_denom is the payout denom to estimate; if empty, the underlying asset is used.
+	RedeemDenom string `protobuf:"bytes,3,opt,name=redeem_denom,json=redeemDenom,proto3" json:"redeem_denom,omitempty"`
 }
 
 func (x *QueryEstimateSwapOutRequest) Reset() {
 	*x = QueryEstimateSwapOutRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_query_proto_msgTypes[6]
+		mi := &file_vault_v1_query_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4302,7 +6237,7 @@ func (*QueryEstimateSwapOutRequest) ProtoMessage() {}
 
 // Deprecated: Use QueryEstimateSwapOutRequest.ProtoReflect.Descriptor instead.
 func (*QueryEstimateSwapOutRequest) Descriptor() ([]byte, []int) {
-	return file_vault_v1_query_proto_rawDescGZIP(), []int{6}
+	return file_vault_v1_query_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *QueryEstimateSwapOutRequest) GetVaultAddress() string {
@@ -4312,11 +6247,18 @@ func (x *QueryEstimateSwapOutRequest) GetVaultAddress() string {
 	return ""
 }
 
-func (x *QueryEstimateSwapOutRequest) GetAssets() *v1beta11.Coin {
+func (x *QueryEstimateSwapOutRequest) GetShares() string {
 	if x != nil {
-		return x.Assets
+		return x.Shares
 	}
-	return nil
+	return ""
+}
+
+func (x *QueryEstimateSwapOutRequest) GetRedeemDenom() string {
+	if x != nil {
+		return x.RedeemDenom
+	}
+	return ""
 }
 
 // QueryEstimateSwapOutResponse is the response message for the Query/EstimateSwapOut endpoint.
@@ -4336,7 +6278,7 @@ type QueryEstimateSwapOutResponse struct {
 func (x *QueryEstimateSwapOutResponse) Reset() {
 	*x = QueryEstimateSwapOutResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_query_proto_msgTypes[7]
+		mi := &file_vault_v1_query_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4350,7 +6292,7 @@ func (*QueryEstimateSwapOutResponse) ProtoMessage() {}
 
 // Deprecated: Use QueryEstimateSwapOutResponse.ProtoReflect.Descriptor instead.
 func (*QueryEstimateSwapOutResponse) Descriptor() ([]byte, []int) {
-	return file_vault_v1_query_proto_rawDescGZIP(), []int{7}
+	return file_vault_v1_query_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *QueryEstimateSwapOutResponse) GetAssets() *v1beta11.Coin {
@@ -4390,40 +6332,98 @@ var file_vault_v1_query_proto_rawDesc = []byte{
 	0x1a, 0x1f, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75,
 	0x66, 0x2f, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x2e, 0x70, 0x72, 0x6f, 0x74,
 	0x6f, 0x1a, 0x14, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x2f, 0x76, 0x61, 0x75, 0x6c,
-	0x74, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x5c, 0x0a, 0x12, 0x51, 0x75, 0x65, 0x72, 0x79,
-	0x56, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x46, 0x0a,
-	0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x0b, 0x32, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e,
-	0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61,
-	0x67, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e,
-	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x94, 0x01, 0x0a, 0x13, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56,
-	0x61, 0x75, 0x6c, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x34, 0x0a,
-	0x06, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x16, 0x2e,
-	0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x63,
-	0x63, 0x6f, 0x75, 0x6e, 0x74, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x76, 0x61, 0x75,
-	0x6c, 0x74, 0x73, 0x12, 0x47, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f,
-	0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65,
-	0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x38, 0x0a, 0x11,
-	0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65,
-	0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41,
-	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x22, 0x48, 0x0a, 0x12, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56,
-	0x61, 0x75, 0x6c, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x32, 0x0a, 0x05,
-	0x76, 0x61, 0x75, 0x6c, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x16, 0x2e, 0x76, 0x61,
-	0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x63, 0x63, 0x6f,
-	0x75, 0x6e, 0x74, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x05, 0x76, 0x61, 0x75, 0x6c, 0x74,
-	0x22, 0x7a, 0x0a, 0x1a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x45, 0x73, 0x74, 0x69, 0x6d, 0x61, 0x74,
-	0x65, 0x53, 0x77, 0x61, 0x70, 0x49, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x23,
-	0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72,
-	0x65, 0x73, 0x73, 0x12, 0x37, 0x0a, 0x06, 0x61, 0x73, 0x73, 0x65, 0x74, 0x73, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73,
-	0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04,
-	0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x61, 0x73, 0x73, 0x65, 0x74, 0x73, 0x22, 0xa8, 0x01, 0x0a,
+	0x74, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x65, 0x0a, 0x1b, 0x51, 0x75, 0x65, 0x72, 0x79,
+	0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x73, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x46, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0xbe,
+	0x01, 0x0a, 0x1c, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53,
+	0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
+	0x55, 0x0a, 0x11, 0x70, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x5f, 0x73, 0x77, 0x61, 0x70, 0x5f,
+	0x6f, 0x75, 0x74, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x23, 0x2e, 0x76, 0x61, 0x75,
+	0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61,
+	0x70, 0x4f, 0x75, 0x74, 0x57, 0x69, 0x74, 0x68, 0x54, 0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x42,
+	0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x0f, 0x70, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77,
+	0x61, 0x70, 0x4f, 0x75, 0x74, 0x73, 0x12, 0x47, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x27, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22,
+	0xc4, 0x01, 0x0a, 0x19, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f,
+	0x75, 0x74, 0x57, 0x69, 0x74, 0x68, 0x54, 0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x12, 0x1d, 0x0a,
+	0x0a, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x04, 0x52, 0x09, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x49, 0x64, 0x12, 0x48, 0x0a, 0x10,
+	0x70, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x5f, 0x73, 0x77, 0x61, 0x70, 0x5f, 0x6f, 0x75, 0x74,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76,
+	0x31, 0x2e, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74,
+	0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x0e, 0x70, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53,
+	0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x12, 0x3e, 0x0a, 0x07, 0x74, 0x69, 0x6d, 0x65, 0x6f, 0x75,
+	0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65,
+	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74,
+	0x61, 0x6d, 0x70, 0x42, 0x08, 0xc8, 0xde, 0x1f, 0x00, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x07, 0x74,
+	0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x22, 0x5c, 0x0a, 0x12, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56,
+	0x61, 0x75, 0x6c, 0x74, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x46, 0x0a, 0x0a,
+	0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71,
+	0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67,
+	0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61,
+	0x74, 0x69, 0x6f, 0x6e, 0x22, 0x94, 0x01, 0x0a, 0x13, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x61,
+	0x75, 0x6c, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x34, 0x0a, 0x06,
+	0x76, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x16, 0x2e, 0x76,
+	0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x63, 0x63,
+	0x6f, 0x75, 0x6e, 0x74, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x76, 0x61, 0x75, 0x6c,
+	0x74, 0x73, 0x12, 0x47, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
+	0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52,
+	0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x23, 0x0a, 0x11, 0x51,
+	0x75, 0x65, 0x72, 0x79, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64,
+	0x22, 0xc2, 0x01, 0x0a, 0x12, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x32, 0x0a, 0x05, 0x76, 0x61, 0x75, 0x6c, 0x74,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x16, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76,
+	0x31, 0x2e, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x42, 0x04,
+	0xc8, 0xde, 0x1f, 0x00, 0x52, 0x05, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x12, 0x3c, 0x0a, 0x09, 0x70,
+	0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x18,
+	0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e,
+	0x74, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x09,
+	0x70, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x12, 0x3a, 0x0a, 0x08, 0x72, 0x65, 0x73,
+	0x65, 0x72, 0x76, 0x65, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x76, 0x61,
+	0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x42, 0x61,
+	0x6c, 0x61, 0x6e, 0x63, 0x65, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x08, 0x72, 0x65, 0x73,
+	0x65, 0x72, 0x76, 0x65, 0x73, 0x22, 0x7a, 0x0a, 0x1a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x45, 0x73,
+	0x74, 0x69, 0x6d, 0x61, 0x74, 0x65, 0x53, 0x77, 0x61, 0x70, 0x49, 0x6e, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64,
+	0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c,
+	0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x37, 0x0a, 0x06, 0x61, 0x73, 0x73, 0x65,
+	0x74, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43,
+	0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x61, 0x73, 0x73, 0x65, 0x74,
+	0x73, 0x22, 0xa8, 0x01, 0x0a, 0x1b, 0x51, 0x75, 0x65, 0x72, 0x79, 0x45, 0x73, 0x74, 0x69, 0x6d,
+	0x61, 0x74, 0x65, 0x53, 0x77, 0x61, 0x70, 0x49, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x12, 0x37, 0x0a, 0x06, 0x61, 0x73, 0x73, 0x65, 0x74, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde,
+	0x1f, 0x00, 0x52, 0x06, 0x61, 0x73, 0x73, 0x65, 0x74, 0x73, 0x12, 0x16, 0x0a, 0x06, 0x68, 0x65,
+	0x69, 0x67, 0x68, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x68, 0x65, 0x69, 0x67,
+	0x68, 0x74, 0x12, 0x38, 0x0a, 0x04, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62,
+	0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x08, 0xc8, 0xde,
+	0x1f, 0x00, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x04, 0x74, 0x69, 0x6d, 0x65, 0x22, 0x9c, 0x01, 0x0a,
 	0x1b, 0x51, 0x75, 0x65, 0x72, 0x79, 0x45, 0x73, 0x74, 0x69, 0x6d, 0x61, 0x74, 0x65, 0x53, 0x77,
-	0x61, 0x70, 0x49, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x37, 0x0a, 0x06,
+	0x61, 0x70, 0x4f, 0x75, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x23, 0x0a, 0x0d,
+	0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x12, 0x35, 0x0a, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x09, 0x42, 0x1d, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e, 0x74,
+	0x52, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x12, 0x21, 0x0a, 0x0c, 0x72, 0x65, 0x64, 0x65,
+	0x65, 0x6d, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b,
+	0x72, 0x65, 0x64, 0x65, 0x65, 0x6d, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x22, 0xa9, 0x01, 0x0a, 0x1c,
+	0x51, 0x75, 0x65, 0x72, 0x79, 0x45, 0x73, 0x74, 0x69, 0x6d, 0x61, 0x74, 0x65, 0x53, 0x77, 0x61,
+	0x70, 0x4f, 0x75, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x37, 0x0a, 0x06,
 	0x61, 0x73, 0x73, 0x65, 0x74, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63,
 	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
 	0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x61,
@@ -4432,68 +6432,57 @@ var file_vault_v1_query_proto_rawDesc = []byte{
 	0x04, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f,
 	0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69,
 	0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x08, 0xc8, 0xde, 0x1f, 0x00, 0x90, 0xdf, 0x1f,
-	0x01, 0x52, 0x04, 0x74, 0x69, 0x6d, 0x65, 0x22, 0x7b, 0x0a, 0x1b, 0x51, 0x75, 0x65, 0x72, 0x79,
-	0x45, 0x73, 0x74, 0x69, 0x6d, 0x61, 0x74, 0x65, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f,
-	0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76,
-	0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x37, 0x0a, 0x06, 0x61,
-	0x73, 0x73, 0x65, 0x74, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x61, 0x73,
-	0x73, 0x65, 0x74, 0x73, 0x22, 0xa9, 0x01, 0x0a, 0x1c, 0x51, 0x75, 0x65, 0x72, 0x79, 0x45, 0x73,
-	0x74, 0x69, 0x6d, 0x61, 0x74, 0x65, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x37, 0x0a, 0x06, 0x61, 0x73, 0x73, 0x65, 0x74, 0x73, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62,
-	0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e,
-	0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x61, 0x73, 0x73, 0x65, 0x74, 0x73, 0x12, 0x16,
-	0x0a, 0x06, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06,
-	0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x12, 0x38, 0x0a, 0x04, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x03,
-	0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70,
-	0x42, 0x08, 0xc8, 0xde, 0x1f, 0x00, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x04, 0x74, 0x69, 0x6d, 0x65,
-	0x32, 0x90, 0x04, 0x0a, 0x05, 0x51, 0x75, 0x65, 0x72, 0x79, 0x12, 0x5f, 0x0a, 0x06, 0x56, 0x61,
-	0x75, 0x6c, 0x74, 0x73, 0x12, 0x1c, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e,
-	0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x1a, 0x1d, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75,
-	0x65, 0x72, 0x79, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x22, 0x18, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x12, 0x12, 0x10, 0x2f, 0x76, 0x61, 0x75, 0x6c,
-	0x74, 0x2f, 0x76, 0x31, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x12, 0x6c, 0x0a, 0x05, 0x56,
-	0x61, 0x75, 0x6c, 0x74, 0x12, 0x1b, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e,
-	0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x1a, 0x1c, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65,
-	0x72, 0x79, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
-	0x28, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x22, 0x12, 0x20, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f,
-	0x76, 0x31, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x2f, 0x7b, 0x76, 0x61, 0x75, 0x6c, 0x74,
-	0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x7d, 0x12, 0x98, 0x01, 0x0a, 0x0e, 0x45, 0x73,
-	0x74, 0x69, 0x6d, 0x61, 0x74, 0x65, 0x53, 0x77, 0x61, 0x70, 0x49, 0x6e, 0x12, 0x24, 0x2e, 0x76,
-	0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x45, 0x73, 0x74,
-	0x69, 0x6d, 0x61, 0x74, 0x65, 0x53, 0x77, 0x61, 0x70, 0x49, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x1a, 0x25, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75,
-	0x65, 0x72, 0x79, 0x45, 0x73, 0x74, 0x69, 0x6d, 0x61, 0x74, 0x65, 0x53, 0x77, 0x61, 0x70, 0x49,
-	0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x39, 0x82, 0xd3, 0xe4, 0x93, 0x02,
-	0x33, 0x12, 0x31, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x2f, 0x76, 0x61, 0x75,
-	0x6c, 0x74, 0x73, 0x2f, 0x7b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65,
-	0x73, 0x73, 0x7d, 0x2f, 0x65, 0x73, 0x74, 0x69, 0x6d, 0x61, 0x74, 0x65, 0x5f, 0x73, 0x77, 0x61,
-	0x70, 0x5f, 0x69, 0x6e, 0x12, 0x9c, 0x01, 0x0a, 0x0f, 0x45, 0x73, 0x74, 0x69, 0x6d, 0x61, 0x74,
-	0x65, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x12, 0x25, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74,
+	0x01, 0x52, 0x04, 0x74, 0x69, 0x6d, 0x65, 0x32, 0x8d, 0x05, 0x0a, 0x05, 0x51, 0x75, 0x65, 0x72,
+	0x79, 0x12, 0x5f, 0x0a, 0x06, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x12, 0x1c, 0x2e, 0x76, 0x61,
+	0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x61, 0x75, 0x6c,
+	0x74, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1d, 0x2e, 0x76, 0x61, 0x75, 0x6c,
+	0x74, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x73,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x18, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x12,
+	0x12, 0x10, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x2f, 0x76, 0x61, 0x75, 0x6c,
+	0x74, 0x73, 0x12, 0x61, 0x0a, 0x05, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x12, 0x1b, 0x2e, 0x76, 0x61,
+	0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x61, 0x75, 0x6c,
+	0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1c, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74,
+	0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x1d, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x17, 0x12, 0x15,
+	0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x73,
+	0x2f, 0x7b, 0x69, 0x64, 0x7d, 0x12, 0x98, 0x01, 0x0a, 0x0e, 0x45, 0x73, 0x74, 0x69, 0x6d, 0x61,
+	0x74, 0x65, 0x53, 0x77, 0x61, 0x70, 0x49, 0x6e, 0x12, 0x24, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74,
 	0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x45, 0x73, 0x74, 0x69, 0x6d, 0x61, 0x74,
-	0x65, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
-	0x26, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79,
-	0x45, 0x73, 0x74, 0x69, 0x6d, 0x61, 0x74, 0x65, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x3a, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x34, 0x12,
-	0x32, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74,
-	0x73, 0x2f, 0x7b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
-	0x7d, 0x2f, 0x65, 0x73, 0x74, 0x69, 0x6d, 0x61, 0x74, 0x65, 0x5f, 0x73, 0x77, 0x61, 0x70, 0x5f,
-	0x6f, 0x75, 0x74, 0x42, 0x8b, 0x01, 0x0a, 0x0c, 0x63, 0x6f, 0x6d, 0x2e, 0x76, 0x61, 0x75, 0x6c,
-	0x74, 0x2e, 0x76, 0x31, 0x42, 0x0a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x72, 0x6f, 0x74, 0x6f,
-	0x50, 0x01, 0x5a, 0x2e, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70,
-	0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70,
-	0x69, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74,
-	0x76, 0x31, 0xa2, 0x02, 0x03, 0x56, 0x58, 0x58, 0xaa, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74,
-	0x2e, 0x56, 0x31, 0xca, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02,
-	0x14, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74,
-	0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x09, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56,
-	0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x65, 0x53, 0x77, 0x61, 0x70, 0x49, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x25,
+	0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x45,
+	0x73, 0x74, 0x69, 0x6d, 0x61, 0x74, 0x65, 0x53, 0x77, 0x61, 0x70, 0x49, 0x6e, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x39, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x33, 0x12, 0x31, 0x2f,
+	0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x2f,
+	0x7b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x7d, 0x2f,
+	0x65, 0x73, 0x74, 0x69, 0x6d, 0x61, 0x74, 0x65, 0x5f, 0x73, 0x77, 0x61, 0x70, 0x5f, 0x69, 0x6e,
+	0x12, 0x9c, 0x01, 0x0a, 0x0f, 0x45, 0x73, 0x74, 0x69, 0x6d, 0x61, 0x74, 0x65, 0x53, 0x77, 0x61,
+	0x70, 0x4f, 0x75, 0x74, 0x12, 0x25, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e,
+	0x51, 0x75, 0x65, 0x72, 0x79, 0x45, 0x73, 0x74, 0x69, 0x6d, 0x61, 0x74, 0x65, 0x53, 0x77, 0x61,
+	0x70, 0x4f, 0x75, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x26, 0x2e, 0x76, 0x61,
+	0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x45, 0x73, 0x74, 0x69,
+	0x6d, 0x61, 0x74, 0x65, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x22, 0x3a, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x34, 0x12, 0x32, 0x2f, 0x76, 0x61,
+	0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x2f, 0x7b, 0x76,
+	0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x7d, 0x2f, 0x65, 0x73,
+	0x74, 0x69, 0x6d, 0x61, 0x74, 0x65, 0x5f, 0x73, 0x77, 0x61, 0x70, 0x5f, 0x6f, 0x75, 0x74, 0x12,
+	0x85, 0x01, 0x0a, 0x0f, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f,
+	0x75, 0x74, 0x73, 0x12, 0x25, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x51,
+	0x75, 0x65, 0x72, 0x79, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f,
+	0x75, 0x74, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x26, 0x2e, 0x76, 0x61, 0x75,
+	0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x65, 0x6e, 0x64, 0x69,
+	0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x22, 0x23, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x1d, 0x12, 0x1b, 0x2f, 0x76, 0x61, 0x75,
+	0x6c, 0x74, 0x2f, 0x76, 0x31, 0x2f, 0x70, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x5f, 0x73, 0x77,
+	0x61, 0x70, 0x5f, 0x6f, 0x75, 0x74, 0x73, 0x42, 0x8b, 0x01, 0x0a, 0x0c, 0x63, 0x6f, 0x6d, 0x2e,
+	0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x42, 0x0a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50,
+	0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2e, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63,
+	0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c,
+	0x74, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76,
+	0x61, 0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x56, 0x58, 0x58, 0xaa, 0x02, 0x08, 0x56,
+	0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c,
+	0x56, 0x31, 0xe2, 0x02, 0x14, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50,
+	0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x09, 0x56, 0x61, 0x75, 0x6c,
+	0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -4508,46 +6497,59 @@ func file_vault_v1_query_proto_rawDescGZIP() []byte {
 	return file_vault_v1_query_proto_rawDescData
 }
 
-var file_vault_v1_query_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_vault_v1_query_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_vault_v1_query_proto_goTypes = []interface{}{
-	(*QueryVaultsRequest)(nil),           // 0: vault.v1.QueryVaultsRequest
-	(*QueryVaultsResponse)(nil),          // 1: vault.v1.QueryVaultsResponse
-	(*QueryVaultRequest)(nil),            // 2: vault.v1.QueryVaultRequest
-	(*QueryVaultResponse)(nil),           // 3: vault.v1.QueryVaultResponse
-	(*QueryEstimateSwapInRequest)(nil),   // 4: vault.v1.QueryEstimateSwapInRequest
-	(*QueryEstimateSwapInResponse)(nil),  // 5: vault.v1.QueryEstimateSwapInResponse
-	(*QueryEstimateSwapOutRequest)(nil),  // 6: vault.v1.QueryEstimateSwapOutRequest
-	(*QueryEstimateSwapOutResponse)(nil), // 7: vault.v1.QueryEstimateSwapOutResponse
-	(*v1beta1.PageRequest)(nil),          // 8: cosmos.base.query.v1beta1.PageRequest
-	(*VaultAccount)(nil),                 // 9: vault.v1.VaultAccount
-	(*v1beta1.PageResponse)(nil),         // 10: cosmos.base.query.v1beta1.PageResponse
-	(*v1beta11.Coin)(nil),                // 11: cosmos.base.v1beta1.Coin
-	(*timestamppb.Timestamp)(nil),        // 12: google.protobuf.Timestamp
+	(*QueryPendingSwapOutsRequest)(nil),  // 0: vault.v1.QueryPendingSwapOutsRequest
+	(*QueryPendingSwapOutsResponse)(nil), // 1: vault.v1.QueryPendingSwapOutsResponse
+	(*PendingSwapOutWithTimeout)(nil),    // 2: vault.v1.PendingSwapOutWithTimeout
+	(*QueryVaultsRequest)(nil),           // 3: vault.v1.QueryVaultsRequest
+	(*QueryVaultsResponse)(nil),          // 4: vault.v1.QueryVaultsResponse
+	(*QueryVaultRequest)(nil),            // 5: vault.v1.QueryVaultRequest
+	(*QueryVaultResponse)(nil),           // 6: vault.v1.QueryVaultResponse
+	(*QueryEstimateSwapInRequest)(nil),   // 7: vault.v1.QueryEstimateSwapInRequest
+	(*QueryEstimateSwapInResponse)(nil),  // 8: vault.v1.QueryEstimateSwapInResponse
+	(*QueryEstimateSwapOutRequest)(nil),  // 9: vault.v1.QueryEstimateSwapOutRequest
+	(*QueryEstimateSwapOutResponse)(nil), // 10: vault.v1.QueryEstimateSwapOutResponse
+	(*v1beta1.PageRequest)(nil),          // 11: cosmos.base.query.v1beta1.PageRequest
+	(*v1beta1.PageResponse)(nil),         // 12: cosmos.base.query.v1beta1.PageResponse
+	(*PendingSwapOut)(nil),               // 13: vault.v1.PendingSwapOut
+	(*timestamppb.Timestamp)(nil),        // 14: google.protobuf.Timestamp
+	(*VaultAccount)(nil),                 // 15: vault.v1.VaultAccount
+	(*AccountBalance)(nil),               // 16: vault.v1.AccountBalance
+	(*v1beta11.Coin)(nil),                // 17: cosmos.base.v1beta1.Coin
 }
 var file_vault_v1_query_proto_depIdxs = []int32{
-	8,  // 0: vault.v1.QueryVaultsRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
-	9,  // 1: vault.v1.QueryVaultsResponse.vaults:type_name -> vault.v1.VaultAccount
-	10, // 2: vault.v1.QueryVaultsResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
-	9,  // 3: vault.v1.QueryVaultResponse.vault:type_name -> vault.v1.VaultAccount
-	11, // 4: vault.v1.QueryEstimateSwapInRequest.assets:type_name -> cosmos.base.v1beta1.Coin
-	11, // 5: vault.v1.QueryEstimateSwapInResponse.assets:type_name -> cosmos.base.v1beta1.Coin
-	12, // 6: vault.v1.QueryEstimateSwapInResponse.time:type_name -> google.protobuf.Timestamp
-	11, // 7: vault.v1.QueryEstimateSwapOutRequest.assets:type_name -> cosmos.base.v1beta1.Coin
-	11, // 8: vault.v1.QueryEstimateSwapOutResponse.assets:type_name -> cosmos.base.v1beta1.Coin
-	12, // 9: vault.v1.QueryEstimateSwapOutResponse.time:type_name -> google.protobuf.Timestamp
-	0,  // 10: vault.v1.Query.Vaults:input_type -> vault.v1.QueryVaultsRequest
-	2,  // 11: vault.v1.Query.Vault:input_type -> vault.v1.QueryVaultRequest
-	4,  // 12: vault.v1.Query.EstimateSwapIn:input_type -> vault.v1.QueryEstimateSwapInRequest
-	6,  // 13: vault.v1.Query.EstimateSwapOut:input_type -> vault.v1.QueryEstimateSwapOutRequest
-	1,  // 14: vault.v1.Query.Vaults:output_type -> vault.v1.QueryVaultsResponse
-	3,  // 15: vault.v1.Query.Vault:output_type -> vault.v1.QueryVaultResponse
-	5,  // 16: vault.v1.Query.EstimateSwapIn:output_type -> vault.v1.QueryEstimateSwapInResponse
-	7,  // 17: vault.v1.Query.EstimateSwapOut:output_type -> vault.v1.QueryEstimateSwapOutResponse
-	14, // [14:18] is the sub-list for method output_type
-	10, // [10:14] is the sub-list for method input_type
-	10, // [10:10] is the sub-list for extension type_name
-	10, // [10:10] is the sub-list for extension extendee
-	0,  // [0:10] is the sub-list for field type_name
+	11, // 0: vault.v1.QueryPendingSwapOutsRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	2,  // 1: vault.v1.QueryPendingSwapOutsResponse.pending_swap_outs:type_name -> vault.v1.PendingSwapOutWithTimeout
+	12, // 2: vault.v1.QueryPendingSwapOutsResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	13, // 3: vault.v1.PendingSwapOutWithTimeout.pending_swap_out:type_name -> vault.v1.PendingSwapOut
+	14, // 4: vault.v1.PendingSwapOutWithTimeout.timeout:type_name -> google.protobuf.Timestamp
+	11, // 5: vault.v1.QueryVaultsRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	15, // 6: vault.v1.QueryVaultsResponse.vaults:type_name -> vault.v1.VaultAccount
+	12, // 7: vault.v1.QueryVaultsResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	15, // 8: vault.v1.QueryVaultResponse.vault:type_name -> vault.v1.VaultAccount
+	16, // 9: vault.v1.QueryVaultResponse.principal:type_name -> vault.v1.AccountBalance
+	16, // 10: vault.v1.QueryVaultResponse.reserves:type_name -> vault.v1.AccountBalance
+	17, // 11: vault.v1.QueryEstimateSwapInRequest.assets:type_name -> cosmos.base.v1beta1.Coin
+	17, // 12: vault.v1.QueryEstimateSwapInResponse.assets:type_name -> cosmos.base.v1beta1.Coin
+	14, // 13: vault.v1.QueryEstimateSwapInResponse.time:type_name -> google.protobuf.Timestamp
+	17, // 14: vault.v1.QueryEstimateSwapOutResponse.assets:type_name -> cosmos.base.v1beta1.Coin
+	14, // 15: vault.v1.QueryEstimateSwapOutResponse.time:type_name -> google.protobuf.Timestamp
+	3,  // 16: vault.v1.Query.Vaults:input_type -> vault.v1.QueryVaultsRequest
+	5,  // 17: vault.v1.Query.Vault:input_type -> vault.v1.QueryVaultRequest
+	7,  // 18: vault.v1.Query.EstimateSwapIn:input_type -> vault.v1.QueryEstimateSwapInRequest
+	9,  // 19: vault.v1.Query.EstimateSwapOut:input_type -> vault.v1.QueryEstimateSwapOutRequest
+	0,  // 20: vault.v1.Query.PendingSwapOuts:input_type -> vault.v1.QueryPendingSwapOutsRequest
+	4,  // 21: vault.v1.Query.Vaults:output_type -> vault.v1.QueryVaultsResponse
+	6,  // 22: vault.v1.Query.Vault:output_type -> vault.v1.QueryVaultResponse
+	8,  // 23: vault.v1.Query.EstimateSwapIn:output_type -> vault.v1.QueryEstimateSwapInResponse
+	10, // 24: vault.v1.Query.EstimateSwapOut:output_type -> vault.v1.QueryEstimateSwapOutResponse
+	1,  // 25: vault.v1.Query.PendingSwapOuts:output_type -> vault.v1.QueryPendingSwapOutsResponse
+	21, // [21:26] is the sub-list for method output_type
+	16, // [16:21] is the sub-list for method input_type
+	16, // [16:16] is the sub-list for extension type_name
+	16, // [16:16] is the sub-list for extension extendee
+	0,  // [0:16] is the sub-list for field type_name
 }
 
 func init() { file_vault_v1_query_proto_init() }
@@ -4558,7 +6560,7 @@ func file_vault_v1_query_proto_init() {
 	file_vault_v1_vault_proto_init()
 	if !protoimpl.UnsafeEnabled {
 		file_vault_v1_query_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryVaultsRequest); i {
+			switch v := v.(*QueryPendingSwapOutsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -4570,7 +6572,7 @@ func file_vault_v1_query_proto_init() {
 			}
 		}
 		file_vault_v1_query_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryVaultsResponse); i {
+			switch v := v.(*QueryPendingSwapOutsResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -4582,7 +6584,7 @@ func file_vault_v1_query_proto_init() {
 			}
 		}
 		file_vault_v1_query_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryVaultRequest); i {
+			switch v := v.(*PendingSwapOutWithTimeout); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -4594,7 +6596,7 @@ func file_vault_v1_query_proto_init() {
 			}
 		}
 		file_vault_v1_query_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryVaultResponse); i {
+			switch v := v.(*QueryVaultsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -4606,7 +6608,7 @@ func file_vault_v1_query_proto_init() {
 			}
 		}
 		file_vault_v1_query_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryEstimateSwapInRequest); i {
+			switch v := v.(*QueryVaultsResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -4618,7 +6620,7 @@ func file_vault_v1_query_proto_init() {
 			}
 		}
 		file_vault_v1_query_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryEstimateSwapInResponse); i {
+			switch v := v.(*QueryVaultRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -4630,7 +6632,7 @@ func file_vault_v1_query_proto_init() {
 			}
 		}
 		file_vault_v1_query_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryEstimateSwapOutRequest); i {
+			switch v := v.(*QueryVaultResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -4642,6 +6644,42 @@ func file_vault_v1_query_proto_init() {
 			}
 		}
 		file_vault_v1_query_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryEstimateSwapInRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_vault_v1_query_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryEstimateSwapInResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_vault_v1_query_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*QueryEstimateSwapOutRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_vault_v1_query_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*QueryEstimateSwapOutResponse); i {
 			case 0:
 				return &v.state
@@ -4660,7 +6698,7 @@ func file_vault_v1_query_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_vault_v1_query_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

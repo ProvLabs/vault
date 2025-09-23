@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/provlabs/vault/types"
-	"github.com/provlabs/vault/utils"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -27,35 +26,38 @@ type VaultAttributer interface {
 	GetAdmin() string
 	GetShareDenom() string
 	GetUnderlyingAsset() string
+	GetPaymentDenom() string
+	GetWithdrawalDelaySeconds() uint64
 }
 
 // CreateVault creates the vault based on the provided attributes.
 func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*types.VaultAccount, error) {
-	underlyingAssetAddr, err := markertypes.MarkerAddress(attributes.GetUnderlyingAsset())
+	underlying := attributes.GetUnderlyingAsset()
+	payment := attributes.GetPaymentDenom()
+	withdrawalDelay := attributes.GetWithdrawalDelaySeconds()
+
+	underlyingAssetAddr, err := markertypes.MarkerAddress(underlying)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get underlying asset marker address: %w", err)
 	}
-
 	if found := k.MarkerKeeper.IsMarkerAccount(ctx, underlyingAssetAddr); !found {
-		return nil, fmt.Errorf("underlying asset marker %q not found", attributes.GetUnderlyingAsset())
+		return nil, fmt.Errorf("underlying asset marker %q not found", underlying)
 	}
 
-	vault, err := k.createVaultAccount(ctx, attributes.GetAdmin(), attributes.GetShareDenom(), attributes.GetUnderlyingAsset())
+	vault, err := k.createVaultAccount(ctx, attributes.GetAdmin(), attributes.GetShareDenom(), underlying, payment, withdrawalDelay)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create vault account: %w", err)
 	}
 
-	_, err = k.createVaultMarker(ctx, vault.GetAddress(), vault.ShareDenom, vault.UnderlyingAssets[0])
-	if err != nil {
+	if _, err := k.createVaultMarker(ctx, vault.GetAddress(), vault.ShareDenom, vault.UnderlyingAsset); err != nil {
 		return nil, fmt.Errorf("failed to create vault marker: %w", err)
 	}
 
 	k.emitEvent(ctx, types.NewEventVaultCreated(vault))
-
 	return vault, nil
 }
 
-// GetVault finds a vault by a given address
+// GetVault finds a vault by a given address.
 //
 // This function will return nil if nothing exists at this address.
 func (k Keeper) GetVault(ctx sdk.Context, address sdk.AccAddress) (*types.VaultAccount, error) {
@@ -71,38 +73,42 @@ func (k Keeper) GetVault(ctx sdk.Context, address sdk.AccAddress) (*types.VaultA
 }
 
 // createVaultAccount creates and stores a new vault account.
-func (k *Keeper) createVaultAccount(ctx sdk.Context, admin, shareDenom, underlyingAsset string) (*types.VaultAccount, error) {
+func (k *Keeper) createVaultAccount(ctx sdk.Context, admin, shareDenom, underlyingAsset, paymentDenom string, withdrawalDelay uint64) (*types.VaultAccount, error) {
 	vaultAddr := types.GetVaultAddress(shareDenom)
 
-	// TODO: determine how to handle setting interest rates with management issue: https://github.com/ProvLabs/vault/issues/8
-	vault := types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(vaultAddr), admin, shareDenom, []string{underlyingAsset})
+	vault := types.NewVaultAccount(
+		authtypes.NewBaseAccountWithAddress(vaultAddr),
+		admin,
+		shareDenom,
+		underlyingAsset,
+		paymentDenom,
+		withdrawalDelay,
+	)
 
 	if err := vault.Validate(); err != nil {
 		return nil, fmt.Errorf("failed to validate vault account: %w", err)
 	}
 
-	if err := k.SetVault(ctx, vault); err != nil {
+	if err := k.SetVaultLookup(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to store new vault: %w", err)
 	}
 
 	vaultAcc := k.AuthKeeper.GetAccount(ctx, vault.GetAddress())
 	if vaultAcc != nil {
-		_, ok := vaultAcc.(types.VaultAccountI)
-		if ok {
+		if _, ok := vaultAcc.(types.VaultAccountI); ok {
 			return nil, fmt.Errorf("vault address already exists for %s", vaultAddr.String())
 		} else if vaultAcc.GetSequence() > 0 {
-			// account exists, is not a vault, and has been signed for
 			return nil, fmt.Errorf("account at %s is not a vault account", vaultAddr.String())
 		}
 	}
 	vaultAcc = k.AuthKeeper.NewAccount(ctx, vault).(types.VaultAccountI)
+	vault.PausedBalance = sdk.Coin{}
 	k.AuthKeeper.SetAccount(ctx, vaultAcc)
 
 	return vault, nil
 }
 
 // createVaultMarker creates, finalizes, and activates a new restricted marker for the vault's share denomination.
-// TODO: https://github.com/ProvLabs/vault/issues/2 discussion of marker configuration
 func (k *Keeper) createVaultMarker(ctx sdk.Context, markerManager sdk.AccAddress, shareDenom, underlyingAsset string) (*markertypes.MarkerAccount, error) {
 	vaultShareMarkerAddress, err := markertypes.MarkerAddress(shareDenom)
 	if err != nil {
@@ -143,16 +149,21 @@ func (k *Keeper) createVaultMarker(ctx sdk.Context, markerManager sdk.AccAddress
 	return newMarker, nil
 }
 
-// SwapIn handles the process of depositing underlying assets into a vault in exchange for newly minted vault shares.
+// SwapIn handles the process of depositing underlying assets into a vault in
+// exchange for newly minted vault shares.
+//
 // It performs the following steps:
 //  1. Retrieves the vault configuration for the given vault address.
-//  2. Reconciles any accrued interest from the vault to the marker module if due.
-//  3. Validates that the provided underlying asset is supported by the vault.
-//  4. Constructs the vault share amount based on the asset value.
-//  5. Mints the equivalent amount of shares to the vault account.
-//  6. Withdraws the minted shares from the vault to the recipient address.
-//  7. Sends the underlying asset from the recipient to the vault’s marker account.
-//  8. Emits a SwapIn event with metadata for indexing and audit.
+//  2. Verifies that swap-in is enabled for the vault.
+//  3. Reconciles any accrued interest from the vault to the marker module (if due).
+//  4. Resolves the vault share marker address.
+//  5. Validates that the provided underlying asset matches the vault’s configured underlying denom.
+//  6. Calculates the number of shares to mint based on the deposit, current supply, and vault balance.
+//  7. Mints the computed amount of shares under the vault’s admin authority.
+//  8. Withdraws the minted shares from the vault to the recipient address.
+//  9. Sends the underlying asset from the recipient to the vault’s marker account.
+//
+// 10. Emits a SwapIn event with metadata for indexing and audit.
 //
 // Returns the minted share amount on success, or an error if any step fails.
 func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, asset sdk.Coin) (*sdk.Coin, error) {
@@ -164,24 +175,25 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 		return nil, fmt.Errorf("vault with address %v not found", vaultAddr.String())
 	}
 
+	if vault.Paused {
+		return nil, fmt.Errorf("vault %s is paused", vaultAddr.String())
+	}
+
 	if !vault.SwapInEnabled {
 		return nil, fmt.Errorf("swaps are not enabled for vault %s", vaultAddr.String())
+	}
+
+	if err := vault.ValidateAcceptedCoin(asset); err != nil {
+		return nil, err
 	}
 
 	if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to reconcile vault interest: %w", err)
 	}
 
-	markerAddr := markertypes.MustGetMarkerAddress(vault.ShareDenom)
+	principalAddress := vault.PrincipalMarkerAddress()
 
-	if err := vault.ValidateUnderlyingAssets(asset); err != nil {
-		return nil, err
-	}
-
-	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
-	totalAssets := k.BankKeeper.GetBalance(ctx, markerAddr, vault.UnderlyingAssets[0]).Amount
-
-	shares, err := utils.CalculateSharesFromAssets(asset.Amount, totalAssets, totalShares, vault.ShareDenom)
+	shares, err := k.ConvertDepositToSharesInUnderlyingAsset(ctx, *vault, asset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate shares from assets: %w", err)
 	}
@@ -198,77 +210,89 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 		return nil, err
 	}
 
-	if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx), recipient, markerAddr, sdk.NewCoins(asset)); err != nil {
+	if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx), recipient, principalAddress, sdk.NewCoins(asset)); err != nil {
 		return nil, err
 	}
 
 	k.emitEvent(ctx, types.NewEventSwapIn(vaultAddr.String(), recipient.String(), asset, shares))
-
 	return &shares, nil
 }
 
-// SwapOut handles the process of redeeming vault shares in exchange for underlying assets.
-// It performs the following steps:
-//  1. Retrieves the vault configuration for the given vault address.
-//  2. Reconciles any accrued interest from the vault to the marker module if due.
-//  3. Validates that the provided share denomination matches the vault's configured share denom.
-//  4. Calculates the amount of underlying assets to return based on the share amount.
-//  5. Transfers the shares from the owner to the vault's marker account.
-//  6. Burns the received shares from the vault account.
-//  7. Sends the equivalent amount of underlying assets from the marker to the owner.
-//  8. Emits a SwapOut event with metadata for indexing and audit.
-//
-// Returns the burned share amount on success, or an error if any step fails.
-func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, shares sdk.Coin) (*sdk.Coin, error) {
+// checkPayoutRestrictions performs a pre-flight check to ensure a user is permissioned to receive
+// the assets from a vault's principal marker. This prevents queueing a withdrawal that is guaranteed
+// to fail later due to marker transfer restrictions (e.g., required attributes).
+func (k *Keeper) checkPayoutRestrictions(ctx sdk.Context, vault *types.VaultAccount, owner sdk.AccAddress, assets sdk.Coin) error {
+	_, err := k.MarkerKeeper.SendRestrictionFn(
+		markertypes.WithTransferAgents(ctx, vault.GetAddress()),
+		vault.PrincipalMarkerAddress(),
+		owner,
+		sdk.NewCoins(assets),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to pass send restrictions test: %w", err)
+	}
+	return nil
+}
+
+// SwapOut validates a swap-out request, calculates the resulting assets, escrows the user's shares,
+// and enqueues a pending withdrawal request to be processed by the EndBlocker.
+// It returns the unique ID of the newly queued request.
+func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, shares sdk.Coin, redeemDenom string) (uint64, error) {
 	vault, err := k.GetVault(ctx, vaultAddr)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 	if vault == nil {
-		return nil, fmt.Errorf("vault with address %v not found", vaultAddr.String())
+		return 0, fmt.Errorf("vault with address %v not found", vaultAddr.String())
+	}
+
+	if vault.Paused {
+		return 0, fmt.Errorf("vault %s is paused", vaultAddr.String())
 	}
 
 	if !vault.SwapOutEnabled {
-		return nil, fmt.Errorf("swaps are not enabled for vault %s", vaultAddr.String())
+		return 0, fmt.Errorf("swaps are not enabled for vault %s", vaultAddr.String())
 	}
 
 	if shares.Denom != vault.ShareDenom {
-		return nil, fmt.Errorf("swap out denom must be share denom %v : %v", shares.Denom, vault.ShareDenom)
+		return 0, fmt.Errorf("swap out denom must be share denom %v : %v", shares.Denom, vault.ShareDenom)
 	}
 
-	if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
-		return nil, fmt.Errorf("failed to reconcile vault interest: %w", err)
+	if redeemDenom == "" {
+		redeemDenom = vault.UnderlyingAsset
 	}
 
-	markerAddr := markertypes.MustGetMarkerAddress(vault.ShareDenom)
+	if err := vault.ValidateAcceptedDenom(redeemDenom); err != nil {
+		return 0, err
+	}
 
-	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
-	totalAssets := k.BankKeeper.GetBalance(ctx, markerAddr, vault.UnderlyingAssets[0]).Amount
-
-	assets, err := utils.CalculateAssetsFromShares(shares.Amount, totalShares, totalAssets, vault.UnderlyingAssets[0])
+	assets, err := k.ConvertSharesToRedeemCoin(ctx, *vault, shares.Amount, redeemDenom)
 	if err != nil {
-		return nil, fmt.Errorf("failed to calculate assets from shares: %w", err)
+		return 0, fmt.Errorf("failed to calculate assets from shares: %w", err)
 	}
 
-	if err := assets.Validate(); err != nil {
-		return nil, err
+	if err := k.checkPayoutRestrictions(ctx, vault, owner, assets); err != nil {
+		return 0, err
 	}
 
-	if err := k.BankKeeper.SendCoins(ctx, owner, markerAddr, sdk.NewCoins(shares)); err != nil {
-		return nil, fmt.Errorf("failed to send shares to marker: %w", err)
+	if err := k.BankKeeper.SendCoins(ctx, owner, vault.GetAddress(), sdk.NewCoins(shares)); err != nil {
+		return 0, fmt.Errorf("failed to escrow shares: %w", err)
 	}
 
-	if err := k.MarkerKeeper.BurnCoin(ctx, vault.GetAddress(), shares); err != nil {
-		return nil, fmt.Errorf("failed to burn shares: %w", err)
+	payoutTime := ctx.BlockTime().Unix() + int64(vault.WithdrawalDelaySeconds)
+	pendingReq := types.PendingSwapOut{
+		Owner:        owner.String(),
+		VaultAddress: vaultAddr.String(),
+		RedeemDenom:  redeemDenom,
+		Shares:       shares,
+	}
+	requestID, err := k.PendingSwapOutQueue.Enqueue(ctx, payoutTime, &pendingReq)
+	if err != nil {
+		return 0, fmt.Errorf("failed to enqueue pending swap out request: %w", err)
 	}
 
-	if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, vaultAddr), markerAddr, owner, sdk.NewCoins(assets)); err != nil {
-		return nil, fmt.Errorf("failed to send underlying asset: %w", err)
-	}
-
-	k.emitEvent(ctx, types.NewEventSwapOut(vaultAddr.String(), owner.String(), assets, shares))
-
-	return &shares, nil
+	k.emitEvent(ctx, types.NewEventSwapOutRequested(vaultAddr.String(), owner.String(), redeemDenom, shares, requestID))
+	return requestID, nil
 }
 
 // SetSwapInEnable updates the SwapInEnabled flag for a given vault. It updates the vault account in the state and
@@ -343,4 +367,25 @@ func (k Keeper) ValidateInterestRateLimits(minRateStr, maxRateStr string) error 
 	}
 
 	return nil
+}
+
+// autoPauseVault sets a vault's state to paused, records the reason, persists it to state,
+// and emits an EventVaultAutoPaused. This function is intended to be called in response to a
+// critical, unrecoverable error for a specific vault. The provided reason should be a stable,
+// hard-coded string suitable for persistence and later auditing.
+func (k *Keeper) autoPauseVault(ctx context.Context, vault *types.VaultAccount, reason string) {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	sdkCtx.Logger().Error(
+		"Auto-pausing vault due to critical error",
+		"vault_address", vault.GetAddress().String(),
+		"reason", reason,
+	)
+
+	vault.Paused = true
+	vault.PausedReason = reason
+
+	k.AuthKeeper.SetAccount(ctx, vault)
+
+	k.emitEvent(sdkCtx, types.NewEventVaultAutoPaused(vault.GetAddress().String(), reason))
 }

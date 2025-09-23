@@ -22,17 +22,17 @@ func TestVaultAccount_Validate(t *testing.T) {
 	baseAcc := authtypes.NewBaseAccountWithAddress(sdk.MustAccAddressFromBech32(validAdmin))
 
 	tests := []struct {
-		name        string
-		account     types.VaultAccount
-		expectedErr string
+		name         string
+		vaultAccount types.VaultAccount
+		expectedErr  string
 	}{
 		{
 			name: "valid vault account with interest rates (current==desired)",
-			account: types.VaultAccount{
+			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
 				ShareDenom:          validDenom,
-				UnderlyingAssets:    []string{"uusd"},
+				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: validInterest,
 				DesiredInterestRate: validInterest,
 			},
@@ -40,11 +40,11 @@ func TestVaultAccount_Validate(t *testing.T) {
 		},
 		{
 			name: "valid vault account with bounds and current==0",
-			account: types.VaultAccount{
+			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
 				ShareDenom:          validDenom,
-				UnderlyingAssets:    []string{"uusd"},
+				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: "0.00",
 				DesiredInterestRate: "0.04",
 				MinInterestRate:     "0.03",
@@ -54,11 +54,11 @@ func TestVaultAccount_Validate(t *testing.T) {
 		},
 		{
 			name: "invalid admin address",
-			account: types.VaultAccount{
+			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               "invalid-address",
 				ShareDenom:          validDenom,
-				UnderlyingAssets:    []string{"uusd"},
+				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: validInterest,
 				DesiredInterestRate: validInterest,
 			},
@@ -66,11 +66,11 @@ func TestVaultAccount_Validate(t *testing.T) {
 		},
 		{
 			name: "empty share denom",
-			account: types.VaultAccount{
+			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
 				ShareDenom:          "",
-				UnderlyingAssets:    []string{"uusd"},
+				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: validInterest,
 				DesiredInterestRate: validInterest,
 			},
@@ -78,11 +78,11 @@ func TestVaultAccount_Validate(t *testing.T) {
 		},
 		{
 			name: "invalid share denom",
-			account: types.VaultAccount{
+			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
 				ShareDenom:          invalidDenom,
-				UnderlyingAssets:    []string{"uusd"},
+				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: validInterest,
 				DesiredInterestRate: validInterest,
 			},
@@ -90,35 +90,87 @@ func TestVaultAccount_Validate(t *testing.T) {
 		},
 		{
 			name: "empty underlying assets",
-			account: types.VaultAccount{
+			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
 				ShareDenom:          validDenom,
-				UnderlyingAssets:    []string{},
+				UnderlyingAsset:     "",
 				CurrentInterestRate: validInterest,
 				DesiredInterestRate: validInterest,
 			},
-			expectedErr: "at least one underlying asset is required",
+			expectedErr: "invalid underlying asset denom: ",
 		},
 		{
 			name: "invalid underlying asset denom",
-			account: types.VaultAccount{
+			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
 				ShareDenom:          validDenom,
-				UnderlyingAssets:    []string{invalidDenom},
+				UnderlyingAsset:     invalidDenom,
 				CurrentInterestRate: validInterest,
 				DesiredInterestRate: validInterest,
 			},
 			expectedErr: fmt.Sprintf("invalid underlying asset denom: %s", invalidDenom),
 		},
 		{
-			name: "invalid current interest rate",
-			account: types.VaultAccount{
+			name: "payment denom omitted => ok",
+			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
 				ShareDenom:          validDenom,
-				UnderlyingAssets:    []string{"uusd"},
+				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "",
+				CurrentInterestRate: validInterest,
+				DesiredInterestRate: validInterest,
+			},
+			expectedErr: "",
+		},
+		{
+			name: "payment denom valid and distinct => ok",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				ShareDenom:          validDenom,
+				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "usdc",
+				CurrentInterestRate: validInterest,
+				DesiredInterestRate: validInterest,
+			},
+			expectedErr: "",
+		},
+		{
+			name: "payment denom invalid format => error",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				ShareDenom:          validDenom,
+				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "inv@lid$",
+				CurrentInterestRate: validInterest,
+				DesiredInterestRate: validInterest,
+			},
+			expectedErr: "invalid payment denom",
+		},
+		{
+			name: "payment denom equals underlying => error",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				ShareDenom:          validDenom,
+				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
+				CurrentInterestRate: validInterest,
+				DesiredInterestRate: validInterest,
+			},
+			expectedErr: "cannot equal underlying asset denom",
+		},
+		{
+			name: "invalid current interest rate",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				ShareDenom:          validDenom,
+				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: invalidInterest,
 				DesiredInterestRate: validInterest,
 			},
@@ -126,11 +178,11 @@ func TestVaultAccount_Validate(t *testing.T) {
 		},
 		{
 			name: "invalid desired interest rate",
-			account: types.VaultAccount{
+			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
 				ShareDenom:          validDenom,
-				UnderlyingAssets:    []string{"uusd"},
+				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: validInterest,
 				DesiredInterestRate: invalidInterest,
 			},
@@ -138,11 +190,11 @@ func TestVaultAccount_Validate(t *testing.T) {
 		},
 		{
 			name: "valid min/max equal",
-			account: types.VaultAccount{
+			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
 				ShareDenom:          validDenom,
-				UnderlyingAssets:    []string{"uusd"},
+				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: "0.00",
 				DesiredInterestRate: "0.10",
 				MinInterestRate:     "0.10",
@@ -152,11 +204,11 @@ func TestVaultAccount_Validate(t *testing.T) {
 		},
 		{
 			name: "valid min < max",
-			account: types.VaultAccount{
+			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
 				ShareDenom:          validDenom,
-				UnderlyingAssets:    []string{"uusd"},
+				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: "0.00",
 				DesiredInterestRate: "0.03",
 				MinInterestRate:     "0.01",
@@ -166,11 +218,11 @@ func TestVaultAccount_Validate(t *testing.T) {
 		},
 		{
 			name: "invalid min format (max empty)",
-			account: types.VaultAccount{
+			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
 				ShareDenom:          validDenom,
-				UnderlyingAssets:    []string{"uusd"},
+				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: "0.00",
 				DesiredInterestRate: "0.00",
 				MinInterestRate:     "nope",
@@ -180,11 +232,11 @@ func TestVaultAccount_Validate(t *testing.T) {
 		},
 		{
 			name: "invalid max format (min empty)",
-			account: types.VaultAccount{
+			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
 				ShareDenom:          validDenom,
-				UnderlyingAssets:    []string{"uusd"},
+				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: "0.00",
 				DesiredInterestRate: "0.00",
 				MinInterestRate:     "",
@@ -194,11 +246,11 @@ func TestVaultAccount_Validate(t *testing.T) {
 		},
 		{
 			name: "min > max => error",
-			account: types.VaultAccount{
+			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
 				ShareDenom:          validDenom,
-				UnderlyingAssets:    []string{"uusd"},
+				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: "0.00",
 				DesiredInterestRate: "0.07",
 				MinInterestRate:     "0.08",
@@ -208,11 +260,11 @@ func TestVaultAccount_Validate(t *testing.T) {
 		},
 		{
 			name: "desired < min => error",
-			account: types.VaultAccount{
+			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
 				ShareDenom:          validDenom,
-				UnderlyingAssets:    []string{"uusd"},
+				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: "0.00",
 				DesiredInterestRate: "0.02",
 				MinInterestRate:     "0.03",
@@ -222,11 +274,11 @@ func TestVaultAccount_Validate(t *testing.T) {
 		},
 		{
 			name: "desired > max => error",
-			account: types.VaultAccount{
+			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
 				ShareDenom:          validDenom,
-				UnderlyingAssets:    []string{"uusd"},
+				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: "0.00",
 				DesiredInterestRate: "0.06",
 				MinInterestRate:     "",
@@ -236,11 +288,11 @@ func TestVaultAccount_Validate(t *testing.T) {
 		},
 		{
 			name: "current non-zero and not equal desired => error",
-			account: types.VaultAccount{
+			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
 				ShareDenom:          validDenom,
-				UnderlyingAssets:    []string{"uusd"},
+				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: "0.03",
 				DesiredInterestRate: "0.04",
 			},
@@ -248,11 +300,11 @@ func TestVaultAccount_Validate(t *testing.T) {
 		},
 		{
 			name: "min only and desired == min => ok",
-			account: types.VaultAccount{
+			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
 				ShareDenom:          validDenom,
-				UnderlyingAssets:    []string{"uusd"},
+				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: "0.00",
 				DesiredInterestRate: "0.03",
 				MinInterestRate:     "0.03",
@@ -261,11 +313,11 @@ func TestVaultAccount_Validate(t *testing.T) {
 		},
 		{
 			name: "max only and desired == max => ok",
-			account: types.VaultAccount{
+			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
 				ShareDenom:          validDenom,
-				UnderlyingAssets:    []string{"uusd"},
+				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: "0.00",
 				DesiredInterestRate: "0.07",
 				MaxInterestRate:     "0.07",
@@ -276,53 +328,112 @@ func TestVaultAccount_Validate(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			err := tc.account.Validate()
+			err := tc.vaultAccount.Validate()
 			if tc.expectedErr != "" {
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), tc.expectedErr)
+				assert.Error(t, err, "expected an error")
+				assert.Contains(t, err.Error(), tc.expectedErr, "error should contain expected message")
 			} else {
-				assert.NoError(t, err)
+				assert.NoError(t, err, "expected no error")
 			}
 		})
 	}
 }
 
-func TestVaultAccount_ValidateUnderlyingAssets(t *testing.T) {
-	vault := types.VaultAccount{
-		UnderlyingAssets: []string{"jackthecat", "georgethedog"},
-	}
-
+func TestVaultAccount_AcceptedDenoms(t *testing.T) {
 	tests := []struct {
-		name        string
-		asset       sdk.Coin
-		expectedErr string
+		name            string
+		underlyingAsset string
+		paymentDenom    string
+		expectedDenoms  []string
 	}{
 		{
-			name:        "valid asset denom match (jackthecat)",
-			asset:       sdk.NewInt64Coin("jackthecat", 100),
-			expectedErr: "",
+			name:            "only underlying when payment empty",
+			underlyingAsset: "uusd",
+			paymentDenom:    "",
+			expectedDenoms:  []string{"uusd"},
 		},
 		{
-			name:        "valid asset denom match (georgethedog)",
-			asset:       sdk.NewInt64Coin("georgethedog", 50),
-			expectedErr: "",
+			name:            "only underlying when payment equals underlying",
+			underlyingAsset: "uusd",
+			paymentDenom:    "uusd",
+			expectedDenoms:  []string{"uusd"},
 		},
 		{
-			name:        "unsupported asset denom",
-			asset:       sdk.NewInt64Coin("btc", 10),
-			expectedErr: "btc asset denom not supported for vault",
+			name:            "underlying and payment when distinct",
+			underlyingAsset: "uusd",
+			paymentDenom:    "usdc",
+			expectedDenoms:  []string{"uusd", "usdc"},
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			err := vault.ValidateUnderlyingAssets(tc.asset)
-			if tc.expectedErr != "" {
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), tc.expectedErr)
-			} else {
-				assert.NoError(t, err)
-			}
+			v := types.VaultAccount{UnderlyingAsset: tc.underlyingAsset, PaymentDenom: tc.paymentDenom}
+			got := v.AcceptedDenoms()
+			assert.ElementsMatch(t, tc.expectedDenoms, got, "accepted denoms should match expected")
 		})
 	}
+}
+
+func TestVaultAccount_IsAcceptedDenom(t *testing.T) {
+	vaWithMulti := types.VaultAccount{UnderlyingAsset: "uusd", PaymentDenom: "usdc"}
+	assert.True(t, vaWithMulti.IsAcceptedDenom("uusd"), "underlying should be accepted")
+	assert.True(t, vaWithMulti.IsAcceptedDenom("usdc"), "payment denom should be accepted")
+	assert.False(t, vaWithMulti.IsAcceptedDenom("uatom"), "unlisted denom should not be accepted")
+
+	vaUnderlyingOnly := types.VaultAccount{UnderlyingAsset: "uusd", PaymentDenom: ""}
+	assert.True(t, vaUnderlyingOnly.IsAcceptedDenom("uusd"), "underlying should be accepted when payment empty")
+	assert.False(t, vaUnderlyingOnly.IsAcceptedDenom("usdc"), "payment should not be accepted when not configured")
+
+	vaMultiSameDenom := types.VaultAccount{UnderlyingAsset: "uusd", PaymentDenom: "uusd"}
+	assert.True(t, vaMultiSameDenom.IsAcceptedDenom("uusd"), "underlying should be accepted when payment equals underlying")
+	assert.False(t, vaMultiSameDenom.IsAcceptedDenom("usdc"), "unlisted denom should not be accepted when payment equals underlying")
+}
+
+func TestVaultAccount_ValidateAcceptedDenom(t *testing.T) {
+	vaUnderlyingOnly := types.VaultAccount{UnderlyingAsset: "uusd"}
+	err := vaUnderlyingOnly.ValidateAcceptedDenom("uusd")
+	assert.NoError(t, err, "valid underlying should pass")
+
+	err = vaUnderlyingOnly.ValidateAcceptedDenom("usdc")
+	assert.Error(t, err, "unlisted denom should error")
+	assert.Contains(t, err.Error(), `denom not supported for vault`, "error should indicate unsupported denom")
+	assert.Contains(t, err.Error(), `"uusd"`, "error should list allowed denom")
+	assert.Contains(t, err.Error(), `"usdc"`, "error should include the provided denom")
+
+	vaWithMulti := types.VaultAccount{UnderlyingAsset: "uusd", PaymentDenom: "usdc"}
+	err = vaWithMulti.ValidateAcceptedDenom("uusd")
+	assert.NoError(t, err, "underlying should pass when dual")
+
+	err = vaWithMulti.ValidateAcceptedDenom("usdc")
+	assert.NoError(t, err, "payment denom should pass when dual")
+
+	err = vaWithMulti.ValidateAcceptedDenom("uatom")
+	assert.Error(t, err, "unlisted denom should error when dual")
+	assert.Contains(t, err.Error(), `"uusd"`, "error should include first allowed denom")
+	assert.Contains(t, err.Error(), `"usdc"`, "error should include second allowed denom")
+	assert.Contains(t, err.Error(), `"uatom"`, "error should include provided denom")
+}
+
+func TestVaultAccount_ValidateAcceptedCoin(t *testing.T) {
+	vaWithMulti := types.VaultAccount{UnderlyingAsset: "uusd", PaymentDenom: "usdc"}
+
+	err := vaWithMulti.ValidateAcceptedCoin(sdk.NewInt64Coin("uusd", 1))
+	assert.NoError(t, err, "non-zero underlying coin should be accepted")
+
+	err = vaWithMulti.ValidateAcceptedCoin(sdk.NewInt64Coin("usdc", 5))
+	assert.NoError(t, err, "non-zero payment coin should be accepted")
+
+	err = vaWithMulti.ValidateAcceptedCoin(sdk.NewInt64Coin("uatom", 7))
+	assert.Error(t, err, "unlisted denom should error")
+	assert.Contains(t, err.Error(), "denom not supported for vault", "error should indicate unsupported denom")
+
+	err = vaWithMulti.ValidateAcceptedCoin(sdk.NewInt64Coin("uusd", 0))
+	assert.Error(t, err, "zero amount should error")
+	assert.Equal(t, "amount must be greater than zero", err.Error(), "error should match expected message")
+
+	vaUnderlyingOnly := types.VaultAccount{UnderlyingAsset: "uusd"}
+	err = vaUnderlyingOnly.ValidateAcceptedCoin(sdk.NewInt64Coin("usdc", 3))
+	assert.Error(t, err, "payment denom should not be accepted when not configured")
+	assert.Contains(t, err.Error(), "denom not supported for vault", "error should indicate unsupported denom")
 }

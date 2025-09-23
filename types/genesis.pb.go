@@ -23,19 +23,188 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+type QueueEntry struct {
+	Time uint64 `protobuf:"varint,1,opt,name=time,proto3" json:"time,omitempty"`
+	Addr string `protobuf:"bytes,2,opt,name=addr,proto3" json:"addr,omitempty"`
+}
+
+func (m *QueueEntry) Reset()         { *m = QueueEntry{} }
+func (m *QueueEntry) String() string { return proto.CompactTextString(m) }
+func (*QueueEntry) ProtoMessage()    {}
+func (*QueueEntry) Descriptor() ([]byte, []int) {
+	return fileDescriptor_4c971b352fb6cc17, []int{0}
+}
+func (m *QueueEntry) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueueEntry) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueueEntry.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueueEntry) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueueEntry.Merge(m, src)
+}
+func (m *QueueEntry) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueueEntry) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueueEntry.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueueEntry proto.InternalMessageInfo
+
+func (m *QueueEntry) GetTime() uint64 {
+	if m != nil {
+		return m.Time
+	}
+	return 0
+}
+
+func (m *QueueEntry) GetAddr() string {
+	if m != nil {
+		return m.Addr
+	}
+	return ""
+}
+
+type PendingSwapOutQueueEntry struct {
+	Time    int64          `protobuf:"varint,1,opt,name=time,proto3" json:"time,omitempty"`
+	Id      uint64         `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
+	SwapOut PendingSwapOut `protobuf:"bytes,3,opt,name=swap_out,json=swapOut,proto3" json:"swap_out"`
+}
+
+func (m *PendingSwapOutQueueEntry) Reset()         { *m = PendingSwapOutQueueEntry{} }
+func (m *PendingSwapOutQueueEntry) String() string { return proto.CompactTextString(m) }
+func (*PendingSwapOutQueueEntry) ProtoMessage()    {}
+func (*PendingSwapOutQueueEntry) Descriptor() ([]byte, []int) {
+	return fileDescriptor_4c971b352fb6cc17, []int{1}
+}
+func (m *PendingSwapOutQueueEntry) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *PendingSwapOutQueueEntry) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_PendingSwapOutQueueEntry.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *PendingSwapOutQueueEntry) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PendingSwapOutQueueEntry.Merge(m, src)
+}
+func (m *PendingSwapOutQueueEntry) XXX_Size() int {
+	return m.Size()
+}
+func (m *PendingSwapOutQueueEntry) XXX_DiscardUnknown() {
+	xxx_messageInfo_PendingSwapOutQueueEntry.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PendingSwapOutQueueEntry proto.InternalMessageInfo
+
+func (m *PendingSwapOutQueueEntry) GetTime() int64 {
+	if m != nil {
+		return m.Time
+	}
+	return 0
+}
+
+func (m *PendingSwapOutQueueEntry) GetId() uint64 {
+	if m != nil {
+		return m.Id
+	}
+	return 0
+}
+
+func (m *PendingSwapOutQueueEntry) GetSwapOut() PendingSwapOut {
+	if m != nil {
+		return m.SwapOut
+	}
+	return PendingSwapOut{}
+}
+
+type PendingSwapOutQueue struct {
+	LatestSequenceNumber uint64                     `protobuf:"varint,1,opt,name=latest_sequence_number,json=latestSequenceNumber,proto3" json:"latest_sequence_number,omitempty"`
+	Entries              []PendingSwapOutQueueEntry `protobuf:"bytes,2,rep,name=entries,proto3" json:"entries"`
+}
+
+func (m *PendingSwapOutQueue) Reset()         { *m = PendingSwapOutQueue{} }
+func (m *PendingSwapOutQueue) String() string { return proto.CompactTextString(m) }
+func (*PendingSwapOutQueue) ProtoMessage()    {}
+func (*PendingSwapOutQueue) Descriptor() ([]byte, []int) {
+	return fileDescriptor_4c971b352fb6cc17, []int{2}
+}
+func (m *PendingSwapOutQueue) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *PendingSwapOutQueue) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_PendingSwapOutQueue.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *PendingSwapOutQueue) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PendingSwapOutQueue.Merge(m, src)
+}
+func (m *PendingSwapOutQueue) XXX_Size() int {
+	return m.Size()
+}
+func (m *PendingSwapOutQueue) XXX_DiscardUnknown() {
+	xxx_messageInfo_PendingSwapOutQueue.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PendingSwapOutQueue proto.InternalMessageInfo
+
+func (m *PendingSwapOutQueue) GetLatestSequenceNumber() uint64 {
+	if m != nil {
+		return m.LatestSequenceNumber
+	}
+	return 0
+}
+
+func (m *PendingSwapOutQueue) GetEntries() []PendingSwapOutQueueEntry {
+	if m != nil {
+		return m.Entries
+	}
+	return nil
+}
+
 // GenesisState defines the vault module's genesis state.
+// NOTE: payout verification queue is not imported or exported.  It will always be empty after endblocker processes it.
 type GenesisState struct {
-	// params defines all the parameters of the module.
-	Params Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
 	// vaults defines the vaults that exist at genesis.
-	Vaults []VaultAccount `protobuf:"bytes,2,rep,name=vaults,proto3" json:"vaults"`
+	Vaults []VaultAccount `protobuf:"bytes,1,rep,name=vaults,proto3" json:"vaults"`
+	// payout_timeout_queue contains (time, addr) entries for vaults that are
+	// temporarily deferred from automatic payout/interest verification until the
+	// given UNIX timestamp (seconds). These entries are re-enqueued on InitGenesis.
+	PayoutTimeoutQueue []QueueEntry `protobuf:"bytes,2,rep,name=payout_timeout_queue,json=payoutTimeoutQueue,proto3" json:"payout_timeout_queue"`
+	// pending_swap_out_queue contains entries for pending swap outs.
+	PendingSwapOutQueue PendingSwapOutQueue `protobuf:"bytes,3,opt,name=pending_swap_out_queue,json=pendingSwapOutQueue,proto3" json:"pending_swap_out_queue"`
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }
 func (m *GenesisState) String() string { return proto.CompactTextString(m) }
 func (*GenesisState) ProtoMessage()    {}
 func (*GenesisState) Descriptor() ([]byte, []int) {
-	return fileDescriptor_4c971b352fb6cc17, []int{0}
+	return fileDescriptor_4c971b352fb6cc17, []int{3}
 }
 func (m *GenesisState) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -64,13 +233,6 @@ func (m *GenesisState) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_GenesisState proto.InternalMessageInfo
 
-func (m *GenesisState) GetParams() Params {
-	if m != nil {
-		return m.Params
-	}
-	return Params{}
-}
-
 func (m *GenesisState) GetVaults() []VaultAccount {
 	if m != nil {
 		return m.Vaults
@@ -78,28 +240,177 @@ func (m *GenesisState) GetVaults() []VaultAccount {
 	return nil
 }
 
+func (m *GenesisState) GetPayoutTimeoutQueue() []QueueEntry {
+	if m != nil {
+		return m.PayoutTimeoutQueue
+	}
+	return nil
+}
+
+func (m *GenesisState) GetPendingSwapOutQueue() PendingSwapOutQueue {
+	if m != nil {
+		return m.PendingSwapOutQueue
+	}
+	return PendingSwapOutQueue{}
+}
+
 func init() {
+	proto.RegisterType((*QueueEntry)(nil), "vault.v1.QueueEntry")
+	proto.RegisterType((*PendingSwapOutQueueEntry)(nil), "vault.v1.PendingSwapOutQueueEntry")
+	proto.RegisterType((*PendingSwapOutQueue)(nil), "vault.v1.PendingSwapOutQueue")
 	proto.RegisterType((*GenesisState)(nil), "vault.v1.GenesisState")
 }
 
 func init() { proto.RegisterFile("vault/v1/genesis.proto", fileDescriptor_4c971b352fb6cc17) }
 
 var fileDescriptor_4c971b352fb6cc17 = []byte{
-	// 221 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x12, 0x2b, 0x4b, 0x2c, 0xcd,
-	0x29, 0xd1, 0x2f, 0x33, 0xd4, 0x4f, 0x4f, 0xcd, 0x4b, 0x2d, 0xce, 0x2c, 0xd6, 0x2b, 0x28, 0xca,
-	0x2f, 0xc9, 0x17, 0xe2, 0x00, 0x8b, 0xeb, 0x95, 0x19, 0x4a, 0x89, 0xa4, 0xe7, 0xa7, 0xe7, 0x83,
-	0x05, 0xf5, 0x41, 0x2c, 0x88, 0xbc, 0x94, 0x28, 0x5c, 0x5f, 0x41, 0x62, 0x51, 0x62, 0x2e, 0x54,
-	0x9b, 0x94, 0x08, 0x5c, 0x18, 0xa2, 0x1f, 0x2c, 0xaa, 0x54, 0xc2, 0xc5, 0xe3, 0x0e, 0x31, 0x3d,
-	0xb8, 0x24, 0xb1, 0x24, 0x55, 0x48, 0x8f, 0x8b, 0x0d, 0xa2, 0x4b, 0x82, 0x51, 0x81, 0x51, 0x83,
-	0xdb, 0x48, 0x40, 0x0f, 0x66, 0x9b, 0x5e, 0x00, 0x58, 0xdc, 0x89, 0xe5, 0xc4, 0x3d, 0x79, 0x86,
-	0x20, 0xa8, 0x2a, 0x21, 0x13, 0x2e, 0x36, 0xb0, 0x82, 0x62, 0x09, 0x26, 0x05, 0x66, 0x0d, 0x6e,
-	0x23, 0x31, 0x84, 0xfa, 0x30, 0x10, 0xc3, 0x31, 0x39, 0x39, 0xbf, 0x34, 0xaf, 0x04, 0xa6, 0x0b,
-	0xa2, 0xd6, 0xc9, 0xf2, 0xc4, 0x23, 0x39, 0xc6, 0x0b, 0x8f, 0xe4, 0x18, 0x1f, 0x3c, 0x92, 0x63,
-	0x9c, 0xf0, 0x58, 0x8e, 0xe1, 0xc2, 0x63, 0x39, 0x86, 0x1b, 0x8f, 0xe5, 0x18, 0xa2, 0xe4, 0xd3,
-	0x33, 0x4b, 0x32, 0x4a, 0x93, 0xf4, 0x92, 0xf3, 0x73, 0xf5, 0x0b, 0x8a, 0xf2, 0xcb, 0x72, 0x12,
-	0x93, 0x8a, 0x21, 0x0e, 0xd6, 0x2f, 0xa9, 0x2c, 0x48, 0x2d, 0x4e, 0x62, 0x03, 0xbb, 0xdb, 0x18,
-	0x10, 0x00, 0x00, 0xff, 0xff, 0xea, 0x72, 0xcf, 0xbe, 0x1e, 0x01, 0x00, 0x00,
+	// 411 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x7c, 0x92, 0xcf, 0x6e, 0x9c, 0x30,
+	0x10, 0xc6, 0x31, 0x8b, 0x92, 0xd4, 0xa9, 0x7a, 0x70, 0x10, 0x42, 0x91, 0x4a, 0x10, 0x27, 0x4e,
+	0xa0, 0xa4, 0xb9, 0xe4, 0xd8, 0x48, 0x55, 0x2f, 0x55, 0xff, 0xb0, 0x55, 0x55, 0xf5, 0x82, 0x0c,
+	0x58, 0x14, 0x69, 0xd7, 0x76, 0xb0, 0x4d, 0xc4, 0x53, 0xb4, 0x8f, 0x95, 0x63, 0x8e, 0x3d, 0x55,
+	0xd5, 0xee, 0xb5, 0x0f, 0x51, 0x61, 0x9b, 0xae, 0xaa, 0x66, 0x73, 0x62, 0x98, 0xcf, 0xf3, 0xf3,
+	0x37, 0xe3, 0x81, 0xc1, 0x80, 0xd5, 0x4a, 0xe6, 0xc3, 0x79, 0xde, 0x12, 0x4a, 0x44, 0x27, 0x32,
+	0xde, 0x33, 0xc9, 0xd0, 0x91, 0xce, 0x67, 0xc3, 0xf9, 0xa9, 0xdf, 0xb2, 0x96, 0xe9, 0x64, 0x3e,
+	0x45, 0x46, 0x3f, 0xf5, 0xff, 0xd6, 0x99, 0x83, 0x3a, 0x9b, 0x5c, 0x42, 0xf8, 0x41, 0x11, 0x45,
+	0x5e, 0x51, 0xd9, 0x8f, 0x08, 0x41, 0x4f, 0x76, 0x6b, 0x12, 0x82, 0x18, 0xa4, 0x5e, 0xa1, 0xe3,
+	0x29, 0x87, 0x9b, 0xa6, 0x0f, 0xdd, 0x18, 0xa4, 0x4f, 0x0a, 0x1d, 0x27, 0x23, 0x0c, 0xdf, 0x13,
+	0xda, 0x74, 0xb4, 0x5d, 0xde, 0x62, 0xfe, 0x4e, 0xc9, 0x3d, 0x8c, 0x85, 0x65, 0x3c, 0x83, 0x6e,
+	0xd7, 0x68, 0x82, 0x57, 0xb8, 0x5d, 0x83, 0xae, 0xe0, 0x91, 0xb8, 0xc5, 0xbc, 0x64, 0x4a, 0x86,
+	0x8b, 0x18, 0xa4, 0xc7, 0x17, 0x61, 0x36, 0xdb, 0xcf, 0xfe, 0x25, 0x5f, 0x7b, 0x77, 0x3f, 0xcf,
+	0x9c, 0xe2, 0x50, 0x98, 0xdf, 0xe4, 0x1b, 0x80, 0x27, 0x0f, 0xdc, 0x8d, 0x2e, 0x61, 0xb0, 0xc2,
+	0x92, 0x08, 0x59, 0x0a, 0x72, 0xa3, 0x08, 0xad, 0x49, 0x49, 0xd5, 0xba, 0x22, 0xbd, 0x6d, 0xc6,
+	0x37, 0xea, 0xd2, 0x8a, 0x6f, 0xb5, 0x86, 0xae, 0xe1, 0x21, 0xa1, 0xb2, 0xef, 0x88, 0x08, 0xdd,
+	0x78, 0x91, 0x1e, 0x5f, 0x24, 0xfb, 0x7c, 0xec, 0x3a, 0x9c, 0x1d, 0xd9, 0xc2, 0xe4, 0x37, 0x80,
+	0x4f, 0x5f, 0x9b, 0xa7, 0x58, 0x4a, 0x2c, 0x27, 0x2b, 0x07, 0x1a, 0x22, 0x42, 0xa0, 0x99, 0xc1,
+	0x8e, 0xf9, 0x69, 0x0a, 0x5e, 0xd6, 0x35, 0x53, 0x74, 0xee, 0xcc, 0x9e, 0x45, 0x6f, 0xa0, 0xcf,
+	0xf1, 0xc8, 0x94, 0x2c, 0xa7, 0x91, 0x4d, 0xdf, 0x9b, 0xe9, 0x4a, 0xeb, 0xcb, 0xdf, 0x31, 0xfe,
+	0x73, 0x82, 0x4c, 0xdd, 0x47, 0x53, 0x66, 0xc6, 0xf1, 0x19, 0x06, 0xdc, 0xf8, 0x2f, 0xe7, 0x49,
+	0x5b, 0x9e, 0x99, 0xf7, 0xf3, 0x47, 0xfb, 0xb4, 0xe0, 0x13, 0xfe, 0x80, 0x74, 0x75, 0xb7, 0x89,
+	0xc0, 0xfd, 0x26, 0x02, 0xbf, 0x36, 0x11, 0xf8, 0xbe, 0x8d, 0x9c, 0xfb, 0x6d, 0xe4, 0xfc, 0xd8,
+	0x46, 0xce, 0x97, 0xb3, 0xb6, 0x93, 0x5f, 0x55, 0x95, 0xd5, 0x6c, 0x9d, 0xf3, 0x9e, 0x0d, 0x2b,
+	0x5c, 0x09, 0xb3, 0x6c, 0xb9, 0x1c, 0x39, 0x11, 0xd5, 0x81, 0xde, 0xb9, 0x17, 0x7f, 0x02, 0x00,
+	0x00, 0xff, 0xff, 0x83, 0xb2, 0x2e, 0x0a, 0xc3, 0x02, 0x00, 0x00,
+}
+
+func (m *QueueEntry) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueueEntry) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueueEntry) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Addr) > 0 {
+		i -= len(m.Addr)
+		copy(dAtA[i:], m.Addr)
+		i = encodeVarintGenesis(dAtA, i, uint64(len(m.Addr)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.Time != 0 {
+		i = encodeVarintGenesis(dAtA, i, uint64(m.Time))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *PendingSwapOutQueueEntry) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PendingSwapOutQueueEntry) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *PendingSwapOutQueueEntry) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.SwapOut.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintGenesis(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	if m.Id != 0 {
+		i = encodeVarintGenesis(dAtA, i, uint64(m.Id))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.Time != 0 {
+		i = encodeVarintGenesis(dAtA, i, uint64(m.Time))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *PendingSwapOutQueue) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *PendingSwapOutQueue) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *PendingSwapOutQueue) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Entries) > 0 {
+		for iNdEx := len(m.Entries) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Entries[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if m.LatestSequenceNumber != 0 {
+		i = encodeVarintGenesis(dAtA, i, uint64(m.LatestSequenceNumber))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *GenesisState) Marshal() (dAtA []byte, err error) {
@@ -122,6 +433,30 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	{
+		size, err := m.PendingSwapOutQueue.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintGenesis(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	if len(m.PayoutTimeoutQueue) > 0 {
+		for iNdEx := len(m.PayoutTimeoutQueue) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.PayoutTimeoutQueue[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintGenesis(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
 	if len(m.Vaults) > 0 {
 		for iNdEx := len(m.Vaults) - 1; iNdEx >= 0; iNdEx-- {
 			{
@@ -133,19 +468,9 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 				i = encodeVarintGenesis(dAtA, i, uint64(size))
 			}
 			i--
-			dAtA[i] = 0x12
+			dAtA[i] = 0xa
 		}
 	}
-	{
-		size, err := m.Params.MarshalToSizedBuffer(dAtA[:i])
-		if err != nil {
-			return 0, err
-		}
-		i -= size
-		i = encodeVarintGenesis(dAtA, i, uint64(size))
-	}
-	i--
-	dAtA[i] = 0xa
 	return len(dAtA) - i, nil
 }
 
@@ -160,20 +485,77 @@ func encodeVarintGenesis(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
+func (m *QueueEntry) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Time != 0 {
+		n += 1 + sovGenesis(uint64(m.Time))
+	}
+	l = len(m.Addr)
+	if l > 0 {
+		n += 1 + l + sovGenesis(uint64(l))
+	}
+	return n
+}
+
+func (m *PendingSwapOutQueueEntry) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Time != 0 {
+		n += 1 + sovGenesis(uint64(m.Time))
+	}
+	if m.Id != 0 {
+		n += 1 + sovGenesis(uint64(m.Id))
+	}
+	l = m.SwapOut.Size()
+	n += 1 + l + sovGenesis(uint64(l))
+	return n
+}
+
+func (m *PendingSwapOutQueue) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.LatestSequenceNumber != 0 {
+		n += 1 + sovGenesis(uint64(m.LatestSequenceNumber))
+	}
+	if len(m.Entries) > 0 {
+		for _, e := range m.Entries {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	return n
+}
+
 func (m *GenesisState) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	l = m.Params.Size()
-	n += 1 + l + sovGenesis(uint64(l))
 	if len(m.Vaults) > 0 {
 		for _, e := range m.Vaults {
 			l = e.Size()
 			n += 1 + l + sovGenesis(uint64(l))
 		}
 	}
+	if len(m.PayoutTimeoutQueue) > 0 {
+		for _, e := range m.PayoutTimeoutQueue {
+			l = e.Size()
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
+	l = m.PendingSwapOutQueue.Size()
+	n += 1 + l + sovGenesis(uint64(l))
 	return n
 }
 
@@ -182,6 +564,331 @@ func sovGenesis(x uint64) (n int) {
 }
 func sozGenesis(x uint64) (n int) {
 	return sovGenesis(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *QueueEntry) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenesis
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueueEntry: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueueEntry: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Time", wireType)
+			}
+			m.Time = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Time |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Addr", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Addr = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenesis(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PendingSwapOutQueueEntry) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenesis
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PendingSwapOutQueueEntry: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PendingSwapOutQueueEntry: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Time", wireType)
+			}
+			m.Time = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Time |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+			}
+			m.Id = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Id |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SwapOut", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.SwapOut.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenesis(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *PendingSwapOutQueue) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowGenesis
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: PendingSwapOutQueue: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: PendingSwapOutQueue: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LatestSequenceNumber", wireType)
+			}
+			m.LatestSequenceNumber = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.LatestSequenceNumber |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Entries", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Entries = append(m.Entries, PendingSwapOutQueueEntry{})
+			if err := m.Entries[len(m.Entries)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipGenesis(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
 }
 func (m *GenesisState) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -214,39 +921,6 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Params", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowGenesis
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthGenesis
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := m.Params.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
 				return fmt.Errorf("proto: wrong wireType = %d for field Vaults", wireType)
 			}
 			var msglen int
@@ -276,6 +950,73 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 			}
 			m.Vaults = append(m.Vaults, VaultAccount{})
 			if err := m.Vaults[len(m.Vaults)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PayoutTimeoutQueue", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PayoutTimeoutQueue = append(m.PayoutTimeoutQueue, QueueEntry{})
+			if err := m.PayoutTimeoutQueue[len(m.PayoutTimeoutQueue)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PendingSwapOutQueue", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.PendingSwapOutQueue.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

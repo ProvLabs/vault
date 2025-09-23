@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/provlabs/vault/interest"
@@ -17,10 +16,6 @@ import (
 )
 
 const (
-	// AutoReconcileTimeout is the duration (in seconds) that a vault is considered recently reconciled
-	// and is exempt from automatic interest checks in the BeginBlocker.
-	AutoReconcileTimeout = 20 * interest.SecondsPerHour
-
 	// AutoReconcilePayoutDuration is the time period (in seconds) used to forecast if a vault has
 	// sufficient funds to cover future interest payments.
 	AutoReconcilePayoutDuration = 24 * interest.SecondsPerHour
@@ -28,59 +23,50 @@ const (
 
 // ReconcileVaultInterest updates interest accounting for a vault if a new interest period has started.
 //
-// This should be called before any transaction that changes vault principal, reserves,
-// or performs management actions that depend on current interest state.
-// If a new interest period is detected, this will apply interest transfers and reset the period start.
+// If this is the first time the vault accrues interest, it triggers the start of a new period.
+// If the current block time is after PeriodStart, it applies the interest transfer.
+// If the current time has not advanced past PeriodStart, it is a no-op.
+// This function will do nothing if the vault is paused.
 //
-// If no prior interest record exists, it initializes the period tracking.
+// This should be called before any transaction that changes vault principal/reserves or depends on the
+// current interest state.
 func (k *Keeper) ReconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccount) error {
-	currentBlockTime := ctx.BlockTime().Unix()
-
-	interestDetails, err := k.VaultInterestDetails.Get(ctx, vault.GetAddress())
-	if err != nil {
-		if errors.Is(err, collections.ErrNotFound) {
-			return k.VaultInterestDetails.Set(ctx, vault.GetAddress(), types.VaultInterestDetails{
-				PeriodStart: currentBlockTime,
-			})
-		}
-		return fmt.Errorf("failed to get vault interest details: %w", err)
-	}
-
-	if currentBlockTime <= interestDetails.PeriodStart {
+	if vault.Paused {
 		return nil
 	}
+	currentBlockTime := ctx.BlockTime().Unix()
 
-	if err := k.PerformVaultInterestTransfer(ctx, vault, interestDetails); err != nil {
-		return err
+	if vault.PeriodStart != 0 {
+		if currentBlockTime <= vault.PeriodStart {
+			return nil
+		}
+
+		if err := k.PerformVaultInterestTransfer(ctx, vault); err != nil {
+			return err
+		}
 	}
 
-	return k.VaultInterestDetails.Set(ctx, vault.GetAddress(), types.VaultInterestDetails{
-		PeriodStart: currentBlockTime,
-	})
+	return k.SafeAddVerification(ctx, vault)
 }
 
 // PerformVaultInterestTransfer applies accrued interest between the vault and the marker account
-// if the current block time is beyond the start of the interest period.
+// if the current block time is beyond PeriodStart.
 //
-// This function should be used in contexts where the interest period should be evaluated
-// but not updated, such as BeginBlock processing. It checks whether the interest period
-// has elapsed, calculates the earned or owed interest, performs the necessary transfer
-// (including partial liquidation of principal if needed for negative interest),
-// and emits a reconciliation event.
-//
-// This method does not update the PeriodStart timestamp.
-func (k *Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.VaultAccount, interestDetails types.VaultInterestDetails) error {
+// Positive interest is paid from vault reserves to the marker. Negative interest is refunded from
+// marker principal back to the vault (bounded by available principal). An EventVaultReconcile is emitted.
+// This method does not modify PeriodStart.
+func (k *Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.VaultAccount) error {
 	currentBlockTime := ctx.BlockTime().Unix()
 
-	if currentBlockTime <= interestDetails.PeriodStart {
+	if currentBlockTime <= vault.PeriodStart {
 		return nil
 	}
 
-	periodDuration := currentBlockTime - interestDetails.PeriodStart
-	markerAddress := markertypes.MustGetMarkerAddress(vault.ShareDenom)
+	periodDuration := currentBlockTime - vault.PeriodStart
+	principalAddress := vault.PrincipalMarkerAddress()
 
-	reserves := k.BankKeeper.GetBalance(ctx, vault.GetAddress(), vault.UnderlyingAssets[0])
-	principal := k.BankKeeper.GetBalance(ctx, markerAddress, vault.UnderlyingAssets[0])
+	reserves := k.BankKeeper.GetBalance(ctx, vault.GetAddress(), vault.UnderlyingAsset)
+	principal := k.BankKeeper.GetBalance(ctx, principalAddress, vault.UnderlyingAsset)
 
 	interestEarned, err := interest.CalculateInterestEarned(principal, vault.CurrentInterestRate, periodDuration)
 	if err != nil {
@@ -94,8 +80,8 @@ func (k *Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vaul
 
 		if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx),
 			vault.GetAddress(),
-			markerAddress,
-			sdk.NewCoins(sdk.NewCoin(vault.UnderlyingAssets[0], interestEarned)),
+			principalAddress,
+			sdk.NewCoins(sdk.NewCoin(vault.UnderlyingAsset, interestEarned)),
 		); err != nil {
 			return fmt.Errorf("failed to pay interest: %w", err)
 		}
@@ -106,15 +92,15 @@ func (k *Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vaul
 		}
 
 		if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx),
-			markerAddress,
+			principalAddress,
 			vault.GetAddress(),
-			sdk.NewCoins(sdk.NewCoin(vault.UnderlyingAssets[0], owed)),
+			sdk.NewCoins(sdk.NewCoin(vault.UnderlyingAsset, owed)),
 		); err != nil {
 			return fmt.Errorf("failed to reclaim negative interest: %w", err)
 		}
 	}
 
-	principalAfter := k.BankKeeper.GetBalance(ctx, markerAddress, vault.UnderlyingAssets[0])
+	principalAfter := k.BankKeeper.GetBalance(ctx, principalAddress, vault.UnderlyingAsset)
 
 	k.emitEvent(ctx, types.NewEventVaultReconcile(
 		vault.GetAddress().String(),
@@ -128,31 +114,23 @@ func (k *Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vaul
 	return nil
 }
 
-// CanPayoutDuration determines whether the vault can fulfill the interest payment
-// or refund over the given duration, based on the current reserves and principal.
+// CanPayoutDuration determines whether the vault can fulfill the interest payment or refund
+// over the given duration based on current reserves and principal.
 //
-// It calculates the interest accrued (positive or negative) over the specified duration
-// using the vault's interest rate. The result determines whether the vault can
-// successfully execute the interest transfer:
-//
-//   - Returns true if the duration is zero or less (no accrual needed).
-//   - Returns true if the interest is zero (no transfer needed).
-//   - Returns true if the interest is positive and the vault's reserves are sufficient to pay it.
-//   - Returns true if the interest is negative and the marker holds any principal (able to refund).
-//   - Returns false otherwise.
-//
-// This function is typically used prior to reconciling interest or scheduling expiration.
+// It returns true when duration <= 0, when accrued interest is zero, when positive interest
+// can be paid from reserves, or when negative interest can be refunded from nonzero principal.
+// Otherwise it returns false.
 func (k *Keeper) CanPayoutDuration(ctx sdk.Context, vault *types.VaultAccount, duration int64) (bool, error) {
 	if duration <= 0 {
 		return true, nil
 	}
 
-	denom := vault.UnderlyingAssets[0]
+	denom := vault.UnderlyingAsset
 	vaultAddr := vault.GetAddress()
-	markerAddr := markertypes.MustGetMarkerAddress(vault.ShareDenom)
+	principalAddress := vault.PrincipalMarkerAddress()
 
 	reserves := k.BankKeeper.GetBalance(ctx, vaultAddr, denom)
-	principal := k.BankKeeper.GetBalance(ctx, markerAddr, denom)
+	principal := k.BankKeeper.GetBalance(ctx, principalAddress, denom)
 
 	interestEarned, err := interest.CalculateInterestEarned(principal, vault.CurrentInterestRate, duration)
 	if err != nil {
@@ -171,8 +149,8 @@ func (k *Keeper) CanPayoutDuration(ctx sdk.Context, vault *types.VaultAccount, d
 	}
 }
 
-// UpdateInterestRates updates the current and desired interest rates for a vault.
-// This function will emit the NewEventVaultInterestChange event.
+// UpdateInterestRates sets the vault's current and desired interest rates and emits
+// an EventVaultInterestChange. The modified account is persisted via the auth keeper.
 func (k *Keeper) UpdateInterestRates(ctx context.Context, vault *types.VaultAccount, currentRate, desiredRate string) {
 	event := types.NewEventVaultInterestChange(vault.GetAddress().String(), currentRate, desiredRate)
 	vault.CurrentInterestRate = currentRate
@@ -181,29 +159,18 @@ func (k *Keeper) UpdateInterestRates(ctx context.Context, vault *types.VaultAcco
 	k.emitEvent(sdk.UnwrapSDKContext(ctx), event)
 }
 
-// CalculateVaultTotalAssets returns the total value of the vault's assets,
-// including any interest that would have accrued since the last interest period start.
-// This is used to simulate the value of earned interest as if a reconciliation had occurred
-// at the current block time, without modifying state or transferring funds.
+// CalculateVaultTotalAssets returns the total value of the vault's assets, including the interest
+// that would have accrued from PeriodStart to the current block time, without mutating state.
 //
-// If no interest rate is set or if the vault has not yet begun accruing interest,
-// the original principal amount is returned unmodified.
+// If no rate is set or accrual has not started, it returns the provided principal unchanged.
 func (k Keeper) CalculateVaultTotalAssets(ctx sdk.Context, vault *types.VaultAccount, principal sdk.Coin) (sdkmath.Int, error) {
 	estimated := principal.Amount
 
-	if vault.CurrentInterestRate == "" {
+	if vault.CurrentInterestRate == "" || vault.PeriodStart == 0 {
 		return estimated, nil
 	}
 
-	interestDetails, err := k.VaultInterestDetails.Get(ctx, vault.GetAddress())
-	if err != nil {
-		if !errors.Is(err, collections.ErrNotFound) {
-			return sdkmath.Int{}, fmt.Errorf("error getting interest details: %w", err)
-		}
-		return estimated, nil
-	}
-
-	duration := ctx.BlockTime().Unix() - interestDetails.PeriodStart
+	duration := ctx.BlockTime().Unix() - vault.PeriodStart
 	if duration <= 0 {
 		return estimated, nil
 	}
@@ -217,56 +184,73 @@ func (k Keeper) CalculateVaultTotalAssets(ctx sdk.Context, vault *types.VaultAcc
 }
 
 // handleVaultInterestTimeouts checks vaults with expired interest periods and reconciles or disables them.
-//
-// For each vault with an expired interest period:
-// - If the vault is missing, it is skipped.
-// - If the vault can't pay the required interest, it is marked as depleted.
-// - Otherwise, interest is reconciled for the vault.
-//
-// After processing, any depleted vaults are handled to disable interest or take corrective action.
-//
-// This is intended to run during BeginBlock and ignores individual vault errors.
+// It uses a safe "collect-then-mutate" pattern to comply with the SDK iterator contract.
+// For each due timeout entry:
+//   - It collects keys for all non-paused vaults.
+//   - It then iterates the collected keys, dequeuing each item before processing it.
+//   - Vaults that cannot cover the required interest are marked depleted.
+//   - Otherwise, interest is reconciled.
 func (k *Keeper) handleVaultInterestTimeouts(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	currentBlockTime := sdkCtx.BlockTime().Unix()
+	now := sdkCtx.BlockTime().Unix()
 
-	var depletedVaults []ReconciledVault
-	var reconciledVaults []sdk.AccAddress
-	err := k.VaultInterestDetails.Walk(ctx, nil, func(vaultAddr sdk.AccAddress, details types.VaultInterestDetails) (bool, error) {
-		if details.ExpireTime > currentBlockTime {
+	var keysToProcess []collections.Pair[uint64, sdk.AccAddress]
+	var depleted []*types.VaultAccount
+	var reconciled []*types.VaultAccount
+
+	err := k.PayoutTimeoutQueue.WalkDue(ctx, now, func(timeout uint64, addr sdk.AccAddress) (bool, error) {
+		key := collections.Join(timeout, addr)
+		vault, ok := k.tryGetVault(sdkCtx, addr)
+		if ok && vault.Paused {
 			return false, nil
 		}
-
-		vault, ok := k.tryGetVault(sdkCtx, vaultAddr)
-		if !ok {
-			return false, nil
-		}
-
-		periodDuration := currentBlockTime - details.PeriodStart
-		canPay, err := k.CanPayoutDuration(sdkCtx, vault, periodDuration)
-		if err != nil {
-			sdkCtx.Logger().Error("failed to check payout ability", "vault", vaultAddr.String(), "err", err)
-			return false, nil
-		}
-		if !canPay {
-			// PR Review TODO: Due to possible drift from endblocker to begin blocker.  The account might not be able to pay the funds.
-			// Should we just take the remainder of funds or just disable current interest of vault?
-			depletedVaults = append(depletedVaults, ReconciledVault{Vault: vault, InterestDetails: &details})
-			return false, nil
-		}
-
-		if err := k.PerformVaultInterestTransfer(sdkCtx, vault, details); err != nil {
-			sdkCtx.Logger().Error("failed to reconcile interest", "vault", vaultAddr.String(), "err", err)
-		}
-		reconciledVaults = append(reconciledVaults, vault.GetAddress())
+		keysToProcess = append(keysToProcess, key)
 		return false, nil
 	})
 	if err != nil {
 		return fmt.Errorf("walk failed: %w", err)
 	}
 
-	k.resetVaultInterestPeriods(ctx, reconciledVaults, currentBlockTime)
-	k.handleDepletedVaults(ctx, depletedVaults)
+	for _, key := range keysToProcess {
+		timeout := key.K1()
+		addr := key.K2()
+
+		if err := k.PayoutTimeoutQueue.Dequeue(ctx, int64(timeout), addr); err != nil {
+			sdkCtx.Logger().Error("CRITICAL: failed to dequeue interest timeout, skipping", "vault", addr.String(), "err", err)
+			continue
+		}
+
+		vault, ok := k.tryGetVault(sdkCtx, addr)
+		if !ok {
+			continue
+		}
+
+		periodDuration := int64(timeout) - vault.PeriodStart
+		if periodDuration < 0 {
+			periodDuration = now - vault.PeriodStart
+		}
+
+		canPay, err := k.CanPayoutDuration(sdkCtx, vault, periodDuration)
+		if err != nil {
+			sdkCtx.Logger().Error("failed to check payout ability", "vault", addr.String(), "err", err)
+			continue
+		}
+
+		if !canPay {
+			depleted = append(depleted, vault)
+			continue
+		}
+
+		if err := k.PerformVaultInterestTransfer(sdkCtx, vault); err != nil {
+			sdkCtx.Logger().Error("failed to reconcile interest", "vault", addr.String(), "err", err)
+			continue
+		}
+
+		reconciled = append(reconciled, vault)
+	}
+
+	k.resetVaultInterestPeriods(ctx, reconciled)
+	k.handleDepletedVaults(ctx, depleted)
 	return nil
 }
 
@@ -285,127 +269,96 @@ func (k *Keeper) tryGetVault(ctx sdk.Context, addr sdk.AccAddress) (*types.Vault
 	return vault, true
 }
 
-// handleReconciledVaults processes vaults that have been reconciled in the current block.
-// It partitions them into active (able to pay interest) and depleted (unable to pay interest) vaults.
-// Active vaults have their expiration time extended, while depleted vaults have their interest rate set to zero.
+// handleReconciledVaults processes vaults from the payout verification queue using a safe
+// "collect-then-mutate" pattern.
+//
+// It first collects keys for all non-paused vaults. It then iterates the collected keys, removing
+// each from the set before partitioning them into payable vs depleted groups.
 func (k *Keeper) handleReconciledVaults(ctx context.Context) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	blockTime := sdkCtx.BlockTime().Unix()
+	var keysToProcess []sdk.AccAddress
+	var vaultsToProcess []*types.VaultAccount
 
-	reconciled, err := k.GetReconciledVaults(sdkCtx, blockTime)
+	err := k.PayoutVerificationSet.Walk(ctx, nil, func(addr sdk.AccAddress) (bool, error) {
+		v, ok := k.tryGetVault(sdkCtx, addr)
+		if ok && v.Paused {
+			return false, nil
+		}
+		keysToProcess = append(keysToProcess, addr)
+		return false, nil
+	})
 	if err != nil {
-		return fmt.Errorf("failed to get reconciled vaults: %w", err)
+		return fmt.Errorf("walk failed: %w", err)
 	}
 
-	payable, depleted := k.partitionReconciledVaults(sdkCtx, reconciled)
-	k.handlePayableVaults(ctx, payable)
-	k.handleDepletedVaults(ctx, depleted)
-
-	return nil
-}
-
-// partitionReconciledVaults groups the vaults into payable and depleted vaults.
-func (k *Keeper) partitionReconciledVaults(sdkCtx sdk.Context, vaults []ReconciledVault) ([]ReconciledVault, []ReconciledVault) {
-	var payable, depleted []ReconciledVault
-	for _, record := range vaults {
-		payout, err := k.CanPayoutDuration(sdkCtx, record.Vault, AutoReconcilePayoutDuration)
-		if err != nil {
-			sdkCtx.Logger().Error("failed to check if vault can payout", "vault", record.Vault.GetAddress().String(), "err", err)
+	for _, addr := range keysToProcess {
+		if err := k.PayoutVerificationSet.Remove(ctx, addr); err != nil {
+			sdkCtx.Logger().Error("CRITICAL: failed to remove from payout verification set, skipping", "vault", addr.String(), "err", err)
 			continue
 		}
 
-		if payout {
-			payable = append(payable, record)
+		v, ok := k.tryGetVault(sdkCtx, addr)
+		if ok && !v.Paused {
+			vaultsToProcess = append(vaultsToProcess, v)
+		}
+	}
+
+	payable, depleted := k.partitionVaults(sdkCtx, vaultsToProcess)
+	k.handlePayableVaults(ctx, payable)
+	k.handleDepletedVaults(ctx, depleted)
+	return nil
+}
+
+// partitionVaults splits the provided vaults into payable and depleted groups for the
+// AutoReconcilePayoutDuration forecast window using CanPayoutDuration.
+func (k *Keeper) partitionVaults(sdkCtx sdk.Context, vaults []*types.VaultAccount) ([]*types.VaultAccount, []*types.VaultAccount) {
+	var payable []*types.VaultAccount
+	var depleted []*types.VaultAccount
+	for _, v := range vaults {
+		ok, err := k.CanPayoutDuration(sdkCtx, v, AutoReconcilePayoutDuration)
+		if err != nil {
+			sdkCtx.Logger().Error("failed to check payout ability", "vault", v.GetAddress().String(), "err", err)
+			continue
+		}
+		if ok {
+			payable = append(payable, v)
 		} else {
-			depleted = append(depleted, record)
+			depleted = append(depleted, v)
 		}
 	}
 	return payable, depleted
 }
 
-// handlePayableVaults handles the logic for payable vaults that have been reonciled.
-func (k *Keeper) handlePayableVaults(ctx context.Context, payouts []ReconciledVault) {
+// handlePayableVaults updates timeout tracking for vaults that remain payable after reconciliation.
+// It sets PeriodTimeout to now + AutoReconcileTimeout, persists the vault, and enqueues the timeout.
+func (k *Keeper) handlePayableVaults(ctx context.Context, payouts []*types.VaultAccount) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	blockTime := sdkCtx.BlockTime().Unix()
 
-	for _, record := range payouts {
-		record.InterestDetails.ExpireTime = blockTime + AutoReconcileTimeout
-		if err := k.VaultInterestDetails.Set(ctx, record.Vault.GetAddress(), *record.InterestDetails); err != nil {
-			sdkCtx.Logger().Error("failed to set VaultInterestDetails for vault", "vault", record.Vault.GetAddress().String(), "err", err)
+	for _, v := range payouts {
+		if err := k.SafeEnqueueTimeout(ctx, v); err != nil {
+			sdkCtx.Logger().Error("failed to enqueue timeout", "vault", v.GetAddress().String(), "err", err)
 		}
 	}
 }
 
-// handleDepletedVaults handles the logic for depleted vaults that have been reconciled.
-func (k *Keeper) handleDepletedVaults(ctx context.Context, failedPayouts []ReconciledVault) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
+// handleDepletedVaults disables interest for vaults that cannot cover the forecasted payout window
+// by setting the current rate to zero while preserving the desired rate.
+func (k *Keeper) handleDepletedVaults(ctx context.Context, failedPayouts []*types.VaultAccount) {
 	for _, record := range failedPayouts {
-		k.UpdateInterestRates(ctx, record.Vault, types.ZeroInterestRate, record.Vault.DesiredInterestRate)
-
-		if err := k.VaultInterestDetails.Remove(ctx, record.Vault.GetAddress()); err != nil {
-			sdkCtx.Logger().Error("failed to remove VaultInterestDetails for vault", "vault", record.Vault.GetAddress().String(), "err", err)
-		}
+		k.UpdateInterestRates(ctx, record, types.ZeroInterestRate, record.DesiredInterestRate)
 	}
 }
 
-// resetVaultInterestPeriods sets a new PeriodStart for the given vaults in VaultInterestDetails.
-func (k *Keeper) resetVaultInterestPeriods(ctx context.Context, vaultAddrs []sdk.AccAddress, periodStart int64) {
+// resetVaultInterestPeriods starts a new accrual period for the provided vaults after a successful
+// interest reconciliation by calling SafeEnqueueTimeout for each.
+//
+// This updates PeriodStart and PeriodTimeout, persists the vault, and enqueues the corresponding timeout entry.
+func (k *Keeper) resetVaultInterestPeriods(ctx context.Context, vaults []*types.VaultAccount) {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
-	for _, addr := range vaultAddrs {
-		err := k.VaultInterestDetails.Set(ctx, addr, types.VaultInterestDetails{
-			PeriodStart: periodStart,
-		})
-		if err != nil {
-			sdkCtx.Logger().Error("failed to reset VaultInterestDetails period", "vault", addr.String(), "err", err)
+	for _, vault := range vaults {
+		if err := k.SafeEnqueueTimeout(ctx, vault); err != nil {
+			sdkCtx.Logger().Error("failed to enqueue vault timeout", "vault", vault.GetAddress().String(), "err", err)
 		}
 	}
-}
-
-// ReconciledVault is a helper struct to combine a vault and its interest details.
-type ReconciledVault struct {
-	Vault           *types.VaultAccount
-	InterestDetails *types.VaultInterestDetails
-}
-
-// GetReconciledVaults retrieves all vault records where the interest period
-// started at the given currentBlockTime, indicating they have been reconciled.
-func (k *Keeper) GetReconciledVaults(ctx context.Context, currentBlockTime int64) ([]ReconciledVault, error) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	var results []ReconciledVault
-
-	err := k.VaultInterestDetails.Walk(sdkCtx, nil, func(vaultAddr sdk.AccAddress, interestDetails types.VaultInterestDetails) (stop bool, err error) {
-		if interestDetails.PeriodStart == currentBlockTime {
-			vault, ok := k.tryGetVault(sdkCtx, vaultAddr)
-			if !ok {
-				return false, nil
-			}
-
-			results = append(results, ReconciledVault{
-				Vault:           vault,
-				InterestDetails: &interestDetails,
-			})
-		}
-		return false, nil
-	})
-
-	if err != nil {
-		return nil, fmt.Errorf("failed to walk vault interest details: %w", err)
-	}
-
-	return results, nil
-}
-
-func (k *Keeper) addToVaultTimeoutCheck(ctx context.Context, vault *types.VaultAccount) error {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	interestDetails, err := k.VaultInterestDetails.Get(sdkCtx, vault.GetAddress())
-	if err != nil && !errors.Is(err, collections.ErrNotFound) {
-		return fmt.Errorf("failed to get vault interest details: %w", err)
-	}
-
-	if interestDetails.ExpireTime == 0 {
-		interestDetails.ExpireTime = sdkCtx.BlockTime().Unix() + AutoReconcileTimeout
-	}
-
-	return k.VaultInterestDetails.Set(ctx, vault.GetAddress(), interestDetails)
 }

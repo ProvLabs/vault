@@ -94,6 +94,6 @@ include sims.mk
 
 test-unit:
 	@echo "Running unit tests with coverage..."
-	@go test -cover -coverpkg=./keeper/... -coverprofile=coverage.out -race -v ./keeper/...
+	@go test -cover -coverpkg=./keeper/...,./interest/...,./queue/...,./types/... -coverprofile=coverage.out -race -v ./...
 	@go tool cover -html=coverage.out && go tool cover -func=coverage.out
 	@echo "Unit tests completed."

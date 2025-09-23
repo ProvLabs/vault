@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	modulev1 "github.com/provlabs/vault/api/module/v1"
 	vaultv1 "github.com/provlabs/vault/api/v1"
 	"github.com/provlabs/vault/keeper"
+	"github.com/provlabs/vault/simulation"
 	"github.com/provlabs/vault/types"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
@@ -38,6 +40,7 @@ var (
 	_ module.HasGenesis          = AppModule{}
 	_ module.HasGenesisBasics    = AppModuleBasic{}
 	_ module.HasServices         = AppModule{}
+	_ module.AppModuleSimulation = AppModule{}
 )
 
 // AppModuleBasic implements the basic methods for the vault module.
@@ -442,4 +445,18 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 	)
 	m := NewAppModule(k, in.AddressCodec)
 	return ModuleOutputs{Keeper: k, Module: m}
+}
+
+// GenerateGenesisState creates a randomized GenState of the bank module.
+func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState)
+}
+
+// RegisterStoreDecoder registers a decoder for supply module's types
+func (am AppModule) RegisterStoreDecoder(_ simtypes.StoreDecoderRegistry) {
+}
+
+// WeightedOperations returns the all the gov module operations with their respective weights.
+func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
+	return simulation.WeightedOperations(simState, *am.keeper)
 }

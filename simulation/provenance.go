@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/provlabs/vault/simapp"
+	"github.com/provlabs/vault/types"
 
 	"cosmossdk.io/math"
 
@@ -16,7 +16,6 @@ import (
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
-	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 )
 
 const (
@@ -48,7 +47,7 @@ func CreateMarker(ctx context.Context, coin sdk.Coin, admin sdk.AccAddress, keep
 	return err
 }
 
-func AddAttribute(ctx context.Context, acc sdk.AccAddress, attr string, nk namekeeper.Keeper, ak attrkeeper.Keeper) error {
+func AddAttribute(ctx context.Context, acc sdk.AccAddress, attr string, nk types.NameKeeper, ak attrkeeper.Keeper) error {
 	err := nk.SetNameRecord(sdk.UnwrapSDKContext(ctx), attr, acc, false)
 	if err != nil {
 		return err
@@ -66,20 +65,20 @@ func AddAttribute(ctx context.Context, acc sdk.AccAddress, attr string, nk namek
 	return err
 }
 
-func MarkerExists(ctx sdk.Context, app *simapp.SimApp, denom string) bool {
-	marker, err := app.MarkerKeeper.GetMarker(ctx, markertypes.MustGetMarkerAddress(denom))
+func MarkerExists(ctx sdk.Context, markerKeeper types.MarkerKeeper, denom string) bool {
+	marker, err := markerKeeper.GetMarker(ctx, markertypes.MustGetMarkerAddress(denom))
 	return marker != nil && err == nil
 }
 
-func CreateGlobalMarker(ctx sdk.Context, app *simapp.SimApp, underlying sdk.Coin, accs []simtypes.Account) error {
-	err := CreateMarker(sdk.UnwrapSDKContext(ctx), sdk.NewInt64Coin(underlying.Denom, underlying.Amount.Int64()), app.AccountKeeper.GetModuleAddress("mint"), app.MarkerKeeper)
+func CreateGlobalMarker(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, mk markerkeeper.Keeper, underlying sdk.Coin, accs []simtypes.Account) error {
+	err := CreateMarker(sdk.UnwrapSDKContext(ctx), sdk.NewInt64Coin(underlying.Denom, underlying.Amount.Int64()), ak.GetModuleAddress("mint"), mk)
 	if err != nil {
 		return fmt.Errorf("CreateMarker: %w", err)
 	}
 
 	for _, acc := range accs {
 		amount := underlying.Amount.Quo(math.NewInt(int64(len(accs))))
-		err = FundAccount(ctx, app, acc.Address, sdk.NewCoins(sdk.NewInt64Coin(underlying.Denom, amount.Int64())))
+		err = FundAccount(ctx, bk, acc.Address, sdk.NewCoins(sdk.NewInt64Coin(underlying.Denom, amount.Int64())))
 		if err != nil {
 			return fmt.Errorf("FundAccount for %s: %w", acc.Address, err)
 		}
@@ -88,10 +87,10 @@ func CreateGlobalMarker(ctx sdk.Context, app *simapp.SimApp, underlying sdk.Coin
 	return nil
 }
 
-func FundAccount(ctx context.Context, app *simapp.SimApp, addr sdk.AccAddress, amounts sdk.Coins) error {
-	if err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, amounts); err != nil {
+func FundAccount(ctx context.Context, bk types.BankKeeper, addr sdk.AccAddress, amounts sdk.Coins) error {
+	if err := bk.MintCoins(ctx, minttypes.ModuleName, amounts); err != nil {
 		return err
 	}
 	ctx = markertypes.WithBypass(ctx) // Bypass marker checks for this operation.
-	return app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, amounts)
+	return bk.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, amounts)
 }

@@ -249,17 +249,17 @@ func SimulateMsgUpdateInterestRate(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateInterestRateRequest{}), "unable to get random vault"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateInterestRateRequest{}), "unable to get random vault"), nil, nil
 		}
 
 		adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateInterestRateRequest{}), "invalid admin address for vault"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateInterestRateRequest{}), "invalid admin address for vault"), nil, nil
 		}
 
 		rate, err := getRandomInterestRate(r, k, ctx, vault.GetAddress())
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateInterestRateRequest{}), "unable to get random interest rate"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateInterestRateRequest{}), "unable to get random interest rate"), nil, nil
 		}
 
 		msg := &types.MsgUpdateInterestRateRequest{
@@ -271,7 +271,7 @@ func SimulateMsgUpdateInterestRate(k keeper.Keeper) simtypes.Operation {
 		handler := keeper.NewMsgServer(&k)
 		_, err = handler.UpdateInterestRate(sdk.WrapSDKContext(ctx), msg)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, err
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "successfully updated interest rate"), nil, nil
@@ -284,17 +284,17 @@ func SimulateMsgUpdateMinInterestRate(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateMinInterestRateRequest{}), "unable to get random vault"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateMinInterestRateRequest{}), "unable to get random vault"), nil, nil
 		}
 
 		adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateMinInterestRateRequest{}), "invalid admin address for vault"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateMinInterestRateRequest{}), "invalid admin address for vault"), nil, nil
 		}
 
 		rate, err := getRandomMinInterestRate(r, k, ctx, vault.GetAddress())
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateMinInterestRateRequest{}), "unable to get random min interest rate"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateMinInterestRateRequest{}), "unable to get random min interest rate"), nil, nil
 		}
 
 		msg := &types.MsgUpdateMinInterestRateRequest{
@@ -306,7 +306,7 @@ func SimulateMsgUpdateMinInterestRate(k keeper.Keeper) simtypes.Operation {
 		handler := keeper.NewMsgServer(&k)
 		_, err = handler.UpdateMinInterestRate(sdk.WrapSDKContext(ctx), msg)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, err
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "successfully updated min interest rate"), nil, nil
@@ -319,17 +319,17 @@ func SimulateMsgUpdateMaxInterestRate(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateMaxInterestRateRequest{}), "unable to get random vault"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateMaxInterestRateRequest{}), "unable to get random vault"), nil, nil
 		}
 
 		adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateMaxInterestRateRequest{}), "invalid admin address for vault"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateMaxInterestRateRequest{}), "invalid admin address for vault"), nil, nil
 		}
 
 		rate, err := getRandomMaxInterestRate(r, k, ctx, vault.GetAddress())
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateMaxInterestRateRequest{}), "unable to get random max interest rate"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateMaxInterestRateRequest{}), "unable to get random max interest rate"), nil, nil
 		}
 
 		msg := &types.MsgUpdateMaxInterestRateRequest{
@@ -354,12 +354,12 @@ func SimulateMsgToggleSwapIn(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleSwapInRequest{}), "unable to get random vault"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleSwapInRequest{}), "unable to get random vault"), nil, nil
 		}
 
 		adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleSwapInRequest{}), "invalid admin address"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleSwapInRequest{}), "invalid admin address"), nil, nil
 		}
 
 		msg := &types.MsgToggleSwapInRequest{
@@ -383,12 +383,12 @@ func SimulateMsgToggleSwapOut(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleSwapOutRequest{}), "unable to get random vault"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleSwapOutRequest{}), "unable to get random vault"), nil, nil
 		}
 
 		adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleSwapOutRequest{}), "invalid admin address"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleSwapOutRequest{}), "invalid admin address"), nil, nil
 		}
 
 		msg := &types.MsgToggleSwapOutRequest{
@@ -412,12 +412,12 @@ func SimulateMsgDepositInterestFunds(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositInterestFundsRequest{}), "unable to get random vault"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositInterestFundsRequest{}), "unable to get random vault"), nil, nil
 		}
 
 		adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositInterestFundsRequest{}), "invalid admin address"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositInterestFundsRequest{}), "invalid admin address"), nil, nil
 		}
 
 		// Find the admin's balance of the underlying asset
@@ -462,15 +462,18 @@ func SimulateMsgWithdrawInterestFunds(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawInterestFundsRequest{}), "unable to get random vault"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawInterestFundsRequest{}), "unable to get random vault"), nil, nil
 		}
 
 		adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawInterestFundsRequest{}), "invalid admin address"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawInterestFundsRequest{}), "invalid admin address"), nil, nil
 		}
 
 		balance := k.BankKeeper.GetBalance(ctx, vault.GetAddress(), vault.UnderlyingAsset)
+		if balance.Amount.IsZero() {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawInterestFundsRequest{}), "no underlying asset funds"), nil, nil
+		}
 		amount := sdk.NewInt64Coin(vault.UnderlyingAsset, r.Int63n(balance.Amount.Int64()))
 
 		msg := &types.MsgWithdrawInterestFundsRequest{
@@ -495,12 +498,12 @@ func SimulateMsgDepositPrincipalFunds(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositPrincipalFundsRequest{}), "unable to get random vault"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositPrincipalFundsRequest{}), "unable to get random vault"), nil, nil
 		}
 
 		adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositPrincipalFundsRequest{}), "invalid admin address"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositPrincipalFundsRequest{}), "invalid admin address"), nil, nil
 		}
 
 		// TODO Do I need to do these checks?
@@ -549,12 +552,12 @@ func SimulateMsgWithdrawPrincipalFunds(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawPrincipalFundsRequest{}), "unable to get random vault"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawPrincipalFundsRequest{}), "unable to get random vault"), nil, nil
 		}
 
 		adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawPrincipalFundsRequest{}), "invalid admin address"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawPrincipalFundsRequest{}), "invalid admin address"), nil, nil
 		}
 
 		// TODO Do I need to do these checks?
@@ -565,6 +568,9 @@ func SimulateMsgWithdrawPrincipalFunds(k keeper.Keeper) simtypes.Operation {
 		principalAddr := vault.PrincipalMarkerAddress()
 		asset := getRandomVaultAsset(r, vault)
 		balance := k.BankKeeper.GetBalance(ctx, principalAddr, asset)
+		if balance.Amount.IsZero() {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawPrincipalFundsRequest{}), "no underlying asset funds"), nil, nil
+		}
 		amount := sdk.NewInt64Coin(vault.UnderlyingAsset, r.Int63n(balance.Amount.Int64()))
 
 		msg := &types.MsgWithdrawPrincipalFundsRequest{
@@ -589,17 +595,17 @@ func SimulateMsgExpeditePendingSwapOut(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgExpeditePendingSwapOutRequest{}), "unable to get random vault"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgExpeditePendingSwapOutRequest{}), "unable to get random vault"), nil, nil
 		}
 
 		adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgExpeditePendingSwapOutRequest{}), "invalid admin address"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgExpeditePendingSwapOutRequest{}), "invalid admin address"), nil, nil
 		}
 
 		swapID, err := getRandomPendingSwapOut(r, k, ctx, vault.GetAddress())
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgExpeditePendingSwapOutRequest{}), "unable to get random pending swap out"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgExpeditePendingSwapOutRequest{}), "unable to get random pending swap out"), nil, nil
 		}
 
 		msg := &types.MsgExpeditePendingSwapOutRequest{
@@ -623,16 +629,16 @@ func SimulateMsgPauseVault(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgPauseVaultRequest{}), "unable to get random vault"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgPauseVaultRequest{}), "unable to get random vault"), nil, nil
 		}
 
 		adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgPauseVaultRequest{}), "invalid admin address"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgPauseVaultRequest{}), "invalid admin address"), nil, nil
 		}
 
 		if vault.Paused {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgPauseVaultRequest{}), "vault is already paused"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgPauseVaultRequest{}), "vault is already paused"), nil, nil
 		}
 
 		msg := &types.MsgPauseVaultRequest{
@@ -656,16 +662,16 @@ func SimulateMsgUnpauseVault(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUnpauseVaultRequest{}), "unable to get random vault"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUnpauseVaultRequest{}), "unable to get random vault"), nil, nil
 		}
 
 		adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUnpauseVaultRequest{}), "invalid admin address"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUnpauseVaultRequest{}), "invalid admin address"), nil, nil
 		}
 
 		if !vault.Paused {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgPauseVaultRequest{}), "vault is already unpaused"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgPauseVaultRequest{}), "vault is already unpaused"), nil, nil
 		}
 
 		msg := &types.MsgUnpauseVaultRequest{

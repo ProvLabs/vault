@@ -16,13 +16,13 @@ import (
 )
 
 const (
-	MaxNumVaults                 = 5
-	ChanceOfPaymentDenom         = 2  // 1 in X
-	ChanceOfNegativeMinRate      = 10 // 1 in X
-	MaxPositiveMinRate           = 0.1
-	MaxNegativeMinRate           = 0.05
-	MaxRateAddition              = 0.2
-	ChanceOfNewVault             = 3 // 1 in X
+	MaxNumVaults            = 5
+	ChanceOfPaymentDenom    = 2  // 1 in X
+	ChanceOfNegativeMinRate = 10 // 1 in X
+	MaxPositiveMinRate      = 0.1
+	MaxNegativeMinRate      = 0.05
+	MaxRateAddition         = 0.2
+
 	ChanceOfPausedVault          = 5 // 1 in X
 	MaxPausedBalance             = 1_000_000
 	MinPausedBalance             = 1_000
@@ -84,12 +84,22 @@ func randomVaults(simState *module.SimulationState) []types.VaultAccount {
 		withdrawalDelaySeconds := uint64(simState.Rand.Int63n(keeper.AutoReconcileTimeout))
 
 		var periodStart, periodTimeout int64
-		if simState.Rand.Intn(ChanceOfNewVault) == 0 {
+		switch simState.Rand.Intn(3) {
+		case 0: // Inactive
+			desiredRate = 0
+			currentRate = 0
 			periodStart = 0
 			periodTimeout = 0
-		} else {
+			minRate = 0
+			maxRate = 0
+		case 1: // Active
+			currentRate = desiredRate
 			periodStart = simState.GenTimestamp.Unix()
 			periodTimeout = simState.GenTimestamp.Unix() + simState.Rand.Int63n(int64(keeper.AutoReconcileTimeout))
+		case 2: // Defaulted
+			currentRate = 0
+			periodTimeout = simState.GenTimestamp.Unix()
+			periodStart = periodTimeout - (simState.Rand.Int63n(int64(keeper.AutoReconcileTimeout)) + 1)
 		}
 
 		var paused bool
@@ -201,6 +211,6 @@ func randomPendingSwaps(simState *module.SimulationState, vaults []types.VaultAc
 
 	return types.PendingSwapOutQueue{
 		Entries:              allPendingSwaps,
-		LatestSequenceNumber: maxSequence,
+		LatestSequenceNumber: maxSequence + 1,
 	}
 }

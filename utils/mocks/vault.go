@@ -85,6 +85,10 @@ func (m *MockAuthKeeper) SetAccount(_ context.Context, acc sdk.AccountI) {
 	m.accounts[addrKey(acc.GetAddress())] = acc
 }
 
+func (m *MockAuthKeeper) GetModuleAddress(moduleName string) sdk.AccAddress {
+	return sdk.AccAddress(moduleName)
+}
+
 // NewVaultKeeper returns an instance of the Keeper with all dependencies mocked.
 func NewVaultKeeper(
 	t testing.TB,

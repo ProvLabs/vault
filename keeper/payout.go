@@ -153,9 +153,7 @@ func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.P
 	}
 
 	vault.TotalShares = vault.TotalShares.Sub(req.Shares)
-	if err := k.SetVaultAccount(ctx, &vault); err != nil {
-		return fmt.Errorf("failed to update vault account: %w", err)
-	}
+	k.AuthKeeper.SetAccount(ctx, &vault)
 
 	k.emitEvent(ctx, types.NewEventSwapOutCompleted(req.VaultAddress, req.Owner, assets, id))
 	return nil

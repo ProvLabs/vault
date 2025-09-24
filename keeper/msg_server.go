@@ -492,3 +492,140 @@ func (k msgServer) UnpauseVault(goCtx context.Context, msg *types.MsgUnpauseVaul
 
 	return &types.MsgUnpauseVaultResponse{}, nil
 }
+
+// SetBridgeAddress sets the single external bridge address allowed to mint or burn shares for a vault.
+func (k msgServer) SetBridgeAddress(goCtx context.Context, msg *types.MsgSetBridgeAddressRequest) (*types.MsgSetBridgeAddressResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault: %w", err)
+	}
+	if vault == nil {
+		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+	}
+	if err := vault.ValidateAdmin(msg.Admin); err != nil {
+		return nil, err
+	}
+
+	vault.BridgeAddress = msg.BridgeAddress
+	if err := k.SetVaultAccount(ctx, vault); err != nil {
+		return nil, fmt.Errorf("failed to set vault account: %w", err)
+	}
+
+	return &types.MsgSetBridgeAddressResponse{}, nil
+}
+
+// ToggleBridge enables or disables the bridge functionality for a vault.
+func (k msgServer) ToggleBridge(goCtx context.Context, msg *types.MsgToggleBridgeRequest) (*types.MsgToggleBridgeResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault: %w", err)
+	}
+	if vault == nil {
+		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+	}
+	if err := vault.ValidateAdmin(msg.Admin); err != nil {
+		return nil, err
+	}
+
+	vault.BridgeEnabled = msg.Enabled
+	if err := k.SetVaultAccount(ctx, vault); err != nil {
+		return nil, fmt.Errorf("failed to set vault account: %w", err)
+	}
+
+	return &types.MsgToggleBridgeResponse{}, nil
+}
+
+// BridgeMintShares mints local share marker supply for a vault; the signer must match the configured bridge address
+// and the mint amount must not exceed (total_shares - current marker supply).
+func (k msgServer) BridgeMintShares(goCtx context.Context, msg *types.MsgBridgeMintSharesRequest) (*types.MsgBridgeMintSharesResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	bridgeAddr := sdk.MustAccAddressFromBech32(msg.Bridge)
+
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault: %w", err)
+	}
+	if vault == nil {
+		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+	}
+	if !vault.BridgeEnabled {
+		return nil, fmt.Errorf("bridge is disabled for vault %s", msg.VaultAddress)
+	}
+	if vault.BridgeAddress != bridgeAddr.String() {
+		return nil, fmt.Errorf("unauthorized bridge: expected %s got %s", vault.BridgeAddress, bridgeAddr.String())
+	}
+	if msg.Shares.Denom != vault.ShareDenom {
+		return nil, fmt.Errorf("invalid shares denom: expected %s got %s", vault.ShareDenom, msg.Shares.Denom)
+	}
+	if !msg.Shares.Amount.IsPositive() {
+		return nil, fmt.Errorf("mint amount must be positive")
+	}
+
+	currentSupply := k.BankKeeper.GetSupply(ctx, vault.ShareDenom)
+	available := vault.TotalShares.Sub(currentSupply)
+	if msg.Shares.Amount.GT(available.Amount) {
+		return nil, fmt.Errorf("mint exceeds capacity: requested %s available %s", msg.Shares.Amount.String(), available.Amount.String())
+	}
+
+	if err := k.MarkerKeeper.MintCoin(ctx, vaultAddr, msg.Shares); err != nil {
+		return nil, fmt.Errorf("failed to mint shares to bridge: %w", err)
+	}
+
+	if err := k.MarkerKeeper.WithdrawCoins(ctx, vaultAddr, bridgeAddr, msg.Shares.Denom, sdk.NewCoins(msg.Shares)); err != nil {
+		return nil, fmt.Errorf("failed to transfer minted shares to bridge: %w", err)
+	}
+
+	return &types.MsgBridgeMintSharesResponse{}, nil
+}
+
+// BridgeBurnShares burns local share marker supply for a vault; the signer must match the configured bridge address
+// and the burn amount must not exceed the current marker supply. Shares are burned from the bridge account balance.
+func (k msgServer) BridgeBurnShares(goCtx context.Context, msg *types.MsgBridgeBurnSharesRequest) (*types.MsgBridgeBurnSharesResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	bridgeAddr := sdk.MustAccAddressFromBech32(msg.Bridge)
+
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault: %w", err)
+	}
+	if vault == nil {
+		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+	}
+	if !vault.BridgeEnabled {
+		return nil, fmt.Errorf("bridge is disabled for vault %s", msg.VaultAddress)
+	}
+	if vault.BridgeAddress != bridgeAddr.String() {
+		return nil, fmt.Errorf("unauthorized bridge: expected %s got %s", vault.BridgeAddress, bridgeAddr.String())
+	}
+	if msg.Shares.Denom != vault.ShareDenom {
+		return nil, fmt.Errorf("invalid shares denom: expected %s got %s", vault.ShareDenom, msg.Shares.Denom)
+	}
+	if !msg.Shares.Amount.IsPositive() {
+		return nil, fmt.Errorf("burn amount must be positive")
+	}
+
+	currentSupply := k.BankKeeper.GetSupply(ctx, vault.ShareDenom)
+	if msg.Shares.Amount.GT(currentSupply.Amount) {
+		return nil, fmt.Errorf("burn exceeds current supply: requested %s available %s", msg.Shares.Amount.String(), currentSupply.Amount.String())
+	}
+
+	if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, vaultAddr), bridgeAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(msg.Shares)); err != nil {
+		return nil, fmt.Errorf("failed to transfer shares from bridge to vault: %w", err)
+	}
+
+	if err := k.MarkerKeeper.BurnCoin(ctx, bridgeAddr, msg.Shares); err != nil {
+		return nil, fmt.Errorf("failed to burn shares from bridge: %w", err)
+	}
+
+	return &types.MsgBridgeBurnSharesResponse{}, nil
+}

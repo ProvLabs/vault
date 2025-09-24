@@ -2908,7 +2908,12 @@ func (s *TestSuite) TestMsgServer_ToggleBridge() {
 			UnderlyingAsset: underlying,
 		})
 		s.Require().NoError(err, "setup: expected vault creation to succeed")
+		vault, err := s.k.GetVault(s.ctx, vaultAddr)
+		s.Require().NoError(err, "setup: should load vault")
+		vault.BridgeAddress = s.adminAddr.String()
+		s.k.AuthKeeper.SetAccount(s.ctx, vault)
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+
 	}
 
 	tc := msgServerTestCase[types.MsgToggleBridgeRequest, postCheckArgs]{

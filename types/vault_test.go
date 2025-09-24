@@ -42,6 +42,19 @@ func TestVaultAccount_Validate(t *testing.T) {
 			expectedErr: "",
 		},
 		{
+			name: "valid base account is nil",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         nil,
+				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
+				ShareDenom:          validDenom,
+				UnderlyingAsset:     "uusd",
+				CurrentInterestRate: validInterest,
+				DesiredInterestRate: validInterest,
+			},
+			expectedErr: "base account cannot be nil",
+		},
+		{
 			name: "valid vault account with bounds and current==0",
 			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,

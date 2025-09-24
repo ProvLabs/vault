@@ -95,6 +95,10 @@ func (va VaultAccount) Clone() *VaultAccount {
 
 // Validate performs a series of checks to ensure the VaultAccount is correctly configured.
 func (va VaultAccount) Validate() error {
+	if va.BaseAccount == nil {
+		return fmt.Errorf("base account cannot be nil")
+	}
+
 	if err := va.BaseAccount.Validate(); err != nil {
 		return err
 	}

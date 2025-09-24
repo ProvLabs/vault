@@ -394,67 +394,22 @@ func (s *TestSuite) setupSinglePaymentDenomVault(underlyingDenom, shareDenom, pa
 	return vault
 }
 
+// createBridgeMintSharesEventsExact returns the exact ordered events a successful
+// BridgeMintShares emits: marker mint to the share marker, withdraw to the bridge,
+// then the vault EventBridgeMintShares—suitable for strict equality checks in tests.
 func createBridgeMintSharesEventsExact(vaultAddr, bridgeAddr sdk.AccAddress, shareDenom string, shares sdk.Coin) sdk.Events {
 	markerAddr := markertypes.MustGetMarkerAddress(shareDenom)
 	markerModuleAddr := authtypes.NewModuleAddress(markertypes.ModuleName)
-	amtStr := fmt.Sprintf("%s%s", shares.Amount.String(), shares.Denom)
 
-	return sdk.Events{
-		sdk.NewEvent("coin_received",
-			sdk.NewAttribute("receiver", markerModuleAddr.String()),
-			sdk.NewAttribute("amount", amtStr),
-		),
-		sdk.NewEvent("coinbase",
-			sdk.NewAttribute("minter", markerModuleAddr.String()),
-			sdk.NewAttribute("amount", amtStr),
-		),
-		sdk.NewEvent("coin_spent",
-			sdk.NewAttribute("spender", markerModuleAddr.String()),
-			sdk.NewAttribute("amount", amtStr),
-		),
-		sdk.NewEvent("coin_received",
-			sdk.NewAttribute("receiver", markerAddr.String()),
-			sdk.NewAttribute("amount", amtStr),
-		),
-		sdk.NewEvent("transfer",
-			sdk.NewAttribute("recipient", markerAddr.String()),
-			sdk.NewAttribute("sender", markerModuleAddr.String()),
-			sdk.NewAttribute("amount", amtStr),
-		),
-		sdk.NewEvent("message",
-			sdk.NewAttribute("sender", markerModuleAddr.String()),
-		),
-		sdk.NewEvent("provenance.marker.v1.EventMarkerMint",
-			sdk.NewAttribute("administrator", vaultAddr.String()),
-			sdk.NewAttribute("amount", shares.Amount.String()),
-			sdk.NewAttribute("denom", shares.Denom),
-		),
-		sdk.NewEvent("coin_spent",
-			sdk.NewAttribute("spender", markerAddr.String()),
-			sdk.NewAttribute("amount", amtStr),
-		),
-		sdk.NewEvent("coin_received",
-			sdk.NewAttribute("receiver", bridgeAddr.String()),
-			sdk.NewAttribute("amount", amtStr),
-		),
-		sdk.NewEvent("transfer",
-			sdk.NewAttribute("recipient", bridgeAddr.String()),
-			sdk.NewAttribute("sender", markerAddr.String()),
-			sdk.NewAttribute("amount", amtStr),
-		),
-		sdk.NewEvent("message",
-			sdk.NewAttribute("sender", markerAddr.String()),
-		),
-		sdk.NewEvent("provenance.marker.v1.EventMarkerWithdraw",
-			sdk.NewAttribute("administrator", vaultAddr.String()),
-			sdk.NewAttribute("coins", amtStr),
-			sdk.NewAttribute("denom", shares.Denom),
-			sdk.NewAttribute("to_address", bridgeAddr.String()),
-		),
-		sdk.NewEvent("vault.v1.EventBridgeMintShares",
-			sdk.NewAttribute("bridge", bridgeAddr.String()),
-			sdk.NewAttribute("shares", CoinToJSON(shares)),
-			sdk.NewAttribute("vault_address", vaultAddr.String()),
-		),
-	}
+	events := sdk.NewEventManager().Events()
+	events = append(events, createMarkerMintCoinEvents(markerModuleAddr, vaultAddr, markerAddr, shares)...)
+	events = append(events, createMarkerWithdraw(vaultAddr, markerAddr, bridgeAddr, shares)...)
+	events = append(events, sdk.NewEvent(
+		"vault.v1.EventBridgeMintShares",
+		sdk.NewAttribute("bridge", bridgeAddr.String()),
+		sdk.NewAttribute("shares", CoinToJSON(shares)),
+		sdk.NewAttribute("vault_address", vaultAddr.String()),
+	))
+
+	return events
 }

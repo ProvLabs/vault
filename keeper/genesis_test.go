@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"time"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
@@ -19,6 +20,7 @@ func (s *TestSuite) TestVaultGenesis_InitAndExport() {
 		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
 		Admin:               admin,
 		ShareDenom:          shareDenom,
+		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
 		UnderlyingAsset:     underlying,
 		CurrentInterestRate: types.ZeroInterestRate,
 		DesiredInterestRate: types.ZeroInterestRate,
@@ -86,6 +88,7 @@ func (s *TestSuite) TestVaultGenesis_RoundTrip_PastAndFutureTimeouts() {
 		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
 		Admin:               admin,
 		ShareDenom:          shareDenom,
+		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
 		UnderlyingAsset:     underlying,
 		CurrentInterestRate: types.ZeroInterestRate,
 		DesiredInterestRate: types.ZeroInterestRate,
@@ -125,6 +128,7 @@ func (s *TestSuite) TestVaultGenesis_InvalidTimeoutAddressPanics() {
 		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
 		Admin:               admin,
 		ShareDenom:          shareDenom,
+		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
 		UnderlyingAsset:     underlying,
 		CurrentInterestRate: types.ZeroInterestRate,
 		DesiredInterestRate: types.ZeroInterestRate,
@@ -155,6 +159,7 @@ func (s *TestSuite) TestVaultGenesis_ExistingAccountNumberCopied() {
 		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
 		Admin:               admin,
 		ShareDenom:          shareDenom,
+		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
 		UnderlyingAsset:     underlying,
 		CurrentInterestRate: types.ZeroInterestRate,
 		DesiredInterestRate: types.ZeroInterestRate,
@@ -184,6 +189,7 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidVault() {
 		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
 		Admin:               "",
 		ShareDenom:          "invalid denom!",
+		TotalShares:         sdk.Coin{Denom: "invalid denom!", Amount: math.NewInt(0)},
 		UnderlyingAsset:     "underX",
 		CurrentInterestRate: types.ZeroInterestRate,
 		DesiredInterestRate: types.ZeroInterestRate,
@@ -202,6 +208,7 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidPendingSwapOut() {
 		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
 		Admin:               admin,
 		ShareDenom:          shareDenom,
+		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
 		UnderlyingAsset:     underlying,
 		CurrentInterestRate: types.ZeroInterestRate,
 		DesiredInterestRate: types.ZeroInterestRate,
@@ -238,6 +245,7 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPendingSwapOutHasUnknownVault
 		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
 		Admin:               admin,
 		ShareDenom:          shareDenom,
+		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
 		UnderlyingAsset:     underlying,
 		CurrentInterestRate: types.ZeroInterestRate,
 		DesiredInterestRate: types.ZeroInterestRate,
@@ -274,6 +282,7 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPendingSwapOutHasBadVaultAddr
 		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
 		Admin:               admin,
 		ShareDenom:          shareDenom,
+		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
 		UnderlyingAsset:     underlying,
 		CurrentInterestRate: types.ZeroInterestRate,
 		DesiredInterestRate: types.ZeroInterestRate,

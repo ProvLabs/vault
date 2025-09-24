@@ -73,6 +73,7 @@ func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyi
 		BaseAccount:            baseAcc,
 		Admin:                  admin,
 		ShareDenom:             shareDenom,
+		TotalShares:            sdk.Coin{Denom: shareDenom, Amount: sdkmath.ZeroInt()},
 		UnderlyingAsset:        underlyingAsset,
 		PaymentDenom:           paymentDenom,
 		CurrentInterestRate:    ZeroInterestRate,
@@ -82,6 +83,8 @@ func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyi
 		WithdrawalDelaySeconds: withdrawalDelay,
 		Paused:                 false,
 		PausedBalance:          sdk.Coin{},
+		BridgeEnabled:          false,
+		BridgeAddress:          "",
 	}
 }
 

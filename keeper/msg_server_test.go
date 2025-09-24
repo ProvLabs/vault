@@ -70,6 +70,7 @@ func (s *TestSuite) TestMsgServer_CreateVault() {
 				vaultAcc.GetUnderlyingAsset(),
 				"expected vault underlying asset denom to match request",
 			)
+			s.Equal(vaultAcc.GetTotalShares(), sdk.NewCoin(postCheckArgs.ShareDenom, math.ZeroInt()), "expected vault total shares to be zero")
 		},
 	}
 

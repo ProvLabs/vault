@@ -125,7 +125,7 @@ func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstim
 	}
 
 	principalAddress := vault.PrincipalMarkerAddress()
-	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
+	totalShares := vault.TotalShares.Amount
 	totalAssets := k.BankKeeper.GetBalance(ctx, principalAddress, vault.UnderlyingAsset)
 
 	estimatedTotalAssets, err := k.CalculateVaultTotalAssets(ctx, vault, totalAssets)
@@ -181,7 +181,7 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 	}
 
 	principalAddress := vault.PrincipalMarkerAddress()
-	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
+	totalShares := vault.TotalShares.Amount
 	totalAssets := k.BankKeeper.GetBalance(ctx, principalAddress, vault.UnderlyingAsset)
 
 	estimatedTotalAssets, err := k.CalculateVaultTotalAssets(ctx, vault, totalAssets)

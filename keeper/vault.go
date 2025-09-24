@@ -103,6 +103,7 @@ func (k *Keeper) createVaultAccount(ctx sdk.Context, admin, shareDenom, underlyi
 	}
 	vaultAcc = k.AuthKeeper.NewAccount(ctx, vault).(types.VaultAccountI)
 	vault.PausedBalance = sdk.Coin{}
+	vault.TotalShares = sdk.NewCoin(shareDenom, sdkmath.ZeroInt())
 	k.AuthKeeper.SetAccount(ctx, vaultAcc)
 
 	return vault, nil
@@ -204,6 +205,11 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 
 	if err := k.MarkerKeeper.MintCoin(ctx, vault.GetAddress(), shares); err != nil {
 		return nil, err
+	}
+
+	vault.TotalShares = vault.TotalShares.Add(shares)
+	if err := k.SetVaultAccount(ctx, vault); err != nil {
+		return nil, fmt.Errorf("failed to update vault account: %w", err)
 	}
 
 	if err := k.MarkerKeeper.WithdrawCoins(ctx, vault.GetAddress(), recipient, shares.Denom, sdk.NewCoins(shares)); err != nil {

@@ -39,6 +39,8 @@ type VaultAccountI interface {
 
 	// GetAdmin returns the bech32-encoded address string of the vault administrator.
 	GetAdmin() string
+	// GetTotalShares returns the total shares issued by the vault.
+	GetTotalShares() sdk.Coin
 
 	// GetShareDenom returns the share token denom that the vault mints/burns to
 	// represent proportional ownership in the vault's underlying assets.

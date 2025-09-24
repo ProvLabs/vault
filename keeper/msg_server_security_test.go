@@ -67,8 +67,12 @@ func (s *TestSuite) TestMsgServer_SmallFirstSwapIn_HugeDonation_SwapOut() {
 	respIn, err := s.k.SwapIn(s.ctx, vaultAddr, owner, tiny)
 	s.Require().NoError(err, "tiny swap-in should succeed")
 	s.Require().Equal(tiny.Amount.Mul(utils.ShareScalar), respIn.Amount, "tiny swap-in should mint deposit * ShareScalar shares")
+	vault, err = s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "should successfully get vault after tiny swap-in")
+	s.Require().NotNil(vault, "vault should not be nil after tiny swap-in")
 
 	totalShares := s.simApp.BankKeeper.GetSupply(s.ctx, shareDenom).Amount
+	s.Require().Equal(vault.TotalShares.Amount, totalShares, "total share supply should equal tiny depositor shares")
 	totalAssets := s.simApp.BankKeeper.GetBalance(s.ctx, markerAddr, underlying).Amount
 	impliedPricePre := totalAssets.Mul(utils.ShareScalar).Quo(totalShares) // assets per ShareScalar shares
 	s.Require().Equal(math.NewInt(1), impliedPricePre, "implied price should be 1 right after first swap-in")
@@ -83,7 +87,11 @@ func (s *TestSuite) TestMsgServer_SmallFirstSwapIn_HugeDonation_SwapOut() {
 	s.Require().NoError(err, "swap-out of all tiny depositor shares should succeed")
 
 	s.simApp.VaultKeeper.ProcessPendingSwapOuts(s.ctx)
+	vault, err = s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "should successfully get vault after tiny swap-out")
+	s.Require().NotNil(vault, "vault should not be nil after tiny swap-out")
 	postTotalShares := s.simApp.BankKeeper.GetSupply(s.ctx, shareDenom).Amount
+	s.Require().Equal(postTotalShares, vault.TotalShares.Amount, "total share supply should match vault account after tiny swap-out")
 	postTotalAssets := s.simApp.BankKeeper.GetBalance(s.ctx, markerAddr, underlying).Amount
 	if !postTotalShares.IsZero() {
 		impliedPrice := postTotalAssets.Mul(utils.ShareScalar).Quo(postTotalShares) // assets per ShareScalar shares

@@ -6,8 +6,6 @@ Each vault is configured with both an **underlying asset denom** (the backing co
 The payment denom provides a secondary unit for payouts and redemptions: users can request to redeem shares into either the underlying asset or the configured payment denom (if supported), with conversions handled via on-chain NAV pricing.  
 The module manages vault lifecycle, share issuance, redemptions, dual-asset accounting, interest accrual, and time-based job queues for automated processing.
 
-
-
 ## Keeper Responsibilities
 
 The keeper ties together state management, account operations, marker integration, interest reconciliation, and queued jobs.

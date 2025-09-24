@@ -167,8 +167,15 @@ func SimulateMsgSwapIn(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSwapInRequest{}), "no account has funds for this vault's accepted assets"), nil, nil
 		}
 
-		// Pick a random amount of their balance
-		amount, err := simtypes.RandPositiveInt(r, balance.Amount)
+		// Calculate 1/1000 of the balance
+		portion := balance.Amount.Quo(math.NewInt(1000))
+		if portion.IsZero() {
+			// If portion is zero, the balance is too low to deposit a meaningful portion.
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSwapInRequest{}), "balance too low to swap in a portion"), nil, nil
+		}
+
+		// Pick a random amount of their balance up to portion
+		amount, err := simtypes.RandPositiveInt(r, portion)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSwapInRequest{}), "balance amount is not positive"), nil, nil
 		}
@@ -426,15 +433,15 @@ func SimulateMsgDepositInterestFunds(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositInterestFundsRequest{}), "admin has no funds to deposit"), nil, nil
 		}
 
-		// Calculate 10% of the balance
-		tenPercent := balance.Amount.Quo(math.NewInt(10))
-		if tenPercent.IsZero() {
-			// If 10% is zero, the balance is too low to deposit a meaningful portion.
+		// Calculate 1% of the balance
+		portion := balance.Amount.Quo(math.NewInt(100))
+		if portion.IsZero() {
+			// If 1% is zero, the balance is too low to deposit a meaningful portion.
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositInterestFundsRequest{}), "balance too low to deposit a portion"), nil, nil
 		}
 
-		// Deposit a random amount up to 10% of the admin's balance
-		amountInt, err := simtypes.RandPositiveInt(r, tenPercent)
+		// Deposit a random amount up to 1% of the admin's balance
+		amountInt, err := simtypes.RandPositiveInt(r, portion)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositInterestFundsRequest{}), "error generating random amount"), nil, err
 		}
@@ -471,7 +478,7 @@ func SimulateMsgWithdrawInterestFunds(k keeper.Keeper) simtypes.Operation {
 		}
 
 		balance := k.BankKeeper.GetBalance(ctx, vault.GetAddress(), vault.UnderlyingAsset)
-		if balance.Amount.IsZero() {
+		if balance.IsZero() {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawInterestFundsRequest{}), "no underlying asset funds"), nil, nil
 		}
 		amount := sdk.NewInt64Coin(vault.UnderlyingAsset, r.Int63n(balance.Amount.Int64()))
@@ -517,14 +524,14 @@ func SimulateMsgDepositPrincipalFunds(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositPrincipalFundsRequest{}), "admin has no funds to deposit"), nil, nil
 		}
 
-		// Calculate 10% of the balance
-		tenPercent := balance.Amount.Quo(math.NewInt(10))
-		if tenPercent.IsZero() {
+		// Calculate 1% of the balance
+		portion := balance.Amount.Quo(math.NewInt(100))
+		if portion.IsZero() {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositPrincipalFundsRequest{}), "balance too low to deposit a portion"), nil, nil
 		}
 
-		// Deposit a random amount up to 10% of the admin's balance
-		amountInt, err := simtypes.RandPositiveInt(r, tenPercent)
+		// Deposit a random amount up to 1% of the admin's balance
+		amountInt, err := simtypes.RandPositiveInt(r, portion)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositPrincipalFundsRequest{}), "error generating random amount"), nil, err
 		}
@@ -568,7 +575,7 @@ func SimulateMsgWithdrawPrincipalFunds(k keeper.Keeper) simtypes.Operation {
 		principalAddr := vault.PrincipalMarkerAddress()
 		asset := getRandomVaultAsset(r, vault)
 		balance := k.BankKeeper.GetBalance(ctx, principalAddr, asset)
-		if balance.Amount.IsZero() {
+		if balance.IsZero() {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawPrincipalFundsRequest{}), "no underlying asset funds"), nil, nil
 		}
 		amount := sdk.NewInt64Coin(vault.UnderlyingAsset, r.Int63n(balance.Amount.Int64()))

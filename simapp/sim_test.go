@@ -88,7 +88,7 @@ func interBlockCacheOpt() func(*baseapp.BaseApp) {
 // /usr/local/go/bin/go test -benchmem -run=^$ github.com/ProvLabs/vault -bench ^BenchmarkFullAppSimulation$ -Commit=true -cpuprofile cpu.out
 func TestAppImportExport(t *testing.T) {
 	// uncomment to run in ide without flags.
-	simcli.FlagEnabledValue = true
+	//simcli.FlagEnabledValue = true
 	//tempDir, err := os.MkdirTemp("", "sim-log-*")
 	//require.NoError(t, err, "MkdirTemp")
 	//t.Logf("tempDir: %s", tempDir)

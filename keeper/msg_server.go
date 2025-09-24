@@ -568,6 +568,9 @@ func (k msgServer) BridgeMintShares(goCtx context.Context, msg *types.MsgBridgeM
 	if vault == nil {
 		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
 	}
+	if vault.Paused {
+		return nil, fmt.Errorf("vault %s is paused", vaultAddr.String())
+	}
 	if !vault.BridgeEnabled {
 		return nil, fmt.Errorf("bridge is disabled for vault %s", msg.VaultAddress)
 	}
@@ -618,6 +621,9 @@ func (k msgServer) BridgeBurnShares(goCtx context.Context, msg *types.MsgBridgeB
 	}
 	if vault == nil {
 		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+	}
+	if vault.Paused {
+		return nil, fmt.Errorf("vault %s is paused", vaultAddr.String())
 	}
 	if !vault.BridgeEnabled {
 		return nil, fmt.Errorf("bridge is disabled for vault %s", msg.VaultAddress)

@@ -92,11 +92,21 @@ func (va VaultAccount) Clone() *VaultAccount {
 
 // Validate performs a series of checks to ensure the VaultAccount is correctly configured.
 func (va VaultAccount) Validate() error {
+	if err := va.BaseAccount.Validate(); err != nil {
+		return err
+	}
+
 	if _, err := sdk.AccAddressFromBech32(va.Admin); err != nil {
 		return fmt.Errorf("invalid admin address: %w", err)
 	}
 	if err := sdk.ValidateDenom(va.ShareDenom); err != nil {
 		return fmt.Errorf("invalid share denom: %w", err)
+	}
+	if va.TotalShares.Denom != va.ShareDenom {
+		return fmt.Errorf("total shares denom (%s) must match share denom (%s)", va.TotalShares.Denom, va.ShareDenom)
+	}
+	if va.TotalShares.IsNegative() {
+		return fmt.Errorf("total shares cannot be negative: %s", va.TotalShares)
 	}
 	if err := sdk.ValidateDenom(va.UnderlyingAsset); err != nil {
 		return fmt.Errorf("invalid underlying asset denom: %s", va.UnderlyingAsset)
@@ -109,6 +119,15 @@ func (va VaultAccount) Validate() error {
 		if va.PaymentDenom == va.UnderlyingAsset {
 			return fmt.Errorf("payment (%q) denom cannot equal underlying asset denom (%q)", va.PaymentDenom, va.UnderlyingAsset)
 		}
+	}
+
+	if va.BridgeAddress != "" {
+		if _, err := sdk.AccAddressFromBech32(va.BridgeAddress); err != nil {
+			return fmt.Errorf("invalid bridge address: %w", err)
+		}
+	}
+	if va.BridgeEnabled && va.BridgeAddress == "" {
+		return fmt.Errorf("bridge cannot be enabled without a bridge address")
 	}
 
 	cur, err := sdkmath.LegacyNewDecFromStr(va.CurrentInterestRate)

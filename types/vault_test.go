@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
 
@@ -14,6 +15,7 @@ import (
 
 func TestVaultAccount_Validate(t *testing.T) {
 	validAdmin := utils.TestAddress().Bech32
+	validBridgeAddress := utils.TestAddress().Bech32
 	validDenom := "validdenom"
 	invalidDenom := "inval!d"
 	validInterest := "0.05"
@@ -31,6 +33,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				ShareDenom:          validDenom,
 				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: validInterest,
@@ -43,6 +46,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				ShareDenom:          validDenom,
 				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: "0.00",
@@ -57,6 +61,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               "invalid-address",
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				ShareDenom:          validDenom,
 				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: validInterest,
@@ -69,6 +74,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
+				TotalShares:         sdk.Coin{Denom: "", Amount: math.NewInt(0)},
 				ShareDenom:          "",
 				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: validInterest,
@@ -81,6 +87,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
+				TotalShares:         sdk.Coin{Denom: invalidDenom, Amount: math.NewInt(0)},
 				ShareDenom:          invalidDenom,
 				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: validInterest,
@@ -93,6 +100,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				ShareDenom:          validDenom,
 				UnderlyingAsset:     "",
 				CurrentInterestRate: validInterest,
@@ -105,6 +113,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				ShareDenom:          validDenom,
 				UnderlyingAsset:     invalidDenom,
 				CurrentInterestRate: validInterest,
@@ -117,6 +126,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				ShareDenom:          validDenom,
 				UnderlyingAsset:     "uusd",
 				PaymentDenom:        "",
@@ -130,6 +140,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				ShareDenom:          validDenom,
 				UnderlyingAsset:     "uusd",
 				PaymentDenom:        "usdc",
@@ -143,6 +154,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				ShareDenom:          validDenom,
 				UnderlyingAsset:     "uusd",
 				PaymentDenom:        "inv@lid$",
@@ -156,6 +168,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				ShareDenom:          validDenom,
 				UnderlyingAsset:     "uusd",
 				PaymentDenom:        "uusd",
@@ -169,6 +182,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				ShareDenom:          validDenom,
 				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: invalidInterest,
@@ -181,6 +195,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				ShareDenom:          validDenom,
 				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: validInterest,
@@ -193,6 +208,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				ShareDenom:          validDenom,
 				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: "0.00",
@@ -207,6 +223,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				ShareDenom:          validDenom,
 				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: "0.00",
@@ -221,6 +238,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				ShareDenom:          validDenom,
 				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: "0.00",
@@ -235,6 +253,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				ShareDenom:          validDenom,
 				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: "0.00",
@@ -249,6 +268,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				ShareDenom:          validDenom,
 				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: "0.00",
@@ -263,6 +283,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				ShareDenom:          validDenom,
 				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: "0.00",
@@ -277,6 +298,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				ShareDenom:          validDenom,
 				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: "0.00",
@@ -291,6 +313,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				ShareDenom:          validDenom,
 				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: "0.03",
@@ -303,6 +326,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				ShareDenom:          validDenom,
 				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: "0.00",
@@ -316,6 +340,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				ShareDenom:          validDenom,
 				UnderlyingAsset:     "uusd",
 				CurrentInterestRate: "0.00",
@@ -323,6 +348,78 @@ func TestVaultAccount_Validate(t *testing.T) {
 				MaxInterestRate:     "0.07",
 			},
 			expectedErr: "",
+		},
+		// New Test Cases
+		{
+			name: "invalid total shares (negative)",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				TotalShares:         sdk.Coin{Denom: validDenom, Amount: math.NewInt(-100)},
+				ShareDenom:          validDenom,
+				UnderlyingAsset:     "uusd",
+				CurrentInterestRate: "0.0",
+				DesiredInterestRate: "0.0",
+			},
+			expectedErr: "total shares cannot be negative",
+		},
+		{
+			name: "invalid total shares (denom mismatch)",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin("wrongdenom", 100),
+				ShareDenom:          validDenom,
+				UnderlyingAsset:     "uusd",
+				CurrentInterestRate: "0.0",
+				DesiredInterestRate: "0.0",
+			},
+			expectedErr: "total shares denom (wrongdenom) must match share denom (validdenom)",
+		},
+		{
+			name: "valid bridge address",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
+				ShareDenom:          validDenom,
+				UnderlyingAsset:     "uusd",
+				CurrentInterestRate: "0.0",
+				DesiredInterestRate: "0.0",
+				BridgeAddress:       validBridgeAddress,
+				BridgeEnabled:       true,
+			},
+			expectedErr: "",
+		},
+		{
+			name: "invalid bridge address",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
+				ShareDenom:          validDenom,
+				UnderlyingAsset:     "uusd",
+				CurrentInterestRate: "0.0",
+				DesiredInterestRate: "0.0",
+				BridgeAddress:       "invalid-bridge-address",
+				BridgeEnabled:       true,
+			},
+			expectedErr: "invalid bridge address",
+		},
+		{
+			name: "bridge enabled with no address",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
+				ShareDenom:          validDenom,
+				UnderlyingAsset:     "uusd",
+				CurrentInterestRate: "0.0",
+				DesiredInterestRate: "0.0",
+				BridgeAddress:       "",
+				BridgeEnabled:       true,
+			},
+			expectedErr: "bridge cannot be enabled without a bridge address",
 		},
 	}
 

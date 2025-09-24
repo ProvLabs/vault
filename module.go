@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	modulev1 "github.com/provlabs/vault/api/module/v1"
 	vaultv1 "github.com/provlabs/vault/api/v1"
@@ -26,6 +25,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/version"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -104,14 +104,18 @@ type AppModule struct {
 	AppModuleBasic
 	keeper       *keeper.Keeper
 	addressCodec address.Codec
+	markerKeeper types.MarkerKeeper
+	bankKeeper   types.BankKeeper
 }
 
 // NewAppModule creates a new AppModule instance.
-func NewAppModule(keeper *keeper.Keeper, addressCodec address.Codec) AppModule {
+func NewAppModule(keeper *keeper.Keeper, mk types.MarkerKeeper, bk types.BankKeeper, addressCodec address.Codec) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(),
 		keeper:         keeper,
 		addressCodec:   addressCodec,
+		markerKeeper:   mk,
+		bankKeeper:     bk,
 	}
 }
 
@@ -443,13 +447,21 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.MarkerKeeper,
 		in.BankKeeper,
 	)
-	m := NewAppModule(k, in.AddressCodec)
+	m := NewAppModule(k, in.MarkerKeeper, in.BankKeeper, in.AddressCodec)
 	return ModuleOutputs{Keeper: k, Module: m}
 }
 
 // GenerateGenesisState creates a randomized GenState of the bank module.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	simulation.RandomizedGenState(simState)
+	state := simulation.RandomizedGenState(simState)
+	_ = state
+	// Create all the universal denoms which are underlying and payment and setup NAVs
+
+	// Distribute the universal denoms to all user accounts and vaults.
+	// Next we want to fund the Vault with underlying for Interest Payment
+	// Next we want to fund the Vault for Escrowed Shares. This should match pending swap out
+	// Next we want to give underlying asset and payment denom to vault markers
+	// Next we want to give shares to users
 }
 
 // RegisterStoreDecoder registers a decoder for supply module's types

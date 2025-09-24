@@ -2752,6 +2752,256 @@ func (s *TestSuite) TestMsgServer_UnpauseVault_Failures() {
 	}
 }
 
+func (s *TestSuite) TestMsgServer_SetBridgeAddress() {
+	type postCheckArgs struct {
+		VaultAddress   sdk.AccAddress
+		ExpectedBridge string
+	}
+
+	testDef := msgServerTestDef[types.MsgSetBridgeAddressRequest, types.MsgSetBridgeAddressResponse, postCheckArgs]{
+		endpointName: "SetBridgeAddress",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).SetBridgeAddress,
+		postCheck: func(msg *types.MsgSetBridgeAddressRequest, args postCheckArgs) {
+			v, err := s.k.GetVault(s.ctx, args.VaultAddress)
+			s.Require().NoError(err, "post-check: should load vault for verification")
+			s.Assert().Equal(args.ExpectedBridge, v.BridgeAddress, "post-check: expected vault BridgeAddress to match")
+		},
+	}
+
+	underlying := "under"
+	share := "vaultshares"
+	admin := s.adminAddr
+	bridge := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+	vaultAddr := types.GetVaultAddress(share)
+
+	setup := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      share,
+			UnderlyingAsset: underlying,
+		})
+		s.Require().NoError(err, "setup: expected vault creation to succeed")
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	tc := msgServerTestCase[types.MsgSetBridgeAddressRequest, postCheckArgs]{
+		name:  "happy path",
+		setup: setup,
+		msg: types.MsgSetBridgeAddressRequest{
+			Admin:         admin.String(),
+			VaultAddress:  vaultAddr.String(),
+			BridgeAddress: bridge.String(),
+		},
+		postCheckArgs: postCheckArgs{
+			VaultAddress:   vaultAddr,
+			ExpectedBridge: bridge.String(),
+		},
+		expectedEvents: sdk.Events{
+			sdk.NewEvent("vault.v1.EventBridgeAddressSet",
+				sdk.NewAttribute("admin", admin.String()),
+				sdk.NewAttribute("bridge_address", bridge.String()),
+				sdk.NewAttribute("vault_address", vaultAddr.String()),
+			),
+		},
+	}
+
+	testDef.expectedResponse = &types.MsgSetBridgeAddressResponse{}
+	runMsgServerTestCase(s, testDef, tc)
+}
+
+func (s *TestSuite) TestMsgServer_SetBridgeAddress_Failures() {
+	testDef := msgServerTestDef[types.MsgSetBridgeAddressRequest, types.MsgSetBridgeAddressResponse, any]{
+		endpointName: "SetBridgeAddress",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).SetBridgeAddress,
+		postCheck:    nil,
+	}
+
+	underlying := "under"
+	share := "vaultshares"
+	admin := s.adminAddr
+	other := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+	bridge := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+	vaultAddr := types.GetVaultAddress(share)
+	markerAddr := markertypes.MustGetMarkerAddress(share)
+
+	base := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      share,
+			UnderlyingAsset: underlying,
+		})
+		s.Require().NoError(err, "base: expected vault creation to succeed")
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	tests := []msgServerTestCase[types.MsgSetBridgeAddressRequest, any]{
+		{
+			name: "vault not found",
+			setup: func() {
+				s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			},
+			msg: types.MsgSetBridgeAddressRequest{
+				Admin:         admin.String(),
+				VaultAddress:  types.GetVaultAddress("missing").String(),
+				BridgeAddress: bridge.String(),
+			},
+			expectedErrSubstrs: []string{"vault not found"},
+		},
+		{
+			name:  "invalid vault address (not a vault account)",
+			setup: base,
+			msg: types.MsgSetBridgeAddressRequest{
+				Admin:         admin.String(),
+				VaultAddress:  markerAddr.String(),
+				BridgeAddress: bridge.String(),
+			},
+			expectedErrSubstrs: []string{"failed to get vault", "is not a vault account"},
+		},
+		{
+			name:  "unauthorized admin",
+			setup: base,
+			msg: types.MsgSetBridgeAddressRequest{
+				Admin:         other.String(),
+				VaultAddress:  vaultAddr.String(),
+				BridgeAddress: bridge.String(),
+			},
+			expectedErrSubstrs: []string{"unauthorized", "is not the vault admin"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_ToggleBridge() {
+	type postCheckArgs struct {
+		VaultAddress    sdk.AccAddress
+		ExpectedEnabled bool
+	}
+
+	testDef := msgServerTestDef[types.MsgToggleBridgeRequest, types.MsgToggleBridgeResponse, postCheckArgs]{
+		endpointName: "ToggleBridge",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).ToggleBridge,
+		postCheck: func(msg *types.MsgToggleBridgeRequest, args postCheckArgs) {
+			v, err := s.k.GetVault(s.ctx, args.VaultAddress)
+			s.Require().NoError(err, "post-check: should load vault for verification")
+			s.Assert().Equal(args.ExpectedEnabled, v.BridgeEnabled, "post-check: expected BridgeEnabled to match")
+		},
+	}
+
+	underlying := "under"
+	share := "vaultshares"
+	admin := s.adminAddr
+	vaultAddr := types.GetVaultAddress(share)
+
+	setup := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      share,
+			UnderlyingAsset: underlying,
+		})
+		s.Require().NoError(err, "setup: expected vault creation to succeed")
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	tc := msgServerTestCase[types.MsgToggleBridgeRequest, postCheckArgs]{
+		name:  "happy path - enable bridge",
+		setup: setup,
+		msg: types.MsgToggleBridgeRequest{
+			Admin:        admin.String(),
+			VaultAddress: vaultAddr.String(),
+			Enabled:      true,
+		},
+		postCheckArgs: postCheckArgs{
+			VaultAddress:    vaultAddr,
+			ExpectedEnabled: true,
+		},
+		expectedEvents: sdk.Events{
+			sdk.NewEvent("vault.v1.EventBridgeToggled",
+				sdk.NewAttribute("admin", admin.String()),
+				sdk.NewAttribute("enabled", "true"),
+				sdk.NewAttribute("vault_address", vaultAddr.String()),
+			),
+		},
+	}
+
+	testDef.expectedResponse = &types.MsgToggleBridgeResponse{}
+	runMsgServerTestCase(s, testDef, tc)
+}
+
+func (s *TestSuite) TestMsgServer_ToggleBridge_Failures() {
+	testDef := msgServerTestDef[types.MsgToggleBridgeRequest, types.MsgToggleBridgeResponse, any]{
+		endpointName: "ToggleBridge",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).ToggleBridge,
+		postCheck:    nil,
+	}
+
+	underlying := "under"
+	share := "vaultshares"
+	admin := s.adminAddr
+	other := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+	vaultAddr := types.GetVaultAddress(share)
+	markerAddr := markertypes.MustGetMarkerAddress(share)
+
+	base := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      share,
+			UnderlyingAsset: underlying,
+		})
+		s.Require().NoError(err, "base: expected vault creation to succeed")
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	tests := []msgServerTestCase[types.MsgToggleBridgeRequest, any]{
+		{
+			name: "vault not found",
+			setup: func() {
+				s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			},
+			msg: types.MsgToggleBridgeRequest{
+				Admin:        admin.String(),
+				VaultAddress: types.GetVaultAddress("missing").String(),
+				Enabled:      true,
+			},
+			expectedErrSubstrs: []string{"not found"},
+		},
+		{
+			name:  "invalid vault address (not a vault account)",
+			setup: base,
+			msg: types.MsgToggleBridgeRequest{
+				Admin:        admin.String(),
+				VaultAddress: markerAddr.String(),
+				Enabled:      true,
+			},
+			expectedErrSubstrs: []string{"failed to get vault", "is not a vault account"},
+		},
+		{
+			name:  "unauthorized admin",
+			setup: base,
+			msg: types.MsgToggleBridgeRequest{
+				Admin:        other.String(),
+				VaultAddress: vaultAddr.String(),
+				Enabled:      true,
+			},
+			expectedErrSubstrs: []string{"unauthorized", "is not the vault admin"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
 // msgServerTestDef defines the configuration for testing a specific MsgServer endpoint.
 // Req is the request message type.
 // Resp is the expected response message type.

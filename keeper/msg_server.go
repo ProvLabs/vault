@@ -514,6 +514,12 @@ func (k msgServer) SetBridgeAddress(goCtx context.Context, msg *types.MsgSetBrid
 		return nil, fmt.Errorf("failed to set vault account: %w", err)
 	}
 
+	if err := ctx.EventManager().EmitTypedEvent(
+		types.NewEventBridgeAddressSet(vaultAddr.String(), msg.Admin, msg.BridgeAddress),
+	); err != nil {
+		return nil, fmt.Errorf("failed to emit EventBridgeAddressSet: %w", err)
+	}
+
 	return &types.MsgSetBridgeAddressResponse{}, nil
 }
 
@@ -536,6 +542,12 @@ func (k msgServer) ToggleBridge(goCtx context.Context, msg *types.MsgToggleBridg
 	vault.BridgeEnabled = msg.Enabled
 	if err := k.SetVaultAccount(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to set vault account: %w", err)
+	}
+
+	if err := ctx.EventManager().EmitTypedEvent(
+		types.NewEventBridgeToggled(vaultAddr.String(), msg.Admin, msg.Enabled),
+	); err != nil {
+		return nil, fmt.Errorf("failed to emit EventBridgeToggled: %w", err)
 	}
 
 	return &types.MsgToggleBridgeResponse{}, nil
@@ -583,6 +595,12 @@ func (k msgServer) BridgeMintShares(goCtx context.Context, msg *types.MsgBridgeM
 		return nil, fmt.Errorf("failed to transfer minted shares to bridge: %w", err)
 	}
 
+	if err := ctx.EventManager().EmitTypedEvent(
+		types.NewEventBridgeMintShares(vaultAddr.String(), bridgeAddr.String(), msg.Shares),
+	); err != nil {
+		return nil, fmt.Errorf("failed to emit EventBridgeMintShares: %w", err)
+	}
+
 	return &types.MsgBridgeMintSharesResponse{}, nil
 }
 
@@ -618,8 +636,14 @@ func (k msgServer) BridgeBurnShares(goCtx context.Context, msg *types.MsgBridgeB
 		return nil, fmt.Errorf("failed to transfer shares from bridge to vault: %w", err)
 	}
 
-	if err := k.MarkerKeeper.BurnCoin(ctx, bridgeAddr, msg.Shares); err != nil {
-		return nil, fmt.Errorf("failed to burn shares from bridge: %w", err)
+	if err := k.MarkerKeeper.BurnCoin(ctx, vaultAddr, msg.Shares); err != nil {
+		return nil, fmt.Errorf("failed to burn shares from marker: %w", err)
+	}
+
+	if err := ctx.EventManager().EmitTypedEvent(
+		types.NewEventBridgeBurnShares(vaultAddr.String(), bridgeAddr.String(), msg.Shares),
+	); err != nil {
+		return nil, fmt.Errorf("failed to emit EventBridgeBurnShares: %w", err)
 	}
 
 	return &types.MsgBridgeBurnSharesResponse{}, nil

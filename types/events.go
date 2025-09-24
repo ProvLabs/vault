@@ -200,3 +200,39 @@ func NewEventVaultUnpaused(vaultAddress, admin string, totalVaultValue sdk.Coin)
 		TotalVaultValue: totalVaultValue,
 	}
 }
+
+// NewEventBridgeAddressSet creates a new EventBridgeAddressSet event.
+func NewEventBridgeAddressSet(vaultAddress, admin, bridgeAddress string) *EventBridgeAddressSet {
+	return &EventBridgeAddressSet{
+		VaultAddress:  vaultAddress,
+		Admin:         admin,
+		BridgeAddress: bridgeAddress,
+	}
+}
+
+// NewEventBridgeToggled creates a new EventBridgeToggled event.
+func NewEventBridgeToggled(vaultAddress, admin string, enabled bool) *EventBridgeToggled {
+	return &EventBridgeToggled{
+		VaultAddress: vaultAddress,
+		Admin:        admin,
+		Enabled:      enabled,
+	}
+}
+
+// NewEventBridgeMintShares creates a new EventBridgeMintShares event.
+func NewEventBridgeMintShares(vaultAddress, bridge string, shares sdk.Coin) *EventBridgeMintShares {
+	return &EventBridgeMintShares{
+		VaultAddress: vaultAddress,
+		Bridge:       bridge,
+		Shares:       shares,
+	}
+}
+
+// NewEventBridgeBurnShares creates a new EventBridgeBurnShares event.
+func NewEventBridgeBurnShares(vaultAddress, bridge string, shares sdk.Coin) *EventBridgeBurnShares {
+	return &EventBridgeBurnShares{
+		VaultAddress: vaultAddress,
+		Bridge:       bridge,
+		Shares:       shares,
+	}
+}

@@ -614,11 +614,6 @@ func (k msgServer) BridgeBurnShares(goCtx context.Context, msg *types.MsgBridgeB
 		return nil, fmt.Errorf("burn amount must be positive")
 	}
 
-	currentSupply := k.BankKeeper.GetSupply(ctx, vault.ShareDenom)
-	if msg.Shares.Amount.GT(currentSupply.Amount) {
-		return nil, fmt.Errorf("burn exceeds current supply: requested %s available %s", msg.Shares.Amount.String(), currentSupply.Amount.String())
-	}
-
 	if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, vaultAddr), bridgeAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(msg.Shares)); err != nil {
 		return nil, fmt.Errorf("failed to transfer shares from bridge to vault: %w", err)
 	}

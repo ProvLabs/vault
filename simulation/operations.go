@@ -37,20 +37,20 @@ const (
 
 var DefaultWeights = map[string]int{
 	OpWeightMsgCreateVault:           5,
-	OpWeightMsgSwapIn:                19,
-	OpWeightMsgSwapOut:               10,
+	OpWeightMsgSwapIn:                30,
+	OpWeightMsgSwapOut:               15,
 	OpWeightMsgUpdateInterestRate:    8,
 	OpWeightMsgUpdateMinInterestRate: 3,
 	OpWeightMsgUpdateMaxInterestRate: 3,
 	OpWeightMsgToggleSwapIn:          7,
 	OpWeightMsgToggleSwapOut:         7,
-	OpWeightMsgDepositInterest:       5,
+	OpWeightMsgDepositInterest:       4,
 	OpWeightMsgWithdrawInterest:      4,
 	OpWeightMsgDepositPrincipal:      4,
 	OpWeightMsgWithdrawPrincipal:     4,
-	OpWeightMsgExpediteSwap:          3,
-	OpWeightMsgPauseVault:            10,
-	OpWeightMsgUnpauseVault:          10,
+	OpWeightMsgExpediteSwap:          2,
+	OpWeightMsgPauseVault:            2,
+	OpWeightMsgUnpauseVault:          2,
 }
 
 func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simulation.WeightedOperations {

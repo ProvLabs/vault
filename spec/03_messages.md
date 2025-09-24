@@ -5,6 +5,7 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 
 ---
 <!-- TOC -->
+- [Endpoint Gating Matrix](#endpoint-gating-matrix)
 - [CreateVault](#createvault)
 - [SwapIn](#swapin)
 - [SwapOut](#swapout)
@@ -22,6 +23,32 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 - [UnpauseVault](#unpausevault)
 
 ---
+
+## Endpoint Gating Matrix
+
+| Endpoint                 | Admin required | Works when UNPAUSED | Works when PAUSED | Other gates / notes                                                                       |
+| ------------------------ | -------------- | ------------------: | ----------------: | ----------------------------------------------------------------------------------------- |
+| `CreateVault`            | No             |                   ✅ |                 ✅ | Creates new vault + marker; pause state irrelevant.                                       |
+| `SwapIn`                 | No             |                   ✅ |                 ❌ | Requires `SwapInEnabled`, accepted denom, reconcilable interest.                          |
+| `SwapOut`                | No             |                   ✅ |                 ❌ | Requires `SwapOutEnabled`, share denom match, payout restrictions pass, enqueues pending. |
+| `UpdateMinInterestRate`  | Yes            |                   ✅ |                 ❌ | Validates min/max; uses `SetMinInterestRate`.                                             |
+| `UpdateMaxInterestRate`  | Yes            |                   ✅ |                 ❌ | Validates min/max; uses `SetMaxInterestRate`.                                             |
+| `UpdateInterestRate`     | Yes            |                   ✅ |                 ❌ | Validates bounds, reconciles if current≠0, updates enable/disable flows.                  |
+| `ToggleSwapIn`           | Yes            |                   ✅ |                 ❌ | Just flips flag via keeper; msg layer blocks if paused.                                   |
+| `ToggleSwapOut`          | Yes            |                   ✅ |                 ❌ | Same as above.                                                                            |
+| `DepositInterestFunds`   | Yes            |                   ✅ |                 ❌ | Underlying denom only; reconciles interest after deposit.                                 |
+| `WithdrawInterestFunds`  | Yes            |                   ✅ |                 ❌ | Underlying denom only; reconciles before withdrawal.                                      |
+| `DepositPrincipalFunds`  | Yes            |                   ❌ |                 ✅ | Explicitly requires paused; reconciles first.                                             |
+| `WithdrawPrincipalFunds` | Yes            |                   ❌ |                 ✅ | Explicitly requires paused; reconciles first.                                             |
+| `ExpeditePendingSwapOut` | Yes            |                   ✅ |                 ✅ | No pause check; admin-gated expedite of an existing request.                              |
+| `PauseVault`             | Yes            |                   ✅ |                 ❌ | Only if not already paused; reconciles + snapshots `PausedBalance`.                       |
+| `UnpauseVault`           | Yes            |                   ❌ |                 ✅ | Only if paused; clears `PausedBalance`.                                                   |
+
+**Notes**
+- **SwapOut is asynchronous**: the tx enqueues a request and returns a `request_id`. Completion or failure is signaled later by events in `EndBlocker`. See the Events doc for `EventSwapOutRequested`, `EventSwapOutCompleted`, and `EventSwapOutRefunded`.
+- **Principal adjustments require pause** to prevent supply/valuation drift during user flows.
+- Many admin actions **reconcile interest** before/after state changes to keep TVV and share ratios consistent.
+
 
 ## CreateVault
 

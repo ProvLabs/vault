@@ -26,7 +26,9 @@ Each vault is an `x/auth` account implementing `VaultAccountI`. The canonical re
 
 - Admin address, share denom, underlying asset, optional **payment denom** (must differ from underlying)  
 - Interest configuration: `CurrentInterestRate`, `DesiredInterestRate`, optional `MinInterestRate`/`MaxInterestRate` bounds  
-- Swap toggles, `WithdrawalDelaySeconds`, pause flags/reason and `PausedBalance` snapshot
+- Swap toggles, `WithdrawalDelaySeconds`, pause flags/reason and `PausedBalance` snapshot  
+- **Total supply-of-record:** `total_shares` (authoritative across chains; includes locally and externally held shares)  
+- **Bridging controls:** `bridge_address` (the sole authorized external address) and `bridge_enabled` (feature gate)
 
 `VaultAccount` enforces invariants (e.g., payment denom cannot equal underlying, rate bounds, etc.) and provides helpers like `AcceptedDenoms()` and `ValidateAcceptedDenom`. :contentReference[oaicite:1]{index=1}
 
@@ -36,7 +38,7 @@ Each vault is an `x/auth` account implementing `VaultAccountI`. The canonical re
 
 ## Collections (x/vault)
 
-The module uses typed collections with fixed **prefix IDs** for clarity and upgrade stability. :contentReference[oaicite:2]{index=2}
+The module uses typed collections with fixed **prefix IDs** for clarity and upgrade stability. Bridging introduces no new collections; capacity is computed at runtime from local marker/bank supply vs `total_shares`. :contentReference[oaicite:2]{index=2}
 
 ### Vault Lookup (prefix 0)
 
@@ -44,7 +46,7 @@ A compact lookup keyed by vault address. Used to enumerate vaults and cache seri
 
 - **Prefix:** `VaultsKeyPrefix` (0)  
 - **Key:** `sdk.AccAddress` (vault address)  
-- **Value:** `[]byte` (serialized `VaultAccount`)  
+- **Value:** `[]byte` (serialized `VaultAccount`, including `total_shares`, `bridge_address`, `bridge_enabled`)  
 :contentReference[oaicite:3]{index=3}
 
 ### Payout Verification Set (prefix 1)
@@ -110,6 +112,7 @@ Given a **share denom**, the corresponding vault account address is derived dete
 
 ## Genesis Notes
 
-The module defines a minimal `GenesisState` with validation and relies on import/export logic to include **vault accounts** (from `x/auth`) and active **queue entries** (timeouts and pending swap-outs). There are **no module Params** in the vault genesis. :contentReference[oaicite:12]{index=12} :contentReference[oaicite:13]{index=13}
+The module defines a minimal `GenesisState` with validation and relies on import/export logic to include **vault accounts** (from `x/auth`) and active **queue entries** (timeouts and pending swap-outs). There are **no module Params** in the vault genesis.  
+Genesis must preserve `total_shares`, `bridge_address`, and `bridge_enabled`, and validate that local marker supply does not exceed `total_shares`. :contentReference[oaicite:12]{index=12} :contentReference[oaicite:13]{index=13}
 
 ---

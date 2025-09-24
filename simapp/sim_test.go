@@ -368,7 +368,7 @@ func TestFullAppSimulation(t *testing.T) {
 }
 
 func TestSimple(t *testing.T) {
-	simcli.FlagEnabledValue = true
+	//simcli.FlagEnabledValue = true
 	config, db, dir, logger, skip, err := setupSimulation("leveldb-app-sim", "Simulation")
 	if skip {
 		t.Skip("skipping provlabs vault application simulation")
@@ -411,7 +411,7 @@ func TestSimple(t *testing.T) {
 
 func TestAppStateDeterminism(t *testing.T) {
 	// uncomment these to run in ide without flags.
-	simcli.FlagEnabledValue = true
+	//simcli.FlagEnabledValue = true
 	//simcli.FlagBlockSizeValue = 100
 	//simcli.FlagNumBlocksValue = 50
 

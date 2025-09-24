@@ -253,11 +253,3 @@ message EventVaultUnpaused {
   // total_vault_value is the new total value of the vault's assets at the time of unpausing.
   cosmos.base.v1beta1.Coin total_vault_value = 3 [(gogoproto.nullable) = false];
 }
-
-// EventVaultAutoPaused is emitted when a vault is automatically paused due to a critical error.
-message EventVaultAutoPaused {
-  // vault_address is the address of the vault that was paused.
-  string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // reason is the critical error message that triggered the automatic pause.
-  string reason = 2;
-}

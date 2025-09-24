@@ -370,7 +370,7 @@ func (k Keeper) ValidateInterestRateLimits(minRateStr, maxRateStr string) error 
 }
 
 // autoPauseVault sets a vault's state to paused, records the reason, persists it to state,
-// and emits an EventVaultAutoPaused. This function is intended to be called in response to a
+// and emits an EventVaultPaused. This function is intended to be called in response to a
 // critical, unrecoverable error for a specific vault. The provided reason should be a stable,
 // hard-coded string suitable for persistence and later auditing.
 func (k *Keeper) autoPauseVault(ctx context.Context, vault *types.VaultAccount, reason string) {
@@ -385,7 +385,13 @@ func (k *Keeper) autoPauseVault(ctx context.Context, vault *types.VaultAccount, 
 	vault.Paused = true
 	vault.PausedReason = reason
 
+	tvv, err := k.GetTVVInUnderlyingAsset(sdkCtx, *vault)
+	if err != nil {
+		sdkCtx.Logger().Error("Failed to get TVV in underlying asset", "vault_address", vault.GetAddress().String(), "error", err)
+	}
+
+	vault.PausedBalance = sdk.Coin{Denom: vault.UnderlyingAsset, Amount: tvv}
 	k.AuthKeeper.SetAccount(ctx, vault)
 
-	k.emitEvent(sdkCtx, types.NewEventVaultAutoPaused(vault.GetAddress().String(), reason))
+	k.emitEvent(sdkCtx, types.NewEventVaultPaused(vault.GetAddress().String(), vault.GetAddress().String(), reason, vault.PausedBalance))
 }

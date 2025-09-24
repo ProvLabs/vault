@@ -1,4 +1,4 @@
-# Vault Module
+ Vault Module
 
 A Provenance Blockchain module for managing vaults.
 
@@ -16,6 +16,7 @@ A Provenance Blockchain module for managing vaults.
     - [Helper Scripts](#helper-scripts)
   - [Protobuf](#protobuf)
     - [Generating Protobuf Files](#generating-protobuf-files)
+  - [Specifications](#specifications)
 
 ## Prerequisites
 
@@ -116,3 +117,14 @@ To regenerate the Go code from the `.proto` files, run:
 ```bash
 make proto-all
 ```
+
+## Specifications
+
+The `spec/` directory contains module documentation:
+
+- [Concepts & Overview](spec/01_concepts.md) — what a vault is, share/asset model, payment denom behavior, module responsibilities.
+- [State](spec/02_state.md) — canonical vault accounts, queues/collections, addressing, genesis notes.
+- [Msgs](spec/03_messages.md) — tx endpoints, endpoint gating matrix, flows and validation.
+- [Events](spec/04_events.md) — event catalog and operational guidance (incl. swap-out success/refund signaling).
+- [Queries](spec/05_queries.md) — gRPC/REST query endpoints, request/response shapes, usage notes.
+- [Begin/End Blockers](spec/06_blocker.md) — ABCI hooks for interest rotation and pending swap-out processing. *(WIP if empty)*

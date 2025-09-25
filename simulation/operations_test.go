@@ -353,6 +353,19 @@ func (s *VaultSimTestSuite) TestSimulateMsgBridgeMintShares() {
 	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying", "underlyingshare", admin, s.accs)
 	s.Require().NoError(err, "CreateVault")
 
+	vault, err := s.app.VaultKeeper.GetVault(s.ctx, markertypes.MustGetMarkerAddress("underlyingshare"))
+	s.Require().NoError(err, "GetVault")
+	principalAddress := vault.PrincipalMarkerAddress()
+
+	// Mint some shares to create an initial supply
+	initialShares := sdk.NewInt64Coin("underlyingshare", 1000)
+	err = s.app.MarkerKeeper.MintCoin(s.ctx, principalAddress, initialShares)
+	s.Require().NoError(err, "MintCoin")
+
+	// Burn some shares to create capacity for the bridge to mint
+	err = s.app.MarkerKeeper.BurnCoin(s.ctx, principalAddress, sdk.NewInt64Coin("underlyingshare", 500))
+	s.Require().NoError(err, "BurnCoin")
+
 	err = simulation.SetVaultBridge(s.ctx, s.app.VaultKeeper, "underlyingshare", bridge.Address, true)
 	s.Require().NoError(err, "SetVaultBridge")
 

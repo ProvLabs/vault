@@ -113,11 +113,7 @@ func DepositPrincipalFunds(ctx sdk.Context, vk *keeper.Keeper, shareDenom string
 
 // SetVaultBridge sets the bridge address and enabled flag for a vault.
 func SetVaultBridge(ctx sdk.Context, vk *keeper.Keeper, shareDenom string, bridgeAddr sdk.AccAddress, enabled bool) error {
-	marker, err := vk.MarkerKeeper.GetMarkerByDenom(ctx, shareDenom)
-	if err != nil {
-		return err
-	}
-	vaultAddr := marker.GetAddress()
+	vaultAddr := types.GetVaultAddress(shareDenom)
 
 	vault, err := vk.GetVault(ctx, vaultAddr)
 	if err != nil {

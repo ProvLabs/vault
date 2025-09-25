@@ -49,7 +49,7 @@ func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*type
 		return nil, fmt.Errorf("failed to create vault account: %w", err)
 	}
 
-	if _, err := k.createVaultMarker(ctx, vault.GetAddress(), vault.ShareDenom, vault.UnderlyingAsset); err != nil {
+	if _, err := k.createVaultMarker(ctx, vault.GetAddress(), vault.TotalShares.Denom, vault.UnderlyingAsset); err != nil {
 		return nil, fmt.Errorf("failed to create vault marker: %w", err)
 	}
 
@@ -258,8 +258,8 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 		return 0, fmt.Errorf("swaps are not enabled for vault %s", vaultAddr.String())
 	}
 
-	if shares.Denom != vault.ShareDenom {
-		return 0, fmt.Errorf("swap out denom must be share denom %v : %v", shares.Denom, vault.ShareDenom)
+	if shares.Denom != vault.TotalShares.Denom {
+		return 0, fmt.Errorf("swap out denom must be share denom %v : %v", shares.Denom, vault.TotalShares.Denom)
 	}
 
 	if redeemDenom == "" {

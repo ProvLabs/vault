@@ -24,7 +24,6 @@ func TestSafeEnqueueVerification_UpdatesVaultAndQueues(t *testing.T) {
 	v := &types.VaultAccount{
 		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
 		Admin:               admin.String(),
-		ShareDenom:          share,
 		TotalShares:         sdk.NewInt64Coin(share, 0),
 		UnderlyingAsset:     "under",
 		CurrentInterestRate: types.ZeroInterestRate,
@@ -78,7 +77,6 @@ func TestSafeEnqueueTimeout_UpdatesVaultAndQueues(t *testing.T) {
 	v := &types.VaultAccount{
 		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
 		Admin:               admin.String(),
-		ShareDenom:          share,
 		TotalShares:         sdk.NewInt64Coin(share, 0),
 		UnderlyingAsset:     "under",
 		CurrentInterestRate: types.ZeroInterestRate,

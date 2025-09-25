@@ -45,7 +45,7 @@ func (s *TestSuite) TestCreateVault_Success() {
 	vault, err := s.k.CreateVault(s.ctx, attrs)
 	s.Require().NoError(err)
 	s.Require().Equal(attrs.admin, vault.Admin)
-	s.Require().Equal(attrs.share, vault.ShareDenom)
+	s.Require().Equal(attrs.share, vault.TotalShares.Denom)
 	s.Require().Equal(attrs.underlying, vault.UnderlyingAsset)
 
 	addr := types.GetVaultAddress(share)

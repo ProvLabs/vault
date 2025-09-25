@@ -42,10 +42,6 @@ type VaultAccountI interface {
 	// GetTotalShares returns the total shares issued by the vault.
 	GetTotalShares() sdk.Coin
 
-	// GetShareDenom returns the share token denom that the vault mints/burns to
-	// represent proportional ownership in the vault's underlying assets.
-	GetShareDenom() string
-
 	// GetUnderlyingAsset returns the denom of the asset the vault actually holds.
 	GetUnderlyingAsset() string
 
@@ -72,7 +68,6 @@ func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyi
 	return &VaultAccount{
 		BaseAccount:            baseAcc,
 		Admin:                  admin,
-		ShareDenom:             shareDenom,
 		TotalShares:            sdk.Coin{Denom: shareDenom, Amount: sdkmath.ZeroInt()},
 		UnderlyingAsset:        underlyingAsset,
 		PaymentDenom:           paymentDenom,
@@ -106,11 +101,8 @@ func (va VaultAccount) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(va.Admin); err != nil {
 		return fmt.Errorf("invalid admin address: %w", err)
 	}
-	if err := sdk.ValidateDenom(va.ShareDenom); err != nil {
+	if err := sdk.ValidateDenom(va.TotalShares.Denom); err != nil {
 		return fmt.Errorf("invalid share denom: %w", err)
-	}
-	if va.TotalShares.Denom != va.ShareDenom {
-		return fmt.Errorf("total shares denom (%s) must match share denom (%s)", va.TotalShares.Denom, va.ShareDenom)
 	}
 	if va.TotalShares.IsNegative() {
 		return fmt.Errorf("total shares cannot be negative: %s", va.TotalShares)
@@ -261,5 +253,5 @@ func (v *VaultAccount) ValidateAcceptedCoin(c sdk.Coin) error {
 // PrincipalMarkerAddress returns the share-denom marker address that holds the
 // vault’s principal (i.e., the marker account backing the vault’s shares).
 func (v VaultAccount) PrincipalMarkerAddress() sdk.AccAddress {
-	return markertypes.MustGetMarkerAddress(v.ShareDenom)
+	return markertypes.MustGetMarkerAddress(v.TotalShares.Denom)
 }

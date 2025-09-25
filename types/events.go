@@ -22,7 +22,7 @@ func NewEventVaultCreated(vault *VaultAccount) *EventVaultCreated {
 	return &EventVaultCreated{
 		VaultAddress:    vault.GetAddress().String(),
 		Admin:           vault.Admin,
-		ShareDenom:      vault.ShareDenom,
+		ShareDenom:      vault.TotalShares.Denom,
 		UnderlyingAsset: vault.UnderlyingAsset,
 	}
 }

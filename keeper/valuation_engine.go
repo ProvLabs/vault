@@ -83,7 +83,7 @@ func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccoun
 	balances := k.BankKeeper.GetAllBalances(ctx, vault.PrincipalMarkerAddress())
 	total := math.ZeroInt()
 	for _, balance := range balances {
-		if balance.Denom == vault.ShareDenom {
+		if balance.Denom == vault.TotalShares.Denom {
 			continue
 		}
 		val, err := k.ToUnderlyingAssetAmount(ctx, vault, balance)
@@ -142,7 +142,7 @@ func (k Keeper) ConvertDepositToSharesInUnderlyingAsset(ctx sdk.Context, vault t
 		return sdk.Coin{}, err
 	}
 	amountNumerator := in.Amount.Mul(priceNum)
-	return utils.CalculateSharesProRataFraction(amountNumerator, priceDen, tvv, vault.TotalShares.Amount, vault.ShareDenom)
+	return utils.CalculateSharesProRataFraction(amountNumerator, priceDen, tvv, vault.TotalShares.Amount, vault.TotalShares.Denom)
 }
 
 // ConvertSharesToRedeemCoin converts a share amount into a payout coin in redeemDenom

@@ -568,23 +568,20 @@ func (k msgServer) BridgeMintShares(goCtx context.Context, msg *types.MsgBridgeM
 	if vault == nil {
 		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
 	}
-	if vault.Paused {
-		return nil, fmt.Errorf("vault %s is paused", vaultAddr.String())
-	}
 	if !vault.BridgeEnabled {
 		return nil, fmt.Errorf("bridge is disabled for vault %s", msg.VaultAddress)
 	}
 	if vault.BridgeAddress != bridgeAddr.String() {
 		return nil, fmt.Errorf("unauthorized bridge: expected %s got %s", vault.BridgeAddress, bridgeAddr.String())
 	}
-	if msg.Shares.Denom != vault.ShareDenom {
-		return nil, fmt.Errorf("invalid shares denom: expected %s got %s", vault.ShareDenom, msg.Shares.Denom)
+	if msg.Shares.Denom != vault.TotalShares.Denom {
+		return nil, fmt.Errorf("invalid shares denom: expected %s got %s", vault.TotalShares.Denom, msg.Shares.Denom)
 	}
 	if !msg.Shares.Amount.IsPositive() {
 		return nil, fmt.Errorf("mint amount must be positive")
 	}
 
-	currentSupply := k.BankKeeper.GetSupply(ctx, vault.ShareDenom)
+	currentSupply := k.BankKeeper.GetSupply(ctx, vault.TotalShares.Denom)
 	available := vault.TotalShares.Sub(currentSupply)
 	if msg.Shares.Amount.GT(available.Amount) {
 		return nil, fmt.Errorf("mint exceeds capacity: requested %s available %s", msg.Shares.Amount.String(), available.Amount.String())
@@ -622,17 +619,14 @@ func (k msgServer) BridgeBurnShares(goCtx context.Context, msg *types.MsgBridgeB
 	if vault == nil {
 		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
 	}
-	if vault.Paused {
-		return nil, fmt.Errorf("vault %s is paused", vaultAddr.String())
-	}
 	if !vault.BridgeEnabled {
 		return nil, fmt.Errorf("bridge is disabled for vault %s", msg.VaultAddress)
 	}
 	if vault.BridgeAddress != bridgeAddr.String() {
 		return nil, fmt.Errorf("unauthorized bridge: expected %s got %s", vault.BridgeAddress, bridgeAddr.String())
 	}
-	if msg.Shares.Denom != vault.ShareDenom {
-		return nil, fmt.Errorf("invalid shares denom: expected %s got %s", vault.ShareDenom, msg.Shares.Denom)
+	if msg.Shares.Denom != vault.TotalShares.Denom {
+		return nil, fmt.Errorf("invalid shares denom: expected %s got %s", vault.TotalShares.Denom, msg.Shares.Denom)
 	}
 	if !msg.Shares.Amount.IsPositive() {
 		return nil, fmt.Errorf("burn amount must be positive")

@@ -71,7 +71,7 @@ func (k queryServer) Vault(goCtx context.Context, req *types.QueryVaultRequest) 
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	marker, err := k.MarkerKeeper.GetMarkerByDenom(ctx, vault.ShareDenom)
+	marker, err := k.MarkerKeeper.GetMarkerByDenom(ctx, vault.TotalShares.Denom)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -139,7 +139,7 @@ func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstim
 		priceDen,
 		estimatedTotalAssets,
 		totalShares,
-		vault.ShareDenom,
+		vault.TotalShares.Denom,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate shares: %w", err)

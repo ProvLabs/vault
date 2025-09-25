@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -70,6 +71,7 @@ func (s *TestSuite) TestMsgServer_CreateVault() {
 				vaultAcc.GetUnderlyingAsset(),
 				"expected vault underlying asset denom to match request",
 			)
+			s.Equal(vaultAcc.GetTotalShares(), sdk.NewCoin(postCheckArgs.ShareDenom, math.ZeroInt()), "expected vault total shares to be zero")
 		},
 	}
 
@@ -2741,6 +2743,616 @@ func (s *TestSuite) TestMsgServer_UnpauseVault_Failures() {
 				VaultAddress: vaultAddr.String(),
 			},
 			expectedErrSubstrs: []string{"is not paused"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_SetBridgeAddress() {
+	type postCheckArgs struct {
+		VaultAddress   sdk.AccAddress
+		ExpectedBridge string
+	}
+
+	testDef := msgServerTestDef[types.MsgSetBridgeAddressRequest, types.MsgSetBridgeAddressResponse, postCheckArgs]{
+		endpointName: "SetBridgeAddress",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).SetBridgeAddress,
+		postCheck: func(msg *types.MsgSetBridgeAddressRequest, args postCheckArgs) {
+			v, err := s.k.GetVault(s.ctx, args.VaultAddress)
+			s.Require().NoError(err, "post-check: should load vault for verification")
+			s.Assert().Equal(args.ExpectedBridge, v.BridgeAddress, "post-check: expected vault BridgeAddress to match")
+		},
+	}
+
+	underlying := "under"
+	share := "vaultshares"
+	admin := s.adminAddr
+	bridge := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+	vaultAddr := types.GetVaultAddress(share)
+
+	setup := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      share,
+			UnderlyingAsset: underlying,
+		})
+		s.Require().NoError(err, "setup: expected vault creation to succeed")
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	tc := msgServerTestCase[types.MsgSetBridgeAddressRequest, postCheckArgs]{
+		name:  "happy path",
+		setup: setup,
+		msg: types.MsgSetBridgeAddressRequest{
+			Admin:         admin.String(),
+			VaultAddress:  vaultAddr.String(),
+			BridgeAddress: bridge.String(),
+		},
+		postCheckArgs: postCheckArgs{
+			VaultAddress:   vaultAddr,
+			ExpectedBridge: bridge.String(),
+		},
+		expectedEvents: sdk.Events{
+			sdk.NewEvent("vault.v1.EventBridgeAddressSet",
+				sdk.NewAttribute("admin", admin.String()),
+				sdk.NewAttribute("bridge_address", bridge.String()),
+				sdk.NewAttribute("vault_address", vaultAddr.String()),
+			),
+		},
+	}
+
+	testDef.expectedResponse = &types.MsgSetBridgeAddressResponse{}
+	runMsgServerTestCase(s, testDef, tc)
+}
+
+func (s *TestSuite) TestMsgServer_SetBridgeAddress_Failures() {
+	testDef := msgServerTestDef[types.MsgSetBridgeAddressRequest, types.MsgSetBridgeAddressResponse, any]{
+		endpointName: "SetBridgeAddress",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).SetBridgeAddress,
+		postCheck:    nil,
+	}
+
+	underlying := "under"
+	share := "vaultshares"
+	admin := s.adminAddr
+	other := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+	bridge := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+	vaultAddr := types.GetVaultAddress(share)
+	markerAddr := markertypes.MustGetMarkerAddress(share)
+
+	base := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      share,
+			UnderlyingAsset: underlying,
+		})
+		s.Require().NoError(err, "base: expected vault creation to succeed")
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	tests := []msgServerTestCase[types.MsgSetBridgeAddressRequest, any]{
+		{
+			name: "vault not found",
+			setup: func() {
+				s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			},
+			msg: types.MsgSetBridgeAddressRequest{
+				Admin:         admin.String(),
+				VaultAddress:  types.GetVaultAddress("missing").String(),
+				BridgeAddress: bridge.String(),
+			},
+			expectedErrSubstrs: []string{"vault not found"},
+		},
+		{
+			name:  "invalid vault address (not a vault account)",
+			setup: base,
+			msg: types.MsgSetBridgeAddressRequest{
+				Admin:         admin.String(),
+				VaultAddress:  markerAddr.String(),
+				BridgeAddress: bridge.String(),
+			},
+			expectedErrSubstrs: []string{"failed to get vault", "is not a vault account"},
+		},
+		{
+			name:  "unauthorized admin",
+			setup: base,
+			msg: types.MsgSetBridgeAddressRequest{
+				Admin:         other.String(),
+				VaultAddress:  vaultAddr.String(),
+				BridgeAddress: bridge.String(),
+			},
+			expectedErrSubstrs: []string{"unauthorized", "is not the vault admin"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_ToggleBridge() {
+	type postCheckArgs struct {
+		VaultAddress    sdk.AccAddress
+		ExpectedEnabled bool
+	}
+
+	testDef := msgServerTestDef[types.MsgToggleBridgeRequest, types.MsgToggleBridgeResponse, postCheckArgs]{
+		endpointName: "ToggleBridge",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).ToggleBridge,
+		postCheck: func(msg *types.MsgToggleBridgeRequest, args postCheckArgs) {
+			v, err := s.k.GetVault(s.ctx, args.VaultAddress)
+			s.Require().NoError(err, "post-check: should load vault for verification")
+			s.Assert().Equal(args.ExpectedEnabled, v.BridgeEnabled, "post-check: expected BridgeEnabled to match")
+		},
+	}
+
+	underlying := "under"
+	share := "vaultshares"
+	admin := s.adminAddr
+	vaultAddr := types.GetVaultAddress(share)
+
+	setup := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      share,
+			UnderlyingAsset: underlying,
+		})
+		s.Require().NoError(err, "setup: expected vault creation to succeed")
+		vault, err := s.k.GetVault(s.ctx, vaultAddr)
+		s.Require().NoError(err, "setup: should load vault")
+		vault.BridgeAddress = s.adminAddr.String()
+		s.k.AuthKeeper.SetAccount(s.ctx, vault)
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+
+	}
+
+	tc := msgServerTestCase[types.MsgToggleBridgeRequest, postCheckArgs]{
+		name:  "happy path - enable bridge",
+		setup: setup,
+		msg: types.MsgToggleBridgeRequest{
+			Admin:        admin.String(),
+			VaultAddress: vaultAddr.String(),
+			Enabled:      true,
+		},
+		postCheckArgs: postCheckArgs{
+			VaultAddress:    vaultAddr,
+			ExpectedEnabled: true,
+		},
+		expectedEvents: sdk.Events{
+			sdk.NewEvent("vault.v1.EventBridgeToggled",
+				sdk.NewAttribute("admin", admin.String()),
+				sdk.NewAttribute("enabled", "true"),
+				sdk.NewAttribute("vault_address", vaultAddr.String()),
+			),
+		},
+	}
+
+	testDef.expectedResponse = &types.MsgToggleBridgeResponse{}
+	runMsgServerTestCase(s, testDef, tc)
+}
+
+func (s *TestSuite) TestMsgServer_ToggleBridge_Failures() {
+	testDef := msgServerTestDef[types.MsgToggleBridgeRequest, types.MsgToggleBridgeResponse, any]{
+		endpointName: "ToggleBridge",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).ToggleBridge,
+		postCheck:    nil,
+	}
+
+	underlying := "under"
+	share := "vaultshares"
+	admin := s.adminAddr
+	other := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+	vaultAddr := types.GetVaultAddress(share)
+	markerAddr := markertypes.MustGetMarkerAddress(share)
+
+	base := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      share,
+			UnderlyingAsset: underlying,
+		})
+		s.Require().NoError(err, "base: expected vault creation to succeed")
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	tests := []msgServerTestCase[types.MsgToggleBridgeRequest, any]{
+		{
+			name: "vault not found",
+			setup: func() {
+				s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			},
+			msg: types.MsgToggleBridgeRequest{
+				Admin:        admin.String(),
+				VaultAddress: types.GetVaultAddress("missing").String(),
+				Enabled:      true,
+			},
+			expectedErrSubstrs: []string{"not found"},
+		},
+		{
+			name:  "invalid vault address (not a vault account)",
+			setup: base,
+			msg: types.MsgToggleBridgeRequest{
+				Admin:        admin.String(),
+				VaultAddress: markerAddr.String(),
+				Enabled:      true,
+			},
+			expectedErrSubstrs: []string{"failed to get vault", "is not a vault account"},
+		},
+		{
+			name:  "unauthorized admin",
+			setup: base,
+			msg: types.MsgToggleBridgeRequest{
+				Admin:        other.String(),
+				VaultAddress: vaultAddr.String(),
+				Enabled:      true,
+			},
+			expectedErrSubstrs: []string{"unauthorized", "is not the vault admin"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_BridgeMintShares() {
+	type postCheckArgs struct {
+		BridgeAddress  sdk.AccAddress
+		VaultAddress   sdk.AccAddress
+		MintedShares   sdk.Coin
+		ShareDenom     string
+		ExpectedSupply math.Int
+	}
+
+	testDef := msgServerTestDef[types.MsgBridgeMintSharesRequest, types.MsgBridgeMintSharesResponse, postCheckArgs]{
+		endpointName: "BridgeMintShares",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).BridgeMintShares,
+		postCheck: func(msg *types.MsgBridgeMintSharesRequest, args postCheckArgs) {
+			supply := s.k.BankKeeper.GetSupply(s.ctx, args.ShareDenom)
+			s.Assert().Equal(args.ExpectedSupply.String(), supply.Amount.String(), "supply after bridge mint should equal minted amount")
+			bal := s.k.BankKeeper.GetBalance(s.ctx, args.BridgeAddress, args.ShareDenom)
+			s.Assert().Equal(args.MintedShares, bal, "bridge account balance should equal minted amount")
+		},
+	}
+
+	underlying := "under"
+	share := "vaultshares"
+	admin := s.adminAddr
+	bridge := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+	vaultAddr := types.GetVaultAddress(share)
+	minted := sdk.NewInt64Coin(share, 250_000_000)
+
+	setup := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1_000_000)), admin)
+		v, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      share,
+			UnderlyingAsset: underlying,
+		})
+		s.Require().NoError(err, "setup: expected vault creation to succeed")
+		v.BridgeEnabled = true
+		v.BridgeAddress = bridge.String()
+		v.TotalShares = sdk.NewCoin(share, math.NewInt(10_000_000_000))
+		s.k.AuthKeeper.SetAccount(s.ctx, v)
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	tc := msgServerTestCase[types.MsgBridgeMintSharesRequest, postCheckArgs]{
+		name:  "happy path",
+		setup: setup,
+		msg: types.MsgBridgeMintSharesRequest{
+			VaultAddress: vaultAddr.String(),
+			Bridge:       bridge.String(),
+			Shares:       minted,
+		},
+		postCheckArgs: postCheckArgs{
+			BridgeAddress:  bridge,
+			VaultAddress:   vaultAddr,
+			MintedShares:   minted,
+			ShareDenom:     share,
+			ExpectedSupply: minted.Amount,
+		},
+		expectedEvents: createBridgeMintSharesEventsExact(vaultAddr, bridge, share, minted),
+	}
+
+	testDef.expectedResponse = &types.MsgBridgeMintSharesResponse{}
+	runMsgServerTestCase(s, testDef, tc)
+}
+
+func (s *TestSuite) TestMsgServer_BridgeMintShares_SupplyAndBalances() {
+	type postCheckArgs struct {
+		VaultAddress  sdk.AccAddress
+		BridgeAddress sdk.AccAddress
+		Minted        sdk.Coin
+	}
+
+	testDef := msgServerTestDef[types.MsgBridgeMintSharesRequest, types.MsgBridgeMintSharesResponse, postCheckArgs]{
+		endpointName: "BridgeMintShares",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).BridgeMintShares,
+		postCheck: func(msg *types.MsgBridgeMintSharesRequest, args postCheckArgs) {
+			supply := s.k.BankKeeper.GetSupply(s.ctx, args.Minted.Denom)
+			s.Assert().True(supply.Amount.Equal(args.Minted.Amount), "supply check should equal minted amount")
+			b := s.k.BankKeeper.GetBalance(s.ctx, args.BridgeAddress, args.Minted.Denom)
+			s.Assert().Equal(args.Minted, b, "bridge balance check should equal minted amount")
+		},
+	}
+
+	underlying := "underx"
+	share := "vaultsharex"
+	admin := s.adminAddr
+	bridge := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+	vaultAddr := types.GetVaultAddress(share)
+	minted := sdk.NewInt64Coin(share, 1_000)
+
+	setup := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(10_000)), admin)
+		v, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      share,
+			UnderlyingAsset: underlying,
+		})
+		s.Require().NoError(err, "setup: expected vault creation success")
+		v.TotalShares = sdk.NewCoin(share, math.NewInt(9_999_999))
+		v.BridgeAddress = bridge.String()
+		v.BridgeEnabled = true
+		s.k.AuthKeeper.SetAccount(s.ctx, v)
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	tc := msgServerTestCase[types.MsgBridgeMintSharesRequest, postCheckArgs]{
+		name:  "supply and balance update",
+		setup: setup,
+		msg: types.MsgBridgeMintSharesRequest{
+			VaultAddress: vaultAddr.String(),
+			Bridge:       bridge.String(),
+			Shares:       minted,
+		},
+		postCheckArgs: postCheckArgs{
+			VaultAddress:  vaultAddr,
+			BridgeAddress: bridge,
+			Minted:        minted,
+		},
+		expectedEvents: createBridgeMintSharesEventsExact(vaultAddr, bridge, share, minted),
+	}
+
+	testDef.expectedResponse = &types.MsgBridgeMintSharesResponse{}
+	runMsgServerTestCase(s, testDef, tc)
+}
+
+func (s *TestSuite) TestMsgServer_BridgeMintShares_ErrorMessages() {
+	testDef := msgServerTestDef[types.MsgBridgeMintSharesRequest, types.MsgBridgeMintSharesResponse, any]{
+		endpointName: "BridgeMintShares",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).BridgeMintShares,
+		postCheck:    nil,
+	}
+
+	underlying := "erru"
+	share := "errshare"
+	admin := s.adminAddr
+	bridge := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+	vaultAddr := types.GetVaultAddress(share)
+
+	setup := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1_000_000)), admin)
+		v, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      share,
+			UnderlyingAsset: underlying,
+		})
+		s.Require().NoError(err, "setup: vault creation should succeed")
+		v.TotalShares = sdk.NewCoin(share, math.NewInt(100))
+		v.BridgeAddress = bridge.String()
+		v.BridgeEnabled = true
+		s.k.AuthKeeper.SetAccount(s.ctx, v)
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	tc := msgServerTestCase[types.MsgBridgeMintSharesRequest, any]{
+		name:  "capacity message content",
+		setup: setup,
+		msg: types.MsgBridgeMintSharesRequest{
+			VaultAddress: vaultAddr.String(),
+			Bridge:       bridge.String(),
+			Shares:       sdk.NewInt64Coin(share, 101),
+		},
+		expectedErrSubstrs: []string{
+			"mint exceeds capacity",
+			fmt.Sprintf("requested %d", 101),
+			fmt.Sprintf("available %d", 100),
+		},
+	}
+	runMsgServerTestCase(s, testDef, tc)
+}
+
+func (s *TestSuite) TestMsgServer_BridgeBurnShares() {
+	type postCheckArgs struct {
+		VaultAddr  sdk.AccAddress
+		BridgeAddr sdk.AccAddress
+		Shares     sdk.Coin
+	}
+
+	testDef := msgServerTestDef[types.MsgBridgeBurnSharesRequest, types.MsgBridgeBurnSharesResponse, postCheckArgs]{
+		endpointName: "BridgeBurnShares",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).BridgeBurnShares,
+		postCheck: func(msg *types.MsgBridgeBurnSharesRequest, args postCheckArgs) {
+			supply := s.simApp.BankKeeper.GetSupply(s.ctx, args.Shares.Denom)
+			s.Assert().Equal(int64(0), supply.Amount.Int64(), "expected total supply to be zero after burn")
+			s.assertBalance(args.BridgeAddr, args.Shares.Denom, sdkmath.ZeroInt())
+		},
+	}
+
+	underlying := "under"
+	share := "vaultshares"
+	admin := s.adminAddr
+	vaultAddr := types.GetVaultAddress(share)
+	markerAddr := markertypes.MustGetMarkerAddress(share)
+	bridgeAddr := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+	burn := sdk.NewInt64Coin(share, 100_000_000)
+
+	setup := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlying, 2_000_000), admin)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      share,
+			UnderlyingAsset: underlying,
+		})
+		s.Require().NoError(err, "expected vault creation to succeed")
+
+		v, err := s.k.GetVault(s.ctx, vaultAddr)
+		s.Require().NoError(err, "expected vault retrieval to succeed")
+		v.BridgeEnabled = true
+		v.BridgeAddress = bridgeAddr.String()
+		s.k.AuthKeeper.SetAccount(s.ctx, v)
+
+		err = s.k.MarkerKeeper.MintCoin(s.ctx, vaultAddr, burn)
+		s.Require().NoError(err, "expected marker mint to succeed")
+		err = s.k.MarkerKeeper.WithdrawCoins(s.ctx, vaultAddr, bridgeAddr, share, sdk.NewCoins(burn))
+		s.Require().NoError(err, "expected marker withdraw to bridge to succeed")
+
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	events := createSendCoinEvents(bridgeAddr.String(), markerAddr.String(), sdk.NewCoins(burn).String())
+	events = append(events, createMarkerBurn(vaultAddr, markerAddr, burn)...)
+	events = append(events, sdk.NewEvent("vault.v1.EventBridgeBurnShares",
+		sdk.NewAttribute("bridge", bridgeAddr.String()),
+		sdk.NewAttribute("shares", CoinToJSON(burn)),
+		sdk.NewAttribute("vault_address", vaultAddr.String()),
+	))
+
+	tc := msgServerTestCase[types.MsgBridgeBurnSharesRequest, postCheckArgs]{
+		name:  "happy path",
+		setup: setup,
+		msg: types.MsgBridgeBurnSharesRequest{
+			VaultAddress: vaultAddr.String(),
+			Bridge:       bridgeAddr.String(),
+			Shares:       burn,
+		},
+		postCheckArgs:  postCheckArgs{VaultAddr: vaultAddr, BridgeAddr: bridgeAddr, Shares: burn},
+		expectedEvents: events,
+	}
+
+	testDef.expectedResponse = &types.MsgBridgeBurnSharesResponse{}
+	runMsgServerTestCase(s, testDef, tc)
+}
+
+func (s *TestSuite) TestMsgServer_BridgeBurnShares_Failures() {
+	testDef := msgServerTestDef[types.MsgBridgeBurnSharesRequest, types.MsgBridgeBurnSharesResponse, any]{
+		endpointName: "BridgeBurnShares",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).BridgeBurnShares,
+		postCheck:    nil,
+	}
+
+	underlying := "under"
+	share := "vaultshares"
+	admin := s.adminAddr
+	vaultAddr := types.GetVaultAddress(share)
+	bridgeAddr := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+	otherBridge := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+	burn := sdk.NewInt64Coin(share, 100_000_000)
+
+	base := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlying, 2_000_000), admin)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      share,
+			UnderlyingAsset: underlying,
+		})
+		s.Require().NoError(err, "expected vault creation to succeed")
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	enabled := func() {
+		base()
+		v, err := s.k.GetVault(s.ctx, vaultAddr)
+		s.Require().NoError(err, "expected vault retrieval to succeed")
+		v.BridgeEnabled = true
+		v.BridgeAddress = bridgeAddr.String()
+		s.k.AuthKeeper.SetAccount(s.ctx, v)
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	enabledWithBridgeFunds := func() {
+		enabled()
+		err := s.k.MarkerKeeper.MintCoin(s.ctx, vaultAddr, burn)
+		s.Require().NoError(err, "expected marker mint to succeed")
+		err = s.k.MarkerKeeper.WithdrawCoins(s.ctx, vaultAddr, bridgeAddr, share, sdk.NewCoins(burn))
+		s.Require().NoError(err, "expected marker withdraw to bridge to succeed")
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	tests := []msgServerTestCase[types.MsgBridgeBurnSharesRequest, any]{
+		{
+			name: "vault not found",
+			msg: types.MsgBridgeBurnSharesRequest{
+				VaultAddress: types.GetVaultAddress("nosuch").String(),
+				Bridge:       bridgeAddr.String(),
+				Shares:       burn,
+			},
+			expectedErrSubstrs: []string{"vault not found"},
+		},
+		{
+			name:  "bridge disabled",
+			setup: base,
+			msg: types.MsgBridgeBurnSharesRequest{
+				VaultAddress: vaultAddr.String(),
+				Bridge:       bridgeAddr.String(),
+				Shares:       burn,
+			},
+			expectedErrSubstrs: []string{"bridge is disabled"},
+		},
+		{
+			name:  "unauthorized bridge",
+			setup: enabled,
+			msg: types.MsgBridgeBurnSharesRequest{
+				VaultAddress: vaultAddr.String(),
+				Bridge:       otherBridge.String(),
+				Shares:       burn,
+			},
+			expectedErrSubstrs: []string{"unauthorized bridge"},
+		},
+		{
+			name:  "invalid shares denom",
+			setup: enabledWithBridgeFunds,
+			msg: types.MsgBridgeBurnSharesRequest{
+				VaultAddress: vaultAddr.String(),
+				Bridge:       bridgeAddr.String(),
+				Shares:       sdk.NewInt64Coin("wrongdenom", 10),
+			},
+			expectedErrSubstrs: []string{"invalid shares denom"},
+		},
+		{
+			name:  "non-positive amount",
+			setup: enabledWithBridgeFunds,
+			msg: types.MsgBridgeBurnSharesRequest{
+				VaultAddress: vaultAddr.String(),
+				Bridge:       bridgeAddr.String(),
+				Shares:       sdk.NewInt64Coin(share, 0),
+			},
+			expectedErrSubstrs: []string{"burn amount must be positive"},
+		},
+		{
+			name:  "insufficient bridge balance",
+			setup: enabled,
+			msg: types.MsgBridgeBurnSharesRequest{
+				VaultAddress: vaultAddr.String(),
+				Bridge:       bridgeAddr.String(),
+				Shares:       burn,
+			},
+			expectedErrSubstrs: []string{"failed to transfer shares from bridge to vault", "insufficient funds"},
 		},
 	}
 

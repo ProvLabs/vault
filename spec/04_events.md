@@ -25,6 +25,11 @@ This document describes all events emitted by the `x/vault` module and how to us
 - [Admin Toggles](#admin-toggles)
   - [EventToggleSwapIn](#eventtoggleswapin)
   - [EventToggleSwapOut](#eventtoggleswapout)
+- [Bridge](#bridge)
+  - [EventBridgeAddressSet](#eventbridgeaddressset)
+  - [EventBridgeToggled](#eventbridgetoggled)
+  - [EventBridgeMintShares](#eventbridgemintshares)
+  - [EventBridgeBurnShares](#eventbridgeburnshares)
 
 ---
 
@@ -224,5 +229,50 @@ Emitted when **swap-out** is enabled/disabled.
 - `vault_address` — vault  
 - `admin` — actor  
 - `enabled` — boolean
+
+---
+
+## Bridge
+
+### EventBridgeAddressSet
+Emitted when the **bridge address** for a vault is configured or updated.
+
+**Fields**
+- `vault_address` — vault  
+- `admin` — actor  
+- `bridge_address` — external address authorized to mint/burn shares
+
+---
+
+### EventBridgeToggled
+Emitted when **bridge functionality** is enabled or disabled.
+
+**Fields**
+- `vault_address` — vault  
+- `admin` — actor  
+- `enabled` — boolean
+
+**Notes**
+- When disabled or the vault is **paused**, bridge mint/burn requests are rejected.
+
+---
+
+### EventBridgeMintShares
+Emitted when shares are **minted to the bridge** and transferred out.
+
+**Fields**
+- `vault_address` — vault  
+- `bridge` — bridge signer  
+- `shares` — minted share amount
+
+---
+
+### EventBridgeBurnShares
+Emitted when shares are **burned from the bridge** balance.
+
+**Fields**
+- `vault_address` — vault  
+- `bridge` — bridge signer  
+- `shares` — burned share amount
 
 ---

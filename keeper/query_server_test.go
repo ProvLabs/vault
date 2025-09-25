@@ -27,7 +27,7 @@ func (s *TestSuite) TestQueryServer_Vault() {
 			// Can't do a direct compare because of account numbers.
 			s.Assert().Equal(expected.Vault.Address, actual.Vault.Address, "vault address")
 			s.Assert().Equal(expected.Vault.Admin, actual.Vault.Admin, "vault admin")
-			s.Assert().Equal(expected.Vault.ShareDenom, actual.Vault.ShareDenom, "vault share denom")
+			s.Assert().Equal(expected.Vault.TotalShares, actual.Vault.TotalShares, "vault total shares")
 			s.Assert().Equal(expected.Vault.UnderlyingAsset, actual.Vault.UnderlyingAsset, "vault underlying asset")
 
 			s.Assert().Equal(expected.Principal.Address, actual.Principal.Address, "principal address")
@@ -153,7 +153,7 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 					out = append(out, vaultView{
 						Address:         v.GetAddress().String(),
 						Admin:           v.GetAdmin(),
-						ShareDenom:      v.GetShareDenom(),
+						ShareDenom:      v.GetTotalShares().Denom,
 						UnderlyingAsset: v.GetUnderlyingAsset(),
 						PaymentDenom:    v.GetPaymentDenom(),
 						IsPaused:        v.GetPaused(),
@@ -615,6 +615,11 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 
 				err = FundAccount(s.ctx, s.simApp.BankKeeper, s.adminAddr, sdk.NewCoins(sharesToSwap))
 				s.Require().NoError(err, "funding owner with scaled shares should succeed")
+				vault, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err, "should get vault")
+				s.Require().NotNil(vault, "vault should not be nil")
+				vault.TotalShares = sharesToSwap
+				s.k.AuthKeeper.SetAccount(s.ctx, vault)
 			},
 			Req: &types.QueryEstimateSwapOutRequest{
 				VaultAddress: vaultAddr.String(),
@@ -680,6 +685,11 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 
 				err = FundAccount(s.ctx, s.simApp.BankKeeper, s.adminAddr, sdk.NewCoins(sharesToSwap))
 				s.Require().NoError(err, "funding owner with scaled shares should succeed")
+				vault, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err, "should get vault")
+				s.Require().NotNil(vault, "vault should not be nil")
+				vault.TotalShares = sharesToSwap
+				s.k.AuthKeeper.SetAccount(s.ctx, vault)
 			},
 			Req: &types.QueryEstimateSwapOutRequest{
 				VaultAddress: vaultAddr.String(),
@@ -707,6 +717,11 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 
 				err = FundAccount(s.ctx, s.simApp.BankKeeper, s.adminAddr, sdk.NewCoins(sharesToSwap))
 				s.Require().NoError(err, "funding owner with scaled shares should succeed")
+				vault, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err, "should get vault")
+				s.Require().NotNil(vault, "vault should not be nil")
+				vault.TotalShares = sharesToSwap
+				s.k.AuthKeeper.SetAccount(s.ctx, vault)
 			},
 			Req: &types.QueryEstimateSwapOutRequest{
 				VaultAddress: vaultAddr.String(),

@@ -157,6 +157,7 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 	exampleAdminAddr := "pb1g4s2q6c0a8y9c0s6e1f4h7j9k2l4m6n8p0q2r"
 	exampleVaultAddr := "pb1z3x5c7v9b2n4m6f8h0j1k3l5p7r9s0t2w4y6"
 	exampleOwnerAddr := "pb1a2b3c4d5e6f7g8h9j0k1l2m3n4p5q6r7s8t"
+	exampleBridgeAddr := "pb1b2r3i4d5g6e7a8d9d0e1m2o3s4i5g6n7e8r9"
 	return &autocliv1.ModuleOptions{
 		Tx: &autocliv1.ServiceCommandDescriptor{
 			Service: vaultv1.Msg_ServiceDesc.ServiceName,
@@ -337,6 +338,54 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "admin"},
 						{ProtoField: "vault_address"},
+					},
+				},
+				{
+					RpcMethod: "SetBridgeAddress",
+					Use:       "set-bridge-address [admin] [vault_address] [bridge_address]",
+					Alias:     []string{"sba"},
+					Short:     "Set the single external bridge address allowed to mint/burn shares for a vault",
+					Example:   fmt.Sprintf("%s set-bridge-address %s %s %s", txStart, exampleAdminAddr, exampleVaultAddr, exampleBridgeAddr),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "admin"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "bridge_address"},
+					},
+				},
+				{
+					RpcMethod: "ToggleBridge",
+					Use:       "toggle-bridge [admin] [vault_address] [enabled]",
+					Alias:     []string{"tb"},
+					Short:     "Enable or disable the bridge functionality for a vault",
+					Example:   fmt.Sprintf("%s toggle-bridge %s %s true", txStart, exampleAdminAddr, exampleVaultAddr),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "admin"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "enabled"},
+					},
+				},
+				{
+					RpcMethod: "BridgeMintShares",
+					Use:       "bridge-mint-shares [bridge] [vault_address] [shares]",
+					Alias:     []string{"bms"},
+					Short:     "Mint local share marker supply; must be signed by the configured bridge address",
+					Example:   fmt.Sprintf("%s bridge-mint-shares %s %s 100svnhash", txStart, exampleBridgeAddr, exampleVaultAddr),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "bridge"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "shares"},
+					},
+				},
+				{
+					RpcMethod: "BridgeBurnShares",
+					Use:       "bridge-burn-shares [bridge] [vault_address] [shares]",
+					Alias:     []string{"bbs"},
+					Short:     "Burn local share marker supply; must be signed by the configured bridge address",
+					Example:   fmt.Sprintf("%s bridge-burn-shares %s %s 100svnhash", txStart, exampleBridgeAddr, exampleVaultAddr),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "bridge"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "shares"},
 					},
 				},
 			},

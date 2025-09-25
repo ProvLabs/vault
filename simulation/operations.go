@@ -163,7 +163,7 @@ func SimulateMsgSwapOut(k keeper.Keeper) simtypes.Operation {
 		vaults, _ := k.GetVaults(ctx)
 		iter := utils.Filter(vaults, func(addr sdk.AccAddress) bool {
 			vault, _ := k.GetVault(ctx, addr)
-			return vault.ShareDenom == denom
+			return vault.TotalShares.Denom == denom
 		})
 		vaults = slices.Collect(iter)
 		vaultAddr := sdk.AccAddress{}

@@ -83,7 +83,7 @@ func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccoun
 	balances := k.BankKeeper.GetAllBalances(ctx, vault.PrincipalMarkerAddress())
 	total := math.ZeroInt()
 	for _, balance := range balances {
-		if balance.Denom == vault.ShareDenom {
+		if balance.Denom == vault.TotalShares.Denom {
 			continue
 		}
 		val, err := k.ToUnderlyingAssetAmount(ctx, vault, balance)
@@ -114,11 +114,11 @@ func (k Keeper) GetNAVPerShareInUnderlyingAsset(ctx sdk.Context, vault types.Vau
 	if err != nil {
 		return math.Int{}, err
 	}
-	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
-	if totalShares.IsZero() {
+
+	if vault.TotalShares.IsZero() {
 		return math.ZeroInt(), nil
 	}
-	return tvv.Quo(totalShares), nil
+	return tvv.Quo(vault.TotalShares.Amount), nil
 }
 
 // ConvertSharesToRedeemCoin converts a share amount into a payout coin in redeemDenom
@@ -141,9 +141,8 @@ func (k Keeper) ConvertDepositToSharesInUnderlyingAsset(ctx sdk.Context, vault t
 	if err != nil {
 		return sdk.Coin{}, err
 	}
-	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
 	amountNumerator := in.Amount.Mul(priceNum)
-	return utils.CalculateSharesProRataFraction(amountNumerator, priceDen, tvv, totalShares, vault.ShareDenom)
+	return utils.CalculateSharesProRataFraction(amountNumerator, priceDen, tvv, vault.TotalShares.Amount, vault.TotalShares.Denom)
 }
 
 // ConvertSharesToRedeemCoin converts a share amount into a payout coin in redeemDenom
@@ -166,7 +165,6 @@ func (k Keeper) ConvertSharesToRedeemCoin(ctx sdk.Context, vault types.VaultAcco
 	if err != nil {
 		return sdk.Coin{}, err
 	}
-	totalShares := k.BankKeeper.GetSupply(ctx, vault.ShareDenom).Amount
 	priceNum, priceDen, err := k.UnitPriceFraction(ctx, redeemDenom, vault.UnderlyingAsset)
 	if err != nil {
 		return sdk.Coin{}, err
@@ -174,5 +172,5 @@ func (k Keeper) ConvertSharesToRedeemCoin(ctx sdk.Context, vault types.VaultAcco
 	if priceNum.IsZero() {
 		return sdk.Coin{}, fmt.Errorf("zero price for %s/%s", redeemDenom, vault.UnderlyingAsset)
 	}
-	return utils.CalculateRedeemProRataFraction(shares, totalShares, tvv, priceNum, priceDen, redeemDenom)
+	return utils.CalculateRedeemProRataFraction(shares, vault.TotalShares.Amount, tvv, priceNum, priceDen, redeemDenom)
 }

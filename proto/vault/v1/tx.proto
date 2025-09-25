@@ -54,6 +54,18 @@ service Msg {
   rpc PauseVault(MsgPauseVaultRequest) returns (MsgPauseVaultResponse);
 
   rpc UnpauseVault(MsgUnpauseVaultRequest) returns (MsgUnpauseVaultResponse);
+
+  // SetBridgeAddress sets the single external bridge address allowed to mint or burn shares for a vault.
+  rpc SetBridgeAddress(MsgSetBridgeAddressRequest) returns (MsgSetBridgeAddressResponse);
+
+  // ToggleBridge enables or disables the bridge functionality for a vault.
+  rpc ToggleBridge(MsgToggleBridgeRequest) returns (MsgToggleBridgeResponse);
+
+  // BridgeMintShares mints local share marker supply for a vault; must be signed by the configured bridge address.
+  rpc BridgeMintShares(MsgBridgeMintSharesRequest) returns (MsgBridgeMintSharesResponse);
+
+  // BridgeBurnShares burns local share marker supply for a vault; must be signed by the configured bridge address.
+  rpc BridgeBurnShares(MsgBridgeBurnSharesRequest) returns (MsgBridgeBurnSharesResponse);
 }
 
 // MsgCreateVaultRequest is the request message for the CreateVault endpoint.
@@ -263,17 +275,93 @@ message MsgExpeditePendingSwapOutRequest {
 // MsgExpeditePendingSwapOutResponse is the response message for the ExpeditePendingSwapOut endpoint.
 message MsgExpeditePendingSwapOutResponse {}
 
+// MsgPauseVaultRequest is the request message to pause a vault. When processed,
+// the vault disables user-facing swap operations and records the provided reason.
 message MsgPauseVaultRequest {
   option (cosmos.msg.v1.signer) = "admin";
+
+  // admin is the address of the vault administrator initiating the pause.
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // vault_address is the bech32 address of the vault to pause.
   string vault_address = 2;
+  // reason is a human-readable explanation for pausing the vault. This is recorded
+  // for operators and clients to understand the context (e.g., maintenance or anomaly).
   string reason = 3;
 }
+
+// MsgPauseVaultResponse is the response message for the PauseVault endpoint.
 message MsgPauseVaultResponse {}
 
+// MsgUnpauseVaultRequest is the request message to unpause a vault. When processed,
+// the vault re-enables user-facing swap operations (subject to existing flags).
 message MsgUnpauseVaultRequest {
   option (cosmos.msg.v1.signer) = "admin";
+
+  // admin is the address of the vault administrator initiating the unpause.
   string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // vault_address is the bech32 address of the vault to unpause.
   string vault_address = 2;
 }
+
+// MsgUnpauseVaultResponse is the response message for the UnpauseVault endpoint.
 message MsgUnpauseVaultResponse {}
+
+// MsgSetBridgeAddressRequest is the request message for configuring the bridge address for a vault.
+message MsgSetBridgeAddressRequest {
+  option (cosmos.msg.v1.signer) = "admin";
+
+  // admin is the address of the vault administrator.
+  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // vault_address is the bech32 address of the vault to update.
+  string vault_address = 2;
+  // bridge_address is the single external address allowed to mint or burn shares on behalf of this vault.
+  string bridge_address = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgSetBridgeAddressResponse is the response message for the SetBridgeAddress endpoint.
+message MsgSetBridgeAddressResponse {}
+
+// MsgToggleBridgeRequest is the request message for enabling or disabling the bridge for a vault.
+message MsgToggleBridgeRequest {
+  option (cosmos.msg.v1.signer) = "admin";
+
+  // admin is the address of the vault administrator.
+  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // vault_address is the bech32 address of the vault to update.
+  string vault_address = 2;
+  // enabled indicates whether bridge operations are allowed.
+  bool enabled = 3;
+}
+
+// MsgToggleBridgeResponse is the response message for the ToggleBridge endpoint.
+message MsgToggleBridgeResponse {}
+
+// MsgBridgeMintSharesRequest is the request message for minting local share marker supply; must be signed by the configured bridge address.
+message MsgBridgeMintSharesRequest {
+  option (cosmos.msg.v1.signer) = "bridge";
+
+  // bridge is the signer and must match the vault's configured bridge_address.
+  string bridge = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // vault_address is the bech32 address of the vault whose local share marker supply will be increased.
+  string vault_address = 2;
+  // shares is the amount of shares to mint into local marker supply.
+  cosmos.base.v1beta1.Coin shares = 3 [(gogoproto.nullable) = false];
+}
+
+// MsgBridgeMintSharesResponse is the response message for the BridgeMintShares endpoint.
+message MsgBridgeMintSharesResponse {}
+
+// MsgBridgeBurnSharesRequest is the request message for burning local share marker supply; must be signed by the configured bridge address.
+message MsgBridgeBurnSharesRequest {
+  option (cosmos.msg.v1.signer) = "bridge";
+
+  // bridge is the signer and must match the vault's configured bridge_address.
+  string bridge = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // vault_address is the bech32 address of the vault whose local share marker supply will be decreased.
+  string vault_address = 2;
+  // shares is the amount of shares to burn from local marker supply.
+  cosmos.base.v1beta1.Coin shares = 3 [(gogoproto.nullable) = false];
+}
+
+// MsgBridgeBurnSharesResponse is the response message for the BridgeBurnShares endpoint.
+message MsgBridgeBurnSharesResponse {}

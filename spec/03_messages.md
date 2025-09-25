@@ -9,6 +9,10 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 - [CreateVault](#createvault)
 - [SwapIn](#swapin)
 - [SwapOut](#swapout)
+- [BridgeMintShares](#bridgemintshares)
+- [BridgeBurnShares](#bridgeburnshares)
+- [SetBridgeAddress](#setbridgeaddress)
+- [ToggleBridgeEnabled](#togglebridgeenabled)
 - [UpdateMinInterestRate](#updatemininterestrate)
 - [UpdateMaxInterestRate](#updatemaxinterestrate)
 - [UpdateInterestRate](#updateinterestrate)
@@ -31,6 +35,10 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 | `CreateVault`            | No             |                   ✅ |                 ✅ | Creation only.                                                                                                |
 | `SwapIn`                 | No             |                   ✅ |                 ❌ | Keeper `SwapIn` enforces `!vault.Paused`, `SwapInEnabled`, accepted denom, reconcile.                         |
 | `SwapOut`                | No             |                   ✅ |                 ❌ | Keeper `SwapOut` enforces `!vault.Paused`, `SwapOutEnabled`, share denom match, payout restrictions, enqueue. |
+| `BridgeMintShares`       | No (bridge)    |                   ✅ |                 ✅ | Requires `bridge_enabled`, signer == `bridge_address`, shares denom match, positive amount, capacity ≤ `total_shares`. |
+| `BridgeBurnShares`       | No (bridge)    |                   ✅ |                 ✅ | Requires `bridge_enabled`, signer == `bridge_address`, shares denom match, positive amount; burns from marker. |
+| `SetBridgeAddress`       | Yes            |                   ✅ |                 ✅ | Sets or updates the single authorized `bridge_address`.                                                       |
+| `ToggleBridgeEnabled`    | Yes            |                   ✅ |                 ✅ | Enables/disables bridge operations; no mint/burn allowed when disabled.                                       |
 | `UpdateMinInterestRate`  | Yes            |                   ✅ |                 ✅ | Calls `SetMinInterestRate`.                                                                                   |
 | `UpdateMaxInterestRate`  | Yes            |                   ✅ |                 ✅ | Calls `SetMaxInterestRate`.                                                                                   |
 | `UpdateInterestRate`     | Yes            |                   ✅ |                 ✅ | Validates bounds, may reconcile, updates enable/disable flows.                                                |
@@ -76,7 +84,6 @@ Swap-outs are queued with respect to `withdrawal_delay_seconds`.
 
 - **Request:** `MsgSwapOutRequest { owner, vault_address, assets (shares), redeem_denom }`  
 - **Response:** `MsgSwapOutResponse { request_id }`  
-
 ---
 
 ## UpdateMinInterestRate
@@ -192,3 +199,37 @@ Admin-only. Resumes a paused vault, clears paused balance, and recalculates NAV.
 - **Response:** `MsgUnpauseVaultResponse {}`  
 
 ---
+
+## SetBridgeAddress
+
+Admin-only. Sets or updates the single authorized external bridge address for a vault.
+
+- **Request:** `MsgSetBridgeAddressRequest { admin, vault_address, bridge_address }`  
+- **Response:** `MsgSetBridgeAddressResponse {}`  
+
+---
+
+## ToggleBridgeEnabled
+
+Admin-only. Enables or disables bridge operations for a vault.
+
+- **Request:** `MsgToggleBridgeEnabledRequest { admin, vault_address, enabled }`  
+- **Response:** `MsgToggleBridgeEnabledResponse {}` 
+
+---
+
+## BridgeMintShares
+
+Mints local share marker supply to the bridge within capacity (`total_shares - local_supply`) and transfers the minted shares to the bridge address.
+
+- **Request:** `MsgBridgeMintSharesRequest { bridge, vault_address, shares }`  
+- **Response:** `MsgBridgeMintSharesResponse {}`  
+
+---
+
+## BridgeBurnShares
+
+Transfers shares from the bridge back to the vault and burns them from the marker, reducing local supply (does not change `total_shares`).
+
+- **Request:** `MsgBridgeBurnSharesRequest { bridge, vault_address, shares }`  
+- **Response:** `MsgBridgeBurnSharesResponse {}`  

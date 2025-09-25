@@ -6,6 +6,9 @@ import (
 
 	"github.com/provlabs/vault/types"
 
+	sdkmath "cosmossdk.io/math"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -24,7 +27,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		vaults = append(vaults, types.VaultAccount{
 			BaseAccount:     authtypes.NewBaseAccountWithAddress(addr),
 			Admin:           admin,
-			ShareDenom:      denom,
+			TotalShares:     sdk.NewCoin(denom, sdkmath.ZeroInt()),
 			UnderlyingAsset: underlying,
 		})
 	}

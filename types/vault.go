@@ -39,10 +39,8 @@ type VaultAccountI interface {
 
 	// GetAdmin returns the bech32-encoded address string of the vault administrator.
 	GetAdmin() string
-
-	// GetShareDenom returns the share token denom that the vault mints/burns to
-	// represent proportional ownership in the vault's underlying assets.
-	GetShareDenom() string
+	// GetTotalShares returns the total shares issued by the vault.
+	GetTotalShares() sdk.Coin
 
 	// GetUnderlyingAsset returns the denom of the asset the vault actually holds.
 	GetUnderlyingAsset() string
@@ -70,7 +68,7 @@ func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyi
 	return &VaultAccount{
 		BaseAccount:            baseAcc,
 		Admin:                  admin,
-		ShareDenom:             shareDenom,
+		TotalShares:            sdk.Coin{Denom: shareDenom, Amount: sdkmath.ZeroInt()},
 		UnderlyingAsset:        underlyingAsset,
 		PaymentDenom:           paymentDenom,
 		CurrentInterestRate:    ZeroInterestRate,
@@ -80,6 +78,8 @@ func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyi
 		WithdrawalDelaySeconds: withdrawalDelay,
 		Paused:                 false,
 		PausedBalance:          sdk.Coin{},
+		BridgeEnabled:          false,
+		BridgeAddress:          "",
 	}
 }
 
@@ -90,11 +90,22 @@ func (va VaultAccount) Clone() *VaultAccount {
 
 // Validate performs a series of checks to ensure the VaultAccount is correctly configured.
 func (va VaultAccount) Validate() error {
+	if va.BaseAccount == nil {
+		return fmt.Errorf("base account cannot be nil")
+	}
+
+	if err := va.BaseAccount.Validate(); err != nil {
+		return err
+	}
+
 	if _, err := sdk.AccAddressFromBech32(va.Admin); err != nil {
 		return fmt.Errorf("invalid admin address: %w", err)
 	}
-	if err := sdk.ValidateDenom(va.ShareDenom); err != nil {
+	if err := sdk.ValidateDenom(va.TotalShares.Denom); err != nil {
 		return fmt.Errorf("invalid share denom: %w", err)
+	}
+	if va.TotalShares.IsNegative() {
+		return fmt.Errorf("total shares cannot be negative: %s", va.TotalShares)
 	}
 	if err := sdk.ValidateDenom(va.UnderlyingAsset); err != nil {
 		return fmt.Errorf("invalid underlying asset denom: %s", va.UnderlyingAsset)
@@ -107,6 +118,15 @@ func (va VaultAccount) Validate() error {
 		if va.PaymentDenom == va.UnderlyingAsset {
 			return fmt.Errorf("payment (%q) denom cannot equal underlying asset denom (%q)", va.PaymentDenom, va.UnderlyingAsset)
 		}
+	}
+
+	if va.BridgeAddress != "" {
+		if _, err := sdk.AccAddressFromBech32(va.BridgeAddress); err != nil {
+			return fmt.Errorf("invalid bridge address: %w", err)
+		}
+	}
+	if va.BridgeEnabled && va.BridgeAddress == "" {
+		return fmt.Errorf("bridge cannot be enabled without a bridge address")
 	}
 
 	cur, err := sdkmath.LegacyNewDecFromStr(va.CurrentInterestRate)
@@ -233,5 +253,5 @@ func (v *VaultAccount) ValidateAcceptedCoin(c sdk.Coin) error {
 // PrincipalMarkerAddress returns the share-denom marker address that holds the
 // vault’s principal (i.e., the marker account backing the vault’s shares).
 func (v VaultAccount) PrincipalMarkerAddress() sdk.AccAddress {
-	return markertypes.MustGetMarkerAddress(v.ShareDenom)
+	return markertypes.MustGetMarkerAddress(v.TotalShares.Denom)
 }

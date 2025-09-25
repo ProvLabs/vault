@@ -1376,10 +1376,16 @@ func (m *MsgExpeditePendingSwapOutResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgExpeditePendingSwapOutResponse proto.InternalMessageInfo
 
+// MsgPauseVaultRequest is the request message to pause a vault. When processed,
+// the vault disables user-facing swap operations and records the provided reason.
 type MsgPauseVaultRequest struct {
-	Admin        string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// admin is the address of the vault administrator initiating the pause.
+	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// vault_address is the bech32 address of the vault to pause.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	Reason       string `protobuf:"bytes,3,opt,name=reason,proto3" json:"reason,omitempty"`
+	// reason is a human-readable explanation for pausing the vault. This is recorded
+	// for operators and clients to understand the context (e.g., maintenance or anomaly).
+	Reason string `protobuf:"bytes,3,opt,name=reason,proto3" json:"reason,omitempty"`
 }
 
 func (m *MsgPauseVaultRequest) Reset()         { *m = MsgPauseVaultRequest{} }
@@ -1436,6 +1442,7 @@ func (m *MsgPauseVaultRequest) GetReason() string {
 	return ""
 }
 
+// MsgPauseVaultResponse is the response message for the PauseVault endpoint.
 type MsgPauseVaultResponse struct {
 }
 
@@ -1472,8 +1479,12 @@ func (m *MsgPauseVaultResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgPauseVaultResponse proto.InternalMessageInfo
 
+// MsgUnpauseVaultRequest is the request message to unpause a vault. When processed,
+// the vault re-enables user-facing swap operations (subject to existing flags).
 type MsgUnpauseVaultRequest struct {
-	Admin        string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// admin is the address of the vault administrator initiating the unpause.
+	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// vault_address is the bech32 address of the vault to unpause.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 }
 
@@ -1524,6 +1535,7 @@ func (m *MsgUnpauseVaultRequest) GetVaultAddress() string {
 	return ""
 }
 
+// MsgUnpauseVaultResponse is the response message for the UnpauseVault endpoint.
 type MsgUnpauseVaultResponse struct {
 }
 
@@ -1560,6 +1572,410 @@ func (m *MsgUnpauseVaultResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUnpauseVaultResponse proto.InternalMessageInfo
 
+// MsgSetBridgeAddressRequest is the request message for configuring the bridge address for a vault.
+type MsgSetBridgeAddressRequest struct {
+	// admin is the address of the vault administrator.
+	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// vault_address is the bech32 address of the vault to update.
+	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// bridge_address is the single external address allowed to mint or burn shares on behalf of this vault.
+	BridgeAddress string `protobuf:"bytes,3,opt,name=bridge_address,json=bridgeAddress,proto3" json:"bridge_address,omitempty"`
+}
+
+func (m *MsgSetBridgeAddressRequest) Reset()         { *m = MsgSetBridgeAddressRequest{} }
+func (m *MsgSetBridgeAddressRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgSetBridgeAddressRequest) ProtoMessage()    {}
+func (*MsgSetBridgeAddressRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_311d0123a4881c5c, []int{30}
+}
+func (m *MsgSetBridgeAddressRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSetBridgeAddressRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSetBridgeAddressRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSetBridgeAddressRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSetBridgeAddressRequest.Merge(m, src)
+}
+func (m *MsgSetBridgeAddressRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSetBridgeAddressRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSetBridgeAddressRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSetBridgeAddressRequest proto.InternalMessageInfo
+
+func (m *MsgSetBridgeAddressRequest) GetAdmin() string {
+	if m != nil {
+		return m.Admin
+	}
+	return ""
+}
+
+func (m *MsgSetBridgeAddressRequest) GetVaultAddress() string {
+	if m != nil {
+		return m.VaultAddress
+	}
+	return ""
+}
+
+func (m *MsgSetBridgeAddressRequest) GetBridgeAddress() string {
+	if m != nil {
+		return m.BridgeAddress
+	}
+	return ""
+}
+
+// MsgSetBridgeAddressResponse is the response message for the SetBridgeAddress endpoint.
+type MsgSetBridgeAddressResponse struct {
+}
+
+func (m *MsgSetBridgeAddressResponse) Reset()         { *m = MsgSetBridgeAddressResponse{} }
+func (m *MsgSetBridgeAddressResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgSetBridgeAddressResponse) ProtoMessage()    {}
+func (*MsgSetBridgeAddressResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_311d0123a4881c5c, []int{31}
+}
+func (m *MsgSetBridgeAddressResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSetBridgeAddressResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSetBridgeAddressResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSetBridgeAddressResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSetBridgeAddressResponse.Merge(m, src)
+}
+func (m *MsgSetBridgeAddressResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSetBridgeAddressResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSetBridgeAddressResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSetBridgeAddressResponse proto.InternalMessageInfo
+
+// MsgToggleBridgeRequest is the request message for enabling or disabling the bridge for a vault.
+type MsgToggleBridgeRequest struct {
+	// admin is the address of the vault administrator.
+	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// vault_address is the bech32 address of the vault to update.
+	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// enabled indicates whether bridge operations are allowed.
+	Enabled bool `protobuf:"varint,3,opt,name=enabled,proto3" json:"enabled,omitempty"`
+}
+
+func (m *MsgToggleBridgeRequest) Reset()         { *m = MsgToggleBridgeRequest{} }
+func (m *MsgToggleBridgeRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgToggleBridgeRequest) ProtoMessage()    {}
+func (*MsgToggleBridgeRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_311d0123a4881c5c, []int{32}
+}
+func (m *MsgToggleBridgeRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgToggleBridgeRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgToggleBridgeRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgToggleBridgeRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgToggleBridgeRequest.Merge(m, src)
+}
+func (m *MsgToggleBridgeRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgToggleBridgeRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgToggleBridgeRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgToggleBridgeRequest proto.InternalMessageInfo
+
+func (m *MsgToggleBridgeRequest) GetAdmin() string {
+	if m != nil {
+		return m.Admin
+	}
+	return ""
+}
+
+func (m *MsgToggleBridgeRequest) GetVaultAddress() string {
+	if m != nil {
+		return m.VaultAddress
+	}
+	return ""
+}
+
+func (m *MsgToggleBridgeRequest) GetEnabled() bool {
+	if m != nil {
+		return m.Enabled
+	}
+	return false
+}
+
+// MsgToggleBridgeResponse is the response message for the ToggleBridge endpoint.
+type MsgToggleBridgeResponse struct {
+}
+
+func (m *MsgToggleBridgeResponse) Reset()         { *m = MsgToggleBridgeResponse{} }
+func (m *MsgToggleBridgeResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgToggleBridgeResponse) ProtoMessage()    {}
+func (*MsgToggleBridgeResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_311d0123a4881c5c, []int{33}
+}
+func (m *MsgToggleBridgeResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgToggleBridgeResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgToggleBridgeResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgToggleBridgeResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgToggleBridgeResponse.Merge(m, src)
+}
+func (m *MsgToggleBridgeResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgToggleBridgeResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgToggleBridgeResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgToggleBridgeResponse proto.InternalMessageInfo
+
+// MsgBridgeMintSharesRequest is the request message for minting local share marker supply; must be signed by the configured bridge address.
+type MsgBridgeMintSharesRequest struct {
+	// bridge is the signer and must match the vault's configured bridge_address.
+	Bridge string `protobuf:"bytes,1,opt,name=bridge,proto3" json:"bridge,omitempty"`
+	// vault_address is the bech32 address of the vault whose local share marker supply will be increased.
+	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// shares is the amount of shares to mint into local marker supply.
+	Shares types.Coin `protobuf:"bytes,3,opt,name=shares,proto3" json:"shares"`
+}
+
+func (m *MsgBridgeMintSharesRequest) Reset()         { *m = MsgBridgeMintSharesRequest{} }
+func (m *MsgBridgeMintSharesRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgBridgeMintSharesRequest) ProtoMessage()    {}
+func (*MsgBridgeMintSharesRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_311d0123a4881c5c, []int{34}
+}
+func (m *MsgBridgeMintSharesRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgBridgeMintSharesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgBridgeMintSharesRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgBridgeMintSharesRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgBridgeMintSharesRequest.Merge(m, src)
+}
+func (m *MsgBridgeMintSharesRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgBridgeMintSharesRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgBridgeMintSharesRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgBridgeMintSharesRequest proto.InternalMessageInfo
+
+func (m *MsgBridgeMintSharesRequest) GetBridge() string {
+	if m != nil {
+		return m.Bridge
+	}
+	return ""
+}
+
+func (m *MsgBridgeMintSharesRequest) GetVaultAddress() string {
+	if m != nil {
+		return m.VaultAddress
+	}
+	return ""
+}
+
+func (m *MsgBridgeMintSharesRequest) GetShares() types.Coin {
+	if m != nil {
+		return m.Shares
+	}
+	return types.Coin{}
+}
+
+// MsgBridgeMintSharesResponse is the response message for the BridgeMintShares endpoint.
+type MsgBridgeMintSharesResponse struct {
+}
+
+func (m *MsgBridgeMintSharesResponse) Reset()         { *m = MsgBridgeMintSharesResponse{} }
+func (m *MsgBridgeMintSharesResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgBridgeMintSharesResponse) ProtoMessage()    {}
+func (*MsgBridgeMintSharesResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_311d0123a4881c5c, []int{35}
+}
+func (m *MsgBridgeMintSharesResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgBridgeMintSharesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgBridgeMintSharesResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgBridgeMintSharesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgBridgeMintSharesResponse.Merge(m, src)
+}
+func (m *MsgBridgeMintSharesResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgBridgeMintSharesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgBridgeMintSharesResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgBridgeMintSharesResponse proto.InternalMessageInfo
+
+// MsgBridgeBurnSharesRequest is the request message for burning local share marker supply; must be signed by the configured bridge address.
+type MsgBridgeBurnSharesRequest struct {
+	// bridge is the signer and must match the vault's configured bridge_address.
+	Bridge string `protobuf:"bytes,1,opt,name=bridge,proto3" json:"bridge,omitempty"`
+	// vault_address is the bech32 address of the vault whose local share marker supply will be decreased.
+	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// shares is the amount of shares to burn from local marker supply.
+	Shares types.Coin `protobuf:"bytes,3,opt,name=shares,proto3" json:"shares"`
+}
+
+func (m *MsgBridgeBurnSharesRequest) Reset()         { *m = MsgBridgeBurnSharesRequest{} }
+func (m *MsgBridgeBurnSharesRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgBridgeBurnSharesRequest) ProtoMessage()    {}
+func (*MsgBridgeBurnSharesRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_311d0123a4881c5c, []int{36}
+}
+func (m *MsgBridgeBurnSharesRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgBridgeBurnSharesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgBridgeBurnSharesRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgBridgeBurnSharesRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgBridgeBurnSharesRequest.Merge(m, src)
+}
+func (m *MsgBridgeBurnSharesRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgBridgeBurnSharesRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgBridgeBurnSharesRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgBridgeBurnSharesRequest proto.InternalMessageInfo
+
+func (m *MsgBridgeBurnSharesRequest) GetBridge() string {
+	if m != nil {
+		return m.Bridge
+	}
+	return ""
+}
+
+func (m *MsgBridgeBurnSharesRequest) GetVaultAddress() string {
+	if m != nil {
+		return m.VaultAddress
+	}
+	return ""
+}
+
+func (m *MsgBridgeBurnSharesRequest) GetShares() types.Coin {
+	if m != nil {
+		return m.Shares
+	}
+	return types.Coin{}
+}
+
+// MsgBridgeBurnSharesResponse is the response message for the BridgeBurnShares endpoint.
+type MsgBridgeBurnSharesResponse struct {
+}
+
+func (m *MsgBridgeBurnSharesResponse) Reset()         { *m = MsgBridgeBurnSharesResponse{} }
+func (m *MsgBridgeBurnSharesResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgBridgeBurnSharesResponse) ProtoMessage()    {}
+func (*MsgBridgeBurnSharesResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_311d0123a4881c5c, []int{37}
+}
+func (m *MsgBridgeBurnSharesResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgBridgeBurnSharesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgBridgeBurnSharesResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgBridgeBurnSharesResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgBridgeBurnSharesResponse.Merge(m, src)
+}
+func (m *MsgBridgeBurnSharesResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgBridgeBurnSharesResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgBridgeBurnSharesResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgBridgeBurnSharesResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgCreateVaultRequest)(nil), "vault.v1.MsgCreateVaultRequest")
 	proto.RegisterType((*MsgCreateVaultResponse)(nil), "vault.v1.MsgCreateVaultResponse")
@@ -1591,80 +2007,99 @@ func init() {
 	proto.RegisterType((*MsgPauseVaultResponse)(nil), "vault.v1.MsgPauseVaultResponse")
 	proto.RegisterType((*MsgUnpauseVaultRequest)(nil), "vault.v1.MsgUnpauseVaultRequest")
 	proto.RegisterType((*MsgUnpauseVaultResponse)(nil), "vault.v1.MsgUnpauseVaultResponse")
+	proto.RegisterType((*MsgSetBridgeAddressRequest)(nil), "vault.v1.MsgSetBridgeAddressRequest")
+	proto.RegisterType((*MsgSetBridgeAddressResponse)(nil), "vault.v1.MsgSetBridgeAddressResponse")
+	proto.RegisterType((*MsgToggleBridgeRequest)(nil), "vault.v1.MsgToggleBridgeRequest")
+	proto.RegisterType((*MsgToggleBridgeResponse)(nil), "vault.v1.MsgToggleBridgeResponse")
+	proto.RegisterType((*MsgBridgeMintSharesRequest)(nil), "vault.v1.MsgBridgeMintSharesRequest")
+	proto.RegisterType((*MsgBridgeMintSharesResponse)(nil), "vault.v1.MsgBridgeMintSharesResponse")
+	proto.RegisterType((*MsgBridgeBurnSharesRequest)(nil), "vault.v1.MsgBridgeBurnSharesRequest")
+	proto.RegisterType((*MsgBridgeBurnSharesResponse)(nil), "vault.v1.MsgBridgeBurnSharesResponse")
 }
 
 func init() { proto.RegisterFile("vault/v1/tx.proto", fileDescriptor_311d0123a4881c5c) }
 
 var fileDescriptor_311d0123a4881c5c = []byte{
-	// 1087 bytes of a gzipped FileDescriptorProto
+	// 1255 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x58, 0x4f, 0x6f, 0x1b, 0x45,
-	0x14, 0xcf, 0xb6, 0xf9, 0xd7, 0xe7, 0x54, 0xb4, 0x43, 0x9a, 0x38, 0x4b, 0x6b, 0x27, 0xae, 0x04,
-	0x49, 0x10, 0x6b, 0xa5, 0x3d, 0xf0, 0xe7, 0x96, 0x34, 0x20, 0xe5, 0x60, 0x11, 0x39, 0xb4, 0x48,
-	0x5c, 0xac, 0xb1, 0x77, 0xb4, 0x59, 0xe1, 0x9d, 0xdd, 0xee, 0x8c, 0xff, 0x1d, 0x90, 0x10, 0x5f,
-	0x00, 0x24, 0x38, 0x21, 0xf1, 0x0d, 0x38, 0x54, 0x88, 0x13, 0xf0, 0x01, 0x7a, 0x8c, 0x38, 0x71,
-	0x42, 0x28, 0x39, 0xf4, 0x5b, 0x20, 0xb4, 0xb3, 0x2f, 0xb5, 0x67, 0x3d, 0xde, 0x5a, 0x14, 0x02,
-	0xb9, 0x65, 0xdf, 0x7b, 0x33, 0xef, 0xf7, 0x9b, 0x37, 0xf3, 0x7e, 0x2f, 0x86, 0x9b, 0x5d, 0xda,
-	0x69, 0xcb, 0x6a, 0x77, 0xa7, 0x2a, 0xfb, 0x4e, 0x14, 0x87, 0x32, 0x24, 0x8b, 0xca, 0xe4, 0x74,
-	0x77, 0xec, 0x52, 0x2b, 0x14, 0x41, 0x28, 0xaa, 0x4d, 0x2a, 0x58, 0xb5, 0xbb, 0xd3, 0x64, 0x92,
-	0xee, 0x54, 0x5b, 0xa1, 0xcf, 0xd3, 0x48, 0x7b, 0x15, 0xfd, 0x81, 0xf0, 0x92, 0x1d, 0x02, 0xe1,
-	0xa1, 0x63, 0x2d, 0x75, 0x34, 0xd4, 0x57, 0x35, 0xfd, 0x40, 0xd7, 0xb2, 0x17, 0x7a, 0x61, 0x6a,
-	0x4f, 0xfe, 0x4a, 0xad, 0x95, 0x3f, 0x2d, 0xb8, 0x55, 0x13, 0xde, 0x83, 0x98, 0x51, 0xc9, 0x1e,
-	0x25, 0xf9, 0xeb, 0xec, 0x71, 0x87, 0x09, 0x49, 0x1c, 0x98, 0xa3, 0x6e, 0xe0, 0xf3, 0xa2, 0xb5,
-	0x6e, 0x6d, 0x5e, 0xdb, 0x2b, 0xfe, 0xfa, 0xe3, 0x5b, 0xcb, 0xb8, 0xe1, 0xae, 0xeb, 0xc6, 0x4c,
-	0x88, 0x23, 0x19, 0xfb, 0xdc, 0xab, 0xa7, 0x61, 0xa4, 0x0c, 0x05, 0x71, 0x4c, 0x63, 0xd6, 0x70,
-	0x19, 0x0f, 0x83, 0xe2, 0x95, 0x64, 0x55, 0x1d, 0x94, 0x69, 0x3f, 0xb1, 0x90, 0x2d, 0xb8, 0xd1,
-	0xe1, 0x2e, 0x8b, 0xdb, 0x03, 0x9f, 0x7b, 0x0d, 0x2a, 0x04, 0x93, 0xc5, 0xab, 0x2a, 0xea, 0x95,
-	0xa1, 0x7d, 0x37, 0x31, 0x93, 0xbb, 0x70, 0x3d, 0xa2, 0x83, 0x80, 0x71, 0x89, 0xbb, 0xcd, 0xaa,
-	0xb8, 0x25, 0x34, 0xa6, 0xfb, 0xbd, 0x03, 0xc5, 0x9e, 0x2f, 0x8f, 0xdd, 0x98, 0xf6, 0x68, 0xbb,
-	0xe1, 0xb2, 0x36, 0x1d, 0x34, 0x04, 0x6b, 0x85, 0xdc, 0x15, 0xc5, 0xb9, 0x75, 0x6b, 0x73, 0xb6,
-	0xbe, 0x32, 0xf4, 0xef, 0x27, 0xee, 0xa3, 0xd4, 0xfb, 0x1e, 0x7c, 0xf1, 0xec, 0xc9, 0x76, 0x0a,
-	0xbb, 0x52, 0x84, 0x95, 0x2c, 0x7f, 0x11, 0x85, 0x5c, 0xb0, 0xca, 0xf7, 0x16, 0xdc, 0xa8, 0x09,
-	0xef, 0xa8, 0x47, 0xa3, 0x03, 0x3e, 0x72, 0x2a, 0x61, 0x8f, 0xb3, 0xf8, 0xc5, 0xa7, 0xa2, 0xc2,
-	0x12, 0x26, 0xaa, 0xaa, 0x0d, 0x9a, 0x7a, 0xf1, 0x5c, 0x96, 0x94, 0x11, 0x57, 0x90, 0xb7, 0x61,
-	0x5e, 0x1d, 0x87, 0x50, 0xe7, 0x51, 0xb8, 0xb7, 0xe6, 0xe0, 0x96, 0x49, 0xfd, 0x1d, 0xac, 0xbf,
-	0xf3, 0x20, 0xf4, 0xf9, 0xde, 0xec, 0xd3, 0xdf, 0xcb, 0x33, 0x75, 0x0c, 0x47, 0x22, 0x2a, 0x53,
-	0xe5, 0x55, 0xb8, 0x39, 0x82, 0x16, 0x39, 0x9c, 0x58, 0xcf, 0xad, 0x1f, 0x76, 0xe4, 0xff, 0x92,
-	0x04, 0xd9, 0x80, 0xa5, 0x98, 0xb9, 0x8c, 0x05, 0x5a, 0xad, 0x0b, 0xa9, 0x4d, 0x95, 0x5a, 0xe3,
-	0x79, 0x1f, 0xc8, 0x28, 0xa3, 0x94, 0x28, 0xb9, 0x03, 0x10, 0xa7, 0xec, 0x1a, 0xbe, 0xab, 0x78,
-	0xcd, 0xd6, 0xaf, 0xa1, 0xe5, 0xc0, 0xad, 0x7c, 0x67, 0x41, 0xb9, 0x26, 0xbc, 0x87, 0x91, 0x4b,
-	0x25, 0xab, 0xf9, 0xfc, 0x80, 0x4b, 0x16, 0x33, 0x21, 0xeb, 0x54, 0xb2, 0xbf, 0x7b, 0xe1, 0xa7,
-	0x3a, 0x95, 0x35, 0x58, 0x0c, 0x7c, 0xde, 0x88, 0xa9, 0x64, 0x78, 0xd9, 0x17, 0x02, 0x9f, 0x27,
-	0x69, 0xb5, 0x5b, 0x58, 0x81, 0xf5, 0xc9, 0xf0, 0xb0, 0x96, 0x3a, 0x07, 0xda, 0xbf, 0x50, 0x0e,
-	0xb4, 0xaf, 0x73, 0xa0, 0xfd, 0x7c, 0x0e, 0x59, 0x78, 0xc8, 0xe1, 0x5b, 0x0b, 0x6e, 0x3f, 0x0f,
-	0xba, 0x48, 0x02, 0x9c, 0xf5, 0x34, 0x02, 0x9c, 0xf5, 0xc6, 0x08, 0x94, 0xe1, 0xce, 0x04, 0x6c,
-	0x88, 0xfe, 0x6b, 0x4b, 0x35, 0x8b, 0x8f, 0x42, 0xcf, 0x6b, 0xb3, 0xb1, 0xbe, 0xf0, 0xcf, 0xe3,
-	0x2e, 0xc2, 0x02, 0xe3, 0xb4, 0xd9, 0x66, 0xae, 0x82, 0xbd, 0x58, 0x3f, 0xff, 0xd4, 0x60, 0xaf,
-	0xc1, 0xea, 0x18, 0x28, 0x04, 0xfc, 0x8d, 0x95, 0xf1, 0xe9, 0x4d, 0xe0, 0xbf, 0x42, 0x6c, 0x43,
-	0x71, 0x1c, 0x15, 0x42, 0xfe, 0xc9, 0x82, 0x52, 0x4d, 0x78, 0xfb, 0x2c, 0x0a, 0x85, 0x2f, 0xcf,
-	0xcb, 0xf0, 0x41, 0x87, 0xbb, 0xe2, 0x5f, 0x45, 0x9e, 0xb4, 0xaf, 0x20, 0xec, 0x70, 0x39, 0x7d,
-	0xfb, 0x52, 0xe1, 0x1a, 0xb1, 0x0d, 0xf5, 0x42, 0xcd, 0xd8, 0x91, 0xdf, 0xcf, 0xe9, 0x2b, 0xfe,
-	0x18, 0x95, 0xe9, 0x92, 0x11, 0x4c, 0xdf, 0xf8, 0x04, 0xf0, 0x3a, 0x43, 0x3c, 0x85, 0xc3, 0xd8,
-	0xe7, 0x2d, 0x3f, 0xa2, 0xed, 0x4b, 0xc5, 0x70, 0x02, 0x78, 0x64, 0xf8, 0x8b, 0xa5, 0x1d, 0xc3,
-	0x65, 0xa3, 0x78, 0x17, 0x36, 0x72, 0xd0, 0x23, 0xc7, 0xcf, 0x14, 0xc5, 0xf7, 0xfb, 0x11, 0x73,
-	0x7d, 0xc9, 0x0e, 0x19, 0x77, 0x7d, 0xee, 0xbd, 0x64, 0x0b, 0xd1, 0x45, 0xfa, 0x4a, 0x46, 0xa4,
-	0x0d, 0x18, 0x27, 0xa5, 0x47, 0x8c, 0x5f, 0x5a, 0xb0, 0x5c, 0x13, 0xde, 0x21, 0xed, 0x88, 0x97,
-	0x9b, 0x5d, 0xa7, 0x3a, 0xfb, 0x15, 0x98, 0x8f, 0x19, 0x15, 0x21, 0x47, 0x0d, 0xc1, 0x2f, 0x0d,
-	0xf6, 0xaa, 0x9a, 0xa6, 0x47, 0x01, 0x21, 0xd4, 0x81, 0x52, 0x8e, 0x87, 0x3c, 0xba, 0x10, 0xac,
-	0x06, 0x7d, 0xd0, 0x53, 0xa7, 0xa8, 0xee, 0xfd, 0x50, 0x80, 0xab, 0x35, 0xe1, 0x91, 0x43, 0x28,
-	0x8c, 0x4c, 0xc0, 0xa4, 0xec, 0x9c, 0xff, 0x27, 0xe2, 0x18, 0xff, 0x37, 0xb0, 0xd7, 0x27, 0x07,
-	0xe0, 0x3c, 0xb6, 0x0b, 0xf3, 0xa9, 0x16, 0x11, 0x5b, 0x8b, 0xd5, 0x54, 0xd3, 0x7e, 0xcd, 0xe8,
-	0xc3, 0x2d, 0xf6, 0x61, 0x01, 0x0b, 0x4e, 0xc6, 0xe3, 0x86, 0xb7, 0xd0, 0xbe, 0x6d, 0x76, 0xe2,
-	0x2e, 0x1c, 0x6e, 0x19, 0xc7, 0x2a, 0xb2, 0xa5, 0x2d, 0xcb, 0x9b, 0x0c, 0xed, 0xed, 0x69, 0x42,
-	0xc7, 0xf2, 0xe9, 0x23, 0x90, 0x39, 0x9f, 0x71, 0x8a, 0x33, 0xe7, 0x33, 0x4f, 0x54, 0x84, 0x01,
-	0x19, 0x9f, 0x58, 0xc8, 0xeb, 0x86, 0x1d, 0x4c, 0x99, 0xde, 0x78, 0x61, 0x1c, 0xa6, 0x39, 0x82,
-	0xa5, 0xd1, 0x09, 0x83, 0xe8, 0x37, 0xc0, 0x30, 0x11, 0xd9, 0x1b, 0x39, 0x11, 0xb8, 0xe9, 0x23,
-	0xb8, 0xae, 0x0d, 0x01, 0x64, 0xd2, 0x9a, 0x91, 0x6a, 0x57, 0xf2, 0x42, 0x70, 0xdf, 0x4f, 0x61,
-	0xd9, 0xa4, 0xc1, 0x64, 0x53, 0x5b, 0x9b, 0x33, 0x62, 0xd8, 0x5b, 0x53, 0x44, 0x0e, 0x0b, 0x6e,
-	0xd4, 0xc3, 0x4c, 0xc1, 0xf3, 0x04, 0x3f, 0x53, 0xf0, 0x5c, 0x79, 0x4d, 0xf2, 0x19, 0xd5, 0x89,
-	0x18, 0x31, 0x1b, 0xb5, 0x29, 0x93, 0x2f, 0x57, 0xec, 0xc8, 0x63, 0x58, 0x31, 0x4b, 0x05, 0x31,
-	0xa3, 0x36, 0x67, 0x7c, 0x73, 0xaa, 0xd8, 0x61, 0x4a, 0x73, 0xe7, 0xcf, 0xa4, 0xcc, 0x55, 0xa7,
-	0x4c, 0xca, 0x7c, 0x29, 0x21, 0x35, 0x80, 0x61, 0xd7, 0x26, 0x25, 0x6d, 0xe9, 0x98, 0xbe, 0xd8,
-	0xe5, 0x89, 0xfe, 0xe1, 0x73, 0x19, 0x6d, 0xb8, 0x99, 0xe7, 0x62, 0x90, 0x81, 0xcc, 0x73, 0x31,
-	0x75, 0x6b, 0x7b, 0xee, 0xf3, 0x67, 0x4f, 0xb6, 0xad, 0xbd, 0x77, 0x9f, 0x9e, 0x96, 0xac, 0x93,
-	0xd3, 0x92, 0xf5, 0xc7, 0x69, 0xc9, 0xfa, 0xea, 0xac, 0x34, 0x73, 0x72, 0x56, 0x9a, 0xf9, 0xed,
-	0xac, 0x34, 0xf3, 0x49, 0xd9, 0xf3, 0xe5, 0x71, 0xa7, 0xe9, 0xb4, 0xc2, 0xa0, 0x1a, 0xc5, 0x61,
-	0xb7, 0x4d, 0x9b, 0xa2, 0x9a, 0xfe, 0xce, 0x24, 0x07, 0x11, 0x13, 0xcd, 0x79, 0xf5, 0xa3, 0xcf,
-	0xfd, 0xbf, 0x02, 0x00, 0x00, 0xff, 0xff, 0x3f, 0x21, 0xb6, 0x25, 0x7d, 0x12, 0x00, 0x00,
+	0x14, 0xcf, 0x36, 0x7f, 0xfb, 0x92, 0x94, 0x74, 0x48, 0x13, 0x67, 0xdb, 0xd8, 0x89, 0xcb, 0x9f,
+	0x24, 0x08, 0x9b, 0xb4, 0x07, 0xa0, 0x17, 0x94, 0x34, 0x20, 0xe5, 0x60, 0x11, 0x39, 0xb4, 0x48,
+	0x5c, 0xac, 0x71, 0x76, 0xb4, 0x59, 0xe1, 0x9d, 0xdd, 0xee, 0x8c, 0xe3, 0xe4, 0x80, 0x84, 0xf8,
+	0x02, 0x20, 0xc1, 0x09, 0x89, 0x2f, 0x80, 0x38, 0xf4, 0xc0, 0x85, 0x3f, 0xe2, 0xdc, 0x63, 0xc4,
+	0x89, 0x13, 0x42, 0xc9, 0xa1, 0xdf, 0x02, 0xa1, 0x9d, 0x99, 0xc4, 0x9e, 0xdd, 0xd9, 0xb5, 0x45,
+	0x69, 0x68, 0x6e, 0xf1, 0x7b, 0x6f, 0xe6, 0xfd, 0x7e, 0xf3, 0x76, 0xe6, 0xfd, 0x5e, 0xe0, 0xfa,
+	0x01, 0x6e, 0xb7, 0x78, 0xf5, 0x60, 0xbd, 0xca, 0x0f, 0x2b, 0x61, 0x14, 0xf0, 0x00, 0x4d, 0x08,
+	0x53, 0xe5, 0x60, 0xdd, 0x2e, 0xee, 0x05, 0xcc, 0x0f, 0x58, 0xb5, 0x89, 0x19, 0xa9, 0x1e, 0xac,
+	0x37, 0x09, 0xc7, 0xeb, 0xd5, 0xbd, 0xc0, 0xa3, 0x32, 0xd2, 0x9e, 0x57, 0x7e, 0x9f, 0xb9, 0xf1,
+	0x0e, 0x3e, 0x73, 0x95, 0x63, 0x41, 0x3a, 0x1a, 0xe2, 0x57, 0x55, 0xfe, 0x50, 0xae, 0x59, 0x37,
+	0x70, 0x03, 0x69, 0x8f, 0xff, 0x92, 0xd6, 0xf2, 0xdf, 0x16, 0xdc, 0xa8, 0x31, 0xf7, 0x7e, 0x44,
+	0x30, 0x27, 0x0f, 0xe3, 0xfc, 0x75, 0xf2, 0xa8, 0x4d, 0x18, 0x47, 0x15, 0x18, 0xc5, 0x8e, 0xef,
+	0xd1, 0x82, 0xb5, 0x64, 0xad, 0x5c, 0xdd, 0x2c, 0xfc, 0xfe, 0xe3, 0x9b, 0xb3, 0x6a, 0xc3, 0x0d,
+	0xc7, 0x89, 0x08, 0x63, 0xbb, 0x3c, 0xf2, 0xa8, 0x5b, 0x97, 0x61, 0xa8, 0x04, 0x93, 0x6c, 0x1f,
+	0x47, 0xa4, 0xe1, 0x10, 0x1a, 0xf8, 0x85, 0x2b, 0xf1, 0xaa, 0x3a, 0x08, 0xd3, 0x56, 0x6c, 0x41,
+	0xab, 0x30, 0xd3, 0xa6, 0x0e, 0x89, 0x5a, 0x47, 0x1e, 0x75, 0x1b, 0x98, 0x31, 0xc2, 0x0b, 0xc3,
+	0x22, 0xea, 0xa5, 0xae, 0x7d, 0x23, 0x36, 0xa3, 0xdb, 0x30, 0x1d, 0xe2, 0x23, 0x9f, 0x50, 0xae,
+	0x76, 0x1b, 0x11, 0x71, 0x53, 0xca, 0x28, 0xf7, 0x7b, 0x07, 0x0a, 0x1d, 0x8f, 0xef, 0x3b, 0x11,
+	0xee, 0xe0, 0x56, 0xc3, 0x21, 0x2d, 0x7c, 0xd4, 0x60, 0x64, 0x2f, 0xa0, 0x0e, 0x2b, 0x8c, 0x2e,
+	0x59, 0x2b, 0x23, 0xf5, 0xb9, 0xae, 0x7f, 0x2b, 0x76, 0xef, 0x4a, 0xef, 0x3d, 0xf8, 0xe2, 0xe9,
+	0xe3, 0x35, 0x09, 0xbb, 0x5c, 0x80, 0xb9, 0x24, 0x7f, 0x16, 0x06, 0x94, 0x91, 0xf2, 0x0f, 0x16,
+	0xcc, 0xd4, 0x98, 0xbb, 0xdb, 0xc1, 0xe1, 0x36, 0xed, 0x39, 0x95, 0xa0, 0x43, 0x49, 0xd4, 0xff,
+	0x54, 0x44, 0x58, 0xcc, 0x44, 0x54, 0xb5, 0x81, 0xa5, 0x57, 0x9d, 0xcb, 0x94, 0x30, 0xaa, 0x15,
+	0xe8, 0x6d, 0x18, 0x13, 0xc7, 0xc1, 0xc4, 0x79, 0x4c, 0xde, 0x59, 0xa8, 0xa8, 0x2d, 0xe3, 0xfa,
+	0x57, 0x54, 0xfd, 0x2b, 0xf7, 0x03, 0x8f, 0x6e, 0x8e, 0x3c, 0xf9, 0xb3, 0x34, 0x54, 0x57, 0xe1,
+	0x8a, 0x88, 0xc8, 0x54, 0x7e, 0x19, 0xae, 0xf7, 0xa0, 0x55, 0x1c, 0x8e, 0xad, 0x73, 0xeb, 0x87,
+	0x6d, 0xfe, 0x42, 0x92, 0x40, 0xcb, 0x30, 0x15, 0x11, 0x87, 0x10, 0x5f, 0xab, 0xf5, 0xa4, 0xb4,
+	0x89, 0x52, 0x6b, 0x3c, 0xef, 0x02, 0xea, 0x65, 0x24, 0x89, 0xa2, 0x45, 0x80, 0x48, 0xb2, 0x6b,
+	0x78, 0x8e, 0xe0, 0x35, 0x52, 0xbf, 0xaa, 0x2c, 0xdb, 0x4e, 0xf9, 0x3b, 0x0b, 0x4a, 0x35, 0xe6,
+	0x3e, 0x08, 0x1d, 0xcc, 0x49, 0xcd, 0xa3, 0xdb, 0x94, 0x93, 0x88, 0x30, 0x5e, 0xc7, 0x9c, 0xfc,
+	0xdb, 0x0f, 0x7e, 0xa0, 0x53, 0x59, 0x80, 0x09, 0xdf, 0xa3, 0x8d, 0x08, 0x73, 0xa2, 0x3e, 0xf6,
+	0x71, 0xdf, 0xa3, 0x71, 0x5a, 0xed, 0x2b, 0x2c, 0xc3, 0x52, 0x36, 0x3c, 0x55, 0x4b, 0x9d, 0x03,
+	0x3e, 0xbc, 0x50, 0x0e, 0xf8, 0x50, 0xe7, 0x80, 0x0f, 0xf3, 0x39, 0x24, 0xe1, 0x29, 0x0e, 0xdf,
+	0x5a, 0x70, 0xeb, 0x3c, 0xe8, 0x22, 0x09, 0x50, 0xd2, 0xd1, 0x08, 0x50, 0xd2, 0x49, 0x11, 0x28,
+	0xc1, 0x62, 0x06, 0x36, 0x85, 0xfe, 0x6b, 0x4b, 0x3c, 0x16, 0x1f, 0x05, 0xae, 0xdb, 0x22, 0xa9,
+	0x77, 0xe1, 0xbf, 0xc7, 0x5d, 0x80, 0x71, 0x42, 0x71, 0xb3, 0x45, 0x1c, 0x01, 0x7b, 0xa2, 0x7e,
+	0xf6, 0x53, 0x83, 0xbd, 0x00, 0xf3, 0x29, 0x50, 0x0a, 0xf0, 0x37, 0x56, 0xc2, 0xa7, 0x3f, 0x02,
+	0xff, 0x17, 0x62, 0x1b, 0x0a, 0x69, 0x54, 0x0a, 0xf2, 0xcf, 0x16, 0x14, 0x6b, 0xcc, 0xdd, 0x22,
+	0x61, 0xc0, 0x3c, 0x7e, 0x56, 0x86, 0x0f, 0xda, 0xd4, 0x61, 0xcf, 0x15, 0x79, 0xfc, 0x7c, 0xf9,
+	0x41, 0x9b, 0xf2, 0xc1, 0x9f, 0x2f, 0x11, 0xae, 0x11, 0x5b, 0x16, 0x37, 0xd4, 0x8c, 0x5d, 0xf1,
+	0xfb, 0x45, 0xde, 0xe2, 0x8f, 0x55, 0x67, 0xba, 0x64, 0x04, 0xe5, 0x1d, 0xcf, 0x00, 0xaf, 0x33,
+	0x54, 0xa7, 0xb0, 0x13, 0x79, 0x74, 0xcf, 0x0b, 0x71, 0xeb, 0x52, 0x31, 0xcc, 0x00, 0xaf, 0x18,
+	0xfe, 0x6a, 0x69, 0xc7, 0x70, 0xd9, 0x28, 0xde, 0x86, 0xe5, 0x1c, 0xf4, 0x8a, 0xe3, 0x67, 0x82,
+	0xe2, 0xfb, 0x87, 0x21, 0x71, 0x3c, 0x4e, 0x76, 0x08, 0x75, 0x3c, 0xea, 0x3e, 0xe3, 0x13, 0xa2,
+	0x37, 0xe9, 0x2b, 0x89, 0x26, 0x6d, 0xc0, 0x98, 0x95, 0x5e, 0x61, 0xfc, 0xd2, 0x82, 0xd9, 0x1a,
+	0x73, 0x77, 0x70, 0x9b, 0x3d, 0x9b, 0x76, 0x1d, 0xe8, 0xec, 0xe7, 0x60, 0x2c, 0x22, 0x98, 0x05,
+	0x54, 0xf5, 0x10, 0xf5, 0x4b, 0x83, 0x3d, 0x2f, 0xd4, 0x74, 0x2f, 0x20, 0x05, 0xf5, 0x48, 0x74,
+	0x8e, 0x07, 0x34, 0xbc, 0x10, 0xac, 0x86, 0xfe, 0xa0, 0xa7, 0x56, 0xa8, 0x7e, 0xb3, 0xc0, 0x8e,
+	0xc5, 0x14, 0xe1, 0x9b, 0x91, 0xe7, 0xb8, 0x44, 0x2d, 0x7f, 0xae, 0xc7, 0xf8, 0x1e, 0x5c, 0x6b,
+	0x8a, 0x64, 0xe7, 0x51, 0xc3, 0x7d, 0x76, 0x9f, 0x6e, 0xf6, 0x82, 0xd3, 0xb8, 0x2d, 0xc2, 0x4d,
+	0x23, 0x7e, 0x53, 0xc3, 0x96, 0x21, 0x2f, 0x58, 0xc3, 0x3e, 0x03, 0xa5, 0x00, 0xff, 0x24, 0x0b,
+	0x22, 0xad, 0x35, 0x8f, 0xf2, 0xdd, 0x78, 0x7e, 0x3a, 0x2f, 0xc8, 0x5b, 0x30, 0x26, 0xcf, 0xa2,
+	0x2f, 0x6a, 0x15, 0x37, 0xf0, 0xab, 0x22, 0xe6, 0xb4, 0xc1, 0xa5, 0xbb, 0x0c, 0xbf, 0x37, 0x19,
+	0xb3, 0x52, 0xa9, 0x54, 0x2d, 0xd2, 0xd0, 0x4d, 0xd4, 0x36, 0xdb, 0x11, 0xbd, 0xa4, 0xd4, 0x7a,
+	0xa1, 0x4b, 0x6a, 0x77, 0xbe, 0xbf, 0x06, 0xc3, 0x35, 0xe6, 0xa2, 0x1d, 0x98, 0xec, 0x19, 0x24,
+	0x51, 0xa9, 0x72, 0x36, 0xd0, 0x57, 0x8c, 0x23, 0xb6, 0xbd, 0x94, 0x1d, 0xa0, 0xc6, 0x9a, 0x0d,
+	0x18, 0x93, 0x92, 0x0e, 0xd9, 0x5a, 0xac, 0x26, 0x3e, 0xed, 0x9b, 0x46, 0x9f, 0xda, 0x62, 0x0b,
+	0xc6, 0xd5, 0xbb, 0x89, 0xd2, 0x71, 0xdd, 0xc7, 0xdc, 0xbe, 0x65, 0x76, 0xaa, 0x5d, 0x28, 0xdc,
+	0x30, 0x4e, 0x27, 0x68, 0x55, 0x5b, 0x96, 0x37, 0x60, 0xd9, 0x6b, 0x83, 0x84, 0xa6, 0xf2, 0xe9,
+	0x93, 0x84, 0x39, 0x9f, 0x71, 0x18, 0x32, 0xe7, 0x33, 0x0f, 0x26, 0x88, 0x00, 0x4a, 0x0b, 0x7f,
+	0xf4, 0x9a, 0x61, 0x07, 0x53, 0xa6, 0xd7, 0xfb, 0xc6, 0xa9, 0x34, 0xbb, 0x30, 0xd5, 0x2b, 0xd4,
+	0x91, 0xfe, 0x05, 0x18, 0x06, 0x0b, 0x7b, 0x39, 0x27, 0x42, 0x6d, 0xfa, 0x10, 0xa6, 0x35, 0x2d,
+	0x8d, 0xb2, 0xd6, 0xf4, 0x54, 0xbb, 0x9c, 0x17, 0xa2, 0xf6, 0xfd, 0x14, 0x66, 0x4d, 0x52, 0x16,
+	0xad, 0x68, 0x6b, 0x73, 0x94, 0xba, 0xbd, 0x3a, 0x40, 0x64, 0xb7, 0xe0, 0x46, 0x59, 0x99, 0x28,
+	0x78, 0x9e, 0x6e, 0x4e, 0x14, 0x3c, 0x57, 0xa5, 0xc6, 0xf9, 0x8c, 0x22, 0x0f, 0x19, 0x31, 0x1b,
+	0x25, 0x5e, 0x22, 0x5f, 0xae, 0x66, 0x44, 0x8f, 0x60, 0xce, 0xac, 0xb8, 0x90, 0x19, 0xb5, 0x39,
+	0xe3, 0x1b, 0x03, 0xc5, 0x76, 0x53, 0x9a, 0x05, 0x54, 0x22, 0x65, 0xae, 0xc8, 0x4b, 0xa4, 0xcc,
+	0x57, 0x64, 0xa8, 0x06, 0xd0, 0x15, 0x3f, 0xa8, 0xa8, 0x2d, 0x4d, 0xc9, 0x34, 0xbb, 0x94, 0xe9,
+	0xef, 0x5e, 0x97, 0x5e, 0xdd, 0x92, 0xb8, 0x2e, 0x06, 0x35, 0x95, 0xb8, 0x2e, 0x26, 0xd1, 0x83,
+	0x1a, 0x30, 0x93, 0x14, 0x0c, 0xe8, 0x15, 0xfd, 0xf1, 0x33, 0xeb, 0x21, 0xfb, 0xd5, 0x3e, 0x51,
+	0xc9, 0x4b, 0x2e, 0xdd, 0xc6, 0x4b, 0xae, 0x89, 0x11, 0xe3, 0x25, 0xd7, 0x95, 0x41, 0x8c, 0x3a,
+	0xd9, 0x5a, 0x13, 0xa8, 0x33, 0x44, 0x43, 0x02, 0x75, 0x56, 0x7f, 0xee, 0x26, 0xe8, 0x36, 0x38,
+	0x63, 0x82, 0x54, 0xeb, 0x36, 0x26, 0x48, 0x77, 0x49, 0x7b, 0xf4, 0xf3, 0xa7, 0x8f, 0xd7, 0xac,
+	0xcd, 0x77, 0x9f, 0x9c, 0x14, 0xad, 0xe3, 0x93, 0xa2, 0xf5, 0xd7, 0x49, 0xd1, 0xfa, 0xea, 0xb4,
+	0x38, 0x74, 0x7c, 0x5a, 0x1c, 0xfa, 0xe3, 0xb4, 0x38, 0xf4, 0x49, 0xc9, 0xf5, 0xf8, 0x7e, 0xbb,
+	0x59, 0xd9, 0x0b, 0xfc, 0x6a, 0x18, 0x05, 0x07, 0x2d, 0xdc, 0x64, 0x55, 0xf9, 0x6f, 0x72, 0x7e,
+	0x14, 0x12, 0xd6, 0x1c, 0x13, 0xff, 0xb3, 0xbe, 0xfb, 0x4f, 0x00, 0x00, 0x00, 0xff, 0xff, 0xfc,
+	0x48, 0xc1, 0xc9, 0x3c, 0x17, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -1707,6 +2142,14 @@ type MsgClient interface {
 	ExpeditePendingSwapOut(ctx context.Context, in *MsgExpeditePendingSwapOutRequest, opts ...grpc.CallOption) (*MsgExpeditePendingSwapOutResponse, error)
 	PauseVault(ctx context.Context, in *MsgPauseVaultRequest, opts ...grpc.CallOption) (*MsgPauseVaultResponse, error)
 	UnpauseVault(ctx context.Context, in *MsgUnpauseVaultRequest, opts ...grpc.CallOption) (*MsgUnpauseVaultResponse, error)
+	// SetBridgeAddress sets the single external bridge address allowed to mint or burn shares for a vault.
+	SetBridgeAddress(ctx context.Context, in *MsgSetBridgeAddressRequest, opts ...grpc.CallOption) (*MsgSetBridgeAddressResponse, error)
+	// ToggleBridge enables or disables the bridge functionality for a vault.
+	ToggleBridge(ctx context.Context, in *MsgToggleBridgeRequest, opts ...grpc.CallOption) (*MsgToggleBridgeResponse, error)
+	// BridgeMintShares mints local share marker supply for a vault; must be signed by the configured bridge address.
+	BridgeMintShares(ctx context.Context, in *MsgBridgeMintSharesRequest, opts ...grpc.CallOption) (*MsgBridgeMintSharesResponse, error)
+	// BridgeBurnShares burns local share marker supply for a vault; must be signed by the configured bridge address.
+	BridgeBurnShares(ctx context.Context, in *MsgBridgeBurnSharesRequest, opts ...grpc.CallOption) (*MsgBridgeBurnSharesResponse, error)
 }
 
 type msgClient struct {
@@ -1852,6 +2295,42 @@ func (c *msgClient) UnpauseVault(ctx context.Context, in *MsgUnpauseVaultRequest
 	return out, nil
 }
 
+func (c *msgClient) SetBridgeAddress(ctx context.Context, in *MsgSetBridgeAddressRequest, opts ...grpc.CallOption) (*MsgSetBridgeAddressResponse, error) {
+	out := new(MsgSetBridgeAddressResponse)
+	err := c.cc.Invoke(ctx, "/vault.v1.Msg/SetBridgeAddress", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) ToggleBridge(ctx context.Context, in *MsgToggleBridgeRequest, opts ...grpc.CallOption) (*MsgToggleBridgeResponse, error) {
+	out := new(MsgToggleBridgeResponse)
+	err := c.cc.Invoke(ctx, "/vault.v1.Msg/ToggleBridge", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) BridgeMintShares(ctx context.Context, in *MsgBridgeMintSharesRequest, opts ...grpc.CallOption) (*MsgBridgeMintSharesResponse, error) {
+	out := new(MsgBridgeMintSharesResponse)
+	err := c.cc.Invoke(ctx, "/vault.v1.Msg/BridgeMintShares", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) BridgeBurnShares(ctx context.Context, in *MsgBridgeBurnSharesRequest, opts ...grpc.CallOption) (*MsgBridgeBurnSharesResponse, error) {
+	out := new(MsgBridgeBurnSharesResponse)
+	err := c.cc.Invoke(ctx, "/vault.v1.Msg/BridgeBurnShares", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// CreateVault creates a new vault.
@@ -1882,6 +2361,14 @@ type MsgServer interface {
 	ExpeditePendingSwapOut(context.Context, *MsgExpeditePendingSwapOutRequest) (*MsgExpeditePendingSwapOutResponse, error)
 	PauseVault(context.Context, *MsgPauseVaultRequest) (*MsgPauseVaultResponse, error)
 	UnpauseVault(context.Context, *MsgUnpauseVaultRequest) (*MsgUnpauseVaultResponse, error)
+	// SetBridgeAddress sets the single external bridge address allowed to mint or burn shares for a vault.
+	SetBridgeAddress(context.Context, *MsgSetBridgeAddressRequest) (*MsgSetBridgeAddressResponse, error)
+	// ToggleBridge enables or disables the bridge functionality for a vault.
+	ToggleBridge(context.Context, *MsgToggleBridgeRequest) (*MsgToggleBridgeResponse, error)
+	// BridgeMintShares mints local share marker supply for a vault; must be signed by the configured bridge address.
+	BridgeMintShares(context.Context, *MsgBridgeMintSharesRequest) (*MsgBridgeMintSharesResponse, error)
+	// BridgeBurnShares burns local share marker supply for a vault; must be signed by the configured bridge address.
+	BridgeBurnShares(context.Context, *MsgBridgeBurnSharesRequest) (*MsgBridgeBurnSharesResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -1932,6 +2419,18 @@ func (*UnimplementedMsgServer) PauseVault(ctx context.Context, req *MsgPauseVaul
 }
 func (*UnimplementedMsgServer) UnpauseVault(ctx context.Context, req *MsgUnpauseVaultRequest) (*MsgUnpauseVaultResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UnpauseVault not implemented")
+}
+func (*UnimplementedMsgServer) SetBridgeAddress(ctx context.Context, req *MsgSetBridgeAddressRequest) (*MsgSetBridgeAddressResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetBridgeAddress not implemented")
+}
+func (*UnimplementedMsgServer) ToggleBridge(ctx context.Context, req *MsgToggleBridgeRequest) (*MsgToggleBridgeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ToggleBridge not implemented")
+}
+func (*UnimplementedMsgServer) BridgeMintShares(ctx context.Context, req *MsgBridgeMintSharesRequest) (*MsgBridgeMintSharesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BridgeMintShares not implemented")
+}
+func (*UnimplementedMsgServer) BridgeBurnShares(ctx context.Context, req *MsgBridgeBurnSharesRequest) (*MsgBridgeBurnSharesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BridgeBurnShares not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -2208,6 +2707,78 @@ func _Msg_UnpauseVault_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_SetBridgeAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSetBridgeAddressRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SetBridgeAddress(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/vault.v1.Msg/SetBridgeAddress",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SetBridgeAddress(ctx, req.(*MsgSetBridgeAddressRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_ToggleBridge_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgToggleBridgeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ToggleBridge(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/vault.v1.Msg/ToggleBridge",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ToggleBridge(ctx, req.(*MsgToggleBridgeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_BridgeMintShares_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgBridgeMintSharesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).BridgeMintShares(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/vault.v1.Msg/BridgeMintShares",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).BridgeMintShares(ctx, req.(*MsgBridgeMintSharesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_BridgeBurnShares_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgBridgeBurnSharesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).BridgeBurnShares(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/vault.v1.Msg/BridgeBurnShares",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).BridgeBurnShares(ctx, req.(*MsgBridgeBurnSharesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var Msg_serviceDesc = _Msg_serviceDesc
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "vault.v1.Msg",
@@ -2272,6 +2843,22 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UnpauseVault",
 			Handler:    _Msg_UnpauseVault_Handler,
+		},
+		{
+			MethodName: "SetBridgeAddress",
+			Handler:    _Msg_SetBridgeAddress_Handler,
+		},
+		{
+			MethodName: "ToggleBridge",
+			Handler:    _Msg_ToggleBridge_Handler,
+		},
+		{
+			MethodName: "BridgeMintShares",
+			Handler:    _Msg_BridgeMintShares_Handler,
+		},
+		{
+			MethodName: "BridgeBurnShares",
+			Handler:    _Msg_BridgeBurnShares_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -3315,6 +3902,283 @@ func (m *MsgUnpauseVaultResponse) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgSetBridgeAddressRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSetBridgeAddressRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSetBridgeAddressRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.BridgeAddress) > 0 {
+		i -= len(m.BridgeAddress)
+		copy(dAtA[i:], m.BridgeAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.BridgeAddress)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.VaultAddress) > 0 {
+		i -= len(m.VaultAddress)
+		copy(dAtA[i:], m.VaultAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.VaultAddress)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Admin) > 0 {
+		i -= len(m.Admin)
+		copy(dAtA[i:], m.Admin)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Admin)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSetBridgeAddressResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSetBridgeAddressResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSetBridgeAddressResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgToggleBridgeRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgToggleBridgeRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgToggleBridgeRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Enabled {
+		i--
+		if m.Enabled {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.VaultAddress) > 0 {
+		i -= len(m.VaultAddress)
+		copy(dAtA[i:], m.VaultAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.VaultAddress)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Admin) > 0 {
+		i -= len(m.Admin)
+		copy(dAtA[i:], m.Admin)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Admin)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgToggleBridgeResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgToggleBridgeResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgToggleBridgeResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgBridgeMintSharesRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgBridgeMintSharesRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgBridgeMintSharesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Shares.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	if len(m.VaultAddress) > 0 {
+		i -= len(m.VaultAddress)
+		copy(dAtA[i:], m.VaultAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.VaultAddress)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Bridge) > 0 {
+		i -= len(m.Bridge)
+		copy(dAtA[i:], m.Bridge)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Bridge)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgBridgeMintSharesResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgBridgeMintSharesResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgBridgeMintSharesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgBridgeBurnSharesRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgBridgeBurnSharesRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgBridgeBurnSharesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Shares.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	if len(m.VaultAddress) > 0 {
+		i -= len(m.VaultAddress)
+		copy(dAtA[i:], m.VaultAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.VaultAddress)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Bridge) > 0 {
+		i -= len(m.Bridge)
+		copy(dAtA[i:], m.Bridge)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Bridge)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgBridgeBurnSharesResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgBridgeBurnSharesResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgBridgeBurnSharesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -3759,6 +4623,121 @@ func (m *MsgUnpauseVaultRequest) Size() (n int) {
 }
 
 func (m *MsgUnpauseVaultResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgSetBridgeAddressRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Admin)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.VaultAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.BridgeAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgSetBridgeAddressResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgToggleBridgeRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Admin)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.VaultAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	if m.Enabled {
+		n += 2
+	}
+	return n
+}
+
+func (m *MsgToggleBridgeResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgBridgeMintSharesRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Bridge)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.VaultAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.Shares.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgBridgeMintSharesResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgBridgeBurnSharesRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Bridge)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.VaultAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.Shares.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgBridgeBurnSharesResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -6697,6 +7676,780 @@ func (m *MsgUnpauseVaultResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgUnpauseVaultResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSetBridgeAddressRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSetBridgeAddressRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSetBridgeAddressRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Admin = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VaultAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VaultAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BridgeAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.BridgeAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSetBridgeAddressResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSetBridgeAddressResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSetBridgeAddressResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgToggleBridgeRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgToggleBridgeRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgToggleBridgeRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Admin = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VaultAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VaultAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Enabled", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Enabled = bool(v != 0)
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgToggleBridgeResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgToggleBridgeResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgToggleBridgeResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgBridgeMintSharesRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgBridgeMintSharesRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgBridgeMintSharesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Bridge", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Bridge = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VaultAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VaultAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Shares", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Shares.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgBridgeMintSharesResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgBridgeMintSharesResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgBridgeMintSharesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgBridgeBurnSharesRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgBridgeBurnSharesRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgBridgeBurnSharesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Bridge", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Bridge = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VaultAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VaultAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Shares", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Shares.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgBridgeBurnSharesResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgBridgeBurnSharesResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgBridgeBurnSharesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

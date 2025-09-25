@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"time"
 
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
@@ -18,7 +19,7 @@ func (s *TestSuite) TestVaultGenesis_InitAndExport() {
 	vault := types.VaultAccount{
 		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
 		Admin:               admin,
-		ShareDenom:          shareDenom,
+		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
 		UnderlyingAsset:     underlying,
 		CurrentInterestRate: types.ZeroInterestRate,
 		DesiredInterestRate: types.ZeroInterestRate,
@@ -55,7 +56,7 @@ func (s *TestSuite) TestVaultGenesis_InitAndExport() {
 	exp := exported.Vaults[0]
 	s.Require().Equal(vault.GetAddress().String(), exp.GetAddress().String())
 	s.Require().Equal(vault.Admin, exp.Admin)
-	s.Require().Equal(vault.ShareDenom, exp.ShareDenom)
+	s.Require().Equal(vault.TotalShares, exp.TotalShares)
 	s.Require().Equal(vault.UnderlyingAsset, exp.UnderlyingAsset)
 
 	s.Require().Len(exported.PayoutTimeoutQueue, 1)
@@ -85,7 +86,7 @@ func (s *TestSuite) TestVaultGenesis_RoundTrip_PastAndFutureTimeouts() {
 	vault := types.VaultAccount{
 		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
 		Admin:               admin,
-		ShareDenom:          shareDenom,
+		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
 		UnderlyingAsset:     underlying,
 		CurrentInterestRate: types.ZeroInterestRate,
 		DesiredInterestRate: types.ZeroInterestRate,
@@ -124,7 +125,7 @@ func (s *TestSuite) TestVaultGenesis_InvalidTimeoutAddressPanics() {
 	vault := types.VaultAccount{
 		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
 		Admin:               admin,
-		ShareDenom:          shareDenom,
+		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
 		UnderlyingAsset:     underlying,
 		CurrentInterestRate: types.ZeroInterestRate,
 		DesiredInterestRate: types.ZeroInterestRate,
@@ -154,7 +155,7 @@ func (s *TestSuite) TestVaultGenesis_ExistingAccountNumberCopied() {
 	vault := types.VaultAccount{
 		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
 		Admin:               admin,
-		ShareDenom:          shareDenom,
+		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
 		UnderlyingAsset:     underlying,
 		CurrentInterestRate: types.ZeroInterestRate,
 		DesiredInterestRate: types.ZeroInterestRate,
@@ -183,7 +184,7 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidVault() {
 	vault := types.VaultAccount{
 		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
 		Admin:               "",
-		ShareDenom:          "invalid denom!",
+		TotalShares:         sdk.Coin{Denom: "invalid denom!", Amount: math.NewInt(0)},
 		UnderlyingAsset:     "underX",
 		CurrentInterestRate: types.ZeroInterestRate,
 		DesiredInterestRate: types.ZeroInterestRate,
@@ -201,7 +202,7 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidPendingSwapOut() {
 	vault := types.VaultAccount{
 		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
 		Admin:               admin,
-		ShareDenom:          shareDenom,
+		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
 		UnderlyingAsset:     underlying,
 		CurrentInterestRate: types.ZeroInterestRate,
 		DesiredInterestRate: types.ZeroInterestRate,
@@ -237,7 +238,7 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPendingSwapOutHasUnknownVault
 	vault := types.VaultAccount{
 		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
 		Admin:               admin,
-		ShareDenom:          shareDenom,
+		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
 		UnderlyingAsset:     underlying,
 		CurrentInterestRate: types.ZeroInterestRate,
 		DesiredInterestRate: types.ZeroInterestRate,
@@ -273,7 +274,7 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPendingSwapOutHasBadVaultAddr
 	vault := types.VaultAccount{
 		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
 		Admin:               admin,
-		ShareDenom:          shareDenom,
+		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
 		UnderlyingAsset:     underlying,
 		CurrentInterestRate: types.ZeroInterestRate,
 		DesiredInterestRate: types.ZeroInterestRate,

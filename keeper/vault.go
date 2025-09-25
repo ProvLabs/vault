@@ -49,7 +49,7 @@ func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*type
 		return nil, fmt.Errorf("failed to create vault account: %w", err)
 	}
 
-	if _, err := k.createVaultMarker(ctx, vault.GetAddress(), vault.ShareDenom, vault.UnderlyingAsset); err != nil {
+	if _, err := k.createVaultMarker(ctx, vault.GetAddress(), vault.TotalShares.Denom, vault.UnderlyingAsset); err != nil {
 		return nil, fmt.Errorf("failed to create vault marker: %w", err)
 	}
 
@@ -102,7 +102,6 @@ func (k *Keeper) createVaultAccount(ctx sdk.Context, admin, shareDenom, underlyi
 		}
 	}
 	vaultAcc = k.AuthKeeper.NewAccount(ctx, vault).(types.VaultAccountI)
-	vault.PausedBalance = sdk.Coin{}
 	k.AuthKeeper.SetAccount(ctx, vaultAcc)
 
 	return vault, nil
@@ -206,6 +205,11 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 		return nil, err
 	}
 
+	vault.TotalShares = vault.TotalShares.Add(shares)
+	if err := k.SetVaultAccount(ctx, vault); err != nil {
+		return nil, fmt.Errorf("failed to update vault account: %w", err)
+	}
+
 	if err := k.MarkerKeeper.WithdrawCoins(ctx, vault.GetAddress(), recipient, shares.Denom, sdk.NewCoins(shares)); err != nil {
 		return nil, err
 	}
@@ -254,8 +258,8 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 		return 0, fmt.Errorf("swaps are not enabled for vault %s", vaultAddr.String())
 	}
 
-	if shares.Denom != vault.ShareDenom {
-		return 0, fmt.Errorf("swap out denom must be share denom %v : %v", shares.Denom, vault.ShareDenom)
+	if shares.Denom != vault.TotalShares.Denom {
+		return 0, fmt.Errorf("swap out denom must be share denom %v : %v", shares.Denom, vault.TotalShares.Denom)
 	}
 
 	if redeemDenom == "" {
@@ -370,7 +374,7 @@ func (k Keeper) ValidateInterestRateLimits(minRateStr, maxRateStr string) error 
 }
 
 // autoPauseVault sets a vault's state to paused, records the reason, persists it to state,
-// and emits an EventVaultAutoPaused. This function is intended to be called in response to a
+// and emits an EventVaultPaused. This function is intended to be called in response to a
 // critical, unrecoverable error for a specific vault. The provided reason should be a stable,
 // hard-coded string suitable for persistence and later auditing.
 func (k *Keeper) autoPauseVault(ctx context.Context, vault *types.VaultAccount, reason string) {
@@ -385,7 +389,13 @@ func (k *Keeper) autoPauseVault(ctx context.Context, vault *types.VaultAccount, 
 	vault.Paused = true
 	vault.PausedReason = reason
 
+	tvv, err := k.GetTVVInUnderlyingAsset(sdkCtx, *vault)
+	if err != nil {
+		sdkCtx.Logger().Error("Failed to get TVV in underlying asset", "vault_address", vault.GetAddress().String(), "error", err)
+	}
+
+	vault.PausedBalance = sdk.Coin{Denom: vault.UnderlyingAsset, Amount: tvv}
 	k.AuthKeeper.SetAccount(ctx, vault)
 
-	k.emitEvent(sdkCtx, types.NewEventVaultAutoPaused(vault.GetAddress().String(), reason))
+	k.emitEvent(sdkCtx, types.NewEventVaultPaused(vault.GetAddress().String(), vault.GetAddress().String(), reason, vault.PausedBalance))
 }

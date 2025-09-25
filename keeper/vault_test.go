@@ -45,7 +45,7 @@ func (s *TestSuite) TestCreateVault_Success() {
 	vault, err := s.k.CreateVault(s.ctx, attrs)
 	s.Require().NoError(err)
 	s.Require().Equal(attrs.admin, vault.Admin)
-	s.Require().Equal(attrs.share, vault.ShareDenom)
+	s.Require().Equal(attrs.share, vault.TotalShares.Denom)
 	s.Require().Equal(attrs.underlying, vault.UnderlyingAsset)
 
 	addr := types.GetVaultAddress(share)
@@ -124,8 +124,11 @@ func (s *TestSuite) TestSwapIn_MultiAsset() {
 	depositorAddr := s.CreateAndFundAccount(sdk.NewInt64Coin(paymentDenom, 1000))
 	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, depositorAddr, sdk.NewCoins(sdk.NewInt64Coin(unacceptedDenom, 1000))), "should fund depositor with unaccepted denom")
 
+	totalShares := sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(1000))
 	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1000))), "should fund vault principal with initial TVV")
-	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(1000))), "should mint initial share supply")
+	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), totalShares), "should mint initial share supply")
+	vault.TotalShares = totalShares
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 	depositCoin := sdk.NewInt64Coin(paymentDenom, 10)
 	mintedShares, err := s.k.SwapIn(s.ctx, vault.GetAddress(), depositorAddr, depositCoin)
@@ -169,19 +172,25 @@ func (s *TestSuite) TestSwapOut_MultiAsset() {
 	blockTime := time.Now().UTC()
 	s.ctx = s.ctx.WithBlockTime(blockTime)
 
+	initialShares := utils.ShareScalar.MulRaw(100)
 	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
 	vault.SwapOutEnabled = true
 	vault.WithdrawalDelaySeconds = 0 // Set to zero for instant processing in the same block's endblocker
+	vault.TotalShares = sdk.NewCoin(shareDenom, initialShares)
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
-
-	initialShares := utils.ShareScalar.MulRaw(100)
 	redeemerAddr := s.CreateAndFundAccount(sdk.NewCoin(shareDenom, initialShares))
 
 	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(
 		sdk.NewInt64Coin(underlyingDenom, 500),
 		sdk.NewInt64Coin(paymentDenom, 500),
 	)), "should fund vault principal with liquidity")
+
+	vault, err := s.k.GetVault(s.ctx, vault.GetAddress())
+	s.Require().NoError(err, "should get vault")
+	s.Require().NotNil(vault, "vault should not be nil")
 	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(500))), "should mint initial share supply")
+	vault.TotalShares = vault.TotalShares.Add(sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(500)))
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 	sharesToRedeemForPayment := sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(10))
 	reqID1, err := s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sharesToRedeemForPayment, paymentDenom)
@@ -375,6 +384,11 @@ func (s *TestSuite) TestSwapOut_SucceedsWithRestrictedUnderlyingAssetRequiredAtt
 	s.Require().NoError(s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), restrictedUnderlyingDenom, sdk.NewCoins(sdk.NewInt64Coin(restrictedUnderlyingDenom, initialTVV))))
 	initialShares := utils.ShareScalar.MulRaw(initialTVV)
 	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), sdk.NewCoin(shareDenom, initialShares)), "should mint initial share supply")
+	vault, err = s.k.GetVault(s.ctx, vault.GetAddress())
+	s.Require().NoError(err, "should get vault")
+	s.Require().NotNil(vault, "vault should not be nil")
+	vault.TotalShares = sdk.NewCoin(shareDenom, initialShares)
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 	redeemerAddr := s.CreateAndFundAccount(sdk.Coin{})
 	sharesForRedeemer := utils.ShareScalar.MulRaw(100)
@@ -621,7 +635,7 @@ func (s *TestSuite) TestAutoPauseVault_SetsPausedAndEmitsEvent() {
 	evs := s.ctx.EventManager().Events()
 	s.Require().NotEmpty(evs, "an event should be emitted")
 	last := evs[len(evs)-1]
-	s.Require().Equal("vault.v1.EventVaultAutoPaused", last.Type, "event type should be EventVaultAutoPaused")
+	s.Require().Equal("vault.v1.EventVaultPaused", last.Type, "event type should be EventVaultAutoPaused")
 
 	hasAddr := false
 	hasReason := false

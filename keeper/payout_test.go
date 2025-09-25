@@ -53,6 +53,7 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 				vault, err := s.k.GetVault(s.ctx, vaultAddr)
 				s.Require().NoError(err, "should successfully get vault")
 				s.Require().NotNil(vault, "vault should not be nil")
+				s.Require().Equal(supply, vault.TotalShares, "vault TotalShares should match supply")
 
 				expectedEvents := sdk.Events{}
 				expectedEvents = append(expectedEvents, createSendCoinEvents(principalAddress.String(), ownerAddr.String(), sdk.NewCoins(assets).String())...)
@@ -98,6 +99,7 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 				vault, err := s.k.GetVault(s.ctx, vaultAddr)
 				s.Require().NoError(err, "should successfully get vault")
 				s.Require().NotNil(vault, "vault should not be nil")
+				s.Require().Equal(supply, vault.TotalShares, "vault TotalShares should match supply")
 
 				expectedEvents := sdk.Events{}
 				expectedEvents = append(expectedEvents, createSendCoinEvents(principalAddress.String(), ownerAddr.String(), sdk.NewCoins(expectedAssets).String())...)
@@ -123,8 +125,11 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 				s.Require().NoError(err, "should successfully swap in assets")
 				s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, ownerAddr, vault.GetAddress(), sdk.NewCoins(*minted)), "should escrow shares into vault account")
 
+				vault, err = s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err, "should successfully get vault")
 				vault.PeriodStart = 1
 				s.Require().NoError(s.k.SetVaultAccount(s.ctx, vault), "must update vault account period")
+				s.Require().NotNil(vault, "vault should not be nil")
 
 				req := types.PendingSwapOut{
 					Owner:        ownerAddr.String(),
@@ -144,6 +149,7 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 				vault, err := s.k.GetVault(s.ctx, vaultAddr)
 				s.Require().NoError(err, "should successfully get vault")
 				s.Require().NotNil(vault, "vault should not be nil")
+				s.Require().Equal(supply, vault.TotalShares, "vault TotalShares should match supply")
 
 				expectedEvents := sdk.Events{}
 				reconcileEvent, err := sdk.TypedEventToEvent(types.NewEventVaultReconcile(vaultAddr.String(), assets, assets, vault.CurrentInterestRate, testBlockTime.Unix()-1, math.NewInt(0)))

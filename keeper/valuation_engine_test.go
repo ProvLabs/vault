@@ -112,6 +112,9 @@ func (s *TestSuite) TestGetTVVInUnderlyingAsset_EmptyAndSharesOnly() {
 	s.Require().Equal(math.ZeroInt(), tvvEmpty, "TVV of empty vault should be zero")
 
 	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), sdk.NewInt64Coin(shareDenom, 1000)), "should mint shares")
+	vault.TotalShares = sdk.NewInt64Coin(shareDenom, 1000)
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
 	tvvSharesOnly, err := testKeeper.GetTVVInUnderlyingAsset(s.ctx, *vault)
 	s.Require().NoError(err, "get TVV of shares-only vault should succeed")
 	s.Require().Equal(math.ZeroInt(), tvvSharesOnly, "TVV of shares-only vault should be zero")
@@ -209,6 +212,8 @@ func (s *TestSuite) TestGetNAVPerShareInUnderlyingAsset_FloorsToZeroForTinyPerSh
 	totalVaultValueInAsset := math.NewInt(1005)
 	shareSupplyMint := sdk.NewCoin(shareDenom, utils.ShareScalar.Mul(totalVaultValueInAsset))
 	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), shareSupplyMint), "should mint share supply matching tvv*ShareScalar")
+	vault.TotalShares = shareSupplyMint
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
 	navPerShareAsset, err := testKeeper.GetNAVPerShareInUnderlyingAsset(s.ctx, *vault)
@@ -231,6 +236,8 @@ func (s *TestSuite) TestGetNAVPerShareInUnderlyingAsset_ZeroSupplyAndNormalNAV()
 	s.Require().Equal(math.ZeroInt(), navPerShareZeroSupply, "NAV per share should be zero with zero share supply")
 
 	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), sdk.NewInt64Coin(shareDenom, 500)), "should mint shares")
+	vault.TotalShares = sdk.NewInt64Coin(shareDenom, 500)
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 	navPerShareNormal, err := testKeeper.GetNAVPerShareInUnderlyingAsset(s.ctx, *vault)
 	s.Require().NoError(err, "should compute normal NAV per share")
 	s.Require().Equal(math.NewInt(2), navPerShareNormal, "1000 TVV / 500 shares should be 2 NAV per share")
@@ -250,11 +257,13 @@ func (s *TestSuite) TestConvertDepositToSharesInUnderlyingAsset_UsesNAV() {
 
 	tvv, err := testKeeper.GetTVVInUnderlyingAsset(s.ctx, *vault)
 	s.Require().NoError(err, "should compute TVV")
-	initialShares := tvv.Mul(utils.ShareScalar)
+	initialShares := sdk.NewCoin(shareDenom, tvv.Mul(utils.ShareScalar))
 	s.Require().NoError(
-		s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), sdk.NewCoin(shareDenom, initialShares)),
+		s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), initialShares),
 		"should mint initial shares to match TVV",
 	)
+	vault.TotalShares = initialShares
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 	mintedShares, err := testKeeper.ConvertDepositToSharesInUnderlyingAsset(s.ctx, *vault, sdk.NewInt64Coin(paymentDenom, 4))
 	s.Require().NoError(err, "deposit conversion should succeed")
@@ -286,6 +295,8 @@ func (s *TestSuite) TestConvertDepositToSharesInUnderlyingAsset_InitialAndDustDe
 		sdk.NewInt64Coin(underlyingDenom, 1000),
 	)), "should fund vault for TVV")
 	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), sdk.NewCoin(shareDenom, math.NewInt(1))), "should add a single share to circulation")
+	vault.TotalShares = sdk.NewCoin(shareDenom, math.NewInt(1))
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 	dustDepositShares, err := testKeeper.ConvertDepositToSharesInUnderlyingAsset(s.ctx, *vault, sdk.NewInt64Coin(paymentDenom, 1))
 	s.Require().NoError(err, "dust deposit should not error")
 	s.Require().True(dustDepositShares.Amount.IsZero(), "dust deposit should floor to zero shares")
@@ -305,6 +316,8 @@ func (s *TestSuite) TestConvertSharesToRedeemCoin_AssetAndPaymentPaths() {
 	totalVaultValueInAsset := math.NewInt(1005)
 	shareSupply := utils.ShareScalar.Mul(totalVaultValueInAsset)
 	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), sdk.NewCoin(shareDenom, shareSupply)), "should mint share supply equal to tvv*ShareScalar")
+	vault.TotalShares = sdk.NewCoin(shareDenom, shareSupply)
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
 	outAssetCoin, err := testKeeper.ConvertSharesToRedeemCoin(s.ctx, *vault, utils.ShareScalar, underlyingDenom)
@@ -340,6 +353,8 @@ func (s *TestSuite) TestConvertSharesToRedeemCoin_ZeroAndDustRedemption() {
 	tvv := math.NewInt(1000)
 	totalShares := tvv.Mul(utils.ShareScalar)
 	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), sdk.NewCoin(shareDenom, totalShares)), "should mint total shares")
+	vault.TotalShares = sdk.NewCoin(shareDenom, totalShares)
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(
 		sdk.NewInt64Coin(underlyingDenom, 1000),
 	)), "should fund vault for TVV")
@@ -358,6 +373,8 @@ func (s *TestSuite) TestConvertSharesToRedeemCoin_TVVZero_SupplyNonzero() {
 		s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), initialShareSupply),
 		"minting initial shares while TVV is zero should succeed",
 	)
+	vault.TotalShares = initialShareSupply
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
 	redeemCoin, err := testKeeper.ConvertSharesToRedeemCoin(s.ctx, *vault, utils.ShareScalar, underlyingDenom)
@@ -395,6 +412,7 @@ func (s *TestSuite) TestGetNAVPerShareInUnderlyingAsset_PausedUsesPausedBalance(
 
 	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), sdk.NewInt64Coin(shareDenom, 1_000_000)),
 		"minting shares before paused NAV test should succeed")
+	vault.TotalShares = sdk.NewInt64Coin(shareDenom, 1_000_000)
 
 	vault.Paused = true
 	vault.PausedBalance = sdk.NewInt64Coin(underlyingDenom, 1234)

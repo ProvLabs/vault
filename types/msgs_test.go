@@ -977,3 +977,253 @@ func TestMsgUnpauseVaultRequest_ValidateBasic(t *testing.T) {
 		})
 	}
 }
+
+func TestMsgSetBridgeAddressRequest_ValidateBasic(t *testing.T) {
+	admin := utils.TestAddress().Bech32
+	vault := utils.TestAddress().Bech32
+	bridge := utils.TestAddress().Bech32
+
+	tests := []struct {
+		name        string
+		msg         types.MsgSetBridgeAddressRequest
+		expectedErr error
+	}{
+		{
+			name: "valid",
+			msg: types.MsgSetBridgeAddressRequest{
+				Admin:         admin,
+				VaultAddress:  vault,
+				BridgeAddress: bridge,
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "invalid admin",
+			msg: types.MsgSetBridgeAddressRequest{
+				Admin:         "bad",
+				VaultAddress:  vault,
+				BridgeAddress: bridge,
+			},
+			expectedErr: fmt.Errorf("invalid admin address: %q", "bad"),
+		},
+		{
+			name: "invalid vault",
+			msg: types.MsgSetBridgeAddressRequest{
+				Admin:         admin,
+				VaultAddress:  "bad",
+				BridgeAddress: bridge,
+			},
+			expectedErr: fmt.Errorf("invalid vault address: %q", "bad"),
+		},
+		{
+			name: "invalid bridge",
+			msg: types.MsgSetBridgeAddressRequest{
+				Admin:         admin,
+				VaultAddress:  vault,
+				BridgeAddress: "bad",
+			},
+			expectedErr: fmt.Errorf("invalid bridge address: %q", "bad"),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.expectedErr != nil {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tc.expectedErr.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestMsgToggleBridgeRequest_ValidateBasic(t *testing.T) {
+	admin := utils.TestAddress().Bech32
+	vault := utils.TestAddress().Bech32
+
+	tests := []struct {
+		name        string
+		msg         types.MsgToggleBridgeRequest
+		expectedErr error
+	}{
+		{
+			name: "valid",
+			msg: types.MsgToggleBridgeRequest{
+				Admin:        admin,
+				VaultAddress: vault,
+				Enabled:      true,
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "invalid admin",
+			msg: types.MsgToggleBridgeRequest{
+				Admin:        "bad",
+				VaultAddress: vault,
+				Enabled:      false,
+			},
+			expectedErr: fmt.Errorf("invalid admin address: %q", "bad"),
+		},
+		{
+			name: "invalid vault",
+			msg: types.MsgToggleBridgeRequest{
+				Admin:        admin,
+				VaultAddress: "bad",
+				Enabled:      true,
+			},
+			expectedErr: fmt.Errorf("invalid vault address: %q", "bad"),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.expectedErr != nil {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tc.expectedErr.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestMsgBridgeMintSharesRequest_ValidateBasic(t *testing.T) {
+	bridge := utils.TestAddress().Bech32
+	vault := utils.TestAddress().Bech32
+
+	tests := []struct {
+		name        string
+		msg         types.MsgBridgeMintSharesRequest
+		expectedErr error
+	}{
+		{
+			name: "valid",
+			msg: types.MsgBridgeMintSharesRequest{
+				Bridge:       bridge,
+				VaultAddress: vault,
+				Shares:       sdk.NewInt64Coin("vaultshare", 100),
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "invalid bridge",
+			msg: types.MsgBridgeMintSharesRequest{
+				Bridge:       "bad",
+				VaultAddress: vault,
+				Shares:       sdk.NewInt64Coin("vaultshare", 100),
+			},
+			expectedErr: fmt.Errorf("invalid bridge address: %q", "bad"),
+		},
+		{
+			name: "invalid vault",
+			msg: types.MsgBridgeMintSharesRequest{
+				Bridge:       bridge,
+				VaultAddress: "bad",
+				Shares:       sdk.NewInt64Coin("vaultshare", 100),
+			},
+			expectedErr: fmt.Errorf("invalid vault address: %q", "bad"),
+		},
+		{
+			name: "invalid shares denom",
+			msg: types.MsgBridgeMintSharesRequest{
+				Bridge:       bridge,
+				VaultAddress: vault,
+				Shares:       sdk.Coin{Denom: "inv@lid$", Amount: sdkmath.NewInt(100)},
+			},
+			expectedErr: fmt.Errorf("invalid shares coin %v: %w", sdk.Coin{Denom: "inv@lid$", Amount: sdkmath.NewInt(100)}, fmt.Errorf("invalid denom: %s", "inv@lid$")),
+		},
+		{
+			name: "zero shares amount",
+			msg: types.MsgBridgeMintSharesRequest{
+				Bridge:       bridge,
+				VaultAddress: vault,
+				Shares:       sdk.NewInt64Coin("vaultshare", 0),
+			},
+			expectedErr: fmt.Errorf("shares amount must be greater than zero"),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.expectedErr != nil {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tc.expectedErr.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func TestMsgBridgeBurnSharesRequest_ValidateBasic(t *testing.T) {
+	bridge := utils.TestAddress().Bech32
+	vault := utils.TestAddress().Bech32
+
+	tests := []struct {
+		name        string
+		msg         types.MsgBridgeBurnSharesRequest
+		expectedErr error
+	}{
+		{
+			name: "valid",
+			msg: types.MsgBridgeBurnSharesRequest{
+				Bridge:       bridge,
+				VaultAddress: vault,
+				Shares:       sdk.NewInt64Coin("vaultshare", 100),
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "invalid bridge",
+			msg: types.MsgBridgeBurnSharesRequest{
+				Bridge:       "bad",
+				VaultAddress: vault,
+				Shares:       sdk.NewInt64Coin("vaultshare", 100),
+			},
+			expectedErr: fmt.Errorf("invalid bridge address: %q", "bad"),
+		},
+		{
+			name: "invalid vault",
+			msg: types.MsgBridgeBurnSharesRequest{
+				Bridge:       bridge,
+				VaultAddress: "bad",
+				Shares:       sdk.NewInt64Coin("vaultshare", 100),
+			},
+			expectedErr: fmt.Errorf("invalid vault address: %q", "bad"),
+		},
+		{
+			name: "invalid shares denom",
+			msg: types.MsgBridgeBurnSharesRequest{
+				Bridge:       bridge,
+				VaultAddress: vault,
+				Shares:       sdk.Coin{Denom: "inv@lid$", Amount: sdkmath.NewInt(100)},
+			},
+			expectedErr: fmt.Errorf("invalid shares coin %v: %w", sdk.Coin{Denom: "inv@lid$", Amount: sdkmath.NewInt(100)}, fmt.Errorf("invalid denom: %s", "inv@lid$")),
+		},
+		{
+			name: "zero shares amount",
+			msg: types.MsgBridgeBurnSharesRequest{
+				Bridge:       bridge,
+				VaultAddress: vault,
+				Shares:       sdk.NewInt64Coin("vaultshare", 0),
+			},
+			expectedErr: fmt.Errorf("shares amount must be greater than zero"),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.expectedErr != nil {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tc.expectedErr.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+		})
+	}
+}

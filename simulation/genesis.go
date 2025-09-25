@@ -120,7 +120,7 @@ func randomVaults(simState *module.SimulationState) []types.VaultAccount {
 		vault := types.VaultAccount{
 			BaseAccount:            authtypes.NewBaseAccountWithAddress(addr),
 			Admin:                  admin,
-			ShareDenom:             shareDenom,
+			TotalShares:            sdk.NewCoin(shareDenom, sdkmath.ZeroInt()),
 			UnderlyingAsset:        underlyingDenom,
 			PaymentDenom:           paymentDenom,
 			CurrentInterestRate:    fmt.Sprintf("%f", currentRate),
@@ -180,7 +180,7 @@ func randomPendingSwaps(simState *module.SimulationState, vaults []types.VaultAc
 			// Multiply the base random amount by the ShareScalar to get a realistic, scaled share amount
 			baseSharesAmount := sdkmath.NewInt(simState.Rand.Int63n(MaxSharesAmount) + 1)
 			scaledSharesAmount := baseSharesAmount.Mul(utils.ShareScalar)
-			shares := sdk.NewCoin(vault.ShareDenom, scaledSharesAmount)
+			shares := sdk.NewCoin(vault.TotalShares.Denom, scaledSharesAmount)
 
 			redeemDenom := vault.UnderlyingAsset
 			if vault.PaymentDenom != "" && simState.Rand.Intn(ChanceOfRedeemDenomIsPayment) == 0 {

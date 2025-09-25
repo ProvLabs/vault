@@ -393,3 +393,23 @@ func (s *TestSuite) setupSinglePaymentDenomVault(underlyingDenom, shareDenom, pa
 
 	return vault
 }
+
+// createBridgeMintSharesEventsExact returns the exact ordered events a successful
+// BridgeMintShares emits: marker mint to the share marker, withdraw to the bridge,
+// then the vault EventBridgeMintShares—suitable for strict equality checks in tests.
+func createBridgeMintSharesEventsExact(vaultAddr, bridgeAddr sdk.AccAddress, shareDenom string, shares sdk.Coin) sdk.Events {
+	markerAddr := markertypes.MustGetMarkerAddress(shareDenom)
+	markerModuleAddr := authtypes.NewModuleAddress(markertypes.ModuleName)
+
+	events := sdk.NewEventManager().Events()
+	events = append(events, createMarkerMintCoinEvents(markerModuleAddr, vaultAddr, markerAddr, shares)...)
+	events = append(events, createMarkerWithdraw(vaultAddr, markerAddr, bridgeAddr, shares)...)
+	events = append(events, sdk.NewEvent(
+		"vault.v1.EventBridgeMintShares",
+		sdk.NewAttribute("bridge", bridgeAddr.String()),
+		sdk.NewAttribute("shares", CoinToJSON(shares)),
+		sdk.NewAttribute("vault_address", vaultAddr.String()),
+	))
+
+	return events
+}

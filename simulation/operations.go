@@ -217,7 +217,7 @@ func SimulateMsgSwapOut(k keeper.Keeper) simtypes.Operation {
 		}
 
 		// Find an account that has shares in this vault
-		owner, balance, err := getRandomAccountWithDenom(r, k, ctx, accs, vault.ShareDenom)
+		owner, balance, err := getRandomAccountWithDenom(r, k, ctx, accs, vault.TotalShares.Denom)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSwapOutRequest{}), "no account has shares in this vault"), nil, nil
 		}
@@ -227,7 +227,7 @@ func SimulateMsgSwapOut(k keeper.Keeper) simtypes.Operation {
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSwapOutRequest{}), "balance amount is not positive"), nil, nil
 		}
-		shares := sdk.NewCoin(vault.ShareDenom, amount)
+		shares := sdk.NewCoin(vault.TotalShares.Denom, amount)
 
 		// Pick a random asset to receive it in
 		redeemDenom := getRandomVaultAsset(r, vault)

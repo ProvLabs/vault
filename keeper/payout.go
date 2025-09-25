@@ -152,6 +152,9 @@ func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.P
 		return types.CriticalErr(errMsg, fmt.Errorf("%s: %w", errMsg, err))
 	}
 
+	vault.TotalShares = vault.TotalShares.Sub(req.Shares)
+	k.AuthKeeper.SetAccount(ctx, &vault)
+
 	k.emitEvent(ctx, types.NewEventSwapOutCompleted(req.VaultAddress, req.Owner, assets, id))
 	return nil
 }

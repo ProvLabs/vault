@@ -25,6 +25,10 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgExpeditePendingSwapOutRequest)(nil),
 	(*MsgPauseVaultRequest)(nil),
 	(*MsgUnpauseVaultRequest)(nil),
+	(*MsgSetBridgeAddressRequest)(nil),
+	(*MsgToggleBridgeRequest)(nil),
+	(*MsgBridgeMintSharesRequest)(nil),
+	(*MsgBridgeBurnSharesRequest)(nil),
 }
 
 // ValidateBasic performs stateless validation on MsgCreateVaultRequest.
@@ -266,6 +270,65 @@ func (m MsgUnpauseVaultRequest) ValidateBasic() error {
 	}
 	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
 		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgSetBridgeAddressRequest.
+func (m MsgSetBridgeAddressRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
+		return fmt.Errorf("invalid admin address: %q: %w", m.Admin, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.BridgeAddress); err != nil {
+		return fmt.Errorf("invalid bridge address: %q: %w", m.BridgeAddress, err)
+	}
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgToggleBridgeRequest.
+func (m MsgToggleBridgeRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
+		return fmt.Errorf("invalid admin address: %q: %w", m.Admin, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgBridgeMintSharesRequest.
+func (m MsgBridgeMintSharesRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Bridge); err != nil {
+		return fmt.Errorf("invalid bridge address: %q: %w", m.Bridge, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	if err := m.Shares.Validate(); err != nil {
+		return fmt.Errorf("invalid shares coin %v: %w", m.Shares, err)
+	}
+	if !m.Shares.Amount.IsPositive() {
+		return fmt.Errorf("shares amount must be greater than zero")
+	}
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgBridgeBurnSharesRequest.
+func (m MsgBridgeBurnSharesRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Bridge); err != nil {
+		return fmt.Errorf("invalid bridge address: %q: %w", m.Bridge, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	if err := m.Shares.Validate(); err != nil {
+		return fmt.Errorf("invalid shares coin %v: %w", m.Shares, err)
+	}
+	if !m.Shares.Amount.IsPositive() {
+		return fmt.Errorf("shares amount must be greater than zero")
 	}
 	return nil
 }

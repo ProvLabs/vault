@@ -34,6 +34,10 @@ const (
 	Msg_ExpeditePendingSwapOut_FullMethodName = "/vault.v1.Msg/ExpeditePendingSwapOut"
 	Msg_PauseVault_FullMethodName             = "/vault.v1.Msg/PauseVault"
 	Msg_UnpauseVault_FullMethodName           = "/vault.v1.Msg/UnpauseVault"
+	Msg_SetBridgeAddress_FullMethodName       = "/vault.v1.Msg/SetBridgeAddress"
+	Msg_ToggleBridge_FullMethodName           = "/vault.v1.Msg/ToggleBridge"
+	Msg_BridgeMintShares_FullMethodName       = "/vault.v1.Msg/BridgeMintShares"
+	Msg_BridgeBurnShares_FullMethodName       = "/vault.v1.Msg/BridgeBurnShares"
 )
 
 // MsgClient is the client API for Msg service.
@@ -70,6 +74,14 @@ type MsgClient interface {
 	ExpeditePendingSwapOut(ctx context.Context, in *MsgExpeditePendingSwapOutRequest, opts ...grpc.CallOption) (*MsgExpeditePendingSwapOutResponse, error)
 	PauseVault(ctx context.Context, in *MsgPauseVaultRequest, opts ...grpc.CallOption) (*MsgPauseVaultResponse, error)
 	UnpauseVault(ctx context.Context, in *MsgUnpauseVaultRequest, opts ...grpc.CallOption) (*MsgUnpauseVaultResponse, error)
+	// SetBridgeAddress sets the single external bridge address allowed to mint or burn shares for a vault.
+	SetBridgeAddress(ctx context.Context, in *MsgSetBridgeAddressRequest, opts ...grpc.CallOption) (*MsgSetBridgeAddressResponse, error)
+	// ToggleBridge enables or disables the bridge functionality for a vault.
+	ToggleBridge(ctx context.Context, in *MsgToggleBridgeRequest, opts ...grpc.CallOption) (*MsgToggleBridgeResponse, error)
+	// BridgeMintShares mints local share marker supply for a vault; must be signed by the configured bridge address.
+	BridgeMintShares(ctx context.Context, in *MsgBridgeMintSharesRequest, opts ...grpc.CallOption) (*MsgBridgeMintSharesResponse, error)
+	// BridgeBurnShares burns local share marker supply for a vault; must be signed by the configured bridge address.
+	BridgeBurnShares(ctx context.Context, in *MsgBridgeBurnSharesRequest, opts ...grpc.CallOption) (*MsgBridgeBurnSharesResponse, error)
 }
 
 type msgClient struct {
@@ -230,6 +242,46 @@ func (c *msgClient) UnpauseVault(ctx context.Context, in *MsgUnpauseVaultRequest
 	return out, nil
 }
 
+func (c *msgClient) SetBridgeAddress(ctx context.Context, in *MsgSetBridgeAddressRequest, opts ...grpc.CallOption) (*MsgSetBridgeAddressResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgSetBridgeAddressResponse)
+	err := c.cc.Invoke(ctx, Msg_SetBridgeAddress_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) ToggleBridge(ctx context.Context, in *MsgToggleBridgeRequest, opts ...grpc.CallOption) (*MsgToggleBridgeResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgToggleBridgeResponse)
+	err := c.cc.Invoke(ctx, Msg_ToggleBridge_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) BridgeMintShares(ctx context.Context, in *MsgBridgeMintSharesRequest, opts ...grpc.CallOption) (*MsgBridgeMintSharesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgBridgeMintSharesResponse)
+	err := c.cc.Invoke(ctx, Msg_BridgeMintShares_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) BridgeBurnShares(ctx context.Context, in *MsgBridgeBurnSharesRequest, opts ...grpc.CallOption) (*MsgBridgeBurnSharesResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgBridgeBurnSharesResponse)
+	err := c.cc.Invoke(ctx, Msg_BridgeBurnShares_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility.
@@ -264,6 +316,14 @@ type MsgServer interface {
 	ExpeditePendingSwapOut(context.Context, *MsgExpeditePendingSwapOutRequest) (*MsgExpeditePendingSwapOutResponse, error)
 	PauseVault(context.Context, *MsgPauseVaultRequest) (*MsgPauseVaultResponse, error)
 	UnpauseVault(context.Context, *MsgUnpauseVaultRequest) (*MsgUnpauseVaultResponse, error)
+	// SetBridgeAddress sets the single external bridge address allowed to mint or burn shares for a vault.
+	SetBridgeAddress(context.Context, *MsgSetBridgeAddressRequest) (*MsgSetBridgeAddressResponse, error)
+	// ToggleBridge enables or disables the bridge functionality for a vault.
+	ToggleBridge(context.Context, *MsgToggleBridgeRequest) (*MsgToggleBridgeResponse, error)
+	// BridgeMintShares mints local share marker supply for a vault; must be signed by the configured bridge address.
+	BridgeMintShares(context.Context, *MsgBridgeMintSharesRequest) (*MsgBridgeMintSharesResponse, error)
+	// BridgeBurnShares burns local share marker supply for a vault; must be signed by the configured bridge address.
+	BridgeBurnShares(context.Context, *MsgBridgeBurnSharesRequest) (*MsgBridgeBurnSharesResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -318,6 +378,18 @@ func (UnimplementedMsgServer) PauseVault(context.Context, *MsgPauseVaultRequest)
 }
 func (UnimplementedMsgServer) UnpauseVault(context.Context, *MsgUnpauseVaultRequest) (*MsgUnpauseVaultResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UnpauseVault not implemented")
+}
+func (UnimplementedMsgServer) SetBridgeAddress(context.Context, *MsgSetBridgeAddressRequest) (*MsgSetBridgeAddressResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetBridgeAddress not implemented")
+}
+func (UnimplementedMsgServer) ToggleBridge(context.Context, *MsgToggleBridgeRequest) (*MsgToggleBridgeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ToggleBridge not implemented")
+}
+func (UnimplementedMsgServer) BridgeMintShares(context.Context, *MsgBridgeMintSharesRequest) (*MsgBridgeMintSharesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BridgeMintShares not implemented")
+}
+func (UnimplementedMsgServer) BridgeBurnShares(context.Context, *MsgBridgeBurnSharesRequest) (*MsgBridgeBurnSharesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BridgeBurnShares not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 func (UnimplementedMsgServer) testEmbeddedByValue()             {}
@@ -610,6 +682,78 @@ func _Msg_UnpauseVault_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_SetBridgeAddress_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSetBridgeAddressRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SetBridgeAddress(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_SetBridgeAddress_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SetBridgeAddress(ctx, req.(*MsgSetBridgeAddressRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_ToggleBridge_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgToggleBridgeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).ToggleBridge(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_ToggleBridge_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).ToggleBridge(ctx, req.(*MsgToggleBridgeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_BridgeMintShares_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgBridgeMintSharesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).BridgeMintShares(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_BridgeMintShares_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).BridgeMintShares(ctx, req.(*MsgBridgeMintSharesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_BridgeBurnShares_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgBridgeBurnSharesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).BridgeBurnShares(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_BridgeBurnShares_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).BridgeBurnShares(ctx, req.(*MsgBridgeBurnSharesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -676,6 +820,22 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UnpauseVault",
 			Handler:    _Msg_UnpauseVault_Handler,
+		},
+		{
+			MethodName: "SetBridgeAddress",
+			Handler:    _Msg_SetBridgeAddress_Handler,
+		},
+		{
+			MethodName: "ToggleBridge",
+			Handler:    _Msg_ToggleBridge_Handler,
+		},
+		{
+			MethodName: "BridgeMintShares",
+			Handler:    _Msg_BridgeMintShares_Handler,
+		},
+		{
+			MethodName: "BridgeBurnShares",
+			Handler:    _Msg_BridgeBurnShares_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

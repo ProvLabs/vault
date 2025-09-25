@@ -254,10 +254,42 @@ message EventVaultUnpaused {
   cosmos.base.v1beta1.Coin total_vault_value = 3 [(gogoproto.nullable) = false];
 }
 
-// EventVaultAutoPaused is emitted when a vault is automatically paused due to a critical error.
-message EventVaultAutoPaused {
-  // vault_address is the address of the vault that was paused.
+// EventBridgeAddressSet is emitted when the bridge address for a vault is configured or updated.
+message EventBridgeAddressSet {
+  // vault_address is the bech32 address of the vault.
   string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
-  // reason is the critical error message that triggered the automatic pause.
-  string reason = 2;
+  // admin is the address of the account that set the bridge address.
+  string admin = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // bridge_address is the configured external address allowed to mint/burn shares.
+  string bridge_address = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// EventBridgeToggled is emitted when the bridge functionality is enabled or disabled for a vault.
+message EventBridgeToggled {
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // admin is the address of the account that toggled bridge functionality.
+  string admin = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // enabled is the new state of the bridge functionality.
+  bool enabled = 3;
+}
+
+// EventBridgeMintShares is emitted when shares are minted via the bridge flow.
+message EventBridgeMintShares {
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // bridge is the bech32 address of the bridge signer.
+  string bridge = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // shares is the amount of shares minted.
+  cosmos.base.v1beta1.Coin shares = 3 [(gogoproto.nullable) = false];
+}
+
+// EventBridgeBurnShares is emitted when shares are burned via the bridge flow.
+message EventBridgeBurnShares {
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // bridge is the bech32 address of the bridge signer.
+  string bridge = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // shares is the amount of shares burned.
+  cosmos.base.v1beta1.Coin shares = 3 [(gogoproto.nullable) = false];
 }

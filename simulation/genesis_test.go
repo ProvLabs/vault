@@ -45,7 +45,7 @@ func TestRandomizedGenState(t *testing.T) {
 	require.NotEmpty(t, vaultGenesis.Vaults)
 	for _, v := range vaultGenesis.Vaults {
 		require.NotEmpty(t, v.Admin)
-		require.NotEmpty(t, v.ShareDenom)
+		require.NotEmpty(t, v.TotalShares)
 		require.NotEmpty(t, v.GetAddress())
 		require.NotEmpty(t, v.UnderlyingAsset)
 	}

@@ -12720,27 +12720,29 @@ func (x *fastReflection_EventVaultUnpaused) ProtoMethods() *protoiface.Methods {
 }
 
 var (
-	md_EventVaultAutoPaused               protoreflect.MessageDescriptor
-	fd_EventVaultAutoPaused_vault_address protoreflect.FieldDescriptor
-	fd_EventVaultAutoPaused_reason        protoreflect.FieldDescriptor
+	md_EventBridgeAddressSet                protoreflect.MessageDescriptor
+	fd_EventBridgeAddressSet_vault_address  protoreflect.FieldDescriptor
+	fd_EventBridgeAddressSet_admin          protoreflect.FieldDescriptor
+	fd_EventBridgeAddressSet_bridge_address protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_vault_v1_events_proto_init()
-	md_EventVaultAutoPaused = File_vault_v1_events_proto.Messages().ByName("EventVaultAutoPaused")
-	fd_EventVaultAutoPaused_vault_address = md_EventVaultAutoPaused.Fields().ByName("vault_address")
-	fd_EventVaultAutoPaused_reason = md_EventVaultAutoPaused.Fields().ByName("reason")
+	md_EventBridgeAddressSet = File_vault_v1_events_proto.Messages().ByName("EventBridgeAddressSet")
+	fd_EventBridgeAddressSet_vault_address = md_EventBridgeAddressSet.Fields().ByName("vault_address")
+	fd_EventBridgeAddressSet_admin = md_EventBridgeAddressSet.Fields().ByName("admin")
+	fd_EventBridgeAddressSet_bridge_address = md_EventBridgeAddressSet.Fields().ByName("bridge_address")
 }
 
-var _ protoreflect.Message = (*fastReflection_EventVaultAutoPaused)(nil)
+var _ protoreflect.Message = (*fastReflection_EventBridgeAddressSet)(nil)
 
-type fastReflection_EventVaultAutoPaused EventVaultAutoPaused
+type fastReflection_EventBridgeAddressSet EventBridgeAddressSet
 
-func (x *EventVaultAutoPaused) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_EventVaultAutoPaused)(x)
+func (x *EventBridgeAddressSet) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_EventBridgeAddressSet)(x)
 }
 
-func (x *EventVaultAutoPaused) slowProtoReflect() protoreflect.Message {
+func (x *EventBridgeAddressSet) slowProtoReflect() protoreflect.Message {
 	mi := &file_vault_v1_events_proto_msgTypes[21]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -12752,43 +12754,43 @@ func (x *EventVaultAutoPaused) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_EventVaultAutoPaused_messageType fastReflection_EventVaultAutoPaused_messageType
-var _ protoreflect.MessageType = fastReflection_EventVaultAutoPaused_messageType{}
+var _fastReflection_EventBridgeAddressSet_messageType fastReflection_EventBridgeAddressSet_messageType
+var _ protoreflect.MessageType = fastReflection_EventBridgeAddressSet_messageType{}
 
-type fastReflection_EventVaultAutoPaused_messageType struct{}
+type fastReflection_EventBridgeAddressSet_messageType struct{}
 
-func (x fastReflection_EventVaultAutoPaused_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_EventVaultAutoPaused)(nil)
+func (x fastReflection_EventBridgeAddressSet_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_EventBridgeAddressSet)(nil)
 }
-func (x fastReflection_EventVaultAutoPaused_messageType) New() protoreflect.Message {
-	return new(fastReflection_EventVaultAutoPaused)
+func (x fastReflection_EventBridgeAddressSet_messageType) New() protoreflect.Message {
+	return new(fastReflection_EventBridgeAddressSet)
 }
-func (x fastReflection_EventVaultAutoPaused_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_EventVaultAutoPaused
+func (x fastReflection_EventBridgeAddressSet_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_EventBridgeAddressSet
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_EventVaultAutoPaused) Descriptor() protoreflect.MessageDescriptor {
-	return md_EventVaultAutoPaused
+func (x *fastReflection_EventBridgeAddressSet) Descriptor() protoreflect.MessageDescriptor {
+	return md_EventBridgeAddressSet
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_EventVaultAutoPaused) Type() protoreflect.MessageType {
-	return _fastReflection_EventVaultAutoPaused_messageType
+func (x *fastReflection_EventBridgeAddressSet) Type() protoreflect.MessageType {
+	return _fastReflection_EventBridgeAddressSet_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_EventVaultAutoPaused) New() protoreflect.Message {
-	return new(fastReflection_EventVaultAutoPaused)
+func (x *fastReflection_EventBridgeAddressSet) New() protoreflect.Message {
+	return new(fastReflection_EventBridgeAddressSet)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_EventVaultAutoPaused) Interface() protoreflect.ProtoMessage {
-	return (*EventVaultAutoPaused)(x)
+func (x *fastReflection_EventBridgeAddressSet) Interface() protoreflect.ProtoMessage {
+	return (*EventBridgeAddressSet)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -12796,16 +12798,22 @@ func (x *fastReflection_EventVaultAutoPaused) Interface() protoreflect.ProtoMess
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_EventVaultAutoPaused) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_EventBridgeAddressSet) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.VaultAddress != "" {
 		value := protoreflect.ValueOfString(x.VaultAddress)
-		if !f(fd_EventVaultAutoPaused_vault_address, value) {
+		if !f(fd_EventBridgeAddressSet_vault_address, value) {
 			return
 		}
 	}
-	if x.Reason != "" {
-		value := protoreflect.ValueOfString(x.Reason)
-		if !f(fd_EventVaultAutoPaused_reason, value) {
+	if x.Admin != "" {
+		value := protoreflect.ValueOfString(x.Admin)
+		if !f(fd_EventBridgeAddressSet_admin, value) {
+			return
+		}
+	}
+	if x.BridgeAddress != "" {
+		value := protoreflect.ValueOfString(x.BridgeAddress)
+		if !f(fd_EventBridgeAddressSet_bridge_address, value) {
 			return
 		}
 	}
@@ -12822,17 +12830,19 @@ func (x *fastReflection_EventVaultAutoPaused) Range(f func(protoreflect.FieldDes
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_EventVaultAutoPaused) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_EventBridgeAddressSet) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.EventVaultAutoPaused.vault_address":
+	case "vault.v1.EventBridgeAddressSet.vault_address":
 		return x.VaultAddress != ""
-	case "vault.v1.EventVaultAutoPaused.reason":
-		return x.Reason != ""
+	case "vault.v1.EventBridgeAddressSet.admin":
+		return x.Admin != ""
+	case "vault.v1.EventBridgeAddressSet.bridge_address":
+		return x.BridgeAddress != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultAutoPaused"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeAddressSet"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventVaultAutoPaused does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.EventBridgeAddressSet does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -12842,17 +12852,19 @@ func (x *fastReflection_EventVaultAutoPaused) Has(fd protoreflect.FieldDescripto
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_EventVaultAutoPaused) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_EventBridgeAddressSet) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.EventVaultAutoPaused.vault_address":
+	case "vault.v1.EventBridgeAddressSet.vault_address":
 		x.VaultAddress = ""
-	case "vault.v1.EventVaultAutoPaused.reason":
-		x.Reason = ""
+	case "vault.v1.EventBridgeAddressSet.admin":
+		x.Admin = ""
+	case "vault.v1.EventBridgeAddressSet.bridge_address":
+		x.BridgeAddress = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultAutoPaused"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeAddressSet"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventVaultAutoPaused does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.EventBridgeAddressSet does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -12862,19 +12874,22 @@ func (x *fastReflection_EventVaultAutoPaused) Clear(fd protoreflect.FieldDescrip
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_EventVaultAutoPaused) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_EventBridgeAddressSet) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.EventVaultAutoPaused.vault_address":
+	case "vault.v1.EventBridgeAddressSet.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventVaultAutoPaused.reason":
-		value := x.Reason
+	case "vault.v1.EventBridgeAddressSet.admin":
+		value := x.Admin
+		return protoreflect.ValueOfString(value)
+	case "vault.v1.EventBridgeAddressSet.bridge_address":
+		value := x.BridgeAddress
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultAutoPaused"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeAddressSet"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventVaultAutoPaused does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message vault.v1.EventBridgeAddressSet does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -12888,17 +12903,19 @@ func (x *fastReflection_EventVaultAutoPaused) Get(descriptor protoreflect.FieldD
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_EventVaultAutoPaused) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_EventBridgeAddressSet) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.EventVaultAutoPaused.vault_address":
+	case "vault.v1.EventBridgeAddressSet.vault_address":
 		x.VaultAddress = value.Interface().(string)
-	case "vault.v1.EventVaultAutoPaused.reason":
-		x.Reason = value.Interface().(string)
+	case "vault.v1.EventBridgeAddressSet.admin":
+		x.Admin = value.Interface().(string)
+	case "vault.v1.EventBridgeAddressSet.bridge_address":
+		x.BridgeAddress = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultAutoPaused"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeAddressSet"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventVaultAutoPaused does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.EventBridgeAddressSet does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -12912,44 +12929,48 @@ func (x *fastReflection_EventVaultAutoPaused) Set(fd protoreflect.FieldDescripto
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_EventVaultAutoPaused) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_EventBridgeAddressSet) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventVaultAutoPaused.vault_address":
-		panic(fmt.Errorf("field vault_address of message vault.v1.EventVaultAutoPaused is not mutable"))
-	case "vault.v1.EventVaultAutoPaused.reason":
-		panic(fmt.Errorf("field reason of message vault.v1.EventVaultAutoPaused is not mutable"))
+	case "vault.v1.EventBridgeAddressSet.vault_address":
+		panic(fmt.Errorf("field vault_address of message vault.v1.EventBridgeAddressSet is not mutable"))
+	case "vault.v1.EventBridgeAddressSet.admin":
+		panic(fmt.Errorf("field admin of message vault.v1.EventBridgeAddressSet is not mutable"))
+	case "vault.v1.EventBridgeAddressSet.bridge_address":
+		panic(fmt.Errorf("field bridge_address of message vault.v1.EventBridgeAddressSet is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultAutoPaused"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeAddressSet"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventVaultAutoPaused does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.EventBridgeAddressSet does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_EventVaultAutoPaused) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_EventBridgeAddressSet) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventVaultAutoPaused.vault_address":
+	case "vault.v1.EventBridgeAddressSet.vault_address":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventVaultAutoPaused.reason":
+	case "vault.v1.EventBridgeAddressSet.admin":
+		return protoreflect.ValueOfString("")
+	case "vault.v1.EventBridgeAddressSet.bridge_address":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultAutoPaused"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeAddressSet"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventVaultAutoPaused does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message vault.v1.EventBridgeAddressSet does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_EventVaultAutoPaused) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_EventBridgeAddressSet) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.EventVaultAutoPaused", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in vault.v1.EventBridgeAddressSet", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -12957,7 +12978,7 @@ func (x *fastReflection_EventVaultAutoPaused) WhichOneof(d protoreflect.OneofDes
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_EventVaultAutoPaused) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_EventBridgeAddressSet) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -12968,7 +12989,7 @@ func (x *fastReflection_EventVaultAutoPaused) GetUnknown() protoreflect.RawField
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_EventVaultAutoPaused) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_EventBridgeAddressSet) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -12980,7 +13001,7 @@ func (x *fastReflection_EventVaultAutoPaused) SetUnknown(fields protoreflect.Raw
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_EventVaultAutoPaused) IsValid() bool {
+func (x *fastReflection_EventBridgeAddressSet) IsValid() bool {
 	return x != nil
 }
 
@@ -12990,9 +13011,9 @@ func (x *fastReflection_EventVaultAutoPaused) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_EventVaultAutoPaused) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_EventBridgeAddressSet) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*EventVaultAutoPaused)
+		x := input.Message.Interface().(*EventBridgeAddressSet)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -13008,7 +13029,11 @@ func (x *fastReflection_EventVaultAutoPaused) ProtoMethods() *protoiface.Methods
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		l = len(x.Reason)
+		l = len(x.Admin)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.BridgeAddress)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
@@ -13022,7 +13047,7 @@ func (x *fastReflection_EventVaultAutoPaused) ProtoMethods() *protoiface.Methods
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*EventVaultAutoPaused)
+		x := input.Message.Interface().(*EventBridgeAddressSet)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -13041,10 +13066,17 @@ func (x *fastReflection_EventVaultAutoPaused) ProtoMethods() *protoiface.Methods
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if len(x.Reason) > 0 {
-			i -= len(x.Reason)
-			copy(dAtA[i:], x.Reason)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Reason)))
+		if len(x.BridgeAddress) > 0 {
+			i -= len(x.BridgeAddress)
+			copy(dAtA[i:], x.BridgeAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.BridgeAddress)))
+			i--
+			dAtA[i] = 0x1a
+		}
+		if len(x.Admin) > 0 {
+			i -= len(x.Admin)
+			copy(dAtA[i:], x.Admin)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Admin)))
 			i--
 			dAtA[i] = 0x12
 		}
@@ -13066,7 +13098,7 @@ func (x *fastReflection_EventVaultAutoPaused) ProtoMethods() *protoiface.Methods
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*EventVaultAutoPaused)
+		x := input.Message.Interface().(*EventBridgeAddressSet)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -13098,10 +13130,10 @@ func (x *fastReflection_EventVaultAutoPaused) ProtoMethods() *protoiface.Methods
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EventVaultAutoPaused: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EventBridgeAddressSet: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EventVaultAutoPaused: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EventBridgeAddressSet: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -13138,7 +13170,7 @@ func (x *fastReflection_EventVaultAutoPaused) ProtoMethods() *protoiface.Methods
 				iNdEx = postIndex
 			case 2:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Reason", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
 				}
 				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
@@ -13166,7 +13198,1703 @@ func (x *fastReflection_EventVaultAutoPaused) ProtoMethods() *protoiface.Methods
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Reason = string(dAtA[iNdEx:postIndex])
+				x.Admin = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field BridgeAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.BridgeAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_EventBridgeToggled               protoreflect.MessageDescriptor
+	fd_EventBridgeToggled_vault_address protoreflect.FieldDescriptor
+	fd_EventBridgeToggled_admin         protoreflect.FieldDescriptor
+	fd_EventBridgeToggled_enabled       protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_vault_v1_events_proto_init()
+	md_EventBridgeToggled = File_vault_v1_events_proto.Messages().ByName("EventBridgeToggled")
+	fd_EventBridgeToggled_vault_address = md_EventBridgeToggled.Fields().ByName("vault_address")
+	fd_EventBridgeToggled_admin = md_EventBridgeToggled.Fields().ByName("admin")
+	fd_EventBridgeToggled_enabled = md_EventBridgeToggled.Fields().ByName("enabled")
+}
+
+var _ protoreflect.Message = (*fastReflection_EventBridgeToggled)(nil)
+
+type fastReflection_EventBridgeToggled EventBridgeToggled
+
+func (x *EventBridgeToggled) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_EventBridgeToggled)(x)
+}
+
+func (x *EventBridgeToggled) slowProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_events_proto_msgTypes[22]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_EventBridgeToggled_messageType fastReflection_EventBridgeToggled_messageType
+var _ protoreflect.MessageType = fastReflection_EventBridgeToggled_messageType{}
+
+type fastReflection_EventBridgeToggled_messageType struct{}
+
+func (x fastReflection_EventBridgeToggled_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_EventBridgeToggled)(nil)
+}
+func (x fastReflection_EventBridgeToggled_messageType) New() protoreflect.Message {
+	return new(fastReflection_EventBridgeToggled)
+}
+func (x fastReflection_EventBridgeToggled_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_EventBridgeToggled
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_EventBridgeToggled) Descriptor() protoreflect.MessageDescriptor {
+	return md_EventBridgeToggled
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_EventBridgeToggled) Type() protoreflect.MessageType {
+	return _fastReflection_EventBridgeToggled_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_EventBridgeToggled) New() protoreflect.Message {
+	return new(fastReflection_EventBridgeToggled)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_EventBridgeToggled) Interface() protoreflect.ProtoMessage {
+	return (*EventBridgeToggled)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_EventBridgeToggled) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.VaultAddress != "" {
+		value := protoreflect.ValueOfString(x.VaultAddress)
+		if !f(fd_EventBridgeToggled_vault_address, value) {
+			return
+		}
+	}
+	if x.Admin != "" {
+		value := protoreflect.ValueOfString(x.Admin)
+		if !f(fd_EventBridgeToggled_admin, value) {
+			return
+		}
+	}
+	if x.Enabled != false {
+		value := protoreflect.ValueOfBool(x.Enabled)
+		if !f(fd_EventBridgeToggled_enabled, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_EventBridgeToggled) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "vault.v1.EventBridgeToggled.vault_address":
+		return x.VaultAddress != ""
+	case "vault.v1.EventBridgeToggled.admin":
+		return x.Admin != ""
+	case "vault.v1.EventBridgeToggled.enabled":
+		return x.Enabled != false
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeToggled"))
+		}
+		panic(fmt.Errorf("message vault.v1.EventBridgeToggled does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_EventBridgeToggled) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "vault.v1.EventBridgeToggled.vault_address":
+		x.VaultAddress = ""
+	case "vault.v1.EventBridgeToggled.admin":
+		x.Admin = ""
+	case "vault.v1.EventBridgeToggled.enabled":
+		x.Enabled = false
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeToggled"))
+		}
+		panic(fmt.Errorf("message vault.v1.EventBridgeToggled does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_EventBridgeToggled) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "vault.v1.EventBridgeToggled.vault_address":
+		value := x.VaultAddress
+		return protoreflect.ValueOfString(value)
+	case "vault.v1.EventBridgeToggled.admin":
+		value := x.Admin
+		return protoreflect.ValueOfString(value)
+	case "vault.v1.EventBridgeToggled.enabled":
+		value := x.Enabled
+		return protoreflect.ValueOfBool(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeToggled"))
+		}
+		panic(fmt.Errorf("message vault.v1.EventBridgeToggled does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_EventBridgeToggled) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "vault.v1.EventBridgeToggled.vault_address":
+		x.VaultAddress = value.Interface().(string)
+	case "vault.v1.EventBridgeToggled.admin":
+		x.Admin = value.Interface().(string)
+	case "vault.v1.EventBridgeToggled.enabled":
+		x.Enabled = value.Bool()
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeToggled"))
+		}
+		panic(fmt.Errorf("message vault.v1.EventBridgeToggled does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_EventBridgeToggled) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "vault.v1.EventBridgeToggled.vault_address":
+		panic(fmt.Errorf("field vault_address of message vault.v1.EventBridgeToggled is not mutable"))
+	case "vault.v1.EventBridgeToggled.admin":
+		panic(fmt.Errorf("field admin of message vault.v1.EventBridgeToggled is not mutable"))
+	case "vault.v1.EventBridgeToggled.enabled":
+		panic(fmt.Errorf("field enabled of message vault.v1.EventBridgeToggled is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeToggled"))
+		}
+		panic(fmt.Errorf("message vault.v1.EventBridgeToggled does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_EventBridgeToggled) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "vault.v1.EventBridgeToggled.vault_address":
+		return protoreflect.ValueOfString("")
+	case "vault.v1.EventBridgeToggled.admin":
+		return protoreflect.ValueOfString("")
+	case "vault.v1.EventBridgeToggled.enabled":
+		return protoreflect.ValueOfBool(false)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeToggled"))
+		}
+		panic(fmt.Errorf("message vault.v1.EventBridgeToggled does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_EventBridgeToggled) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in vault.v1.EventBridgeToggled", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_EventBridgeToggled) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_EventBridgeToggled) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_EventBridgeToggled) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_EventBridgeToggled) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*EventBridgeToggled)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.VaultAddress)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Admin)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.Enabled {
+			n += 2
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*EventBridgeToggled)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Enabled {
+			i--
+			if x.Enabled {
+				dAtA[i] = 1
+			} else {
+				dAtA[i] = 0
+			}
+			i--
+			dAtA[i] = 0x18
+		}
+		if len(x.Admin) > 0 {
+			i -= len(x.Admin)
+			copy(dAtA[i:], x.Admin)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Admin)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.VaultAddress) > 0 {
+			i -= len(x.VaultAddress)
+			copy(dAtA[i:], x.VaultAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.VaultAddress)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*EventBridgeToggled)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EventBridgeToggled: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EventBridgeToggled: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field VaultAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.VaultAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Admin = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 3:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Enabled", wireType)
+				}
+				var v int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					v |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				x.Enabled = bool(v != 0)
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_EventBridgeMintShares               protoreflect.MessageDescriptor
+	fd_EventBridgeMintShares_vault_address protoreflect.FieldDescriptor
+	fd_EventBridgeMintShares_bridge        protoreflect.FieldDescriptor
+	fd_EventBridgeMintShares_shares        protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_vault_v1_events_proto_init()
+	md_EventBridgeMintShares = File_vault_v1_events_proto.Messages().ByName("EventBridgeMintShares")
+	fd_EventBridgeMintShares_vault_address = md_EventBridgeMintShares.Fields().ByName("vault_address")
+	fd_EventBridgeMintShares_bridge = md_EventBridgeMintShares.Fields().ByName("bridge")
+	fd_EventBridgeMintShares_shares = md_EventBridgeMintShares.Fields().ByName("shares")
+}
+
+var _ protoreflect.Message = (*fastReflection_EventBridgeMintShares)(nil)
+
+type fastReflection_EventBridgeMintShares EventBridgeMintShares
+
+func (x *EventBridgeMintShares) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_EventBridgeMintShares)(x)
+}
+
+func (x *EventBridgeMintShares) slowProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_events_proto_msgTypes[23]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_EventBridgeMintShares_messageType fastReflection_EventBridgeMintShares_messageType
+var _ protoreflect.MessageType = fastReflection_EventBridgeMintShares_messageType{}
+
+type fastReflection_EventBridgeMintShares_messageType struct{}
+
+func (x fastReflection_EventBridgeMintShares_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_EventBridgeMintShares)(nil)
+}
+func (x fastReflection_EventBridgeMintShares_messageType) New() protoreflect.Message {
+	return new(fastReflection_EventBridgeMintShares)
+}
+func (x fastReflection_EventBridgeMintShares_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_EventBridgeMintShares
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_EventBridgeMintShares) Descriptor() protoreflect.MessageDescriptor {
+	return md_EventBridgeMintShares
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_EventBridgeMintShares) Type() protoreflect.MessageType {
+	return _fastReflection_EventBridgeMintShares_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_EventBridgeMintShares) New() protoreflect.Message {
+	return new(fastReflection_EventBridgeMintShares)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_EventBridgeMintShares) Interface() protoreflect.ProtoMessage {
+	return (*EventBridgeMintShares)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_EventBridgeMintShares) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.VaultAddress != "" {
+		value := protoreflect.ValueOfString(x.VaultAddress)
+		if !f(fd_EventBridgeMintShares_vault_address, value) {
+			return
+		}
+	}
+	if x.Bridge != "" {
+		value := protoreflect.ValueOfString(x.Bridge)
+		if !f(fd_EventBridgeMintShares_bridge, value) {
+			return
+		}
+	}
+	if x.Shares != nil {
+		value := protoreflect.ValueOfMessage(x.Shares.ProtoReflect())
+		if !f(fd_EventBridgeMintShares_shares, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_EventBridgeMintShares) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "vault.v1.EventBridgeMintShares.vault_address":
+		return x.VaultAddress != ""
+	case "vault.v1.EventBridgeMintShares.bridge":
+		return x.Bridge != ""
+	case "vault.v1.EventBridgeMintShares.shares":
+		return x.Shares != nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeMintShares"))
+		}
+		panic(fmt.Errorf("message vault.v1.EventBridgeMintShares does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_EventBridgeMintShares) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "vault.v1.EventBridgeMintShares.vault_address":
+		x.VaultAddress = ""
+	case "vault.v1.EventBridgeMintShares.bridge":
+		x.Bridge = ""
+	case "vault.v1.EventBridgeMintShares.shares":
+		x.Shares = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeMintShares"))
+		}
+		panic(fmt.Errorf("message vault.v1.EventBridgeMintShares does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_EventBridgeMintShares) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "vault.v1.EventBridgeMintShares.vault_address":
+		value := x.VaultAddress
+		return protoreflect.ValueOfString(value)
+	case "vault.v1.EventBridgeMintShares.bridge":
+		value := x.Bridge
+		return protoreflect.ValueOfString(value)
+	case "vault.v1.EventBridgeMintShares.shares":
+		value := x.Shares
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeMintShares"))
+		}
+		panic(fmt.Errorf("message vault.v1.EventBridgeMintShares does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_EventBridgeMintShares) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "vault.v1.EventBridgeMintShares.vault_address":
+		x.VaultAddress = value.Interface().(string)
+	case "vault.v1.EventBridgeMintShares.bridge":
+		x.Bridge = value.Interface().(string)
+	case "vault.v1.EventBridgeMintShares.shares":
+		x.Shares = value.Message().Interface().(*v1beta1.Coin)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeMintShares"))
+		}
+		panic(fmt.Errorf("message vault.v1.EventBridgeMintShares does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_EventBridgeMintShares) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "vault.v1.EventBridgeMintShares.shares":
+		if x.Shares == nil {
+			x.Shares = new(v1beta1.Coin)
+		}
+		return protoreflect.ValueOfMessage(x.Shares.ProtoReflect())
+	case "vault.v1.EventBridgeMintShares.vault_address":
+		panic(fmt.Errorf("field vault_address of message vault.v1.EventBridgeMintShares is not mutable"))
+	case "vault.v1.EventBridgeMintShares.bridge":
+		panic(fmt.Errorf("field bridge of message vault.v1.EventBridgeMintShares is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeMintShares"))
+		}
+		panic(fmt.Errorf("message vault.v1.EventBridgeMintShares does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_EventBridgeMintShares) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "vault.v1.EventBridgeMintShares.vault_address":
+		return protoreflect.ValueOfString("")
+	case "vault.v1.EventBridgeMintShares.bridge":
+		return protoreflect.ValueOfString("")
+	case "vault.v1.EventBridgeMintShares.shares":
+		m := new(v1beta1.Coin)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeMintShares"))
+		}
+		panic(fmt.Errorf("message vault.v1.EventBridgeMintShares does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_EventBridgeMintShares) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in vault.v1.EventBridgeMintShares", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_EventBridgeMintShares) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_EventBridgeMintShares) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_EventBridgeMintShares) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_EventBridgeMintShares) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*EventBridgeMintShares)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.VaultAddress)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Bridge)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.Shares != nil {
+			l = options.Size(x.Shares)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*EventBridgeMintShares)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Shares != nil {
+			encoded, err := options.Marshal(x.Shares)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x1a
+		}
+		if len(x.Bridge) > 0 {
+			i -= len(x.Bridge)
+			copy(dAtA[i:], x.Bridge)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Bridge)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.VaultAddress) > 0 {
+			i -= len(x.VaultAddress)
+			copy(dAtA[i:], x.VaultAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.VaultAddress)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*EventBridgeMintShares)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EventBridgeMintShares: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EventBridgeMintShares: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field VaultAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.VaultAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Bridge", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Bridge = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Shares", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Shares == nil {
+					x.Shares = &v1beta1.Coin{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Shares); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_EventBridgeBurnShares               protoreflect.MessageDescriptor
+	fd_EventBridgeBurnShares_vault_address protoreflect.FieldDescriptor
+	fd_EventBridgeBurnShares_bridge        protoreflect.FieldDescriptor
+	fd_EventBridgeBurnShares_shares        protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_vault_v1_events_proto_init()
+	md_EventBridgeBurnShares = File_vault_v1_events_proto.Messages().ByName("EventBridgeBurnShares")
+	fd_EventBridgeBurnShares_vault_address = md_EventBridgeBurnShares.Fields().ByName("vault_address")
+	fd_EventBridgeBurnShares_bridge = md_EventBridgeBurnShares.Fields().ByName("bridge")
+	fd_EventBridgeBurnShares_shares = md_EventBridgeBurnShares.Fields().ByName("shares")
+}
+
+var _ protoreflect.Message = (*fastReflection_EventBridgeBurnShares)(nil)
+
+type fastReflection_EventBridgeBurnShares EventBridgeBurnShares
+
+func (x *EventBridgeBurnShares) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_EventBridgeBurnShares)(x)
+}
+
+func (x *EventBridgeBurnShares) slowProtoReflect() protoreflect.Message {
+	mi := &file_vault_v1_events_proto_msgTypes[24]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_EventBridgeBurnShares_messageType fastReflection_EventBridgeBurnShares_messageType
+var _ protoreflect.MessageType = fastReflection_EventBridgeBurnShares_messageType{}
+
+type fastReflection_EventBridgeBurnShares_messageType struct{}
+
+func (x fastReflection_EventBridgeBurnShares_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_EventBridgeBurnShares)(nil)
+}
+func (x fastReflection_EventBridgeBurnShares_messageType) New() protoreflect.Message {
+	return new(fastReflection_EventBridgeBurnShares)
+}
+func (x fastReflection_EventBridgeBurnShares_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_EventBridgeBurnShares
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_EventBridgeBurnShares) Descriptor() protoreflect.MessageDescriptor {
+	return md_EventBridgeBurnShares
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_EventBridgeBurnShares) Type() protoreflect.MessageType {
+	return _fastReflection_EventBridgeBurnShares_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_EventBridgeBurnShares) New() protoreflect.Message {
+	return new(fastReflection_EventBridgeBurnShares)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_EventBridgeBurnShares) Interface() protoreflect.ProtoMessage {
+	return (*EventBridgeBurnShares)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_EventBridgeBurnShares) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.VaultAddress != "" {
+		value := protoreflect.ValueOfString(x.VaultAddress)
+		if !f(fd_EventBridgeBurnShares_vault_address, value) {
+			return
+		}
+	}
+	if x.Bridge != "" {
+		value := protoreflect.ValueOfString(x.Bridge)
+		if !f(fd_EventBridgeBurnShares_bridge, value) {
+			return
+		}
+	}
+	if x.Shares != nil {
+		value := protoreflect.ValueOfMessage(x.Shares.ProtoReflect())
+		if !f(fd_EventBridgeBurnShares_shares, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_EventBridgeBurnShares) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "vault.v1.EventBridgeBurnShares.vault_address":
+		return x.VaultAddress != ""
+	case "vault.v1.EventBridgeBurnShares.bridge":
+		return x.Bridge != ""
+	case "vault.v1.EventBridgeBurnShares.shares":
+		return x.Shares != nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeBurnShares"))
+		}
+		panic(fmt.Errorf("message vault.v1.EventBridgeBurnShares does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_EventBridgeBurnShares) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "vault.v1.EventBridgeBurnShares.vault_address":
+		x.VaultAddress = ""
+	case "vault.v1.EventBridgeBurnShares.bridge":
+		x.Bridge = ""
+	case "vault.v1.EventBridgeBurnShares.shares":
+		x.Shares = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeBurnShares"))
+		}
+		panic(fmt.Errorf("message vault.v1.EventBridgeBurnShares does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_EventBridgeBurnShares) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "vault.v1.EventBridgeBurnShares.vault_address":
+		value := x.VaultAddress
+		return protoreflect.ValueOfString(value)
+	case "vault.v1.EventBridgeBurnShares.bridge":
+		value := x.Bridge
+		return protoreflect.ValueOfString(value)
+	case "vault.v1.EventBridgeBurnShares.shares":
+		value := x.Shares
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeBurnShares"))
+		}
+		panic(fmt.Errorf("message vault.v1.EventBridgeBurnShares does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_EventBridgeBurnShares) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "vault.v1.EventBridgeBurnShares.vault_address":
+		x.VaultAddress = value.Interface().(string)
+	case "vault.v1.EventBridgeBurnShares.bridge":
+		x.Bridge = value.Interface().(string)
+	case "vault.v1.EventBridgeBurnShares.shares":
+		x.Shares = value.Message().Interface().(*v1beta1.Coin)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeBurnShares"))
+		}
+		panic(fmt.Errorf("message vault.v1.EventBridgeBurnShares does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_EventBridgeBurnShares) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "vault.v1.EventBridgeBurnShares.shares":
+		if x.Shares == nil {
+			x.Shares = new(v1beta1.Coin)
+		}
+		return protoreflect.ValueOfMessage(x.Shares.ProtoReflect())
+	case "vault.v1.EventBridgeBurnShares.vault_address":
+		panic(fmt.Errorf("field vault_address of message vault.v1.EventBridgeBurnShares is not mutable"))
+	case "vault.v1.EventBridgeBurnShares.bridge":
+		panic(fmt.Errorf("field bridge of message vault.v1.EventBridgeBurnShares is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeBurnShares"))
+		}
+		panic(fmt.Errorf("message vault.v1.EventBridgeBurnShares does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_EventBridgeBurnShares) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "vault.v1.EventBridgeBurnShares.vault_address":
+		return protoreflect.ValueOfString("")
+	case "vault.v1.EventBridgeBurnShares.bridge":
+		return protoreflect.ValueOfString("")
+	case "vault.v1.EventBridgeBurnShares.shares":
+		m := new(v1beta1.Coin)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeBurnShares"))
+		}
+		panic(fmt.Errorf("message vault.v1.EventBridgeBurnShares does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_EventBridgeBurnShares) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in vault.v1.EventBridgeBurnShares", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_EventBridgeBurnShares) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_EventBridgeBurnShares) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_EventBridgeBurnShares) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_EventBridgeBurnShares) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*EventBridgeBurnShares)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.VaultAddress)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Bridge)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.Shares != nil {
+			l = options.Size(x.Shares)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*EventBridgeBurnShares)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if x.Shares != nil {
+			encoded, err := options.Marshal(x.Shares)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x1a
+		}
+		if len(x.Bridge) > 0 {
+			i -= len(x.Bridge)
+			copy(dAtA[i:], x.Bridge)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Bridge)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.VaultAddress) > 0 {
+			i -= len(x.VaultAddress)
+			copy(dAtA[i:], x.VaultAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.VaultAddress)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*EventBridgeBurnShares)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EventBridgeBurnShares: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EventBridgeBurnShares: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field VaultAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.VaultAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Bridge", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Bridge = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Shares", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Shares == nil {
+					x.Shares = &v1beta1.Coin{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Shares); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -14527,20 +16255,22 @@ func (x *EventVaultUnpaused) GetTotalVaultValue() *v1beta1.Coin {
 	return nil
 }
 
-// EventVaultAutoPaused is emitted when a vault is automatically paused due to a critical error.
-type EventVaultAutoPaused struct {
+// EventBridgeAddressSet is emitted when the bridge address for a vault is configured or updated.
+type EventBridgeAddressSet struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// vault_address is the address of the vault that was paused.
+	// vault_address is the bech32 address of the vault.
 	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// reason is the critical error message that triggered the automatic pause.
-	Reason string `protobuf:"bytes,2,opt,name=reason,proto3" json:"reason,omitempty"`
+	// admin is the address of the account that set the bridge address.
+	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
+	// bridge_address is the configured external address allowed to mint/burn shares.
+	BridgeAddress string `protobuf:"bytes,3,opt,name=bridge_address,json=bridgeAddress,proto3" json:"bridge_address,omitempty"`
 }
 
-func (x *EventVaultAutoPaused) Reset() {
-	*x = EventVaultAutoPaused{}
+func (x *EventBridgeAddressSet) Reset() {
+	*x = EventBridgeAddressSet{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_vault_v1_events_proto_msgTypes[21]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -14548,29 +16278,201 @@ func (x *EventVaultAutoPaused) Reset() {
 	}
 }
 
-func (x *EventVaultAutoPaused) String() string {
+func (x *EventBridgeAddressSet) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*EventVaultAutoPaused) ProtoMessage() {}
+func (*EventBridgeAddressSet) ProtoMessage() {}
 
-// Deprecated: Use EventVaultAutoPaused.ProtoReflect.Descriptor instead.
-func (*EventVaultAutoPaused) Descriptor() ([]byte, []int) {
+// Deprecated: Use EventBridgeAddressSet.ProtoReflect.Descriptor instead.
+func (*EventBridgeAddressSet) Descriptor() ([]byte, []int) {
 	return file_vault_v1_events_proto_rawDescGZIP(), []int{21}
 }
 
-func (x *EventVaultAutoPaused) GetVaultAddress() string {
+func (x *EventBridgeAddressSet) GetVaultAddress() string {
 	if x != nil {
 		return x.VaultAddress
 	}
 	return ""
 }
 
-func (x *EventVaultAutoPaused) GetReason() string {
+func (x *EventBridgeAddressSet) GetAdmin() string {
 	if x != nil {
-		return x.Reason
+		return x.Admin
 	}
 	return ""
+}
+
+func (x *EventBridgeAddressSet) GetBridgeAddress() string {
+	if x != nil {
+		return x.BridgeAddress
+	}
+	return ""
+}
+
+// EventBridgeToggled is emitted when the bridge functionality is enabled or disabled for a vault.
+type EventBridgeToggled struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// vault_address is the bech32 address of the vault.
+	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// admin is the address of the account that toggled bridge functionality.
+	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
+	// enabled is the new state of the bridge functionality.
+	Enabled bool `protobuf:"varint,3,opt,name=enabled,proto3" json:"enabled,omitempty"`
+}
+
+func (x *EventBridgeToggled) Reset() {
+	*x = EventBridgeToggled{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_vault_v1_events_proto_msgTypes[22]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *EventBridgeToggled) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EventBridgeToggled) ProtoMessage() {}
+
+// Deprecated: Use EventBridgeToggled.ProtoReflect.Descriptor instead.
+func (*EventBridgeToggled) Descriptor() ([]byte, []int) {
+	return file_vault_v1_events_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *EventBridgeToggled) GetVaultAddress() string {
+	if x != nil {
+		return x.VaultAddress
+	}
+	return ""
+}
+
+func (x *EventBridgeToggled) GetAdmin() string {
+	if x != nil {
+		return x.Admin
+	}
+	return ""
+}
+
+func (x *EventBridgeToggled) GetEnabled() bool {
+	if x != nil {
+		return x.Enabled
+	}
+	return false
+}
+
+// EventBridgeMintShares is emitted when shares are minted via the bridge flow.
+type EventBridgeMintShares struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// vault_address is the bech32 address of the vault.
+	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// bridge is the bech32 address of the bridge signer.
+	Bridge string `protobuf:"bytes,2,opt,name=bridge,proto3" json:"bridge,omitempty"`
+	// shares is the amount of shares minted.
+	Shares *v1beta1.Coin `protobuf:"bytes,3,opt,name=shares,proto3" json:"shares,omitempty"`
+}
+
+func (x *EventBridgeMintShares) Reset() {
+	*x = EventBridgeMintShares{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_vault_v1_events_proto_msgTypes[23]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *EventBridgeMintShares) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EventBridgeMintShares) ProtoMessage() {}
+
+// Deprecated: Use EventBridgeMintShares.ProtoReflect.Descriptor instead.
+func (*EventBridgeMintShares) Descriptor() ([]byte, []int) {
+	return file_vault_v1_events_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *EventBridgeMintShares) GetVaultAddress() string {
+	if x != nil {
+		return x.VaultAddress
+	}
+	return ""
+}
+
+func (x *EventBridgeMintShares) GetBridge() string {
+	if x != nil {
+		return x.Bridge
+	}
+	return ""
+}
+
+func (x *EventBridgeMintShares) GetShares() *v1beta1.Coin {
+	if x != nil {
+		return x.Shares
+	}
+	return nil
+}
+
+// EventBridgeBurnShares is emitted when shares are burned via the bridge flow.
+type EventBridgeBurnShares struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// vault_address is the bech32 address of the vault.
+	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// bridge is the bech32 address of the bridge signer.
+	Bridge string `protobuf:"bytes,2,opt,name=bridge,proto3" json:"bridge,omitempty"`
+	// shares is the amount of shares burned.
+	Shares *v1beta1.Coin `protobuf:"bytes,3,opt,name=shares,proto3" json:"shares,omitempty"`
+}
+
+func (x *EventBridgeBurnShares) Reset() {
+	*x = EventBridgeBurnShares{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_vault_v1_events_proto_msgTypes[24]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *EventBridgeBurnShares) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EventBridgeBurnShares) ProtoMessage() {}
+
+// Deprecated: Use EventBridgeBurnShares.ProtoReflect.Descriptor instead.
+func (*EventBridgeBurnShares) Descriptor() ([]byte, []int) {
+	return file_vault_v1_events_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *EventBridgeBurnShares) GetVaultAddress() string {
+	if x != nil {
+		return x.VaultAddress
+	}
+	return ""
+}
+
+func (x *EventBridgeBurnShares) GetBridge() string {
+	if x != nil {
+		return x.Bridge
+	}
+	return ""
+}
+
+func (x *EventBridgeBurnShares) GetShares() *v1beta1.Coin {
+	if x != nil {
+		return x.Shares
+	}
+	return nil
 }
 
 var File_vault_v1_events_proto protoreflect.FileDescriptor
@@ -14846,23 +16748,63 @@ var file_vault_v1_events_proto_rawDesc = []byte{
 	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62,
 	0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52,
 	0x0f, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x56, 0x61, 0x6c, 0x75, 0x65,
-	0x22, 0x6d, 0x0a, 0x14, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x75,
-	0x74, 0x6f, 0x50, 0x61, 0x75, 0x73, 0x65, 0x64, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c,
+	0x22, 0xc7, 0x01, 0x0a, 0x15, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65,
+	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x65, 0x74, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61,
+	0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75,
+	0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d,
+	0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69,
+	0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x3f, 0x0a, 0x0e, 0x62, 0x72, 0x69,
+	0x64, 0x67, 0x65, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28,
+	0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0d, 0x62, 0x72, 0x69,
+	0x64, 0x67, 0x65, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x22, 0x9d, 0x01, 0x0a, 0x12, 0x45,
+	0x76, 0x65, 0x6e, 0x74, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x54, 0x6f, 0x67, 0x67, 0x6c, 0x65,
+	0x64, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65,
+	0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69,
+	0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
+	0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42,
+	0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72,
+	0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e,
+	0x12, 0x18, 0x0a, 0x07, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28,
+	0x08, 0x52, 0x07, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x22, 0xc1, 0x01, 0x0a, 0x15, 0x45,
+	0x76, 0x65, 0x6e, 0x74, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x4d, 0x69, 0x6e, 0x74, 0x53, 0x68,
+	0x61, 0x72, 0x65, 0x73, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d,
+	0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53,
+	0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72,
+	0x65, 0x73, 0x73, 0x12, 0x30, 0x0a, 0x06, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x06, 0x62,
+	0x72, 0x69, 0x64, 0x67, 0x65, 0x12, 0x37, 0x0a, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x18,
+	0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62,
+	0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e,
+	0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x22, 0xc1,
+	0x01, 0x0a, 0x15, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x42, 0x75,
+	0x72, 0x6e, 0x53, 0x68, 0x61, 0x72, 0x65, 0x73, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c,
 	0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42,
 	0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72,
 	0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74,
-	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x16, 0x0a, 0x06, 0x72, 0x65, 0x61, 0x73, 0x6f,
-	0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x72, 0x65, 0x61, 0x73, 0x6f, 0x6e, 0x42,
-	0x8c, 0x01, 0x0a, 0x0c, 0x63, 0x6f, 0x6d, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31,
-	0x42, 0x0b, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a,
-	0x2e, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x6f, 0x76,
-	0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76,
-	0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2,
-	0x02, 0x03, 0x56, 0x58, 0x58, 0xaa, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56, 0x31,
-	0xca, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x14, 0x56, 0x61,
-	0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61,
-	0x74, 0x61, 0xea, 0x02, 0x09, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x30, 0x0a, 0x06, 0x62, 0x72, 0x69, 0x64, 0x67,
+	0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e,
+	0x67, 0x52, 0x06, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x12, 0x37, 0x0a, 0x06, 0x73, 0x68, 0x61,
+	0x72, 0x65, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e,
+	0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x73, 0x68, 0x61, 0x72,
+	0x65, 0x73, 0x42, 0x8c, 0x01, 0x0a, 0x0c, 0x63, 0x6f, 0x6d, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74,
+	0x2e, 0x76, 0x31, 0x42, 0x0b, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f,
+	0x50, 0x01, 0x5a, 0x2e, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70,
+	0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70,
+	0x69, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74,
+	0x76, 0x31, 0xa2, 0x02, 0x03, 0x56, 0x58, 0x58, 0xaa, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74,
+	0x2e, 0x56, 0x31, 0xca, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02,
+	0x14, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74,
+	0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x09, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56,
+	0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -14877,7 +16819,7 @@ func file_vault_v1_events_proto_rawDescGZIP() []byte {
 	return file_vault_v1_events_proto_rawDescData
 }
 
-var file_vault_v1_events_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
+var file_vault_v1_events_proto_msgTypes = make([]protoimpl.MessageInfo, 25)
 var file_vault_v1_events_proto_goTypes = []interface{}{
 	(*EventDeposit)(nil),                 // 0: vault.v1.EventDeposit
 	(*EventWithdraw)(nil),                // 1: vault.v1.EventWithdraw
@@ -14900,31 +16842,36 @@ var file_vault_v1_events_proto_goTypes = []interface{}{
 	(*EventPendingSwapOutExpedited)(nil), // 18: vault.v1.EventPendingSwapOutExpedited
 	(*EventVaultPaused)(nil),             // 19: vault.v1.EventVaultPaused
 	(*EventVaultUnpaused)(nil),           // 20: vault.v1.EventVaultUnpaused
-	(*EventVaultAutoPaused)(nil),         // 21: vault.v1.EventVaultAutoPaused
-	(*v1beta1.Coin)(nil),                 // 22: cosmos.base.v1beta1.Coin
+	(*EventBridgeAddressSet)(nil),        // 21: vault.v1.EventBridgeAddressSet
+	(*EventBridgeToggled)(nil),           // 22: vault.v1.EventBridgeToggled
+	(*EventBridgeMintShares)(nil),        // 23: vault.v1.EventBridgeMintShares
+	(*EventBridgeBurnShares)(nil),        // 24: vault.v1.EventBridgeBurnShares
+	(*v1beta1.Coin)(nil),                 // 25: cosmos.base.v1beta1.Coin
 }
 var file_vault_v1_events_proto_depIdxs = []int32{
-	22, // 0: vault.v1.EventSwapIn.amount_in:type_name -> cosmos.base.v1beta1.Coin
-	22, // 1: vault.v1.EventSwapIn.shares_received:type_name -> cosmos.base.v1beta1.Coin
-	22, // 2: vault.v1.EventSwapOut.shares_burned:type_name -> cosmos.base.v1beta1.Coin
-	22, // 3: vault.v1.EventSwapOut.amount_out:type_name -> cosmos.base.v1beta1.Coin
-	22, // 4: vault.v1.EventVaultReconcile.principal_before:type_name -> cosmos.base.v1beta1.Coin
-	22, // 5: vault.v1.EventVaultReconcile.principal_after:type_name -> cosmos.base.v1beta1.Coin
-	22, // 6: vault.v1.EventVaultReconcile.interest_earned:type_name -> cosmos.base.v1beta1.Coin
-	22, // 7: vault.v1.EventInterestDeposit.amount:type_name -> cosmos.base.v1beta1.Coin
-	22, // 8: vault.v1.EventInterestWithdrawal.amount:type_name -> cosmos.base.v1beta1.Coin
-	22, // 9: vault.v1.EventDepositPrincipalFunds.amount:type_name -> cosmos.base.v1beta1.Coin
-	22, // 10: vault.v1.EventWithdrawPrincipalFunds.amount:type_name -> cosmos.base.v1beta1.Coin
-	22, // 11: vault.v1.EventSwapOutRequested.shares:type_name -> cosmos.base.v1beta1.Coin
-	22, // 12: vault.v1.EventSwapOutCompleted.assets:type_name -> cosmos.base.v1beta1.Coin
-	22, // 13: vault.v1.EventSwapOutRefunded.shares:type_name -> cosmos.base.v1beta1.Coin
-	22, // 14: vault.v1.EventVaultPaused.total_vault_value:type_name -> cosmos.base.v1beta1.Coin
-	22, // 15: vault.v1.EventVaultUnpaused.total_vault_value:type_name -> cosmos.base.v1beta1.Coin
-	16, // [16:16] is the sub-list for method output_type
-	16, // [16:16] is the sub-list for method input_type
-	16, // [16:16] is the sub-list for extension type_name
-	16, // [16:16] is the sub-list for extension extendee
-	0,  // [0:16] is the sub-list for field type_name
+	25, // 0: vault.v1.EventSwapIn.amount_in:type_name -> cosmos.base.v1beta1.Coin
+	25, // 1: vault.v1.EventSwapIn.shares_received:type_name -> cosmos.base.v1beta1.Coin
+	25, // 2: vault.v1.EventSwapOut.shares_burned:type_name -> cosmos.base.v1beta1.Coin
+	25, // 3: vault.v1.EventSwapOut.amount_out:type_name -> cosmos.base.v1beta1.Coin
+	25, // 4: vault.v1.EventVaultReconcile.principal_before:type_name -> cosmos.base.v1beta1.Coin
+	25, // 5: vault.v1.EventVaultReconcile.principal_after:type_name -> cosmos.base.v1beta1.Coin
+	25, // 6: vault.v1.EventVaultReconcile.interest_earned:type_name -> cosmos.base.v1beta1.Coin
+	25, // 7: vault.v1.EventInterestDeposit.amount:type_name -> cosmos.base.v1beta1.Coin
+	25, // 8: vault.v1.EventInterestWithdrawal.amount:type_name -> cosmos.base.v1beta1.Coin
+	25, // 9: vault.v1.EventDepositPrincipalFunds.amount:type_name -> cosmos.base.v1beta1.Coin
+	25, // 10: vault.v1.EventWithdrawPrincipalFunds.amount:type_name -> cosmos.base.v1beta1.Coin
+	25, // 11: vault.v1.EventSwapOutRequested.shares:type_name -> cosmos.base.v1beta1.Coin
+	25, // 12: vault.v1.EventSwapOutCompleted.assets:type_name -> cosmos.base.v1beta1.Coin
+	25, // 13: vault.v1.EventSwapOutRefunded.shares:type_name -> cosmos.base.v1beta1.Coin
+	25, // 14: vault.v1.EventVaultPaused.total_vault_value:type_name -> cosmos.base.v1beta1.Coin
+	25, // 15: vault.v1.EventVaultUnpaused.total_vault_value:type_name -> cosmos.base.v1beta1.Coin
+	25, // 16: vault.v1.EventBridgeMintShares.shares:type_name -> cosmos.base.v1beta1.Coin
+	25, // 17: vault.v1.EventBridgeBurnShares.shares:type_name -> cosmos.base.v1beta1.Coin
+	18, // [18:18] is the sub-list for method output_type
+	18, // [18:18] is the sub-list for method input_type
+	18, // [18:18] is the sub-list for extension type_name
+	18, // [18:18] is the sub-list for extension extendee
+	0,  // [0:18] is the sub-list for field type_name
 }
 
 func init() { file_vault_v1_events_proto_init() }
@@ -15186,7 +17133,43 @@ func file_vault_v1_events_proto_init() {
 			}
 		}
 		file_vault_v1_events_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*EventVaultAutoPaused); i {
+			switch v := v.(*EventBridgeAddressSet); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_vault_v1_events_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*EventBridgeToggled); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_vault_v1_events_proto_msgTypes[23].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*EventBridgeMintShares); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_vault_v1_events_proto_msgTypes[24].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*EventBridgeBurnShares); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -15204,7 +17187,7 @@ func file_vault_v1_events_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_vault_v1_events_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   22,
+			NumMessages:   25,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

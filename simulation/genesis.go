@@ -13,6 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
@@ -222,18 +223,18 @@ func randomPendingSwaps(simState *module.SimulationState, vaults []types.VaultAc
 // GenerateMarkerGenesis creates the underlying and payment markers for simulation.
 func GenerateMarkerGenesis(simState *module.SimulationState) {
 	var markerGenesis markertypes.GenesisState
-	if simState.GenState[markertypes.ModuleName] != nil {
-		simState.Cdc.MustUnmarshalJSON(simState.GenState[markertypes.ModuleName], &markerGenesis)
-	}
+	var bankGenesis banktypes.GenesisState
+	simState.Cdc.MustUnmarshalJSON(simState.GenState[markertypes.ModuleName], &markerGenesis)
+	simState.Cdc.MustUnmarshalJSON(simState.GenState[banktypes.ModuleName], &bankGenesis)
 
-	underlyingDenom := "underlying"
-	paymentDenom := "payment"
+	underlying := sdk.NewInt64Coin("underlyingvault", 1_000_000_000_000)
+	payment := sdk.NewInt64Coin("paymentvault", 1_000_000_000_000)
 
-	for _, denom := range []string{underlyingDenom, paymentDenom} {
+	for _, coin := range []sdk.Coin{underlying, payment} {
 		modAddr := authtypes.NewModuleAddress(types.ModuleName)
 		marker := markertypes.NewMarkerAccount(
 			authtypes.NewBaseAccountWithAddress(modAddr),
-			sdk.NewInt64Coin(denom, 1_000_000_000_000),
+			coin,
 			modAddr,
 			[]markertypes.AccessGrant{
 				{
@@ -256,9 +257,9 @@ func GenerateMarkerGenesis(simState *module.SimulationState) {
 	}
 
 	// We need to set a NAV for the payment denom so that it can be used in swaps
-	nav := markertypes.NewNetAssetValue(sdk.NewInt64Coin("underlying", 1), 2)
+	nav := markertypes.NewNetAssetValue(sdk.NewInt64Coin(underlying.Denom, 1), 2)
 	markerGenesis.NetAssetValues = append(markerGenesis.NetAssetValues, markertypes.MarkerNetAssetValues{
-		Address:        string(markertypes.MustGetMarkerAddress("payment")),
+		Address:        string(markertypes.MustGetMarkerAddress(payment.Denom)),
 		NetAssetValues: []markertypes.NetAssetValue{nav},
 	})
 
@@ -267,4 +268,44 @@ func GenerateMarkerGenesis(simState *module.SimulationState) {
 		panic(err)
 	}
 	simState.GenState[markertypes.ModuleName] = markerGenesisBz
+}
+
+// DistributeGeneratedMarkers distributes the generated markers to the simulation accounts.
+func DistributeGeneratedMarkers(simState *module.SimulationState) {
+	var bankGenesis banktypes.GenesisState
+	simState.Cdc.MustUnmarshalJSON(simState.GenState[banktypes.ModuleName], &bankGenesis)
+
+	underlying := sdk.NewInt64Coin("underlyingvault", 1_000_000_000_000)
+	payment := sdk.NewInt64Coin("paymentvault", 1_000_000_000_000)
+
+	// Update bankGenesis to evenly distribute all the marker denoms to the the simState accounts
+	// Update bankGenesis supply to have each of the markers
+	for _, coin := range []sdk.Coin{underlying, payment} {
+		numAccounts := int64(len(simState.Accounts))
+		if numAccounts == 0 {
+			continue
+		}
+
+		// Add the new coin to the total supply
+		bankGenesis.Supply = bankGenesis.Supply.Add(coin)
+
+		// Distribute the coins, adding the remainder to the last account
+		amountPerAccount := coin.Amount.QuoRaw(numAccounts)
+		remainder := coin.Amount.ModRaw(numAccounts)
+
+		for i, acc := range simState.Accounts {
+			distAmount := amountPerAccount
+			if i == len(simState.Accounts)-1 {
+				distAmount = distAmount.Add(remainder)
+			}
+
+			bankGenesis.Balances = append(bankGenesis.Balances, banktypes.Balance{Address: acc.Address.String(), Coins: sdk.NewCoins(sdk.NewCoin(coin.Denom, distAmount))})
+		}
+	}
+
+	bankGenesisBz, err := simState.Cdc.MarshalJSON(&bankGenesis)
+	if err != nil {
+		panic(err)
+	}
+	simState.GenState[banktypes.ModuleName] = bankGenesisBz
 }

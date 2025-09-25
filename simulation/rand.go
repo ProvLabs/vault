@@ -3,6 +3,7 @@ package simulation
 import (
 	"fmt"
 	"math/rand"
+	"strings"
 
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
@@ -33,12 +34,22 @@ func getRandomVault(r *rand.Rand, k keeper.Keeper, ctx sdk.Context) (*types.Vaul
 }
 
 func getRandomDenom(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, acc simtypes.Account) (string, error) {
-	balances := k.BankKeeper.GetAllBalances(ctx, acc.Address)
+	balances := k.BankKeeper.GetAllBalances(sdk.UnwrapSDKContext(ctx), acc.Address)
 	if balances.Empty() {
 		return "", fmt.Errorf("account has no coins")
 	}
-	randIndex := r.Intn(len(balances))
-	return balances[randIndex].Denom, nil
+
+	r.Shuffle(len(balances), func(i, j int) {
+		balances[i], balances[j] = balances[j], balances[i]
+	})
+
+	for _, coin := range balances {
+		if strings.HasSuffix(coin.Denom, "vault") {
+			return coin.Denom, nil
+		}
+	}
+
+	return "", fmt.Errorf("account has no coins with a 'vault' suffix")
 }
 
 func getRandomInterestRate(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, vaultAddr sdk.AccAddress) (string, error) {

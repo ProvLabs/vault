@@ -35,8 +35,8 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 | `CreateVault`            | No             |                   ✅ |                 ✅ | Creation only.                                                                                                |
 | `SwapIn`                 | No             |                   ✅ |                 ❌ | Keeper `SwapIn` enforces `!vault.Paused`, `SwapInEnabled`, accepted denom, reconcile.                         |
 | `SwapOut`                | No             |                   ✅ |                 ❌ | Keeper `SwapOut` enforces `!vault.Paused`, `SwapOutEnabled`, share denom match, payout restrictions, enqueue. |
-| `BridgeMintShares`       | No (bridge)    |                   ✅ |                 ❌ | Requires `bridge_enabled`, signer == `bridge_address`, shares denom match, positive amount, capacity ≤ `total_shares`. |
-| `BridgeBurnShares`       | No (bridge)    |                   ✅ |                 ❌ | Requires `bridge_enabled`, signer == `bridge_address`, shares denom match, positive amount; burns from marker. |
+| `BridgeMintShares`       | No (bridge)    |                   ✅ |                 ✅ | Requires `bridge_enabled`, signer == `bridge_address`, shares denom match, positive amount, capacity ≤ `total_shares`. |
+| `BridgeBurnShares`       | No (bridge)    |                   ✅ |                 ✅ | Requires `bridge_enabled`, signer == `bridge_address`, shares denom match, positive amount; burns from marker. |
 | `SetBridgeAddress`       | Yes            |                   ✅ |                 ✅ | Sets or updates the single authorized `bridge_address`.                                                       |
 | `ToggleBridgeEnabled`    | Yes            |                   ✅ |                 ✅ | Enables/disables bridge operations; no mint/burn allowed when disabled.                                       |
 | `UpdateMinInterestRate`  | Yes            |                   ✅ |                 ✅ | Calls `SetMinInterestRate`.                                                                                   |

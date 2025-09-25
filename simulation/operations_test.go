@@ -316,6 +316,79 @@ func (s *VaultSimTestSuite) TestSimulateMsgUpdateMaxInterestRate() {
 	s.Require().Len(futureOps, 0, "futureOperations")
 }
 
+func (s *VaultSimTestSuite) TestSimulateMsgToggleBridge() {
+	selected := s.accs[0]
+
+	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying", "underlyingshare", selected, s.accs)
+	s.Require().NoError(err, "CreateVault")
+
+	op := simulation.SimulateMsgToggleBridge(*s.app.VaultKeeper)
+	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
+	s.Require().NoError(err, "SimulateMsgToggleBridge")
+	s.Require().True(opMsg.OK, "operationMsg.OK")
+	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
+	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
+	s.Require().Len(futureOps, 0, "futureOperations")
+}
+
+func (s *VaultSimTestSuite) TestSimulateMsgSetBridgeAddress() {
+	selected := s.accs[0]
+
+	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying", "underlyingshare", selected, s.accs)
+	s.Require().NoError(err, "CreateVault")
+
+	op := simulation.SimulateMsgSetBridgeAddress(*s.app.VaultKeeper)
+	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
+	s.Require().NoError(err, "SimulateMsgSetBridgeAddress")
+	s.Require().True(opMsg.OK, "operationMsg.OK")
+	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
+	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
+	s.Require().Len(futureOps, 0, "futureOperations")
+}
+
+func (s *VaultSimTestSuite) TestSimulateMsgBridgeMintShares() {
+	admin := s.accs[0]
+	bridge := s.accs[1]
+
+	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying", "underlyingshare", admin, s.accs)
+	s.Require().NoError(err, "CreateVault")
+
+	err = simulation.SetVaultBridge(s.ctx, s.app.VaultKeeper, "underlyingshare", bridge.Address, true)
+	s.Require().NoError(err, "SetVaultBridge")
+
+	op := simulation.SimulateMsgBridgeMintShares(*s.app.VaultKeeper)
+	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
+	s.Require().NoError(err, "SimulateMsgBridgeMintShares")
+	s.Require().True(opMsg.OK, "operationMsg.OK")
+	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
+	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
+	s.Require().Len(futureOps, 0, "futureOperations")
+}
+
+func (s *VaultSimTestSuite) TestSimulateMsgBridgeBurnShares() {
+	admin := s.accs[0]
+	bridge := s.accs[1]
+
+	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying", "underlyingshare", admin, s.accs)
+	s.Require().NoError(err, "CreateVault")
+
+	err = simulation.SetVaultBridge(s.ctx, s.app.VaultKeeper, "underlyingshare", bridge.Address, true)
+	s.Require().NoError(err, "SetVaultBridge")
+
+	// give bridge account some shares
+	shares := sdk.NewInt64Coin("underlyingshare", 1000)
+	err = FundAccount(s.ctx, s.app.BankKeeper, bridge.Address, sdk.NewCoins(shares))
+	s.Require().NoError(err, "FundAccount for bridge")
+
+	op := simulation.SimulateMsgBridgeBurnShares(*s.app.VaultKeeper)
+	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
+	s.Require().NoError(err, "SimulateMsgBridgeBurnShares")
+	s.Require().True(opMsg.OK, "operationMsg.OK")
+	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
+	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
+	s.Require().Len(futureOps, 0, "futureOperations")
+}
+
 // GenerateTestingAccounts generates n new accounts, creates them (in state) and gives each 1 million power worth of bond tokens.
 func GenerateTestingAccounts(t *testing.T, ctx sdk.Context, app *simapp.SimApp, r *rand.Rand, n int) []simtypes.Account {
 	return GenerateTestingAccountsWithPower(t, ctx, app, r, n, 1_000_000)

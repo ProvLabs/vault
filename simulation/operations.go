@@ -34,25 +34,31 @@ const (
 	OpWeightMsgPauseVault            = "op_weight_msg_pause_vault"
 	OpWeightMsgUnpauseVault          = "op_weight_msg_unpause_vault"
 	OpWeightMsgToggleBridge          = "op_weight_msg_toggle_bridge"
+	OpWeightMsgSetBridgeAddress      = "op_weight_msg_set_bridge_address"
+	OpWeightMsgBridgeMintShares      = "op_weight_msg_bridge_mint_shares"
+	OpWeightMsgBridgeBurnShares      = "op_weight_msg_bridge_burn_shares"
 )
 
 var DefaultWeights = map[string]int{
-	OpWeightMsgCreateVault:           5,
-	OpWeightMsgSwapIn:                30,
-	OpWeightMsgSwapOut:               15,
-	OpWeightMsgUpdateInterestRate:    8,
+	OpWeightMsgCreateVault:           4,
+	OpWeightMsgSwapIn:                25,
+	OpWeightMsgSwapOut:               12,
+	OpWeightMsgUpdateInterestRate:    7,
 	OpWeightMsgUpdateMinInterestRate: 3,
 	OpWeightMsgUpdateMaxInterestRate: 3,
-	OpWeightMsgToggleSwapIn:          7,
-	OpWeightMsgToggleSwapOut:         7,
-	OpWeightMsgDepositInterest:       4,
-	OpWeightMsgWithdrawInterest:      4,
-	OpWeightMsgDepositPrincipal:      4,
-	OpWeightMsgWithdrawPrincipal:     4,
+	OpWeightMsgToggleSwapIn:          6,
+	OpWeightMsgToggleSwapOut:         6,
+	OpWeightMsgDepositInterest:       3,
+	OpWeightMsgWithdrawInterest:      3,
+	OpWeightMsgDepositPrincipal:      3,
+	OpWeightMsgWithdrawPrincipal:     3,
 	OpWeightMsgExpediteSwap:          2,
 	OpWeightMsgPauseVault:            2,
 	OpWeightMsgUnpauseVault:          2,
-	OpWeightMsgToggleBridge:          5,
+	OpWeightMsgToggleBridge:          2,
+	OpWeightMsgSetBridgeAddress:      2,
+	OpWeightMsgBridgeMintShares:      6,
+	OpWeightMsgBridgeBurnShares:      6,
 }
 
 func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simulation.WeightedOperations {
@@ -73,6 +79,9 @@ func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simula
 		wPauseVault            int
 		wUnpauseVault          int
 		wToggleBridge          int
+		wSetBridgeAddress      int
+		wBridgeMintShares      int
+		wBridgeBurnShares      int
 	)
 
 	simState.AppParams.GetOrGenerate(OpWeightMsgCreateVault, &wCreateVault, simState.Rand, func(_ *rand.Rand) { wCreateVault = DefaultWeights[OpWeightMsgCreateVault] })
@@ -91,6 +100,9 @@ func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simula
 	simState.AppParams.GetOrGenerate(OpWeightMsgPauseVault, &wPauseVault, simState.Rand, func(_ *rand.Rand) { wPauseVault = DefaultWeights[OpWeightMsgPauseVault] })
 	simState.AppParams.GetOrGenerate(OpWeightMsgUnpauseVault, &wUnpauseVault, simState.Rand, func(_ *rand.Rand) { wUnpauseVault = DefaultWeights[OpWeightMsgUnpauseVault] })
 	simState.AppParams.GetOrGenerate(OpWeightMsgToggleBridge, &wToggleBridge, simState.Rand, func(_ *rand.Rand) { wToggleBridge = DefaultWeights[OpWeightMsgToggleBridge] })
+	simState.AppParams.GetOrGenerate(OpWeightMsgSetBridgeAddress, &wSetBridgeAddress, simState.Rand, func(_ *rand.Rand) { wSetBridgeAddress = DefaultWeights[OpWeightMsgSetBridgeAddress] })
+	simState.AppParams.GetOrGenerate(OpWeightMsgBridgeMintShares, &wBridgeMintShares, simState.Rand, func(_ *rand.Rand) { wBridgeMintShares = DefaultWeights[OpWeightMsgBridgeMintShares] })
+	simState.AppParams.GetOrGenerate(OpWeightMsgBridgeBurnShares, &wBridgeBurnShares, simState.Rand, func(_ *rand.Rand) { wBridgeBurnShares = DefaultWeights[OpWeightMsgBridgeBurnShares] })
 
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(wCreateVault, SimulateMsgCreateVault(k)),
@@ -109,6 +121,9 @@ func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simula
 		simulation.NewWeightedOperation(wPauseVault, SimulateMsgPauseVault(k)),
 		simulation.NewWeightedOperation(wUnpauseVault, SimulateMsgUnpauseVault(k)),
 		simulation.NewWeightedOperation(wToggleBridge, SimulateMsgToggleBridge(k)),
+		simulation.NewWeightedOperation(wSetBridgeAddress, SimulateMsgSetBridgeAddress(k)),
+		simulation.NewWeightedOperation(wBridgeMintShares, SimulateMsgBridgeMintShares(k)),
+		simulation.NewWeightedOperation(wBridgeBurnShares, SimulateMsgBridgeBurnShares(k)),
 	}
 }
 

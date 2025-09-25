@@ -33,6 +33,7 @@ const (
 	OpWeightMsgExpediteSwap          = "op_weight_msg_expedite_swap"
 	OpWeightMsgPauseVault            = "op_weight_msg_pause_vault"
 	OpWeightMsgUnpauseVault          = "op_weight_msg_unpause_vault"
+	OpWeightMsgToggleBridge          = "op_weight_msg_toggle_bridge"
 )
 
 var DefaultWeights = map[string]int{
@@ -51,6 +52,7 @@ var DefaultWeights = map[string]int{
 	OpWeightMsgExpediteSwap:          2,
 	OpWeightMsgPauseVault:            2,
 	OpWeightMsgUnpauseVault:          2,
+	OpWeightMsgToggleBridge:          5,
 }
 
 func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simulation.WeightedOperations {
@@ -70,6 +72,7 @@ func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simula
 		wExpediteSwap          int
 		wPauseVault            int
 		wUnpauseVault          int
+		wToggleBridge          int
 	)
 
 	simState.AppParams.GetOrGenerate(OpWeightMsgCreateVault, &wCreateVault, simState.Rand, func(_ *rand.Rand) { wCreateVault = DefaultWeights[OpWeightMsgCreateVault] })
@@ -87,6 +90,7 @@ func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simula
 	simState.AppParams.GetOrGenerate(OpWeightMsgExpediteSwap, &wExpediteSwap, simState.Rand, func(_ *rand.Rand) { wExpediteSwap = DefaultWeights[OpWeightMsgExpediteSwap] })
 	simState.AppParams.GetOrGenerate(OpWeightMsgPauseVault, &wPauseVault, simState.Rand, func(_ *rand.Rand) { wPauseVault = DefaultWeights[OpWeightMsgPauseVault] })
 	simState.AppParams.GetOrGenerate(OpWeightMsgUnpauseVault, &wUnpauseVault, simState.Rand, func(_ *rand.Rand) { wUnpauseVault = DefaultWeights[OpWeightMsgUnpauseVault] })
+	simState.AppParams.GetOrGenerate(OpWeightMsgToggleBridge, &wToggleBridge, simState.Rand, func(_ *rand.Rand) { wToggleBridge = DefaultWeights[OpWeightMsgToggleBridge] })
 
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(wCreateVault, SimulateMsgCreateVault(k)),
@@ -104,6 +108,7 @@ func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simula
 		simulation.NewWeightedOperation(wExpediteSwap, SimulateMsgExpeditePendingSwapOut(k)),
 		simulation.NewWeightedOperation(wPauseVault, SimulateMsgPauseVault(k)),
 		simulation.NewWeightedOperation(wUnpauseVault, SimulateMsgUnpauseVault(k)),
+		simulation.NewWeightedOperation(wToggleBridge, SimulateMsgToggleBridge(k)),
 	}
 }
 
@@ -693,5 +698,35 @@ func SimulateMsgUnpauseVault(k keeper.Keeper) simtypes.Operation {
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "successfully unpaused vault"), nil, nil
+	}
+}
+
+func SimulateMsgToggleBridge(k keeper.Keeper) simtypes.Operation {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		vault, err := getRandomVault(r, k, ctx)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleBridgeRequest{}), "unable to get random vault"), nil, nil
+		}
+
+		adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleBridgeRequest{}), "invalid admin address"), nil, err
+		}
+
+		msg := &types.MsgToggleBridgeRequest{
+			VaultAddress: vault.GetAddress().String(),
+			Admin:        adminAddr.String(),
+			Enabled:      !vault.BridgeEnabled,
+		}
+
+		handler := keeper.NewMsgServer(&k)
+		_, err = handler.ToggleBridge(sdk.WrapSDKContext(ctx), msg)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, err
+		}
+
+		return simtypes.NewOperationMsg(msg, true, "successfully toggled bridge"), nil, nil
 	}
 }

@@ -452,10 +452,12 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 }
 
 // GenerateGenesisState creates a randomized GenState of the bank module.
-func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
+func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	state := simulation.RandomizedGenState(simState)
 	_ = state
+
 	// Create all the universal denoms which are underlying and payment and setup NAVs
+	simulation.GenerateMarkerGenesis(simState)
 
 	// Distribute the universal denoms to all user accounts and vaults.
 	// Next we want to fund the Vault with underlying for Interest Payment

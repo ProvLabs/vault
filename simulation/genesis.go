@@ -13,6 +13,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 const (
@@ -215,4 +217,54 @@ func randomPendingSwaps(simState *module.SimulationState, vaults []types.VaultAc
 		Entries:              allPendingSwaps,
 		LatestSequenceNumber: maxSequence + 1,
 	}
+}
+
+// GenerateMarkerGenesis creates the underlying and payment markers for simulation.
+func GenerateMarkerGenesis(simState *module.SimulationState) {
+	var markerGenesis markertypes.GenesisState
+	if simState.GenState[markertypes.ModuleName] != nil {
+		simState.Cdc.MustUnmarshalJSON(simState.GenState[markertypes.ModuleName], &markerGenesis)
+	}
+
+	underlyingDenom := "underlying"
+	paymentDenom := "payment"
+
+	for _, denom := range []string{underlyingDenom, paymentDenom} {
+		modAddr := authtypes.NewModuleAddress(types.ModuleName)
+		marker := markertypes.NewMarkerAccount(
+			authtypes.NewBaseAccountWithAddress(modAddr),
+			sdk.NewInt64Coin(denom, 1_000_000_000_000),
+			modAddr,
+			[]markertypes.AccessGrant{
+				{
+					Address: modAddr.String(),
+					Permissions: markertypes.AccessList{
+						markertypes.Access_Mint,
+						markertypes.Access_Burn,
+						markertypes.Access_Withdraw,
+					},
+				},
+			},
+			markertypes.StatusActive,
+			markertypes.MarkerType_Coin,
+			false, // supply not fixed
+			true,  // allow gov control
+			true,  // allow forced transfer
+			[]string{},
+		)
+		markerGenesis.Markers = append(markerGenesis.Markers, *marker)
+	}
+
+	// We need to set a NAV for the payment denom so that it can be used in swaps
+	nav := markertypes.NewNetAssetValue(sdk.NewInt64Coin("underlying", 1), 2)
+	markerGenesis.NetAssetValues = append(markerGenesis.NetAssetValues, markertypes.MarkerNetAssetValues{
+		Address:        string(markertypes.MustGetMarkerAddress("payment")),
+		NetAssetValues: []markertypes.NetAssetValue{nav},
+	})
+
+	markerGenesisBz, err := simState.Cdc.MarshalJSON(&markerGenesis)
+	if err != nil {
+		panic(err)
+	}
+	simState.GenState[markertypes.ModuleName] = markerGenesisBz
 }

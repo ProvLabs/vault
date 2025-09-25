@@ -33,6 +33,47 @@ func getRandomVault(r *rand.Rand, k keeper.Keeper, ctx sdk.Context) (*types.Vaul
 	return vault, nil
 }
 
+// finds a random vault that has bridging enabled and the bridge address is a sim account
+func getRandomBridgedVault(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, accs []simtypes.Account, checkBalance bool) (types.VaultAccount, error) {
+	addrs, err := k.GetVaults(sdk.UnwrapSDKContext(ctx))
+	if err != nil {
+		return types.VaultAccount{}, err
+	}
+
+	vaults := []types.VaultAccount{}
+	for _, addr := range addrs {
+		vault, err := k.GetVault(ctx, addr)
+		if err != nil {
+			continue
+		}
+		if vault == nil {
+			continue
+		}
+
+		if vault.BridgeEnabled && vault.BridgeAddress != "" {
+			addr, err := sdk.AccAddressFromBech32(vault.BridgeAddress)
+			if err == nil {
+				if _, found := simtypes.FindAccount(accs, addr); found {
+					if checkBalance {
+						balance := k.BankKeeper.GetBalance(ctx, addr, vault.GetTotalShares().Denom)
+						if balance.IsPositive() {
+							vaults = append(vaults, *vault)
+						}
+					} else {
+						vaults = append(vaults, *vault)
+					}
+				}
+			}
+		}
+	}
+
+	if len(vaults) == 0 {
+		return types.VaultAccount{}, fmt.Errorf("no vaults with bridge enabled and bridge account found")
+	}
+
+	return vaults[r.Intn(len(vaults))], nil
+}
+
 func getRandomDenom(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, acc simtypes.Account) (string, error) {
 	balances := k.BankKeeper.GetAllBalances(sdk.UnwrapSDKContext(ctx), acc.Address)
 	if balances.Empty() {

@@ -730,3 +730,99 @@ func SimulateMsgToggleBridge(k keeper.Keeper) simtypes.Operation {
 		return simtypes.NewOperationMsg(msg, true, "successfully toggled bridge"), nil, nil
 	}
 }
+
+// SimulateMsgSetBridgeAddress creates a message to set the bridge address for a vault
+func SimulateMsgSetBridgeAddress(k keeper.Keeper) simtypes.Operation {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		vault, err := getRandomVault(r, k, ctx)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSetBridgeAddressRequest{}), "unable to get random vault"), nil, nil
+		}
+
+		adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSetBridgeAddressRequest{}), "invalid admin address"), nil, err
+		}
+
+		newBridgeAccount, _ := simtypes.RandomAcc(r, accs)
+
+		msg := &types.MsgSetBridgeAddressRequest{
+			VaultAddress:  vault.GetAddress().String(),
+			Admin:         adminAddr.String(),
+			BridgeAddress: newBridgeAccount.Address.String(),
+		}
+
+		handler := keeper.NewMsgServer(&k)
+		_, err = handler.SetBridgeAddress(sdk.WrapSDKContext(ctx), msg)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, err
+		}
+
+		return simtypes.NewOperationMsg(msg, true, "successfully set bridge address"), nil, nil
+	}
+}
+
+// SimulateMsgBridgeMintShares creates a message to mint shares to the bridge address
+func SimulateMsgBridgeMintShares(k keeper.Keeper) simtypes.Operation {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		vault, err := getRandomBridgedVault(r, k, ctx, accs, false)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgBridgeMintSharesRequest{}), err.Error()), nil, nil
+		}
+		bridgeAddr, _ := sdk.AccAddressFromBech32(vault.BridgeAddress)
+		amount := simtypes.RandomAmount(r, math.NewInt(1000000))
+		shares := sdk.NewCoin(vault.TotalShares.Denom, amount)
+
+		msg := &types.MsgBridgeMintSharesRequest{
+			VaultAddress: vault.GetAddress().String(),
+			Bridge:       bridgeAddr.String(),
+			Shares:       shares,
+		}
+
+		handler := keeper.NewMsgServer(&k)
+		_, err = handler.BridgeMintShares(sdk.WrapSDKContext(ctx), msg)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, err
+		}
+
+		return simtypes.NewOperationMsg(msg, true, "successfully minted shares to bridge"), nil, nil
+	}
+}
+
+// SimulateMsgBridgeBurnShares creates a message to burn shares from the bridge address
+func SimulateMsgBridgeBurnShares(k keeper.Keeper) simtypes.Operation {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		vault, err := getRandomBridgedVault(r, k, ctx, accs, true)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgBridgeBurnSharesRequest{}), err.Error()), nil, nil
+		}
+
+		bridgeAddr, _ := sdk.AccAddressFromBech32(vault.BridgeAddress)
+		balance := k.BankKeeper.GetBalance(ctx, bridgeAddr, vault.TotalShares.Denom)
+		amount, err := simtypes.RandPositiveInt(r, balance.Amount)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgBridgeBurnSharesRequest{}), "unable to get random burn amount"), nil, err
+		}
+		shares := sdk.NewCoin(vault.TotalShares.Denom, amount)
+
+		msg := &types.MsgBridgeBurnSharesRequest{
+			VaultAddress: vault.GetAddress().String(),
+			Bridge:       bridgeAddr.String(),
+			Shares:       shares,
+		}
+
+		handler := keeper.NewMsgServer(&k)
+		_, err = handler.BridgeBurnShares(sdk.WrapSDKContext(ctx), msg)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, err
+		}
+
+		return simtypes.NewOperationMsg(msg, true, "successfully burned shares from bridge"), nil, nil
+	}
+}

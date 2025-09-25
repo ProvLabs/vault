@@ -56,7 +56,6 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 - **SwapOut is asynchronous**: the tx enqueues a request and returns `request_id`; completion or refund is emitted later in `EndBlocker`.
 - **Principal adjustments require pause** to avoid valuation drift during user flows.
 - **Toggles are allowed while paused.** Interest fund moves are also allowed while paused (with reconciliation as noted).
-- **Bridge operations are disabled while paused** and additionally require `bridge_enabled` with the caller equal to `bridge_address`.
 
 ## CreateVault
 

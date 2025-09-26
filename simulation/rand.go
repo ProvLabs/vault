@@ -76,7 +76,7 @@ func getRandomBridgedVault(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, accs 
 			continue
 		}
 
-		if vault.BridgeEnabled && vault.BridgeAddress != "" {
+		if vault.BridgeAddress != "" {
 			addr, err := sdk.AccAddressFromBech32(vault.BridgeAddress)
 			if err == nil {
 				if _, found := simtypes.FindAccount(accs, addr); found {

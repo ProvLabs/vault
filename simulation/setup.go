@@ -171,6 +171,10 @@ func Setup(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, ak types.AccountKeepe
 		return fmt.Errorf("failed to add nav for payment: %w", err)
 	}
 
+	if err := AddNav(ctx, markerKeeper, underlyingDenom, ak.GetModuleAddress("mint"), sdk.NewInt64Coin(paymentDenom, 1), 1); err != nil {
+		return fmt.Errorf("failed to add nav for payment: %w", err)
+	}
+
 	// Create an initial vault.
 	admin, _ := simtypes.RandomAcc(r, accs)
 	shareDenom := fmt.Sprintf("vaultshare%d", r.Intn(1000))

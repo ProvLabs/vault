@@ -183,7 +183,6 @@ func SimulateMsgSwapIn(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSwapInRequest{}), "unable to get random vault"), nil, nil
 		}
 
-		// TODO Do we want to manually pause and enable swap in
 		if vault.Paused {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSwapInRequest{}), "vault is paused"), nil, nil
 		}
@@ -242,7 +241,6 @@ func SimulateMsgSwapOut(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSwapOutRequest{}), "unable to get random vault"), nil, nil
 		}
 
-		// TODO Should I manually ensure they are not paused and don't have swap out enabled
 		if vault.Paused {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSwapOutRequest{}), "vault is paused"), nil, nil
 		}
@@ -587,7 +585,6 @@ func SimulateMsgDepositPrincipalFunds(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositPrincipalFundsRequest{}), "invalid admin address"), nil, err
 		}
 
-		// TODO Do we want to manually pause it
 		if !vault.Paused {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositPrincipalFundsRequest{}), "vault is not paused"), nil, nil
 		}
@@ -646,7 +643,6 @@ func SimulateMsgWithdrawPrincipalFunds(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawPrincipalFundsRequest{}), "invalid admin address"), nil, err
 		}
 
-		// TODO Do we want to manually pause it
 		if !vault.Paused {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawPrincipalFundsRequest{}), "vault is not paused"), nil, nil
 		}
@@ -694,7 +690,6 @@ func SimulateMsgExpeditePendingSwapOut(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgExpeditePendingSwapOutRequest{}), "invalid admin address"), nil, err
 		}
 
-		// TODO Do we want to manually create a pending swap out?
 		swapID, err := getRandomPendingSwapOut(r, k, ctx, vault.GetAddress())
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgExpeditePendingSwapOutRequest{}), "unable to get random pending swap out"), nil, nil
@@ -734,7 +729,6 @@ func SimulateMsgPauseVault(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgPauseVaultRequest{}), "invalid admin address"), nil, err
 		}
 
-		// TODO Can we just pause it?
 		if vault.Paused {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgPauseVaultRequest{}), "vault is already paused"), nil, nil
 		}
@@ -773,7 +767,6 @@ func SimulateMsgUnpauseVault(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUnpauseVaultRequest{}), "invalid admin address"), nil, err
 		}
 
-		// TODO Can we just pause it?
 		if !vault.Paused {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgPauseVaultRequest{}), "vault is already unpaused"), nil, nil
 		}

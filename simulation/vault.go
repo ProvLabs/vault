@@ -129,3 +129,37 @@ func SetVaultBridge(ctx sdk.Context, vk *keeper.Keeper, shareDenom string, bridg
 	vk.AuthKeeper.SetAccount(ctx, vault)
 	return nil
 }
+
+// UpdateVaultTotalShares sets the total shares amount in the vault.
+func UpdateVaultTotalShares(ctx sdk.Context, vk *keeper.Keeper, shares sdk.Coin) error {
+	vaultAddr := types.GetVaultAddress(shares.Denom)
+
+	vault, err := vk.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return err
+	}
+	if vault == nil {
+		return fmt.Errorf("vault with share denom %s not found", shares.Denom)
+	}
+
+	vault.TotalShares = shares
+
+	vk.AuthKeeper.SetAccount(ctx, vault)
+	return nil
+}
+
+// BridgeAssets mints and burns shares for a vault to represent assets passed over a bridge.
+func BridgeAssets(ctx sdk.Context, vk *keeper.Keeper, shareDenom string, mintAmount, burnAmount sdk.Coin) error {
+	vaultAddr := types.GetVaultAddress(shareDenom)
+	if !mintAmount.IsZero() {
+		if err := vk.MarkerKeeper.MintCoin(ctx, vaultAddr, mintAmount); err != nil {
+			return err
+		}
+	}
+	if !burnAmount.IsZero() {
+		if err := vk.MarkerKeeper.BurnCoin(ctx, vaultAddr, burnAmount); err != nil {
+			return err
+		}
+	}
+	return nil
+}

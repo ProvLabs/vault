@@ -789,9 +789,20 @@ func SimulateMsgBridgeMintShares(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgBridgeMintSharesRequest{}), err.Error()), nil, nil
 		}
 		bridgeAddr, _ := sdk.AccAddressFromBech32(vault.BridgeAddress)
-		amount := simtypes.RandomAmount(r, math.NewInt(1000000))
-		shares := sdk.NewCoin(vault.TotalShares.Denom, amount)
 
+		// Calculate available capacity for minting
+		supply := k.BankKeeper.GetSupply(ctx, vault.TotalShares.Denom)
+		availableToMint := vault.TotalShares.Amount.Sub(supply.Amount)
+
+		if !availableToMint.IsPositive() {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgBridgeMintSharesRequest{}), "no capacity available to mint new shares"), nil, nil
+		}
+
+		amount, err := simtypes.RandPositiveInt(r, availableToMint)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgBridgeMintSharesRequest{}), "unable to get random mint amount"), nil, err
+		}
+		shares := sdk.NewCoin(vault.TotalShares.Denom, amount)
 		msg := &types.MsgBridgeMintSharesRequest{
 			VaultAddress: vault.GetAddress().String(),
 			Bridge:       bridgeAddr.String(),

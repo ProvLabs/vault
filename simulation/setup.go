@@ -14,9 +14,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/simulation"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
+	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -140,6 +142,39 @@ func IsSetup(k keeper.Keeper, ctx sdk.Context) bool {
 		return false
 	}
 	return len(vaults) > 0
+}
+
+// Setup ensures the simulation is ready by creating global markers and an initial vault if none exist.
+func Setup(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper, mk markerkeeper.Keeper, accs []simtypes.Account) error {
+	if IsSetup(k, ctx) {
+		return nil
+	}
+
+	// Create global markers for underlying and payment denoms.
+	underlyingDenom := "underlyingvaulty"
+	paymentDenom := "paymentvaulty"
+
+	if err := CreateGlobalMarker(ctx, ak, bk, mk, sdk.NewInt64Coin(underlyingDenom, 100_000_000), accs, false); err != nil {
+		return fmt.Errorf("failed to create global marker for underlying: %w", err)
+	}
+	if err := CreateGlobalMarker(ctx, ak, bk, mk, sdk.NewInt64Coin(paymentDenom, 100_000_000), accs, false); err != nil {
+		return fmt.Errorf("failed to create global marker for payment: %w", err)
+	}
+
+	if err := AddNav(ctx, mk, paymentDenom, ak.GetModuleAddress("mint"), sdk.NewInt64Coin(underlyingDenom, 1), 1); err != nil {
+		return fmt.Errorf("failed to add nav for payment: %w", err)
+	}
+
+	// Create an initial vault.
+	admin, _ := simtypes.RandomAcc(r, accs)
+	shareDenom := fmt.Sprintf("vaultshare%d", r.Intn(1000))
+
+	selectedPayment := ""
+	if r.Intn(2) == 0 {
+		selectedPayment = paymentDenom
+	}
+
+	return CreateVault(ctx, &k, ak, bk, mk, underlyingDenom, selectedPayment, shareDenom, admin, accs)
 }
 
 func randomTimeouts(simState *module.SimulationState, vaults []types.VaultAccount) []types.QueueEntry {

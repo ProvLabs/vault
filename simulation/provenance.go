@@ -72,6 +72,28 @@ func CreateUnrestrictedMarker(ctx context.Context, coin sdk.Coin, admin sdk.AccA
 	return err
 }
 
+// AddNav adds a net asset value to a marker.
+func AddNav(ctx context.Context, keeper markerkeeper.Keeper, denom string, admin sdk.AccAddress, price sdk.Coin, volume uint64) error {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	nav := []markertypes.NetAssetValue{
+		{
+			Price:              price,
+			Volume:             volume,
+			UpdatedBlockHeight: uint64(sdkCtx.BlockHeight()),
+		},
+	}
+
+	msg := &markertypes.MsgAddNetAssetValuesRequest{
+		Denom:          denom,
+		Administrator:  admin.String(),
+		NetAssetValues: nav,
+	}
+
+	markerMsgServer := markerkeeper.NewMsgServerImpl(keeper)
+	_, err := markerMsgServer.AddNetAssetValues(ctx, msg)
+	return err
+}
+
 func AddAttribute(ctx context.Context, acc sdk.AccAddress, attr string, nk types.NameKeeper, ak attrkeeper.Keeper) error {
 	err := nk.SetNameRecord(sdk.UnwrapSDKContext(ctx), attr, acc, false)
 	if err != nil {

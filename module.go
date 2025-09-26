@@ -501,25 +501,15 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 }
 
 // GenerateGenesisState creates a randomized GenState of the bank module.
-func (am AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	state := simulation.RandomizedGenState(simState)
-	_ = state
-
-	// Create all the universal denoms which are underlying and payment and setup NAVs
-	simulation.GenerateMarkerGenesis(simState)
-
-	// Distribute the universal denoms to all user accounts and vaults.
-	// Next we want to fund the Vault with underlying for Interest Payment
-	// Next we want to fund the Vault for Escrowed Shares. This should match pending swap out
-	// Next we want to give underlying asset and payment denom to vault markers
-	// Next we want to give shares to users
+func (m AppModule) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState)
 }
 
 // RegisterStoreDecoder registers a decoder for supply module's types
-func (am AppModule) RegisterStoreDecoder(_ simtypes.StoreDecoderRegistry) {
+func (m AppModule) RegisterStoreDecoder(_ simtypes.StoreDecoderRegistry) {
 }
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
-func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	return simulation.WeightedOperations(simState, *am.keeper)
+func (m AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
+	return simulation.WeightedOperations(simState, *m.keeper)
 }

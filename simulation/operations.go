@@ -170,10 +170,11 @@ func SimulateMsgSwapIn(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
+			// TODO Do we want to manually create one
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSwapInRequest{}), "unable to get random vault"), nil, nil
 		}
 
-		// TODO Do I need to do these checks?
+		// TODO Do we want to manually pause and enable swap in
 		if vault.Paused {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSwapInRequest{}), "vault is paused"), nil, nil
 		}
@@ -225,10 +226,11 @@ func SimulateMsgSwapOut(k keeper.Keeper) simtypes.Operation {
 		// Get a random vault
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
+			// TODO Do we want to manually create one
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSwapOutRequest{}), "unable to get random vault"), nil, nil
 		}
 
-		// TODO Do I need to do these checks?
+		// TODO Should I manually ensure they are not paused and don't have swap out enabled
 		if vault.Paused {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSwapOutRequest{}), "vault is paused"), nil, nil
 		}
@@ -276,6 +278,7 @@ func SimulateMsgUpdateInterestRate(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
+			// TODO Do we want to manually create one
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateInterestRateRequest{}), "unable to get random vault"), nil, nil
 		}
 
@@ -311,6 +314,7 @@ func SimulateMsgUpdateMinInterestRate(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
+			// TODO Do we want to manually create one
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateMinInterestRateRequest{}), "unable to get random vault"), nil, nil
 		}
 
@@ -346,6 +350,7 @@ func SimulateMsgUpdateMaxInterestRate(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
+			// TODO Do we want to manually create one
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateMaxInterestRateRequest{}), "unable to get random vault"), nil, nil
 		}
 
@@ -381,6 +386,7 @@ func SimulateMsgToggleSwapIn(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
+			// TODO Do we want to manually create one
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleSwapInRequest{}), "unable to get random vault"), nil, nil
 		}
 
@@ -410,6 +416,7 @@ func SimulateMsgToggleSwapOut(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
+			// TODO Do we want to manually create one
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleSwapOutRequest{}), "unable to get random vault"), nil, nil
 		}
 
@@ -439,6 +446,7 @@ func SimulateMsgDepositInterestFunds(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
+			// TODO Do we want to manually create one
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositInterestFundsRequest{}), "unable to get random vault"), nil, nil
 		}
 
@@ -489,6 +497,7 @@ func SimulateMsgWithdrawInterestFunds(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
+			// TODO Do we want to manually create one
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawInterestFundsRequest{}), "unable to get random vault"), nil, nil
 		}
 
@@ -525,6 +534,7 @@ func SimulateMsgDepositPrincipalFunds(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
+			// TODO Do we want to manually create one?
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositPrincipalFundsRequest{}), "unable to get random vault"), nil, nil
 		}
 
@@ -533,7 +543,7 @@ func SimulateMsgDepositPrincipalFunds(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositPrincipalFundsRequest{}), "invalid admin address"), nil, err
 		}
 
-		// TODO Do I need to do these checks?
+		// TODO Do we want to manually pause it
 		if !vault.Paused {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositPrincipalFundsRequest{}), "vault is not paused"), nil, nil
 		}
@@ -579,6 +589,7 @@ func SimulateMsgWithdrawPrincipalFunds(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
+			// TODO Do we want to manually create one
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawPrincipalFundsRequest{}), "unable to get random vault"), nil, nil
 		}
 
@@ -587,7 +598,7 @@ func SimulateMsgWithdrawPrincipalFunds(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawPrincipalFundsRequest{}), "invalid admin address"), nil, err
 		}
 
-		// TODO Do I need to do these checks?
+		// TODO Do we want to manually pause it
 		if !vault.Paused {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawPrincipalFundsRequest{}), "vault is not paused"), nil, nil
 		}
@@ -622,6 +633,7 @@ func SimulateMsgExpeditePendingSwapOut(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
+			// TODO Do we want to manually create a vault
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgExpeditePendingSwapOutRequest{}), "unable to get random vault"), nil, nil
 		}
 
@@ -630,6 +642,7 @@ func SimulateMsgExpeditePendingSwapOut(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgExpeditePendingSwapOutRequest{}), "invalid admin address"), nil, err
 		}
 
+		// TODO Do we want to manually create a pending swap out?
 		swapID, err := getRandomPendingSwapOut(r, k, ctx, vault.GetAddress())
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgExpeditePendingSwapOutRequest{}), "unable to get random pending swap out"), nil, nil
@@ -656,6 +669,7 @@ func SimulateMsgPauseVault(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
+			// TODO Do we want to manually create a vault
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgPauseVaultRequest{}), "unable to get random vault"), nil, nil
 		}
 
@@ -664,6 +678,7 @@ func SimulateMsgPauseVault(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgPauseVaultRequest{}), "invalid admin address"), nil, err
 		}
 
+		// TODO Can we just pause it?
 		if vault.Paused {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgPauseVaultRequest{}), "vault is already paused"), nil, nil
 		}
@@ -689,6 +704,7 @@ func SimulateMsgUnpauseVault(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
+			// TODO Do we want to manually create a vault
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUnpauseVaultRequest{}), "unable to get random vault"), nil, nil
 		}
 
@@ -697,6 +713,7 @@ func SimulateMsgUnpauseVault(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUnpauseVaultRequest{}), "invalid admin address"), nil, err
 		}
 
+		// TODO Can we just pause it?
 		if !vault.Paused {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgPauseVaultRequest{}), "vault is already unpaused"), nil, nil
 		}
@@ -722,6 +739,7 @@ func SimulateMsgToggleBridge(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
+			// TODO Do we want to manually create a vault
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleBridgeRequest{}), "unable to get random vault"), nil, nil
 		}
 
@@ -753,6 +771,7 @@ func SimulateMsgSetBridgeAddress(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
+			// TODO Do we want to manually create a vault so this succeeds
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSetBridgeAddressRequest{}), "unable to get random vault"), nil, nil
 		}
 
@@ -786,6 +805,7 @@ func SimulateMsgBridgeMintShares(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		vault, err := getRandomBridgedVault(r, k, ctx, accs, false)
 		if err != nil {
+			// TODO Do we want to manually turn one vault into a bridged vault?
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgBridgeMintSharesRequest{}), err.Error()), nil, nil
 		}
 		bridgeAddr, _ := sdk.AccAddressFromBech32(vault.BridgeAddress)
@@ -826,6 +846,7 @@ func SimulateMsgBridgeBurnShares(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		vault, err := getRandomBridgedVault(r, k, ctx, accs, true)
 		if err != nil {
+			// TODO Do we want to manually turn one vault into a bridged vault?
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgBridgeBurnSharesRequest{}), err.Error()), nil, nil
 		}
 

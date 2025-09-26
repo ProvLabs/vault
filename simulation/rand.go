@@ -33,6 +33,32 @@ func getRandomVault(r *rand.Rand, k keeper.Keeper, ctx sdk.Context) (*types.Vaul
 	return vault, nil
 }
 
+// getRandomVaultWithCondition gets a random vault that satisfies a given condition.
+func getRandomVaultWithCondition(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, condition func(vault types.VaultAccount) bool) (*types.VaultAccount, error) {
+	allVaultAddrs, err := k.GetVaults(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	var matchingVaults []*types.VaultAccount
+	for _, vaultAddr := range allVaultAddrs {
+		vault, err := k.GetVault(ctx, vaultAddr)
+		if err != nil || vault == nil {
+			continue
+		}
+
+		if condition(*vault) {
+			matchingVaults = append(matchingVaults, vault)
+		}
+	}
+
+	if len(matchingVaults) == 0 {
+		return nil, fmt.Errorf("no vaults found matching condition")
+	}
+
+	return matchingVaults[r.Intn(len(matchingVaults))], nil
+}
+
 // finds a random vault that has bridging enabled and the bridge address is a sim account
 func getRandomBridgedVault(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, accs []simtypes.Account, checkBalance bool) (types.VaultAccount, error) {
 	addrs, err := k.GetVaults(sdk.UnwrapSDKContext(ctx))

@@ -132,6 +132,16 @@ func CreateRandomVault(r *rand.Rand, currentTimestamp time.Time, accs []simulati
 	}
 }
 
+// IsSetup checks if the simulation has been set up with any vaults.
+func IsSetup(k keeper.Keeper, ctx sdk.Context) bool {
+	vaults, err := k.GetVaults(ctx)
+	if err != nil {
+		// If there's an error getting vaults, we can consider it not set up.
+		return false
+	}
+	return len(vaults) > 0
+}
+
 func randomTimeouts(simState *module.SimulationState, vaults []types.VaultAccount) []types.QueueEntry {
 	var timeouts []types.QueueEntry
 

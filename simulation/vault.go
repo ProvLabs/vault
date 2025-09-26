@@ -14,11 +14,12 @@ import (
 )
 
 // CreateVault creates a new vault with a marker and funds accounts.
-func CreateVault(ctx sdk.Context, vk *keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper, mk markerkeeper.Keeper, underlying, share string, admin simtypes.Account, accs []simtypes.Account) error {
+func CreateVault(ctx sdk.Context, vk *keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper, mk markerkeeper.Keeper, underlying, paymentDenom, share string, admin simtypes.Account, accs []simtypes.Account) error {
 	if !MarkerExists(ctx, mk, underlying) {
-		if err := CreateGlobalMarker(ctx, ak, bk, mk, sdk.NewInt64Coin(underlying, 1000), accs); err != nil {
-			return fmt.Errorf("unable to create global marker: %w", err)
-		}
+		return fmt.Errorf("underlying marker %s does not exist", underlying)
+	}
+	if paymentDenom != "" && !MarkerExists(ctx, mk, paymentDenom) {
+		return fmt.Errorf("payment denom marker %s does not exist", paymentDenom)
 	}
 
 	// Create a vault that uses the marker as an underlying asset
@@ -26,7 +27,7 @@ func CreateVault(ctx sdk.Context, vk *keeper.Keeper, ak types.AccountKeeper, bk 
 		Admin:                  admin.Address.String(),
 		ShareDenom:             share,
 		UnderlyingAsset:        underlying,
-		PaymentDenom:           "",
+		PaymentDenom:           paymentDenom,
 		WithdrawalDelaySeconds: interest.SecondsPerDay,
 	}
 	msgServer := keeper.NewMsgServer(vk)

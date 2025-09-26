@@ -47,6 +47,31 @@ func CreateMarker(ctx context.Context, coin sdk.Coin, admin sdk.AccAddress, keep
 	return err
 }
 
+// CreateUnrestrictedMarker creates a new unrestricted marker of type COIN.
+func CreateUnrestrictedMarker(ctx context.Context, coin sdk.Coin, admin sdk.AccAddress, keeper markerkeeper.Keeper) error {
+	newMarker := &markertypes.MsgAddFinalizeActivateMarkerRequest{
+		Amount:      coin,
+		Manager:     admin.String(),
+		FromAddress: admin.String(),
+		MarkerType:  markertypes.MarkerType_Coin,
+		AccessList: []markertypes.AccessGrant{
+			{
+				Address: admin.String(),
+				Permissions: markertypes.AccessList{
+					markertypes.Access_Mint, markertypes.Access_Burn, markertypes.Access_Withdraw,
+				},
+			},
+		},
+		SupplyFixed:            true,
+		AllowGovernanceControl: true,
+		AllowForcedTransfer:    false,
+		RequiredAttributes:     []string{},
+	}
+	markerMsgServer := markerkeeper.NewMsgServerImpl(keeper)
+	_, err := markerMsgServer.AddFinalizeActivateMarker(ctx, newMarker)
+	return err
+}
+
 func AddAttribute(ctx context.Context, acc sdk.AccAddress, attr string, nk types.NameKeeper, ak attrkeeper.Keeper) error {
 	err := nk.SetNameRecord(sdk.UnwrapSDKContext(ctx), attr, acc, false)
 	if err != nil {
@@ -70,8 +95,14 @@ func MarkerExists(ctx sdk.Context, markerKeeper types.MarkerKeeper, denom string
 	return marker != nil && err == nil
 }
 
-func CreateGlobalMarker(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, mk markerkeeper.Keeper, underlying sdk.Coin, accs []simtypes.Account) error {
-	err := CreateMarker(sdk.UnwrapSDKContext(ctx), sdk.NewInt64Coin(underlying.Denom, underlying.Amount.Int64()), ak.GetModuleAddress("mint"), mk)
+func CreateGlobalMarker(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, mk markerkeeper.Keeper, underlying sdk.Coin, accs []simtypes.Account, restricted bool) error {
+	var err error
+	if restricted {
+		err = CreateMarker(sdk.UnwrapSDKContext(ctx), sdk.NewInt64Coin(underlying.Denom, underlying.Amount.Int64()), ak.GetModuleAddress("mint"), mk)
+	} else {
+		err = CreateUnrestrictedMarker(sdk.UnwrapSDKContext(ctx), sdk.NewInt64Coin(underlying.Denom, underlying.Amount.Int64()), ak.GetModuleAddress("mint"), mk)
+	}
+
 	if err != nil {
 		return fmt.Errorf("CreateMarker: %w", err)
 	}

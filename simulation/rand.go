@@ -111,12 +111,12 @@ func getRandomDenom(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, acc simtypes
 	})
 
 	for _, coin := range balances {
-		if strings.HasSuffix(coin.Denom, "vault") {
+		if strings.HasSuffix(coin.Denom, "vaulty") {
 			return coin.Denom, nil
 		}
 	}
 
-	return "", fmt.Errorf("account has no coins with a 'vault' suffix")
+	return "", fmt.Errorf("account has no coins with a 'vaulty' suffix")
 }
 
 func getRandomInterestRate(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, vaultAddr sdk.AccAddress) (string, error) {

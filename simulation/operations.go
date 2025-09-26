@@ -127,25 +127,6 @@ func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simula
 	}
 }
 
-func SimulateNewRandomizedVault(k keeper.Keeper) simtypes.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simtypes.Account, chainID string,
-	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
-		vault := CreateRandomVault(r, ctx.BlockTime(), accs)
-		k.
-		// Create all the universal denoms which are underlying and payment and setup NAVs
-		// simulation.GenerateMarkerGenesis(simState)
-
-		// Distribute the universal denoms to all user accounts and vaults.
-		// Next we want to fund the Vault with underlying for Interest Payment
-		// Next we want to fund the Vault for Escrowed Shares. This should match pending swap out
-		// Next we want to give underlying asset and payment denom to vault markers
-		// Next we want to give shares to users
-
-		return simtypes.NewOperationMsgBasic(types.ModuleName, "SimulateNewRandomizedVault", "creating a randomized preconfigured vault", true, nil), nil, nil
-	}
-}
-
 func SimulateMsgCreateVault(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,

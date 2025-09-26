@@ -2,6 +2,8 @@ package simulation
 
 import (
 	"fmt"
+	"math/rand"
+	"time"
 
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
@@ -11,6 +13,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
@@ -33,98 +36,100 @@ const (
 	ChanceOfTimeoutEntry         = 2 // 1 in X
 	MaxNumPendingSwaps           = 11
 	MaxSharesAmount              = 1000 // This is the base amount, it will be multiplied by ShareScalar
+	MaxTotalShares               = 1000 // This is the base amount, it will be multiplied by ShareScalar
 	ChanceOfRedeemDenomIsPayment = 2    // 1 in X
 	NumPayoutTimeOptions         = 3
 )
 
-// Create all the universal denoms which are underlying and payment and setup NAVs
-// simulation.GenerateMarkerGenesis(simState)
-
-// Distribute the universal denoms to all user accounts and vaults.
-// Next we want to fund the Vault with underlying for Interest Payment
-// Next we want to fund the Vault for Escrowed Shares. This should match pending swap out
-// Next we want to give underlying asset and payment denom to vault markers
-// Next we want to give shares to users
-
 func randomVaults(simState *module.SimulationState) []types.VaultAccount {
 	var vaults []types.VaultAccount
-	admin := simState.Accounts[0].Address.String()
 
 	for i := 0; i < simState.Rand.Intn(MaxNumVaults)+1; i++ {
-		// --- Vault Config ---
-		shareDenom := fmt.Sprintf("vaultshare%d", i)
-		underlyingDenom := "underlying"
-		paymentDenom := ""
-
-		if simState.Rand.Intn(ChanceOfPaymentDenom) == 0 {
-			paymentDenom = "payment"
-		}
-
-		addr := types.GetVaultAddress(shareDenom)
-
-		var minRate float64
-		if simState.Rand.Intn(ChanceOfNegativeMinRate) == 0 {
-			minRate = (simState.Rand.Float64() - 1) * MaxNegativeMinRate
-		} else {
-			minRate = simState.Rand.Float64() * MaxPositiveMinRate
-		}
-
-		maxRate := minRate + simState.Rand.Float64()*MaxRateAddition
-		desiredRate := minRate + simState.Rand.Float64()*(maxRate-minRate)
-		currentRate := minRate + simState.Rand.Float64()*(maxRate-minRate)
-		withdrawalDelaySeconds := uint64(simState.Rand.Int63n(keeper.AutoReconcileTimeout))
-
-		var periodStart, periodTimeout int64
-		switch simState.Rand.Intn(3) {
-		case 0: // Inactive
-			desiredRate = 0
-			currentRate = 0
-			periodStart = 0
-			periodTimeout = 0
-			minRate = 0
-			maxRate = 0
-		case 1: // Active
-			currentRate = desiredRate
-			periodStart = simState.GenTimestamp.Unix()
-			periodTimeout = simState.GenTimestamp.Unix() + simState.Rand.Int63n(int64(keeper.AutoReconcileTimeout))
-		case 2: // Defaulted
-			currentRate = 0
-			periodTimeout = simState.GenTimestamp.Unix()
-			periodStart = periodTimeout - (simState.Rand.Int63n(int64(keeper.AutoReconcileTimeout)) + 1)
-		}
-
-		var paused bool
-		var pausedBalance sdk.Coin
-		if simState.Rand.Intn(ChanceOfPausedVault) == 0 {
-			paused = true
-			pausedBalance = sdk.NewCoin(underlyingDenom, sdkmath.NewInt(simState.Rand.Int63n(MaxPausedBalance)+MinPausedBalance))
-		} else {
-			paused = false
-			pausedBalance = sdk.Coin{}
-		}
-
-		vault := types.VaultAccount{
-			BaseAccount:            authtypes.NewBaseAccountWithAddress(addr),
-			Admin:                  admin,
-			TotalShares:            sdk.NewCoin(shareDenom, sdkmath.ZeroInt()),
-			UnderlyingAsset:        underlyingDenom,
-			PaymentDenom:           paymentDenom,
-			CurrentInterestRate:    fmt.Sprintf("%f", currentRate),
-			DesiredInterestRate:    fmt.Sprintf("%f", desiredRate),
-			MinInterestRate:        fmt.Sprintf("%f", minRate),
-			MaxInterestRate:        fmt.Sprintf("%f", maxRate),
-			PeriodStart:            periodStart,
-			PeriodTimeout:          periodTimeout,
-			SwapInEnabled:          simState.Rand.Intn(ChanceOfSwapInEnabled) == 0,
-			SwapOutEnabled:         simState.Rand.Intn(ChanceOfSwapOutEnabled) == 0,
-			WithdrawalDelaySeconds: withdrawalDelaySeconds,
-			Paused:                 paused,
-			PausedBalance:          pausedBalance,
-		}
+		vault := CreateRandomVault(simState.Rand, simState.GenTimestamp, simState.Accounts)
 		vaults = append(vaults, vault)
 	}
 
 	return vaults
+}
+
+// CreateRandomVault creates a single random vault for simulation purposes.
+func CreateRandomVault(r *rand.Rand, currentTimestamp time.Time, accs []simulation.Account) types.VaultAccount {
+	admin := accs[0].Address.String()
+
+	// --- Vault Config ---
+	shareDenom := fmt.Sprintf("vaultshare%d", r.Int63n(100_000_000))
+	underlyingDenom := "underlying"
+	paymentDenom := ""
+
+	if r.Intn(ChanceOfPaymentDenom) == 0 {
+		paymentDenom = "payment"
+	}
+
+	addr := types.GetVaultAddress(shareDenom)
+
+	var minRate float64
+	if r.Intn(ChanceOfNegativeMinRate) == 0 {
+		minRate = (r.Float64() - 1) * MaxNegativeMinRate
+	} else {
+		minRate = r.Float64() * MaxPositiveMinRate
+	}
+
+	maxRate := minRate + r.Float64()*MaxRateAddition
+	desiredRate := minRate + r.Float64()*(maxRate-minRate)
+	currentRate := minRate + r.Float64()*(maxRate-minRate)
+	withdrawalDelaySeconds := uint64(r.Int63n(keeper.AutoReconcileTimeout))
+
+	// Calculate a random number of total shares. It should be multiplied by ShareScalar
+	baseTotalShares := sdkmath.NewInt(r.Int63n(MaxTotalShares + 1))
+	totalShares := sdk.NewCoin(shareDenom, baseTotalShares.Mul(utils.ShareScalar))
+
+	var periodStart, periodTimeout int64
+	switch r.Intn(3) {
+	case 0: // Inactive
+		desiredRate = 0
+		currentRate = 0
+		periodStart = 0
+		periodTimeout = 0
+		minRate = 0
+		maxRate = 0
+	case 1: // Active
+		currentRate = desiredRate
+		periodStart = currentTimestamp.Unix()
+		periodTimeout = currentTimestamp.Unix() + r.Int63n(int64(keeper.AutoReconcileTimeout))
+	case 2: // Defaulted
+		currentRate = 0
+		periodTimeout = currentTimestamp.Unix()
+		periodStart = periodTimeout - (r.Int63n(int64(keeper.AutoReconcileTimeout)) + 1)
+	}
+
+	var paused bool
+	var pausedBalance sdk.Coin
+	if r.Intn(ChanceOfPausedVault) == 0 {
+		paused = true
+		pausedBalance = sdk.NewCoin(underlyingDenom, sdkmath.NewInt(r.Int63n(MaxPausedBalance)+MinPausedBalance))
+	} else {
+		paused = false
+		pausedBalance = sdk.Coin{}
+	}
+
+	return types.VaultAccount{
+		BaseAccount:            authtypes.NewBaseAccountWithAddress(addr),
+		Admin:                  admin,
+		TotalShares:            totalShares,
+		UnderlyingAsset:        underlyingDenom,
+		PaymentDenom:           paymentDenom,
+		CurrentInterestRate:    fmt.Sprintf("%f", currentRate),
+		DesiredInterestRate:    fmt.Sprintf("%f", desiredRate),
+		MinInterestRate:        fmt.Sprintf("%f", minRate),
+		MaxInterestRate:        fmt.Sprintf("%f", maxRate),
+		PeriodStart:            periodStart,
+		PeriodTimeout:          periodTimeout,
+		SwapInEnabled:          r.Intn(ChanceOfSwapInEnabled) == 0,
+		SwapOutEnabled:         r.Intn(ChanceOfSwapOutEnabled) == 0,
+		WithdrawalDelaySeconds: withdrawalDelaySeconds,
+		Paused:                 paused,
+		PausedBalance:          pausedBalance,
+	}
 }
 
 func randomTimeouts(simState *module.SimulationState, vaults []types.VaultAccount) []types.QueueEntry {

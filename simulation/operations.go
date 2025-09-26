@@ -133,7 +133,7 @@ func SimulateMsgCreateVault(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, err
 		}
 
 		admin, _ := simtypes.RandomAcc(r, accs)
@@ -162,7 +162,7 @@ func SimulateMsgCreateVault(k keeper.Keeper) simtypes.Operation {
 		handler := keeper.NewMsgServer(&k)
 		_, err = handler.CreateVault(sdk.WrapSDKContext(ctx), msg)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 		}
 
 		return simtypes.NewOperationMsg(msg, true, ""), nil, nil
@@ -175,12 +175,12 @@ func SimulateMsgSwapIn(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, err
 		}
 
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSwapInRequest{}), "unable to get random vault"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSwapInRequest{}), "unable to get random vault"), nil, err
 		}
 
 		if vault.Paused {
@@ -220,7 +220,7 @@ func SimulateMsgSwapIn(k keeper.Keeper) simtypes.Operation {
 		handler := keeper.NewMsgServer(&k)
 		_, err = handler.SwapIn(sdk.WrapSDKContext(ctx), msg)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "failed to swap in"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "failed to swap in"), nil, nil
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "successfully swapped in"), nil, nil
@@ -233,12 +233,12 @@ func SimulateMsgSwapOut(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, err
 		}
 
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSwapOutRequest{}), "unable to get random vault"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSwapOutRequest{}), "unable to get random vault"), nil, err
 		}
 
 		if vault.Paused {
@@ -275,7 +275,7 @@ func SimulateMsgSwapOut(k keeper.Keeper) simtypes.Operation {
 		handler := keeper.NewMsgServer(&k)
 		_, err = handler.SwapOut(sdk.WrapSDKContext(ctx), msg)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "failed to swap out"), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "failed to swap out"), nil, nil
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "successfully swapped out"), nil, nil
@@ -288,12 +288,12 @@ func SimulateMsgUpdateInterestRate(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, err
 		}
 
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateInterestRateRequest{}), "unable to get random vault"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateInterestRateRequest{}), "unable to get random vault"), nil, err
 		}
 
 		adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
@@ -315,7 +315,7 @@ func SimulateMsgUpdateInterestRate(k keeper.Keeper) simtypes.Operation {
 		handler := keeper.NewMsgServer(&k)
 		_, err = handler.UpdateInterestRate(sdk.WrapSDKContext(ctx), msg)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "successfully updated interest rate"), nil, nil
@@ -328,12 +328,12 @@ func SimulateMsgUpdateMinInterestRate(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, err
 		}
 
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateMinInterestRateRequest{}), "unable to get random vault"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateMinInterestRateRequest{}), "unable to get random vault"), nil, err
 		}
 
 		adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
@@ -355,7 +355,7 @@ func SimulateMsgUpdateMinInterestRate(k keeper.Keeper) simtypes.Operation {
 		handler := keeper.NewMsgServer(&k)
 		_, err = handler.UpdateMinInterestRate(sdk.WrapSDKContext(ctx), msg)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "successfully updated min interest rate"), nil, nil
@@ -368,12 +368,12 @@ func SimulateMsgUpdateMaxInterestRate(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, err
 		}
 
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateMaxInterestRateRequest{}), "unable to get random vault"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateMaxInterestRateRequest{}), "unable to get random vault"), nil, err
 		}
 
 		adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
@@ -395,7 +395,7 @@ func SimulateMsgUpdateMaxInterestRate(k keeper.Keeper) simtypes.Operation {
 		handler := keeper.NewMsgServer(&k)
 		_, err = handler.UpdateMaxInterestRate(sdk.WrapSDKContext(ctx), msg)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "successfully updated max interest rate"), nil, nil
@@ -408,12 +408,12 @@ func SimulateMsgToggleSwapIn(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, err
 		}
 
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleSwapInRequest{}), "unable to get random vault"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleSwapInRequest{}), "unable to get random vault"), nil, err
 		}
 
 		adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
@@ -429,7 +429,7 @@ func SimulateMsgToggleSwapIn(k keeper.Keeper) simtypes.Operation {
 		handler := keeper.NewMsgServer(&k)
 		_, err = handler.ToggleSwapIn(sdk.WrapSDKContext(ctx), msg)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "successfully toggled swap in"), nil, nil
@@ -442,12 +442,12 @@ func SimulateMsgToggleSwapOut(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, err
 		}
 
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleSwapOutRequest{}), "unable to get random vault"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleSwapOutRequest{}), "unable to get random vault"), nil, err
 		}
 
 		adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
@@ -463,7 +463,7 @@ func SimulateMsgToggleSwapOut(k keeper.Keeper) simtypes.Operation {
 		handler := keeper.NewMsgServer(&k)
 		_, err = handler.ToggleSwapOut(sdk.WrapSDKContext(ctx), msg)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "successfully toggled swap out"), nil, nil
@@ -476,12 +476,12 @@ func SimulateMsgDepositInterestFunds(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, err
 		}
 
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositInterestFundsRequest{}), "unable to get random vault"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositInterestFundsRequest{}), "unable to get random vault"), nil, err
 		}
 
 		adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
@@ -518,7 +518,7 @@ func SimulateMsgDepositInterestFunds(k keeper.Keeper) simtypes.Operation {
 		handler := keeper.NewMsgServer(&k)
 		_, err = handler.DepositInterestFunds(sdk.WrapSDKContext(ctx), msg)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "successfully deposited interest funds"), nil, nil
@@ -531,12 +531,12 @@ func SimulateMsgWithdrawInterestFunds(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, err
 		}
 
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawInterestFundsRequest{}), "unable to get random vault"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawInterestFundsRequest{}), "unable to get random vault"), nil, err
 		}
 
 		adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
@@ -559,7 +559,7 @@ func SimulateMsgWithdrawInterestFunds(k keeper.Keeper) simtypes.Operation {
 		handler := keeper.NewMsgServer(&k)
 		_, err = handler.WithdrawInterestFunds(sdk.WrapSDKContext(ctx), msg)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "successfully withdrew interest funds"), nil, nil
@@ -572,12 +572,12 @@ func SimulateMsgDepositPrincipalFunds(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, err
 		}
 
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositPrincipalFundsRequest{}), "unable to get random vault"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositPrincipalFundsRequest{}), "unable to get random vault"), nil, err
 		}
 
 		adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
@@ -617,7 +617,7 @@ func SimulateMsgDepositPrincipalFunds(k keeper.Keeper) simtypes.Operation {
 		handler := keeper.NewMsgServer(&k)
 		_, err = handler.DepositPrincipalFunds(sdk.WrapSDKContext(ctx), msg)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "successfully deposited principal funds"), nil, nil
@@ -630,12 +630,12 @@ func SimulateMsgWithdrawPrincipalFunds(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, err
 		}
 
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawPrincipalFundsRequest{}), "unable to get random vault"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawPrincipalFundsRequest{}), "unable to get random vault"), nil, err
 		}
 
 		adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
@@ -664,7 +664,7 @@ func SimulateMsgWithdrawPrincipalFunds(k keeper.Keeper) simtypes.Operation {
 		handler := keeper.NewMsgServer(&k)
 		_, err = handler.WithdrawPrincipalFunds(sdk.WrapSDKContext(ctx), msg)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "successfully withdrew principal funds"), nil, nil
@@ -677,12 +677,12 @@ func SimulateMsgExpeditePendingSwapOut(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, err
 		}
 
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgExpeditePendingSwapOutRequest{}), "unable to get random vault"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgExpeditePendingSwapOutRequest{}), "unable to get random vault"), nil, err
 		}
 
 		adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
@@ -703,7 +703,7 @@ func SimulateMsgExpeditePendingSwapOut(k keeper.Keeper) simtypes.Operation {
 		handler := keeper.NewMsgServer(&k)
 		_, err = handler.ExpeditePendingSwapOut(sdk.WrapSDKContext(ctx), msg)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "successfully expedited swap out"), nil, nil
@@ -716,12 +716,12 @@ func SimulateMsgPauseVault(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, err
 		}
 
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgPauseVaultRequest{}), "unable to get random vault"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgPauseVaultRequest{}), "unable to get random vault"), nil, err
 		}
 
 		adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
@@ -741,7 +741,7 @@ func SimulateMsgPauseVault(k keeper.Keeper) simtypes.Operation {
 		handler := keeper.NewMsgServer(&k)
 		_, err = handler.PauseVault(sdk.WrapSDKContext(ctx), msg)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "successfully paused vault"), nil, nil
@@ -754,12 +754,12 @@ func SimulateMsgUnpauseVault(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, err
 		}
 
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUnpauseVaultRequest{}), "unable to get random vault"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUnpauseVaultRequest{}), "unable to get random vault"), nil, err
 		}
 
 		adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
@@ -779,7 +779,7 @@ func SimulateMsgUnpauseVault(k keeper.Keeper) simtypes.Operation {
 		handler := keeper.NewMsgServer(&k)
 		_, err = handler.UnpauseVault(sdk.WrapSDKContext(ctx), msg)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "successfully unpaused vault"), nil, nil
@@ -792,12 +792,12 @@ func SimulateMsgToggleBridge(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, err
 		}
 
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleBridgeRequest{}), "unable to get random vault"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleBridgeRequest{}), "unable to get random vault"), nil, err
 		}
 
 		if vault.BridgeAddress == "" {
@@ -818,7 +818,7 @@ func SimulateMsgToggleBridge(k keeper.Keeper) simtypes.Operation {
 		handler := keeper.NewMsgServer(&k)
 		_, err = handler.ToggleBridge(sdk.WrapSDKContext(ctx), msg)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "successfully toggled bridge"), nil, nil
@@ -832,12 +832,12 @@ func SimulateMsgSetBridgeAddress(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, err
 		}
 
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSetBridgeAddressRequest{}), "unable to get random vault"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSetBridgeAddressRequest{}), "unable to get random vault"), nil, err
 		}
 
 		adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
@@ -856,7 +856,7 @@ func SimulateMsgSetBridgeAddress(k keeper.Keeper) simtypes.Operation {
 		handler := keeper.NewMsgServer(&k)
 		_, err = handler.SetBridgeAddress(sdk.WrapSDKContext(ctx), msg)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "successfully set bridge address"), nil, nil
@@ -870,7 +870,7 @@ func SimulateMsgBridgeMintShares(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, err
 		}
 
 		vault, err := getRandomBridgedVault(r, k, ctx, accs, false)
@@ -905,7 +905,7 @@ func SimulateMsgBridgeMintShares(k keeper.Keeper) simtypes.Operation {
 		handler := keeper.NewMsgServer(&k)
 		_, err = handler.BridgeMintShares(sdk.WrapSDKContext(ctx), msg)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "successfully minted shares to bridge"), nil, nil
@@ -919,7 +919,7 @@ func SimulateMsgBridgeBurnShares(k keeper.Keeper) simtypes.Operation {
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, err
 		}
 
 		vault, err := getRandomBridgedVault(r, k, ctx, accs, true)
@@ -948,7 +948,7 @@ func SimulateMsgBridgeBurnShares(k keeper.Keeper) simtypes.Operation {
 		handler := keeper.NewMsgServer(&k)
 		_, err = handler.BridgeBurnShares(sdk.WrapSDKContext(ctx), msg)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, err
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "successfully burned shares from bridge"), nil, nil

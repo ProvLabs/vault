@@ -9,6 +9,7 @@ import (
 	modulev1 "github.com/provlabs/vault/api/module/v1"
 	vaultv1 "github.com/provlabs/vault/api/v1"
 	"github.com/provlabs/vault/keeper"
+	"github.com/provlabs/vault/simulation"
 	"github.com/provlabs/vault/types"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
@@ -24,6 +25,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/version"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
@@ -38,6 +40,7 @@ var (
 	_ module.HasGenesis          = AppModule{}
 	_ module.HasGenesisBasics    = AppModuleBasic{}
 	_ module.HasServices         = AppModule{}
+	_ module.AppModuleSimulation = AppModule{}
 )
 
 // AppModuleBasic implements the basic methods for the vault module.
@@ -101,14 +104,18 @@ type AppModule struct {
 	AppModuleBasic
 	keeper       *keeper.Keeper
 	addressCodec address.Codec
+	markerKeeper types.MarkerKeeper
+	bankKeeper   types.BankKeeper
 }
 
 // NewAppModule creates a new AppModule instance.
-func NewAppModule(keeper *keeper.Keeper, addressCodec address.Codec) AppModule {
+func NewAppModule(keeper *keeper.Keeper, mk types.MarkerKeeper, bk types.BankKeeper, addressCodec address.Codec) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(),
 		keeper:         keeper,
 		addressCodec:   addressCodec,
+		markerKeeper:   mk,
+		bankKeeper:     bk,
 	}
 }
 
@@ -489,6 +496,20 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.MarkerKeeper,
 		in.BankKeeper,
 	)
-	m := NewAppModule(k, in.AddressCodec)
+	m := NewAppModule(k, in.MarkerKeeper, in.BankKeeper, in.AddressCodec)
 	return ModuleOutputs{Keeper: k, Module: m}
+}
+
+// GenerateGenesisState creates a randomized GenState of the bank module.
+func (m AppModule) GenerateGenesisState(simState *module.SimulationState) {
+	simulation.RandomizedGenState(simState)
+}
+
+// RegisterStoreDecoder registers a decoder for supply module's types
+func (m AppModule) RegisterStoreDecoder(_ simtypes.StoreDecoderRegistry) {
+}
+
+// WeightedOperations returns the all the gov module operations with their respective weights.
+func (m AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
+	return simulation.WeightedOperations(simState, *m.keeper)
 }

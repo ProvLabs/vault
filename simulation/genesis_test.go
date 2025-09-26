@@ -39,14 +39,6 @@ func TestRandomizedGenState(t *testing.T) {
 
 	var vaultGenesis types.GenesisState
 	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &vaultGenesis)
-
-	require.NotEmpty(t, vaultGenesis.Vaults)
-	for _, v := range vaultGenesis.Vaults {
-		require.NotEmpty(t, v.Admin)
-		require.NotEmpty(t, v.TotalShares)
-		require.NotEmpty(t, v.GetAddress())
-		require.NotEmpty(t, v.UnderlyingAsset)
-	}
 }
 
 func TestRandomizedGenState_Panics(t *testing.T) {

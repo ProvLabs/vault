@@ -381,6 +381,9 @@ func (s *VaultSimTestSuite) TestSimulateMsgBridgeBurnShares() {
 	err = simulation.SetVaultBridge(s.ctx, s.app.VaultKeeper, "underlyingshare", bridge.Address, true)
 	s.Require().NoError(err, "SetVaultBridge")
 
+	err = simulation.UpdateVaultTotalShares(s.ctx, s.app.VaultKeeper, sdk.NewInt64Coin("underlyingshare", 1000))
+	s.Require().NoError(err, "UpdateVaultTotalShares")
+
 	// give bridge account some shares
 	shares := sdk.NewInt64Coin("underlyingshare", 1000)
 	err = FundAccount(s.ctx, s.app.BankKeeper, bridge.Address, sdk.NewCoins(shares))

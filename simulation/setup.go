@@ -145,7 +145,7 @@ func IsSetup(k keeper.Keeper, ctx sdk.Context) bool {
 }
 
 // Setup ensures the simulation is ready by creating global markers and an initial vault if none exist.
-func Setup(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper, mk markerkeeper.Keeper, accs []simtypes.Account) error {
+func Setup(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper, mk types.MarkerKeeper, accs []simtypes.Account) error {
 	if IsSetup(k, ctx) {
 		return nil
 	}
@@ -154,14 +154,20 @@ func Setup(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, ak types.AccountKeepe
 	underlyingDenom := "underlyingvaulty"
 	paymentDenom := "paymentvaulty"
 
-	if err := CreateGlobalMarker(ctx, ak, bk, mk, sdk.NewInt64Coin(underlyingDenom, 100_000_000), accs, false); err != nil {
+	// Need to manually cast here
+	markerKeeper, ok := mk.(markerkeeper.Keeper)
+	if !ok {
+		return fmt.Errorf("marker keeper is not of type markerkeeper.Keeper")
+	}
+
+	if err := CreateGlobalMarker(ctx, ak, bk, markerKeeper, sdk.NewInt64Coin(underlyingDenom, 100_000_000), accs, false); err != nil {
 		return fmt.Errorf("failed to create global marker for underlying: %w", err)
 	}
-	if err := CreateGlobalMarker(ctx, ak, bk, mk, sdk.NewInt64Coin(paymentDenom, 100_000_000), accs, false); err != nil {
+	if err := CreateGlobalMarker(ctx, ak, bk, markerKeeper, sdk.NewInt64Coin(paymentDenom, 100_000_000), accs, false); err != nil {
 		return fmt.Errorf("failed to create global marker for payment: %w", err)
 	}
 
-	if err := AddNav(ctx, mk, paymentDenom, ak.GetModuleAddress("mint"), sdk.NewInt64Coin(underlyingDenom, 1), 1); err != nil {
+	if err := AddNav(ctx, markerKeeper, paymentDenom, ak.GetModuleAddress("mint"), sdk.NewInt64Coin(underlyingDenom, 1), 1); err != nil {
 		return fmt.Errorf("failed to add nav for payment: %w", err)
 	}
 
@@ -174,7 +180,7 @@ func Setup(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, ak types.AccountKeepe
 		selectedPayment = paymentDenom
 	}
 
-	return CreateVault(ctx, &k, ak, bk, mk, underlyingDenom, selectedPayment, shareDenom, admin, accs)
+	return CreateVault(ctx, &k, ak, bk, markerKeeper, underlyingDenom, selectedPayment, shareDenom, admin, accs)
 }
 
 func randomTimeouts(simState *module.SimulationState, vaults []types.VaultAccount) []types.QueueEntry {

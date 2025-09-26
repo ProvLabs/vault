@@ -183,13 +183,6 @@ func SimulateMsgSwapIn(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSwapInRequest{}), "unable to get random vault"), nil, err
 		}
 
-		if vault.Paused {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSwapInRequest{}), "vault is paused"), nil, nil
-		}
-		if !vault.SwapInEnabled {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSwapInRequest{}), "vault has swap-in disabled"), nil, nil
-		}
-
 		assetDenom := getRandomVaultAsset(r, vault)
 		owner, balance, err := getRandomAccountWithDenom(r, k, ctx, accs, assetDenom)
 		if err != nil {
@@ -239,13 +232,6 @@ func SimulateMsgSwapOut(k keeper.Keeper) simtypes.Operation {
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSwapOutRequest{}), "unable to get random vault"), nil, err
-		}
-
-		if vault.Paused {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSwapOutRequest{}), "vault is paused"), nil, nil
-		}
-		if !vault.SwapOutEnabled {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSwapOutRequest{}), "vault has swap-out disabled"), nil, nil
 		}
 
 		// Find an account that has shares in this vault
@@ -585,10 +571,6 @@ func SimulateMsgDepositPrincipalFunds(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositPrincipalFundsRequest{}), "invalid admin address"), nil, err
 		}
 
-		if !vault.Paused {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositPrincipalFundsRequest{}), "vault is not paused"), nil, nil
-		}
-
 		asset := getRandomVaultAsset(r, vault)
 		balance := k.BankKeeper.GetBalance(ctx, adminAddr, asset)
 		if balance.IsZero() {
@@ -641,10 +623,6 @@ func SimulateMsgWithdrawPrincipalFunds(k keeper.Keeper) simtypes.Operation {
 		adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawPrincipalFundsRequest{}), "invalid admin address"), nil, err
-		}
-
-		if !vault.Paused {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawPrincipalFundsRequest{}), "vault is not paused"), nil, nil
 		}
 
 		principalAddr := vault.PrincipalMarkerAddress()
@@ -729,10 +707,6 @@ func SimulateMsgPauseVault(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgPauseVaultRequest{}), "invalid admin address"), nil, err
 		}
 
-		if vault.Paused {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgPauseVaultRequest{}), "vault is already paused"), nil, nil
-		}
-
 		msg := &types.MsgPauseVaultRequest{
 			VaultAddress: vault.GetAddress().String(),
 			Admin:        adminAddr.String(),
@@ -767,10 +741,6 @@ func SimulateMsgUnpauseVault(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUnpauseVaultRequest{}), "invalid admin address"), nil, err
 		}
 
-		if !vault.Paused {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgPauseVaultRequest{}), "vault is already unpaused"), nil, nil
-		}
-
 		msg := &types.MsgUnpauseVaultRequest{
 			VaultAddress: vault.GetAddress().String(),
 			Admin:        adminAddr.String(),
@@ -798,10 +768,6 @@ func SimulateMsgToggleBridge(k keeper.Keeper) simtypes.Operation {
 		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleBridgeRequest{}), "unable to get random vault"), nil, err
-		}
-
-		if vault.BridgeAddress == "" {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgToggleBridgeRequest{}), "vault bridge address has not been set"), nil, nil
 		}
 
 		adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
@@ -879,10 +845,6 @@ func SimulateMsgBridgeMintShares(k keeper.Keeper) simtypes.Operation {
 		}
 		bridgeAddr, _ := sdk.AccAddressFromBech32(vault.BridgeAddress)
 
-		if !vault.BridgeEnabled {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgBridgeMintSharesRequest{}), "bridge is not enabled"), nil, nil
-		}
-
 		// Calculate available capacity for minting
 		supply := k.BankKeeper.GetSupply(ctx, vault.TotalShares.Denom)
 		availableToMint := vault.TotalShares.Amount.Sub(supply.Amount)
@@ -925,10 +887,6 @@ func SimulateMsgBridgeBurnShares(k keeper.Keeper) simtypes.Operation {
 		vault, err := getRandomBridgedVault(r, k, ctx, accs, true)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgBridgeBurnSharesRequest{}), err.Error()), nil, nil
-		}
-
-		if !vault.BridgeEnabled {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgBridgeBurnSharesRequest{}), "bridge is not enabled"), nil, nil
 		}
 
 		bridgeAddr, _ := sdk.AccAddressFromBech32(vault.BridgeAddress)

@@ -3,6 +3,8 @@ package simulation
 import (
 	"fmt"
 	"math/rand"
+	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/provlabs/vault/keeper"
@@ -13,6 +15,32 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
+
+func genRandomDenom(r *rand.Rand, regex, suffix string) string {
+	denom := randomUnrestrictedDenom(r, regex) + suffix
+	denom = denom[:len(denom)-len(suffix)] + suffix
+	return denom
+}
+
+func randomInt63(r *rand.Rand, maxVal int64) (result int64) {
+	if maxVal == 0 {
+		return 0
+	}
+	return r.Int63n(maxVal)
+}
+
+// randomUnrestrictedDenom returns a randomized unrestricted denom string value.
+func randomUnrestrictedDenom(r *rand.Rand, unrestrictedDenomExp string) string {
+	exp := regexp.MustCompile(`\{(\d+),(\d+)\}`)
+	matches := exp.FindStringSubmatch(unrestrictedDenomExp)
+	if len(matches) != 3 {
+		panic("expected two number as range expression in unrestricted denom expression")
+	}
+	minLen, _ := strconv.ParseInt(matches[1], 10, 32)
+	maxLen, _ := strconv.ParseInt(matches[2], 10, 32)
+
+	return simtypes.RandStringOfLength(r, int(randomInt63(r, maxLen-minLen)+minLen))
+}
 
 func getRandomVault(r *rand.Rand, k keeper.Keeper, ctx sdk.Context) (*types.VaultAccount, error) {
 	vaults, err := k.GetVaults(ctx)
@@ -111,12 +139,12 @@ func getRandomDenom(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, acc simtypes
 	})
 
 	for _, coin := range balances {
-		if strings.HasSuffix(coin.Denom, "vaulty") {
+		if strings.HasSuffix(coin.Denom, "vx") {
 			return coin.Denom, nil
 		}
 	}
 
-	return "", fmt.Errorf("account has no coins with a 'vaulty' suffix")
+	return "", fmt.Errorf("account has no coins with a 'vx' suffix")
 }
 
 func getRandomInterestRate(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, vaultAddr sdk.AccAddress) (string, error) {

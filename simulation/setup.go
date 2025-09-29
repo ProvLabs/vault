@@ -16,10 +16,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/simulation"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 const (
@@ -150,10 +148,12 @@ func Setup(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, ak types.AccountKeepe
 		return nil
 	}
 
+	denomRegex := mk.GetUnrestrictedDenomRegex(ctx)
+
 	// Create global markers for underlying and payment denoms.
-	underlyingDenom := "underlyingmarkervaulty"
-	paymentDenom := "paymentmarkervaulty"
-	// restrictedDenom := "restrictedvaulty"
+	underlyingDenom := genRandomDenom(r, denomRegex, "vx")
+	paymentDenom := genRandomDenom(r, denomRegex, "vx")
+	// restrictedDenom := genRandomDenom(r, denomRegex, "vx")
 
 	// Need to manually cast here
 	markerKeeper, ok := mk.(markerkeeper.Keeper)
@@ -228,173 +228,4 @@ func Setup(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, ak types.AccountKeepe
 	}
 
 	return CreateVault(ctx, &k, ak, bk, markerKeeper, underlyingDenom, selectedPayment, shareDenom, admin, accs)
-}
-
-func randomTimeouts(simState *module.SimulationState, vaults []types.VaultAccount) []types.QueueEntry {
-	var timeouts []types.QueueEntry
-
-	for _, vault := range vaults {
-		// A vault with no timeout set should not be in the queue.
-		if vault.PeriodTimeout == 0 {
-			continue
-		}
-
-		if simState.Rand.Intn(ChanceOfTimeoutEntry) == 0 {
-			addr, err := sdk.AccAddressFromBech32(vault.GetAddress().String())
-			if err != nil {
-				panic(err)
-			}
-			timeouts = append(timeouts, types.QueueEntry{
-				Time: uint64(vault.PeriodTimeout),
-				Addr: addr.String(),
-			})
-		}
-	}
-
-	return timeouts
-}
-
-func randomPendingSwaps(simState *module.SimulationState, vaults []types.VaultAccount) types.PendingSwapOutQueue {
-	var allPendingSwaps []types.PendingSwapOutQueueEntry
-	maxSequence := uint64(0)
-
-	for _, vault := range vaults {
-		numPendingSwaps := simState.Rand.Intn(MaxNumPendingSwaps)
-		for j := 0; j < numPendingSwaps; j++ {
-			maxSequence++
-			requestID := maxSequence
-
-			owner := simState.Accounts[simState.Rand.Intn(len(simState.Accounts))].Address
-
-			// Multiply the base random amount by the ShareScalar to get a realistic, scaled share amount
-			baseSharesAmount := sdkmath.NewInt(simState.Rand.Int63n(MaxSharesAmount) + 1)
-			scaledSharesAmount := baseSharesAmount.Mul(utils.ShareScalar)
-			shares := sdk.NewCoin(vault.TotalShares.Denom, scaledSharesAmount)
-
-			redeemDenom := vault.UnderlyingAsset
-			if vault.PaymentDenom != "" && simState.Rand.Intn(ChanceOfRedeemDenomIsPayment) == 0 {
-				redeemDenom = vault.PaymentDenom
-			}
-
-			var payoutTime int64
-			switch simState.Rand.Intn(NumPayoutTimeOptions) {
-			case 0:
-				payoutTime = 0
-			case 1:
-				payoutTime = simState.GenTimestamp.Unix()
-			default:
-				if vault.WithdrawalDelaySeconds > 0 {
-					payoutTime = simState.GenTimestamp.Unix() + simState.Rand.Int63n(int64(vault.WithdrawalDelaySeconds))
-				} else {
-					payoutTime = simState.GenTimestamp.Unix()
-				}
-			}
-
-			allPendingSwaps = append(allPendingSwaps, types.PendingSwapOutQueueEntry{
-				Time: payoutTime,
-				Id:   requestID,
-				SwapOut: types.PendingSwapOut{
-					VaultAddress: vault.GetAddress().String(),
-					Owner:        owner.String(),
-					Shares:       shares,
-					RedeemDenom:  redeemDenom,
-				},
-			})
-		}
-	}
-
-	return types.PendingSwapOutQueue{
-		Entries:              allPendingSwaps,
-		LatestSequenceNumber: maxSequence + 1,
-	}
-}
-
-// GenerateMarkerGenesis creates the underlying and payment markers for simulation.
-func GenerateMarkerGenesis(simState *module.SimulationState) {
-	var markerGenesis markertypes.GenesisState
-	var bankGenesis banktypes.GenesisState
-	simState.Cdc.MustUnmarshalJSON(simState.GenState[markertypes.ModuleName], &markerGenesis)
-	simState.Cdc.MustUnmarshalJSON(simState.GenState[banktypes.ModuleName], &bankGenesis)
-
-	underlying := sdk.NewInt64Coin("underlyingvault", 1_000_000_000_000)
-	payment := sdk.NewInt64Coin("paymentvault", 1_000_000_000_000)
-
-	for _, coin := range []sdk.Coin{underlying, payment} {
-		modAddr := authtypes.NewModuleAddress(types.ModuleName)
-		marker := markertypes.NewMarkerAccount(
-			authtypes.NewBaseAccountWithAddress(modAddr),
-			coin,
-			modAddr,
-			[]markertypes.AccessGrant{
-				{
-					Address: modAddr.String(),
-					Permissions: markertypes.AccessList{
-						markertypes.Access_Mint,
-						markertypes.Access_Burn,
-						markertypes.Access_Withdraw,
-					},
-				},
-			},
-			markertypes.StatusActive,
-			markertypes.MarkerType_Coin,
-			false, // supply not fixed
-			true,  // allow gov control
-			true,  // allow forced transfer
-			[]string{},
-		)
-		markerGenesis.Markers = append(markerGenesis.Markers, *marker)
-	}
-
-	// We need to set a NAV for the payment denom so that it can be used in swaps
-	nav := markertypes.NewNetAssetValue(sdk.NewInt64Coin(underlying.Denom, 1), 2)
-	markerGenesis.NetAssetValues = append(markerGenesis.NetAssetValues, markertypes.MarkerNetAssetValues{
-		Address:        string(markertypes.MustGetMarkerAddress(payment.Denom)),
-		NetAssetValues: []markertypes.NetAssetValue{nav},
-	})
-
-	markerGenesisBz, err := simState.Cdc.MarshalJSON(&markerGenesis)
-	if err != nil {
-		panic(err)
-	}
-	simState.GenState[markertypes.ModuleName] = markerGenesisBz
-}
-
-// DistributeGeneratedMarkers distributes the generated markers to the simulation accounts.
-func DistributeGeneratedMarkers(simState *module.SimulationState) {
-	var bankGenesis banktypes.GenesisState
-	simState.Cdc.MustUnmarshalJSON(simState.GenState[banktypes.ModuleName], &bankGenesis)
-
-	underlying := sdk.NewInt64Coin("underlyingvault", 1_000_000_000_000)
-	payment := sdk.NewInt64Coin("paymentvault", 1_000_000_000_000)
-
-	// Update bankGenesis to evenly distribute all the marker denoms to the the simState accounts
-	// Update bankGenesis supply to have each of the markers
-	for _, coin := range []sdk.Coin{underlying, payment} {
-		numAccounts := int64(len(simState.Accounts))
-		if numAccounts == 0 {
-			continue
-		}
-
-		// Add the new coin to the total supply
-		bankGenesis.Supply = bankGenesis.Supply.Add(coin)
-
-		// Distribute the coins, adding the remainder to the last account
-		amountPerAccount := coin.Amount.QuoRaw(numAccounts)
-		remainder := coin.Amount.ModRaw(numAccounts)
-
-		for i, acc := range simState.Accounts {
-			distAmount := amountPerAccount
-			if i == len(simState.Accounts)-1 {
-				distAmount = distAmount.Add(remainder)
-			}
-
-			bankGenesis.Balances = append(bankGenesis.Balances, banktypes.Balance{Address: acc.Address.String(), Coins: sdk.NewCoins(sdk.NewCoin(coin.Denom, distAmount))})
-		}
-	}
-
-	bankGenesisBz, err := simState.Cdc.MarshalJSON(&bankGenesis)
-	if err != nil {
-		panic(err)
-	}
-	simState.GenState[banktypes.ModuleName] = bankGenesisBz
 }

@@ -13,6 +13,11 @@ import (
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 )
 
+const (
+	// VaultGlobalDenomSuffix is appended to every global marker denom for sim testing.
+	VaultGlobalDenomSuffix = "vx"
+)
+
 // CreateVault creates a new vault with a marker and funds accounts.
 func CreateVault(ctx sdk.Context, vk *keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper, mk markerkeeper.Keeper, underlying, paymentDenom, share string, admin simtypes.Account, accs []simtypes.Account) error {
 	if !MarkerExists(ctx, mk, underlying) {

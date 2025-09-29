@@ -32,9 +32,9 @@ func Setup(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, ak types.AccountKeepe
 	denomRegex := mk.GetUnrestrictedDenomRegex(ctx)
 
 	// Create global markers for underlying and payment denoms.
-	underlyingDenom := genRandomDenom(r, denomRegex, "vx")
-	paymentDenom := genRandomDenom(r, denomRegex, "vx")
-	// restrictedDenom := genRandomDenom(r, denomRegex, "vx")
+	underlyingDenom := genRandomDenom(r, denomRegex, VaultGlobalDenomSuffix)
+	paymentDenom := genRandomDenom(r, denomRegex, VaultGlobalDenomSuffix)
+	restrictedDenom := genRandomDenom(r, denomRegex, VaultGlobalDenomSuffix)
 
 	// Need to manually cast here
 	markerKeeper, ok := mk.(markerkeeper.Keeper)

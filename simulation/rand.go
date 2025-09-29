@@ -143,7 +143,7 @@ func getRandomDenom(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, acc simtypes
 	})
 
 	for _, coin := range balances {
-		if strings.HasSuffix(coin.Denom, "vx") {
+		if strings.HasSuffix(coin.Denom, VaultGlobalDenomSuffix) {
 			return coin.Denom, nil
 		}
 	}

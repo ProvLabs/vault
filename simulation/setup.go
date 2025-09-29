@@ -34,7 +34,6 @@ func Setup(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, ak types.AccountKeepe
 	// Create global markers for underlying and payment denoms.
 	underlyingDenom := genRandomDenom(r, denomRegex, VaultGlobalDenomSuffix)
 	paymentDenom := genRandomDenom(r, denomRegex, VaultGlobalDenomSuffix)
-	restrictedDenom := genRandomDenom(r, denomRegex, VaultGlobalDenomSuffix)
 
 	// Need to manually cast here
 	markerKeeper, ok := mk.(markerkeeper.Keeper)
@@ -49,55 +48,15 @@ func Setup(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, ak types.AccountKeepe
 		return fmt.Errorf("failed to create global marker for payment: %w", err)
 	}
 
-	// Create a restricted marker and distribute to only 2 accounts
-	/*
-		if len(accs) < 2 {
-			return fmt.Errorf("not enough accounts to create restricted marker, need at least 2")
-		}
-		restrictedAccs := accs[:2]
-		if err := CreateGlobalMarker(ctx, ak, bk, markerKeeper, sdk.NewInt64Coin(restrictedDenom, 100_000_000), restrictedAccs, true); err != nil {
-			return fmt.Errorf("failed to create global marker for restricted: %w", err)
-		}
-	*/
-
-	// Add required attribute to the accounts that received the restricted asset
-	/*
-		for _, acc := range restrictedAccs {
-			if err := AddAttribute(ctx, acc.Address, RequiredMarkerAttribute, nk, attrk); err != nil {
-				return fmt.Errorf("failed to add attribute to account %s: %w", acc.Address, err)
-			}
-		}
-	*/
-
-	if err := AddNav(ctx, markerKeeper, paymentDenom, ak.GetModuleAddress("mint"), sdk.NewInt64Coin(underlyingDenom, 1), 1); err != nil {
+	// Generate a random volume between 1 and 4 for the NAV.
+	volume := uint64(r.Intn(4) + 1)
+	if err := AddNav(ctx, markerKeeper, paymentDenom, ak.GetModuleAddress("mint"), sdk.NewInt64Coin(underlyingDenom, 1), volume); err != nil {
 		return fmt.Errorf("failed to add nav for payment: %w", err)
 	}
 
-	/*
-		if err := AddNav(ctx, markerKeeper, paymentDenom, ak.GetModuleAddress("mint"), sdk.NewInt64Coin(restrictedDenom, 1), 1); err != nil {
-			return fmt.Errorf("failed to add nav for payment: %w", err)
-		}
-	*/
-
-	if err := AddNav(ctx, markerKeeper, underlyingDenom, ak.GetModuleAddress("mint"), sdk.NewInt64Coin(paymentDenom, 1), 1); err != nil {
+	if err := AddNav(ctx, markerKeeper, underlyingDenom, ak.GetModuleAddress("mint"), sdk.NewInt64Coin(paymentDenom, 1), volume); err != nil {
 		return fmt.Errorf("failed to add nav for payment: %w", err)
 	}
-
-	/*
-		if err := AddNav(ctx, markerKeeper, underlyingDenom, ak.GetModuleAddress("mint"), sdk.NewInt64Coin(restrictedDenom, 1), 1); err != nil {
-			return fmt.Errorf("failed to add nav for payment: %w", err)
-		}
-	*/
-
-	/*
-		if err := AddNav(ctx, markerKeeper, restrictedDenom, ak.GetModuleAddress("mint"), sdk.NewInt64Coin(underlyingDenom, 2), 1); err != nil {
-			return fmt.Errorf("failed to add nav for restricted: %w", err)
-		}
-
-		if err := AddNav(ctx, markerKeeper, restrictedDenom, ak.GetModuleAddress("mint"), sdk.NewInt64Coin(paymentDenom, 2), 1); err != nil {
-			return fmt.Errorf("failed to add nav for restricted: %w", err)
-		}
-	*/
 
 	// Create an initial vault.
 	admin, _ := simtypes.RandomAcc(r, accs)

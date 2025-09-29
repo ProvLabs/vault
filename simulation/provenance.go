@@ -12,7 +12,6 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 
-	attrkeeper "github.com/provenance-io/provenance/x/attribute/keeper"
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -96,22 +95,21 @@ func AddNav(ctx context.Context, keeper markerkeeper.Keeper, denom string, admin
 }
 
 // AddAttribute adds an attribute to an account.
-func AddAttribute(ctx context.Context, acc sdk.AccAddress, attr string, nk types.NameKeeper, ak attrkeeper.Keeper) error {
-	err := nk.SetNameRecord(sdk.UnwrapSDKContext(ctx), attr, acc, false)
+func AddAttribute(ctx context.Context, acc sdk.AccAddress, attrName string, nk types.NameKeeper, ak types.AttributeKeeper) error {
+	err := nk.SetNameRecord(sdk.UnwrapSDKContext(ctx), attrName, acc, false)
 	if err != nil {
 		return err
 	}
 
-	newAttr := &attrtypes.MsgAddAttributeRequest{
-		Name:          attr,
-		Value:         []byte("abc"),
-		AttributeType: attrtypes.AttributeType_String,
-		Account:       acc.String(),
-		Owner:         acc.String(),
-	}
-	attrMsgServer := attrkeeper.NewMsgServerImpl(ak)
-	_, err = attrMsgServer.AddAttribute(ctx, newAttr)
-	return err
+	attr := attrtypes.NewAttribute(
+		attrName,
+		acc.String(),
+		attrtypes.AttributeType_String,
+		[]byte("abc"),
+		nil,
+	)
+
+	return ak.SetAttribute(sdk.UnwrapSDKContext(ctx), attr, acc)
 }
 
 // MarkerExists checks if a marker with the given denom exists.

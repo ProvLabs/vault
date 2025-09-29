@@ -22,6 +22,7 @@ const (
 	RequiredMarkerAttribute = "kyc.jackthecat.vault"
 )
 
+// CreateMarker creates a new restricted marker of type COIN.
 func CreateMarker(ctx context.Context, coin sdk.Coin, admin sdk.AccAddress, keeper markerkeeper.Keeper) error {
 	// Add a marker with deposit permissions so that it can be found by the sim.
 	newMarker := &markertypes.MsgAddFinalizeActivateMarkerRequest{
@@ -94,6 +95,7 @@ func AddNav(ctx context.Context, keeper markerkeeper.Keeper, denom string, admin
 	return err
 }
 
+// AddAttribute adds an attribute to an account.
 func AddAttribute(ctx context.Context, acc sdk.AccAddress, attr string, nk types.NameKeeper, ak attrkeeper.Keeper) error {
 	err := nk.SetNameRecord(sdk.UnwrapSDKContext(ctx), attr, acc, false)
 	if err != nil {
@@ -112,11 +114,13 @@ func AddAttribute(ctx context.Context, acc sdk.AccAddress, attr string, nk types
 	return err
 }
 
+// MarkerExists checks if a marker with the given denom exists.
 func MarkerExists(ctx sdk.Context, markerKeeper types.MarkerKeeper, denom string) bool {
 	marker, err := markerKeeper.GetMarker(ctx, markertypes.MustGetMarkerAddress(denom))
 	return marker != nil && err == nil
 }
 
+// CreateGlobalMarker creates a new marker and distributes its coins to a given set of accounts.
 func CreateGlobalMarker(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, mk markerkeeper.Keeper, underlying sdk.Coin, accs []simtypes.Account, restricted bool) error {
 	var err error
 	if restricted {
@@ -140,6 +144,7 @@ func CreateGlobalMarker(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKe
 	return nil
 }
 
+// FundAccount mints new coins and sends them to an account.
 func FundAccount(ctx context.Context, bk types.BankKeeper, addr sdk.AccAddress, amounts sdk.Coins) error {
 	if err := bk.MintCoins(ctx, minttypes.ModuleName, amounts); err != nil {
 		return err

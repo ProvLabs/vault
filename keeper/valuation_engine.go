@@ -27,17 +27,43 @@ func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom, underlyingAsset str
 	if srcDenom == underlyingAsset {
 		return math.NewInt(1), math.NewInt(1), nil
 	}
-	nav, err := k.MarkerKeeper.GetNetAssetValue(ctx, srcDenom, underlyingAsset)
-	if err != nil {
-		return math.Int{}, math.Int{}, err
-	}
-	if nav == nil {
+
+	fwd, errF := k.MarkerKeeper.GetNetAssetValue(ctx, srcDenom, underlyingAsset)
+	rev, errR := k.MarkerKeeper.GetNetAssetValue(ctx, underlyingAsset, srcDenom)
+
+	if fwd == nil && rev == nil {
+		if errF != nil {
+			return math.Int{}, math.Int{}, errF
+		}
+		if errR != nil {
+			return math.Int{}, math.Int{}, errR
+		}
 		return math.Int{}, math.Int{}, fmt.Errorf("nav not found for %s/%s", srcDenom, underlyingAsset)
 	}
-	priceAmt := nav.Price.Amount
-	volAmt := math.NewInt(int64(nav.Volume))
+
+	useForward := false
+	switch {
+	case fwd != nil && rev == nil:
+		useForward = true
+	case fwd == nil && rev != nil:
+		useForward = false
+	default:
+		useForward = fwd.UpdatedBlockHeight >= rev.UpdatedBlockHeight
+	}
+
+	if useForward {
+		priceAmt := fwd.Price.Amount
+		volAmt := math.NewInt(int64(fwd.Volume))
+		if volAmt.IsZero() {
+			return math.Int{}, math.Int{}, fmt.Errorf("nav volume is zero for %s/%s", srcDenom, underlyingAsset)
+		}
+		return priceAmt, volAmt, nil
+	}
+
+	priceAmt := math.NewInt(int64(rev.Volume))
+	volAmt := rev.Price.Amount
 	if volAmt.IsZero() {
-		return math.Int{}, math.Int{}, fmt.Errorf("nav volume is zero for %s/%s", srcDenom, underlyingAsset)
+		return math.Int{}, math.Int{}, fmt.Errorf("nav price is zero for %s/%s", underlyingAsset, srcDenom)
 	}
 	return priceAmt, volAmt, nil
 }

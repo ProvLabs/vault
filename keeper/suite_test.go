@@ -394,6 +394,23 @@ func (s *TestSuite) setupSinglePaymentDenomVault(underlyingDenom, shareDenom, pa
 	return vault
 }
 
+// setReverseNAV sets a reverse net asset value on the underlying denom marker,
+// allowing the vault to value the underlying in terms of the payment denom.
+func (s *TestSuite) setReverseNAV(underlyingDenom, paymentDenom string, price, volume int64) {
+	underlyingMarkerAddr := markertypes.MustGetMarkerAddress(underlyingDenom)
+	underlyingMarkerAccount, err := s.k.MarkerKeeper.GetMarker(s.ctx, underlyingMarkerAddr)
+	s.Require().NoError(err, "should fetch underlying marker for reverse NAV setup")
+	s.Require().NoError(s.k.MarkerKeeper.SetNetAssetValue(s.ctx, underlyingMarkerAccount, markertypes.NetAssetValue{
+		Price:  sdk.NewInt64Coin(paymentDenom, price),
+		Volume: uint64(volume),
+	}, "test-reverse"), "should set reverse NAV %s->%s=%d/%d", underlyingDenom, paymentDenom, price, volume)
+}
+
+// bumpHeight increments the suite's context block height by 1.
+func (s *TestSuite) bumpHeight() {
+	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+}
+
 // createBridgeMintSharesEventsExact returns the exact ordered events a successful
 // BridgeMintShares emits: marker mint to the share marker, withdraw to the bridge,
 // then the vault EventBridgeMintShares—suitable for strict equality checks in tests.

@@ -1,4 +1,6 @@
 name: Sims
+permissions:
+  contents: read
 
 on:
   pull_request:
@@ -6,11 +8,8 @@ on:
     branches:
       - main
 
-
 jobs:
   sim-test:
-    permissions:
-      contents: read
     runs-on: ubuntu-latest
     strategy:
       matrix:

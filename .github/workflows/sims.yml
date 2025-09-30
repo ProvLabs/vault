@@ -6,8 +6,11 @@ on:
     branches:
       - main
 
+
 jobs:
   sim-test:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     strategy:
       matrix:

@@ -1,0 +1,37 @@
+name: Sims
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+jobs:
+  run-sims:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+
+      - name: Build application
+        run: make build
+
+      - name: Run runsim tests
+        run: |
+          make test-sim-import-export
+          make test-sim-multi-seed-short
+          make test-sim-after-import
+          
+      - name: Run simple and benchmark tests
+        run: |
+          make test-sim-simple
+          make test-sim-benchmark
+          
+      - name: Run nondeterminism and invariants tests
+        run: |
+          make test-sim-nondeterminism
+          make test-sim-benchmark-invariants

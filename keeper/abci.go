@@ -7,7 +7,9 @@ import (
 const (
 	// MaxSwapOutBatchSize is the maximum number of pending swap-out requests
 	// to process in a single EndBlocker invocation. This prevents a large queue
-	// from consuming excessive block time and memory.
+	// from consuming excessive block time and memory. This is a temporary value
+	// and we will need to do more analysis on a proper batch size.
+	// See https://github.com/ProvLabs/vault/issues/75.
 	MaxSwapOutBatchSize = 100
 )
 

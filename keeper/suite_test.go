@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -429,4 +430,15 @@ func createBridgeMintSharesEventsExact(vaultAddr, bridgeAddr sdk.AccAddress, sha
 	))
 
 	return events
+}
+
+// createMarkerSetNAV constructs the expected event emitted when a marker's NAV
+func createMarkerSetNAV(shareDenom string, price sdk.Coin, source string, volume uint64) sdk.Event {
+	return sdk.NewEvent(
+		"provenance.marker.v1.EventSetNetAssetValue",
+		sdk.NewAttribute("denom", shareDenom),
+		sdk.NewAttribute("price", price.String()),
+		sdk.NewAttribute("source", source),
+		sdk.NewAttribute("volume", strconv.FormatUint(volume, 10)),
+	)
 }

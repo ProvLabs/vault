@@ -24,7 +24,11 @@ import (
 //   - Errors if no NAV exists for (srcDenom → underlyingAsset).
 //   - Errors if NAV.Volume == 0.
 func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom, underlyingAsset string) (num, den math.Int, err error) {
-	if srcDenom == underlyingAsset {
+	// Currently, we are treating "uylds.fcc" as a universal stablecoin equivalent to the underlying asset.
+	// This is a temporary measure until we have a more robust multi-currency support and stablecoin handling.
+	// The assumption is that "uylds.fcc" is always pegged 1:1 with the underlying asset for vault valuation purposes.
+	// For more information, see https://github.com/ProvLabs/vault/issues/73
+	if srcDenom == underlyingAsset || underlyingAsset == "uylds.fcc" {
 		return math.NewInt(1), math.NewInt(1), nil
 	}
 	nav, err := k.MarkerKeeper.GetNetAssetValue(ctx, srcDenom, underlyingAsset)

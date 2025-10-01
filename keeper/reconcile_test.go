@@ -17,6 +17,7 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 	twoMonths := -24 * 60 * time.Hour
 	shareDenom := "vaultshares"
 	underlying := sdk.NewInt64Coin("underlying", 1_000_000_000)
+	totalShares := sdk.NewInt64Coin(shareDenom, 1_000_000_000_000_000)
 	vaultAddress := types.GetVaultAddress(shareDenom)
 	testBlockTime := time.Now()
 	futureTime := testBlockTime.Add(100 * time.Second)
@@ -29,19 +30,22 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 			ShareDenom:      shareDenom,
 			UnderlyingAsset: underlying.Denom,
 		})
-		s.Require().NoError(err)
+		s.Require().NoError(err, "CreateVault should not error")
 
 		vault, err := s.k.GetVault(s.ctx, vaultAddress)
-		s.Require().NoError(err)
+		s.Require().NoError(err, "GetVault should not error in setup")
 		vault.CurrentInterestRate = interestRate
 		vault.DesiredInterestRate = interestRate
 		vault.PeriodStart = periodStartSeconds
 		vault.Paused = paused
+		vault.TotalShares = totalShares
 		s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
 		err = FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddress, sdk.NewCoins(underlying))
-		s.Require().NoError(err)
+		s.Require().NoError(err, "funding vault account should not error")
 		err = FundAccount(s.ctx, s.simApp.BankKeeper, markertypes.MustGetMarkerAddress(shareDenom), sdk.NewCoins(underlying))
-		s.Require().NoError(err)
+		s.Require().NoError(err, "funding share marker account should not error")
+
 		s.ctx = s.ctx.WithBlockTime(testBlockTime)
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	}
@@ -84,7 +88,25 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 				s.assertInPayoutVerificationQueue(vaultAddress, true)
 				s.assertVaultAndMarkerBalances(vaultAddress, shareDenom, underlying.Denom, sdkmath.NewInt(958047987), sdkmath.NewInt(1041952013))
 			},
-			expectedEvents: createReconcileEvents(vaultAddress, markertypes.MustGetMarkerAddress(shareDenom), sdkmath.NewInt(41952013), sdkmath.NewInt(1_000_000_000), sdkmath.NewInt(1041952013), underlying.Denom, "0.25", 5_184_000),
+			expectedEvents: func() sdk.Events {
+				ev := createReconcileEvents(
+					vaultAddress,
+					markertypes.MustGetMarkerAddress(shareDenom),
+					sdkmath.NewInt(41952013),
+					sdkmath.NewInt(1_000_000_000),
+					sdkmath.NewInt(1_041_952_013),
+					underlying.Denom,
+					"0.25",
+					5_184_000,
+				)
+				nav := createMarkerSetNAV(
+					shareDenom,
+					sdk.NewCoin(underlying.Denom, sdkmath.NewInt(1_041_952_013)),
+					"vault",
+					totalShares.Amount.Uint64(),
+				)
+				return append(ev, nav)
+			}(),
 		},
 		{
 			name: "interest period has elasped, should pay negative interest and update period start",
@@ -93,9 +115,27 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 			},
 			posthander: func() {
 				s.assertInPayoutVerificationQueue(vaultAddress, true)
-				s.assertVaultAndMarkerBalances(vaultAddress, shareDenom, underlying.Denom, sdkmath.NewInt(1040262904), sdkmath.NewInt(959737096))
+				s.assertVaultAndMarkerBalances(vaultAddress, shareDenom, underlying.Denom, sdkmath.NewInt(1_040_262_904), sdkmath.NewInt(959_737_096))
 			},
-			expectedEvents: createReconcileEvents(vaultAddress, markertypes.MustGetMarkerAddress(shareDenom), sdkmath.NewInt(-40262904), sdkmath.NewInt(1_000_000_000), sdkmath.NewInt(959737096), underlying.Denom, "-0.25", 5_184_000),
+			expectedEvents: func() sdk.Events {
+				ev := createReconcileEvents(
+					vaultAddress,
+					markertypes.MustGetMarkerAddress(shareDenom),
+					sdkmath.NewInt(-40_262_904),
+					sdkmath.NewInt(1_000_000_000),
+					sdkmath.NewInt(959_737_096),
+					underlying.Denom,
+					"-0.25",
+					5_184_000,
+				)
+				nav := createMarkerSetNAV(
+					shareDenom,
+					sdk.NewCoin(underlying.Denom, sdkmath.NewInt(959_737_096)),
+					"vault",
+					totalShares.Amount.Uint64(),
+				)
+				return append(ev, nav)
+			}(),
 		},
 		{
 			name: "paused vault, should do nothing",
@@ -105,8 +145,8 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 			posthander: func() {
 				s.assertInPayoutVerificationQueue(vaultAddress, false)
 				vault, err := s.k.GetVault(s.ctx, vaultAddress)
-				s.Require().NoError(err)
-				s.Require().Equal(pastTime.Unix(), vault.PeriodStart, "PeriodStart should not be updated for paused vault")
+				s.Require().NoError(err, "GetVault should not error when paused")
+				s.Require().Equal(pastTime.Unix(), vault.PeriodStart, "PeriodStart should remain unchanged when paused")
 			},
 			expectedEvents: sdk.Events{},
 		},
@@ -120,55 +160,26 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 			}
 
 			vault, err := s.k.GetVault(s.ctx, vaultAddress)
-			s.Require().NoError(err, "failed to get vault for test setup")
+			s.Require().NoError(err, "GetVault should not error before reconcile")
 			err = s.k.ReconcileVaultInterest(s.ctx, vault)
 
 			if tc.posthander != nil {
 				tc.posthander()
 			}
 			if len(tc.expectedErrSubstr) > 0 {
-				s.Require().Error(err)
-				s.Require().Contains(err.Error(), tc.expectedErrSubstr)
+				s.Require().Error(err, "expected error from ReconcileVaultInterest")
+				s.Require().Contains(err.Error(), tc.expectedErrSubstr, "error substring mismatch")
 			} else {
-				s.Require().NoError(err)
+				s.Require().NoError(err, "ReconcileVaultInterest should not error")
 			}
 
 			s.Assert().Equal(
 				normalizeEvents(tc.expectedEvents),
-				normalizeEvents(s.ctx.EventManager().Events()))
+				normalizeEvents(s.ctx.EventManager().Events()),
+				"events mismatch for %s", tc.name,
+			)
 		})
 	}
-}
-
-func createReconcileEvents(vaultAddr, markerAddr sdk.AccAddress, interest, principle, principleAfter sdkmath.Int, denom, rate string, durations int64) []sdk.Event {
-	var allEvents []sdk.Event
-
-	r, err := sdkmath.LegacyNewDecFromStr(rate)
-	if err != nil {
-		panic(fmt.Sprintf("invalid rate %s: %v", rate, err))
-	}
-	var fromAddress string
-	var toAddress string
-	if r.IsNegative() {
-		fromAddress = markerAddr.String()
-		toAddress = vaultAddr.String()
-	} else {
-		fromAddress = vaultAddr.String()
-		toAddress = markerAddr.String()
-	}
-	sendToMarkerEvents := createSendCoinEvents(fromAddress, toAddress, sdk.NewCoin(denom, interest.Abs()).String())
-	allEvents = append(allEvents, sendToMarkerEvents...)
-
-	reconcileEvent := sdk.NewEvent("vault.v1.EventVaultReconcile",
-		sdk.NewAttribute("interest_earned", CoinToJSON(sdk.Coin{Denom: denom, Amount: interest})),
-		sdk.NewAttribute("principal_after", CoinToJSON(sdk.NewCoin(denom, principleAfter))),
-		sdk.NewAttribute("principal_before", CoinToJSON(sdk.NewCoin(denom, principle))),
-		sdk.NewAttribute("rate", rate),
-		sdk.NewAttribute("time", fmt.Sprintf("%v", durations)),
-		sdk.NewAttribute("vault_address", vaultAddr.String()),
-	)
-	allEvents = append(allEvents, reconcileEvent)
-	return allEvents
 }
 
 func (s *TestSuite) TestKeeper_CalculateVaultTotalAssets() {

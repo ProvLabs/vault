@@ -159,6 +159,7 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 				reconcileEvent, err := sdk.TypedEventToEvent(types.NewEventVaultReconcile(vaultAddr.String(), assets, assets, vault.CurrentInterestRate, testBlockTime.Unix()-1, math.NewInt(0)))
 				s.Require().NoError(err, "should not error converting typed EventVaultReconciled")
 				expectedEvents = append(expectedEvents, reconcileEvent)
+				expectedEvents = append(expectedEvents, createMarkerSetNAV(shareDenom, assets, "vault", shares.Amount.Uint64()))
 				expectedEvents = append(expectedEvents, createSendCoinEvents(principalAddress.String(), ownerAddr.String(), sdk.NewCoins(assets).String())...)
 				expectedEvents = append(expectedEvents, createSendCoinEvents(vaultAddr.String(), principalAddress.String(), shares.String())...)
 				expectedEvents = append(expectedEvents, createMarkerBurn(vaultAddr, principalAddress, shares)...)

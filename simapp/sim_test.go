@@ -368,6 +368,7 @@ func TestFullAppSimulation(t *testing.T) {
 }
 
 func TestSimple(t *testing.T) {
+	//simcli.FlagEnabledValue = true
 	config, db, dir, logger, skip, err := setupSimulation("leveldb-app-sim", "Simulation")
 	if skip {
 		t.Skip("skipping provlabs vault application simulation")

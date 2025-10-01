@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -20,6 +21,7 @@ type MarkerKeeper interface {
 	GetNetAssetValue(ctx sdk.Context, markerDenom, priceDenom string) (*types.NetAssetValue, error)
 	SetNetAssetValue(ctx sdk.Context, marker types.MarkerAccountI, netAssetValue types.NetAssetValue, source string) error
 	SendRestrictionFn(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error)
+	GetUnrestrictedDenomRegex(ctx sdk.Context) (regex string)
 }
 
 type AccountKeeper interface {
@@ -30,12 +32,23 @@ type AccountKeeper interface {
 	GetAllAccounts(ctx context.Context) []sdk.AccountI
 	HasAccount(ctx context.Context, addr sdk.AccAddress) bool
 	SetAccount(ctx context.Context, acc sdk.AccountI)
+
+	GetModuleAddress(moduleName string) sdk.AccAddress
 }
 
-// BankKeeper defines the bank functionality needed from within the quarantine module.
 type BankKeeper interface {
 	SendCoins(context context.Context, fromAddr sdk.AccAddress, toAddr sdk.AccAddress, amt sdk.Coins) error
 	GetAllBalances(context context.Context, addr sdk.AccAddress) sdk.Coins
 	GetBalance(context context.Context, addr sdk.AccAddress, denom string) sdk.Coin
 	GetSupply(context context.Context, denom string) sdk.Coin
+	MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
+	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
+}
+
+type NameKeeper interface {
+	SetNameRecord(ctx sdk.Context, name string, addr sdk.AccAddress, restrict bool) error
+}
+
+type AttributeKeeper interface {
+	SetAttribute(ctx sdk.Context, attr attrtypes.Attribute, owner sdk.AccAddress) error
 }

@@ -1,0 +1,38 @@
+name: Sims
+permissions:
+  contents: read
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  sim-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        name:
+          - import-export
+          - multi-seed-short
+          - after-import
+          - simple
+          - benchmark
+          - nondeterminism
+          - benchmark-invariants
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+
+      - name: Build application
+        run: make build
+
+      - name: Run simulation test
+        run: make test-sim-${{ matrix.name }}

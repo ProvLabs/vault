@@ -30,10 +30,10 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 			ShareDenom:      shareDenom,
 			UnderlyingAsset: underlying.Denom,
 		})
-		s.Require().NoError(err)
+		s.Require().NoError(err, "CreateVault should not error")
 
 		vault, err := s.k.GetVault(s.ctx, vaultAddress)
-		s.Require().NoError(err)
+		s.Require().NoError(err, "GetVault should not error in setup")
 		vault.CurrentInterestRate = interestRate
 		vault.DesiredInterestRate = interestRate
 		vault.PeriodStart = periodStartSeconds
@@ -42,9 +42,9 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 		s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 		err = FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddress, sdk.NewCoins(underlying))
-		s.Require().NoError(err)
+		s.Require().NoError(err, "funding vault account should not error")
 		err = FundAccount(s.ctx, s.simApp.BankKeeper, markertypes.MustGetMarkerAddress(shareDenom), sdk.NewCoins(underlying))
-		s.Require().NoError(err)
+		s.Require().NoError(err, "funding share marker account should not error")
 
 		s.ctx = s.ctx.WithBlockTime(testBlockTime)
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
@@ -145,8 +145,8 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 			posthander: func() {
 				s.assertInPayoutVerificationQueue(vaultAddress, false)
 				vault, err := s.k.GetVault(s.ctx, vaultAddress)
-				s.Require().NoError(err)
-				s.Require().Equal(pastTime.Unix(), vault.PeriodStart)
+				s.Require().NoError(err, "GetVault should not error when paused")
+				s.Require().Equal(pastTime.Unix(), vault.PeriodStart, "PeriodStart should remain unchanged when paused")
 			},
 			expectedEvents: sdk.Events{},
 		},
@@ -160,22 +160,24 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 			}
 
 			vault, err := s.k.GetVault(s.ctx, vaultAddress)
-			s.Require().NoError(err)
+			s.Require().NoError(err, "GetVault should not error before reconcile")
 			err = s.k.ReconcileVaultInterest(s.ctx, vault)
 
 			if tc.posthander != nil {
 				tc.posthander()
 			}
 			if len(tc.expectedErrSubstr) > 0 {
-				s.Require().Error(err)
-				s.Require().Contains(err.Error(), tc.expectedErrSubstr)
+				s.Require().Error(err, "expected error from ReconcileVaultInterest")
+				s.Require().Contains(err.Error(), tc.expectedErrSubstr, "error substring mismatch")
 			} else {
-				s.Require().NoError(err)
+				s.Require().NoError(err, "ReconcileVaultInterest should not error")
 			}
 
 			s.Assert().Equal(
 				normalizeEvents(tc.expectedEvents),
-				normalizeEvents(s.ctx.EventManager().Events()))
+				normalizeEvents(s.ctx.EventManager().Events()),
+				"events mismatch for %s", tc.name,
+			)
 		})
 	}
 }

@@ -16,20 +16,24 @@ import (
 
 // ProcessPendingSwapOuts processes the queue of pending swap-out requests. Called from the EndBlocker,
 // it iterates through requests due for payout at the current block time. It uses a safe "collect-then-mutate"
-// pattern to comply with the SDK iterator contract. It first collects all due requests, then passes them to
-// `processSwapOutJobs` for execution. Critical, unrecoverable errors during job processing will cause the
-// associated vault to be automatically paused.
-func (k *Keeper) ProcessPendingSwapOuts(ctx context.Context) error {
+// pattern to comply with the SDK iterator contract. It first collects all due requests up to the provided `batchSize`,
+// then passes them to `processSwapOutJobs` for execution. Critical, unrecoverable errors during job processing
+// will cause the associated vault to be automatically paused.
+func (k *Keeper) ProcessPendingSwapOuts(ctx context.Context, batchSize int) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	now := sdkCtx.BlockTime().Unix()
-
 	var jobsToProcess []types.PayoutJob
 
+	processed := 0
 	err := k.PendingSwapOutQueue.WalkDue(ctx, now, func(timestamp int64, id uint64, vaultAddr sdk.AccAddress, req types.PendingSwapOut) (stop bool, err error) {
 		vault, ok := k.tryGetVault(sdkCtx, vaultAddr)
 		if ok && vault.Paused {
 			return false, nil
 		}
+		if processed == batchSize {
+			return true, nil
+		}
+		processed++
 		jobsToProcess = append(jobsToProcess, types.NewPayoutJob(timestamp, id, vaultAddr, req))
 		return false, nil
 	})

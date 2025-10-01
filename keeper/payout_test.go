@@ -10,6 +10,7 @@ import (
 
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
+	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
 )
 
@@ -24,6 +25,7 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 		setup         func(shareDenom string, vaultAddr sdk.AccAddress, shares sdk.Coin) (ownerAddr sdk.AccAddress, reqID uint64)
 		posthandler   func(ownerAddr sdk.AccAddress, reqID uint64, shareDenom string, vaultAddr sdk.AccAddress, principalAddress sdk.AccAddress, shares sdk.Coin, testBlockTime time.Time)
 		expectedError string
+		batchSize     int
 	}{
 		{
 			name: "successful payout of due request",
@@ -68,6 +70,7 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 					"a single EventSwapOutCompleted should be emitted",
 				)
 			},
+			batchSize: keeper.MaxSwapOutBatchSize,
 		},
 		{
 			name: "successful payout of due request with 0 assets",
@@ -114,6 +117,7 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 					"a single EventSwapOutCompleted should be emitted",
 				)
 			},
+			batchSize: keeper.MaxSwapOutBatchSize,
 		},
 		{
 			name: "successful payout of due request with reconcile",
@@ -167,6 +171,48 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 					"a single EventSwapOutCompleted should be emitted",
 				)
 			},
+			batchSize: keeper.MaxSwapOutBatchSize,
+		},
+		{
+			name: "successful limit by batch size of 0",
+			setup: func(shareDenom string, vaultAddr sdk.AccAddress, shares sdk.Coin) (sdk.AccAddress, uint64) {
+				ownerAddr := s.CreateAndFundAccount(assets)
+				vault := s.setupBaseVault(underlyingDenom, shareDenom)
+
+				minted, err := s.k.SwapIn(s.ctx, vaultAddr, ownerAddr, assets)
+				s.Require().NoError(err, "should successfully swap in assets")
+				s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, ownerAddr, vault.GetAddress(), sdk.NewCoins(*minted)), "should escrow shares into vault account")
+
+				req := types.PendingSwapOut{
+					Owner:        ownerAddr.String(),
+					VaultAddress: vaultAddr.String(),
+					RedeemDenom:  underlyingDenom,
+					Shares:       *minted,
+				}
+				id, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, duePayoutTime, &req)
+				s.Require().NoError(err, "should successfully enqueue request")
+				return ownerAddr, id
+			},
+			posthandler: func(ownerAddr sdk.AccAddress, reqID uint64, shareDenom string, vaultAddr sdk.AccAddress, principalAddress sdk.AccAddress, shares sdk.Coin, testBlockTime time.Time) {
+				supply := s.k.BankKeeper.GetSupply(s.ctx, shareDenom)
+				s.Require().False(supply.Amount.IsZero(), "shares should still exist since nothing was processed")
+				s.assertBalance(ownerAddr, underlyingDenom, math.ZeroInt())
+				s.assertBalance(vaultAddr, shareDenom, shares.Amount)
+
+				vault, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err, "should successfully get vault")
+				s.Require().NotNil(vault, "vault should not be nil")
+				s.Require().Equal(supply, vault.TotalShares, "vault TotalShares should match supply")
+
+				expectedEvents := sdk.Events{}
+				s.Assert().Equal(
+					normalizeEvents(expectedEvents),
+					normalizeEvents(s.ctx.EventManager().Events()),
+					"a single EventSwapOutCompleted should be emitted",
+					"no events should be emitted when batch size is 0",
+				)
+			},
+			batchSize: 0,
 		},
 		{
 			name: "failed payout refunds shares",
@@ -208,6 +254,7 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 					"a single EventSwapOutRefunded should be emitted",
 				)
 			},
+			batchSize: keeper.MaxSwapOutBatchSize,
 		},
 		{
 			name: "failed payout reconcile refunds shares",
@@ -248,6 +295,7 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 					"a single EventSwapOutRefunded should be emitted",
 				)
 			},
+			batchSize: keeper.MaxSwapOutBatchSize,
 		},
 		{
 			name: "refund when calculating redeem denom fails",
@@ -284,6 +332,7 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 					"a single EventSwapOutRefunded should be emitted",
 				)
 			},
+			batchSize: keeper.MaxSwapOutBatchSize,
 		},
 		{
 			name: "request for non-existent vault is skipped and dequeued",
@@ -308,6 +357,7 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 				s.Require().NoError(err)
 				s.Require().Empty(entries, "queue should be empty after processing the non-existent vault request")
 			},
+			batchSize: keeper.MaxSwapOutBatchSize,
 		},
 	}
 
@@ -328,7 +378,7 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 			s.ctx = s.ctx.WithBlockTime(testBlockTime)
 
-			err := s.k.ProcessPendingSwapOuts(s.ctx)
+			err := s.k.ProcessPendingSwapOuts(s.ctx, tc.batchSize)
 
 			if tc.expectedError != "" {
 				s.Require().Error(err)

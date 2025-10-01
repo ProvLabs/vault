@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
+	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
 	"github.com/provlabs/vault/utils"
 )
@@ -86,7 +87,7 @@ func (s *TestSuite) TestMsgServer_SmallFirstSwapIn_HugeDonation_SwapOut() {
 	_, err = s.k.SwapOut(s.ctx, vaultAddr, owner, sharesToBurn, "")
 	s.Require().NoError(err, "swap-out of all tiny depositor shares should succeed")
 
-	s.simApp.VaultKeeper.ProcessPendingSwapOuts(s.ctx)
+	s.simApp.VaultKeeper.ProcessPendingSwapOuts(s.ctx, keeper.MaxSwapOutBatchSize)
 	vault, err = s.k.GetVault(s.ctx, vaultAddr)
 	s.Require().NoError(err, "should successfully get vault after tiny swap-out")
 	s.Require().NotNil(vault, "vault should not be nil after tiny swap-out")

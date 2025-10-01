@@ -442,3 +442,37 @@ func createMarkerSetNAV(shareDenom string, price sdk.Coin, source string, volume
 		sdk.NewAttribute("volume", strconv.FormatUint(volume, 10)),
 	)
 }
+
+// createReconcileEvents constructs the expected event sequence for a vault
+// interest reconciliation, including any bank send events and the vault's
+// own EventVaultReconcile.
+func createReconcileEvents(vaultAddr, markerAddr sdk.AccAddress, interest, principle, principleAfter sdkmath.Int, denom, rate string, durations int64) []sdk.Event {
+	var allEvents []sdk.Event
+
+	r, err := sdkmath.LegacyNewDecFromStr(rate)
+	if err != nil {
+		panic(fmt.Sprintf("invalid rate %s: %v", rate, err))
+	}
+	var fromAddress string
+	var toAddress string
+	if r.IsNegative() {
+		fromAddress = markerAddr.String()
+		toAddress = vaultAddr.String()
+	} else {
+		fromAddress = vaultAddr.String()
+		toAddress = markerAddr.String()
+	}
+	sendToMarkerEvents := createSendCoinEvents(fromAddress, toAddress, sdk.NewCoin(denom, interest.Abs()).String())
+	allEvents = append(allEvents, sendToMarkerEvents...)
+
+	reconcileEvent := sdk.NewEvent("vault.v1.EventVaultReconcile",
+		sdk.NewAttribute("interest_earned", CoinToJSON(sdk.Coin{Denom: denom, Amount: interest})),
+		sdk.NewAttribute("principal_after", CoinToJSON(sdk.NewCoin(denom, principleAfter))),
+		sdk.NewAttribute("principal_before", CoinToJSON(sdk.NewCoin(denom, principle))),
+		sdk.NewAttribute("rate", rate),
+		sdk.NewAttribute("time", fmt.Sprintf("%v", durations)),
+		sdk.NewAttribute("vault_address", vaultAddr.String()),
+	)
+	allEvents = append(allEvents, reconcileEvent)
+	return allEvents
+}

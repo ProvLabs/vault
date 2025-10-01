@@ -23,7 +23,8 @@ const (
 
 // ReconcileVaultInterest updates interest accounting for a vault if a new interest period has started.
 //
-// If this is the first time the vault accrues interest, it triggers the start of a new period.
+// If this is the first time the vault accrues interest, it triggers the start of a new period
+// and publishes the initial NAV for the share denom in terms of the underlying asset.
 // If the current block time is after PeriodStart, it applies the interest transfer.
 // If the current time has not advanced past PeriodStart, it is a no-op.
 // This function will do nothing if the vault is paused.
@@ -44,9 +45,40 @@ func (k *Keeper) ReconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccou
 		if err := k.PerformVaultInterestTransfer(ctx, vault); err != nil {
 			return err
 		}
+		if err := k.publishShareNav(ctx, vault); err != nil {
+			return err
+		}
 	}
 
 	return k.SafeAddVerification(ctx, vault)
+}
+
+// publishShareNav records the Net Asset Value (NAV) for the vault's share denom
+// in terms of its underlying asset. It fetches the vault’s principal marker,
+// computes the total value of vault assets in underlying units (TVV), and sets
+// the NAV as (Price = TVV in underlying, Volume = total shares). If no shares
+// exist or the TVV is non-positive, no NAV is published.
+func (k *Keeper) publishShareNav(ctx sdk.Context, vault *types.VaultAccount) error {
+	vaultMarker, err := k.MarkerKeeper.GetMarker(ctx, vault.PrincipalMarkerAddress())
+	if err != nil {
+		return fmt.Errorf("failed to get principal marker: %w", err)
+	}
+	if !vault.TotalShares.IsPositive() {
+		return nil
+	}
+	tvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
+	if err != nil {
+		return fmt.Errorf("failed to get TVV: %w", err)
+	}
+	if !tvv.IsPositive() {
+		return nil
+	}
+
+	k.MarkerKeeper.SetNetAssetValue(ctx, vaultMarker, markertypes.NetAssetValue{
+		Price:  sdk.NewCoin(vault.UnderlyingAsset, tvv),
+		Volume: vault.TotalShares.Amount.Uint64(),
+	}, types.ModuleName)
+	return nil
 }
 
 // PerformVaultInterestTransfer applies accrued interest between the vault and the marker account

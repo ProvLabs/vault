@@ -21,7 +21,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	accounts := k.AuthKeeper.GetAllAccounts(ctx)
 	for _, acc := range accounts {
 		if v, ok := acc.(types.VaultAccountI); ok {
-			if err := v.Validate(); err == nil {
+			if err := v.Validate(); err != nil {
 				panic(err)
 			}
 			k.SetVaultLookup(ctx, v.Clone())

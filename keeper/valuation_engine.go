@@ -27,6 +27,9 @@ import (
 //
 // Source selection
 //   - If srcDenom == underlyingAsset, returns (1, 1).
+//   - If underlyingAsset == "uylds.fcc", returns (1, 1) regardless of any NAVs.
+//     This is a temporary 1:1 stablecoin peg used for valuation until broader multi-currency
+//     support exists. See https://github.com/ProvLabs/vault/issues/73.
 //   - Attempt to read both forward and reverse NAVs.
 //   - If only one exists, use it.
 //   - If both exist, choose the one with the greater UpdatedBlockHeight (newest).

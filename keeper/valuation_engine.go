@@ -11,18 +11,35 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// UnitPriceFraction returns the unit price of srcDenom expressed in vault.UnderlyingAsset
-// as an integer fraction (priceNumerator, priceDenominator), derived from the NAV.
+// UnitPriceFraction returns the unit price of srcDenom expressed in underlyingAsset
+// as an integer fraction (numerator, denominator), using marker Net Asset Value (NAV).
 //
-// Semantics:
-//   - NAV.Price is the total value (in underlyingAsset units) for NAV.Volume units of srcDenom.
-//   - Therefore, 1 srcDenom = (NAV.Price.Amount / NAV.Volume) underlying units.
-//   - This function returns (NAV.Price.Amount, NAV.Volume) so callers can apply floor arithmetic.
+// Semantics
+//   - Forward NAV (srcDenom → underlyingAsset):
+//     NAV.Price is the total value in underlyingAsset units for NAV.Volume units of srcDenom.
+//     => 1 srcDenom = NAV.Price.Amount / NAV.Volume underlyingAsset.
+//     => returns (NAV.Price.Amount, NAV.Volume).
+//   - Reverse NAV (underlyingAsset → srcDenom):
+//     NAV.Price is the total value in srcDenom units for NAV.Volume units of underlyingAsset.
+//     => 1 srcDenom = NAV.Volume / NAV.Price.Amount underlyingAsset.
+//     => returns (NAV.Volume, NAV.Price.Amount).
+//   - The fraction is returned in integers so callers can apply floor-safe arithmetic.
 //
-// Special cases and errors:
+// Source selection
 //   - If srcDenom == underlyingAsset, returns (1, 1).
-//   - Errors if no NAV exists for (srcDenom → underlyingAsset).
-//   - Errors if NAV.Volume == 0.
+//   - Attempt to read both forward and reverse NAVs.
+//   - If only one exists, use it.
+//   - If both exist, choose the one with the greater UpdatedBlockHeight (newest).
+//
+// Errors
+//   - If neither forward nor reverse NAV exists, returns an error. If one lookup errored,
+//     that error is returned; otherwise "nav not found for src/underlying".
+//   - For the chosen NAV direction:
+//   - Forward: error if NAV.Volume == 0.
+//   - Reverse: error if NAV.Price.Amount == 0.
+//
+// Returns
+//   - (num, den) as math.Int, suitable for computing: floor(x * num / den).
 func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom, underlyingAsset string) (num, den math.Int, err error) {
 	// Currently, we are treating "uylds.fcc" as a universal stablecoin equivalent to the underlying asset.
 	// This is a temporary measure until we have a more robust multi-currency support and stablecoin handling.
@@ -31,17 +48,43 @@ func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom, underlyingAsset str
 	if srcDenom == underlyingAsset || underlyingAsset == "uylds.fcc" {
 		return math.NewInt(1), math.NewInt(1), nil
 	}
-	nav, err := k.MarkerKeeper.GetNetAssetValue(ctx, srcDenom, underlyingAsset)
-	if err != nil {
-		return math.Int{}, math.Int{}, err
-	}
-	if nav == nil {
+
+	fwd, errF := k.MarkerKeeper.GetNetAssetValue(ctx, srcDenom, underlyingAsset)
+	rev, errR := k.MarkerKeeper.GetNetAssetValue(ctx, underlyingAsset, srcDenom)
+
+	if fwd == nil && rev == nil {
+		if errF != nil {
+			return math.Int{}, math.Int{}, errF
+		}
+		if errR != nil {
+			return math.Int{}, math.Int{}, errR
+		}
 		return math.Int{}, math.Int{}, fmt.Errorf("nav not found for %s/%s", srcDenom, underlyingAsset)
 	}
-	priceAmt := nav.Price.Amount
-	volAmt := math.NewInt(int64(nav.Volume))
+
+	useForward := false
+	switch {
+	case fwd != nil && rev == nil:
+		useForward = true
+	case fwd == nil && rev != nil:
+		useForward = false
+	default:
+		useForward = fwd.UpdatedBlockHeight >= rev.UpdatedBlockHeight
+	}
+
+	if useForward {
+		priceAmt := fwd.Price.Amount
+		volAmt := math.NewInt(int64(fwd.Volume))
+		if volAmt.IsZero() {
+			return math.Int{}, math.Int{}, fmt.Errorf("nav volume is zero for %s/%s", srcDenom, underlyingAsset)
+		}
+		return priceAmt, volAmt, nil
+	}
+
+	priceAmt := math.NewInt(int64(rev.Volume))
+	volAmt := rev.Price.Amount
 	if volAmt.IsZero() {
-		return math.Int{}, math.Int{}, fmt.Errorf("nav volume is zero for %s/%s", srcDenom, underlyingAsset)
+		return math.Int{}, math.Int{}, fmt.Errorf("nav price is zero for %s/%s", underlyingAsset, srcDenom)
 	}
 	return priceAmt, volAmt, nil
 }

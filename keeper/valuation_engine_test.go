@@ -20,28 +20,51 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 		name                  string
 		fromDenom             string
 		toDenom               string
+		setup                 func()
 		expectedNumerator     int64
 		expectedDenominator   int64
 		expectedErrorContains string
 	}{
 		{name: "identity", fromDenom: underlyingDenom, toDenom: underlyingDenom, expectedNumerator: 1, expectedDenominator: 1},
 		{name: "nav-present", fromDenom: paymentDenom, toDenom: underlyingDenom, expectedNumerator: 1, expectedDenominator: 2},
+		{
+			name:      "reverse-nav-present-newer",
+			fromDenom: paymentDenom, toDenom: underlyingDenom,
+			setup: func() {
+				s.bumpHeight()
+				s.setReverseNAV(underlyingDenom, paymentDenom, 2, 1)
+			},
+			expectedNumerator:   1,
+			expectedDenominator: 2,
+		},
+		{
+			name:      "reverse-nav-selected-zero-price-errors",
+			fromDenom: paymentDenom, toDenom: underlyingDenom,
+			setup: func() {
+				s.bumpHeight()
+				s.setReverseNAV(underlyingDenom, paymentDenom, 0, 1)
+			},
+			expectedErrorContains: "nav price is zero",
+		},
 		{name: "nav-missing", fromDenom: "unknown", toDenom: underlyingDenom, expectedErrorContains: "nav not found"},
 	}
 
 	for _, scenario := range cases {
 		s.Run(scenario.name, func() {
+			if scenario.setup != nil {
+				scenario.setup()
+			}
 			testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
 			numerator, denominator, err := testKeeper.UnitPriceFraction(s.ctx, scenario.fromDenom, scenario.toDenom)
 			if scenario.expectedErrorContains != "" {
-				s.Require().Error(err, "should error when NAV missing")
-				s.Require().Contains(err.Error(), scenario.expectedErrorContains, "error should mention NAV missing")
+				s.Require().Error(err)
+				s.Require().Contains(err.Error(), scenario.expectedErrorContains)
 				return
 			}
-			s.Require().NoError(err, "should compute price fraction without error")
-			s.Require().Equal(math.NewInt(scenario.expectedNumerator), numerator, "numerator should match expected")
-			s.Require().Equal(math.NewInt(scenario.expectedDenominator), denominator, "denominator should match expected")
-			s.Require().True(denominator.IsPositive(), "denominator should be > 0")
+			s.Require().NoError(err)
+			s.Require().Equal(math.NewInt(scenario.expectedNumerator), numerator)
+			s.Require().Equal(math.NewInt(scenario.expectedDenominator), denominator)
+			s.Require().True(denominator.IsPositive())
 		})
 	}
 }

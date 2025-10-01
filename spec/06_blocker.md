@@ -88,6 +88,8 @@ Ordering is intentional:
 
 At block end, the module fulfills **due swap-out requests**:
 
+To prevent a large queue from consuming excessive block time and memory, a maximum of `MaxSwapOutBatchSize` (currently 100) requests are processed per block.
+
 1. **Collect due requests** from `PendingSwapOutQueue` with `dueTime <= now`.
 
    * Skip paused vaults; they remain queued.

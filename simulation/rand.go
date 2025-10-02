@@ -37,15 +37,31 @@ func randomUnrestrictedDenom(r *rand.Rand, unrestrictedDenomExp string, suffix s
 	if len(matches) != 3 {
 		panic("expected two number as range expression in unrestricted denom expression")
 	}
-	minLen, _ := strconv.ParseInt(matches[1], 10, 32)
-	maxLen, _ := strconv.ParseInt(matches[2], 10, 32)
+	minLen, _ := strconv.ParseInt(matches[1], 10, 32) // tail min
+	maxLen, _ := strconv.ParseInt(matches[2], 10, 32) // tail max
 
-	baseLen := randomInt63(r, maxLen-minLen+1) + minLen - int64(len(suffix))
-	if baseLen < 1 {
-		panic("suffix too long for regex length")
+	// choose tail length inclusively
+	tailLen := randomInt63(r, (maxLen-minLen)+1) + minLen
+
+	if int64(len(suffix)) > tailLen {
+		panic("suffix too long for regex tail length")
+	}
+	midLen := int(tailLen) - len(suffix)
+
+	letters := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+	var b strings.Builder
+	b.Grow(1 + midLen + len(suffix))
+
+	b.WriteByte(letters[r.Intn(len(letters))])
+
+	if midLen > 0 {
+		b.WriteString(simtypes.RandStringOfLength(r, midLen))
 	}
 
-	return simtypes.RandStringOfLength(r, int(baseLen)) + suffix
+	b.WriteString(suffix)
+
+	return b.String()
 }
 
 // getRandomVault selects a random vault from all existing vaults.

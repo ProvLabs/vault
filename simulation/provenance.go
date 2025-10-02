@@ -3,6 +3,8 @@ package simulation
 import (
 	"context"
 	"fmt"
+	"strings"
+	"time"
 
 	"github.com/provlabs/vault/types"
 
@@ -101,7 +103,8 @@ func AddAttribute(ctx context.Context, acc sdk.AccAddress, attrName string, nk t
 		return err
 	}
 
-	attr := attrtypes.NewAttribute(
+	// name string, address string, attrType AttributeType, value []byte, expirationDate *time.Time, concreteType string
+	attr := NewAttribute(
 		attrName,
 		acc.String(),
 		attrtypes.AttributeType_String,
@@ -149,4 +152,20 @@ func FundAccount(ctx context.Context, bk types.BankKeeper, addr sdk.AccAddress, 
 	}
 	ctx = markertypes.WithBypass(ctx) // Bypass marker checks for this operation.
 	return bk.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, amounts)
+}
+
+// NewAttribute creates a new instance of an Attribute.
+func NewAttribute(name string, address string, attrType attrtypes.AttributeType, value []byte, expirationDate *time.Time) attrtypes.Attribute {
+	// Ensure string type values are trimmed.
+	if attrType != attrtypes.AttributeType_Bytes && attrType != attrtypes.AttributeType_Proto {
+		trimmed := strings.TrimSpace(string(value))
+		value = []byte(trimmed)
+	}
+	return attrtypes.Attribute{
+		Name:           name,
+		Address:        address,
+		AttributeType:  attrType,
+		Value:          value,
+		ExpirationDate: expirationDate,
+	}
 }

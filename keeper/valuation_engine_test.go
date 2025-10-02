@@ -46,6 +46,22 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 			},
 			expectedErrorContains: "nav price is zero",
 		},
+		{
+			name:      "underlying-uylds.fcc-overrides-nav",
+			fromDenom: paymentDenom, toDenom: "uylds.fcc",
+			setup: func() {
+				pmtMarkerAddr := markertypes.MustGetMarkerAddress(paymentDenom)
+				pmtMarkerAcct, err := s.k.MarkerKeeper.GetMarker(s.ctx, pmtMarkerAddr)
+				s.Require().NoError(err, "setup(%s): fetch payment marker", "underlying-uylds.fcc-overrides-nav")
+				err = s.k.MarkerKeeper.SetNetAssetValue(s.ctx, pmtMarkerAcct, markertypes.NetAssetValue{
+					Price:  sdk.NewInt64Coin("uylds.fcc", 5),
+					Volume: 2,
+				}, "test-uylds-fcc")
+				s.Require().NoError(err, "setup(%s): set forward NAV usdc->uylds.fcc", "underlying-uylds.fcc-overrides-nav")
+			},
+			expectedNumerator:   1,
+			expectedDenominator: 1,
+		},
 		{name: "nav-missing", fromDenom: "unknown", toDenom: underlyingDenom, expectedErrorContains: "nav not found"},
 	}
 
@@ -57,14 +73,14 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 			testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
 			numerator, denominator, err := testKeeper.UnitPriceFraction(s.ctx, scenario.fromDenom, scenario.toDenom)
 			if scenario.expectedErrorContains != "" {
-				s.Require().Error(err)
-				s.Require().Contains(err.Error(), scenario.expectedErrorContains)
+				s.Require().Error(err, "case %q: expected an error", scenario.name)
+				s.Require().Contains(err.Error(), scenario.expectedErrorContains, "case %q: error message mismatch", scenario.name)
 				return
 			}
-			s.Require().NoError(err)
-			s.Require().Equal(math.NewInt(scenario.expectedNumerator), numerator)
-			s.Require().Equal(math.NewInt(scenario.expectedDenominator), denominator)
-			s.Require().True(denominator.IsPositive())
+			s.Require().NoError(err, "case %q: unexpected error", scenario.name)
+			s.Require().Equal(math.NewInt(scenario.expectedNumerator), numerator, "case %q: numerator mismatch", scenario.name)
+			s.Require().Equal(math.NewInt(scenario.expectedDenominator), denominator, "case %q: denominator mismatch", scenario.name)
+			s.Require().True(denominator.IsPositive(), "case %q: expected positive denominator", scenario.name)
 		})
 	}
 }

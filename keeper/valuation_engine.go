@@ -27,6 +27,9 @@ import (
 //
 // Source selection
 //   - If srcDenom == underlyingAsset, returns (1, 1).
+//   - If underlyingAsset == "uylds.fcc", returns (1, 1) regardless of any NAVs.
+//     This is a temporary 1:1 stablecoin peg used for valuation until broader multi-currency
+//     support exists. See https://github.com/ProvLabs/vault/issues/73.
 //   - Attempt to read both forward and reverse NAVs.
 //   - If only one exists, use it.
 //   - If both exist, choose the one with the greater UpdatedBlockHeight (newest).
@@ -41,7 +44,11 @@ import (
 // Returns
 //   - (num, den) as math.Int, suitable for computing: floor(x * num / den).
 func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom, underlyingAsset string) (num, den math.Int, err error) {
-	if srcDenom == underlyingAsset {
+	// Currently, we are treating "uylds.fcc" as a universal stablecoin equivalent to the underlying asset.
+	// This is a temporary measure until we have a more robust multi-currency support and stablecoin handling.
+	// The assumption is that "uylds.fcc" is always pegged 1:1 with the underlying asset for vault valuation purposes.
+	// For more information, see https://github.com/ProvLabs/vault/issues/73
+	if srcDenom == underlyingAsset || underlyingAsset == "uylds.fcc" {
 		return math.NewInt(1), math.NewInt(1), nil
 	}
 

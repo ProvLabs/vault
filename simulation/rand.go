@@ -18,8 +18,7 @@ import (
 
 // genRandomDenom generates a random denominator string with a given suffix.
 func genRandomDenom(r *rand.Rand, regex, suffix string) string {
-	denom := randomUnrestrictedDenom(r, regex) + suffix
-	denom = denom[:len(denom)-len(suffix)] + suffix
+	denom := randomUnrestrictedDenom(r, regex, suffix)
 	return denom
 }
 
@@ -32,7 +31,7 @@ func randomInt63(r *rand.Rand, maxVal int64) (result int64) {
 }
 
 // randomUnrestrictedDenom generates a random string for a denom based on the length constraints in the expression.
-func randomUnrestrictedDenom(r *rand.Rand, unrestrictedDenomExp string) string {
+func randomUnrestrictedDenom(r *rand.Rand, unrestrictedDenomExp string, suffix string) string {
 	exp := regexp.MustCompile(`\{(\d+),(\d+)\}`)
 	matches := exp.FindStringSubmatch(unrestrictedDenomExp)
 	if len(matches) != 3 {
@@ -41,7 +40,12 @@ func randomUnrestrictedDenom(r *rand.Rand, unrestrictedDenomExp string) string {
 	minLen, _ := strconv.ParseInt(matches[1], 10, 32)
 	maxLen, _ := strconv.ParseInt(matches[2], 10, 32)
 
-	return simtypes.RandStringOfLength(r, int(randomInt63(r, maxLen-minLen)+minLen))
+	baseLen := randomInt63(r, maxLen-minLen+1) + minLen - int64(len(suffix))
+	if baseLen < 1 {
+		panic("suffix too long for regex length")
+	}
+
+	return simtypes.RandStringOfLength(r, int(baseLen)) + suffix
 }
 
 // getRandomVault selects a random vault from all existing vaults.

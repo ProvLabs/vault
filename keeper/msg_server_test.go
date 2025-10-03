@@ -954,9 +954,9 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 			},
 			expectedEvents: sdk.Events{
 				sdk.NewEvent("vault.v1.EventVaultReconcile",
-					sdk.NewAttribute("interest_earned", CoinToJSON(sdk.NewInt64Coin(underlyingDenom, 0))),
-					sdk.NewAttribute("principal_after", CoinToJSON(sdk.NewInt64Coin(underlyingDenom, 0))),
-					sdk.NewAttribute("principal_before", CoinToJSON(sdk.NewInt64Coin(underlyingDenom, 0))),
+					sdk.NewAttribute("interest_earned", sdk.NewInt64Coin(underlyingDenom, 0).String()),
+					sdk.NewAttribute("principal_after", sdk.NewInt64Coin(underlyingDenom, 0).String()),
+					sdk.NewAttribute("principal_before", sdk.NewInt64Coin(underlyingDenom, 0).String()),
 					sdk.NewAttribute("rate", "4.20"),
 					sdk.NewAttribute("time", "10000"),
 					sdk.NewAttribute("vault_address", vaultAddr.String()),
@@ -986,9 +986,9 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 			},
 			expectedEvents: sdk.Events{
 				sdk.NewEvent("vault.v1.EventVaultReconcile",
-					sdk.NewAttribute("interest_earned", CoinToJSON(sdk.NewInt64Coin(underlyingDenom, 0))),
-					sdk.NewAttribute("principal_after", CoinToJSON(sdk.NewInt64Coin(underlyingDenom, 0))),
-					sdk.NewAttribute("principal_before", CoinToJSON(sdk.NewInt64Coin(underlyingDenom, 0))),
+					sdk.NewAttribute("interest_earned", sdk.NewInt64Coin(underlyingDenom, 0).String()),
+					sdk.NewAttribute("principal_after", sdk.NewInt64Coin(underlyingDenom, 0).String()),
+					sdk.NewAttribute("principal_before", sdk.NewInt64Coin(underlyingDenom, 0).String()),
 					sdk.NewAttribute("rate", "6.12"),
 					sdk.NewAttribute("time", "10000"),
 					sdk.NewAttribute("vault_address", vaultAddr.String()),
@@ -1019,9 +1019,9 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 			},
 			expectedEvents: sdk.Events{
 				sdk.NewEvent("vault.v1.EventVaultReconcile",
-					sdk.NewAttribute("interest_earned", CoinToJSON(sdk.NewInt64Coin(underlyingDenom, 0))),
-					sdk.NewAttribute("principal_after", CoinToJSON(sdk.NewInt64Coin(underlyingDenom, 0))),
-					sdk.NewAttribute("principal_before", CoinToJSON(sdk.NewInt64Coin(underlyingDenom, 0))),
+					sdk.NewAttribute("interest_earned", sdk.NewInt64Coin(underlyingDenom, 0).String()),
+					sdk.NewAttribute("principal_after", sdk.NewInt64Coin(underlyingDenom, 0).String()),
+					sdk.NewAttribute("principal_before", sdk.NewInt64Coin(underlyingDenom, 0).String()),
 					sdk.NewAttribute("rate", "3.33"),
 					sdk.NewAttribute("time", "5000"),
 					sdk.NewAttribute("vault_address", vaultAddr.String()),
@@ -1655,7 +1655,7 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds() {
 		ev = append(ev, sdk.NewEvent(
 			"vault.v1.EventInterestDeposit",
 			sdk.NewAttribute("admin", admin.String()),
-			sdk.NewAttribute("amount", CoinToJSON(amount)),
+			sdk.NewAttribute("amount", amount.String()),
 			sdk.NewAttribute("vault_address", vaultAddr.String()),
 		))
 
@@ -1685,7 +1685,7 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds() {
 		ev = append(ev, sdk.NewEvent(
 			"vault.v1.EventInterestDeposit",
 			sdk.NewAttribute("admin", admin.String()),
-			sdk.NewAttribute("amount", CoinToJSON(amount)),
+			sdk.NewAttribute("amount", amount.String()),
 			sdk.NewAttribute("vault_address", vaultAddr.String()),
 		))
 
@@ -1840,7 +1840,7 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds() {
 		ev = append(ev, sdk.NewEvent(
 			"vault.v1.EventInterestWithdrawal",
 			sdk.NewAttribute("admin", admin.String()),
-			sdk.NewAttribute("amount", CoinToJSON(amount)),
+			sdk.NewAttribute("amount", amount.String()),
 			sdk.NewAttribute("vault_address", vaultAddr.String()),
 		))
 
@@ -1999,7 +1999,7 @@ func (s *TestSuite) TestMsgServer_DepositPrincipalFunds() {
 		ev = append(ev, sdk.NewEvent(
 			"vault.v1.EventDepositPrincipalFunds",
 			sdk.NewAttribute("admin", admin.String()),
-			sdk.NewAttribute("amount", CoinToJSON(amount)),
+			sdk.NewAttribute("amount", amount.String()),
 			sdk.NewAttribute("vault_address", vaultAddr.String()),
 		))
 
@@ -2174,7 +2174,7 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds() {
 		ev = append(ev, sdk.NewEvent(
 			"vault.v1.EventWithdrawPrincipalFunds",
 			sdk.NewAttribute("admin", admin.String()),
-			sdk.NewAttribute("amount", CoinToJSON(amount)),
+			sdk.NewAttribute("amount", amount.String()),
 			sdk.NewAttribute("vault_address", vaultAddr.String()),
 		))
 
@@ -2453,7 +2453,7 @@ func (s *TestSuite) TestMsgServer_PauseVault() {
 				"vault.v1.EventVaultPaused",
 				sdk.NewAttribute("admin", admin.String()),
 				sdk.NewAttribute("reason", reason),
-				sdk.NewAttribute("total_vault_value", CoinToJSON(sdk.NewInt64Coin(underlying, 0))),
+				sdk.NewAttribute("total_vault_value", sdk.NewInt64Coin(underlying, 0).String()),
 				sdk.NewAttribute("vault_address", vaultAddr.String()),
 			),
 		},
@@ -2499,9 +2499,9 @@ func (s *TestSuite) TestMsgServer_PauseVault() {
 		},
 		expectedEvents: sdk.Events{
 			sdk.NewEvent("vault.v1.EventVaultReconcile",
-				sdk.NewAttribute("interest_earned", CoinToJSON(sdk.NewInt64Coin(underlying, 0))),
-				sdk.NewAttribute("principal_after", CoinToJSON(sdk.NewInt64Coin(underlying, 0))),
-				sdk.NewAttribute("principal_before", CoinToJSON(sdk.NewInt64Coin(underlying, 0))),
+				sdk.NewAttribute("interest_earned", sdk.NewInt64Coin(underlying, 0).String()),
+				sdk.NewAttribute("principal_after", sdk.NewInt64Coin(underlying, 0).String()),
+				sdk.NewAttribute("principal_before", sdk.NewInt64Coin(underlying, 0).String()),
 				sdk.NewAttribute("rate", "1.23"),
 				sdk.NewAttribute("time", "10000"),
 				sdk.NewAttribute("vault_address", vaultAddr.String()),
@@ -2510,7 +2510,7 @@ func (s *TestSuite) TestMsgServer_PauseVault() {
 				"vault.v1.EventVaultPaused",
 				sdk.NewAttribute("admin", admin.String()),
 				sdk.NewAttribute("reason", "maintenance"),
-				sdk.NewAttribute("total_vault_value", CoinToJSON(sdk.NewInt64Coin(underlying, 0))),
+				sdk.NewAttribute("total_vault_value", sdk.NewInt64Coin(underlying, 0).String()),
 				sdk.NewAttribute("vault_address", vaultAddr.String()),
 			),
 		},
@@ -2662,7 +2662,7 @@ func (s *TestSuite) TestMsgServer_UnpauseVault() {
 			sdk.NewEvent(
 				"vault.v1.EventVaultUnpaused",
 				sdk.NewAttribute("admin", admin.String()),
-				sdk.NewAttribute("total_vault_value", CoinToJSON(sdk.NewInt64Coin(underlying, 0))),
+				sdk.NewAttribute("total_vault_value", sdk.NewInt64Coin(underlying, 0).String()),
 				sdk.NewAttribute("vault_address", vaultAddr.String()),
 			),
 		},
@@ -3229,7 +3229,7 @@ func (s *TestSuite) TestMsgServer_BridgeBurnShares() {
 	events = append(events, createMarkerBurn(vaultAddr, markerAddr, burn)...)
 	events = append(events, sdk.NewEvent("vault.v1.EventBridgeBurnShares",
 		sdk.NewAttribute("bridge", bridgeAddr.String()),
-		sdk.NewAttribute("shares", CoinToJSON(burn)),
+		sdk.NewAttribute("shares", burn.String()),
 		sdk.NewAttribute("vault_address", vaultAddr.String()),
 	))
 

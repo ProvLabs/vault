@@ -32,8 +32,8 @@ func NewEventSwapIn(vaultAddress, owner string, amountIn, sharesReceived sdk.Coi
 	return &EventSwapIn{
 		VaultAddress:   vaultAddress,
 		Owner:          owner,
-		AmountIn:       amountIn,
-		SharesReceived: sharesReceived,
+		AmountIn:       amountIn.String(),
+		SharesReceived: sharesReceived.String(),
 	}
 }
 
@@ -42,21 +42,25 @@ func NewEventSwapOut(vaultAddress, owner string, amountOut, sharesBurned sdk.Coi
 	return &EventSwapOut{
 		VaultAddress: vaultAddress,
 		Owner:        owner,
-		AmountOut:    amountOut,
-		SharesBurned: sharesBurned,
+		AmountOut:    amountOut.String(),
+		SharesBurned: sharesBurned.String(),
 	}
 }
 
 // NewEventVaultReconcile creates a new EventVaultReconcile event.
 // Note: interestEarned does not use NewCoin to avoid panics with negative amounts.
 func NewEventVaultReconcile(vaultAddress string, principalBefore, principalAfter sdk.Coin, rate string, time int64, interestEarned sdkmath.Int) *EventVaultReconcile {
+	interestEarnedCoin := sdk.Coin{
+		Denom:  principalBefore.Denom,
+		Amount: interestEarned,
+	}
 	return &EventVaultReconcile{
 		VaultAddress:    vaultAddress,
-		PrincipalBefore: principalBefore,
-		PrincipalAfter:  principalAfter,
+		PrincipalBefore: principalBefore.String(),
+		PrincipalAfter:  principalAfter.String(),
 		Rate:            rate,
 		Time:            time,
-		InterestEarned:  sdk.Coin{Denom: principalBefore.Denom, Amount: interestEarned},
+		InterestEarned:  interestEarnedCoin.String(),
 	}
 }
 
@@ -74,7 +78,7 @@ func NewEventInterestDeposit(vaultAddress, admin string, amount sdk.Coin) *Event
 	return &EventInterestDeposit{
 		VaultAddress: vaultAddress,
 		Admin:        admin,
-		Amount:       amount,
+		Amount:       amount.String(),
 	}
 }
 
@@ -83,7 +87,7 @@ func NewEventInterestWithdrawal(vaultAddress, admin string, amount sdk.Coin) *Ev
 	return &EventInterestWithdrawal{
 		VaultAddress: vaultAddress,
 		Admin:        admin,
-		Amount:       amount,
+		Amount:       amount.String(),
 	}
 }
 
@@ -110,7 +114,7 @@ func NewEventDepositPrincipalFunds(vaultAddress, admin string, amount sdk.Coin) 
 	return &EventDepositPrincipalFunds{
 		VaultAddress: vaultAddress,
 		Admin:        admin,
-		Amount:       amount,
+		Amount:       amount.String(),
 	}
 }
 
@@ -119,7 +123,7 @@ func NewEventWithdrawPrincipalFunds(vaultAddress, admin string, amount sdk.Coin)
 	return &EventWithdrawPrincipalFunds{
 		VaultAddress: vaultAddress,
 		Admin:        admin,
-		Amount:       amount,
+		Amount:       amount.String(),
 	}
 }
 
@@ -147,7 +151,7 @@ func NewEventSwapOutRequested(vaultAddress, owner, redeemDenom string, shares sd
 		VaultAddress: vaultAddress,
 		Owner:        owner,
 		RedeemDenom:  redeemDenom,
-		Shares:       shares,
+		Shares:       shares.String(),
 		RequestId:    requestID,
 	}
 }
@@ -157,7 +161,7 @@ func NewEventSwapOutCompleted(vaultAddress, owner string, assets sdk.Coin, reque
 	return &EventSwapOutCompleted{
 		VaultAddress: vaultAddress,
 		Owner:        owner,
-		Assets:       assets,
+		Assets:       assets.String(),
 		RequestId:    requestID,
 	}
 }
@@ -167,7 +171,7 @@ func NewEventSwapOutRefunded(vaultAddress, owner string, shares sdk.Coin, reques
 	return &EventSwapOutRefunded{
 		VaultAddress: vaultAddress,
 		Owner:        owner,
-		Shares:       shares,
+		Shares:       shares.String(),
 		RequestId:    requestID,
 		Reason:       reason,
 	}
@@ -188,7 +192,7 @@ func NewEventVaultPaused(vaultAddress, admin, reason string, totalVaultValue sdk
 		VaultAddress:    vaultAddress,
 		Admin:           admin,
 		Reason:          reason,
-		TotalVaultValue: totalVaultValue,
+		TotalVaultValue: totalVaultValue.String(),
 	}
 }
 
@@ -197,7 +201,7 @@ func NewEventVaultUnpaused(vaultAddress, admin string, totalVaultValue sdk.Coin)
 	return &EventVaultUnpaused{
 		VaultAddress:    vaultAddress,
 		Admin:           admin,
-		TotalVaultValue: totalVaultValue,
+		TotalVaultValue: totalVaultValue.String(),
 	}
 }
 
@@ -224,7 +228,7 @@ func NewEventBridgeMintShares(vaultAddress, bridge string, shares sdk.Coin) *Eve
 	return &EventBridgeMintShares{
 		VaultAddress: vaultAddress,
 		Bridge:       bridge,
-		Shares:       shares,
+		Shares:       shares.String(),
 	}
 }
 
@@ -233,6 +237,6 @@ func NewEventBridgeBurnShares(vaultAddress, bridge string, shares sdk.Coin) *Eve
 	return &EventBridgeBurnShares{
 		VaultAddress: vaultAddress,
 		Bridge:       bridge,
-		Shares:       shares,
+		Shares:       shares.String(),
 	}
 }

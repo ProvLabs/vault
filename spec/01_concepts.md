@@ -7,6 +7,34 @@ The payment denom provides a secondary unit for payouts and redemptions: users c
 The module manages vault lifecycle, share issuance, redemptions, dual-asset accounting, interest accrual, and time-based job queues for automated processing.  
 Total share supply is tracked on the vault as **total_shares**, the authoritative supply-of-record across chains; local marker supply must never exceed this amount.
 
+## Key Definitions
+
+- **Underlying Asset**: the base denom that defines vault value and payouts. TVV is always expressed in this unit.  
+- **Payment Denom (Secondary)**: an optional denom configured on a vault. It may be a normal swappable token (e.g., `uusdc`) or a restricted **receipt token** used for accounting. Swapability is determined by marker configuration.  
+- **Receipt Token**: a restricted marker that may be set as the payment denom. Users can swap-in with it if marker permissions allow; user swap-out is not possible unless the marker grants transfer authority.  
+- **Principal**: the vault’s total assets held in the **share marker account**, including underlying balances and any payment denom balances (normal or receipt).  
+- **Reserves**: the vault account balance used to pay positive interest or receive refunds from negative interest.  
+- **TVV (Total Vault Value)**: the value of all principal assets, computed and reported in the underlying unit.  
+- **NAV**: conversion rate between denoms, used for valuation and conversions, subject to special-case rules.  
+- **Total Shares**: the canonical supply-of-record across chains. Local marker supply must never exceed `total_shares`.
+
+### Marker Authority Rules
+
+All user I/O must satisfy **both** layers:  
+1) **Vault-level gates** — the vault must be unpaused and the relevant toggle (`SwapIn`/`SwapOut`) must be enabled.  
+2) **Marker permissions** — the marker for the target denom (including the **underlying**) must allow the transfer (attributes, restrictions, transfer authority).  
+
+Examples:  
+- `uylds.fcc` is a restricted marker with required attributes; users must satisfy those attributes to deposit/withdraw even when vault toggles are enabled.  
+- Receipt tokens typically deny public transfers; therefore user swap-out to a receipt token is not possible regardless of vault toggles.
+
+### Special Case: YLDS Peg Mode
+
+If a vault’s underlying is set to `uylds.fcc`, all conversions are treated as **1:1** with YLDS regardless of NAV.  
+This means any configured payment denom (normal token or receipt token) is valued **1:1** with `uylds.fcc` for TVV and estimates.
+
+---
+
 ## Keeper Responsibilities
 
 The keeper ties together state management, account operations, marker integration, interest reconciliation, and queued jobs.
@@ -33,9 +61,9 @@ The keeper ties together state management, account operations, marker integratio
 - **Queues**: vaults rotate between verification and timeout queues to forecast payout ability and auto-reconcile interest periodically.
 
 ### Valuation
-- **NAV Calculations**: conversion functions based on Net Asset Value (NAV) between denominations.
-- **TVV (Total Vault Value)**: derived from balances at the principal marker, always expressed in underlying units.
-- **Pro-Rata Conversions**: deterministic share/asset calculations with floor arithmetic to avoid inflation or over-distribution.
+- **NAV Calculations**: conversion functions based on Net Asset Value (NAV) between denominations.  
+- **TVV (Total Vault Value)**: derived from balances at the principal marker, always expressed in underlying units.  
+- **Pro-Rata Conversions**: deterministic share/asset calculations with floor arithmetic to avoid inflation or over-distribution.  
 - **Share Supply-of-Record**: `total_shares` tracks all issued shares (local and bridged); local marker supply is a subset bounded by `total_shares`.
 
 ### Queues & Jobs
@@ -69,8 +97,8 @@ The keeper ties together state management, account operations, marker integratio
 2. **SwapIn**: users deposit assets → shares minted.
 3. **SwapOut**: users escrow shares → queued for payout.
 4. **Interest**: accrues over time, reconciled on actions or via queues.
-5. **Block Processing**:
-   - BeginBlocker: runs interest checks and timeouts.
+5. **Block Processing**:  
+   - BeginBlocker: runs interest checks and timeouts.  
    - EndBlocker: finalizes swap-out jobs and reconciliations.
 6. **Admin Tools**: manage interest rates, deposits/withdrawals, pausing/unpausing, and queue interventions.
 7. **Bridge Ops (optional)**: authorized bridge mints/burns local supply under `total_shares` capacity to facilitate cross-chain share movement.

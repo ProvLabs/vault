@@ -11,7 +11,7 @@ Total share supply is tracked on the vault as **total_shares**, the authoritativ
 
 - **Underlying Asset**: the base denom that defines vault value and payouts. TVV is always expressed in this unit.  
 - **Payment Denom (Secondary)**: an optional denom configured on a vault. It may be a normal swappable token (e.g., `uusdc`) or a restricted **receipt token** used for accounting. Swapability is determined by marker configuration.  
-- **Receipt Token**: a restricted marker that may be set as the payment denom. Users can swap-in with it if marker permissions allow; user swap-out is not possible unless the marker grants transfer authority.  
+- **Receipt Token**: a restricted marker that may be set as the payment denom. The only account with transfer authority is the holder of the receipt itself, which represents deployed capital (e.g., receipts into a fund). User swap-out to a receipt token is not possible unless the marker explicitly grants transfer authority. 
 - **Principal**: the vault’s total assets held in the **share marker account**, including underlying balances and any payment denom balances (normal or receipt).  
 - **Reserves**: the vault account balance used to pay positive interest or receive refunds from negative interest.  
 - **TVV (Total Vault Value)**: the value of all principal assets, computed and reported in the underlying unit.  

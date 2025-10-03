@@ -341,7 +341,7 @@ func createSwapOutEvents(owner, vaultAddr sdk.AccAddress, assets, shares sdk.Coi
 		sdk.NewAttribute("owner", owner.String()),
 		sdk.NewAttribute("redeem_denom", assets.Denom),
 		sdk.NewAttribute("request_id", "0"),
-		sdk.NewAttribute("shares", CoinToJSON(shares)),
+		sdk.NewAttribute("shares", shares.String()),
 		sdk.NewAttribute("vault_address", vaultAddr.String()),
 	)
 	allEvents = append(allEvents, swapOutEvent)
@@ -365,9 +365,9 @@ func createSwapInEvents(owner, vaultAddr, markerAddr sdk.AccAddress, asset, shar
 	allEvents = append(allEvents, sendAssetEvents...)
 
 	swapInEvent := sdk.NewEvent("vault.v1.EventSwapIn",
-		sdk.NewAttribute("amount_in", CoinToJSON(asset)),
+		sdk.NewAttribute("amount_in", asset.String()),
 		sdk.NewAttribute("owner", owner.String()),
-		sdk.NewAttribute("shares_received", CoinToJSON(shares)),
+		sdk.NewAttribute("shares_received", shares.String()),
 		sdk.NewAttribute("vault_address", vaultAddr.String()),
 	)
 	allEvents = append(allEvents, swapInEvent)
@@ -425,7 +425,7 @@ func createBridgeMintSharesEventsExact(vaultAddr, bridgeAddr sdk.AccAddress, sha
 	events = append(events, sdk.NewEvent(
 		"vault.v1.EventBridgeMintShares",
 		sdk.NewAttribute("bridge", bridgeAddr.String()),
-		sdk.NewAttribute("shares", CoinToJSON(shares)),
+		sdk.NewAttribute("shares", shares.String()),
 		sdk.NewAttribute("vault_address", vaultAddr.String()),
 	))
 
@@ -464,11 +464,11 @@ func createReconcileEvents(vaultAddr, markerAddr sdk.AccAddress, interest, princ
 	}
 	sendToMarkerEvents := createSendCoinEvents(fromAddress, toAddress, sdk.NewCoin(denom, interest.Abs()).String())
 	allEvents = append(allEvents, sendToMarkerEvents...)
-
+	interestEarned := sdk.Coin{Denom: denom, Amount: interest}
 	reconcileEvent := sdk.NewEvent("vault.v1.EventVaultReconcile",
-		sdk.NewAttribute("interest_earned", CoinToJSON(sdk.Coin{Denom: denom, Amount: interest})),
-		sdk.NewAttribute("principal_after", CoinToJSON(sdk.NewCoin(denom, principleAfter))),
-		sdk.NewAttribute("principal_before", CoinToJSON(sdk.NewCoin(denom, principle))),
+		sdk.NewAttribute("interest_earned", interestEarned.String()),
+		sdk.NewAttribute("principal_after", sdk.NewCoin(denom, principleAfter).String()),
+		sdk.NewAttribute("principal_before", sdk.NewCoin(denom, principle).String()),
 		sdk.NewAttribute("rate", rate),
 		sdk.NewAttribute("time", fmt.Sprintf("%v", durations)),
 		sdk.NewAttribute("vault_address", vaultAddr.String()),

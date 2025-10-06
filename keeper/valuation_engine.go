@@ -76,19 +76,19 @@ func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom, underlyingAsset str
 	}
 
 	if useForward {
-		priceAmt := fwd.Price.Amount
-		volAmt := math.NewInt(int64(fwd.Volume))
-		if volAmt.IsZero() {
+		if fwd.Volume == 0 {
 			return math.Int{}, math.Int{}, fmt.Errorf("nav volume is zero for %s/%s", srcDenom, underlyingAsset)
 		}
+		priceAmt := fwd.Price.Amount
+		volAmt := math.NewIntFromUint64(fwd.Volume)
 		return priceAmt, volAmt, nil
 	}
 
-	priceAmt := math.NewInt(int64(rev.Volume))
-	volAmt := rev.Price.Amount
-	if volAmt.IsZero() {
+	if rev.Price.Amount.IsZero() {
 		return math.Int{}, math.Int{}, fmt.Errorf("nav price is zero for %s/%s", underlyingAsset, srcDenom)
 	}
+	priceAmt := math.NewIntFromUint64(rev.Volume)
+	volAmt := rev.Price.Amount
 	return priceAmt, volAmt, nil
 }
 

@@ -48,17 +48,25 @@ func (k *Keeper) SetVaultAccount(ctx sdk.Context, vault *types.VaultAccount) err
 	return nil
 }
 
-// FindVault retrieves a vault by its address or share denomination.
+// FindVaultAccount retrieves a vault by its address or share denomination.
 func (k *Keeper) FindVaultAccount(ctx sdk.Context, id string) (*types.VaultAccount, error) {
 	if addr, err := sdk.AccAddressFromBech32(id); err == nil {
-		if vault, err := k.GetVault(ctx, addr); err != nil || vault != nil {
-			return vault, err
+		vault, err := k.GetVault(ctx, addr)
+		if err != nil {
+			return nil, err
+		}
+		if vault != nil {
+			return vault, nil
 		}
 	}
 
 	addr := types.GetVaultAddress(id)
-	if vault, err := k.GetVault(ctx, addr); err != nil || vault != nil {
-		return vault, err
+	vault, err := k.GetVault(ctx, addr)
+	if err != nil {
+		return nil, err
+	}
+	if vault != nil {
+		return vault, nil
 	}
 
 	return nil, fmt.Errorf("vault with id '%s' not found", id)

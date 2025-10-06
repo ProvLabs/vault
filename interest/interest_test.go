@@ -109,7 +109,7 @@ func TestCalculateInterestEarned(t *testing.T) {
 }
 
 func TestCalculateExpiration(t *testing.T) {
-	startTime := int64(1752764321) // 2025-07-17T14:58:41Z
+	startTime := int64(1752764321)
 	denom := "vault"
 
 	tests := []struct {
@@ -127,7 +127,16 @@ func TestCalculateExpiration(t *testing.T) {
 			name:          "never expires with zero rate",
 			principal:     sdk.NewCoin(denom, sdkmath.NewInt(100_000)),
 			reserves:      sdk.NewCoin(denom, sdkmath.NewInt(500_000)),
-			rate:          types.ZeroInterestRate,
+			rate:          "0",
+			periodSeconds: 60,
+			startTime:     startTime,
+			expected:      startTime,
+		},
+		{
+			name:          "never expires with negative rate",
+			principal:     sdk.NewCoin(denom, sdkmath.NewInt(100_000)),
+			reserves:      sdk.NewCoin(denom, sdkmath.NewInt(500_000)),
+			rate:          "-0.25",
 			periodSeconds: 60,
 			startTime:     startTime,
 			expected:      startTime,
@@ -161,7 +170,7 @@ func TestCalculateExpiration(t *testing.T) {
 			expected:      startTime + interest.CalculatePeriodsLimit,
 		},
 		{
-			name:          "never accrues interest when exceeding period limit",
+			name:          "never accrues when single period exceeds limit",
 			principal:     sdk.NewCoin(denom, sdkmath.NewInt(100)),
 			reserves:      sdk.NewCoin(denom, sdkmath.NewInt(1_000_000)),
 			rate:          "1.0",
@@ -201,14 +210,24 @@ func TestCalculateExpiration(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			exp, err := interest.CalculateExpiration(tc.principal, tc.reserves, tc.rate, tc.periodSeconds, tc.startTime, interest.CalculatePeriodsLimit)
-			if len(tc.expectedErrStr) > 0 {
-				require.Error(t, err)
-				require.Contains(t, err.Error(), tc.expectedErrStr)
-			} else {
-				require.NoError(t, err)
-				require.Equal(t, tc.expected, exp)
+			limit := tc.limit
+			if limit == 0 {
+				limit = interest.CalculatePeriodsLimit
 			}
+
+			exp, err := interest.CalculateExpiration(tc.principal, tc.reserves, tc.rate, tc.periodSeconds, tc.startTime, limit)
+
+			if tc.expectedErrStr != "" {
+				require.Error(t, err, "expected error for test %q but got none", tc.name)
+				require.Contains(t, err.Error(), tc.expectedErrStr,
+					"expected error containing %q, got %q", tc.expectedErrStr, err.Error())
+				return
+			}
+
+			require.NoError(t, err, "unexpected error for test %q: %v", tc.name, err)
+			require.Equal(t, tc.expected, exp,
+				"unexpected expiration time for test %q\nprincipal=%s reserves=%s rate=%s period=%d limit=%d",
+				tc.name, tc.principal, tc.reserves, tc.rate, tc.periodSeconds, limit)
 		})
 	}
 }

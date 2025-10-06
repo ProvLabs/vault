@@ -28,12 +28,14 @@ func NewMsgServer(keeper *Keeper) types.MsgServer {
 func (k msgServer) CreateVault(goCtx context.Context, msg *types.MsgCreateVaultRequest) (*types.MsgCreateVaultResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	_, err := k.Keeper.CreateVault(ctx, msg)
+	vault, err := k.Keeper.CreateVault(ctx, msg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create vault: %w", err)
 	}
 
-	return &types.MsgCreateVaultResponse{}, nil
+	return &types.MsgCreateVaultResponse{
+		VaultAddress: vault.Address,
+	}, nil
 }
 
 // SwapIn handles depositing assets accepted by the vault and mints vault shares to the recipient.
@@ -43,12 +45,12 @@ func (k msgServer) SwapIn(goCtx context.Context, msg *types.MsgSwapInRequest) (*
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
 	ownerAddr := sdk.MustAccAddressFromBech32(msg.Owner)
 
-	_, err := k.Keeper.SwapIn(ctx, vaultAddr, ownerAddr, msg.Assets)
+	sharesReceived, err := k.Keeper.SwapIn(ctx, vaultAddr, ownerAddr, msg.Assets)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.MsgSwapInResponse{}, nil
+	return &types.MsgSwapInResponse{SharesReceived: *sharesReceived}, nil
 }
 
 // SwapOut handles redeeming vault shares for assets accepted by the vault and transfers them to the recipient.

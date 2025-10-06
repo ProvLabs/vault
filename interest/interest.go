@@ -97,7 +97,7 @@ func CalculateExpiration(principal sdk.Coin, vaultReserves sdk.Coin, rate string
 	if err != nil {
 		return 0, fmt.Errorf("invalid rate string: %w", err)
 	}
-	if rateDec.IsZero() || rateDec.IsNegative() || principal.IsZero() {
+	if rateDec.IsZero() || rateDec.IsNegative() || principal.IsZero() { // no interest or negative interest means no depletion
 		return startTime, nil
 	}
 	periods, i, err := CalculatePeriods(vaultReserves, principal, rate, periodSeconds, limit)

@@ -97,35 +97,24 @@ func CalculateExpiration(principal sdk.Coin, vaultReserves sdk.Coin, rate string
 	if err != nil {
 		return 0, fmt.Errorf("invalid rate string: %w", err)
 	}
-	if rateDec.IsNegative() {
-		return 0, errors.New("rate cannot be negative")
-	}
-
-	// If the rate is zero, then reserves are not depleted and it never expires.
-	if rateDec.IsZero() || principal.IsZero() {
+	if rateDec.IsZero() || rateDec.IsNegative() || principal.IsZero() {
 		return startTime, nil
 	}
-
-	// Iteratively calculate interest until the vault is depleted.
 	periods, i, err := CalculatePeriods(vaultReserves, principal, rate, periodSeconds, limit)
 	if err != nil {
 		return i, err
 	}
-
-	// Calculate final expiration time with overflow checks using int64. Check for multiplication overflow.
 	totalSeconds := sdkmath.NewInt(periodSeconds)
 	totalSeconds, err = totalSeconds.SafeMul(sdkmath.NewInt(periods))
 	if err != nil {
 		return 0, fmt.Errorf("failed to calculate total seconds: %w", err)
 	}
-
 	expirationTime := sdkmath.NewInt(startTime)
 	expirationTime, err = expirationTime.SafeAdd(totalSeconds)
 	if err != nil {
 		return 0, fmt.Errorf("failed to calculate expiration time: %w", err)
 	}
-
-	return expirationTime.Int64(), nil // Unix epoch time
+	return expirationTime.Int64(), nil
 }
 
 // CalculatePeriods simulates continuous compounding to determine how many compounding

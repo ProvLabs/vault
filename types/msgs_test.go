@@ -113,6 +113,36 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 			},
 			expectedErr: fmt.Errorf("payment (%q) denom cannot equal underlying asset denom (%q)", "uusd", "uusd"),
 		},
+		{
+			name: "share denom equals underlying (not allowed)",
+			msg: types.MsgCreateVaultRequest{
+				Admin:           admin,
+				ShareDenom:      "uusd",
+				UnderlyingAsset: "uusd",
+				PaymentDenom:    "usdc",
+			},
+			expectedErr: fmt.Errorf("share denom (%q) cannot equal underlying asset denom (%q)", "uusd", "uusd"),
+		},
+		{
+			name: "share denom equals payment denom (not allowed)",
+			msg: types.MsgCreateVaultRequest{
+				Admin:           admin,
+				ShareDenom:      "usdc",
+				UnderlyingAsset: "uusd",
+				PaymentDenom:    "usdc",
+			},
+			expectedErr: fmt.Errorf("share denom (%q) cannot equal payment denom (%q)", "usdc", "usdc"),
+		},
+		{
+			name: "swap out delay over two years (not allowed)",
+			msg: types.MsgCreateVaultRequest{
+				Admin:                  admin,
+				ShareDenom:             "vaultshare",
+				UnderlyingAsset:        "uusd",
+				WithdrawalDelaySeconds: types.MaxWithdrawalDelay + 1,
+			},
+			expectedErr: fmt.Errorf("withdrawal delay cannot exceed %d seconds", types.MaxWithdrawalDelay),
+		},
 	}
 
 	for _, tc := range tests {
@@ -216,6 +246,16 @@ func TestMsgSwapOutRequest_ValidateBasic(t *testing.T) {
 			expectedErr: nil,
 		},
 		{
+			name: "valid with redeem denom",
+			msg: types.MsgSwapOutRequest{
+				Owner:        owner,
+				VaultAddress: vault,
+				Assets:       sdk.NewInt64Coin("uusd", 100),
+				RedeemDenom:  "usdc",
+			},
+			expectedErr: nil,
+		},
+		{
 			name: "invalid vault address",
 			msg: types.MsgSwapOutRequest{
 				Owner:        owner,
@@ -250,6 +290,16 @@ func TestMsgSwapOutRequest_ValidateBasic(t *testing.T) {
 				Assets:       sdk.NewInt64Coin("uusd", 0),
 			},
 			expectedErr: fmt.Errorf("invalid amount: assets %s must be greater than zero", "uusd"),
+		},
+		{
+			name: "invalid redeem denom",
+			msg: types.MsgSwapOutRequest{
+				Owner:        owner,
+				VaultAddress: vault,
+				Assets:       sdk.NewInt64Coin("uusd", 100),
+				RedeemDenom:  "inv@lid$",
+			},
+			expectedErr: fmt.Errorf("invalid redeem_denom: %w", fmt.Errorf("invalid denom: %s", "inv@lid$")),
 		},
 	}
 

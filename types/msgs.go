@@ -55,6 +55,16 @@ func (m MsgCreateVaultRequest) ValidateBasic() error {
 	if m.UnderlyingAsset == m.PaymentDenom {
 		return fmt.Errorf("payment (%q) denom cannot equal underlying asset denom (%q)", m.PaymentDenom, m.UnderlyingAsset)
 	}
+	if m.ShareDenom == m.UnderlyingAsset {
+		return fmt.Errorf("share denom (%q) cannot equal underlying asset denom (%q)", m.ShareDenom, m.UnderlyingAsset)
+	}
+	if m.ShareDenom == m.PaymentDenom {
+		return fmt.Errorf("share denom (%q) cannot equal payment denom (%q)", m.ShareDenom, m.PaymentDenom)
+	}
+
+	if m.WithdrawalDelaySeconds > MaxWithdrawalDelay {
+		return fmt.Errorf("withdrawal delay cannot exceed %d seconds", MaxWithdrawalDelay)
+	}
 
 	return nil
 }
@@ -100,6 +110,12 @@ func (m MsgSwapOutRequest) ValidateBasic() error {
 
 	if !m.Assets.Amount.GT(sdkmath.NewInt(0)) {
 		return fmt.Errorf("invalid amount: assets %s must be greater than zero", m.Assets.Denom)
+	}
+
+	if m.RedeemDenom != "" {
+		if err := sdk.ValidateDenom(m.RedeemDenom); err != nil {
+			return fmt.Errorf("invalid redeem_denom: %w", err)
+		}
 	}
 
 	return nil

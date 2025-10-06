@@ -28,12 +28,14 @@ func NewMsgServer(keeper *Keeper) types.MsgServer {
 func (k msgServer) CreateVault(goCtx context.Context, msg *types.MsgCreateVaultRequest) (*types.MsgCreateVaultResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	_, err := k.Keeper.CreateVault(ctx, msg)
+	vault, err := k.Keeper.CreateVault(ctx, msg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create vault: %w", err)
 	}
 
-	return &types.MsgCreateVaultResponse{}, nil
+	return &types.MsgCreateVaultResponse{
+		VaultAddress: vault.Address,
+	}, nil
 }
 
 // SwapIn handles depositing assets accepted by the vault and mints vault shares to the recipient.

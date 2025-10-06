@@ -125,7 +125,7 @@ func (s *TestSuite) TestMsgServer_CreateVault() {
 		},
 	}
 
-	testDef.expectedResponse = &types.MsgCreateVaultResponse{}
+	testDef.expectedResponse = &types.MsgCreateVaultResponse{VaultAddress: vaultAddr.String()}
 	runMsgServerTestCase(s, testDef, tc)
 }
 

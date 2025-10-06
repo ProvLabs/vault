@@ -260,7 +260,7 @@ func (s *TestSuite) TestMsgServer_SwapIn() {
 		postCheckArgs:      postCheckArgs{Owner: owner, VaultAddr: vaultAddr, MarkerAddr: markerAddr, UnderlyingAsset: assets, Shares: expectedShares},
 		expectedEvents:     createSwapInEvents(owner, vaultAddr, markerAddr, assets, expectedShares),
 	}
-	testDef.expectedResponse = &types.MsgSwapInResponse{}
+	testDef.expectedResponse = &types.MsgSwapInResponse{SharesReceived: expectedShares}
 	runMsgServerTestCase(s, testDef, tc)
 }
 

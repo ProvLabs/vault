@@ -62,6 +62,10 @@ func (m MsgCreateVaultRequest) ValidateBasic() error {
 		return fmt.Errorf("share denom (%q) cannot equal payment denom (%q)", m.ShareDenom, m.PaymentDenom)
 	}
 
+	if m.WithdrawalDelaySeconds > MaxWithdrawalDelay {
+		return fmt.Errorf("withdrawal delay cannot exceed %d seconds", MaxWithdrawalDelay)
+	}
+
 	return nil
 }
 

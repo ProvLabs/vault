@@ -133,6 +133,16 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 			},
 			expectedErr: fmt.Errorf("share denom (%q) cannot equal payment denom (%q)", "usdc", "usdc"),
 		},
+		{
+			name: "swap out delay over two years (not allowed)",
+			msg: types.MsgCreateVaultRequest{
+				Admin:                  admin,
+				ShareDenom:             "vaultshare",
+				UnderlyingAsset:        "uusd",
+				WithdrawalDelaySeconds: types.MaxWithdrawalDelay + 1,
+			},
+			expectedErr: fmt.Errorf("withdrawal delay cannot exceed %d seconds", types.MaxWithdrawalDelay),
+		},
 	}
 
 	for _, tc := range tests {

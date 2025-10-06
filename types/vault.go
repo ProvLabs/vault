@@ -13,7 +13,8 @@ import (
 )
 
 const (
-	ZeroInterestRate = "0.0"
+	ZeroInterestRate   = "0.0"
+	MaxWithdrawalDelay = 31536000 * 2
 )
 
 var (

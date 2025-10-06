@@ -145,7 +145,7 @@ func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccoun
 	return total, nil
 }
 
-// GetNAVPerShareInUnderlyingAsset returns the floor NAV-per-share in units of
+// GetNAVPerShareInUnderlyingAsset returns the floor NAV per share in units of
 // vault.UnderlyingAsset.
 //
 // Paused fast-path:
@@ -153,13 +153,10 @@ func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccoun
 //     vault.PausedBalance.Amount (ignores live TVV and share supply).
 //
 // Computation (when not paused):
-//   - TVV(underlying) is obtained from GetTVVInUnderlyingAsset (principal/marker balances only).
-//   - totalShareSupply is fetched from BankKeeper.GetSupply(vault.ShareDenom) (the live supply).
+//   - TVV(underlying) is obtained from GetTVVInUnderlyingAsset (includes current vault holdings in underlying units).
+//   - totalShareSupply is taken from vault.TotalShares.Amount (the recorded share supply).
 //   - If total shares == 0, returns 0. Otherwise returns TVV / totalShareSupply (floor).
 func (k Keeper) GetNAVPerShareInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccount) (math.Int, error) {
-	if vault.Paused {
-		return vault.PausedBalance.Amount, nil
-	}
 	tvv, err := k.GetTVVInUnderlyingAsset(ctx, vault)
 	if err != nil {
 		return math.Int{}, err

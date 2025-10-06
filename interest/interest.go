@@ -100,17 +100,17 @@ func CalculateExpiration(principal sdk.Coin, vaultReserves sdk.Coin, rate string
 	if rateDec.IsZero() || rateDec.IsNegative() || principal.IsZero() { // no interest or negative interest means no depletion
 		return startTime, nil
 	}
-	periods, i, err := CalculatePeriods(vaultReserves, principal, rate, periodSeconds, limit)
+	periodsBeforeDepletion, i, err := CalculatePeriods(vaultReserves, principal, rate, periodSeconds, limit)
 	if err != nil {
 		return i, err
 	}
-	totalSeconds := sdkmath.NewInt(periodSeconds)
-	totalSeconds, err = totalSeconds.SafeMul(sdkmath.NewInt(periods))
+	secondsToDepletion := sdkmath.NewInt(periodSeconds)
+	secondsToDepletion, err = secondsToDepletion.SafeMul(sdkmath.NewInt(periodsBeforeDepletion))
 	if err != nil {
 		return 0, fmt.Errorf("failed to calculate total seconds: %w", err)
 	}
 	expirationTime := sdkmath.NewInt(startTime)
-	expirationTime, err = expirationTime.SafeAdd(totalSeconds)
+	expirationTime, err = expirationTime.SafeAdd(secondsToDepletion)
 	if err != nil {
 		return 0, fmt.Errorf("failed to calculate expiration time: %w", err)
 	}

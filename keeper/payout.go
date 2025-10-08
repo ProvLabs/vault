@@ -156,6 +156,7 @@ func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.P
 		return types.CriticalErr(errMsg, fmt.Errorf("%s: %w", errMsg, err))
 	}
 
+	// This should never fail, since ConvertSharesToRedeemCoin it would have failed before this point in order for this math to be incorrect.
 	vault.TotalShares, err = vault.TotalShares.SafeSub(req.Shares)
 	if err != nil {
 		errMsg := fmt.Sprintf(

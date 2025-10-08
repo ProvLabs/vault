@@ -2160,7 +2160,9 @@ type MsgClient interface {
 	WithdrawPrincipalFunds(ctx context.Context, in *MsgWithdrawPrincipalFundsRequest, opts ...grpc.CallOption) (*MsgWithdrawPrincipalFundsResponse, error)
 	// ExpeditePendingSwapOut expedites a pending swap out from a vault.
 	ExpeditePendingSwapOut(ctx context.Context, in *MsgExpeditePendingSwapOutRequest, opts ...grpc.CallOption) (*MsgExpeditePendingSwapOutResponse, error)
+	// PauseVault pauses user-facing swap operations for a vault and records a reason (admin only).
 	PauseVault(ctx context.Context, in *MsgPauseVaultRequest, opts ...grpc.CallOption) (*MsgPauseVaultResponse, error)
+	// UnpauseVault re-enables user-facing swap operations for a vault (admin only).
 	UnpauseVault(ctx context.Context, in *MsgUnpauseVaultRequest, opts ...grpc.CallOption) (*MsgUnpauseVaultResponse, error)
 	// SetBridgeAddress sets the single external bridge address allowed to mint or burn shares for a vault.
 	SetBridgeAddress(ctx context.Context, in *MsgSetBridgeAddressRequest, opts ...grpc.CallOption) (*MsgSetBridgeAddressResponse, error)
@@ -2379,7 +2381,9 @@ type MsgServer interface {
 	WithdrawPrincipalFunds(context.Context, *MsgWithdrawPrincipalFundsRequest) (*MsgWithdrawPrincipalFundsResponse, error)
 	// ExpeditePendingSwapOut expedites a pending swap out from a vault.
 	ExpeditePendingSwapOut(context.Context, *MsgExpeditePendingSwapOutRequest) (*MsgExpeditePendingSwapOutResponse, error)
+	// PauseVault pauses user-facing swap operations for a vault and records a reason (admin only).
 	PauseVault(context.Context, *MsgPauseVaultRequest) (*MsgPauseVaultResponse, error)
+	// UnpauseVault re-enables user-facing swap operations for a vault (admin only).
 	UnpauseVault(context.Context, *MsgUnpauseVaultRequest) (*MsgUnpauseVaultResponse, error)
 	// SetBridgeAddress sets the single external bridge address allowed to mint or burn shares for a vault.
 	SetBridgeAddress(context.Context, *MsgSetBridgeAddressRequest) (*MsgSetBridgeAddressResponse, error)

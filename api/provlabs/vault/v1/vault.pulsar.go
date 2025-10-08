@@ -40,8 +40,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_vault_proto_init()
-	md_VaultAccount = File_vault_v1_vault_proto.Messages().ByName("VaultAccount")
+	file_provlabs_vault_v1_vault_proto_init()
+	md_VaultAccount = File_provlabs_vault_v1_vault_proto.Messages().ByName("VaultAccount")
 	fd_VaultAccount_base_account = md_VaultAccount.Fields().ByName("base_account")
 	fd_VaultAccount_total_shares = md_VaultAccount.Fields().ByName("total_shares")
 	fd_VaultAccount_underlying_asset = md_VaultAccount.Fields().ByName("underlying_asset")
@@ -72,7 +72,7 @@ func (x *VaultAccount) ProtoReflect() protoreflect.Message {
 }
 
 func (x *VaultAccount) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_vault_proto_msgTypes[0]
+	mi := &file_provlabs_vault_v1_vault_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -257,49 +257,49 @@ func (x *fastReflection_VaultAccount) Range(f func(protoreflect.FieldDescriptor,
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_VaultAccount) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.VaultAccount.base_account":
+	case "provlabs.vault.v1.VaultAccount.base_account":
 		return x.BaseAccount != nil
-	case "vault.v1.VaultAccount.total_shares":
+	case "provlabs.vault.v1.VaultAccount.total_shares":
 		return x.TotalShares != nil
-	case "vault.v1.VaultAccount.underlying_asset":
+	case "provlabs.vault.v1.VaultAccount.underlying_asset":
 		return x.UnderlyingAsset != ""
-	case "vault.v1.VaultAccount.payment_denom":
+	case "provlabs.vault.v1.VaultAccount.payment_denom":
 		return x.PaymentDenom != ""
-	case "vault.v1.VaultAccount.admin":
+	case "provlabs.vault.v1.VaultAccount.admin":
 		return x.Admin != ""
-	case "vault.v1.VaultAccount.current_interest_rate":
+	case "provlabs.vault.v1.VaultAccount.current_interest_rate":
 		return x.CurrentInterestRate != ""
-	case "vault.v1.VaultAccount.desired_interest_rate":
+	case "provlabs.vault.v1.VaultAccount.desired_interest_rate":
 		return x.DesiredInterestRate != ""
-	case "vault.v1.VaultAccount.min_interest_rate":
+	case "provlabs.vault.v1.VaultAccount.min_interest_rate":
 		return x.MinInterestRate != ""
-	case "vault.v1.VaultAccount.max_interest_rate":
+	case "provlabs.vault.v1.VaultAccount.max_interest_rate":
 		return x.MaxInterestRate != ""
-	case "vault.v1.VaultAccount.period_start":
+	case "provlabs.vault.v1.VaultAccount.period_start":
 		return x.PeriodStart != int64(0)
-	case "vault.v1.VaultAccount.period_timeout":
+	case "provlabs.vault.v1.VaultAccount.period_timeout":
 		return x.PeriodTimeout != int64(0)
-	case "vault.v1.VaultAccount.swap_in_enabled":
+	case "provlabs.vault.v1.VaultAccount.swap_in_enabled":
 		return x.SwapInEnabled != false
-	case "vault.v1.VaultAccount.swap_out_enabled":
+	case "provlabs.vault.v1.VaultAccount.swap_out_enabled":
 		return x.SwapOutEnabled != false
-	case "vault.v1.VaultAccount.withdrawal_delay_seconds":
+	case "provlabs.vault.v1.VaultAccount.withdrawal_delay_seconds":
 		return x.WithdrawalDelaySeconds != uint64(0)
-	case "vault.v1.VaultAccount.paused":
+	case "provlabs.vault.v1.VaultAccount.paused":
 		return x.Paused != false
-	case "vault.v1.VaultAccount.paused_balance":
+	case "provlabs.vault.v1.VaultAccount.paused_balance":
 		return x.PausedBalance != nil
-	case "vault.v1.VaultAccount.paused_reason":
+	case "provlabs.vault.v1.VaultAccount.paused_reason":
 		return x.PausedReason != ""
-	case "vault.v1.VaultAccount.bridge_address":
+	case "provlabs.vault.v1.VaultAccount.bridge_address":
 		return x.BridgeAddress != ""
-	case "vault.v1.VaultAccount.bridge_enabled":
+	case "provlabs.vault.v1.VaultAccount.bridge_enabled":
 		return x.BridgeEnabled != false
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.VaultAccount"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.VaultAccount"))
 		}
-		panic(fmt.Errorf("message vault.v1.VaultAccount does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.VaultAccount does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -311,49 +311,49 @@ func (x *fastReflection_VaultAccount) Has(fd protoreflect.FieldDescriptor) bool 
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_VaultAccount) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.VaultAccount.base_account":
+	case "provlabs.vault.v1.VaultAccount.base_account":
 		x.BaseAccount = nil
-	case "vault.v1.VaultAccount.total_shares":
+	case "provlabs.vault.v1.VaultAccount.total_shares":
 		x.TotalShares = nil
-	case "vault.v1.VaultAccount.underlying_asset":
+	case "provlabs.vault.v1.VaultAccount.underlying_asset":
 		x.UnderlyingAsset = ""
-	case "vault.v1.VaultAccount.payment_denom":
+	case "provlabs.vault.v1.VaultAccount.payment_denom":
 		x.PaymentDenom = ""
-	case "vault.v1.VaultAccount.admin":
+	case "provlabs.vault.v1.VaultAccount.admin":
 		x.Admin = ""
-	case "vault.v1.VaultAccount.current_interest_rate":
+	case "provlabs.vault.v1.VaultAccount.current_interest_rate":
 		x.CurrentInterestRate = ""
-	case "vault.v1.VaultAccount.desired_interest_rate":
+	case "provlabs.vault.v1.VaultAccount.desired_interest_rate":
 		x.DesiredInterestRate = ""
-	case "vault.v1.VaultAccount.min_interest_rate":
+	case "provlabs.vault.v1.VaultAccount.min_interest_rate":
 		x.MinInterestRate = ""
-	case "vault.v1.VaultAccount.max_interest_rate":
+	case "provlabs.vault.v1.VaultAccount.max_interest_rate":
 		x.MaxInterestRate = ""
-	case "vault.v1.VaultAccount.period_start":
+	case "provlabs.vault.v1.VaultAccount.period_start":
 		x.PeriodStart = int64(0)
-	case "vault.v1.VaultAccount.period_timeout":
+	case "provlabs.vault.v1.VaultAccount.period_timeout":
 		x.PeriodTimeout = int64(0)
-	case "vault.v1.VaultAccount.swap_in_enabled":
+	case "provlabs.vault.v1.VaultAccount.swap_in_enabled":
 		x.SwapInEnabled = false
-	case "vault.v1.VaultAccount.swap_out_enabled":
+	case "provlabs.vault.v1.VaultAccount.swap_out_enabled":
 		x.SwapOutEnabled = false
-	case "vault.v1.VaultAccount.withdrawal_delay_seconds":
+	case "provlabs.vault.v1.VaultAccount.withdrawal_delay_seconds":
 		x.WithdrawalDelaySeconds = uint64(0)
-	case "vault.v1.VaultAccount.paused":
+	case "provlabs.vault.v1.VaultAccount.paused":
 		x.Paused = false
-	case "vault.v1.VaultAccount.paused_balance":
+	case "provlabs.vault.v1.VaultAccount.paused_balance":
 		x.PausedBalance = nil
-	case "vault.v1.VaultAccount.paused_reason":
+	case "provlabs.vault.v1.VaultAccount.paused_reason":
 		x.PausedReason = ""
-	case "vault.v1.VaultAccount.bridge_address":
+	case "provlabs.vault.v1.VaultAccount.bridge_address":
 		x.BridgeAddress = ""
-	case "vault.v1.VaultAccount.bridge_enabled":
+	case "provlabs.vault.v1.VaultAccount.bridge_enabled":
 		x.BridgeEnabled = false
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.VaultAccount"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.VaultAccount"))
 		}
-		panic(fmt.Errorf("message vault.v1.VaultAccount does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.VaultAccount does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -365,68 +365,68 @@ func (x *fastReflection_VaultAccount) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_VaultAccount) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.VaultAccount.base_account":
+	case "provlabs.vault.v1.VaultAccount.base_account":
 		value := x.BaseAccount
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "vault.v1.VaultAccount.total_shares":
+	case "provlabs.vault.v1.VaultAccount.total_shares":
 		value := x.TotalShares
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "vault.v1.VaultAccount.underlying_asset":
+	case "provlabs.vault.v1.VaultAccount.underlying_asset":
 		value := x.UnderlyingAsset
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.VaultAccount.payment_denom":
+	case "provlabs.vault.v1.VaultAccount.payment_denom":
 		value := x.PaymentDenom
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.VaultAccount.admin":
+	case "provlabs.vault.v1.VaultAccount.admin":
 		value := x.Admin
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.VaultAccount.current_interest_rate":
+	case "provlabs.vault.v1.VaultAccount.current_interest_rate":
 		value := x.CurrentInterestRate
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.VaultAccount.desired_interest_rate":
+	case "provlabs.vault.v1.VaultAccount.desired_interest_rate":
 		value := x.DesiredInterestRate
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.VaultAccount.min_interest_rate":
+	case "provlabs.vault.v1.VaultAccount.min_interest_rate":
 		value := x.MinInterestRate
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.VaultAccount.max_interest_rate":
+	case "provlabs.vault.v1.VaultAccount.max_interest_rate":
 		value := x.MaxInterestRate
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.VaultAccount.period_start":
+	case "provlabs.vault.v1.VaultAccount.period_start":
 		value := x.PeriodStart
 		return protoreflect.ValueOfInt64(value)
-	case "vault.v1.VaultAccount.period_timeout":
+	case "provlabs.vault.v1.VaultAccount.period_timeout":
 		value := x.PeriodTimeout
 		return protoreflect.ValueOfInt64(value)
-	case "vault.v1.VaultAccount.swap_in_enabled":
+	case "provlabs.vault.v1.VaultAccount.swap_in_enabled":
 		value := x.SwapInEnabled
 		return protoreflect.ValueOfBool(value)
-	case "vault.v1.VaultAccount.swap_out_enabled":
+	case "provlabs.vault.v1.VaultAccount.swap_out_enabled":
 		value := x.SwapOutEnabled
 		return protoreflect.ValueOfBool(value)
-	case "vault.v1.VaultAccount.withdrawal_delay_seconds":
+	case "provlabs.vault.v1.VaultAccount.withdrawal_delay_seconds":
 		value := x.WithdrawalDelaySeconds
 		return protoreflect.ValueOfUint64(value)
-	case "vault.v1.VaultAccount.paused":
+	case "provlabs.vault.v1.VaultAccount.paused":
 		value := x.Paused
 		return protoreflect.ValueOfBool(value)
-	case "vault.v1.VaultAccount.paused_balance":
+	case "provlabs.vault.v1.VaultAccount.paused_balance":
 		value := x.PausedBalance
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "vault.v1.VaultAccount.paused_reason":
+	case "provlabs.vault.v1.VaultAccount.paused_reason":
 		value := x.PausedReason
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.VaultAccount.bridge_address":
+	case "provlabs.vault.v1.VaultAccount.bridge_address":
 		value := x.BridgeAddress
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.VaultAccount.bridge_enabled":
+	case "provlabs.vault.v1.VaultAccount.bridge_enabled":
 		value := x.BridgeEnabled
 		return protoreflect.ValueOfBool(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.VaultAccount"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.VaultAccount"))
 		}
-		panic(fmt.Errorf("message vault.v1.VaultAccount does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.VaultAccount does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -442,49 +442,49 @@ func (x *fastReflection_VaultAccount) Get(descriptor protoreflect.FieldDescripto
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_VaultAccount) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.VaultAccount.base_account":
+	case "provlabs.vault.v1.VaultAccount.base_account":
 		x.BaseAccount = value.Message().Interface().(*v1beta1.BaseAccount)
-	case "vault.v1.VaultAccount.total_shares":
+	case "provlabs.vault.v1.VaultAccount.total_shares":
 		x.TotalShares = value.Message().Interface().(*v1beta11.Coin)
-	case "vault.v1.VaultAccount.underlying_asset":
+	case "provlabs.vault.v1.VaultAccount.underlying_asset":
 		x.UnderlyingAsset = value.Interface().(string)
-	case "vault.v1.VaultAccount.payment_denom":
+	case "provlabs.vault.v1.VaultAccount.payment_denom":
 		x.PaymentDenom = value.Interface().(string)
-	case "vault.v1.VaultAccount.admin":
+	case "provlabs.vault.v1.VaultAccount.admin":
 		x.Admin = value.Interface().(string)
-	case "vault.v1.VaultAccount.current_interest_rate":
+	case "provlabs.vault.v1.VaultAccount.current_interest_rate":
 		x.CurrentInterestRate = value.Interface().(string)
-	case "vault.v1.VaultAccount.desired_interest_rate":
+	case "provlabs.vault.v1.VaultAccount.desired_interest_rate":
 		x.DesiredInterestRate = value.Interface().(string)
-	case "vault.v1.VaultAccount.min_interest_rate":
+	case "provlabs.vault.v1.VaultAccount.min_interest_rate":
 		x.MinInterestRate = value.Interface().(string)
-	case "vault.v1.VaultAccount.max_interest_rate":
+	case "provlabs.vault.v1.VaultAccount.max_interest_rate":
 		x.MaxInterestRate = value.Interface().(string)
-	case "vault.v1.VaultAccount.period_start":
+	case "provlabs.vault.v1.VaultAccount.period_start":
 		x.PeriodStart = value.Int()
-	case "vault.v1.VaultAccount.period_timeout":
+	case "provlabs.vault.v1.VaultAccount.period_timeout":
 		x.PeriodTimeout = value.Int()
-	case "vault.v1.VaultAccount.swap_in_enabled":
+	case "provlabs.vault.v1.VaultAccount.swap_in_enabled":
 		x.SwapInEnabled = value.Bool()
-	case "vault.v1.VaultAccount.swap_out_enabled":
+	case "provlabs.vault.v1.VaultAccount.swap_out_enabled":
 		x.SwapOutEnabled = value.Bool()
-	case "vault.v1.VaultAccount.withdrawal_delay_seconds":
+	case "provlabs.vault.v1.VaultAccount.withdrawal_delay_seconds":
 		x.WithdrawalDelaySeconds = value.Uint()
-	case "vault.v1.VaultAccount.paused":
+	case "provlabs.vault.v1.VaultAccount.paused":
 		x.Paused = value.Bool()
-	case "vault.v1.VaultAccount.paused_balance":
+	case "provlabs.vault.v1.VaultAccount.paused_balance":
 		x.PausedBalance = value.Message().Interface().(*v1beta11.Coin)
-	case "vault.v1.VaultAccount.paused_reason":
+	case "provlabs.vault.v1.VaultAccount.paused_reason":
 		x.PausedReason = value.Interface().(string)
-	case "vault.v1.VaultAccount.bridge_address":
+	case "provlabs.vault.v1.VaultAccount.bridge_address":
 		x.BridgeAddress = value.Interface().(string)
-	case "vault.v1.VaultAccount.bridge_enabled":
+	case "provlabs.vault.v1.VaultAccount.bridge_enabled":
 		x.BridgeEnabled = value.Bool()
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.VaultAccount"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.VaultAccount"))
 		}
-		panic(fmt.Errorf("message vault.v1.VaultAccount does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.VaultAccount does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -500,58 +500,58 @@ func (x *fastReflection_VaultAccount) Set(fd protoreflect.FieldDescriptor, value
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_VaultAccount) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.VaultAccount.base_account":
+	case "provlabs.vault.v1.VaultAccount.base_account":
 		if x.BaseAccount == nil {
 			x.BaseAccount = new(v1beta1.BaseAccount)
 		}
 		return protoreflect.ValueOfMessage(x.BaseAccount.ProtoReflect())
-	case "vault.v1.VaultAccount.total_shares":
+	case "provlabs.vault.v1.VaultAccount.total_shares":
 		if x.TotalShares == nil {
 			x.TotalShares = new(v1beta11.Coin)
 		}
 		return protoreflect.ValueOfMessage(x.TotalShares.ProtoReflect())
-	case "vault.v1.VaultAccount.paused_balance":
+	case "provlabs.vault.v1.VaultAccount.paused_balance":
 		if x.PausedBalance == nil {
 			x.PausedBalance = new(v1beta11.Coin)
 		}
 		return protoreflect.ValueOfMessage(x.PausedBalance.ProtoReflect())
-	case "vault.v1.VaultAccount.underlying_asset":
-		panic(fmt.Errorf("field underlying_asset of message vault.v1.VaultAccount is not mutable"))
-	case "vault.v1.VaultAccount.payment_denom":
-		panic(fmt.Errorf("field payment_denom of message vault.v1.VaultAccount is not mutable"))
-	case "vault.v1.VaultAccount.admin":
-		panic(fmt.Errorf("field admin of message vault.v1.VaultAccount is not mutable"))
-	case "vault.v1.VaultAccount.current_interest_rate":
-		panic(fmt.Errorf("field current_interest_rate of message vault.v1.VaultAccount is not mutable"))
-	case "vault.v1.VaultAccount.desired_interest_rate":
-		panic(fmt.Errorf("field desired_interest_rate of message vault.v1.VaultAccount is not mutable"))
-	case "vault.v1.VaultAccount.min_interest_rate":
-		panic(fmt.Errorf("field min_interest_rate of message vault.v1.VaultAccount is not mutable"))
-	case "vault.v1.VaultAccount.max_interest_rate":
-		panic(fmt.Errorf("field max_interest_rate of message vault.v1.VaultAccount is not mutable"))
-	case "vault.v1.VaultAccount.period_start":
-		panic(fmt.Errorf("field period_start of message vault.v1.VaultAccount is not mutable"))
-	case "vault.v1.VaultAccount.period_timeout":
-		panic(fmt.Errorf("field period_timeout of message vault.v1.VaultAccount is not mutable"))
-	case "vault.v1.VaultAccount.swap_in_enabled":
-		panic(fmt.Errorf("field swap_in_enabled of message vault.v1.VaultAccount is not mutable"))
-	case "vault.v1.VaultAccount.swap_out_enabled":
-		panic(fmt.Errorf("field swap_out_enabled of message vault.v1.VaultAccount is not mutable"))
-	case "vault.v1.VaultAccount.withdrawal_delay_seconds":
-		panic(fmt.Errorf("field withdrawal_delay_seconds of message vault.v1.VaultAccount is not mutable"))
-	case "vault.v1.VaultAccount.paused":
-		panic(fmt.Errorf("field paused of message vault.v1.VaultAccount is not mutable"))
-	case "vault.v1.VaultAccount.paused_reason":
-		panic(fmt.Errorf("field paused_reason of message vault.v1.VaultAccount is not mutable"))
-	case "vault.v1.VaultAccount.bridge_address":
-		panic(fmt.Errorf("field bridge_address of message vault.v1.VaultAccount is not mutable"))
-	case "vault.v1.VaultAccount.bridge_enabled":
-		panic(fmt.Errorf("field bridge_enabled of message vault.v1.VaultAccount is not mutable"))
+	case "provlabs.vault.v1.VaultAccount.underlying_asset":
+		panic(fmt.Errorf("field underlying_asset of message provlabs.vault.v1.VaultAccount is not mutable"))
+	case "provlabs.vault.v1.VaultAccount.payment_denom":
+		panic(fmt.Errorf("field payment_denom of message provlabs.vault.v1.VaultAccount is not mutable"))
+	case "provlabs.vault.v1.VaultAccount.admin":
+		panic(fmt.Errorf("field admin of message provlabs.vault.v1.VaultAccount is not mutable"))
+	case "provlabs.vault.v1.VaultAccount.current_interest_rate":
+		panic(fmt.Errorf("field current_interest_rate of message provlabs.vault.v1.VaultAccount is not mutable"))
+	case "provlabs.vault.v1.VaultAccount.desired_interest_rate":
+		panic(fmt.Errorf("field desired_interest_rate of message provlabs.vault.v1.VaultAccount is not mutable"))
+	case "provlabs.vault.v1.VaultAccount.min_interest_rate":
+		panic(fmt.Errorf("field min_interest_rate of message provlabs.vault.v1.VaultAccount is not mutable"))
+	case "provlabs.vault.v1.VaultAccount.max_interest_rate":
+		panic(fmt.Errorf("field max_interest_rate of message provlabs.vault.v1.VaultAccount is not mutable"))
+	case "provlabs.vault.v1.VaultAccount.period_start":
+		panic(fmt.Errorf("field period_start of message provlabs.vault.v1.VaultAccount is not mutable"))
+	case "provlabs.vault.v1.VaultAccount.period_timeout":
+		panic(fmt.Errorf("field period_timeout of message provlabs.vault.v1.VaultAccount is not mutable"))
+	case "provlabs.vault.v1.VaultAccount.swap_in_enabled":
+		panic(fmt.Errorf("field swap_in_enabled of message provlabs.vault.v1.VaultAccount is not mutable"))
+	case "provlabs.vault.v1.VaultAccount.swap_out_enabled":
+		panic(fmt.Errorf("field swap_out_enabled of message provlabs.vault.v1.VaultAccount is not mutable"))
+	case "provlabs.vault.v1.VaultAccount.withdrawal_delay_seconds":
+		panic(fmt.Errorf("field withdrawal_delay_seconds of message provlabs.vault.v1.VaultAccount is not mutable"))
+	case "provlabs.vault.v1.VaultAccount.paused":
+		panic(fmt.Errorf("field paused of message provlabs.vault.v1.VaultAccount is not mutable"))
+	case "provlabs.vault.v1.VaultAccount.paused_reason":
+		panic(fmt.Errorf("field paused_reason of message provlabs.vault.v1.VaultAccount is not mutable"))
+	case "provlabs.vault.v1.VaultAccount.bridge_address":
+		panic(fmt.Errorf("field bridge_address of message provlabs.vault.v1.VaultAccount is not mutable"))
+	case "provlabs.vault.v1.VaultAccount.bridge_enabled":
+		panic(fmt.Errorf("field bridge_enabled of message provlabs.vault.v1.VaultAccount is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.VaultAccount"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.VaultAccount"))
 		}
-		panic(fmt.Errorf("message vault.v1.VaultAccount does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.VaultAccount does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -560,52 +560,52 @@ func (x *fastReflection_VaultAccount) Mutable(fd protoreflect.FieldDescriptor) p
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_VaultAccount) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.VaultAccount.base_account":
+	case "provlabs.vault.v1.VaultAccount.base_account":
 		m := new(v1beta1.BaseAccount)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "vault.v1.VaultAccount.total_shares":
+	case "provlabs.vault.v1.VaultAccount.total_shares":
 		m := new(v1beta11.Coin)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "vault.v1.VaultAccount.underlying_asset":
+	case "provlabs.vault.v1.VaultAccount.underlying_asset":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.VaultAccount.payment_denom":
+	case "provlabs.vault.v1.VaultAccount.payment_denom":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.VaultAccount.admin":
+	case "provlabs.vault.v1.VaultAccount.admin":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.VaultAccount.current_interest_rate":
+	case "provlabs.vault.v1.VaultAccount.current_interest_rate":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.VaultAccount.desired_interest_rate":
+	case "provlabs.vault.v1.VaultAccount.desired_interest_rate":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.VaultAccount.min_interest_rate":
+	case "provlabs.vault.v1.VaultAccount.min_interest_rate":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.VaultAccount.max_interest_rate":
+	case "provlabs.vault.v1.VaultAccount.max_interest_rate":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.VaultAccount.period_start":
+	case "provlabs.vault.v1.VaultAccount.period_start":
 		return protoreflect.ValueOfInt64(int64(0))
-	case "vault.v1.VaultAccount.period_timeout":
+	case "provlabs.vault.v1.VaultAccount.period_timeout":
 		return protoreflect.ValueOfInt64(int64(0))
-	case "vault.v1.VaultAccount.swap_in_enabled":
+	case "provlabs.vault.v1.VaultAccount.swap_in_enabled":
 		return protoreflect.ValueOfBool(false)
-	case "vault.v1.VaultAccount.swap_out_enabled":
+	case "provlabs.vault.v1.VaultAccount.swap_out_enabled":
 		return protoreflect.ValueOfBool(false)
-	case "vault.v1.VaultAccount.withdrawal_delay_seconds":
+	case "provlabs.vault.v1.VaultAccount.withdrawal_delay_seconds":
 		return protoreflect.ValueOfUint64(uint64(0))
-	case "vault.v1.VaultAccount.paused":
+	case "provlabs.vault.v1.VaultAccount.paused":
 		return protoreflect.ValueOfBool(false)
-	case "vault.v1.VaultAccount.paused_balance":
+	case "provlabs.vault.v1.VaultAccount.paused_balance":
 		m := new(v1beta11.Coin)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "vault.v1.VaultAccount.paused_reason":
+	case "provlabs.vault.v1.VaultAccount.paused_reason":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.VaultAccount.bridge_address":
+	case "provlabs.vault.v1.VaultAccount.bridge_address":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.VaultAccount.bridge_enabled":
+	case "provlabs.vault.v1.VaultAccount.bridge_enabled":
 		return protoreflect.ValueOfBool(false)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.VaultAccount"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.VaultAccount"))
 		}
-		panic(fmt.Errorf("message vault.v1.VaultAccount does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.VaultAccount does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -615,7 +615,7 @@ func (x *fastReflection_VaultAccount) NewField(fd protoreflect.FieldDescriptor) 
 func (x *fastReflection_VaultAccount) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.VaultAccount", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.VaultAccount", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -1611,8 +1611,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_vault_proto_init()
-	md_AccountBalance = File_vault_v1_vault_proto.Messages().ByName("AccountBalance")
+	file_provlabs_vault_v1_vault_proto_init()
+	md_AccountBalance = File_provlabs_vault_v1_vault_proto.Messages().ByName("AccountBalance")
 	fd_AccountBalance_address = md_AccountBalance.Fields().ByName("address")
 	fd_AccountBalance_coins = md_AccountBalance.Fields().ByName("coins")
 }
@@ -1626,7 +1626,7 @@ func (x *AccountBalance) ProtoReflect() protoreflect.Message {
 }
 
 func (x *AccountBalance) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_vault_proto_msgTypes[1]
+	mi := &file_provlabs_vault_v1_vault_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1709,15 +1709,15 @@ func (x *fastReflection_AccountBalance) Range(f func(protoreflect.FieldDescripto
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_AccountBalance) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.AccountBalance.address":
+	case "provlabs.vault.v1.AccountBalance.address":
 		return x.Address != ""
-	case "vault.v1.AccountBalance.coins":
+	case "provlabs.vault.v1.AccountBalance.coins":
 		return len(x.Coins) != 0
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.AccountBalance"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.AccountBalance"))
 		}
-		panic(fmt.Errorf("message vault.v1.AccountBalance does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.AccountBalance does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1729,15 +1729,15 @@ func (x *fastReflection_AccountBalance) Has(fd protoreflect.FieldDescriptor) boo
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_AccountBalance) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.AccountBalance.address":
+	case "provlabs.vault.v1.AccountBalance.address":
 		x.Address = ""
-	case "vault.v1.AccountBalance.coins":
+	case "provlabs.vault.v1.AccountBalance.coins":
 		x.Coins = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.AccountBalance"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.AccountBalance"))
 		}
-		panic(fmt.Errorf("message vault.v1.AccountBalance does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.AccountBalance does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1749,10 +1749,10 @@ func (x *fastReflection_AccountBalance) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_AccountBalance) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.AccountBalance.address":
+	case "provlabs.vault.v1.AccountBalance.address":
 		value := x.Address
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.AccountBalance.coins":
+	case "provlabs.vault.v1.AccountBalance.coins":
 		if len(x.Coins) == 0 {
 			return protoreflect.ValueOfList(&_AccountBalance_2_list{})
 		}
@@ -1760,9 +1760,9 @@ func (x *fastReflection_AccountBalance) Get(descriptor protoreflect.FieldDescrip
 		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.AccountBalance"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.AccountBalance"))
 		}
-		panic(fmt.Errorf("message vault.v1.AccountBalance does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.AccountBalance does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -1778,17 +1778,17 @@ func (x *fastReflection_AccountBalance) Get(descriptor protoreflect.FieldDescrip
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_AccountBalance) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.AccountBalance.address":
+	case "provlabs.vault.v1.AccountBalance.address":
 		x.Address = value.Interface().(string)
-	case "vault.v1.AccountBalance.coins":
+	case "provlabs.vault.v1.AccountBalance.coins":
 		lv := value.List()
 		clv := lv.(*_AccountBalance_2_list)
 		x.Coins = *clv.list
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.AccountBalance"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.AccountBalance"))
 		}
-		panic(fmt.Errorf("message vault.v1.AccountBalance does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.AccountBalance does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1804,19 +1804,19 @@ func (x *fastReflection_AccountBalance) Set(fd protoreflect.FieldDescriptor, val
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_AccountBalance) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.AccountBalance.coins":
+	case "provlabs.vault.v1.AccountBalance.coins":
 		if x.Coins == nil {
 			x.Coins = []*v1beta11.Coin{}
 		}
 		value := &_AccountBalance_2_list{list: &x.Coins}
 		return protoreflect.ValueOfList(value)
-	case "vault.v1.AccountBalance.address":
-		panic(fmt.Errorf("field address of message vault.v1.AccountBalance is not mutable"))
+	case "provlabs.vault.v1.AccountBalance.address":
+		panic(fmt.Errorf("field address of message provlabs.vault.v1.AccountBalance is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.AccountBalance"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.AccountBalance"))
 		}
-		panic(fmt.Errorf("message vault.v1.AccountBalance does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.AccountBalance does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1825,16 +1825,16 @@ func (x *fastReflection_AccountBalance) Mutable(fd protoreflect.FieldDescriptor)
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_AccountBalance) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.AccountBalance.address":
+	case "provlabs.vault.v1.AccountBalance.address":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.AccountBalance.coins":
+	case "provlabs.vault.v1.AccountBalance.coins":
 		list := []*v1beta11.Coin{}
 		return protoreflect.ValueOfList(&_AccountBalance_2_list{list: &list})
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.AccountBalance"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.AccountBalance"))
 		}
-		panic(fmt.Errorf("message vault.v1.AccountBalance does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.AccountBalance does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1844,7 +1844,7 @@ func (x *fastReflection_AccountBalance) NewField(fd protoreflect.FieldDescriptor
 func (x *fastReflection_AccountBalance) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.AccountBalance", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.AccountBalance", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -2120,8 +2120,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_vault_proto_init()
-	md_PendingSwapOut = File_vault_v1_vault_proto.Messages().ByName("PendingSwapOut")
+	file_provlabs_vault_v1_vault_proto_init()
+	md_PendingSwapOut = File_provlabs_vault_v1_vault_proto.Messages().ByName("PendingSwapOut")
 	fd_PendingSwapOut_owner = md_PendingSwapOut.Fields().ByName("owner")
 	fd_PendingSwapOut_vault_address = md_PendingSwapOut.Fields().ByName("vault_address")
 	fd_PendingSwapOut_shares = md_PendingSwapOut.Fields().ByName("shares")
@@ -2137,7 +2137,7 @@ func (x *PendingSwapOut) ProtoReflect() protoreflect.Message {
 }
 
 func (x *PendingSwapOut) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_vault_proto_msgTypes[2]
+	mi := &file_provlabs_vault_v1_vault_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2232,19 +2232,19 @@ func (x *fastReflection_PendingSwapOut) Range(f func(protoreflect.FieldDescripto
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_PendingSwapOut) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.PendingSwapOut.owner":
+	case "provlabs.vault.v1.PendingSwapOut.owner":
 		return x.Owner != ""
-	case "vault.v1.PendingSwapOut.vault_address":
+	case "provlabs.vault.v1.PendingSwapOut.vault_address":
 		return x.VaultAddress != ""
-	case "vault.v1.PendingSwapOut.shares":
+	case "provlabs.vault.v1.PendingSwapOut.shares":
 		return x.Shares != nil
-	case "vault.v1.PendingSwapOut.redeem_denom":
+	case "provlabs.vault.v1.PendingSwapOut.redeem_denom":
 		return x.RedeemDenom != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOut"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.PendingSwapOut"))
 		}
-		panic(fmt.Errorf("message vault.v1.PendingSwapOut does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.PendingSwapOut does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2256,19 +2256,19 @@ func (x *fastReflection_PendingSwapOut) Has(fd protoreflect.FieldDescriptor) boo
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_PendingSwapOut) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.PendingSwapOut.owner":
+	case "provlabs.vault.v1.PendingSwapOut.owner":
 		x.Owner = ""
-	case "vault.v1.PendingSwapOut.vault_address":
+	case "provlabs.vault.v1.PendingSwapOut.vault_address":
 		x.VaultAddress = ""
-	case "vault.v1.PendingSwapOut.shares":
+	case "provlabs.vault.v1.PendingSwapOut.shares":
 		x.Shares = nil
-	case "vault.v1.PendingSwapOut.redeem_denom":
+	case "provlabs.vault.v1.PendingSwapOut.redeem_denom":
 		x.RedeemDenom = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOut"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.PendingSwapOut"))
 		}
-		panic(fmt.Errorf("message vault.v1.PendingSwapOut does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.PendingSwapOut does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2280,23 +2280,23 @@ func (x *fastReflection_PendingSwapOut) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_PendingSwapOut) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.PendingSwapOut.owner":
+	case "provlabs.vault.v1.PendingSwapOut.owner":
 		value := x.Owner
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.PendingSwapOut.vault_address":
+	case "provlabs.vault.v1.PendingSwapOut.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.PendingSwapOut.shares":
+	case "provlabs.vault.v1.PendingSwapOut.shares":
 		value := x.Shares
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "vault.v1.PendingSwapOut.redeem_denom":
+	case "provlabs.vault.v1.PendingSwapOut.redeem_denom":
 		value := x.RedeemDenom
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOut"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.PendingSwapOut"))
 		}
-		panic(fmt.Errorf("message vault.v1.PendingSwapOut does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.PendingSwapOut does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -2312,19 +2312,19 @@ func (x *fastReflection_PendingSwapOut) Get(descriptor protoreflect.FieldDescrip
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_PendingSwapOut) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.PendingSwapOut.owner":
+	case "provlabs.vault.v1.PendingSwapOut.owner":
 		x.Owner = value.Interface().(string)
-	case "vault.v1.PendingSwapOut.vault_address":
+	case "provlabs.vault.v1.PendingSwapOut.vault_address":
 		x.VaultAddress = value.Interface().(string)
-	case "vault.v1.PendingSwapOut.shares":
+	case "provlabs.vault.v1.PendingSwapOut.shares":
 		x.Shares = value.Message().Interface().(*v1beta11.Coin)
-	case "vault.v1.PendingSwapOut.redeem_denom":
+	case "provlabs.vault.v1.PendingSwapOut.redeem_denom":
 		x.RedeemDenom = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOut"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.PendingSwapOut"))
 		}
-		panic(fmt.Errorf("message vault.v1.PendingSwapOut does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.PendingSwapOut does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2340,22 +2340,22 @@ func (x *fastReflection_PendingSwapOut) Set(fd protoreflect.FieldDescriptor, val
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_PendingSwapOut) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.PendingSwapOut.shares":
+	case "provlabs.vault.v1.PendingSwapOut.shares":
 		if x.Shares == nil {
 			x.Shares = new(v1beta11.Coin)
 		}
 		return protoreflect.ValueOfMessage(x.Shares.ProtoReflect())
-	case "vault.v1.PendingSwapOut.owner":
-		panic(fmt.Errorf("field owner of message vault.v1.PendingSwapOut is not mutable"))
-	case "vault.v1.PendingSwapOut.vault_address":
-		panic(fmt.Errorf("field vault_address of message vault.v1.PendingSwapOut is not mutable"))
-	case "vault.v1.PendingSwapOut.redeem_denom":
-		panic(fmt.Errorf("field redeem_denom of message vault.v1.PendingSwapOut is not mutable"))
+	case "provlabs.vault.v1.PendingSwapOut.owner":
+		panic(fmt.Errorf("field owner of message provlabs.vault.v1.PendingSwapOut is not mutable"))
+	case "provlabs.vault.v1.PendingSwapOut.vault_address":
+		panic(fmt.Errorf("field vault_address of message provlabs.vault.v1.PendingSwapOut is not mutable"))
+	case "provlabs.vault.v1.PendingSwapOut.redeem_denom":
+		panic(fmt.Errorf("field redeem_denom of message provlabs.vault.v1.PendingSwapOut is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOut"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.PendingSwapOut"))
 		}
-		panic(fmt.Errorf("message vault.v1.PendingSwapOut does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.PendingSwapOut does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2364,20 +2364,20 @@ func (x *fastReflection_PendingSwapOut) Mutable(fd protoreflect.FieldDescriptor)
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_PendingSwapOut) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.PendingSwapOut.owner":
+	case "provlabs.vault.v1.PendingSwapOut.owner":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.PendingSwapOut.vault_address":
+	case "provlabs.vault.v1.PendingSwapOut.vault_address":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.PendingSwapOut.shares":
+	case "provlabs.vault.v1.PendingSwapOut.shares":
 		m := new(v1beta11.Coin)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "vault.v1.PendingSwapOut.redeem_denom":
+	case "provlabs.vault.v1.PendingSwapOut.redeem_denom":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOut"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.PendingSwapOut"))
 		}
-		panic(fmt.Errorf("message vault.v1.PendingSwapOut does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.PendingSwapOut does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2387,7 +2387,7 @@ func (x *fastReflection_PendingSwapOut) NewField(fd protoreflect.FieldDescriptor
 func (x *fastReflection_PendingSwapOut) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.PendingSwapOut", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.PendingSwapOut", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -2742,7 +2742,7 @@ func (x *fastReflection_PendingSwapOut) ProtoMethods() *protoiface.Methods {
 // versions:
 // 	protoc-gen-go v1.27.0
 // 	protoc        (unknown)
-// source: vault/v1/vault.proto
+// source: provlabs/vault/v1/vault.proto
 
 const (
 	// Verify that this generated code is sufficiently up-to-date.
@@ -2822,7 +2822,7 @@ type VaultAccount struct {
 func (x *VaultAccount) Reset() {
 	*x = VaultAccount{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_vault_proto_msgTypes[0]
+		mi := &file_provlabs_vault_v1_vault_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2836,7 +2836,7 @@ func (*VaultAccount) ProtoMessage() {}
 
 // Deprecated: Use VaultAccount.ProtoReflect.Descriptor instead.
 func (*VaultAccount) Descriptor() ([]byte, []int) {
-	return file_vault_v1_vault_proto_rawDescGZIP(), []int{0}
+	return file_provlabs_vault_v1_vault_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *VaultAccount) GetBaseAccount() *v1beta1.BaseAccount {
@@ -2987,7 +2987,7 @@ type AccountBalance struct {
 func (x *AccountBalance) Reset() {
 	*x = AccountBalance{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_vault_proto_msgTypes[1]
+		mi := &file_provlabs_vault_v1_vault_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3001,7 +3001,7 @@ func (*AccountBalance) ProtoMessage() {}
 
 // Deprecated: Use AccountBalance.ProtoReflect.Descriptor instead.
 func (*AccountBalance) Descriptor() ([]byte, []int) {
-	return file_vault_v1_vault_proto_rawDescGZIP(), []int{1}
+	return file_provlabs_vault_v1_vault_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *AccountBalance) GetAddress() string {
@@ -3037,7 +3037,7 @@ type PendingSwapOut struct {
 func (x *PendingSwapOut) Reset() {
 	*x = PendingSwapOut{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_vault_proto_msgTypes[2]
+		mi := &file_provlabs_vault_v1_vault_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3051,7 +3051,7 @@ func (*PendingSwapOut) ProtoMessage() {}
 
 // Deprecated: Use PendingSwapOut.ProtoReflect.Descriptor instead.
 func (*PendingSwapOut) Descriptor() ([]byte, []int) {
-	return file_vault_v1_vault_proto_rawDescGZIP(), []int{2}
+	return file_provlabs_vault_v1_vault_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *PendingSwapOut) GetOwner() string {
@@ -3082,143 +3082,148 @@ func (x *PendingSwapOut) GetRedeemDenom() string {
 	return ""
 }
 
-var File_vault_v1_vault_proto protoreflect.FileDescriptor
+var File_provlabs_vault_v1_vault_proto protoreflect.FileDescriptor
 
-var file_vault_v1_vault_proto_rawDesc = []byte{
-	0x0a, 0x14, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74,
-	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x08, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31,
-	0x1a, 0x1e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x75, 0x74, 0x68, 0x2f, 0x76, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x1a, 0x1e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x73, 0x65, 0x2f, 0x76, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x63, 0x6f, 0x69, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x1a, 0x19, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x14, 0x67, 0x6f, 0x67,
-	0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x22, 0xf8, 0x07, 0x0a, 0x0c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x63, 0x63, 0x6f, 0x75,
-	0x6e, 0x74, 0x12, 0x49, 0x0a, 0x0c, 0x62, 0x61, 0x73, 0x65, 0x5f, 0x61, 0x63, 0x63, 0x6f, 0x75,
-	0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x42,
-	0x61, 0x73, 0x65, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x42, 0x04, 0xd0, 0xde, 0x1f, 0x01,
-	0x52, 0x0b, 0x62, 0x61, 0x73, 0x65, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x42, 0x0a,
-	0x0c, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x5f, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73,
-	0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04,
-	0xc8, 0xde, 0x1f, 0x00, 0x52, 0x0b, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x53, 0x68, 0x61, 0x72, 0x65,
-	0x73, 0x12, 0x29, 0x0a, 0x10, 0x75, 0x6e, 0x64, 0x65, 0x72, 0x6c, 0x79, 0x69, 0x6e, 0x67, 0x5f,
-	0x61, 0x73, 0x73, 0x65, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0f, 0x75, 0x6e, 0x64,
-	0x65, 0x72, 0x6c, 0x79, 0x69, 0x6e, 0x67, 0x41, 0x73, 0x73, 0x65, 0x74, 0x12, 0x23, 0x0a, 0x0d,
-	0x70, 0x61, 0x79, 0x6d, 0x65, 0x6e, 0x74, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x04, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x0c, 0x70, 0x61, 0x79, 0x6d, 0x65, 0x6e, 0x74, 0x44, 0x65, 0x6e, 0x6f,
-	0x6d, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09,
-	0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64,
-	0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69,
-	0x6e, 0x12, 0x48, 0x0a, 0x15, 0x63, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x5f, 0x69, 0x6e, 0x74,
-	0x65, 0x72, 0x65, 0x73, 0x74, 0x5f, 0x72, 0x61, 0x74, 0x65, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09,
-	0x42, 0x14, 0xd2, 0xb4, 0x2d, 0x10, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x44, 0x65, 0x63,
-	0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x13, 0x63, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x49,
-	0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x12, 0x48, 0x0a, 0x15, 0x64,
-	0x65, 0x73, 0x69, 0x72, 0x65, 0x64, 0x5f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x5f,
-	0x72, 0x61, 0x74, 0x65, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09, 0x42, 0x14, 0xd2, 0xb4, 0x2d, 0x10,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x44, 0x65, 0x63, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67,
-	0x52, 0x13, 0x64, 0x65, 0x73, 0x69, 0x72, 0x65, 0x64, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73,
-	0x74, 0x52, 0x61, 0x74, 0x65, 0x12, 0x40, 0x0a, 0x11, 0x6d, 0x69, 0x6e, 0x5f, 0x69, 0x6e, 0x74,
-	0x65, 0x72, 0x65, 0x73, 0x74, 0x5f, 0x72, 0x61, 0x74, 0x65, 0x18, 0x08, 0x20, 0x01, 0x28, 0x09,
-	0x42, 0x14, 0xd2, 0xb4, 0x2d, 0x10, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x44, 0x65, 0x63,
-	0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0f, 0x6d, 0x69, 0x6e, 0x49, 0x6e, 0x74, 0x65, 0x72,
-	0x65, 0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x12, 0x40, 0x0a, 0x11, 0x6d, 0x61, 0x78, 0x5f, 0x69,
-	0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x5f, 0x72, 0x61, 0x74, 0x65, 0x18, 0x09, 0x20, 0x01,
+var file_provlabs_vault_v1_vault_proto_rawDesc = []byte{
+	0x0a, 0x1d, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74,
+	0x2f, 0x76, 0x31, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12,
+	0x11, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e,
+	0x76, 0x31, 0x1a, 0x1e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x61, 0x75, 0x74, 0x68, 0x2f,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x1a, 0x1e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x73, 0x65, 0x2f,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x63, 0x6f, 0x69, 0x6e, 0x2e, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x1a, 0x19, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5f, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x14, 0x67,
+	0x6f, 0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x22, 0xf8, 0x07, 0x0a, 0x0c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x63, 0x63,
+	0x6f, 0x75, 0x6e, 0x74, 0x12, 0x49, 0x0a, 0x0c, 0x62, 0x61, 0x73, 0x65, 0x5f, 0x61, 0x63, 0x63,
+	0x6f, 0x75, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
+	0x2e, 0x42, 0x61, 0x73, 0x65, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x42, 0x04, 0xd0, 0xde,
+	0x1f, 0x01, 0x52, 0x0b, 0x62, 0x61, 0x73, 0x65, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x12,
+	0x42, 0x0a, 0x0c, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x5f, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62,
+	0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e,
+	0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x0b, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x53, 0x68, 0x61,
+	0x72, 0x65, 0x73, 0x12, 0x29, 0x0a, 0x10, 0x75, 0x6e, 0x64, 0x65, 0x72, 0x6c, 0x79, 0x69, 0x6e,
+	0x67, 0x5f, 0x61, 0x73, 0x73, 0x65, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0f, 0x75,
+	0x6e, 0x64, 0x65, 0x72, 0x6c, 0x79, 0x69, 0x6e, 0x67, 0x41, 0x73, 0x73, 0x65, 0x74, 0x12, 0x23,
+	0x0a, 0x0d, 0x70, 0x61, 0x79, 0x6d, 0x65, 0x6e, 0x74, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18,
+	0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x70, 0x61, 0x79, 0x6d, 0x65, 0x6e, 0x74, 0x44, 0x65,
+	0x6e, 0x6f, 0x6d, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x05, 0x20, 0x01,
+	0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41,
+	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64,
+	0x6d, 0x69, 0x6e, 0x12, 0x48, 0x0a, 0x15, 0x63, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x5f, 0x69,
+	0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x5f, 0x72, 0x61, 0x74, 0x65, 0x18, 0x06, 0x20, 0x01,
 	0x28, 0x09, 0x42, 0x14, 0xd2, 0xb4, 0x2d, 0x10, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x44,
-	0x65, 0x63, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0f, 0x6d, 0x61, 0x78, 0x49, 0x6e, 0x74,
-	0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x12, 0x21, 0x0a, 0x0c, 0x70, 0x65, 0x72,
-	0x69, 0x6f, 0x64, 0x5f, 0x73, 0x74, 0x61, 0x72, 0x74, 0x18, 0x0a, 0x20, 0x01, 0x28, 0x03, 0x52,
-	0x0b, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x53, 0x74, 0x61, 0x72, 0x74, 0x12, 0x25, 0x0a, 0x0e,
-	0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x18, 0x0b,
-	0x20, 0x01, 0x28, 0x03, 0x52, 0x0d, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x54, 0x69, 0x6d, 0x65,
-	0x6f, 0x75, 0x74, 0x12, 0x26, 0x0a, 0x0f, 0x73, 0x77, 0x61, 0x70, 0x5f, 0x69, 0x6e, 0x5f, 0x65,
-	0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x18, 0x0c, 0x20, 0x01, 0x28, 0x08, 0x52, 0x0d, 0x73, 0x77,
-	0x61, 0x70, 0x49, 0x6e, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x12, 0x28, 0x0a, 0x10, 0x73,
-	0x77, 0x61, 0x70, 0x5f, 0x6f, 0x75, 0x74, 0x5f, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x18,
-	0x0d, 0x20, 0x01, 0x28, 0x08, 0x52, 0x0e, 0x73, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x45, 0x6e,
-	0x61, 0x62, 0x6c, 0x65, 0x64, 0x12, 0x38, 0x0a, 0x18, 0x77, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61,
-	0x77, 0x61, 0x6c, 0x5f, 0x64, 0x65, 0x6c, 0x61, 0x79, 0x5f, 0x73, 0x65, 0x63, 0x6f, 0x6e, 0x64,
-	0x73, 0x18, 0x0e, 0x20, 0x01, 0x28, 0x04, 0x52, 0x16, 0x77, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61,
-	0x77, 0x61, 0x6c, 0x44, 0x65, 0x6c, 0x61, 0x79, 0x53, 0x65, 0x63, 0x6f, 0x6e, 0x64, 0x73, 0x12,
-	0x16, 0x0a, 0x06, 0x70, 0x61, 0x75, 0x73, 0x65, 0x64, 0x18, 0x0f, 0x20, 0x01, 0x28, 0x08, 0x52,
-	0x06, 0x70, 0x61, 0x75, 0x73, 0x65, 0x64, 0x12, 0x46, 0x0a, 0x0e, 0x70, 0x61, 0x75, 0x73, 0x65,
-	0x64, 0x5f, 0x62, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x18, 0x10, 0x20, 0x01, 0x28, 0x0b, 0x32,
-	0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31,
-	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00,
-	0x52, 0x0d, 0x70, 0x61, 0x75, 0x73, 0x65, 0x64, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x12,
-	0x23, 0x0a, 0x0d, 0x70, 0x61, 0x75, 0x73, 0x65, 0x64, 0x5f, 0x72, 0x65, 0x61, 0x73, 0x6f, 0x6e,
-	0x18, 0x11, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x70, 0x61, 0x75, 0x73, 0x65, 0x64, 0x52, 0x65,
-	0x61, 0x73, 0x6f, 0x6e, 0x12, 0x3f, 0x0a, 0x0e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x5f, 0x61,
-	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x12, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4,
-	0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
-	0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0d, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x41, 0x64,
-	0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x25, 0x0a, 0x0e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x5f,
-	0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x18, 0x13, 0x20, 0x01, 0x28, 0x08, 0x52, 0x0d, 0x62,
-	0x72, 0x69, 0x64, 0x67, 0x65, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x22, 0x97, 0x01, 0x0a,
-	0x0e, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x12,
-	0x18, 0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x61, 0x0a, 0x05, 0x63, 0x6f, 0x69,
-	0x6e, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43,
-	0x6f, 0x69, 0x6e, 0x42, 0x30, 0xc8, 0xde, 0x1f, 0x00, 0xaa, 0xdf, 0x1f, 0x28, 0x67, 0x69, 0x74,
-	0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e,
-	0x43, 0x6f, 0x69, 0x6e, 0x73, 0x52, 0x05, 0x63, 0x6f, 0x69, 0x6e, 0x73, 0x3a, 0x08, 0x88, 0xa0,
-	0x1f, 0x00, 0xe8, 0xa0, 0x1f, 0x00, 0x22, 0xdb, 0x01, 0x0a, 0x0e, 0x50, 0x65, 0x6e, 0x64, 0x69,
-	0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x12, 0x2e, 0x0a, 0x05, 0x6f, 0x77, 0x6e,
-	0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69,
-	0x6e, 0x67, 0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75,
-	0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
-	0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64,
-	0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c,
-	0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x37, 0x0a, 0x06, 0x73, 0x68, 0x61, 0x72,
-	0x65, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43,
-	0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65,
-	0x73, 0x12, 0x21, 0x0a, 0x0c, 0x72, 0x65, 0x64, 0x65, 0x65, 0x6d, 0x5f, 0x64, 0x65, 0x6e, 0x6f,
-	0x6d, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x72, 0x65, 0x64, 0x65, 0x65, 0x6d, 0x44,
-	0x65, 0x6e, 0x6f, 0x6d, 0x42, 0x8b, 0x01, 0x0a, 0x0c, 0x63, 0x6f, 0x6d, 0x2e, 0x76, 0x61, 0x75,
-	0x6c, 0x74, 0x2e, 0x76, 0x31, 0x42, 0x0a, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x50, 0x72, 0x6f, 0x74,
-	0x6f, 0x50, 0x01, 0x5a, 0x2e, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f,
-	0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61,
-	0x70, 0x69, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c,
-	0x74, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x56, 0x58, 0x58, 0xaa, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c,
-	0x74, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2,
-	0x02, 0x14, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65,
-	0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x09, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a,
-	0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x65, 0x63, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x13, 0x63, 0x75, 0x72, 0x72, 0x65, 0x6e,
+	0x74, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x12, 0x48, 0x0a,
+	0x15, 0x64, 0x65, 0x73, 0x69, 0x72, 0x65, 0x64, 0x5f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73,
+	0x74, 0x5f, 0x72, 0x61, 0x74, 0x65, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09, 0x42, 0x14, 0xd2, 0xb4,
+	0x2d, 0x10, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x44, 0x65, 0x63, 0x53, 0x74, 0x72, 0x69,
+	0x6e, 0x67, 0x52, 0x13, 0x64, 0x65, 0x73, 0x69, 0x72, 0x65, 0x64, 0x49, 0x6e, 0x74, 0x65, 0x72,
+	0x65, 0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x12, 0x40, 0x0a, 0x11, 0x6d, 0x69, 0x6e, 0x5f, 0x69,
+	0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x5f, 0x72, 0x61, 0x74, 0x65, 0x18, 0x08, 0x20, 0x01,
+	0x28, 0x09, 0x42, 0x14, 0xd2, 0xb4, 0x2d, 0x10, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x44,
+	0x65, 0x63, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0f, 0x6d, 0x69, 0x6e, 0x49, 0x6e, 0x74,
+	0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x12, 0x40, 0x0a, 0x11, 0x6d, 0x61, 0x78,
+	0x5f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x5f, 0x72, 0x61, 0x74, 0x65, 0x18, 0x09,
+	0x20, 0x01, 0x28, 0x09, 0x42, 0x14, 0xd2, 0xb4, 0x2d, 0x10, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2e, 0x44, 0x65, 0x63, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0f, 0x6d, 0x61, 0x78, 0x49,
+	0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x12, 0x21, 0x0a, 0x0c, 0x70,
+	0x65, 0x72, 0x69, 0x6f, 0x64, 0x5f, 0x73, 0x74, 0x61, 0x72, 0x74, 0x18, 0x0a, 0x20, 0x01, 0x28,
+	0x03, 0x52, 0x0b, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x53, 0x74, 0x61, 0x72, 0x74, 0x12, 0x25,
+	0x0a, 0x0e, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74,
+	0x18, 0x0b, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0d, 0x70, 0x65, 0x72, 0x69, 0x6f, 0x64, 0x54, 0x69,
+	0x6d, 0x65, 0x6f, 0x75, 0x74, 0x12, 0x26, 0x0a, 0x0f, 0x73, 0x77, 0x61, 0x70, 0x5f, 0x69, 0x6e,
+	0x5f, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x18, 0x0c, 0x20, 0x01, 0x28, 0x08, 0x52, 0x0d,
+	0x73, 0x77, 0x61, 0x70, 0x49, 0x6e, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x12, 0x28, 0x0a,
+	0x10, 0x73, 0x77, 0x61, 0x70, 0x5f, 0x6f, 0x75, 0x74, 0x5f, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65,
+	0x64, 0x18, 0x0d, 0x20, 0x01, 0x28, 0x08, 0x52, 0x0e, 0x73, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74,
+	0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x12, 0x38, 0x0a, 0x18, 0x77, 0x69, 0x74, 0x68, 0x64,
+	0x72, 0x61, 0x77, 0x61, 0x6c, 0x5f, 0x64, 0x65, 0x6c, 0x61, 0x79, 0x5f, 0x73, 0x65, 0x63, 0x6f,
+	0x6e, 0x64, 0x73, 0x18, 0x0e, 0x20, 0x01, 0x28, 0x04, 0x52, 0x16, 0x77, 0x69, 0x74, 0x68, 0x64,
+	0x72, 0x61, 0x77, 0x61, 0x6c, 0x44, 0x65, 0x6c, 0x61, 0x79, 0x53, 0x65, 0x63, 0x6f, 0x6e, 0x64,
+	0x73, 0x12, 0x16, 0x0a, 0x06, 0x70, 0x61, 0x75, 0x73, 0x65, 0x64, 0x18, 0x0f, 0x20, 0x01, 0x28,
+	0x08, 0x52, 0x06, 0x70, 0x61, 0x75, 0x73, 0x65, 0x64, 0x12, 0x46, 0x0a, 0x0e, 0x70, 0x61, 0x75,
+	0x73, 0x65, 0x64, 0x5f, 0x62, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x18, 0x10, 0x20, 0x01, 0x28,
+	0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e,
+	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde,
+	0x1f, 0x00, 0x52, 0x0d, 0x70, 0x61, 0x75, 0x73, 0x65, 0x64, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63,
+	0x65, 0x12, 0x23, 0x0a, 0x0d, 0x70, 0x61, 0x75, 0x73, 0x65, 0x64, 0x5f, 0x72, 0x65, 0x61, 0x73,
+	0x6f, 0x6e, 0x18, 0x11, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x70, 0x61, 0x75, 0x73, 0x65, 0x64,
+	0x52, 0x65, 0x61, 0x73, 0x6f, 0x6e, 0x12, 0x3f, 0x0a, 0x0e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65,
+	0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x12, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18,
+	0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65,
+	0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0d, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65,
+	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x25, 0x0a, 0x0e, 0x62, 0x72, 0x69, 0x64, 0x67,
+	0x65, 0x5f, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x18, 0x13, 0x20, 0x01, 0x28, 0x08, 0x52,
+	0x0d, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x45, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x22, 0x97,
+	0x01, 0x0a, 0x0e, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63,
+	0x65, 0x12, 0x18, 0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x61, 0x0a, 0x05, 0x63,
+	0x6f, 0x69, 0x6e, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
+	0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x30, 0xc8, 0xde, 0x1f, 0x00, 0xaa, 0xdf, 0x1f, 0x28, 0x67,
+	0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x74, 0x79, 0x70, 0x65,
+	0x73, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x73, 0x52, 0x05, 0x63, 0x6f, 0x69, 0x6e, 0x73, 0x3a, 0x08,
+	0x88, 0xa0, 0x1f, 0x00, 0xe8, 0xa0, 0x1f, 0x00, 0x22, 0xdb, 0x01, 0x0a, 0x0e, 0x50, 0x65, 0x6e,
+	0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x12, 0x2e, 0x0a, 0x05, 0x6f,
+	0x77, 0x6e, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74,
+	0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x12, 0x3d, 0x0a, 0x0d, 0x76,
+	0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41,
+	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61,
+	0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x37, 0x0a, 0x06, 0x73, 0x68,
+	0x61, 0x72, 0x65, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
+	0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x73, 0x68, 0x61,
+	0x72, 0x65, 0x73, 0x12, 0x21, 0x0a, 0x0c, 0x72, 0x65, 0x64, 0x65, 0x65, 0x6d, 0x5f, 0x64, 0x65,
+	0x6e, 0x6f, 0x6d, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x72, 0x65, 0x64, 0x65, 0x65,
+	0x6d, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x42, 0xc2, 0x01, 0x0a, 0x15, 0x63, 0x6f, 0x6d, 0x2e, 0x70,
+	0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31,
+	0x42, 0x0a, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x37,
+	0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c,
+	0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x70, 0x72,
+	0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b,
+	0x76, 0x61, 0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x50, 0x56, 0x58, 0xaa, 0x02, 0x11,
+	0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56,
+	0x31, 0xca, 0x02, 0x11, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x5c, 0x56, 0x61, 0x75,
+	0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1d, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73,
+	0x5c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74,
+	0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x13, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73,
+	0x3a, 0x3a, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x33,
 }
 
 var (
-	file_vault_v1_vault_proto_rawDescOnce sync.Once
-	file_vault_v1_vault_proto_rawDescData = file_vault_v1_vault_proto_rawDesc
+	file_provlabs_vault_v1_vault_proto_rawDescOnce sync.Once
+	file_provlabs_vault_v1_vault_proto_rawDescData = file_provlabs_vault_v1_vault_proto_rawDesc
 )
 
-func file_vault_v1_vault_proto_rawDescGZIP() []byte {
-	file_vault_v1_vault_proto_rawDescOnce.Do(func() {
-		file_vault_v1_vault_proto_rawDescData = protoimpl.X.CompressGZIP(file_vault_v1_vault_proto_rawDescData)
+func file_provlabs_vault_v1_vault_proto_rawDescGZIP() []byte {
+	file_provlabs_vault_v1_vault_proto_rawDescOnce.Do(func() {
+		file_provlabs_vault_v1_vault_proto_rawDescData = protoimpl.X.CompressGZIP(file_provlabs_vault_v1_vault_proto_rawDescData)
 	})
-	return file_vault_v1_vault_proto_rawDescData
+	return file_provlabs_vault_v1_vault_proto_rawDescData
 }
 
-var file_vault_v1_vault_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
-var file_vault_v1_vault_proto_goTypes = []interface{}{
-	(*VaultAccount)(nil),        // 0: vault.v1.VaultAccount
-	(*AccountBalance)(nil),      // 1: vault.v1.AccountBalance
-	(*PendingSwapOut)(nil),      // 2: vault.v1.PendingSwapOut
+var file_provlabs_vault_v1_vault_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
+var file_provlabs_vault_v1_vault_proto_goTypes = []interface{}{
+	(*VaultAccount)(nil),        // 0: provlabs.vault.v1.VaultAccount
+	(*AccountBalance)(nil),      // 1: provlabs.vault.v1.AccountBalance
+	(*PendingSwapOut)(nil),      // 2: provlabs.vault.v1.PendingSwapOut
 	(*v1beta1.BaseAccount)(nil), // 3: cosmos.auth.v1beta1.BaseAccount
 	(*v1beta11.Coin)(nil),       // 4: cosmos.base.v1beta1.Coin
 }
-var file_vault_v1_vault_proto_depIdxs = []int32{
-	3, // 0: vault.v1.VaultAccount.base_account:type_name -> cosmos.auth.v1beta1.BaseAccount
-	4, // 1: vault.v1.VaultAccount.total_shares:type_name -> cosmos.base.v1beta1.Coin
-	4, // 2: vault.v1.VaultAccount.paused_balance:type_name -> cosmos.base.v1beta1.Coin
-	4, // 3: vault.v1.AccountBalance.coins:type_name -> cosmos.base.v1beta1.Coin
-	4, // 4: vault.v1.PendingSwapOut.shares:type_name -> cosmos.base.v1beta1.Coin
+var file_provlabs_vault_v1_vault_proto_depIdxs = []int32{
+	3, // 0: provlabs.vault.v1.VaultAccount.base_account:type_name -> cosmos.auth.v1beta1.BaseAccount
+	4, // 1: provlabs.vault.v1.VaultAccount.total_shares:type_name -> cosmos.base.v1beta1.Coin
+	4, // 2: provlabs.vault.v1.VaultAccount.paused_balance:type_name -> cosmos.base.v1beta1.Coin
+	4, // 3: provlabs.vault.v1.AccountBalance.coins:type_name -> cosmos.base.v1beta1.Coin
+	4, // 4: provlabs.vault.v1.PendingSwapOut.shares:type_name -> cosmos.base.v1beta1.Coin
 	5, // [5:5] is the sub-list for method output_type
 	5, // [5:5] is the sub-list for method input_type
 	5, // [5:5] is the sub-list for extension type_name
@@ -3226,13 +3231,13 @@ var file_vault_v1_vault_proto_depIdxs = []int32{
 	0, // [0:5] is the sub-list for field type_name
 }
 
-func init() { file_vault_v1_vault_proto_init() }
-func file_vault_v1_vault_proto_init() {
-	if File_vault_v1_vault_proto != nil {
+func init() { file_provlabs_vault_v1_vault_proto_init() }
+func file_provlabs_vault_v1_vault_proto_init() {
+	if File_provlabs_vault_v1_vault_proto != nil {
 		return
 	}
 	if !protoimpl.UnsafeEnabled {
-		file_vault_v1_vault_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_vault_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*VaultAccount); i {
 			case 0:
 				return &v.state
@@ -3244,7 +3249,7 @@ func file_vault_v1_vault_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_vault_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_vault_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*AccountBalance); i {
 			case 0:
 				return &v.state
@@ -3256,7 +3261,7 @@ func file_vault_v1_vault_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_vault_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_vault_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*PendingSwapOut); i {
 			case 0:
 				return &v.state
@@ -3273,18 +3278,18 @@ func file_vault_v1_vault_proto_init() {
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_vault_v1_vault_proto_rawDesc,
+			RawDescriptor: file_provlabs_vault_v1_vault_proto_rawDesc,
 			NumEnums:      0,
 			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_vault_v1_vault_proto_goTypes,
-		DependencyIndexes: file_vault_v1_vault_proto_depIdxs,
-		MessageInfos:      file_vault_v1_vault_proto_msgTypes,
+		GoTypes:           file_provlabs_vault_v1_vault_proto_goTypes,
+		DependencyIndexes: file_provlabs_vault_v1_vault_proto_depIdxs,
+		MessageInfos:      file_provlabs_vault_v1_vault_proto_msgTypes,
 	}.Build()
-	File_vault_v1_vault_proto = out.File
-	file_vault_v1_vault_proto_rawDesc = nil
-	file_vault_v1_vault_proto_goTypes = nil
-	file_vault_v1_vault_proto_depIdxs = nil
+	File_provlabs_vault_v1_vault_proto = out.File
+	file_provlabs_vault_v1_vault_proto_rawDesc = nil
+	file_provlabs_vault_v1_vault_proto_goTypes = nil
+	file_provlabs_vault_v1_vault_proto_depIdxs = nil
 }

@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             (unknown)
-// source: vault/v1/query.proto
+// source: provlabs/vault/v1/query.proto
 
 package vaultv1
 
@@ -19,11 +19,11 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Query_Vaults_FullMethodName          = "/vault.v1.Query/Vaults"
-	Query_Vault_FullMethodName           = "/vault.v1.Query/Vault"
-	Query_EstimateSwapIn_FullMethodName  = "/vault.v1.Query/EstimateSwapIn"
-	Query_EstimateSwapOut_FullMethodName = "/vault.v1.Query/EstimateSwapOut"
-	Query_PendingSwapOuts_FullMethodName = "/vault.v1.Query/PendingSwapOuts"
+	Query_Vaults_FullMethodName          = "/provlabs.vault.v1.Query/Vaults"
+	Query_Vault_FullMethodName           = "/provlabs.vault.v1.Query/Vault"
+	Query_EstimateSwapIn_FullMethodName  = "/provlabs.vault.v1.Query/EstimateSwapIn"
+	Query_EstimateSwapOut_FullMethodName = "/provlabs.vault.v1.Query/EstimateSwapOut"
+	Query_PendingSwapOuts_FullMethodName = "/provlabs.vault.v1.Query/PendingSwapOuts"
 )
 
 // QueryClient is the client API for Query service.
@@ -258,7 +258,7 @@ func _Query_PendingSwapOuts_Handler(srv interface{}, ctx context.Context, dec fu
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Query_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "vault.v1.Query",
+	ServiceName: "provlabs.vault.v1.Query",
 	HandlerType: (*QueryServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -283,5 +283,5 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "vault/v1/query.proto",
+	Metadata: "provlabs/vault/v1/query.proto",
 }

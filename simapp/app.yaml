@@ -62,7 +62,7 @@ modules:
       "@type": cosmos.group.module.v1.Module
   - name: vault
     config:
-      "@type": vault.module.v1.Module
+      "@type": provlabs.vault.module.v1.Module
   - name: vesting
     config:
       "@type": cosmos.vesting.module.v1.Module

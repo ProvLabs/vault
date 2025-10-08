@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             (unknown)
-// source: vault/v1/tx.proto
+// source: provlabs/vault/v1/tx.proto
 
 package vaultv1
 
@@ -19,25 +19,25 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Msg_CreateVault_FullMethodName            = "/vault.v1.Msg/CreateVault"
-	Msg_SwapIn_FullMethodName                 = "/vault.v1.Msg/SwapIn"
-	Msg_SwapOut_FullMethodName                = "/vault.v1.Msg/SwapOut"
-	Msg_UpdateMinInterestRate_FullMethodName  = "/vault.v1.Msg/UpdateMinInterestRate"
-	Msg_UpdateMaxInterestRate_FullMethodName  = "/vault.v1.Msg/UpdateMaxInterestRate"
-	Msg_UpdateInterestRate_FullMethodName     = "/vault.v1.Msg/UpdateInterestRate"
-	Msg_ToggleSwapIn_FullMethodName           = "/vault.v1.Msg/ToggleSwapIn"
-	Msg_ToggleSwapOut_FullMethodName          = "/vault.v1.Msg/ToggleSwapOut"
-	Msg_DepositInterestFunds_FullMethodName   = "/vault.v1.Msg/DepositInterestFunds"
-	Msg_WithdrawInterestFunds_FullMethodName  = "/vault.v1.Msg/WithdrawInterestFunds"
-	Msg_DepositPrincipalFunds_FullMethodName  = "/vault.v1.Msg/DepositPrincipalFunds"
-	Msg_WithdrawPrincipalFunds_FullMethodName = "/vault.v1.Msg/WithdrawPrincipalFunds"
-	Msg_ExpeditePendingSwapOut_FullMethodName = "/vault.v1.Msg/ExpeditePendingSwapOut"
-	Msg_PauseVault_FullMethodName             = "/vault.v1.Msg/PauseVault"
-	Msg_UnpauseVault_FullMethodName           = "/vault.v1.Msg/UnpauseVault"
-	Msg_SetBridgeAddress_FullMethodName       = "/vault.v1.Msg/SetBridgeAddress"
-	Msg_ToggleBridge_FullMethodName           = "/vault.v1.Msg/ToggleBridge"
-	Msg_BridgeMintShares_FullMethodName       = "/vault.v1.Msg/BridgeMintShares"
-	Msg_BridgeBurnShares_FullMethodName       = "/vault.v1.Msg/BridgeBurnShares"
+	Msg_CreateVault_FullMethodName            = "/provlabs.vault.v1.Msg/CreateVault"
+	Msg_SwapIn_FullMethodName                 = "/provlabs.vault.v1.Msg/SwapIn"
+	Msg_SwapOut_FullMethodName                = "/provlabs.vault.v1.Msg/SwapOut"
+	Msg_UpdateMinInterestRate_FullMethodName  = "/provlabs.vault.v1.Msg/UpdateMinInterestRate"
+	Msg_UpdateMaxInterestRate_FullMethodName  = "/provlabs.vault.v1.Msg/UpdateMaxInterestRate"
+	Msg_UpdateInterestRate_FullMethodName     = "/provlabs.vault.v1.Msg/UpdateInterestRate"
+	Msg_ToggleSwapIn_FullMethodName           = "/provlabs.vault.v1.Msg/ToggleSwapIn"
+	Msg_ToggleSwapOut_FullMethodName          = "/provlabs.vault.v1.Msg/ToggleSwapOut"
+	Msg_DepositInterestFunds_FullMethodName   = "/provlabs.vault.v1.Msg/DepositInterestFunds"
+	Msg_WithdrawInterestFunds_FullMethodName  = "/provlabs.vault.v1.Msg/WithdrawInterestFunds"
+	Msg_DepositPrincipalFunds_FullMethodName  = "/provlabs.vault.v1.Msg/DepositPrincipalFunds"
+	Msg_WithdrawPrincipalFunds_FullMethodName = "/provlabs.vault.v1.Msg/WithdrawPrincipalFunds"
+	Msg_ExpeditePendingSwapOut_FullMethodName = "/provlabs.vault.v1.Msg/ExpeditePendingSwapOut"
+	Msg_PauseVault_FullMethodName             = "/provlabs.vault.v1.Msg/PauseVault"
+	Msg_UnpauseVault_FullMethodName           = "/provlabs.vault.v1.Msg/UnpauseVault"
+	Msg_SetBridgeAddress_FullMethodName       = "/provlabs.vault.v1.Msg/SetBridgeAddress"
+	Msg_ToggleBridge_FullMethodName           = "/provlabs.vault.v1.Msg/ToggleBridge"
+	Msg_BridgeMintShares_FullMethodName       = "/provlabs.vault.v1.Msg/BridgeMintShares"
+	Msg_BridgeBurnShares_FullMethodName       = "/provlabs.vault.v1.Msg/BridgeBurnShares"
 )
 
 // MsgClient is the client API for Msg service.
@@ -762,7 +762,7 @@ func _Msg_BridgeBurnShares_Handler(srv interface{}, ctx context.Context, dec fun
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Msg_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "vault.v1.Msg",
+	ServiceName: "provlabs.vault.v1.Msg",
 	HandlerType: (*MsgServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -843,5 +843,5 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "vault/v1/tx.proto",
+	Metadata: "provlabs/vault/v1/tx.proto",
 }

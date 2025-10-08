@@ -57,7 +57,7 @@ lint:
 BUF_VERSION=1.50
 BUILDER_VERSION=0.17.1
 protoImageName=ghcr.io/cosmos/proto-builder:$(BUILDER_VERSION)
-protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
+protoImage=$(DOCKER) run --rm -v "$(CURDIR)":/workspace --workdir /workspace $(protoImageName)
 
 proto-all: proto-format proto-lint proto-gen proto-swagger-gen
 proto-regen: proto-format proto-gen proto-swagger-gen

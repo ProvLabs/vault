@@ -1,5 +1,5 @@
-#!/usr/bin/env sh
-set -eo pipefail
+#!/usr/bin/env bash
+set -euo pipefail
 
 TMP_DIR="./tmp-swagger-gen"
 OUT_DIR="./openapi"

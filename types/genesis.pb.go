@@ -23,8 +23,11 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// QueueEntry is a (time, addr) pair used by the vault payout deferral queue.
 type QueueEntry struct {
+	// time is the UNIX timestamp (in seconds) when the entry becomes eligible.
 	Time uint64 `protobuf:"varint,1,opt,name=time,proto3" json:"time,omitempty"`
+	// addr is the bech32 vault address associated with the entry.
 	Addr string `protobuf:"bytes,2,opt,name=addr,proto3" json:"addr,omitempty"`
 }
 
@@ -75,9 +78,13 @@ func (m *QueueEntry) GetAddr() string {
 	return ""
 }
 
+// PendingSwapOutQueueEntry represents a single pending swap-out request queued for later processing.
 type PendingSwapOutQueueEntry struct {
-	Time    int64          `protobuf:"varint,1,opt,name=time,proto3" json:"time,omitempty"`
-	Id      uint64         `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
+	// time is the UNIX timestamp (in seconds) when this pending swap-out was enqueued or becomes eligible.
+	Time int64 `protobuf:"varint,1,opt,name=time,proto3" json:"time,omitempty"`
+	// id is the unique identifier of the pending swap-out request.
+	Id uint64 `protobuf:"varint,2,opt,name=id,proto3" json:"id,omitempty"`
+	// swap_out contains the pending swap-out details.
 	SwapOut PendingSwapOut `protobuf:"bytes,3,opt,name=swap_out,json=swapOut,proto3" json:"swap_out"`
 }
 
@@ -135,9 +142,12 @@ func (m *PendingSwapOutQueueEntry) GetSwapOut() PendingSwapOut {
 	return PendingSwapOut{}
 }
 
+// PendingSwapOutQueue holds the latest sequence number and all queued swap-out entries.
 type PendingSwapOutQueue struct {
-	LatestSequenceNumber uint64                     `protobuf:"varint,1,opt,name=latest_sequence_number,json=latestSequenceNumber,proto3" json:"latest_sequence_number,omitempty"`
-	Entries              []PendingSwapOutQueueEntry `protobuf:"bytes,2,rep,name=entries,proto3" json:"entries"`
+	// latest_sequence_number is the most recently assigned pending swap-out ID.
+	LatestSequenceNumber uint64 `protobuf:"varint,1,opt,name=latest_sequence_number,json=latestSequenceNumber,proto3" json:"latest_sequence_number,omitempty"`
+	// entries contains all currently queued pending swap-out entries.
+	Entries []PendingSwapOutQueueEntry `protobuf:"bytes,2,rep,name=entries,proto3" json:"entries"`
 }
 
 func (m *PendingSwapOutQueue) Reset()         { *m = PendingSwapOutQueue{} }

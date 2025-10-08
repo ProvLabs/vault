@@ -65,6 +65,11 @@ Desktop.ini
 simapp/build
 debug_*
 __debug*
+tmp_*
+
+# Generated OpenAPI/Swagger artifacts
+openapi/
+tmp-swagger-gen/
 
 # Go version file
 .go-version

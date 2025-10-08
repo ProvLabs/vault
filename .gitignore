@@ -65,6 +65,7 @@ Desktop.ini
 simapp/build
 debug_*
 __debug*
+tmp_*
 
 # Go version file
 .go-version

@@ -1,7 +1,6 @@
-.PHONY: proto-format proto-lint proto-gen license format lint build run
+.PHONY: proto-format proto-lint proto-gen proto-swagger-gen license format lint build run test-unit swagger-serve
 all: proto-all format lint test-unit build
 
-# Find the go executable if it wasn't pre-set (e.g. via env var).
 ifeq (,$(GO))
   ifeq ($(OS),Windows_NT)
     GO := $(shell where go.exe 2> NUL)
@@ -9,7 +8,6 @@ ifeq (,$(GO))
     GO := $(shell command -v go 2> /dev/null)
   endif
 endif
-# Make sure we have a working go executable since most stuff in here needs it.
 ifeq ("$(shell $(GO) version > /dev/null || echo nogo)","nogo")
   $(error Could not find go. Is it in PATH? $(GO))
 endif
@@ -19,11 +17,12 @@ endif
 BINDIR ?= $(GOPATH)/bin
 BUILDDIR ?= $(CURDIR)/build
 
-include contrib/devtools/Makefile
+DOCKER := $(shell command -v docker 2>/dev/null)
+ifeq (,$(DOCKER))
+  $(error Docker not found. Install Docker or set DOCKER to the docker binary path)
+endif
 
-###############################################################################
-###                                  Build                                  ###
-###############################################################################
+include contrib/devtools/Makefile
 
 build:
 	@echo "Building simd binary..."
@@ -32,10 +31,6 @@ build:
 
 run: build
 	@./local.sh
-
-###############################################################################
-###                                 Tooling                                 ###
-###############################################################################
 
 gofumpt_cmd=mvdan.cc/gofumpt
 goimports_reviser_cmd=github.com/incu6us/goimports-reviser/v3
@@ -59,14 +54,13 @@ lint:
 	@go run $(golangci_lint_cmd) run --timeout=10m
 	@echo "Linting complete."
 
-###############################################################################
-###                                Protobuf                                 ###
-###############################################################################
-
 BUF_VERSION=1.50
-BUILDER_VERSION=0.15.3
+BUILDER_VERSION=0.17.1
+protoImageName=ghcr.io/cosmos/proto-builder:$(BUILDER_VERSION)
+protoImage=$(DOCKER) run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName)
 
-proto-all: proto-format proto-lint proto-gen
+proto-all: proto-format proto-lint proto-gen proto-swagger-gen
+proto-regen: proto-format proto-gen proto-swagger-gen
 
 proto-format:
 	@echo "Formatting protobuf definitions..."
@@ -86,9 +80,10 @@ proto-lint:
 		bufbuild/buf:$(BUF_VERSION) lint
 	@echo "Protobuf linting complete."
 
-###############################################################################
-###                                 Testing                                 ###
-###############################################################################
+proto-swagger-gen:
+	@echo "Generating Protobuf Swagger (Cosmos-style)"
+	@$(protoImage) sh ./scripts/protoc-swagger-gen.sh
+	@echo "OpenAPI generation complete."
 
 include sims.mk
 

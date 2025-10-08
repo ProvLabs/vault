@@ -17,7 +17,7 @@ endif
 BINDIR ?= $(GOPATH)/bin
 BUILDDIR ?= $(CURDIR)/build
 
-DOCKER := $(shell command -v docker 2>/dev/null)
+DOCKER ?= $(shell command -v docker 2>/dev/null)
 ifeq (,$(DOCKER))
   $(error Docker not found. Install Docker or set DOCKER to the docker binary path)
 endif
@@ -90,5 +90,6 @@ include sims.mk
 test-unit:
 	@echo "Running unit tests with coverage..."
 	@go test -cover -coverpkg=./keeper/...,./interest/...,./queue/...,./types/... -coverprofile=coverage.out -race -v ./...
-	@go tool cover -html=coverage.out && go tool cover -func=coverage.out
-	@echo "Unit tests completed."
+	@go tool cover -html=coverage.out -o coverage.html
+	@go tool cover -func=coverage.out
+	@echo "Coverage report: coverage.html"

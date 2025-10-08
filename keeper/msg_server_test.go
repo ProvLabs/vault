@@ -116,7 +116,7 @@ func (s *TestSuite) TestMsgServer_CreateVault() {
 				sdk.NewAttribute("administrator", vaultAddr.String()),
 				sdk.NewAttribute("denom", sharedenom),
 			),
-			sdk.NewEvent("vault.v1.EventVaultCreated",
+			sdk.NewEvent("provlabs.vault.v1.EventVaultCreated",
 				sdk.NewAttribute("admin", admin),
 				sdk.NewAttribute("share_denom", sharedenom),
 				sdk.NewAttribute("underlying_asset", underlying),
@@ -617,7 +617,7 @@ func (s *TestSuite) TestMsgServer_ToggleSwapOut() {
 				ExpectedEnabled: true,
 			},
 			expectedEvents: sdk.Events{
-				sdk.NewEvent("vault.v1.EventToggleSwapOut",
+				sdk.NewEvent("provlabs.vault.v1.EventToggleSwapOut",
 					sdk.NewAttribute("admin", owner.String()),
 					sdk.NewAttribute("enabled", "true"),
 					sdk.NewAttribute("vault_address", vaultAddr.String()),
@@ -643,7 +643,7 @@ func (s *TestSuite) TestMsgServer_ToggleSwapOut() {
 				ExpectedEnabled: false,
 			},
 			expectedEvents: sdk.Events{
-				sdk.NewEvent("vault.v1.EventToggleSwapOut",
+				sdk.NewEvent("provlabs.vault.v1.EventToggleSwapOut",
 					sdk.NewAttribute("admin", owner.String()),
 					sdk.NewAttribute("enabled", "false"),
 					sdk.NewAttribute("vault_address", vaultAddr.String()),
@@ -670,7 +670,7 @@ func (s *TestSuite) TestMsgServer_ToggleSwapOut() {
 				ExpectedEnabled: false,
 			},
 			expectedEvents: sdk.Events{
-				sdk.NewEvent("vault.v1.EventToggleSwapOut",
+				sdk.NewEvent("provlabs.vault.v1.EventToggleSwapOut",
 					sdk.NewAttribute("admin", owner.String()),
 					sdk.NewAttribute("enabled", "false"),
 					sdk.NewAttribute("vault_address", vaultAddr.String()),
@@ -770,7 +770,7 @@ func (s *TestSuite) TestMsgServer_ToggleSwapIn() {
 				ExpectedEnabled: true,
 			},
 			expectedEvents: sdk.Events{
-				sdk.NewEvent("vault.v1.EventToggleSwapIn",
+				sdk.NewEvent("provlabs.vault.v1.EventToggleSwapIn",
 					sdk.NewAttribute("admin", owner.String()),
 					sdk.NewAttribute("enabled", "true"),
 					sdk.NewAttribute("vault_address", vaultAddr.String()),
@@ -796,7 +796,7 @@ func (s *TestSuite) TestMsgServer_ToggleSwapIn() {
 				ExpectedEnabled: false,
 			},
 			expectedEvents: sdk.Events{
-				sdk.NewEvent("vault.v1.EventToggleSwapIn",
+				sdk.NewEvent("provlabs.vault.v1.EventToggleSwapIn",
 					sdk.NewAttribute("admin", owner.String()),
 					sdk.NewAttribute("enabled", "false"),
 					sdk.NewAttribute("vault_address", vaultAddr.String()),
@@ -823,7 +823,7 @@ func (s *TestSuite) TestMsgServer_ToggleSwapIn() {
 				ExpectedEnabled: false,
 			},
 			expectedEvents: sdk.Events{
-				sdk.NewEvent("vault.v1.EventToggleSwapIn",
+				sdk.NewEvent("provlabs.vault.v1.EventToggleSwapIn",
 					sdk.NewAttribute("admin", owner.String()),
 					sdk.NewAttribute("enabled", "false"),
 					sdk.NewAttribute("vault_address", vaultAddr.String()),
@@ -928,7 +928,7 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 				ExpectedPeriodStart:       currentBlockTime.Unix(),
 			},
 			expectedEvents: sdk.Events{
-				sdk.NewEvent("vault.v1.EventVaultInterestChange",
+				sdk.NewEvent("provlabs.vault.v1.EventVaultInterestChange",
 					sdk.NewAttribute("current_rate", "0.05"),
 					sdk.NewAttribute("desired_rate", "0.05"),
 					sdk.NewAttribute("vault_address", vaultAddr.String()),
@@ -953,7 +953,7 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 				ExpectedPeriodStart:       currentBlockTime.Unix(),
 			},
 			expectedEvents: sdk.Events{
-				sdk.NewEvent("vault.v1.EventVaultReconcile",
+				sdk.NewEvent("provlabs.vault.v1.EventVaultReconcile",
 					sdk.NewAttribute("interest_earned", sdk.NewInt64Coin(underlyingDenom, 0).String()),
 					sdk.NewAttribute("principal_after", sdk.NewInt64Coin(underlyingDenom, 0).String()),
 					sdk.NewAttribute("principal_before", sdk.NewInt64Coin(underlyingDenom, 0).String()),
@@ -961,7 +961,7 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 					sdk.NewAttribute("time", "10000"),
 					sdk.NewAttribute("vault_address", vaultAddr.String()),
 				),
-				sdk.NewEvent("vault.v1.EventVaultInterestChange",
+				sdk.NewEvent("provlabs.vault.v1.EventVaultInterestChange",
 					sdk.NewAttribute("current_rate", "4.06"),
 					sdk.NewAttribute("desired_rate", "4.06"),
 					sdk.NewAttribute("vault_address", vaultAddr.String()),
@@ -985,7 +985,7 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 				ExpectInVerificationQueue: false,
 			},
 			expectedEvents: sdk.Events{
-				sdk.NewEvent("vault.v1.EventVaultReconcile",
+				sdk.NewEvent("provlabs.vault.v1.EventVaultReconcile",
 					sdk.NewAttribute("interest_earned", sdk.NewInt64Coin(underlyingDenom, 0).String()),
 					sdk.NewAttribute("principal_after", sdk.NewInt64Coin(underlyingDenom, 0).String()),
 					sdk.NewAttribute("principal_before", sdk.NewInt64Coin(underlyingDenom, 0).String()),
@@ -993,7 +993,7 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 					sdk.NewAttribute("time", "10000"),
 					sdk.NewAttribute("vault_address", vaultAddr.String()),
 				),
-				sdk.NewEvent("vault.v1.EventVaultInterestChange",
+				sdk.NewEvent("provlabs.vault.v1.EventVaultInterestChange",
 					sdk.NewAttribute("current_rate", "0.0"),
 					sdk.NewAttribute("desired_rate", "0.0"),
 					sdk.NewAttribute("vault_address", vaultAddr.String()),
@@ -1018,7 +1018,7 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 				ExpectedPeriodStart:       currentBlockTime.Unix(),
 			},
 			expectedEvents: sdk.Events{
-				sdk.NewEvent("vault.v1.EventVaultReconcile",
+				sdk.NewEvent("provlabs.vault.v1.EventVaultReconcile",
 					sdk.NewAttribute("interest_earned", sdk.NewInt64Coin(underlyingDenom, 0).String()),
 					sdk.NewAttribute("principal_after", sdk.NewInt64Coin(underlyingDenom, 0).String()),
 					sdk.NewAttribute("principal_before", sdk.NewInt64Coin(underlyingDenom, 0).String()),
@@ -1026,7 +1026,7 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 					sdk.NewAttribute("time", "5000"),
 					sdk.NewAttribute("vault_address", vaultAddr.String()),
 				),
-				sdk.NewEvent("vault.v1.EventVaultInterestChange",
+				sdk.NewEvent("provlabs.vault.v1.EventVaultInterestChange",
 					sdk.NewAttribute("current_rate", "3.33"),
 					sdk.NewAttribute("desired_rate", "3.33"),
 					sdk.NewAttribute("vault_address", vaultAddr.String()),
@@ -1043,7 +1043,7 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 				ExpectInVerificationQueue: false,
 			},
 			expectedEvents: sdk.Events{
-				sdk.NewEvent("vault.v1.EventVaultInterestChange",
+				sdk.NewEvent("provlabs.vault.v1.EventVaultInterestChange",
 					sdk.NewAttribute("current_rate", "0.0"),
 					sdk.NewAttribute("desired_rate", "0.0"),
 					sdk.NewAttribute("vault_address", vaultAddr.String()),
@@ -1069,7 +1069,7 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 				ExpectedPeriodStart:       currentBlockTime.Unix(),
 			},
 			expectedEvents: sdk.Events{
-				sdk.NewEvent("vault.v1.EventVaultInterestChange",
+				sdk.NewEvent("provlabs.vault.v1.EventVaultInterestChange",
 					sdk.NewAttribute("current_rate", "1.25"),
 					sdk.NewAttribute("desired_rate", "1.25"),
 					sdk.NewAttribute("vault_address", vaultAddr.String()),
@@ -1097,7 +1097,7 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 				ExpectedPeriodStart:       currentBlockTime.Unix() - 7777,
 			},
 			expectedEvents: sdk.Events{
-				sdk.NewEvent("vault.v1.EventVaultInterestChange",
+				sdk.NewEvent("provlabs.vault.v1.EventVaultInterestChange",
 					sdk.NewAttribute("current_rate", "4.06"),
 					sdk.NewAttribute("desired_rate", "4.06"),
 					sdk.NewAttribute("vault_address", vaultAddr.String()),
@@ -1122,7 +1122,7 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 				ExpectInVerificationQueue: true,
 			},
 			expectedEvents: sdk.Events{
-				sdk.NewEvent("vault.v1.EventVaultInterestChange",
+				sdk.NewEvent("provlabs.vault.v1.EventVaultInterestChange",
 					sdk.NewAttribute("current_rate", "1.25"),
 					sdk.NewAttribute("desired_rate", "1.25"),
 					sdk.NewAttribute("vault_address", vaultAddr.String()),
@@ -1149,7 +1149,7 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 				ExpectInVerificationQueue: false,
 			},
 			expectedEvents: sdk.Events{
-				sdk.NewEvent("vault.v1.EventVaultInterestChange",
+				sdk.NewEvent("provlabs.vault.v1.EventVaultInterestChange",
 					sdk.NewAttribute("current_rate", "0.0"),
 					sdk.NewAttribute("desired_rate", "0.0"),
 					sdk.NewAttribute("vault_address", vaultAddr.String()),
@@ -1290,7 +1290,7 @@ func (s *TestSuite) TestMsgServer_UpdateMinInterestRate() {
 				ExpectedMin:  "-0.05",
 			},
 			expectedEvents: sdk.Events{
-				sdk.NewEvent("vault.v1.EventMinInterestRateUpdated",
+				sdk.NewEvent("provlabs.vault.v1.EventMinInterestRateUpdated",
 					sdk.NewAttribute("admin", admin.String()),
 					sdk.NewAttribute("min_rate", "-0.05"),
 					sdk.NewAttribute("vault_address", vaultAddr.String()),
@@ -1454,7 +1454,7 @@ func (s *TestSuite) TestMsgServer_UpdateMaxInterestRate() {
 				ExpectedMax:  "0.50",
 			},
 			expectedEvents: sdk.Events{
-				sdk.NewEvent("vault.v1.EventMaxInterestRateUpdated",
+				sdk.NewEvent("provlabs.vault.v1.EventMaxInterestRateUpdated",
 					sdk.NewAttribute("admin", admin.String()),
 					sdk.NewAttribute("max_rate", "0.50"),
 					sdk.NewAttribute("vault_address", vaultAddr.String()),
@@ -1653,7 +1653,7 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds() {
 	s.Run("happy path - deposit interest funds", func() {
 		ev := createSendCoinEvents(admin.String(), vaultAddr.String(), sdk.NewCoins(amount).String())
 		ev = append(ev, sdk.NewEvent(
-			"vault.v1.EventInterestDeposit",
+			"provlabs.vault.v1.EventInterestDeposit",
 			sdk.NewAttribute("admin", admin.String()),
 			sdk.NewAttribute("amount", amount.String()),
 			sdk.NewAttribute("vault_address", vaultAddr.String()),
@@ -1683,7 +1683,7 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds() {
 	s.Run("happy path - deposit interest funds - restricted marker with attributes", func() {
 		ev := createSendCoinEvents(admin.String(), vaultAddr.String(), sdk.NewCoins(amount).String())
 		ev = append(ev, sdk.NewEvent(
-			"vault.v1.EventInterestDeposit",
+			"provlabs.vault.v1.EventInterestDeposit",
 			sdk.NewAttribute("admin", admin.String()),
 			sdk.NewAttribute("amount", amount.String()),
 			sdk.NewAttribute("vault_address", vaultAddr.String()),
@@ -1838,7 +1838,7 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds() {
 	s.Run("happy path - withdraw interest funds", func() {
 		ev := createSendCoinEvents(vaultAddr.String(), admin.String(), sdk.NewCoins(amount).String())
 		ev = append(ev, sdk.NewEvent(
-			"vault.v1.EventInterestWithdrawal",
+			"provlabs.vault.v1.EventInterestWithdrawal",
 			sdk.NewAttribute("admin", admin.String()),
 			sdk.NewAttribute("amount", amount.String()),
 			sdk.NewAttribute("vault_address", vaultAddr.String()),
@@ -1997,7 +1997,7 @@ func (s *TestSuite) TestMsgServer_DepositPrincipalFunds() {
 	s.Run("happy path - deposit principal funds", func() {
 		ev := createSendCoinEvents(admin.String(), markerAddr.String(), sdk.NewCoins(amount).String())
 		ev = append(ev, sdk.NewEvent(
-			"vault.v1.EventDepositPrincipalFunds",
+			"provlabs.vault.v1.EventDepositPrincipalFunds",
 			sdk.NewAttribute("admin", admin.String()),
 			sdk.NewAttribute("amount", amount.String()),
 			sdk.NewAttribute("vault_address", vaultAddr.String()),
@@ -2172,7 +2172,7 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds() {
 	s.Run("happy path - withdraw principal funds", func() {
 		ev := createSendCoinEvents(markerAddr.String(), admin.String(), sdk.NewCoins(amount).String())
 		ev = append(ev, sdk.NewEvent(
-			"vault.v1.EventWithdrawPrincipalFunds",
+			"provlabs.vault.v1.EventWithdrawPrincipalFunds",
 			sdk.NewAttribute("admin", admin.String()),
 			sdk.NewAttribute("amount", amount.String()),
 			sdk.NewAttribute("vault_address", vaultAddr.String()),
@@ -2359,7 +2359,7 @@ func (s *TestSuite) TestMsgServer_ExpeditePendingSwapOut() {
 			},
 			expectedEvents: sdk.Events{
 				sdk.NewEvent(
-					"vault.v1.EventPendingSwapOutExpedited",
+					"provlabs.vault.v1.EventPendingSwapOutExpedited",
 					sdk.NewAttribute("admin", admin.String()),
 					sdk.NewAttribute("request_id", fmt.Sprintf("%d", id)),
 					sdk.NewAttribute("vault", vaultAddr.String()),
@@ -2450,7 +2450,7 @@ func (s *TestSuite) TestMsgServer_PauseVault() {
 		},
 		expectedEvents: sdk.Events{
 			sdk.NewEvent(
-				"vault.v1.EventVaultPaused",
+				"provlabs.vault.v1.EventVaultPaused",
 				sdk.NewAttribute("admin", admin.String()),
 				sdk.NewAttribute("reason", reason),
 				sdk.NewAttribute("total_vault_value", sdk.NewInt64Coin(underlying, 0).String()),
@@ -2498,7 +2498,7 @@ func (s *TestSuite) TestMsgServer_PauseVault() {
 			ExpectedPausedReason: reason,
 		},
 		expectedEvents: sdk.Events{
-			sdk.NewEvent("vault.v1.EventVaultReconcile",
+			sdk.NewEvent("provlabs.vault.v1.EventVaultReconcile",
 				sdk.NewAttribute("interest_earned", sdk.NewInt64Coin(underlying, 0).String()),
 				sdk.NewAttribute("principal_after", sdk.NewInt64Coin(underlying, 0).String()),
 				sdk.NewAttribute("principal_before", sdk.NewInt64Coin(underlying, 0).String()),
@@ -2507,7 +2507,7 @@ func (s *TestSuite) TestMsgServer_PauseVault() {
 				sdk.NewAttribute("vault_address", vaultAddr.String()),
 			),
 			sdk.NewEvent(
-				"vault.v1.EventVaultPaused",
+				"provlabs.vault.v1.EventVaultPaused",
 				sdk.NewAttribute("admin", admin.String()),
 				sdk.NewAttribute("reason", "maintenance"),
 				sdk.NewAttribute("total_vault_value", sdk.NewInt64Coin(underlying, 0).String()),
@@ -2660,7 +2660,7 @@ func (s *TestSuite) TestMsgServer_UnpauseVault() {
 		},
 		expectedEvents: sdk.Events{
 			sdk.NewEvent(
-				"vault.v1.EventVaultUnpaused",
+				"provlabs.vault.v1.EventVaultUnpaused",
 				sdk.NewAttribute("admin", admin.String()),
 				sdk.NewAttribute("total_vault_value", sdk.NewInt64Coin(underlying, 0).String()),
 				sdk.NewAttribute("vault_address", vaultAddr.String()),
@@ -2799,7 +2799,7 @@ func (s *TestSuite) TestMsgServer_SetBridgeAddress() {
 			ExpectedBridge: bridge.String(),
 		},
 		expectedEvents: sdk.Events{
-			sdk.NewEvent("vault.v1.EventBridgeAddressSet",
+			sdk.NewEvent("provlabs.vault.v1.EventBridgeAddressSet",
 				sdk.NewAttribute("admin", admin.String()),
 				sdk.NewAttribute("bridge_address", bridge.String()),
 				sdk.NewAttribute("vault_address", vaultAddr.String()),
@@ -2929,7 +2929,7 @@ func (s *TestSuite) TestMsgServer_ToggleBridge() {
 			ExpectedEnabled: true,
 		},
 		expectedEvents: sdk.Events{
-			sdk.NewEvent("vault.v1.EventBridgeToggled",
+			sdk.NewEvent("provlabs.vault.v1.EventBridgeToggled",
 				sdk.NewAttribute("admin", admin.String()),
 				sdk.NewAttribute("enabled", "true"),
 				sdk.NewAttribute("vault_address", vaultAddr.String()),
@@ -3227,7 +3227,7 @@ func (s *TestSuite) TestMsgServer_BridgeBurnShares() {
 
 	events := createSendCoinEvents(bridgeAddr.String(), markerAddr.String(), sdk.NewCoins(burn).String())
 	events = append(events, createMarkerBurn(vaultAddr, markerAddr, burn)...)
-	events = append(events, sdk.NewEvent("vault.v1.EventBridgeBurnShares",
+	events = append(events, sdk.NewEvent("provlabs.vault.v1.EventBridgeBurnShares",
 		sdk.NewAttribute("bridge", bridgeAddr.String()),
 		sdk.NewAttribute("shares", burn.String()),
 		sdk.NewAttribute("vault_address", vaultAddr.String()),

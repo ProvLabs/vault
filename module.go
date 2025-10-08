@@ -62,17 +62,17 @@ func (AppModuleBasic) RegisterInterfaces(reg codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(reg)
 
 	reg.RegisterInterface(
-		"vault.v1.VaultAccount",
+		"provlabs.vault.v1.VaultAccount",
 		(*types.VaultAccountI)(nil),
 		&types.VaultAccount{},
 	)
 	reg.RegisterInterface(
-		"vault.v1.VaultAccount",
+		"provlabs.vault.v1.VaultAccount",
 		(*sdk.AccountI)(nil),
 		&types.VaultAccount{},
 	)
 	reg.RegisterInterface(
-		"vault.v1.VaultAccount",
+		"provlabs.vault.v1.VaultAccount",
 		(*authtypes.GenesisAccount)(nil),
 		&types.VaultAccount{},
 	)

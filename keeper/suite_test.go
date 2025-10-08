@@ -337,7 +337,7 @@ func createSwapOutEvents(owner, vaultAddr sdk.AccAddress, assets, shares sdk.Coi
 	allEvents = append(allEvents, sendToMarkerEvents...)
 
 	// 2. The vault's own SwapOut event
-	swapOutEvent := sdk.NewEvent("vault.v1.EventSwapOutRequested",
+	swapOutEvent := sdk.NewEvent("provlabs.vault.v1.EventSwapOutRequested",
 		sdk.NewAttribute("owner", owner.String()),
 		sdk.NewAttribute("redeem_denom", assets.Denom),
 		sdk.NewAttribute("request_id", "0"),
@@ -364,7 +364,7 @@ func createSwapInEvents(owner, vaultAddr, markerAddr sdk.AccAddress, asset, shar
 	sendAssetEvents := createSendCoinEvents(owner.String(), markerAddr.String(), sdk.NewCoins(asset).String())
 	allEvents = append(allEvents, sendAssetEvents...)
 
-	swapInEvent := sdk.NewEvent("vault.v1.EventSwapIn",
+	swapInEvent := sdk.NewEvent("provlabs.vault.v1.EventSwapIn",
 		sdk.NewAttribute("amount_in", asset.String()),
 		sdk.NewAttribute("owner", owner.String()),
 		sdk.NewAttribute("shares_received", shares.String()),
@@ -423,7 +423,7 @@ func createBridgeMintSharesEventsExact(vaultAddr, bridgeAddr sdk.AccAddress, sha
 	events = append(events, createMarkerMintCoinEvents(markerModuleAddr, vaultAddr, markerAddr, shares)...)
 	events = append(events, createMarkerWithdraw(vaultAddr, markerAddr, bridgeAddr, shares)...)
 	events = append(events, sdk.NewEvent(
-		"vault.v1.EventBridgeMintShares",
+		"provlabs.vault.v1.EventBridgeMintShares",
 		sdk.NewAttribute("bridge", bridgeAddr.String()),
 		sdk.NewAttribute("shares", shares.String()),
 		sdk.NewAttribute("vault_address", vaultAddr.String()),
@@ -465,7 +465,7 @@ func createReconcileEvents(vaultAddr, markerAddr sdk.AccAddress, interest, princ
 	sendToMarkerEvents := createSendCoinEvents(fromAddress, toAddress, sdk.NewCoin(denom, interest.Abs()).String())
 	allEvents = append(allEvents, sendToMarkerEvents...)
 	interestEarned := sdk.Coin{Denom: denom, Amount: interest}
-	reconcileEvent := sdk.NewEvent("vault.v1.EventVaultReconcile",
+	reconcileEvent := sdk.NewEvent("provlabs.vault.v1.EventVaultReconcile",
 		sdk.NewAttribute("interest_earned", interestEarned.String()),
 		sdk.NewAttribute("principal_after", sdk.NewCoin(denom, principleAfter).String()),
 		sdk.NewAttribute("principal_before", sdk.NewCoin(denom, principle).String()),

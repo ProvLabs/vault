@@ -5,15 +5,16 @@ package types
 
 import (
 	fmt "fmt"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+	time "time"
+
 	types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
 	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
 	_ "google.golang.org/protobuf/types/known/timestamppb"
-	io "io"
-	math "math"
-	math_bits "math/bits"
-	time "time"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -137,7 +138,7 @@ func (m *InterestPeriod) GetInterestEarned() types.Coin {
 }
 
 func init() {
-	proto.RegisterType((*InterestPeriod)(nil), "vault.v1.InterestPeriod")
+	proto.RegisterType((*InterestPeriod)(nil), "provlabs.vault.v1.InterestPeriod")
 }
 
 func init() { proto.RegisterFile("vault/v1/interest.proto", fileDescriptor_dbf02284312cba1f) }

@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	modulev1 "github.com/provlabs/vault/api/module/v1"
-	vaultv1 "github.com/provlabs/vault/api/v1"
+	modulev1 "github.com/provlabs/vault/api/provlabs/vault/module/v1"
+	vaultv1 "github.com/provlabs/vault/api/provlabs/vault/v1"
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/simulation"
 	"github.com/provlabs/vault/types"

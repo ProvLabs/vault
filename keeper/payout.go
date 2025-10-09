@@ -156,7 +156,17 @@ func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.P
 		return types.CriticalErr(errMsg, fmt.Errorf("%s: %w", errMsg, err))
 	}
 
-	vault.TotalShares = vault.TotalShares.Sub(req.Shares)
+	// This should not fail under correct accounting. Liquidity issues would cause BankKeeper.SendCoins to fail earlier.
+	// If SafeSub fails here, req.Shares > TotalShares, indicating accounting drift; we pause the vault.
+	vault.TotalShares, err = vault.TotalShares.SafeSub(req.Shares)
+	if err != nil {
+		errMsg := fmt.Sprintf(
+			"failed to deduct %s shares from vault %s total shares after successful payout",
+			req.Shares, vaultAddr,
+		)
+		ctx.Logger().Error("CRITICAL: "+errMsg, "error", err)
+		return types.CriticalErr(errMsg, fmt.Errorf("%s: %w", errMsg, err))
+	}
 	k.AuthKeeper.SetAccount(ctx, &vault)
 
 	k.emitEvent(ctx, types.NewEventSwapOutCompleted(req.VaultAddress, req.Owner, assets, id))

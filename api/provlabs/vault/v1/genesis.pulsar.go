@@ -20,8 +20,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_genesis_proto_init()
-	md_QueueEntry = File_vault_v1_genesis_proto.Messages().ByName("QueueEntry")
+	file_provlabs_vault_v1_genesis_proto_init()
+	md_QueueEntry = File_provlabs_vault_v1_genesis_proto.Messages().ByName("QueueEntry")
 	fd_QueueEntry_time = md_QueueEntry.Fields().ByName("time")
 	fd_QueueEntry_addr = md_QueueEntry.Fields().ByName("addr")
 }
@@ -35,7 +35,7 @@ func (x *QueueEntry) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueueEntry) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_genesis_proto_msgTypes[0]
+	mi := &file_provlabs_vault_v1_genesis_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -118,15 +118,15 @@ func (x *fastReflection_QueueEntry) Range(f func(protoreflect.FieldDescriptor, p
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_QueueEntry) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.QueueEntry.time":
+	case "provlabs.vault.v1.QueueEntry.time":
 		return x.Time != uint64(0)
-	case "vault.v1.QueueEntry.addr":
+	case "provlabs.vault.v1.QueueEntry.addr":
 		return x.Addr != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueueEntry"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueueEntry"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueueEntry does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueueEntry does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -138,15 +138,15 @@ func (x *fastReflection_QueueEntry) Has(fd protoreflect.FieldDescriptor) bool {
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueueEntry) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.QueueEntry.time":
+	case "provlabs.vault.v1.QueueEntry.time":
 		x.Time = uint64(0)
-	case "vault.v1.QueueEntry.addr":
+	case "provlabs.vault.v1.QueueEntry.addr":
 		x.Addr = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueueEntry"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueueEntry"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueueEntry does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueueEntry does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -158,17 +158,17 @@ func (x *fastReflection_QueueEntry) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_QueueEntry) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.QueueEntry.time":
+	case "provlabs.vault.v1.QueueEntry.time":
 		value := x.Time
 		return protoreflect.ValueOfUint64(value)
-	case "vault.v1.QueueEntry.addr":
+	case "provlabs.vault.v1.QueueEntry.addr":
 		value := x.Addr
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueueEntry"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueueEntry"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueueEntry does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueueEntry does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -184,15 +184,15 @@ func (x *fastReflection_QueueEntry) Get(descriptor protoreflect.FieldDescriptor)
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueueEntry) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.QueueEntry.time":
+	case "provlabs.vault.v1.QueueEntry.time":
 		x.Time = value.Uint()
-	case "vault.v1.QueueEntry.addr":
+	case "provlabs.vault.v1.QueueEntry.addr":
 		x.Addr = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueueEntry"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueueEntry"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueueEntry does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueueEntry does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -208,15 +208,15 @@ func (x *fastReflection_QueueEntry) Set(fd protoreflect.FieldDescriptor, value p
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueueEntry) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.QueueEntry.time":
-		panic(fmt.Errorf("field time of message vault.v1.QueueEntry is not mutable"))
-	case "vault.v1.QueueEntry.addr":
-		panic(fmt.Errorf("field addr of message vault.v1.QueueEntry is not mutable"))
+	case "provlabs.vault.v1.QueueEntry.time":
+		panic(fmt.Errorf("field time of message provlabs.vault.v1.QueueEntry is not mutable"))
+	case "provlabs.vault.v1.QueueEntry.addr":
+		panic(fmt.Errorf("field addr of message provlabs.vault.v1.QueueEntry is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueueEntry"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueueEntry"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueueEntry does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueueEntry does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -225,15 +225,15 @@ func (x *fastReflection_QueueEntry) Mutable(fd protoreflect.FieldDescriptor) pro
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_QueueEntry) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.QueueEntry.time":
+	case "provlabs.vault.v1.QueueEntry.time":
 		return protoreflect.ValueOfUint64(uint64(0))
-	case "vault.v1.QueueEntry.addr":
+	case "provlabs.vault.v1.QueueEntry.addr":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueueEntry"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueueEntry"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueueEntry does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueueEntry does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -243,7 +243,7 @@ func (x *fastReflection_QueueEntry) NewField(fd protoreflect.FieldDescriptor) pr
 func (x *fastReflection_QueueEntry) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.QueueEntry", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.QueueEntry", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -489,8 +489,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_genesis_proto_init()
-	md_PendingSwapOutQueueEntry = File_vault_v1_genesis_proto.Messages().ByName("PendingSwapOutQueueEntry")
+	file_provlabs_vault_v1_genesis_proto_init()
+	md_PendingSwapOutQueueEntry = File_provlabs_vault_v1_genesis_proto.Messages().ByName("PendingSwapOutQueueEntry")
 	fd_PendingSwapOutQueueEntry_time = md_PendingSwapOutQueueEntry.Fields().ByName("time")
 	fd_PendingSwapOutQueueEntry_id = md_PendingSwapOutQueueEntry.Fields().ByName("id")
 	fd_PendingSwapOutQueueEntry_swap_out = md_PendingSwapOutQueueEntry.Fields().ByName("swap_out")
@@ -505,7 +505,7 @@ func (x *PendingSwapOutQueueEntry) ProtoReflect() protoreflect.Message {
 }
 
 func (x *PendingSwapOutQueueEntry) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_genesis_proto_msgTypes[1]
+	mi := &file_provlabs_vault_v1_genesis_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -594,17 +594,17 @@ func (x *fastReflection_PendingSwapOutQueueEntry) Range(f func(protoreflect.Fiel
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_PendingSwapOutQueueEntry) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.PendingSwapOutQueueEntry.time":
+	case "provlabs.vault.v1.PendingSwapOutQueueEntry.time":
 		return x.Time != int64(0)
-	case "vault.v1.PendingSwapOutQueueEntry.id":
+	case "provlabs.vault.v1.PendingSwapOutQueueEntry.id":
 		return x.Id != uint64(0)
-	case "vault.v1.PendingSwapOutQueueEntry.swap_out":
+	case "provlabs.vault.v1.PendingSwapOutQueueEntry.swap_out":
 		return x.SwapOut != nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOutQueueEntry"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.PendingSwapOutQueueEntry"))
 		}
-		panic(fmt.Errorf("message vault.v1.PendingSwapOutQueueEntry does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.PendingSwapOutQueueEntry does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -616,17 +616,17 @@ func (x *fastReflection_PendingSwapOutQueueEntry) Has(fd protoreflect.FieldDescr
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_PendingSwapOutQueueEntry) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.PendingSwapOutQueueEntry.time":
+	case "provlabs.vault.v1.PendingSwapOutQueueEntry.time":
 		x.Time = int64(0)
-	case "vault.v1.PendingSwapOutQueueEntry.id":
+	case "provlabs.vault.v1.PendingSwapOutQueueEntry.id":
 		x.Id = uint64(0)
-	case "vault.v1.PendingSwapOutQueueEntry.swap_out":
+	case "provlabs.vault.v1.PendingSwapOutQueueEntry.swap_out":
 		x.SwapOut = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOutQueueEntry"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.PendingSwapOutQueueEntry"))
 		}
-		panic(fmt.Errorf("message vault.v1.PendingSwapOutQueueEntry does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.PendingSwapOutQueueEntry does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -638,20 +638,20 @@ func (x *fastReflection_PendingSwapOutQueueEntry) Clear(fd protoreflect.FieldDes
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_PendingSwapOutQueueEntry) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.PendingSwapOutQueueEntry.time":
+	case "provlabs.vault.v1.PendingSwapOutQueueEntry.time":
 		value := x.Time
 		return protoreflect.ValueOfInt64(value)
-	case "vault.v1.PendingSwapOutQueueEntry.id":
+	case "provlabs.vault.v1.PendingSwapOutQueueEntry.id":
 		value := x.Id
 		return protoreflect.ValueOfUint64(value)
-	case "vault.v1.PendingSwapOutQueueEntry.swap_out":
+	case "provlabs.vault.v1.PendingSwapOutQueueEntry.swap_out":
 		value := x.SwapOut
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOutQueueEntry"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.PendingSwapOutQueueEntry"))
 		}
-		panic(fmt.Errorf("message vault.v1.PendingSwapOutQueueEntry does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.PendingSwapOutQueueEntry does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -667,17 +667,17 @@ func (x *fastReflection_PendingSwapOutQueueEntry) Get(descriptor protoreflect.Fi
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_PendingSwapOutQueueEntry) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.PendingSwapOutQueueEntry.time":
+	case "provlabs.vault.v1.PendingSwapOutQueueEntry.time":
 		x.Time = value.Int()
-	case "vault.v1.PendingSwapOutQueueEntry.id":
+	case "provlabs.vault.v1.PendingSwapOutQueueEntry.id":
 		x.Id = value.Uint()
-	case "vault.v1.PendingSwapOutQueueEntry.swap_out":
+	case "provlabs.vault.v1.PendingSwapOutQueueEntry.swap_out":
 		x.SwapOut = value.Message().Interface().(*PendingSwapOut)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOutQueueEntry"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.PendingSwapOutQueueEntry"))
 		}
-		panic(fmt.Errorf("message vault.v1.PendingSwapOutQueueEntry does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.PendingSwapOutQueueEntry does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -693,20 +693,20 @@ func (x *fastReflection_PendingSwapOutQueueEntry) Set(fd protoreflect.FieldDescr
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_PendingSwapOutQueueEntry) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.PendingSwapOutQueueEntry.swap_out":
+	case "provlabs.vault.v1.PendingSwapOutQueueEntry.swap_out":
 		if x.SwapOut == nil {
 			x.SwapOut = new(PendingSwapOut)
 		}
 		return protoreflect.ValueOfMessage(x.SwapOut.ProtoReflect())
-	case "vault.v1.PendingSwapOutQueueEntry.time":
-		panic(fmt.Errorf("field time of message vault.v1.PendingSwapOutQueueEntry is not mutable"))
-	case "vault.v1.PendingSwapOutQueueEntry.id":
-		panic(fmt.Errorf("field id of message vault.v1.PendingSwapOutQueueEntry is not mutable"))
+	case "provlabs.vault.v1.PendingSwapOutQueueEntry.time":
+		panic(fmt.Errorf("field time of message provlabs.vault.v1.PendingSwapOutQueueEntry is not mutable"))
+	case "provlabs.vault.v1.PendingSwapOutQueueEntry.id":
+		panic(fmt.Errorf("field id of message provlabs.vault.v1.PendingSwapOutQueueEntry is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOutQueueEntry"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.PendingSwapOutQueueEntry"))
 		}
-		panic(fmt.Errorf("message vault.v1.PendingSwapOutQueueEntry does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.PendingSwapOutQueueEntry does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -715,18 +715,18 @@ func (x *fastReflection_PendingSwapOutQueueEntry) Mutable(fd protoreflect.FieldD
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_PendingSwapOutQueueEntry) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.PendingSwapOutQueueEntry.time":
+	case "provlabs.vault.v1.PendingSwapOutQueueEntry.time":
 		return protoreflect.ValueOfInt64(int64(0))
-	case "vault.v1.PendingSwapOutQueueEntry.id":
+	case "provlabs.vault.v1.PendingSwapOutQueueEntry.id":
 		return protoreflect.ValueOfUint64(uint64(0))
-	case "vault.v1.PendingSwapOutQueueEntry.swap_out":
+	case "provlabs.vault.v1.PendingSwapOutQueueEntry.swap_out":
 		m := new(PendingSwapOut)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOutQueueEntry"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.PendingSwapOutQueueEntry"))
 		}
-		panic(fmt.Errorf("message vault.v1.PendingSwapOutQueueEntry does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.PendingSwapOutQueueEntry does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -736,7 +736,7 @@ func (x *fastReflection_PendingSwapOutQueueEntry) NewField(fd protoreflect.Field
 func (x *fastReflection_PendingSwapOutQueueEntry) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.PendingSwapOutQueueEntry", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.PendingSwapOutQueueEntry", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -1070,8 +1070,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_genesis_proto_init()
-	md_PendingSwapOutQueue = File_vault_v1_genesis_proto.Messages().ByName("PendingSwapOutQueue")
+	file_provlabs_vault_v1_genesis_proto_init()
+	md_PendingSwapOutQueue = File_provlabs_vault_v1_genesis_proto.Messages().ByName("PendingSwapOutQueue")
 	fd_PendingSwapOutQueue_latest_sequence_number = md_PendingSwapOutQueue.Fields().ByName("latest_sequence_number")
 	fd_PendingSwapOutQueue_entries = md_PendingSwapOutQueue.Fields().ByName("entries")
 }
@@ -1085,7 +1085,7 @@ func (x *PendingSwapOutQueue) ProtoReflect() protoreflect.Message {
 }
 
 func (x *PendingSwapOutQueue) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_genesis_proto_msgTypes[2]
+	mi := &file_provlabs_vault_v1_genesis_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1168,15 +1168,15 @@ func (x *fastReflection_PendingSwapOutQueue) Range(f func(protoreflect.FieldDesc
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_PendingSwapOutQueue) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.PendingSwapOutQueue.latest_sequence_number":
+	case "provlabs.vault.v1.PendingSwapOutQueue.latest_sequence_number":
 		return x.LatestSequenceNumber != uint64(0)
-	case "vault.v1.PendingSwapOutQueue.entries":
+	case "provlabs.vault.v1.PendingSwapOutQueue.entries":
 		return len(x.Entries) != 0
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOutQueue"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.PendingSwapOutQueue"))
 		}
-		panic(fmt.Errorf("message vault.v1.PendingSwapOutQueue does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.PendingSwapOutQueue does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1188,15 +1188,15 @@ func (x *fastReflection_PendingSwapOutQueue) Has(fd protoreflect.FieldDescriptor
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_PendingSwapOutQueue) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.PendingSwapOutQueue.latest_sequence_number":
+	case "provlabs.vault.v1.PendingSwapOutQueue.latest_sequence_number":
 		x.LatestSequenceNumber = uint64(0)
-	case "vault.v1.PendingSwapOutQueue.entries":
+	case "provlabs.vault.v1.PendingSwapOutQueue.entries":
 		x.Entries = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOutQueue"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.PendingSwapOutQueue"))
 		}
-		panic(fmt.Errorf("message vault.v1.PendingSwapOutQueue does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.PendingSwapOutQueue does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1208,10 +1208,10 @@ func (x *fastReflection_PendingSwapOutQueue) Clear(fd protoreflect.FieldDescript
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_PendingSwapOutQueue) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.PendingSwapOutQueue.latest_sequence_number":
+	case "provlabs.vault.v1.PendingSwapOutQueue.latest_sequence_number":
 		value := x.LatestSequenceNumber
 		return protoreflect.ValueOfUint64(value)
-	case "vault.v1.PendingSwapOutQueue.entries":
+	case "provlabs.vault.v1.PendingSwapOutQueue.entries":
 		if len(x.Entries) == 0 {
 			return protoreflect.ValueOfList(&_PendingSwapOutQueue_2_list{})
 		}
@@ -1219,9 +1219,9 @@ func (x *fastReflection_PendingSwapOutQueue) Get(descriptor protoreflect.FieldDe
 		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOutQueue"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.PendingSwapOutQueue"))
 		}
-		panic(fmt.Errorf("message vault.v1.PendingSwapOutQueue does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.PendingSwapOutQueue does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -1237,17 +1237,17 @@ func (x *fastReflection_PendingSwapOutQueue) Get(descriptor protoreflect.FieldDe
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_PendingSwapOutQueue) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.PendingSwapOutQueue.latest_sequence_number":
+	case "provlabs.vault.v1.PendingSwapOutQueue.latest_sequence_number":
 		x.LatestSequenceNumber = value.Uint()
-	case "vault.v1.PendingSwapOutQueue.entries":
+	case "provlabs.vault.v1.PendingSwapOutQueue.entries":
 		lv := value.List()
 		clv := lv.(*_PendingSwapOutQueue_2_list)
 		x.Entries = *clv.list
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOutQueue"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.PendingSwapOutQueue"))
 		}
-		panic(fmt.Errorf("message vault.v1.PendingSwapOutQueue does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.PendingSwapOutQueue does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1263,19 +1263,19 @@ func (x *fastReflection_PendingSwapOutQueue) Set(fd protoreflect.FieldDescriptor
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_PendingSwapOutQueue) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.PendingSwapOutQueue.entries":
+	case "provlabs.vault.v1.PendingSwapOutQueue.entries":
 		if x.Entries == nil {
 			x.Entries = []*PendingSwapOutQueueEntry{}
 		}
 		value := &_PendingSwapOutQueue_2_list{list: &x.Entries}
 		return protoreflect.ValueOfList(value)
-	case "vault.v1.PendingSwapOutQueue.latest_sequence_number":
-		panic(fmt.Errorf("field latest_sequence_number of message vault.v1.PendingSwapOutQueue is not mutable"))
+	case "provlabs.vault.v1.PendingSwapOutQueue.latest_sequence_number":
+		panic(fmt.Errorf("field latest_sequence_number of message provlabs.vault.v1.PendingSwapOutQueue is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOutQueue"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.PendingSwapOutQueue"))
 		}
-		panic(fmt.Errorf("message vault.v1.PendingSwapOutQueue does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.PendingSwapOutQueue does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1284,16 +1284,16 @@ func (x *fastReflection_PendingSwapOutQueue) Mutable(fd protoreflect.FieldDescri
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_PendingSwapOutQueue) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.PendingSwapOutQueue.latest_sequence_number":
+	case "provlabs.vault.v1.PendingSwapOutQueue.latest_sequence_number":
 		return protoreflect.ValueOfUint64(uint64(0))
-	case "vault.v1.PendingSwapOutQueue.entries":
+	case "provlabs.vault.v1.PendingSwapOutQueue.entries":
 		list := []*PendingSwapOutQueueEntry{}
 		return protoreflect.ValueOfList(&_PendingSwapOutQueue_2_list{list: &list})
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOutQueue"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.PendingSwapOutQueue"))
 		}
-		panic(fmt.Errorf("message vault.v1.PendingSwapOutQueue does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.PendingSwapOutQueue does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1303,7 +1303,7 @@ func (x *fastReflection_PendingSwapOutQueue) NewField(fd protoreflect.FieldDescr
 func (x *fastReflection_PendingSwapOutQueue) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.PendingSwapOutQueue", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.PendingSwapOutQueue", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -1664,8 +1664,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_genesis_proto_init()
-	md_GenesisState = File_vault_v1_genesis_proto.Messages().ByName("GenesisState")
+	file_provlabs_vault_v1_genesis_proto_init()
+	md_GenesisState = File_provlabs_vault_v1_genesis_proto.Messages().ByName("GenesisState")
 	fd_GenesisState_vaults = md_GenesisState.Fields().ByName("vaults")
 	fd_GenesisState_payout_timeout_queue = md_GenesisState.Fields().ByName("payout_timeout_queue")
 	fd_GenesisState_pending_swap_out_queue = md_GenesisState.Fields().ByName("pending_swap_out_queue")
@@ -1680,7 +1680,7 @@ func (x *GenesisState) ProtoReflect() protoreflect.Message {
 }
 
 func (x *GenesisState) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_genesis_proto_msgTypes[3]
+	mi := &file_provlabs_vault_v1_genesis_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1769,17 +1769,17 @@ func (x *fastReflection_GenesisState) Range(f func(protoreflect.FieldDescriptor,
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_GenesisState) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.GenesisState.vaults":
+	case "provlabs.vault.v1.GenesisState.vaults":
 		return len(x.Vaults) != 0
-	case "vault.v1.GenesisState.payout_timeout_queue":
+	case "provlabs.vault.v1.GenesisState.payout_timeout_queue":
 		return len(x.PayoutTimeoutQueue) != 0
-	case "vault.v1.GenesisState.pending_swap_out_queue":
+	case "provlabs.vault.v1.GenesisState.pending_swap_out_queue":
 		return x.PendingSwapOutQueue != nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.GenesisState"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.GenesisState"))
 		}
-		panic(fmt.Errorf("message vault.v1.GenesisState does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.GenesisState does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1791,17 +1791,17 @@ func (x *fastReflection_GenesisState) Has(fd protoreflect.FieldDescriptor) bool 
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_GenesisState) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.GenesisState.vaults":
+	case "provlabs.vault.v1.GenesisState.vaults":
 		x.Vaults = nil
-	case "vault.v1.GenesisState.payout_timeout_queue":
+	case "provlabs.vault.v1.GenesisState.payout_timeout_queue":
 		x.PayoutTimeoutQueue = nil
-	case "vault.v1.GenesisState.pending_swap_out_queue":
+	case "provlabs.vault.v1.GenesisState.pending_swap_out_queue":
 		x.PendingSwapOutQueue = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.GenesisState"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.GenesisState"))
 		}
-		panic(fmt.Errorf("message vault.v1.GenesisState does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.GenesisState does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1813,26 +1813,26 @@ func (x *fastReflection_GenesisState) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_GenesisState) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.GenesisState.vaults":
+	case "provlabs.vault.v1.GenesisState.vaults":
 		if len(x.Vaults) == 0 {
 			return protoreflect.ValueOfList(&_GenesisState_1_list{})
 		}
 		listValue := &_GenesisState_1_list{list: &x.Vaults}
 		return protoreflect.ValueOfList(listValue)
-	case "vault.v1.GenesisState.payout_timeout_queue":
+	case "provlabs.vault.v1.GenesisState.payout_timeout_queue":
 		if len(x.PayoutTimeoutQueue) == 0 {
 			return protoreflect.ValueOfList(&_GenesisState_2_list{})
 		}
 		listValue := &_GenesisState_2_list{list: &x.PayoutTimeoutQueue}
 		return protoreflect.ValueOfList(listValue)
-	case "vault.v1.GenesisState.pending_swap_out_queue":
+	case "provlabs.vault.v1.GenesisState.pending_swap_out_queue":
 		value := x.PendingSwapOutQueue
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.GenesisState"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.GenesisState"))
 		}
-		panic(fmt.Errorf("message vault.v1.GenesisState does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.GenesisState does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -1848,21 +1848,21 @@ func (x *fastReflection_GenesisState) Get(descriptor protoreflect.FieldDescripto
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_GenesisState) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.GenesisState.vaults":
+	case "provlabs.vault.v1.GenesisState.vaults":
 		lv := value.List()
 		clv := lv.(*_GenesisState_1_list)
 		x.Vaults = *clv.list
-	case "vault.v1.GenesisState.payout_timeout_queue":
+	case "provlabs.vault.v1.GenesisState.payout_timeout_queue":
 		lv := value.List()
 		clv := lv.(*_GenesisState_2_list)
 		x.PayoutTimeoutQueue = *clv.list
-	case "vault.v1.GenesisState.pending_swap_out_queue":
+	case "provlabs.vault.v1.GenesisState.pending_swap_out_queue":
 		x.PendingSwapOutQueue = value.Message().Interface().(*PendingSwapOutQueue)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.GenesisState"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.GenesisState"))
 		}
-		panic(fmt.Errorf("message vault.v1.GenesisState does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.GenesisState does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1878,28 +1878,28 @@ func (x *fastReflection_GenesisState) Set(fd protoreflect.FieldDescriptor, value
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_GenesisState) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.GenesisState.vaults":
+	case "provlabs.vault.v1.GenesisState.vaults":
 		if x.Vaults == nil {
 			x.Vaults = []*VaultAccount{}
 		}
 		value := &_GenesisState_1_list{list: &x.Vaults}
 		return protoreflect.ValueOfList(value)
-	case "vault.v1.GenesisState.payout_timeout_queue":
+	case "provlabs.vault.v1.GenesisState.payout_timeout_queue":
 		if x.PayoutTimeoutQueue == nil {
 			x.PayoutTimeoutQueue = []*QueueEntry{}
 		}
 		value := &_GenesisState_2_list{list: &x.PayoutTimeoutQueue}
 		return protoreflect.ValueOfList(value)
-	case "vault.v1.GenesisState.pending_swap_out_queue":
+	case "provlabs.vault.v1.GenesisState.pending_swap_out_queue":
 		if x.PendingSwapOutQueue == nil {
 			x.PendingSwapOutQueue = new(PendingSwapOutQueue)
 		}
 		return protoreflect.ValueOfMessage(x.PendingSwapOutQueue.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.GenesisState"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.GenesisState"))
 		}
-		panic(fmt.Errorf("message vault.v1.GenesisState does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.GenesisState does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1908,20 +1908,20 @@ func (x *fastReflection_GenesisState) Mutable(fd protoreflect.FieldDescriptor) p
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_GenesisState) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.GenesisState.vaults":
+	case "provlabs.vault.v1.GenesisState.vaults":
 		list := []*VaultAccount{}
 		return protoreflect.ValueOfList(&_GenesisState_1_list{list: &list})
-	case "vault.v1.GenesisState.payout_timeout_queue":
+	case "provlabs.vault.v1.GenesisState.payout_timeout_queue":
 		list := []*QueueEntry{}
 		return protoreflect.ValueOfList(&_GenesisState_2_list{list: &list})
-	case "vault.v1.GenesisState.pending_swap_out_queue":
+	case "provlabs.vault.v1.GenesisState.pending_swap_out_queue":
 		m := new(PendingSwapOutQueue)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.GenesisState"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.GenesisState"))
 		}
-		panic(fmt.Errorf("message vault.v1.GenesisState does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.GenesisState does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1931,7 +1931,7 @@ func (x *fastReflection_GenesisState) NewField(fd protoreflect.FieldDescriptor) 
 func (x *fastReflection_GenesisState) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.GenesisState", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.GenesisState", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -2269,7 +2269,7 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 // versions:
 // 	protoc-gen-go v1.27.0
 // 	protoc        (unknown)
-// source: vault/v1/genesis.proto
+// source: provlabs/vault/v1/genesis.proto
 
 const (
 	// Verify that this generated code is sufficiently up-to-date.
@@ -2293,7 +2293,7 @@ type QueueEntry struct {
 func (x *QueueEntry) Reset() {
 	*x = QueueEntry{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_genesis_proto_msgTypes[0]
+		mi := &file_provlabs_vault_v1_genesis_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2307,7 +2307,7 @@ func (*QueueEntry) ProtoMessage() {}
 
 // Deprecated: Use QueueEntry.ProtoReflect.Descriptor instead.
 func (*QueueEntry) Descriptor() ([]byte, []int) {
-	return file_vault_v1_genesis_proto_rawDescGZIP(), []int{0}
+	return file_provlabs_vault_v1_genesis_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *QueueEntry) GetTime() uint64 {
@@ -2341,7 +2341,7 @@ type PendingSwapOutQueueEntry struct {
 func (x *PendingSwapOutQueueEntry) Reset() {
 	*x = PendingSwapOutQueueEntry{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_genesis_proto_msgTypes[1]
+		mi := &file_provlabs_vault_v1_genesis_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2355,7 +2355,7 @@ func (*PendingSwapOutQueueEntry) ProtoMessage() {}
 
 // Deprecated: Use PendingSwapOutQueueEntry.ProtoReflect.Descriptor instead.
 func (*PendingSwapOutQueueEntry) Descriptor() ([]byte, []int) {
-	return file_vault_v1_genesis_proto_rawDescGZIP(), []int{1}
+	return file_provlabs_vault_v1_genesis_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *PendingSwapOutQueueEntry) GetTime() int64 {
@@ -2394,7 +2394,7 @@ type PendingSwapOutQueue struct {
 func (x *PendingSwapOutQueue) Reset() {
 	*x = PendingSwapOutQueue{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_genesis_proto_msgTypes[2]
+		mi := &file_provlabs_vault_v1_genesis_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2408,7 +2408,7 @@ func (*PendingSwapOutQueue) ProtoMessage() {}
 
 // Deprecated: Use PendingSwapOutQueue.ProtoReflect.Descriptor instead.
 func (*PendingSwapOutQueue) Descriptor() ([]byte, []int) {
-	return file_vault_v1_genesis_proto_rawDescGZIP(), []int{2}
+	return file_provlabs_vault_v1_genesis_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *PendingSwapOutQueue) GetLatestSequenceNumber() uint64 {
@@ -2445,7 +2445,7 @@ type GenesisState struct {
 func (x *GenesisState) Reset() {
 	*x = GenesisState{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_genesis_proto_msgTypes[3]
+		mi := &file_provlabs_vault_v1_genesis_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2459,7 +2459,7 @@ func (*GenesisState) ProtoMessage() {}
 
 // Deprecated: Use GenesisState.ProtoReflect.Descriptor instead.
 func (*GenesisState) Descriptor() ([]byte, []int) {
-	return file_vault_v1_genesis_proto_rawDescGZIP(), []int{3}
+	return file_provlabs_vault_v1_genesis_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *GenesisState) GetVaults() []*VaultAccount {
@@ -2483,88 +2483,96 @@ func (x *GenesisState) GetPendingSwapOutQueue() *PendingSwapOutQueue {
 	return nil
 }
 
-var File_vault_v1_genesis_proto protoreflect.FileDescriptor
+var File_provlabs_vault_v1_genesis_proto protoreflect.FileDescriptor
 
-var file_vault_v1_genesis_proto_rawDesc = []byte{
-	0x0a, 0x16, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x2f, 0x67, 0x65, 0x6e, 0x65, 0x73,
-	0x69, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x08, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e,
-	0x76, 0x31, 0x1a, 0x14, 0x67, 0x6f, 0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f,
-	0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x14, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f,
-	0x76, 0x31, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x34,
-	0x0a, 0x0a, 0x51, 0x75, 0x65, 0x75, 0x65, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x12, 0x0a, 0x04,
-	0x74, 0x69, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x04, 0x74, 0x69, 0x6d, 0x65,
-	0x12, 0x12, 0x0a, 0x04, 0x61, 0x64, 0x64, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04,
-	0x61, 0x64, 0x64, 0x72, 0x22, 0x79, 0x0a, 0x18, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53,
+var file_provlabs_vault_v1_genesis_proto_rawDesc = []byte{
+	0x0a, 0x1f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74,
+	0x2f, 0x76, 0x31, 0x2f, 0x67, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x12, 0x11, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c,
+	0x74, 0x2e, 0x76, 0x31, 0x1a, 0x14, 0x67, 0x6f, 0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f,
+	0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1d, 0x70, 0x72, 0x6f, 0x76,
+	0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x2f, 0x76, 0x61,
+	0x75, 0x6c, 0x74, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x34, 0x0a, 0x0a, 0x51, 0x75, 0x65,
+	0x75, 0x65, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x12, 0x0a, 0x04, 0x74, 0x69, 0x6d, 0x65, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x04, 0x74, 0x69, 0x6d, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x61,
+	0x64, 0x64, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x61, 0x64, 0x64, 0x72, 0x22,
+	0x82, 0x01, 0x0a, 0x18, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f,
+	0x75, 0x74, 0x51, 0x75, 0x65, 0x75, 0x65, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x12, 0x0a, 0x04,
+	0x74, 0x69, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x04, 0x74, 0x69, 0x6d, 0x65,
+	0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04, 0x52, 0x02, 0x69, 0x64,
+	0x12, 0x42, 0x0a, 0x08, 0x73, 0x77, 0x61, 0x70, 0x5f, 0x6f, 0x75, 0x74, 0x18, 0x03, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x21, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61,
+	0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77,
+	0x61, 0x70, 0x4f, 0x75, 0x74, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x07, 0x73, 0x77, 0x61,
+	0x70, 0x4f, 0x75, 0x74, 0x22, 0x98, 0x01, 0x0a, 0x13, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67,
+	0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x51, 0x75, 0x65, 0x75, 0x65, 0x12, 0x34, 0x0a, 0x16,
+	0x6c, 0x61, 0x74, 0x65, 0x73, 0x74, 0x5f, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x5f,
+	0x6e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x14, 0x6c, 0x61,
+	0x74, 0x65, 0x73, 0x74, 0x53, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x4e, 0x75, 0x6d, 0x62,
+	0x65, 0x72, 0x12, 0x4b, 0x0a, 0x07, 0x65, 0x6e, 0x74, 0x72, 0x69, 0x65, 0x73, 0x18, 0x02, 0x20,
+	0x03, 0x28, 0x0b, 0x32, 0x2b, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76,
+	0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53,
 	0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x51, 0x75, 0x65, 0x75, 0x65, 0x45, 0x6e, 0x74, 0x72, 0x79,
-	0x12, 0x12, 0x0a, 0x04, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x03, 0x52, 0x04,
-	0x74, 0x69, 0x6d, 0x65, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x04,
-	0x52, 0x02, 0x69, 0x64, 0x12, 0x39, 0x0a, 0x08, 0x73, 0x77, 0x61, 0x70, 0x5f, 0x6f, 0x75, 0x74,
-	0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76,
-	0x31, 0x2e, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74,
-	0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x07, 0x73, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x22,
-	0x8f, 0x01, 0x0a, 0x13, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f,
-	0x75, 0x74, 0x51, 0x75, 0x65, 0x75, 0x65, 0x12, 0x34, 0x0a, 0x16, 0x6c, 0x61, 0x74, 0x65, 0x73,
-	0x74, 0x5f, 0x73, 0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x5f, 0x6e, 0x75, 0x6d, 0x62, 0x65,
-	0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x14, 0x6c, 0x61, 0x74, 0x65, 0x73, 0x74, 0x53,
-	0x65, 0x71, 0x75, 0x65, 0x6e, 0x63, 0x65, 0x4e, 0x75, 0x6d, 0x62, 0x65, 0x72, 0x12, 0x42, 0x0a,
-	0x07, 0x65, 0x6e, 0x74, 0x72, 0x69, 0x65, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x22,
-	0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e,
-	0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x51, 0x75, 0x65, 0x75, 0x65, 0x45, 0x6e, 0x74,
-	0x72, 0x79, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x07, 0x65, 0x6e, 0x74, 0x72, 0x69, 0x65,
-	0x73, 0x22, 0xec, 0x01, 0x0a, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x53, 0x74, 0x61,
-	0x74, 0x65, 0x12, 0x34, 0x0a, 0x06, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x18, 0x01, 0x20, 0x03,
-	0x28, 0x0b, 0x32, 0x16, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x56, 0x61,
-	0x75, 0x6c, 0x74, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00,
-	0x52, 0x06, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x12, 0x4c, 0x0a, 0x14, 0x70, 0x61, 0x79, 0x6f,
-	0x75, 0x74, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x5f, 0x71, 0x75, 0x65, 0x75, 0x65,
-	0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76,
+	0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x07, 0x65, 0x6e, 0x74, 0x72, 0x69, 0x65, 0x73, 0x22,
+	0x87, 0x02, 0x0a, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x53, 0x74, 0x61, 0x74, 0x65,
+	0x12, 0x3d, 0x0a, 0x06, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b,
+	0x32, 0x1f, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c,
+	0x74, 0x2e, 0x76, 0x31, 0x2e, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e,
+	0x74, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x12,
+	0x55, 0x0a, 0x14, 0x70, 0x61, 0x79, 0x6f, 0x75, 0x74, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x6f, 0x75,
+	0x74, 0x5f, 0x71, 0x75, 0x65, 0x75, 0x65, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e,
+	0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76,
 	0x31, 0x2e, 0x51, 0x75, 0x65, 0x75, 0x65, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x42, 0x04, 0xc8, 0xde,
 	0x1f, 0x00, 0x52, 0x12, 0x70, 0x61, 0x79, 0x6f, 0x75, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x6f, 0x75,
-	0x74, 0x51, 0x75, 0x65, 0x75, 0x65, 0x12, 0x58, 0x0a, 0x16, 0x70, 0x65, 0x6e, 0x64, 0x69, 0x6e,
+	0x74, 0x51, 0x75, 0x65, 0x75, 0x65, 0x12, 0x61, 0x0a, 0x16, 0x70, 0x65, 0x6e, 0x64, 0x69, 0x6e,
 	0x67, 0x5f, 0x73, 0x77, 0x61, 0x70, 0x5f, 0x6f, 0x75, 0x74, 0x5f, 0x71, 0x75, 0x65, 0x75, 0x65,
-	0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76,
-	0x31, 0x2e, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74,
-	0x51, 0x75, 0x65, 0x75, 0x65, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x13, 0x70, 0x65, 0x6e,
-	0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x51, 0x75, 0x65, 0x75, 0x65,
-	0x42, 0x8d, 0x01, 0x0a, 0x0c, 0x63, 0x6f, 0x6d, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76,
-	0x31, 0x42, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50,
-	0x01, 0x5a, 0x2e, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72,
-	0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69,
-	0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x76,
-	0x31, 0xa2, 0x02, 0x03, 0x56, 0x58, 0x58, 0xaa, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e,
-	0x56, 0x31, 0xca, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x14,
-	0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61,
-	0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x09, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31,
+	0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62,
+	0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x50, 0x65, 0x6e, 0x64, 0x69,
+	0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x51, 0x75, 0x65, 0x75, 0x65, 0x42, 0x04,
+	0xc8, 0xde, 0x1f, 0x00, 0x52, 0x13, 0x70, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61,
+	0x70, 0x4f, 0x75, 0x74, 0x51, 0x75, 0x65, 0x75, 0x65, 0x42, 0xc4, 0x01, 0x0a, 0x15, 0x63, 0x6f,
+	0x6d, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74,
+	0x2e, 0x76, 0x31, 0x42, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x50, 0x72, 0x6f, 0x74,
+	0x6f, 0x50, 0x01, 0x5a, 0x37, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f,
+	0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61,
+	0x70, 0x69, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c,
+	0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x50,
+	0x56, 0x58, 0xaa, 0x02, 0x11, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x56, 0x61,
+	0x75, 0x6c, 0x74, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x11, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62,
+	0x73, 0x5c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1d, 0x50, 0x72, 0x6f,
+	0x76, 0x6c, 0x61, 0x62, 0x73, 0x5c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47,
+	0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x13, 0x50, 0x72, 0x6f,
+	0x76, 0x6c, 0x61, 0x62, 0x73, 0x3a, 0x3a, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31,
 	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
-	file_vault_v1_genesis_proto_rawDescOnce sync.Once
-	file_vault_v1_genesis_proto_rawDescData = file_vault_v1_genesis_proto_rawDesc
+	file_provlabs_vault_v1_genesis_proto_rawDescOnce sync.Once
+	file_provlabs_vault_v1_genesis_proto_rawDescData = file_provlabs_vault_v1_genesis_proto_rawDesc
 )
 
-func file_vault_v1_genesis_proto_rawDescGZIP() []byte {
-	file_vault_v1_genesis_proto_rawDescOnce.Do(func() {
-		file_vault_v1_genesis_proto_rawDescData = protoimpl.X.CompressGZIP(file_vault_v1_genesis_proto_rawDescData)
+func file_provlabs_vault_v1_genesis_proto_rawDescGZIP() []byte {
+	file_provlabs_vault_v1_genesis_proto_rawDescOnce.Do(func() {
+		file_provlabs_vault_v1_genesis_proto_rawDescData = protoimpl.X.CompressGZIP(file_provlabs_vault_v1_genesis_proto_rawDescData)
 	})
-	return file_vault_v1_genesis_proto_rawDescData
+	return file_provlabs_vault_v1_genesis_proto_rawDescData
 }
 
-var file_vault_v1_genesis_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
-var file_vault_v1_genesis_proto_goTypes = []interface{}{
-	(*QueueEntry)(nil),               // 0: vault.v1.QueueEntry
-	(*PendingSwapOutQueueEntry)(nil), // 1: vault.v1.PendingSwapOutQueueEntry
-	(*PendingSwapOutQueue)(nil),      // 2: vault.v1.PendingSwapOutQueue
-	(*GenesisState)(nil),             // 3: vault.v1.GenesisState
-	(*PendingSwapOut)(nil),           // 4: vault.v1.PendingSwapOut
-	(*VaultAccount)(nil),             // 5: vault.v1.VaultAccount
+var file_provlabs_vault_v1_genesis_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_provlabs_vault_v1_genesis_proto_goTypes = []interface{}{
+	(*QueueEntry)(nil),               // 0: provlabs.vault.v1.QueueEntry
+	(*PendingSwapOutQueueEntry)(nil), // 1: provlabs.vault.v1.PendingSwapOutQueueEntry
+	(*PendingSwapOutQueue)(nil),      // 2: provlabs.vault.v1.PendingSwapOutQueue
+	(*GenesisState)(nil),             // 3: provlabs.vault.v1.GenesisState
+	(*PendingSwapOut)(nil),           // 4: provlabs.vault.v1.PendingSwapOut
+	(*VaultAccount)(nil),             // 5: provlabs.vault.v1.VaultAccount
 }
-var file_vault_v1_genesis_proto_depIdxs = []int32{
-	4, // 0: vault.v1.PendingSwapOutQueueEntry.swap_out:type_name -> vault.v1.PendingSwapOut
-	1, // 1: vault.v1.PendingSwapOutQueue.entries:type_name -> vault.v1.PendingSwapOutQueueEntry
-	5, // 2: vault.v1.GenesisState.vaults:type_name -> vault.v1.VaultAccount
-	0, // 3: vault.v1.GenesisState.payout_timeout_queue:type_name -> vault.v1.QueueEntry
-	2, // 4: vault.v1.GenesisState.pending_swap_out_queue:type_name -> vault.v1.PendingSwapOutQueue
+var file_provlabs_vault_v1_genesis_proto_depIdxs = []int32{
+	4, // 0: provlabs.vault.v1.PendingSwapOutQueueEntry.swap_out:type_name -> provlabs.vault.v1.PendingSwapOut
+	1, // 1: provlabs.vault.v1.PendingSwapOutQueue.entries:type_name -> provlabs.vault.v1.PendingSwapOutQueueEntry
+	5, // 2: provlabs.vault.v1.GenesisState.vaults:type_name -> provlabs.vault.v1.VaultAccount
+	0, // 3: provlabs.vault.v1.GenesisState.payout_timeout_queue:type_name -> provlabs.vault.v1.QueueEntry
+	2, // 4: provlabs.vault.v1.GenesisState.pending_swap_out_queue:type_name -> provlabs.vault.v1.PendingSwapOutQueue
 	5, // [5:5] is the sub-list for method output_type
 	5, // [5:5] is the sub-list for method input_type
 	5, // [5:5] is the sub-list for extension type_name
@@ -2572,14 +2580,14 @@ var file_vault_v1_genesis_proto_depIdxs = []int32{
 	0, // [0:5] is the sub-list for field type_name
 }
 
-func init() { file_vault_v1_genesis_proto_init() }
-func file_vault_v1_genesis_proto_init() {
-	if File_vault_v1_genesis_proto != nil {
+func init() { file_provlabs_vault_v1_genesis_proto_init() }
+func file_provlabs_vault_v1_genesis_proto_init() {
+	if File_provlabs_vault_v1_genesis_proto != nil {
 		return
 	}
-	file_vault_v1_vault_proto_init()
+	file_provlabs_vault_v1_vault_proto_init()
 	if !protoimpl.UnsafeEnabled {
-		file_vault_v1_genesis_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_genesis_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*QueueEntry); i {
 			case 0:
 				return &v.state
@@ -2591,7 +2599,7 @@ func file_vault_v1_genesis_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_genesis_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_genesis_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*PendingSwapOutQueueEntry); i {
 			case 0:
 				return &v.state
@@ -2603,7 +2611,7 @@ func file_vault_v1_genesis_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_genesis_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_genesis_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*PendingSwapOutQueue); i {
 			case 0:
 				return &v.state
@@ -2615,7 +2623,7 @@ func file_vault_v1_genesis_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_genesis_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_genesis_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*GenesisState); i {
 			case 0:
 				return &v.state
@@ -2632,18 +2640,18 @@ func file_vault_v1_genesis_proto_init() {
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_vault_v1_genesis_proto_rawDesc,
+			RawDescriptor: file_provlabs_vault_v1_genesis_proto_rawDesc,
 			NumEnums:      0,
 			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_vault_v1_genesis_proto_goTypes,
-		DependencyIndexes: file_vault_v1_genesis_proto_depIdxs,
-		MessageInfos:      file_vault_v1_genesis_proto_msgTypes,
+		GoTypes:           file_provlabs_vault_v1_genesis_proto_goTypes,
+		DependencyIndexes: file_provlabs_vault_v1_genesis_proto_depIdxs,
+		MessageInfos:      file_provlabs_vault_v1_genesis_proto_msgTypes,
 	}.Build()
-	File_vault_v1_genesis_proto = out.File
-	file_vault_v1_genesis_proto_rawDesc = nil
-	file_vault_v1_genesis_proto_goTypes = nil
-	file_vault_v1_genesis_proto_depIdxs = nil
+	File_provlabs_vault_v1_genesis_proto = out.File
+	file_provlabs_vault_v1_genesis_proto_rawDesc = nil
+	file_provlabs_vault_v1_genesis_proto_goTypes = nil
+	file_provlabs_vault_v1_genesis_proto_depIdxs = nil
 }

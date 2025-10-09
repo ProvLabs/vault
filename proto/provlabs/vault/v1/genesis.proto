@@ -1,8 +1,8 @@
 syntax = "proto3";
-package vault.v1;
+package provlabs.vault.v1;
 
 import "gogoproto/gogo.proto";
-import "vault/v1/vault.proto";
+import "provlabs/vault/v1/vault.proto";
 
 option go_package = "github.com/provlabs/vault/types";
 

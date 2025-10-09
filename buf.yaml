@@ -10,7 +10,6 @@ deps:
   - buf.build/googleapis/googleapis:cc916c31859748a68fd229a3c8d7a2e8
 lint:
   use:
-    - DEFAULT
     - COMMENTS 
   except:
     - SERVICE_SUFFIX

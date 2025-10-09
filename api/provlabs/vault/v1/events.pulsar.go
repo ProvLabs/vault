@@ -23,8 +23,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_events_proto_init()
-	md_EventDeposit = File_vault_v1_events_proto.Messages().ByName("EventDeposit")
+	file_provlabs_vault_v1_events_proto_init()
+	md_EventDeposit = File_provlabs_vault_v1_events_proto.Messages().ByName("EventDeposit")
 	fd_EventDeposit_caller = md_EventDeposit.Fields().ByName("caller")
 	fd_EventDeposit_owner = md_EventDeposit.Fields().ByName("owner")
 	fd_EventDeposit_assets = md_EventDeposit.Fields().ByName("assets")
@@ -41,7 +41,7 @@ func (x *EventDeposit) ProtoReflect() protoreflect.Message {
 }
 
 func (x *EventDeposit) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_events_proto_msgTypes[0]
+	mi := &file_provlabs_vault_v1_events_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -142,21 +142,21 @@ func (x *fastReflection_EventDeposit) Range(f func(protoreflect.FieldDescriptor,
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_EventDeposit) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.EventDeposit.caller":
+	case "provlabs.vault.v1.EventDeposit.caller":
 		return x.Caller != ""
-	case "vault.v1.EventDeposit.owner":
+	case "provlabs.vault.v1.EventDeposit.owner":
 		return x.Owner != ""
-	case "vault.v1.EventDeposit.assets":
+	case "provlabs.vault.v1.EventDeposit.assets":
 		return x.Assets != ""
-	case "vault.v1.EventDeposit.shares":
+	case "provlabs.vault.v1.EventDeposit.shares":
 		return x.Shares != ""
-	case "vault.v1.EventDeposit.vault_id":
+	case "provlabs.vault.v1.EventDeposit.vault_id":
 		return x.VaultId != uint32(0)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventDeposit"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventDeposit"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventDeposit does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventDeposit does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -168,21 +168,21 @@ func (x *fastReflection_EventDeposit) Has(fd protoreflect.FieldDescriptor) bool 
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventDeposit) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.EventDeposit.caller":
+	case "provlabs.vault.v1.EventDeposit.caller":
 		x.Caller = ""
-	case "vault.v1.EventDeposit.owner":
+	case "provlabs.vault.v1.EventDeposit.owner":
 		x.Owner = ""
-	case "vault.v1.EventDeposit.assets":
+	case "provlabs.vault.v1.EventDeposit.assets":
 		x.Assets = ""
-	case "vault.v1.EventDeposit.shares":
+	case "provlabs.vault.v1.EventDeposit.shares":
 		x.Shares = ""
-	case "vault.v1.EventDeposit.vault_id":
+	case "provlabs.vault.v1.EventDeposit.vault_id":
 		x.VaultId = uint32(0)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventDeposit"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventDeposit"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventDeposit does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventDeposit does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -194,26 +194,26 @@ func (x *fastReflection_EventDeposit) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_EventDeposit) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.EventDeposit.caller":
+	case "provlabs.vault.v1.EventDeposit.caller":
 		value := x.Caller
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventDeposit.owner":
+	case "provlabs.vault.v1.EventDeposit.owner":
 		value := x.Owner
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventDeposit.assets":
+	case "provlabs.vault.v1.EventDeposit.assets":
 		value := x.Assets
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventDeposit.shares":
+	case "provlabs.vault.v1.EventDeposit.shares":
 		value := x.Shares
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventDeposit.vault_id":
+	case "provlabs.vault.v1.EventDeposit.vault_id":
 		value := x.VaultId
 		return protoreflect.ValueOfUint32(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventDeposit"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventDeposit"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventDeposit does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventDeposit does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -229,21 +229,21 @@ func (x *fastReflection_EventDeposit) Get(descriptor protoreflect.FieldDescripto
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventDeposit) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.EventDeposit.caller":
+	case "provlabs.vault.v1.EventDeposit.caller":
 		x.Caller = value.Interface().(string)
-	case "vault.v1.EventDeposit.owner":
+	case "provlabs.vault.v1.EventDeposit.owner":
 		x.Owner = value.Interface().(string)
-	case "vault.v1.EventDeposit.assets":
+	case "provlabs.vault.v1.EventDeposit.assets":
 		x.Assets = value.Interface().(string)
-	case "vault.v1.EventDeposit.shares":
+	case "provlabs.vault.v1.EventDeposit.shares":
 		x.Shares = value.Interface().(string)
-	case "vault.v1.EventDeposit.vault_id":
+	case "provlabs.vault.v1.EventDeposit.vault_id":
 		x.VaultId = uint32(value.Uint())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventDeposit"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventDeposit"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventDeposit does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventDeposit does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -259,21 +259,21 @@ func (x *fastReflection_EventDeposit) Set(fd protoreflect.FieldDescriptor, value
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventDeposit) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventDeposit.caller":
-		panic(fmt.Errorf("field caller of message vault.v1.EventDeposit is not mutable"))
-	case "vault.v1.EventDeposit.owner":
-		panic(fmt.Errorf("field owner of message vault.v1.EventDeposit is not mutable"))
-	case "vault.v1.EventDeposit.assets":
-		panic(fmt.Errorf("field assets of message vault.v1.EventDeposit is not mutable"))
-	case "vault.v1.EventDeposit.shares":
-		panic(fmt.Errorf("field shares of message vault.v1.EventDeposit is not mutable"))
-	case "vault.v1.EventDeposit.vault_id":
-		panic(fmt.Errorf("field vault_id of message vault.v1.EventDeposit is not mutable"))
+	case "provlabs.vault.v1.EventDeposit.caller":
+		panic(fmt.Errorf("field caller of message provlabs.vault.v1.EventDeposit is not mutable"))
+	case "provlabs.vault.v1.EventDeposit.owner":
+		panic(fmt.Errorf("field owner of message provlabs.vault.v1.EventDeposit is not mutable"))
+	case "provlabs.vault.v1.EventDeposit.assets":
+		panic(fmt.Errorf("field assets of message provlabs.vault.v1.EventDeposit is not mutable"))
+	case "provlabs.vault.v1.EventDeposit.shares":
+		panic(fmt.Errorf("field shares of message provlabs.vault.v1.EventDeposit is not mutable"))
+	case "provlabs.vault.v1.EventDeposit.vault_id":
+		panic(fmt.Errorf("field vault_id of message provlabs.vault.v1.EventDeposit is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventDeposit"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventDeposit"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventDeposit does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventDeposit does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -282,21 +282,21 @@ func (x *fastReflection_EventDeposit) Mutable(fd protoreflect.FieldDescriptor) p
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_EventDeposit) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventDeposit.caller":
+	case "provlabs.vault.v1.EventDeposit.caller":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventDeposit.owner":
+	case "provlabs.vault.v1.EventDeposit.owner":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventDeposit.assets":
+	case "provlabs.vault.v1.EventDeposit.assets":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventDeposit.shares":
+	case "provlabs.vault.v1.EventDeposit.shares":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventDeposit.vault_id":
+	case "provlabs.vault.v1.EventDeposit.vault_id":
 		return protoreflect.ValueOfUint32(uint32(0))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventDeposit"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventDeposit"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventDeposit does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventDeposit does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -306,7 +306,7 @@ func (x *fastReflection_EventDeposit) NewField(fd protoreflect.FieldDescriptor) 
 func (x *fastReflection_EventDeposit) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.EventDeposit", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.EventDeposit", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -684,8 +684,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_events_proto_init()
-	md_EventWithdraw = File_vault_v1_events_proto.Messages().ByName("EventWithdraw")
+	file_provlabs_vault_v1_events_proto_init()
+	md_EventWithdraw = File_provlabs_vault_v1_events_proto.Messages().ByName("EventWithdraw")
 	fd_EventWithdraw_caller = md_EventWithdraw.Fields().ByName("caller")
 	fd_EventWithdraw_receiver = md_EventWithdraw.Fields().ByName("receiver")
 	fd_EventWithdraw_owner = md_EventWithdraw.Fields().ByName("owner")
@@ -703,7 +703,7 @@ func (x *EventWithdraw) ProtoReflect() protoreflect.Message {
 }
 
 func (x *EventWithdraw) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_events_proto_msgTypes[1]
+	mi := &file_provlabs_vault_v1_events_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -810,23 +810,23 @@ func (x *fastReflection_EventWithdraw) Range(f func(protoreflect.FieldDescriptor
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_EventWithdraw) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.EventWithdraw.caller":
+	case "provlabs.vault.v1.EventWithdraw.caller":
 		return x.Caller != ""
-	case "vault.v1.EventWithdraw.receiver":
+	case "provlabs.vault.v1.EventWithdraw.receiver":
 		return x.Receiver != ""
-	case "vault.v1.EventWithdraw.owner":
+	case "provlabs.vault.v1.EventWithdraw.owner":
 		return x.Owner != ""
-	case "vault.v1.EventWithdraw.assets":
+	case "provlabs.vault.v1.EventWithdraw.assets":
 		return x.Assets != ""
-	case "vault.v1.EventWithdraw.shares":
+	case "provlabs.vault.v1.EventWithdraw.shares":
 		return x.Shares != ""
-	case "vault.v1.EventWithdraw.vault_id":
+	case "provlabs.vault.v1.EventWithdraw.vault_id":
 		return x.VaultId != uint32(0)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventWithdraw"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventWithdraw"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventWithdraw does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventWithdraw does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -838,23 +838,23 @@ func (x *fastReflection_EventWithdraw) Has(fd protoreflect.FieldDescriptor) bool
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventWithdraw) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.EventWithdraw.caller":
+	case "provlabs.vault.v1.EventWithdraw.caller":
 		x.Caller = ""
-	case "vault.v1.EventWithdraw.receiver":
+	case "provlabs.vault.v1.EventWithdraw.receiver":
 		x.Receiver = ""
-	case "vault.v1.EventWithdraw.owner":
+	case "provlabs.vault.v1.EventWithdraw.owner":
 		x.Owner = ""
-	case "vault.v1.EventWithdraw.assets":
+	case "provlabs.vault.v1.EventWithdraw.assets":
 		x.Assets = ""
-	case "vault.v1.EventWithdraw.shares":
+	case "provlabs.vault.v1.EventWithdraw.shares":
 		x.Shares = ""
-	case "vault.v1.EventWithdraw.vault_id":
+	case "provlabs.vault.v1.EventWithdraw.vault_id":
 		x.VaultId = uint32(0)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventWithdraw"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventWithdraw"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventWithdraw does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventWithdraw does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -866,29 +866,29 @@ func (x *fastReflection_EventWithdraw) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_EventWithdraw) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.EventWithdraw.caller":
+	case "provlabs.vault.v1.EventWithdraw.caller":
 		value := x.Caller
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventWithdraw.receiver":
+	case "provlabs.vault.v1.EventWithdraw.receiver":
 		value := x.Receiver
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventWithdraw.owner":
+	case "provlabs.vault.v1.EventWithdraw.owner":
 		value := x.Owner
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventWithdraw.assets":
+	case "provlabs.vault.v1.EventWithdraw.assets":
 		value := x.Assets
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventWithdraw.shares":
+	case "provlabs.vault.v1.EventWithdraw.shares":
 		value := x.Shares
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventWithdraw.vault_id":
+	case "provlabs.vault.v1.EventWithdraw.vault_id":
 		value := x.VaultId
 		return protoreflect.ValueOfUint32(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventWithdraw"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventWithdraw"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventWithdraw does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventWithdraw does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -904,23 +904,23 @@ func (x *fastReflection_EventWithdraw) Get(descriptor protoreflect.FieldDescript
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventWithdraw) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.EventWithdraw.caller":
+	case "provlabs.vault.v1.EventWithdraw.caller":
 		x.Caller = value.Interface().(string)
-	case "vault.v1.EventWithdraw.receiver":
+	case "provlabs.vault.v1.EventWithdraw.receiver":
 		x.Receiver = value.Interface().(string)
-	case "vault.v1.EventWithdraw.owner":
+	case "provlabs.vault.v1.EventWithdraw.owner":
 		x.Owner = value.Interface().(string)
-	case "vault.v1.EventWithdraw.assets":
+	case "provlabs.vault.v1.EventWithdraw.assets":
 		x.Assets = value.Interface().(string)
-	case "vault.v1.EventWithdraw.shares":
+	case "provlabs.vault.v1.EventWithdraw.shares":
 		x.Shares = value.Interface().(string)
-	case "vault.v1.EventWithdraw.vault_id":
+	case "provlabs.vault.v1.EventWithdraw.vault_id":
 		x.VaultId = uint32(value.Uint())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventWithdraw"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventWithdraw"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventWithdraw does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventWithdraw does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -936,23 +936,23 @@ func (x *fastReflection_EventWithdraw) Set(fd protoreflect.FieldDescriptor, valu
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventWithdraw) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventWithdraw.caller":
-		panic(fmt.Errorf("field caller of message vault.v1.EventWithdraw is not mutable"))
-	case "vault.v1.EventWithdraw.receiver":
-		panic(fmt.Errorf("field receiver of message vault.v1.EventWithdraw is not mutable"))
-	case "vault.v1.EventWithdraw.owner":
-		panic(fmt.Errorf("field owner of message vault.v1.EventWithdraw is not mutable"))
-	case "vault.v1.EventWithdraw.assets":
-		panic(fmt.Errorf("field assets of message vault.v1.EventWithdraw is not mutable"))
-	case "vault.v1.EventWithdraw.shares":
-		panic(fmt.Errorf("field shares of message vault.v1.EventWithdraw is not mutable"))
-	case "vault.v1.EventWithdraw.vault_id":
-		panic(fmt.Errorf("field vault_id of message vault.v1.EventWithdraw is not mutable"))
+	case "provlabs.vault.v1.EventWithdraw.caller":
+		panic(fmt.Errorf("field caller of message provlabs.vault.v1.EventWithdraw is not mutable"))
+	case "provlabs.vault.v1.EventWithdraw.receiver":
+		panic(fmt.Errorf("field receiver of message provlabs.vault.v1.EventWithdraw is not mutable"))
+	case "provlabs.vault.v1.EventWithdraw.owner":
+		panic(fmt.Errorf("field owner of message provlabs.vault.v1.EventWithdraw is not mutable"))
+	case "provlabs.vault.v1.EventWithdraw.assets":
+		panic(fmt.Errorf("field assets of message provlabs.vault.v1.EventWithdraw is not mutable"))
+	case "provlabs.vault.v1.EventWithdraw.shares":
+		panic(fmt.Errorf("field shares of message provlabs.vault.v1.EventWithdraw is not mutable"))
+	case "provlabs.vault.v1.EventWithdraw.vault_id":
+		panic(fmt.Errorf("field vault_id of message provlabs.vault.v1.EventWithdraw is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventWithdraw"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventWithdraw"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventWithdraw does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventWithdraw does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -961,23 +961,23 @@ func (x *fastReflection_EventWithdraw) Mutable(fd protoreflect.FieldDescriptor) 
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_EventWithdraw) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventWithdraw.caller":
+	case "provlabs.vault.v1.EventWithdraw.caller":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventWithdraw.receiver":
+	case "provlabs.vault.v1.EventWithdraw.receiver":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventWithdraw.owner":
+	case "provlabs.vault.v1.EventWithdraw.owner":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventWithdraw.assets":
+	case "provlabs.vault.v1.EventWithdraw.assets":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventWithdraw.shares":
+	case "provlabs.vault.v1.EventWithdraw.shares":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventWithdraw.vault_id":
+	case "provlabs.vault.v1.EventWithdraw.vault_id":
 		return protoreflect.ValueOfUint32(uint32(0))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventWithdraw"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventWithdraw"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventWithdraw does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventWithdraw does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -987,7 +987,7 @@ func (x *fastReflection_EventWithdraw) NewField(fd protoreflect.FieldDescriptor)
 func (x *fastReflection_EventWithdraw) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.EventWithdraw", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.EventWithdraw", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -1406,8 +1406,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_events_proto_init()
-	md_EventVaultCreated = File_vault_v1_events_proto.Messages().ByName("EventVaultCreated")
+	file_provlabs_vault_v1_events_proto_init()
+	md_EventVaultCreated = File_provlabs_vault_v1_events_proto.Messages().ByName("EventVaultCreated")
 	fd_EventVaultCreated_vault_address = md_EventVaultCreated.Fields().ByName("vault_address")
 	fd_EventVaultCreated_admin = md_EventVaultCreated.Fields().ByName("admin")
 	fd_EventVaultCreated_share_denom = md_EventVaultCreated.Fields().ByName("share_denom")
@@ -1423,7 +1423,7 @@ func (x *EventVaultCreated) ProtoReflect() protoreflect.Message {
 }
 
 func (x *EventVaultCreated) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_events_proto_msgTypes[2]
+	mi := &file_provlabs_vault_v1_events_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1518,19 +1518,19 @@ func (x *fastReflection_EventVaultCreated) Range(f func(protoreflect.FieldDescri
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_EventVaultCreated) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.EventVaultCreated.vault_address":
+	case "provlabs.vault.v1.EventVaultCreated.vault_address":
 		return x.VaultAddress != ""
-	case "vault.v1.EventVaultCreated.admin":
+	case "provlabs.vault.v1.EventVaultCreated.admin":
 		return x.Admin != ""
-	case "vault.v1.EventVaultCreated.share_denom":
+	case "provlabs.vault.v1.EventVaultCreated.share_denom":
 		return x.ShareDenom != ""
-	case "vault.v1.EventVaultCreated.underlying_asset":
+	case "provlabs.vault.v1.EventVaultCreated.underlying_asset":
 		return x.UnderlyingAsset != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultCreated"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventVaultCreated"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventVaultCreated does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventVaultCreated does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1542,19 +1542,19 @@ func (x *fastReflection_EventVaultCreated) Has(fd protoreflect.FieldDescriptor) 
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventVaultCreated) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.EventVaultCreated.vault_address":
+	case "provlabs.vault.v1.EventVaultCreated.vault_address":
 		x.VaultAddress = ""
-	case "vault.v1.EventVaultCreated.admin":
+	case "provlabs.vault.v1.EventVaultCreated.admin":
 		x.Admin = ""
-	case "vault.v1.EventVaultCreated.share_denom":
+	case "provlabs.vault.v1.EventVaultCreated.share_denom":
 		x.ShareDenom = ""
-	case "vault.v1.EventVaultCreated.underlying_asset":
+	case "provlabs.vault.v1.EventVaultCreated.underlying_asset":
 		x.UnderlyingAsset = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultCreated"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventVaultCreated"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventVaultCreated does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventVaultCreated does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1566,23 +1566,23 @@ func (x *fastReflection_EventVaultCreated) Clear(fd protoreflect.FieldDescriptor
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_EventVaultCreated) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.EventVaultCreated.vault_address":
+	case "provlabs.vault.v1.EventVaultCreated.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventVaultCreated.admin":
+	case "provlabs.vault.v1.EventVaultCreated.admin":
 		value := x.Admin
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventVaultCreated.share_denom":
+	case "provlabs.vault.v1.EventVaultCreated.share_denom":
 		value := x.ShareDenom
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventVaultCreated.underlying_asset":
+	case "provlabs.vault.v1.EventVaultCreated.underlying_asset":
 		value := x.UnderlyingAsset
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultCreated"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventVaultCreated"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventVaultCreated does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventVaultCreated does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -1598,19 +1598,19 @@ func (x *fastReflection_EventVaultCreated) Get(descriptor protoreflect.FieldDesc
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventVaultCreated) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.EventVaultCreated.vault_address":
+	case "provlabs.vault.v1.EventVaultCreated.vault_address":
 		x.VaultAddress = value.Interface().(string)
-	case "vault.v1.EventVaultCreated.admin":
+	case "provlabs.vault.v1.EventVaultCreated.admin":
 		x.Admin = value.Interface().(string)
-	case "vault.v1.EventVaultCreated.share_denom":
+	case "provlabs.vault.v1.EventVaultCreated.share_denom":
 		x.ShareDenom = value.Interface().(string)
-	case "vault.v1.EventVaultCreated.underlying_asset":
+	case "provlabs.vault.v1.EventVaultCreated.underlying_asset":
 		x.UnderlyingAsset = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultCreated"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventVaultCreated"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventVaultCreated does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventVaultCreated does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1626,19 +1626,19 @@ func (x *fastReflection_EventVaultCreated) Set(fd protoreflect.FieldDescriptor, 
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventVaultCreated) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventVaultCreated.vault_address":
-		panic(fmt.Errorf("field vault_address of message vault.v1.EventVaultCreated is not mutable"))
-	case "vault.v1.EventVaultCreated.admin":
-		panic(fmt.Errorf("field admin of message vault.v1.EventVaultCreated is not mutable"))
-	case "vault.v1.EventVaultCreated.share_denom":
-		panic(fmt.Errorf("field share_denom of message vault.v1.EventVaultCreated is not mutable"))
-	case "vault.v1.EventVaultCreated.underlying_asset":
-		panic(fmt.Errorf("field underlying_asset of message vault.v1.EventVaultCreated is not mutable"))
+	case "provlabs.vault.v1.EventVaultCreated.vault_address":
+		panic(fmt.Errorf("field vault_address of message provlabs.vault.v1.EventVaultCreated is not mutable"))
+	case "provlabs.vault.v1.EventVaultCreated.admin":
+		panic(fmt.Errorf("field admin of message provlabs.vault.v1.EventVaultCreated is not mutable"))
+	case "provlabs.vault.v1.EventVaultCreated.share_denom":
+		panic(fmt.Errorf("field share_denom of message provlabs.vault.v1.EventVaultCreated is not mutable"))
+	case "provlabs.vault.v1.EventVaultCreated.underlying_asset":
+		panic(fmt.Errorf("field underlying_asset of message provlabs.vault.v1.EventVaultCreated is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultCreated"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventVaultCreated"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventVaultCreated does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventVaultCreated does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1647,19 +1647,19 @@ func (x *fastReflection_EventVaultCreated) Mutable(fd protoreflect.FieldDescript
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_EventVaultCreated) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventVaultCreated.vault_address":
+	case "provlabs.vault.v1.EventVaultCreated.vault_address":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventVaultCreated.admin":
+	case "provlabs.vault.v1.EventVaultCreated.admin":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventVaultCreated.share_denom":
+	case "provlabs.vault.v1.EventVaultCreated.share_denom":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventVaultCreated.underlying_asset":
+	case "provlabs.vault.v1.EventVaultCreated.underlying_asset":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultCreated"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventVaultCreated"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventVaultCreated does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventVaultCreated does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1669,7 +1669,7 @@ func (x *fastReflection_EventVaultCreated) NewField(fd protoreflect.FieldDescrip
 func (x *fastReflection_EventVaultCreated) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.EventVaultCreated", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.EventVaultCreated", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -2018,8 +2018,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_events_proto_init()
-	md_EventSwapIn = File_vault_v1_events_proto.Messages().ByName("EventSwapIn")
+	file_provlabs_vault_v1_events_proto_init()
+	md_EventSwapIn = File_provlabs_vault_v1_events_proto.Messages().ByName("EventSwapIn")
 	fd_EventSwapIn_owner = md_EventSwapIn.Fields().ByName("owner")
 	fd_EventSwapIn_amount_in = md_EventSwapIn.Fields().ByName("amount_in")
 	fd_EventSwapIn_shares_received = md_EventSwapIn.Fields().ByName("shares_received")
@@ -2035,7 +2035,7 @@ func (x *EventSwapIn) ProtoReflect() protoreflect.Message {
 }
 
 func (x *EventSwapIn) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_events_proto_msgTypes[3]
+	mi := &file_provlabs_vault_v1_events_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2130,19 +2130,19 @@ func (x *fastReflection_EventSwapIn) Range(f func(protoreflect.FieldDescriptor, 
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_EventSwapIn) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.EventSwapIn.owner":
+	case "provlabs.vault.v1.EventSwapIn.owner":
 		return x.Owner != ""
-	case "vault.v1.EventSwapIn.amount_in":
+	case "provlabs.vault.v1.EventSwapIn.amount_in":
 		return x.AmountIn != ""
-	case "vault.v1.EventSwapIn.shares_received":
+	case "provlabs.vault.v1.EventSwapIn.shares_received":
 		return x.SharesReceived != ""
-	case "vault.v1.EventSwapIn.vault_address":
+	case "provlabs.vault.v1.EventSwapIn.vault_address":
 		return x.VaultAddress != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventSwapIn"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventSwapIn"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventSwapIn does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventSwapIn does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2154,19 +2154,19 @@ func (x *fastReflection_EventSwapIn) Has(fd protoreflect.FieldDescriptor) bool {
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventSwapIn) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.EventSwapIn.owner":
+	case "provlabs.vault.v1.EventSwapIn.owner":
 		x.Owner = ""
-	case "vault.v1.EventSwapIn.amount_in":
+	case "provlabs.vault.v1.EventSwapIn.amount_in":
 		x.AmountIn = ""
-	case "vault.v1.EventSwapIn.shares_received":
+	case "provlabs.vault.v1.EventSwapIn.shares_received":
 		x.SharesReceived = ""
-	case "vault.v1.EventSwapIn.vault_address":
+	case "provlabs.vault.v1.EventSwapIn.vault_address":
 		x.VaultAddress = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventSwapIn"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventSwapIn"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventSwapIn does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventSwapIn does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2178,23 +2178,23 @@ func (x *fastReflection_EventSwapIn) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_EventSwapIn) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.EventSwapIn.owner":
+	case "provlabs.vault.v1.EventSwapIn.owner":
 		value := x.Owner
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventSwapIn.amount_in":
+	case "provlabs.vault.v1.EventSwapIn.amount_in":
 		value := x.AmountIn
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventSwapIn.shares_received":
+	case "provlabs.vault.v1.EventSwapIn.shares_received":
 		value := x.SharesReceived
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventSwapIn.vault_address":
+	case "provlabs.vault.v1.EventSwapIn.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventSwapIn"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventSwapIn"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventSwapIn does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventSwapIn does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -2210,19 +2210,19 @@ func (x *fastReflection_EventSwapIn) Get(descriptor protoreflect.FieldDescriptor
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventSwapIn) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.EventSwapIn.owner":
+	case "provlabs.vault.v1.EventSwapIn.owner":
 		x.Owner = value.Interface().(string)
-	case "vault.v1.EventSwapIn.amount_in":
+	case "provlabs.vault.v1.EventSwapIn.amount_in":
 		x.AmountIn = value.Interface().(string)
-	case "vault.v1.EventSwapIn.shares_received":
+	case "provlabs.vault.v1.EventSwapIn.shares_received":
 		x.SharesReceived = value.Interface().(string)
-	case "vault.v1.EventSwapIn.vault_address":
+	case "provlabs.vault.v1.EventSwapIn.vault_address":
 		x.VaultAddress = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventSwapIn"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventSwapIn"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventSwapIn does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventSwapIn does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2238,19 +2238,19 @@ func (x *fastReflection_EventSwapIn) Set(fd protoreflect.FieldDescriptor, value 
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventSwapIn) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventSwapIn.owner":
-		panic(fmt.Errorf("field owner of message vault.v1.EventSwapIn is not mutable"))
-	case "vault.v1.EventSwapIn.amount_in":
-		panic(fmt.Errorf("field amount_in of message vault.v1.EventSwapIn is not mutable"))
-	case "vault.v1.EventSwapIn.shares_received":
-		panic(fmt.Errorf("field shares_received of message vault.v1.EventSwapIn is not mutable"))
-	case "vault.v1.EventSwapIn.vault_address":
-		panic(fmt.Errorf("field vault_address of message vault.v1.EventSwapIn is not mutable"))
+	case "provlabs.vault.v1.EventSwapIn.owner":
+		panic(fmt.Errorf("field owner of message provlabs.vault.v1.EventSwapIn is not mutable"))
+	case "provlabs.vault.v1.EventSwapIn.amount_in":
+		panic(fmt.Errorf("field amount_in of message provlabs.vault.v1.EventSwapIn is not mutable"))
+	case "provlabs.vault.v1.EventSwapIn.shares_received":
+		panic(fmt.Errorf("field shares_received of message provlabs.vault.v1.EventSwapIn is not mutable"))
+	case "provlabs.vault.v1.EventSwapIn.vault_address":
+		panic(fmt.Errorf("field vault_address of message provlabs.vault.v1.EventSwapIn is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventSwapIn"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventSwapIn"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventSwapIn does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventSwapIn does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2259,19 +2259,19 @@ func (x *fastReflection_EventSwapIn) Mutable(fd protoreflect.FieldDescriptor) pr
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_EventSwapIn) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventSwapIn.owner":
+	case "provlabs.vault.v1.EventSwapIn.owner":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventSwapIn.amount_in":
+	case "provlabs.vault.v1.EventSwapIn.amount_in":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventSwapIn.shares_received":
+	case "provlabs.vault.v1.EventSwapIn.shares_received":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventSwapIn.vault_address":
+	case "provlabs.vault.v1.EventSwapIn.vault_address":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventSwapIn"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventSwapIn"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventSwapIn does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventSwapIn does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2281,7 +2281,7 @@ func (x *fastReflection_EventSwapIn) NewField(fd protoreflect.FieldDescriptor) p
 func (x *fastReflection_EventSwapIn) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.EventSwapIn", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.EventSwapIn", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -2630,8 +2630,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_events_proto_init()
-	md_EventSwapOut = File_vault_v1_events_proto.Messages().ByName("EventSwapOut")
+	file_provlabs_vault_v1_events_proto_init()
+	md_EventSwapOut = File_provlabs_vault_v1_events_proto.Messages().ByName("EventSwapOut")
 	fd_EventSwapOut_owner = md_EventSwapOut.Fields().ByName("owner")
 	fd_EventSwapOut_shares_burned = md_EventSwapOut.Fields().ByName("shares_burned")
 	fd_EventSwapOut_amount_out = md_EventSwapOut.Fields().ByName("amount_out")
@@ -2647,7 +2647,7 @@ func (x *EventSwapOut) ProtoReflect() protoreflect.Message {
 }
 
 func (x *EventSwapOut) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_events_proto_msgTypes[4]
+	mi := &file_provlabs_vault_v1_events_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2742,19 +2742,19 @@ func (x *fastReflection_EventSwapOut) Range(f func(protoreflect.FieldDescriptor,
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_EventSwapOut) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.EventSwapOut.owner":
+	case "provlabs.vault.v1.EventSwapOut.owner":
 		return x.Owner != ""
-	case "vault.v1.EventSwapOut.shares_burned":
+	case "provlabs.vault.v1.EventSwapOut.shares_burned":
 		return x.SharesBurned != ""
-	case "vault.v1.EventSwapOut.amount_out":
+	case "provlabs.vault.v1.EventSwapOut.amount_out":
 		return x.AmountOut != ""
-	case "vault.v1.EventSwapOut.vault_address":
+	case "provlabs.vault.v1.EventSwapOut.vault_address":
 		return x.VaultAddress != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventSwapOut"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventSwapOut"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventSwapOut does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventSwapOut does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2766,19 +2766,19 @@ func (x *fastReflection_EventSwapOut) Has(fd protoreflect.FieldDescriptor) bool 
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventSwapOut) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.EventSwapOut.owner":
+	case "provlabs.vault.v1.EventSwapOut.owner":
 		x.Owner = ""
-	case "vault.v1.EventSwapOut.shares_burned":
+	case "provlabs.vault.v1.EventSwapOut.shares_burned":
 		x.SharesBurned = ""
-	case "vault.v1.EventSwapOut.amount_out":
+	case "provlabs.vault.v1.EventSwapOut.amount_out":
 		x.AmountOut = ""
-	case "vault.v1.EventSwapOut.vault_address":
+	case "provlabs.vault.v1.EventSwapOut.vault_address":
 		x.VaultAddress = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventSwapOut"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventSwapOut"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventSwapOut does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventSwapOut does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2790,23 +2790,23 @@ func (x *fastReflection_EventSwapOut) Clear(fd protoreflect.FieldDescriptor) {
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_EventSwapOut) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.EventSwapOut.owner":
+	case "provlabs.vault.v1.EventSwapOut.owner":
 		value := x.Owner
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventSwapOut.shares_burned":
+	case "provlabs.vault.v1.EventSwapOut.shares_burned":
 		value := x.SharesBurned
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventSwapOut.amount_out":
+	case "provlabs.vault.v1.EventSwapOut.amount_out":
 		value := x.AmountOut
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventSwapOut.vault_address":
+	case "provlabs.vault.v1.EventSwapOut.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventSwapOut"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventSwapOut"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventSwapOut does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventSwapOut does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -2822,19 +2822,19 @@ func (x *fastReflection_EventSwapOut) Get(descriptor protoreflect.FieldDescripto
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventSwapOut) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.EventSwapOut.owner":
+	case "provlabs.vault.v1.EventSwapOut.owner":
 		x.Owner = value.Interface().(string)
-	case "vault.v1.EventSwapOut.shares_burned":
+	case "provlabs.vault.v1.EventSwapOut.shares_burned":
 		x.SharesBurned = value.Interface().(string)
-	case "vault.v1.EventSwapOut.amount_out":
+	case "provlabs.vault.v1.EventSwapOut.amount_out":
 		x.AmountOut = value.Interface().(string)
-	case "vault.v1.EventSwapOut.vault_address":
+	case "provlabs.vault.v1.EventSwapOut.vault_address":
 		x.VaultAddress = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventSwapOut"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventSwapOut"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventSwapOut does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventSwapOut does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2850,19 +2850,19 @@ func (x *fastReflection_EventSwapOut) Set(fd protoreflect.FieldDescriptor, value
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventSwapOut) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventSwapOut.owner":
-		panic(fmt.Errorf("field owner of message vault.v1.EventSwapOut is not mutable"))
-	case "vault.v1.EventSwapOut.shares_burned":
-		panic(fmt.Errorf("field shares_burned of message vault.v1.EventSwapOut is not mutable"))
-	case "vault.v1.EventSwapOut.amount_out":
-		panic(fmt.Errorf("field amount_out of message vault.v1.EventSwapOut is not mutable"))
-	case "vault.v1.EventSwapOut.vault_address":
-		panic(fmt.Errorf("field vault_address of message vault.v1.EventSwapOut is not mutable"))
+	case "provlabs.vault.v1.EventSwapOut.owner":
+		panic(fmt.Errorf("field owner of message provlabs.vault.v1.EventSwapOut is not mutable"))
+	case "provlabs.vault.v1.EventSwapOut.shares_burned":
+		panic(fmt.Errorf("field shares_burned of message provlabs.vault.v1.EventSwapOut is not mutable"))
+	case "provlabs.vault.v1.EventSwapOut.amount_out":
+		panic(fmt.Errorf("field amount_out of message provlabs.vault.v1.EventSwapOut is not mutable"))
+	case "provlabs.vault.v1.EventSwapOut.vault_address":
+		panic(fmt.Errorf("field vault_address of message provlabs.vault.v1.EventSwapOut is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventSwapOut"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventSwapOut"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventSwapOut does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventSwapOut does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2871,19 +2871,19 @@ func (x *fastReflection_EventSwapOut) Mutable(fd protoreflect.FieldDescriptor) p
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_EventSwapOut) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventSwapOut.owner":
+	case "provlabs.vault.v1.EventSwapOut.owner":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventSwapOut.shares_burned":
+	case "provlabs.vault.v1.EventSwapOut.shares_burned":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventSwapOut.amount_out":
+	case "provlabs.vault.v1.EventSwapOut.amount_out":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventSwapOut.vault_address":
+	case "provlabs.vault.v1.EventSwapOut.vault_address":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventSwapOut"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventSwapOut"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventSwapOut does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventSwapOut does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2893,7 +2893,7 @@ func (x *fastReflection_EventSwapOut) NewField(fd protoreflect.FieldDescriptor) 
 func (x *fastReflection_EventSwapOut) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.EventSwapOut", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.EventSwapOut", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -3244,8 +3244,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_events_proto_init()
-	md_EventVaultReconcile = File_vault_v1_events_proto.Messages().ByName("EventVaultReconcile")
+	file_provlabs_vault_v1_events_proto_init()
+	md_EventVaultReconcile = File_provlabs_vault_v1_events_proto.Messages().ByName("EventVaultReconcile")
 	fd_EventVaultReconcile_vault_address = md_EventVaultReconcile.Fields().ByName("vault_address")
 	fd_EventVaultReconcile_principal_before = md_EventVaultReconcile.Fields().ByName("principal_before")
 	fd_EventVaultReconcile_principal_after = md_EventVaultReconcile.Fields().ByName("principal_after")
@@ -3263,7 +3263,7 @@ func (x *EventVaultReconcile) ProtoReflect() protoreflect.Message {
 }
 
 func (x *EventVaultReconcile) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_events_proto_msgTypes[5]
+	mi := &file_provlabs_vault_v1_events_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3370,23 +3370,23 @@ func (x *fastReflection_EventVaultReconcile) Range(f func(protoreflect.FieldDesc
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_EventVaultReconcile) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.EventVaultReconcile.vault_address":
+	case "provlabs.vault.v1.EventVaultReconcile.vault_address":
 		return x.VaultAddress != ""
-	case "vault.v1.EventVaultReconcile.principal_before":
+	case "provlabs.vault.v1.EventVaultReconcile.principal_before":
 		return x.PrincipalBefore != ""
-	case "vault.v1.EventVaultReconcile.principal_after":
+	case "provlabs.vault.v1.EventVaultReconcile.principal_after":
 		return x.PrincipalAfter != ""
-	case "vault.v1.EventVaultReconcile.rate":
+	case "provlabs.vault.v1.EventVaultReconcile.rate":
 		return x.Rate != ""
-	case "vault.v1.EventVaultReconcile.time":
+	case "provlabs.vault.v1.EventVaultReconcile.time":
 		return x.Time != int64(0)
-	case "vault.v1.EventVaultReconcile.interest_earned":
+	case "provlabs.vault.v1.EventVaultReconcile.interest_earned":
 		return x.InterestEarned != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultReconcile"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventVaultReconcile"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventVaultReconcile does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventVaultReconcile does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -3398,23 +3398,23 @@ func (x *fastReflection_EventVaultReconcile) Has(fd protoreflect.FieldDescriptor
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventVaultReconcile) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.EventVaultReconcile.vault_address":
+	case "provlabs.vault.v1.EventVaultReconcile.vault_address":
 		x.VaultAddress = ""
-	case "vault.v1.EventVaultReconcile.principal_before":
+	case "provlabs.vault.v1.EventVaultReconcile.principal_before":
 		x.PrincipalBefore = ""
-	case "vault.v1.EventVaultReconcile.principal_after":
+	case "provlabs.vault.v1.EventVaultReconcile.principal_after":
 		x.PrincipalAfter = ""
-	case "vault.v1.EventVaultReconcile.rate":
+	case "provlabs.vault.v1.EventVaultReconcile.rate":
 		x.Rate = ""
-	case "vault.v1.EventVaultReconcile.time":
+	case "provlabs.vault.v1.EventVaultReconcile.time":
 		x.Time = int64(0)
-	case "vault.v1.EventVaultReconcile.interest_earned":
+	case "provlabs.vault.v1.EventVaultReconcile.interest_earned":
 		x.InterestEarned = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultReconcile"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventVaultReconcile"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventVaultReconcile does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventVaultReconcile does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -3426,29 +3426,29 @@ func (x *fastReflection_EventVaultReconcile) Clear(fd protoreflect.FieldDescript
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_EventVaultReconcile) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.EventVaultReconcile.vault_address":
+	case "provlabs.vault.v1.EventVaultReconcile.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventVaultReconcile.principal_before":
+	case "provlabs.vault.v1.EventVaultReconcile.principal_before":
 		value := x.PrincipalBefore
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventVaultReconcile.principal_after":
+	case "provlabs.vault.v1.EventVaultReconcile.principal_after":
 		value := x.PrincipalAfter
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventVaultReconcile.rate":
+	case "provlabs.vault.v1.EventVaultReconcile.rate":
 		value := x.Rate
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventVaultReconcile.time":
+	case "provlabs.vault.v1.EventVaultReconcile.time":
 		value := x.Time
 		return protoreflect.ValueOfInt64(value)
-	case "vault.v1.EventVaultReconcile.interest_earned":
+	case "provlabs.vault.v1.EventVaultReconcile.interest_earned":
 		value := x.InterestEarned
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultReconcile"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventVaultReconcile"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventVaultReconcile does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventVaultReconcile does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -3464,23 +3464,23 @@ func (x *fastReflection_EventVaultReconcile) Get(descriptor protoreflect.FieldDe
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventVaultReconcile) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.EventVaultReconcile.vault_address":
+	case "provlabs.vault.v1.EventVaultReconcile.vault_address":
 		x.VaultAddress = value.Interface().(string)
-	case "vault.v1.EventVaultReconcile.principal_before":
+	case "provlabs.vault.v1.EventVaultReconcile.principal_before":
 		x.PrincipalBefore = value.Interface().(string)
-	case "vault.v1.EventVaultReconcile.principal_after":
+	case "provlabs.vault.v1.EventVaultReconcile.principal_after":
 		x.PrincipalAfter = value.Interface().(string)
-	case "vault.v1.EventVaultReconcile.rate":
+	case "provlabs.vault.v1.EventVaultReconcile.rate":
 		x.Rate = value.Interface().(string)
-	case "vault.v1.EventVaultReconcile.time":
+	case "provlabs.vault.v1.EventVaultReconcile.time":
 		x.Time = value.Int()
-	case "vault.v1.EventVaultReconcile.interest_earned":
+	case "provlabs.vault.v1.EventVaultReconcile.interest_earned":
 		x.InterestEarned = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultReconcile"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventVaultReconcile"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventVaultReconcile does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventVaultReconcile does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -3496,23 +3496,23 @@ func (x *fastReflection_EventVaultReconcile) Set(fd protoreflect.FieldDescriptor
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventVaultReconcile) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventVaultReconcile.vault_address":
-		panic(fmt.Errorf("field vault_address of message vault.v1.EventVaultReconcile is not mutable"))
-	case "vault.v1.EventVaultReconcile.principal_before":
-		panic(fmt.Errorf("field principal_before of message vault.v1.EventVaultReconcile is not mutable"))
-	case "vault.v1.EventVaultReconcile.principal_after":
-		panic(fmt.Errorf("field principal_after of message vault.v1.EventVaultReconcile is not mutable"))
-	case "vault.v1.EventVaultReconcile.rate":
-		panic(fmt.Errorf("field rate of message vault.v1.EventVaultReconcile is not mutable"))
-	case "vault.v1.EventVaultReconcile.time":
-		panic(fmt.Errorf("field time of message vault.v1.EventVaultReconcile is not mutable"))
-	case "vault.v1.EventVaultReconcile.interest_earned":
-		panic(fmt.Errorf("field interest_earned of message vault.v1.EventVaultReconcile is not mutable"))
+	case "provlabs.vault.v1.EventVaultReconcile.vault_address":
+		panic(fmt.Errorf("field vault_address of message provlabs.vault.v1.EventVaultReconcile is not mutable"))
+	case "provlabs.vault.v1.EventVaultReconcile.principal_before":
+		panic(fmt.Errorf("field principal_before of message provlabs.vault.v1.EventVaultReconcile is not mutable"))
+	case "provlabs.vault.v1.EventVaultReconcile.principal_after":
+		panic(fmt.Errorf("field principal_after of message provlabs.vault.v1.EventVaultReconcile is not mutable"))
+	case "provlabs.vault.v1.EventVaultReconcile.rate":
+		panic(fmt.Errorf("field rate of message provlabs.vault.v1.EventVaultReconcile is not mutable"))
+	case "provlabs.vault.v1.EventVaultReconcile.time":
+		panic(fmt.Errorf("field time of message provlabs.vault.v1.EventVaultReconcile is not mutable"))
+	case "provlabs.vault.v1.EventVaultReconcile.interest_earned":
+		panic(fmt.Errorf("field interest_earned of message provlabs.vault.v1.EventVaultReconcile is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultReconcile"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventVaultReconcile"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventVaultReconcile does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventVaultReconcile does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -3521,23 +3521,23 @@ func (x *fastReflection_EventVaultReconcile) Mutable(fd protoreflect.FieldDescri
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_EventVaultReconcile) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventVaultReconcile.vault_address":
+	case "provlabs.vault.v1.EventVaultReconcile.vault_address":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventVaultReconcile.principal_before":
+	case "provlabs.vault.v1.EventVaultReconcile.principal_before":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventVaultReconcile.principal_after":
+	case "provlabs.vault.v1.EventVaultReconcile.principal_after":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventVaultReconcile.rate":
+	case "provlabs.vault.v1.EventVaultReconcile.rate":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventVaultReconcile.time":
+	case "provlabs.vault.v1.EventVaultReconcile.time":
 		return protoreflect.ValueOfInt64(int64(0))
-	case "vault.v1.EventVaultReconcile.interest_earned":
+	case "provlabs.vault.v1.EventVaultReconcile.interest_earned":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultReconcile"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventVaultReconcile"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventVaultReconcile does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventVaultReconcile does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -3547,7 +3547,7 @@ func (x *fastReflection_EventVaultReconcile) NewField(fd protoreflect.FieldDescr
 func (x *fastReflection_EventVaultReconcile) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.EventVaultReconcile", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.EventVaultReconcile", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -3965,8 +3965,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_events_proto_init()
-	md_EventVaultInterestChange = File_vault_v1_events_proto.Messages().ByName("EventVaultInterestChange")
+	file_provlabs_vault_v1_events_proto_init()
+	md_EventVaultInterestChange = File_provlabs_vault_v1_events_proto.Messages().ByName("EventVaultInterestChange")
 	fd_EventVaultInterestChange_vault_address = md_EventVaultInterestChange.Fields().ByName("vault_address")
 	fd_EventVaultInterestChange_current_rate = md_EventVaultInterestChange.Fields().ByName("current_rate")
 	fd_EventVaultInterestChange_desired_rate = md_EventVaultInterestChange.Fields().ByName("desired_rate")
@@ -3981,7 +3981,7 @@ func (x *EventVaultInterestChange) ProtoReflect() protoreflect.Message {
 }
 
 func (x *EventVaultInterestChange) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_events_proto_msgTypes[6]
+	mi := &file_provlabs_vault_v1_events_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4070,17 +4070,17 @@ func (x *fastReflection_EventVaultInterestChange) Range(f func(protoreflect.Fiel
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_EventVaultInterestChange) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.EventVaultInterestChange.vault_address":
+	case "provlabs.vault.v1.EventVaultInterestChange.vault_address":
 		return x.VaultAddress != ""
-	case "vault.v1.EventVaultInterestChange.current_rate":
+	case "provlabs.vault.v1.EventVaultInterestChange.current_rate":
 		return x.CurrentRate != ""
-	case "vault.v1.EventVaultInterestChange.desired_rate":
+	case "provlabs.vault.v1.EventVaultInterestChange.desired_rate":
 		return x.DesiredRate != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultInterestChange"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventVaultInterestChange"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventVaultInterestChange does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventVaultInterestChange does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -4092,17 +4092,17 @@ func (x *fastReflection_EventVaultInterestChange) Has(fd protoreflect.FieldDescr
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventVaultInterestChange) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.EventVaultInterestChange.vault_address":
+	case "provlabs.vault.v1.EventVaultInterestChange.vault_address":
 		x.VaultAddress = ""
-	case "vault.v1.EventVaultInterestChange.current_rate":
+	case "provlabs.vault.v1.EventVaultInterestChange.current_rate":
 		x.CurrentRate = ""
-	case "vault.v1.EventVaultInterestChange.desired_rate":
+	case "provlabs.vault.v1.EventVaultInterestChange.desired_rate":
 		x.DesiredRate = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultInterestChange"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventVaultInterestChange"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventVaultInterestChange does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventVaultInterestChange does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -4114,20 +4114,20 @@ func (x *fastReflection_EventVaultInterestChange) Clear(fd protoreflect.FieldDes
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_EventVaultInterestChange) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.EventVaultInterestChange.vault_address":
+	case "provlabs.vault.v1.EventVaultInterestChange.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventVaultInterestChange.current_rate":
+	case "provlabs.vault.v1.EventVaultInterestChange.current_rate":
 		value := x.CurrentRate
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventVaultInterestChange.desired_rate":
+	case "provlabs.vault.v1.EventVaultInterestChange.desired_rate":
 		value := x.DesiredRate
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultInterestChange"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventVaultInterestChange"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventVaultInterestChange does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventVaultInterestChange does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -4143,17 +4143,17 @@ func (x *fastReflection_EventVaultInterestChange) Get(descriptor protoreflect.Fi
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventVaultInterestChange) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.EventVaultInterestChange.vault_address":
+	case "provlabs.vault.v1.EventVaultInterestChange.vault_address":
 		x.VaultAddress = value.Interface().(string)
-	case "vault.v1.EventVaultInterestChange.current_rate":
+	case "provlabs.vault.v1.EventVaultInterestChange.current_rate":
 		x.CurrentRate = value.Interface().(string)
-	case "vault.v1.EventVaultInterestChange.desired_rate":
+	case "provlabs.vault.v1.EventVaultInterestChange.desired_rate":
 		x.DesiredRate = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultInterestChange"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventVaultInterestChange"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventVaultInterestChange does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventVaultInterestChange does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -4169,17 +4169,17 @@ func (x *fastReflection_EventVaultInterestChange) Set(fd protoreflect.FieldDescr
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventVaultInterestChange) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventVaultInterestChange.vault_address":
-		panic(fmt.Errorf("field vault_address of message vault.v1.EventVaultInterestChange is not mutable"))
-	case "vault.v1.EventVaultInterestChange.current_rate":
-		panic(fmt.Errorf("field current_rate of message vault.v1.EventVaultInterestChange is not mutable"))
-	case "vault.v1.EventVaultInterestChange.desired_rate":
-		panic(fmt.Errorf("field desired_rate of message vault.v1.EventVaultInterestChange is not mutable"))
+	case "provlabs.vault.v1.EventVaultInterestChange.vault_address":
+		panic(fmt.Errorf("field vault_address of message provlabs.vault.v1.EventVaultInterestChange is not mutable"))
+	case "provlabs.vault.v1.EventVaultInterestChange.current_rate":
+		panic(fmt.Errorf("field current_rate of message provlabs.vault.v1.EventVaultInterestChange is not mutable"))
+	case "provlabs.vault.v1.EventVaultInterestChange.desired_rate":
+		panic(fmt.Errorf("field desired_rate of message provlabs.vault.v1.EventVaultInterestChange is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultInterestChange"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventVaultInterestChange"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventVaultInterestChange does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventVaultInterestChange does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -4188,17 +4188,17 @@ func (x *fastReflection_EventVaultInterestChange) Mutable(fd protoreflect.FieldD
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_EventVaultInterestChange) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventVaultInterestChange.vault_address":
+	case "provlabs.vault.v1.EventVaultInterestChange.vault_address":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventVaultInterestChange.current_rate":
+	case "provlabs.vault.v1.EventVaultInterestChange.current_rate":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventVaultInterestChange.desired_rate":
+	case "provlabs.vault.v1.EventVaultInterestChange.desired_rate":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultInterestChange"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventVaultInterestChange"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventVaultInterestChange does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventVaultInterestChange does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -4208,7 +4208,7 @@ func (x *fastReflection_EventVaultInterestChange) NewField(fd protoreflect.Field
 func (x *fastReflection_EventVaultInterestChange) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.EventVaultInterestChange", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.EventVaultInterestChange", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -4513,8 +4513,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_events_proto_init()
-	md_EventInterestDeposit = File_vault_v1_events_proto.Messages().ByName("EventInterestDeposit")
+	file_provlabs_vault_v1_events_proto_init()
+	md_EventInterestDeposit = File_provlabs_vault_v1_events_proto.Messages().ByName("EventInterestDeposit")
 	fd_EventInterestDeposit_vault_address = md_EventInterestDeposit.Fields().ByName("vault_address")
 	fd_EventInterestDeposit_admin = md_EventInterestDeposit.Fields().ByName("admin")
 	fd_EventInterestDeposit_amount = md_EventInterestDeposit.Fields().ByName("amount")
@@ -4529,7 +4529,7 @@ func (x *EventInterestDeposit) ProtoReflect() protoreflect.Message {
 }
 
 func (x *EventInterestDeposit) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_events_proto_msgTypes[7]
+	mi := &file_provlabs_vault_v1_events_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4618,17 +4618,17 @@ func (x *fastReflection_EventInterestDeposit) Range(f func(protoreflect.FieldDes
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_EventInterestDeposit) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.EventInterestDeposit.vault_address":
+	case "provlabs.vault.v1.EventInterestDeposit.vault_address":
 		return x.VaultAddress != ""
-	case "vault.v1.EventInterestDeposit.admin":
+	case "provlabs.vault.v1.EventInterestDeposit.admin":
 		return x.Admin != ""
-	case "vault.v1.EventInterestDeposit.amount":
+	case "provlabs.vault.v1.EventInterestDeposit.amount":
 		return x.Amount != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventInterestDeposit"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventInterestDeposit"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventInterestDeposit does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventInterestDeposit does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -4640,17 +4640,17 @@ func (x *fastReflection_EventInterestDeposit) Has(fd protoreflect.FieldDescripto
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventInterestDeposit) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.EventInterestDeposit.vault_address":
+	case "provlabs.vault.v1.EventInterestDeposit.vault_address":
 		x.VaultAddress = ""
-	case "vault.v1.EventInterestDeposit.admin":
+	case "provlabs.vault.v1.EventInterestDeposit.admin":
 		x.Admin = ""
-	case "vault.v1.EventInterestDeposit.amount":
+	case "provlabs.vault.v1.EventInterestDeposit.amount":
 		x.Amount = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventInterestDeposit"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventInterestDeposit"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventInterestDeposit does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventInterestDeposit does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -4662,20 +4662,20 @@ func (x *fastReflection_EventInterestDeposit) Clear(fd protoreflect.FieldDescrip
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_EventInterestDeposit) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.EventInterestDeposit.vault_address":
+	case "provlabs.vault.v1.EventInterestDeposit.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventInterestDeposit.admin":
+	case "provlabs.vault.v1.EventInterestDeposit.admin":
 		value := x.Admin
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventInterestDeposit.amount":
+	case "provlabs.vault.v1.EventInterestDeposit.amount":
 		value := x.Amount
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventInterestDeposit"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventInterestDeposit"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventInterestDeposit does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventInterestDeposit does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -4691,17 +4691,17 @@ func (x *fastReflection_EventInterestDeposit) Get(descriptor protoreflect.FieldD
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventInterestDeposit) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.EventInterestDeposit.vault_address":
+	case "provlabs.vault.v1.EventInterestDeposit.vault_address":
 		x.VaultAddress = value.Interface().(string)
-	case "vault.v1.EventInterestDeposit.admin":
+	case "provlabs.vault.v1.EventInterestDeposit.admin":
 		x.Admin = value.Interface().(string)
-	case "vault.v1.EventInterestDeposit.amount":
+	case "provlabs.vault.v1.EventInterestDeposit.amount":
 		x.Amount = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventInterestDeposit"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventInterestDeposit"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventInterestDeposit does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventInterestDeposit does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -4717,17 +4717,17 @@ func (x *fastReflection_EventInterestDeposit) Set(fd protoreflect.FieldDescripto
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventInterestDeposit) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventInterestDeposit.vault_address":
-		panic(fmt.Errorf("field vault_address of message vault.v1.EventInterestDeposit is not mutable"))
-	case "vault.v1.EventInterestDeposit.admin":
-		panic(fmt.Errorf("field admin of message vault.v1.EventInterestDeposit is not mutable"))
-	case "vault.v1.EventInterestDeposit.amount":
-		panic(fmt.Errorf("field amount of message vault.v1.EventInterestDeposit is not mutable"))
+	case "provlabs.vault.v1.EventInterestDeposit.vault_address":
+		panic(fmt.Errorf("field vault_address of message provlabs.vault.v1.EventInterestDeposit is not mutable"))
+	case "provlabs.vault.v1.EventInterestDeposit.admin":
+		panic(fmt.Errorf("field admin of message provlabs.vault.v1.EventInterestDeposit is not mutable"))
+	case "provlabs.vault.v1.EventInterestDeposit.amount":
+		panic(fmt.Errorf("field amount of message provlabs.vault.v1.EventInterestDeposit is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventInterestDeposit"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventInterestDeposit"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventInterestDeposit does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventInterestDeposit does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -4736,17 +4736,17 @@ func (x *fastReflection_EventInterestDeposit) Mutable(fd protoreflect.FieldDescr
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_EventInterestDeposit) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventInterestDeposit.vault_address":
+	case "provlabs.vault.v1.EventInterestDeposit.vault_address":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventInterestDeposit.admin":
+	case "provlabs.vault.v1.EventInterestDeposit.admin":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventInterestDeposit.amount":
+	case "provlabs.vault.v1.EventInterestDeposit.amount":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventInterestDeposit"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventInterestDeposit"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventInterestDeposit does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventInterestDeposit does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -4756,7 +4756,7 @@ func (x *fastReflection_EventInterestDeposit) NewField(fd protoreflect.FieldDesc
 func (x *fastReflection_EventInterestDeposit) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.EventInterestDeposit", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.EventInterestDeposit", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -5061,8 +5061,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_events_proto_init()
-	md_EventInterestWithdrawal = File_vault_v1_events_proto.Messages().ByName("EventInterestWithdrawal")
+	file_provlabs_vault_v1_events_proto_init()
+	md_EventInterestWithdrawal = File_provlabs_vault_v1_events_proto.Messages().ByName("EventInterestWithdrawal")
 	fd_EventInterestWithdrawal_vault_address = md_EventInterestWithdrawal.Fields().ByName("vault_address")
 	fd_EventInterestWithdrawal_admin = md_EventInterestWithdrawal.Fields().ByName("admin")
 	fd_EventInterestWithdrawal_amount = md_EventInterestWithdrawal.Fields().ByName("amount")
@@ -5077,7 +5077,7 @@ func (x *EventInterestWithdrawal) ProtoReflect() protoreflect.Message {
 }
 
 func (x *EventInterestWithdrawal) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_events_proto_msgTypes[8]
+	mi := &file_provlabs_vault_v1_events_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5166,17 +5166,17 @@ func (x *fastReflection_EventInterestWithdrawal) Range(f func(protoreflect.Field
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_EventInterestWithdrawal) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.EventInterestWithdrawal.vault_address":
+	case "provlabs.vault.v1.EventInterestWithdrawal.vault_address":
 		return x.VaultAddress != ""
-	case "vault.v1.EventInterestWithdrawal.admin":
+	case "provlabs.vault.v1.EventInterestWithdrawal.admin":
 		return x.Admin != ""
-	case "vault.v1.EventInterestWithdrawal.amount":
+	case "provlabs.vault.v1.EventInterestWithdrawal.amount":
 		return x.Amount != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventInterestWithdrawal"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventInterestWithdrawal"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventInterestWithdrawal does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventInterestWithdrawal does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -5188,17 +5188,17 @@ func (x *fastReflection_EventInterestWithdrawal) Has(fd protoreflect.FieldDescri
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventInterestWithdrawal) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.EventInterestWithdrawal.vault_address":
+	case "provlabs.vault.v1.EventInterestWithdrawal.vault_address":
 		x.VaultAddress = ""
-	case "vault.v1.EventInterestWithdrawal.admin":
+	case "provlabs.vault.v1.EventInterestWithdrawal.admin":
 		x.Admin = ""
-	case "vault.v1.EventInterestWithdrawal.amount":
+	case "provlabs.vault.v1.EventInterestWithdrawal.amount":
 		x.Amount = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventInterestWithdrawal"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventInterestWithdrawal"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventInterestWithdrawal does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventInterestWithdrawal does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -5210,20 +5210,20 @@ func (x *fastReflection_EventInterestWithdrawal) Clear(fd protoreflect.FieldDesc
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_EventInterestWithdrawal) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.EventInterestWithdrawal.vault_address":
+	case "provlabs.vault.v1.EventInterestWithdrawal.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventInterestWithdrawal.admin":
+	case "provlabs.vault.v1.EventInterestWithdrawal.admin":
 		value := x.Admin
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventInterestWithdrawal.amount":
+	case "provlabs.vault.v1.EventInterestWithdrawal.amount":
 		value := x.Amount
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventInterestWithdrawal"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventInterestWithdrawal"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventInterestWithdrawal does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventInterestWithdrawal does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -5239,17 +5239,17 @@ func (x *fastReflection_EventInterestWithdrawal) Get(descriptor protoreflect.Fie
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventInterestWithdrawal) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.EventInterestWithdrawal.vault_address":
+	case "provlabs.vault.v1.EventInterestWithdrawal.vault_address":
 		x.VaultAddress = value.Interface().(string)
-	case "vault.v1.EventInterestWithdrawal.admin":
+	case "provlabs.vault.v1.EventInterestWithdrawal.admin":
 		x.Admin = value.Interface().(string)
-	case "vault.v1.EventInterestWithdrawal.amount":
+	case "provlabs.vault.v1.EventInterestWithdrawal.amount":
 		x.Amount = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventInterestWithdrawal"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventInterestWithdrawal"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventInterestWithdrawal does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventInterestWithdrawal does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -5265,17 +5265,17 @@ func (x *fastReflection_EventInterestWithdrawal) Set(fd protoreflect.FieldDescri
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventInterestWithdrawal) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventInterestWithdrawal.vault_address":
-		panic(fmt.Errorf("field vault_address of message vault.v1.EventInterestWithdrawal is not mutable"))
-	case "vault.v1.EventInterestWithdrawal.admin":
-		panic(fmt.Errorf("field admin of message vault.v1.EventInterestWithdrawal is not mutable"))
-	case "vault.v1.EventInterestWithdrawal.amount":
-		panic(fmt.Errorf("field amount of message vault.v1.EventInterestWithdrawal is not mutable"))
+	case "provlabs.vault.v1.EventInterestWithdrawal.vault_address":
+		panic(fmt.Errorf("field vault_address of message provlabs.vault.v1.EventInterestWithdrawal is not mutable"))
+	case "provlabs.vault.v1.EventInterestWithdrawal.admin":
+		panic(fmt.Errorf("field admin of message provlabs.vault.v1.EventInterestWithdrawal is not mutable"))
+	case "provlabs.vault.v1.EventInterestWithdrawal.amount":
+		panic(fmt.Errorf("field amount of message provlabs.vault.v1.EventInterestWithdrawal is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventInterestWithdrawal"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventInterestWithdrawal"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventInterestWithdrawal does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventInterestWithdrawal does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -5284,17 +5284,17 @@ func (x *fastReflection_EventInterestWithdrawal) Mutable(fd protoreflect.FieldDe
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_EventInterestWithdrawal) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventInterestWithdrawal.vault_address":
+	case "provlabs.vault.v1.EventInterestWithdrawal.vault_address":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventInterestWithdrawal.admin":
+	case "provlabs.vault.v1.EventInterestWithdrawal.admin":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventInterestWithdrawal.amount":
+	case "provlabs.vault.v1.EventInterestWithdrawal.amount":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventInterestWithdrawal"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventInterestWithdrawal"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventInterestWithdrawal does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventInterestWithdrawal does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -5304,7 +5304,7 @@ func (x *fastReflection_EventInterestWithdrawal) NewField(fd protoreflect.FieldD
 func (x *fastReflection_EventInterestWithdrawal) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.EventInterestWithdrawal", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.EventInterestWithdrawal", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -5609,8 +5609,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_events_proto_init()
-	md_EventToggleSwapIn = File_vault_v1_events_proto.Messages().ByName("EventToggleSwapIn")
+	file_provlabs_vault_v1_events_proto_init()
+	md_EventToggleSwapIn = File_provlabs_vault_v1_events_proto.Messages().ByName("EventToggleSwapIn")
 	fd_EventToggleSwapIn_vault_address = md_EventToggleSwapIn.Fields().ByName("vault_address")
 	fd_EventToggleSwapIn_admin = md_EventToggleSwapIn.Fields().ByName("admin")
 	fd_EventToggleSwapIn_enabled = md_EventToggleSwapIn.Fields().ByName("enabled")
@@ -5625,7 +5625,7 @@ func (x *EventToggleSwapIn) ProtoReflect() protoreflect.Message {
 }
 
 func (x *EventToggleSwapIn) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_events_proto_msgTypes[9]
+	mi := &file_provlabs_vault_v1_events_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5714,17 +5714,17 @@ func (x *fastReflection_EventToggleSwapIn) Range(f func(protoreflect.FieldDescri
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_EventToggleSwapIn) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.EventToggleSwapIn.vault_address":
+	case "provlabs.vault.v1.EventToggleSwapIn.vault_address":
 		return x.VaultAddress != ""
-	case "vault.v1.EventToggleSwapIn.admin":
+	case "provlabs.vault.v1.EventToggleSwapIn.admin":
 		return x.Admin != ""
-	case "vault.v1.EventToggleSwapIn.enabled":
+	case "provlabs.vault.v1.EventToggleSwapIn.enabled":
 		return x.Enabled != false
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventToggleSwapIn"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventToggleSwapIn"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventToggleSwapIn does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventToggleSwapIn does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -5736,17 +5736,17 @@ func (x *fastReflection_EventToggleSwapIn) Has(fd protoreflect.FieldDescriptor) 
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventToggleSwapIn) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.EventToggleSwapIn.vault_address":
+	case "provlabs.vault.v1.EventToggleSwapIn.vault_address":
 		x.VaultAddress = ""
-	case "vault.v1.EventToggleSwapIn.admin":
+	case "provlabs.vault.v1.EventToggleSwapIn.admin":
 		x.Admin = ""
-	case "vault.v1.EventToggleSwapIn.enabled":
+	case "provlabs.vault.v1.EventToggleSwapIn.enabled":
 		x.Enabled = false
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventToggleSwapIn"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventToggleSwapIn"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventToggleSwapIn does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventToggleSwapIn does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -5758,20 +5758,20 @@ func (x *fastReflection_EventToggleSwapIn) Clear(fd protoreflect.FieldDescriptor
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_EventToggleSwapIn) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.EventToggleSwapIn.vault_address":
+	case "provlabs.vault.v1.EventToggleSwapIn.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventToggleSwapIn.admin":
+	case "provlabs.vault.v1.EventToggleSwapIn.admin":
 		value := x.Admin
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventToggleSwapIn.enabled":
+	case "provlabs.vault.v1.EventToggleSwapIn.enabled":
 		value := x.Enabled
 		return protoreflect.ValueOfBool(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventToggleSwapIn"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventToggleSwapIn"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventToggleSwapIn does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventToggleSwapIn does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -5787,17 +5787,17 @@ func (x *fastReflection_EventToggleSwapIn) Get(descriptor protoreflect.FieldDesc
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventToggleSwapIn) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.EventToggleSwapIn.vault_address":
+	case "provlabs.vault.v1.EventToggleSwapIn.vault_address":
 		x.VaultAddress = value.Interface().(string)
-	case "vault.v1.EventToggleSwapIn.admin":
+	case "provlabs.vault.v1.EventToggleSwapIn.admin":
 		x.Admin = value.Interface().(string)
-	case "vault.v1.EventToggleSwapIn.enabled":
+	case "provlabs.vault.v1.EventToggleSwapIn.enabled":
 		x.Enabled = value.Bool()
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventToggleSwapIn"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventToggleSwapIn"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventToggleSwapIn does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventToggleSwapIn does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -5813,17 +5813,17 @@ func (x *fastReflection_EventToggleSwapIn) Set(fd protoreflect.FieldDescriptor, 
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventToggleSwapIn) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventToggleSwapIn.vault_address":
-		panic(fmt.Errorf("field vault_address of message vault.v1.EventToggleSwapIn is not mutable"))
-	case "vault.v1.EventToggleSwapIn.admin":
-		panic(fmt.Errorf("field admin of message vault.v1.EventToggleSwapIn is not mutable"))
-	case "vault.v1.EventToggleSwapIn.enabled":
-		panic(fmt.Errorf("field enabled of message vault.v1.EventToggleSwapIn is not mutable"))
+	case "provlabs.vault.v1.EventToggleSwapIn.vault_address":
+		panic(fmt.Errorf("field vault_address of message provlabs.vault.v1.EventToggleSwapIn is not mutable"))
+	case "provlabs.vault.v1.EventToggleSwapIn.admin":
+		panic(fmt.Errorf("field admin of message provlabs.vault.v1.EventToggleSwapIn is not mutable"))
+	case "provlabs.vault.v1.EventToggleSwapIn.enabled":
+		panic(fmt.Errorf("field enabled of message provlabs.vault.v1.EventToggleSwapIn is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventToggleSwapIn"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventToggleSwapIn"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventToggleSwapIn does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventToggleSwapIn does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -5832,17 +5832,17 @@ func (x *fastReflection_EventToggleSwapIn) Mutable(fd protoreflect.FieldDescript
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_EventToggleSwapIn) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventToggleSwapIn.vault_address":
+	case "provlabs.vault.v1.EventToggleSwapIn.vault_address":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventToggleSwapIn.admin":
+	case "provlabs.vault.v1.EventToggleSwapIn.admin":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventToggleSwapIn.enabled":
+	case "provlabs.vault.v1.EventToggleSwapIn.enabled":
 		return protoreflect.ValueOfBool(false)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventToggleSwapIn"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventToggleSwapIn"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventToggleSwapIn does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventToggleSwapIn does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -5852,7 +5852,7 @@ func (x *fastReflection_EventToggleSwapIn) NewField(fd protoreflect.FieldDescrip
 func (x *fastReflection_EventToggleSwapIn) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.EventToggleSwapIn", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.EventToggleSwapIn", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -6147,8 +6147,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_events_proto_init()
-	md_EventToggleSwapOut = File_vault_v1_events_proto.Messages().ByName("EventToggleSwapOut")
+	file_provlabs_vault_v1_events_proto_init()
+	md_EventToggleSwapOut = File_provlabs_vault_v1_events_proto.Messages().ByName("EventToggleSwapOut")
 	fd_EventToggleSwapOut_vault_address = md_EventToggleSwapOut.Fields().ByName("vault_address")
 	fd_EventToggleSwapOut_admin = md_EventToggleSwapOut.Fields().ByName("admin")
 	fd_EventToggleSwapOut_enabled = md_EventToggleSwapOut.Fields().ByName("enabled")
@@ -6163,7 +6163,7 @@ func (x *EventToggleSwapOut) ProtoReflect() protoreflect.Message {
 }
 
 func (x *EventToggleSwapOut) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_events_proto_msgTypes[10]
+	mi := &file_provlabs_vault_v1_events_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6252,17 +6252,17 @@ func (x *fastReflection_EventToggleSwapOut) Range(f func(protoreflect.FieldDescr
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_EventToggleSwapOut) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.EventToggleSwapOut.vault_address":
+	case "provlabs.vault.v1.EventToggleSwapOut.vault_address":
 		return x.VaultAddress != ""
-	case "vault.v1.EventToggleSwapOut.admin":
+	case "provlabs.vault.v1.EventToggleSwapOut.admin":
 		return x.Admin != ""
-	case "vault.v1.EventToggleSwapOut.enabled":
+	case "provlabs.vault.v1.EventToggleSwapOut.enabled":
 		return x.Enabled != false
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventToggleSwapOut"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventToggleSwapOut"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventToggleSwapOut does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventToggleSwapOut does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -6274,17 +6274,17 @@ func (x *fastReflection_EventToggleSwapOut) Has(fd protoreflect.FieldDescriptor)
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventToggleSwapOut) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.EventToggleSwapOut.vault_address":
+	case "provlabs.vault.v1.EventToggleSwapOut.vault_address":
 		x.VaultAddress = ""
-	case "vault.v1.EventToggleSwapOut.admin":
+	case "provlabs.vault.v1.EventToggleSwapOut.admin":
 		x.Admin = ""
-	case "vault.v1.EventToggleSwapOut.enabled":
+	case "provlabs.vault.v1.EventToggleSwapOut.enabled":
 		x.Enabled = false
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventToggleSwapOut"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventToggleSwapOut"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventToggleSwapOut does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventToggleSwapOut does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -6296,20 +6296,20 @@ func (x *fastReflection_EventToggleSwapOut) Clear(fd protoreflect.FieldDescripto
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_EventToggleSwapOut) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.EventToggleSwapOut.vault_address":
+	case "provlabs.vault.v1.EventToggleSwapOut.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventToggleSwapOut.admin":
+	case "provlabs.vault.v1.EventToggleSwapOut.admin":
 		value := x.Admin
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventToggleSwapOut.enabled":
+	case "provlabs.vault.v1.EventToggleSwapOut.enabled":
 		value := x.Enabled
 		return protoreflect.ValueOfBool(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventToggleSwapOut"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventToggleSwapOut"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventToggleSwapOut does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventToggleSwapOut does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -6325,17 +6325,17 @@ func (x *fastReflection_EventToggleSwapOut) Get(descriptor protoreflect.FieldDes
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventToggleSwapOut) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.EventToggleSwapOut.vault_address":
+	case "provlabs.vault.v1.EventToggleSwapOut.vault_address":
 		x.VaultAddress = value.Interface().(string)
-	case "vault.v1.EventToggleSwapOut.admin":
+	case "provlabs.vault.v1.EventToggleSwapOut.admin":
 		x.Admin = value.Interface().(string)
-	case "vault.v1.EventToggleSwapOut.enabled":
+	case "provlabs.vault.v1.EventToggleSwapOut.enabled":
 		x.Enabled = value.Bool()
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventToggleSwapOut"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventToggleSwapOut"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventToggleSwapOut does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventToggleSwapOut does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -6351,17 +6351,17 @@ func (x *fastReflection_EventToggleSwapOut) Set(fd protoreflect.FieldDescriptor,
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventToggleSwapOut) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventToggleSwapOut.vault_address":
-		panic(fmt.Errorf("field vault_address of message vault.v1.EventToggleSwapOut is not mutable"))
-	case "vault.v1.EventToggleSwapOut.admin":
-		panic(fmt.Errorf("field admin of message vault.v1.EventToggleSwapOut is not mutable"))
-	case "vault.v1.EventToggleSwapOut.enabled":
-		panic(fmt.Errorf("field enabled of message vault.v1.EventToggleSwapOut is not mutable"))
+	case "provlabs.vault.v1.EventToggleSwapOut.vault_address":
+		panic(fmt.Errorf("field vault_address of message provlabs.vault.v1.EventToggleSwapOut is not mutable"))
+	case "provlabs.vault.v1.EventToggleSwapOut.admin":
+		panic(fmt.Errorf("field admin of message provlabs.vault.v1.EventToggleSwapOut is not mutable"))
+	case "provlabs.vault.v1.EventToggleSwapOut.enabled":
+		panic(fmt.Errorf("field enabled of message provlabs.vault.v1.EventToggleSwapOut is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventToggleSwapOut"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventToggleSwapOut"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventToggleSwapOut does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventToggleSwapOut does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -6370,17 +6370,17 @@ func (x *fastReflection_EventToggleSwapOut) Mutable(fd protoreflect.FieldDescrip
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_EventToggleSwapOut) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventToggleSwapOut.vault_address":
+	case "provlabs.vault.v1.EventToggleSwapOut.vault_address":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventToggleSwapOut.admin":
+	case "provlabs.vault.v1.EventToggleSwapOut.admin":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventToggleSwapOut.enabled":
+	case "provlabs.vault.v1.EventToggleSwapOut.enabled":
 		return protoreflect.ValueOfBool(false)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventToggleSwapOut"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventToggleSwapOut"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventToggleSwapOut does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventToggleSwapOut does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -6390,7 +6390,7 @@ func (x *fastReflection_EventToggleSwapOut) NewField(fd protoreflect.FieldDescri
 func (x *fastReflection_EventToggleSwapOut) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.EventToggleSwapOut", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.EventToggleSwapOut", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -6685,8 +6685,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_events_proto_init()
-	md_EventDepositPrincipalFunds = File_vault_v1_events_proto.Messages().ByName("EventDepositPrincipalFunds")
+	file_provlabs_vault_v1_events_proto_init()
+	md_EventDepositPrincipalFunds = File_provlabs_vault_v1_events_proto.Messages().ByName("EventDepositPrincipalFunds")
 	fd_EventDepositPrincipalFunds_vault_address = md_EventDepositPrincipalFunds.Fields().ByName("vault_address")
 	fd_EventDepositPrincipalFunds_admin = md_EventDepositPrincipalFunds.Fields().ByName("admin")
 	fd_EventDepositPrincipalFunds_amount = md_EventDepositPrincipalFunds.Fields().ByName("amount")
@@ -6701,7 +6701,7 @@ func (x *EventDepositPrincipalFunds) ProtoReflect() protoreflect.Message {
 }
 
 func (x *EventDepositPrincipalFunds) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_events_proto_msgTypes[11]
+	mi := &file_provlabs_vault_v1_events_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6790,17 +6790,17 @@ func (x *fastReflection_EventDepositPrincipalFunds) Range(f func(protoreflect.Fi
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_EventDepositPrincipalFunds) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.EventDepositPrincipalFunds.vault_address":
+	case "provlabs.vault.v1.EventDepositPrincipalFunds.vault_address":
 		return x.VaultAddress != ""
-	case "vault.v1.EventDepositPrincipalFunds.admin":
+	case "provlabs.vault.v1.EventDepositPrincipalFunds.admin":
 		return x.Admin != ""
-	case "vault.v1.EventDepositPrincipalFunds.amount":
+	case "provlabs.vault.v1.EventDepositPrincipalFunds.amount":
 		return x.Amount != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventDepositPrincipalFunds"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventDepositPrincipalFunds"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventDepositPrincipalFunds does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventDepositPrincipalFunds does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -6812,17 +6812,17 @@ func (x *fastReflection_EventDepositPrincipalFunds) Has(fd protoreflect.FieldDes
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventDepositPrincipalFunds) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.EventDepositPrincipalFunds.vault_address":
+	case "provlabs.vault.v1.EventDepositPrincipalFunds.vault_address":
 		x.VaultAddress = ""
-	case "vault.v1.EventDepositPrincipalFunds.admin":
+	case "provlabs.vault.v1.EventDepositPrincipalFunds.admin":
 		x.Admin = ""
-	case "vault.v1.EventDepositPrincipalFunds.amount":
+	case "provlabs.vault.v1.EventDepositPrincipalFunds.amount":
 		x.Amount = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventDepositPrincipalFunds"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventDepositPrincipalFunds"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventDepositPrincipalFunds does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventDepositPrincipalFunds does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -6834,20 +6834,20 @@ func (x *fastReflection_EventDepositPrincipalFunds) Clear(fd protoreflect.FieldD
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_EventDepositPrincipalFunds) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.EventDepositPrincipalFunds.vault_address":
+	case "provlabs.vault.v1.EventDepositPrincipalFunds.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventDepositPrincipalFunds.admin":
+	case "provlabs.vault.v1.EventDepositPrincipalFunds.admin":
 		value := x.Admin
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventDepositPrincipalFunds.amount":
+	case "provlabs.vault.v1.EventDepositPrincipalFunds.amount":
 		value := x.Amount
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventDepositPrincipalFunds"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventDepositPrincipalFunds"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventDepositPrincipalFunds does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventDepositPrincipalFunds does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -6863,17 +6863,17 @@ func (x *fastReflection_EventDepositPrincipalFunds) Get(descriptor protoreflect.
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventDepositPrincipalFunds) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.EventDepositPrincipalFunds.vault_address":
+	case "provlabs.vault.v1.EventDepositPrincipalFunds.vault_address":
 		x.VaultAddress = value.Interface().(string)
-	case "vault.v1.EventDepositPrincipalFunds.admin":
+	case "provlabs.vault.v1.EventDepositPrincipalFunds.admin":
 		x.Admin = value.Interface().(string)
-	case "vault.v1.EventDepositPrincipalFunds.amount":
+	case "provlabs.vault.v1.EventDepositPrincipalFunds.amount":
 		x.Amount = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventDepositPrincipalFunds"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventDepositPrincipalFunds"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventDepositPrincipalFunds does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventDepositPrincipalFunds does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -6889,17 +6889,17 @@ func (x *fastReflection_EventDepositPrincipalFunds) Set(fd protoreflect.FieldDes
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventDepositPrincipalFunds) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventDepositPrincipalFunds.vault_address":
-		panic(fmt.Errorf("field vault_address of message vault.v1.EventDepositPrincipalFunds is not mutable"))
-	case "vault.v1.EventDepositPrincipalFunds.admin":
-		panic(fmt.Errorf("field admin of message vault.v1.EventDepositPrincipalFunds is not mutable"))
-	case "vault.v1.EventDepositPrincipalFunds.amount":
-		panic(fmt.Errorf("field amount of message vault.v1.EventDepositPrincipalFunds is not mutable"))
+	case "provlabs.vault.v1.EventDepositPrincipalFunds.vault_address":
+		panic(fmt.Errorf("field vault_address of message provlabs.vault.v1.EventDepositPrincipalFunds is not mutable"))
+	case "provlabs.vault.v1.EventDepositPrincipalFunds.admin":
+		panic(fmt.Errorf("field admin of message provlabs.vault.v1.EventDepositPrincipalFunds is not mutable"))
+	case "provlabs.vault.v1.EventDepositPrincipalFunds.amount":
+		panic(fmt.Errorf("field amount of message provlabs.vault.v1.EventDepositPrincipalFunds is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventDepositPrincipalFunds"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventDepositPrincipalFunds"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventDepositPrincipalFunds does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventDepositPrincipalFunds does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -6908,17 +6908,17 @@ func (x *fastReflection_EventDepositPrincipalFunds) Mutable(fd protoreflect.Fiel
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_EventDepositPrincipalFunds) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventDepositPrincipalFunds.vault_address":
+	case "provlabs.vault.v1.EventDepositPrincipalFunds.vault_address":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventDepositPrincipalFunds.admin":
+	case "provlabs.vault.v1.EventDepositPrincipalFunds.admin":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventDepositPrincipalFunds.amount":
+	case "provlabs.vault.v1.EventDepositPrincipalFunds.amount":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventDepositPrincipalFunds"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventDepositPrincipalFunds"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventDepositPrincipalFunds does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventDepositPrincipalFunds does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -6928,7 +6928,7 @@ func (x *fastReflection_EventDepositPrincipalFunds) NewField(fd protoreflect.Fie
 func (x *fastReflection_EventDepositPrincipalFunds) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.EventDepositPrincipalFunds", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.EventDepositPrincipalFunds", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -7233,8 +7233,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_events_proto_init()
-	md_EventWithdrawPrincipalFunds = File_vault_v1_events_proto.Messages().ByName("EventWithdrawPrincipalFunds")
+	file_provlabs_vault_v1_events_proto_init()
+	md_EventWithdrawPrincipalFunds = File_provlabs_vault_v1_events_proto.Messages().ByName("EventWithdrawPrincipalFunds")
 	fd_EventWithdrawPrincipalFunds_vault_address = md_EventWithdrawPrincipalFunds.Fields().ByName("vault_address")
 	fd_EventWithdrawPrincipalFunds_admin = md_EventWithdrawPrincipalFunds.Fields().ByName("admin")
 	fd_EventWithdrawPrincipalFunds_amount = md_EventWithdrawPrincipalFunds.Fields().ByName("amount")
@@ -7249,7 +7249,7 @@ func (x *EventWithdrawPrincipalFunds) ProtoReflect() protoreflect.Message {
 }
 
 func (x *EventWithdrawPrincipalFunds) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_events_proto_msgTypes[12]
+	mi := &file_provlabs_vault_v1_events_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7338,17 +7338,17 @@ func (x *fastReflection_EventWithdrawPrincipalFunds) Range(f func(protoreflect.F
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_EventWithdrawPrincipalFunds) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.EventWithdrawPrincipalFunds.vault_address":
+	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.vault_address":
 		return x.VaultAddress != ""
-	case "vault.v1.EventWithdrawPrincipalFunds.admin":
+	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.admin":
 		return x.Admin != ""
-	case "vault.v1.EventWithdrawPrincipalFunds.amount":
+	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.amount":
 		return x.Amount != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventWithdrawPrincipalFunds"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventWithdrawPrincipalFunds"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventWithdrawPrincipalFunds does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventWithdrawPrincipalFunds does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -7360,17 +7360,17 @@ func (x *fastReflection_EventWithdrawPrincipalFunds) Has(fd protoreflect.FieldDe
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventWithdrawPrincipalFunds) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.EventWithdrawPrincipalFunds.vault_address":
+	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.vault_address":
 		x.VaultAddress = ""
-	case "vault.v1.EventWithdrawPrincipalFunds.admin":
+	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.admin":
 		x.Admin = ""
-	case "vault.v1.EventWithdrawPrincipalFunds.amount":
+	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.amount":
 		x.Amount = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventWithdrawPrincipalFunds"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventWithdrawPrincipalFunds"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventWithdrawPrincipalFunds does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventWithdrawPrincipalFunds does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -7382,20 +7382,20 @@ func (x *fastReflection_EventWithdrawPrincipalFunds) Clear(fd protoreflect.Field
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_EventWithdrawPrincipalFunds) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.EventWithdrawPrincipalFunds.vault_address":
+	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventWithdrawPrincipalFunds.admin":
+	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.admin":
 		value := x.Admin
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventWithdrawPrincipalFunds.amount":
+	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.amount":
 		value := x.Amount
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventWithdrawPrincipalFunds"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventWithdrawPrincipalFunds"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventWithdrawPrincipalFunds does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventWithdrawPrincipalFunds does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -7411,17 +7411,17 @@ func (x *fastReflection_EventWithdrawPrincipalFunds) Get(descriptor protoreflect
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventWithdrawPrincipalFunds) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.EventWithdrawPrincipalFunds.vault_address":
+	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.vault_address":
 		x.VaultAddress = value.Interface().(string)
-	case "vault.v1.EventWithdrawPrincipalFunds.admin":
+	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.admin":
 		x.Admin = value.Interface().(string)
-	case "vault.v1.EventWithdrawPrincipalFunds.amount":
+	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.amount":
 		x.Amount = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventWithdrawPrincipalFunds"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventWithdrawPrincipalFunds"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventWithdrawPrincipalFunds does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventWithdrawPrincipalFunds does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -7437,17 +7437,17 @@ func (x *fastReflection_EventWithdrawPrincipalFunds) Set(fd protoreflect.FieldDe
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventWithdrawPrincipalFunds) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventWithdrawPrincipalFunds.vault_address":
-		panic(fmt.Errorf("field vault_address of message vault.v1.EventWithdrawPrincipalFunds is not mutable"))
-	case "vault.v1.EventWithdrawPrincipalFunds.admin":
-		panic(fmt.Errorf("field admin of message vault.v1.EventWithdrawPrincipalFunds is not mutable"))
-	case "vault.v1.EventWithdrawPrincipalFunds.amount":
-		panic(fmt.Errorf("field amount of message vault.v1.EventWithdrawPrincipalFunds is not mutable"))
+	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.vault_address":
+		panic(fmt.Errorf("field vault_address of message provlabs.vault.v1.EventWithdrawPrincipalFunds is not mutable"))
+	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.admin":
+		panic(fmt.Errorf("field admin of message provlabs.vault.v1.EventWithdrawPrincipalFunds is not mutable"))
+	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.amount":
+		panic(fmt.Errorf("field amount of message provlabs.vault.v1.EventWithdrawPrincipalFunds is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventWithdrawPrincipalFunds"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventWithdrawPrincipalFunds"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventWithdrawPrincipalFunds does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventWithdrawPrincipalFunds does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -7456,17 +7456,17 @@ func (x *fastReflection_EventWithdrawPrincipalFunds) Mutable(fd protoreflect.Fie
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_EventWithdrawPrincipalFunds) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventWithdrawPrincipalFunds.vault_address":
+	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.vault_address":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventWithdrawPrincipalFunds.admin":
+	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.admin":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventWithdrawPrincipalFunds.amount":
+	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.amount":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventWithdrawPrincipalFunds"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventWithdrawPrincipalFunds"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventWithdrawPrincipalFunds does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventWithdrawPrincipalFunds does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -7476,7 +7476,7 @@ func (x *fastReflection_EventWithdrawPrincipalFunds) NewField(fd protoreflect.Fi
 func (x *fastReflection_EventWithdrawPrincipalFunds) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.EventWithdrawPrincipalFunds", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.EventWithdrawPrincipalFunds", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -7781,8 +7781,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_events_proto_init()
-	md_EventMinInterestRateUpdated = File_vault_v1_events_proto.Messages().ByName("EventMinInterestRateUpdated")
+	file_provlabs_vault_v1_events_proto_init()
+	md_EventMinInterestRateUpdated = File_provlabs_vault_v1_events_proto.Messages().ByName("EventMinInterestRateUpdated")
 	fd_EventMinInterestRateUpdated_vault_address = md_EventMinInterestRateUpdated.Fields().ByName("vault_address")
 	fd_EventMinInterestRateUpdated_admin = md_EventMinInterestRateUpdated.Fields().ByName("admin")
 	fd_EventMinInterestRateUpdated_min_rate = md_EventMinInterestRateUpdated.Fields().ByName("min_rate")
@@ -7797,7 +7797,7 @@ func (x *EventMinInterestRateUpdated) ProtoReflect() protoreflect.Message {
 }
 
 func (x *EventMinInterestRateUpdated) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_events_proto_msgTypes[13]
+	mi := &file_provlabs_vault_v1_events_proto_msgTypes[13]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7886,17 +7886,17 @@ func (x *fastReflection_EventMinInterestRateUpdated) Range(f func(protoreflect.F
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_EventMinInterestRateUpdated) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.EventMinInterestRateUpdated.vault_address":
+	case "provlabs.vault.v1.EventMinInterestRateUpdated.vault_address":
 		return x.VaultAddress != ""
-	case "vault.v1.EventMinInterestRateUpdated.admin":
+	case "provlabs.vault.v1.EventMinInterestRateUpdated.admin":
 		return x.Admin != ""
-	case "vault.v1.EventMinInterestRateUpdated.min_rate":
+	case "provlabs.vault.v1.EventMinInterestRateUpdated.min_rate":
 		return x.MinRate != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventMinInterestRateUpdated"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventMinInterestRateUpdated"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventMinInterestRateUpdated does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventMinInterestRateUpdated does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -7908,17 +7908,17 @@ func (x *fastReflection_EventMinInterestRateUpdated) Has(fd protoreflect.FieldDe
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventMinInterestRateUpdated) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.EventMinInterestRateUpdated.vault_address":
+	case "provlabs.vault.v1.EventMinInterestRateUpdated.vault_address":
 		x.VaultAddress = ""
-	case "vault.v1.EventMinInterestRateUpdated.admin":
+	case "provlabs.vault.v1.EventMinInterestRateUpdated.admin":
 		x.Admin = ""
-	case "vault.v1.EventMinInterestRateUpdated.min_rate":
+	case "provlabs.vault.v1.EventMinInterestRateUpdated.min_rate":
 		x.MinRate = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventMinInterestRateUpdated"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventMinInterestRateUpdated"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventMinInterestRateUpdated does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventMinInterestRateUpdated does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -7930,20 +7930,20 @@ func (x *fastReflection_EventMinInterestRateUpdated) Clear(fd protoreflect.Field
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_EventMinInterestRateUpdated) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.EventMinInterestRateUpdated.vault_address":
+	case "provlabs.vault.v1.EventMinInterestRateUpdated.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventMinInterestRateUpdated.admin":
+	case "provlabs.vault.v1.EventMinInterestRateUpdated.admin":
 		value := x.Admin
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventMinInterestRateUpdated.min_rate":
+	case "provlabs.vault.v1.EventMinInterestRateUpdated.min_rate":
 		value := x.MinRate
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventMinInterestRateUpdated"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventMinInterestRateUpdated"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventMinInterestRateUpdated does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventMinInterestRateUpdated does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -7959,17 +7959,17 @@ func (x *fastReflection_EventMinInterestRateUpdated) Get(descriptor protoreflect
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventMinInterestRateUpdated) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.EventMinInterestRateUpdated.vault_address":
+	case "provlabs.vault.v1.EventMinInterestRateUpdated.vault_address":
 		x.VaultAddress = value.Interface().(string)
-	case "vault.v1.EventMinInterestRateUpdated.admin":
+	case "provlabs.vault.v1.EventMinInterestRateUpdated.admin":
 		x.Admin = value.Interface().(string)
-	case "vault.v1.EventMinInterestRateUpdated.min_rate":
+	case "provlabs.vault.v1.EventMinInterestRateUpdated.min_rate":
 		x.MinRate = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventMinInterestRateUpdated"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventMinInterestRateUpdated"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventMinInterestRateUpdated does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventMinInterestRateUpdated does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -7985,17 +7985,17 @@ func (x *fastReflection_EventMinInterestRateUpdated) Set(fd protoreflect.FieldDe
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventMinInterestRateUpdated) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventMinInterestRateUpdated.vault_address":
-		panic(fmt.Errorf("field vault_address of message vault.v1.EventMinInterestRateUpdated is not mutable"))
-	case "vault.v1.EventMinInterestRateUpdated.admin":
-		panic(fmt.Errorf("field admin of message vault.v1.EventMinInterestRateUpdated is not mutable"))
-	case "vault.v1.EventMinInterestRateUpdated.min_rate":
-		panic(fmt.Errorf("field min_rate of message vault.v1.EventMinInterestRateUpdated is not mutable"))
+	case "provlabs.vault.v1.EventMinInterestRateUpdated.vault_address":
+		panic(fmt.Errorf("field vault_address of message provlabs.vault.v1.EventMinInterestRateUpdated is not mutable"))
+	case "provlabs.vault.v1.EventMinInterestRateUpdated.admin":
+		panic(fmt.Errorf("field admin of message provlabs.vault.v1.EventMinInterestRateUpdated is not mutable"))
+	case "provlabs.vault.v1.EventMinInterestRateUpdated.min_rate":
+		panic(fmt.Errorf("field min_rate of message provlabs.vault.v1.EventMinInterestRateUpdated is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventMinInterestRateUpdated"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventMinInterestRateUpdated"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventMinInterestRateUpdated does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventMinInterestRateUpdated does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -8004,17 +8004,17 @@ func (x *fastReflection_EventMinInterestRateUpdated) Mutable(fd protoreflect.Fie
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_EventMinInterestRateUpdated) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventMinInterestRateUpdated.vault_address":
+	case "provlabs.vault.v1.EventMinInterestRateUpdated.vault_address":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventMinInterestRateUpdated.admin":
+	case "provlabs.vault.v1.EventMinInterestRateUpdated.admin":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventMinInterestRateUpdated.min_rate":
+	case "provlabs.vault.v1.EventMinInterestRateUpdated.min_rate":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventMinInterestRateUpdated"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventMinInterestRateUpdated"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventMinInterestRateUpdated does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventMinInterestRateUpdated does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -8024,7 +8024,7 @@ func (x *fastReflection_EventMinInterestRateUpdated) NewField(fd protoreflect.Fi
 func (x *fastReflection_EventMinInterestRateUpdated) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.EventMinInterestRateUpdated", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.EventMinInterestRateUpdated", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -8329,8 +8329,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_events_proto_init()
-	md_EventMaxInterestRateUpdated = File_vault_v1_events_proto.Messages().ByName("EventMaxInterestRateUpdated")
+	file_provlabs_vault_v1_events_proto_init()
+	md_EventMaxInterestRateUpdated = File_provlabs_vault_v1_events_proto.Messages().ByName("EventMaxInterestRateUpdated")
 	fd_EventMaxInterestRateUpdated_vault_address = md_EventMaxInterestRateUpdated.Fields().ByName("vault_address")
 	fd_EventMaxInterestRateUpdated_admin = md_EventMaxInterestRateUpdated.Fields().ByName("admin")
 	fd_EventMaxInterestRateUpdated_max_rate = md_EventMaxInterestRateUpdated.Fields().ByName("max_rate")
@@ -8345,7 +8345,7 @@ func (x *EventMaxInterestRateUpdated) ProtoReflect() protoreflect.Message {
 }
 
 func (x *EventMaxInterestRateUpdated) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_events_proto_msgTypes[14]
+	mi := &file_provlabs_vault_v1_events_proto_msgTypes[14]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8434,17 +8434,17 @@ func (x *fastReflection_EventMaxInterestRateUpdated) Range(f func(protoreflect.F
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_EventMaxInterestRateUpdated) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.EventMaxInterestRateUpdated.vault_address":
+	case "provlabs.vault.v1.EventMaxInterestRateUpdated.vault_address":
 		return x.VaultAddress != ""
-	case "vault.v1.EventMaxInterestRateUpdated.admin":
+	case "provlabs.vault.v1.EventMaxInterestRateUpdated.admin":
 		return x.Admin != ""
-	case "vault.v1.EventMaxInterestRateUpdated.max_rate":
+	case "provlabs.vault.v1.EventMaxInterestRateUpdated.max_rate":
 		return x.MaxRate != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventMaxInterestRateUpdated"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventMaxInterestRateUpdated"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventMaxInterestRateUpdated does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventMaxInterestRateUpdated does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -8456,17 +8456,17 @@ func (x *fastReflection_EventMaxInterestRateUpdated) Has(fd protoreflect.FieldDe
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventMaxInterestRateUpdated) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.EventMaxInterestRateUpdated.vault_address":
+	case "provlabs.vault.v1.EventMaxInterestRateUpdated.vault_address":
 		x.VaultAddress = ""
-	case "vault.v1.EventMaxInterestRateUpdated.admin":
+	case "provlabs.vault.v1.EventMaxInterestRateUpdated.admin":
 		x.Admin = ""
-	case "vault.v1.EventMaxInterestRateUpdated.max_rate":
+	case "provlabs.vault.v1.EventMaxInterestRateUpdated.max_rate":
 		x.MaxRate = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventMaxInterestRateUpdated"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventMaxInterestRateUpdated"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventMaxInterestRateUpdated does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventMaxInterestRateUpdated does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -8478,20 +8478,20 @@ func (x *fastReflection_EventMaxInterestRateUpdated) Clear(fd protoreflect.Field
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_EventMaxInterestRateUpdated) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.EventMaxInterestRateUpdated.vault_address":
+	case "provlabs.vault.v1.EventMaxInterestRateUpdated.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventMaxInterestRateUpdated.admin":
+	case "provlabs.vault.v1.EventMaxInterestRateUpdated.admin":
 		value := x.Admin
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventMaxInterestRateUpdated.max_rate":
+	case "provlabs.vault.v1.EventMaxInterestRateUpdated.max_rate":
 		value := x.MaxRate
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventMaxInterestRateUpdated"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventMaxInterestRateUpdated"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventMaxInterestRateUpdated does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventMaxInterestRateUpdated does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -8507,17 +8507,17 @@ func (x *fastReflection_EventMaxInterestRateUpdated) Get(descriptor protoreflect
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventMaxInterestRateUpdated) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.EventMaxInterestRateUpdated.vault_address":
+	case "provlabs.vault.v1.EventMaxInterestRateUpdated.vault_address":
 		x.VaultAddress = value.Interface().(string)
-	case "vault.v1.EventMaxInterestRateUpdated.admin":
+	case "provlabs.vault.v1.EventMaxInterestRateUpdated.admin":
 		x.Admin = value.Interface().(string)
-	case "vault.v1.EventMaxInterestRateUpdated.max_rate":
+	case "provlabs.vault.v1.EventMaxInterestRateUpdated.max_rate":
 		x.MaxRate = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventMaxInterestRateUpdated"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventMaxInterestRateUpdated"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventMaxInterestRateUpdated does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventMaxInterestRateUpdated does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -8533,17 +8533,17 @@ func (x *fastReflection_EventMaxInterestRateUpdated) Set(fd protoreflect.FieldDe
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventMaxInterestRateUpdated) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventMaxInterestRateUpdated.vault_address":
-		panic(fmt.Errorf("field vault_address of message vault.v1.EventMaxInterestRateUpdated is not mutable"))
-	case "vault.v1.EventMaxInterestRateUpdated.admin":
-		panic(fmt.Errorf("field admin of message vault.v1.EventMaxInterestRateUpdated is not mutable"))
-	case "vault.v1.EventMaxInterestRateUpdated.max_rate":
-		panic(fmt.Errorf("field max_rate of message vault.v1.EventMaxInterestRateUpdated is not mutable"))
+	case "provlabs.vault.v1.EventMaxInterestRateUpdated.vault_address":
+		panic(fmt.Errorf("field vault_address of message provlabs.vault.v1.EventMaxInterestRateUpdated is not mutable"))
+	case "provlabs.vault.v1.EventMaxInterestRateUpdated.admin":
+		panic(fmt.Errorf("field admin of message provlabs.vault.v1.EventMaxInterestRateUpdated is not mutable"))
+	case "provlabs.vault.v1.EventMaxInterestRateUpdated.max_rate":
+		panic(fmt.Errorf("field max_rate of message provlabs.vault.v1.EventMaxInterestRateUpdated is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventMaxInterestRateUpdated"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventMaxInterestRateUpdated"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventMaxInterestRateUpdated does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventMaxInterestRateUpdated does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -8552,17 +8552,17 @@ func (x *fastReflection_EventMaxInterestRateUpdated) Mutable(fd protoreflect.Fie
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_EventMaxInterestRateUpdated) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventMaxInterestRateUpdated.vault_address":
+	case "provlabs.vault.v1.EventMaxInterestRateUpdated.vault_address":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventMaxInterestRateUpdated.admin":
+	case "provlabs.vault.v1.EventMaxInterestRateUpdated.admin":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventMaxInterestRateUpdated.max_rate":
+	case "provlabs.vault.v1.EventMaxInterestRateUpdated.max_rate":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventMaxInterestRateUpdated"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventMaxInterestRateUpdated"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventMaxInterestRateUpdated does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventMaxInterestRateUpdated does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -8572,7 +8572,7 @@ func (x *fastReflection_EventMaxInterestRateUpdated) NewField(fd protoreflect.Fi
 func (x *fastReflection_EventMaxInterestRateUpdated) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.EventMaxInterestRateUpdated", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.EventMaxInterestRateUpdated", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -8879,8 +8879,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_events_proto_init()
-	md_EventSwapOutRequested = File_vault_v1_events_proto.Messages().ByName("EventSwapOutRequested")
+	file_provlabs_vault_v1_events_proto_init()
+	md_EventSwapOutRequested = File_provlabs_vault_v1_events_proto.Messages().ByName("EventSwapOutRequested")
 	fd_EventSwapOutRequested_vault_address = md_EventSwapOutRequested.Fields().ByName("vault_address")
 	fd_EventSwapOutRequested_owner = md_EventSwapOutRequested.Fields().ByName("owner")
 	fd_EventSwapOutRequested_redeem_denom = md_EventSwapOutRequested.Fields().ByName("redeem_denom")
@@ -8897,7 +8897,7 @@ func (x *EventSwapOutRequested) ProtoReflect() protoreflect.Message {
 }
 
 func (x *EventSwapOutRequested) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_events_proto_msgTypes[15]
+	mi := &file_provlabs_vault_v1_events_proto_msgTypes[15]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8998,21 +8998,21 @@ func (x *fastReflection_EventSwapOutRequested) Range(f func(protoreflect.FieldDe
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_EventSwapOutRequested) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.EventSwapOutRequested.vault_address":
+	case "provlabs.vault.v1.EventSwapOutRequested.vault_address":
 		return x.VaultAddress != ""
-	case "vault.v1.EventSwapOutRequested.owner":
+	case "provlabs.vault.v1.EventSwapOutRequested.owner":
 		return x.Owner != ""
-	case "vault.v1.EventSwapOutRequested.redeem_denom":
+	case "provlabs.vault.v1.EventSwapOutRequested.redeem_denom":
 		return x.RedeemDenom != ""
-	case "vault.v1.EventSwapOutRequested.shares":
+	case "provlabs.vault.v1.EventSwapOutRequested.shares":
 		return x.Shares != ""
-	case "vault.v1.EventSwapOutRequested.request_id":
+	case "provlabs.vault.v1.EventSwapOutRequested.request_id":
 		return x.RequestId != uint64(0)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventSwapOutRequested"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventSwapOutRequested"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventSwapOutRequested does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventSwapOutRequested does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -9024,21 +9024,21 @@ func (x *fastReflection_EventSwapOutRequested) Has(fd protoreflect.FieldDescript
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventSwapOutRequested) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.EventSwapOutRequested.vault_address":
+	case "provlabs.vault.v1.EventSwapOutRequested.vault_address":
 		x.VaultAddress = ""
-	case "vault.v1.EventSwapOutRequested.owner":
+	case "provlabs.vault.v1.EventSwapOutRequested.owner":
 		x.Owner = ""
-	case "vault.v1.EventSwapOutRequested.redeem_denom":
+	case "provlabs.vault.v1.EventSwapOutRequested.redeem_denom":
 		x.RedeemDenom = ""
-	case "vault.v1.EventSwapOutRequested.shares":
+	case "provlabs.vault.v1.EventSwapOutRequested.shares":
 		x.Shares = ""
-	case "vault.v1.EventSwapOutRequested.request_id":
+	case "provlabs.vault.v1.EventSwapOutRequested.request_id":
 		x.RequestId = uint64(0)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventSwapOutRequested"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventSwapOutRequested"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventSwapOutRequested does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventSwapOutRequested does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -9050,26 +9050,26 @@ func (x *fastReflection_EventSwapOutRequested) Clear(fd protoreflect.FieldDescri
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_EventSwapOutRequested) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.EventSwapOutRequested.vault_address":
+	case "provlabs.vault.v1.EventSwapOutRequested.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventSwapOutRequested.owner":
+	case "provlabs.vault.v1.EventSwapOutRequested.owner":
 		value := x.Owner
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventSwapOutRequested.redeem_denom":
+	case "provlabs.vault.v1.EventSwapOutRequested.redeem_denom":
 		value := x.RedeemDenom
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventSwapOutRequested.shares":
+	case "provlabs.vault.v1.EventSwapOutRequested.shares":
 		value := x.Shares
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventSwapOutRequested.request_id":
+	case "provlabs.vault.v1.EventSwapOutRequested.request_id":
 		value := x.RequestId
 		return protoreflect.ValueOfUint64(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventSwapOutRequested"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventSwapOutRequested"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventSwapOutRequested does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventSwapOutRequested does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -9085,21 +9085,21 @@ func (x *fastReflection_EventSwapOutRequested) Get(descriptor protoreflect.Field
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventSwapOutRequested) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.EventSwapOutRequested.vault_address":
+	case "provlabs.vault.v1.EventSwapOutRequested.vault_address":
 		x.VaultAddress = value.Interface().(string)
-	case "vault.v1.EventSwapOutRequested.owner":
+	case "provlabs.vault.v1.EventSwapOutRequested.owner":
 		x.Owner = value.Interface().(string)
-	case "vault.v1.EventSwapOutRequested.redeem_denom":
+	case "provlabs.vault.v1.EventSwapOutRequested.redeem_denom":
 		x.RedeemDenom = value.Interface().(string)
-	case "vault.v1.EventSwapOutRequested.shares":
+	case "provlabs.vault.v1.EventSwapOutRequested.shares":
 		x.Shares = value.Interface().(string)
-	case "vault.v1.EventSwapOutRequested.request_id":
+	case "provlabs.vault.v1.EventSwapOutRequested.request_id":
 		x.RequestId = value.Uint()
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventSwapOutRequested"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventSwapOutRequested"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventSwapOutRequested does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventSwapOutRequested does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -9115,21 +9115,21 @@ func (x *fastReflection_EventSwapOutRequested) Set(fd protoreflect.FieldDescript
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventSwapOutRequested) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventSwapOutRequested.vault_address":
-		panic(fmt.Errorf("field vault_address of message vault.v1.EventSwapOutRequested is not mutable"))
-	case "vault.v1.EventSwapOutRequested.owner":
-		panic(fmt.Errorf("field owner of message vault.v1.EventSwapOutRequested is not mutable"))
-	case "vault.v1.EventSwapOutRequested.redeem_denom":
-		panic(fmt.Errorf("field redeem_denom of message vault.v1.EventSwapOutRequested is not mutable"))
-	case "vault.v1.EventSwapOutRequested.shares":
-		panic(fmt.Errorf("field shares of message vault.v1.EventSwapOutRequested is not mutable"))
-	case "vault.v1.EventSwapOutRequested.request_id":
-		panic(fmt.Errorf("field request_id of message vault.v1.EventSwapOutRequested is not mutable"))
+	case "provlabs.vault.v1.EventSwapOutRequested.vault_address":
+		panic(fmt.Errorf("field vault_address of message provlabs.vault.v1.EventSwapOutRequested is not mutable"))
+	case "provlabs.vault.v1.EventSwapOutRequested.owner":
+		panic(fmt.Errorf("field owner of message provlabs.vault.v1.EventSwapOutRequested is not mutable"))
+	case "provlabs.vault.v1.EventSwapOutRequested.redeem_denom":
+		panic(fmt.Errorf("field redeem_denom of message provlabs.vault.v1.EventSwapOutRequested is not mutable"))
+	case "provlabs.vault.v1.EventSwapOutRequested.shares":
+		panic(fmt.Errorf("field shares of message provlabs.vault.v1.EventSwapOutRequested is not mutable"))
+	case "provlabs.vault.v1.EventSwapOutRequested.request_id":
+		panic(fmt.Errorf("field request_id of message provlabs.vault.v1.EventSwapOutRequested is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventSwapOutRequested"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventSwapOutRequested"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventSwapOutRequested does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventSwapOutRequested does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -9138,21 +9138,21 @@ func (x *fastReflection_EventSwapOutRequested) Mutable(fd protoreflect.FieldDesc
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_EventSwapOutRequested) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventSwapOutRequested.vault_address":
+	case "provlabs.vault.v1.EventSwapOutRequested.vault_address":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventSwapOutRequested.owner":
+	case "provlabs.vault.v1.EventSwapOutRequested.owner":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventSwapOutRequested.redeem_denom":
+	case "provlabs.vault.v1.EventSwapOutRequested.redeem_denom":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventSwapOutRequested.shares":
+	case "provlabs.vault.v1.EventSwapOutRequested.shares":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventSwapOutRequested.request_id":
+	case "provlabs.vault.v1.EventSwapOutRequested.request_id":
 		return protoreflect.ValueOfUint64(uint64(0))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventSwapOutRequested"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventSwapOutRequested"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventSwapOutRequested does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventSwapOutRequested does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -9162,7 +9162,7 @@ func (x *fastReflection_EventSwapOutRequested) NewField(fd protoreflect.FieldDes
 func (x *fastReflection_EventSwapOutRequested) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.EventSwapOutRequested", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.EventSwapOutRequested", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -9538,8 +9538,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_events_proto_init()
-	md_EventSwapOutCompleted = File_vault_v1_events_proto.Messages().ByName("EventSwapOutCompleted")
+	file_provlabs_vault_v1_events_proto_init()
+	md_EventSwapOutCompleted = File_provlabs_vault_v1_events_proto.Messages().ByName("EventSwapOutCompleted")
 	fd_EventSwapOutCompleted_vault_address = md_EventSwapOutCompleted.Fields().ByName("vault_address")
 	fd_EventSwapOutCompleted_owner = md_EventSwapOutCompleted.Fields().ByName("owner")
 	fd_EventSwapOutCompleted_assets = md_EventSwapOutCompleted.Fields().ByName("assets")
@@ -9555,7 +9555,7 @@ func (x *EventSwapOutCompleted) ProtoReflect() protoreflect.Message {
 }
 
 func (x *EventSwapOutCompleted) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_events_proto_msgTypes[16]
+	mi := &file_provlabs_vault_v1_events_proto_msgTypes[16]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9650,19 +9650,19 @@ func (x *fastReflection_EventSwapOutCompleted) Range(f func(protoreflect.FieldDe
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_EventSwapOutCompleted) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.EventSwapOutCompleted.vault_address":
+	case "provlabs.vault.v1.EventSwapOutCompleted.vault_address":
 		return x.VaultAddress != ""
-	case "vault.v1.EventSwapOutCompleted.owner":
+	case "provlabs.vault.v1.EventSwapOutCompleted.owner":
 		return x.Owner != ""
-	case "vault.v1.EventSwapOutCompleted.assets":
+	case "provlabs.vault.v1.EventSwapOutCompleted.assets":
 		return x.Assets != ""
-	case "vault.v1.EventSwapOutCompleted.request_id":
+	case "provlabs.vault.v1.EventSwapOutCompleted.request_id":
 		return x.RequestId != uint64(0)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventSwapOutCompleted"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventSwapOutCompleted"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventSwapOutCompleted does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventSwapOutCompleted does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -9674,19 +9674,19 @@ func (x *fastReflection_EventSwapOutCompleted) Has(fd protoreflect.FieldDescript
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventSwapOutCompleted) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.EventSwapOutCompleted.vault_address":
+	case "provlabs.vault.v1.EventSwapOutCompleted.vault_address":
 		x.VaultAddress = ""
-	case "vault.v1.EventSwapOutCompleted.owner":
+	case "provlabs.vault.v1.EventSwapOutCompleted.owner":
 		x.Owner = ""
-	case "vault.v1.EventSwapOutCompleted.assets":
+	case "provlabs.vault.v1.EventSwapOutCompleted.assets":
 		x.Assets = ""
-	case "vault.v1.EventSwapOutCompleted.request_id":
+	case "provlabs.vault.v1.EventSwapOutCompleted.request_id":
 		x.RequestId = uint64(0)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventSwapOutCompleted"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventSwapOutCompleted"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventSwapOutCompleted does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventSwapOutCompleted does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -9698,23 +9698,23 @@ func (x *fastReflection_EventSwapOutCompleted) Clear(fd protoreflect.FieldDescri
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_EventSwapOutCompleted) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.EventSwapOutCompleted.vault_address":
+	case "provlabs.vault.v1.EventSwapOutCompleted.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventSwapOutCompleted.owner":
+	case "provlabs.vault.v1.EventSwapOutCompleted.owner":
 		value := x.Owner
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventSwapOutCompleted.assets":
+	case "provlabs.vault.v1.EventSwapOutCompleted.assets":
 		value := x.Assets
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventSwapOutCompleted.request_id":
+	case "provlabs.vault.v1.EventSwapOutCompleted.request_id":
 		value := x.RequestId
 		return protoreflect.ValueOfUint64(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventSwapOutCompleted"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventSwapOutCompleted"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventSwapOutCompleted does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventSwapOutCompleted does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -9730,19 +9730,19 @@ func (x *fastReflection_EventSwapOutCompleted) Get(descriptor protoreflect.Field
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventSwapOutCompleted) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.EventSwapOutCompleted.vault_address":
+	case "provlabs.vault.v1.EventSwapOutCompleted.vault_address":
 		x.VaultAddress = value.Interface().(string)
-	case "vault.v1.EventSwapOutCompleted.owner":
+	case "provlabs.vault.v1.EventSwapOutCompleted.owner":
 		x.Owner = value.Interface().(string)
-	case "vault.v1.EventSwapOutCompleted.assets":
+	case "provlabs.vault.v1.EventSwapOutCompleted.assets":
 		x.Assets = value.Interface().(string)
-	case "vault.v1.EventSwapOutCompleted.request_id":
+	case "provlabs.vault.v1.EventSwapOutCompleted.request_id":
 		x.RequestId = value.Uint()
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventSwapOutCompleted"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventSwapOutCompleted"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventSwapOutCompleted does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventSwapOutCompleted does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -9758,19 +9758,19 @@ func (x *fastReflection_EventSwapOutCompleted) Set(fd protoreflect.FieldDescript
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventSwapOutCompleted) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventSwapOutCompleted.vault_address":
-		panic(fmt.Errorf("field vault_address of message vault.v1.EventSwapOutCompleted is not mutable"))
-	case "vault.v1.EventSwapOutCompleted.owner":
-		panic(fmt.Errorf("field owner of message vault.v1.EventSwapOutCompleted is not mutable"))
-	case "vault.v1.EventSwapOutCompleted.assets":
-		panic(fmt.Errorf("field assets of message vault.v1.EventSwapOutCompleted is not mutable"))
-	case "vault.v1.EventSwapOutCompleted.request_id":
-		panic(fmt.Errorf("field request_id of message vault.v1.EventSwapOutCompleted is not mutable"))
+	case "provlabs.vault.v1.EventSwapOutCompleted.vault_address":
+		panic(fmt.Errorf("field vault_address of message provlabs.vault.v1.EventSwapOutCompleted is not mutable"))
+	case "provlabs.vault.v1.EventSwapOutCompleted.owner":
+		panic(fmt.Errorf("field owner of message provlabs.vault.v1.EventSwapOutCompleted is not mutable"))
+	case "provlabs.vault.v1.EventSwapOutCompleted.assets":
+		panic(fmt.Errorf("field assets of message provlabs.vault.v1.EventSwapOutCompleted is not mutable"))
+	case "provlabs.vault.v1.EventSwapOutCompleted.request_id":
+		panic(fmt.Errorf("field request_id of message provlabs.vault.v1.EventSwapOutCompleted is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventSwapOutCompleted"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventSwapOutCompleted"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventSwapOutCompleted does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventSwapOutCompleted does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -9779,19 +9779,19 @@ func (x *fastReflection_EventSwapOutCompleted) Mutable(fd protoreflect.FieldDesc
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_EventSwapOutCompleted) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventSwapOutCompleted.vault_address":
+	case "provlabs.vault.v1.EventSwapOutCompleted.vault_address":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventSwapOutCompleted.owner":
+	case "provlabs.vault.v1.EventSwapOutCompleted.owner":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventSwapOutCompleted.assets":
+	case "provlabs.vault.v1.EventSwapOutCompleted.assets":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventSwapOutCompleted.request_id":
+	case "provlabs.vault.v1.EventSwapOutCompleted.request_id":
 		return protoreflect.ValueOfUint64(uint64(0))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventSwapOutCompleted"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventSwapOutCompleted"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventSwapOutCompleted does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventSwapOutCompleted does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -9801,7 +9801,7 @@ func (x *fastReflection_EventSwapOutCompleted) NewField(fd protoreflect.FieldDes
 func (x *fastReflection_EventSwapOutCompleted) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.EventSwapOutCompleted", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.EventSwapOutCompleted", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -10135,8 +10135,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_events_proto_init()
-	md_EventSwapOutRefunded = File_vault_v1_events_proto.Messages().ByName("EventSwapOutRefunded")
+	file_provlabs_vault_v1_events_proto_init()
+	md_EventSwapOutRefunded = File_provlabs_vault_v1_events_proto.Messages().ByName("EventSwapOutRefunded")
 	fd_EventSwapOutRefunded_vault_address = md_EventSwapOutRefunded.Fields().ByName("vault_address")
 	fd_EventSwapOutRefunded_owner = md_EventSwapOutRefunded.Fields().ByName("owner")
 	fd_EventSwapOutRefunded_shares = md_EventSwapOutRefunded.Fields().ByName("shares")
@@ -10153,7 +10153,7 @@ func (x *EventSwapOutRefunded) ProtoReflect() protoreflect.Message {
 }
 
 func (x *EventSwapOutRefunded) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_events_proto_msgTypes[17]
+	mi := &file_provlabs_vault_v1_events_proto_msgTypes[17]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10254,21 +10254,21 @@ func (x *fastReflection_EventSwapOutRefunded) Range(f func(protoreflect.FieldDes
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_EventSwapOutRefunded) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.EventSwapOutRefunded.vault_address":
+	case "provlabs.vault.v1.EventSwapOutRefunded.vault_address":
 		return x.VaultAddress != ""
-	case "vault.v1.EventSwapOutRefunded.owner":
+	case "provlabs.vault.v1.EventSwapOutRefunded.owner":
 		return x.Owner != ""
-	case "vault.v1.EventSwapOutRefunded.shares":
+	case "provlabs.vault.v1.EventSwapOutRefunded.shares":
 		return x.Shares != ""
-	case "vault.v1.EventSwapOutRefunded.request_id":
+	case "provlabs.vault.v1.EventSwapOutRefunded.request_id":
 		return x.RequestId != uint64(0)
-	case "vault.v1.EventSwapOutRefunded.reason":
+	case "provlabs.vault.v1.EventSwapOutRefunded.reason":
 		return x.Reason != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventSwapOutRefunded"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventSwapOutRefunded"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventSwapOutRefunded does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventSwapOutRefunded does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -10280,21 +10280,21 @@ func (x *fastReflection_EventSwapOutRefunded) Has(fd protoreflect.FieldDescripto
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventSwapOutRefunded) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.EventSwapOutRefunded.vault_address":
+	case "provlabs.vault.v1.EventSwapOutRefunded.vault_address":
 		x.VaultAddress = ""
-	case "vault.v1.EventSwapOutRefunded.owner":
+	case "provlabs.vault.v1.EventSwapOutRefunded.owner":
 		x.Owner = ""
-	case "vault.v1.EventSwapOutRefunded.shares":
+	case "provlabs.vault.v1.EventSwapOutRefunded.shares":
 		x.Shares = ""
-	case "vault.v1.EventSwapOutRefunded.request_id":
+	case "provlabs.vault.v1.EventSwapOutRefunded.request_id":
 		x.RequestId = uint64(0)
-	case "vault.v1.EventSwapOutRefunded.reason":
+	case "provlabs.vault.v1.EventSwapOutRefunded.reason":
 		x.Reason = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventSwapOutRefunded"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventSwapOutRefunded"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventSwapOutRefunded does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventSwapOutRefunded does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -10306,26 +10306,26 @@ func (x *fastReflection_EventSwapOutRefunded) Clear(fd protoreflect.FieldDescrip
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_EventSwapOutRefunded) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.EventSwapOutRefunded.vault_address":
+	case "provlabs.vault.v1.EventSwapOutRefunded.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventSwapOutRefunded.owner":
+	case "provlabs.vault.v1.EventSwapOutRefunded.owner":
 		value := x.Owner
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventSwapOutRefunded.shares":
+	case "provlabs.vault.v1.EventSwapOutRefunded.shares":
 		value := x.Shares
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventSwapOutRefunded.request_id":
+	case "provlabs.vault.v1.EventSwapOutRefunded.request_id":
 		value := x.RequestId
 		return protoreflect.ValueOfUint64(value)
-	case "vault.v1.EventSwapOutRefunded.reason":
+	case "provlabs.vault.v1.EventSwapOutRefunded.reason":
 		value := x.Reason
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventSwapOutRefunded"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventSwapOutRefunded"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventSwapOutRefunded does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventSwapOutRefunded does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -10341,21 +10341,21 @@ func (x *fastReflection_EventSwapOutRefunded) Get(descriptor protoreflect.FieldD
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventSwapOutRefunded) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.EventSwapOutRefunded.vault_address":
+	case "provlabs.vault.v1.EventSwapOutRefunded.vault_address":
 		x.VaultAddress = value.Interface().(string)
-	case "vault.v1.EventSwapOutRefunded.owner":
+	case "provlabs.vault.v1.EventSwapOutRefunded.owner":
 		x.Owner = value.Interface().(string)
-	case "vault.v1.EventSwapOutRefunded.shares":
+	case "provlabs.vault.v1.EventSwapOutRefunded.shares":
 		x.Shares = value.Interface().(string)
-	case "vault.v1.EventSwapOutRefunded.request_id":
+	case "provlabs.vault.v1.EventSwapOutRefunded.request_id":
 		x.RequestId = value.Uint()
-	case "vault.v1.EventSwapOutRefunded.reason":
+	case "provlabs.vault.v1.EventSwapOutRefunded.reason":
 		x.Reason = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventSwapOutRefunded"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventSwapOutRefunded"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventSwapOutRefunded does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventSwapOutRefunded does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -10371,21 +10371,21 @@ func (x *fastReflection_EventSwapOutRefunded) Set(fd protoreflect.FieldDescripto
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventSwapOutRefunded) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventSwapOutRefunded.vault_address":
-		panic(fmt.Errorf("field vault_address of message vault.v1.EventSwapOutRefunded is not mutable"))
-	case "vault.v1.EventSwapOutRefunded.owner":
-		panic(fmt.Errorf("field owner of message vault.v1.EventSwapOutRefunded is not mutable"))
-	case "vault.v1.EventSwapOutRefunded.shares":
-		panic(fmt.Errorf("field shares of message vault.v1.EventSwapOutRefunded is not mutable"))
-	case "vault.v1.EventSwapOutRefunded.request_id":
-		panic(fmt.Errorf("field request_id of message vault.v1.EventSwapOutRefunded is not mutable"))
-	case "vault.v1.EventSwapOutRefunded.reason":
-		panic(fmt.Errorf("field reason of message vault.v1.EventSwapOutRefunded is not mutable"))
+	case "provlabs.vault.v1.EventSwapOutRefunded.vault_address":
+		panic(fmt.Errorf("field vault_address of message provlabs.vault.v1.EventSwapOutRefunded is not mutable"))
+	case "provlabs.vault.v1.EventSwapOutRefunded.owner":
+		panic(fmt.Errorf("field owner of message provlabs.vault.v1.EventSwapOutRefunded is not mutable"))
+	case "provlabs.vault.v1.EventSwapOutRefunded.shares":
+		panic(fmt.Errorf("field shares of message provlabs.vault.v1.EventSwapOutRefunded is not mutable"))
+	case "provlabs.vault.v1.EventSwapOutRefunded.request_id":
+		panic(fmt.Errorf("field request_id of message provlabs.vault.v1.EventSwapOutRefunded is not mutable"))
+	case "provlabs.vault.v1.EventSwapOutRefunded.reason":
+		panic(fmt.Errorf("field reason of message provlabs.vault.v1.EventSwapOutRefunded is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventSwapOutRefunded"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventSwapOutRefunded"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventSwapOutRefunded does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventSwapOutRefunded does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -10394,21 +10394,21 @@ func (x *fastReflection_EventSwapOutRefunded) Mutable(fd protoreflect.FieldDescr
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_EventSwapOutRefunded) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventSwapOutRefunded.vault_address":
+	case "provlabs.vault.v1.EventSwapOutRefunded.vault_address":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventSwapOutRefunded.owner":
+	case "provlabs.vault.v1.EventSwapOutRefunded.owner":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventSwapOutRefunded.shares":
+	case "provlabs.vault.v1.EventSwapOutRefunded.shares":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventSwapOutRefunded.request_id":
+	case "provlabs.vault.v1.EventSwapOutRefunded.request_id":
 		return protoreflect.ValueOfUint64(uint64(0))
-	case "vault.v1.EventSwapOutRefunded.reason":
+	case "provlabs.vault.v1.EventSwapOutRefunded.reason":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventSwapOutRefunded"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventSwapOutRefunded"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventSwapOutRefunded does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventSwapOutRefunded does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -10418,7 +10418,7 @@ func (x *fastReflection_EventSwapOutRefunded) NewField(fd protoreflect.FieldDesc
 func (x *fastReflection_EventSwapOutRefunded) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.EventSwapOutRefunded", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.EventSwapOutRefunded", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -10793,8 +10793,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_events_proto_init()
-	md_EventPendingSwapOutExpedited = File_vault_v1_events_proto.Messages().ByName("EventPendingSwapOutExpedited")
+	file_provlabs_vault_v1_events_proto_init()
+	md_EventPendingSwapOutExpedited = File_provlabs_vault_v1_events_proto.Messages().ByName("EventPendingSwapOutExpedited")
 	fd_EventPendingSwapOutExpedited_request_id = md_EventPendingSwapOutExpedited.Fields().ByName("request_id")
 	fd_EventPendingSwapOutExpedited_vault = md_EventPendingSwapOutExpedited.Fields().ByName("vault")
 	fd_EventPendingSwapOutExpedited_admin = md_EventPendingSwapOutExpedited.Fields().ByName("admin")
@@ -10809,7 +10809,7 @@ func (x *EventPendingSwapOutExpedited) ProtoReflect() protoreflect.Message {
 }
 
 func (x *EventPendingSwapOutExpedited) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_events_proto_msgTypes[18]
+	mi := &file_provlabs_vault_v1_events_proto_msgTypes[18]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10898,17 +10898,17 @@ func (x *fastReflection_EventPendingSwapOutExpedited) Range(f func(protoreflect.
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_EventPendingSwapOutExpedited) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.EventPendingSwapOutExpedited.request_id":
+	case "provlabs.vault.v1.EventPendingSwapOutExpedited.request_id":
 		return x.RequestId != uint64(0)
-	case "vault.v1.EventPendingSwapOutExpedited.vault":
+	case "provlabs.vault.v1.EventPendingSwapOutExpedited.vault":
 		return x.Vault != ""
-	case "vault.v1.EventPendingSwapOutExpedited.admin":
+	case "provlabs.vault.v1.EventPendingSwapOutExpedited.admin":
 		return x.Admin != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventPendingSwapOutExpedited"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventPendingSwapOutExpedited"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventPendingSwapOutExpedited does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventPendingSwapOutExpedited does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -10920,17 +10920,17 @@ func (x *fastReflection_EventPendingSwapOutExpedited) Has(fd protoreflect.FieldD
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventPendingSwapOutExpedited) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.EventPendingSwapOutExpedited.request_id":
+	case "provlabs.vault.v1.EventPendingSwapOutExpedited.request_id":
 		x.RequestId = uint64(0)
-	case "vault.v1.EventPendingSwapOutExpedited.vault":
+	case "provlabs.vault.v1.EventPendingSwapOutExpedited.vault":
 		x.Vault = ""
-	case "vault.v1.EventPendingSwapOutExpedited.admin":
+	case "provlabs.vault.v1.EventPendingSwapOutExpedited.admin":
 		x.Admin = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventPendingSwapOutExpedited"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventPendingSwapOutExpedited"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventPendingSwapOutExpedited does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventPendingSwapOutExpedited does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -10942,20 +10942,20 @@ func (x *fastReflection_EventPendingSwapOutExpedited) Clear(fd protoreflect.Fiel
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_EventPendingSwapOutExpedited) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.EventPendingSwapOutExpedited.request_id":
+	case "provlabs.vault.v1.EventPendingSwapOutExpedited.request_id":
 		value := x.RequestId
 		return protoreflect.ValueOfUint64(value)
-	case "vault.v1.EventPendingSwapOutExpedited.vault":
+	case "provlabs.vault.v1.EventPendingSwapOutExpedited.vault":
 		value := x.Vault
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventPendingSwapOutExpedited.admin":
+	case "provlabs.vault.v1.EventPendingSwapOutExpedited.admin":
 		value := x.Admin
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventPendingSwapOutExpedited"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventPendingSwapOutExpedited"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventPendingSwapOutExpedited does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventPendingSwapOutExpedited does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -10971,17 +10971,17 @@ func (x *fastReflection_EventPendingSwapOutExpedited) Get(descriptor protoreflec
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventPendingSwapOutExpedited) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.EventPendingSwapOutExpedited.request_id":
+	case "provlabs.vault.v1.EventPendingSwapOutExpedited.request_id":
 		x.RequestId = value.Uint()
-	case "vault.v1.EventPendingSwapOutExpedited.vault":
+	case "provlabs.vault.v1.EventPendingSwapOutExpedited.vault":
 		x.Vault = value.Interface().(string)
-	case "vault.v1.EventPendingSwapOutExpedited.admin":
+	case "provlabs.vault.v1.EventPendingSwapOutExpedited.admin":
 		x.Admin = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventPendingSwapOutExpedited"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventPendingSwapOutExpedited"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventPendingSwapOutExpedited does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventPendingSwapOutExpedited does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -10997,17 +10997,17 @@ func (x *fastReflection_EventPendingSwapOutExpedited) Set(fd protoreflect.FieldD
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventPendingSwapOutExpedited) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventPendingSwapOutExpedited.request_id":
-		panic(fmt.Errorf("field request_id of message vault.v1.EventPendingSwapOutExpedited is not mutable"))
-	case "vault.v1.EventPendingSwapOutExpedited.vault":
-		panic(fmt.Errorf("field vault of message vault.v1.EventPendingSwapOutExpedited is not mutable"))
-	case "vault.v1.EventPendingSwapOutExpedited.admin":
-		panic(fmt.Errorf("field admin of message vault.v1.EventPendingSwapOutExpedited is not mutable"))
+	case "provlabs.vault.v1.EventPendingSwapOutExpedited.request_id":
+		panic(fmt.Errorf("field request_id of message provlabs.vault.v1.EventPendingSwapOutExpedited is not mutable"))
+	case "provlabs.vault.v1.EventPendingSwapOutExpedited.vault":
+		panic(fmt.Errorf("field vault of message provlabs.vault.v1.EventPendingSwapOutExpedited is not mutable"))
+	case "provlabs.vault.v1.EventPendingSwapOutExpedited.admin":
+		panic(fmt.Errorf("field admin of message provlabs.vault.v1.EventPendingSwapOutExpedited is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventPendingSwapOutExpedited"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventPendingSwapOutExpedited"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventPendingSwapOutExpedited does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventPendingSwapOutExpedited does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -11016,17 +11016,17 @@ func (x *fastReflection_EventPendingSwapOutExpedited) Mutable(fd protoreflect.Fi
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_EventPendingSwapOutExpedited) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventPendingSwapOutExpedited.request_id":
+	case "provlabs.vault.v1.EventPendingSwapOutExpedited.request_id":
 		return protoreflect.ValueOfUint64(uint64(0))
-	case "vault.v1.EventPendingSwapOutExpedited.vault":
+	case "provlabs.vault.v1.EventPendingSwapOutExpedited.vault":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventPendingSwapOutExpedited.admin":
+	case "provlabs.vault.v1.EventPendingSwapOutExpedited.admin":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventPendingSwapOutExpedited"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventPendingSwapOutExpedited"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventPendingSwapOutExpedited does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventPendingSwapOutExpedited does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -11036,7 +11036,7 @@ func (x *fastReflection_EventPendingSwapOutExpedited) NewField(fd protoreflect.F
 func (x *fastReflection_EventPendingSwapOutExpedited) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.EventPendingSwapOutExpedited", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.EventPendingSwapOutExpedited", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -11326,8 +11326,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_events_proto_init()
-	md_EventVaultPaused = File_vault_v1_events_proto.Messages().ByName("EventVaultPaused")
+	file_provlabs_vault_v1_events_proto_init()
+	md_EventVaultPaused = File_provlabs_vault_v1_events_proto.Messages().ByName("EventVaultPaused")
 	fd_EventVaultPaused_vault_address = md_EventVaultPaused.Fields().ByName("vault_address")
 	fd_EventVaultPaused_admin = md_EventVaultPaused.Fields().ByName("admin")
 	fd_EventVaultPaused_reason = md_EventVaultPaused.Fields().ByName("reason")
@@ -11343,7 +11343,7 @@ func (x *EventVaultPaused) ProtoReflect() protoreflect.Message {
 }
 
 func (x *EventVaultPaused) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_events_proto_msgTypes[19]
+	mi := &file_provlabs_vault_v1_events_proto_msgTypes[19]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11438,19 +11438,19 @@ func (x *fastReflection_EventVaultPaused) Range(f func(protoreflect.FieldDescrip
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_EventVaultPaused) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.EventVaultPaused.vault_address":
+	case "provlabs.vault.v1.EventVaultPaused.vault_address":
 		return x.VaultAddress != ""
-	case "vault.v1.EventVaultPaused.admin":
+	case "provlabs.vault.v1.EventVaultPaused.admin":
 		return x.Admin != ""
-	case "vault.v1.EventVaultPaused.reason":
+	case "provlabs.vault.v1.EventVaultPaused.reason":
 		return x.Reason != ""
-	case "vault.v1.EventVaultPaused.total_vault_value":
+	case "provlabs.vault.v1.EventVaultPaused.total_vault_value":
 		return x.TotalVaultValue != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultPaused"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventVaultPaused"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventVaultPaused does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventVaultPaused does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -11462,19 +11462,19 @@ func (x *fastReflection_EventVaultPaused) Has(fd protoreflect.FieldDescriptor) b
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventVaultPaused) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.EventVaultPaused.vault_address":
+	case "provlabs.vault.v1.EventVaultPaused.vault_address":
 		x.VaultAddress = ""
-	case "vault.v1.EventVaultPaused.admin":
+	case "provlabs.vault.v1.EventVaultPaused.admin":
 		x.Admin = ""
-	case "vault.v1.EventVaultPaused.reason":
+	case "provlabs.vault.v1.EventVaultPaused.reason":
 		x.Reason = ""
-	case "vault.v1.EventVaultPaused.total_vault_value":
+	case "provlabs.vault.v1.EventVaultPaused.total_vault_value":
 		x.TotalVaultValue = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultPaused"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventVaultPaused"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventVaultPaused does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventVaultPaused does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -11486,23 +11486,23 @@ func (x *fastReflection_EventVaultPaused) Clear(fd protoreflect.FieldDescriptor)
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_EventVaultPaused) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.EventVaultPaused.vault_address":
+	case "provlabs.vault.v1.EventVaultPaused.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventVaultPaused.admin":
+	case "provlabs.vault.v1.EventVaultPaused.admin":
 		value := x.Admin
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventVaultPaused.reason":
+	case "provlabs.vault.v1.EventVaultPaused.reason":
 		value := x.Reason
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventVaultPaused.total_vault_value":
+	case "provlabs.vault.v1.EventVaultPaused.total_vault_value":
 		value := x.TotalVaultValue
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultPaused"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventVaultPaused"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventVaultPaused does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventVaultPaused does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -11518,19 +11518,19 @@ func (x *fastReflection_EventVaultPaused) Get(descriptor protoreflect.FieldDescr
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventVaultPaused) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.EventVaultPaused.vault_address":
+	case "provlabs.vault.v1.EventVaultPaused.vault_address":
 		x.VaultAddress = value.Interface().(string)
-	case "vault.v1.EventVaultPaused.admin":
+	case "provlabs.vault.v1.EventVaultPaused.admin":
 		x.Admin = value.Interface().(string)
-	case "vault.v1.EventVaultPaused.reason":
+	case "provlabs.vault.v1.EventVaultPaused.reason":
 		x.Reason = value.Interface().(string)
-	case "vault.v1.EventVaultPaused.total_vault_value":
+	case "provlabs.vault.v1.EventVaultPaused.total_vault_value":
 		x.TotalVaultValue = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultPaused"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventVaultPaused"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventVaultPaused does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventVaultPaused does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -11546,19 +11546,19 @@ func (x *fastReflection_EventVaultPaused) Set(fd protoreflect.FieldDescriptor, v
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventVaultPaused) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventVaultPaused.vault_address":
-		panic(fmt.Errorf("field vault_address of message vault.v1.EventVaultPaused is not mutable"))
-	case "vault.v1.EventVaultPaused.admin":
-		panic(fmt.Errorf("field admin of message vault.v1.EventVaultPaused is not mutable"))
-	case "vault.v1.EventVaultPaused.reason":
-		panic(fmt.Errorf("field reason of message vault.v1.EventVaultPaused is not mutable"))
-	case "vault.v1.EventVaultPaused.total_vault_value":
-		panic(fmt.Errorf("field total_vault_value of message vault.v1.EventVaultPaused is not mutable"))
+	case "provlabs.vault.v1.EventVaultPaused.vault_address":
+		panic(fmt.Errorf("field vault_address of message provlabs.vault.v1.EventVaultPaused is not mutable"))
+	case "provlabs.vault.v1.EventVaultPaused.admin":
+		panic(fmt.Errorf("field admin of message provlabs.vault.v1.EventVaultPaused is not mutable"))
+	case "provlabs.vault.v1.EventVaultPaused.reason":
+		panic(fmt.Errorf("field reason of message provlabs.vault.v1.EventVaultPaused is not mutable"))
+	case "provlabs.vault.v1.EventVaultPaused.total_vault_value":
+		panic(fmt.Errorf("field total_vault_value of message provlabs.vault.v1.EventVaultPaused is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultPaused"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventVaultPaused"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventVaultPaused does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventVaultPaused does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -11567,19 +11567,19 @@ func (x *fastReflection_EventVaultPaused) Mutable(fd protoreflect.FieldDescripto
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_EventVaultPaused) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventVaultPaused.vault_address":
+	case "provlabs.vault.v1.EventVaultPaused.vault_address":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventVaultPaused.admin":
+	case "provlabs.vault.v1.EventVaultPaused.admin":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventVaultPaused.reason":
+	case "provlabs.vault.v1.EventVaultPaused.reason":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventVaultPaused.total_vault_value":
+	case "provlabs.vault.v1.EventVaultPaused.total_vault_value":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultPaused"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventVaultPaused"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventVaultPaused does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventVaultPaused does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -11589,7 +11589,7 @@ func (x *fastReflection_EventVaultPaused) NewField(fd protoreflect.FieldDescript
 func (x *fastReflection_EventVaultPaused) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.EventVaultPaused", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.EventVaultPaused", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -11937,8 +11937,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_events_proto_init()
-	md_EventVaultUnpaused = File_vault_v1_events_proto.Messages().ByName("EventVaultUnpaused")
+	file_provlabs_vault_v1_events_proto_init()
+	md_EventVaultUnpaused = File_provlabs_vault_v1_events_proto.Messages().ByName("EventVaultUnpaused")
 	fd_EventVaultUnpaused_vault_address = md_EventVaultUnpaused.Fields().ByName("vault_address")
 	fd_EventVaultUnpaused_admin = md_EventVaultUnpaused.Fields().ByName("admin")
 	fd_EventVaultUnpaused_total_vault_value = md_EventVaultUnpaused.Fields().ByName("total_vault_value")
@@ -11953,7 +11953,7 @@ func (x *EventVaultUnpaused) ProtoReflect() protoreflect.Message {
 }
 
 func (x *EventVaultUnpaused) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_events_proto_msgTypes[20]
+	mi := &file_provlabs_vault_v1_events_proto_msgTypes[20]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12042,17 +12042,17 @@ func (x *fastReflection_EventVaultUnpaused) Range(f func(protoreflect.FieldDescr
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_EventVaultUnpaused) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.EventVaultUnpaused.vault_address":
+	case "provlabs.vault.v1.EventVaultUnpaused.vault_address":
 		return x.VaultAddress != ""
-	case "vault.v1.EventVaultUnpaused.admin":
+	case "provlabs.vault.v1.EventVaultUnpaused.admin":
 		return x.Admin != ""
-	case "vault.v1.EventVaultUnpaused.total_vault_value":
+	case "provlabs.vault.v1.EventVaultUnpaused.total_vault_value":
 		return x.TotalVaultValue != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultUnpaused"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventVaultUnpaused"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventVaultUnpaused does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventVaultUnpaused does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -12064,17 +12064,17 @@ func (x *fastReflection_EventVaultUnpaused) Has(fd protoreflect.FieldDescriptor)
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventVaultUnpaused) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.EventVaultUnpaused.vault_address":
+	case "provlabs.vault.v1.EventVaultUnpaused.vault_address":
 		x.VaultAddress = ""
-	case "vault.v1.EventVaultUnpaused.admin":
+	case "provlabs.vault.v1.EventVaultUnpaused.admin":
 		x.Admin = ""
-	case "vault.v1.EventVaultUnpaused.total_vault_value":
+	case "provlabs.vault.v1.EventVaultUnpaused.total_vault_value":
 		x.TotalVaultValue = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultUnpaused"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventVaultUnpaused"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventVaultUnpaused does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventVaultUnpaused does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -12086,20 +12086,20 @@ func (x *fastReflection_EventVaultUnpaused) Clear(fd protoreflect.FieldDescripto
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_EventVaultUnpaused) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.EventVaultUnpaused.vault_address":
+	case "provlabs.vault.v1.EventVaultUnpaused.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventVaultUnpaused.admin":
+	case "provlabs.vault.v1.EventVaultUnpaused.admin":
 		value := x.Admin
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventVaultUnpaused.total_vault_value":
+	case "provlabs.vault.v1.EventVaultUnpaused.total_vault_value":
 		value := x.TotalVaultValue
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultUnpaused"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventVaultUnpaused"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventVaultUnpaused does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventVaultUnpaused does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -12115,17 +12115,17 @@ func (x *fastReflection_EventVaultUnpaused) Get(descriptor protoreflect.FieldDes
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventVaultUnpaused) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.EventVaultUnpaused.vault_address":
+	case "provlabs.vault.v1.EventVaultUnpaused.vault_address":
 		x.VaultAddress = value.Interface().(string)
-	case "vault.v1.EventVaultUnpaused.admin":
+	case "provlabs.vault.v1.EventVaultUnpaused.admin":
 		x.Admin = value.Interface().(string)
-	case "vault.v1.EventVaultUnpaused.total_vault_value":
+	case "provlabs.vault.v1.EventVaultUnpaused.total_vault_value":
 		x.TotalVaultValue = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultUnpaused"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventVaultUnpaused"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventVaultUnpaused does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventVaultUnpaused does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -12141,17 +12141,17 @@ func (x *fastReflection_EventVaultUnpaused) Set(fd protoreflect.FieldDescriptor,
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventVaultUnpaused) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventVaultUnpaused.vault_address":
-		panic(fmt.Errorf("field vault_address of message vault.v1.EventVaultUnpaused is not mutable"))
-	case "vault.v1.EventVaultUnpaused.admin":
-		panic(fmt.Errorf("field admin of message vault.v1.EventVaultUnpaused is not mutable"))
-	case "vault.v1.EventVaultUnpaused.total_vault_value":
-		panic(fmt.Errorf("field total_vault_value of message vault.v1.EventVaultUnpaused is not mutable"))
+	case "provlabs.vault.v1.EventVaultUnpaused.vault_address":
+		panic(fmt.Errorf("field vault_address of message provlabs.vault.v1.EventVaultUnpaused is not mutable"))
+	case "provlabs.vault.v1.EventVaultUnpaused.admin":
+		panic(fmt.Errorf("field admin of message provlabs.vault.v1.EventVaultUnpaused is not mutable"))
+	case "provlabs.vault.v1.EventVaultUnpaused.total_vault_value":
+		panic(fmt.Errorf("field total_vault_value of message provlabs.vault.v1.EventVaultUnpaused is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultUnpaused"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventVaultUnpaused"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventVaultUnpaused does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventVaultUnpaused does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -12160,17 +12160,17 @@ func (x *fastReflection_EventVaultUnpaused) Mutable(fd protoreflect.FieldDescrip
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_EventVaultUnpaused) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventVaultUnpaused.vault_address":
+	case "provlabs.vault.v1.EventVaultUnpaused.vault_address":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventVaultUnpaused.admin":
+	case "provlabs.vault.v1.EventVaultUnpaused.admin":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventVaultUnpaused.total_vault_value":
+	case "provlabs.vault.v1.EventVaultUnpaused.total_vault_value":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventVaultUnpaused"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventVaultUnpaused"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventVaultUnpaused does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventVaultUnpaused does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -12180,7 +12180,7 @@ func (x *fastReflection_EventVaultUnpaused) NewField(fd protoreflect.FieldDescri
 func (x *fastReflection_EventVaultUnpaused) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.EventVaultUnpaused", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.EventVaultUnpaused", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -12485,8 +12485,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_events_proto_init()
-	md_EventBridgeAddressSet = File_vault_v1_events_proto.Messages().ByName("EventBridgeAddressSet")
+	file_provlabs_vault_v1_events_proto_init()
+	md_EventBridgeAddressSet = File_provlabs_vault_v1_events_proto.Messages().ByName("EventBridgeAddressSet")
 	fd_EventBridgeAddressSet_vault_address = md_EventBridgeAddressSet.Fields().ByName("vault_address")
 	fd_EventBridgeAddressSet_admin = md_EventBridgeAddressSet.Fields().ByName("admin")
 	fd_EventBridgeAddressSet_bridge_address = md_EventBridgeAddressSet.Fields().ByName("bridge_address")
@@ -12501,7 +12501,7 @@ func (x *EventBridgeAddressSet) ProtoReflect() protoreflect.Message {
 }
 
 func (x *EventBridgeAddressSet) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_events_proto_msgTypes[21]
+	mi := &file_provlabs_vault_v1_events_proto_msgTypes[21]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12590,17 +12590,17 @@ func (x *fastReflection_EventBridgeAddressSet) Range(f func(protoreflect.FieldDe
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_EventBridgeAddressSet) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.EventBridgeAddressSet.vault_address":
+	case "provlabs.vault.v1.EventBridgeAddressSet.vault_address":
 		return x.VaultAddress != ""
-	case "vault.v1.EventBridgeAddressSet.admin":
+	case "provlabs.vault.v1.EventBridgeAddressSet.admin":
 		return x.Admin != ""
-	case "vault.v1.EventBridgeAddressSet.bridge_address":
+	case "provlabs.vault.v1.EventBridgeAddressSet.bridge_address":
 		return x.BridgeAddress != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeAddressSet"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventBridgeAddressSet"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventBridgeAddressSet does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventBridgeAddressSet does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -12612,17 +12612,17 @@ func (x *fastReflection_EventBridgeAddressSet) Has(fd protoreflect.FieldDescript
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventBridgeAddressSet) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.EventBridgeAddressSet.vault_address":
+	case "provlabs.vault.v1.EventBridgeAddressSet.vault_address":
 		x.VaultAddress = ""
-	case "vault.v1.EventBridgeAddressSet.admin":
+	case "provlabs.vault.v1.EventBridgeAddressSet.admin":
 		x.Admin = ""
-	case "vault.v1.EventBridgeAddressSet.bridge_address":
+	case "provlabs.vault.v1.EventBridgeAddressSet.bridge_address":
 		x.BridgeAddress = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeAddressSet"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventBridgeAddressSet"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventBridgeAddressSet does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventBridgeAddressSet does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -12634,20 +12634,20 @@ func (x *fastReflection_EventBridgeAddressSet) Clear(fd protoreflect.FieldDescri
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_EventBridgeAddressSet) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.EventBridgeAddressSet.vault_address":
+	case "provlabs.vault.v1.EventBridgeAddressSet.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventBridgeAddressSet.admin":
+	case "provlabs.vault.v1.EventBridgeAddressSet.admin":
 		value := x.Admin
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventBridgeAddressSet.bridge_address":
+	case "provlabs.vault.v1.EventBridgeAddressSet.bridge_address":
 		value := x.BridgeAddress
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeAddressSet"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventBridgeAddressSet"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventBridgeAddressSet does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventBridgeAddressSet does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -12663,17 +12663,17 @@ func (x *fastReflection_EventBridgeAddressSet) Get(descriptor protoreflect.Field
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventBridgeAddressSet) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.EventBridgeAddressSet.vault_address":
+	case "provlabs.vault.v1.EventBridgeAddressSet.vault_address":
 		x.VaultAddress = value.Interface().(string)
-	case "vault.v1.EventBridgeAddressSet.admin":
+	case "provlabs.vault.v1.EventBridgeAddressSet.admin":
 		x.Admin = value.Interface().(string)
-	case "vault.v1.EventBridgeAddressSet.bridge_address":
+	case "provlabs.vault.v1.EventBridgeAddressSet.bridge_address":
 		x.BridgeAddress = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeAddressSet"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventBridgeAddressSet"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventBridgeAddressSet does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventBridgeAddressSet does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -12689,17 +12689,17 @@ func (x *fastReflection_EventBridgeAddressSet) Set(fd protoreflect.FieldDescript
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventBridgeAddressSet) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventBridgeAddressSet.vault_address":
-		panic(fmt.Errorf("field vault_address of message vault.v1.EventBridgeAddressSet is not mutable"))
-	case "vault.v1.EventBridgeAddressSet.admin":
-		panic(fmt.Errorf("field admin of message vault.v1.EventBridgeAddressSet is not mutable"))
-	case "vault.v1.EventBridgeAddressSet.bridge_address":
-		panic(fmt.Errorf("field bridge_address of message vault.v1.EventBridgeAddressSet is not mutable"))
+	case "provlabs.vault.v1.EventBridgeAddressSet.vault_address":
+		panic(fmt.Errorf("field vault_address of message provlabs.vault.v1.EventBridgeAddressSet is not mutable"))
+	case "provlabs.vault.v1.EventBridgeAddressSet.admin":
+		panic(fmt.Errorf("field admin of message provlabs.vault.v1.EventBridgeAddressSet is not mutable"))
+	case "provlabs.vault.v1.EventBridgeAddressSet.bridge_address":
+		panic(fmt.Errorf("field bridge_address of message provlabs.vault.v1.EventBridgeAddressSet is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeAddressSet"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventBridgeAddressSet"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventBridgeAddressSet does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventBridgeAddressSet does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -12708,17 +12708,17 @@ func (x *fastReflection_EventBridgeAddressSet) Mutable(fd protoreflect.FieldDesc
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_EventBridgeAddressSet) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventBridgeAddressSet.vault_address":
+	case "provlabs.vault.v1.EventBridgeAddressSet.vault_address":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventBridgeAddressSet.admin":
+	case "provlabs.vault.v1.EventBridgeAddressSet.admin":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventBridgeAddressSet.bridge_address":
+	case "provlabs.vault.v1.EventBridgeAddressSet.bridge_address":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeAddressSet"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventBridgeAddressSet"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventBridgeAddressSet does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventBridgeAddressSet does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -12728,7 +12728,7 @@ func (x *fastReflection_EventBridgeAddressSet) NewField(fd protoreflect.FieldDes
 func (x *fastReflection_EventBridgeAddressSet) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.EventBridgeAddressSet", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.EventBridgeAddressSet", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -13033,8 +13033,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_events_proto_init()
-	md_EventBridgeToggled = File_vault_v1_events_proto.Messages().ByName("EventBridgeToggled")
+	file_provlabs_vault_v1_events_proto_init()
+	md_EventBridgeToggled = File_provlabs_vault_v1_events_proto.Messages().ByName("EventBridgeToggled")
 	fd_EventBridgeToggled_vault_address = md_EventBridgeToggled.Fields().ByName("vault_address")
 	fd_EventBridgeToggled_admin = md_EventBridgeToggled.Fields().ByName("admin")
 	fd_EventBridgeToggled_enabled = md_EventBridgeToggled.Fields().ByName("enabled")
@@ -13049,7 +13049,7 @@ func (x *EventBridgeToggled) ProtoReflect() protoreflect.Message {
 }
 
 func (x *EventBridgeToggled) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_events_proto_msgTypes[22]
+	mi := &file_provlabs_vault_v1_events_proto_msgTypes[22]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13138,17 +13138,17 @@ func (x *fastReflection_EventBridgeToggled) Range(f func(protoreflect.FieldDescr
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_EventBridgeToggled) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.EventBridgeToggled.vault_address":
+	case "provlabs.vault.v1.EventBridgeToggled.vault_address":
 		return x.VaultAddress != ""
-	case "vault.v1.EventBridgeToggled.admin":
+	case "provlabs.vault.v1.EventBridgeToggled.admin":
 		return x.Admin != ""
-	case "vault.v1.EventBridgeToggled.enabled":
+	case "provlabs.vault.v1.EventBridgeToggled.enabled":
 		return x.Enabled != false
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeToggled"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventBridgeToggled"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventBridgeToggled does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventBridgeToggled does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -13160,17 +13160,17 @@ func (x *fastReflection_EventBridgeToggled) Has(fd protoreflect.FieldDescriptor)
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventBridgeToggled) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.EventBridgeToggled.vault_address":
+	case "provlabs.vault.v1.EventBridgeToggled.vault_address":
 		x.VaultAddress = ""
-	case "vault.v1.EventBridgeToggled.admin":
+	case "provlabs.vault.v1.EventBridgeToggled.admin":
 		x.Admin = ""
-	case "vault.v1.EventBridgeToggled.enabled":
+	case "provlabs.vault.v1.EventBridgeToggled.enabled":
 		x.Enabled = false
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeToggled"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventBridgeToggled"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventBridgeToggled does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventBridgeToggled does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -13182,20 +13182,20 @@ func (x *fastReflection_EventBridgeToggled) Clear(fd protoreflect.FieldDescripto
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_EventBridgeToggled) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.EventBridgeToggled.vault_address":
+	case "provlabs.vault.v1.EventBridgeToggled.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventBridgeToggled.admin":
+	case "provlabs.vault.v1.EventBridgeToggled.admin":
 		value := x.Admin
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventBridgeToggled.enabled":
+	case "provlabs.vault.v1.EventBridgeToggled.enabled":
 		value := x.Enabled
 		return protoreflect.ValueOfBool(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeToggled"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventBridgeToggled"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventBridgeToggled does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventBridgeToggled does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -13211,17 +13211,17 @@ func (x *fastReflection_EventBridgeToggled) Get(descriptor protoreflect.FieldDes
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventBridgeToggled) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.EventBridgeToggled.vault_address":
+	case "provlabs.vault.v1.EventBridgeToggled.vault_address":
 		x.VaultAddress = value.Interface().(string)
-	case "vault.v1.EventBridgeToggled.admin":
+	case "provlabs.vault.v1.EventBridgeToggled.admin":
 		x.Admin = value.Interface().(string)
-	case "vault.v1.EventBridgeToggled.enabled":
+	case "provlabs.vault.v1.EventBridgeToggled.enabled":
 		x.Enabled = value.Bool()
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeToggled"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventBridgeToggled"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventBridgeToggled does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventBridgeToggled does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -13237,17 +13237,17 @@ func (x *fastReflection_EventBridgeToggled) Set(fd protoreflect.FieldDescriptor,
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventBridgeToggled) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventBridgeToggled.vault_address":
-		panic(fmt.Errorf("field vault_address of message vault.v1.EventBridgeToggled is not mutable"))
-	case "vault.v1.EventBridgeToggled.admin":
-		panic(fmt.Errorf("field admin of message vault.v1.EventBridgeToggled is not mutable"))
-	case "vault.v1.EventBridgeToggled.enabled":
-		panic(fmt.Errorf("field enabled of message vault.v1.EventBridgeToggled is not mutable"))
+	case "provlabs.vault.v1.EventBridgeToggled.vault_address":
+		panic(fmt.Errorf("field vault_address of message provlabs.vault.v1.EventBridgeToggled is not mutable"))
+	case "provlabs.vault.v1.EventBridgeToggled.admin":
+		panic(fmt.Errorf("field admin of message provlabs.vault.v1.EventBridgeToggled is not mutable"))
+	case "provlabs.vault.v1.EventBridgeToggled.enabled":
+		panic(fmt.Errorf("field enabled of message provlabs.vault.v1.EventBridgeToggled is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeToggled"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventBridgeToggled"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventBridgeToggled does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventBridgeToggled does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -13256,17 +13256,17 @@ func (x *fastReflection_EventBridgeToggled) Mutable(fd protoreflect.FieldDescrip
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_EventBridgeToggled) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventBridgeToggled.vault_address":
+	case "provlabs.vault.v1.EventBridgeToggled.vault_address":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventBridgeToggled.admin":
+	case "provlabs.vault.v1.EventBridgeToggled.admin":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventBridgeToggled.enabled":
+	case "provlabs.vault.v1.EventBridgeToggled.enabled":
 		return protoreflect.ValueOfBool(false)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeToggled"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventBridgeToggled"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventBridgeToggled does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventBridgeToggled does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -13276,7 +13276,7 @@ func (x *fastReflection_EventBridgeToggled) NewField(fd protoreflect.FieldDescri
 func (x *fastReflection_EventBridgeToggled) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.EventBridgeToggled", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.EventBridgeToggled", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -13571,8 +13571,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_events_proto_init()
-	md_EventBridgeMintShares = File_vault_v1_events_proto.Messages().ByName("EventBridgeMintShares")
+	file_provlabs_vault_v1_events_proto_init()
+	md_EventBridgeMintShares = File_provlabs_vault_v1_events_proto.Messages().ByName("EventBridgeMintShares")
 	fd_EventBridgeMintShares_vault_address = md_EventBridgeMintShares.Fields().ByName("vault_address")
 	fd_EventBridgeMintShares_bridge = md_EventBridgeMintShares.Fields().ByName("bridge")
 	fd_EventBridgeMintShares_shares = md_EventBridgeMintShares.Fields().ByName("shares")
@@ -13587,7 +13587,7 @@ func (x *EventBridgeMintShares) ProtoReflect() protoreflect.Message {
 }
 
 func (x *EventBridgeMintShares) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_events_proto_msgTypes[23]
+	mi := &file_provlabs_vault_v1_events_proto_msgTypes[23]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13676,17 +13676,17 @@ func (x *fastReflection_EventBridgeMintShares) Range(f func(protoreflect.FieldDe
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_EventBridgeMintShares) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.EventBridgeMintShares.vault_address":
+	case "provlabs.vault.v1.EventBridgeMintShares.vault_address":
 		return x.VaultAddress != ""
-	case "vault.v1.EventBridgeMintShares.bridge":
+	case "provlabs.vault.v1.EventBridgeMintShares.bridge":
 		return x.Bridge != ""
-	case "vault.v1.EventBridgeMintShares.shares":
+	case "provlabs.vault.v1.EventBridgeMintShares.shares":
 		return x.Shares != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeMintShares"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventBridgeMintShares"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventBridgeMintShares does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventBridgeMintShares does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -13698,17 +13698,17 @@ func (x *fastReflection_EventBridgeMintShares) Has(fd protoreflect.FieldDescript
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventBridgeMintShares) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.EventBridgeMintShares.vault_address":
+	case "provlabs.vault.v1.EventBridgeMintShares.vault_address":
 		x.VaultAddress = ""
-	case "vault.v1.EventBridgeMintShares.bridge":
+	case "provlabs.vault.v1.EventBridgeMintShares.bridge":
 		x.Bridge = ""
-	case "vault.v1.EventBridgeMintShares.shares":
+	case "provlabs.vault.v1.EventBridgeMintShares.shares":
 		x.Shares = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeMintShares"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventBridgeMintShares"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventBridgeMintShares does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventBridgeMintShares does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -13720,20 +13720,20 @@ func (x *fastReflection_EventBridgeMintShares) Clear(fd protoreflect.FieldDescri
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_EventBridgeMintShares) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.EventBridgeMintShares.vault_address":
+	case "provlabs.vault.v1.EventBridgeMintShares.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventBridgeMintShares.bridge":
+	case "provlabs.vault.v1.EventBridgeMintShares.bridge":
 		value := x.Bridge
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventBridgeMintShares.shares":
+	case "provlabs.vault.v1.EventBridgeMintShares.shares":
 		value := x.Shares
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeMintShares"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventBridgeMintShares"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventBridgeMintShares does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventBridgeMintShares does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -13749,17 +13749,17 @@ func (x *fastReflection_EventBridgeMintShares) Get(descriptor protoreflect.Field
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventBridgeMintShares) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.EventBridgeMintShares.vault_address":
+	case "provlabs.vault.v1.EventBridgeMintShares.vault_address":
 		x.VaultAddress = value.Interface().(string)
-	case "vault.v1.EventBridgeMintShares.bridge":
+	case "provlabs.vault.v1.EventBridgeMintShares.bridge":
 		x.Bridge = value.Interface().(string)
-	case "vault.v1.EventBridgeMintShares.shares":
+	case "provlabs.vault.v1.EventBridgeMintShares.shares":
 		x.Shares = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeMintShares"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventBridgeMintShares"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventBridgeMintShares does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventBridgeMintShares does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -13775,17 +13775,17 @@ func (x *fastReflection_EventBridgeMintShares) Set(fd protoreflect.FieldDescript
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventBridgeMintShares) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventBridgeMintShares.vault_address":
-		panic(fmt.Errorf("field vault_address of message vault.v1.EventBridgeMintShares is not mutable"))
-	case "vault.v1.EventBridgeMintShares.bridge":
-		panic(fmt.Errorf("field bridge of message vault.v1.EventBridgeMintShares is not mutable"))
-	case "vault.v1.EventBridgeMintShares.shares":
-		panic(fmt.Errorf("field shares of message vault.v1.EventBridgeMintShares is not mutable"))
+	case "provlabs.vault.v1.EventBridgeMintShares.vault_address":
+		panic(fmt.Errorf("field vault_address of message provlabs.vault.v1.EventBridgeMintShares is not mutable"))
+	case "provlabs.vault.v1.EventBridgeMintShares.bridge":
+		panic(fmt.Errorf("field bridge of message provlabs.vault.v1.EventBridgeMintShares is not mutable"))
+	case "provlabs.vault.v1.EventBridgeMintShares.shares":
+		panic(fmt.Errorf("field shares of message provlabs.vault.v1.EventBridgeMintShares is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeMintShares"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventBridgeMintShares"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventBridgeMintShares does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventBridgeMintShares does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -13794,17 +13794,17 @@ func (x *fastReflection_EventBridgeMintShares) Mutable(fd protoreflect.FieldDesc
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_EventBridgeMintShares) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventBridgeMintShares.vault_address":
+	case "provlabs.vault.v1.EventBridgeMintShares.vault_address":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventBridgeMintShares.bridge":
+	case "provlabs.vault.v1.EventBridgeMintShares.bridge":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventBridgeMintShares.shares":
+	case "provlabs.vault.v1.EventBridgeMintShares.shares":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeMintShares"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventBridgeMintShares"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventBridgeMintShares does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventBridgeMintShares does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -13814,7 +13814,7 @@ func (x *fastReflection_EventBridgeMintShares) NewField(fd protoreflect.FieldDes
 func (x *fastReflection_EventBridgeMintShares) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.EventBridgeMintShares", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.EventBridgeMintShares", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -14119,8 +14119,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_events_proto_init()
-	md_EventBridgeBurnShares = File_vault_v1_events_proto.Messages().ByName("EventBridgeBurnShares")
+	file_provlabs_vault_v1_events_proto_init()
+	md_EventBridgeBurnShares = File_provlabs_vault_v1_events_proto.Messages().ByName("EventBridgeBurnShares")
 	fd_EventBridgeBurnShares_vault_address = md_EventBridgeBurnShares.Fields().ByName("vault_address")
 	fd_EventBridgeBurnShares_bridge = md_EventBridgeBurnShares.Fields().ByName("bridge")
 	fd_EventBridgeBurnShares_shares = md_EventBridgeBurnShares.Fields().ByName("shares")
@@ -14135,7 +14135,7 @@ func (x *EventBridgeBurnShares) ProtoReflect() protoreflect.Message {
 }
 
 func (x *EventBridgeBurnShares) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_events_proto_msgTypes[24]
+	mi := &file_provlabs_vault_v1_events_proto_msgTypes[24]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14224,17 +14224,17 @@ func (x *fastReflection_EventBridgeBurnShares) Range(f func(protoreflect.FieldDe
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_EventBridgeBurnShares) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.EventBridgeBurnShares.vault_address":
+	case "provlabs.vault.v1.EventBridgeBurnShares.vault_address":
 		return x.VaultAddress != ""
-	case "vault.v1.EventBridgeBurnShares.bridge":
+	case "provlabs.vault.v1.EventBridgeBurnShares.bridge":
 		return x.Bridge != ""
-	case "vault.v1.EventBridgeBurnShares.shares":
+	case "provlabs.vault.v1.EventBridgeBurnShares.shares":
 		return x.Shares != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeBurnShares"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventBridgeBurnShares"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventBridgeBurnShares does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventBridgeBurnShares does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -14246,17 +14246,17 @@ func (x *fastReflection_EventBridgeBurnShares) Has(fd protoreflect.FieldDescript
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventBridgeBurnShares) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.EventBridgeBurnShares.vault_address":
+	case "provlabs.vault.v1.EventBridgeBurnShares.vault_address":
 		x.VaultAddress = ""
-	case "vault.v1.EventBridgeBurnShares.bridge":
+	case "provlabs.vault.v1.EventBridgeBurnShares.bridge":
 		x.Bridge = ""
-	case "vault.v1.EventBridgeBurnShares.shares":
+	case "provlabs.vault.v1.EventBridgeBurnShares.shares":
 		x.Shares = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeBurnShares"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventBridgeBurnShares"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventBridgeBurnShares does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventBridgeBurnShares does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -14268,20 +14268,20 @@ func (x *fastReflection_EventBridgeBurnShares) Clear(fd protoreflect.FieldDescri
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_EventBridgeBurnShares) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.EventBridgeBurnShares.vault_address":
+	case "provlabs.vault.v1.EventBridgeBurnShares.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventBridgeBurnShares.bridge":
+	case "provlabs.vault.v1.EventBridgeBurnShares.bridge":
 		value := x.Bridge
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.EventBridgeBurnShares.shares":
+	case "provlabs.vault.v1.EventBridgeBurnShares.shares":
 		value := x.Shares
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeBurnShares"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventBridgeBurnShares"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventBridgeBurnShares does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventBridgeBurnShares does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -14297,17 +14297,17 @@ func (x *fastReflection_EventBridgeBurnShares) Get(descriptor protoreflect.Field
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventBridgeBurnShares) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.EventBridgeBurnShares.vault_address":
+	case "provlabs.vault.v1.EventBridgeBurnShares.vault_address":
 		x.VaultAddress = value.Interface().(string)
-	case "vault.v1.EventBridgeBurnShares.bridge":
+	case "provlabs.vault.v1.EventBridgeBurnShares.bridge":
 		x.Bridge = value.Interface().(string)
-	case "vault.v1.EventBridgeBurnShares.shares":
+	case "provlabs.vault.v1.EventBridgeBurnShares.shares":
 		x.Shares = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeBurnShares"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventBridgeBurnShares"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventBridgeBurnShares does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventBridgeBurnShares does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -14323,17 +14323,17 @@ func (x *fastReflection_EventBridgeBurnShares) Set(fd protoreflect.FieldDescript
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_EventBridgeBurnShares) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventBridgeBurnShares.vault_address":
-		panic(fmt.Errorf("field vault_address of message vault.v1.EventBridgeBurnShares is not mutable"))
-	case "vault.v1.EventBridgeBurnShares.bridge":
-		panic(fmt.Errorf("field bridge of message vault.v1.EventBridgeBurnShares is not mutable"))
-	case "vault.v1.EventBridgeBurnShares.shares":
-		panic(fmt.Errorf("field shares of message vault.v1.EventBridgeBurnShares is not mutable"))
+	case "provlabs.vault.v1.EventBridgeBurnShares.vault_address":
+		panic(fmt.Errorf("field vault_address of message provlabs.vault.v1.EventBridgeBurnShares is not mutable"))
+	case "provlabs.vault.v1.EventBridgeBurnShares.bridge":
+		panic(fmt.Errorf("field bridge of message provlabs.vault.v1.EventBridgeBurnShares is not mutable"))
+	case "provlabs.vault.v1.EventBridgeBurnShares.shares":
+		panic(fmt.Errorf("field shares of message provlabs.vault.v1.EventBridgeBurnShares is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeBurnShares"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventBridgeBurnShares"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventBridgeBurnShares does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventBridgeBurnShares does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -14342,17 +14342,17 @@ func (x *fastReflection_EventBridgeBurnShares) Mutable(fd protoreflect.FieldDesc
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_EventBridgeBurnShares) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.EventBridgeBurnShares.vault_address":
+	case "provlabs.vault.v1.EventBridgeBurnShares.vault_address":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventBridgeBurnShares.bridge":
+	case "provlabs.vault.v1.EventBridgeBurnShares.bridge":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.EventBridgeBurnShares.shares":
+	case "provlabs.vault.v1.EventBridgeBurnShares.shares":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.EventBridgeBurnShares"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventBridgeBurnShares"))
 		}
-		panic(fmt.Errorf("message vault.v1.EventBridgeBurnShares does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.EventBridgeBurnShares does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -14362,7 +14362,7 @@ func (x *fastReflection_EventBridgeBurnShares) NewField(fd protoreflect.FieldDes
 func (x *fastReflection_EventBridgeBurnShares) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.EventBridgeBurnShares", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.EventBridgeBurnShares", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -14663,7 +14663,7 @@ func (x *fastReflection_EventBridgeBurnShares) ProtoMethods() *protoiface.Method
 // versions:
 // 	protoc-gen-go v1.27.0
 // 	protoc        (unknown)
-// source: vault/v1/events.proto
+// source: provlabs/vault/v1/events.proto
 
 const (
 	// Verify that this generated code is sufficiently up-to-date.
@@ -14693,7 +14693,7 @@ type EventDeposit struct {
 func (x *EventDeposit) Reset() {
 	*x = EventDeposit{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_events_proto_msgTypes[0]
+		mi := &file_provlabs_vault_v1_events_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -14707,7 +14707,7 @@ func (*EventDeposit) ProtoMessage() {}
 
 // Deprecated: Use EventDeposit.ProtoReflect.Descriptor instead.
 func (*EventDeposit) Descriptor() ([]byte, []int) {
-	return file_vault_v1_events_proto_rawDescGZIP(), []int{0}
+	return file_provlabs_vault_v1_events_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *EventDeposit) GetCaller() string {
@@ -14768,7 +14768,7 @@ type EventWithdraw struct {
 func (x *EventWithdraw) Reset() {
 	*x = EventWithdraw{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_events_proto_msgTypes[1]
+		mi := &file_provlabs_vault_v1_events_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -14782,7 +14782,7 @@ func (*EventWithdraw) ProtoMessage() {}
 
 // Deprecated: Use EventWithdraw.ProtoReflect.Descriptor instead.
 func (*EventWithdraw) Descriptor() ([]byte, []int) {
-	return file_vault_v1_events_proto_rawDescGZIP(), []int{1}
+	return file_provlabs_vault_v1_events_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *EventWithdraw) GetCaller() string {
@@ -14846,7 +14846,7 @@ type EventVaultCreated struct {
 func (x *EventVaultCreated) Reset() {
 	*x = EventVaultCreated{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_events_proto_msgTypes[2]
+		mi := &file_provlabs_vault_v1_events_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -14860,7 +14860,7 @@ func (*EventVaultCreated) ProtoMessage() {}
 
 // Deprecated: Use EventVaultCreated.ProtoReflect.Descriptor instead.
 func (*EventVaultCreated) Descriptor() ([]byte, []int) {
-	return file_vault_v1_events_proto_rawDescGZIP(), []int{2}
+	return file_provlabs_vault_v1_events_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *EventVaultCreated) GetVaultAddress() string {
@@ -14910,7 +14910,7 @@ type EventSwapIn struct {
 func (x *EventSwapIn) Reset() {
 	*x = EventSwapIn{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_events_proto_msgTypes[3]
+		mi := &file_provlabs_vault_v1_events_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -14924,7 +14924,7 @@ func (*EventSwapIn) ProtoMessage() {}
 
 // Deprecated: Use EventSwapIn.ProtoReflect.Descriptor instead.
 func (*EventSwapIn) Descriptor() ([]byte, []int) {
-	return file_vault_v1_events_proto_rawDescGZIP(), []int{3}
+	return file_provlabs_vault_v1_events_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *EventSwapIn) GetOwner() string {
@@ -14974,7 +14974,7 @@ type EventSwapOut struct {
 func (x *EventSwapOut) Reset() {
 	*x = EventSwapOut{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_events_proto_msgTypes[4]
+		mi := &file_provlabs_vault_v1_events_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -14988,7 +14988,7 @@ func (*EventSwapOut) ProtoMessage() {}
 
 // Deprecated: Use EventSwapOut.ProtoReflect.Descriptor instead.
 func (*EventSwapOut) Descriptor() ([]byte, []int) {
-	return file_vault_v1_events_proto_rawDescGZIP(), []int{4}
+	return file_provlabs_vault_v1_events_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *EventSwapOut) GetOwner() string {
@@ -15042,7 +15042,7 @@ type EventVaultReconcile struct {
 func (x *EventVaultReconcile) Reset() {
 	*x = EventVaultReconcile{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_events_proto_msgTypes[5]
+		mi := &file_provlabs_vault_v1_events_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -15056,7 +15056,7 @@ func (*EventVaultReconcile) ProtoMessage() {}
 
 // Deprecated: Use EventVaultReconcile.ProtoReflect.Descriptor instead.
 func (*EventVaultReconcile) Descriptor() ([]byte, []int) {
-	return file_vault_v1_events_proto_rawDescGZIP(), []int{5}
+	return file_provlabs_vault_v1_events_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *EventVaultReconcile) GetVaultAddress() string {
@@ -15118,7 +15118,7 @@ type EventVaultInterestChange struct {
 func (x *EventVaultInterestChange) Reset() {
 	*x = EventVaultInterestChange{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_events_proto_msgTypes[6]
+		mi := &file_provlabs_vault_v1_events_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -15132,7 +15132,7 @@ func (*EventVaultInterestChange) ProtoMessage() {}
 
 // Deprecated: Use EventVaultInterestChange.ProtoReflect.Descriptor instead.
 func (*EventVaultInterestChange) Descriptor() ([]byte, []int) {
-	return file_vault_v1_events_proto_rawDescGZIP(), []int{6}
+	return file_provlabs_vault_v1_events_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *EventVaultInterestChange) GetVaultAddress() string {
@@ -15173,7 +15173,7 @@ type EventInterestDeposit struct {
 func (x *EventInterestDeposit) Reset() {
 	*x = EventInterestDeposit{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_events_proto_msgTypes[7]
+		mi := &file_provlabs_vault_v1_events_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -15187,7 +15187,7 @@ func (*EventInterestDeposit) ProtoMessage() {}
 
 // Deprecated: Use EventInterestDeposit.ProtoReflect.Descriptor instead.
 func (*EventInterestDeposit) Descriptor() ([]byte, []int) {
-	return file_vault_v1_events_proto_rawDescGZIP(), []int{7}
+	return file_provlabs_vault_v1_events_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *EventInterestDeposit) GetVaultAddress() string {
@@ -15228,7 +15228,7 @@ type EventInterestWithdrawal struct {
 func (x *EventInterestWithdrawal) Reset() {
 	*x = EventInterestWithdrawal{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_events_proto_msgTypes[8]
+		mi := &file_provlabs_vault_v1_events_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -15242,7 +15242,7 @@ func (*EventInterestWithdrawal) ProtoMessage() {}
 
 // Deprecated: Use EventInterestWithdrawal.ProtoReflect.Descriptor instead.
 func (*EventInterestWithdrawal) Descriptor() ([]byte, []int) {
-	return file_vault_v1_events_proto_rawDescGZIP(), []int{8}
+	return file_provlabs_vault_v1_events_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *EventInterestWithdrawal) GetVaultAddress() string {
@@ -15283,7 +15283,7 @@ type EventToggleSwapIn struct {
 func (x *EventToggleSwapIn) Reset() {
 	*x = EventToggleSwapIn{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_events_proto_msgTypes[9]
+		mi := &file_provlabs_vault_v1_events_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -15297,7 +15297,7 @@ func (*EventToggleSwapIn) ProtoMessage() {}
 
 // Deprecated: Use EventToggleSwapIn.ProtoReflect.Descriptor instead.
 func (*EventToggleSwapIn) Descriptor() ([]byte, []int) {
-	return file_vault_v1_events_proto_rawDescGZIP(), []int{9}
+	return file_provlabs_vault_v1_events_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *EventToggleSwapIn) GetVaultAddress() string {
@@ -15338,7 +15338,7 @@ type EventToggleSwapOut struct {
 func (x *EventToggleSwapOut) Reset() {
 	*x = EventToggleSwapOut{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_events_proto_msgTypes[10]
+		mi := &file_provlabs_vault_v1_events_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -15352,7 +15352,7 @@ func (*EventToggleSwapOut) ProtoMessage() {}
 
 // Deprecated: Use EventToggleSwapOut.ProtoReflect.Descriptor instead.
 func (*EventToggleSwapOut) Descriptor() ([]byte, []int) {
-	return file_vault_v1_events_proto_rawDescGZIP(), []int{10}
+	return file_provlabs_vault_v1_events_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *EventToggleSwapOut) GetVaultAddress() string {
@@ -15393,7 +15393,7 @@ type EventDepositPrincipalFunds struct {
 func (x *EventDepositPrincipalFunds) Reset() {
 	*x = EventDepositPrincipalFunds{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_events_proto_msgTypes[11]
+		mi := &file_provlabs_vault_v1_events_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -15407,7 +15407,7 @@ func (*EventDepositPrincipalFunds) ProtoMessage() {}
 
 // Deprecated: Use EventDepositPrincipalFunds.ProtoReflect.Descriptor instead.
 func (*EventDepositPrincipalFunds) Descriptor() ([]byte, []int) {
-	return file_vault_v1_events_proto_rawDescGZIP(), []int{11}
+	return file_provlabs_vault_v1_events_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *EventDepositPrincipalFunds) GetVaultAddress() string {
@@ -15448,7 +15448,7 @@ type EventWithdrawPrincipalFunds struct {
 func (x *EventWithdrawPrincipalFunds) Reset() {
 	*x = EventWithdrawPrincipalFunds{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_events_proto_msgTypes[12]
+		mi := &file_provlabs_vault_v1_events_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -15462,7 +15462,7 @@ func (*EventWithdrawPrincipalFunds) ProtoMessage() {}
 
 // Deprecated: Use EventWithdrawPrincipalFunds.ProtoReflect.Descriptor instead.
 func (*EventWithdrawPrincipalFunds) Descriptor() ([]byte, []int) {
-	return file_vault_v1_events_proto_rawDescGZIP(), []int{12}
+	return file_provlabs_vault_v1_events_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *EventWithdrawPrincipalFunds) GetVaultAddress() string {
@@ -15504,7 +15504,7 @@ type EventMinInterestRateUpdated struct {
 func (x *EventMinInterestRateUpdated) Reset() {
 	*x = EventMinInterestRateUpdated{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_events_proto_msgTypes[13]
+		mi := &file_provlabs_vault_v1_events_proto_msgTypes[13]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -15518,7 +15518,7 @@ func (*EventMinInterestRateUpdated) ProtoMessage() {}
 
 // Deprecated: Use EventMinInterestRateUpdated.ProtoReflect.Descriptor instead.
 func (*EventMinInterestRateUpdated) Descriptor() ([]byte, []int) {
-	return file_vault_v1_events_proto_rawDescGZIP(), []int{13}
+	return file_provlabs_vault_v1_events_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *EventMinInterestRateUpdated) GetVaultAddress() string {
@@ -15560,7 +15560,7 @@ type EventMaxInterestRateUpdated struct {
 func (x *EventMaxInterestRateUpdated) Reset() {
 	*x = EventMaxInterestRateUpdated{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_events_proto_msgTypes[14]
+		mi := &file_provlabs_vault_v1_events_proto_msgTypes[14]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -15574,7 +15574,7 @@ func (*EventMaxInterestRateUpdated) ProtoMessage() {}
 
 // Deprecated: Use EventMaxInterestRateUpdated.ProtoReflect.Descriptor instead.
 func (*EventMaxInterestRateUpdated) Descriptor() ([]byte, []int) {
-	return file_vault_v1_events_proto_rawDescGZIP(), []int{14}
+	return file_provlabs_vault_v1_events_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *EventMaxInterestRateUpdated) GetVaultAddress() string {
@@ -15619,7 +15619,7 @@ type EventSwapOutRequested struct {
 func (x *EventSwapOutRequested) Reset() {
 	*x = EventSwapOutRequested{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_events_proto_msgTypes[15]
+		mi := &file_provlabs_vault_v1_events_proto_msgTypes[15]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -15633,7 +15633,7 @@ func (*EventSwapOutRequested) ProtoMessage() {}
 
 // Deprecated: Use EventSwapOutRequested.ProtoReflect.Descriptor instead.
 func (*EventSwapOutRequested) Descriptor() ([]byte, []int) {
-	return file_vault_v1_events_proto_rawDescGZIP(), []int{15}
+	return file_provlabs_vault_v1_events_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *EventSwapOutRequested) GetVaultAddress() string {
@@ -15690,7 +15690,7 @@ type EventSwapOutCompleted struct {
 func (x *EventSwapOutCompleted) Reset() {
 	*x = EventSwapOutCompleted{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_events_proto_msgTypes[16]
+		mi := &file_provlabs_vault_v1_events_proto_msgTypes[16]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -15704,7 +15704,7 @@ func (*EventSwapOutCompleted) ProtoMessage() {}
 
 // Deprecated: Use EventSwapOutCompleted.ProtoReflect.Descriptor instead.
 func (*EventSwapOutCompleted) Descriptor() ([]byte, []int) {
-	return file_vault_v1_events_proto_rawDescGZIP(), []int{16}
+	return file_provlabs_vault_v1_events_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *EventSwapOutCompleted) GetVaultAddress() string {
@@ -15757,7 +15757,7 @@ type EventSwapOutRefunded struct {
 func (x *EventSwapOutRefunded) Reset() {
 	*x = EventSwapOutRefunded{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_events_proto_msgTypes[17]
+		mi := &file_provlabs_vault_v1_events_proto_msgTypes[17]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -15771,7 +15771,7 @@ func (*EventSwapOutRefunded) ProtoMessage() {}
 
 // Deprecated: Use EventSwapOutRefunded.ProtoReflect.Descriptor instead.
 func (*EventSwapOutRefunded) Descriptor() ([]byte, []int) {
-	return file_vault_v1_events_proto_rawDescGZIP(), []int{17}
+	return file_provlabs_vault_v1_events_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *EventSwapOutRefunded) GetVaultAddress() string {
@@ -15826,7 +15826,7 @@ type EventPendingSwapOutExpedited struct {
 func (x *EventPendingSwapOutExpedited) Reset() {
 	*x = EventPendingSwapOutExpedited{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_events_proto_msgTypes[18]
+		mi := &file_provlabs_vault_v1_events_proto_msgTypes[18]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -15840,7 +15840,7 @@ func (*EventPendingSwapOutExpedited) ProtoMessage() {}
 
 // Deprecated: Use EventPendingSwapOutExpedited.ProtoReflect.Descriptor instead.
 func (*EventPendingSwapOutExpedited) Descriptor() ([]byte, []int) {
-	return file_vault_v1_events_proto_rawDescGZIP(), []int{18}
+	return file_provlabs_vault_v1_events_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *EventPendingSwapOutExpedited) GetRequestId() uint64 {
@@ -15883,7 +15883,7 @@ type EventVaultPaused struct {
 func (x *EventVaultPaused) Reset() {
 	*x = EventVaultPaused{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_events_proto_msgTypes[19]
+		mi := &file_provlabs_vault_v1_events_proto_msgTypes[19]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -15897,7 +15897,7 @@ func (*EventVaultPaused) ProtoMessage() {}
 
 // Deprecated: Use EventVaultPaused.ProtoReflect.Descriptor instead.
 func (*EventVaultPaused) Descriptor() ([]byte, []int) {
-	return file_vault_v1_events_proto_rawDescGZIP(), []int{19}
+	return file_provlabs_vault_v1_events_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *EventVaultPaused) GetVaultAddress() string {
@@ -15945,7 +15945,7 @@ type EventVaultUnpaused struct {
 func (x *EventVaultUnpaused) Reset() {
 	*x = EventVaultUnpaused{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_events_proto_msgTypes[20]
+		mi := &file_provlabs_vault_v1_events_proto_msgTypes[20]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -15959,7 +15959,7 @@ func (*EventVaultUnpaused) ProtoMessage() {}
 
 // Deprecated: Use EventVaultUnpaused.ProtoReflect.Descriptor instead.
 func (*EventVaultUnpaused) Descriptor() ([]byte, []int) {
-	return file_vault_v1_events_proto_rawDescGZIP(), []int{20}
+	return file_provlabs_vault_v1_events_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *EventVaultUnpaused) GetVaultAddress() string {
@@ -16000,7 +16000,7 @@ type EventBridgeAddressSet struct {
 func (x *EventBridgeAddressSet) Reset() {
 	*x = EventBridgeAddressSet{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_events_proto_msgTypes[21]
+		mi := &file_provlabs_vault_v1_events_proto_msgTypes[21]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -16014,7 +16014,7 @@ func (*EventBridgeAddressSet) ProtoMessage() {}
 
 // Deprecated: Use EventBridgeAddressSet.ProtoReflect.Descriptor instead.
 func (*EventBridgeAddressSet) Descriptor() ([]byte, []int) {
-	return file_vault_v1_events_proto_rawDescGZIP(), []int{21}
+	return file_provlabs_vault_v1_events_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *EventBridgeAddressSet) GetVaultAddress() string {
@@ -16055,7 +16055,7 @@ type EventBridgeToggled struct {
 func (x *EventBridgeToggled) Reset() {
 	*x = EventBridgeToggled{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_events_proto_msgTypes[22]
+		mi := &file_provlabs_vault_v1_events_proto_msgTypes[22]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -16069,7 +16069,7 @@ func (*EventBridgeToggled) ProtoMessage() {}
 
 // Deprecated: Use EventBridgeToggled.ProtoReflect.Descriptor instead.
 func (*EventBridgeToggled) Descriptor() ([]byte, []int) {
-	return file_vault_v1_events_proto_rawDescGZIP(), []int{22}
+	return file_provlabs_vault_v1_events_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *EventBridgeToggled) GetVaultAddress() string {
@@ -16110,7 +16110,7 @@ type EventBridgeMintShares struct {
 func (x *EventBridgeMintShares) Reset() {
 	*x = EventBridgeMintShares{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_events_proto_msgTypes[23]
+		mi := &file_provlabs_vault_v1_events_proto_msgTypes[23]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -16124,7 +16124,7 @@ func (*EventBridgeMintShares) ProtoMessage() {}
 
 // Deprecated: Use EventBridgeMintShares.ProtoReflect.Descriptor instead.
 func (*EventBridgeMintShares) Descriptor() ([]byte, []int) {
-	return file_vault_v1_events_proto_rawDescGZIP(), []int{23}
+	return file_provlabs_vault_v1_events_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *EventBridgeMintShares) GetVaultAddress() string {
@@ -16165,7 +16165,7 @@ type EventBridgeBurnShares struct {
 func (x *EventBridgeBurnShares) Reset() {
 	*x = EventBridgeBurnShares{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_events_proto_msgTypes[24]
+		mi := &file_provlabs_vault_v1_events_proto_msgTypes[24]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -16179,7 +16179,7 @@ func (*EventBridgeBurnShares) ProtoMessage() {}
 
 // Deprecated: Use EventBridgeBurnShares.ProtoReflect.Descriptor instead.
 func (*EventBridgeBurnShares) Descriptor() ([]byte, []int) {
-	return file_vault_v1_events_proto_rawDescGZIP(), []int{24}
+	return file_provlabs_vault_v1_events_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *EventBridgeBurnShares) GetVaultAddress() string {
@@ -16203,338 +16203,343 @@ func (x *EventBridgeBurnShares) GetShares() string {
 	return ""
 }
 
-var File_vault_v1_events_proto protoreflect.FileDescriptor
+var File_provlabs_vault_v1_events_proto protoreflect.FileDescriptor
 
-var file_vault_v1_events_proto_rawDesc = []byte{
-	0x0a, 0x15, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x2f, 0x65, 0x76, 0x65, 0x6e, 0x74,
-	0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x08, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76,
-	0x31, 0x1a, 0x19, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xbb, 0x01, 0x0a,
-	0x0c, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x12, 0x30, 0x0a,
-	0x06, 0x63, 0x61, 0x6c, 0x6c, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2,
-	0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
-	0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x06, 0x63, 0x61, 0x6c, 0x6c, 0x65, 0x72, 0x12,
-	0x2e, 0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18,
-	0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65,
-	0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x12,
-	0x16, 0x0a, 0x06, 0x61, 0x73, 0x73, 0x65, 0x74, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x06, 0x61, 0x73, 0x73, 0x65, 0x74, 0x73, 0x12, 0x16, 0x0a, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65,
-	0x73, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x12,
-	0x19, 0x0a, 0x08, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x05, 0x20, 0x01, 0x28,
-	0x0d, 0x52, 0x07, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x49, 0x64, 0x22, 0xf2, 0x01, 0x0a, 0x0d, 0x45,
-	0x76, 0x65, 0x6e, 0x74, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x12, 0x30, 0x0a, 0x06,
-	0x63, 0x61, 0x6c, 0x6c, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4,
-	0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
-	0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x06, 0x63, 0x61, 0x6c, 0x6c, 0x65, 0x72, 0x12, 0x34,
-	0x0a, 0x08, 0x72, 0x65, 0x63, 0x65, 0x69, 0x76, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
+var file_provlabs_vault_v1_events_proto_rawDesc = []byte{
+	0x0a, 0x1e, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74,
+	0x2f, 0x76, 0x31, 0x2f, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x12, 0x11, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74,
+	0x2e, 0x76, 0x31, 0x1a, 0x19, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5f, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xbb,
+	0x01, 0x0a, 0x0c, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x12,
+	0x30, 0x0a, 0x06, 0x63, 0x61, 0x6c, 0x6c, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42,
+	0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72,
+	0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x06, 0x63, 0x61, 0x6c, 0x6c, 0x65,
+	0x72, 0x12, 0x2e, 0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
 	0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64,
-	0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x08, 0x72, 0x65, 0x63, 0x65,
-	0x69, 0x76, 0x65, 0x72, 0x12, 0x2e, 0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18, 0x03, 0x20,
+	0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65,
+	0x72, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x73, 0x73, 0x65, 0x74, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x06, 0x61, 0x73, 0x73, 0x65, 0x74, 0x73, 0x12, 0x16, 0x0a, 0x06, 0x73, 0x68, 0x61,
+	0x72, 0x65, 0x73, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65,
+	0x73, 0x12, 0x19, 0x0a, 0x08, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x05, 0x20,
+	0x01, 0x28, 0x0d, 0x52, 0x07, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x49, 0x64, 0x22, 0xf2, 0x01, 0x0a,
+	0x0d, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x12, 0x30,
+	0x0a, 0x06, 0x63, 0x61, 0x6c, 0x6c, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18,
+	0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65,
+	0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x06, 0x63, 0x61, 0x6c, 0x6c, 0x65, 0x72,
+	0x12, 0x34, 0x0a, 0x08, 0x72, 0x65, 0x63, 0x65, 0x69, 0x76, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41,
+	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x08, 0x72, 0x65,
+	0x63, 0x65, 0x69, 0x76, 0x65, 0x72, 0x12, 0x2e, 0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18,
+	0x03, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52,
+	0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x73, 0x73, 0x65, 0x74, 0x73,
+	0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x61, 0x73, 0x73, 0x65, 0x74, 0x73, 0x12, 0x16,
+	0x0a, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06,
+	0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x12, 0x19, 0x0a, 0x08, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f,
+	0x69, 0x64, 0x18, 0x06, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x07, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x49,
+	0x64, 0x22, 0xce, 0x01, 0x0a, 0x11, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x56, 0x61, 0x75, 0x6c, 0x74,
+	0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x64, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74,
+	0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18,
+	0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65,
+	0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41,
+	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52,
+	0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x1f, 0x0a, 0x0b, 0x73, 0x68, 0x61, 0x72, 0x65, 0x5f,
+	0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x73, 0x68, 0x61,
+	0x72, 0x65, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x12, 0x29, 0x0a, 0x10, 0x75, 0x6e, 0x64, 0x65, 0x72,
+	0x6c, 0x79, 0x69, 0x6e, 0x67, 0x5f, 0x61, 0x73, 0x73, 0x65, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x0f, 0x75, 0x6e, 0x64, 0x65, 0x72, 0x6c, 0x79, 0x69, 0x6e, 0x67, 0x41, 0x73, 0x73,
+	0x65, 0x74, 0x22, 0xc2, 0x01, 0x0a, 0x0b, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x53, 0x77, 0x61, 0x70,
+	0x49, 0x6e, 0x12, 0x2e, 0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x6f, 0x77, 0x6e,
+	0x65, 0x72, 0x12, 0x1b, 0x0a, 0x09, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x5f, 0x69, 0x6e, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x49, 0x6e, 0x12,
+	0x27, 0x0a, 0x0f, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x5f, 0x72, 0x65, 0x63, 0x65, 0x69, 0x76,
+	0x65, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0e, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73,
+	0x52, 0x65, 0x63, 0x65, 0x69, 0x76, 0x65, 0x64, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c,
+	0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x42,
+	0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72,
+	0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74,
+	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x22, 0xc1, 0x01, 0x0a, 0x0c, 0x45, 0x76, 0x65, 0x6e,
+	0x74, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x12, 0x2e, 0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65,
+	0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e,
+	0x67, 0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x12, 0x23, 0x0a, 0x0d, 0x73, 0x68, 0x61, 0x72,
+	0x65, 0x73, 0x5f, 0x62, 0x75, 0x72, 0x6e, 0x65, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x0c, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x42, 0x75, 0x72, 0x6e, 0x65, 0x64, 0x12, 0x1d, 0x0a,
+	0x0a, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x5f, 0x6f, 0x75, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x09, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x4f, 0x75, 0x74, 0x12, 0x3d, 0x0a, 0x0d,
+	0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x04, 0x20,
 	0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
-	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x6f,
-	0x77, 0x6e, 0x65, 0x72, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x73, 0x73, 0x65, 0x74, 0x73, 0x18, 0x04,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x61, 0x73, 0x73, 0x65, 0x74, 0x73, 0x12, 0x16, 0x0a, 0x06,
-	0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x73, 0x68,
-	0x61, 0x72, 0x65, 0x73, 0x12, 0x19, 0x0a, 0x08, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x69, 0x64,
-	0x18, 0x06, 0x20, 0x01, 0x28, 0x0d, 0x52, 0x07, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x49, 0x64, 0x22,
-	0xce, 0x01, 0x0a, 0x11, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x43, 0x72,
-	0x65, 0x61, 0x74, 0x65, 0x64, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61,
+	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76,
+	0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x22, 0xf9, 0x01, 0x0a, 0x13,
+	0x45, 0x76, 0x65, 0x6e, 0x74, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x52, 0x65, 0x63, 0x6f, 0x6e, 0x63,
+	0x69, 0x6c, 0x65, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64,
+	0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74,
+	0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65,
+	0x73, 0x73, 0x12, 0x29, 0x0a, 0x10, 0x70, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x5f,
+	0x62, 0x65, 0x66, 0x6f, 0x72, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0f, 0x70, 0x72,
+	0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x42, 0x65, 0x66, 0x6f, 0x72, 0x65, 0x12, 0x27, 0x0a,
+	0x0f, 0x70, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x5f, 0x61, 0x66, 0x74, 0x65, 0x72,
+	0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0e, 0x70, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61,
+	0x6c, 0x41, 0x66, 0x74, 0x65, 0x72, 0x12, 0x12, 0x0a, 0x04, 0x72, 0x61, 0x74, 0x65, 0x18, 0x04,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x72, 0x61, 0x74, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x74, 0x69,
+	0x6d, 0x65, 0x18, 0x05, 0x20, 0x01, 0x28, 0x03, 0x52, 0x04, 0x74, 0x69, 0x6d, 0x65, 0x12, 0x27,
+	0x0a, 0x0f, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x5f, 0x65, 0x61, 0x72, 0x6e, 0x65,
+	0x64, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0e, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73,
+	0x74, 0x45, 0x61, 0x72, 0x6e, 0x65, 0x64, 0x22, 0x9f, 0x01, 0x0a, 0x18, 0x45, 0x76, 0x65, 0x6e,
+	0x74, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x43, 0x68,
+	0x61, 0x6e, 0x67, 0x65, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d,
+	0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53,
+	0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72,
+	0x65, 0x73, 0x73, 0x12, 0x21, 0x0a, 0x0c, 0x63, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x5f, 0x72,
+	0x61, 0x74, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x63, 0x75, 0x72, 0x72, 0x65,
+	0x6e, 0x74, 0x52, 0x61, 0x74, 0x65, 0x12, 0x21, 0x0a, 0x0c, 0x64, 0x65, 0x73, 0x69, 0x72, 0x65,
+	0x64, 0x5f, 0x72, 0x61, 0x74, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x64, 0x65,
+	0x73, 0x69, 0x72, 0x65, 0x64, 0x52, 0x61, 0x74, 0x65, 0x22, 0x9d, 0x01, 0x0a, 0x14, 0x45, 0x76,
+	0x65, 0x6e, 0x74, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x44, 0x65, 0x70, 0x6f, 0x73,
+	0x69, 0x74, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72,
+	0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72,
+	0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
+	0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64,
+	0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69,
+	0x6e, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0xa0, 0x01, 0x0a, 0x17, 0x45, 0x76,
+	0x65, 0x6e, 0x74, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x57, 0x69, 0x74, 0x68, 0x64,
+	0x72, 0x61, 0x77, 0x61, 0x6c, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61,
 	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4,
 	0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
 	0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64,
 	0x72, 0x65, 0x73, 0x73, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20,
 	0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
 	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61,
-	0x64, 0x6d, 0x69, 0x6e, 0x12, 0x1f, 0x0a, 0x0b, 0x73, 0x68, 0x61, 0x72, 0x65, 0x5f, 0x64, 0x65,
-	0x6e, 0x6f, 0x6d, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x73, 0x68, 0x61, 0x72, 0x65,
-	0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x12, 0x29, 0x0a, 0x10, 0x75, 0x6e, 0x64, 0x65, 0x72, 0x6c, 0x79,
-	0x69, 0x6e, 0x67, 0x5f, 0x61, 0x73, 0x73, 0x65, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x0f, 0x75, 0x6e, 0x64, 0x65, 0x72, 0x6c, 0x79, 0x69, 0x6e, 0x67, 0x41, 0x73, 0x73, 0x65, 0x74,
-	0x22, 0xc2, 0x01, 0x0a, 0x0b, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x53, 0x77, 0x61, 0x70, 0x49, 0x6e,
-	0x12, 0x2e, 0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42,
-	0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72,
-	0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72,
-	0x12, 0x1b, 0x0a, 0x09, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x5f, 0x69, 0x6e, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x08, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x49, 0x6e, 0x12, 0x27, 0x0a,
-	0x0f, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x5f, 0x72, 0x65, 0x63, 0x65, 0x69, 0x76, 0x65, 0x64,
-	0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0e, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x52, 0x65,
-	0x63, 0x65, 0x69, 0x76, 0x65, 0x64, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f,
-	0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2,
-	0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
-	0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64,
-	0x64, 0x72, 0x65, 0x73, 0x73, 0x22, 0xc1, 0x01, 0x0a, 0x0c, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x53,
-	0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x12, 0x2e, 0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52,
-	0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x12, 0x23, 0x0a, 0x0d, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73,
-	0x5f, 0x62, 0x75, 0x72, 0x6e, 0x65, 0x64, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x73,
-	0x68, 0x61, 0x72, 0x65, 0x73, 0x42, 0x75, 0x72, 0x6e, 0x65, 0x64, 0x12, 0x1d, 0x0a, 0x0a, 0x61,
-	0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x5f, 0x6f, 0x75, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x09, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x4f, 0x75, 0x74, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61,
-	0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x04, 0x20, 0x01, 0x28,
-	0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64,
-	0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75,
-	0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x22, 0xf9, 0x01, 0x0a, 0x13, 0x45, 0x76,
-	0x65, 0x6e, 0x74, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x52, 0x65, 0x63, 0x6f, 0x6e, 0x63, 0x69, 0x6c,
-	0x65, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65,
-	0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69,
-	0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
-	0x12, 0x29, 0x0a, 0x10, 0x70, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x5f, 0x62, 0x65,
-	0x66, 0x6f, 0x72, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0f, 0x70, 0x72, 0x69, 0x6e,
-	0x63, 0x69, 0x70, 0x61, 0x6c, 0x42, 0x65, 0x66, 0x6f, 0x72, 0x65, 0x12, 0x27, 0x0a, 0x0f, 0x70,
-	0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x5f, 0x61, 0x66, 0x74, 0x65, 0x72, 0x18, 0x03,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x0e, 0x70, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x41,
-	0x66, 0x74, 0x65, 0x72, 0x12, 0x12, 0x0a, 0x04, 0x72, 0x61, 0x74, 0x65, 0x18, 0x04, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x04, 0x72, 0x61, 0x74, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x74, 0x69, 0x6d, 0x65,
-	0x18, 0x05, 0x20, 0x01, 0x28, 0x03, 0x52, 0x04, 0x74, 0x69, 0x6d, 0x65, 0x12, 0x27, 0x0a, 0x0f,
-	0x69, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x5f, 0x65, 0x61, 0x72, 0x6e, 0x65, 0x64, 0x18,
-	0x06, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0e, 0x69, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x45,
-	0x61, 0x72, 0x6e, 0x65, 0x64, 0x22, 0x9f, 0x01, 0x0a, 0x18, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x56,
-	0x61, 0x75, 0x6c, 0x74, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x43, 0x68, 0x61, 0x6e,
-	0x67, 0x65, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72,
+	0x64, 0x6d, 0x69, 0x6e, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x03,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0x9c, 0x01, 0x0a,
+	0x11, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x54, 0x6f, 0x67, 0x67, 0x6c, 0x65, 0x53, 0x77, 0x61, 0x70,
+	0x49, 0x6e, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72,
 	0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63,
 	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72,
 	0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
-	0x73, 0x12, 0x21, 0x0a, 0x0c, 0x63, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x5f, 0x72, 0x61, 0x74,
-	0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x63, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x74,
-	0x52, 0x61, 0x74, 0x65, 0x12, 0x21, 0x0a, 0x0c, 0x64, 0x65, 0x73, 0x69, 0x72, 0x65, 0x64, 0x5f,
-	0x72, 0x61, 0x74, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x64, 0x65, 0x73, 0x69,
-	0x72, 0x65, 0x64, 0x52, 0x61, 0x74, 0x65, 0x22, 0x9d, 0x01, 0x0a, 0x14, 0x45, 0x76, 0x65, 0x6e,
-	0x74, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74,
-	0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73,
-	0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e,
-	0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12,
-	0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18,
-	0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65,
-	0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12,
-	0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0xa0, 0x01, 0x0a, 0x17, 0x45, 0x76, 0x65, 0x6e,
-	0x74, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61,
-	0x77, 0x61, 0x6c, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64,
-	0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74,
-	0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65,
-	0x73, 0x73, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28,
-	0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64,
-	0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d,
-	0x69, 0x6e, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0x9c, 0x01, 0x0a, 0x11, 0x45,
-	0x76, 0x65, 0x6e, 0x74, 0x54, 0x6f, 0x67, 0x67, 0x6c, 0x65, 0x53, 0x77, 0x61, 0x70, 0x49, 0x6e,
-	0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73,
-	0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e,
-	0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12,
-	0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18,
-	0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65,
-	0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12,
-	0x18, 0x0a, 0x07, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x08,
-	0x52, 0x07, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x22, 0x9d, 0x01, 0x0a, 0x12, 0x45, 0x76,
-	0x65, 0x6e, 0x74, 0x54, 0x6f, 0x67, 0x67, 0x6c, 0x65, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74,
-	0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73,
-	0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e,
-	0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12,
-	0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18,
-	0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65,
-	0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12,
-	0x18, 0x0a, 0x07, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x08,
-	0x52, 0x07, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x22, 0xa3, 0x01, 0x0a, 0x1a, 0x45, 0x76,
-	0x65, 0x6e, 0x74, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x50, 0x72, 0x69, 0x6e, 0x63, 0x69,
-	0x70, 0x61, 0x6c, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c,
-	0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42,
-	0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72,
-	0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74,
-	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67,
-	0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e,
-	0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x22,
-	0xa4, 0x01, 0x0a, 0x1b, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61,
-	0x77, 0x50, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x12,
-	0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67,
-	0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x2e,
-	0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2,
-	0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
-	0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x16,
-	0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06,
-	0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0xa7, 0x01, 0x0a, 0x1b, 0x45, 0x76, 0x65, 0x6e, 0x74,
-	0x4d, 0x69, 0x6e, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x55,
-	0x70, 0x64, 0x61, 0x74, 0x65, 0x64, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f,
-	0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2,
-	0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
-	0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64,
-	0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02,
-	0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05,
-	0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x19, 0x0a, 0x08, 0x6d, 0x69, 0x6e, 0x5f, 0x72, 0x61, 0x74,
-	0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x69, 0x6e, 0x52, 0x61, 0x74, 0x65,
-	0x22, 0xa7, 0x01, 0x0a, 0x1b, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x4d, 0x61, 0x78, 0x49, 0x6e, 0x74,
-	0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x64,
-	0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73,
-	0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e,
-	0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12,
-	0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18,
-	0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65,
-	0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12,
-	0x19, 0x0a, 0x08, 0x6d, 0x61, 0x78, 0x5f, 0x72, 0x61, 0x74, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x07, 0x6d, 0x61, 0x78, 0x52, 0x61, 0x74, 0x65, 0x22, 0xac, 0x01, 0x0a, 0x15, 0x45,
-	0x76, 0x65, 0x6e, 0x74, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x65, 0x64, 0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64,
-	0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61, 0x75,
-	0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x14, 0x0a, 0x05, 0x6f, 0x77, 0x6e,
-	0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x12,
-	0x21, 0x0a, 0x0c, 0x72, 0x65, 0x64, 0x65, 0x65, 0x6d, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18,
-	0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x72, 0x65, 0x64, 0x65, 0x65, 0x6d, 0x44, 0x65, 0x6e,
-	0x6f, 0x6d, 0x12, 0x16, 0x0a, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x18, 0x04, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x12, 0x1d, 0x0a, 0x0a, 0x72, 0x65,
-	0x71, 0x75, 0x65, 0x73, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x05, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09,
-	0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x49, 0x64, 0x22, 0x89, 0x01, 0x0a, 0x15, 0x45, 0x76,
-	0x65, 0x6e, 0x74, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x43, 0x6f, 0x6d, 0x70, 0x6c, 0x65,
-	0x74, 0x65, 0x64, 0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64,
-	0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c,
-	0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x14, 0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65,
-	0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x12, 0x16,
-	0x0a, 0x06, 0x61, 0x73, 0x73, 0x65, 0x74, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06,
-	0x61, 0x73, 0x73, 0x65, 0x74, 0x73, 0x12, 0x1d, 0x0a, 0x0a, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x5f, 0x69, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x72, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x49, 0x64, 0x22, 0xa0, 0x01, 0x0a, 0x14, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x53,
-	0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x52, 0x65, 0x66, 0x75, 0x6e, 0x64, 0x65, 0x64, 0x12, 0x23,
-	0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72,
-	0x65, 0x73, 0x73, 0x12, 0x14, 0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x12, 0x16, 0x0a, 0x06, 0x73, 0x68, 0x61,
-	0x72, 0x65, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65,
-	0x73, 0x12, 0x1d, 0x0a, 0x0a, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x5f, 0x69, 0x64, 0x18,
-	0x04, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x49, 0x64,
-	0x12, 0x16, 0x0a, 0x06, 0x72, 0x65, 0x61, 0x73, 0x6f, 0x6e, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x06, 0x72, 0x65, 0x61, 0x73, 0x6f, 0x6e, 0x22, 0x9d, 0x01, 0x0a, 0x1c, 0x45, 0x76, 0x65,
-	0x6e, 0x74, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74,
-	0x45, 0x78, 0x70, 0x65, 0x64, 0x69, 0x74, 0x65, 0x64, 0x12, 0x1d, 0x0a, 0x0a, 0x72, 0x65, 0x71,
-	0x75, 0x65, 0x73, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x72,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x49, 0x64, 0x12, 0x2e, 0x0a, 0x05, 0x76, 0x61, 0x75, 0x6c,
-	0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e,
-	0x67, 0x52, 0x05, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69,
-	0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e,
-	0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x22, 0x91, 0x01, 0x0a, 0x10, 0x45, 0x76, 0x65,
-	0x6e, 0x74, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x50, 0x61, 0x75, 0x73, 0x65, 0x64, 0x12, 0x23, 0x0a,
-	0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65,
-	0x73, 0x73, 0x12, 0x14, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x16, 0x0a, 0x06, 0x72, 0x65, 0x61, 0x73,
-	0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x72, 0x65, 0x61, 0x73, 0x6f, 0x6e,
-	0x12, 0x2a, 0x0a, 0x11, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x5f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f,
-	0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0f, 0x74, 0x6f, 0x74,
-	0x61, 0x6c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x22, 0x7b, 0x0a, 0x12,
-	0x45, 0x76, 0x65, 0x6e, 0x74, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x55, 0x6e, 0x70, 0x61, 0x75, 0x73,
-	0x65, 0x64, 0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72,
-	0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74,
-	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x14, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x2a, 0x0a,
-	0x11, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x5f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x76, 0x61, 0x6c,
-	0x75, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0f, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x56,
-	0x61, 0x75, 0x6c, 0x74, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x22, 0xc7, 0x01, 0x0a, 0x15, 0x45, 0x76,
-	0x65, 0x6e, 0x74, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
-	0x53, 0x65, 0x74, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64,
-	0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74,
-	0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65,
-	0x73, 0x73, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28,
-	0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64,
-	0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d,
-	0x69, 0x6e, 0x12, 0x3f, 0x0a, 0x0e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x5f, 0x61, 0x64, 0x64,
-	0x72, 0x65, 0x73, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74,
-	0x72, 0x69, 0x6e, 0x67, 0x52, 0x0d, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x41, 0x64, 0x64, 0x72,
-	0x65, 0x73, 0x73, 0x22, 0x9d, 0x01, 0x0a, 0x12, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x42, 0x72, 0x69,
-	0x64, 0x67, 0x65, 0x54, 0x6f, 0x67, 0x67, 0x6c, 0x65, 0x64, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61,
+	0x73, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
+	0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64,
+	0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69,
+	0x6e, 0x12, 0x18, 0x0a, 0x07, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x18, 0x03, 0x20, 0x01,
+	0x28, 0x08, 0x52, 0x07, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x22, 0x9d, 0x01, 0x0a, 0x12,
+	0x45, 0x76, 0x65, 0x6e, 0x74, 0x54, 0x6f, 0x67, 0x67, 0x6c, 0x65, 0x53, 0x77, 0x61, 0x70, 0x4f,
+	0x75, 0x74, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72,
+	0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72,
+	0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
+	0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64,
+	0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69,
+	0x6e, 0x12, 0x18, 0x0a, 0x07, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x18, 0x03, 0x20, 0x01,
+	0x28, 0x08, 0x52, 0x07, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x22, 0xa3, 0x01, 0x0a, 0x1a,
+	0x45, 0x76, 0x65, 0x6e, 0x74, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x50, 0x72, 0x69, 0x6e,
+	0x63, 0x69, 0x70, 0x61, 0x6c, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61,
 	0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28,
 	0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64,
 	0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75,
 	0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d,
 	0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f,
 	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69,
-	0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x18, 0x0a, 0x07, 0x65, 0x6e, 0x61,
-	0x62, 0x6c, 0x65, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x08, 0x52, 0x07, 0x65, 0x6e, 0x61, 0x62,
-	0x6c, 0x65, 0x64, 0x22, 0xa0, 0x01, 0x0a, 0x15, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x42, 0x72, 0x69,
-	0x64, 0x67, 0x65, 0x4d, 0x69, 0x6e, 0x74, 0x53, 0x68, 0x61, 0x72, 0x65, 0x73, 0x12, 0x3d, 0x0a,
-	0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c,
-	0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x30, 0x0a, 0x06,
-	0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4,
-	0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
-	0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x06, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x12, 0x16,
-	0x0a, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06,
-	0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x22, 0xa0, 0x01, 0x0a, 0x15, 0x45, 0x76, 0x65, 0x6e, 0x74,
-	0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x42, 0x75, 0x72, 0x6e, 0x53, 0x68, 0x61, 0x72, 0x65, 0x73,
-	0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73,
-	0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e,
-	0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12,
-	0x30, 0x0a, 0x06, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42,
+	0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f,
+	0x75, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e,
+	0x74, 0x22, 0xa4, 0x01, 0x0a, 0x1b, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x57, 0x69, 0x74, 0x68, 0x64,
+	0x72, 0x61, 0x77, 0x50, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x46, 0x75, 0x6e, 0x64,
+	0x73, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65,
+	0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69,
+	0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
+	0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42,
 	0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72,
-	0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x06, 0x62, 0x72, 0x69, 0x64, 0x67,
-	0x65, 0x12, 0x16, 0x0a, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x42, 0x8c, 0x01, 0x0a, 0x0c, 0x63, 0x6f,
-	0x6d, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x42, 0x0b, 0x45, 0x76, 0x65, 0x6e,
-	0x74, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2e, 0x67, 0x69, 0x74, 0x68, 0x75,
-	0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76,
-	0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76,
-	0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x56, 0x58, 0x58, 0xaa,
-	0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x08, 0x56, 0x61, 0x75,
-	0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x14, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31,
-	0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x09, 0x56,
-	0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e,
+	0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0xa7, 0x01, 0x0a, 0x1b, 0x45, 0x76, 0x65,
+	0x6e, 0x74, 0x4d, 0x69, 0x6e, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61, 0x74,
+	0x65, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x64, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c,
+	0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42,
+	0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72,
+	0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74,
+	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67,
+	0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x19, 0x0a, 0x08, 0x6d, 0x69, 0x6e, 0x5f, 0x72,
+	0x61, 0x74, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x69, 0x6e, 0x52, 0x61,
+	0x74, 0x65, 0x22, 0xa7, 0x01, 0x0a, 0x1b, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x4d, 0x61, 0x78, 0x49,
+	0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61, 0x74, 0x65, 0x55, 0x70, 0x64, 0x61, 0x74,
+	0x65, 0x64, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72,
+	0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72,
+	0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
+	0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64,
+	0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69,
+	0x6e, 0x12, 0x19, 0x0a, 0x08, 0x6d, 0x61, 0x78, 0x5f, 0x72, 0x61, 0x74, 0x65, 0x18, 0x03, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x07, 0x6d, 0x61, 0x78, 0x52, 0x61, 0x74, 0x65, 0x22, 0xac, 0x01, 0x0a,
+	0x15, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x52, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x65, 0x64, 0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f,
+	0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76,
+	0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x14, 0x0a, 0x05, 0x6f,
+	0x77, 0x6e, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65,
+	0x72, 0x12, 0x21, 0x0a, 0x0c, 0x72, 0x65, 0x64, 0x65, 0x65, 0x6d, 0x5f, 0x64, 0x65, 0x6e, 0x6f,
+	0x6d, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x72, 0x65, 0x64, 0x65, 0x65, 0x6d, 0x44,
+	0x65, 0x6e, 0x6f, 0x6d, 0x12, 0x16, 0x0a, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x18, 0x04,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x12, 0x1d, 0x0a, 0x0a,
+	0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x05, 0x20, 0x01, 0x28, 0x04,
+	0x52, 0x09, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x49, 0x64, 0x22, 0x89, 0x01, 0x0a, 0x15,
+	0x45, 0x76, 0x65, 0x6e, 0x74, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x43, 0x6f, 0x6d, 0x70,
+	0x6c, 0x65, 0x74, 0x65, 0x64, 0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61,
+	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61,
+	0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x14, 0x0a, 0x05, 0x6f, 0x77,
+	0x6e, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72,
+	0x12, 0x16, 0x0a, 0x06, 0x61, 0x73, 0x73, 0x65, 0x74, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x06, 0x61, 0x73, 0x73, 0x65, 0x74, 0x73, 0x12, 0x1d, 0x0a, 0x0a, 0x72, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x72, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x49, 0x64, 0x22, 0xa0, 0x01, 0x0a, 0x14, 0x45, 0x76, 0x65, 0x6e,
+	0x74, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x52, 0x65, 0x66, 0x75, 0x6e, 0x64, 0x65, 0x64,
+	0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x14, 0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x12, 0x16, 0x0a, 0x06, 0x73,
+	0x68, 0x61, 0x72, 0x65, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x73, 0x68, 0x61,
+	0x72, 0x65, 0x73, 0x12, 0x1d, 0x0a, 0x0a, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x5f, 0x69,
+	0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x49, 0x64, 0x12, 0x16, 0x0a, 0x06, 0x72, 0x65, 0x61, 0x73, 0x6f, 0x6e, 0x18, 0x05, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x06, 0x72, 0x65, 0x61, 0x73, 0x6f, 0x6e, 0x22, 0x9d, 0x01, 0x0a, 0x1c, 0x45,
+	0x76, 0x65, 0x6e, 0x74, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f,
+	0x75, 0x74, 0x45, 0x78, 0x70, 0x65, 0x64, 0x69, 0x74, 0x65, 0x64, 0x12, 0x1d, 0x0a, 0x0a, 0x72,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52,
+	0x09, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x49, 0x64, 0x12, 0x2e, 0x0a, 0x05, 0x76, 0x61,
+	0x75, 0x6c, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72,
+	0x69, 0x6e, 0x67, 0x52, 0x05, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64,
+	0x6d, 0x69, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72,
+	0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x22, 0x91, 0x01, 0x0a, 0x10, 0x45,
+	0x76, 0x65, 0x6e, 0x74, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x50, 0x61, 0x75, 0x73, 0x65, 0x64, 0x12,
+	0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64,
+	0x72, 0x65, 0x73, 0x73, 0x12, 0x14, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x16, 0x0a, 0x06, 0x72, 0x65,
+	0x61, 0x73, 0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x72, 0x65, 0x61, 0x73,
+	0x6f, 0x6e, 0x12, 0x2a, 0x0a, 0x11, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x5f, 0x76, 0x61, 0x75, 0x6c,
+	0x74, 0x5f, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0f, 0x74,
+	0x6f, 0x74, 0x61, 0x6c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x22, 0x7b,
+	0x0a, 0x12, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x55, 0x6e, 0x70, 0x61,
+	0x75, 0x73, 0x65, 0x64, 0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61, 0x75,
+	0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x14, 0x0a, 0x05, 0x61, 0x64, 0x6d,
+	0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12,
+	0x2a, 0x0a, 0x11, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x5f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x76,
+	0x61, 0x6c, 0x75, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0f, 0x74, 0x6f, 0x74, 0x61,
+	0x6c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x22, 0xc7, 0x01, 0x0a, 0x15,
+	0x45, 0x76, 0x65, 0x6e, 0x74, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x41, 0x64, 0x64, 0x72, 0x65,
+	0x73, 0x73, 0x53, 0x65, 0x74, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61,
+	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4,
+	0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
+	0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64,
+	0x72, 0x65, 0x73, 0x73, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61,
+	0x64, 0x6d, 0x69, 0x6e, 0x12, 0x3f, 0x0a, 0x0e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x5f, 0x61,
+	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4,
+	0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
+	0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0d, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x41, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x22, 0x9d, 0x01, 0x0a, 0x12, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x42,
+	0x72, 0x69, 0x64, 0x67, 0x65, 0x54, 0x6f, 0x67, 0x67, 0x6c, 0x65, 0x64, 0x12, 0x3d, 0x0a, 0x0d,
+	0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76,
+	0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x2e, 0x0a, 0x05, 0x61,
+	0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74,
+	0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x18, 0x0a, 0x07, 0x65,
+	0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x08, 0x52, 0x07, 0x65, 0x6e,
+	0x61, 0x62, 0x6c, 0x65, 0x64, 0x22, 0xa0, 0x01, 0x0a, 0x15, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x42,
+	0x72, 0x69, 0x64, 0x67, 0x65, 0x4d, 0x69, 0x6e, 0x74, 0x53, 0x68, 0x61, 0x72, 0x65, 0x73, 0x12,
+	0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67,
+	0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x30,
+	0x0a, 0x06, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18,
+	0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65,
+	0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x06, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65,
+	0x12, 0x16, 0x0a, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x22, 0xa0, 0x01, 0x0a, 0x15, 0x45, 0x76, 0x65,
+	0x6e, 0x74, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x42, 0x75, 0x72, 0x6e, 0x53, 0x68, 0x61, 0x72,
+	0x65, 0x73, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72,
+	0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72,
+	0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x12, 0x30, 0x0a, 0x06, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x06, 0x62, 0x72, 0x69,
+	0x64, 0x67, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x18, 0x03, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x42, 0xc3, 0x01, 0x0a, 0x15,
+	0x63, 0x6f, 0x6d, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75,
+	0x6c, 0x74, 0x2e, 0x76, 0x31, 0x42, 0x0b, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x50, 0x72, 0x6f,
+	0x74, 0x6f, 0x50, 0x01, 0x5a, 0x37, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
+	0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f,
+	0x61, 0x70, 0x69, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75,
+	0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2, 0x02, 0x03,
+	0x50, 0x56, 0x58, 0xaa, 0x02, 0x11, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x56,
+	0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x11, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61,
+	0x62, 0x73, 0x5c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1d, 0x50, 0x72,
+	0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x5c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c,
+	0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x13, 0x50, 0x72,
+	0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x3a, 0x3a, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56,
+	0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
-	file_vault_v1_events_proto_rawDescOnce sync.Once
-	file_vault_v1_events_proto_rawDescData = file_vault_v1_events_proto_rawDesc
+	file_provlabs_vault_v1_events_proto_rawDescOnce sync.Once
+	file_provlabs_vault_v1_events_proto_rawDescData = file_provlabs_vault_v1_events_proto_rawDesc
 )
 
-func file_vault_v1_events_proto_rawDescGZIP() []byte {
-	file_vault_v1_events_proto_rawDescOnce.Do(func() {
-		file_vault_v1_events_proto_rawDescData = protoimpl.X.CompressGZIP(file_vault_v1_events_proto_rawDescData)
+func file_provlabs_vault_v1_events_proto_rawDescGZIP() []byte {
+	file_provlabs_vault_v1_events_proto_rawDescOnce.Do(func() {
+		file_provlabs_vault_v1_events_proto_rawDescData = protoimpl.X.CompressGZIP(file_provlabs_vault_v1_events_proto_rawDescData)
 	})
-	return file_vault_v1_events_proto_rawDescData
+	return file_provlabs_vault_v1_events_proto_rawDescData
 }
 
-var file_vault_v1_events_proto_msgTypes = make([]protoimpl.MessageInfo, 25)
-var file_vault_v1_events_proto_goTypes = []interface{}{
-	(*EventDeposit)(nil),                 // 0: vault.v1.EventDeposit
-	(*EventWithdraw)(nil),                // 1: vault.v1.EventWithdraw
-	(*EventVaultCreated)(nil),            // 2: vault.v1.EventVaultCreated
-	(*EventSwapIn)(nil),                  // 3: vault.v1.EventSwapIn
-	(*EventSwapOut)(nil),                 // 4: vault.v1.EventSwapOut
-	(*EventVaultReconcile)(nil),          // 5: vault.v1.EventVaultReconcile
-	(*EventVaultInterestChange)(nil),     // 6: vault.v1.EventVaultInterestChange
-	(*EventInterestDeposit)(nil),         // 7: vault.v1.EventInterestDeposit
-	(*EventInterestWithdrawal)(nil),      // 8: vault.v1.EventInterestWithdrawal
-	(*EventToggleSwapIn)(nil),            // 9: vault.v1.EventToggleSwapIn
-	(*EventToggleSwapOut)(nil),           // 10: vault.v1.EventToggleSwapOut
-	(*EventDepositPrincipalFunds)(nil),   // 11: vault.v1.EventDepositPrincipalFunds
-	(*EventWithdrawPrincipalFunds)(nil),  // 12: vault.v1.EventWithdrawPrincipalFunds
-	(*EventMinInterestRateUpdated)(nil),  // 13: vault.v1.EventMinInterestRateUpdated
-	(*EventMaxInterestRateUpdated)(nil),  // 14: vault.v1.EventMaxInterestRateUpdated
-	(*EventSwapOutRequested)(nil),        // 15: vault.v1.EventSwapOutRequested
-	(*EventSwapOutCompleted)(nil),        // 16: vault.v1.EventSwapOutCompleted
-	(*EventSwapOutRefunded)(nil),         // 17: vault.v1.EventSwapOutRefunded
-	(*EventPendingSwapOutExpedited)(nil), // 18: vault.v1.EventPendingSwapOutExpedited
-	(*EventVaultPaused)(nil),             // 19: vault.v1.EventVaultPaused
-	(*EventVaultUnpaused)(nil),           // 20: vault.v1.EventVaultUnpaused
-	(*EventBridgeAddressSet)(nil),        // 21: vault.v1.EventBridgeAddressSet
-	(*EventBridgeToggled)(nil),           // 22: vault.v1.EventBridgeToggled
-	(*EventBridgeMintShares)(nil),        // 23: vault.v1.EventBridgeMintShares
-	(*EventBridgeBurnShares)(nil),        // 24: vault.v1.EventBridgeBurnShares
+var file_provlabs_vault_v1_events_proto_msgTypes = make([]protoimpl.MessageInfo, 25)
+var file_provlabs_vault_v1_events_proto_goTypes = []interface{}{
+	(*EventDeposit)(nil),                 // 0: provlabs.vault.v1.EventDeposit
+	(*EventWithdraw)(nil),                // 1: provlabs.vault.v1.EventWithdraw
+	(*EventVaultCreated)(nil),            // 2: provlabs.vault.v1.EventVaultCreated
+	(*EventSwapIn)(nil),                  // 3: provlabs.vault.v1.EventSwapIn
+	(*EventSwapOut)(nil),                 // 4: provlabs.vault.v1.EventSwapOut
+	(*EventVaultReconcile)(nil),          // 5: provlabs.vault.v1.EventVaultReconcile
+	(*EventVaultInterestChange)(nil),     // 6: provlabs.vault.v1.EventVaultInterestChange
+	(*EventInterestDeposit)(nil),         // 7: provlabs.vault.v1.EventInterestDeposit
+	(*EventInterestWithdrawal)(nil),      // 8: provlabs.vault.v1.EventInterestWithdrawal
+	(*EventToggleSwapIn)(nil),            // 9: provlabs.vault.v1.EventToggleSwapIn
+	(*EventToggleSwapOut)(nil),           // 10: provlabs.vault.v1.EventToggleSwapOut
+	(*EventDepositPrincipalFunds)(nil),   // 11: provlabs.vault.v1.EventDepositPrincipalFunds
+	(*EventWithdrawPrincipalFunds)(nil),  // 12: provlabs.vault.v1.EventWithdrawPrincipalFunds
+	(*EventMinInterestRateUpdated)(nil),  // 13: provlabs.vault.v1.EventMinInterestRateUpdated
+	(*EventMaxInterestRateUpdated)(nil),  // 14: provlabs.vault.v1.EventMaxInterestRateUpdated
+	(*EventSwapOutRequested)(nil),        // 15: provlabs.vault.v1.EventSwapOutRequested
+	(*EventSwapOutCompleted)(nil),        // 16: provlabs.vault.v1.EventSwapOutCompleted
+	(*EventSwapOutRefunded)(nil),         // 17: provlabs.vault.v1.EventSwapOutRefunded
+	(*EventPendingSwapOutExpedited)(nil), // 18: provlabs.vault.v1.EventPendingSwapOutExpedited
+	(*EventVaultPaused)(nil),             // 19: provlabs.vault.v1.EventVaultPaused
+	(*EventVaultUnpaused)(nil),           // 20: provlabs.vault.v1.EventVaultUnpaused
+	(*EventBridgeAddressSet)(nil),        // 21: provlabs.vault.v1.EventBridgeAddressSet
+	(*EventBridgeToggled)(nil),           // 22: provlabs.vault.v1.EventBridgeToggled
+	(*EventBridgeMintShares)(nil),        // 23: provlabs.vault.v1.EventBridgeMintShares
+	(*EventBridgeBurnShares)(nil),        // 24: provlabs.vault.v1.EventBridgeBurnShares
 }
-var file_vault_v1_events_proto_depIdxs = []int32{
+var file_provlabs_vault_v1_events_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
 	0, // [0:0] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
@@ -16542,13 +16547,13 @@ var file_vault_v1_events_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for field type_name
 }
 
-func init() { file_vault_v1_events_proto_init() }
-func file_vault_v1_events_proto_init() {
-	if File_vault_v1_events_proto != nil {
+func init() { file_provlabs_vault_v1_events_proto_init() }
+func file_provlabs_vault_v1_events_proto_init() {
+	if File_provlabs_vault_v1_events_proto != nil {
 		return
 	}
 	if !protoimpl.UnsafeEnabled {
-		file_vault_v1_events_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_events_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*EventDeposit); i {
 			case 0:
 				return &v.state
@@ -16560,7 +16565,7 @@ func file_vault_v1_events_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_events_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_events_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*EventWithdraw); i {
 			case 0:
 				return &v.state
@@ -16572,7 +16577,7 @@ func file_vault_v1_events_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_events_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_events_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*EventVaultCreated); i {
 			case 0:
 				return &v.state
@@ -16584,7 +16589,7 @@ func file_vault_v1_events_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_events_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_events_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*EventSwapIn); i {
 			case 0:
 				return &v.state
@@ -16596,7 +16601,7 @@ func file_vault_v1_events_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_events_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_events_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*EventSwapOut); i {
 			case 0:
 				return &v.state
@@ -16608,7 +16613,7 @@ func file_vault_v1_events_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_events_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_events_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*EventVaultReconcile); i {
 			case 0:
 				return &v.state
@@ -16620,7 +16625,7 @@ func file_vault_v1_events_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_events_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_events_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*EventVaultInterestChange); i {
 			case 0:
 				return &v.state
@@ -16632,7 +16637,7 @@ func file_vault_v1_events_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_events_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_events_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*EventInterestDeposit); i {
 			case 0:
 				return &v.state
@@ -16644,7 +16649,7 @@ func file_vault_v1_events_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_events_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_events_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*EventInterestWithdrawal); i {
 			case 0:
 				return &v.state
@@ -16656,7 +16661,7 @@ func file_vault_v1_events_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_events_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_events_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*EventToggleSwapIn); i {
 			case 0:
 				return &v.state
@@ -16668,7 +16673,7 @@ func file_vault_v1_events_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_events_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_events_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*EventToggleSwapOut); i {
 			case 0:
 				return &v.state
@@ -16680,7 +16685,7 @@ func file_vault_v1_events_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_events_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_events_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*EventDepositPrincipalFunds); i {
 			case 0:
 				return &v.state
@@ -16692,7 +16697,7 @@ func file_vault_v1_events_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_events_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_events_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*EventWithdrawPrincipalFunds); i {
 			case 0:
 				return &v.state
@@ -16704,7 +16709,7 @@ func file_vault_v1_events_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_events_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_events_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*EventMinInterestRateUpdated); i {
 			case 0:
 				return &v.state
@@ -16716,7 +16721,7 @@ func file_vault_v1_events_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_events_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_events_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*EventMaxInterestRateUpdated); i {
 			case 0:
 				return &v.state
@@ -16728,7 +16733,7 @@ func file_vault_v1_events_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_events_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_events_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*EventSwapOutRequested); i {
 			case 0:
 				return &v.state
@@ -16740,7 +16745,7 @@ func file_vault_v1_events_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_events_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_events_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*EventSwapOutCompleted); i {
 			case 0:
 				return &v.state
@@ -16752,7 +16757,7 @@ func file_vault_v1_events_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_events_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_events_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*EventSwapOutRefunded); i {
 			case 0:
 				return &v.state
@@ -16764,7 +16769,7 @@ func file_vault_v1_events_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_events_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_events_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*EventPendingSwapOutExpedited); i {
 			case 0:
 				return &v.state
@@ -16776,7 +16781,7 @@ func file_vault_v1_events_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_events_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_events_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*EventVaultPaused); i {
 			case 0:
 				return &v.state
@@ -16788,7 +16793,7 @@ func file_vault_v1_events_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_events_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_events_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*EventVaultUnpaused); i {
 			case 0:
 				return &v.state
@@ -16800,7 +16805,7 @@ func file_vault_v1_events_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_events_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_events_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*EventBridgeAddressSet); i {
 			case 0:
 				return &v.state
@@ -16812,7 +16817,7 @@ func file_vault_v1_events_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_events_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_events_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*EventBridgeToggled); i {
 			case 0:
 				return &v.state
@@ -16824,7 +16829,7 @@ func file_vault_v1_events_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_events_proto_msgTypes[23].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_events_proto_msgTypes[23].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*EventBridgeMintShares); i {
 			case 0:
 				return &v.state
@@ -16836,7 +16841,7 @@ func file_vault_v1_events_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_events_proto_msgTypes[24].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_events_proto_msgTypes[24].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*EventBridgeBurnShares); i {
 			case 0:
 				return &v.state
@@ -16853,18 +16858,18 @@ func file_vault_v1_events_proto_init() {
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_vault_v1_events_proto_rawDesc,
+			RawDescriptor: file_provlabs_vault_v1_events_proto_rawDesc,
 			NumEnums:      0,
 			NumMessages:   25,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
-		GoTypes:           file_vault_v1_events_proto_goTypes,
-		DependencyIndexes: file_vault_v1_events_proto_depIdxs,
-		MessageInfos:      file_vault_v1_events_proto_msgTypes,
+		GoTypes:           file_provlabs_vault_v1_events_proto_goTypes,
+		DependencyIndexes: file_provlabs_vault_v1_events_proto_depIdxs,
+		MessageInfos:      file_provlabs_vault_v1_events_proto_msgTypes,
 	}.Build()
-	File_vault_v1_events_proto = out.File
-	file_vault_v1_events_proto_rawDesc = nil
-	file_vault_v1_events_proto_goTypes = nil
-	file_vault_v1_events_proto_depIdxs = nil
+	File_provlabs_vault_v1_events_proto = out.File
+	file_provlabs_vault_v1_events_proto_rawDesc = nil
+	file_provlabs_vault_v1_events_proto_goTypes = nil
+	file_provlabs_vault_v1_events_proto_depIdxs = nil
 }

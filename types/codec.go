@@ -15,13 +15,13 @@ func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	registry.RegisterImplementations((*sdk.Msg)(nil), messages...)
 
 	registry.RegisterInterface(
-		"vault.v1.VaultAccount",
+		"provlabs.vault.v1.VaultAccount",
 		(*sdk.AccountI)(nil),
 		&VaultAccount{},
 	)
 
 	registry.RegisterInterface(
-		"vault.v1.VaultAccount",
+		"provlabs.vault.v1.VaultAccount",
 		(*authtypes.GenesisAccount)(nil),
 		&VaultAccount{},
 	)

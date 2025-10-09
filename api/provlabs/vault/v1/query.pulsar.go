@@ -23,8 +23,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_query_proto_init()
-	md_QueryPendingSwapOutsRequest = File_vault_v1_query_proto.Messages().ByName("QueryPendingSwapOutsRequest")
+	file_provlabs_vault_v1_query_proto_init()
+	md_QueryPendingSwapOutsRequest = File_provlabs_vault_v1_query_proto.Messages().ByName("QueryPendingSwapOutsRequest")
 	fd_QueryPendingSwapOutsRequest_pagination = md_QueryPendingSwapOutsRequest.Fields().ByName("pagination")
 }
 
@@ -37,7 +37,7 @@ func (x *QueryPendingSwapOutsRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryPendingSwapOutsRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_query_proto_msgTypes[0]
+	mi := &file_provlabs_vault_v1_query_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -114,13 +114,13 @@ func (x *fastReflection_QueryPendingSwapOutsRequest) Range(f func(protoreflect.F
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_QueryPendingSwapOutsRequest) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.QueryPendingSwapOutsRequest.pagination":
+	case "provlabs.vault.v1.QueryPendingSwapOutsRequest.pagination":
 		return x.Pagination != nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryPendingSwapOutsRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryPendingSwapOutsRequest"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryPendingSwapOutsRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryPendingSwapOutsRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -132,13 +132,13 @@ func (x *fastReflection_QueryPendingSwapOutsRequest) Has(fd protoreflect.FieldDe
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryPendingSwapOutsRequest) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.QueryPendingSwapOutsRequest.pagination":
+	case "provlabs.vault.v1.QueryPendingSwapOutsRequest.pagination":
 		x.Pagination = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryPendingSwapOutsRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryPendingSwapOutsRequest"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryPendingSwapOutsRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryPendingSwapOutsRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -150,14 +150,14 @@ func (x *fastReflection_QueryPendingSwapOutsRequest) Clear(fd protoreflect.Field
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_QueryPendingSwapOutsRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.QueryPendingSwapOutsRequest.pagination":
+	case "provlabs.vault.v1.QueryPendingSwapOutsRequest.pagination":
 		value := x.Pagination
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryPendingSwapOutsRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryPendingSwapOutsRequest"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryPendingSwapOutsRequest does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryPendingSwapOutsRequest does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -173,13 +173,13 @@ func (x *fastReflection_QueryPendingSwapOutsRequest) Get(descriptor protoreflect
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryPendingSwapOutsRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.QueryPendingSwapOutsRequest.pagination":
+	case "provlabs.vault.v1.QueryPendingSwapOutsRequest.pagination":
 		x.Pagination = value.Message().Interface().(*v1beta1.PageRequest)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryPendingSwapOutsRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryPendingSwapOutsRequest"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryPendingSwapOutsRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryPendingSwapOutsRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -195,16 +195,16 @@ func (x *fastReflection_QueryPendingSwapOutsRequest) Set(fd protoreflect.FieldDe
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryPendingSwapOutsRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.QueryPendingSwapOutsRequest.pagination":
+	case "provlabs.vault.v1.QueryPendingSwapOutsRequest.pagination":
 		if x.Pagination == nil {
 			x.Pagination = new(v1beta1.PageRequest)
 		}
 		return protoreflect.ValueOfMessage(x.Pagination.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryPendingSwapOutsRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryPendingSwapOutsRequest"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryPendingSwapOutsRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryPendingSwapOutsRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -213,14 +213,14 @@ func (x *fastReflection_QueryPendingSwapOutsRequest) Mutable(fd protoreflect.Fie
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_QueryPendingSwapOutsRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.QueryPendingSwapOutsRequest.pagination":
+	case "provlabs.vault.v1.QueryPendingSwapOutsRequest.pagination":
 		m := new(v1beta1.PageRequest)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryPendingSwapOutsRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryPendingSwapOutsRequest"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryPendingSwapOutsRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryPendingSwapOutsRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -230,7 +230,7 @@ func (x *fastReflection_QueryPendingSwapOutsRequest) NewField(fd protoreflect.Fi
 func (x *fastReflection_QueryPendingSwapOutsRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.QueryPendingSwapOutsRequest", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.QueryPendingSwapOutsRequest", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -510,8 +510,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_query_proto_init()
-	md_QueryPendingSwapOutsResponse = File_vault_v1_query_proto.Messages().ByName("QueryPendingSwapOutsResponse")
+	file_provlabs_vault_v1_query_proto_init()
+	md_QueryPendingSwapOutsResponse = File_provlabs_vault_v1_query_proto.Messages().ByName("QueryPendingSwapOutsResponse")
 	fd_QueryPendingSwapOutsResponse_pending_swap_outs = md_QueryPendingSwapOutsResponse.Fields().ByName("pending_swap_outs")
 	fd_QueryPendingSwapOutsResponse_pagination = md_QueryPendingSwapOutsResponse.Fields().ByName("pagination")
 }
@@ -525,7 +525,7 @@ func (x *QueryPendingSwapOutsResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryPendingSwapOutsResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_query_proto_msgTypes[1]
+	mi := &file_provlabs_vault_v1_query_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -608,15 +608,15 @@ func (x *fastReflection_QueryPendingSwapOutsResponse) Range(f func(protoreflect.
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_QueryPendingSwapOutsResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.QueryPendingSwapOutsResponse.pending_swap_outs":
+	case "provlabs.vault.v1.QueryPendingSwapOutsResponse.pending_swap_outs":
 		return len(x.PendingSwapOuts) != 0
-	case "vault.v1.QueryPendingSwapOutsResponse.pagination":
+	case "provlabs.vault.v1.QueryPendingSwapOutsResponse.pagination":
 		return x.Pagination != nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryPendingSwapOutsResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryPendingSwapOutsResponse"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryPendingSwapOutsResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryPendingSwapOutsResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -628,15 +628,15 @@ func (x *fastReflection_QueryPendingSwapOutsResponse) Has(fd protoreflect.FieldD
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryPendingSwapOutsResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.QueryPendingSwapOutsResponse.pending_swap_outs":
+	case "provlabs.vault.v1.QueryPendingSwapOutsResponse.pending_swap_outs":
 		x.PendingSwapOuts = nil
-	case "vault.v1.QueryPendingSwapOutsResponse.pagination":
+	case "provlabs.vault.v1.QueryPendingSwapOutsResponse.pagination":
 		x.Pagination = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryPendingSwapOutsResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryPendingSwapOutsResponse"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryPendingSwapOutsResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryPendingSwapOutsResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -648,20 +648,20 @@ func (x *fastReflection_QueryPendingSwapOutsResponse) Clear(fd protoreflect.Fiel
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_QueryPendingSwapOutsResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.QueryPendingSwapOutsResponse.pending_swap_outs":
+	case "provlabs.vault.v1.QueryPendingSwapOutsResponse.pending_swap_outs":
 		if len(x.PendingSwapOuts) == 0 {
 			return protoreflect.ValueOfList(&_QueryPendingSwapOutsResponse_1_list{})
 		}
 		listValue := &_QueryPendingSwapOutsResponse_1_list{list: &x.PendingSwapOuts}
 		return protoreflect.ValueOfList(listValue)
-	case "vault.v1.QueryPendingSwapOutsResponse.pagination":
+	case "provlabs.vault.v1.QueryPendingSwapOutsResponse.pagination":
 		value := x.Pagination
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryPendingSwapOutsResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryPendingSwapOutsResponse"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryPendingSwapOutsResponse does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryPendingSwapOutsResponse does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -677,17 +677,17 @@ func (x *fastReflection_QueryPendingSwapOutsResponse) Get(descriptor protoreflec
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryPendingSwapOutsResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.QueryPendingSwapOutsResponse.pending_swap_outs":
+	case "provlabs.vault.v1.QueryPendingSwapOutsResponse.pending_swap_outs":
 		lv := value.List()
 		clv := lv.(*_QueryPendingSwapOutsResponse_1_list)
 		x.PendingSwapOuts = *clv.list
-	case "vault.v1.QueryPendingSwapOutsResponse.pagination":
+	case "provlabs.vault.v1.QueryPendingSwapOutsResponse.pagination":
 		x.Pagination = value.Message().Interface().(*v1beta1.PageResponse)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryPendingSwapOutsResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryPendingSwapOutsResponse"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryPendingSwapOutsResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryPendingSwapOutsResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -703,22 +703,22 @@ func (x *fastReflection_QueryPendingSwapOutsResponse) Set(fd protoreflect.FieldD
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryPendingSwapOutsResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.QueryPendingSwapOutsResponse.pending_swap_outs":
+	case "provlabs.vault.v1.QueryPendingSwapOutsResponse.pending_swap_outs":
 		if x.PendingSwapOuts == nil {
 			x.PendingSwapOuts = []*PendingSwapOutWithTimeout{}
 		}
 		value := &_QueryPendingSwapOutsResponse_1_list{list: &x.PendingSwapOuts}
 		return protoreflect.ValueOfList(value)
-	case "vault.v1.QueryPendingSwapOutsResponse.pagination":
+	case "provlabs.vault.v1.QueryPendingSwapOutsResponse.pagination":
 		if x.Pagination == nil {
 			x.Pagination = new(v1beta1.PageResponse)
 		}
 		return protoreflect.ValueOfMessage(x.Pagination.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryPendingSwapOutsResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryPendingSwapOutsResponse"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryPendingSwapOutsResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryPendingSwapOutsResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -727,17 +727,17 @@ func (x *fastReflection_QueryPendingSwapOutsResponse) Mutable(fd protoreflect.Fi
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_QueryPendingSwapOutsResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.QueryPendingSwapOutsResponse.pending_swap_outs":
+	case "provlabs.vault.v1.QueryPendingSwapOutsResponse.pending_swap_outs":
 		list := []*PendingSwapOutWithTimeout{}
 		return protoreflect.ValueOfList(&_QueryPendingSwapOutsResponse_1_list{list: &list})
-	case "vault.v1.QueryPendingSwapOutsResponse.pagination":
+	case "provlabs.vault.v1.QueryPendingSwapOutsResponse.pagination":
 		m := new(v1beta1.PageResponse)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryPendingSwapOutsResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryPendingSwapOutsResponse"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryPendingSwapOutsResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryPendingSwapOutsResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -747,7 +747,7 @@ func (x *fastReflection_QueryPendingSwapOutsResponse) NewField(fd protoreflect.F
 func (x *fastReflection_QueryPendingSwapOutsResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.QueryPendingSwapOutsResponse", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.QueryPendingSwapOutsResponse", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -1033,8 +1033,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_query_proto_init()
-	md_PendingSwapOutWithTimeout = File_vault_v1_query_proto.Messages().ByName("PendingSwapOutWithTimeout")
+	file_provlabs_vault_v1_query_proto_init()
+	md_PendingSwapOutWithTimeout = File_provlabs_vault_v1_query_proto.Messages().ByName("PendingSwapOutWithTimeout")
 	fd_PendingSwapOutWithTimeout_request_id = md_PendingSwapOutWithTimeout.Fields().ByName("request_id")
 	fd_PendingSwapOutWithTimeout_pending_swap_out = md_PendingSwapOutWithTimeout.Fields().ByName("pending_swap_out")
 	fd_PendingSwapOutWithTimeout_timeout = md_PendingSwapOutWithTimeout.Fields().ByName("timeout")
@@ -1049,7 +1049,7 @@ func (x *PendingSwapOutWithTimeout) ProtoReflect() protoreflect.Message {
 }
 
 func (x *PendingSwapOutWithTimeout) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_query_proto_msgTypes[2]
+	mi := &file_provlabs_vault_v1_query_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1138,17 +1138,17 @@ func (x *fastReflection_PendingSwapOutWithTimeout) Range(f func(protoreflect.Fie
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_PendingSwapOutWithTimeout) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.PendingSwapOutWithTimeout.request_id":
+	case "provlabs.vault.v1.PendingSwapOutWithTimeout.request_id":
 		return x.RequestId != uint64(0)
-	case "vault.v1.PendingSwapOutWithTimeout.pending_swap_out":
+	case "provlabs.vault.v1.PendingSwapOutWithTimeout.pending_swap_out":
 		return x.PendingSwapOut != nil
-	case "vault.v1.PendingSwapOutWithTimeout.timeout":
+	case "provlabs.vault.v1.PendingSwapOutWithTimeout.timeout":
 		return x.Timeout != nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOutWithTimeout"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.PendingSwapOutWithTimeout"))
 		}
-		panic(fmt.Errorf("message vault.v1.PendingSwapOutWithTimeout does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.PendingSwapOutWithTimeout does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1160,17 +1160,17 @@ func (x *fastReflection_PendingSwapOutWithTimeout) Has(fd protoreflect.FieldDesc
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_PendingSwapOutWithTimeout) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.PendingSwapOutWithTimeout.request_id":
+	case "provlabs.vault.v1.PendingSwapOutWithTimeout.request_id":
 		x.RequestId = uint64(0)
-	case "vault.v1.PendingSwapOutWithTimeout.pending_swap_out":
+	case "provlabs.vault.v1.PendingSwapOutWithTimeout.pending_swap_out":
 		x.PendingSwapOut = nil
-	case "vault.v1.PendingSwapOutWithTimeout.timeout":
+	case "provlabs.vault.v1.PendingSwapOutWithTimeout.timeout":
 		x.Timeout = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOutWithTimeout"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.PendingSwapOutWithTimeout"))
 		}
-		panic(fmt.Errorf("message vault.v1.PendingSwapOutWithTimeout does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.PendingSwapOutWithTimeout does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1182,20 +1182,20 @@ func (x *fastReflection_PendingSwapOutWithTimeout) Clear(fd protoreflect.FieldDe
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_PendingSwapOutWithTimeout) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.PendingSwapOutWithTimeout.request_id":
+	case "provlabs.vault.v1.PendingSwapOutWithTimeout.request_id":
 		value := x.RequestId
 		return protoreflect.ValueOfUint64(value)
-	case "vault.v1.PendingSwapOutWithTimeout.pending_swap_out":
+	case "provlabs.vault.v1.PendingSwapOutWithTimeout.pending_swap_out":
 		value := x.PendingSwapOut
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "vault.v1.PendingSwapOutWithTimeout.timeout":
+	case "provlabs.vault.v1.PendingSwapOutWithTimeout.timeout":
 		value := x.Timeout
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOutWithTimeout"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.PendingSwapOutWithTimeout"))
 		}
-		panic(fmt.Errorf("message vault.v1.PendingSwapOutWithTimeout does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.PendingSwapOutWithTimeout does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -1211,17 +1211,17 @@ func (x *fastReflection_PendingSwapOutWithTimeout) Get(descriptor protoreflect.F
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_PendingSwapOutWithTimeout) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.PendingSwapOutWithTimeout.request_id":
+	case "provlabs.vault.v1.PendingSwapOutWithTimeout.request_id":
 		x.RequestId = value.Uint()
-	case "vault.v1.PendingSwapOutWithTimeout.pending_swap_out":
+	case "provlabs.vault.v1.PendingSwapOutWithTimeout.pending_swap_out":
 		x.PendingSwapOut = value.Message().Interface().(*PendingSwapOut)
-	case "vault.v1.PendingSwapOutWithTimeout.timeout":
+	case "provlabs.vault.v1.PendingSwapOutWithTimeout.timeout":
 		x.Timeout = value.Message().Interface().(*timestamppb.Timestamp)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOutWithTimeout"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.PendingSwapOutWithTimeout"))
 		}
-		panic(fmt.Errorf("message vault.v1.PendingSwapOutWithTimeout does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.PendingSwapOutWithTimeout does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1237,23 +1237,23 @@ func (x *fastReflection_PendingSwapOutWithTimeout) Set(fd protoreflect.FieldDesc
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_PendingSwapOutWithTimeout) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.PendingSwapOutWithTimeout.pending_swap_out":
+	case "provlabs.vault.v1.PendingSwapOutWithTimeout.pending_swap_out":
 		if x.PendingSwapOut == nil {
 			x.PendingSwapOut = new(PendingSwapOut)
 		}
 		return protoreflect.ValueOfMessage(x.PendingSwapOut.ProtoReflect())
-	case "vault.v1.PendingSwapOutWithTimeout.timeout":
+	case "provlabs.vault.v1.PendingSwapOutWithTimeout.timeout":
 		if x.Timeout == nil {
 			x.Timeout = new(timestamppb.Timestamp)
 		}
 		return protoreflect.ValueOfMessage(x.Timeout.ProtoReflect())
-	case "vault.v1.PendingSwapOutWithTimeout.request_id":
-		panic(fmt.Errorf("field request_id of message vault.v1.PendingSwapOutWithTimeout is not mutable"))
+	case "provlabs.vault.v1.PendingSwapOutWithTimeout.request_id":
+		panic(fmt.Errorf("field request_id of message provlabs.vault.v1.PendingSwapOutWithTimeout is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOutWithTimeout"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.PendingSwapOutWithTimeout"))
 		}
-		panic(fmt.Errorf("message vault.v1.PendingSwapOutWithTimeout does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.PendingSwapOutWithTimeout does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1262,19 +1262,19 @@ func (x *fastReflection_PendingSwapOutWithTimeout) Mutable(fd protoreflect.Field
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_PendingSwapOutWithTimeout) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.PendingSwapOutWithTimeout.request_id":
+	case "provlabs.vault.v1.PendingSwapOutWithTimeout.request_id":
 		return protoreflect.ValueOfUint64(uint64(0))
-	case "vault.v1.PendingSwapOutWithTimeout.pending_swap_out":
+	case "provlabs.vault.v1.PendingSwapOutWithTimeout.pending_swap_out":
 		m := new(PendingSwapOut)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "vault.v1.PendingSwapOutWithTimeout.timeout":
+	case "provlabs.vault.v1.PendingSwapOutWithTimeout.timeout":
 		m := new(timestamppb.Timestamp)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.PendingSwapOutWithTimeout"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.PendingSwapOutWithTimeout"))
 		}
-		panic(fmt.Errorf("message vault.v1.PendingSwapOutWithTimeout does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.PendingSwapOutWithTimeout does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1284,7 +1284,7 @@ func (x *fastReflection_PendingSwapOutWithTimeout) NewField(fd protoreflect.Fiel
 func (x *fastReflection_PendingSwapOutWithTimeout) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.PendingSwapOutWithTimeout", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.PendingSwapOutWithTimeout", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -1593,8 +1593,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_query_proto_init()
-	md_QueryVaultsRequest = File_vault_v1_query_proto.Messages().ByName("QueryVaultsRequest")
+	file_provlabs_vault_v1_query_proto_init()
+	md_QueryVaultsRequest = File_provlabs_vault_v1_query_proto.Messages().ByName("QueryVaultsRequest")
 	fd_QueryVaultsRequest_pagination = md_QueryVaultsRequest.Fields().ByName("pagination")
 }
 
@@ -1607,7 +1607,7 @@ func (x *QueryVaultsRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryVaultsRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_query_proto_msgTypes[3]
+	mi := &file_provlabs_vault_v1_query_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1684,13 +1684,13 @@ func (x *fastReflection_QueryVaultsRequest) Range(f func(protoreflect.FieldDescr
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_QueryVaultsRequest) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.QueryVaultsRequest.pagination":
+	case "provlabs.vault.v1.QueryVaultsRequest.pagination":
 		return x.Pagination != nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryVaultsRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryVaultsRequest"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryVaultsRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryVaultsRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1702,13 +1702,13 @@ func (x *fastReflection_QueryVaultsRequest) Has(fd protoreflect.FieldDescriptor)
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryVaultsRequest) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.QueryVaultsRequest.pagination":
+	case "provlabs.vault.v1.QueryVaultsRequest.pagination":
 		x.Pagination = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryVaultsRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryVaultsRequest"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryVaultsRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryVaultsRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1720,14 +1720,14 @@ func (x *fastReflection_QueryVaultsRequest) Clear(fd protoreflect.FieldDescripto
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_QueryVaultsRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.QueryVaultsRequest.pagination":
+	case "provlabs.vault.v1.QueryVaultsRequest.pagination":
 		value := x.Pagination
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryVaultsRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryVaultsRequest"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryVaultsRequest does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryVaultsRequest does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -1743,13 +1743,13 @@ func (x *fastReflection_QueryVaultsRequest) Get(descriptor protoreflect.FieldDes
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryVaultsRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.QueryVaultsRequest.pagination":
+	case "provlabs.vault.v1.QueryVaultsRequest.pagination":
 		x.Pagination = value.Message().Interface().(*v1beta1.PageRequest)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryVaultsRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryVaultsRequest"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryVaultsRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryVaultsRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1765,16 +1765,16 @@ func (x *fastReflection_QueryVaultsRequest) Set(fd protoreflect.FieldDescriptor,
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryVaultsRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.QueryVaultsRequest.pagination":
+	case "provlabs.vault.v1.QueryVaultsRequest.pagination":
 		if x.Pagination == nil {
 			x.Pagination = new(v1beta1.PageRequest)
 		}
 		return protoreflect.ValueOfMessage(x.Pagination.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryVaultsRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryVaultsRequest"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryVaultsRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryVaultsRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1783,14 +1783,14 @@ func (x *fastReflection_QueryVaultsRequest) Mutable(fd protoreflect.FieldDescrip
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_QueryVaultsRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.QueryVaultsRequest.pagination":
+	case "provlabs.vault.v1.QueryVaultsRequest.pagination":
 		m := new(v1beta1.PageRequest)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryVaultsRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryVaultsRequest"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryVaultsRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryVaultsRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -1800,7 +1800,7 @@ func (x *fastReflection_QueryVaultsRequest) NewField(fd protoreflect.FieldDescri
 func (x *fastReflection_QueryVaultsRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.QueryVaultsRequest", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.QueryVaultsRequest", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -2080,8 +2080,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_query_proto_init()
-	md_QueryVaultsResponse = File_vault_v1_query_proto.Messages().ByName("QueryVaultsResponse")
+	file_provlabs_vault_v1_query_proto_init()
+	md_QueryVaultsResponse = File_provlabs_vault_v1_query_proto.Messages().ByName("QueryVaultsResponse")
 	fd_QueryVaultsResponse_vaults = md_QueryVaultsResponse.Fields().ByName("vaults")
 	fd_QueryVaultsResponse_pagination = md_QueryVaultsResponse.Fields().ByName("pagination")
 }
@@ -2095,7 +2095,7 @@ func (x *QueryVaultsResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryVaultsResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_query_proto_msgTypes[4]
+	mi := &file_provlabs_vault_v1_query_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2178,15 +2178,15 @@ func (x *fastReflection_QueryVaultsResponse) Range(f func(protoreflect.FieldDesc
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_QueryVaultsResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.QueryVaultsResponse.vaults":
+	case "provlabs.vault.v1.QueryVaultsResponse.vaults":
 		return len(x.Vaults) != 0
-	case "vault.v1.QueryVaultsResponse.pagination":
+	case "provlabs.vault.v1.QueryVaultsResponse.pagination":
 		return x.Pagination != nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryVaultsResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryVaultsResponse"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryVaultsResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryVaultsResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2198,15 +2198,15 @@ func (x *fastReflection_QueryVaultsResponse) Has(fd protoreflect.FieldDescriptor
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryVaultsResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.QueryVaultsResponse.vaults":
+	case "provlabs.vault.v1.QueryVaultsResponse.vaults":
 		x.Vaults = nil
-	case "vault.v1.QueryVaultsResponse.pagination":
+	case "provlabs.vault.v1.QueryVaultsResponse.pagination":
 		x.Pagination = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryVaultsResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryVaultsResponse"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryVaultsResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryVaultsResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2218,20 +2218,20 @@ func (x *fastReflection_QueryVaultsResponse) Clear(fd protoreflect.FieldDescript
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_QueryVaultsResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.QueryVaultsResponse.vaults":
+	case "provlabs.vault.v1.QueryVaultsResponse.vaults":
 		if len(x.Vaults) == 0 {
 			return protoreflect.ValueOfList(&_QueryVaultsResponse_1_list{})
 		}
 		listValue := &_QueryVaultsResponse_1_list{list: &x.Vaults}
 		return protoreflect.ValueOfList(listValue)
-	case "vault.v1.QueryVaultsResponse.pagination":
+	case "provlabs.vault.v1.QueryVaultsResponse.pagination":
 		value := x.Pagination
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryVaultsResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryVaultsResponse"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryVaultsResponse does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryVaultsResponse does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -2247,17 +2247,17 @@ func (x *fastReflection_QueryVaultsResponse) Get(descriptor protoreflect.FieldDe
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryVaultsResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.QueryVaultsResponse.vaults":
+	case "provlabs.vault.v1.QueryVaultsResponse.vaults":
 		lv := value.List()
 		clv := lv.(*_QueryVaultsResponse_1_list)
 		x.Vaults = *clv.list
-	case "vault.v1.QueryVaultsResponse.pagination":
+	case "provlabs.vault.v1.QueryVaultsResponse.pagination":
 		x.Pagination = value.Message().Interface().(*v1beta1.PageResponse)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryVaultsResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryVaultsResponse"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryVaultsResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryVaultsResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2273,22 +2273,22 @@ func (x *fastReflection_QueryVaultsResponse) Set(fd protoreflect.FieldDescriptor
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryVaultsResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.QueryVaultsResponse.vaults":
+	case "provlabs.vault.v1.QueryVaultsResponse.vaults":
 		if x.Vaults == nil {
 			x.Vaults = []*VaultAccount{}
 		}
 		value := &_QueryVaultsResponse_1_list{list: &x.Vaults}
 		return protoreflect.ValueOfList(value)
-	case "vault.v1.QueryVaultsResponse.pagination":
+	case "provlabs.vault.v1.QueryVaultsResponse.pagination":
 		if x.Pagination == nil {
 			x.Pagination = new(v1beta1.PageResponse)
 		}
 		return protoreflect.ValueOfMessage(x.Pagination.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryVaultsResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryVaultsResponse"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryVaultsResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryVaultsResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2297,17 +2297,17 @@ func (x *fastReflection_QueryVaultsResponse) Mutable(fd protoreflect.FieldDescri
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_QueryVaultsResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.QueryVaultsResponse.vaults":
+	case "provlabs.vault.v1.QueryVaultsResponse.vaults":
 		list := []*VaultAccount{}
 		return protoreflect.ValueOfList(&_QueryVaultsResponse_1_list{list: &list})
-	case "vault.v1.QueryVaultsResponse.pagination":
+	case "provlabs.vault.v1.QueryVaultsResponse.pagination":
 		m := new(v1beta1.PageResponse)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryVaultsResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryVaultsResponse"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryVaultsResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryVaultsResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2317,7 +2317,7 @@ func (x *fastReflection_QueryVaultsResponse) NewField(fd protoreflect.FieldDescr
 func (x *fastReflection_QueryVaultsResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.QueryVaultsResponse", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.QueryVaultsResponse", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -2601,8 +2601,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_query_proto_init()
-	md_QueryVaultRequest = File_vault_v1_query_proto.Messages().ByName("QueryVaultRequest")
+	file_provlabs_vault_v1_query_proto_init()
+	md_QueryVaultRequest = File_provlabs_vault_v1_query_proto.Messages().ByName("QueryVaultRequest")
 	fd_QueryVaultRequest_id = md_QueryVaultRequest.Fields().ByName("id")
 }
 
@@ -2615,7 +2615,7 @@ func (x *QueryVaultRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryVaultRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_query_proto_msgTypes[5]
+	mi := &file_provlabs_vault_v1_query_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2692,13 +2692,13 @@ func (x *fastReflection_QueryVaultRequest) Range(f func(protoreflect.FieldDescri
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_QueryVaultRequest) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.QueryVaultRequest.id":
+	case "provlabs.vault.v1.QueryVaultRequest.id":
 		return x.Id != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryVaultRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryVaultRequest"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryVaultRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryVaultRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2710,13 +2710,13 @@ func (x *fastReflection_QueryVaultRequest) Has(fd protoreflect.FieldDescriptor) 
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryVaultRequest) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.QueryVaultRequest.id":
+	case "provlabs.vault.v1.QueryVaultRequest.id":
 		x.Id = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryVaultRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryVaultRequest"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryVaultRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryVaultRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2728,14 +2728,14 @@ func (x *fastReflection_QueryVaultRequest) Clear(fd protoreflect.FieldDescriptor
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_QueryVaultRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.QueryVaultRequest.id":
+	case "provlabs.vault.v1.QueryVaultRequest.id":
 		value := x.Id
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryVaultRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryVaultRequest"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryVaultRequest does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryVaultRequest does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -2751,13 +2751,13 @@ func (x *fastReflection_QueryVaultRequest) Get(descriptor protoreflect.FieldDesc
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryVaultRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.QueryVaultRequest.id":
+	case "provlabs.vault.v1.QueryVaultRequest.id":
 		x.Id = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryVaultRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryVaultRequest"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryVaultRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryVaultRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2773,13 +2773,13 @@ func (x *fastReflection_QueryVaultRequest) Set(fd protoreflect.FieldDescriptor, 
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryVaultRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.QueryVaultRequest.id":
-		panic(fmt.Errorf("field id of message vault.v1.QueryVaultRequest is not mutable"))
+	case "provlabs.vault.v1.QueryVaultRequest.id":
+		panic(fmt.Errorf("field id of message provlabs.vault.v1.QueryVaultRequest is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryVaultRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryVaultRequest"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryVaultRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryVaultRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2788,13 +2788,13 @@ func (x *fastReflection_QueryVaultRequest) Mutable(fd protoreflect.FieldDescript
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_QueryVaultRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.QueryVaultRequest.id":
+	case "provlabs.vault.v1.QueryVaultRequest.id":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryVaultRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryVaultRequest"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryVaultRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryVaultRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -2804,7 +2804,7 @@ func (x *fastReflection_QueryVaultRequest) NewField(fd protoreflect.FieldDescrip
 func (x *fastReflection_QueryVaultRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.QueryVaultRequest", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.QueryVaultRequest", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -3023,8 +3023,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_query_proto_init()
-	md_QueryVaultResponse = File_vault_v1_query_proto.Messages().ByName("QueryVaultResponse")
+	file_provlabs_vault_v1_query_proto_init()
+	md_QueryVaultResponse = File_provlabs_vault_v1_query_proto.Messages().ByName("QueryVaultResponse")
 	fd_QueryVaultResponse_vault = md_QueryVaultResponse.Fields().ByName("vault")
 	fd_QueryVaultResponse_principal = md_QueryVaultResponse.Fields().ByName("principal")
 	fd_QueryVaultResponse_reserves = md_QueryVaultResponse.Fields().ByName("reserves")
@@ -3039,7 +3039,7 @@ func (x *QueryVaultResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryVaultResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_query_proto_msgTypes[6]
+	mi := &file_provlabs_vault_v1_query_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3128,17 +3128,17 @@ func (x *fastReflection_QueryVaultResponse) Range(f func(protoreflect.FieldDescr
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_QueryVaultResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.QueryVaultResponse.vault":
+	case "provlabs.vault.v1.QueryVaultResponse.vault":
 		return x.Vault != nil
-	case "vault.v1.QueryVaultResponse.principal":
+	case "provlabs.vault.v1.QueryVaultResponse.principal":
 		return x.Principal != nil
-	case "vault.v1.QueryVaultResponse.reserves":
+	case "provlabs.vault.v1.QueryVaultResponse.reserves":
 		return x.Reserves != nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryVaultResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryVaultResponse"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryVaultResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryVaultResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -3150,17 +3150,17 @@ func (x *fastReflection_QueryVaultResponse) Has(fd protoreflect.FieldDescriptor)
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryVaultResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.QueryVaultResponse.vault":
+	case "provlabs.vault.v1.QueryVaultResponse.vault":
 		x.Vault = nil
-	case "vault.v1.QueryVaultResponse.principal":
+	case "provlabs.vault.v1.QueryVaultResponse.principal":
 		x.Principal = nil
-	case "vault.v1.QueryVaultResponse.reserves":
+	case "provlabs.vault.v1.QueryVaultResponse.reserves":
 		x.Reserves = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryVaultResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryVaultResponse"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryVaultResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryVaultResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -3172,20 +3172,20 @@ func (x *fastReflection_QueryVaultResponse) Clear(fd protoreflect.FieldDescripto
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_QueryVaultResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.QueryVaultResponse.vault":
+	case "provlabs.vault.v1.QueryVaultResponse.vault":
 		value := x.Vault
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "vault.v1.QueryVaultResponse.principal":
+	case "provlabs.vault.v1.QueryVaultResponse.principal":
 		value := x.Principal
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "vault.v1.QueryVaultResponse.reserves":
+	case "provlabs.vault.v1.QueryVaultResponse.reserves":
 		value := x.Reserves
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryVaultResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryVaultResponse"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryVaultResponse does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryVaultResponse does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -3201,17 +3201,17 @@ func (x *fastReflection_QueryVaultResponse) Get(descriptor protoreflect.FieldDes
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryVaultResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.QueryVaultResponse.vault":
+	case "provlabs.vault.v1.QueryVaultResponse.vault":
 		x.Vault = value.Message().Interface().(*VaultAccount)
-	case "vault.v1.QueryVaultResponse.principal":
+	case "provlabs.vault.v1.QueryVaultResponse.principal":
 		x.Principal = value.Message().Interface().(*AccountBalance)
-	case "vault.v1.QueryVaultResponse.reserves":
+	case "provlabs.vault.v1.QueryVaultResponse.reserves":
 		x.Reserves = value.Message().Interface().(*AccountBalance)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryVaultResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryVaultResponse"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryVaultResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryVaultResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -3227,26 +3227,26 @@ func (x *fastReflection_QueryVaultResponse) Set(fd protoreflect.FieldDescriptor,
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryVaultResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.QueryVaultResponse.vault":
+	case "provlabs.vault.v1.QueryVaultResponse.vault":
 		if x.Vault == nil {
 			x.Vault = new(VaultAccount)
 		}
 		return protoreflect.ValueOfMessage(x.Vault.ProtoReflect())
-	case "vault.v1.QueryVaultResponse.principal":
+	case "provlabs.vault.v1.QueryVaultResponse.principal":
 		if x.Principal == nil {
 			x.Principal = new(AccountBalance)
 		}
 		return protoreflect.ValueOfMessage(x.Principal.ProtoReflect())
-	case "vault.v1.QueryVaultResponse.reserves":
+	case "provlabs.vault.v1.QueryVaultResponse.reserves":
 		if x.Reserves == nil {
 			x.Reserves = new(AccountBalance)
 		}
 		return protoreflect.ValueOfMessage(x.Reserves.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryVaultResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryVaultResponse"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryVaultResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryVaultResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -3255,20 +3255,20 @@ func (x *fastReflection_QueryVaultResponse) Mutable(fd protoreflect.FieldDescrip
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_QueryVaultResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.QueryVaultResponse.vault":
+	case "provlabs.vault.v1.QueryVaultResponse.vault":
 		m := new(VaultAccount)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "vault.v1.QueryVaultResponse.principal":
+	case "provlabs.vault.v1.QueryVaultResponse.principal":
 		m := new(AccountBalance)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "vault.v1.QueryVaultResponse.reserves":
+	case "provlabs.vault.v1.QueryVaultResponse.reserves":
 		m := new(AccountBalance)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryVaultResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryVaultResponse"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryVaultResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryVaultResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -3278,7 +3278,7 @@ func (x *fastReflection_QueryVaultResponse) NewField(fd protoreflect.FieldDescri
 func (x *fastReflection_QueryVaultResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.QueryVaultResponse", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.QueryVaultResponse", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -3615,8 +3615,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_query_proto_init()
-	md_QueryEstimateSwapInRequest = File_vault_v1_query_proto.Messages().ByName("QueryEstimateSwapInRequest")
+	file_provlabs_vault_v1_query_proto_init()
+	md_QueryEstimateSwapInRequest = File_provlabs_vault_v1_query_proto.Messages().ByName("QueryEstimateSwapInRequest")
 	fd_QueryEstimateSwapInRequest_vault_address = md_QueryEstimateSwapInRequest.Fields().ByName("vault_address")
 	fd_QueryEstimateSwapInRequest_assets = md_QueryEstimateSwapInRequest.Fields().ByName("assets")
 }
@@ -3630,7 +3630,7 @@ func (x *QueryEstimateSwapInRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryEstimateSwapInRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_query_proto_msgTypes[7]
+	mi := &file_provlabs_vault_v1_query_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3713,15 +3713,15 @@ func (x *fastReflection_QueryEstimateSwapInRequest) Range(f func(protoreflect.Fi
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_QueryEstimateSwapInRequest) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.QueryEstimateSwapInRequest.vault_address":
+	case "provlabs.vault.v1.QueryEstimateSwapInRequest.vault_address":
 		return x.VaultAddress != ""
-	case "vault.v1.QueryEstimateSwapInRequest.assets":
+	case "provlabs.vault.v1.QueryEstimateSwapInRequest.assets":
 		return x.Assets != nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryEstimateSwapInRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryEstimateSwapInRequest"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryEstimateSwapInRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryEstimateSwapInRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -3733,15 +3733,15 @@ func (x *fastReflection_QueryEstimateSwapInRequest) Has(fd protoreflect.FieldDes
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryEstimateSwapInRequest) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.QueryEstimateSwapInRequest.vault_address":
+	case "provlabs.vault.v1.QueryEstimateSwapInRequest.vault_address":
 		x.VaultAddress = ""
-	case "vault.v1.QueryEstimateSwapInRequest.assets":
+	case "provlabs.vault.v1.QueryEstimateSwapInRequest.assets":
 		x.Assets = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryEstimateSwapInRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryEstimateSwapInRequest"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryEstimateSwapInRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryEstimateSwapInRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -3753,17 +3753,17 @@ func (x *fastReflection_QueryEstimateSwapInRequest) Clear(fd protoreflect.FieldD
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_QueryEstimateSwapInRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.QueryEstimateSwapInRequest.vault_address":
+	case "provlabs.vault.v1.QueryEstimateSwapInRequest.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.QueryEstimateSwapInRequest.assets":
+	case "provlabs.vault.v1.QueryEstimateSwapInRequest.assets":
 		value := x.Assets
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryEstimateSwapInRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryEstimateSwapInRequest"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryEstimateSwapInRequest does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryEstimateSwapInRequest does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -3779,15 +3779,15 @@ func (x *fastReflection_QueryEstimateSwapInRequest) Get(descriptor protoreflect.
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryEstimateSwapInRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.QueryEstimateSwapInRequest.vault_address":
+	case "provlabs.vault.v1.QueryEstimateSwapInRequest.vault_address":
 		x.VaultAddress = value.Interface().(string)
-	case "vault.v1.QueryEstimateSwapInRequest.assets":
+	case "provlabs.vault.v1.QueryEstimateSwapInRequest.assets":
 		x.Assets = value.Message().Interface().(*v1beta11.Coin)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryEstimateSwapInRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryEstimateSwapInRequest"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryEstimateSwapInRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryEstimateSwapInRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -3803,18 +3803,18 @@ func (x *fastReflection_QueryEstimateSwapInRequest) Set(fd protoreflect.FieldDes
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryEstimateSwapInRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.QueryEstimateSwapInRequest.assets":
+	case "provlabs.vault.v1.QueryEstimateSwapInRequest.assets":
 		if x.Assets == nil {
 			x.Assets = new(v1beta11.Coin)
 		}
 		return protoreflect.ValueOfMessage(x.Assets.ProtoReflect())
-	case "vault.v1.QueryEstimateSwapInRequest.vault_address":
-		panic(fmt.Errorf("field vault_address of message vault.v1.QueryEstimateSwapInRequest is not mutable"))
+	case "provlabs.vault.v1.QueryEstimateSwapInRequest.vault_address":
+		panic(fmt.Errorf("field vault_address of message provlabs.vault.v1.QueryEstimateSwapInRequest is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryEstimateSwapInRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryEstimateSwapInRequest"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryEstimateSwapInRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryEstimateSwapInRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -3823,16 +3823,16 @@ func (x *fastReflection_QueryEstimateSwapInRequest) Mutable(fd protoreflect.Fiel
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_QueryEstimateSwapInRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.QueryEstimateSwapInRequest.vault_address":
+	case "provlabs.vault.v1.QueryEstimateSwapInRequest.vault_address":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.QueryEstimateSwapInRequest.assets":
+	case "provlabs.vault.v1.QueryEstimateSwapInRequest.assets":
 		m := new(v1beta11.Coin)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryEstimateSwapInRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryEstimateSwapInRequest"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryEstimateSwapInRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryEstimateSwapInRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -3842,7 +3842,7 @@ func (x *fastReflection_QueryEstimateSwapInRequest) NewField(fd protoreflect.Fie
 func (x *fastReflection_QueryEstimateSwapInRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.QueryEstimateSwapInRequest", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.QueryEstimateSwapInRequest", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -4115,8 +4115,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_query_proto_init()
-	md_QueryEstimateSwapInResponse = File_vault_v1_query_proto.Messages().ByName("QueryEstimateSwapInResponse")
+	file_provlabs_vault_v1_query_proto_init()
+	md_QueryEstimateSwapInResponse = File_provlabs_vault_v1_query_proto.Messages().ByName("QueryEstimateSwapInResponse")
 	fd_QueryEstimateSwapInResponse_assets = md_QueryEstimateSwapInResponse.Fields().ByName("assets")
 	fd_QueryEstimateSwapInResponse_height = md_QueryEstimateSwapInResponse.Fields().ByName("height")
 	fd_QueryEstimateSwapInResponse_time = md_QueryEstimateSwapInResponse.Fields().ByName("time")
@@ -4131,7 +4131,7 @@ func (x *QueryEstimateSwapInResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryEstimateSwapInResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_query_proto_msgTypes[8]
+	mi := &file_provlabs_vault_v1_query_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4220,17 +4220,17 @@ func (x *fastReflection_QueryEstimateSwapInResponse) Range(f func(protoreflect.F
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_QueryEstimateSwapInResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.QueryEstimateSwapInResponse.assets":
+	case "provlabs.vault.v1.QueryEstimateSwapInResponse.assets":
 		return x.Assets != nil
-	case "vault.v1.QueryEstimateSwapInResponse.height":
+	case "provlabs.vault.v1.QueryEstimateSwapInResponse.height":
 		return x.Height != int64(0)
-	case "vault.v1.QueryEstimateSwapInResponse.time":
+	case "provlabs.vault.v1.QueryEstimateSwapInResponse.time":
 		return x.Time != nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryEstimateSwapInResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryEstimateSwapInResponse"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryEstimateSwapInResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryEstimateSwapInResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -4242,17 +4242,17 @@ func (x *fastReflection_QueryEstimateSwapInResponse) Has(fd protoreflect.FieldDe
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryEstimateSwapInResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.QueryEstimateSwapInResponse.assets":
+	case "provlabs.vault.v1.QueryEstimateSwapInResponse.assets":
 		x.Assets = nil
-	case "vault.v1.QueryEstimateSwapInResponse.height":
+	case "provlabs.vault.v1.QueryEstimateSwapInResponse.height":
 		x.Height = int64(0)
-	case "vault.v1.QueryEstimateSwapInResponse.time":
+	case "provlabs.vault.v1.QueryEstimateSwapInResponse.time":
 		x.Time = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryEstimateSwapInResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryEstimateSwapInResponse"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryEstimateSwapInResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryEstimateSwapInResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -4264,20 +4264,20 @@ func (x *fastReflection_QueryEstimateSwapInResponse) Clear(fd protoreflect.Field
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_QueryEstimateSwapInResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.QueryEstimateSwapInResponse.assets":
+	case "provlabs.vault.v1.QueryEstimateSwapInResponse.assets":
 		value := x.Assets
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "vault.v1.QueryEstimateSwapInResponse.height":
+	case "provlabs.vault.v1.QueryEstimateSwapInResponse.height":
 		value := x.Height
 		return protoreflect.ValueOfInt64(value)
-	case "vault.v1.QueryEstimateSwapInResponse.time":
+	case "provlabs.vault.v1.QueryEstimateSwapInResponse.time":
 		value := x.Time
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryEstimateSwapInResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryEstimateSwapInResponse"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryEstimateSwapInResponse does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryEstimateSwapInResponse does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -4293,17 +4293,17 @@ func (x *fastReflection_QueryEstimateSwapInResponse) Get(descriptor protoreflect
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryEstimateSwapInResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.QueryEstimateSwapInResponse.assets":
+	case "provlabs.vault.v1.QueryEstimateSwapInResponse.assets":
 		x.Assets = value.Message().Interface().(*v1beta11.Coin)
-	case "vault.v1.QueryEstimateSwapInResponse.height":
+	case "provlabs.vault.v1.QueryEstimateSwapInResponse.height":
 		x.Height = value.Int()
-	case "vault.v1.QueryEstimateSwapInResponse.time":
+	case "provlabs.vault.v1.QueryEstimateSwapInResponse.time":
 		x.Time = value.Message().Interface().(*timestamppb.Timestamp)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryEstimateSwapInResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryEstimateSwapInResponse"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryEstimateSwapInResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryEstimateSwapInResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -4319,23 +4319,23 @@ func (x *fastReflection_QueryEstimateSwapInResponse) Set(fd protoreflect.FieldDe
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryEstimateSwapInResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.QueryEstimateSwapInResponse.assets":
+	case "provlabs.vault.v1.QueryEstimateSwapInResponse.assets":
 		if x.Assets == nil {
 			x.Assets = new(v1beta11.Coin)
 		}
 		return protoreflect.ValueOfMessage(x.Assets.ProtoReflect())
-	case "vault.v1.QueryEstimateSwapInResponse.time":
+	case "provlabs.vault.v1.QueryEstimateSwapInResponse.time":
 		if x.Time == nil {
 			x.Time = new(timestamppb.Timestamp)
 		}
 		return protoreflect.ValueOfMessage(x.Time.ProtoReflect())
-	case "vault.v1.QueryEstimateSwapInResponse.height":
-		panic(fmt.Errorf("field height of message vault.v1.QueryEstimateSwapInResponse is not mutable"))
+	case "provlabs.vault.v1.QueryEstimateSwapInResponse.height":
+		panic(fmt.Errorf("field height of message provlabs.vault.v1.QueryEstimateSwapInResponse is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryEstimateSwapInResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryEstimateSwapInResponse"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryEstimateSwapInResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryEstimateSwapInResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -4344,19 +4344,19 @@ func (x *fastReflection_QueryEstimateSwapInResponse) Mutable(fd protoreflect.Fie
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_QueryEstimateSwapInResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.QueryEstimateSwapInResponse.assets":
+	case "provlabs.vault.v1.QueryEstimateSwapInResponse.assets":
 		m := new(v1beta11.Coin)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "vault.v1.QueryEstimateSwapInResponse.height":
+	case "provlabs.vault.v1.QueryEstimateSwapInResponse.height":
 		return protoreflect.ValueOfInt64(int64(0))
-	case "vault.v1.QueryEstimateSwapInResponse.time":
+	case "provlabs.vault.v1.QueryEstimateSwapInResponse.time":
 		m := new(timestamppb.Timestamp)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryEstimateSwapInResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryEstimateSwapInResponse"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryEstimateSwapInResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryEstimateSwapInResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -4366,7 +4366,7 @@ func (x *fastReflection_QueryEstimateSwapInResponse) NewField(fd protoreflect.Fi
 func (x *fastReflection_QueryEstimateSwapInResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.QueryEstimateSwapInResponse", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.QueryEstimateSwapInResponse", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -4677,8 +4677,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_query_proto_init()
-	md_QueryEstimateSwapOutRequest = File_vault_v1_query_proto.Messages().ByName("QueryEstimateSwapOutRequest")
+	file_provlabs_vault_v1_query_proto_init()
+	md_QueryEstimateSwapOutRequest = File_provlabs_vault_v1_query_proto.Messages().ByName("QueryEstimateSwapOutRequest")
 	fd_QueryEstimateSwapOutRequest_vault_address = md_QueryEstimateSwapOutRequest.Fields().ByName("vault_address")
 	fd_QueryEstimateSwapOutRequest_shares = md_QueryEstimateSwapOutRequest.Fields().ByName("shares")
 	fd_QueryEstimateSwapOutRequest_redeem_denom = md_QueryEstimateSwapOutRequest.Fields().ByName("redeem_denom")
@@ -4693,7 +4693,7 @@ func (x *QueryEstimateSwapOutRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryEstimateSwapOutRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_query_proto_msgTypes[9]
+	mi := &file_provlabs_vault_v1_query_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4782,17 +4782,17 @@ func (x *fastReflection_QueryEstimateSwapOutRequest) Range(f func(protoreflect.F
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_QueryEstimateSwapOutRequest) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.QueryEstimateSwapOutRequest.vault_address":
+	case "provlabs.vault.v1.QueryEstimateSwapOutRequest.vault_address":
 		return x.VaultAddress != ""
-	case "vault.v1.QueryEstimateSwapOutRequest.shares":
+	case "provlabs.vault.v1.QueryEstimateSwapOutRequest.shares":
 		return x.Shares != ""
-	case "vault.v1.QueryEstimateSwapOutRequest.redeem_denom":
+	case "provlabs.vault.v1.QueryEstimateSwapOutRequest.redeem_denom":
 		return x.RedeemDenom != ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryEstimateSwapOutRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryEstimateSwapOutRequest"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryEstimateSwapOutRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryEstimateSwapOutRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -4804,17 +4804,17 @@ func (x *fastReflection_QueryEstimateSwapOutRequest) Has(fd protoreflect.FieldDe
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryEstimateSwapOutRequest) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.QueryEstimateSwapOutRequest.vault_address":
+	case "provlabs.vault.v1.QueryEstimateSwapOutRequest.vault_address":
 		x.VaultAddress = ""
-	case "vault.v1.QueryEstimateSwapOutRequest.shares":
+	case "provlabs.vault.v1.QueryEstimateSwapOutRequest.shares":
 		x.Shares = ""
-	case "vault.v1.QueryEstimateSwapOutRequest.redeem_denom":
+	case "provlabs.vault.v1.QueryEstimateSwapOutRequest.redeem_denom":
 		x.RedeemDenom = ""
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryEstimateSwapOutRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryEstimateSwapOutRequest"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryEstimateSwapOutRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryEstimateSwapOutRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -4826,20 +4826,20 @@ func (x *fastReflection_QueryEstimateSwapOutRequest) Clear(fd protoreflect.Field
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_QueryEstimateSwapOutRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.QueryEstimateSwapOutRequest.vault_address":
+	case "provlabs.vault.v1.QueryEstimateSwapOutRequest.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.QueryEstimateSwapOutRequest.shares":
+	case "provlabs.vault.v1.QueryEstimateSwapOutRequest.shares":
 		value := x.Shares
 		return protoreflect.ValueOfString(value)
-	case "vault.v1.QueryEstimateSwapOutRequest.redeem_denom":
+	case "provlabs.vault.v1.QueryEstimateSwapOutRequest.redeem_denom":
 		value := x.RedeemDenom
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryEstimateSwapOutRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryEstimateSwapOutRequest"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryEstimateSwapOutRequest does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryEstimateSwapOutRequest does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -4855,17 +4855,17 @@ func (x *fastReflection_QueryEstimateSwapOutRequest) Get(descriptor protoreflect
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryEstimateSwapOutRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.QueryEstimateSwapOutRequest.vault_address":
+	case "provlabs.vault.v1.QueryEstimateSwapOutRequest.vault_address":
 		x.VaultAddress = value.Interface().(string)
-	case "vault.v1.QueryEstimateSwapOutRequest.shares":
+	case "provlabs.vault.v1.QueryEstimateSwapOutRequest.shares":
 		x.Shares = value.Interface().(string)
-	case "vault.v1.QueryEstimateSwapOutRequest.redeem_denom":
+	case "provlabs.vault.v1.QueryEstimateSwapOutRequest.redeem_denom":
 		x.RedeemDenom = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryEstimateSwapOutRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryEstimateSwapOutRequest"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryEstimateSwapOutRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryEstimateSwapOutRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -4881,17 +4881,17 @@ func (x *fastReflection_QueryEstimateSwapOutRequest) Set(fd protoreflect.FieldDe
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryEstimateSwapOutRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.QueryEstimateSwapOutRequest.vault_address":
-		panic(fmt.Errorf("field vault_address of message vault.v1.QueryEstimateSwapOutRequest is not mutable"))
-	case "vault.v1.QueryEstimateSwapOutRequest.shares":
-		panic(fmt.Errorf("field shares of message vault.v1.QueryEstimateSwapOutRequest is not mutable"))
-	case "vault.v1.QueryEstimateSwapOutRequest.redeem_denom":
-		panic(fmt.Errorf("field redeem_denom of message vault.v1.QueryEstimateSwapOutRequest is not mutable"))
+	case "provlabs.vault.v1.QueryEstimateSwapOutRequest.vault_address":
+		panic(fmt.Errorf("field vault_address of message provlabs.vault.v1.QueryEstimateSwapOutRequest is not mutable"))
+	case "provlabs.vault.v1.QueryEstimateSwapOutRequest.shares":
+		panic(fmt.Errorf("field shares of message provlabs.vault.v1.QueryEstimateSwapOutRequest is not mutable"))
+	case "provlabs.vault.v1.QueryEstimateSwapOutRequest.redeem_denom":
+		panic(fmt.Errorf("field redeem_denom of message provlabs.vault.v1.QueryEstimateSwapOutRequest is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryEstimateSwapOutRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryEstimateSwapOutRequest"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryEstimateSwapOutRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryEstimateSwapOutRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -4900,17 +4900,17 @@ func (x *fastReflection_QueryEstimateSwapOutRequest) Mutable(fd protoreflect.Fie
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_QueryEstimateSwapOutRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.QueryEstimateSwapOutRequest.vault_address":
+	case "provlabs.vault.v1.QueryEstimateSwapOutRequest.vault_address":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.QueryEstimateSwapOutRequest.shares":
+	case "provlabs.vault.v1.QueryEstimateSwapOutRequest.shares":
 		return protoreflect.ValueOfString("")
-	case "vault.v1.QueryEstimateSwapOutRequest.redeem_denom":
+	case "provlabs.vault.v1.QueryEstimateSwapOutRequest.redeem_denom":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryEstimateSwapOutRequest"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryEstimateSwapOutRequest"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryEstimateSwapOutRequest does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryEstimateSwapOutRequest does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -4920,7 +4920,7 @@ func (x *fastReflection_QueryEstimateSwapOutRequest) NewField(fd protoreflect.Fi
 func (x *fastReflection_QueryEstimateSwapOutRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.QueryEstimateSwapOutRequest", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.QueryEstimateSwapOutRequest", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -5225,8 +5225,8 @@ var (
 )
 
 func init() {
-	file_vault_v1_query_proto_init()
-	md_QueryEstimateSwapOutResponse = File_vault_v1_query_proto.Messages().ByName("QueryEstimateSwapOutResponse")
+	file_provlabs_vault_v1_query_proto_init()
+	md_QueryEstimateSwapOutResponse = File_provlabs_vault_v1_query_proto.Messages().ByName("QueryEstimateSwapOutResponse")
 	fd_QueryEstimateSwapOutResponse_assets = md_QueryEstimateSwapOutResponse.Fields().ByName("assets")
 	fd_QueryEstimateSwapOutResponse_height = md_QueryEstimateSwapOutResponse.Fields().ByName("height")
 	fd_QueryEstimateSwapOutResponse_time = md_QueryEstimateSwapOutResponse.Fields().ByName("time")
@@ -5241,7 +5241,7 @@ func (x *QueryEstimateSwapOutResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *QueryEstimateSwapOutResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_vault_v1_query_proto_msgTypes[10]
+	mi := &file_provlabs_vault_v1_query_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5330,17 +5330,17 @@ func (x *fastReflection_QueryEstimateSwapOutResponse) Range(f func(protoreflect.
 // a repeated field is populated if it is non-empty.
 func (x *fastReflection_QueryEstimateSwapOutResponse) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "vault.v1.QueryEstimateSwapOutResponse.assets":
+	case "provlabs.vault.v1.QueryEstimateSwapOutResponse.assets":
 		return x.Assets != nil
-	case "vault.v1.QueryEstimateSwapOutResponse.height":
+	case "provlabs.vault.v1.QueryEstimateSwapOutResponse.height":
 		return x.Height != int64(0)
-	case "vault.v1.QueryEstimateSwapOutResponse.time":
+	case "provlabs.vault.v1.QueryEstimateSwapOutResponse.time":
 		return x.Time != nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryEstimateSwapOutResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryEstimateSwapOutResponse"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryEstimateSwapOutResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryEstimateSwapOutResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -5352,17 +5352,17 @@ func (x *fastReflection_QueryEstimateSwapOutResponse) Has(fd protoreflect.FieldD
 // Clear is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryEstimateSwapOutResponse) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "vault.v1.QueryEstimateSwapOutResponse.assets":
+	case "provlabs.vault.v1.QueryEstimateSwapOutResponse.assets":
 		x.Assets = nil
-	case "vault.v1.QueryEstimateSwapOutResponse.height":
+	case "provlabs.vault.v1.QueryEstimateSwapOutResponse.height":
 		x.Height = int64(0)
-	case "vault.v1.QueryEstimateSwapOutResponse.time":
+	case "provlabs.vault.v1.QueryEstimateSwapOutResponse.time":
 		x.Time = nil
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryEstimateSwapOutResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryEstimateSwapOutResponse"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryEstimateSwapOutResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryEstimateSwapOutResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -5374,20 +5374,20 @@ func (x *fastReflection_QueryEstimateSwapOutResponse) Clear(fd protoreflect.Fiel
 // of the value; to obtain a mutable reference, use Mutable.
 func (x *fastReflection_QueryEstimateSwapOutResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "vault.v1.QueryEstimateSwapOutResponse.assets":
+	case "provlabs.vault.v1.QueryEstimateSwapOutResponse.assets":
 		value := x.Assets
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "vault.v1.QueryEstimateSwapOutResponse.height":
+	case "provlabs.vault.v1.QueryEstimateSwapOutResponse.height":
 		value := x.Height
 		return protoreflect.ValueOfInt64(value)
-	case "vault.v1.QueryEstimateSwapOutResponse.time":
+	case "provlabs.vault.v1.QueryEstimateSwapOutResponse.time":
 		value := x.Time
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryEstimateSwapOutResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryEstimateSwapOutResponse"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryEstimateSwapOutResponse does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryEstimateSwapOutResponse does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -5403,17 +5403,17 @@ func (x *fastReflection_QueryEstimateSwapOutResponse) Get(descriptor protoreflec
 // Set is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryEstimateSwapOutResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "vault.v1.QueryEstimateSwapOutResponse.assets":
+	case "provlabs.vault.v1.QueryEstimateSwapOutResponse.assets":
 		x.Assets = value.Message().Interface().(*v1beta11.Coin)
-	case "vault.v1.QueryEstimateSwapOutResponse.height":
+	case "provlabs.vault.v1.QueryEstimateSwapOutResponse.height":
 		x.Height = value.Int()
-	case "vault.v1.QueryEstimateSwapOutResponse.time":
+	case "provlabs.vault.v1.QueryEstimateSwapOutResponse.time":
 		x.Time = value.Message().Interface().(*timestamppb.Timestamp)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryEstimateSwapOutResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryEstimateSwapOutResponse"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryEstimateSwapOutResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryEstimateSwapOutResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -5429,23 +5429,23 @@ func (x *fastReflection_QueryEstimateSwapOutResponse) Set(fd protoreflect.FieldD
 // Mutable is a mutating operation and unsafe for concurrent use.
 func (x *fastReflection_QueryEstimateSwapOutResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.QueryEstimateSwapOutResponse.assets":
+	case "provlabs.vault.v1.QueryEstimateSwapOutResponse.assets":
 		if x.Assets == nil {
 			x.Assets = new(v1beta11.Coin)
 		}
 		return protoreflect.ValueOfMessage(x.Assets.ProtoReflect())
-	case "vault.v1.QueryEstimateSwapOutResponse.time":
+	case "provlabs.vault.v1.QueryEstimateSwapOutResponse.time":
 		if x.Time == nil {
 			x.Time = new(timestamppb.Timestamp)
 		}
 		return protoreflect.ValueOfMessage(x.Time.ProtoReflect())
-	case "vault.v1.QueryEstimateSwapOutResponse.height":
-		panic(fmt.Errorf("field height of message vault.v1.QueryEstimateSwapOutResponse is not mutable"))
+	case "provlabs.vault.v1.QueryEstimateSwapOutResponse.height":
+		panic(fmt.Errorf("field height of message provlabs.vault.v1.QueryEstimateSwapOutResponse is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryEstimateSwapOutResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryEstimateSwapOutResponse"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryEstimateSwapOutResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryEstimateSwapOutResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -5454,19 +5454,19 @@ func (x *fastReflection_QueryEstimateSwapOutResponse) Mutable(fd protoreflect.Fi
 // For lists, maps, and messages, this returns a new, empty, mutable value.
 func (x *fastReflection_QueryEstimateSwapOutResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "vault.v1.QueryEstimateSwapOutResponse.assets":
+	case "provlabs.vault.v1.QueryEstimateSwapOutResponse.assets":
 		m := new(v1beta11.Coin)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "vault.v1.QueryEstimateSwapOutResponse.height":
+	case "provlabs.vault.v1.QueryEstimateSwapOutResponse.height":
 		return protoreflect.ValueOfInt64(int64(0))
-	case "vault.v1.QueryEstimateSwapOutResponse.time":
+	case "provlabs.vault.v1.QueryEstimateSwapOutResponse.time":
 		m := new(timestamppb.Timestamp)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: vault.v1.QueryEstimateSwapOutResponse"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.QueryEstimateSwapOutResponse"))
 		}
-		panic(fmt.Errorf("message vault.v1.QueryEstimateSwapOutResponse does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.QueryEstimateSwapOutResponse does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -5476,7 +5476,7 @@ func (x *fastReflection_QueryEstimateSwapOutResponse) NewField(fd protoreflect.F
 func (x *fastReflection_QueryEstimateSwapOutResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in vault.v1.QueryEstimateSwapOutResponse", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.QueryEstimateSwapOutResponse", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -5783,7 +5783,7 @@ func (x *fastReflection_QueryEstimateSwapOutResponse) ProtoMethods() *protoiface
 // versions:
 // 	protoc-gen-go v1.27.0
 // 	protoc        (unknown)
-// source: vault/v1/query.proto
+// source: provlabs/vault/v1/query.proto
 
 const (
 	// Verify that this generated code is sufficiently up-to-date.
@@ -5805,7 +5805,7 @@ type QueryPendingSwapOutsRequest struct {
 func (x *QueryPendingSwapOutsRequest) Reset() {
 	*x = QueryPendingSwapOutsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_query_proto_msgTypes[0]
+		mi := &file_provlabs_vault_v1_query_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5819,7 +5819,7 @@ func (*QueryPendingSwapOutsRequest) ProtoMessage() {}
 
 // Deprecated: Use QueryPendingSwapOutsRequest.ProtoReflect.Descriptor instead.
 func (*QueryPendingSwapOutsRequest) Descriptor() ([]byte, []int) {
-	return file_vault_v1_query_proto_rawDescGZIP(), []int{0}
+	return file_provlabs_vault_v1_query_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *QueryPendingSwapOutsRequest) GetPagination() *v1beta1.PageRequest {
@@ -5844,7 +5844,7 @@ type QueryPendingSwapOutsResponse struct {
 func (x *QueryPendingSwapOutsResponse) Reset() {
 	*x = QueryPendingSwapOutsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_query_proto_msgTypes[1]
+		mi := &file_provlabs_vault_v1_query_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5858,7 +5858,7 @@ func (*QueryPendingSwapOutsResponse) ProtoMessage() {}
 
 // Deprecated: Use QueryPendingSwapOutsResponse.ProtoReflect.Descriptor instead.
 func (*QueryPendingSwapOutsResponse) Descriptor() ([]byte, []int) {
-	return file_vault_v1_query_proto_rawDescGZIP(), []int{1}
+	return file_provlabs_vault_v1_query_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *QueryPendingSwapOutsResponse) GetPendingSwapOuts() []*PendingSwapOutWithTimeout {
@@ -5892,7 +5892,7 @@ type PendingSwapOutWithTimeout struct {
 func (x *PendingSwapOutWithTimeout) Reset() {
 	*x = PendingSwapOutWithTimeout{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_query_proto_msgTypes[2]
+		mi := &file_provlabs_vault_v1_query_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5906,7 +5906,7 @@ func (*PendingSwapOutWithTimeout) ProtoMessage() {}
 
 // Deprecated: Use PendingSwapOutWithTimeout.ProtoReflect.Descriptor instead.
 func (*PendingSwapOutWithTimeout) Descriptor() ([]byte, []int) {
-	return file_vault_v1_query_proto_rawDescGZIP(), []int{2}
+	return file_provlabs_vault_v1_query_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *PendingSwapOutWithTimeout) GetRequestId() uint64 {
@@ -5943,7 +5943,7 @@ type QueryVaultsRequest struct {
 func (x *QueryVaultsRequest) Reset() {
 	*x = QueryVaultsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_query_proto_msgTypes[3]
+		mi := &file_provlabs_vault_v1_query_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5957,7 +5957,7 @@ func (*QueryVaultsRequest) ProtoMessage() {}
 
 // Deprecated: Use QueryVaultsRequest.ProtoReflect.Descriptor instead.
 func (*QueryVaultsRequest) Descriptor() ([]byte, []int) {
-	return file_vault_v1_query_proto_rawDescGZIP(), []int{3}
+	return file_provlabs_vault_v1_query_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *QueryVaultsRequest) GetPagination() *v1beta1.PageRequest {
@@ -5982,7 +5982,7 @@ type QueryVaultsResponse struct {
 func (x *QueryVaultsResponse) Reset() {
 	*x = QueryVaultsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_query_proto_msgTypes[4]
+		mi := &file_provlabs_vault_v1_query_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5996,7 +5996,7 @@ func (*QueryVaultsResponse) ProtoMessage() {}
 
 // Deprecated: Use QueryVaultsResponse.ProtoReflect.Descriptor instead.
 func (*QueryVaultsResponse) Descriptor() ([]byte, []int) {
-	return file_vault_v1_query_proto_rawDescGZIP(), []int{4}
+	return file_provlabs_vault_v1_query_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *QueryVaultsResponse) GetVaults() []*VaultAccount {
@@ -6026,7 +6026,7 @@ type QueryVaultRequest struct {
 func (x *QueryVaultRequest) Reset() {
 	*x = QueryVaultRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_query_proto_msgTypes[5]
+		mi := &file_provlabs_vault_v1_query_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6040,7 +6040,7 @@ func (*QueryVaultRequest) ProtoMessage() {}
 
 // Deprecated: Use QueryVaultRequest.ProtoReflect.Descriptor instead.
 func (*QueryVaultRequest) Descriptor() ([]byte, []int) {
-	return file_vault_v1_query_proto_rawDescGZIP(), []int{5}
+	return file_provlabs_vault_v1_query_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *QueryVaultRequest) GetId() string {
@@ -6067,7 +6067,7 @@ type QueryVaultResponse struct {
 func (x *QueryVaultResponse) Reset() {
 	*x = QueryVaultResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_query_proto_msgTypes[6]
+		mi := &file_provlabs_vault_v1_query_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6081,7 +6081,7 @@ func (*QueryVaultResponse) ProtoMessage() {}
 
 // Deprecated: Use QueryVaultResponse.ProtoReflect.Descriptor instead.
 func (*QueryVaultResponse) Descriptor() ([]byte, []int) {
-	return file_vault_v1_query_proto_rawDescGZIP(), []int{6}
+	return file_provlabs_vault_v1_query_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *QueryVaultResponse) GetVault() *VaultAccount {
@@ -6120,7 +6120,7 @@ type QueryEstimateSwapInRequest struct {
 func (x *QueryEstimateSwapInRequest) Reset() {
 	*x = QueryEstimateSwapInRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_query_proto_msgTypes[7]
+		mi := &file_provlabs_vault_v1_query_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6134,7 +6134,7 @@ func (*QueryEstimateSwapInRequest) ProtoMessage() {}
 
 // Deprecated: Use QueryEstimateSwapInRequest.ProtoReflect.Descriptor instead.
 func (*QueryEstimateSwapInRequest) Descriptor() ([]byte, []int) {
-	return file_vault_v1_query_proto_rawDescGZIP(), []int{7}
+	return file_provlabs_vault_v1_query_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *QueryEstimateSwapInRequest) GetVaultAddress() string {
@@ -6168,7 +6168,7 @@ type QueryEstimateSwapInResponse struct {
 func (x *QueryEstimateSwapInResponse) Reset() {
 	*x = QueryEstimateSwapInResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_query_proto_msgTypes[8]
+		mi := &file_provlabs_vault_v1_query_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6182,7 +6182,7 @@ func (*QueryEstimateSwapInResponse) ProtoMessage() {}
 
 // Deprecated: Use QueryEstimateSwapInResponse.ProtoReflect.Descriptor instead.
 func (*QueryEstimateSwapInResponse) Descriptor() ([]byte, []int) {
-	return file_vault_v1_query_proto_rawDescGZIP(), []int{8}
+	return file_provlabs_vault_v1_query_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *QueryEstimateSwapInResponse) GetAssets() *v1beta11.Coin {
@@ -6223,7 +6223,7 @@ type QueryEstimateSwapOutRequest struct {
 func (x *QueryEstimateSwapOutRequest) Reset() {
 	*x = QueryEstimateSwapOutRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_query_proto_msgTypes[9]
+		mi := &file_provlabs_vault_v1_query_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6237,7 +6237,7 @@ func (*QueryEstimateSwapOutRequest) ProtoMessage() {}
 
 // Deprecated: Use QueryEstimateSwapOutRequest.ProtoReflect.Descriptor instead.
 func (*QueryEstimateSwapOutRequest) Descriptor() ([]byte, []int) {
-	return file_vault_v1_query_proto_rawDescGZIP(), []int{9}
+	return file_provlabs_vault_v1_query_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *QueryEstimateSwapOutRequest) GetVaultAddress() string {
@@ -6278,7 +6278,7 @@ type QueryEstimateSwapOutResponse struct {
 func (x *QueryEstimateSwapOutResponse) Reset() {
 	*x = QueryEstimateSwapOutResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_vault_v1_query_proto_msgTypes[10]
+		mi := &file_provlabs_vault_v1_query_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6292,7 +6292,7 @@ func (*QueryEstimateSwapOutResponse) ProtoMessage() {}
 
 // Deprecated: Use QueryEstimateSwapOutResponse.ProtoReflect.Descriptor instead.
 func (*QueryEstimateSwapOutResponse) Descriptor() ([]byte, []int) {
-	return file_vault_v1_query_proto_rawDescGZIP(), []int{10}
+	return file_provlabs_vault_v1_query_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *QueryEstimateSwapOutResponse) GetAssets() *v1beta11.Coin {
@@ -6316,235 +6316,249 @@ func (x *QueryEstimateSwapOutResponse) GetTime() *timestamppb.Timestamp {
 	return nil
 }
 
-var File_vault_v1_query_proto protoreflect.FileDescriptor
+var File_provlabs_vault_v1_query_proto protoreflect.FileDescriptor
 
-var file_vault_v1_query_proto_rawDesc = []byte{
-	0x0a, 0x14, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x2f, 0x71, 0x75, 0x65, 0x72, 0x79,
-	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x08, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31,
-	0x1a, 0x2a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x73, 0x65, 0x2f, 0x71, 0x75,
-	0x65, 0x72, 0x79, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x70, 0x61, 0x67, 0x69,
-	0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1e, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x73, 0x65, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
-	0x31, 0x2f, 0x63, 0x6f, 0x69, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x14, 0x67, 0x6f,
-	0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f,
-	0x74, 0x6f, 0x1a, 0x1c, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x61,
-	0x6e, 0x6e, 0x6f, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x1a, 0x1f, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75,
-	0x66, 0x2f, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x2e, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x1a, 0x14, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x2f, 0x76, 0x61, 0x75, 0x6c,
-	0x74, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x65, 0x0a, 0x1b, 0x51, 0x75, 0x65, 0x72, 0x79,
-	0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x73, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x46, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61,
-	0x74, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76,
-	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0xbe,
-	0x01, 0x0a, 0x1c, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53,
-	0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
-	0x55, 0x0a, 0x11, 0x70, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x5f, 0x73, 0x77, 0x61, 0x70, 0x5f,
-	0x6f, 0x75, 0x74, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x23, 0x2e, 0x76, 0x61, 0x75,
-	0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61,
-	0x70, 0x4f, 0x75, 0x74, 0x57, 0x69, 0x74, 0x68, 0x54, 0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x42,
-	0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x0f, 0x70, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77,
-	0x61, 0x70, 0x4f, 0x75, 0x74, 0x73, 0x12, 0x47, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61,
-	0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x27, 0x2e, 0x63, 0x6f, 0x73,
-	0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76,
-	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22,
-	0xc4, 0x01, 0x0a, 0x19, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f,
-	0x75, 0x74, 0x57, 0x69, 0x74, 0x68, 0x54, 0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x12, 0x1d, 0x0a,
-	0x0a, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x04, 0x52, 0x09, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x49, 0x64, 0x12, 0x48, 0x0a, 0x10,
-	0x70, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x5f, 0x73, 0x77, 0x61, 0x70, 0x5f, 0x6f, 0x75, 0x74,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76,
-	0x31, 0x2e, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74,
-	0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x0e, 0x70, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53,
-	0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x12, 0x3e, 0x0a, 0x07, 0x74, 0x69, 0x6d, 0x65, 0x6f, 0x75,
-	0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65,
-	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74,
-	0x61, 0x6d, 0x70, 0x42, 0x08, 0xc8, 0xde, 0x1f, 0x00, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x07, 0x74,
-	0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x22, 0x5c, 0x0a, 0x12, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56,
-	0x61, 0x75, 0x6c, 0x74, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x46, 0x0a, 0x0a,
-	0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b,
-	0x32, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71,
-	0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67,
-	0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61,
-	0x74, 0x69, 0x6f, 0x6e, 0x22, 0x94, 0x01, 0x0a, 0x13, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x61,
-	0x75, 0x6c, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x34, 0x0a, 0x06,
-	0x76, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x16, 0x2e, 0x76,
-	0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x63, 0x63,
-	0x6f, 0x75, 0x6e, 0x74, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x76, 0x61, 0x75, 0x6c,
-	0x74, 0x73, 0x12, 0x47, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e,
-	0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x27, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
-	0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
-	0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52,
-	0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x23, 0x0a, 0x11, 0x51,
-	0x75, 0x65, 0x72, 0x79, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64,
-	0x22, 0xc2, 0x01, 0x0a, 0x12, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x32, 0x0a, 0x05, 0x76, 0x61, 0x75, 0x6c, 0x74,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x16, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76,
-	0x31, 0x2e, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x42, 0x04,
-	0xc8, 0xde, 0x1f, 0x00, 0x52, 0x05, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x12, 0x3c, 0x0a, 0x09, 0x70,
-	0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x18,
-	0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e,
-	0x74, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x09,
-	0x70, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x12, 0x3a, 0x0a, 0x08, 0x72, 0x65, 0x73,
-	0x65, 0x72, 0x76, 0x65, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x76, 0x61,
-	0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x42, 0x61,
-	0x6c, 0x61, 0x6e, 0x63, 0x65, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x08, 0x72, 0x65, 0x73,
-	0x65, 0x72, 0x76, 0x65, 0x73, 0x22, 0x7a, 0x0a, 0x1a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x45, 0x73,
-	0x74, 0x69, 0x6d, 0x61, 0x74, 0x65, 0x53, 0x77, 0x61, 0x70, 0x49, 0x6e, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64,
-	0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c,
-	0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x37, 0x0a, 0x06, 0x61, 0x73, 0x73, 0x65,
-	0x74, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43,
-	0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x61, 0x73, 0x73, 0x65, 0x74,
-	0x73, 0x22, 0xa8, 0x01, 0x0a, 0x1b, 0x51, 0x75, 0x65, 0x72, 0x79, 0x45, 0x73, 0x74, 0x69, 0x6d,
-	0x61, 0x74, 0x65, 0x53, 0x77, 0x61, 0x70, 0x49, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x12, 0x37, 0x0a, 0x06, 0x61, 0x73, 0x73, 0x65, 0x74, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e,
-	0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde,
-	0x1f, 0x00, 0x52, 0x06, 0x61, 0x73, 0x73, 0x65, 0x74, 0x73, 0x12, 0x16, 0x0a, 0x06, 0x68, 0x65,
-	0x69, 0x67, 0x68, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x68, 0x65, 0x69, 0x67,
-	0x68, 0x74, 0x12, 0x38, 0x0a, 0x04, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b,
-	0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62,
-	0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x08, 0xc8, 0xde,
-	0x1f, 0x00, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x04, 0x74, 0x69, 0x6d, 0x65, 0x22, 0x9c, 0x01, 0x0a,
-	0x1b, 0x51, 0x75, 0x65, 0x72, 0x79, 0x45, 0x73, 0x74, 0x69, 0x6d, 0x61, 0x74, 0x65, 0x53, 0x77,
-	0x61, 0x70, 0x4f, 0x75, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x23, 0x0a, 0x0d,
-	0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
-	0x73, 0x12, 0x35, 0x0a, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28,
-	0x09, 0x42, 0x1d, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
-	0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e, 0x74,
-	0x52, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x12, 0x21, 0x0a, 0x0c, 0x72, 0x65, 0x64, 0x65,
-	0x65, 0x6d, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b,
-	0x72, 0x65, 0x64, 0x65, 0x65, 0x6d, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x22, 0xa9, 0x01, 0x0a, 0x1c,
+var file_provlabs_vault_v1_query_proto_rawDesc = []byte{
+	0x0a, 0x1d, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74,
+	0x2f, 0x76, 0x31, 0x2f, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12,
+	0x11, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e,
+	0x76, 0x31, 0x1a, 0x2a, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x73, 0x65, 0x2f,
+	0x71, 0x75, 0x65, 0x72, 0x79, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x70, 0x61,
+	0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1e,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x62, 0x61, 0x73, 0x65, 0x2f, 0x76, 0x31, 0x62, 0x65,
+	0x74, 0x61, 0x31, 0x2f, 0x63, 0x6f, 0x69, 0x6e, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x14,
+	0x67, 0x6f, 0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1c, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x61, 0x70, 0x69,
+	0x2f, 0x61, 0x6e, 0x6e, 0x6f, 0x74, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x2e, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x1a, 0x1f, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x62, 0x75, 0x66, 0x2f, 0x74, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x1a, 0x1d, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61,
+	0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x22, 0x65, 0x0a, 0x1b, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x65, 0x6e, 0x64, 0x69,
+	0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x12, 0x46, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62,
+	0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61,
+	0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x52, 0x0a, 0x70,
+	0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0xc7, 0x01, 0x0a, 0x1c, 0x51, 0x75,
+	0x65, 0x72, 0x79, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75,
+	0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x5e, 0x0a, 0x11, 0x70, 0x65,
+	0x6e, 0x64, 0x69, 0x6e, 0x67, 0x5f, 0x73, 0x77, 0x61, 0x70, 0x5f, 0x6f, 0x75, 0x74, 0x73, 0x18,
+	0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x2c, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73,
+	0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e,
+	0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x57, 0x69, 0x74, 0x68, 0x54, 0x69, 0x6d, 0x65,
+	0x6f, 0x75, 0x74, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x0f, 0x70, 0x65, 0x6e, 0x64, 0x69,
+	0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x73, 0x12, 0x47, 0x0a, 0x0a, 0x70, 0x61,
+	0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x27,
+	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65,
+	0x72, 0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74,
+	0x69, 0x6f, 0x6e, 0x22, 0xcd, 0x01, 0x0a, 0x19, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53,
+	0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x57, 0x69, 0x74, 0x68, 0x54, 0x69, 0x6d, 0x65, 0x6f, 0x75,
+	0x74, 0x12, 0x1d, 0x0a, 0x0a, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x5f, 0x69, 0x64, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x49, 0x64,
+	0x12, 0x51, 0x0a, 0x10, 0x70, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x5f, 0x73, 0x77, 0x61, 0x70,
+	0x5f, 0x6f, 0x75, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x70, 0x72, 0x6f,
+	0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x50,
+	0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x42, 0x04, 0xc8,
+	0xde, 0x1f, 0x00, 0x52, 0x0e, 0x70, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61, 0x70,
+	0x4f, 0x75, 0x74, 0x12, 0x3e, 0x0a, 0x07, 0x74, 0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x18, 0x03,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70,
+	0x42, 0x08, 0xc8, 0xde, 0x1f, 0x00, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x07, 0x74, 0x69, 0x6d, 0x65,
+	0x6f, 0x75, 0x74, 0x22, 0x5c, 0x0a, 0x12, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x61, 0x75, 0x6c,
+	0x74, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x46, 0x0a, 0x0a, 0x70, 0x61, 0x67,
+	0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x26, 0x2e,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72,
+	0x79, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f,
+	0x6e, 0x22, 0x9d, 0x01, 0x0a, 0x13, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x61, 0x75, 0x6c, 0x74,
+	0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3d, 0x0a, 0x06, 0x76, 0x61, 0x75,
+	0x6c, 0x74, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1f, 0x2e, 0x70, 0x72, 0x6f, 0x76,
+	0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x56, 0x61,
+	0x75, 0x6c, 0x74, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00,
+	0x52, 0x06, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x12, 0x47, 0x0a, 0x0a, 0x70, 0x61, 0x67, 0x69,
+	0x6e, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x27, 0x2e, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x71, 0x75, 0x65, 0x72, 0x79,
+	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x50, 0x61, 0x67, 0x65, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x52, 0x0a, 0x70, 0x61, 0x67, 0x69, 0x6e, 0x61, 0x74, 0x69, 0x6f,
+	0x6e, 0x22, 0x23, 0x0a, 0x11, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x22, 0xdd, 0x01, 0x0a, 0x12, 0x51, 0x75, 0x65, 0x72, 0x79,
+	0x56, 0x61, 0x75, 0x6c, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3b, 0x0a,
+	0x05, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1f, 0x2e, 0x70,
+	0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31,
+	0x2e, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x42, 0x04, 0xc8,
+	0xde, 0x1f, 0x00, 0x52, 0x05, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x12, 0x45, 0x0a, 0x09, 0x70, 0x72,
+	0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e,
+	0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76,
+	0x31, 0x2e, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x42, 0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65,
+	0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x09, 0x70, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61,
+	0x6c, 0x12, 0x43, 0x0a, 0x08, 0x72, 0x65, 0x73, 0x65, 0x72, 0x76, 0x65, 0x73, 0x18, 0x03, 0x20,
+	0x01, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76,
+	0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x42,
+	0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x08, 0x72, 0x65,
+	0x73, 0x65, 0x72, 0x76, 0x65, 0x73, 0x22, 0x7a, 0x0a, 0x1a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x45,
+	0x73, 0x74, 0x69, 0x6d, 0x61, 0x74, 0x65, 0x53, 0x77, 0x61, 0x70, 0x49, 0x6e, 0x52, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61, 0x75,
+	0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x37, 0x0a, 0x06, 0x61, 0x73, 0x73,
+	0x65, 0x74, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e,
+	0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x61, 0x73, 0x73, 0x65,
+	0x74, 0x73, 0x22, 0xa8, 0x01, 0x0a, 0x1b, 0x51, 0x75, 0x65, 0x72, 0x79, 0x45, 0x73, 0x74, 0x69,
+	0x6d, 0x61, 0x74, 0x65, 0x53, 0x77, 0x61, 0x70, 0x49, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x12, 0x37, 0x0a, 0x06, 0x61, 0x73, 0x73, 0x65, 0x74, 0x73, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65,
+	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8,
+	0xde, 0x1f, 0x00, 0x52, 0x06, 0x61, 0x73, 0x73, 0x65, 0x74, 0x73, 0x12, 0x16, 0x0a, 0x06, 0x68,
+	0x65, 0x69, 0x67, 0x68, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x68, 0x65, 0x69,
+	0x67, 0x68, 0x74, 0x12, 0x38, 0x0a, 0x04, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28,
+	0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x62, 0x75, 0x66, 0x2e, 0x54, 0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x08, 0xc8,
+	0xde, 0x1f, 0x00, 0x90, 0xdf, 0x1f, 0x01, 0x52, 0x04, 0x74, 0x69, 0x6d, 0x65, 0x22, 0x9c, 0x01,
+	0x0a, 0x1b, 0x51, 0x75, 0x65, 0x72, 0x79, 0x45, 0x73, 0x74, 0x69, 0x6d, 0x61, 0x74, 0x65, 0x53,
+	0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x23, 0x0a,
+	0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65,
+	0x73, 0x73, 0x12, 0x35, 0x0a, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x09, 0x42, 0x1d, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x15, 0x63, 0x6f, 0x73, 0x6d,
+	0x6f, 0x73, 0x73, 0x64, 0x6b, 0x2e, 0x69, 0x6f, 0x2f, 0x6d, 0x61, 0x74, 0x68, 0x2e, 0x49, 0x6e,
+	0x74, 0x52, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x12, 0x21, 0x0a, 0x0c, 0x72, 0x65, 0x64,
+	0x65, 0x65, 0x6d, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x0b, 0x72, 0x65, 0x64, 0x65, 0x65, 0x6d, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x22, 0xa9, 0x01, 0x0a,
+	0x1c, 0x51, 0x75, 0x65, 0x72, 0x79, 0x45, 0x73, 0x74, 0x69, 0x6d, 0x61, 0x74, 0x65, 0x53, 0x77,
+	0x61, 0x70, 0x4f, 0x75, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x37, 0x0a,
+	0x06, 0x61, 0x73, 0x73, 0x65, 0x74, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65,
+	0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06,
+	0x61, 0x73, 0x73, 0x65, 0x74, 0x73, 0x12, 0x16, 0x0a, 0x06, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74,
+	0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x12, 0x38,
+	0x0a, 0x04, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67,
+	0x6f, 0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54,
+	0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x08, 0xc8, 0xde, 0x1f, 0x00, 0x90, 0xdf,
+	0x1f, 0x01, 0x52, 0x04, 0x74, 0x69, 0x6d, 0x65, 0x32, 0xe7, 0x05, 0x0a, 0x05, 0x51, 0x75, 0x65,
+	0x72, 0x79, 0x12, 0x71, 0x0a, 0x06, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x12, 0x25, 0x2e, 0x70,
+	0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31,
+	0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x1a, 0x26, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76,
+	0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x61, 0x75,
+	0x6c, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x18, 0x82, 0xd3, 0xe4,
+	0x93, 0x02, 0x12, 0x12, 0x10, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x2f, 0x76,
+	0x61, 0x75, 0x6c, 0x74, 0x73, 0x12, 0x73, 0x0a, 0x05, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x12, 0x24,
+	0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e,
+	0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x52, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x1a, 0x25, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e,
+	0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x61,
+	0x75, 0x6c, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x1d, 0x82, 0xd3, 0xe4,
+	0x93, 0x02, 0x17, 0x12, 0x15, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x2f, 0x76,
+	0x61, 0x75, 0x6c, 0x74, 0x73, 0x2f, 0x7b, 0x69, 0x64, 0x7d, 0x12, 0xaa, 0x01, 0x0a, 0x0e, 0x45,
+	0x73, 0x74, 0x69, 0x6d, 0x61, 0x74, 0x65, 0x53, 0x77, 0x61, 0x70, 0x49, 0x6e, 0x12, 0x2d, 0x2e,
+	0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76,
+	0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x45, 0x73, 0x74, 0x69, 0x6d, 0x61, 0x74, 0x65, 0x53,
+	0x77, 0x61, 0x70, 0x49, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2e, 0x2e, 0x70,
+	0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31,
+	0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x45, 0x73, 0x74, 0x69, 0x6d, 0x61, 0x74, 0x65, 0x53, 0x77,
+	0x61, 0x70, 0x49, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x39, 0x82, 0xd3,
+	0xe4, 0x93, 0x02, 0x33, 0x12, 0x31, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x2f,
+	0x76, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x2f, 0x7b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x7d, 0x2f, 0x65, 0x73, 0x74, 0x69, 0x6d, 0x61, 0x74, 0x65, 0x5f,
+	0x73, 0x77, 0x61, 0x70, 0x5f, 0x69, 0x6e, 0x12, 0xae, 0x01, 0x0a, 0x0f, 0x45, 0x73, 0x74, 0x69,
+	0x6d, 0x61, 0x74, 0x65, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x12, 0x2e, 0x2e, 0x70, 0x72,
+	0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e,
 	0x51, 0x75, 0x65, 0x72, 0x79, 0x45, 0x73, 0x74, 0x69, 0x6d, 0x61, 0x74, 0x65, 0x53, 0x77, 0x61,
-	0x70, 0x4f, 0x75, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x37, 0x0a, 0x06,
-	0x61, 0x73, 0x73, 0x65, 0x74, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
-	0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x61,
-	0x73, 0x73, 0x65, 0x74, 0x73, 0x12, 0x16, 0x0a, 0x06, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x18,
-	0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x12, 0x38, 0x0a,
-	0x04, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x1a, 0x2e, 0x67, 0x6f,
-	0x6f, 0x67, 0x6c, 0x65, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x75, 0x66, 0x2e, 0x54, 0x69,
-	0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x42, 0x08, 0xc8, 0xde, 0x1f, 0x00, 0x90, 0xdf, 0x1f,
-	0x01, 0x52, 0x04, 0x74, 0x69, 0x6d, 0x65, 0x32, 0x8d, 0x05, 0x0a, 0x05, 0x51, 0x75, 0x65, 0x72,
-	0x79, 0x12, 0x5f, 0x0a, 0x06, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x12, 0x1c, 0x2e, 0x76, 0x61,
-	0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x61, 0x75, 0x6c,
-	0x74, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1d, 0x2e, 0x76, 0x61, 0x75, 0x6c,
-	0x74, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x73,
-	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x18, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x12,
-	0x12, 0x10, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x2f, 0x76, 0x61, 0x75, 0x6c,
-	0x74, 0x73, 0x12, 0x61, 0x0a, 0x05, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x12, 0x1b, 0x2e, 0x76, 0x61,
-	0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x61, 0x75, 0x6c,
-	0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1c, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74,
-	0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x1d, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x17, 0x12, 0x15,
-	0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x73,
-	0x2f, 0x7b, 0x69, 0x64, 0x7d, 0x12, 0x98, 0x01, 0x0a, 0x0e, 0x45, 0x73, 0x74, 0x69, 0x6d, 0x61,
-	0x74, 0x65, 0x53, 0x77, 0x61, 0x70, 0x49, 0x6e, 0x12, 0x24, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74,
-	0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x45, 0x73, 0x74, 0x69, 0x6d, 0x61, 0x74,
-	0x65, 0x53, 0x77, 0x61, 0x70, 0x49, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x25,
-	0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x45,
-	0x73, 0x74, 0x69, 0x6d, 0x61, 0x74, 0x65, 0x53, 0x77, 0x61, 0x70, 0x49, 0x6e, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x39, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x33, 0x12, 0x31, 0x2f,
-	0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x2f,
-	0x7b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x7d, 0x2f,
-	0x65, 0x73, 0x74, 0x69, 0x6d, 0x61, 0x74, 0x65, 0x5f, 0x73, 0x77, 0x61, 0x70, 0x5f, 0x69, 0x6e,
-	0x12, 0x9c, 0x01, 0x0a, 0x0f, 0x45, 0x73, 0x74, 0x69, 0x6d, 0x61, 0x74, 0x65, 0x53, 0x77, 0x61,
-	0x70, 0x4f, 0x75, 0x74, 0x12, 0x25, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e,
+	0x70, 0x4f, 0x75, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2f, 0x2e, 0x70, 0x72,
+	0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e,
 	0x51, 0x75, 0x65, 0x72, 0x79, 0x45, 0x73, 0x74, 0x69, 0x6d, 0x61, 0x74, 0x65, 0x53, 0x77, 0x61,
-	0x70, 0x4f, 0x75, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x26, 0x2e, 0x76, 0x61,
-	0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x45, 0x73, 0x74, 0x69,
-	0x6d, 0x61, 0x74, 0x65, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x22, 0x3a, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x34, 0x12, 0x32, 0x2f, 0x76, 0x61,
-	0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x2f, 0x7b, 0x76,
-	0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x7d, 0x2f, 0x65, 0x73,
-	0x74, 0x69, 0x6d, 0x61, 0x74, 0x65, 0x5f, 0x73, 0x77, 0x61, 0x70, 0x5f, 0x6f, 0x75, 0x74, 0x12,
-	0x85, 0x01, 0x0a, 0x0f, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f,
-	0x75, 0x74, 0x73, 0x12, 0x25, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x51,
-	0x75, 0x65, 0x72, 0x79, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f,
-	0x75, 0x74, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x26, 0x2e, 0x76, 0x61, 0x75,
-	0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x65, 0x6e, 0x64, 0x69,
-	0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x22, 0x23, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x1d, 0x12, 0x1b, 0x2f, 0x76, 0x61, 0x75,
-	0x6c, 0x74, 0x2f, 0x76, 0x31, 0x2f, 0x70, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x5f, 0x73, 0x77,
-	0x61, 0x70, 0x5f, 0x6f, 0x75, 0x74, 0x73, 0x42, 0x8b, 0x01, 0x0a, 0x0c, 0x63, 0x6f, 0x6d, 0x2e,
-	0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x42, 0x0a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50,
-	0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x2e, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63,
-	0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c,
-	0x74, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76,
-	0x61, 0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x56, 0x58, 0x58, 0xaa, 0x02, 0x08, 0x56,
-	0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c,
-	0x56, 0x31, 0xe2, 0x02, 0x14, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50,
-	0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x09, 0x56, 0x61, 0x75, 0x6c,
-	0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x70, 0x4f, 0x75, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x3a, 0x82, 0xd3,
+	0xe4, 0x93, 0x02, 0x34, 0x12, 0x32, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x2f,
+	0x76, 0x61, 0x75, 0x6c, 0x74, 0x73, 0x2f, 0x7b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x7d, 0x2f, 0x65, 0x73, 0x74, 0x69, 0x6d, 0x61, 0x74, 0x65, 0x5f,
+	0x73, 0x77, 0x61, 0x70, 0x5f, 0x6f, 0x75, 0x74, 0x12, 0x97, 0x01, 0x0a, 0x0f, 0x50, 0x65, 0x6e,
+	0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x73, 0x12, 0x2e, 0x2e, 0x70,
+	0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31,
+	0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61,
+	0x70, 0x4f, 0x75, 0x74, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2f, 0x2e, 0x70,
+	0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31,
+	0x2e, 0x51, 0x75, 0x65, 0x72, 0x79, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61,
+	0x70, 0x4f, 0x75, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x23, 0x82,
+	0xd3, 0xe4, 0x93, 0x02, 0x1d, 0x12, 0x1b, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31,
+	0x2f, 0x70, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x5f, 0x73, 0x77, 0x61, 0x70, 0x5f, 0x6f, 0x75,
+	0x74, 0x73, 0x42, 0xc2, 0x01, 0x0a, 0x15, 0x63, 0x6f, 0x6d, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c,
+	0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x42, 0x0a, 0x51, 0x75,
+	0x65, 0x72, 0x79, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x37, 0x67, 0x69, 0x74, 0x68,
+	0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f,
+	0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61,
+	0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c,
+	0x74, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x50, 0x56, 0x58, 0xaa, 0x02, 0x11, 0x50, 0x72, 0x6f, 0x76,
+	0x6c, 0x61, 0x62, 0x73, 0x2e, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x11,
+	0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x5c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56,
+	0x31, 0xe2, 0x02, 0x1d, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x5c, 0x56, 0x61, 0x75,
+	0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74,
+	0x61, 0xea, 0x02, 0x13, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x3a, 0x3a, 0x56, 0x61,
+	0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
-	file_vault_v1_query_proto_rawDescOnce sync.Once
-	file_vault_v1_query_proto_rawDescData = file_vault_v1_query_proto_rawDesc
+	file_provlabs_vault_v1_query_proto_rawDescOnce sync.Once
+	file_provlabs_vault_v1_query_proto_rawDescData = file_provlabs_vault_v1_query_proto_rawDesc
 )
 
-func file_vault_v1_query_proto_rawDescGZIP() []byte {
-	file_vault_v1_query_proto_rawDescOnce.Do(func() {
-		file_vault_v1_query_proto_rawDescData = protoimpl.X.CompressGZIP(file_vault_v1_query_proto_rawDescData)
+func file_provlabs_vault_v1_query_proto_rawDescGZIP() []byte {
+	file_provlabs_vault_v1_query_proto_rawDescOnce.Do(func() {
+		file_provlabs_vault_v1_query_proto_rawDescData = protoimpl.X.CompressGZIP(file_provlabs_vault_v1_query_proto_rawDescData)
 	})
-	return file_vault_v1_query_proto_rawDescData
+	return file_provlabs_vault_v1_query_proto_rawDescData
 }
 
-var file_vault_v1_query_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
-var file_vault_v1_query_proto_goTypes = []interface{}{
-	(*QueryPendingSwapOutsRequest)(nil),  // 0: vault.v1.QueryPendingSwapOutsRequest
-	(*QueryPendingSwapOutsResponse)(nil), // 1: vault.v1.QueryPendingSwapOutsResponse
-	(*PendingSwapOutWithTimeout)(nil),    // 2: vault.v1.PendingSwapOutWithTimeout
-	(*QueryVaultsRequest)(nil),           // 3: vault.v1.QueryVaultsRequest
-	(*QueryVaultsResponse)(nil),          // 4: vault.v1.QueryVaultsResponse
-	(*QueryVaultRequest)(nil),            // 5: vault.v1.QueryVaultRequest
-	(*QueryVaultResponse)(nil),           // 6: vault.v1.QueryVaultResponse
-	(*QueryEstimateSwapInRequest)(nil),   // 7: vault.v1.QueryEstimateSwapInRequest
-	(*QueryEstimateSwapInResponse)(nil),  // 8: vault.v1.QueryEstimateSwapInResponse
-	(*QueryEstimateSwapOutRequest)(nil),  // 9: vault.v1.QueryEstimateSwapOutRequest
-	(*QueryEstimateSwapOutResponse)(nil), // 10: vault.v1.QueryEstimateSwapOutResponse
+var file_provlabs_vault_v1_query_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_provlabs_vault_v1_query_proto_goTypes = []interface{}{
+	(*QueryPendingSwapOutsRequest)(nil),  // 0: provlabs.vault.v1.QueryPendingSwapOutsRequest
+	(*QueryPendingSwapOutsResponse)(nil), // 1: provlabs.vault.v1.QueryPendingSwapOutsResponse
+	(*PendingSwapOutWithTimeout)(nil),    // 2: provlabs.vault.v1.PendingSwapOutWithTimeout
+	(*QueryVaultsRequest)(nil),           // 3: provlabs.vault.v1.QueryVaultsRequest
+	(*QueryVaultsResponse)(nil),          // 4: provlabs.vault.v1.QueryVaultsResponse
+	(*QueryVaultRequest)(nil),            // 5: provlabs.vault.v1.QueryVaultRequest
+	(*QueryVaultResponse)(nil),           // 6: provlabs.vault.v1.QueryVaultResponse
+	(*QueryEstimateSwapInRequest)(nil),   // 7: provlabs.vault.v1.QueryEstimateSwapInRequest
+	(*QueryEstimateSwapInResponse)(nil),  // 8: provlabs.vault.v1.QueryEstimateSwapInResponse
+	(*QueryEstimateSwapOutRequest)(nil),  // 9: provlabs.vault.v1.QueryEstimateSwapOutRequest
+	(*QueryEstimateSwapOutResponse)(nil), // 10: provlabs.vault.v1.QueryEstimateSwapOutResponse
 	(*v1beta1.PageRequest)(nil),          // 11: cosmos.base.query.v1beta1.PageRequest
 	(*v1beta1.PageResponse)(nil),         // 12: cosmos.base.query.v1beta1.PageResponse
-	(*PendingSwapOut)(nil),               // 13: vault.v1.PendingSwapOut
+	(*PendingSwapOut)(nil),               // 13: provlabs.vault.v1.PendingSwapOut
 	(*timestamppb.Timestamp)(nil),        // 14: google.protobuf.Timestamp
-	(*VaultAccount)(nil),                 // 15: vault.v1.VaultAccount
-	(*AccountBalance)(nil),               // 16: vault.v1.AccountBalance
+	(*VaultAccount)(nil),                 // 15: provlabs.vault.v1.VaultAccount
+	(*AccountBalance)(nil),               // 16: provlabs.vault.v1.AccountBalance
 	(*v1beta11.Coin)(nil),                // 17: cosmos.base.v1beta1.Coin
 }
-var file_vault_v1_query_proto_depIdxs = []int32{
-	11, // 0: vault.v1.QueryPendingSwapOutsRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
-	2,  // 1: vault.v1.QueryPendingSwapOutsResponse.pending_swap_outs:type_name -> vault.v1.PendingSwapOutWithTimeout
-	12, // 2: vault.v1.QueryPendingSwapOutsResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
-	13, // 3: vault.v1.PendingSwapOutWithTimeout.pending_swap_out:type_name -> vault.v1.PendingSwapOut
-	14, // 4: vault.v1.PendingSwapOutWithTimeout.timeout:type_name -> google.protobuf.Timestamp
-	11, // 5: vault.v1.QueryVaultsRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
-	15, // 6: vault.v1.QueryVaultsResponse.vaults:type_name -> vault.v1.VaultAccount
-	12, // 7: vault.v1.QueryVaultsResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
-	15, // 8: vault.v1.QueryVaultResponse.vault:type_name -> vault.v1.VaultAccount
-	16, // 9: vault.v1.QueryVaultResponse.principal:type_name -> vault.v1.AccountBalance
-	16, // 10: vault.v1.QueryVaultResponse.reserves:type_name -> vault.v1.AccountBalance
-	17, // 11: vault.v1.QueryEstimateSwapInRequest.assets:type_name -> cosmos.base.v1beta1.Coin
-	17, // 12: vault.v1.QueryEstimateSwapInResponse.assets:type_name -> cosmos.base.v1beta1.Coin
-	14, // 13: vault.v1.QueryEstimateSwapInResponse.time:type_name -> google.protobuf.Timestamp
-	17, // 14: vault.v1.QueryEstimateSwapOutResponse.assets:type_name -> cosmos.base.v1beta1.Coin
-	14, // 15: vault.v1.QueryEstimateSwapOutResponse.time:type_name -> google.protobuf.Timestamp
-	3,  // 16: vault.v1.Query.Vaults:input_type -> vault.v1.QueryVaultsRequest
-	5,  // 17: vault.v1.Query.Vault:input_type -> vault.v1.QueryVaultRequest
-	7,  // 18: vault.v1.Query.EstimateSwapIn:input_type -> vault.v1.QueryEstimateSwapInRequest
-	9,  // 19: vault.v1.Query.EstimateSwapOut:input_type -> vault.v1.QueryEstimateSwapOutRequest
-	0,  // 20: vault.v1.Query.PendingSwapOuts:input_type -> vault.v1.QueryPendingSwapOutsRequest
-	4,  // 21: vault.v1.Query.Vaults:output_type -> vault.v1.QueryVaultsResponse
-	6,  // 22: vault.v1.Query.Vault:output_type -> vault.v1.QueryVaultResponse
-	8,  // 23: vault.v1.Query.EstimateSwapIn:output_type -> vault.v1.QueryEstimateSwapInResponse
-	10, // 24: vault.v1.Query.EstimateSwapOut:output_type -> vault.v1.QueryEstimateSwapOutResponse
-	1,  // 25: vault.v1.Query.PendingSwapOuts:output_type -> vault.v1.QueryPendingSwapOutsResponse
+var file_provlabs_vault_v1_query_proto_depIdxs = []int32{
+	11, // 0: provlabs.vault.v1.QueryPendingSwapOutsRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	2,  // 1: provlabs.vault.v1.QueryPendingSwapOutsResponse.pending_swap_outs:type_name -> provlabs.vault.v1.PendingSwapOutWithTimeout
+	12, // 2: provlabs.vault.v1.QueryPendingSwapOutsResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	13, // 3: provlabs.vault.v1.PendingSwapOutWithTimeout.pending_swap_out:type_name -> provlabs.vault.v1.PendingSwapOut
+	14, // 4: provlabs.vault.v1.PendingSwapOutWithTimeout.timeout:type_name -> google.protobuf.Timestamp
+	11, // 5: provlabs.vault.v1.QueryVaultsRequest.pagination:type_name -> cosmos.base.query.v1beta1.PageRequest
+	15, // 6: provlabs.vault.v1.QueryVaultsResponse.vaults:type_name -> provlabs.vault.v1.VaultAccount
+	12, // 7: provlabs.vault.v1.QueryVaultsResponse.pagination:type_name -> cosmos.base.query.v1beta1.PageResponse
+	15, // 8: provlabs.vault.v1.QueryVaultResponse.vault:type_name -> provlabs.vault.v1.VaultAccount
+	16, // 9: provlabs.vault.v1.QueryVaultResponse.principal:type_name -> provlabs.vault.v1.AccountBalance
+	16, // 10: provlabs.vault.v1.QueryVaultResponse.reserves:type_name -> provlabs.vault.v1.AccountBalance
+	17, // 11: provlabs.vault.v1.QueryEstimateSwapInRequest.assets:type_name -> cosmos.base.v1beta1.Coin
+	17, // 12: provlabs.vault.v1.QueryEstimateSwapInResponse.assets:type_name -> cosmos.base.v1beta1.Coin
+	14, // 13: provlabs.vault.v1.QueryEstimateSwapInResponse.time:type_name -> google.protobuf.Timestamp
+	17, // 14: provlabs.vault.v1.QueryEstimateSwapOutResponse.assets:type_name -> cosmos.base.v1beta1.Coin
+	14, // 15: provlabs.vault.v1.QueryEstimateSwapOutResponse.time:type_name -> google.protobuf.Timestamp
+	3,  // 16: provlabs.vault.v1.Query.Vaults:input_type -> provlabs.vault.v1.QueryVaultsRequest
+	5,  // 17: provlabs.vault.v1.Query.Vault:input_type -> provlabs.vault.v1.QueryVaultRequest
+	7,  // 18: provlabs.vault.v1.Query.EstimateSwapIn:input_type -> provlabs.vault.v1.QueryEstimateSwapInRequest
+	9,  // 19: provlabs.vault.v1.Query.EstimateSwapOut:input_type -> provlabs.vault.v1.QueryEstimateSwapOutRequest
+	0,  // 20: provlabs.vault.v1.Query.PendingSwapOuts:input_type -> provlabs.vault.v1.QueryPendingSwapOutsRequest
+	4,  // 21: provlabs.vault.v1.Query.Vaults:output_type -> provlabs.vault.v1.QueryVaultsResponse
+	6,  // 22: provlabs.vault.v1.Query.Vault:output_type -> provlabs.vault.v1.QueryVaultResponse
+	8,  // 23: provlabs.vault.v1.Query.EstimateSwapIn:output_type -> provlabs.vault.v1.QueryEstimateSwapInResponse
+	10, // 24: provlabs.vault.v1.Query.EstimateSwapOut:output_type -> provlabs.vault.v1.QueryEstimateSwapOutResponse
+	1,  // 25: provlabs.vault.v1.Query.PendingSwapOuts:output_type -> provlabs.vault.v1.QueryPendingSwapOutsResponse
 	21, // [21:26] is the sub-list for method output_type
 	16, // [16:21] is the sub-list for method input_type
 	16, // [16:16] is the sub-list for extension type_name
@@ -6552,14 +6566,14 @@ var file_vault_v1_query_proto_depIdxs = []int32{
 	0,  // [0:16] is the sub-list for field type_name
 }
 
-func init() { file_vault_v1_query_proto_init() }
-func file_vault_v1_query_proto_init() {
-	if File_vault_v1_query_proto != nil {
+func init() { file_provlabs_vault_v1_query_proto_init() }
+func file_provlabs_vault_v1_query_proto_init() {
+	if File_provlabs_vault_v1_query_proto != nil {
 		return
 	}
-	file_vault_v1_vault_proto_init()
+	file_provlabs_vault_v1_vault_proto_init()
 	if !protoimpl.UnsafeEnabled {
-		file_vault_v1_query_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_query_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*QueryPendingSwapOutsRequest); i {
 			case 0:
 				return &v.state
@@ -6571,7 +6585,7 @@ func file_vault_v1_query_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_query_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_query_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*QueryPendingSwapOutsResponse); i {
 			case 0:
 				return &v.state
@@ -6583,7 +6597,7 @@ func file_vault_v1_query_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_query_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_query_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*PendingSwapOutWithTimeout); i {
 			case 0:
 				return &v.state
@@ -6595,7 +6609,7 @@ func file_vault_v1_query_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_query_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_query_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*QueryVaultsRequest); i {
 			case 0:
 				return &v.state
@@ -6607,7 +6621,7 @@ func file_vault_v1_query_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_query_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_query_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*QueryVaultsResponse); i {
 			case 0:
 				return &v.state
@@ -6619,7 +6633,7 @@ func file_vault_v1_query_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_query_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_query_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*QueryVaultRequest); i {
 			case 0:
 				return &v.state
@@ -6631,7 +6645,7 @@ func file_vault_v1_query_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_query_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_query_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*QueryVaultResponse); i {
 			case 0:
 				return &v.state
@@ -6643,7 +6657,7 @@ func file_vault_v1_query_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_query_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_query_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*QueryEstimateSwapInRequest); i {
 			case 0:
 				return &v.state
@@ -6655,7 +6669,7 @@ func file_vault_v1_query_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_query_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_query_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*QueryEstimateSwapInResponse); i {
 			case 0:
 				return &v.state
@@ -6667,7 +6681,7 @@ func file_vault_v1_query_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_query_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_query_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*QueryEstimateSwapOutRequest); i {
 			case 0:
 				return &v.state
@@ -6679,7 +6693,7 @@ func file_vault_v1_query_proto_init() {
 				return nil
 			}
 		}
-		file_vault_v1_query_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
+		file_provlabs_vault_v1_query_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*QueryEstimateSwapOutResponse); i {
 			case 0:
 				return &v.state
@@ -6696,18 +6710,18 @@ func file_vault_v1_query_proto_init() {
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: file_vault_v1_query_proto_rawDesc,
+			RawDescriptor: file_provlabs_vault_v1_query_proto_rawDesc,
 			NumEnums:      0,
 			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_vault_v1_query_proto_goTypes,
-		DependencyIndexes: file_vault_v1_query_proto_depIdxs,
-		MessageInfos:      file_vault_v1_query_proto_msgTypes,
+		GoTypes:           file_provlabs_vault_v1_query_proto_goTypes,
+		DependencyIndexes: file_provlabs_vault_v1_query_proto_depIdxs,
+		MessageInfos:      file_provlabs_vault_v1_query_proto_msgTypes,
 	}.Build()
-	File_vault_v1_query_proto = out.File
-	file_vault_v1_query_proto_rawDesc = nil
-	file_vault_v1_query_proto_goTypes = nil
-	file_vault_v1_query_proto_depIdxs = nil
+	File_provlabs_vault_v1_query_proto = out.File
+	file_provlabs_vault_v1_query_proto_rawDesc = nil
+	file_provlabs_vault_v1_query_proto_goTypes = nil
+	file_provlabs_vault_v1_query_proto_depIdxs = nil
 }

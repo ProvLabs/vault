@@ -329,7 +329,7 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 				sdk.NewEvent("message",
 					sdk.NewAttribute("sender", vaultAddr.String()),
 				),
-				sdk.NewEvent("vault.v1.EventVaultReconcile",
+				sdk.NewEvent("provlabs.vault.v1.EventVaultReconcile",
 					sdk.NewAttribute("interest_earned", "41952013underlying"),
 					sdk.NewAttribute("principal_after", "1041952013underlying"),
 					sdk.NewAttribute("principal_before", "1000000000underlying"),
@@ -364,7 +364,7 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 			expectDeleted: true,
 			expectRate:    types.ZeroInterestRate,
 			expectedEvents: sdk.Events{
-				sdk.NewEvent("vault.v1.EventVaultInterestChange",
+				sdk.NewEvent("provlabs.vault.v1.EventVaultInterestChange",
 					sdk.NewAttribute("current_rate", types.ZeroInterestRate),
 					sdk.NewAttribute("desired_rate", "0.25"),
 					sdk.NewAttribute("vault_address", vaultAddr.String()),
@@ -494,7 +494,7 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 			expectErr: false,
 			expectedEvents: sdk.Events{
 				sdk.NewEvent(
-					"vault.v1.EventVaultInterestChange",
+					"provlabs.vault.v1.EventVaultInterestChange",
 					sdk.NewAttribute("current_rate", types.ZeroInterestRate),
 					sdk.NewAttribute("desired_rate", "0.1"),
 					sdk.NewAttribute("vault_address", v1.vaultAddr.String()),
@@ -516,7 +516,7 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 			expectErr: false,
 			expectedEvents: sdk.Events{
 				sdk.NewEvent(
-					"vault.v1.EventVaultInterestChange",
+					"provlabs.vault.v1.EventVaultInterestChange",
 					sdk.NewAttribute("current_rate", types.ZeroInterestRate),
 					sdk.NewAttribute("desired_rate", "0.1"),
 					sdk.NewAttribute("vault_address", v2.vaultAddr.String()),
@@ -670,7 +670,7 @@ func (s *TestSuite) TestKeeper_handleDepletedVaults() {
 			},
 			expectedEvents: sdk.Events{
 				sdk.NewEvent(
-					"vault.v1.EventVaultInterestChange",
+					"provlabs.vault.v1.EventVaultInterestChange",
 					sdk.NewAttribute("current_rate", types.ZeroInterestRate),
 					sdk.NewAttribute("desired_rate", initialRate),
 					sdk.NewAttribute("vault_address", v1.vaultAddr.String()),
@@ -695,13 +695,13 @@ func (s *TestSuite) TestKeeper_handleDepletedVaults() {
 			},
 			expectedEvents: sdk.Events{
 				sdk.NewEvent(
-					"vault.v1.EventVaultInterestChange",
+					"provlabs.vault.v1.EventVaultInterestChange",
 					sdk.NewAttribute("current_rate", types.ZeroInterestRate),
 					sdk.NewAttribute("desired_rate", initialRate),
 					sdk.NewAttribute("vault_address", v1.vaultAddr.String()),
 				),
 				sdk.NewEvent(
-					"vault.v1.EventVaultInterestChange",
+					"provlabs.vault.v1.EventVaultInterestChange",
 					sdk.NewAttribute("current_rate", types.ZeroInterestRate),
 					sdk.NewAttribute("desired_rate", "0.2"),
 					sdk.NewAttribute("vault_address", v2.vaultAddr.String()),
@@ -753,7 +753,7 @@ func (s *TestSuite) TestKeeper_UpdateInterestRates() {
 			desiredRate: desiredRate,
 			expectedEvents: sdk.Events{
 				sdk.NewEvent(
-					"vault.v1.EventVaultInterestChange",
+					"provlabs.vault.v1.EventVaultInterestChange",
 					sdk.NewAttribute("current_rate", newRate),
 					sdk.NewAttribute("desired_rate", desiredRate),
 					sdk.NewAttribute("vault_address", v1.vaultAddr.String()),

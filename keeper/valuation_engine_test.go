@@ -12,7 +12,9 @@ import (
 )
 
 func (s *TestSuite) TestUnitPriceFraction_Table() {
-	underlyingDenom := "ylds"
+	const uyldsFccDenom = "uylds.fcc"
+
+	underlyingDenom := "underlying"
 	paymentDenom := "usdc"
 	shareDenom := "vshare"
 	s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
@@ -28,8 +30,22 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 		expectedErrorContains string
 	}{
 		{
-			name:                "identity",
+			name:                "identity-src-equals-underlying",
 			fromDenom:           underlyingDenom,
+			expectedNumerator:   1,
+			expectedDenominator: 1,
+		},
+		{
+			name:                "payment-denom-uylds-fcc-fastpath",
+			fromDenom:           paymentDenom,
+			paymentOverride:     uyldsFccDenom,
+			expectedNumerator:   1,
+			expectedDenominator: 1,
+		},
+		{
+			name:                "underlying-uylds-fcc-fastpath",
+			fromDenom:           paymentDenom,
+			underlyingOverride:  uyldsFccDenom,
 			expectedNumerator:   1,
 			expectedDenominator: 1,
 		},
@@ -59,29 +75,6 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 			expectedErrorContains: "nav price is zero",
 		},
 		{
-			name:               "underlying-uylds.fcc-overrides-nav",
-			fromDenom:          paymentDenom,
-			underlyingOverride: "uylds.fcc",
-			setup: func() {
-				pmtMarkerAddr := markertypes.MustGetMarkerAddress(paymentDenom)
-				pmtMarkerAcct, err := s.k.MarkerKeeper.GetMarker(s.ctx, pmtMarkerAddr)
-				s.Require().NoError(err)
-				err = s.k.MarkerKeeper.SetNetAssetValue(s.ctx, pmtMarkerAcct, markertypes.NetAssetValue{
-					Price:  sdk.NewInt64Coin("uylds.fcc", 5),
-					Volume: 2,
-				}, "test-uylds-fcc")
-				s.Require().NoError(err)
-			},
-			expectedNumerator:   1,
-			expectedDenominator: 1,
-		},
-		{
-			name:              "payment-uylds.fcc-overrides-nav",
-			fromDenom:         paymentDenom,
-			paymentOverride:   "uylds.fcc",
-			expectedNumerator: 1, expectedDenominator: 1,
-		},
-		{
 			name:                  "nav-missing",
 			fromDenom:             "unknown",
 			expectedErrorContains: "nav not found",
@@ -96,14 +89,14 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 				err = s.k.MarkerKeeper.SetNetAssetValue(s.ctx, pmtMarkerAcct, markertypes.NetAssetValue{
 					Price:  sdk.NewInt64Coin(underlyingDenom, 3),
 					Volume: 2,
-				}, "fwd-newer")
+				}, "fwd-old")
 				s.Require().NoError(err)
 				s.setReverseNAV(underlyingDenom, paymentDenom, 5, 7)
 				s.bumpHeight()
 				err = s.k.MarkerKeeper.SetNetAssetValue(s.ctx, pmtMarkerAcct, markertypes.NetAssetValue{
 					Price:  sdk.NewInt64Coin(underlyingDenom, 6),
 					Volume: 4,
-				}, "fwd-newest")
+				}, "fwd-new")
 				s.Require().NoError(err)
 			},
 			expectedNumerator:   6,

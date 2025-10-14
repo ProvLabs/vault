@@ -52,7 +52,7 @@ func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom string, vault types.
 	// we assume a 1:1 equivalence between the payment denom and the underlying denom.
 	// See https://github.com/ProvLabs/vault/issues/73 for details.
 	const uyldsFccDenom = "uylds.fcc"
-	if srcDenom == uyldsFccDenom && (vault.PaymentDenom == uyldsFccDenom || underlyingAsset == uyldsFccDenom) {
+	if vault.PaymentDenom == uyldsFccDenom || underlyingAsset == uyldsFccDenom {
 		return math.NewInt(1), math.NewInt(1), nil
 	}
 

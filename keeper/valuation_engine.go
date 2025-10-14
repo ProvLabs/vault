@@ -43,12 +43,13 @@ import (
 //
 // Returns
 //   - (num, den) as math.Int, suitable for computing: floor(x * num / den).
-func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom, underlyingAsset string) (num, den math.Int, err error) {
+func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom string, vault types.VaultAccount) (num, den math.Int, err error) {
 	// Currently, we are treating "uylds.fcc" as a universal stablecoin equivalent to the underlying asset.
 	// This is a temporary measure until we have a more robust multi-currency support and stablecoin handling.
 	// The assumption is that "uylds.fcc" is always pegged 1:1 with the underlying asset for vault valuation purposes.
 	// For more information, see https://github.com/ProvLabs/vault/issues/73
-	if srcDenom == underlyingAsset || underlyingAsset == "uylds.fcc" {
+	underlyingAsset := vault.UnderlyingAsset
+	if srcDenom == underlyingAsset || underlyingAsset == "uylds.fcc" || vault.PaymentDenom == "uylds.fcc" {
 		return math.NewInt(1), math.NewInt(1), nil
 	}
 
@@ -103,7 +104,7 @@ func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom, underlyingAsset str
 // This performs a pure conversion based on NAV (or identity if denom==underlying). It does
 // not enforce whether the denom is accepted by the vault; such policy checks are handled elsewhere.
 func (k Keeper) ToUnderlyingAssetAmount(ctx sdk.Context, vault types.VaultAccount, in sdk.Coin) (math.Int, error) {
-	priceAmount, volume, err := k.UnitPriceFraction(ctx, in.Denom, vault.UnderlyingAsset)
+	priceAmount, volume, err := k.UnitPriceFraction(ctx, in.Denom, vault)
 	if err != nil {
 		return math.Int{}, err
 	}
@@ -180,7 +181,7 @@ func (k Keeper) GetNAVPerShareInUnderlyingAsset(ctx sdk.Context, vault types.Vau
 // Returns a coin in redeemDenom. This function performs calculation only; callers
 // must enforce liquidity/policy. If shares <= 0, returns a zero-amount coin.
 func (k Keeper) ConvertDepositToSharesInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccount, in sdk.Coin) (sdk.Coin, error) {
-	priceNum, priceDen, err := k.UnitPriceFraction(ctx, in.Denom, vault.UnderlyingAsset)
+	priceNum, priceDen, err := k.UnitPriceFraction(ctx, in.Denom, vault)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -212,7 +213,7 @@ func (k Keeper) ConvertSharesToRedeemCoin(ctx sdk.Context, vault types.VaultAcco
 	if err != nil {
 		return sdk.Coin{}, err
 	}
-	priceNum, priceDen, err := k.UnitPriceFraction(ctx, redeemDenom, vault.UnderlyingAsset)
+	priceNum, priceDen, err := k.UnitPriceFraction(ctx, redeemDenom, vault)
 	if err != nil {
 		return sdk.Coin{}, err
 	}

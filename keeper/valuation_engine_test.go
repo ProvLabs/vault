@@ -7,6 +7,7 @@ import (
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
 	"github.com/provlabs/vault/keeper"
+	"github.com/provlabs/vault/types"
 	"github.com/provlabs/vault/utils"
 )
 
@@ -19,17 +20,28 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 	cases := []struct {
 		name                  string
 		fromDenom             string
-		toDenom               string
+		underlyingOverride    string
+		paymentOverride       string
 		setup                 func()
 		expectedNumerator     int64
 		expectedDenominator   int64
 		expectedErrorContains string
 	}{
-		{name: "identity", fromDenom: underlyingDenom, toDenom: underlyingDenom, expectedNumerator: 1, expectedDenominator: 1},
-		{name: "nav-present", fromDenom: paymentDenom, toDenom: underlyingDenom, expectedNumerator: 1, expectedDenominator: 2},
+		{
+			name:                "identity",
+			fromDenom:           underlyingDenom,
+			expectedNumerator:   1,
+			expectedDenominator: 1,
+		},
+		{
+			name:                "forward-nav-present",
+			fromDenom:           paymentDenom,
+			expectedNumerator:   1,
+			expectedDenominator: 2,
+		},
 		{
 			name:      "reverse-nav-present-newer",
-			fromDenom: paymentDenom, toDenom: underlyingDenom,
+			fromDenom: paymentDenom,
 			setup: func() {
 				s.bumpHeight()
 				s.setReverseNAV(underlyingDenom, paymentDenom, 2, 1)
@@ -39,7 +51,7 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 		},
 		{
 			name:      "reverse-nav-selected-zero-price-errors",
-			fromDenom: paymentDenom, toDenom: underlyingDenom,
+			fromDenom: paymentDenom,
 			setup: func() {
 				s.bumpHeight()
 				s.setReverseNAV(underlyingDenom, paymentDenom, 0, 1)
@@ -47,40 +59,102 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 			expectedErrorContains: "nav price is zero",
 		},
 		{
-			name:      "underlying-uylds.fcc-overrides-nav",
-			fromDenom: paymentDenom, toDenom: "uylds.fcc",
+			name:               "underlying-uylds.fcc-overrides-nav",
+			fromDenom:          paymentDenom,
+			underlyingOverride: "uylds.fcc",
 			setup: func() {
 				pmtMarkerAddr := markertypes.MustGetMarkerAddress(paymentDenom)
 				pmtMarkerAcct, err := s.k.MarkerKeeper.GetMarker(s.ctx, pmtMarkerAddr)
-				s.Require().NoError(err, "setup(%s): fetch payment marker", "underlying-uylds.fcc-overrides-nav")
+				s.Require().NoError(err)
 				err = s.k.MarkerKeeper.SetNetAssetValue(s.ctx, pmtMarkerAcct, markertypes.NetAssetValue{
 					Price:  sdk.NewInt64Coin("uylds.fcc", 5),
 					Volume: 2,
 				}, "test-uylds-fcc")
-				s.Require().NoError(err, "setup(%s): set forward NAV usdc->uylds.fcc", "underlying-uylds.fcc-overrides-nav")
+				s.Require().NoError(err)
 			},
 			expectedNumerator:   1,
 			expectedDenominator: 1,
 		},
-		{name: "nav-missing", fromDenom: "unknown", toDenom: underlyingDenom, expectedErrorContains: "nav not found"},
+		{
+			name:              "payment-uylds.fcc-overrides-nav",
+			fromDenom:         paymentDenom,
+			paymentOverride:   "uylds.fcc",
+			expectedNumerator: 1, expectedDenominator: 1,
+		},
+		{
+			name:                  "nav-missing",
+			fromDenom:             "unknown",
+			expectedErrorContains: "nav not found",
+		},
+		{
+			name:      "both-present-forward-newer-selected",
+			fromDenom: paymentDenom,
+			setup: func() {
+				pmtMarkerAddr := markertypes.MustGetMarkerAddress(paymentDenom)
+				pmtMarkerAcct, err := s.k.MarkerKeeper.GetMarker(s.ctx, pmtMarkerAddr)
+				s.Require().NoError(err)
+				err = s.k.MarkerKeeper.SetNetAssetValue(s.ctx, pmtMarkerAcct, markertypes.NetAssetValue{
+					Price:  sdk.NewInt64Coin(underlyingDenom, 3),
+					Volume: 2,
+				}, "fwd-newer")
+				s.Require().NoError(err)
+				s.setReverseNAV(underlyingDenom, paymentDenom, 5, 7)
+				s.bumpHeight()
+				err = s.k.MarkerKeeper.SetNetAssetValue(s.ctx, pmtMarkerAcct, markertypes.NetAssetValue{
+					Price:  sdk.NewInt64Coin(underlyingDenom, 6),
+					Volume: 4,
+				}, "fwd-newest")
+				s.Require().NoError(err)
+			},
+			expectedNumerator:   6,
+			expectedDenominator: 4,
+		},
+		{
+			name:      "both-present-same-height-forward-wins",
+			fromDenom: paymentDenom,
+			setup: func() {
+				pmtMarkerAddr := markertypes.MustGetMarkerAddress(paymentDenom)
+				pmtMarkerAcct, err := s.k.MarkerKeeper.GetMarker(s.ctx, pmtMarkerAddr)
+				s.Require().NoError(err)
+				s.setReverseNAV(underlyingDenom, paymentDenom, 11, 5)
+				err = s.k.MarkerKeeper.SetNetAssetValue(s.ctx, pmtMarkerAcct, markertypes.NetAssetValue{
+					Price:  sdk.NewInt64Coin(underlyingDenom, 9),
+					Volume: 3,
+				}, "fwd-same-height")
+				s.Require().NoError(err)
+			},
+			expectedNumerator:   9,
+			expectedDenominator: 3,
+		},
 	}
 
-	for _, scenario := range cases {
-		s.Run(scenario.name, func() {
-			if scenario.setup != nil {
-				scenario.setup()
+	for _, tc := range cases {
+		s.Run(tc.name, func() {
+			if tc.setup != nil {
+				tc.setup()
+			}
+			vault := types.VaultAccount{
+				UnderlyingAsset: underlyingDenom,
+				PaymentDenom:    paymentDenom,
+				TotalShares:     sdk.NewInt64Coin(shareDenom, 0),
+			}
+			if tc.underlyingOverride != "" {
+				vault.UnderlyingAsset = tc.underlyingOverride
+			}
+			if tc.paymentOverride != "" {
+				vault.PaymentDenom = tc.paymentOverride
 			}
 			testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
-			numerator, denominator, err := testKeeper.UnitPriceFraction(s.ctx, scenario.fromDenom, scenario.toDenom)
-			if scenario.expectedErrorContains != "" {
-				s.Require().Error(err, "case %q: expected an error", scenario.name)
-				s.Require().Contains(err.Error(), scenario.expectedErrorContains, "case %q: error message mismatch", scenario.name)
+			num, den, err := testKeeper.UnitPriceFraction(s.ctx, tc.fromDenom, vault)
+			if tc.expectedErrorContains != "" {
+				s.Require().Error(err, "case %q", tc.name)
+				s.Require().Contains(err.Error(), tc.expectedErrorContains, "case %q", tc.name)
 				return
 			}
-			s.Require().NoError(err, "case %q: unexpected error", scenario.name)
-			s.Require().Equal(math.NewInt(scenario.expectedNumerator), numerator, "case %q: numerator mismatch", scenario.name)
-			s.Require().Equal(math.NewInt(scenario.expectedDenominator), denominator, "case %q: denominator mismatch", scenario.name)
-			s.Require().True(denominator.IsPositive(), "case %q: expected positive denominator", scenario.name)
+			s.Require().NoError(err, "case %q", tc.name)
+			s.Require().Equal(math.NewInt(tc.expectedNumerator), num, "case %q numerator", tc.name)
+			s.Require().Equal(math.NewInt(tc.expectedDenominator), den, "case %q denominator", tc.name)
+			s.Require().True(den.IsPositive(), "case %q denominator positive", tc.name)
 		})
 	}
 }

@@ -43,11 +43,16 @@ import (
 // Returns
 // - (num, den) as math.Int, suitable for floor(x * num / den).
 func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom string, vault types.VaultAccount) (num, den math.Int, err error) {
+	underlyingAsset := vault.UnderlyingAsset
+	if srcDenom == underlyingAsset {
+		return math.NewInt(1), math.NewInt(1), nil
+	}
+
 	// For now, if either the vault’s underlying asset or payment denom is "uylds.fcc",
 	// we assume a 1:1 equivalence between the payment denom and the underlying denom.
 	// See https://github.com/ProvLabs/vault/issues/73 for details.
-	underlyingAsset := vault.UnderlyingAsset
-	if srcDenom == underlyingAsset || underlyingAsset == "uylds.fcc" || vault.PaymentDenom == "uylds.fcc" {
+	const uyldsFccDenom = "uylds.fcc"
+	if srcDenom == uyldsFccDenom && (vault.PaymentDenom == uyldsFccDenom || underlyingAsset == uyldsFccDenom) {
 		return math.NewInt(1), math.NewInt(1), nil
 	}
 

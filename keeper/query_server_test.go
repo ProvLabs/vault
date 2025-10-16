@@ -739,6 +739,149 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 	}
 }
 
+// TestQueryServer_VaultPendingSwapOuts tests the VaultPendingSwapOuts query endpoint.
+func (s *TestSuite) TestQueryServer_VaultPendingSwapOuts() {
+	testDef := querytest.TestDef[types.QueryVaultPendingSwapOutsRequest, types.QueryVaultPendingSwapOutsResponse]{
+		QueryName: "VaultPendingSwapOuts",
+		Query:     keeper.NewQueryServer(s.simApp.VaultKeeper).VaultPendingSwapOuts,
+		ManualEquality: func(s querytest.TestSuiter, expected, actual *types.QueryVaultPendingSwapOutsResponse) {
+			s.Require().NotNil(actual, "actual response should not be nil")
+			s.Require().NotNil(expected, "expected response should not be nil")
+
+			s.Require().Len(actual.PendingSwapOuts, len(expected.PendingSwapOuts), "unexpected number of pending swap outs returned")
+
+			// Custom comparison to ignore time drift in tests
+			for i := range expected.PendingSwapOuts {
+				s.Assert().Equal(expected.PendingSwapOuts[i].RequestId, actual.PendingSwapOuts[i].RequestId, "request id mismatch for entry %d", i)
+				s.Assert().Equal(expected.PendingSwapOuts[i].PendingSwapOut, actual.PendingSwapOuts[i].PendingSwapOut, "pending swap out mismatch for entry %d", i)
+				s.Assert().WithinDuration(expected.PendingSwapOuts[i].Timeout, actual.PendingSwapOuts[i].Timeout, 1*time.Second, "timeout mismatch for entry %d", i)
+			}
+
+			if expected.Pagination != nil {
+				if expected.Pagination.Total > 0 {
+					s.Assert().Equal(expected.Pagination.Total, actual.Pagination.Total, "pagination total")
+				}
+				if len(expected.Pagination.NextKey) > 0 {
+					s.Assert().NotEmpty(actual.Pagination.NextKey, "pagination next_key should not be empty")
+				} else {
+					s.Assert().Empty(actual.Pagination.NextKey, "pagination next_key should be empty")
+				}
+			}
+		},
+	}
+
+	// --- Test Data Setup ---
+	underlyingAsset := "stake_vpso" // Use a unique denom to avoid test conflicts
+	shareDenomA, shareDenomB := "vshare_a", "vshare_b"
+	vaultAddrA := types.GetVaultAddress(shareDenomA)
+	vaultAddrB := types.GetVaultAddress(shareDenomB)
+
+	owner1, owner2, owner3, owner4 := sdk.AccAddress("owner1______________"), sdk.AccAddress("owner2______________"), sdk.AccAddress("owner3______________"), sdk.AccAddress("owner4______________")
+
+	// Requests for Vault A
+	reqA1 := &types.PendingSwapOut{Owner: owner1.String(), VaultAddress: vaultAddrA.String(), Shares: sdk.NewInt64Coin(shareDenomA, 100)}
+	reqA2 := &types.PendingSwapOut{Owner: owner2.String(), VaultAddress: vaultAddrA.String(), Shares: sdk.NewInt64Coin(shareDenomA, 200)}
+
+	// Requests for Vault B
+	reqB1 := &types.PendingSwapOut{Owner: owner3.String(), VaultAddress: vaultAddrB.String(), Shares: sdk.NewInt64Coin(shareDenomB, 300)}
+	reqB2 := &types.PendingSwapOut{Owner: owner4.String(), VaultAddress: vaultAddrB.String(), Shares: sdk.NewInt64Coin(shareDenomB, 400)}
+
+	timeA1, timeA2 := time.Now().Add(1*time.Hour), time.Now().Add(2*time.Hour)
+	timeB1, timeB2 := time.Now().Add(3*time.Hour), time.Now().Add(4*time.Hour)
+
+	// Base setup creates both vaults and populates Vault B with 2 entries.
+	baseSetup := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingAsset, 1_000_000), s.adminAddr)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: s.adminAddr.String(), ShareDenom: shareDenomA, UnderlyingAsset: underlyingAsset})
+		s.Require().NoError(err)
+		_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: s.adminAddr.String(), ShareDenom: shareDenomB, UnderlyingAsset: underlyingAsset})
+		s.Require().NoError(err)
+
+		// Vault B always has 2 entries
+		_, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, timeB1.Unix(), reqB1)
+		s.Require().NoError(err)
+		_, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, timeB2.Unix(), reqB2)
+		s.Require().NoError(err)
+	}
+
+	tests := []querytest.TestCase[types.QueryVaultPendingSwapOutsRequest, types.QueryVaultPendingSwapOutsResponse]{
+		{
+			Name: "success - vault A has 1 entry",
+			Setup: func() {
+				baseSetup()
+				_, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, timeA1.Unix(), reqA1)
+				s.Require().NoError(err)
+			},
+			Req: &types.QueryVaultPendingSwapOutsRequest{Id: vaultAddrA.String()},
+			ExpectedResp: &types.QueryVaultPendingSwapOutsResponse{
+				PendingSwapOuts: []types.PendingSwapOutWithTimeout{
+					{RequestId: 2, PendingSwapOut: *reqA1, Timeout: timeA1.Truncate(time.Second)},
+				},
+				Pagination: &query.PageResponse{Total: 1},
+			},
+		},
+		{
+			Name: "success - vault A has 2 entries",
+			Setup: func() {
+				baseSetup()
+				_, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, timeA1.Unix(), reqA1)
+				s.Require().NoError(err)
+				_, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, timeA2.Unix(), reqA2)
+				s.Require().NoError(err)
+			},
+			Req: &types.QueryVaultPendingSwapOutsRequest{Id: vaultAddrA.String()},
+			ExpectedResp: &types.QueryVaultPendingSwapOutsResponse{
+				PendingSwapOuts: []types.PendingSwapOutWithTimeout{
+					{RequestId: 2, PendingSwapOut: *reqA1, Timeout: timeA1.Truncate(time.Second)},
+					{RequestId: 3, PendingSwapOut: *reqA2, Timeout: timeA2.Truncate(time.Second)},
+				},
+				Pagination: &query.PageResponse{Total: 2},
+			},
+		},
+		{
+			Name: "success - vault A has 2 entries with pagination",
+			Setup: func() {
+				baseSetup()
+				_, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, timeA1.Unix(), reqA1)
+				s.Require().NoError(err)
+				_, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, timeA2.Unix(), reqA2)
+				s.Require().NoError(err)
+			},
+			Req: &types.QueryVaultPendingSwapOutsRequest{
+				Id:         vaultAddrA.String(),
+				Pagination: &query.PageRequest{Limit: 1, CountTotal: true},
+			},
+			ExpectedResp: &types.QueryVaultPendingSwapOutsResponse{
+				PendingSwapOuts: []types.PendingSwapOutWithTimeout{
+					{RequestId: 2, PendingSwapOut: *reqA1, Timeout: timeA1.Truncate(time.Second)},
+				},
+				Pagination: &query.PageResponse{NextKey: []byte("not nil"), Total: 2},
+			},
+		},
+		{
+			Name:  "success - vault A has 0 entries",
+			Setup: baseSetup,
+			Req:   &types.QueryVaultPendingSwapOutsRequest{Id: vaultAddrA.String()},
+			ExpectedResp: &types.QueryVaultPendingSwapOutsResponse{
+				PendingSwapOuts: []types.PendingSwapOutWithTimeout{},
+				Pagination:      &query.PageResponse{Total: 0},
+			},
+		},
+		{
+			Name:               "failure - invalid vault id",
+			Setup:              baseSetup,
+			Req:                &types.QueryVaultPendingSwapOutsRequest{Id: "invalid-id"},
+			ExpectedErrSubstrs: []string{"not found"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.Name, func() {
+			querytest.RunTestCase(s, testDef, tc)
+		})
+	}
+}
+
 func (s *TestSuite) TestQueryServer_PendingSwapOuts() {
 	testDef := querytest.TestDef[types.QueryPendingSwapOutsRequest, types.QueryPendingSwapOutsResponse]{
 		QueryName: "PendingSwapOuts",

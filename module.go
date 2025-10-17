@@ -448,6 +448,16 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:     "Query all pending swap outs",
 					Example:   fmt.Sprintf("%s pending-swap-outs", queryStart),
 				},
+				{
+					RpcMethod: "VaultPendingSwapOuts",
+					Use:       "vault-pending-swap-outs [id]",
+					Alias:     []string{"vpso"},
+					Short:     "Query all pending swap outs for a specific vault",
+					Example:   fmt.Sprintf("%s vault-pending-swap-outs %s", queryStart, exampleVaultAddr),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "id"},
+					},
+				},
 			},
 		},
 	}

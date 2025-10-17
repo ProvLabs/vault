@@ -248,3 +248,41 @@ func (k queryServer) PendingSwapOuts(goCtx context.Context, req *types.QueryPend
 		Pagination:      pageRes,
 	}, nil
 }
+
+// VaultPendingSwapOuts returns a paginated list of all pending swap outs for a specific vault.
+func (k queryServer) VaultPendingSwapOuts(goCtx context.Context, req *types.QueryVaultPendingSwapOutsRequest) (*types.QueryVaultPendingSwapOutsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vault, err := k.FindVaultAccount(ctx, req.Id)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	swapOuts, pageRes, err := query.CollectionFilteredPaginate(
+		ctx,
+		k.PendingSwapOutQueue.IndexedMap,
+		req.Pagination,
+		func(key collections.Triple[int64, uint64, sdk.AccAddress], value types.PendingSwapOut) (include bool, err error) {
+			return vault.Address == key.K3().String(), nil
+		},
+		func(key collections.Triple[int64, uint64, sdk.AccAddress], value types.PendingSwapOut) (types.PendingSwapOutWithTimeout, error) {
+			return types.PendingSwapOutWithTimeout{
+				RequestId:      key.K2(),
+				Timeout:        time.Unix(key.K1(), 0),
+				PendingSwapOut: value,
+			}, nil
+		},
+	)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &types.QueryVaultPendingSwapOutsResponse{
+		PendingSwapOuts: swapOuts,
+		Pagination:      pageRes,
+	}, nil
+}

@@ -148,3 +148,30 @@ Returns a paginated list of all **queued** swap-out requests, with their `reques
 - An admin may call `MsgExpeditePendingSwapOut` on a `request_id` to accelerate processing. The query result will still show the item until it is completed/refunded.
 
 ---
+
+## VaultPendingSwapOuts
+
+Returns a paginated list of all **queued** swap-out requests for a **specific vault**.
+
+- **gRPC:** `Query/VaultPendingSwapOuts`
+- **REST:** `GET /vault/v1/vaults/{id}/pending_swap_outs`
+
+### Request — `QueryVaultPendingSwapOutsRequest`
+- `id`: either the vault’s **bech32 address** or its **share denom**.
+- `pagination` *(optional)*: standard Cosmos `PageRequest`.
+
+### Response — `QueryVaultPendingSwapOutsResponse`
+- `pending_swap_outs`: array of `PendingSwapOutWithTimeout`:
+  - `request_id`: unique ID assigned at `MsgSwapOut`.
+  - `pending_swap_out`: the queued request (includes `vault_address`, `owner`, `shares`, `redeem_denom`, etc.).
+  - `timeout`: the scheduled block time at/after which the job is eligible for processing.
+- `pagination`: `PageResponse`.
+
+**Usage pattern**
+- This is a more efficient alternative to `PendingSwapOuts` when you only need to see the queue for a single vault.
+- It's useful for vault-specific UIs or monitoring systems that track the pending redemptions for a particular vault.
+
+**Common errors**
+- Invalid vault ID (address or share denom).
+
+---

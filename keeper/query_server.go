@@ -116,7 +116,7 @@ func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstim
 		return nil, status.Errorf(codes.InvalidArgument, "unsupported deposit denom: %q", req.Assets.Denom)
 	}
 
-	priceNum, priceDen, err := k.UnitPriceFraction(ctx, req.Assets.Denom, vault.UnderlyingAsset)
+	priceNum, priceDen, err := k.UnitPriceFraction(ctx, req.Assets.Denom, *vault)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "no NAV for %s/%s: %v", req.Assets.Denom, vault.UnderlyingAsset, err)
 	}
@@ -189,7 +189,7 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 		return nil, status.Errorf(codes.Internal, "failed to estimate total assets: %v", err)
 	}
 
-	priceNum, priceDen, err := k.UnitPriceFraction(ctx, redeemDenom, vault.UnderlyingAsset)
+	priceNum, priceDen, err := k.UnitPriceFraction(ctx, redeemDenom, *vault)
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "no NAV for %s/%s: %v", redeemDenom, vault.UnderlyingAsset, err)
 	}

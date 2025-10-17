@@ -12,43 +12,47 @@ import (
 )
 
 // UnitPriceFraction returns the unit price of srcDenom expressed in underlyingAsset
-// as an integer fraction (numerator, denominator), using marker Net Asset Value (NAV).
+// as an integer fraction (numerator, denominator) using marker Net Asset Value (NAV).
 //
 // Semantics
 //   - Forward NAV (srcDenom → underlyingAsset):
-//     NAV.Price is the total value in underlyingAsset units for NAV.Volume units of srcDenom.
-//     => 1 srcDenom = NAV.Price.Amount / NAV.Volume underlyingAsset.
-//     => returns (NAV.Price.Amount, NAV.Volume).
+//     NAV.Price is total underlying units for NAV.Volume units of srcDenom.
+//     1 srcDenom = NAV.Price.Amount / NAV.Volume underlyingAsset → (num, den) = (NAV.Price.Amount, NAV.Volume).
 //   - Reverse NAV (underlyingAsset → srcDenom):
-//     NAV.Price is the total value in srcDenom units for NAV.Volume units of underlyingAsset.
-//     => 1 srcDenom = NAV.Volume / NAV.Price.Amount underlyingAsset.
-//     => returns (NAV.Volume, NAV.Price.Amount).
-//   - The fraction is returned in integers so callers can apply floor-safe arithmetic.
+//     NAV.Price is total srcDenom units for NAV.Volume units of underlyingAsset.
+//     1 srcDenom = NAV.Volume / NAV.Price.Amount underlyingAsset → (num, den) = (NAV.Volume, NAV.Price.Amount).
+//
+// The result is integer (floor-safe) arithmetic.
 //
 // Source selection
-//   - If srcDenom == underlyingAsset, returns (1, 1).
-//   - If underlyingAsset == "uylds.fcc", returns (1, 1) regardless of any NAVs.
-//     This is a temporary 1:1 stablecoin peg used for valuation until broader multi-currency
-//     support exists. See https://github.com/ProvLabs/vault/issues/73.
-//   - Attempt to read both forward and reverse NAVs.
+// - Identity/peg fast-paths return (1, 1):
+//   - If srcDenom == underlyingAsset
+//   - If underlyingAsset == "uylds.fcc" (temporary 1:1 peg; see https://github.com/ProvLabs/vault/issues/73)
+//   - If vault.PaymentDenom == "uylds.fcc" (temporary 1:1 peg; see https://github.com/ProvLabs/vault/issues/73)
+//
+// - Otherwise read both forward and reverse NAVs:
 //   - If only one exists, use it.
 //   - If both exist, choose the one with the greater UpdatedBlockHeight (newest).
 //
 // Errors
-//   - If neither forward nor reverse NAV exists, returns an error. If one lookup errored,
-//     that error is returned; otherwise "nav not found for src/underlying".
-//   - For the chosen NAV direction:
+// - If neither NAV exists, return the lookup error (if any) or "nav not found for src/underlying".
+// - For the selected NAV direction:
 //   - Forward: error if NAV.Volume == 0.
 //   - Reverse: error if NAV.Price.Amount == 0.
 //
 // Returns
-//   - (num, den) as math.Int, suitable for computing: floor(x * num / den).
-func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom, underlyingAsset string) (num, den math.Int, err error) {
-	// Currently, we are treating "uylds.fcc" as a universal stablecoin equivalent to the underlying asset.
-	// This is a temporary measure until we have a more robust multi-currency support and stablecoin handling.
-	// The assumption is that "uylds.fcc" is always pegged 1:1 with the underlying asset for vault valuation purposes.
-	// For more information, see https://github.com/ProvLabs/vault/issues/73
-	if srcDenom == underlyingAsset || underlyingAsset == "uylds.fcc" {
+// - (num, den) as math.Int, suitable for floor(x * num / den).
+func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom string, vault types.VaultAccount) (num, den math.Int, err error) {
+	underlyingAsset := vault.UnderlyingAsset
+	if srcDenom == underlyingAsset {
+		return math.NewInt(1), math.NewInt(1), nil
+	}
+
+	// For now, if either the vault’s underlying asset or payment denom is "uylds.fcc",
+	// we assume a 1:1 equivalence between the payment denom and the underlying denom.
+	// See https://github.com/ProvLabs/vault/issues/73 for details.
+	const uyldsFccDenom = "uylds.fcc"
+	if vault.PaymentDenom == uyldsFccDenom || underlyingAsset == uyldsFccDenom {
 		return math.NewInt(1), math.NewInt(1), nil
 	}
 
@@ -103,7 +107,7 @@ func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom, underlyingAsset str
 // This performs a pure conversion based on NAV (or identity if denom==underlying). It does
 // not enforce whether the denom is accepted by the vault; such policy checks are handled elsewhere.
 func (k Keeper) ToUnderlyingAssetAmount(ctx sdk.Context, vault types.VaultAccount, in sdk.Coin) (math.Int, error) {
-	priceAmount, volume, err := k.UnitPriceFraction(ctx, in.Denom, vault.UnderlyingAsset)
+	priceAmount, volume, err := k.UnitPriceFraction(ctx, in.Denom, vault)
 	if err != nil {
 		return math.Int{}, err
 	}
@@ -180,7 +184,7 @@ func (k Keeper) GetNAVPerShareInUnderlyingAsset(ctx sdk.Context, vault types.Vau
 // Returns a coin in redeemDenom. This function performs calculation only; callers
 // must enforce liquidity/policy. If shares <= 0, returns a zero-amount coin.
 func (k Keeper) ConvertDepositToSharesInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccount, in sdk.Coin) (sdk.Coin, error) {
-	priceNum, priceDen, err := k.UnitPriceFraction(ctx, in.Denom, vault.UnderlyingAsset)
+	priceNum, priceDen, err := k.UnitPriceFraction(ctx, in.Denom, vault)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -212,7 +216,7 @@ func (k Keeper) ConvertSharesToRedeemCoin(ctx sdk.Context, vault types.VaultAcco
 	if err != nil {
 		return sdk.Coin{}, err
 	}
-	priceNum, priceDen, err := k.UnitPriceFraction(ctx, redeemDenom, vault.UnderlyingAsset)
+	priceNum, priceDen, err := k.UnitPriceFraction(ctx, redeemDenom, vault)
 	if err != nil {
 		return sdk.Coin{}, err
 	}

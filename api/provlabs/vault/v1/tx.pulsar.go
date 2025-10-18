@@ -2,6 +2,7 @@
 package vaultv1
 
 import (
+	v1beta11 "cosmossdk.io/api/cosmos/bank/v1beta1"
 	v1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	_ "cosmossdk.io/api/cosmos/msg/v1"
 	fmt "fmt"
@@ -17505,6 +17506,925 @@ func (x *fastReflection_MsgBridgeBurnSharesResponse) ProtoMethods() *protoiface.
 	}
 }
 
+var (
+	md_MsgSetShareDenomMetadataRequest               protoreflect.MessageDescriptor
+	fd_MsgSetShareDenomMetadataRequest_metadata      protoreflect.FieldDescriptor
+	fd_MsgSetShareDenomMetadataRequest_admin         protoreflect.FieldDescriptor
+	fd_MsgSetShareDenomMetadataRequest_vault_address protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_provlabs_vault_v1_tx_proto_init()
+	md_MsgSetShareDenomMetadataRequest = File_provlabs_vault_v1_tx_proto.Messages().ByName("MsgSetShareDenomMetadataRequest")
+	fd_MsgSetShareDenomMetadataRequest_metadata = md_MsgSetShareDenomMetadataRequest.Fields().ByName("metadata")
+	fd_MsgSetShareDenomMetadataRequest_admin = md_MsgSetShareDenomMetadataRequest.Fields().ByName("admin")
+	fd_MsgSetShareDenomMetadataRequest_vault_address = md_MsgSetShareDenomMetadataRequest.Fields().ByName("vault_address")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgSetShareDenomMetadataRequest)(nil)
+
+type fastReflection_MsgSetShareDenomMetadataRequest MsgSetShareDenomMetadataRequest
+
+func (x *MsgSetShareDenomMetadataRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgSetShareDenomMetadataRequest)(x)
+}
+
+func (x *MsgSetShareDenomMetadataRequest) slowProtoReflect() protoreflect.Message {
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[38]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgSetShareDenomMetadataRequest_messageType fastReflection_MsgSetShareDenomMetadataRequest_messageType
+var _ protoreflect.MessageType = fastReflection_MsgSetShareDenomMetadataRequest_messageType{}
+
+type fastReflection_MsgSetShareDenomMetadataRequest_messageType struct{}
+
+func (x fastReflection_MsgSetShareDenomMetadataRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgSetShareDenomMetadataRequest)(nil)
+}
+func (x fastReflection_MsgSetShareDenomMetadataRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgSetShareDenomMetadataRequest)
+}
+func (x fastReflection_MsgSetShareDenomMetadataRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgSetShareDenomMetadataRequest
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgSetShareDenomMetadataRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgSetShareDenomMetadataRequest
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgSetShareDenomMetadataRequest) Type() protoreflect.MessageType {
+	return _fastReflection_MsgSetShareDenomMetadataRequest_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgSetShareDenomMetadataRequest) New() protoreflect.Message {
+	return new(fastReflection_MsgSetShareDenomMetadataRequest)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgSetShareDenomMetadataRequest) Interface() protoreflect.ProtoMessage {
+	return (*MsgSetShareDenomMetadataRequest)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgSetShareDenomMetadataRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Metadata != nil {
+		value := protoreflect.ValueOfMessage(x.Metadata.ProtoReflect())
+		if !f(fd_MsgSetShareDenomMetadataRequest_metadata, value) {
+			return
+		}
+	}
+	if x.Admin != "" {
+		value := protoreflect.ValueOfString(x.Admin)
+		if !f(fd_MsgSetShareDenomMetadataRequest_admin, value) {
+			return
+		}
+	}
+	if x.VaultAddress != "" {
+		value := protoreflect.ValueOfString(x.VaultAddress)
+		if !f(fd_MsgSetShareDenomMetadataRequest_vault_address, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgSetShareDenomMetadataRequest) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "provlabs.vault.v1.MsgSetShareDenomMetadataRequest.metadata":
+		return x.Metadata != nil
+	case "provlabs.vault.v1.MsgSetShareDenomMetadataRequest.admin":
+		return x.Admin != ""
+	case "provlabs.vault.v1.MsgSetShareDenomMetadataRequest.vault_address":
+		return x.VaultAddress != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgSetShareDenomMetadataRequest"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.MsgSetShareDenomMetadataRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgSetShareDenomMetadataRequest) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "provlabs.vault.v1.MsgSetShareDenomMetadataRequest.metadata":
+		x.Metadata = nil
+	case "provlabs.vault.v1.MsgSetShareDenomMetadataRequest.admin":
+		x.Admin = ""
+	case "provlabs.vault.v1.MsgSetShareDenomMetadataRequest.vault_address":
+		x.VaultAddress = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgSetShareDenomMetadataRequest"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.MsgSetShareDenomMetadataRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgSetShareDenomMetadataRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "provlabs.vault.v1.MsgSetShareDenomMetadataRequest.metadata":
+		value := x.Metadata
+		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "provlabs.vault.v1.MsgSetShareDenomMetadataRequest.admin":
+		value := x.Admin
+		return protoreflect.ValueOfString(value)
+	case "provlabs.vault.v1.MsgSetShareDenomMetadataRequest.vault_address":
+		value := x.VaultAddress
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgSetShareDenomMetadataRequest"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.MsgSetShareDenomMetadataRequest does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgSetShareDenomMetadataRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "provlabs.vault.v1.MsgSetShareDenomMetadataRequest.metadata":
+		x.Metadata = value.Message().Interface().(*v1beta11.Metadata)
+	case "provlabs.vault.v1.MsgSetShareDenomMetadataRequest.admin":
+		x.Admin = value.Interface().(string)
+	case "provlabs.vault.v1.MsgSetShareDenomMetadataRequest.vault_address":
+		x.VaultAddress = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgSetShareDenomMetadataRequest"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.MsgSetShareDenomMetadataRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgSetShareDenomMetadataRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "provlabs.vault.v1.MsgSetShareDenomMetadataRequest.metadata":
+		if x.Metadata == nil {
+			x.Metadata = new(v1beta11.Metadata)
+		}
+		return protoreflect.ValueOfMessage(x.Metadata.ProtoReflect())
+	case "provlabs.vault.v1.MsgSetShareDenomMetadataRequest.admin":
+		panic(fmt.Errorf("field admin of message provlabs.vault.v1.MsgSetShareDenomMetadataRequest is not mutable"))
+	case "provlabs.vault.v1.MsgSetShareDenomMetadataRequest.vault_address":
+		panic(fmt.Errorf("field vault_address of message provlabs.vault.v1.MsgSetShareDenomMetadataRequest is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgSetShareDenomMetadataRequest"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.MsgSetShareDenomMetadataRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgSetShareDenomMetadataRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "provlabs.vault.v1.MsgSetShareDenomMetadataRequest.metadata":
+		m := new(v1beta11.Metadata)
+		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "provlabs.vault.v1.MsgSetShareDenomMetadataRequest.admin":
+		return protoreflect.ValueOfString("")
+	case "provlabs.vault.v1.MsgSetShareDenomMetadataRequest.vault_address":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgSetShareDenomMetadataRequest"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.MsgSetShareDenomMetadataRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgSetShareDenomMetadataRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.MsgSetShareDenomMetadataRequest", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgSetShareDenomMetadataRequest) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgSetShareDenomMetadataRequest) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgSetShareDenomMetadataRequest) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgSetShareDenomMetadataRequest) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgSetShareDenomMetadataRequest)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.Metadata != nil {
+			l = options.Size(x.Metadata)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Admin)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.VaultAddress)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgSetShareDenomMetadataRequest)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.VaultAddress) > 0 {
+			i -= len(x.VaultAddress)
+			copy(dAtA[i:], x.VaultAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.VaultAddress)))
+			i--
+			dAtA[i] = 0x1a
+		}
+		if len(x.Admin) > 0 {
+			i -= len(x.Admin)
+			copy(dAtA[i:], x.Admin)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Admin)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if x.Metadata != nil {
+			encoded, err := options.Marshal(x.Metadata)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgSetShareDenomMetadataRequest)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgSetShareDenomMetadataRequest: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgSetShareDenomMetadataRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if x.Metadata == nil {
+					x.Metadata = &v1beta11.Metadata{}
+				}
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Metadata); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Admin = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field VaultAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.VaultAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_MsgSetShareDenomMetadataResponse protoreflect.MessageDescriptor
+)
+
+func init() {
+	file_provlabs_vault_v1_tx_proto_init()
+	md_MsgSetShareDenomMetadataResponse = File_provlabs_vault_v1_tx_proto.Messages().ByName("MsgSetShareDenomMetadataResponse")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgSetShareDenomMetadataResponse)(nil)
+
+type fastReflection_MsgSetShareDenomMetadataResponse MsgSetShareDenomMetadataResponse
+
+func (x *MsgSetShareDenomMetadataResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgSetShareDenomMetadataResponse)(x)
+}
+
+func (x *MsgSetShareDenomMetadataResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[39]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgSetShareDenomMetadataResponse_messageType fastReflection_MsgSetShareDenomMetadataResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgSetShareDenomMetadataResponse_messageType{}
+
+type fastReflection_MsgSetShareDenomMetadataResponse_messageType struct{}
+
+func (x fastReflection_MsgSetShareDenomMetadataResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgSetShareDenomMetadataResponse)(nil)
+}
+func (x fastReflection_MsgSetShareDenomMetadataResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgSetShareDenomMetadataResponse)
+}
+func (x fastReflection_MsgSetShareDenomMetadataResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgSetShareDenomMetadataResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgSetShareDenomMetadataResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgSetShareDenomMetadataResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgSetShareDenomMetadataResponse) Type() protoreflect.MessageType {
+	return _fastReflection_MsgSetShareDenomMetadataResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgSetShareDenomMetadataResponse) New() protoreflect.Message {
+	return new(fastReflection_MsgSetShareDenomMetadataResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgSetShareDenomMetadataResponse) Interface() protoreflect.ProtoMessage {
+	return (*MsgSetShareDenomMetadataResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgSetShareDenomMetadataResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgSetShareDenomMetadataResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgSetShareDenomMetadataResponse"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.MsgSetShareDenomMetadataResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgSetShareDenomMetadataResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgSetShareDenomMetadataResponse"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.MsgSetShareDenomMetadataResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgSetShareDenomMetadataResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgSetShareDenomMetadataResponse"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.MsgSetShareDenomMetadataResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgSetShareDenomMetadataResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgSetShareDenomMetadataResponse"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.MsgSetShareDenomMetadataResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgSetShareDenomMetadataResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgSetShareDenomMetadataResponse"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.MsgSetShareDenomMetadataResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgSetShareDenomMetadataResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgSetShareDenomMetadataResponse"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.MsgSetShareDenomMetadataResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgSetShareDenomMetadataResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.MsgSetShareDenomMetadataResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgSetShareDenomMetadataResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgSetShareDenomMetadataResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgSetShareDenomMetadataResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgSetShareDenomMetadataResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgSetShareDenomMetadataResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgSetShareDenomMetadataResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgSetShareDenomMetadataResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgSetShareDenomMetadataResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgSetShareDenomMetadataResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -19123,6 +20043,89 @@ func (*MsgBridgeBurnSharesResponse) Descriptor() ([]byte, []int) {
 	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{37}
 }
 
+// MsgSetShareDenomMetadataRequest defines the request to set bank denom metadata for a vault's share denom.
+// The target denom is derived from the vault identified by vault_address.
+type MsgSetShareDenomMetadataRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// metadata is the bank module Metadata to assign to the vault's share denom.
+	Metadata *v1beta11.Metadata `protobuf:"bytes,1,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	// admin is the address of the vault administrator authorizing this update.
+	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
+	// vault_address is the bech32 address of the vault whose share denom metadata is being set.
+	VaultAddress string `protobuf:"bytes,3,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+}
+
+func (x *MsgSetShareDenomMetadataRequest) Reset() {
+	*x = MsgSetShareDenomMetadataRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[38]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgSetShareDenomMetadataRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgSetShareDenomMetadataRequest) ProtoMessage() {}
+
+// Deprecated: Use MsgSetShareDenomMetadataRequest.ProtoReflect.Descriptor instead.
+func (*MsgSetShareDenomMetadataRequest) Descriptor() ([]byte, []int) {
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{38}
+}
+
+func (x *MsgSetShareDenomMetadataRequest) GetMetadata() *v1beta11.Metadata {
+	if x != nil {
+		return x.Metadata
+	}
+	return nil
+}
+
+func (x *MsgSetShareDenomMetadataRequest) GetAdmin() string {
+	if x != nil {
+		return x.Admin
+	}
+	return ""
+}
+
+func (x *MsgSetShareDenomMetadataRequest) GetVaultAddress() string {
+	if x != nil {
+		return x.VaultAddress
+	}
+	return ""
+}
+
+// MsgSetShareDenomMetadataResponse defines the response for setting a vault's share denom metadata.
+type MsgSetShareDenomMetadataResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *MsgSetShareDenomMetadataResponse) Reset() {
+	*x = MsgSetShareDenomMetadataResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[39]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgSetShareDenomMetadataResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgSetShareDenomMetadataResponse) ProtoMessage() {}
+
+// Deprecated: Use MsgSetShareDenomMetadataResponse.ProtoReflect.Descriptor instead.
+func (*MsgSetShareDenomMetadataResponse) Descriptor() ([]byte, []int) {
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{39}
+}
+
 var File_provlabs_vault_v1_tx_proto protoreflect.FileDescriptor
 
 var file_provlabs_vault_v1_tx_proto_rawDesc = []byte{
@@ -19135,7 +20138,9 @@ var file_provlabs_vault_v1_tx_proto_rawDesc = []byte{
 	0x73, 0x67, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x19, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
 	0x5f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72,
 	0x6f, 0x74, 0x6f, 0x1a, 0x14, 0x67, 0x6f, 0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67,
-	0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xfe, 0x01, 0x0a, 0x15, 0x4d, 0x73,
+	0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1e, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2f, 0x62, 0x61, 0x6e, 0x6b, 0x2f, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2f, 0x62,
+	0x61, 0x6e, 0x6b, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xfe, 0x01, 0x0a, 0x15, 0x4d, 0x73,
 	0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x52, 0x65, 0x71, 0x75,
 	0x65, 0x73, 0x74, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x01, 0x20, 0x01,
 	0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41,
@@ -19386,7 +20391,25 @@ var file_provlabs_vault_v1_tx_proto_rawDesc = []byte{
 	0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65,
 	0x73, 0x3a, 0x0b, 0x82, 0xe7, 0xb0, 0x2a, 0x06, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x22, 0x1d,
 	0x0a, 0x1b, 0x4d, 0x73, 0x67, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x42, 0x75, 0x72, 0x6e, 0x53,
-	0x68, 0x61, 0x72, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x32, 0x86, 0x11,
+	0x68, 0x61, 0x72, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xf9, 0x01,
+	0x0a, 0x1f, 0x4d, 0x73, 0x67, 0x53, 0x65, 0x74, 0x53, 0x68, 0x61, 0x72, 0x65, 0x44, 0x65, 0x6e,
+	0x6f, 0x6d, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x12, 0x75, 0x0a, 0x08, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x6e,
+	0x6b, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61,
+	0x74, 0x61, 0x42, 0x3a, 0xc8, 0xde, 0x1f, 0x00, 0xda, 0xde, 0x1f, 0x32, 0x67, 0x69, 0x74, 0x68,
+	0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x78, 0x2f, 0x62, 0x61, 0x6e, 0x6b, 0x2f,
+	0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x52, 0x08,
+	0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69,
+	0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e,
+	0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c,
+	0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x3a, 0x0a, 0x82,
+	0xe7, 0xb0, 0x2a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x22, 0x22, 0x0a, 0x20, 0x4d, 0x73, 0x67,
+	0x53, 0x65, 0x74, 0x53, 0x68, 0x61, 0x72, 0x65, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x4d, 0x65, 0x74,
+	0x61, 0x64, 0x61, 0x74, 0x61, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x32, 0x89, 0x12,
 	0x0a, 0x03, 0x4d, 0x73, 0x67, 0x12, 0x62, 0x0a, 0x0b, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x56,
 	0x61, 0x75, 0x6c, 0x74, 0x12, 0x28, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e,
 	0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61,
@@ -19522,20 +20545,29 @@ var file_provlabs_vault_v1_tx_proto_rawDesc = []byte{
 	0x72, 0x6e, 0x53, 0x68, 0x61, 0x72, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
 	0x2e, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74,
 	0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x42, 0x75, 0x72,
-	0x6e, 0x53, 0x68, 0x61, 0x72, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x1a,
-	0x05, 0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0xbf, 0x01, 0x0a, 0x15, 0x63, 0x6f, 0x6d, 0x2e, 0x70,
-	0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31,
-	0x42, 0x07, 0x54, 0x78, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x37, 0x67, 0x69, 0x74,
-	0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73,
-	0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c,
-	0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61, 0x75,
-	0x6c, 0x74, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x50, 0x56, 0x58, 0xaa, 0x02, 0x11, 0x50, 0x72, 0x6f,
-	0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56, 0x31, 0xca, 0x02,
-	0x11, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x5c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c,
-	0x56, 0x31, 0xe2, 0x02, 0x1d, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x5c, 0x56, 0x61,
-	0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61,
-	0x74, 0x61, 0xea, 0x02, 0x13, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x3a, 0x3a, 0x56,
-	0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x6e, 0x53, 0x68, 0x61, 0x72, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12,
+	0x80, 0x01, 0x0a, 0x15, 0x53, 0x65, 0x74, 0x53, 0x68, 0x61, 0x72, 0x65, 0x44, 0x65, 0x6e, 0x6f,
+	0x6d, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x32, 0x2e, 0x70, 0x72, 0x6f, 0x76,
+	0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73,
+	0x67, 0x53, 0x65, 0x74, 0x53, 0x68, 0x61, 0x72, 0x65, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x4d, 0x65,
+	0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x33, 0x2e,
+	0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76,
+	0x31, 0x2e, 0x4d, 0x73, 0x67, 0x53, 0x65, 0x74, 0x53, 0x68, 0x61, 0x72, 0x65, 0x44, 0x65, 0x6e,
+	0x6f, 0x6d, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x1a, 0x05, 0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0xbf, 0x01, 0x0a, 0x15, 0x63, 0x6f,
+	0x6d, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74,
+	0x2e, 0x76, 0x31, 0x42, 0x07, 0x54, 0x78, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x37,
+	0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c,
+	0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x70, 0x72,
+	0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b,
+	0x76, 0x61, 0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x50, 0x56, 0x58, 0xaa, 0x02, 0x11,
+	0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56,
+	0x31, 0xca, 0x02, 0x11, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x5c, 0x56, 0x61, 0x75,
+	0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1d, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73,
+	0x5c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74,
+	0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x13, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73,
+	0x3a, 0x3a, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f,
+	0x74, 0x6f, 0x33,
 }
 
 var (
@@ -19550,7 +20582,7 @@ func file_provlabs_vault_v1_tx_proto_rawDescGZIP() []byte {
 	return file_provlabs_vault_v1_tx_proto_rawDescData
 }
 
-var file_provlabs_vault_v1_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 38)
+var file_provlabs_vault_v1_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 40)
 var file_provlabs_vault_v1_tx_proto_goTypes = []interface{}{
 	(*MsgCreateVaultRequest)(nil),             // 0: provlabs.vault.v1.MsgCreateVaultRequest
 	(*MsgCreateVaultResponse)(nil),            // 1: provlabs.vault.v1.MsgCreateVaultResponse
@@ -19590,61 +20622,67 @@ var file_provlabs_vault_v1_tx_proto_goTypes = []interface{}{
 	(*MsgBridgeMintSharesResponse)(nil),       // 35: provlabs.vault.v1.MsgBridgeMintSharesResponse
 	(*MsgBridgeBurnSharesRequest)(nil),        // 36: provlabs.vault.v1.MsgBridgeBurnSharesRequest
 	(*MsgBridgeBurnSharesResponse)(nil),       // 37: provlabs.vault.v1.MsgBridgeBurnSharesResponse
-	(*v1beta1.Coin)(nil),                      // 38: cosmos.base.v1beta1.Coin
+	(*MsgSetShareDenomMetadataRequest)(nil),   // 38: provlabs.vault.v1.MsgSetShareDenomMetadataRequest
+	(*MsgSetShareDenomMetadataResponse)(nil),  // 39: provlabs.vault.v1.MsgSetShareDenomMetadataResponse
+	(*v1beta1.Coin)(nil),                      // 40: cosmos.base.v1beta1.Coin
+	(*v1beta11.Metadata)(nil),                 // 41: cosmos.bank.v1beta1.Metadata
 }
 var file_provlabs_vault_v1_tx_proto_depIdxs = []int32{
-	38, // 0: provlabs.vault.v1.MsgSwapInRequest.assets:type_name -> cosmos.base.v1beta1.Coin
-	38, // 1: provlabs.vault.v1.MsgSwapInResponse.shares_received:type_name -> cosmos.base.v1beta1.Coin
-	38, // 2: provlabs.vault.v1.MsgSwapOutRequest.assets:type_name -> cosmos.base.v1beta1.Coin
-	38, // 3: provlabs.vault.v1.MsgDepositInterestFundsRequest.amount:type_name -> cosmos.base.v1beta1.Coin
-	38, // 4: provlabs.vault.v1.MsgWithdrawInterestFundsRequest.amount:type_name -> cosmos.base.v1beta1.Coin
-	38, // 5: provlabs.vault.v1.MsgDepositPrincipalFundsRequest.amount:type_name -> cosmos.base.v1beta1.Coin
-	38, // 6: provlabs.vault.v1.MsgWithdrawPrincipalFundsRequest.amount:type_name -> cosmos.base.v1beta1.Coin
-	38, // 7: provlabs.vault.v1.MsgBridgeMintSharesRequest.shares:type_name -> cosmos.base.v1beta1.Coin
-	38, // 8: provlabs.vault.v1.MsgBridgeBurnSharesRequest.shares:type_name -> cosmos.base.v1beta1.Coin
-	0,  // 9: provlabs.vault.v1.Msg.CreateVault:input_type -> provlabs.vault.v1.MsgCreateVaultRequest
-	2,  // 10: provlabs.vault.v1.Msg.SwapIn:input_type -> provlabs.vault.v1.MsgSwapInRequest
-	4,  // 11: provlabs.vault.v1.Msg.SwapOut:input_type -> provlabs.vault.v1.MsgSwapOutRequest
-	6,  // 12: provlabs.vault.v1.Msg.UpdateMinInterestRate:input_type -> provlabs.vault.v1.MsgUpdateMinInterestRateRequest
-	8,  // 13: provlabs.vault.v1.Msg.UpdateMaxInterestRate:input_type -> provlabs.vault.v1.MsgUpdateMaxInterestRateRequest
-	10, // 14: provlabs.vault.v1.Msg.UpdateInterestRate:input_type -> provlabs.vault.v1.MsgUpdateInterestRateRequest
-	12, // 15: provlabs.vault.v1.Msg.ToggleSwapIn:input_type -> provlabs.vault.v1.MsgToggleSwapInRequest
-	14, // 16: provlabs.vault.v1.Msg.ToggleSwapOut:input_type -> provlabs.vault.v1.MsgToggleSwapOutRequest
-	16, // 17: provlabs.vault.v1.Msg.DepositInterestFunds:input_type -> provlabs.vault.v1.MsgDepositInterestFundsRequest
-	18, // 18: provlabs.vault.v1.Msg.WithdrawInterestFunds:input_type -> provlabs.vault.v1.MsgWithdrawInterestFundsRequest
-	20, // 19: provlabs.vault.v1.Msg.DepositPrincipalFunds:input_type -> provlabs.vault.v1.MsgDepositPrincipalFundsRequest
-	22, // 20: provlabs.vault.v1.Msg.WithdrawPrincipalFunds:input_type -> provlabs.vault.v1.MsgWithdrawPrincipalFundsRequest
-	24, // 21: provlabs.vault.v1.Msg.ExpeditePendingSwapOut:input_type -> provlabs.vault.v1.MsgExpeditePendingSwapOutRequest
-	26, // 22: provlabs.vault.v1.Msg.PauseVault:input_type -> provlabs.vault.v1.MsgPauseVaultRequest
-	28, // 23: provlabs.vault.v1.Msg.UnpauseVault:input_type -> provlabs.vault.v1.MsgUnpauseVaultRequest
-	30, // 24: provlabs.vault.v1.Msg.SetBridgeAddress:input_type -> provlabs.vault.v1.MsgSetBridgeAddressRequest
-	32, // 25: provlabs.vault.v1.Msg.ToggleBridge:input_type -> provlabs.vault.v1.MsgToggleBridgeRequest
-	34, // 26: provlabs.vault.v1.Msg.BridgeMintShares:input_type -> provlabs.vault.v1.MsgBridgeMintSharesRequest
-	36, // 27: provlabs.vault.v1.Msg.BridgeBurnShares:input_type -> provlabs.vault.v1.MsgBridgeBurnSharesRequest
-	1,  // 28: provlabs.vault.v1.Msg.CreateVault:output_type -> provlabs.vault.v1.MsgCreateVaultResponse
-	3,  // 29: provlabs.vault.v1.Msg.SwapIn:output_type -> provlabs.vault.v1.MsgSwapInResponse
-	5,  // 30: provlabs.vault.v1.Msg.SwapOut:output_type -> provlabs.vault.v1.MsgSwapOutResponse
-	7,  // 31: provlabs.vault.v1.Msg.UpdateMinInterestRate:output_type -> provlabs.vault.v1.MsgUpdateMinInterestRateResponse
-	9,  // 32: provlabs.vault.v1.Msg.UpdateMaxInterestRate:output_type -> provlabs.vault.v1.MsgUpdateMaxInterestRateResponse
-	11, // 33: provlabs.vault.v1.Msg.UpdateInterestRate:output_type -> provlabs.vault.v1.MsgUpdateInterestRateResponse
-	13, // 34: provlabs.vault.v1.Msg.ToggleSwapIn:output_type -> provlabs.vault.v1.MsgToggleSwapInResponse
-	15, // 35: provlabs.vault.v1.Msg.ToggleSwapOut:output_type -> provlabs.vault.v1.MsgToggleSwapOutResponse
-	17, // 36: provlabs.vault.v1.Msg.DepositInterestFunds:output_type -> provlabs.vault.v1.MsgDepositInterestFundsResponse
-	19, // 37: provlabs.vault.v1.Msg.WithdrawInterestFunds:output_type -> provlabs.vault.v1.MsgWithdrawInterestFundsResponse
-	21, // 38: provlabs.vault.v1.Msg.DepositPrincipalFunds:output_type -> provlabs.vault.v1.MsgDepositPrincipalFundsResponse
-	23, // 39: provlabs.vault.v1.Msg.WithdrawPrincipalFunds:output_type -> provlabs.vault.v1.MsgWithdrawPrincipalFundsResponse
-	25, // 40: provlabs.vault.v1.Msg.ExpeditePendingSwapOut:output_type -> provlabs.vault.v1.MsgExpeditePendingSwapOutResponse
-	27, // 41: provlabs.vault.v1.Msg.PauseVault:output_type -> provlabs.vault.v1.MsgPauseVaultResponse
-	29, // 42: provlabs.vault.v1.Msg.UnpauseVault:output_type -> provlabs.vault.v1.MsgUnpauseVaultResponse
-	31, // 43: provlabs.vault.v1.Msg.SetBridgeAddress:output_type -> provlabs.vault.v1.MsgSetBridgeAddressResponse
-	33, // 44: provlabs.vault.v1.Msg.ToggleBridge:output_type -> provlabs.vault.v1.MsgToggleBridgeResponse
-	35, // 45: provlabs.vault.v1.Msg.BridgeMintShares:output_type -> provlabs.vault.v1.MsgBridgeMintSharesResponse
-	37, // 46: provlabs.vault.v1.Msg.BridgeBurnShares:output_type -> provlabs.vault.v1.MsgBridgeBurnSharesResponse
-	28, // [28:47] is the sub-list for method output_type
-	9,  // [9:28] is the sub-list for method input_type
-	9,  // [9:9] is the sub-list for extension type_name
-	9,  // [9:9] is the sub-list for extension extendee
-	0,  // [0:9] is the sub-list for field type_name
+	40, // 0: provlabs.vault.v1.MsgSwapInRequest.assets:type_name -> cosmos.base.v1beta1.Coin
+	40, // 1: provlabs.vault.v1.MsgSwapInResponse.shares_received:type_name -> cosmos.base.v1beta1.Coin
+	40, // 2: provlabs.vault.v1.MsgSwapOutRequest.assets:type_name -> cosmos.base.v1beta1.Coin
+	40, // 3: provlabs.vault.v1.MsgDepositInterestFundsRequest.amount:type_name -> cosmos.base.v1beta1.Coin
+	40, // 4: provlabs.vault.v1.MsgWithdrawInterestFundsRequest.amount:type_name -> cosmos.base.v1beta1.Coin
+	40, // 5: provlabs.vault.v1.MsgDepositPrincipalFundsRequest.amount:type_name -> cosmos.base.v1beta1.Coin
+	40, // 6: provlabs.vault.v1.MsgWithdrawPrincipalFundsRequest.amount:type_name -> cosmos.base.v1beta1.Coin
+	40, // 7: provlabs.vault.v1.MsgBridgeMintSharesRequest.shares:type_name -> cosmos.base.v1beta1.Coin
+	40, // 8: provlabs.vault.v1.MsgBridgeBurnSharesRequest.shares:type_name -> cosmos.base.v1beta1.Coin
+	41, // 9: provlabs.vault.v1.MsgSetShareDenomMetadataRequest.metadata:type_name -> cosmos.bank.v1beta1.Metadata
+	0,  // 10: provlabs.vault.v1.Msg.CreateVault:input_type -> provlabs.vault.v1.MsgCreateVaultRequest
+	2,  // 11: provlabs.vault.v1.Msg.SwapIn:input_type -> provlabs.vault.v1.MsgSwapInRequest
+	4,  // 12: provlabs.vault.v1.Msg.SwapOut:input_type -> provlabs.vault.v1.MsgSwapOutRequest
+	6,  // 13: provlabs.vault.v1.Msg.UpdateMinInterestRate:input_type -> provlabs.vault.v1.MsgUpdateMinInterestRateRequest
+	8,  // 14: provlabs.vault.v1.Msg.UpdateMaxInterestRate:input_type -> provlabs.vault.v1.MsgUpdateMaxInterestRateRequest
+	10, // 15: provlabs.vault.v1.Msg.UpdateInterestRate:input_type -> provlabs.vault.v1.MsgUpdateInterestRateRequest
+	12, // 16: provlabs.vault.v1.Msg.ToggleSwapIn:input_type -> provlabs.vault.v1.MsgToggleSwapInRequest
+	14, // 17: provlabs.vault.v1.Msg.ToggleSwapOut:input_type -> provlabs.vault.v1.MsgToggleSwapOutRequest
+	16, // 18: provlabs.vault.v1.Msg.DepositInterestFunds:input_type -> provlabs.vault.v1.MsgDepositInterestFundsRequest
+	18, // 19: provlabs.vault.v1.Msg.WithdrawInterestFunds:input_type -> provlabs.vault.v1.MsgWithdrawInterestFundsRequest
+	20, // 20: provlabs.vault.v1.Msg.DepositPrincipalFunds:input_type -> provlabs.vault.v1.MsgDepositPrincipalFundsRequest
+	22, // 21: provlabs.vault.v1.Msg.WithdrawPrincipalFunds:input_type -> provlabs.vault.v1.MsgWithdrawPrincipalFundsRequest
+	24, // 22: provlabs.vault.v1.Msg.ExpeditePendingSwapOut:input_type -> provlabs.vault.v1.MsgExpeditePendingSwapOutRequest
+	26, // 23: provlabs.vault.v1.Msg.PauseVault:input_type -> provlabs.vault.v1.MsgPauseVaultRequest
+	28, // 24: provlabs.vault.v1.Msg.UnpauseVault:input_type -> provlabs.vault.v1.MsgUnpauseVaultRequest
+	30, // 25: provlabs.vault.v1.Msg.SetBridgeAddress:input_type -> provlabs.vault.v1.MsgSetBridgeAddressRequest
+	32, // 26: provlabs.vault.v1.Msg.ToggleBridge:input_type -> provlabs.vault.v1.MsgToggleBridgeRequest
+	34, // 27: provlabs.vault.v1.Msg.BridgeMintShares:input_type -> provlabs.vault.v1.MsgBridgeMintSharesRequest
+	36, // 28: provlabs.vault.v1.Msg.BridgeBurnShares:input_type -> provlabs.vault.v1.MsgBridgeBurnSharesRequest
+	38, // 29: provlabs.vault.v1.Msg.SetShareDenomMetadata:input_type -> provlabs.vault.v1.MsgSetShareDenomMetadataRequest
+	1,  // 30: provlabs.vault.v1.Msg.CreateVault:output_type -> provlabs.vault.v1.MsgCreateVaultResponse
+	3,  // 31: provlabs.vault.v1.Msg.SwapIn:output_type -> provlabs.vault.v1.MsgSwapInResponse
+	5,  // 32: provlabs.vault.v1.Msg.SwapOut:output_type -> provlabs.vault.v1.MsgSwapOutResponse
+	7,  // 33: provlabs.vault.v1.Msg.UpdateMinInterestRate:output_type -> provlabs.vault.v1.MsgUpdateMinInterestRateResponse
+	9,  // 34: provlabs.vault.v1.Msg.UpdateMaxInterestRate:output_type -> provlabs.vault.v1.MsgUpdateMaxInterestRateResponse
+	11, // 35: provlabs.vault.v1.Msg.UpdateInterestRate:output_type -> provlabs.vault.v1.MsgUpdateInterestRateResponse
+	13, // 36: provlabs.vault.v1.Msg.ToggleSwapIn:output_type -> provlabs.vault.v1.MsgToggleSwapInResponse
+	15, // 37: provlabs.vault.v1.Msg.ToggleSwapOut:output_type -> provlabs.vault.v1.MsgToggleSwapOutResponse
+	17, // 38: provlabs.vault.v1.Msg.DepositInterestFunds:output_type -> provlabs.vault.v1.MsgDepositInterestFundsResponse
+	19, // 39: provlabs.vault.v1.Msg.WithdrawInterestFunds:output_type -> provlabs.vault.v1.MsgWithdrawInterestFundsResponse
+	21, // 40: provlabs.vault.v1.Msg.DepositPrincipalFunds:output_type -> provlabs.vault.v1.MsgDepositPrincipalFundsResponse
+	23, // 41: provlabs.vault.v1.Msg.WithdrawPrincipalFunds:output_type -> provlabs.vault.v1.MsgWithdrawPrincipalFundsResponse
+	25, // 42: provlabs.vault.v1.Msg.ExpeditePendingSwapOut:output_type -> provlabs.vault.v1.MsgExpeditePendingSwapOutResponse
+	27, // 43: provlabs.vault.v1.Msg.PauseVault:output_type -> provlabs.vault.v1.MsgPauseVaultResponse
+	29, // 44: provlabs.vault.v1.Msg.UnpauseVault:output_type -> provlabs.vault.v1.MsgUnpauseVaultResponse
+	31, // 45: provlabs.vault.v1.Msg.SetBridgeAddress:output_type -> provlabs.vault.v1.MsgSetBridgeAddressResponse
+	33, // 46: provlabs.vault.v1.Msg.ToggleBridge:output_type -> provlabs.vault.v1.MsgToggleBridgeResponse
+	35, // 47: provlabs.vault.v1.Msg.BridgeMintShares:output_type -> provlabs.vault.v1.MsgBridgeMintSharesResponse
+	37, // 48: provlabs.vault.v1.Msg.BridgeBurnShares:output_type -> provlabs.vault.v1.MsgBridgeBurnSharesResponse
+	39, // 49: provlabs.vault.v1.Msg.SetShareDenomMetadata:output_type -> provlabs.vault.v1.MsgSetShareDenomMetadataResponse
+	30, // [30:50] is the sub-list for method output_type
+	10, // [10:30] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_provlabs_vault_v1_tx_proto_init() }
@@ -20109,6 +21147,30 @@ func file_provlabs_vault_v1_tx_proto_init() {
 				return nil
 			}
 		}
+		file_provlabs_vault_v1_tx_proto_msgTypes[38].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgSetShareDenomMetadataRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_provlabs_vault_v1_tx_proto_msgTypes[39].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgSetShareDenomMetadataResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -20116,7 +21178,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_provlabs_vault_v1_tx_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   38,
+			NumMessages:   40,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

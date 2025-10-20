@@ -25,6 +25,7 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 - [ExpeditePendingSwapOut](#expeditependingswapout)
 - [PauseVault](#pausevault)
 - [UnpauseVault](#unpausevault)
+- [SetShareDenomMetadata](#setShareDenomMetadata)
 
 ---
 
@@ -233,3 +234,13 @@ Transfers shares from the bridge back to the vault and burns them from the marke
 
 - **Request:** `MsgBridgeBurnSharesRequest { bridge, vault_address, shares }`  
 - **Response:** `MsgBridgeBurnSharesResponse {}`  
+
+---
+
+## SetShareDenomMetadata
+
+Admin-only. Sets Bank module metadata for a vault’s share denom, defining how it is displayed (name, symbol, units).
+
+- **Request:** `MsgSetShareDenomMetadataRequest { admin, vault_address, metadata }`
+- **Response:** `MsgSetShareDenomMetadataResponse {}`
+

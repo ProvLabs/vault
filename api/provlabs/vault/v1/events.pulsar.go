@@ -17753,15 +17753,20 @@ func (x *EventBridgeBurnShares) GetShares() string {
 	return ""
 }
 
-// EventDenomUnit denom units for set denom share event
+// EventDenomUnit describes a single denom unit entry that is included in the
+// share denom metadata emitted with EventSetShareDenomMetadata.
 type EventDenomUnit struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Denom    string   `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
-	Exponent string   `protobuf:"bytes,2,opt,name=exponent,proto3" json:"exponent,omitempty"`
-	Aliases  []string `protobuf:"bytes,3,rep,name=aliases,proto3" json:"aliases,omitempty"`
+	// denom is the unit name (e.g., "nushare", "ushare").
+	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+	// exponent is the base-10 exponent for this unit relative to the base denom.
+	// For example, exponent=6 means 1 display unit = 10^6 base units.
+	Exponent string `protobuf:"bytes,2,opt,name=exponent,proto3" json:"exponent,omitempty"`
+	// aliases lists optional alternative names for this unit. May be empty.
+	Aliases []string `protobuf:"bytes,3,rep,name=aliases,proto3" json:"aliases,omitempty"`
 }
 
 func (x *EventDenomUnit) Reset() {
@@ -17805,20 +17810,29 @@ func (x *EventDenomUnit) GetAliases() []string {
 	return nil
 }
 
-// EventSetShareDenomMetadata event emitted when metadata is set on share with denom
+// EventSetShareDenomMetadata is emitted when denom metadata is set for a vault’s
+// share denom (via MsgSetShareDenomMetadata).
 type EventSetShareDenomMetadata struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	VaultAddress        string            `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	MetadataBase        string            `protobuf:"bytes,2,opt,name=metadata_base,json=metadataBase,proto3" json:"metadata_base,omitempty"`
-	MetadataDescription string            `protobuf:"bytes,3,opt,name=metadata_description,json=metadataDescription,proto3" json:"metadata_description,omitempty"`
-	MetadataDisplay     string            `protobuf:"bytes,4,opt,name=metadata_display,json=metadataDisplay,proto3" json:"metadata_display,omitempty"`
-	MetadataDenomUnits  []*EventDenomUnit `protobuf:"bytes,5,rep,name=metadata_denom_units,json=metadataDenomUnits,proto3" json:"metadata_denom_units,omitempty"`
-	Administrator       string            `protobuf:"bytes,6,opt,name=administrator,proto3" json:"administrator,omitempty"`
-	MetadataName        string            `protobuf:"bytes,7,opt,name=metadata_name,json=metadataName,proto3" json:"metadata_name,omitempty"`
-	MetadataSymbol      string            `protobuf:"bytes,8,opt,name=metadata_symbol,json=metadataSymbol,proto3" json:"metadata_symbol,omitempty"`
+	// vault_address is the bech32 address of the vault.
+	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// metadata_base is the base denomination (e.g., "nushare").
+	MetadataBase string `protobuf:"bytes,2,opt,name=metadata_base,json=metadataBase,proto3" json:"metadata_base,omitempty"`
+	// metadata_description is a human-readable description of the share denom.
+	MetadataDescription string `protobuf:"bytes,3,opt,name=metadata_description,json=metadataDescription,proto3" json:"metadata_description,omitempty"`
+	// metadata_display is the display denomination (e.g., "ushare" or "SHARE").
+	MetadataDisplay string `protobuf:"bytes,4,opt,name=metadata_display,json=metadataDisplay,proto3" json:"metadata_display,omitempty"`
+	// metadata_denom_units lists all denom units and their exponents.
+	MetadataDenomUnits []*EventDenomUnit `protobuf:"bytes,5,rep,name=metadata_denom_units,json=metadataDenomUnits,proto3" json:"metadata_denom_units,omitempty"`
+	// administrator is the bech32 address of the signer that set the metadata.
+	Administrator string `protobuf:"bytes,6,opt,name=administrator,proto3" json:"administrator,omitempty"`
+	// metadata_name is the descriptive name for the share denom.
+	MetadataName string `protobuf:"bytes,7,opt,name=metadata_name,json=metadataName,proto3" json:"metadata_name,omitempty"`
+	// metadata_symbol is the short ticker-style symbol (optional).
+	MetadataSymbol string `protobuf:"bytes,8,opt,name=metadata_symbol,json=metadataSymbol,proto3" json:"metadata_symbol,omitempty"`
 }
 
 func (x *EventSetShareDenomMetadata) Reset() {

@@ -651,8 +651,8 @@ func (k msgServer) BridgeBurnShares(goCtx context.Context, msg *types.MsgBridgeB
 	return &types.MsgBridgeBurnSharesResponse{}, nil
 }
 
-// MsgSetShareDenomMetadata sets the metadata for the vault share denom.
-func (k msgServer) MsgSetShareDenomMetadata(goCtx context.Context, msg *types.MsgSetShareDenomMetadataRequest) (*types.MsgSetShareDenomMetadataResponse, error) {
+// SetShareDenomMetadata sets the metadata for the vault share denom.
+func (k msgServer) SetShareDenomMetadata(goCtx context.Context, msg *types.MsgSetShareDenomMetadataRequest) (*types.MsgSetShareDenomMetadataResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)

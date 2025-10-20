@@ -240,3 +240,12 @@ func NewEventBridgeBurnShares(vaultAddress, bridge string, shares sdk.Coin) *Eve
 		Shares:       shares.String(),
 	}
 }
+
+// NewEventAssetManagerSet creates a new EventAssetManagerSet event.
+func NewEventAssetManagerSet(vaultAddress, admin, assetManager string) *EventAssetManagerSet {
+	return &EventAssetManagerSet{
+		VaultAddress: vaultAddress,
+		Admin:        admin,
+		AssetManager: assetManager,
+	}
+}

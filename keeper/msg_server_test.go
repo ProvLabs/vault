@@ -1663,7 +1663,7 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds() {
 			name:  "happy path",
 			setup: setup,
 			msg: types.MsgDepositInterestFundsRequest{
-				Admin:        admin.String(),
+				Authority:    admin.String(),
 				VaultAddress: vaultAddr.String(),
 				Amount:       amount,
 			},
@@ -1693,7 +1693,7 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds() {
 			name:  "happy path restricted",
 			setup: setupRestricted,
 			msg: types.MsgDepositInterestFundsRequest{
-				Admin:        admin.String(),
+				Authority:    admin.String(),
 				VaultAddress: vaultAddr.String(),
 				Amount:       amount,
 			},
@@ -1747,7 +1747,7 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds_Failures() {
 		{
 			name: "vault does not exist",
 			msg: types.MsgDepositInterestFundsRequest{
-				Admin:        admin.String(),
+				Authority:    admin.String(),
 				VaultAddress: types.GetVaultAddress("doesnotexist").String(),
 				Amount:       amount,
 			},
@@ -1757,7 +1757,7 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds_Failures() {
 			name:  "invalid vault address not a vault account",
 			setup: setup,
 			msg: types.MsgDepositInterestFundsRequest{
-				Admin:        admin.String(),
+				Authority:    admin.String(),
 				VaultAddress: markertypes.MustGetMarkerAddress(shares).String(),
 				Amount:       amount,
 			},
@@ -1767,7 +1767,7 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds_Failures() {
 			name:  "unauthorized admin",
 			setup: setupWithAdminFunds,
 			msg: types.MsgDepositInterestFundsRequest{
-				Admin:        other.String(),
+				Authority:    other.String(),
 				VaultAddress: vaultAddr.String(),
 				Amount:       amount,
 			},
@@ -1777,7 +1777,7 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds_Failures() {
 			name:  "incorrect underlying asset",
 			setup: setup,
 			msg: types.MsgDepositInterestFundsRequest{
-				Admin:        admin.String(),
+				Authority:    admin.String(),
 				VaultAddress: vaultAddr.String(),
 				Amount:       sdk.NewInt64Coin(unsupportedDenom, 9_999_999),
 			},
@@ -1787,7 +1787,7 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds_Failures() {
 			name:  "insufficient admin balance",
 			setup: setup,
 			msg: types.MsgDepositInterestFundsRequest{
-				Admin:        admin.String(),
+				Authority:    admin.String(),
 				VaultAddress: vaultAddr.String(),
 				Amount:       sdk.NewInt64Coin(underlying, 9_999_999),
 			},
@@ -1848,7 +1848,7 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds() {
 			name:  "happy path",
 			setup: setup,
 			msg: types.MsgWithdrawInterestFundsRequest{
-				Admin:        admin.String(),
+				Authority:    admin.String(),
 				VaultAddress: vaultAddr.String(),
 				Amount:       amount,
 			},
@@ -1900,7 +1900,7 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds_Failures() {
 		{
 			name: "vault does not exist",
 			msg: types.MsgWithdrawInterestFundsRequest{
-				Admin:        admin.String(),
+				Authority:    admin.String(),
 				VaultAddress: types.GetVaultAddress("doesnotexist").String(),
 				Amount:       amount,
 			},
@@ -1910,7 +1910,7 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds_Failures() {
 			name:  "invalid vault address not a vault account",
 			setup: setup,
 			msg: types.MsgWithdrawInterestFundsRequest{
-				Admin:        admin.String(),
+				Authority:    admin.String(),
 				VaultAddress: markerAddr.String(),
 				Amount:       amount,
 			},
@@ -1920,7 +1920,7 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds_Failures() {
 			name:  "unauthorized admin",
 			setup: setupWithVaultFunds,
 			msg: types.MsgWithdrawInterestFundsRequest{
-				Admin:        other.String(),
+				Authority:    other.String(),
 				VaultAddress: vaultAddr.String(),
 				Amount:       amount,
 			},
@@ -1930,7 +1930,7 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds_Failures() {
 			name:  "insufficient vault balance",
 			setup: setup,
 			msg: types.MsgWithdrawInterestFundsRequest{
-				Admin:        admin.String(),
+				Authority:    admin.String(),
 				VaultAddress: vaultAddr.String(),
 				Amount:       sdk.NewInt64Coin(underlying, 9_999_999),
 			},
@@ -1940,7 +1940,7 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds_Failures() {
 			name:  "incorrect underlying asset",
 			setup: setup,
 			msg: types.MsgWithdrawInterestFundsRequest{
-				Admin:        admin.String(),
+				Authority:    admin.String(),
 				VaultAddress: vaultAddr.String(),
 				Amount:       sdk.NewInt64Coin(unsupportedDenom, 9_999_999),
 			},
@@ -2007,7 +2007,7 @@ func (s *TestSuite) TestMsgServer_DepositPrincipalFunds() {
 			name:  "happy path",
 			setup: setup,
 			msg: types.MsgDepositPrincipalFundsRequest{
-				Admin:        admin.String(),
+				Authority:    admin.String(),
 				VaultAddress: vaultAddr.String(),
 				Amount:       amount,
 			},
@@ -2065,7 +2065,7 @@ func (s *TestSuite) TestMsgServer_DepositPrincipalFunds_Failures() {
 		{
 			name: "vault does not exist",
 			msg: types.MsgDepositPrincipalFundsRequest{
-				Admin:        admin.String(),
+				Authority:    admin.String(),
 				VaultAddress: types.GetVaultAddress("doesnotexist").String(),
 				Amount:       amount,
 			},
@@ -2075,7 +2075,7 @@ func (s *TestSuite) TestMsgServer_DepositPrincipalFunds_Failures() {
 			name:  "invalid vault address not a vault account",
 			setup: setup,
 			msg: types.MsgDepositPrincipalFundsRequest{
-				Admin:        admin.String(),
+				Authority:    admin.String(),
 				VaultAddress: markertypes.MustGetMarkerAddress(share).String(),
 				Amount:       amount,
 			},
@@ -2085,7 +2085,7 @@ func (s *TestSuite) TestMsgServer_DepositPrincipalFunds_Failures() {
 			name:  "unauthorized admin",
 			setup: setup,
 			msg: types.MsgDepositPrincipalFundsRequest{
-				Admin:        other.String(),
+				Authority:    other.String(),
 				VaultAddress: vaultAddr.String(),
 				Amount:       amount,
 			},
@@ -2095,7 +2095,7 @@ func (s *TestSuite) TestMsgServer_DepositPrincipalFunds_Failures() {
 			name:  "vault is not paused",
 			setup: setupNotPaused,
 			msg: types.MsgDepositPrincipalFundsRequest{
-				Admin:        admin.String(),
+				Authority:    admin.String(),
 				VaultAddress: vaultAddr.String(),
 				Amount:       amount,
 			},
@@ -2105,7 +2105,7 @@ func (s *TestSuite) TestMsgServer_DepositPrincipalFunds_Failures() {
 			name:  "invalid asset for vault",
 			setup: setup,
 			msg: types.MsgDepositPrincipalFundsRequest{
-				Admin:        admin.String(),
+				Authority:    admin.String(),
 				VaultAddress: vaultAddr.String(),
 				Amount:       sdk.NewInt64Coin("wrongdenom", 500),
 			},
@@ -2115,7 +2115,7 @@ func (s *TestSuite) TestMsgServer_DepositPrincipalFunds_Failures() {
 			name:  "insufficient admin balance",
 			setup: setup,
 			msg: types.MsgDepositPrincipalFundsRequest{
-				Admin:        admin.String(),
+				Authority:    admin.String(),
 				VaultAddress: vaultAddr.String(),
 				Amount:       sdk.NewInt64Coin(underlying, 9_999_999),
 			},
@@ -2182,7 +2182,7 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds() {
 			name:  "happy path",
 			setup: setup,
 			msg: types.MsgWithdrawPrincipalFundsRequest{
-				Admin:        admin.String(),
+				Authority:    admin.String(),
 				VaultAddress: vaultAddr.String(),
 				Amount:       amount,
 			},
@@ -2241,7 +2241,7 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds_Failures() {
 		{
 			name: "vault does not exist",
 			msg: types.MsgWithdrawPrincipalFundsRequest{
-				Admin:        admin.String(),
+				Authority:    admin.String(),
 				VaultAddress: types.GetVaultAddress("doesnotexist").String(),
 				Amount:       amount,
 			},
@@ -2251,7 +2251,7 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds_Failures() {
 			name:  "invalid vault address not a vault account",
 			setup: setup,
 			msg: types.MsgWithdrawPrincipalFundsRequest{
-				Admin:        admin.String(),
+				Authority:    admin.String(),
 				VaultAddress: markerAddr.String(),
 				Amount:       amount,
 			},
@@ -2261,7 +2261,7 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds_Failures() {
 			name:  "unauthorized admin",
 			setup: setup,
 			msg: types.MsgWithdrawPrincipalFundsRequest{
-				Admin:        other.String(),
+				Authority:    other.String(),
 				VaultAddress: vaultAddr.String(),
 				Amount:       amount,
 			},
@@ -2271,7 +2271,7 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds_Failures() {
 			name:  "vault is not paused",
 			setup: setupNotPaused,
 			msg: types.MsgWithdrawPrincipalFundsRequest{
-				Admin:        admin.String(),
+				Authority:    admin.String(),
 				VaultAddress: vaultAddr.String(),
 				Amount:       amount,
 			},
@@ -2281,7 +2281,7 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds_Failures() {
 			name:  "invalid asset for vault",
 			setup: setup,
 			msg: types.MsgWithdrawPrincipalFundsRequest{
-				Admin:        admin.String(),
+				Authority:    admin.String(),
 				VaultAddress: vaultAddr.String(),
 				Amount:       sdk.NewInt64Coin("wrongdenom", 500),
 			},
@@ -2291,7 +2291,7 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds_Failures() {
 			name:  "insufficient marker balance",
 			setup: setup,
 			msg: types.MsgWithdrawPrincipalFundsRequest{
-				Admin:        admin.String(),
+				Authority:    admin.String(),
 				VaultAddress: vaultAddr.String(),
 				Amount:       sdk.NewInt64Coin(underlying, 9_999_999),
 			},
@@ -2437,7 +2437,7 @@ func (s *TestSuite) TestMsgServer_PauseVault() {
 		name:  "happy path",
 		setup: setup,
 		msg: types.MsgPauseVaultRequest{
-			Admin:        admin.String(),
+			Authority:    admin.String(),
 			VaultAddress: vaultAddr.String(),
 			Reason:       reason,
 		},
@@ -2486,7 +2486,7 @@ func (s *TestSuite) TestMsgServer_PauseVault() {
 		name:  "happy path with interest",
 		setup: setupWithInterest,
 		msg: types.MsgPauseVaultRequest{
-			Admin:        admin.String(),
+			Authority:    admin.String(),
 			VaultAddress: vaultAddr.String(),
 			Reason:       reason,
 		},
@@ -2548,7 +2548,7 @@ func (s *TestSuite) TestMsgServer_PauseVault_Failures() {
 		{
 			name: "vault not found",
 			msg: types.MsgPauseVaultRequest{
-				Admin:        admin.String(),
+				Authority:    admin.String(),
 				VaultAddress: types.GetVaultAddress("nope").String(),
 				Reason:       "x",
 			},
@@ -2558,7 +2558,7 @@ func (s *TestSuite) TestMsgServer_PauseVault_Failures() {
 			name:  "invalid vault address (not a vault account)",
 			setup: base,
 			msg: types.MsgPauseVaultRequest{
-				Admin:        admin.String(),
+				Authority:    admin.String(),
 				VaultAddress: markerAddr.String(),
 				Reason:       "x",
 			},
@@ -2568,7 +2568,7 @@ func (s *TestSuite) TestMsgServer_PauseVault_Failures() {
 			name:  "unauthorized admin",
 			setup: base,
 			msg: types.MsgPauseVaultRequest{
-				Admin:        other.String(),
+				Authority:    other.String(),
 				VaultAddress: vaultAddr.String(),
 				Reason:       "x",
 			},
@@ -2579,7 +2579,7 @@ func (s *TestSuite) TestMsgServer_PauseVault_Failures() {
 			setup: func() {
 				base()
 				_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).PauseVault(s.ctx, &types.MsgPauseVaultRequest{
-					Admin:        admin.String(),
+					Authority:    admin.String(),
 					VaultAddress: vaultAddr.String(),
 					Reason:       "first",
 				})
@@ -2587,7 +2587,7 @@ func (s *TestSuite) TestMsgServer_PauseVault_Failures() {
 				s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 			},
 			msg: types.MsgPauseVaultRequest{
-				Admin:        admin.String(),
+				Authority:    admin.String(),
 				VaultAddress: vaultAddr.String(),
 				Reason:       "second",
 			},
@@ -2637,7 +2637,7 @@ func (s *TestSuite) TestMsgServer_UnpauseVault() {
 		})
 		s.Require().NoError(err, "expected vault creation to succeed")
 		_, err = keeper.NewMsgServer(s.simApp.VaultKeeper).PauseVault(s.ctx, &types.MsgPauseVaultRequest{
-			Admin:        admin.String(),
+			Authority:    admin.String(),
 			VaultAddress: vaultAddr.String(),
 			Reason:       "maintenance",
 		})
@@ -2649,7 +2649,7 @@ func (s *TestSuite) TestMsgServer_UnpauseVault() {
 		name:  "happy path",
 		setup: setup,
 		msg: types.MsgUnpauseVaultRequest{
-			Admin:        admin.String(),
+			Authority:    admin.String(),
 			VaultAddress: vaultAddr.String(),
 		},
 		postCheckArgs: postCheckArgs{
@@ -2700,7 +2700,7 @@ func (s *TestSuite) TestMsgServer_UnpauseVault_Failures() {
 	paused := func() {
 		base()
 		_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).PauseVault(s.ctx, &types.MsgPauseVaultRequest{
-			Admin:        admin.String(),
+			Authority:    admin.String(),
 			VaultAddress: vaultAddr.String(),
 			Reason:       "maintenance",
 		})
@@ -2712,7 +2712,7 @@ func (s *TestSuite) TestMsgServer_UnpauseVault_Failures() {
 		{
 			name: "vault not found",
 			msg: types.MsgUnpauseVaultRequest{
-				Admin:        admin.String(),
+				Authority:    admin.String(),
 				VaultAddress: types.GetVaultAddress("missing").String(),
 			},
 			expectedErrSubstrs: []string{"not found"},
@@ -2721,7 +2721,7 @@ func (s *TestSuite) TestMsgServer_UnpauseVault_Failures() {
 			name:  "invalid vault address (not a vault account)",
 			setup: base,
 			msg: types.MsgUnpauseVaultRequest{
-				Admin:        admin.String(),
+				Authority:    admin.String(),
 				VaultAddress: markerAddr.String(),
 			},
 			expectedErrSubstrs: []string{"failed to get vault", "is not a vault account"},
@@ -2730,7 +2730,7 @@ func (s *TestSuite) TestMsgServer_UnpauseVault_Failures() {
 			name:  "unauthorized admin",
 			setup: paused,
 			msg: types.MsgUnpauseVaultRequest{
-				Admin:        other.String(),
+				Authority:    other.String(),
 				VaultAddress: vaultAddr.String(),
 			},
 			expectedErrSubstrs: []string{"unauthorized", "is not the vault admin"},
@@ -2739,7 +2739,7 @@ func (s *TestSuite) TestMsgServer_UnpauseVault_Failures() {
 			name:  "not paused",
 			setup: base,
 			msg: types.MsgUnpauseVaultRequest{
-				Admin:        admin.String(),
+				Authority:    admin.String(),
 				VaultAddress: vaultAddr.String(),
 			},
 			expectedErrSubstrs: []string{"is not paused"},

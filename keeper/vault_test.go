@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"fmt"
-	"testing"
 	"time"
 
 	"cosmossdk.io/math"
@@ -650,63 +649,4 @@ func (s *TestSuite) TestAutoPauseVault_SetsPausedAndEmitsEvent() {
 	}
 	s.Require().True(hasAddr, "event should include vault_address attribute")
 	s.Require().True(hasReason, "event should include reason attribute")
-}
-
-func TestVaultAccount_ValidateManagementAuthority(t *testing.T) {
-	admin := utils.TestAddress().Bech32
-	assetMgr := utils.TestAddress().Bech32
-	other := utils.TestAddress().Bech32
-
-	tests := []struct {
-		name       string
-		va         types.VaultAccount
-		authority  string
-		shouldPass bool
-	}{
-		{
-			name:       "admin allowed",
-			va:         types.VaultAccount{Admin: admin, AssetManager: ""},
-			authority:  admin,
-			shouldPass: true,
-		},
-		{
-			name:       "asset manager allowed",
-			va:         types.VaultAccount{Admin: admin, AssetManager: assetMgr},
-			authority:  assetMgr,
-			shouldPass: true,
-		},
-		{
-			name:       "non-admin with no asset manager set => denied",
-			va:         types.VaultAccount{Admin: admin, AssetManager: ""},
-			authority:  other,
-			shouldPass: false,
-		},
-		{
-			name:       "non-admin, non-asset-manager => denied",
-			va:         types.VaultAccount{Admin: admin, AssetManager: assetMgr},
-			authority:  other,
-			shouldPass: false,
-		},
-		{
-			name:       "empty authority => denied",
-			va:         types.VaultAccount{Admin: admin, AssetManager: assetMgr},
-			authority:  "",
-			shouldPass: false,
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			err := tc.va.ValidateManagementAuthority(tc.authority)
-			if tc.shouldPass {
-				assert.NoError(t, err, "expected authority to be accepted")
-			} else {
-				assert.Error(t, err, "expected authority to be rejected")
-				assert.Contains(t, err.Error(), "unauthorized authority", "error should indicate unauthorized")
-				if tc.authority != "" {
-					assert.Contains(t, err.Error(), tc.authority, "error should include the provided authority")
-				}
-			}
-		})
-	}
 }

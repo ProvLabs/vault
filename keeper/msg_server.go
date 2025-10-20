@@ -650,3 +650,35 @@ func (k msgServer) BridgeBurnShares(goCtx context.Context, msg *types.MsgBridgeB
 
 	return &types.MsgBridgeBurnSharesResponse{}, nil
 }
+
+// MsgSetShareDenomMetadata sets the metadata for the vault share denom.
+func (k msgServer) MsgSetShareDenomMetadata(goCtx context.Context, msg *types.MsgSetShareDenomMetadataRequest) (*types.MsgSetShareDenomMetadataResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault: %w", err)
+	}
+	if vault == nil {
+		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+	}
+	if err := vault.ValidateAdmin(msg.Admin); err != nil {
+		return nil, err
+	}
+
+	metadata := msg.Metadata
+	if metadata.Base != vault.TotalShares.Denom {
+		return nil, fmt.Errorf("metadata base denom %s does not match vault share denom %s", metadata.Base, vault.TotalShares.Denom)
+	}
+
+	k.BankKeeper.SetDenomMetaData(ctx, metadata)
+
+	if err := ctx.EventManager().EmitTypedEvent(
+		types.NewEventSetShareDenomMetadata(vaultAddr.String(), msg.Admin, metadata),
+	); err != nil {
+		return nil, fmt.Errorf("failed to emit EventSetShareDenomMetadata: %w", err)
+	}
+
+	return &types.MsgSetShareDenomMetadataResponse{}, nil
+}

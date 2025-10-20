@@ -14659,6 +14659,1556 @@ func (x *fastReflection_EventBridgeBurnShares) ProtoMethods() *protoiface.Method
 	}
 }
 
+var _ protoreflect.List = (*_EventDenomUnit_3_list)(nil)
+
+type _EventDenomUnit_3_list struct {
+	list *[]string
+}
+
+func (x *_EventDenomUnit_3_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_EventDenomUnit_3_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfString((*x.list)[i])
+}
+
+func (x *_EventDenomUnit_3_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.String()
+	concreteValue := valueUnwrapped
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_EventDenomUnit_3_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.String()
+	concreteValue := valueUnwrapped
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_EventDenomUnit_3_list) AppendMutable() protoreflect.Value {
+	panic(fmt.Errorf("AppendMutable can not be called on message EventDenomUnit at list field Aliases as it is not of Message kind"))
+}
+
+func (x *_EventDenomUnit_3_list) Truncate(n int) {
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_EventDenomUnit_3_list) NewElement() protoreflect.Value {
+	v := ""
+	return protoreflect.ValueOfString(v)
+}
+
+func (x *_EventDenomUnit_3_list) IsValid() bool {
+	return x.list != nil
+}
+
+var (
+	md_EventDenomUnit          protoreflect.MessageDescriptor
+	fd_EventDenomUnit_denom    protoreflect.FieldDescriptor
+	fd_EventDenomUnit_exponent protoreflect.FieldDescriptor
+	fd_EventDenomUnit_aliases  protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_provlabs_vault_v1_events_proto_init()
+	md_EventDenomUnit = File_provlabs_vault_v1_events_proto.Messages().ByName("EventDenomUnit")
+	fd_EventDenomUnit_denom = md_EventDenomUnit.Fields().ByName("denom")
+	fd_EventDenomUnit_exponent = md_EventDenomUnit.Fields().ByName("exponent")
+	fd_EventDenomUnit_aliases = md_EventDenomUnit.Fields().ByName("aliases")
+}
+
+var _ protoreflect.Message = (*fastReflection_EventDenomUnit)(nil)
+
+type fastReflection_EventDenomUnit EventDenomUnit
+
+func (x *EventDenomUnit) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_EventDenomUnit)(x)
+}
+
+func (x *EventDenomUnit) slowProtoReflect() protoreflect.Message {
+	mi := &file_provlabs_vault_v1_events_proto_msgTypes[25]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_EventDenomUnit_messageType fastReflection_EventDenomUnit_messageType
+var _ protoreflect.MessageType = fastReflection_EventDenomUnit_messageType{}
+
+type fastReflection_EventDenomUnit_messageType struct{}
+
+func (x fastReflection_EventDenomUnit_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_EventDenomUnit)(nil)
+}
+func (x fastReflection_EventDenomUnit_messageType) New() protoreflect.Message {
+	return new(fastReflection_EventDenomUnit)
+}
+func (x fastReflection_EventDenomUnit_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_EventDenomUnit
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_EventDenomUnit) Descriptor() protoreflect.MessageDescriptor {
+	return md_EventDenomUnit
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_EventDenomUnit) Type() protoreflect.MessageType {
+	return _fastReflection_EventDenomUnit_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_EventDenomUnit) New() protoreflect.Message {
+	return new(fastReflection_EventDenomUnit)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_EventDenomUnit) Interface() protoreflect.ProtoMessage {
+	return (*EventDenomUnit)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_EventDenomUnit) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Denom != "" {
+		value := protoreflect.ValueOfString(x.Denom)
+		if !f(fd_EventDenomUnit_denom, value) {
+			return
+		}
+	}
+	if x.Exponent != "" {
+		value := protoreflect.ValueOfString(x.Exponent)
+		if !f(fd_EventDenomUnit_exponent, value) {
+			return
+		}
+	}
+	if len(x.Aliases) != 0 {
+		value := protoreflect.ValueOfList(&_EventDenomUnit_3_list{list: &x.Aliases})
+		if !f(fd_EventDenomUnit_aliases, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_EventDenomUnit) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "provlabs.vault.v1.EventDenomUnit.denom":
+		return x.Denom != ""
+	case "provlabs.vault.v1.EventDenomUnit.exponent":
+		return x.Exponent != ""
+	case "provlabs.vault.v1.EventDenomUnit.aliases":
+		return len(x.Aliases) != 0
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventDenomUnit"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.EventDenomUnit does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_EventDenomUnit) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "provlabs.vault.v1.EventDenomUnit.denom":
+		x.Denom = ""
+	case "provlabs.vault.v1.EventDenomUnit.exponent":
+		x.Exponent = ""
+	case "provlabs.vault.v1.EventDenomUnit.aliases":
+		x.Aliases = nil
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventDenomUnit"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.EventDenomUnit does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_EventDenomUnit) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "provlabs.vault.v1.EventDenomUnit.denom":
+		value := x.Denom
+		return protoreflect.ValueOfString(value)
+	case "provlabs.vault.v1.EventDenomUnit.exponent":
+		value := x.Exponent
+		return protoreflect.ValueOfString(value)
+	case "provlabs.vault.v1.EventDenomUnit.aliases":
+		if len(x.Aliases) == 0 {
+			return protoreflect.ValueOfList(&_EventDenomUnit_3_list{})
+		}
+		listValue := &_EventDenomUnit_3_list{list: &x.Aliases}
+		return protoreflect.ValueOfList(listValue)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventDenomUnit"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.EventDenomUnit does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_EventDenomUnit) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "provlabs.vault.v1.EventDenomUnit.denom":
+		x.Denom = value.Interface().(string)
+	case "provlabs.vault.v1.EventDenomUnit.exponent":
+		x.Exponent = value.Interface().(string)
+	case "provlabs.vault.v1.EventDenomUnit.aliases":
+		lv := value.List()
+		clv := lv.(*_EventDenomUnit_3_list)
+		x.Aliases = *clv.list
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventDenomUnit"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.EventDenomUnit does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_EventDenomUnit) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "provlabs.vault.v1.EventDenomUnit.aliases":
+		if x.Aliases == nil {
+			x.Aliases = []string{}
+		}
+		value := &_EventDenomUnit_3_list{list: &x.Aliases}
+		return protoreflect.ValueOfList(value)
+	case "provlabs.vault.v1.EventDenomUnit.denom":
+		panic(fmt.Errorf("field denom of message provlabs.vault.v1.EventDenomUnit is not mutable"))
+	case "provlabs.vault.v1.EventDenomUnit.exponent":
+		panic(fmt.Errorf("field exponent of message provlabs.vault.v1.EventDenomUnit is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventDenomUnit"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.EventDenomUnit does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_EventDenomUnit) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "provlabs.vault.v1.EventDenomUnit.denom":
+		return protoreflect.ValueOfString("")
+	case "provlabs.vault.v1.EventDenomUnit.exponent":
+		return protoreflect.ValueOfString("")
+	case "provlabs.vault.v1.EventDenomUnit.aliases":
+		list := []string{}
+		return protoreflect.ValueOfList(&_EventDenomUnit_3_list{list: &list})
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventDenomUnit"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.EventDenomUnit does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_EventDenomUnit) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.EventDenomUnit", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_EventDenomUnit) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_EventDenomUnit) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_EventDenomUnit) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_EventDenomUnit) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*EventDenomUnit)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.Denom)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Exponent)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if len(x.Aliases) > 0 {
+			for _, s := range x.Aliases {
+				l = len(s)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*EventDenomUnit)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.Aliases) > 0 {
+			for iNdEx := len(x.Aliases) - 1; iNdEx >= 0; iNdEx-- {
+				i -= len(x.Aliases[iNdEx])
+				copy(dAtA[i:], x.Aliases[iNdEx])
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Aliases[iNdEx])))
+				i--
+				dAtA[i] = 0x1a
+			}
+		}
+		if len(x.Exponent) > 0 {
+			i -= len(x.Exponent)
+			copy(dAtA[i:], x.Exponent)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Exponent)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.Denom) > 0 {
+			i -= len(x.Denom)
+			copy(dAtA[i:], x.Denom)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Denom)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*EventDenomUnit)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EventDenomUnit: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EventDenomUnit: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Denom = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Exponent", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Exponent = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Aliases", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Aliases = append(x.Aliases, string(dAtA[iNdEx:postIndex]))
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var _ protoreflect.List = (*_EventSetShareDenomMetadata_5_list)(nil)
+
+type _EventSetShareDenomMetadata_5_list struct {
+	list *[]*EventDenomUnit
+}
+
+func (x *_EventSetShareDenomMetadata_5_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_EventSetShareDenomMetadata_5_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_EventSetShareDenomMetadata_5_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*EventDenomUnit)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_EventSetShareDenomMetadata_5_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*EventDenomUnit)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_EventSetShareDenomMetadata_5_list) AppendMutable() protoreflect.Value {
+	v := new(EventDenomUnit)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_EventSetShareDenomMetadata_5_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_EventSetShareDenomMetadata_5_list) NewElement() protoreflect.Value {
+	v := new(EventDenomUnit)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_EventSetShareDenomMetadata_5_list) IsValid() bool {
+	return x.list != nil
+}
+
+var (
+	md_EventSetShareDenomMetadata                      protoreflect.MessageDescriptor
+	fd_EventSetShareDenomMetadata_vault_address        protoreflect.FieldDescriptor
+	fd_EventSetShareDenomMetadata_metadata_base        protoreflect.FieldDescriptor
+	fd_EventSetShareDenomMetadata_metadata_description protoreflect.FieldDescriptor
+	fd_EventSetShareDenomMetadata_metadata_display     protoreflect.FieldDescriptor
+	fd_EventSetShareDenomMetadata_metadata_denom_units protoreflect.FieldDescriptor
+	fd_EventSetShareDenomMetadata_administrator        protoreflect.FieldDescriptor
+	fd_EventSetShareDenomMetadata_metadata_name        protoreflect.FieldDescriptor
+	fd_EventSetShareDenomMetadata_metadata_symbol      protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_provlabs_vault_v1_events_proto_init()
+	md_EventSetShareDenomMetadata = File_provlabs_vault_v1_events_proto.Messages().ByName("EventSetShareDenomMetadata")
+	fd_EventSetShareDenomMetadata_vault_address = md_EventSetShareDenomMetadata.Fields().ByName("vault_address")
+	fd_EventSetShareDenomMetadata_metadata_base = md_EventSetShareDenomMetadata.Fields().ByName("metadata_base")
+	fd_EventSetShareDenomMetadata_metadata_description = md_EventSetShareDenomMetadata.Fields().ByName("metadata_description")
+	fd_EventSetShareDenomMetadata_metadata_display = md_EventSetShareDenomMetadata.Fields().ByName("metadata_display")
+	fd_EventSetShareDenomMetadata_metadata_denom_units = md_EventSetShareDenomMetadata.Fields().ByName("metadata_denom_units")
+	fd_EventSetShareDenomMetadata_administrator = md_EventSetShareDenomMetadata.Fields().ByName("administrator")
+	fd_EventSetShareDenomMetadata_metadata_name = md_EventSetShareDenomMetadata.Fields().ByName("metadata_name")
+	fd_EventSetShareDenomMetadata_metadata_symbol = md_EventSetShareDenomMetadata.Fields().ByName("metadata_symbol")
+}
+
+var _ protoreflect.Message = (*fastReflection_EventSetShareDenomMetadata)(nil)
+
+type fastReflection_EventSetShareDenomMetadata EventSetShareDenomMetadata
+
+func (x *EventSetShareDenomMetadata) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_EventSetShareDenomMetadata)(x)
+}
+
+func (x *EventSetShareDenomMetadata) slowProtoReflect() protoreflect.Message {
+	mi := &file_provlabs_vault_v1_events_proto_msgTypes[26]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_EventSetShareDenomMetadata_messageType fastReflection_EventSetShareDenomMetadata_messageType
+var _ protoreflect.MessageType = fastReflection_EventSetShareDenomMetadata_messageType{}
+
+type fastReflection_EventSetShareDenomMetadata_messageType struct{}
+
+func (x fastReflection_EventSetShareDenomMetadata_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_EventSetShareDenomMetadata)(nil)
+}
+func (x fastReflection_EventSetShareDenomMetadata_messageType) New() protoreflect.Message {
+	return new(fastReflection_EventSetShareDenomMetadata)
+}
+func (x fastReflection_EventSetShareDenomMetadata_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_EventSetShareDenomMetadata
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_EventSetShareDenomMetadata) Descriptor() protoreflect.MessageDescriptor {
+	return md_EventSetShareDenomMetadata
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_EventSetShareDenomMetadata) Type() protoreflect.MessageType {
+	return _fastReflection_EventSetShareDenomMetadata_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_EventSetShareDenomMetadata) New() protoreflect.Message {
+	return new(fastReflection_EventSetShareDenomMetadata)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_EventSetShareDenomMetadata) Interface() protoreflect.ProtoMessage {
+	return (*EventSetShareDenomMetadata)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_EventSetShareDenomMetadata) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.VaultAddress != "" {
+		value := protoreflect.ValueOfString(x.VaultAddress)
+		if !f(fd_EventSetShareDenomMetadata_vault_address, value) {
+			return
+		}
+	}
+	if x.MetadataBase != "" {
+		value := protoreflect.ValueOfString(x.MetadataBase)
+		if !f(fd_EventSetShareDenomMetadata_metadata_base, value) {
+			return
+		}
+	}
+	if x.MetadataDescription != "" {
+		value := protoreflect.ValueOfString(x.MetadataDescription)
+		if !f(fd_EventSetShareDenomMetadata_metadata_description, value) {
+			return
+		}
+	}
+	if x.MetadataDisplay != "" {
+		value := protoreflect.ValueOfString(x.MetadataDisplay)
+		if !f(fd_EventSetShareDenomMetadata_metadata_display, value) {
+			return
+		}
+	}
+	if len(x.MetadataDenomUnits) != 0 {
+		value := protoreflect.ValueOfList(&_EventSetShareDenomMetadata_5_list{list: &x.MetadataDenomUnits})
+		if !f(fd_EventSetShareDenomMetadata_metadata_denom_units, value) {
+			return
+		}
+	}
+	if x.Administrator != "" {
+		value := protoreflect.ValueOfString(x.Administrator)
+		if !f(fd_EventSetShareDenomMetadata_administrator, value) {
+			return
+		}
+	}
+	if x.MetadataName != "" {
+		value := protoreflect.ValueOfString(x.MetadataName)
+		if !f(fd_EventSetShareDenomMetadata_metadata_name, value) {
+			return
+		}
+	}
+	if x.MetadataSymbol != "" {
+		value := protoreflect.ValueOfString(x.MetadataSymbol)
+		if !f(fd_EventSetShareDenomMetadata_metadata_symbol, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_EventSetShareDenomMetadata) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.vault_address":
+		return x.VaultAddress != ""
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.metadata_base":
+		return x.MetadataBase != ""
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.metadata_description":
+		return x.MetadataDescription != ""
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.metadata_display":
+		return x.MetadataDisplay != ""
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.metadata_denom_units":
+		return len(x.MetadataDenomUnits) != 0
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.administrator":
+		return x.Administrator != ""
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.metadata_name":
+		return x.MetadataName != ""
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.metadata_symbol":
+		return x.MetadataSymbol != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventSetShareDenomMetadata"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.EventSetShareDenomMetadata does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_EventSetShareDenomMetadata) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.vault_address":
+		x.VaultAddress = ""
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.metadata_base":
+		x.MetadataBase = ""
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.metadata_description":
+		x.MetadataDescription = ""
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.metadata_display":
+		x.MetadataDisplay = ""
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.metadata_denom_units":
+		x.MetadataDenomUnits = nil
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.administrator":
+		x.Administrator = ""
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.metadata_name":
+		x.MetadataName = ""
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.metadata_symbol":
+		x.MetadataSymbol = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventSetShareDenomMetadata"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.EventSetShareDenomMetadata does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_EventSetShareDenomMetadata) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.vault_address":
+		value := x.VaultAddress
+		return protoreflect.ValueOfString(value)
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.metadata_base":
+		value := x.MetadataBase
+		return protoreflect.ValueOfString(value)
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.metadata_description":
+		value := x.MetadataDescription
+		return protoreflect.ValueOfString(value)
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.metadata_display":
+		value := x.MetadataDisplay
+		return protoreflect.ValueOfString(value)
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.metadata_denom_units":
+		if len(x.MetadataDenomUnits) == 0 {
+			return protoreflect.ValueOfList(&_EventSetShareDenomMetadata_5_list{})
+		}
+		listValue := &_EventSetShareDenomMetadata_5_list{list: &x.MetadataDenomUnits}
+		return protoreflect.ValueOfList(listValue)
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.administrator":
+		value := x.Administrator
+		return protoreflect.ValueOfString(value)
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.metadata_name":
+		value := x.MetadataName
+		return protoreflect.ValueOfString(value)
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.metadata_symbol":
+		value := x.MetadataSymbol
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventSetShareDenomMetadata"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.EventSetShareDenomMetadata does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_EventSetShareDenomMetadata) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.vault_address":
+		x.VaultAddress = value.Interface().(string)
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.metadata_base":
+		x.MetadataBase = value.Interface().(string)
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.metadata_description":
+		x.MetadataDescription = value.Interface().(string)
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.metadata_display":
+		x.MetadataDisplay = value.Interface().(string)
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.metadata_denom_units":
+		lv := value.List()
+		clv := lv.(*_EventSetShareDenomMetadata_5_list)
+		x.MetadataDenomUnits = *clv.list
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.administrator":
+		x.Administrator = value.Interface().(string)
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.metadata_name":
+		x.MetadataName = value.Interface().(string)
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.metadata_symbol":
+		x.MetadataSymbol = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventSetShareDenomMetadata"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.EventSetShareDenomMetadata does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_EventSetShareDenomMetadata) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.metadata_denom_units":
+		if x.MetadataDenomUnits == nil {
+			x.MetadataDenomUnits = []*EventDenomUnit{}
+		}
+		value := &_EventSetShareDenomMetadata_5_list{list: &x.MetadataDenomUnits}
+		return protoreflect.ValueOfList(value)
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.vault_address":
+		panic(fmt.Errorf("field vault_address of message provlabs.vault.v1.EventSetShareDenomMetadata is not mutable"))
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.metadata_base":
+		panic(fmt.Errorf("field metadata_base of message provlabs.vault.v1.EventSetShareDenomMetadata is not mutable"))
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.metadata_description":
+		panic(fmt.Errorf("field metadata_description of message provlabs.vault.v1.EventSetShareDenomMetadata is not mutable"))
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.metadata_display":
+		panic(fmt.Errorf("field metadata_display of message provlabs.vault.v1.EventSetShareDenomMetadata is not mutable"))
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.administrator":
+		panic(fmt.Errorf("field administrator of message provlabs.vault.v1.EventSetShareDenomMetadata is not mutable"))
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.metadata_name":
+		panic(fmt.Errorf("field metadata_name of message provlabs.vault.v1.EventSetShareDenomMetadata is not mutable"))
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.metadata_symbol":
+		panic(fmt.Errorf("field metadata_symbol of message provlabs.vault.v1.EventSetShareDenomMetadata is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventSetShareDenomMetadata"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.EventSetShareDenomMetadata does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_EventSetShareDenomMetadata) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.vault_address":
+		return protoreflect.ValueOfString("")
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.metadata_base":
+		return protoreflect.ValueOfString("")
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.metadata_description":
+		return protoreflect.ValueOfString("")
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.metadata_display":
+		return protoreflect.ValueOfString("")
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.metadata_denom_units":
+		list := []*EventDenomUnit{}
+		return protoreflect.ValueOfList(&_EventSetShareDenomMetadata_5_list{list: &list})
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.administrator":
+		return protoreflect.ValueOfString("")
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.metadata_name":
+		return protoreflect.ValueOfString("")
+	case "provlabs.vault.v1.EventSetShareDenomMetadata.metadata_symbol":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventSetShareDenomMetadata"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.EventSetShareDenomMetadata does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_EventSetShareDenomMetadata) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.EventSetShareDenomMetadata", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_EventSetShareDenomMetadata) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_EventSetShareDenomMetadata) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_EventSetShareDenomMetadata) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_EventSetShareDenomMetadata) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*EventSetShareDenomMetadata)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.VaultAddress)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.MetadataBase)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.MetadataDescription)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.MetadataDisplay)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if len(x.MetadataDenomUnits) > 0 {
+			for _, e := range x.MetadataDenomUnits {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		l = len(x.Administrator)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.MetadataName)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.MetadataSymbol)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*EventSetShareDenomMetadata)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.MetadataSymbol) > 0 {
+			i -= len(x.MetadataSymbol)
+			copy(dAtA[i:], x.MetadataSymbol)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.MetadataSymbol)))
+			i--
+			dAtA[i] = 0x42
+		}
+		if len(x.MetadataName) > 0 {
+			i -= len(x.MetadataName)
+			copy(dAtA[i:], x.MetadataName)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.MetadataName)))
+			i--
+			dAtA[i] = 0x3a
+		}
+		if len(x.Administrator) > 0 {
+			i -= len(x.Administrator)
+			copy(dAtA[i:], x.Administrator)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Administrator)))
+			i--
+			dAtA[i] = 0x32
+		}
+		if len(x.MetadataDenomUnits) > 0 {
+			for iNdEx := len(x.MetadataDenomUnits) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.MetadataDenomUnits[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x2a
+			}
+		}
+		if len(x.MetadataDisplay) > 0 {
+			i -= len(x.MetadataDisplay)
+			copy(dAtA[i:], x.MetadataDisplay)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.MetadataDisplay)))
+			i--
+			dAtA[i] = 0x22
+		}
+		if len(x.MetadataDescription) > 0 {
+			i -= len(x.MetadataDescription)
+			copy(dAtA[i:], x.MetadataDescription)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.MetadataDescription)))
+			i--
+			dAtA[i] = 0x1a
+		}
+		if len(x.MetadataBase) > 0 {
+			i -= len(x.MetadataBase)
+			copy(dAtA[i:], x.MetadataBase)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.MetadataBase)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.VaultAddress) > 0 {
+			i -= len(x.VaultAddress)
+			copy(dAtA[i:], x.VaultAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.VaultAddress)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*EventSetShareDenomMetadata)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EventSetShareDenomMetadata: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EventSetShareDenomMetadata: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field VaultAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.VaultAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MetadataBase", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.MetadataBase = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MetadataDescription", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.MetadataDescription = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 4:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MetadataDisplay", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.MetadataDisplay = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 5:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MetadataDenomUnits", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.MetadataDenomUnits = append(x.MetadataDenomUnits, &EventDenomUnit{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.MetadataDenomUnits[len(x.MetadataDenomUnits)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 6:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Administrator", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Administrator = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 7:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MetadataName", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.MetadataName = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 8:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field MetadataSymbol", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.MetadataSymbol = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -16203,6 +17753,150 @@ func (x *EventBridgeBurnShares) GetShares() string {
 	return ""
 }
 
+// EventDenomUnit denom units for set denom share event
+type EventDenomUnit struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Denom    string   `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+	Exponent string   `protobuf:"bytes,2,opt,name=exponent,proto3" json:"exponent,omitempty"`
+	Aliases  []string `protobuf:"bytes,3,rep,name=aliases,proto3" json:"aliases,omitempty"`
+}
+
+func (x *EventDenomUnit) Reset() {
+	*x = EventDenomUnit{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_provlabs_vault_v1_events_proto_msgTypes[25]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *EventDenomUnit) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EventDenomUnit) ProtoMessage() {}
+
+// Deprecated: Use EventDenomUnit.ProtoReflect.Descriptor instead.
+func (*EventDenomUnit) Descriptor() ([]byte, []int) {
+	return file_provlabs_vault_v1_events_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *EventDenomUnit) GetDenom() string {
+	if x != nil {
+		return x.Denom
+	}
+	return ""
+}
+
+func (x *EventDenomUnit) GetExponent() string {
+	if x != nil {
+		return x.Exponent
+	}
+	return ""
+}
+
+func (x *EventDenomUnit) GetAliases() []string {
+	if x != nil {
+		return x.Aliases
+	}
+	return nil
+}
+
+// EventSetShareDenomMetadata event emitted when metadata is set on share with denom
+type EventSetShareDenomMetadata struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	VaultAddress        string            `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	MetadataBase        string            `protobuf:"bytes,2,opt,name=metadata_base,json=metadataBase,proto3" json:"metadata_base,omitempty"`
+	MetadataDescription string            `protobuf:"bytes,3,opt,name=metadata_description,json=metadataDescription,proto3" json:"metadata_description,omitempty"`
+	MetadataDisplay     string            `protobuf:"bytes,4,opt,name=metadata_display,json=metadataDisplay,proto3" json:"metadata_display,omitempty"`
+	MetadataDenomUnits  []*EventDenomUnit `protobuf:"bytes,5,rep,name=metadata_denom_units,json=metadataDenomUnits,proto3" json:"metadata_denom_units,omitempty"`
+	Administrator       string            `protobuf:"bytes,6,opt,name=administrator,proto3" json:"administrator,omitempty"`
+	MetadataName        string            `protobuf:"bytes,7,opt,name=metadata_name,json=metadataName,proto3" json:"metadata_name,omitempty"`
+	MetadataSymbol      string            `protobuf:"bytes,8,opt,name=metadata_symbol,json=metadataSymbol,proto3" json:"metadata_symbol,omitempty"`
+}
+
+func (x *EventSetShareDenomMetadata) Reset() {
+	*x = EventSetShareDenomMetadata{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_provlabs_vault_v1_events_proto_msgTypes[26]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *EventSetShareDenomMetadata) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EventSetShareDenomMetadata) ProtoMessage() {}
+
+// Deprecated: Use EventSetShareDenomMetadata.ProtoReflect.Descriptor instead.
+func (*EventSetShareDenomMetadata) Descriptor() ([]byte, []int) {
+	return file_provlabs_vault_v1_events_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *EventSetShareDenomMetadata) GetVaultAddress() string {
+	if x != nil {
+		return x.VaultAddress
+	}
+	return ""
+}
+
+func (x *EventSetShareDenomMetadata) GetMetadataBase() string {
+	if x != nil {
+		return x.MetadataBase
+	}
+	return ""
+}
+
+func (x *EventSetShareDenomMetadata) GetMetadataDescription() string {
+	if x != nil {
+		return x.MetadataDescription
+	}
+	return ""
+}
+
+func (x *EventSetShareDenomMetadata) GetMetadataDisplay() string {
+	if x != nil {
+		return x.MetadataDisplay
+	}
+	return ""
+}
+
+func (x *EventSetShareDenomMetadata) GetMetadataDenomUnits() []*EventDenomUnit {
+	if x != nil {
+		return x.MetadataDenomUnits
+	}
+	return nil
+}
+
+func (x *EventSetShareDenomMetadata) GetAdministrator() string {
+	if x != nil {
+		return x.Administrator
+	}
+	return ""
+}
+
+func (x *EventSetShareDenomMetadata) GetMetadataName() string {
+	if x != nil {
+		return x.MetadataName
+	}
+	return ""
+}
+
+func (x *EventSetShareDenomMetadata) GetMetadataSymbol() string {
+	if x != nil {
+		return x.MetadataSymbol
+	}
+	return ""
+}
+
 var File_provlabs_vault_v1_events_proto protoreflect.FileDescriptor
 
 var file_provlabs_vault_v1_events_proto_rawDesc = []byte{
@@ -16483,20 +18177,53 @@ var file_provlabs_vault_v1_events_proto_rawDesc = []byte{
 	0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64,
 	0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x06, 0x62, 0x72, 0x69,
 	0x64, 0x67, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x18, 0x03, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x42, 0xc3, 0x01, 0x0a, 0x15,
-	0x63, 0x6f, 0x6d, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75,
-	0x6c, 0x74, 0x2e, 0x76, 0x31, 0x42, 0x0b, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x50, 0x72, 0x6f,
-	0x74, 0x6f, 0x50, 0x01, 0x5a, 0x37, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
-	0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f,
-	0x61, 0x70, 0x69, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75,
-	0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2, 0x02, 0x03,
-	0x50, 0x56, 0x58, 0xaa, 0x02, 0x11, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x56,
-	0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x11, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61,
-	0x62, 0x73, 0x5c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1d, 0x50, 0x72,
-	0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x5c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c,
-	0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x13, 0x50, 0x72,
-	0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x3a, 0x3a, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56,
-	0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x01, 0x28, 0x09, 0x52, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x22, 0x5c, 0x0a, 0x0e, 0x45,
+	0x76, 0x65, 0x6e, 0x74, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x55, 0x6e, 0x69, 0x74, 0x12, 0x14, 0x0a,
+	0x05, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x64, 0x65,
+	0x6e, 0x6f, 0x6d, 0x12, 0x1a, 0x0a, 0x08, 0x65, 0x78, 0x70, 0x6f, 0x6e, 0x65, 0x6e, 0x74, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x65, 0x78, 0x70, 0x6f, 0x6e, 0x65, 0x6e, 0x74, 0x12,
+	0x18, 0x0a, 0x07, 0x61, 0x6c, 0x69, 0x61, 0x73, 0x65, 0x73, 0x18, 0x03, 0x20, 0x03, 0x28, 0x09,
+	0x52, 0x07, 0x61, 0x6c, 0x69, 0x61, 0x73, 0x65, 0x73, 0x22, 0xa7, 0x03, 0x0a, 0x1a, 0x45, 0x76,
+	0x65, 0x6e, 0x74, 0x53, 0x65, 0x74, 0x53, 0x68, 0x61, 0x72, 0x65, 0x44, 0x65, 0x6e, 0x6f, 0x6d,
+	0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c,
+	0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42,
+	0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72,
+	0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74,
+	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x23, 0x0a, 0x0d, 0x6d, 0x65, 0x74, 0x61, 0x64,
+	0x61, 0x74, 0x61, 0x5f, 0x62, 0x61, 0x73, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c,
+	0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x42, 0x61, 0x73, 0x65, 0x12, 0x31, 0x0a, 0x14,
+	0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5f, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70,
+	0x74, 0x69, 0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x13, 0x6d, 0x65, 0x74, 0x61,
+	0x64, 0x61, 0x74, 0x61, 0x44, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x12,
+	0x29, 0x0a, 0x10, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5f, 0x64, 0x69, 0x73, 0x70,
+	0x6c, 0x61, 0x79, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0f, 0x6d, 0x65, 0x74, 0x61, 0x64,
+	0x61, 0x74, 0x61, 0x44, 0x69, 0x73, 0x70, 0x6c, 0x61, 0x79, 0x12, 0x53, 0x0a, 0x14, 0x6d, 0x65,
+	0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x5f, 0x75, 0x6e, 0x69,
+	0x74, 0x73, 0x18, 0x05, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c,
+	0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x45, 0x76, 0x65,
+	0x6e, 0x74, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x55, 0x6e, 0x69, 0x74, 0x52, 0x12, 0x6d, 0x65, 0x74,
+	0x61, 0x64, 0x61, 0x74, 0x61, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x55, 0x6e, 0x69, 0x74, 0x73, 0x12,
+	0x24, 0x0a, 0x0d, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x69, 0x73, 0x74, 0x72, 0x61, 0x74, 0x6f, 0x72,
+	0x18, 0x06, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0d, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x69, 0x73, 0x74,
+	0x72, 0x61, 0x74, 0x6f, 0x72, 0x12, 0x23, 0x0a, 0x0d, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74,
+	0x61, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x07, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x6d, 0x65,
+	0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x4e, 0x61, 0x6d, 0x65, 0x12, 0x27, 0x0a, 0x0f, 0x6d, 0x65,
+	0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x5f, 0x73, 0x79, 0x6d, 0x62, 0x6f, 0x6c, 0x18, 0x08, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x0e, 0x6d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0x53, 0x79, 0x6d,
+	0x62, 0x6f, 0x6c, 0x42, 0xc3, 0x01, 0x0a, 0x15, 0x63, 0x6f, 0x6d, 0x2e, 0x70, 0x72, 0x6f, 0x76,
+	0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x42, 0x0b, 0x45,
+	0x76, 0x65, 0x6e, 0x74, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x37, 0x67, 0x69,
+	0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62,
+	0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x70, 0x72, 0x6f, 0x76,
+	0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61,
+	0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x50, 0x56, 0x58, 0xaa, 0x02, 0x11, 0x50, 0x72,
+	0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56, 0x31, 0xca,
+	0x02, 0x11, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x5c, 0x56, 0x61, 0x75, 0x6c, 0x74,
+	0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1d, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x5c, 0x56,
+	0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64,
+	0x61, 0x74, 0x61, 0xea, 0x02, 0x13, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x3a, 0x3a,
+	0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
+	0x33,
 }
 
 var (
@@ -16511,7 +18238,7 @@ func file_provlabs_vault_v1_events_proto_rawDescGZIP() []byte {
 	return file_provlabs_vault_v1_events_proto_rawDescData
 }
 
-var file_provlabs_vault_v1_events_proto_msgTypes = make([]protoimpl.MessageInfo, 25)
+var file_provlabs_vault_v1_events_proto_msgTypes = make([]protoimpl.MessageInfo, 27)
 var file_provlabs_vault_v1_events_proto_goTypes = []interface{}{
 	(*EventDeposit)(nil),                 // 0: provlabs.vault.v1.EventDeposit
 	(*EventWithdraw)(nil),                // 1: provlabs.vault.v1.EventWithdraw
@@ -16538,13 +18265,16 @@ var file_provlabs_vault_v1_events_proto_goTypes = []interface{}{
 	(*EventBridgeToggled)(nil),           // 22: provlabs.vault.v1.EventBridgeToggled
 	(*EventBridgeMintShares)(nil),        // 23: provlabs.vault.v1.EventBridgeMintShares
 	(*EventBridgeBurnShares)(nil),        // 24: provlabs.vault.v1.EventBridgeBurnShares
+	(*EventDenomUnit)(nil),               // 25: provlabs.vault.v1.EventDenomUnit
+	(*EventSetShareDenomMetadata)(nil),   // 26: provlabs.vault.v1.EventSetShareDenomMetadata
 }
 var file_provlabs_vault_v1_events_proto_depIdxs = []int32{
-	0, // [0:0] is the sub-list for method output_type
-	0, // [0:0] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	25, // 0: provlabs.vault.v1.EventSetShareDenomMetadata.metadata_denom_units:type_name -> provlabs.vault.v1.EventDenomUnit
+	1,  // [1:1] is the sub-list for method output_type
+	1,  // [1:1] is the sub-list for method input_type
+	1,  // [1:1] is the sub-list for extension type_name
+	1,  // [1:1] is the sub-list for extension extendee
+	0,  // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_provlabs_vault_v1_events_proto_init() }
@@ -16853,6 +18583,30 @@ func file_provlabs_vault_v1_events_proto_init() {
 				return nil
 			}
 		}
+		file_provlabs_vault_v1_events_proto_msgTypes[25].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*EventDenomUnit); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_provlabs_vault_v1_events_proto_msgTypes[26].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*EventSetShareDenomMetadata); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -16860,7 +18614,7 @@ func file_provlabs_vault_v1_events_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_provlabs_vault_v1_events_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   25,
+			NumMessages:   27,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

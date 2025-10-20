@@ -269,1516 +269,6 @@ func (m *EventVaultCreated) GetUnderlyingAsset() string {
 	return ""
 }
 
-// EventSwapIn is an event emitted when assets are swapped in for vault shares.
-type EventSwapIn struct {
-	// owner is the address of the account that initiated the swap.
-	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
-	// amount_in is the amount of underlying assets that were swapped in.
-	AmountIn string `protobuf:"bytes,2,opt,name=amount_in,json=amountIn,proto3" json:"amount_in,omitempty"`
-	// shares_received is the amount of vault shares that were minted.
-	SharesReceived string `protobuf:"bytes,3,opt,name=shares_received,json=sharesReceived,proto3" json:"shares_received,omitempty"`
-	// vault_address is the bech32 address of the vault.
-	VaultAddress string `protobuf:"bytes,4,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-}
-
-func (m *EventSwapIn) Reset()         { *m = EventSwapIn{} }
-func (m *EventSwapIn) String() string { return proto.CompactTextString(m) }
-func (*EventSwapIn) ProtoMessage()    {}
-func (*EventSwapIn) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{3}
-}
-func (m *EventSwapIn) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *EventSwapIn) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_EventSwapIn.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *EventSwapIn) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventSwapIn.Merge(m, src)
-}
-func (m *EventSwapIn) XXX_Size() int {
-	return m.Size()
-}
-func (m *EventSwapIn) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventSwapIn.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_EventSwapIn proto.InternalMessageInfo
-
-func (m *EventSwapIn) GetOwner() string {
-	if m != nil {
-		return m.Owner
-	}
-	return ""
-}
-
-func (m *EventSwapIn) GetAmountIn() string {
-	if m != nil {
-		return m.AmountIn
-	}
-	return ""
-}
-
-func (m *EventSwapIn) GetSharesReceived() string {
-	if m != nil {
-		return m.SharesReceived
-	}
-	return ""
-}
-
-func (m *EventSwapIn) GetVaultAddress() string {
-	if m != nil {
-		return m.VaultAddress
-	}
-	return ""
-}
-
-// EventSwapOut is an event emitted when vault shares are swapped out for underlying assets.
-type EventSwapOut struct {
-	// owner is the address of the account that initiated the swap.
-	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
-	// shares_burned is the amount of vault shares that were burned.
-	SharesBurned string `protobuf:"bytes,2,opt,name=shares_burned,json=sharesBurned,proto3" json:"shares_burned,omitempty"`
-	// amount_out is the amount of underlying assets that were sent to the recipient.
-	AmountOut string `protobuf:"bytes,3,opt,name=amount_out,json=amountOut,proto3" json:"amount_out,omitempty"`
-	// vault_address is the bech32 address of the vault.
-	VaultAddress string `protobuf:"bytes,4,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-}
-
-func (m *EventSwapOut) Reset()         { *m = EventSwapOut{} }
-func (m *EventSwapOut) String() string { return proto.CompactTextString(m) }
-func (*EventSwapOut) ProtoMessage()    {}
-func (*EventSwapOut) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{4}
-}
-func (m *EventSwapOut) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *EventSwapOut) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_EventSwapOut.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *EventSwapOut) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventSwapOut.Merge(m, src)
-}
-func (m *EventSwapOut) XXX_Size() int {
-	return m.Size()
-}
-func (m *EventSwapOut) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventSwapOut.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_EventSwapOut proto.InternalMessageInfo
-
-func (m *EventSwapOut) GetOwner() string {
-	if m != nil {
-		return m.Owner
-	}
-	return ""
-}
-
-func (m *EventSwapOut) GetSharesBurned() string {
-	if m != nil {
-		return m.SharesBurned
-	}
-	return ""
-}
-
-func (m *EventSwapOut) GetAmountOut() string {
-	if m != nil {
-		return m.AmountOut
-	}
-	return ""
-}
-
-func (m *EventSwapOut) GetVaultAddress() string {
-	if m != nil {
-		return m.VaultAddress
-	}
-	return ""
-}
-
-// EventVaultReconcile is an event emitted when a vault's interest is reconciled.
-type EventVaultReconcile struct {
-	// vault_address is the bech32 address of the vault.
-	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// principal_before is the principal amount before applying interest.
-	PrincipalBefore string `protobuf:"bytes,2,opt,name=principal_before,json=principalBefore,proto3" json:"principal_before,omitempty"`
-	// principal_after is the principal amount after applying interest.
-	PrincipalAfter string `protobuf:"bytes,3,opt,name=principal_after,json=principalAfter,proto3" json:"principal_after,omitempty"`
-	// rate is a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%) representing annual interest rate for the period.
-	Rate string `protobuf:"bytes,4,opt,name=rate,proto3" json:"rate,omitempty"`
-	// time is the payout duration in seconds.
-	Time int64 `protobuf:"varint,5,opt,name=time,proto3" json:"time,omitempty"`
-	// interest_earned is the interest amount (can be positive or negative).
-	InterestEarned string `protobuf:"bytes,6,opt,name=interest_earned,json=interestEarned,proto3" json:"interest_earned,omitempty"`
-}
-
-func (m *EventVaultReconcile) Reset()         { *m = EventVaultReconcile{} }
-func (m *EventVaultReconcile) String() string { return proto.CompactTextString(m) }
-func (*EventVaultReconcile) ProtoMessage()    {}
-func (*EventVaultReconcile) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{5}
-}
-func (m *EventVaultReconcile) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *EventVaultReconcile) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_EventVaultReconcile.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *EventVaultReconcile) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventVaultReconcile.Merge(m, src)
-}
-func (m *EventVaultReconcile) XXX_Size() int {
-	return m.Size()
-}
-func (m *EventVaultReconcile) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventVaultReconcile.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_EventVaultReconcile proto.InternalMessageInfo
-
-func (m *EventVaultReconcile) GetVaultAddress() string {
-	if m != nil {
-		return m.VaultAddress
-	}
-	return ""
-}
-
-func (m *EventVaultReconcile) GetPrincipalBefore() string {
-	if m != nil {
-		return m.PrincipalBefore
-	}
-	return ""
-}
-
-func (m *EventVaultReconcile) GetPrincipalAfter() string {
-	if m != nil {
-		return m.PrincipalAfter
-	}
-	return ""
-}
-
-func (m *EventVaultReconcile) GetRate() string {
-	if m != nil {
-		return m.Rate
-	}
-	return ""
-}
-
-func (m *EventVaultReconcile) GetTime() int64 {
-	if m != nil {
-		return m.Time
-	}
-	return 0
-}
-
-func (m *EventVaultReconcile) GetInterestEarned() string {
-	if m != nil {
-		return m.InterestEarned
-	}
-	return ""
-}
-
-// EventVaultInterestChange is an event emitted when a vault's interest rate is changed.
-type EventVaultInterestChange struct {
-	// vault_address is the bech32 address of the vault.
-	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// current_rate is a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%) representing the actual annual interest rate the vault is using.
-	CurrentRate string `protobuf:"bytes,2,opt,name=current_rate,json=currentRate,proto3" json:"current_rate,omitempty"`
-	// desired_rate is a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%) representing the the annual interest rate the admin wants to use.
-	DesiredRate string `protobuf:"bytes,3,opt,name=desired_rate,json=desiredRate,proto3" json:"desired_rate,omitempty"`
-}
-
-func (m *EventVaultInterestChange) Reset()         { *m = EventVaultInterestChange{} }
-func (m *EventVaultInterestChange) String() string { return proto.CompactTextString(m) }
-func (*EventVaultInterestChange) ProtoMessage()    {}
-func (*EventVaultInterestChange) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{6}
-}
-func (m *EventVaultInterestChange) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *EventVaultInterestChange) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_EventVaultInterestChange.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *EventVaultInterestChange) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventVaultInterestChange.Merge(m, src)
-}
-func (m *EventVaultInterestChange) XXX_Size() int {
-	return m.Size()
-}
-func (m *EventVaultInterestChange) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventVaultInterestChange.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_EventVaultInterestChange proto.InternalMessageInfo
-
-func (m *EventVaultInterestChange) GetVaultAddress() string {
-	if m != nil {
-		return m.VaultAddress
-	}
-	return ""
-}
-
-func (m *EventVaultInterestChange) GetCurrentRate() string {
-	if m != nil {
-		return m.CurrentRate
-	}
-	return ""
-}
-
-func (m *EventVaultInterestChange) GetDesiredRate() string {
-	if m != nil {
-		return m.DesiredRate
-	}
-	return ""
-}
-
-// EventInterestDeposit is an event emitted when funds are deposited for paying interest.
-type EventInterestDeposit struct {
-	// vault_address is the bech32 address of the vault.
-	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// admin is the address of the account that deposited the funds.
-	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
-	// amount is the amount of funds deposited.
-	Amount string `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
-}
-
-func (m *EventInterestDeposit) Reset()         { *m = EventInterestDeposit{} }
-func (m *EventInterestDeposit) String() string { return proto.CompactTextString(m) }
-func (*EventInterestDeposit) ProtoMessage()    {}
-func (*EventInterestDeposit) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{7}
-}
-func (m *EventInterestDeposit) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *EventInterestDeposit) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_EventInterestDeposit.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *EventInterestDeposit) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventInterestDeposit.Merge(m, src)
-}
-func (m *EventInterestDeposit) XXX_Size() int {
-	return m.Size()
-}
-func (m *EventInterestDeposit) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventInterestDeposit.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_EventInterestDeposit proto.InternalMessageInfo
-
-func (m *EventInterestDeposit) GetVaultAddress() string {
-	if m != nil {
-		return m.VaultAddress
-	}
-	return ""
-}
-
-func (m *EventInterestDeposit) GetAdmin() string {
-	if m != nil {
-		return m.Admin
-	}
-	return ""
-}
-
-func (m *EventInterestDeposit) GetAmount() string {
-	if m != nil {
-		return m.Amount
-	}
-	return ""
-}
-
-// EventInterestWithdrawal is an event emitted when unused interest funds are withdrawn.
-type EventInterestWithdrawal struct {
-	// vault_address is the bech32 address of the vault.
-	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// admin is the address of the account that withdrew the funds.
-	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
-	// amount is the amount of funds withdrawn.
-	Amount string `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
-}
-
-func (m *EventInterestWithdrawal) Reset()         { *m = EventInterestWithdrawal{} }
-func (m *EventInterestWithdrawal) String() string { return proto.CompactTextString(m) }
-func (*EventInterestWithdrawal) ProtoMessage()    {}
-func (*EventInterestWithdrawal) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{8}
-}
-func (m *EventInterestWithdrawal) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *EventInterestWithdrawal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_EventInterestWithdrawal.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *EventInterestWithdrawal) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventInterestWithdrawal.Merge(m, src)
-}
-func (m *EventInterestWithdrawal) XXX_Size() int {
-	return m.Size()
-}
-func (m *EventInterestWithdrawal) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventInterestWithdrawal.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_EventInterestWithdrawal proto.InternalMessageInfo
-
-func (m *EventInterestWithdrawal) GetVaultAddress() string {
-	if m != nil {
-		return m.VaultAddress
-	}
-	return ""
-}
-
-func (m *EventInterestWithdrawal) GetAdmin() string {
-	if m != nil {
-		return m.Admin
-	}
-	return ""
-}
-
-func (m *EventInterestWithdrawal) GetAmount() string {
-	if m != nil {
-		return m.Amount
-	}
-	return ""
-}
-
-// EventToggleSwapIn is an event emitted when swap-in operations are enabled or disabled for a vault.
-type EventToggleSwapIn struct {
-	// vault_address is the bech32 address of the vault.
-	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// admin is the address of the account that toggled the swap-in operations.
-	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
-	// enabled is the new state of swap-in operations.
-	Enabled bool `protobuf:"varint,3,opt,name=enabled,proto3" json:"enabled,omitempty"`
-}
-
-func (m *EventToggleSwapIn) Reset()         { *m = EventToggleSwapIn{} }
-func (m *EventToggleSwapIn) String() string { return proto.CompactTextString(m) }
-func (*EventToggleSwapIn) ProtoMessage()    {}
-func (*EventToggleSwapIn) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{9}
-}
-func (m *EventToggleSwapIn) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *EventToggleSwapIn) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_EventToggleSwapIn.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *EventToggleSwapIn) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventToggleSwapIn.Merge(m, src)
-}
-func (m *EventToggleSwapIn) XXX_Size() int {
-	return m.Size()
-}
-func (m *EventToggleSwapIn) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventToggleSwapIn.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_EventToggleSwapIn proto.InternalMessageInfo
-
-func (m *EventToggleSwapIn) GetVaultAddress() string {
-	if m != nil {
-		return m.VaultAddress
-	}
-	return ""
-}
-
-func (m *EventToggleSwapIn) GetAdmin() string {
-	if m != nil {
-		return m.Admin
-	}
-	return ""
-}
-
-func (m *EventToggleSwapIn) GetEnabled() bool {
-	if m != nil {
-		return m.Enabled
-	}
-	return false
-}
-
-// EventToggleSwapOut is an event emitted when swap-out operations are enabled or disabled for a vault.
-type EventToggleSwapOut struct {
-	// vault_address is the bech32 address of the vault.
-	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// admin is the address of the account that toggled the swap-out operations.
-	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
-	// enabled is the new state of swap-out operations.
-	Enabled bool `protobuf:"varint,3,opt,name=enabled,proto3" json:"enabled,omitempty"`
-}
-
-func (m *EventToggleSwapOut) Reset()         { *m = EventToggleSwapOut{} }
-func (m *EventToggleSwapOut) String() string { return proto.CompactTextString(m) }
-func (*EventToggleSwapOut) ProtoMessage()    {}
-func (*EventToggleSwapOut) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{10}
-}
-func (m *EventToggleSwapOut) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *EventToggleSwapOut) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_EventToggleSwapOut.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *EventToggleSwapOut) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventToggleSwapOut.Merge(m, src)
-}
-func (m *EventToggleSwapOut) XXX_Size() int {
-	return m.Size()
-}
-func (m *EventToggleSwapOut) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventToggleSwapOut.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_EventToggleSwapOut proto.InternalMessageInfo
-
-func (m *EventToggleSwapOut) GetVaultAddress() string {
-	if m != nil {
-		return m.VaultAddress
-	}
-	return ""
-}
-
-func (m *EventToggleSwapOut) GetAdmin() string {
-	if m != nil {
-		return m.Admin
-	}
-	return ""
-}
-
-func (m *EventToggleSwapOut) GetEnabled() bool {
-	if m != nil {
-		return m.Enabled
-	}
-	return false
-}
-
-// EventDepositPrincipalFunds is an event emitted when principal funds are deposited by the admin.
-type EventDepositPrincipalFunds struct {
-	// vault_address is the bech32 address of the vault.
-	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// admin is the address of the account that deposited the funds.
-	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
-	// amount is the amount of funds deposited.
-	Amount string `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
-}
-
-func (m *EventDepositPrincipalFunds) Reset()         { *m = EventDepositPrincipalFunds{} }
-func (m *EventDepositPrincipalFunds) String() string { return proto.CompactTextString(m) }
-func (*EventDepositPrincipalFunds) ProtoMessage()    {}
-func (*EventDepositPrincipalFunds) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{11}
-}
-func (m *EventDepositPrincipalFunds) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *EventDepositPrincipalFunds) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_EventDepositPrincipalFunds.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *EventDepositPrincipalFunds) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventDepositPrincipalFunds.Merge(m, src)
-}
-func (m *EventDepositPrincipalFunds) XXX_Size() int {
-	return m.Size()
-}
-func (m *EventDepositPrincipalFunds) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventDepositPrincipalFunds.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_EventDepositPrincipalFunds proto.InternalMessageInfo
-
-func (m *EventDepositPrincipalFunds) GetVaultAddress() string {
-	if m != nil {
-		return m.VaultAddress
-	}
-	return ""
-}
-
-func (m *EventDepositPrincipalFunds) GetAdmin() string {
-	if m != nil {
-		return m.Admin
-	}
-	return ""
-}
-
-func (m *EventDepositPrincipalFunds) GetAmount() string {
-	if m != nil {
-		return m.Amount
-	}
-	return ""
-}
-
-// EventWithdrawPrincipalFunds is an event emitted when principal funds are withdrawn by the admin.
-type EventWithdrawPrincipalFunds struct {
-	// vault_address is the bech32 address of the vault.
-	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// admin is the address of the account that withdrew the funds.
-	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
-	// amount is the amount of funds withdrawn.
-	Amount string `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
-}
-
-func (m *EventWithdrawPrincipalFunds) Reset()         { *m = EventWithdrawPrincipalFunds{} }
-func (m *EventWithdrawPrincipalFunds) String() string { return proto.CompactTextString(m) }
-func (*EventWithdrawPrincipalFunds) ProtoMessage()    {}
-func (*EventWithdrawPrincipalFunds) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{12}
-}
-func (m *EventWithdrawPrincipalFunds) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *EventWithdrawPrincipalFunds) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_EventWithdrawPrincipalFunds.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *EventWithdrawPrincipalFunds) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventWithdrawPrincipalFunds.Merge(m, src)
-}
-func (m *EventWithdrawPrincipalFunds) XXX_Size() int {
-	return m.Size()
-}
-func (m *EventWithdrawPrincipalFunds) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventWithdrawPrincipalFunds.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_EventWithdrawPrincipalFunds proto.InternalMessageInfo
-
-func (m *EventWithdrawPrincipalFunds) GetVaultAddress() string {
-	if m != nil {
-		return m.VaultAddress
-	}
-	return ""
-}
-
-func (m *EventWithdrawPrincipalFunds) GetAdmin() string {
-	if m != nil {
-		return m.Admin
-	}
-	return ""
-}
-
-func (m *EventWithdrawPrincipalFunds) GetAmount() string {
-	if m != nil {
-		return m.Amount
-	}
-	return ""
-}
-
-// EventMinInterestRateUpdated is emitted when the minimum interest rate is updated.
-type EventMinInterestRateUpdated struct {
-	// vault_address is the bech32 address of the vault.
-	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// admin is the address of the account that updated the limit.
-	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
-	// min_rate is the newly set minimum annual interest rate as a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%).
-	// An empty string "" represents no minimum.
-	MinRate string `protobuf:"bytes,3,opt,name=min_rate,json=minRate,proto3" json:"min_rate,omitempty"`
-}
-
-func (m *EventMinInterestRateUpdated) Reset()         { *m = EventMinInterestRateUpdated{} }
-func (m *EventMinInterestRateUpdated) String() string { return proto.CompactTextString(m) }
-func (*EventMinInterestRateUpdated) ProtoMessage()    {}
-func (*EventMinInterestRateUpdated) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{13}
-}
-func (m *EventMinInterestRateUpdated) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *EventMinInterestRateUpdated) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_EventMinInterestRateUpdated.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *EventMinInterestRateUpdated) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventMinInterestRateUpdated.Merge(m, src)
-}
-func (m *EventMinInterestRateUpdated) XXX_Size() int {
-	return m.Size()
-}
-func (m *EventMinInterestRateUpdated) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventMinInterestRateUpdated.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_EventMinInterestRateUpdated proto.InternalMessageInfo
-
-func (m *EventMinInterestRateUpdated) GetVaultAddress() string {
-	if m != nil {
-		return m.VaultAddress
-	}
-	return ""
-}
-
-func (m *EventMinInterestRateUpdated) GetAdmin() string {
-	if m != nil {
-		return m.Admin
-	}
-	return ""
-}
-
-func (m *EventMinInterestRateUpdated) GetMinRate() string {
-	if m != nil {
-		return m.MinRate
-	}
-	return ""
-}
-
-// EventMaxInterestRateUpdated is emitted when the maximum interest rate is updated.
-type EventMaxInterestRateUpdated struct {
-	// vault_address is the bech32 address of the vault.
-	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// admin is the address of the account that updated the limit.
-	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
-	// max_rate is the newly set maximum annual interest rate as a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%).
-	// An empty string "" represents no maximum.
-	MaxRate string `protobuf:"bytes,3,opt,name=max_rate,json=maxRate,proto3" json:"max_rate,omitempty"`
-}
-
-func (m *EventMaxInterestRateUpdated) Reset()         { *m = EventMaxInterestRateUpdated{} }
-func (m *EventMaxInterestRateUpdated) String() string { return proto.CompactTextString(m) }
-func (*EventMaxInterestRateUpdated) ProtoMessage()    {}
-func (*EventMaxInterestRateUpdated) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{14}
-}
-func (m *EventMaxInterestRateUpdated) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *EventMaxInterestRateUpdated) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_EventMaxInterestRateUpdated.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *EventMaxInterestRateUpdated) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventMaxInterestRateUpdated.Merge(m, src)
-}
-func (m *EventMaxInterestRateUpdated) XXX_Size() int {
-	return m.Size()
-}
-func (m *EventMaxInterestRateUpdated) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventMaxInterestRateUpdated.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_EventMaxInterestRateUpdated proto.InternalMessageInfo
-
-func (m *EventMaxInterestRateUpdated) GetVaultAddress() string {
-	if m != nil {
-		return m.VaultAddress
-	}
-	return ""
-}
-
-func (m *EventMaxInterestRateUpdated) GetAdmin() string {
-	if m != nil {
-		return m.Admin
-	}
-	return ""
-}
-
-func (m *EventMaxInterestRateUpdated) GetMaxRate() string {
-	if m != nil {
-		return m.MaxRate
-	}
-	return ""
-}
-
-// EventSwapOutRequested is emitted when a user successfully queues a swap out.
-type EventSwapOutRequested struct {
-	// vault_address is the bech32 address of the vault.
-	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// owner is the bech32 address of the user who initiated the swap out.
-	Owner string `protobuf:"bytes,2,opt,name=owner,proto3" json:"owner,omitempty"`
-	// redeem_denom is the denomination of the asset to be redeemed.
-	RedeemDenom string `protobuf:"bytes,3,opt,name=redeem_denom,json=redeemDenom,proto3" json:"redeem_denom,omitempty"`
-	// shares is the amount of vault shares the user escrowed for this request.
-	Shares string `protobuf:"bytes,4,opt,name=shares,proto3" json:"shares,omitempty"`
-	// request_id is the unique identifier for this pending swap out request.
-	RequestId uint64 `protobuf:"varint,5,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
-}
-
-func (m *EventSwapOutRequested) Reset()         { *m = EventSwapOutRequested{} }
-func (m *EventSwapOutRequested) String() string { return proto.CompactTextString(m) }
-func (*EventSwapOutRequested) ProtoMessage()    {}
-func (*EventSwapOutRequested) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{15}
-}
-func (m *EventSwapOutRequested) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *EventSwapOutRequested) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_EventSwapOutRequested.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *EventSwapOutRequested) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventSwapOutRequested.Merge(m, src)
-}
-func (m *EventSwapOutRequested) XXX_Size() int {
-	return m.Size()
-}
-func (m *EventSwapOutRequested) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventSwapOutRequested.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_EventSwapOutRequested proto.InternalMessageInfo
-
-func (m *EventSwapOutRequested) GetVaultAddress() string {
-	if m != nil {
-		return m.VaultAddress
-	}
-	return ""
-}
-
-func (m *EventSwapOutRequested) GetOwner() string {
-	if m != nil {
-		return m.Owner
-	}
-	return ""
-}
-
-func (m *EventSwapOutRequested) GetRedeemDenom() string {
-	if m != nil {
-		return m.RedeemDenom
-	}
-	return ""
-}
-
-func (m *EventSwapOutRequested) GetShares() string {
-	if m != nil {
-		return m.Shares
-	}
-	return ""
-}
-
-func (m *EventSwapOutRequested) GetRequestId() uint64 {
-	if m != nil {
-		return m.RequestId
-	}
-	return 0
-}
-
-// EventSwapOutCompleted is emitted when a pending swap out is successfully processed.
-type EventSwapOutCompleted struct {
-	// vault_address is the bech32 address of the vault.
-	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// owner is the bech32 address of the user who received the payout.
-	Owner string `protobuf:"bytes,2,opt,name=owner,proto3" json:"owner,omitempty"`
-	// assets is the amount of assets paid out to the user.
-	Assets string `protobuf:"bytes,3,opt,name=assets,proto3" json:"assets,omitempty"`
-	// request_id is the unique identifier of the swap out request that was completed.
-	RequestId uint64 `protobuf:"varint,4,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
-}
-
-func (m *EventSwapOutCompleted) Reset()         { *m = EventSwapOutCompleted{} }
-func (m *EventSwapOutCompleted) String() string { return proto.CompactTextString(m) }
-func (*EventSwapOutCompleted) ProtoMessage()    {}
-func (*EventSwapOutCompleted) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{16}
-}
-func (m *EventSwapOutCompleted) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *EventSwapOutCompleted) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_EventSwapOutCompleted.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *EventSwapOutCompleted) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventSwapOutCompleted.Merge(m, src)
-}
-func (m *EventSwapOutCompleted) XXX_Size() int {
-	return m.Size()
-}
-func (m *EventSwapOutCompleted) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventSwapOutCompleted.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_EventSwapOutCompleted proto.InternalMessageInfo
-
-func (m *EventSwapOutCompleted) GetVaultAddress() string {
-	if m != nil {
-		return m.VaultAddress
-	}
-	return ""
-}
-
-func (m *EventSwapOutCompleted) GetOwner() string {
-	if m != nil {
-		return m.Owner
-	}
-	return ""
-}
-
-func (m *EventSwapOutCompleted) GetAssets() string {
-	if m != nil {
-		return m.Assets
-	}
-	return ""
-}
-
-func (m *EventSwapOutCompleted) GetRequestId() uint64 {
-	if m != nil {
-		return m.RequestId
-	}
-	return 0
-}
-
-// EventSwapOutRefunded is emitted when a pending swap out fails and the user's
-// escrowed shares are returned.
-type EventSwapOutRefunded struct {
-	// vault_address is the bech32 address of the vault.
-	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// owner is the bech32 address of the user whose shares were refunded.
-	Owner string `protobuf:"bytes,2,opt,name=owner,proto3" json:"owner,omitempty"`
-	// shares is the amount of vault shares that were returned to the user.
-	Shares string `protobuf:"bytes,3,opt,name=shares,proto3" json:"shares,omitempty"`
-	// request_id is the unique identifier of the swap out request that failed.
-	RequestId uint64 `protobuf:"varint,4,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
-	// reason is a string detailing why the swap out failed.
-	Reason string `protobuf:"bytes,5,opt,name=reason,proto3" json:"reason,omitempty"`
-}
-
-func (m *EventSwapOutRefunded) Reset()         { *m = EventSwapOutRefunded{} }
-func (m *EventSwapOutRefunded) String() string { return proto.CompactTextString(m) }
-func (*EventSwapOutRefunded) ProtoMessage()    {}
-func (*EventSwapOutRefunded) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{17}
-}
-func (m *EventSwapOutRefunded) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *EventSwapOutRefunded) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_EventSwapOutRefunded.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *EventSwapOutRefunded) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventSwapOutRefunded.Merge(m, src)
-}
-func (m *EventSwapOutRefunded) XXX_Size() int {
-	return m.Size()
-}
-func (m *EventSwapOutRefunded) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventSwapOutRefunded.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_EventSwapOutRefunded proto.InternalMessageInfo
-
-func (m *EventSwapOutRefunded) GetVaultAddress() string {
-	if m != nil {
-		return m.VaultAddress
-	}
-	return ""
-}
-
-func (m *EventSwapOutRefunded) GetOwner() string {
-	if m != nil {
-		return m.Owner
-	}
-	return ""
-}
-
-func (m *EventSwapOutRefunded) GetShares() string {
-	if m != nil {
-		return m.Shares
-	}
-	return ""
-}
-
-func (m *EventSwapOutRefunded) GetRequestId() uint64 {
-	if m != nil {
-		return m.RequestId
-	}
-	return 0
-}
-
-func (m *EventSwapOutRefunded) GetReason() string {
-	if m != nil {
-		return m.Reason
-	}
-	return ""
-}
-
-// EventPendingSwapOutExpedited is an event emitted when a pending swap-out is expedited by the admin.
-type EventPendingSwapOutExpedited struct {
-	// request_id is the numerical identifier of the pending swap-out.
-	RequestId uint64 `protobuf:"varint,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
-	// vault is the bech32 address of the vault.
-	Vault string `protobuf:"bytes,2,opt,name=vault,proto3" json:"vault,omitempty"`
-	// admin is the address of the account that expedited the swap-out.
-	Admin string `protobuf:"bytes,3,opt,name=admin,proto3" json:"admin,omitempty"`
-}
-
-func (m *EventPendingSwapOutExpedited) Reset()         { *m = EventPendingSwapOutExpedited{} }
-func (m *EventPendingSwapOutExpedited) String() string { return proto.CompactTextString(m) }
-func (*EventPendingSwapOutExpedited) ProtoMessage()    {}
-func (*EventPendingSwapOutExpedited) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{18}
-}
-func (m *EventPendingSwapOutExpedited) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *EventPendingSwapOutExpedited) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_EventPendingSwapOutExpedited.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *EventPendingSwapOutExpedited) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventPendingSwapOutExpedited.Merge(m, src)
-}
-func (m *EventPendingSwapOutExpedited) XXX_Size() int {
-	return m.Size()
-}
-func (m *EventPendingSwapOutExpedited) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventPendingSwapOutExpedited.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_EventPendingSwapOutExpedited proto.InternalMessageInfo
-
-func (m *EventPendingSwapOutExpedited) GetRequestId() uint64 {
-	if m != nil {
-		return m.RequestId
-	}
-	return 0
-}
-
-func (m *EventPendingSwapOutExpedited) GetVault() string {
-	if m != nil {
-		return m.Vault
-	}
-	return ""
-}
-
-func (m *EventPendingSwapOutExpedited) GetAdmin() string {
-	if m != nil {
-		return m.Admin
-	}
-	return ""
-}
-
-// EventVaultPaused is emitted when a vault is paused.
-type EventVaultPaused struct {
-	// vault_address is the bech32 address of the vault.
-	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// admin is the address of the account that paused the vault.
-	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
-	// reason is the reason for pausing the vault.
-	Reason string `protobuf:"bytes,3,opt,name=reason,proto3" json:"reason,omitempty"`
-	// total_vault_value is the total value of the vault's assets at the time of pausing.
-	TotalVaultValue string `protobuf:"bytes,4,opt,name=total_vault_value,json=totalVaultValue,proto3" json:"total_vault_value,omitempty"`
-}
-
-func (m *EventVaultPaused) Reset()         { *m = EventVaultPaused{} }
-func (m *EventVaultPaused) String() string { return proto.CompactTextString(m) }
-func (*EventVaultPaused) ProtoMessage()    {}
-func (*EventVaultPaused) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{19}
-}
-func (m *EventVaultPaused) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *EventVaultPaused) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_EventVaultPaused.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *EventVaultPaused) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventVaultPaused.Merge(m, src)
-}
-func (m *EventVaultPaused) XXX_Size() int {
-	return m.Size()
-}
-func (m *EventVaultPaused) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventVaultPaused.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_EventVaultPaused proto.InternalMessageInfo
-
-func (m *EventVaultPaused) GetVaultAddress() string {
-	if m != nil {
-		return m.VaultAddress
-	}
-	return ""
-}
-
-func (m *EventVaultPaused) GetAdmin() string {
-	if m != nil {
-		return m.Admin
-	}
-	return ""
-}
-
-func (m *EventVaultPaused) GetReason() string {
-	if m != nil {
-		return m.Reason
-	}
-	return ""
-}
-
-func (m *EventVaultPaused) GetTotalVaultValue() string {
-	if m != nil {
-		return m.TotalVaultValue
-	}
-	return ""
-}
-
-// EventVaultUnpaused is emitted when a vault is unpaused.
-type EventVaultUnpaused struct {
-	// vault_address is the bech32 address of the vault.
-	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// admin is the address of the account that unpaused the vault.
-	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
-	// total_vault_value is the new total value of the vault's assets at the time of unpausing.
-	TotalVaultValue string `protobuf:"bytes,3,opt,name=total_vault_value,json=totalVaultValue,proto3" json:"total_vault_value,omitempty"`
-}
-
-func (m *EventVaultUnpaused) Reset()         { *m = EventVaultUnpaused{} }
-func (m *EventVaultUnpaused) String() string { return proto.CompactTextString(m) }
-func (*EventVaultUnpaused) ProtoMessage()    {}
-func (*EventVaultUnpaused) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{20}
-}
-func (m *EventVaultUnpaused) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *EventVaultUnpaused) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_EventVaultUnpaused.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *EventVaultUnpaused) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventVaultUnpaused.Merge(m, src)
-}
-func (m *EventVaultUnpaused) XXX_Size() int {
-	return m.Size()
-}
-func (m *EventVaultUnpaused) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventVaultUnpaused.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_EventVaultUnpaused proto.InternalMessageInfo
-
-func (m *EventVaultUnpaused) GetVaultAddress() string {
-	if m != nil {
-		return m.VaultAddress
-	}
-	return ""
-}
-
-func (m *EventVaultUnpaused) GetAdmin() string {
-	if m != nil {
-		return m.Admin
-	}
-	return ""
-}
-
-func (m *EventVaultUnpaused) GetTotalVaultValue() string {
-	if m != nil {
-		return m.TotalVaultValue
-	}
-	return ""
-}
-
-// EventBridgeAddressSet is emitted when the bridge address for a vault is configured or updated.
-type EventBridgeAddressSet struct {
-	// vault_address is the bech32 address of the vault.
-	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// admin is the address of the account that set the bridge address.
-	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
-	// bridge_address is the configured external address allowed to mint/burn shares.
-	BridgeAddress string `protobuf:"bytes,3,opt,name=bridge_address,json=bridgeAddress,proto3" json:"bridge_address,omitempty"`
-}
-
-func (m *EventBridgeAddressSet) Reset()         { *m = EventBridgeAddressSet{} }
-func (m *EventBridgeAddressSet) String() string { return proto.CompactTextString(m) }
-func (*EventBridgeAddressSet) ProtoMessage()    {}
-func (*EventBridgeAddressSet) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{21}
-}
-func (m *EventBridgeAddressSet) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *EventBridgeAddressSet) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_EventBridgeAddressSet.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *EventBridgeAddressSet) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventBridgeAddressSet.Merge(m, src)
-}
-func (m *EventBridgeAddressSet) XXX_Size() int {
-	return m.Size()
-}
-func (m *EventBridgeAddressSet) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventBridgeAddressSet.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_EventBridgeAddressSet proto.InternalMessageInfo
-
-func (m *EventBridgeAddressSet) GetVaultAddress() string {
-	if m != nil {
-		return m.VaultAddress
-	}
-	return ""
-}
-
-func (m *EventBridgeAddressSet) GetAdmin() string {
-	if m != nil {
-		return m.Admin
-	}
-	return ""
-}
-
-func (m *EventBridgeAddressSet) GetBridgeAddress() string {
-	if m != nil {
-		return m.BridgeAddress
-	}
-	return ""
-}
-
-// EventBridgeToggled is emitted when the bridge functionality is enabled or disabled for a vault.
-type EventBridgeToggled struct {
-	// vault_address is the bech32 address of the vault.
-	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// admin is the address of the account that toggled bridge functionality.
-	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
-	// enabled is the new state of the bridge functionality.
-	Enabled bool `protobuf:"varint,3,opt,name=enabled,proto3" json:"enabled,omitempty"`
-}
-
-func (m *EventBridgeToggled) Reset()         { *m = EventBridgeToggled{} }
-func (m *EventBridgeToggled) String() string { return proto.CompactTextString(m) }
-func (*EventBridgeToggled) ProtoMessage()    {}
-func (*EventBridgeToggled) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{22}
-}
-func (m *EventBridgeToggled) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *EventBridgeToggled) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_EventBridgeToggled.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *EventBridgeToggled) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventBridgeToggled.Merge(m, src)
-}
-func (m *EventBridgeToggled) XXX_Size() int {
-	return m.Size()
-}
-func (m *EventBridgeToggled) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventBridgeToggled.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_EventBridgeToggled proto.InternalMessageInfo
-
-func (m *EventBridgeToggled) GetVaultAddress() string {
-	if m != nil {
-		return m.VaultAddress
-	}
-	return ""
-}
-
-func (m *EventBridgeToggled) GetAdmin() string {
-	if m != nil {
-		return m.Admin
-	}
-	return ""
-}
-
-func (m *EventBridgeToggled) GetEnabled() bool {
-	if m != nil {
-		return m.Enabled
-	}
-	return false
-}
-
-// EventBridgeMintShares is emitted when shares are minted via the bridge flow.
-type EventBridgeMintShares struct {
-	// vault_address is the bech32 address of the vault.
-	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// bridge is the bech32 address of the bridge signer.
-	Bridge string `protobuf:"bytes,2,opt,name=bridge,proto3" json:"bridge,omitempty"`
-	// shares is the amount of shares minted.
-	Shares string `protobuf:"bytes,3,opt,name=shares,proto3" json:"shares,omitempty"`
-}
-
-func (m *EventBridgeMintShares) Reset()         { *m = EventBridgeMintShares{} }
-func (m *EventBridgeMintShares) String() string { return proto.CompactTextString(m) }
-func (*EventBridgeMintShares) ProtoMessage()    {}
-func (*EventBridgeMintShares) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{23}
-}
-func (m *EventBridgeMintShares) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *EventBridgeMintShares) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_EventBridgeMintShares.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *EventBridgeMintShares) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventBridgeMintShares.Merge(m, src)
-}
-func (m *EventBridgeMintShares) XXX_Size() int {
-	return m.Size()
-}
-func (m *EventBridgeMintShares) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventBridgeMintShares.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_EventBridgeMintShares proto.InternalMessageInfo
-
-func (m *EventBridgeMintShares) GetVaultAddress() string {
-	if m != nil {
-		return m.VaultAddress
-	}
-	return ""
-}
-
-func (m *EventBridgeMintShares) GetBridge() string {
-	if m != nil {
-		return m.Bridge
-	}
-	return ""
-}
-
-func (m *EventBridgeMintShares) GetShares() string {
-	if m != nil {
-		return m.Shares
-	}
-	return ""
-}
-
-// EventBridgeBurnShares is emitted when shares are burned via the bridge flow.
-type EventBridgeBurnShares struct {
-	// vault_address is the bech32 address of the vault.
-	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// bridge is the bech32 address of the bridge signer.
-	Bridge string `protobuf:"bytes,2,opt,name=bridge,proto3" json:"bridge,omitempty"`
-	// shares is the amount of shares burned.
-	Shares string `protobuf:"bytes,3,opt,name=shares,proto3" json:"shares,omitempty"`
-}
-
-func (m *EventBridgeBurnShares) Reset()         { *m = EventBridgeBurnShares{} }
-func (m *EventBridgeBurnShares) String() string { return proto.CompactTextString(m) }
-func (*EventBridgeBurnShares) ProtoMessage()    {}
-func (*EventBridgeBurnShares) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{24}
-}
-func (m *EventBridgeBurnShares) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *EventBridgeBurnShares) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_EventBridgeBurnShares.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *EventBridgeBurnShares) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_EventBridgeBurnShares.Merge(m, src)
-}
-func (m *EventBridgeBurnShares) XXX_Size() int {
-	return m.Size()
-}
-func (m *EventBridgeBurnShares) XXX_DiscardUnknown() {
-	xxx_messageInfo_EventBridgeBurnShares.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_EventBridgeBurnShares proto.InternalMessageInfo
-
-func (m *EventBridgeBurnShares) GetVaultAddress() string {
-	if m != nil {
-		return m.VaultAddress
-	}
-	return ""
-}
-
-func (m *EventBridgeBurnShares) GetBridge() string {
-	if m != nil {
-		return m.Bridge
-	}
-	return ""
-}
-
-func (m *EventBridgeBurnShares) GetShares() string {
-	if m != nil {
-		return m.Shares
-	}
-	return ""
-}
-
 // EventDenomUnit describes a single denom unit entry that is included in the
 // share denom metadata emitted with EventSetShareDenomMetadata.
 type EventDenomUnit struct {
@@ -1795,7 +285,7 @@ func (m *EventDenomUnit) Reset()         { *m = EventDenomUnit{} }
 func (m *EventDenomUnit) String() string { return proto.CompactTextString(m) }
 func (*EventDenomUnit) ProtoMessage()    {}
 func (*EventDenomUnit) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{25}
+	return fileDescriptor_5fb7c27aa4ee0453, []int{3}
 }
 func (m *EventDenomUnit) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1870,7 +360,7 @@ func (m *EventSetShareDenomMetadata) Reset()         { *m = EventSetShareDenomMe
 func (m *EventSetShareDenomMetadata) String() string { return proto.CompactTextString(m) }
 func (*EventSetShareDenomMetadata) ProtoMessage()    {}
 func (*EventSetShareDenomMetadata) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{26}
+	return fileDescriptor_5fb7c27aa4ee0453, []int{4}
 }
 func (m *EventSetShareDenomMetadata) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1955,10 +445,1522 @@ func (m *EventSetShareDenomMetadata) GetMetadataSymbol() string {
 	return ""
 }
 
+// EventSwapIn is an event emitted when assets are swapped in for vault shares.
+type EventSwapIn struct {
+	// owner is the address of the account that initiated the swap.
+	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
+	// amount_in is the amount of underlying assets that were swapped in.
+	AmountIn string `protobuf:"bytes,2,opt,name=amount_in,json=amountIn,proto3" json:"amount_in,omitempty"`
+	// shares_received is the amount of vault shares that were minted.
+	SharesReceived string `protobuf:"bytes,3,opt,name=shares_received,json=sharesReceived,proto3" json:"shares_received,omitempty"`
+	// vault_address is the bech32 address of the vault.
+	VaultAddress string `protobuf:"bytes,4,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+}
+
+func (m *EventSwapIn) Reset()         { *m = EventSwapIn{} }
+func (m *EventSwapIn) String() string { return proto.CompactTextString(m) }
+func (*EventSwapIn) ProtoMessage()    {}
+func (*EventSwapIn) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5fb7c27aa4ee0453, []int{5}
+}
+func (m *EventSwapIn) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventSwapIn) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventSwapIn.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventSwapIn) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventSwapIn.Merge(m, src)
+}
+func (m *EventSwapIn) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventSwapIn) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventSwapIn.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventSwapIn proto.InternalMessageInfo
+
+func (m *EventSwapIn) GetOwner() string {
+	if m != nil {
+		return m.Owner
+	}
+	return ""
+}
+
+func (m *EventSwapIn) GetAmountIn() string {
+	if m != nil {
+		return m.AmountIn
+	}
+	return ""
+}
+
+func (m *EventSwapIn) GetSharesReceived() string {
+	if m != nil {
+		return m.SharesReceived
+	}
+	return ""
+}
+
+func (m *EventSwapIn) GetVaultAddress() string {
+	if m != nil {
+		return m.VaultAddress
+	}
+	return ""
+}
+
+// EventSwapOut is an event emitted when vault shares are swapped out for underlying assets.
+type EventSwapOut struct {
+	// owner is the address of the account that initiated the swap.
+	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
+	// shares_burned is the amount of vault shares that were burned.
+	SharesBurned string `protobuf:"bytes,2,opt,name=shares_burned,json=sharesBurned,proto3" json:"shares_burned,omitempty"`
+	// amount_out is the amount of underlying assets that were sent to the recipient.
+	AmountOut string `protobuf:"bytes,3,opt,name=amount_out,json=amountOut,proto3" json:"amount_out,omitempty"`
+	// vault_address is the bech32 address of the vault.
+	VaultAddress string `protobuf:"bytes,4,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+}
+
+func (m *EventSwapOut) Reset()         { *m = EventSwapOut{} }
+func (m *EventSwapOut) String() string { return proto.CompactTextString(m) }
+func (*EventSwapOut) ProtoMessage()    {}
+func (*EventSwapOut) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5fb7c27aa4ee0453, []int{6}
+}
+func (m *EventSwapOut) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventSwapOut) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventSwapOut.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventSwapOut) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventSwapOut.Merge(m, src)
+}
+func (m *EventSwapOut) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventSwapOut) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventSwapOut.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventSwapOut proto.InternalMessageInfo
+
+func (m *EventSwapOut) GetOwner() string {
+	if m != nil {
+		return m.Owner
+	}
+	return ""
+}
+
+func (m *EventSwapOut) GetSharesBurned() string {
+	if m != nil {
+		return m.SharesBurned
+	}
+	return ""
+}
+
+func (m *EventSwapOut) GetAmountOut() string {
+	if m != nil {
+		return m.AmountOut
+	}
+	return ""
+}
+
+func (m *EventSwapOut) GetVaultAddress() string {
+	if m != nil {
+		return m.VaultAddress
+	}
+	return ""
+}
+
+// EventVaultReconcile is an event emitted when a vault's interest is reconciled.
+type EventVaultReconcile struct {
+	// vault_address is the bech32 address of the vault.
+	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// principal_before is the principal amount before applying interest.
+	PrincipalBefore string `protobuf:"bytes,2,opt,name=principal_before,json=principalBefore,proto3" json:"principal_before,omitempty"`
+	// principal_after is the principal amount after applying interest.
+	PrincipalAfter string `protobuf:"bytes,3,opt,name=principal_after,json=principalAfter,proto3" json:"principal_after,omitempty"`
+	// rate is a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%) representing annual interest rate for the period.
+	Rate string `protobuf:"bytes,4,opt,name=rate,proto3" json:"rate,omitempty"`
+	// time is the payout duration in seconds.
+	Time int64 `protobuf:"varint,5,opt,name=time,proto3" json:"time,omitempty"`
+	// interest_earned is the interest amount (can be positive or negative).
+	InterestEarned string `protobuf:"bytes,6,opt,name=interest_earned,json=interestEarned,proto3" json:"interest_earned,omitempty"`
+}
+
+func (m *EventVaultReconcile) Reset()         { *m = EventVaultReconcile{} }
+func (m *EventVaultReconcile) String() string { return proto.CompactTextString(m) }
+func (*EventVaultReconcile) ProtoMessage()    {}
+func (*EventVaultReconcile) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5fb7c27aa4ee0453, []int{7}
+}
+func (m *EventVaultReconcile) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventVaultReconcile) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventVaultReconcile.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventVaultReconcile) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventVaultReconcile.Merge(m, src)
+}
+func (m *EventVaultReconcile) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventVaultReconcile) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventVaultReconcile.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventVaultReconcile proto.InternalMessageInfo
+
+func (m *EventVaultReconcile) GetVaultAddress() string {
+	if m != nil {
+		return m.VaultAddress
+	}
+	return ""
+}
+
+func (m *EventVaultReconcile) GetPrincipalBefore() string {
+	if m != nil {
+		return m.PrincipalBefore
+	}
+	return ""
+}
+
+func (m *EventVaultReconcile) GetPrincipalAfter() string {
+	if m != nil {
+		return m.PrincipalAfter
+	}
+	return ""
+}
+
+func (m *EventVaultReconcile) GetRate() string {
+	if m != nil {
+		return m.Rate
+	}
+	return ""
+}
+
+func (m *EventVaultReconcile) GetTime() int64 {
+	if m != nil {
+		return m.Time
+	}
+	return 0
+}
+
+func (m *EventVaultReconcile) GetInterestEarned() string {
+	if m != nil {
+		return m.InterestEarned
+	}
+	return ""
+}
+
+// EventVaultInterestChange is an event emitted when a vault's interest rate is changed.
+type EventVaultInterestChange struct {
+	// vault_address is the bech32 address of the vault.
+	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// current_rate is a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%) representing the actual annual interest rate the vault is using.
+	CurrentRate string `protobuf:"bytes,2,opt,name=current_rate,json=currentRate,proto3" json:"current_rate,omitempty"`
+	// desired_rate is a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%) representing the the annual interest rate the admin wants to use.
+	DesiredRate string `protobuf:"bytes,3,opt,name=desired_rate,json=desiredRate,proto3" json:"desired_rate,omitempty"`
+}
+
+func (m *EventVaultInterestChange) Reset()         { *m = EventVaultInterestChange{} }
+func (m *EventVaultInterestChange) String() string { return proto.CompactTextString(m) }
+func (*EventVaultInterestChange) ProtoMessage()    {}
+func (*EventVaultInterestChange) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5fb7c27aa4ee0453, []int{8}
+}
+func (m *EventVaultInterestChange) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventVaultInterestChange) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventVaultInterestChange.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventVaultInterestChange) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventVaultInterestChange.Merge(m, src)
+}
+func (m *EventVaultInterestChange) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventVaultInterestChange) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventVaultInterestChange.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventVaultInterestChange proto.InternalMessageInfo
+
+func (m *EventVaultInterestChange) GetVaultAddress() string {
+	if m != nil {
+		return m.VaultAddress
+	}
+	return ""
+}
+
+func (m *EventVaultInterestChange) GetCurrentRate() string {
+	if m != nil {
+		return m.CurrentRate
+	}
+	return ""
+}
+
+func (m *EventVaultInterestChange) GetDesiredRate() string {
+	if m != nil {
+		return m.DesiredRate
+	}
+	return ""
+}
+
+// EventInterestDeposit is an event emitted when funds are deposited for paying interest.
+type EventInterestDeposit struct {
+	// vault_address is the bech32 address of the vault.
+	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// admin is the address of the account that deposited the funds.
+	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
+	// amount is the amount of funds deposited.
+	Amount string `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
+}
+
+func (m *EventInterestDeposit) Reset()         { *m = EventInterestDeposit{} }
+func (m *EventInterestDeposit) String() string { return proto.CompactTextString(m) }
+func (*EventInterestDeposit) ProtoMessage()    {}
+func (*EventInterestDeposit) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5fb7c27aa4ee0453, []int{9}
+}
+func (m *EventInterestDeposit) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventInterestDeposit) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventInterestDeposit.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventInterestDeposit) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventInterestDeposit.Merge(m, src)
+}
+func (m *EventInterestDeposit) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventInterestDeposit) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventInterestDeposit.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventInterestDeposit proto.InternalMessageInfo
+
+func (m *EventInterestDeposit) GetVaultAddress() string {
+	if m != nil {
+		return m.VaultAddress
+	}
+	return ""
+}
+
+func (m *EventInterestDeposit) GetAdmin() string {
+	if m != nil {
+		return m.Admin
+	}
+	return ""
+}
+
+func (m *EventInterestDeposit) GetAmount() string {
+	if m != nil {
+		return m.Amount
+	}
+	return ""
+}
+
+// EventInterestWithdrawal is an event emitted when unused interest funds are withdrawn.
+type EventInterestWithdrawal struct {
+	// vault_address is the bech32 address of the vault.
+	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// admin is the address of the account that withdrew the funds.
+	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
+	// amount is the amount of funds withdrawn.
+	Amount string `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
+}
+
+func (m *EventInterestWithdrawal) Reset()         { *m = EventInterestWithdrawal{} }
+func (m *EventInterestWithdrawal) String() string { return proto.CompactTextString(m) }
+func (*EventInterestWithdrawal) ProtoMessage()    {}
+func (*EventInterestWithdrawal) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5fb7c27aa4ee0453, []int{10}
+}
+func (m *EventInterestWithdrawal) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventInterestWithdrawal) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventInterestWithdrawal.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventInterestWithdrawal) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventInterestWithdrawal.Merge(m, src)
+}
+func (m *EventInterestWithdrawal) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventInterestWithdrawal) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventInterestWithdrawal.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventInterestWithdrawal proto.InternalMessageInfo
+
+func (m *EventInterestWithdrawal) GetVaultAddress() string {
+	if m != nil {
+		return m.VaultAddress
+	}
+	return ""
+}
+
+func (m *EventInterestWithdrawal) GetAdmin() string {
+	if m != nil {
+		return m.Admin
+	}
+	return ""
+}
+
+func (m *EventInterestWithdrawal) GetAmount() string {
+	if m != nil {
+		return m.Amount
+	}
+	return ""
+}
+
+// EventToggleSwapIn is an event emitted when swap-in operations are enabled or disabled for a vault.
+type EventToggleSwapIn struct {
+	// vault_address is the bech32 address of the vault.
+	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// admin is the address of the account that toggled the swap-in operations.
+	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
+	// enabled is the new state of swap-in operations.
+	Enabled bool `protobuf:"varint,3,opt,name=enabled,proto3" json:"enabled,omitempty"`
+}
+
+func (m *EventToggleSwapIn) Reset()         { *m = EventToggleSwapIn{} }
+func (m *EventToggleSwapIn) String() string { return proto.CompactTextString(m) }
+func (*EventToggleSwapIn) ProtoMessage()    {}
+func (*EventToggleSwapIn) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5fb7c27aa4ee0453, []int{11}
+}
+func (m *EventToggleSwapIn) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventToggleSwapIn) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventToggleSwapIn.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventToggleSwapIn) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventToggleSwapIn.Merge(m, src)
+}
+func (m *EventToggleSwapIn) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventToggleSwapIn) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventToggleSwapIn.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventToggleSwapIn proto.InternalMessageInfo
+
+func (m *EventToggleSwapIn) GetVaultAddress() string {
+	if m != nil {
+		return m.VaultAddress
+	}
+	return ""
+}
+
+func (m *EventToggleSwapIn) GetAdmin() string {
+	if m != nil {
+		return m.Admin
+	}
+	return ""
+}
+
+func (m *EventToggleSwapIn) GetEnabled() bool {
+	if m != nil {
+		return m.Enabled
+	}
+	return false
+}
+
+// EventToggleSwapOut is an event emitted when swap-out operations are enabled or disabled for a vault.
+type EventToggleSwapOut struct {
+	// vault_address is the bech32 address of the vault.
+	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// admin is the address of the account that toggled the swap-out operations.
+	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
+	// enabled is the new state of swap-out operations.
+	Enabled bool `protobuf:"varint,3,opt,name=enabled,proto3" json:"enabled,omitempty"`
+}
+
+func (m *EventToggleSwapOut) Reset()         { *m = EventToggleSwapOut{} }
+func (m *EventToggleSwapOut) String() string { return proto.CompactTextString(m) }
+func (*EventToggleSwapOut) ProtoMessage()    {}
+func (*EventToggleSwapOut) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5fb7c27aa4ee0453, []int{12}
+}
+func (m *EventToggleSwapOut) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventToggleSwapOut) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventToggleSwapOut.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventToggleSwapOut) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventToggleSwapOut.Merge(m, src)
+}
+func (m *EventToggleSwapOut) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventToggleSwapOut) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventToggleSwapOut.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventToggleSwapOut proto.InternalMessageInfo
+
+func (m *EventToggleSwapOut) GetVaultAddress() string {
+	if m != nil {
+		return m.VaultAddress
+	}
+	return ""
+}
+
+func (m *EventToggleSwapOut) GetAdmin() string {
+	if m != nil {
+		return m.Admin
+	}
+	return ""
+}
+
+func (m *EventToggleSwapOut) GetEnabled() bool {
+	if m != nil {
+		return m.Enabled
+	}
+	return false
+}
+
+// EventDepositPrincipalFunds is an event emitted when principal funds are deposited by the admin.
+type EventDepositPrincipalFunds struct {
+	// vault_address is the bech32 address of the vault.
+	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// admin is the address of the account that deposited the funds.
+	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
+	// amount is the amount of funds deposited.
+	Amount string `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
+}
+
+func (m *EventDepositPrincipalFunds) Reset()         { *m = EventDepositPrincipalFunds{} }
+func (m *EventDepositPrincipalFunds) String() string { return proto.CompactTextString(m) }
+func (*EventDepositPrincipalFunds) ProtoMessage()    {}
+func (*EventDepositPrincipalFunds) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5fb7c27aa4ee0453, []int{13}
+}
+func (m *EventDepositPrincipalFunds) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventDepositPrincipalFunds) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventDepositPrincipalFunds.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventDepositPrincipalFunds) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventDepositPrincipalFunds.Merge(m, src)
+}
+func (m *EventDepositPrincipalFunds) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventDepositPrincipalFunds) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventDepositPrincipalFunds.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventDepositPrincipalFunds proto.InternalMessageInfo
+
+func (m *EventDepositPrincipalFunds) GetVaultAddress() string {
+	if m != nil {
+		return m.VaultAddress
+	}
+	return ""
+}
+
+func (m *EventDepositPrincipalFunds) GetAdmin() string {
+	if m != nil {
+		return m.Admin
+	}
+	return ""
+}
+
+func (m *EventDepositPrincipalFunds) GetAmount() string {
+	if m != nil {
+		return m.Amount
+	}
+	return ""
+}
+
+// EventWithdrawPrincipalFunds is an event emitted when principal funds are withdrawn by the admin.
+type EventWithdrawPrincipalFunds struct {
+	// vault_address is the bech32 address of the vault.
+	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// admin is the address of the account that withdrew the funds.
+	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
+	// amount is the amount of funds withdrawn.
+	Amount string `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
+}
+
+func (m *EventWithdrawPrincipalFunds) Reset()         { *m = EventWithdrawPrincipalFunds{} }
+func (m *EventWithdrawPrincipalFunds) String() string { return proto.CompactTextString(m) }
+func (*EventWithdrawPrincipalFunds) ProtoMessage()    {}
+func (*EventWithdrawPrincipalFunds) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5fb7c27aa4ee0453, []int{14}
+}
+func (m *EventWithdrawPrincipalFunds) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventWithdrawPrincipalFunds) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventWithdrawPrincipalFunds.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventWithdrawPrincipalFunds) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventWithdrawPrincipalFunds.Merge(m, src)
+}
+func (m *EventWithdrawPrincipalFunds) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventWithdrawPrincipalFunds) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventWithdrawPrincipalFunds.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventWithdrawPrincipalFunds proto.InternalMessageInfo
+
+func (m *EventWithdrawPrincipalFunds) GetVaultAddress() string {
+	if m != nil {
+		return m.VaultAddress
+	}
+	return ""
+}
+
+func (m *EventWithdrawPrincipalFunds) GetAdmin() string {
+	if m != nil {
+		return m.Admin
+	}
+	return ""
+}
+
+func (m *EventWithdrawPrincipalFunds) GetAmount() string {
+	if m != nil {
+		return m.Amount
+	}
+	return ""
+}
+
+// EventMinInterestRateUpdated is emitted when the minimum interest rate is updated.
+type EventMinInterestRateUpdated struct {
+	// vault_address is the bech32 address of the vault.
+	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// admin is the address of the account that updated the limit.
+	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
+	// min_rate is the newly set minimum annual interest rate as a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%).
+	// An empty string "" represents no minimum.
+	MinRate string `protobuf:"bytes,3,opt,name=min_rate,json=minRate,proto3" json:"min_rate,omitempty"`
+}
+
+func (m *EventMinInterestRateUpdated) Reset()         { *m = EventMinInterestRateUpdated{} }
+func (m *EventMinInterestRateUpdated) String() string { return proto.CompactTextString(m) }
+func (*EventMinInterestRateUpdated) ProtoMessage()    {}
+func (*EventMinInterestRateUpdated) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5fb7c27aa4ee0453, []int{15}
+}
+func (m *EventMinInterestRateUpdated) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventMinInterestRateUpdated) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventMinInterestRateUpdated.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventMinInterestRateUpdated) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventMinInterestRateUpdated.Merge(m, src)
+}
+func (m *EventMinInterestRateUpdated) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventMinInterestRateUpdated) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventMinInterestRateUpdated.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventMinInterestRateUpdated proto.InternalMessageInfo
+
+func (m *EventMinInterestRateUpdated) GetVaultAddress() string {
+	if m != nil {
+		return m.VaultAddress
+	}
+	return ""
+}
+
+func (m *EventMinInterestRateUpdated) GetAdmin() string {
+	if m != nil {
+		return m.Admin
+	}
+	return ""
+}
+
+func (m *EventMinInterestRateUpdated) GetMinRate() string {
+	if m != nil {
+		return m.MinRate
+	}
+	return ""
+}
+
+// EventMaxInterestRateUpdated is emitted when the maximum interest rate is updated.
+type EventMaxInterestRateUpdated struct {
+	// vault_address is the bech32 address of the vault.
+	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// admin is the address of the account that updated the limit.
+	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
+	// max_rate is the newly set maximum annual interest rate as a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%).
+	// An empty string "" represents no maximum.
+	MaxRate string `protobuf:"bytes,3,opt,name=max_rate,json=maxRate,proto3" json:"max_rate,omitempty"`
+}
+
+func (m *EventMaxInterestRateUpdated) Reset()         { *m = EventMaxInterestRateUpdated{} }
+func (m *EventMaxInterestRateUpdated) String() string { return proto.CompactTextString(m) }
+func (*EventMaxInterestRateUpdated) ProtoMessage()    {}
+func (*EventMaxInterestRateUpdated) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5fb7c27aa4ee0453, []int{16}
+}
+func (m *EventMaxInterestRateUpdated) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventMaxInterestRateUpdated) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventMaxInterestRateUpdated.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventMaxInterestRateUpdated) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventMaxInterestRateUpdated.Merge(m, src)
+}
+func (m *EventMaxInterestRateUpdated) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventMaxInterestRateUpdated) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventMaxInterestRateUpdated.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventMaxInterestRateUpdated proto.InternalMessageInfo
+
+func (m *EventMaxInterestRateUpdated) GetVaultAddress() string {
+	if m != nil {
+		return m.VaultAddress
+	}
+	return ""
+}
+
+func (m *EventMaxInterestRateUpdated) GetAdmin() string {
+	if m != nil {
+		return m.Admin
+	}
+	return ""
+}
+
+func (m *EventMaxInterestRateUpdated) GetMaxRate() string {
+	if m != nil {
+		return m.MaxRate
+	}
+	return ""
+}
+
+// EventSwapOutRequested is emitted when a user successfully queues a swap out.
+type EventSwapOutRequested struct {
+	// vault_address is the bech32 address of the vault.
+	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// owner is the bech32 address of the user who initiated the swap out.
+	Owner string `protobuf:"bytes,2,opt,name=owner,proto3" json:"owner,omitempty"`
+	// redeem_denom is the denomination of the asset to be redeemed.
+	RedeemDenom string `protobuf:"bytes,3,opt,name=redeem_denom,json=redeemDenom,proto3" json:"redeem_denom,omitempty"`
+	// shares is the amount of vault shares the user escrowed for this request.
+	Shares string `protobuf:"bytes,4,opt,name=shares,proto3" json:"shares,omitempty"`
+	// request_id is the unique identifier for this pending swap out request.
+	RequestId uint64 `protobuf:"varint,5,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+}
+
+func (m *EventSwapOutRequested) Reset()         { *m = EventSwapOutRequested{} }
+func (m *EventSwapOutRequested) String() string { return proto.CompactTextString(m) }
+func (*EventSwapOutRequested) ProtoMessage()    {}
+func (*EventSwapOutRequested) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5fb7c27aa4ee0453, []int{17}
+}
+func (m *EventSwapOutRequested) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventSwapOutRequested) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventSwapOutRequested.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventSwapOutRequested) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventSwapOutRequested.Merge(m, src)
+}
+func (m *EventSwapOutRequested) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventSwapOutRequested) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventSwapOutRequested.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventSwapOutRequested proto.InternalMessageInfo
+
+func (m *EventSwapOutRequested) GetVaultAddress() string {
+	if m != nil {
+		return m.VaultAddress
+	}
+	return ""
+}
+
+func (m *EventSwapOutRequested) GetOwner() string {
+	if m != nil {
+		return m.Owner
+	}
+	return ""
+}
+
+func (m *EventSwapOutRequested) GetRedeemDenom() string {
+	if m != nil {
+		return m.RedeemDenom
+	}
+	return ""
+}
+
+func (m *EventSwapOutRequested) GetShares() string {
+	if m != nil {
+		return m.Shares
+	}
+	return ""
+}
+
+func (m *EventSwapOutRequested) GetRequestId() uint64 {
+	if m != nil {
+		return m.RequestId
+	}
+	return 0
+}
+
+// EventSwapOutCompleted is emitted when a pending swap out is successfully processed.
+type EventSwapOutCompleted struct {
+	// vault_address is the bech32 address of the vault.
+	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// owner is the bech32 address of the user who received the payout.
+	Owner string `protobuf:"bytes,2,opt,name=owner,proto3" json:"owner,omitempty"`
+	// assets is the amount of assets paid out to the user.
+	Assets string `protobuf:"bytes,3,opt,name=assets,proto3" json:"assets,omitempty"`
+	// request_id is the unique identifier of the swap out request that was completed.
+	RequestId uint64 `protobuf:"varint,4,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+}
+
+func (m *EventSwapOutCompleted) Reset()         { *m = EventSwapOutCompleted{} }
+func (m *EventSwapOutCompleted) String() string { return proto.CompactTextString(m) }
+func (*EventSwapOutCompleted) ProtoMessage()    {}
+func (*EventSwapOutCompleted) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5fb7c27aa4ee0453, []int{18}
+}
+func (m *EventSwapOutCompleted) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventSwapOutCompleted) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventSwapOutCompleted.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventSwapOutCompleted) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventSwapOutCompleted.Merge(m, src)
+}
+func (m *EventSwapOutCompleted) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventSwapOutCompleted) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventSwapOutCompleted.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventSwapOutCompleted proto.InternalMessageInfo
+
+func (m *EventSwapOutCompleted) GetVaultAddress() string {
+	if m != nil {
+		return m.VaultAddress
+	}
+	return ""
+}
+
+func (m *EventSwapOutCompleted) GetOwner() string {
+	if m != nil {
+		return m.Owner
+	}
+	return ""
+}
+
+func (m *EventSwapOutCompleted) GetAssets() string {
+	if m != nil {
+		return m.Assets
+	}
+	return ""
+}
+
+func (m *EventSwapOutCompleted) GetRequestId() uint64 {
+	if m != nil {
+		return m.RequestId
+	}
+	return 0
+}
+
+// EventSwapOutRefunded is emitted when a pending swap out fails and the user's
+// escrowed shares are returned.
+type EventSwapOutRefunded struct {
+	// vault_address is the bech32 address of the vault.
+	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// owner is the bech32 address of the user whose shares were refunded.
+	Owner string `protobuf:"bytes,2,opt,name=owner,proto3" json:"owner,omitempty"`
+	// shares is the amount of vault shares that were returned to the user.
+	Shares string `protobuf:"bytes,3,opt,name=shares,proto3" json:"shares,omitempty"`
+	// request_id is the unique identifier of the swap out request that failed.
+	RequestId uint64 `protobuf:"varint,4,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	// reason is a string detailing why the swap out failed.
+	Reason string `protobuf:"bytes,5,opt,name=reason,proto3" json:"reason,omitempty"`
+}
+
+func (m *EventSwapOutRefunded) Reset()         { *m = EventSwapOutRefunded{} }
+func (m *EventSwapOutRefunded) String() string { return proto.CompactTextString(m) }
+func (*EventSwapOutRefunded) ProtoMessage()    {}
+func (*EventSwapOutRefunded) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5fb7c27aa4ee0453, []int{19}
+}
+func (m *EventSwapOutRefunded) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventSwapOutRefunded) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventSwapOutRefunded.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventSwapOutRefunded) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventSwapOutRefunded.Merge(m, src)
+}
+func (m *EventSwapOutRefunded) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventSwapOutRefunded) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventSwapOutRefunded.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventSwapOutRefunded proto.InternalMessageInfo
+
+func (m *EventSwapOutRefunded) GetVaultAddress() string {
+	if m != nil {
+		return m.VaultAddress
+	}
+	return ""
+}
+
+func (m *EventSwapOutRefunded) GetOwner() string {
+	if m != nil {
+		return m.Owner
+	}
+	return ""
+}
+
+func (m *EventSwapOutRefunded) GetShares() string {
+	if m != nil {
+		return m.Shares
+	}
+	return ""
+}
+
+func (m *EventSwapOutRefunded) GetRequestId() uint64 {
+	if m != nil {
+		return m.RequestId
+	}
+	return 0
+}
+
+func (m *EventSwapOutRefunded) GetReason() string {
+	if m != nil {
+		return m.Reason
+	}
+	return ""
+}
+
+// EventPendingSwapOutExpedited is an event emitted when a pending swap-out is expedited by the admin.
+type EventPendingSwapOutExpedited struct {
+	// request_id is the numerical identifier of the pending swap-out.
+	RequestId uint64 `protobuf:"varint,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
+	// vault is the bech32 address of the vault.
+	Vault string `protobuf:"bytes,2,opt,name=vault,proto3" json:"vault,omitempty"`
+	// admin is the address of the account that expedited the swap-out.
+	Admin string `protobuf:"bytes,3,opt,name=admin,proto3" json:"admin,omitempty"`
+}
+
+func (m *EventPendingSwapOutExpedited) Reset()         { *m = EventPendingSwapOutExpedited{} }
+func (m *EventPendingSwapOutExpedited) String() string { return proto.CompactTextString(m) }
+func (*EventPendingSwapOutExpedited) ProtoMessage()    {}
+func (*EventPendingSwapOutExpedited) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5fb7c27aa4ee0453, []int{20}
+}
+func (m *EventPendingSwapOutExpedited) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventPendingSwapOutExpedited) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventPendingSwapOutExpedited.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventPendingSwapOutExpedited) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventPendingSwapOutExpedited.Merge(m, src)
+}
+func (m *EventPendingSwapOutExpedited) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventPendingSwapOutExpedited) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventPendingSwapOutExpedited.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventPendingSwapOutExpedited proto.InternalMessageInfo
+
+func (m *EventPendingSwapOutExpedited) GetRequestId() uint64 {
+	if m != nil {
+		return m.RequestId
+	}
+	return 0
+}
+
+func (m *EventPendingSwapOutExpedited) GetVault() string {
+	if m != nil {
+		return m.Vault
+	}
+	return ""
+}
+
+func (m *EventPendingSwapOutExpedited) GetAdmin() string {
+	if m != nil {
+		return m.Admin
+	}
+	return ""
+}
+
+// EventVaultPaused is emitted when a vault is paused.
+type EventVaultPaused struct {
+	// vault_address is the bech32 address of the vault.
+	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// admin is the address of the account that paused the vault.
+	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
+	// reason is the reason for pausing the vault.
+	Reason string `protobuf:"bytes,3,opt,name=reason,proto3" json:"reason,omitempty"`
+	// total_vault_value is the total value of the vault's assets at the time of pausing.
+	TotalVaultValue string `protobuf:"bytes,4,opt,name=total_vault_value,json=totalVaultValue,proto3" json:"total_vault_value,omitempty"`
+}
+
+func (m *EventVaultPaused) Reset()         { *m = EventVaultPaused{} }
+func (m *EventVaultPaused) String() string { return proto.CompactTextString(m) }
+func (*EventVaultPaused) ProtoMessage()    {}
+func (*EventVaultPaused) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5fb7c27aa4ee0453, []int{21}
+}
+func (m *EventVaultPaused) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventVaultPaused) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventVaultPaused.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventVaultPaused) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventVaultPaused.Merge(m, src)
+}
+func (m *EventVaultPaused) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventVaultPaused) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventVaultPaused.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventVaultPaused proto.InternalMessageInfo
+
+func (m *EventVaultPaused) GetVaultAddress() string {
+	if m != nil {
+		return m.VaultAddress
+	}
+	return ""
+}
+
+func (m *EventVaultPaused) GetAdmin() string {
+	if m != nil {
+		return m.Admin
+	}
+	return ""
+}
+
+func (m *EventVaultPaused) GetReason() string {
+	if m != nil {
+		return m.Reason
+	}
+	return ""
+}
+
+func (m *EventVaultPaused) GetTotalVaultValue() string {
+	if m != nil {
+		return m.TotalVaultValue
+	}
+	return ""
+}
+
+// EventVaultUnpaused is emitted when a vault is unpaused.
+type EventVaultUnpaused struct {
+	// vault_address is the bech32 address of the vault.
+	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// admin is the address of the account that unpaused the vault.
+	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
+	// total_vault_value is the new total value of the vault's assets at the time of unpausing.
+	TotalVaultValue string `protobuf:"bytes,3,opt,name=total_vault_value,json=totalVaultValue,proto3" json:"total_vault_value,omitempty"`
+}
+
+func (m *EventVaultUnpaused) Reset()         { *m = EventVaultUnpaused{} }
+func (m *EventVaultUnpaused) String() string { return proto.CompactTextString(m) }
+func (*EventVaultUnpaused) ProtoMessage()    {}
+func (*EventVaultUnpaused) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5fb7c27aa4ee0453, []int{22}
+}
+func (m *EventVaultUnpaused) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventVaultUnpaused) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventVaultUnpaused.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventVaultUnpaused) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventVaultUnpaused.Merge(m, src)
+}
+func (m *EventVaultUnpaused) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventVaultUnpaused) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventVaultUnpaused.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventVaultUnpaused proto.InternalMessageInfo
+
+func (m *EventVaultUnpaused) GetVaultAddress() string {
+	if m != nil {
+		return m.VaultAddress
+	}
+	return ""
+}
+
+func (m *EventVaultUnpaused) GetAdmin() string {
+	if m != nil {
+		return m.Admin
+	}
+	return ""
+}
+
+func (m *EventVaultUnpaused) GetTotalVaultValue() string {
+	if m != nil {
+		return m.TotalVaultValue
+	}
+	return ""
+}
+
+// EventBridgeAddressSet is emitted when the bridge address for a vault is configured or updated.
+type EventBridgeAddressSet struct {
+	// vault_address is the bech32 address of the vault.
+	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// admin is the address of the account that set the bridge address.
+	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
+	// bridge_address is the configured external address allowed to mint/burn shares.
+	BridgeAddress string `protobuf:"bytes,3,opt,name=bridge_address,json=bridgeAddress,proto3" json:"bridge_address,omitempty"`
+}
+
+func (m *EventBridgeAddressSet) Reset()         { *m = EventBridgeAddressSet{} }
+func (m *EventBridgeAddressSet) String() string { return proto.CompactTextString(m) }
+func (*EventBridgeAddressSet) ProtoMessage()    {}
+func (*EventBridgeAddressSet) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5fb7c27aa4ee0453, []int{23}
+}
+func (m *EventBridgeAddressSet) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventBridgeAddressSet) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventBridgeAddressSet.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventBridgeAddressSet) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventBridgeAddressSet.Merge(m, src)
+}
+func (m *EventBridgeAddressSet) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventBridgeAddressSet) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventBridgeAddressSet.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventBridgeAddressSet proto.InternalMessageInfo
+
+func (m *EventBridgeAddressSet) GetVaultAddress() string {
+	if m != nil {
+		return m.VaultAddress
+	}
+	return ""
+}
+
+func (m *EventBridgeAddressSet) GetAdmin() string {
+	if m != nil {
+		return m.Admin
+	}
+	return ""
+}
+
+func (m *EventBridgeAddressSet) GetBridgeAddress() string {
+	if m != nil {
+		return m.BridgeAddress
+	}
+	return ""
+}
+
+// EventBridgeToggled is emitted when the bridge functionality is enabled or disabled for a vault.
+type EventBridgeToggled struct {
+	// vault_address is the bech32 address of the vault.
+	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// admin is the address of the account that toggled bridge functionality.
+	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
+	// enabled is the new state of the bridge functionality.
+	Enabled bool `protobuf:"varint,3,opt,name=enabled,proto3" json:"enabled,omitempty"`
+}
+
+func (m *EventBridgeToggled) Reset()         { *m = EventBridgeToggled{} }
+func (m *EventBridgeToggled) String() string { return proto.CompactTextString(m) }
+func (*EventBridgeToggled) ProtoMessage()    {}
+func (*EventBridgeToggled) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5fb7c27aa4ee0453, []int{24}
+}
+func (m *EventBridgeToggled) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventBridgeToggled) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventBridgeToggled.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventBridgeToggled) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventBridgeToggled.Merge(m, src)
+}
+func (m *EventBridgeToggled) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventBridgeToggled) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventBridgeToggled.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventBridgeToggled proto.InternalMessageInfo
+
+func (m *EventBridgeToggled) GetVaultAddress() string {
+	if m != nil {
+		return m.VaultAddress
+	}
+	return ""
+}
+
+func (m *EventBridgeToggled) GetAdmin() string {
+	if m != nil {
+		return m.Admin
+	}
+	return ""
+}
+
+func (m *EventBridgeToggled) GetEnabled() bool {
+	if m != nil {
+		return m.Enabled
+	}
+	return false
+}
+
+// EventBridgeMintShares is emitted when shares are minted via the bridge flow.
+type EventBridgeMintShares struct {
+	// vault_address is the bech32 address of the vault.
+	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// bridge is the bech32 address of the bridge signer.
+	Bridge string `protobuf:"bytes,2,opt,name=bridge,proto3" json:"bridge,omitempty"`
+	// shares is the amount of shares minted.
+	Shares string `protobuf:"bytes,3,opt,name=shares,proto3" json:"shares,omitempty"`
+}
+
+func (m *EventBridgeMintShares) Reset()         { *m = EventBridgeMintShares{} }
+func (m *EventBridgeMintShares) String() string { return proto.CompactTextString(m) }
+func (*EventBridgeMintShares) ProtoMessage()    {}
+func (*EventBridgeMintShares) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5fb7c27aa4ee0453, []int{25}
+}
+func (m *EventBridgeMintShares) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventBridgeMintShares) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventBridgeMintShares.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventBridgeMintShares) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventBridgeMintShares.Merge(m, src)
+}
+func (m *EventBridgeMintShares) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventBridgeMintShares) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventBridgeMintShares.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventBridgeMintShares proto.InternalMessageInfo
+
+func (m *EventBridgeMintShares) GetVaultAddress() string {
+	if m != nil {
+		return m.VaultAddress
+	}
+	return ""
+}
+
+func (m *EventBridgeMintShares) GetBridge() string {
+	if m != nil {
+		return m.Bridge
+	}
+	return ""
+}
+
+func (m *EventBridgeMintShares) GetShares() string {
+	if m != nil {
+		return m.Shares
+	}
+	return ""
+}
+
+// EventBridgeBurnShares is emitted when shares are burned via the bridge flow.
+type EventBridgeBurnShares struct {
+	// vault_address is the bech32 address of the vault.
+	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// bridge is the bech32 address of the bridge signer.
+	Bridge string `protobuf:"bytes,2,opt,name=bridge,proto3" json:"bridge,omitempty"`
+	// shares is the amount of shares burned.
+	Shares string `protobuf:"bytes,3,opt,name=shares,proto3" json:"shares,omitempty"`
+}
+
+func (m *EventBridgeBurnShares) Reset()         { *m = EventBridgeBurnShares{} }
+func (m *EventBridgeBurnShares) String() string { return proto.CompactTextString(m) }
+func (*EventBridgeBurnShares) ProtoMessage()    {}
+func (*EventBridgeBurnShares) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5fb7c27aa4ee0453, []int{26}
+}
+func (m *EventBridgeBurnShares) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventBridgeBurnShares) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventBridgeBurnShares.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventBridgeBurnShares) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventBridgeBurnShares.Merge(m, src)
+}
+func (m *EventBridgeBurnShares) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventBridgeBurnShares) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventBridgeBurnShares.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventBridgeBurnShares proto.InternalMessageInfo
+
+func (m *EventBridgeBurnShares) GetVaultAddress() string {
+	if m != nil {
+		return m.VaultAddress
+	}
+	return ""
+}
+
+func (m *EventBridgeBurnShares) GetBridge() string {
+	if m != nil {
+		return m.Bridge
+	}
+	return ""
+}
+
+func (m *EventBridgeBurnShares) GetShares() string {
+	if m != nil {
+		return m.Shares
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*EventDeposit)(nil), "provlabs.vault.v1.EventDeposit")
 	proto.RegisterType((*EventWithdraw)(nil), "provlabs.vault.v1.EventWithdraw")
 	proto.RegisterType((*EventVaultCreated)(nil), "provlabs.vault.v1.EventVaultCreated")
+	proto.RegisterType((*EventDenomUnit)(nil), "provlabs.vault.v1.EventDenomUnit")
+	proto.RegisterType((*EventSetShareDenomMetadata)(nil), "provlabs.vault.v1.EventSetShareDenomMetadata")
 	proto.RegisterType((*EventSwapIn)(nil), "provlabs.vault.v1.EventSwapIn")
 	proto.RegisterType((*EventSwapOut)(nil), "provlabs.vault.v1.EventSwapOut")
 	proto.RegisterType((*EventVaultReconcile)(nil), "provlabs.vault.v1.EventVaultReconcile")
@@ -1981,92 +1983,91 @@ func init() {
 	proto.RegisterType((*EventBridgeToggled)(nil), "provlabs.vault.v1.EventBridgeToggled")
 	proto.RegisterType((*EventBridgeMintShares)(nil), "provlabs.vault.v1.EventBridgeMintShares")
 	proto.RegisterType((*EventBridgeBurnShares)(nil), "provlabs.vault.v1.EventBridgeBurnShares")
-	proto.RegisterType((*EventDenomUnit)(nil), "provlabs.vault.v1.EventDenomUnit")
-	proto.RegisterType((*EventSetShareDenomMetadata)(nil), "provlabs.vault.v1.EventSetShareDenomMetadata")
 }
 
 func init() { proto.RegisterFile("provlabs/vault/v1/events.proto", fileDescriptor_5fb7c27aa4ee0453) }
 
 var fileDescriptor_5fb7c27aa4ee0453 = []byte{
-	// 1245 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x58, 0xcf, 0x6f, 0x1b, 0x45,
-	0x14, 0xee, 0x62, 0xc7, 0x71, 0xc7, 0x76, 0xd2, 0x6e, 0x03, 0xb8, 0x2d, 0x75, 0x1b, 0x17, 0x89,
-	0x16, 0x09, 0xa7, 0x05, 0x2e, 0x1c, 0x10, 0xaa, 0x93, 0x20, 0xe5, 0x10, 0x88, 0xd6, 0xa4, 0x48,
-	0x08, 0x69, 0x35, 0xf6, 0xbe, 0x38, 0x23, 0xed, 0xce, 0x2e, 0x33, 0xb3, 0x4e, 0x22, 0xfe, 0x02,
+	// 1250 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x58, 0x4d, 0x6f, 0x1b, 0x45,
+	0x18, 0xee, 0x62, 0x27, 0x71, 0xc6, 0x1f, 0x6d, 0xb7, 0x01, 0xdc, 0x96, 0xba, 0xcd, 0x16, 0x89,
+	0x14, 0x09, 0xa7, 0x05, 0x2e, 0x1c, 0x10, 0xaa, 0xdb, 0x22, 0xe5, 0x10, 0x88, 0x36, 0xa4, 0x48,
+	0x08, 0x69, 0x35, 0xf6, 0xbe, 0x71, 0x46, 0xda, 0x9d, 0x5d, 0x66, 0x66, 0x9d, 0x44, 0xfc, 0x02,
 	0x6e, 0x70, 0x07, 0x11, 0x09, 0xa4, 0x5e, 0x38, 0x72, 0xe3, 0x04, 0x17, 0x38, 0xa1, 0x8a, 0x13,
-	0x47, 0x94, 0xfc, 0x07, 0xdc, 0xb8, 0xa1, 0xf9, 0xe5, 0xf5, 0xba, 0x09, 0x4e, 0xb0, 0x94, 0xfa,
-	0xb6, 0xf3, 0xcd, 0x9b, 0x99, 0xef, 0x7b, 0x33, 0xef, 0xcd, 0x9b, 0x45, 0x8d, 0x84, 0xc5, 0x83,
-	0x10, 0x77, 0xf9, 0xca, 0x00, 0xa7, 0xa1, 0x58, 0x19, 0x3c, 0x5c, 0x81, 0x01, 0x50, 0xc1, 0x5b,
-	0x09, 0x8b, 0x45, 0xec, 0x5e, 0xb5, 0xfd, 0x2d, 0xd5, 0xdf, 0x1a, 0x3c, 0xbc, 0x71, 0xbd, 0x17,
-	0xf3, 0x28, 0xe6, 0xbe, 0x32, 0x58, 0xd1, 0x0d, 0x6d, 0xdd, 0xfc, 0xc9, 0x41, 0xd5, 0x75, 0x39,
-	0x7c, 0x0d, 0x92, 0x98, 0x13, 0xe1, 0x3e, 0x40, 0xa5, 0x1e, 0x0e, 0x43, 0x60, 0x75, 0xe7, 0x8e,
-	0x73, 0xef, 0x72, 0xbb, 0xfe, 0xc7, 0x8f, 0x6f, 0x2c, 0x99, 0x21, 0x8f, 0x82, 0x80, 0x01, 0xe7,
-	0x1d, 0xc1, 0x08, 0xed, 0x7b, 0xc6, 0xce, 0x6d, 0xa1, 0xb9, 0x78, 0x8f, 0x02, 0xab, 0xbf, 0x30,
-	0x61, 0x80, 0x36, 0x73, 0x5f, 0x42, 0x25, 0xcc, 0x39, 0x08, 0x5e, 0x2f, 0xc8, 0x01, 0x9e, 0x69,
-	0x49, 0x9c, 0xef, 0x62, 0x06, 0xbc, 0x5e, 0xd4, 0xb8, 0x6e, 0xb9, 0xd7, 0x51, 0x59, 0x29, 0xf1,
-	0x49, 0x50, 0x9f, 0xbb, 0xe3, 0xdc, 0xab, 0x79, 0xf3, 0xaa, 0xbd, 0x11, 0x34, 0xff, 0x76, 0x50,
-	0x4d, 0xb1, 0xff, 0x98, 0x88, 0xdd, 0x80, 0xe1, 0xbd, 0xff, 0x41, 0xff, 0x6d, 0x54, 0x66, 0xd0,
-	0x03, 0x32, 0x38, 0x83, 0x82, 0xa1, 0x65, 0x26, 0xba, 0x70, 0x5e, 0xd1, 0xc5, 0x53, 0x44, 0xcf,
-	0x9d, 0x2a, 0xba, 0x94, 0x17, 0xfd, 0xbb, 0x83, 0xae, 0x2a, 0xd1, 0x8f, 0x25, 0xb0, 0xca, 0x00,
-	0x0b, 0x08, 0xdc, 0x77, 0x51, 0x4d, 0x0f, 0xc0, 0x7a, 0xf9, 0x89, 0xfa, 0xab, 0xca, 0xdc, 0x60,
-	0x52, 0x0f, 0x0e, 0x22, 0x42, 0x27, 0x6f, 0xa2, 0x32, 0x73, 0x6f, 0xa3, 0x8a, 0x62, 0xea, 0x07,
-	0x40, 0xe3, 0xc8, 0xec, 0x24, 0x52, 0xd0, 0x9a, 0x44, 0xdc, 0xfb, 0xe8, 0x4a, 0x4a, 0x03, 0x60,
-	0xe1, 0x01, 0xa1, 0x7d, 0x5f, 0xa9, 0x35, 0xd2, 0x17, 0x33, 0xfc, 0x91, 0x84, 0x9b, 0xbf, 0x38,
-	0xa8, 0xa2, 0x04, 0x75, 0xf6, 0x70, 0xb2, 0x41, 0x33, 0xdf, 0x3a, 0x67, 0xf3, 0xed, 0x4d, 0x74,
-	0x19, 0x47, 0x71, 0x4a, 0x85, 0x6f, 0xf9, 0x7b, 0x65, 0x0d, 0x6c, 0x50, 0xf7, 0x35, 0xb4, 0xa8,
-	0x5d, 0xea, 0x9b, 0xbd, 0x0b, 0x0c, 0xd9, 0x05, 0x0d, 0x7b, 0x06, 0x7d, 0xd6, 0x81, 0xc5, 0xf3,
-	0x38, 0xb0, 0xf9, 0xb3, 0x0d, 0x24, 0x29, 0xe2, 0xc3, 0x54, 0x9c, 0x5b, 0xc5, 0x5d, 0x54, 0x33,
-	0x44, 0xbb, 0x29, 0xa3, 0x10, 0x18, 0x25, 0x55, 0x0d, 0xb6, 0x15, 0xe6, 0xde, 0x42, 0xc8, 0x48,
-	0x8d, 0x53, 0x61, 0x84, 0x18, 0xf1, 0x72, 0xcd, 0x29, 0x35, 0xfc, 0xe3, 0xa0, 0x6b, 0xd9, 0xc9,
-	0xf2, 0xa0, 0x17, 0xd3, 0x1e, 0x09, 0x61, 0xda, 0xb3, 0x75, 0x1f, 0x5d, 0x49, 0x18, 0xa1, 0x3d,
-	0x92, 0xe0, 0xd0, 0xef, 0xc2, 0x4e, 0xcc, 0xc0, 0x88, 0x5b, 0x1c, 0xe2, 0x6d, 0x05, 0xcb, 0xdd,
-	0xca, 0x4c, 0xf1, 0x8e, 0xb0, 0x01, 0xe6, 0x2d, 0x0c, 0xe1, 0x47, 0x12, 0x75, 0x5d, 0x54, 0x64,
-	0x58, 0x80, 0x39, 0x52, 0xea, 0x5b, 0x62, 0x82, 0x44, 0xa0, 0x22, 0xa9, 0xe0, 0xa9, 0x6f, 0x39,
-	0x21, 0xa1, 0x02, 0x18, 0x70, 0xe1, 0x03, 0x56, 0x7e, 0x2d, 0xe9, 0x09, 0x2d, 0xbc, 0xae, 0xd0,
-	0xe6, 0xb7, 0x0e, 0xaa, 0x67, 0xda, 0x37, 0x4c, 0xe7, 0xea, 0x2e, 0xa6, 0xfd, 0xa9, 0x1d, 0xb0,
-	0x8c, 0xaa, 0xbd, 0x94, 0x31, 0xa0, 0xc2, 0x57, 0xa4, 0xb5, 0xf8, 0x8a, 0xc1, 0x3c, 0xc9, 0x7d,
-	0x19, 0x55, 0x03, 0xe0, 0x84, 0x41, 0xa0, 0x4d, 0xb4, 0xea, 0x8a, 0xc1, 0xa4, 0x49, 0xf3, 0x1b,
-	0x07, 0x2d, 0x29, 0x86, 0x96, 0x9c, 0x4d, 0xd9, 0x17, 0x1c, 0xfa, 0x32, 0x95, 0xa9, 0x13, 0x37,
-	0xcc, 0xdf, 0xaa, 0xd5, 0x3c, 0x74, 0xd0, 0xcb, 0x39, 0x7e, 0x36, 0x29, 0xe3, 0x70, 0x56, 0x28,
-	0x7e, 0x6d, 0x53, 0xe7, 0x47, 0x71, 0xbf, 0x1f, 0x82, 0xc9, 0x37, 0x17, 0x4c, 0xae, 0x8e, 0xe6,
-	0x81, 0xe2, 0x6e, 0x68, 0x32, 0x51, 0xd9, 0xb3, 0x4d, 0xb9, 0xc3, 0xee, 0x18, 0xbd, 0x13, 0xa3,
-	0xfa, 0x79, 0xf1, 0xfb, 0xce, 0x41, 0x37, 0x46, 0x8b, 0x85, 0x2d, 0x1b, 0x93, 0xef, 0xa7, 0x34,
-	0xe0, 0xb3, 0xb2, 0xc9, 0xdf, 0x3b, 0xe8, 0x66, 0xae, 0x28, 0x98, 0x4d, 0x9a, 0x4f, 0x2c, 0xcd,
-	0x4d, 0x42, 0x6d, 0xc4, 0xc8, 0x38, 0xdf, 0x4e, 0x82, 0xe7, 0x71, 0xa1, 0x5f, 0x47, 0xe5, 0x88,
-	0xd0, 0xd1, 0xe4, 0x33, 0x1f, 0x11, 0xaa, 0x12, 0x4f, 0xc6, 0x14, 0xef, 0xcf, 0x08, 0x53, 0xbc,
-	0x9f, 0x67, 0x8a, 0xf7, 0x15, 0xd3, 0x1f, 0x1c, 0xf4, 0xe2, 0xe8, 0x25, 0xec, 0xc1, 0x67, 0x29,
-	0x70, 0xc9, 0xf1, 0xee, 0x89, 0x1c, 0xc7, 0x98, 0x2c, 0xe5, 0x2a, 0x59, 0x7b, 0x31, 0x2f, 0xa3,
-	0x2a, 0x83, 0x00, 0x20, 0xca, 0xd5, 0x3a, 0x15, 0x8d, 0xe9, 0x62, 0xe7, 0xb4, 0xd2, 0xf5, 0x16,
-	0x42, 0x4c, 0x53, 0xb0, 0xc5, 0x6b, 0xd1, 0xbb, 0x6c, 0x90, 0x8d, 0xa0, 0xf9, 0xc5, 0x18, 0xdd,
-	0xd5, 0x38, 0x4a, 0x42, 0x98, 0x92, 0xee, 0x69, 0xe5, 0x75, 0x9e, 0x4b, 0x71, 0x9c, 0xcb, 0xa1,
-	0xbd, 0x5d, 0x86, 0xae, 0xdb, 0x91, 0x75, 0xda, 0xb4, 0x54, 0x8c, 0x5b, 0x0a, 0xff, 0xe1, 0x96,
-	0x71, 0x2a, 0x72, 0x18, 0x03, 0xcc, 0x63, 0x6a, 0x6b, 0x62, 0xdd, 0x92, 0xe9, 0xf1, 0x15, 0x45,
-	0x71, 0x0b, 0x68, 0x40, 0x68, 0xdf, 0x30, 0x5d, 0xdf, 0x4f, 0x20, 0x20, 0x42, 0x57, 0x47, 0x23,
-	0xf3, 0x3a, 0xe3, 0xf3, 0xb6, 0xd0, 0x9c, 0x22, 0x3d, 0xf9, 0xa0, 0x29, 0xb3, 0xec, 0x60, 0x16,
-	0xce, 0x74, 0x30, 0x9b, 0x5f, 0x39, 0xe8, 0x4a, 0x56, 0x42, 0x6c, 0xe1, 0x94, 0x9f, 0xc3, 0x7d,
-	0x23, 0x21, 0x30, 0x92, 0x39, 0x8c, 0x1f, 0x0a, 0xa3, 0x7e, 0x70, 0x5f, 0x47, 0x57, 0x45, 0x2c,
-	0x70, 0xe8, 0xeb, 0x89, 0x07, 0x38, 0x4c, 0x6d, 0x21, 0xb4, 0xa8, 0x3a, 0xd4, 0xfa, 0x8f, 0x25,
-	0xdc, 0xfc, 0xdc, 0xdc, 0x28, 0x0a, 0xda, 0xa6, 0xc9, 0xd4, 0xa4, 0x4e, 0x5c, 0xbc, 0x70, 0xf2,
-	0xe2, 0xbf, 0xda, 0xf3, 0xdd, 0x66, 0x24, 0xe8, 0x83, 0x75, 0x1a, 0x5c, 0xf8, 0x95, 0xf6, 0x1e,
-	0x5a, 0xe8, 0x2a, 0x0a, 0xc3, 0xf5, 0x26, 0x6d, 0x69, 0xad, 0x3b, 0x4a, 0x39, 0xbb, 0x99, 0xb5,
-	0x12, 0x7d, 0x3f, 0x07, 0xb3, 0x73, 0x33, 0x1f, 0xe6, 0x3d, 0xbd, 0x49, 0xa8, 0xe8, 0xe8, 0x58,
-	0x9b, 0x92, 0xe2, 0x03, 0x54, 0xd2, 0x9e, 0x98, 0xc8, 0xd1, 0xd8, 0x9d, 0x16, 0xf4, 0xe3, 0x14,
-	0xe5, 0x83, 0x66, 0xd6, 0x28, 0x7e, 0x8a, 0x16, 0x4c, 0x79, 0x43, 0xe3, 0x68, 0x9b, 0x12, 0x21,
-	0x63, 0x40, 0x27, 0x7d, 0x1d, 0x20, 0xba, 0xe1, 0xde, 0x40, 0x65, 0xd8, 0x4f, 0x62, 0x0a, 0x54,
-	0xd8, 0xf7, 0xa6, 0x6d, 0xcb, 0x3d, 0xc2, 0x21, 0xc1, 0x5c, 0x4d, 0x5e, 0x90, 0x97, 0x93, 0x69,
-	0x36, 0x9f, 0x14, 0x4c, 0xf5, 0xd4, 0x01, 0xbd, 0x39, 0x6a, 0x99, 0x4d, 0x10, 0x38, 0xc0, 0x02,
-	0x4f, 0xeb, 0x85, 0xbb, 0xa8, 0x16, 0x99, 0xa9, 0xfc, 0x2e, 0xe6, 0xf6, 0x91, 0x51, 0xb5, 0x60,
-	0x1b, 0x73, 0x70, 0x1f, 0xa2, 0xa5, 0xa1, 0x51, 0x00, 0xbc, 0xc7, 0x48, 0x22, 0xc8, 0x30, 0xbf,
-	0x5c, 0xb3, 0x7d, 0x6b, 0x59, 0x97, 0x7c, 0xbc, 0x65, 0x43, 0x08, 0x4f, 0x42, 0x7c, 0x60, 0x73,
-	0xcd, 0xd0, 0x5c, 0xc3, 0x6e, 0x27, 0x37, 0x3b, 0x8d, 0x23, 0x3f, 0xa5, 0x44, 0xf0, 0xfa, 0xdc,
-	0x9d, 0xc2, 0xbd, 0xca, 0x9b, 0xcb, 0xad, 0x67, 0x7e, 0x4c, 0xb5, 0xf2, 0xde, 0xf6, 0xdc, 0x8c,
-	0x80, 0x81, 0xb8, 0xfb, 0x2a, 0xaa, 0xa9, 0xc3, 0x4f, 0xb8, 0x60, 0x58, 0xc4, 0xcc, 0x3c, 0xdf,
-	0xf2, 0x60, 0x4e, 0x3d, 0xc5, 0x11, 0xd4, 0xe7, 0xf3, 0xea, 0x3f, 0xc0, 0xfa, 0x2d, 0x38, 0x34,
-	0xe2, 0x07, 0x51, 0x37, 0x0e, 0xeb, 0x65, 0xfd, 0x16, 0xb4, 0x70, 0x47, 0xa1, 0xed, 0x77, 0x7e,
-	0x3b, 0x6a, 0x38, 0x4f, 0x8f, 0x1a, 0xce, 0x5f, 0x47, 0x0d, 0xe7, 0xcb, 0xe3, 0xc6, 0xa5, 0xa7,
-	0xc7, 0x8d, 0x4b, 0x7f, 0x1e, 0x37, 0x2e, 0x7d, 0x72, 0xbb, 0x4f, 0xc4, 0x6e, 0xda, 0x6d, 0xf5,
-	0xe2, 0x68, 0x65, 0xec, 0x3f, 0x9c, 0x38, 0x48, 0x80, 0x77, 0x4b, 0xea, 0xb7, 0xda, 0x5b, 0xff,
-	0x06, 0x00, 0x00, 0xff, 0xff, 0xa7, 0x30, 0xc0, 0xce, 0xa6, 0x13, 0x00, 0x00,
+	0x47, 0x94, 0xfc, 0x03, 0x6e, 0xdc, 0xd0, 0x7c, 0x79, 0xbd, 0x6e, 0x82, 0x13, 0x2c, 0xa5, 0xbe,
+	0x79, 0x9e, 0x7d, 0x67, 0xe6, 0x79, 0xde, 0x79, 0x3f, 0x66, 0x8c, 0x5a, 0x29, 0x4b, 0x06, 0x11,
+	0xee, 0xf2, 0xd5, 0x01, 0xce, 0x22, 0xb1, 0x3a, 0xb8, 0xb7, 0x0a, 0x03, 0xa0, 0x82, 0xb7, 0x53,
+	0x96, 0x88, 0xc4, 0xbd, 0x6c, 0xbf, 0xb7, 0xd5, 0xf7, 0xf6, 0xe0, 0xde, 0xb5, 0xab, 0xbd, 0x84,
+	0xc7, 0x09, 0x0f, 0x94, 0xc1, 0xaa, 0x1e, 0x68, 0x6b, 0xef, 0x27, 0x07, 0xd5, 0x1e, 0xc9, 0xe9,
+	0x0f, 0x21, 0x4d, 0x38, 0x11, 0xee, 0x5d, 0x34, 0xdf, 0xc3, 0x51, 0x04, 0xac, 0xe9, 0xdc, 0x72,
+	0x56, 0x16, 0x3b, 0xcd, 0x3f, 0x7e, 0x7c, 0x63, 0xc9, 0x4c, 0xb9, 0x1f, 0x86, 0x0c, 0x38, 0xdf,
+	0x14, 0x8c, 0xd0, 0xbe, 0x6f, 0xec, 0xdc, 0x36, 0x9a, 0x4b, 0x76, 0x29, 0xb0, 0xe6, 0x0b, 0x13,
+	0x26, 0x68, 0x33, 0xf7, 0x25, 0x34, 0x8f, 0x39, 0x07, 0xc1, 0x9b, 0x25, 0x39, 0xc1, 0x37, 0x23,
+	0x89, 0xf3, 0x1d, 0xcc, 0x80, 0x37, 0xcb, 0x1a, 0xd7, 0x23, 0xf7, 0x2a, 0xaa, 0x28, 0x25, 0x01,
+	0x09, 0x9b, 0x73, 0xb7, 0x9c, 0x95, 0xba, 0xbf, 0xa0, 0xc6, 0x6b, 0xa1, 0xf7, 0xb7, 0x83, 0xea,
+	0x8a, 0xfd, 0xc7, 0x44, 0xec, 0x84, 0x0c, 0xef, 0xfe, 0x0f, 0xfa, 0x6f, 0xa3, 0x0a, 0x83, 0x1e,
+	0x90, 0xc1, 0x29, 0x14, 0x0c, 0x2d, 0x73, 0xd1, 0xa5, 0xb3, 0x8a, 0x2e, 0x9f, 0x20, 0x7a, 0xee,
+	0x44, 0xd1, 0xf3, 0x45, 0xd1, 0xbf, 0x3b, 0xe8, 0xb2, 0x12, 0xfd, 0x58, 0x02, 0x0f, 0x18, 0x60,
+	0x01, 0xa1, 0xfb, 0x2e, 0xaa, 0xeb, 0x09, 0x58, 0x6f, 0x3f, 0x51, 0x7f, 0x4d, 0x99, 0x1b, 0x4c,
+	0xea, 0xc1, 0x61, 0x4c, 0xe8, 0xe4, 0x43, 0x54, 0x66, 0xee, 0x4d, 0x54, 0x55, 0x4c, 0x83, 0x10,
+	0x68, 0x12, 0x9b, 0x93, 0x44, 0x0a, 0x7a, 0x28, 0x11, 0xf7, 0x0e, 0xba, 0x94, 0xd1, 0x10, 0x58,
+	0xb4, 0x4f, 0x68, 0x3f, 0x50, 0x6a, 0x8d, 0xf4, 0x8b, 0x39, 0x7e, 0x5f, 0xc2, 0xde, 0xa7, 0xa8,
+	0x61, 0x42, 0x90, 0x26, 0xf1, 0x16, 0x25, 0xc2, 0x5d, 0x42, 0x73, 0x7a, 0x5d, 0x25, 0xc2, 0xd7,
+	0x03, 0xf7, 0x1a, 0xaa, 0xc0, 0x5e, 0x9a, 0x50, 0xa0, 0x42, 0xd3, 0xf4, 0x87, 0x63, 0xb7, 0x89,
+	0x16, 0x70, 0x44, 0x30, 0x07, 0x19, 0x55, 0xa5, 0x95, 0x45, 0xdf, 0x0e, 0xbd, 0x27, 0x25, 0x74,
+	0x4d, 0x2d, 0xbf, 0x09, 0x62, 0x73, 0xc8, 0x6f, 0x1d, 0x04, 0x0e, 0xb1, 0xc0, 0xd3, 0xfa, 0xed,
+	0x36, 0xaa, 0xc7, 0x66, 0xa9, 0xa0, 0x8b, 0x39, 0x18, 0x62, 0x35, 0x0b, 0x76, 0x30, 0x07, 0xf7,
+	0x1e, 0x5a, 0x1a, 0x1a, 0x85, 0xc0, 0x7b, 0x8c, 0xa4, 0x82, 0x24, 0xd4, 0x78, 0xed, 0x8a, 0xfd,
+	0xf6, 0x30, 0xff, 0x24, 0xdd, 0x97, 0x4f, 0x21, 0x3c, 0x8d, 0xf0, 0xbe, 0x75, 0xdf, 0xd0, 0x5c,
+	0xc3, 0xee, 0x66, 0x61, 0x75, 0x9a, 0xc4, 0x41, 0x46, 0x89, 0x90, 0x01, 0x55, 0x5a, 0xa9, 0xbe,
+	0xb9, 0xdc, 0x7e, 0xa6, 0x1e, 0xb4, 0x8b, 0xde, 0xf6, 0xdd, 0x9c, 0x80, 0x81, 0xb8, 0xfb, 0x2a,
+	0xaa, 0xab, 0x83, 0x26, 0x5c, 0x30, 0x2c, 0x12, 0xa6, 0x82, 0x70, 0xd1, 0x2f, 0x82, 0x05, 0xf5,
+	0x14, 0xc7, 0xd0, 0x5c, 0x28, 0xaa, 0xff, 0x00, 0xc7, 0xe0, 0xbe, 0x86, 0x86, 0x94, 0x03, 0xbe,
+	0x1f, 0x77, 0x93, 0xa8, 0x59, 0x51, 0x66, 0x0d, 0x0b, 0x6f, 0x2a, 0xd4, 0xfb, 0xc5, 0x41, 0x55,
+	0x7d, 0x52, 0xbb, 0x38, 0x5d, 0xa3, 0x79, 0x8e, 0x39, 0xa7, 0xcb, 0xb1, 0xeb, 0x68, 0x11, 0xc7,
+	0x49, 0x46, 0x45, 0x60, 0xe3, 0xd8, 0xaf, 0x68, 0x60, 0x8d, 0x4a, 0x16, 0x3a, 0xb5, 0x02, 0x93,
+	0xc3, 0xa1, 0x71, 0x7f, 0x43, 0xc3, 0xbe, 0x41, 0x9f, 0x0d, 0x88, 0xf2, 0x59, 0x02, 0xc2, 0xfb,
+	0xd9, 0x16, 0x54, 0x29, 0xe2, 0xc3, 0x4c, 0x9c, 0x59, 0xc5, 0x6d, 0x54, 0x37, 0x44, 0xbb, 0x19,
+	0xa3, 0x10, 0xda, 0x88, 0xd2, 0x60, 0x47, 0x61, 0xee, 0x0d, 0x84, 0x8c, 0xd4, 0x24, 0x13, 0x46,
+	0x88, 0x11, 0x2f, 0xf7, 0x9c, 0x52, 0xc3, 0x3f, 0x0e, 0xba, 0x92, 0x57, 0x18, 0x1f, 0x7a, 0x09,
+	0xed, 0x91, 0x08, 0xa6, 0xcd, 0x95, 0x3b, 0xe8, 0x52, 0xca, 0x08, 0xed, 0x91, 0x14, 0x47, 0x41,
+	0x17, 0xb6, 0x13, 0x66, 0xd3, 0xe5, 0xe2, 0x10, 0xef, 0x28, 0x58, 0x9e, 0x56, 0x6e, 0x8a, 0xb7,
+	0x85, 0x2d, 0xb4, 0x7e, 0x63, 0x08, 0xdf, 0x97, 0xa8, 0xeb, 0xa2, 0x32, 0xc3, 0x02, 0x4c, 0x6e,
+	0xa8, 0xdf, 0x12, 0x13, 0x24, 0x06, 0x55, 0x51, 0x4b, 0xbe, 0xfa, 0x2d, 0x17, 0x24, 0x54, 0x00,
+	0x03, 0x2e, 0x02, 0xc0, 0xca, 0xaf, 0x3a, 0xa2, 0x1b, 0x16, 0x7e, 0xa4, 0x50, 0xef, 0x5b, 0x07,
+	0x35, 0x73, 0xed, 0x6b, 0xe6, 0xe3, 0x83, 0x1d, 0x4c, 0xfb, 0x53, 0x3b, 0x60, 0x19, 0xd5, 0x7a,
+	0x19, 0x63, 0x40, 0x45, 0xa0, 0x48, 0x6b, 0xf1, 0x55, 0x83, 0xf9, 0x92, 0xfb, 0x32, 0xaa, 0x85,
+	0xc0, 0x09, 0x83, 0x50, 0x9b, 0x68, 0xd5, 0x55, 0x83, 0x49, 0x13, 0xef, 0x1b, 0x07, 0x2d, 0x29,
+	0x86, 0x96, 0x9c, 0x6d, 0xdd, 0xe7, 0xdc, 0x02, 0x64, 0x4b, 0x53, 0x11, 0x37, 0xec, 0xe3, 0x6a,
+	0xe4, 0x1d, 0x38, 0xe8, 0xe5, 0x02, 0x3f, 0xdb, 0x9c, 0x71, 0x34, 0x2b, 0x14, 0xbf, 0xb6, 0x2d,
+	0xf4, 0xa3, 0xa4, 0xdf, 0x8f, 0xc0, 0xd4, 0x9b, 0x73, 0x26, 0xd7, 0x44, 0x0b, 0x40, 0x71, 0x37,
+	0x32, 0x95, 0xa8, 0xe2, 0xdb, 0xa1, 0x3c, 0x61, 0x77, 0x8c, 0xde, 0xb1, 0x59, 0xfd, 0xbc, 0xf8,
+	0x7d, 0xe7, 0x98, 0x96, 0x6a, 0x22, 0x6f, 0xc3, 0xe6, 0xe4, 0xfb, 0x19, 0x0d, 0xf9, 0xac, 0x1c,
+	0xf2, 0xf7, 0x0e, 0xba, 0x5e, 0xb8, 0x1c, 0xce, 0x26, 0xcd, 0x27, 0x96, 0xe6, 0x3a, 0xa1, 0x36,
+	0x63, 0x64, 0x9e, 0x6f, 0xa5, 0xe1, 0xf3, 0xb8, 0xd8, 0x5d, 0x45, 0x95, 0x98, 0xd0, 0xd1, 0xe2,
+	0xb3, 0x10, 0x13, 0xaa, 0x0a, 0x4f, 0xce, 0x14, 0xef, 0xcd, 0x08, 0x53, 0xbc, 0x57, 0x64, 0x8a,
+	0xf7, 0x14, 0xd3, 0x1f, 0x1c, 0xf4, 0xe2, 0x68, 0x13, 0xf6, 0xe1, 0xb3, 0x0c, 0xb8, 0xe4, 0x78,
+	0xfb, 0x58, 0x8e, 0x63, 0x4c, 0x96, 0x0a, 0x2f, 0x1a, 0xdb, 0x98, 0x97, 0x51, 0x8d, 0x41, 0x08,
+	0x10, 0x17, 0xee, 0xbc, 0x55, 0x8d, 0xe9, 0x4b, 0xef, 0x49, 0x4f, 0x98, 0x1b, 0x08, 0x31, 0x4d,
+	0xc1, 0x3e, 0x62, 0xca, 0xfe, 0xa2, 0x41, 0xd6, 0x42, 0xef, 0x8b, 0x31, 0xba, 0x0f, 0x92, 0x38,
+	0x8d, 0x60, 0x4a, 0xba, 0x27, 0x3d, 0xb3, 0x8a, 0x5c, 0xca, 0xe3, 0x5c, 0x0e, 0x6c, 0x77, 0x19,
+	0xba, 0x6e, 0x5b, 0xde, 0xd7, 0xa7, 0xa5, 0x62, 0xdc, 0x52, 0xfa, 0x0f, 0xb7, 0x8c, 0x53, 0x91,
+	0xd3, 0x18, 0x60, 0x9e, 0x50, 0xfb, 0x36, 0xd2, 0x23, 0x59, 0x1e, 0x5f, 0x51, 0x14, 0x37, 0x80,
+	0x86, 0x84, 0xf6, 0x0d, 0xd3, 0x47, 0x7b, 0x29, 0x84, 0x44, 0xe8, 0xdb, 0xd1, 0xc8, 0xba, 0xce,
+	0xf8, 0xba, 0x6d, 0x34, 0xa7, 0x48, 0x4f, 0x0e, 0x34, 0x65, 0x96, 0x07, 0x66, 0xe9, 0x54, 0x81,
+	0xe9, 0x7d, 0xe5, 0xa0, 0x4b, 0xf9, 0x15, 0x62, 0x03, 0x67, 0xfc, 0x0c, 0xee, 0x1b, 0x49, 0x81,
+	0x91, 0xca, 0x61, 0xfc, 0x50, 0x1a, 0xf5, 0x83, 0xfb, 0x3a, 0xba, 0x2c, 0x12, 0x81, 0xa3, 0x40,
+	0x2f, 0x3c, 0xc0, 0x51, 0x66, 0x2f, 0x42, 0x17, 0xd5, 0x07, 0xb5, 0xff, 0x63, 0x09, 0x7b, 0x9f,
+	0x9b, 0x8e, 0xa2, 0xa0, 0x2d, 0x9a, 0x4e, 0x4d, 0xea, 0xd8, 0xcd, 0x4b, 0xc7, 0x6f, 0xfe, 0xab,
+	0x8d, 0xef, 0x0e, 0x23, 0x61, 0x1f, 0xac, 0xd3, 0xe0, 0xdc, 0x5b, 0xda, 0x7b, 0xa8, 0xd1, 0x55,
+	0x14, 0x86, 0xfb, 0x4d, 0x3a, 0xd2, 0x7a, 0x77, 0x94, 0x72, 0xde, 0x99, 0xb5, 0x12, 0xdd, 0x9f,
+	0xc3, 0xd9, 0xe9, 0xcc, 0x07, 0x45, 0x4f, 0xaf, 0x13, 0xaa, 0xdf, 0xbc, 0x53, 0x77, 0xbb, 0xbb,
+	0x68, 0x5e, 0x7b, 0x62, 0x22, 0x47, 0x63, 0x77, 0x52, 0xd2, 0x8f, 0x53, 0x94, 0x0f, 0x9a, 0x19,
+	0xa3, 0xd8, 0x79, 0xe7, 0xb7, 0xc3, 0x96, 0xf3, 0xf4, 0xb0, 0xe5, 0xfc, 0x75, 0xd8, 0x72, 0xbe,
+	0x3c, 0x6a, 0x5d, 0x78, 0x7a, 0xd4, 0xba, 0xf0, 0xe7, 0x51, 0xeb, 0xc2, 0x27, 0x37, 0xfb, 0x44,
+	0xec, 0x64, 0xdd, 0x76, 0x2f, 0x89, 0x57, 0xc7, 0xfe, 0x87, 0x13, 0xfb, 0x29, 0xf0, 0xee, 0xbc,
+	0xfa, 0x5b, 0xed, 0xad, 0x7f, 0x03, 0x00, 0x00, 0xff, 0xff, 0x30, 0x84, 0x3b, 0x0e, 0xa6, 0x13,
+	0x00, 0x00,
 }
 
 func (m *EventDeposit) Marshal() (dAtA []byte, err error) {
@@ -2226,6 +2227,138 @@ func (m *EventVaultCreated) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i -= len(m.Admin)
 		copy(dAtA[i:], m.Admin)
 		i = encodeVarintEvents(dAtA, i, uint64(len(m.Admin)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.VaultAddress) > 0 {
+		i -= len(m.VaultAddress)
+		copy(dAtA[i:], m.VaultAddress)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.VaultAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *EventDenomUnit) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventDenomUnit) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventDenomUnit) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Aliases) > 0 {
+		for iNdEx := len(m.Aliases) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Aliases[iNdEx])
+			copy(dAtA[i:], m.Aliases[iNdEx])
+			i = encodeVarintEvents(dAtA, i, uint64(len(m.Aliases[iNdEx])))
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if len(m.Exponent) > 0 {
+		i -= len(m.Exponent)
+		copy(dAtA[i:], m.Exponent)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Exponent)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *EventSetShareDenomMetadata) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventSetShareDenomMetadata) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventSetShareDenomMetadata) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.MetadataSymbol) > 0 {
+		i -= len(m.MetadataSymbol)
+		copy(dAtA[i:], m.MetadataSymbol)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.MetadataSymbol)))
+		i--
+		dAtA[i] = 0x42
+	}
+	if len(m.MetadataName) > 0 {
+		i -= len(m.MetadataName)
+		copy(dAtA[i:], m.MetadataName)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.MetadataName)))
+		i--
+		dAtA[i] = 0x3a
+	}
+	if len(m.Administrator) > 0 {
+		i -= len(m.Administrator)
+		copy(dAtA[i:], m.Administrator)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Administrator)))
+		i--
+		dAtA[i] = 0x32
+	}
+	if len(m.MetadataDenomUnits) > 0 {
+		for iNdEx := len(m.MetadataDenomUnits) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.MetadataDenomUnits[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintEvents(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x2a
+		}
+	}
+	if len(m.MetadataDisplay) > 0 {
+		i -= len(m.MetadataDisplay)
+		copy(dAtA[i:], m.MetadataDisplay)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.MetadataDisplay)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.MetadataDescription) > 0 {
+		i -= len(m.MetadataDescription)
+		copy(dAtA[i:], m.MetadataDescription)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.MetadataDescription)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.MetadataBase) > 0 {
+		i -= len(m.MetadataBase)
+		copy(dAtA[i:], m.MetadataBase)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.MetadataBase)))
 		i--
 		dAtA[i] = 0x12
 	}
@@ -3283,138 +3416,6 @@ func (m *EventBridgeBurnShares) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
-func (m *EventDenomUnit) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *EventDenomUnit) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *EventDenomUnit) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.Aliases) > 0 {
-		for iNdEx := len(m.Aliases) - 1; iNdEx >= 0; iNdEx-- {
-			i -= len(m.Aliases[iNdEx])
-			copy(dAtA[i:], m.Aliases[iNdEx])
-			i = encodeVarintEvents(dAtA, i, uint64(len(m.Aliases[iNdEx])))
-			i--
-			dAtA[i] = 0x1a
-		}
-	}
-	if len(m.Exponent) > 0 {
-		i -= len(m.Exponent)
-		copy(dAtA[i:], m.Exponent)
-		i = encodeVarintEvents(dAtA, i, uint64(len(m.Exponent)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.Denom) > 0 {
-		i -= len(m.Denom)
-		copy(dAtA[i:], m.Denom)
-		i = encodeVarintEvents(dAtA, i, uint64(len(m.Denom)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
-func (m *EventSetShareDenomMetadata) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *EventSetShareDenomMetadata) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *EventSetShareDenomMetadata) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if len(m.MetadataSymbol) > 0 {
-		i -= len(m.MetadataSymbol)
-		copy(dAtA[i:], m.MetadataSymbol)
-		i = encodeVarintEvents(dAtA, i, uint64(len(m.MetadataSymbol)))
-		i--
-		dAtA[i] = 0x42
-	}
-	if len(m.MetadataName) > 0 {
-		i -= len(m.MetadataName)
-		copy(dAtA[i:], m.MetadataName)
-		i = encodeVarintEvents(dAtA, i, uint64(len(m.MetadataName)))
-		i--
-		dAtA[i] = 0x3a
-	}
-	if len(m.Administrator) > 0 {
-		i -= len(m.Administrator)
-		copy(dAtA[i:], m.Administrator)
-		i = encodeVarintEvents(dAtA, i, uint64(len(m.Administrator)))
-		i--
-		dAtA[i] = 0x32
-	}
-	if len(m.MetadataDenomUnits) > 0 {
-		for iNdEx := len(m.MetadataDenomUnits) - 1; iNdEx >= 0; iNdEx-- {
-			{
-				size, err := m.MetadataDenomUnits[iNdEx].MarshalToSizedBuffer(dAtA[:i])
-				if err != nil {
-					return 0, err
-				}
-				i -= size
-				i = encodeVarintEvents(dAtA, i, uint64(size))
-			}
-			i--
-			dAtA[i] = 0x2a
-		}
-	}
-	if len(m.MetadataDisplay) > 0 {
-		i -= len(m.MetadataDisplay)
-		copy(dAtA[i:], m.MetadataDisplay)
-		i = encodeVarintEvents(dAtA, i, uint64(len(m.MetadataDisplay)))
-		i--
-		dAtA[i] = 0x22
-	}
-	if len(m.MetadataDescription) > 0 {
-		i -= len(m.MetadataDescription)
-		copy(dAtA[i:], m.MetadataDescription)
-		i = encodeVarintEvents(dAtA, i, uint64(len(m.MetadataDescription)))
-		i--
-		dAtA[i] = 0x1a
-	}
-	if len(m.MetadataBase) > 0 {
-		i -= len(m.MetadataBase)
-		copy(dAtA[i:], m.MetadataBase)
-		i = encodeVarintEvents(dAtA, i, uint64(len(m.MetadataBase)))
-		i--
-		dAtA[i] = 0x12
-	}
-	if len(m.VaultAddress) > 0 {
-		i -= len(m.VaultAddress)
-		copy(dAtA[i:], m.VaultAddress)
-		i = encodeVarintEvents(dAtA, i, uint64(len(m.VaultAddress)))
-		i--
-		dAtA[i] = 0xa
-	}
-	return len(dAtA) - i, nil
-}
-
 func encodeVarintEvents(dAtA []byte, offset int, v uint64) int {
 	offset -= sovEvents(v)
 	base := offset
@@ -3505,6 +3506,72 @@ func (m *EventVaultCreated) Size() (n int) {
 		n += 1 + l + sovEvents(uint64(l))
 	}
 	l = len(m.UnderlyingAsset)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	return n
+}
+
+func (m *EventDenomUnit) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.Exponent)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	if len(m.Aliases) > 0 {
+		for _, s := range m.Aliases {
+			l = len(s)
+			n += 1 + l + sovEvents(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *EventSetShareDenomMetadata) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.VaultAddress)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.MetadataBase)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.MetadataDescription)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.MetadataDisplay)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	if len(m.MetadataDenomUnits) > 0 {
+		for _, e := range m.MetadataDenomUnits {
+			l = e.Size()
+			n += 1 + l + sovEvents(uint64(l))
+		}
+	}
+	l = len(m.Administrator)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.MetadataName)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.MetadataSymbol)
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
@@ -4003,72 +4070,6 @@ func (m *EventBridgeBurnShares) Size() (n int) {
 		n += 1 + l + sovEvents(uint64(l))
 	}
 	l = len(m.Shares)
-	if l > 0 {
-		n += 1 + l + sovEvents(uint64(l))
-	}
-	return n
-}
-
-func (m *EventDenomUnit) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.Denom)
-	if l > 0 {
-		n += 1 + l + sovEvents(uint64(l))
-	}
-	l = len(m.Exponent)
-	if l > 0 {
-		n += 1 + l + sovEvents(uint64(l))
-	}
-	if len(m.Aliases) > 0 {
-		for _, s := range m.Aliases {
-			l = len(s)
-			n += 1 + l + sovEvents(uint64(l))
-		}
-	}
-	return n
-}
-
-func (m *EventSetShareDenomMetadata) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = len(m.VaultAddress)
-	if l > 0 {
-		n += 1 + l + sovEvents(uint64(l))
-	}
-	l = len(m.MetadataBase)
-	if l > 0 {
-		n += 1 + l + sovEvents(uint64(l))
-	}
-	l = len(m.MetadataDescription)
-	if l > 0 {
-		n += 1 + l + sovEvents(uint64(l))
-	}
-	l = len(m.MetadataDisplay)
-	if l > 0 {
-		n += 1 + l + sovEvents(uint64(l))
-	}
-	if len(m.MetadataDenomUnits) > 0 {
-		for _, e := range m.MetadataDenomUnits {
-			l = e.Size()
-			n += 1 + l + sovEvents(uint64(l))
-		}
-	}
-	l = len(m.Administrator)
-	if l > 0 {
-		n += 1 + l + sovEvents(uint64(l))
-	}
-	l = len(m.MetadataName)
-	if l > 0 {
-		n += 1 + l + sovEvents(uint64(l))
-	}
-	l = len(m.MetadataSymbol)
 	if l > 0 {
 		n += 1 + l + sovEvents(uint64(l))
 	}
@@ -4663,6 +4664,460 @@ func (m *EventVaultCreated) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.UnderlyingAsset = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EventDenomUnit) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventDenomUnit: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventDenomUnit: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Exponent", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Exponent = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Aliases", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Aliases = append(m.Aliases, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EventSetShareDenomMetadata) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventSetShareDenomMetadata: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventSetShareDenomMetadata: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VaultAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VaultAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MetadataBase", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MetadataBase = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MetadataDescription", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MetadataDescription = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MetadataDisplay", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MetadataDisplay = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MetadataDenomUnits", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MetadataDenomUnits = append(m.MetadataDenomUnits, &EventDenomUnit{})
+			if err := m.MetadataDenomUnits[len(m.MetadataDenomUnits)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Administrator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Administrator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MetadataName", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MetadataName = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MetadataSymbol", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MetadataSymbol = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex
@@ -8126,460 +8581,6 @@ func (m *EventBridgeBurnShares) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.Shares = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipEvents(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthEvents
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *EventDenomUnit) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowEvents
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: EventDenomUnit: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: EventDenomUnit: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEvents
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthEvents
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthEvents
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Denom = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Exponent", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEvents
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthEvents
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthEvents
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Exponent = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Aliases", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEvents
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthEvents
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthEvents
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Aliases = append(m.Aliases, string(dAtA[iNdEx:postIndex]))
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipEvents(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthEvents
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *EventSetShareDenomMetadata) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowEvents
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: EventSetShareDenomMetadata: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: EventSetShareDenomMetadata: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field VaultAddress", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEvents
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthEvents
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthEvents
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.VaultAddress = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 2:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MetadataBase", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEvents
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthEvents
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthEvents
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.MetadataBase = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 3:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MetadataDescription", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEvents
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthEvents
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthEvents
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.MetadataDescription = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 4:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MetadataDisplay", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEvents
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthEvents
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthEvents
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.MetadataDisplay = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 5:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MetadataDenomUnits", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEvents
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthEvents
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthEvents
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.MetadataDenomUnits = append(m.MetadataDenomUnits, &EventDenomUnit{})
-			if err := m.MetadataDenomUnits[len(m.MetadataDenomUnits)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		case 6:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Administrator", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEvents
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthEvents
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthEvents
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.Administrator = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 7:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MetadataName", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEvents
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthEvents
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthEvents
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.MetadataName = string(dAtA[iNdEx:postIndex])
-			iNdEx = postIndex
-		case 8:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MetadataSymbol", wireType)
-			}
-			var stringLen uint64
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowEvents
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				stringLen |= uint64(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			intStringLen := int(stringLen)
-			if intStringLen < 0 {
-				return ErrInvalidLengthEvents
-			}
-			postIndex := iNdEx + intStringLen
-			if postIndex < 0 {
-				return ErrInvalidLengthEvents
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.MetadataSymbol = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

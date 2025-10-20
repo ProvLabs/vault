@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	Msg_CreateVault_FullMethodName            = "/provlabs.vault.v1.Msg/CreateVault"
+	Msg_SetShareDenomMetadata_FullMethodName  = "/provlabs.vault.v1.Msg/SetShareDenomMetadata"
 	Msg_SwapIn_FullMethodName                 = "/provlabs.vault.v1.Msg/SwapIn"
 	Msg_SwapOut_FullMethodName                = "/provlabs.vault.v1.Msg/SwapOut"
 	Msg_UpdateMinInterestRate_FullMethodName  = "/provlabs.vault.v1.Msg/UpdateMinInterestRate"
@@ -38,7 +39,6 @@ const (
 	Msg_ToggleBridge_FullMethodName           = "/provlabs.vault.v1.Msg/ToggleBridge"
 	Msg_BridgeMintShares_FullMethodName       = "/provlabs.vault.v1.Msg/BridgeMintShares"
 	Msg_BridgeBurnShares_FullMethodName       = "/provlabs.vault.v1.Msg/BridgeBurnShares"
-	Msg_SetShareDenomMetadata_FullMethodName  = "/provlabs.vault.v1.Msg/SetShareDenomMetadata"
 )
 
 // MsgClient is the client API for Msg service.
@@ -49,6 +49,9 @@ const (
 type MsgClient interface {
 	// CreateVault creates a new vault.
 	CreateVault(ctx context.Context, in *MsgCreateVaultRequest, opts ...grpc.CallOption) (*MsgCreateVaultResponse, error)
+	// SetShareDenomMetadata allows Denom Metadata (see bank module) to be set for the vault's share denom.
+	// Similar to marker's SetDenomMetadata, but scoped to a specific vault. Only the vault admin may call this.
+	SetShareDenomMetadata(ctx context.Context, in *MsgSetShareDenomMetadataRequest, opts ...grpc.CallOption) (*MsgSetShareDenomMetadataResponse, error)
 	// SwapIn exchanges underlying assets for vault shares by depositing them into a vault.
 	SwapIn(ctx context.Context, in *MsgSwapInRequest, opts ...grpc.CallOption) (*MsgSwapInResponse, error)
 	// SwapOut exchanges vault shares for underlying assets by withdrawing from a vault.
@@ -85,9 +88,6 @@ type MsgClient interface {
 	BridgeMintShares(ctx context.Context, in *MsgBridgeMintSharesRequest, opts ...grpc.CallOption) (*MsgBridgeMintSharesResponse, error)
 	// BridgeBurnShares burns local share marker supply for a vault; must be signed by the configured bridge address.
 	BridgeBurnShares(ctx context.Context, in *MsgBridgeBurnSharesRequest, opts ...grpc.CallOption) (*MsgBridgeBurnSharesResponse, error)
-	// SetShareDenomMetadata allows Denom Metadata (see bank module) to be set for the vault's share denom.
-	// Similar to marker's SetDenomMetadata, but scoped to a specific vault. Only the vault admin may call this.
-	SetShareDenomMetadata(ctx context.Context, in *MsgSetShareDenomMetadataRequest, opts ...grpc.CallOption) (*MsgSetShareDenomMetadataResponse, error)
 }
 
 type msgClient struct {
@@ -102,6 +102,16 @@ func (c *msgClient) CreateVault(ctx context.Context, in *MsgCreateVaultRequest, 
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(MsgCreateVaultResponse)
 	err := c.cc.Invoke(ctx, Msg_CreateVault_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) SetShareDenomMetadata(ctx context.Context, in *MsgSetShareDenomMetadataRequest, opts ...grpc.CallOption) (*MsgSetShareDenomMetadataResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgSetShareDenomMetadataResponse)
+	err := c.cc.Invoke(ctx, Msg_SetShareDenomMetadata_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -288,16 +298,6 @@ func (c *msgClient) BridgeBurnShares(ctx context.Context, in *MsgBridgeBurnShare
 	return out, nil
 }
 
-func (c *msgClient) SetShareDenomMetadata(ctx context.Context, in *MsgSetShareDenomMetadataRequest, opts ...grpc.CallOption) (*MsgSetShareDenomMetadataResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(MsgSetShareDenomMetadataResponse)
-	err := c.cc.Invoke(ctx, Msg_SetShareDenomMetadata_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility.
@@ -306,6 +306,9 @@ func (c *msgClient) SetShareDenomMetadata(ctx context.Context, in *MsgSetShareDe
 type MsgServer interface {
 	// CreateVault creates a new vault.
 	CreateVault(context.Context, *MsgCreateVaultRequest) (*MsgCreateVaultResponse, error)
+	// SetShareDenomMetadata allows Denom Metadata (see bank module) to be set for the vault's share denom.
+	// Similar to marker's SetDenomMetadata, but scoped to a specific vault. Only the vault admin may call this.
+	SetShareDenomMetadata(context.Context, *MsgSetShareDenomMetadataRequest) (*MsgSetShareDenomMetadataResponse, error)
 	// SwapIn exchanges underlying assets for vault shares by depositing them into a vault.
 	SwapIn(context.Context, *MsgSwapInRequest) (*MsgSwapInResponse, error)
 	// SwapOut exchanges vault shares for underlying assets by withdrawing from a vault.
@@ -342,9 +345,6 @@ type MsgServer interface {
 	BridgeMintShares(context.Context, *MsgBridgeMintSharesRequest) (*MsgBridgeMintSharesResponse, error)
 	// BridgeBurnShares burns local share marker supply for a vault; must be signed by the configured bridge address.
 	BridgeBurnShares(context.Context, *MsgBridgeBurnSharesRequest) (*MsgBridgeBurnSharesResponse, error)
-	// SetShareDenomMetadata allows Denom Metadata (see bank module) to be set for the vault's share denom.
-	// Similar to marker's SetDenomMetadata, but scoped to a specific vault. Only the vault admin may call this.
-	SetShareDenomMetadata(context.Context, *MsgSetShareDenomMetadataRequest) (*MsgSetShareDenomMetadataResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -357,6 +357,9 @@ type UnimplementedMsgServer struct{}
 
 func (UnimplementedMsgServer) CreateVault(context.Context, *MsgCreateVaultRequest) (*MsgCreateVaultResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateVault not implemented")
+}
+func (UnimplementedMsgServer) SetShareDenomMetadata(context.Context, *MsgSetShareDenomMetadataRequest) (*MsgSetShareDenomMetadataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetShareDenomMetadata not implemented")
 }
 func (UnimplementedMsgServer) SwapIn(context.Context, *MsgSwapInRequest) (*MsgSwapInResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SwapIn not implemented")
@@ -412,9 +415,6 @@ func (UnimplementedMsgServer) BridgeMintShares(context.Context, *MsgBridgeMintSh
 func (UnimplementedMsgServer) BridgeBurnShares(context.Context, *MsgBridgeBurnSharesRequest) (*MsgBridgeBurnSharesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BridgeBurnShares not implemented")
 }
-func (UnimplementedMsgServer) SetShareDenomMetadata(context.Context, *MsgSetShareDenomMetadataRequest) (*MsgSetShareDenomMetadataResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SetShareDenomMetadata not implemented")
-}
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 func (UnimplementedMsgServer) testEmbeddedByValue()             {}
 
@@ -450,6 +450,24 @@ func _Msg_CreateVault_Handler(srv interface{}, ctx context.Context, dec func(int
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).CreateVault(ctx, req.(*MsgCreateVaultRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_SetShareDenomMetadata_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSetShareDenomMetadataRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SetShareDenomMetadata(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_SetShareDenomMetadata_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SetShareDenomMetadata(ctx, req.(*MsgSetShareDenomMetadataRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -778,24 +796,6 @@ func _Msg_BridgeBurnShares_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_SetShareDenomMetadata_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgSetShareDenomMetadataRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).SetShareDenomMetadata(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Msg_SetShareDenomMetadata_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).SetShareDenomMetadata(ctx, req.(*MsgSetShareDenomMetadataRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -806,6 +806,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateVault",
 			Handler:    _Msg_CreateVault_Handler,
+		},
+		{
+			MethodName: "SetShareDenomMetadata",
+			Handler:    _Msg_SetShareDenomMetadata_Handler,
 		},
 		{
 			MethodName: "SwapIn",
@@ -878,10 +882,6 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "BridgeBurnShares",
 			Handler:    _Msg_BridgeBurnShares_Handler,
-		},
-		{
-			MethodName: "SetShareDenomMetadata",
-			Handler:    _Msg_SetShareDenomMetadata_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

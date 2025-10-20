@@ -29,6 +29,7 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgToggleBridgeRequest)(nil),
 	(*MsgBridgeMintSharesRequest)(nil),
 	(*MsgBridgeBurnSharesRequest)(nil),
+	(*MsgSetAssetManagerRequest)(nil),
 }
 
 // ValidateBasic performs stateless validation on MsgCreateVaultRequest.
@@ -259,8 +260,8 @@ func (m MsgWithdrawPrincipalFundsRequest) ValidateBasic() error {
 
 // ValidateBasic performs stateless validation on MsgExpeditePendingSwapOutRequest.
 func (m MsgExpeditePendingSwapOutRequest) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
-		return fmt.Errorf("invalid admin address: %q: %w", m.Admin, err)
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		return fmt.Errorf("invalid authority address: %q: %w", m.Authority, err)
 	}
 	return nil
 }

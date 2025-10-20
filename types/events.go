@@ -74,19 +74,19 @@ func NewEventVaultInterestChange(vaultAddress, currentRate, desiredRate string) 
 }
 
 // NewEventInterestDeposit creates a new EventInterestDeposit event.
-func NewEventInterestDeposit(vaultAddress, admin string, amount sdk.Coin) *EventInterestDeposit {
+func NewEventInterestDeposit(vaultAddress, authority string, amount sdk.Coin) *EventInterestDeposit {
 	return &EventInterestDeposit{
 		VaultAddress: vaultAddress,
-		Admin:        admin,
+		Authority:    authority,
 		Amount:       amount.String(),
 	}
 }
 
 // NewEventInterestWithdrawal creates a new EventInterestWithdrawal event.
-func NewEventInterestWithdrawal(vaultAddress, admin string, amount sdk.Coin) *EventInterestWithdrawal {
+func NewEventInterestWithdrawal(vaultAddress, authority string, amount sdk.Coin) *EventInterestWithdrawal {
 	return &EventInterestWithdrawal{
 		VaultAddress: vaultAddress,
-		Admin:        admin,
+		Authority:    authority,
 		Amount:       amount.String(),
 	}
 }
@@ -110,19 +110,19 @@ func NewEventToggleSwapOut(vaultAddress, admin string, enabled bool) *EventToggl
 }
 
 // NewEventDepositPrincipalFunds creates a new EventPrincipalDeposit event.
-func NewEventDepositPrincipalFunds(vaultAddress, admin string, amount sdk.Coin) *EventDepositPrincipalFunds {
+func NewEventDepositPrincipalFunds(vaultAddress, authority string, amount sdk.Coin) *EventDepositPrincipalFunds {
 	return &EventDepositPrincipalFunds{
 		VaultAddress: vaultAddress,
-		Admin:        admin,
+		Authority:    authority,
 		Amount:       amount.String(),
 	}
 }
 
 // NewEventWithdrawPrincipalFunds creates a new EventWithdrawPrincipalFunds event.
-func NewEventWithdrawPrincipalFunds(vaultAddress, admin string, amount sdk.Coin) *EventWithdrawPrincipalFunds {
+func NewEventWithdrawPrincipalFunds(vaultAddress, authority string, amount sdk.Coin) *EventWithdrawPrincipalFunds {
 	return &EventWithdrawPrincipalFunds{
 		VaultAddress: vaultAddress,
-		Admin:        admin,
+		Authority:    authority,
 		Amount:       amount.String(),
 	}
 }
@@ -178,29 +178,29 @@ func NewEventSwapOutRefunded(vaultAddress, owner string, shares sdk.Coin, reques
 }
 
 // NewEventPendingSwapOutExpedited creates a new EventPendingSwapOutExpedited event.
-func NewEventPendingSwapOutExpedited(requestID uint64, vault, admin string) *EventPendingSwapOutExpedited {
+func NewEventPendingSwapOutExpedited(requestID uint64, vault, authority string) *EventPendingSwapOutExpedited {
 	return &EventPendingSwapOutExpedited{
 		RequestId: requestID,
 		Vault:     vault,
-		Admin:     admin,
+		Authority: authority,
 	}
 }
 
 // NewEventVaultPaused creates a new EventVaultPaused event.
-func NewEventVaultPaused(vaultAddress, admin, reason string, totalVaultValue sdk.Coin) *EventVaultPaused {
+func NewEventVaultPaused(vaultAddress, authority, reason string, totalVaultValue sdk.Coin) *EventVaultPaused {
 	return &EventVaultPaused{
 		VaultAddress:    vaultAddress,
-		Admin:           admin,
+		Authority:       authority,
 		Reason:          reason,
 		TotalVaultValue: totalVaultValue.String(),
 	}
 }
 
 // NewEventVaultUnpaused creates a new EventVaultUnpaused event.
-func NewEventVaultUnpaused(vaultAddress, admin string, totalVaultValue sdk.Coin) *EventVaultUnpaused {
+func NewEventVaultUnpaused(vaultAddress, authority string, totalVaultValue sdk.Coin) *EventVaultUnpaused {
 	return &EventVaultUnpaused{
 		VaultAddress:    vaultAddress,
-		Admin:           admin,
+		Authority:       authority,
 		TotalVaultValue: totalVaultValue.String(),
 	}
 }

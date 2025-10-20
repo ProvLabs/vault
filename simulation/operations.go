@@ -674,7 +674,7 @@ func SimulateMsgExpeditePendingSwapOut(k keeper.Keeper) simtypes.Operation {
 		}
 
 		msg := &types.MsgExpeditePendingSwapOutRequest{
-			Admin:     adminAddr.String(),
+			Authority: adminAddr.String(),
 			RequestId: swapID,
 		}
 

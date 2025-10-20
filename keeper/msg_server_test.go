@@ -2351,7 +2351,7 @@ func (s *TestSuite) TestMsgServer_ExpeditePendingSwapOut() {
 			name:  "happy path",
 			setup: setup,
 			msg: types.MsgExpeditePendingSwapOutRequest{
-				Admin:     admin.String(),
+				Authority: admin.String(),
 				RequestId: id,
 			},
 			postCheckArgs: postCheckArgs{
@@ -2370,7 +2370,7 @@ func (s *TestSuite) TestMsgServer_ExpeditePendingSwapOut() {
 			name:  "unauthorized admin",
 			setup: setup,
 			msg: types.MsgExpeditePendingSwapOutRequest{
-				Admin:     other.String(),
+				Authority: other.String(),
 				RequestId: id,
 			},
 			expectedErrSubstrs: []string{"unauthorized"},
@@ -2379,7 +2379,7 @@ func (s *TestSuite) TestMsgServer_ExpeditePendingSwapOut() {
 			name:  "request id does not exist",
 			setup: setup,
 			msg: types.MsgExpeditePendingSwapOutRequest{
-				Admin:     admin.String(),
+				Authority: admin.String(),
 				RequestId: 999,
 			},
 			expectedErrSubstrs: []string{"failed to get pending swap out"},

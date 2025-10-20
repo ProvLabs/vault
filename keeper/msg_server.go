@@ -246,8 +246,8 @@ func (k msgServer) DepositInterestFunds(goCtx context.Context, msg *types.MsgDep
 		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
 	}
 
-	if !(msg.Authority == vault.Admin || (vault.AssetManager != "" && msg.Authority == vault.AssetManager)) {
-		return nil, fmt.Errorf("unauthorized authority: %s", msg.Authority)
+	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+		return nil, err
 	}
 
 	if vault.UnderlyingAsset != msg.Amount.Denom {
@@ -282,8 +282,8 @@ func (k msgServer) WithdrawInterestFunds(goCtx context.Context, msg *types.MsgWi
 		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
 	}
 
-	if !(msg.Authority == vault.Admin || (vault.AssetManager != "" && msg.Authority == vault.AssetManager)) {
-		return nil, fmt.Errorf("unauthorized authority: %s", msg.Authority)
+	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+		return nil, err
 	}
 	if vault.UnderlyingAsset != msg.Amount.Denom {
 		return nil, fmt.Errorf("denom not supported for vault must be of type \"%s\" : got \"%s\"", vault.UnderlyingAsset, msg.Amount.Denom)
@@ -314,8 +314,8 @@ func (k msgServer) DepositPrincipalFunds(goCtx context.Context, msg *types.MsgDe
 	if vault == nil {
 		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
 	}
-	if !(msg.Authority == vault.Admin || (vault.AssetManager != "" && msg.Authority == vault.AssetManager)) {
-		return nil, fmt.Errorf("unauthorized authority: %s", msg.Authority)
+	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+		return nil, err
 	}
 
 	if !vault.Paused {
@@ -357,8 +357,8 @@ func (k msgServer) WithdrawPrincipalFunds(goCtx context.Context, msg *types.MsgW
 	if vault == nil {
 		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
 	}
-	if !(msg.Authority == vault.Admin || (vault.AssetManager != "" && msg.Authority == vault.AssetManager)) {
-		return nil, fmt.Errorf("unauthorized authority: %s", msg.Authority)
+	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+		return nil, err
 	}
 
 	if !vault.Paused {
@@ -406,7 +406,7 @@ func (k msgServer) ExpeditePendingSwapOut(goCtx context.Context, msg *types.MsgE
 	if vault == nil {
 		return nil, fmt.Errorf("vault not found: %s", vaultAddr)
 	}
-	if err := vault.ValidateAdmin(msg.Admin); err != nil {
+	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, err
 	}
 
@@ -414,7 +414,7 @@ func (k msgServer) ExpeditePendingSwapOut(goCtx context.Context, msg *types.MsgE
 		return nil, fmt.Errorf("failed to expedite swap out: %w", err)
 	}
 
-	k.emitEvent(ctx, types.NewEventPendingSwapOutExpedited(msg.RequestId, swapOut.VaultAddress, msg.Admin))
+	k.emitEvent(ctx, types.NewEventPendingSwapOutExpedited(msg.RequestId, swapOut.VaultAddress, msg.Authority))
 
 	return &types.MsgExpeditePendingSwapOutResponse{}, nil
 }
@@ -431,8 +431,8 @@ func (k msgServer) PauseVault(goCtx context.Context, msg *types.MsgPauseVaultReq
 	if vault == nil {
 		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
 	}
-	if !(msg.Authority == vault.Admin || (vault.AssetManager != "" && msg.Authority == vault.AssetManager)) {
-		return nil, fmt.Errorf("unauthorized authority: %s", msg.Authority)
+	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+		return nil, err
 	}
 
 	if vault.Paused {
@@ -471,8 +471,8 @@ func (k msgServer) UnpauseVault(goCtx context.Context, msg *types.MsgUnpauseVaul
 	if vault == nil {
 		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
 	}
-	if !(msg.Authority == vault.Admin || (vault.AssetManager != "" && msg.Authority == vault.AssetManager)) {
-		return nil, fmt.Errorf("unauthorized authority: %s", msg.Authority)
+	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+		return nil, err
 	}
 
 	if !vault.Paused {

@@ -894,7 +894,7 @@ func TestMsgExpeditePendingSwapOutRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "valid",
 			msg: types.MsgExpeditePendingSwapOutRequest{
-				Admin:     addr,
+				Authority: addr,
 				RequestId: 1,
 			},
 			expectedErr: nil,
@@ -902,10 +902,10 @@ func TestMsgExpeditePendingSwapOutRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "invalid admin",
 			msg: types.MsgExpeditePendingSwapOutRequest{
-				Admin:     "bad",
+				Authority: "bad",
 				RequestId: 1,
 			},
-			expectedErr: fmt.Errorf("invalid admin address: %q", "bad"),
+			expectedErr: fmt.Errorf("invalid authority address: %q", "bad"),
 		},
 	}
 

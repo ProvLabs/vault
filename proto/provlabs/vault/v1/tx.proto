@@ -284,10 +284,11 @@ message MsgWithdrawPrincipalFundsResponse {}
 
 // MsgExpeditePendingSwapOutRequest is the request message for expediting a swap out from a vault.
 message MsgExpeditePendingSwapOutRequest {
-  option (cosmos.msg.v1.signer) = "admin";
+  option (cosmos.msg.v1.signer) = "authority";
 
-  // admin is the address of the vault administrator initiating the swap out.
-  string admin = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // authority is the address of the vault admin or asset manager initiating the expedite.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
   // request_id is the id of the pending swap out to expedite.
   uint64 request_id = 2;
 }

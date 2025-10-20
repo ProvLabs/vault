@@ -1654,7 +1654,7 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds() {
 		ev := createSendCoinEvents(admin.String(), vaultAddr.String(), sdk.NewCoins(amount).String())
 		ev = append(ev, sdk.NewEvent(
 			"provlabs.vault.v1.EventInterestDeposit",
-			sdk.NewAttribute("admin", admin.String()),
+			sdk.NewAttribute("authority", admin.String()),
 			sdk.NewAttribute("amount", amount.String()),
 			sdk.NewAttribute("vault_address", vaultAddr.String()),
 		))
@@ -1680,11 +1680,12 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds() {
 		testDef.expectedResponse = &types.MsgDepositInterestFundsResponse{}
 		runMsgServerTestCase(s, testDef, tc)
 	})
+
 	s.Run("happy path - deposit interest funds - restricted marker with attributes", func() {
 		ev := createSendCoinEvents(admin.String(), vaultAddr.String(), sdk.NewCoins(amount).String())
 		ev = append(ev, sdk.NewEvent(
 			"provlabs.vault.v1.EventInterestDeposit",
-			sdk.NewAttribute("admin", admin.String()),
+			sdk.NewAttribute("authority", admin.String()),
 			sdk.NewAttribute("amount", amount.String()),
 			sdk.NewAttribute("vault_address", vaultAddr.String()),
 		))
@@ -1694,6 +1695,50 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds() {
 			setup: setupRestricted,
 			msg: types.MsgDepositInterestFundsRequest{
 				Authority:    admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Amount:       amount,
+			},
+			postCheckArgs: postCheckArgs{
+				VaultAddress:          vaultAddr,
+				ExpectedDepositAmount: amount,
+				ExpectedVaultBalance:  amount,
+				InVerificationQueue:   true,
+				ExpectedPeriodStart:   blockTime.Unix(),
+			},
+			expectedEvents: ev,
+		}
+
+		testDef.expectedResponse = &types.MsgDepositInterestFundsResponse{}
+		runMsgServerTestCase(s, testDef, tc)
+	})
+
+	s.Run("happy path - deposit interest funds as asset manager", func() {
+		assetMgr := s.CreateAndFundAccount(amount)
+		setupWithAssetMgr := func() {
+			setup()
+			_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).SetAssetManager(s.ctx, &types.MsgSetAssetManagerRequest{
+				Admin:        admin.String(),
+				VaultAddress: vaultAddr.String(),
+				AssetManager: assetMgr.String(),
+			})
+			s.Require().NoError(err, "failed to set asset manager")
+			// Ensure asset manager has funds for deposit (top up if needed)
+			s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, assetMgr, sdk.NewCoins(amount)))
+		}
+
+		ev := createSendCoinEvents(assetMgr.String(), vaultAddr.String(), sdk.NewCoins(amount).String())
+		ev = append(ev, sdk.NewEvent(
+			"provlabs.vault.v1.EventInterestDeposit",
+			sdk.NewAttribute("authority", assetMgr.String()),
+			sdk.NewAttribute("amount", amount.String()),
+			sdk.NewAttribute("vault_address", vaultAddr.String()),
+		))
+
+		tc := msgServerTestCase[types.MsgDepositInterestFundsRequest, postCheckArgs]{
+			name:  "happy path asset manager",
+			setup: setupWithAssetMgr,
+			msg: types.MsgDepositInterestFundsRequest{
+				Authority:    assetMgr.String(),
 				VaultAddress: vaultAddr.String(),
 				Amount:       amount,
 			},
@@ -1764,7 +1809,7 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds_Failures() {
 			expectedErrSubstrs: []string{"failed to get vault", "is not a vault account"},
 		},
 		{
-			name:  "unauthorized admin",
+			name:  "unauthorized authority",
 			setup: setupWithAdminFunds,
 			msg: types.MsgDepositInterestFundsRequest{
 				Authority:    other.String(),

@@ -140,20 +140,20 @@ Admin-only. Enables or disables user swap-out operations.
 
 ## DepositInterestFunds
 
-Admin-only. Moves interest reserve funds from admin → vault account.
+Admin or Asset Manager. Moves interest reserve funds from authority → vault account.
 Only underlying denom is accepted.
 
-* **Request:** `MsgDepositInterestFundsRequest { admin, vault_address, amount }`
+* **Request:** `MsgDepositInterestFundsRequest { authority, vault_address, amount }`
 * **Response:** `MsgDepositInterestFundsResponse {}`
 
 ---
 
 ## WithdrawInterestFunds
 
-Admin-only. Withdraws unused interest reserve funds vault → admin.
+Admin or Asset Manager. Withdraws unused interest reserve funds vault → authority.
 Only underlying denom is accepted.
 
-* **Request:** `MsgWithdrawInterestFundsRequest { admin, vault_address, amount }`
+* **Request:** `MsgWithdrawInterestFundsRequest { authority, vault_address, amount }`
 * **Response:** `MsgWithdrawInterestFundsResponse {}`
 
 ---

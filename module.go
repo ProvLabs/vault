@@ -206,7 +206,7 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						{ProtoField: "owner"},
 						{ProtoField: "vault_address"},
 						{ProtoField: "assets"},
-						{ProtoField: "redeem_denom"},
+						{ProtoField: "redeem_denom", Optional: true},
 					},
 				},
 				{

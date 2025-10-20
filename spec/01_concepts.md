@@ -16,7 +16,8 @@ Total share supply is tracked on the vault as **total_shares**, the authoritativ
 - **Reserves**: the vault account balance used to pay positive interest or receive refunds from negative interest.  
 - **TVV (Total Vault Value)**: the value of all principal assets, computed and reported in the underlying unit.  
 - **NAV**: conversion rate between denoms, used for valuation and conversions, subject to special-case rules.  
-- **Total Shares**: the canonical supply-of-record across chains. Local marker supply must never exceed `total_shares`.
+- **Total Shares**: the canonical supply-of-record across chains. Local marker supply must never exceed `total_shares`.  
+- **Asset Manager**: an optional delegated operator address with limited management authority. When set, this account can perform certain administrative actions (e.g., fund management operations) in addition to the vault admin. If unset, only the vault admin holds these permissions.
 
 ### Marker Authority Rules
 
@@ -44,6 +45,7 @@ The keeper ties together state management, account operations, marker integratio
 - **GetVault**: retrieves and validates a vault account by address.
 - **Pause/Unpause**: admins can pause a vault, freezing operations and fixing balances, or unpause to resume operations.
 - **Bridge Controls**: configure a single **bridge address** and **enable/disable** bridging; capacity checks ensure local marker supply never exceeds `total_shares`.
+- **SetAssetManager**: assigns or clears the optional delegated **asset manager** address. When set, both the admin and asset manager may perform privileged actions on the vault.
 
 ### Swap Operations
 - **SwapIn**: deposit underlying assets, mint shares, and transfer them to the depositor.
@@ -75,6 +77,7 @@ The keeper ties together state management, account operations, marker integratio
 - **InitGenesis**: loads vault accounts, queue entries, and validates stored state.
 - **ExportGenesis**: exports all vaults and active queue entries for chain restart or upgrades.
 - **Bridge Fields**: genesis includes `total_shares`, `bridge_address`, and `bridge_enabled`; validation asserts local marker supply does not exceed `total_shares`.
+- **Asset Manager Field**: genesis includes the optional `asset_manager` field for each vault, which may be empty if not configured.
 
 ### Block Hooks
 - **BeginBlocker**: checks vaults with expired timeouts and reconciles or disables interest.
@@ -88,6 +91,7 @@ The keeper ties together state management, account operations, marker integratio
 - **Refund Path**: failed withdrawals attempt to return escrowed shares to the user, with reason codes emitted for transparency.
 - **Validation**: strict checks on denoms, admin permissions, share supply, and marker restrictions ensure consistency and prevent misconfiguration.
 - **Supply Guardrails**: bridge mints beyond capacity are rejected; burns require the configured bridge address.
+- **Delegated Authority**: when an asset manager is set, either the admin or asset manager may perform operations that require vault authority. If cleared, only the admin retains this capability.
 
 ---
 
@@ -100,5 +104,5 @@ The keeper ties together state management, account operations, marker integratio
 5. **Block Processing**:  
    - BeginBlocker: runs interest checks and timeouts.  
    - EndBlocker: finalizes swap-out jobs and reconciliations.
-6. **Admin Tools**: manage interest rates, deposits/withdrawals, pausing/unpausing, and queue interventions.
+6. **Admin Tools**: manage interest rates, deposits/withdrawals, pausing/unpausing, queue interventions, and assign asset managers.
 7. **Bridge Ops (optional)**: authorized bridge mints/burns local supply under `total_shares` capacity to facilitate cross-chain share movement.

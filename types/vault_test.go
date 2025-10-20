@@ -16,6 +16,7 @@ import (
 func TestVaultAccount_Validate(t *testing.T) {
 	validAdmin := utils.TestAddress().Bech32
 	validBridgeAddress := utils.TestAddress().Bech32
+	validAssetManager := utils.TestAddress().Bech32
 	validDenom := "validdenom"
 	invalidDenom := "inval!d"
 	validInterest := "0.05"
@@ -392,6 +393,32 @@ func TestVaultAccount_Validate(t *testing.T) {
 				BridgeEnabled:       true,
 			},
 			expectedErr: "bridge cannot be enabled without a bridge address",
+		},
+		{
+			name: "asset manager set with valid address",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				AssetManager:        validAssetManager,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
+				UnderlyingAsset:     "uusd",
+				CurrentInterestRate: "0.0",
+				DesiredInterestRate: "0.0",
+			},
+			expectedErr: "",
+		},
+		{
+			name: "asset manager set with invalid address",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				AssetManager:        "not-a-bech32",
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
+				UnderlyingAsset:     "uusd",
+				CurrentInterestRate: "0.0",
+				DesiredInterestRate: "0.0",
+			},
+			expectedErr: "invalid asset manager address",
 		},
 	}
 

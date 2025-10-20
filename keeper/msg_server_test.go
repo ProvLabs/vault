@@ -1771,7 +1771,7 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds_Failures() {
 				VaultAddress: vaultAddr.String(),
 				Amount:       amount,
 			},
-			expectedErrSubstrs: []string{"unauthorized", "is not the vault admin"},
+			expectedErrSubstrs: []string{"unauthorized authority"},
 		},
 		{
 			name:  "incorrect underlying asset",
@@ -1924,7 +1924,7 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds_Failures() {
 				VaultAddress: vaultAddr.String(),
 				Amount:       amount,
 			},
-			expectedErrSubstrs: []string{"unauthorized", "is not the vault admin"},
+			expectedErrSubstrs: []string{"unauthorized authority"},
 		},
 		{
 			name:  "insufficient vault balance",
@@ -2089,7 +2089,7 @@ func (s *TestSuite) TestMsgServer_DepositPrincipalFunds_Failures() {
 				VaultAddress: vaultAddr.String(),
 				Amount:       amount,
 			},
-			expectedErrSubstrs: []string{"unauthorized", "is not the vault admin"},
+			expectedErrSubstrs: []string{"unauthorized authority"},
 		},
 		{
 			name:  "vault is not paused",
@@ -2265,7 +2265,7 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds_Failures() {
 				VaultAddress: vaultAddr.String(),
 				Amount:       amount,
 			},
-			expectedErrSubstrs: []string{"unauthorized", "is not the vault admin"},
+			expectedErrSubstrs: []string{"unauthorized authority"},
 		},
 		{
 			name:  "vault is not paused",
@@ -2572,7 +2572,7 @@ func (s *TestSuite) TestMsgServer_PauseVault_Failures() {
 				VaultAddress: vaultAddr.String(),
 				Reason:       "x",
 			},
-			expectedErrSubstrs: []string{"unauthorized", "is not the vault admin"},
+			expectedErrSubstrs: []string{"unauthorized authority"},
 		},
 		{
 			name: "already paused",
@@ -2733,7 +2733,7 @@ func (s *TestSuite) TestMsgServer_UnpauseVault_Failures() {
 				Authority:    other.String(),
 				VaultAddress: vaultAddr.String(),
 			},
-			expectedErrSubstrs: []string{"unauthorized", "is not the vault admin"},
+			expectedErrSubstrs: []string{"unauthorized authority"},
 		},
 		{
 			name:  "not paused",
@@ -3353,6 +3353,60 @@ func (s *TestSuite) TestMsgServer_BridgeBurnShares_Failures() {
 				Shares:       burn,
 			},
 			expectedErrSubstrs: []string{"failed to transfer shares from bridge to vault", "insufficient funds"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_SetAssetManager_Failures() {
+	testDef := msgServerTestDef[types.MsgSetAssetManagerRequest, types.MsgSetAssetManagerResponse, any]{
+		endpointName: "SetAssetManager",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).SetAssetManager,
+		postCheck:    nil,
+	}
+
+	underlying := "under"
+	share := "vaultshares"
+	admin := s.adminAddr
+	vaultAddr := types.GetVaultAddress(share)
+	assetMgr := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+	otherAdmin := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+
+	base := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlying, 2_000_000), admin)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      share,
+			UnderlyingAsset: underlying,
+		})
+		s.Require().NoError(err, "expected vault creation to succeed")
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	tests := []msgServerTestCase[types.MsgSetAssetManagerRequest, any]{
+		{
+			name: "vault not found",
+			msg: types.MsgSetAssetManagerRequest{
+				Admin:        admin.String(),
+				VaultAddress: types.GetVaultAddress("nosuch").String(),
+				AssetManager: assetMgr.String(),
+			},
+			expectedErrSubstrs: []string{"vault not found"},
+		},
+		{
+			name:  "unauthorized admin",
+			setup: base,
+			msg: types.MsgSetAssetManagerRequest{
+				Admin:        otherAdmin.String(),
+				VaultAddress: vaultAddr.String(),
+				AssetManager: assetMgr.String(),
+			},
+			expectedErrSubstrs: []string{"unauthorized"},
 		},
 	}
 

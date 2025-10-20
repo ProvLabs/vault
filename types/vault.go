@@ -121,6 +121,12 @@ func (va VaultAccount) Validate() error {
 		}
 	}
 
+	if va.AssetManager != "" {
+		if _, err := sdk.AccAddressFromBech32(va.AssetManager); err != nil {
+			return fmt.Errorf("invalid asset manager address: %w", err)
+		}
+	}
+
 	if va.BridgeAddress != "" {
 		if _, err := sdk.AccAddressFromBech32(va.BridgeAddress); err != nil {
 			return fmt.Errorf("invalid bridge address: %w", err)
@@ -172,6 +178,7 @@ func (va VaultAccount) Validate() error {
 	return nil
 }
 
+// InterestEnabled returns true if the vault is currently configured to use interest.
 func (va VaultAccount) InterestEnabled() bool {
 	current, err := sdkmath.LegacyNewDecFromStr(va.CurrentInterestRate)
 	if err != nil {

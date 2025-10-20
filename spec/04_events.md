@@ -30,6 +30,9 @@ This document describes all events emitted by the `x/vault` module and how to us
   - [EventBridgeToggled](#eventbridgetoggled)
   - [EventBridgeMintShares](#eventbridgemintshares)
   - [EventBridgeBurnShares](#eventbridgeburnshares)
+- [Metadata](#metadata)
+  - [EventSetShareDenomMetadata](#eventSetShareDenomMetadata)
+  - [EventDenomUnit](#eventDenomUnit) 
 
 ---
 
@@ -43,6 +46,37 @@ Emitted when a vault is created.
 - `admin` — vault admin  
 - `share_denom` — vault share token denom  
 - `underlying_asset` — base collateral denom
+
+---
+
+## Metadata
+
+### EventSetShareDenomMetadata
+
+Emitted when denom metadata is set for a vault’s share denom (via `MsgSetShareDenomMetadata`).
+
+**Fields**
+
+- `vault_address` — vault
+- `metadata_base` — base denom (e.g., `nushare`)
+- `metadata_description` — description of the share denom
+- `metadata_display` — display denom (e.g., `ushare` or `SHARE`)
+- `metadata_denom_units` — list of denom units with exponents and aliases
+- `administrator` — admin who set the metadata
+- `metadata_name` — human-readable name
+- `metadata_symbol` — ticker-style symbol
+
+---
+
+### EventDenomUnit
+
+Included inside `EventSetShareDenomMetadata` to describe each denom unit.
+
+**Fields**
+
+- `denom` — unit name (e.g., `nushare`, `ushare`)
+- `exponent` — power of 10 exponent relative to base unit
+- `aliases` — optional alternative names (may be empty)
 
 ---
 
@@ -274,5 +308,3 @@ Emitted when shares are **burned from the bridge** balance.
 - `vault_address` — vault  
 - `bridge` — bridge signer  
 - `shares` — burned share amount
-
----

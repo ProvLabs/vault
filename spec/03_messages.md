@@ -7,6 +7,7 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 <!-- TOC -->
 - [Endpoint Gating Matrix](#endpoint-gating-matrix)
 - [CreateVault](#createvault)
+- [SetShareDenomMetadata](#setShareDenomMetadata)
 - [SwapIn](#swapin)
 - [SwapOut](#swapout)
 - [BridgeMintShares](#bridgemintshares)
@@ -64,6 +65,15 @@ The creator is recorded as vault admin.
 
 - **Request:** `MsgCreateVaultRequest { admin, share_denom, underlying_asset, payment_denom?, withdrawal_delay_seconds }`  
 - **Response:** `MsgCreateVaultResponse {}`  
+
+---
+
+## SetShareDenomMetadata
+
+Admin-only. Sets Bank module metadata for a vault’s share denom, defining how it is displayed (name, symbol, units).
+
+- **Request:** `MsgSetShareDenomMetadataRequest { admin, vault_address, metadata }`
+- **Response:** `MsgSetShareDenomMetadataResponse {}`
 
 ---
 

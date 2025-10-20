@@ -1,16 +1,19 @@
 package types
 
 import (
+	"errors"
 	fmt "fmt"
 
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 // AllRequestMsgs defines all the Msg*Request messages.
 var AllRequestMsgs = []sdk.Msg{
 	(*MsgCreateVaultRequest)(nil),
+	(*MsgSetShareDenomMetadataRequest)(nil),
 	(*MsgSwapInRequest)(nil),
 	(*MsgSwapOutRequest)(nil),
 	(*MsgUpdateMinInterestRateRequest)(nil),
@@ -66,6 +69,20 @@ func (m MsgCreateVaultRequest) ValidateBasic() error {
 		return fmt.Errorf("withdrawal delay cannot exceed %d seconds", MaxWithdrawalDelay)
 	}
 
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgSetShareDenomMetadataRequest.
+func (m MsgSetShareDenomMetadataRequest) ValidateBasic() error {
+	if len(m.Admin) == 0 {
+		return errors.New("invalid set denom metadata request: administrator cannot be empty")
+	}
+	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
+		return fmt.Errorf("invalid set denom metadata request: administrator must be a bech32 address string: %w", err)
+	}
+	if err := markertypes.ValidateDenomMetadataBasic(m.Metadata); err != nil {
+		return fmt.Errorf("invalid set denom metadata request: %w", err)
+	}
 	return nil
 }
 

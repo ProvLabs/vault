@@ -7,8 +7,10 @@ import (
 	context "context"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
-	types "github.com/cosmos/cosmos-sdk/types"
+	types1 "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
+	_ "github.com/cosmos/cosmos-sdk/x/bank/types"
+	github_com_cosmos_cosmos_sdk_x_bank_types "github.com/cosmos/cosmos-sdk/x/bank/types"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
@@ -160,6 +162,101 @@ func (m *MsgCreateVaultResponse) GetVaultAddress() string {
 	return ""
 }
 
+// MsgSetShareDenomMetadataRequest defines the request to set bank denom metadata for a vault's share denom.
+// The target denom is derived from the vault identified by vault_address.
+type MsgSetShareDenomMetadataRequest struct {
+	// metadata is the bank module Metadata to assign to the vault's share denom.
+	Metadata github_com_cosmos_cosmos_sdk_x_bank_types.Metadata `protobuf:"bytes,1,opt,name=metadata,proto3,customtype=github.com/cosmos/cosmos-sdk/x/bank/types.Metadata" json:"metadata"`
+	// admin is the address of the vault administrator authorizing this update.
+	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
+	// vault_address is the bech32 address of the vault whose share denom metadata is being set.
+	VaultAddress string `protobuf:"bytes,3,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+}
+
+func (m *MsgSetShareDenomMetadataRequest) Reset()         { *m = MsgSetShareDenomMetadataRequest{} }
+func (m *MsgSetShareDenomMetadataRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgSetShareDenomMetadataRequest) ProtoMessage()    {}
+func (*MsgSetShareDenomMetadataRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1bb9c8306211b32d, []int{2}
+}
+func (m *MsgSetShareDenomMetadataRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSetShareDenomMetadataRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSetShareDenomMetadataRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSetShareDenomMetadataRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSetShareDenomMetadataRequest.Merge(m, src)
+}
+func (m *MsgSetShareDenomMetadataRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSetShareDenomMetadataRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSetShareDenomMetadataRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSetShareDenomMetadataRequest proto.InternalMessageInfo
+
+func (m *MsgSetShareDenomMetadataRequest) GetAdmin() string {
+	if m != nil {
+		return m.Admin
+	}
+	return ""
+}
+
+func (m *MsgSetShareDenomMetadataRequest) GetVaultAddress() string {
+	if m != nil {
+		return m.VaultAddress
+	}
+	return ""
+}
+
+// MsgSetShareDenomMetadataResponse defines the response for setting a vault's share denom metadata.
+type MsgSetShareDenomMetadataResponse struct {
+}
+
+func (m *MsgSetShareDenomMetadataResponse) Reset()         { *m = MsgSetShareDenomMetadataResponse{} }
+func (m *MsgSetShareDenomMetadataResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgSetShareDenomMetadataResponse) ProtoMessage()    {}
+func (*MsgSetShareDenomMetadataResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1bb9c8306211b32d, []int{3}
+}
+func (m *MsgSetShareDenomMetadataResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSetShareDenomMetadataResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSetShareDenomMetadataResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSetShareDenomMetadataResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSetShareDenomMetadataResponse.Merge(m, src)
+}
+func (m *MsgSetShareDenomMetadataResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSetShareDenomMetadataResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSetShareDenomMetadataResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSetShareDenomMetadataResponse proto.InternalMessageInfo
+
 // MsgSwapInRequest is the request message for depositing underlying assets into a vault in exchange for shares.
 type MsgSwapInRequest struct {
 	// owner is the address initiating the swap in (deposit).
@@ -167,14 +264,14 @@ type MsgSwapInRequest struct {
 	// vault_address is the address of the target vault.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// assets is the amount of underlying assets to deposit.
-	Assets types.Coin `protobuf:"bytes,3,opt,name=assets,proto3" json:"assets"`
+	Assets types1.Coin `protobuf:"bytes,3,opt,name=assets,proto3" json:"assets"`
 }
 
 func (m *MsgSwapInRequest) Reset()         { *m = MsgSwapInRequest{} }
 func (m *MsgSwapInRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgSwapInRequest) ProtoMessage()    {}
 func (*MsgSwapInRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bb9c8306211b32d, []int{2}
+	return fileDescriptor_1bb9c8306211b32d, []int{4}
 }
 func (m *MsgSwapInRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -217,24 +314,24 @@ func (m *MsgSwapInRequest) GetVaultAddress() string {
 	return ""
 }
 
-func (m *MsgSwapInRequest) GetAssets() types.Coin {
+func (m *MsgSwapInRequest) GetAssets() types1.Coin {
 	if m != nil {
 		return m.Assets
 	}
-	return types.Coin{}
+	return types1.Coin{}
 }
 
 // MsgSwapInResponse is the response message for a successful SwapIn.
 type MsgSwapInResponse struct {
 	// shares_received is the amount of vault shares minted to the depositor.
-	SharesReceived types.Coin `protobuf:"bytes,1,opt,name=shares_received,json=sharesReceived,proto3" json:"shares_received"`
+	SharesReceived types1.Coin `protobuf:"bytes,1,opt,name=shares_received,json=sharesReceived,proto3" json:"shares_received"`
 }
 
 func (m *MsgSwapInResponse) Reset()         { *m = MsgSwapInResponse{} }
 func (m *MsgSwapInResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgSwapInResponse) ProtoMessage()    {}
 func (*MsgSwapInResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bb9c8306211b32d, []int{3}
+	return fileDescriptor_1bb9c8306211b32d, []int{5}
 }
 func (m *MsgSwapInResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -263,11 +360,11 @@ func (m *MsgSwapInResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgSwapInResponse proto.InternalMessageInfo
 
-func (m *MsgSwapInResponse) GetSharesReceived() types.Coin {
+func (m *MsgSwapInResponse) GetSharesReceived() types1.Coin {
 	if m != nil {
 		return m.SharesReceived
 	}
-	return types.Coin{}
+	return types1.Coin{}
 }
 
 // MsgSwapOutRequest is the request message for redeeming vault shares in exchange for underlying assets.
@@ -277,7 +374,7 @@ type MsgSwapOutRequest struct {
 	// vault_address is the address of the vault to redeem from.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// assets is the amount of underlying assets to withdraw.
-	Assets types.Coin `protobuf:"bytes,3,opt,name=assets,proto3" json:"assets"`
+	Assets types1.Coin `protobuf:"bytes,3,opt,name=assets,proto3" json:"assets"`
 	// redeem_denom selects the payout coin.
 	// - If empty, defaults to the vault’s underlying_asset.
 	// - Must be either the vault’s underlying_asset or its payment_denom.
@@ -288,7 +385,7 @@ func (m *MsgSwapOutRequest) Reset()         { *m = MsgSwapOutRequest{} }
 func (m *MsgSwapOutRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgSwapOutRequest) ProtoMessage()    {}
 func (*MsgSwapOutRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bb9c8306211b32d, []int{4}
+	return fileDescriptor_1bb9c8306211b32d, []int{6}
 }
 func (m *MsgSwapOutRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -331,11 +428,11 @@ func (m *MsgSwapOutRequest) GetVaultAddress() string {
 	return ""
 }
 
-func (m *MsgSwapOutRequest) GetAssets() types.Coin {
+func (m *MsgSwapOutRequest) GetAssets() types1.Coin {
 	if m != nil {
 		return m.Assets
 	}
-	return types.Coin{}
+	return types1.Coin{}
 }
 
 func (m *MsgSwapOutRequest) GetRedeemDenom() string {
@@ -355,7 +452,7 @@ func (m *MsgSwapOutResponse) Reset()         { *m = MsgSwapOutResponse{} }
 func (m *MsgSwapOutResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgSwapOutResponse) ProtoMessage()    {}
 func (*MsgSwapOutResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bb9c8306211b32d, []int{5}
+	return fileDescriptor_1bb9c8306211b32d, []int{7}
 }
 func (m *MsgSwapOutResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -406,7 +503,7 @@ func (m *MsgUpdateMinInterestRateRequest) Reset()         { *m = MsgUpdateMinInt
 func (m *MsgUpdateMinInterestRateRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateMinInterestRateRequest) ProtoMessage()    {}
 func (*MsgUpdateMinInterestRateRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bb9c8306211b32d, []int{6}
+	return fileDescriptor_1bb9c8306211b32d, []int{8}
 }
 func (m *MsgUpdateMinInterestRateRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -464,7 +561,7 @@ func (m *MsgUpdateMinInterestRateResponse) Reset()         { *m = MsgUpdateMinIn
 func (m *MsgUpdateMinInterestRateResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateMinInterestRateResponse) ProtoMessage()    {}
 func (*MsgUpdateMinInterestRateResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bb9c8306211b32d, []int{7}
+	return fileDescriptor_1bb9c8306211b32d, []int{9}
 }
 func (m *MsgUpdateMinInterestRateResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -508,7 +605,7 @@ func (m *MsgUpdateMaxInterestRateRequest) Reset()         { *m = MsgUpdateMaxInt
 func (m *MsgUpdateMaxInterestRateRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateMaxInterestRateRequest) ProtoMessage()    {}
 func (*MsgUpdateMaxInterestRateRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bb9c8306211b32d, []int{8}
+	return fileDescriptor_1bb9c8306211b32d, []int{10}
 }
 func (m *MsgUpdateMaxInterestRateRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -566,7 +663,7 @@ func (m *MsgUpdateMaxInterestRateResponse) Reset()         { *m = MsgUpdateMaxIn
 func (m *MsgUpdateMaxInterestRateResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateMaxInterestRateResponse) ProtoMessage()    {}
 func (*MsgUpdateMaxInterestRateResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bb9c8306211b32d, []int{9}
+	return fileDescriptor_1bb9c8306211b32d, []int{11}
 }
 func (m *MsgUpdateMaxInterestRateResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -609,7 +706,7 @@ func (m *MsgUpdateInterestRateRequest) Reset()         { *m = MsgUpdateInterestR
 func (m *MsgUpdateInterestRateRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateInterestRateRequest) ProtoMessage()    {}
 func (*MsgUpdateInterestRateRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bb9c8306211b32d, []int{10}
+	return fileDescriptor_1bb9c8306211b32d, []int{12}
 }
 func (m *MsgUpdateInterestRateRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -667,7 +764,7 @@ func (m *MsgUpdateInterestRateResponse) Reset()         { *m = MsgUpdateInterest
 func (m *MsgUpdateInterestRateResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgUpdateInterestRateResponse) ProtoMessage()    {}
 func (*MsgUpdateInterestRateResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bb9c8306211b32d, []int{11}
+	return fileDescriptor_1bb9c8306211b32d, []int{13}
 }
 func (m *MsgUpdateInterestRateResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -710,7 +807,7 @@ func (m *MsgToggleSwapInRequest) Reset()         { *m = MsgToggleSwapInRequest{}
 func (m *MsgToggleSwapInRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgToggleSwapInRequest) ProtoMessage()    {}
 func (*MsgToggleSwapInRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bb9c8306211b32d, []int{12}
+	return fileDescriptor_1bb9c8306211b32d, []int{14}
 }
 func (m *MsgToggleSwapInRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -768,7 +865,7 @@ func (m *MsgToggleSwapInResponse) Reset()         { *m = MsgToggleSwapInResponse
 func (m *MsgToggleSwapInResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgToggleSwapInResponse) ProtoMessage()    {}
 func (*MsgToggleSwapInResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bb9c8306211b32d, []int{13}
+	return fileDescriptor_1bb9c8306211b32d, []int{15}
 }
 func (m *MsgToggleSwapInResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -811,7 +908,7 @@ func (m *MsgToggleSwapOutRequest) Reset()         { *m = MsgToggleSwapOutRequest
 func (m *MsgToggleSwapOutRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgToggleSwapOutRequest) ProtoMessage()    {}
 func (*MsgToggleSwapOutRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bb9c8306211b32d, []int{14}
+	return fileDescriptor_1bb9c8306211b32d, []int{16}
 }
 func (m *MsgToggleSwapOutRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -869,7 +966,7 @@ func (m *MsgToggleSwapOutResponse) Reset()         { *m = MsgToggleSwapOutRespon
 func (m *MsgToggleSwapOutResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgToggleSwapOutResponse) ProtoMessage()    {}
 func (*MsgToggleSwapOutResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bb9c8306211b32d, []int{15}
+	return fileDescriptor_1bb9c8306211b32d, []int{17}
 }
 func (m *MsgToggleSwapOutResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -905,14 +1002,14 @@ type MsgDepositInterestFundsRequest struct {
 	// vault_address is the bech32 address of the vault to which funds are being deposited.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// amount is the amount of funds to deposit.
-	Amount types.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount"`
+	Amount types1.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount"`
 }
 
 func (m *MsgDepositInterestFundsRequest) Reset()         { *m = MsgDepositInterestFundsRequest{} }
 func (m *MsgDepositInterestFundsRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgDepositInterestFundsRequest) ProtoMessage()    {}
 func (*MsgDepositInterestFundsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bb9c8306211b32d, []int{16}
+	return fileDescriptor_1bb9c8306211b32d, []int{18}
 }
 func (m *MsgDepositInterestFundsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -955,11 +1052,11 @@ func (m *MsgDepositInterestFundsRequest) GetVaultAddress() string {
 	return ""
 }
 
-func (m *MsgDepositInterestFundsRequest) GetAmount() types.Coin {
+func (m *MsgDepositInterestFundsRequest) GetAmount() types1.Coin {
 	if m != nil {
 		return m.Amount
 	}
-	return types.Coin{}
+	return types1.Coin{}
 }
 
 // MsgDepositInterestFundsResponse is the response message for the DepositInterestFunds endpoint.
@@ -970,7 +1067,7 @@ func (m *MsgDepositInterestFundsResponse) Reset()         { *m = MsgDepositInter
 func (m *MsgDepositInterestFundsResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgDepositInterestFundsResponse) ProtoMessage()    {}
 func (*MsgDepositInterestFundsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bb9c8306211b32d, []int{17}
+	return fileDescriptor_1bb9c8306211b32d, []int{19}
 }
 func (m *MsgDepositInterestFundsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1006,14 +1103,14 @@ type MsgWithdrawInterestFundsRequest struct {
 	// vault_address is the bech32 address of the vault from which funds are being withdrawn.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// amount is the amount of funds to withdraw.
-	Amount types.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount"`
+	Amount types1.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount"`
 }
 
 func (m *MsgWithdrawInterestFundsRequest) Reset()         { *m = MsgWithdrawInterestFundsRequest{} }
 func (m *MsgWithdrawInterestFundsRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgWithdrawInterestFundsRequest) ProtoMessage()    {}
 func (*MsgWithdrawInterestFundsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bb9c8306211b32d, []int{18}
+	return fileDescriptor_1bb9c8306211b32d, []int{20}
 }
 func (m *MsgWithdrawInterestFundsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1056,11 +1153,11 @@ func (m *MsgWithdrawInterestFundsRequest) GetVaultAddress() string {
 	return ""
 }
 
-func (m *MsgWithdrawInterestFundsRequest) GetAmount() types.Coin {
+func (m *MsgWithdrawInterestFundsRequest) GetAmount() types1.Coin {
 	if m != nil {
 		return m.Amount
 	}
-	return types.Coin{}
+	return types1.Coin{}
 }
 
 // MsgWithdrawInterestFundsResponse is the response message for the WithdrawInterestFunds endpoint.
@@ -1071,7 +1168,7 @@ func (m *MsgWithdrawInterestFundsResponse) Reset()         { *m = MsgWithdrawInt
 func (m *MsgWithdrawInterestFundsResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgWithdrawInterestFundsResponse) ProtoMessage()    {}
 func (*MsgWithdrawInterestFundsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bb9c8306211b32d, []int{19}
+	return fileDescriptor_1bb9c8306211b32d, []int{21}
 }
 func (m *MsgWithdrawInterestFundsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1107,14 +1204,14 @@ type MsgDepositPrincipalFundsRequest struct {
 	// vault_address is the bech32 address of the vault to which funds are being deposited.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// amount is the amount of funds to deposit.
-	Amount types.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount"`
+	Amount types1.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount"`
 }
 
 func (m *MsgDepositPrincipalFundsRequest) Reset()         { *m = MsgDepositPrincipalFundsRequest{} }
 func (m *MsgDepositPrincipalFundsRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgDepositPrincipalFundsRequest) ProtoMessage()    {}
 func (*MsgDepositPrincipalFundsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bb9c8306211b32d, []int{20}
+	return fileDescriptor_1bb9c8306211b32d, []int{22}
 }
 func (m *MsgDepositPrincipalFundsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1157,11 +1254,11 @@ func (m *MsgDepositPrincipalFundsRequest) GetVaultAddress() string {
 	return ""
 }
 
-func (m *MsgDepositPrincipalFundsRequest) GetAmount() types.Coin {
+func (m *MsgDepositPrincipalFundsRequest) GetAmount() types1.Coin {
 	if m != nil {
 		return m.Amount
 	}
-	return types.Coin{}
+	return types1.Coin{}
 }
 
 // MsgDepositPrincipalFundsResponse is the response message for the DepositPrincipalFunds endpoint.
@@ -1172,7 +1269,7 @@ func (m *MsgDepositPrincipalFundsResponse) Reset()         { *m = MsgDepositPrin
 func (m *MsgDepositPrincipalFundsResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgDepositPrincipalFundsResponse) ProtoMessage()    {}
 func (*MsgDepositPrincipalFundsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bb9c8306211b32d, []int{21}
+	return fileDescriptor_1bb9c8306211b32d, []int{23}
 }
 func (m *MsgDepositPrincipalFundsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1208,14 +1305,14 @@ type MsgWithdrawPrincipalFundsRequest struct {
 	// vault_address is the bech32 address of the vault from which funds are being withdrawn.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// amount is the amount of funds to withdraw.
-	Amount types.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount"`
+	Amount types1.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount"`
 }
 
 func (m *MsgWithdrawPrincipalFundsRequest) Reset()         { *m = MsgWithdrawPrincipalFundsRequest{} }
 func (m *MsgWithdrawPrincipalFundsRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgWithdrawPrincipalFundsRequest) ProtoMessage()    {}
 func (*MsgWithdrawPrincipalFundsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bb9c8306211b32d, []int{22}
+	return fileDescriptor_1bb9c8306211b32d, []int{24}
 }
 func (m *MsgWithdrawPrincipalFundsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1258,11 +1355,11 @@ func (m *MsgWithdrawPrincipalFundsRequest) GetVaultAddress() string {
 	return ""
 }
 
-func (m *MsgWithdrawPrincipalFundsRequest) GetAmount() types.Coin {
+func (m *MsgWithdrawPrincipalFundsRequest) GetAmount() types1.Coin {
 	if m != nil {
 		return m.Amount
 	}
-	return types.Coin{}
+	return types1.Coin{}
 }
 
 // MsgWithdrawPrincipalFundsResponse is the response message for the WithdrawPrincipalFunds endpoint.
@@ -1273,7 +1370,7 @@ func (m *MsgWithdrawPrincipalFundsResponse) Reset()         { *m = MsgWithdrawPr
 func (m *MsgWithdrawPrincipalFundsResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgWithdrawPrincipalFundsResponse) ProtoMessage()    {}
 func (*MsgWithdrawPrincipalFundsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bb9c8306211b32d, []int{23}
+	return fileDescriptor_1bb9c8306211b32d, []int{25}
 }
 func (m *MsgWithdrawPrincipalFundsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1314,7 +1411,7 @@ func (m *MsgExpeditePendingSwapOutRequest) Reset()         { *m = MsgExpeditePen
 func (m *MsgExpeditePendingSwapOutRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgExpeditePendingSwapOutRequest) ProtoMessage()    {}
 func (*MsgExpeditePendingSwapOutRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bb9c8306211b32d, []int{24}
+	return fileDescriptor_1bb9c8306211b32d, []int{26}
 }
 func (m *MsgExpeditePendingSwapOutRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1365,7 +1462,7 @@ func (m *MsgExpeditePendingSwapOutResponse) Reset()         { *m = MsgExpeditePe
 func (m *MsgExpeditePendingSwapOutResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgExpeditePendingSwapOutResponse) ProtoMessage()    {}
 func (*MsgExpeditePendingSwapOutResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bb9c8306211b32d, []int{25}
+	return fileDescriptor_1bb9c8306211b32d, []int{27}
 }
 func (m *MsgExpeditePendingSwapOutResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1410,7 +1507,7 @@ func (m *MsgPauseVaultRequest) Reset()         { *m = MsgPauseVaultRequest{} }
 func (m *MsgPauseVaultRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgPauseVaultRequest) ProtoMessage()    {}
 func (*MsgPauseVaultRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bb9c8306211b32d, []int{26}
+	return fileDescriptor_1bb9c8306211b32d, []int{28}
 }
 func (m *MsgPauseVaultRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1468,7 +1565,7 @@ func (m *MsgPauseVaultResponse) Reset()         { *m = MsgPauseVaultResponse{} }
 func (m *MsgPauseVaultResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgPauseVaultResponse) ProtoMessage()    {}
 func (*MsgPauseVaultResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bb9c8306211b32d, []int{27}
+	return fileDescriptor_1bb9c8306211b32d, []int{29}
 }
 func (m *MsgPauseVaultResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1510,7 +1607,7 @@ func (m *MsgUnpauseVaultRequest) Reset()         { *m = MsgUnpauseVaultRequest{}
 func (m *MsgUnpauseVaultRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgUnpauseVaultRequest) ProtoMessage()    {}
 func (*MsgUnpauseVaultRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bb9c8306211b32d, []int{28}
+	return fileDescriptor_1bb9c8306211b32d, []int{30}
 }
 func (m *MsgUnpauseVaultRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1561,7 +1658,7 @@ func (m *MsgUnpauseVaultResponse) Reset()         { *m = MsgUnpauseVaultResponse
 func (m *MsgUnpauseVaultResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgUnpauseVaultResponse) ProtoMessage()    {}
 func (*MsgUnpauseVaultResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bb9c8306211b32d, []int{29}
+	return fileDescriptor_1bb9c8306211b32d, []int{31}
 }
 func (m *MsgUnpauseVaultResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1604,7 +1701,7 @@ func (m *MsgSetBridgeAddressRequest) Reset()         { *m = MsgSetBridgeAddressR
 func (m *MsgSetBridgeAddressRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgSetBridgeAddressRequest) ProtoMessage()    {}
 func (*MsgSetBridgeAddressRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bb9c8306211b32d, []int{30}
+	return fileDescriptor_1bb9c8306211b32d, []int{32}
 }
 func (m *MsgSetBridgeAddressRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1662,7 +1759,7 @@ func (m *MsgSetBridgeAddressResponse) Reset()         { *m = MsgSetBridgeAddress
 func (m *MsgSetBridgeAddressResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgSetBridgeAddressResponse) ProtoMessage()    {}
 func (*MsgSetBridgeAddressResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bb9c8306211b32d, []int{31}
+	return fileDescriptor_1bb9c8306211b32d, []int{33}
 }
 func (m *MsgSetBridgeAddressResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1705,7 +1802,7 @@ func (m *MsgToggleBridgeRequest) Reset()         { *m = MsgToggleBridgeRequest{}
 func (m *MsgToggleBridgeRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgToggleBridgeRequest) ProtoMessage()    {}
 func (*MsgToggleBridgeRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bb9c8306211b32d, []int{32}
+	return fileDescriptor_1bb9c8306211b32d, []int{34}
 }
 func (m *MsgToggleBridgeRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1763,7 +1860,7 @@ func (m *MsgToggleBridgeResponse) Reset()         { *m = MsgToggleBridgeResponse
 func (m *MsgToggleBridgeResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgToggleBridgeResponse) ProtoMessage()    {}
 func (*MsgToggleBridgeResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bb9c8306211b32d, []int{33}
+	return fileDescriptor_1bb9c8306211b32d, []int{35}
 }
 func (m *MsgToggleBridgeResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1799,14 +1896,14 @@ type MsgBridgeMintSharesRequest struct {
 	// vault_address is the bech32 address of the vault whose local share marker supply will be increased.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// shares is the amount of shares to mint into local marker supply.
-	Shares types.Coin `protobuf:"bytes,3,opt,name=shares,proto3" json:"shares"`
+	Shares types1.Coin `protobuf:"bytes,3,opt,name=shares,proto3" json:"shares"`
 }
 
 func (m *MsgBridgeMintSharesRequest) Reset()         { *m = MsgBridgeMintSharesRequest{} }
 func (m *MsgBridgeMintSharesRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgBridgeMintSharesRequest) ProtoMessage()    {}
 func (*MsgBridgeMintSharesRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bb9c8306211b32d, []int{34}
+	return fileDescriptor_1bb9c8306211b32d, []int{36}
 }
 func (m *MsgBridgeMintSharesRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1849,11 +1946,11 @@ func (m *MsgBridgeMintSharesRequest) GetVaultAddress() string {
 	return ""
 }
 
-func (m *MsgBridgeMintSharesRequest) GetShares() types.Coin {
+func (m *MsgBridgeMintSharesRequest) GetShares() types1.Coin {
 	if m != nil {
 		return m.Shares
 	}
-	return types.Coin{}
+	return types1.Coin{}
 }
 
 // MsgBridgeMintSharesResponse is the response message for the BridgeMintShares endpoint.
@@ -1864,7 +1961,7 @@ func (m *MsgBridgeMintSharesResponse) Reset()         { *m = MsgBridgeMintShares
 func (m *MsgBridgeMintSharesResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgBridgeMintSharesResponse) ProtoMessage()    {}
 func (*MsgBridgeMintSharesResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bb9c8306211b32d, []int{35}
+	return fileDescriptor_1bb9c8306211b32d, []int{37}
 }
 func (m *MsgBridgeMintSharesResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1900,14 +1997,14 @@ type MsgBridgeBurnSharesRequest struct {
 	// vault_address is the bech32 address of the vault whose local share marker supply will be decreased.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// shares is the amount of shares to burn from local marker supply.
-	Shares types.Coin `protobuf:"bytes,3,opt,name=shares,proto3" json:"shares"`
+	Shares types1.Coin `protobuf:"bytes,3,opt,name=shares,proto3" json:"shares"`
 }
 
 func (m *MsgBridgeBurnSharesRequest) Reset()         { *m = MsgBridgeBurnSharesRequest{} }
 func (m *MsgBridgeBurnSharesRequest) String() string { return proto.CompactTextString(m) }
 func (*MsgBridgeBurnSharesRequest) ProtoMessage()    {}
 func (*MsgBridgeBurnSharesRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bb9c8306211b32d, []int{36}
+	return fileDescriptor_1bb9c8306211b32d, []int{38}
 }
 func (m *MsgBridgeBurnSharesRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1950,11 +2047,11 @@ func (m *MsgBridgeBurnSharesRequest) GetVaultAddress() string {
 	return ""
 }
 
-func (m *MsgBridgeBurnSharesRequest) GetShares() types.Coin {
+func (m *MsgBridgeBurnSharesRequest) GetShares() types1.Coin {
 	if m != nil {
 		return m.Shares
 	}
-	return types.Coin{}
+	return types1.Coin{}
 }
 
 // MsgBridgeBurnSharesResponse is the response message for the BridgeBurnShares endpoint.
@@ -1965,7 +2062,7 @@ func (m *MsgBridgeBurnSharesResponse) Reset()         { *m = MsgBridgeBurnShares
 func (m *MsgBridgeBurnSharesResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgBridgeBurnSharesResponse) ProtoMessage()    {}
 func (*MsgBridgeBurnSharesResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_1bb9c8306211b32d, []int{37}
+	return fileDescriptor_1bb9c8306211b32d, []int{39}
 }
 func (m *MsgBridgeBurnSharesResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1997,6 +2094,8 @@ var xxx_messageInfo_MsgBridgeBurnSharesResponse proto.InternalMessageInfo
 func init() {
 	proto.RegisterType((*MsgCreateVaultRequest)(nil), "provlabs.vault.v1.MsgCreateVaultRequest")
 	proto.RegisterType((*MsgCreateVaultResponse)(nil), "provlabs.vault.v1.MsgCreateVaultResponse")
+	proto.RegisterType((*MsgSetShareDenomMetadataRequest)(nil), "provlabs.vault.v1.MsgSetShareDenomMetadataRequest")
+	proto.RegisterType((*MsgSetShareDenomMetadataResponse)(nil), "provlabs.vault.v1.MsgSetShareDenomMetadataResponse")
 	proto.RegisterType((*MsgSwapInRequest)(nil), "provlabs.vault.v1.MsgSwapInRequest")
 	proto.RegisterType((*MsgSwapInResponse)(nil), "provlabs.vault.v1.MsgSwapInResponse")
 	proto.RegisterType((*MsgSwapOutRequest)(nil), "provlabs.vault.v1.MsgSwapOutRequest")
@@ -2038,89 +2137,95 @@ func init() {
 func init() { proto.RegisterFile("provlabs/vault/v1/tx.proto", fileDescriptor_1bb9c8306211b32d) }
 
 var fileDescriptor_1bb9c8306211b32d = []byte{
-	// 1301 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x59, 0xcf, 0x6f, 0x1b, 0xc5,
-	0x17, 0xcf, 0xe6, 0x67, 0xfb, 0x92, 0xb4, 0xc9, 0x28, 0x4d, 0x9c, 0xfd, 0x7e, 0xe3, 0x24, 0x0e,
-	0x88, 0x34, 0xa8, 0x76, 0x93, 0x20, 0x01, 0x95, 0x10, 0x6a, 0x1a, 0x10, 0x39, 0x58, 0x44, 0x0e,
-	0x2d, 0x12, 0x12, 0xb2, 0xc6, 0xde, 0xd1, 0x66, 0x25, 0x7b, 0x76, 0xbb, 0x33, 0xb6, 0x93, 0x43,
-	0xa5, 0x0a, 0x24, 0xae, 0x20, 0xc1, 0x09, 0x89, 0xff, 0x80, 0x43, 0x0f, 0x5c, 0xf8, 0x21, 0xce,
-	0x3d, 0x46, 0x9c, 0x38, 0x21, 0x94, 0x1c, 0xfa, 0x5f, 0x20, 0xb4, 0x33, 0x93, 0x78, 0xd7, 0x3b,
-	0xbb, 0xde, 0x50, 0x1a, 0x9a, 0x5b, 0x76, 0xe6, 0xcd, 0x7b, 0x9f, 0xcf, 0x9b, 0x99, 0x37, 0x9f,
-	0x17, 0x83, 0xe9, 0xf9, 0x6e, 0xbb, 0x81, 0x6b, 0xac, 0xd4, 0xc6, 0xad, 0x06, 0x2f, 0xb5, 0xd7,
-	0x4b, 0xfc, 0xa0, 0xe8, 0xf9, 0x2e, 0x77, 0xd1, 0xf4, 0xe9, 0x5c, 0x51, 0xcc, 0x15, 0xdb, 0xeb,
-	0x66, 0xbe, 0xee, 0xb2, 0xa6, 0xcb, 0x4a, 0x35, 0xcc, 0x48, 0xa9, 0xbd, 0x5e, 0x23, 0x1c, 0xaf,
-	0x97, 0xea, 0xae, 0x43, 0xe5, 0x12, 0x73, 0x4e, 0xcd, 0x37, 0x99, 0x1d, 0xb8, 0x6a, 0x32, 0x5b,
-	0x4d, 0xcc, 0xcb, 0x89, 0xaa, 0xf8, 0x2a, 0xc9, 0x0f, 0x35, 0x35, 0x63, 0xbb, 0xb6, 0x2b, 0xc7,
-	0x83, 0xbf, 0xe4, 0x68, 0xe1, 0x2f, 0x03, 0x6e, 0x94, 0x99, 0x7d, 0xcf, 0x27, 0x98, 0x93, 0x07,
-	0x41, 0xfc, 0x0a, 0x79, 0xd8, 0x22, 0x8c, 0xa3, 0x22, 0x8c, 0x60, 0xab, 0xe9, 0xd0, 0x9c, 0xb1,
-	0x64, 0xac, 0x5e, 0xdd, 0xca, 0xfd, 0xf6, 0xc3, 0xad, 0x19, 0xe5, 0xf0, 0xae, 0x65, 0xf9, 0x84,
-	0xb1, 0x3d, 0xee, 0x3b, 0xd4, 0xae, 0x48, 0x33, 0xb4, 0x08, 0xe3, 0x6c, 0x1f, 0xfb, 0xa4, 0x6a,
-	0x11, 0xea, 0x36, 0x73, 0x83, 0xc1, 0xaa, 0x0a, 0x88, 0xa1, 0xed, 0x60, 0x04, 0xdd, 0x84, 0xa9,
-	0x16, 0xb5, 0x88, 0xdf, 0x38, 0x74, 0xa8, 0x5d, 0xc5, 0x8c, 0x11, 0x9e, 0x1b, 0x12, 0x56, 0xd7,
-	0xbb, 0xe3, 0x77, 0x83, 0x61, 0xb4, 0x02, 0x93, 0x1e, 0x3e, 0x6c, 0x12, 0xca, 0x95, 0xb7, 0x61,
-	0x61, 0x37, 0xa1, 0x06, 0xa5, 0xbf, 0xb7, 0x20, 0xd7, 0x71, 0xf8, 0xbe, 0xe5, 0xe3, 0x0e, 0x6e,
-	0x54, 0x2d, 0xd2, 0xc0, 0x87, 0x55, 0x46, 0xea, 0x2e, 0xb5, 0x58, 0x6e, 0x64, 0xc9, 0x58, 0x1d,
-	0xae, 0xcc, 0x76, 0xe7, 0xb7, 0x83, 0xe9, 0x3d, 0x39, 0x7b, 0x07, 0x3e, 0x7b, 0xf6, 0x64, 0x4d,
-	0xc2, 0x2e, 0xbc, 0x03, 0xb3, 0xbd, 0xfc, 0x99, 0xe7, 0x52, 0x46, 0x02, 0x10, 0x62, 0x43, 0xaa,
-	0x58, 0xd2, 0x95, 0x89, 0xa8, 0x4c, 0x88, 0x41, 0x95, 0x82, 0xc2, 0xf7, 0x06, 0x4c, 0x95, 0x99,
-	0xbd, 0xd7, 0xc1, 0xde, 0x0e, 0x0d, 0xa5, 0xce, 0xed, 0x50, 0xe2, 0xf7, 0x4f, 0x9d, 0x30, 0x8b,
-	0x47, 0x1a, 0x8c, 0x47, 0x42, 0x6f, 0xc2, 0xa8, 0xc8, 0x19, 0x13, 0x49, 0x1b, 0xdf, 0x98, 0x2f,
-	0x2a, 0x97, 0xc1, 0x21, 0x29, 0xaa, 0x43, 0x52, 0xbc, 0xe7, 0x3a, 0x74, 0x6b, 0xf8, 0xe9, 0x1f,
-	0x8b, 0x03, 0x15, 0x65, 0xae, 0xd8, 0x8a, 0x48, 0x85, 0x4f, 0x61, 0x3a, 0x84, 0x56, 0x11, 0xfd,
-	0x00, 0xae, 0x8b, 0x6d, 0x62, 0x55, 0x9f, 0xd4, 0x89, 0xd3, 0x26, 0x96, 0x00, 0x9e, 0x21, 0xc4,
-	0x35, 0xb9, 0xae, 0xa2, 0x96, 0x15, 0x8e, 0x8c, 0x33, 0xff, 0x1f, 0xb6, 0xf8, 0x4b, 0x99, 0x0e,
-	0xb4, 0x0c, 0x13, 0x3e, 0xb1, 0x08, 0x69, 0x46, 0x8e, 0xd6, 0xb8, 0x1c, 0x13, 0x27, 0x2b, 0x92,
-	0xb1, 0x4d, 0x40, 0x61, 0x46, 0x2a, 0x65, 0x0b, 0x00, 0xbe, 0x64, 0x57, 0x75, 0x64, 0xb6, 0x86,
-	0x2b, 0x57, 0xd5, 0xc8, 0x8e, 0x55, 0xf8, 0xce, 0x80, 0xc5, 0x32, 0xb3, 0xef, 0x7b, 0x16, 0xe6,
-	0xa4, 0xec, 0xd0, 0x1d, 0xca, 0x89, 0x4f, 0x18, 0xaf, 0x60, 0x4e, 0xfe, 0xe9, 0xfd, 0xca, 0x94,
-	0x95, 0x79, 0xb8, 0xd2, 0x74, 0x68, 0xd5, 0xc7, 0x9c, 0xa8, 0xbb, 0x35, 0xd6, 0x74, 0x68, 0x10,
-	0x36, 0x72, 0xe8, 0x0b, 0xb0, 0x94, 0x0c, 0x4f, 0x52, 0xec, 0xe1, 0x80, 0x0f, 0x2e, 0x94, 0x03,
-	0x3e, 0x88, 0x72, 0xc0, 0x07, 0xe9, 0x1c, 0x7a, 0xe1, 0x29, 0x0e, 0xdf, 0x1a, 0xf0, 0xff, 0x33,
-	0xa3, 0x8b, 0x24, 0x40, 0x49, 0x27, 0x42, 0x80, 0x92, 0x4e, 0x8c, 0xc0, 0x22, 0x2c, 0x24, 0x60,
-	0x53, 0xe8, 0xbf, 0x36, 0x44, 0x6d, 0xfa, 0xc8, 0xb5, 0xed, 0x06, 0x89, 0x55, 0x98, 0x7f, 0x1f,
-	0x77, 0x0e, 0xc6, 0x08, 0xc5, 0xb5, 0x06, 0xb1, 0x04, 0xec, 0x2b, 0x95, 0xd3, 0xcf, 0x08, 0xec,
-	0x79, 0x98, 0x8b, 0x81, 0x52, 0x80, 0xbf, 0x31, 0x7a, 0xe6, 0xa2, 0x45, 0xe0, 0xbf, 0x42, 0x6c,
-	0x42, 0x2e, 0x8e, 0x4a, 0x41, 0xfe, 0xc9, 0x80, 0x7c, 0x99, 0xd9, 0xdb, 0xc4, 0x73, 0x99, 0xc3,
-	0x4f, 0xb7, 0xe1, 0xfd, 0x16, 0xb5, 0xd8, 0x0b, 0x45, 0x1e, 0x94, 0xaf, 0xa6, 0xdb, 0xa2, 0x3c,
-	0x7b, 0xf9, 0x12, 0xe6, 0x11, 0x62, 0xcb, 0xe2, 0x86, 0xea, 0xb1, 0x2b, 0x7e, 0x3f, 0xcb, 0x5b,
-	0xfc, 0xb1, 0x7a, 0x08, 0x2f, 0x19, 0x41, 0x79, 0xc7, 0x13, 0xc0, 0x47, 0x19, 0xaa, 0x2c, 0xec,
-	0xfa, 0x0e, 0xad, 0x3b, 0x1e, 0x6e, 0x5c, 0x2a, 0x86, 0x09, 0xe0, 0x15, 0xc3, 0x5f, 0x8c, 0x48,
-	0x1a, 0x2e, 0x1b, 0xc5, 0x15, 0x58, 0x4e, 0x41, 0xaf, 0x38, 0x3e, 0x12, 0x14, 0xdf, 0x3b, 0xf0,
-	0x88, 0xe5, 0x70, 0xb2, 0x4b, 0xa8, 0xe5, 0x50, 0xfb, 0x39, 0x4b, 0x48, 0xf4, 0x91, 0x1e, 0xec,
-	0x79, 0xa4, 0x35, 0x18, 0x93, 0xc2, 0x2b, 0x8c, 0x5f, 0x1a, 0x30, 0x53, 0x66, 0xf6, 0x2e, 0x6e,
-	0xb1, 0xe7, 0x93, 0xca, 0x99, 0x72, 0x3f, 0x0b, 0xa3, 0x3e, 0xc1, 0xcc, 0xa5, 0xea, 0x0d, 0x51,
-	0x5f, 0x11, 0xd8, 0x73, 0x42, 0xbc, 0x87, 0x01, 0x29, 0xa8, 0x87, 0xe2, 0xe5, 0xb8, 0x4f, 0xbd,
-	0x0b, 0xc1, 0xaa, 0x79, 0x1f, 0xa2, 0xa1, 0x15, 0xaa, 0x5f, 0x0d, 0x30, 0x03, 0x31, 0x45, 0xf8,
-	0x96, 0xef, 0x58, 0x36, 0x51, 0xcb, 0x5f, 0x68, 0x1a, 0xdf, 0x85, 0x6b, 0x35, 0x11, 0xec, 0xcc,
-	0x6a, 0xa8, 0x8f, 0xf7, 0xc9, 0x5a, 0x18, 0x5c, 0x84, 0xdb, 0x02, 0xfc, 0x4f, 0x8b, 0x5f, 0xf7,
-	0x60, 0x4b, 0x93, 0x97, 0xec, 0xc1, 0x3e, 0x05, 0xa5, 0x00, 0xff, 0x28, 0x37, 0x44, 0x8e, 0x96,
-	0x1d, 0xca, 0xf7, 0x94, 0x9e, 0x97, 0xa0, 0x6f, 0xc3, 0xa8, 0xcc, 0x45, 0x5f, 0xd4, 0xca, 0x2e,
-	0x73, 0x55, 0x91, 0x7d, 0x43, 0xe6, 0xaa, 0x22, 0xcd, 0xef, 0x8c, 0x07, 0xac, 0x54, 0x28, 0xb5,
-	0x17, 0x71, 0xe8, 0x3a, 0x6a, 0x5b, 0x2d, 0x9f, 0x5e, 0x52, 0x6a, 0x61, 0xe8, 0x92, 0xda, 0xc6,
-	0x17, 0xd3, 0x30, 0x54, 0x66, 0x36, 0xaa, 0xc1, 0x78, 0xa8, 0x6f, 0x45, 0xab, 0xc5, 0xd8, 0x3f,
-	0x12, 0x8a, 0xda, 0xd6, 0xde, 0xbc, 0x99, 0xc1, 0x52, 0x35, 0x3a, 0x7b, 0x30, 0x2a, 0x45, 0x1e,
-	0x5a, 0xd1, 0x2f, 0x8a, 0xe8, 0x52, 0xf3, 0x95, 0x74, 0x23, 0xe5, 0xf4, 0x01, 0x8c, 0xa9, 0xda,
-	0x8a, 0x52, 0x16, 0x74, 0x2b, 0xbf, 0xf9, 0x6a, 0x1f, 0x2b, 0xe5, 0xf7, 0xb1, 0x01, 0x37, 0xb4,
-	0x4d, 0x0d, 0xda, 0xd0, 0x3b, 0x48, 0x6b, 0xd0, 0xcc, 0xcd, 0x73, 0xad, 0x89, 0x43, 0x88, 0xf6,
-	0x24, 0x7d, 0x20, 0x68, 0xfb, 0xab, 0x3e, 0x10, 0xf4, 0x4d, 0x0f, 0xea, 0x00, 0x8a, 0x37, 0x15,
-	0xa8, 0x94, 0xe6, 0x4a, 0x17, 0xfb, 0x76, 0xf6, 0x05, 0x2a, 0x30, 0x81, 0x89, 0x70, 0x5b, 0x80,
-	0x12, 0x8e, 0x99, 0xa6, 0x9f, 0x31, 0xd7, 0xb2, 0x98, 0xaa, 0x30, 0xfb, 0x30, 0x19, 0xd1, 0xf2,
-	0xa8, 0xef, 0xe2, 0xd0, 0x49, 0x7a, 0x3d, 0x93, 0xad, 0x8a, 0xf4, 0x08, 0x66, 0x74, 0xe2, 0x1a,
-	0xad, 0xeb, 0x9d, 0xa4, 0x34, 0x11, 0xe6, 0xc6, 0x79, 0x96, 0x84, 0xce, 0x92, 0x56, 0xfb, 0x26,
-	0x9d, 0xa5, 0x34, 0x95, 0x9f, 0x74, 0x96, 0x52, 0xc5, 0xb5, 0x80, 0xa0, 0x15, 0xa7, 0x28, 0x9d,
-	0x90, 0x56, 0xa3, 0x26, 0x41, 0x48, 0x55, 0xbf, 0xe8, 0x73, 0x03, 0x66, 0xf5, 0xe2, 0x11, 0xf5,
-	0xa1, 0xa4, 0x07, 0xf1, 0xc6, 0xf9, 0x16, 0x85, 0x50, 0xe8, 0xe5, 0x61, 0x12, 0x8a, 0x54, 0x2d,
-	0x9b, 0x84, 0x22, 0x5d, 0x81, 0xa2, 0x2a, 0x40, 0x57, 0xec, 0xa1, 0xd7, 0xf4, 0x3e, 0x62, 0xfa,
-	0xd4, 0x5c, 0xed, 0x6f, 0xd8, 0xbd, 0xc2, 0x61, 0xe5, 0x96, 0x74, 0x85, 0x35, 0xc2, 0x32, 0xe9,
-	0x0a, 0xeb, 0x84, 0x20, 0x7a, 0x08, 0x53, 0xbd, 0x22, 0x0a, 0xdd, 0x4a, 0xa8, 0xf1, 0x7a, 0xb1,
-	0x68, 0x16, 0xb3, 0x9a, 0xf7, 0x16, 0x27, 0x39, 0x9d, 0x5e, 0x9c, 0x22, 0xda, 0x2d, 0xbd, 0x38,
-	0x45, 0x15, 0x55, 0xc0, 0xac, 0x57, 0x92, 0x24, 0x31, 0x4b, 0x50, 0x5d, 0x49, 0xcc, 0x92, 0x94,
-	0x4e, 0x37, 0x64, 0x57, 0x2a, 0xa4, 0x87, 0x8c, 0xa9, 0xa1, 0xf4, 0x90, 0x71, 0x05, 0x62, 0x8e,
-	0x3c, 0x7e, 0xf6, 0x64, 0xcd, 0xd8, 0x7a, 0xfb, 0xe9, 0x71, 0xde, 0x38, 0x3a, 0xce, 0x1b, 0x7f,
-	0x1e, 0xe7, 0x8d, 0xaf, 0x4e, 0xf2, 0x03, 0x47, 0x27, 0xf9, 0x81, 0xdf, 0x4f, 0xf2, 0x03, 0x9f,
-	0x2c, 0xda, 0x0e, 0xdf, 0x6f, 0xd5, 0x8a, 0x75, 0xb7, 0x59, 0xea, 0xf9, 0xe9, 0x83, 0x1f, 0x7a,
-	0x84, 0xd5, 0x46, 0xc5, 0xcf, 0x0f, 0x9b, 0x7f, 0x07, 0x00, 0x00, 0xff, 0xff, 0xc7, 0x5c, 0x1c,
-	0x83, 0x19, 0x19, 0x00, 0x00,
+	// 1405 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x59, 0xcd, 0x6f, 0x1b, 0x45,
+	0x14, 0xcf, 0xa6, 0x69, 0xda, 0xbe, 0xa4, 0x5f, 0xa3, 0x34, 0x75, 0x16, 0xe2, 0xb4, 0x2e, 0x88,
+	0xb4, 0xa8, 0x76, 0x93, 0x22, 0x01, 0x95, 0x10, 0x6a, 0x5a, 0x10, 0x3d, 0x58, 0x54, 0x0e, 0x2d,
+	0x12, 0x12, 0xb2, 0xc6, 0xd9, 0xd1, 0x66, 0x55, 0xef, 0xac, 0xbb, 0x33, 0xfe, 0xc8, 0xa1, 0x52,
+	0x05, 0x27, 0x4e, 0x20, 0xc1, 0x09, 0x89, 0xff, 0x80, 0x43, 0x0f, 0x5c, 0xf8, 0x10, 0xe7, 0x1e,
+	0x2b, 0x4e, 0x88, 0x43, 0x85, 0xda, 0x43, 0xff, 0x06, 0x2e, 0x08, 0xed, 0xcc, 0xb3, 0xbd, 0xeb,
+	0x9d, 0x5d, 0xbb, 0x94, 0x86, 0xe6, 0x94, 0xec, 0xcc, 0x7b, 0xf3, 0x7e, 0xbf, 0x37, 0x6f, 0x67,
+	0x7e, 0xcf, 0x0b, 0x76, 0x2b, 0x0c, 0x3a, 0x4d, 0xda, 0x10, 0x95, 0x0e, 0x6d, 0x37, 0x65, 0xa5,
+	0xb3, 0x56, 0x91, 0xbd, 0x72, 0x2b, 0x0c, 0x64, 0x40, 0x8e, 0xf7, 0xe7, 0xca, 0x6a, 0xae, 0xdc,
+	0x59, 0xb3, 0x8b, 0x5b, 0x81, 0xf0, 0x03, 0x51, 0x69, 0x50, 0x7e, 0xab, 0xd2, 0x59, 0x6b, 0x30,
+	0x49, 0xd7, 0xd4, 0x83, 0x76, 0x89, 0xcd, 0x0b, 0x36, 0x98, 0xdf, 0x0a, 0x3c, 0x8e, 0xf3, 0x27,
+	0x71, 0xde, 0x17, 0x6e, 0x14, 0xca, 0x17, 0x2e, 0x4e, 0x2c, 0xe9, 0x89, 0xba, 0x7a, 0xaa, 0xe8,
+	0x07, 0x9c, 0x5a, 0x70, 0x03, 0x37, 0xd0, 0xe3, 0xd1, 0x7f, 0x7a, 0xb4, 0xf4, 0xb7, 0x05, 0x27,
+	0xaa, 0xc2, 0xbd, 0x12, 0x32, 0x2a, 0xd9, 0xcd, 0x08, 0x5f, 0x8d, 0xdd, 0x6e, 0x33, 0x21, 0x49,
+	0x19, 0xf6, 0x53, 0xc7, 0xf7, 0x78, 0xc1, 0x3a, 0x65, 0xad, 0x1e, 0xda, 0x28, 0xfc, 0xf6, 0xc3,
+	0xf9, 0x05, 0x5c, 0xf0, 0xb2, 0xe3, 0x84, 0x4c, 0x88, 0x4d, 0x19, 0x7a, 0xdc, 0xad, 0x69, 0x33,
+	0xb2, 0x02, 0x73, 0x62, 0x9b, 0x86, 0xac, 0xee, 0x30, 0x1e, 0xf8, 0x85, 0xe9, 0xc8, 0xab, 0x06,
+	0x6a, 0xe8, 0x6a, 0x34, 0x42, 0xce, 0xc2, 0xb1, 0x36, 0x77, 0x58, 0xd8, 0xdc, 0xf1, 0xb8, 0x5b,
+	0xa7, 0x42, 0x30, 0x59, 0xd8, 0xa7, 0xac, 0x8e, 0x0e, 0xc7, 0x2f, 0x47, 0xc3, 0xe4, 0x0c, 0x1c,
+	0x6e, 0xd1, 0x1d, 0x9f, 0x71, 0x89, 0xab, 0xcd, 0x28, 0xbb, 0x79, 0x1c, 0xd4, 0xeb, 0xbd, 0x05,
+	0x85, 0xae, 0x27, 0xb7, 0x9d, 0x90, 0x76, 0x69, 0xb3, 0xee, 0xb0, 0x26, 0xdd, 0xa9, 0x0b, 0xb6,
+	0x15, 0x70, 0x47, 0x14, 0xf6, 0x9f, 0xb2, 0x56, 0x67, 0x6a, 0x8b, 0xc3, 0xf9, 0xab, 0xd1, 0xf4,
+	0xa6, 0x9e, 0xbd, 0x04, 0x9f, 0x3d, 0xb9, 0x77, 0x4e, 0xc3, 0x2e, 0xbd, 0x03, 0x8b, 0xa3, 0xfc,
+	0x45, 0x2b, 0xe0, 0x82, 0x45, 0x20, 0xd4, 0x86, 0xd5, 0xa9, 0xa6, 0xab, 0x13, 0x51, 0x9b, 0x57,
+	0x83, 0x98, 0x82, 0xd2, 0x5f, 0x16, 0xac, 0x54, 0x85, 0xbb, 0xc9, 0xe4, 0xe6, 0x80, 0x69, 0x95,
+	0x49, 0xea, 0x50, 0x49, 0xfb, 0x99, 0x6c, 0xc3, 0x41, 0x1f, 0x87, 0xd4, 0x1a, 0x73, 0xeb, 0xcb,
+	0x65, 0xcc, 0xa4, 0xda, 0x73, 0xdc, 0xe0, 0x72, 0xdf, 0x6f, 0xe3, 0xd2, 0xfd, 0x87, 0x2b, 0x53,
+	0x7f, 0x3c, 0x5c, 0x59, 0x77, 0x3d, 0xb9, 0xdd, 0x6e, 0x94, 0xb7, 0x02, 0x1f, 0xf7, 0x12, 0xff,
+	0x9c, 0x17, 0xce, 0xad, 0x4a, 0x4f, 0x97, 0x8f, 0xdc, 0x69, 0x31, 0x31, 0xf0, 0xad, 0x0d, 0x42,
+	0x0d, 0x37, 0x70, 0x7a, 0xb2, 0x0d, 0x4c, 0xf1, 0xdd, 0x97, 0xe6, 0x9b, 0x48, 0x5d, 0x09, 0x4e,
+	0x65, 0x53, 0xd7, 0x49, 0x2c, 0x7d, 0x6f, 0xc1, 0xb1, 0xc8, 0xa8, 0x4b, 0x5b, 0xd7, 0x78, 0xac,
+	0xb4, 0x82, 0x2e, 0x67, 0xe1, 0xf8, 0xd2, 0x52, 0x66, 0x69, 0x64, 0xd3, 0x69, 0x64, 0xe4, 0x4d,
+	0x98, 0x55, 0x35, 0xa5, 0x71, 0xcf, 0xad, 0x2f, 0x0d, 0x73, 0x2c, 0xd8, 0x20, 0xc7, 0x57, 0x02,
+	0x8f, 0x6f, 0xcc, 0x44, 0xf9, 0xad, 0xa1, 0x39, 0x52, 0x52, 0x91, 0x4a, 0x9f, 0xc2, 0xf1, 0x18,
+	0x5a, 0x2c, 0x84, 0x0f, 0xe0, 0xa8, 0x2a, 0x63, 0x51, 0x0f, 0xd9, 0x16, 0xf3, 0x3a, 0xcc, 0xc1,
+	0x6d, 0x1c, 0x1b, 0xe2, 0x88, 0xf6, 0xab, 0xa1, 0x5b, 0xe9, 0x81, 0x35, 0x58, 0xff, 0xc3, 0xb6,
+	0x7c, 0x21, 0xd3, 0x41, 0x4e, 0xc3, 0x7c, 0xc8, 0x1c, 0xc6, 0xfc, 0xc4, 0xab, 0x37, 0xa7, 0xc7,
+	0xd4, 0x26, 0x27, 0x32, 0x76, 0x11, 0x48, 0x9c, 0x11, 0xa6, 0x6c, 0x19, 0x20, 0xd4, 0xec, 0xea,
+	0x9e, 0xce, 0xd6, 0x4c, 0xed, 0x10, 0x8e, 0x5c, 0x73, 0x4a, 0xdf, 0xe9, 0xb7, 0xe6, 0x46, 0xcb,
+	0xa1, 0x92, 0x55, 0x3d, 0x7e, 0x8d, 0x4b, 0x16, 0x32, 0x21, 0x6b, 0x54, 0xb2, 0x7f, 0x7b, 0xfe,
+	0x4c, 0x94, 0x95, 0x25, 0x38, 0xe8, 0x7b, 0xbc, 0x1e, 0x52, 0xc9, 0xb0, 0xbc, 0x0f, 0xf8, 0x1e,
+	0x8f, 0xc2, 0x1a, 0x2a, 0x3b, 0x03, 0x1e, 0x56, 0x76, 0x92, 0x03, 0xed, 0xed, 0x2a, 0x07, 0xda,
+	0x4b, 0x72, 0xa0, 0xbd, 0x7c, 0x0e, 0xa3, 0xf0, 0x90, 0xc3, 0xb7, 0x16, 0xbc, 0x3c, 0x30, 0xda,
+	0x4d, 0x02, 0x9c, 0x75, 0x13, 0x04, 0x38, 0xeb, 0xa6, 0x08, 0xac, 0xc0, 0x72, 0x06, 0x36, 0x44,
+	0xff, 0xb5, 0xa5, 0xce, 0xee, 0x8f, 0x02, 0xd7, 0x6d, 0xb2, 0xd4, 0x09, 0xf3, 0xdf, 0xe3, 0x2e,
+	0xc0, 0x01, 0xc6, 0x69, 0xa3, 0xc9, 0x1c, 0x05, 0xfb, 0x60, 0xad, 0xff, 0x98, 0x80, 0xbd, 0x04,
+	0x27, 0x53, 0xa0, 0x10, 0xf0, 0x37, 0xd6, 0xc8, 0x5c, 0xf2, 0x10, 0xf8, 0xbf, 0x10, 0xdb, 0x50,
+	0x48, 0xa3, 0x42, 0xc8, 0x3f, 0x59, 0x50, 0xac, 0x0a, 0xf7, 0x2a, 0x6b, 0x05, 0xc2, 0x93, 0xfd,
+	0x6d, 0x78, 0xbf, 0xcd, 0x1d, 0xf1, 0x5c, 0x91, 0x47, 0xc7, 0x97, 0x1f, 0xb4, 0xb9, 0x9c, 0xfc,
+	0xf8, 0x52, 0xe6, 0x09, 0x62, 0xa7, 0xd5, 0x1b, 0x6a, 0xc6, 0x8e, 0xfc, 0x7e, 0xd6, 0x6f, 0xf1,
+	0xc7, 0x28, 0x14, 0xf6, 0x18, 0x41, 0xfd, 0x8e, 0x67, 0x80, 0x4f, 0x32, 0xc4, 0x2c, 0x5c, 0x0f,
+	0x3d, 0xbe, 0xe5, 0xb5, 0x68, 0x73, 0x4f, 0x31, 0xcc, 0x00, 0x8f, 0x0c, 0x7f, 0xb1, 0x12, 0x69,
+	0xd8, 0x6b, 0x14, 0xcf, 0xc0, 0xe9, 0x1c, 0xf4, 0xc8, 0xf1, 0x8e, 0xa2, 0xf8, 0x5e, 0xaf, 0xc5,
+	0x1c, 0x4f, 0xb2, 0xeb, 0x8c, 0x3b, 0x1e, 0x77, 0x9f, 0xf1, 0x08, 0x49, 0x5e, 0xd2, 0xd3, 0x23,
+	0x97, 0xb4, 0x01, 0x63, 0x56, 0x78, 0xc4, 0xf8, 0xa5, 0x05, 0x0b, 0x55, 0xe1, 0x5e, 0xa7, 0x6d,
+	0xf1, 0x6c, 0xad, 0xc4, 0x44, 0xb9, 0x5f, 0x84, 0xd9, 0x90, 0x51, 0x11, 0x70, 0xbc, 0x43, 0xf0,
+	0x29, 0x01, 0xfb, 0xa4, 0x6a, 0x6e, 0xe2, 0x80, 0x10, 0xea, 0x8e, 0xba, 0x39, 0x6e, 0xf0, 0xd6,
+	0xae, 0x60, 0x35, 0xdc, 0x0f, 0xc9, 0xd0, 0x88, 0xea, 0x57, 0x0b, 0x6c, 0xad, 0xa8, 0x37, 0x42,
+	0xcf, 0x71, 0x19, 0xba, 0x3f, 0xd7, 0x34, 0xbe, 0x0b, 0x47, 0x1a, 0x2a, 0x58, 0x52, 0xf6, 0xe7,
+	0xac, 0x7e, 0xb8, 0x11, 0x07, 0x97, 0xe0, 0xb6, 0x0c, 0x2f, 0x19, 0xf1, 0x9b, 0x2e, 0x6c, 0x6d,
+	0xf2, 0x82, 0x5d, 0xd8, 0x7d, 0x50, 0x08, 0xf8, 0x47, 0xbd, 0x21, 0x7a, 0xb4, 0xea, 0x71, 0xdd,
+	0xe9, 0x0c, 0x36, 0xe4, 0x02, 0xcc, 0xea, 0x5c, 0x8c, 0x45, 0x8d, 0x76, 0x13, 0x9f, 0x2a, 0xba,
+	0x6f, 0x98, 0xf8, 0x54, 0xd1, 0xe6, 0x97, 0xe6, 0x22, 0x56, 0x18, 0x0a, 0xf7, 0x22, 0x0d, 0xdd,
+	0x44, 0x6d, 0xa3, 0x1d, 0xf2, 0x3d, 0x4a, 0x2d, 0x0e, 0x5d, 0x53, 0x5b, 0xff, 0x82, 0xc0, 0xbe,
+	0xaa, 0x70, 0x49, 0x03, 0xe6, 0x62, 0x7d, 0x3d, 0x59, 0x2d, 0xa7, 0x7e, 0x88, 0x29, 0x1b, 0x7f,
+	0xfa, 0xb0, 0xcf, 0x4e, 0x60, 0x89, 0x8d, 0xce, 0x5d, 0x0b, 0x4e, 0x18, 0x3b, 0x60, 0xb2, 0x6e,
+	0x5e, 0x24, 0xef, 0x97, 0x02, 0xfb, 0xe2, 0x53, 0xf9, 0x20, 0x84, 0x4d, 0x98, 0xd5, 0x3a, 0x93,
+	0x9c, 0xc9, 0x70, 0x8f, 0x4b, 0x63, 0xfb, 0x95, 0x7c, 0x23, 0x5c, 0xf4, 0x26, 0x1c, 0xc0, 0xe3,
+	0x9d, 0xe4, 0x38, 0x0c, 0x2f, 0x1f, 0xfb, 0xd5, 0x31, 0x56, 0xb1, 0x7c, 0x19, 0xfb, 0xaa, 0xac,
+	0x7c, 0xe5, 0xf5, 0x88, 0x59, 0xf9, 0xca, 0x6d, 0xdc, 0xe2, 0x10, 0x92, 0x6d, 0xd1, 0x18, 0x08,
+	0xc6, 0x16, 0x6f, 0x0c, 0x04, 0x73, 0xdf, 0x45, 0xba, 0x40, 0xd2, 0x7d, 0x0d, 0xa9, 0xe4, 0x2d,
+	0x65, 0x8a, 0x7d, 0x61, 0x72, 0x07, 0x0c, 0xcc, 0x60, 0x3e, 0xde, 0x99, 0x90, 0x8c, 0x4a, 0x37,
+	0xb4, 0x54, 0xf6, 0xb9, 0x49, 0x4c, 0x31, 0xcc, 0x36, 0x1c, 0x4e, 0xb4, 0x13, 0x64, 0xac, 0x73,
+	0xac, 0x92, 0x5e, 0x9f, 0xc8, 0x16, 0x23, 0xdd, 0x81, 0x05, 0x93, 0xbe, 0x27, 0x6b, 0xe6, 0x45,
+	0x72, 0xfa, 0x18, 0x7b, 0xfd, 0x69, 0x5c, 0x62, 0xb5, 0x64, 0x94, 0xdf, 0x59, 0xb5, 0x94, 0xd7,
+	0x68, 0x64, 0xd5, 0x52, 0xae, 0xbe, 0x57, 0x10, 0x8c, 0xfa, 0x98, 0xe4, 0x13, 0x32, 0xca, 0xe4,
+	0x2c, 0x08, 0xb9, 0x02, 0x9c, 0x7c, 0x6e, 0xc1, 0xa2, 0x59, 0xbf, 0x92, 0x31, 0x94, 0xcc, 0x20,
+	0xde, 0x78, 0x3a, 0xa7, 0x18, 0x0a, 0xb3, 0x42, 0xcd, 0x42, 0x91, 0x2b, 0xa7, 0xb3, 0x50, 0xe4,
+	0x8b, 0x60, 0x52, 0x07, 0x18, 0xea, 0x4d, 0xf2, 0x9a, 0x79, 0x8d, 0x94, 0x44, 0xb6, 0x57, 0xc7,
+	0x1b, 0x0e, 0x5f, 0xe1, 0xb8, 0x78, 0xcc, 0x7a, 0x85, 0x0d, 0xda, 0x36, 0xeb, 0x15, 0x36, 0x69,
+	0x51, 0x72, 0x1b, 0x8e, 0x8d, 0xea, 0x38, 0x72, 0x3e, 0xf3, 0x7a, 0x32, 0xe9, 0x55, 0xbb, 0x3c,
+	0xa9, 0xf9, 0xe8, 0xe1, 0xa4, 0xa7, 0xf3, 0x0f, 0xa7, 0x84, 0x7c, 0xcc, 0x3f, 0x9c, 0x92, 0xa2,
+	0x2e, 0x62, 0x36, 0xaa, 0x8a, 0xb2, 0x98, 0x65, 0x08, 0xbf, 0x2c, 0x66, 0x59, 0x62, 0x6b, 0x18,
+	0x72, 0xa8, 0x56, 0xf2, 0x43, 0xa6, 0x04, 0x59, 0x7e, 0xc8, 0xb4, 0x08, 0xb2, 0xf7, 0xdf, 0x7d,
+	0x72, 0xef, 0x9c, 0xb5, 0xf1, 0xf6, 0xfd, 0x47, 0x45, 0xeb, 0xc1, 0xa3, 0xa2, 0xf5, 0xe7, 0xa3,
+	0xa2, 0xf5, 0xd5, 0xe3, 0xe2, 0xd4, 0x83, 0xc7, 0xc5, 0xa9, 0xdf, 0x1f, 0x17, 0xa7, 0x3e, 0x59,
+	0x89, 0x7d, 0x5c, 0x18, 0xf9, 0x7a, 0xa5, 0x3e, 0x29, 0x34, 0x66, 0xd5, 0x17, 0xa2, 0x8b, 0xff,
+	0x04, 0x00, 0x00, 0xff, 0xff, 0xf7, 0x46, 0xa1, 0xa0, 0xdc, 0x1a, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -2137,6 +2242,9 @@ const _ = grpc.SupportPackageIsVersion4
 type MsgClient interface {
 	// CreateVault creates a new vault.
 	CreateVault(ctx context.Context, in *MsgCreateVaultRequest, opts ...grpc.CallOption) (*MsgCreateVaultResponse, error)
+	// SetShareDenomMetadata allows Denom Metadata (see bank module) to be set for the vault's share denom.
+	// Similar to marker's SetDenomMetadata, but scoped to a specific vault. Only the vault admin may call this.
+	SetShareDenomMetadata(ctx context.Context, in *MsgSetShareDenomMetadataRequest, opts ...grpc.CallOption) (*MsgSetShareDenomMetadataResponse, error)
 	// SwapIn exchanges underlying assets for vault shares by depositing them into a vault.
 	SwapIn(ctx context.Context, in *MsgSwapInRequest, opts ...grpc.CallOption) (*MsgSwapInResponse, error)
 	// SwapOut exchanges vault shares for underlying assets by withdrawing from a vault.
@@ -2186,6 +2294,15 @@ func NewMsgClient(cc grpc1.ClientConn) MsgClient {
 func (c *msgClient) CreateVault(ctx context.Context, in *MsgCreateVaultRequest, opts ...grpc.CallOption) (*MsgCreateVaultResponse, error) {
 	out := new(MsgCreateVaultResponse)
 	err := c.cc.Invoke(ctx, "/provlabs.vault.v1.Msg/CreateVault", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) SetShareDenomMetadata(ctx context.Context, in *MsgSetShareDenomMetadataRequest, opts ...grpc.CallOption) (*MsgSetShareDenomMetadataResponse, error) {
+	out := new(MsgSetShareDenomMetadataResponse)
+	err := c.cc.Invoke(ctx, "/provlabs.vault.v1.Msg/SetShareDenomMetadata", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -2358,6 +2475,9 @@ func (c *msgClient) BridgeBurnShares(ctx context.Context, in *MsgBridgeBurnShare
 type MsgServer interface {
 	// CreateVault creates a new vault.
 	CreateVault(context.Context, *MsgCreateVaultRequest) (*MsgCreateVaultResponse, error)
+	// SetShareDenomMetadata allows Denom Metadata (see bank module) to be set for the vault's share denom.
+	// Similar to marker's SetDenomMetadata, but scoped to a specific vault. Only the vault admin may call this.
+	SetShareDenomMetadata(context.Context, *MsgSetShareDenomMetadataRequest) (*MsgSetShareDenomMetadataResponse, error)
 	// SwapIn exchanges underlying assets for vault shares by depositing them into a vault.
 	SwapIn(context.Context, *MsgSwapInRequest) (*MsgSwapInResponse, error)
 	// SwapOut exchanges vault shares for underlying assets by withdrawing from a vault.
@@ -2402,6 +2522,9 @@ type UnimplementedMsgServer struct {
 
 func (*UnimplementedMsgServer) CreateVault(ctx context.Context, req *MsgCreateVaultRequest) (*MsgCreateVaultResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateVault not implemented")
+}
+func (*UnimplementedMsgServer) SetShareDenomMetadata(ctx context.Context, req *MsgSetShareDenomMetadataRequest) (*MsgSetShareDenomMetadataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetShareDenomMetadata not implemented")
 }
 func (*UnimplementedMsgServer) SwapIn(ctx context.Context, req *MsgSwapInRequest) (*MsgSwapInResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SwapIn not implemented")
@@ -2476,6 +2599,24 @@ func _Msg_CreateVault_Handler(srv interface{}, ctx context.Context, dec func(int
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).CreateVault(ctx, req.(*MsgCreateVaultRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_SetShareDenomMetadata_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSetShareDenomMetadataRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SetShareDenomMetadata(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provlabs.vault.v1.Msg/SetShareDenomMetadata",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SetShareDenomMetadata(ctx, req.(*MsgSetShareDenomMetadataRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2814,6 +2955,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_CreateVault_Handler,
 		},
 		{
+			MethodName: "SetShareDenomMetadata",
+			Handler:    _Msg_SetShareDenomMetadata_Handler,
+		},
+		{
 			MethodName: "SwapIn",
 			Handler:    _Msg_SwapIn_Handler,
 		},
@@ -2973,6 +3118,76 @@ func (m *MsgCreateVaultResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 		i--
 		dAtA[i] = 0xa
 	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSetShareDenomMetadataRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSetShareDenomMetadataRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSetShareDenomMetadataRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.VaultAddress) > 0 {
+		i -= len(m.VaultAddress)
+		copy(dAtA[i:], m.VaultAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.VaultAddress)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Admin) > 0 {
+		i -= len(m.Admin)
+		copy(dAtA[i:], m.Admin)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Admin)))
+		i--
+		dAtA[i] = 0x12
+	}
+	{
+		size := m.Metadata.Size()
+		i -= size
+		if _, err := m.Metadata.MarshalTo(dAtA[i:]); err != nil {
+			return 0, err
+		}
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSetShareDenomMetadataResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSetShareDenomMetadataResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSetShareDenomMetadataResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
 	return len(dAtA) - i, nil
 }
 
@@ -4273,6 +4488,34 @@ func (m *MsgCreateVaultResponse) Size() (n int) {
 	return n
 }
 
+func (m *MsgSetShareDenomMetadataRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.Metadata.Size()
+	n += 1 + l + sovTx(uint64(l))
+	l = len(m.Admin)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.VaultAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgSetShareDenomMetadataResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
 func (m *MsgSwapInRequest) Size() (n int) {
 	if m == nil {
 		return 0
@@ -5058,6 +5301,203 @@ func (m *MsgCreateVaultResponse) Unmarshal(dAtA []byte) error {
 			}
 			m.VaultAddress = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSetShareDenomMetadataRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSetShareDenomMetadataRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSetShareDenomMetadataRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Metadata", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Metadata.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Admin = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VaultAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VaultAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSetShareDenomMetadataResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSetShareDenomMetadataResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSetShareDenomMetadataResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])

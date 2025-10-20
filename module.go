@@ -165,6 +165,7 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 	exampleVaultAddr := "pb1z3x5c7v9b2n4m6f8h0j1k3l5p7r9s0t2w4y6"
 	exampleOwnerAddr := "pb1a2b3c4d5e6f7g8h9j0k1l2m3n4p5q6r7s8t"
 	exampleBridgeAddr := "pb1b2r3i4d5g6e7a8d9d0e1m2o3s4i5g6n7e8r9"
+	exampleMetadata := `{"base":"nushare","name":"Nu Vault Share","symbol":"NU","description":"Share token for the Nu Vault","display":"ushare","denom_units":[{"denom":"nushare","exponent":0},{"denom":"ushare","exponent":6}]}`
 	return &autocliv1.ModuleOptions{
 		Tx: &autocliv1.ServiceCommandDescriptor{
 			Service: vaultv1.Msg_ServiceDesc.ServiceName,
@@ -393,6 +394,18 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						{ProtoField: "bridge"},
 						{ProtoField: "vault_address"},
 						{ProtoField: "shares"},
+					},
+				},
+				{
+					RpcMethod: "SetShareDenomMetadata",
+					Use:       "set-share-denom-metadata [admin] [vault_address] [metadata]",
+					Alias:     []string{"ssdm"},
+					Short:     "Set Bank metadata for a vault’s share denom",
+					Example:   fmt.Sprintf("%s set-share-denom-metadata %s %s '%s'", txStart, exampleAdminAddr, exampleVaultAddr, exampleMetadata),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "admin"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "metadata"},
 					},
 				},
 			},

@@ -1654,8 +1654,8 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds() {
 		ev := createSendCoinEvents(admin.String(), vaultAddr.String(), sdk.NewCoins(amount).String())
 		ev = append(ev, sdk.NewEvent(
 			"provlabs.vault.v1.EventInterestDeposit",
-			sdk.NewAttribute("authority", admin.String()),
 			sdk.NewAttribute("amount", amount.String()),
+			sdk.NewAttribute("authority", admin.String()),
 			sdk.NewAttribute("vault_address", vaultAddr.String()),
 		))
 
@@ -1685,8 +1685,8 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds() {
 		ev := createSendCoinEvents(admin.String(), vaultAddr.String(), sdk.NewCoins(amount).String())
 		ev = append(ev, sdk.NewEvent(
 			"provlabs.vault.v1.EventInterestDeposit",
-			sdk.NewAttribute("authority", admin.String()),
 			sdk.NewAttribute("amount", amount.String()),
+			sdk.NewAttribute("authority", admin.String()),
 			sdk.NewAttribute("vault_address", vaultAddr.String()),
 		))
 
@@ -1722,15 +1722,14 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds() {
 				AssetManager: assetMgr.String(),
 			})
 			s.Require().NoError(err, "failed to set asset manager")
-			// Ensure asset manager has funds for deposit (top up if needed)
 			s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, assetMgr, sdk.NewCoins(amount)))
 		}
 
 		ev := createSendCoinEvents(assetMgr.String(), vaultAddr.String(), sdk.NewCoins(amount).String())
 		ev = append(ev, sdk.NewEvent(
 			"provlabs.vault.v1.EventInterestDeposit",
-			sdk.NewAttribute("authority", assetMgr.String()),
 			sdk.NewAttribute("amount", amount.String()),
+			sdk.NewAttribute("authority", assetMgr.String()),
 			sdk.NewAttribute("vault_address", vaultAddr.String()),
 		))
 
@@ -1884,8 +1883,8 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds() {
 		ev := createSendCoinEvents(vaultAddr.String(), admin.String(), sdk.NewCoins(amount).String())
 		ev = append(ev, sdk.NewEvent(
 			"provlabs.vault.v1.EventInterestWithdrawal",
-			sdk.NewAttribute("authority", admin.String()),
 			sdk.NewAttribute("amount", amount.String()),
+			sdk.NewAttribute("authority", admin.String()),
 			sdk.NewAttribute("vault_address", vaultAddr.String()),
 		))
 
@@ -1925,8 +1924,8 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds() {
 		ev := createSendCoinEvents(vaultAddr.String(), assetMgr.String(), sdk.NewCoins(amount).String())
 		ev = append(ev, sdk.NewEvent(
 			"provlabs.vault.v1.EventInterestWithdrawal",
-			sdk.NewAttribute("authority", assetMgr.String()),
 			sdk.NewAttribute("amount", amount.String()),
+			sdk.NewAttribute("authority", assetMgr.String()),
 			sdk.NewAttribute("vault_address", vaultAddr.String()),
 		))
 
@@ -2084,8 +2083,8 @@ func (s *TestSuite) TestMsgServer_DepositPrincipalFunds() {
 		ev := createSendCoinEvents(admin.String(), markerAddr.String(), sdk.NewCoins(amount).String())
 		ev = append(ev, sdk.NewEvent(
 			"provlabs.vault.v1.EventDepositPrincipalFunds",
-			sdk.NewAttribute("admin", admin.String()),
 			sdk.NewAttribute("amount", amount.String()),
+			sdk.NewAttribute("authority", admin.String()),
 			sdk.NewAttribute("vault_address", vaultAddr.String()),
 		))
 
@@ -2094,6 +2093,63 @@ func (s *TestSuite) TestMsgServer_DepositPrincipalFunds() {
 			setup: setup,
 			msg: types.MsgDepositPrincipalFundsRequest{
 				Authority:    admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Amount:       amount,
+			},
+			postCheckArgs: postCheckArgs{
+				VaultAddress:        vaultAddr,
+				MarkerAddress:       markerAddr,
+				ExpectedVaultAssets: amount,
+			},
+			expectedEvents: ev,
+		}
+
+		testDef.expectedResponse = &types.MsgDepositPrincipalFundsResponse{}
+		runMsgServerTestCase(s, testDef, tc)
+	})
+
+	s.Run("happy path - deposit principal funds as asset manager", func() {
+		assetMgr := s.CreateAndFundAccount(sdk.NewInt64Coin(underlying, amount.Amount.Int64()))
+
+		setupWithAssetMgr := func() {
+			// base setup with marker/vault, but fund the asset manager for the deposit flow
+			s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin)
+			_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+				Admin:           admin.String(),
+				ShareDenom:      share,
+				UnderlyingAsset: underlying,
+			})
+			s.Require().NoError(err)
+
+			s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, assetMgr, sdk.NewCoins(amount)))
+
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			vault, err := s.k.GetVault(s.ctx, vaultAddr)
+			s.Require().NoError(err)
+			vault.Paused = true
+			s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+			_, err = keeper.NewMsgServer(s.simApp.VaultKeeper).SetAssetManager(s.ctx, &types.MsgSetAssetManagerRequest{
+				Admin:        admin.String(),
+				VaultAddress: vaultAddr.String(),
+				AssetManager: assetMgr.String(),
+			})
+			s.Require().NoError(err, "failed to set asset manager")
+		}
+
+		ev := createSendCoinEvents(assetMgr.String(), markerAddr.String(), sdk.NewCoins(amount).String())
+		ev = append(ev, sdk.NewEvent(
+			"provlabs.vault.v1.EventDepositPrincipalFunds",
+			sdk.NewAttribute("amount", amount.String()),
+			sdk.NewAttribute("authority", assetMgr.String()),
+			sdk.NewAttribute("vault_address", vaultAddr.String()),
+		))
+
+		tc := msgServerTestCase[types.MsgDepositPrincipalFundsRequest, postCheckArgs]{
+			name:  "happy path asset manager",
+			setup: setupWithAssetMgr,
+			msg: types.MsgDepositPrincipalFundsRequest{
+				Authority:    assetMgr.String(),
 				VaultAddress: vaultAddr.String(),
 				Amount:       amount,
 			},
@@ -2228,7 +2284,7 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds() {
 		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).WithdrawPrincipalFunds,
 		postCheck: func(msg *types.MsgWithdrawPrincipalFundsRequest, args postCheckArgs) {
 			balance := s.k.BankKeeper.GetBalance(s.ctx, args.AdminAddress, args.ExpectedAdminAssets.Denom)
-			s.Assert().Equal(args.ExpectedAdminAssets, balance)
+			s.Assert().Equal(args.ExpectedAdminAssets, balance, "admin balance after principal withdrawal")
 		},
 	}
 
@@ -2246,8 +2302,8 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds() {
 			ShareDenom:      share,
 			UnderlyingAsset: underlying,
 		})
-		s.Require().NoError(err)
-		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, sdk.NewCoins(amount)))
+		s.Require().NoError(err, "failed to create vault")
+		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, sdk.NewCoins(amount)), "failed to fund marker account")
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 		vault, err := s.k.GetVault(s.ctx, vaultAddr)
 		s.Require().NoError(err)
@@ -2259,8 +2315,8 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds() {
 		ev := createSendCoinEvents(markerAddr.String(), admin.String(), sdk.NewCoins(amount).String())
 		ev = append(ev, sdk.NewEvent(
 			"provlabs.vault.v1.EventWithdrawPrincipalFunds",
-			sdk.NewAttribute("admin", admin.String()),
 			sdk.NewAttribute("amount", amount.String()),
+			sdk.NewAttribute("authority", admin.String()),
 			sdk.NewAttribute("vault_address", vaultAddr.String()),
 		))
 
@@ -2274,6 +2330,62 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds() {
 			},
 			postCheckArgs: postCheckArgs{
 				AdminAddress:        admin,
+				MarkerAddress:       markerAddr,
+				ExpectedAdminAssets: amount,
+			},
+			expectedEvents: ev,
+		}
+
+		testDef.expectedResponse = &types.MsgWithdrawPrincipalFundsResponse{}
+		runMsgServerTestCase(s, testDef, tc)
+	})
+
+	s.Run("happy path - withdraw principal funds as asset manager", func() {
+		assetMgr := s.CreateAndFundAccount(sdk.Coin{Denom: underlying, Amount: math.ZeroInt()})
+
+		setupWithAssetMgr := func() {
+			s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin)
+			_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+				Admin:           admin.String(),
+				ShareDenom:      share,
+				UnderlyingAsset: underlying,
+			})
+			s.Require().NoError(err)
+
+			s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, sdk.NewCoins(amount)))
+
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			vault, err := s.k.GetVault(s.ctx, vaultAddr)
+			s.Require().NoError(err)
+			vault.Paused = true
+			s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+			_, err = keeper.NewMsgServer(s.simApp.VaultKeeper).SetAssetManager(s.ctx, &types.MsgSetAssetManagerRequest{
+				Admin:        admin.String(),
+				VaultAddress: vaultAddr.String(),
+				AssetManager: assetMgr.String(),
+			})
+			s.Require().NoError(err, "failed to set asset manager")
+		}
+
+		ev := createSendCoinEvents(markerAddr.String(), assetMgr.String(), sdk.NewCoins(amount).String())
+		ev = append(ev, sdk.NewEvent(
+			"provlabs.vault.v1.EventWithdrawPrincipalFunds",
+			sdk.NewAttribute("amount", amount.String()),
+			sdk.NewAttribute("authority", assetMgr.String()),
+			sdk.NewAttribute("vault_address", vaultAddr.String()),
+		))
+
+		tc := msgServerTestCase[types.MsgWithdrawPrincipalFundsRequest, postCheckArgs]{
+			name:  "happy path asset manager",
+			setup: setupWithAssetMgr,
+			msg: types.MsgWithdrawPrincipalFundsRequest{
+				Authority:    assetMgr.String(),
+				VaultAddress: vaultAddr.String(),
+				Amount:       amount,
+			},
+			postCheckArgs: postCheckArgs{
+				AdminAddress:        assetMgr,
 				MarkerAddress:       markerAddr,
 				ExpectedAdminAssets: amount,
 			},
@@ -2423,13 +2535,24 @@ func (s *TestSuite) TestMsgServer_ExpeditePendingSwapOut() {
 			ShareDenom:      share,
 			UnderlyingAsset: underlying,
 		})
-		s.Require().NoError(err)
+		s.Require().NoError(err, "should create vault")
 
-		id, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, blockTime.Unix(), &types.PendingSwapOut{
+		var qErr error
+		id, qErr = s.k.PendingSwapOutQueue.Enqueue(s.ctx, blockTime.Unix(), &types.PendingSwapOut{
 			VaultAddress: vaultAddr.String(),
 		})
-		s.Require().NoError(err)
+		s.Require().NoError(qErr, "should enqueue pending swap out")
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	setupWithAssetMgr := func(assetMgr sdk.AccAddress) {
+		setup()
+		_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).SetAssetManager(s.ctx, &types.MsgSetAssetManagerRequest{
+			Admin:        admin.String(),
+			VaultAddress: vaultAddr.String(),
+			AssetManager: assetMgr.String(),
+		})
+		s.Require().NoError(err, "should set asset manager")
 	}
 
 	tests := []msgServerTestCase[types.MsgExpeditePendingSwapOutRequest, postCheckArgs]{
@@ -2446,14 +2569,14 @@ func (s *TestSuite) TestMsgServer_ExpeditePendingSwapOut() {
 			expectedEvents: sdk.Events{
 				sdk.NewEvent(
 					"provlabs.vault.v1.EventPendingSwapOutExpedited",
-					sdk.NewAttribute("admin", admin.String()),
+					sdk.NewAttribute("authority", admin.String()),
 					sdk.NewAttribute("request_id", fmt.Sprintf("%d", id)),
 					sdk.NewAttribute("vault", vaultAddr.String()),
 				),
 			},
 		},
 		{
-			name:  "unauthorized admin",
+			name:  "unauthorized authority",
 			setup: setup,
 			msg: types.MsgExpeditePendingSwapOutRequest{
 				Authority: other.String(),
@@ -2478,6 +2601,35 @@ func (s *TestSuite) TestMsgServer_ExpeditePendingSwapOut() {
 			runMsgServerTestCase(s, testDef, tc)
 		})
 	}
+
+	s.Run("happy path - asset manager authority", func() {
+		assetMgr := s.CreateAndFundAccount(sdk.Coin{Denom: underlying, Amount: math.ZeroInt()})
+		setupWithAssetMgr(assetMgr)
+
+		ev := sdk.Events{
+			sdk.NewEvent(
+				"provlabs.vault.v1.EventPendingSwapOutExpedited",
+				sdk.NewAttribute("authority", assetMgr.String()),
+				sdk.NewAttribute("request_id", fmt.Sprintf("%d", id)),
+				sdk.NewAttribute("vault", vaultAddr.String()),
+			),
+		}
+
+		tc := msgServerTestCase[types.MsgExpeditePendingSwapOutRequest, postCheckArgs]{
+			name: "happy path - asset manager authority",
+			msg: types.MsgExpeditePendingSwapOutRequest{
+				Authority: assetMgr.String(),
+				RequestId: id,
+			},
+			postCheckArgs: postCheckArgs{
+				RequestId: id,
+			},
+			expectedEvents: ev,
+		}
+
+		testDef.expectedResponse = &types.MsgExpeditePendingSwapOutResponse{}
+		runMsgServerTestCase(s, testDef, tc)
+	})
 }
 
 func (s *TestSuite) TestMsgServer_PauseVault() {
@@ -2495,10 +2647,10 @@ func (s *TestSuite) TestMsgServer_PauseVault() {
 		postCheck: func(msg *types.MsgPauseVaultRequest, args postCheckArgs) {
 			v, err := s.k.GetVault(s.ctx, args.VaultAddress)
 			s.Require().NoError(err, "expected to load vault %s for post-check", args.VaultAddress)
-			s.Assert().Equal(args.ExpectedPaused, v.Paused, "vault paused flag should match expectation")
-			s.Assert().Equal(args.ExpectedPauseDenom, v.PausedBalance.Denom, "paused balance denom should equal underlying asset")
-			s.Assert().Equal(args.ExpectedPauseAmount, v.PausedBalance.Amount.Int64(), "paused balance amount should equal expected total value")
-			s.Assert().Equal(args.ExpectedPausedReason, v.PausedReason, "paused reason should be recorded on vault")
+			s.Assert().Equal(args.ExpectedPaused, v.Paused)
+			s.Assert().Equal(args.ExpectedPauseDenom, v.PausedBalance.Denom)
+			s.Assert().Equal(args.ExpectedPauseAmount, v.PausedBalance.Amount.Int64())
+			s.Assert().Equal(args.ExpectedPausedReason, v.PausedReason)
 		},
 	}
 
@@ -2515,94 +2667,88 @@ func (s *TestSuite) TestMsgServer_PauseVault() {
 			ShareDenom:      share,
 			UnderlyingAsset: underlying,
 		})
-		s.Require().NoError(err, "expected vault creation to succeed")
+		s.Require().NoError(err)
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	}
 
-	tc := msgServerTestCase[types.MsgPauseVaultRequest, postCheckArgs]{
-		name:  "happy path",
-		setup: setup,
-		msg: types.MsgPauseVaultRequest{
-			Authority:    admin.String(),
+	setupWithAssetMgr := func(assetMgr sdk.AccAddress) {
+		setup()
+		_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).SetAssetManager(s.ctx, &types.MsgSetAssetManagerRequest{
+			Admin:        admin.String(),
 			VaultAddress: vaultAddr.String(),
-			Reason:       reason,
-		},
-		postCheckArgs: postCheckArgs{
-			VaultAddress:         vaultAddr,
-			ExpectedPaused:       true,
-			ExpectedPauseDenom:   underlying,
-			ExpectedPauseAmount:  0,
-			ExpectedPausedReason: reason,
-		},
-		expectedEvents: sdk.Events{
+			AssetManager: assetMgr.String(),
+		})
+		s.Require().NoError(err)
+	}
+
+	s.Run("happy path - admin pause vault", func() {
+		ev := sdk.Events{
 			sdk.NewEvent(
 				"provlabs.vault.v1.EventVaultPaused",
-				sdk.NewAttribute("admin", admin.String()),
+				sdk.NewAttribute("authority", admin.String()),
 				sdk.NewAttribute("reason", reason),
 				sdk.NewAttribute("total_vault_value", sdk.NewInt64Coin(underlying, 0).String()),
 				sdk.NewAttribute("vault_address", vaultAddr.String()),
 			),
-		},
-	}
+		}
 
-	testDef.expectedResponse = &types.MsgPauseVaultResponse{}
-	runMsgServerTestCase(s, testDef, tc)
+		tc := msgServerTestCase[types.MsgPauseVaultRequest, postCheckArgs]{
+			name:  "happy path - admin pause",
+			setup: setup,
+			msg: types.MsgPauseVaultRequest{
+				Authority:    admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Reason:       reason,
+			},
+			postCheckArgs: postCheckArgs{
+				VaultAddress:         vaultAddr,
+				ExpectedPaused:       true,
+				ExpectedPauseDenom:   underlying,
+				ExpectedPauseAmount:  0,
+				ExpectedPausedReason: reason,
+			},
+			expectedEvents: ev,
+		}
 
-	setupWithInterest := func() {
-		setup()
-		now := time.Now()
-		s.ctx = s.ctx.WithBlockTime(now)
-		_, err := s.k.GetVault(s.ctx, vaultAddr)
-		s.Require().NoError(err, "expected to load vault for interest setup")
-		_, err = keeper.NewMsgServer(s.simApp.VaultKeeper).UpdateInterestRate(s.ctx, &types.MsgUpdateInterestRateRequest{
-			Admin:        admin.String(),
-			VaultAddress: vaultAddr.String(),
-			NewRate:      "1.23",
-		})
-		s.Require().NoError(err, "expected to update interest rate")
-		vaultAcc, err := s.k.GetVault(s.ctx, vaultAddr)
-		s.Require().NoError(err, "expected to reload vault after rate update")
-		vaultAcc.PeriodStart = now.Unix() - 10000
-		s.Require().NoError(s.k.SetVaultAccount(s.ctx, vaultAcc), "expected to persist updated period start")
-		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
-		s.ctx = s.ctx.WithBlockTime(now)
-	}
+		testDef.expectedResponse = &types.MsgPauseVaultResponse{}
+		runMsgServerTestCase(s, testDef, tc)
+	})
 
-	tc2 := msgServerTestCase[types.MsgPauseVaultRequest, postCheckArgs]{
-		name:  "happy path with interest",
-		setup: setupWithInterest,
-		msg: types.MsgPauseVaultRequest{
-			Authority:    admin.String(),
-			VaultAddress: vaultAddr.String(),
-			Reason:       reason,
-		},
-		postCheckArgs: postCheckArgs{
-			VaultAddress:         vaultAddr,
-			ExpectedPaused:       true,
-			ExpectedPauseDenom:   underlying,
-			ExpectedPauseAmount:  0,
-			ExpectedPausedReason: reason,
-		},
-		expectedEvents: sdk.Events{
-			sdk.NewEvent("provlabs.vault.v1.EventVaultReconcile",
-				sdk.NewAttribute("interest_earned", sdk.NewInt64Coin(underlying, 0).String()),
-				sdk.NewAttribute("principal_after", sdk.NewInt64Coin(underlying, 0).String()),
-				sdk.NewAttribute("principal_before", sdk.NewInt64Coin(underlying, 0).String()),
-				sdk.NewAttribute("rate", "1.23"),
-				sdk.NewAttribute("time", "10000"),
-				sdk.NewAttribute("vault_address", vaultAddr.String()),
-			),
+	s.Run("happy path - asset manager pause vault", func() {
+		assetMgr := s.CreateAndFundAccount(sdk.NewInt64Coin(underlying, 100))
+		setupWithAssetMgr(assetMgr)
+
+		ev := sdk.Events{
 			sdk.NewEvent(
 				"provlabs.vault.v1.EventVaultPaused",
-				sdk.NewAttribute("admin", admin.String()),
-				sdk.NewAttribute("reason", "maintenance"),
+				sdk.NewAttribute("authority", assetMgr.String()),
+				sdk.NewAttribute("reason", reason),
 				sdk.NewAttribute("total_vault_value", sdk.NewInt64Coin(underlying, 0).String()),
 				sdk.NewAttribute("vault_address", vaultAddr.String()),
 			),
-		},
-	}
+		}
 
-	runMsgServerTestCase(s, testDef, tc2)
+		tc := msgServerTestCase[types.MsgPauseVaultRequest, postCheckArgs]{
+			name:  "happy path - asset manager pause",
+			setup: func() {},
+			msg: types.MsgPauseVaultRequest{
+				Authority:    assetMgr.String(),
+				VaultAddress: vaultAddr.String(),
+				Reason:       reason,
+			},
+			postCheckArgs: postCheckArgs{
+				VaultAddress:         vaultAddr,
+				ExpectedPaused:       true,
+				ExpectedPauseDenom:   underlying,
+				ExpectedPauseAmount:  0,
+				ExpectedPausedReason: reason,
+			},
+			expectedEvents: ev,
+		}
+
+		testDef.expectedResponse = &types.MsgPauseVaultResponse{}
+		runMsgServerTestCase(s, testDef, tc)
+	})
 }
 
 func (s *TestSuite) TestMsgServer_PauseVault_Failures() {
@@ -2701,11 +2847,11 @@ func (s *TestSuite) TestMsgServer_UnpauseVault() {
 		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).UnpauseVault,
 		postCheck: func(msg *types.MsgUnpauseVaultRequest, args postCheckArgs) {
 			v, err := s.k.GetVault(s.ctx, args.VaultAddress)
-			s.Require().NoError(err, "expected to load vault %s for post-check", args.VaultAddress)
-			s.Assert().Equal(args.ExpectedPaused, v.Paused, "vault should be unpaused")
-			s.Assert().Equal(args.ExpectedEmptyDenom, v.PausedBalance.Denom, "paused balance denom should be cleared when unpaused")
-			s.Assert().Equal(args.ExpectedEmptyAmount, v.PausedBalance.Amount.Int64(), "paused balance amount should be zero when unpaused")
-			s.Assert().Empty(v.PausedReason, "paused reason should be cleared when unpaused")
+			s.Require().NoError(err)
+			s.Assert().Equal(args.ExpectedPaused, v.Paused)
+			s.Assert().Equal(args.ExpectedEmptyDenom, v.PausedBalance.Denom)
+			s.Assert().Equal(args.ExpectedEmptyAmount, v.PausedBalance.Amount.Int64())
+			s.Assert().Empty(v.PausedReason)
 		},
 	}
 
@@ -2721,41 +2867,88 @@ func (s *TestSuite) TestMsgServer_UnpauseVault() {
 			ShareDenom:      share,
 			UnderlyingAsset: underlying,
 		})
-		s.Require().NoError(err, "expected vault creation to succeed")
+		s.Require().NoError(err)
 		_, err = keeper.NewMsgServer(s.simApp.VaultKeeper).PauseVault(s.ctx, &types.MsgPauseVaultRequest{
 			Authority:    admin.String(),
 			VaultAddress: vaultAddr.String(),
 			Reason:       "maintenance",
 		})
-		s.Require().NoError(err, "expected pause to succeed before unpause")
+		s.Require().NoError(err)
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	}
 
-	tc := msgServerTestCase[types.MsgUnpauseVaultRequest, postCheckArgs]{
-		name:  "happy path",
-		setup: setup,
-		msg: types.MsgUnpauseVaultRequest{
-			Authority:    admin.String(),
+	setupWithAssetMgr := func(assetMgr sdk.AccAddress) {
+		setup()
+		_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).SetAssetManager(s.ctx, &types.MsgSetAssetManagerRequest{
+			Admin:        admin.String(),
 			VaultAddress: vaultAddr.String(),
-		},
-		postCheckArgs: postCheckArgs{
-			VaultAddress:        vaultAddr,
-			ExpectedPaused:      false,
-			ExpectedEmptyDenom:  "",
-			ExpectedEmptyAmount: 0,
-		},
-		expectedEvents: sdk.Events{
+			AssetManager: assetMgr.String(),
+		})
+		s.Require().NoError(err)
+	}
+
+	s.Run("happy path - admin unpause vault", func() {
+		ev := sdk.Events{
 			sdk.NewEvent(
 				"provlabs.vault.v1.EventVaultUnpaused",
-				sdk.NewAttribute("admin", admin.String()),
+				sdk.NewAttribute("authority", admin.String()),
 				sdk.NewAttribute("total_vault_value", sdk.NewInt64Coin(underlying, 0).String()),
 				sdk.NewAttribute("vault_address", vaultAddr.String()),
 			),
-		},
-	}
+		}
 
-	testDef.expectedResponse = &types.MsgUnpauseVaultResponse{}
-	runMsgServerTestCase(s, testDef, tc)
+		tc := msgServerTestCase[types.MsgUnpauseVaultRequest, postCheckArgs]{
+			name:  "happy path - admin unpause",
+			setup: setup,
+			msg: types.MsgUnpauseVaultRequest{
+				Authority:    admin.String(),
+				VaultAddress: vaultAddr.String(),
+			},
+			postCheckArgs: postCheckArgs{
+				VaultAddress:        vaultAddr,
+				ExpectedPaused:      false,
+				ExpectedEmptyDenom:  "",
+				ExpectedEmptyAmount: 0,
+			},
+			expectedEvents: ev,
+		}
+
+		testDef.expectedResponse = &types.MsgUnpauseVaultResponse{}
+		runMsgServerTestCase(s, testDef, tc)
+	})
+
+	s.Run("happy path - asset manager unpause vault", func() {
+		assetMgr := s.CreateAndFundAccount(sdk.NewInt64Coin(underlying, 100))
+		setupWithAssetMgr(assetMgr)
+
+		ev := sdk.Events{
+			sdk.NewEvent(
+				"provlabs.vault.v1.EventVaultUnpaused",
+				sdk.NewAttribute("authority", assetMgr.String()),
+				sdk.NewAttribute("total_vault_value", sdk.NewInt64Coin(underlying, 0).String()),
+				sdk.NewAttribute("vault_address", vaultAddr.String()),
+			),
+		}
+
+		tc := msgServerTestCase[types.MsgUnpauseVaultRequest, postCheckArgs]{
+			name:  "happy path - asset manager unpause",
+			setup: func() {},
+			msg: types.MsgUnpauseVaultRequest{
+				Authority:    assetMgr.String(),
+				VaultAddress: vaultAddr.String(),
+			},
+			postCheckArgs: postCheckArgs{
+				VaultAddress:        vaultAddr,
+				ExpectedPaused:      false,
+				ExpectedEmptyDenom:  "",
+				ExpectedEmptyAmount: 0,
+			},
+			expectedEvents: ev,
+		}
+
+		testDef.expectedResponse = &types.MsgUnpauseVaultResponse{}
+		runMsgServerTestCase(s, testDef, tc)
+	})
 }
 
 func (s *TestSuite) TestMsgServer_UnpauseVault_Failures() {

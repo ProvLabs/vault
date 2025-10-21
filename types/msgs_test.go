@@ -470,7 +470,7 @@ func TestMsgUpdateInterestRateRequest_ValidateBasic(t *testing.T) {
 			expectedErr: nil,
 		},
 		{
-			name: "invalid admin",
+			name: "invalid authority",
 			msg: types.MsgUpdateInterestRateRequest{
 				Authority:    "bad",
 				VaultAddress: addr,

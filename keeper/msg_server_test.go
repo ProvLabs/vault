@@ -1257,9 +1257,9 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate_Failures() {
 			expectedErrSubstrs: []string{"failed to get vault", "is not a vault account"},
 		},
 		{
-			name: "unauthorized admin",
+			name: "unauthorized authority",
 			msg: types.MsgUpdateInterestRateRequest{
-				Authority:    sdk.AccAddress("invalidadmin").String(),
+				Authority:    sdk.AccAddress("bad").String(),
 				VaultAddress: vaultAddr.String(),
 				NewRate:      "0.05",
 			},

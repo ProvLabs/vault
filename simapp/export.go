@@ -41,3 +41,4 @@ func (app *SimApp) ExportAppStateAndValidators(
 		ConsensusParams: app.BaseApp.GetConsensusParams(ctx),
 	}, err
 }
+

@@ -394,3 +394,4 @@ func (k *Keeper) resetVaultInterestPeriods(ctx context.Context, vaults []*types.
 		}
 	}
 }
+

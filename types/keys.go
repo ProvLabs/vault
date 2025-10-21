@@ -58,3 +58,4 @@ var (
 func GetVaultAddress(shareDenom string) sdk.AccAddress {
 	return sdk.AccAddress(crypto.AddressHash([]byte(fmt.Sprintf("%s/%s", ModuleName, shareDenom))))
 }
+

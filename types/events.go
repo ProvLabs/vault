@@ -249,3 +249,4 @@ func NewEventAssetManagerSet(vaultAddress, admin, assetManager string) *EventAss
 		AssetManager: assetManager,
 	}
 }
+

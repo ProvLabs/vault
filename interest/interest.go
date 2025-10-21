@@ -185,3 +185,4 @@ func CalculatePeriods(
 
 	return periods, 0, nil
 }
+

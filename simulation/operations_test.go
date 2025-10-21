@@ -434,3 +434,4 @@ func FundAccount(ctx context.Context, bankKeeper bankkeeper.Keeper, addr sdk.Acc
 	ctx = markertypes.WithBypass(ctx) // Bypass marker checks for this operation.
 	return bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, amounts)
 }
+

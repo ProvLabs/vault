@@ -25,3 +25,4 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&vaultGenesis)
 }
+

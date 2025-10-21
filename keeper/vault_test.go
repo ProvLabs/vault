@@ -650,3 +650,4 @@ func (s *TestSuite) TestAutoPauseVault_SetsPausedAndEmitsEvent() {
 	s.Require().True(hasAddr, "event should include vault_address attribute")
 	s.Require().True(hasReason, "event should include reason attribute")
 }
+

@@ -275,3 +275,4 @@ func (v VaultAccount) ValidateManagementAuthority(authority string) error {
 	}
 	return fmt.Errorf("unauthorized authority: %s", authority)
 }
+

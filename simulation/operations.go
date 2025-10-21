@@ -912,3 +912,4 @@ func SimulateMsgBridgeBurnShares(k keeper.Keeper) simtypes.Operation {
 		return simtypes.NewOperationMsg(msg, true, "successfully burned shares from bridge"), nil, nil
 	}
 }
+

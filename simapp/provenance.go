@@ -69,3 +69,4 @@ func (app *SimApp) RegisterProvenanceModules() error {
 		marker.NewAppModule(app.appCodec, app.MarkerKeeper, app.AccountKeeper, app.BankKeeper, app.FeegrantKeeper, *app.GovKeeper, app.AttributeKeeper, app.interfaceRegistry),
 	)
 }
+

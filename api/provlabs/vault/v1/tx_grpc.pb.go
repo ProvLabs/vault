@@ -899,3 +899,4 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "provlabs/vault/v1/tx.proto",
 }
+

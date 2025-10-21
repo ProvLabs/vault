@@ -63,3 +63,4 @@ func (k Keeper) SafeEnqueueTimeout(ctx context.Context, vault *types.VaultAccoun
 	}
 	return k.PayoutTimeoutQueue.Enqueue(ctx, vault.PeriodTimeout, vault.GetAddress())
 }
+

@@ -169,3 +169,4 @@ func NewAttribute(name string, address string, attrType attrtypes.AttributeType,
 		ExpirationDate: expirationDate,
 	}
 }
+

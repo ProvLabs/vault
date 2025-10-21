@@ -69,3 +69,4 @@ func Setup(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, ak types.AccountKeepe
 
 	return CreateVault(ctx, &k, ak, bk, markerKeeper, underlyingDenom, selectedPayment, shareDenom, admin, accs)
 }
+

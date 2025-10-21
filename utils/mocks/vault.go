@@ -145,3 +145,4 @@ func MakeTestEncodingConfig(prefix string, modules ...module.AppModuleBasic) mod
 
 	return encCfg
 }
+

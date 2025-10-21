@@ -277,3 +277,4 @@ func TestVeryLargeInitialSwapInRoundTrip(t *testing.T) {
 		out.Amount, largeIn,
 	)
 }
+

@@ -24,3 +24,4 @@ func ExpDec(x math.LegacyDec, terms int) math.LegacyDec {
 
 	return result
 }
+

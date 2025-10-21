@@ -539,3 +539,4 @@ func (m AppModule) RegisterStoreDecoder(_ simtypes.StoreDecoderRegistry) {
 func (m AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return simulation.WeightedOperations(simState, *m.keeper)
 }
+

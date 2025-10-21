@@ -2655,3 +2655,4 @@ func file_provlabs_vault_v1_genesis_proto_init() {
 	file_provlabs_vault_v1_genesis_proto_goTypes = nil
 	file_provlabs_vault_v1_genesis_proto_depIdxs = nil
 }
+

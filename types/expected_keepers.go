@@ -52,3 +52,4 @@ type NameKeeper interface {
 type AttributeKeeper interface {
 	SetAttribute(ctx sdk.Context, attr attrtypes.Attribute, owner sdk.AccAddress) error
 }
+

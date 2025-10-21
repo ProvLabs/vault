@@ -286,3 +286,4 @@ func ProvideMarkerKeeperStub() *markerkeeper.Keeper {
 func (app *SimApp) AppCodec() codec.Codec {
 	return app.appCodec
 }
+

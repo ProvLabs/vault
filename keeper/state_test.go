@@ -128,3 +128,4 @@ func (s *TestSuite) TestFindVaultAccount() {
 		})
 	}
 }
+

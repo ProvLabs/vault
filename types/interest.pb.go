@@ -709,3 +709,4 @@ var (
 	ErrIntOverflowInterest          = fmt.Errorf("proto: integer overflow")
 	ErrUnexpectedEndOfGroupInterest = fmt.Errorf("proto: unexpected end of group")
 )
+

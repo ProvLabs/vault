@@ -49,3 +49,4 @@ func generateAddress(prefix string, bytes []byte) string {
 	}
 	return address
 }
+

@@ -3374,3 +3374,4 @@ func file_provlabs_vault_v1_vault_proto_init() {
 	file_provlabs_vault_v1_vault_proto_goTypes = nil
 	file_provlabs_vault_v1_vault_proto_depIdxs = nil
 }
+

@@ -19,3 +19,4 @@ func NewPayoutJob(timestamp int64, id uint64, vaultAddr sdk.AccAddress, req Pend
 		Req:       req,
 	}
 }
+

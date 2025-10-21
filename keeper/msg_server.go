@@ -664,3 +664,4 @@ func (k msgServer) SetAssetManager(goCtx context.Context, msg *types.MsgSetAsset
 
 	return &types.MsgSetAssetManagerResponse{}, nil
 }
+

@@ -476,3 +476,4 @@ func (s *TestSuite) TestKeeper_ProcessSwapOutJobs() {
 		})
 	}
 }
+

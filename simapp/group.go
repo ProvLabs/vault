@@ -31,3 +31,4 @@ func NewGroupCheckerFunc(querier GroupPolicyQuerier) GroupCheckerFunc {
 		return err == nil
 	})
 }
+

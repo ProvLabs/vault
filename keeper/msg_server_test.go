@@ -1604,7 +1604,7 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds() {
 		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).DepositInterestFunds,
 		postCheck: func(msg *types.MsgDepositInterestFundsRequest, args postCheckArgs) {
 			vaultBal := s.k.BankKeeper.GetBalance(s.ctx, args.VaultAddress, args.ExpectedDepositAmount.Denom)
-			s.Assert().Equal(args.ExpectedVaultBalance.Amount.Int64(), vaultBal.Amount.Int64())
+			s.Assert().Equal(args.ExpectedVaultBalance.Amount.Int64(), vaultBal.Amount.Int64(), "vault balance mismatch")
 
 			s.assertInPayoutVerificationQueue(args.VaultAddress, args.InVerificationQueue)
 		},
@@ -1722,7 +1722,7 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds() {
 				AssetManager: assetMgr.String(),
 			})
 			s.Require().NoError(err, "failed to set asset manager")
-			s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, assetMgr, sdk.NewCoins(amount)))
+			s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, assetMgr, sdk.NewCoins(amount)), "failed to fund asset manager account")
 		}
 
 		ev := createSendCoinEvents(assetMgr.String(), vaultAddr.String(), sdk.NewCoins(amount).String())
@@ -1778,13 +1778,13 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds_Failures() {
 			ShareDenom:      shares,
 			UnderlyingAsset: underlying,
 		})
-		s.Require().NoError(err)
+		s.Require().NoError(err, "failed to create vault")
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	}
 
 	setupWithAdminFunds := func() {
 		setup()
-		FundAccount(s.ctx, s.simApp.BankKeeper, admin, sdk.NewCoins(amount))
+		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, admin, sdk.NewCoins(amount)), "failed to fund admin account")
 	}
 
 	tests := []msgServerTestCase[types.MsgDepositInterestFundsRequest, any]{
@@ -1837,6 +1837,24 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds_Failures() {
 			},
 			expectedErrSubstrs: []string{"failed to deposit funds", "insufficient funds"},
 		},
+		{
+			name: "reconcile failure propagates",
+			setup: func() {
+				setupWithAdminFunds()
+				v, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err)
+				s.Require().NotNil(v)
+				v.CurrentInterestRate = "invalid"
+				v.PeriodStart = s.ctx.BlockTime().Unix() - 3600
+				s.simApp.AccountKeeper.SetAccount(s.ctx, v)
+			},
+			msg: types.MsgDepositInterestFundsRequest{
+				Authority:    admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Amount:       sdk.NewInt64Coin(underlying, 1),
+			},
+			expectedErrSubstrs: []string{"failed to reconcile vault interest after deposit", "failed to calculate interest"},
+		},
 	}
 
 	for _, tc := range tests {
@@ -1857,7 +1875,7 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds() {
 		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).WithdrawInterestFunds,
 		postCheck: func(msg *types.MsgWithdrawInterestFundsRequest, args postCheckArgs) {
 			bal := s.k.BankKeeper.GetBalance(s.ctx, args.AuthorityAddress, args.ExpectedAuthorityAmt.Denom)
-			s.Assert().Equal(args.ExpectedAuthorityAmt, bal)
+			s.Assert().Equal(args.ExpectedAuthorityAmt, bal, "authority balance after withdrawal")
 		},
 	}
 
@@ -1874,8 +1892,8 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds() {
 			ShareDenom:      shares,
 			UnderlyingAsset: underlying,
 		})
-		s.Require().NoError(err)
-		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(amount)))
+		s.Require().NoError(err, "failed to create vault")
+		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(amount)), "failed to fund vault account")
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	}
 
@@ -1912,7 +1930,6 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds() {
 
 		setupWithAssetMgr := func() {
 			setup()
-			// Set asset manager on the vault
 			_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).SetAssetManager(s.ctx, &types.MsgSetAssetManagerRequest{
 				Admin:        admin.String(),
 				VaultAddress: vaultAddr.String(),
@@ -1972,13 +1989,13 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds_Failures() {
 			ShareDenom:      shares,
 			UnderlyingAsset: underlying,
 		})
-		s.Require().NoError(err)
+		s.Require().NoError(err, "failed to create vault")
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	}
 
 	setupWithVaultFunds := func() {
 		setup()
-		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(amount)))
+		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(amount)), "failed to fund vault account")
 	}
 
 	tests := []msgServerTestCase[types.MsgWithdrawInterestFundsRequest, any]{
@@ -2030,6 +2047,24 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds_Failures() {
 				Amount:       sdk.NewInt64Coin(unsupportedDenom, 9_999_999),
 			},
 			expectedErrSubstrs: []string{"denom not supported for vault", "under", unsupportedDenom},
+		},
+		{
+			name: "reconcile failure propagates",
+			setup: func() {
+				setupWithVaultFunds()
+				v, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err, "failed to get vault")
+				s.Require().NotNil(v, "vault should not be nil")
+				v.CurrentInterestRate = "invalid"
+				v.PeriodStart = s.ctx.BlockTime().Unix() - 3600
+				s.simApp.AccountKeeper.SetAccount(s.ctx, v)
+			},
+			msg: types.MsgWithdrawInterestFundsRequest{
+				Authority:    admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Amount:       sdk.NewInt64Coin(underlying, 1),
+			},
+			expectedErrSubstrs: []string{"failed to reconcile vault interest before withdrawal", "failed to calculate interest"},
 		},
 	}
 

@@ -60,22 +60,6 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {}
 // RegisterInterfaces registers vault interfaces to the interface registry.
 func (AppModuleBasic) RegisterInterfaces(reg codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(reg)
-
-	reg.RegisterInterface(
-		"provlabs.vault.v1.VaultAccount",
-		(*types.VaultAccountI)(nil),
-		&types.VaultAccount{},
-	)
-	reg.RegisterInterface(
-		"provlabs.vault.v1.VaultAccount",
-		(*sdk.AccountI)(nil),
-		&types.VaultAccount{},
-	)
-	reg.RegisterInterface(
-		"provlabs.vault.v1.VaultAccount",
-		(*authtypes.GenesisAccount)(nil),
-		&types.VaultAccount{},
-	)
 }
 
 // RegisterGRPCGatewayRoutes sets up gRPC gateway routes.

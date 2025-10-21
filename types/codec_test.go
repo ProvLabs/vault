@@ -10,14 +10,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	"github.com/provlabs/vault/types"
 	vaulttypes "github.com/provlabs/vault/types"
 )
 
 func TestVaultAccount_UnpackIntoAllInterfaces(t *testing.T) {
 	reg := codectypes.NewInterfaceRegistry()
 	authtypes.RegisterInterfaces(reg)
-	types.RegisterInterfaces(reg)
+	vaulttypes.RegisterInterfaces(reg)
 
 	cdc := codec.NewProtoCodec(reg)
 	any, err := codectypes.NewAnyWithValue(&vaulttypes.VaultAccount{})

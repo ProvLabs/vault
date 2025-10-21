@@ -8,6 +8,12 @@ import (
 	proto "github.com/cosmos/gogoproto/proto"
 )
 
+var (
+	_ VaultAccountI            = (*VaultAccount)(nil)
+	_ sdk.AccountI             = (*VaultAccount)(nil)
+	_ authtypes.GenesisAccount = (*VaultAccount)(nil)
+)
+
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	messages := make([]proto.Message, len(AllRequestMsgs))
 	copy(messages, AllRequestMsgs)

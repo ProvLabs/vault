@@ -266,11 +266,11 @@ func (v VaultAccount) PrincipalMarkerAddress() sdk.AccAddress {
 
 // ValidateManagementAuthority checks whether the given address is authorized to perform
 // vault management actions. Either the vault admin or the asset manager (if set) is allowed.
-func (va VaultAccount) ValidateManagementAuthority(authority string) error {
-	if authority == va.Admin {
+func (v VaultAccount) ValidateManagementAuthority(authority string) error {
+	if authority == v.Admin {
 		return nil
 	}
-	if va.AssetManager != "" && authority == va.AssetManager {
+	if v.AssetManager != "" && authority == v.AssetManager {
 		return nil
 	}
 	return fmt.Errorf("unauthorized authority: %s", authority)

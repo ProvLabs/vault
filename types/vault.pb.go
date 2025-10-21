@@ -5,15 +5,16 @@ package types
 
 import (
 	fmt "fmt"
+	io "io"
+	math "math"
+	math_bits "math/bits"
+
 	_ "github.com/cosmos/cosmos-proto"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types1 "github.com/cosmos/cosmos-sdk/types"
 	types "github.com/cosmos/cosmos-sdk/x/auth/types"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
-	io "io"
-	math "math"
-	math_bits "math/bits"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -95,168 +96,168 @@ type VaultAccount struct {
 	AssetManager string `protobuf:"bytes,20,opt,name=asset_manager,json=assetManager,proto3" json:"asset_manager,omitempty"`
 }
 
-func (m *VaultAccount) Reset()         { *m = VaultAccount{} }
-func (m *VaultAccount) String() string { return proto.CompactTextString(m) }
+func (v *VaultAccount) Reset()         { *v = VaultAccount{} }
+func (v *VaultAccount) String() string { return proto.CompactTextString(v) }
 func (*VaultAccount) ProtoMessage()    {}
 func (*VaultAccount) Descriptor() ([]byte, []int) {
 	return fileDescriptor_2e0d78aae3177bea, []int{0}
 }
-func (m *VaultAccount) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
+func (v *VaultAccount) XXX_Unmarshal(b []byte) error {
+	return v.Unmarshal(b)
 }
-func (m *VaultAccount) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (v *VaultAccount) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_VaultAccount.Marshal(b, m, deterministic)
+		return xxx_messageInfo_VaultAccount.Marshal(b, v, deterministic)
 	} else {
 		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
+		n, err := v.MarshalToSizedBuffer(b)
 		if err != nil {
 			return nil, err
 		}
 		return b[:n], nil
 	}
 }
-func (m *VaultAccount) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_VaultAccount.Merge(m, src)
+func (v *VaultAccount) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_VaultAccount.Merge(v, src)
 }
-func (m *VaultAccount) XXX_Size() int {
-	return m.Size()
+func (v *VaultAccount) XXX_Size() int {
+	return v.Size()
 }
-func (m *VaultAccount) XXX_DiscardUnknown() {
-	xxx_messageInfo_VaultAccount.DiscardUnknown(m)
+func (v *VaultAccount) XXX_DiscardUnknown() {
+	xxx_messageInfo_VaultAccount.DiscardUnknown(v)
 }
 
 var xxx_messageInfo_VaultAccount proto.InternalMessageInfo
 
-func (m *VaultAccount) GetTotalShares() types1.Coin {
-	if m != nil {
-		return m.TotalShares
+func (v *VaultAccount) GetTotalShares() types1.Coin {
+	if v != nil {
+		return v.TotalShares
 	}
 	return types1.Coin{}
 }
 
-func (m *VaultAccount) GetUnderlyingAsset() string {
-	if m != nil {
-		return m.UnderlyingAsset
+func (v *VaultAccount) GetUnderlyingAsset() string {
+	if v != nil {
+		return v.UnderlyingAsset
 	}
 	return ""
 }
 
-func (m *VaultAccount) GetPaymentDenom() string {
-	if m != nil {
-		return m.PaymentDenom
+func (v *VaultAccount) GetPaymentDenom() string {
+	if v != nil {
+		return v.PaymentDenom
 	}
 	return ""
 }
 
-func (m *VaultAccount) GetAdmin() string {
-	if m != nil {
-		return m.Admin
+func (v *VaultAccount) GetAdmin() string {
+	if v != nil {
+		return v.Admin
 	}
 	return ""
 }
 
-func (m *VaultAccount) GetCurrentInterestRate() string {
-	if m != nil {
-		return m.CurrentInterestRate
+func (v *VaultAccount) GetCurrentInterestRate() string {
+	if v != nil {
+		return v.CurrentInterestRate
 	}
 	return ""
 }
 
-func (m *VaultAccount) GetDesiredInterestRate() string {
-	if m != nil {
-		return m.DesiredInterestRate
+func (v *VaultAccount) GetDesiredInterestRate() string {
+	if v != nil {
+		return v.DesiredInterestRate
 	}
 	return ""
 }
 
-func (m *VaultAccount) GetMinInterestRate() string {
-	if m != nil {
-		return m.MinInterestRate
+func (v *VaultAccount) GetMinInterestRate() string {
+	if v != nil {
+		return v.MinInterestRate
 	}
 	return ""
 }
 
-func (m *VaultAccount) GetMaxInterestRate() string {
-	if m != nil {
-		return m.MaxInterestRate
+func (v *VaultAccount) GetMaxInterestRate() string {
+	if v != nil {
+		return v.MaxInterestRate
 	}
 	return ""
 }
 
-func (m *VaultAccount) GetPeriodStart() int64 {
-	if m != nil {
-		return m.PeriodStart
+func (v *VaultAccount) GetPeriodStart() int64 {
+	if v != nil {
+		return v.PeriodStart
 	}
 	return 0
 }
 
-func (m *VaultAccount) GetPeriodTimeout() int64 {
-	if m != nil {
-		return m.PeriodTimeout
+func (v *VaultAccount) GetPeriodTimeout() int64 {
+	if v != nil {
+		return v.PeriodTimeout
 	}
 	return 0
 }
 
-func (m *VaultAccount) GetSwapInEnabled() bool {
-	if m != nil {
-		return m.SwapInEnabled
+func (v *VaultAccount) GetSwapInEnabled() bool {
+	if v != nil {
+		return v.SwapInEnabled
 	}
 	return false
 }
 
-func (m *VaultAccount) GetSwapOutEnabled() bool {
-	if m != nil {
-		return m.SwapOutEnabled
+func (v *VaultAccount) GetSwapOutEnabled() bool {
+	if v != nil {
+		return v.SwapOutEnabled
 	}
 	return false
 }
 
-func (m *VaultAccount) GetWithdrawalDelaySeconds() uint64 {
-	if m != nil {
-		return m.WithdrawalDelaySeconds
+func (v *VaultAccount) GetWithdrawalDelaySeconds() uint64 {
+	if v != nil {
+		return v.WithdrawalDelaySeconds
 	}
 	return 0
 }
 
-func (m *VaultAccount) GetPaused() bool {
-	if m != nil {
-		return m.Paused
+func (v *VaultAccount) GetPaused() bool {
+	if v != nil {
+		return v.Paused
 	}
 	return false
 }
 
-func (m *VaultAccount) GetPausedBalance() types1.Coin {
-	if m != nil {
-		return m.PausedBalance
+func (v *VaultAccount) GetPausedBalance() types1.Coin {
+	if v != nil {
+		return v.PausedBalance
 	}
 	return types1.Coin{}
 }
 
-func (m *VaultAccount) GetPausedReason() string {
-	if m != nil {
-		return m.PausedReason
+func (v *VaultAccount) GetPausedReason() string {
+	if v != nil {
+		return v.PausedReason
 	}
 	return ""
 }
 
-func (m *VaultAccount) GetBridgeAddress() string {
-	if m != nil {
-		return m.BridgeAddress
+func (v *VaultAccount) GetBridgeAddress() string {
+	if v != nil {
+		return v.BridgeAddress
 	}
 	return ""
 }
 
-func (m *VaultAccount) GetBridgeEnabled() bool {
-	if m != nil {
-		return m.BridgeEnabled
+func (v *VaultAccount) GetBridgeEnabled() bool {
+	if v != nil {
+		return v.BridgeEnabled
 	}
 	return false
 }
 
-func (m *VaultAccount) GetAssetManager() string {
-	if m != nil {
-		return m.AssetManager
+func (v *VaultAccount) GetAssetManager() string {
+	if v != nil {
+		return v.AssetManager
 	}
 	return ""
 }
@@ -438,38 +439,38 @@ var fileDescriptor_2e0d78aae3177bea = []byte{
 	0x06, 0x00, 0x00,
 }
 
-func (m *VaultAccount) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
+func (v *VaultAccount) Marshal() (dAtA []byte, err error) {
+	size := v.Size()
 	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	n, err := v.MarshalToSizedBuffer(dAtA[:size])
 	if err != nil {
 		return nil, err
 	}
 	return dAtA[:n], nil
 }
 
-func (m *VaultAccount) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
+func (v *VaultAccount) MarshalTo(dAtA []byte) (int, error) {
+	size := v.Size()
+	return v.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *VaultAccount) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (v *VaultAccount) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if len(m.AssetManager) > 0 {
-		i -= len(m.AssetManager)
-		copy(dAtA[i:], m.AssetManager)
-		i = encodeVarintVault(dAtA, i, uint64(len(m.AssetManager)))
+	if len(v.AssetManager) > 0 {
+		i -= len(v.AssetManager)
+		copy(dAtA[i:], v.AssetManager)
+		i = encodeVarintVault(dAtA, i, uint64(len(v.AssetManager)))
 		i--
 		dAtA[i] = 0x1
 		i--
 		dAtA[i] = 0xa2
 	}
-	if m.BridgeEnabled {
+	if v.BridgeEnabled {
 		i--
-		if m.BridgeEnabled {
+		if v.BridgeEnabled {
 			dAtA[i] = 1
 		} else {
 			dAtA[i] = 0
@@ -479,26 +480,26 @@ func (m *VaultAccount) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x98
 	}
-	if len(m.BridgeAddress) > 0 {
-		i -= len(m.BridgeAddress)
-		copy(dAtA[i:], m.BridgeAddress)
-		i = encodeVarintVault(dAtA, i, uint64(len(m.BridgeAddress)))
+	if len(v.BridgeAddress) > 0 {
+		i -= len(v.BridgeAddress)
+		copy(dAtA[i:], v.BridgeAddress)
+		i = encodeVarintVault(dAtA, i, uint64(len(v.BridgeAddress)))
 		i--
 		dAtA[i] = 0x1
 		i--
 		dAtA[i] = 0x92
 	}
-	if len(m.PausedReason) > 0 {
-		i -= len(m.PausedReason)
-		copy(dAtA[i:], m.PausedReason)
-		i = encodeVarintVault(dAtA, i, uint64(len(m.PausedReason)))
+	if len(v.PausedReason) > 0 {
+		i -= len(v.PausedReason)
+		copy(dAtA[i:], v.PausedReason)
+		i = encodeVarintVault(dAtA, i, uint64(len(v.PausedReason)))
 		i--
 		dAtA[i] = 0x1
 		i--
 		dAtA[i] = 0x8a
 	}
 	{
-		size, err := m.PausedBalance.MarshalToSizedBuffer(dAtA[:i])
+		size, err := v.PausedBalance.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -509,9 +510,9 @@ func (m *VaultAccount) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	dAtA[i] = 0x1
 	i--
 	dAtA[i] = 0x82
-	if m.Paused {
+	if v.Paused {
 		i--
-		if m.Paused {
+		if v.Paused {
 			dAtA[i] = 1
 		} else {
 			dAtA[i] = 0
@@ -519,14 +520,14 @@ func (m *VaultAccount) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x78
 	}
-	if m.WithdrawalDelaySeconds != 0 {
-		i = encodeVarintVault(dAtA, i, uint64(m.WithdrawalDelaySeconds))
+	if v.WithdrawalDelaySeconds != 0 {
+		i = encodeVarintVault(dAtA, i, uint64(v.WithdrawalDelaySeconds))
 		i--
 		dAtA[i] = 0x70
 	}
-	if m.SwapOutEnabled {
+	if v.SwapOutEnabled {
 		i--
-		if m.SwapOutEnabled {
+		if v.SwapOutEnabled {
 			dAtA[i] = 1
 		} else {
 			dAtA[i] = 0
@@ -534,9 +535,9 @@ func (m *VaultAccount) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x68
 	}
-	if m.SwapInEnabled {
+	if v.SwapInEnabled {
 		i--
-		if m.SwapInEnabled {
+		if v.SwapInEnabled {
 			dAtA[i] = 1
 		} else {
 			dAtA[i] = 0
@@ -544,67 +545,67 @@ func (m *VaultAccount) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x60
 	}
-	if m.PeriodTimeout != 0 {
-		i = encodeVarintVault(dAtA, i, uint64(m.PeriodTimeout))
+	if v.PeriodTimeout != 0 {
+		i = encodeVarintVault(dAtA, i, uint64(v.PeriodTimeout))
 		i--
 		dAtA[i] = 0x58
 	}
-	if m.PeriodStart != 0 {
-		i = encodeVarintVault(dAtA, i, uint64(m.PeriodStart))
+	if v.PeriodStart != 0 {
+		i = encodeVarintVault(dAtA, i, uint64(v.PeriodStart))
 		i--
 		dAtA[i] = 0x50
 	}
-	if len(m.MaxInterestRate) > 0 {
-		i -= len(m.MaxInterestRate)
-		copy(dAtA[i:], m.MaxInterestRate)
-		i = encodeVarintVault(dAtA, i, uint64(len(m.MaxInterestRate)))
+	if len(v.MaxInterestRate) > 0 {
+		i -= len(v.MaxInterestRate)
+		copy(dAtA[i:], v.MaxInterestRate)
+		i = encodeVarintVault(dAtA, i, uint64(len(v.MaxInterestRate)))
 		i--
 		dAtA[i] = 0x4a
 	}
-	if len(m.MinInterestRate) > 0 {
-		i -= len(m.MinInterestRate)
-		copy(dAtA[i:], m.MinInterestRate)
-		i = encodeVarintVault(dAtA, i, uint64(len(m.MinInterestRate)))
+	if len(v.MinInterestRate) > 0 {
+		i -= len(v.MinInterestRate)
+		copy(dAtA[i:], v.MinInterestRate)
+		i = encodeVarintVault(dAtA, i, uint64(len(v.MinInterestRate)))
 		i--
 		dAtA[i] = 0x42
 	}
-	if len(m.DesiredInterestRate) > 0 {
-		i -= len(m.DesiredInterestRate)
-		copy(dAtA[i:], m.DesiredInterestRate)
-		i = encodeVarintVault(dAtA, i, uint64(len(m.DesiredInterestRate)))
+	if len(v.DesiredInterestRate) > 0 {
+		i -= len(v.DesiredInterestRate)
+		copy(dAtA[i:], v.DesiredInterestRate)
+		i = encodeVarintVault(dAtA, i, uint64(len(v.DesiredInterestRate)))
 		i--
 		dAtA[i] = 0x3a
 	}
-	if len(m.CurrentInterestRate) > 0 {
-		i -= len(m.CurrentInterestRate)
-		copy(dAtA[i:], m.CurrentInterestRate)
-		i = encodeVarintVault(dAtA, i, uint64(len(m.CurrentInterestRate)))
+	if len(v.CurrentInterestRate) > 0 {
+		i -= len(v.CurrentInterestRate)
+		copy(dAtA[i:], v.CurrentInterestRate)
+		i = encodeVarintVault(dAtA, i, uint64(len(v.CurrentInterestRate)))
 		i--
 		dAtA[i] = 0x32
 	}
-	if len(m.Admin) > 0 {
-		i -= len(m.Admin)
-		copy(dAtA[i:], m.Admin)
-		i = encodeVarintVault(dAtA, i, uint64(len(m.Admin)))
+	if len(v.Admin) > 0 {
+		i -= len(v.Admin)
+		copy(dAtA[i:], v.Admin)
+		i = encodeVarintVault(dAtA, i, uint64(len(v.Admin)))
 		i--
 		dAtA[i] = 0x2a
 	}
-	if len(m.PaymentDenom) > 0 {
-		i -= len(m.PaymentDenom)
-		copy(dAtA[i:], m.PaymentDenom)
-		i = encodeVarintVault(dAtA, i, uint64(len(m.PaymentDenom)))
+	if len(v.PaymentDenom) > 0 {
+		i -= len(v.PaymentDenom)
+		copy(dAtA[i:], v.PaymentDenom)
+		i = encodeVarintVault(dAtA, i, uint64(len(v.PaymentDenom)))
 		i--
 		dAtA[i] = 0x22
 	}
-	if len(m.UnderlyingAsset) > 0 {
-		i -= len(m.UnderlyingAsset)
-		copy(dAtA[i:], m.UnderlyingAsset)
-		i = encodeVarintVault(dAtA, i, uint64(len(m.UnderlyingAsset)))
+	if len(v.UnderlyingAsset) > 0 {
+		i -= len(v.UnderlyingAsset)
+		copy(dAtA[i:], v.UnderlyingAsset)
+		i = encodeVarintVault(dAtA, i, uint64(len(v.UnderlyingAsset)))
 		i--
 		dAtA[i] = 0x1a
 	}
 	{
-		size, err := m.TotalShares.MarshalToSizedBuffer(dAtA[:i])
+		size, err := v.TotalShares.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
 		}
@@ -613,9 +614,9 @@ func (m *VaultAccount) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	}
 	i--
 	dAtA[i] = 0x12
-	if m.BaseAccount != nil {
+	if v.BaseAccount != nil {
 		{
-			size, err := m.BaseAccount.MarshalToSizedBuffer(dAtA[:i])
+			size, err := v.BaseAccount.MarshalToSizedBuffer(dAtA[:i])
 			if err != nil {
 				return 0, err
 			}
@@ -737,78 +738,78 @@ func encodeVarintVault(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *VaultAccount) Size() (n int) {
-	if m == nil {
+func (v *VaultAccount) Size() (n int) {
+	if v == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if m.BaseAccount != nil {
-		l = m.BaseAccount.Size()
+	if v.BaseAccount != nil {
+		l = v.BaseAccount.Size()
 		n += 1 + l + sovVault(uint64(l))
 	}
-	l = m.TotalShares.Size()
+	l = v.TotalShares.Size()
 	n += 1 + l + sovVault(uint64(l))
-	l = len(m.UnderlyingAsset)
+	l = len(v.UnderlyingAsset)
 	if l > 0 {
 		n += 1 + l + sovVault(uint64(l))
 	}
-	l = len(m.PaymentDenom)
+	l = len(v.PaymentDenom)
 	if l > 0 {
 		n += 1 + l + sovVault(uint64(l))
 	}
-	l = len(m.Admin)
+	l = len(v.Admin)
 	if l > 0 {
 		n += 1 + l + sovVault(uint64(l))
 	}
-	l = len(m.CurrentInterestRate)
+	l = len(v.CurrentInterestRate)
 	if l > 0 {
 		n += 1 + l + sovVault(uint64(l))
 	}
-	l = len(m.DesiredInterestRate)
+	l = len(v.DesiredInterestRate)
 	if l > 0 {
 		n += 1 + l + sovVault(uint64(l))
 	}
-	l = len(m.MinInterestRate)
+	l = len(v.MinInterestRate)
 	if l > 0 {
 		n += 1 + l + sovVault(uint64(l))
 	}
-	l = len(m.MaxInterestRate)
+	l = len(v.MaxInterestRate)
 	if l > 0 {
 		n += 1 + l + sovVault(uint64(l))
 	}
-	if m.PeriodStart != 0 {
-		n += 1 + sovVault(uint64(m.PeriodStart))
+	if v.PeriodStart != 0 {
+		n += 1 + sovVault(uint64(v.PeriodStart))
 	}
-	if m.PeriodTimeout != 0 {
-		n += 1 + sovVault(uint64(m.PeriodTimeout))
+	if v.PeriodTimeout != 0 {
+		n += 1 + sovVault(uint64(v.PeriodTimeout))
 	}
-	if m.SwapInEnabled {
+	if v.SwapInEnabled {
 		n += 2
 	}
-	if m.SwapOutEnabled {
+	if v.SwapOutEnabled {
 		n += 2
 	}
-	if m.WithdrawalDelaySeconds != 0 {
-		n += 1 + sovVault(uint64(m.WithdrawalDelaySeconds))
+	if v.WithdrawalDelaySeconds != 0 {
+		n += 1 + sovVault(uint64(v.WithdrawalDelaySeconds))
 	}
-	if m.Paused {
+	if v.Paused {
 		n += 2
 	}
-	l = m.PausedBalance.Size()
+	l = v.PausedBalance.Size()
 	n += 2 + l + sovVault(uint64(l))
-	l = len(m.PausedReason)
+	l = len(v.PausedReason)
 	if l > 0 {
 		n += 2 + l + sovVault(uint64(l))
 	}
-	l = len(m.BridgeAddress)
+	l = len(v.BridgeAddress)
 	if l > 0 {
 		n += 2 + l + sovVault(uint64(l))
 	}
-	if m.BridgeEnabled {
+	if v.BridgeEnabled {
 		n += 3
 	}
-	l = len(m.AssetManager)
+	l = len(v.AssetManager)
 	if l > 0 {
 		n += 2 + l + sovVault(uint64(l))
 	}

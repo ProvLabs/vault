@@ -259,7 +259,7 @@ func (k msgServer) DepositInterestFunds(goCtx context.Context, msg *types.MsgDep
 	}
 
 	if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
-		return nil, fmt.Errorf("failed to reconcile vault interest before withdrawal: %w", err)
+		return nil, fmt.Errorf("failed to reconcile vault interest after deposit: %w", err)
 	}
 
 	k.emitEvent(ctx, types.NewEventInterestDeposit(msg.VaultAddress, msg.Authority, msg.Amount))

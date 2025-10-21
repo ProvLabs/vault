@@ -8,20 +8,33 @@ import (
 	proto "github.com/cosmos/gogoproto/proto"
 )
 
-// RegisterInterfaces registers the vault module's message types for protobuf interface compatibility.
+var (
+	_ VaultAccountI            = (*VaultAccount)(nil)
+	_ sdk.AccountI             = (*VaultAccount)(nil)
+	_ authtypes.GenesisAccount = (*VaultAccount)(nil)
+)
+
 func RegisterInterfaces(registry codectypes.InterfaceRegistry) {
 	messages := make([]proto.Message, len(AllRequestMsgs))
 	copy(messages, AllRequestMsgs)
 	registry.RegisterImplementations((*sdk.Msg)(nil), messages...)
 
 	registry.RegisterInterface(
-		"provlabs.vault.v1.VaultAccount",
+		"provlabs.vault.v1.VaultAccountI",
+		(*VaultAccountI)(nil),
+	)
+
+	registry.RegisterImplementations(
+		(*VaultAccountI)(nil),
+		&VaultAccount{},
+	)
+
+	registry.RegisterImplementations(
 		(*sdk.AccountI)(nil),
 		&VaultAccount{},
 	)
 
-	registry.RegisterInterface(
-		"provlabs.vault.v1.VaultAccount",
+	registry.RegisterImplementations(
 		(*authtypes.GenesisAccount)(nil),
 		&VaultAccount{},
 	)

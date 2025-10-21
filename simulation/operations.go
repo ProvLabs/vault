@@ -292,9 +292,15 @@ func SimulateMsgUpdateInterestRate(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateInterestRateRequest{}), "unable to get random interest rate"), nil, err
 		}
 
+		authority := adminAddr
+		if vault.AssetManager != "" && r.Intn(2) == 1 {
+			if am, err := sdk.AccAddressFromBech32(vault.AssetManager); err == nil {
+				authority = am
+			}
+		}
 		msg := &types.MsgUpdateInterestRateRequest{
 			VaultAddress: vault.GetAddress().String(),
-			Authority:    adminAddr.String(),
+			Authority:    authority.String(),
 			NewRate:      rate,
 		}
 

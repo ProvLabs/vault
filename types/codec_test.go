@@ -29,8 +29,12 @@ func TestVaultAccount_UnpackIntoAllInterfaces(t *testing.T) {
 	var asAccount sdk.AccountI
 	require.NoError(t, cdc.UnpackAny(any, &asAccount), "failed to unpack Any into AccountI")
 	require.NotNil(t, asAccount, "unpacked AccountI is nil")
+	_, ok := asAccount.(*vaulttypes.VaultAccount)
+	require.True(t, ok, "AccountI did not unwrap to *VaultAccount")
 
 	var asGenesis authtypes.GenesisAccount
 	require.NoError(t, cdc.UnpackAny(any, &asGenesis), "failed to unpack Any into GenesisAccount")
 	require.NotNil(t, asGenesis, "unpacked GenesisAccount is nil")
+	_, ok = asGenesis.(*vaulttypes.VaultAccount)
+	require.True(t, ok, "GenesisAccount did not unwrap to *VaultAccount")
 }

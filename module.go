@@ -450,7 +450,7 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:       "estimate-swap-out [vault_address] [shares] [redeem_denom]",
 					Alias:     []string{"eso"},
 					Short:     "Estimate assets received for redeeming shares",
-					Example:   fmt.Sprintf("%s estimate-swap-out %s 1000000 nhash", queryStart, exampleVaultAddr),
+					Example:   fmt.Sprintf("%s estimate-swap-out %s 1000000nhash", queryStart, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "vault_address"},
 						{ProtoField: "shares"},

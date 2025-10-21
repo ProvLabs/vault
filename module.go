@@ -166,7 +166,7 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 	exampleVaultAddr := "pb1z3x5c7v9b2n4m6f8h0j1k3l5p7r9s0t2w4y6"
 	exampleOwnerAddr := "pb1a2b3c4d5e6f7g8h9j0k1l2m3n4p5q6r7s8t"
 	exampleBridgeAddr := "pb1b2r3i4d5g6e7a8d9d0e1m2o3s4i5g6n7e8r9"
-	exampleAssetMgrAddr := "pb1m4n5g6r7m8n9g0r1a2s3s4e5t6m7a8n9a0g"
+	exampleAssetMgrAddr := "pb1a5s6e7t8m9g0r1m2a3n4a5g6e7r8a9d0r1s"
 
 	return &autocliv1.ModuleOptions{
 		Tx: &autocliv1.ServiceCommandDescriptor{

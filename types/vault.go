@@ -85,74 +85,80 @@ func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyi
 }
 
 // Clone makes a MarkerAccount instance copy.
-func (va VaultAccount) Clone() *VaultAccount {
-	return proto.Clone(&va).(*VaultAccount)
+func (v VaultAccount) Clone() *VaultAccount {
+	return proto.Clone(&v).(*VaultAccount)
 }
 
 // Validate performs a series of checks to ensure the VaultAccount is correctly configured.
-func (va VaultAccount) Validate() error {
-	if va.BaseAccount == nil {
+func (v VaultAccount) Validate() error {
+	if v.BaseAccount == nil {
 		return fmt.Errorf("base account cannot be nil")
 	}
 
-	if err := va.BaseAccount.Validate(); err != nil {
+	if err := v.BaseAccount.Validate(); err != nil {
 		return err
 	}
 
-	if _, err := sdk.AccAddressFromBech32(va.Admin); err != nil {
+	if _, err := sdk.AccAddressFromBech32(v.Admin); err != nil {
 		return fmt.Errorf("invalid admin address: %w", err)
 	}
-	if err := sdk.ValidateDenom(va.TotalShares.Denom); err != nil {
+	if err := sdk.ValidateDenom(v.TotalShares.Denom); err != nil {
 		return fmt.Errorf("invalid share denom: %w", err)
 	}
-	if va.TotalShares.IsNegative() {
-		return fmt.Errorf("total shares cannot be negative: %s", va.TotalShares)
+	if v.TotalShares.IsNegative() {
+		return fmt.Errorf("total shares cannot be negative: %s", v.TotalShares)
 	}
-	if err := sdk.ValidateDenom(va.UnderlyingAsset); err != nil {
-		return fmt.Errorf("invalid underlying asset denom: %s", va.UnderlyingAsset)
-	}
-
-	if va.PaymentDenom != "" {
-		if err := sdk.ValidateDenom(va.PaymentDenom); err != nil {
-			return fmt.Errorf("invalid payment denom: %q: %w", va.PaymentDenom, err)
-		}
-		if va.PaymentDenom == va.UnderlyingAsset {
-			return fmt.Errorf("payment (%q) denom cannot equal underlying asset denom (%q)", va.PaymentDenom, va.UnderlyingAsset)
-		}
+	if err := sdk.ValidateDenom(v.UnderlyingAsset); err != nil {
+		return fmt.Errorf("invalid underlying asset denom: %s", v.UnderlyingAsset)
 	}
 
-	if va.BridgeAddress != "" {
-		if _, err := sdk.AccAddressFromBech32(va.BridgeAddress); err != nil {
+	if v.PaymentDenom != "" {
+		if err := sdk.ValidateDenom(v.PaymentDenom); err != nil {
+			return fmt.Errorf("invalid payment denom: %q: %w", v.PaymentDenom, err)
+		}
+		if v.PaymentDenom == v.UnderlyingAsset {
+			return fmt.Errorf("payment (%q) denom cannot equal underlying asset denom (%q)", v.PaymentDenom, v.UnderlyingAsset)
+		}
+	}
+
+	if v.AssetManager != "" {
+		if _, err := sdk.AccAddressFromBech32(v.AssetManager); err != nil {
+			return fmt.Errorf("invalid asset manager address: %w", err)
+		}
+	}
+
+	if v.BridgeAddress != "" {
+		if _, err := sdk.AccAddressFromBech32(v.BridgeAddress); err != nil {
 			return fmt.Errorf("invalid bridge address: %w", err)
 		}
 	}
-	if va.BridgeEnabled && va.BridgeAddress == "" {
+	if v.BridgeEnabled && v.BridgeAddress == "" {
 		return fmt.Errorf("bridge cannot be enabled without a bridge address")
 	}
 
-	cur, err := sdkmath.LegacyNewDecFromStr(va.CurrentInterestRate)
+	cur, err := sdkmath.LegacyNewDecFromStr(v.CurrentInterestRate)
 	if err != nil {
-		return fmt.Errorf("invalid current interest rate: %s", va.CurrentInterestRate)
+		return fmt.Errorf("invalid current interest rate: %s", v.CurrentInterestRate)
 	}
-	des, err := sdkmath.LegacyNewDecFromStr(va.DesiredInterestRate)
+	des, err := sdkmath.LegacyNewDecFromStr(v.DesiredInterestRate)
 	if err != nil {
-		return fmt.Errorf("invalid desired interest rate: %s", va.DesiredInterestRate)
+		return fmt.Errorf("invalid desired interest rate: %s", v.DesiredInterestRate)
 	}
 
 	var min, max sdkmath.LegacyDec
-	hasMin := va.MinInterestRate != ""
-	hasMax := va.MaxInterestRate != ""
+	hasMin := v.MinInterestRate != ""
+	hasMax := v.MaxInterestRate != ""
 
 	if hasMin {
-		min, err = sdkmath.LegacyNewDecFromStr(va.MinInterestRate)
+		min, err = sdkmath.LegacyNewDecFromStr(v.MinInterestRate)
 		if err != nil {
-			return fmt.Errorf("invalid min interest rate: %s", va.MinInterestRate)
+			return fmt.Errorf("invalid min interest rate: %s", v.MinInterestRate)
 		}
 	}
 	if hasMax {
-		max, err = sdkmath.LegacyNewDecFromStr(va.MaxInterestRate)
+		max, err = sdkmath.LegacyNewDecFromStr(v.MaxInterestRate)
 		if err != nil {
-			return fmt.Errorf("invalid max interest rate: %s", va.MaxInterestRate)
+			return fmt.Errorf("invalid max interest rate: %s", v.MaxInterestRate)
 		}
 	}
 
@@ -172,8 +178,9 @@ func (va VaultAccount) Validate() error {
 	return nil
 }
 
-func (va VaultAccount) InterestEnabled() bool {
-	current, err := sdkmath.LegacyNewDecFromStr(va.CurrentInterestRate)
+// InterestEnabled returns true if the vault is currently configured to use interest.
+func (v VaultAccount) InterestEnabled() bool {
+	current, err := sdkmath.LegacyNewDecFromStr(v.CurrentInterestRate)
 	if err != nil {
 		return false
 	}
@@ -255,4 +262,16 @@ func (v *VaultAccount) ValidateAcceptedCoin(c sdk.Coin) error {
 // vault’s principal (i.e., the marker account backing the vault’s shares).
 func (v VaultAccount) PrincipalMarkerAddress() sdk.AccAddress {
 	return markertypes.MustGetMarkerAddress(v.TotalShares.Denom)
+}
+
+// ValidateManagementAuthority checks whether the given address is authorized to perform
+// vault management actions. Either the vault admin or the asset manager (if set) is allowed.
+func (v VaultAccount) ValidateManagementAuthority(authority string) error {
+	if authority == v.Admin {
+		return nil
+	}
+	if v.AssetManager != "" && authority == v.AssetManager {
+		return nil
+	}
+	return fmt.Errorf("unauthorized authority: %s", authority)
 }

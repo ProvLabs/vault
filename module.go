@@ -162,9 +162,12 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 	txStart := fmt.Sprintf("%s tx %s", version.AppName, types.ModuleName)
 	queryStart := fmt.Sprintf("%s query %s", version.AppName, types.ModuleName)
 	exampleAdminAddr := "pb1g4s2q6c0a8y9c0s6e1f4h7j9k2l4m6n8p0q2r"
+	exampleAuthorityAddr := "pb1m4n5g6r7m8n9g0r1a2s3s4e5t6m7a8n9a0g"
 	exampleVaultAddr := "pb1z3x5c7v9b2n4m6f8h0j1k3l5p7r9s0t2w4y6"
 	exampleOwnerAddr := "pb1a2b3c4d5e6f7g8h9j0k1l2m3n4p5q6r7s8t"
 	exampleBridgeAddr := "pb1b2r3i4d5g6e7a8d9d0e1m2o3s4i5g6n7e8r9"
+	exampleAssetMgrAddr := "pb1a5s6e7t8m9g0r1m2a3n4a5g6e7r8a9d0r1s"
+
 	return &autocliv1.ModuleOptions{
 		Tx: &autocliv1.ServiceCommandDescriptor{
 			Service: vaultv1.Msg_ServiceDesc.ServiceName,
@@ -195,21 +198,22 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod: "SwapOut",
-					Use:       "swap-out [owner] [vault_address] [assets]",
+					Use:       "swap-out [owner] [vault_address] [assets] [redeem_denom]",
 					Alias:     []string{"so"},
-					Short:     "Withdraw underlying assets from a vault by burning shares",
-					Example:   fmt.Sprintf("%s swap-out %s %s 100svnhash", txStart, exampleOwnerAddr, exampleVaultAddr),
+					Short:     "Queue a withdrawal by redeeming shares for assets",
+					Example:   fmt.Sprintf("%s swap-out %s %s 100svnhash nhash", txStart, exampleOwnerAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "owner"},
 						{ProtoField: "vault_address"},
 						{ProtoField: "assets"},
+						{ProtoField: "redeem_denom", Optional: true},
 					},
 				},
 				{
 					RpcMethod: "UpdateMinInterestRate",
 					Use:       "update-min-interest-rate [admin] [vault_address] [min_rate]",
 					Alias:     []string{"umir"},
-					Short:     "Sets the vault's minimum annual interest rate (e.g., \"0.9\" for 90% and \"0.9001353\" for 90.01353%) or clears it when not provided.",
+					Short:     "Set the vault's minimum annual interest rate or clear it with empty string",
 					Example:   fmt.Sprintf("%s update-min-interest-rate %s %s 0.01", txStart, exampleAdminAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "admin"},
@@ -221,8 +225,8 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "UpdateMaxInterestRate",
 					Use:       "update-max-interest-rate [admin] [vault_address] [max_rate]",
 					Alias:     []string{"umaxir"},
-					Short:     "Sets the vault's maximum annual interest rate (e.g., \"0.9\" for 90% and \"0.9001353\" for 90.01353%) or clears it when not provided.",
-					Example:   fmt.Sprintf("%s update-max-interest-rate %s %s 0.1", txStart, exampleAdminAddr, exampleVaultAddr),
+					Short:     "Set the vault's maximum annual interest rate or clear it with empty string",
+					Example:   fmt.Sprintf("%s update-max-interest-rate %s %s 0.10", txStart, exampleAdminAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "admin"},
 						{ProtoField: "vault_address"},
@@ -233,7 +237,7 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "UpdateInterestRate",
 					Use:       "update-interest-rate [admin] [vault_address] [new_rate]",
 					Alias:     []string{"uir"},
-					Short:     "Updates the current annual interest rate (e.g., \"0.9\" for 90% and \"0.9001353\" for 90.01353%) for the vault.",
+					Short:     "Update the vault's current/desired annual interest rate",
 					Example:   fmt.Sprintf("%s update-interest-rate %s %s 0.05", txStart, exampleAdminAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "admin"},
@@ -267,83 +271,83 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod: "DepositInterestFunds",
-					Use:       "deposit-interest-funds [admin] [vault_address] [amount]",
+					Use:       "deposit-interest-funds [authority] [vault_address] [amount]",
 					Alias:     []string{"dif"},
-					Short:     "Deposit funds into a vault for paying interest",
-					Example:   fmt.Sprintf("%s deposit-interest-funds %s %s 5000nhash", txStart, exampleAdminAddr, exampleVaultAddr),
+					Short:     "Deposit funds into a vault for paying interest (admin or asset manager)",
+					Example:   fmt.Sprintf("%s deposit-interest-funds %s %s 5000nhash", txStart, exampleAuthorityAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "admin"},
+						{ProtoField: "authority"},
 						{ProtoField: "vault_address"},
 						{ProtoField: "amount"},
 					},
 				},
 				{
 					RpcMethod: "WithdrawInterestFunds",
-					Use:       "withdraw-interest-funds [admin] [vault_address] [amount]",
+					Use:       "withdraw-interest-funds [authority] [vault_address] [amount]",
 					Alias:     []string{"wif"},
-					Short:     "Withdraw unused interest funds from a vault",
-					Example:   fmt.Sprintf("%s withdraw-interest-funds %s %s 1000nhash", txStart, exampleAdminAddr, exampleVaultAddr),
+					Short:     "Withdraw unused interest funds (admin or asset manager)",
+					Example:   fmt.Sprintf("%s withdraw-interest-funds %s %s 1000nhash", txStart, exampleAuthorityAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "admin"},
+						{ProtoField: "authority"},
 						{ProtoField: "vault_address"},
 						{ProtoField: "amount"},
 					},
 				},
 				{
 					RpcMethod: "DepositPrincipalFunds",
-					Use:       "deposit-principal-funds [admin] [vault_address] [amount]",
+					Use:       "deposit-principal-funds [authority] [vault_address] [amount]",
 					Alias:     []string{"dpf"},
-					Short:     "Deposit principal funds into the vault’s marker",
-					Example:   fmt.Sprintf("%s deposit-principal-funds %s %s 100000nhash", txStart, exampleAdminAddr, exampleVaultAddr),
+					Short:     "Deposit principal funds into the vault’s marker (admin or asset manager)",
+					Example:   fmt.Sprintf("%s deposit-principal-funds %s %s 100000nhash", txStart, exampleAuthorityAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "admin"},
+						{ProtoField: "authority"},
 						{ProtoField: "vault_address"},
 						{ProtoField: "amount"},
 					},
 				},
 				{
 					RpcMethod: "WithdrawPrincipalFunds",
-					Use:       "withdraw-principal-funds [admin] [vault_address] [amount]",
+					Use:       "withdraw-principal-funds [authority] [vault_address] [amount]",
 					Alias:     []string{"wpf"},
-					Short:     "Withdraw principal funds from the vault’s marker",
-					Example:   fmt.Sprintf("%s withdraw-principal-funds %s %s 10000nhash", txStart, exampleAdminAddr, exampleVaultAddr),
+					Short:     "Withdraw principal funds from the vault’s marker (admin or asset manager)",
+					Example:   fmt.Sprintf("%s withdraw-principal-funds %s %s 10000nhash", txStart, exampleAuthorityAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "admin"},
+						{ProtoField: "authority"},
 						{ProtoField: "vault_address"},
 						{ProtoField: "amount"},
 					},
 				},
 				{
 					RpcMethod: "ExpeditePendingSwapOut",
-					Use:       "expedite-pending-swap-out [admin] [request_id]",
+					Use:       "expedite-pending-swap-out [authority] [request_id]",
 					Alias:     []string{"epso"},
-					Short:     "Expedite a pending swap out from a vault",
-					Example:   fmt.Sprintf("%s expedite-pending-swap-out %s 1", txStart, exampleAdminAddr),
+					Short:     "Expedite a pending swap out (admin or asset manager)",
+					Example:   fmt.Sprintf("%s expedite-pending-swap-out %s 1", txStart, exampleAuthorityAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "admin"},
+						{ProtoField: "authority"},
 						{ProtoField: "request_id"},
 					},
 				},
 				{
 					RpcMethod: "PauseVault",
-					Use:       "pause [admin] [vault_address] [reason]",
+					Use:       "pause [authority] [vault_address] [reason]",
 					Alias:     []string{"pv"},
-					Short:     "Pause a vault, disabling all user-facing operations",
-					Example:   fmt.Sprintf("%s pause %s %s 'rebalancing collateral'", txStart, exampleAdminAddr, exampleVaultAddr),
+					Short:     "Pause a vault (admin or asset manager), disabling user-facing operations",
+					Example:   fmt.Sprintf("%s pause %s %s 'rebalancing collateral'", txStart, exampleAuthorityAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "admin"},
+						{ProtoField: "authority"},
 						{ProtoField: "vault_address"},
 						{ProtoField: "reason"},
 					},
 				},
 				{
 					RpcMethod: "UnpauseVault",
-					Use:       "unpause [admin] [vault_address]",
+					Use:       "unpause [authority] [vault_address]",
 					Alias:     []string{"upv"},
-					Short:     "Unpause a vault, re-enabling all user-facing operations",
-					Example:   fmt.Sprintf("%s unpause %s %s", txStart, exampleAdminAddr, exampleVaultAddr),
+					Short:     "Unpause a vault (admin or asset manager)",
+					Example:   fmt.Sprintf("%s unpause %s %s", txStart, exampleAuthorityAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "admin"},
+						{ProtoField: "authority"},
 						{ProtoField: "vault_address"},
 					},
 				},
@@ -395,6 +399,18 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						{ProtoField: "shares"},
 					},
 				},
+				{
+					RpcMethod: "SetAssetManager",
+					Use:       "set-asset-manager [admin] [vault_address] [asset_manager]",
+					Alias:     []string{"sam"},
+					Short:     "Set or clear the asset manager address for a vault (pass empty string to clear)",
+					Example:   fmt.Sprintf("%s set-asset-manager %s %s %s", txStart, exampleAdminAddr, exampleVaultAddr, exampleAssetMgrAddr),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "admin"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "asset_manager"},
+					},
+				},
 			},
 		},
 
@@ -434,7 +450,7 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:       "estimate-swap-out [vault_address] [shares] [redeem_denom]",
 					Alias:     []string{"eso"},
 					Short:     "Estimate assets received for redeeming shares",
-					Example:   fmt.Sprintf("%s estimate-swap-out %s 1000000 nhash", queryStart, exampleVaultAddr),
+					Example:   fmt.Sprintf("%s estimate-swap-out %s 1000000nhash", queryStart, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "vault_address"},
 						{ProtoField: "shares"},

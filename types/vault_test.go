@@ -16,6 +16,7 @@ import (
 func TestVaultAccount_Validate(t *testing.T) {
 	validAdmin := utils.TestAddress().Bech32
 	validBridgeAddress := utils.TestAddress().Bech32
+	validAssetManager := utils.TestAddress().Bech32
 	validDenom := "validdenom"
 	invalidDenom := "inval!d"
 	validInterest := "0.05"
@@ -393,6 +394,32 @@ func TestVaultAccount_Validate(t *testing.T) {
 			},
 			expectedErr: "bridge cannot be enabled without a bridge address",
 		},
+		{
+			name: "asset manager set with valid address",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				AssetManager:        validAssetManager,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
+				UnderlyingAsset:     "uusd",
+				CurrentInterestRate: "0.0",
+				DesiredInterestRate: "0.0",
+			},
+			expectedErr: "",
+		},
+		{
+			name: "asset manager set with invalid address",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				AssetManager:        "not-a-bech32",
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
+				UnderlyingAsset:     "uusd",
+				CurrentInterestRate: "0.0",
+				DesiredInterestRate: "0.0",
+			},
+			expectedErr: "invalid asset manager address",
+		},
 	}
 
 	for _, tc := range tests {
@@ -505,4 +532,63 @@ func TestVaultAccount_ValidateAcceptedCoin(t *testing.T) {
 	err = vaUnderlyingOnly.ValidateAcceptedCoin(sdk.NewInt64Coin("usdc", 3))
 	assert.Error(t, err, "payment denom should not be accepted when not configured")
 	assert.Contains(t, err.Error(), "denom not supported for vault", "error should indicate unsupported denom")
+}
+
+func TestVaultAccount_ValidateManagementAuthority(t *testing.T) {
+	admin := utils.TestAddress().Bech32
+	assetMgr := utils.TestAddress().Bech32
+	other := utils.TestAddress().Bech32
+
+	tests := []struct {
+		name       string
+		va         types.VaultAccount
+		authority  string
+		shouldPass bool
+	}{
+		{
+			name:       "admin allowed",
+			va:         types.VaultAccount{Admin: admin, AssetManager: ""},
+			authority:  admin,
+			shouldPass: true,
+		},
+		{
+			name:       "asset manager allowed",
+			va:         types.VaultAccount{Admin: admin, AssetManager: assetMgr},
+			authority:  assetMgr,
+			shouldPass: true,
+		},
+		{
+			name:       "non-admin with no asset manager set => denied",
+			va:         types.VaultAccount{Admin: admin, AssetManager: ""},
+			authority:  other,
+			shouldPass: false,
+		},
+		{
+			name:       "non-admin, non-asset-manager => denied",
+			va:         types.VaultAccount{Admin: admin, AssetManager: assetMgr},
+			authority:  other,
+			shouldPass: false,
+		},
+		{
+			name:       "empty authority => denied",
+			va:         types.VaultAccount{Admin: admin, AssetManager: assetMgr},
+			authority:  "",
+			shouldPass: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.va.ValidateManagementAuthority(tc.authority)
+			if tc.shouldPass {
+				assert.NoError(t, err, "expected authority to be accepted")
+			} else {
+				assert.Error(t, err, "expected authority to be rejected")
+				assert.Contains(t, err.Error(), "unauthorized authority", "error should indicate unauthorized")
+				if tc.authority != "" {
+					assert.Contains(t, err.Error(), tc.authority, "error should include the provided authority")
+				}
+			}
+		})
+	}
 }

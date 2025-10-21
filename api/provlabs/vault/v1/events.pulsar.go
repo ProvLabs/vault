@@ -4508,7 +4508,7 @@ func (x *fastReflection_EventVaultInterestChange) ProtoMethods() *protoiface.Met
 var (
 	md_EventInterestDeposit               protoreflect.MessageDescriptor
 	fd_EventInterestDeposit_vault_address protoreflect.FieldDescriptor
-	fd_EventInterestDeposit_admin         protoreflect.FieldDescriptor
+	fd_EventInterestDeposit_authority     protoreflect.FieldDescriptor
 	fd_EventInterestDeposit_amount        protoreflect.FieldDescriptor
 )
 
@@ -4516,7 +4516,7 @@ func init() {
 	file_provlabs_vault_v1_events_proto_init()
 	md_EventInterestDeposit = File_provlabs_vault_v1_events_proto.Messages().ByName("EventInterestDeposit")
 	fd_EventInterestDeposit_vault_address = md_EventInterestDeposit.Fields().ByName("vault_address")
-	fd_EventInterestDeposit_admin = md_EventInterestDeposit.Fields().ByName("admin")
+	fd_EventInterestDeposit_authority = md_EventInterestDeposit.Fields().ByName("authority")
 	fd_EventInterestDeposit_amount = md_EventInterestDeposit.Fields().ByName("amount")
 }
 
@@ -4591,9 +4591,9 @@ func (x *fastReflection_EventInterestDeposit) Range(f func(protoreflect.FieldDes
 			return
 		}
 	}
-	if x.Admin != "" {
-		value := protoreflect.ValueOfString(x.Admin)
-		if !f(fd_EventInterestDeposit_admin, value) {
+	if x.Authority != "" {
+		value := protoreflect.ValueOfString(x.Authority)
+		if !f(fd_EventInterestDeposit_authority, value) {
 			return
 		}
 	}
@@ -4620,8 +4620,8 @@ func (x *fastReflection_EventInterestDeposit) Has(fd protoreflect.FieldDescripto
 	switch fd.FullName() {
 	case "provlabs.vault.v1.EventInterestDeposit.vault_address":
 		return x.VaultAddress != ""
-	case "provlabs.vault.v1.EventInterestDeposit.admin":
-		return x.Admin != ""
+	case "provlabs.vault.v1.EventInterestDeposit.authority":
+		return x.Authority != ""
 	case "provlabs.vault.v1.EventInterestDeposit.amount":
 		return x.Amount != ""
 	default:
@@ -4642,8 +4642,8 @@ func (x *fastReflection_EventInterestDeposit) Clear(fd protoreflect.FieldDescrip
 	switch fd.FullName() {
 	case "provlabs.vault.v1.EventInterestDeposit.vault_address":
 		x.VaultAddress = ""
-	case "provlabs.vault.v1.EventInterestDeposit.admin":
-		x.Admin = ""
+	case "provlabs.vault.v1.EventInterestDeposit.authority":
+		x.Authority = ""
 	case "provlabs.vault.v1.EventInterestDeposit.amount":
 		x.Amount = ""
 	default:
@@ -4665,8 +4665,8 @@ func (x *fastReflection_EventInterestDeposit) Get(descriptor protoreflect.FieldD
 	case "provlabs.vault.v1.EventInterestDeposit.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
-	case "provlabs.vault.v1.EventInterestDeposit.admin":
-		value := x.Admin
+	case "provlabs.vault.v1.EventInterestDeposit.authority":
+		value := x.Authority
 		return protoreflect.ValueOfString(value)
 	case "provlabs.vault.v1.EventInterestDeposit.amount":
 		value := x.Amount
@@ -4693,8 +4693,8 @@ func (x *fastReflection_EventInterestDeposit) Set(fd protoreflect.FieldDescripto
 	switch fd.FullName() {
 	case "provlabs.vault.v1.EventInterestDeposit.vault_address":
 		x.VaultAddress = value.Interface().(string)
-	case "provlabs.vault.v1.EventInterestDeposit.admin":
-		x.Admin = value.Interface().(string)
+	case "provlabs.vault.v1.EventInterestDeposit.authority":
+		x.Authority = value.Interface().(string)
 	case "provlabs.vault.v1.EventInterestDeposit.amount":
 		x.Amount = value.Interface().(string)
 	default:
@@ -4719,8 +4719,8 @@ func (x *fastReflection_EventInterestDeposit) Mutable(fd protoreflect.FieldDescr
 	switch fd.FullName() {
 	case "provlabs.vault.v1.EventInterestDeposit.vault_address":
 		panic(fmt.Errorf("field vault_address of message provlabs.vault.v1.EventInterestDeposit is not mutable"))
-	case "provlabs.vault.v1.EventInterestDeposit.admin":
-		panic(fmt.Errorf("field admin of message provlabs.vault.v1.EventInterestDeposit is not mutable"))
+	case "provlabs.vault.v1.EventInterestDeposit.authority":
+		panic(fmt.Errorf("field authority of message provlabs.vault.v1.EventInterestDeposit is not mutable"))
 	case "provlabs.vault.v1.EventInterestDeposit.amount":
 		panic(fmt.Errorf("field amount of message provlabs.vault.v1.EventInterestDeposit is not mutable"))
 	default:
@@ -4738,7 +4738,7 @@ func (x *fastReflection_EventInterestDeposit) NewField(fd protoreflect.FieldDesc
 	switch fd.FullName() {
 	case "provlabs.vault.v1.EventInterestDeposit.vault_address":
 		return protoreflect.ValueOfString("")
-	case "provlabs.vault.v1.EventInterestDeposit.admin":
+	case "provlabs.vault.v1.EventInterestDeposit.authority":
 		return protoreflect.ValueOfString("")
 	case "provlabs.vault.v1.EventInterestDeposit.amount":
 		return protoreflect.ValueOfString("")
@@ -4815,7 +4815,7 @@ func (x *fastReflection_EventInterestDeposit) ProtoMethods() *protoiface.Methods
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		l = len(x.Admin)
+		l = len(x.Authority)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
@@ -4859,10 +4859,10 @@ func (x *fastReflection_EventInterestDeposit) ProtoMethods() *protoiface.Methods
 			i--
 			dAtA[i] = 0x1a
 		}
-		if len(x.Admin) > 0 {
-			i -= len(x.Admin)
-			copy(dAtA[i:], x.Admin)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Admin)))
+		if len(x.Authority) > 0 {
+			i -= len(x.Authority)
+			copy(dAtA[i:], x.Authority)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Authority)))
 			i--
 			dAtA[i] = 0x12
 		}
@@ -4956,7 +4956,7 @@ func (x *fastReflection_EventInterestDeposit) ProtoMethods() *protoiface.Methods
 				iNdEx = postIndex
 			case 2:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
 				}
 				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
@@ -4984,7 +4984,7 @@ func (x *fastReflection_EventInterestDeposit) ProtoMethods() *protoiface.Methods
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Admin = string(dAtA[iNdEx:postIndex])
+				x.Authority = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 3:
 				if wireType != 2 {
@@ -5056,7 +5056,7 @@ func (x *fastReflection_EventInterestDeposit) ProtoMethods() *protoiface.Methods
 var (
 	md_EventInterestWithdrawal               protoreflect.MessageDescriptor
 	fd_EventInterestWithdrawal_vault_address protoreflect.FieldDescriptor
-	fd_EventInterestWithdrawal_admin         protoreflect.FieldDescriptor
+	fd_EventInterestWithdrawal_authority     protoreflect.FieldDescriptor
 	fd_EventInterestWithdrawal_amount        protoreflect.FieldDescriptor
 )
 
@@ -5064,7 +5064,7 @@ func init() {
 	file_provlabs_vault_v1_events_proto_init()
 	md_EventInterestWithdrawal = File_provlabs_vault_v1_events_proto.Messages().ByName("EventInterestWithdrawal")
 	fd_EventInterestWithdrawal_vault_address = md_EventInterestWithdrawal.Fields().ByName("vault_address")
-	fd_EventInterestWithdrawal_admin = md_EventInterestWithdrawal.Fields().ByName("admin")
+	fd_EventInterestWithdrawal_authority = md_EventInterestWithdrawal.Fields().ByName("authority")
 	fd_EventInterestWithdrawal_amount = md_EventInterestWithdrawal.Fields().ByName("amount")
 }
 
@@ -5139,9 +5139,9 @@ func (x *fastReflection_EventInterestWithdrawal) Range(f func(protoreflect.Field
 			return
 		}
 	}
-	if x.Admin != "" {
-		value := protoreflect.ValueOfString(x.Admin)
-		if !f(fd_EventInterestWithdrawal_admin, value) {
+	if x.Authority != "" {
+		value := protoreflect.ValueOfString(x.Authority)
+		if !f(fd_EventInterestWithdrawal_authority, value) {
 			return
 		}
 	}
@@ -5168,8 +5168,8 @@ func (x *fastReflection_EventInterestWithdrawal) Has(fd protoreflect.FieldDescri
 	switch fd.FullName() {
 	case "provlabs.vault.v1.EventInterestWithdrawal.vault_address":
 		return x.VaultAddress != ""
-	case "provlabs.vault.v1.EventInterestWithdrawal.admin":
-		return x.Admin != ""
+	case "provlabs.vault.v1.EventInterestWithdrawal.authority":
+		return x.Authority != ""
 	case "provlabs.vault.v1.EventInterestWithdrawal.amount":
 		return x.Amount != ""
 	default:
@@ -5190,8 +5190,8 @@ func (x *fastReflection_EventInterestWithdrawal) Clear(fd protoreflect.FieldDesc
 	switch fd.FullName() {
 	case "provlabs.vault.v1.EventInterestWithdrawal.vault_address":
 		x.VaultAddress = ""
-	case "provlabs.vault.v1.EventInterestWithdrawal.admin":
-		x.Admin = ""
+	case "provlabs.vault.v1.EventInterestWithdrawal.authority":
+		x.Authority = ""
 	case "provlabs.vault.v1.EventInterestWithdrawal.amount":
 		x.Amount = ""
 	default:
@@ -5213,8 +5213,8 @@ func (x *fastReflection_EventInterestWithdrawal) Get(descriptor protoreflect.Fie
 	case "provlabs.vault.v1.EventInterestWithdrawal.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
-	case "provlabs.vault.v1.EventInterestWithdrawal.admin":
-		value := x.Admin
+	case "provlabs.vault.v1.EventInterestWithdrawal.authority":
+		value := x.Authority
 		return protoreflect.ValueOfString(value)
 	case "provlabs.vault.v1.EventInterestWithdrawal.amount":
 		value := x.Amount
@@ -5241,8 +5241,8 @@ func (x *fastReflection_EventInterestWithdrawal) Set(fd protoreflect.FieldDescri
 	switch fd.FullName() {
 	case "provlabs.vault.v1.EventInterestWithdrawal.vault_address":
 		x.VaultAddress = value.Interface().(string)
-	case "provlabs.vault.v1.EventInterestWithdrawal.admin":
-		x.Admin = value.Interface().(string)
+	case "provlabs.vault.v1.EventInterestWithdrawal.authority":
+		x.Authority = value.Interface().(string)
 	case "provlabs.vault.v1.EventInterestWithdrawal.amount":
 		x.Amount = value.Interface().(string)
 	default:
@@ -5267,8 +5267,8 @@ func (x *fastReflection_EventInterestWithdrawal) Mutable(fd protoreflect.FieldDe
 	switch fd.FullName() {
 	case "provlabs.vault.v1.EventInterestWithdrawal.vault_address":
 		panic(fmt.Errorf("field vault_address of message provlabs.vault.v1.EventInterestWithdrawal is not mutable"))
-	case "provlabs.vault.v1.EventInterestWithdrawal.admin":
-		panic(fmt.Errorf("field admin of message provlabs.vault.v1.EventInterestWithdrawal is not mutable"))
+	case "provlabs.vault.v1.EventInterestWithdrawal.authority":
+		panic(fmt.Errorf("field authority of message provlabs.vault.v1.EventInterestWithdrawal is not mutable"))
 	case "provlabs.vault.v1.EventInterestWithdrawal.amount":
 		panic(fmt.Errorf("field amount of message provlabs.vault.v1.EventInterestWithdrawal is not mutable"))
 	default:
@@ -5286,7 +5286,7 @@ func (x *fastReflection_EventInterestWithdrawal) NewField(fd protoreflect.FieldD
 	switch fd.FullName() {
 	case "provlabs.vault.v1.EventInterestWithdrawal.vault_address":
 		return protoreflect.ValueOfString("")
-	case "provlabs.vault.v1.EventInterestWithdrawal.admin":
+	case "provlabs.vault.v1.EventInterestWithdrawal.authority":
 		return protoreflect.ValueOfString("")
 	case "provlabs.vault.v1.EventInterestWithdrawal.amount":
 		return protoreflect.ValueOfString("")
@@ -5363,7 +5363,7 @@ func (x *fastReflection_EventInterestWithdrawal) ProtoMethods() *protoiface.Meth
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		l = len(x.Admin)
+		l = len(x.Authority)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
@@ -5407,10 +5407,10 @@ func (x *fastReflection_EventInterestWithdrawal) ProtoMethods() *protoiface.Meth
 			i--
 			dAtA[i] = 0x1a
 		}
-		if len(x.Admin) > 0 {
-			i -= len(x.Admin)
-			copy(dAtA[i:], x.Admin)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Admin)))
+		if len(x.Authority) > 0 {
+			i -= len(x.Authority)
+			copy(dAtA[i:], x.Authority)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Authority)))
 			i--
 			dAtA[i] = 0x12
 		}
@@ -5504,7 +5504,7 @@ func (x *fastReflection_EventInterestWithdrawal) ProtoMethods() *protoiface.Meth
 				iNdEx = postIndex
 			case 2:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
 				}
 				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
@@ -5532,7 +5532,7 @@ func (x *fastReflection_EventInterestWithdrawal) ProtoMethods() *protoiface.Meth
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Admin = string(dAtA[iNdEx:postIndex])
+				x.Authority = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 3:
 				if wireType != 2 {
@@ -6680,7 +6680,7 @@ func (x *fastReflection_EventToggleSwapOut) ProtoMethods() *protoiface.Methods {
 var (
 	md_EventDepositPrincipalFunds               protoreflect.MessageDescriptor
 	fd_EventDepositPrincipalFunds_vault_address protoreflect.FieldDescriptor
-	fd_EventDepositPrincipalFunds_admin         protoreflect.FieldDescriptor
+	fd_EventDepositPrincipalFunds_authority     protoreflect.FieldDescriptor
 	fd_EventDepositPrincipalFunds_amount        protoreflect.FieldDescriptor
 )
 
@@ -6688,7 +6688,7 @@ func init() {
 	file_provlabs_vault_v1_events_proto_init()
 	md_EventDepositPrincipalFunds = File_provlabs_vault_v1_events_proto.Messages().ByName("EventDepositPrincipalFunds")
 	fd_EventDepositPrincipalFunds_vault_address = md_EventDepositPrincipalFunds.Fields().ByName("vault_address")
-	fd_EventDepositPrincipalFunds_admin = md_EventDepositPrincipalFunds.Fields().ByName("admin")
+	fd_EventDepositPrincipalFunds_authority = md_EventDepositPrincipalFunds.Fields().ByName("authority")
 	fd_EventDepositPrincipalFunds_amount = md_EventDepositPrincipalFunds.Fields().ByName("amount")
 }
 
@@ -6763,9 +6763,9 @@ func (x *fastReflection_EventDepositPrincipalFunds) Range(f func(protoreflect.Fi
 			return
 		}
 	}
-	if x.Admin != "" {
-		value := protoreflect.ValueOfString(x.Admin)
-		if !f(fd_EventDepositPrincipalFunds_admin, value) {
+	if x.Authority != "" {
+		value := protoreflect.ValueOfString(x.Authority)
+		if !f(fd_EventDepositPrincipalFunds_authority, value) {
 			return
 		}
 	}
@@ -6792,8 +6792,8 @@ func (x *fastReflection_EventDepositPrincipalFunds) Has(fd protoreflect.FieldDes
 	switch fd.FullName() {
 	case "provlabs.vault.v1.EventDepositPrincipalFunds.vault_address":
 		return x.VaultAddress != ""
-	case "provlabs.vault.v1.EventDepositPrincipalFunds.admin":
-		return x.Admin != ""
+	case "provlabs.vault.v1.EventDepositPrincipalFunds.authority":
+		return x.Authority != ""
 	case "provlabs.vault.v1.EventDepositPrincipalFunds.amount":
 		return x.Amount != ""
 	default:
@@ -6814,8 +6814,8 @@ func (x *fastReflection_EventDepositPrincipalFunds) Clear(fd protoreflect.FieldD
 	switch fd.FullName() {
 	case "provlabs.vault.v1.EventDepositPrincipalFunds.vault_address":
 		x.VaultAddress = ""
-	case "provlabs.vault.v1.EventDepositPrincipalFunds.admin":
-		x.Admin = ""
+	case "provlabs.vault.v1.EventDepositPrincipalFunds.authority":
+		x.Authority = ""
 	case "provlabs.vault.v1.EventDepositPrincipalFunds.amount":
 		x.Amount = ""
 	default:
@@ -6837,8 +6837,8 @@ func (x *fastReflection_EventDepositPrincipalFunds) Get(descriptor protoreflect.
 	case "provlabs.vault.v1.EventDepositPrincipalFunds.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
-	case "provlabs.vault.v1.EventDepositPrincipalFunds.admin":
-		value := x.Admin
+	case "provlabs.vault.v1.EventDepositPrincipalFunds.authority":
+		value := x.Authority
 		return protoreflect.ValueOfString(value)
 	case "provlabs.vault.v1.EventDepositPrincipalFunds.amount":
 		value := x.Amount
@@ -6865,8 +6865,8 @@ func (x *fastReflection_EventDepositPrincipalFunds) Set(fd protoreflect.FieldDes
 	switch fd.FullName() {
 	case "provlabs.vault.v1.EventDepositPrincipalFunds.vault_address":
 		x.VaultAddress = value.Interface().(string)
-	case "provlabs.vault.v1.EventDepositPrincipalFunds.admin":
-		x.Admin = value.Interface().(string)
+	case "provlabs.vault.v1.EventDepositPrincipalFunds.authority":
+		x.Authority = value.Interface().(string)
 	case "provlabs.vault.v1.EventDepositPrincipalFunds.amount":
 		x.Amount = value.Interface().(string)
 	default:
@@ -6891,8 +6891,8 @@ func (x *fastReflection_EventDepositPrincipalFunds) Mutable(fd protoreflect.Fiel
 	switch fd.FullName() {
 	case "provlabs.vault.v1.EventDepositPrincipalFunds.vault_address":
 		panic(fmt.Errorf("field vault_address of message provlabs.vault.v1.EventDepositPrincipalFunds is not mutable"))
-	case "provlabs.vault.v1.EventDepositPrincipalFunds.admin":
-		panic(fmt.Errorf("field admin of message provlabs.vault.v1.EventDepositPrincipalFunds is not mutable"))
+	case "provlabs.vault.v1.EventDepositPrincipalFunds.authority":
+		panic(fmt.Errorf("field authority of message provlabs.vault.v1.EventDepositPrincipalFunds is not mutable"))
 	case "provlabs.vault.v1.EventDepositPrincipalFunds.amount":
 		panic(fmt.Errorf("field amount of message provlabs.vault.v1.EventDepositPrincipalFunds is not mutable"))
 	default:
@@ -6910,7 +6910,7 @@ func (x *fastReflection_EventDepositPrincipalFunds) NewField(fd protoreflect.Fie
 	switch fd.FullName() {
 	case "provlabs.vault.v1.EventDepositPrincipalFunds.vault_address":
 		return protoreflect.ValueOfString("")
-	case "provlabs.vault.v1.EventDepositPrincipalFunds.admin":
+	case "provlabs.vault.v1.EventDepositPrincipalFunds.authority":
 		return protoreflect.ValueOfString("")
 	case "provlabs.vault.v1.EventDepositPrincipalFunds.amount":
 		return protoreflect.ValueOfString("")
@@ -6987,7 +6987,7 @@ func (x *fastReflection_EventDepositPrincipalFunds) ProtoMethods() *protoiface.M
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		l = len(x.Admin)
+		l = len(x.Authority)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
@@ -7031,10 +7031,10 @@ func (x *fastReflection_EventDepositPrincipalFunds) ProtoMethods() *protoiface.M
 			i--
 			dAtA[i] = 0x1a
 		}
-		if len(x.Admin) > 0 {
-			i -= len(x.Admin)
-			copy(dAtA[i:], x.Admin)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Admin)))
+		if len(x.Authority) > 0 {
+			i -= len(x.Authority)
+			copy(dAtA[i:], x.Authority)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Authority)))
 			i--
 			dAtA[i] = 0x12
 		}
@@ -7128,7 +7128,7 @@ func (x *fastReflection_EventDepositPrincipalFunds) ProtoMethods() *protoiface.M
 				iNdEx = postIndex
 			case 2:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
 				}
 				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
@@ -7156,7 +7156,7 @@ func (x *fastReflection_EventDepositPrincipalFunds) ProtoMethods() *protoiface.M
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Admin = string(dAtA[iNdEx:postIndex])
+				x.Authority = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 3:
 				if wireType != 2 {
@@ -7228,7 +7228,7 @@ func (x *fastReflection_EventDepositPrincipalFunds) ProtoMethods() *protoiface.M
 var (
 	md_EventWithdrawPrincipalFunds               protoreflect.MessageDescriptor
 	fd_EventWithdrawPrincipalFunds_vault_address protoreflect.FieldDescriptor
-	fd_EventWithdrawPrincipalFunds_admin         protoreflect.FieldDescriptor
+	fd_EventWithdrawPrincipalFunds_authority     protoreflect.FieldDescriptor
 	fd_EventWithdrawPrincipalFunds_amount        protoreflect.FieldDescriptor
 )
 
@@ -7236,7 +7236,7 @@ func init() {
 	file_provlabs_vault_v1_events_proto_init()
 	md_EventWithdrawPrincipalFunds = File_provlabs_vault_v1_events_proto.Messages().ByName("EventWithdrawPrincipalFunds")
 	fd_EventWithdrawPrincipalFunds_vault_address = md_EventWithdrawPrincipalFunds.Fields().ByName("vault_address")
-	fd_EventWithdrawPrincipalFunds_admin = md_EventWithdrawPrincipalFunds.Fields().ByName("admin")
+	fd_EventWithdrawPrincipalFunds_authority = md_EventWithdrawPrincipalFunds.Fields().ByName("authority")
 	fd_EventWithdrawPrincipalFunds_amount = md_EventWithdrawPrincipalFunds.Fields().ByName("amount")
 }
 
@@ -7311,9 +7311,9 @@ func (x *fastReflection_EventWithdrawPrincipalFunds) Range(f func(protoreflect.F
 			return
 		}
 	}
-	if x.Admin != "" {
-		value := protoreflect.ValueOfString(x.Admin)
-		if !f(fd_EventWithdrawPrincipalFunds_admin, value) {
+	if x.Authority != "" {
+		value := protoreflect.ValueOfString(x.Authority)
+		if !f(fd_EventWithdrawPrincipalFunds_authority, value) {
 			return
 		}
 	}
@@ -7340,8 +7340,8 @@ func (x *fastReflection_EventWithdrawPrincipalFunds) Has(fd protoreflect.FieldDe
 	switch fd.FullName() {
 	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.vault_address":
 		return x.VaultAddress != ""
-	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.admin":
-		return x.Admin != ""
+	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.authority":
+		return x.Authority != ""
 	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.amount":
 		return x.Amount != ""
 	default:
@@ -7362,8 +7362,8 @@ func (x *fastReflection_EventWithdrawPrincipalFunds) Clear(fd protoreflect.Field
 	switch fd.FullName() {
 	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.vault_address":
 		x.VaultAddress = ""
-	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.admin":
-		x.Admin = ""
+	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.authority":
+		x.Authority = ""
 	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.amount":
 		x.Amount = ""
 	default:
@@ -7385,8 +7385,8 @@ func (x *fastReflection_EventWithdrawPrincipalFunds) Get(descriptor protoreflect
 	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
-	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.admin":
-		value := x.Admin
+	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.authority":
+		value := x.Authority
 		return protoreflect.ValueOfString(value)
 	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.amount":
 		value := x.Amount
@@ -7413,8 +7413,8 @@ func (x *fastReflection_EventWithdrawPrincipalFunds) Set(fd protoreflect.FieldDe
 	switch fd.FullName() {
 	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.vault_address":
 		x.VaultAddress = value.Interface().(string)
-	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.admin":
-		x.Admin = value.Interface().(string)
+	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.authority":
+		x.Authority = value.Interface().(string)
 	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.amount":
 		x.Amount = value.Interface().(string)
 	default:
@@ -7439,8 +7439,8 @@ func (x *fastReflection_EventWithdrawPrincipalFunds) Mutable(fd protoreflect.Fie
 	switch fd.FullName() {
 	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.vault_address":
 		panic(fmt.Errorf("field vault_address of message provlabs.vault.v1.EventWithdrawPrincipalFunds is not mutable"))
-	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.admin":
-		panic(fmt.Errorf("field admin of message provlabs.vault.v1.EventWithdrawPrincipalFunds is not mutable"))
+	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.authority":
+		panic(fmt.Errorf("field authority of message provlabs.vault.v1.EventWithdrawPrincipalFunds is not mutable"))
 	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.amount":
 		panic(fmt.Errorf("field amount of message provlabs.vault.v1.EventWithdrawPrincipalFunds is not mutable"))
 	default:
@@ -7458,7 +7458,7 @@ func (x *fastReflection_EventWithdrawPrincipalFunds) NewField(fd protoreflect.Fi
 	switch fd.FullName() {
 	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.vault_address":
 		return protoreflect.ValueOfString("")
-	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.admin":
+	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.authority":
 		return protoreflect.ValueOfString("")
 	case "provlabs.vault.v1.EventWithdrawPrincipalFunds.amount":
 		return protoreflect.ValueOfString("")
@@ -7535,7 +7535,7 @@ func (x *fastReflection_EventWithdrawPrincipalFunds) ProtoMethods() *protoiface.
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		l = len(x.Admin)
+		l = len(x.Authority)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
@@ -7579,10 +7579,10 @@ func (x *fastReflection_EventWithdrawPrincipalFunds) ProtoMethods() *protoiface.
 			i--
 			dAtA[i] = 0x1a
 		}
-		if len(x.Admin) > 0 {
-			i -= len(x.Admin)
-			copy(dAtA[i:], x.Admin)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Admin)))
+		if len(x.Authority) > 0 {
+			i -= len(x.Authority)
+			copy(dAtA[i:], x.Authority)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Authority)))
 			i--
 			dAtA[i] = 0x12
 		}
@@ -7676,7 +7676,7 @@ func (x *fastReflection_EventWithdrawPrincipalFunds) ProtoMethods() *protoiface.
 				iNdEx = postIndex
 			case 2:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
 				}
 				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
@@ -7704,7 +7704,7 @@ func (x *fastReflection_EventWithdrawPrincipalFunds) ProtoMethods() *protoiface.
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Admin = string(dAtA[iNdEx:postIndex])
+				x.Authority = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 3:
 				if wireType != 2 {
@@ -10789,7 +10789,7 @@ var (
 	md_EventPendingSwapOutExpedited            protoreflect.MessageDescriptor
 	fd_EventPendingSwapOutExpedited_request_id protoreflect.FieldDescriptor
 	fd_EventPendingSwapOutExpedited_vault      protoreflect.FieldDescriptor
-	fd_EventPendingSwapOutExpedited_admin      protoreflect.FieldDescriptor
+	fd_EventPendingSwapOutExpedited_authority  protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -10797,7 +10797,7 @@ func init() {
 	md_EventPendingSwapOutExpedited = File_provlabs_vault_v1_events_proto.Messages().ByName("EventPendingSwapOutExpedited")
 	fd_EventPendingSwapOutExpedited_request_id = md_EventPendingSwapOutExpedited.Fields().ByName("request_id")
 	fd_EventPendingSwapOutExpedited_vault = md_EventPendingSwapOutExpedited.Fields().ByName("vault")
-	fd_EventPendingSwapOutExpedited_admin = md_EventPendingSwapOutExpedited.Fields().ByName("admin")
+	fd_EventPendingSwapOutExpedited_authority = md_EventPendingSwapOutExpedited.Fields().ByName("authority")
 }
 
 var _ protoreflect.Message = (*fastReflection_EventPendingSwapOutExpedited)(nil)
@@ -10877,9 +10877,9 @@ func (x *fastReflection_EventPendingSwapOutExpedited) Range(f func(protoreflect.
 			return
 		}
 	}
-	if x.Admin != "" {
-		value := protoreflect.ValueOfString(x.Admin)
-		if !f(fd_EventPendingSwapOutExpedited_admin, value) {
+	if x.Authority != "" {
+		value := protoreflect.ValueOfString(x.Authority)
+		if !f(fd_EventPendingSwapOutExpedited_authority, value) {
 			return
 		}
 	}
@@ -10902,8 +10902,8 @@ func (x *fastReflection_EventPendingSwapOutExpedited) Has(fd protoreflect.FieldD
 		return x.RequestId != uint64(0)
 	case "provlabs.vault.v1.EventPendingSwapOutExpedited.vault":
 		return x.Vault != ""
-	case "provlabs.vault.v1.EventPendingSwapOutExpedited.admin":
-		return x.Admin != ""
+	case "provlabs.vault.v1.EventPendingSwapOutExpedited.authority":
+		return x.Authority != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventPendingSwapOutExpedited"))
@@ -10924,8 +10924,8 @@ func (x *fastReflection_EventPendingSwapOutExpedited) Clear(fd protoreflect.Fiel
 		x.RequestId = uint64(0)
 	case "provlabs.vault.v1.EventPendingSwapOutExpedited.vault":
 		x.Vault = ""
-	case "provlabs.vault.v1.EventPendingSwapOutExpedited.admin":
-		x.Admin = ""
+	case "provlabs.vault.v1.EventPendingSwapOutExpedited.authority":
+		x.Authority = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventPendingSwapOutExpedited"))
@@ -10948,8 +10948,8 @@ func (x *fastReflection_EventPendingSwapOutExpedited) Get(descriptor protoreflec
 	case "provlabs.vault.v1.EventPendingSwapOutExpedited.vault":
 		value := x.Vault
 		return protoreflect.ValueOfString(value)
-	case "provlabs.vault.v1.EventPendingSwapOutExpedited.admin":
-		value := x.Admin
+	case "provlabs.vault.v1.EventPendingSwapOutExpedited.authority":
+		value := x.Authority
 		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
@@ -10975,8 +10975,8 @@ func (x *fastReflection_EventPendingSwapOutExpedited) Set(fd protoreflect.FieldD
 		x.RequestId = value.Uint()
 	case "provlabs.vault.v1.EventPendingSwapOutExpedited.vault":
 		x.Vault = value.Interface().(string)
-	case "provlabs.vault.v1.EventPendingSwapOutExpedited.admin":
-		x.Admin = value.Interface().(string)
+	case "provlabs.vault.v1.EventPendingSwapOutExpedited.authority":
+		x.Authority = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventPendingSwapOutExpedited"))
@@ -11001,8 +11001,8 @@ func (x *fastReflection_EventPendingSwapOutExpedited) Mutable(fd protoreflect.Fi
 		panic(fmt.Errorf("field request_id of message provlabs.vault.v1.EventPendingSwapOutExpedited is not mutable"))
 	case "provlabs.vault.v1.EventPendingSwapOutExpedited.vault":
 		panic(fmt.Errorf("field vault of message provlabs.vault.v1.EventPendingSwapOutExpedited is not mutable"))
-	case "provlabs.vault.v1.EventPendingSwapOutExpedited.admin":
-		panic(fmt.Errorf("field admin of message provlabs.vault.v1.EventPendingSwapOutExpedited is not mutable"))
+	case "provlabs.vault.v1.EventPendingSwapOutExpedited.authority":
+		panic(fmt.Errorf("field authority of message provlabs.vault.v1.EventPendingSwapOutExpedited is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventPendingSwapOutExpedited"))
@@ -11020,7 +11020,7 @@ func (x *fastReflection_EventPendingSwapOutExpedited) NewField(fd protoreflect.F
 		return protoreflect.ValueOfUint64(uint64(0))
 	case "provlabs.vault.v1.EventPendingSwapOutExpedited.vault":
 		return protoreflect.ValueOfString("")
-	case "provlabs.vault.v1.EventPendingSwapOutExpedited.admin":
+	case "provlabs.vault.v1.EventPendingSwapOutExpedited.authority":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
@@ -11098,7 +11098,7 @@ func (x *fastReflection_EventPendingSwapOutExpedited) ProtoMethods() *protoiface
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		l = len(x.Admin)
+		l = len(x.Authority)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
@@ -11131,10 +11131,10 @@ func (x *fastReflection_EventPendingSwapOutExpedited) ProtoMethods() *protoiface
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if len(x.Admin) > 0 {
-			i -= len(x.Admin)
-			copy(dAtA[i:], x.Admin)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Admin)))
+		if len(x.Authority) > 0 {
+			i -= len(x.Authority)
+			copy(dAtA[i:], x.Authority)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Authority)))
 			i--
 			dAtA[i] = 0x1a
 		}
@@ -11252,7 +11252,7 @@ func (x *fastReflection_EventPendingSwapOutExpedited) ProtoMethods() *protoiface
 				iNdEx = postIndex
 			case 3:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
 				}
 				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
@@ -11280,7 +11280,7 @@ func (x *fastReflection_EventPendingSwapOutExpedited) ProtoMethods() *protoiface
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Admin = string(dAtA[iNdEx:postIndex])
+				x.Authority = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -11320,7 +11320,7 @@ func (x *fastReflection_EventPendingSwapOutExpedited) ProtoMethods() *protoiface
 var (
 	md_EventVaultPaused                   protoreflect.MessageDescriptor
 	fd_EventVaultPaused_vault_address     protoreflect.FieldDescriptor
-	fd_EventVaultPaused_admin             protoreflect.FieldDescriptor
+	fd_EventVaultPaused_authority         protoreflect.FieldDescriptor
 	fd_EventVaultPaused_reason            protoreflect.FieldDescriptor
 	fd_EventVaultPaused_total_vault_value protoreflect.FieldDescriptor
 )
@@ -11329,7 +11329,7 @@ func init() {
 	file_provlabs_vault_v1_events_proto_init()
 	md_EventVaultPaused = File_provlabs_vault_v1_events_proto.Messages().ByName("EventVaultPaused")
 	fd_EventVaultPaused_vault_address = md_EventVaultPaused.Fields().ByName("vault_address")
-	fd_EventVaultPaused_admin = md_EventVaultPaused.Fields().ByName("admin")
+	fd_EventVaultPaused_authority = md_EventVaultPaused.Fields().ByName("authority")
 	fd_EventVaultPaused_reason = md_EventVaultPaused.Fields().ByName("reason")
 	fd_EventVaultPaused_total_vault_value = md_EventVaultPaused.Fields().ByName("total_vault_value")
 }
@@ -11405,9 +11405,9 @@ func (x *fastReflection_EventVaultPaused) Range(f func(protoreflect.FieldDescrip
 			return
 		}
 	}
-	if x.Admin != "" {
-		value := protoreflect.ValueOfString(x.Admin)
-		if !f(fd_EventVaultPaused_admin, value) {
+	if x.Authority != "" {
+		value := protoreflect.ValueOfString(x.Authority)
+		if !f(fd_EventVaultPaused_authority, value) {
 			return
 		}
 	}
@@ -11440,8 +11440,8 @@ func (x *fastReflection_EventVaultPaused) Has(fd protoreflect.FieldDescriptor) b
 	switch fd.FullName() {
 	case "provlabs.vault.v1.EventVaultPaused.vault_address":
 		return x.VaultAddress != ""
-	case "provlabs.vault.v1.EventVaultPaused.admin":
-		return x.Admin != ""
+	case "provlabs.vault.v1.EventVaultPaused.authority":
+		return x.Authority != ""
 	case "provlabs.vault.v1.EventVaultPaused.reason":
 		return x.Reason != ""
 	case "provlabs.vault.v1.EventVaultPaused.total_vault_value":
@@ -11464,8 +11464,8 @@ func (x *fastReflection_EventVaultPaused) Clear(fd protoreflect.FieldDescriptor)
 	switch fd.FullName() {
 	case "provlabs.vault.v1.EventVaultPaused.vault_address":
 		x.VaultAddress = ""
-	case "provlabs.vault.v1.EventVaultPaused.admin":
-		x.Admin = ""
+	case "provlabs.vault.v1.EventVaultPaused.authority":
+		x.Authority = ""
 	case "provlabs.vault.v1.EventVaultPaused.reason":
 		x.Reason = ""
 	case "provlabs.vault.v1.EventVaultPaused.total_vault_value":
@@ -11489,8 +11489,8 @@ func (x *fastReflection_EventVaultPaused) Get(descriptor protoreflect.FieldDescr
 	case "provlabs.vault.v1.EventVaultPaused.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
-	case "provlabs.vault.v1.EventVaultPaused.admin":
-		value := x.Admin
+	case "provlabs.vault.v1.EventVaultPaused.authority":
+		value := x.Authority
 		return protoreflect.ValueOfString(value)
 	case "provlabs.vault.v1.EventVaultPaused.reason":
 		value := x.Reason
@@ -11520,8 +11520,8 @@ func (x *fastReflection_EventVaultPaused) Set(fd protoreflect.FieldDescriptor, v
 	switch fd.FullName() {
 	case "provlabs.vault.v1.EventVaultPaused.vault_address":
 		x.VaultAddress = value.Interface().(string)
-	case "provlabs.vault.v1.EventVaultPaused.admin":
-		x.Admin = value.Interface().(string)
+	case "provlabs.vault.v1.EventVaultPaused.authority":
+		x.Authority = value.Interface().(string)
 	case "provlabs.vault.v1.EventVaultPaused.reason":
 		x.Reason = value.Interface().(string)
 	case "provlabs.vault.v1.EventVaultPaused.total_vault_value":
@@ -11548,8 +11548,8 @@ func (x *fastReflection_EventVaultPaused) Mutable(fd protoreflect.FieldDescripto
 	switch fd.FullName() {
 	case "provlabs.vault.v1.EventVaultPaused.vault_address":
 		panic(fmt.Errorf("field vault_address of message provlabs.vault.v1.EventVaultPaused is not mutable"))
-	case "provlabs.vault.v1.EventVaultPaused.admin":
-		panic(fmt.Errorf("field admin of message provlabs.vault.v1.EventVaultPaused is not mutable"))
+	case "provlabs.vault.v1.EventVaultPaused.authority":
+		panic(fmt.Errorf("field authority of message provlabs.vault.v1.EventVaultPaused is not mutable"))
 	case "provlabs.vault.v1.EventVaultPaused.reason":
 		panic(fmt.Errorf("field reason of message provlabs.vault.v1.EventVaultPaused is not mutable"))
 	case "provlabs.vault.v1.EventVaultPaused.total_vault_value":
@@ -11569,7 +11569,7 @@ func (x *fastReflection_EventVaultPaused) NewField(fd protoreflect.FieldDescript
 	switch fd.FullName() {
 	case "provlabs.vault.v1.EventVaultPaused.vault_address":
 		return protoreflect.ValueOfString("")
-	case "provlabs.vault.v1.EventVaultPaused.admin":
+	case "provlabs.vault.v1.EventVaultPaused.authority":
 		return protoreflect.ValueOfString("")
 	case "provlabs.vault.v1.EventVaultPaused.reason":
 		return protoreflect.ValueOfString("")
@@ -11648,7 +11648,7 @@ func (x *fastReflection_EventVaultPaused) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		l = len(x.Admin)
+		l = len(x.Authority)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
@@ -11703,10 +11703,10 @@ func (x *fastReflection_EventVaultPaused) ProtoMethods() *protoiface.Methods {
 			i--
 			dAtA[i] = 0x1a
 		}
-		if len(x.Admin) > 0 {
-			i -= len(x.Admin)
-			copy(dAtA[i:], x.Admin)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Admin)))
+		if len(x.Authority) > 0 {
+			i -= len(x.Authority)
+			copy(dAtA[i:], x.Authority)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Authority)))
 			i--
 			dAtA[i] = 0x12
 		}
@@ -11800,7 +11800,7 @@ func (x *fastReflection_EventVaultPaused) ProtoMethods() *protoiface.Methods {
 				iNdEx = postIndex
 			case 2:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
 				}
 				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
@@ -11828,7 +11828,7 @@ func (x *fastReflection_EventVaultPaused) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Admin = string(dAtA[iNdEx:postIndex])
+				x.Authority = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 3:
 				if wireType != 2 {
@@ -11932,7 +11932,7 @@ func (x *fastReflection_EventVaultPaused) ProtoMethods() *protoiface.Methods {
 var (
 	md_EventVaultUnpaused                   protoreflect.MessageDescriptor
 	fd_EventVaultUnpaused_vault_address     protoreflect.FieldDescriptor
-	fd_EventVaultUnpaused_admin             protoreflect.FieldDescriptor
+	fd_EventVaultUnpaused_authority         protoreflect.FieldDescriptor
 	fd_EventVaultUnpaused_total_vault_value protoreflect.FieldDescriptor
 )
 
@@ -11940,7 +11940,7 @@ func init() {
 	file_provlabs_vault_v1_events_proto_init()
 	md_EventVaultUnpaused = File_provlabs_vault_v1_events_proto.Messages().ByName("EventVaultUnpaused")
 	fd_EventVaultUnpaused_vault_address = md_EventVaultUnpaused.Fields().ByName("vault_address")
-	fd_EventVaultUnpaused_admin = md_EventVaultUnpaused.Fields().ByName("admin")
+	fd_EventVaultUnpaused_authority = md_EventVaultUnpaused.Fields().ByName("authority")
 	fd_EventVaultUnpaused_total_vault_value = md_EventVaultUnpaused.Fields().ByName("total_vault_value")
 }
 
@@ -12015,9 +12015,9 @@ func (x *fastReflection_EventVaultUnpaused) Range(f func(protoreflect.FieldDescr
 			return
 		}
 	}
-	if x.Admin != "" {
-		value := protoreflect.ValueOfString(x.Admin)
-		if !f(fd_EventVaultUnpaused_admin, value) {
+	if x.Authority != "" {
+		value := protoreflect.ValueOfString(x.Authority)
+		if !f(fd_EventVaultUnpaused_authority, value) {
 			return
 		}
 	}
@@ -12044,8 +12044,8 @@ func (x *fastReflection_EventVaultUnpaused) Has(fd protoreflect.FieldDescriptor)
 	switch fd.FullName() {
 	case "provlabs.vault.v1.EventVaultUnpaused.vault_address":
 		return x.VaultAddress != ""
-	case "provlabs.vault.v1.EventVaultUnpaused.admin":
-		return x.Admin != ""
+	case "provlabs.vault.v1.EventVaultUnpaused.authority":
+		return x.Authority != ""
 	case "provlabs.vault.v1.EventVaultUnpaused.total_vault_value":
 		return x.TotalVaultValue != ""
 	default:
@@ -12066,8 +12066,8 @@ func (x *fastReflection_EventVaultUnpaused) Clear(fd protoreflect.FieldDescripto
 	switch fd.FullName() {
 	case "provlabs.vault.v1.EventVaultUnpaused.vault_address":
 		x.VaultAddress = ""
-	case "provlabs.vault.v1.EventVaultUnpaused.admin":
-		x.Admin = ""
+	case "provlabs.vault.v1.EventVaultUnpaused.authority":
+		x.Authority = ""
 	case "provlabs.vault.v1.EventVaultUnpaused.total_vault_value":
 		x.TotalVaultValue = ""
 	default:
@@ -12089,8 +12089,8 @@ func (x *fastReflection_EventVaultUnpaused) Get(descriptor protoreflect.FieldDes
 	case "provlabs.vault.v1.EventVaultUnpaused.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
-	case "provlabs.vault.v1.EventVaultUnpaused.admin":
-		value := x.Admin
+	case "provlabs.vault.v1.EventVaultUnpaused.authority":
+		value := x.Authority
 		return protoreflect.ValueOfString(value)
 	case "provlabs.vault.v1.EventVaultUnpaused.total_vault_value":
 		value := x.TotalVaultValue
@@ -12117,8 +12117,8 @@ func (x *fastReflection_EventVaultUnpaused) Set(fd protoreflect.FieldDescriptor,
 	switch fd.FullName() {
 	case "provlabs.vault.v1.EventVaultUnpaused.vault_address":
 		x.VaultAddress = value.Interface().(string)
-	case "provlabs.vault.v1.EventVaultUnpaused.admin":
-		x.Admin = value.Interface().(string)
+	case "provlabs.vault.v1.EventVaultUnpaused.authority":
+		x.Authority = value.Interface().(string)
 	case "provlabs.vault.v1.EventVaultUnpaused.total_vault_value":
 		x.TotalVaultValue = value.Interface().(string)
 	default:
@@ -12143,8 +12143,8 @@ func (x *fastReflection_EventVaultUnpaused) Mutable(fd protoreflect.FieldDescrip
 	switch fd.FullName() {
 	case "provlabs.vault.v1.EventVaultUnpaused.vault_address":
 		panic(fmt.Errorf("field vault_address of message provlabs.vault.v1.EventVaultUnpaused is not mutable"))
-	case "provlabs.vault.v1.EventVaultUnpaused.admin":
-		panic(fmt.Errorf("field admin of message provlabs.vault.v1.EventVaultUnpaused is not mutable"))
+	case "provlabs.vault.v1.EventVaultUnpaused.authority":
+		panic(fmt.Errorf("field authority of message provlabs.vault.v1.EventVaultUnpaused is not mutable"))
 	case "provlabs.vault.v1.EventVaultUnpaused.total_vault_value":
 		panic(fmt.Errorf("field total_vault_value of message provlabs.vault.v1.EventVaultUnpaused is not mutable"))
 	default:
@@ -12162,7 +12162,7 @@ func (x *fastReflection_EventVaultUnpaused) NewField(fd protoreflect.FieldDescri
 	switch fd.FullName() {
 	case "provlabs.vault.v1.EventVaultUnpaused.vault_address":
 		return protoreflect.ValueOfString("")
-	case "provlabs.vault.v1.EventVaultUnpaused.admin":
+	case "provlabs.vault.v1.EventVaultUnpaused.authority":
 		return protoreflect.ValueOfString("")
 	case "provlabs.vault.v1.EventVaultUnpaused.total_vault_value":
 		return protoreflect.ValueOfString("")
@@ -12239,7 +12239,7 @@ func (x *fastReflection_EventVaultUnpaused) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		l = len(x.Admin)
+		l = len(x.Authority)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
@@ -12283,10 +12283,10 @@ func (x *fastReflection_EventVaultUnpaused) ProtoMethods() *protoiface.Methods {
 			i--
 			dAtA[i] = 0x1a
 		}
-		if len(x.Admin) > 0 {
-			i -= len(x.Admin)
-			copy(dAtA[i:], x.Admin)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Admin)))
+		if len(x.Authority) > 0 {
+			i -= len(x.Authority)
+			copy(dAtA[i:], x.Authority)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Authority)))
 			i--
 			dAtA[i] = 0x12
 		}
@@ -12380,7 +12380,7 @@ func (x *fastReflection_EventVaultUnpaused) ProtoMethods() *protoiface.Methods {
 				iNdEx = postIndex
 			case 2:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
 				}
 				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
@@ -12408,7 +12408,7 @@ func (x *fastReflection_EventVaultUnpaused) ProtoMethods() *protoiface.Methods {
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.Admin = string(dAtA[iNdEx:postIndex])
+				x.Authority = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 3:
 				if wireType != 2 {
@@ -14659,6 +14659,554 @@ func (x *fastReflection_EventBridgeBurnShares) ProtoMethods() *protoiface.Method
 	}
 }
 
+var (
+	md_EventAssetManagerSet               protoreflect.MessageDescriptor
+	fd_EventAssetManagerSet_vault_address protoreflect.FieldDescriptor
+	fd_EventAssetManagerSet_admin         protoreflect.FieldDescriptor
+	fd_EventAssetManagerSet_asset_manager protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_provlabs_vault_v1_events_proto_init()
+	md_EventAssetManagerSet = File_provlabs_vault_v1_events_proto.Messages().ByName("EventAssetManagerSet")
+	fd_EventAssetManagerSet_vault_address = md_EventAssetManagerSet.Fields().ByName("vault_address")
+	fd_EventAssetManagerSet_admin = md_EventAssetManagerSet.Fields().ByName("admin")
+	fd_EventAssetManagerSet_asset_manager = md_EventAssetManagerSet.Fields().ByName("asset_manager")
+}
+
+var _ protoreflect.Message = (*fastReflection_EventAssetManagerSet)(nil)
+
+type fastReflection_EventAssetManagerSet EventAssetManagerSet
+
+func (x *EventAssetManagerSet) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_EventAssetManagerSet)(x)
+}
+
+func (x *EventAssetManagerSet) slowProtoReflect() protoreflect.Message {
+	mi := &file_provlabs_vault_v1_events_proto_msgTypes[25]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_EventAssetManagerSet_messageType fastReflection_EventAssetManagerSet_messageType
+var _ protoreflect.MessageType = fastReflection_EventAssetManagerSet_messageType{}
+
+type fastReflection_EventAssetManagerSet_messageType struct{}
+
+func (x fastReflection_EventAssetManagerSet_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_EventAssetManagerSet)(nil)
+}
+func (x fastReflection_EventAssetManagerSet_messageType) New() protoreflect.Message {
+	return new(fastReflection_EventAssetManagerSet)
+}
+func (x fastReflection_EventAssetManagerSet_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_EventAssetManagerSet
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_EventAssetManagerSet) Descriptor() protoreflect.MessageDescriptor {
+	return md_EventAssetManagerSet
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_EventAssetManagerSet) Type() protoreflect.MessageType {
+	return _fastReflection_EventAssetManagerSet_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_EventAssetManagerSet) New() protoreflect.Message {
+	return new(fastReflection_EventAssetManagerSet)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_EventAssetManagerSet) Interface() protoreflect.ProtoMessage {
+	return (*EventAssetManagerSet)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_EventAssetManagerSet) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.VaultAddress != "" {
+		value := protoreflect.ValueOfString(x.VaultAddress)
+		if !f(fd_EventAssetManagerSet_vault_address, value) {
+			return
+		}
+	}
+	if x.Admin != "" {
+		value := protoreflect.ValueOfString(x.Admin)
+		if !f(fd_EventAssetManagerSet_admin, value) {
+			return
+		}
+	}
+	if x.AssetManager != "" {
+		value := protoreflect.ValueOfString(x.AssetManager)
+		if !f(fd_EventAssetManagerSet_asset_manager, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_EventAssetManagerSet) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "provlabs.vault.v1.EventAssetManagerSet.vault_address":
+		return x.VaultAddress != ""
+	case "provlabs.vault.v1.EventAssetManagerSet.admin":
+		return x.Admin != ""
+	case "provlabs.vault.v1.EventAssetManagerSet.asset_manager":
+		return x.AssetManager != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventAssetManagerSet"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.EventAssetManagerSet does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_EventAssetManagerSet) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "provlabs.vault.v1.EventAssetManagerSet.vault_address":
+		x.VaultAddress = ""
+	case "provlabs.vault.v1.EventAssetManagerSet.admin":
+		x.Admin = ""
+	case "provlabs.vault.v1.EventAssetManagerSet.asset_manager":
+		x.AssetManager = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventAssetManagerSet"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.EventAssetManagerSet does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_EventAssetManagerSet) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "provlabs.vault.v1.EventAssetManagerSet.vault_address":
+		value := x.VaultAddress
+		return protoreflect.ValueOfString(value)
+	case "provlabs.vault.v1.EventAssetManagerSet.admin":
+		value := x.Admin
+		return protoreflect.ValueOfString(value)
+	case "provlabs.vault.v1.EventAssetManagerSet.asset_manager":
+		value := x.AssetManager
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventAssetManagerSet"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.EventAssetManagerSet does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_EventAssetManagerSet) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "provlabs.vault.v1.EventAssetManagerSet.vault_address":
+		x.VaultAddress = value.Interface().(string)
+	case "provlabs.vault.v1.EventAssetManagerSet.admin":
+		x.Admin = value.Interface().(string)
+	case "provlabs.vault.v1.EventAssetManagerSet.asset_manager":
+		x.AssetManager = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventAssetManagerSet"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.EventAssetManagerSet does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_EventAssetManagerSet) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "provlabs.vault.v1.EventAssetManagerSet.vault_address":
+		panic(fmt.Errorf("field vault_address of message provlabs.vault.v1.EventAssetManagerSet is not mutable"))
+	case "provlabs.vault.v1.EventAssetManagerSet.admin":
+		panic(fmt.Errorf("field admin of message provlabs.vault.v1.EventAssetManagerSet is not mutable"))
+	case "provlabs.vault.v1.EventAssetManagerSet.asset_manager":
+		panic(fmt.Errorf("field asset_manager of message provlabs.vault.v1.EventAssetManagerSet is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventAssetManagerSet"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.EventAssetManagerSet does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_EventAssetManagerSet) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "provlabs.vault.v1.EventAssetManagerSet.vault_address":
+		return protoreflect.ValueOfString("")
+	case "provlabs.vault.v1.EventAssetManagerSet.admin":
+		return protoreflect.ValueOfString("")
+	case "provlabs.vault.v1.EventAssetManagerSet.asset_manager":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventAssetManagerSet"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.EventAssetManagerSet does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_EventAssetManagerSet) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.EventAssetManagerSet", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_EventAssetManagerSet) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_EventAssetManagerSet) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_EventAssetManagerSet) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_EventAssetManagerSet) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*EventAssetManagerSet)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.VaultAddress)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Admin)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.AssetManager)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*EventAssetManagerSet)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.AssetManager) > 0 {
+			i -= len(x.AssetManager)
+			copy(dAtA[i:], x.AssetManager)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.AssetManager)))
+			i--
+			dAtA[i] = 0x1a
+		}
+		if len(x.Admin) > 0 {
+			i -= len(x.Admin)
+			copy(dAtA[i:], x.Admin)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Admin)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.VaultAddress) > 0 {
+			i -= len(x.VaultAddress)
+			copy(dAtA[i:], x.VaultAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.VaultAddress)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*EventAssetManagerSet)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EventAssetManagerSet: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: EventAssetManagerSet: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field VaultAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.VaultAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Admin = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field AssetManager", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.AssetManager = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
 // Code generated by protoc-gen-go. DO NOT EDIT.
 // versions:
 // 	protoc-gen-go v1.27.0
@@ -15164,8 +15712,8 @@ type EventInterestDeposit struct {
 
 	// vault_address is the bech32 address of the vault.
 	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// admin is the address of the account that deposited the funds.
-	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
+	// authority is the address (admin or asset manager) that deposited the funds.
+	Authority string `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`
 	// amount is the amount of funds deposited.
 	Amount string `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
 }
@@ -15197,9 +15745,9 @@ func (x *EventInterestDeposit) GetVaultAddress() string {
 	return ""
 }
 
-func (x *EventInterestDeposit) GetAdmin() string {
+func (x *EventInterestDeposit) GetAuthority() string {
 	if x != nil {
-		return x.Admin
+		return x.Authority
 	}
 	return ""
 }
@@ -15219,8 +15767,8 @@ type EventInterestWithdrawal struct {
 
 	// vault_address is the bech32 address of the vault.
 	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// admin is the address of the account that withdrew the funds.
-	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
+	// authority is the address (admin or asset manager) that withdrew the funds.
+	Authority string `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`
 	// amount is the amount of funds withdrawn.
 	Amount string `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
 }
@@ -15252,9 +15800,9 @@ func (x *EventInterestWithdrawal) GetVaultAddress() string {
 	return ""
 }
 
-func (x *EventInterestWithdrawal) GetAdmin() string {
+func (x *EventInterestWithdrawal) GetAuthority() string {
 	if x != nil {
-		return x.Admin
+		return x.Authority
 	}
 	return ""
 }
@@ -15376,7 +15924,7 @@ func (x *EventToggleSwapOut) GetEnabled() bool {
 	return false
 }
 
-// EventDepositPrincipalFunds is an event emitted when principal funds are deposited by the admin.
+// EventDepositPrincipalFunds is an event emitted when principal funds are deposited by the authority.
 type EventDepositPrincipalFunds struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -15384,8 +15932,8 @@ type EventDepositPrincipalFunds struct {
 
 	// vault_address is the bech32 address of the vault.
 	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// admin is the address of the account that deposited the funds.
-	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
+	// authority is the address (admin or asset manager) that deposited the funds.
+	Authority string `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`
 	// amount is the amount of funds deposited.
 	Amount string `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
 }
@@ -15417,9 +15965,9 @@ func (x *EventDepositPrincipalFunds) GetVaultAddress() string {
 	return ""
 }
 
-func (x *EventDepositPrincipalFunds) GetAdmin() string {
+func (x *EventDepositPrincipalFunds) GetAuthority() string {
 	if x != nil {
-		return x.Admin
+		return x.Authority
 	}
 	return ""
 }
@@ -15431,7 +15979,7 @@ func (x *EventDepositPrincipalFunds) GetAmount() string {
 	return ""
 }
 
-// EventWithdrawPrincipalFunds is an event emitted when principal funds are withdrawn by the admin.
+// EventWithdrawPrincipalFunds is an event emitted when principal funds are withdrawn by the authority.
 type EventWithdrawPrincipalFunds struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -15439,8 +15987,8 @@ type EventWithdrawPrincipalFunds struct {
 
 	// vault_address is the bech32 address of the vault.
 	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// admin is the address of the account that withdrew the funds.
-	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
+	// authority is the address (admin or asset manager) that withdrew the funds.
+	Authority string `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`
 	// amount is the amount of funds withdrawn.
 	Amount string `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
 }
@@ -15472,9 +16020,9 @@ func (x *EventWithdrawPrincipalFunds) GetVaultAddress() string {
 	return ""
 }
 
-func (x *EventWithdrawPrincipalFunds) GetAdmin() string {
+func (x *EventWithdrawPrincipalFunds) GetAuthority() string {
 	if x != nil {
-		return x.Admin
+		return x.Authority
 	}
 	return ""
 }
@@ -15809,7 +16357,7 @@ func (x *EventSwapOutRefunded) GetReason() string {
 	return ""
 }
 
-// EventPendingSwapOutExpedited is an event emitted when a pending swap-out is expedited by the admin.
+// EventPendingSwapOutExpedited is an event emitted when a pending swap-out is expedited by the authority.
 type EventPendingSwapOutExpedited struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -15819,8 +16367,8 @@ type EventPendingSwapOutExpedited struct {
 	RequestId uint64 `protobuf:"varint,1,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
 	// vault is the bech32 address of the vault.
 	Vault string `protobuf:"bytes,2,opt,name=vault,proto3" json:"vault,omitempty"`
-	// admin is the address of the account that expedited the swap-out.
-	Admin string `protobuf:"bytes,3,opt,name=admin,proto3" json:"admin,omitempty"`
+	// authority is the address (admin or asset manager) that expedited the swap-out.
+	Authority string `protobuf:"bytes,3,opt,name=authority,proto3" json:"authority,omitempty"`
 }
 
 func (x *EventPendingSwapOutExpedited) Reset() {
@@ -15857,9 +16405,9 @@ func (x *EventPendingSwapOutExpedited) GetVault() string {
 	return ""
 }
 
-func (x *EventPendingSwapOutExpedited) GetAdmin() string {
+func (x *EventPendingSwapOutExpedited) GetAuthority() string {
 	if x != nil {
-		return x.Admin
+		return x.Authority
 	}
 	return ""
 }
@@ -15872,8 +16420,8 @@ type EventVaultPaused struct {
 
 	// vault_address is the bech32 address of the vault.
 	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// admin is the address of the account that paused the vault.
-	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
+	// authority is the address (admin or asset manager) that paused the vault.
+	Authority string `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`
 	// reason is the reason for pausing the vault.
 	Reason string `protobuf:"bytes,3,opt,name=reason,proto3" json:"reason,omitempty"`
 	// total_vault_value is the total value of the vault's assets at the time of pausing.
@@ -15907,9 +16455,9 @@ func (x *EventVaultPaused) GetVaultAddress() string {
 	return ""
 }
 
-func (x *EventVaultPaused) GetAdmin() string {
+func (x *EventVaultPaused) GetAuthority() string {
 	if x != nil {
-		return x.Admin
+		return x.Authority
 	}
 	return ""
 }
@@ -15936,8 +16484,8 @@ type EventVaultUnpaused struct {
 
 	// vault_address is the bech32 address of the vault.
 	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// admin is the address of the account that unpaused the vault.
-	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
+	// authority is the address (admin or asset manager) that unpaused the vault.
+	Authority string `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`
 	// total_vault_value is the new total value of the vault's assets at the time of unpausing.
 	TotalVaultValue string `protobuf:"bytes,3,opt,name=total_vault_value,json=totalVaultValue,proto3" json:"total_vault_value,omitempty"`
 }
@@ -15969,9 +16517,9 @@ func (x *EventVaultUnpaused) GetVaultAddress() string {
 	return ""
 }
 
-func (x *EventVaultUnpaused) GetAdmin() string {
+func (x *EventVaultUnpaused) GetAuthority() string {
 	if x != nil {
-		return x.Admin
+		return x.Authority
 	}
 	return ""
 }
@@ -16203,6 +16751,61 @@ func (x *EventBridgeBurnShares) GetShares() string {
 	return ""
 }
 
+// EventAssetManagerSet is emitted when a vault's asset manager is set or cleared.
+type EventAssetManagerSet struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// vault_address is the address of the vault whose asset manager was updated.
+	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// admin is the address of the admin who performed the update.
+	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
+	// asset_manager is the new asset manager address. If empty, it indicates the asset manager was cleared.
+	AssetManager string `protobuf:"bytes,3,opt,name=asset_manager,json=assetManager,proto3" json:"asset_manager,omitempty"`
+}
+
+func (x *EventAssetManagerSet) Reset() {
+	*x = EventAssetManagerSet{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_provlabs_vault_v1_events_proto_msgTypes[25]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *EventAssetManagerSet) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EventAssetManagerSet) ProtoMessage() {}
+
+// Deprecated: Use EventAssetManagerSet.ProtoReflect.Descriptor instead.
+func (*EventAssetManagerSet) Descriptor() ([]byte, []int) {
+	return file_provlabs_vault_v1_events_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *EventAssetManagerSet) GetVaultAddress() string {
+	if x != nil {
+		return x.VaultAddress
+	}
+	return ""
+}
+
+func (x *EventAssetManagerSet) GetAdmin() string {
+	if x != nil {
+		return x.Admin
+	}
+	return ""
+}
+
+func (x *EventAssetManagerSet) GetAssetManager() string {
+	if x != nil {
+		return x.AssetManager
+	}
+	return ""
+}
+
 var File_provlabs_vault_v1_events_proto protoreflect.FileDescriptor
 
 var file_provlabs_vault_v1_events_proto_rawDesc = []byte{
@@ -16301,26 +16904,27 @@ var file_provlabs_vault_v1_events_proto_rawDesc = []byte{
 	0x61, 0x74, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x63, 0x75, 0x72, 0x72, 0x65,
 	0x6e, 0x74, 0x52, 0x61, 0x74, 0x65, 0x12, 0x21, 0x0a, 0x0c, 0x64, 0x65, 0x73, 0x69, 0x72, 0x65,
 	0x64, 0x5f, 0x72, 0x61, 0x74, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x64, 0x65,
-	0x73, 0x69, 0x72, 0x65, 0x64, 0x52, 0x61, 0x74, 0x65, 0x22, 0x9d, 0x01, 0x0a, 0x14, 0x45, 0x76,
+	0x73, 0x69, 0x72, 0x65, 0x64, 0x52, 0x61, 0x74, 0x65, 0x22, 0xa5, 0x01, 0x0a, 0x14, 0x45, 0x76,
 	0x65, 0x6e, 0x74, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x44, 0x65, 0x70, 0x6f, 0x73,
 	0x69, 0x74, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72,
 	0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63,
 	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72,
 	0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
-	0x73, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09,
-	0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64,
-	0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69,
-	0x6e, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28,
-	0x09, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0xa0, 0x01, 0x0a, 0x17, 0x45, 0x76,
-	0x65, 0x6e, 0x74, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x57, 0x69, 0x74, 0x68, 0x64,
-	0x72, 0x61, 0x77, 0x61, 0x6c, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61,
-	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4,
-	0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
-	0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64,
-	0x72, 0x65, 0x73, 0x73, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
-	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61,
-	0x64, 0x6d, 0x69, 0x6e, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x03,
+	0x73, 0x12, 0x36, 0x0a, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x09,
+	0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f,
+	0x75, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e,
+	0x74, 0x22, 0xa8, 0x01, 0x0a, 0x17, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x49, 0x6e, 0x74, 0x65, 0x72,
+	0x65, 0x73, 0x74, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x61, 0x6c, 0x12, 0x3d, 0x0a,
+	0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c,
+	0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x36, 0x0a, 0x09,
+	0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42,
+	0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72,
+	0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f,
+	0x72, 0x69, 0x74, 0x79, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x03,
 	0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0x9c, 0x01, 0x0a,
 	0x11, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x54, 0x6f, 0x67, 0x67, 0x6c, 0x65, 0x53, 0x77, 0x61, 0x70,
 	0x49, 0x6e, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72,
@@ -16341,26 +16945,27 @@ var file_provlabs_vault_v1_events_proto_rawDesc = []byte{
 	0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64,
 	0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69,
 	0x6e, 0x12, 0x18, 0x0a, 0x07, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x18, 0x03, 0x20, 0x01,
-	0x28, 0x08, 0x52, 0x07, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x22, 0xa3, 0x01, 0x0a, 0x1a,
+	0x28, 0x08, 0x52, 0x07, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x22, 0xab, 0x01, 0x0a, 0x1a,
 	0x45, 0x76, 0x65, 0x6e, 0x74, 0x44, 0x65, 0x70, 0x6f, 0x73, 0x69, 0x74, 0x50, 0x72, 0x69, 0x6e,
 	0x63, 0x69, 0x70, 0x61, 0x6c, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61,
 	0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28,
 	0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64,
 	0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75,
-	0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d,
-	0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69,
-	0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f,
-	0x75, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e,
-	0x74, 0x22, 0xa4, 0x01, 0x0a, 0x1b, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x57, 0x69, 0x74, 0x68, 0x64,
-	0x72, 0x61, 0x77, 0x50, 0x72, 0x69, 0x6e, 0x63, 0x69, 0x70, 0x61, 0x6c, 0x46, 0x75, 0x6e, 0x64,
-	0x73, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65,
-	0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f,
-	0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69,
-	0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
-	0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42,
-	0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72,
-	0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e,
+	0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x36, 0x0a, 0x09, 0x61, 0x75, 0x74,
+	0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4,
+	0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
+	0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74,
+	0x79, 0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0xac, 0x01, 0x0a, 0x1b, 0x45, 0x76,
+	0x65, 0x6e, 0x74, 0x57, 0x69, 0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x50, 0x72, 0x69, 0x6e, 0x63,
+	0x69, 0x70, 0x61, 0x6c, 0x46, 0x75, 0x6e, 0x64, 0x73, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75,
+	0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
+	0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64,
+	0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c,
+	0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x36, 0x0a, 0x09, 0x61, 0x75, 0x74, 0x68,
+	0x6f, 0x72, 0x69, 0x74, 0x79, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d,
+	0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53,
+	0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79,
 	0x12, 0x16, 0x0a, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09,
 	0x52, 0x06, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x22, 0xa7, 0x01, 0x0a, 0x1b, 0x45, 0x76, 0x65,
 	0x6e, 0x74, 0x4d, 0x69, 0x6e, 0x49, 0x6e, 0x74, 0x65, 0x72, 0x65, 0x73, 0x74, 0x52, 0x61, 0x74,
@@ -16413,77 +17018,91 @@ var file_provlabs_vault_v1_events_proto_rawDesc = []byte{
 	0x72, 0x65, 0x73, 0x12, 0x1d, 0x0a, 0x0a, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x5f, 0x69,
 	0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x04, 0x52, 0x09, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
 	0x49, 0x64, 0x12, 0x16, 0x0a, 0x06, 0x72, 0x65, 0x61, 0x73, 0x6f, 0x6e, 0x18, 0x05, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x06, 0x72, 0x65, 0x61, 0x73, 0x6f, 0x6e, 0x22, 0x9d, 0x01, 0x0a, 0x1c, 0x45,
+	0x28, 0x09, 0x52, 0x06, 0x72, 0x65, 0x61, 0x73, 0x6f, 0x6e, 0x22, 0xa5, 0x01, 0x0a, 0x1c, 0x45,
 	0x76, 0x65, 0x6e, 0x74, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f,
 	0x75, 0x74, 0x45, 0x78, 0x70, 0x65, 0x64, 0x69, 0x74, 0x65, 0x64, 0x12, 0x1d, 0x0a, 0x0a, 0x72,
 	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52,
 	0x09, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x49, 0x64, 0x12, 0x2e, 0x0a, 0x05, 0x76, 0x61,
 	0x75, 0x6c, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63,
 	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72,
-	0x69, 0x6e, 0x67, 0x52, 0x05, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64,
-	0x6d, 0x69, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72,
-	0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x22, 0x91, 0x01, 0x0a, 0x10, 0x45,
-	0x76, 0x65, 0x6e, 0x74, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x50, 0x61, 0x75, 0x73, 0x65, 0x64, 0x12,
-	0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64,
-	0x72, 0x65, 0x73, 0x73, 0x12, 0x14, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x16, 0x0a, 0x06, 0x72, 0x65,
+	0x69, 0x6e, 0x67, 0x52, 0x05, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x12, 0x36, 0x0a, 0x09, 0x61, 0x75,
+	0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2,
+	0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69,
+	0x74, 0x79, 0x22, 0x99, 0x01, 0x0a, 0x10, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x56, 0x61, 0x75, 0x6c,
+	0x74, 0x50, 0x61, 0x75, 0x73, 0x65, 0x64, 0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74,
+	0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c,
+	0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x1c, 0x0a, 0x09,
+	0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x12, 0x16, 0x0a, 0x06, 0x72, 0x65,
 	0x61, 0x73, 0x6f, 0x6e, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x72, 0x65, 0x61, 0x73,
 	0x6f, 0x6e, 0x12, 0x2a, 0x0a, 0x11, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x5f, 0x76, 0x61, 0x75, 0x6c,
 	0x74, 0x5f, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0f, 0x74,
-	0x6f, 0x74, 0x61, 0x6c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x22, 0x7b,
-	0x0a, 0x12, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x55, 0x6e, 0x70, 0x61,
-	0x75, 0x73, 0x65, 0x64, 0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64,
-	0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61, 0x75,
-	0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x14, 0x0a, 0x05, 0x61, 0x64, 0x6d,
-	0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12,
-	0x2a, 0x0a, 0x11, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x5f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x76,
-	0x61, 0x6c, 0x75, 0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0f, 0x74, 0x6f, 0x74, 0x61,
-	0x6c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x22, 0xc7, 0x01, 0x0a, 0x15,
-	0x45, 0x76, 0x65, 0x6e, 0x74, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x41, 0x64, 0x64, 0x72, 0x65,
-	0x73, 0x73, 0x53, 0x65, 0x74, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61,
+	0x6f, 0x74, 0x61, 0x6c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x22, 0x83,
+	0x01, 0x0a, 0x12, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x55, 0x6e, 0x70,
+	0x61, 0x75, 0x73, 0x65, 0x64, 0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61,
+	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61,
+	0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x1c, 0x0a, 0x09, 0x61, 0x75,
+	0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x61,
+	0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x12, 0x2a, 0x0a, 0x11, 0x74, 0x6f, 0x74, 0x61,
+	0x6c, 0x5f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x03, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x0f, 0x74, 0x6f, 0x74, 0x61, 0x6c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x56,
+	0x61, 0x6c, 0x75, 0x65, 0x22, 0xc7, 0x01, 0x0a, 0x15, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x42, 0x72,
+	0x69, 0x64, 0x67, 0x65, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x65, 0x74, 0x12, 0x3d,
+	0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52,
+	0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x2e, 0x0a,
+	0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4,
+	0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
+	0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x3f, 0x0a,
+	0x0e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18,
+	0x03, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52,
+	0x0d, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x22, 0x9d,
+	0x01, 0x0a, 0x12, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x54, 0x6f,
+	0x67, 0x67, 0x6c, 0x65, 0x64, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61,
 	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4,
 	0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
 	0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64,
 	0x72, 0x65, 0x73, 0x73, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20,
 	0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
 	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61,
-	0x64, 0x6d, 0x69, 0x6e, 0x12, 0x3f, 0x0a, 0x0e, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x5f, 0x61,
-	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4,
-	0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
-	0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0d, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x41, 0x64,
-	0x64, 0x72, 0x65, 0x73, 0x73, 0x22, 0x9d, 0x01, 0x0a, 0x12, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x42,
-	0x72, 0x69, 0x64, 0x67, 0x65, 0x54, 0x6f, 0x67, 0x67, 0x6c, 0x65, 0x64, 0x12, 0x3d, 0x0a, 0x0d,
-	0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
-	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76,
-	0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x2e, 0x0a, 0x05, 0x61,
-	0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14,
+	0x64, 0x6d, 0x69, 0x6e, 0x12, 0x18, 0x0a, 0x07, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x18,
+	0x03, 0x20, 0x01, 0x28, 0x08, 0x52, 0x07, 0x65, 0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x22, 0xa0,
+	0x01, 0x0a, 0x15, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x4d, 0x69,
+	0x6e, 0x74, 0x53, 0x68, 0x61, 0x72, 0x65, 0x73, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c,
+	0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42,
+	0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72,
+	0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74,
+	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x30, 0x0a, 0x06, 0x62, 0x72, 0x69, 0x64, 0x67,
+	0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e,
+	0x67, 0x52, 0x06, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x73, 0x68, 0x61,
+	0x72, 0x65, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65,
+	0x73, 0x22, 0xa0, 0x01, 0x0a, 0x15, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x42, 0x72, 0x69, 0x64, 0x67,
+	0x65, 0x42, 0x75, 0x72, 0x6e, 0x53, 0x68, 0x61, 0x72, 0x65, 0x73, 0x12, 0x3d, 0x0a, 0x0d, 0x76,
+	0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41,
+	0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61,
+	0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x30, 0x0a, 0x06, 0x62, 0x72,
+	0x69, 0x64, 0x67, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14,
 	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74,
-	0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x18, 0x0a, 0x07, 0x65,
-	0x6e, 0x61, 0x62, 0x6c, 0x65, 0x64, 0x18, 0x03, 0x20, 0x01, 0x28, 0x08, 0x52, 0x07, 0x65, 0x6e,
-	0x61, 0x62, 0x6c, 0x65, 0x64, 0x22, 0xa0, 0x01, 0x0a, 0x15, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x42,
-	0x72, 0x69, 0x64, 0x67, 0x65, 0x4d, 0x69, 0x6e, 0x74, 0x53, 0x68, 0x61, 0x72, 0x65, 0x73, 0x12,
-	0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67,
-	0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x30,
-	0x0a, 0x06, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18,
-	0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65,
-	0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x06, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65,
-	0x12, 0x16, 0x0a, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09,
-	0x52, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x22, 0xa0, 0x01, 0x0a, 0x15, 0x45, 0x76, 0x65,
-	0x6e, 0x74, 0x42, 0x72, 0x69, 0x64, 0x67, 0x65, 0x42, 0x75, 0x72, 0x6e, 0x53, 0x68, 0x61, 0x72,
-	0x65, 0x73, 0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72,
-	0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72,
-	0x69, 0x6e, 0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
-	0x73, 0x12, 0x30, 0x0a, 0x06, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28,
-	0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64,
-	0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x06, 0x62, 0x72, 0x69,
-	0x64, 0x67, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x18, 0x03, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x42, 0xc3, 0x01, 0x0a, 0x15,
+	0x72, 0x69, 0x6e, 0x67, 0x52, 0x06, 0x62, 0x72, 0x69, 0x64, 0x67, 0x65, 0x12, 0x16, 0x0a, 0x06,
+	0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x73, 0x68,
+	0x61, 0x72, 0x65, 0x73, 0x22, 0xc4, 0x01, 0x0a, 0x14, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x41, 0x73,
+	0x73, 0x65, 0x74, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x72, 0x53, 0x65, 0x74, 0x12, 0x3d, 0x0a,
+	0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
+	0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c,
+	0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x2e, 0x0a, 0x05,
+	0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d,
+	0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53,
+	0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x12, 0x3d, 0x0a, 0x0d,
+	0x61, 0x73, 0x73, 0x65, 0x74, 0x5f, 0x6d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x72, 0x18, 0x03, 0x20,
+	0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e,
+	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c, 0x61,
+	0x73, 0x73, 0x65, 0x74, 0x4d, 0x61, 0x6e, 0x61, 0x67, 0x65, 0x72, 0x42, 0xc3, 0x01, 0x0a, 0x15,
 	0x63, 0x6f, 0x6d, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75,
 	0x6c, 0x74, 0x2e, 0x76, 0x31, 0x42, 0x0b, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x50, 0x72, 0x6f,
 	0x74, 0x6f, 0x50, 0x01, 0x5a, 0x37, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
@@ -16511,7 +17130,7 @@ func file_provlabs_vault_v1_events_proto_rawDescGZIP() []byte {
 	return file_provlabs_vault_v1_events_proto_rawDescData
 }
 
-var file_provlabs_vault_v1_events_proto_msgTypes = make([]protoimpl.MessageInfo, 25)
+var file_provlabs_vault_v1_events_proto_msgTypes = make([]protoimpl.MessageInfo, 26)
 var file_provlabs_vault_v1_events_proto_goTypes = []interface{}{
 	(*EventDeposit)(nil),                 // 0: provlabs.vault.v1.EventDeposit
 	(*EventWithdraw)(nil),                // 1: provlabs.vault.v1.EventWithdraw
@@ -16538,6 +17157,7 @@ var file_provlabs_vault_v1_events_proto_goTypes = []interface{}{
 	(*EventBridgeToggled)(nil),           // 22: provlabs.vault.v1.EventBridgeToggled
 	(*EventBridgeMintShares)(nil),        // 23: provlabs.vault.v1.EventBridgeMintShares
 	(*EventBridgeBurnShares)(nil),        // 24: provlabs.vault.v1.EventBridgeBurnShares
+	(*EventAssetManagerSet)(nil),         // 25: provlabs.vault.v1.EventAssetManagerSet
 }
 var file_provlabs_vault_v1_events_proto_depIdxs = []int32{
 	0, // [0:0] is the sub-list for method output_type
@@ -16853,6 +17473,18 @@ func file_provlabs_vault_v1_events_proto_init() {
 				return nil
 			}
 		}
+		file_provlabs_vault_v1_events_proto_msgTypes[25].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*EventAssetManagerSet); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -16860,7 +17492,7 @@ func file_provlabs_vault_v1_events_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_provlabs_vault_v1_events_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   25,
+			NumMessages:   26,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

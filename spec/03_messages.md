@@ -160,47 +160,47 @@ Only underlying denom is accepted.
 
 ## DepositPrincipalFunds
 
-Admin-only. Deposits principal into a vault’s backing marker account.
+Admin or Asset Manager. Deposits principal into a vault’s backing marker account.
 Vault must be paused to allow this adjustment.
 
-* **Request:** `MsgDepositPrincipalFundsRequest { admin, vault_address, amount }`
+* **Request:** `MsgDepositPrincipalFundsRequest { authority, vault_address, amount }`
 * **Response:** `MsgDepositPrincipalFundsResponse {}`
 
 ---
 
 ## WithdrawPrincipalFunds
 
-Admin-only. Withdraws principal from a vault’s backing marker account.
+Admin or Asset Manager. Withdraws principal from a vault’s backing marker account.
 Vault must be paused to allow this adjustment.
 
-* **Request:** `MsgWithdrawPrincipalFundsRequest { admin, vault_address, amount }`
+* **Request:** `MsgWithdrawPrincipalFundsRequest { authority, vault_address, amount }`
 * **Response:** `MsgWithdrawPrincipalFundsResponse {}`
 
 ---
 
 ## ExpeditePendingSwapOut
 
-Admin-only. Immediately processes a specific queued swap-out by ID.
+Admin or Asset Manager. Immediately processes a specific queued swap-out by ID.
 
-* **Request:** `MsgExpeditePendingSwapOutRequest { admin, request_id }`
+* **Request:** `MsgExpeditePendingSwapOutRequest { authority, request_id }`
 * **Response:** `MsgExpeditePendingSwapOutResponse {}`
 
 ---
 
 ## PauseVault
 
-Admin-only. Pauses a vault, disabling swap-ins and swap-outs, and recording reason + balance snapshot.
+Admin or Asset Manager. Pauses a vault, disabling swap-ins and swap-outs, and recording reason + balance snapshot.
 
-* **Request:** `MsgPauseVaultRequest { admin, vault_address, reason }`
+* **Request:** `MsgPauseVaultRequest { authority, vault_address, reason }`
 * **Response:** `MsgPauseVaultResponse {}`
 
 ---
 
 ## UnpauseVault
 
-Admin-only. Resumes a paused vault, clears paused balance, and recalculates NAV.
+Admin or Asset Manager. Resumes a paused vault, clears paused balance, and recalculates NAV.
 
-* **Request:** `MsgUnpauseVaultRequest { admin, vault_address }`
+* **Request:** `MsgUnpauseVaultRequest { authority, vault_address }`
 * **Response:** `MsgUnpauseVaultResponse {}`
 
 ---

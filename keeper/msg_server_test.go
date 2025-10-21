@@ -895,6 +895,7 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 	underlyingDenom := "underlying"
 	shareDenom := "vaultshares"
 	owner := s.adminAddr
+	assetMgr := sdk.AccAddress("assetManagerAddr___________")
 	vaultAddr := types.GetVaultAddress(shareDenom)
 	currentBlockTime := time.Now()
 
@@ -913,6 +914,7 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 	tests := []struct {
 		name           string
 		interestRate   string
+		authority      string
 		setup          func()
 		postCheckArgs  postCheckArgs
 		expectedEvents sdk.Events
@@ -1156,6 +1158,31 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 				),
 			},
 		},
+		{
+			name:         "asset manager can update non-zero rate",
+			interestRate: "0.75",
+			authority:    assetMgr.String(),
+			setup: func() {
+				setup()
+				v, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err)
+				v.AssetManager = assetMgr.String()
+				s.Require().NoError(s.k.SetVaultAccount(s.ctx, v))
+			},
+			postCheckArgs: postCheckArgs{
+				VaultAddress:              vaultAddr,
+				ExpectedRate:              "0.75",
+				ExpectInVerificationQueue: true,
+				ExpectedPeriodStart:       currentBlockTime.Unix(),
+			},
+			expectedEvents: sdk.Events{
+				sdk.NewEvent("provlabs.vault.v1.EventVaultInterestChange",
+					sdk.NewAttribute("current_rate", "0.75"),
+					sdk.NewAttribute("desired_rate", "0.75"),
+					sdk.NewAttribute("vault_address", vaultAddr.String()),
+				),
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -1164,6 +1191,9 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 				Authority:    owner.String(),
 				VaultAddress: vaultAddr.String(),
 				NewRate:      tt.interestRate,
+			}
+			if tt.authority != "" {
+				updateInterestRateReq.Authority = tt.authority
 			}
 
 			tc := msgServerTestCase[types.MsgUpdateInterestRateRequest, postCheckArgs]{
@@ -1234,7 +1264,7 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate_Failures() {
 				NewRate:      "0.05",
 			},
 			setup:              setup,
-			expectedErrSubstrs: []string{"unauthorized", "is not the vault admin"},
+			expectedErrSubstrs: []string{"unauthorized authority"},
 		},
 	}
 	for _, tc := range tests {

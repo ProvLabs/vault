@@ -476,7 +476,7 @@ func TestMsgUpdateInterestRateRequest_ValidateBasic(t *testing.T) {
 				VaultAddress: addr,
 				NewRate:      "1.5",
 			},
-			expectedErr: fmt.Errorf("invalid admin address: %q", "bad"),
+			expectedErr: fmt.Errorf("invalid authority address: %q", "bad"),
 		},
 		{
 			name: "invalid vault address",

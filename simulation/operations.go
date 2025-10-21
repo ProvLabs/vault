@@ -294,7 +294,7 @@ func SimulateMsgUpdateInterestRate(k keeper.Keeper) simtypes.Operation {
 
 		msg := &types.MsgUpdateInterestRateRequest{
 			VaultAddress: vault.GetAddress().String(),
-			Admin:        adminAddr.String(),
+			Authority:    adminAddr.String(),
 			NewRate:      rate,
 		}
 

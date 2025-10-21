@@ -1161,7 +1161,7 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
 			updateInterestRateReq := types.MsgUpdateInterestRateRequest{
-				Admin:        owner.String(),
+				Authority:    owner.String(),
 				VaultAddress: vaultAddr.String(),
 				NewRate:      tt.interestRate,
 			}
@@ -1209,7 +1209,7 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate_Failures() {
 		{
 			name: "vault does not exist",
 			msg: types.MsgUpdateInterestRateRequest{
-				Admin:        owner.String(),
+				Authority:    owner.String(),
 				VaultAddress: types.GetVaultAddress("invalidvaultaddress").String(),
 				NewRate:      "0.05",
 			},
@@ -1219,7 +1219,7 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate_Failures() {
 		{
 			name: "vault invalid vault address",
 			msg: types.MsgUpdateInterestRateRequest{
-				Admin:        owner.String(),
+				Authority:    owner.String(),
 				VaultAddress: markertypes.MustGetMarkerAddress(shareDenom).String(),
 				NewRate:      "0.05",
 			},
@@ -1229,7 +1229,7 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate_Failures() {
 		{
 			name: "unauthorized admin",
 			msg: types.MsgUpdateInterestRateRequest{
-				Admin:        sdk.AccAddress("invalidadmin").String(),
+				Authority:    sdk.AccAddress("invalidadmin").String(),
 				VaultAddress: vaultAddr.String(),
 				NewRate:      "0.05",
 			},
@@ -1552,7 +1552,7 @@ func (s *TestSuite) TestMsgServer_UpdateMaxInterestRate_Failures() {
 				baseSetup()
 				_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).UpdateInterestRate(
 					s.ctx, &types.MsgUpdateInterestRateRequest{
-						Admin:        admin.String(),
+						Authority:    admin.String(),
 						VaultAddress: vaultAddr.String(),
 						NewRate:      "0.50",
 					},

@@ -130,7 +130,7 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 	if vault == nil {
 		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
 	}
-	if err := vault.ValidateAdmin(msg.Admin); err != nil {
+	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, err
 	}
 

@@ -23,17 +23,15 @@ func (s *TestSuite) TestQueryServer_Vault() {
 		ManualEquality: func(s querytest.TestSuiter, expected, actual *types.QueryVaultResponse) {
 			s.Require().NotNil(actual, "actual response should not be nil")
 			s.Require().NotNil(expected, "expected response should not be nil")
-
-			// Can't do a direct compare because of account numbers.
 			s.Assert().Equal(expected.Vault.Address, actual.Vault.Address, "vault address")
 			s.Assert().Equal(expected.Vault.Admin, actual.Vault.Admin, "vault admin")
 			s.Assert().Equal(expected.Vault.TotalShares, actual.Vault.TotalShares, "vault total shares")
 			s.Assert().Equal(expected.Vault.UnderlyingAsset, actual.Vault.UnderlyingAsset, "vault underlying asset")
-
 			s.Assert().Equal(expected.Principal.Address, actual.Principal.Address, "principal address")
 			s.Assert().Equal(expected.Principal.Coins, actual.Principal.Coins, "principal coins")
 			s.Assert().Equal(expected.Reserves.Address, actual.Reserves.Address, "reserves address")
 			s.Assert().Equal(expected.Reserves.Coins, actual.Reserves.Coins, "reserves coins")
+			s.Assert().Equal(expected.TotalVaultValue, actual.TotalVaultValue, "total vault value")
 		},
 	}
 
@@ -46,7 +44,6 @@ func (s *TestSuite) TestQueryServer_Vault() {
 	nonExistentAddr := sdk.AccAddress("nonExistentAddr_____")
 	admin := s.adminAddr.String()
 
-	// Common setup for tests that need existing vaults.
 	setupVaults := func() {
 		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("stake1", 1), s.adminAddr)
 		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("stake2", 1), s.adminAddr)
@@ -54,12 +51,8 @@ func (s *TestSuite) TestQueryServer_Vault() {
 		s.Require().NoError(err)
 		_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: admin, ShareDenom: shareDenom2, UnderlyingAsset: "stake2"})
 		s.Require().NoError(err)
-
-		// Fund vault 1 reserves and principal
 		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin("stake1", 100))))
 		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr1, sdk.NewCoins(sdk.NewInt64Coin("stake1", 1000))))
-
-		// Fund vault 2 reserves and principal
 		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, addr2, sdk.NewCoins(sdk.NewInt64Coin("stake2", 200))))
 		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr2, sdk.NewCoins(sdk.NewInt64Coin("stake2", 2000))))
 	}
@@ -79,6 +72,7 @@ func (s *TestSuite) TestQueryServer_Vault() {
 					Address: addr1.String(),
 					Coins:   sdk.NewCoins(sdk.NewInt64Coin("stake1", 100)),
 				},
+				TotalVaultValue: sdk.NewInt64Coin("stake1", 1100),
 			},
 		},
 		{
@@ -95,6 +89,7 @@ func (s *TestSuite) TestQueryServer_Vault() {
 					Address: addr2.String(),
 					Coins:   sdk.NewCoins(sdk.NewInt64Coin("stake2", 200)),
 				},
+				TotalVaultValue: sdk.NewInt64Coin("stake2", 2200),
 			},
 		},
 		{
@@ -128,7 +123,6 @@ func (s *TestSuite) TestQueryServer_Vault() {
 	}
 }
 
-// TestQueryServer_Vaults tests the Vaults query endpoint.
 func (s *TestSuite) TestQueryServer_Vaults() {
 	testDef := querytest.TestDef[types.QueryVaultsRequest, types.QueryVaultsResponse]{
 		QueryName: "Vaults",

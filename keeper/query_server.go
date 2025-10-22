@@ -78,10 +78,16 @@ func (k queryServer) Vault(goCtx context.Context, req *types.QueryVaultRequest) 
 
 	principal := k.BankKeeper.GetAllBalances(goCtx, marker.GetAddress())
 	reserves := k.BankKeeper.GetAllBalances(goCtx, vault.GetAddress())
-	tvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
+	totalAssets, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, status.Errorf(codes.Internal, "failed to get total vault value: %v", err)
 	}
+
+	tvv, err := k.CalculateVaultTotalAssets(ctx, vault, sdk.Coin{Denom: vault.UnderlyingAsset, Amount: totalAssets})
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to estimate total assets: %v", err)
+	}
+
 	return &types.QueryVaultResponse{
 		Vault: *vault,
 		Principal: types.AccountBalance{
@@ -128,11 +134,13 @@ func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstim
 		return nil, status.Errorf(codes.InvalidArgument, "invalid NAV: zero volume for %s/%s", req.Assets.Denom, vault.UnderlyingAsset)
 	}
 
-	principalAddress := vault.PrincipalMarkerAddress()
 	totalShares := vault.TotalShares.Amount
-	totalAssets := k.BankKeeper.GetBalance(ctx, principalAddress, vault.UnderlyingAsset)
+	totalAssets, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get total vault value: %v", err)
+	}
 
-	estimatedTotalAssets, err := k.CalculateVaultTotalAssets(ctx, vault, totalAssets)
+	estimatedTotalAssets, err := k.CalculateVaultTotalAssets(ctx, vault, sdk.Coin{Denom: vault.UnderlyingAsset, Amount: totalAssets})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to estimate total assets: %v", err)
 	}
@@ -184,11 +192,13 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 		return nil, status.Errorf(codes.InvalidArgument, "unsupported redeem denom: %q", redeemDenom)
 	}
 
-	principalAddress := vault.PrincipalMarkerAddress()
 	totalShares := vault.TotalShares.Amount
-	totalAssets := k.BankKeeper.GetBalance(ctx, principalAddress, vault.UnderlyingAsset)
+	totalAssets, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get total vault value: %v", err)
+	}
 
-	estimatedTotalAssets, err := k.CalculateVaultTotalAssets(ctx, vault, totalAssets)
+	estimatedTotalAssets, err := k.CalculateVaultTotalAssets(ctx, vault, sdk.Coin{Denom: vault.UnderlyingAsset, Amount: totalAssets})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to estimate total assets: %v", err)
 	}

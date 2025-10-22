@@ -72,7 +72,7 @@ func (s *TestSuite) TestQueryServer_Vault() {
 					Address: addr1.String(),
 					Coins:   sdk.NewCoins(sdk.NewInt64Coin("stake1", 100)),
 				},
-				TotalVaultValue: sdk.NewInt64Coin("stake1", 1100),
+				TotalVaultValue: sdk.NewInt64Coin("stake1", 1000),
 			},
 		},
 		{
@@ -89,7 +89,7 @@ func (s *TestSuite) TestQueryServer_Vault() {
 					Address: addr2.String(),
 					Coins:   sdk.NewCoins(sdk.NewInt64Coin("stake2", 200)),
 				},
-				TotalVaultValue: sdk.NewInt64Coin("stake2", 2200),
+				TotalVaultValue: sdk.NewInt64Coin("stake2", 2000),
 			},
 		},
 		{

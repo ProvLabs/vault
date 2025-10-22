@@ -131,9 +131,9 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 		QueryName: "Vaults",
 		Query:     keeper.NewQueryServer(s.simApp.VaultKeeper).Vaults,
 		ManualEquality: func(s querytest.TestSuiter, expected, actual *types.QueryVaultsResponse) {
-			s.Require().NotNil(actual)
-			s.Require().NotNil(expected)
-			s.Require().Len(actual.Vaults, len(expected.Vaults))
+			s.Require().NotNil(actual, "actual response should not be nil")
+			s.Require().NotNil(expected, "expected response should not be nil")
+			s.Require().Len(actual.Vaults, len(expected.Vaults), "unexpected number of vaults returned")
 
 			type vaultView struct {
 				Address         string
@@ -159,22 +159,23 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 				return out
 			}
 
-			s.Assert().ElementsMatch(toViews(expected.Vaults), toViews(actual.Vaults))
+			s.Assert().ElementsMatch(toViews(expected.Vaults), toViews(actual.Vaults), "vaults do not match")
 
 			if expected.Pagination != nil {
 				if expected.Pagination.Total > 0 {
-					s.Assert().Equal(expected.Pagination.Total, actual.Pagination.Total)
+					s.Assert().Equal(expected.Pagination.Total, actual.Pagination.Total, "pagination total")
 				}
 				if len(expected.Pagination.NextKey) > 0 {
-					s.Assert().NotEmpty(actual.Pagination.NextKey)
+					s.Assert().NotEmpty(actual.Pagination.NextKey, "pagination next_key should not be empty")
 				} else {
-					s.Assert().Empty(actual.Pagination.NextKey)
+					s.Assert().Empty(actual.Pagination.NextKey, "pagination next_key should be empty")
 				}
 			}
 		},
 	}
 	admin := s.adminAddr.String()
 
+	// Define some vault addresses for consistent testing
 	shareDenom1 := "vault1"
 	addr1 := types.GetVaultAddress(shareDenom1)
 	shareDenom2 := "vault2"

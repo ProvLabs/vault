@@ -672,7 +672,7 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 				})
 				s.Require().NoError(err, "vault creation should succeed")
 				vault, err := s.k.GetVault(s.ctx, vaultAddr)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "getting vault should succeed")
 				vault.Paused = true
 				s.k.AuthKeeper.SetAccount(s.ctx, vault)
 			},
@@ -691,7 +691,7 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 				})
 				s.Require().NoError(err, "vault creation should succeed")
 				vault, err := s.k.GetVault(s.ctx, vaultAddr)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "getting vault should succeed")
 				vault.SwapOutEnabled = false
 				s.k.AuthKeeper.SetAccount(s.ctx, vault)
 			},
@@ -799,15 +799,15 @@ func (s *TestSuite) TestQueryServer_VaultPendingSwapOuts() {
 	baseSetup := func() {
 		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingAsset, 1_000_000), s.adminAddr)
 		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: s.adminAddr.String(), ShareDenom: shareDenomA, UnderlyingAsset: underlyingAsset})
-		s.Require().NoError(err)
+		s.Require().NoError(err, "creating vault A")
 		_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: s.adminAddr.String(), ShareDenom: shareDenomB, UnderlyingAsset: underlyingAsset})
-		s.Require().NoError(err)
+		s.Require().NoError(err, "creating vault B")
 
 		// Vault B always has 2 entries
 		_, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, timeB1.Unix(), reqB1)
-		s.Require().NoError(err)
+		s.Require().NoError(err, "populating pending swap out queue for vault B1")
 		_, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, timeB2.Unix(), reqB2)
-		s.Require().NoError(err)
+		s.Require().NoError(err, "populating pending swap out queue for vault B2")
 	}
 
 	tests := []querytest.TestCase[types.QueryVaultPendingSwapOutsRequest, types.QueryVaultPendingSwapOutsResponse]{
@@ -831,9 +831,9 @@ func (s *TestSuite) TestQueryServer_VaultPendingSwapOuts() {
 			Setup: func() {
 				baseSetup()
 				_, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, timeA1.Unix(), reqA1)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "populating pending swap out queue for vault A1")
 				_, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, timeA2.Unix(), reqA2)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "populating pending swap out queue for vault A2")
 			},
 			Req: &types.QueryVaultPendingSwapOutsRequest{Id: vaultAddrA.String()},
 			ExpectedResp: &types.QueryVaultPendingSwapOutsResponse{
@@ -849,9 +849,9 @@ func (s *TestSuite) TestQueryServer_VaultPendingSwapOuts() {
 			Setup: func() {
 				baseSetup()
 				_, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, timeA1.Unix(), reqA1)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "populating pending swap out queue for vault A1")
 				_, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, timeA2.Unix(), reqA2)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "populating pending swap out queue for vault A2")
 			},
 			Req: &types.QueryVaultPendingSwapOutsRequest{
 				Id:         vaultAddrA.String(),
@@ -954,11 +954,11 @@ func (s *TestSuite) TestQueryServer_PendingSwapOuts() {
 			Name: "happy path - multiple swap outs",
 			Setup: func() {
 				_, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, payoutTime1.Unix(), swapOut1)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "populating pending swap out queue for vault A1")
 				_, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, payoutTime2.Unix(), swapOut2)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "populating pending swap out queue for vault A2")
 				_, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, payoutTime3.Unix(), swapOut3)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "populating pending swap out queue for vault A3")
 			},
 			Req: &types.QueryPendingSwapOutsRequest{},
 			ExpectedResp: &types.QueryPendingSwapOutsResponse{
@@ -974,11 +974,11 @@ func (s *TestSuite) TestQueryServer_PendingSwapOuts() {
 			Name: "pagination - limits the number of outputs",
 			Setup: func() {
 				_, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, payoutTime1.Unix(), swapOut1)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "populating pending swap out queue for vault A1")
 				_, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, payoutTime2.Unix(), swapOut2)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "populating pending swap out queue for vault A2")
 				_, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, payoutTime3.Unix(), swapOut3)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "populating pending swap out queue for vault A3")
 			},
 			Req: &types.QueryPendingSwapOutsRequest{
 				Pagination: &query.PageRequest{Limit: 2, CountTotal: true},
@@ -998,11 +998,11 @@ func (s *TestSuite) TestQueryServer_PendingSwapOuts() {
 			Name: "pagination - offset starts at correct location",
 			Setup: func() {
 				_, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, payoutTime1.Unix(), swapOut1)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "populating pending swap out queue for vault A1")
 				_, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, payoutTime2.Unix(), swapOut2)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "populating pending swap out queue for vault A2")
 				_, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, payoutTime3.Unix(), swapOut3)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "populating pending swap out queue for vault A3")
 			},
 			Req: &types.QueryPendingSwapOutsRequest{
 				Pagination: &query.PageRequest{Offset: 1, CountTotal: true},
@@ -1019,11 +1019,11 @@ func (s *TestSuite) TestQueryServer_PendingSwapOuts() {
 			Name: "pagination - offset starts at correct location and enforces limit",
 			Setup: func() {
 				_, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, payoutTime1.Unix(), swapOut1)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "populating pending swap out queue for vault A1")
 				_, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, payoutTime2.Unix(), swapOut2)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "populating pending swap out queue for vault A2")
 				_, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, payoutTime3.Unix(), swapOut3)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "populating pending swap out queue for vault A3")
 			},
 			Req: &types.QueryPendingSwapOutsRequest{
 				Pagination: &query.PageRequest{Offset: 2, Limit: 1, CountTotal: true},
@@ -1039,11 +1039,11 @@ func (s *TestSuite) TestQueryServer_PendingSwapOuts() {
 			Name: "pagination - enabled count total",
 			Setup: func() {
 				_, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, payoutTime1.Unix(), swapOut1)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "populating pending swap out queue for vault A1")
 				_, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, payoutTime2.Unix(), swapOut2)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "populating pending swap out queue for vault A2")
 				_, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, payoutTime3.Unix(), swapOut3)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "populating pending swap out queue for vault A3")
 			},
 			Req: &types.QueryPendingSwapOutsRequest{
 				Pagination: &query.PageRequest{CountTotal: true},
@@ -1061,11 +1061,11 @@ func (s *TestSuite) TestQueryServer_PendingSwapOuts() {
 			Name: "pagination - reverse provides the results in reverse order",
 			Setup: func() {
 				_, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, payoutTime1.Unix(), swapOut1)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "populating pending swap out queue for vault A1")
 				_, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, payoutTime2.Unix(), swapOut2)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "populating pending swap out queue for vault A2")
 				_, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, payoutTime3.Unix(), swapOut3)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "populating pending swap out queue for vault A3")
 			},
 			Req: &types.QueryPendingSwapOutsRequest{
 				Pagination: &query.PageRequest{Reverse: true, Limit: 2, CountTotal: true},

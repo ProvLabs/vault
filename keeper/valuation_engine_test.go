@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"time"
+
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -554,6 +556,49 @@ func (s *TestSuite) TestEstimateTotalVaultValue_SingleAsset() {
 	s.Require().Equal(expectedCoin, estimatedTVV, "estimated TVV should equal principal balance")
 }
 
+func (s *TestSuite) TestEstimateTotalVaultValue_SingleAsset_WithInterest() {
+	underlyingDenom := "ylds"
+	shareDenom := "vshare"
+	vault := s.setupBaseVault(underlyingDenom, shareDenom)
+
+	const interestRate = "0.1"
+	const secondsPerYear = 31536000
+	const secondsToAccrue = int64(60 * 60 * 24 * 30)
+
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(
+		sdk.NewInt64Coin(underlyingDenom, 1000),
+	)), "funding principal should succeed")
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.GetAddress(), sdk.NewCoins(
+		sdk.NewInt64Coin(underlyingDenom, 100),
+	)), "funding reserves should succeed")
+
+	startTime := s.ctx.BlockTime()
+	vault.PeriodStart = startTime.Unix()
+	vault.CurrentInterestRate = interestRate
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+	s.ctx = s.ctx.WithBlockTime(startTime.Add(time.Second * time.Duration(secondsToAccrue)))
+
+	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
+	estimatedTVV, err := testKeeper.EstimateTotalVaultValue(s.ctx, vault)
+
+	s.Require().NoError(err, "estimation should not error for single asset")
+
+	baseAmt := math.NewInt(1000)
+
+	rateDec, err := math.LegacyNewDecFromStr(interestRate)
+	s.Require().NoError(err, "parsing interest rate string should not fail")
+	durationDec := math.LegacyNewDec(secondsToAccrue)
+	secondsPerYearDec := math.LegacyNewDec(secondsPerYear)
+	timeFraction := durationDec.Quo(secondsPerYearDec)
+	interestDec := baseAmt.ToLegacyDec().Mul(rateDec).Mul(timeFraction)
+	interestEarned := interestDec.TruncateInt()
+
+	expectedTotalAmount := baseAmt.Add(interestEarned)
+
+	expectedCoin := sdk.NewCoin(underlyingDenom, expectedTotalAmount)
+	s.Require().Equal(expectedCoin, estimatedTVV, "estimated TVV should equal principal balance plus accrued interest")
+}
+
 func (s *TestSuite) TestEstimateTotalVaultValue_MultiAsset_UnderlyingIsFcc() {
 	underlyingDenom := "uylds.fcc"
 	paymentDenom := "usdc"
@@ -573,16 +618,69 @@ func (s *TestSuite) TestEstimateTotalVaultValue_MultiAsset_UnderlyingIsFcc() {
 		sdk.NewInt64Coin(underlyingDenom, 100),
 		sdk.NewInt64Coin(paymentDenom, 50),
 	)), "funding principal should succeed")
-	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.GetAddress(), sdk.NewCoins(
-		sdk.NewInt64Coin(underlyingDenom, 10),
-	)), "funding reserves should succeed")
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 10))), "funding reserves should succeed")
 
-	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
+	testKeeper := s.k
 	estimatedTVV, err := testKeeper.EstimateTotalVaultValue(s.ctx, vault)
 
 	s.Require().NoError(err, "estimation should not error with uylds.fcc underlying")
 	expectedCoin := sdk.NewInt64Coin(underlyingDenom, 150)
 	s.Require().Equal(expectedCoin, estimatedTVV, "estimated TVV should sum assets at 1:1")
+}
+
+func (s *TestSuite) TestEstimateTotalVaultValue_MultiAsset_UnderlyingIsFcc_WithInterest() {
+	underlyingDenom := "uylds.fcc"
+	paymentDenom := "usdc"
+	shareDenom := "vsharefcc"
+
+	const interestRate = "0.1"
+	const secondsPerYear = 31536000
+	const secondsToAccrue = int64(60 * 60 * 24 * 30)
+
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingDenom, 1_000_000), s.adminAddr)
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 1_000_000), s.adminAddr)
+	s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, underlyingDenom, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 110)))
+	s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, paymentDenom, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 50)))
+
+	vault, err := s.k.CreateVault(s.ctx, vaultAttrs{admin: s.adminAddr.String(), share: shareDenom, underlying: underlyingDenom})
+	s.Require().NoError(err, "vault creation should succeed")
+	vault.PaymentDenom = paymentDenom
+
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(
+		sdk.NewInt64Coin(underlyingDenom, 100),
+		sdk.NewInt64Coin(paymentDenom, 50),
+	)), "funding principal should succeed")
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 10))), "funding reserves should succeed")
+
+	startTime := s.ctx.BlockTime()
+	vault.PeriodStart = startTime.Unix()
+	vault.CurrentInterestRate = interestRate
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+	s.ctx = s.ctx.WithBlockTime(startTime.Add(time.Second * time.Duration(secondsToAccrue)))
+
+	testKeeper := s.k
+	estimatedTVV, err := testKeeper.EstimateTotalVaultValue(s.ctx, vault)
+
+	s.Require().NoError(err, "estimation should not error with uylds.fcc underlying")
+
+	baseAmt := math.NewInt(150)
+
+	rateDec, err := math.LegacyNewDecFromStr(interestRate)
+	s.Require().NoError(err, "parsing interest rate string should not fail")
+	durationDec := math.LegacyNewDec(secondsToAccrue)
+	secondsPerYearDec := math.LegacyNewDec(secondsPerYear)
+	timeFraction := durationDec.Quo(secondsPerYearDec)
+	interestDec := baseAmt.ToLegacyDec().Mul(rateDec).Mul(timeFraction)
+	interestEarned := interestDec.TruncateInt()
+
+	expectedTotalAmount := baseAmt.Add(interestEarned)
+
+	expectedCoin := sdk.NewCoin(underlyingDenom, expectedTotalAmount)
+	s.Require().Equal(
+		expectedCoin,
+		estimatedTVV,
+		"estimated TVV should sum assets at 1:1 and add accrued interest",
+	)
 }
 
 func (s *TestSuite) TestEstimateTotalVaultValue_MultiAsset_PaymentIsFcc() {
@@ -604,16 +702,76 @@ func (s *TestSuite) TestEstimateTotalVaultValue_MultiAsset_PaymentIsFcc() {
 		sdk.NewInt64Coin(underlyingDenom, 100),
 		sdk.NewInt64Coin(paymentDenom, 50),
 	)), "funding principal should succeed")
-	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.GetAddress(), sdk.NewCoins(
-		sdk.NewInt64Coin(underlyingDenom, 10),
-	)), "funding reserves should succeed")
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 10))), "funding reserves should succeed")
 
-	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
+	testKeeper := s.k
 	estimatedTVV, err := testKeeper.EstimateTotalVaultValue(s.ctx, vault)
 
 	s.Require().NoError(err, "estimation should not error with uylds.fcc payment")
 	expectedCoin := sdk.NewInt64Coin(underlyingDenom, 150)
-	s.Require().Equal(expectedCoin, estimatedTVV, "estimated TVV should sum assets at 1:1")
+	s.Require().Equal(
+		expectedCoin,
+		estimatedTVV,
+		"estimated TVV should sum assets at 1:1",
+	)
+}
+
+func (s *TestSuite) TestEstimateTotalVaultValue_MultiAsset_PaymentIsFcc_WithInterest() {
+	underlyingDenom := "receipttoken"
+	paymentDenom := "uylds.fcc"
+	shareDenom := "vsharercpt"
+
+	const interestRate = "0.1"
+	const secondsPerYear = 31536000
+	const secondsToAccrue = int64(60 * 60 * 24 * 30)
+
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingDenom, 1_000_000), s.adminAddr)
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 1_000_000), s.adminAddr)
+	s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, underlyingDenom, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 110)))
+	s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, paymentDenom, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 50)))
+
+	vault, err := s.k.CreateVault(
+		s.ctx,
+		vaultAttrs{admin: s.adminAddr.String(), share: shareDenom, underlying: underlyingDenom},
+	)
+	s.Require().NoError(err, "vault creation should succeed")
+	vault.PaymentDenom = paymentDenom
+
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(
+		sdk.NewInt64Coin(underlyingDenom, 100),
+		sdk.NewInt64Coin(paymentDenom, 50),
+	)), "funding principal should succeed")
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 10))), "funding reserves should succeed")
+
+	startTime := s.ctx.BlockTime()
+	vault.PeriodStart = startTime.Unix()
+	vault.CurrentInterestRate = interestRate
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+	s.ctx = s.ctx.WithBlockTime(startTime.Add(time.Second * time.Duration(secondsToAccrue)))
+
+	testKeeper := s.k
+	estimatedTVV, err := testKeeper.EstimateTotalVaultValue(s.ctx, vault)
+
+	s.Require().NoError(err, "estimation should not error with uylds.fcc payment")
+
+	baseAmt := math.NewInt(150)
+
+	rateDec, err := math.LegacyNewDecFromStr(interestRate)
+	s.Require().NoError(err, "parsing interest rate string should not fail")
+	durationDec := math.LegacyNewDec(secondsToAccrue)
+	secondsPerYearDec := math.LegacyNewDec(secondsPerYear)
+	timeFraction := durationDec.Quo(secondsPerYearDec)
+	interestDec := baseAmt.ToLegacyDec().Mul(rateDec).Mul(timeFraction)
+	interestEarned := interestDec.TruncateInt()
+
+	expectedTotalAmount := baseAmt.Add(interestEarned)
+
+	expectedCoin := sdk.NewCoin(underlyingDenom, expectedTotalAmount)
+	s.Require().Equal(
+		expectedCoin,
+		estimatedTVV,
+		"estimated TVV should sum assets at 1:1 and add accrued interest",
+	)
 }
 
 func (s *TestSuite) TestEstimateTotalVaultValue_MultiAsset_WithNAV() {
@@ -622,20 +780,44 @@ func (s *TestSuite) TestEstimateTotalVaultValue_MultiAsset_WithNAV() {
 	shareDenom := "vshare"
 	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
 
+	const interestRate = "0.1"
+	const secondsPerYear = 31536000
+	const secondsToAccrue = int64(60 * 60 * 24 * 30)
+
 	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(
 		sdk.NewInt64Coin(underlyingDenom, 100),
 		sdk.NewInt64Coin(paymentDenom, 50),
-	)), "funding principal should succeed")
+	)), "funding principal account should succeed")
 	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.GetAddress(), sdk.NewCoins(
 		sdk.NewInt64Coin(underlyingDenom, 10),
-	)), "funding reserves should succeed")
+	)), "funding vault account (reserves) should succeed")
 
-	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
+	startTime := s.ctx.BlockTime()
+	vault.PeriodStart = startTime.Unix()
+	vault.CurrentInterestRate = interestRate
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+	s.ctx = s.ctx.WithBlockTime(startTime.Add(time.Second * time.Duration(secondsToAccrue)))
+
+	testKeeper := s.k
 	estimatedTVV, err := testKeeper.EstimateTotalVaultValue(s.ctx, vault)
 
-	s.Require().NoError(err, "estimation should not error with NAV conversion")
-	expectedCoin := sdk.NewInt64Coin(underlyingDenom, 125)
-	s.Require().Equal(expectedCoin, estimatedTVV, "estimated TVV should sum assets using NAV")
+	s.Require().NoError(err, "EstimateTotalVaultValue should not error during NAV conversion")
+
+	baseAmt := math.NewInt(125)
+
+	rateDec, err := math.LegacyNewDecFromStr(interestRate)
+	s.Require().NoError(err, "parsing interest rate string should not fail")
+	durationDec := math.LegacyNewDec(secondsToAccrue)
+	secondsPerYearDec := math.LegacyNewDec(secondsPerYear)
+	timeFraction := durationDec.Quo(secondsPerYearDec)
+	// Corrected line: Use ToLegacyDec() for proper conversion
+	interestDec := baseAmt.ToLegacyDec().Mul(rateDec).Mul(timeFraction)
+	interestEarned := interestDec.TruncateInt()
+
+	expectedTotalAmount := baseAmt.Add(interestEarned)
+
+	expectedCoin := sdk.NewCoin(underlyingDenom, expectedTotalAmount)
+	s.Require().Equal(expectedCoin, estimatedTVV, "estimated TVV should equal base principal (with NAV) plus accrued interest")
 }
 
 func (s *TestSuite) TestEstimateTotalVaultValue_ErrorPropagation() {

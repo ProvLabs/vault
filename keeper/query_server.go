@@ -131,7 +131,7 @@ func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstim
 
 	totalShares := vault.TotalShares.Amount
 
-	estTVV, err := k.EstimateTotalVaultValue(ctx, vault)
+	estimatedTVV, err := k.EstimateTotalVaultValue(ctx, vault)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to estimate total assets: %v", err)
 	}
@@ -140,7 +140,7 @@ func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstim
 	estimatedShares, err := utils.CalculateSharesProRataFraction(
 		amountNum,
 		priceDen,
-		estTVV.Amount,
+		estimatedTVV.Amount,
 		totalShares,
 		vault.TotalShares.Denom,
 	)
@@ -186,7 +186,7 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 
 	totalShares := vault.TotalShares.Amount
 
-	estTVV, err := k.EstimateTotalVaultValue(ctx, vault)
+	estimatedTVV, err := k.EstimateTotalVaultValue(ctx, vault)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to estimate total assets: %v", err)
 	}
@@ -202,7 +202,7 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 	estimatedPayout, err := utils.CalculateRedeemProRataFraction(
 		req.Shares,
 		totalShares,
-		estTVV.Amount,
+		estimatedTVV.Amount,
 		priceNum,
 		priceDen,
 		redeemDenom,

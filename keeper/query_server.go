@@ -78,7 +78,10 @@ func (k queryServer) Vault(goCtx context.Context, req *types.QueryVaultRequest) 
 
 	principal := k.BankKeeper.GetAllBalances(goCtx, marker.GetAddress())
 	reserves := k.BankKeeper.GetAllBalances(goCtx, vault.GetAddress())
-
+	tvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
 	return &types.QueryVaultResponse{
 		Vault: *vault,
 		Principal: types.AccountBalance{
@@ -89,6 +92,7 @@ func (k queryServer) Vault(goCtx context.Context, req *types.QueryVaultRequest) 
 			Address: vault.GetAddress().String(),
 			Coins:   reserves,
 		},
+		TotalVaultValue: sdk.Coin{Denom: vault.UnderlyingAsset, Amount: tvv},
 	}, nil
 }
 

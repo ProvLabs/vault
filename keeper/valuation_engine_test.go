@@ -510,3 +510,150 @@ func (s *TestSuite) TestGetTVVInUnderlyingAsset_PausedUsesPausedBalance() {
 	s.Require().NoError(err, "GetTVVInUnderlyingAsset should not error when paused")
 	s.Require().Equal(math.NewInt(42), tvv, "when paused, TVV should equal vault.PausedBalance.Amount regardless of principal contents")
 }
+
+func (s *TestSuite) TestEstimateTotalVaultValue_Paused() {
+	underlyingDenom := "ylds"
+	shareDenom := "vshare"
+	vault := s.setupBaseVault(underlyingDenom, shareDenom)
+
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(
+		sdk.NewInt64Coin(underlyingDenom, 9999),
+	)), "funding principal should succeed")
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.GetAddress(), sdk.NewCoins(
+		sdk.NewInt64Coin(underlyingDenom, 100),
+	)), "funding reserves should succeed")
+
+	vault.Paused = true
+	vault.PausedBalance = sdk.NewInt64Coin(underlyingDenom, 42)
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
+	estimatedTVV, err := testKeeper.EstimateTotalVaultValue(s.ctx, vault)
+
+	s.Require().NoError(err, "estimation should not error when paused")
+	s.Require().Equal(vault.PausedBalance, estimatedTVV, "estimated TVV should equal PausedBalance when vault is paused")
+}
+
+func (s *TestSuite) TestEstimateTotalVaultValue_SingleAsset() {
+	underlyingDenom := "ylds"
+	shareDenom := "vshare"
+	vault := s.setupBaseVault(underlyingDenom, shareDenom)
+
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(
+		sdk.NewInt64Coin(underlyingDenom, 1000),
+	)), "funding principal should succeed")
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.GetAddress(), sdk.NewCoins(
+		sdk.NewInt64Coin(underlyingDenom, 100),
+	)), "funding reserves should succeed")
+
+	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
+	estimatedTVV, err := testKeeper.EstimateTotalVaultValue(s.ctx, vault)
+
+	s.Require().NoError(err, "estimation should not error for single asset")
+	expectedCoin := sdk.NewInt64Coin(underlyingDenom, 1000)
+	s.Require().Equal(expectedCoin, estimatedTVV, "estimated TVV should equal principal balance")
+}
+
+func (s *TestSuite) TestEstimateTotalVaultValue_MultiAsset_UnderlyingIsFcc() {
+	underlyingDenom := "uylds.fcc"
+	paymentDenom := "usdc"
+	shareDenom := "vsharefcc"
+
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingDenom, 1_000_000), s.adminAddr)
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 1_000_000), s.adminAddr)
+	s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, underlyingDenom, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 110)))
+	s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, paymentDenom, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 50)))
+
+	vault, err := s.k.CreateVault(s.ctx, vaultAttrs{admin: s.adminAddr.String(), share: shareDenom, underlying: underlyingDenom})
+	s.Require().NoError(err, "vault creation should succeed")
+	vault.PaymentDenom = paymentDenom
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(
+		sdk.NewInt64Coin(underlyingDenom, 100),
+		sdk.NewInt64Coin(paymentDenom, 50),
+	)), "funding principal should succeed")
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.GetAddress(), sdk.NewCoins(
+		sdk.NewInt64Coin(underlyingDenom, 10),
+	)), "funding reserves should succeed")
+
+	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
+	estimatedTVV, err := testKeeper.EstimateTotalVaultValue(s.ctx, vault)
+
+	s.Require().NoError(err, "estimation should not error with uylds.fcc underlying")
+	expectedCoin := sdk.NewInt64Coin(underlyingDenom, 150)
+	s.Require().Equal(expectedCoin, estimatedTVV, "estimated TVV should sum assets at 1:1")
+}
+
+func (s *TestSuite) TestEstimateTotalVaultValue_MultiAsset_PaymentIsFcc() {
+	underlyingDenom := "receipttoken"
+	paymentDenom := "uylds.fcc"
+	shareDenom := "vsharercpt"
+
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingDenom, 1_000_000), s.adminAddr)
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 1_000_000), s.adminAddr)
+	s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, underlyingDenom, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 110)))
+	s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, paymentDenom, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 50)))
+
+	vault, err := s.k.CreateVault(s.ctx, vaultAttrs{admin: s.adminAddr.String(), share: shareDenom, underlying: underlyingDenom})
+	s.Require().NoError(err, "vault creation should succeed")
+	vault.PaymentDenom = paymentDenom
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(
+		sdk.NewInt64Coin(underlyingDenom, 100),
+		sdk.NewInt64Coin(paymentDenom, 50),
+	)), "funding principal should succeed")
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.GetAddress(), sdk.NewCoins(
+		sdk.NewInt64Coin(underlyingDenom, 10),
+	)), "funding reserves should succeed")
+
+	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
+	estimatedTVV, err := testKeeper.EstimateTotalVaultValue(s.ctx, vault)
+
+	s.Require().NoError(err, "estimation should not error with uylds.fcc payment")
+	expectedCoin := sdk.NewInt64Coin(underlyingDenom, 150)
+	s.Require().Equal(expectedCoin, estimatedTVV, "estimated TVV should sum assets at 1:1")
+}
+
+func (s *TestSuite) TestEstimateTotalVaultValue_MultiAsset_WithNAV() {
+	underlyingDenom := "ylds"
+	paymentDenom := "usdc"
+	shareDenom := "vshare"
+	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
+
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(
+		sdk.NewInt64Coin(underlyingDenom, 100),
+		sdk.NewInt64Coin(paymentDenom, 50),
+	)), "funding principal should succeed")
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.GetAddress(), sdk.NewCoins(
+		sdk.NewInt64Coin(underlyingDenom, 10),
+	)), "funding reserves should succeed")
+
+	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
+	estimatedTVV, err := testKeeper.EstimateTotalVaultValue(s.ctx, vault)
+
+	s.Require().NoError(err, "estimation should not error with NAV conversion")
+	expectedCoin := sdk.NewInt64Coin(underlyingDenom, 125)
+	s.Require().Equal(expectedCoin, estimatedTVV, "estimated TVV should sum assets using NAV")
+}
+
+func (s *TestSuite) TestEstimateTotalVaultValue_ErrorPropagation() {
+	underlyingDenom := "ylds"
+	paymentDenom := "usdc"
+	shareDenom := "vshare"
+	vault := s.setupBaseVault(underlyingDenom, shareDenom)
+
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 1_000_000), s.adminAddr)
+	s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, paymentDenom, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 10)))
+
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(
+		sdk.NewInt64Coin(paymentDenom, 10),
+	)), "funding principal should succeed")
+
+	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
+	_, err := testKeeper.EstimateTotalVaultValue(s.ctx, vault)
+
+	s.Require().Error(err, "estimation should error if GetTVV errors")
+	s.Require().Contains(err.Error(), "get tvv: nav not found for usdc/ylds", "error should propagate from missing NAV")
+}

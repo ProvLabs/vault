@@ -78,14 +78,10 @@ func (k queryServer) Vault(goCtx context.Context, req *types.QueryVaultRequest) 
 
 	principal := k.BankKeeper.GetAllBalances(goCtx, marker.GetAddress())
 	reserves := k.BankKeeper.GetAllBalances(goCtx, vault.GetAddress())
-	totalAssets, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to get total vault value: %v", err)
-	}
 
-	tvv, err := k.CalculateVaultTotalAssets(ctx, vault, sdk.Coin{Denom: vault.UnderlyingAsset, Amount: totalAssets})
+	tvv, err := k.EstimateTotalVaultValue(ctx, vault)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to estimate total assets: %v", err)
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	return &types.QueryVaultResponse{
@@ -98,7 +94,7 @@ func (k queryServer) Vault(goCtx context.Context, req *types.QueryVaultRequest) 
 			Address: vault.GetAddress().String(),
 			Coins:   reserves,
 		},
-		TotalVaultValue: sdk.Coin{Denom: vault.UnderlyingAsset, Amount: tvv},
+		TotalVaultValue: tvv,
 	}, nil
 }
 
@@ -121,7 +117,6 @@ func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstim
 	if err != nil || vault == nil {
 		return nil, status.Errorf(codes.NotFound, "vault with address %q not found", req.VaultAddress)
 	}
-
 	if !vault.IsAcceptedDenom(req.Assets.Denom) {
 		return nil, status.Errorf(codes.InvalidArgument, "unsupported deposit denom: %q", req.Assets.Denom)
 	}
@@ -135,12 +130,8 @@ func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstim
 	}
 
 	totalShares := vault.TotalShares.Amount
-	totalAssets, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to get total vault value: %v", err)
-	}
 
-	estimatedTotalAssets, err := k.CalculateVaultTotalAssets(ctx, vault, sdk.Coin{Denom: vault.UnderlyingAsset, Amount: totalAssets})
+	estTVV, err := k.EstimateTotalVaultValue(ctx, vault)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to estimate total assets: %v", err)
 	}
@@ -149,7 +140,7 @@ func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstim
 	estimatedShares, err := utils.CalculateSharesProRataFraction(
 		amountNum,
 		priceDen,
-		estimatedTotalAssets,
+		estTVV.Amount,
 		totalShares,
 		vault.TotalShares.Denom,
 	)
@@ -184,6 +175,7 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 	if err != nil || vault == nil {
 		return nil, status.Errorf(codes.NotFound, "vault with address %q not found", req.VaultAddress)
 	}
+
 	redeemDenom := req.RedeemDenom
 	if redeemDenom == "" {
 		redeemDenom = vault.UnderlyingAsset
@@ -193,12 +185,8 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 	}
 
 	totalShares := vault.TotalShares.Amount
-	totalAssets, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to get total vault value: %v", err)
-	}
 
-	estimatedTotalAssets, err := k.CalculateVaultTotalAssets(ctx, vault, sdk.Coin{Denom: vault.UnderlyingAsset, Amount: totalAssets})
+	estTVV, err := k.EstimateTotalVaultValue(ctx, vault)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to estimate total assets: %v", err)
 	}
@@ -214,7 +202,7 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 	estimatedPayout, err := utils.CalculateRedeemProRataFraction(
 		req.Shares,
 		totalShares,
-		estimatedTotalAssets,
+		estTVV.Amount,
 		priceNum,
 		priceDen,
 		redeemDenom,

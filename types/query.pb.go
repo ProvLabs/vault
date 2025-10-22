@@ -468,7 +468,7 @@ type QueryVaultResponse struct {
 	Reserves AccountBalance `protobuf:"bytes,3,opt,name=reserves,proto3" json:"reserves"`
 	// total_vault_value is the estimated total value of the vault in its
 	// underlying asset. It includes current principal and estimated unpaid
-	// interest, but excludes reserves. The value is approximate and may differ
+	// interest (at query block height), but excludes reserves. The value is approximate and may differ
 	// from the reconciled amount.
 	TotalVaultValue types.Coin `protobuf:"bytes,4,opt,name=total_vault_value,json=totalVaultValue,proto3" json:"total_vault_value"`
 }

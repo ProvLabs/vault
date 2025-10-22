@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -480,13 +479,13 @@ func createReconcileEvents(vaultAddr, markerAddr sdk.AccAddress, interest, princ
 
 // expectedWithSimpleAPY calculates the total amount (principal + interest)
 // using a simple APY formula.
-func expectedWithSimpleAPY(baseAmt math.Int, rateStr string, seconds int64) (math.Int, error) {
-	rateDec, err := math.LegacyNewDecFromStr(rateStr)
+func expectedWithSimpleAPY(baseAmt sdkmath.Int, rateStr string, seconds int64) (sdkmath.Int, error) {
+	rateDec, err := sdkmath.LegacyNewDecFromStr(rateStr)
 	if err != nil {
-		return math.Int{}, err
+		return sdkmath.Int{}, err
 	}
-	durationDec := math.LegacyNewDec(seconds)
-	secondsPerYearDec := math.LegacyNewDec(31536000)
+	durationDec := sdkmath.LegacyNewDec(seconds)
+	secondsPerYearDec := sdkmath.LegacyNewDec(31536000)
 	timeFraction := durationDec.Quo(secondsPerYearDec)
 	interestDec := baseAmt.ToLegacyDec().Mul(rateDec).Mul(timeFraction)
 	return baseAmt.Add(interestDec.TruncateInt()), nil

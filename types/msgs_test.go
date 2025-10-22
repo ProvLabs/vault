@@ -463,25 +463,25 @@ func TestMsgUpdateInterestRateRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "valid",
 			msg: types.MsgUpdateInterestRateRequest{
-				Admin:        addr,
+				Authority:    addr,
 				VaultAddress: addr,
 				NewRate:      "1.5",
 			},
 			expectedErr: nil,
 		},
 		{
-			name: "invalid admin",
+			name: "invalid authority",
 			msg: types.MsgUpdateInterestRateRequest{
-				Admin:        "bad",
+				Authority:    "bad",
 				VaultAddress: addr,
 				NewRate:      "1.5",
 			},
-			expectedErr: fmt.Errorf("invalid admin address: %q", "bad"),
+			expectedErr: fmt.Errorf("invalid authority address: %q", "bad"),
 		},
 		{
 			name: "invalid vault address",
 			msg: types.MsgUpdateInterestRateRequest{
-				Admin:        addr,
+				Authority:    addr,
 				VaultAddress: "bad",
 				NewRate:      "1.5",
 			},
@@ -490,7 +490,7 @@ func TestMsgUpdateInterestRateRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "invalid new rate",
 			msg: types.MsgUpdateInterestRateRequest{
-				Admin:        addr,
+				Authority:    addr,
 				VaultAddress: addr,
 				NewRate:      "bad",
 			},

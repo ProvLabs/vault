@@ -587,7 +587,7 @@ func (s *TestSuite) TestUpdateInterestRate_BoundsEnforced() {
 
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	_, err = srv.UpdateInterestRate(s.ctx, &types.MsgUpdateInterestRateRequest{
-		Admin:        s.adminAddr.String(),
+		Authority:    s.adminAddr.String(),
 		VaultAddress: addr.String(),
 		NewRate:      "0.25",
 	})
@@ -599,7 +599,7 @@ func (s *TestSuite) TestUpdateInterestRate_BoundsEnforced() {
 
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	_, err = srv.UpdateInterestRate(s.ctx, &types.MsgUpdateInterestRateRequest{
-		Admin:        s.adminAddr.String(),
+		Authority:    s.adminAddr.String(),
 		VaultAddress: addr.String(),
 		NewRate:      "0.05",
 	})
@@ -607,7 +607,7 @@ func (s *TestSuite) TestUpdateInterestRate_BoundsEnforced() {
 
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	_, err = srv.UpdateInterestRate(s.ctx, &types.MsgUpdateInterestRateRequest{
-		Admin:        s.adminAddr.String(),
+		Authority:    s.adminAddr.String(),
 		VaultAddress: addr.String(),
 		NewRate:      "0.60",
 	})

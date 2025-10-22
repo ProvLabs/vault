@@ -43,7 +43,7 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 | `ToggleBridgeEnabled`    | Admin only                        |                   ✅ |                 ✅ | Enables/disables bridge operations; no mint/burn allowed when disabled.                                       |
 | `UpdateMinInterestRate`  | Admin only                        |                   ✅ |                 ✅ | Validates and updates the minimum allowable interest rate.                                                    |
 | `UpdateMaxInterestRate`  | Admin only                        |                   ✅ |                 ✅ | Validates and updates the maximum allowable interest rate.                                                    |
-| `UpdateInterestRate`     | Admin only                        |                   ✅ |                 ✅ | Validates bounds, may reconcile, updates enable/disable flows.                                                |
+| `UpdateInterestRate`     | Admin or Asset Manager            |                   ✅ |                 ✅ | Validates bounds, may reconcile, updates enable/disable flows.                                                |
 | `ToggleSwapIn`           | Admin only                        |                   ✅ |                 ✅ | Allows enabling or disabling swap-in operations.                                                              |
 | `ToggleSwapOut`          | Admin only                        |                   ✅ |                 ✅ | Allows enabling or disabling swap-out operations.                                                             |
 | `DepositInterestFunds`   | Admin or Asset Manager            |                   ✅ |                 ✅ | Underlying denom only; reconciles after deposit.                                                              |
@@ -111,11 +111,11 @@ Admin-only. Updates the maximum allowable annual interest rate (or disables with
 
 ## UpdateInterestRate
 
-Admin-only. Updates the current and desired interest rate for a vault.
+Admin or Asset Manager. Updates the current and desired interest rate for a vault.
 If interest was previously enabled, triggers a reconciliation before updating.
 Transitions may enqueue or clear payout verification / timeout entries.
 
-* **Request:** `MsgUpdateInterestRateRequest { admin, vault_address, new_rate }`
+* **Request:** `MsgUpdateInterestRateRequest { authority, vault_address, new_rate }`
 * **Response:** `MsgUpdateInterestRateResponse {}`
 
 ---

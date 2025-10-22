@@ -60,22 +60,6 @@ func (AppModuleBasic) RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {}
 // RegisterInterfaces registers vault interfaces to the interface registry.
 func (AppModuleBasic) RegisterInterfaces(reg codectypes.InterfaceRegistry) {
 	types.RegisterInterfaces(reg)
-
-	reg.RegisterInterface(
-		"provlabs.vault.v1.VaultAccount",
-		(*types.VaultAccountI)(nil),
-		&types.VaultAccount{},
-	)
-	reg.RegisterInterface(
-		"provlabs.vault.v1.VaultAccount",
-		(*sdk.AccountI)(nil),
-		&types.VaultAccount{},
-	)
-	reg.RegisterInterface(
-		"provlabs.vault.v1.VaultAccount",
-		(*authtypes.GenesisAccount)(nil),
-		&types.VaultAccount{},
-	)
 }
 
 // RegisterGRPCGatewayRoutes sets up gRPC gateway routes.
@@ -235,12 +219,12 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod: "UpdateInterestRate",
-					Use:       "update-interest-rate [admin] [vault_address] [new_rate]",
+					Use:       "update-interest-rate [authority] [vault_address] [new_rate]",
 					Alias:     []string{"uir"},
-					Short:     "Update the vault's current/desired annual interest rate",
+					Short:     "Update the vault's current/desired annual interest rate (admin or asset manager)",
 					Example:   fmt.Sprintf("%s update-interest-rate %s %s 0.05", txStart, exampleAdminAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "admin"},
+						{ProtoField: "authority"},
 						{ProtoField: "vault_address"},
 						{ProtoField: "new_rate"},
 					},

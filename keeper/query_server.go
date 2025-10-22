@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/provlabs/vault/types"
@@ -145,7 +144,7 @@ func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstim
 		vault.TotalShares.Denom,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to calculate shares: %w", err)
+		return nil, status.Errorf(codes.Internal, "failed to calculate shares: %v", err)
 	}
 
 	return &types.QueryEstimateSwapInResponse{
@@ -208,7 +207,7 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 		redeemDenom,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to calculate redeem estimate: %w", err)
+		return nil, status.Errorf(codes.Internal, "failed to calculate redeem estimate: %v", err)
 	}
 
 	return &types.QueryEstimateSwapOutResponse{

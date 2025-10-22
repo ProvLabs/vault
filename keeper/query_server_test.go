@@ -194,7 +194,7 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 					UnderlyingAsset: "stake2",
 					PaymentDenom:    "usdc",
 				})
-				s.Require().NoError(err)
+				s.Require().NoError(err, "vault creation should succeed")
 			},
 			Req: &types.QueryVaultsRequest{},
 			ExpectedResp: &types.QueryVaultsResponse{
@@ -216,21 +216,21 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 					UnderlyingAsset: "stake2",
 					PaymentDenom:    "usdc",
 				})
-				s.Require().NoError(err)
+				s.Require().NoError(err, "vault creation should succeed")
 				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 					Admin:           admin,
 					ShareDenom:      shareDenom2,
 					UnderlyingAsset: "nhash",
 					PaymentDenom:    "usdc",
 				})
-				s.Require().NoError(err)
+				s.Require().NoError(err, "vault creation should succeed")
 				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 					Admin:           admin,
 					ShareDenom:      shareDenom3,
 					UnderlyingAsset: "usdf",
 					PaymentDenom:    "usdc",
 				})
-				s.Require().NoError(err)
+				s.Require().NoError(err, "vault creation should succeed")
 			},
 			Req: &types.QueryVaultsRequest{},
 			ExpectedResp: &types.QueryVaultsResponse{
@@ -254,21 +254,21 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 					UnderlyingAsset: "stake2",
 					PaymentDenom:    "usdc",
 				})
-				s.Require().NoError(err)
+				s.Require().NoError(err, "vault creation should succeed")
 				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 					Admin:           admin,
 					ShareDenom:      shareDenom2,
 					UnderlyingAsset: "nhash",
 					PaymentDenom:    "usdc",
 				})
-				s.Require().NoError(err)
+				s.Require().NoError(err, "vault creation should succeed")
 				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 					Admin:           admin,
 					ShareDenom:      shareDenom3,
 					UnderlyingAsset: "usdf",
 					PaymentDenom:    "usdc",
 				})
-				s.Require().NoError(err)
+				s.Require().NoError(err, "vault creation should succeed")
 			},
 			Req: &types.QueryVaultsRequest{
 				Pagination: &query.PageRequest{Limit: 2},
@@ -295,21 +295,21 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 					UnderlyingAsset: "stake2",
 					PaymentDenom:    "usdc",
 				})
-				s.Require().NoError(err)
+				s.Require().NoError(err, "vault creation should succeed")
 				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 					Admin:           admin,
 					ShareDenom:      shareDenom2,
 					UnderlyingAsset: "nhash",
 					PaymentDenom:    "usdc",
 				})
-				s.Require().NoError(err)
+				s.Require().NoError(err, "vault creation should succeed")
 				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 					Admin:           admin,
 					ShareDenom:      shareDenom3,
 					UnderlyingAsset: "usdf",
 					PaymentDenom:    "usdc",
 				})
-				s.Require().NoError(err)
+				s.Require().NoError(err, "vault creation should succeed")
 			},
 			Req: &types.QueryVaultsRequest{
 				Pagination: &query.PageRequest{Offset: 1},
@@ -334,21 +334,21 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 					UnderlyingAsset: "stake2",
 					PaymentDenom:    "usdc",
 				})
-				s.Require().NoError(err)
+				s.Require().NoError(err, "vault creation should succeed")
 				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 					Admin:           admin,
 					ShareDenom:      shareDenom2,
 					UnderlyingAsset: "nhash",
 					PaymentDenom:    "usdc",
 				})
-				s.Require().NoError(err)
+				s.Require().NoError(err, "vault creation should succeed")
 				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 					Admin:           admin,
 					ShareDenom:      shareDenom3,
 					UnderlyingAsset: "usdf",
 					PaymentDenom:    "usdc",
 				})
-				s.Require().NoError(err)
+				s.Require().NoError(err, "vault creation should succeed")
 			},
 			Req: &types.QueryVaultsRequest{
 				Pagination: &query.PageRequest{Offset: 2, Limit: 1},
@@ -372,21 +372,21 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 					UnderlyingAsset: "stake2",
 					PaymentDenom:    "usdc",
 				})
-				s.Require().NoError(err)
+				s.Require().NoError(err, "vault creation should succeed")
 				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 					Admin:           admin,
 					ShareDenom:      shareDenom2,
 					UnderlyingAsset: "nhash",
 					PaymentDenom:    "usdc",
 				})
-				s.Require().NoError(err)
+				s.Require().NoError(err, "vault creation should succeed")
 				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 					Admin:           admin,
 					ShareDenom:      shareDenom3,
 					UnderlyingAsset: "usdf",
 					PaymentDenom:    "usdc",
 				})
-				s.Require().NoError(err)
+				s.Require().NoError(err, "vault creation should succeed")
 			},
 			Req: &types.QueryVaultsRequest{
 				Pagination: &query.PageRequest{CountTotal: true},
@@ -412,21 +412,21 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 					UnderlyingAsset: "stake2",
 					PaymentDenom:    "usdc",
 				})
-				s.Require().NoError(err)
+				s.Require().NoError(err, "vault creation should succeed")
 				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 					Admin:           admin,
 					ShareDenom:      shareDenom2,
 					UnderlyingAsset: "nhash",
 					PaymentDenom:    "usdc",
 				})
-				s.Require().NoError(err)
+				s.Require().NoError(err, "vault creation should succeed")
 				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 					Admin:           admin,
 					ShareDenom:      shareDenom3,
 					UnderlyingAsset: "usdf",
 					PaymentDenom:    "usdc",
 				})
-				s.Require().NoError(err)
+				s.Require().NoError(err, "vault creation should succeed")
 			},
 			Req: &types.QueryVaultsRequest{
 				Pagination: &query.PageRequest{Reverse: true, Limit: 2},

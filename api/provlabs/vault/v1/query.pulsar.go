@@ -7305,9 +7305,10 @@ type QueryVaultResponse struct {
 	Principal *AccountBalance `protobuf:"bytes,2,opt,name=principal,proto3" json:"principal,omitempty"`
 	// reserves is the total amount of reserves held in the vault account for interest payments.
 	Reserves *AccountBalance `protobuf:"bytes,3,opt,name=reserves,proto3" json:"reserves,omitempty"`
-	// total_vault_value represents the total current value of the vault,
-	// including all underlying principal, reserves, and accrued interest.
-	// This provides a single aggregated view of the vault's total holdings.
+	// total_vault_value is the estimated total value of the vault in its
+	// underlying asset. It includes current principal and estimated unpaid
+	// interest, but excludes reserves. The value is approximate and may differ
+	// from the reconciled amount.
 	TotalVaultValue *v1beta11.Coin `protobuf:"bytes,4,opt,name=total_vault_value,json=totalVaultValue,proto3" json:"total_vault_value,omitempty"`
 }
 

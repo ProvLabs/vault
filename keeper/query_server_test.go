@@ -21,17 +21,17 @@ func (s *TestSuite) TestQueryServer_Vault() {
 		QueryName: "Vault",
 		Query:     keeper.NewQueryServer(s.simApp.VaultKeeper).Vault,
 		ManualEquality: func(s querytest.TestSuiter, expected, actual *types.QueryVaultResponse) {
-			s.Require().NotNil(actual)
-			s.Require().NotNil(expected)
-			s.Assert().Equal(expected.Vault.Address, actual.Vault.Address)
-			s.Assert().Equal(expected.Vault.Admin, actual.Vault.Admin)
-			s.Assert().Equal(expected.Vault.TotalShares, actual.Vault.TotalShares)
-			s.Assert().Equal(expected.Vault.UnderlyingAsset, actual.Vault.UnderlyingAsset)
-			s.Assert().Equal(expected.Principal.Address, actual.Principal.Address)
-			s.Assert().Equal(expected.Principal.Coins, actual.Principal.Coins)
-			s.Assert().Equal(expected.Reserves.Address, actual.Reserves.Address)
-			s.Assert().Equal(expected.Reserves.Coins, actual.Reserves.Coins)
-			s.Assert().Equal(expected.TotalVaultValue, actual.TotalVaultValue)
+			s.Require().NotNil(actual, "actual response should not be nil")
+			s.Require().NotNil(expected, "expected response should not be nil")
+			s.Assert().Equal(expected.Vault.Address, actual.Vault.Address, "vault address")
+			s.Assert().Equal(expected.Vault.Admin, actual.Vault.Admin, "vault admin")
+			s.Assert().Equal(expected.Vault.TotalShares, actual.Vault.TotalShares, "vault total shares")
+			s.Assert().Equal(expected.Vault.UnderlyingAsset, actual.Vault.UnderlyingAsset, "vault underlying asset")
+			s.Assert().Equal(expected.Principal.Address, actual.Principal.Address, "principal address")
+			s.Assert().Equal(expected.Principal.Coins, actual.Principal.Coins, "principal coins")
+			s.Assert().Equal(expected.Reserves.Address, actual.Reserves.Address, "reserves address")
+			s.Assert().Equal(expected.Reserves.Coins, actual.Reserves.Coins, "reserves coins")
+			s.Assert().Equal(expected.TotalVaultValue, actual.TotalVaultValue, "total vault value")
 		},
 	}
 
@@ -49,23 +49,14 @@ func (s *TestSuite) TestQueryServer_Vault() {
 
 	setupVaults := func() {
 		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlying, 1), s.adminAddr)
-		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlying, 1), s.adminAddr)
 		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: admin, ShareDenom: shareDenom1, UnderlyingAsset: underlying, PaymentDenom: payment})
-		s.Require().NoError(err)
+		s.Require().NoError(err, "create vault1 should succeed")
 		_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: admin, ShareDenom: shareDenom2, UnderlyingAsset: underlying, PaymentDenom: payment})
-		s.Require().NoError(err)
-
-		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin(underlying, 40))))
-		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr1, sdk.NewCoins(
-			sdk.NewInt64Coin(underlying, 100),
-			sdk.NewInt64Coin(payment, 250),
-		)))
-
-		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, addr2, sdk.NewCoins(sdk.NewInt64Coin(underlying, 20))))
-		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr2, sdk.NewCoins(
-			sdk.NewInt64Coin(underlying, 200),
-			sdk.NewInt64Coin(payment, 100),
-		)))
+		s.Require().NoError(err, "create vault2 should succeed")
+		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin(underlying, 40))), "fund reserves for vault1 should succeed")
+		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr1, sdk.NewCoins(sdk.NewInt64Coin(underlying, 100), sdk.NewInt64Coin(payment, 250))), "fund principal (marker) for vault1 should succeed")
+		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, addr2, sdk.NewCoins(sdk.NewInt64Coin(underlying, 20))), "fund reserves for vault2 should succeed")
+		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr2, sdk.NewCoins(sdk.NewInt64Coin(underlying, 200), sdk.NewInt64Coin(payment, 100))), "fund principal (marker) for vault2 should succeed")
 	}
 
 	tests := []querytest.TestCase[types.QueryVaultRequest, types.QueryVaultResponse]{
@@ -492,12 +483,9 @@ func (s *TestSuite) TestQueryServer_EstimateSwapIn() {
 			Setup: func() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
 				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-					Admin:           admin,
-					ShareDenom:      shareDenom,
-					UnderlyingAsset: underlyingDenom,
-					PaymentDenom:    paymentDenom,
+					Admin: admin, ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom,
 				})
-				s.Require().NoError(err)
+				s.Require().NoError(err, "vault creation should succeed")
 			},
 			Req: &types.QueryEstimateSwapInRequest{
 				VaultAddress: vaultAddr.String(),
@@ -512,12 +500,9 @@ func (s *TestSuite) TestQueryServer_EstimateSwapIn() {
 			Setup: func() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
 				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-					Admin:           admin,
-					ShareDenom:      shareDenom,
-					UnderlyingAsset: underlyingDenom,
-					PaymentDenom:    paymentDenom,
+					Admin: admin, ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom,
 				})
-				s.Require().NoError(err)
+				s.Require().NoError(err, "vault creation should succeed")
 			},
 			Req: &types.QueryEstimateSwapInRequest{
 				VaultAddress: vaultAddr.String(),
@@ -552,12 +537,9 @@ func (s *TestSuite) TestQueryServer_EstimateSwapIn() {
 			Setup: func() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
 				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-					Admin:           admin,
-					ShareDenom:      shareDenom,
-					UnderlyingAsset: underlyingDenom,
-					PaymentDenom:    paymentDenom,
+					Admin: admin, ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom,
 				})
-				s.Require().NoError(err)
+				s.Require().NoError(err, "vault creation should succeed")
 			},
 			Req: &types.QueryEstimateSwapInRequest{
 				VaultAddress: vaultAddr.String(),
@@ -593,19 +575,16 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 			Setup: func() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
 				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-					Admin:           admin,
-					ShareDenom:      shareDenom,
-					UnderlyingAsset: underlyingDenom,
-					PaymentDenom:    paymentDenom,
+					Admin: admin, ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom,
 				})
-				s.Require().NoError(err)
+				s.Require().NoError(err, "vault creation should succeed")
 				err = FundAccount(s.ctx, s.simApp.BankKeeper, markertypes.MustGetMarkerAddress(shareDenom), sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 100)))
-				s.Require().NoError(err)
+				s.Require().NoError(err, "fund marker with underlying should succeed")
 				err = FundAccount(s.ctx, s.simApp.BankKeeper, s.adminAddr, sdk.NewCoins(sharesToSwap))
-				s.Require().NoError(err)
+				s.Require().NoError(err, "fund owner with shares should succeed")
 				vault, err := s.k.GetVault(s.ctx, vaultAddr)
-				s.Require().NoError(err)
-				s.Require().NotNil(vault)
+				s.Require().NoError(err, "get vault should succeed")
+				s.Require().NotNil(vault, "vault should not be nil")
 				vault.TotalShares = sharesToSwap
 				s.k.AuthKeeper.SetAccount(s.ctx, vault)
 			},
@@ -622,19 +601,16 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 			Setup: func() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
 				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-					Admin:           admin,
-					ShareDenom:      shareDenom,
-					UnderlyingAsset: underlyingDenom,
-					PaymentDenom:    paymentDenom,
+					Admin: admin, ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom,
 				})
-				s.Require().NoError(err)
+				s.Require().NoError(err, "vault creation should succeed")
 				err = FundAccount(s.ctx, s.simApp.BankKeeper, markertypes.MustGetMarkerAddress(shareDenom), sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 100)))
-				s.Require().NoError(err)
+				s.Require().NoError(err, "fund marker with underlying should succeed")
 				err = FundAccount(s.ctx, s.simApp.BankKeeper, s.adminAddr, sdk.NewCoins(sharesToSwap))
-				s.Require().NoError(err)
+				s.Require().NoError(err, "fund owner with shares should succeed")
 				vault, err := s.k.GetVault(s.ctx, vaultAddr)
-				s.Require().NoError(err)
-				s.Require().NotNil(vault)
+				s.Require().NoError(err, "get vault should succeed")
+				s.Require().NotNil(vault, "vault should not be nil")
 				vault.TotalShares = sharesToSwap
 				s.k.AuthKeeper.SetAccount(s.ctx, vault)
 			},
@@ -672,12 +648,9 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 			Setup: func() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
 				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-					Admin:           admin,
-					ShareDenom:      shareDenom,
-					UnderlyingAsset: underlyingDenom,
-					PaymentDenom:    paymentDenom,
+					Admin: admin, ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom,
 				})
-				s.Require().NoError(err)
+				s.Require().NoError(err, "vault creation should succeed")
 			},
 			Req: &types.QueryEstimateSwapOutRequest{
 				VaultAddress: vaultAddr.String(),

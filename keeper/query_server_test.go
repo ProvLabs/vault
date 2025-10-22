@@ -751,43 +751,51 @@ func (s *TestSuite) TestQueryServer_VaultPendingSwapOuts() {
 		QueryName: "VaultPendingSwapOuts",
 		Query:     keeper.NewQueryServer(s.simApp.VaultKeeper).VaultPendingSwapOuts,
 		ManualEquality: func(s querytest.TestSuiter, expected, actual *types.QueryVaultPendingSwapOutsResponse) {
-			s.Require().NotNil(actual)
-			s.Require().NotNil(expected)
-			s.Require().Len(actual.PendingSwapOuts, len(expected.PendingSwapOuts))
+			s.Require().NotNil(actual, "actual response should not be nil")
+			s.Require().NotNil(expected, "expected response should not be nil")
+
+			s.Require().Len(actual.PendingSwapOuts, len(expected.PendingSwapOuts), "unexpected number of pending swap outs returned")
+
+			// Custom comparison to ignore time drift in tests
 			for i := range expected.PendingSwapOuts {
-				s.Assert().Equal(expected.PendingSwapOuts[i].RequestId, actual.PendingSwapOuts[i].RequestId)
-				s.Assert().Equal(expected.PendingSwapOuts[i].PendingSwapOut, actual.PendingSwapOuts[i].PendingSwapOut)
-				s.Assert().WithinDuration(expected.PendingSwapOuts[i].Timeout, actual.PendingSwapOuts[i].Timeout, 1*time.Second)
+				s.Assert().Equal(expected.PendingSwapOuts[i].RequestId, actual.PendingSwapOuts[i].RequestId, "request id mismatch for entry %d", i)
+				s.Assert().Equal(expected.PendingSwapOuts[i].PendingSwapOut, actual.PendingSwapOuts[i].PendingSwapOut, "pending swap out mismatch for entry %d", i)
+				s.Assert().WithinDuration(expected.PendingSwapOuts[i].Timeout, actual.PendingSwapOuts[i].Timeout, 1*time.Second, "timeout mismatch for entry %d", i)
 			}
+
 			if expected.Pagination != nil {
 				if expected.Pagination.Total > 0 {
-					s.Assert().Equal(expected.Pagination.Total, actual.Pagination.Total)
+					s.Assert().Equal(expected.Pagination.Total, actual.Pagination.Total, "pagination total")
 				}
 				if len(expected.Pagination.NextKey) > 0 {
-					s.Assert().NotEmpty(actual.Pagination.NextKey)
+					s.Assert().NotEmpty(actual.Pagination.NextKey, "pagination next_key should not be empty")
 				} else {
-					s.Assert().Empty(actual.Pagination.NextKey)
+					s.Assert().Empty(actual.Pagination.NextKey, "pagination next_key should be empty")
 				}
 			}
 		},
 	}
 
-	underlyingAsset := "stake_vpso"
+	// --- Test Data Setup ---
+	underlyingAsset := "stake_vpso" // Use a unique denom to avoid test conflicts
 	shareDenomA, shareDenomB := "vshare_a", "vshare_b"
 	vaultAddrA := types.GetVaultAddress(shareDenomA)
 	vaultAddrB := types.GetVaultAddress(shareDenomB)
 
 	owner1, owner2, owner3, owner4 := sdk.AccAddress("owner1______________"), sdk.AccAddress("owner2______________"), sdk.AccAddress("owner3______________"), sdk.AccAddress("owner4______________")
 
+	// Requests for Vault A
 	reqA1 := &types.PendingSwapOut{Owner: owner1.String(), VaultAddress: vaultAddrA.String(), Shares: sdk.NewInt64Coin(shareDenomA, 100)}
 	reqA2 := &types.PendingSwapOut{Owner: owner2.String(), VaultAddress: vaultAddrA.String(), Shares: sdk.NewInt64Coin(shareDenomA, 200)}
 
+	// Requests for Vault B
 	reqB1 := &types.PendingSwapOut{Owner: owner3.String(), VaultAddress: vaultAddrB.String(), Shares: sdk.NewInt64Coin(shareDenomB, 300)}
 	reqB2 := &types.PendingSwapOut{Owner: owner4.String(), VaultAddress: vaultAddrB.String(), Shares: sdk.NewInt64Coin(shareDenomB, 400)}
 
 	timeA1, timeA2 := time.Now().Add(1*time.Hour), time.Now().Add(2*time.Hour)
 	timeB1, timeB2 := time.Now().Add(3*time.Hour), time.Now().Add(4*time.Hour)
 
+	// Base setup creates both vaults and populates Vault B with 2 entries.
 	baseSetup := func() {
 		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingAsset, 1_000_000), s.adminAddr)
 		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: s.adminAddr.String(), ShareDenom: shareDenomA, UnderlyingAsset: underlyingAsset})
@@ -795,6 +803,7 @@ func (s *TestSuite) TestQueryServer_VaultPendingSwapOuts() {
 		_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: s.adminAddr.String(), ShareDenom: shareDenomB, UnderlyingAsset: underlyingAsset})
 		s.Require().NoError(err)
 
+		// Vault B always has 2 entries
 		_, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, timeB1.Unix(), reqB1)
 		s.Require().NoError(err)
 		_, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, timeB2.Unix(), reqB2)
@@ -884,27 +893,32 @@ func (s *TestSuite) TestQueryServer_PendingSwapOuts() {
 		QueryName: "PendingSwapOuts",
 		Query:     keeper.NewQueryServer(s.simApp.VaultKeeper).PendingSwapOuts,
 		ManualEquality: func(s querytest.TestSuiter, expected, actual *types.QueryPendingSwapOutsResponse) {
-			s.Require().NotNil(actual)
-			s.Require().NotNil(expected)
-			s.Require().Len(actual.PendingSwapOuts, len(expected.PendingSwapOuts))
+			s.Require().NotNil(actual, "actual response should not be nil")
+			s.Require().NotNil(expected, "expected response should not be nil")
+
+			s.Require().Len(actual.PendingSwapOuts, len(expected.PendingSwapOuts), "unexpected number of pending swap outs returned")
+
+			// Custom comparison to ignore time drift in tests
 			for i := range expected.PendingSwapOuts {
-				s.Assert().Equal(expected.PendingSwapOuts[i].RequestId, actual.PendingSwapOuts[i].RequestId)
-				s.Assert().Equal(expected.PendingSwapOuts[i].PendingSwapOut, actual.PendingSwapOuts[i].PendingSwapOut)
-				s.Assert().WithinDuration(expected.PendingSwapOuts[i].Timeout, actual.PendingSwapOuts[i].Timeout, 1*time.Second)
+				s.Assert().Equal(expected.PendingSwapOuts[i].RequestId, actual.PendingSwapOuts[i].RequestId, "request id mismatch for entry %d", i)
+				s.Assert().Equal(expected.PendingSwapOuts[i].PendingSwapOut, actual.PendingSwapOuts[i].PendingSwapOut, "pending swap out mismatch for entry %d", i)
+				s.Assert().WithinDuration(expected.PendingSwapOuts[i].Timeout, actual.PendingSwapOuts[i].Timeout, 1*time.Second, "timeout mismatch for entry %d", i)
 			}
+
 			if expected.Pagination != nil {
 				if expected.Pagination.Total > 0 {
-					s.Assert().Equal(expected.Pagination.Total, actual.Pagination.Total)
+					s.Assert().Equal(expected.Pagination.Total, actual.Pagination.Total, "pagination total")
 				}
 				if len(expected.Pagination.NextKey) > 0 {
-					s.Assert().NotEmpty(actual.Pagination.NextKey)
+					s.Assert().NotEmpty(actual.Pagination.NextKey, "pagination next_key should not be empty")
 				} else {
-					s.Assert().Empty(actual.Pagination.NextKey)
+					s.Assert().Empty(actual.Pagination.NextKey, "pagination next_key should be empty")
 				}
 			}
 		},
 	}
 
+	// Define some swap outs for consistent testing
 	addr1 := sdk.AccAddress("addr1_______________")
 	addr2 := sdk.AccAddress("addr2_______________")
 	addr3 := sdk.AccAddress("addr3_______________")
@@ -927,7 +941,11 @@ func (s *TestSuite) TestQueryServer_PendingSwapOuts() {
 			Req: &types.QueryPendingSwapOutsRequest{},
 			ExpectedResp: &types.QueryPendingSwapOutsResponse{
 				PendingSwapOuts: []types.PendingSwapOutWithTimeout{
-					{RequestId: 0, PendingSwapOut: *swapOut1, Timeout: payoutTime1.Truncate(time.Second)},
+					{
+						RequestId:      0,
+						PendingSwapOut: *swapOut1,
+						Timeout:        payoutTime1.Truncate(time.Second),
+					},
 				},
 				Pagination: &query.PageResponse{Total: 1},
 			},

@@ -97,6 +97,7 @@ func (k queryServer) Vault(goCtx context.Context, req *types.QueryVaultRequest) 
 	}, nil
 }
 
+// EstimateSwapIn estimates the amount of shares received for a given amount of deposit assets at query time.
 func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstimateSwapInRequest) (*types.QueryEstimateSwapInResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -118,6 +119,10 @@ func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstim
 	}
 	if !vault.IsAcceptedDenom(req.Assets.Denom) {
 		return nil, status.Errorf(codes.InvalidArgument, "unsupported deposit denom: %q", req.Assets.Denom)
+	}
+
+	if vault.Paused || !vault.SwapInEnabled {
+		return nil, status.Error(codes.FailedPrecondition, "swap-in disabled or vault paused")
 	}
 
 	priceNum, priceDen, err := k.UnitPriceFraction(ctx, req.Assets.Denom, *vault)
@@ -173,6 +178,10 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 	vault, err := k.GetVault(ctx, vaultAddr)
 	if err != nil || vault == nil {
 		return nil, status.Errorf(codes.NotFound, "vault with address %q not found", req.VaultAddress)
+	}
+
+	if vault.Paused || !vault.SwapOutEnabled {
+		return nil, status.Error(codes.FailedPrecondition, "swap-out disabled or vault paused")
 	}
 
 	redeemDenom := req.RedeemDenom

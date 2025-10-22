@@ -513,6 +513,44 @@ func (s *TestSuite) TestQueryServer_EstimateSwapIn() {
 			},
 		},
 		{
+			Name: "fails if vault is paused",
+			Setup: func() {
+				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
+				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin: admin, ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom,
+				})
+				s.Require().NoError(err, "vault creation should succeed")
+				vault, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err)
+				vault.Paused = true
+				s.k.AuthKeeper.SetAccount(s.ctx, vault)
+			},
+			Req: &types.QueryEstimateSwapInRequest{
+				VaultAddress: vaultAddr.String(),
+				Assets:       assetsUnderlying,
+			},
+			ExpectedErrSubstrs: []string{"swap-in disabled or vault paused", "FailedPrecondition"},
+		},
+		{
+			Name: "fails if swap-in is disabled",
+			Setup: func() {
+				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
+				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin: admin, ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom,
+				})
+				s.Require().NoError(err, "vault creation should succeed")
+				vault, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err)
+				vault.SwapInEnabled = false
+				s.k.AuthKeeper.SetAccount(s.ctx, vault)
+			},
+			Req: &types.QueryEstimateSwapInRequest{
+				VaultAddress: vaultAddr.String(),
+				Assets:       assetsUnderlying,
+			},
+			ExpectedErrSubstrs: []string{"swap-in disabled or vault paused", "FailedPrecondition"},
+		},
+		{
 			Name:               "nil request",
 			Req:                nil,
 			ExpectedErrSubstrs: []string{"invalid request"},
@@ -622,6 +660,44 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 			ExpectedResp: &types.QueryEstimateSwapOutResponse{
 				Assets: sdk.NewInt64Coin(paymentDenom, 100),
 			},
+		},
+		{
+			Name: "fails if vault is paused",
+			Setup: func() {
+				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
+				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin: admin, ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom,
+				})
+				s.Require().NoError(err, "vault creation should succeed")
+				vault, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err)
+				vault.Paused = true
+				s.k.AuthKeeper.SetAccount(s.ctx, vault)
+			},
+			Req: &types.QueryEstimateSwapOutRequest{
+				VaultAddress: vaultAddr.String(),
+				Shares:       sharesToSwap.Amount,
+			},
+			ExpectedErrSubstrs: []string{"swap-out disabled or vault paused", "FailedPrecondition"},
+		},
+		{
+			Name: "fails if swap-out is disabled",
+			Setup: func() {
+				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
+				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin: admin, ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom,
+				})
+				s.Require().NoError(err, "vault creation should succeed")
+				vault, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err)
+				vault.SwapOutEnabled = false
+				s.k.AuthKeeper.SetAccount(s.ctx, vault)
+			},
+			Req: &types.QueryEstimateSwapOutRequest{
+				VaultAddress: vaultAddr.String(),
+				Shares:       sharesToSwap.Amount,
+			},
+			ExpectedErrSubstrs: []string{"swap-out disabled or vault paused", "FailedPrecondition"},
 		},
 		{
 			Name:               "nil request",

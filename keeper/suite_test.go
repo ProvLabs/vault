@@ -476,3 +476,17 @@ func createReconcileEvents(vaultAddr, markerAddr sdk.AccAddress, interest, princ
 	allEvents = append(allEvents, reconcileEvent)
 	return allEvents
 }
+
+// expectedWithSimpleAPY calculates the total amount (principal + interest)
+// using a simple APY formula.
+func expectedWithSimpleAPY(baseAmt sdkmath.Int, rateStr string, seconds int64) (sdkmath.Int, error) {
+	rateDec, err := sdkmath.LegacyNewDecFromStr(rateStr)
+	if err != nil {
+		return sdkmath.Int{}, err
+	}
+	durationDec := sdkmath.LegacyNewDec(seconds)
+	secondsPerYearDec := sdkmath.LegacyNewDec(31536000)
+	timeFraction := durationDec.Quo(secondsPerYearDec)
+	interestDec := baseAmt.ToLegacyDec().Mul(rateDec).Mul(timeFraction)
+	return baseAmt.Add(interestDec.TruncateInt()), nil
+}

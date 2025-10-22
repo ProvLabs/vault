@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/provlabs/vault/types"
@@ -79,6 +78,11 @@ func (k queryServer) Vault(goCtx context.Context, req *types.QueryVaultRequest) 
 	principal := k.BankKeeper.GetAllBalances(goCtx, marker.GetAddress())
 	reserves := k.BankKeeper.GetAllBalances(goCtx, vault.GetAddress())
 
+	tvv, err := k.EstimateTotalVaultValue(ctx, vault)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
 	return &types.QueryVaultResponse{
 		Vault: *vault,
 		Principal: types.AccountBalance{
@@ -89,9 +93,11 @@ func (k queryServer) Vault(goCtx context.Context, req *types.QueryVaultRequest) 
 			Address: vault.GetAddress().String(),
 			Coins:   reserves,
 		},
+		TotalVaultValue: tvv,
 	}, nil
 }
 
+// EstimateSwapIn estimates the amount of shares received for a given amount of deposit assets at query time.
 func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstimateSwapInRequest) (*types.QueryEstimateSwapInResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -111,9 +117,12 @@ func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstim
 	if err != nil || vault == nil {
 		return nil, status.Errorf(codes.NotFound, "vault with address %q not found", req.VaultAddress)
 	}
-
 	if !vault.IsAcceptedDenom(req.Assets.Denom) {
 		return nil, status.Errorf(codes.InvalidArgument, "unsupported deposit denom: %q", req.Assets.Denom)
+	}
+
+	if vault.Paused || !vault.SwapInEnabled {
+		return nil, status.Error(codes.FailedPrecondition, "swap-in disabled or vault paused")
 	}
 
 	priceNum, priceDen, err := k.UnitPriceFraction(ctx, req.Assets.Denom, *vault)
@@ -124,11 +133,9 @@ func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstim
 		return nil, status.Errorf(codes.InvalidArgument, "invalid NAV: zero volume for %s/%s", req.Assets.Denom, vault.UnderlyingAsset)
 	}
 
-	principalAddress := vault.PrincipalMarkerAddress()
 	totalShares := vault.TotalShares.Amount
-	totalAssets := k.BankKeeper.GetBalance(ctx, principalAddress, vault.UnderlyingAsset)
 
-	estimatedTotalAssets, err := k.CalculateVaultTotalAssets(ctx, vault, totalAssets)
+	estimatedTVV, err := k.EstimateTotalVaultValue(ctx, vault)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to estimate total assets: %v", err)
 	}
@@ -137,12 +144,12 @@ func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstim
 	estimatedShares, err := utils.CalculateSharesProRataFraction(
 		amountNum,
 		priceDen,
-		estimatedTotalAssets,
+		estimatedTVV.Amount,
 		totalShares,
 		vault.TotalShares.Denom,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to calculate shares: %w", err)
+		return nil, status.Errorf(codes.Internal, "failed to calculate shares: %v", err)
 	}
 
 	return &types.QueryEstimateSwapInResponse{
@@ -172,6 +179,11 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 	if err != nil || vault == nil {
 		return nil, status.Errorf(codes.NotFound, "vault with address %q not found", req.VaultAddress)
 	}
+
+	if vault.Paused || !vault.SwapOutEnabled {
+		return nil, status.Error(codes.FailedPrecondition, "swap-out disabled or vault paused")
+	}
+
 	redeemDenom := req.RedeemDenom
 	if redeemDenom == "" {
 		redeemDenom = vault.UnderlyingAsset
@@ -180,11 +192,9 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 		return nil, status.Errorf(codes.InvalidArgument, "unsupported redeem denom: %q", redeemDenom)
 	}
 
-	principalAddress := vault.PrincipalMarkerAddress()
 	totalShares := vault.TotalShares.Amount
-	totalAssets := k.BankKeeper.GetBalance(ctx, principalAddress, vault.UnderlyingAsset)
 
-	estimatedTotalAssets, err := k.CalculateVaultTotalAssets(ctx, vault, totalAssets)
+	estimatedTVV, err := k.EstimateTotalVaultValue(ctx, vault)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to estimate total assets: %v", err)
 	}
@@ -200,13 +210,13 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 	estimatedPayout, err := utils.CalculateRedeemProRataFraction(
 		req.Shares,
 		totalShares,
-		estimatedTotalAssets,
+		estimatedTVV.Amount,
 		priceNum,
 		priceDen,
 		redeemDenom,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to calculate redeem estimate: %w", err)
+		return nil, status.Errorf(codes.Internal, "failed to calculate redeem estimate: %v", err)
 	}
 
 	return &types.QueryEstimateSwapOutResponse{

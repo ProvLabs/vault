@@ -325,3 +325,4 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "provlabs/vault/v1/query.proto",
 }
+

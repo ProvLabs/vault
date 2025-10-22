@@ -169,3 +169,4 @@ func BridgeAssets(ctx sdk.Context, vk *keeper.Keeper, shareDenom string, mintAmo
 	}
 	return nil
 }
+

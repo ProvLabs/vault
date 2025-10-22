@@ -1098,3 +1098,4 @@ func (s *TestSuite) TestQueryServer_PendingSwapOuts() {
 		})
 	}
 }
+

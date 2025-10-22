@@ -357,3 +357,4 @@ func getRandomAccountWithDenom(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, a
 
 	return simtypes.Account{}, sdk.Coin{}, fmt.Errorf("no account has positive %s balance", denom)
 }
+

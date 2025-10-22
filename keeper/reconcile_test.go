@@ -935,3 +935,4 @@ func (s *TestSuite) TestKeeper_CanPayoutDuration() {
 		})
 	}
 }
+

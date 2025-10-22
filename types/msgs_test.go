@@ -1356,3 +1356,4 @@ func TestMsgSetAssetManagerRequest_ValidateBasic(t *testing.T) {
 		})
 	}
 }
+

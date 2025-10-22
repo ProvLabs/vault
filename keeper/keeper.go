@@ -89,3 +89,4 @@ func (k Keeper) emitEvent(ctx sdk.Context, event proto.Message) {
 		k.getLogger(ctx).Error(fmt.Sprintf("error emitting event %#v: %v", event, err))
 	}
 }
+

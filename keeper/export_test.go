@@ -42,3 +42,4 @@ func (k Keeper) TestAccessor_autoPauseVault(t *testing.T, ctx context.Context, v
 	t.Helper()
 	k.autoPauseVault(ctx, vault, reason)
 }
+

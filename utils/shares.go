@@ -105,3 +105,4 @@ func CalculateRedeemProRataFraction(shares math.Int, totalShares math.Int, total
 	out := num.Quo(den)
 	return sdk.NewCoin(payoutDenom, out), nil
 }
+

@@ -710,3 +710,4 @@ var (
 
 	forward_Query_VaultPendingSwapOuts_0 = runtime.ForwardResponseMessage
 )
+

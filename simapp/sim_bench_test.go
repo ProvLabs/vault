@@ -122,3 +122,4 @@ func BenchmarkInvariants(b *testing.B) {
 		})
 	}
 }
+

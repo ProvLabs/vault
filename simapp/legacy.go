@@ -52,3 +52,4 @@ func (app *SimApp) RegisterLegacyModules() error {
 		solomachine.NewAppModule(),
 	)
 }
+

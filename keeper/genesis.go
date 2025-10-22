@@ -117,3 +117,4 @@ func vaultExists(ctx sdk.Context, k Keeper, addr sdk.AccAddress) bool {
 	_, err := k.GetVault(ctx, addr)
 	return err == nil
 }
+

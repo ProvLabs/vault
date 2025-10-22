@@ -112,3 +112,4 @@ func TestSafeEnqueueTimeout_UpdatesVaultAndQueues(t *testing.T) {
 	require.Equal(t, now.Unix(), va.PeriodStart, "vault PeriodStart should equal block time; expected %d, got %d", now.Unix(), va.PeriodStart)
 	require.Equal(t, int64(expectTimeout), va.PeriodTimeout, "vault PeriodTimeout should equal expected timeout; expected %d, got %d", expectTimeout, va.PeriodTimeout)
 }
+

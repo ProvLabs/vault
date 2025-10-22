@@ -99,3 +99,4 @@ func (s *TestSuite) TestMsgServer_SmallFirstSwapIn_HugeDonation_SwapOut() {
 		s.Require().Equal(math.NewInt(1), impliedPrice, "implied price should normalize to 1 at scale")
 	}
 }
+

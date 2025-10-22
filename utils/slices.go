@@ -23,3 +23,4 @@ func Filter[S any](s []S, fn func(S) bool) iter.Seq[S] {
 		}
 	}
 }
+

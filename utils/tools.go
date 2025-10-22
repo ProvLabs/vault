@@ -10,3 +10,4 @@ import (
 	_ "github.com/incu6us/goimports-reviser/v3"
 	_ "mvdan.cc/gofumpt"
 )
+

@@ -399,3 +399,4 @@ func (k *Keeper) autoPauseVault(ctx context.Context, vault *types.VaultAccount, 
 
 	k.emitEvent(sdkCtx, types.NewEventVaultPaused(vault.GetAddress().String(), vault.GetAddress().String(), reason, vault.PausedBalance))
 }
+

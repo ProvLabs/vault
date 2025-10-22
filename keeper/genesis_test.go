@@ -300,3 +300,4 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPendingSwapOutHasBadVaultAddr
 	}
 	s.Require().Panics(func() { s.k.InitGenesis(s.ctx, genesis) })
 }
+

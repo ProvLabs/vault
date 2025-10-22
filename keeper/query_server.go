@@ -286,3 +286,4 @@ func (k queryServer) VaultPendingSwapOuts(goCtx context.Context, req *types.Quer
 		Pagination:      pageRes,
 	}, nil
 }
+

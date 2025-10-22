@@ -27,3 +27,4 @@ func (e *CriticalError) Unwrap() error { return e.Err }
 func CriticalErr(reason string, err error) error {
 	return &CriticalError{Reason: reason, Err: err}
 }
+

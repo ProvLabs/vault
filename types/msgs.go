@@ -366,3 +366,4 @@ func (m MsgSetAssetManagerRequest) ValidateBasic() error {
 	}
 	return nil
 }
+

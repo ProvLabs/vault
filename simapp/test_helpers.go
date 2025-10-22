@@ -215,3 +215,4 @@ func genesisStateWithValSet(t *testing.T,
 
 	return genesisState
 }
+

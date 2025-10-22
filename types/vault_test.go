@@ -592,3 +592,4 @@ func TestVaultAccount_ValidateManagementAuthority(t *testing.T) {
 		})
 	}
 }
+

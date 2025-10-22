@@ -1851,3 +1851,4 @@ var (
 	ErrIntOverflowVault          = fmt.Errorf("proto: integer overflow")
 	ErrUnexpectedEndOfGroupVault = fmt.Errorf("proto: unexpected end of group")
 )
+

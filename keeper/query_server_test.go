@@ -49,6 +49,7 @@ func (s *TestSuite) TestQueryServer_Vault() {
 
 	setupVaults := func() {
 		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlying, 1), s.adminAddr)
+		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(payment, 1), s.adminAddr)
 		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: admin, ShareDenom: shareDenom1, UnderlyingAsset: underlying, PaymentDenom: payment})
 		s.Require().NoError(err, "create vault1 should succeed")
 		_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: admin, ShareDenom: shareDenom2, UnderlyingAsset: underlying, PaymentDenom: payment})

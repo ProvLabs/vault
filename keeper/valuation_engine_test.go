@@ -562,7 +562,6 @@ func (s *TestSuite) TestEstimateTotalVaultValue_SingleAsset_WithInterest() {
 	vault := s.setupBaseVault(underlyingDenom, shareDenom)
 
 	const interestRate = "0.1"
-	const secondsPerYear = 31536000
 	const secondsToAccrue = int64(60 * 60 * 24 * 30)
 
 	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(
@@ -584,16 +583,8 @@ func (s *TestSuite) TestEstimateTotalVaultValue_SingleAsset_WithInterest() {
 	s.Require().NoError(err, "estimation should not error for single asset")
 
 	baseAmt := math.NewInt(1000)
-
-	rateDec, err := math.LegacyNewDecFromStr(interestRate)
-	s.Require().NoError(err, "parsing interest rate string should not fail")
-	durationDec := math.LegacyNewDec(secondsToAccrue)
-	secondsPerYearDec := math.LegacyNewDec(secondsPerYear)
-	timeFraction := durationDec.Quo(secondsPerYearDec)
-	interestDec := baseAmt.ToLegacyDec().Mul(rateDec).Mul(timeFraction)
-	interestEarned := interestDec.TruncateInt()
-
-	expectedTotalAmount := baseAmt.Add(interestEarned)
+	expectedTotalAmount, err := expectedWithSimpleAPY(baseAmt, interestRate, secondsToAccrue)
+	s.Require().NoError(err, "calculating expected APY should not fail")
 
 	expectedCoin := sdk.NewCoin(underlyingDenom, expectedTotalAmount)
 	s.Require().Equal(expectedCoin, estimatedTVV, "estimated TVV should equal principal balance plus accrued interest")
@@ -634,7 +625,6 @@ func (s *TestSuite) TestEstimateTotalVaultValue_MultiAsset_UnderlyingIsFcc_WithI
 	shareDenom := "vsharefcc"
 
 	const interestRate = "0.1"
-	const secondsPerYear = 31536000
 	const secondsToAccrue = int64(60 * 60 * 24 * 30)
 
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingDenom, 1_000_000), s.adminAddr)
@@ -664,16 +654,8 @@ func (s *TestSuite) TestEstimateTotalVaultValue_MultiAsset_UnderlyingIsFcc_WithI
 	s.Require().NoError(err, "estimation should not error with uylds.fcc underlying")
 
 	baseAmt := math.NewInt(150)
-
-	rateDec, err := math.LegacyNewDecFromStr(interestRate)
-	s.Require().NoError(err, "parsing interest rate string should not fail")
-	durationDec := math.LegacyNewDec(secondsToAccrue)
-	secondsPerYearDec := math.LegacyNewDec(secondsPerYear)
-	timeFraction := durationDec.Quo(secondsPerYearDec)
-	interestDec := baseAmt.ToLegacyDec().Mul(rateDec).Mul(timeFraction)
-	interestEarned := interestDec.TruncateInt()
-
-	expectedTotalAmount := baseAmt.Add(interestEarned)
+	expectedTotalAmount, err := expectedWithSimpleAPY(baseAmt, interestRate, secondsToAccrue)
+	s.Require().NoError(err, "calculating expected APY should not fail")
 
 	expectedCoin := sdk.NewCoin(underlyingDenom, expectedTotalAmount)
 	s.Require().Equal(
@@ -693,7 +675,10 @@ func (s *TestSuite) TestEstimateTotalVaultValue_MultiAsset_PaymentIsFcc() {
 	s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, underlyingDenom, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 110)))
 	s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, paymentDenom, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 50)))
 
-	vault, err := s.k.CreateVault(s.ctx, vaultAttrs{admin: s.adminAddr.String(), share: shareDenom, underlying: underlyingDenom})
+	vault, err := s.k.CreateVault(
+		s.ctx,
+		vaultAttrs{admin: s.adminAddr.String(), share: shareDenom, underlying: underlyingDenom},
+	)
 	s.Require().NoError(err, "vault creation should succeed")
 	vault.PaymentDenom = paymentDenom
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
@@ -722,7 +707,6 @@ func (s *TestSuite) TestEstimateTotalVaultValue_MultiAsset_PaymentIsFcc_WithInte
 	shareDenom := "vsharercpt"
 
 	const interestRate = "0.1"
-	const secondsPerYear = 31536000
 	const secondsToAccrue = int64(60 * 60 * 24 * 30)
 
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingDenom, 1_000_000), s.adminAddr)
@@ -755,16 +739,8 @@ func (s *TestSuite) TestEstimateTotalVaultValue_MultiAsset_PaymentIsFcc_WithInte
 	s.Require().NoError(err, "estimation should not error with uylds.fcc payment")
 
 	baseAmt := math.NewInt(150)
-
-	rateDec, err := math.LegacyNewDecFromStr(interestRate)
-	s.Require().NoError(err, "parsing interest rate string should not fail")
-	durationDec := math.LegacyNewDec(secondsToAccrue)
-	secondsPerYearDec := math.LegacyNewDec(secondsPerYear)
-	timeFraction := durationDec.Quo(secondsPerYearDec)
-	interestDec := baseAmt.ToLegacyDec().Mul(rateDec).Mul(timeFraction)
-	interestEarned := interestDec.TruncateInt()
-
-	expectedTotalAmount := baseAmt.Add(interestEarned)
+	expectedTotalAmount, err := expectedWithSimpleAPY(baseAmt, interestRate, secondsToAccrue)
+	s.Require().NoError(err, "calculating expected APY should not fail")
 
 	expectedCoin := sdk.NewCoin(underlyingDenom, expectedTotalAmount)
 	s.Require().Equal(
@@ -781,7 +757,6 @@ func (s *TestSuite) TestEstimateTotalVaultValue_MultiAsset_WithNAV() {
 	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
 
 	const interestRate = "0.1"
-	const secondsPerYear = 31536000
 	const secondsToAccrue = int64(60 * 60 * 24 * 30)
 
 	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(
@@ -804,17 +779,8 @@ func (s *TestSuite) TestEstimateTotalVaultValue_MultiAsset_WithNAV() {
 	s.Require().NoError(err, "EstimateTotalVaultValue should not error during NAV conversion")
 
 	baseAmt := math.NewInt(125)
-
-	rateDec, err := math.LegacyNewDecFromStr(interestRate)
-	s.Require().NoError(err, "parsing interest rate string should not fail")
-	durationDec := math.LegacyNewDec(secondsToAccrue)
-	secondsPerYearDec := math.LegacyNewDec(secondsPerYear)
-	timeFraction := durationDec.Quo(secondsPerYearDec)
-	// Corrected line: Use ToLegacyDec() for proper conversion
-	interestDec := baseAmt.ToLegacyDec().Mul(rateDec).Mul(timeFraction)
-	interestEarned := interestDec.TruncateInt()
-
-	expectedTotalAmount := baseAmt.Add(interestEarned)
+	expectedTotalAmount, err := expectedWithSimpleAPY(baseAmt, interestRate, secondsToAccrue)
+	s.Require().NoError(err, "calculating expected APY should not fail")
 
 	expectedCoin := sdk.NewCoin(underlyingDenom, expectedTotalAmount)
 	s.Require().Equal(expectedCoin, estimatedTVV, "estimated TVV should equal base principal (with NAV) plus accrued interest")

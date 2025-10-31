@@ -165,9 +165,9 @@ def build_report(node: str, j: dict, now_ts: int) -> dict:
         "seconds_low_used": elapsed_lo,
         "seconds_high_used": elapsed_hi,
         "per_share_underlying": (str(per_share_underlying) if per_share_underlying not in (None, Decimal(0)) else None),
-        "shares_for_1m_uylds": (str(shares_for_1m) if shares_for_1m not in (None, Decimal(0)) else None),
+        "shares_for_1m_uylds": (str(shares_for_1m) if shares_for_1m not in (None, Decimal(0)) else None),  # 1_000_000 uylds = 1 ylds = 1usd, 1_234_567 uylds = 1.234567 ylds = 1.234567 usd 
         "now_ts": dt_utc_str(now_ts),
-        "seconds_since_start": now_ts - start,
+        "seconds_since_start": now_ts - start, # seconds since period start to now
     }
 
 def fetch_one(base: str, target: str) -> dict:

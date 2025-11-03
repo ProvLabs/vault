@@ -161,7 +161,6 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 
 			vault, err := s.k.GetVault(s.ctx, vaultAddress)
 			s.Require().NoError(err, "GetVault should not error before reconcile")
-			s.k.TestAccessor_reconcileVaultInterest(s.T(), s.ctx, vault)
 			err = s.k.TestAccessor_reconcileVaultInterest(s.T(), s.ctx, vault)
 
 			if tc.posthander != nil {

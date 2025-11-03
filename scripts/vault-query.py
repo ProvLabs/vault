@@ -1,4 +1,29 @@
 #!/usr/bin/env python3
+"""
+vaults_report.py
+
+Generates a detailed report for one or more vaults by querying Provenance Vault REST endpoints.
+
+This script fetches vault data from a specified network (pl-testnet, pio-mainnet, pio-testnet, or custom API base),
+calculates the total vault value (TVV) using continuous compounding interest, and compares the on-chain reported TVV
+to the calculated range at ±2 seconds from the current chain time.
+
+Output is a JSON array of vault reports including vault address, underlying asset, rate, principal, calculated TVV bounds,
+reported values, and derived metrics like per-share underlying and shares per 1,000,000 uylds.
+
+Usage:
+  vaults_report.py [-n pl-testnet|pio-mainnet|pio-testnet|<api-base-url>] [vault-address-or-share-denom]
+
+Examples:
+  vaults_report.py
+  vaults_report.py -n pl-testnet
+  vaults_report.py -n pio-testnet
+  vaults_report.py -n pio-mainnet
+  vaults_report.py -n https://custom-api.net:443
+  vaults_report.py -n pl-testnet tp1f2222pmyaw74w33ldrnrxnan73z6ayzhe5pxpl
+  vaults_report.py -n pl-testnet nu.uylds.nuva
+"""
+
 import argparse
 import json
 import sys

@@ -293,7 +293,7 @@ func (k msgServer) WithdrawInterestFunds(goCtx context.Context, msg *types.MsgWi
 		return nil, fmt.Errorf("failed to reconcile vault interest before withdrawal: %w", err)
 	}
 
-	if err := k.BankKeeper.SendCoins(ctx, vaultAddr, authorityAddr, sdk.NewCoins(msg.Amount)); err != nil {
+	if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, authorityAddr), vaultAddr, authorityAddr, sdk.NewCoins(msg.Amount)); err != nil {
 		return nil, fmt.Errorf("failed to withdraw funds: %w", err)
 	}
 
@@ -376,7 +376,7 @@ func (k msgServer) WithdrawPrincipalFunds(goCtx context.Context, msg *types.MsgW
 		return nil, err
 	}
 
-	if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, vaultAddr),
+	if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, withdrawAddress, vaultAddr),
 		principalAddress,
 		withdrawAddress,
 		sdk.NewCoins(msg.Amount),

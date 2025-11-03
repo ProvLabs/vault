@@ -87,7 +87,7 @@ func (s *TestSuite) TestMsgServer_SmallFirstSwapIn_HugeDonation_SwapOut() {
 	_, err = s.k.SwapOut(s.ctx, vaultAddr, owner, sharesToBurn, "")
 	s.Require().NoError(err, "swap-out of all tiny depositor shares should succeed")
 
-	s.simApp.VaultKeeper.ProcessPendingSwapOuts(s.ctx, keeper.MaxSwapOutBatchSize)
+	s.simApp.VaultKeeper.TestAccessor_processPendingSwapOuts(s.T(), s.ctx, keeper.MaxSwapOutBatchSize)
 	vault, err = s.k.GetVault(s.ctx, vaultAddr)
 	s.Require().NoError(err, "should successfully get vault after tiny swap-out")
 	s.Require().NotNil(vault, "vault should not be nil after tiny swap-out")

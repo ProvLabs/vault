@@ -21,7 +21,7 @@ const (
 	AutoReconcilePayoutDuration = 24 * interest.SecondsPerHour
 )
 
-// ReconcileVaultInterest updates interest accounting for a vault if a new interest period has started.
+// reconcileVaultInterest updates interest accounting for a vault if a new interest period has started.
 //
 // If this is the first time the vault accrues interest, it triggers the start of a new period
 // and publishes the initial NAV for the share denom in terms of the underlying asset.
@@ -31,7 +31,7 @@ const (
 //
 // This should be called before any transaction that changes vault principal/reserves or depends on the
 // current interest state.
-func (k *Keeper) ReconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccount) error {
+func (k *Keeper) reconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccount) error {
 	if vault.Paused {
 		return nil
 	}

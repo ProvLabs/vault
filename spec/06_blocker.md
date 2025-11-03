@@ -13,7 +13,7 @@ This document explains how the vault module uses ABCI block hooks to keep vaults
   - [BeginBlocker](#beginblocker)
     - [handleVaultInterestTimeouts](#handlevaultinteresttimeouts)
   - [EndBlocker](#endblocker)
-    - [ProcessPendingSwapOuts](#processpendingswapouts)
+    - [processPendingSwapOuts](#processpendingswapouts)
     - [handleReconciledVaults](#handlereconciledvaults)
   - [Interest Accrual & Transfers](#interest-accrual--transfers)
   - [Payout Processing Details](#payout-processing-details)
@@ -134,7 +134,7 @@ This advances vaults from the **verification set**:
 
 ## Payout Processing Details
 
-* **processSingleWithdrawal** (called from `ProcessPendingSwapOuts`)
+* **processSingleWithdrawal** (called from `processPendingSwapOuts`)
 
   1. **Reconcile interest** for the vault.
   2. Convert **shares → payout coin** (`underlying_asset` or optional **payment denom**), using current NAV and pro-rata TVV.

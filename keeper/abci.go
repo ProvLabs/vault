@@ -20,7 +20,7 @@ func (k *Keeper) BeginBlocker(ctx context.Context) error {
 
 // EndBlocker is a hook that is called at the end of every block.
 func (k *Keeper) EndBlocker(ctx context.Context) error {
-	if err := k.ProcessPendingSwapOuts(ctx, MaxSwapOutBatchSize); err != nil {
+	if err := k.processPendingSwapOuts(ctx, MaxSwapOutBatchSize); err != nil {
 		return err
 	}
 

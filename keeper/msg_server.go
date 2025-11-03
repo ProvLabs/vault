@@ -293,6 +293,7 @@ func (k msgServer) WithdrawInterestFunds(goCtx context.Context, msg *types.MsgWi
 		return nil, fmt.Errorf("failed to reconcile vault interest before withdrawal: %w", err)
 	}
 
+	// for receipt tokens, the transfer agent for the authority address is used
 	if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, authorityAddr), vaultAddr, authorityAddr, sdk.NewCoins(msg.Amount)); err != nil {
 		return nil, fmt.Errorf("failed to withdraw funds: %w", err)
 	}
@@ -369,16 +370,18 @@ func (k msgServer) WithdrawPrincipalFunds(goCtx context.Context, msg *types.MsgW
 		return nil, fmt.Errorf("failed to reconcile vault interest before principal change: %w", err)
 	}
 
-	withdrawAddress := sdk.MustAccAddressFromBech32(msg.Authority)
+	authorityAddress := sdk.MustAccAddressFromBech32(msg.Authority)
 	principalAddress := vault.PrincipalMarkerAddress()
 
 	if err := vault.ValidateAcceptedCoin(msg.Amount); err != nil {
 		return nil, err
 	}
 
-	if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, withdrawAddress, vaultAddr),
+	// for receipt tokens, the transfer agent for the authority address is used
+	// transfer agent of vault address is required for all token types since principal is marker account
+	if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, authorityAddress, vaultAddr),
 		principalAddress,
-		withdrawAddress,
+		authorityAddress,
 		sdk.NewCoins(msg.Amount),
 	); err != nil {
 		return nil, fmt.Errorf("failed to withdraw principal funds: %w", err)

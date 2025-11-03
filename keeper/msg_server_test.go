@@ -2103,6 +2103,7 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds_Failures() {
 		postCheck:    nil,
 	}
 
+	underlying := "under"
 	receiptUnderlying := "receiptunder"
 	shares := "vaultshares"
 	unsupportedDenom := "unsupportedDenom"
@@ -2110,23 +2111,55 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds_Failures() {
 	other := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1000))
 	vaultAddr := types.GetVaultAddress(shares)
 	markerAddr := markertypes.MustGetMarkerAddress(shares)
-	amount := sdk.NewInt64Coin(receiptUnderlying, 500)
+	amountRegular := sdk.NewInt64Coin(underlying, 500)
+	amountReceipt := sdk.NewInt64Coin(receiptUnderlying, 500)
 
-	setup := func() {
+	setupRegular := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      shares,
+			UnderlyingAsset: underlying,
+		})
+		s.Require().NoError(err, "failed to create vault")
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	setupRegularWithVaultFunds := func() {
+		setupRegular()
+		err := FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(amountRegular))
+		s.Require().NoError(err, "failed to fund vault account")
+	}
+
+	setupReceipt := func() {
 		s.requireAddFinalizeAndActivateReceiptMarker(sdk.NewCoin(receiptUnderlying, math.NewInt(1000)), admin)
 		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 			Admin:           admin.String(),
 			ShareDenom:      shares,
 			UnderlyingAsset: receiptUnderlying,
 		})
-		s.Require().NoError(err, "failed to create vault")
+		s.Require().NoError(err, "failed to create receipt-underlying vault")
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	}
 
-	setupWithVaultFunds := func() {
-		setup()
-		err := FundAccount(markertypes.WithBypass(s.ctx), s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(amount))
-		s.Require().NoError(err, "failed to fund vault account")
+	setupReceiptWithVaultFunds := func() {
+		setupReceipt()
+		err := FundAccount(markertypes.WithBypass(s.ctx), s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(amountReceipt))
+		s.Require().NoError(err, "failed to fund receipt-underlying vault account")
+	}
+
+	setupSendFailsNoTransferPerm := func() {
+		thirdParty := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+		s.requireAddFinalizeAndActivateReceiptMarker(sdk.NewCoin(receiptUnderlying, math.NewInt(2000)), thirdParty)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      shares,
+			UnderlyingAsset: receiptUnderlying,
+		})
+		s.Require().NoError(err, "failed to create vault for send-fails case")
+		err = FundAccount(markertypes.WithBypass(s.ctx), s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(amountReceipt))
+		s.Require().NoError(err, "failed to fund receipt-underlying vault account for send-fails case")
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	}
 
 	tests := []msgServerTestCase[types.MsgWithdrawInterestFundsRequest, any]{
@@ -2135,54 +2168,54 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds_Failures() {
 			msg: types.MsgWithdrawInterestFundsRequest{
 				Authority:    admin.String(),
 				VaultAddress: types.GetVaultAddress("doesnotexist").String(),
-				Amount:       amount,
+				Amount:       amountRegular,
 			},
 			expectedErrSubstrs: []string{"not found"},
 		},
 		{
 			name:  "invalid vault address not a vault account",
-			setup: setup,
+			setup: setupRegular,
 			msg: types.MsgWithdrawInterestFundsRequest{
 				Authority:    admin.String(),
 				VaultAddress: markerAddr.String(),
-				Amount:       amount,
+				Amount:       amountRegular,
 			},
 			expectedErrSubstrs: []string{"failed to get vault", "is not a vault account"},
 		},
 		{
-			name:  "unauthorized authority (receipt underlying)",
-			setup: setupWithVaultFunds,
+			name:  "unauthorized authority",
+			setup: setupRegularWithVaultFunds,
 			msg: types.MsgWithdrawInterestFundsRequest{
 				Authority:    other.String(),
 				VaultAddress: vaultAddr.String(),
-				Amount:       amount,
+				Amount:       amountRegular,
 			},
 			expectedErrSubstrs: []string{"unauthorized authority"},
 		},
 		{
-			name:  "insufficient vault balance (receipt underlying)",
-			setup: setup,
+			name:  "insufficient vault balance",
+			setup: setupRegular,
 			msg: types.MsgWithdrawInterestFundsRequest{
 				Authority:    admin.String(),
 				VaultAddress: vaultAddr.String(),
-				Amount:       sdk.NewInt64Coin(receiptUnderlying, 9_999_999),
+				Amount:       sdk.NewInt64Coin(underlying, 9_999_999),
 			},
-			expectedErrSubstrs: []string{"failed to withdraw funds", "insufficient funds"},
+			expectedErrSubstrs: []string{"failed to withdraw interest funds", "insufficient funds"},
 		},
 		{
-			name:  "incorrect underlying asset (receipt vault expects receiptunder)",
-			setup: setup,
+			name:  "incorrect underlying asset",
+			setup: setupRegular,
 			msg: types.MsgWithdrawInterestFundsRequest{
 				Authority:    admin.String(),
 				VaultAddress: vaultAddr.String(),
 				Amount:       sdk.NewInt64Coin(unsupportedDenom, 9_999_999),
 			},
-			expectedErrSubstrs: []string{"denom not supported for vault", receiptUnderlying, unsupportedDenom},
+			expectedErrSubstrs: []string{"denom not supported for vault", underlying, unsupportedDenom},
 		},
 		{
-			name: "reconcile failure propagates (receipt underlying)",
+			name: "reconcile failure propagates",
 			setup: func() {
-				setupWithVaultFunds()
+				setupRegularWithVaultFunds()
 				v, err := s.k.GetVault(s.ctx, vaultAddr)
 				s.Require().NoError(err, "failed to get vault")
 				s.Require().NotNil(v, "vault should not be nil")
@@ -2193,9 +2226,49 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds_Failures() {
 			msg: types.MsgWithdrawInterestFundsRequest{
 				Authority:    admin.String(),
 				VaultAddress: vaultAddr.String(),
-				Amount:       sdk.NewInt64Coin(receiptUnderlying, 1),
+				Amount:       sdk.NewInt64Coin(underlying, 1),
 			},
 			expectedErrSubstrs: []string{"failed to reconcile vault interest before withdrawal", "failed to calculate interest"},
+		},
+		{
+			name:  "receipt underlying: unauthorized authority",
+			setup: setupReceiptWithVaultFunds,
+			msg: types.MsgWithdrawInterestFundsRequest{
+				Authority:    other.String(),
+				VaultAddress: vaultAddr.String(),
+				Amount:       amountReceipt,
+			},
+			expectedErrSubstrs: []string{"unauthorized authority"},
+		},
+		{
+			name:  "receipt underlying: insufficient vault balance",
+			setup: setupReceipt,
+			msg: types.MsgWithdrawInterestFundsRequest{
+				Authority:    admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Amount:       sdk.NewInt64Coin(receiptUnderlying, 9_999_999),
+			},
+			expectedErrSubstrs: []string{"failed to withdraw interest funds", "insufficient funds"},
+		},
+		{
+			name:  "receipt underlying: incorrect underlying asset",
+			setup: setupReceipt,
+			msg: types.MsgWithdrawInterestFundsRequest{
+				Authority:    admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Amount:       sdk.NewInt64Coin(unsupportedDenom, 9_999_999),
+			},
+			expectedErrSubstrs: []string{"denom not supported for vault", receiptUnderlying, unsupportedDenom},
+		},
+		{
+			name:  "receipt underlying: send fails without transfer permission on receipt token",
+			setup: setupSendFailsNoTransferPerm,
+			msg: types.MsgWithdrawInterestFundsRequest{
+				Authority:    admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Amount:       amountReceipt,
+			},
+			expectedErrSubstrs: []string{"failed to withdraw interest funds", "does not have transfer permissions for", receiptUnderlying},
 		},
 	}
 

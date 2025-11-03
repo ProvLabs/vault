@@ -295,7 +295,7 @@ func (k msgServer) WithdrawInterestFunds(goCtx context.Context, msg *types.MsgWi
 
 	// for receipt tokens, the transfer agent for the authority address is used
 	if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, authorityAddr), vaultAddr, authorityAddr, sdk.NewCoins(msg.Amount)); err != nil {
-		return nil, fmt.Errorf("failed to withdraw funds: %w", err)
+		return nil, fmt.Errorf("failed to withdraw interest funds: %w", err)
 	}
 
 	k.emitEvent(ctx, types.NewEventInterestWithdrawal(msg.VaultAddress, msg.Authority, msg.Amount))

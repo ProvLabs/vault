@@ -14,12 +14,12 @@ import (
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
-// ProcessPendingSwapOuts processes the queue of pending swap-out requests. Called from the EndBlocker,
+// processPendingSwapOuts processes the queue of pending swap-out requests. Called from the EndBlocker,
 // it iterates through requests due for payout at the current block time. It uses a safe "collect-then-mutate"
 // pattern to comply with the SDK iterator contract. It first collects all due requests up to the provided `batchSize`,
 // then passes them to `processSwapOutJobs` for execution. Critical, unrecoverable errors during job processing
 // will cause the associated vault to be automatically paused.
-func (k *Keeper) ProcessPendingSwapOuts(ctx context.Context, batchSize int) error {
+func (k *Keeper) processPendingSwapOuts(ctx context.Context, batchSize int) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	now := sdkCtx.BlockTime().Unix()
 	var jobsToProcess []types.PayoutJob
@@ -125,7 +125,7 @@ func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.P
 	ownerAddr := sdk.MustAccAddressFromBech32(req.Owner)
 	principalAddress := markertypes.MustGetMarkerAddress(req.Shares.Denom)
 
-	if err := k.ReconcileVaultInterest(ctx, &vault); err != nil {
+	if err := k.reconcileVaultInterest(ctx, &vault); err != nil {
 		return fmt.Errorf("failed to reconcile vault interest: %w", err)
 	}
 

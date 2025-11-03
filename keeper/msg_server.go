@@ -156,7 +156,7 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 
 	prevEnabled := vault.InterestEnabled()
 	if !curRate.IsZero() && !vault.Paused {
-		if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
+		if err := k.reconcileVaultInterest(ctx, vault); err != nil {
 			return nil, fmt.Errorf("failed to reconcile before rate change: %w", err)
 		}
 	}
@@ -258,7 +258,7 @@ func (k msgServer) DepositInterestFunds(goCtx context.Context, msg *types.MsgDep
 		return nil, fmt.Errorf("failed to deposit funds: %w", err)
 	}
 
-	if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
+	if err := k.reconcileVaultInterest(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to reconcile vault interest after deposit: %w", err)
 	}
 
@@ -289,12 +289,13 @@ func (k msgServer) WithdrawInterestFunds(goCtx context.Context, msg *types.MsgWi
 		return nil, fmt.Errorf("denom not supported for vault must be of type \"%s\" : got \"%s\"", vault.UnderlyingAsset, msg.Amount.Denom)
 	}
 
-	if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
+	if err := k.reconcileVaultInterest(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to reconcile vault interest before withdrawal: %w", err)
 	}
 
-	if err := k.BankKeeper.SendCoins(ctx, vaultAddr, authorityAddr, sdk.NewCoins(msg.Amount)); err != nil {
-		return nil, fmt.Errorf("failed to withdraw funds: %w", err)
+	// for receipt tokens, the transfer agent for the authority address is used
+	if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, authorityAddr), vaultAddr, authorityAddr, sdk.NewCoins(msg.Amount)); err != nil {
+		return nil, fmt.Errorf("failed to withdraw interest funds: %w", err)
 	}
 
 	k.emitEvent(ctx, types.NewEventInterestWithdrawal(msg.VaultAddress, msg.Authority, msg.Amount))
@@ -322,7 +323,7 @@ func (k msgServer) DepositPrincipalFunds(goCtx context.Context, msg *types.MsgDe
 		return nil, fmt.Errorf("vault must be paused to deposit principal funds")
 	}
 
-	if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
+	if err := k.reconcileVaultInterest(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to reconcile vault interest before principal change: %w", err)
 	}
 
@@ -365,20 +366,22 @@ func (k msgServer) WithdrawPrincipalFunds(goCtx context.Context, msg *types.MsgW
 		return nil, fmt.Errorf("vault must be paused to withdraw principal funds")
 	}
 
-	if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
+	if err := k.reconcileVaultInterest(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to reconcile vault interest before principal change: %w", err)
 	}
 
-	withdrawAddress := sdk.MustAccAddressFromBech32(msg.Authority)
+	authorityAddress := sdk.MustAccAddressFromBech32(msg.Authority)
 	principalAddress := vault.PrincipalMarkerAddress()
 
 	if err := vault.ValidateAcceptedCoin(msg.Amount); err != nil {
 		return nil, err
 	}
 
-	if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, vaultAddr),
+	// for receipt tokens, the transfer agent for the authority address is used
+	// transfer agent of vault address is required for all token types since principal is marker account
+	if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, authorityAddress, vaultAddr),
 		principalAddress,
-		withdrawAddress,
+		authorityAddress,
 		sdk.NewCoins(msg.Amount),
 	); err != nil {
 		return nil, fmt.Errorf("failed to withdraw principal funds: %w", err)
@@ -438,7 +441,7 @@ func (k msgServer) PauseVault(goCtx context.Context, msg *types.MsgPauseVaultReq
 	if vault.Paused {
 		return nil, fmt.Errorf("vault %s is already paused", msg.VaultAddress)
 	}
-	if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
+	if err := k.reconcileVaultInterest(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to reconcile interest before pausing: %w", err)
 	}
 

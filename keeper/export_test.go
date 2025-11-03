@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provlabs/vault/types"
 )
 
@@ -41,4 +42,16 @@ func (k Keeper) TestAccessor_processSwapOutJobs(t *testing.T, ctx context.Contex
 func (k Keeper) TestAccessor_autoPauseVault(t *testing.T, ctx context.Context, vault *types.VaultAccount, reason string) {
 	t.Helper()
 	k.autoPauseVault(ctx, vault, reason)
+}
+
+// TestAccessor_reconcileVaultInterest exposes this keeper's reconcileVaultInterest function for unit tests.
+func (k Keeper) TestAccessor_reconcileVaultInterest(t *testing.T, ctx context.Context, vault *types.VaultAccount) error {
+	t.Helper()
+	return k.reconcileVaultInterest(sdk.UnwrapSDKContext(ctx), vault)
+}
+
+// TestAccessor_processPendingSwapOuts exposes this keeper's processPendingSwapOuts function for unit tests.
+func (k Keeper) TestAccessor_processPendingSwapOuts(t *testing.T, ctx context.Context, size int) error {
+	t.Helper()
+	return k.processPendingSwapOuts(ctx, size)
 }

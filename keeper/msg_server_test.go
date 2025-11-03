@@ -1923,13 +1923,14 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds() {
 			UnderlyingAsset: underlying,
 		})
 		s.Require().NoError(err, "failed to create vault")
-		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(amount)), "failed to fund vault account")
+		err = FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(amount))
+		s.Require().NoError(err, "failed to fund vault account")
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	}
 
 	s.Run("happy path - withdraw interest funds", func() {
-		ev := createSendCoinEvents(vaultAddr.String(), admin.String(), sdk.NewCoins(amount).String())
-		ev = append(ev, sdk.NewEvent(
+		expectedEvents := createSendCoinEvents(vaultAddr.String(), admin.String(), sdk.NewCoins(amount).String())
+		expectedEvents = append(expectedEvents, sdk.NewEvent(
 			"provlabs.vault.v1.EventInterestWithdrawal",
 			sdk.NewAttribute("amount", amount.String()),
 			sdk.NewAttribute("authority", admin.String()),
@@ -1948,7 +1949,7 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds() {
 				AuthorityAddress:     admin,
 				ExpectedAuthorityAmt: amount,
 			},
-			expectedEvents: ev,
+			expectedEvents: expectedEvents,
 		}
 
 		testDef.expectedResponse = &types.MsgWithdrawInterestFundsResponse{}
@@ -1956,7 +1957,7 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds() {
 	})
 
 	s.Run("happy path - withdraw interest funds as asset manager", func() {
-		assetMgr := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1)) // fund to ensure account exists
+		assetMgr := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
 
 		setupWithAssetMgr := func() {
 			setup()
@@ -1968,8 +1969,8 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds() {
 			s.Require().NoError(err, "failed to set asset manager")
 		}
 
-		ev := createSendCoinEvents(vaultAddr.String(), assetMgr.String(), sdk.NewCoins(amount).String())
-		ev = append(ev, sdk.NewEvent(
+		expectedEvents := createSendCoinEvents(vaultAddr.String(), assetMgr.String(), sdk.NewCoins(amount).String())
+		expectedEvents = append(expectedEvents, sdk.NewEvent(
 			"provlabs.vault.v1.EventInterestWithdrawal",
 			sdk.NewAttribute("amount", amount.String()),
 			sdk.NewAttribute("authority", assetMgr.String()),
@@ -1988,7 +1989,106 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds() {
 				AuthorityAddress:     assetMgr,
 				ExpectedAuthorityAmt: amount,
 			},
-			expectedEvents: ev,
+			expectedEvents: expectedEvents,
+		}
+
+		testDef.expectedResponse = &types.MsgWithdrawInterestFundsResponse{}
+		runMsgServerTestCase(s, testDef, tc)
+	})
+
+	s.Run("happy path - withdraw interest funds with receipt token (admin)", func() {
+		receipt := "receiptunder"
+		receiptSupply := math.NewInt(1000)
+		withdrawAmt := sdk.NewInt64Coin(receipt, 500)
+		receiptVaultAddr := types.GetVaultAddress(shares)
+
+		setupReceiptAdmin := func() {
+			s.requireAddFinalizeAndActivateReceiptMarker(sdk.NewCoin(receipt, receiptSupply), admin)
+			_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+				Admin:           admin.String(),
+				ShareDenom:      shares,
+				UnderlyingAsset: receipt,
+			})
+			s.Require().NoError(err, "failed to create vault with receipt underlying")
+			err = FundAccount(markertypes.WithBypass(s.ctx), s.simApp.BankKeeper, receiptVaultAddr, sdk.NewCoins(withdrawAmt))
+			s.Require().NoError(err, "failed to fund vault account with receipt token")
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+		}
+
+		expecteEvents := createSendCoinEvents(receiptVaultAddr.String(), admin.String(), sdk.NewCoins(withdrawAmt).String())
+		expecteEvents = append(expecteEvents, sdk.NewEvent(
+			"provlabs.vault.v1.EventInterestWithdrawal",
+			sdk.NewAttribute("amount", withdrawAmt.String()),
+			sdk.NewAttribute("authority", admin.String()),
+			sdk.NewAttribute("vault_address", receiptVaultAddr.String()),
+		))
+
+		tc := msgServerTestCase[types.MsgWithdrawInterestFundsRequest, postCheckArgs]{
+			name:  "receipt token admin",
+			setup: setupReceiptAdmin,
+			msg: types.MsgWithdrawInterestFundsRequest{
+				Authority:    admin.String(),
+				VaultAddress: receiptVaultAddr.String(),
+				Amount:       withdrawAmt,
+			},
+			postCheckArgs: postCheckArgs{
+				AuthorityAddress:     admin,
+				ExpectedAuthorityAmt: withdrawAmt,
+			},
+			expectedEvents: expecteEvents,
+		}
+
+		testDef.expectedResponse = &types.MsgWithdrawInterestFundsResponse{}
+		runMsgServerTestCase(s, testDef, tc)
+	})
+
+	s.Run("happy path - withdraw interest funds with receipt token (asset manager)", func() {
+		receipt := "receiptunder2"
+		receiptSupply := math.NewInt(1000)
+		withdrawAmt := sdk.NewInt64Coin(receipt, 500)
+		assetMgr := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+		receiptVaultAddr := types.GetVaultAddress(shares)
+
+		setupReceiptAssetMgr := func() {
+			s.requireAddFinalizeAndActivateReceiptMarker(sdk.NewCoin(receipt, receiptSupply), assetMgr)
+			_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+				Admin:           admin.String(),
+				ShareDenom:      shares,
+				UnderlyingAsset: receipt,
+			})
+			s.Require().NoError(err, "failed to create vault with receipt underlying")
+			err = FundAccount(markertypes.WithBypass(s.ctx), s.simApp.BankKeeper, receiptVaultAddr, sdk.NewCoins(withdrawAmt))
+			s.Require().NoError(err, "failed to fund vault account with receipt token")
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			_, err = keeper.NewMsgServer(s.simApp.VaultKeeper).SetAssetManager(s.ctx, &types.MsgSetAssetManagerRequest{
+				Admin:        admin.String(),
+				VaultAddress: receiptVaultAddr.String(),
+				AssetManager: assetMgr.String(),
+			})
+			s.Require().NoError(err, "failed to set asset manager for receipt case")
+		}
+
+		expectedEvent := createSendCoinEvents(receiptVaultAddr.String(), assetMgr.String(), sdk.NewCoins(withdrawAmt).String())
+		expectedEvent = append(expectedEvent, sdk.NewEvent(
+			"provlabs.vault.v1.EventInterestWithdrawal",
+			sdk.NewAttribute("amount", withdrawAmt.String()),
+			sdk.NewAttribute("authority", assetMgr.String()),
+			sdk.NewAttribute("vault_address", receiptVaultAddr.String()),
+		))
+
+		tc := msgServerTestCase[types.MsgWithdrawInterestFundsRequest, postCheckArgs]{
+			name:  "receipt token asset manager",
+			setup: setupReceiptAssetMgr,
+			msg: types.MsgWithdrawInterestFundsRequest{
+				Authority:    assetMgr.String(),
+				VaultAddress: receiptVaultAddr.String(),
+				Amount:       withdrawAmt,
+			},
+			postCheckArgs: postCheckArgs{
+				AuthorityAddress:     assetMgr,
+				ExpectedAuthorityAmt: withdrawAmt,
+			},
+			expectedEvents: expectedEvent,
 		}
 
 		testDef.expectedResponse = &types.MsgWithdrawInterestFundsResponse{}
@@ -2004,15 +2104,17 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds_Failures() {
 	}
 
 	underlying := "under"
+	receiptUnderlying := "receiptunder"
 	shares := "vaultshares"
 	unsupportedDenom := "unsupportedDenom"
 	admin := s.adminAddr
 	other := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1000))
 	vaultAddr := types.GetVaultAddress(shares)
 	markerAddr := markertypes.MustGetMarkerAddress(shares)
-	amount := sdk.NewInt64Coin(underlying, 500)
+	amountRegular := sdk.NewInt64Coin(underlying, 500)
+	amountReceipt := sdk.NewInt64Coin(receiptUnderlying, 500)
 
-	setup := func() {
+	setupRegular := func() {
 		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin)
 		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 			Admin:           admin.String(),
@@ -2023,9 +2125,41 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds_Failures() {
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	}
 
-	setupWithVaultFunds := func() {
-		setup()
-		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(amount)), "failed to fund vault account")
+	setupRegularWithVaultFunds := func() {
+		setupRegular()
+		err := FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(amountRegular))
+		s.Require().NoError(err, "failed to fund vault account")
+	}
+
+	setupReceipt := func() {
+		s.requireAddFinalizeAndActivateReceiptMarker(sdk.NewCoin(receiptUnderlying, math.NewInt(1000)), admin)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      shares,
+			UnderlyingAsset: receiptUnderlying,
+		})
+		s.Require().NoError(err, "failed to create receipt-underlying vault")
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	setupReceiptWithVaultFunds := func() {
+		setupReceipt()
+		err := FundAccount(markertypes.WithBypass(s.ctx), s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(amountReceipt))
+		s.Require().NoError(err, "failed to fund receipt-underlying vault account")
+	}
+
+	setupSendFailsNoTransferPerm := func() {
+		thirdParty := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+		s.requireAddFinalizeAndActivateReceiptMarker(sdk.NewCoin(receiptUnderlying, math.NewInt(2000)), thirdParty)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      shares,
+			UnderlyingAsset: receiptUnderlying,
+		})
+		s.Require().NoError(err, "failed to create vault for send-fails case")
+		err = FundAccount(markertypes.WithBypass(s.ctx), s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(amountReceipt))
+		s.Require().NoError(err, "failed to fund receipt-underlying vault account for send-fails case")
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	}
 
 	tests := []msgServerTestCase[types.MsgWithdrawInterestFundsRequest, any]{
@@ -2034,54 +2168,54 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds_Failures() {
 			msg: types.MsgWithdrawInterestFundsRequest{
 				Authority:    admin.String(),
 				VaultAddress: types.GetVaultAddress("doesnotexist").String(),
-				Amount:       amount,
+				Amount:       amountRegular,
 			},
 			expectedErrSubstrs: []string{"not found"},
 		},
 		{
 			name:  "invalid vault address not a vault account",
-			setup: setup,
+			setup: setupRegular,
 			msg: types.MsgWithdrawInterestFundsRequest{
 				Authority:    admin.String(),
 				VaultAddress: markerAddr.String(),
-				Amount:       amount,
+				Amount:       amountRegular,
 			},
 			expectedErrSubstrs: []string{"failed to get vault", "is not a vault account"},
 		},
 		{
 			name:  "unauthorized authority",
-			setup: setupWithVaultFunds,
+			setup: setupRegularWithVaultFunds,
 			msg: types.MsgWithdrawInterestFundsRequest{
 				Authority:    other.String(),
 				VaultAddress: vaultAddr.String(),
-				Amount:       amount,
+				Amount:       amountRegular,
 			},
 			expectedErrSubstrs: []string{"unauthorized authority"},
 		},
 		{
 			name:  "insufficient vault balance",
-			setup: setup,
+			setup: setupRegular,
 			msg: types.MsgWithdrawInterestFundsRequest{
 				Authority:    admin.String(),
 				VaultAddress: vaultAddr.String(),
 				Amount:       sdk.NewInt64Coin(underlying, 9_999_999),
 			},
-			expectedErrSubstrs: []string{"failed to withdraw funds", "insufficient funds"},
+			expectedErrSubstrs: []string{"failed to withdraw interest funds", "insufficient funds"},
 		},
 		{
 			name:  "incorrect underlying asset",
-			setup: setup,
+			setup: setupRegular,
 			msg: types.MsgWithdrawInterestFundsRequest{
 				Authority:    admin.String(),
 				VaultAddress: vaultAddr.String(),
 				Amount:       sdk.NewInt64Coin(unsupportedDenom, 9_999_999),
 			},
-			expectedErrSubstrs: []string{"denom not supported for vault", "under", unsupportedDenom},
+			expectedErrSubstrs: []string{"denom not supported for vault", underlying, unsupportedDenom},
 		},
 		{
 			name: "reconcile failure propagates",
 			setup: func() {
-				setupWithVaultFunds()
+				setupRegularWithVaultFunds()
 				v, err := s.k.GetVault(s.ctx, vaultAddr)
 				s.Require().NoError(err, "failed to get vault")
 				s.Require().NotNil(v, "vault should not be nil")
@@ -2095,6 +2229,46 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds_Failures() {
 				Amount:       sdk.NewInt64Coin(underlying, 1),
 			},
 			expectedErrSubstrs: []string{"failed to reconcile vault interest before withdrawal", "failed to calculate interest"},
+		},
+		{
+			name:  "receipt underlying: unauthorized authority",
+			setup: setupReceiptWithVaultFunds,
+			msg: types.MsgWithdrawInterestFundsRequest{
+				Authority:    other.String(),
+				VaultAddress: vaultAddr.String(),
+				Amount:       amountReceipt,
+			},
+			expectedErrSubstrs: []string{"unauthorized authority"},
+		},
+		{
+			name:  "receipt underlying: insufficient vault balance",
+			setup: setupReceipt,
+			msg: types.MsgWithdrawInterestFundsRequest{
+				Authority:    admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Amount:       sdk.NewInt64Coin(receiptUnderlying, 9_999_999),
+			},
+			expectedErrSubstrs: []string{"failed to withdraw interest funds", "insufficient funds"},
+		},
+		{
+			name:  "receipt underlying: incorrect underlying asset",
+			setup: setupReceipt,
+			msg: types.MsgWithdrawInterestFundsRequest{
+				Authority:    admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Amount:       sdk.NewInt64Coin(unsupportedDenom, 9_999_999),
+			},
+			expectedErrSubstrs: []string{"denom not supported for vault", receiptUnderlying, unsupportedDenom},
+		},
+		{
+			name:  "receipt underlying: send fails without transfer permission on receipt token",
+			setup: setupSendFailsNoTransferPerm,
+			msg: types.MsgWithdrawInterestFundsRequest{
+				Authority:    admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Amount:       amountReceipt,
+			},
+			expectedErrSubstrs: []string{"failed to withdraw interest funds", "does not have transfer permissions for", receiptUnderlying},
 		},
 	}
 
@@ -2368,10 +2542,11 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds() {
 			UnderlyingAsset: underlying,
 		})
 		s.Require().NoError(err, "failed to create vault")
-		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, sdk.NewCoins(amount)), "failed to fund marker account")
+		err = FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, sdk.NewCoins(amount))
+		s.Require().NoError(err, "failed to fund marker account")
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 		vault, err := s.k.GetVault(s.ctx, vaultAddr)
-		s.Require().NoError(err)
+		s.Require().NoError(err, "failed to get vault")
 		vault.Paused = true
 		s.k.AuthKeeper.SetAccount(s.ctx, vault)
 	}
@@ -2415,16 +2590,14 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds() {
 				ShareDenom:      share,
 				UnderlyingAsset: underlying,
 			})
-			s.Require().NoError(err)
-
-			s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, sdk.NewCoins(amount)))
-
+			s.Require().NoError(err, "failed to create vault")
+			err = FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, sdk.NewCoins(amount))
+			s.Require().NoError(err, "failed to fund marker account")
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 			vault, err := s.k.GetVault(s.ctx, vaultAddr)
-			s.Require().NoError(err)
+			s.Require().NoError(err, "failed to get vault")
 			vault.Paused = true
 			s.k.AuthKeeper.SetAccount(s.ctx, vault)
-
 			_, err = keeper.NewMsgServer(s.simApp.VaultKeeper).SetAssetManager(s.ctx, &types.MsgSetAssetManagerRequest{
 				Admin:        admin.String(),
 				VaultAddress: vaultAddr.String(),
@@ -2460,6 +2633,117 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds() {
 		testDef.expectedResponse = &types.MsgWithdrawPrincipalFundsResponse{}
 		runMsgServerTestCase(s, testDef, tc)
 	})
+
+	s.Run("happy path - withdraw principal funds with receipt token (admin)", func() {
+		receipt := "receiptunder"
+		receiptSupply := math.NewInt(1000)
+		withdrawAmt := sdk.NewInt64Coin(receipt, 500)
+		receiptVaultAddr := types.GetVaultAddress(share)
+		receiptMarkerAddr := markertypes.MustGetMarkerAddress(share)
+
+		setupReceiptAdmin := func() {
+			s.requireAddFinalizeAndActivateReceiptMarker(sdk.NewCoin(receipt, receiptSupply), admin)
+			_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+				Admin:           admin.String(),
+				ShareDenom:      share,
+				UnderlyingAsset: receipt,
+			})
+			s.Require().NoError(err, "failed to create vault with receipt underlying")
+			err = FundAccount(markertypes.WithBypass(s.ctx), s.simApp.BankKeeper, receiptMarkerAddr, sdk.NewCoins(withdrawAmt))
+			s.Require().NoError(err, "failed to fund receipt marker account")
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			vault, err := s.k.GetVault(s.ctx, receiptVaultAddr)
+			s.Require().NoError(err, "failed to get vault")
+			vault.Paused = true
+			s.k.AuthKeeper.SetAccount(s.ctx, vault)
+		}
+
+		ev := createSendCoinEvents(receiptMarkerAddr.String(), admin.String(), sdk.NewCoins(withdrawAmt).String())
+		ev = append(ev, sdk.NewEvent(
+			"provlabs.vault.v1.EventWithdrawPrincipalFunds",
+			sdk.NewAttribute("amount", withdrawAmt.String()),
+			sdk.NewAttribute("authority", admin.String()),
+			sdk.NewAttribute("vault_address", receiptVaultAddr.String()),
+		))
+
+		tc := msgServerTestCase[types.MsgWithdrawPrincipalFundsRequest, postCheckArgs]{
+			name:  "receipt token admin",
+			setup: setupReceiptAdmin,
+			msg: types.MsgWithdrawPrincipalFundsRequest{
+				Authority:    admin.String(),
+				VaultAddress: receiptVaultAddr.String(),
+				Amount:       withdrawAmt,
+			},
+			postCheckArgs: postCheckArgs{
+				AdminAddress:        admin,
+				MarkerAddress:       receiptMarkerAddr,
+				ExpectedAdminAssets: withdrawAmt,
+			},
+			expectedEvents: ev,
+		}
+
+		testDef.expectedResponse = &types.MsgWithdrawPrincipalFundsResponse{}
+		runMsgServerTestCase(s, testDef, tc)
+	})
+
+	s.Run("happy path - withdraw principal funds with receipt token (asset manager)", func() {
+		receiptDenom := "receiptunder2"
+		receiptSupply := math.NewInt(1000)
+		withdrawAmt := sdk.NewInt64Coin(receiptDenom, 500)
+		assetMgr := s.CreateAndFundAccount(sdk.Coin{Denom: receiptDenom, Amount: math.ZeroInt()})
+		receiptVaultAddr := types.GetVaultAddress(share)
+		receiptMarkerAddr := markertypes.MustGetMarkerAddress(share)
+
+		setupReceiptAssetMgr := func() {
+			s.requireAddFinalizeAndActivateReceiptMarker(sdk.NewCoin(receiptDenom, receiptSupply), assetMgr)
+			_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+				Admin:           admin.String(),
+				ShareDenom:      share,
+				UnderlyingAsset: receiptDenom,
+			})
+			s.Require().NoError(err, "failed to create vault with receipt underlying")
+			err = FundAccount(markertypes.WithBypass(s.ctx), s.simApp.BankKeeper, receiptMarkerAddr, sdk.NewCoins(withdrawAmt))
+			s.Require().NoError(err, "failed to fund receipt marker account")
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			vault, err := s.k.GetVault(s.ctx, receiptVaultAddr)
+			s.Require().NoError(err, "failed to get vault")
+			vault.Paused = true
+			s.k.AuthKeeper.SetAccount(s.ctx, vault)
+			_, err = keeper.NewMsgServer(s.simApp.VaultKeeper).SetAssetManager(s.ctx, &types.MsgSetAssetManagerRequest{
+				Admin:        admin.String(),
+				VaultAddress: receiptVaultAddr.String(),
+				AssetManager: assetMgr.String(),
+			})
+			s.Require().NoError(err, "failed to set asset manager for receipt case")
+		}
+
+		ev := createSendCoinEvents(receiptMarkerAddr.String(), assetMgr.String(), sdk.NewCoins(withdrawAmt).String())
+		ev = append(ev, sdk.NewEvent(
+			"provlabs.vault.v1.EventWithdrawPrincipalFunds",
+			sdk.NewAttribute("amount", withdrawAmt.String()),
+			sdk.NewAttribute("authority", assetMgr.String()),
+			sdk.NewAttribute("vault_address", receiptVaultAddr.String()),
+		))
+
+		tc := msgServerTestCase[types.MsgWithdrawPrincipalFundsRequest, postCheckArgs]{
+			name:  "receipt token asset manager",
+			setup: setupReceiptAssetMgr,
+			msg: types.MsgWithdrawPrincipalFundsRequest{
+				Authority:    assetMgr.String(),
+				VaultAddress: receiptVaultAddr.String(),
+				Amount:       withdrawAmt,
+			},
+			postCheckArgs: postCheckArgs{
+				AdminAddress:        assetMgr,
+				MarkerAddress:       receiptMarkerAddr,
+				ExpectedAdminAssets: withdrawAmt,
+			},
+			expectedEvents: ev,
+		}
+
+		testDef.expectedResponse = &types.MsgWithdrawPrincipalFundsResponse{}
+		runMsgServerTestCase(s, testDef, tc)
+	})
 }
 
 func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds_Failures() {
@@ -2470,33 +2754,92 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds_Failures() {
 	}
 
 	underlying := "under"
+	receiptUnderlying := "receiptunder"
 	share := "vaultshares"
 	admin := s.adminAddr
 	other := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1000))
 	vaultAddr := types.GetVaultAddress(share)
-	markerAddr := markertypes.MustGetMarkerAddress(share)
-	amount := sdk.NewInt64Coin(underlying, 500)
+	shareMarkerAddr := markertypes.MustGetMarkerAddress(share)
+	amountRegular := sdk.NewInt64Coin(underlying, 500)
+	amountReceipt := sdk.NewInt64Coin(receiptUnderlying, 500)
 
-	setup := func() {
+	setupRegular := func() {
 		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin)
 		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 			Admin:           admin.String(),
 			ShareDenom:      share,
 			UnderlyingAsset: underlying,
 		})
-		s.Require().NoError(err)
+		s.Require().NoError(err, "failed to create vault")
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 		vault, err := s.k.GetVault(s.ctx, vaultAddr)
-		s.Require().NoError(err)
+		s.Require().NoError(err, "failed to get vault")
 		vault.Paused = true
 		s.k.AuthKeeper.SetAccount(s.ctx, vault)
 	}
 
-	setupNotPaused := func() {
-		setup()
+	setupRegularNotPaused := func() {
+		setupRegular()
 		vault, err := s.k.GetVault(s.ctx, vaultAddr)
-		s.Require().NoError(err)
+		s.Require().NoError(err, "failed to get vault")
 		vault.Paused = false
+		s.k.AuthKeeper.SetAccount(s.ctx, vault)
+	}
+
+	setupRegularWithShareFunds := func() {
+		setupRegular()
+		err := FundAccount(s.ctx, s.simApp.BankKeeper, shareMarkerAddr, sdk.NewCoins(amountRegular))
+		s.Require().NoError(err, "failed to fund share marker account")
+	}
+
+	setupReceipt := func() {
+		s.requireAddFinalizeAndActivateReceiptMarker(sdk.NewCoin(receiptUnderlying, math.NewInt(1000)), admin)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      share,
+			UnderlyingAsset: receiptUnderlying,
+		})
+		s.Require().NoError(err, "failed to create receipt-underlying vault")
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+		vault, err := s.k.GetVault(s.ctx, vaultAddr)
+		s.Require().NoError(err, "failed to get vault")
+		vault.Paused = true
+		s.k.AuthKeeper.SetAccount(s.ctx, vault)
+	}
+
+	setupReceiptWithShareFunds := func() {
+		setupReceipt()
+		err := FundAccount(markertypes.WithBypass(s.ctx), s.simApp.BankKeeper, shareMarkerAddr, sdk.NewCoins(amountReceipt))
+		s.Require().NoError(err, "failed to fund share marker account with receipt token")
+	}
+
+	setupSendFailsNoTransferPerm := func() {
+		thirdParty := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+		s.requireAddFinalizeAndActivateReceiptMarker(sdk.NewCoin(receiptUnderlying, math.NewInt(2000)), thirdParty)
+
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      share,
+			UnderlyingAsset: receiptUnderlying,
+		})
+		s.Require().NoError(err, "failed to create vault for send-fails case")
+
+		m, err := s.simApp.MarkerKeeper.GetMarkerByDenom(s.ctx, share)
+		s.Require().NoError(err, "failed to get share marker to grant withdraw")
+		mk := m.(*markertypes.MarkerAccount)
+		mk.AccessControl = append(mk.AccessControl, markertypes.AccessGrant{
+			Address:     admin.String(),
+			Permissions: []markertypes.Access{markertypes.Access_Withdraw},
+		})
+		s.simApp.MarkerKeeper.SetMarker(s.ctx, mk)
+
+		err = FundAccount(markertypes.WithBypass(s.ctx), s.simApp.BankKeeper, shareMarkerAddr, sdk.NewCoins(amountReceipt))
+		s.Require().NoError(err, "failed to fund share marker account with receipt token for send-fails case")
+
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+		vault, err := s.k.GetVault(s.ctx, vaultAddr)
+		s.Require().NoError(err, "failed to get vault")
+		vault.Paused = true
 		s.k.AuthKeeper.SetAccount(s.ctx, vault)
 	}
 
@@ -2506,43 +2849,43 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds_Failures() {
 			msg: types.MsgWithdrawPrincipalFundsRequest{
 				Authority:    admin.String(),
 				VaultAddress: types.GetVaultAddress("doesnotexist").String(),
-				Amount:       amount,
+				Amount:       amountRegular,
 			},
 			expectedErrSubstrs: []string{"not found"},
 		},
 		{
 			name:  "invalid vault address not a vault account",
-			setup: setup,
+			setup: setupRegular,
 			msg: types.MsgWithdrawPrincipalFundsRequest{
 				Authority:    admin.String(),
-				VaultAddress: markerAddr.String(),
-				Amount:       amount,
+				VaultAddress: shareMarkerAddr.String(),
+				Amount:       amountRegular,
 			},
 			expectedErrSubstrs: []string{"failed to get vault", "is not a vault account"},
 		},
 		{
-			name:  "unauthorized admin",
-			setup: setup,
+			name:  "unauthorized authority",
+			setup: setupRegularWithShareFunds,
 			msg: types.MsgWithdrawPrincipalFundsRequest{
 				Authority:    other.String(),
 				VaultAddress: vaultAddr.String(),
-				Amount:       amount,
+				Amount:       amountRegular,
 			},
 			expectedErrSubstrs: []string{"unauthorized authority"},
 		},
 		{
 			name:  "vault is not paused",
-			setup: setupNotPaused,
+			setup: setupRegularNotPaused,
 			msg: types.MsgWithdrawPrincipalFundsRequest{
 				Authority:    admin.String(),
 				VaultAddress: vaultAddr.String(),
-				Amount:       amount,
+				Amount:       amountRegular,
 			},
 			expectedErrSubstrs: []string{"vault must be paused to withdraw principal funds"},
 		},
 		{
 			name:  "invalid asset for vault",
-			setup: setup,
+			setup: setupRegular,
 			msg: types.MsgWithdrawPrincipalFundsRequest{
 				Authority:    admin.String(),
 				VaultAddress: vaultAddr.String(),
@@ -2551,14 +2894,58 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds_Failures() {
 			expectedErrSubstrs: []string{"denom not supported for vault", "under", "wrongdenom"},
 		},
 		{
-			name:  "insufficient marker balance",
-			setup: setup,
+			name:  "insufficient share marker balance",
+			setup: setupRegular,
 			msg: types.MsgWithdrawPrincipalFundsRequest{
 				Authority:    admin.String(),
 				VaultAddress: vaultAddr.String(),
 				Amount:       sdk.NewInt64Coin(underlying, 9_999_999),
 			},
 			expectedErrSubstrs: []string{"failed to withdraw principal funds", "insufficient funds"},
+		},
+		{
+			name:  "receipt underlying: unauthorized authority",
+			setup: setupReceiptWithShareFunds,
+			msg: types.MsgWithdrawPrincipalFundsRequest{
+				Authority:    other.String(),
+				VaultAddress: vaultAddr.String(),
+				Amount:       amountReceipt,
+			},
+			expectedErrSubstrs: []string{"unauthorized authority"},
+		},
+		{
+			name:  "receipt underlying: insufficient share marker balance",
+			setup: setupReceipt,
+			msg: types.MsgWithdrawPrincipalFundsRequest{
+				Authority:    admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Amount:       sdk.NewInt64Coin(receiptUnderlying, 9_999_999),
+			},
+			expectedErrSubstrs: []string{"failed to withdraw principal funds", "insufficient funds"},
+		},
+		{
+			name:  "receipt underlying: invalid asset for vault",
+			setup: setupReceipt,
+			msg: types.MsgWithdrawPrincipalFundsRequest{
+				Authority:    admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Amount:       sdk.NewInt64Coin("wrongdenom", 500),
+			},
+			expectedErrSubstrs: []string{"denom not supported for vault", receiptUnderlying, "wrongdenom"},
+		},
+		{
+			name:  "receipt underlying: send fails without transfer permission on receipt token",
+			setup: setupSendFailsNoTransferPerm,
+			msg: types.MsgWithdrawPrincipalFundsRequest{
+				Authority:    admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Amount:       amountReceipt,
+			},
+			expectedErrSubstrs: []string{
+				"failed to withdraw principal funds",
+				"does not have transfer permissions for",
+				receiptUnderlying,
+			},
 		},
 	}
 

@@ -694,8 +694,8 @@ var xxx_messageInfo_MsgUpdateMaxInterestRateResponse proto.InternalMessageInfo
 
 // MsgUpdateInterestRateRequest is the request message for updating the annual interest rate of a vault.
 type MsgUpdateInterestRateRequest struct {
-	// admin is the address of the vault administrator.
-	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// authority is the address of the vault administrator or asset manager.
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	// vault_address is the bech32 address of the vault.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// new_rate is the new annual interest rate for the the vault as a decimal string (e.g., "0.9" for 90% and "0.9001353" for 90.01353%).
@@ -735,9 +735,9 @@ func (m *MsgUpdateInterestRateRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdateInterestRateRequest proto.InternalMessageInfo
 
-func (m *MsgUpdateInterestRateRequest) GetAdmin() string {
+func (m *MsgUpdateInterestRateRequest) GetAuthority() string {
 	if m != nil {
-		return m.Admin
+		return m.Authority
 	}
 	return ""
 }
@@ -997,8 +997,9 @@ var xxx_messageInfo_MsgToggleSwapOutResponse proto.InternalMessageInfo
 
 // MsgDepositInterestFundsRequest is the request message for depositing funds to be used for paying interest.
 type MsgDepositInterestFundsRequest struct {
-	// admin is the address of the account depositing the funds.
-	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// authority is the address of the account depositing the funds.
+	// Must match either the vault admin or the configured asset manager.
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	// vault_address is the bech32 address of the vault to which funds are being deposited.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// amount is the amount of funds to deposit.
@@ -1038,9 +1039,9 @@ func (m *MsgDepositInterestFundsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgDepositInterestFundsRequest proto.InternalMessageInfo
 
-func (m *MsgDepositInterestFundsRequest) GetAdmin() string {
+func (m *MsgDepositInterestFundsRequest) GetAuthority() string {
 	if m != nil {
-		return m.Admin
+		return m.Authority
 	}
 	return ""
 }
@@ -1098,8 +1099,8 @@ var xxx_messageInfo_MsgDepositInterestFundsResponse proto.InternalMessageInfo
 
 // MsgWithdrawInterestFundsRequest is the request message for withdrawing unused interest funds.
 type MsgWithdrawInterestFundsRequest struct {
-	// admin is the address of the vault administrator initiating the withdrawal.
-	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// authority is the address of the vault administrator or asset manager initiating the withdrawal.
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	// vault_address is the bech32 address of the vault from which funds are being withdrawn.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// amount is the amount of funds to withdraw.
@@ -1139,9 +1140,9 @@ func (m *MsgWithdrawInterestFundsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgWithdrawInterestFundsRequest proto.InternalMessageInfo
 
-func (m *MsgWithdrawInterestFundsRequest) GetAdmin() string {
+func (m *MsgWithdrawInterestFundsRequest) GetAuthority() string {
 	if m != nil {
-		return m.Admin
+		return m.Authority
 	}
 	return ""
 }
@@ -1199,8 +1200,9 @@ var xxx_messageInfo_MsgWithdrawInterestFundsResponse proto.InternalMessageInfo
 
 // MsgDepositPrincipalFundsRequest is the request message for depositing principal funds into a vault.
 type MsgDepositPrincipalFundsRequest struct {
-	// admin is the address of the account depositing the funds.
-	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// authority is the address of the account depositing the funds.
+	// Must match either the vault admin or the configured asset manager.
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	// vault_address is the bech32 address of the vault to which funds are being deposited.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// amount is the amount of funds to deposit.
@@ -1240,9 +1242,9 @@ func (m *MsgDepositPrincipalFundsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgDepositPrincipalFundsRequest proto.InternalMessageInfo
 
-func (m *MsgDepositPrincipalFundsRequest) GetAdmin() string {
+func (m *MsgDepositPrincipalFundsRequest) GetAuthority() string {
 	if m != nil {
-		return m.Admin
+		return m.Authority
 	}
 	return ""
 }
@@ -1300,8 +1302,8 @@ var xxx_messageInfo_MsgDepositPrincipalFundsResponse proto.InternalMessageInfo
 
 // MsgWithdrawPrincipalFundsRequest is the request message for withdrawing principal funds from a vault.
 type MsgWithdrawPrincipalFundsRequest struct {
-	// admin is the address of the vault administrator initiating the withdrawal.
-	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// authority is the address of the vault administrator or asset manager initiating the withdrawal.
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	// vault_address is the bech32 address of the vault from which funds are being withdrawn.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// amount is the amount of funds to withdraw.
@@ -1341,9 +1343,9 @@ func (m *MsgWithdrawPrincipalFundsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgWithdrawPrincipalFundsRequest proto.InternalMessageInfo
 
-func (m *MsgWithdrawPrincipalFundsRequest) GetAdmin() string {
+func (m *MsgWithdrawPrincipalFundsRequest) GetAuthority() string {
 	if m != nil {
-		return m.Admin
+		return m.Authority
 	}
 	return ""
 }
@@ -1401,8 +1403,8 @@ var xxx_messageInfo_MsgWithdrawPrincipalFundsResponse proto.InternalMessageInfo
 
 // MsgExpeditePendingSwapOutRequest is the request message for expediting a swap out from a vault.
 type MsgExpeditePendingSwapOutRequest struct {
-	// admin is the address of the vault administrator initiating the swap out.
-	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// authority is the address of the vault admin or asset manager initiating the expedite.
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	// request_id is the id of the pending swap out to expedite.
 	RequestId uint64 `protobuf:"varint,2,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
 }
@@ -1440,9 +1442,9 @@ func (m *MsgExpeditePendingSwapOutRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgExpeditePendingSwapOutRequest proto.InternalMessageInfo
 
-func (m *MsgExpeditePendingSwapOutRequest) GetAdmin() string {
+func (m *MsgExpeditePendingSwapOutRequest) GetAuthority() string {
 	if m != nil {
-		return m.Admin
+		return m.Authority
 	}
 	return ""
 }
@@ -1494,8 +1496,8 @@ var xxx_messageInfo_MsgExpeditePendingSwapOutResponse proto.InternalMessageInfo
 // MsgPauseVaultRequest is the request message to pause a vault. When processed,
 // the vault disables user-facing swap operations and records the provided reason.
 type MsgPauseVaultRequest struct {
-	// admin is the address of the vault administrator initiating the pause.
-	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// authority is the address of the vault administrator or asset manager initiating the pause.
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	// vault_address is the bech32 address of the vault to pause.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// reason is a human-readable explanation for pausing the vault. This is recorded
@@ -1536,9 +1538,9 @@ func (m *MsgPauseVaultRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgPauseVaultRequest proto.InternalMessageInfo
 
-func (m *MsgPauseVaultRequest) GetAdmin() string {
+func (m *MsgPauseVaultRequest) GetAuthority() string {
 	if m != nil {
-		return m.Admin
+		return m.Authority
 	}
 	return ""
 }
@@ -1597,8 +1599,8 @@ var xxx_messageInfo_MsgPauseVaultResponse proto.InternalMessageInfo
 // MsgUnpauseVaultRequest is the request message to unpause a vault. When processed,
 // the vault re-enables user-facing swap operations (subject to existing flags).
 type MsgUnpauseVaultRequest struct {
-	// admin is the address of the vault administrator initiating the unpause.
-	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// authority is the address of the vault administrator or asset manager initiating the unpause.
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	// vault_address is the bech32 address of the vault to unpause.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 }
@@ -1636,9 +1638,9 @@ func (m *MsgUnpauseVaultRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUnpauseVaultRequest proto.InternalMessageInfo
 
-func (m *MsgUnpauseVaultRequest) GetAdmin() string {
+func (m *MsgUnpauseVaultRequest) GetAuthority() string {
 	if m != nil {
-		return m.Admin
+		return m.Authority
 	}
 	return ""
 }
@@ -2091,6 +2093,108 @@ func (m *MsgBridgeBurnSharesResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgBridgeBurnSharesResponse proto.InternalMessageInfo
 
+// MsgSetAssetManagerRequest sets or clears the optional asset manager address for a vault.
+type MsgSetAssetManagerRequest struct {
+	// admin is the address of the vault administrator.
+	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
+	// vault_address is the bech32 address of the vault to update.
+	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// asset_manager is the address that will be allowed to manage certain vault operations alongside the admin.
+	// Passing an empty string clears any configured asset manager.
+	AssetManager string `protobuf:"bytes,3,opt,name=asset_manager,json=assetManager,proto3" json:"asset_manager,omitempty"`
+}
+
+func (m *MsgSetAssetManagerRequest) Reset()         { *m = MsgSetAssetManagerRequest{} }
+func (m *MsgSetAssetManagerRequest) String() string { return proto.CompactTextString(m) }
+func (*MsgSetAssetManagerRequest) ProtoMessage()    {}
+func (*MsgSetAssetManagerRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1bb9c8306211b32d, []int{40}
+}
+func (m *MsgSetAssetManagerRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSetAssetManagerRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSetAssetManagerRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSetAssetManagerRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSetAssetManagerRequest.Merge(m, src)
+}
+func (m *MsgSetAssetManagerRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSetAssetManagerRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSetAssetManagerRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSetAssetManagerRequest proto.InternalMessageInfo
+
+func (m *MsgSetAssetManagerRequest) GetAdmin() string {
+	if m != nil {
+		return m.Admin
+	}
+	return ""
+}
+
+func (m *MsgSetAssetManagerRequest) GetVaultAddress() string {
+	if m != nil {
+		return m.VaultAddress
+	}
+	return ""
+}
+
+func (m *MsgSetAssetManagerRequest) GetAssetManager() string {
+	if m != nil {
+		return m.AssetManager
+	}
+	return ""
+}
+
+// MsgSetAssetManagerResponse is the response message for the SetAssetManager endpoint.
+type MsgSetAssetManagerResponse struct {
+}
+
+func (m *MsgSetAssetManagerResponse) Reset()         { *m = MsgSetAssetManagerResponse{} }
+func (m *MsgSetAssetManagerResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgSetAssetManagerResponse) ProtoMessage()    {}
+func (*MsgSetAssetManagerResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_1bb9c8306211b32d, []int{41}
+}
+func (m *MsgSetAssetManagerResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSetAssetManagerResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSetAssetManagerResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSetAssetManagerResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSetAssetManagerResponse.Merge(m, src)
+}
+func (m *MsgSetAssetManagerResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSetAssetManagerResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSetAssetManagerResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSetAssetManagerResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgCreateVaultRequest)(nil), "provlabs.vault.v1.MsgCreateVaultRequest")
 	proto.RegisterType((*MsgCreateVaultResponse)(nil), "provlabs.vault.v1.MsgCreateVaultResponse")
@@ -2132,100 +2236,108 @@ func init() {
 	proto.RegisterType((*MsgBridgeMintSharesResponse)(nil), "provlabs.vault.v1.MsgBridgeMintSharesResponse")
 	proto.RegisterType((*MsgBridgeBurnSharesRequest)(nil), "provlabs.vault.v1.MsgBridgeBurnSharesRequest")
 	proto.RegisterType((*MsgBridgeBurnSharesResponse)(nil), "provlabs.vault.v1.MsgBridgeBurnSharesResponse")
+	proto.RegisterType((*MsgSetAssetManagerRequest)(nil), "provlabs.vault.v1.MsgSetAssetManagerRequest")
+	proto.RegisterType((*MsgSetAssetManagerResponse)(nil), "provlabs.vault.v1.MsgSetAssetManagerResponse")
 }
 
 func init() { proto.RegisterFile("provlabs/vault/v1/tx.proto", fileDescriptor_1bb9c8306211b32d) }
 
 var fileDescriptor_1bb9c8306211b32d = []byte{
-	// 1405 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x59, 0xcd, 0x6f, 0x1b, 0x45,
-	0x14, 0xcf, 0xa6, 0x69, 0xda, 0xbe, 0xa4, 0x5f, 0xa3, 0x34, 0x75, 0x16, 0xe2, 0xb4, 0x2e, 0x88,
-	0xb4, 0xa8, 0x76, 0x93, 0x22, 0x01, 0x95, 0x10, 0x6a, 0x5a, 0x10, 0x3d, 0x58, 0x54, 0x0e, 0x2d,
-	0x12, 0x12, 0xb2, 0xc6, 0xd9, 0xd1, 0x66, 0x55, 0xef, 0xac, 0xbb, 0x33, 0xfe, 0xc8, 0xa1, 0x52,
-	0x05, 0x27, 0x4e, 0x20, 0xc1, 0x09, 0x89, 0xff, 0x80, 0x43, 0x0f, 0x5c, 0xf8, 0x10, 0xe7, 0x1e,
-	0x2b, 0x4e, 0x88, 0x43, 0x85, 0xda, 0x43, 0xff, 0x06, 0x2e, 0x08, 0xed, 0xcc, 0xb3, 0xbd, 0xeb,
-	0x9d, 0x5d, 0xbb, 0x94, 0x86, 0xe6, 0x94, 0xec, 0xcc, 0x7b, 0xf3, 0x7e, 0xbf, 0x37, 0x6f, 0x67,
-	0x7e, 0xcf, 0x0b, 0x76, 0x2b, 0x0c, 0x3a, 0x4d, 0xda, 0x10, 0x95, 0x0e, 0x6d, 0x37, 0x65, 0xa5,
-	0xb3, 0x56, 0x91, 0xbd, 0x72, 0x2b, 0x0c, 0x64, 0x40, 0x8e, 0xf7, 0xe7, 0xca, 0x6a, 0xae, 0xdc,
-	0x59, 0xb3, 0x8b, 0x5b, 0x81, 0xf0, 0x03, 0x51, 0x69, 0x50, 0x7e, 0xab, 0xd2, 0x59, 0x6b, 0x30,
-	0x49, 0xd7, 0xd4, 0x83, 0x76, 0x89, 0xcd, 0x0b, 0x36, 0x98, 0xdf, 0x0a, 0x3c, 0x8e, 0xf3, 0x27,
-	0x71, 0xde, 0x17, 0x6e, 0x14, 0xca, 0x17, 0x2e, 0x4e, 0x2c, 0xe9, 0x89, 0xba, 0x7a, 0xaa, 0xe8,
-	0x07, 0x9c, 0x5a, 0x70, 0x03, 0x37, 0xd0, 0xe3, 0xd1, 0x7f, 0x7a, 0xb4, 0xf4, 0xb7, 0x05, 0x27,
-	0xaa, 0xc2, 0xbd, 0x12, 0x32, 0x2a, 0xd9, 0xcd, 0x08, 0x5f, 0x8d, 0xdd, 0x6e, 0x33, 0x21, 0x49,
-	0x19, 0xf6, 0x53, 0xc7, 0xf7, 0x78, 0xc1, 0x3a, 0x65, 0xad, 0x1e, 0xda, 0x28, 0xfc, 0xf6, 0xc3,
-	0xf9, 0x05, 0x5c, 0xf0, 0xb2, 0xe3, 0x84, 0x4c, 0x88, 0x4d, 0x19, 0x7a, 0xdc, 0xad, 0x69, 0x33,
-	0xb2, 0x02, 0x73, 0x62, 0x9b, 0x86, 0xac, 0xee, 0x30, 0x1e, 0xf8, 0x85, 0xe9, 0xc8, 0xab, 0x06,
-	0x6a, 0xe8, 0x6a, 0x34, 0x42, 0xce, 0xc2, 0xb1, 0x36, 0x77, 0x58, 0xd8, 0xdc, 0xf1, 0xb8, 0x5b,
-	0xa7, 0x42, 0x30, 0x59, 0xd8, 0xa7, 0xac, 0x8e, 0x0e, 0xc7, 0x2f, 0x47, 0xc3, 0xe4, 0x0c, 0x1c,
-	0x6e, 0xd1, 0x1d, 0x9f, 0x71, 0x89, 0xab, 0xcd, 0x28, 0xbb, 0x79, 0x1c, 0xd4, 0xeb, 0xbd, 0x05,
-	0x85, 0xae, 0x27, 0xb7, 0x9d, 0x90, 0x76, 0x69, 0xb3, 0xee, 0xb0, 0x26, 0xdd, 0xa9, 0x0b, 0xb6,
-	0x15, 0x70, 0x47, 0x14, 0xf6, 0x9f, 0xb2, 0x56, 0x67, 0x6a, 0x8b, 0xc3, 0xf9, 0xab, 0xd1, 0xf4,
-	0xa6, 0x9e, 0xbd, 0x04, 0x9f, 0x3d, 0xb9, 0x77, 0x4e, 0xc3, 0x2e, 0xbd, 0x03, 0x8b, 0xa3, 0xfc,
-	0x45, 0x2b, 0xe0, 0x82, 0x45, 0x20, 0xd4, 0x86, 0xd5, 0xa9, 0xa6, 0xab, 0x13, 0x51, 0x9b, 0x57,
-	0x83, 0x98, 0x82, 0xd2, 0x5f, 0x16, 0xac, 0x54, 0x85, 0xbb, 0xc9, 0xe4, 0xe6, 0x80, 0x69, 0x95,
-	0x49, 0xea, 0x50, 0x49, 0xfb, 0x99, 0x6c, 0xc3, 0x41, 0x1f, 0x87, 0xd4, 0x1a, 0x73, 0xeb, 0xcb,
-	0x65, 0xcc, 0xa4, 0xda, 0x73, 0xdc, 0xe0, 0x72, 0xdf, 0x6f, 0xe3, 0xd2, 0xfd, 0x87, 0x2b, 0x53,
-	0x7f, 0x3c, 0x5c, 0x59, 0x77, 0x3d, 0xb9, 0xdd, 0x6e, 0x94, 0xb7, 0x02, 0x1f, 0xf7, 0x12, 0xff,
-	0x9c, 0x17, 0xce, 0xad, 0x4a, 0x4f, 0x97, 0x8f, 0xdc, 0x69, 0x31, 0x31, 0xf0, 0xad, 0x0d, 0x42,
-	0x0d, 0x37, 0x70, 0x7a, 0xb2, 0x0d, 0x4c, 0xf1, 0xdd, 0x97, 0xe6, 0x9b, 0x48, 0x5d, 0x09, 0x4e,
-	0x65, 0x53, 0xd7, 0x49, 0x2c, 0x7d, 0x6f, 0xc1, 0xb1, 0xc8, 0xa8, 0x4b, 0x5b, 0xd7, 0x78, 0xac,
-	0xb4, 0x82, 0x2e, 0x67, 0xe1, 0xf8, 0xd2, 0x52, 0x66, 0x69, 0x64, 0xd3, 0x69, 0x64, 0xe4, 0x4d,
-	0x98, 0x55, 0x35, 0xa5, 0x71, 0xcf, 0xad, 0x2f, 0x0d, 0x73, 0x2c, 0xd8, 0x20, 0xc7, 0x57, 0x02,
-	0x8f, 0x6f, 0xcc, 0x44, 0xf9, 0xad, 0xa1, 0x39, 0x52, 0x52, 0x91, 0x4a, 0x9f, 0xc2, 0xf1, 0x18,
-	0x5a, 0x2c, 0x84, 0x0f, 0xe0, 0xa8, 0x2a, 0x63, 0x51, 0x0f, 0xd9, 0x16, 0xf3, 0x3a, 0xcc, 0xc1,
-	0x6d, 0x1c, 0x1b, 0xe2, 0x88, 0xf6, 0xab, 0xa1, 0x5b, 0xe9, 0x81, 0x35, 0x58, 0xff, 0xc3, 0xb6,
-	0x7c, 0x21, 0xd3, 0x41, 0x4e, 0xc3, 0x7c, 0xc8, 0x1c, 0xc6, 0xfc, 0xc4, 0xab, 0x37, 0xa7, 0xc7,
-	0xd4, 0x26, 0x27, 0x32, 0x76, 0x11, 0x48, 0x9c, 0x11, 0xa6, 0x6c, 0x19, 0x20, 0xd4, 0xec, 0xea,
-	0x9e, 0xce, 0xd6, 0x4c, 0xed, 0x10, 0x8e, 0x5c, 0x73, 0x4a, 0xdf, 0xe9, 0xb7, 0xe6, 0x46, 0xcb,
-	0xa1, 0x92, 0x55, 0x3d, 0x7e, 0x8d, 0x4b, 0x16, 0x32, 0x21, 0x6b, 0x54, 0xb2, 0x7f, 0x7b, 0xfe,
-	0x4c, 0x94, 0x95, 0x25, 0x38, 0xe8, 0x7b, 0xbc, 0x1e, 0x52, 0xc9, 0xb0, 0xbc, 0x0f, 0xf8, 0x1e,
-	0x8f, 0xc2, 0x1a, 0x2a, 0x3b, 0x03, 0x1e, 0x56, 0x76, 0x92, 0x03, 0xed, 0xed, 0x2a, 0x07, 0xda,
-	0x4b, 0x72, 0xa0, 0xbd, 0x7c, 0x0e, 0xa3, 0xf0, 0x90, 0xc3, 0xb7, 0x16, 0xbc, 0x3c, 0x30, 0xda,
-	0x4d, 0x02, 0x9c, 0x75, 0x13, 0x04, 0x38, 0xeb, 0xa6, 0x08, 0xac, 0xc0, 0x72, 0x06, 0x36, 0x44,
-	0xff, 0xb5, 0xa5, 0xce, 0xee, 0x8f, 0x02, 0xd7, 0x6d, 0xb2, 0xd4, 0x09, 0xf3, 0xdf, 0xe3, 0x2e,
-	0xc0, 0x01, 0xc6, 0x69, 0xa3, 0xc9, 0x1c, 0x05, 0xfb, 0x60, 0xad, 0xff, 0x98, 0x80, 0xbd, 0x04,
-	0x27, 0x53, 0xa0, 0x10, 0xf0, 0x37, 0xd6, 0xc8, 0x5c, 0xf2, 0x10, 0xf8, 0xbf, 0x10, 0xdb, 0x50,
-	0x48, 0xa3, 0x42, 0xc8, 0x3f, 0x59, 0x50, 0xac, 0x0a, 0xf7, 0x2a, 0x6b, 0x05, 0xc2, 0x93, 0xfd,
-	0x6d, 0x78, 0xbf, 0xcd, 0x1d, 0xf1, 0x5c, 0x91, 0x47, 0xc7, 0x97, 0x1f, 0xb4, 0xb9, 0x9c, 0xfc,
-	0xf8, 0x52, 0xe6, 0x09, 0x62, 0xa7, 0xd5, 0x1b, 0x6a, 0xc6, 0x8e, 0xfc, 0x7e, 0xd6, 0x6f, 0xf1,
-	0xc7, 0x28, 0x14, 0xf6, 0x18, 0x41, 0xfd, 0x8e, 0x67, 0x80, 0x4f, 0x32, 0xc4, 0x2c, 0x5c, 0x0f,
-	0x3d, 0xbe, 0xe5, 0xb5, 0x68, 0x73, 0x4f, 0x31, 0xcc, 0x00, 0x8f, 0x0c, 0x7f, 0xb1, 0x12, 0x69,
-	0xd8, 0x6b, 0x14, 0xcf, 0xc0, 0xe9, 0x1c, 0xf4, 0xc8, 0xf1, 0x8e, 0xa2, 0xf8, 0x5e, 0xaf, 0xc5,
-	0x1c, 0x4f, 0xb2, 0xeb, 0x8c, 0x3b, 0x1e, 0x77, 0x9f, 0xf1, 0x08, 0x49, 0x5e, 0xd2, 0xd3, 0x23,
-	0x97, 0xb4, 0x01, 0x63, 0x56, 0x78, 0xc4, 0xf8, 0xa5, 0x05, 0x0b, 0x55, 0xe1, 0x5e, 0xa7, 0x6d,
-	0xf1, 0x6c, 0xad, 0xc4, 0x44, 0xb9, 0x5f, 0x84, 0xd9, 0x90, 0x51, 0x11, 0x70, 0xbc, 0x43, 0xf0,
-	0x29, 0x01, 0xfb, 0xa4, 0x6a, 0x6e, 0xe2, 0x80, 0x10, 0xea, 0x8e, 0xba, 0x39, 0x6e, 0xf0, 0xd6,
-	0xae, 0x60, 0x35, 0xdc, 0x0f, 0xc9, 0xd0, 0x88, 0xea, 0x57, 0x0b, 0x6c, 0xad, 0xa8, 0x37, 0x42,
-	0xcf, 0x71, 0x19, 0xba, 0x3f, 0xd7, 0x34, 0xbe, 0x0b, 0x47, 0x1a, 0x2a, 0x58, 0x52, 0xf6, 0xe7,
-	0xac, 0x7e, 0xb8, 0x11, 0x07, 0x97, 0xe0, 0xb6, 0x0c, 0x2f, 0x19, 0xf1, 0x9b, 0x2e, 0x6c, 0x6d,
-	0xf2, 0x82, 0x5d, 0xd8, 0x7d, 0x50, 0x08, 0xf8, 0x47, 0xbd, 0x21, 0x7a, 0xb4, 0xea, 0x71, 0xdd,
-	0xe9, 0x0c, 0x36, 0xe4, 0x02, 0xcc, 0xea, 0x5c, 0x8c, 0x45, 0x8d, 0x76, 0x13, 0x9f, 0x2a, 0xba,
-	0x6f, 0x98, 0xf8, 0x54, 0xd1, 0xe6, 0x97, 0xe6, 0x22, 0x56, 0x18, 0x0a, 0xf7, 0x22, 0x0d, 0xdd,
-	0x44, 0x6d, 0xa3, 0x1d, 0xf2, 0x3d, 0x4a, 0x2d, 0x0e, 0x5d, 0x53, 0x5b, 0xff, 0x82, 0xc0, 0xbe,
-	0xaa, 0x70, 0x49, 0x03, 0xe6, 0x62, 0x7d, 0x3d, 0x59, 0x2d, 0xa7, 0x7e, 0x88, 0x29, 0x1b, 0x7f,
-	0xfa, 0xb0, 0xcf, 0x4e, 0x60, 0x89, 0x8d, 0xce, 0x5d, 0x0b, 0x4e, 0x18, 0x3b, 0x60, 0xb2, 0x6e,
-	0x5e, 0x24, 0xef, 0x97, 0x02, 0xfb, 0xe2, 0x53, 0xf9, 0x20, 0x84, 0x4d, 0x98, 0xd5, 0x3a, 0x93,
-	0x9c, 0xc9, 0x70, 0x8f, 0x4b, 0x63, 0xfb, 0x95, 0x7c, 0x23, 0x5c, 0xf4, 0x26, 0x1c, 0xc0, 0xe3,
-	0x9d, 0xe4, 0x38, 0x0c, 0x2f, 0x1f, 0xfb, 0xd5, 0x31, 0x56, 0xb1, 0x7c, 0x19, 0xfb, 0xaa, 0xac,
-	0x7c, 0xe5, 0xf5, 0x88, 0x59, 0xf9, 0xca, 0x6d, 0xdc, 0xe2, 0x10, 0x92, 0x6d, 0xd1, 0x18, 0x08,
-	0xc6, 0x16, 0x6f, 0x0c, 0x04, 0x73, 0xdf, 0x45, 0xba, 0x40, 0xd2, 0x7d, 0x0d, 0xa9, 0xe4, 0x2d,
-	0x65, 0x8a, 0x7d, 0x61, 0x72, 0x07, 0x0c, 0xcc, 0x60, 0x3e, 0xde, 0x99, 0x90, 0x8c, 0x4a, 0x37,
-	0xb4, 0x54, 0xf6, 0xb9, 0x49, 0x4c, 0x31, 0xcc, 0x36, 0x1c, 0x4e, 0xb4, 0x13, 0x64, 0xac, 0x73,
-	0xac, 0x92, 0x5e, 0x9f, 0xc8, 0x16, 0x23, 0xdd, 0x81, 0x05, 0x93, 0xbe, 0x27, 0x6b, 0xe6, 0x45,
-	0x72, 0xfa, 0x18, 0x7b, 0xfd, 0x69, 0x5c, 0x62, 0xb5, 0x64, 0x94, 0xdf, 0x59, 0xb5, 0x94, 0xd7,
-	0x68, 0x64, 0xd5, 0x52, 0xae, 0xbe, 0x57, 0x10, 0x8c, 0xfa, 0x98, 0xe4, 0x13, 0x32, 0xca, 0xe4,
-	0x2c, 0x08, 0xb9, 0x02, 0x9c, 0x7c, 0x6e, 0xc1, 0xa2, 0x59, 0xbf, 0x92, 0x31, 0x94, 0xcc, 0x20,
-	0xde, 0x78, 0x3a, 0xa7, 0x18, 0x0a, 0xb3, 0x42, 0xcd, 0x42, 0x91, 0x2b, 0xa7, 0xb3, 0x50, 0xe4,
-	0x8b, 0x60, 0x52, 0x07, 0x18, 0xea, 0x4d, 0xf2, 0x9a, 0x79, 0x8d, 0x94, 0x44, 0xb6, 0x57, 0xc7,
-	0x1b, 0x0e, 0x5f, 0xe1, 0xb8, 0x78, 0xcc, 0x7a, 0x85, 0x0d, 0xda, 0x36, 0xeb, 0x15, 0x36, 0x69,
-	0x51, 0x72, 0x1b, 0x8e, 0x8d, 0xea, 0x38, 0x72, 0x3e, 0xf3, 0x7a, 0x32, 0xe9, 0x55, 0xbb, 0x3c,
-	0xa9, 0xf9, 0xe8, 0xe1, 0xa4, 0xa7, 0xf3, 0x0f, 0xa7, 0x84, 0x7c, 0xcc, 0x3f, 0x9c, 0x92, 0xa2,
-	0x2e, 0x62, 0x36, 0xaa, 0x8a, 0xb2, 0x98, 0x65, 0x08, 0xbf, 0x2c, 0x66, 0x59, 0x62, 0x6b, 0x18,
-	0x72, 0xa8, 0x56, 0xf2, 0x43, 0xa6, 0x04, 0x59, 0x7e, 0xc8, 0xb4, 0x08, 0xb2, 0xf7, 0xdf, 0x7d,
-	0x72, 0xef, 0x9c, 0xb5, 0xf1, 0xf6, 0xfd, 0x47, 0x45, 0xeb, 0xc1, 0xa3, 0xa2, 0xf5, 0xe7, 0xa3,
-	0xa2, 0xf5, 0xd5, 0xe3, 0xe2, 0xd4, 0x83, 0xc7, 0xc5, 0xa9, 0xdf, 0x1f, 0x17, 0xa7, 0x3e, 0x59,
-	0x89, 0x7d, 0x5c, 0x18, 0xf9, 0x7a, 0xa5, 0x3e, 0x29, 0x34, 0x66, 0xd5, 0x17, 0xa2, 0x8b, 0xff,
-	0x04, 0x00, 0x00, 0xff, 0xff, 0xf7, 0x46, 0xa1, 0xa0, 0xdc, 0x1a, 0x00, 0x00,
+	// 1494 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x59, 0xcf, 0x6f, 0x1b, 0x45,
+	0x14, 0xce, 0xa6, 0x69, 0xda, 0xbe, 0x24, 0xfd, 0x31, 0x4a, 0x53, 0x67, 0x69, 0x9c, 0xd6, 0x05,
+	0x91, 0x16, 0x62, 0x37, 0x29, 0xe2, 0x47, 0xa5, 0x0a, 0x35, 0x2d, 0x88, 0x1e, 0x2c, 0x2a, 0x87,
+	0x16, 0x09, 0x09, 0x59, 0xe3, 0xec, 0x68, 0xb3, 0xaa, 0x77, 0xd6, 0xdd, 0x19, 0xc7, 0xc9, 0x01,
+	0xa9, 0x02, 0x71, 0xe0, 0x86, 0x04, 0x37, 0xc4, 0x95, 0x13, 0x87, 0x1e, 0xb8, 0x20, 0x24, 0x8e,
+	0xd0, 0x63, 0xc5, 0x09, 0x71, 0xa8, 0x50, 0x7b, 0xe8, 0xdf, 0xd0, 0x0b, 0x42, 0x3b, 0xf3, 0x6c,
+	0xef, 0x7a, 0x67, 0xd7, 0x6e, 0x45, 0x43, 0x73, 0x4a, 0x76, 0xe6, 0xcd, 0xbc, 0xef, 0x7b, 0xef,
+	0xed, 0xcc, 0xfb, 0xd6, 0x60, 0xb7, 0xc2, 0x60, 0xab, 0x49, 0x1b, 0xa2, 0xb2, 0x45, 0xdb, 0x4d,
+	0x59, 0xd9, 0x5a, 0xa9, 0xc8, 0xed, 0x72, 0x2b, 0x0c, 0x64, 0x40, 0x8e, 0x75, 0xe7, 0xca, 0x6a,
+	0xae, 0xbc, 0xb5, 0x62, 0x17, 0x37, 0x02, 0xe1, 0x07, 0xa2, 0xd2, 0xa0, 0xfc, 0x56, 0x65, 0x6b,
+	0xa5, 0xc1, 0x24, 0x5d, 0x51, 0x0f, 0x7a, 0x49, 0x6c, 0x5e, 0xb0, 0xde, 0xfc, 0x46, 0xe0, 0x71,
+	0x9c, 0x3f, 0x81, 0xf3, 0xbe, 0x70, 0x23, 0x57, 0xbe, 0x70, 0x71, 0x62, 0x5e, 0x4f, 0xd4, 0xd5,
+	0x53, 0x45, 0x3f, 0xe0, 0xd4, 0xac, 0x1b, 0xb8, 0x81, 0x1e, 0x8f, 0xfe, 0xd3, 0xa3, 0xa5, 0x7f,
+	0x2c, 0x38, 0x5e, 0x15, 0xee, 0x95, 0x90, 0x51, 0xc9, 0x6e, 0x46, 0xf8, 0x6a, 0xec, 0x76, 0x9b,
+	0x09, 0x49, 0xca, 0xb0, 0x9f, 0x3a, 0xbe, 0xc7, 0x0b, 0xd6, 0x29, 0x6b, 0xe9, 0xd0, 0x5a, 0xe1,
+	0x8f, 0x9f, 0x96, 0x67, 0x71, 0xc3, 0xcb, 0x8e, 0x13, 0x32, 0x21, 0xd6, 0x65, 0xe8, 0x71, 0xb7,
+	0xa6, 0xcd, 0xc8, 0x22, 0x4c, 0x89, 0x4d, 0x1a, 0xb2, 0xba, 0xc3, 0x78, 0xe0, 0x17, 0xc6, 0xa3,
+	0x55, 0x35, 0x50, 0x43, 0x57, 0xa3, 0x11, 0x72, 0x16, 0x8e, 0xb6, 0xb9, 0xc3, 0xc2, 0xe6, 0x8e,
+	0xc7, 0xdd, 0x3a, 0x15, 0x82, 0xc9, 0xc2, 0x3e, 0x65, 0x75, 0xa4, 0x3f, 0x7e, 0x39, 0x1a, 0x26,
+	0x67, 0x60, 0xa6, 0x45, 0x77, 0x7c, 0xc6, 0x25, 0xee, 0x36, 0xa1, 0xec, 0xa6, 0x71, 0x50, 0xef,
+	0xf7, 0x36, 0x14, 0x3a, 0x9e, 0xdc, 0x74, 0x42, 0xda, 0xa1, 0xcd, 0xba, 0xc3, 0x9a, 0x74, 0xa7,
+	0x2e, 0xd8, 0x46, 0xc0, 0x1d, 0x51, 0xd8, 0x7f, 0xca, 0x5a, 0x9a, 0xa8, 0xcd, 0xf5, 0xe7, 0xaf,
+	0x46, 0xd3, 0xeb, 0x7a, 0xf6, 0x22, 0x7c, 0xfe, 0xf8, 0xee, 0x39, 0x0d, 0xbb, 0x74, 0x09, 0xe6,
+	0x06, 0xf9, 0x8b, 0x56, 0xc0, 0x05, 0x8b, 0x40, 0xa8, 0x84, 0xd5, 0xa9, 0xa6, 0xab, 0x03, 0x51,
+	0x9b, 0x56, 0x83, 0x18, 0x82, 0xd2, 0x13, 0x0b, 0x16, 0xab, 0xc2, 0x5d, 0x67, 0x72, 0xbd, 0xc7,
+	0xb4, 0xca, 0x24, 0x75, 0xa8, 0xa4, 0xdd, 0x48, 0xb6, 0xe1, 0xa0, 0x8f, 0x43, 0x6a, 0x8f, 0xa9,
+	0xd5, 0x85, 0x32, 0x46, 0x52, 0xe5, 0x1c, 0x13, 0x5c, 0xee, 0xae, 0x5b, 0xbb, 0x78, 0xef, 0xc1,
+	0xe2, 0xd8, 0x5f, 0x0f, 0x16, 0x57, 0x5d, 0x4f, 0x6e, 0xb6, 0x1b, 0xe5, 0x8d, 0xc0, 0xc7, 0x5c,
+	0xe2, 0x9f, 0x65, 0xe1, 0xdc, 0xaa, 0x6c, 0xeb, 0xf2, 0x91, 0x3b, 0x2d, 0x26, 0x7a, 0x6b, 0x6b,
+	0x3d, 0x57, 0xfd, 0x04, 0x8e, 0x8f, 0x96, 0xc0, 0x14, 0xdf, 0x7d, 0x69, 0xbe, 0x89, 0xd0, 0x95,
+	0xe0, 0x54, 0x36, 0x75, 0x1d, 0xc4, 0xd2, 0x8f, 0x16, 0x1c, 0x8d, 0x8c, 0x3a, 0xb4, 0x75, 0x8d,
+	0xc7, 0x4a, 0x2b, 0xe8, 0x70, 0x16, 0x0e, 0x2f, 0x2d, 0x65, 0x96, 0x46, 0x36, 0x9e, 0x46, 0x46,
+	0xde, 0x82, 0x49, 0x55, 0x53, 0x1a, 0xf7, 0xd4, 0xea, 0x7c, 0x3f, 0xc6, 0x82, 0xf5, 0x62, 0x7c,
+	0x25, 0xf0, 0xf8, 0xda, 0x44, 0x14, 0xdf, 0x1a, 0x9a, 0x23, 0x25, 0xe5, 0xa9, 0xf4, 0x29, 0x1c,
+	0x8b, 0xa1, 0xc5, 0x42, 0xf8, 0x00, 0x8e, 0xa8, 0x32, 0x16, 0xf5, 0x90, 0x6d, 0x30, 0x6f, 0x8b,
+	0x39, 0x98, 0xc6, 0xa1, 0x2e, 0x0e, 0xeb, 0x75, 0x35, 0x5c, 0x56, 0xba, 0x6f, 0xf5, 0xf6, 0xff,
+	0xb0, 0x2d, 0x5f, 0xc8, 0x70, 0x90, 0xd3, 0x30, 0x1d, 0x32, 0x87, 0x31, 0x3f, 0xf1, 0xea, 0x4d,
+	0xe9, 0x31, 0x95, 0xe4, 0x44, 0xc4, 0x2e, 0x00, 0x89, 0x33, 0xc2, 0x90, 0x2d, 0x00, 0x84, 0x9a,
+	0x5d, 0xdd, 0xd3, 0xd1, 0x9a, 0xa8, 0x1d, 0xc2, 0x91, 0x6b, 0x4e, 0xe9, 0x7b, 0xfd, 0xd6, 0xdc,
+	0x68, 0x39, 0x54, 0xb2, 0xaa, 0xc7, 0xaf, 0x71, 0xc9, 0x42, 0x26, 0x64, 0x8d, 0x4a, 0xf6, 0xac,
+	0xe7, 0xcf, 0x48, 0x51, 0x99, 0x87, 0x83, 0xbe, 0xc7, 0xeb, 0x21, 0x95, 0x0c, 0xcb, 0xfb, 0x80,
+	0xef, 0xf1, 0xc8, 0xad, 0xa1, 0xb2, 0x33, 0xe0, 0x61, 0x65, 0x27, 0x39, 0xd0, 0xed, 0x5d, 0xe5,
+	0x40, 0xb7, 0x93, 0x1c, 0xe8, 0x76, 0x3e, 0x87, 0x41, 0x78, 0xc8, 0xe1, 0x07, 0x0b, 0x4e, 0xf6,
+	0x8c, 0x4c, 0x04, 0xde, 0x84, 0x43, 0xb4, 0x2d, 0x37, 0x83, 0xd0, 0x93, 0x3b, 0x43, 0x49, 0xf4,
+	0x4d, 0x47, 0x26, 0xc2, 0x59, 0x27, 0x41, 0x84, 0xb3, 0x8e, 0x22, 0x72, 0x38, 0x22, 0xd2, 0xdf,
+	0xaf, 0xb4, 0x08, 0x0b, 0x19, 0x38, 0x91, 0xc9, 0x37, 0x96, 0x3a, 0xc7, 0x3f, 0x0a, 0x5c, 0xb7,
+	0xc9, 0x52, 0xa7, 0xcd, 0x7f, 0x9f, 0x84, 0x02, 0x1c, 0x60, 0x9c, 0x36, 0x9a, 0xcc, 0x51, 0xd0,
+	0x0f, 0xd6, 0xba, 0x8f, 0x89, 0x1c, 0xcc, 0xc3, 0x89, 0x14, 0x28, 0x04, 0xfc, 0xad, 0x35, 0x30,
+	0x97, 0x3c, 0x10, 0xfe, 0x2f, 0xc4, 0x36, 0x14, 0xd2, 0xa8, 0x10, 0xf2, 0x6f, 0x16, 0x14, 0xab,
+	0xc2, 0xbd, 0xca, 0x5a, 0x81, 0xf0, 0x64, 0x37, 0x0d, 0xef, 0xb7, 0xb9, 0x23, 0x76, 0xa5, 0x5e,
+	0xa2, 0x23, 0xcd, 0x0f, 0xda, 0x5c, 0x8e, 0x7e, 0xa4, 0x29, 0xf3, 0x54, 0x35, 0x9d, 0x56, 0x6f,
+	0xae, 0x99, 0x07, 0x72, 0xfd, 0x5d, 0xbf, 0xdd, 0x1f, 0x63, 0x03, 0xb1, 0x87, 0xc9, 0xea, 0x73,
+	0x20, 0x83, 0x48, 0x92, 0x2d, 0x46, 0xe4, 0x7a, 0xe8, 0xf1, 0x0d, 0xaf, 0x45, 0x9b, 0x7b, 0x96,
+	0x6d, 0x06, 0x11, 0x64, 0x7b, 0xcf, 0x4a, 0x84, 0x64, 0x2f, 0xd3, 0x3d, 0x03, 0xa7, 0x73, 0x98,
+	0x20, 0xdf, 0xaf, 0x34, 0xdf, 0xf7, 0xb6, 0x5b, 0xcc, 0xf1, 0x24, 0xbb, 0xce, 0xb8, 0xe3, 0xf1,
+	0xc1, 0x26, 0xe4, 0x59, 0xf9, 0x26, 0x6f, 0xfa, 0xf1, 0x81, 0x9b, 0x3e, 0x03, 0x70, 0x16, 0x14,
+	0x04, 0xfc, 0x9d, 0x05, 0xb3, 0x55, 0xe1, 0x5e, 0xa7, 0x6d, 0x91, 0xd4, 0x24, 0xcf, 0x35, 0x29,
+	0x73, 0x30, 0x19, 0x32, 0x2a, 0x02, 0x8e, 0x97, 0x11, 0x3e, 0xa5, 0x28, 0x9c, 0x50, 0x8a, 0x29,
+	0x0e, 0x0e, 0x61, 0x7f, 0xa9, 0xef, 0xa0, 0x1b, 0xbc, 0xb5, 0xab, 0xc0, 0x53, 0x00, 0xf5, 0xad,
+	0x93, 0x84, 0x81, 0x10, 0x7f, 0xb5, 0xc0, 0xd6, 0x3d, 0xfb, 0x5a, 0xe8, 0x39, 0x2e, 0xc3, 0x2d,
+	0x9e, 0xeb, 0xc5, 0xf3, 0x2e, 0x1c, 0x6e, 0x28, 0x67, 0x49, 0x61, 0x91, 0xb3, 0xfb, 0x4c, 0x23,
+	0x0e, 0x2e, 0x71, 0x3f, 0x2d, 0xc0, 0x4b, 0x46, 0xfc, 0xa6, 0x36, 0x40, 0x9b, 0xbc, 0x60, 0x6d,
+	0x40, 0x17, 0x14, 0x02, 0xfe, 0x59, 0x27, 0x44, 0x8f, 0x56, 0x3d, 0xae, 0xb5, 0x54, 0x2f, 0x21,
+	0xe7, 0x61, 0x52, 0xc7, 0x62, 0x28, 0x6a, 0xb4, 0x1b, 0xf9, 0xfc, 0xd1, 0xca, 0x64, 0xe4, 0xf3,
+	0x47, 0x9b, 0x5f, 0x9c, 0x8a, 0x58, 0xa1, 0x2b, 0xcc, 0x45, 0x1a, 0xba, 0x89, 0xda, 0x5a, 0x3b,
+	0xe4, 0x7b, 0x94, 0x5a, 0x1c, 0x3a, 0x52, 0xfb, 0xc5, 0x82, 0x79, 0x5d, 0x86, 0xea, 0x7b, 0x45,
+	0x95, 0x72, 0xea, 0xb2, 0xf0, 0xb9, 0x56, 0xda, 0x25, 0x98, 0x51, 0x02, 0xad, 0xee, 0x6b, 0x67,
+	0x43, 0x5f, 0xa2, 0x69, 0x1a, 0x83, 0x96, 0x28, 0xc7, 0x93, 0xdd, 0x33, 0x20, 0x09, 0x5e, 0x73,
+	0x5b, 0x7d, 0x42, 0x60, 0x5f, 0x55, 0xb8, 0xa4, 0x01, 0x53, 0xb1, 0xaf, 0x22, 0x64, 0xa9, 0x9c,
+	0xfa, 0x8c, 0x55, 0x36, 0x7e, 0x38, 0xb2, 0xcf, 0x8e, 0x60, 0x89, 0x32, 0xf1, 0x8e, 0x05, 0xc7,
+	0x8d, 0xdf, 0x0f, 0xc8, 0xaa, 0x79, 0x93, 0xbc, 0xef, 0x2c, 0xf6, 0x85, 0xa7, 0x5a, 0x83, 0x10,
+	0xd6, 0x61, 0x52, 0x77, 0xe6, 0xe4, 0x4c, 0xc6, 0xf2, 0xb8, 0x98, 0xb0, 0x5f, 0xce, 0x37, 0xc2,
+	0x4d, 0x6f, 0xc2, 0x01, 0xbc, 0xd3, 0x48, 0xce, 0x82, 0xfe, 0xed, 0x6b, 0xbf, 0x32, 0xc4, 0x2a,
+	0x16, 0x2f, 0xa3, 0x2a, 0xcd, 0x8a, 0x57, 0x9e, 0xc2, 0xce, 0x8a, 0x57, 0xae, 0xec, 0x8d, 0x43,
+	0x48, 0x8a, 0xca, 0x21, 0x10, 0x8c, 0x02, 0x79, 0x08, 0x04, 0xb3, 0x6a, 0x25, 0x1d, 0x20, 0x69,
+	0x25, 0x48, 0x2a, 0x79, 0x5b, 0x99, 0x7c, 0x9f, 0x1f, 0x7d, 0x01, 0x3a, 0x66, 0x30, 0x1d, 0xd7,
+	0x72, 0x24, 0xa3, 0xd2, 0x0d, 0x22, 0xd4, 0x3e, 0x37, 0x8a, 0x29, 0xba, 0xd9, 0x84, 0x99, 0x84,
+	0x00, 0x23, 0x43, 0x17, 0xc7, 0x2a, 0xe9, 0xb5, 0x91, 0x6c, 0xd1, 0xd3, 0x67, 0x30, 0x6b, 0x52,
+	0x41, 0x64, 0xc5, 0xbc, 0x49, 0x8e, 0xf2, 0xb3, 0x57, 0x9f, 0x66, 0x49, 0xac, 0x96, 0x8c, 0xc2,
+	0x24, 0xab, 0x96, 0xf2, 0xe4, 0x58, 0x56, 0x2d, 0xe5, 0x2a, 0x1f, 0x05, 0xc1, 0xa8, 0x16, 0x48,
+	0x3e, 0x21, 0xa3, 0x68, 0xc8, 0x82, 0x90, 0x2b, 0x47, 0xc8, 0x17, 0x16, 0xcc, 0x99, 0x3b, 0x78,
+	0x32, 0x84, 0x92, 0x19, 0xc4, 0x1b, 0x4f, 0xb7, 0x28, 0x86, 0xc2, 0xdc, 0x96, 0x67, 0xa1, 0xc8,
+	0xd5, 0x13, 0x59, 0x28, 0xf2, 0x3b, 0x7f, 0x52, 0x07, 0xe8, 0x37, 0xd6, 0xe4, 0x55, 0xf3, 0x1e,
+	0x29, 0x5d, 0x60, 0x2f, 0x0d, 0x37, 0xec, 0xbf, 0xc2, 0xf1, 0xc6, 0x38, 0xeb, 0x15, 0x36, 0xf4,
+	0xf0, 0x59, 0xaf, 0xb0, 0xa9, 0xcf, 0x26, 0xb7, 0xe1, 0xe8, 0x60, 0x8f, 0x4a, 0x96, 0x33, 0xaf,
+	0x27, 0x53, 0x2f, 0x6e, 0x97, 0x47, 0x35, 0x1f, 0x3c, 0x9c, 0xf4, 0x74, 0xfe, 0xe1, 0x94, 0x68,
+	0x8d, 0xf3, 0x0f, 0xa7, 0x64, 0xc3, 0x1a, 0x31, 0x1b, 0xec, 0xf8, 0xb2, 0x98, 0x65, 0x34, 0xb5,
+	0x59, 0xcc, 0xb2, 0x1a, 0xc9, 0xbe, 0xcb, 0x7e, 0x27, 0x96, 0xef, 0x32, 0xd5, 0x6c, 0xe6, 0xbb,
+	0x4c, 0x37, 0x78, 0x84, 0xc3, 0x91, 0x81, 0xfe, 0x88, 0xbc, 0x9e, 0x99, 0x0f, 0x43, 0x0f, 0x68,
+	0x2f, 0x8f, 0x68, 0xad, 0xfd, 0xd9, 0xfb, 0xef, 0x3c, 0xbe, 0x7b, 0xce, 0x5a, 0x7b, 0xe7, 0xde,
+	0xc3, 0xa2, 0x75, 0xff, 0x61, 0xd1, 0xfa, 0xfb, 0x61, 0xd1, 0xfa, 0xfa, 0x51, 0x71, 0xec, 0xfe,
+	0xa3, 0xe2, 0xd8, 0x9f, 0x8f, 0x8a, 0x63, 0x9f, 0x2c, 0xc6, 0x7e, 0x0a, 0x1a, 0xf8, 0xad, 0x51,
+	0xfd, 0x00, 0xd4, 0x98, 0x54, 0xbf, 0xe7, 0x5d, 0xf8, 0x37, 0x00, 0x00, 0xff, 0xff, 0x58, 0x07,
+	0xc1, 0xaf, 0x8a, 0x1c, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -2260,18 +2372,24 @@ type MsgClient interface {
 	// ToggleSwapOut allows enabling or disabling swap-out operations for a vault.
 	ToggleSwapOut(ctx context.Context, in *MsgToggleSwapOutRequest, opts ...grpc.CallOption) (*MsgToggleSwapOutResponse, error)
 	// DepositInterestFunds allows depositing funds into the vault for paying interest.
+	// May be signed by the vault admin or the configured asset manager.
 	DepositInterestFunds(ctx context.Context, in *MsgDepositInterestFundsRequest, opts ...grpc.CallOption) (*MsgDepositInterestFundsResponse, error)
-	// WithdrawInterestFunds allows withdrawing unused interest funds (admin only).
+	// WithdrawInterestFunds allows withdrawing unused interest funds.
+	// May be signed by the vault admin or the configured asset manager.
 	WithdrawInterestFunds(ctx context.Context, in *MsgWithdrawInterestFundsRequest, opts ...grpc.CallOption) (*MsgWithdrawInterestFundsResponse, error)
 	// DepositPrincipalFunds allows depositing principal funds into a vault.
+	// May be signed by the vault admin or the configured asset manager.
 	DepositPrincipalFunds(ctx context.Context, in *MsgDepositPrincipalFundsRequest, opts ...grpc.CallOption) (*MsgDepositPrincipalFundsResponse, error)
 	// WithdrawPrincipalFunds allows withdrawing principal funds from a vault.
+	// May be signed by the vault admin or the configured asset manager.
 	WithdrawPrincipalFunds(ctx context.Context, in *MsgWithdrawPrincipalFundsRequest, opts ...grpc.CallOption) (*MsgWithdrawPrincipalFundsResponse, error)
 	// ExpeditePendingSwapOut expedites a pending swap out from a vault.
 	ExpeditePendingSwapOut(ctx context.Context, in *MsgExpeditePendingSwapOutRequest, opts ...grpc.CallOption) (*MsgExpeditePendingSwapOutResponse, error)
-	// PauseVault pauses user-facing swap operations for a vault and records a reason (admin only).
+	// PauseVault pauses user-facing swap operations for a vault and records a reason.
+	// May be signed by the vault admin or the configured asset manager.
 	PauseVault(ctx context.Context, in *MsgPauseVaultRequest, opts ...grpc.CallOption) (*MsgPauseVaultResponse, error)
-	// UnpauseVault re-enables user-facing swap operations for a vault (admin only).
+	// UnpauseVault re-enables user-facing swap operations for a vault.
+	// May be signed by the vault admin or the configured asset manager.
 	UnpauseVault(ctx context.Context, in *MsgUnpauseVaultRequest, opts ...grpc.CallOption) (*MsgUnpauseVaultResponse, error)
 	// SetBridgeAddress sets the single external bridge address allowed to mint or burn shares for a vault.
 	SetBridgeAddress(ctx context.Context, in *MsgSetBridgeAddressRequest, opts ...grpc.CallOption) (*MsgSetBridgeAddressResponse, error)
@@ -2281,6 +2399,9 @@ type MsgClient interface {
 	BridgeMintShares(ctx context.Context, in *MsgBridgeMintSharesRequest, opts ...grpc.CallOption) (*MsgBridgeMintSharesResponse, error)
 	// BridgeBurnShares burns local share marker supply for a vault; must be signed by the configured bridge address.
 	BridgeBurnShares(ctx context.Context, in *MsgBridgeBurnSharesRequest, opts ...grpc.CallOption) (*MsgBridgeBurnSharesResponse, error)
+	// SetAssetManager sets or clears the optional asset manager address for a vault.
+	// The vault admin must sign this transaction. Passing an empty address clears it.
+	SetAssetManager(ctx context.Context, in *MsgSetAssetManagerRequest, opts ...grpc.CallOption) (*MsgSetAssetManagerResponse, error)
 }
 
 type msgClient struct {
@@ -2471,6 +2592,15 @@ func (c *msgClient) BridgeBurnShares(ctx context.Context, in *MsgBridgeBurnShare
 	return out, nil
 }
 
+func (c *msgClient) SetAssetManager(ctx context.Context, in *MsgSetAssetManagerRequest, opts ...grpc.CallOption) (*MsgSetAssetManagerResponse, error) {
+	out := new(MsgSetAssetManagerResponse)
+	err := c.cc.Invoke(ctx, "/provlabs.vault.v1.Msg/SetAssetManager", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// CreateVault creates a new vault.
@@ -2493,18 +2623,24 @@ type MsgServer interface {
 	// ToggleSwapOut allows enabling or disabling swap-out operations for a vault.
 	ToggleSwapOut(context.Context, *MsgToggleSwapOutRequest) (*MsgToggleSwapOutResponse, error)
 	// DepositInterestFunds allows depositing funds into the vault for paying interest.
+	// May be signed by the vault admin or the configured asset manager.
 	DepositInterestFunds(context.Context, *MsgDepositInterestFundsRequest) (*MsgDepositInterestFundsResponse, error)
-	// WithdrawInterestFunds allows withdrawing unused interest funds (admin only).
+	// WithdrawInterestFunds allows withdrawing unused interest funds.
+	// May be signed by the vault admin or the configured asset manager.
 	WithdrawInterestFunds(context.Context, *MsgWithdrawInterestFundsRequest) (*MsgWithdrawInterestFundsResponse, error)
 	// DepositPrincipalFunds allows depositing principal funds into a vault.
+	// May be signed by the vault admin or the configured asset manager.
 	DepositPrincipalFunds(context.Context, *MsgDepositPrincipalFundsRequest) (*MsgDepositPrincipalFundsResponse, error)
 	// WithdrawPrincipalFunds allows withdrawing principal funds from a vault.
+	// May be signed by the vault admin or the configured asset manager.
 	WithdrawPrincipalFunds(context.Context, *MsgWithdrawPrincipalFundsRequest) (*MsgWithdrawPrincipalFundsResponse, error)
 	// ExpeditePendingSwapOut expedites a pending swap out from a vault.
 	ExpeditePendingSwapOut(context.Context, *MsgExpeditePendingSwapOutRequest) (*MsgExpeditePendingSwapOutResponse, error)
-	// PauseVault pauses user-facing swap operations for a vault and records a reason (admin only).
+	// PauseVault pauses user-facing swap operations for a vault and records a reason.
+	// May be signed by the vault admin or the configured asset manager.
 	PauseVault(context.Context, *MsgPauseVaultRequest) (*MsgPauseVaultResponse, error)
-	// UnpauseVault re-enables user-facing swap operations for a vault (admin only).
+	// UnpauseVault re-enables user-facing swap operations for a vault.
+	// May be signed by the vault admin or the configured asset manager.
 	UnpauseVault(context.Context, *MsgUnpauseVaultRequest) (*MsgUnpauseVaultResponse, error)
 	// SetBridgeAddress sets the single external bridge address allowed to mint or burn shares for a vault.
 	SetBridgeAddress(context.Context, *MsgSetBridgeAddressRequest) (*MsgSetBridgeAddressResponse, error)
@@ -2514,6 +2650,9 @@ type MsgServer interface {
 	BridgeMintShares(context.Context, *MsgBridgeMintSharesRequest) (*MsgBridgeMintSharesResponse, error)
 	// BridgeBurnShares burns local share marker supply for a vault; must be signed by the configured bridge address.
 	BridgeBurnShares(context.Context, *MsgBridgeBurnSharesRequest) (*MsgBridgeBurnSharesResponse, error)
+	// SetAssetManager sets or clears the optional asset manager address for a vault.
+	// The vault admin must sign this transaction. Passing an empty address clears it.
+	SetAssetManager(context.Context, *MsgSetAssetManagerRequest) (*MsgSetAssetManagerResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -2579,6 +2718,9 @@ func (*UnimplementedMsgServer) BridgeMintShares(ctx context.Context, req *MsgBri
 }
 func (*UnimplementedMsgServer) BridgeBurnShares(ctx context.Context, req *MsgBridgeBurnSharesRequest) (*MsgBridgeBurnSharesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BridgeBurnShares not implemented")
+}
+func (*UnimplementedMsgServer) SetAssetManager(ctx context.Context, req *MsgSetAssetManagerRequest) (*MsgSetAssetManagerResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetAssetManager not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -2945,6 +3087,24 @@ func _Msg_BridgeBurnShares_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_SetAssetManager_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSetAssetManagerRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SetAssetManager(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provlabs.vault.v1.Msg/SetAssetManager",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SetAssetManager(ctx, req.(*MsgSetAssetManagerRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var Msg_serviceDesc = _Msg_serviceDesc
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "provlabs.vault.v1.Msg",
@@ -3029,6 +3189,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "BridgeBurnShares",
 			Handler:    _Msg_BridgeBurnShares_Handler,
+		},
+		{
+			MethodName: "SetAssetManager",
+			Handler:    _Msg_SetAssetManager_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -3521,10 +3685,10 @@ func (m *MsgUpdateInterestRateRequest) MarshalToSizedBuffer(dAtA []byte) (int, e
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.Admin) > 0 {
-		i -= len(m.Admin)
-		copy(dAtA[i:], m.Admin)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Admin)))
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -3731,10 +3895,10 @@ func (m *MsgDepositInterestFundsRequest) MarshalToSizedBuffer(dAtA []byte) (int,
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.Admin) > 0 {
-		i -= len(m.Admin)
-		copy(dAtA[i:], m.Admin)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Admin)))
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -3801,10 +3965,10 @@ func (m *MsgWithdrawInterestFundsRequest) MarshalToSizedBuffer(dAtA []byte) (int
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.Admin) > 0 {
-		i -= len(m.Admin)
-		copy(dAtA[i:], m.Admin)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Admin)))
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -3871,10 +4035,10 @@ func (m *MsgDepositPrincipalFundsRequest) MarshalToSizedBuffer(dAtA []byte) (int
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.Admin) > 0 {
-		i -= len(m.Admin)
-		copy(dAtA[i:], m.Admin)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Admin)))
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -3941,10 +4105,10 @@ func (m *MsgWithdrawPrincipalFundsRequest) MarshalToSizedBuffer(dAtA []byte) (in
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.Admin) > 0 {
-		i -= len(m.Admin)
-		copy(dAtA[i:], m.Admin)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Admin)))
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -3999,10 +4163,10 @@ func (m *MsgExpeditePendingSwapOutRequest) MarshalToSizedBuffer(dAtA []byte) (in
 		i--
 		dAtA[i] = 0x10
 	}
-	if len(m.Admin) > 0 {
-		i -= len(m.Admin)
-		copy(dAtA[i:], m.Admin)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Admin)))
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -4066,10 +4230,10 @@ func (m *MsgPauseVaultRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.Admin) > 0 {
-		i -= len(m.Admin)
-		copy(dAtA[i:], m.Admin)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Admin)))
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -4126,10 +4290,10 @@ func (m *MsgUnpauseVaultRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 		i--
 		dAtA[i] = 0x12
 	}
-	if len(m.Admin) > 0 {
-		i -= len(m.Admin)
-		copy(dAtA[i:], m.Admin)
-		i = encodeVarintTx(dAtA, i, uint64(len(m.Admin)))
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
 		i--
 		dAtA[i] = 0xa
 	}
@@ -4436,6 +4600,73 @@ func (m *MsgBridgeBurnSharesResponse) MarshalToSizedBuffer(dAtA []byte) (int, er
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgSetAssetManagerRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSetAssetManagerRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSetAssetManagerRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.AssetManager) > 0 {
+		i -= len(m.AssetManager)
+		copy(dAtA[i:], m.AssetManager)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.AssetManager)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.VaultAddress) > 0 {
+		i -= len(m.VaultAddress)
+		copy(dAtA[i:], m.VaultAddress)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.VaultAddress)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Admin) > 0 {
+		i -= len(m.Admin)
+		copy(dAtA[i:], m.Admin)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Admin)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSetAssetManagerResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSetAssetManagerResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSetAssetManagerResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -4647,7 +4878,7 @@ func (m *MsgUpdateInterestRateRequest) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.Admin)
+	l = len(m.Authority)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
@@ -4735,7 +4966,7 @@ func (m *MsgDepositInterestFundsRequest) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.Admin)
+	l = len(m.Authority)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
@@ -4763,7 +4994,7 @@ func (m *MsgWithdrawInterestFundsRequest) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.Admin)
+	l = len(m.Authority)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
@@ -4791,7 +5022,7 @@ func (m *MsgDepositPrincipalFundsRequest) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.Admin)
+	l = len(m.Authority)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
@@ -4819,7 +5050,7 @@ func (m *MsgWithdrawPrincipalFundsRequest) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.Admin)
+	l = len(m.Authority)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
@@ -4847,7 +5078,7 @@ func (m *MsgExpeditePendingSwapOutRequest) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.Admin)
+	l = len(m.Authority)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
@@ -4872,7 +5103,7 @@ func (m *MsgPauseVaultRequest) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.Admin)
+	l = len(m.Authority)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
@@ -4902,7 +5133,7 @@ func (m *MsgUnpauseVaultRequest) Size() (n int) {
 	}
 	var l int
 	_ = l
-	l = len(m.Admin)
+	l = len(m.Authority)
 	if l > 0 {
 		n += 1 + l + sovTx(uint64(l))
 	}
@@ -5029,6 +5260,36 @@ func (m *MsgBridgeBurnSharesRequest) Size() (n int) {
 }
 
 func (m *MsgBridgeBurnSharesResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgSetAssetManagerRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Admin)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.VaultAddress)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = len(m.AssetManager)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	return n
+}
+
+func (m *MsgSetAssetManagerResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -6420,7 +6681,7 @@ func (m *MsgUpdateInterestRateRequest) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -6448,7 +6709,7 @@ func (m *MsgUpdateInterestRateRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Admin = string(dAtA[iNdEx:postIndex])
+			m.Authority = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -6984,7 +7245,7 @@ func (m *MsgDepositInterestFundsRequest) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -7012,7 +7273,7 @@ func (m *MsgDepositInterestFundsRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Admin = string(dAtA[iNdEx:postIndex])
+			m.Authority = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -7181,7 +7442,7 @@ func (m *MsgWithdrawInterestFundsRequest) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -7209,7 +7470,7 @@ func (m *MsgWithdrawInterestFundsRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Admin = string(dAtA[iNdEx:postIndex])
+			m.Authority = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -7378,7 +7639,7 @@ func (m *MsgDepositPrincipalFundsRequest) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -7406,7 +7667,7 @@ func (m *MsgDepositPrincipalFundsRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Admin = string(dAtA[iNdEx:postIndex])
+			m.Authority = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -7575,7 +7836,7 @@ func (m *MsgWithdrawPrincipalFundsRequest) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -7603,7 +7864,7 @@ func (m *MsgWithdrawPrincipalFundsRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Admin = string(dAtA[iNdEx:postIndex])
+			m.Authority = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -7772,7 +8033,7 @@ func (m *MsgExpeditePendingSwapOutRequest) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -7800,7 +8061,7 @@ func (m *MsgExpeditePendingSwapOutRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Admin = string(dAtA[iNdEx:postIndex])
+			m.Authority = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 0 {
@@ -7923,7 +8184,7 @@ func (m *MsgPauseVaultRequest) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -7951,7 +8212,7 @@ func (m *MsgPauseVaultRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Admin = string(dAtA[iNdEx:postIndex])
+			m.Authority = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -8119,7 +8380,7 @@ func (m *MsgUnpauseVaultRequest) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
 			}
 			var stringLen uint64
 			for shift := uint(0); ; shift += 7 {
@@ -8147,7 +8408,7 @@ func (m *MsgUnpauseVaultRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Admin = string(dAtA[iNdEx:postIndex])
+			m.Authority = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		case 2:
 			if wireType != 2 {
@@ -9003,6 +9264,202 @@ func (m *MsgBridgeBurnSharesResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgBridgeBurnSharesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSetAssetManagerRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSetAssetManagerRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSetAssetManagerRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Admin", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Admin = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VaultAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VaultAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AssetManager", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AssetManager = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSetAssetManagerResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSetAssetManagerResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSetAssetManagerResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

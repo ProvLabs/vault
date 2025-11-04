@@ -225,3 +225,28 @@ func (k Keeper) ConvertSharesToRedeemCoin(ctx sdk.Context, vault types.VaultAcco
 	}
 	return utils.CalculateRedeemProRataFraction(shares, vault.TotalShares.Amount, tvv, priceNum, priceDen, redeemDenom)
 }
+
+// EstimateTotalVaultValue returns an estimated Total Vault Value (TVV) as a Coin
+// denominated in the vault's underlying asset. It composes two steps without
+// mutating state:
+//  1. Reads the current principal-only TVV from on-chain balances at the
+//     principal (marker) account (excludes reserves and unpaid interest).
+//  2. Applies the vault's interest model to estimate unpaid interest through
+//     CalculateVaultTotalAssets, producing a best-effort TVV as of the query
+//     block. The result is floor-rounded and suitable for pro-rata calculations.
+//
+// If the vault is paused, the estimation honors the keeper’s paused logic
+// inside GetTVVInUnderlyingAsset.
+//
+// Returns an sdk.Coin { Denom: vault.UnderlyingAsset, Amount: ... }.
+func (k Keeper) EstimateTotalVaultValue(ctx sdk.Context, vault *types.VaultAccount) (sdk.Coin, error) {
+	baseAmt, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
+	if err != nil {
+		return sdk.Coin{}, fmt.Errorf("get tvv: %w", err)
+	}
+	estAmt, err := k.CalculateVaultTotalAssets(ctx, vault, sdk.Coin{Denom: vault.UnderlyingAsset, Amount: baseAmt})
+	if err != nil {
+		return sdk.Coin{}, fmt.Errorf("estimate tvv: %w", err)
+	}
+	return sdk.Coin{Denom: vault.UnderlyingAsset, Amount: estAmt}, nil
+}

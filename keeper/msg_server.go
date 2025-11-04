@@ -162,7 +162,7 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 	if vault == nil {
 		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
 	}
-	if err := vault.ValidateAdmin(msg.Admin); err != nil {
+	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, err
 	}
 
@@ -188,7 +188,7 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 
 	prevEnabled := vault.InterestEnabled()
 	if !curRate.IsZero() && !vault.Paused {
-		if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
+		if err := k.reconcileVaultInterest(ctx, vault); err != nil {
 			return nil, fmt.Errorf("failed to reconcile before rate change: %w", err)
 		}
 	}
@@ -267,7 +267,7 @@ func (k msgServer) ToggleSwapOut(goCtx context.Context, msg *types.MsgToggleSwap
 func (k msgServer) DepositInterestFunds(goCtx context.Context, msg *types.MsgDepositInterestFundsRequest) (*types.MsgDepositInterestFundsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	adminAddr := sdk.MustAccAddressFromBech32(msg.Admin)
+	authorityAddr := sdk.MustAccAddressFromBech32(msg.Authority)
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
 
 	vault, err := k.GetVault(ctx, vaultAddr)
@@ -278,7 +278,7 @@ func (k msgServer) DepositInterestFunds(goCtx context.Context, msg *types.MsgDep
 		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
 	}
 
-	if err := vault.ValidateAdmin(msg.Admin); err != nil {
+	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, err
 	}
 
@@ -286,15 +286,15 @@ func (k msgServer) DepositInterestFunds(goCtx context.Context, msg *types.MsgDep
 		return nil, fmt.Errorf("denom not supported for vault must be of type \"%s\" : got \"%s\"", vault.UnderlyingAsset, msg.Amount.Denom)
 	}
 
-	if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx), adminAddr, vaultAddr, sdk.NewCoins(msg.Amount)); err != nil {
+	if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx), authorityAddr, vaultAddr, sdk.NewCoins(msg.Amount)); err != nil {
 		return nil, fmt.Errorf("failed to deposit funds: %w", err)
 	}
 
-	if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
-		return nil, fmt.Errorf("failed to reconcile vault interest before withdrawal: %w", err)
+	if err := k.reconcileVaultInterest(ctx, vault); err != nil {
+		return nil, fmt.Errorf("failed to reconcile vault interest after deposit: %w", err)
 	}
 
-	k.emitEvent(ctx, types.NewEventInterestDeposit(msg.VaultAddress, msg.Admin, msg.Amount))
+	k.emitEvent(ctx, types.NewEventInterestDeposit(msg.VaultAddress, msg.Authority, msg.Amount))
 
 	return &types.MsgDepositInterestFundsResponse{}, nil
 }
@@ -303,7 +303,7 @@ func (k msgServer) DepositInterestFunds(goCtx context.Context, msg *types.MsgDep
 func (k msgServer) WithdrawInterestFunds(goCtx context.Context, msg *types.MsgWithdrawInterestFundsRequest) (*types.MsgWithdrawInterestFundsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	adminAddr := sdk.MustAccAddressFromBech32(msg.Admin)
+	authorityAddr := sdk.MustAccAddressFromBech32(msg.Authority)
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
 
 	vault, err := k.GetVault(ctx, vaultAddr)
@@ -314,22 +314,23 @@ func (k msgServer) WithdrawInterestFunds(goCtx context.Context, msg *types.MsgWi
 		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
 	}
 
-	if err := vault.ValidateAdmin(msg.Admin); err != nil {
+	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, err
 	}
 	if vault.UnderlyingAsset != msg.Amount.Denom {
 		return nil, fmt.Errorf("denom not supported for vault must be of type \"%s\" : got \"%s\"", vault.UnderlyingAsset, msg.Amount.Denom)
 	}
 
-	if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
+	if err := k.reconcileVaultInterest(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to reconcile vault interest before withdrawal: %w", err)
 	}
 
-	if err := k.BankKeeper.SendCoins(ctx, vaultAddr, adminAddr, sdk.NewCoins(msg.Amount)); err != nil {
-		return nil, fmt.Errorf("failed to withdraw funds: %w", err)
+	// for receipt tokens, the transfer agent for the authority address is used
+	if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, authorityAddr), vaultAddr, authorityAddr, sdk.NewCoins(msg.Amount)); err != nil {
+		return nil, fmt.Errorf("failed to withdraw interest funds: %w", err)
 	}
 
-	k.emitEvent(ctx, types.NewEventInterestWithdrawal(msg.VaultAddress, msg.Admin, msg.Amount))
+	k.emitEvent(ctx, types.NewEventInterestWithdrawal(msg.VaultAddress, msg.Authority, msg.Amount))
 
 	return &types.MsgWithdrawInterestFundsResponse{}, nil
 }
@@ -346,7 +347,7 @@ func (k msgServer) DepositPrincipalFunds(goCtx context.Context, msg *types.MsgDe
 	if vault == nil {
 		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
 	}
-	if err := vault.ValidateAdmin(msg.Admin); err != nil {
+	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, err
 	}
 
@@ -354,11 +355,11 @@ func (k msgServer) DepositPrincipalFunds(goCtx context.Context, msg *types.MsgDe
 		return nil, fmt.Errorf("vault must be paused to deposit principal funds")
 	}
 
-	if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
+	if err := k.reconcileVaultInterest(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to reconcile vault interest before principal change: %w", err)
 	}
 
-	depositFromAddress := sdk.MustAccAddressFromBech32(msg.Admin)
+	depositFromAddress := sdk.MustAccAddressFromBech32(msg.Authority)
 	principalAddress := vault.PrincipalMarkerAddress()
 
 	if err := vault.ValidateAcceptedCoin(msg.Amount); err != nil {
@@ -373,7 +374,7 @@ func (k msgServer) DepositPrincipalFunds(goCtx context.Context, msg *types.MsgDe
 		return nil, fmt.Errorf("failed to deposit principal funds: %w", err)
 	}
 
-	k.emitEvent(ctx, types.NewEventDepositPrincipalFunds(msg.VaultAddress, msg.Admin, msg.Amount))
+	k.emitEvent(ctx, types.NewEventDepositPrincipalFunds(msg.VaultAddress, msg.Authority, msg.Amount))
 	return &types.MsgDepositPrincipalFundsResponse{}, nil
 }
 
@@ -389,7 +390,7 @@ func (k msgServer) WithdrawPrincipalFunds(goCtx context.Context, msg *types.MsgW
 	if vault == nil {
 		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
 	}
-	if err := vault.ValidateAdmin(msg.Admin); err != nil {
+	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, err
 	}
 
@@ -397,26 +398,29 @@ func (k msgServer) WithdrawPrincipalFunds(goCtx context.Context, msg *types.MsgW
 		return nil, fmt.Errorf("vault must be paused to withdraw principal funds")
 	}
 
-	if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
+	if err := k.reconcileVaultInterest(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to reconcile vault interest before principal change: %w", err)
 	}
 
-	withdrawAddress := sdk.MustAccAddressFromBech32(msg.Admin)
+	authorityAddress := sdk.MustAccAddressFromBech32(msg.Authority)
 	principalAddress := vault.PrincipalMarkerAddress()
 
 	if err := vault.ValidateAcceptedCoin(msg.Amount); err != nil {
 		return nil, err
 	}
 
-	if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, vaultAddr),
+	// for receipt tokens, the transfer agent for the authority address is used
+	// transfer agent of vault address is required for all token types since principal is marker account
+	if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, authorityAddress, vaultAddr),
 		principalAddress,
-		withdrawAddress,
+		authorityAddress,
 		sdk.NewCoins(msg.Amount),
 	); err != nil {
 		return nil, fmt.Errorf("failed to withdraw principal funds: %w", err)
 	}
 
-	k.emitEvent(ctx, types.NewEventWithdrawPrincipalFunds(msg.VaultAddress, msg.Admin, msg.Amount))
+	k.emitEvent(ctx, types.NewEventWithdrawPrincipalFunds(msg.VaultAddress, msg.Authority, msg.Amount))
+
 	return &types.MsgWithdrawPrincipalFundsResponse{}, nil
 }
 
@@ -437,7 +441,7 @@ func (k msgServer) ExpeditePendingSwapOut(goCtx context.Context, msg *types.MsgE
 	if vault == nil {
 		return nil, fmt.Errorf("vault not found: %s", vaultAddr)
 	}
-	if err := vault.ValidateAdmin(msg.Admin); err != nil {
+	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, err
 	}
 
@@ -445,7 +449,7 @@ func (k msgServer) ExpeditePendingSwapOut(goCtx context.Context, msg *types.MsgE
 		return nil, fmt.Errorf("failed to expedite swap out: %w", err)
 	}
 
-	k.emitEvent(ctx, types.NewEventPendingSwapOutExpedited(msg.RequestId, swapOut.VaultAddress, msg.Admin))
+	k.emitEvent(ctx, types.NewEventPendingSwapOutExpedited(msg.RequestId, swapOut.VaultAddress, msg.Authority))
 
 	return &types.MsgExpeditePendingSwapOutResponse{}, nil
 }
@@ -462,14 +466,14 @@ func (k msgServer) PauseVault(goCtx context.Context, msg *types.MsgPauseVaultReq
 	if vault == nil {
 		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
 	}
-	if err := vault.ValidateAdmin(msg.Admin); err != nil {
+	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, err
 	}
 
 	if vault.Paused {
 		return nil, fmt.Errorf("vault %s is already paused", msg.VaultAddress)
 	}
-	if err := k.ReconcileVaultInterest(ctx, vault); err != nil {
+	if err := k.reconcileVaultInterest(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to reconcile interest before pausing: %w", err)
 	}
 
@@ -485,7 +489,7 @@ func (k msgServer) PauseVault(goCtx context.Context, msg *types.MsgPauseVaultReq
 		return nil, fmt.Errorf("failed to set vault account: %w", err)
 	}
 
-	k.emitEvent(ctx, types.NewEventVaultPaused(msg.VaultAddress, msg.Admin, msg.Reason, vault.PausedBalance))
+	k.emitEvent(ctx, types.NewEventVaultPaused(msg.VaultAddress, msg.Authority, msg.Reason, vault.PausedBalance))
 
 	return &types.MsgPauseVaultResponse{}, nil
 }
@@ -502,7 +506,7 @@ func (k msgServer) UnpauseVault(goCtx context.Context, msg *types.MsgUnpauseVaul
 	if vault == nil {
 		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
 	}
-	if err := vault.ValidateAdmin(msg.Admin); err != nil {
+	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, err
 	}
 
@@ -522,7 +526,7 @@ func (k msgServer) UnpauseVault(goCtx context.Context, msg *types.MsgUnpauseVaul
 		return nil, fmt.Errorf("failed to get TVV before pausing: %w", err)
 	}
 
-	k.emitEvent(ctx, types.NewEventVaultUnpaused(msg.VaultAddress, msg.Admin, sdk.NewCoin(vault.UnderlyingAsset, tvv)))
+	k.emitEvent(ctx, types.NewEventVaultUnpaused(msg.VaultAddress, msg.Authority, sdk.NewCoin(vault.UnderlyingAsset, tvv)))
 
 	return &types.MsgUnpauseVaultResponse{}, nil
 }
@@ -548,11 +552,7 @@ func (k msgServer) SetBridgeAddress(goCtx context.Context, msg *types.MsgSetBrid
 		return nil, fmt.Errorf("failed to set vault account: %w", err)
 	}
 
-	if err := ctx.EventManager().EmitTypedEvent(
-		types.NewEventBridgeAddressSet(vaultAddr.String(), msg.Admin, msg.BridgeAddress),
-	); err != nil {
-		return nil, fmt.Errorf("failed to emit EventBridgeAddressSet: %w", err)
-	}
+	k.emitEvent(ctx, types.NewEventBridgeAddressSet(vaultAddr.String(), msg.Admin, msg.BridgeAddress))
 
 	return &types.MsgSetBridgeAddressResponse{}, nil
 }
@@ -578,11 +578,7 @@ func (k msgServer) ToggleBridge(goCtx context.Context, msg *types.MsgToggleBridg
 		return nil, fmt.Errorf("failed to set vault account: %w", err)
 	}
 
-	if err := ctx.EventManager().EmitTypedEvent(
-		types.NewEventBridgeToggled(vaultAddr.String(), msg.Admin, msg.Enabled),
-	); err != nil {
-		return nil, fmt.Errorf("failed to emit EventBridgeToggled: %w", err)
-	}
+	k.emitEvent(ctx, types.NewEventBridgeToggled(msg.VaultAddress, msg.Admin, msg.Enabled))
 
 	return &types.MsgToggleBridgeResponse{}, nil
 }
@@ -629,11 +625,7 @@ func (k msgServer) BridgeMintShares(goCtx context.Context, msg *types.MsgBridgeM
 		return nil, fmt.Errorf("failed to transfer minted shares to bridge: %w", err)
 	}
 
-	if err := ctx.EventManager().EmitTypedEvent(
-		types.NewEventBridgeMintShares(vaultAddr.String(), bridgeAddr.String(), msg.Shares),
-	); err != nil {
-		return nil, fmt.Errorf("failed to emit EventBridgeMintShares: %w", err)
-	}
+	k.emitEvent(ctx, types.NewEventBridgeMintShares(vaultAddr.String(), bridgeAddr.String(), msg.Shares))
 
 	return &types.MsgBridgeMintSharesResponse{}, nil
 }
@@ -674,11 +666,36 @@ func (k msgServer) BridgeBurnShares(goCtx context.Context, msg *types.MsgBridgeB
 		return nil, fmt.Errorf("failed to burn shares from marker: %w", err)
 	}
 
-	if err := ctx.EventManager().EmitTypedEvent(
-		types.NewEventBridgeBurnShares(vaultAddr.String(), bridgeAddr.String(), msg.Shares),
-	); err != nil {
-		return nil, fmt.Errorf("failed to emit EventBridgeBurnShares: %w", err)
-	}
+	k.emitEvent(ctx, types.NewEventBridgeBurnShares(vaultAddr.String(), bridgeAddr.String(), msg.Shares))
 
 	return &types.MsgBridgeBurnSharesResponse{}, nil
+}
+
+// SetAssetManager sets or clears the optional asset manager address for a vault.
+// Only the vault admin may call this. Passing an empty AssetManager clears it.
+func (k msgServer) SetAssetManager(goCtx context.Context, msg *types.MsgSetAssetManagerRequest) (*types.MsgSetAssetManagerResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault: %w", err)
+	}
+	if vault == nil {
+		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+	}
+
+	if err := vault.ValidateAdmin(msg.Admin); err != nil {
+		return nil, err
+	}
+
+	vault.AssetManager = msg.AssetManager
+
+	if err := k.SetVaultAccount(ctx, vault); err != nil {
+		return nil, fmt.Errorf("failed to set vault account: %w", err)
+	}
+
+	k.emitEvent(ctx, types.NewEventAssetManagerSet(vaultAddr.String(), msg.Admin, msg.AssetManager))
+
+	return &types.MsgSetAssetManagerResponse{}, nil
 }

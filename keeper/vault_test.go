@@ -205,7 +205,7 @@ func (s *TestSuite) TestSwapOut_MultiAsset() {
 	s.Require().NoError(err, "should successfully queue swap out for the default underlying asset")
 	s.Require().Equal(uint64(1), reqID2, "second request id should be 1")
 
-	err = s.k.ProcessPendingSwapOuts(s.ctx, keeper.MaxSwapOutBatchSize)
+	err = s.k.TestAccessor_processPendingSwapOuts(s.T(), s.ctx, keeper.MaxSwapOutBatchSize)
 	s.Require().NoError(err, "processing pending withdrawals should not fail")
 
 	// --- Assert Final Balances ---
@@ -407,7 +407,7 @@ func (s *TestSuite) TestSwapOut_SucceedsWithRestrictedUnderlyingAssetRequiredAtt
 
 	s.assertBalance(redeemerAddr, shareDenom, sharesForRedeemer.Sub(sharesToRedeem.Amount))
 	s.assertBalance(vault.GetAddress(), shareDenom, sharesToRedeem.Amount)
-	err = s.k.ProcessPendingSwapOuts(s.ctx, keeper.MaxSwapOutBatchSize)
+	err = s.k.TestAccessor_processPendingSwapOuts(s.T(), s.ctx, keeper.MaxSwapOutBatchSize)
 	s.Require().NoError(err, "processing pending withdrawals should not fail")
 
 	s.assertBalance(redeemerAddr, restrictedUnderlyingDenom, math.NewInt(50))
@@ -587,7 +587,7 @@ func (s *TestSuite) TestUpdateInterestRate_BoundsEnforced() {
 
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	_, err = srv.UpdateInterestRate(s.ctx, &types.MsgUpdateInterestRateRequest{
-		Admin:        s.adminAddr.String(),
+		Authority:    s.adminAddr.String(),
 		VaultAddress: addr.String(),
 		NewRate:      "0.25",
 	})
@@ -599,7 +599,7 @@ func (s *TestSuite) TestUpdateInterestRate_BoundsEnforced() {
 
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	_, err = srv.UpdateInterestRate(s.ctx, &types.MsgUpdateInterestRateRequest{
-		Admin:        s.adminAddr.String(),
+		Authority:    s.adminAddr.String(),
 		VaultAddress: addr.String(),
 		NewRate:      "0.05",
 	})
@@ -607,7 +607,7 @@ func (s *TestSuite) TestUpdateInterestRate_BoundsEnforced() {
 
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	_, err = srv.UpdateInterestRate(s.ctx, &types.MsgUpdateInterestRateRequest{
-		Admin:        s.adminAddr.String(),
+		Authority:    s.adminAddr.String(),
 		VaultAddress: addr.String(),
 		NewRate:      "0.60",
 	})

@@ -39,6 +39,7 @@ const (
 	Msg_ToggleBridge_FullMethodName           = "/provlabs.vault.v1.Msg/ToggleBridge"
 	Msg_BridgeMintShares_FullMethodName       = "/provlabs.vault.v1.Msg/BridgeMintShares"
 	Msg_BridgeBurnShares_FullMethodName       = "/provlabs.vault.v1.Msg/BridgeBurnShares"
+	Msg_SetAssetManager_FullMethodName        = "/provlabs.vault.v1.Msg/SetAssetManager"
 )
 
 // MsgClient is the client API for Msg service.
@@ -67,18 +68,24 @@ type MsgClient interface {
 	// ToggleSwapOut allows enabling or disabling swap-out operations for a vault.
 	ToggleSwapOut(ctx context.Context, in *MsgToggleSwapOutRequest, opts ...grpc.CallOption) (*MsgToggleSwapOutResponse, error)
 	// DepositInterestFunds allows depositing funds into the vault for paying interest.
+	// May be signed by the vault admin or the configured asset manager.
 	DepositInterestFunds(ctx context.Context, in *MsgDepositInterestFundsRequest, opts ...grpc.CallOption) (*MsgDepositInterestFundsResponse, error)
-	// WithdrawInterestFunds allows withdrawing unused interest funds (admin only).
+	// WithdrawInterestFunds allows withdrawing unused interest funds.
+	// May be signed by the vault admin or the configured asset manager.
 	WithdrawInterestFunds(ctx context.Context, in *MsgWithdrawInterestFundsRequest, opts ...grpc.CallOption) (*MsgWithdrawInterestFundsResponse, error)
 	// DepositPrincipalFunds allows depositing principal funds into a vault.
+	// May be signed by the vault admin or the configured asset manager.
 	DepositPrincipalFunds(ctx context.Context, in *MsgDepositPrincipalFundsRequest, opts ...grpc.CallOption) (*MsgDepositPrincipalFundsResponse, error)
 	// WithdrawPrincipalFunds allows withdrawing principal funds from a vault.
+	// May be signed by the vault admin or the configured asset manager.
 	WithdrawPrincipalFunds(ctx context.Context, in *MsgWithdrawPrincipalFundsRequest, opts ...grpc.CallOption) (*MsgWithdrawPrincipalFundsResponse, error)
 	// ExpeditePendingSwapOut expedites a pending swap out from a vault.
 	ExpeditePendingSwapOut(ctx context.Context, in *MsgExpeditePendingSwapOutRequest, opts ...grpc.CallOption) (*MsgExpeditePendingSwapOutResponse, error)
-	// PauseVault pauses user-facing swap operations for a vault and records a reason (admin only).
+	// PauseVault pauses user-facing swap operations for a vault and records a reason.
+	// May be signed by the vault admin or the configured asset manager.
 	PauseVault(ctx context.Context, in *MsgPauseVaultRequest, opts ...grpc.CallOption) (*MsgPauseVaultResponse, error)
-	// UnpauseVault re-enables user-facing swap operations for a vault (admin only).
+	// UnpauseVault re-enables user-facing swap operations for a vault.
+	// May be signed by the vault admin or the configured asset manager.
 	UnpauseVault(ctx context.Context, in *MsgUnpauseVaultRequest, opts ...grpc.CallOption) (*MsgUnpauseVaultResponse, error)
 	// SetBridgeAddress sets the single external bridge address allowed to mint or burn shares for a vault.
 	SetBridgeAddress(ctx context.Context, in *MsgSetBridgeAddressRequest, opts ...grpc.CallOption) (*MsgSetBridgeAddressResponse, error)
@@ -88,6 +95,9 @@ type MsgClient interface {
 	BridgeMintShares(ctx context.Context, in *MsgBridgeMintSharesRequest, opts ...grpc.CallOption) (*MsgBridgeMintSharesResponse, error)
 	// BridgeBurnShares burns local share marker supply for a vault; must be signed by the configured bridge address.
 	BridgeBurnShares(ctx context.Context, in *MsgBridgeBurnSharesRequest, opts ...grpc.CallOption) (*MsgBridgeBurnSharesResponse, error)
+	// SetAssetManager sets or clears the optional asset manager address for a vault.
+	// The vault admin must sign this transaction. Passing an empty address clears it.
+	SetAssetManager(ctx context.Context, in *MsgSetAssetManagerRequest, opts ...grpc.CallOption) (*MsgSetAssetManagerResponse, error)
 }
 
 type msgClient struct {
@@ -298,6 +308,16 @@ func (c *msgClient) BridgeBurnShares(ctx context.Context, in *MsgBridgeBurnShare
 	return out, nil
 }
 
+func (c *msgClient) SetAssetManager(ctx context.Context, in *MsgSetAssetManagerRequest, opts ...grpc.CallOption) (*MsgSetAssetManagerResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgSetAssetManagerResponse)
+	err := c.cc.Invoke(ctx, Msg_SetAssetManager_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility.
@@ -324,18 +344,24 @@ type MsgServer interface {
 	// ToggleSwapOut allows enabling or disabling swap-out operations for a vault.
 	ToggleSwapOut(context.Context, *MsgToggleSwapOutRequest) (*MsgToggleSwapOutResponse, error)
 	// DepositInterestFunds allows depositing funds into the vault for paying interest.
+	// May be signed by the vault admin or the configured asset manager.
 	DepositInterestFunds(context.Context, *MsgDepositInterestFundsRequest) (*MsgDepositInterestFundsResponse, error)
-	// WithdrawInterestFunds allows withdrawing unused interest funds (admin only).
+	// WithdrawInterestFunds allows withdrawing unused interest funds.
+	// May be signed by the vault admin or the configured asset manager.
 	WithdrawInterestFunds(context.Context, *MsgWithdrawInterestFundsRequest) (*MsgWithdrawInterestFundsResponse, error)
 	// DepositPrincipalFunds allows depositing principal funds into a vault.
+	// May be signed by the vault admin or the configured asset manager.
 	DepositPrincipalFunds(context.Context, *MsgDepositPrincipalFundsRequest) (*MsgDepositPrincipalFundsResponse, error)
 	// WithdrawPrincipalFunds allows withdrawing principal funds from a vault.
+	// May be signed by the vault admin or the configured asset manager.
 	WithdrawPrincipalFunds(context.Context, *MsgWithdrawPrincipalFundsRequest) (*MsgWithdrawPrincipalFundsResponse, error)
 	// ExpeditePendingSwapOut expedites a pending swap out from a vault.
 	ExpeditePendingSwapOut(context.Context, *MsgExpeditePendingSwapOutRequest) (*MsgExpeditePendingSwapOutResponse, error)
-	// PauseVault pauses user-facing swap operations for a vault and records a reason (admin only).
+	// PauseVault pauses user-facing swap operations for a vault and records a reason.
+	// May be signed by the vault admin or the configured asset manager.
 	PauseVault(context.Context, *MsgPauseVaultRequest) (*MsgPauseVaultResponse, error)
-	// UnpauseVault re-enables user-facing swap operations for a vault (admin only).
+	// UnpauseVault re-enables user-facing swap operations for a vault.
+	// May be signed by the vault admin or the configured asset manager.
 	UnpauseVault(context.Context, *MsgUnpauseVaultRequest) (*MsgUnpauseVaultResponse, error)
 	// SetBridgeAddress sets the single external bridge address allowed to mint or burn shares for a vault.
 	SetBridgeAddress(context.Context, *MsgSetBridgeAddressRequest) (*MsgSetBridgeAddressResponse, error)
@@ -345,6 +371,9 @@ type MsgServer interface {
 	BridgeMintShares(context.Context, *MsgBridgeMintSharesRequest) (*MsgBridgeMintSharesResponse, error)
 	// BridgeBurnShares burns local share marker supply for a vault; must be signed by the configured bridge address.
 	BridgeBurnShares(context.Context, *MsgBridgeBurnSharesRequest) (*MsgBridgeBurnSharesResponse, error)
+	// SetAssetManager sets or clears the optional asset manager address for a vault.
+	// The vault admin must sign this transaction. Passing an empty address clears it.
+	SetAssetManager(context.Context, *MsgSetAssetManagerRequest) (*MsgSetAssetManagerResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -414,6 +443,9 @@ func (UnimplementedMsgServer) BridgeMintShares(context.Context, *MsgBridgeMintSh
 }
 func (UnimplementedMsgServer) BridgeBurnShares(context.Context, *MsgBridgeBurnSharesRequest) (*MsgBridgeBurnSharesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BridgeBurnShares not implemented")
+}
+func (UnimplementedMsgServer) SetAssetManager(context.Context, *MsgSetAssetManagerRequest) (*MsgSetAssetManagerResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetAssetManager not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 func (UnimplementedMsgServer) testEmbeddedByValue()             {}
@@ -796,6 +828,24 @@ func _Msg_BridgeBurnShares_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_SetAssetManager_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSetAssetManagerRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SetAssetManager(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_SetAssetManager_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SetAssetManager(ctx, req.(*MsgSetAssetManagerRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -882,6 +932,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "BridgeBurnShares",
 			Handler:    _Msg_BridgeBurnShares_Handler,
+		},
+		{
+			MethodName: "SetAssetManager",
+			Handler:    _Msg_SetAssetManager_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -19,11 +19,12 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Query_Vaults_FullMethodName          = "/provlabs.vault.v1.Query/Vaults"
-	Query_Vault_FullMethodName           = "/provlabs.vault.v1.Query/Vault"
-	Query_EstimateSwapIn_FullMethodName  = "/provlabs.vault.v1.Query/EstimateSwapIn"
-	Query_EstimateSwapOut_FullMethodName = "/provlabs.vault.v1.Query/EstimateSwapOut"
-	Query_PendingSwapOuts_FullMethodName = "/provlabs.vault.v1.Query/PendingSwapOuts"
+	Query_Vaults_FullMethodName               = "/provlabs.vault.v1.Query/Vaults"
+	Query_Vault_FullMethodName                = "/provlabs.vault.v1.Query/Vault"
+	Query_EstimateSwapIn_FullMethodName       = "/provlabs.vault.v1.Query/EstimateSwapIn"
+	Query_EstimateSwapOut_FullMethodName      = "/provlabs.vault.v1.Query/EstimateSwapOut"
+	Query_PendingSwapOuts_FullMethodName      = "/provlabs.vault.v1.Query/PendingSwapOuts"
+	Query_VaultPendingSwapOuts_FullMethodName = "/provlabs.vault.v1.Query/VaultPendingSwapOuts"
 )
 
 // QueryClient is the client API for Query service.
@@ -42,6 +43,8 @@ type QueryClient interface {
 	EstimateSwapOut(ctx context.Context, in *QueryEstimateSwapOutRequest, opts ...grpc.CallOption) (*QueryEstimateSwapOutResponse, error)
 	// PendingSwapOuts returns a paginated list of all pending swap outs.
 	PendingSwapOuts(ctx context.Context, in *QueryPendingSwapOutsRequest, opts ...grpc.CallOption) (*QueryPendingSwapOutsResponse, error)
+	// VaultPendingSwapOuts returns a paginated list of all pending swap outs for a specific vault.
+	VaultPendingSwapOuts(ctx context.Context, in *QueryVaultPendingSwapOutsRequest, opts ...grpc.CallOption) (*QueryVaultPendingSwapOutsResponse, error)
 }
 
 type queryClient struct {
@@ -102,6 +105,16 @@ func (c *queryClient) PendingSwapOuts(ctx context.Context, in *QueryPendingSwapO
 	return out, nil
 }
 
+func (c *queryClient) VaultPendingSwapOuts(ctx context.Context, in *QueryVaultPendingSwapOutsRequest, opts ...grpc.CallOption) (*QueryVaultPendingSwapOutsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(QueryVaultPendingSwapOutsResponse)
+	err := c.cc.Invoke(ctx, Query_VaultPendingSwapOuts_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility.
@@ -118,6 +131,8 @@ type QueryServer interface {
 	EstimateSwapOut(context.Context, *QueryEstimateSwapOutRequest) (*QueryEstimateSwapOutResponse, error)
 	// PendingSwapOuts returns a paginated list of all pending swap outs.
 	PendingSwapOuts(context.Context, *QueryPendingSwapOutsRequest) (*QueryPendingSwapOutsResponse, error)
+	// VaultPendingSwapOuts returns a paginated list of all pending swap outs for a specific vault.
+	VaultPendingSwapOuts(context.Context, *QueryVaultPendingSwapOutsRequest) (*QueryVaultPendingSwapOutsResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -142,6 +157,9 @@ func (UnimplementedQueryServer) EstimateSwapOut(context.Context, *QueryEstimateS
 }
 func (UnimplementedQueryServer) PendingSwapOuts(context.Context, *QueryPendingSwapOutsRequest) (*QueryPendingSwapOutsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PendingSwapOuts not implemented")
+}
+func (UnimplementedQueryServer) VaultPendingSwapOuts(context.Context, *QueryVaultPendingSwapOutsRequest) (*QueryVaultPendingSwapOutsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VaultPendingSwapOuts not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 func (UnimplementedQueryServer) testEmbeddedByValue()               {}
@@ -254,6 +272,24 @@ func _Query_PendingSwapOuts_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_VaultPendingSwapOuts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryVaultPendingSwapOutsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).VaultPendingSwapOuts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_VaultPendingSwapOuts_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).VaultPendingSwapOuts(ctx, req.(*QueryVaultPendingSwapOutsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -280,6 +316,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "PendingSwapOuts",
 			Handler:    _Query_PendingSwapOuts_Handler,
+		},
+		{
+			MethodName: "VaultPendingSwapOuts",
+			Handler:    _Query_VaultPendingSwapOuts_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -292,9 +292,15 @@ func SimulateMsgUpdateInterestRate(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateInterestRateRequest{}), "unable to get random interest rate"), nil, err
 		}
 
+		authority := adminAddr
+		if vault.AssetManager != "" && r.Intn(2) == 1 {
+			if am, err := sdk.AccAddressFromBech32(vault.AssetManager); err == nil {
+				authority = am
+			}
+		}
 		msg := &types.MsgUpdateInterestRateRequest{
 			VaultAddress: vault.GetAddress().String(),
-			Admin:        adminAddr.String(),
+			Authority:    authority.String(),
 			NewRate:      rate,
 		}
 
@@ -497,7 +503,7 @@ func SimulateMsgDepositInterestFunds(k keeper.Keeper) simtypes.Operation {
 
 		msg := &types.MsgDepositInterestFundsRequest{
 			VaultAddress: vault.GetAddress().String(),
-			Admin:        adminAddr.String(),
+			Authority:    adminAddr.String(),
 			Amount:       amount,
 		}
 
@@ -538,7 +544,7 @@ func SimulateMsgWithdrawInterestFunds(k keeper.Keeper) simtypes.Operation {
 
 		msg := &types.MsgWithdrawInterestFundsRequest{
 			VaultAddress: vault.GetAddress().String(),
-			Admin:        adminAddr.String(),
+			Authority:    adminAddr.String(),
 			Amount:       amount,
 		}
 
@@ -592,7 +598,7 @@ func SimulateMsgDepositPrincipalFunds(k keeper.Keeper) simtypes.Operation {
 
 		msg := &types.MsgDepositPrincipalFundsRequest{
 			VaultAddress: vault.GetAddress().String(),
-			Admin:        adminAddr.String(),
+			Authority:    adminAddr.String(),
 			Amount:       amount,
 		}
 
@@ -635,7 +641,7 @@ func SimulateMsgWithdrawPrincipalFunds(k keeper.Keeper) simtypes.Operation {
 
 		msg := &types.MsgWithdrawPrincipalFundsRequest{
 			VaultAddress: vault.GetAddress().String(),
-			Admin:        adminAddr.String(),
+			Authority:    adminAddr.String(),
 			Amount:       amount,
 		}
 
@@ -674,7 +680,7 @@ func SimulateMsgExpeditePendingSwapOut(k keeper.Keeper) simtypes.Operation {
 		}
 
 		msg := &types.MsgExpeditePendingSwapOutRequest{
-			Admin:     adminAddr.String(),
+			Authority: adminAddr.String(),
 			RequestId: swapID,
 		}
 
@@ -709,7 +715,7 @@ func SimulateMsgPauseVault(k keeper.Keeper) simtypes.Operation {
 
 		msg := &types.MsgPauseVaultRequest{
 			VaultAddress: vault.GetAddress().String(),
-			Admin:        adminAddr.String(),
+			Authority:    adminAddr.String(),
 		}
 
 		handler := keeper.NewMsgServer(&k)
@@ -743,7 +749,7 @@ func SimulateMsgUnpauseVault(k keeper.Keeper) simtypes.Operation {
 
 		msg := &types.MsgUnpauseVaultRequest{
 			VaultAddress: vault.GetAddress().String(),
-			Admin:        adminAddr.String(),
+			Authority:    adminAddr.String(),
 		}
 
 		handler := keeper.NewMsgServer(&k)

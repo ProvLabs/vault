@@ -75,7 +75,7 @@ func PauseVault(ctx sdk.Context, vk *keeper.Keeper, shareDenom string) error {
 		return err
 	}
 	msgServer := keeper.NewMsgServer(vk)
-	_, err = msgServer.PauseVault(ctx, &types.MsgPauseVaultRequest{Admin: vault.Admin, VaultAddress: vault.Address, Reason: "test"})
+	_, err = msgServer.PauseVault(ctx, &types.MsgPauseVaultRequest{Authority: vault.Admin, VaultAddress: vault.Address, Reason: "test"})
 	return err
 }
 
@@ -90,7 +90,7 @@ func DepositInterestFunds(ctx sdk.Context, vk *keeper.Keeper, shareDenom string,
 		return nil, err
 	}
 	deposit := &types.MsgDepositInterestFundsRequest{
-		Admin:        vault.Admin,
+		Authority:    vault.Admin,
 		VaultAddress: vault.Address,
 		Amount:       amount,
 	}
@@ -109,7 +109,7 @@ func DepositPrincipalFunds(ctx sdk.Context, vk *keeper.Keeper, shareDenom string
 		return nil, err
 	}
 	deposit := &types.MsgDepositPrincipalFundsRequest{
-		Admin:        vault.Admin,
+		Authority:    vault.Admin,
 		VaultAddress: vaultAddress.String(),
 		Amount:       amount,
 	}

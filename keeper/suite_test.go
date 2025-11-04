@@ -150,6 +150,41 @@ func (s *TestSuite) requireAddFinalizeAndActivateMarker(coin sdk.Coin, manager s
 	s.Require().NoError(err, "AddFinalizeAndActivateMarker(%s)", coin.Denom)
 }
 
+// requireAddFinalizeAndActivateReceiptMarker creates and activates a restricted marker
+// for the given coin and grants the grantee full permissions (mint, burn, transfer,
+// withdraw, deposit). This is used to replicate a receipt token. It fails the test if any step errors.
+func (s *TestSuite) requireAddFinalizeAndActivateReceiptMarker(coin sdk.Coin, grantee sdk.AccAddress) {
+	markerAddr, err := markertypes.MarkerAddress(coin.Denom)
+	s.Require().NoError(err, "MarkerAddress(%q)", coin.Denom)
+
+	marker := &markertypes.MarkerAccount{
+		BaseAccount: &authtypes.BaseAccount{Address: markerAddr.String()},
+		Manager:     grantee.String(),
+		AccessControl: []markertypes.AccessGrant{
+			{
+				Address: grantee.String(),
+				Permissions: markertypes.AccessList{
+					markertypes.Access_Mint,
+					markertypes.Access_Burn,
+					markertypes.Access_Transfer,
+					markertypes.Access_Withdraw,
+					markertypes.Access_Deposit,
+				},
+			},
+		},
+		Status:                 markertypes.StatusProposed,
+		Denom:                  coin.Denom,
+		Supply:                 coin.Amount,
+		MarkerType:             markertypes.MarkerType_RestrictedCoin,
+		SupplyFixed:            true,
+		AllowGovernanceControl: false,
+		RequiredAttributes:     nil,
+	}
+
+	err = s.simApp.MarkerKeeper.AddFinalizeAndActivateMarker(s.ctx, marker)
+	s.Require().NoError(err, "AddFinalizeAndActivateMarker(%s)", coin.Denom)
+}
+
 // CoinToJSON returns a stable JSON string representation of an sdk.Coin suitable
 // for inclusion in event attribute comparisons.
 func CoinToJSON(coin sdk.Coin) string {
@@ -475,4 +510,18 @@ func createReconcileEvents(vaultAddr, markerAddr sdk.AccAddress, interest, princ
 	)
 	allEvents = append(allEvents, reconcileEvent)
 	return allEvents
+}
+
+// expectedWithSimpleAPY calculates the total amount (principal + interest)
+// using a simple APY formula.
+func expectedWithSimpleAPY(baseAmt sdkmath.Int, rateStr string, seconds int64) (sdkmath.Int, error) {
+	rateDec, err := sdkmath.LegacyNewDecFromStr(rateStr)
+	if err != nil {
+		return sdkmath.Int{}, err
+	}
+	durationDec := sdkmath.LegacyNewDec(seconds)
+	secondsPerYearDec := sdkmath.LegacyNewDec(31536000)
+	timeFraction := durationDec.Quo(secondsPerYearDec)
+	interestDec := baseAmt.ToLegacyDec().Mul(rateDec).Mul(timeFraction)
+	return baseAmt.Add(interestDec.TruncateInt()), nil
 }

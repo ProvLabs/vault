@@ -379,7 +379,7 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 			s.ctx = s.ctx.WithBlockTime(testBlockTime)
 
-			err := s.k.ProcessPendingSwapOuts(s.ctx, tc.batchSize)
+			err := s.k.TestAccessor_processPendingSwapOuts(s.T(), s.ctx, tc.batchSize)
 
 			if tc.expectedError != "" {
 				s.Require().Error(err)

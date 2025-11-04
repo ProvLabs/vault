@@ -36,6 +36,116 @@ var _ = time.Kitchen
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// QueryVaultPendingSwapOutsRequest is the request message for the Query/VaultPendingSwapOuts endpoint.
+type QueryVaultPendingSwapOutsRequest struct {
+	// id is the bech32 address of the vault or the vault's share denom to query.
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	// pagination defines an optional pagination for the request.
+	Pagination *query.PageRequest `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryVaultPendingSwapOutsRequest) Reset()         { *m = QueryVaultPendingSwapOutsRequest{} }
+func (m *QueryVaultPendingSwapOutsRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryVaultPendingSwapOutsRequest) ProtoMessage()    {}
+func (*QueryVaultPendingSwapOutsRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a1276ddd190bfbca, []int{0}
+}
+func (m *QueryVaultPendingSwapOutsRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryVaultPendingSwapOutsRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryVaultPendingSwapOutsRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryVaultPendingSwapOutsRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryVaultPendingSwapOutsRequest.Merge(m, src)
+}
+func (m *QueryVaultPendingSwapOutsRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryVaultPendingSwapOutsRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryVaultPendingSwapOutsRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryVaultPendingSwapOutsRequest proto.InternalMessageInfo
+
+func (m *QueryVaultPendingSwapOutsRequest) GetId() string {
+	if m != nil {
+		return m.Id
+	}
+	return ""
+}
+
+func (m *QueryVaultPendingSwapOutsRequest) GetPagination() *query.PageRequest {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
+// QueryVaultPendingSwapOutsResponse is the response message for the Query/VaultPendingSwapOuts endpoint.
+type QueryVaultPendingSwapOutsResponse struct {
+	// pending_swap_outs is a list of all pending swap outs.
+	PendingSwapOuts []PendingSwapOutWithTimeout `protobuf:"bytes,1,rep,name=pending_swap_outs,json=pendingSwapOuts,proto3" json:"pending_swap_outs"`
+	// pagination defines the pagination in the response.
+	Pagination *query.PageResponse `protobuf:"bytes,2,opt,name=pagination,proto3" json:"pagination,omitempty"`
+}
+
+func (m *QueryVaultPendingSwapOutsResponse) Reset()         { *m = QueryVaultPendingSwapOutsResponse{} }
+func (m *QueryVaultPendingSwapOutsResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryVaultPendingSwapOutsResponse) ProtoMessage()    {}
+func (*QueryVaultPendingSwapOutsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_a1276ddd190bfbca, []int{1}
+}
+func (m *QueryVaultPendingSwapOutsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryVaultPendingSwapOutsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryVaultPendingSwapOutsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryVaultPendingSwapOutsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryVaultPendingSwapOutsResponse.Merge(m, src)
+}
+func (m *QueryVaultPendingSwapOutsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryVaultPendingSwapOutsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryVaultPendingSwapOutsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryVaultPendingSwapOutsResponse proto.InternalMessageInfo
+
+func (m *QueryVaultPendingSwapOutsResponse) GetPendingSwapOuts() []PendingSwapOutWithTimeout {
+	if m != nil {
+		return m.PendingSwapOuts
+	}
+	return nil
+}
+
+func (m *QueryVaultPendingSwapOutsResponse) GetPagination() *query.PageResponse {
+	if m != nil {
+		return m.Pagination
+	}
+	return nil
+}
+
 // QueryPendingSwapOutsRequest is the request message for the Query/PendingSwapOuts endpoint.
 type QueryPendingSwapOutsRequest struct {
 	// pagination defines an optional pagination for the request.
@@ -46,7 +156,7 @@ func (m *QueryPendingSwapOutsRequest) Reset()         { *m = QueryPendingSwapOut
 func (m *QueryPendingSwapOutsRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryPendingSwapOutsRequest) ProtoMessage()    {}
 func (*QueryPendingSwapOutsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a1276ddd190bfbca, []int{0}
+	return fileDescriptor_a1276ddd190bfbca, []int{2}
 }
 func (m *QueryPendingSwapOutsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -94,7 +204,7 @@ func (m *QueryPendingSwapOutsResponse) Reset()         { *m = QueryPendingSwapOu
 func (m *QueryPendingSwapOutsResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryPendingSwapOutsResponse) ProtoMessage()    {}
 func (*QueryPendingSwapOutsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a1276ddd190bfbca, []int{1}
+	return fileDescriptor_a1276ddd190bfbca, []int{3}
 }
 func (m *QueryPendingSwapOutsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -151,7 +261,7 @@ func (m *PendingSwapOutWithTimeout) Reset()         { *m = PendingSwapOutWithTim
 func (m *PendingSwapOutWithTimeout) String() string { return proto.CompactTextString(m) }
 func (*PendingSwapOutWithTimeout) ProtoMessage()    {}
 func (*PendingSwapOutWithTimeout) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a1276ddd190bfbca, []int{2}
+	return fileDescriptor_a1276ddd190bfbca, []int{4}
 }
 func (m *PendingSwapOutWithTimeout) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -211,7 +321,7 @@ func (m *QueryVaultsRequest) Reset()         { *m = QueryVaultsRequest{} }
 func (m *QueryVaultsRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryVaultsRequest) ProtoMessage()    {}
 func (*QueryVaultsRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a1276ddd190bfbca, []int{3}
+	return fileDescriptor_a1276ddd190bfbca, []int{5}
 }
 func (m *QueryVaultsRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -259,7 +369,7 @@ func (m *QueryVaultsResponse) Reset()         { *m = QueryVaultsResponse{} }
 func (m *QueryVaultsResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryVaultsResponse) ProtoMessage()    {}
 func (*QueryVaultsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a1276ddd190bfbca, []int{4}
+	return fileDescriptor_a1276ddd190bfbca, []int{6}
 }
 func (m *QueryVaultsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -312,7 +422,7 @@ func (m *QueryVaultRequest) Reset()         { *m = QueryVaultRequest{} }
 func (m *QueryVaultRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryVaultRequest) ProtoMessage()    {}
 func (*QueryVaultRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a1276ddd190bfbca, []int{5}
+	return fileDescriptor_a1276ddd190bfbca, []int{7}
 }
 func (m *QueryVaultRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -356,13 +466,18 @@ type QueryVaultResponse struct {
 	Principal AccountBalance `protobuf:"bytes,2,opt,name=principal,proto3" json:"principal"`
 	// reserves is the total amount of reserves held in the vault account for interest payments.
 	Reserves AccountBalance `protobuf:"bytes,3,opt,name=reserves,proto3" json:"reserves"`
+	// total_vault_value is the estimated total value of the vault in its
+	// underlying asset. It includes current principal and estimated unpaid
+	// interest (at query block height), but excludes reserves. The value is approximate and may differ
+	// from the reconciled amount.
+	TotalVaultValue types.Coin `protobuf:"bytes,4,opt,name=total_vault_value,json=totalVaultValue,proto3" json:"total_vault_value"`
 }
 
 func (m *QueryVaultResponse) Reset()         { *m = QueryVaultResponse{} }
 func (m *QueryVaultResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryVaultResponse) ProtoMessage()    {}
 func (*QueryVaultResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a1276ddd190bfbca, []int{6}
+	return fileDescriptor_a1276ddd190bfbca, []int{8}
 }
 func (m *QueryVaultResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -412,6 +527,13 @@ func (m *QueryVaultResponse) GetReserves() AccountBalance {
 	return AccountBalance{}
 }
 
+func (m *QueryVaultResponse) GetTotalVaultValue() types.Coin {
+	if m != nil {
+		return m.TotalVaultValue
+	}
+	return types.Coin{}
+}
+
 // QueryEstimateSwapInRequest is the request message for the Query/EstimateSwapIn endpoint.
 type QueryEstimateSwapInRequest struct {
 	// vault_address is the bech32 address of the vault to query.
@@ -424,7 +546,7 @@ func (m *QueryEstimateSwapInRequest) Reset()         { *m = QueryEstimateSwapInR
 func (m *QueryEstimateSwapInRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryEstimateSwapInRequest) ProtoMessage()    {}
 func (*QueryEstimateSwapInRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a1276ddd190bfbca, []int{7}
+	return fileDescriptor_a1276ddd190bfbca, []int{9}
 }
 func (m *QueryEstimateSwapInRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -481,7 +603,7 @@ func (m *QueryEstimateSwapInResponse) Reset()         { *m = QueryEstimateSwapIn
 func (m *QueryEstimateSwapInResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryEstimateSwapInResponse) ProtoMessage()    {}
 func (*QueryEstimateSwapInResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a1276ddd190bfbca, []int{8}
+	return fileDescriptor_a1276ddd190bfbca, []int{10}
 }
 func (m *QueryEstimateSwapInResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -545,7 +667,7 @@ func (m *QueryEstimateSwapOutRequest) Reset()         { *m = QueryEstimateSwapOu
 func (m *QueryEstimateSwapOutRequest) String() string { return proto.CompactTextString(m) }
 func (*QueryEstimateSwapOutRequest) ProtoMessage()    {}
 func (*QueryEstimateSwapOutRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a1276ddd190bfbca, []int{9}
+	return fileDescriptor_a1276ddd190bfbca, []int{11}
 }
 func (m *QueryEstimateSwapOutRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -602,7 +724,7 @@ func (m *QueryEstimateSwapOutResponse) Reset()         { *m = QueryEstimateSwapO
 func (m *QueryEstimateSwapOutResponse) String() string { return proto.CompactTextString(m) }
 func (*QueryEstimateSwapOutResponse) ProtoMessage()    {}
 func (*QueryEstimateSwapOutResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_a1276ddd190bfbca, []int{10}
+	return fileDescriptor_a1276ddd190bfbca, []int{12}
 }
 func (m *QueryEstimateSwapOutResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -653,6 +775,8 @@ func (m *QueryEstimateSwapOutResponse) GetTime() time.Time {
 }
 
 func init() {
+	proto.RegisterType((*QueryVaultPendingSwapOutsRequest)(nil), "provlabs.vault.v1.QueryVaultPendingSwapOutsRequest")
+	proto.RegisterType((*QueryVaultPendingSwapOutsResponse)(nil), "provlabs.vault.v1.QueryVaultPendingSwapOutsResponse")
 	proto.RegisterType((*QueryPendingSwapOutsRequest)(nil), "provlabs.vault.v1.QueryPendingSwapOutsRequest")
 	proto.RegisterType((*QueryPendingSwapOutsResponse)(nil), "provlabs.vault.v1.QueryPendingSwapOutsResponse")
 	proto.RegisterType((*PendingSwapOutWithTimeout)(nil), "provlabs.vault.v1.PendingSwapOutWithTimeout")
@@ -669,64 +793,69 @@ func init() {
 func init() { proto.RegisterFile("provlabs/vault/v1/query.proto", fileDescriptor_a1276ddd190bfbca) }
 
 var fileDescriptor_a1276ddd190bfbca = []byte{
-	// 904 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x56, 0xcd, 0x8e, 0x1b, 0x45,
-	0x10, 0xde, 0xde, 0x1f, 0x13, 0xd7, 0x86, 0xdd, 0x6c, 0x43, 0xc0, 0x71, 0x62, 0x3b, 0x99, 0x25,
-	0x21, 0x42, 0xd0, 0x23, 0x3b, 0x20, 0x08, 0x08, 0xa4, 0x38, 0x04, 0xb4, 0xa7, 0x24, 0x43, 0x04,
-	0x12, 0x42, 0x58, 0x6d, 0x4f, 0x33, 0x6e, 0xe1, 0x99, 0x9e, 0x9d, 0xee, 0x71, 0x14, 0x50, 0x2e,
-	0x3c, 0x41, 0x24, 0x0e, 0x5c, 0xe0, 0x0e, 0x1c, 0x78, 0x0d, 0x72, 0x41, 0x8a, 0xc4, 0x05, 0x21,
-	0x11, 0xd0, 0x2e, 0x12, 0xaf, 0x81, 0xa6, 0xbb, 0x27, 0xde, 0xf1, 0x4f, 0x6c, 0x4b, 0x39, 0xe4,
-	0x36, 0xd3, 0x55, 0xf5, 0xd5, 0xf7, 0x55, 0x55, 0xff, 0x40, 0x2d, 0x4e, 0xc4, 0x70, 0x40, 0xbb,
-	0xd2, 0x1d, 0xd2, 0x74, 0xa0, 0xdc, 0x61, 0xd3, 0xdd, 0x4f, 0x59, 0x72, 0x87, 0xc4, 0x89, 0x50,
-	0x02, 0xef, 0xe4, 0x66, 0xa2, 0xcd, 0x64, 0xd8, 0xac, 0xbe, 0xd2, 0x13, 0x32, 0x14, 0xd2, 0xed,
-	0x52, 0xc9, 0x8c, 0xaf, 0x3b, 0x6c, 0x76, 0x99, 0xa2, 0x4d, 0x37, 0xa6, 0x01, 0x8f, 0xa8, 0xe2,
-	0x22, 0x32, 0xe1, 0xd5, 0xfa, 0x51, 0xdf, 0xdc, 0xab, 0x27, 0x78, 0x6e, 0x7f, 0x3e, 0x10, 0x81,
-	0xd0, 0x9f, 0x6e, 0xf6, 0x65, 0x57, 0xcf, 0x04, 0x42, 0x04, 0x03, 0xe6, 0xd2, 0x98, 0xbb, 0x34,
-	0x8a, 0x84, 0xd2, 0x90, 0xd2, 0x5a, 0x1b, 0xd6, 0xaa, 0xff, 0xba, 0xe9, 0x17, 0xae, 0xe2, 0x21,
-	0x93, 0x8a, 0x86, 0xb1, 0x75, 0x98, 0x22, 0xc9, 0x90, 0xd7, 0x66, 0x87, 0xc1, 0xe9, 0x9b, 0x19,
-	0xeb, 0x1b, 0x2c, 0xf2, 0x79, 0x14, 0x7c, 0x74, 0x9b, 0xc6, 0xd7, 0x53, 0x25, 0x3d, 0xb6, 0x9f,
-	0x32, 0xa9, 0xf0, 0x07, 0x00, 0x23, 0x19, 0x15, 0x74, 0x16, 0x5d, 0xdc, 0x6c, 0x5d, 0x20, 0x46,
-	0x07, 0xc9, 0x74, 0x10, 0x53, 0x1f, 0xab, 0x86, 0xdc, 0xa0, 0x01, 0xb3, 0xb1, 0xde, 0x91, 0x48,
-	0xe7, 0x57, 0x04, 0x67, 0xa6, 0xe7, 0x91, 0xb1, 0x88, 0x24, 0xc3, 0x9f, 0xc3, 0x4e, 0x6c, 0x4c,
-	0x1d, 0x79, 0x9b, 0xc6, 0x1d, 0x91, 0x2a, 0x59, 0x41, 0x67, 0xd7, 0x2e, 0x6e, 0xb6, 0x5e, 0x25,
-	0x13, 0x65, 0x27, 0x45, 0x98, 0x4f, 0xb8, 0xea, 0xdf, 0xe2, 0x21, 0x13, 0xa9, 0x6a, 0xaf, 0xdf,
-	0x7f, 0xd8, 0x58, 0xf1, 0xb6, 0xe3, 0x62, 0x1e, 0xfc, 0x61, 0x41, 0xc8, 0xaa, 0x16, 0xf2, 0xf2,
-	0x5c, 0x21, 0x86, 0x5c, 0x41, 0xc9, 0x6f, 0x08, 0x4e, 0xcd, 0xcc, 0x8e, 0x6b, 0x00, 0x89, 0x91,
-	0xdf, 0xe1, 0xbe, 0xae, 0xd7, 0xba, 0x57, 0xb6, 0x2b, 0x7b, 0x3e, 0xbe, 0x09, 0x27, 0xc6, 0x55,
-	0x5a, 0x2e, 0xe7, 0xe6, 0x8a, 0xb4, 0xca, 0xb6, 0x8a, 0xca, 0xf0, 0x7b, 0xf0, 0x8c, 0x32, 0xc9,
-	0x2b, 0x6b, 0x1a, 0xa9, 0x4a, 0xcc, 0x48, 0x90, 0x7c, 0x24, 0xc8, 0xad, 0x7c, 0x24, 0xda, 0xc7,
-	0x32, 0x88, 0x7b, 0x7f, 0x37, 0x90, 0x97, 0x07, 0x39, 0x9f, 0x01, 0xd6, 0x8d, 0xf9, 0x38, 0xcb,
-	0xfa, 0xc4, 0xfb, 0xfe, 0x03, 0x82, 0xe7, 0x0a, 0xf0, 0xb6, 0xdd, 0xef, 0x42, 0x49, 0xcb, 0xcc,
-	0x7b, 0xdc, 0x98, 0x22, 0x5f, 0x87, 0x5c, 0xe9, 0xf5, 0x44, 0x1a, 0xe5, 0xe2, 0x6d, 0xd0, 0x93,
-	0xeb, 0xe6, 0x2e, 0xec, 0x8c, 0xe8, 0xe5, 0xe2, 0xb7, 0x60, 0xd5, 0x36, 0xaf, 0xec, 0xad, 0x72,
-	0xdf, 0xf9, 0x0b, 0x1d, 0xad, 0xd1, 0x23, 0x0d, 0xef, 0xc0, 0x86, 0xa6, 0x63, 0xcb, 0xb3, 0xa0,
-	0x04, 0x13, 0x83, 0xaf, 0x41, 0x39, 0x4e, 0x78, 0xd4, 0xe3, 0x31, 0x1d, 0x3c, 0x66, 0x04, 0xf2,
-	0x58, 0x3a, 0xa0, 0x51, 0x8f, 0x59, 0x88, 0x51, 0x24, 0xbe, 0x0a, 0xc7, 0x12, 0x26, 0x59, 0x32,
-	0x64, 0xd2, 0xb6, 0x7f, 0x61, 0x94, 0x47, 0x81, 0xce, 0x57, 0x50, 0xd5, 0xf2, 0xae, 0x49, 0xc5,
-	0x43, 0xaa, 0x58, 0x36, 0x5a, 0x7b, 0x51, 0x5e, 0x8d, 0x5d, 0x78, 0x56, 0x03, 0x75, 0xa8, 0xef,
-	0x27, 0x4c, 0x4a, 0x5b, 0x98, 0xe3, 0x7a, 0xf1, 0x8a, 0x59, 0xc3, 0x6f, 0x42, 0x89, 0x4a, 0xc9,
-	0x94, 0xb4, 0x5a, 0x4e, 0x15, 0x9a, 0x91, 0xb7, 0xe1, 0xaa, 0xe0, 0x51, 0xde, 0x49, 0xe3, 0xee,
-	0xfc, 0x88, 0xec, 0x01, 0x34, 0x9e, 0xdc, 0x16, 0x79, 0x04, 0x8c, 0x96, 0x02, 0xc6, 0x2f, 0x40,
-	0xa9, 0xcf, 0x78, 0xd0, 0x37, 0x1b, 0x6c, 0xcd, 0xb3, 0x7f, 0xf8, 0x2d, 0x58, 0xcf, 0x46, 0x7f,
-	0xa9, 0xcd, 0xa2, 0x23, 0x9c, 0xef, 0xa7, 0x51, 0xbd, 0x9e, 0xaa, 0xa5, 0x0a, 0xf5, 0x06, 0x94,
-	0x64, 0x9f, 0x26, 0xcc, 0x14, 0xaa, 0xdc, 0xae, 0x65, 0x49, 0xfe, 0x7c, 0xd8, 0x38, 0x69, 0x64,
-	0x49, 0xff, 0x4b, 0xc2, 0x85, 0x1b, 0x52, 0xd5, 0x27, 0x7b, 0x91, 0xf2, 0xac, 0x33, 0x3e, 0x07,
-	0xc7, 0x13, 0xe6, 0x33, 0x16, 0x76, 0x7c, 0x16, 0x89, 0x50, 0xb3, 0x2f, 0x7b, 0x9b, 0x66, 0xed,
-	0xfd, 0x6c, 0xc9, 0xf9, 0x29, 0x3f, 0x62, 0x27, 0xe8, 0x3d, 0x75, 0xa5, 0x6c, 0xfd, 0xb7, 0x01,
-	0x1b, 0x9a, 0x2b, 0xde, 0x87, 0x92, 0x39, 0x1a, 0xf0, 0xf9, 0x29, 0x83, 0x3b, 0x79, 0x32, 0x55,
-	0x2f, 0xcc, 0x73, 0x33, 0x6a, 0x9d, 0xca, 0x37, 0xbf, 0xff, 0xfb, 0xed, 0x2a, 0xc6, 0x27, 0xc6,
-	0xee, 0x3d, 0x89, 0x25, 0x6c, 0x68, 0x5f, 0xfc, 0xd2, 0x63, 0xa1, 0xf2, 0x84, 0xe7, 0xe7, 0x78,
-	0xd9, 0x7c, 0x35, 0x9d, 0xef, 0x45, 0x7c, 0x72, 0x3c, 0x9f, 0xfb, 0x35, 0xf7, 0xef, 0xe2, 0x9f,
-	0x11, 0x6c, 0x15, 0x47, 0x1c, 0xbf, 0x36, 0x0b, 0x78, 0xea, 0x3e, 0xac, 0x92, 0x45, 0xdd, 0x2d,
-	0xa1, 0xcb, 0x9a, 0xd0, 0x25, 0xdc, 0x9c, 0x24, 0x54, 0x18, 0xd3, 0xbb, 0x2e, 0xb3, 0x00, 0xe6,
-	0x4e, 0xe2, 0x11, 0xfe, 0x05, 0xc1, 0xf6, 0xd8, 0x14, 0xe1, 0x85, 0xd2, 0x8f, 0x76, 0x43, 0xd5,
-	0x5d, 0xd8, 0xdf, 0xf2, 0x7d, 0x5b, 0xf3, 0x7d, 0x1d, 0xb7, 0x96, 0xe4, 0x9b, 0x5d, 0xbb, 0xdf,
-	0x21, 0xd8, 0x1e, 0x7b, 0x59, 0xcc, 0x26, 0x3c, 0xfd, 0xa9, 0x33, 0x9b, 0xf0, 0x8c, 0x27, 0x8b,
-	0xb3, 0xab, 0x09, 0xd7, 0xf0, 0xe9, 0x11, 0xe1, 0x89, 0x27, 0x4c, 0xfb, 0xf2, 0xfd, 0x83, 0x3a,
-	0x7a, 0x70, 0x50, 0x47, 0xff, 0x1c, 0xd4, 0xd1, 0xbd, 0xc3, 0xfa, 0xca, 0x83, 0xc3, 0xfa, 0xca,
-	0x1f, 0x87, 0xf5, 0x95, 0x4f, 0x1b, 0x01, 0x57, 0xfd, 0xb4, 0x4b, 0x7a, 0x22, 0x74, 0xc7, 0xde,
-	0x68, 0xea, 0x4e, 0xcc, 0x64, 0xb7, 0xa4, 0x37, 0xd2, 0xa5, 0xff, 0x03, 0x00, 0x00, 0xff, 0xff,
-	0x1d, 0x1e, 0x26, 0xd9, 0x95, 0x0a, 0x00, 0x00,
+	// 987 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xd4, 0x56, 0xc1, 0x6f, 0x1b, 0xc5,
+	0x17, 0xce, 0x38, 0x89, 0x5b, 0xbf, 0xf4, 0x97, 0x34, 0xf3, 0x6b, 0xc1, 0x75, 0x6b, 0x3b, 0xd9,
+	0xd0, 0x36, 0x20, 0xd8, 0x95, 0x93, 0x22, 0x28, 0x08, 0xa4, 0xa6, 0x14, 0x14, 0x71, 0x68, 0x6b,
+	0xaa, 0x22, 0x21, 0x84, 0x35, 0xf6, 0x0e, 0xeb, 0x11, 0xde, 0x9d, 0xcd, 0xce, 0xac, 0xab, 0x16,
+	0xf5, 0xc2, 0x5f, 0x50, 0x89, 0x03, 0x97, 0x72, 0x87, 0x1e, 0x38, 0xf0, 0x4f, 0xd0, 0x03, 0x48,
+	0x95, 0xb8, 0x20, 0x0e, 0x05, 0x25, 0xfc, 0x21, 0x68, 0x67, 0x66, 0xeb, 0xac, 0xbd, 0x8e, 0x6d,
+	0xd4, 0x03, 0xdc, 0xec, 0x99, 0xf7, 0xbe, 0xf7, 0x7d, 0xdf, 0xbc, 0x37, 0x3b, 0x50, 0x0d, 0x23,
+	0xde, 0xef, 0x91, 0xb6, 0x70, 0xfa, 0x24, 0xee, 0x49, 0xa7, 0xdf, 0x70, 0xf6, 0x62, 0x1a, 0xdd,
+	0xb5, 0xc3, 0x88, 0x4b, 0x8e, 0x57, 0xd3, 0x6d, 0x5b, 0x6d, 0xdb, 0xfd, 0x46, 0xe5, 0x95, 0x0e,
+	0x17, 0x3e, 0x17, 0x4e, 0x9b, 0x08, 0xaa, 0x63, 0x9d, 0x7e, 0xa3, 0x4d, 0x25, 0x69, 0x38, 0x21,
+	0xf1, 0x58, 0x40, 0x24, 0xe3, 0x81, 0x4e, 0xaf, 0xd4, 0x0e, 0xc7, 0xa6, 0x51, 0x1d, 0xce, 0xd2,
+	0xfd, 0x53, 0x1e, 0xf7, 0xb8, 0xfa, 0xe9, 0x24, 0xbf, 0xcc, 0xea, 0x39, 0x8f, 0x73, 0xaf, 0x47,
+	0x1d, 0x12, 0x32, 0x87, 0x04, 0x01, 0x97, 0x0a, 0x52, 0x98, 0xdd, 0xba, 0xd9, 0x55, 0xff, 0xda,
+	0xf1, 0xe7, 0x8e, 0x64, 0x3e, 0x15, 0x92, 0xf8, 0xa1, 0x09, 0xc8, 0x91, 0xa4, 0xc9, 0xab, 0x6d,
+	0xeb, 0x1e, 0xac, 0xdd, 0x4c, 0x58, 0xdf, 0x4e, 0xd6, 0x6e, 0xd0, 0xc0, 0x65, 0x81, 0xf7, 0xd1,
+	0x1d, 0x12, 0x5e, 0x8f, 0xa5, 0x68, 0xd2, 0xbd, 0x98, 0x0a, 0x89, 0x97, 0xa1, 0xc0, 0xdc, 0x32,
+	0x5a, 0x43, 0x9b, 0xa5, 0x66, 0x81, 0xb9, 0xf8, 0x7d, 0x80, 0x81, 0xb6, 0x72, 0x61, 0x0d, 0x6d,
+	0x2e, 0x6d, 0x5d, 0xb0, 0xb5, 0x38, 0x3b, 0x11, 0x67, 0x6b, 0xd3, 0x8c, 0x44, 0xfb, 0x06, 0xf1,
+	0xa8, 0xc1, 0x6a, 0x1e, 0xca, 0xb4, 0x7e, 0x46, 0xb0, 0x7e, 0x44, 0x71, 0x11, 0xf2, 0x40, 0x50,
+	0xfc, 0x19, 0xac, 0x86, 0x7a, 0xab, 0x25, 0xee, 0x90, 0xb0, 0xc5, 0x63, 0x29, 0xca, 0x68, 0x6d,
+	0x7e, 0x73, 0x69, 0xeb, 0x55, 0x7b, 0xe4, 0x40, 0xec, 0x2c, 0xcc, 0xc7, 0x4c, 0x76, 0x6f, 0x31,
+	0x9f, 0xf2, 0x58, 0xee, 0x2c, 0x3c, 0x7e, 0x5a, 0x9f, 0x6b, 0xae, 0x84, 0xd9, 0x3a, 0xf8, 0x83,
+	0x1c, 0x35, 0x17, 0x27, 0xaa, 0xd1, 0xe4, 0x32, 0x72, 0x28, 0x9c, 0x55, 0x6a, 0xc6, 0xb8, 0x98,
+	0x75, 0x0d, 0xfd, 0x63, 0xd7, 0x7e, 0x42, 0x70, 0x2e, 0xbf, 0xce, 0x7f, 0xcd, 0xb0, 0x5f, 0x10,
+	0x9c, 0x19, 0x5b, 0x1d, 0x57, 0x01, 0x22, 0x2d, 0xbf, 0x65, 0xba, 0x6f, 0xa1, 0x59, 0x32, 0x2b,
+	0xbb, 0x2e, 0xbe, 0x09, 0x27, 0x87, 0x55, 0x1a, 0x2e, 0xeb, 0x13, 0x45, 0x1a, 0x65, 0xcb, 0x59,
+	0x65, 0xf8, 0x5d, 0x38, 0x26, 0x75, 0xf1, 0xf2, 0xbc, 0x42, 0xaa, 0xd8, 0x7a, 0xba, 0xec, 0x74,
+	0xba, 0xec, 0x5b, 0xe9, 0x74, 0xed, 0x1c, 0x4f, 0x20, 0x1e, 0xfc, 0x51, 0x47, 0xcd, 0x34, 0xc9,
+	0xfa, 0x14, 0xf0, 0xa0, 0x9d, 0x9f, 0xfb, 0xb9, 0x7f, 0x8b, 0xe0, 0xff, 0x19, 0x78, 0x73, 0xdc,
+	0xef, 0x40, 0x51, 0xc9, 0x4c, 0xcf, 0xb8, 0x9e, 0x23, 0x5f, 0xa5, 0x5c, 0xe9, 0x74, 0x78, 0x1c,
+	0xa4, 0xe2, 0x4d, 0xd2, 0xf3, 0x3b, 0xcd, 0x0d, 0x58, 0x1d, 0xd0, 0x1b, 0x73, 0x75, 0x58, 0x8f,
+	0x0a, 0x87, 0x3d, 0x7a, 0xa6, 0xe1, 0x6d, 0x58, 0x54, 0x74, 0x8c, 0x3d, 0x53, 0x4a, 0xd0, 0x39,
+	0xf8, 0x1a, 0x94, 0xc2, 0x88, 0x05, 0x1d, 0x16, 0x92, 0xde, 0x11, 0x2d, 0x90, 0xe6, 0x92, 0x1e,
+	0x09, 0x3a, 0xd4, 0x40, 0x0c, 0x32, 0xf1, 0x55, 0x38, 0x1e, 0x51, 0x41, 0xa3, 0x3e, 0x15, 0xe6,
+	0xf8, 0xa7, 0x46, 0x79, 0x96, 0x88, 0x3f, 0x84, 0x55, 0xc9, 0x25, 0xe9, 0xb5, 0x54, 0x42, 0xab,
+	0x4f, 0x7a, 0x31, 0x2d, 0x2f, 0x28, 0xb4, 0x33, 0x19, 0x53, 0x53, 0x3b, 0xaf, 0x72, 0x16, 0xa4,
+	0x83, 0xa6, 0x32, 0x95, 0xce, 0xdb, 0x49, 0x9e, 0x75, 0x0f, 0x2a, 0xca, 0xab, 0x6b, 0x42, 0x32,
+	0x9f, 0x48, 0x9a, 0xf4, 0xe9, 0x6e, 0x90, 0x5a, 0xbb, 0x01, 0xff, 0xd3, 0x45, 0x88, 0xeb, 0x46,
+	0x54, 0x08, 0xe3, 0xf2, 0x09, 0xb5, 0x78, 0x45, 0xaf, 0xe1, 0x37, 0xa0, 0x48, 0x84, 0xa0, 0x52,
+	0x18, 0x63, 0x26, 0x92, 0x30, 0xe1, 0xd6, 0x77, 0xc8, 0xdc, 0x66, 0xc3, 0xc5, 0xcd, 0x89, 0x0d,
+	0x80, 0xd1, 0x4c, 0xc0, 0xf8, 0x05, 0x28, 0x76, 0x29, 0xf3, 0xba, 0x7a, 0x5a, 0xe7, 0x9b, 0xe6,
+	0x1f, 0x7e, 0x13, 0x16, 0x92, 0x39, 0x9a, 0x69, 0xf2, 0x54, 0x86, 0xf5, 0x30, 0x8f, 0xea, 0xf5,
+	0x58, 0xce, 0x64, 0xd4, 0xeb, 0x50, 0x14, 0x5d, 0x12, 0x51, 0x6d, 0x54, 0x69, 0xa7, 0x9a, 0x14,
+	0xf9, 0xfd, 0x69, 0xfd, 0xb4, 0x96, 0x25, 0xdc, 0x2f, 0x6c, 0xc6, 0x1d, 0x9f, 0xc8, 0xae, 0xbd,
+	0x1b, 0xc8, 0xa6, 0x09, 0xc6, 0xeb, 0x70, 0x22, 0xa2, 0x2e, 0xa5, 0x7e, 0xcb, 0xa5, 0x01, 0xf7,
+	0x15, 0xfb, 0x52, 0x73, 0x49, 0xaf, 0xbd, 0x97, 0x2c, 0x59, 0xdf, 0xa7, 0xf7, 0xf5, 0x08, 0xbd,
+	0x7f, 0x9d, 0x95, 0x5b, 0x0f, 0x8f, 0xc1, 0xa2, 0xe2, 0x8a, 0xf7, 0xa0, 0xa8, 0xef, 0x19, 0x7c,
+	0x3e, 0x67, 0x0a, 0x46, 0xaf, 0xb9, 0xca, 0x85, 0x49, 0x61, 0x5a, 0xad, 0x55, 0xfe, 0xea, 0xd7,
+	0xbf, 0xbe, 0x2e, 0x60, 0x7c, 0x72, 0xe8, 0x3d, 0x22, 0xb0, 0x80, 0x45, 0x15, 0x8b, 0x5f, 0x3a,
+	0x12, 0x2a, 0x2d, 0x78, 0x7e, 0x42, 0x94, 0xa9, 0x57, 0x55, 0xf5, 0x5e, 0xc4, 0xa7, 0x87, 0xeb,
+	0x39, 0x5f, 0x32, 0xf7, 0x3e, 0x7e, 0x84, 0x60, 0x39, 0xdb, 0xe2, 0xf8, 0xb5, 0x71, 0xc0, 0xb9,
+	0x73, 0x58, 0xb1, 0xa7, 0x0d, 0x37, 0x84, 0x2e, 0x2b, 0x42, 0xdb, 0xb8, 0x31, 0x4a, 0x28, 0xd3,
+	0xa6, 0xf7, 0x1d, 0x6a, 0x00, 0xf4, 0x07, 0x8e, 0x05, 0xf8, 0x07, 0x04, 0x2b, 0x43, 0x5d, 0x84,
+	0xa7, 0x2a, 0x3f, 0x98, 0x86, 0x8a, 0x33, 0x75, 0xbc, 0xe1, 0xfb, 0x96, 0xe2, 0x7b, 0x09, 0x6f,
+	0xcd, 0xc8, 0x37, 0xf9, 0x86, 0x7f, 0x83, 0x60, 0x65, 0xe8, 0x99, 0x32, 0x9e, 0x70, 0xfe, 0xbb,
+	0x69, 0x3c, 0xe1, 0x31, 0xef, 0x1f, 0x6b, 0x43, 0x11, 0xae, 0xe2, 0xb3, 0x03, 0xc2, 0x23, 0xef,
+	0x21, 0xfc, 0x23, 0x82, 0x53, 0x79, 0xcf, 0x4e, 0xbc, 0x7d, 0x64, 0x5b, 0x8d, 0xe1, 0x78, 0x69,
+	0xb6, 0x24, 0x43, 0xd4, 0x51, 0x44, 0x5f, 0xc6, 0x17, 0x73, 0x5b, 0x73, 0x94, 0xf4, 0xce, 0xe5,
+	0xc7, 0xfb, 0x35, 0xf4, 0x64, 0xbf, 0x86, 0xfe, 0xdc, 0xaf, 0xa1, 0x07, 0x07, 0xb5, 0xb9, 0x27,
+	0x07, 0xb5, 0xb9, 0xdf, 0x0e, 0x6a, 0x73, 0x9f, 0xd4, 0x3d, 0x26, 0xbb, 0x71, 0xdb, 0xee, 0x70,
+	0xdf, 0x19, 0x7a, 0xf0, 0xcb, 0xbb, 0x21, 0x15, 0xed, 0xa2, 0x9a, 0xfe, 0xed, 0xbf, 0x03, 0x00,
+	0x00, 0xff, 0xff, 0xfd, 0x1b, 0x84, 0xac, 0xe2, 0x0c, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -751,6 +880,8 @@ type QueryClient interface {
 	EstimateSwapOut(ctx context.Context, in *QueryEstimateSwapOutRequest, opts ...grpc.CallOption) (*QueryEstimateSwapOutResponse, error)
 	// PendingSwapOuts returns a paginated list of all pending swap outs.
 	PendingSwapOuts(ctx context.Context, in *QueryPendingSwapOutsRequest, opts ...grpc.CallOption) (*QueryPendingSwapOutsResponse, error)
+	// VaultPendingSwapOuts returns a paginated list of all pending swap outs for a specific vault.
+	VaultPendingSwapOuts(ctx context.Context, in *QueryVaultPendingSwapOutsRequest, opts ...grpc.CallOption) (*QueryVaultPendingSwapOutsResponse, error)
 }
 
 type queryClient struct {
@@ -806,6 +937,15 @@ func (c *queryClient) PendingSwapOuts(ctx context.Context, in *QueryPendingSwapO
 	return out, nil
 }
 
+func (c *queryClient) VaultPendingSwapOuts(ctx context.Context, in *QueryVaultPendingSwapOutsRequest, opts ...grpc.CallOption) (*QueryVaultPendingSwapOutsResponse, error) {
+	out := new(QueryVaultPendingSwapOutsResponse)
+	err := c.cc.Invoke(ctx, "/provlabs.vault.v1.Query/VaultPendingSwapOuts", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Vaults returns a paginated list of all vaults.
@@ -818,6 +958,8 @@ type QueryServer interface {
 	EstimateSwapOut(context.Context, *QueryEstimateSwapOutRequest) (*QueryEstimateSwapOutResponse, error)
 	// PendingSwapOuts returns a paginated list of all pending swap outs.
 	PendingSwapOuts(context.Context, *QueryPendingSwapOutsRequest) (*QueryPendingSwapOutsResponse, error)
+	// VaultPendingSwapOuts returns a paginated list of all pending swap outs for a specific vault.
+	VaultPendingSwapOuts(context.Context, *QueryVaultPendingSwapOutsRequest) (*QueryVaultPendingSwapOutsResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -838,6 +980,9 @@ func (*UnimplementedQueryServer) EstimateSwapOut(ctx context.Context, req *Query
 }
 func (*UnimplementedQueryServer) PendingSwapOuts(ctx context.Context, req *QueryPendingSwapOutsRequest) (*QueryPendingSwapOutsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PendingSwapOuts not implemented")
+}
+func (*UnimplementedQueryServer) VaultPendingSwapOuts(ctx context.Context, req *QueryVaultPendingSwapOutsRequest) (*QueryVaultPendingSwapOutsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VaultPendingSwapOuts not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -934,6 +1079,24 @@ func _Query_PendingSwapOuts_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_VaultPendingSwapOuts_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryVaultPendingSwapOutsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).VaultPendingSwapOuts(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/provlabs.vault.v1.Query/VaultPendingSwapOuts",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).VaultPendingSwapOuts(ctx, req.(*QueryVaultPendingSwapOutsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var Query_serviceDesc = _Query_serviceDesc
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "provlabs.vault.v1.Query",
@@ -959,9 +1122,104 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 			MethodName: "PendingSwapOuts",
 			Handler:    _Query_PendingSwapOuts_Handler,
 		},
+		{
+			MethodName: "VaultPendingSwapOuts",
+			Handler:    _Query_VaultPendingSwapOuts_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "provlabs/vault/v1/query.proto",
+}
+
+func (m *QueryVaultPendingSwapOutsRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryVaultPendingSwapOutsRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryVaultPendingSwapOutsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Id) > 0 {
+		i -= len(m.Id)
+		copy(dAtA[i:], m.Id)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Id)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryVaultPendingSwapOutsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryVaultPendingSwapOutsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryVaultPendingSwapOutsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Pagination != nil {
+		{
+			size, err := m.Pagination.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintQuery(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.PendingSwapOuts) > 0 {
+		for iNdEx := len(m.PendingSwapOuts) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.PendingSwapOuts[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *QueryPendingSwapOutsRequest) Marshal() (dAtA []byte, err error) {
@@ -1068,12 +1326,12 @@ func (m *PendingSwapOutWithTimeout) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	_ = i
 	var l int
 	_ = l
-	n3, err3 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.Timeout, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.Timeout):])
-	if err3 != nil {
-		return 0, err3
+	n5, err5 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.Timeout, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.Timeout):])
+	if err5 != nil {
+		return 0, err5
 	}
-	i -= n3
-	i = encodeVarintQuery(dAtA, i, uint64(n3))
+	i -= n5
+	i = encodeVarintQuery(dAtA, i, uint64(n5))
 	i--
 	dAtA[i] = 0x1a
 	{
@@ -1229,6 +1487,16 @@ func (m *QueryVaultResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	var l int
 	_ = l
 	{
+		size, err := m.TotalVaultValue.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x22
+	{
 		size, err := m.Reserves.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
 			return 0, err
@@ -1321,12 +1589,12 @@ func (m *QueryEstimateSwapInResponse) MarshalToSizedBuffer(dAtA []byte) (int, er
 	_ = i
 	var l int
 	_ = l
-	n11, err11 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.Time, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.Time):])
-	if err11 != nil {
-		return 0, err11
+	n14, err14 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.Time, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.Time):])
+	if err14 != nil {
+		return 0, err14
 	}
-	i -= n11
-	i = encodeVarintQuery(dAtA, i, uint64(n11))
+	i -= n14
+	i = encodeVarintQuery(dAtA, i, uint64(n14))
 	i--
 	dAtA[i] = 0x1a
 	if m.Height != 0 {
@@ -1414,12 +1682,12 @@ func (m *QueryEstimateSwapOutResponse) MarshalToSizedBuffer(dAtA []byte) (int, e
 	_ = i
 	var l int
 	_ = l
-	n13, err13 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.Time, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.Time):])
-	if err13 != nil {
-		return 0, err13
+	n16, err16 := github_com_cosmos_gogoproto_types.StdTimeMarshalTo(m.Time, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdTime(m.Time):])
+	if err16 != nil {
+		return 0, err16
 	}
-	i -= n13
-	i = encodeVarintQuery(dAtA, i, uint64(n13))
+	i -= n16
+	i = encodeVarintQuery(dAtA, i, uint64(n16))
 	i--
 	dAtA[i] = 0x1a
 	if m.Height != 0 {
@@ -1451,6 +1719,42 @@ func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
+func (m *QueryVaultPendingSwapOutsRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Id)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
+func (m *QueryVaultPendingSwapOutsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.PendingSwapOuts) > 0 {
+		for _, e := range m.PendingSwapOuts {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	if m.Pagination != nil {
+		l = m.Pagination.Size()
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	return n
+}
+
 func (m *QueryPendingSwapOutsRequest) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1556,6 +1860,8 @@ func (m *QueryVaultResponse) Size() (n int) {
 	n += 1 + l + sovQuery(uint64(l))
 	l = m.Reserves.Size()
 	n += 1 + l + sovQuery(uint64(l))
+	l = m.TotalVaultValue.Size()
+	n += 1 + l + sovQuery(uint64(l))
 	return n
 }
 
@@ -1630,6 +1936,244 @@ func sovQuery(x uint64) (n int) {
 }
 func sozQuery(x uint64) (n int) {
 	return sovQuery(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *QueryVaultPendingSwapOutsRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryVaultPendingSwapOutsRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryVaultPendingSwapOutsRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Id = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageRequest{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryVaultPendingSwapOutsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryVaultPendingSwapOutsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryVaultPendingSwapOutsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PendingSwapOuts", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PendingSwapOuts = append(m.PendingSwapOuts, PendingSwapOutWithTimeout{})
+			if err := m.PendingSwapOuts[len(m.PendingSwapOuts)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Pagination", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Pagination == nil {
+				m.Pagination = &query.PageResponse{}
+			}
+			if err := m.Pagination.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
 }
 func (m *QueryPendingSwapOutsRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -2385,6 +2929,39 @@ func (m *QueryVaultResponse) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if err := m.Reserves.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TotalVaultValue", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.TotalVaultValue.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

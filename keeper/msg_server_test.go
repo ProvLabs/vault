@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
@@ -182,6 +183,202 @@ func (s *TestSuite) TestMsgServer_CreateVault_Failures() {
 				UnderlyingAsset: "under",
 			},
 			expectedErrSubstrs: []string{"already exists"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_SetShareDenomMetadata() {
+	type postCheckArgs struct {
+		VaultAddress     sdk.AccAddress
+		ExpectedMetadata banktypes.Metadata
+	}
+
+	testDef := msgServerTestDef[types.MsgSetShareDenomMetadataRequest, types.MsgSetShareDenomMetadataResponse, postCheckArgs]{
+		endpointName: "SetShareDenomMetadata",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).SetShareDenomMetadata,
+		postCheck: func(msg *types.MsgSetShareDenomMetadataRequest, args postCheckArgs) {
+			// Verify the metadata was set in the BankKeeper
+			actualMetadata, found := s.simApp.BankKeeper.GetDenomMetaData(s.ctx, args.ExpectedMetadata.Base)
+			s.Require().True(found, "post-check: metadata should be found in BankKeeper")
+			s.Assert().Equal(args.ExpectedMetadata.Base, actualMetadata.Base, "post-check: base denom should match")
+			s.Assert().Equal(args.ExpectedMetadata.Display, actualMetadata.Display, "post-check: display denom should match")
+			s.Assert().Equal(args.ExpectedMetadata.Description, actualMetadata.Description, "post-check: description should match")
+			s.Assert().Equal(args.ExpectedMetadata.Name, actualMetadata.Name, "post-check: name should match")
+			s.Assert().Equal(args.ExpectedMetadata.Symbol, actualMetadata.Symbol, "post-check: symbol should match")
+			s.Assert().Equal(len(args.ExpectedMetadata.DenomUnits), len(actualMetadata.DenomUnits), "post-check: denom units count should match")
+		},
+	}
+
+	underlying := "under"
+	share := "vaultshares"
+	admin := s.adminAddr
+	vaultAddr := types.GetVaultAddress(share)
+
+	metadata := banktypes.Metadata{
+		Base:        share,
+		Display:     share,
+		Description: "Vault shares for testing",
+		Name:        "Vault Shares",
+		Symbol:      "VSHARES",
+		DenomUnits: []*banktypes.DenomUnit{
+			{
+				Denom:    share,
+				Exponent: 0,
+				Aliases:  []string{"vshare"},
+			},
+			{
+				Denom:    "mvshare",
+				Exponent: 6,
+				Aliases:  []string{},
+			},
+		},
+	}
+
+	setup := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      share,
+			UnderlyingAsset: underlying,
+		})
+		s.Require().NoError(err, "setup: expected vault creation to succeed")
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	tc := msgServerTestCase[types.MsgSetShareDenomMetadataRequest, postCheckArgs]{
+		name:  "happy path",
+		setup: setup,
+		msg: types.MsgSetShareDenomMetadataRequest{
+			Admin:        admin.String(),
+			VaultAddress: vaultAddr.String(),
+			Metadata:     metadata,
+		},
+		postCheckArgs: postCheckArgs{
+			VaultAddress:     vaultAddr,
+			ExpectedMetadata: metadata,
+		},
+		expectedEvents: sdk.Events{
+			sdk.NewEvent("provlabs.vault.v1.EventSetShareDenomMetadata",
+				sdk.NewAttribute("administrator", admin.String()),
+				sdk.NewAttribute("metadata_base", share),
+				sdk.NewAttribute("metadata_denom_units", `[{"denom":"vaultshares","exponent":"0","aliases":["vshare"]},{"denom":"mvshare","exponent":"6","aliases":[]}]`),
+				sdk.NewAttribute("metadata_description", "Vault shares for testing"),
+				sdk.NewAttribute("metadata_display", share),
+				sdk.NewAttribute("metadata_name", "Vault Shares"),
+				sdk.NewAttribute("metadata_symbol", "VSHARES"),
+				sdk.NewAttribute("vault_address", vaultAddr.String()),
+			),
+		},
+	}
+
+	testDef.expectedResponse = &types.MsgSetShareDenomMetadataResponse{}
+	runMsgServerTestCase(s, testDef, tc)
+}
+
+func (s *TestSuite) TestMsgServer_SetShareDenomMetadata_Failures() {
+	testDef := msgServerTestDef[types.MsgSetShareDenomMetadataRequest, types.MsgSetShareDenomMetadataResponse, any]{
+		endpointName: "SetShareDenomMetadata",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).SetShareDenomMetadata,
+		postCheck:    nil,
+	}
+
+	underlying := "under"
+	share := "vaultshares"
+	wrongShare := "wrongshares"
+	admin := s.adminAddr
+	other := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+	vaultAddr := types.GetVaultAddress(share)
+	markerAddr := markertypes.MustGetMarkerAddress(share)
+
+	validMetadata := banktypes.Metadata{
+		Base:        share,
+		Display:     share,
+		Description: "Vault shares for testing",
+		Name:        "Vault Shares",
+		Symbol:      "VSHARES",
+		DenomUnits: []*banktypes.DenomUnit{
+			{
+				Denom:    share,
+				Exponent: 0,
+				Aliases:  []string{},
+			},
+		},
+	}
+
+	wrongMetadata := banktypes.Metadata{
+		Base:        wrongShare,
+		Display:     wrongShare,
+		Description: "Wrong vault shares",
+		Name:        "Wrong Shares",
+		Symbol:      "WRONG",
+		DenomUnits: []*banktypes.DenomUnit{
+			{
+				Denom:    wrongShare,
+				Exponent: 0,
+				Aliases:  []string{},
+			},
+		},
+	}
+
+	base := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      share,
+			UnderlyingAsset: underlying,
+		})
+		s.Require().NoError(err, "base: expected vault creation to succeed")
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	tests := []msgServerTestCase[types.MsgSetShareDenomMetadataRequest, any]{
+		{
+			name: "vault not found",
+			setup: func() {
+				s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			},
+			msg: types.MsgSetShareDenomMetadataRequest{
+				Admin:        admin.String(),
+				VaultAddress: types.GetVaultAddress("missing").String(),
+				Metadata:     validMetadata,
+			},
+			expectedErrSubstrs: []string{"vault not found"},
+		},
+		{
+			name:  "invalid vault address (not a vault account)",
+			setup: base,
+			msg: types.MsgSetShareDenomMetadataRequest{
+				Admin:        admin.String(),
+				VaultAddress: markerAddr.String(),
+				Metadata:     validMetadata,
+			},
+			expectedErrSubstrs: []string{"failed to get vault", "is not a vault account"},
+		},
+		{
+			name:  "unauthorized admin",
+			setup: base,
+			msg: types.MsgSetShareDenomMetadataRequest{
+				Admin:        other.String(),
+				VaultAddress: vaultAddr.String(),
+				Metadata:     validMetadata,
+			},
+			expectedErrSubstrs: []string{"unauthorized", "is not the vault admin"},
+		},
+		{
+			name:  "metadata base denom does not match vault share denom",
+			setup: base,
+			msg: types.MsgSetShareDenomMetadataRequest{
+				Admin:        admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Metadata:     wrongMetadata,
+			},
+			expectedErrSubstrs: []string{"metadata base denom", "does not match vault share denom"},
 		},
 	}
 

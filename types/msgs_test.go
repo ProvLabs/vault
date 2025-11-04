@@ -175,6 +175,7 @@ func makeMetadata(units []*banktypes.DenomUnit, base, display, desc string) bank
 	}
 }
 
+// TestValidateDenomMetadataBasic verifies minimal validation rules for denom metadata.
 func TestValidateDenomMetadataBasic(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -182,75 +183,23 @@ func TestValidateDenomMetadataBasic(t *testing.T) {
 		expectedErr error
 	}{
 		{
-			name:        "base invalid",
-			md:          makeMetadata(nil, "x", "hash", "a"),
-			expectedErr: fmt.Errorf("denom metadata base invalid"),
+			name:        "base empty",
+			md:          makeMetadata(nil, "", "shares", "a"),
+			expectedErr: fmt.Errorf("denom metadata base cannot be empty"),
 		},
 		{
-			name:        "display invalid",
-			md:          makeMetadata(nil, "hash", "x", "a"),
-			expectedErr: fmt.Errorf("denom metadata display invalid"),
+			name:        "display empty",
+			md:          makeMetadata(nil, "shares", "", "a"),
+			expectedErr: fmt.Errorf("denom metadata display cannot be empty"),
 		},
 		{
 			name:        "description too long",
-			md:          makeMetadata([]*banktypes.DenomUnit{makeDenomUnit("nhash", 0)}, "nhash", "nhash", strings.Repeat("d", 201)),
+			md:          makeMetadata([]*banktypes.DenomUnit{makeDenomUnit("shares", 0)}, "shares", "shares", strings.Repeat("d", 201)),
 			expectedErr: fmt.Errorf("denom metadata description too long"),
 		},
 		{
-			name:        "base not present in denom units",
-			md:          makeMetadata([]*banktypes.DenomUnit{makeDenomUnit("nhash", 0)}, "uhash", "nhash", "a"),
-			expectedErr: fmt.Errorf("denom metadata denom units must include base"),
-		},
-		{
-			name:        "display not present in denom units",
-			md:          makeMetadata([]*banktypes.DenomUnit{makeDenomUnit("nhash", 0)}, "nhash", "hash", "a"),
-			expectedErr: fmt.Errorf("denom metadata denom units must include display"),
-		},
-		{
-			name: "no root coin name found",
-			md: banktypes.Metadata{
-				Description: "a",
-				DenomUnits: []*banktypes.DenomUnit{
-					{Denom: "abcd", Aliases: []string{"wxyz"}},
-				},
-				Base:    "abcd",
-				Display: "abcd",
-				Name:    "ABCD",
-				Symbol:  "ABCD",
-			},
-			expectedErr: fmt.Errorf("denom metadata root coin name could not be found"),
-		},
-		{
-			name: "root coin name invalid denom",
-			md: banktypes.Metadata{
-				Description: "a",
-				DenomUnits: []*banktypes.DenomUnit{
-					{Denom: "nx", Exponent: 0, Aliases: []string{"nanox"}},
-					{Denom: "kx", Exponent: 3, Aliases: []string{"kilox"}},
-				},
-				Base:    "nx",
-				Display: "nx",
-				Name:    "NX",
-				Symbol:  "NX",
-			},
-			expectedErr: fmt.Errorf("denom metadata base invalid"),
-		},
-
-		{
-			name: "success unordered units and nonzero first exponent allowed",
-			md: makeMetadata([]*banktypes.DenomUnit{
-				makeDenomUnit("hash", 9),
-				makeDenomUnit("uhash", 3),
-				makeDenomUnit("nhash", 0, "nanohash"),
-			}, "nhash", "hash", "ok"),
-			expectedErr: nil,
-		},
-		{
-			name: "success display present via alias",
-			md: makeMetadata([]*banktypes.DenomUnit{
-				makeDenomUnit("nhash", 0),
-				makeDenomUnit("hash", 9, "khash"),
-			}, "nhash", "khash", "ok"),
+			name:        "success minimal",
+			md:          makeMetadata(nil, "shares", "shares", "ok"),
 			expectedErr: nil,
 		},
 	}
@@ -268,19 +217,16 @@ func TestValidateDenomMetadataBasic(t *testing.T) {
 	}
 }
 
+// TestMsgSetShareDenomMetadataRequest_ValidateBasic verifies request-level validation.
 func TestMsgSetShareDenomMetadataRequest_ValidateBasic(t *testing.T) {
 	admin := utils.TestAddress().Bech32
 	vault := utils.TestAddress().Bech32
 
 	validMD := makeMetadata([]*banktypes.DenomUnit{
-		makeDenomUnit("nhash", 0),
-		makeDenomUnit("uhash", 3),
-		makeDenomUnit("hash", 9),
-	}, "nhash", "hash", "ok")
+		makeDenomUnit("shares", 0),
+	}, "shares", "shares", "ok")
 
-	missingDisplayMD := makeMetadata([]*banktypes.DenomUnit{
-		makeDenomUnit("nhash", 0),
-	}, "nhash", "hash", "ok")
+	emptyDisplayMD := makeMetadata(nil, "shares", "", "ok")
 
 	tests := []struct {
 		name        string
@@ -333,13 +279,13 @@ func TestMsgSetShareDenomMetadataRequest_ValidateBasic(t *testing.T) {
 			expectedErr: fmt.Errorf("invalid set denom metadata request: administrator must be a bech32 address string"),
 		},
 		{
-			name: "invalid metadata missing display",
+			name: "invalid metadata empty display",
 			msg: types.MsgSetShareDenomMetadataRequest{
 				Admin:        admin,
 				VaultAddress: vault,
-				Metadata:     missingDisplayMD,
+				Metadata:     emptyDisplayMD,
 			},
-			expectedErr: fmt.Errorf("invalid set denom metadata request: denom metadata denom units must include display: hash"),
+			expectedErr: fmt.Errorf("invalid set denom metadata request: denom metadata display cannot be empty"),
 		},
 	}
 

@@ -3,12 +3,12 @@ package types
 import (
 	"errors"
 	fmt "fmt"
+	"strings"
 
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 const maxDenomMetadataDescriptionLength = 200
@@ -96,45 +96,28 @@ func (m MsgSetShareDenomMetadataRequest) ValidateBasic() error {
 	return nil
 }
 
-// ValidateDenomMetadataBasic performs basic stateless validation of denom metadata.
+// ValidateDenomMetadataBasic performs lightweight, display-oriented validation of
+// denomination metadata used for vault share tokens. Unlike the Marker Module it intentionally avoids
+// the strict SI-prefix and denom-root checks applied to on-chain currency
+// metadata, allowing vault administrators flexibility in naming and formatting.
+//
+// This function verifies only that:
+//   - Base and Display fields are non-empty (after trimming whitespace)
+//   - Description length does not exceed maxDenomMetadataDescriptionLength
+//
+// It does not enforce full denom syntax or unit relationships, since share
+// metadata may include arbitrary display names, symbols, or localized text.
 func ValidateDenomMetadataBasic(md banktypes.Metadata) error {
-	if err := sdk.ValidateDenom(md.Base); err != nil {
-		return fmt.Errorf("denom metadata base invalid: %w", err)
+	if strings.TrimSpace(md.Base) == "" {
+		return errors.New("denom metadata base cannot be empty")
 	}
-	if err := sdk.ValidateDenom(md.Display); err != nil {
-		return fmt.Errorf("denom metadata display invalid: %w", err)
+	if strings.TrimSpace(md.Display) == "" {
+		return errors.New("denom metadata display cannot be empty")
 	}
 	if len(md.Description) > maxDenomMetadataDescriptionLength {
 		return fmt.Errorf("denom metadata description too long (expected <= %d, actual: %d)", maxDenomMetadataDescriptionLength, len(md.Description))
 	}
-	if !denomUnitSetContains(md.DenomUnits, md.Base) {
-		return fmt.Errorf("denom metadata denom units must include base: %s", md.Base)
-	}
-	if !denomUnitSetContains(md.DenomUnits, md.Display) {
-		return fmt.Errorf("denom metadata denom units must include display: %s", md.Display)
-	}
-	root := markertypes.GetRootCoinName(md)
-	if len(root) == 0 {
-		return errors.New("denom metadata root coin name could not be found")
-	}
-	if err := sdk.ValidateDenom(root); err != nil {
-		return fmt.Errorf("denom metadata root coin name invalid: %w", err)
-	}
 	return nil
-}
-
-func denomUnitSetContains(units []*banktypes.DenomUnit, name string) bool {
-	for _, du := range units {
-		if du.Denom == name {
-			return true
-		}
-		for _, a := range du.Aliases {
-			if a == name {
-				return true
-			}
-		}
-	}
-	return false
 }
 
 // ValidateBasic performs stateless validation on MsgSwapInRequest.

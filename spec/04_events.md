@@ -32,8 +32,8 @@ This document describes all events emitted by the `x/vault` module and how to us
   - [EventBridgeMintShares](#eventbridgemintshares)
   - [EventBridgeBurnShares](#eventbridgeburnshares)
 - [Metadata](#metadata)
-  - [EventSetShareDenomMetadata](#eventSetShareDenomMetadata)
-  - [EventDenomUnit](#eventDenomUnit) 
+  - [EventSetShareDenomMetadata](#eventsetsharedenommetadata)
+  - [EventDenomUnit](#eventdenomunit)
 
 ---
 

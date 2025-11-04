@@ -1,16 +1,22 @@
 package types
 
 import (
+	"errors"
 	fmt "fmt"
+	"strings"
 
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
+
+const maxDenomMetadataDescriptionLength = 200
 
 // AllRequestMsgs defines all the Msg*Request messages.
 var AllRequestMsgs = []sdk.Msg{
 	(*MsgCreateVaultRequest)(nil),
+	(*MsgSetShareDenomMetadataRequest)(nil),
 	(*MsgSwapInRequest)(nil),
 	(*MsgSwapOutRequest)(nil),
 	(*MsgUpdateMinInterestRateRequest)(nil),
@@ -67,6 +73,50 @@ func (m MsgCreateVaultRequest) ValidateBasic() error {
 		return fmt.Errorf("withdrawal delay cannot exceed %d seconds", MaxWithdrawalDelay)
 	}
 
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgSetShareDenomMetadataRequest.
+func (m MsgSetShareDenomMetadataRequest) ValidateBasic() error {
+	if len(m.VaultAddress) == 0 {
+		return errors.New("invalid set denom metadata request: vault address cannot be empty")
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid set denom metadata request: vault address must be a bech32 address string: %w", err)
+	}
+	if len(m.Admin) == 0 {
+		return errors.New("invalid set denom metadata request: administrator cannot be empty")
+	}
+	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
+		return fmt.Errorf("invalid set denom metadata request: administrator must be a bech32 address string: %w", err)
+	}
+	if err := ValidateDenomMetadataBasic(m.Metadata); err != nil {
+		return fmt.Errorf("invalid set denom metadata request: %w", err)
+	}
+	return nil
+}
+
+// ValidateDenomMetadataBasic performs lightweight, display-oriented validation of
+// denomination metadata used for vault share tokens. Unlike the Marker Module it intentionally avoids
+// the strict SI-prefix and denom-root checks applied to on-chain currency
+// metadata, allowing vault administrators flexibility in naming and formatting.
+//
+// This function verifies only that:
+//   - Base and Display fields are non-empty (after trimming whitespace)
+//   - Description length does not exceed maxDenomMetadataDescriptionLength
+//
+// It does not enforce full denom syntax or unit relationships, since share
+// metadata may include arbitrary display names, symbols, or localized text.
+func ValidateDenomMetadataBasic(md banktypes.Metadata) error {
+	if strings.TrimSpace(md.Base) == "" {
+		return errors.New("denom metadata base cannot be empty")
+	}
+	if strings.TrimSpace(md.Display) == "" {
+		return errors.New("denom metadata display cannot be empty")
+	}
+	if len(md.Description) > maxDenomMetadataDescriptionLength {
+		return fmt.Errorf("denom metadata description too long (expected <= %d, actual: %d)", maxDenomMetadataDescriptionLength, len(md.Description))
+	}
 	return nil
 }
 

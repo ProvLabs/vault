@@ -5,41 +5,35 @@ This document describes all events emitted by the `x/vault` module and how to us
 ---
 
 <!-- TOC -->
-
-* [Lifecycle](#lifecycle)
-
-  * [EventVaultCreated](#eventvaultcreated)
-  * [EventVaultPaused](#eventvaultpaused)
-  * [EventVaultUnpaused](#eventvaultunpaused)
-* [Swaps](#swaps)
-
-  * [EventSwapIn](#eventswapin)
-  * [EventSwapOutRequested](#eventswapoutrequested)
-  * [EventPendingSwapOutExpedited](#eventpendingswapoutexpedited)
-  * [EventSwapOutCompleted](#eventswapoutcompleted)
-  * [EventSwapOutRefunded](#eventswapoutrefunded)
-  * [How to tell if your SwapOut succeeded](#how-to-tell-if-your-swapout-succeeded)
-* [Interest](#interest)
-
-  * [EventVaultReconcile](#eventvaultreconcile)
-  * [EventVaultInterestChange](#eventvaultinterestchange)
-  * [EventMinInterestRateUpdated](#eventmininterestrateupdated)
-  * [EventMaxInterestRateUpdated](#eventmaxinterestrateupdated)
-  * [EventInterestDeposit](#eventinterestdeposit)
-  * [EventInterestWithdrawal](#eventinterestwithdrawal)
-* [Admin Toggles](#admin-toggles)
-
-  * [EventToggleSwapIn](#eventtoggleswapin)
-  * [EventToggleSwapOut](#eventtoggleswapout)
-* [Bridge](#bridge)
-
-  * [EventBridgeAddressSet](#eventbridgeaddressset)
-  * [EventBridgeToggled](#eventbridgetoggled)
-  * [EventBridgeMintShares](#eventbridgemintshares)
-  * [EventBridgeBurnShares](#eventbridgeburnshares)
-* [Management](#management)
-
-  * [EventAssetManagerSet](#eventassetmanagerset)
+- [Lifecycle](#lifecycle)
+  - [EventVaultCreated](#eventvaultcreated)
+  - [EventVaultPaused](#eventvaultpaused)
+  - [EventVaultUnpaused](#eventvaultunpaused)
+- [Swaps](#swaps)
+  - [EventSwapIn](#eventswapin)
+  - [EventSwapOutRequested](#eventswapoutrequested)
+  - [EventPendingSwapOutExpedited](#eventpendingswapoutexpedited)
+  - [EventSwapOutCompleted](#eventswapoutcompleted)
+  - [EventSwapOutRefunded](#eventswapoutrefunded)
+  - [How to tell if your SwapOut succeeded](#how-to-tell-if-your-swapout-succeeded)
+- [Interest](#interest)
+  - [EventVaultReconcile](#eventvaultreconcile)
+  - [EventVaultInterestChange](#eventvaultinterestchange)
+  - [EventMinInterestRateUpdated](#eventmininterestrateupdated)
+  - [EventMaxInterestRateUpdated](#eventmaxinterestrateupdated)
+  - [EventInterestDeposit](#eventinterestdeposit)
+  - [EventInterestWithdrawal](#eventinterestwithdrawal)
+- [Admin Toggles](#admin-toggles)
+  - [EventToggleSwapIn](#eventtoggleswapin)
+  - [EventToggleSwapOut](#eventtoggleswapout)
+- [Bridge](#bridge)
+  - [EventBridgeAddressSet](#eventbridgeaddressset)
+  - [EventBridgeToggled](#eventbridgetoggled)
+  - [EventBridgeMintShares](#eventbridgemintshares)
+  - [EventBridgeBurnShares](#eventbridgeburnshares)
+- [Metadata](#metadata)
+  - [EventSetShareDenomMetadata](#eventsetsharedenommetadata)
+  - [EventDenomUnit](#eventdenomunit)
 
 ---
 
@@ -332,16 +326,31 @@ Emitted when shares are **burned from the bridge** balance.
 
 ---
 
-## Management
+## Metadata
 
-### EventAssetManagerSet
+### EventSetShareDenomMetadata
 
-Emitted when a vault’s asset manager is set or cleared.
+Emitted when denom metadata is set for a vault’s share denom (via `MsgSetShareDenomMetadata`).
 
 **Fields**
 
-* `vault_address` — vault
-* `admin` — actor
-* `asset_manager` — new asset manager bech32 address (empty when cleared)
+- `vault_address` — vault
+- `metadata_base` — base denom (e.g., `nushare`)
+- `metadata_description` — description of the share denom
+- `metadata_display` — display denom (e.g., `ushare` or `SHARE`)
+- `metadata_denom_units` — list of denom units with exponents and aliases
+- `administrator` — admin who set the metadata
+- `metadata_name` — human-readable name
+- `metadata_symbol` — ticker-style symbol
 
 ---
+
+### EventDenomUnit
+
+Included inside `EventSetShareDenomMetadata` to describe each denom unit.
+
+**Fields**
+
+- `denom` — unit name (e.g., `nushare`, `ushare`)
+- `exponent` — power of 10 exponent relative to base unit
+- `aliases` — optional alternative names (may be empty)

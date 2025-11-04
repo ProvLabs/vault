@@ -2,10 +2,12 @@ package types_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/provlabs/vault/types"
@@ -142,6 +144,148 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 				WithdrawalDelaySeconds: types.MaxWithdrawalDelay + 1,
 			},
 			expectedErr: fmt.Errorf("withdrawal delay cannot exceed %d seconds", types.MaxWithdrawalDelay),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.expectedErr != nil {
+				assert.Error(t, err, "expected error for case %q", tc.name)
+				assert.Contains(t, err.Error(), tc.expectedErr.Error(), "error should contain expected substring for case %q", tc.name)
+			} else {
+				assert.NoError(t, err, "expected no error for case %q", tc.name)
+			}
+		})
+	}
+}
+
+func makeDenomUnit(denom string, exp uint32, aliases ...string) *banktypes.DenomUnit {
+	return &banktypes.DenomUnit{Denom: denom, Exponent: exp, Aliases: aliases}
+}
+
+func makeMetadata(units []*banktypes.DenomUnit, base, display, desc string) banktypes.Metadata {
+	return banktypes.Metadata{
+		Description: desc,
+		DenomUnits:  units,
+		Base:        base,
+		Display:     display,
+		Name:        strings.ToUpper(display),
+		Symbol:      strings.ToUpper(display),
+	}
+}
+
+// TestValidateDenomMetadataBasic verifies minimal validation rules for denom metadata.
+func TestValidateDenomMetadataBasic(t *testing.T) {
+	tests := []struct {
+		name        string
+		md          banktypes.Metadata
+		expectedErr error
+	}{
+		{
+			name:        "base empty",
+			md:          makeMetadata(nil, "", "shares", "a"),
+			expectedErr: fmt.Errorf("denom metadata base cannot be empty"),
+		},
+		{
+			name:        "display empty",
+			md:          makeMetadata(nil, "shares", "", "a"),
+			expectedErr: fmt.Errorf("denom metadata display cannot be empty"),
+		},
+		{
+			name:        "description too long",
+			md:          makeMetadata([]*banktypes.DenomUnit{makeDenomUnit("shares", 0)}, "shares", "shares", strings.Repeat("d", 201)),
+			expectedErr: fmt.Errorf("denom metadata description too long"),
+		},
+		{
+			name:        "success minimal",
+			md:          makeMetadata(nil, "shares", "shares", "ok"),
+			expectedErr: nil,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := types.ValidateDenomMetadataBasic(tc.md)
+			if tc.expectedErr != nil {
+				assert.Error(t, err, "expected error for case %q", tc.name)
+				assert.Contains(t, err.Error(), tc.expectedErr.Error(), "error should contain expected substring for case %q", tc.name)
+			} else {
+				assert.NoError(t, err, "expected no error for case %q", tc.name)
+			}
+		})
+	}
+}
+
+// TestMsgSetShareDenomMetadataRequest_ValidateBasic verifies request-level validation.
+func TestMsgSetShareDenomMetadataRequest_ValidateBasic(t *testing.T) {
+	admin := utils.TestAddress().Bech32
+	vault := utils.TestAddress().Bech32
+
+	validMD := makeMetadata([]*banktypes.DenomUnit{
+		makeDenomUnit("shares", 0),
+	}, "shares", "shares", "ok")
+
+	emptyDisplayMD := makeMetadata(nil, "shares", "", "ok")
+
+	tests := []struct {
+		name        string
+		msg         types.MsgSetShareDenomMetadataRequest
+		expectedErr error
+	}{
+		{
+			name: "valid",
+			msg: types.MsgSetShareDenomMetadataRequest{
+				Admin:        admin,
+				VaultAddress: vault,
+				Metadata:     validMD,
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "empty vault address",
+			msg: types.MsgSetShareDenomMetadataRequest{
+				Admin:        admin,
+				VaultAddress: "",
+				Metadata:     validMD,
+			},
+			expectedErr: fmt.Errorf("invalid set denom metadata request: vault address cannot be empty"),
+		},
+		{
+			name: "invalid vault bech32",
+			msg: types.MsgSetShareDenomMetadataRequest{
+				Admin:        admin,
+				VaultAddress: "bad",
+				Metadata:     validMD,
+			},
+			expectedErr: fmt.Errorf("invalid set denom metadata request: vault address must be a bech32 address string"),
+		},
+		{
+			name: "empty admin",
+			msg: types.MsgSetShareDenomMetadataRequest{
+				Admin:        "",
+				VaultAddress: vault,
+				Metadata:     validMD,
+			},
+			expectedErr: fmt.Errorf("invalid set denom metadata request: administrator cannot be empty"),
+		},
+		{
+			name: "invalid admin bech32",
+			msg: types.MsgSetShareDenomMetadataRequest{
+				Admin:        "bad",
+				VaultAddress: vault,
+				Metadata:     validMD,
+			},
+			expectedErr: fmt.Errorf("invalid set denom metadata request: administrator must be a bech32 address string"),
+		},
+		{
+			name: "invalid metadata empty display",
+			msg: types.MsgSetShareDenomMetadataRequest{
+				Admin:        admin,
+				VaultAddress: vault,
+				Metadata:     emptyDisplayMD,
+			},
+			expectedErr: fmt.Errorf("invalid set denom metadata request: denom metadata display cannot be empty"),
 		},
 	}
 

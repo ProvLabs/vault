@@ -1,9 +1,12 @@
 package types
 
 import (
+	fmt "fmt"
+
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 const (
@@ -238,6 +241,29 @@ func NewEventBridgeBurnShares(vaultAddress, bridge string, shares sdk.Coin) *Eve
 		VaultAddress: vaultAddress,
 		Bridge:       bridge,
 		Shares:       shares.String(),
+	}
+}
+
+// NewEventSetShareDenomMetadata creates a new EventSetShareDenomMetadata event.
+func NewEventSetShareDenomMetadata(vaultAddress, administrator string, metadata banktypes.Metadata) *EventSetShareDenomMetadata {
+	metadataDenomUnits := make([]*EventDenomUnit, len(metadata.DenomUnits))
+	for i, du := range metadata.DenomUnits {
+		denomUnit := EventDenomUnit{
+			Denom:    du.Denom,
+			Exponent: fmt.Sprint(du.Exponent),
+			Aliases:  du.Aliases,
+		}
+		metadataDenomUnits[i] = &denomUnit
+	}
+	return &EventSetShareDenomMetadata{
+		VaultAddress:        vaultAddress,
+		MetadataBase:        metadata.Base,
+		MetadataDescription: metadata.Description,
+		MetadataDisplay:     metadata.Display,
+		MetadataDenomUnits:  metadataDenomUnits,
+		MetadataName:        metadata.Name,
+		MetadataSymbol:      metadata.Symbol,
+		Administrator:       administrator,
 	}
 }
 

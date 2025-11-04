@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	Msg_CreateVault_FullMethodName            = "/provlabs.vault.v1.Msg/CreateVault"
+	Msg_SetShareDenomMetadata_FullMethodName  = "/provlabs.vault.v1.Msg/SetShareDenomMetadata"
 	Msg_SwapIn_FullMethodName                 = "/provlabs.vault.v1.Msg/SwapIn"
 	Msg_SwapOut_FullMethodName                = "/provlabs.vault.v1.Msg/SwapOut"
 	Msg_UpdateMinInterestRate_FullMethodName  = "/provlabs.vault.v1.Msg/UpdateMinInterestRate"
@@ -49,6 +50,9 @@ const (
 type MsgClient interface {
 	// CreateVault creates a new vault.
 	CreateVault(ctx context.Context, in *MsgCreateVaultRequest, opts ...grpc.CallOption) (*MsgCreateVaultResponse, error)
+	// SetShareDenomMetadata allows Denom Metadata (see bank module) to be set for the vault's share denom.
+	// Similar to marker's SetDenomMetadata, but scoped to a specific vault. Only the vault admin may call this.
+	SetShareDenomMetadata(ctx context.Context, in *MsgSetShareDenomMetadataRequest, opts ...grpc.CallOption) (*MsgSetShareDenomMetadataResponse, error)
 	// SwapIn exchanges underlying assets for vault shares by depositing them into a vault.
 	SwapIn(ctx context.Context, in *MsgSwapInRequest, opts ...grpc.CallOption) (*MsgSwapInResponse, error)
 	// SwapOut exchanges vault shares for underlying assets by withdrawing from a vault.
@@ -108,6 +112,16 @@ func (c *msgClient) CreateVault(ctx context.Context, in *MsgCreateVaultRequest, 
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(MsgCreateVaultResponse)
 	err := c.cc.Invoke(ctx, Msg_CreateVault_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) SetShareDenomMetadata(ctx context.Context, in *MsgSetShareDenomMetadataRequest, opts ...grpc.CallOption) (*MsgSetShareDenomMetadataResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgSetShareDenomMetadataResponse)
+	err := c.cc.Invoke(ctx, Msg_SetShareDenomMetadata_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -312,6 +326,9 @@ func (c *msgClient) SetAssetManager(ctx context.Context, in *MsgSetAssetManagerR
 type MsgServer interface {
 	// CreateVault creates a new vault.
 	CreateVault(context.Context, *MsgCreateVaultRequest) (*MsgCreateVaultResponse, error)
+	// SetShareDenomMetadata allows Denom Metadata (see bank module) to be set for the vault's share denom.
+	// Similar to marker's SetDenomMetadata, but scoped to a specific vault. Only the vault admin may call this.
+	SetShareDenomMetadata(context.Context, *MsgSetShareDenomMetadataRequest) (*MsgSetShareDenomMetadataResponse, error)
 	// SwapIn exchanges underlying assets for vault shares by depositing them into a vault.
 	SwapIn(context.Context, *MsgSwapInRequest) (*MsgSwapInResponse, error)
 	// SwapOut exchanges vault shares for underlying assets by withdrawing from a vault.
@@ -369,6 +386,9 @@ type UnimplementedMsgServer struct{}
 
 func (UnimplementedMsgServer) CreateVault(context.Context, *MsgCreateVaultRequest) (*MsgCreateVaultResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateVault not implemented")
+}
+func (UnimplementedMsgServer) SetShareDenomMetadata(context.Context, *MsgSetShareDenomMetadataRequest) (*MsgSetShareDenomMetadataResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetShareDenomMetadata not implemented")
 }
 func (UnimplementedMsgServer) SwapIn(context.Context, *MsgSwapInRequest) (*MsgSwapInResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SwapIn not implemented")
@@ -462,6 +482,24 @@ func _Msg_CreateVault_Handler(srv interface{}, ctx context.Context, dec func(int
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).CreateVault(ctx, req.(*MsgCreateVaultRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_SetShareDenomMetadata_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSetShareDenomMetadataRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SetShareDenomMetadata(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_SetShareDenomMetadata_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SetShareDenomMetadata(ctx, req.(*MsgSetShareDenomMetadataRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -818,6 +856,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateVault",
 			Handler:    _Msg_CreateVault_Handler,
+		},
+		{
+			MethodName: "SetShareDenomMetadata",
+			Handler:    _Msg_SetShareDenomMetadata_Handler,
 		},
 		{
 			MethodName: "SwapIn",

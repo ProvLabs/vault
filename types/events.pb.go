@@ -269,6 +269,182 @@ func (m *EventVaultCreated) GetUnderlyingAsset() string {
 	return ""
 }
 
+// EventDenomUnit describes a single denom unit entry that is included in the
+// share denom metadata emitted with EventSetShareDenomMetadata.
+type EventDenomUnit struct {
+	// denom is the unit name (e.g., "nushare", "ushare").
+	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
+	// exponent is the base-10 exponent for this unit relative to the base denom.
+	// For example, exponent=6 means 1 display unit = 10^6 base units.
+	Exponent string `protobuf:"bytes,2,opt,name=exponent,proto3" json:"exponent,omitempty"`
+	// aliases lists optional alternative names for this unit. May be empty.
+	Aliases []string `protobuf:"bytes,3,rep,name=aliases,proto3" json:"aliases,omitempty"`
+}
+
+func (m *EventDenomUnit) Reset()         { *m = EventDenomUnit{} }
+func (m *EventDenomUnit) String() string { return proto.CompactTextString(m) }
+func (*EventDenomUnit) ProtoMessage()    {}
+func (*EventDenomUnit) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5fb7c27aa4ee0453, []int{3}
+}
+func (m *EventDenomUnit) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventDenomUnit) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventDenomUnit.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventDenomUnit) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventDenomUnit.Merge(m, src)
+}
+func (m *EventDenomUnit) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventDenomUnit) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventDenomUnit.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventDenomUnit proto.InternalMessageInfo
+
+func (m *EventDenomUnit) GetDenom() string {
+	if m != nil {
+		return m.Denom
+	}
+	return ""
+}
+
+func (m *EventDenomUnit) GetExponent() string {
+	if m != nil {
+		return m.Exponent
+	}
+	return ""
+}
+
+func (m *EventDenomUnit) GetAliases() []string {
+	if m != nil {
+		return m.Aliases
+	}
+	return nil
+}
+
+// EventSetShareDenomMetadata is emitted when denom metadata is set for a vault’s
+// share denom (via MsgSetShareDenomMetadata).
+type EventSetShareDenomMetadata struct {
+	// vault_address is the bech32 address of the vault.
+	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// metadata_base is the base denomination (e.g., "nushare").
+	MetadataBase string `protobuf:"bytes,2,opt,name=metadata_base,json=metadataBase,proto3" json:"metadata_base,omitempty"`
+	// metadata_description is a human-readable description of the share denom.
+	MetadataDescription string `protobuf:"bytes,3,opt,name=metadata_description,json=metadataDescription,proto3" json:"metadata_description,omitempty"`
+	// metadata_display is the display denomination (e.g., "ushare" or "SHARE").
+	MetadataDisplay string `protobuf:"bytes,4,opt,name=metadata_display,json=metadataDisplay,proto3" json:"metadata_display,omitempty"`
+	// metadata_denom_units lists all denom units and their exponents.
+	MetadataDenomUnits []*EventDenomUnit `protobuf:"bytes,5,rep,name=metadata_denom_units,json=metadataDenomUnits,proto3" json:"metadata_denom_units,omitempty"`
+	// administrator is the bech32 address of the signer that set the metadata.
+	Administrator string `protobuf:"bytes,6,opt,name=administrator,proto3" json:"administrator,omitempty"`
+	// metadata_name is the descriptive name for the share denom.
+	MetadataName string `protobuf:"bytes,7,opt,name=metadata_name,json=metadataName,proto3" json:"metadata_name,omitempty"`
+	// metadata_symbol is the short ticker-style symbol (optional).
+	MetadataSymbol string `protobuf:"bytes,8,opt,name=metadata_symbol,json=metadataSymbol,proto3" json:"metadata_symbol,omitempty"`
+}
+
+func (m *EventSetShareDenomMetadata) Reset()         { *m = EventSetShareDenomMetadata{} }
+func (m *EventSetShareDenomMetadata) String() string { return proto.CompactTextString(m) }
+func (*EventSetShareDenomMetadata) ProtoMessage()    {}
+func (*EventSetShareDenomMetadata) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5fb7c27aa4ee0453, []int{4}
+}
+func (m *EventSetShareDenomMetadata) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventSetShareDenomMetadata) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventSetShareDenomMetadata.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventSetShareDenomMetadata) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventSetShareDenomMetadata.Merge(m, src)
+}
+func (m *EventSetShareDenomMetadata) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventSetShareDenomMetadata) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventSetShareDenomMetadata.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventSetShareDenomMetadata proto.InternalMessageInfo
+
+func (m *EventSetShareDenomMetadata) GetVaultAddress() string {
+	if m != nil {
+		return m.VaultAddress
+	}
+	return ""
+}
+
+func (m *EventSetShareDenomMetadata) GetMetadataBase() string {
+	if m != nil {
+		return m.MetadataBase
+	}
+	return ""
+}
+
+func (m *EventSetShareDenomMetadata) GetMetadataDescription() string {
+	if m != nil {
+		return m.MetadataDescription
+	}
+	return ""
+}
+
+func (m *EventSetShareDenomMetadata) GetMetadataDisplay() string {
+	if m != nil {
+		return m.MetadataDisplay
+	}
+	return ""
+}
+
+func (m *EventSetShareDenomMetadata) GetMetadataDenomUnits() []*EventDenomUnit {
+	if m != nil {
+		return m.MetadataDenomUnits
+	}
+	return nil
+}
+
+func (m *EventSetShareDenomMetadata) GetAdministrator() string {
+	if m != nil {
+		return m.Administrator
+	}
+	return ""
+}
+
+func (m *EventSetShareDenomMetadata) GetMetadataName() string {
+	if m != nil {
+		return m.MetadataName
+	}
+	return ""
+}
+
+func (m *EventSetShareDenomMetadata) GetMetadataSymbol() string {
+	if m != nil {
+		return m.MetadataSymbol
+	}
+	return ""
+}
+
 // EventSwapIn is an event emitted when assets are swapped in for vault shares.
 type EventSwapIn struct {
 	// owner is the address of the account that initiated the swap.
@@ -285,7 +461,7 @@ func (m *EventSwapIn) Reset()         { *m = EventSwapIn{} }
 func (m *EventSwapIn) String() string { return proto.CompactTextString(m) }
 func (*EventSwapIn) ProtoMessage()    {}
 func (*EventSwapIn) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{3}
+	return fileDescriptor_5fb7c27aa4ee0453, []int{5}
 }
 func (m *EventSwapIn) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -358,7 +534,7 @@ func (m *EventSwapOut) Reset()         { *m = EventSwapOut{} }
 func (m *EventSwapOut) String() string { return proto.CompactTextString(m) }
 func (*EventSwapOut) ProtoMessage()    {}
 func (*EventSwapOut) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{4}
+	return fileDescriptor_5fb7c27aa4ee0453, []int{6}
 }
 func (m *EventSwapOut) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -435,7 +611,7 @@ func (m *EventVaultReconcile) Reset()         { *m = EventVaultReconcile{} }
 func (m *EventVaultReconcile) String() string { return proto.CompactTextString(m) }
 func (*EventVaultReconcile) ProtoMessage()    {}
 func (*EventVaultReconcile) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{5}
+	return fileDescriptor_5fb7c27aa4ee0453, []int{7}
 }
 func (m *EventVaultReconcile) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -520,7 +696,7 @@ func (m *EventVaultInterestChange) Reset()         { *m = EventVaultInterestChan
 func (m *EventVaultInterestChange) String() string { return proto.CompactTextString(m) }
 func (*EventVaultInterestChange) ProtoMessage()    {}
 func (*EventVaultInterestChange) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{6}
+	return fileDescriptor_5fb7c27aa4ee0453, []int{8}
 }
 func (m *EventVaultInterestChange) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -584,7 +760,7 @@ func (m *EventInterestDeposit) Reset()         { *m = EventInterestDeposit{} }
 func (m *EventInterestDeposit) String() string { return proto.CompactTextString(m) }
 func (*EventInterestDeposit) ProtoMessage()    {}
 func (*EventInterestDeposit) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{7}
+	return fileDescriptor_5fb7c27aa4ee0453, []int{9}
 }
 func (m *EventInterestDeposit) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -648,7 +824,7 @@ func (m *EventInterestWithdrawal) Reset()         { *m = EventInterestWithdrawal
 func (m *EventInterestWithdrawal) String() string { return proto.CompactTextString(m) }
 func (*EventInterestWithdrawal) ProtoMessage()    {}
 func (*EventInterestWithdrawal) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{8}
+	return fileDescriptor_5fb7c27aa4ee0453, []int{10}
 }
 func (m *EventInterestWithdrawal) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -712,7 +888,7 @@ func (m *EventToggleSwapIn) Reset()         { *m = EventToggleSwapIn{} }
 func (m *EventToggleSwapIn) String() string { return proto.CompactTextString(m) }
 func (*EventToggleSwapIn) ProtoMessage()    {}
 func (*EventToggleSwapIn) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{9}
+	return fileDescriptor_5fb7c27aa4ee0453, []int{11}
 }
 func (m *EventToggleSwapIn) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -776,7 +952,7 @@ func (m *EventToggleSwapOut) Reset()         { *m = EventToggleSwapOut{} }
 func (m *EventToggleSwapOut) String() string { return proto.CompactTextString(m) }
 func (*EventToggleSwapOut) ProtoMessage()    {}
 func (*EventToggleSwapOut) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{10}
+	return fileDescriptor_5fb7c27aa4ee0453, []int{12}
 }
 func (m *EventToggleSwapOut) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -840,7 +1016,7 @@ func (m *EventDepositPrincipalFunds) Reset()         { *m = EventDepositPrincipa
 func (m *EventDepositPrincipalFunds) String() string { return proto.CompactTextString(m) }
 func (*EventDepositPrincipalFunds) ProtoMessage()    {}
 func (*EventDepositPrincipalFunds) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{11}
+	return fileDescriptor_5fb7c27aa4ee0453, []int{13}
 }
 func (m *EventDepositPrincipalFunds) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -904,7 +1080,7 @@ func (m *EventWithdrawPrincipalFunds) Reset()         { *m = EventWithdrawPrinci
 func (m *EventWithdrawPrincipalFunds) String() string { return proto.CompactTextString(m) }
 func (*EventWithdrawPrincipalFunds) ProtoMessage()    {}
 func (*EventWithdrawPrincipalFunds) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{12}
+	return fileDescriptor_5fb7c27aa4ee0453, []int{14}
 }
 func (m *EventWithdrawPrincipalFunds) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -969,7 +1145,7 @@ func (m *EventMinInterestRateUpdated) Reset()         { *m = EventMinInterestRat
 func (m *EventMinInterestRateUpdated) String() string { return proto.CompactTextString(m) }
 func (*EventMinInterestRateUpdated) ProtoMessage()    {}
 func (*EventMinInterestRateUpdated) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{13}
+	return fileDescriptor_5fb7c27aa4ee0453, []int{15}
 }
 func (m *EventMinInterestRateUpdated) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1034,7 +1210,7 @@ func (m *EventMaxInterestRateUpdated) Reset()         { *m = EventMaxInterestRat
 func (m *EventMaxInterestRateUpdated) String() string { return proto.CompactTextString(m) }
 func (*EventMaxInterestRateUpdated) ProtoMessage()    {}
 func (*EventMaxInterestRateUpdated) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{14}
+	return fileDescriptor_5fb7c27aa4ee0453, []int{16}
 }
 func (m *EventMaxInterestRateUpdated) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1102,7 +1278,7 @@ func (m *EventSwapOutRequested) Reset()         { *m = EventSwapOutRequested{} }
 func (m *EventSwapOutRequested) String() string { return proto.CompactTextString(m) }
 func (*EventSwapOutRequested) ProtoMessage()    {}
 func (*EventSwapOutRequested) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{15}
+	return fileDescriptor_5fb7c27aa4ee0453, []int{17}
 }
 func (m *EventSwapOutRequested) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1182,7 +1358,7 @@ func (m *EventSwapOutCompleted) Reset()         { *m = EventSwapOutCompleted{} }
 func (m *EventSwapOutCompleted) String() string { return proto.CompactTextString(m) }
 func (*EventSwapOutCompleted) ProtoMessage()    {}
 func (*EventSwapOutCompleted) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{16}
+	return fileDescriptor_5fb7c27aa4ee0453, []int{18}
 }
 func (m *EventSwapOutCompleted) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1258,7 +1434,7 @@ func (m *EventSwapOutRefunded) Reset()         { *m = EventSwapOutRefunded{} }
 func (m *EventSwapOutRefunded) String() string { return proto.CompactTextString(m) }
 func (*EventSwapOutRefunded) ProtoMessage()    {}
 func (*EventSwapOutRefunded) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{17}
+	return fileDescriptor_5fb7c27aa4ee0453, []int{19}
 }
 func (m *EventSwapOutRefunded) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1336,7 +1512,7 @@ func (m *EventPendingSwapOutExpedited) Reset()         { *m = EventPendingSwapOu
 func (m *EventPendingSwapOutExpedited) String() string { return proto.CompactTextString(m) }
 func (*EventPendingSwapOutExpedited) ProtoMessage()    {}
 func (*EventPendingSwapOutExpedited) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{18}
+	return fileDescriptor_5fb7c27aa4ee0453, []int{20}
 }
 func (m *EventPendingSwapOutExpedited) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1402,7 +1578,7 @@ func (m *EventVaultPaused) Reset()         { *m = EventVaultPaused{} }
 func (m *EventVaultPaused) String() string { return proto.CompactTextString(m) }
 func (*EventVaultPaused) ProtoMessage()    {}
 func (*EventVaultPaused) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{19}
+	return fileDescriptor_5fb7c27aa4ee0453, []int{21}
 }
 func (m *EventVaultPaused) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1473,7 +1649,7 @@ func (m *EventVaultUnpaused) Reset()         { *m = EventVaultUnpaused{} }
 func (m *EventVaultUnpaused) String() string { return proto.CompactTextString(m) }
 func (*EventVaultUnpaused) ProtoMessage()    {}
 func (*EventVaultUnpaused) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{20}
+	return fileDescriptor_5fb7c27aa4ee0453, []int{22}
 }
 func (m *EventVaultUnpaused) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1537,7 +1713,7 @@ func (m *EventBridgeAddressSet) Reset()         { *m = EventBridgeAddressSet{} }
 func (m *EventBridgeAddressSet) String() string { return proto.CompactTextString(m) }
 func (*EventBridgeAddressSet) ProtoMessage()    {}
 func (*EventBridgeAddressSet) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{21}
+	return fileDescriptor_5fb7c27aa4ee0453, []int{23}
 }
 func (m *EventBridgeAddressSet) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1601,7 +1777,7 @@ func (m *EventBridgeToggled) Reset()         { *m = EventBridgeToggled{} }
 func (m *EventBridgeToggled) String() string { return proto.CompactTextString(m) }
 func (*EventBridgeToggled) ProtoMessage()    {}
 func (*EventBridgeToggled) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{22}
+	return fileDescriptor_5fb7c27aa4ee0453, []int{24}
 }
 func (m *EventBridgeToggled) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1665,7 +1841,7 @@ func (m *EventBridgeMintShares) Reset()         { *m = EventBridgeMintShares{} }
 func (m *EventBridgeMintShares) String() string { return proto.CompactTextString(m) }
 func (*EventBridgeMintShares) ProtoMessage()    {}
 func (*EventBridgeMintShares) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{23}
+	return fileDescriptor_5fb7c27aa4ee0453, []int{25}
 }
 func (m *EventBridgeMintShares) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1729,7 +1905,7 @@ func (m *EventBridgeBurnShares) Reset()         { *m = EventBridgeBurnShares{} }
 func (m *EventBridgeBurnShares) String() string { return proto.CompactTextString(m) }
 func (*EventBridgeBurnShares) ProtoMessage()    {}
 func (*EventBridgeBurnShares) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{24}
+	return fileDescriptor_5fb7c27aa4ee0453, []int{26}
 }
 func (m *EventBridgeBurnShares) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1793,7 +1969,7 @@ func (m *EventAssetManagerSet) Reset()         { *m = EventAssetManagerSet{} }
 func (m *EventAssetManagerSet) String() string { return proto.CompactTextString(m) }
 func (*EventAssetManagerSet) ProtoMessage()    {}
 func (*EventAssetManagerSet) Descriptor() ([]byte, []int) {
-	return fileDescriptor_5fb7c27aa4ee0453, []int{25}
+	return fileDescriptor_5fb7c27aa4ee0453, []int{27}
 }
 func (m *EventAssetManagerSet) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1847,6 +2023,8 @@ func init() {
 	proto.RegisterType((*EventDeposit)(nil), "provlabs.vault.v1.EventDeposit")
 	proto.RegisterType((*EventWithdraw)(nil), "provlabs.vault.v1.EventWithdraw")
 	proto.RegisterType((*EventVaultCreated)(nil), "provlabs.vault.v1.EventVaultCreated")
+	proto.RegisterType((*EventDenomUnit)(nil), "provlabs.vault.v1.EventDenomUnit")
+	proto.RegisterType((*EventSetShareDenomMetadata)(nil), "provlabs.vault.v1.EventSetShareDenomMetadata")
 	proto.RegisterType((*EventSwapIn)(nil), "provlabs.vault.v1.EventSwapIn")
 	proto.RegisterType((*EventSwapOut)(nil), "provlabs.vault.v1.EventSwapOut")
 	proto.RegisterType((*EventVaultReconcile)(nil), "provlabs.vault.v1.EventVaultReconcile")
@@ -1875,77 +2053,89 @@ func init() {
 func init() { proto.RegisterFile("provlabs/vault/v1/events.proto", fileDescriptor_5fb7c27aa4ee0453) }
 
 var fileDescriptor_5fb7c27aa4ee0453 = []byte{
-	// 1105 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x98, 0xbf, 0x6f, 0x1c, 0x45,
-	0x14, 0xc7, 0xbd, 0xdc, 0xf9, 0x6c, 0x3f, 0xdf, 0xf9, 0xc7, 0x62, 0xe0, 0x9c, 0x1f, 0x97, 0x78,
-	0x53, 0x90, 0x20, 0x71, 0x4e, 0x04, 0x42, 0xa2, 0x88, 0x90, 0xed, 0x18, 0xc9, 0x85, 0x85, 0xb5,
-	0x26, 0x41, 0xa2, 0x59, 0xcd, 0xdd, 0x3e, 0x9f, 0x47, 0xda, 0x9d, 0x5d, 0x66, 0x67, 0xcf, 0x76,
-	0x4d, 0x45, 0x47, 0x8b, 0x04, 0x22, 0x0d, 0x02, 0x89, 0x94, 0x74, 0x54, 0x20, 0x24, 0xa8, 0x50,
-	0x44, 0x45, 0x89, 0xec, 0xff, 0x80, 0x8e, 0x0e, 0xcd, 0xaf, 0xfb, 0x15, 0x9b, 0xb3, 0xb9, 0x28,
-	0xbe, 0xce, 0xf3, 0xdd, 0x37, 0xbb, 0x9f, 0xef, 0x9b, 0x99, 0x37, 0xcf, 0x07, 0xb5, 0x94, 0x27,
-	0xed, 0x88, 0x34, 0xb2, 0xd5, 0x36, 0xc9, 0x23, 0xb1, 0xda, 0xbe, 0xb7, 0x8a, 0x6d, 0x64, 0x22,
-	0xab, 0xa7, 0x3c, 0x11, 0x89, 0xbb, 0x68, 0x9f, 0xd7, 0xd5, 0xf3, 0x7a, 0xfb, 0xde, 0x95, 0xe5,
-	0x66, 0x92, 0xc5, 0x49, 0x16, 0xa8, 0x80, 0x55, 0x3d, 0xd0, 0xd1, 0xde, 0x8f, 0x0e, 0x94, 0x37,
-	0xe5, 0xf4, 0x07, 0x98, 0x26, 0x19, 0x15, 0xee, 0x5d, 0x28, 0x35, 0x49, 0x14, 0x21, 0xaf, 0x3a,
-	0x37, 0x9d, 0xdb, 0x33, 0xeb, 0xd5, 0x3f, 0x7e, 0x78, 0x73, 0xc9, 0x4c, 0x59, 0x0b, 0x43, 0x8e,
-	0x59, 0xb6, 0x2b, 0x38, 0x65, 0x2d, 0xdf, 0xc4, 0xb9, 0x75, 0x98, 0x4c, 0x0e, 0x18, 0xf2, 0xea,
-	0x4b, 0x43, 0x26, 0xe8, 0x30, 0xf7, 0x55, 0x28, 0x91, 0x2c, 0x43, 0x91, 0x55, 0x0b, 0x72, 0x82,
-	0x6f, 0x46, 0x52, 0xcf, 0xf6, 0x09, 0xc7, 0xac, 0x5a, 0xd4, 0xba, 0x1e, 0xb9, 0xcb, 0x30, 0xad,
-	0x9c, 0x04, 0x34, 0xac, 0x4e, 0xde, 0x74, 0x6e, 0x57, 0xfc, 0x29, 0x35, 0xde, 0x0a, 0xbd, 0xbf,
-	0x1d, 0xa8, 0x28, 0xfa, 0x8f, 0xa8, 0xd8, 0x0f, 0x39, 0x39, 0xf8, 0x1f, 0xf8, 0x6f, 0xc3, 0x34,
-	0xc7, 0x26, 0xd2, 0xf6, 0x39, 0x1c, 0x74, 0x22, 0xbb, 0xa6, 0x0b, 0x17, 0x35, 0x5d, 0x3c, 0xc3,
-	0xf4, 0xe4, 0x99, 0xa6, 0x4b, 0xfd, 0xa6, 0x7f, 0x77, 0x60, 0x51, 0x99, 0x7e, 0x24, 0x85, 0x0d,
-	0x8e, 0x44, 0x60, 0xe8, 0xde, 0x87, 0x8a, 0x9e, 0x40, 0xf4, 0xe7, 0x87, 0xfa, 0x2f, 0xab, 0x70,
-	0xa3, 0x49, 0x3f, 0x24, 0x8c, 0x29, 0x1b, 0xbe, 0x88, 0x2a, 0xcc, 0xbd, 0x01, 0xb3, 0x8a, 0x34,
-	0x08, 0x91, 0x25, 0xb1, 0x59, 0x49, 0x50, 0xd2, 0x03, 0xa9, 0xb8, 0x77, 0x60, 0x21, 0x67, 0x21,
-	0xf2, 0xe8, 0x88, 0xb2, 0x56, 0xa0, 0xdc, 0x1a, 0xeb, 0xf3, 0x5d, 0x7d, 0x4d, 0xca, 0xde, 0xcf,
-	0x0e, 0xcc, 0x2a, 0x43, 0xbb, 0x07, 0x24, 0xdd, 0x62, 0xdd, 0xdc, 0x3a, 0xe7, 0xcb, 0xed, 0x55,
-	0x98, 0x21, 0x71, 0x92, 0x33, 0x11, 0x58, 0x7e, 0x7f, 0x5a, 0x0b, 0x5b, 0xcc, 0x7d, 0x1d, 0xe6,
-	0x75, 0x4a, 0x03, 0xb3, 0x76, 0xa1, 0x81, 0x9d, 0xd3, 0xb2, 0x6f, 0xd4, 0x67, 0x13, 0x58, 0xbc,
-	0x48, 0x02, 0xbd, 0x9f, 0xec, 0x41, 0x92, 0x26, 0x3e, 0xc8, 0xc5, 0x85, 0x5d, 0xdc, 0x82, 0x8a,
-	0x01, 0x6d, 0xe4, 0x9c, 0x61, 0x68, 0x9c, 0x94, 0xb5, 0xb8, 0xae, 0x34, 0xf7, 0x3a, 0x80, 0xb1,
-	0x9a, 0xe4, 0xc2, 0x18, 0x31, 0xe6, 0xe5, 0x37, 0x47, 0xf4, 0xf0, 0x8f, 0x03, 0x2f, 0x77, 0x77,
-	0x96, 0x8f, 0xcd, 0x84, 0x35, 0x69, 0x84, 0xa3, 0xee, 0xad, 0x3b, 0xb0, 0x90, 0x72, 0xca, 0x9a,
-	0x34, 0x25, 0x51, 0xd0, 0xc0, 0xbd, 0x84, 0xa3, 0x31, 0x37, 0xdf, 0xd1, 0xd7, 0x95, 0x2c, 0x57,
-	0xab, 0x1b, 0x4a, 0xf6, 0x84, 0x3d, 0x60, 0xfe, 0x5c, 0x47, 0x5e, 0x93, 0xaa, 0xeb, 0x42, 0x91,
-	0x13, 0x81, 0x66, 0x4b, 0xa9, 0xbf, 0xa5, 0x26, 0x68, 0x8c, 0xea, 0x24, 0x15, 0x7c, 0xf5, 0xb7,
-	0x7c, 0x21, 0x65, 0x02, 0x39, 0x66, 0x22, 0x40, 0xa2, 0xf2, 0x5a, 0xd2, 0x2f, 0xb4, 0xf2, 0xa6,
-	0x52, 0xbd, 0xaf, 0x1d, 0xa8, 0x76, 0xbd, 0x6f, 0x99, 0x87, 0x1b, 0xfb, 0x84, 0xb5, 0x46, 0x4e,
-	0xc0, 0x0a, 0x94, 0x9b, 0x39, 0xe7, 0xc8, 0x44, 0xa0, 0xa0, 0xb5, 0xf9, 0x59, 0xa3, 0xf9, 0x92,
-	0x7d, 0x05, 0xca, 0x21, 0x66, 0x94, 0x63, 0xa8, 0x43, 0xb4, 0xeb, 0x59, 0xa3, 0xc9, 0x10, 0xef,
-	0x1b, 0x07, 0x96, 0x14, 0xa1, 0x85, 0xb3, 0x25, 0x7b, 0x44, 0xba, 0x77, 0x60, 0x86, 0xe4, 0x62,
-	0x3f, 0xe1, 0x54, 0x1c, 0x0d, 0x3d, 0xfe, 0xdd, 0x50, 0x55, 0xd2, 0xd4, 0xce, 0xeb, 0xd4, 0x71,
-	0x35, 0xf2, 0xbe, 0x73, 0xe0, 0xb5, 0x3e, 0x4e, 0x5b, 0x9c, 0x49, 0x34, 0x6e, 0xa8, 0x5f, 0xda,
-	0x52, 0xfa, 0x61, 0xd2, 0x6a, 0x45, 0x68, 0xea, 0xcf, 0x0b, 0x2e, 0xa5, 0x55, 0x98, 0x42, 0x46,
-	0x1a, 0x91, 0xa9, 0x4c, 0xd3, 0xbe, 0x1d, 0x7a, 0x5f, 0x39, 0xe0, 0x0e, 0xe0, 0x9d, 0x7a, 0xca,
-	0x2f, 0x8b, 0xef, 0x7b, 0x07, 0xae, 0xf4, 0x36, 0x0f, 0x3b, 0xf6, 0x8c, 0xbe, 0x9f, 0xb3, 0x30,
-	0x1b, 0xb7, 0xc5, 0x7e, 0xe2, 0xc0, 0xd5, 0xbe, 0x66, 0x61, 0xbc, 0x71, 0xbf, 0xb5, 0xb8, 0xdb,
-	0x94, 0xd9, 0x93, 0x24, 0xeb, 0xc0, 0xc3, 0x34, 0xbc, 0x8c, 0x0b, 0x7f, 0x19, 0xa6, 0x63, 0xca,
-	0x7a, 0x8b, 0xd3, 0x54, 0x4c, 0x99, 0x2a, 0x4c, 0x5d, 0x52, 0x72, 0x38, 0x26, 0xa4, 0xe4, 0xb0,
-	0x9f, 0x94, 0x1c, 0x2a, 0xd2, 0x27, 0x0e, 0xbc, 0xd2, 0x7b, 0x49, 0xfb, 0xf8, 0x49, 0x8e, 0x99,
-	0x64, 0xbc, 0x75, 0x2a, 0xe3, 0x00, 0xc9, 0x52, 0x5f, 0xa7, 0x6b, 0x2f, 0xee, 0x15, 0x28, 0x73,
-	0x0c, 0x11, 0xe3, 0xbe, 0x5e, 0x68, 0x56, 0x6b, 0xba, 0x19, 0x3a, 0xab, 0xb5, 0xbd, 0x0e, 0xc0,
-	0x35, 0x82, 0x6d, 0x6e, 0x8b, 0xfe, 0x8c, 0x51, 0xb6, 0x42, 0xef, 0xb3, 0x01, 0xdc, 0x8d, 0x24,
-	0x4e, 0x23, 0x1c, 0x11, 0xf7, 0xac, 0xf6, 0xbb, 0x9f, 0xa5, 0x38, 0xc8, 0xf2, 0xd8, 0xde, 0x3e,
-	0x9d, 0xd4, 0xed, 0xc9, 0x3e, 0x6e, 0x54, 0x14, 0x93, 0x96, 0xc2, 0x7f, 0xa4, 0x65, 0x10, 0x45,
-	0x4e, 0xe3, 0x48, 0xb2, 0x84, 0xd9, 0x9e, 0x59, 0x8f, 0xe4, 0x05, 0x79, 0x4d, 0x21, 0xee, 0x20,
-	0x0b, 0x29, 0x6b, 0x19, 0xd2, 0xcd, 0xc3, 0x14, 0x43, 0x2a, 0x74, 0xf7, 0xd4, 0xf3, 0x5e, 0x67,
-	0xf0, 0xbd, 0x75, 0x98, 0x54, 0xd0, 0xc3, 0x37, 0x9a, 0x0a, 0xeb, 0x3f, 0xf1, 0x85, 0x73, 0x9f,
-	0x78, 0xef, 0x0b, 0x07, 0x16, 0xba, 0xad, 0xc6, 0x0e, 0xc9, 0xb3, 0xf3, 0xa6, 0xf1, 0xda, 0x33,
-	0x35, 0x66, 0xa0, 0x92, 0x98, 0xbc, 0x14, 0x7a, 0xf3, 0xe2, 0xbe, 0x01, 0x8b, 0x22, 0x11, 0x24,
-	0x0a, 0xf4, 0x07, 0xda, 0x24, 0xca, 0x6d, 0xe3, 0x34, 0xaf, 0x1e, 0x28, 0x8e, 0x47, 0x52, 0xf6,
-	0x3e, 0xb5, 0x57, 0x8e, 0xd2, 0x1e, 0xb2, 0xf4, 0xb9, 0xd1, 0x9d, 0x4a, 0x51, 0x38, 0x9d, 0xe2,
-	0x57, 0xbb, 0xf1, 0xd7, 0x39, 0x0d, 0x5b, 0x68, 0x33, 0x89, 0x2f, 0xfc, 0xee, 0x7b, 0x0f, 0xe6,
-	0x1a, 0x0a, 0xa1, 0xf3, 0xbd, 0x61, 0xeb, 0x5c, 0x69, 0xf4, 0x22, 0x77, 0xaf, 0x70, 0xed, 0x44,
-	0x5f, 0xe4, 0xe1, 0xf8, 0x5c, 0xe1, 0x8f, 0xfb, 0x33, 0xbd, 0x4d, 0x99, 0xd8, 0xd5, 0x87, 0x70,
-	0x44, 0xc4, 0xbb, 0x50, 0xd2, 0x99, 0x18, 0xca, 0x68, 0xe2, 0xce, 0xaa, 0x06, 0x83, 0x88, 0xf2,
-	0x3f, 0xa1, 0x71, 0x43, 0xfc, 0xc5, 0x16, 0x47, 0xf5, 0x0f, 0xed, 0x36, 0x61, 0xa4, 0x85, 0xfc,
-	0x12, 0xb6, 0xeb, 0x7d, 0xa8, 0xa8, 0x6a, 0x1e, 0xc4, 0x1a, 0x61, 0xe8, 0x6e, 0x2d, 0x93, 0x1e,
-	0xe0, 0xf5, 0x77, 0x7f, 0x3b, 0xae, 0x39, 0x4f, 0x8f, 0x6b, 0xce, 0x5f, 0xc7, 0x35, 0xe7, 0xf3,
-	0x93, 0xda, 0xc4, 0xd3, 0x93, 0xda, 0xc4, 0x9f, 0x27, 0xb5, 0x89, 0x8f, 0x6f, 0xb4, 0xa8, 0xd8,
-	0xcf, 0x1b, 0xf5, 0x66, 0x12, 0xaf, 0x0e, 0xfc, 0xfe, 0x24, 0x8e, 0x52, 0xcc, 0x1a, 0x25, 0xf5,
-	0x73, 0xd2, 0x5b, 0xff, 0x06, 0x00, 0x00, 0xff, 0xff, 0xf0, 0xda, 0x1e, 0xf5, 0x9e, 0x12, 0x00,
-	0x00,
+	// 1299 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x58, 0xcd, 0x6f, 0x1b, 0xc5,
+	0x1b, 0xee, 0xfe, 0x9c, 0x0f, 0xe7, 0x8d, 0x9d, 0xb6, 0xdb, 0xfc, 0xc0, 0xfd, 0x72, 0x9b, 0x2d,
+	0x12, 0x29, 0x12, 0x4e, 0x0b, 0x08, 0x89, 0x43, 0x85, 0x9a, 0xb6, 0x48, 0x39, 0x04, 0xaa, 0x0d,
+	0x2d, 0x12, 0x42, 0x5a, 0x8d, 0xbd, 0x6f, 0x9d, 0x91, 0x76, 0x67, 0x97, 0x99, 0x59, 0x37, 0x39,
+	0x73, 0xe2, 0xc6, 0x15, 0x09, 0x44, 0x2f, 0xa8, 0x48, 0xf4, 0xc8, 0x8d, 0x13, 0x08, 0x09, 0x4e,
+	0xa8, 0xe2, 0xc4, 0x11, 0xb5, 0xff, 0x01, 0x37, 0x6e, 0x68, 0xbe, 0xbc, 0x59, 0x37, 0xc1, 0x29,
+	0x46, 0xad, 0x6f, 0x9e, 0x67, 0xde, 0x99, 0x7d, 0x9e, 0x77, 0xde, 0x8f, 0x19, 0x43, 0x3b, 0xe7,
+	0xd9, 0x20, 0x21, 0x5d, 0xb1, 0x36, 0x20, 0x45, 0x22, 0xd7, 0x06, 0x97, 0xd7, 0x70, 0x80, 0x4c,
+	0x8a, 0x4e, 0xce, 0x33, 0x99, 0xf9, 0xc7, 0xdd, 0x7c, 0x47, 0xcf, 0x77, 0x06, 0x97, 0x4f, 0x9d,
+	0xec, 0x65, 0x22, 0xcd, 0x44, 0xa4, 0x0d, 0xd6, 0xcc, 0xc0, 0x58, 0x07, 0xdf, 0x7b, 0xd0, 0xb8,
+	0xa1, 0x96, 0x5f, 0xc7, 0x3c, 0x13, 0x54, 0xfa, 0x97, 0x60, 0xae, 0x47, 0x92, 0x04, 0x79, 0xcb,
+	0x3b, 0xef, 0xad, 0x2e, 0xac, 0xb7, 0x7e, 0xfb, 0xee, 0xd5, 0x65, 0xbb, 0xe4, 0x6a, 0x1c, 0x73,
+	0x14, 0x62, 0x4b, 0x72, 0xca, 0xfa, 0xa1, 0xb5, 0xf3, 0x3b, 0x30, 0x9b, 0xdd, 0x65, 0xc8, 0x5b,
+	0xff, 0x1b, 0xb3, 0xc0, 0x98, 0xf9, 0x2f, 0xc0, 0x1c, 0x11, 0x02, 0xa5, 0x68, 0xd5, 0xd4, 0x82,
+	0xd0, 0x8e, 0x14, 0x2e, 0xb6, 0x09, 0x47, 0xd1, 0x9a, 0x31, 0xb8, 0x19, 0xf9, 0x27, 0xa1, 0xae,
+	0x95, 0x44, 0x34, 0x6e, 0xcd, 0x9e, 0xf7, 0x56, 0x9b, 0xe1, 0xbc, 0x1e, 0x6f, 0xc4, 0xc1, 0x9f,
+	0x1e, 0x34, 0x35, 0xfb, 0x0f, 0xa8, 0xdc, 0x8e, 0x39, 0xb9, 0xfb, 0x2f, 0xe8, 0xbf, 0x01, 0x75,
+	0x8e, 0x3d, 0xa4, 0x83, 0x43, 0x28, 0x18, 0x5a, 0x96, 0xa2, 0x6b, 0x4f, 0x2b, 0x7a, 0xe6, 0x00,
+	0xd1, 0xb3, 0x07, 0x8a, 0x9e, 0xab, 0x8a, 0xfe, 0xd5, 0x83, 0xe3, 0x5a, 0xf4, 0x6d, 0x05, 0x5c,
+	0xe3, 0x48, 0x24, 0xc6, 0xfe, 0x15, 0x68, 0x9a, 0x05, 0xc4, 0x7c, 0x7e, 0xac, 0xfe, 0x86, 0x36,
+	0xb7, 0x98, 0xd2, 0x43, 0xe2, 0x94, 0xb2, 0xf1, 0x87, 0xa8, 0xcd, 0xfc, 0x73, 0xb0, 0xa8, 0x99,
+	0x46, 0x31, 0xb2, 0x2c, 0xb5, 0x27, 0x09, 0x1a, 0xba, 0xae, 0x10, 0xff, 0x22, 0x1c, 0x2b, 0x58,
+	0x8c, 0x3c, 0xd9, 0xa5, 0xac, 0x1f, 0x69, 0xb5, 0x56, 0xfa, 0xd1, 0x12, 0xbf, 0xaa, 0xe0, 0xe0,
+	0x23, 0x58, 0xb2, 0x21, 0xc8, 0xb2, 0xf4, 0x16, 0xa3, 0xd2, 0x5f, 0x86, 0x59, 0xb3, 0xaf, 0x16,
+	0x11, 0x9a, 0x81, 0x7f, 0x0a, 0xea, 0xb8, 0x93, 0x67, 0x0c, 0x99, 0x34, 0x34, 0xc3, 0xe1, 0xd8,
+	0x6f, 0xc1, 0x3c, 0x49, 0x28, 0x11, 0xa8, 0xa2, 0xaa, 0xb6, 0xba, 0x10, 0xba, 0x61, 0x70, 0xbf,
+	0x06, 0xa7, 0xf4, 0xf6, 0x5b, 0x28, 0xb7, 0x86, 0xfc, 0x36, 0x51, 0x92, 0x98, 0x48, 0x32, 0xa9,
+	0xdf, 0x2e, 0x40, 0x33, 0xb5, 0x5b, 0x45, 0x5d, 0x22, 0xd0, 0x12, 0x6b, 0x38, 0x70, 0x9d, 0x08,
+	0xf4, 0x2f, 0xc3, 0xf2, 0xd0, 0x28, 0x46, 0xd1, 0xe3, 0x34, 0x97, 0x34, 0x63, 0xd6, 0x6b, 0x27,
+	0xdc, 0xdc, 0xf5, 0x72, 0x4a, 0xb9, 0xaf, 0x5c, 0x42, 0x45, 0x9e, 0x90, 0x5d, 0xe7, 0xbe, 0xa1,
+	0xb9, 0x81, 0xfd, 0xad, 0xca, 0xee, 0x2c, 0x4b, 0xa3, 0x82, 0x51, 0xa9, 0x02, 0xaa, 0xb6, 0xba,
+	0xf8, 0xda, 0x4a, 0xe7, 0x89, 0x7a, 0xd0, 0xa9, 0x7a, 0x3b, 0xf4, 0x4b, 0x02, 0x16, 0x12, 0xfe,
+	0x4b, 0xd0, 0xd4, 0x07, 0x4d, 0x85, 0xe4, 0x44, 0x66, 0x5c, 0x07, 0xe1, 0x42, 0x58, 0x05, 0x2b,
+	0xea, 0x19, 0x49, 0xb1, 0x35, 0x5f, 0x55, 0xff, 0x2e, 0x49, 0xd1, 0x7f, 0x19, 0x86, 0x94, 0x23,
+	0xb1, 0x9b, 0x76, 0xb3, 0xa4, 0x55, 0xd7, 0x66, 0x4b, 0x0e, 0xde, 0xd2, 0x68, 0xf0, 0xa3, 0x07,
+	0x8b, 0xe6, 0xa4, 0xee, 0x92, 0x7c, 0x83, 0x95, 0x39, 0xe6, 0x1d, 0x2e, 0xc7, 0x4e, 0xc3, 0x02,
+	0x49, 0xb3, 0x82, 0xc9, 0xc8, 0xc5, 0x71, 0x58, 0x37, 0xc0, 0x06, 0x53, 0x2c, 0x4c, 0x6a, 0x45,
+	0x36, 0x87, 0x63, 0xeb, 0xfe, 0x25, 0x03, 0x87, 0x16, 0x7d, 0x32, 0x20, 0x66, 0x9e, 0x26, 0x20,
+	0x82, 0x1f, 0x5c, 0x41, 0x55, 0x22, 0xde, 0x2b, 0xe4, 0x53, 0xab, 0xb8, 0x00, 0x4d, 0x4b, 0xb4,
+	0x5b, 0x70, 0x86, 0xb1, 0x8b, 0x28, 0x03, 0xae, 0x6b, 0xcc, 0x3f, 0x0b, 0x60, 0xa5, 0x66, 0x85,
+	0xb4, 0x42, 0xac, 0x78, 0xf5, 0xcd, 0x09, 0x35, 0xfc, 0xe5, 0xc1, 0x89, 0xb2, 0xc2, 0x84, 0xd8,
+	0xcb, 0x58, 0x8f, 0x26, 0x38, 0x69, 0xae, 0x5c, 0x84, 0x63, 0x39, 0xa7, 0xac, 0x47, 0x73, 0x92,
+	0x44, 0x5d, 0xbc, 0x93, 0x71, 0x97, 0x2e, 0x47, 0x87, 0xf8, 0xba, 0x86, 0xd5, 0x69, 0x95, 0xa6,
+	0xe4, 0x8e, 0x74, 0x85, 0x36, 0x5c, 0x1a, 0xc2, 0x57, 0x15, 0xea, 0xfb, 0x30, 0xc3, 0x89, 0x44,
+	0x9b, 0x1b, 0xfa, 0xb7, 0xc2, 0x24, 0x4d, 0x51, 0x57, 0xd4, 0x5a, 0xa8, 0x7f, 0xab, 0x0d, 0x29,
+	0x93, 0xc8, 0x51, 0xc8, 0x08, 0x89, 0xf6, 0xab, 0x89, 0xe8, 0x25, 0x07, 0xdf, 0xd0, 0x68, 0xf0,
+	0x95, 0x07, 0xad, 0x52, 0xfb, 0x86, 0x9d, 0xbc, 0xb6, 0x4d, 0x58, 0x7f, 0x62, 0x07, 0xac, 0x40,
+	0xa3, 0x57, 0x70, 0x8e, 0x4c, 0x46, 0x9a, 0xb4, 0x11, 0xbf, 0x68, 0xb1, 0x50, 0x71, 0x5f, 0x81,
+	0x46, 0x8c, 0x82, 0x72, 0x8c, 0x8d, 0x89, 0x51, 0xbd, 0x68, 0x31, 0x65, 0x12, 0x7c, 0xed, 0xc1,
+	0xb2, 0x66, 0xe8, 0xc8, 0xb9, 0xd6, 0x3d, 0x21, 0xbb, 0x37, 0x61, 0x81, 0x14, 0x72, 0x3b, 0xe3,
+	0x54, 0xee, 0x8e, 0x6d, 0x03, 0xa5, 0xa9, 0x6e, 0x6d, 0x3a, 0xf2, 0x86, 0xfd, 0x5c, 0x8f, 0x82,
+	0x6f, 0x3c, 0x78, 0xb1, 0xc2, 0xd3, 0x35, 0x69, 0x92, 0x4c, 0x1b, 0xd5, 0x2f, 0x5c, 0x4b, 0x7d,
+	0x3f, 0xeb, 0xf7, 0x13, 0xb4, 0xf5, 0xe7, 0x19, 0xb7, 0xd4, 0x16, 0xcc, 0x23, 0x23, 0xdd, 0xc4,
+	0x56, 0xa6, 0x7a, 0xe8, 0x86, 0xc1, 0x97, 0x1e, 0xf8, 0x23, 0xf4, 0xf6, 0xcd, 0xf2, 0xe7, 0xc5,
+	0xef, 0x5b, 0xcf, 0xb6, 0x58, 0x1b, 0x89, 0x37, 0x5d, 0x8e, 0xbe, 0x53, 0xb0, 0x58, 0x4c, 0xdb,
+	0x61, 0x3f, 0xf0, 0xe0, 0x74, 0xe5, 0xd2, 0x38, 0xdd, 0x74, 0xef, 0x3b, 0xba, 0x9b, 0x94, 0xb9,
+	0x4c, 0x52, 0x75, 0xe0, 0x56, 0x1e, 0x3f, 0x8f, 0x8b, 0xdf, 0x49, 0xa8, 0xa7, 0x94, 0xed, 0x2d,
+	0x4e, 0xf3, 0x29, 0x65, 0xba, 0x30, 0x95, 0x4c, 0xc9, 0xce, 0x94, 0x30, 0x25, 0x3b, 0x55, 0xa6,
+	0x64, 0x47, 0x33, 0x7d, 0xe0, 0xc1, 0xff, 0xf7, 0x36, 0xe9, 0x10, 0x3f, 0x2e, 0x50, 0x28, 0x8e,
+	0x17, 0xf6, 0xe5, 0x38, 0xc2, 0x64, 0xb9, 0xf2, 0xe2, 0x71, 0x8d, 0x7b, 0x05, 0x1a, 0x1c, 0x63,
+	0xc4, 0xb4, 0x72, 0x27, 0x5e, 0x34, 0x98, 0xb9, 0x14, 0x1f, 0xf4, 0xc4, 0x39, 0x0b, 0xc0, 0x0d,
+	0x05, 0xf7, 0xc8, 0x99, 0x09, 0x17, 0x2c, 0xb2, 0x11, 0x07, 0x9f, 0x8e, 0xd0, 0xbd, 0x96, 0xa5,
+	0x79, 0x82, 0x13, 0xd2, 0x3d, 0xe8, 0x19, 0x56, 0xe5, 0x32, 0x33, 0xca, 0xe5, 0x9e, 0xeb, 0x3e,
+	0x43, 0xd7, 0xdd, 0x51, 0xf7, 0xf9, 0x49, 0xa9, 0x58, 0xb7, 0xd4, 0xfe, 0xc1, 0x2d, 0xa3, 0x54,
+	0xd4, 0x32, 0x8e, 0x44, 0x64, 0xcc, 0xbd, 0x9d, 0xcc, 0x48, 0x35, 0xc8, 0x33, 0x9a, 0xe2, 0x4d,
+	0x64, 0x31, 0x65, 0x7d, 0xcb, 0xf4, 0xc6, 0x4e, 0x8e, 0x31, 0x95, 0xe6, 0xf6, 0xb4, 0x67, 0x5f,
+	0x6f, 0x74, 0xdf, 0x0e, 0xcc, 0x6a, 0xd2, 0xe3, 0x03, 0x4d, 0x9b, 0x55, 0x33, 0xbe, 0x76, 0xe8,
+	0x8c, 0x0f, 0x3e, 0xf7, 0xe0, 0x58, 0x79, 0xd5, 0xb8, 0x49, 0x0a, 0x71, 0x58, 0x37, 0x9e, 0x79,
+	0xa2, 0xc6, 0x8c, 0x54, 0x12, 0xeb, 0x97, 0xda, 0x5e, 0xbf, 0xf8, 0xaf, 0xc0, 0x71, 0x99, 0x49,
+	0x92, 0x44, 0xe6, 0x03, 0x03, 0x92, 0x14, 0xee, 0xe2, 0x74, 0x54, 0x4f, 0x68, 0x1e, 0xb7, 0x15,
+	0x1c, 0x7c, 0xe2, 0x5a, 0x8e, 0xc6, 0x6e, 0xb1, 0xfc, 0x3f, 0x63, 0xb7, 0x2f, 0x8b, 0xda, 0xfe,
+	0x2c, 0x7e, 0x76, 0x81, 0xbf, 0xce, 0x69, 0xdc, 0x47, 0xe7, 0x49, 0x7c, 0xe6, 0xbd, 0xef, 0x6d,
+	0x58, 0xea, 0x6a, 0x0a, 0xc3, 0xef, 0x8d, 0x3b, 0xe7, 0x66, 0x77, 0x2f, 0xe5, 0xb2, 0x85, 0x1b,
+	0x25, 0xa6, 0x91, 0xc7, 0xd3, 0xd3, 0xc2, 0xef, 0x55, 0x3d, 0xbd, 0x49, 0x99, 0x79, 0x2c, 0x4f,
+	0xdc, 0x0e, 0x2f, 0xc1, 0x9c, 0xf1, 0xc4, 0x58, 0x8e, 0xd6, 0xee, 0xa0, 0x6a, 0x30, 0x4a, 0x51,
+	0xbd, 0x84, 0xa6, 0x8d, 0xe2, 0x4f, 0xae, 0x38, 0xea, 0x3f, 0x36, 0x36, 0x09, 0x23, 0x7d, 0xe4,
+	0xcf, 0x21, 0x5c, 0xaf, 0x40, 0x53, 0x57, 0xf3, 0x28, 0x35, 0x14, 0xc6, 0x46, 0x6b, 0x83, 0xec,
+	0x21, 0xbc, 0xfe, 0xd6, 0x2f, 0x8f, 0xda, 0xde, 0xc3, 0x47, 0x6d, 0xef, 0x8f, 0x47, 0x6d, 0xef,
+	0xb3, 0xc7, 0xed, 0x23, 0x0f, 0x1f, 0xb7, 0x8f, 0xfc, 0xfe, 0xb8, 0x7d, 0xe4, 0xc3, 0x73, 0x7d,
+	0x2a, 0xb7, 0x8b, 0x6e, 0xa7, 0x97, 0xa5, 0x6b, 0x23, 0xff, 0x43, 0xca, 0xdd, 0x1c, 0x45, 0x77,
+	0x4e, 0xff, 0xad, 0xf8, 0xfa, 0xdf, 0x01, 0x00, 0x00, 0xff, 0xff, 0x04, 0xbe, 0xe2, 0x5a, 0xa6,
+	0x14, 0x00, 0x00,
 }
 
 func (m *EventDeposit) Marshal() (dAtA []byte, err error) {
@@ -2105,6 +2295,138 @@ func (m *EventVaultCreated) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i -= len(m.Admin)
 		copy(dAtA[i:], m.Admin)
 		i = encodeVarintEvents(dAtA, i, uint64(len(m.Admin)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.VaultAddress) > 0 {
+		i -= len(m.VaultAddress)
+		copy(dAtA[i:], m.VaultAddress)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.VaultAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *EventDenomUnit) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventDenomUnit) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventDenomUnit) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.Aliases) > 0 {
+		for iNdEx := len(m.Aliases) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.Aliases[iNdEx])
+			copy(dAtA[i:], m.Aliases[iNdEx])
+			i = encodeVarintEvents(dAtA, i, uint64(len(m.Aliases[iNdEx])))
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if len(m.Exponent) > 0 {
+		i -= len(m.Exponent)
+		copy(dAtA[i:], m.Exponent)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Exponent)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.Denom) > 0 {
+		i -= len(m.Denom)
+		copy(dAtA[i:], m.Denom)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Denom)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *EventSetShareDenomMetadata) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventSetShareDenomMetadata) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventSetShareDenomMetadata) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.MetadataSymbol) > 0 {
+		i -= len(m.MetadataSymbol)
+		copy(dAtA[i:], m.MetadataSymbol)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.MetadataSymbol)))
+		i--
+		dAtA[i] = 0x42
+	}
+	if len(m.MetadataName) > 0 {
+		i -= len(m.MetadataName)
+		copy(dAtA[i:], m.MetadataName)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.MetadataName)))
+		i--
+		dAtA[i] = 0x3a
+	}
+	if len(m.Administrator) > 0 {
+		i -= len(m.Administrator)
+		copy(dAtA[i:], m.Administrator)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Administrator)))
+		i--
+		dAtA[i] = 0x32
+	}
+	if len(m.MetadataDenomUnits) > 0 {
+		for iNdEx := len(m.MetadataDenomUnits) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.MetadataDenomUnits[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintEvents(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x2a
+		}
+	}
+	if len(m.MetadataDisplay) > 0 {
+		i -= len(m.MetadataDisplay)
+		copy(dAtA[i:], m.MetadataDisplay)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.MetadataDisplay)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.MetadataDescription) > 0 {
+		i -= len(m.MetadataDescription)
+		copy(dAtA[i:], m.MetadataDescription)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.MetadataDescription)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.MetadataBase) > 0 {
+		i -= len(m.MetadataBase)
+		copy(dAtA[i:], m.MetadataBase)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.MetadataBase)))
 		i--
 		dAtA[i] = 0x12
 	}
@@ -3302,6 +3624,72 @@ func (m *EventVaultCreated) Size() (n int) {
 	return n
 }
 
+func (m *EventDenomUnit) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Denom)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.Exponent)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	if len(m.Aliases) > 0 {
+		for _, s := range m.Aliases {
+			l = len(s)
+			n += 1 + l + sovEvents(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *EventSetShareDenomMetadata) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.VaultAddress)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.MetadataBase)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.MetadataDescription)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.MetadataDisplay)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	if len(m.MetadataDenomUnits) > 0 {
+		for _, e := range m.MetadataDenomUnits {
+			l = e.Size()
+			n += 1 + l + sovEvents(uint64(l))
+		}
+	}
+	l = len(m.Administrator)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.MetadataName)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.MetadataSymbol)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	return n
+}
+
 func (m *EventSwapIn) Size() (n int) {
 	if m == nil {
 		return 0
@@ -4409,6 +4797,460 @@ func (m *EventVaultCreated) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			m.UnderlyingAsset = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EventDenomUnit) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventDenomUnit: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventDenomUnit: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Denom", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Denom = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Exponent", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Exponent = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Aliases", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Aliases = append(m.Aliases, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *EventSetShareDenomMetadata) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventSetShareDenomMetadata: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventSetShareDenomMetadata: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VaultAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VaultAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MetadataBase", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MetadataBase = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MetadataDescription", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MetadataDescription = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MetadataDisplay", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MetadataDisplay = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MetadataDenomUnits", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MetadataDenomUnits = append(m.MetadataDenomUnits, &EventDenomUnit{})
+			if err := m.MetadataDenomUnits[len(m.MetadataDenomUnits)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Administrator", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Administrator = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MetadataName", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MetadataName = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MetadataSymbol", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MetadataSymbol = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

@@ -6,27 +6,27 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 ---
 
 <!-- TOC -->
-
-* [Endpoint Gating Matrix](#endpoint-gating-matrix)
-* [CreateVault](#createvault)
-* [SwapIn](#swapin)
-* [SwapOut](#swapout)
-* [BridgeMintShares](#bridgemintshares)
-* [BridgeBurnShares](#bridgeburnshares)
-* [SetBridgeAddress](#setbridgeaddress)
-* [ToggleBridgeEnabled](#togglebridgeenabled)
-* [UpdateMinInterestRate](#updatemininterestrate)
-* [UpdateMaxInterestRate](#updatemaxinterestrate)
-* [UpdateInterestRate](#updateinterestrate)
-* [ToggleSwapIn](#toggleswapin)
-* [ToggleSwapOut](#toggleswapout)
-* [DepositInterestFunds](#depositinterestfunds)
-* [WithdrawInterestFunds](#withdrawinterestfunds)
-* [DepositPrincipalFunds](#depositprincipalfunds)
-* [WithdrawPrincipalFunds](#withdrawprincipalfunds)
-* [ExpeditePendingSwapOut](#expeditependingswapout)
-* [PauseVault](#pausevault)
-* [UnpauseVault](#unpausevault)
+- [Endpoint Gating Matrix](#endpoint-gating-matrix)
+- [CreateVault](#createvault)
+- [SetShareDenomMetadata](#setShareDenomMetadata)
+- [SwapIn](#swapin)
+- [SwapOut](#swapout)
+- [BridgeMintShares](#bridgemintshares)
+- [BridgeBurnShares](#bridgeburnshares)
+- [SetBridgeAddress](#setbridgeaddress)
+- [ToggleBridgeEnabled](#togglebridgeenabled)
+- [UpdateMinInterestRate](#updatemininterestrate)
+- [UpdateMaxInterestRate](#updatemaxinterestrate)
+- [UpdateInterestRate](#updateinterestrate)
+- [ToggleSwapIn](#toggleswapin)
+- [ToggleSwapOut](#toggleswapout)
+- [DepositInterestFunds](#depositinterestfunds)
+- [WithdrawInterestFunds](#withdrawinterestfunds)
+- [DepositPrincipalFunds](#depositprincipalfunds)
+- [WithdrawPrincipalFunds](#withdrawprincipalfunds)
+- [ExpeditePendingSwapOut](#expeditependingswapout)
+- [PauseVault](#pausevault)
+- [UnpauseVault](#unpausevault)
 
 ---
 
@@ -68,6 +68,15 @@ The creator is recorded as vault admin.
 
 * **Request:** `MsgCreateVaultRequest { admin, share_denom, underlying_asset, payment_denom?, withdrawal_delay_seconds }`
 * **Response:** `MsgCreateVaultResponse {}`
+
+---
+
+## SetShareDenomMetadata
+
+Admin-only. Sets Bank module metadata for a vault’s share denom, defining how it is displayed (name, symbol, units).
+
+- **Request:** `MsgSetShareDenomMetadataRequest { admin, vault_address, metadata }`
+- **Response:** `MsgSetShareDenomMetadataResponse {}`
 
 ---
 

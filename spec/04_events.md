@@ -5,7 +5,6 @@ This document describes all events emitted by the `x/vault` module and how to us
 ---
 
 <!-- TOC -->
-<<<<<<< HEAD
 - [Lifecycle](#lifecycle)
   - [EventVaultCreated](#eventvaultcreated)
   - [EventVaultPaused](#eventvaultpaused)
@@ -35,43 +34,6 @@ This document describes all events emitted by the `x/vault` module and how to us
 - [Metadata](#metadata)
   - [EventSetShareDenomMetadata](#eventSetShareDenomMetadata)
   - [EventDenomUnit](#eventDenomUnit) 
-=======
-
-* [Lifecycle](#lifecycle)
-
-  * [EventVaultCreated](#eventvaultcreated)
-  * [EventVaultPaused](#eventvaultpaused)
-  * [EventVaultUnpaused](#eventvaultunpaused)
-* [Swaps](#swaps)
-
-  * [EventSwapIn](#eventswapin)
-  * [EventSwapOutRequested](#eventswapoutrequested)
-  * [EventPendingSwapOutExpedited](#eventpendingswapoutexpedited)
-  * [EventSwapOutCompleted](#eventswapoutcompleted)
-  * [EventSwapOutRefunded](#eventswapoutrefunded)
-  * [How to tell if your SwapOut succeeded](#how-to-tell-if-your-swapout-succeeded)
-* [Interest](#interest)
-
-  * [EventVaultReconcile](#eventvaultreconcile)
-  * [EventVaultInterestChange](#eventvaultinterestchange)
-  * [EventMinInterestRateUpdated](#eventmininterestrateupdated)
-  * [EventMaxInterestRateUpdated](#eventmaxinterestrateupdated)
-  * [EventInterestDeposit](#eventinterestdeposit)
-  * [EventInterestWithdrawal](#eventinterestwithdrawal)
-* [Admin Toggles](#admin-toggles)
-
-  * [EventToggleSwapIn](#eventtoggleswapin)
-  * [EventToggleSwapOut](#eventtoggleswapout)
-* [Bridge](#bridge)
-
-  * [EventBridgeAddressSet](#eventbridgeaddressset)
-  * [EventBridgeToggled](#eventbridgetoggled)
-  * [EventBridgeMintShares](#eventbridgemintshares)
-  * [EventBridgeBurnShares](#eventbridgeburnshares)
-* [Management](#management)
-
-  * [EventAssetManagerSet](#eventassetmanagerset)
->>>>>>> main
 
 ---
 
@@ -388,11 +350,6 @@ Emitted when shares are **minted to the bridge** and transferred out.
 Emitted when shares are **burned from the bridge** balance.
 
 **Fields**
-<<<<<<< HEAD
-- `vault_address` — vault  
-- `bridge` — bridge signer  
-- `shares` — burned share amount
-=======
 
 * `vault_address` — vault
 * `bridge` — bridge signer

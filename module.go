@@ -150,12 +150,9 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 	exampleVaultAddr := "pb1z3x5c7v9b2n4m6f8h0j1k3l5p7r9s0t2w4y6"
 	exampleOwnerAddr := "pb1a2b3c4d5e6f7g8h9j0k1l2m3n4p5q6r7s8t"
 	exampleBridgeAddr := "pb1b2r3i4d5g6e7a8d9d0e1m2o3s4i5g6n7e8r9"
-<<<<<<< HEAD
 	exampleMetadata := `{"base":"nushare","name":"Nu Vault Share","symbol":"NU","description":"Share token for the Nu Vault","display":"ushare","denom_units":[{"denom":"nushare","exponent":0},{"denom":"ushare","exponent":6}]}`
-=======
 	exampleAssetMgrAddr := "pb1a5s6e7t8m9g0r1m2a3n4a5g6e7r8a9d0r1s"
 
->>>>>>> main
 	return &autocliv1.ModuleOptions{
 		Tx: &autocliv1.ServiceCommandDescriptor{
 			Service: vaultv1.Msg_ServiceDesc.ServiceName,
@@ -388,7 +385,6 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					},
 				},
 				{
-<<<<<<< HEAD
 					RpcMethod: "SetShareDenomMetadata",
 					Use:       "set-share-denom-metadata [admin] [vault_address] [metadata]",
 					Alias:     []string{"ssdm"},
@@ -398,7 +394,6 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						{ProtoField: "admin"},
 						{ProtoField: "vault_address"},
 						{ProtoField: "metadata"},
-=======
 					RpcMethod: "SetAssetManager",
 					Use:       "set-asset-manager [admin] [vault_address] [asset_manager]",
 					Alias:     []string{"sam"},
@@ -408,7 +403,6 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						{ProtoField: "admin"},
 						{ProtoField: "vault_address"},
 						{ProtoField: "asset_manager"},
->>>>>>> main
 					},
 				},
 			},

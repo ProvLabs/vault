@@ -6,7 +6,6 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 ---
 
 <!-- TOC -->
-<<<<<<< HEAD
 - [Endpoint Gating Matrix](#endpoint-gating-matrix)
 - [CreateVault](#createvault)
 - [SetShareDenomMetadata](#setShareDenomMetadata)
@@ -28,29 +27,6 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 - [ExpeditePendingSwapOut](#expeditependingswapout)
 - [PauseVault](#pausevault)
 - [UnpauseVault](#unpausevault)
-=======
-
-* [Endpoint Gating Matrix](#endpoint-gating-matrix)
-* [CreateVault](#createvault)
-* [SwapIn](#swapin)
-* [SwapOut](#swapout)
-* [BridgeMintShares](#bridgemintshares)
-* [BridgeBurnShares](#bridgeburnshares)
-* [SetBridgeAddress](#setbridgeaddress)
-* [ToggleBridgeEnabled](#togglebridgeenabled)
-* [UpdateMinInterestRate](#updatemininterestrate)
-* [UpdateMaxInterestRate](#updatemaxinterestrate)
-* [UpdateInterestRate](#updateinterestrate)
-* [ToggleSwapIn](#toggleswapin)
-* [ToggleSwapOut](#toggleswapout)
-* [DepositInterestFunds](#depositinterestfunds)
-* [WithdrawInterestFunds](#withdrawinterestfunds)
-* [DepositPrincipalFunds](#depositprincipalfunds)
-* [WithdrawPrincipalFunds](#withdrawprincipalfunds)
-* [ExpeditePendingSwapOut](#expeditependingswapout)
-* [PauseVault](#pausevault)
-* [UnpauseVault](#unpausevault)
->>>>>>> main
 
 ---
 

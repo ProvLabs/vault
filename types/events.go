@@ -244,7 +244,6 @@ func NewEventBridgeBurnShares(vaultAddress, bridge string, shares sdk.Coin) *Eve
 	}
 }
 
-<<<<<<< HEAD
 // NewEventSetShareDenomMetadata creates a new EventSetShareDenomMetadata event.
 func NewEventSetShareDenomMetadata(vaultAddress, administrator string, metadata banktypes.Metadata) *EventSetShareDenomMetadata {
 	metadataDenomUnits := make([]*EventDenomUnit, len(metadata.DenomUnits))
@@ -265,13 +264,14 @@ func NewEventSetShareDenomMetadata(vaultAddress, administrator string, metadata 
 		MetadataName:        metadata.Name,
 		MetadataSymbol:      metadata.Symbol,
 		Administrator:       administrator,
-=======
+	}
+}
+
 // NewEventAssetManagerSet creates a new EventAssetManagerSet event.
 func NewEventAssetManagerSet(vaultAddress, admin, assetManager string) *EventAssetManagerSet {
 	return &EventAssetManagerSet{
 		VaultAddress: vaultAddress,
 		Admin:        admin,
 		AssetManager: assetManager,
->>>>>>> main
 	}
 }

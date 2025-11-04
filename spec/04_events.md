@@ -368,6 +368,3 @@ Emitted when a vault’s asset manager is set or cleared.
 * `vault_address` — vault
 * `admin` — actor
 * `asset_manager` — new asset manager bech32 address (empty when cleared)
-
----
->>>>>>> main

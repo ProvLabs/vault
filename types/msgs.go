@@ -78,13 +78,19 @@ func (m MsgCreateVaultRequest) ValidateBasic() error {
 
 // ValidateBasic performs stateless validation on MsgSetShareDenomMetadataRequest.
 func (m MsgSetShareDenomMetadataRequest) ValidateBasic() error {
+	if len(m.VaultAddress) == 0 {
+		return errors.New("invalid set denom metadata request: vault address cannot be empty")
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid set denom metadata request: vault address must be a bech32 address string: %w", err)
+	}
 	if len(m.Admin) == 0 {
 		return errors.New("invalid set denom metadata request: administrator cannot be empty")
 	}
 	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
 		return fmt.Errorf("invalid set denom metadata request: administrator must be a bech32 address string: %w", err)
 	}
-	if err := markertypes.ValidateDenomMetadataBasic(m.Metadata); err != nil {
+	if err := ValidateDenomMetadataBasic(m.Metadata); err != nil {
 		return fmt.Errorf("invalid set denom metadata request: %w", err)
 	}
 	return nil

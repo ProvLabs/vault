@@ -270,6 +270,7 @@ func TestValidateDenomMetadataBasic(t *testing.T) {
 
 func TestMsgSetShareDenomMetadataRequest_ValidateBasic(t *testing.T) {
 	admin := utils.TestAddress().Bech32
+	vault := utils.TestAddress().Bech32
 
 	validMD := makeMetadata([]*banktypes.DenomUnit{
 		makeDenomUnit("nhash", 0),
@@ -289,34 +290,56 @@ func TestMsgSetShareDenomMetadataRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "valid",
 			msg: types.MsgSetShareDenomMetadataRequest{
-				Admin:    admin,
-				Metadata: validMD,
+				Admin:        admin,
+				VaultAddress: vault,
+				Metadata:     validMD,
 			},
 			expectedErr: nil,
 		},
 		{
+			name: "empty vault address",
+			msg: types.MsgSetShareDenomMetadataRequest{
+				Admin:        admin,
+				VaultAddress: "",
+				Metadata:     validMD,
+			},
+			expectedErr: fmt.Errorf("invalid set denom metadata request: vault address cannot be empty"),
+		},
+		{
+			name: "invalid vault bech32",
+			msg: types.MsgSetShareDenomMetadataRequest{
+				Admin:        admin,
+				VaultAddress: "bad",
+				Metadata:     validMD,
+			},
+			expectedErr: fmt.Errorf("invalid set denom metadata request: vault address must be a bech32 address string"),
+		},
+		{
 			name: "empty admin",
 			msg: types.MsgSetShareDenomMetadataRequest{
-				Admin:    "",
-				Metadata: validMD,
+				Admin:        "",
+				VaultAddress: vault,
+				Metadata:     validMD,
 			},
 			expectedErr: fmt.Errorf("invalid set denom metadata request: administrator cannot be empty"),
 		},
 		{
 			name: "invalid admin bech32",
 			msg: types.MsgSetShareDenomMetadataRequest{
-				Admin:    "bad",
-				Metadata: validMD,
+				Admin:        "bad",
+				VaultAddress: vault,
+				Metadata:     validMD,
 			},
 			expectedErr: fmt.Errorf("invalid set denom metadata request: administrator must be a bech32 address string"),
 		},
 		{
 			name: "invalid metadata missing display",
 			msg: types.MsgSetShareDenomMetadataRequest{
-				Admin:    admin,
-				Metadata: missingDisplayMD,
+				Admin:        admin,
+				VaultAddress: vault,
+				Metadata:     missingDisplayMD,
 			},
-			expectedErr: fmt.Errorf("invalid set denom metadata request: denom metadata metadata must contain a denomination unit with display denom 'hash'"),
+			expectedErr: fmt.Errorf("invalid set denom metadata request: denom metadata denom units must include display: hash"),
 		},
 	}
 

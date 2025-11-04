@@ -203,7 +203,6 @@ func (s *TestSuite) TestMsgServer_SetShareDenomMetadata() {
 		endpointName: "SetShareDenomMetadata",
 		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).SetShareDenomMetadata,
 		postCheck: func(msg *types.MsgSetShareDenomMetadataRequest, args postCheckArgs) {
-			// Verify the metadata was set in the BankKeeper
 			actualMetadata, found := s.simApp.BankKeeper.GetDenomMetaData(s.ctx, args.ExpectedMetadata.Base)
 			s.Require().True(found, "post-check: metadata should be found in BankKeeper")
 			s.Assert().Equal(args.ExpectedMetadata.Base, actualMetadata.Base, "post-check: base denom should match")

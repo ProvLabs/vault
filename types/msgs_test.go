@@ -2,10 +2,12 @@ package types_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/provlabs/vault/types"
@@ -142,6 +144,179 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 				WithdrawalDelaySeconds: types.MaxWithdrawalDelay + 1,
 			},
 			expectedErr: fmt.Errorf("withdrawal delay cannot exceed %d seconds", types.MaxWithdrawalDelay),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.expectedErr != nil {
+				assert.Error(t, err, "expected error for case %q", tc.name)
+				assert.Contains(t, err.Error(), tc.expectedErr.Error(), "error should contain expected substring for case %q", tc.name)
+			} else {
+				assert.NoError(t, err, "expected no error for case %q", tc.name)
+			}
+		})
+	}
+}
+
+func makeDenomUnit(denom string, exp uint32, aliases ...string) *banktypes.DenomUnit {
+	return &banktypes.DenomUnit{Denom: denom, Exponent: exp, Aliases: aliases}
+}
+
+func makeMetadata(units []*banktypes.DenomUnit, base, display, desc string) banktypes.Metadata {
+	return banktypes.Metadata{
+		Description: desc,
+		DenomUnits:  units,
+		Base:        base,
+		Display:     display,
+		Name:        strings.ToUpper(display),
+		Symbol:      strings.ToUpper(display),
+	}
+}
+
+func TestValidateDenomMetadataBasic(t *testing.T) {
+	tests := []struct {
+		name        string
+		md          banktypes.Metadata
+		expectedErr error
+	}{
+		{
+			name:        "base invalid",
+			md:          makeMetadata(nil, "x", "hash", "a"),
+			expectedErr: fmt.Errorf("denom metadata base invalid"),
+		},
+		{
+			name:        "display invalid",
+			md:          makeMetadata(nil, "hash", "x", "a"),
+			expectedErr: fmt.Errorf("denom metadata display invalid"),
+		},
+		{
+			name:        "description too long",
+			md:          makeMetadata([]*banktypes.DenomUnit{makeDenomUnit("nhash", 0)}, "nhash", "nhash", strings.Repeat("d", 201)),
+			expectedErr: fmt.Errorf("denom metadata description too long"),
+		},
+		{
+			name:        "base not present in denom units",
+			md:          makeMetadata([]*banktypes.DenomUnit{makeDenomUnit("nhash", 0)}, "uhash", "nhash", "a"),
+			expectedErr: fmt.Errorf("denom metadata denom units must include base"),
+		},
+		{
+			name:        "display not present in denom units",
+			md:          makeMetadata([]*banktypes.DenomUnit{makeDenomUnit("nhash", 0)}, "nhash", "hash", "a"),
+			expectedErr: fmt.Errorf("denom metadata denom units must include display"),
+		},
+		{
+			name: "no root coin name found",
+			md: banktypes.Metadata{
+				Description: "a",
+				DenomUnits: []*banktypes.DenomUnit{
+					{Denom: "abcd", Aliases: []string{"wxyz"}},
+				},
+				Base:    "abcd",
+				Display: "abcd",
+				Name:    "ABCD",
+				Symbol:  "ABCD",
+			},
+			expectedErr: fmt.Errorf("denom metadata root coin name could not be found"),
+		},
+		{
+			name: "root coin name invalid denom",
+			md: banktypes.Metadata{
+				Description: "a",
+				DenomUnits: []*banktypes.DenomUnit{
+					{Denom: "nx", Exponent: 0, Aliases: []string{"nanox"}},
+					{Denom: "kx", Exponent: 3, Aliases: []string{"kilox"}},
+				},
+				Base:    "nx",
+				Display: "nx",
+				Name:    "NX",
+				Symbol:  "NX",
+			},
+			expectedErr: fmt.Errorf("denom metadata base invalid"),
+		},
+
+		{
+			name: "success unordered units and nonzero first exponent allowed",
+			md: makeMetadata([]*banktypes.DenomUnit{
+				makeDenomUnit("hash", 9),
+				makeDenomUnit("uhash", 3),
+				makeDenomUnit("nhash", 0, "nanohash"),
+			}, "nhash", "hash", "ok"),
+			expectedErr: nil,
+		},
+		{
+			name: "success display present via alias",
+			md: makeMetadata([]*banktypes.DenomUnit{
+				makeDenomUnit("nhash", 0),
+				makeDenomUnit("hash", 9, "khash"),
+			}, "nhash", "khash", "ok"),
+			expectedErr: nil,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := types.ValidateDenomMetadataBasic(tc.md)
+			if tc.expectedErr != nil {
+				assert.Error(t, err, "expected error for case %q", tc.name)
+				assert.Contains(t, err.Error(), tc.expectedErr.Error(), "error should contain expected substring for case %q", tc.name)
+			} else {
+				assert.NoError(t, err, "expected no error for case %q", tc.name)
+			}
+		})
+	}
+}
+
+func TestMsgSetShareDenomMetadataRequest_ValidateBasic(t *testing.T) {
+	admin := utils.TestAddress().Bech32
+
+	validMD := makeMetadata([]*banktypes.DenomUnit{
+		makeDenomUnit("nhash", 0),
+		makeDenomUnit("uhash", 3),
+		makeDenomUnit("hash", 9),
+	}, "nhash", "hash", "ok")
+
+	missingDisplayMD := makeMetadata([]*banktypes.DenomUnit{
+		makeDenomUnit("nhash", 0),
+	}, "nhash", "hash", "ok")
+
+	tests := []struct {
+		name        string
+		msg         types.MsgSetShareDenomMetadataRequest
+		expectedErr error
+	}{
+		{
+			name: "valid",
+			msg: types.MsgSetShareDenomMetadataRequest{
+				Admin:    admin,
+				Metadata: validMD,
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "empty admin",
+			msg: types.MsgSetShareDenomMetadataRequest{
+				Admin:    "",
+				Metadata: validMD,
+			},
+			expectedErr: fmt.Errorf("invalid set denom metadata request: administrator cannot be empty"),
+		},
+		{
+			name: "invalid admin bech32",
+			msg: types.MsgSetShareDenomMetadataRequest{
+				Admin:    "bad",
+				Metadata: validMD,
+			},
+			expectedErr: fmt.Errorf("invalid set denom metadata request: administrator must be a bech32 address string"),
+		},
+		{
+			name: "invalid metadata missing display",
+			msg: types.MsgSetShareDenomMetadataRequest{
+				Admin:    admin,
+				Metadata: missingDisplayMD,
+			},
+			expectedErr: fmt.Errorf("invalid set denom metadata request: denom metadata metadata must contain a denomination unit with display denom 'hash'"),
 		},
 	}
 

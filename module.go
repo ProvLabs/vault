@@ -170,12 +170,12 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						{ProtoField: "underlying_asset"},
 						{ProtoField: "share_denom"},
 					},
-					FlagOptions: []*autocliv1.FlagOption{
-						{
+					FlagOptions: map[string]*autocliv1.FlagOptions{
+						"payment-denom": {
 							Name:  "payment-denom",
 							Usage: "Payment denom used for swap-outs and payouts. If omitted, the underlying asset is used.",
 						},
-						{
+						"withdrawal-delay-seconds": {
 							Name:  "withdrawal-delay-seconds",
 							Usage: "Minimum delay (in seconds) before a queued swap-out can complete. Set to 0 for no delay.",
 						},

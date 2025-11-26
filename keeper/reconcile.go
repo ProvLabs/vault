@@ -98,7 +98,6 @@ func (k *Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vaul
 	principalAddress := vault.PrincipalMarkerAddress()
 
 	reserves := k.BankKeeper.GetBalance(ctx, vault.GetAddress(), vault.UnderlyingAsset)
-	// principal := k.BankKeeper.GetBalance(ctx, principalAddress, vault.UnderlyingAsset)
 	principalTvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
 	if err != nil {
 		return err
@@ -164,14 +163,12 @@ func (k *Keeper) CanPayoutDuration(ctx sdk.Context, vault *types.VaultAccount, d
 
 	denom := vault.UnderlyingAsset
 	vaultAddr := vault.GetAddress()
-	// principalAddress := vault.PrincipalMarkerAddress()
-
 	reserves := k.BankKeeper.GetBalance(ctx, vaultAddr, denom)
-	// principal := k.BankKeeper.GetBalance(ctx, principalAddress, denom)
 	principalTvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
 	if err != nil {
 		return false, err
 	}
+	principal := sdk.NewCoin(denom, principalTvv)
 
 	interestEarned, err := interest.CalculateInterestEarned(sdk.NewCoin(denom, principalTvv), vault.CurrentInterestRate, duration)
 	if err != nil {

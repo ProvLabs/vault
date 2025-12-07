@@ -223,7 +223,9 @@ get_replace_str () {
             # We'll want it as "<other version> of `<other library>`".
             # It's provided without quotes to printf so that it gets split on that
             # space and provided as two separate args to put tics around the <other library>.
-            printf '%s of `%s`' $( sed -E 's/^([^ ]+) +(.*)$/\2 \1/' <<< "$repl" )
+            local sed_out
+            sed_out="$( sed -E 's/^([^ ]+) +(.*)$/\2 \1/' <<< "$repl" )"
+            printf '%s of `%s`' $sed_out
         else
             # $repl is a <location>, put tics around it.
             printf '`%s`' "$repl"

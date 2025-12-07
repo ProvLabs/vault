@@ -22,7 +22,7 @@
 # It allows for the versions to include a replacement library too, e.g.
 # * `<lib>` bumped to v0.50.10-pio-1 of `<fork>` (from v0.50.7-pio-1 of `<fork>`) <link>.
 #
-# Here's the expeced bump line format:
+Here's the expected bump line format:
 # * `<lib>` bumped to <version_new>[ of `<fork_new>`] (from <version_old>[ of `<fork_old>`])[ <warning>] <link>.
 # Where [] denotes an optional portion.
 # And <name> represents a string that we will call "name" (but doesn't necessarily reflect a variable).
@@ -32,7 +32,7 @@
 function printPrevLib() {
     if (LibCount == 1) {
         # If there was only one line for this library, just print it without any changes.
-        # The only real difference between this output and the combined one is the parenthases around the links.
+        # The only real difference between this output and the combined one is the parentheses around the links.
         # But I just felt like it'd be best to keep the original when there's nothing being combined.
         print LibFirstLine
     } else if (LibCount > 1) {

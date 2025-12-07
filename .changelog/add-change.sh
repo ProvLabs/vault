@@ -352,7 +352,7 @@ clean_exit () {
 for message in "${messages[@]}"; do
     # For the first line, make sure it starts with a "* " and add the link to the end, removing any
     # period from before the link. For all other lines, add two spaces to the beginning of the line.
-    awk -v link="$link" '{if(NR==1){sub(/^[[:space:]]*[-*]?[[:space:]]*/,"* "); sub(/[[:space:]]*(\.)?[[:space:]]*$/," " link "."); print;}else{print "  " $0;};}' <<< "$message" > "$temp_file"
+    awk -v link="$link" '{if(NR==1){sub(/^[[:space:]]*[-*]?[[:space:]]*/,"* "); sub(/[[:space:]]*(\.)?[[:space:]]*$/," " link "."); print;}else{print "  " $0;};}' <<< "$message" >> "$temp_file"
 done
 
 section_dir="${repo_root}/.changelog/unreleased/${section}"

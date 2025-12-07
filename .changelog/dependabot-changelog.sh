@@ -120,7 +120,7 @@ branch_fn="$( sed -E 's|^[^/]+/[^/]+/||; s|/|-|g;' <<< "$head_branch" )"
 
 # This script requires another script that must be in the same directory.
 # To consistently find them, we'll need to know the absolute path to the dir with this script.
-where_i_am="$( cd "$( dirname "${BASH_SOURCE:-$0}" )" && pwd -P )""
+where_i_am="$( cd "$( dirname "${BASH_SOURCE:-$0}" )" && pwd -P )"
 [[ -n "$verbose" ]] && printf '     Where I Am: "%s"\n' "$where_i_am"
 
 [[ -n "$verbose" ]] && printf 'Looking for go.mod dependency changes.\n'

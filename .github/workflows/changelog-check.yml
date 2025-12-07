@@ -1,0 +1,32 @@
+name: Changelog Entry Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  check-changelog:
+    runs-on: ubuntu-latest
+    name: Confirm Changelog Entry
+    steps:
+      - name: Check for changelog changes
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            unreleased:
+              # Matches any .md file inside unreleased or its subdirectories
+              - '.changelog/unreleased/**/*.md'
+
+      # If changes exist, give a positive confirmation
+      - name: Changelog Found
+        if: steps.changes.outputs.unreleased == 'true'
+        run: echo "A changelog entry was found in .changelog/unreleased."
+
+      # If changes DO NOT exist, fail the check (non-blocking)
+      - name: Changelog Missing
+        if: steps.changes.outputs.unreleased == 'false'
+        run: |
+          echo "No new entry found in .changelog/unreleased."
+          echo "This is a reminder to add one if this change warrants it."
+          exit 1

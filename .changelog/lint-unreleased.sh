@@ -3,7 +3,7 @@
 
 [[ -n "$VERBOSE" ]] && set -x
 
-where_i_am="$( cd "$( dirname "${BASH_SOURCE:-$0}" )"; pwd -P )"
+where_i_am="$( cd "$( dirname "${BASH_SOURCE:-$0}" )" && pwd -P )""
 ur_dir="${where_i_am}/unreleased"
 if [[ ! -d "$ur_dir" ]]; then
     printf 'Unreleased changes Directory does not exist: %s\n' "$ur_dir"

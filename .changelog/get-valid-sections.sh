@@ -7,7 +7,7 @@
 # It's assumed that they're listed in the order that they should appear as sections.
 
 # Assume that this script is in the {repo_root}/.changelog/ dir and that the CHANGELOG.md file is directly in {repo_root}.
-where_i_am="$( cd "$( dirname "${BASH_SOURCE:-$0}" )"; pwd -P )"
+where_i_am="$( cd "$( dirname "${BASH_SOURCE:-$0}" )" && pwd -P )""
 cl_file="$( dirname "$where_i_am" )/CHANGELOG.md"
 if [[ ! -f "$cl_file" ]]; then
     printf 'Changelog file does not exist: %s\n' "$cl_file" >&2

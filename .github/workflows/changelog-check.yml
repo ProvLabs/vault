@@ -18,18 +18,24 @@ jobs:
         with:
           filters: |
             unreleased:
-              # Matches any .md file inside unreleased or its subdirectories
-              - '.changelog/unreleased/**/*.md'
+              - '.changelog/unreleased/features/*.md'
+              - '.changelog/unreleased/improvements/*.md'
+              - '.changelog/unreleased/bug-fixes/*.md'
+              - '.changelog/unreleased/deprecated/*.md'
+              - '.changelog/unreleased/client-breaking/*.md'
+              - '.changelog/unreleased/api-breaking/*.md'
+              - '.changelog/unreleased/state-machine-breaking/*.md'
+              - '.changelog/unreleased/dependencies/*.md'
 
-      # If changes exist, give a positive confirmation
       - name: Changelog Found
         if: steps.changes.outputs.unreleased == 'true'
-        run: echo "A changelog entry was found in .changelog/unreleased."
+        run: echo "A valid changelog entry was found in .changelog/unreleased."
 
-      # If changes DO NOT exist, fail the check (non-blocking)
-      - name: Changelog Missing
+      - name: Changelog Missing or Invalid
         if: steps.changes.outputs.unreleased == 'false'
         run: |
-          echo "No new entry found in .changelog/unreleased."
-          echo "This is a reminder to add one if this change warrants it."
+          echo "No new entry found in the valid .changelog/unreleased subdirectories."
+          echo "Please ensure you have added a .md file to one of the following:"
+          echo "  - features, improvements, bug-fixes, deprecated,"
+          echo "  - client-breaking, api-breaking, state-machine-breaking, dependencies"
           exit 1

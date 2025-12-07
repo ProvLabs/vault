@@ -225,7 +225,10 @@ get_replace_str () {
             # space and provided as two separate args to put tics around the <other library>.
             local sed_out
             sed_out="$( sed -E 's/^([^ ]+) +(.*)$/\2 \1/' <<< "$repl" )"
-            printf '%s of `%s`' $sed_out
+            # sed_out format: "<version> <library>"
+            local new_ver lib_name
+            read -r new_ver lib_name <<< "$sed_out"
+            printf '%s of `%s`' "$new_ver" "$lib_name"
         else
             # $repl is a <location>, put tics around it.
             printf '`%s`' "$repl"

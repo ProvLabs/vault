@@ -353,21 +353,30 @@ func (k *Keeper) SetMaxInterestRate(ctx sdk.Context, vault *types.VaultAccount, 
 // rates are valid decimal values and that the minimum rate is not greater than
 // the maximum rate. Empty values are treated as unset and pass validation.
 func (k Keeper) ValidateInterestRateLimits(minRateStr, maxRateStr string) error {
-	if minRateStr == "" || maxRateStr == "" {
-		return nil
+	var minRate, maxRate sdkmath.LegacyDec
+	var err error
+	var hasMin, hasMax bool
+
+	if minRateStr != "" {
+		minRate, err = sdkmath.LegacyNewDecFromStr(minRateStr)
+		if err != nil {
+			return fmt.Errorf("invalid min interest rate: %w", err)
+		}
+		hasMin = true
 	}
 
-	minRate, err := sdkmath.LegacyNewDecFromStr(minRateStr)
-	if err != nil {
-		return fmt.Errorf("invalid min interest rate: %w", err)
-	}
-	maxRate, err := sdkmath.LegacyNewDecFromStr(maxRateStr)
-	if err != nil {
-		return fmt.Errorf("invalid max interest rate: %w", err)
+	if maxRateStr != "" {
+		maxRate, err = sdkmath.LegacyNewDecFromStr(maxRateStr)
+		if err != nil {
+			return fmt.Errorf("invalid max interest rate: %w", err)
+		}
+		hasMax = true
 	}
 
-	if minRate.GT(maxRate) {
-		return fmt.Errorf("minimum interest rate %s cannot be greater than maximum interest rate %s", minRate, maxRate)
+	if hasMin && hasMax {
+		if minRate.GT(maxRate) {
+			return fmt.Errorf("minimum interest rate %s cannot be greater than maximum interest rate %s", minRate, maxRate)
+		}
 	}
 
 	return nil

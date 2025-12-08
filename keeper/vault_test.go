@@ -535,6 +535,24 @@ func (s *TestSuite) TestValidateInterestRateLimits() {
 			expectErr: "invalid max interest rate",
 		},
 		{
+			name:      "bad min, empty max => error",
+			min:       "not-a-number",
+			max:       "",
+			expectErr: "invalid min interest rate",
+		},
+		{
+			name:      "empty min, bad max => error",
+			min:       "",
+			max:       "invalid-decimal",
+			expectErr: "invalid max interest rate",
+		},
+		{
+			name:      "both bad => error",
+			min:       "bad",
+			max:       "worse",
+			expectErr: "invalid min interest rate",
+		},
+		{
 			name: "zero min, zero max => ok",
 			min:  "0",
 			max:  "0",
@@ -548,6 +566,17 @@ func (s *TestSuite) TestValidateInterestRateLimits() {
 			name: "high precision => ok",
 			min:  "0.123456789012345678",
 			max:  "0.223456789012345678",
+		},
+		{
+			name:      "negative min > negative max => error",
+			min:       "-0.05",
+			max:       "-0.10",
+			expectErr: "cannot be greater than",
+		},
+		{
+			name: "negative min < negative max => ok",
+			min:  "-0.10",
+			max:  "-0.05",
 		},
 	}
 

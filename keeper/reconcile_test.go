@@ -1191,3 +1191,116 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_Use
 	s.Require().True(found, "expected EventVaultReconcile to be emitted for composite principal TVV transfer")
 
 }
+
+func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_NegativeInterest_PartialLiquidation() {
+	s.SetupTest()
+
+	shareDenom := "nvylds.shares.liquid"
+	underlying := sdk.NewInt64Coin("uylds.fcc", 1_000_000_000)
+	vaultAddr := types.GetVaultAddress(shareDenom)
+	markerAddr := markertypes.MustGetMarkerAddress(shareDenom)
+	now := time.Now().UTC()
+	periodStart := now.Add(-365 * 24 * time.Hour).Unix()
+
+	s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
+
+	_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+		Admin:           s.adminAddr.String(),
+		ShareDenom:      shareDenom,
+		UnderlyingAsset: underlying.Denom,
+	})
+	s.Require().NoError(err, "CreateVault should succeed")
+
+	vault, err := s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "GetVault should return the created vault")
+
+	vault.CurrentInterestRate = "-10.0"
+	vault.DesiredInterestRate = "-10.0"
+	vault.PeriodStart = periodStart
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(underlying)), "Funding vault should succeed")
+
+	smallPrincipal := sdk.NewInt64Coin(underlying.Denom, 100_000)
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, sdk.NewCoins(smallPrincipal)), "Funding marker with small principal should succeed")
+
+	s.ctx = s.ctx.WithBlockTime(now).WithEventManager(sdk.NewEventManager())
+
+	err = s.k.TestAccessor_reconcileVaultInterest(s.T(), s.ctx, vault)
+	s.Require().NoError(err, "ReconcileVaultInterest should not error during partial liquidation")
+
+	endMarker := s.simApp.BankKeeper.GetBalance(s.ctx, markerAddr, underlying.Denom)
+	s.Require().True(endMarker.IsZero(), "Marker balance should be fully liquidated to zero")
+
+	endVault := s.simApp.BankKeeper.GetBalance(s.ctx, vaultAddr, underlying.Denom)
+	expectedVaultBalance := underlying.Amount.Add(smallPrincipal.Amount)
+	s.Require().Equal(expectedVaultBalance, endVault.Amount, "Vault should receive exactly the available marker balance")
+
+	events := normalizeEvents(s.ctx.EventManager().Events())
+	found := false
+	for _, ev := range events {
+		if ev.Type == "provlabs.vault.v1.EventVaultReconcile" {
+			found = true
+			for _, attr := range ev.Attributes {
+				if string(attr.Key) == "interest_earned" {
+					expectedStr := smallPrincipal.Amount.Neg().String() + underlying.Denom
+					s.Require().Equal(expectedStr, string(attr.Value), "Event interest_earned should reflect the capped liquidation amount")
+				}
+			}
+		}
+	}
+	s.Require().True(found, "EventVaultReconcile should be emitted")
+}
+
+func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_NegativeInterest_Composite_DepletesUnderlying() {
+	s.SetupTest()
+
+	shareDenom := "nvylds.shares.composite.neg"
+	underlyingDenom := "uylds.fcc.receipt"
+	paymentDenom := "uylds.fcc"
+
+	vaultAddr := types.GetVaultAddress(shareDenom)
+	markerAddr := markertypes.MustGetMarkerAddress(shareDenom)
+	now := time.Now().UTC()
+	periodStart := now.Add(-365 * 24 * time.Hour).Unix()
+
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingDenom, 1000), s.adminAddr)
+
+	_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+		Admin:           s.adminAddr.String(),
+		ShareDenom:      shareDenom,
+		UnderlyingAsset: underlyingDenom,
+		PaymentDenom:    paymentDenom,
+	})
+	s.Require().NoError(err, "CreateVault with composite structure should succeed")
+
+	vault, err := s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "GetVault should return the created vault")
+
+	vault.CurrentInterestRate = "-0.5"
+	vault.DesiredInterestRate = "-0.5"
+	vault.PeriodStart = periodStart
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1_000_000))), "Funding vault should succeed")
+
+	hugeOtherBalance := sdk.NewInt64Coin(paymentDenom, 1_000_000_000)
+	tinyUnderlyingBalance := sdk.NewInt64Coin(underlyingDenom, 10)
+
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, sdk.NewCoins(hugeOtherBalance, tinyUnderlyingBalance)), "Funding marker with composite assets should succeed")
+
+	s.ctx = s.ctx.WithBlockTime(now).WithEventManager(sdk.NewEventManager())
+
+	tvv, err := s.k.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	s.Require().NoError(err, "GetTVVInUnderlyingAsset should succeed")
+	s.Require().True(tvv.GT(sdkmath.NewInt(100_000)), "TVV should be significantly higher than the underlying balance due to secondary assets")
+
+	err = s.k.TestAccessor_reconcileVaultInterest(s.T(), s.ctx, vault)
+	s.Require().NoError(err, "ReconcileVaultInterest should not error even if underlying liquidity is insufficient for full negative interest")
+
+	endUnderlying := s.simApp.BankKeeper.GetBalance(s.ctx, markerAddr, underlyingDenom)
+	endOther := s.simApp.BankKeeper.GetBalance(s.ctx, markerAddr, paymentDenom)
+
+	s.Require().True(endUnderlying.IsZero(), "Underlying asset should be fully depleted")
+	s.Require().Equal(hugeOtherBalance.Amount, endOther.Amount, "Secondary asset balance should remain unchanged")
+}

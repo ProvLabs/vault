@@ -3512,18 +3512,24 @@ func (s *TestSuite) TestMsgServer_UnpauseVault() {
 		ExpectedPaused      bool
 		ExpectedEmptyDenom  string
 		ExpectedEmptyAmount int64
+		ExpectedDesiredRate string
+		ExpectedCurrentRate string
+		ExpectedPeriodStart int64
 	}
 
 	testDef := msgServerTestDef[types.MsgUnpauseVaultRequest, types.MsgUnpauseVaultResponse, postCheckArgs]{
 		endpointName: "UnpauseVault",
 		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).UnpauseVault,
 		postCheck: func(msg *types.MsgUnpauseVaultRequest, args postCheckArgs) {
-			v, err := s.k.GetVault(s.ctx, args.VaultAddress)
-			s.Require().NoError(err)
-			s.Assert().Equal(args.ExpectedPaused, v.Paused)
-			s.Assert().Equal(args.ExpectedEmptyDenom, v.PausedBalance.Denom)
-			s.Assert().Equal(args.ExpectedEmptyAmount, v.PausedBalance.Amount.Int64())
-			s.Assert().Empty(v.PausedReason)
+			vault, err := s.k.GetVault(s.ctx, args.VaultAddress)
+			s.Require().NoError(err, "expected to load vault %s for post-check", args.VaultAddress)
+			s.Assert().Equal(args.ExpectedPaused, vault.Paused, "vault paused status")
+			s.Assert().Equal(args.ExpectedEmptyDenom, vault.PausedBalance.Denom, "vault paused balance denom")
+			s.Assert().Equal(args.ExpectedEmptyAmount, vault.PausedBalance.Amount.Int64(), "vault paused balance amount")
+			s.Assert().Empty(vault.PausedReason, "vault paused reason")
+			s.Assert().Equal(args.ExpectedDesiredRate, vault.DesiredInterestRate, "vault desired interest rate")
+			s.Assert().Equal(args.ExpectedCurrentRate, vault.CurrentInterestRate, "vault current interest rate")
+			s.Assert().Equal(args.ExpectedPeriodStart, vault.PeriodStart, "vault interest period start")
 		},
 	}
 
@@ -3531,6 +3537,7 @@ func (s *TestSuite) TestMsgServer_UnpauseVault() {
 	share := "vaultshares"
 	admin := s.adminAddr
 	vaultAddr := types.GetVaultAddress(share)
+	interestRate := "0.0406"
 
 	setup := func() {
 		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(10_000)), admin)
@@ -3540,12 +3547,18 @@ func (s *TestSuite) TestMsgServer_UnpauseVault() {
 			UnderlyingAsset: underlying,
 		})
 		s.Require().NoError(err)
+		vault, err := s.k.GetVault(s.ctx, vaultAddr)
+		s.Require().NoError(err, "failed to get vault in setup")
+		s.k.UpdateInterestRates(s.ctx, vault, interestRate, interestRate)
+		vault.PeriodStart = s.ctx.BlockTime().Add(time.Hour).Unix()
+		err = s.k.SetVaultAccount(s.ctx, vault)
+		s.Require().NoError(err, "failed to set vault account in setup")
 		_, err = keeper.NewMsgServer(s.simApp.VaultKeeper).PauseVault(s.ctx, &types.MsgPauseVaultRequest{
 			Authority:    admin.String(),
 			VaultAddress: vaultAddr.String(),
 			Reason:       "maintenance",
 		})
-		s.Require().NoError(err)
+		s.Require().NoError(err, "expected pause to succeed in setup")
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	}
 
@@ -3561,6 +3574,12 @@ func (s *TestSuite) TestMsgServer_UnpauseVault() {
 
 	s.Run("happy path - admin unpause vault", func() {
 		ev := sdk.Events{
+			sdk.NewEvent(
+				"provlabs.vault.v1.EventVaultInterestChange",
+				sdk.NewAttribute("current_rate", interestRate),
+				sdk.NewAttribute("desired_rate", interestRate),
+				sdk.NewAttribute("vault_address", vaultAddr.String()),
+			),
 			sdk.NewEvent(
 				"provlabs.vault.v1.EventVaultUnpaused",
 				sdk.NewAttribute("authority", admin.String()),
@@ -3581,6 +3600,9 @@ func (s *TestSuite) TestMsgServer_UnpauseVault() {
 				ExpectedPaused:      false,
 				ExpectedEmptyDenom:  "",
 				ExpectedEmptyAmount: 0,
+				ExpectedDesiredRate: interestRate,
+				ExpectedCurrentRate: interestRate,
+				ExpectedPeriodStart: s.ctx.BlockTime().Unix(),
 			},
 			expectedEvents: ev,
 		}
@@ -3594,6 +3616,12 @@ func (s *TestSuite) TestMsgServer_UnpauseVault() {
 		setupWithAssetMgr(assetMgr)
 
 		ev := sdk.Events{
+			sdk.NewEvent(
+				"provlabs.vault.v1.EventVaultInterestChange",
+				sdk.NewAttribute("current_rate", interestRate),
+				sdk.NewAttribute("desired_rate", interestRate),
+				sdk.NewAttribute("vault_address", vaultAddr.String()),
+			),
 			sdk.NewEvent(
 				"provlabs.vault.v1.EventVaultUnpaused",
 				sdk.NewAttribute("authority", assetMgr.String()),
@@ -3614,6 +3642,9 @@ func (s *TestSuite) TestMsgServer_UnpauseVault() {
 				ExpectedPaused:      false,
 				ExpectedEmptyDenom:  "",
 				ExpectedEmptyAmount: 0,
+				ExpectedCurrentRate: interestRate,
+				ExpectedDesiredRate: interestRate,
+				ExpectedPeriodStart: s.ctx.BlockTime().Unix(),
 			},
 			expectedEvents: ev,
 		}

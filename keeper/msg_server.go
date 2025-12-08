@@ -518,7 +518,6 @@ func (k msgServer) UnpauseVault(goCtx context.Context, msg *types.MsgUnpauseVaul
 
 	k.UpdateInterestRates(ctx, vault, vault.DesiredInterestRate, vault.DesiredInterestRate)
 
-	vault.PeriodStart = ctx.BlockTime().Unix()
 	vault.PausedBalance = sdk.Coin{}
 	vault.Paused = false
 	vault.PausedReason = ""
@@ -529,6 +528,11 @@ func (k msgServer) UnpauseVault(goCtx context.Context, msg *types.MsgUnpauseVaul
 	tvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get TVV before pausing: %w", err)
+	}
+
+	err = k.SafeEnqueueTimeout(ctx, vault)
+	if err != nil {
+		return nil, fmt.Errorf("failed to enqueue payout timeout after unpausing: %w", err)
 	}
 
 	k.emitEvent(ctx, types.NewEventVaultUnpaused(msg.VaultAddress, msg.Authority, sdk.NewCoin(vault.UnderlyingAsset, tvv)))

@@ -3508,13 +3508,14 @@ func (s *TestSuite) TestMsgServer_PauseVault_Failures() {
 
 func (s *TestSuite) TestMsgServer_UnpauseVault() {
 	type postCheckArgs struct {
-		VaultAddress        sdk.AccAddress
-		ExpectedPaused      bool
-		ExpectedEmptyDenom  string
-		ExpectedEmptyAmount int64
-		ExpectedDesiredRate string
-		ExpectedCurrentRate string
-		ExpectedPeriodStart int64
+		VaultAddress          sdk.AccAddress
+		ExpectedPaused        bool
+		ExpectedEmptyDenom    string
+		ExpectedEmptyAmount   int64
+		ExpectedDesiredRate   string
+		ExpectedCurrentRate   string
+		ExpectedPeriodStart   int64
+		ExpectedPeriodTimeout int64
 	}
 
 	testDef := msgServerTestDef[types.MsgUnpauseVaultRequest, types.MsgUnpauseVaultResponse, postCheckArgs]{
@@ -3530,6 +3531,7 @@ func (s *TestSuite) TestMsgServer_UnpauseVault() {
 			s.Assert().Equal(args.ExpectedDesiredRate, vault.DesiredInterestRate, "vault desired interest rate")
 			s.Assert().Equal(args.ExpectedCurrentRate, vault.CurrentInterestRate, "vault current interest rate")
 			s.Assert().Equal(args.ExpectedPeriodStart, vault.PeriodStart, "vault interest period start")
+			s.Assert().Equal(args.ExpectedPeriodTimeout, vault.PeriodTimeout, "vault interest period timeout")
 		},
 	}
 
@@ -3538,8 +3540,10 @@ func (s *TestSuite) TestMsgServer_UnpauseVault() {
 	admin := s.adminAddr
 	vaultAddr := types.GetVaultAddress(share)
 	interestRate := "0.0406"
+	now := time.Now()
 
 	setup := func() {
+		s.ctx = s.ctx.WithBlockTime(now)
 		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(10_000)), admin)
 		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 			Admin:           admin.String(),
@@ -3550,7 +3554,8 @@ func (s *TestSuite) TestMsgServer_UnpauseVault() {
 		vault, err := s.k.GetVault(s.ctx, vaultAddr)
 		s.Require().NoError(err, "failed to get vault in setup")
 		s.k.UpdateInterestRates(s.ctx, vault, interestRate, interestRate)
-		vault.PeriodStart = s.ctx.BlockTime().Add(time.Hour).Unix()
+		vault.PeriodStart = s.ctx.BlockTime().Unix()
+		vault.PeriodTimeout = s.ctx.BlockTime().Add(24 * time.Hour).Unix()
 		err = s.k.SetVaultAccount(s.ctx, vault)
 		s.Require().NoError(err, "failed to set vault account in setup")
 		_, err = keeper.NewMsgServer(s.simApp.VaultKeeper).PauseVault(s.ctx, &types.MsgPauseVaultRequest{
@@ -3596,13 +3601,14 @@ func (s *TestSuite) TestMsgServer_UnpauseVault() {
 				VaultAddress: vaultAddr.String(),
 			},
 			postCheckArgs: postCheckArgs{
-				VaultAddress:        vaultAddr,
-				ExpectedPaused:      false,
-				ExpectedEmptyDenom:  "",
-				ExpectedEmptyAmount: 0,
-				ExpectedDesiredRate: interestRate,
-				ExpectedCurrentRate: interestRate,
-				ExpectedPeriodStart: s.ctx.BlockTime().Unix(),
+				VaultAddress:          vaultAddr,
+				ExpectedPaused:        false,
+				ExpectedEmptyDenom:    "",
+				ExpectedEmptyAmount:   0,
+				ExpectedDesiredRate:   interestRate,
+				ExpectedCurrentRate:   interestRate,
+				ExpectedPeriodStart:   now.Unix(),
+				ExpectedPeriodTimeout: now.Add(20 * time.Hour).Unix(),
 			},
 			expectedEvents: ev,
 		}
@@ -3638,13 +3644,14 @@ func (s *TestSuite) TestMsgServer_UnpauseVault() {
 				VaultAddress: vaultAddr.String(),
 			},
 			postCheckArgs: postCheckArgs{
-				VaultAddress:        vaultAddr,
-				ExpectedPaused:      false,
-				ExpectedEmptyDenom:  "",
-				ExpectedEmptyAmount: 0,
-				ExpectedCurrentRate: interestRate,
-				ExpectedDesiredRate: interestRate,
-				ExpectedPeriodStart: s.ctx.BlockTime().Unix(),
+				VaultAddress:          vaultAddr,
+				ExpectedPaused:        false,
+				ExpectedEmptyDenom:    "",
+				ExpectedEmptyAmount:   0,
+				ExpectedCurrentRate:   interestRate,
+				ExpectedDesiredRate:   interestRate,
+				ExpectedPeriodStart:   now.Unix(),
+				ExpectedPeriodTimeout: now.Add(20 * time.Hour).Unix(),
 			},
 			expectedEvents: ev,
 		}

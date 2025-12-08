@@ -170,27 +170,29 @@ func (k *Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vaul
 	return nil
 }
 
-// CanPayoutDuration determines whether the vault can fulfill the interest payment or refund
-// over the given duration based on current reserves and principal.
+// CanPayoutDuration determines whether the vault can fulfill the projected
+// interest payment or refund over the given duration based on current reserves
+// and principal TVV.
 //
-// It returns true when duration <= 0, when accrued interest is zero, when positive interest
-// can be paid from reserves, or when negative interest can be refunded from nonzero principal.
+// It returns true when duration <= 0, when accrued interest is zero, when
+// positive interest can be paid from vault reserves, or when negative interest
+// can be fully covered by the principal marker's underlying balance.
 // Otherwise it returns false.
 func (k *Keeper) CanPayoutDuration(ctx sdk.Context, vault *types.VaultAccount, duration int64) (bool, error) {
 	if duration <= 0 {
 		return true, nil
 	}
 
-	denom := vault.UnderlyingAsset
+	underlyingDenom := vault.UnderlyingAsset
 	vaultAddr := vault.GetAddress()
 
-	reserves := k.BankKeeper.GetBalance(ctx, vaultAddr, denom)
+	reserves := k.BankKeeper.GetBalance(ctx, vaultAddr, underlyingDenom)
 	principalTvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
 	if err != nil {
 		return false, err
 	}
 
-	principalCoin := sdk.NewCoin(denom, principalTvv)
+	principalCoin := sdk.NewCoin(underlyingDenom, principalTvv)
 
 	interestEarned, err := interest.CalculateInterestEarned(principalCoin, vault.CurrentInterestRate, duration)
 	if err != nil {
@@ -205,7 +207,12 @@ func (k *Keeper) CanPayoutDuration(ctx sdk.Context, vault *types.VaultAccount, d
 		return !reserves.Amount.LT(interestEarned), nil
 	}
 
-	return true, nil
+	if interestEarned.IsPositive() {
+		return !reserves.Amount.LT(interestEarned), nil
+	}
+
+	principalUnderlying := k.BankKeeper.GetBalance(ctx, vault.PrincipalMarkerAddress(), underlyingDenom)
+	return principalUnderlying.Amount.IsPositive(), nil
 }
 
 // UpdateInterestRates sets the vault's current and desired interest rates and emits

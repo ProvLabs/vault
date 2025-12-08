@@ -1,0 +1,41 @@
+name: Changelog Entry Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  check-changelog:
+    runs-on: ubuntu-latest
+    name: Confirm Changelog Entry
+    steps:
+      - name: Check for changelog changes
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            unreleased:
+              - '.changelog/unreleased/features/*.md'
+              - '.changelog/unreleased/improvements/*.md'
+              - '.changelog/unreleased/bug-fixes/*.md'
+              - '.changelog/unreleased/deprecated/*.md'
+              - '.changelog/unreleased/client-breaking/*.md'
+              - '.changelog/unreleased/api-breaking/*.md'
+              - '.changelog/unreleased/state-machine-breaking/*.md'
+              - '.changelog/unreleased/dependencies/*.md'
+
+      - name: Changelog Found
+        if: steps.changes.outputs.unreleased == 'true'
+        run: echo "A valid changelog entry was found in .changelog/unreleased."
+
+      - name: Changelog Missing or Invalid
+        if: steps.changes.outputs.unreleased == 'false'
+        run: |
+          echo "No new entry found in the valid .changelog/unreleased subdirectories."
+          echo "Please ensure you have added a .md file to one of the following:"
+          echo "  - features, improvements, bug-fixes, deprecated,"
+          echo "  - client-breaking, api-breaking, state-machine-breaking, dependencies"
+          exit 1

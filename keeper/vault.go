@@ -386,14 +386,13 @@ func (k *Keeper) autoPauseVault(ctx context.Context, vault *types.VaultAccount, 
 		"reason", reason,
 	)
 
-	vault.Paused = true
-	vault.PausedReason = reason
-
 	tvv, err := k.GetTVVInUnderlyingAsset(sdkCtx, *vault)
 	if err != nil {
 		sdkCtx.Logger().Error("Failed to get TVV in underlying asset", "vault_address", vault.GetAddress().String(), "error", err)
 	}
 
+	vault.Paused = true
+	vault.PausedReason = reason
 	vault.PausedBalance = sdk.Coin{Denom: vault.UnderlyingAsset, Amount: tvv}
 	k.AuthKeeper.SetAccount(ctx, vault)
 

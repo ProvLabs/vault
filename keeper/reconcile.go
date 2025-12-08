@@ -84,9 +84,17 @@ func (k *Keeper) publishShareNav(ctx sdk.Context, vault *types.VaultAccount) err
 // PerformVaultInterestTransfer applies accrued interest between the vault and the marker account
 // if the current block time is beyond PeriodStart.
 //
-// Positive interest is paid from vault reserves to the marker. Negative interest is refunded from
-// marker principal back to the vault (bounded by available principal). An EventVaultReconcile is emitted.
-// This method does not modify PeriodStart.
+// Interest is settled exclusively in the vault's defined UnderlyingAsset.
+//   - Positive Interest: Paid from vault reserves to the marker. Fails if reserves are insufficient.
+//   - Negative Interest: Refunded from marker principal to the vault. This is bounded by the
+//     available balance of the UnderlyingAsset in the marker account.
+//
+// IMPORTANT: If the vault utilizes composite reserves (holding multiple token types), secondary
+// assets are NOT liquidated or transferred to satisfy interest obligations. If the marker owes
+// negative interest but lacks sufficient liquidity in the UnderlyingAsset, the transfer is
+// capped at the available underlying balance, potentially resulting in a partial payment.
+//
+// An EventVaultReconcile is emitted upon success. This method does not modify PeriodStart.
 func (k *Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.VaultAccount) error {
 	currentBlockTime := ctx.BlockTime().Unix()
 	if currentBlockTime <= vault.PeriodStart {

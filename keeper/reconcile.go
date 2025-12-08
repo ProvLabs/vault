@@ -175,15 +175,11 @@ func (k *Keeper) CanPayoutDuration(ctx sdk.Context, vault *types.VaultAccount, d
 
 	denom := vault.UnderlyingAsset
 	vaultAddr := vault.GetAddress()
-	principalAddr := vault.PrincipalMarkerAddress()
 
 	reserves := k.BankKeeper.GetBalance(ctx, vaultAddr, denom)
 	principalTvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
 	if err != nil {
 		return false, err
-	}
-	if !principalTvv.IsPositive() {
-		return false, nil
 	}
 
 	principalCoin := sdk.NewCoin(denom, principalTvv)
@@ -201,10 +197,7 @@ func (k *Keeper) CanPayoutDuration(ctx sdk.Context, vault *types.VaultAccount, d
 		return !reserves.Amount.LT(interestEarned), nil
 	}
 
-	principalUnderlying := k.BankKeeper.GetBalance(ctx, principalAddr, denom)
-	owed := interestEarned.Abs()
-
-	return !principalUnderlying.Amount.LT(owed), nil
+	return true, nil
 }
 
 // UpdateInterestRates sets the vault's current and desired interest rates and emits

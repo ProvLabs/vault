@@ -1162,16 +1162,21 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_Use
 				}
 			}
 
+			expectedPrincipalBefore := sdk.NewCoin(underlying.Denom, principalTvv)
+			principalTvvAfter, err := s.k.GetTVVInUnderlyingAsset(s.ctx, *vault)
+			s.Require().NoError(err, "expected GetTVVInUnderlyingAsset after reconcile to succeed")
+			expectedPrincipalAfter := sdk.NewCoin(underlying.Denom, principalTvvAfter)
+
 			s.Require().Equal(
-				fmt.Sprintf("%s%s", startMarkerUnderlying.String(), underlying.Denom),
+				expectedPrincipalBefore.String(),
 				principalBeforeStr,
-				"expected principal_before to reflect starting underlying principal",
+				"expected principal_before to reflect TVV-based principal before transfer",
 			)
 
 			s.Require().Equal(
-				fmt.Sprintf("%s%s", endMarkerUnderlying.String(), underlying.Denom),
+				expectedPrincipalAfter.String(),
 				principalAfterStr,
-				"expected principal_after to reflect ending underlying principal",
+				"expected principal_after to reflect TVV-based principal after transfer",
 			)
 
 			s.Require().Equal(
@@ -1183,6 +1188,6 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_Use
 			break
 		}
 	}
-
 	s.Require().True(found, "expected EventVaultReconcile to be emitted for composite principal TVV transfer")
+
 }

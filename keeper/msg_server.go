@@ -530,9 +530,8 @@ func (k msgServer) UnpauseVault(goCtx context.Context, msg *types.MsgUnpauseVaul
 		return nil, fmt.Errorf("failed to get TVV before pausing: %w", err)
 	}
 
-	err = k.SafeEnqueueTimeout(ctx, vault)
-	if err != nil {
-		return nil, fmt.Errorf("failed to enqueue payout timeout after unpausing: %w", err)
+	if err := k.SafeAddVerification(ctx, vault); err != nil {
+		return nil, fmt.Errorf("failed to enqueue vault payout verification: %w", err)
 	}
 
 	k.emitEvent(ctx, types.NewEventVaultUnpaused(msg.VaultAddress, msg.Authority, sdk.NewCoin(vault.UnderlyingAsset, tvv)))

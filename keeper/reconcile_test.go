@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
+	"github.com/provlabs/vault/interest"
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
 )
@@ -934,4 +935,254 @@ func (s *TestSuite) TestKeeper_CanPayoutDuration() {
 			}
 		})
 	}
+}
+
+func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_UsesTVV() {
+	s.SetupTest()
+
+	shareDenom := "nvylds.shares"
+	underlying := sdk.NewInt64Coin("uylds.fcc", 1_000_000_000)
+	vaultAddr := types.GetVaultAddress(shareDenom)
+	markerAddr := markertypes.MustGetMarkerAddress(shareDenom)
+	now := time.Now().UTC()
+	periodStart := now.Add(-60 * 24 * time.Hour).Unix()
+
+	s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
+
+	_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+		Admin:           s.adminAddr.String(),
+		ShareDenom:      shareDenom,
+		UnderlyingAsset: underlying.Denom,
+	})
+	s.Require().NoError(err, "failed to create vault")
+
+	vault, err := s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err)
+
+	vault.CurrentInterestRate = "0.25"
+	vault.DesiredInterestRate = "0.25"
+	vault.PeriodStart = periodStart
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	s.Require().NoError(
+		FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(underlying)),
+		"failed to fund vault account",
+	)
+	s.Require().NoError(
+		FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, sdk.NewCoins(underlying)),
+		"failed to fund marker account",
+	)
+
+	s.ctx = s.ctx.WithBlockTime(now).WithEventManager(sdk.NewEventManager())
+
+	startVault := s.simApp.BankKeeper.GetBalance(s.ctx, vaultAddr, underlying.Denom).Amount
+	startMarker := s.simApp.BankKeeper.GetBalance(s.ctx, markerAddr, underlying.Denom).Amount
+	s.Require().Equal(underlying.Amount, startVault)
+	s.Require().Equal(underlying.Amount, startMarker)
+
+	principalTvv, err := s.k.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	s.Require().NoError(err, "failed to get TVV in underlying asset")
+	s.Require().True(principalTvv.GT(sdkmath.ZeroInt()), "expected positive TVV")
+
+	principalCoin := sdk.NewCoin(underlying.Denom, principalTvv)
+	periodDuration := s.ctx.BlockTime().Unix() - vault.PeriodStart
+
+	interestEarned, err := interest.CalculateInterestEarned(principalCoin, vault.CurrentInterestRate, periodDuration)
+	s.Require().NoError(err, "failed to calculate interest earned")
+	s.Require().True(interestEarned.IsPositive(), "expected positive interest earned")
+
+	err = s.k.TestAccessor_reconcileVaultInterest(s.T(), s.ctx, vault)
+	s.Require().NoError(err, "failed to reconcile vault interest")
+
+	endVault := s.simApp.BankKeeper.GetBalance(s.ctx, vaultAddr, underlying.Denom).Amount
+	endMarker := s.simApp.BankKeeper.GetBalance(s.ctx, markerAddr, underlying.Denom).Amount
+
+	expectedVault := startVault.Sub(interestEarned)
+	expectedMarker := startMarker.Add(interestEarned)
+
+	s.Require().Equal(expectedVault, endVault, "vault reserves mismatch")
+	s.Require().Equal(expectedMarker, endMarker, "marker principal mismatch")
+
+	s.assertVaultAndMarkerBalances(
+		vaultAddr,
+		shareDenom,
+		underlying.Denom,
+		expectedVault,
+		expectedMarker,
+	)
+
+	events := normalizeEvents(s.ctx.EventManager().Events())
+
+	found := false
+	for _, event := range events {
+		if event.Type == "provlabs.vault.v1.EventVaultReconcile" {
+			found = true
+
+			var principalBeforeStr, principalAfterStr, interestStr string
+			for _, attr := range event.Attributes {
+				switch string(attr.Key) {
+				case "principal_before":
+					principalBeforeStr = string(attr.Value)
+				case "principal_after":
+					principalAfterStr = string(attr.Value)
+				case "interest_earned":
+					interestStr = string(attr.Value)
+				}
+			}
+
+			s.Require().Equal(
+				fmt.Sprintf("%s%s", startMarker.String(), underlying.Denom),
+				principalBeforeStr,
+				"principal before mismatch",
+			)
+
+			s.Require().Equal(
+				fmt.Sprintf("%s%s", endMarker.String(), underlying.Denom),
+				principalAfterStr,
+				"principal after mismatch",
+			)
+
+			s.Require().Equal(
+				fmt.Sprintf("%s%s", interestEarned.String(), underlying.Denom),
+				interestStr,
+				"interest earned mismatch",
+			)
+
+			break
+		}
+	}
+	s.Require().True(found, "expected EventVaultReconcile to be emitted")
+}
+
+func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_UsesCompositeTVV() {
+	s.SetupTest()
+
+	shareDenom := "nvylds.shares.composite"
+	underlying := sdk.NewInt64Coin("uylds.fcc.receipt.token", 1_000_000_000)
+	paymentDenom := "uylds.fcc"
+
+	vaultAddr := types.GetVaultAddress(shareDenom)
+	markerAddr := markertypes.MustGetMarkerAddress(shareDenom)
+	now := time.Now().UTC()
+	periodStart := now.Add(-60 * 24 * time.Hour).Unix()
+
+	s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
+
+	_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+		Admin:           s.adminAddr.String(),
+		ShareDenom:      shareDenom,
+		UnderlyingAsset: underlying.Denom,
+		PaymentDenom:    paymentDenom,
+	})
+	s.Require().NoError(err, "expected CreateVault to succeed")
+
+	vault, err := s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "expected GetVault to succeed after CreateVault")
+
+	vault.CurrentInterestRate = "0.25"
+	vault.DesiredInterestRate = "0.25"
+	vault.PeriodStart = periodStart
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	s.Require().NoError(
+		FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(underlying)),
+		"expected funding vault reserves to succeed",
+	)
+
+	receiptPortion := sdkmath.NewInt(950_000_000)
+	paymentPortion := sdkmath.NewInt(50_000_000)
+
+	s.Require().NoError(
+		FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, sdk.NewCoins(
+			sdk.NewCoin(underlying.Denom, receiptPortion),
+			sdk.NewCoin(paymentDenom, paymentPortion),
+		)),
+		"expected funding composite principal to succeed",
+	)
+
+	s.ctx = s.ctx.WithBlockTime(now).WithEventManager(sdk.NewEventManager())
+
+	startVault := s.simApp.BankKeeper.GetBalance(s.ctx, vaultAddr, underlying.Denom).Amount
+	startMarkerUnderlying := s.simApp.BankKeeper.GetBalance(s.ctx, markerAddr, underlying.Denom).Amount
+	startMarkerPayment := s.simApp.BankKeeper.GetBalance(s.ctx, markerAddr, paymentDenom).Amount
+
+	s.Require().Equal(underlying.Amount, startVault, "expected initial vault reserves to equal funded amount")
+	s.Require().Equal(receiptPortion, startMarkerUnderlying, "expected marker underlying balance to equal receipt portion")
+	s.Require().Equal(paymentPortion, startMarkerPayment, "expected marker payment balance to equal payment portion")
+
+	principalTvv, err := s.k.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	s.Require().NoError(err, "expected GetTVVInUnderlyingAsset to succeed")
+	s.Require().True(principalTvv.GT(sdkmath.ZeroInt()), "expected TVV principal to be positive for composite principal")
+
+	principalCoin := sdk.NewCoin(underlying.Denom, principalTvv)
+	periodDuration := s.ctx.BlockTime().Unix() - vault.PeriodStart
+
+	interestEarned, err := interest.CalculateInterestEarned(principalCoin, vault.CurrentInterestRate, periodDuration)
+	s.Require().NoError(err, "expected CalculateInterestEarned to succeed")
+	s.Require().True(interestEarned.IsPositive(), "expected interest earned to be positive for positive rate")
+
+	err = s.k.TestAccessor_reconcileVaultInterest(s.T(), s.ctx, vault)
+	s.Require().NoError(err, "expected reconcileVaultInterest to succeed")
+
+	endVault := s.simApp.BankKeeper.GetBalance(s.ctx, vaultAddr, underlying.Denom).Amount
+	endMarkerUnderlying := s.simApp.BankKeeper.GetBalance(s.ctx, markerAddr, underlying.Denom).Amount
+	endMarkerPayment := s.simApp.BankKeeper.GetBalance(s.ctx, markerAddr, paymentDenom).Amount
+
+	expectedVault := startVault.Sub(interestEarned)
+	expectedMarkerUnderlying := startMarkerUnderlying.Add(interestEarned)
+
+	s.Require().Equal(expectedVault, endVault, "expected vault reserves to decrease by TVV-based interest")
+	s.Require().Equal(expectedMarkerUnderlying, endMarkerUnderlying, "expected marker underlying balance to increase by TVV-based interest")
+	s.Require().Equal(startMarkerPayment, endMarkerPayment, "expected marker payment token balance to remain unchanged")
+
+	s.assertVaultAndMarkerBalances(
+		vaultAddr,
+		shareDenom,
+		underlying.Denom,
+		expectedVault,
+		expectedMarkerUnderlying,
+	)
+
+	events := normalizeEvents(s.ctx.EventManager().Events())
+
+	found := false
+	for _, ev := range events {
+		if ev.Type == "provlabs.vault.v1.EventVaultReconcile" {
+			found = true
+
+			var principalBeforeStr, principalAfterStr, interestStr string
+			for _, attr := range ev.Attributes {
+				switch string(attr.Key) {
+				case "principal_before":
+					principalBeforeStr = string(attr.Value)
+				case "principal_after":
+					principalAfterStr = string(attr.Value)
+				case "interest_earned":
+					interestStr = string(attr.Value)
+				}
+			}
+
+			s.Require().Equal(
+				fmt.Sprintf("%s%s", startMarkerUnderlying.String(), underlying.Denom),
+				principalBeforeStr,
+				"expected principal_before to reflect starting underlying principal",
+			)
+
+			s.Require().Equal(
+				fmt.Sprintf("%s%s", endMarkerUnderlying.String(), underlying.Denom),
+				principalAfterStr,
+				"expected principal_after to reflect ending underlying principal",
+			)
+
+			s.Require().Equal(
+				fmt.Sprintf("%s%s", interestEarned.String(), underlying.Denom),
+				interestStr,
+				"expected interest_earned to reflect TVV-based interest amount",
+			)
+
+			break
+		}
+	}
+
+	s.Require().True(found, "expected EventVaultReconcile to be emitted for composite principal TVV transfer")
 }

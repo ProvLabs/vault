@@ -485,6 +485,8 @@ func (k msgServer) PauseVault(goCtx context.Context, msg *types.MsgPauseVaultReq
 	vault.PausedBalance = sdk.NewCoin(vault.UnderlyingAsset, tvv)
 	vault.Paused = true
 	vault.PausedReason = msg.Reason
+	k.UpdateInterestRates(ctx, vault, types.ZeroInterestRate, vault.DesiredInterestRate)
+
 	if err := k.SetVaultAccount(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to set vault account: %w", err)
 	}
@@ -514,6 +516,8 @@ func (k msgServer) UnpauseVault(goCtx context.Context, msg *types.MsgUnpauseVaul
 		return nil, fmt.Errorf("vault %s is not paused", msg.VaultAddress)
 	}
 
+	k.UpdateInterestRates(ctx, vault, vault.DesiredInterestRate, vault.DesiredInterestRate)
+
 	vault.PausedBalance = sdk.Coin{}
 	vault.Paused = false
 	vault.PausedReason = ""
@@ -524,6 +528,10 @@ func (k msgServer) UnpauseVault(goCtx context.Context, msg *types.MsgUnpauseVaul
 	tvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get TVV before pausing: %w", err)
+	}
+
+	if err := k.SafeAddVerification(ctx, vault); err != nil {
+		return nil, fmt.Errorf("failed to enqueue vault payout verification: %w", err)
 	}
 
 	k.emitEvent(ctx, types.NewEventVaultUnpaused(msg.VaultAddress, msg.Authority, sdk.NewCoin(vault.UnderlyingAsset, tvv)))

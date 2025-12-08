@@ -3532,6 +3532,9 @@ func (s *TestSuite) TestMsgServer_UnpauseVault() {
 			s.Assert().Equal(args.ExpectedCurrentRate, vault.CurrentInterestRate, "vault current interest rate")
 			s.Assert().Equal(args.ExpectedPeriodStart, vault.PeriodStart, "vault interest period start")
 			s.Assert().Equal(args.ExpectedPeriodTimeout, vault.PeriodTimeout, "vault interest period timeout")
+			found, err := s.k.PayoutVerificationSet.Has(s.ctx, args.VaultAddress)
+			s.Require().NoError(err, "error checking payout verification set for vault %s", args.VaultAddress)
+			s.Assert().True(found, "vault should be in payout verification set")
 		},
 	}
 
@@ -3608,7 +3611,7 @@ func (s *TestSuite) TestMsgServer_UnpauseVault() {
 				ExpectedDesiredRate:   interestRate,
 				ExpectedCurrentRate:   interestRate,
 				ExpectedPeriodStart:   now.Unix(),
-				ExpectedPeriodTimeout: now.Add(20 * time.Hour).Unix(),
+				ExpectedPeriodTimeout: 0,
 			},
 			expectedEvents: ev,
 		}
@@ -3651,7 +3654,7 @@ func (s *TestSuite) TestMsgServer_UnpauseVault() {
 				ExpectedCurrentRate:   interestRate,
 				ExpectedDesiredRate:   interestRate,
 				ExpectedPeriodStart:   now.Unix(),
-				ExpectedPeriodTimeout: now.Add(20 * time.Hour).Unix(),
+				ExpectedPeriodTimeout: 0,
 			},
 			expectedEvents: ev,
 		}

@@ -939,6 +939,49 @@ func (s *TestSuite) TestKeeper_CanPayoutDuration() {
 	}
 }
 
+func (s *TestSuite) TestKeeper_CanPayoutDuration_NegativeInterest_Composite_InsufficientUnderlying() {
+	s.SetupTest()
+
+	shareDenom := "vaultshares.composite"
+	underlyingDenom := "uylds.fcc.receipt.token"
+	paymentDenom := "uylds.fcc"
+
+	underlying := sdk.NewInt64Coin(underlyingDenom, 1_000_000_000)
+	vaultAddr := types.GetVaultAddress(shareDenom)
+	markerAddr := markertypes.MustGetMarkerAddress(shareDenom)
+
+	s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
+
+	_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: s.adminAddr.String(), ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom})
+	s.Require().NoError(err)
+
+	vault, err := s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err)
+
+	vault.CurrentInterestRate = "-0.5"
+	vault.DesiredInterestRate = "-0.5"
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(sdk.NewCoin(underlyingDenom, sdkmath.NewInt(1_000_000)))))
+
+	tinyUnderlying := sdkmath.NewInt(10_000_000)
+	hugePayment := sdkmath.NewInt(10_000_000_000_000)
+
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, sdk.NewCoins(sdk.NewCoin(underlyingDenom, tinyUnderlying), sdk.NewCoin(paymentDenom, hugePayment))), "failed to fund marker account")
+
+	year := int64(365 * 24 * time.Hour / time.Second)
+
+	canPayLong, err := s.k.CanPayoutDuration(s.ctx, vault, year)
+	s.Require().NoError(err, "error checking CanPayoutDuration for long duration")
+	s.Require().False(canPayLong, "expected CanPayoutDuration to be false for long duration with insufficient underlying")
+
+	smallDuration := int64(1)
+
+	canPayShort, err := s.k.CanPayoutDuration(s.ctx, vault, smallDuration)
+	s.Require().NoError(err, "error checking CanPayoutDuration for short duration")
+	s.Require().True(canPayShort, "expected CanPayoutDuration to be true for short duration with sufficient underlying")
+}
+
 func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_UsesTVV() {
 	s.SetupTest()
 

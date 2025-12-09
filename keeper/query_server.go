@@ -40,7 +40,15 @@ func (k queryServer) Vaults(goCtx context.Context, req *types.QueryVaultsRequest
 		k.Keeper.Vaults,
 		req.Pagination,
 		func(key sdk.AccAddress, _ []byte) (include bool, err error) {
-			vault, _ := k.GetVault(ctx, key)
+			vault, err := k.GetVault(ctx, key)
+			if err != nil {
+				ctx.Logger().Error("failed to get vault during pagination", "key", key.String(), "error", err)
+				return false, nil
+			}
+			if vault == nil {
+				ctx.Logger().Error("nil vault found during pagination", "key", key.String())
+				return false, nil
+			}
 			vaults = append(vaults, *vault)
 			return true, nil
 		},

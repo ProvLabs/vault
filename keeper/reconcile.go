@@ -226,7 +226,7 @@ func (k *Keeper) UpdateInterestRates(ctx sdk.Context, vault *types.VaultAccount,
 	if err := k.SetVaultAccount(ctx, vault); err != nil {
 		return err
 	}
-	k.emitEvent(sdk.UnwrapSDKContext(ctx), event)
+	k.emitEvent(ctx, event)
 	return nil
 }
 

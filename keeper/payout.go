@@ -167,7 +167,15 @@ func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.P
 		ctx.Logger().Error("CRITICAL: "+errMsg, "error", err)
 		return types.CriticalErr(errMsg, fmt.Errorf("%s: %w", errMsg, err))
 	}
-	k.AuthKeeper.SetAccount(ctx, &vault)
+
+	if err := k.SetVaultAccount(ctx, &vault); err != nil {
+		errMsg := fmt.Sprintf(
+			"failed to update vault account %s after successful payout",
+			vaultAddr,
+		)
+		ctx.Logger().Error("CRITICAL: "+errMsg, "error", err)
+		return types.CriticalErr(errMsg, fmt.Errorf("%s: %w", errMsg, err))
+	}
 
 	k.emitEvent(ctx, types.NewEventSwapOutCompleted(req.VaultAddress, req.Owner, assets, id))
 	return nil

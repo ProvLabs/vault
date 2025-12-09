@@ -1140,9 +1140,9 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 				setup()
 				vaultAcc, err := s.k.GetVault(s.ctx, vaultAddr)
 				s.Require().NoError(err)
-				s.k.UpdateInterestRates(s.ctx, vaultAcc, "4.20", "4.20")
+				s.Require().NoError(s.k.UpdateInterestRates(s.ctx, vaultAcc, "4.20", "4.20"), "initial interest rate update should succeed")
 				vaultAcc.PeriodStart = currentBlockTime.Unix() - 10000
-				s.Require().NoError(s.k.SetVaultAccount(s.ctx, vaultAcc))
+				s.Require().NoError(s.k.SetVaultAccount(s.ctx, vaultAcc), "setting vault account should succeed")
 			},
 			postCheckArgs: postCheckArgs{
 				VaultAddress:              vaultAddr,
@@ -1173,9 +1173,9 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 				setup()
 				vaultAcc, err := s.k.GetVault(s.ctx, vaultAddr)
 				s.Require().NoError(err)
-				s.k.UpdateInterestRates(s.ctx, vaultAcc, "6.12", "6.12")
+				s.Require().NoError(s.k.UpdateInterestRates(s.ctx, vaultAcc, "6.12", "6.12"), "initial interest rate update should succeed")
 				vaultAcc.PeriodStart = currentBlockTime.Unix() - 10000
-				s.Require().NoError(s.k.SetVaultAccount(s.ctx, vaultAcc))
+				s.Require().NoError(s.k.SetVaultAccount(s.ctx, vaultAcc), "setting vault account should succeed")
 			},
 			postCheckArgs: postCheckArgs{
 				VaultAddress:              vaultAddr,
@@ -1205,9 +1205,9 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 				setup()
 				vaultAcc, err := s.k.GetVault(s.ctx, vaultAddr)
 				s.Require().NoError(err)
-				s.k.UpdateInterestRates(s.ctx, vaultAcc, "3.33", "3.33")
+				s.Require().NoError(s.k.UpdateInterestRates(s.ctx, vaultAcc, "3.33", "3.33"), "initial interest rate update should succeed")
 				vaultAcc.PeriodStart = currentBlockTime.Unix() - 5000
-				s.Require().NoError(s.k.SetVaultAccount(s.ctx, vaultAcc))
+				s.Require().NoError(s.k.SetVaultAccount(s.ctx, vaultAcc), "setting vault account should succeed")
 			},
 			postCheckArgs: postCheckArgs{
 				VaultAddress:              vaultAddr,
@@ -1255,10 +1255,10 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 				setup()
 				vaultAcc, err := s.k.GetVault(s.ctx, vaultAddr)
 				s.Require().NoError(err)
-				s.k.UpdateInterestRates(s.ctx, vaultAcc, "0.0", "0.0")
+				s.Require().NoError(s.k.UpdateInterestRates(s.ctx, vaultAcc, "0.0", "0.0"), "initial interest rate update should succeed")
 				vaultAcc.PeriodStart = currentBlockTime.Unix() - 1234
 				vaultAcc.PeriodTimeout = currentBlockTime.Unix() + 9999
-				s.Require().NoError(s.k.SetVaultAccount(s.ctx, vaultAcc))
+				s.Require().NoError(s.k.SetVaultAccount(s.ctx, vaultAcc), "setting vault account should succeed")
 			},
 			postCheckArgs: postCheckArgs{
 				VaultAddress:              vaultAddr,
@@ -1281,11 +1281,11 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 				setup()
 				vaultAcc, err := s.k.GetVault(s.ctx, vaultAddr)
 				s.Require().NoError(err)
-				s.k.UpdateInterestRates(s.ctx, vaultAcc, "4.20", "4.20")
+				s.Require().NoError(s.k.UpdateInterestRates(s.ctx, vaultAcc, "4.20", "4.20"), "initial interest rate update should succeed")
 				priorStart := currentBlockTime.Unix() - 7777
 				vaultAcc.PeriodStart = priorStart
 				vaultAcc.Paused = true
-				s.Require().NoError(s.k.SetVaultAccount(s.ctx, vaultAcc))
+				s.Require().NoError(s.k.SetVaultAccount(s.ctx, vaultAcc), "setting vault account should succeed")
 				s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 			},
 			postCheckArgs: postCheckArgs{
@@ -1309,9 +1309,9 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 				setup()
 				vaultAcc, err := s.k.GetVault(s.ctx, vaultAddr)
 				s.Require().NoError(err)
-				s.k.UpdateInterestRates(s.ctx, vaultAcc, "0.0", "0.0")
+				s.Require().NoError(s.k.UpdateInterestRates(s.ctx, vaultAcc, "0.0", "0.0"), "initial interest rate update should succeed")
 				vaultAcc.Paused = true
-				s.Require().NoError(s.k.SetVaultAccount(s.ctx, vaultAcc))
+				s.Require().NoError(s.k.SetVaultAccount(s.ctx, vaultAcc), "setting vault account should succeed")
 				s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 			},
 			postCheckArgs: postCheckArgs{
@@ -1333,12 +1333,12 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate() {
 			setup: func() {
 				setup()
 				vaultAcc, err := s.k.GetVault(s.ctx, vaultAddr)
-				s.Require().NoError(err)
-				s.k.UpdateInterestRates(s.ctx, vaultAcc, "2.50", "2.50")
+				s.Require().NoError(err, "error getting vault account")
+				s.Require().NoError(s.k.UpdateInterestRates(s.ctx, vaultAcc, "2.50", "2.50"), "initial interest rate update should succeed")
 				vaultAcc.PeriodStart = currentBlockTime.Unix() - 5000
 				vaultAcc.PeriodTimeout = currentBlockTime.Unix() + 3600
 				vaultAcc.Paused = true
-				s.Require().NoError(s.k.SetVaultAccount(s.ctx, vaultAcc))
+				s.Require().NoError(s.k.SetVaultAccount(s.ctx, vaultAcc), "setting vault account should succeed")
 				s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 			},
 			postCheckArgs: postCheckArgs{
@@ -3323,7 +3323,7 @@ func (s *TestSuite) TestMsgServer_PauseVault() {
 		s.Require().NoError(err)
 		vault, err := s.k.GetVault(s.ctx, vaultAddr)
 		s.Require().NoError(err, "failed to get vault in setup")
-		s.k.UpdateInterestRates(s.ctx, vault, interestRate, interestRate)
+		s.Require().NoError(s.k.UpdateInterestRates(s.ctx, vault, interestRate, interestRate), "initial interest rate update should succeed")
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	}
 
@@ -3556,7 +3556,7 @@ func (s *TestSuite) TestMsgServer_UnpauseVault() {
 		s.Require().NoError(err)
 		vault, err := s.k.GetVault(s.ctx, vaultAddr)
 		s.Require().NoError(err, "failed to get vault in setup")
-		s.k.UpdateInterestRates(s.ctx, vault, interestRate, interestRate)
+		s.Require().NoError(s.k.UpdateInterestRates(s.ctx, vault, interestRate, interestRate), "initial interest rate update should succeed")
 		vault.PeriodStart = s.ctx.BlockTime().Unix()
 		vault.PeriodTimeout = s.ctx.BlockTime().Add(24 * time.Hour).Unix()
 		err = s.k.SetVaultAccount(s.ctx, vault)

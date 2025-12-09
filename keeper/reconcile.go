@@ -35,6 +35,7 @@ func (k *Keeper) reconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccou
 	if vault.Paused {
 		return nil
 	}
+
 	currentBlockTime := ctx.BlockTime().Unix()
 
 	if vault.PeriodStart != 0 {
@@ -42,15 +43,37 @@ func (k *Keeper) reconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccou
 			return nil
 		}
 
-		if err := k.PerformVaultInterestTransfer(ctx, vault); err != nil {
-			return err
-		}
-		if err := k.publishShareNav(ctx, vault); err != nil {
+		if err := k.settleVaultPeriod(ctx, vault); err != nil {
 			return err
 		}
 	}
 
 	return k.SafeAddVerification(ctx, vault)
+}
+
+func (k *Keeper) settleVaultPeriod(ctx sdk.Context, vault *types.VaultAccount) error {
+	if err := k.PerformVaultTechFeeAccrualAndSweep(ctx, vault); err != nil {
+		return err
+	}
+
+	if err := k.PerformVaultInterestTransfer(ctx, vault); err != nil {
+		return err
+	}
+
+	if err := k.publishShareNav(ctx, vault); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (k *Keeper) PerformVaultTechFeeAccrualAndSweep(ctx sdk.Context, vault *types.VaultAccount) error {
+	currentBlockTime := ctx.BlockTime().Unix()
+	if currentBlockTime <= vault.PeriodStart {
+		return nil
+	}
+
+	return nil
 }
 
 // publishShareNav records the Net Asset Value (NAV) for the vault's share denom

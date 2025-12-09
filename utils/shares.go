@@ -56,7 +56,7 @@ func CalculateSharesProRataFraction(
 	if amountDenominator.IsZero() {
 		return sdk.Coin{}, fmt.Errorf("invalid input: zero denominator")
 	}
-	if totalAssets.IsZero() {
+	if totalAssets.IsZero() && totalShares.IsZero() {
 		shares := amountNumerator.Mul(ShareScalar).Quo(amountDenominator)
 		return sdk.NewCoin(shareDenom, shares), nil
 	}

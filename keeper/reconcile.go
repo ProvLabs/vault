@@ -8,7 +8,6 @@ import (
 	"github.com/provlabs/vault/types"
 
 	"cosmossdk.io/collections"
-	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -99,6 +98,20 @@ func (k *Keeper) settleVaultPeriod(ctx sdk.Context, vault *types.VaultAccount) e
 	return nil
 }
 
+// PerformVaultTechFeeAccrualAndSweep accrues the vault’s technology fee for the
+// elapsed period and attempts to pay down any outstanding fee using the vault’s
+// available underlying-asset reserves.
+//
+// The method first calculates how much tech fee has accumulated since the last
+// period began and adds that amount to `vault.TechFeeAccrued`. It then checks
+// the vault account’s current balance of the underlying asset and sweeps as
+// much of the accrued fee as possible to the configured fee recipient. Any
+// remainder stays in `TechFeeAccrued` to be settled later.
+//
+// This function never draws from principal, never errors due to insufficient
+// reserves, and logs (rather than returns) any failed send attempts. It returns
+// an error only when required inputs (such as TVV or fee calculation) cannot be
+// computed.
 func (k *Keeper) PerformVaultTechFeeAccrualAndSweep(ctx sdk.Context, vault *types.VaultAccount) error {
 	currentBlockTime := ctx.BlockTime().Unix()
 	if currentBlockTime <= vault.PeriodStart {
@@ -137,7 +150,7 @@ func (k *Keeper) PerformVaultTechFeeAccrualAndSweep(ctx sdk.Context, vault *type
 	}
 
 	if vault.TechFeeAccrued.IsNil() {
-		vault.TechFeeAccrued = math.ZeroInt()
+		vault.TechFeeAccrued = sdkmath.ZeroInt()
 	}
 	vault.TechFeeAccrued = vault.TechFeeAccrued.Add(feeAmount)
 

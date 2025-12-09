@@ -8,6 +8,7 @@ import (
 	"github.com/provlabs/vault/types"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,7 +20,38 @@ const (
 	// AutoReconcilePayoutDuration is the time period (in seconds) used to forecast if a vault has
 	// sufficient funds to cover future interest payments.
 	AutoReconcilePayoutDuration = 24 * interest.SecondsPerHour
+	HardcodedTechFeeAPR         = "0.0015" // 15 bps annualized
+	TechFeeRecipientMainnet     = "pb1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+	TechFeeRecipientTestnet     = "tp1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+	MainnetChainID = "pio-mainnet-1"
+	TestnetChainID = "pio-testnet-1"
 )
+
+func (k Keeper) GetTechFeeRate(ctx sdk.Context) string {
+	return HardcodedTechFeeAPR
+}
+
+func (k Keeper) GetTechFeeRecipient(ctx sdk.Context) sdk.AccAddress {
+	chainID := ctx.ChainID()
+
+	var addrStr string
+	switch chainID {
+	case MainnetChainID:
+		addrStr = TechFeeRecipientMainnet
+	case TestnetChainID:
+		addrStr = TechFeeRecipientTestnet
+	default:
+		addrStr = TechFeeRecipientTestnet
+	}
+
+	addr, err := sdk.AccAddressFromBech32(addrStr)
+	if err != nil {
+		panic(fmt.Sprintf("invalid hardcoded tech fee recipient address for chain %s: %v", chainID, err))
+	}
+
+	return addr
+}
 
 // reconcileVaultInterest updates interest accounting for a vault if a new interest period has started.
 //
@@ -72,6 +104,74 @@ func (k *Keeper) PerformVaultTechFeeAccrualAndSweep(ctx sdk.Context, vault *type
 	if currentBlockTime <= vault.PeriodStart {
 		return nil
 	}
+
+	denom := vault.UnderlyingAsset
+	vaultAddr := vault.GetAddress()
+
+	principalTvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
+	if err != nil {
+		return fmt.Errorf("failed to get TVV for tech fee: %w", err)
+	}
+	if !principalTvv.IsPositive() {
+		return nil
+	}
+
+	rate := k.GetTechFeeRate(ctx)
+	if rate == "" {
+		return nil
+	}
+
+	periodDuration := currentBlockTime - vault.PeriodStart
+	if periodDuration <= 0 {
+		return nil
+	}
+
+	principalCoin := sdk.NewCoin(denom, principalTvv)
+
+	feeAmount, err := interest.CalculateInterestEarned(principalCoin, rate, periodDuration)
+	if err != nil {
+		return fmt.Errorf("failed to calculate tech fee: %w", err)
+	}
+	if !feeAmount.IsPositive() {
+		return nil
+	}
+
+	if vault.TechFeeAccrued.IsNil() {
+		vault.TechFeeAccrued = math.ZeroInt()
+	}
+	vault.TechFeeAccrued = vault.TechFeeAccrued.Add(feeAmount)
+
+	reserves := k.BankKeeper.GetBalance(ctx, vaultAddr, denom)
+	if !reserves.Amount.IsPositive() || !vault.TechFeeAccrued.IsPositive() {
+		return nil
+	}
+
+	payNow := vault.TechFeeAccrued
+	if reserves.Amount.LT(payNow) {
+		payNow = reserves.Amount
+	}
+	if payNow.IsZero() {
+		return nil
+	}
+
+	recipient := k.GetTechFeeRecipient(ctx)
+	if recipient.Empty() {
+		ctx.Logger().Error("tech fee recipient not configured", "vault", vaultAddr.String())
+		return nil
+	}
+
+	err = k.BankKeeper.SendCoins(
+		markertypes.WithBypass(ctx),
+		vaultAddr,
+		recipient,
+		sdk.NewCoins(sdk.NewCoin(denom, payNow)),
+	)
+	if err != nil {
+		ctx.Logger().Error("failed to pay tech fee", "vault", vaultAddr.String(), "err", err)
+		return nil
+	}
+
+	vault.TechFeeAccrued = vault.TechFeeAccrued.Sub(payNow)
 
 	return nil
 }

@@ -21,10 +21,10 @@ Instead, work from your own fork.
 2. Click **Fork** and create a fork under your GitHub account.
 3. Clone your fork:
 
-   ```bash
+```bash
    git clone git@github.com:<your-username>/vault.git
    cd vault
-````
+```
 
 ### 1.2 Add the upstream remote
 

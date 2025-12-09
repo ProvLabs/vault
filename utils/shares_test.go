@@ -96,9 +96,6 @@ func TestCalculateAssetsFromShares(t *testing.T) {
 func TestCalculateSharesProRataFraction(t *testing.T) {
 	shareDenom := "vaultshare"
 
-	// These cover the single-floor path directly with price fractions folded
-	// into (amountNumerator / amountDenominator). Keeping explicit priced cases
-	// ensures the new API is exercised beyond 1:1 underlying deposits.
 	tests := []struct {
 		name            string
 		amountNum       sdkmath.Int
@@ -118,6 +115,14 @@ func TestCalculateSharesProRataFraction(t *testing.T) {
 			expected:    sdk.NewCoin(shareDenom, sdkmath.NewInt(100_000_000)),
 		},
 		{
+			name:        "assets zero but shares non-zero uses pro-rata path",
+			amountNum:   sdkmath.NewInt(1),
+			amountDen:   sdkmath.NewInt(1),
+			totalAssets: sdkmath.NewInt(0),
+			totalShares: sdkmath.NewInt(1),
+			expected:    sdk.NewCoin(shareDenom, sdkmath.NewInt(1_000_001)),
+		},
+		{
 			name:        "proportional mint with virtual offsets (price 1:1)",
 			amountNum:   sdkmath.NewInt(50),
 			amountDen:   sdkmath.NewInt(1),
@@ -135,8 +140,8 @@ func TestCalculateSharesProRataFraction(t *testing.T) {
 		},
 		{
 			name:        "priced deposit 3/2 into non-empty vault",
-			amountNum:   sdkmath.NewInt(6), // 2 * 3 (amount * priceNum)
-			amountDen:   sdkmath.NewInt(2), // priceDen
+			amountNum:   sdkmath.NewInt(6),
+			amountDen:   sdkmath.NewInt(2),
 			totalAssets: sdkmath.NewInt(100),
 			totalShares: sdkmath.NewInt(200),
 			expected:    sdk.NewCoin(shareDenom, sdkmath.NewInt(29_708)),
@@ -182,11 +187,13 @@ func TestCalculateSharesProRataFraction(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			got, err := utils.CalculateSharesProRataFraction(tc.amountNum, tc.amountDen, tc.totalAssets, tc.totalShares, shareDenom)
+
 			if tc.expectErr {
 				require.Error(t, err)
 				require.EqualError(t, err, tc.expectedErrText)
 				return
 			}
+
 			require.NoError(t, err)
 			require.Equal(t, tc.expected, got, fmt.Sprintf("unexpected shares for amount=%s/%s totalAssets=%s totalShares=%s", tc.amountNum, tc.amountDen, tc.totalAssets, tc.totalShares))
 		})

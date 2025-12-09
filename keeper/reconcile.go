@@ -83,15 +83,15 @@ func (k *Keeper) reconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccou
 }
 
 func (k *Keeper) settleVaultPeriod(ctx sdk.Context, vault *types.VaultAccount) error {
-	if err := k.PerformVaultTechFeeAccrualAndSweep(ctx, vault); err != nil {
-		return err
-	}
-
 	if err := k.PerformVaultInterestTransfer(ctx, vault); err != nil {
 		return err
 	}
 
 	if err := k.publishShareNav(ctx, vault); err != nil {
+		return err
+	}
+
+	if err := k.PerformVaultTechFeeAccrualAndSweep(ctx, vault); err != nil {
 		return err
 	}
 

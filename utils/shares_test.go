@@ -189,12 +189,12 @@ func TestCalculateSharesProRataFraction(t *testing.T) {
 			got, err := utils.CalculateSharesProRataFraction(tc.amountNum, tc.amountDen, tc.totalAssets, tc.totalShares, shareDenom)
 
 			if tc.expectErr {
-				require.Error(t, err)
-				require.EqualError(t, err, tc.expectedErrText)
+				require.Error(t, err, "expected error for case: %s", tc.name)
+				require.EqualError(t, err, tc.expectedErrText, "unexpected error text for case: %s", tc.name)
 				return
 			}
 
-			require.NoError(t, err)
+			require.NoError(t, err, "unexpected error for case: %s", tc.name)
 			require.Equal(t, tc.expected, got, fmt.Sprintf("unexpected shares for amount=%s/%s totalAssets=%s totalShares=%s", tc.amountNum, tc.amountDen, tc.totalAssets, tc.totalShares))
 		})
 	}

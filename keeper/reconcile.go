@@ -84,101 +84,137 @@ func (k *Keeper) publishShareNav(ctx sdk.Context, vault *types.VaultAccount) err
 // PerformVaultInterestTransfer applies accrued interest between the vault and the marker account
 // if the current block time is beyond PeriodStart.
 //
-// Positive interest is paid from vault reserves to the marker. Negative interest is refunded from
-// marker principal back to the vault (bounded by available principal). An EventVaultReconcile is emitted.
-// This method does not modify PeriodStart.
+// Interest is settled exclusively in the vault's defined UnderlyingAsset.
+//   - Positive Interest: Paid from vault reserves to the marker. Fails if reserves are insufficient.
+//   - Negative Interest: Refunded from marker principal to the vault. This is bounded by the
+//     available balance of the UnderlyingAsset in the marker account.
+//
+// IMPORTANT: If the vault utilizes composite reserves (holding multiple token types), secondary
+// assets are NOT liquidated or transferred to satisfy interest obligations. If the marker owes
+// negative interest but lacks sufficient liquidity in the UnderlyingAsset, the transfer is
+// capped at the available underlying balance, potentially resulting in a partial payment.
+//
+// An EventVaultReconcile is emitted upon success. This method does not modify PeriodStart.
 func (k *Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.VaultAccount) error {
 	currentBlockTime := ctx.BlockTime().Unix()
-
 	if currentBlockTime <= vault.PeriodStart {
 		return nil
 	}
 
 	periodDuration := currentBlockTime - vault.PeriodStart
+	denom := vault.UnderlyingAsset
+	vaultAddr := vault.GetAddress()
 	principalAddress := vault.PrincipalMarkerAddress()
 
-	reserves := k.BankKeeper.GetBalance(ctx, vault.GetAddress(), vault.UnderlyingAsset)
-	principal := k.BankKeeper.GetBalance(ctx, principalAddress, vault.UnderlyingAsset)
+	reserves := k.BankKeeper.GetBalance(ctx, vaultAddr, denom)
+	principalTvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
+	if err != nil {
+		return err
+	}
+	principalInTvv := sdk.NewCoin(denom, principalTvv)
 
-	interestEarned, err := interest.CalculateInterestEarned(principal, vault.CurrentInterestRate, periodDuration)
+	interestEarned, err := interest.CalculateInterestEarned(principalInTvv, vault.CurrentInterestRate, periodDuration)
 	if err != nil {
 		return fmt.Errorf("failed to calculate interest: %w", err)
 	}
+
+	actualInterest := interestEarned
 
 	if interestEarned.IsPositive() {
 		if reserves.Amount.LT(interestEarned) {
 			return fmt.Errorf("insufficient reserves to pay interest")
 		}
-
-		if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx),
-			vault.GetAddress(),
+		if err := k.BankKeeper.SendCoins(
+			markertypes.WithBypass(ctx),
+			vaultAddr,
 			principalAddress,
-			sdk.NewCoins(sdk.NewCoin(vault.UnderlyingAsset, interestEarned)),
+			sdk.NewCoins(sdk.NewCoin(denom, interestEarned)),
 		); err != nil {
 			return fmt.Errorf("failed to pay interest: %w", err)
 		}
 	} else if interestEarned.IsNegative() {
+		principalUnderlying := k.BankKeeper.GetBalance(ctx, principalAddress, denom)
 		owed := interestEarned.Abs()
-		if principal.Amount.LT(owed) {
-			owed = principal.Amount
+		if principalUnderlying.Amount.LT(owed) {
+			owed = principalUnderlying.Amount
 		}
-
-		if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx),
-			principalAddress,
-			vault.GetAddress(),
-			sdk.NewCoins(sdk.NewCoin(vault.UnderlyingAsset, owed)),
-		); err != nil {
-			return fmt.Errorf("failed to reclaim negative interest: %w", err)
+		if owed.IsZero() {
+			actualInterest = sdkmath.ZeroInt()
+		} else {
+			if err := k.BankKeeper.SendCoins(
+				markertypes.WithBypass(ctx),
+				principalAddress,
+				vaultAddr,
+				sdk.NewCoins(sdk.NewCoin(denom, owed)),
+			); err != nil {
+				return fmt.Errorf("failed to reclaim negative interest: %w", err)
+			}
+			actualInterest = owed.Neg()
 		}
 	}
 
-	principalAfter := k.BankKeeper.GetBalance(ctx, principalAddress, vault.UnderlyingAsset)
+	principalTvvAfter, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
+	if err != nil {
+		return err
+	}
 
 	k.emitEvent(ctx, types.NewEventVaultReconcile(
-		vault.GetAddress().String(),
-		principal,
-		principalAfter,
+		vaultAddr.String(),
+		principalInTvv,
+		sdk.NewCoin(denom, principalTvvAfter),
 		vault.CurrentInterestRate,
 		periodDuration,
-		interestEarned,
+		actualInterest,
 	))
 
 	return nil
 }
 
-// CanPayoutDuration determines whether the vault can fulfill the interest payment or refund
-// over the given duration based on current reserves and principal.
+// CanPayoutDuration determines whether the vault can fulfill the projected
+// interest payment or refund over the given duration based on current reserves
+// and principal TVV.
 //
-// It returns true when duration <= 0, when accrued interest is zero, when positive interest
-// can be paid from reserves, or when negative interest can be refunded from nonzero principal.
+// It returns true when duration <= 0, when accrued interest is zero, when
+// positive interest can be paid from vault reserves, or when negative interest
+// can be fully covered by the principal marker's underlying balance.
 // Otherwise it returns false.
 func (k *Keeper) CanPayoutDuration(ctx sdk.Context, vault *types.VaultAccount, duration int64) (bool, error) {
 	if duration <= 0 {
 		return true, nil
 	}
 
-	denom := vault.UnderlyingAsset
+	underlyingDenom := vault.UnderlyingAsset
 	vaultAddr := vault.GetAddress()
-	principalAddress := vault.PrincipalMarkerAddress()
+	principalAddr := vault.PrincipalMarkerAddress()
 
-	reserves := k.BankKeeper.GetBalance(ctx, vaultAddr, denom)
-	principal := k.BankKeeper.GetBalance(ctx, principalAddress, denom)
+	principalTvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
+	if err != nil {
+		return false, err
+	}
+	if principalTvv.IsZero() {
+		return true, nil
+	}
 
-	interestEarned, err := interest.CalculateInterestEarned(principal, vault.CurrentInterestRate, duration)
+	principalCoin := sdk.NewCoin(underlyingDenom, principalTvv)
+
+	interestEarned, err := interest.CalculateInterestEarned(principalCoin, vault.CurrentInterestRate, duration)
 	if err != nil {
 		return false, fmt.Errorf("failed to calculate interest: %w", err)
 	}
 
-	switch {
-	case interestEarned.IsZero():
+	if interestEarned.IsZero() {
 		return true, nil
-	case interestEarned.IsPositive():
-		return !reserves.Amount.LT(interestEarned), nil
-	case interestEarned.IsNegative():
-		return principal.Amount.IsPositive(), nil
-	default:
-		return false, fmt.Errorf("unexpected interest value: %s", interestEarned.String())
 	}
+
+	if interestEarned.IsPositive() {
+		reserves := k.BankKeeper.GetBalance(ctx, vaultAddr, underlyingDenom)
+		return !reserves.Amount.LT(interestEarned), nil
+	}
+
+	principalUnderlying := k.BankKeeper.GetBalance(ctx, principalAddr, underlyingDenom)
+	owed := interestEarned.Abs()
+
+	return !principalUnderlying.Amount.LT(owed), nil
 }
 
 // UpdateInterestRates sets the vault's current and desired interest rates and emits

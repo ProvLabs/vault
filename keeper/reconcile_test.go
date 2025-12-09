@@ -735,7 +735,7 @@ func (s *TestSuite) TestKeeper_UpdateInterestRates() {
 	v1 := NewVaultInfo(1)
 	initialRate := "0.1"
 	newRate := "0.2"
-	desiredRate := "0.3"
+	desiredRate := "0.2"
 
 	tests := []struct {
 		name           string

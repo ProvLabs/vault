@@ -17,13 +17,15 @@ func (k Keeper) TestAccessor_handleReconciledVaults(t *testing.T, ctx context.Co
 // TestAccessor_handlePayableVaults exposes this keeper's handlePayableVaults function for unit tests.
 func (k Keeper) TestAccessor_handlePayableVaults(t *testing.T, ctx context.Context, payouts []*types.VaultAccount) {
 	t.Helper()
-	k.handlePayableVaults(ctx, payouts)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	k.handlePayableVaults(sdkCtx, payouts)
 }
 
 // TestAccessor_handleDepletedVaults exposes this keeper's handleDepletedVaults function for unit tests.
 func (k Keeper) TestAccessor_handleDepletedVaults(t *testing.T, ctx context.Context, failedPayouts []*types.VaultAccount) {
 	t.Helper()
-	k.handleDepletedVaults(ctx, failedPayouts)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	k.handleDepletedVaults(sdkCtx, failedPayouts)
 }
 
 // TestAccessor_handleDepletedVaults exposes this keeper's handleDepletedVaults function for unit tests.

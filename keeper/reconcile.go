@@ -219,12 +219,15 @@ func (k *Keeper) CanPayoutDuration(ctx sdk.Context, vault *types.VaultAccount, d
 
 // UpdateInterestRates sets the vault's current and desired interest rates and emits
 // an EventVaultInterestChange. The modified account is persisted via the auth keeper.
-func (k *Keeper) UpdateInterestRates(ctx context.Context, vault *types.VaultAccount, currentRate, desiredRate string) {
+func (k *Keeper) UpdateInterestRates(ctx sdk.Context, vault *types.VaultAccount, currentRate, desiredRate string) error {
 	event := types.NewEventVaultInterestChange(vault.GetAddress().String(), currentRate, desiredRate)
 	vault.CurrentInterestRate = currentRate
 	vault.DesiredInterestRate = desiredRate
-	k.AuthKeeper.SetAccount(ctx, vault)
-	k.emitEvent(sdk.UnwrapSDKContext(ctx), event)
+	if err := k.SetVaultAccount(ctx, vault); err != nil {
+		return err
+	}
+	k.emitEvent(ctx, event)
+	return nil
 }
 
 // CalculateVaultTotalAssets returns the total value of the vault's assets, including the interest
@@ -317,8 +320,8 @@ func (k *Keeper) handleVaultInterestTimeouts(ctx context.Context) error {
 		reconciled = append(reconciled, vault)
 	}
 
-	k.resetVaultInterestPeriods(ctx, reconciled)
-	k.handleDepletedVaults(ctx, depleted)
+	k.resetVaultInterestPeriods(sdkCtx, reconciled)
+	k.handleDepletedVaults(sdkCtx, depleted)
 	return nil
 }
 
@@ -372,8 +375,8 @@ func (k *Keeper) handleReconciledVaults(ctx context.Context) error {
 	}
 
 	payable, depleted := k.partitionVaults(sdkCtx, vaultsToProcess)
-	k.handlePayableVaults(ctx, payable)
-	k.handleDepletedVaults(ctx, depleted)
+	k.handlePayableVaults(sdkCtx, payable)
+	k.handleDepletedVaults(sdkCtx, depleted)
 	return nil
 }
 
@@ -399,21 +402,21 @@ func (k *Keeper) partitionVaults(sdkCtx sdk.Context, vaults []*types.VaultAccoun
 
 // handlePayableVaults updates timeout tracking for vaults that remain payable after reconciliation.
 // It sets PeriodTimeout to now + AutoReconcileTimeout, persists the vault, and enqueues the timeout.
-func (k *Keeper) handlePayableVaults(ctx context.Context, payouts []*types.VaultAccount) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
+func (k *Keeper) handlePayableVaults(ctx sdk.Context, payouts []*types.VaultAccount) {
 	for _, v := range payouts {
 		if err := k.SafeEnqueueTimeout(ctx, v); err != nil {
-			sdkCtx.Logger().Error("failed to enqueue timeout", "vault", v.GetAddress().String(), "err", err)
+			ctx.Logger().Error("failed to enqueue timeout", "vault", v.GetAddress().String(), "err", err)
 		}
 	}
 }
 
 // handleDepletedVaults disables interest for vaults that cannot cover the forecasted payout window
 // by setting the current rate to zero while preserving the desired rate.
-func (k *Keeper) handleDepletedVaults(ctx context.Context, failedPayouts []*types.VaultAccount) {
+func (k *Keeper) handleDepletedVaults(ctx sdk.Context, failedPayouts []*types.VaultAccount) {
 	for _, record := range failedPayouts {
-		k.UpdateInterestRates(ctx, record, types.ZeroInterestRate, record.DesiredInterestRate)
+		if err := k.UpdateInterestRates(ctx, record, types.ZeroInterestRate, record.DesiredInterestRate); err != nil {
+			ctx.Logger().Error("failed to update interest rates", "vault", record.GetAddress().String(), "err", err)
+		}
 	}
 }
 
@@ -421,12 +424,10 @@ func (k *Keeper) handleDepletedVaults(ctx context.Context, failedPayouts []*type
 // interest reconciliation by calling SafeEnqueueTimeout for each.
 //
 // This updates PeriodStart and PeriodTimeout, persists the vault, and enqueues the corresponding timeout entry.
-func (k *Keeper) resetVaultInterestPeriods(ctx context.Context, vaults []*types.VaultAccount) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
+func (k *Keeper) resetVaultInterestPeriods(ctx sdk.Context, vaults []*types.VaultAccount) {
 	for _, vault := range vaults {
 		if err := k.SafeEnqueueTimeout(ctx, vault); err != nil {
-			sdkCtx.Logger().Error("failed to enqueue vault timeout", "vault", vault.GetAddress().String(), "err", err)
+			ctx.Logger().Error("failed to enqueue vault timeout", "vault", vault.GetAddress().String(), "err", err)
 		}
 	}
 }

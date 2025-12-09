@@ -420,28 +420,28 @@ func (s *TestSuite) TestSetMinMaxInterestRate_NoOp_NoEvent() {
 
 	attrs := vaultAttrs{admin: s.adminAddr.String(), share: share, underlying: base}
 	v, err := s.k.CreateVault(s.ctx, attrs)
-	s.Require().NoError(err)
+	s.Require().NoError(err, "vault creation should succeed")
 
-	s.k.UpdateInterestRates(s.ctx, v, "0.10", "0.10")
+	s.Require().NoError(s.k.UpdateInterestRates(s.ctx, v, "0.10", "0.10"), "should set initial min/max rates without error")
 	s.k.AuthKeeper.SetAccount(s.ctx, v)
 
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	err = s.k.SetMinInterestRate(s.ctx, v, "0.10")
-	s.Require().NoError(err)
+	s.Require().NoError(err, "setting min interest rate should not error")
 
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	err = s.k.SetMinInterestRate(s.ctx, v, "0.10")
-	s.Require().NoError(err)
-	s.Require().Len(s.ctx.EventManager().Events(), 0)
+	s.Require().NoError(err, "setting min interest rate should not error")
+	s.Require().Len(s.ctx.EventManager().Events(), 0, "no events should be emitted when setting the same min interest rate")
 
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	err = s.k.SetMaxInterestRate(s.ctx, v, "0.25")
-	s.Require().NoError(err)
+	s.Require().NoError(err, "setting max interest rate should not error")
 
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	err = s.k.SetMaxInterestRate(s.ctx, v, "0.25")
-	s.Require().NoError(err)
-	s.Require().Len(s.ctx.EventManager().Events(), 0)
+	s.Require().NoError(err, "setting max interest rate should not error")
+	s.Require().Len(s.ctx.EventManager().Events(), 0, "no events should be emitted when setting the same max interest rate")
 }
 
 func (s *TestSuite) TestSetMinInterestRate_ValidationBlocksWhenAboveExistingMax() {
@@ -606,11 +606,11 @@ func (s *TestSuite) TestUpdateInterestRate_BoundsEnforced() {
 	v, err := s.k.GetVault(s.ctx, addr)
 	s.Require().NoError(err)
 
-	s.k.UpdateInterestRates(s.ctx, v, "0.10", "0.10")
+	s.Require().NoError(s.k.UpdateInterestRates(s.ctx, v, "0.10", "0.10"), "should set initial min/max rates without error")
 	s.k.AuthKeeper.SetAccount(s.ctx, v)
 
-	s.Require().NoError(s.k.SetMinInterestRate(s.ctx, v, "0.10"))
-	s.Require().NoError(s.k.SetMaxInterestRate(s.ctx, v, "0.50"))
+	s.Require().NoError(s.k.SetMinInterestRate(s.ctx, v, "0.10"), "setting min interest rate should not error")
+	s.Require().NoError(s.k.SetMaxInterestRate(s.ctx, v, "0.50"), "setting max interest rate should not error")
 
 	srv := keeper.NewMsgServer(s.simApp.VaultKeeper)
 
@@ -620,9 +620,9 @@ func (s *TestSuite) TestUpdateInterestRate_BoundsEnforced() {
 		VaultAddress: addr.String(),
 		NewRate:      "0.25",
 	})
-	s.Require().NoError(err)
+	s.Require().NoError(err, "updating interest rate to 0.25 should not error")
 	v2, err := s.k.GetVault(s.ctx, addr)
-	s.Require().NoError(err)
+	s.Require().NoError(err, "getting vault after interest rate update should not error")
 	s.Require().Equal("0.25", v2.CurrentInterestRate)
 	s.Require().Equal("0.25", v2.DesiredInterestRate)
 
@@ -632,7 +632,7 @@ func (s *TestSuite) TestUpdateInterestRate_BoundsEnforced() {
 		VaultAddress: addr.String(),
 		NewRate:      "0.05",
 	})
-	s.Require().Error(err)
+	s.Require().Error(err, "updating interest rate to 0.05 should error")
 
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	_, err = srv.UpdateInterestRate(s.ctx, &types.MsgUpdateInterestRateRequest{
@@ -640,7 +640,7 @@ func (s *TestSuite) TestUpdateInterestRate_BoundsEnforced() {
 		VaultAddress: addr.String(),
 		NewRate:      "0.60",
 	})
-	s.Require().Error(err)
+	s.Require().Error(err, "updating interest rate to 0.60 should error")
 }
 
 func (s *TestSuite) TestAutoPauseVault_SetsPausedAndEmitsEvent() {

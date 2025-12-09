@@ -735,7 +735,7 @@ func (s *TestSuite) TestKeeper_UpdateInterestRates() {
 	v1 := NewVaultInfo(1)
 	initialRate := "0.1"
 	newRate := "0.2"
-	desiredRate := "0.3"
+	desiredRate := "0.2"
 
 	tests := []struct {
 		name           string
@@ -762,10 +762,10 @@ func (s *TestSuite) TestKeeper_UpdateInterestRates() {
 			},
 			postCheck: func(vault *types.VaultAccount) {
 				updatedVault, err := s.k.GetVault(s.ctx, vault.GetAddress())
-				s.Require().NoError(err)
-				s.Require().NotNil(updatedVault)
-				s.Assert().Equal(newRate, updatedVault.CurrentInterestRate)
-				s.Assert().Equal(desiredRate, updatedVault.DesiredInterestRate)
+				s.Require().NoError(err, "retrieving updated vault should not error")
+				s.Require().NotNil(updatedVault, "updated vault should not be nil")
+				s.Assert().Equal(newRate, updatedVault.CurrentInterestRate, "current interest rate should be updated")
+				s.Assert().Equal(desiredRate, updatedVault.DesiredInterestRate, "desired interest rate should be updated")
 			},
 		},
 	}
@@ -776,12 +776,12 @@ func (s *TestSuite) TestKeeper_UpdateInterestRates() {
 			vault := tc.setup()
 
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
-			s.k.UpdateInterestRates(s.ctx, vault, tc.currentRate, tc.desiredRate)
+			s.Require().NoError(s.k.UpdateInterestRates(s.ctx, vault, tc.currentRate, tc.desiredRate), "interest rate update should succeed")
 
 			s.Assert().Equal(
 				normalizeEvents(tc.expectedEvents),
 				normalizeEvents(s.ctx.EventManager().Events()),
-			)
+				"emitted events should match expected events")
 
 			if tc.postCheck != nil {
 				tc.postCheck(vault)

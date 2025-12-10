@@ -31,19 +31,22 @@ func (k Keeper) TestAccessor_handleDepletedVaults(t *testing.T, ctx context.Cont
 // TestAccessor_handleDepletedVaults exposes this keeper's handleDepletedVaults function for unit tests.
 func (k Keeper) TestAccessor_handleVaultInterestTimeouts(t *testing.T, ctx context.Context) error {
 	t.Helper()
-	return k.handleVaultInterestTimeouts(ctx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	return k.handleVaultInterestTimeouts(sdkCtx)
 }
 
 // TestAccessor_processSwapOutJobs exposes this keeper's processSwapOutJobs function for unit tests.
 func (k Keeper) TestAccessor_processSwapOutJobs(t *testing.T, ctx context.Context, jobsToProcess []types.PayoutJob) {
 	t.Helper()
-	k.processSwapOutJobs(ctx, jobsToProcess)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	k.processSwapOutJobs(sdkCtx, jobsToProcess)
 }
 
 // TestAccessor_autoPauseVault exposes this keeper's autoPauseVault function for unit tests.
 func (k Keeper) TestAccessor_autoPauseVault(t *testing.T, ctx context.Context, vault *types.VaultAccount, reason string) {
 	t.Helper()
-	k.autoPauseVault(ctx, vault, reason)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	k.autoPauseVault(sdkCtx, vault, reason)
 }
 
 // TestAccessor_reconcileVaultInterest exposes this keeper's reconcileVaultInterest function for unit tests.
@@ -55,5 +58,6 @@ func (k Keeper) TestAccessor_reconcileVaultInterest(t *testing.T, ctx context.Co
 // TestAccessor_processPendingSwapOuts exposes this keeper's processPendingSwapOuts function for unit tests.
 func (k Keeper) TestAccessor_processPendingSwapOuts(t *testing.T, ctx context.Context, size int) error {
 	t.Helper()
-	return k.processPendingSwapOuts(ctx, size)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	return k.processPendingSwapOuts(sdkCtx, size)
 }

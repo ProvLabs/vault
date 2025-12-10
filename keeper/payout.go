@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"strings"
@@ -19,14 +18,13 @@ import (
 // pattern to comply with the SDK iterator contract. It first collects all due requests up to the provided `batchSize`,
 // then passes them to `processSwapOutJobs` for execution. Critical, unrecoverable errors during job processing
 // will cause the associated vault to be automatically paused.
-func (k *Keeper) processPendingSwapOuts(ctx context.Context, batchSize int) error {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	now := sdkCtx.BlockTime().Unix()
+func (k *Keeper) processPendingSwapOuts(ctx sdk.Context, batchSize int) error {
+	now := ctx.BlockTime().Unix()
 	var jobsToProcess []types.PayoutJob
 
 	processed := 0
 	err := k.PendingSwapOutQueue.WalkDue(ctx, now, func(timestamp int64, id uint64, vaultAddr sdk.AccAddress, req types.PendingSwapOut) (stop bool, err error) {
-		vault, ok := k.tryGetVault(sdkCtx, vaultAddr)
+		vault, ok := k.tryGetVault(ctx, vaultAddr)
 		if ok && vault.Paused {
 			return false, nil
 		}
@@ -38,7 +36,7 @@ func (k *Keeper) processPendingSwapOuts(ctx context.Context, batchSize int) erro
 		return false, nil
 	})
 	if err != nil {
-		sdkCtx.Logger().Error("error during pending withdrawal queue walk", "error", err)
+		ctx.Logger().Error("error during pending withdrawal queue walk", "error", err)
 		return err
 	}
 
@@ -55,19 +53,17 @@ func (k *Keeper) processPendingSwapOuts(ctx context.Context, batchSize int) erro
 //   - On recoverable failure, a refund is attempted. If the refund itself returns a critical error,
 //     the vault is auto-paused with a stable reason string.
 //   - On critical failure during processing, the vault is auto-paused with a stable reason string.
-func (k *Keeper) processSwapOutJobs(ctx context.Context, jobsToProcess []types.PayoutJob) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
+func (k *Keeper) processSwapOutJobs(ctx sdk.Context, jobsToProcess []types.PayoutJob) {
 	for _, j := range jobsToProcess {
-		vault, ok := k.tryGetVault(sdkCtx, j.VaultAddr)
+		vault, ok := k.tryGetVault(ctx, j.VaultAddr)
 		if !ok {
 			if err := k.PendingSwapOutQueue.Dequeue(ctx, j.Timestamp, j.VaultAddr, j.ID); err != nil {
-				sdkCtx.Logger().Error(
+				ctx.Logger().Error(
 					fmt.Sprintf("CRITICAL: failed to dequeue withdrawal request %d for non-existent vault %s", j.ID, j.VaultAddr),
 					"error", err,
 				)
 			} else {
-				sdkCtx.Logger().Error(
+				ctx.Logger().Error(
 					"dequeued and skipped pending withdrawal for non-existent vault",
 					"request_id", j.ID,
 					"vault_address", j.VaultAddr.String(),
@@ -81,7 +77,7 @@ func (k *Keeper) processSwapOutJobs(ctx context.Context, jobsToProcess []types.P
 		}
 
 		if err := k.PendingSwapOutQueue.Dequeue(ctx, j.Timestamp, j.VaultAddr, j.ID); err != nil {
-			sdkCtx.Logger().Error(
+			ctx.Logger().Error(
 				"failed to dequeue withdrawal request",
 				"request_id", j.ID,
 				"vault_address", j.VaultAddr.String(),
@@ -90,24 +86,24 @@ func (k *Keeper) processSwapOutJobs(ctx context.Context, jobsToProcess []types.P
 			continue
 		}
 
-		if err := k.processSingleWithdrawal(sdkCtx, j.ID, j.Req, *vault); err != nil {
+		if err := k.processSingleWithdrawal(ctx, j.ID, j.Req, *vault); err != nil {
 			var cErr *types.CriticalError
 			if errors.As(err, &cErr) {
-				k.autoPauseVault(sdkCtx, vault, cErr.Reason)
+				k.autoPauseVault(ctx, vault, cErr.Reason)
 				continue
 			}
 
 			reason := k.getRefundReason(err)
-			sdkCtx.Logger().Error(
+			ctx.Logger().Error(
 				"failed to process withdrawal, issuing refund",
 				"withdrawal_id", j.ID,
 				"reason", reason,
 				"error", err,
 			)
 
-			if rerr := k.refundWithdrawal(sdkCtx, j.ID, j.Req, reason); rerr != nil {
+			if rerr := k.refundWithdrawal(ctx, j.ID, j.Req, reason); rerr != nil {
 				if errors.As(rerr, &cErr) {
-					k.autoPauseVault(sdkCtx, vault, cErr.Reason)
+					k.autoPauseVault(ctx, vault, cErr.Reason)
 				}
 			}
 		}

@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/provlabs/vault/types"
@@ -301,18 +300,24 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 
 // SetSwapInEnable updates the SwapInEnabled flag for a given vault. It updates the vault account in the state and
 // emits an EventToggleSwapIn event.
-func (k *Keeper) SetSwapInEnable(ctx context.Context, vault *types.VaultAccount, enabled bool) {
+func (k *Keeper) SetSwapInEnable(ctx sdk.Context, vault *types.VaultAccount, enabled bool) error {
 	vault.SwapInEnabled = enabled
-	k.AuthKeeper.SetAccount(ctx, vault)
-	k.emitEvent(sdk.UnwrapSDKContext(ctx), types.NewEventToggleSwapIn(vault.Address, vault.Admin, enabled))
+	if err := k.SetVaultAccount(ctx, vault); err != nil {
+		return err
+	}
+	k.emitEvent(ctx, types.NewEventToggleSwapIn(vault.Address, vault.Admin, enabled))
+	return nil
 }
 
 // SetSwapOutEnable updates the SwapOutEnabled flag for a given vault. It updates the vault account in the state and
 // emits an EventToggleSwapOut event.
-func (k *Keeper) SetSwapOutEnable(ctx context.Context, vault *types.VaultAccount, enabled bool) {
+func (k *Keeper) SetSwapOutEnable(ctx sdk.Context, vault *types.VaultAccount, enabled bool) error {
 	vault.SwapOutEnabled = enabled
-	k.AuthKeeper.SetAccount(ctx, vault)
-	k.emitEvent(sdk.UnwrapSDKContext(ctx), types.NewEventToggleSwapOut(vault.Address, vault.Admin, enabled))
+	if err := k.SetVaultAccount(ctx, vault); err != nil {
+		return err
+	}
+	k.emitEvent(ctx, types.NewEventToggleSwapOut(vault.Address, vault.Admin, enabled))
+	return nil
 }
 
 // SetMinInterestRate sets the minimum interest rate for a vault.
@@ -386,24 +391,24 @@ func (k Keeper) ValidateInterestRateLimits(minRateStr, maxRateStr string) error 
 // and emits an EventVaultPaused. This function is intended to be called in response to a
 // critical, unrecoverable error for a specific vault. The provided reason should be a stable,
 // hard-coded string suitable for persistence and later auditing.
-func (k *Keeper) autoPauseVault(ctx context.Context, vault *types.VaultAccount, reason string) {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
-	sdkCtx.Logger().Error(
+func (k *Keeper) autoPauseVault(ctx sdk.Context, vault *types.VaultAccount, reason string) {
+	ctx.Logger().Error(
 		"Auto-pausing vault due to critical error",
 		"vault_address", vault.GetAddress().String(),
 		"reason", reason,
 	)
 
-	tvv, err := k.GetTVVInUnderlyingAsset(sdkCtx, *vault)
+	tvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
 	if err != nil {
-		sdkCtx.Logger().Error("Failed to get TVV in underlying asset", "vault_address", vault.GetAddress().String(), "error", err)
+		ctx.Logger().Error("Failed to get TVV in underlying asset", "vault_address", vault.GetAddress().String(), "error", err)
 	}
 
 	vault.Paused = true
 	vault.PausedReason = reason
 	vault.PausedBalance = sdk.Coin{Denom: vault.UnderlyingAsset, Amount: tvv}
-	k.AuthKeeper.SetAccount(ctx, vault)
+	if err := k.SetVaultAccount(ctx, vault); err != nil {
+		ctx.Logger().Error("Failed to set vault account", "vault_address", vault.GetAddress().String(), "error", err)
+	}
 
-	k.emitEvent(sdkCtx, types.NewEventVaultPaused(vault.GetAddress().String(), vault.GetAddress().String(), reason, vault.PausedBalance))
+	k.emitEvent(ctx, types.NewEventVaultPaused(vault.GetAddress().String(), vault.GetAddress().String(), reason, vault.PausedBalance))
 }

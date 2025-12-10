@@ -261,9 +261,8 @@ func (k Keeper) CalculateVaultTotalAssets(ctx sdk.Context, vault *types.VaultAcc
 //   - It then iterates the collected keys, dequeuing each item before processing it.
 //   - Vaults that cannot cover the required interest are marked depleted.
 //   - Otherwise, interest is reconciled.
-func (k *Keeper) handleVaultInterestTimeouts(ctx context.Context) error {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	now := sdkCtx.BlockTime().Unix()
+func (k *Keeper) handleVaultInterestTimeouts(ctx sdk.Context) error {
+	now := ctx.BlockTime().Unix()
 
 	var keysToProcess []collections.Pair[uint64, sdk.AccAddress]
 	var depleted []*types.VaultAccount
@@ -271,7 +270,7 @@ func (k *Keeper) handleVaultInterestTimeouts(ctx context.Context) error {
 
 	err := k.PayoutTimeoutQueue.WalkDue(ctx, now, func(timeout uint64, addr sdk.AccAddress) (bool, error) {
 		key := collections.Join(timeout, addr)
-		vault, ok := k.tryGetVault(sdkCtx, addr)
+		vault, ok := k.tryGetVault(ctx, addr)
 		if ok && vault.Paused {
 			return false, nil
 		}
@@ -287,11 +286,11 @@ func (k *Keeper) handleVaultInterestTimeouts(ctx context.Context) error {
 		addr := key.K2()
 
 		if err := k.PayoutTimeoutQueue.Dequeue(ctx, int64(timeout), addr); err != nil {
-			sdkCtx.Logger().Error("CRITICAL: failed to dequeue interest timeout, skipping", "vault", addr.String(), "err", err)
+			ctx.Logger().Error("CRITICAL: failed to dequeue interest timeout, skipping", "vault", addr.String(), "err", err)
 			continue
 		}
 
-		vault, ok := k.tryGetVault(sdkCtx, addr)
+		vault, ok := k.tryGetVault(ctx, addr)
 		if !ok {
 			continue
 		}
@@ -301,9 +300,9 @@ func (k *Keeper) handleVaultInterestTimeouts(ctx context.Context) error {
 			periodDuration = now - vault.PeriodStart
 		}
 
-		canPay, err := k.CanPayoutDuration(sdkCtx, vault, periodDuration)
+		canPay, err := k.CanPayoutDuration(ctx, vault, periodDuration)
 		if err != nil {
-			sdkCtx.Logger().Error("failed to check payout ability", "vault", addr.String(), "err", err)
+			ctx.Logger().Error("failed to check payout ability", "vault", addr.String(), "err", err)
 			continue
 		}
 
@@ -312,16 +311,16 @@ func (k *Keeper) handleVaultInterestTimeouts(ctx context.Context) error {
 			continue
 		}
 
-		if err := k.PerformVaultInterestTransfer(sdkCtx, vault); err != nil {
-			sdkCtx.Logger().Error("failed to reconcile interest", "vault", addr.String(), "err", err)
+		if err := k.PerformVaultInterestTransfer(ctx, vault); err != nil {
+			ctx.Logger().Error("failed to reconcile interest", "vault", addr.String(), "err", err)
 			continue
 		}
 
 		reconciled = append(reconciled, vault)
 	}
 
-	k.resetVaultInterestPeriods(sdkCtx, reconciled)
-	k.handleDepletedVaults(sdkCtx, depleted)
+	k.resetVaultInterestPeriods(ctx, reconciled)
+	k.handleDepletedVaults(ctx, depleted)
 	return nil
 }
 

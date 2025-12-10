@@ -780,16 +780,24 @@ func (s *TestSuite) TestMsgServer_ToggleSwapOut() {
 	otherUser := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1000))
 	vaultAddr := types.GetVaultAddress(shareDenom)
 
-	setup := func() {
-		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), owner)
-		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-			Admin:           owner.String(),
-			ShareDenom:      shareDenom,
-			UnderlyingAsset: underlyingDenom,
-		})
-		s.Require().NoError(err)
-		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
-		s.ctx = s.ctx.WithBlockTime(time.Now())
+	setup := func(setAccountInvalid bool) func() {
+		return func() {
+			s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), owner)
+			_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+				Admin:           owner.String(),
+				ShareDenom:      shareDenom,
+				UnderlyingAsset: underlyingDenom,
+			})
+			s.Require().NoError(err)
+			if setAccountInvalid {
+				vault, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err)
+				vault.PaymentDenom = underlyingDenom
+				s.k.AuthKeeper.SetAccount(s.ctx, vault)
+			}
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			s.ctx = s.ctx.WithBlockTime(time.Now())
+		}
 	}
 
 	tests := []struct {
@@ -802,7 +810,7 @@ func (s *TestSuite) TestMsgServer_ToggleSwapOut() {
 	}{
 		{
 			name:  "happy path - enable swap out",
-			setup: setup,
+			setup: setup(false),
 			msg: types.MsgToggleSwapOutRequest{
 				Admin:        owner.String(),
 				VaultAddress: vaultAddr.String(),
@@ -823,7 +831,7 @@ func (s *TestSuite) TestMsgServer_ToggleSwapOut() {
 		{
 			name: "happy path - disable swap out",
 			setup: func() {
-				setup()
+				setup(false)()
 				vault, err := s.k.GetVault(s.ctx, vaultAddr)
 				s.Require().NoError(err)
 				vault.SwapOutEnabled = true
@@ -849,7 +857,7 @@ func (s *TestSuite) TestMsgServer_ToggleSwapOut() {
 		{
 			name: "happy path - paused vault toggle swap out",
 			setup: func() {
-				setup()
+				setup(false)()
 				vault, err := s.k.GetVault(s.ctx, vaultAddr)
 				s.Require().NoError(err)
 				vault.SwapOutEnabled = true
@@ -885,13 +893,26 @@ func (s *TestSuite) TestMsgServer_ToggleSwapOut() {
 		},
 		{
 			name:  "failure - unauthorized admin",
-			setup: setup,
+			setup: setup(false),
 			msg: types.MsgToggleSwapOutRequest{
 				Admin:        otherUser.String(),
 				VaultAddress: vaultAddr.String(),
 				Enabled:      true,
 			},
 			expectedErrSubstrs: []string{"unauthorized", otherUser.String(), "is not the vault admin"},
+		},
+		{
+			name:  "failure - invalid vault state during toggle",
+			setup: setup(true),
+			msg: types.MsgToggleSwapOutRequest{
+				Admin:        owner.String(),
+				VaultAddress: vaultAddr.String(),
+				Enabled:      true,
+			},
+			expectedErrSubstrs: []string{
+				"failed to set swap out enable",
+				"payment (\"underlying\") denom cannot equal underlying asset denom (\"underlying\")",
+			},
 		},
 	}
 
@@ -934,15 +955,23 @@ func (s *TestSuite) TestMsgServer_ToggleSwapIn() {
 	otherUser := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1000))
 	vaultAddr := types.GetVaultAddress(shareDenom)
 
-	setup := func() {
-		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), owner)
-		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-			Admin:           owner.String(),
-			ShareDenom:      shareDenom,
-			UnderlyingAsset: underlyingDenom,
-		})
-		s.Require().NoError(err)
-		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	setup := func(setAccountInvalid bool) func() {
+		return func() {
+			s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), owner)
+			_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+				Admin:           owner.String(),
+				ShareDenom:      shareDenom,
+				UnderlyingAsset: underlyingDenom,
+			})
+			s.Require().NoError(err)
+			if setAccountInvalid {
+				vault, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err)
+				vault.PaymentDenom = underlyingDenom
+				s.k.AuthKeeper.SetAccount(s.ctx, vault)
+			}
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+		}
 	}
 
 	tests := []struct {
@@ -955,7 +984,7 @@ func (s *TestSuite) TestMsgServer_ToggleSwapIn() {
 	}{
 		{
 			name:  "happy path - enable swap in",
-			setup: setup,
+			setup: setup(false),
 			msg: types.MsgToggleSwapInRequest{
 				Admin:        owner.String(),
 				VaultAddress: vaultAddr.String(),
@@ -976,7 +1005,7 @@ func (s *TestSuite) TestMsgServer_ToggleSwapIn() {
 		{
 			name: "happy path - disable swap in",
 			setup: func() {
-				setup()
+				setup(false)()
 				vault, err := s.k.GetVault(s.ctx, vaultAddr)
 				s.Require().NoError(err)
 				vault.SwapInEnabled = true
@@ -1002,7 +1031,7 @@ func (s *TestSuite) TestMsgServer_ToggleSwapIn() {
 		{
 			name: "happy path - vault paused toggle swap in",
 			setup: func() {
-				setup()
+				setup(false)()
 				vault, err := s.k.GetVault(s.ctx, vaultAddr)
 				s.Require().NoError(err)
 				vault.SwapInEnabled = true
@@ -1028,7 +1057,7 @@ func (s *TestSuite) TestMsgServer_ToggleSwapIn() {
 		},
 		{
 			name:  "failure - vault not found",
-			setup: func() { /* no setup, so vault doesn't exist */ },
+			setup: func() {},
 			msg: types.MsgToggleSwapInRequest{
 				Admin:        owner.String(),
 				VaultAddress: vaultAddr.String(),
@@ -1038,13 +1067,26 @@ func (s *TestSuite) TestMsgServer_ToggleSwapIn() {
 		},
 		{
 			name:  "failure - unauthorized admin",
-			setup: setup,
+			setup: setup(false),
 			msg: types.MsgToggleSwapInRequest{
 				Admin:        otherUser.String(),
 				VaultAddress: vaultAddr.String(),
 				Enabled:      true,
 			},
 			expectedErrSubstrs: []string{"unauthorized", otherUser.String(), "is not the vault admin"},
+		},
+		{
+			name:  "failure - invalid vault state during toggle",
+			setup: setup(true),
+			msg: types.MsgToggleSwapInRequest{
+				Admin:        owner.String(),
+				VaultAddress: vaultAddr.String(),
+				Enabled:      true,
+			},
+			expectedErrSubstrs: []string{
+				"failed to set swap in enable",
+				"payment (\"underlying\") denom cannot equal underlying asset denom (\"underlying\")",
+			},
 		},
 	}
 

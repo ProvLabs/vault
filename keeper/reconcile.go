@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/provlabs/vault/interest"
@@ -344,13 +343,12 @@ func (k *Keeper) tryGetVault(ctx sdk.Context, addr sdk.AccAddress) (*types.Vault
 //
 // It first collects keys for all non-paused vaults. It then iterates the collected keys, removing
 // each from the set before partitioning them into payable vs depleted groups.
-func (k *Keeper) handleReconciledVaults(ctx context.Context) error {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
+func (k *Keeper) handleReconciledVaults(ctx sdk.Context) error {
 	var keysToProcess []sdk.AccAddress
 	var vaultsToProcess []*types.VaultAccount
 
 	err := k.PayoutVerificationSet.Walk(ctx, nil, func(addr sdk.AccAddress) (bool, error) {
-		v, ok := k.tryGetVault(sdkCtx, addr)
+		v, ok := k.tryGetVault(ctx, addr)
 		if ok && v.Paused {
 			return false, nil
 		}
@@ -363,19 +361,19 @@ func (k *Keeper) handleReconciledVaults(ctx context.Context) error {
 
 	for _, addr := range keysToProcess {
 		if err := k.PayoutVerificationSet.Remove(ctx, addr); err != nil {
-			sdkCtx.Logger().Error("CRITICAL: failed to remove from payout verification set, skipping", "vault", addr.String(), "err", err)
+			ctx.Logger().Error("CRITICAL: failed to remove from payout verification set, skipping", "vault", addr.String(), "err", err)
 			continue
 		}
 
-		v, ok := k.tryGetVault(sdkCtx, addr)
+		v, ok := k.tryGetVault(ctx, addr)
 		if ok && !v.Paused {
 			vaultsToProcess = append(vaultsToProcess, v)
 		}
 	}
 
-	payable, depleted := k.partitionVaults(sdkCtx, vaultsToProcess)
-	k.handlePayableVaults(sdkCtx, payable)
-	k.handleDepletedVaults(sdkCtx, depleted)
+	payable, depleted := k.partitionVaults(ctx, vaultsToProcess)
+	k.handlePayableVaults(ctx, payable)
+	k.handleDepletedVaults(ctx, depleted)
 	return nil
 }
 

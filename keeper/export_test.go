@@ -11,7 +11,8 @@ import (
 // TestAccessor_handleReconciledVaults exposes this keeper's handleReconciledVaults function for unit tests.
 func (k Keeper) TestAccessor_handleReconciledVaults(t *testing.T, ctx context.Context) error {
 	t.Helper()
-	return k.handleReconciledVaults(ctx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	return k.handleReconciledVaults(sdkCtx)
 }
 
 // TestAccessor_handlePayableVaults exposes this keeper's handlePayableVaults function for unit tests.

@@ -1,7 +1,6 @@
 package queue
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/provlabs/vault/types"
@@ -27,7 +26,7 @@ func NewPayoutTimeoutQueue(builder *collections.SchemaBuilder) *PayoutTimeoutQue
 
 // Enqueue schedules a vault for timeout processing by inserting an
 // entry into the PayoutTimeoutQueue keyed by (periodTimeout, vault address).
-func (p *PayoutTimeoutQueue) Enqueue(ctx context.Context, periodTimeout int64, vaultAddr sdk.AccAddress) error {
+func (p *PayoutTimeoutQueue) Enqueue(ctx sdk.Context, periodTimeout int64, vaultAddr sdk.AccAddress) error {
 	if periodTimeout < 0 {
 		return fmt.Errorf("periodTimeout cannot be negative")
 	}
@@ -36,7 +35,7 @@ func (p *PayoutTimeoutQueue) Enqueue(ctx context.Context, periodTimeout int64, v
 
 // Dequeue removes a specific timeout entry (periodTimeout, vault)
 // from the PayoutTimeoutQueue.
-func (p *PayoutTimeoutQueue) Dequeue(ctx context.Context, periodTimeout int64, vaultAddr sdk.AccAddress) error {
+func (p *PayoutTimeoutQueue) Dequeue(ctx sdk.Context, periodTimeout int64, vaultAddr sdk.AccAddress) error {
 	if periodTimeout < 0 {
 		return fmt.Errorf("periodTimeout cannot be negative")
 	}

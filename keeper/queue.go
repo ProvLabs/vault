@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"context"
-
 	"github.com/provlabs/vault/interest"
 	"github.com/provlabs/vault/types"
 
@@ -22,9 +20,8 @@ const (
 // This ensures a vault is not present in both the verification set and timeout queues
 // at the same time. Typically called after enabling interest or completing a
 // reconciliation so the next accrual cycle begins cleanly.
-func (k Keeper) SafeAddVerification(ctx context.Context, vault *types.VaultAccount) error {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	currentBlockTime := sdkCtx.BlockTime().Unix()
+func (k Keeper) SafeAddVerification(ctx sdk.Context, vault *types.VaultAccount) error {
+	currentBlockTime := ctx.BlockTime().Unix()
 
 	if err := k.PayoutTimeoutQueue.Dequeue(ctx, vault.PeriodTimeout, vault.GetAddress()); err != nil {
 		return err
@@ -32,7 +29,7 @@ func (k Keeper) SafeAddVerification(ctx context.Context, vault *types.VaultAccou
 
 	vault.PeriodStart = currentBlockTime
 	vault.PeriodTimeout = 0
-	if err := k.SetVaultAccount(sdkCtx, vault); err != nil {
+	if err := k.SetVaultAccount(ctx, vault); err != nil {
 		return err
 	}
 
@@ -47,18 +44,16 @@ func (k Keeper) SafeAddVerification(ctx context.Context, vault *types.VaultAccou
 // This ensures a vault is not present in both the timeout and verification queues
 // at the same time. Typically called after a vault has been marked as payable so it
 // will be revisited after the auto-reconcile window.
-func (k Keeper) SafeEnqueueTimeout(ctx context.Context, vault *types.VaultAccount) error {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-
+func (k Keeper) SafeEnqueueTimeout(ctx sdk.Context, vault *types.VaultAccount) error {
 	if err := k.PayoutTimeoutQueue.Dequeue(ctx, vault.PeriodTimeout, vault.GetAddress()); err != nil {
 		return err
 	}
 
-	currentBlockTime := sdkCtx.BlockTime().Unix()
+	currentBlockTime := ctx.BlockTime().Unix()
 	vault.PeriodStart = currentBlockTime
 	vault.PeriodTimeout = currentBlockTime + AutoReconcileTimeout
-	if err := k.SetVaultAccount(sdkCtx, vault); err != nil {
-		sdkCtx.Logger().Error("failed to set vault", "vault", vault.GetAddress().String(), "err", err)
+	if err := k.SetVaultAccount(ctx, vault); err != nil {
+		ctx.Logger().Error("failed to set vault", "vault", vault.GetAddress().String(), "err", err)
 		return err
 	}
 	return k.PayoutTimeoutQueue.Enqueue(ctx, vault.PeriodTimeout, vault.GetAddress())

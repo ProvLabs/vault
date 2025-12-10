@@ -406,9 +406,7 @@ func (k *Keeper) autoPauseVault(ctx sdk.Context, vault *types.VaultAccount, reas
 	vault.Paused = true
 	vault.PausedReason = reason
 	vault.PausedBalance = sdk.Coin{Denom: vault.UnderlyingAsset, Amount: tvv}
-	if err := k.SetVaultAccount(ctx, vault); err != nil {
-		ctx.Logger().Error("Failed to set vault account", "vault_address", vault.GetAddress().String(), "error", err)
-	}
+	k.AuthKeeper.SetAccount(ctx, vault) // Updating via SetAccount to skip validation since auto-pausing is triggered by invalid state
 
 	k.emitEvent(ctx, types.NewEventVaultPaused(vault.GetAddress().String(), vault.GetAddress().String(), reason, vault.PausedBalance))
 }

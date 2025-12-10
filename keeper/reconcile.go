@@ -379,13 +379,13 @@ func (k *Keeper) handleReconciledVaults(ctx sdk.Context) error {
 
 // partitionVaults splits the provided vaults into payable and depleted groups for the
 // AutoReconcilePayoutDuration forecast window using CanPayoutDuration.
-func (k *Keeper) partitionVaults(sdkCtx sdk.Context, vaults []*types.VaultAccount) ([]*types.VaultAccount, []*types.VaultAccount) {
+func (k *Keeper) partitionVaults(ctx sdk.Context, vaults []*types.VaultAccount) ([]*types.VaultAccount, []*types.VaultAccount) {
 	var payable []*types.VaultAccount
 	var depleted []*types.VaultAccount
 	for _, v := range vaults {
-		ok, err := k.CanPayoutDuration(sdkCtx, v, AutoReconcilePayoutDuration)
+		ok, err := k.CanPayoutDuration(ctx, v, AutoReconcilePayoutDuration)
 		if err != nil {
-			sdkCtx.Logger().Error("failed to check payout ability", "vault", v.GetAddress().String(), "err", err)
+			ctx.Logger().Error("failed to check payout ability", "vault", v.GetAddress().String(), "err", err)
 			continue
 		}
 		if ok {

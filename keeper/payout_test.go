@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
-	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
@@ -519,7 +518,7 @@ func (s *TestSuite) TestKeeper_ProcessSingleWithdrawal_AddressErrors() {
 				Owner:        ownerAddr.String(),
 				VaultAddress: vaultAddr.String(),
 				RedeemDenom:  underlyingDenom,
-				Shares:       sdk.Coin{"invalid!share", sdkmath.NewInt(1)},
+				Shares:       sdk.Coin{"invalid!share", math.NewInt(1)},
 			},
 			expectedError: "invalid principal address for denom invalid!share: invalid denom: invalid!share",
 		},

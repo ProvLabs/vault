@@ -348,4 +348,4 @@ require (
 	sigs.k8s.io/yaml v1.4.0 // indirect
 )
 
-replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.50.13-pio-1
+replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.50.14-pio-2

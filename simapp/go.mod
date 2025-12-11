@@ -206,7 +206,7 @@ require (
 
 replace (
 	// TODO: might not need to do this...
-	github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.50.13-pio-1
+	github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.50.14-pio-2
 	// use local provlabs/vault
 	github.com/provlabs/vault => ../
 

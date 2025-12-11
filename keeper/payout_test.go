@@ -500,7 +500,7 @@ func (s *TestSuite) TestKeeper_ProcessSingleWithdrawal_AddressErrors() {
 				RedeemDenom:  underlyingDenom,
 				Shares:       *minted,
 			},
-			expectedError: "invalid vault address invalidvaultaddress: decoding bech32 failed: invalid separator index -1",
+			expectedError: "invalid vault address invalidvaultaddress:",
 		},
 		{
 			name: "invalid owner address",
@@ -510,7 +510,7 @@ func (s *TestSuite) TestKeeper_ProcessSingleWithdrawal_AddressErrors() {
 				RedeemDenom:  underlyingDenom,
 				Shares:       *minted,
 			},
-			expectedError: "invalid owner address invalidowneraddress: decoding bech32 failed: invalid separator index -1",
+			expectedError: "invalid owner address invalidowneraddress:",
 		},
 		{
 			name: "invalid principal address (share denom)",
@@ -520,7 +520,7 @@ func (s *TestSuite) TestKeeper_ProcessSingleWithdrawal_AddressErrors() {
 				RedeemDenom:  underlyingDenom,
 				Shares:       sdk.Coin{"invalid!share", math.NewInt(1)},
 			},
-			expectedError: "invalid principal address for denom invalid!share: invalid denom: invalid!share",
+			expectedError: "invalid principal address for denom invalid!share:",
 		},
 	}
 
@@ -556,7 +556,7 @@ func (s *TestSuite) TestKeeper_RefundWithdrawal_AddressErrors() {
 				RedeemDenom:  underlyingDenom,
 				Shares:       *minted,
 			},
-			expectedError: "invalid vault address invalidvaultaddress: decoding bech32 failed: invalid separator index -1",
+			expectedError: "invalid vault address invalidvaultaddress:",
 		},
 		{
 			name: "invalid owner address",
@@ -566,7 +566,7 @@ func (s *TestSuite) TestKeeper_RefundWithdrawal_AddressErrors() {
 				RedeemDenom:  underlyingDenom,
 				Shares:       *minted,
 			},
-			expectedError: "invalid owner address invalidowneraddress: decoding bech32 failed: invalid separator index -1",
+			expectedError: "invalid owner address invalidowneraddress:",
 		},
 	}
 

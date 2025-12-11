@@ -37,8 +37,8 @@ import (
 // Errors
 // - If neither NAV exists, return the lookup error (if any) or "nav not found for src/underlying".
 // - For the selected NAV direction:
-//   - Forward: error if NAV.Volume == 0.
-//   - Reverse: error if NAV.Price.Amount == 0.
+//   - Forward: error if NAV.Volume == 0 or NAV.Price.Amount == 0.
+//   - Reverse: error if NAV.Price.Amount == 0 or NAV.Volume == 0.
 //
 // Returns
 // - (num, den) as math.Int, suitable for floor(x * num / den).
@@ -83,6 +83,9 @@ func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom string, vault types.
 		if fwd.Volume == 0 {
 			return math.Int{}, math.Int{}, fmt.Errorf("nav volume is zero for %s/%s", srcDenom, underlyingAsset)
 		}
+		if fwd.Price.Amount.IsZero() {
+			return math.Int{}, math.Int{}, fmt.Errorf("nav price is zero for %s/%s", srcDenom, underlyingAsset)
+		}
 		priceAmt := fwd.Price.Amount
 		volAmt := math.NewIntFromUint64(fwd.Volume)
 		return priceAmt, volAmt, nil
@@ -90,6 +93,9 @@ func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom string, vault types.
 
 	if rev.Price.Amount.IsZero() {
 		return math.Int{}, math.Int{}, fmt.Errorf("nav price is zero for %s/%s", underlyingAsset, srcDenom)
+	}
+	if rev.Volume == 0 {
+		return math.Int{}, math.Int{}, fmt.Errorf("nav volume is zero for %s/%s", underlyingAsset, srcDenom)
 	}
 	priceAmt := math.NewIntFromUint64(rev.Volume)
 	volAmt := rev.Price.Amount

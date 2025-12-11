@@ -86,7 +86,7 @@ func (p *PendingSwapOutQueue) Enqueue(ctx context.Context, pendingTime int64, re
 		return 0, fmt.Errorf("pending time cannot be negative")
 	}
 	if err := req.Validate(); err != nil {
-		return 0, err
+		return 0, fmt.Errorf("invalid pending swap out request: %w", err)
 	}
 	vault, err := sdk.AccAddressFromBech32(req.VaultAddress)
 	if err != nil {

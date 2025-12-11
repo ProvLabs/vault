@@ -208,7 +208,7 @@ func TestPendingSwapOutQueueEnqueueAndDequeue(t *testing.T) {
 			timestamp:   1,
 			dequeue:     false,
 			expectError: true,
-			errorMsg:    "invalid vault address invalid:",
+			errorMsg:    "invalid pending swap out request: invalid vault address invalid:",
 		},
 		{
 			name: "enqueue fails validation (invalid owner address)",
@@ -221,7 +221,7 @@ func TestPendingSwapOutQueueEnqueueAndDequeue(t *testing.T) {
 			timestamp:   1,
 			dequeue:     false,
 			expectError: true,
-			errorMsg:    "invalid owner address invalidowner:",
+			errorMsg:    "invalid pending swap out request: invalid owner address invalidowner:",
 		},
 		{
 			name: "enqueue fails validation (zero shares)",
@@ -247,7 +247,7 @@ func TestPendingSwapOutQueueEnqueueAndDequeue(t *testing.T) {
 			timestamp:   1,
 			dequeue:     false,
 			expectError: true,
-			errorMsg:    "redeem denom cannot be empty",
+			errorMsg:    "invalid pending swap out request: redeem denom cannot be empty",
 		},
 		{
 			name: "enqueue with negative timestamp",

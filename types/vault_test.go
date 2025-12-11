@@ -607,6 +607,8 @@ func TestPendingSwapOut_Validate(t *testing.T) {
 		RedeemDenom:  validRedeem,
 	}
 
+	const invalidBech32ErrPrefix = "decoding bech32 failed:"
+
 	tests := []struct {
 		name           string
 		pendingSwapOut types.PendingSwapOut
@@ -625,7 +627,7 @@ func TestPendingSwapOut_Validate(t *testing.T) {
 				Shares:       baseReq.Shares,
 				RedeemDenom:  validRedeem,
 			},
-			expectedErr: fmt.Sprintf("invalid owner address %s: decoding bech32 failed: invalid separator index -1", invalidBech32),
+			expectedErr: fmt.Sprintf("invalid owner address %s: %s", invalidBech32, invalidBech32ErrPrefix),
 		},
 		{
 			name: "invalid vault address",
@@ -635,7 +637,7 @@ func TestPendingSwapOut_Validate(t *testing.T) {
 				Shares:       baseReq.Shares,
 				RedeemDenom:  validRedeem,
 			},
-			expectedErr: fmt.Sprintf("invalid vault address %s: decoding bech32 failed: invalid separator index -1", invalidBech32),
+			expectedErr: fmt.Sprintf("invalid vault address %s: %s", invalidBech32, invalidBech32ErrPrefix),
 		},
 		{
 			name: "invalid shares (negative)",

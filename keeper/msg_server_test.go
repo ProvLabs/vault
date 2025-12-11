@@ -3162,9 +3162,9 @@ func (s *TestSuite) TestMsgServer_ExpeditePendingSwapOut() {
 		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).ExpeditePendingSwapOut,
 		postCheck: func(msg *types.MsgExpeditePendingSwapOutRequest, args postCheckArgs) {
 			release, withdrawal, err := s.k.PendingSwapOutQueue.GetByID(s.ctx, args.RequestId)
-			s.Require().NoError(err, "should be able to get swap out")
+			s.Require().NoError(err, "should be able to get swap out request by ID")
 			s.Assert().Equal(int64(0), release, "release time should be expedited to 0")
-			s.Assert().NotNil(withdrawal, "swap out should not be nil")
+			s.Assert().NotNil(withdrawal, "swap out should not be nil after expedite")
 		},
 	}
 
@@ -3185,11 +3185,17 @@ func (s *TestSuite) TestMsgServer_ExpeditePendingSwapOut() {
 		})
 		s.Require().NoError(err, "should create vault")
 
+		validOwner := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1)).String()
+		validShares := sdk.NewInt64Coin(share, 1)
+
 		var qErr error
 		id, qErr = s.k.PendingSwapOutQueue.Enqueue(s.ctx, blockTime.Unix(), &types.PendingSwapOut{
+			Owner:        validOwner,
 			VaultAddress: vaultAddr.String(),
+			Shares:       validShares,
+			RedeemDenom:  underlying,
 		})
-		s.Require().NoError(qErr, "should enqueue pending swap out")
+		s.Require().NoError(qErr, "should successfully enqueue pending swap out request")
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	}
 

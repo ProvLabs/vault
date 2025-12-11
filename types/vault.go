@@ -275,3 +275,38 @@ func (v VaultAccount) ValidateManagementAuthority(authority string) error {
 	}
 	return fmt.Errorf("unauthorized authority: %s", authority)
 }
+
+// NewPendingSwapOut creates a new PendingSwapOut object.
+func NewPendingSwapOut(owner sdk.AccAddress, vaultAddr sdk.AccAddress, shares sdk.Coin, redeemDenom string) PendingSwapOut {
+	return PendingSwapOut{
+		Owner:        owner.String(),
+		VaultAddress: vaultAddr.String(),
+		Shares:       shares,
+		RedeemDenom:  redeemDenom,
+	}
+}
+
+// Validate performs basic checks on a PendingSwapOut request.
+func (p PendingSwapOut) Validate() error {
+	if _, err := sdk.AccAddressFromBech32(p.Owner); err != nil {
+		return fmt.Errorf("invalid owner address %s: %w", p.Owner, err)
+	}
+
+	if _, err := sdk.AccAddressFromBech32(p.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address %s: %w", p.VaultAddress, err)
+	}
+
+	if !p.Shares.IsValid() {
+		return fmt.Errorf("invalid shares: %s", p.Shares.String())
+	}
+
+	if p.Shares.IsZero() {
+		return fmt.Errorf("shares cannot be zero")
+	}
+
+	if p.RedeemDenom == "" {
+		return fmt.Errorf("redeem denom cannot be empty")
+	}
+
+	return nil
+}

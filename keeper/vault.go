@@ -284,12 +284,8 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 	}
 
 	payoutTime := ctx.BlockTime().Unix() + int64(vault.WithdrawalDelaySeconds)
-	pendingReq := types.PendingSwapOut{
-		Owner:        owner.String(),
-		VaultAddress: vaultAddr.String(),
-		RedeemDenom:  redeemDenom,
-		Shares:       shares,
-	}
+
+	pendingReq := types.NewPendingSwapOut(owner, vaultAddr, shares, redeemDenom)
 	requestID, err := k.PendingSwapOutQueue.Enqueue(ctx, payoutTime, &pendingReq)
 	if err != nil {
 		return 0, fmt.Errorf("failed to enqueue pending swap out request: %w", err)

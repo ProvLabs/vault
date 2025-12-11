@@ -85,6 +85,9 @@ func (p *PendingSwapOutQueue) Enqueue(ctx context.Context, pendingTime int64, re
 	if pendingTime < 0 {
 		return 0, fmt.Errorf("pending time cannot be negative")
 	}
+	if err := req.Validate(); err != nil {
+		return 0, err
+	}
 	vault, err := sdk.AccAddressFromBech32(req.VaultAddress)
 	if err != nil {
 		return 0, err

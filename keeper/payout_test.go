@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
@@ -473,6 +474,108 @@ func (s *TestSuite) TestKeeper_ProcessSwapOutJobs() {
 			if tc.posthandler != nil {
 				tc.posthandler(ownerAddr, reqID, shareDenom, vaultAddr, mintedShares)
 			}
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_ProcessSingleWithdrawal_AddressErrors() {
+	underlyingDenom := "ylds"
+	shareDenom := "vshare"
+	assets := sdk.NewInt64Coin(underlyingDenom, 50)
+	vaultAddr := types.GetVaultAddress(shareDenom)
+	ownerAddr := s.CreateAndFundAccount(assets)
+	vault := s.setupBaseVault(underlyingDenom, shareDenom)
+	minted, err := s.k.SwapIn(s.ctx, vaultAddr, ownerAddr, assets)
+	s.Require().NoError(err, "should successfully swap in assets for setup")
+
+	tests := []struct {
+		name          string
+		req           types.PendingSwapOut
+		expectedError string
+	}{
+		{
+			name: "invalid vault address",
+			req: types.PendingSwapOut{
+				Owner:        ownerAddr.String(),
+				VaultAddress: "invalidvaultaddress",
+				RedeemDenom:  underlyingDenom,
+				Shares:       *minted,
+			},
+			expectedError: "invalid vault address invalidvaultaddress: decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name: "invalid owner address",
+			req: types.PendingSwapOut{
+				Owner:        "invalidowneraddress",
+				VaultAddress: vaultAddr.String(),
+				RedeemDenom:  underlyingDenom,
+				Shares:       *minted,
+			},
+			expectedError: "invalid owner address invalidowneraddress: decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name: "invalid principal address (share denom)",
+			req: types.PendingSwapOut{
+				Owner:        ownerAddr.String(),
+				VaultAddress: vaultAddr.String(),
+				RedeemDenom:  underlyingDenom,
+				Shares:       sdk.Coin{"invalid!share", sdkmath.NewInt(1)},
+			},
+			expectedError: "invalid principal address for denom invalid!share: invalid denom: invalid!share",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			err := s.k.TestAccessor_processSingleWithdrawal(s.T(), s.ctx, 1, tc.req, *vault)
+			s.Require().Error(err, "should return an error for invalid address/denom parsing")
+			s.Require().ErrorContains(err, tc.expectedError, "the error message should contain the expected address parsing failure")
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_RefundWithdrawal_AddressErrors() {
+	underlyingDenom := "ylds"
+	shareDenom := "vshare"
+	assets := sdk.NewInt64Coin(underlyingDenom, 50)
+	vaultAddr := types.GetVaultAddress(shareDenom)
+	ownerAddr := s.CreateAndFundAccount(assets)
+	s.setupBaseVault(underlyingDenom, shareDenom)
+	minted, err := s.k.SwapIn(s.ctx, vaultAddr, ownerAddr, assets)
+	s.Require().NoError(err, "should successfully swap in assets for setup")
+
+	tests := []struct {
+		name          string
+		req           types.PendingSwapOut
+		expectedError string
+	}{
+		{
+			name: "invalid vault address",
+			req: types.PendingSwapOut{
+				Owner:        ownerAddr.String(),
+				VaultAddress: "invalidvaultaddress",
+				RedeemDenom:  underlyingDenom,
+				Shares:       *minted,
+			},
+			expectedError: "invalid vault address invalidvaultaddress: decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name: "invalid owner address",
+			req: types.PendingSwapOut{
+				Owner:        "invalidowneraddress",
+				VaultAddress: vaultAddr.String(),
+				RedeemDenom:  underlyingDenom,
+				Shares:       *minted,
+			},
+			expectedError: "invalid owner address invalidowneraddress: decoding bech32 failed: invalid separator index -1",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			err := s.k.TestAccessor_refundWithdrawal(s.T(), s.ctx, 1, tc.req, types.RefundReasonRecipientMissingAttributes)
+			s.Require().Error(err, "should return an error for invalid address parsing")
+			s.Require().ErrorContains(err, tc.expectedError, "the error message should contain the expected address parsing failure")
 		})
 	}
 }

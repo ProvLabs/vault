@@ -57,3 +57,15 @@ func (k Keeper) TestAccessor_processPendingSwapOuts(t *testing.T, ctx context.Co
 	t.Helper()
 	return k.processPendingSwapOuts(ctx, size)
 }
+
+// TestAccessor_processSingleWithdrawal exposes this keeper's processSingleWithdrawal function for unit tests.
+func (k Keeper) TestAccessor_processSingleWithdrawal(t *testing.T, ctx context.Context, id uint64, req types.PendingSwapOut, vault types.VaultAccount) error {
+	t.Helper()
+	return k.processSingleWithdrawal(sdk.UnwrapSDKContext(ctx), id, req, vault)
+}
+
+// TestAccessor_refundWithdrawal exposes this keeper's refundWithdrawal function for unit tests.
+func (k Keeper) TestAccessor_refundWithdrawal(t *testing.T, ctx context.Context, id uint64, req types.PendingSwapOut, reason string) error {
+	t.Helper()
+	return k.refundWithdrawal(sdk.UnwrapSDKContext(ctx), id, req, reason)
+}

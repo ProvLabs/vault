@@ -36,7 +36,7 @@ func newTestPendingSwapOutQueue(t *testing.T) (sdk.Context, *queue.PendingSwapOu
 
 	q := queue.NewPendingSwapOutQueue(sb, cfg.Codec)
 	_, err := sb.Build()
-	require.NoError(t, err)
+	require.NoError(t, err, "schema build should not error")
 	return testCtx.Ctx.WithLogger(log.NewNopLogger()), q
 }
 
@@ -54,22 +54,23 @@ func TestPendingSwapOutQueue_Codec(t *testing.T) {
 	}
 
 	_, err := q.Enqueue(ctx, time.Now().Unix(), originalReq)
-	require.NoError(t, err)
+	require.NoError(t, err, "enqueue should succeed for valid request")
 
 	var retrievedReq vtypes.PendingSwapOut
 	retrieved := false
 	err = q.Walk(ctx, func(timestamp int64, id uint64, vault sdk.AccAddress, req vtypes.PendingSwapOut) (stop bool, err error) {
 		retrievedReq = req
 		retrieved = true
-		return true, nil // stop after first item
+		return true, nil
 	})
 
-	require.NoError(t, err)
+	require.NoError(t, err, "walk should not error")
 	require.True(t, retrieved, "did not retrieve any request from the queue")
 
-	require.Equal(t, originalReq.Owner, retrievedReq.Owner)
-	require.Equal(t, originalReq.VaultAddress, retrievedReq.VaultAddress)
-	require.Equal(t, originalReq.RedeemDenom, retrievedReq.RedeemDenom)
+	require.Equal(t, originalReq.Owner, retrievedReq.Owner, "retrieved owner must match original owner")
+	require.Equal(t, originalReq.VaultAddress, retrievedReq.VaultAddress, "retrieved vault address must match original vault address")
+	require.Equal(t, originalReq.RedeemDenom, retrievedReq.RedeemDenom, "retrieved redeem denom must match original redeem denom")
+	require.Equal(t, originalReq.Shares, retrievedReq.Shares, "retrieved shares must match original shares")
 }
 
 func TestPendingSwapOutQueueWalk(t *testing.T) {
@@ -93,9 +94,9 @@ func TestPendingSwapOutQueueWalk(t *testing.T) {
 			name: "success",
 			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) {
 				_, err := q.Enqueue(ctx, 1, req1)
-				require.NoError(t, err)
+				require.NoError(t, err, "enqueue req1 should succeed")
 				_, err = q.Enqueue(ctx, 2, req2)
-				require.NoError(t, err)
+				require.NoError(t, err, "enqueue req2 should succeed")
 			},
 			expectedSeen: []vtypes.PendingSwapOut{*req1, *req2},
 		},
@@ -103,11 +104,11 @@ func TestPendingSwapOutQueueWalk(t *testing.T) {
 			name: "success with order preservation",
 			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) {
 				_, err := q.Enqueue(ctx, 1, req1)
-				require.NoError(t, err)
+				require.NoError(t, err, "enqueue req1 should succeed")
 				_, err = q.Enqueue(ctx, 2, req2)
-				require.NoError(t, err)
+				require.NoError(t, err, "enqueue req2 should succeed")
 				_, err = q.Enqueue(ctx, 3, req3)
-				require.NoError(t, err)
+				require.NoError(t, err, "enqueue req3 should succeed")
 			},
 			expectedSeen: []vtypes.PendingSwapOut{*req1, *req2, *req3},
 		},
@@ -120,9 +121,9 @@ func TestPendingSwapOutQueueWalk(t *testing.T) {
 			name: "error",
 			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) {
 				_, err := q.Enqueue(ctx, 1, req1)
-				require.NoError(t, err)
+				require.NoError(t, err, "enqueue req1 should succeed")
 				_, err = q.Enqueue(ctx, 2, req2)
-				require.NoError(t, err)
+				require.NoError(t, err, "enqueue req2 should succeed")
 			},
 			expectedErr:  boom,
 			expectedSeen: []vtypes.PendingSwapOut{*req1, *req2},
@@ -148,11 +149,11 @@ func TestPendingSwapOutQueueWalk(t *testing.T) {
 			})
 
 			if tc.expectedErr != nil {
-				require.ErrorIs(t, err, tc.expectedErr)
+				require.ErrorIs(t, err, tc.expectedErr, "walk should return the expected error")
 			} else {
-				require.NoError(t, err)
+				require.NoError(t, err, "walk should not return an error")
 			}
-			require.Equal(t, tc.expectedSeen, seen)
+			require.Equal(t, tc.expectedSeen, seen, "walk should iterate over all expected entries")
 		})
 	}
 }
@@ -160,6 +161,13 @@ func TestPendingSwapOutQueueWalk(t *testing.T) {
 func TestPendingSwapOutQueueEnqueueAndDequeue(t *testing.T) {
 	addr1 := utils.TestProvlabsAddress()
 	addr2 := utils.TestProvlabsAddress()
+
+	validReq := vtypes.NewPendingSwapOut(
+		sdk.MustAccAddressFromBech32(addr1.Bech32),
+		sdk.MustAccAddressFromBech32(addr1.Bech32),
+		sdk.NewInt64Coin("vshare", 10),
+		"uusd",
+	)
 
 	tests := []struct {
 		name        string
@@ -173,9 +181,9 @@ func TestPendingSwapOutQueueEnqueueAndDequeue(t *testing.T) {
 		{
 			name: "successful enqueue and dequeue",
 			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) (int64, sdk.AccAddress, uint64) {
-				req := &vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32}
+				req := &vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, RedeemDenom: "usd", Shares: sdk.NewInt64Coin("vshares", 100)}
 				id, err := q.Enqueue(ctx, 1, req)
-				require.NoError(t, err)
+				require.NoError(t, err, "enqueue must succeed")
 				return 1, sdk.MustAccAddressFromBech32(addr1.Bech32), id
 			},
 			dequeue:     true,
@@ -187,21 +195,67 @@ func TestPendingSwapOutQueueEnqueueAndDequeue(t *testing.T) {
 				return 1, sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32), 999
 			},
 			dequeue:     true,
-			expectError: false, // Dequeue with a non-existent key should not error.
+			expectError: false,
 		},
 		{
-			name: "enqueue with invalid vault address",
+			name: "enqueue with invalid vault address (pre-validation, now fails validation)",
 			req: &vtypes.PendingSwapOut{
+				Owner:        validReq.Owner,
 				VaultAddress: "invalid",
+				Shares:       validReq.Shares,
+				RedeemDenom:  validReq.RedeemDenom,
 			},
 			timestamp:   1,
 			dequeue:     false,
 			expectError: true,
+			errorMsg:    "invalid vault address invalid:",
+		},
+		{
+			name: "enqueue fails validation (invalid owner address)",
+			req: &vtypes.PendingSwapOut{
+				Owner:        "invalidowner",
+				VaultAddress: validReq.VaultAddress,
+				Shares:       validReq.Shares,
+				RedeemDenom:  validReq.RedeemDenom,
+			},
+			timestamp:   1,
+			dequeue:     false,
+			expectError: true,
+			errorMsg:    "invalid owner address invalidowner:",
+		},
+		{
+			name: "enqueue fails validation (zero shares)",
+			req: &vtypes.PendingSwapOut{
+				Owner:        validReq.Owner,
+				VaultAddress: validReq.VaultAddress,
+				Shares:       sdk.NewInt64Coin("vshare", 0),
+				RedeemDenom:  validReq.RedeemDenom,
+			},
+			timestamp:   1,
+			dequeue:     false,
+			expectError: true,
+			errorMsg:    "shares cannot be zero",
+		},
+		{
+			name: "enqueue fails validation (empty redeem denom)",
+			req: &vtypes.PendingSwapOut{
+				Owner:        validReq.Owner,
+				VaultAddress: validReq.VaultAddress,
+				Shares:       validReq.Shares,
+				RedeemDenom:  "",
+			},
+			timestamp:   1,
+			dequeue:     false,
+			expectError: true,
+			errorMsg:    "redeem denom cannot be empty",
 		},
 		{
 			name: "enqueue with negative timestamp",
 			req: &vtypes.PendingSwapOut{
 				VaultAddress: addr2.Bech32,
+				Owner:        validReq.Owner,
+				Shares:       validReq.Shares,
+				RedeemDenom:  validReq.RedeemDenom,
 			},
 			timestamp:   -1,
 			dequeue:     false,
@@ -227,26 +281,25 @@ func TestPendingSwapOutQueueEnqueueAndDequeue(t *testing.T) {
 				timestamp, addr, id := tc.setup(t, ctx, q)
 				err := q.Dequeue(ctx, timestamp, addr, id)
 				if tc.expectError {
-					require.Error(t, err)
+					require.Error(t, err, "dequeue should return an error")
 					if tc.errorMsg != "" {
-						require.Contains(t, err.Error(), tc.errorMsg)
+						require.Contains(t, err.Error(), tc.errorMsg, "dequeue error message should contain expected text")
 					}
 				} else {
-					require.NoError(t, err)
-					// Verify item is removed
+					require.NoError(t, err, "dequeue should not return an error")
 					_, err = q.IndexedMap.Get(ctx, collections.Join3(timestamp, id, addr))
-					require.Error(t, err)
-					require.ErrorIs(t, err, collections.ErrNotFound)
+					require.Error(t, err, "get should fail after successful dequeue")
+					require.ErrorIs(t, err, collections.ErrNotFound, "error should be collections.ErrNotFound")
 				}
 			} else {
 				_, err := q.Enqueue(ctx, tc.timestamp, tc.req)
 				if tc.expectError {
-					require.Error(t, err)
+					require.Error(t, err, "enqueue should return an error")
 					if tc.errorMsg != "" {
-						require.Contains(t, err.Error(), tc.errorMsg)
+						require.Contains(t, err.Error(), tc.errorMsg, "enqueue error message should contain expected text")
 					}
 				} else {
-					require.NoError(t, err)
+					require.NoError(t, err, "enqueue should not return an error")
 				}
 			}
 		})
@@ -255,7 +308,7 @@ func TestPendingSwapOutQueueEnqueueAndDequeue(t *testing.T) {
 
 func TestPendingSwapOutQueue_GetByID(t *testing.T) {
 	addr1 := utils.TestProvlabsAddress()
-	req1 := &vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32}
+	req1 := &vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, RedeemDenom: "usd", Shares: sdk.NewInt64Coin("vshares", 100)}
 
 	tests := map[string]struct {
 		setup    func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) uint64
@@ -265,7 +318,7 @@ func TestPendingSwapOutQueue_GetByID(t *testing.T) {
 		"success": {
 			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) uint64 {
 				id, err := q.Enqueue(ctx, 123, req1)
-				require.NoError(t, err)
+				require.NoError(t, err, "enqueue should succeed")
 				return id
 			},
 		},
@@ -285,14 +338,14 @@ func TestPendingSwapOutQueue_GetByID(t *testing.T) {
 			pendingTime, req, err := q.GetByID(ctx, id)
 
 			if len(tc.errorMsg) > 0 {
-				require.Error(t, err)
-				require.ErrorContains(t, err, tc.errorMsg)
-				require.Equal(t, int64(0), pendingTime)
+				require.Error(t, err, "GetByID should return an error")
+				require.ErrorContains(t, err, tc.errorMsg, "error message should contain expected text")
+				require.Equal(t, int64(0), pendingTime, "pending time should be zero on error")
 			} else {
-				require.NoError(t, err)
-				require.Equal(t, req1.VaultAddress, req.VaultAddress)
-				require.Equal(t, req1.Owner, req.Owner)
-				require.Equal(t, int64(123), pendingTime)
+				require.NoError(t, err, "GetByID should not return an error")
+				require.Equal(t, req1.VaultAddress, req.VaultAddress, "retrieved vault address should match")
+				require.Equal(t, req1.Owner, req.Owner, "retrieved owner should match")
+				require.Equal(t, int64(123), pendingTime, "retrieved timestamp should match")
 			}
 		})
 	}
@@ -301,8 +354,8 @@ func TestPendingSwapOutQueue_GetByID(t *testing.T) {
 func TestPendingSwapOutQueue_ExpediteSwapOut(t *testing.T) {
 	addr1 := utils.TestProvlabsAddress()
 	addr2 := utils.TestProvlabsAddress()
-	req1 := &vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32}
-	req2 := &vtypes.PendingSwapOut{VaultAddress: addr2.Bech32, Owner: addr2.Bech32}
+	req1 := &vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, RedeemDenom: "usd", Shares: sdk.NewInt64Coin("vshares", 100)}
+	req2 := &vtypes.PendingSwapOut{VaultAddress: addr2.Bech32, Owner: addr2.Bech32, RedeemDenom: "usd", Shares: sdk.NewInt64Coin("vshares", 100)}
 
 	tests := map[string]struct {
 		setup      func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) (uint64, int64, sdk.AccAddress)
@@ -312,23 +365,23 @@ func TestPendingSwapOutQueue_ExpediteSwapOut(t *testing.T) {
 		"success with one entry": {
 			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) (uint64, int64, sdk.AccAddress) {
 				id, err := q.Enqueue(ctx, 123, req1)
-				require.NoError(t, err)
+				require.NoError(t, err, "enqueue should succeed")
 				return id, 123, sdk.MustAccAddressFromBech32(addr1.Bech32)
 			},
 		},
 		"success with two entries, second is expedited": {
 			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) (uint64, int64, sdk.AccAddress) {
 				_, err := q.Enqueue(ctx, 123, req1)
-				require.NoError(t, err)
+				require.NoError(t, err, "enqueue req1 should succeed")
 				id2, err := q.Enqueue(ctx, 456, req2)
-				require.NoError(t, err)
+				require.NoError(t, err, "enqueue req2 should succeed")
 				return id2, 456, sdk.MustAccAddressFromBech32(addr2.Bech32)
 			},
 		},
 		"success on entry with timestamp 0": {
 			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) (uint64, int64, sdk.AccAddress) {
 				id, err := q.Enqueue(ctx, 0, req1)
-				require.NoError(t, err)
+				require.NoError(t, err, "enqueue should succeed")
 				return id, 0, sdk.MustAccAddressFromBech32(addr1.Bech32)
 			},
 		},
@@ -352,20 +405,19 @@ func TestPendingSwapOutQueue_ExpediteSwapOut(t *testing.T) {
 			err := q.ExpediteSwapOut(ctx, id)
 
 			if len(tc.errorMsg) > 0 {
-				require.Error(t, err)
-				require.ErrorContains(t, err, tc.errorMsg)
+				require.Error(t, err, "ExpediteSwapOut should return an error")
+				require.ErrorContains(t, err, tc.errorMsg, "error message should contain expected text")
 			} else {
-				require.NoError(t, err)
+				require.NoError(t, err, "ExpediteSwapOut should not return an error")
 
-				// Verify old entry is removed
 				if oldTimestamp != 0 {
 					_, err = q.IndexedMap.Get(ctx, collections.Join3(oldTimestamp, id, addr))
-					require.ErrorContains(t, err, "not found")
+					require.ErrorContains(t, err, "not found", "old entry should be removed")
 				}
 
-				// Verify new entry exists with timestamp 0
-				_, err = q.IndexedMap.Get(ctx, collections.Join3(int64(0), id, addr))
-				require.NoError(t, err)
+				newKey := collections.Join3(int64(0), id, addr)
+				_, err = q.IndexedMap.Get(ctx, newKey)
+				require.NoError(t, err, "new entry with timestamp 0 should exist")
 			}
 		})
 	}
@@ -377,9 +429,9 @@ func TestPendingSwapOutQueue_Export(t *testing.T) {
 	if addr1.Bech32 > addr2.Bech32 {
 		addr1, addr2 = addr2, addr1
 	}
-	req1 := &vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, RedeemDenom: "usd"}
-	req2 := &vtypes.PendingSwapOut{VaultAddress: addr2.Bech32, Owner: addr2.Bech32, RedeemDenom: "usd"}
-	req3 := &vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, RedeemDenom: "usd"}
+	req1 := &vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, RedeemDenom: "usd", Shares: sdk.NewInt64Coin("vshares", 100)}
+	req2 := &vtypes.PendingSwapOut{VaultAddress: addr2.Bech32, Owner: addr2.Bech32, RedeemDenom: "usd", Shares: sdk.NewInt64Coin("vshares", 200)}
+	req3 := &vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, RedeemDenom: "usd", Shares: sdk.NewInt64Coin("vshares", 300)}
 
 	tests := []struct {
 		name          string
@@ -391,11 +443,11 @@ func TestPendingSwapOutQueue_Export(t *testing.T) {
 			name: "multiple elements",
 			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) {
 				_, err := q.Enqueue(ctx, 1, req1)
-				require.NoError(t, err)
+				require.NoError(t, err, "enqueue req1 should succeed")
 				_, err = q.Enqueue(ctx, 2, req2)
-				require.NoError(t, err)
+				require.NoError(t, err, "enqueue req2 should succeed")
 				_, err = q.Enqueue(ctx, 1, req3)
-				require.NoError(t, err)
+				require.NoError(t, err, "enqueue req3 should succeed")
 			},
 			expectedQueue: vtypes.PendingSwapOutQueue{
 				LatestSequenceNumber: 3,
@@ -410,7 +462,6 @@ func TestPendingSwapOutQueue_Export(t *testing.T) {
 		{
 			name: "no elements",
 			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) {
-				// No elements enqueued
 			},
 			expectedQueue: vtypes.PendingSwapOutQueue{
 				LatestSequenceNumber: 0,
@@ -428,17 +479,18 @@ func TestPendingSwapOutQueue_Export(t *testing.T) {
 			exportedQueue, err := q.Export(ctx)
 
 			if tc.expectError {
-				require.Error(t, err)
+				require.Error(t, err, "export should return an error")
 			} else {
-				require.NoError(t, err)
-				require.Equal(t, tc.expectedQueue.LatestSequenceNumber, exportedQueue.LatestSequenceNumber)
-				require.Equal(t, len(tc.expectedQueue.Entries), len(exportedQueue.Entries))
+				require.NoError(t, err, "export should not return an error")
+				require.Equal(t, tc.expectedQueue.LatestSequenceNumber, exportedQueue.LatestSequenceNumber, "latest sequence number should match")
+				require.Equal(t, len(tc.expectedQueue.Entries), len(exportedQueue.Entries), "number of exported entries should match")
 				for i, entry := range tc.expectedQueue.Entries {
-					require.Equal(t, entry.Time, exportedQueue.Entries[i].Time)
-					require.Equal(t, entry.Id, exportedQueue.Entries[i].Id)
-					require.Equal(t, entry.SwapOut.Owner, exportedQueue.Entries[i].SwapOut.Owner)
-					require.Equal(t, entry.SwapOut.VaultAddress, exportedQueue.Entries[i].SwapOut.VaultAddress)
-					require.Equal(t, entry.SwapOut.RedeemDenom, exportedQueue.Entries[i].SwapOut.RedeemDenom)
+					require.Equal(t, entry.Time, exportedQueue.Entries[i].Time, "exported entry time should match")
+					require.Equal(t, entry.Id, exportedQueue.Entries[i].Id, "exported entry ID should match")
+					require.Equal(t, entry.SwapOut.Owner, exportedQueue.Entries[i].SwapOut.Owner, "exported entry owner should match")
+					require.Equal(t, entry.SwapOut.VaultAddress, exportedQueue.Entries[i].SwapOut.VaultAddress, "exported entry vault address should match")
+					require.Equal(t, entry.SwapOut.RedeemDenom, exportedQueue.Entries[i].SwapOut.RedeemDenom, "exported entry redeem denom should match")
+					require.Equal(t, entry.SwapOut.Shares, exportedQueue.Entries[i].SwapOut.Shares, "exported entry shares should match")
 				}
 			}
 		})
@@ -491,7 +543,7 @@ func TestPendingSwapOutQueue_Import(t *testing.T) {
 					{Time: 1, Id: 0, SwapOut: vtypes.PendingSwapOut{VaultAddress: "badaddress", Owner: addr1.Bech32, RedeemDenom: "usd", Shares: sdk.NewInt64Coin("vshares", 100)}},
 				},
 			},
-			errorMsg: "invalid vault address in pending swap out queue",
+			errorMsg: "invalid vault address in pending swap out queue:",
 		},
 		{
 			name: "bad owner address",
@@ -501,7 +553,7 @@ func TestPendingSwapOutQueue_Import(t *testing.T) {
 					{Time: 1, Id: 0, SwapOut: vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: "badaddress", RedeemDenom: "usd", Shares: sdk.NewInt64Coin("vshares", 100)}},
 				},
 			},
-			errorMsg: "invalid owner address in pending swap out queue",
+			errorMsg: "invalid owner address in pending swap out queue:",
 		},
 	}
 
@@ -512,21 +564,21 @@ func TestPendingSwapOutQueue_Import(t *testing.T) {
 			err := q.Import(ctx, tc.genQueue)
 
 			if len(tc.errorMsg) > 0 {
-				require.Error(t, err)
-				require.Contains(t, err.Error(), tc.errorMsg)
+				require.Error(t, err, "import should return an error")
+				require.Contains(t, err.Error(), tc.errorMsg, "import error message should contain expected text")
 			} else {
-				require.NoError(t, err)
+				require.NoError(t, err, "import should not return an error")
 
 				seq, err := q.Sequence.Peek(ctx)
-				require.NoError(t, err)
-				require.Equal(t, tc.genQueue.LatestSequenceNumber, seq)
+				require.NoError(t, err, "sequence peek should not error")
+				require.Equal(t, tc.genQueue.LatestSequenceNumber, seq, "latest sequence number should match imported value")
 
 				for _, entry := range tc.genQueue.Entries {
 					vaultAddr, err := sdk.AccAddressFromBech32(entry.SwapOut.VaultAddress)
-					require.NoError(t, err)
+					require.NoError(t, err, "vault address should be valid")
 					req, err := q.IndexedMap.Get(ctx, collections.Join3(entry.Time, entry.Id, vaultAddr))
-					require.NoError(t, err)
-					require.Equal(t, entry.SwapOut, req)
+					require.NoError(t, err, "indexed map get should not error")
+					require.Equal(t, entry.SwapOut, req, "retrieved request should match imported request")
 				}
 			}
 		})

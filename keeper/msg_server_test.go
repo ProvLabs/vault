@@ -3189,12 +3189,13 @@ func (s *TestSuite) TestMsgServer_ExpeditePendingSwapOut() {
 		validShares := sdk.NewInt64Coin(share, 1)
 
 		var qErr error
-		id, qErr = s.k.PendingSwapOutQueue.Enqueue(s.ctx, blockTime.Unix(), &types.PendingSwapOut{
-			Owner:        validOwner,
-			VaultAddress: vaultAddr.String(),
-			Shares:       validShares,
-			RedeemDenom:  underlying,
-		})
+		pendingReq := types.NewPendingSwapOut(
+			sdk.MustAccAddressFromBech32(validOwner),
+			vaultAddr,
+			validShares,
+			underlying,
+		)
+		id, qErr = s.k.PendingSwapOutQueue.Enqueue(s.ctx, blockTime.Unix(), &pendingReq)
 		s.Require().NoError(qErr, "should successfully enqueue pending swap out request")
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	}

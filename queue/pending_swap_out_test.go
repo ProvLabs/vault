@@ -162,11 +162,15 @@ func TestPendingSwapOutQueueEnqueueAndDequeue(t *testing.T) {
 	addr1 := utils.TestProvlabsAddress()
 	addr2 := utils.TestProvlabsAddress()
 
+	addr1Acc := sdk.MustAccAddressFromBech32(addr1.Bech32)
+	validShares := sdk.NewInt64Coin("vshare", 10)
+	validRedeem := "uusd"
+
 	validReq := vtypes.NewPendingSwapOut(
-		sdk.MustAccAddressFromBech32(addr1.Bech32),
-		sdk.MustAccAddressFromBech32(addr1.Bech32),
-		sdk.NewInt64Coin("vshare", 10),
-		"uusd",
+		addr1Acc,
+		addr1Acc,
+		validShares,
+		validRedeem,
 	)
 
 	tests := []struct {
@@ -181,10 +185,10 @@ func TestPendingSwapOutQueueEnqueueAndDequeue(t *testing.T) {
 		{
 			name: "successful enqueue and dequeue",
 			setup: func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) (int64, sdk.AccAddress, uint64) {
-				req := &vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, RedeemDenom: "usd", Shares: sdk.NewInt64Coin("vshares", 100)}
-				id, err := q.Enqueue(ctx, 1, req)
+				req := vtypes.NewPendingSwapOut(addr1Acc, addr1Acc, sdk.NewInt64Coin("vshares", 100), "usd")
+				id, err := q.Enqueue(ctx, 1, &req)
 				require.NoError(t, err, "enqueue must succeed")
-				return 1, sdk.MustAccAddressFromBech32(addr1.Bech32), id
+				return 1, addr1Acc, id
 			},
 			dequeue:     true,
 			expectError: false,
@@ -202,8 +206,8 @@ func TestPendingSwapOutQueueEnqueueAndDequeue(t *testing.T) {
 			req: &vtypes.PendingSwapOut{
 				Owner:        validReq.Owner,
 				VaultAddress: "invalid",
-				Shares:       validReq.Shares,
-				RedeemDenom:  validReq.RedeemDenom,
+				Shares:       validShares,
+				RedeemDenom:  validRedeem,
 			},
 			timestamp:   1,
 			dequeue:     false,
@@ -215,8 +219,8 @@ func TestPendingSwapOutQueueEnqueueAndDequeue(t *testing.T) {
 			req: &vtypes.PendingSwapOut{
 				Owner:        "invalidowner",
 				VaultAddress: validReq.VaultAddress,
-				Shares:       validReq.Shares,
-				RedeemDenom:  validReq.RedeemDenom,
+				Shares:       validShares,
+				RedeemDenom:  validRedeem,
 			},
 			timestamp:   1,
 			dequeue:     false,
@@ -229,7 +233,7 @@ func TestPendingSwapOutQueueEnqueueAndDequeue(t *testing.T) {
 				Owner:        validReq.Owner,
 				VaultAddress: validReq.VaultAddress,
 				Shares:       sdk.NewInt64Coin("vshare", 0),
-				RedeemDenom:  validReq.RedeemDenom,
+				RedeemDenom:  validRedeem,
 			},
 			timestamp:   1,
 			dequeue:     false,
@@ -241,7 +245,7 @@ func TestPendingSwapOutQueueEnqueueAndDequeue(t *testing.T) {
 			req: &vtypes.PendingSwapOut{
 				Owner:        validReq.Owner,
 				VaultAddress: validReq.VaultAddress,
-				Shares:       validReq.Shares,
+				Shares:       validShares,
 				RedeemDenom:  "",
 			},
 			timestamp:   1,

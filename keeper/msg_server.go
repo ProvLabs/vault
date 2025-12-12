@@ -237,8 +237,9 @@ func (k msgServer) ToggleSwapIn(goCtx context.Context, msg *types.MsgToggleSwapI
 	if err := vault.ValidateAdmin(msg.Admin); err != nil {
 		return nil, err
 	}
-
-	k.SetSwapInEnable(ctx, vault, msg.Enabled)
+	if err := k.SetSwapInEnable(ctx, vault, msg.Enabled); err != nil {
+		return nil, fmt.Errorf("failed to set swap in enable: %w", err)
+	}
 
 	return &types.MsgToggleSwapInResponse{}, nil
 }
@@ -260,7 +261,9 @@ func (k msgServer) ToggleSwapOut(goCtx context.Context, msg *types.MsgToggleSwap
 		return nil, err
 	}
 
-	k.SetSwapOutEnable(ctx, vault, msg.Enabled)
+	if err := k.SetSwapOutEnable(ctx, vault, msg.Enabled); err != nil {
+		return nil, fmt.Errorf("failed to set swap out enable: %w", err)
+	}
 
 	return &types.MsgToggleSwapOutResponse{}, nil
 }

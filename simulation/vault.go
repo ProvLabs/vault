@@ -132,7 +132,9 @@ func SetVaultBridge(ctx sdk.Context, vk *keeper.Keeper, shareDenom string, bridg
 	vault.BridgeAddress = bridgeAddr.String()
 	vault.BridgeEnabled = enabled
 
-	vk.AuthKeeper.SetAccount(ctx, vault)
+	if err := vk.SetVaultAccount(ctx, vault); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -150,7 +152,9 @@ func UpdateVaultTotalShares(ctx sdk.Context, vk *keeper.Keeper, shares sdk.Coin)
 
 	vault.TotalShares = shares
 
-	vk.AuthKeeper.SetAccount(ctx, vault)
+	if err := vk.SetVaultAccount(ctx, vault); err != nil {
+		return err
+	}
 	return nil
 }
 

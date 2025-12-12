@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"context"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (
@@ -14,12 +14,12 @@ const (
 )
 
 // BeginBlocker is a hook that is called at the beginning of every block.
-func (k *Keeper) BeginBlocker(ctx context.Context) error {
+func (k *Keeper) BeginBlocker(ctx sdk.Context) error {
 	return k.handleVaultInterestTimeouts(ctx)
 }
 
 // EndBlocker is a hook that is called at the end of every block.
-func (k *Keeper) EndBlocker(ctx context.Context) error {
+func (k *Keeper) EndBlocker(ctx sdk.Context) error {
 	if err := k.processPendingSwapOuts(ctx, MaxSwapOutBatchSize); err != nil {
 		return err
 	}

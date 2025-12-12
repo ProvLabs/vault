@@ -322,7 +322,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgToggleBridge() {
 	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "", "underlyingshare", selected, s.accs)
 	s.Require().NoError(err, "CreateVault")
 
-	err = simulation.SetVaultBridge(s.ctx, s.app.VaultKeeper, "underlyingshare", sdk.AccAddress(""), true)
+	err = simulation.SetVaultBridge(s.ctx, s.app.VaultKeeper, "underlyingshare", sdk.AccAddress("bridgeaddr"), true)
 	s.Require().NoError(err, "SetVaultBridge")
 
 	op := simulation.SimulateMsgToggleBridge(*s.app.VaultKeeper)

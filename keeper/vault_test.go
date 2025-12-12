@@ -200,20 +200,25 @@ func (s *TestSuite) TestSwapOut_MultiAsset() {
 	s.assertBalance(redeemerAddr, shareDenom, initialShares.Sub(sharesToRedeemForPayment.Amount))
 	s.assertBalance(vault.GetAddress(), shareDenom, sharesToRedeemForPayment.Amount)
 
-	sharesToRedeemForUnderlying := sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(5))
-	reqID2, err := s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sharesToRedeemForUnderlying, "")
+	sharesToRedeemForDefaultPayment := sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(5))
+	reqID2, err := s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sharesToRedeemForDefaultPayment, "")
 	s.Require().NoError(err, "should successfully queue swap out for the default underlying asset")
 	s.Require().Equal(uint64(1), reqID2, "second request id should be 1")
+
+	sharesToRedeemForUnderlying := sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(8))
+	reqID3, err := s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sharesToRedeemForUnderlying, underlyingDenom)
+	s.Require().NoError(err, "should successfully queue swap out for the default underlying asset")
+	s.Require().Equal(uint64(2), reqID3, "third request id should be 2")
 
 	err = s.k.TestAccessor_processPendingSwapOuts(s.T(), s.ctx, keeper.MaxSwapOutBatchSize)
 	s.Require().NoError(err, "processing pending withdrawals should not fail")
 
 	// --- Assert Final Balances ---
-	s.assertBalance(redeemerAddr, paymentDenom, math.NewInt(24))
-	s.assertBalance(redeemerAddr, underlyingDenom, math.NewInt(6))
+	s.assertBalance(redeemerAddr, paymentDenom, math.NewInt(36))
+	s.assertBalance(redeemerAddr, underlyingDenom, math.NewInt(10))
 
 	// --- Test 3: Unaccepted Denom ---
-	_, err = s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sharesToRedeemForUnderlying, unacceptedDenom)
+	_, err = s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sharesToRedeemForDefaultPayment, unacceptedDenom)
 	s.Require().Error(err, "should fail to swap out for an unaccepted asset")
 	s.Require().ErrorContains(err, "denom not supported for vault", "error should indicate the denom is not accepted")
 }

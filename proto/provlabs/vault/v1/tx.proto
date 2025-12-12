@@ -95,7 +95,8 @@ message MsgCreateVaultRequest {
   string share_denom = 2;
   // underlying_asset is the denomination of the asset supported by the vault.
   string underlying_asset = 3;
-  // payment_denom is an optional secondary denomination the vault can accept.
+  // payment_denom is the secondary denomination the vault can accept.
+  // If left empty, it defaults to the underlying_asset.
   string payment_denom = 4;
   // withdrawal_delay_seconds is the time period (in seconds) that a withdrawal
   // must wait in the pending queue before being processed.
@@ -156,7 +157,7 @@ message MsgSwapOutRequest {
   // assets is the amount of underlying assets to withdraw.
   cosmos.base.v1beta1.Coin assets = 3 [(gogoproto.nullable) = false];
   // redeem_denom selects the payout coin.
-  // - If empty, defaults to the vault’s underlying_asset.
+  // - If empty, defaults to the vault’s payment_denom.
   // - Must be either the vault’s underlying_asset or its payment_denom.
   string redeem_denom = 4;
 }

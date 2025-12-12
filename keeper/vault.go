@@ -186,6 +186,14 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 		return nil, err
 	}
 
+	accept, err := k.AllowSwapInAmount(ctx, asset, *vault)
+	if err != nil {
+		return nil, fmt.Errorf("swap in amount not allowed: %w", err)
+	}
+	if !accept {
+		return nil, fmt.Errorf("swap in amount %s is below the minimum required value for vault %s", asset.String(), vaultAddr.String())
+	}
+
 	if err := k.reconcileVaultInterest(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to reconcile vault interest: %w", err)
 	}
@@ -406,4 +414,26 @@ func (k *Keeper) autoPauseVault(ctx context.Context, vault *types.VaultAccount, 
 	k.AuthKeeper.SetAccount(ctx, vault)
 
 	k.emitEvent(sdkCtx, types.NewEventVaultPaused(vault.GetAddress().String(), vault.GetAddress().String(), reason, vault.PausedBalance))
+}
+
+func (k *Keeper) AllowSwapInAmount(ctx sdk.Context, swapInAssest sdk.Coin, vault types.VaultAccount) (bool, error) {
+	assetInUnderlying, err := k.ToUnderlyingAssetAmount(ctx, vault, swapInAssest)
+	if err != nil {
+		return false, fmt.Errorf("failed to convert swap in asset to underlying asset amount: %w", err)
+	}
+
+	if len(vault.MinSwapInValue) == 0 {
+		return true, nil
+	}
+
+	minLimit, ok := sdkmath.NewIntFromString(vault.MinSwapInValue)
+	if !ok {
+		return true, nil
+	}
+
+	if minLimit.IsZero() {
+		return true, nil
+	}
+
+	return assetInUnderlying.GTE(minLimit), nil
 }

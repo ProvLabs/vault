@@ -79,6 +79,12 @@ message VaultAccount {
   // collateral operations alongside the admin (e.g., pausing/unpausing, depositing/withdrawing
   // principal or interest funds). If unset (empty string), only the admin may perform those actions.
   string asset_manager = 20 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // min_swap_in_value is a string representing the minimum value required for a deposit.
+  // - The value is measured in the underlying_asset.
+  // - Incoming payment_denom deposits are converted to this unit before checking.
+  // - If empty ("") or "0", there is no minimum limit.
+  string min_swap_in_value = 21 [(cosmos_proto.scalar) = "cosmos.IntString"];
 }
 
 // AccountBalance represents the coin balance of a single account.

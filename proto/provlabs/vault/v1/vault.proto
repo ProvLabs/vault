@@ -79,6 +79,17 @@ message VaultAccount {
   // collateral operations alongside the admin (e.g., pausing/unpausing, depositing/withdrawing
   // principal or interest funds). If unset (empty string), only the admin may perform those actions.
   string asset_manager = 20 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+
+  // tech_fee_accrued tracks the total outstanding (unpaid) technology fee
+  // denominated implicitly in the underlying_asset. This value grows every
+  // period and is reduced whenever the vault successfully transfers funds to
+  // the tech-fee recipient. It is not a coin balance and is never sent via
+  // the bank module.
+  string tech_fee_accrued = 21 [
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false,
+    (cosmos_proto.scalar) = "cosmos.Int"
+  ];
 }
 
 // AccountBalance represents the coin balance of a single account.

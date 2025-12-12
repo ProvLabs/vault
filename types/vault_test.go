@@ -592,3 +592,104 @@ func TestVaultAccount_ValidateManagementAuthority(t *testing.T) {
 		})
 	}
 }
+
+func TestPendingSwapOut_Validate(t *testing.T) {
+	validOwner := utils.TestAddress().Bech32
+	validVault := utils.TestAddress().Bech32
+	validDenom := "vshare"
+	validRedeem := "uusd"
+	invalidBech32 := "invalidaddress"
+
+	baseReq := types.PendingSwapOut{
+		Owner:        validOwner,
+		VaultAddress: validVault,
+		Shares:       sdk.NewInt64Coin(validDenom, 100),
+		RedeemDenom:  validRedeem,
+	}
+
+	const invalidBech32ErrPrefix = "decoding bech32 failed:"
+
+	tests := []struct {
+		name           string
+		pendingSwapOut types.PendingSwapOut
+		expectedErr    string
+	}{
+		{
+			name:           "valid request",
+			pendingSwapOut: baseReq,
+			expectedErr:    "",
+		},
+		{
+			name: "invalid owner address",
+			pendingSwapOut: types.PendingSwapOut{
+				Owner:        invalidBech32,
+				VaultAddress: validVault,
+				Shares:       baseReq.Shares,
+				RedeemDenom:  validRedeem,
+			},
+			expectedErr: fmt.Sprintf("invalid owner address %s: %s", invalidBech32, invalidBech32ErrPrefix),
+		},
+		{
+			name: "invalid vault address",
+			pendingSwapOut: types.PendingSwapOut{
+				Owner:        validOwner,
+				VaultAddress: invalidBech32,
+				Shares:       baseReq.Shares,
+				RedeemDenom:  validRedeem,
+			},
+			expectedErr: fmt.Sprintf("invalid vault address %s: %s", invalidBech32, invalidBech32ErrPrefix),
+		},
+		{
+			name: "invalid shares (negative)",
+			pendingSwapOut: types.PendingSwapOut{
+				Owner:        validOwner,
+				VaultAddress: validVault,
+				Shares:       sdk.Coin{Denom: validDenom, Amount: math.NewInt(-10)},
+				RedeemDenom:  validRedeem,
+			},
+			expectedErr: "invalid shares: -10vshare",
+		},
+		{
+			name: "invalid shares (zero amount)",
+			pendingSwapOut: types.PendingSwapOut{
+				Owner:        validOwner,
+				VaultAddress: validVault,
+				Shares:       sdk.NewInt64Coin(validDenom, 0),
+				RedeemDenom:  validRedeem,
+			},
+			expectedErr: "shares cannot be zero",
+		},
+		{
+			name: "invalid shares (empty denom)",
+			pendingSwapOut: types.PendingSwapOut{
+				Owner:        validOwner,
+				VaultAddress: validVault,
+				Shares:       sdk.Coin{Denom: "", Amount: math.NewInt(10)},
+				RedeemDenom:  validRedeem,
+			},
+			expectedErr: "invalid shares: 10",
+		},
+		{
+			name: "empty redeem denom",
+			pendingSwapOut: types.PendingSwapOut{
+				Owner:        validOwner,
+				VaultAddress: validVault,
+				Shares:       baseReq.Shares,
+				RedeemDenom:  "",
+			},
+			expectedErr: "redeem denom cannot be empty",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.pendingSwapOut.Validate()
+			if tc.expectedErr != "" {
+				assert.Error(t, err, "expected an error for test case: %s", tc.name)
+				assert.Contains(t, err.Error(), tc.expectedErr, "error should contain expected message for test case: %s", tc.name)
+			} else {
+				assert.NoError(t, err, "expected no error for test case: %s", tc.name)
+			}
+		})
+	}
+}

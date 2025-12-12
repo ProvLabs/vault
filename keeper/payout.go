@@ -121,9 +121,18 @@ func (k *Keeper) processSwapOutJobs(ctx context.Context, jobsToProcess []types.P
 // principal or burn failure), the error is wrapped in a *types.CriticalError with a stable reason so the vault
 // can be automatically paused.
 func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.PendingSwapOut, vault types.VaultAccount) error {
-	vaultAddr := sdk.MustAccAddressFromBech32(req.VaultAddress)
-	ownerAddr := sdk.MustAccAddressFromBech32(req.Owner)
-	principalAddress := markertypes.MustGetMarkerAddress(req.Shares.Denom)
+	vaultAddr, err := sdk.AccAddressFromBech32(req.VaultAddress)
+	if err != nil {
+		return fmt.Errorf("invalid vault address %s: %w", req.VaultAddress, err)
+	}
+	ownerAddr, err := sdk.AccAddressFromBech32(req.Owner)
+	if err != nil {
+		return fmt.Errorf("invalid owner address %s: %w", req.Owner, err)
+	}
+	principalAddress, err := markertypes.MarkerAddress(req.Shares.Denom)
+	if err != nil {
+		return fmt.Errorf("invalid principal address for denom %s: %w", req.Shares.Denom, err)
+	}
 
 	if err := k.reconcileVaultInterest(ctx, &vault); err != nil {
 		return fmt.Errorf("failed to reconcile vault interest: %w", err)
@@ -186,8 +195,14 @@ func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.P
 // It returns nil on success. If the refund transfer itself fails, the error is wrapped in a
 // *types.CriticalError with a stable reason so the vault can be automatically paused.
 func (k *Keeper) refundWithdrawal(ctx sdk.Context, id uint64, req types.PendingSwapOut, reason string) error {
-	vaultAddr := sdk.MustAccAddressFromBech32(req.VaultAddress)
-	ownerAddr := sdk.MustAccAddressFromBech32(req.Owner)
+	vaultAddr, err := sdk.AccAddressFromBech32(req.VaultAddress)
+	if err != nil {
+		return fmt.Errorf("invalid vault address %s: %w", req.VaultAddress, err)
+	}
+	ownerAddr, err := sdk.AccAddressFromBech32(req.Owner)
+	if err != nil {
+		return fmt.Errorf("invalid owner address %s: %w", req.Owner, err)
+	}
 
 	if err := k.BankKeeper.SendCoins(ctx, vaultAddr, ownerAddr, sdk.NewCoins(req.Shares)); err != nil {
 		errMsg := fmt.Sprintf(

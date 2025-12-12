@@ -66,6 +66,9 @@ type VaultAccountI interface {
 
 // NewVaultAccount creates a new vault with an optional payment denom allowed for I/O alongside the underlying asset.
 func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyingAsset, paymentDenom string, withdrawalDelay uint64) *VaultAccount {
+	if paymentDenom == "" {
+		paymentDenom = underlyingAsset
+	}
 	return &VaultAccount{
 		BaseAccount:            baseAcc,
 		Admin:                  admin,
@@ -108,17 +111,13 @@ func (v VaultAccount) Validate() error {
 	if v.TotalShares.IsNegative() {
 		return fmt.Errorf("total shares cannot be negative: %s", v.TotalShares)
 	}
+
 	if err := sdk.ValidateDenom(v.UnderlyingAsset); err != nil {
 		return fmt.Errorf("invalid underlying asset denom: %s", v.UnderlyingAsset)
 	}
 
-	if v.PaymentDenom != "" {
-		if err := sdk.ValidateDenom(v.PaymentDenom); err != nil {
-			return fmt.Errorf("invalid payment denom: %q: %w", v.PaymentDenom, err)
-		}
-		if v.PaymentDenom == v.UnderlyingAsset {
-			return fmt.Errorf("payment (%q) denom cannot equal underlying asset denom (%q)", v.PaymentDenom, v.UnderlyingAsset)
-		}
+	if err := sdk.ValidateDenom(v.PaymentDenom); err != nil {
+		return fmt.Errorf("invalid payment denom: %q: %w", v.PaymentDenom, err)
 	}
 
 	if v.AssetManager != "" {

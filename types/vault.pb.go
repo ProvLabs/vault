@@ -40,15 +40,17 @@ type VaultAccount struct {
 	// - Exactly one denom.
 	// - Total Vault Value (TVV) and NAV-per-share are computed and reported in this denom.
 	// - Interest accrual and internal accounting are measured in this denom.
-	// - Any other coin accepted for I/O must have a NAV record priced INTO this denom.
+	// - Any other coin accepted for I/O (i.e. a distinct payment_denom) must have a NAV record priced INTO this denom.
 	UnderlyingAsset string `protobuf:"bytes,3,opt,name=underlying_asset,json=underlyingAsset,proto3" json:"underlying_asset,omitempty"`
-	// payment_denom is the single optional external payment coin supported for user I/O
-	// alongside the underlying_asset.
-	// - If unset, the vault operates single-denom: deposits/withdrawals only in underlying_asset.
-	// - If set, swap-in/out accept either underlying_asset OR payment_denom (one denom per call).
-	// - Must differ from share_denom and underlying_asset.
-	// - Requires an on-chain NAV record mapping payment_denom -> underlying_asset to value deposits
-	//   and redemptions.
+	// payment_denom is the external payment coin supported for user I/O alongside the underlying_asset.
+	// - Always populated. If not specified during creation, it defaults to underlying_asset.
+	// - If payment_denom equals underlying_asset, the vault operates as a single-denom vault.
+	// - If payment_denom differs from underlying_asset, swap-in/out accept either denom (one per call).
+	// - Default Swap-Out: If a user does not specify a redeem_denom during withdrawal,
+	//   the vault defaults to paying out in this payment_denom.
+	// - NAV Requirement: If payment_denom differs from underlying_asset, it requires an on-chain NAV record
+	//   mapping payment_denom -> underlying_asset to value deposits and redemptions.
+	//   (Note: In current versions, this NAV check is strictly enforced unless payment_denom is 'uylds.fcc').
 	PaymentDenom string `protobuf:"bytes,4,opt,name=payment_denom,json=paymentDenom,proto3" json:"payment_denom,omitempty"`
 	// admin is the address that has administrative privileges over the vault.
 	Admin string `protobuf:"bytes,5,opt,name=admin,proto3" json:"admin,omitempty"`

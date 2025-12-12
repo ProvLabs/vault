@@ -792,7 +792,7 @@ func (s *TestSuite) TestMsgServer_ToggleSwapOut() {
 			if setAccountInvalid {
 				vault, err := s.k.GetVault(s.ctx, vaultAddr)
 				s.Require().NoError(err)
-				vault.PaymentDenom = underlyingDenom
+				vault.PaymentDenom = "!TABLES!"
 				s.k.AuthKeeper.SetAccount(s.ctx, vault)
 			}
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
@@ -911,7 +911,7 @@ func (s *TestSuite) TestMsgServer_ToggleSwapOut() {
 			},
 			expectedErrSubstrs: []string{
 				"failed to set swap out enable",
-				"payment (\"underlying\") denom cannot equal underlying asset denom (\"underlying\")",
+				"invalid payment denom: \"!TABLES!\": invalid denom: !TABLES!",
 			},
 		},
 	}
@@ -967,7 +967,7 @@ func (s *TestSuite) TestMsgServer_ToggleSwapIn() {
 			if setAccountInvalid {
 				vault, err := s.k.GetVault(s.ctx, vaultAddr)
 				s.Require().NoError(err)
-				vault.PaymentDenom = underlyingDenom
+				vault.PaymentDenom = "!TABLES!"
 				s.k.AuthKeeper.SetAccount(s.ctx, vault)
 			}
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
@@ -1085,7 +1085,7 @@ func (s *TestSuite) TestMsgServer_ToggleSwapIn() {
 			},
 			expectedErrSubstrs: []string{
 				"failed to set swap in enable",
-				"payment (\"underlying\") denom cannot equal underlying asset denom (\"underlying\")",
+				"invalid payment denom: \"!TABLES!\": invalid denom: !TABLES!",
 			},
 		},
 	}

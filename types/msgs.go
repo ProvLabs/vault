@@ -59,9 +59,6 @@ func (m MsgCreateVaultRequest) ValidateBasic() error {
 		}
 	}
 
-	if m.UnderlyingAsset == m.PaymentDenom {
-		return fmt.Errorf("payment (%q) denom cannot equal underlying asset denom (%q)", m.PaymentDenom, m.UnderlyingAsset)
-	}
 	if m.ShareDenom == m.UnderlyingAsset {
 		return fmt.Errorf("share denom (%q) cannot equal underlying asset denom (%q)", m.ShareDenom, m.UnderlyingAsset)
 	}

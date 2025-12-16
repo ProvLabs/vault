@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"cosmossdk.io/collections"
+	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -215,8 +216,13 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 		return nil, status.Errorf(codes.InvalidArgument, "zero price for %s/%s", redeemDenom, vault.UnderlyingAsset)
 	}
 
+	shares, ok := math.NewIntFromString(req.Shares)
+	if !ok {
+		return nil, status.Error(codes.InvalidArgument, "invalid shares amount")
+	}
+
 	estimatedPayout, err := utils.CalculateRedeemProRataFraction(
-		req.Shares,
+		shares,
 		totalShares,
 		estimatedTVV.Amount,
 		priceNum,

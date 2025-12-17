@@ -738,7 +738,7 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 			ExpectedErrSubstrs: []string{"unsupported redeem denom"},
 		},
 		{
-			Name: "fails in correct shares string",
+			Name: "fails with incorrect shares string",
 			Setup: func() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
 				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{

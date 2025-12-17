@@ -19355,7 +19355,7 @@ type MsgCreateVaultRequest struct {
 	// underlying_asset is the denomination of the asset supported by the vault.
 	UnderlyingAsset string `protobuf:"bytes,3,opt,name=underlying_asset,json=underlyingAsset,proto3" json:"underlying_asset,omitempty"`
 	// payment_denom is the secondary denomination the vault can accept.
-	// If left empty, it defaults to the underlying_asset.
+	// if not specified, vault payment_denom will be set to underlying_asset.
 	PaymentDenom string `protobuf:"bytes,4,opt,name=payment_denom,json=paymentDenom,proto3" json:"payment_denom,omitempty"`
 	// withdrawal_delay_seconds is the time period (in seconds) that a withdrawal
 	// must wait in the pending queue before being processed.

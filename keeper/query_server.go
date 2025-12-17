@@ -218,7 +218,7 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 
 	shares, ok := math.NewIntFromString(req.Shares)
 	if !ok {
-		return nil, status.Error(codes.InvalidArgument, "invalid shares amount")
+		return nil, status.Errorf(codes.InvalidArgument, "invalid shares amount \"%s\" : must be a valid integer", req.Shares)
 	}
 
 	estimatedPayout, err := utils.CalculateRedeemProRataFraction(

@@ -630,7 +630,7 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 			},
 			Req: &types.QueryEstimateSwapOutRequest{
 				VaultAddress: vaultAddr.String(),
-				Shares:       sharesToSwap.Amount,
+				Shares:       sharesToSwap.Amount.String(),
 			},
 			ExpectedResp: &types.QueryEstimateSwapOutResponse{
 				Assets: sdk.NewInt64Coin(underlyingDenom, 100),
@@ -656,7 +656,7 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 			},
 			Req: &types.QueryEstimateSwapOutRequest{
 				VaultAddress: vaultAddr.String(),
-				Shares:       sharesToSwap.Amount,
+				Shares:       sharesToSwap.Amount.String(),
 				RedeemDenom:  paymentDenom,
 			},
 			ExpectedResp: &types.QueryEstimateSwapOutResponse{
@@ -678,7 +678,7 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 			},
 			Req: &types.QueryEstimateSwapOutRequest{
 				VaultAddress: vaultAddr.String(),
-				Shares:       sharesToSwap.Amount,
+				Shares:       sharesToSwap.Amount.String(),
 			},
 			ExpectedErrSubstrs: []string{"swap-out disabled or vault paused", "FailedPrecondition"},
 		},
@@ -697,7 +697,7 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 			},
 			Req: &types.QueryEstimateSwapOutRequest{
 				VaultAddress: vaultAddr.String(),
-				Shares:       sharesToSwap.Amount,
+				Shares:       sharesToSwap.Amount.String(),
 			},
 			ExpectedErrSubstrs: []string{"swap-out disabled or vault paused", "FailedPrecondition"},
 		},
@@ -732,10 +732,25 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 			},
 			Req: &types.QueryEstimateSwapOutRequest{
 				VaultAddress: vaultAddr.String(),
-				Shares:       math.NewInt(100),
+				Shares:       math.NewInt(100).String(),
 				RedeemDenom:  "wrongdenom",
 			},
 			ExpectedErrSubstrs: []string{"unsupported redeem denom"},
+		},
+		{
+			Name: "fails in correct shares string",
+			Setup: func() {
+				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
+				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin: admin, ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom,
+				})
+				s.Require().NoError(err, "vault creation should succeed")
+			},
+			Req: &types.QueryEstimateSwapOutRequest{
+				VaultAddress: vaultAddr.String(),
+				Shares:       "bogus",
+			},
+			ExpectedErrSubstrs: []string{"invalid shares amount \"bogus\" : must be a valid integer"},
 		},
 	}
 

@@ -106,16 +106,6 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 			expectedErr: fmt.Errorf("invalid payment denom: %q: %w", "inv@lid$", fmt.Errorf("invalid denom: %s", "inv@lid$")),
 		},
 		{
-			name: "payment denom equals underlying (not allowed)",
-			msg: types.MsgCreateVaultRequest{
-				Admin:           admin,
-				ShareDenom:      "vaultshare",
-				UnderlyingAsset: "uusd",
-				PaymentDenom:    "uusd",
-			},
-			expectedErr: fmt.Errorf("payment (%q) denom cannot equal underlying asset denom (%q)", "uusd", "uusd"),
-		},
-		{
 			name: "share denom equals underlying (not allowed)",
 			msg: types.MsgCreateVaultRequest{
 				Admin:           admin,

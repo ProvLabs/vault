@@ -41,7 +41,8 @@ type MsgCreateVaultRequest struct {
 	ShareDenom string `protobuf:"bytes,2,opt,name=share_denom,json=shareDenom,proto3" json:"share_denom,omitempty"`
 	// underlying_asset is the denomination of the asset supported by the vault.
 	UnderlyingAsset string `protobuf:"bytes,3,opt,name=underlying_asset,json=underlyingAsset,proto3" json:"underlying_asset,omitempty"`
-	// payment_denom is an optional secondary denomination the vault can accept.
+	// payment_denom is the secondary denomination the vault can accept.
+	// if not specified, vault payment_denom will be set to underlying_asset.
 	PaymentDenom string `protobuf:"bytes,4,opt,name=payment_denom,json=paymentDenom,proto3" json:"payment_denom,omitempty"`
 	// withdrawal_delay_seconds is the time period (in seconds) that a withdrawal
 	// must wait in the pending queue before being processed.
@@ -376,7 +377,7 @@ type MsgSwapOutRequest struct {
 	// assets is the amount of underlying assets to withdraw.
 	Assets types1.Coin `protobuf:"bytes,3,opt,name=assets,proto3" json:"assets"`
 	// redeem_denom selects the payout coin.
-	// - If empty, defaults to the vault’s underlying_asset.
+	// - If empty, defaults to the vault’s payment_denom.
 	// - Must be either the vault’s underlying_asset or its payment_denom.
 	RedeemDenom string `protobuf:"bytes,4,opt,name=redeem_denom,json=redeemDenom,proto3" json:"redeem_denom,omitempty"`
 }

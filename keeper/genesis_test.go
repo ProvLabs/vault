@@ -21,6 +21,7 @@ func (s *TestSuite) TestVaultGenesis_InitAndExport() {
 		Admin:               admin,
 		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
 		UnderlyingAsset:     underlying,
+		PaymentDenom:        underlying,
 		CurrentInterestRate: types.ZeroInterestRate,
 		DesiredInterestRate: types.ZeroInterestRate,
 	}
@@ -88,6 +89,7 @@ func (s *TestSuite) TestVaultGenesis_RoundTrip_PastAndFutureTimeouts() {
 		Admin:               admin,
 		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
 		UnderlyingAsset:     underlying,
+		PaymentDenom:        underlying,
 		CurrentInterestRate: types.ZeroInterestRate,
 		DesiredInterestRate: types.ZeroInterestRate,
 	}
@@ -157,6 +159,7 @@ func (s *TestSuite) TestVaultGenesis_ExistingAccountNumberCopied() {
 		Admin:               admin,
 		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
 		UnderlyingAsset:     underlying,
+		PaymentDenom:        underlying,
 		CurrentInterestRate: types.ZeroInterestRate,
 		DesiredInterestRate: types.ZeroInterestRate,
 	}

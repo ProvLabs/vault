@@ -262,7 +262,7 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 	}
 
 	if redeemDenom == "" {
-		redeemDenom = vault.UnderlyingAsset
+		redeemDenom = vault.PaymentDenom
 	}
 
 	if err := vault.ValidateAcceptedDenom(redeemDenom); err != nil {

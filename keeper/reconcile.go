@@ -52,11 +52,40 @@ func (k *Keeper) reconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccou
 	return k.SafeAddVerification(ctx, vault)
 }
 
+// setShareDenomNAV publishes the Net Asset Value (NAV) for a vault’s share denom
+// in terms of the underlying asset.
+//
+// The NAV price is set to the vault’s total value in underlying units (TVV),
+// and the NAV volume is set to the total number of shares. If the total share
+// amount cannot be represented as a uint64, this method returns an error and
+// does not publish a NAV.
+func (k *Keeper) setShareDenomNAV(ctx sdk.Context, vault *types.VaultAccount, vaultMarker markertypes.MarkerAccountI, tvv sdkmath.Int) error {
+	if !vault.TotalShares.Amount.IsUint64() {
+		return fmt.Errorf(
+			"vault total shares overflows uint64: %s",
+			vault.TotalShares.Amount.String(),
+		)
+	}
+
+	return k.MarkerKeeper.SetNetAssetValue(
+		ctx,
+		vaultMarker,
+		markertypes.NetAssetValue{
+			Price:  sdk.NewCoin(vault.UnderlyingAsset, tvv),
+			Volume: vault.TotalShares.Amount.Uint64(),
+		},
+		types.ModuleName,
+	)
+}
+
 // publishShareNav records the Net Asset Value (NAV) for the vault's share denom
 // in terms of its underlying asset. It fetches the vault’s principal marker,
-// computes the total value of vault assets in underlying units (TVV), and sets
-// the NAV as (Price = TVV in underlying, Volume = total shares). If no shares
-// exist or the TVV is non-positive, no NAV is published.
+// computes the total value of vault assets in underlying units (TVV), and
+// attempts to set the NAV as (Price = TVV in underlying, Volume = total shares).
+// If no shares exist or the TVV is non-positive, no NAV is published.
+//
+// If NAV publication fails, the error is logged and the operation continues
+// without failing the overall vault reconciliation process.
 func (k *Keeper) publishShareNav(ctx sdk.Context, vault *types.VaultAccount) error {
 	vaultMarker, err := k.MarkerKeeper.GetMarker(ctx, vault.PrincipalMarkerAddress())
 	if err != nil {
@@ -73,10 +102,9 @@ func (k *Keeper) publishShareNav(ctx sdk.Context, vault *types.VaultAccount) err
 		return nil
 	}
 
-	k.MarkerKeeper.SetNetAssetValue(ctx, vaultMarker, markertypes.NetAssetValue{
-		Price:  sdk.NewCoin(vault.UnderlyingAsset, tvv),
-		Volume: vault.TotalShares.Amount.Uint64(),
-	}, types.ModuleName)
+	if err := k.setShareDenomNAV(ctx, vault, vaultMarker, tvv); err != nil {
+		ctx.Logger().Error("failed to publish share NAV", "err", err)
+	}
 	return nil
 }
 

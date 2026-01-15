@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"fmt"
 	"math"
+	"math/big"
 	"time"
 
 	sdkmath "cosmossdk.io/math"
@@ -1348,4 +1349,121 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_NegativeInterest_Com
 
 	s.Require().True(endUnderlying.IsZero(), "Underlying asset should be fully depleted")
 	s.Require().Equal(hugeOtherBalance.Amount, endOther.Amount, "Secondary asset balance should remain unchanged")
+}
+
+func (s *TestSuite) TestKeeper_setShareDenomNAV() {
+	shareDenom := "vaultshares"
+	underlyingDenom := "underlying"
+	vaultAddr := types.GetVaultAddress(shareDenom)
+	markerAddr := markertypes.MustGetMarkerAddress(shareDenom)
+
+	validShares := sdk.NewInt64Coin(shareDenom, 1_000_000)
+
+	maxU64 := new(big.Int).SetUint64(^uint64(0))
+	overflowShares := sdk.NewCoin(
+		shareDenom,
+		sdkmath.NewIntFromBigInt(new(big.Int).Add(maxU64, big.NewInt(1))),
+	)
+
+	tvv := sdkmath.NewInt(123_456)
+
+	setup := func(shares sdk.Coin) (*types.VaultAccount, markertypes.MarkerAccountI) {
+		s.requireAddFinalizeAndActivateMarker(
+			sdk.NewInt64Coin(underlyingDenom, 1),
+			s.adminAddr,
+		)
+
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           s.adminAddr.String(),
+			ShareDenom:      shareDenom,
+			UnderlyingAsset: underlyingDenom,
+		})
+		s.Require().NoError(err, "CreateVault should not error in setup")
+
+		vault, err := s.k.GetVault(s.ctx, vaultAddr)
+		s.Require().NoError(err, "GetVault should not error in setup")
+		s.Require().NotNil(vault, "vault should not be nil in setup")
+
+		vault.TotalShares = shares
+		s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+		marker, err := s.k.MarkerKeeper.GetMarker(s.ctx, markerAddr)
+		s.Require().NoError(err, "GetMarker should not error in setup")
+		s.Require().NotNil(marker, "marker should not be nil in setup")
+
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+		return vault, marker
+	}
+
+	tests := []struct {
+		name           string
+		shares         sdk.Coin
+		expectErr      bool
+		expectNAVEvent bool
+	}{
+		{
+			name:           "valid shares publishes NAV",
+			shares:         validShares,
+			expectErr:      false,
+			expectNAVEvent: true,
+		},
+		{
+			name:           "overflow shares returns error and skips NAV",
+			shares:         overflowShares,
+			expectErr:      true,
+			expectNAVEvent: false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			vault, marker := setup(tc.shares)
+
+			s.Require().NotNil(vault, "vault should not be nil for test case %q", tc.name)
+			s.Require().NotNil(marker, "marker should not be nil for test case %q", tc.name)
+
+			var err error
+			s.Require().NotPanics(
+				func() {
+					err = s.k.TestAccessor_setShareDenomNAV(
+						s.T(),
+						s.ctx,
+						vault,
+						marker,
+						tvv,
+					)
+				},
+				"setShareDenomNAV should not panic for test case %q (shares=%s)",
+				tc.name,
+				tc.shares.String(),
+			)
+
+			if tc.expectErr {
+				s.Require().Error(err, "expected setShareDenomNAV to return an error for test case %q (shares=%s)", tc.name, tc.shares.String())
+			} else {
+				s.Require().NoError(err, "expected setShareDenomNAV to succeed for test case %q (shares=%s)", tc.name, tc.shares.String())
+			}
+
+			events := normalizeEvents(s.ctx.EventManager().Events())
+
+			found := false
+			for _, ev := range events {
+				if ev.Type == "provenance.marker.v1.EventSetNetAssetValue" {
+					found = true
+					break
+				}
+			}
+
+			s.Require().Equal(
+				tc.expectNAVEvent,
+				found,
+				"NAV event presence mismatch for test case %q: expected=%t got=%t (shares=%s)",
+				tc.name,
+				tc.expectNAVEvent,
+				found,
+				tc.shares.String(),
+			)
+		})
+	}
 }

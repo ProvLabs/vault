@@ -4,7 +4,9 @@ import (
 	"context"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provlabs/vault/types"
 )
 
@@ -73,4 +75,10 @@ func (k Keeper) TestAccessor_processSingleWithdrawal(t *testing.T, ctx context.C
 func (k Keeper) TestAccessor_refundWithdrawal(t *testing.T, ctx context.Context, id uint64, req types.PendingSwapOut, reason string) error {
 	t.Helper()
 	return k.refundWithdrawal(sdk.UnwrapSDKContext(ctx), id, req, reason)
+}
+
+// TestAccessor_setShareDenomNAV exposes this keeper's setShareDenomNAV function for unit tests.
+func (k Keeper) TestAccessor_setShareDenomNAV(t *testing.T, ctx context.Context, vault *types.VaultAccount, vaultMarker markertypes.MarkerAccountI, tvv sdkmath.Int) error {
+	t.Helper()
+	return k.setShareDenomNAV(sdk.UnwrapSDKContext(ctx), vault, vaultMarker, tvv)
 }

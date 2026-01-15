@@ -1858,6 +1858,169 @@ func (s *TestSuite) TestMsgServer_UpdateMaxInterestRate_Failures() {
 	}
 }
 
+func (s *TestSuite) TestMsgServer_UpdateWithdrawalDelay() {
+	type postCheckArgs struct {
+		VaultAddress         sdk.AccAddress
+		ExpectedDelaySeconds uint64
+		ExpectedAuthority    string
+	}
+
+	testDef := msgServerTestDef[types.MsgUpdateWithdrawalDelayRequest, types.MsgUpdateWithdrawalDelayResponse, postCheckArgs]{
+		endpointName: "UpdateWithdrawalDelay",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).UpdateWithdrawalDelay,
+		postCheck: func(msg *types.MsgUpdateWithdrawalDelayRequest, args postCheckArgs) {
+			v, err := s.k.GetVault(s.ctx, args.VaultAddress)
+			s.Require().NoError(err, "post-check: should load vault for verification")
+			s.Assert().Equal(args.ExpectedDelaySeconds, v.WithdrawalDelaySeconds, "post-check: expected WithdrawalDelaySeconds to match")
+		},
+	}
+
+	underlying := "under"
+	share := "vaultshares"
+	admin := s.adminAddr
+	assetMgr := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+	vaultAddr := types.GetVaultAddress(share)
+
+	delayAdmin := uint64(3600)
+	delayAssetMgr := uint64(7200)
+
+	setup := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      share,
+			UnderlyingAsset: underlying,
+		})
+		s.Require().NoError(err, "setup: expected vault creation to succeed")
+
+		v, err := s.k.GetVault(s.ctx, vaultAddr)
+		s.Require().NoError(err, "setup: should load vault")
+		v.AssetManager = assetMgr.String()
+		s.k.AuthKeeper.SetAccount(s.ctx, v)
+
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	tests := []msgServerTestCase[types.MsgUpdateWithdrawalDelayRequest, postCheckArgs]{
+		{
+			name:  "happy path - admin is authority",
+			setup: setup,
+			msg: types.MsgUpdateWithdrawalDelayRequest{
+				Authority:              admin.String(),
+				VaultAddress:           vaultAddr.String(),
+				WithdrawalDelaySeconds: delayAdmin,
+			},
+			postCheckArgs: postCheckArgs{
+				VaultAddress:         vaultAddr,
+				ExpectedDelaySeconds: delayAdmin,
+				ExpectedAuthority:    admin.String(),
+			},
+			expectedEvents: sdk.Events{
+				sdk.NewEvent("provlabs.vault.v1.EventWithdrawalDelayUpdated",
+					sdk.NewAttribute("authority", admin.String()),
+					sdk.NewAttribute("vault_address", vaultAddr.String()),
+					sdk.NewAttribute("withdrawal_delay_seconds", fmt.Sprintf("%d", delayAdmin)),
+				),
+			},
+		},
+		{
+			name:  "happy path - asset manager is authority",
+			setup: setup,
+			msg: types.MsgUpdateWithdrawalDelayRequest{
+				Authority:              assetMgr.String(),
+				VaultAddress:           vaultAddr.String(),
+				WithdrawalDelaySeconds: delayAssetMgr,
+			},
+			postCheckArgs: postCheckArgs{
+				VaultAddress:         vaultAddr,
+				ExpectedDelaySeconds: delayAssetMgr,
+				ExpectedAuthority:    assetMgr.String(),
+			},
+			expectedEvents: sdk.Events{
+				sdk.NewEvent("provlabs.vault.v1.EventWithdrawalDelayUpdated",
+					sdk.NewAttribute("authority", assetMgr.String()),
+					sdk.NewAttribute("vault_address", vaultAddr.String()),
+					sdk.NewAttribute("withdrawal_delay_seconds", fmt.Sprintf("%d", delayAssetMgr)),
+				),
+			},
+		},
+	}
+
+	testDef.expectedResponse = &types.MsgUpdateWithdrawalDelayResponse{}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_UpdateWithdrawalDelay_Failures() {
+	testDef := msgServerTestDef[types.MsgUpdateWithdrawalDelayRequest, types.MsgUpdateWithdrawalDelayResponse, any]{
+		endpointName: "UpdateWithdrawalDelay",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).UpdateWithdrawalDelay,
+		postCheck:    nil,
+	}
+
+	underlying := "under"
+	share := "vaultshares"
+	admin := s.adminAddr
+	other := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+	vaultAddr := types.GetVaultAddress(share)
+	markerAddr := markertypes.MustGetMarkerAddress(share)
+
+	base := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      share,
+			UnderlyingAsset: underlying,
+		})
+		s.Require().NoError(err, "base: expected vault creation to succeed")
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
+	tests := []msgServerTestCase[types.MsgUpdateWithdrawalDelayRequest, any]{
+		{
+			name: "vault not found",
+			setup: func() {
+				s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			},
+			msg: types.MsgUpdateWithdrawalDelayRequest{
+				Authority:              admin.String(),
+				VaultAddress:           types.GetVaultAddress("missing").String(),
+				WithdrawalDelaySeconds: 10,
+			},
+			expectedErrSubstrs: []string{"vault not found"},
+		},
+		{
+			name:  "invalid vault address (not a vault account)",
+			setup: base,
+			msg: types.MsgUpdateWithdrawalDelayRequest{
+				Authority:              admin.String(),
+				VaultAddress:           markerAddr.String(),
+				WithdrawalDelaySeconds: 10,
+			},
+			expectedErrSubstrs: []string{"failed to get vault", "is not a vault account"},
+		},
+		{
+			name:  "unauthorized admin",
+			setup: base,
+			msg: types.MsgUpdateWithdrawalDelayRequest{
+				Authority:              other.String(),
+				VaultAddress:           vaultAddr.String(),
+				WithdrawalDelaySeconds: 10,
+			},
+			expectedErrSubstrs: []string{"unauthorized"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
 func (s *TestSuite) TestMsgServer_DepositInterestFunds() {
 	type postCheckArgs struct {
 		VaultAddress          sdk.AccAddress

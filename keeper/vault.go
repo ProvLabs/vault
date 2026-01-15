@@ -383,6 +383,18 @@ func (k Keeper) ValidateInterestRateLimits(minRateStr, maxRateStr string) error 
 	return nil
 }
 
+func (k *Keeper) SetWithdrawalDelay(ctx sdk.Context, vault *types.VaultAccount, delaySeconds uint64, authority string) error {
+	if vault.WithdrawalDelaySeconds == delaySeconds {
+		return nil
+	}
+	vault.WithdrawalDelaySeconds = delaySeconds
+	if err := k.SetVaultAccount(ctx, vault); err != nil {
+		return err
+	}
+	k.emitEvent(ctx, types.NewEventWithdrawalDelayUpdated(vault.Address, authority, delaySeconds))
+	return nil
+}
+
 // autoPauseVault sets a vault's state to paused, records the reason, persists it to state,
 // and emits an EventVaultPaused. This function is intended to be called in response to a
 // critical, unrecoverable error for a specific vault. The provided reason should be a stable,

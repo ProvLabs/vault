@@ -221,6 +221,28 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 	return &types.MsgUpdateInterestRateResponse{}, nil
 }
 
+func (k msgServer) UpdateWithdrawalDelay(goCtx context.Context, msg *types.MsgUpdateWithdrawalDelayRequest) (*types.MsgUpdateWithdrawalDelayResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault: %w", err)
+	}
+	if vault == nil {
+		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+	}
+	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+		return nil, err
+	}
+
+	if err := k.SetWithdrawalDelay(ctx, vault, msg.WithdrawalDelaySeconds, msg.Authority); err != nil {
+		return nil, fmt.Errorf("failed to set withdrawal delay: %w", err)
+	}
+
+	return &types.MsgUpdateWithdrawalDelayResponse{}, nil
+}
+
 // ToggleSwapIn enables or disables swap-in operations for a vault.
 func (k msgServer) ToggleSwapIn(goCtx context.Context, msg *types.MsgToggleSwapInRequest) (*types.MsgToggleSwapInResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)

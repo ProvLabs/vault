@@ -275,3 +275,12 @@ func NewEventAssetManagerSet(vaultAddress, admin, assetManager string) *EventAss
 		AssetManager: assetManager,
 	}
 }
+
+// NewEventWithdrawalDelayUpdated creates a new EventWithdrawalDelayUpdated event.
+func NewEventWithdrawalDelayUpdated(vaultAddress, authority string, withdrawalDelaySeconds uint64) *EventWithdrawalDelayUpdated {
+	return &EventWithdrawalDelayUpdated{
+		VaultAddress:           vaultAddress,
+		Authority:              authority,
+		WithdrawalDelaySeconds: withdrawalDelaySeconds,
+	}
+}

@@ -22,6 +22,7 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgUpdateMinInterestRateRequest)(nil),
 	(*MsgUpdateMaxInterestRateRequest)(nil),
 	(*MsgUpdateInterestRateRequest)(nil),
+	(*MsgUpdateWithdrawalDelayRequest)(nil),
 	(*MsgToggleSwapInRequest)(nil),
 	(*MsgToggleSwapOutRequest)(nil),
 	(*MsgDepositInterestFundsRequest)(nil),
@@ -211,6 +212,20 @@ func (m MsgUpdateInterestRateRequest) ValidateBasic() error {
 	}
 	if _, err := sdkmath.LegacyNewDecFromStr(m.NewRate); err != nil {
 		return fmt.Errorf("invalid interest rate: %q: %w", m.NewRate, err)
+	}
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgUpdateWithdrawalDelayRequest.
+func (m MsgUpdateWithdrawalDelayRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		return fmt.Errorf("invalid authority address: %q: %w", m.Authority, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	if m.WithdrawalDelaySeconds > MaxWithdrawalDelay {
+		return fmt.Errorf("withdrawal delay cannot exceed %d seconds", MaxWithdrawalDelay)
 	}
 	return nil
 }

@@ -26,6 +26,7 @@ const (
 	Msg_UpdateMinInterestRate_FullMethodName  = "/provlabs.vault.v1.Msg/UpdateMinInterestRate"
 	Msg_UpdateMaxInterestRate_FullMethodName  = "/provlabs.vault.v1.Msg/UpdateMaxInterestRate"
 	Msg_UpdateInterestRate_FullMethodName     = "/provlabs.vault.v1.Msg/UpdateInterestRate"
+	Msg_UpdateWithdrawalDelay_FullMethodName  = "/provlabs.vault.v1.Msg/UpdateWithdrawalDelay"
 	Msg_ToggleSwapIn_FullMethodName           = "/provlabs.vault.v1.Msg/ToggleSwapIn"
 	Msg_ToggleSwapOut_FullMethodName          = "/provlabs.vault.v1.Msg/ToggleSwapOut"
 	Msg_DepositInterestFunds_FullMethodName   = "/provlabs.vault.v1.Msg/DepositInterestFunds"
@@ -63,6 +64,8 @@ type MsgClient interface {
 	UpdateMaxInterestRate(ctx context.Context, in *MsgUpdateMaxInterestRateRequest, opts ...grpc.CallOption) (*MsgUpdateMaxInterestRateResponse, error)
 	// UpdateInterestRate allows the interest admin to update the current annual interest rate within limits.
 	UpdateInterestRate(ctx context.Context, in *MsgUpdateInterestRateRequest, opts ...grpc.CallOption) (*MsgUpdateInterestRateResponse, error)
+	// UpdateWithdrawalDelay allows updating the withdrawal delay for a vault.
+	UpdateWithdrawalDelay(ctx context.Context, in *MsgUpdateWithdrawalDelayRequest, opts ...grpc.CallOption) (*MsgUpdateWithdrawalDelayResponse, error)
 	// ToggleSwapIn allows enabling or disabling swap-in operations for a vault.
 	ToggleSwapIn(ctx context.Context, in *MsgToggleSwapInRequest, opts ...grpc.CallOption) (*MsgToggleSwapInResponse, error)
 	// ToggleSwapOut allows enabling or disabling swap-out operations for a vault.
@@ -172,6 +175,16 @@ func (c *msgClient) UpdateInterestRate(ctx context.Context, in *MsgUpdateInteres
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(MsgUpdateInterestRateResponse)
 	err := c.cc.Invoke(ctx, Msg_UpdateInterestRate_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateWithdrawalDelay(ctx context.Context, in *MsgUpdateWithdrawalDelayRequest, opts ...grpc.CallOption) (*MsgUpdateWithdrawalDelayResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgUpdateWithdrawalDelayResponse)
+	err := c.cc.Invoke(ctx, Msg_UpdateWithdrawalDelay_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -339,6 +352,8 @@ type MsgServer interface {
 	UpdateMaxInterestRate(context.Context, *MsgUpdateMaxInterestRateRequest) (*MsgUpdateMaxInterestRateResponse, error)
 	// UpdateInterestRate allows the interest admin to update the current annual interest rate within limits.
 	UpdateInterestRate(context.Context, *MsgUpdateInterestRateRequest) (*MsgUpdateInterestRateResponse, error)
+	// UpdateWithdrawalDelay allows updating the withdrawal delay for a vault.
+	UpdateWithdrawalDelay(context.Context, *MsgUpdateWithdrawalDelayRequest) (*MsgUpdateWithdrawalDelayResponse, error)
 	// ToggleSwapIn allows enabling or disabling swap-in operations for a vault.
 	ToggleSwapIn(context.Context, *MsgToggleSwapInRequest) (*MsgToggleSwapInResponse, error)
 	// ToggleSwapOut allows enabling or disabling swap-out operations for a vault.
@@ -404,6 +419,9 @@ func (UnimplementedMsgServer) UpdateMaxInterestRate(context.Context, *MsgUpdateM
 }
 func (UnimplementedMsgServer) UpdateInterestRate(context.Context, *MsgUpdateInterestRateRequest) (*MsgUpdateInterestRateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateInterestRate not implemented")
+}
+func (UnimplementedMsgServer) UpdateWithdrawalDelay(context.Context, *MsgUpdateWithdrawalDelayRequest) (*MsgUpdateWithdrawalDelayResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateWithdrawalDelay not implemented")
 }
 func (UnimplementedMsgServer) ToggleSwapIn(context.Context, *MsgToggleSwapInRequest) (*MsgToggleSwapInResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ToggleSwapIn not implemented")
@@ -590,6 +608,24 @@ func _Msg_UpdateInterestRate_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).UpdateInterestRate(ctx, req.(*MsgUpdateInterestRateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateWithdrawalDelay_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateWithdrawalDelayRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateWithdrawalDelay(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_UpdateWithdrawalDelay_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateWithdrawalDelay(ctx, req.(*MsgUpdateWithdrawalDelayRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -880,6 +916,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateInterestRate",
 			Handler:    _Msg_UpdateInterestRate_Handler,
+		},
+		{
+			MethodName: "UpdateWithdrawalDelay",
+			Handler:    _Msg_UpdateWithdrawalDelay_Handler,
 		},
 		{
 			MethodName: "ToggleSwapIn",

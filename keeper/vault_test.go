@@ -684,3 +684,42 @@ func (s *TestSuite) TestAutoPauseVault_SetsPausedAndEmitsEvent() {
 	s.Require().True(hasAddr, "event should include vault_address attribute")
 	s.Require().True(hasReason, "event should include reason attribute")
 }
+
+func (s *TestSuite) TestSetWithdrawalDelay() {
+	share := "jackthecatshare"
+	under := "georgethedogunder"
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(under, 1_000_000), s.adminAddr)
+
+	attrs := vaultAttrs{
+		admin:      s.adminAddr.String(),
+		share:      share,
+		underlying: under,
+	}
+	vault, err := s.k.CreateVault(s.ctx, attrs)
+	s.Require().NoError(err, "CreateVault should succeed")
+
+	vaultAddr := types.GetVaultAddress(share)
+	authorityAddr := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+	authority := authorityAddr.String()
+	delay := uint64(3600)
+
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	err = s.k.SetWithdrawalDelay(s.ctx, vault, delay, authority)
+	s.Require().NoError(err, "SetWithdrawalDelay should succeed")
+
+	updated, err := s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "GetVault should succeed after SetWithdrawalDelay")
+	s.Require().NotNil(updated, "vault should exist after SetWithdrawalDelay")
+	s.Require().Equal(delay, updated.WithdrawalDelaySeconds, "WithdrawalDelaySeconds should be updated")
+
+	expectedEvents := sdk.Events{
+		sdk.NewEvent("provlabs.vault.v1.EventWithdrawalDelayUpdated",
+			sdk.NewAttribute("authority", authority),
+			sdk.NewAttribute("vault_address", vaultAddr.String()),
+			sdk.NewAttribute("withdrawal_delay_seconds", fmt.Sprintf("%d", delay)),
+		),
+	}
+
+	evs := s.ctx.EventManager().Events()
+	s.Require().Equal(normalizeEvents(expectedEvents), normalizeEvents(evs), "events should match expected EventWithdrawalDelayUpdated")
+}

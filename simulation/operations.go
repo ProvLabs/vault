@@ -37,6 +37,7 @@ const (
 	OpWeightMsgSetBridgeAddress      = "op_weight_msg_set_bridge_address"
 	OpWeightMsgBridgeMintShares      = "op_weight_msg_bridge_mint_shares"
 	OpWeightMsgBridgeBurnShares      = "op_weight_msg_bridge_burn_shares"
+	OpWeightMsgUpdateWithdrawalDelay = "op_weight_msg_update_withdrawal_delay"
 )
 
 var DefaultWeights = map[string]int{
@@ -59,6 +60,7 @@ var DefaultWeights = map[string]int{
 	OpWeightMsgSetBridgeAddress:      2,
 	OpWeightMsgBridgeMintShares:      6,
 	OpWeightMsgBridgeBurnShares:      6,
+	OpWeightMsgUpdateWithdrawalDelay: 2,
 }
 
 func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simulation.WeightedOperations {
@@ -82,6 +84,7 @@ func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simula
 		wSetBridgeAddress      int
 		wBridgeMintShares      int
 		wBridgeBurnShares      int
+		wUpdateWithdrawalDelay int
 	)
 
 	simState.AppParams.GetOrGenerate(OpWeightMsgCreateVault, &wCreateVault, simState.Rand, func(_ *rand.Rand) { wCreateVault = DefaultWeights[OpWeightMsgCreateVault] })
@@ -103,6 +106,7 @@ func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simula
 	simState.AppParams.GetOrGenerate(OpWeightMsgSetBridgeAddress, &wSetBridgeAddress, simState.Rand, func(_ *rand.Rand) { wSetBridgeAddress = DefaultWeights[OpWeightMsgSetBridgeAddress] })
 	simState.AppParams.GetOrGenerate(OpWeightMsgBridgeMintShares, &wBridgeMintShares, simState.Rand, func(_ *rand.Rand) { wBridgeMintShares = DefaultWeights[OpWeightMsgBridgeMintShares] })
 	simState.AppParams.GetOrGenerate(OpWeightMsgBridgeBurnShares, &wBridgeBurnShares, simState.Rand, func(_ *rand.Rand) { wBridgeBurnShares = DefaultWeights[OpWeightMsgBridgeBurnShares] })
+	simState.AppParams.GetOrGenerate(OpWeightMsgUpdateWithdrawalDelay, &wUpdateWithdrawalDelay, simState.Rand, func(_ *rand.Rand) { wUpdateWithdrawalDelay = DefaultWeights[OpWeightMsgUpdateWithdrawalDelay] })
 
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(wCreateVault, SimulateMsgCreateVault(k)),
@@ -124,6 +128,7 @@ func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simula
 		simulation.NewWeightedOperation(wSetBridgeAddress, SimulateMsgSetBridgeAddress(k)),
 		simulation.NewWeightedOperation(wBridgeMintShares, SimulateMsgBridgeMintShares(k)),
 		simulation.NewWeightedOperation(wBridgeBurnShares, SimulateMsgBridgeBurnShares(k)),
+		simulation.NewWeightedOperation(wUpdateWithdrawalDelay, SimulateMsgUpdateWithdrawalDelay(k)),
 	}
 }
 
@@ -916,5 +921,59 @@ func SimulateMsgBridgeBurnShares(k keeper.Keeper) simtypes.Operation {
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "successfully burned shares from bridge"), nil, nil
+	}
+}
+
+func SimulateMsgUpdateWithdrawalDelay(k keeper.Keeper) simtypes.Operation {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to setup initial state"), nil, err
+		}
+
+		vault, err := getRandomVault(r, k, ctx)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateWithdrawalDelayRequest{}), "unable to get random vault"), nil, err
+		}
+
+		adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateWithdrawalDelayRequest{}), "invalid admin address for vault"), nil, err
+		}
+
+		authority := adminAddr
+		if vault.AssetManager != "" && r.Intn(2) == 1 {
+			if am, err := sdk.AccAddressFromBech32(vault.AssetManager); err == nil {
+				authority = am
+			}
+		}
+
+		var delay uint64
+		switch r.Intn(4) {
+		case 0:
+			delay = 0
+		case 1:
+			delay = interest.SecondsPerDay
+		case 2:
+			delay = interest.SecondsPerDay * 7
+		default:
+			delay = uint64(r.Intn(int(interest.SecondsPerDay*30))) + 1
+		}
+
+		msg := &types.MsgUpdateWithdrawalDelayRequest{
+			Authority:              authority.String(),
+			VaultAddress:           vault.GetAddress().String(),
+			WithdrawalDelaySeconds: delay,
+		}
+
+		handler := keeper.NewMsgServer(&k)
+		_, err = handler.UpdateWithdrawalDelay(sdk.WrapSDKContext(ctx), msg)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
+		}
+
+		return simtypes.NewOperationMsg(msg, true, "successfully updated withdrawal delay"), nil, nil
 	}
 }

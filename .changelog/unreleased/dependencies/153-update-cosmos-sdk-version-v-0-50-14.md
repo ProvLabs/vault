@@ -1,1 +1,1 @@
-* Update cosmos-sdk to v0.50.14 [PR 153](https://github.com/provlabs/vault/pull/153).
+* `github.com/cosmos/cosmos-sdk` bumped to v0.50.14 (from v0.50.0) [PR 153](https://github.com/provlabs/vault/pull/153). 

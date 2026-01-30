@@ -90,7 +90,7 @@ func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyi
 	}
 }
 
-// Clone makes a MarkerAccount instance copy.
+// Clone makes a VaultAccount instance copy.
 func (v VaultAccount) Clone() *VaultAccount {
 	return protoadapt.MessageV1Of(gproto.Clone(protoadapt.MessageV2Of(&v))).(*VaultAccount)
 }

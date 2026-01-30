@@ -6,13 +6,13 @@ toolchain go1.24.1
 
 require (
 	cosmossdk.io/client/v2 v2.0.0-beta.8
-	cosmossdk.io/core v0.11.2
+	cosmossdk.io/core v0.11.3
 	cosmossdk.io/depinject v1.1.0
 	cosmossdk.io/log v1.5.0
-	cosmossdk.io/math v1.4.0
-	cosmossdk.io/store v1.1.1
+	cosmossdk.io/math v1.5.3
+	cosmossdk.io/store v1.1.2
 	cosmossdk.io/x/feegrant v0.1.1
-	cosmossdk.io/x/tx v0.13.8
+	cosmossdk.io/x/tx v0.14.0
 	cosmossdk.io/x/upgrade v0.1.4
 	github.com/cometbft/cometbft v0.38.17
 	github.com/cosmos/cosmos-db v1.1.1
@@ -206,7 +206,7 @@ require (
 
 replace (
 	// TODO: might not need to do this...
-	github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.50.14-pio-2
+	github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.53.5-pio-2
 	// use local provlabs/vault
 	github.com/provlabs/vault => ../
 

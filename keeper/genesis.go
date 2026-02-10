@@ -24,7 +24,13 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 			if err := v.Validate(); err != nil {
 				panic(err)
 			}
-			k.SetVaultLookup(ctx, v.Clone())
+			vault, ok := v.(*types.VaultAccount)
+			if !ok {
+				panic(fmt.Errorf("unable to cast account %s to VaultAccount", v.GetAddress().String()))
+			}
+			if err := k.SetVaultLookup(ctx, vault); err != nil {
+				panic(err)
+			}
 		}
 	}
 

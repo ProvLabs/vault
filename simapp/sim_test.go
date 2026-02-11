@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -38,6 +39,7 @@ import (
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	vaulttypes "github.com/provlabs/vault/types"
 )
 
 func init() {
@@ -192,9 +194,11 @@ func TestAppImportExport(t *testing.T) {
 			stakingtypes.HistoricalInfoKey, stakingtypes.UnbondingIDKey, stakingtypes.UnbondingIndexKey,
 			stakingtypes.UnbondingTypeKey, stakingtypes.ValidatorUpdatesKey,
 		},
-		authzkeeper.StoreKey:   {authzkeeper.GrantQueuePrefix},
-		feegrant.StoreKey:      {feegrant.FeeAllowanceQueueKeyPrefix},
-		slashingtypes.StoreKey: {slashingtypes.ValidatorMissedBlockBitmapKeyPrefix},
+		authzkeeper.StoreKey:    {authzkeeper.GrantQueuePrefix},
+		feegrant.StoreKey:       {feegrant.FeeAllowanceQueueKeyPrefix},
+		slashingtypes.StoreKey:  {slashingtypes.ValidatorMissedBlockBitmapKeyPrefix},
+		vaulttypes.StoreKey:     {vaulttypes.VaultPayoutVerificationSetPrefix},
+		attributetypes.StoreKey: {attributetypes.AttributeAddrLookupKeyPrefix},
 	}
 
 	storeKeys := app.GetStoreKeys()

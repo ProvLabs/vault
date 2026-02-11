@@ -52,6 +52,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 			panic(fmt.Errorf("failed to store vault %s: %w", v.Address, err))
 		}
 	}
+
 	for _, entry := range genState.PayoutTimeoutQueue {
 		addr, err := sdk.AccAddressFromBech32(entry.Addr)
 		if err != nil {

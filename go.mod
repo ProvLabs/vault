@@ -13,7 +13,7 @@ require (
 	cosmossdk.io/log v1.6.1
 	cosmossdk.io/math v1.5.3
 	cosmossdk.io/store v1.1.2
-	github.com/cometbft/cometbft v0.38.20
+	github.com/cometbft/cometbft v0.38.21
 	github.com/cosmos/cosmos-proto v1.0.0-beta.5
 	github.com/cosmos/cosmos-sdk v0.53.5
 	github.com/cosmos/gogoproto v1.7.2
@@ -21,12 +21,12 @@ require (
 	github.com/golangci/golangci-lint v1.61.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/incu6us/goimports-reviser/v3 v3.8.2
-	github.com/provenance-io/provenance v1.24.0
+	github.com/provenance-io/provenance v1.27.2
 	github.com/provlabs/vault/simapp v0.0.0-20250618191328-f45c4bfe12b9
 	github.com/stretchr/testify v1.11.1
 	google.golang.org/genproto/googleapis/api v0.0.0-20250707201910-8d1bb00bc6a7
-	google.golang.org/grpc v1.75.0
-	google.golang.org/protobuf v1.36.10
+	google.golang.org/grpc v1.75.1
+	google.golang.org/protobuf v1.36.11
 	mvdan.cc/gofumpt v0.7.0
 )
 
@@ -165,7 +165,7 @@ require (
 	github.com/golangci/revgrep v0.5.3 // indirect
 	github.com/golangci/unconvert v0.0.0-20240309020433-c5143eacb3ed // indirect
 	github.com/google/btree v1.1.3 // indirect
-	github.com/google/flatbuffers v1.12.1 // indirect
+	github.com/google/flatbuffers v2.0.8+incompatible // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/orderedcode v0.0.1 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
@@ -183,7 +183,7 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0 // indirect
 	github.com/gsterjov/go-libsecret v0.0.0-20161001094733-a6f4afe4910c // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
-	github.com/hashicorp/go-getter v1.7.5 // indirect
+	github.com/hashicorp/go-getter v1.7.9 // indirect
 	github.com/hashicorp/go-hclog v1.6.3 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
 	github.com/hashicorp/go-metrics v0.5.4 // indirect
@@ -234,7 +234,6 @@ require (
 	github.com/mgechev/revive v1.3.9 // indirect
 	github.com/minio/highwayhash v1.0.3 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
-	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/moricho/tparallel v0.3.2 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
@@ -283,7 +282,7 @@ require (
 	github.com/sourcegraph/go-diff v0.7.0 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
 	github.com/spf13/cast v1.10.0 // indirect
-	github.com/spf13/cobra v1.10.1 // indirect
+	github.com/spf13/cobra v1.10.2 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/spf13/viper v1.21.0 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.5.0 // indirect
@@ -301,7 +300,7 @@ require (
 	github.com/tomarrell/wrapcheck/v2 v2.9.0 // indirect
 	github.com/tommy-muehle/go-mnd/v2 v2.5.1 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
-	github.com/ulikunitz/xz v0.5.11 // indirect
+	github.com/ulikunitz/xz v0.5.14 // indirect
 	github.com/ultraware/funlen v0.1.0 // indirect
 	github.com/ultraware/whitespace v0.1.1 // indirect
 	github.com/uudashr/gocognit v1.1.3 // indirect
@@ -346,8 +345,6 @@ require (
 	golang.org/x/text v0.28.0 // indirect
 	golang.org/x/time v0.12.0 // indirect
 	golang.org/x/tools v0.36.0 // indirect
-	golang.org/x/tools/go/expect v0.1.1-deprecated // indirect
-	golang.org/x/tools/go/packages/packagestest v0.1.1-deprecated // indirect
 	google.golang.org/api v0.247.0 // indirect
 	google.golang.org/genproto v0.0.0-20250603155806-513f23925822 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250818200422-3122310a409c // indirect
@@ -361,4 +358,8 @@ require (
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
 
-replace github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.53.5-pio-2
+replace (
+	github.com/cosmos/cosmos-sdk => github.com/provenance-io/cosmos-sdk v0.53.5-pio-2
+	github.com/gogo/protobuf => github.com/gogo/protobuf v1.3.2
+	github.com/provenance-io/provenance => github.com/provlabs/provenance v0.0.0-20260211181209-0738eda325a1
+)

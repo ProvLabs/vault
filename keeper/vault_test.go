@@ -403,7 +403,7 @@ func (s *TestSuite) TestSwapOut_SucceedsWithRestrictedUnderlyingAssetRequiredAtt
 
 	s.Require().NoError(s.simApp.NameKeeper.SetNameRecord(s.ctx, requiredAttribute, s.adminAddr, false), "should successfully bind the name to the redeemer's address")
 	expireTime := time.Now().Add(24 * time.Hour)
-	attribute := attrtypes.NewAttribute(requiredAttribute, redeemerAddr.String(), attrtypes.AttributeType_String, []byte("true"), &expireTime)
+	attribute := attrtypes.NewAttribute(requiredAttribute, redeemerAddr.String(), attrtypes.AttributeType_String, []byte("true"), &expireTime, "")
 	s.Require().NoError(s.simApp.AttributeKeeper.SetAttribute(s.ctx, attribute, s.adminAddr), "should successfully set the required attribute on the redeemer")
 
 	sharesToRedeem := sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(50))

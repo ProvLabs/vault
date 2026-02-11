@@ -24,7 +24,9 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 			if err := v.Validate(); err != nil {
 				panic(err)
 			}
-			k.SetVaultLookup(ctx, v.Clone())
+			if err := k.SetVaultLookup(ctx, v.Clone()); err != nil {
+				panic(fmt.Errorf("failed to set vault lookup for existing vault %s: %w", v.GetAddress(), err))
+			}
 		}
 	}
 

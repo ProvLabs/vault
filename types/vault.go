@@ -5,6 +5,9 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 
+	gproto "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/protoadapt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	proto "github.com/cosmos/gogoproto/proto"
@@ -87,9 +90,9 @@ func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyi
 	}
 }
 
-// Clone makes a MarkerAccount instance copy.
+// Clone makes a VaultAccount instance copy.
 func (v VaultAccount) Clone() *VaultAccount {
-	return proto.Clone(&v).(*VaultAccount)
+	return protoadapt.MessageV1Of(gproto.Clone(protoadapt.MessageV2Of(&v))).(*VaultAccount)
 }
 
 // Validate performs a series of checks to ensure the VaultAccount is correctly configured.

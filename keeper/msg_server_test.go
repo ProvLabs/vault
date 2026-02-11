@@ -2066,7 +2066,7 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds() {
 		s.simApp.AccountKeeper.SetAccount(s.ctx, s.simApp.AccountKeeper.NewAccountWithAddress(s.ctx, admin))
 		s.Require().NoError(s.simApp.NameKeeper.SetNameRecord(s.ctx, requiredAttribute, s.adminAddr, false), "should successfully bind the name to the redeemer's address")
 		expireTime := time.Now().Add(24 * time.Hour)
-		attribute := attrtypes.NewAttribute(requiredAttribute, admin.String(), attrtypes.AttributeType_String, []byte("true"), &expireTime)
+		attribute := attrtypes.NewAttribute(requiredAttribute, admin.String(), attrtypes.AttributeType_String, []byte("true"), &expireTime, "")
 		s.Require().NoError(s.simApp.AttributeKeeper.SetAttribute(s.ctx, attribute, s.adminAddr), "should successfully set the required attribute on the redeemer")
 
 		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin, requiredAttribute)

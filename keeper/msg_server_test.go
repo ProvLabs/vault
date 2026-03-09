@@ -1523,10 +1523,11 @@ func (s *TestSuite) TestMsgServer_UpdateMinInterestRate() {
 		endpointName: "UpdateMinInterestRate",
 		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).UpdateMinInterestRate,
 		postCheck: func(msg *types.MsgUpdateMinInterestRateRequest, args postCheckArgs) {
-		v, err := s.k.GetVault(s.ctx, args.VaultAddress)
-		s.Require().NoError(err, "post-check: failed to get vault %s", args.VaultAddress)
-		s.Assert().Equal(args.ExpectedMin, v.MinInterestRate, "post-check: min interest rate mismatch")
-		},	}
+			v, err := s.k.GetVault(s.ctx, args.VaultAddress)
+			s.Require().NoError(err, "post-check: failed to get vault %s", args.VaultAddress)
+			s.Assert().Equal(args.ExpectedMin, v.MinInterestRate, "post-check: min interest rate mismatch")
+		},
+	}
 
 	underlying := "under"
 	share := "vaultshares"

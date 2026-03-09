@@ -34,7 +34,7 @@ func newTestPayoutTimeoutQueue(t *testing.T) (sdk.Context, *queue.PayoutTimeoutQ
 	sb := collections.NewSchemaBuilder(kvStoreService)
 	q := queue.NewPayoutTimeoutQueue(sb)
 	_, err := sb.Build()
-	require.NoError(t, err)
+	require.NoError(t, err, "schema build should not error")
 	return testCtx.Ctx.WithLogger(log.NewNopLogger()), q
 }
 
@@ -44,7 +44,7 @@ func TestPayoutTimeoutQueueEnqueueDequeue(t *testing.T) {
 	addr := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
 	ts := int64(200)
 
-	require.EqualError(t, q.Enqueue(ctx, -1, addr), "periodTimeout cannot be negative", addr.String())
+	require.EqualError(t, q.Enqueue(ctx, -1, addr), "periodTimeout cannot be negative", "enqueue with negative timestamp should return specific error")
 	require.NoError(t, q.Enqueue(ctx, ts, addr), "enqueue payout timeout (%d) for %s should succeed", ts, addr.String())
 
 	found := false
@@ -55,10 +55,10 @@ func TestPayoutTimeoutQueueEnqueueDequeue(t *testing.T) {
 		}
 		return false, nil
 	})
-	require.NoError(t, err)
+	require.NoError(t, err, "walking the payout timeout queue should not error")
 	require.True(t, found, "expected to find timeout (%d) for %s in payout timeout queue after enqueue", ts, addr.String())
 
-	require.EqualError(t, q.Dequeue(ctx, -1, addr), "periodTimeout cannot be negative", ts, addr.String())
+	require.EqualError(t, q.Dequeue(ctx, -1, addr), "periodTimeout cannot be negative", "dequeue with negative timestamp should return specific error")
 	require.NoError(t, q.Dequeue(ctx, ts, addr), "dequeue payout timeout (%d) for %s should succeed", ts, addr.String())
 
 	found = false
@@ -66,7 +66,7 @@ func TestPayoutTimeoutQueueEnqueueDequeue(t *testing.T) {
 		found = true
 		return true, nil // stop walking
 	})
-	require.NoError(t, err)
+	require.NoError(t, err, "walking the payout timeout queue after dequeue should not error")
 	require.False(t, found, "payout timeout queue should be empty after dequeue")
 }
 
@@ -86,7 +86,7 @@ func TestPayoutTimeoutQueueEnqueueDequeue_Timeout(t *testing.T) {
 		}
 		return false, nil
 	})
-	require.NoError(t, err)
+	require.NoError(t, err, "walking the payout timeout queue should not error")
 	require.True(t, found, "expected to find timeout (%d) for %s in payout timeout queue after enqueue", ts, addr.String())
 
 	require.NoError(t, q.Dequeue(ctx, ts, addr), "dequeue payout timeout (%d) for %s should succeed", ts, addr.String())
@@ -96,7 +96,7 @@ func TestPayoutTimeoutQueueEnqueueDequeue_Timeout(t *testing.T) {
 		found = true
 		return true, nil // stop walking
 	})
-	require.NoError(t, err)
+	require.NoError(t, err, "walking the payout timeout queue after dequeue should not error")
 	require.False(t, found, "payout timeout queue should be empty after dequeue")
 }
 
@@ -162,5 +162,5 @@ func TestPayoutTimeoutQueueRemoveAllTimeoutsForVault(t *testing.T) {
 		require.False(t, address.Equals(a1), "payout timeout queue should not include any entries for a1 after removal")
 		return false, nil
 	})
-	require.NoError(t, err)
+	require.NoError(t, err, "walking the payout timeout queue after removal should not error")
 }

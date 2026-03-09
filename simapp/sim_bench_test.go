@@ -40,7 +40,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	}
 	app, err := NewSimApp(logger, db, nil, true, appOpts, baseAppOpts...)
 	require.NoError(b, err, "NewSimApp failed")
-	require.Equal(b, "SimApp", app.Name())
+	require.Equal(b, "SimApp", app.Name(), "app name mismatch")
 
 	// run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
@@ -85,7 +85,7 @@ func BenchmarkInvariants(b *testing.B) {
 
 	app, err := NewSimApp(logger, db, nil, true, appOpts, baseAppOpts...)
 	require.NoError(b, err, "NewSimApp failed")
-	require.Equal(b, "SimApp", app.Name())
+	require.Equal(b, "SimApp", app.Name(), "app name mismatch")
 	// run randomized simulation
 	_, lastBlockTime, simParams, simErr := simulation.SimulateFromSeedProv(
 		b,

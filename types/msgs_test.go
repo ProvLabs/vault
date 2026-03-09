@@ -1283,10 +1283,10 @@ func TestMsgSetBridgeAddressRequest_ValidateBasic(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
 			if tc.expectedErr != nil {
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), tc.expectedErr.Error())
+				assert.Error(t, err, "expected error for test case %q", tc.name)
+				assert.Contains(t, err.Error(), tc.expectedErr.Error(), "error message mismatch for test case %q", tc.name)
 			} else {
-				assert.NoError(t, err)
+				assert.NoError(t, err, "unexpected error for test case %q", tc.name)
 			}
 		})
 	}
@@ -1334,10 +1334,10 @@ func TestMsgToggleBridgeRequest_ValidateBasic(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
 			if tc.expectedErr != nil {
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), tc.expectedErr.Error())
+				assert.Error(t, err, "expected error for test case %q", tc.name)
+				assert.Contains(t, err.Error(), tc.expectedErr.Error(), "error message mismatch for test case %q", tc.name)
 			} else {
-				assert.NoError(t, err)
+				assert.NoError(t, err, "unexpected error for test case %q", tc.name)
 			}
 		})
 	}
@@ -1403,10 +1403,10 @@ func TestMsgBridgeMintSharesRequest_ValidateBasic(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
 			if tc.expectedErr != nil {
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), tc.expectedErr.Error())
+				assert.Error(t, err, "expected error for test case %q", tc.name)
+				assert.Contains(t, err.Error(), tc.expectedErr.Error(), "error message mismatch for test case %q", tc.name)
 			} else {
-				assert.NoError(t, err)
+				assert.NoError(t, err, "unexpected error for test case %q", tc.name)
 			}
 		})
 	}
@@ -1472,10 +1472,10 @@ func TestMsgBridgeBurnSharesRequest_ValidateBasic(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
 			if tc.expectedErr != nil {
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), tc.expectedErr.Error())
+				assert.Error(t, err, "expected error for test case %q", tc.name)
+				assert.Contains(t, err.Error(), tc.expectedErr.Error(), "error message mismatch for test case %q", tc.name)
 			} else {
-				assert.NoError(t, err)
+				assert.NoError(t, err, "unexpected error for test case %q", tc.name)
 			}
 		})
 	}

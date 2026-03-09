@@ -523,7 +523,7 @@ func (s *TestSuite) TestQueryServer_EstimateSwapIn() {
 				})
 				s.Require().NoError(err, "vault creation should succeed")
 				vault, err := s.k.GetVault(s.ctx, vaultAddr)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "getting vault should succeed")
 				vault.Paused = true
 				s.k.AuthKeeper.SetAccount(s.ctx, vault)
 			},
@@ -542,7 +542,7 @@ func (s *TestSuite) TestQueryServer_EstimateSwapIn() {
 				})
 				s.Require().NoError(err, "vault creation should succeed")
 				vault, err := s.k.GetVault(s.ctx, vaultAddr)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "getting vault should succeed")
 				vault.SwapInEnabled = false
 				s.k.AuthKeeper.SetAccount(s.ctx, vault)
 			},
@@ -825,7 +825,7 @@ func (s *TestSuite) TestQueryServer_VaultPendingSwapOuts() {
 			Setup: func() {
 				baseSetup()
 				_, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, timeA1.Unix(), reqA1)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "populating pending swap out queue for vault A1")
 			},
 			Req: &types.QueryVaultPendingSwapOutsRequest{Id: vaultAddrA.String()},
 			ExpectedResp: &types.QueryVaultPendingSwapOutsResponse{
@@ -945,7 +945,7 @@ func (s *TestSuite) TestQueryServer_PendingSwapOuts() {
 			Name: "happy path - single swap out",
 			Setup: func() {
 				_, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, payoutTime1.Unix(), swapOut1)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "populating pending swap out queue")
 			},
 			Req: &types.QueryPendingSwapOutsRequest{},
 			ExpectedResp: &types.QueryPendingSwapOutsResponse{

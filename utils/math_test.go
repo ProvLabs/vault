@@ -77,7 +77,7 @@ func TestExpDecConvergenceToE(t *testing.T) {
 		elapsed := time.Since(start).Microseconds()
 
 		f, err := result.Float64()
-		require.NoError(t, err)
+		require.NoErrorf(t, err, "Float64 conversion failed for terms=%d", terms)
 
 		diff := math.Abs(f - target)
 		t.Logf("terms=%d took %d µs, result=%.20f, diff=%.20f", terms, elapsed, f, diff)

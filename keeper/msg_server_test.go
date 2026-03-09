@@ -43,7 +43,7 @@ func (s *TestSuite) TestMsgServer_CreateVault() {
 			s.False(marker.HasGovernanceEnabled(), "vault marker %s should not allow governance control", postCheckArgs.ShareDenom)
 
 			access := marker.GetAccessList()
-			s.Len(access, 1, "expected exactly one access entry for vault marker %s", postCheckArgs.ShareDenom)
+			s.Require().Len(access, 1, "expected exactly one access entry for vault marker %s", postCheckArgs.ShareDenom)
 			s.Equal(types.GetVaultAddress(postCheckArgs.ShareDenom).String(), access[0].Address, "vault marker %s access should be granted to vault account", postCheckArgs.ShareDenom)
 			s.ElementsMatch(
 				[]markertypes.Access{

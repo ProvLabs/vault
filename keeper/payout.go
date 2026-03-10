@@ -86,6 +86,30 @@ func (k *Keeper) processSwapOutJobs(ctx sdk.Context, jobsToProcess []types.Payou
 			continue
 		}
 
+		// Proactively check if the vault can cover projected payments before attempting reconciliation.
+		// This prevents partial state mutations (like AUM fee collection) if the vault is known to be insolvent.
+		payable, err := k.CanPayoutDuration(ctx, vault, ctx.BlockTime().Unix()-vault.PeriodStart)
+		if err != nil {
+			ctx.Logger().Error("failed to check payout ability during withdrawal processing", "vault", vault.GetAddress().String(), "err", err)
+			if rerr := k.refundWithdrawal(ctx, j.ID, j.Req, types.RefundReasonUnknown); rerr != nil {
+				var cErr *types.CriticalError
+				if errors.As(rerr, &cErr) {
+					k.autoPauseVault(ctx, vault, cErr.Reason)
+				}
+			}
+			continue
+		}
+
+		if !payable {
+			if rerr := k.refundWithdrawal(ctx, j.ID, j.Req, types.RefundReasonReconcileFailure); rerr != nil {
+				var cErr *types.CriticalError
+				if errors.As(rerr, &cErr) {
+					k.autoPauseVault(ctx, vault, cErr.Reason)
+				}
+			}
+			continue
+		}
+
 		if err := k.processSingleWithdrawal(ctx, j.ID, j.Req, *vault); err != nil {
 			var cErr *types.CriticalError
 			if errors.As(err, &cErr) {

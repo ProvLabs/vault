@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/provlabs/vault/types"
 	"github.com/provlabs/vault/utils"
 
 	sdkmath "cosmossdk.io/math"
@@ -65,23 +66,51 @@ func CalculateInterestEarned(principal sdk.Coin, rate string, periodSeconds int6
 	return interestAmountDec.TruncateInt(), nil
 }
 
+// CalculateAUMFee computes the linear technology fee for a given AUM over a period.
+//
+// It uses the formula `Fee = (AUM * rate * t)`, where:
+//   - AUM is the total vault value.
+//   - rate is the annual AUM fee rate (e.g., "0.0015" for 15 bps).
+//   - t is the time in years, derived from (`periodSeconds` / 31_536_000).
+func CalculateAUMFee(aum sdkmath.Int, periodSeconds int64) (sdkmath.Int, error) {
+	if periodSeconds <= 0 {
+		return sdkmath.ZeroInt(), nil
+	}
+
+	rate, err := sdkmath.LegacyNewDecFromStr(types.AUMFeeRate)
+	if err != nil {
+		return sdkmath.Int{}, fmt.Errorf("invalid AUM fee rate: %w", err)
+	}
+
+	// AUM as a deterministic decimal
+	a := sdkmath.LegacyNewDecFromInt(aum)
+
+	// t = time in years, as a deterministic decimal
+	t := sdkmath.LegacyNewDec(periodSeconds).QuoInt64(SecondsPerYear)
+
+	// fee = AUM * rate * t
+	feeDec := a.Mul(rate).Mul(t)
+
+	return feeDec.TruncateInt(), nil
+}
+
 // CalculateExpiration determines the epoch time at which a vault will no longer be
-// able to pay the required interest on a principal amount.
+// able to pay the required interest and AUM fees on a principal amount.
 //
 // It simulates the compounding process period by period, tracking the vault's
 // reserve balance. The expiration time is the start time of the first period for which
-// the earned interest exceeds the vault's remaining reserves.
+// the earned interest and fees exceed the vault's remaining reserves.
 //
 // Parameters:
 //   - principal: The initial amount of the asset earning interest.
-//   - vaultReserves: The funds available in the vault to pay out as interest.
+//   - vaultReserves: The funds available in the vault to pay out as interest and fees.
 //   - rate: The annual interest rate (e.g., "0.04" for 4%).
 //   - periodSeconds: The compounding interval in seconds.
 //   - startTime: The epoch second when the interest calculation begins.
 //
 // Returns:
 // - The expiration time as an epoch second.
-// - If the vault will never be depleted (e.g., zero interest rate), it returns the startTime.
+// - If the vault will never be depleted, it returns the startTime.
 // - An error if the inputs are invalid or a calculation fails.
 func CalculateExpiration(principal sdk.Coin, vaultReserves sdk.Coin, rate string, periodSeconds, startTime, limit int64) (int64, error) {
 	if principal.Denom != vaultReserves.Denom {
@@ -93,17 +122,18 @@ func CalculateExpiration(principal sdk.Coin, vaultReserves sdk.Coin, rate string
 	if startTime <= 0 {
 		return 0, errors.New("startTime must be positive")
 	}
-	rateDec, err := sdkmath.LegacyNewDecFromStr(rate)
-	if err != nil {
-		return 0, fmt.Errorf("invalid rate string: %w", err)
-	}
-	if rateDec.IsZero() || rateDec.IsNegative() || principal.IsZero() { // no interest or negative interest means no depletion
-		return startTime, nil
-	}
+
 	periodsBeforeDepletion, i, err := CalculatePeriods(vaultReserves, principal, rate, periodSeconds, limit)
 	if err != nil {
 		return i, err
 	}
+
+	// If the calculation reached the limit without depleting reserves,
+	// we consider it as "never expires" within the simulated window.
+	if limit != CalculatePeriodsNoLimit && periodsBeforeDepletion*periodSeconds >= limit {
+		return startTime, nil
+	}
+
 	secondsToDepletion := sdkmath.NewInt(periodSeconds)
 	secondsToDepletion, err = secondsToDepletion.SafeMul(sdkmath.NewInt(periodsBeforeDepletion))
 	if err != nil {
@@ -117,14 +147,11 @@ func CalculateExpiration(principal sdk.Coin, vaultReserves sdk.Coin, rate string
 	return expirationTime.Int64(), nil
 }
 
-// CalculatePeriods simulates continuous compounding to determine how many compounding
-// periods a vault can sustain paying interest before its reserves are depleted.
-//
-// The interest for each period is calculated using the continuous compounding formula,
-// and added or subtracted from the principal depending on the sign of the rate.
+// CalculatePeriods simulates continuous compounding and linear fee accrual to determine how many
+// compounding periods a vault can sustain paying interest and AUM fees before its reserves are depleted.
 //
 // Parameters:
-//   - vaultReserves: The available funds in the vault to pay interest.
+//   - vaultReserves: The available funds in the vault to pay interest and fees.
 //   - principal: The initial amount earning interest.
 //   - rate: The annual interest rate (as a string, e.g. "0.05" for 5%, "-0.05" for -5%).
 //   - periodSeconds: The length of each compounding period in seconds.
@@ -135,7 +162,7 @@ func CalculateExpiration(principal sdk.Coin, vaultReserves sdk.Coin, rate string
 // Returns:
 //   - The number of full compounding periods the reserves can cover (up to the limit).
 //   - A placeholder value (currently always zero) for potential future use.
-//   - An error if interest calculation fails or input is invalid.
+//   - An error if interest or fee calculation fails or input is invalid.
 func CalculatePeriods(
 	vaultReserves sdk.Coin,
 	principal sdk.Coin,
@@ -146,7 +173,7 @@ func CalculatePeriods(
 	if vaultReserves.Amount.IsNegative() || principal.Amount.IsNegative() {
 		return 0, 0, fmt.Errorf("vault reserves and principal must be non-negative")
 	}
-	if principal.Amount.IsZero() || periodSeconds <= 0 {
+	if periodSeconds <= 0 {
 		return 0, 0, nil
 	}
 	if vaultReserves.Denom != principal.Denom {
@@ -162,19 +189,38 @@ func CalculatePeriods(
 			return 0, 0, fmt.Errorf("failed to calculate interest for period %d: %w", periods+1, err)
 		}
 
-		if interest.IsZero() {
+		fee, err := CalculateAUMFee(principal.Amount, periodSeconds)
+		if err != nil {
+			return 0, 0, fmt.Errorf("failed to calculate AUM fee for period %d: %w", periods+1, err)
+		}
+
+		totalDeduction := fee
+		if interest.IsPositive() {
+			totalDeduction = totalDeduction.Add(interest)
+		}
+
+		if totalDeduction.IsZero() && !interest.IsNegative() {
+			// If no interest and no fees, and interest is not negative, it will never deplete.
+			// But we should break if we reach the limit.
+			if limit == CalculatePeriodsNoLimit {
+				break
+			}
+		}
+
+		if vaultReserves.Amount.LT(totalDeduction) {
 			break
 		}
 
+		// Deduct fee and positive interest from reserves
+		vaultReserves = vaultReserves.Sub(sdk.NewCoin(vaultReserves.Denom, totalDeduction))
+
+		// Update principal based on interest
 		if interest.IsPositive() {
-			if vaultReserves.Amount.LT(interest) {
-				break
-			}
-			vaultReserves = vaultReserves.Sub(sdk.NewCoin(vaultReserves.Denom, interest))
 			principal = principal.Add(sdk.NewCoin(principal.Denom, interest))
-		} else {
+		} else if interest.IsNegative() {
 			principal = principal.Sub(sdk.NewCoin(principal.Denom, interest.Abs()))
 			if principal.Amount.IsNegative() {
+				principal.Amount = sdkmath.ZeroInt()
 				break
 			}
 		}

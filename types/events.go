@@ -284,3 +284,22 @@ func NewEventWithdrawalDelayUpdated(vaultAddress, authority string, withdrawalDe
 		WithdrawalDelaySeconds: withdrawalDelaySeconds,
 	}
 }
+
+// NewEventVaultFeeCollected creates a new EventVaultFeeCollected event.
+func NewEventVaultFeeCollected(vaultAddress string, feeAmount, aumSnapshot sdk.Coin, periodSeconds int64) *EventVaultFeeCollected {
+	return &EventVaultFeeCollected{
+		VaultAddress:  vaultAddress,
+		FeeAmount:     feeAmount.String(),
+		AumSnapshot:   aumSnapshot.String(),
+		PeriodSeconds: periodSeconds,
+	}
+}
+
+// NewEventVaultPrincipalLiquidation creates a new EventVaultPrincipalLiquidation event.
+func NewEventVaultPrincipalLiquidation(vaultAddress string, amount sdk.Coin, reason string) *EventVaultPrincipalLiquidation {
+	return &EventVaultPrincipalLiquidation{
+		VaultAddress: vaultAddress,
+		Amount:       amount.String(),
+		Reason:       reason,
+	}
+}

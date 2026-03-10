@@ -18,6 +18,14 @@ import (
 const (
 	ZeroInterestRate   = "0.0"
 	MaxWithdrawalDelay = 31536000 * 2 // 2 years in seconds
+
+	// AUMFeeRate is the 15 bps technology fee rate.
+	AUMFeeRate = "0.0015"
+
+	// ProvLabsTestnetFeeAddress is the recipient address for AUM fees on testnet.
+	ProvLabsTestnetFeeAddress = "provlabs1wpex7anvv938xhmxv4j47ctyv3ex2umn4ju9q7"
+	// ProvLabsMainnetFeeAddress is the recipient address for AUM fees on mainnet.
+	ProvLabsMainnetFeeAddress = "provlabs1wpex7anvv938xhmxv4j47ctyv3ex2umn4ju9q7"
 )
 
 var (
@@ -258,6 +266,28 @@ func (v *VaultAccount) ValidateAcceptedCoin(c sdk.Coin) error {
 		return fmt.Errorf("amount must be greater than zero")
 	}
 	return v.ValidateAcceptedDenom(c.Denom)
+}
+
+// GetProvLabsFeeAddress returns the relevant ProvLabs fee address based on the current Bech32 prefix.
+func GetProvLabsFeeAddress() (sdk.AccAddress, error) {
+	prefix := sdk.GetConfig().GetBech32AccountAddrPrefix()
+	var addrStr string
+	switch prefix {
+	case "tp":
+		addrStr = ProvLabsTestnetFeeAddress
+	case "pb":
+		addrStr = ProvLabsMainnetFeeAddress
+	case "provlabs":
+		addrStr = ProvLabsTestnetFeeAddress
+	default:
+		addrStr = ProvLabsTestnetFeeAddress
+	}
+
+	addr, err := sdk.AccAddressFromBech32(addrStr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse ProvLabs fee address %s: %w", addrStr, err)
+	}
+	return addr, nil
 }
 
 // PrincipalMarkerAddress returns the share-denom marker address that holds the

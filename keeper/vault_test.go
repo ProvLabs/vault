@@ -396,6 +396,7 @@ func (s *TestSuite) TestSwapOut_SucceedsWithRestrictedUnderlyingAssetRequiredAtt
 	s.Require().NoError(err, "should get vault")
 	s.Require().NotNil(vault, "vault should not be nil")
 	vault.TotalShares = sdk.NewCoin(shareDenom, initialShares)
+	vault.PeriodStart = s.ctx.BlockTime().Unix()
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 	redeemerAddr := s.CreateAndFundAccount(sdk.Coin{})

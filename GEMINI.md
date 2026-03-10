@@ -32,7 +32,7 @@ The agent operates as a **Principal Blockchain Engineer** with deep expertise in
 
 ### Code Style & Structure
 - **Idiomatic Go**: Follow standard Go conventions (Effective Go).
-- **Simplicity & Readability**: Prioritize maintainability. Variable and function names must be descriptive.
+- **Simplicity & Readability**: Prioritize maintainability. Variable and function names must be descriptive. Use underscores as digit separators for large numeric literals (e.g., `959_490_521`).
 - **Naming over Comments**: Use clear variable naming and logic flow to explain intent. Avoid redundant comments; use comments only for counter-intuitive business logic or complex architectural context.
 - **Cleanliness**: Proactively eliminate unused code and obsolete comments.
 - **Error Handling**: **Always** wrap errors with context: `fmt.Errorf("failed to [action]: %w", err)`.
@@ -65,30 +65,3 @@ The agent operates as a **Principal Blockchain Engineer** with deep expertise in
 - **`./local.sh`**: Spins up a local single-node blockchain (`vaulty-1`) for development.
 - **`./scripts/`**: Use `tx.sh` and `query.sh` for easy interaction with the local node.
 - **`go test ./...`**: Runs the full test suite.
-
-### Task Context Persistence (`.gemini/context.json`)
-For multi-stage tasks, track state across steps to ensure continuity.
-- **Location**: `.gemini/context.json`
-- **Usage**:
-    - **Initialization**: Populate `run_id` and `global_inputs`.
-    - **Step Updates**: Append success/failure status and specific outputs (e.g., `tx_hash`) to the `steps` array.
-
-#### Context Template
-```json
-{
-  "run_id": "unix_timestamp",
-  "global_inputs": {
-    "vault_address": "string",
-    "underlying_denom": "string"
-  },
-  "steps": [
-    {
-      "project": "vault",
-      "status": "success | failed",
-      "outputs": {
-        "tx_hash": "string"
-      }
-    }
-  ]
-}
-```

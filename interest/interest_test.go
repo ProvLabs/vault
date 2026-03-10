@@ -109,7 +109,7 @@ func TestCalculateInterestEarned(t *testing.T) {
 }
 
 func TestCalculateExpiration(t *testing.T) {
-	startTime := int64(1752764321)
+	startTime := int64(1_752_764_321)
 	denom := "vault"
 
 	tests := []struct {
@@ -124,7 +124,7 @@ func TestCalculateExpiration(t *testing.T) {
 		expectedErrStr string
 	}{
 		{
-			name:          "never expires with zero rate",
+			name:          "expires due to AUM fee with zero interest rate",
 			principal:     sdk.NewCoin(denom, sdkmath.NewInt(100_000)),
 			reserves:      sdk.NewCoin(denom, sdkmath.NewInt(500_000)),
 			rate:          "0",
@@ -133,13 +133,22 @@ func TestCalculateExpiration(t *testing.T) {
 			expected:      startTime,
 		},
 		{
-			name:          "never expires with negative rate",
-			principal:     sdk.NewCoin(denom, sdkmath.NewInt(100_000)),
-			reserves:      sdk.NewCoin(denom, sdkmath.NewInt(500_000)),
-			rate:          "-0.25",
-			periodSeconds: 60,
+			name:          "expires due to AUM fee with larger principal",
+			principal:     sdk.NewCoin(denom, sdkmath.NewInt(1_000_000_000)),
+			reserves:      sdk.NewCoin(denom, sdkmath.NewInt(1_000_000)),
+			rate:          "0",
+			periodSeconds: 86_400, // 1 day
 			startTime:     startTime,
-			expected:      startTime,
+			expected:      1_757_948_321,
+		},
+		{
+			name:          "expires with negative interest rate and AUM fee",
+			principal:     sdk.NewCoin(denom, sdkmath.NewInt(1_000_000_000)),
+			reserves:      sdk.NewCoin(denom, sdkmath.NewInt(1_000_000)),
+			rate:          "-0.01",
+			periodSeconds: 86_400,
+			startTime:     startTime,
+			expected:      1_757_948_321,
 		},
 		{
 			name:          "never expires with zero principal",
@@ -167,7 +176,7 @@ func TestCalculateExpiration(t *testing.T) {
 			periodSeconds: interest.CalculatePeriodsLimit / 2,
 			limit:         interest.CalculatePeriodsLimit,
 			startTime:     startTime,
-			expected:      startTime + interest.CalculatePeriodsLimit,
+			expected:      startTime,
 		},
 		{
 			name:          "never accrues when single period exceeds limit",

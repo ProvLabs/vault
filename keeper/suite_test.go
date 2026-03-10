@@ -257,6 +257,9 @@ func (s *TestSuite) setupBaseVaultRestricted(underlyingDenom, shareDenom string,
 	vault, err := s.k.CreateVault(s.ctx, vaultCfg)
 	s.Require().NoError(err, "vault creation should succeed")
 
+	vault.PeriodStart = s.ctx.BlockTime().Unix()
+	s.Require().NoError(s.k.SetVaultAccount(s.ctx, vault))
+
 	return vault
 }
 
@@ -281,6 +284,9 @@ func (s *TestSuite) setupBaseVault(underlyingDenom, shareDenom string, paymentDe
 	}
 	vault, err := s.k.CreateVault(s.ctx, vaultCfg)
 	s.Require().NoError(err, "vault creation should succeed")
+
+	vault.PeriodStart = s.ctx.BlockTime().Unix()
+	s.Require().NoError(s.k.SetVaultAccount(s.ctx, vault))
 
 	return vault
 }
@@ -476,6 +482,25 @@ func createMarkerSetNAV(shareDenom string, price sdk.Coin, source string, volume
 		sdk.NewAttribute("source", source),
 		sdk.NewAttribute("volume", strconv.FormatUint(volume, 10)),
 	)
+}
+
+// createFeeEvents constructs the expected event sequence for an AUM fee collection,
+// including the bank send events to the ProvLabs wallet and the module's fee collection event.
+func createFeeEvents(vaultAddr, provlabsAddr sdk.AccAddress, fee, aum sdkmath.Int, denom string, duration int64) []sdk.Event {
+	var allEvents []sdk.Event
+
+	sendEvents := createSendCoinEvents(vaultAddr.String(), provlabsAddr.String(), sdk.NewCoin(denom, fee).String())
+	allEvents = append(allEvents, sendEvents...)
+
+	feeEvent := sdk.NewEvent("provlabs.vault.v1.EventVaultFeeCollected",
+		sdk.NewAttribute("aum_snapshot", sdk.NewCoin(denom, aum).String()),
+		sdk.NewAttribute("fee_amount", sdk.NewCoin(denom, fee).String()),
+		sdk.NewAttribute("period_seconds", fmt.Sprintf("%v", duration)),
+		sdk.NewAttribute("vault_address", vaultAddr.String()),
+	)
+	allEvents = append(allEvents, feeEvent)
+
+	return allEvents
 }
 
 // createReconcileEvents constructs the expected event sequence for a vault

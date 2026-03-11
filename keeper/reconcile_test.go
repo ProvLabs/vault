@@ -987,7 +987,10 @@ func (s *TestSuite) TestKeeper_CanPayoutDuration_NegativeInterest_Composite_Insu
 	vault.DesiredInterestRate = "-0.5"
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
-	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(sdk.NewCoin(underlyingDenom, sdkmath.NewInt(1_000_000)))), "failed to fund composite vault in TestKeeper_CanPayoutDuration_NegativeInterest_Composite_InsufficientUnderlying")
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(
+		sdk.NewCoin(underlyingDenom, sdkmath.NewInt(1_000_000)),
+		sdk.NewCoin(paymentDenom, sdkmath.NewInt(1_000_000)),
+	)), "failed to fund composite vault in TestKeeper_CanPayoutDuration_NegativeInterest_Composite_InsufficientUnderlying")
 
 	tinyUnderlying := sdkmath.NewInt(10_000_000)
 	hugePayment := sdkmath.NewInt(10_000_000_000_000)
@@ -1161,7 +1164,7 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_Use
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 	s.Require().NoError(
-		FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(underlying)),
+		FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(underlying, sdk.NewInt64Coin(paymentDenom, 1_000_000))),
 		"expected funding vault reserves to succeed",
 	)
 
@@ -1178,11 +1181,13 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_Use
 
 	s.ctx = s.ctx.WithBlockTime(now).WithEventManager(sdk.NewEventManager())
 
-	startVault := s.simApp.BankKeeper.GetBalance(s.ctx, vaultAddr, underlying.Denom).Amount
+	startVaultUnderlying := s.simApp.BankKeeper.GetBalance(s.ctx, vaultAddr, underlying.Denom).Amount
+	startVaultPayment := s.simApp.BankKeeper.GetBalance(s.ctx, vaultAddr, paymentDenom).Amount
 	startMarkerUnderlying := s.simApp.BankKeeper.GetBalance(s.ctx, markerAddr, underlying.Denom).Amount
 	startMarkerPayment := s.simApp.BankKeeper.GetBalance(s.ctx, markerAddr, paymentDenom).Amount
 
-	s.Require().Equal(underlying.Amount, startVault, "expected initial vault reserves to equal funded amount")
+	s.Require().Equal(underlying.Amount, startVaultUnderlying, "expected initial vault underlying reserves to equal funded amount")
+	s.Require().Equal(sdkmath.NewInt(1_000_000), startVaultPayment, "expected initial vault payment reserves to equal funded amount")
 	s.Require().Equal(receiptPortion, startMarkerUnderlying, "expected marker underlying balance to equal receipt portion")
 	s.Require().Equal(paymentPortion, startMarkerPayment, "expected marker payment balance to equal payment portion")
 
@@ -1197,20 +1202,26 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_Use
 	s.Require().NoError(err, "expected CalculateInterestEarned to succeed")
 	s.Require().True(interestEarned.IsPositive(), "expected interest earned to be positive for positive rate")
 
-	feeAmount, err := interest.CalculateAUMFee(principalTvv, periodDuration)
+	feeAmountInUnderlying, err := interest.CalculateAUMFee(principalTvv, periodDuration)
 	s.Require().NoError(err, "expected CalculateAUMFee to succeed")
+
+	feeAmount, err := s.k.FromUnderlyingAssetAmount(s.ctx, *vault, feeAmountInUnderlying, paymentDenom)
+	s.Require().NoError(err, "expected FromUnderlyingAssetAmount to succeed for fee")
 
 	err = s.k.TestAccessor_reconcileVaultInterest(s.T(), s.ctx, vault)
 	s.Require().NoError(err, "expected reconcileVaultInterest to succeed")
 
-	endVault := s.simApp.BankKeeper.GetBalance(s.ctx, vaultAddr, underlying.Denom).Amount
+	endVaultUnderlying := s.simApp.BankKeeper.GetBalance(s.ctx, vaultAddr, underlying.Denom).Amount
+	endVaultPayment := s.simApp.BankKeeper.GetBalance(s.ctx, vaultAddr, paymentDenom).Amount
 	endMarkerUnderlying := s.simApp.BankKeeper.GetBalance(s.ctx, markerAddr, underlying.Denom).Amount
 	endMarkerPayment := s.simApp.BankKeeper.GetBalance(s.ctx, markerAddr, paymentDenom).Amount
 
-	expectedVault := startVault.Sub(interestEarned).Sub(feeAmount)
+	expectedVaultUnderlying := startVaultUnderlying.Sub(interestEarned)
+	expectedVaultPayment := startVaultPayment.Sub(feeAmount)
 	expectedMarkerUnderlying := startMarkerUnderlying.Add(interestEarned)
 
-	s.Require().Equal(expectedVault, endVault, "expected vault reserves to decrease by TVV-based interest and fee")
+	s.Require().Equal(expectedVaultUnderlying, endVaultUnderlying, "expected vault underlying reserves to decrease by TVV-based interest")
+	s.Require().Equal(expectedVaultPayment, endVaultPayment, "expected vault payment reserves to decrease by AUM fee")
 	s.Require().Equal(expectedMarkerUnderlying, endMarkerUnderlying, "expected marker underlying balance to increase by TVV-based interest")
 	s.Require().Equal(startMarkerPayment, endMarkerPayment, "expected marker payment token balance to remain unchanged")
 
@@ -1218,7 +1229,7 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_Use
 		vaultAddr,
 		shareDenom,
 		underlying.Denom,
-		expectedVault,
+		expectedVaultUnderlying,
 		expectedMarkerUnderlying,
 	)
 

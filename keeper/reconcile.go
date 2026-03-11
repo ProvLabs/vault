@@ -116,7 +116,7 @@ func (k *Keeper) publishShareNav(ctx sdk.Context, vault *types.VaultAccount) err
 // from the vault reserves and routes it to the ProvLabs wallet.
 //
 // Fees are calculated linearly based on the current TVV snapshot.
-// Fees are settled exclusively in the vault's UnderlyingAsset.
+// Fees are settled exclusively in the vault's PaymentDenom.
 // This method fails if reserves are insufficient to cover the fee.
 func (k *Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAccount) error {
 	currentBlockTime := ctx.BlockTime().Unix()
@@ -125,7 +125,6 @@ func (k *Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAcco
 	}
 
 	periodDuration := currentBlockTime - vault.PeriodStart
-	denom := vault.UnderlyingAsset
 	vaultAddr := vault.GetAddress()
 	recipientAddr := types.GetProvLabsFeeAddress(ctx.ChainID())
 
@@ -134,22 +133,32 @@ func (k *Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAcco
 		return fmt.Errorf("failed to get TVV for fee calculation: %w", err)
 	}
 
-	feeAmount, err := interest.CalculateAUMFee(tvv, periodDuration)
+	feeInUnderlying, err := interest.CalculateAUMFee(tvv, periodDuration)
 	if err != nil {
 		return fmt.Errorf("failed to calculate AUM fee: %w", err)
+	}
+
+	if feeInUnderlying.IsZero() {
+		return nil
+	}
+
+	feeDenom := vault.PaymentDenom
+	feeAmount, err := k.FromUnderlyingAssetAmount(ctx, *vault, feeInUnderlying, feeDenom)
+	if err != nil {
+		return fmt.Errorf("failed to convert fee to payment denom %s: %w", feeDenom, err)
 	}
 
 	if feeAmount.IsZero() {
 		return nil
 	}
 
-	reserves := k.BankKeeper.GetBalance(ctx, vaultAddr, denom)
+	reserves := k.BankKeeper.GetBalance(ctx, vaultAddr, feeDenom)
 	if reserves.Amount.LT(feeAmount) {
-		ctx.Logger().Error("insufficient reserves to pay technology fee", "vault", vaultAddr.String(), "required", feeAmount.String(), "available", reserves.Amount.String())
+		ctx.Logger().Error("insufficient reserves to pay technology fee", "vault", vaultAddr.String(), "required", feeAmount.String(), "available", reserves.Amount.String(), "denom", feeDenom)
 		return nil
 	}
 
-	feeCoin := sdk.NewCoin(denom, feeAmount)
+	feeCoin := sdk.NewCoin(feeDenom, feeAmount)
 	if err := k.BankKeeper.SendCoins(
 		markertypes.WithBypass(ctx),
 		vaultAddr,
@@ -163,7 +172,7 @@ func (k *Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAcco
 		vaultAddr.String(),
 		recipientAddr.String(),
 		feeCoin,
-		sdk.NewCoin(denom, tvv),
+		sdk.NewCoin(vault.UnderlyingAsset, tvv),
 		periodDuration,
 	))
 
@@ -272,6 +281,7 @@ func (k *Keeper) CanPayoutDuration(ctx sdk.Context, vault *types.VaultAccount, d
 	}
 
 	underlyingDenom := vault.UnderlyingAsset
+	paymentDenom := vault.PaymentDenom
 	vaultAddr := vault.GetAddress()
 	principalAddr := vault.PrincipalMarkerAddress()
 
@@ -290,23 +300,38 @@ func (k *Keeper) CanPayoutDuration(ctx sdk.Context, vault *types.VaultAccount, d
 		return false, fmt.Errorf("failed to calculate interest: %w", err)
 	}
 
-	aumFee, err := interest.CalculateAUMFee(principalTvv, duration)
+	aumFeeInUnderlying, err := interest.CalculateAUMFee(principalTvv, duration)
 	if err != nil {
 		return false, fmt.Errorf("failed to calculate AUM fee: %w", err)
 	}
 
-	if interestEarned.IsZero() && aumFee.IsZero() {
+	if interestEarned.IsZero() && aumFeeInUnderlying.IsZero() {
 		return true, nil
 	}
 
-	reserves := k.BankKeeper.GetBalance(ctx, vaultAddr, underlyingDenom)
-	totalDeduction := aumFee
-	if interestEarned.IsPositive() {
-		totalDeduction = totalDeduction.Add(interestEarned)
+	feeAmount, err := k.FromUnderlyingAssetAmount(ctx, *vault, aumFeeInUnderlying, paymentDenom)
+	if err != nil {
+		return false, fmt.Errorf("failed to convert fee to payment denom: %w", err)
 	}
 
-	if reserves.Amount.LT(totalDeduction) {
-		return false, nil
+	reservesUnderlying := k.BankKeeper.GetBalance(ctx, vaultAddr, underlyingDenom)
+	reservesPayment := k.BankKeeper.GetBalance(ctx, vaultAddr, paymentDenom)
+
+	if paymentDenom == underlyingDenom {
+		totalRequired := aumFeeInUnderlying
+		if interestEarned.IsPositive() {
+			totalRequired = totalRequired.Add(interestEarned)
+		}
+		if reservesUnderlying.Amount.LT(totalRequired) {
+			return false, nil
+		}
+	} else {
+		if interestEarned.IsPositive() && reservesUnderlying.Amount.LT(interestEarned) {
+			return false, nil
+		}
+		if reservesPayment.Amount.LT(feeAmount) {
+			return false, nil
+		}
 	}
 
 	if interestEarned.IsNegative() {

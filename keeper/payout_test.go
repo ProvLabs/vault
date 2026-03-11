@@ -232,7 +232,7 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 					Shares:       *minted,
 				}
 				id, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, duePayoutTime, &req)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "should successfully enqueue request")
 				return ownerAddr, id
 			},
 			posthandler: func(ownerAddr sdk.AccAddress, reqID uint64, shareDenom string, vaultAddr sdk.AccAddress, principalAddress sdk.AccAddress, shares sdk.Coin, testBlockTime time.Time) {
@@ -355,7 +355,7 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 					entries = append(entries, req)
 					return false, nil
 				})
-				s.Require().NoError(err)
+				s.Require().NoError(err, "walking the queue should not error")
 				s.Require().Empty(entries, "queue should be empty after processing the non-existent vault request")
 			},
 			batchSize: keeper.MaxSwapOutBatchSize,
@@ -382,10 +382,10 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 			err := s.k.TestAccessor_processPendingSwapOuts(s.T(), s.ctx, tc.batchSize)
 
 			if tc.expectedError != "" {
-				s.Require().Error(err)
-				s.Require().ErrorContains(err, tc.expectedError)
+				s.Require().Error(err, "expected error during processPendingSwapOuts")
+				s.Require().ErrorContains(err, tc.expectedError, "error message mismatch")
 			} else {
-				s.Require().NoError(err)
+				s.Require().NoError(err, "unexpected error during processPendingSwapOuts")
 			}
 
 			if tc.posthandler != nil {

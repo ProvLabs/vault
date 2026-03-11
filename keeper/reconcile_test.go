@@ -198,10 +198,10 @@ func (s *TestSuite) TestKeeper_CalculateVaultTotalAssets() {
 			ShareDenom:      shareDenom,
 			UnderlyingAsset: underlying.Denom,
 		})
-		s.Require().NoError(err)
+		s.Require().NoError(err, "CreateVault should not error in CalculateVaultTotalAssets setup")
 
 		vault, err := s.k.GetVault(s.ctx, vaultAddress)
-		s.Require().NoError(err)
+		s.Require().NoError(err, "GetVault should not error in CalculateVaultTotalAssets setup")
 		vault.CurrentInterestRate = interestRate
 		vault.PeriodStart = periodStartSeconds
 		s.k.AuthKeeper.SetAccount(s.ctx, vault)
@@ -262,10 +262,10 @@ func (s *TestSuite) TestKeeper_CalculateVaultTotalAssets() {
 			est, err := s.k.CalculateVaultTotalAssets(s.ctx, vault, underlying)
 
 			if tc.expectErr {
-				s.Require().Error(err)
+				s.Require().Error(err, "test case %s: expected error from CalculateVaultTotalAssets", tc.name)
 			} else {
-				s.Require().NoError(err)
-				s.Require().Equal(tc.expectedIncrease, est)
+				s.Require().NoError(err, "test case %s: CalculateVaultTotalAssets should not error", tc.name)
+				s.Require().Equal(tc.expectedIncrease, est, "test case %s: total assets estimation mismatch", tc.name)
 			}
 		})
 	}
@@ -298,16 +298,16 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 					ShareDenom:      shareDenom,
 					UnderlyingAsset: underlying.Denom,
 				})
-				s.Require().NoError(err)
+				s.Require().NoError(err, "happy path: CreateVault should not error")
 				vault, err := s.k.GetVault(s.ctx, vaultAddr)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "happy path: GetVault should not error")
 				vault.CurrentInterestRate = "0.25"
 				vault.DesiredInterestRate = "0.25"
 				vault.PeriodStart = twoMonthsAgo
 				s.k.AuthKeeper.SetAccount(s.ctx, vault)
-				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(underlying)))
-				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, sdk.NewCoins(underlying)))
-				s.Require().NoError(s.k.PayoutTimeoutQueue.Enqueue(s.ctx, testBlockTime.Unix(), vault.GetAddress()))
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(underlying)), "happy path: funding vault account should not error")
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, sdk.NewCoins(underlying)), "happy path: funding marker account should not error")
+				s.Require().NoError(s.k.PayoutTimeoutQueue.Enqueue(s.ctx, testBlockTime.Unix(), vault.GetAddress()), "happy path: enqueuing payout timeout should not error")
 				s.ctx = s.ctx.WithBlockTime(testBlockTime).WithEventManager(sdk.NewEventManager())
 			},
 			checkAddr:     vaultAddr,
@@ -350,15 +350,15 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 					ShareDenom:      shareDenom,
 					UnderlyingAsset: underlying.Denom,
 				})
-				s.Require().NoError(err)
+				s.Require().NoError(err, "vault cannot pay: CreateVault should not error")
 				vault, err := s.k.GetVault(s.ctx, vaultAddr)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "vault cannot pay: GetVault should not error")
 				vault.CurrentInterestRate = "0.25"
 				vault.DesiredInterestRate = "0.25"
 				s.k.AuthKeeper.SetAccount(s.ctx, vault)
-				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, sdk.NewCoins(underlying)))
-				s.Require().NoError(s.k.SafeAddVerification(s.ctx, vault))
-				s.Require().NoError(s.k.PayoutTimeoutQueue.Enqueue(s.ctx, testBlockTime.Unix(), vault.GetAddress()))
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, sdk.NewCoins(underlying)), "vault cannot pay: funding marker account should not error")
+				s.Require().NoError(s.k.SafeAddVerification(s.ctx, vault), "vault cannot pay: SafeAddVerification should not error")
+				s.Require().NoError(s.k.PayoutTimeoutQueue.Enqueue(s.ctx, testBlockTime.Unix(), vault.GetAddress()), "vault cannot pay: enqueuing payout timeout should not error")
 				s.ctx = s.ctx.WithBlockTime(testBlockTime).WithEventManager(sdk.NewEventManager())
 			},
 			checkAddr:     vaultAddr,
@@ -382,12 +382,12 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 					ShareDenom:      shareDenom,
 					UnderlyingAsset: underlying.Denom,
 				})
-				s.Require().NoError(err)
+				s.Require().NoError(err, "paused vault: CreateVault should not error")
 				vault, err := s.k.GetVault(s.ctx, vaultAddr)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "paused vault: GetVault should not error")
 				vault.Paused = true
 				s.k.AuthKeeper.SetAccount(s.ctx, vault)
-				s.Require().NoError(s.k.PayoutTimeoutQueue.Enqueue(s.ctx, testBlockTime.Unix(), vault.GetAddress()))
+				s.Require().NoError(s.k.PayoutTimeoutQueue.Enqueue(s.ctx, testBlockTime.Unix(), vault.GetAddress()), "paused vault: enqueuing payout timeout should not error")
 				s.ctx = s.ctx.WithBlockTime(testBlockTime).WithEventManager(sdk.NewEventManager())
 			},
 			checkAddr:      vaultAddr,
@@ -398,8 +398,8 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 		{
 			name: "non-vault address in interest details does nothing",
 			setup: func() {
-				s.Require().NoError(s.k.PayoutVerificationSet.Set(s.ctx, markerAddr))
-				s.Require().NoError(s.k.PayoutTimeoutQueue.Enqueue(s.ctx, testBlockTime.Unix(), markerAddr))
+				s.Require().NoError(s.k.PayoutVerificationSet.Set(s.ctx, markerAddr), "non-vault: PayoutVerificationSet.Set should not error")
+				s.Require().NoError(s.k.PayoutTimeoutQueue.Enqueue(s.ctx, testBlockTime.Unix(), markerAddr), "non-vault: enqueuing payout timeout should not error")
 				s.ctx = s.ctx.WithBlockTime(testBlockTime).WithEventManager(sdk.NewEventManager())
 			},
 			checkAddr:      markerAddr,
@@ -415,17 +415,17 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 			s.SetupTest()
 			tc.setup()
 			err := s.k.TestAccessor_handleVaultInterestTimeouts(s.T(), s.ctx)
-			s.Require().NoError(err)
+			s.Require().NoError(err, "test case %s: handleVaultInterestTimeouts should not error", tc.name)
 			if tc.expectRate != "" {
 				vault, err := s.k.GetVault(s.ctx, vaultAddr)
-				s.Require().NoError(err)
-				s.Require().Equal(tc.expectRate, vault.CurrentInterestRate)
+				s.Require().NoError(err, "test case %s: GetVault should not error after timeout handling", tc.name)
+				s.Require().Equal(tc.expectRate, vault.CurrentInterestRate, "test case %s: current interest rate mismatch", tc.name)
 			}
 			em := s.ctx.EventManager()
 			s.Assert().Equalf(
 				normalizeEvents(tc.expectedEvents),
 				normalizeEvents(em.Events()),
-				"beginblocker events",
+				"test case %s: beginblocker events mismatch", tc.name,
 			)
 		})
 	}
@@ -439,17 +439,17 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 	AssertIsPayable := func(info VaultInfo, expectedRate string) {
 		s.T().Helper()
 		vault, err := s.k.GetVault(s.ctx, info.vaultAddr)
-		s.Require().NoError(err)
-		s.Require().NotNil(vault)
-		s.Assert().Equal(expectedRate, vault.CurrentInterestRate, "interest rate should not change for payable vault")
+		s.Require().NoError(err, "GetVault should not error for payable vault %s", info.vaultAddr)
+		s.Require().NotNil(vault, "vault %s should not be nil", info.vaultAddr)
+		s.Assert().Equal(expectedRate, vault.CurrentInterestRate, "interest rate should not change for payable vault %s", info.vaultAddr)
 	}
 
 	AssertIsDepleted := func(info VaultInfo) {
 		s.T().Helper()
 		vault, err := s.k.GetVault(s.ctx, info.vaultAddr)
-		s.Require().NoError(err)
-		s.Require().NotNil(vault)
-		s.Assert().Equal(types.ZeroInterestRate, vault.CurrentInterestRate, "interest rate should be zeroed out for depleted vault")
+		s.Require().NoError(err, "GetVault should not error for depleted vault %s", info.vaultAddr)
+		s.Require().NotNil(vault, "vault %s should not be nil", info.vaultAddr)
+		s.Assert().Equal(types.ZeroInterestRate, vault.CurrentInterestRate, "interest rate should be zeroed out for depleted vault %s", info.vaultAddr)
 		s.assertInPayoutVerificationQueue(vault.GetAddress(), false)
 	}
 
@@ -468,8 +468,8 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 			postCheck: func() {
 				// No vaults to check
 				vaults, err := s.k.GetVaults(s.ctx)
-				s.Require().NoError(err)
-				s.Require().Empty(vaults)
+				s.Require().NoError(err, "no vaults: GetVaults should not error")
+				s.Require().Empty(vaults, "no vaults: vaults should be empty")
 			},
 			expectErr:      false,
 			expectedEvents: sdk.Events{},
@@ -552,14 +552,14 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 			err := s.k.TestAccessor_handleReconciledVaults(s.T(), s.ctx)
 
 			if tc.expectErr {
-				s.Require().Error(err)
+				s.Require().Error(err, "test case %s: expected error from handleReconciledVaults", tc.name)
 			} else {
-				s.Require().NoError(err)
+				s.Require().NoError(err, "test case %s: handleReconciledVaults should not error", tc.name)
 			}
 
 			actualEvents := normalizeEvents(s.ctx.EventManager().Events())
 			expectedEvents := normalizeEvents(tc.expectedEvents)
-			s.Assert().Equal(actualEvents, expectedEvents, "emitted events should contain all expected events")
+			s.Assert().Equal(expectedEvents, actualEvents, "test case %s: emitted events mismatch", tc.name)
 
 			if tc.postCheck != nil {
 				tc.postCheck()
@@ -584,9 +584,9 @@ func (s *TestSuite) TestKeeper_handlePayableVaults() {
 			}
 			return false, nil
 		})
-		s.Require().NoError(err)
-		s.Assert().True(found, "missing timeout entry at expected time")
-		s.Assert().Equal(1, count, "should be exactly one timeout entry for vault")
+		s.Require().NoError(err, "WalkDue should not error for address %s", addr)
+		s.Assert().True(found, "missing timeout entry at expected time %d for address %s", expected, addr)
+		s.Assert().Equal(1, count, "should be exactly one timeout entry for vault %s", addr)
 	}
 
 	tests := []struct {
@@ -603,9 +603,9 @@ func (s *TestSuite) TestKeeper_handlePayableVaults() {
 			postCheck: func(vaults []*types.VaultAccount) {
 				addr := vaults[0].GetAddress()
 				vault, err := s.k.GetVault(s.ctx, addr)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "single payable: GetVault should not error")
 				expectedExpireTime := testBlockTime.Unix() + keeper.AutoReconcileTimeout
-				s.Assert().Equal(expectedExpireTime, vault.PeriodTimeout)
+				s.Assert().Equal(expectedExpireTime, vault.PeriodTimeout, "single payable: PeriodTimeout mismatch")
 				assertSingleTimeoutAt(addr, expectedExpireTime)
 			},
 		},
@@ -621,14 +621,14 @@ func (s *TestSuite) TestKeeper_handlePayableVaults() {
 
 				addr1 := vaults[0].GetAddress()
 				v1r, err := s.k.GetVault(s.ctx, addr1)
-				s.Require().NoError(err)
-				s.Assert().Equal(expectedExpireTime, v1r.PeriodTimeout)
+				s.Require().NoError(err, "multiple payable (vault 1): GetVault should not error")
+				s.Assert().Equal(expectedExpireTime, v1r.PeriodTimeout, "multiple payable (vault 1): PeriodTimeout mismatch")
 				assertSingleTimeoutAt(addr1, expectedExpireTime)
 
 				addr2 := vaults[1].GetAddress()
 				v2r, err := s.k.GetVault(s.ctx, addr2)
-				s.Require().NoError(err)
-				s.Assert().Equal(expectedExpireTime, v2r.PeriodTimeout)
+				s.Require().NoError(err, "multiple payable (vault 2): GetVault should not error")
+				s.Assert().Equal(expectedExpireTime, v2r.PeriodTimeout, "multiple payable (vault 2): PeriodTimeout mismatch")
 				assertSingleTimeoutAt(addr2, expectedExpireTime)
 			},
 		},
@@ -666,9 +666,9 @@ func (s *TestSuite) TestKeeper_handleDepletedVaults() {
 			postCheck: func(vaults []*types.VaultAccount) {
 				addr := vaults[0].GetAddress()
 				updatedVault, err := s.k.GetVault(s.ctx, addr)
-				s.Require().NoError(err)
-				s.Assert().Equal(types.ZeroInterestRate, updatedVault.CurrentInterestRate, "interest rate should be zeroed")
-				s.Assert().Equal(initialRate, updatedVault.DesiredInterestRate, "desired rate should remain unchanged")
+				s.Require().NoError(err, "single depleted: GetVault should not error")
+				s.Assert().Equal(types.ZeroInterestRate, updatedVault.CurrentInterestRate, "single depleted: interest rate should be zeroed")
+				s.Assert().Equal(initialRate, updatedVault.DesiredInterestRate, "single depleted: desired rate should remain unchanged")
 			},
 			expectedEvents: sdk.Events{
 				sdk.NewEvent(
@@ -690,9 +690,9 @@ func (s *TestSuite) TestKeeper_handleDepletedVaults() {
 				for _, v := range vaults {
 					addr := v.GetAddress()
 					updatedVault, err := s.k.GetVault(s.ctx, addr)
-					s.Require().NoError(err)
-					s.Assert().Equal(types.ZeroInterestRate, updatedVault.CurrentInterestRate)
-					s.Assert().Equal(v.DesiredInterestRate, updatedVault.DesiredInterestRate)
+					s.Require().NoError(err, "multiple depleted: GetVault should not error for address %s", addr)
+					s.Assert().Equal(types.ZeroInterestRate, updatedVault.CurrentInterestRate, "multiple depleted: interest rate should be zeroed for address %s", addr)
+					s.Assert().Equal(v.DesiredInterestRate, updatedVault.DesiredInterestRate, "multiple depleted: desired rate mismatch for address %s", addr)
 				}
 			},
 			expectedEvents: sdk.Events{
@@ -723,6 +723,7 @@ func (s *TestSuite) TestKeeper_handleDepletedVaults() {
 			s.Assert().Equal(
 				normalizeEvents(tc.expectedEvents),
 				normalizeEvents(s.ctx.EventManager().Events()),
+				"test case %s: emitted events mismatch", tc.name,
 			)
 
 			if tc.postCheck != nil {
@@ -777,12 +778,12 @@ func (s *TestSuite) TestKeeper_UpdateInterestRates() {
 			vault := tc.setup()
 
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
-			s.Require().NoError(s.k.UpdateInterestRates(s.ctx, vault, tc.currentRate, tc.desiredRate), "interest rate update should succeed")
+			s.Require().NoError(s.k.UpdateInterestRates(s.ctx, vault, tc.currentRate, tc.desiredRate), "test case %s: interest rate update should succeed", tc.name)
 
 			s.Assert().Equal(
 				normalizeEvents(tc.expectedEvents),
 				normalizeEvents(s.ctx.EventManager().Events()),
-				"emitted events should match expected events")
+				"test case %s: emitted events mismatch", tc.name)
 
 			if tc.postCheck != nil {
 				tc.postCheck(vault)
@@ -798,7 +799,7 @@ func createVaultWithInterest(s *TestSuite, info VaultInfo, interestRate string, 
 		ShareDenom:      info.shareDenom,
 		UnderlyingAsset: info.underlying.Denom,
 	})
-	s.Require().NoError(err)
+	s.Require().NoError(err, "failed to create vault in createVaultWithInterest for share denom %s", info.shareDenom)
 
 	vault.CurrentInterestRate = interestRate
 	vault.DesiredInterestRate = interestRate
@@ -809,14 +810,14 @@ func createVaultWithInterest(s *TestSuite, info VaultInfo, interestRate string, 
 	if fundReserves {
 		// Fund with enough to cover a day's interest
 		err = FundAccount(s.ctx, s.simApp.BankKeeper, info.vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(info.underlying.Denom, 1_000_000)))
-		s.Require().NoError(err)
+		s.Require().NoError(err, "failed to fund vault reserves in createVaultWithInterest for vault %s", info.vaultAddr)
 	}
 	if fundPrincipal {
 		err = FundAccount(s.ctx, s.simApp.BankKeeper, markertypes.MustGetMarkerAddress(info.shareDenom), sdk.NewCoins(info.underlying))
-		s.Require().NoError(err)
+		s.Require().NoError(err, "failed to fund marker principal in createVaultWithInterest for marker %s", info.shareDenom)
 	}
 
-	s.Require().NoError(s.k.SafeAddVerification(s.ctx, vault))
+	s.Require().NoError(s.k.SafeAddVerification(s.ctx, vault), "failed to safe add verification in createVaultWithInterest for vault %s", info.vaultAddr)
 	return vault
 }
 
@@ -848,10 +849,10 @@ func (s *TestSuite) TestKeeper_CanPayoutDuration() {
 			ShareDenom:      shareDenom,
 			UnderlyingAsset: underlying.Denom,
 		})
-		s.Require().NoError(err)
+		s.Require().NoError(err, "failed to create vault in createVaultWithRate")
 
 		vault, err := s.k.GetVault(s.ctx, vaultAddr)
-		s.Require().NoError(err)
+		s.Require().NoError(err, "failed to get vault in createVaultWithRate")
 		vault.CurrentInterestRate = rate
 		s.k.AuthKeeper.SetAccount(s.ctx, vault)
 		return vault
@@ -954,16 +955,16 @@ func (s *TestSuite) TestKeeper_CanPayoutDuration_NegativeInterest_Composite_Insu
 	s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
 
 	_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: s.adminAddr.String(), ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom})
-	s.Require().NoError(err)
+	s.Require().NoError(err, "failed to create composite vault in TestKeeper_CanPayoutDuration_NegativeInterest_Composite_InsufficientUnderlying")
 
 	vault, err := s.k.GetVault(s.ctx, vaultAddr)
-	s.Require().NoError(err)
+	s.Require().NoError(err, "failed to get composite vault in TestKeeper_CanPayoutDuration_NegativeInterest_Composite_InsufficientUnderlying")
 
 	vault.CurrentInterestRate = "-0.5"
 	vault.DesiredInterestRate = "-0.5"
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
-	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(sdk.NewCoin(underlyingDenom, sdkmath.NewInt(1_000_000)))))
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(sdk.NewCoin(underlyingDenom, sdkmath.NewInt(1_000_000)))), "failed to fund composite vault in TestKeeper_CanPayoutDuration_NegativeInterest_Composite_InsufficientUnderlying")
 
 	tinyUnderlying := sdkmath.NewInt(10_000_000)
 	hugePayment := sdkmath.NewInt(10_000_000_000_000)
@@ -1003,7 +1004,7 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_Use
 	s.Require().NoError(err, "failed to create vault")
 
 	vault, err := s.k.GetVault(s.ctx, vaultAddr)
-	s.Require().NoError(err)
+	s.Require().NoError(err, "failed to get vault in TestKeeper_PerformVaultInterestTransfer_PositiveInterest_UsesTVV")
 
 	vault.CurrentInterestRate = "0.25"
 	vault.DesiredInterestRate = "0.25"
@@ -1012,19 +1013,19 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_Use
 
 	s.Require().NoError(
 		FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(underlying)),
-		"failed to fund vault account",
+		"failed to fund vault account in TestKeeper_PerformVaultInterestTransfer_PositiveInterest_UsesTVV",
 	)
 	s.Require().NoError(
 		FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, sdk.NewCoins(underlying)),
-		"failed to fund marker account",
+		"failed to fund marker account in TestKeeper_PerformVaultInterestTransfer_PositiveInterest_UsesTVV",
 	)
 
 	s.ctx = s.ctx.WithBlockTime(now).WithEventManager(sdk.NewEventManager())
 
 	startVault := s.simApp.BankKeeper.GetBalance(s.ctx, vaultAddr, underlying.Denom).Amount
 	startMarker := s.simApp.BankKeeper.GetBalance(s.ctx, markerAddr, underlying.Denom).Amount
-	s.Require().Equal(underlying.Amount, startVault)
-	s.Require().Equal(underlying.Amount, startMarker)
+	s.Require().Equal(underlying.Amount, startVault, "initial vault reserves should match funded amount")
+	s.Require().Equal(underlying.Amount, startMarker, "initial marker principal should match funded amount")
 
 	principalTvv, err := s.k.GetTVVInUnderlyingAsset(s.ctx, *vault)
 	s.Require().NoError(err, "failed to get TVV in underlying asset")

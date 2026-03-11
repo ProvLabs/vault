@@ -87,19 +87,19 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 			setup: func() {
 				pmtMarkerAddr := markertypes.MustGetMarkerAddress(paymentDenom)
 				pmtMarkerAcct, err := s.k.MarkerKeeper.GetMarker(s.ctx, pmtMarkerAddr)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "should fetch marker for %s", paymentDenom)
 				err = s.k.MarkerKeeper.SetNetAssetValue(s.ctx, pmtMarkerAcct, markertypes.NetAssetValue{
 					Price:  sdk.NewInt64Coin(underlyingDenom, 3),
 					Volume: 2,
 				}, "fwd-old")
-				s.Require().NoError(err)
+				s.Require().NoError(err, "setting old forward NAV should succeed")
 				s.setReverseNAV(underlyingDenom, paymentDenom, 5, 7)
 				s.bumpHeight()
 				err = s.k.MarkerKeeper.SetNetAssetValue(s.ctx, pmtMarkerAcct, markertypes.NetAssetValue{
 					Price:  sdk.NewInt64Coin(underlyingDenom, 6),
 					Volume: 4,
 				}, "fwd-new")
-				s.Require().NoError(err)
+				s.Require().NoError(err, "setting new forward NAV should succeed")
 			},
 			expectedNumerator:   6,
 			expectedDenominator: 4,
@@ -110,13 +110,13 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 			setup: func() {
 				pmtMarkerAddr := markertypes.MustGetMarkerAddress(paymentDenom)
 				pmtMarkerAcct, err := s.k.MarkerKeeper.GetMarker(s.ctx, pmtMarkerAddr)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "should fetch marker for %s", paymentDenom)
 				s.setReverseNAV(underlyingDenom, paymentDenom, 11, 5)
 				err = s.k.MarkerKeeper.SetNetAssetValue(s.ctx, pmtMarkerAcct, markertypes.NetAssetValue{
 					Price:  sdk.NewInt64Coin(underlyingDenom, 9),
 					Volume: 3,
 				}, "fwd-same-height")
-				s.Require().NoError(err)
+				s.Require().NoError(err, "setting forward NAV at same height should succeed")
 			},
 			expectedNumerator:   9,
 			expectedDenominator: 3,
@@ -142,14 +142,14 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 			testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
 			num, den, err := testKeeper.UnitPriceFraction(s.ctx, tc.fromDenom, vault)
 			if tc.expectedErrorContains != "" {
-				s.Require().Error(err, "case %q", tc.name)
-				s.Require().Contains(err.Error(), tc.expectedErrorContains, "case %q", tc.name)
+				s.Require().Error(err, "expected error for case %q", tc.name)
+				s.Require().Contains(err.Error(), tc.expectedErrorContains, "error message mismatch for case %q", tc.name)
 				return
 			}
-			s.Require().NoError(err, "case %q", tc.name)
-			s.Require().Equal(math.NewInt(tc.expectedNumerator), num, "case %q numerator", tc.name)
-			s.Require().Equal(math.NewInt(tc.expectedDenominator), den, "case %q denominator", tc.name)
-			s.Require().True(den.IsPositive(), "case %q denominator positive", tc.name)
+			s.Require().NoError(err, "unexpected error for case %q", tc.name)
+			s.Require().Equal(math.NewInt(tc.expectedNumerator), num, "numerator mismatch for case %q", tc.name)
+			s.Require().Equal(math.NewInt(tc.expectedDenominator), den, "denominator mismatch for case %q", tc.name)
+			s.Require().True(den.IsPositive(), "denominator must be positive for case %q", tc.name)
 		})
 	}
 }

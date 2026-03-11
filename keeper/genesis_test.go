@@ -53,29 +53,29 @@ func (s *TestSuite) TestVaultGenesis_InitAndExport() {
 	s.ctx = s.ctx.WithBlockTime(time.Unix(past+60, 0))
 
 	exported := s.k.ExportGenesis(s.ctx)
-	s.Require().Len(exported.Vaults, 1)
+	s.Require().Len(exported.Vaults, 1, "exported genesis should contain exactly one vault")
 	exp := exported.Vaults[0]
-	s.Require().Equal(vault.GetAddress().String(), exp.GetAddress().String())
-	s.Require().Equal(vault.Admin, exp.Admin)
-	s.Require().Equal(vault.TotalShares, exp.TotalShares)
-	s.Require().Equal(vault.UnderlyingAsset, exp.UnderlyingAsset)
+	s.Require().Equal(vault.GetAddress().String(), exp.GetAddress().String(), "exported vault address mismatch")
+	s.Require().Equal(vault.Admin, exp.Admin, "exported vault admin mismatch")
+	s.Require().Equal(vault.TotalShares, exp.TotalShares, "exported vault total shares mismatch")
+	s.Require().Equal(vault.UnderlyingAsset, exp.UnderlyingAsset, "exported vault underlying asset mismatch")
 
-	s.Require().Len(exported.PayoutTimeoutQueue, 1)
-	s.Require().Equal(vaultAddr.String(), exported.PayoutTimeoutQueue[0].Addr)
-	s.Require().Equal(uint64(past), exported.PayoutTimeoutQueue[0].Time)
+	s.Require().Len(exported.PayoutTimeoutQueue, 1, "exported genesis should contain exactly one payout timeout entry")
+	s.Require().Equal(vaultAddr.String(), exported.PayoutTimeoutQueue[0].Addr, "payout timeout entry address mismatch")
+	s.Require().Equal(uint64(past), exported.PayoutTimeoutQueue[0].Time, "payout timeout entry time mismatch")
 
 	got, err := s.k.GetVault(s.ctx, vaultAddr)
-	s.Require().NoError(err)
-	s.Require().NotNil(got)
-	s.Require().Equal(vaultAddr.String(), got.GetAddress().String())
+	s.Require().NoError(err, "failed to get vault after InitGenesis")
+	s.Require().NotNil(got, "vault should not be nil after InitGenesis")
+	s.Require().Equal(vaultAddr.String(), got.GetAddress().String(), "retrieved vault address mismatch")
 
-	s.Require().Len(exported.PendingSwapOutQueue.Entries, 1)
-	s.Require().Equal(uint64(55), exported.PendingSwapOutQueue.LatestSequenceNumber)
-	s.Require().Equal(uint64(1), exported.PendingSwapOutQueue.Entries[0].Id)
-	s.Require().Equal(int64(10000), exported.PendingSwapOutQueue.Entries[0].Time)
-	s.Require().Equal(admin, exported.PendingSwapOutQueue.Entries[0].SwapOut.Owner)
-	s.Require().Equal(vault.Address, exported.PendingSwapOutQueue.Entries[0].SwapOut.VaultAddress)
-	s.Require().Equal("ylds", exported.PendingSwapOutQueue.Entries[0].SwapOut.RedeemDenom)
+	s.Require().Len(exported.PendingSwapOutQueue.Entries, 1, "exported genesis should contain exactly one pending swap out entry")
+	s.Require().Equal(uint64(55), exported.PendingSwapOutQueue.LatestSequenceNumber, "pending swap out queue latest sequence number mismatch")
+	s.Require().Equal(uint64(1), exported.PendingSwapOutQueue.Entries[0].Id, "pending swap out entry ID mismatch")
+	s.Require().Equal(int64(10000), exported.PendingSwapOutQueue.Entries[0].Time, "pending swap out entry time mismatch")
+	s.Require().Equal(admin, exported.PendingSwapOutQueue.Entries[0].SwapOut.Owner, "pending swap out entry owner mismatch")
+	s.Require().Equal(vault.Address, exported.PendingSwapOutQueue.Entries[0].SwapOut.VaultAddress, "pending swap out entry vault address mismatch")
+	s.Require().Equal("ylds", exported.PendingSwapOutQueue.Entries[0].SwapOut.RedeemDenom, "pending swap out entry redeem denom mismatch")
 }
 
 func (s *TestSuite) TestVaultGenesis_RoundTrip_PastAndFutureTimeouts() {
@@ -111,11 +111,11 @@ func (s *TestSuite) TestVaultGenesis_RoundTrip_PastAndFutureTimeouts() {
 	s.ctx = s.ctx.WithBlockTime(now)
 
 	exported := s.k.ExportGenesis(s.ctx)
-	s.Require().Len(exported.PayoutTimeoutQueue, 2)
-	s.Require().Equal(vaultAddr.String(), exported.PayoutTimeoutQueue[0].Addr)
-	s.Require().Equal(uint64(past), exported.PayoutTimeoutQueue[0].Time)
-	s.Require().Equal(vaultAddr.String(), exported.PayoutTimeoutQueue[1].Addr)
-	s.Require().Equal(uint64(future), exported.PayoutTimeoutQueue[1].Time)
+	s.Require().Len(exported.PayoutTimeoutQueue, 2, "exported genesis should contain exactly two payout timeout entries")
+	s.Require().Equal(vaultAddr.String(), exported.PayoutTimeoutQueue[0].Addr, "first payout timeout entry address mismatch")
+	s.Require().Equal(uint64(past), exported.PayoutTimeoutQueue[0].Time, "first payout timeout entry time mismatch")
+	s.Require().Equal(vaultAddr.String(), exported.PayoutTimeoutQueue[1].Addr, "second payout timeout entry address mismatch")
+	s.Require().Equal(uint64(future), exported.PayoutTimeoutQueue[1].Time, "second payout timeout entry time mismatch")
 }
 
 func (s *TestSuite) TestVaultGenesis_InvalidTimeoutAddressPanics() {
@@ -141,7 +141,7 @@ func (s *TestSuite) TestVaultGenesis_InvalidTimeoutAddressPanics() {
 		PendingSwapOutQueue: types.PendingSwapOutQueue{},
 	}
 
-	s.Require().Panics(func() { s.k.InitGenesis(s.ctx, genesis) })
+	s.Require().Panics(func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on invalid timeout address")
 }
 
 func (s *TestSuite) TestVaultGenesis_ExistingAccountNumberCopied() {
@@ -151,7 +151,7 @@ func (s *TestSuite) TestVaultGenesis_ExistingAccountNumberCopied() {
 	vaultAddr := types.GetVaultAddress(shareDenom)
 
 	existing := authtypes.NewBaseAccountWithAddress(vaultAddr)
-	s.Require().NoError(existing.SetAccountNumber(7))
+	s.Require().NoError(existing.SetAccountNumber(7), "failed to set account number for existing account")
 	s.k.AuthKeeper.SetAccount(s.ctx, existing)
 
 	vault := types.VaultAccount{
@@ -171,15 +171,15 @@ func (s *TestSuite) TestVaultGenesis_ExistingAccountNumberCopied() {
 
 	s.k.InitGenesis(s.ctx, genesis)
 	exported := s.k.ExportGenesis(s.ctx)
-	s.Require().Len(exported.Vaults, 1)
-	s.Require().Equal(uint64(7), exported.Vaults[0].GetAccountNumber())
+	s.Require().Len(exported.Vaults, 1, "exported genesis should contain exactly one vault")
+	s.Require().Equal(uint64(7), exported.Vaults[0].GetAccountNumber(), "exported vault account number mismatch")
 }
 
 func (s *TestSuite) TestVaultGenesis_InitNilDoesNothing() {
 	s.k.InitGenesis(s.ctx, nil)
 	exported := s.k.ExportGenesis(s.ctx)
-	s.Require().Len(exported.Vaults, 0)
-	s.Require().Len(exported.PayoutTimeoutQueue, 0)
+	s.Require().Len(exported.Vaults, 0, "exported genesis should contain zero vaults after nil InitGenesis")
+	s.Require().Len(exported.PayoutTimeoutQueue, 0, "exported genesis should contain zero payout timeout entries after nil InitGenesis")
 }
 
 func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidVault() {
@@ -193,7 +193,7 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidVault() {
 		DesiredInterestRate: types.ZeroInterestRate,
 	}
 	genesis := &types.GenesisState{Vaults: []types.VaultAccount{vault}}
-	s.Require().Panics(func() { s.k.InitGenesis(s.ctx, genesis) })
+	s.Require().Panics(func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on invalid genesis state")
 }
 
 func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidPendingSwapOut() {
@@ -228,7 +228,7 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidPendingSwapOut() {
 			},
 		},
 	}
-	s.Require().Panics(func() { s.k.InitGenesis(s.ctx, genesis) })
+	s.Require().Panics(func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on invalid genesis state")
 }
 
 func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPendingSwapOutHasUnknownVault() {
@@ -265,7 +265,7 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPendingSwapOutHasUnknownVault
 			},
 		},
 	}
-	s.Require().Panics(func() { s.k.InitGenesis(s.ctx, genesis) })
+	s.Require().Panics(func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on invalid genesis state")
 }
 
 func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPendingSwapOutHasBadVaultAddress() {
@@ -301,5 +301,5 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPendingSwapOutHasBadVaultAddr
 			},
 		},
 	}
-	s.Require().Panics(func() { s.k.InitGenesis(s.ctx, genesis) })
+	s.Require().Panics(func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on invalid genesis state")
 }

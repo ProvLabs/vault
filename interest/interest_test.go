@@ -97,13 +97,13 @@ func TestCalculateInterestEarned(t *testing.T) {
 			interestAmt, err := interest.CalculateInterestEarned(tc.principal, tc.rate, tc.periodSeconds)
 
 			if tc.expectedErrorMsg != "" {
-				require.Error(t, err)
-				require.Contains(t, err.Error(), tc.expectedErrorMsg)
+				require.Errorf(t, err, "test case %q: expected error but got none", tc.name)
+				require.Containsf(t, err.Error(), tc.expectedErrorMsg, "test case %q: error message mismatch", tc.name)
 				return
 			}
 
-			require.NoError(t, err)
-			require.True(t, tc.expectedInterest.Equal(interestAmt), "interest amount doesn't match expected %s : %s", tc.expectedInterest.String(), interestAmt.String())
+			require.NoErrorf(t, err, "test case %q: unexpected error", tc.name)
+			require.Truef(t, tc.expectedInterest.Equal(interestAmt), "test case %q: interest amount doesn't match; expected %s, got %s", tc.name, tc.expectedInterest.String(), interestAmt.String())
 		})
 	}
 }
@@ -218,16 +218,13 @@ func TestCalculateExpiration(t *testing.T) {
 			exp, err := interest.CalculateExpiration(tc.principal, tc.reserves, tc.rate, tc.periodSeconds, tc.startTime, limit)
 
 			if tc.expectedErrStr != "" {
-				require.Error(t, err, "expected error for test %q but got none", tc.name)
-				require.Contains(t, err.Error(), tc.expectedErrStr,
-					"expected error containing %q, got %q", tc.expectedErrStr, err.Error())
+				require.Errorf(t, err, "test case %q: expected error but got none", tc.name)
+				require.Containsf(t, err.Error(), tc.expectedErrStr, "test case %q: error message mismatch", tc.name)
 				return
 			}
 
-			require.NoError(t, err, "unexpected error for test %q: %v", tc.name, err)
-			require.Equal(t, tc.expected, exp,
-				"unexpected expiration time for test %q\nprincipal=%s reserves=%s rate=%s period=%d limit=%d",
-				tc.name, tc.principal, tc.reserves, tc.rate, tc.periodSeconds, limit)
+			require.NoErrorf(t, err, "test case %q: unexpected error", tc.name)
+			require.Equalf(t, tc.expected, exp, "test case %q: expiration time mismatch; principal=%s reserves=%s rate=%s period=%d limit=%d", tc.name, tc.principal, tc.reserves, tc.rate, tc.periodSeconds, limit)
 		})
 	}
 }
@@ -356,14 +353,14 @@ func TestExpDecInterestDrift(t *testing.T) {
 
 	for _, rate := range rates {
 		rateF, err := strconv.ParseFloat(rate, 64)
-		require.NoError(t, err)
+		require.NoErrorf(t, err, "failed to parse rate %q", rate)
 
 		for _, principalAmt := range principals {
 			for _, duration := range durations {
 				principal := sdk.NewCoin("test", sdkmath.NewInt(principalAmt))
 
 				earned, err := interest.CalculateInterestEarned(principal, rate, duration)
-				require.NoError(t, err)
+				require.NoErrorf(t, err, "CalculateInterestEarned failed for rate=%s, principal=%d, duration=%d", rate, principalAmt, duration)
 				sdkInterest := earned.Int64()
 
 				tYears := float64(duration) / float64(annualSeconds)
@@ -373,7 +370,7 @@ func TestExpDecInterestDrift(t *testing.T) {
 				diff := sdkInterest - stdInterest
 				percentDrift := 100 * float64(diff) / float64(principalAmt)
 
-				t.Logf("terms=%d, rate=%s, principal=%d, duration=%ds → sdk=%d, std=%d, drift=%d (%.10f%%)",
+				t.Logf("terms=%d, rate=%s, principal=%d, duration=%ds \u2192 sdk=%d, std=%d, drift=%d (%.10f%%)",
 					interest.EulerPrecision, rate, principalAmt, duration, sdkInterest, stdInterest, diff, percentDrift)
 			}
 		}

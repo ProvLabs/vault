@@ -67,10 +67,10 @@ func TestPendingSwapOutQueue_Codec(t *testing.T) {
 	require.NoError(t, err, "walk should not error")
 	require.True(t, retrieved, "did not retrieve any request from the queue")
 
-	require.Equal(t, originalReq.Owner, retrievedReq.Owner, "retrieved owner must match original owner")
-	require.Equal(t, originalReq.VaultAddress, retrievedReq.VaultAddress, "retrieved vault address must match original vault address")
-	require.Equal(t, originalReq.RedeemDenom, retrievedReq.RedeemDenom, "retrieved redeem denom must match original redeem denom")
-	require.Equal(t, originalReq.Shares, retrievedReq.Shares, "retrieved shares must match original shares")
+	require.Equal(t, originalReq.Owner, retrievedReq.Owner, "retrieved owner mismatch")
+	require.Equal(t, originalReq.VaultAddress, retrievedReq.VaultAddress, "retrieved vault address mismatch")
+	require.Equal(t, originalReq.RedeemDenom, retrievedReq.RedeemDenom, "retrieved redeem denom mismatch")
+	require.Equal(t, originalReq.Shares, retrievedReq.Shares, "retrieved shares mismatch")
 }
 
 func TestPendingSwapOutQueueWalk(t *testing.T) {
@@ -285,25 +285,25 @@ func TestPendingSwapOutQueueEnqueueAndDequeue(t *testing.T) {
 				timestamp, addr, id := tc.setup(t, ctx, q)
 				err := q.Dequeue(ctx, timestamp, addr, id)
 				if tc.expectError {
-					require.Error(t, err, "dequeue should return an error")
+					require.Errorf(t, err, "test case %q: dequeue should return an error", tc.name)
 					if tc.errorMsg != "" {
-						require.Contains(t, err.Error(), tc.errorMsg, "dequeue error message should contain expected text")
+						require.Containsf(t, err.Error(), tc.errorMsg, "test case %q: dequeue error message mismatch", tc.name)
 					}
 				} else {
-					require.NoError(t, err, "dequeue should not return an error")
+					require.NoErrorf(t, err, "test case %q: dequeue should not return an error", tc.name)
 					_, err = q.IndexedMap.Get(ctx, collections.Join3(timestamp, id, addr))
-					require.Error(t, err, "get should fail after successful dequeue")
-					require.ErrorIs(t, err, collections.ErrNotFound, "error should be collections.ErrNotFound")
+					require.Errorf(t, err, "test case %q: get should fail after successful dequeue", tc.name)
+					require.ErrorIs(t, err, collections.ErrNotFound, "test case %q: error should be collections.ErrNotFound", tc.name)
 				}
 			} else {
 				_, err := q.Enqueue(ctx, tc.timestamp, tc.req)
 				if tc.expectError {
-					require.Error(t, err, "enqueue should return an error")
+					require.Errorf(t, err, "test case %q: enqueue should return an error", tc.name)
 					if tc.errorMsg != "" {
-						require.Contains(t, err.Error(), tc.errorMsg, "enqueue error message should contain expected text")
+						require.Containsf(t, err.Error(), tc.errorMsg, "test case %q: enqueue error message mismatch", tc.name)
 					}
 				} else {
-					require.NoError(t, err, "enqueue should not return an error")
+					require.NoErrorf(t, err, "test case %q: enqueue should not return an error", tc.name)
 				}
 			}
 		})
@@ -342,14 +342,14 @@ func TestPendingSwapOutQueue_GetByID(t *testing.T) {
 			pendingTime, req, err := q.GetByID(ctx, id)
 
 			if len(tc.errorMsg) > 0 {
-				require.Error(t, err, "GetByID should return an error")
-				require.ErrorContains(t, err, tc.errorMsg, "error message should contain expected text")
-				require.Equal(t, int64(0), pendingTime, "pending time should be zero on error")
+				require.Errorf(t, err, "test case %q: GetByID should return an error", name)
+				require.ErrorContainsf(t, err, tc.errorMsg, "test case %q: error message mismatch", name)
+				require.Equalf(t, int64(0), pendingTime, "test case %q: pending time should be zero on error", name)
 			} else {
-				require.NoError(t, err, "GetByID should not return an error")
-				require.Equal(t, req1.VaultAddress, req.VaultAddress, "retrieved vault address should match")
-				require.Equal(t, req1.Owner, req.Owner, "retrieved owner should match")
-				require.Equal(t, int64(123), pendingTime, "retrieved timestamp should match")
+				require.NoErrorf(t, err, "test case %q: GetByID should not return an error", name)
+				require.Equalf(t, req1.VaultAddress, req.VaultAddress, "test case %q: retrieved vault address mismatch", name)
+				require.Equalf(t, req1.Owner, req.Owner, "test case %q: retrieved owner mismatch", name)
+				require.Equalf(t, int64(123), pendingTime, "test case %q: retrieved timestamp mismatch", name)
 			}
 		})
 	}
@@ -409,19 +409,19 @@ func TestPendingSwapOutQueue_ExpediteSwapOut(t *testing.T) {
 			err := q.ExpediteSwapOut(ctx, id)
 
 			if len(tc.errorMsg) > 0 {
-				require.Error(t, err, "ExpediteSwapOut should return an error")
-				require.ErrorContains(t, err, tc.errorMsg, "error message should contain expected text")
+				require.Errorf(t, err, "test case %q: ExpediteSwapOut should return an error", name)
+				require.ErrorContainsf(t, err, tc.errorMsg, "test case %q: error message mismatch", name)
 			} else {
-				require.NoError(t, err, "ExpediteSwapOut should not return an error")
+				require.NoErrorf(t, err, "test case %q: ExpediteSwapOut should not return an error", name)
 
 				if oldTimestamp != 0 {
 					_, err = q.IndexedMap.Get(ctx, collections.Join3(oldTimestamp, id, addr))
-					require.ErrorContains(t, err, "not found", "old entry should be removed")
+					require.ErrorContainsf(t, err, "not found", "test case %q: old entry should be removed", name)
 				}
 
 				newKey := collections.Join3(int64(0), id, addr)
 				_, err = q.IndexedMap.Get(ctx, newKey)
-				require.NoError(t, err, "new entry with timestamp 0 should exist")
+				require.NoErrorf(t, err, "test case %q: new entry with timestamp 0 should exist", name)
 			}
 		})
 	}
@@ -483,18 +483,18 @@ func TestPendingSwapOutQueue_Export(t *testing.T) {
 			exportedQueue, err := q.Export(ctx)
 
 			if tc.expectError {
-				require.Error(t, err, "export should return an error")
+				require.Errorf(t, err, "test case %q: export should return an error", tc.name)
 			} else {
-				require.NoError(t, err, "export should not return an error")
-				require.Equal(t, tc.expectedQueue.LatestSequenceNumber, exportedQueue.LatestSequenceNumber, "latest sequence number should match")
-				require.Equal(t, len(tc.expectedQueue.Entries), len(exportedQueue.Entries), "number of exported entries should match")
+				require.NoErrorf(t, err, "test case %q: export should not return an error", tc.name)
+				require.Equalf(t, tc.expectedQueue.LatestSequenceNumber, exportedQueue.LatestSequenceNumber, "test case %q: latest sequence number mismatch", tc.name)
+				require.Equalf(t, len(tc.expectedQueue.Entries), len(exportedQueue.Entries), "test case %q: number of exported entries mismatch", tc.name)
 				for i, entry := range tc.expectedQueue.Entries {
-					require.Equal(t, entry.Time, exportedQueue.Entries[i].Time, "exported entry time should match")
-					require.Equal(t, entry.Id, exportedQueue.Entries[i].Id, "exported entry ID should match")
-					require.Equal(t, entry.SwapOut.Owner, exportedQueue.Entries[i].SwapOut.Owner, "exported entry owner should match")
-					require.Equal(t, entry.SwapOut.VaultAddress, exportedQueue.Entries[i].SwapOut.VaultAddress, "exported entry vault address should match")
-					require.Equal(t, entry.SwapOut.RedeemDenom, exportedQueue.Entries[i].SwapOut.RedeemDenom, "exported entry redeem denom should match")
-					require.Equal(t, entry.SwapOut.Shares, exportedQueue.Entries[i].SwapOut.Shares, "exported entry shares should match")
+					require.Equalf(t, entry.Time, exportedQueue.Entries[i].Time, "test case %q: exported entry time mismatch at index %d", tc.name, i)
+					require.Equalf(t, entry.Id, exportedQueue.Entries[i].Id, "test case %q: exported entry ID mismatch at index %d", tc.name, i)
+					require.Equalf(t, entry.SwapOut.Owner, exportedQueue.Entries[i].SwapOut.Owner, "test case %q: exported entry owner mismatch at index %d", tc.name, i)
+					require.Equalf(t, entry.SwapOut.VaultAddress, exportedQueue.Entries[i].SwapOut.VaultAddress, "test case %q: exported entry vault address mismatch at index %d", tc.name, i)
+					require.Equalf(t, entry.SwapOut.RedeemDenom, exportedQueue.Entries[i].SwapOut.RedeemDenom, "test case %q: exported entry redeem denom mismatch at index %d", tc.name, i)
+					require.Equalf(t, entry.SwapOut.Shares, exportedQueue.Entries[i].SwapOut.Shares, "test case %q: exported entry shares mismatch at index %d", tc.name, i)
 				}
 			}
 		})
@@ -568,21 +568,21 @@ func TestPendingSwapOutQueue_Import(t *testing.T) {
 			err := q.Import(ctx, tc.genQueue)
 
 			if len(tc.errorMsg) > 0 {
-				require.Error(t, err, "import should return an error")
-				require.Contains(t, err.Error(), tc.errorMsg, "import error message should contain expected text")
+				require.Errorf(t, err, "test case %q: import should return an error", tc.name)
+				require.Containsf(t, err.Error(), tc.errorMsg, "test case %q: import error message mismatch", tc.name)
 			} else {
-				require.NoError(t, err, "import should not return an error")
+				require.NoErrorf(t, err, "test case %q: import should not return an error", tc.name)
 
 				seq, err := q.Sequence.Peek(ctx)
-				require.NoError(t, err, "sequence peek should not error")
-				require.Equal(t, tc.genQueue.LatestSequenceNumber, seq, "latest sequence number should match imported value")
+				require.NoErrorf(t, err, "test case %q: sequence peek should not error", tc.name)
+				require.Equalf(t, tc.genQueue.LatestSequenceNumber, seq, "test case %q: latest sequence number mismatch", tc.name)
 
 				for _, entry := range tc.genQueue.Entries {
 					vaultAddr, err := sdk.AccAddressFromBech32(entry.SwapOut.VaultAddress)
-					require.NoError(t, err, "vault address should be valid")
+					require.NoErrorf(t, err, "test case %q: vault address should be valid", tc.name)
 					req, err := q.IndexedMap.Get(ctx, collections.Join3(entry.Time, entry.Id, vaultAddr))
-					require.NoError(t, err, "indexed map get should not error")
-					require.Equal(t, entry.SwapOut, req, "retrieved request should match imported request")
+					require.NoErrorf(t, err, "test case %q: indexed map get should not error", tc.name)
+					require.Equalf(t, entry.SwapOut, req, "test case %q: retrieved request mismatch", tc.name)
 				}
 			}
 		})

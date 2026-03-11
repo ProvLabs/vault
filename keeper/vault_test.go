@@ -43,15 +43,15 @@ func (s *TestSuite) TestCreateVault_Success() {
 	}
 
 	vault, err := s.k.CreateVault(s.ctx, attrs)
-	s.Require().NoError(err)
-	s.Require().Equal(attrs.admin, vault.Admin)
-	s.Require().Equal(attrs.share, vault.TotalShares.Denom)
-	s.Require().Equal(attrs.underlying, vault.UnderlyingAsset)
+	s.Require().NoError(err, "CreateVault should succeed for valid attributes")
+	s.Require().Equal(attrs.admin, vault.Admin, "vault admin should match request")
+	s.Require().Equal(attrs.share, vault.TotalShares.Denom, "vault share denom should match request")
+	s.Require().Equal(attrs.underlying, vault.UnderlyingAsset, "vault underlying asset should match request")
 
 	addr := types.GetVaultAddress(share)
 	stored, err := s.k.GetVault(s.ctx, addr)
-	s.Require().NoError(err)
-	s.Require().Equal(vault.Address, stored.Address)
+	s.Require().NoError(err, "GetVault should succeed for existing vault")
+	s.Require().Equal(vault.Address, stored.Address, "stored vault address should match created vault address")
 }
 
 func (s *TestSuite) TestCreateVault_AssetMarkerMissing() {
@@ -82,7 +82,8 @@ func (s *TestSuite) TestCreateVault_DuplicateMarkerFails() {
 	}
 
 	_, err := s.k.CreateVault(s.ctx, attrs)
-	s.Require().ErrorContains(err, "already exists")
+	s.Require().Error(err, "CreateVault should fail for duplicate marker")
+	s.Require().ErrorContains(err, "already exists", "error message should mention duplicate marker")
 }
 
 func (s *TestSuite) TestCreateVault_InvalidDenomFails() {
@@ -94,7 +95,8 @@ func (s *TestSuite) TestCreateVault_InvalidDenomFails() {
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(attrs.underlying, 1000), s.adminAddr)
 
 	_, err := s.k.CreateVault(s.ctx, attrs)
-	s.Require().ErrorContains(err, "invalid denom")
+	s.Require().Error(err, "CreateVault should fail for invalid share denom")
+	s.Require().ErrorContains(err, "invalid denom", "error message should mention invalid denom")
 }
 
 func (s *TestSuite) TestCreateVault_InvalidAdminFails() {
@@ -109,7 +111,8 @@ func (s *TestSuite) TestCreateVault_InvalidAdminFails() {
 	}
 
 	_, err := s.k.CreateVault(s.ctx, attrs)
-	s.Require().ErrorContains(err, "invalid admin address")
+	s.Require().Error(err, "CreateVault should fail for invalid admin address")
+	s.Require().ErrorContains(err, "invalid admin address", "error message should mention invalid admin address")
 }
 
 func (s *TestSuite) TestSwapIn_MultiAsset() {
@@ -233,8 +236,8 @@ func (s *TestSuite) TestSwapOut_FailsWhenDisabled() {
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 	_, err := s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sdk.NewInt64Coin(shareDenom, 10), "")
-	s.Require().Error(err, "swap out should fail when disabled")
-	s.Require().ErrorContains(err, "swaps are not enabled", "error should mention swaps are disabled")
+	s.Require().Error(err, "SwapOut should fail when swaps are disabled")
+	s.Require().ErrorContains(err, "swaps are not enabled", "error message should mention swaps are disabled")
 }
 
 func (s *TestSuite) TestSwapOut_FailsWithInsufficientShares() {
@@ -462,11 +465,11 @@ func (s *TestSuite) TestSetMinInterestRate_ValidationBlocksWhenAboveExistingMax(
 
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	err = s.k.SetMinInterestRate(s.ctx, v, "0.50")
-	s.Require().Error(err)
-	s.Require().Contains(err.Error(), "minimum interest rate")
-	s.Require().Equal("0.40", v.MaxInterestRate)
-	s.Require().Equal("", v.MinInterestRate)
-	s.Require().Len(s.ctx.EventManager().Events(), 0)
+	s.Require().Error(err, "setting min interest rate above max should fail")
+	s.Require().Contains(err.Error(), "minimum interest rate", "error message mismatch when setting min > max")
+	s.Require().Equal("0.40", v.MaxInterestRate, "max interest rate should remain unchanged")
+	s.Require().Equal("", v.MinInterestRate, "min interest rate should remain unchanged")
+	s.Require().Empty(s.ctx.EventManager().Events(), "no events should be emitted on validation failure")
 }
 
 func (s *TestSuite) TestSetMaxInterestRate_ValidationBlocksWhenBelowExistingMin() {
@@ -476,17 +479,17 @@ func (s *TestSuite) TestSetMaxInterestRate_ValidationBlocksWhenBelowExistingMin(
 
 	attrs := vaultAttrs{admin: s.adminAddr.String(), share: share, underlying: base}
 	v, err := s.k.CreateVault(s.ctx, attrs)
-	s.Require().NoError(err)
+	s.Require().NoError(err, "CreateVault should succeed")
 
-	s.Require().NoError(s.k.SetMinInterestRate(s.ctx, v, "-0.50"))
+	s.Require().NoError(s.k.SetMinInterestRate(s.ctx, v, "-0.50"), "setting min interest rate should succeed")
 
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	err = s.k.SetMaxInterestRate(s.ctx, v, "-0.60")
-	s.Require().Error(err)
-	s.Require().Contains(err.Error(), "minimum interest rate")
-	s.Require().Equal("-0.50", v.MinInterestRate)
-	s.Require().Equal("", v.MaxInterestRate)
-	s.Require().Len(s.ctx.EventManager().Events(), 0)
+	s.Require().Error(err, "setting max interest rate below min should fail")
+	s.Require().Contains(err.Error(), "minimum interest rate", "error message mismatch when setting max < min")
+	s.Require().Equal("-0.50", v.MinInterestRate, "min interest rate should remain unchanged")
+	s.Require().Equal("", v.MaxInterestRate, "max interest rate should remain unchanged")
+	s.Require().Empty(s.ctx.EventManager().Events(), "no events should be emitted on validation failure")
 }
 
 func (s *TestSuite) TestValidateInterestRateLimits() {
@@ -609,7 +612,7 @@ func (s *TestSuite) TestUpdateInterestRate_BoundsEnforced() {
 	addr := types.GetVaultAddress(share)
 
 	v, err := s.k.GetVault(s.ctx, addr)
-	s.Require().NoError(err)
+	s.Require().NoError(err, "GetVault should succeed")
 
 	s.Require().NoError(s.k.UpdateInterestRates(s.ctx, v, "0.10", "0.10"), "should set initial min/max rates without error")
 	s.k.AuthKeeper.SetAccount(s.ctx, v)
@@ -628,8 +631,8 @@ func (s *TestSuite) TestUpdateInterestRate_BoundsEnforced() {
 	s.Require().NoError(err, "updating interest rate to 0.25 should not error")
 	v2, err := s.k.GetVault(s.ctx, addr)
 	s.Require().NoError(err, "getting vault after interest rate update should not error")
-	s.Require().Equal("0.25", v2.CurrentInterestRate)
-	s.Require().Equal("0.25", v2.DesiredInterestRate)
+	s.Require().Equal("0.25", v2.CurrentInterestRate, "current interest rate mismatch after update")
+	s.Require().Equal("0.25", v2.DesiredInterestRate, "desired interest rate mismatch after update")
 
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	_, err = srv.UpdateInterestRate(s.ctx, &types.MsgUpdateInterestRateRequest{
@@ -637,7 +640,7 @@ func (s *TestSuite) TestUpdateInterestRate_BoundsEnforced() {
 		VaultAddress: addr.String(),
 		NewRate:      "0.05",
 	})
-	s.Require().Error(err, "updating interest rate to 0.05 should error")
+	s.Require().Error(err, "updating interest rate to 0.05 (below min 0.10) should error")
 
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	_, err = srv.UpdateInterestRate(s.ctx, &types.MsgUpdateInterestRateRequest{
@@ -645,7 +648,7 @@ func (s *TestSuite) TestUpdateInterestRate_BoundsEnforced() {
 		VaultAddress: addr.String(),
 		NewRate:      "0.60",
 	})
-	s.Require().Error(err, "updating interest rate to 0.60 should error")
+	s.Require().Error(err, "updating interest rate to 0.60 (above max 0.50) should error")
 }
 
 func (s *TestSuite) TestAutoPauseVault_SetsPausedAndEmitsEvent() {

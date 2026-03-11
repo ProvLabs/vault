@@ -50,7 +50,7 @@ func Setup(t *testing.T) *SimApp {
 
 	privVal := mock.NewPV()
 	pubKey, err := privVal.GetPubKey()
-	require.NoError(t, err)
+	require.NoError(t, err, "failed to get public key")
 
 	// create validator set with single validator
 	validator := cmttypes.NewValidator(pubKey, 1)
@@ -168,9 +168,9 @@ func genesisStateWithValSet(t *testing.T,
 
 	for _, val := range valSet.Validators {
 		pk, err := cryptocodec.FromCmtPubKeyInterface(val.PubKey)
-		require.NoError(t, err)
+		require.NoError(t, err, "failed to convert CometBFT pubkey")
 		pkAny, err := codectypes.NewAnyWithValue(pk)
-		require.NoError(t, err)
+		require.NoError(t, err, "failed to pack pubkey into Any")
 		validator := stakingtypes.Validator{
 			OperatorAddress:   sdk.ValAddress(val.Address).String(),
 			ConsensusPubkey:   pkAny,

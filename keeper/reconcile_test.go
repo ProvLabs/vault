@@ -96,12 +96,13 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 				s.assertVaultAndMarkerBalances(vaultAddress, shareDenom, underlying.Denom, sdkmath.NewInt(957_801_412), sdkmath.NewInt(1_041_952_013))
 			},
 			expectedEvents: func() sdk.Events {
+				feeAddr, err := types.GetProvLabsFeeAddress(s.ctx.ChainID())
+				s.Require().NoError(err)
 				feeEv := createFeeEvents(
 					vaultAddress,
-					types.GetProvLabsFeeAddress(s.ctx.ChainID()),
-					sdkmath.NewInt(246_575),
-					sdkmath.NewInt(1_000_000_000),
-					underlying.Denom,
+					feeAddr,
+					sdk.NewCoin(underlying.Denom, sdkmath.NewInt(246_575)),
+					sdk.NewCoin(underlying.Denom, sdkmath.NewInt(1_000_000_000)),
 					5_184_000,
 				)
 				ev := createReconcileEvents(
@@ -139,12 +140,13 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 				s.assertVaultAndMarkerBalances(vaultAddress, shareDenom, underlying.Denom, sdkmath.NewInt(1_040_016_329), sdkmath.NewInt(959_737_096))
 			},
 			expectedEvents: func() sdk.Events {
+				feeAddr, err := types.GetProvLabsFeeAddress(s.ctx.ChainID())
+				s.Require().NoError(err)
 				feeEv := createFeeEvents(
 					vaultAddress,
-					types.GetProvLabsFeeAddress(s.ctx.ChainID()),
-					sdkmath.NewInt(246_575),
-					sdkmath.NewInt(1_000_000_000),
-					underlying.Denom,
+					feeAddr,
+					sdk.NewCoin(underlying.Denom, sdkmath.NewInt(246_575)),
+					sdk.NewCoin(underlying.Denom, sdkmath.NewInt(1_000_000_000)),
 					5_184_000,
 				)
 				ev := createReconcileEvents(
@@ -343,12 +345,13 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 			expectDeleted: false,
 			expectRate:    "0.25",
 			expectedEvents: func() sdk.Events {
+				feeAddr, err := types.GetProvLabsFeeAddress(s.ctx.ChainID())
+				s.Require().NoError(err)
 				feeEv := createFeeEvents(
 					vaultAddr,
-					types.GetProvLabsFeeAddress(s.ctx.ChainID()),
-					sdkmath.NewInt(246_575),
-					sdkmath.NewInt(1_000_000_000),
-					underlying.Denom,
+					feeAddr,
+					sdk.NewCoin(underlying.Denom, sdkmath.NewInt(246_575)),
+					sdk.NewCoin(underlying.Denom, sdkmath.NewInt(1_000_000_000)),
 					5_184_000,
 				)
 				ev := createReconcileEvents(
@@ -1379,7 +1382,10 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_NegativeInterest_Com
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 	// Fund with enough for both fee and interest if needed
-	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1_000_000))), "Funding vault should succeed")
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(
+		sdk.NewInt64Coin(underlyingDenom, 1_000_000),
+		sdk.NewInt64Coin(paymentDenom, 10_000_000),
+	)), "Funding vault should succeed")
 
 	hugeOtherBalance := sdk.NewInt64Coin(paymentDenom, 1_000_000_000)
 	tinyUnderlyingBalance := sdk.NewInt64Coin(underlyingDenom, 10)

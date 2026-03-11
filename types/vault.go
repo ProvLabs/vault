@@ -36,16 +36,22 @@ const (
 // For pio-mainnet-1, it returns the hardcoded 'pb' address.
 // For pio-testnet-1, it returns the hardcoded 'tp' address.
 // For any other chain, it returns an address derived from the 'provlabs' byte array.
-func GetProvLabsFeeAddress(chainID string) sdk.AccAddress {
+func GetProvLabsFeeAddress(chainID string) (sdk.AccAddress, error) {
 	switch chainID {
 	case "pio-mainnet-1":
-		addr, _ := sdk.AccAddressFromBech32(ProvLabsMainnetFeeAddress)
-		return addr
+		addr, err := sdk.AccAddressFromBech32(ProvLabsMainnetFeeAddress)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse mainnet fee address: %w", err)
+		}
+		return addr, nil
 	case "pio-testnet-1":
-		addr, _ := sdk.AccAddressFromBech32(ProvLabsTestnetFeeAddress)
-		return addr
+		addr, err := sdk.AccAddressFromBech32(ProvLabsTestnetFeeAddress)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse testnet fee address: %w", err)
+		}
+		return addr, nil
 	default:
-		return sdk.AccAddress(crypto.AddressHash([]byte("provlabs")))
+		return sdk.AccAddress(crypto.AddressHash([]byte("provlabs"))), nil
 	}
 }
 

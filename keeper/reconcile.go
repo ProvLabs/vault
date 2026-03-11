@@ -41,13 +41,10 @@ func (k *Keeper) reconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccou
 			return nil
 		}
 
-		if err := k.PerformVaultFeeTransfer(ctx, vault); err != nil {
+		if err := k.ReconcileVaultFeesAndInterest(ctx, vault); err != nil {
 			return err
 		}
 
-		if err := k.PerformVaultInterestTransfer(ctx, vault); err != nil {
-			return err
-		}
 		if err := k.publishShareNav(ctx, vault); err != nil {
 			return err
 		}
@@ -112,6 +109,26 @@ func (k *Keeper) publishShareNav(ctx sdk.Context, vault *types.VaultAccount) err
 	return nil
 }
 
+// ReconcileVaultFeesAndInterest performs both technology fee collection and
+// interest reconciliation for a vault in a single atomic operation.
+//
+// This method utilizes a cached context to ensure that either both transfers
+// (fee and interest) succeed, or neither is applied.
+func (k *Keeper) ReconcileVaultFeesAndInterest(ctx sdk.Context, vault *types.VaultAccount) error {
+	cacheCtx, writeCache := ctx.CacheContext()
+
+	if err := k.PerformVaultFeeTransfer(cacheCtx, vault); err != nil {
+		return err
+	}
+
+	if err := k.PerformVaultInterestTransfer(cacheCtx, vault); err != nil {
+		return err
+	}
+
+	writeCache()
+	return nil
+}
+
 // PerformVaultFeeTransfer calculates and collects the AUM-based technology fee
 // from the vault reserves and routes it to the ProvLabs wallet.
 //
@@ -126,7 +143,10 @@ func (k *Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAcco
 
 	periodDuration := currentBlockTime - vault.PeriodStart
 	vaultAddr := vault.GetAddress()
-	recipientAddr := types.GetProvLabsFeeAddress(ctx.ChainID())
+	recipientAddr, err := types.GetProvLabsFeeAddress(ctx.ChainID())
+	if err != nil {
+		return err
+	}
 
 	tvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
 	if err != nil {
@@ -154,8 +174,7 @@ func (k *Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAcco
 
 	reserves := k.BankKeeper.GetBalance(ctx, vaultAddr, feeDenom)
 	if reserves.Amount.LT(feeAmount) {
-		ctx.Logger().Error("insufficient reserves to pay technology fee", "vault", vaultAddr.String(), "required", feeAmount.String(), "available", reserves.Amount.String(), "denom", feeDenom)
-		return nil
+		return fmt.Errorf("insufficient reserves to pay technology fee: required %s, available %s %s", feeAmount, reserves.Amount, feeDenom)
 	}
 
 	feeCoin := sdk.NewCoin(feeDenom, feeAmount)
@@ -437,15 +456,9 @@ func (k *Keeper) handleVaultInterestTimeouts(ctx sdk.Context) error {
 			continue
 		}
 
-		// Reconcile Fee and Interest
-		if err := k.PerformVaultFeeTransfer(ctx, vault); err != nil {
-			ctx.Logger().Error("failed to collect technology fee", "vault", addr.String(), "err", err)
+		if err := k.ReconcileVaultFeesAndInterest(ctx, vault); err != nil {
+			ctx.Logger().Error("failed to reconcile fees and interest", "vault", addr.String(), "err", err)
 			depleted = append(depleted, vault)
-			continue
-		}
-
-		if err := k.PerformVaultInterestTransfer(ctx, vault); err != nil {
-			ctx.Logger().Error("failed to reconcile interest", "vault", addr.String(), "err", err)
 			continue
 		}
 

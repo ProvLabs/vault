@@ -163,12 +163,13 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 				// AUM fee for the period from t=1 to testBlockTime
 				duration := testBlockTime.Unix() - 1
 				fee, _ := interest.CalculateAUMFee(assets.Amount, duration)
+				feeAddr, err := types.GetProvLabsFeeAddress(s.ctx.ChainID())
+				s.Require().NoError(err)
 				feeEv := createFeeEvents(
 					vaultAddr,
-					types.GetProvLabsFeeAddress(s.ctx.ChainID()),
-					fee,
-					assets.Amount,
-					underlyingDenom,
+					feeAddr,
+					sdk.NewCoin(underlyingDenom, fee),
+					sdk.NewCoin(underlyingDenom, assets.Amount),
 					duration,
 				)
 				expectedEvents = append(expectedEvents, feeEv...)

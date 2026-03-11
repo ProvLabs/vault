@@ -176,20 +176,21 @@ func CalculatePeriods(
 			return 0, 0, fmt.Errorf("failed to calculate AUM fee for period %d: %w", periods+1, err)
 		}
 
-		if interestEarned.IsZero() && aumFee.IsZero() {
+		totalDeduction := aumFee
+		if interestEarned.IsPositive() {
+			totalDeduction = totalDeduction.Add(interestEarned)
+		}
+
+		if totalDeduction.IsZero() {
 			if periods == 0 && limit == CalculatePeriodsNoLimit {
 				// Avoid infinite loop if nothing is being deducted
 				break
 			}
-			// If it's zero because of small duration/principal, we should still progress if there's a limit
-			if limit == CalculatePeriodsNoLimit {
+			// If it's zero because of small duration/principal, we should still progress if there's a limit.
+			// However, if we're not gaining (negative interest), we've hit a steady state.
+			if limit == CalculatePeriodsNoLimit && !interestEarned.IsNegative() {
 				break
 			}
-		}
-
-		totalDeduction := aumFee
-		if interestEarned.IsPositive() {
-			totalDeduction = totalDeduction.Add(interestEarned)
 		}
 
 		if vaultReserves.Amount.LT(totalDeduction) {

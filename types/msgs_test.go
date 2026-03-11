@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/provlabs/vault/types"
 	"github.com/provlabs/vault/utils"
@@ -1283,7 +1284,7 @@ func TestMsgSetBridgeAddressRequest_ValidateBasic(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
 			if tc.expectedErr != nil {
-				assert.Error(t, err, "expected error for test case %q", tc.name)
+				require.Error(t, err, "expected error for test case %q", tc.name)
 				assert.Contains(t, err.Error(), tc.expectedErr.Error(), "error message mismatch for test case %q", tc.name)
 			} else {
 				assert.NoError(t, err, "unexpected error for test case %q", tc.name)
@@ -1334,7 +1335,7 @@ func TestMsgToggleBridgeRequest_ValidateBasic(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
 			if tc.expectedErr != nil {
-				assert.Error(t, err, "expected error for test case %q", tc.name)
+				require.Error(t, err, "expected error for test case %q", tc.name)
 				assert.Contains(t, err.Error(), tc.expectedErr.Error(), "error message mismatch for test case %q", tc.name)
 			} else {
 				assert.NoError(t, err, "unexpected error for test case %q", tc.name)
@@ -1403,7 +1404,7 @@ func TestMsgBridgeMintSharesRequest_ValidateBasic(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
 			if tc.expectedErr != nil {
-				assert.Error(t, err, "expected error for test case %q", tc.name)
+				require.Error(t, err, "expected error for test case %q", tc.name)
 				assert.Contains(t, err.Error(), tc.expectedErr.Error(), "error message mismatch for test case %q", tc.name)
 			} else {
 				assert.NoError(t, err, "unexpected error for test case %q", tc.name)
@@ -1472,7 +1473,7 @@ func TestMsgBridgeBurnSharesRequest_ValidateBasic(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
 			if tc.expectedErr != nil {
-				assert.Error(t, err, "expected error for test case %q", tc.name)
+				require.Error(t, err, "expected error for test case %q", tc.name)
 				assert.Contains(t, err.Error(), tc.expectedErr.Error(), "error message mismatch for test case %q", tc.name)
 			} else {
 				assert.NoError(t, err, "unexpected error for test case %q", tc.name)

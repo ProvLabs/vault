@@ -515,15 +515,15 @@ func createReconcileEvents(vaultAddr, markerAddr sdk.AccAddress, interest, princ
 // createFeeEvents constructs the expected event sequence for a vault
 // AUM fee collection, including bank send events and the vault's
 // own EventVaultFeeCollected.
-func createFeeEvents(vaultAddr, recipientAddr sdk.AccAddress, fee, aum sdkmath.Int, denom string, duration int64) []sdk.Event {
+func createFeeEvents(vaultAddr, recipientAddr sdk.AccAddress, fee sdk.Coin, aum sdk.Coin, duration int64) []sdk.Event {
 	var allEvents []sdk.Event
 
-	sendEvents := createSendCoinEvents(vaultAddr.String(), recipientAddr.String(), sdk.NewCoin(denom, fee).String())
+	sendEvents := createSendCoinEvents(vaultAddr.String(), recipientAddr.String(), fee.String())
 	allEvents = append(allEvents, sendEvents...)
 
 	feeEvent := sdk.NewEvent("provlabs.vault.v1.EventVaultFeeCollected",
-		sdk.NewAttribute("aum_snapshot", sdk.NewCoin(denom, aum).String()),
-		sdk.NewAttribute("fee_amount", sdk.NewCoin(denom, fee).String()),
+		sdk.NewAttribute("aum_snapshot", aum.String()),
+		sdk.NewAttribute("fee_amount", fee.String()),
 		sdk.NewAttribute("period_seconds", fmt.Sprintf("%v", duration)),
 		sdk.NewAttribute("recipient_address", recipientAddr.String()),
 		sdk.NewAttribute("vault_address", vaultAddr.String()),

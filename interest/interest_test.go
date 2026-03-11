@@ -112,6 +112,8 @@ func TestCalculateExpiration(t *testing.T) {
 	startTime := int64(1752764321)
 	denom := "vault"
 
+	int64Ptr := func(i int64) *int64 { return &i }
+
 	tests := []struct {
 		name           string
 		principal      sdk.Coin
@@ -119,13 +121,25 @@ func TestCalculateExpiration(t *testing.T) {
 		rate           string
 		periodSeconds  int64
 		startTime      int64
-		limit          int64
+		limit          *int64
 		expected       int64
 		expectedErrStr string
 	}{
 		{
-			name:          "never expires with zero rate",
-			principal:     sdk.NewCoin(denom, sdkmath.NewInt(100_000)),
+			name:          "expires with zero interest rate due to AUM fee",
+			principal:     sdk.NewCoin(denom, sdkmath.NewInt(100_000_000)),
+			reserves:      sdk.NewCoin(denom, sdkmath.NewInt(1_000_000)),
+			rate:          "0",
+			periodSeconds: interest.SecondsPerDay,
+			startTime:     startTime,
+			limit:         int64Ptr(interest.CalculatePeriodsNoLimit),
+			// AUM Fee per day: (100,000,000 * 0.0015 * 86,400) / 31,536_000 = 410.95 -> 410
+			// Reserves: 1,000,000 / 410 = 2439.02 -> 2439 periods
+			expected: startTime + 2439*interest.SecondsPerDay,
+		},
+		{
+			name:          "never expires with zero principal and zero interest rate",
+			principal:     sdk.NewCoin(denom, sdkmath.NewInt(0)),
 			reserves:      sdk.NewCoin(denom, sdkmath.NewInt(500_000)),
 			rate:          "0",
 			periodSeconds: 60,
@@ -133,8 +147,8 @@ func TestCalculateExpiration(t *testing.T) {
 			expected:      startTime,
 		},
 		{
-			name:          "never expires with negative rate",
-			principal:     sdk.NewCoin(denom, sdkmath.NewInt(100_000)),
+			name:          "never expires with negative rate and zero AUM fee (zero principal)",
+			principal:     sdk.NewCoin(denom, sdkmath.NewInt(0)),
 			reserves:      sdk.NewCoin(denom, sdkmath.NewInt(500_000)),
 			rate:          "-0.25",
 			periodSeconds: 60,
@@ -142,16 +156,7 @@ func TestCalculateExpiration(t *testing.T) {
 			expected:      startTime,
 		},
 		{
-			name:          "never expires with zero principal",
-			principal:     sdk.NewCoin(denom, sdkmath.NewInt(0)),
-			reserves:      sdk.NewCoin(denom, sdkmath.NewInt(500_000)),
-			rate:          "0.1",
-			periodSeconds: 60,
-			startTime:     startTime,
-			expected:      startTime,
-		},
-		{
-			name:          "depletes quickly with high rate",
+			name:          "depletes quickly with high rate and fee",
 			principal:     sdk.NewCoin(denom, sdkmath.NewInt(525_500_000)),
 			reserves:      sdk.NewCoin(denom, sdkmath.NewInt(1_000)),
 			rate:          "1.0",
@@ -165,7 +170,7 @@ func TestCalculateExpiration(t *testing.T) {
 			reserves:      sdk.NewCoin(denom, sdkmath.NewInt(1_000_000)),
 			rate:          "1.0",
 			periodSeconds: interest.CalculatePeriodsLimit / 2,
-			limit:         interest.CalculatePeriodsLimit,
+			limit:         int64Ptr(interest.CalculatePeriodsLimit),
 			startTime:     startTime,
 			expected:      startTime + interest.CalculatePeriodsLimit,
 		},
@@ -175,7 +180,7 @@ func TestCalculateExpiration(t *testing.T) {
 			reserves:      sdk.NewCoin(denom, sdkmath.NewInt(1_000_000)),
 			rate:          "1.0",
 			periodSeconds: interest.CalculatePeriodsLimit + 1,
-			limit:         interest.CalculatePeriodsLimit,
+			limit:         int64Ptr(interest.CalculatePeriodsLimit),
 			startTime:     startTime,
 			expected:      startTime,
 		},
@@ -210,9 +215,9 @@ func TestCalculateExpiration(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			limit := tc.limit
-			if limit == 0 {
-				limit = interest.CalculatePeriodsLimit
+			var limit int64 = interest.CalculatePeriodsLimit
+			if tc.limit != nil {
+				limit = *tc.limit
 			}
 
 			exp, err := interest.CalculateExpiration(tc.principal, tc.reserves, tc.rate, tc.periodSeconds, tc.startTime, limit)

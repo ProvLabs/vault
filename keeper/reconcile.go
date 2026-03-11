@@ -20,11 +20,11 @@ const (
 	AutoReconcilePayoutDuration = 24 * interest.SecondsPerHour
 )
 
-// reconcileVaultInterest updates interest accounting for a vault if a new interest period has started.
+// reconcileVaultInterest updates interest and fee accounting for a vault if a new interest period has started.
 //
 // If this is the first time the vault accrues interest, it triggers the start of a new period
 // and publishes the initial NAV for the share denom in terms of the underlying asset.
-// If the current block time is after PeriodStart, it applies the interest transfer.
+// If the current block time is after PeriodStart, it applies the fee and interest transfers.
 // If the current time has not advanced past PeriodStart, it is a no-op.
 // This function will do nothing if the vault is paused.
 //
@@ -39,6 +39,10 @@ func (k *Keeper) reconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccou
 	if vault.PeriodStart != 0 {
 		if currentBlockTime <= vault.PeriodStart {
 			return nil
+		}
+
+		if err := k.PerformVaultFeeTransfer(ctx, vault); err != nil {
+			return err
 		}
 
 		if err := k.PerformVaultInterestTransfer(ctx, vault); err != nil {
@@ -108,6 +112,64 @@ func (k *Keeper) publishShareNav(ctx sdk.Context, vault *types.VaultAccount) err
 	return nil
 }
 
+// PerformVaultFeeTransfer calculates and collects the AUM-based technology fee
+// from the vault reserves and routes it to the ProvLabs wallet.
+//
+// Fees are calculated linearly based on the current TVV snapshot.
+// Fees are settled exclusively in the vault's UnderlyingAsset.
+// This method fails if reserves are insufficient to cover the fee.
+func (k *Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAccount) error {
+	currentBlockTime := ctx.BlockTime().Unix()
+	if currentBlockTime <= vault.PeriodStart {
+		return nil
+	}
+
+	periodDuration := currentBlockTime - vault.PeriodStart
+	denom := vault.UnderlyingAsset
+	vaultAddr := vault.GetAddress()
+	recipientAddr := types.GetProvLabsFeeAddress(ctx.ChainID())
+
+	tvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
+	if err != nil {
+		return fmt.Errorf("failed to get TVV for fee calculation: %w", err)
+	}
+
+	feeAmount, err := interest.CalculateAUMFee(tvv, periodDuration)
+	if err != nil {
+		return fmt.Errorf("failed to calculate AUM fee: %w", err)
+	}
+
+	if feeAmount.IsZero() {
+		return nil
+	}
+
+	reserves := k.BankKeeper.GetBalance(ctx, vaultAddr, denom)
+	if reserves.Amount.LT(feeAmount) {
+		ctx.Logger().Error("insufficient reserves to pay technology fee", "vault", vaultAddr.String(), "required", feeAmount.String(), "available", reserves.Amount.String())
+		return nil
+	}
+
+	feeCoin := sdk.NewCoin(denom, feeAmount)
+	if err := k.BankKeeper.SendCoins(
+		markertypes.WithBypass(ctx),
+		vaultAddr,
+		recipientAddr,
+		sdk.NewCoins(feeCoin),
+	); err != nil {
+		return fmt.Errorf("failed to transfer technology fee: %w", err)
+	}
+
+	k.emitEvent(ctx, types.NewEventVaultFeeCollected(
+		vaultAddr.String(),
+		recipientAddr.String(),
+		feeCoin,
+		sdk.NewCoin(denom, tvv),
+		periodDuration,
+	))
+
+	return nil
+}
+
 // PerformVaultInterestTransfer applies accrued interest between the vault and the marker account
 // if the current block time is beyond PeriodStart.
 //
@@ -117,7 +179,7 @@ func (k *Keeper) publishShareNav(ctx sdk.Context, vault *types.VaultAccount) err
 //     available balance of the UnderlyingAsset in the marker account.
 //
 // IMPORTANT: If the vault utilizes composite reserves (holding multiple token types), secondary
-// assets are NOT liquidated or transferred to satisfy interest obligations. If the marker owes
+// assets are NOT liquidited or transferred to satisfy interest obligations. If the marker owes
 // negative interest but lacks sufficient liquidity in the UnderlyingAsset, the transfer is
 // capped at the available underlying balance, potentially resulting in a partial payment.
 //
@@ -198,12 +260,11 @@ func (k *Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vaul
 }
 
 // CanPayoutDuration determines whether the vault can fulfill the projected
-// interest payment or refund over the given duration based on current reserves
-// and principal TVV.
+// interest payment and technology fee over the given duration based on
+// current reserves and principal TVV.
 //
-// It returns true when duration <= 0, when accrued interest is zero, when
-// positive interest can be paid from vault reserves, or when negative interest
-// can be fully covered by the principal marker's underlying balance.
+// It returns true when duration <= 0, when total projected cost is zero, or when
+// costs can be fully covered by the available resources.
 // Otherwise it returns false.
 func (k *Keeper) CanPayoutDuration(ctx sdk.Context, vault *types.VaultAccount, duration int64) (bool, error) {
 	if duration <= 0 {
@@ -229,19 +290,32 @@ func (k *Keeper) CanPayoutDuration(ctx sdk.Context, vault *types.VaultAccount, d
 		return false, fmt.Errorf("failed to calculate interest: %w", err)
 	}
 
-	if interestEarned.IsZero() {
+	aumFee, err := interest.CalculateAUMFee(principalTvv, duration)
+	if err != nil {
+		return false, fmt.Errorf("failed to calculate AUM fee: %w", err)
+	}
+
+	if interestEarned.IsZero() && aumFee.IsZero() {
 		return true, nil
 	}
 
+	reserves := k.BankKeeper.GetBalance(ctx, vaultAddr, underlyingDenom)
+	totalDeduction := aumFee
 	if interestEarned.IsPositive() {
-		reserves := k.BankKeeper.GetBalance(ctx, vaultAddr, underlyingDenom)
-		return !reserves.Amount.LT(interestEarned), nil
+		totalDeduction = totalDeduction.Add(interestEarned)
 	}
 
-	principalUnderlying := k.BankKeeper.GetBalance(ctx, principalAddr, underlyingDenom)
-	owed := interestEarned.Abs()
+	if reserves.Amount.LT(totalDeduction) {
+		return false, nil
+	}
 
-	return !principalUnderlying.Amount.LT(owed), nil
+	if interestEarned.IsNegative() {
+		principalUnderlying := k.BankKeeper.GetBalance(ctx, principalAddr, underlyingDenom)
+		owed := interestEarned.Abs()
+		return !principalUnderlying.Amount.LT(owed), nil
+	}
+
+	return true, nil
 }
 
 // UpdateInterestRates sets the vault's current and desired interest rates and emits
@@ -334,6 +408,13 @@ func (k *Keeper) handleVaultInterestTimeouts(ctx sdk.Context) error {
 		}
 
 		if !canPay {
+			depleted = append(depleted, vault)
+			continue
+		}
+
+		// Reconcile Fee and Interest
+		if err := k.PerformVaultFeeTransfer(ctx, vault); err != nil {
+			ctx.Logger().Error("failed to collect technology fee", "vault", addr.String(), "err", err)
 			depleted = append(depleted, vault)
 			continue
 		}

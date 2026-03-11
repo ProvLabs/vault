@@ -88,13 +88,26 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 			},
 			posthander: func() {
 				s.assertInPayoutVerificationQueue(vaultAddress, true)
-				s.assertVaultAndMarkerBalances(vaultAddress, shareDenom, underlying.Denom, sdkmath.NewInt(958047987), sdkmath.NewInt(1041952013))
+				// AUM Fee for 2 months (1B AUM): (1,000,000,000 * 0.0015 * 5,184,000) / 31,536_000 = 246,575.34 -> 246,575
+				// Interest for 2 months (1B AUM, 25% APR): 41,952,013
+				// Total deduction from reserves: 246,575 + 41,952,013 = 42,198,588
+				// Remaining reserves: 1,000_000_000 - 42,198,588 = 957,801,412
+				// Marker principal: 1,000_000_000 + 41,952,013 = 1,041,952,013
+				s.assertVaultAndMarkerBalances(vaultAddress, shareDenom, underlying.Denom, sdkmath.NewInt(957_801_412), sdkmath.NewInt(1_041_952_013))
 			},
 			expectedEvents: func() sdk.Events {
+				feeEv := createFeeEvents(
+					vaultAddress,
+					types.GetProvLabsFeeAddress(s.ctx.ChainID()),
+					sdkmath.NewInt(246_575),
+					sdkmath.NewInt(1_000_000_000),
+					underlying.Denom,
+					5_184_000,
+				)
 				ev := createReconcileEvents(
 					vaultAddress,
 					markertypes.MustGetMarkerAddress(shareDenom),
-					sdkmath.NewInt(41952013),
+					sdkmath.NewInt(41_952_013),
 					sdkmath.NewInt(1_000_000_000),
 					sdkmath.NewInt(1_041_952_013),
 					underlying.Denom,
@@ -107,7 +120,8 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 					"vault",
 					totalShares.Amount.Uint64(),
 				)
-				return append(ev, nav)
+				res := append(feeEv, ev...)
+				return append(res, nav)
 			}(),
 		},
 		{
@@ -117,9 +131,22 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 			},
 			posthander: func() {
 				s.assertInPayoutVerificationQueue(vaultAddress, true)
-				s.assertVaultAndMarkerBalances(vaultAddress, shareDenom, underlying.Denom, sdkmath.NewInt(1_040_262_904), sdkmath.NewInt(959_737_096))
+				// AUM Fee for 2 months (1B AUM): 246,575
+				// Negative Interest for 2 months: -40,262,904
+				// Total vault change: -246,575 (fee) + 40,262,904 (refund) = +40,016,329
+				// Vault balance: 1,000,000,000 + 40,016,329 = 1,040,016,329
+				// Marker principal: 1,000,000,000 - 40,262,904 = 959,737,096
+				s.assertVaultAndMarkerBalances(vaultAddress, shareDenom, underlying.Denom, sdkmath.NewInt(1_040_016_329), sdkmath.NewInt(959_737_096))
 			},
 			expectedEvents: func() sdk.Events {
+				feeEv := createFeeEvents(
+					vaultAddress,
+					types.GetProvLabsFeeAddress(s.ctx.ChainID()),
+					sdkmath.NewInt(246_575),
+					sdkmath.NewInt(1_000_000_000),
+					underlying.Denom,
+					5_184_000,
+				)
 				ev := createReconcileEvents(
 					vaultAddress,
 					markertypes.MustGetMarkerAddress(shareDenom),
@@ -136,7 +163,8 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 					"vault",
 					totalShares.Amount.Uint64(),
 				)
-				return append(ev, nav)
+				res := append(feeEv, ev...)
+				return append(res, nav)
 			}(),
 		},
 		{
@@ -314,32 +342,27 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 			expectExists:  true,
 			expectDeleted: false,
 			expectRate:    "0.25",
-			expectedEvents: sdk.Events{
-				sdk.NewEvent("coin_spent",
-					sdk.NewAttribute("spender", vaultAddr.String()),
-					sdk.NewAttribute("amount", "41952013underlying"),
-				),
-				sdk.NewEvent("coin_received",
-					sdk.NewAttribute("receiver", markertypes.MustGetMarkerAddress(shareDenom).String()),
-					sdk.NewAttribute("amount", "41952013underlying"),
-				),
-				sdk.NewEvent("transfer",
-					sdk.NewAttribute("recipient", markertypes.MustGetMarkerAddress(shareDenom).String()),
-					sdk.NewAttribute("sender", vaultAddr.String()),
-					sdk.NewAttribute("amount", "41952013underlying"),
-				),
-				sdk.NewEvent("message",
-					sdk.NewAttribute("sender", vaultAddr.String()),
-				),
-				sdk.NewEvent("provlabs.vault.v1.EventVaultReconcile",
-					sdk.NewAttribute("interest_earned", "41952013underlying"),
-					sdk.NewAttribute("principal_after", "1041952013underlying"),
-					sdk.NewAttribute("principal_before", "1000000000underlying"),
-					sdk.NewAttribute("rate", "0.25"),
-					sdk.NewAttribute("time", "5184000"),
-					sdk.NewAttribute("vault_address", vaultAddr.String()),
-				),
-			},
+			expectedEvents: func() sdk.Events {
+				feeEv := createFeeEvents(
+					vaultAddr,
+					types.GetProvLabsFeeAddress(s.ctx.ChainID()),
+					sdkmath.NewInt(246_575),
+					sdkmath.NewInt(1_000_000_000),
+					underlying.Denom,
+					5_184_000,
+				)
+				ev := createReconcileEvents(
+					vaultAddr,
+					markertypes.MustGetMarkerAddress(shareDenom),
+					sdkmath.NewInt(41_952_013),
+					sdkmath.NewInt(1_000_000_000),
+					sdkmath.NewInt(1_041_952_013),
+					underlying.Denom,
+					"0.25",
+					5_184_000,
+				)
+				return append(feeEv, ev...)
+			}(),
 		},
 		{
 			name: "vault cannot pay: interest set to 0 and record deleted",
@@ -1038,13 +1061,16 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_Use
 	s.Require().NoError(err, "failed to calculate interest earned")
 	s.Require().True(interestEarned.IsPositive(), "expected positive interest earned")
 
+	feeAmount, err := interest.CalculateAUMFee(principalTvv, periodDuration)
+	s.Require().NoError(err, "failed to calculate AUM fee")
+
 	err = s.k.TestAccessor_reconcileVaultInterest(s.T(), s.ctx, vault)
 	s.Require().NoError(err, "failed to reconcile vault interest")
 
 	endVault := s.simApp.BankKeeper.GetBalance(s.ctx, vaultAddr, underlying.Denom).Amount
 	endMarker := s.simApp.BankKeeper.GetBalance(s.ctx, markerAddr, underlying.Denom).Amount
 
-	expectedVault := startVault.Sub(interestEarned)
+	expectedVault := startVault.Sub(interestEarned).Sub(feeAmount)
 	expectedMarker := startMarker.Add(interestEarned)
 
 	s.Require().Equal(expectedVault, endVault, "vault reserves mismatch")
@@ -1060,10 +1086,11 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_Use
 
 	events := normalizeEvents(s.ctx.EventManager().Events())
 
-	found := false
+	foundReconcile := false
+	foundFee := false
 	for _, event := range events {
 		if event.Type == "provlabs.vault.v1.EventVaultReconcile" {
-			found = true
+			foundReconcile = true
 
 			var principalBeforeStr, principalAfterStr, interestStr string
 			for _, attr := range event.Attributes {
@@ -1094,11 +1121,13 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_Use
 				interestStr,
 				"interest earned mismatch",
 			)
-
-			break
+		}
+		if event.Type == "provlabs.vault.v1.EventVaultFeeCollected" {
+			foundFee = true
 		}
 	}
-	s.Require().True(found, "expected EventVaultReconcile to be emitted")
+	s.Require().True(foundReconcile, "expected EventVaultReconcile to be emitted")
+	s.Require().True(foundFee, "expected EventVaultFeeCollected to be emitted")
 }
 
 func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_UsesCompositeTVV() {
@@ -1168,6 +1197,9 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_Use
 	s.Require().NoError(err, "expected CalculateInterestEarned to succeed")
 	s.Require().True(interestEarned.IsPositive(), "expected interest earned to be positive for positive rate")
 
+	feeAmount, err := interest.CalculateAUMFee(principalTvv, periodDuration)
+	s.Require().NoError(err, "expected CalculateAUMFee to succeed")
+
 	err = s.k.TestAccessor_reconcileVaultInterest(s.T(), s.ctx, vault)
 	s.Require().NoError(err, "expected reconcileVaultInterest to succeed")
 
@@ -1175,10 +1207,10 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_Use
 	endMarkerUnderlying := s.simApp.BankKeeper.GetBalance(s.ctx, markerAddr, underlying.Denom).Amount
 	endMarkerPayment := s.simApp.BankKeeper.GetBalance(s.ctx, markerAddr, paymentDenom).Amount
 
-	expectedVault := startVault.Sub(interestEarned)
+	expectedVault := startVault.Sub(interestEarned).Sub(feeAmount)
 	expectedMarkerUnderlying := startMarkerUnderlying.Add(interestEarned)
 
-	s.Require().Equal(expectedVault, endVault, "expected vault reserves to decrease by TVV-based interest")
+	s.Require().Equal(expectedVault, endVault, "expected vault reserves to decrease by TVV-based interest and fee")
 	s.Require().Equal(expectedMarkerUnderlying, endMarkerUnderlying, "expected marker underlying balance to increase by TVV-based interest")
 	s.Require().Equal(startMarkerPayment, endMarkerPayment, "expected marker payment token balance to remain unchanged")
 
@@ -1192,10 +1224,11 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_Use
 
 	events := normalizeEvents(s.ctx.EventManager().Events())
 
-	found := false
+	foundReconcile := false
+	foundFee := false
 	for _, ev := range events {
 		if ev.Type == "provlabs.vault.v1.EventVaultReconcile" {
-			found = true
+			foundReconcile = true
 
 			var principalBeforeStr, principalAfterStr, interestStr string
 			for _, attr := range ev.Attributes {
@@ -1231,12 +1264,13 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_Use
 				interestStr,
 				"expected interest_earned to reflect TVV-based interest amount",
 			)
-
-			break
+		}
+		if ev.Type == "provlabs.vault.v1.EventVaultFeeCollected" {
+			foundFee = true
 		}
 	}
-	s.Require().True(found, "expected EventVaultReconcile to be emitted for composite principal TVV transfer")
-
+	s.Require().True(foundReconcile, "expected EventVaultReconcile to be emitted for composite principal TVV transfer")
+	s.Require().True(foundFee, "expected EventVaultFeeCollected to be emitted for composite principal TVV transfer")
 }
 
 func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_NegativeInterest_PartialLiquidation() {
@@ -1273,6 +1307,9 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_NegativeInterest_Par
 
 	s.ctx = s.ctx.WithBlockTime(now).WithEventManager(sdk.NewEventManager())
 
+	// AUM fee for 1 year (100k AUM): (100,000 * 0.0015 * 31,536,000) / 31,536_000 = 150
+	feeAmount, _ := interest.CalculateAUMFee(smallPrincipal.Amount, 31_536_000)
+
 	err = s.k.TestAccessor_reconcileVaultInterest(s.T(), s.ctx, vault)
 	s.Require().NoError(err, "ReconcileVaultInterest should not error during partial liquidation")
 
@@ -1280,8 +1317,9 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_NegativeInterest_Par
 	s.Require().True(endMarker.IsZero(), "Marker balance should be fully liquidated to zero")
 
 	endVault := s.simApp.BankKeeper.GetBalance(s.ctx, vaultAddr, underlying.Denom)
-	expectedVaultBalance := underlying.Amount.Add(smallPrincipal.Amount)
-	s.Require().Equal(expectedVaultBalance, endVault.Amount, "Vault should receive exactly the available marker balance")
+	// Vault change: -fee + refund = -150 + 100,000 = +99,850
+	expectedVaultBalance := underlying.Amount.Add(smallPrincipal.Amount).Sub(feeAmount)
+	s.Require().Equal(expectedVaultBalance, endVault.Amount, "Vault should receive exactly the available marker balance minus AUM fee")
 
 	events := normalizeEvents(s.ctx.EventManager().Events())
 	found := false
@@ -1329,6 +1367,7 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_NegativeInterest_Com
 	vault.PeriodStart = periodStart
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
+	// Fund with enough for both fee and interest if needed
 	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1_000_000))), "Funding vault should succeed")
 
 	hugeOtherBalance := sdk.NewInt64Coin(paymentDenom, 1_000_000_000)

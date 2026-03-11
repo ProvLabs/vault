@@ -33,7 +33,8 @@ The agent operates as a **Principal Blockchain Engineer** with deep expertise in
 ### Code Style & Structure
 - **Idiomatic Go**: Follow standard Go conventions (Effective Go).
 - **Simplicity & Readability**: Prioritize maintainability. Variable and function names must be descriptive.
-- **Naming over Comments**: Use clear variable naming and logic flow to explain intent. Avoid redundant comments; use comments only for counter-intuitive business logic or complex architectural context.
+- **Self-Documenting Code**: Favor descriptive naming and clean logic flow over inline comments. The code should "read" like the business process it implements, reserving comments only for the "why" or complex architectural context.
+- **Number Formatting**: Use underscores as digit separators in large numeric literals (e.g., `123_456_789` instead of `123456789`) to improve readability.
 - **Cleanliness**: Proactively eliminate unused code and obsolete comments.
 - **Error Handling**: **Always** wrap errors with context: `fmt.Errorf("failed to [action]: %w", err)`.
 - **Logging**: Use the module-scoped logger via `k.getLogger(ctx)`. Log messages should be structured and informative.
@@ -46,6 +47,8 @@ The agent operates as a **Principal Blockchain Engineer** with deep expertise in
 
 ### Testing
 - **Table-Driven Tests**: Use standard table-driven patterns for unit and integration tests to ensure exhaustive coverage of edge cases.
+- **Self-Documenting Code**: Avoid internal comments within test logic. Instead, use descriptive variable names and clear logic flow that "reads" like a description of the test case.
+- **Reusable Test Helpers**: Abstract repeated operations (e.g., account setup, vault creation, state assertions) into reusable functions to keep test suites clean and maintainable.
 - **Meaningful Require/Assert Messages**: **Every** assertion must include a descriptive failure message that provides context:
     - *Good*: `s.Require().NoError(err, "failed to create vault for share denom %s", sharedenom)`
     - *Good*: `s.Equal(expectedSupply, actualSupply, "vault marker supply mismatch after swap-in for user %s", userAddr)`

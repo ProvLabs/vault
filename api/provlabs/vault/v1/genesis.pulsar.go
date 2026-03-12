@@ -1656,54 +1656,54 @@ func (x *_GenesisState_2_list) IsValid() bool {
 	return x.list != nil
 }
 
-var _ protoreflect.List = (*_GenesisState_3_list)(nil)
+var _ protoreflect.List = (*_GenesisState_4_list)(nil)
 
-type _GenesisState_3_list struct {
+type _GenesisState_4_list struct {
 	list *[]*QueueEntry
 }
 
-func (x *_GenesisState_3_list) Len() int {
+func (x *_GenesisState_4_list) Len() int {
 	if x.list == nil {
 		return 0
 	}
 	return len(*x.list)
 }
 
-func (x *_GenesisState_3_list) Get(i int) protoreflect.Value {
+func (x *_GenesisState_4_list) Get(i int) protoreflect.Value {
 	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
 }
 
-func (x *_GenesisState_3_list) Set(i int, value protoreflect.Value) {
+func (x *_GenesisState_4_list) Set(i int, value protoreflect.Value) {
 	valueUnwrapped := value.Message()
 	concreteValue := valueUnwrapped.Interface().(*QueueEntry)
 	(*x.list)[i] = concreteValue
 }
 
-func (x *_GenesisState_3_list) Append(value protoreflect.Value) {
+func (x *_GenesisState_4_list) Append(value protoreflect.Value) {
 	valueUnwrapped := value.Message()
 	concreteValue := valueUnwrapped.Interface().(*QueueEntry)
 	*x.list = append(*x.list, concreteValue)
 }
 
-func (x *_GenesisState_3_list) AppendMutable() protoreflect.Value {
+func (x *_GenesisState_4_list) AppendMutable() protoreflect.Value {
 	v := new(QueueEntry)
 	*x.list = append(*x.list, v)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
-func (x *_GenesisState_3_list) Truncate(n int) {
+func (x *_GenesisState_4_list) Truncate(n int) {
 	for i := n; i < len(*x.list); i++ {
 		(*x.list)[i] = nil
 	}
 	*x.list = (*x.list)[:n]
 }
 
-func (x *_GenesisState_3_list) NewElement() protoreflect.Value {
+func (x *_GenesisState_4_list) NewElement() protoreflect.Value {
 	v := new(QueueEntry)
 	return protoreflect.ValueOfMessage(v.ProtoReflect())
 }
 
-func (x *_GenesisState_3_list) IsValid() bool {
+func (x *_GenesisState_4_list) IsValid() bool {
 	return x.list != nil
 }
 
@@ -1711,8 +1711,8 @@ var (
 	md_GenesisState                        protoreflect.MessageDescriptor
 	fd_GenesisState_vaults                 protoreflect.FieldDescriptor
 	fd_GenesisState_payout_timeout_queue   protoreflect.FieldDescriptor
-	fd_GenesisState_fee_timeout_queue      protoreflect.FieldDescriptor
 	fd_GenesisState_pending_swap_out_queue protoreflect.FieldDescriptor
+	fd_GenesisState_fee_timeout_queue      protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -1720,8 +1720,8 @@ func init() {
 	md_GenesisState = File_provlabs_vault_v1_genesis_proto.Messages().ByName("GenesisState")
 	fd_GenesisState_vaults = md_GenesisState.Fields().ByName("vaults")
 	fd_GenesisState_payout_timeout_queue = md_GenesisState.Fields().ByName("payout_timeout_queue")
-	fd_GenesisState_fee_timeout_queue = md_GenesisState.Fields().ByName("fee_timeout_queue")
 	fd_GenesisState_pending_swap_out_queue = md_GenesisState.Fields().ByName("pending_swap_out_queue")
+	fd_GenesisState_fee_timeout_queue = md_GenesisState.Fields().ByName("fee_timeout_queue")
 }
 
 var _ protoreflect.Message = (*fastReflection_GenesisState)(nil)
@@ -1801,15 +1801,15 @@ func (x *fastReflection_GenesisState) Range(f func(protoreflect.FieldDescriptor,
 			return
 		}
 	}
-	if len(x.FeeTimeoutQueue) != 0 {
-		value := protoreflect.ValueOfList(&_GenesisState_3_list{list: &x.FeeTimeoutQueue})
-		if !f(fd_GenesisState_fee_timeout_queue, value) {
-			return
-		}
-	}
 	if x.PendingSwapOutQueue != nil {
 		value := protoreflect.ValueOfMessage(x.PendingSwapOutQueue.ProtoReflect())
 		if !f(fd_GenesisState_pending_swap_out_queue, value) {
+			return
+		}
+	}
+	if len(x.FeeTimeoutQueue) != 0 {
+		value := protoreflect.ValueOfList(&_GenesisState_4_list{list: &x.FeeTimeoutQueue})
+		if !f(fd_GenesisState_fee_timeout_queue, value) {
 			return
 		}
 	}
@@ -1832,10 +1832,10 @@ func (x *fastReflection_GenesisState) Has(fd protoreflect.FieldDescriptor) bool 
 		return len(x.Vaults) != 0
 	case "provlabs.vault.v1.GenesisState.payout_timeout_queue":
 		return len(x.PayoutTimeoutQueue) != 0
-	case "provlabs.vault.v1.GenesisState.fee_timeout_queue":
-		return len(x.FeeTimeoutQueue) != 0
 	case "provlabs.vault.v1.GenesisState.pending_swap_out_queue":
 		return x.PendingSwapOutQueue != nil
+	case "provlabs.vault.v1.GenesisState.fee_timeout_queue":
+		return len(x.FeeTimeoutQueue) != 0
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.GenesisState"))
@@ -1856,10 +1856,10 @@ func (x *fastReflection_GenesisState) Clear(fd protoreflect.FieldDescriptor) {
 		x.Vaults = nil
 	case "provlabs.vault.v1.GenesisState.payout_timeout_queue":
 		x.PayoutTimeoutQueue = nil
-	case "provlabs.vault.v1.GenesisState.fee_timeout_queue":
-		x.FeeTimeoutQueue = nil
 	case "provlabs.vault.v1.GenesisState.pending_swap_out_queue":
 		x.PendingSwapOutQueue = nil
+	case "provlabs.vault.v1.GenesisState.fee_timeout_queue":
+		x.FeeTimeoutQueue = nil
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.GenesisState"))
@@ -1888,15 +1888,15 @@ func (x *fastReflection_GenesisState) Get(descriptor protoreflect.FieldDescripto
 		}
 		listValue := &_GenesisState_2_list{list: &x.PayoutTimeoutQueue}
 		return protoreflect.ValueOfList(listValue)
-	case "provlabs.vault.v1.GenesisState.fee_timeout_queue":
-		if len(x.FeeTimeoutQueue) == 0 {
-			return protoreflect.ValueOfList(&_GenesisState_3_list{})
-		}
-		listValue := &_GenesisState_3_list{list: &x.FeeTimeoutQueue}
-		return protoreflect.ValueOfList(listValue)
 	case "provlabs.vault.v1.GenesisState.pending_swap_out_queue":
 		value := x.PendingSwapOutQueue
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
+	case "provlabs.vault.v1.GenesisState.fee_timeout_queue":
+		if len(x.FeeTimeoutQueue) == 0 {
+			return protoreflect.ValueOfList(&_GenesisState_4_list{})
+		}
+		listValue := &_GenesisState_4_list{list: &x.FeeTimeoutQueue}
+		return protoreflect.ValueOfList(listValue)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.GenesisState"))
@@ -1925,12 +1925,12 @@ func (x *fastReflection_GenesisState) Set(fd protoreflect.FieldDescriptor, value
 		lv := value.List()
 		clv := lv.(*_GenesisState_2_list)
 		x.PayoutTimeoutQueue = *clv.list
-	case "provlabs.vault.v1.GenesisState.fee_timeout_queue":
-		lv := value.List()
-		clv := lv.(*_GenesisState_3_list)
-		x.FeeTimeoutQueue = *clv.list
 	case "provlabs.vault.v1.GenesisState.pending_swap_out_queue":
 		x.PendingSwapOutQueue = value.Message().Interface().(*PendingSwapOutQueue)
+	case "provlabs.vault.v1.GenesisState.fee_timeout_queue":
+		lv := value.List()
+		clv := lv.(*_GenesisState_4_list)
+		x.FeeTimeoutQueue = *clv.list
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.GenesisState"))
@@ -1963,17 +1963,17 @@ func (x *fastReflection_GenesisState) Mutable(fd protoreflect.FieldDescriptor) p
 		}
 		value := &_GenesisState_2_list{list: &x.PayoutTimeoutQueue}
 		return protoreflect.ValueOfList(value)
-	case "provlabs.vault.v1.GenesisState.fee_timeout_queue":
-		if x.FeeTimeoutQueue == nil {
-			x.FeeTimeoutQueue = []*QueueEntry{}
-		}
-		value := &_GenesisState_3_list{list: &x.FeeTimeoutQueue}
-		return protoreflect.ValueOfList(value)
 	case "provlabs.vault.v1.GenesisState.pending_swap_out_queue":
 		if x.PendingSwapOutQueue == nil {
 			x.PendingSwapOutQueue = new(PendingSwapOutQueue)
 		}
 		return protoreflect.ValueOfMessage(x.PendingSwapOutQueue.ProtoReflect())
+	case "provlabs.vault.v1.GenesisState.fee_timeout_queue":
+		if x.FeeTimeoutQueue == nil {
+			x.FeeTimeoutQueue = []*QueueEntry{}
+		}
+		value := &_GenesisState_4_list{list: &x.FeeTimeoutQueue}
+		return protoreflect.ValueOfList(value)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.GenesisState"))
@@ -1993,12 +1993,12 @@ func (x *fastReflection_GenesisState) NewField(fd protoreflect.FieldDescriptor) 
 	case "provlabs.vault.v1.GenesisState.payout_timeout_queue":
 		list := []*QueueEntry{}
 		return protoreflect.ValueOfList(&_GenesisState_2_list{list: &list})
-	case "provlabs.vault.v1.GenesisState.fee_timeout_queue":
-		list := []*QueueEntry{}
-		return protoreflect.ValueOfList(&_GenesisState_3_list{list: &list})
 	case "provlabs.vault.v1.GenesisState.pending_swap_out_queue":
 		m := new(PendingSwapOutQueue)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
+	case "provlabs.vault.v1.GenesisState.fee_timeout_queue":
+		list := []*QueueEntry{}
+		return protoreflect.ValueOfList(&_GenesisState_4_list{list: &list})
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.GenesisState"))
@@ -2080,15 +2080,15 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 				n += 1 + l + runtime.Sov(uint64(l))
 			}
 		}
+		if x.PendingSwapOutQueue != nil {
+			l = options.Size(x.PendingSwapOutQueue)
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
 		if len(x.FeeTimeoutQueue) > 0 {
 			for _, e := range x.FeeTimeoutQueue {
 				l = options.Size(e)
 				n += 1 + l + runtime.Sov(uint64(l))
 			}
-		}
-		if x.PendingSwapOutQueue != nil {
-			l = options.Size(x.PendingSwapOutQueue)
-			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
@@ -2119,20 +2119,6 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
-		if x.PendingSwapOutQueue != nil {
-			encoded, err := options.Marshal(x.PendingSwapOutQueue)
-			if err != nil {
-				return protoiface.MarshalOutput{
-					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
-					Buf:               input.Buf,
-				}, err
-			}
-			i -= len(encoded)
-			copy(dAtA[i:], encoded)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
-			i--
-			dAtA[i] = 0x22
-		}
 		if len(x.FeeTimeoutQueue) > 0 {
 			for iNdEx := len(x.FeeTimeoutQueue) - 1; iNdEx >= 0; iNdEx-- {
 				encoded, err := options.Marshal(x.FeeTimeoutQueue[iNdEx])
@@ -2146,8 +2132,22 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 				copy(dAtA[i:], encoded)
 				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
 				i--
-				dAtA[i] = 0x1a
+				dAtA[i] = 0x22
 			}
+		}
+		if x.PendingSwapOutQueue != nil {
+			encoded, err := options.Marshal(x.PendingSwapOutQueue)
+			if err != nil {
+				return protoiface.MarshalOutput{
+					NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+					Buf:               input.Buf,
+				}, err
+			}
+			i -= len(encoded)
+			copy(dAtA[i:], encoded)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+			i--
+			dAtA[i] = 0x1a
 		}
 		if len(x.PayoutTimeoutQueue) > 0 {
 			for iNdEx := len(x.PayoutTimeoutQueue) - 1; iNdEx >= 0; iNdEx-- {
@@ -2300,40 +2300,6 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 				iNdEx = postIndex
 			case 3:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field FeeTimeoutQueue", wireType)
-				}
-				var msglen int
-				for shift := uint(0); ; shift += 7 {
-					if shift >= 64 {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
-					}
-					if iNdEx >= l {
-						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-					}
-					b := dAtA[iNdEx]
-					iNdEx++
-					msglen |= int(b&0x7F) << shift
-					if b < 0x80 {
-						break
-					}
-				}
-				if msglen < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				postIndex := iNdEx + msglen
-				if postIndex < 0 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
-				}
-				if postIndex > l {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
-				}
-				x.FeeTimeoutQueue = append(x.FeeTimeoutQueue, &QueueEntry{})
-				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.FeeTimeoutQueue[len(x.FeeTimeoutQueue)-1]); err != nil {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
-				}
-				iNdEx = postIndex
-			case 4:
-				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field PendingSwapOutQueue", wireType)
 				}
 				var msglen int
@@ -2365,6 +2331,40 @@ func (x *fastReflection_GenesisState) ProtoMethods() *protoiface.Methods {
 					x.PendingSwapOutQueue = &PendingSwapOutQueue{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.PendingSwapOutQueue); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 4:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field FeeTimeoutQueue", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.FeeTimeoutQueue = append(x.FeeTimeoutQueue, &QueueEntry{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.FeeTimeoutQueue[len(x.FeeTimeoutQueue)-1]); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
 				}
 				iNdEx = postIndex
@@ -2576,12 +2576,12 @@ type GenesisState struct {
 	// temporarily deferred from automatic payout/interest verification until the
 	// given UNIX timestamp (seconds). These entries are re-enqueued on InitGenesis.
 	PayoutTimeoutQueue []*QueueEntry `protobuf:"bytes,2,rep,name=payout_timeout_queue,json=payoutTimeoutQueue,proto3" json:"payout_timeout_queue,omitempty"`
+	// pending_swap_out_queue contains entries for pending swap outs.
+	PendingSwapOutQueue *PendingSwapOutQueue `protobuf:"bytes,3,opt,name=pending_swap_out_queue,json=pendingSwapOutQueue,proto3" json:"pending_swap_out_queue,omitempty"`
 	// fee_timeout_queue contains (time, addr) entries for vaults that are
 	// temporarily deferred from automatic AUM fee collection until the
 	// given UNIX timestamp (seconds). These entries are re-enqueued on InitGenesis.
-	FeeTimeoutQueue []*QueueEntry `protobuf:"bytes,3,rep,name=fee_timeout_queue,json=feeTimeoutQueue,proto3" json:"fee_timeout_queue,omitempty"`
-	// pending_swap_out_queue contains entries for pending swap outs.
-	PendingSwapOutQueue *PendingSwapOutQueue `protobuf:"bytes,4,opt,name=pending_swap_out_queue,json=pendingSwapOutQueue,proto3" json:"pending_swap_out_queue,omitempty"`
+	FeeTimeoutQueue []*QueueEntry `protobuf:"bytes,4,rep,name=fee_timeout_queue,json=feeTimeoutQueue,proto3" json:"fee_timeout_queue,omitempty"`
 }
 
 func (x *GenesisState) Reset() {
@@ -2618,16 +2618,16 @@ func (x *GenesisState) GetPayoutTimeoutQueue() []*QueueEntry {
 	return nil
 }
 
-func (x *GenesisState) GetFeeTimeoutQueue() []*QueueEntry {
+func (x *GenesisState) GetPendingSwapOutQueue() *PendingSwapOutQueue {
 	if x != nil {
-		return x.FeeTimeoutQueue
+		return x.PendingSwapOutQueue
 	}
 	return nil
 }
 
-func (x *GenesisState) GetPendingSwapOutQueue() *PendingSwapOutQueue {
+func (x *GenesisState) GetFeeTimeoutQueue() []*QueueEntry {
 	if x != nil {
-		return x.PendingSwapOutQueue
+		return x.FeeTimeoutQueue
 	}
 	return nil
 }
@@ -2673,18 +2673,18 @@ var file_provlabs_vault_v1_genesis_proto_rawDesc = []byte{
 	0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76,
 	0x31, 0x2e, 0x51, 0x75, 0x65, 0x75, 0x65, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x42, 0x04, 0xc8, 0xde,
 	0x1f, 0x00, 0x52, 0x12, 0x70, 0x61, 0x79, 0x6f, 0x75, 0x74, 0x54, 0x69, 0x6d, 0x65, 0x6f, 0x75,
-	0x74, 0x51, 0x75, 0x65, 0x75, 0x65, 0x12, 0x4f, 0x0a, 0x11, 0x66, 0x65, 0x65, 0x5f, 0x74, 0x69,
-	0x6d, 0x65, 0x6f, 0x75, 0x74, 0x5f, 0x71, 0x75, 0x65, 0x75, 0x65, 0x18, 0x03, 0x20, 0x03, 0x28,
-	0x0b, 0x32, 0x1d, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75,
-	0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x75, 0x65, 0x45, 0x6e, 0x74, 0x72, 0x79,
-	0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x0f, 0x66, 0x65, 0x65, 0x54, 0x69, 0x6d, 0x65, 0x6f,
-	0x75, 0x74, 0x51, 0x75, 0x65, 0x75, 0x65, 0x12, 0x61, 0x0a, 0x16, 0x70, 0x65, 0x6e, 0x64, 0x69,
-	0x6e, 0x67, 0x5f, 0x73, 0x77, 0x61, 0x70, 0x5f, 0x6f, 0x75, 0x74, 0x5f, 0x71, 0x75, 0x65, 0x75,
-	0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61,
-	0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x50, 0x65, 0x6e, 0x64,
-	0x69, 0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x51, 0x75, 0x65, 0x75, 0x65, 0x42,
-	0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x13, 0x70, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77,
-	0x61, 0x70, 0x4f, 0x75, 0x74, 0x51, 0x75, 0x65, 0x75, 0x65, 0x42, 0xc4, 0x01, 0x0a, 0x15, 0x63,
+	0x74, 0x51, 0x75, 0x65, 0x75, 0x65, 0x12, 0x61, 0x0a, 0x16, 0x70, 0x65, 0x6e, 0x64, 0x69, 0x6e,
+	0x67, 0x5f, 0x73, 0x77, 0x61, 0x70, 0x5f, 0x6f, 0x75, 0x74, 0x5f, 0x71, 0x75, 0x65, 0x75, 0x65,
+	0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x26, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62,
+	0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x50, 0x65, 0x6e, 0x64, 0x69,
+	0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x51, 0x75, 0x65, 0x75, 0x65, 0x42, 0x04,
+	0xc8, 0xde, 0x1f, 0x00, 0x52, 0x13, 0x70, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61,
+	0x70, 0x4f, 0x75, 0x74, 0x51, 0x75, 0x65, 0x75, 0x65, 0x12, 0x4f, 0x0a, 0x11, 0x66, 0x65, 0x65,
+	0x5f, 0x74, 0x69, 0x6d, 0x65, 0x6f, 0x75, 0x74, 0x5f, 0x71, 0x75, 0x65, 0x75, 0x65, 0x18, 0x04,
+	0x20, 0x03, 0x28, 0x0b, 0x32, 0x1d, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e,
+	0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x51, 0x75, 0x65, 0x75, 0x65, 0x45, 0x6e,
+	0x74, 0x72, 0x79, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x0f, 0x66, 0x65, 0x65, 0x54, 0x69,
+	0x6d, 0x65, 0x6f, 0x75, 0x74, 0x51, 0x75, 0x65, 0x75, 0x65, 0x42, 0xc4, 0x01, 0x0a, 0x15, 0x63,
 	0x6f, 0x6d, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c,
 	0x74, 0x2e, 0x76, 0x31, 0x42, 0x0c, 0x47, 0x65, 0x6e, 0x65, 0x73, 0x69, 0x73, 0x50, 0x72, 0x6f,
 	0x74, 0x6f, 0x50, 0x01, 0x5a, 0x37, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
@@ -2726,8 +2726,8 @@ var file_provlabs_vault_v1_genesis_proto_depIdxs = []int32{
 	1, // 1: provlabs.vault.v1.PendingSwapOutQueue.entries:type_name -> provlabs.vault.v1.PendingSwapOutQueueEntry
 	5, // 2: provlabs.vault.v1.GenesisState.vaults:type_name -> provlabs.vault.v1.VaultAccount
 	0, // 3: provlabs.vault.v1.GenesisState.payout_timeout_queue:type_name -> provlabs.vault.v1.QueueEntry
-	0, // 4: provlabs.vault.v1.GenesisState.fee_timeout_queue:type_name -> provlabs.vault.v1.QueueEntry
-	2, // 5: provlabs.vault.v1.GenesisState.pending_swap_out_queue:type_name -> provlabs.vault.v1.PendingSwapOutQueue
+	2, // 4: provlabs.vault.v1.GenesisState.pending_swap_out_queue:type_name -> provlabs.vault.v1.PendingSwapOutQueue
+	0, // 5: provlabs.vault.v1.GenesisState.fee_timeout_queue:type_name -> provlabs.vault.v1.QueueEntry
 	6, // [6:6] is the sub-list for method output_type
 	6, // [6:6] is the sub-list for method input_type
 	6, // [6:6] is the sub-list for extension type_name

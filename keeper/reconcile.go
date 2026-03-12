@@ -35,7 +35,6 @@ func (k Keeper) reconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccoun
 	}
 	currentBlockTime := ctx.BlockTime().Unix()
 
-	// 2. Interest Reconciliation
 	if vault.PeriodStart != 0 {
 		if currentBlockTime > vault.PeriodStart {
 			if err := k.PerformVaultInterestTransfer(ctx, vault); err != nil {
@@ -52,7 +51,6 @@ func (k Keeper) reconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccoun
 			}
 		}
 	} else {
-		// If starting interest for the first time, also ensure fees are scheduled
 		if vault.FeePeriodStart == 0 {
 			if err := k.SafeEnqueueFeeTimeout(ctx, vault); err != nil {
 				return err

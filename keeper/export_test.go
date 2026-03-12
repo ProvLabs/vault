@@ -38,6 +38,13 @@ func (k Keeper) TestAccessor_handleVaultInterestTimeouts(t *testing.T, ctx conte
 	return k.handleVaultInterestTimeouts(sdkCtx)
 }
 
+// TestAccessor_handleVaultFeeTimeouts exposes this keeper's handleVaultFeeTimeouts function for unit tests.
+func (k Keeper) TestAccessor_handleVaultFeeTimeouts(t *testing.T, ctx context.Context) error {
+	t.Helper()
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	return k.handleVaultFeeTimeouts(sdkCtx)
+}
+
 // TestAccessor_processSwapOutJobs exposes this keeper's processSwapOutJobs function for unit tests.
 func (k Keeper) TestAccessor_processSwapOutJobs(t *testing.T, ctx context.Context, jobsToProcess []types.PayoutJob) {
 	t.Helper()

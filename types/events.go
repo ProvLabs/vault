@@ -67,6 +67,17 @@ func NewEventVaultReconcile(vaultAddress string, principalBefore, principalAfter
 	}
 }
 
+// NewEventVaultFeeCollected creates a new EventVaultFeeCollected event.
+func NewEventVaultFeeCollected(vaultAddress, recipientAddress string, feeAmount, aumSnapshot sdk.Coin, periodSeconds int64) *EventVaultFeeCollected {
+	return &EventVaultFeeCollected{
+		VaultAddress:     vaultAddress,
+		RecipientAddress: recipientAddress,
+		FeeAmount:        feeAmount.String(),
+		AumSnapshot:      aumSnapshot.String(),
+		PeriodSeconds:    periodSeconds,
+	}
+}
+
 // NewEventVaultInterestChange creates a new EventVaultInterestChange event.
 func NewEventVaultInterestChange(vaultAddress, currentRate, desiredRate string) *EventVaultInterestChange {
 	return &EventVaultInterestChange{

@@ -3,6 +3,8 @@ package types
 import (
 	fmt "fmt"
 
+	"github.com/cometbft/cometbft/crypto"
+
 	sdkmath "cosmossdk.io/math"
 
 	gproto "google.golang.org/protobuf/proto"
@@ -17,8 +19,41 @@ import (
 
 const (
 	ZeroInterestRate   = "0.0"
-	MaxWithdrawalDelay = 31536000 * 2 // 2 years in seconds
+	MaxWithdrawalDelay = 31_536_000 * 2 // 2 years in seconds
+
+	// AUMFeeRate is the annual fee rate for the technology fee (15 bps).
+	AUMFeeRate = "0.0015"
 )
+
+const (
+	// ProvLabsMainnetFeeAddress is the hardcoded ProvLabs fee collection address for pio-mainnet-1.
+	ProvLabsMainnetFeeAddress = "pb1evyv7neax9qtxxzuexnhylxyz4guvsyjjqke4h"
+	// ProvLabsTestnetFeeAddress is the hardcoded ProvLabs fee collection address for pio-testnet-1.
+	ProvLabsTestnetFeeAddress = "tp19ftpcggezgal5ascglq5m022z4e453kh6c9g5f"
+)
+
+// GetProvLabsFeeAddress returns the ProvLabs fee collection address based on the chain ID.
+// For pio-mainnet-1, it returns the hardcoded 'pb' address.
+// For pio-testnet-1, it returns the hardcoded 'tp' address.
+// For any other chain, it returns an address derived from the 'provlabs' byte array.
+func GetProvLabsFeeAddress(chainID string) (sdk.AccAddress, error) {
+	switch chainID {
+	case "pio-mainnet-1":
+		addr, err := sdk.AccAddressFromBech32(ProvLabsMainnetFeeAddress)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse mainnet fee address: %w", err)
+		}
+		return addr, nil
+	case "pio-testnet-1":
+		addr, err := sdk.AccAddressFromBech32(ProvLabsTestnetFeeAddress)
+		if err != nil {
+			return nil, fmt.Errorf("failed to parse testnet fee address: %w", err)
+		}
+		return addr, nil
+	default:
+		return sdk.AccAddress(crypto.AddressHash([]byte("provlabs"))), nil
+	}
+}
 
 var (
 	_ sdk.AccountI             = (*VaultAccount)(nil)

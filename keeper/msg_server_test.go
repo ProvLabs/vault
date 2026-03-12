@@ -2186,6 +2186,55 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds() {
 		testDef.expectedResponse = &types.MsgDepositInterestFundsResponse{}
 		runMsgServerTestCase(s, testDef, tc)
 	})
+
+	s.Run("happy path - deposit payment_denom", func() {
+		paymentDenom := "payment"
+		paymentAmount := sdk.NewInt64Coin(paymentDenom, 1000)
+
+		setupWithPaymentDenom := func() {
+			s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin)
+			s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(paymentDenom, math.NewInt(1000)), admin)
+			s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, admin, sdk.NewCoins(paymentAmount)), "failed to fund account")
+			_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+				Admin:           admin.String(),
+				ShareDenom:      shares,
+				UnderlyingAsset: underlying,
+				PaymentDenom:    paymentDenom,
+			})
+			s.Require().NoError(err, "failed to create vault during setup")
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			s.ctx = s.ctx.WithBlockTime(blockTime)
+		}
+
+		ev := createSendCoinEvents(admin.String(), vaultAddr.String(), sdk.NewCoins(paymentAmount).String())
+		ev = append(ev, sdk.NewEvent(
+			"provlabs.vault.v1.EventInterestDeposit",
+			sdk.NewAttribute("amount", paymentAmount.String()),
+			sdk.NewAttribute("authority", admin.String()),
+			sdk.NewAttribute("vault_address", vaultAddr.String()),
+		))
+
+		tc := msgServerTestCase[types.MsgDepositInterestFundsRequest, postCheckArgs]{
+			name:  "happy path payment denom",
+			setup: setupWithPaymentDenom,
+			msg: types.MsgDepositInterestFundsRequest{
+				Authority:    admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Amount:       paymentAmount,
+			},
+			postCheckArgs: postCheckArgs{
+				VaultAddress:          vaultAddr,
+				ExpectedDepositAmount: paymentAmount,
+				ExpectedVaultBalance:  paymentAmount,
+				InVerificationQueue:   true,
+				ExpectedPeriodStart:   blockTime.Unix(),
+			},
+			expectedEvents: ev,
+		}
+
+		testDef.expectedResponse = &types.MsgDepositInterestFundsResponse{}
+		runMsgServerTestCase(s, testDef, tc)
+	})
 }
 
 func (s *TestSuite) TestMsgServer_DepositInterestFunds_Failures() {
@@ -2491,6 +2540,52 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds() {
 				ExpectedAuthorityAmt: withdrawAmt,
 			},
 			expectedEvents: expectedEvent,
+		}
+
+		testDef.expectedResponse = &types.MsgWithdrawInterestFundsResponse{}
+		runMsgServerTestCase(s, testDef, tc)
+	})
+
+	s.Run("happy path - withdraw payment_denom", func() {
+		paymentDenom := "payment"
+		paymentAmount := sdk.NewInt64Coin(paymentDenom, 1000)
+
+		setupWithPaymentDenom := func() {
+			s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin)
+			s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(paymentDenom, math.NewInt(1000)), admin)
+			_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+				Admin:           admin.String(),
+				ShareDenom:      shares,
+				UnderlyingAsset: underlying,
+				PaymentDenom:    paymentDenom,
+			})
+			s.Require().NoError(err, "failed to create vault")
+			err = FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(paymentAmount))
+			s.Require().NoError(err, "failed to fund vault account")
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+		}
+
+		expectedEvents := createSendCoinEvents(vaultAddr.String(), admin.String(), sdk.NewCoins(paymentAmount).String())
+		expectedEvents = append(expectedEvents, sdk.NewEvent(
+			"provlabs.vault.v1.EventInterestWithdrawal",
+			sdk.NewAttribute("amount", paymentAmount.String()),
+			sdk.NewAttribute("authority", admin.String()),
+			sdk.NewAttribute("vault_address", vaultAddr.String()),
+		))
+
+		tc := msgServerTestCase[types.MsgWithdrawInterestFundsRequest, postCheckArgs]{
+			name:  "happy path payment denom",
+			setup: setupWithPaymentDenom,
+			msg: types.MsgWithdrawInterestFundsRequest{
+				Authority:    admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Amount:       paymentAmount,
+			},
+			postCheckArgs: postCheckArgs{
+				AuthorityAddress:     admin,
+				ExpectedAuthorityAmt: paymentAmount,
+			},
+			expectedEvents: expectedEvents,
 		}
 
 		testDef.expectedResponse = &types.MsgWithdrawInterestFundsResponse{}

@@ -512,6 +512,26 @@ func createReconcileEvents(vaultAddr, markerAddr sdk.AccAddress, interest, princ
 	return allEvents
 }
 
+// createFeeEvents constructs the expected event sequence for a vault
+// AUM fee collection, including bank send events and the vault's
+// own EventVaultFeeCollected.
+func createFeeEvents(vaultAddr, recipientAddr sdk.AccAddress, fee sdk.Coin, aum sdk.Coin, duration int64) []sdk.Event {
+	var allEvents []sdk.Event
+
+	sendEvents := createSendCoinEvents(vaultAddr.String(), recipientAddr.String(), fee.String())
+	allEvents = append(allEvents, sendEvents...)
+
+	feeEvent := sdk.NewEvent("provlabs.vault.v1.EventVaultFeeCollected",
+		sdk.NewAttribute("aum_snapshot", aum.String()),
+		sdk.NewAttribute("fee_amount", fee.String()),
+		sdk.NewAttribute("period_seconds", fmt.Sprintf("%v", duration)),
+		sdk.NewAttribute("recipient_address", recipientAddr.String()),
+		sdk.NewAttribute("vault_address", vaultAddr.String()),
+	)
+	allEvents = append(allEvents, feeEvent)
+	return allEvents
+}
+
 // expectedWithSimpleAPY calculates the total amount (principal + interest)
 // using a simple APY formula.
 func expectedWithSimpleAPY(baseAmt sdkmath.Int, rateStr string, seconds int64) (sdkmath.Int, error) {
@@ -520,7 +540,7 @@ func expectedWithSimpleAPY(baseAmt sdkmath.Int, rateStr string, seconds int64) (
 		return sdkmath.Int{}, err
 	}
 	durationDec := sdkmath.LegacyNewDec(seconds)
-	secondsPerYearDec := sdkmath.LegacyNewDec(31536000)
+	secondsPerYearDec := sdkmath.LegacyNewDec(31_536_000)
 	timeFraction := durationDec.Quo(secondsPerYearDec)
 	interestDec := baseAmt.ToLegacyDec().Mul(rateDec).Mul(timeFraction)
 	return baseAmt.Add(interestDec.TruncateInt()), nil

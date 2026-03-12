@@ -191,6 +191,30 @@ func (s *TestSuite) TestToUnderlyingAssetAmount_IdentityFastPath() {
 	s.Require().Equal(math.NewInt(inputAmount), outAmount, "identity conversion should preserve the input amount for denom %s", underlyingDenom)
 }
 
+func (s *TestSuite) TestFromUnderlyingAssetAmount() {
+	underlyingDenom := "ylds"
+	paymentDenom := "usdc"
+	shareDenom := "vshare"
+	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
+
+	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
+
+	// 2 ylds at 1/2 underlying per payment should be 4 usdc
+	val, err := testKeeper.FromUnderlyingAssetAmount(s.ctx, *vault, math.NewInt(2), paymentDenom)
+	s.Require().NoError(err, "from-underlying should succeed for valid NAV between %s and %s", paymentDenom, underlyingDenom)
+	s.Require().Equal(math.NewInt(4), val, "2 %s at 1/2 %s per %s should be 4 %s", underlyingDenom, underlyingDenom, paymentDenom, paymentDenom)
+
+	// Identity path
+	valIdentity, err := testKeeper.FromUnderlyingAssetAmount(s.ctx, *vault, math.NewInt(100), underlyingDenom)
+	s.Require().NoError(err, "identity from-underlying should succeed for denom %s", underlyingDenom)
+	s.Require().Equal(math.NewInt(100), valIdentity, "100 %s should convert to 100 %s (identity path)", underlyingDenom, underlyingDenom)
+
+	// Error path
+	_, err = testKeeper.FromUnderlyingAssetAmount(s.ctx, *vault, math.NewInt(5), "unknown")
+	s.Require().Error(err, "should error when NAV missing for target denom")
+	s.Require().Contains(err.Error(), "nav not found", "error should mention missing NAV for target denom")
+}
+
 func (s *TestSuite) TestGetTVVInUnderlyingAsset_ExcludesSharesAndSumsInAsset() {
 	underlyingDenom := "ylds"
 	paymentDenom := "usdc"

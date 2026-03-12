@@ -309,8 +309,8 @@ func (k msgServer) DepositInterestFunds(goCtx context.Context, msg *types.MsgDep
 		return nil, err
 	}
 
-	if vault.UnderlyingAsset != msg.Amount.Denom {
-		return nil, fmt.Errorf("denom not supported for vault must be of type \"%s\" : got \"%s\"", vault.UnderlyingAsset, msg.Amount.Denom)
+	if err := vault.ValidateAcceptedCoin(msg.Amount); err != nil {
+		return nil, err
 	}
 
 	if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx), authorityAddr, vaultAddr, sdk.NewCoins(msg.Amount)); err != nil {
@@ -344,8 +344,8 @@ func (k msgServer) WithdrawInterestFunds(goCtx context.Context, msg *types.MsgWi
 	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, err
 	}
-	if vault.UnderlyingAsset != msg.Amount.Denom {
-		return nil, fmt.Errorf("denom not supported for vault must be of type \"%s\" : got \"%s\"", vault.UnderlyingAsset, msg.Amount.Denom)
+	if err := vault.ValidateAcceptedCoin(msg.Amount); err != nil {
+		return nil, err
 	}
 
 	if err := k.reconcileVaultInterest(ctx, vault); err != nil {

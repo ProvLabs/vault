@@ -10,6 +10,7 @@ import (
 
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
+	"github.com/provlabs/vault/interest"
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
 )
@@ -135,6 +136,8 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 				s.Require().NoError(s.k.SetVaultAccount(s.ctx, vault), "must update vault account period")
 				s.Require().NotNil(vault, "vault should not be nil")
 
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 100_000))), "must fund vault reserves for technology fee during reconcile")
+
 				req := types.PendingSwapOut{
 					Owner:        ownerAddr.String(),
 					VaultAddress: vaultAddr.String(),
@@ -156,6 +159,21 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 				s.Require().Equal(supply, vault.TotalShares, "vault TotalShares should match supply")
 
 				expectedEvents := sdk.Events{}
+
+				// AUM fee for the period from t=1 to testBlockTime
+				duration := testBlockTime.Unix() - 1
+				fee, _ := interest.CalculateAUMFee(assets.Amount, duration)
+				feeAddr, err := types.GetProvLabsFeeAddress(s.ctx.ChainID())
+				s.Require().NoError(err)
+				feeEv := createFeeEvents(
+					vaultAddr,
+					feeAddr,
+					sdk.NewCoin(underlyingDenom, fee),
+					sdk.NewCoin(underlyingDenom, assets.Amount),
+					duration,
+				)
+				expectedEvents = append(expectedEvents, feeEv...)
+
 				reconcileEvent, err := sdk.TypedEventToEvent(types.NewEventVaultReconcile(vaultAddr.String(), assets, assets, vault.CurrentInterestRate, testBlockTime.Unix()-1, math.NewInt(0)))
 				s.Require().NoError(err, "should not error converting typed EventVaultReconciled")
 				expectedEvents = append(expectedEvents, reconcileEvent)

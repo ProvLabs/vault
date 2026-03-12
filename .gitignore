@@ -76,3 +76,4 @@ tmp-swagger-gen/
 
 # Vault runtime
 .vaulty/
+issues/

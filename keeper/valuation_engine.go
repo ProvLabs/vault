@@ -120,6 +120,26 @@ func (k Keeper) ToUnderlyingAssetAmount(ctx sdk.Context, vault types.VaultAccoun
 	return in.Amount.Mul(priceAmount).Quo(volume), nil
 }
 
+// FromUnderlyingAssetAmount converts an amount in vault.UnderlyingAsset into its
+// value expressed in targetDenom using integer floor arithmetic and NAV rates.
+//
+// Formula:
+//
+//	value_in_target = underlyingAmount * priceDenominator / priceNumerator
+//
+// where (priceNumerator, priceDenominator) are from UnitPriceFraction(targetDenom → underlying).
+// This is the inverse of ToUnderlyingAssetAmount.
+func (k Keeper) FromUnderlyingAssetAmount(ctx sdk.Context, vault types.VaultAccount, underlyingAmount math.Int, targetDenom string) (math.Int, error) {
+	priceNum, priceDen, err := k.UnitPriceFraction(ctx, targetDenom, vault)
+	if err != nil {
+		return math.Int{}, err
+	}
+	if priceNum.IsZero() {
+		return math.Int{}, fmt.Errorf("zero price numerator for %s", targetDenom)
+	}
+	return underlyingAmount.Mul(priceDen).Quo(priceNum), nil
+}
+
 // GetTVVInUnderlyingAsset returns the Total Vault Value (TVV) expressed in
 // vault.UnderlyingAsset using floor arithmetic.
 //

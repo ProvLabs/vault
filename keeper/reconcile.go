@@ -29,7 +29,7 @@ const (
 //
 // This should be called before any transaction that changes vault principal/reserves or depends on the
 // current interest state.
-func (k *Keeper) reconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccount) error {
+func (k Keeper) reconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccount) error {
 	if vault.Paused {
 		return nil
 	}
@@ -70,7 +70,7 @@ func (k *Keeper) reconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccou
 // and the NAV volume is set to the total number of shares. If the total share
 // amount cannot be represented as a uint64, this method returns an error and
 // does not publish a NAV.
-func (k *Keeper) setShareDenomNAV(ctx sdk.Context, vault *types.VaultAccount, vaultMarker markertypes.MarkerAccountI, tvv sdkmath.Int) error {
+func (k Keeper) setShareDenomNAV(ctx sdk.Context, vault *types.VaultAccount, vaultMarker markertypes.MarkerAccountI, tvv sdkmath.Int) error {
 	if !vault.TotalShares.Amount.IsUint64() {
 		return fmt.Errorf(
 			"vault total shares overflows uint64: %s",
@@ -97,7 +97,7 @@ func (k *Keeper) setShareDenomNAV(ctx sdk.Context, vault *types.VaultAccount, va
 //
 // If NAV publication fails, the error is logged and the operation continues
 // without failing the overall vault reconciliation process.
-func (k *Keeper) publishShareNav(ctx sdk.Context, vault *types.VaultAccount) error {
+func (k Keeper) publishShareNav(ctx sdk.Context, vault *types.VaultAccount) error {
 	vaultMarker, err := k.MarkerKeeper.GetMarker(ctx, vault.PrincipalMarkerAddress())
 	if err != nil {
 		return fmt.Errorf("failed to get principal marker: %w", err)
@@ -133,7 +133,7 @@ func (k *Keeper) publishShareNav(ctx sdk.Context, vault *types.VaultAccount) err
 // capped at the available underlying balance, potentially resulting in a partial payment.
 //
 // An EventVaultReconcile is emitted upon success. This method does not modify PeriodStart.
-func (k *Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.VaultAccount) error {
+func (k Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.VaultAccount) error {
 	currentBlockTime := ctx.BlockTime().Unix()
 	if currentBlockTime <= vault.PeriodStart {
 		return nil
@@ -217,36 +217,20 @@ func (k *Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vaul
 // If the principal marker account has insufficient PaymentDenom liquidity, the remaining
 // fee amount is recorded in OutstandingAumFee.
 // An EventVaultFeeCollected is emitted upon success.
-func (k *Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAccount) error {
+func (k Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAccount) error {
 	currentBlockTime := ctx.BlockTime().Unix()
 	if currentBlockTime <= vault.FeePeriodStart {
 		return nil
 	}
 
-	periodDuration := currentBlockTime - vault.FeePeriodStart
 	tvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
 	if err != nil {
 		return err
 	}
 
-	feeUnderlying, err := interest.CalculateAUMFee(tvv, periodDuration)
+	newFeePayment, err := k.EstimateAccruedAUMFeePayment(ctx, *vault, tvv)
 	if err != nil {
-		return fmt.Errorf("failed to calculate AUM fee: %w", err)
-	}
-
-	// Convert newly accrued fee to PaymentDenom
-	var newFeePayment sdk.Coin
-	if !feeUnderlying.IsZero() {
-		priceNum, priceDen, err := k.UnitPriceFraction(ctx, vault.PaymentDenom, *vault)
-		if err != nil {
-			return fmt.Errorf("failed to get price for fee conversion: %w", err)
-		}
-		// 1 PaymentDenom = priceNum / priceDen UnderlyingAsset
-		// fee_payment = fee_underlying * priceDen / priceNum
-		feePaymentAmount := feeUnderlying.Mul(priceDen).Quo(priceNum)
-		newFeePayment = sdk.NewCoin(vault.PaymentDenom, feePaymentAmount)
-	} else {
-		newFeePayment = sdk.NewCoin(vault.PaymentDenom, sdkmath.ZeroInt())
+		return err
 	}
 
 	totalOutstanding := vault.OutstandingAumFee.Add(newFeePayment)
@@ -279,6 +263,7 @@ func (k *Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAcco
 		}
 	}
 
+	periodDuration := currentBlockTime - vault.FeePeriodStart
 	vault.OutstandingAumFee = totalOutstanding.Sub(toCollect)
 	vault.FeePeriodStart = currentBlockTime
 
@@ -301,7 +286,7 @@ func (k *Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAcco
 // AUM fee is checked against the principal marker's PaymentDenom balance.
 //
 // It returns true only if all checks pass.
-func (k *Keeper) CanPayoutDuration(ctx sdk.Context, vault *types.VaultAccount, duration int64) (bool, error) {
+func (k Keeper) CanPayoutDuration(ctx sdk.Context, vault *types.VaultAccount, duration int64) (bool, error) {
 	if duration <= 0 {
 		return true, nil
 	}
@@ -349,7 +334,7 @@ func (k *Keeper) CanPayoutDuration(ctx sdk.Context, vault *types.VaultAccount, d
 
 // UpdateInterestRates sets the vault's current and desired interest rates and emits
 // an EventVaultInterestChange. The modified account is persisted via the auth keeper.
-func (k *Keeper) UpdateInterestRates(ctx sdk.Context, vault *types.VaultAccount, currentRate, desiredRate string) error {
+func (k Keeper) UpdateInterestRates(ctx sdk.Context, vault *types.VaultAccount, currentRate, desiredRate string) error {
 	event := types.NewEventVaultInterestChange(vault.GetAddress().String(), currentRate, desiredRate)
 	vault.CurrentInterestRate = currentRate
 	vault.DesiredInterestRate = desiredRate
@@ -360,47 +345,80 @@ func (k *Keeper) UpdateInterestRates(ctx sdk.Context, vault *types.VaultAccount,
 	return nil
 }
 
+// EstimateAccruedInterest calculates the interest that would have accrued for the vault
+// from its PeriodStart to the current block time, based on the provided principal.
+// It returns the interest amount (which can be negative) and does not mutate state.
+func (k Keeper) EstimateAccruedInterest(ctx sdk.Context, vault types.VaultAccount, principal sdk.Coin) (sdkmath.Int, error) {
+	if vault.CurrentInterestRate == "" || vault.PeriodStart == 0 {
+		return sdkmath.ZeroInt(), nil
+	}
+	duration := ctx.BlockTime().Unix() - vault.PeriodStart
+	if duration <= 0 {
+		return sdkmath.ZeroInt(), nil
+	}
+	return interest.CalculateInterestEarned(principal, vault.CurrentInterestRate, duration)
+}
+
+// EstimateAccruedAUMFee calculates the AUM fees that would have accrued for the vault
+// from its FeePeriodStart to the current block time, based on the provided total assets.
+// It returns the fee amount in the underlying asset and does not mutate state.
+func (k Keeper) EstimateAccruedAUMFee(ctx sdk.Context, vault types.VaultAccount, totalAssets sdkmath.Int) (sdkmath.Int, error) {
+	if vault.FeePeriodStart == 0 {
+		return sdkmath.ZeroInt(), nil
+	}
+	duration := ctx.BlockTime().Unix() - vault.FeePeriodStart
+	if duration <= 0 {
+		return sdkmath.ZeroInt(), nil
+	}
+	return interest.CalculateAUMFee(totalAssets, duration)
+}
+
+// EstimateAccruedAUMFeePayment calculates the AUM fees that would have accrued for the vault
+// from its FeePeriodStart to the current block time, converted to the vault's PaymentDenom.
+func (k Keeper) EstimateAccruedAUMFeePayment(ctx sdk.Context, vault types.VaultAccount, totalAssets sdkmath.Int) (sdk.Coin, error) {
+	feeUnderlying, err := k.EstimateAccruedAUMFee(ctx, vault, totalAssets)
+	if err != nil {
+		return sdk.Coin{}, err
+	}
+	feePayment, err := k.FromUnderlyingAssetAmount(ctx, vault, feeUnderlying, vault.PaymentDenom)
+	if err != nil {
+		return sdk.Coin{}, fmt.Errorf("failed to convert accrued fee to payment denom: %w", err)
+	}
+	return sdk.NewCoin(vault.PaymentDenom, feePayment), nil
+}
+
+// CalculateOutstandingFeeUnderlying converts the vault's outstanding AUM fees into
+// the equivalent amount of the underlying asset.
+func (k Keeper) CalculateOutstandingFeeUnderlying(ctx sdk.Context, vault types.VaultAccount) (sdkmath.Int, error) {
+	if vault.OutstandingAumFee.IsZero() {
+		return sdkmath.ZeroInt(), nil
+	}
+	return k.ToUnderlyingAssetAmount(ctx, vault, vault.OutstandingAumFee)
+}
+
 // CalculateVaultTotalAssets returns the total value of the vault's assets, including the interest
 // that would have accrued from PeriodStart to the current block time, and subtracting the
 // AUM fees accrued since FeePeriodStart, without mutating state.
 //
 // If no rate is set or accrual has not started, it returns the provided principal unchanged.
 func (k Keeper) CalculateVaultTotalAssets(ctx sdk.Context, vault *types.VaultAccount, principal sdk.Coin) (sdkmath.Int, error) {
-	estimated := principal.Amount
-
-	// 1. Add estimated interest
-	if vault.CurrentInterestRate != "" && vault.PeriodStart != 0 {
-		duration := ctx.BlockTime().Unix() - vault.PeriodStart
-		if duration > 0 {
-			interestEarned, err := interest.CalculateInterestEarned(principal, vault.CurrentInterestRate, duration)
-			if err != nil {
-				return sdkmath.Int{}, fmt.Errorf("error calculating interest: %w", err)
-			}
-			estimated = estimated.Add(interestEarned)
-		}
+	interestEarned, err := k.EstimateAccruedInterest(ctx, *vault, principal)
+	if err != nil {
+		return sdkmath.Int{}, fmt.Errorf("error calculating interest: %w", err)
 	}
+	estimated := principal.Amount.Add(interestEarned)
 
-	// 2. Subtract estimated AUM fees
-	if vault.FeePeriodStart != 0 {
-		duration := ctx.BlockTime().Unix() - vault.FeePeriodStart
-		if duration > 0 {
-			// Estimate fee on the principal + interest
-			feeUnderlying, err := interest.CalculateAUMFee(estimated, duration)
-			if err != nil {
-				return sdkmath.Int{}, fmt.Errorf("error calculating AUM fee: %w", err)
-			}
-			estimated = estimated.Sub(feeUnderlying)
-		}
+	feeAccrued, err := k.EstimateAccruedAUMFee(ctx, *vault, estimated)
+	if err != nil {
+		return sdkmath.Int{}, fmt.Errorf("error calculating AUM fee: %w", err)
 	}
+	estimated = estimated.Sub(feeAccrued)
 
-	// 3. Subtract outstanding fees (already calculated in underlying if possible, or converted)
-	if !vault.OutstandingAumFee.IsZero() {
-		outstandingUnderlying, err := k.ToUnderlyingAssetAmount(ctx, *vault, vault.OutstandingAumFee)
-		if err != nil {
-			return sdkmath.Int{}, fmt.Errorf("error converting outstanding fee: %w", err)
-		}
-		estimated = estimated.Sub(outstandingUnderlying)
+	outstandingUnderlying, err := k.CalculateOutstandingFeeUnderlying(ctx, *vault)
+	if err != nil {
+		return sdkmath.Int{}, fmt.Errorf("error converting outstanding fee: %w", err)
 	}
+	estimated = estimated.Sub(outstandingUnderlying)
 
 	return estimated, nil
 }
@@ -412,7 +430,7 @@ func (k Keeper) CalculateVaultTotalAssets(ctx sdk.Context, vault *types.VaultAcc
 //   - It then iterates the collected keys, dequeuing each item before processing it.
 //   - Vaults that cannot cover the required interest are marked depleted.
 //   - Otherwise, interest is reconciled.
-func (k *Keeper) handleVaultInterestTimeouts(ctx sdk.Context) error {
+func (k Keeper) handleVaultInterestTimeouts(ctx sdk.Context) error {
 	now := ctx.BlockTime().Unix()
 
 	var keysToProcess []collections.Pair[uint64, sdk.AccAddress]
@@ -482,7 +500,7 @@ func (k *Keeper) handleVaultInterestTimeouts(ctx sdk.Context) error {
 
 // tryGetVault returns the vault if found, or false if the vault is missing or invalid.
 // It should only be used in BeginBlocker/EndBlocker logic where failure is non-critical.
-func (k *Keeper) tryGetVault(ctx sdk.Context, addr sdk.AccAddress) (*types.VaultAccount, bool) {
+func (k Keeper) tryGetVault(ctx sdk.Context, addr sdk.AccAddress) (*types.VaultAccount, bool) {
 	vault, err := k.GetVault(ctx, addr)
 	if err != nil {
 		ctx.Logger().Error("failed to get vault", "address", addr.String(), "error", err)
@@ -500,7 +518,7 @@ func (k *Keeper) tryGetVault(ctx sdk.Context, addr sdk.AccAddress) (*types.Vault
 //
 // It first collects keys for all non-paused vaults. It then iterates the collected keys, removing
 // each from the set before partitioning them into payable vs depleted groups.
-func (k *Keeper) handleReconciledVaults(ctx sdk.Context) error {
+func (k Keeper) handleReconciledVaults(ctx sdk.Context) error {
 	var keysToProcess []sdk.AccAddress
 	var vaultsToProcess []*types.VaultAccount
 
@@ -536,7 +554,7 @@ func (k *Keeper) handleReconciledVaults(ctx sdk.Context) error {
 
 // partitionVaults splits the provided vaults into payable and depleted groups for the
 // AutoReconcilePayoutDuration forecast window using CanPayoutDuration.
-func (k *Keeper) partitionVaults(ctx sdk.Context, vaults []*types.VaultAccount) ([]*types.VaultAccount, []*types.VaultAccount) {
+func (k Keeper) partitionVaults(ctx sdk.Context, vaults []*types.VaultAccount) ([]*types.VaultAccount, []*types.VaultAccount) {
 	var payable []*types.VaultAccount
 	var depleted []*types.VaultAccount
 	for _, v := range vaults {
@@ -556,7 +574,7 @@ func (k *Keeper) partitionVaults(ctx sdk.Context, vaults []*types.VaultAccount) 
 
 // handlePayableVaults updates timeout tracking for vaults that remain payable after reconciliation.
 // It sets PeriodTimeout to now + AutoReconcileTimeout, persists the vault, and enqueues the timeout.
-func (k *Keeper) handlePayableVaults(ctx sdk.Context, payouts []*types.VaultAccount) {
+func (k Keeper) handlePayableVaults(ctx sdk.Context, payouts []*types.VaultAccount) {
 	for _, v := range payouts {
 		if err := k.SafeEnqueueTimeout(ctx, v); err != nil {
 			ctx.Logger().Error("failed to enqueue timeout", "vault", v.GetAddress().String(), "err", err)
@@ -566,7 +584,7 @@ func (k *Keeper) handlePayableVaults(ctx sdk.Context, payouts []*types.VaultAcco
 
 // handleDepletedVaults disables interest for vaults that cannot cover the forecasted payout window
 // by setting the current rate to zero while preserving the desired rate.
-func (k *Keeper) handleDepletedVaults(ctx sdk.Context, failedPayouts []*types.VaultAccount) {
+func (k Keeper) handleDepletedVaults(ctx sdk.Context, failedPayouts []*types.VaultAccount) {
 	for _, record := range failedPayouts {
 		if err := k.UpdateInterestRates(ctx, record, types.ZeroInterestRate, record.DesiredInterestRate); err != nil {
 			ctx.Logger().Error("failed to update interest rates", "vault", record.GetAddress().String(), "err", err)
@@ -578,7 +596,7 @@ func (k *Keeper) handleDepletedVaults(ctx sdk.Context, failedPayouts []*types.Va
 // interest reconciliation by calling SafeEnqueueTimeout for each.
 //
 // This updates PeriodStart and PeriodTimeout, persists the vault, and enqueues the corresponding timeout entry.
-func (k *Keeper) resetVaultInterestPeriods(ctx sdk.Context, vaults []*types.VaultAccount) {
+func (k Keeper) resetVaultInterestPeriods(ctx sdk.Context, vaults []*types.VaultAccount) {
 	for _, vault := range vaults {
 		if err := k.SafeEnqueueTimeout(ctx, vault); err != nil {
 			ctx.Logger().Error("failed to enqueue vault timeout", "vault", vault.GetAddress().String(), "err", err)
@@ -588,7 +606,7 @@ func (k *Keeper) resetVaultInterestPeriods(ctx sdk.Context, vaults []*types.Vaul
 
 // handleVaultFeeTimeouts checks vaults with expired fee periods and reconciles them.
 // It uses a safe "collect-then-mutate" pattern to comply with the SDK iterator contract.
-func (k *Keeper) handleVaultFeeTimeouts(ctx sdk.Context) error {
+func (k Keeper) handleVaultFeeTimeouts(ctx sdk.Context) error {
 	now := ctx.BlockTime().Unix()
 
 	var keysToProcess []collections.Pair[uint64, sdk.AccAddress]
@@ -635,7 +653,7 @@ func (k *Keeper) handleVaultFeeTimeouts(ctx sdk.Context) error {
 
 // resetVaultFeePeriods starts a new fee accrual period for the provided vaults after a successful
 // fee reconciliation by calling SafeEnqueueFeeTimeout for each.
-func (k *Keeper) resetVaultFeePeriods(ctx sdk.Context, vaults []*types.VaultAccount) {
+func (k Keeper) resetVaultFeePeriods(ctx sdk.Context, vaults []*types.VaultAccount) {
 	for _, vault := range vaults {
 		if err := k.SafeEnqueueFeeTimeout(ctx, vault); err != nil {
 			ctx.Logger().Error("failed to enqueue vault fee timeout", "vault", vault.GetAddress().String(), "err", err)

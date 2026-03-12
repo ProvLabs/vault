@@ -1749,3 +1749,171 @@ func getAttribute(ev sdk.Event, key string) string {
 	}
 	return ""
 }
+
+func (s *TestSuite) TestKeeper_EstimationMethods() {
+	shareDenom := "vaultshares"
+	underlyingDenom := "underlying"
+	underlying := sdk.NewInt64Coin(underlyingDenom, 1_000_000_000)
+	vaultAddress := types.GetVaultAddress(shareDenom)
+	testBlockTime := time.Now().UTC()
+	pastTime := testBlockTime.Add(-60 * 24 * time.Hour) // ~2 months
+
+	setup := func() *types.VaultAccount {
+		s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           s.adminAddr.String(),
+			ShareDenom:      shareDenom,
+			UnderlyingAsset: underlyingDenom,
+		})
+		s.Require().NoError(err)
+
+		vault, err := s.k.GetVault(s.ctx, vaultAddress)
+		s.Require().NoError(err)
+		s.ctx = s.ctx.WithBlockTime(testBlockTime)
+		return vault
+	}
+
+	s.Run("EstimateAccruedInterest", func() {
+		s.SetupTest()
+		vault := setup()
+
+		// Case 1: No interest rate
+		amt, err := s.k.EstimateAccruedInterest(s.ctx, *vault, underlying)
+		s.Require().NoError(err)
+		s.Require().True(amt.IsZero())
+
+		// Case 2: Positive interest
+		vault.CurrentInterestRate = "0.25"
+		vault.PeriodStart = pastTime.Unix()
+		amt, err = s.k.EstimateAccruedInterest(s.ctx, *vault, underlying)
+		s.Require().NoError(err)
+		s.Require().Equal(sdkmath.NewInt(41_952_013), amt)
+
+		// Case 3: Negative interest
+		vault.CurrentInterestRate = "-0.25"
+		amt, err = s.k.EstimateAccruedInterest(s.ctx, *vault, underlying)
+		s.Require().NoError(err)
+		s.Require().Equal(sdkmath.NewInt(-40_262_904), amt)
+
+		// Case 4: Future period start
+		vault.PeriodStart = testBlockTime.Add(time.Hour).Unix()
+		amt, err = s.k.EstimateAccruedInterest(s.ctx, *vault, underlying)
+		s.Require().NoError(err)
+		s.Require().True(amt.IsZero())
+	})
+
+	s.Run("EstimateAccruedAUMFee", func() {
+		s.SetupTest()
+		vault := setup()
+
+		// Case 1: No fee period start
+		vault.FeePeriodStart = 0
+		amt, err := s.k.EstimateAccruedAUMFee(s.ctx, *vault, underlying.Amount)
+		s.Require().NoError(err)
+		s.Require().True(amt.IsZero())
+
+		// Case 2: Positive fee
+		vault.FeePeriodStart = pastTime.Unix()
+		amt, err = s.k.EstimateAccruedAUMFee(s.ctx, *vault, underlying.Amount)
+		s.Require().NoError(err)
+		// Fee = 1,000,000,000 * 0.0015 * 5,184,000 / 31,536,000 = 246,575
+		s.Require().Equal(sdkmath.NewInt(246_575), amt)
+
+		// Case 3: Zero assets
+		amt, err = s.k.EstimateAccruedAUMFee(s.ctx, *vault, sdkmath.ZeroInt())
+		s.Require().NoError(err)
+		s.Require().True(amt.IsZero())
+	})
+
+	s.Run("CalculateOutstandingFeeUnderlying", func() {
+		s.SetupTest()
+		vault := setup()
+
+		// Case 1: No outstanding fee
+		amt, err := s.k.CalculateOutstandingFeeUnderlying(s.ctx, *vault)
+		s.Require().NoError(err)
+		s.Require().True(amt.IsZero())
+
+		// Case 2: Outstanding fee in underlying
+		vault.OutstandingAumFee = sdk.NewInt64Coin(underlyingDenom, 500)
+		amt, err = s.k.CalculateOutstandingFeeUnderlying(s.ctx, *vault)
+		s.Require().NoError(err)
+		s.Require().Equal(sdkmath.NewInt(500), amt)
+
+		// Case 3: Outstanding fee in payment denom (1:1 fast path)
+		vault.PaymentDenom = "uylds.fcc"
+		vault.OutstandingAumFee = sdk.NewInt64Coin("uylds.fcc", 1000)
+		amt, err = s.k.CalculateOutstandingFeeUnderlying(s.ctx, *vault)
+		s.Require().NoError(err)
+		s.Require().Equal(sdkmath.NewInt(1000), amt)
+	})
+
+	s.Run("EstimateAccruedAUMFeePayment", func() {
+		s.SetupTest()
+		vault := setup()
+
+		// Case 1: No fee period start
+		vault.FeePeriodStart = 0
+		vault.PaymentDenom = underlyingDenom
+		amt, err := s.k.EstimateAccruedAUMFeePayment(s.ctx, *vault, underlying.Amount)
+		s.Require().NoError(err)
+		s.Require().True(amt.IsZero())
+		s.Require().Equal(underlyingDenom, amt.Denom)
+
+		// Case 2: Positive fee, 1:1 payment denom
+		vault.FeePeriodStart = pastTime.Unix()
+		vault.PaymentDenom = underlyingDenom
+		amt, err = s.k.EstimateAccruedAUMFeePayment(s.ctx, *vault, underlying.Amount)
+		s.Require().NoError(err)
+		s.Require().Equal(sdkmath.NewInt(246_575), amt.Amount)
+		s.Require().Equal(underlyingDenom, amt.Denom)
+
+		// Case 3: Positive fee, 1:2 payment denom
+		paymentDenom := "usdc"
+		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 1_000_000), s.adminAddr)
+		pmtMarkerAddr := markertypes.MustGetMarkerAddress(paymentDenom)
+		pmtMarkerAcct, _ := s.k.MarkerKeeper.GetMarker(s.ctx, pmtMarkerAddr)
+		s.k.MarkerKeeper.SetNetAssetValue(s.ctx, pmtMarkerAcct, markertypes.NetAssetValue{
+			Price:  sdk.NewInt64Coin(underlyingDenom, 1),
+			Volume: 2,
+		}, "test")
+
+		vault.PaymentDenom = paymentDenom
+		amt, err = s.k.EstimateAccruedAUMFeePayment(s.ctx, *vault, underlying.Amount)
+		s.Require().NoError(err)
+		// FeeUnderlying = 246,575
+		// FeePayment = 246,575 * 2 / 1 = 493,150
+		s.Require().Equal(sdkmath.NewInt(493_150), amt.Amount)
+		s.Require().Equal(paymentDenom, amt.Denom)
+	})
+
+	s.Run("CalculateVaultTotalAssets", func() {
+		s.SetupTest()
+		vault := setup()
+
+		// Case 1: Simple principal, no interest, no fees
+		vault.CurrentInterestRate = "0.0"
+		vault.PeriodStart = 0
+		vault.FeePeriodStart = 0
+		vault.OutstandingAumFee = sdk.NewCoin(underlyingDenom, sdkmath.ZeroInt())
+
+		amt, err := s.k.CalculateVaultTotalAssets(s.ctx, vault, underlying)
+		s.Require().NoError(err)
+		s.Require().Equal(underlying.Amount, amt)
+
+		// Case 2: Principal + Interest - Fees - Outstanding
+		vault.CurrentInterestRate = "0.25"
+		vault.PeriodStart = pastTime.Unix()
+		vault.FeePeriodStart = pastTime.Unix()
+		vault.OutstandingAumFee = sdk.NewInt64Coin(underlyingDenom, 1000)
+
+		amt, err = s.k.CalculateVaultTotalAssets(s.ctx, vault, underlying)
+		s.Require().NoError(err)
+
+		// ExpectedInterest = 41,952,013
+		// IntermediateSum = 1,000,000,000 + 41,952,013 = 1,041,952,013
+		// ExpectedFee = 1,041,952,013 * 0.0015 * 5,184,000 / 31,536,000 = 256,919 (truncated dec)
+		// Result = 1,041,952,013 - 256,919 - 1000 = 1,041,694,094
+		s.Require().Equal(sdkmath.NewInt(1_041_694_094), amt)
+	})
+}

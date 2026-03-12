@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
@@ -38,7 +39,7 @@ type TestSuite struct {
 // commonly used test fixtures such as the vault keeper and an admin address.
 func (s *TestSuite) SetupTest() {
 	s.simApp = simapp.Setup(s.T())
-	s.ctx = s.simApp.NewContext(false)
+	s.ctx = s.simApp.NewContext(false).WithBlockTime(time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC))
 	s.k = *s.simApp.VaultKeeper
 
 	s.adminAddr = sdk.AccAddress("adminAddr___________")

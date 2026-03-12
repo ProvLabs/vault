@@ -58,3 +58,22 @@ func (k Keeper) SafeEnqueueTimeout(ctx sdk.Context, vault *types.VaultAccount) e
 	}
 	return k.PayoutTimeoutQueue.Enqueue(ctx, vault.PeriodTimeout, vault.GetAddress())
 }
+
+// SafeEnqueueFeeTimeout clears any existing fee timeout entry for the given vault (if any),
+// sets the vault's fee period start to the current block time, sets a new fee period timeout
+// at (now + AutoReconcileTimeout), persists the vault, and enqueues the timeout entry
+// in the FeeTimeoutQueue.
+func (k Keeper) SafeEnqueueFeeTimeout(ctx sdk.Context, vault *types.VaultAccount) error {
+	if err := k.FeeTimeoutQueue.Dequeue(ctx, vault.FeePeriodTimeout, vault.GetAddress()); err != nil {
+		return err
+	}
+
+	currentBlockTime := ctx.BlockTime().Unix()
+	vault.FeePeriodStart = currentBlockTime
+	vault.FeePeriodTimeout = currentBlockTime + AutoReconcileTimeout
+	if err := k.SetVaultAccount(ctx, vault); err != nil {
+		ctx.Logger().Error("failed to set vault", "vault", vault.GetAddress().String(), "err", err)
+		return err
+	}
+	return k.FeeTimeoutQueue.Enqueue(ctx, vault.FeePeriodTimeout, vault.GetAddress())
+}

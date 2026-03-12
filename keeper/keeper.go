@@ -30,6 +30,7 @@ type Keeper struct {
 	Vaults                collections.Map[sdk.AccAddress, []byte]
 	PayoutVerificationSet collections.KeySet[sdk.AccAddress]
 	PayoutTimeoutQueue    *queue.PayoutTimeoutQueue
+	FeeTimeoutQueue       *queue.FeeTimeoutQueue
 	PendingSwapOutQueue   *queue.PendingSwapOutQueue
 }
 
@@ -57,6 +58,7 @@ func NewKeeper(
 		Vaults:                collections.NewMap(builder, types.VaultsKeyPrefix, types.VaultsName, sdk.AccAddressKey, collections.BytesValue),
 		PayoutVerificationSet: collections.NewKeySet(builder, types.VaultPayoutVerificationSetPrefix, types.VaultPayoutVerificationSetName, sdk.AccAddressKey),
 		PayoutTimeoutQueue:    queue.NewPayoutTimeoutQueue(builder),
+		FeeTimeoutQueue:       queue.NewFeeTimeoutQueue(builder),
 		PendingSwapOutQueue:   queue.NewPendingSwapOutQueue(builder, cdc),
 		AuthKeeper:            authKeeper,
 		MarkerKeeper:          markerkeeper,

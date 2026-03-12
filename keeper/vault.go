@@ -103,6 +103,10 @@ func (k *Keeper) createVaultAccount(ctx sdk.Context, admin, shareDenom, underlyi
 	vaultAcc = k.AuthKeeper.NewAccount(ctx, vault).(types.VaultAccountI)
 	k.AuthKeeper.SetAccount(ctx, vaultAcc)
 
+	if err := k.SafeEnqueueFeeTimeout(ctx, vault); err != nil {
+		return nil, fmt.Errorf("failed to enqueue initial fee timeout: %w", err)
+	}
+
 	return vault, nil
 }
 

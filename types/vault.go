@@ -87,6 +87,7 @@ func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyi
 		PausedBalance:          sdk.Coin{},
 		BridgeEnabled:          false,
 		BridgeAddress:          "",
+		OutstandingAumFee:      sdk.NewCoin(paymentDenom, sdkmath.ZeroInt()),
 	}
 }
 

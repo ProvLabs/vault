@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/provlabs/vault/types"
 	"github.com/provlabs/vault/utils"
 
 	sdkmath "cosmossdk.io/math"
@@ -63,6 +64,35 @@ func CalculateInterestEarned(principal sdk.Coin, rate string, periodSeconds int6
 
 	// Truncate to an integer amount for the coin, as coins cannot have fractional parts.
 	return interestAmountDec.TruncateInt(), nil
+}
+
+// CalculateAUMFee computes the 15 bps technology fee (0.15% annual) based on the vault's AUM.
+//
+// Formula:
+//
+//	Fee = (AUM * 0.0015 * duration) / 31536000 (SecondsPerYear)
+//
+// Returns the fee as a truncated sdkmath.Int.
+func CalculateAUMFee(aum sdkmath.Int, duration int64) (sdkmath.Int, error) {
+	if duration < 0 {
+		return sdkmath.Int{}, errors.New("duration cannot be negative")
+	}
+	if duration == 0 || aum.IsZero() {
+		return sdkmath.ZeroInt(), nil
+	}
+
+	rate, err := sdkmath.LegacyNewDecFromStr(types.AUMFeeRate)
+	if err != nil {
+		return sdkmath.Int{}, fmt.Errorf("failed to parse AUM fee rate: %w", err)
+	}
+
+	// Fee = (AUM * rate * duration) / SecondsPerYear
+	aumDec := sdkmath.LegacyNewDecFromInt(aum)
+	durationDec := sdkmath.LegacyNewDec(duration)
+	yearDec := sdkmath.LegacyNewDec(SecondsPerYear)
+
+	fee := aumDec.Mul(rate).Mul(durationDec).Quo(yearDec)
+	return fee.TruncateInt(), nil
 }
 
 // CalculateExpiration determines the epoch time at which a vault will no longer be

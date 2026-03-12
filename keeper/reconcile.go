@@ -212,8 +212,11 @@ func (k Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vault
 // The fee is calculated based on the Total Vault Value (TVV) in the UnderlyingAsset and
 // collected in the vault's configured PaymentDenom.
 //
-// If the principal marker account has insufficient PaymentDenom liquidity, the remaining
-// fee amount is recorded in OutstandingAumFee.
+// This method implements a "collect-what-is-available" strategy: it attempts to transfer
+// the total outstanding fee (accrued + previously unpaid), but caps the collection at
+// the principal marker's current PaymentDenom balance. Any uncollected remainder is
+// recorded in OutstandingAumFee to be retried during the next reconciliation.
+//
 // An EventVaultFeeCollected is emitted upon success.
 func (k Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAccount) error {
 	currentBlockTime := ctx.BlockTime().Unix()
@@ -301,7 +304,6 @@ func (k Keeper) CanPayoutDuration(ctx sdk.Context, vault *types.VaultAccount, du
 		return true, nil
 	}
 
-	// 1. Interest Check
 	principalCoin := sdk.NewCoin(underlyingDenom, principalTvv)
 	interestEarned, err := interest.CalculateInterestEarned(principalCoin, vault.CurrentInterestRate, duration)
 	if err != nil {
@@ -322,10 +324,6 @@ func (k Keeper) CanPayoutDuration(ctx sdk.Context, vault *types.VaultAccount, du
 			}
 		}
 	}
-
-	// 2. AUM Fee Check
-	// Note: AUM fees are allowed to accumulate in OutstandingAumFee if principal liquidity is low,
-	// so they don't block payout duration verification.
 
 	return true, nil
 }

@@ -178,6 +178,27 @@ func (v VaultAccount) Validate() error {
 		return fmt.Errorf("current interest rate must be zero or equal to desired (current=%s desired=%s)", cur, des)
 	}
 
+	if v.PeriodStart < 0 {
+		return fmt.Errorf("period start cannot be negative: %d", v.PeriodStart)
+	}
+	if v.PeriodTimeout < 0 {
+		return fmt.Errorf("period timeout cannot be negative: %d", v.PeriodTimeout)
+	}
+
+	if v.FeePeriodStart < 0 {
+		return fmt.Errorf("fee period start cannot be negative: %d", v.FeePeriodStart)
+	}
+	if v.FeePeriodTimeout < 0 {
+		return fmt.Errorf("fee period timeout cannot be negative: %d", v.FeePeriodTimeout)
+	}
+
+	if v.OutstandingAumFee.Denom != "" && v.OutstandingAumFee.Denom != v.PaymentDenom {
+		return fmt.Errorf("outstanding AUM fee denom %s does not match payment denom %s", v.OutstandingAumFee.Denom, v.PaymentDenom)
+	}
+	if !v.OutstandingAumFee.Amount.IsNil() && v.OutstandingAumFee.IsNegative() {
+		return fmt.Errorf("outstanding AUM fee cannot be negative: %s", v.OutstandingAumFee)
+	}
+
 	return nil
 }
 

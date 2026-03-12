@@ -607,40 +607,61 @@ func TestVaultAccount_ValidateManagementAuthority(t *testing.T) {
 }
 
 func TestGetProvLabsFeeAddress(t *testing.T) {
+	config := sdk.GetConfig()
 	tests := []struct {
 		name     string
 		chainID  string
+		prefix   string
 		expected string
+		bz       []byte
 	}{
 		{
 			name:     "mainnet chain id",
 			chainID:  "pio-mainnet-1",
+			prefix:   "pb",
 			expected: types.ProvLabsMainnetFeeAddress,
 		},
 		{
 			name:     "testnet chain id",
 			chainID:  "pio-testnet-1",
+			prefix:   "tp",
 			expected: types.ProvLabsTestnetFeeAddress,
 		},
 		{
-			name:     "local chain id",
-			chainID:  "vaulty-1",
-			expected: sdk.AccAddress(crypto.AddressHash([]byte("provlabs"))).String(),
+			name:    "local chain id",
+			chainID: "vaulty-1",
+			prefix:  "cosmos",
+			bz:      crypto.AddressHash([]byte("provlabs")),
 		},
 		{
-			name:     "arbitrary chain id",
-			chainID:  "some-other-chain",
-			expected: sdk.AccAddress(crypto.AddressHash([]byte("provlabs"))).String(),
+			name:    "arbitrary chain id",
+			chainID: "some-other-chain",
+			prefix:  "cosmos",
+			bz:      crypto.AddressHash([]byte("provlabs")),
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
+			// Set the prefix for this test case
+			config.SetBech32PrefixForAccount(tc.prefix, tc.prefix+"pub")
+
 			addr, err := types.GetProvLabsFeeAddress(tc.chainID)
 			require.NoError(t, err, "GetProvLabsFeeAddress should not error for chain %s", tc.chainID)
-			assert.Equal(t, tc.expected, addr.String(), "fee address mismatch for chain %s", tc.chainID)
+
+			expected := tc.expected
+			if expected == "" {
+				var err error
+				expected, err = sdk.Bech32ifyAddressBytes(tc.prefix, tc.bz)
+				require.NoError(t, err, "Bech32ifyAddressBytes should not error for prefix %s", tc.prefix)
+			}
+
+			assert.Equal(t, expected, addr.String(), "fee address mismatch for chain %s", tc.chainID)
 		})
 	}
+
+	// Restore default prefix for subsequent tests
+	config.SetBech32PrefixForAccount("cosmos", "cosmospub")
 }
 
 func TestPendingSwapOut_Validate(t *testing.T) {

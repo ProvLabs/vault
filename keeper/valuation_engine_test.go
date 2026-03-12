@@ -201,18 +201,18 @@ func (s *TestSuite) TestFromUnderlyingAssetAmount() {
 
 	// 2 ylds at 1/2 underlying per payment should be 4 usdc
 	val, err := testKeeper.FromUnderlyingAssetAmount(s.ctx, *vault, math.NewInt(2), paymentDenom)
-	s.Require().NoError(err, "from-underlying should succeed for valid NAV")
-	s.Require().Equal(math.NewInt(4), val, "2 ylds at 1/2 should be 4 usdc")
+	s.Require().NoError(err, "from-underlying should succeed for valid NAV between %s and %s", paymentDenom, underlyingDenom)
+	s.Require().Equal(math.NewInt(4), val, "2 %s at 1/2 %s per %s should be 4 %s", underlyingDenom, underlyingDenom, paymentDenom, paymentDenom)
 
 	// Identity path
 	valIdentity, err := testKeeper.FromUnderlyingAssetAmount(s.ctx, *vault, math.NewInt(100), underlyingDenom)
-	s.Require().NoError(err, "identity from-underlying should succeed")
-	s.Require().Equal(math.NewInt(100), valIdentity, "100 ylds should convert to 100 ylds")
+	s.Require().NoError(err, "identity from-underlying should succeed for denom %s", underlyingDenom)
+	s.Require().Equal(math.NewInt(100), valIdentity, "100 %s should convert to 100 %s (identity path)", underlyingDenom, underlyingDenom)
 
 	// Error path
 	_, err = testKeeper.FromUnderlyingAssetAmount(s.ctx, *vault, math.NewInt(5), "unknown")
 	s.Require().Error(err, "should error when NAV missing for target denom")
-	s.Require().Contains(err.Error(), "nav not found", "error should mention missing NAV")
+	s.Require().Contains(err.Error(), "nav not found", "error should mention missing NAV for target denom")
 }
 
 func (s *TestSuite) TestGetTVVInUnderlyingAsset_ExcludesSharesAndSumsInAsset() {

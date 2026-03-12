@@ -303,6 +303,31 @@ func (s *TestSuite) TestPerformVaultFeeTransfer() {
 		s.Require().Contains(err.Error(), "insufficient reserves", "error message should clearly indicate reserve deficiency")
 	})
 
+	s.Run("insufficient reserves - different denom", func() {
+		s.SetupTest()
+		now := time.Now().UTC()
+		oneYearAgo := now.AddDate(-1, 0, 0).Unix()
+		s.ctx = s.ctx.WithBlockTime(now).WithEventManager(sdk.NewEventManager())
+
+		// Setup vault with paymentDenom != underlyingDenom
+		// 1B AUM, enough underlying for fee but 0 paymentDenom
+		vault := setup(paymentDenom, 1_000_000_000, 0, oneYearAgo)
+		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 2_000_000))), "fund underlying")
+
+		// Setup NAV: 1 payment = 1 underlying
+		pmtMarkerAddr := markertypes.MustGetMarkerAddress(paymentDenom)
+		pmtMarker, _ := s.k.MarkerKeeper.GetMarker(s.ctx, pmtMarkerAddr)
+		s.Require().NoError(s.k.MarkerKeeper.SetNetAssetValue(s.ctx, pmtMarker, markertypes.NetAssetValue{
+			Price:  sdk.NewInt64Coin(underlyingDenom, 1),
+			Volume: 1,
+		}, "test"))
+
+		err := s.k.PerformVaultFeeTransfer(s.ctx, vault)
+		s.Require().Error(err, "fee transfer should fail when payment denom reserves are insufficient")
+		s.Require().Contains(err.Error(), "insufficient reserves", "error should mention reserves")
+		s.Require().Contains(err.Error(), paymentDenom, "error should mention the missing denom")
+	})
+
 	s.Run("zero fee - short duration", func() {
 		s.SetupTest()
 		now := time.Now().UTC()

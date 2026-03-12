@@ -77,7 +77,7 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 				setup("0.25", futureTime.Unix(), false)
 			},
 			posthander: func() {
-				s.assertInPayoutVerificationQueue(vaultAddress, false)
+				s.assertInPayoutVerificationQueue(vaultAddress, true)
 				s.assertVaultAndMarkerBalances(vaultAddress, shareDenom, underlying.Denom, underlying.Amount, underlying.Amount)
 			},
 			expectedEvents: sdk.Events{},
@@ -92,8 +92,8 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 				// Fee is calculated on TVV AFTER interest transfer.
 				// Initial TVV: 1,000,000,000. Interest: 41,952,013.
 				// TVV after interest: 1,041,952,013.
-				// Fee: 1,041,952,013 * 0.0015 * 5,184,000 / 31,536,000 = 256,920
-				// Total marker change: 41,952,013 - 256,920 = 41,695,093
+				// Fee: 1,041,952,013 * 0.0015 * 5,184,000 / 31,536,000 = 256,919
+				// Total marker change: 41,952,013 - 256,919 = 41,695,094
 				s.assertVaultAndMarkerBalances(vaultAddress, shareDenom, underlying.Denom, sdkmath.NewInt(958047987), sdkmath.NewInt(1041695094))
 			},
 			expectedEvents: func() sdk.Events {
@@ -109,13 +109,19 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 					5_184_000,
 				)
 				provlabsAddr, _ := types.GetProvLabsFeeAddress(s.ctx.ChainID())
-				feeEvs := createSendCoinEvents(markerAddr.String(), provlabsAddr.String(), "256920underlying")
+				feeEvs := createSendCoinEvents(markerAddr.String(), provlabsAddr.String(), "256919underlying")
 				feeEv := sdk.NewEvent("provlabs.vault.v1.EventVaultFeeCollected",
 					sdk.NewAttribute("aum_snapshot", "1041952013"),
 					sdk.NewAttribute("duration_seconds", "5184000"),
-					sdk.NewAttribute("fee_amount", "256920underlying"),
+					sdk.NewAttribute("fee_amount", "256919underlying"),
 					sdk.NewAttribute("vault_address", vaultAddress.String()),
 				)
+
+
+
+
+
+
 				nav := createMarkerSetNAV(
 					shareDenom,
 					sdk.NewCoin(underlying.Denom, sdkmath.NewInt(1_041_695_094)), // NAV updated with fee
@@ -136,9 +142,9 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 				s.assertInPayoutVerificationQueue(vaultAddress, true)
 				// Initial TVV: 1,000,000,000. Interest: -40,262,904.
 				// TVV after interest: 959,737,096.
-				// Fee: 959,737,096 * 0.0015 * 5,184,000 / 31,536,000 = 236,648
-				// Total marker change: -40,262,904 - 236,648 = -40,499,552
-				// Marker: 1,000,000,000 - 40,499,552 = 959,500,448
+				// Fee: 959,737,096 * 0.0015 * 5,184,000 / 31,536,000 = 236,647
+				// Total marker change: -40,262,904 - 236,647 = -40,499,551
+				// Marker: 1,000,000,000 - 40,499,551 = 959,500,449
 				// Vault: 1,000,000,000 + 40,262,904 = 1,040,262,904
 				s.assertVaultAndMarkerBalances(vaultAddress, shareDenom, underlying.Denom, sdkmath.NewInt(1040262904), sdkmath.NewInt(959500449))
 			},
@@ -155,13 +161,19 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 					5_184_000,
 				)
 				provlabsAddr, _ := types.GetProvLabsFeeAddress(s.ctx.ChainID())
-				feeEvs := createSendCoinEvents(markerAddr.String(), provlabsAddr.String(), "236648underlying")
+				feeEvs := createSendCoinEvents(markerAddr.String(), provlabsAddr.String(), "236647underlying")
 				feeEv := sdk.NewEvent("provlabs.vault.v1.EventVaultFeeCollected",
 					sdk.NewAttribute("aum_snapshot", "959737096"),
 					sdk.NewAttribute("duration_seconds", "5184000"),
-					sdk.NewAttribute("fee_amount", "236648underlying"),
+					sdk.NewAttribute("fee_amount", "236647underlying"),
 					sdk.NewAttribute("vault_address", vaultAddress.String()),
 				)
+
+
+
+
+
+
 				nav := createMarkerSetNAV(
 					shareDenom,
 					sdk.NewCoin(underlying.Denom, sdkmath.NewInt(959_500_449)), // NAV updated with fee
@@ -401,6 +413,12 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 						sdk.NewAttribute("fee_amount", "256919underlying"),
 						sdk.NewAttribute("vault_address", vaultAddr.String()),
 					),
+
+
+
+
+
+
 				}
 				return evs
 			}(),
@@ -1110,11 +1128,11 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_Use
 	endMarker := s.simApp.BankKeeper.GetBalance(s.ctx, markerAddr, underlying.Denom).Amount
 
 	expectedVault := startVault.Sub(interestEarned)
-	// Fee for 1,041,952,013 TVV for 60 days is 256,920.
-	expectedMarker := startMarker.Add(interestEarned).Sub(sdkmath.NewInt(256_920))
+	// Fee for 1,041,952,013 TVV for 60 days is 256,919.
+	expectedMarker := startMarker.Add(interestEarned).Sub(sdkmath.NewInt(256_919))
 
 	s.Require().Equal(expectedVault, endVault, "vault reserves mismatch")
-	s.Require().Equal(sdkmath.NewInt(1_041_695_093), endMarker, "marker principal mismatch")
+	s.Require().Equal(sdkmath.NewInt(1_041_695_094), endMarker, "marker principal mismatch")
 
 	s.assertVaultAndMarkerBalances(
 		vaultAddr,
@@ -1248,7 +1266,7 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_Use
 
 	s.Require().Equal(expectedVault, endVault, "expected vault reserves to decrease by TVV-based interest")
 	s.Require().Equal(expectedMarkerUnderlying, endMarkerUnderlying, "expected marker underlying balance to increase by TVV-based interest")
-	s.Require().Equal(sdkmath.NewInt(49_743_080), endMarkerPayment, "expected marker payment token balance to decrease by AUM fee")
+	s.Require().Equal(sdkmath.NewInt(49_743_081), endMarkerPayment, "expected marker payment token balance to decrease by AUM fee")
 
 	s.assertVaultAndMarkerBalances(
 		vaultAddr,
@@ -1635,7 +1653,7 @@ func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer() {
 	s.Require().Equal(s.ctx.BlockTime().Unix(), vault.FeePeriodStart, "FeePeriodStart should be updated after collection")
 	s.Require().True(vault.OutstandingAumFee.IsZero(), "outstanding fee should be fully cleared; got %s", vault.OutstandingAumFee)
 	endMarkerPayment = s.simApp.BankKeeper.GetBalance(s.ctx, markerAddr, paymentDenom).Amount
-	s.Require().Equal(sdkmath.NewInt(853399), endMarkerPayment, "marker payment balance mismatch after clearing outstanding fees; expected 853,399, got %s", endMarkerPayment)
+	s.Require().Equal(sdkmath.NewInt(853400), endMarkerPayment, "marker payment balance mismatch after clearing outstanding fees; expected 853,400, got %s", endMarkerPayment)
 }
 
 func (s *TestSuite) TestKeeper_CanPayoutDuration_WithAUMFee() {

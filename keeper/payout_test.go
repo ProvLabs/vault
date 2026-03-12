@@ -132,6 +132,7 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 				vault, err = s.k.GetVault(s.ctx, vaultAddr)
 				s.Require().NoError(err, "should successfully get vault")
 				vault.PeriodStart = 1
+				vault.FeePeriodStart = 1
 				s.Require().NoError(s.k.SetVaultAccount(s.ctx, vault), "must update vault account period")
 				s.Require().NotNil(vault, "vault should not be nil")
 

@@ -42,6 +42,7 @@ func (p *FeeTimeoutQueue) Dequeue(ctx sdk.Context, feeTimeout int64, vaultAddr s
 	return p.keyset.Remove(ctx, collections.Join(uint64(feeTimeout), vaultAddr))
 }
 
+
 // WalkDue iterates over all entries in the FeeTimeoutQueue with
 // a timeout timestamp <= nowSec. For each due entry, the callback is invoked.
 func (p *FeeTimeoutQueue) WalkDue(ctx sdk.Context, nowSec int64, fn func(feeTimeout uint64, vaultAddr sdk.AccAddress) (stop bool, err error)) error {

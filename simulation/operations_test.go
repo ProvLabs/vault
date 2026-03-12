@@ -36,7 +36,7 @@ func TestVaultSimTestSuite(t *testing.T) {
 
 func (s *VaultSimTestSuite) SetupTest() {
 	s.app = simapp.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(false)
+	s.ctx = s.app.BaseApp.NewContext(false).WithBlockTime(time.Now())
 	s.cdc = s.app.AppCodec()
 	s.random = rand.New(rand.NewSource(1))
 

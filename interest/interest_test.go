@@ -133,7 +133,7 @@ func TestCalculateExpiration(t *testing.T) {
 			periodSeconds: interest.SecondsPerDay,
 			startTime:     startTime,
 			limit:         int64Ptr(interest.CalculatePeriodsNoLimit),
-			// AUM Fee per day: (100,000,000 * 0.0015 * 86,400) / 31,536_000 = 410.95 -> 410
+			// AUM Fee per day: (100,000,000 * 0.0015 * 86,400) / 31,536,000 = 410.95 -> 410
 			// Reserves: 1,000,000 / 410 = 2439.02 -> 2439 periods
 			expected: startTime + 2439*interest.SecondsPerDay,
 		},

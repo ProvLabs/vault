@@ -43,13 +43,13 @@ func TestCalculateAUMFee(t *testing.T) {
 			name:        "1 day at 15 bps (100M AUM)",
 			aum:         sdkmath.NewInt(100_000_000),
 			duration:    interest.SecondsPerDay,
-			expectedFee: sdkmath.NewInt(410), // (100,000,000 * 0.0015 * 86,400) / 31,536_000 = 410.95... -> 410 (truncated)
+			expectedFee: sdkmath.NewInt(410), // (100,000,000 * 0.0015 * 86,400) / 31,536,000 = 410.95... -> 410 (truncated)
 		},
 		{
 			name:        "1 hour at 15 bps (1B AUM)",
 			aum:         sdkmath.NewInt(1_000_000_000),
 			duration:    interest.SecondsPerHour,
-			expectedFee: sdkmath.NewInt(171), // (1,000,000,000 * 0.0015 * 3,600) / 31,536_000 = 171.23... -> 171
+			expectedFee: sdkmath.NewInt(171), // (1,000,000,000 * 0.0015 * 3,600) / 31,536,000 = 171.23... -> 171
 		},
 	}
 

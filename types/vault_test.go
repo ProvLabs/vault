@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cometbft/cometbft/crypto"
+	"github.com/stretchr/testify/require"
+
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
@@ -599,6 +602,43 @@ func TestVaultAccount_ValidateManagementAuthority(t *testing.T) {
 					assert.Contains(t, err.Error(), tc.authority, "error should include the provided authority")
 				}
 			}
+		})
+	}
+}
+
+func TestGetProvLabsFeeAddress(t *testing.T) {
+	tests := []struct {
+		name     string
+		chainID  string
+		expected string
+	}{
+		{
+			name:     "mainnet chain id",
+			chainID:  "pio-mainnet-1",
+			expected: types.ProvLabsMainnetFeeAddress,
+		},
+		{
+			name:     "testnet chain id",
+			chainID:  "pio-testnet-1",
+			expected: types.ProvLabsTestnetFeeAddress,
+		},
+		{
+			name:     "local chain id",
+			chainID:  "vaulty-1",
+			expected: sdk.AccAddress(crypto.AddressHash([]byte("provlabs"))).String(),
+		},
+		{
+			name:     "arbitrary chain id",
+			chainID:  "some-other-chain",
+			expected: sdk.AccAddress(crypto.AddressHash([]byte("provlabs"))).String(),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			addr, err := types.GetProvLabsFeeAddress(tc.chainID)
+			require.NoError(t, err, "GetProvLabsFeeAddress should not error for chain %s", tc.chainID)
+			assert.Equal(t, tc.expected, addr.String(), "fee address mismatch for chain %s", tc.chainID)
 		})
 	}
 }

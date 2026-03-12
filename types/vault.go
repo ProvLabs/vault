@@ -27,9 +27,9 @@ const (
 
 const (
 	// ProvLabsMainnetFeeAddress is the hardcoded ProvLabs fee collection address for pio-mainnet-1.
-	ProvLabsMainnetFeeAddress = "pb1evyv7neax9qtxxzuexnhylxyz4guvsyjhxyv47"
+	ProvLabsMainnetFeeAddress = "pb1evyv7neax9qtxxzuexnhylxyz4guvsyjjqke4h"
 	// ProvLabsTestnetFeeAddress is the hardcoded ProvLabs fee collection address for pio-testnet-1.
-	ProvLabsTestnetFeeAddress = "tp19ftpcggezgal5ascglq5m022z4e453khv4j3k2"
+	ProvLabsTestnetFeeAddress = "tp19ftpcggezgal5ascglq5m022z4e453kh6c9g5f"
 )
 
 // GetProvLabsFeeAddress returns the ProvLabs fee collection address based on the chain ID.

@@ -88,7 +88,7 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 			},
 			posthander: func() {
 				s.assertInPayoutVerificationQueue(vaultAddress, true)
-				// AUM Fee for 2 months (1B AUM): (1,000,000,000 * 0.0015 * 5,184,000) / 31,536_000 = 246,575.34 -> 246,575
+				// AUM Fee for 2 months (1B AUM): (1,000,000,000 * 0.0015 * 5,184,000) / 31,536,000 = 246,575.34 -> 246,575
 				// Interest for 2 months (1B AUM, 25% APR): 41,952,013
 				// Total deduction from reserves: 246,575 + 41,952,013 = 42,198,588
 				// Remaining reserves: 1,000_000_000 - 42,198,588 = 957,801,412
@@ -212,6 +212,111 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 			)
 		})
 	}
+}
+
+func (s *TestSuite) TestPerformVaultFeeTransfer() {
+	shareDenom := "vaultshares"
+	underlyingDenom := "underlying"
+	paymentDenom := "payment"
+	vaultAddr := types.GetVaultAddress(shareDenom)
+	recipientAddr, _ := types.GetProvLabsFeeAddress(s.ctx.ChainID())
+
+	setup := func(payment string, aum, reserves int64, periodStart int64) *types.VaultAccount {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingDenom, aum), s.adminAddr)
+		if payment != underlyingDenom {
+			s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(payment, reserves), s.adminAddr)
+		}
+
+		vault, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           s.adminAddr.String(),
+			ShareDenom:      shareDenom,
+			UnderlyingAsset: underlyingDenom,
+			PaymentDenom:    payment,
+		})
+		s.Require().NoError(err, "failed to create vault for fee test")
+
+		vault.PeriodStart = periodStart
+		s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, aum))), "failed to fund principal")
+		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(payment, reserves))), "failed to fund reserves")
+
+		return vault
+	}
+
+	s.Run("successful fee collection - same denom", func() {
+		s.SetupTest()
+		now := time.Now().UTC()
+		oneYearAgo := now.AddDate(-1, 0, 0).Unix()
+		s.ctx = s.ctx.WithBlockTime(now).WithEventManager(sdk.NewEventManager())
+
+		// 1B AUM, 15 bps = 1.5M fee
+		vault := setup(underlyingDenom, 1_000_000_000, 2_000_000, oneYearAgo)
+
+		err := s.k.PerformVaultFeeTransfer(s.ctx, vault)
+		s.Require().NoError(err, "fee transfer should succeed when reserves are sufficient")
+
+		feeBalance := s.simApp.BankKeeper.GetBalance(s.ctx, recipientAddr, underlyingDenom)
+		s.Require().Equal(sdkmath.NewInt(1_500_000), feeBalance.Amount, "ProvLabs should receive exactly 15 bps of AUM per year")
+
+		vaultBalance := s.simApp.BankKeeper.GetBalance(s.ctx, vaultAddr, underlyingDenom)
+		s.Require().Equal(sdkmath.NewInt(500_000), vaultBalance.Amount, "vault reserves should be reduced by the collected fee amount")
+	})
+
+	s.Run("successful fee collection - different denom", func() {
+		s.SetupTest()
+		now := time.Now().UTC()
+		oneYearAgo := now.AddDate(-1, 0, 0).Unix()
+		s.ctx = s.ctx.WithBlockTime(now).WithEventManager(sdk.NewEventManager())
+
+		vault := setup(paymentDenom, 1_000_000_000, 1_000_000, oneYearAgo)
+
+		// Setup NAV: 1 payment = 2 underlying
+		// 1B AUM (underlying), 15 bps = 1.5M fee (underlying)
+		// 1.5M underlying = 0.75M payment
+		pmtMarkerAddr := markertypes.MustGetMarkerAddress(paymentDenom)
+		pmtMarker, err := s.k.MarkerKeeper.GetMarker(s.ctx, pmtMarkerAddr)
+		s.Require().NoError(err, "failed to get payment marker")
+		s.Require().NoError(s.k.MarkerKeeper.SetNetAssetValue(s.ctx, pmtMarker, markertypes.NetAssetValue{
+			Price:  sdk.NewInt64Coin(underlyingDenom, 2),
+			Volume: 1,
+		}, "test"), "failed to set NAV for payment denom")
+
+		err = s.k.PerformVaultFeeTransfer(s.ctx, vault)
+		s.Require().NoError(err, "fee transfer should succeed with payment denom conversion")
+
+		feeBalance := s.simApp.BankKeeper.GetBalance(s.ctx, recipientAddr, paymentDenom)
+		s.Require().Equal(sdkmath.NewInt(750_000), feeBalance.Amount, "fee recipient should receive converted fee amount in payment denom")
+	})
+
+	s.Run("insufficient reserves", func() {
+		s.SetupTest()
+		now := time.Now().UTC()
+		oneYearAgo := now.AddDate(-1, 0, 0).Unix()
+		s.ctx = s.ctx.WithBlockTime(now).WithEventManager(sdk.NewEventManager())
+
+		// 1B AUM, 15 bps = 1.5M fee, but only 1M in reserves
+		vault := setup(underlyingDenom, 1_000_000_000, 1_000_000, oneYearAgo)
+
+		err := s.k.PerformVaultFeeTransfer(s.ctx, vault)
+		s.Require().Error(err, "fee transfer should fail when reserves are less than the required fee")
+		s.Require().Contains(err.Error(), "insufficient reserves", "error message should clearly indicate reserve deficiency")
+	})
+
+	s.Run("zero fee - short duration", func() {
+		s.SetupTest()
+		now := time.Now().UTC()
+		periodStart := now.Unix() // Zero duration
+		s.ctx = s.ctx.WithBlockTime(now).WithEventManager(sdk.NewEventManager())
+
+		vault := setup(underlyingDenom, 1_000_000_000, 1_000_000, periodStart)
+
+		err := s.k.PerformVaultFeeTransfer(s.ctx, vault)
+		s.Require().NoError(err, "fee transfer should be a no-op for zero duration")
+
+		feeBalance := s.simApp.BankKeeper.GetBalance(s.ctx, recipientAddr, underlyingDenom)
+		s.Require().True(feeBalance.IsZero(), "no fee should be collected for zero duration")
+	})
 }
 
 func (s *TestSuite) TestKeeper_CalculateVaultTotalAssets() {
@@ -1321,7 +1426,7 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_NegativeInterest_Par
 
 	s.ctx = s.ctx.WithBlockTime(now).WithEventManager(sdk.NewEventManager())
 
-	// AUM fee for 1 year (100k AUM): (100,000 * 0.0015 * 31,536,000) / 31,536_000 = 150
+	// AUM fee for 1 year (100k AUM): (100,000 * 0.0015 * 31,536,000) / 31,536,000 = 150
 	feeAmount, _ := interest.CalculateAUMFee(smallPrincipal.Amount, 31_536_000)
 
 	err = s.k.TestAccessor_reconcileVaultInterest(s.T(), s.ctx, vault)

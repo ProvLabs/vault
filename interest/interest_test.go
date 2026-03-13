@@ -146,6 +146,12 @@ func TestCalculateAUMFee(t *testing.T) {
 			duration:    -1,
 			expectErr:   true,
 		},
+		{
+			name:      "negative aum errors",
+			aum:       sdkmath.NewInt(-1_000_000),
+			duration:  interest.SecondsPerYear,
+			expectErr: true,
+		},
 	}
 
 	for _, tc := range tests {

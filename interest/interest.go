@@ -74,6 +74,9 @@ func CalculateInterestEarned(principal sdk.Coin, rate string, periodSeconds int6
 //
 // Returns the fee as a truncated sdkmath.Int.
 func CalculateAUMFee(aum sdkmath.Int, duration int64) (sdkmath.Int, error) {
+	if aum.IsNegative() {
+		return sdkmath.Int{}, errors.New("aum cannot be negative")
+	}
 	if duration < 0 {
 		return sdkmath.Int{}, errors.New("duration cannot be negative")
 	}

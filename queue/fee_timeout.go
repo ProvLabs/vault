@@ -10,10 +10,14 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// FeeTimeoutQueue manages scheduled fee collections for vaults within
+// the fee-reconciliation flow.
 type FeeTimeoutQueue struct {
 	keyset collections.KeySet[collections.Pair[uint64, sdk.AccAddress]]
 }
 
+// NewFeeTimeoutQueue initializes a new FeeTimeoutQueue using the
+// provided collections schema builder.
 func NewFeeTimeoutQueue(builder *collections.SchemaBuilder) *FeeTimeoutQueue {
 	endKeyCodec := collections.PairKeyCodec(
 		collections.Uint64Key,

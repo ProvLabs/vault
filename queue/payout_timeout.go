@@ -10,10 +10,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// PayoutTimeoutQueue manages scheduled payout distributions for vaults.
 type PayoutTimeoutQueue struct {
 	keyset collections.KeySet[collections.Pair[uint64, sdk.AccAddress]]
 }
 
+// NewPayoutTimeoutQueue initializes a new PayoutTimeoutQueue using the
+// provided collections schema builder.
 func NewPayoutTimeoutQueue(builder *collections.SchemaBuilder) *PayoutTimeoutQueue {
 	endKeyCodec := collections.PairKeyCodec(
 		collections.Uint64Key,

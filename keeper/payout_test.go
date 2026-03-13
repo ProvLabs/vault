@@ -132,6 +132,7 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 				vault, err = s.k.GetVault(s.ctx, vaultAddr)
 				s.Require().NoError(err, "should successfully get vault")
 				vault.PeriodStart = 1
+				vault.FeePeriodStart = 1
 				s.Require().NoError(s.k.SetVaultAccount(s.ctx, vault), "must update vault account period")
 				s.Require().NotNil(vault, "vault should not be nil")
 
@@ -146,7 +147,10 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 				return ownerAddr, id
 			},
 			posthandler: func(ownerAddr sdk.AccAddress, reqID uint64, shareDenom string, vaultAddr sdk.AccAddress, principalAddress sdk.AccAddress, shares sdk.Coin, testBlockTime time.Time) {
-				s.assertBalance(ownerAddr, underlyingDenom, assets.Amount)
+				// Fee calculation: 50 * 0.0015 * testBlockTime.Unix() / 31,536,000
+				// For current epoch (~1.7B), fee is 4.
+				expectedAssets := sdk.NewInt64Coin(underlyingDenom, 46)
+				s.assertBalance(ownerAddr, underlyingDenom, expectedAssets.Amount)
 				supply := s.k.BankKeeper.GetSupply(s.ctx, shareDenom)
 				s.Require().True(supply.Amount.IsZero(), "total supply of shares should be zero after burn")
 
@@ -159,11 +163,25 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 				reconcileEvent, err := sdk.TypedEventToEvent(types.NewEventVaultReconcile(vaultAddr.String(), assets, assets, vault.CurrentInterestRate, testBlockTime.Unix()-1, math.NewInt(0)))
 				s.Require().NoError(err, "should not error converting typed EventVaultReconciled")
 				expectedEvents = append(expectedEvents, reconcileEvent)
-				expectedEvents = append(expectedEvents, createMarkerSetNAV(shareDenom, assets, "vault", shares.Amount.Uint64()))
-				expectedEvents = append(expectedEvents, createSendCoinEvents(principalAddress.String(), ownerAddr.String(), sdk.NewCoins(assets).String())...)
+
+				// AUM Fee events
+				provlabsAddr, _ := types.GetProvLabsFeeAddress(s.ctx.ChainID())
+				expectedEvents = append(expectedEvents, createSendCoinEvents(principalAddress.String(), provlabsAddr.String(), "4ylds")...)
+				feeEvent, _ := sdk.TypedEventToEvent(&types.EventVaultFeeCollected{
+					VaultAddress:      vaultAddr.String(),
+					CollectedAmount:   "4ylds",
+					RequestedAmount:   "4ylds",
+					AumSnapshot:       "50ylds",
+					DurationSeconds:   testBlockTime.Unix() - 1,
+					OutstandingAmount: "0ylds",
+				})
+				expectedEvents = append(expectedEvents, feeEvent)
+
+				expectedEvents = append(expectedEvents, createMarkerSetNAV(shareDenom, expectedAssets, "vault", shares.Amount.Uint64()))
+				expectedEvents = append(expectedEvents, createSendCoinEvents(principalAddress.String(), ownerAddr.String(), sdk.NewCoins(expectedAssets).String())...)
 				expectedEvents = append(expectedEvents, createSendCoinEvents(vaultAddr.String(), principalAddress.String(), shares.String())...)
 				expectedEvents = append(expectedEvents, createMarkerBurn(vaultAddr, principalAddress, shares)...)
-				typedEvent, err := sdk.TypedEventToEvent(types.NewEventSwapOutCompleted(vaultAddr.String(), ownerAddr.String(), assets, reqID))
+				typedEvent, err := sdk.TypedEventToEvent(types.NewEventSwapOutCompleted(vaultAddr.String(), ownerAddr.String(), expectedAssets, reqID))
 				s.Require().NoError(err, "should not error converting typed EventSwapOutCompleted")
 				expectedEvents = append(expectedEvents, typedEvent)
 				s.Assert().Equal(

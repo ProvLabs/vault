@@ -114,3 +114,50 @@ func TestSafeEnqueueTimeout_UpdatesVaultAndQueues(t *testing.T) {
 	require.Equal(t, now.Unix(), va.PeriodStart, "vault PeriodStart should equal block time; expected %d, got %d", now.Unix(), va.PeriodStart)
 	require.Equal(t, int64(expectTimeout), va.PeriodTimeout, "vault PeriodTimeout should equal expected timeout; expected %d, got %d", expectTimeout, va.PeriodTimeout)
 }
+
+func TestSafeEnqueueFeeTimeout_UpdatesVaultAndQueues(t *testing.T) {
+	ctx, k := mocks.NewVaultKeeper(t)
+
+	admin := sdk.MustAccAddressFromBech32(utils.TestProvlabsAddress().Bech32)
+	share := "vaultshares3"
+	vaultAddr := types.GetVaultAddress(share)
+
+	v := &types.VaultAccount{
+		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
+		Admin:               admin.String(),
+		TotalShares:         sdk.NewInt64Coin(share, 0),
+		UnderlyingAsset:     "under",
+		PaymentDenom:        "under",
+		CurrentInterestRate: types.ZeroInterestRate,
+		DesiredInterestRate: types.ZeroInterestRate,
+		FeePeriodStart:      0,
+		FeePeriodTimeout:    30,
+	}
+
+	require.NoError(t, k.FeeTimeoutQueue.Enqueue(ctx, 30, vaultAddr), "precondition: enqueue fee timeout (30) should succeed")
+
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	now := time.Unix(3000, 0)
+	ctx = sdkCtx.WithBlockTime(now)
+
+	require.NoError(t, k.SafeEnqueueFeeTimeout(ctx, v), "SafeEnqueueFeeTimeout should clear timeouts and enqueue new entry")
+
+	expectTimeout := uint64(now.Unix() + kpr.AutoReconcileTimeout)
+
+	var times []uint64
+	err := k.FeeTimeoutQueue.Walk(ctx, func(timestamp uint64, address sdk.AccAddress) (bool, error) {
+		if address.Equals(vaultAddr) {
+			times = append(times, timestamp)
+		}
+		return false, nil
+	})
+	require.NoError(t, err, "walk fee timeout queue should not error")
+	require.ElementsMatch(t, []uint64{expectTimeout}, times, "fee timeout queue should contain exactly the expected timeout; got %v", times)
+
+	acc := k.AuthKeeper.GetAccount(ctx, vaultAddr)
+	require.NotNil(t, acc, "vault account should exist after SafeEnqueueFeeTimeout")
+	va, ok := acc.(*types.VaultAccount)
+	require.True(t, ok, "retrieved account should be *types.VaultAccount; got %T", acc)
+	require.Equal(t, now.Unix(), va.FeePeriodStart, "fee period start should be set to now")
+	require.Equal(t, int64(expectTimeout), va.FeePeriodTimeout, "fee period timeout mismatch; expected %d, got %d", expectTimeout, va.FeePeriodTimeout)
+}

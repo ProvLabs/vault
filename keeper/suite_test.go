@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
@@ -38,7 +39,7 @@ type TestSuite struct {
 // commonly used test fixtures such as the vault keeper and an admin address.
 func (s *TestSuite) SetupTest() {
 	s.simApp = simapp.Setup(s.T())
-	s.ctx = s.simApp.NewContext(false)
+	s.ctx = s.simApp.NewContext(false).WithBlockTime(time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC))
 	s.k = *s.simApp.VaultKeeper
 
 	s.adminAddr = sdk.AccAddress("adminAddr___________")
@@ -109,11 +110,17 @@ func (s *TestSuite) assertVaultAndMarkerBalances(vaultAddr sdk.AccAddress, share
 // event comparison in tests resilient to JSON/string formatting differences.
 func normalizeEvents(events sdk.Events) sdk.Events {
 	for i := range events {
-		for j := range events[i].Attributes {
-			events[i].Attributes[j].Value = strings.Trim(events[i].Attributes[j].Value, `"`)
-		}
+		events[i] = normalizeEvent(events[i])
 	}
 	return events
+}
+
+// normalizeEvent trims surrounding quotes from event attribute values.
+func normalizeEvent(event sdk.Event) sdk.Event {
+	for i := range event.Attributes {
+		event.Attributes[i].Value = strings.Trim(event.Attributes[i].Value, `"`)
+	}
+	return event
 }
 
 // requireAddFinalizeAndActivateMarker creates a restricted marker with the
@@ -236,6 +243,23 @@ func createSendCoinEvents(fromAddress, toAddress string, amount string) []sdk.Ev
 	return events
 }
 
+// vaultAttrs is a simple implementation of the types.VaultCreator interface
+// for use in testing.
+type vaultAttrs struct {
+	admin                  string
+	share                  string
+	underlying             string
+	payment                string
+	withdrawalDelaySeconds uint64
+	expected               types.VaultAccount
+}
+
+func (v vaultAttrs) GetAdmin() string                  { return v.admin }
+func (v vaultAttrs) GetShareDenom() string             { return v.share }
+func (v vaultAttrs) GetUnderlyingAsset() string        { return v.underlying }
+func (v vaultAttrs) GetPaymentDenom() string           { return v.payment }
+func (v vaultAttrs) GetWithdrawalDelaySeconds() uint64 { return v.withdrawalDelaySeconds }
+
 // setupBaseVaultRestricted creates a vault with a restricted underlying asset.
 // It establishes a marker for the underlying asset, requiring a specific attribute for transfers.
 // An optional paymentDenom can be provided for the vault's configuration.
@@ -283,6 +307,38 @@ func (s *TestSuite) setupBaseVault(underlyingDenom, shareDenom string, paymentDe
 	s.Require().NoError(err, "vault creation should succeed")
 
 	return vault
+}
+
+// CreateVaultWithParams creates a vault with the given parameters and returns the vault account.
+func (s *TestSuite) CreateVaultWithParams(shareDenom, underlyingDenom, paymentDenom string) *types.VaultAccount {
+	vault, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+		Admin:           s.adminAddr.String(),
+		ShareDenom:      shareDenom,
+		UnderlyingAsset: underlyingDenom,
+		PaymentDenom:    paymentDenom,
+	})
+	s.Require().NoError(err, "CreateVault should succeed for %s", shareDenom)
+	return vault
+}
+
+// FundMarker mints and sends the provided coins to the marker account associated with the share denom.
+func (s *TestSuite) FundMarker(shareDenom string, coins sdk.Coins) {
+	markerAddr := markertypes.MustGetMarkerAddress(shareDenom)
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, coins), "funding marker %s should not error", shareDenom)
+}
+
+// SetVaultRatesAndPeriod updates a vault's interest rates and fee period settings.
+func (s *TestSuite) SetVaultRatesAndPeriod(vault *types.VaultAccount, currentRate, desiredRate string, feeStart, feeTimeout int64) {
+	vault.CurrentInterestRate = currentRate
+	vault.DesiredInterestRate = desiredRate
+	vault.FeePeriodStart = feeStart
+	vault.FeePeriodTimeout = feeTimeout
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+}
+
+// AdvanceCtxWithTime updates the suite's context block time.
+func (s *TestSuite) AdvanceCtxWithTime(t time.Time) {
+	s.ctx = s.ctx.WithBlockTime(t).WithEventManager(sdk.NewEventManager())
 }
 
 // createMarkerMintCoinEvents builds the expected event sequence for minting
@@ -524,4 +580,16 @@ func expectedWithSimpleAPY(baseAmt sdkmath.Int, rateStr string, seconds int64) (
 	timeFraction := durationDec.Quo(secondsPerYearDec)
 	interestDec := baseAmt.ToLegacyDec().Mul(rateDec).Mul(timeFraction)
 	return baseAmt.Add(interestDec.TruncateInt()), nil
+}
+
+// createVaultFeeCollectedEvent constructs the expected EventVaultFeeCollected event.
+func createVaultFeeCollectedEvent(vaultAddr sdk.AccAddress, aumSnapshot, collected, requested, outstanding sdk.Coin, duration int64) sdk.Event {
+	return sdk.NewEvent("provlabs.vault.v1.EventVaultFeeCollected",
+		sdk.NewAttribute("aum_snapshot", aumSnapshot.String()),
+		sdk.NewAttribute("collected_amount", collected.String()),
+		sdk.NewAttribute("duration_seconds", fmt.Sprintf("%v", duration)),
+		sdk.NewAttribute("outstanding_amount", outstanding.String()),
+		sdk.NewAttribute("requested_amount", requested.String()),
+		sdk.NewAttribute("vault_address", vaultAddr.String()),
+	)
 }

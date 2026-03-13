@@ -179,6 +179,38 @@ func (s *TestSuite) TestToUnderlyingAssetAmount() {
 	s.Require().Contains(err.Error(), "nav not found", "error should mention missing NAV")
 }
 
+func (s *TestSuite) TestFromUnderlyingAssetAmount() {
+	underlyingDenom := "ylds"
+	paymentDenom := "usdc"
+	shareDenom := "vshare"
+	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
+
+	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
+
+	// 1 Underlying = 1/2 Payment (PriceNum=1, PriceDen=2)
+	// FromUnderlying(2 ylds) = 2 * 2 / 1 = 4 usdc
+	val, err := testKeeper.FromUnderlyingAssetAmount(s.ctx, *vault, math.NewInt(2), paymentDenom)
+	s.Require().NoError(err, "from-underlying should succeed for valid NAV")
+	s.Require().Equal(math.NewInt(4), val, "2 ylds at 1/2 should be 4 usdc")
+
+	// Identity path
+	valIdentity, err := testKeeper.FromUnderlyingAssetAmount(s.ctx, *vault, math.NewInt(100), underlyingDenom)
+	s.Require().NoError(err, "identity from-underlying should succeed")
+	s.Require().Equal(math.NewInt(100), valIdentity, "100 ylds should be 100 ylds")
+
+	// Missing NAV
+	_, err = testKeeper.FromUnderlyingAssetAmount(s.ctx, *vault, math.NewInt(5), "unknown")
+	s.Require().Error(err, "should error when NAV missing for target denom")
+	s.Require().Contains(err.Error(), "nav not found", "error should mention missing NAV")
+
+	// Zero price error
+	s.bumpHeight()
+	s.setReverseNAV(underlyingDenom, "zeroprice", 0, 1)
+	_, err = testKeeper.FromUnderlyingAssetAmount(s.ctx, *vault, math.NewInt(5), "zeroprice")
+	s.Require().Error(err, "should error for zero price numerator")
+	s.Require().Contains(err.Error(), "price is zero", "error should mention zero price")
+}
+
 func (s *TestSuite) TestToUnderlyingAssetAmount_IdentityFastPath() {
 	underlyingDenom := "ylds"
 	shareDenom := "vshare"

@@ -469,6 +469,11 @@ func (s *TestSuite) TestQueryServer_EstimateSwapIn() {
 	testDef := querytest.TestDef[types.QueryEstimateSwapInRequest, types.QueryEstimateSwapInResponse]{
 		QueryName: "EstimateSwapIn",
 		Query:     keeper.NewQueryServer(s.simApp.VaultKeeper).EstimateSwapIn,
+		ManualEquality: func(s querytest.TestSuiter, expected, actual *types.QueryEstimateSwapInResponse) {
+			s.Require().NotNil(actual, "actual response should not be nil")
+			s.Require().NotNil(expected, "expected response should not be nil")
+			s.Assert().Equal(expected.Assets, actual.Assets, "assets mismatch")
+		},
 	}
 
 	underlyingDenom := "uylds.fcc"
@@ -600,6 +605,11 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 	testDef := querytest.TestDef[types.QueryEstimateSwapOutRequest, types.QueryEstimateSwapOutResponse]{
 		QueryName: "EstimateSwapOut",
 		Query:     keeper.NewQueryServer(s.simApp.VaultKeeper).EstimateSwapOut,
+		ManualEquality: func(s querytest.TestSuiter, expected, actual *types.QueryEstimateSwapOutResponse) {
+			s.Require().NotNil(actual, "actual response should not be nil")
+			s.Require().NotNil(expected, "expected response should not be nil")
+			s.Assert().Equal(expected.Assets, actual.Assets, "assets mismatch")
+		},
 	}
 
 	underlyingDenom := "uylds.fcc"

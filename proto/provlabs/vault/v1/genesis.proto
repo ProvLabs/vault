@@ -45,4 +45,9 @@ message GenesisState {
 
   // pending_swap_out_queue contains entries for pending swap outs.
   PendingSwapOutQueue pending_swap_out_queue = 3 [(gogoproto.nullable) = false];
+
+  // fee_timeout_queue contains (time, addr) entries for vaults that are
+  // temporarily deferred from automatic AUM fee collection until the
+  // given UNIX timestamp (seconds). These entries are re-enqueued on InitGenesis.
+  repeated QueueEntry fee_timeout_queue = 4 [(gogoproto.nullable) = false];
 }

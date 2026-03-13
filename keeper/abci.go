@@ -15,7 +15,10 @@ const (
 
 // BeginBlocker is a hook that is called at the beginning of every block.
 func (k *Keeper) BeginBlocker(ctx sdk.Context) error {
-	return k.handleVaultInterestTimeouts(ctx)
+	if err := k.handleVaultInterestTimeouts(ctx); err != nil {
+		return err
+	}
+	return k.handleVaultFeeTimeouts(ctx)
 }
 
 // EndBlocker is a hook that is called at the end of every block.

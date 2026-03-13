@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/provlabs/vault/types"
 
@@ -58,10 +59,26 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	for _, entry := range genState.PayoutTimeoutQueue {
 		addr, err := sdk.AccAddressFromBech32(entry.Addr)
 		if err != nil {
-			panic(fmt.Errorf("invalid address in timeout queue: %w", err))
+			panic(fmt.Errorf("invalid address in payout timeout queue: %w", err))
+		}
+		if entry.Time > math.MaxInt64 {
+			panic(fmt.Errorf("payout timeout queue entry for %s has time %d which exceeds max int64", entry.Addr, entry.Time))
 		}
 		if err := k.PayoutTimeoutQueue.Enqueue(ctx, int64(entry.Time), addr); err != nil {
-			panic(fmt.Errorf("failed to enqueue vault timeout for %s: %w", entry.Addr, err))
+			panic(fmt.Errorf("failed to enqueue vault payout timeout for %s: %w", entry.Addr, err))
+		}
+	}
+
+	for _, entry := range genState.FeeTimeoutQueue {
+		addr, err := sdk.AccAddressFromBech32(entry.Addr)
+		if err != nil {
+			panic(fmt.Errorf("invalid address in fee timeout queue: %w", err))
+		}
+		if entry.Time > math.MaxInt64 {
+			panic(fmt.Errorf("fee timeout queue entry for %s has time %d which exceeds max int64", entry.Addr, entry.Time))
+		}
+		if err := k.FeeTimeoutQueue.Enqueue(ctx, int64(entry.Time), addr); err != nil {
+			panic(fmt.Errorf("failed to enqueue vault fee timeout for %s: %w", entry.Addr, err))
 		}
 	}
 
@@ -104,6 +121,19 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		panic(fmt.Errorf("failed to walk payout timeout queue: %w", err))
 	}
 
+	feeTimeoutQueue := make([]types.QueueEntry, 0)
+
+	err = k.FeeTimeoutQueue.Walk(ctx, func(feeTimeout uint64, vaultAddr sdk.AccAddress) (stop bool, err error) {
+		feeTimeoutQueue = append(feeTimeoutQueue, types.QueueEntry{
+			Time: feeTimeout,
+			Addr: vaultAddr.String(),
+		})
+		return false, nil
+	})
+	if err != nil {
+		panic(fmt.Errorf("failed to walk fee timeout queue: %w", err))
+	}
+
 	pendingSwapOutQueue, err := k.PendingSwapOutQueue.Export(ctx)
 	if err != nil {
 		panic(fmt.Errorf("failed to export pending swap out queue: %w", err))
@@ -112,6 +142,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	return &types.GenesisState{
 		Vaults:              vaults,
 		PayoutTimeoutQueue:  paymentTimeoutQueue,
+		FeeTimeoutQueue:     feeTimeoutQueue,
 		PendingSwapOutQueue: *pendingSwapOutQueue,
 	}
 }

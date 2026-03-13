@@ -344,3 +344,19 @@ message EventWithdrawalDelayUpdated {
   // withdrawal_delay_seconds is the newly set withdrawal delay in seconds.
   uint64 withdrawal_delay_seconds = 3;
 }
+
+// EventVaultFeeCollected is an event emitted when a vault's AUM fee is collected.
+message EventVaultFeeCollected {
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // collected_amount is the amount of the technology fee that was actually collected (e.g., "100nhash").
+  string collected_amount = 2;
+  // requested_amount is the amount of the technology fee that was calculated for the period (e.g., "120nhash").
+  string requested_amount = 3;
+  // aum_snapshot is the total vault value at the time of fee calculation (e.g., "1000000underlying").
+  string aum_snapshot = 4;
+  // duration_seconds is the duration for which the fee was calculated.
+  int64 duration_seconds = 5;
+  // outstanding_amount is the amount of AUM fee that remains unpaid after this collection (e.g., "20nhash").
+  string outstanding_amount = 6;
+}

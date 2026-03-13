@@ -108,6 +108,65 @@ func TestCalculateInterestEarned(t *testing.T) {
 	}
 }
 
+func TestCalculateAUMFee(t *testing.T) {
+	tests := []struct {
+		name        string
+		aum         sdkmath.Int
+		duration    int64
+		expectedFee sdkmath.Int
+		expectErr   bool
+	}{
+		{
+			name:        "zero AUM",
+			aum:         sdkmath.ZeroInt(),
+			duration:    interest.SecondsPerYear,
+			expectedFee: sdkmath.ZeroInt(),
+		},
+		{
+			name:        "zero duration",
+			aum:         sdkmath.NewInt(1_000_000),
+			duration:    0,
+			expectedFee: sdkmath.ZeroInt(),
+		},
+		{
+			name:        "1 year at 15 bps (1,000,000 AUM)",
+			aum:         sdkmath.NewInt(1_000_000),
+			duration:    interest.SecondsPerYear,
+			expectedFee: sdkmath.NewInt(1_500), // 1,000,000 * 0.0015
+		},
+		{
+			name:        "6 months at 15 bps (1,000,000 AUM)",
+			aum:         sdkmath.NewInt(1_000_000),
+			duration:    interest.SecondsPerYear / 2,
+			expectedFee: sdkmath.NewInt(750),
+		},
+		{
+			name:        "negative duration errors",
+			aum:         sdkmath.NewInt(1_000_000),
+			duration:    -1,
+			expectErr:   true,
+		},
+		{
+			name:      "negative aum errors",
+			aum:       sdkmath.NewInt(-1_000_000),
+			duration:  interest.SecondsPerYear,
+			expectErr: true,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			fee, err := interest.CalculateAUMFee(tc.aum, tc.duration)
+			if tc.expectErr {
+				require.Errorf(t, err, "test case %q: expected an error but got none", tc.name)
+			} else {
+				require.NoErrorf(t, err, "test case %q: unexpected error during AUM fee calculation", tc.name)
+				require.Truef(t, tc.expectedFee.Equal(fee), "test case %q: fee amount mismatch; expected %s, got %s", tc.name, tc.expectedFee, fee)
+			}
+		})
+	}
+}
+
 func TestCalculateExpiration(t *testing.T) {
 	startTime := int64(1752764321)
 	denom := "vault"

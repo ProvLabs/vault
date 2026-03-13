@@ -370,8 +370,6 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 			expectRate:    "0.25",
 			expectedEvents: func() sdk.Events {
 				markerAddr := markertypes.MustGetMarkerAddress(shareDenom)
-				provlabsAddr, err := types.GetProvLabsFeeAddress(s.ctx.ChainID())
-				s.Require().NoError(err, "failed to get ProvLabs fee address for chain ID %s", s.ctx.ChainID())
 				evs := sdk.Events{
 					sdk.NewEvent("coin_spent",
 						sdk.NewAttribute("spender", vaultAddr.String()),
@@ -397,37 +395,6 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 						sdk.NewAttribute("time", "5184000"),
 						sdk.NewAttribute("vault_address", vaultAddr.String()),
 					),
-					// AUM Fee events
-					sdk.NewEvent("coin_spent",
-						sdk.NewAttribute("spender", markerAddr.String()),
-						sdk.NewAttribute("amount", "256919underlying"),
-					),
-					sdk.NewEvent("coin_received",
-						sdk.NewAttribute("receiver", provlabsAddr.String()),
-						sdk.NewAttribute("amount", "256919underlying"),
-					),
-					sdk.NewEvent("transfer",
-						sdk.NewAttribute("recipient", provlabsAddr.String()),
-						sdk.NewAttribute("sender", markerAddr.String()),
-						sdk.NewAttribute("amount", "256919underlying"),
-					),
-					sdk.NewEvent("message",
-						sdk.NewAttribute("sender", markerAddr.String()),
-					),
-					createVaultFeeCollectedEvent(
-						vaultAddr,
-						sdk.NewCoin("underlying", sdkmath.NewInt(1_041_952_013)),
-						sdk.NewCoin("underlying", sdkmath.NewInt(256_919)),
-						sdk.NewCoin("underlying", sdkmath.NewInt(256_919)),
-						sdk.NewCoin("underlying", sdkmath.ZeroInt()),
-						5_184_000,
-					),
-
-
-
-
-
-
 				}
 				return evs
 			}(),
@@ -1937,22 +1904,28 @@ func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts_RetryOnFailure() {
 	// If we have a balance in paymentDenom ("other"), it will try to find a NAV to underlyingDenom.
 	// Since there is no NAV, it should fail.
 
-	// Fund marker with 'other' denom
-	s.FundMarker(shareDenom, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 100)))
+	// We don't fund the marker with 'other' denom here because that would make GetTVVInUnderlyingAsset fail.
+	// Instead, we rely on the missing NAV for 'other' during fee payment conversion in PerformVaultFeeTransfer.
 
 	err := s.k.TestAccessor_handleVaultFeeTimeouts(s.T(), s.ctx)
 	s.Require().NoError(err, "handleVaultFeeTimeouts should not return error even if a vault fails")
 
-	// Verify the vault is STILL in the queue because it failed PerformVaultFeeTransfer
+	// Verify the vault is RE-ENQUEUED with a NEW timeout because we don't continue on PerformVaultFeeTransfer failure
+	expectedTimeout := uint64(s.ctx.BlockTime().Unix() + keeper.AutoReconcileTimeout)
 	found := false
 	s.k.FeeTimeoutQueue.Walk(s.ctx, func(timeout uint64, addr sdk.AccAddress) (bool, error) {
 		if addr.Equals(vaultAddr) {
 			found = true
-			s.Require().Equal(uint64(twoMonthsAgo.Unix()), timeout, "vault should stay in queue with original timeout")
+			s.Require().Equal(expectedTimeout, timeout, "vault should be rescheduled with new timeout")
 		}
 		return false, nil
 	})
-	s.Require().True(found, "vault should still be in the fee timeout queue after failure")
+	s.Require().True(found, "vault should be in the fee timeout queue with new timeout")
+
+	// Verify FeePeriodStart is UNCHANGED
+	vault, err = s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err)
+	s.Require().Equal(twoMonthsAgo.Unix(), vault.FeePeriodStart, "FeePeriodStart should remain unchanged after failed fee collection")
 }
 
 func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts_Success() {
@@ -2021,6 +1994,7 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts_RetryOnFailure() {
 	// We want to test interest timeouts, which use PayoutTimeoutQueue.
 
 	s.SetVaultRatesAndPeriod(vault, "0.1", "0.1", twoMonthsAgo.Unix(), twoMonthsAgo.Unix())
+	vault.PeriodStart = twoMonthsAgo.Unix()
 	vault.PeriodTimeout = twoMonthsAgo.Unix()
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
@@ -2030,20 +2004,30 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts_RetryOnFailure() {
 	// Enqueue it in PayoutTimeoutQueue
 	s.Require().NoError(s.k.PayoutTimeoutQueue.Enqueue(s.ctx, twoMonthsAgo.Unix(), vaultAddr), "failed to enqueue vault")
 
-	// Fund marker with 'other' denom so PerformVaultFeeTransfer (called inside handleVaultInterestTimeouts) will fail
-	s.FundMarker(shareDenom, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 100)))
+	// Trigger an error in PerformVaultInterestTransfer by providing an invalid interest rate string.
+	// This will cause k.PerformVaultInterestTransfer to fail during CalculateInterestEarned.
+	s.SetVaultRatesAndPeriod(vault, "invalid-rate", "0.1", twoMonthsAgo.Unix(), twoMonthsAgo.Unix())
+	vault.PeriodStart = twoMonthsAgo.Unix()
+	vault.PeriodTimeout = twoMonthsAgo.Unix()
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 	err := s.k.TestAccessor_handleVaultInterestTimeouts(s.T(), s.ctx)
 	s.Require().NoError(err)
 
-	// Verify the vault is STILL in the queue because it failed PerformVaultFeeTransfer
+	// Verify the vault is RE-ENQUEUED with a NEW timeout because we reschedule on failure
+	expectedTimeout := uint64(s.ctx.BlockTime().Unix() + keeper.AutoReconcileTimeout)
 	found := false
 	s.k.PayoutTimeoutQueue.Walk(s.ctx, func(timeout uint64, addr sdk.AccAddress) (bool, error) {
 		if addr.Equals(vaultAddr) {
 			found = true
-			s.Require().Equal(uint64(twoMonthsAgo.Unix()), timeout, "vault should stay in queue with original timeout")
+			s.Require().Equal(expectedTimeout, timeout, "vault should be rescheduled with new timeout")
 		}
 		return false, nil
 	})
-	s.Require().True(found, "vault should still be in the interest timeout queue after failure")
+	s.Require().True(found, "vault should be in the interest timeout queue with new timeout")
+
+	// Verify PeriodStart is UNCHANGED
+	vault, err = s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err)
+	s.Require().Equal(twoMonthsAgo.Unix(), vault.PeriodStart, "PeriodStart should remain unchanged after failed reconciliation")
 }

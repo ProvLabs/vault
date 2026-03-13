@@ -431,17 +431,11 @@ func (k Keeper) CalculateVaultTotalAssets(ctx sdk.Context, vault *types.VaultAcc
 
 // handleVaultInterestTimeouts checks vaults with expired interest periods and reconciles or disables them.
 // It uses a safe "collect-then-mutate" pattern to comply with the SDK iterator contract.
-// For each due timeout entry:
-//   - It collects keys for all non-paused vaults.
-//   - It then iterates the collected keys, dequeuing each item before processing it.
-//   - Vaults that cannot cover the required interest are marked depleted.
-//   - Otherwise, interest is reconciled.
 func (k Keeper) handleVaultInterestTimeouts(ctx sdk.Context) error {
 	now := ctx.BlockTime().Unix()
 
 	var keysToProcess []collections.Pair[uint64, sdk.AccAddress]
 	var depleted []*types.VaultAccount
-	var reconciled []*types.VaultAccount
 
 	err := k.PayoutTimeoutQueue.WalkDue(ctx, now, func(timeout uint64, addr sdk.AccAddress) (bool, error) {
 		key := collections.Join(timeout, addr)
@@ -474,7 +468,8 @@ func (k Keeper) handleVaultInterestTimeouts(ctx sdk.Context) error {
 
 		canPay, err := k.CanPayoutDuration(ctx, vault, periodDuration)
 		if err != nil {
-			ctx.Logger().Error("failed to check payout ability", "vault", addr.String(), "err", err)
+			ctx.Logger().Error("failed to check payout ability, rescheduling", "vault", addr.String(), "err", err)
+			k.rescheduleInterestTimeout(ctx, vault, int64(timeout))
 			continue
 		}
 
@@ -486,27 +481,53 @@ func (k Keeper) handleVaultInterestTimeouts(ctx sdk.Context) error {
 			continue
 		}
 
-		if err := k.PerformVaultInterestTransfer(ctx, vault); err != nil {
-			ctx.Logger().Error("failed to reconcile interest", "vault", addr.String(), "err", err)
+		if err := k.atomicallyReconcileInterest(ctx, vault, int64(timeout)); err != nil {
+			ctx.Logger().Error("failed to reconcile interest atomically, rescheduling", "vault", addr.String(), "err", err)
+			k.rescheduleInterestTimeout(ctx, vault, int64(timeout))
 			continue
 		}
-
-		if err := k.PerformVaultFeeTransfer(ctx, vault); err != nil {
-			ctx.Logger().Error("failed to collect AUM fee", "vault", addr.String(), "err", err)
-			continue
-		}
-
-		if err := k.PayoutTimeoutQueue.Dequeue(ctx, int64(timeout), addr); err != nil {
-			ctx.Logger().Error("CRITICAL: failed to dequeue interest timeout, skipping", "vault", addr.String(), "err", err)
-			continue
-		}
-
-		reconciled = append(reconciled, vault)
 	}
 
-	k.resetVaultInterestPeriods(ctx, reconciled)
 	k.handleDepletedVaults(ctx, depleted)
 	return nil
+}
+
+// atomicallyReconcileInterest performs the interest transfer, dequeues the current
+// timeout, and enqueues the next period timeout within a single atomic cache context.
+// If any step fails, the entire operation is reverted.
+func (k Keeper) atomicallyReconcileInterest(ctx sdk.Context, vault *types.VaultAccount, timeout int64) error {
+	cacheCtx, write := ctx.CacheContext()
+	if err := k.PerformVaultInterestTransfer(cacheCtx, vault); err != nil {
+		return err
+	}
+
+	if err := k.PayoutTimeoutQueue.Dequeue(cacheCtx, timeout, vault.GetAddress()); err != nil {
+		return fmt.Errorf("failed to dequeue interest timeout: %w", err)
+	}
+
+	if err := k.SafeEnqueueTimeout(cacheCtx, vault); err != nil {
+		return fmt.Errorf("failed to reset interest period: %w", err)
+	}
+
+	write()
+	return nil
+}
+
+// rescheduleInterestTimeout pushes a vault's interest timeout to the next window without
+// updating its PeriodStart. This is used when a reconciliation attempt fails due to
+// transient errors, preventing block-to-block retries while preserving accrued interest.
+func (k Keeper) rescheduleInterestTimeout(ctx sdk.Context, vault *types.VaultAccount, oldTimeout int64) {
+	newTimeout := ctx.BlockTime().Unix() + AutoReconcileTimeout
+	if err := k.PayoutTimeoutQueue.Dequeue(ctx, oldTimeout, vault.GetAddress()); err != nil {
+		ctx.Logger().Error("failed to dequeue old interest timeout", "vault", vault.GetAddress().String(), "err", err)
+	}
+	vault.PeriodTimeout = newTimeout
+	if err := k.SetVaultAccount(ctx, vault); err != nil {
+		ctx.Logger().Error("failed to update vault timeout", "vault", vault.GetAddress().String(), "err", err)
+	}
+	if err := k.PayoutTimeoutQueue.Enqueue(ctx, newTimeout, vault.GetAddress()); err != nil {
+		ctx.Logger().Error("failed to enqueue new interest timeout", "vault", vault.GetAddress().String(), "err", err)
+	}
 }
 
 // tryGetVault returns the vault if found, or false if the vault is missing or invalid.
@@ -603,25 +624,12 @@ func (k Keeper) handleDepletedVaults(ctx sdk.Context, failedPayouts []*types.Vau
 	}
 }
 
-// resetVaultInterestPeriods starts a new accrual period for the provided vaults after a successful
-// interest reconciliation by calling SafeEnqueueTimeout for each.
-//
-// This updates PeriodStart and PeriodTimeout, persists the vault, and enqueues the corresponding timeout entry.
-func (k Keeper) resetVaultInterestPeriods(ctx sdk.Context, vaults []*types.VaultAccount) {
-	for _, vault := range vaults {
-		if err := k.SafeEnqueueTimeout(ctx, vault); err != nil {
-			ctx.Logger().Error("failed to enqueue vault timeout", "vault", vault.GetAddress().String(), "err", err)
-		}
-	}
-}
-
 // handleVaultFeeTimeouts checks vaults with expired fee periods and reconciles them.
 // It uses a safe "collect-then-mutate" pattern to comply with the SDK iterator contract.
 func (k Keeper) handleVaultFeeTimeouts(ctx sdk.Context) error {
 	now := ctx.BlockTime().Unix()
 
 	var keysToProcess []collections.Pair[uint64, sdk.AccAddress]
-	var reconciled []*types.VaultAccount
 
 	err := k.FeeTimeoutQueue.WalkDue(ctx, now, func(timeout uint64, addr sdk.AccAddress) (bool, error) {
 		key := collections.Join(timeout, addr)
@@ -647,21 +655,52 @@ func (k Keeper) handleVaultFeeTimeouts(ctx sdk.Context) error {
 			continue
 		}
 
-		if err := k.PerformVaultFeeTransfer(ctx, vault); err != nil {
-			ctx.Logger().Error("failed to collect AUM fee", "vault", addr.String(), "err", err)
+		if err := k.atomicallyReconcileFee(ctx, vault, int64(timeout)); err != nil {
+			ctx.Logger().Error("failed to collect AUM fee atomically, rescheduling", "vault", addr.String(), "err", err)
+			k.rescheduleFeeTimeout(ctx, vault, int64(timeout))
 			continue
 		}
-
-		if err := k.FeeTimeoutQueue.Dequeue(ctx, int64(timeout), addr); err != nil {
-			ctx.Logger().Error("CRITICAL: failed to dequeue fee timeout, skipping", "vault", addr.String(), "err", err)
-			continue
-		}
-
-		reconciled = append(reconciled, vault)
 	}
 
-	k.resetVaultFeePeriods(ctx, reconciled)
 	return nil
+}
+
+// atomicallyReconcileFee performs the AUM fee collection, dequeues the current
+// fee timeout, and enqueues the next fee period timeout within a single atomic
+// cache context. If any step fails, the entire operation is reverted.
+func (k Keeper) atomicallyReconcileFee(ctx sdk.Context, vault *types.VaultAccount, timeout int64) error {
+	cacheCtx, write := ctx.CacheContext()
+	if err := k.PerformVaultFeeTransfer(cacheCtx, vault); err != nil {
+		return err
+	}
+
+	if err := k.FeeTimeoutQueue.Dequeue(cacheCtx, timeout, vault.GetAddress()); err != nil {
+		return fmt.Errorf("failed to dequeue fee timeout: %w", err)
+	}
+
+	if err := k.SafeEnqueueFeeTimeout(cacheCtx, vault); err != nil {
+		return fmt.Errorf("failed to reset fee period: %w", err)
+	}
+
+	write()
+	return nil
+}
+
+// rescheduleFeeTimeout pushes a vault's fee timeout to the next window without updating
+// its FeePeriodStart. This is used when a fee collection attempt fails due to transient
+// errors (e.g. missing NAVs), preventing block-to-block retries while preserving accrued fees.
+func (k Keeper) rescheduleFeeTimeout(ctx sdk.Context, vault *types.VaultAccount, oldTimeout int64) {
+	newTimeout := ctx.BlockTime().Unix() + AutoReconcileTimeout
+	if err := k.FeeTimeoutQueue.Dequeue(ctx, oldTimeout, vault.GetAddress()); err != nil {
+		ctx.Logger().Error("failed to dequeue old fee timeout", "vault", vault.GetAddress().String(), "err", err)
+	}
+	vault.FeePeriodTimeout = newTimeout
+	if err := k.SetVaultAccount(ctx, vault); err != nil {
+		ctx.Logger().Error("failed to update vault fee timeout", "vault", vault.GetAddress().String(), "err", err)
+	}
+	if err := k.FeeTimeoutQueue.Enqueue(ctx, newTimeout, vault.GetAddress()); err != nil {
+		ctx.Logger().Error("failed to enqueue new fee timeout", "vault", vault.GetAddress().String(), "err", err)
+	}
 }
 
 // resetVaultFeePeriods starts a new fee accrual period for the provided vaults after a successful

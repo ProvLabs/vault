@@ -548,6 +548,20 @@ func TestVaultAccount_Validate(t *testing.T) {
 			},
 			expectedErr: "outstanding AUM fee cannot be negative",
 		},
+		{
+			name: "non-zero outstanding AUM fee with empty denom",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
+				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
+				CurrentInterestRate: "0.0",
+				DesiredInterestRate: "0.0",
+				OutstandingAumFee:   sdk.Coin{Denom: "", Amount: math.NewInt(100)},
+			},
+			expectedErr: "outstanding AUM fee denom  does not match payment denom uusd",
+		},
 	}
 
 	for _, tc := range tests {

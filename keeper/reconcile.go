@@ -422,6 +422,10 @@ func (k Keeper) CalculateVaultTotalAssets(ctx sdk.Context, vault *types.VaultAcc
 	}
 	estimated = estimated.Sub(outstandingUnderlying)
 
+	if estimated.IsNegative() {
+		estimated = sdkmath.ZeroInt()
+	}
+
 	return estimated, nil
 }
 

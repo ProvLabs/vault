@@ -108,15 +108,16 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 					"0.25",
 					5_184_000,
 				)
-				provlabsAddr, _ := types.GetProvLabsFeeAddress(s.ctx.ChainID())
+				provlabsAddr, err := types.GetProvLabsFeeAddress(s.ctx.ChainID())
+				s.Require().NoError(err, "failed to get ProvLabs fee address for chain ID %s", s.ctx.ChainID())
 				feeEvs := createSendCoinEvents(markerAddr.String(), provlabsAddr.String(), "256919underlying")
-				feeEv := sdk.NewEvent("provlabs.vault.v1.EventVaultFeeCollected",
-					sdk.NewAttribute("aum_snapshot", "1041952013underlying"),
-					sdk.NewAttribute("collected_amount", "256919underlying"),
-					sdk.NewAttribute("duration_seconds", "5184000"),
-					sdk.NewAttribute("outstanding_amount", "0underlying"),
-					sdk.NewAttribute("requested_amount", "256919underlying"),
-					sdk.NewAttribute("vault_address", vaultAddress.String()),
+				feeEv := createVaultFeeCollectedEvent(
+					vaultAddress,
+					sdk.NewCoin(underlying.Denom, sdkmath.NewInt(1_041_952_013)),
+					sdk.NewCoin(underlying.Denom, sdkmath.NewInt(256_919)),
+					sdk.NewCoin(underlying.Denom, sdkmath.NewInt(256_919)),
+					sdk.NewCoin(underlying.Denom, sdkmath.ZeroInt()),
+					5_184_000,
 				)
 
 
@@ -162,15 +163,16 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 					"-0.25",
 					5_184_000,
 				)
-				provlabsAddr, _ := types.GetProvLabsFeeAddress(s.ctx.ChainID())
+				provlabsAddr, err := types.GetProvLabsFeeAddress(s.ctx.ChainID())
+				s.Require().NoError(err, "failed to get ProvLabs fee address for chain ID %s", s.ctx.ChainID())
 				feeEvs := createSendCoinEvents(markerAddr.String(), provlabsAddr.String(), "236647underlying")
-				feeEv := sdk.NewEvent("provlabs.vault.v1.EventVaultFeeCollected",
-					sdk.NewAttribute("aum_snapshot", "959737096underlying"),
-					sdk.NewAttribute("collected_amount", "236647underlying"),
-					sdk.NewAttribute("duration_seconds", "5184000"),
-					sdk.NewAttribute("outstanding_amount", "0underlying"),
-					sdk.NewAttribute("requested_amount", "236647underlying"),
-					sdk.NewAttribute("vault_address", vaultAddress.String()),
+				feeEv := createVaultFeeCollectedEvent(
+					vaultAddress,
+					sdk.NewCoin(underlying.Denom, sdkmath.NewInt(959_737_096)),
+					sdk.NewCoin(underlying.Denom, sdkmath.NewInt(236_647)),
+					sdk.NewCoin(underlying.Denom, sdkmath.NewInt(236_647)),
+					sdk.NewCoin(underlying.Denom, sdkmath.ZeroInt()),
+					5_184_000,
 				)
 
 
@@ -368,7 +370,8 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 			expectRate:    "0.25",
 			expectedEvents: func() sdk.Events {
 				markerAddr := markertypes.MustGetMarkerAddress(shareDenom)
-				provlabsAddr, _ := types.GetProvLabsFeeAddress(s.ctx.ChainID())
+				provlabsAddr, err := types.GetProvLabsFeeAddress(s.ctx.ChainID())
+				s.Require().NoError(err, "failed to get ProvLabs fee address for chain ID %s", s.ctx.ChainID())
 				evs := sdk.Events{
 					sdk.NewEvent("coin_spent",
 						sdk.NewAttribute("spender", vaultAddr.String()),
@@ -411,13 +414,13 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 					sdk.NewEvent("message",
 						sdk.NewAttribute("sender", markerAddr.String()),
 					),
-					sdk.NewEvent("provlabs.vault.v1.EventVaultFeeCollected",
-						sdk.NewAttribute("aum_snapshot", "1041952013underlying"),
-						sdk.NewAttribute("collected_amount", "256919underlying"),
-						sdk.NewAttribute("duration_seconds", "5184000"),
-						sdk.NewAttribute("outstanding_amount", "0underlying"),
-						sdk.NewAttribute("requested_amount", "256919underlying"),
-						sdk.NewAttribute("vault_address", vaultAddr.String()),
+					createVaultFeeCollectedEvent(
+						vaultAddr,
+						sdk.NewCoin("underlying", sdkmath.NewInt(1_041_952_013)),
+						sdk.NewCoin("underlying", sdkmath.NewInt(256_919)),
+						sdk.NewCoin("underlying", sdkmath.NewInt(256_919)),
+						sdk.NewCoin("underlying", sdkmath.ZeroInt()),
+						5_184_000,
 					),
 
 
@@ -1622,7 +1625,8 @@ func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer() {
 
 			// Verify partial collection
 			s.assertBalance(markertypes.MustGetMarkerAddress(shareDenom), tc.paymentDenom, sdkmath.ZeroInt())
-			provlabsAddr, _ := types.GetProvLabsFeeAddress(s.ctx.ChainID())
+			provlabsAddr, err := types.GetProvLabsFeeAddress(s.ctx.ChainID())
+			s.Require().NoError(err, "failed to get ProvLabs fee address for chain ID %s", s.ctx.ChainID())
 			s.assertBalance(provlabsAddr, tc.paymentDenom, tc.expectedCollected)
 			s.Require().Equal(tc.expectedOutstanding, vault.OutstandingAumFee.Amount, "outstanding fee balance mismatch")
 
@@ -1632,11 +1636,17 @@ func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer() {
 			for _, ev := range events {
 				if ev.Type == "provlabs.vault.v1.EventVaultFeeCollected" {
 					found = true
-					s.Require().Equal(vaultAddr.String(), getAttribute(ev, "vault_address"), "event vault_address mismatch")
-					s.Require().Equal(sdk.NewCoin(tc.paymentDenom, tc.expectedCollected).String(), getAttribute(ev, "collected_amount"), "event collected_amount mismatch")
-					s.Require().Equal(tc.expectedFeeTotal.String()+tc.paymentDenom, getAttribute(ev, "requested_amount"), "event requested_amount mismatch")
-					s.Require().Equal(tc.aumSnapshot, getAttribute(ev, "aum_snapshot"), "event aum_snapshot mismatch")
-					s.Require().Equal(tc.expectedOutstanding.String()+tc.paymentDenom, getAttribute(ev, "outstanding_amount"), "event outstanding_amount mismatch")
+					snapshot, err := sdk.ParseCoinNormalized(tc.aumSnapshot)
+					s.Require().NoError(err, "failed to parse aum snapshot coin")
+					expectedEv := createVaultFeeCollectedEvent(
+						vaultAddr,
+						snapshot,
+						sdk.NewCoin(tc.paymentDenom, tc.expectedCollected),
+						sdk.NewCoin(tc.paymentDenom, tc.expectedFeeTotal),
+						sdk.NewCoin(tc.paymentDenom, tc.expectedOutstanding),
+						int64(60*24*time.Hour/time.Second),
+					)
+					s.Assert().Equal(normalizeEvent(expectedEv), ev, "EventVaultFeeCollected mismatch")
 				}
 			}
 			s.Require().True(found, "EventVaultFeeCollected should be emitted during partial collection")
@@ -1648,7 +1658,8 @@ func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer() {
 			err = s.k.PerformVaultFeeTransfer(s.ctx, vault)
 			s.Require().NoError(err, "PerformVaultFeeTransfer should not error during second collection")
 
-			vault, _ = s.k.GetVault(s.ctx, types.GetVaultAddress(shareDenom))
+			vault, err = s.k.GetVault(s.ctx, types.GetVaultAddress(shareDenom))
+			s.Require().NoError(err, "failed to get vault for share denom %s", shareDenom)
 			s.Require().Equal(s.ctx.BlockTime().Unix(), vault.FeePeriodStart, "FeePeriodStart should be updated")
 			s.Require().True(vault.OutstandingAumFee.IsZero(), "outstanding fee should be cleared")
 			s.assertBalance(markertypes.MustGetMarkerAddress(shareDenom), tc.paymentDenom, tc.expectedFinalMarker)
@@ -1696,9 +1707,10 @@ func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts() {
 	err := s.k.TestAccessor_handleVaultFeeTimeouts(s.T(), s.ctx)
 	s.Require().NoError(err)
 
-	provlabsAddr, _ := types.GetProvLabsFeeAddress(s.ctx.ChainID())
+	provlabsAddr, err := types.GetProvLabsFeeAddress(s.ctx.ChainID())
+	s.Require().NoError(err, "failed to get ProvLabs fee address for chain ID %s", s.ctx.ChainID())
 	feeCollected := s.simApp.BankKeeper.GetBalance(s.ctx, provlabsAddr, paymentDenom).Amount
-	s.Require().True(feeCollected.IsPositive(), "fee should be collected")
+	s.Require().True(feeCollected.IsPositive(), "fee should be collected for address %s", provlabsAddr)
 
 	found := false
 	s.k.FeeTimeoutQueue.Walk(s.ctx, func(timeout uint64, addr sdk.AccAddress) (bool, error) {
@@ -1710,7 +1722,8 @@ func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts() {
 	})
 	s.Require().True(found, "new fee timeout should be enqueued")
 
-	vault, _ = s.k.GetVault(s.ctx, vaultAddr)
+	vault, err = s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "failed to get vault for address %s", vaultAddr)
 	s.Require().Equal(s.ctx.BlockTime().Unix(), vault.FeePeriodStart, "FeePeriodStart should be updated")
 }
 
@@ -1845,7 +1858,8 @@ func (s *TestSuite) TestKeeper_EstimationMethods() {
 		paymentDenom := "usdc"
 		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 1_000_000), s.adminAddr)
 		pmtMarkerAddr := markertypes.MustGetMarkerAddress(paymentDenom)
-		pmtMarkerAcct, _ := s.k.MarkerKeeper.GetMarker(s.ctx, pmtMarkerAddr)
+		pmtMarkerAcct, err := s.k.MarkerKeeper.GetMarker(s.ctx, pmtMarkerAddr)
+		s.Require().NoError(err, "failed to get marker for address %s", pmtMarkerAddr)
 		s.k.MarkerKeeper.SetNetAssetValue(s.ctx, pmtMarkerAcct, markertypes.NetAssetValue{
 			Price:  sdk.NewInt64Coin(underlyingDenom, 1),
 			Volume: 2,

@@ -110,11 +110,17 @@ func (s *TestSuite) assertVaultAndMarkerBalances(vaultAddr sdk.AccAddress, share
 // event comparison in tests resilient to JSON/string formatting differences.
 func normalizeEvents(events sdk.Events) sdk.Events {
 	for i := range events {
-		for j := range events[i].Attributes {
-			events[i].Attributes[j].Value = strings.Trim(events[i].Attributes[j].Value, `"`)
-		}
+		events[i] = normalizeEvent(events[i])
 	}
 	return events
+}
+
+// normalizeEvent trims surrounding quotes from event attribute values.
+func normalizeEvent(event sdk.Event) sdk.Event {
+	for i := range event.Attributes {
+		event.Attributes[i].Value = strings.Trim(event.Attributes[i].Value, `"`)
+	}
+	return event
 }
 
 // requireAddFinalizeAndActivateMarker creates a restricted marker with the
@@ -574,4 +580,16 @@ func expectedWithSimpleAPY(baseAmt sdkmath.Int, rateStr string, seconds int64) (
 	timeFraction := durationDec.Quo(secondsPerYearDec)
 	interestDec := baseAmt.ToLegacyDec().Mul(rateDec).Mul(timeFraction)
 	return baseAmt.Add(interestDec.TruncateInt()), nil
+}
+
+// createVaultFeeCollectedEvent constructs the expected EventVaultFeeCollected event.
+func createVaultFeeCollectedEvent(vaultAddr sdk.AccAddress, aumSnapshot, collected, requested, outstanding sdk.Coin, duration int64) sdk.Event {
+	return sdk.NewEvent("provlabs.vault.v1.EventVaultFeeCollected",
+		sdk.NewAttribute("aum_snapshot", aumSnapshot.String()),
+		sdk.NewAttribute("collected_amount", collected.String()),
+		sdk.NewAttribute("duration_seconds", fmt.Sprintf("%v", duration)),
+		sdk.NewAttribute("outstanding_amount", outstanding.String()),
+		sdk.NewAttribute("requested_amount", requested.String()),
+		sdk.NewAttribute("vault_address", vaultAddr.String()),
+	)
 }

@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	"github.com/provlabs/vault/interest"
 	"github.com/provlabs/vault/types"
 
@@ -21,19 +23,26 @@ const (
 // at the same time. Typically called after enabling interest or completing a
 // reconciliation so the next accrual cycle begins cleanly.
 func (k Keeper) SafeAddVerification(ctx sdk.Context, vault *types.VaultAccount) error {
-	currentBlockTime := ctx.BlockTime().Unix()
+	cacheCtx, write := ctx.CacheContext()
+	currentBlockTime := cacheCtx.BlockTime().Unix()
 
-	if err := k.PayoutTimeoutQueue.Dequeue(ctx, vault.PeriodTimeout, vault.GetAddress()); err != nil {
-		return err
+	if err := k.PayoutTimeoutQueue.Dequeue(cacheCtx, vault.PeriodTimeout, vault.GetAddress()); err != nil {
+		return fmt.Errorf("failed to dequeue existing payout timeout for vault %s: %w", vault.GetAddress(), err)
 	}
 
 	vault.PeriodStart = currentBlockTime
 	vault.PeriodTimeout = 0
-	if err := k.SetVaultAccount(ctx, vault); err != nil {
-		return err
+	if err := k.SetVaultAccount(cacheCtx, vault); err != nil {
+		k.getLogger(cacheCtx).Error("failed to set vault while adding to verification set", "vault", vault.GetAddress().String(), "err", err)
+		return fmt.Errorf("failed to persist vault period for vault %s: %w", vault.GetAddress(), err)
 	}
 
-	return k.PayoutVerificationSet.Set(ctx, vault.GetAddress())
+	if err := k.PayoutVerificationSet.Set(cacheCtx, vault.GetAddress()); err != nil {
+		return fmt.Errorf("failed to set payout verification for vault %s: %w", vault.GetAddress(), err)
+	}
+
+	write()
+	return nil
 }
 
 // SafeEnqueueTimeout clears any existing timeout entry for the given vault (if any),
@@ -45,18 +54,26 @@ func (k Keeper) SafeAddVerification(ctx sdk.Context, vault *types.VaultAccount) 
 // at the same time. Typically called after a vault has been marked as payable so it
 // will be revisited after the auto-reconcile window.
 func (k Keeper) SafeEnqueueTimeout(ctx sdk.Context, vault *types.VaultAccount) error {
-	if err := k.PayoutTimeoutQueue.Dequeue(ctx, vault.PeriodTimeout, vault.GetAddress()); err != nil {
-		return err
+	cacheCtx, write := ctx.CacheContext()
+
+	if err := k.PayoutTimeoutQueue.Dequeue(cacheCtx, vault.PeriodTimeout, vault.GetAddress()); err != nil {
+		return fmt.Errorf("failed to dequeue existing payout timeout for vault %s: %w", vault.GetAddress(), err)
 	}
 
-	currentBlockTime := ctx.BlockTime().Unix()
+	currentBlockTime := cacheCtx.BlockTime().Unix()
 	vault.PeriodStart = currentBlockTime
 	vault.PeriodTimeout = currentBlockTime + AutoReconcileTimeout
-	if err := k.SetVaultAccount(ctx, vault); err != nil {
-		ctx.Logger().Error("failed to set vault", "vault", vault.GetAddress().String(), "err", err)
-		return err
+	if err := k.SetVaultAccount(cacheCtx, vault); err != nil {
+		k.getLogger(cacheCtx).Error("failed to set vault while enqueueing payout timeout", "vault", vault.GetAddress().String(), "err", err)
+		return fmt.Errorf("failed to persist vault period for vault %s: %w", vault.GetAddress(), err)
 	}
-	return k.PayoutTimeoutQueue.Enqueue(ctx, vault.PeriodTimeout, vault.GetAddress())
+
+	if err := k.PayoutTimeoutQueue.Enqueue(cacheCtx, vault.PeriodTimeout, vault.GetAddress()); err != nil {
+		return fmt.Errorf("failed to enqueue payout timeout for vault %s at %d: %w", vault.GetAddress(), vault.PeriodTimeout, err)
+	}
+
+	write()
+	return nil
 }
 
 // SafeEnqueueFeeTimeout clears any existing fee timeout entry for the given vault (if any),
@@ -64,16 +81,24 @@ func (k Keeper) SafeEnqueueTimeout(ctx sdk.Context, vault *types.VaultAccount) e
 // at (now + AutoReconcileTimeout), persists the vault, and enqueues the timeout entry
 // in the FeeTimeoutQueue.
 func (k Keeper) SafeEnqueueFeeTimeout(ctx sdk.Context, vault *types.VaultAccount) error {
-	if err := k.FeeTimeoutQueue.Dequeue(ctx, vault.FeePeriodTimeout, vault.GetAddress()); err != nil {
-		return err
+	cacheCtx, write := ctx.CacheContext()
+
+	if err := k.FeeTimeoutQueue.Dequeue(cacheCtx, vault.FeePeriodTimeout, vault.GetAddress()); err != nil {
+		return fmt.Errorf("failed to dequeue existing fee timeout for vault %s: %w", vault.GetAddress(), err)
 	}
 
-	currentBlockTime := ctx.BlockTime().Unix()
+	currentBlockTime := cacheCtx.BlockTime().Unix()
 	vault.FeePeriodStart = currentBlockTime
 	vault.FeePeriodTimeout = currentBlockTime + AutoReconcileTimeout
-	if err := k.SetVaultAccount(ctx, vault); err != nil {
-		ctx.Logger().Error("failed to set vault", "vault", vault.GetAddress().String(), "err", err)
-		return err
+	if err := k.SetVaultAccount(cacheCtx, vault); err != nil {
+		k.getLogger(cacheCtx).Error("failed to set vault while enqueueing fee timeout", "vault", vault.GetAddress().String(), "err", err)
+		return fmt.Errorf("failed to persist vault fee period for vault %s: %w", vault.GetAddress(), err)
 	}
-	return k.FeeTimeoutQueue.Enqueue(ctx, vault.FeePeriodTimeout, vault.GetAddress())
+
+	if err := k.FeeTimeoutQueue.Enqueue(cacheCtx, vault.FeePeriodTimeout, vault.GetAddress()); err != nil {
+		return fmt.Errorf("failed to enqueue fee timeout for vault %s at %d: %w", vault.GetAddress(), vault.FeePeriodTimeout, err)
+	}
+
+	write()
+	return nil
 }

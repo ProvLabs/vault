@@ -1,9 +1,10 @@
 package keeper_test
 
 import (
+	"math"
 	"time"
 
-	"cosmossdk.io/math"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
@@ -76,6 +77,43 @@ func (s *TestSuite) TestVaultGenesis_InitAndExport() {
 	s.Require().Equal(admin, exported.PendingSwapOutQueue.Entries[0].SwapOut.Owner, "pending swap out entry owner mismatch")
 	s.Require().Equal(vault.Address, exported.PendingSwapOutQueue.Entries[0].SwapOut.VaultAddress, "pending swap out entry vault address mismatch")
 	s.Require().Equal("ylds", exported.PendingSwapOutQueue.Entries[0].SwapOut.RedeemDenom, "pending swap out entry redeem denom mismatch")
+}
+
+func (s *TestSuite) TestInitGenesis_PanicOnInvalidTimeout() {
+	vaultAddr := types.GetVaultAddress("panic-vault").String()
+
+	tests := []struct {
+		name     string
+		genState *types.GenesisState
+		panicMsg string
+	}{
+		{
+			name: "payout timeout exceeds max int64",
+			genState: &types.GenesisState{
+				PayoutTimeoutQueue: []types.QueueEntry{
+					{Time: uint64(math.MaxInt64) + 1, Addr: vaultAddr},
+				},
+			},
+			panicMsg: "exceeds max int64",
+		},
+		{
+			name: "fee timeout exceeds max int64",
+			genState: &types.GenesisState{
+				FeeTimeoutQueue: []types.QueueEntry{
+					{Time: uint64(math.MaxInt64) + 1, Addr: vaultAddr},
+				},
+			},
+			panicMsg: "exceeds max int64",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			s.Require().Panics(func() {
+				s.k.InitGenesis(s.ctx, tt.genState)
+			})
+		})
+	}
 }
 
 func (s *TestSuite) TestVaultGenesis_RoundTrip_PastAndFutureTimeouts() {
@@ -187,7 +225,7 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidVault() {
 	vault := types.VaultAccount{
 		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
 		Admin:               "",
-		TotalShares:         sdk.Coin{Denom: "invalid denom!", Amount: math.NewInt(0)},
+		TotalShares:         sdk.Coin{Denom: "invalid denom!", Amount: sdkmath.NewInt(0)},
 		UnderlyingAsset:     "underX",
 		CurrentInterestRate: types.ZeroInterestRate,
 		DesiredInterestRate: types.ZeroInterestRate,

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/provlabs/vault/types"
 
@@ -60,6 +61,9 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 		if err != nil {
 			panic(fmt.Errorf("invalid address in payout timeout queue: %w", err))
 		}
+		if entry.Time > math.MaxInt64 {
+			panic(fmt.Errorf("payout timeout queue entry for %s has time %d which exceeds max int64", entry.Addr, entry.Time))
+		}
 		if err := k.PayoutTimeoutQueue.Enqueue(ctx, int64(entry.Time), addr); err != nil {
 			panic(fmt.Errorf("failed to enqueue vault payout timeout for %s: %w", entry.Addr, err))
 		}
@@ -69,6 +73,9 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 		addr, err := sdk.AccAddressFromBech32(entry.Addr)
 		if err != nil {
 			panic(fmt.Errorf("invalid address in fee timeout queue: %w", err))
+		}
+		if entry.Time > math.MaxInt64 {
+			panic(fmt.Errorf("fee timeout queue entry for %s has time %d which exceeds max int64", entry.Addr, entry.Time))
 		}
 		if err := k.FeeTimeoutQueue.Enqueue(ctx, int64(entry.Time), addr); err != nil {
 			panic(fmt.Errorf("failed to enqueue vault fee timeout for %s: %w", entry.Addr, err))

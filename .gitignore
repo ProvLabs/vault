@@ -66,6 +66,7 @@ simapp/build
 debug_*
 __debug*
 tmp_*
+issues/
 
 # Generated OpenAPI/Swagger artifacts
 openapi/

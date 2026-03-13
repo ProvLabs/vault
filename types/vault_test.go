@@ -554,10 +554,10 @@ func TestVaultAccount_Validate(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.vaultAccount.Validate()
 			if tc.expectedErr != "" {
-				assert.Error(t, err, "expected an error for test case: %s", tc.name)
-				assert.Contains(t, err.Error(), tc.expectedErr, "error should contain expected message for test case: %s", tc.name)
+				require.Error(t, err, "expected an error for test case: %s", tc.name)
+				require.Contains(t, err.Error(), tc.expectedErr, "error should contain expected message for test case: %s", tc.name)
 			} else {
-				assert.NoError(t, err, "expected no error for test case: %s", tc.name)
+				require.NoError(t, err, "expected no error for test case: %s", tc.name)
 			}
 		})
 	}
@@ -795,10 +795,10 @@ func TestPendingSwapOut_Validate(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.pendingSwapOut.Validate()
 			if tc.expectedErr != "" {
-				assert.Error(t, err, "expected an error for test case: %s", tc.name)
-				assert.Contains(t, err.Error(), tc.expectedErr, "error should contain expected message for test case: %s", tc.name)
+				require.Error(t, err, "expected an error for test case: %s", tc.name)
+				require.Contains(t, err.Error(), tc.expectedErr, "error should contain expected message for test case: %s", tc.name)
 			} else {
-				assert.NoError(t, err, "expected no error for test case: %s", tc.name)
+				require.NoError(t, err, "expected no error for test case: %s", tc.name)
 			}
 		})
 	}

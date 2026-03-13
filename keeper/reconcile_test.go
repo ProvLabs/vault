@@ -1904,3 +1904,146 @@ func (s *TestSuite) TestKeeper_EstimationMethods() {
 		s.Require().Equal(sdkmath.NewInt(1_041_694_094), amt)
 	})
 }
+
+func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts_RetryOnFailure() {
+	s.SetupTest()
+	shareDenom := "fee.timeout.shares"
+	underlyingDenom := "underlying"
+	paymentDenom := "other" // not uylds.fcc, so it needs a NAV
+	underlying := sdk.NewInt64Coin(underlyingDenom, 1_000_000_000)
+	vaultAddr := types.GetVaultAddress(shareDenom)
+
+	now := s.ctx.BlockTime()
+	twoMonthsAgo := now.Add(-60 * 24 * time.Hour)
+
+	s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
+
+	vault := s.CreateVaultWithParams(shareDenom, underlyingDenom, paymentDenom)
+
+	// CreateVaultWithParams enqueues an initial timeout, we must remove it to have a clean test
+	s.Require().NoError(s.k.FeeTimeoutQueue.Dequeue(s.ctx, vault.FeePeriodTimeout, vaultAddr))
+
+	s.SetVaultRatesAndPeriod(vault, "0.0", "0.0", twoMonthsAgo.Unix(), twoMonthsAgo.Unix())
+
+	// Fund marker with some underlying so TVV is positive
+	s.FundMarker(shareDenom, sdk.NewCoins(underlying))
+
+	// Enqueue it
+	s.Require().NoError(s.k.FeeTimeoutQueue.Enqueue(s.ctx, twoMonthsAgo.Unix(), vaultAddr), "failed to enqueue vault")
+
+	// Call handleVaultFeeTimeouts.
+	// PerformVaultFeeTransfer calls GetTVVInUnderlyingAsset.
+	// GetTVVInUnderlyingAsset calls ToUnderlyingAssetAmount for all balances.
+	// If we have a balance in paymentDenom ("other"), it will try to find a NAV to underlyingDenom.
+	// Since there is no NAV, it should fail.
+
+	// Fund marker with 'other' denom
+	s.FundMarker(shareDenom, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 100)))
+
+	err := s.k.TestAccessor_handleVaultFeeTimeouts(s.T(), s.ctx)
+	s.Require().NoError(err, "handleVaultFeeTimeouts should not return error even if a vault fails")
+
+	// Verify the vault is STILL in the queue because it failed PerformVaultFeeTransfer
+	found := false
+	s.k.FeeTimeoutQueue.Walk(s.ctx, func(timeout uint64, addr sdk.AccAddress) (bool, error) {
+		if addr.Equals(vaultAddr) {
+			found = true
+			s.Require().Equal(uint64(twoMonthsAgo.Unix()), timeout, "vault should stay in queue with original timeout")
+		}
+		return false, nil
+	})
+	s.Require().True(found, "vault should still be in the fee timeout queue after failure")
+}
+
+func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts_Success() {
+	s.SetupTest()
+	shareDenom := "fee.success.shares"
+	underlyingDenom := "underlying"
+	paymentDenom := "uylds.fcc"
+	underlying := sdk.NewInt64Coin(underlyingDenom, 1_000_000_000)
+	vaultAddr := types.GetVaultAddress(shareDenom)
+
+	now := s.ctx.BlockTime()
+	twoMonthsAgo := now.Add(-60 * 24 * time.Hour)
+
+	s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
+
+	vault := s.CreateVaultWithParams(shareDenom, underlyingDenom, paymentDenom)
+
+	// CreateVaultWithParams enqueues an initial timeout, we must remove it to have a clean test
+	s.Require().NoError(s.k.FeeTimeoutQueue.Dequeue(s.ctx, vault.FeePeriodTimeout, vaultAddr))
+
+	s.SetVaultRatesAndPeriod(vault, "0.0", "0.0", twoMonthsAgo.Unix(), twoMonthsAgo.Unix())
+
+	// Fund marker with some underlying so TVV is positive
+	s.FundMarker(shareDenom, sdk.NewCoins(underlying))
+
+	// Enqueue it
+	s.Require().NoError(s.k.FeeTimeoutQueue.Enqueue(s.ctx, twoMonthsAgo.Unix(), vaultAddr), "failed to enqueue vault")
+
+	// Call handleVaultFeeTimeouts. Success this time (uylds.fcc doesn't need NAV)
+	err := s.k.TestAccessor_handleVaultFeeTimeouts(s.T(), s.ctx)
+	s.Require().NoError(err)
+
+	// Verify the vault is DEQUEUED from old timeout and ENQUEUED with new timeout
+	foundOld := false
+	foundNew := false
+	s.k.FeeTimeoutQueue.Walk(s.ctx, func(timeout uint64, addr sdk.AccAddress) (bool, error) {
+		if addr.Equals(vaultAddr) {
+			if timeout == uint64(twoMonthsAgo.Unix()) {
+				foundOld = true
+			} else if timeout > uint64(now.Unix()) {
+				foundNew = true
+			}
+		}
+		return false, nil
+	})
+	s.Require().False(foundOld, "vault should be dequeued from old timeout")
+	s.Require().True(foundNew, "vault should be enqueued with new timeout")
+}
+
+func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts_RetryOnFailure() {
+	s.SetupTest()
+	shareDenom := "interest.timeout.shares"
+	underlyingDenom := "underlying"
+	paymentDenom := "other" // not uylds.fcc, so it needs a NAV
+	underlying := sdk.NewInt64Coin(underlyingDenom, 1_000_000_000)
+	vaultAddr := types.GetVaultAddress(shareDenom)
+
+	now := s.ctx.BlockTime()
+	twoMonthsAgo := now.Add(-60 * 24 * time.Hour)
+
+	s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
+
+	vault := s.CreateVaultWithParams(shareDenom, underlyingDenom, paymentDenom)
+
+	// CreateVaultWithParams enqueues an initial fee timeout, and also sets up the vault.
+	// We want to test interest timeouts, which use PayoutTimeoutQueue.
+
+	s.SetVaultRatesAndPeriod(vault, "0.1", "0.1", twoMonthsAgo.Unix(), twoMonthsAgo.Unix())
+	vault.PeriodTimeout = twoMonthsAgo.Unix()
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	// Fund marker with some underlying so TVV is positive
+	s.FundMarker(shareDenom, sdk.NewCoins(underlying))
+
+	// Enqueue it in PayoutTimeoutQueue
+	s.Require().NoError(s.k.PayoutTimeoutQueue.Enqueue(s.ctx, twoMonthsAgo.Unix(), vaultAddr), "failed to enqueue vault")
+
+	// Fund marker with 'other' denom so PerformVaultFeeTransfer (called inside handleVaultInterestTimeouts) will fail
+	s.FundMarker(shareDenom, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 100)))
+
+	err := s.k.TestAccessor_handleVaultInterestTimeouts(s.T(), s.ctx)
+	s.Require().NoError(err)
+
+	// Verify the vault is STILL in the queue because it failed PerformVaultFeeTransfer
+	found := false
+	s.k.PayoutTimeoutQueue.Walk(s.ctx, func(timeout uint64, addr sdk.AccAddress) (bool, error) {
+		if addr.Equals(vaultAddr) {
+			found = true
+			s.Require().Equal(uint64(twoMonthsAgo.Unix()), timeout, "vault should stay in queue with original timeout")
+		}
+		return false, nil
+	})
+	s.Require().True(found, "vault should still be in the interest timeout queue after failure")
+}

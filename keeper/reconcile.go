@@ -460,13 +460,10 @@ func (k Keeper) handleVaultInterestTimeouts(ctx sdk.Context) error {
 		timeout := key.K1()
 		addr := key.K2()
 
-		if err := k.PayoutTimeoutQueue.Dequeue(ctx, int64(timeout), addr); err != nil {
-			ctx.Logger().Error("CRITICAL: failed to dequeue interest timeout, skipping", "vault", addr.String(), "err", err)
-			continue
-		}
-
 		vault, ok := k.tryGetVault(ctx, addr)
 		if !ok {
+			// clean up queue if vault no longer exists
+			_ = k.PayoutTimeoutQueue.Dequeue(ctx, int64(timeout), addr)
 			continue
 		}
 
@@ -483,6 +480,9 @@ func (k Keeper) handleVaultInterestTimeouts(ctx sdk.Context) error {
 
 		if !canPay {
 			depleted = append(depleted, vault)
+			if err := k.PayoutTimeoutQueue.Dequeue(ctx, int64(timeout), addr); err != nil {
+				ctx.Logger().Error("CRITICAL: failed to dequeue interest timeout, skipping", "vault", addr.String(), "err", err)
+			}
 			continue
 		}
 
@@ -493,6 +493,11 @@ func (k Keeper) handleVaultInterestTimeouts(ctx sdk.Context) error {
 
 		if err := k.PerformVaultFeeTransfer(ctx, vault); err != nil {
 			ctx.Logger().Error("failed to collect AUM fee", "vault", addr.String(), "err", err)
+			continue
+		}
+
+		if err := k.PayoutTimeoutQueue.Dequeue(ctx, int64(timeout), addr); err != nil {
+			ctx.Logger().Error("CRITICAL: failed to dequeue interest timeout, skipping", "vault", addr.String(), "err", err)
 			continue
 		}
 
@@ -635,18 +640,20 @@ func (k Keeper) handleVaultFeeTimeouts(ctx sdk.Context) error {
 		timeout := key.K1()
 		addr := key.K2()
 
-		if err := k.FeeTimeoutQueue.Dequeue(ctx, int64(timeout), addr); err != nil {
-			ctx.Logger().Error("CRITICAL: failed to dequeue fee timeout, skipping", "vault", addr.String(), "err", err)
-			continue
-		}
-
 		vault, ok := k.tryGetVault(ctx, addr)
 		if !ok {
+			// clean up queue if vault no longer exists
+			_ = k.FeeTimeoutQueue.Dequeue(ctx, int64(timeout), addr)
 			continue
 		}
 
 		if err := k.PerformVaultFeeTransfer(ctx, vault); err != nil {
 			ctx.Logger().Error("failed to collect AUM fee", "vault", addr.String(), "err", err)
+			continue
+		}
+
+		if err := k.FeeTimeoutQueue.Dequeue(ctx, int64(timeout), addr); err != nil {
+			ctx.Logger().Error("CRITICAL: failed to dequeue fee timeout, skipping", "vault", addr.String(), "err", err)
 			continue
 		}
 

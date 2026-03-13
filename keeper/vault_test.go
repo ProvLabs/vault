@@ -16,20 +16,7 @@ import (
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
-type vaultAttrs struct {
-	admin                  string
-	share                  string
-	underlying             string
-	payment                string
-	withdrawalDelaySeconds uint64
-	expected               types.VaultAccount
-}
-
-func (v vaultAttrs) GetAdmin() string                  { return v.admin }
-func (v vaultAttrs) GetShareDenom() string             { return v.share }
-func (v vaultAttrs) GetUnderlyingAsset() string        { return v.underlying }
-func (v vaultAttrs) GetPaymentDenom() string           { return v.payment }
-func (v vaultAttrs) GetWithdrawalDelaySeconds() uint64 { return v.withdrawalDelaySeconds }
+// TestKeeperTestSuite is handled in suite_test.go
 
 func (s *TestSuite) TestCreateVault_Success() {
 	share := "vaultshare"

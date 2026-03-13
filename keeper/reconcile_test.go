@@ -111,9 +111,11 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 				provlabsAddr, _ := types.GetProvLabsFeeAddress(s.ctx.ChainID())
 				feeEvs := createSendCoinEvents(markerAddr.String(), provlabsAddr.String(), "256919underlying")
 				feeEv := sdk.NewEvent("provlabs.vault.v1.EventVaultFeeCollected",
-					sdk.NewAttribute("aum_snapshot", "1041952013"),
+					sdk.NewAttribute("aum_snapshot", "1041952013underlying"),
+					sdk.NewAttribute("collected_amount", "256919underlying"),
 					sdk.NewAttribute("duration_seconds", "5184000"),
-					sdk.NewAttribute("fee_amount", "256919underlying"),
+					sdk.NewAttribute("outstanding_amount", "0underlying"),
+					sdk.NewAttribute("requested_amount", "256919underlying"),
 					sdk.NewAttribute("vault_address", vaultAddress.String()),
 				)
 
@@ -163,9 +165,11 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 				provlabsAddr, _ := types.GetProvLabsFeeAddress(s.ctx.ChainID())
 				feeEvs := createSendCoinEvents(markerAddr.String(), provlabsAddr.String(), "236647underlying")
 				feeEv := sdk.NewEvent("provlabs.vault.v1.EventVaultFeeCollected",
-					sdk.NewAttribute("aum_snapshot", "959737096"),
+					sdk.NewAttribute("aum_snapshot", "959737096underlying"),
+					sdk.NewAttribute("collected_amount", "236647underlying"),
 					sdk.NewAttribute("duration_seconds", "5184000"),
-					sdk.NewAttribute("fee_amount", "236647underlying"),
+					sdk.NewAttribute("outstanding_amount", "0underlying"),
+					sdk.NewAttribute("requested_amount", "236647underlying"),
 					sdk.NewAttribute("vault_address", vaultAddress.String()),
 				)
 
@@ -408,9 +412,11 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 						sdk.NewAttribute("sender", markerAddr.String()),
 					),
 					sdk.NewEvent("provlabs.vault.v1.EventVaultFeeCollected",
-						sdk.NewAttribute("aum_snapshot", "1041952013"),
+						sdk.NewAttribute("aum_snapshot", "1041952013underlying"),
+						sdk.NewAttribute("collected_amount", "256919underlying"),
 						sdk.NewAttribute("duration_seconds", "5184000"),
-						sdk.NewAttribute("fee_amount", "256919underlying"),
+						sdk.NewAttribute("outstanding_amount", "0underlying"),
+						sdk.NewAttribute("requested_amount", "256919underlying"),
 						sdk.NewAttribute("vault_address", vaultAddr.String()),
 					),
 
@@ -1633,8 +1639,10 @@ func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer() {
 		if ev.Type == "provlabs.vault.v1.EventVaultFeeCollected" {
 			found = true
 			s.Require().Equal(vaultAddr.String(), getAttribute(ev, "vault_address"), "event vault_address mismatch")
-			s.Require().Equal(sdk.NewCoin(paymentDenom, paymentAmount).String(), getAttribute(ev, "fee_amount"), "event fee_amount mismatch")
-			s.Require().Equal("1000100000", getAttribute(ev, "aum_snapshot"), "event aum_snapshot mismatch")
+			s.Require().Equal(sdk.NewCoin(paymentDenom, paymentAmount).String(), getAttribute(ev, "collected_amount"), "event collected_amount mismatch")
+			s.Require().Equal(expectedFeeTotal.String()+paymentDenom, getAttribute(ev, "requested_amount"), "event requested_amount mismatch")
+			s.Require().Equal("1000100000"+underlyingDenom, getAttribute(ev, "aum_snapshot"), "event aum_snapshot mismatch")
+			s.Require().Equal(expectedOutstanding.String()+paymentDenom, getAttribute(ev, "outstanding_amount"), "event outstanding_amount mismatch")
 		}
 	}
 	s.Require().True(found, "EventVaultFeeCollected should be emitted during partial collection")

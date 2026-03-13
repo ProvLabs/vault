@@ -272,12 +272,14 @@ func (k Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAccou
 		return fmt.Errorf("failed to update vault account after fee transfer: %w", err)
 	}
 
-	k.emitEvent(ctx, &types.EventVaultFeeCollected{
-		VaultAddress:    vault.GetAddress().String(),
-		FeeAmount:       toCollect.String(),
-		AumSnapshot:     tvv.String(),
-		DurationSeconds: periodDuration,
-	})
+	k.emitEvent(ctx, types.NewEventVaultFeeCollected(
+		vault.GetAddress().String(),
+		toCollect,
+		totalOutstanding,
+		sdk.NewCoin(vault.UnderlyingAsset, tvv),
+		vault.OutstandingAumFee,
+		periodDuration,
+	))
 
 	return nil
 }

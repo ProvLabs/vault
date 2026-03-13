@@ -168,10 +168,12 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 				provlabsAddr, _ := types.GetProvLabsFeeAddress(s.ctx.ChainID())
 				expectedEvents = append(expectedEvents, createSendCoinEvents(principalAddress.String(), provlabsAddr.String(), "4ylds")...)
 				feeEvent, _ := sdk.TypedEventToEvent(&types.EventVaultFeeCollected{
-					VaultAddress:    vaultAddr.String(),
-					FeeAmount:       "4ylds",
-					AumSnapshot:     "50",
-					DurationSeconds: testBlockTime.Unix() - 1,
+					VaultAddress:      vaultAddr.String(),
+					CollectedAmount:   "4ylds",
+					RequestedAmount:   "4ylds",
+					AumSnapshot:       "50ylds",
+					DurationSeconds:   testBlockTime.Unix() - 1,
+					OutstandingAmount: "0ylds",
 				})
 				expectedEvents = append(expectedEvents, feeEvent)
 

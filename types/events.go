@@ -284,3 +284,15 @@ func NewEventWithdrawalDelayUpdated(vaultAddress, authority string, withdrawalDe
 		WithdrawalDelaySeconds: withdrawalDelaySeconds,
 	}
 }
+
+// NewEventVaultFeeCollected creates a new EventVaultFeeCollected event.
+func NewEventVaultFeeCollected(vaultAddress string, collected, requested, aumSnapshot, outstanding sdk.Coin, duration int64) *EventVaultFeeCollected {
+	return &EventVaultFeeCollected{
+		VaultAddress:      vaultAddress,
+		CollectedAmount:   collected.String(),
+		RequestedAmount:   requested.String(),
+		AumSnapshot:       aumSnapshot.String(),
+		DurationSeconds:   duration,
+		OutstandingAmount: outstanding.String(),
+	}
+}

@@ -17290,20 +17290,24 @@ func (x *fastReflection_EventWithdrawalDelayUpdated) ProtoMethods() *protoiface.
 }
 
 var (
-	md_EventVaultFeeCollected                  protoreflect.MessageDescriptor
-	fd_EventVaultFeeCollected_vault_address    protoreflect.FieldDescriptor
-	fd_EventVaultFeeCollected_fee_amount       protoreflect.FieldDescriptor
-	fd_EventVaultFeeCollected_aum_snapshot     protoreflect.FieldDescriptor
-	fd_EventVaultFeeCollected_duration_seconds protoreflect.FieldDescriptor
+	md_EventVaultFeeCollected                    protoreflect.MessageDescriptor
+	fd_EventVaultFeeCollected_vault_address      protoreflect.FieldDescriptor
+	fd_EventVaultFeeCollected_collected_amount   protoreflect.FieldDescriptor
+	fd_EventVaultFeeCollected_requested_amount   protoreflect.FieldDescriptor
+	fd_EventVaultFeeCollected_aum_snapshot       protoreflect.FieldDescriptor
+	fd_EventVaultFeeCollected_duration_seconds   protoreflect.FieldDescriptor
+	fd_EventVaultFeeCollected_outstanding_amount protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_provlabs_vault_v1_events_proto_init()
 	md_EventVaultFeeCollected = File_provlabs_vault_v1_events_proto.Messages().ByName("EventVaultFeeCollected")
 	fd_EventVaultFeeCollected_vault_address = md_EventVaultFeeCollected.Fields().ByName("vault_address")
-	fd_EventVaultFeeCollected_fee_amount = md_EventVaultFeeCollected.Fields().ByName("fee_amount")
+	fd_EventVaultFeeCollected_collected_amount = md_EventVaultFeeCollected.Fields().ByName("collected_amount")
+	fd_EventVaultFeeCollected_requested_amount = md_EventVaultFeeCollected.Fields().ByName("requested_amount")
 	fd_EventVaultFeeCollected_aum_snapshot = md_EventVaultFeeCollected.Fields().ByName("aum_snapshot")
 	fd_EventVaultFeeCollected_duration_seconds = md_EventVaultFeeCollected.Fields().ByName("duration_seconds")
+	fd_EventVaultFeeCollected_outstanding_amount = md_EventVaultFeeCollected.Fields().ByName("outstanding_amount")
 }
 
 var _ protoreflect.Message = (*fastReflection_EventVaultFeeCollected)(nil)
@@ -17377,9 +17381,15 @@ func (x *fastReflection_EventVaultFeeCollected) Range(f func(protoreflect.FieldD
 			return
 		}
 	}
-	if x.FeeAmount != "" {
-		value := protoreflect.ValueOfString(x.FeeAmount)
-		if !f(fd_EventVaultFeeCollected_fee_amount, value) {
+	if x.CollectedAmount != "" {
+		value := protoreflect.ValueOfString(x.CollectedAmount)
+		if !f(fd_EventVaultFeeCollected_collected_amount, value) {
+			return
+		}
+	}
+	if x.RequestedAmount != "" {
+		value := protoreflect.ValueOfString(x.RequestedAmount)
+		if !f(fd_EventVaultFeeCollected_requested_amount, value) {
 			return
 		}
 	}
@@ -17392,6 +17402,12 @@ func (x *fastReflection_EventVaultFeeCollected) Range(f func(protoreflect.FieldD
 	if x.DurationSeconds != int64(0) {
 		value := protoreflect.ValueOfInt64(x.DurationSeconds)
 		if !f(fd_EventVaultFeeCollected_duration_seconds, value) {
+			return
+		}
+	}
+	if x.OutstandingAmount != "" {
+		value := protoreflect.ValueOfString(x.OutstandingAmount)
+		if !f(fd_EventVaultFeeCollected_outstanding_amount, value) {
 			return
 		}
 	}
@@ -17412,12 +17428,16 @@ func (x *fastReflection_EventVaultFeeCollected) Has(fd protoreflect.FieldDescrip
 	switch fd.FullName() {
 	case "provlabs.vault.v1.EventVaultFeeCollected.vault_address":
 		return x.VaultAddress != ""
-	case "provlabs.vault.v1.EventVaultFeeCollected.fee_amount":
-		return x.FeeAmount != ""
+	case "provlabs.vault.v1.EventVaultFeeCollected.collected_amount":
+		return x.CollectedAmount != ""
+	case "provlabs.vault.v1.EventVaultFeeCollected.requested_amount":
+		return x.RequestedAmount != ""
 	case "provlabs.vault.v1.EventVaultFeeCollected.aum_snapshot":
 		return x.AumSnapshot != ""
 	case "provlabs.vault.v1.EventVaultFeeCollected.duration_seconds":
 		return x.DurationSeconds != int64(0)
+	case "provlabs.vault.v1.EventVaultFeeCollected.outstanding_amount":
+		return x.OutstandingAmount != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventVaultFeeCollected"))
@@ -17436,12 +17456,16 @@ func (x *fastReflection_EventVaultFeeCollected) Clear(fd protoreflect.FieldDescr
 	switch fd.FullName() {
 	case "provlabs.vault.v1.EventVaultFeeCollected.vault_address":
 		x.VaultAddress = ""
-	case "provlabs.vault.v1.EventVaultFeeCollected.fee_amount":
-		x.FeeAmount = ""
+	case "provlabs.vault.v1.EventVaultFeeCollected.collected_amount":
+		x.CollectedAmount = ""
+	case "provlabs.vault.v1.EventVaultFeeCollected.requested_amount":
+		x.RequestedAmount = ""
 	case "provlabs.vault.v1.EventVaultFeeCollected.aum_snapshot":
 		x.AumSnapshot = ""
 	case "provlabs.vault.v1.EventVaultFeeCollected.duration_seconds":
 		x.DurationSeconds = int64(0)
+	case "provlabs.vault.v1.EventVaultFeeCollected.outstanding_amount":
+		x.OutstandingAmount = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventVaultFeeCollected"))
@@ -17461,8 +17485,11 @@ func (x *fastReflection_EventVaultFeeCollected) Get(descriptor protoreflect.Fiel
 	case "provlabs.vault.v1.EventVaultFeeCollected.vault_address":
 		value := x.VaultAddress
 		return protoreflect.ValueOfString(value)
-	case "provlabs.vault.v1.EventVaultFeeCollected.fee_amount":
-		value := x.FeeAmount
+	case "provlabs.vault.v1.EventVaultFeeCollected.collected_amount":
+		value := x.CollectedAmount
+		return protoreflect.ValueOfString(value)
+	case "provlabs.vault.v1.EventVaultFeeCollected.requested_amount":
+		value := x.RequestedAmount
 		return protoreflect.ValueOfString(value)
 	case "provlabs.vault.v1.EventVaultFeeCollected.aum_snapshot":
 		value := x.AumSnapshot
@@ -17470,6 +17497,9 @@ func (x *fastReflection_EventVaultFeeCollected) Get(descriptor protoreflect.Fiel
 	case "provlabs.vault.v1.EventVaultFeeCollected.duration_seconds":
 		value := x.DurationSeconds
 		return protoreflect.ValueOfInt64(value)
+	case "provlabs.vault.v1.EventVaultFeeCollected.outstanding_amount":
+		value := x.OutstandingAmount
+		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventVaultFeeCollected"))
@@ -17492,12 +17522,16 @@ func (x *fastReflection_EventVaultFeeCollected) Set(fd protoreflect.FieldDescrip
 	switch fd.FullName() {
 	case "provlabs.vault.v1.EventVaultFeeCollected.vault_address":
 		x.VaultAddress = value.Interface().(string)
-	case "provlabs.vault.v1.EventVaultFeeCollected.fee_amount":
-		x.FeeAmount = value.Interface().(string)
+	case "provlabs.vault.v1.EventVaultFeeCollected.collected_amount":
+		x.CollectedAmount = value.Interface().(string)
+	case "provlabs.vault.v1.EventVaultFeeCollected.requested_amount":
+		x.RequestedAmount = value.Interface().(string)
 	case "provlabs.vault.v1.EventVaultFeeCollected.aum_snapshot":
 		x.AumSnapshot = value.Interface().(string)
 	case "provlabs.vault.v1.EventVaultFeeCollected.duration_seconds":
 		x.DurationSeconds = value.Int()
+	case "provlabs.vault.v1.EventVaultFeeCollected.outstanding_amount":
+		x.OutstandingAmount = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventVaultFeeCollected"))
@@ -17520,12 +17554,16 @@ func (x *fastReflection_EventVaultFeeCollected) Mutable(fd protoreflect.FieldDes
 	switch fd.FullName() {
 	case "provlabs.vault.v1.EventVaultFeeCollected.vault_address":
 		panic(fmt.Errorf("field vault_address of message provlabs.vault.v1.EventVaultFeeCollected is not mutable"))
-	case "provlabs.vault.v1.EventVaultFeeCollected.fee_amount":
-		panic(fmt.Errorf("field fee_amount of message provlabs.vault.v1.EventVaultFeeCollected is not mutable"))
+	case "provlabs.vault.v1.EventVaultFeeCollected.collected_amount":
+		panic(fmt.Errorf("field collected_amount of message provlabs.vault.v1.EventVaultFeeCollected is not mutable"))
+	case "provlabs.vault.v1.EventVaultFeeCollected.requested_amount":
+		panic(fmt.Errorf("field requested_amount of message provlabs.vault.v1.EventVaultFeeCollected is not mutable"))
 	case "provlabs.vault.v1.EventVaultFeeCollected.aum_snapshot":
 		panic(fmt.Errorf("field aum_snapshot of message provlabs.vault.v1.EventVaultFeeCollected is not mutable"))
 	case "provlabs.vault.v1.EventVaultFeeCollected.duration_seconds":
 		panic(fmt.Errorf("field duration_seconds of message provlabs.vault.v1.EventVaultFeeCollected is not mutable"))
+	case "provlabs.vault.v1.EventVaultFeeCollected.outstanding_amount":
+		panic(fmt.Errorf("field outstanding_amount of message provlabs.vault.v1.EventVaultFeeCollected is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventVaultFeeCollected"))
@@ -17541,12 +17579,16 @@ func (x *fastReflection_EventVaultFeeCollected) NewField(fd protoreflect.FieldDe
 	switch fd.FullName() {
 	case "provlabs.vault.v1.EventVaultFeeCollected.vault_address":
 		return protoreflect.ValueOfString("")
-	case "provlabs.vault.v1.EventVaultFeeCollected.fee_amount":
+	case "provlabs.vault.v1.EventVaultFeeCollected.collected_amount":
+		return protoreflect.ValueOfString("")
+	case "provlabs.vault.v1.EventVaultFeeCollected.requested_amount":
 		return protoreflect.ValueOfString("")
 	case "provlabs.vault.v1.EventVaultFeeCollected.aum_snapshot":
 		return protoreflect.ValueOfString("")
 	case "provlabs.vault.v1.EventVaultFeeCollected.duration_seconds":
 		return protoreflect.ValueOfInt64(int64(0))
+	case "provlabs.vault.v1.EventVaultFeeCollected.outstanding_amount":
+		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.EventVaultFeeCollected"))
@@ -17620,7 +17662,11 @@ func (x *fastReflection_EventVaultFeeCollected) ProtoMethods() *protoiface.Metho
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
-		l = len(x.FeeAmount)
+		l = len(x.CollectedAmount)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.RequestedAmount)
 		if l > 0 {
 			n += 1 + l + runtime.Sov(uint64(l))
 		}
@@ -17630,6 +17676,10 @@ func (x *fastReflection_EventVaultFeeCollected) ProtoMethods() *protoiface.Metho
 		}
 		if x.DurationSeconds != 0 {
 			n += 1 + runtime.Sov(uint64(x.DurationSeconds))
+		}
+		l = len(x.OutstandingAmount)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
 		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
@@ -17660,22 +17710,36 @@ func (x *fastReflection_EventVaultFeeCollected) ProtoMethods() *protoiface.Metho
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
 		}
+		if len(x.OutstandingAmount) > 0 {
+			i -= len(x.OutstandingAmount)
+			copy(dAtA[i:], x.OutstandingAmount)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.OutstandingAmount)))
+			i--
+			dAtA[i] = 0x32
+		}
 		if x.DurationSeconds != 0 {
 			i = runtime.EncodeVarint(dAtA, i, uint64(x.DurationSeconds))
 			i--
-			dAtA[i] = 0x20
+			dAtA[i] = 0x28
 		}
 		if len(x.AumSnapshot) > 0 {
 			i -= len(x.AumSnapshot)
 			copy(dAtA[i:], x.AumSnapshot)
 			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.AumSnapshot)))
 			i--
+			dAtA[i] = 0x22
+		}
+		if len(x.RequestedAmount) > 0 {
+			i -= len(x.RequestedAmount)
+			copy(dAtA[i:], x.RequestedAmount)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.RequestedAmount)))
+			i--
 			dAtA[i] = 0x1a
 		}
-		if len(x.FeeAmount) > 0 {
-			i -= len(x.FeeAmount)
-			copy(dAtA[i:], x.FeeAmount)
-			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.FeeAmount)))
+		if len(x.CollectedAmount) > 0 {
+			i -= len(x.CollectedAmount)
+			copy(dAtA[i:], x.CollectedAmount)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.CollectedAmount)))
 			i--
 			dAtA[i] = 0x12
 		}
@@ -17769,7 +17833,7 @@ func (x *fastReflection_EventVaultFeeCollected) ProtoMethods() *protoiface.Metho
 				iNdEx = postIndex
 			case 2:
 				if wireType != 2 {
-					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field FeeAmount", wireType)
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field CollectedAmount", wireType)
 				}
 				var stringLen uint64
 				for shift := uint(0); ; shift += 7 {
@@ -17797,9 +17861,41 @@ func (x *fastReflection_EventVaultFeeCollected) ProtoMethods() *protoiface.Metho
 				if postIndex > l {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
-				x.FeeAmount = string(dAtA[iNdEx:postIndex])
+				x.CollectedAmount = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field RequestedAmount", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.RequestedAmount = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 4:
 				if wireType != 2 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field AumSnapshot", wireType)
 				}
@@ -17831,7 +17927,7 @@ func (x *fastReflection_EventVaultFeeCollected) ProtoMethods() *protoiface.Metho
 				}
 				x.AumSnapshot = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
-			case 4:
+			case 5:
 				if wireType != 0 {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field DurationSeconds", wireType)
 				}
@@ -17850,6 +17946,38 @@ func (x *fastReflection_EventVaultFeeCollected) ProtoMethods() *protoiface.Metho
 						break
 					}
 				}
+			case 6:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field OutstandingAmount", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.OutstandingAmount = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
 				skippy, err := runtime.Skip(dAtA[iNdEx:])
@@ -19705,12 +19833,16 @@ type EventVaultFeeCollected struct {
 
 	// vault_address is the bech32 address of the vault.
 	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// fee_amount is the amount of the technology fee collected.
-	FeeAmount string `protobuf:"bytes,2,opt,name=fee_amount,json=feeAmount,proto3" json:"fee_amount,omitempty"`
-	// aum_snapshot is the total vault value at the time of fee calculation.
-	AumSnapshot string `protobuf:"bytes,3,opt,name=aum_snapshot,json=aumSnapshot,proto3" json:"aum_snapshot,omitempty"`
+	// collected_amount is the amount of the technology fee that was actually collected (e.g., "100nhash").
+	CollectedAmount string `protobuf:"bytes,2,opt,name=collected_amount,json=collectedAmount,proto3" json:"collected_amount,omitempty"`
+	// requested_amount is the amount of the technology fee that was calculated for the period (e.g., "120nhash").
+	RequestedAmount string `protobuf:"bytes,3,opt,name=requested_amount,json=requestedAmount,proto3" json:"requested_amount,omitempty"`
+	// aum_snapshot is the total vault value at the time of fee calculation (e.g., "1000000underlying").
+	AumSnapshot string `protobuf:"bytes,4,opt,name=aum_snapshot,json=aumSnapshot,proto3" json:"aum_snapshot,omitempty"`
 	// duration_seconds is the duration for which the fee was calculated.
-	DurationSeconds int64 `protobuf:"varint,4,opt,name=duration_seconds,json=durationSeconds,proto3" json:"duration_seconds,omitempty"`
+	DurationSeconds int64 `protobuf:"varint,5,opt,name=duration_seconds,json=durationSeconds,proto3" json:"duration_seconds,omitempty"`
+	// outstanding_amount is the amount of AUM fee that remains unpaid after this collection (e.g., "20nhash").
+	OutstandingAmount string `protobuf:"bytes,6,opt,name=outstanding_amount,json=outstandingAmount,proto3" json:"outstanding_amount,omitempty"`
 }
 
 func (x *EventVaultFeeCollected) Reset() {
@@ -19740,9 +19872,16 @@ func (x *EventVaultFeeCollected) GetVaultAddress() string {
 	return ""
 }
 
-func (x *EventVaultFeeCollected) GetFeeAmount() string {
+func (x *EventVaultFeeCollected) GetCollectedAmount() string {
 	if x != nil {
-		return x.FeeAmount
+		return x.CollectedAmount
+	}
+	return ""
+}
+
+func (x *EventVaultFeeCollected) GetRequestedAmount() string {
+	if x != nil {
+		return x.RequestedAmount
 	}
 	return ""
 }
@@ -19759,6 +19898,13 @@ func (x *EventVaultFeeCollected) GetDurationSeconds() int64 {
 		return x.DurationSeconds
 	}
 	return 0
+}
+
+func (x *EventVaultFeeCollected) GetOutstandingAmount() string {
+	if x != nil {
+		return x.OutstandingAmount
+	}
+	return ""
 }
 
 var File_provlabs_vault_v1_events_proto protoreflect.FileDescriptor
@@ -20103,32 +20249,38 @@ var file_provlabs_vault_v1_events_proto_rawDesc = []byte{
 	0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x61, 0x6c, 0x5f, 0x64, 0x65, 0x6c, 0x61, 0x79, 0x5f, 0x73,
 	0x65, 0x63, 0x6f, 0x6e, 0x64, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x04, 0x52, 0x16, 0x77, 0x69,
 	0x74, 0x68, 0x64, 0x72, 0x61, 0x77, 0x61, 0x6c, 0x44, 0x65, 0x6c, 0x61, 0x79, 0x53, 0x65, 0x63,
-	0x6f, 0x6e, 0x64, 0x73, 0x22, 0xc4, 0x01, 0x0a, 0x16, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x56, 0x61,
+	0x6f, 0x6e, 0x64, 0x73, 0x22, 0xaa, 0x02, 0x0a, 0x16, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x56, 0x61,
 	0x75, 0x6c, 0x74, 0x46, 0x65, 0x65, 0x43, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x65, 0x64, 0x12,
 	0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
 	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d,
 	0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67,
-	0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x1d,
-	0x0a, 0x0a, 0x66, 0x65, 0x65, 0x5f, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x02, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x09, 0x66, 0x65, 0x65, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x21, 0x0a,
-	0x0c, 0x61, 0x75, 0x6d, 0x5f, 0x73, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x18, 0x03, 0x20,
-	0x01, 0x28, 0x09, 0x52, 0x0b, 0x61, 0x75, 0x6d, 0x53, 0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74,
-	0x12, 0x29, 0x0a, 0x10, 0x64, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x73, 0x65, 0x63,
-	0x6f, 0x6e, 0x64, 0x73, 0x18, 0x04, 0x20, 0x01, 0x28, 0x03, 0x52, 0x0f, 0x64, 0x75, 0x72, 0x61,
-	0x74, 0x69, 0x6f, 0x6e, 0x53, 0x65, 0x63, 0x6f, 0x6e, 0x64, 0x73, 0x42, 0xc3, 0x01, 0x0a, 0x15,
-	0x63, 0x6f, 0x6d, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75,
-	0x6c, 0x74, 0x2e, 0x76, 0x31, 0x42, 0x0b, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x73, 0x50, 0x72, 0x6f,
-	0x74, 0x6f, 0x50, 0x01, 0x5a, 0x37, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d,
-	0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f,
-	0x61, 0x70, 0x69, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75,
-	0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2, 0x02, 0x03,
-	0x50, 0x56, 0x58, 0xaa, 0x02, 0x11, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x56,
-	0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x11, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61,
-	0x62, 0x73, 0x5c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1d, 0x50, 0x72,
-	0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x5c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c,
-	0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x13, 0x50, 0x72,
-	0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x3a, 0x3a, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56,
-	0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x29,
+	0x0a, 0x10, 0x63, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x65, 0x64, 0x5f, 0x61, 0x6d, 0x6f, 0x75,
+	0x6e, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0f, 0x63, 0x6f, 0x6c, 0x6c, 0x65, 0x63,
+	0x74, 0x65, 0x64, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x29, 0x0a, 0x10, 0x72, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x65, 0x64, 0x5f, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x03, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x0f, 0x72, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x65, 0x64, 0x41, 0x6d,
+	0x6f, 0x75, 0x6e, 0x74, 0x12, 0x21, 0x0a, 0x0c, 0x61, 0x75, 0x6d, 0x5f, 0x73, 0x6e, 0x61, 0x70,
+	0x73, 0x68, 0x6f, 0x74, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x61, 0x75, 0x6d, 0x53,
+	0x6e, 0x61, 0x70, 0x73, 0x68, 0x6f, 0x74, 0x12, 0x29, 0x0a, 0x10, 0x64, 0x75, 0x72, 0x61, 0x74,
+	0x69, 0x6f, 0x6e, 0x5f, 0x73, 0x65, 0x63, 0x6f, 0x6e, 0x64, 0x73, 0x18, 0x05, 0x20, 0x01, 0x28,
+	0x03, 0x52, 0x0f, 0x64, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x53, 0x65, 0x63, 0x6f, 0x6e,
+	0x64, 0x73, 0x12, 0x2d, 0x0a, 0x12, 0x6f, 0x75, 0x74, 0x73, 0x74, 0x61, 0x6e, 0x64, 0x69, 0x6e,
+	0x67, 0x5f, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09, 0x52, 0x11,
+	0x6f, 0x75, 0x74, 0x73, 0x74, 0x61, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x41, 0x6d, 0x6f, 0x75, 0x6e,
+	0x74, 0x42, 0xc3, 0x01, 0x0a, 0x15, 0x63, 0x6f, 0x6d, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61,
+	0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x42, 0x0b, 0x45, 0x76, 0x65,
+	0x6e, 0x74, 0x73, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x37, 0x67, 0x69, 0x74, 0x68,
+	0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f,
+	0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61,
+	0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c,
+	0x74, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x50, 0x56, 0x58, 0xaa, 0x02, 0x11, 0x50, 0x72, 0x6f, 0x76,
+	0x6c, 0x61, 0x62, 0x73, 0x2e, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x11,
+	0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x5c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56,
+	0x31, 0xe2, 0x02, 0x1d, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x5c, 0x56, 0x61, 0x75,
+	0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74,
+	0x61, 0xea, 0x02, 0x13, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x3a, 0x3a, 0x56, 0x61,
+	0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (

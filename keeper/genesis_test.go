@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"math"
 	"time"
 
@@ -94,7 +95,7 @@ func (s *TestSuite) TestInitGenesis_PanicOnInvalidTimeout() {
 					{Time: uint64(math.MaxInt64) + 1, Addr: vaultAddr},
 				},
 			},
-			panicMsg: "exceeds max int64",
+			panicMsg: fmt.Sprintf("invalid vault genesis state: payout timeout queue entry at index 0 has time %d which exceeds max int64", uint64(math.MaxInt64)+1),
 		},
 		{
 			name: "fee timeout exceeds max int64",
@@ -103,13 +104,13 @@ func (s *TestSuite) TestInitGenesis_PanicOnInvalidTimeout() {
 					{Time: uint64(math.MaxInt64) + 1, Addr: vaultAddr},
 				},
 			},
-			panicMsg: "exceeds max int64",
+			panicMsg: fmt.Sprintf("invalid vault genesis state: fee timeout queue entry at index 0 has time %d which exceeds max int64", uint64(math.MaxInt64)+1),
 		},
 	}
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			s.Require().Panics(func() {
+			s.Require().PanicsWithError(tt.panicMsg, func() {
 				s.k.InitGenesis(s.ctx, tt.genState)
 			})
 		})
@@ -167,6 +168,7 @@ func (s *TestSuite) TestVaultGenesis_InvalidTimeoutAddressPanics() {
 		Admin:               admin,
 		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
 		UnderlyingAsset:     underlying,
+		PaymentDenom:        underlying,
 		CurrentInterestRate: types.ZeroInterestRate,
 		DesiredInterestRate: types.ZeroInterestRate,
 	}
@@ -179,7 +181,8 @@ func (s *TestSuite) TestVaultGenesis_InvalidTimeoutAddressPanics() {
 		PendingSwapOutQueue: types.PendingSwapOutQueue{},
 	}
 
-	s.Require().Panics(func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on invalid timeout address")
+	expectedPanic := "invalid vault genesis state: invalid payout timeout queue address at index 0: decoding bech32 failed: invalid separator index -1"
+	s.Require().PanicsWithError(expectedPanic, func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on invalid timeout address")
 }
 
 func (s *TestSuite) TestVaultGenesis_ExistingAccountNumberCopied() {
@@ -227,11 +230,13 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidVault() {
 		Admin:               "",
 		TotalShares:         sdk.Coin{Denom: "invalid denom!", Amount: sdkmath.NewInt(0)},
 		UnderlyingAsset:     "underX",
+		PaymentDenom:        "underX",
 		CurrentInterestRate: types.ZeroInterestRate,
 		DesiredInterestRate: types.ZeroInterestRate,
 	}
 	genesis := &types.GenesisState{Vaults: []types.VaultAccount{vault}}
-	s.Require().Panics(func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on invalid genesis state")
+	expectedPanic := "invalid vault at index 0: invalid admin address: empty address string is not allowed"
+	s.Require().PanicsWithError(expectedPanic, func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on invalid vault")
 }
 
 func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidPendingSwapOut() {
@@ -245,11 +250,13 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidPendingSwapOut() {
 		Admin:               admin,
 		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
 		UnderlyingAsset:     underlying,
+		PaymentDenom:        underlying,
 		CurrentInterestRate: types.ZeroInterestRate,
 		DesiredInterestRate: types.ZeroInterestRate,
 	}
 
 	genesis := &types.GenesisState{
+		Vaults: []types.VaultAccount{vault},
 		PendingSwapOutQueue: types.PendingSwapOutQueue{
 			LatestSequenceNumber: 55,
 			Entries: []types.PendingSwapOutQueueEntry{
@@ -266,7 +273,8 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidPendingSwapOut() {
 			},
 		},
 	}
-	s.Require().Panics(func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on invalid genesis state")
+	expectedPanic := "failed to import pending swap out queue: invalid owner address in pending swap out queue: decoding bech32 failed: invalid separator index -1"
+	s.Require().PanicsWithError(expectedPanic, func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on invalid pending swap out")
 }
 
 func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPendingSwapOutHasUnknownVault() {
@@ -281,6 +289,7 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPendingSwapOutHasUnknownVault
 		Admin:               admin,
 		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
 		UnderlyingAsset:     underlying,
+		PaymentDenom:        underlying,
 		CurrentInterestRate: types.ZeroInterestRate,
 		DesiredInterestRate: types.ZeroInterestRate,
 	}
@@ -303,7 +312,8 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPendingSwapOutHasUnknownVault
 			},
 		},
 	}
-	s.Require().Panics(func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on invalid genesis state")
+	expectedPanic := fmt.Sprintf("pending queue entry for unknown vault %s", badVaultAddr.String())
+	s.Require().PanicsWithError(expectedPanic, func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on unknown vault")
 }
 
 func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPendingSwapOutHasBadVaultAddress() {
@@ -317,6 +327,7 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPendingSwapOutHasBadVaultAddr
 		Admin:               admin,
 		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
 		UnderlyingAsset:     underlying,
+		PaymentDenom:        underlying,
 		CurrentInterestRate: types.ZeroInterestRate,
 		DesiredInterestRate: types.ZeroInterestRate,
 	}
@@ -339,5 +350,6 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPendingSwapOutHasBadVaultAddr
 			},
 		},
 	}
-	s.Require().Panics(func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on invalid genesis state")
+	expectedPanic := "invalid vault address in pending swap out queue: decoding bech32 failed: invalid separator index -1"
+	s.Require().PanicsWithError(expectedPanic, func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on bad vault address")
 }

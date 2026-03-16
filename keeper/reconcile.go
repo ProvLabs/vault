@@ -284,16 +284,14 @@ func (k Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAccou
 	return nil
 }
 
-// CanPayoutDuration determines whether the vault can fulfill both the projected
-// interest payment/refund AND the AUM fee collection over the given duration
-// based on current reserves and principal TVV.
+// CanPayInterestDuration determines whether the vault can fulfill the projected
+// interest payment/refund over the given duration based on current reserves and principal TVV.
 //
 // Interest is checked against vault reserves (positive interest) or principal
 // marker underlying balance (negative interest).
-// AUM fee is checked against the principal marker's PaymentDenom balance.
 //
-// It returns true only if all checks pass.
-func (k Keeper) CanPayoutDuration(ctx sdk.Context, vault *types.VaultAccount, duration int64) (bool, error) {
+// It returns true only if interest checks pass.
+func (k Keeper) CanPayInterestDuration(ctx sdk.Context, vault *types.VaultAccount, duration int64) (bool, error) {
 	if duration <= 0 {
 		return true, nil
 	}
@@ -466,7 +464,7 @@ func (k Keeper) handleVaultInterestTimeouts(ctx sdk.Context) error {
 			periodDuration = now - vault.PeriodStart
 		}
 
-		canPay, err := k.CanPayoutDuration(ctx, vault, periodDuration)
+		canPay, err := k.CanPayInterestDuration(ctx, vault, periodDuration)
 		if err != nil {
 			ctx.Logger().Error("failed to check payout ability, rescheduling", "vault", addr.String(), "err", err)
 			k.rescheduleInterestTimeout(ctx, vault, int64(timeout))
@@ -585,12 +583,12 @@ func (k Keeper) handleReconciledVaults(ctx sdk.Context) error {
 }
 
 // partitionVaults splits the provided vaults into payable and depleted groups for the
-// AutoReconcilePayoutDuration forecast window using CanPayoutDuration.
+// AutoReconcilePayoutDuration forecast window using CanPayInterestDuration.
 func (k Keeper) partitionVaults(ctx sdk.Context, vaults []*types.VaultAccount) ([]*types.VaultAccount, []*types.VaultAccount) {
 	var payable []*types.VaultAccount
 	var depleted []*types.VaultAccount
 	for _, v := range vaults {
-		ok, err := k.CanPayoutDuration(ctx, v, AutoReconcilePayoutDuration)
+		ok, err := k.CanPayInterestDuration(ctx, v, AutoReconcilePayoutDuration)
 		if err != nil {
 			ctx.Logger().Error("failed to check payout ability", "vault", v.GetAddress().String(), "err", err)
 			continue

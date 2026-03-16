@@ -64,7 +64,7 @@ Processing model (safe “collect-then-mutate”):
 3. **For each vault**:
 
    * Compute `periodDuration` as `timeout - PeriodStart` (fallback to `now - PeriodStart` if needed).
-   * **Check ability to pay/refund** over `periodDuration` via `CanPayoutDuration`.
+   * **Check ability to pay/refund** over `periodDuration` via `CanPayInterestDuration`.
 
      * If **insufficient** → mark **depleted**.
      * If **sufficient** → execute `PerformVaultInterestTransfer` (emits `EventVaultReconcile`) and mark **reconciled**.
@@ -154,7 +154,7 @@ This advances vaults from the **verification set**:
 
 * **AutoReconcilePayoutDuration = 24 hours**
   Used when deciding if a vault remains **payable**.
-  `handleReconciledVaults` calls `partitionVaults` which uses `CanPayoutDuration` over this window:
+  `handleReconciledVaults` calls `partitionVaults` which uses `CanPayInterestDuration` over this window:
 
   * **Positive interest** → must have reserves ≥ forecasted interest.
   * **Negative interest** → principal must be > 0.

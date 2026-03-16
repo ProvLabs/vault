@@ -894,7 +894,7 @@ func NewVaultInfo(id int) VaultInfo {
 	}
 }
 
-func (s *TestSuite) TestKeeper_CanPayoutDuration() {
+func (s *TestSuite) TestKeeper_CanPayInterestDuration() {
 	shareDenom := "vaultshares"
 	underlying := sdk.NewInt64Coin("underlying", 1_000_000_000)
 	vaultAddr := types.GetVaultAddress(shareDenom)
@@ -992,14 +992,14 @@ func (s *TestSuite) TestKeeper_CanPayoutDuration() {
 				))
 			}
 
-			ok, err := s.k.CanPayoutDuration(s.ctx, vault, tc.duration)
-			s.Require().NoError(err, "error checking CanPayoutDuration")
-			s.Require().Equal(tc.expectOK, ok, "unexpected CanPayoutDuration result")
+			ok, err := s.k.CanPayInterestDuration(s.ctx, vault, tc.duration)
+			s.Require().NoError(err, "error checking CanPayInterestDuration")
+			s.Require().Equal(tc.expectOK, ok, "unexpected CanPayInterestDuration result")
 		})
 	}
 }
 
-func (s *TestSuite) TestKeeper_CanPayoutDuration_NegativeInterest_Composite_InsufficientUnderlying() {
+func (s *TestSuite) TestKeeper_CanPayInterestDuration_NegativeInterest_Composite_InsufficientUnderlying() {
 	s.SetupTest()
 
 	shareDenom := "vaultshares.composite"
@@ -1013,16 +1013,16 @@ func (s *TestSuite) TestKeeper_CanPayoutDuration_NegativeInterest_Composite_Insu
 	s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
 
 	_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: s.adminAddr.String(), ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom})
-	s.Require().NoError(err, "failed to create composite vault in TestKeeper_CanPayoutDuration_NegativeInterest_Composite_InsufficientUnderlying")
+	s.Require().NoError(err, "failed to create composite vault in TestKeeper_CanPayInterestDuration_NegativeInterest_Composite_InsufficientUnderlying")
 
 	vault, err := s.k.GetVault(s.ctx, vaultAddr)
-	s.Require().NoError(err, "failed to get composite vault in TestKeeper_CanPayoutDuration_NegativeInterest_Composite_InsufficientUnderlying")
+	s.Require().NoError(err, "failed to get composite vault in TestKeeper_CanPayInterestDuration_NegativeInterest_Composite_InsufficientUnderlying")
 
 	vault.CurrentInterestRate = "-0.5"
 	vault.DesiredInterestRate = "-0.5"
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
-	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(sdk.NewCoin(underlyingDenom, sdkmath.NewInt(1_000_000)))), "failed to fund composite vault in TestKeeper_CanPayoutDuration_NegativeInterest_Composite_InsufficientUnderlying")
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(sdk.NewCoin(underlyingDenom, sdkmath.NewInt(1_000_000)))), "failed to fund composite vault in TestKeeper_CanPayInterestDuration_NegativeInterest_Composite_InsufficientUnderlying")
 
 	tinyUnderlying := sdkmath.NewInt(10_000_000)
 	hugePayment := sdkmath.NewInt(10_000_000_000_000)
@@ -1031,15 +1031,15 @@ func (s *TestSuite) TestKeeper_CanPayoutDuration_NegativeInterest_Composite_Insu
 
 	year := int64(365 * 24 * time.Hour / time.Second)
 
-	canPayLong, err := s.k.CanPayoutDuration(s.ctx, vault, year)
-	s.Require().NoError(err, "error checking CanPayoutDuration for long duration")
-	s.Require().False(canPayLong, "expected CanPayoutDuration to be false for long duration with insufficient underlying")
+	canPayLong, err := s.k.CanPayInterestDuration(s.ctx, vault, year)
+	s.Require().NoError(err, "error checking CanPayInterestDuration for long duration")
+	s.Require().False(canPayLong, "expected CanPayInterestDuration to be false for long duration with insufficient underlying")
 
 	smallDuration := int64(1)
 
-	canPayShort, err := s.k.CanPayoutDuration(s.ctx, vault, smallDuration)
-	s.Require().NoError(err, "error checking CanPayoutDuration for short duration")
-	s.Require().True(canPayShort, "expected CanPayoutDuration to be true for short duration with sufficient underlying")
+	canPayShort, err := s.k.CanPayInterestDuration(s.ctx, vault, smallDuration)
+	s.Require().NoError(err, "error checking CanPayInterestDuration for short duration")
+	s.Require().True(canPayShort, "expected CanPayInterestDuration to be true for short duration with sufficient underlying")
 }
 
 func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_UsesTVV() {
@@ -1634,7 +1634,7 @@ func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer() {
 	}
 }
 
-func (s *TestSuite) TestKeeper_CanPayoutDuration_WithAUMFee() {
+func (s *TestSuite) TestKeeper_CanPayInterestDuration_WithAUMFee() {
 	s.SetupTest()
 	shareDenom := "fee.payout.shares"
 	underlyingDenom := "underlying"
@@ -1648,7 +1648,7 @@ func (s *TestSuite) TestKeeper_CanPayoutDuration_WithAUMFee() {
 
 	year := int64(365 * 24 * time.Hour / time.Second)
 
-	ok, err := s.k.CanPayoutDuration(s.ctx, vault, year)
+	ok, err := s.k.CanPayInterestDuration(s.ctx, vault, year)
 	s.Require().NoError(err)
 	s.Require().True(ok, "should succeed even when no payment denom liquidity for fees (deferred)")
 }

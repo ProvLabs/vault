@@ -79,6 +79,10 @@ func TestFeeTimeoutQueueWalkDueTimeouts(t *testing.T) {
 	require.NoError(t, q.Enqueue(ctx, 75, a2), "enqueue fee timeout (75) for a2 should succeed")
 	require.NoError(t, q.Enqueue(ctx, 500, a1), "enqueue fee timeout (500) for a1 should succeed")
 
+	require.EqualError(t, q.WalkDue(ctx, -1, func(ts uint64, _ sdk.AccAddress) (bool, error) {
+		return false, nil
+	}), "nowSec cannot be negative", "WalkDue with negative timestamp should return specific error")
+
 	var seen []uint64
 	require.NoError(t, q.WalkDue(ctx, 100, func(ts uint64, _ sdk.AccAddress) (bool, error) {
 		seen = append(seen, ts)

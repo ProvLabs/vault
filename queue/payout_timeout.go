@@ -50,6 +50,9 @@ func (p *PayoutTimeoutQueue) Dequeue(ctx sdk.Context, periodTimeout int64, vault
 // Iteration stops when a key with time > nowSec is encountered (since keys are
 // ordered) or when the callback returns stop=true or an error.
 func (p *PayoutTimeoutQueue) WalkDue(ctx sdk.Context, nowSec int64, fn func(periodTimeout uint64, vaultAddr sdk.AccAddress) (stop bool, err error)) error {
+	if nowSec < 0 {
+		return fmt.Errorf("nowSec cannot be negative")
+	}
 	return p.keyset.Walk(ctx, nil, func(key collections.Pair[uint64, sdk.AccAddress]) (stop bool, err error) {
 		if key.K1() > uint64(nowSec) {
 			return true, nil

@@ -117,7 +117,7 @@ This advances vaults from the **verification set**:
 
 ## Interest Accrual & Transfers
 
-* **ReconcileVaultInterest**
+* **ReconcileVault**
   No-op if paused. If `PeriodStart` is set and `now > PeriodStart`, it calls `PerformVaultInterestTransfer`. Always ensures the vault is in the **verification set** afterward (so it will be re-scheduled).
 
 * **PerformVaultInterestTransfer**

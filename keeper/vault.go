@@ -189,7 +189,7 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 		return nil, err
 	}
 
-	if err := k.reconcileVaultInterest(ctx, vault); err != nil {
+	if err := k.reconcileVault(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to reconcile vault interest: %w", err)
 	}
 

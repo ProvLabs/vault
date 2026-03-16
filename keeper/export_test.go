@@ -59,10 +59,10 @@ func (k Keeper) TestAccessor_autoPauseVault(t *testing.T, ctx context.Context, v
 	k.autoPauseVault(sdkCtx, vault, reason)
 }
 
-// TestAccessor_reconcileVaultInterest exposes this keeper's reconcileVaultInterest function for unit tests.
-func (k Keeper) TestAccessor_reconcileVaultInterest(t *testing.T, ctx context.Context, vault *types.VaultAccount) error {
+// TestAccessor_reconcileVault exposes this keeper's reconcileVault function for unit tests.
+func (k Keeper) TestAccessor_reconcileVault(t *testing.T, ctx context.Context, vault *types.VaultAccount) error {
 	t.Helper()
-	return k.reconcileVaultInterest(sdk.UnwrapSDKContext(ctx), vault)
+	return k.reconcileVault(sdk.UnwrapSDKContext(ctx), vault)
 }
 
 // TestAccessor_processPendingSwapOuts exposes this keeper's processPendingSwapOuts function for unit tests.

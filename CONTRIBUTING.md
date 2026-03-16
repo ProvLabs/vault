@@ -261,7 +261,7 @@ For most changes under `keeper`, `interest`, `queue`, and `types`:
 * Prefer `require` / `assert` (or established helpers) with meaningful messages, e.g.:
 
 ```go
-  require.NoError(t, err, "ReconcileVaultInterest should not return an error")
+  require.NoError(t, err, "ReconcileVault should not return an error")
 ```
 
 To run the full unit test suite locally:

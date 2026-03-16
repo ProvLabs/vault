@@ -56,7 +56,7 @@ The keeper ties together state management, account operations, marker integratio
 - **BridgeBurnShares**: authorized bridge returns shares to the vault and burns them from the marker, reducing local supply without changing `total_shares`.
 
 ### Interest Management
-- **ReconcileVaultInterest**: ensures accrued interest is applied before any balance-changing action.
+- **ReconcileVault**: ensures accrued interest is applied before any balance-changing action.
 - **Positive Interest**: paid from vault reserves into the principal marker.
 - **Negative Interest**: refunded from the principal marker into reserves, capped by available funds.
 - **Rate Controls**: vaults have configurable current/desired rates, and optional min/max bounds.

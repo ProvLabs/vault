@@ -15,7 +15,7 @@ import (
 	"github.com/provlabs/vault/types"
 )
 
-func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
+func (s *TestSuite) TestKeeper_ReconcileVault() {
 	twoMonths := -24 * 60 * time.Hour
 	shareDenom := "vaultshares"
 	underlying := sdk.NewInt64Coin("underlying", 1_000_000_000)
@@ -215,16 +215,16 @@ func (s *TestSuite) TestKeeper_ReconcileVaultInterest() {
 
 			vault, err := s.k.GetVault(s.ctx, vaultAddress)
 			s.Require().NoError(err, "GetVault should not error before reconcile")
-			err = s.k.TestAccessor_reconcileVaultInterest(s.T(), s.ctx, vault)
+			err = s.k.TestAccessor_reconcileVault(s.T(), s.ctx, vault)
 
 			if tc.posthander != nil {
 				tc.posthander()
 			}
 			if len(tc.expectedErrSubstr) > 0 {
-				s.Require().Error(err, "expected error from ReconcileVaultInterest")
+				s.Require().Error(err, "expected error from ReconcileVault")
 				s.Require().Contains(err.Error(), tc.expectedErrSubstr, "error substring mismatch")
 			} else {
-				s.Require().NoError(err, "ReconcileVaultInterest should not error")
+				s.Require().NoError(err, "ReconcileVault should not error")
 			}
 
 			s.Assert().Equal(
@@ -1097,7 +1097,7 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_Use
 	s.Require().NoError(err, "failed to calculate interest earned")
 	s.Require().True(interestEarned.IsPositive(), "expected positive interest earned")
 
-	err = s.k.TestAccessor_reconcileVaultInterest(s.T(), s.ctx, vault)
+	err = s.k.TestAccessor_reconcileVault(s.T(), s.ctx, vault)
 	s.Require().NoError(err, "failed to reconcile vault interest")
 
 	endVault := s.simApp.BankKeeper.GetBalance(s.ctx, vaultAddr, underlying.Denom).Amount
@@ -1229,8 +1229,8 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_Use
 	s.Require().NoError(err, "expected CalculateInterestEarned to succeed")
 	s.Require().True(interestEarned.IsPositive(), "expected interest earned to be positive for positive rate")
 
-	err = s.k.TestAccessor_reconcileVaultInterest(s.T(), s.ctx, vault)
-	s.Require().NoError(err, "expected reconcileVaultInterest to succeed")
+	err = s.k.TestAccessor_reconcileVault(s.T(), s.ctx, vault)
+	s.Require().NoError(err, "expected reconcileVault to succeed")
 
 	endVault := s.simApp.BankKeeper.GetBalance(s.ctx, vaultAddr, underlying.Denom).Amount
 	endMarkerUnderlying := s.simApp.BankKeeper.GetBalance(s.ctx, markerAddr, underlying.Denom).Amount
@@ -1335,8 +1335,8 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_NegativeInterest_Par
 
 	s.ctx = s.ctx.WithBlockTime(now).WithEventManager(sdk.NewEventManager())
 
-	err = s.k.TestAccessor_reconcileVaultInterest(s.T(), s.ctx, vault)
-	s.Require().NoError(err, "ReconcileVaultInterest should not error during partial liquidation")
+	err = s.k.TestAccessor_reconcileVault(s.T(), s.ctx, vault)
+	s.Require().NoError(err, "ReconcileVault should not error during partial liquidation")
 
 	endMarker := s.simApp.BankKeeper.GetBalance(s.ctx, markerAddr, underlying.Denom)
 	s.Require().True(endMarker.IsZero(), "Marker balance should be fully liquidated to zero")
@@ -1413,8 +1413,8 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_NegativeInterest_Com
 	s.Require().NoError(err, "GetTVVInUnderlyingAsset should succeed")
 	s.Require().True(tvv.GT(sdkmath.NewInt(100_000)), "TVV should be significantly higher than the underlying balance due to secondary assets")
 
-	err = s.k.TestAccessor_reconcileVaultInterest(s.T(), s.ctx, vault)
-	s.Require().NoError(err, "ReconcileVaultInterest should not error even if underlying liquidity is insufficient for full negative interest")
+	err = s.k.TestAccessor_reconcileVault(s.T(), s.ctx, vault)
+	s.Require().NoError(err, "ReconcileVault should not error even if underlying liquidity is insufficient for full negative interest")
 
 	endUnderlying := s.simApp.BankKeeper.GetBalance(s.ctx, markerAddr, underlyingDenom)
 	endOther := s.simApp.BankKeeper.GetBalance(s.ctx, markerAddr, paymentDenom)
@@ -1726,54 +1726,54 @@ func (s *TestSuite) TestKeeper_EstimationMethods() {
 		return vault
 	}
 
-	s.Run("EstimateAccruedInterest", func() {
+	s.Run("CalculateAccruedInterest", func() {
 		s.SetupTest()
 		vault := setup()
 
 		// Case 1: No interest rate
-		amt, err := s.k.EstimateAccruedInterest(s.ctx, *vault, underlying)
+		amt, err := s.k.CalculateAccruedInterest(s.ctx, *vault, underlying)
 		s.Require().NoError(err)
 		s.Require().True(amt.IsZero())
 
 		// Case 2: Positive interest
 		vault.CurrentInterestRate = "0.25"
 		vault.PeriodStart = pastTime.Unix()
-		amt, err = s.k.EstimateAccruedInterest(s.ctx, *vault, underlying)
+		amt, err = s.k.CalculateAccruedInterest(s.ctx, *vault, underlying)
 		s.Require().NoError(err)
 		s.Require().Equal(sdkmath.NewInt(41_952_013), amt)
 
 		// Case 3: Negative interest
 		vault.CurrentInterestRate = "-0.25"
-		amt, err = s.k.EstimateAccruedInterest(s.ctx, *vault, underlying)
+		amt, err = s.k.CalculateAccruedInterest(s.ctx, *vault, underlying)
 		s.Require().NoError(err)
 		s.Require().Equal(sdkmath.NewInt(-40_262_904), amt)
 
 		// Case 4: Future period start
 		vault.PeriodStart = testBlockTime.Add(time.Hour).Unix()
-		amt, err = s.k.EstimateAccruedInterest(s.ctx, *vault, underlying)
+		amt, err = s.k.CalculateAccruedInterest(s.ctx, *vault, underlying)
 		s.Require().NoError(err)
 		s.Require().True(amt.IsZero())
 	})
 
-	s.Run("EstimateAccruedAUMFee", func() {
+	s.Run("CalculateAccruedAUMFee", func() {
 		s.SetupTest()
 		vault := setup()
 
 		// Case 1: No fee period start
 		vault.FeePeriodStart = 0
-		amt, err := s.k.EstimateAccruedAUMFee(s.ctx, *vault, underlying.Amount)
+		amt, err := s.k.CalculateAccruedAUMFee(s.ctx, *vault, underlying.Amount)
 		s.Require().NoError(err)
 		s.Require().True(amt.IsZero())
 
 		// Case 2: Positive fee
 		vault.FeePeriodStart = pastTime.Unix()
-		amt, err = s.k.EstimateAccruedAUMFee(s.ctx, *vault, underlying.Amount)
+		amt, err = s.k.CalculateAccruedAUMFee(s.ctx, *vault, underlying.Amount)
 		s.Require().NoError(err)
 		// Fee = 1,000,000,000 * 0.0015 * 5,184,000 / 31,536,000 = 246,575
 		s.Require().Equal(sdkmath.NewInt(246_575), amt)
 
 		// Case 3: Zero assets
-		amt, err = s.k.EstimateAccruedAUMFee(s.ctx, *vault, sdkmath.ZeroInt())
+		amt, err = s.k.CalculateAccruedAUMFee(s.ctx, *vault, sdkmath.ZeroInt())
 		s.Require().NoError(err)
 		s.Require().True(amt.IsZero())
 	})
@@ -1801,14 +1801,14 @@ func (s *TestSuite) TestKeeper_EstimationMethods() {
 		s.Require().Equal(sdkmath.NewInt(1000), amt)
 	})
 
-	s.Run("EstimateAccruedAUMFeePayment", func() {
+	s.Run("CalculateAccruedAUMFeePayment", func() {
 		s.SetupTest()
 		vault := setup()
 
 		// Case 1: No fee period start
 		vault.FeePeriodStart = 0
 		vault.PaymentDenom = underlyingDenom
-		amt, err := s.k.EstimateAccruedAUMFeePayment(s.ctx, *vault, underlying.Amount)
+		amt, err := s.k.CalculateAccruedAUMFeePayment(s.ctx, *vault, underlying.Amount)
 		s.Require().NoError(err)
 		s.Require().True(amt.IsZero())
 		s.Require().Equal(underlyingDenom, amt.Denom)
@@ -1816,7 +1816,7 @@ func (s *TestSuite) TestKeeper_EstimationMethods() {
 		// Case 2: Positive fee, 1:1 payment denom
 		vault.FeePeriodStart = pastTime.Unix()
 		vault.PaymentDenom = underlyingDenom
-		amt, err = s.k.EstimateAccruedAUMFeePayment(s.ctx, *vault, underlying.Amount)
+		amt, err = s.k.CalculateAccruedAUMFeePayment(s.ctx, *vault, underlying.Amount)
 		s.Require().NoError(err)
 		s.Require().Equal(sdkmath.NewInt(246_575), amt.Amount)
 		s.Require().Equal(underlyingDenom, amt.Denom)
@@ -1833,7 +1833,7 @@ func (s *TestSuite) TestKeeper_EstimationMethods() {
 		}, "test")
 
 		vault.PaymentDenom = paymentDenom
-		amt, err = s.k.EstimateAccruedAUMFeePayment(s.ctx, *vault, underlying.Amount)
+		amt, err = s.k.CalculateAccruedAUMFeePayment(s.ctx, *vault, underlying.Amount)
 		s.Require().NoError(err)
 		// FeeUnderlying = 246,575
 		// FeePayment = 246,575 * 2 / 1 = 493,150

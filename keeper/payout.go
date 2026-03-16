@@ -130,7 +130,7 @@ func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.P
 		return fmt.Errorf("invalid principal address for denom %s: %w", req.Shares.Denom, err)
 	}
 
-	if err := k.reconcileVaultInterest(ctx, &vault); err != nil {
+	if err := k.reconcileVault(ctx, &vault); err != nil {
 		return fmt.Errorf("failed to reconcile vault interest: %w", err)
 	}
 

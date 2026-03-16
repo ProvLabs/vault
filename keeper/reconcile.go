@@ -20,7 +20,7 @@ const (
 	AutoReconcilePayoutDuration = 24 * interest.SecondsPerHour
 )
 
-// reconcileVaultInterest updates interest accounting and collects AUM fees for a vault if a new period has started.
+// reconcileVault updates interest accounting and collects AUM fees for a vault if a new period has started.
 //
 // If this is the first time the vault accrues interest, it triggers the start of a new period
 // and publishes the initial NAV for the share denom in terms of the underlying asset.
@@ -29,7 +29,7 @@ const (
 //
 // This should be called before any transaction that changes vault principal/reserves or depends on the
 // current interest state.
-func (k Keeper) reconcileVaultInterest(ctx sdk.Context, vault *types.VaultAccount) error {
+func (k Keeper) reconcileVault(ctx sdk.Context, vault *types.VaultAccount) error {
 	if vault.Paused {
 		return nil
 	}
@@ -229,7 +229,7 @@ func (k Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAccou
 		return err
 	}
 
-	newFeePayment, err := k.EstimateAccruedAUMFeePayment(ctx, *vault, tvv)
+	newFeePayment, err := k.CalculateAccruedAUMFeePayment(ctx, *vault, tvv)
 	if err != nil {
 		return err
 	}
@@ -345,10 +345,10 @@ func (k Keeper) UpdateInterestRates(ctx sdk.Context, vault *types.VaultAccount, 
 	return nil
 }
 
-// EstimateAccruedInterest calculates the interest that would have accrued for the vault
+// CalculateAccruedInterest calculates the interest that would have accrued for the vault
 // from its PeriodStart to the current block time, based on the provided principal.
 // It returns the interest amount (which can be negative) and does not mutate state.
-func (k Keeper) EstimateAccruedInterest(ctx sdk.Context, vault types.VaultAccount, principal sdk.Coin) (sdkmath.Int, error) {
+func (k Keeper) CalculateAccruedInterest(ctx sdk.Context, vault types.VaultAccount, principal sdk.Coin) (sdkmath.Int, error) {
 	if vault.CurrentInterestRate == "" || vault.PeriodStart == 0 {
 		return sdkmath.ZeroInt(), nil
 	}
@@ -359,10 +359,10 @@ func (k Keeper) EstimateAccruedInterest(ctx sdk.Context, vault types.VaultAccoun
 	return interest.CalculateInterestEarned(principal, vault.CurrentInterestRate, duration)
 }
 
-// EstimateAccruedAUMFee calculates the AUM fees that would have accrued for the vault
+// CalculateAccruedAUMFee calculates the AUM fees that would have accrued for the vault
 // from its FeePeriodStart to the current block time, based on the provided total assets.
 // It returns the fee amount in the underlying asset and does not mutate state.
-func (k Keeper) EstimateAccruedAUMFee(ctx sdk.Context, vault types.VaultAccount, totalAssets sdkmath.Int) (sdkmath.Int, error) {
+func (k Keeper) CalculateAccruedAUMFee(ctx sdk.Context, vault types.VaultAccount, totalAssets sdkmath.Int) (sdkmath.Int, error) {
 	if vault.FeePeriodStart == 0 {
 		return sdkmath.ZeroInt(), nil
 	}
@@ -373,10 +373,10 @@ func (k Keeper) EstimateAccruedAUMFee(ctx sdk.Context, vault types.VaultAccount,
 	return interest.CalculateAUMFee(totalAssets, duration)
 }
 
-// EstimateAccruedAUMFeePayment calculates the AUM fees that would have accrued for the vault
+// CalculateAccruedAUMFeePayment calculates the AUM fees that would have accrued for the vault
 // from its FeePeriodStart to the current block time, converted to the vault's PaymentDenom.
-func (k Keeper) EstimateAccruedAUMFeePayment(ctx sdk.Context, vault types.VaultAccount, totalAssets sdkmath.Int) (sdk.Coin, error) {
-	feeUnderlying, err := k.EstimateAccruedAUMFee(ctx, vault, totalAssets)
+func (k Keeper) CalculateAccruedAUMFeePayment(ctx sdk.Context, vault types.VaultAccount, totalAssets sdkmath.Int) (sdk.Coin, error) {
+	feeUnderlying, err := k.CalculateAccruedAUMFee(ctx, vault, totalAssets)
 	if err != nil {
 		return sdk.Coin{}, err
 	}
@@ -402,13 +402,13 @@ func (k Keeper) CalculateOutstandingFeeUnderlying(ctx sdk.Context, vault types.V
 //
 // If no rate is set or accrual has not started, it returns the provided principal unchanged.
 func (k Keeper) CalculateVaultTotalAssets(ctx sdk.Context, vault *types.VaultAccount, principal sdk.Coin) (sdkmath.Int, error) {
-	interestEarned, err := k.EstimateAccruedInterest(ctx, *vault, principal)
+	interestEarned, err := k.CalculateAccruedInterest(ctx, *vault, principal)
 	if err != nil {
 		return sdkmath.Int{}, fmt.Errorf("error calculating interest: %w", err)
 	}
 	estimated := principal.Amount.Add(interestEarned)
 
-	feeAccrued, err := k.EstimateAccruedAUMFee(ctx, *vault, estimated)
+	feeAccrued, err := k.CalculateAccruedAUMFee(ctx, *vault, estimated)
 	if err != nil {
 		return sdkmath.Int{}, fmt.Errorf("error calculating AUM fee: %w", err)
 	}

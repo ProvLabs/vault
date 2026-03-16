@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provlabs/vault/types"
 )
@@ -31,7 +33,7 @@ func (k Keeper) MigrateVaultAccountPaymentDenomDefaults(ctx sdk.Context) error {
 			v.PaymentDenom = v.UnderlyingAsset
 			err := k.SetVaultAccount(ctx, v)
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to update vault account %s during migration: %w", v.Address, err)
 			}
 		}
 	}

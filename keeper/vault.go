@@ -171,7 +171,7 @@ func (k *Keeper) createVaultMarker(ctx sdk.Context, markerManager sdk.AccAddress
 func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, asset sdk.Coin) (*sdk.Coin, error) {
 	vault, err := k.GetVault(ctx, vaultAddr)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get vault: %w", err)
 	}
 	if vault == nil {
 		return nil, fmt.Errorf("vault with address %v not found", vaultAddr.String())
@@ -186,7 +186,7 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 	}
 
 	if err := vault.ValidateAcceptedCoin(asset); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to validate asset: %w", err)
 	}
 
 	if err := k.reconcileVault(ctx, vault); err != nil {
@@ -201,11 +201,11 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 	}
 
 	if err := shares.Validate(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to validate shares: %w", err)
 	}
 
 	if err := k.MarkerKeeper.MintCoin(ctx, vault.GetAddress(), shares); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to mint shares: %w", err)
 	}
 
 	vault.TotalShares = vault.TotalShares.Add(shares)
@@ -214,11 +214,11 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 	}
 
 	if err := k.MarkerKeeper.WithdrawCoins(ctx, vault.GetAddress(), recipient, shares.Denom, sdk.NewCoins(shares)); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to withdraw shares: %w", err)
 	}
 
 	if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx), recipient, principalAddress, sdk.NewCoins(asset)); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to send asset to principal: %w", err)
 	}
 
 	k.emitEvent(ctx, types.NewEventSwapIn(vaultAddr.String(), recipient.String(), asset, shares))
@@ -247,7 +247,7 @@ func (k *Keeper) checkPayoutRestrictions(ctx sdk.Context, vault *types.VaultAcco
 func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, shares sdk.Coin, redeemDenom string) (uint64, error) {
 	vault, err := k.GetVault(ctx, vaultAddr)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("failed to get vault: %w", err)
 	}
 	if vault == nil {
 		return 0, fmt.Errorf("vault with address %v not found", vaultAddr.String())
@@ -270,7 +270,7 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 	}
 
 	if err := vault.ValidateAcceptedDenom(redeemDenom); err != nil {
-		return 0, err
+		return 0, fmt.Errorf("failed to validate redeem denom: %w", err)
 	}
 
 	assets, err := k.ConvertSharesToRedeemCoin(ctx, *vault, shares.Amount, redeemDenom)
@@ -279,7 +279,7 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 	}
 
 	if err := k.checkPayoutRestrictions(ctx, vault, owner, assets); err != nil {
-		return 0, err
+		return 0, fmt.Errorf("failed to check payout restrictions: %w", err)
 	}
 
 	if err := k.BankKeeper.SendCoins(ctx, owner, vault.GetAddress(), sdk.NewCoins(shares)); err != nil {
@@ -303,7 +303,7 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 func (k *Keeper) SetSwapInEnable(ctx sdk.Context, vault *types.VaultAccount, enabled bool) error {
 	vault.SwapInEnabled = enabled
 	if err := k.SetVaultAccount(ctx, vault); err != nil {
-		return err
+		return fmt.Errorf("failed to set vault account: %w", err)
 	}
 	k.emitEvent(ctx, types.NewEventToggleSwapIn(vault.Address, vault.Admin, enabled))
 	return nil
@@ -314,7 +314,7 @@ func (k *Keeper) SetSwapInEnable(ctx sdk.Context, vault *types.VaultAccount, ena
 func (k *Keeper) SetSwapOutEnable(ctx sdk.Context, vault *types.VaultAccount, enabled bool) error {
 	vault.SwapOutEnabled = enabled
 	if err := k.SetVaultAccount(ctx, vault); err != nil {
-		return err
+		return fmt.Errorf("failed to set vault account: %w", err)
 	}
 	k.emitEvent(ctx, types.NewEventToggleSwapOut(vault.Address, vault.Admin, enabled))
 	return nil
@@ -324,14 +324,14 @@ func (k *Keeper) SetSwapOutEnable(ctx sdk.Context, vault *types.VaultAccount, en
 // An empty string disables the minimum rate check.
 func (k *Keeper) SetMinInterestRate(ctx sdk.Context, vault *types.VaultAccount, minRate string) error {
 	if err := k.ValidateInterestRateLimits(minRate, vault.MaxInterestRate); err != nil {
-		return err
+		return fmt.Errorf("failed to validate interest rate limits: %w", err)
 	}
 	if vault.MinInterestRate == minRate {
 		return nil
 	}
 	vault.MinInterestRate = minRate
 	if err := k.SetVaultAccount(ctx, vault); err != nil {
-		return err
+		return fmt.Errorf("failed to set vault account: %w", err)
 	}
 	k.emitEvent(ctx, types.NewEventMinInterestRateUpdated(vault.Address, vault.Admin, minRate))
 	return nil
@@ -341,14 +341,14 @@ func (k *Keeper) SetMinInterestRate(ctx sdk.Context, vault *types.VaultAccount, 
 // An empty string disables the maximum rate check.
 func (k *Keeper) SetMaxInterestRate(ctx sdk.Context, vault *types.VaultAccount, maxRate string) error {
 	if err := k.ValidateInterestRateLimits(vault.MinInterestRate, maxRate); err != nil {
-		return err
+		return fmt.Errorf("failed to validate interest rate limits: %w", err)
 	}
 	if vault.MaxInterestRate == maxRate {
 		return nil
 	}
 	vault.MaxInterestRate = maxRate
 	if err := k.SetVaultAccount(ctx, vault); err != nil {
-		return err
+		return fmt.Errorf("failed to set vault account: %w", err)
 	}
 	k.emitEvent(ctx, types.NewEventMaxInterestRateUpdated(vault.Address, vault.Admin, maxRate))
 	return nil
@@ -393,7 +393,7 @@ func (k *Keeper) SetWithdrawalDelay(ctx sdk.Context, vault *types.VaultAccount, 
 	}
 	vault.WithdrawalDelaySeconds = delaySeconds
 	if err := k.SetVaultAccount(ctx, vault); err != nil {
-		return err
+		return fmt.Errorf("failed to set vault account: %w", err)
 	}
 	k.emitEvent(ctx, types.NewEventWithdrawalDelayUpdated(vault.Address, authority, delaySeconds))
 	return nil

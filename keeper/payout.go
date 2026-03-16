@@ -37,7 +37,7 @@ func (k *Keeper) processPendingSwapOuts(ctx sdk.Context, batchSize int) error {
 	})
 	if err != nil {
 		ctx.Logger().Error("error during pending withdrawal queue walk", "error", err)
-		return err
+		return fmt.Errorf("failed to walk pending swap out queue: %w", err)
 	}
 
 	k.processSwapOutJobs(ctx, jobsToProcess)
@@ -140,7 +140,7 @@ func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.P
 	}
 
 	if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, vaultAddr), principalAddress, ownerAddr, sdk.NewCoins(assets)); err != nil {
-		return err
+		return fmt.Errorf("failed to payout assets to owner: %w", err)
 	}
 
 	if err := k.BankKeeper.SendCoins(ctx, vaultAddr, principalAddress, sdk.NewCoins(req.Shares)); err != nil {

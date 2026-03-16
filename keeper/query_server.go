@@ -58,7 +58,7 @@ func (k queryServer) Vaults(goCtx context.Context, req *types.QueryVaultsRequest
 		},
 	)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, status.Errorf(codes.Internal, "failed to paginate vaults: %v", err)
 	}
 
 	return &types.QueryVaultsResponse{
@@ -76,12 +76,12 @@ func (k queryServer) Vault(goCtx context.Context, req *types.QueryVaultRequest) 
 
 	vault, err := k.FindVaultAccount(ctx, req.Id)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, status.Errorf(codes.Internal, "failed to find vault account %s: %v", req.Id, err)
 	}
 
 	marker, err := k.MarkerKeeper.GetMarkerByDenom(ctx, vault.TotalShares.Denom)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, status.Errorf(codes.Internal, "failed to get vault share marker for denom %s: %v", vault.TotalShares.Denom, err)
 	}
 
 	principal := k.BankKeeper.GetAllBalances(goCtx, marker.GetAddress())
@@ -89,7 +89,7 @@ func (k queryServer) Vault(goCtx context.Context, req *types.QueryVaultRequest) 
 
 	tvv, err := k.EstimateTotalVaultValue(ctx, vault)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, status.Errorf(codes.Internal, "failed to estimate total vault value: %v", err)
 	}
 
 	return &types.QueryVaultResponse{
@@ -264,7 +264,7 @@ func (k queryServer) PendingSwapOuts(goCtx context.Context, req *types.QueryPend
 		},
 	)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, status.Errorf(codes.Internal, "failed to paginate pending swap outs: %v", err)
 	}
 
 	return &types.QueryPendingSwapOutsResponse{
@@ -283,7 +283,7 @@ func (k queryServer) VaultPendingSwapOuts(goCtx context.Context, req *types.Quer
 
 	vault, err := k.FindVaultAccount(ctx, req.Id)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, status.Errorf(codes.Internal, "failed to find vault account %s: %v", req.Id, err)
 	}
 
 	swapOuts, pageRes, err := query.CollectionFilteredPaginate(
@@ -302,7 +302,7 @@ func (k queryServer) VaultPendingSwapOuts(goCtx context.Context, req *types.Quer
 		},
 	)
 	if err != nil {
-		return nil, status.Error(codes.Internal, err.Error())
+		return nil, status.Errorf(codes.Internal, "failed to paginate vault pending swap outs: %v", err)
 	}
 
 	return &types.QueryVaultPendingSwapOutsResponse{

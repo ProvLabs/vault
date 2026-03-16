@@ -18,8 +18,11 @@ func (k *Keeper) GetVaults(ctx context.Context) ([]sdk.AccAddress, error) {
 		vaults = append(vaults, key)
 		return false, nil
 	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to walk vaults: %w", err)
+	}
 
-	return vaults, err
+	return vaults, nil
 }
 
 // SetVaultLookup stores a vault in the Vaults collection, keyed by its bech32 address.
@@ -32,7 +35,7 @@ func (k *Keeper) SetVaultLookup(ctx context.Context, vault *types.VaultAccount) 
 
 	addr, err := sdk.AccAddressFromBech32(vault.Address)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to parse vault address %s: %w", vault.Address, err)
 	}
 
 	return k.Vaults.Set(ctx, addr, []byte{})
@@ -42,7 +45,7 @@ func (k *Keeper) SetVaultLookup(ctx context.Context, vault *types.VaultAccount) 
 // Returns an error if validation fails.
 func (k *Keeper) SetVaultAccount(ctx sdk.Context, vault *types.VaultAccount) error {
 	if err := vault.Validate(); err != nil {
-		return err
+		return fmt.Errorf("failed to validate vault: %w", err)
 	}
 	k.AuthKeeper.SetAccount(ctx, vault)
 	return nil
@@ -53,7 +56,7 @@ func (k *Keeper) FindVaultAccount(ctx sdk.Context, id string) (*types.VaultAccou
 	if addr, err := sdk.AccAddressFromBech32(id); err == nil {
 		vault, err := k.GetVault(ctx, addr)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to get vault: %w", err)
 		}
 		if vault != nil {
 			return vault, nil
@@ -63,7 +66,7 @@ func (k *Keeper) FindVaultAccount(ctx sdk.Context, id string) (*types.VaultAccou
 	addr := types.GetVaultAddress(id)
 	vault, err := k.GetVault(ctx, addr)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get vault: %w", err)
 	}
 	if vault != nil {
 		return vault, nil

@@ -38,22 +38,22 @@ func (k Keeper) reconcileVault(ctx sdk.Context, vault *types.VaultAccount) error
 	if vault.PeriodStart != 0 {
 		if currentBlockTime > vault.PeriodStart {
 			if err := k.PerformVaultInterestTransfer(ctx, vault); err != nil {
-				return err
+				return fmt.Errorf("perform vault interest transfer: %w", err)
 			}
 			if err := k.PerformVaultFeeTransfer(ctx, vault); err != nil {
-				return err
+				return fmt.Errorf("perform vault fee transfer: %w", err)
 			}
 			if err := k.SafeEnqueueFeeTimeout(ctx, vault); err != nil {
-				return err
+				return fmt.Errorf("enqueue fee timeout: %w", err)
 			}
 			if err := k.publishShareNav(ctx, vault); err != nil {
-				return err
+				return fmt.Errorf("publish share nav: %w", err)
 			}
 		}
 	} else {
 		if vault.FeePeriodStart == 0 {
 			if err := k.SafeEnqueueFeeTimeout(ctx, vault); err != nil {
-				return err
+				return fmt.Errorf("enqueue fee timeout: %w", err)
 			}
 		}
 	}
@@ -145,7 +145,7 @@ func (k Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vault
 	reserves := k.BankKeeper.GetBalance(ctx, vaultAddr, denom)
 	principalTvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get TVV: %w", err)
 	}
 	principalInTvv := sdk.NewCoin(denom, principalTvv)
 
@@ -191,7 +191,7 @@ func (k Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vault
 
 	principalTvvAfter, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get TVV after reconciliation: %w", err)
 	}
 
 	k.emitEvent(ctx, types.NewEventVaultReconcile(
@@ -226,12 +226,12 @@ func (k Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAccou
 
 	tvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get TVV: %w", err)
 	}
 
 	newFeePayment, err := k.CalculateAccruedAUMFeePayment(ctx, *vault, tvv)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to calculate accrued AUM fee payment: %w", err)
 	}
 
 	totalOutstanding := vault.OutstandingAumFee.Add(newFeePayment)
@@ -302,7 +302,7 @@ func (k Keeper) CanPayInterestDuration(ctx sdk.Context, vault *types.VaultAccoun
 
 	principalTvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("failed to get TVV: %w", err)
 	}
 	if principalTvv.IsZero() {
 		return true, nil
@@ -339,7 +339,7 @@ func (k Keeper) UpdateInterestRates(ctx sdk.Context, vault *types.VaultAccount, 
 	vault.CurrentInterestRate = currentRate
 	vault.DesiredInterestRate = desiredRate
 	if err := k.SetVaultAccount(ctx, vault); err != nil {
-		return err
+		return fmt.Errorf("failed to update vault account: %w", err)
 	}
 	k.emitEvent(ctx, event)
 	return nil
@@ -378,7 +378,7 @@ func (k Keeper) CalculateAccruedAUMFee(ctx sdk.Context, vault types.VaultAccount
 func (k Keeper) CalculateAccruedAUMFeePayment(ctx sdk.Context, vault types.VaultAccount, totalAssets sdkmath.Int) (sdk.Coin, error) {
 	feeUnderlying, err := k.CalculateAccruedAUMFee(ctx, vault, totalAssets)
 	if err != nil {
-		return sdk.Coin{}, err
+		return sdk.Coin{}, fmt.Errorf("failed to calculate accrued AUM fee: %w", err)
 	}
 	feePayment, err := k.FromUnderlyingAssetAmount(ctx, vault, feeUnderlying, vault.PaymentDenom)
 	if err != nil {
@@ -496,7 +496,7 @@ func (k Keeper) handleVaultInterestTimeouts(ctx sdk.Context) error {
 func (k Keeper) atomicallyReconcileInterest(ctx sdk.Context, vault *types.VaultAccount, timeout int64) error {
 	cacheCtx, write := ctx.CacheContext()
 	if err := k.PerformVaultInterestTransfer(cacheCtx, vault); err != nil {
-		return err
+		return fmt.Errorf("failed to perform vault interest transfer: %w", err)
 	}
 
 	if err := k.PayoutTimeoutQueue.Dequeue(cacheCtx, timeout, vault.GetAddress()); err != nil {
@@ -669,7 +669,7 @@ func (k Keeper) handleVaultFeeTimeouts(ctx sdk.Context) error {
 func (k Keeper) atomicallyReconcileFee(ctx sdk.Context, vault *types.VaultAccount, timeout int64) error {
 	cacheCtx, write := ctx.CacheContext()
 	if err := k.PerformVaultFeeTransfer(cacheCtx, vault); err != nil {
-		return err
+		return fmt.Errorf("failed to perform vault fee transfer: %w", err)
 	}
 
 	if err := k.FeeTimeoutQueue.Dequeue(cacheCtx, timeout, vault.GetAddress()); err != nil {

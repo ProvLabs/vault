@@ -1014,5 +1014,5 @@ func (s *TestSuite) TestEstimateTotalVaultValue_ErrorPropagation() {
 	_, err := testKeeper.EstimateTotalVaultValue(s.ctx, vault)
 
 	s.Require().Error(err, "estimation should error if GetTVV errors")
-	s.Require().Contains(err.Error(), "get tvv: nav not found for usdc/ylds", "error should propagate from missing NAV")
+	s.Require().Contains(err.Error(), "nav not found for usdc/ylds", "error should propagate from missing NAV")
 }

@@ -16,92 +16,59 @@ import (
 )
 
 func (s *TestSuite) TestKeeper_ReconcileVault() {
-	twoMonths := -24 * 60 * time.Hour
 	shareDenom := "vaultshares"
 	underlying := sdk.NewInt64Coin("underlying", 1_000_000_000)
 	totalShares := sdk.NewInt64Coin(shareDenom, 1_000_000_000_000_000)
 	vaultAddress := types.GetVaultAddress(shareDenom)
 	testBlockTime := time.Now()
 	futureTime := testBlockTime.Add(100 * time.Second)
-	pastTime := testBlockTime.Add(twoMonths)
-
-	setup := func(interestRate string, periodStartSeconds int64, paused bool) {
-		s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
-		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-			Admin:           s.adminAddr.String(),
-			ShareDenom:      shareDenom,
-			UnderlyingAsset: underlying.Denom,
-		})
-		s.Require().NoError(err, "CreateVault should not error")
-
-		vault, err := s.k.GetVault(s.ctx, vaultAddress)
-		s.Require().NoError(err, "GetVault should not error in setup")
-		vault.CurrentInterestRate = interestRate
-		vault.DesiredInterestRate = interestRate
-		vault.PeriodStart = periodStartSeconds
-		vault.FeePeriodStart = periodStartSeconds
-		vault.Paused = paused
-		vault.TotalShares = totalShares
-		s.k.AuthKeeper.SetAccount(s.ctx, vault)
-
-		err = FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddress, sdk.NewCoins(underlying))
-		s.Require().NoError(err, "funding vault account should not error")
-		err = FundAccount(s.ctx, s.simApp.BankKeeper, markertypes.MustGetMarkerAddress(shareDenom), sdk.NewCoins(underlying))
-		s.Require().NoError(err, "funding share marker account should not error")
-
-		s.ctx = s.ctx.WithBlockTime(testBlockTime)
-		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
-	}
+	pastTime := testBlockTime.Add(-60 * 24 * time.Hour) // ~2 months
 
 	tests := []struct {
 		name              string
-		setup             func()
-		posthander        func()
+		interestRate      string
+		periodStart       int64
+		paused            bool
+		expectedVaultAmt  sdkmath.Int
+		expectedMarkerAmt sdkmath.Int
+		inPayoutQueue     bool
 		expectedErrSubstr string
-		expectedEvents    sdk.Events
+		expectedEvents    func() sdk.Events
 	}{
 		{
-			name: "no start period found, should set period start and return no error",
-			setup: func() {
-				setup("0.25", 0, false)
-			},
-			posthander: func() {
-				s.assertInPayoutVerificationQueue(vaultAddress, true)
-				s.assertVaultAndMarkerBalances(vaultAddress, shareDenom, underlying.Denom, underlying.Amount, underlying.Amount)
-			},
-			expectedEvents: sdk.Events{},
+			name:              "no start period found, should set period start and return no error",
+			interestRate:      "0.25",
+			periodStart:       0,
+			expectedVaultAmt:  underlying.Amount,
+			expectedMarkerAmt: underlying.Amount,
+			inPayoutQueue:     true,
 		},
 		{
-			name: "interest period start in future, should return nil and do nothing",
-			setup: func() {
-				setup("0.25", futureTime.Unix(), false)
-			},
-			posthander: func() {
-				s.assertInPayoutVerificationQueue(vaultAddress, true)
-				s.assertVaultAndMarkerBalances(vaultAddress, shareDenom, underlying.Denom, underlying.Amount, underlying.Amount)
-			},
-			expectedEvents: sdk.Events{},
+			name:              "interest period start in future, should return nil and do nothing",
+			interestRate:      "0.25",
+			periodStart:       futureTime.Unix(),
+			expectedVaultAmt:  underlying.Amount,
+			expectedMarkerAmt: underlying.Amount,
+			inPayoutQueue:     true,
 		},
 		{
-			name: "interest period has elasped, should pay interest and update period start",
-			setup: func() {
-				setup("0.25", pastTime.Unix(), false)
-			},
-			posthander: func() {
-				s.assertInPayoutVerificationQueue(vaultAddress, true)
-				// Fee is calculated on TVV AFTER interest transfer.
-				// Initial TVV: 1,000,000,000. Interest: 41,952,013.
-				// TVV after interest: 1,041,952,013.
-				// Fee: 1,041,952,013 * 0.0015 * 5,184,000 / 31,536,000 = 256,919
-				// Total marker change: 41,952,013 - 256,919 = 41,695,094
-				s.assertVaultAndMarkerBalances(vaultAddress, shareDenom, underlying.Denom, sdkmath.NewInt(958047987), sdkmath.NewInt(1041695094))
-			},
+			name:              "interest period has elasped, should pay interest and update period start",
+			interestRate:      "0.25",
+			periodStart:       pastTime.Unix(),
+			// Fee is calculated on TVV AFTER interest transfer.
+			// Initial TVV: 1,000,000,000. Interest: 41,952,013.
+			// TVV after interest: 1,041,952,013.
+			// Fee: 1,041,952,013 * 0.0015 * 5,184,000 / 31,536,000 = 256,919
+			// Total marker change: 41,952,013 - 256,919 = 41,695,094
+			expectedVaultAmt:  sdkmath.NewInt(958_047_987),
+			expectedMarkerAmt: sdkmath.NewInt(1_041_695_094),
+			inPayoutQueue:     true,
 			expectedEvents: func() sdk.Events {
 				markerAddr := markertypes.MustGetMarkerAddress(shareDenom)
 				ev := createReconcileEvents(
 					vaultAddress,
 					markerAddr,
-					sdkmath.NewInt(41952013),
+					sdkmath.NewInt(41_952_013),
 					sdkmath.NewInt(1_000_000_000),
 					sdkmath.NewInt(1_041_952_013),
 					underlying.Denom,
@@ -120,11 +87,6 @@ func (s *TestSuite) TestKeeper_ReconcileVault() {
 					5_184_000,
 				)
 
-
-
-
-
-
 				nav := createMarkerSetNAV(
 					shareDenom,
 					sdk.NewCoin(underlying.Denom, sdkmath.NewInt(1_041_695_094)), // NAV updated with fee
@@ -134,23 +96,21 @@ func (s *TestSuite) TestKeeper_ReconcileVault() {
 				all := append(ev, feeEvs...)
 				all = append(all, feeEv, nav)
 				return all
-			}(),
+			},
 		},
 		{
-			name: "interest period has elasped, should pay negative interest and update period start",
-			setup: func() {
-				setup("-0.25", pastTime.Unix(), false)
-			},
-			posthander: func() {
-				s.assertInPayoutVerificationQueue(vaultAddress, true)
-				// Initial TVV: 1,000,000,000. Interest: -40,262,904.
-				// TVV after interest: 959,737,096.
-				// Fee: 959,737,096 * 0.0015 * 5,184,000 / 31,536,000 = 236,647
-				// Total marker change: -40,262,904 - 236,647 = -40,499,551
-				// Marker: 1,000,000,000 - 40,499,551 = 959,500,449
-				// Vault: 1,000,000,000 + 40,262,904 = 1,040,262,904
-				s.assertVaultAndMarkerBalances(vaultAddress, shareDenom, underlying.Denom, sdkmath.NewInt(1040262904), sdkmath.NewInt(959500449))
-			},
+			name:              "interest period has elasped, should pay negative interest and update period start",
+			interestRate:      "-0.25",
+			periodStart:       pastTime.Unix(),
+			// Initial TVV: 1,000,000,000. Interest: -40,262,904.
+			// TVV after interest: 959,737,096.
+			// Fee: 959,737,096 * 0.0015 * 5,184,000 / 31,536,000 = 236,647
+			// Total marker change: -40,262,904 - 236,647 = -40,499,551
+			// Marker: 1,000,000,000 - 40,499,551 = 959,500,449
+			// Vault: 1,000,000,000 + 40,262,904 = 1,040,262,904
+			expectedVaultAmt:  sdkmath.NewInt(1_040_262_904),
+			expectedMarkerAmt: sdkmath.NewInt(959_500_449),
+			inPayoutQueue:     true,
 			expectedEvents: func() sdk.Events {
 				markerAddr := markertypes.MustGetMarkerAddress(shareDenom)
 				ev := createReconcileEvents(
@@ -175,11 +135,6 @@ func (s *TestSuite) TestKeeper_ReconcileVault() {
 					5_184_000,
 				)
 
-
-
-
-
-
 				nav := createMarkerSetNAV(
 					shareDenom,
 					sdk.NewCoin(underlying.Denom, sdkmath.NewInt(959_500_449)), // NAV updated with fee
@@ -189,48 +144,52 @@ func (s *TestSuite) TestKeeper_ReconcileVault() {
 				all := append(ev, feeEvs...)
 				all = append(all, feeEv, nav)
 				return all
-			}(),
+			},
 		},
 		{
-			name: "paused vault, should do nothing",
-			setup: func() {
-				setup("0.25", pastTime.Unix(), true)
-			},
-			posthander: func() {
-				s.assertInPayoutVerificationQueue(vaultAddress, false)
-				vault, err := s.k.GetVault(s.ctx, vaultAddress)
-				s.Require().NoError(err, "GetVault should not error when paused")
-				s.Require().Equal(pastTime.Unix(), vault.PeriodStart, "PeriodStart should remain unchanged when paused")
-			},
-			expectedEvents: sdk.Events{},
+			name:              "paused vault, should do nothing",
+			interestRate:      "0.25",
+			periodStart:       pastTime.Unix(),
+			paused:            true,
+			expectedVaultAmt:  underlying.Amount,
+			expectedMarkerAmt: underlying.Amount,
+			inPayoutQueue:     false,
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			s.SetupTest()
-			if tc.setup != nil {
-				tc.setup()
-			}
+			s.setupReconcileVault(tc.interestRate, tc.periodStart, tc.paused, underlying, shareDenom, totalShares, testBlockTime)
 
 			vault, err := s.k.GetVault(s.ctx, vaultAddress)
-			s.Require().NoError(err, "GetVault should not error before reconcile")
+			s.Require().NoError(err, "failed to get vault %s before reconcile", vaultAddress.String())
 			err = s.k.TestAccessor_reconcileVault(s.T(), s.ctx, vault)
 
-			if tc.posthander != nil {
-				tc.posthander()
-			}
 			if len(tc.expectedErrSubstr) > 0 {
-				s.Require().Error(err, "expected error from ReconcileVault")
-				s.Require().Contains(err.Error(), tc.expectedErrSubstr, "error substring mismatch")
+				s.Require().Error(err, "expected error from ReconcileVault for case: %s", tc.name)
+				s.Require().Contains(err.Error(), tc.expectedErrSubstr, "error substring mismatch for case: %s", tc.name)
 			} else {
-				s.Require().NoError(err, "ReconcileVault should not error")
+				s.Require().NoError(err, "ReconcileVault should not error for case: %s", tc.name)
 			}
 
+			s.assertInPayoutVerificationQueue(vaultAddress, tc.inPayoutQueue)
+			s.assertVaultAndMarkerBalances(vaultAddress, shareDenom, underlying.Denom, tc.expectedVaultAmt, tc.expectedMarkerAmt)
+
+			if tc.paused {
+				updatedVault, err := s.k.GetVault(s.ctx, vaultAddress)
+				s.Require().NoError(err, "failed to get vault %s after reconcile", vaultAddress.String())
+				s.Require().Equal(tc.periodStart, updatedVault.PeriodStart, "PeriodStart should remain unchanged when paused for case: %s", tc.name)
+			}
+
+			var expectedEvents sdk.Events = sdk.Events{}
+			if tc.expectedEvents != nil {
+				expectedEvents = tc.expectedEvents()
+			}
 			s.Assert().Equal(
-				normalizeEvents(tc.expectedEvents),
+				normalizeEvents(expectedEvents),
 				normalizeEvents(s.ctx.EventManager().Events()),
-				"events mismatch for %s", tc.name,
+				"events mismatch for case: %s", tc.name,
 			)
 		})
 	}
@@ -1953,8 +1912,6 @@ func (s *TestSuite) TestKeeper_AccrualCalculations() {
 			})
 		}
 	})
-}
-
 }
 
 func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts_RetryOnFailure() {

@@ -503,6 +503,38 @@ func (s *TestSuite) bumpHeight() {
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 }
 
+// setupReconcileVault initializes a vault with the provided parameters, including markers and funding.
+func (s *TestSuite) setupReconcileVault(interestRate string, periodStartSeconds int64, paused bool, underlying sdk.Coin, shareDenom string, totalShares sdk.Coin, testBlockTime time.Time) (sdk.AccAddress, *types.VaultAccount) {
+	s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
+	vaultAddr := types.GetVaultAddress(shareDenom)
+	_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+		Admin:           s.adminAddr.String(),
+		ShareDenom:      shareDenom,
+		UnderlyingAsset: underlying.Denom,
+	})
+	s.Require().NoError(err, "failed to create vault for share denom %s", shareDenom)
+
+	vault, err := s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "failed to get vault for address %s", vaultAddr.String())
+	vault.CurrentInterestRate = interestRate
+	vault.DesiredInterestRate = interestRate
+	vault.PeriodStart = periodStartSeconds
+	vault.FeePeriodStart = periodStartSeconds
+	vault.Paused = paused
+	vault.TotalShares = totalShares
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	err = FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(underlying))
+	s.Require().NoError(err, "failed to fund vault account %s with %s", vaultAddr.String(), underlying.String())
+	err = FundAccount(s.ctx, s.simApp.BankKeeper, markertypes.MustGetMarkerAddress(shareDenom), sdk.NewCoins(underlying))
+	s.Require().NoError(err, "failed to fund share marker account for denom %s with %s", shareDenom, underlying.String())
+
+	s.ctx = s.ctx.WithBlockTime(testBlockTime)
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+
+	return vaultAddr, vault
+}
+
 // createBridgeMintSharesEventsExact returns the exact ordered events a successful
 // BridgeMintShares emits: marker mint to the share marker, withdraw to the bridge,
 // then the vault EventBridgeMintShares—suitable for strict equality checks in tests.

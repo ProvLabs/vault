@@ -600,6 +600,15 @@ func createReconcileEvents(vaultAddr, markerAddr sdk.AccAddress, interest, princ
 	return allEvents
 }
 
+func getAttribute(ev sdk.Event, key string) string {
+	for _, attr := range ev.Attributes {
+		if string(attr.Key) == key {
+			return string(attr.Value)
+		}
+	}
+	return ""
+}
+
 // expectedWithSimpleAPY calculates the total amount (principal + interest)
 // using a simple APY formula.
 func expectedWithSimpleAPY(baseAmt sdkmath.Int, rateStr string, seconds int64) (sdkmath.Int, error) {

@@ -12,10 +12,13 @@ Total share supply is tracked on the vault as **total_shares**, the authoritativ
 - **Underlying Asset**: the base denom that defines vault value and payouts. TVV is always expressed in this unit.  
 - **Payment Denom (Secondary)**: an optional denom configured on a vault. It may be a normal swappable token (e.g., `uusdc`) or a restricted **receipt token** used for accounting. Swapability is determined by marker configuration.  
 - **Receipt Token**: a restricted marker that may be set as the payment denom. The only account with transfer authority is the holder of the receipt itself, which represents deployed capital (e.g., receipts into a fund). User swap-out to a receipt token is not possible unless the marker explicitly grants transfer authority. 
-- **Principal**: the vault’s total assets held in the **share marker account**, including underlying balances and any payment denom balances (normal or receipt).  
-- **Reserves**: the vault account balance used to pay positive interest or receive refunds from negative interest.  
-- **TVV (Total Vault Value)**: the value of all principal assets, computed and reported in the underlying unit.  
-- **NAV**: conversion rate between denoms, used for valuation and conversions, subject to special-case rules.  
+- **Principal**: the vault’s total assets held in the **share marker account**, including underlying balances and any payment denom balances (normal or receipt).
+- **Reserves**: the vault account balance used to pay positive interest or receive refunds from negative interest.
+- **TVV (Total Vault Value)**: the value of all principal assets, computed and reported in the underlying unit.
+    - **Gross TVV**: The literal sum of all assets sitting in the principal marker. Used for interest and fee accruals.
+    - **Net TVV**: Gross TVV minus Outstanding Fees. Used for share pricing (NAV) and user-facing valuation.
+- **NAV**: conversion rate between denoms, used for valuation and conversions, subject to special-case rules.
+
 - **Total Shares**: the canonical supply-of-record across chains. Local marker supply must never exceed `total_shares`.  
 - **Asset Manager**: an optional delegated operator address with limited management authority. When set, this account can perform certain administrative actions (e.g., fund management operations) in addition to the vault admin. If unset, only the vault admin holds these permissions.
 

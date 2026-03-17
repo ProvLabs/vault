@@ -195,6 +195,209 @@ func (s *TestSuite) TestKeeper_ReconcileVault() {
 	}
 }
 
+func (s *TestSuite) TestKeeper_PerformVaultReconcile_CompositeWithOutstandingFee() {
+	shareDenom := "composite.shares"
+	underlyingDenom := "underlying"
+	paymentDenom := "payment"
+	vaultAddress := types.GetVaultAddress(shareDenom)
+	testBlockTime := time.Date(2024, 3, 1, 0, 0, 0, 0, time.UTC)
+	sixtyDays := 60 * 24 * time.Hour
+	pastTime := testBlockTime.Add(-sixtyDays)
+
+	// Local helper for complex composite setup
+	setup := func(outstanding sdk.Coin, markerLiquidity sdk.Coins, navPrice *sdk.Coin) *types.VaultAccount {
+		s.SetupTest()
+		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingDenom, 10_000_000_000), s.adminAddr)
+		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 10_000_000_000), s.adminAddr)
+
+		vault := s.CreateVaultWithParams(shareDenom, underlyingDenom, paymentDenom)
+		vault.CurrentInterestRate = "0.25"
+		vault.DesiredInterestRate = "0.25"
+		vault.PeriodStart = pastTime.Unix()
+		vault.FeePeriodStart = pastTime.Unix()
+		vault.OutstandingAumFee = outstanding
+		s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+		markerAddr := markertypes.MustGetMarkerAddress(shareDenom)
+		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, markerLiquidity))
+		// Fund reserves to pay interest
+		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddress, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1_000_000_000))))
+
+		if navPrice == nil {
+			navPrice = &sdk.Coin{Denom: underlyingDenom, Amount: sdkmath.NewInt(1)}
+		}
+
+		paymentMarkerAddr := markertypes.MustGetMarkerAddress(paymentDenom)
+		paymentMarkerAccount, _ := s.k.MarkerKeeper.GetMarker(s.ctx, paymentMarkerAddr)
+		s.k.MarkerKeeper.SetNetAssetValue(s.ctx, paymentMarkerAccount, markertypes.NetAssetValue{
+			Price:  *navPrice,
+			Volume: 1,
+		}, "test")
+
+		s.ctx = s.ctx.WithBlockTime(testBlockTime).WithEventManager(sdk.NewEventManager())
+		return vault
+	}
+
+	s.Run("Case 1: Full Collection (Sufficient Liquidity)", func() {
+		outstanding := sdk.NewInt64Coin(paymentDenom, 100_000)
+		markerLiquidity := sdk.NewCoins(
+			sdk.NewInt64Coin(underlyingDenom, 1_000_000_000),
+			sdk.NewInt64Coin(paymentDenom, 1_000_000), // Plenty of payment tokens
+		)
+		vault := setup(outstanding, markerLiquidity, nil) // 1:1 Fast-path
+
+		// Interest on GROSS TVV (1,000,000,000 + 1,000,000 = 1,001,000,000)
+		// 1,001,000,000 * (e^(0.25 * 5184000/31536000) - 1) = 41,993,965
+		expectedInterest := sdkmath.NewInt(41_993_965)
+
+		err := s.k.TestAccessor_reconcileVault(s.T(), s.ctx, vault)
+		s.Require().NoError(err)
+
+		// Verify event shows Gross principal
+		events := normalizeEvents(s.ctx.EventManager().Events())
+		foundReconcile := false
+		for _, ev := range events {
+			if ev.Type == "provlabs.vault.v1.EventVaultReconcile" {
+				foundReconcile = true
+				s.Require().Equal("1001000000underlying", getAttribute(ev, "principal_before"))
+				s.Require().Equal(expectedInterest.String()+"underlying", getAttribute(ev, "interest_earned"))
+			}
+		}
+		s.Require().True(foundReconcile)
+
+		updatedVault, _ := s.k.GetVault(s.ctx, vaultAddress)
+		s.Require().True(updatedVault.OutstandingAumFee.IsZero(), "all fees should be cleared")
+		
+		provlabsAddr, _ := types.GetProvLabsFeeAddress(s.ctx.ChainID())
+		// TVV after interest = 1,001,000,000 + 41,993,965 = 1,042,993,965
+		// Current Fee (15bps): 1,042,993,965 * 0.0015 * 5184000/31536000 = 257,176
+		// Total Debt = 257,176 (current) + 100,000 (outstanding) = 357,176
+		s.assertBalance(provlabsAddr, paymentDenom, sdkmath.NewInt(357_176))
+	})
+
+	s.Run("Case 2: Partial Collection (Insufficient Liquidity)", func() {
+		outstanding := sdk.NewInt64Coin(paymentDenom, 1_000_000)
+		markerLiquidity := sdk.NewCoins(
+			sdk.NewInt64Coin(underlyingDenom, 1_000_000_000),
+			sdk.NewInt64Coin(paymentDenom, 100_000), // Only 100k available
+		)
+		vault := setup(outstanding, markerLiquidity, nil)
+
+		err := s.k.TestAccessor_reconcileVault(s.T(), s.ctx, vault)
+		s.Require().NoError(err)
+
+		// TVV = 1,000,100,000
+		// Interest on 1,000,100,000 = 41,956,208
+		// Updated TVV = 1,042,056,208
+		// Fee = 1,042,056,208 * 0.0015 * 5184000/31536000 = 256,945
+		// Total Debt = 256,945 (current on Gross) + 1,000_000 (old) = 1,256,945
+		// Collected = 100,000 (all available)
+		// Remaining = 1,156,945
+		updatedVault, _ := s.k.GetVault(s.ctx, vaultAddress)
+		s.Require().Equal(sdkmath.NewInt(1_156_945), updatedVault.OutstandingAumFee.Amount)
+		
+		provlabsAddr, _ := types.GetProvLabsFeeAddress(s.ctx.ChainID())
+		s.assertBalance(provlabsAddr, paymentDenom, sdkmath.NewInt(100_000))
+	})
+
+	s.Run("Case 3: Interest Accrual on Debted Assets (Verify Gross Logic)", func() {
+		// Vault has 1,000,000,000 underlying
+		// It OWES 500,000,000 payment (Outstanding fee = 500m underlying value)
+		// But those 500m are STILL in the marker (Gross = 1.5b)
+		outstanding := sdk.NewInt64Coin(paymentDenom, 500_000_000)
+		markerLiquidity := sdk.NewCoins(
+			sdk.NewInt64Coin(underlyingDenom, 1_000_000_000),
+			sdk.NewInt64Coin(paymentDenom, 500_000_000),
+		)
+		vault := setup(outstanding, markerLiquidity, nil)
+
+		// Interest on 1.5b (Gross), not 1.0b (Net)
+		// 1,500,000,000 * (e^(0.25 * 5184000/31536000) - 1) = 62,928,020
+		expectedInterest := sdkmath.NewInt(62_928_020)
+
+		err := s.k.TestAccessor_reconcileVault(s.T(), s.ctx, vault)
+		s.Require().NoError(err)
+
+		events := normalizeEvents(s.ctx.EventManager().Events())
+		for _, ev := range events {
+			if ev.Type == "provlabs.vault.v1.EventVaultReconcile" {
+				s.Require().Equal("1500000000underlying", getAttribute(ev, "principal_before"))
+				s.Require().Equal(expectedInterest.String()+"underlying", getAttribute(ev, "interest_earned"))
+			}
+		}
+	})
+
+	s.Run("Case 4: Net Valuation for Share Pricing", func() {
+		outstanding := sdk.NewInt64Coin(paymentDenom, 100_000_000)
+		markerLiquidity := sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1_000_000_000))
+		vault := setup(outstanding, markerLiquidity, nil)
+
+		// GROSS = 1,000,000,000
+		// NET = 1,000,000,000 - 100,000,000 = 900,000_000
+		
+		tvv, _ := s.k.GetTVVInUnderlyingAsset(s.ctx, *vault)
+		s.Require().Equal(sdkmath.NewInt(1_000_000_000), tvv, "GetTVV returns Gross")
+
+		// Valuation should return Net
+		// Interest on Gross (1b) = 41,952,013
+		// Fee on Updated Gross (1,041,952,013) = 256,919
+		// Debt = 100,000,000
+		// Net Valuation = (1,000,000,000 + 41,952,013) - 256,919 - 100,000,000 = 941,695,094
+		expectedNetValuation := sdkmath.NewInt(941_695_094)
+
+		val, err := s.k.CalculateVaultTotalAssets(s.ctx, vault, sdk.NewInt64Coin(underlyingDenom, 1_000_000_000))
+		s.Require().NoError(err)
+		s.Require().Equal(expectedNetValuation, val, "valuation should be Net of outstanding fees")
+	})
+
+	s.Run("Case 5: Negative Interest with Liabilities", func() {
+		outstanding := sdk.NewInt64Coin(paymentDenom, 100_000)
+		markerLiquidity := sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1_000_000_000))
+		vault := setup(outstanding, markerLiquidity, nil)
+		vault.CurrentInterestRate = "-0.25"
+		vault.DesiredInterestRate = "-0.25"
+		s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+		// Negative Interest on Gross (1,000,000,000)
+		// 1,000,000,000 * (e^(-0.25 * 5184000/31536000) - 1) = -40,262,904
+		expectedRefund := sdkmath.NewInt(40_262_904)
+
+		err := s.k.TestAccessor_reconcileVault(s.T(), s.ctx, vault)
+		s.Require().NoError(err)
+
+		events := normalizeEvents(s.ctx.EventManager().Events())
+		for _, ev := range events {
+			if ev.Type == "provlabs.vault.v1.EventVaultReconcile" {
+				s.Require().Equal(expectedRefund.Neg().String()+"underlying", getAttribute(ev, "interest_earned"))
+			}
+		}
+		// Vault reserves should increase by refund
+		s.assertBalance(vaultAddress, underlyingDenom, sdkmath.NewInt(1_040_262_904))
+	})
+
+	s.Run("Case 6: Non-1:1 NAV Composite Conversion", func() {
+		// Outstanding in Payment tokens
+		// NAV: 1 payment = 2 underlying
+		outstanding := sdk.NewInt64Coin(paymentDenom, 50_000_000) // Value 100m underlying
+		markerLiquidity := sdk.NewCoins(
+			sdk.NewInt64Coin(underlyingDenom, 500_000_000),
+			sdk.NewInt64Coin(paymentDenom, 250_000_000), // Value 500m underlying
+		)
+		// Gross TVV = 500m + (250m * 2) = 1,000,000,000
+		vault := setup(outstanding, markerLiquidity, &sdk.Coin{Denom: underlyingDenom, Amount: sdkmath.NewInt(2)})
+
+		// Accruals on Gross (1b)
+		// Interest = 41,952,013
+		// Fee = 256,919
+		// Debt (Net of NAV) = 50,000,000 * 2 = 100,000,000
+		// Net Valuation = (1,000,000,000 + 41,952,013) - 256,919 - 100,000,000 = 941,695,094
+		
+		val, err := s.k.CalculateVaultTotalAssets(s.ctx, vault, sdk.NewInt64Coin(underlyingDenom, 1_000_000_000))
+		s.Require().NoError(err)
+		s.Require().Equal(sdkmath.NewInt(941_695_094), val, "valuation should correctly convert secondary debt via NAV")
+	})
+}
+
 func (s *TestSuite) TestKeeper_CalculateVaultTotalAssets() {
 	shareDenom := "vaultshares"
 	underlying := sdk.NewInt64Coin("underlying", 1_000_000_000)
@@ -1651,15 +1854,6 @@ func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts() {
 	vault, err = s.k.GetVault(s.ctx, vaultAddr)
 	s.Require().NoError(err, "failed to get vault for address %s", vaultAddr)
 	s.Require().Equal(s.ctx.BlockTime().Unix(), vault.FeePeriodStart, "FeePeriodStart should be updated")
-}
-
-func getAttribute(ev sdk.Event, key string) string {
-	for _, attr := range ev.Attributes {
-		if string(attr.Key) == key {
-			return string(attr.Value)
-		}
-	}
-	return ""
 }
 
 func (s *TestSuite) TestKeeper_AccrualCalculations() {

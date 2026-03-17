@@ -121,6 +121,7 @@ func (k Keeper) publishShareNav(ctx sdk.Context, vault *types.VaultAccount) erro
 // if the current block time is beyond PeriodStart.
 //
 // Interest is settled exclusively in the vault's defined UnderlyingAsset.
+// Interest is calculated based on the **Gross TVV** (the literal sum of all assets in the marker).
 //   - Positive Interest: Paid from vault reserves to the marker. Fails if reserves are insufficient.
 //   - Negative Interest: Refunded from marker principal to the vault. This is bounded by the
 //     available balance of the UnderlyingAsset in the marker account.
@@ -209,8 +210,8 @@ func (k Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vault
 // PerformVaultFeeTransfer computes and collects the 15 bps technology fee (0.15% annual)
 // from the vault's principal marker account.
 //
-// The fee is calculated based on the Total Vault Value (TVV) in the UnderlyingAsset and
-// collected in the vault's configured PaymentDenom.
+// The fee is calculated based on the **Gross TVV** (the literal sum of all assets in the marker)
+// and collected in the vault's configured PaymentDenom.
 //
 // This method implements a "collect-what-is-available" strategy: it attempts to transfer
 // the total outstanding fee (accrued + previously unpaid), but caps the collection at
@@ -399,6 +400,10 @@ func (k Keeper) CalculateOutstandingFeeUnderlying(ctx sdk.Context, vault types.V
 // CalculateVaultTotalAssets returns the total value of the vault's assets, including the interest
 // that would have accrued from PeriodStart to the current block time, and subtracting the
 // AUM fees accrued since FeePeriodStart, without mutating state.
+//
+// VALUATION LOGIC (Net TVV): This method subtracts the **OutstandingAumFee** from the gross total
+// to ensure share pricing (NAV) reflects the actual equity owned by shareholders, excluding
+// vault liabilities.
 //
 // If no rate is set or accrual has not started, it returns the provided principal unchanged.
 func (k Keeper) CalculateVaultTotalAssets(ctx sdk.Context, vault *types.VaultAccount, principal sdk.Coin) (sdkmath.Int, error) {

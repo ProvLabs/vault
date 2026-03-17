@@ -52,9 +52,10 @@ The agent operates as a **Principal Blockchain Engineer** with deep expertise in
 
 ### Testing
 - **Table-Driven Tests**: **Mandatory** for unit and integration tests to ensure exhaustive coverage of edge cases.
-- **Self-Documenting Code**: Avoid internal comments within test logic. Instead, use descriptive variable names and clear logic flow that "reads" like a description of the test case.
+- **Descriptive Test Case Names**: Each test case in a table must have a clear, descriptive name that explains the scenario being tested (e.g., "interest period has elapsed, should pay interest").
+- **Self-Documenting Code**: Avoid internal comments within test logic. Instead, use descriptive variable names and clear logic flow that "reads" like a description of the test case. Eliminate redundant comments that merely restate the code's action.
 - **Global Reusable Test Helpers**: Abstract repeated operations (e.g., account setup, vault creation, state assertions) into reusable functions in `suite_test.go` to keep test suites clean and maintainable.
-- **Meaningful Require/Assert Messages**: **Every** assertion must include a descriptive failure message that provides context:
+- **Meaningful Require/Assert Messages**: **Every** assertion must include a descriptive failure message that provides context and explains the expected outcome versus the actual result:
     - *Good*: `s.Require().NoError(err, "failed to create vault for share denom %s", sharedenom)`
     - *Good*: `s.Equal(expectedSupply, actualSupply, "vault marker supply mismatch after swap-in for user %s", userAddr)`
 

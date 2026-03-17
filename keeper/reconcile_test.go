@@ -1703,13 +1703,14 @@ func getAttribute(ev sdk.Event, key string) string {
 	return ""
 }
 
-func (s *TestSuite) TestKeeper_EstimationMethods() {
+func (s *TestSuite) TestKeeper_AccrualCalculations() {
 	shareDenom := "vaultshares"
 	underlyingDenom := "underlying"
 	underlying := sdk.NewInt64Coin(underlyingDenom, 1_000_000_000)
 	vaultAddress := types.GetVaultAddress(shareDenom)
 	testBlockTime := time.Now().UTC()
-	pastTime := testBlockTime.Add(-60 * 24 * time.Hour) // ~2 months
+	sixtyDays := -60 * 24 * time.Hour
+	pastTime := testBlockTime.Add(sixtyDays)
 
 	setup := func() *types.VaultAccount {
 		s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
@@ -1718,10 +1719,10 @@ func (s *TestSuite) TestKeeper_EstimationMethods() {
 			ShareDenom:      shareDenom,
 			UnderlyingAsset: underlyingDenom,
 		})
-		s.Require().NoError(err)
+		s.Require().NoError(err, "failed to create vault in setup")
 
 		vault, err := s.k.GetVault(s.ctx, vaultAddress)
-		s.Require().NoError(err)
+		s.Require().NoError(err, "failed to get vault in setup")
 		s.ctx = s.ctx.WithBlockTime(testBlockTime)
 		return vault
 	}
@@ -1730,146 +1731,230 @@ func (s *TestSuite) TestKeeper_EstimationMethods() {
 		s.SetupTest()
 		vault := setup()
 
-		// Case 1: No interest rate
-		amt, err := s.k.CalculateAccruedInterest(s.ctx, *vault, underlying)
-		s.Require().NoError(err)
-		s.Require().True(amt.IsZero())
+		tests := []struct {
+			name     string
+			rate     string
+			start    int64
+			expected sdkmath.Int
+		}{
+			{
+				name:     "no interest rate set, should return zero interest",
+				rate:     "",
+				start:    pastTime.Unix(),
+				expected: sdkmath.ZeroInt(),
+			},
+			{
+				name:     "positive interest rate, should return correct accrual",
+				rate:     "0.25",
+				start:    pastTime.Unix(),
+				expected: sdkmath.NewInt(41_952_013),
+			},
+			{
+				name:     "negative interest rate, should return negative accrual",
+				rate:     "-0.25",
+				start:    pastTime.Unix(),
+				expected: sdkmath.NewInt(-40_262_904),
+			},
+			{
+				name:     "period start in the future, should return zero interest",
+				rate:     "0.25",
+				start:    testBlockTime.Add(time.Hour).Unix(),
+				expected: sdkmath.ZeroInt(),
+			},
+		}
 
-		// Case 2: Positive interest
-		vault.CurrentInterestRate = "0.25"
-		vault.PeriodStart = pastTime.Unix()
-		amt, err = s.k.CalculateAccruedInterest(s.ctx, *vault, underlying)
-		s.Require().NoError(err)
-		s.Require().Equal(sdkmath.NewInt(41_952_013), amt)
-
-		// Case 3: Negative interest
-		vault.CurrentInterestRate = "-0.25"
-		amt, err = s.k.CalculateAccruedInterest(s.ctx, *vault, underlying)
-		s.Require().NoError(err)
-		s.Require().Equal(sdkmath.NewInt(-40_262_904), amt)
-
-		// Case 4: Future period start
-		vault.PeriodStart = testBlockTime.Add(time.Hour).Unix()
-		amt, err = s.k.CalculateAccruedInterest(s.ctx, *vault, underlying)
-		s.Require().NoError(err)
-		s.Require().True(amt.IsZero())
+		for _, tc := range tests {
+			s.Run(tc.name, func() {
+				vault.CurrentInterestRate = tc.rate
+				vault.PeriodStart = tc.start
+				amt, err := s.k.CalculateAccruedInterest(s.ctx, *vault, underlying)
+				s.Require().NoError(err, "accrued interest calculation failed for case: %s", tc.name)
+				s.Require().Equal(tc.expected, amt, "interest accrual mismatch for case: %s", tc.name)
+			})
+		}
 	})
 
 	s.Run("CalculateAccruedAUMFee", func() {
 		s.SetupTest()
 		vault := setup()
 
-		// Case 1: No fee period start
-		vault.FeePeriodStart = 0
-		amt, err := s.k.CalculateAccruedAUMFee(s.ctx, *vault, underlying.Amount)
-		s.Require().NoError(err)
-		s.Require().True(amt.IsZero())
+		tests := []struct {
+			name     string
+			start    int64
+			assets   sdkmath.Int
+			expected sdkmath.Int
+		}{
+			{
+				name:     "no fee period start, should return zero fee",
+				start:    0,
+				assets:   underlying.Amount,
+				expected: sdkmath.ZeroInt(),
+			},
+			{
+				name:     "valid period elapsed, should return 15bps annual fee",
+				start:    pastTime.Unix(),
+				assets:   underlying.Amount,
+				expected: sdkmath.NewInt(246_575),
+			},
+			{
+				name:     "zero assets, should return zero fee",
+				start:    pastTime.Unix(),
+				assets:   sdkmath.ZeroInt(),
+				expected: sdkmath.ZeroInt(),
+			},
+		}
 
-		// Case 2: Positive fee
-		vault.FeePeriodStart = pastTime.Unix()
-		amt, err = s.k.CalculateAccruedAUMFee(s.ctx, *vault, underlying.Amount)
-		s.Require().NoError(err)
-		// Fee = 1,000,000,000 * 0.0015 * 5,184,000 / 31,536,000 = 246,575
-		s.Require().Equal(sdkmath.NewInt(246_575), amt)
-
-		// Case 3: Zero assets
-		amt, err = s.k.CalculateAccruedAUMFee(s.ctx, *vault, sdkmath.ZeroInt())
-		s.Require().NoError(err)
-		s.Require().True(amt.IsZero())
+		for _, tc := range tests {
+			s.Run(tc.name, func() {
+				vault.FeePeriodStart = tc.start
+				amt, err := s.k.CalculateAccruedAUMFee(s.ctx, *vault, tc.assets)
+				s.Require().NoError(err, "accrued AUM fee calculation failed for case: %s", tc.name)
+				s.Require().Equal(tc.expected, amt, "AUM fee mismatch for case: %s", tc.name)
+			})
+		}
 	})
 
 	s.Run("CalculateOutstandingFeeUnderlying", func() {
 		s.SetupTest()
 		vault := setup()
 
-		// Case 1: No outstanding fee
-		amt, err := s.k.CalculateOutstandingFeeUnderlying(s.ctx, *vault)
-		s.Require().NoError(err)
-		s.Require().True(amt.IsZero())
+		tests := []struct {
+			name         string
+			paymentDenom string
+			outstanding  sdk.Coin
+			expected     sdkmath.Int
+		}{
+			{
+				name:        "no outstanding fee, should return zero",
+				outstanding: sdk.NewInt64Coin(underlyingDenom, 0),
+				expected:    sdkmath.ZeroInt(),
+			},
+			{
+				name:        "outstanding fee in underlying denom, should return same amount",
+				outstanding: sdk.NewInt64Coin(underlyingDenom, 500),
+				expected:    sdkmath.NewInt(500),
+			},
+			{
+				name:         "outstanding fee in fast-path payment denom, should return 1:1 amount",
+				paymentDenom: "uylds.fcc",
+				outstanding:  sdk.NewInt64Coin("uylds.fcc", 1000),
+				expected:     sdkmath.NewInt(1000),
+			},
+		}
 
-		// Case 2: Outstanding fee in underlying
-		vault.OutstandingAumFee = sdk.NewInt64Coin(underlyingDenom, 500)
-		amt, err = s.k.CalculateOutstandingFeeUnderlying(s.ctx, *vault)
-		s.Require().NoError(err)
-		s.Require().Equal(sdkmath.NewInt(500), amt)
-
-		// Case 3: Outstanding fee in payment denom (1:1 fast path)
-		vault.PaymentDenom = "uylds.fcc"
-		vault.OutstandingAumFee = sdk.NewInt64Coin("uylds.fcc", 1000)
-		amt, err = s.k.CalculateOutstandingFeeUnderlying(s.ctx, *vault)
-		s.Require().NoError(err)
-		s.Require().Equal(sdkmath.NewInt(1000), amt)
+		for _, tc := range tests {
+			s.Run(tc.name, func() {
+				if tc.paymentDenom != "" {
+					vault.PaymentDenom = tc.paymentDenom
+				}
+				vault.OutstandingAumFee = tc.outstanding
+				amt, err := s.k.CalculateOutstandingFeeUnderlying(s.ctx, *vault)
+				s.Require().NoError(err, "outstanding fee conversion failed for case: %s", tc.name)
+				s.Require().Equal(tc.expected, amt, "outstanding fee underlying amount mismatch for case: %s", tc.name)
+			})
+		}
 	})
 
 	s.Run("CalculateAccruedAUMFeePayment", func() {
 		s.SetupTest()
 		vault := setup()
 
-		// Case 1: No fee period start
-		vault.FeePeriodStart = 0
-		vault.PaymentDenom = underlyingDenom
-		amt, err := s.k.CalculateAccruedAUMFeePayment(s.ctx, *vault, underlying.Amount)
-		s.Require().NoError(err)
-		s.Require().True(amt.IsZero())
-		s.Require().Equal(underlyingDenom, amt.Denom)
+		tests := []struct {
+			name         string
+			start        int64
+			paymentDenom string
+			setupNav     bool
+			expected     sdk.Coin
+		}{
+			{
+				name:         "no fee period start, should return zero coin",
+				start:        0,
+				paymentDenom: underlyingDenom,
+				expected:     sdk.NewInt64Coin(underlyingDenom, 0),
+			},
+			{
+				name:         "valid period with 1:1 payment denom, should return same amount",
+				start:        pastTime.Unix(),
+				paymentDenom: underlyingDenom,
+				expected:     sdk.NewInt64Coin(underlyingDenom, 246_575),
+			},
+			{
+				name:         "valid period with 1:2 NAV record, should return doubled amount",
+				start:        pastTime.Unix(),
+				paymentDenom: "usdc",
+				setupNav:     true,
+				expected:     sdk.NewInt64Coin("usdc", 493_150),
+			},
+		}
 
-		// Case 2: Positive fee, 1:1 payment denom
-		vault.FeePeriodStart = pastTime.Unix()
-		vault.PaymentDenom = underlyingDenom
-		amt, err = s.k.CalculateAccruedAUMFeePayment(s.ctx, *vault, underlying.Amount)
-		s.Require().NoError(err)
-		s.Require().Equal(sdkmath.NewInt(246_575), amt.Amount)
-		s.Require().Equal(underlyingDenom, amt.Denom)
+		for _, tc := range tests {
+			s.Run(tc.name, func() {
+				vault.FeePeriodStart = tc.start
+				vault.PaymentDenom = tc.paymentDenom
 
-		// Case 3: Positive fee, 1:2 payment denom
-		paymentDenom := "usdc"
-		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 1_000_000), s.adminAddr)
-		pmtMarkerAddr := markertypes.MustGetMarkerAddress(paymentDenom)
-		pmtMarkerAcct, err := s.k.MarkerKeeper.GetMarker(s.ctx, pmtMarkerAddr)
-		s.Require().NoError(err, "failed to get marker for address %s", pmtMarkerAddr)
-		s.k.MarkerKeeper.SetNetAssetValue(s.ctx, pmtMarkerAcct, markertypes.NetAssetValue{
-			Price:  sdk.NewInt64Coin(underlyingDenom, 1),
-			Volume: 2,
-		}, "test")
+				if tc.setupNav {
+					s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(tc.paymentDenom, 1_000_000), s.adminAddr)
+					pmtMarkerAddr := markertypes.MustGetMarkerAddress(tc.paymentDenom)
+					pmtMarkerAcct, err := s.k.MarkerKeeper.GetMarker(s.ctx, pmtMarkerAddr)
+					s.Require().NoError(err, "failed to get marker for address %s", pmtMarkerAddr)
+					s.k.MarkerKeeper.SetNetAssetValue(s.ctx, pmtMarkerAcct, markertypes.NetAssetValue{
+						Price:  sdk.NewInt64Coin(underlyingDenom, 1),
+						Volume: 2,
+					}, "test")
+				}
 
-		vault.PaymentDenom = paymentDenom
-		amt, err = s.k.CalculateAccruedAUMFeePayment(s.ctx, *vault, underlying.Amount)
-		s.Require().NoError(err)
-		// FeeUnderlying = 246,575
-		// FeePayment = 246,575 * 2 / 1 = 493,150
-		s.Require().Equal(sdkmath.NewInt(493_150), amt.Amount)
-		s.Require().Equal(paymentDenom, amt.Denom)
+				amt, err := s.k.CalculateAccruedAUMFeePayment(s.ctx, *vault, underlying.Amount)
+				s.Require().NoError(err, "accrued AUM fee payment calculation failed for case: %s", tc.name)
+				s.Require().Equal(tc.expected, amt, "accrued AUM fee payment coin mismatch for case: %s", tc.name)
+			})
+		}
 	})
 
 	s.Run("CalculateVaultTotalAssets", func() {
 		s.SetupTest()
 		vault := setup()
 
-		// Case 1: Simple principal, no interest, no fees
-		vault.CurrentInterestRate = "0.0"
-		vault.PeriodStart = 0
-		vault.FeePeriodStart = 0
-		vault.OutstandingAumFee = sdk.NewCoin(underlyingDenom, sdkmath.ZeroInt())
+		tests := []struct {
+			name        string
+			rate        string
+			periodStart int64
+			feeStart    int64
+			outstanding sdk.Coin
+			expected    sdkmath.Int
+		}{
+			{
+				name:        "static vault with no accruals, should return principal",
+				rate:        "0.0",
+				periodStart: 0,
+				feeStart:    0,
+				outstanding: sdk.NewInt64Coin(underlyingDenom, 0),
+				expected:    underlying.Amount,
+			},
+			{
+				name:        "active vault with interest and fees, should return net assets after all accruals",
+				rate:        "0.25",
+				periodStart: pastTime.Unix(),
+				feeStart:    pastTime.Unix(),
+				outstanding: sdk.NewInt64Coin(underlyingDenom, 1000),
+				expected:    sdkmath.NewInt(1_041_694_094),
+			},
+		}
 
-		amt, err := s.k.CalculateVaultTotalAssets(s.ctx, vault, underlying)
-		s.Require().NoError(err)
-		s.Require().Equal(underlying.Amount, amt)
+		for _, tc := range tests {
+			s.Run(tc.name, func() {
+				vault.CurrentInterestRate = tc.rate
+				vault.PeriodStart = tc.periodStart
+				vault.FeePeriodStart = tc.feeStart
+				vault.OutstandingAumFee = tc.outstanding
 
-		// Case 2: Principal + Interest - Fees - Outstanding
-		vault.CurrentInterestRate = "0.25"
-		vault.PeriodStart = pastTime.Unix()
-		vault.FeePeriodStart = pastTime.Unix()
-		vault.OutstandingAumFee = sdk.NewInt64Coin(underlyingDenom, 1000)
-
-		amt, err = s.k.CalculateVaultTotalAssets(s.ctx, vault, underlying)
-		s.Require().NoError(err)
-
-		// ExpectedInterest = 41,952,013
-		// IntermediateSum = 1,000,000,000 + 41,952,013 = 1,041,952,013
-		// ExpectedFee = 1,041,952,013 * 0.0015 * 5,184,000 / 31,536,000 = 256,919 (truncated dec)
-		// Result = 1,041,952,013 - 256,919 - 1000 = 1,041,694,094
-		s.Require().Equal(sdkmath.NewInt(1_041_694_094), amt)
+				amt, err := s.k.CalculateVaultTotalAssets(s.ctx, vault, underlying)
+				s.Require().NoError(err, "total assets calculation failed for case: %s", tc.name)
+				s.Require().Equal(tc.expected, amt, "total vault assets mismatch for case: %s", tc.name)
+			})
+		}
 	})
+}
+
 }
 
 func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts_RetryOnFailure() {

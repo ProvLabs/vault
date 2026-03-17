@@ -701,12 +701,3 @@ func (k Keeper) rescheduleFeeTimeout(ctx sdk.Context, vault *types.VaultAccount,
 	}
 }
 
-// resetVaultFeePeriods starts a new fee accrual period for the provided vaults after a successful
-// fee reconciliation by calling SafeEnqueueFeeTimeout for each.
-func (k Keeper) resetVaultFeePeriods(ctx sdk.Context, vaults []*types.VaultAccount) {
-	for _, vault := range vaults {
-		if err := k.SafeEnqueueFeeTimeout(ctx, vault); err != nil {
-			ctx.Logger().Error("failed to enqueue vault fee timeout", "vault", vault.GetAddress().String(), "err", err)
-		}
-	}
-}

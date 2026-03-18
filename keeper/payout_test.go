@@ -6,7 +6,6 @@ import (
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
@@ -260,11 +259,6 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 				reason := types.RefundReasonRecipientMissingAttributes
 
 				expectedEvents := sdk.Events{}
-				expectedEvents = append(expectedEvents, sdk.NewEvent(
-					banktypes.EventTypeCoinSpent,
-					sdk.NewAttribute(banktypes.AttributeKeySpender, principalAddress.String()),
-					sdk.NewAttribute(sdk.AttributeKeyAmount, assets.String()),
-				))
 				expectedEvents = append(expectedEvents, createSendCoinEvents(vaultAddr.String(), ownerAddr.String(), shares.String())...)
 				expectedEvent, err := sdk.TypedEventToEvent(types.NewEventSwapOutRefunded(vaultAddr.String(), ownerAddr.String(), shares, reqID, reason))
 				s.Require().NoError(err, "should not error converting typed EventSwapOutRefunded")

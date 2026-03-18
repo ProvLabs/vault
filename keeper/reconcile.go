@@ -30,35 +30,56 @@ const (
 // This should be called before any transaction that changes vault principal/reserves or depends on the
 // current interest state.
 func (k Keeper) reconcileVault(ctx sdk.Context, vault *types.VaultAccount) error {
+	if vault == nil {
+		return fmt.Errorf("vault account cannot be nil")
+	}
 	if vault.Paused {
 		return nil
 	}
-	currentBlockTime := ctx.BlockTime().Unix()
 
-	if vault.PeriodStart != 0 {
-		if currentBlockTime > vault.PeriodStart {
-			if err := k.PerformVaultInterestTransfer(ctx, vault); err != nil {
+	// Create a cache context to ensure interest and fee transfers are atomic.
+	// If any part of the reconciliation fails, we want to roll back all state changes
+	// (e.g., interest transfers, fee transfers, and queue updates).
+	cacheCtx, write := ctx.CacheContext()
+
+	// Work on a copy to ensure we don't leave the caller's vault object in an
+	// inconsistent "half-mutated" state if an error occurs.
+	v := vault.Clone()
+
+	currentBlockTime := cacheCtx.BlockTime().Unix()
+
+	if v.PeriodStart != 0 {
+		if currentBlockTime > v.PeriodStart {
+			if err := k.PerformVaultInterestTransfer(cacheCtx, v); err != nil {
 				return fmt.Errorf("perform vault interest transfer: %w", err)
 			}
-			if err := k.PerformVaultFeeTransfer(ctx, vault); err != nil {
+			if err := k.PerformVaultFeeTransfer(cacheCtx, v); err != nil {
 				return fmt.Errorf("perform vault fee transfer: %w", err)
 			}
-			if err := k.SafeEnqueueFeeTimeout(ctx, vault); err != nil {
+			if err := k.SafeEnqueueFeeTimeout(cacheCtx, v); err != nil {
 				return fmt.Errorf("enqueue fee timeout: %w", err)
 			}
-			if err := k.publishShareNav(ctx, vault); err != nil {
+			if err := k.publishShareNav(cacheCtx, v); err != nil {
 				return fmt.Errorf("publish share nav: %w", err)
 			}
 		}
 	} else {
-		if vault.FeePeriodStart == 0 {
-			if err := k.SafeEnqueueFeeTimeout(ctx, vault); err != nil {
+		if v.FeePeriodStart == 0 {
+			if err := k.SafeEnqueueFeeTimeout(cacheCtx, v); err != nil {
 				return fmt.Errorf("enqueue fee timeout: %w", err)
 			}
 		}
 	}
 
-	return k.SafeAddVerification(ctx, vault)
+	if err := k.SafeAddVerification(cacheCtx, v); err != nil {
+		return err
+	}
+
+	write()
+
+	// Update the original vault object with the successful changes.
+	*vault = *v
+	return nil
 }
 
 // setShareDenomNAV publishes the Net Asset Value (NAV) for a vault’s share denom

@@ -76,7 +76,11 @@ func (k *Keeper) processSwapOutJobs(ctx sdk.Context, jobsToProcess []types.Payou
 			continue
 		}
 
-		if err := k.PendingSwapOutQueue.Dequeue(ctx, j.Timestamp, j.VaultAddr, j.ID); err != nil {
+		// Use a cache context for each job to ensure that failed withdrawals (and their associated
+		// reconciliations) are rolled back atomically without affecting other jobs in the batch.
+		cacheCtx, write := ctx.CacheContext()
+
+		if err := k.PendingSwapOutQueue.Dequeue(cacheCtx, j.Timestamp, j.VaultAddr, j.ID); err != nil {
 			ctx.Logger().Error(
 				"failed to dequeue withdrawal request",
 				"request_id", j.ID,
@@ -86,7 +90,7 @@ func (k *Keeper) processSwapOutJobs(ctx sdk.Context, jobsToProcess []types.Payou
 			continue
 		}
 
-		if err := k.processSingleWithdrawal(ctx, j.ID, j.Req, *vault); err != nil {
+		if err := k.processSingleWithdrawal(cacheCtx, j.ID, j.Req, *vault); err != nil {
 			var cErr *types.CriticalError
 			if errors.As(err, &cErr) {
 				k.autoPauseVault(ctx, vault, cErr.Reason)
@@ -106,6 +110,8 @@ func (k *Keeper) processSwapOutJobs(ctx sdk.Context, jobsToProcess []types.Payou
 					k.autoPauseVault(ctx, vault, cErr.Reason)
 				}
 			}
+		} else {
+			write()
 		}
 	}
 }

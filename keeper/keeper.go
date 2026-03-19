@@ -7,6 +7,7 @@ import (
 	"github.com/provlabs/vault/types"
 
 	"cosmossdk.io/collections"
+	collcodec "cosmossdk.io/collections/codec"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/store"
@@ -56,7 +57,7 @@ func NewKeeper(
 		eventService:          eventService,
 		addressCodec:          addressCodec,
 		authority:             authority,
-		AUMFeeAddress:         collections.NewItem(builder, types.AUMFeeAddressKeyPrefix, types.AUMFeeAddressKeyName, sdk.AccAddressValue),
+		AUMFeeAddress:         collections.NewItem(builder, types.AUMFeeAddressKeyPrefix, types.AUMFeeAddressKeyName, collcodec.KeyToValueCodec(sdk.AccAddressKey)),
 		Vaults:                collections.NewMap(builder, types.VaultsKeyPrefix, types.VaultsName, sdk.AccAddressKey, collections.BytesValue),
 		PayoutVerificationSet: collections.NewKeySet(builder, types.VaultPayoutVerificationSetPrefix, types.VaultPayoutVerificationSetName, sdk.AccAddressKey),
 		PayoutTimeoutQueue:    queue.NewPayoutTimeoutQueue(builder),

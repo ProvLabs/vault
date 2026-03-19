@@ -123,7 +123,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 
 	paymentTimeoutQueue := make([]types.QueueEntry, 0)
 
-	err := k.PayoutTimeoutQueue.Walk(ctx, func(periodTimeout uint64, vaultAddr sdk.AccAddress) (stop bool, err error) {
+	err = k.PayoutTimeoutQueue.Walk(ctx, func(periodTimeout uint64, vaultAddr sdk.AccAddress) (stop bool, err error) {
 		paymentTimeoutQueue = append(paymentTimeoutQueue, types.QueueEntry{
 			Time: periodTimeout,
 			Addr: vaultAddr.String(),

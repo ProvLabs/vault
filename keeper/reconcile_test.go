@@ -75,7 +75,7 @@ func (s *TestSuite) TestKeeper_ReconcileVault() {
 					"0.25",
 					5_184_000,
 				)
-				provlabsAddr := s.keeper.GetAUMFeeAddress(s.ctx)
+				provlabsAddr := s.k.GetAUMFeeAddress(s.ctx)
 
 				feeEvs := createSendCoinEvents(markerAddr.String(), provlabsAddr.String(), "256919underlying")
 				feeEv := createVaultFeeCollectedEvent(
@@ -123,7 +123,7 @@ func (s *TestSuite) TestKeeper_ReconcileVault() {
 					"-0.25",
 					5_184_000,
 				)
-				provlabsAddr := s.keeper.GetAUMFeeAddress(s.ctx)
+				provlabsAddr := s.k.GetAUMFeeAddress(s.ctx)
 
 				feeEvs := createSendCoinEvents(markerAddr.String(), provlabsAddr.String(), "236647underlying")
 				feeEv := createVaultFeeCollectedEvent(
@@ -268,7 +268,7 @@ func (s *TestSuite) TestKeeper_PerformVaultReconcile_CompositeWithOutstandingFee
 		updatedVault, _ := s.k.GetVault(s.ctx, vaultAddress)
 		s.Require().True(updatedVault.OutstandingAumFee.IsZero(), "all fees should be cleared")
 		
-		provlabsAddr, _ := types.GetProvLabsFeeAddress(s.ctx.ChainID())
+		provlabsAddr := s.k.GetAUMFeeAddress(s.ctx)
 		// TVV after interest = 1,001,000,000 + 41,993,965 = 1,042,993,965
 		// Current Fee (15bps): 1,042,993,965 * 0.0015 * 5184000/31536000 = 257,176
 		// Total Debt = 257,176 (current) + 100,000 (outstanding) = 357,176
@@ -296,7 +296,7 @@ func (s *TestSuite) TestKeeper_PerformVaultReconcile_CompositeWithOutstandingFee
 		updatedVault, _ := s.k.GetVault(s.ctx, vaultAddress)
 		s.Require().Equal(sdkmath.NewInt(1_156_945), updatedVault.OutstandingAumFee.Amount)
 		
-		provlabsAddr, _ := types.GetProvLabsFeeAddress(s.ctx.ChainID())
+		provlabsAddr := s.k.GetAUMFeeAddress(s.ctx)
 		s.assertBalance(provlabsAddr, paymentDenom, sdkmath.NewInt(100_000))
 	})
 
@@ -1754,7 +1754,7 @@ func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer() {
 
 			// Verify partial collection
 			s.assertBalance(markertypes.MustGetMarkerAddress(shareDenom), tc.paymentDenom, sdkmath.ZeroInt())
-			provlabsAddr := s.keeper.GetAUMFeeAddress(s.ctx)
+			provlabsAddr := s.k.GetAUMFeeAddress(s.ctx)
 
 			s.assertBalance(provlabsAddr, tc.paymentDenom, tc.expectedCollected)
 			s.Require().Equal(tc.expectedOutstanding, vault.OutstandingAumFee.Amount, "outstanding fee balance mismatch")
@@ -1836,7 +1836,7 @@ func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts() {
 	err := s.k.TestAccessor_handleVaultFeeTimeouts(s.T(), s.ctx)
 	s.Require().NoError(err)
 
-	provlabsAddr := s.keeper.GetAUMFeeAddress(s.ctx)
+	provlabsAddr := s.k.GetAUMFeeAddress(s.ctx)
 
 	feeCollected := s.simApp.BankKeeper.GetBalance(s.ctx, provlabsAddr, paymentDenom).Amount
 	s.Require().True(feeCollected.IsPositive(), "fee should be collected for address %s", provlabsAddr)

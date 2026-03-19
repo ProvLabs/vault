@@ -75,8 +75,8 @@ func (s *TestSuite) TestKeeper_ReconcileVault() {
 					"0.25",
 					5_184_000,
 				)
-				provlabsAddr, err := types.GetProvLabsFeeAddress(s.ctx.ChainID())
-				s.Require().NoError(err, "failed to get ProvLabs fee address for chain ID %s", s.ctx.ChainID())
+				provlabsAddr := s.keeper.GetAUMFeeAddress(s.ctx)
+
 				feeEvs := createSendCoinEvents(markerAddr.String(), provlabsAddr.String(), "256919underlying")
 				feeEv := createVaultFeeCollectedEvent(
 					vaultAddress,
@@ -123,8 +123,8 @@ func (s *TestSuite) TestKeeper_ReconcileVault() {
 					"-0.25",
 					5_184_000,
 				)
-				provlabsAddr, err := types.GetProvLabsFeeAddress(s.ctx.ChainID())
-				s.Require().NoError(err, "failed to get ProvLabs fee address for chain ID %s", s.ctx.ChainID())
+				provlabsAddr := s.keeper.GetAUMFeeAddress(s.ctx)
+
 				feeEvs := createSendCoinEvents(markerAddr.String(), provlabsAddr.String(), "236647underlying")
 				feeEv := createVaultFeeCollectedEvent(
 					vaultAddress,
@@ -1754,8 +1754,8 @@ func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer() {
 
 			// Verify partial collection
 			s.assertBalance(markertypes.MustGetMarkerAddress(shareDenom), tc.paymentDenom, sdkmath.ZeroInt())
-			provlabsAddr, err := types.GetProvLabsFeeAddress(s.ctx.ChainID())
-			s.Require().NoError(err, "failed to get ProvLabs fee address for chain ID %s", s.ctx.ChainID())
+			provlabsAddr := s.keeper.GetAUMFeeAddress(s.ctx)
+
 			s.assertBalance(provlabsAddr, tc.paymentDenom, tc.expectedCollected)
 			s.Require().Equal(tc.expectedOutstanding, vault.OutstandingAumFee.Amount, "outstanding fee balance mismatch")
 
@@ -1836,8 +1836,8 @@ func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts() {
 	err := s.k.TestAccessor_handleVaultFeeTimeouts(s.T(), s.ctx)
 	s.Require().NoError(err)
 
-	provlabsAddr, err := types.GetProvLabsFeeAddress(s.ctx.ChainID())
-	s.Require().NoError(err, "failed to get ProvLabs fee address for chain ID %s", s.ctx.ChainID())
+	provlabsAddr := s.keeper.GetAUMFeeAddress(s.ctx)
+
 	feeCollected := s.simApp.BankKeeper.GetBalance(s.ctx, provlabsAddr, paymentDenom).Amount
 	s.Require().True(feeCollected.IsPositive(), "fee should be collected for address %s", provlabsAddr)
 

@@ -676,47 +676,6 @@ func TestVaultAccount_ValidateAcceptedCoin(t *testing.T) {
 	assert.Contains(t, err.Error(), "denom not supported for vault", "error should indicate unsupported denom")
 }
 
-func TestGetProvLabsFeeAddress(t *testing.T) {
-	tests := []struct {
-		name    string
-		chainID string
-	}{
-		{
-			name:    "mainnet",
-			chainID: "pio-mainnet-1",
-		},
-		{
-			name:    "testnet",
-			chainID: "pio-testnet-1",
-		},
-		{
-			name:    "other/local",
-			chainID: "vaulty-1",
-		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			addr, err := types.GetProvLabsFeeAddress(tc.chainID)
-			// On some test environments, Bech32 prefix might be locked to 'cosmos', 
-			// making Bech32 decoding of 'pb...' or 'tp...' fail if not configured.
-			// The default path uses crypto.AddressHash which is prefix-agnostic.
-			if tc.chainID == "pio-mainnet-1" || tc.chainID == "pio-testnet-1" {
-				// These might fail if the SDK global config isn't set to 'pb' or 'tp'
-				// For now, let's just ensure it doesn't panic and we handle the error if it's a prefix mismatch
-				if err != nil {
-					require.Containsf(t, err.Error(), "invalid Bech32 prefix", "test case %q: unexpected error; want Bech32 prefix error, got %v", tc.name, err)
-				} else {
-					require.NotNilf(t, addr, "test case %q: fee address should not be nil", tc.name)
-				}
-			} else {
-				require.NoErrorf(t, err, "test case %q: unexpected error for chain %s", tc.name, tc.chainID)
-				require.NotNilf(t, addr, "test case %q: fee address should not be nil", tc.name)
-			}
-		})
-	}
-}
-
 func TestPendingSwapOut_Validate(t *testing.T) {
 	validOwner := utils.TestAddress().Bech32
 	validVault := utils.TestAddress().Bech32

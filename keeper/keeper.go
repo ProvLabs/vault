@@ -27,6 +27,7 @@ type Keeper struct {
 	MarkerKeeper types.MarkerKeeper
 	BankKeeper   types.BankKeeper
 
+	AUMFeeAddress         collections.Item[sdk.AccAddress]
 	Vaults                collections.Map[sdk.AccAddress, []byte]
 	PayoutVerificationSet collections.KeySet[sdk.AccAddress]
 	PayoutTimeoutQueue    *queue.PayoutTimeoutQueue
@@ -55,6 +56,7 @@ func NewKeeper(
 		eventService:          eventService,
 		addressCodec:          addressCodec,
 		authority:             authority,
+		AUMFeeAddress:         collections.NewItem(builder, types.AUMFeeAddressKeyPrefix, types.AUMFeeAddressKeyName, sdk.AccAddressValue),
 		Vaults:                collections.NewMap(builder, types.VaultsKeyPrefix, types.VaultsName, sdk.AccAddressKey, collections.BytesValue),
 		PayoutVerificationSet: collections.NewKeySet(builder, types.VaultPayoutVerificationSetPrefix, types.VaultPayoutVerificationSetName, sdk.AccAddressKey),
 		PayoutTimeoutQueue:    queue.NewPayoutTimeoutQueue(builder),
@@ -77,6 +79,16 @@ func NewKeeper(
 // GetAuthority returns the module's authority.
 func (k Keeper) GetAuthority() []byte {
 	return k.authority
+}
+
+// GetAUMFeeAddress returns the address where AUM fees are collected.
+// It prioritizes the address stored in state, falling back to the hardcoded default.
+func (k Keeper) GetAUMFeeAddress(ctx sdk.Context) sdk.AccAddress {
+	addr, err := k.AUMFeeAddress.Get(ctx)
+	if err == nil && len(addr) > 0 {
+		return addr
+	}
+	return types.AUMFeeAddress
 }
 
 // getLogger returns a logger with vault module context.

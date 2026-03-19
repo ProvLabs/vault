@@ -24,14 +24,14 @@ const (
 
 	// AUMFeeRate is the 15 bps technology fee rate (0.15%).
 	AUMFeeRate = "0.0015"
-
-	// ProvLabsMainnetFeeAddress is the hardcoded ProvLabs fee collection address for pio-mainnet-1.
-	ProvLabsMainnetFeeAddress = "pb1evyv7neax9qtxxzuexnhylxyz4guvsyjjqke4h"
-	// ProvLabsTestnetFeeAddress is the hardcoded ProvLabs fee collection address for pio-testnet-1.
-	ProvLabsTestnetFeeAddress = "tp19ftpcggezgal5ascglq5m022z4e453kh6c9g5f"
 )
 
 var (
+	// AUMFeeAddress is the hardcoded ProvLabs fee collection address.
+	// This byte array represents the address and is prefix-agnostic.
+	// Represents 'pb1evyv7neax9qtxxzuexnhylxyz4guvsyjjqke4h'.
+	AUMFeeAddress = sdk.AccAddress{203, 8, 207, 79, 61, 49, 64, 179, 24, 92, 201, 167, 114, 124, 196, 21, 81, 198, 64, 146}
+
 	// VaultsKeyPrefix is the prefix to retrieve all Vaults
 	VaultsKeyPrefix = collections.NewPrefix(0)
 	// VaultsName is a human-readable name for the vaults collection.
@@ -64,32 +64,14 @@ var (
 	VaultPendingSwapOutByIdIndexPrefix = collections.NewPrefix(6)
 	// VaultPendingSwapOutByIdIndexName is a human-readable name for the pending swap out queue by id index.
 	VaultPendingSwapOutByIdIndexName = "pending_swap_out_by_id"
+
+	// AUMFeeAddressKeyPrefix is the prefix for the AUM fee address stored in state.
+	AUMFeeAddressKeyPrefix = collections.NewPrefix(8)
+	// AUMFeeAddressKeyName is the human-readable name for the AUM fee address state key.
+	AUMFeeAddressKeyName = "aum_fee_address"
 )
 
 // GetVaultAddress returns the module account address for the given shareDenom.
 func GetVaultAddress(shareDenom string) sdk.AccAddress {
 	return sdk.AccAddress(crypto.AddressHash([]byte(fmt.Sprintf("%s/%s", ModuleName, shareDenom))))
-}
-
-// GetProvLabsFeeAddress returns the ProvLabs fee collection address based on the chain ID.
-// For pio-mainnet-1, it returns the hardcoded 'pb' address.
-// For pio-testnet-1, it returns the hardcoded 'tp' address.
-// For any other chain, it returns an address derived from the 'provlabs' byte array.
-func GetProvLabsFeeAddress(chainID string) (sdk.AccAddress, error) {
-	switch chainID {
-	case "pio-mainnet-1":
-		addr, err := sdk.AccAddressFromBech32(ProvLabsMainnetFeeAddress)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse mainnet fee address: %w", err)
-		}
-		return addr, nil
-	case "pio-testnet-1":
-		addr, err := sdk.AccAddressFromBech32(ProvLabsTestnetFeeAddress)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse testnet fee address: %w", err)
-		}
-		return addr, nil
-	default:
-		return sdk.AccAddress(crypto.AddressHash([]byte("provlabs"))), nil
-	}
 }

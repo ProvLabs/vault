@@ -262,10 +262,7 @@ func (k Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAccou
 		return nil
 	}
 
-	provlabsAddr, err := types.GetProvLabsFeeAddress(ctx.ChainID())
-	if err != nil {
-		return fmt.Errorf("failed to get ProvLabs fee address: %w", err)
-	}
+	provlabsAddr := k.GetAUMFeeAddress(ctx)
 
 	principalAddress := vault.PrincipalMarkerAddress()
 	balance := k.BankKeeper.GetBalance(ctx, principalAddress, vault.PaymentDenom)

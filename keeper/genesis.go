@@ -19,6 +19,13 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 		panic(fmt.Errorf("invalid vault genesis state: %w", err))
 	}
 
+	if genState.AumFeeAddress != "" {
+		addr := sdk.MustAccAddressFromBech32(genState.AumFeeAddress)
+		if err := k.AUMFeeAddress.Set(ctx, addr); err != nil {
+			panic(fmt.Errorf("failed to set aum fee address: %w", err))
+		}
+	}
+
 	accounts := k.AuthKeeper.GetAllAccounts(ctx)
 	for _, acc := range accounts {
 		if v, ok := acc.(types.VaultAccountI); ok {
@@ -101,6 +108,12 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	allAccounts := k.AuthKeeper.GetAllAccounts(ctx)
 
+	var aumFeeAddress string
+	addr, err := k.AUMFeeAddress.Get(ctx)
+	if err == nil && len(addr) > 0 {
+		aumFeeAddress = addr.String()
+	}
+
 	var vaults []types.VaultAccount
 	for _, acc := range allAccounts {
 		if v, ok := acc.(*types.VaultAccount); ok {
@@ -144,6 +157,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		PayoutTimeoutQueue:  paymentTimeoutQueue,
 		FeeTimeoutQueue:     feeTimeoutQueue,
 		PendingSwapOutQueue: *pendingSwapOutQueue,
+		AumFeeAddress:       aumFeeAddress,
 	}
 }
 

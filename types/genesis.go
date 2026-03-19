@@ -15,6 +15,12 @@ func DefaultGenesisState() *GenesisState {
 // Validate performs basic genesis state validation returning an error upon any
 // failure.
 func (gs GenesisState) Validate() error {
+	if gs.AumFeeAddress != "" {
+		if _, err := sdk.AccAddressFromBech32(gs.AumFeeAddress); err != nil {
+			return fmt.Errorf("invalid aum fee address: %w", err)
+		}
+	}
+
 	for i, entry := range gs.PayoutTimeoutQueue {
 		if _, err := sdk.AccAddressFromBech32(entry.Addr); err != nil {
 			return fmt.Errorf("invalid payout timeout queue address at index %d: %w", i, err)

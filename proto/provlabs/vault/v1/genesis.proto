@@ -50,4 +50,8 @@ message GenesisState {
   // temporarily deferred from automatic AUM fee collection until the
   // given UNIX timestamp (seconds). These entries are re-enqueued on InitGenesis.
   repeated QueueEntry fee_timeout_queue = 4 [(gogoproto.nullable) = false];
+
+  // aum_fee_address is the address where AUM fees are collected.
+  // If empty, the hardcoded default is used.
+  string aum_fee_address = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }

@@ -997,6 +997,31 @@ func (s *TestSuite) TestEstimateTotalVaultValue_MultiAsset_WithNAV_WithNegativeI
 	s.Require().Equal(expectedCoin, estimatedTVV, "estimated TVV should equal base principal (with NAV) and subtract negative interest")
 }
 
+func (s *TestSuite) TestEstimateTotalVaultValue_FullScenario() {
+	underlyingDenom := "ylds"
+	shareDenom := "vshare"
+	vault := s.setupBaseVault(underlyingDenom, shareDenom)
+
+	// Setup: 1000 principal, 50 outstanding fee, 10% rate.
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(
+		sdk.NewInt64Coin(underlyingDenom, 1_000),
+	)))
+
+	startTime := s.ctx.BlockTime()
+	vault.PeriodStart = startTime.Unix()
+	vault.FeePeriodStart = startTime.Unix()
+	vault.CurrentInterestRate = "0.1"
+	vault.OutstandingAumFee = sdk.NewInt64Coin(underlyingDenom, 50)
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	// Advance 1 year. Expected: (1000 + 105 interest) - 1 accrued fee - 50 outstanding = 1054.
+	s.ctx = s.ctx.WithBlockTime(startTime.Add(time.Second * 31_536_000))
+
+	estimatedTVV, err := s.k.EstimateTotalVaultValue(s.ctx, vault)
+	s.Require().NoError(err)
+	s.Require().Equal(sdk.NewInt64Coin(underlyingDenom, 1_054), estimatedTVV)
+}
+
 func (s *TestSuite) TestEstimateTotalVaultValue_ErrorPropagation() {
 	underlyingDenom := "ylds"
 	paymentDenom := "usdc"

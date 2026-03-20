@@ -86,20 +86,22 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ client.TxEncodingCo
 // AppModule implements the core vault module functionality.
 type AppModule struct {
 	AppModuleBasic
-	keeper       *keeper.Keeper
-	addressCodec address.Codec
-	markerKeeper types.MarkerKeeper
-	bankKeeper   types.BankKeeper
+	keeper         *keeper.Keeper
+	addressCodec   address.Codec
+	markerKeeper   types.MarkerKeeper
+	bankKeeper     types.BankKeeper
+	exchangeKeeper types.ExchangeKeeper
 }
 
 // NewAppModule creates a new AppModule instance.
-func NewAppModule(keeper *keeper.Keeper, mk types.MarkerKeeper, bk types.BankKeeper, addressCodec address.Codec) AppModule {
+func NewAppModule(keeper *keeper.Keeper, mk types.MarkerKeeper, bk types.BankKeeper, ek types.ExchangeKeeper, addressCodec address.Codec) AppModule {
 	return AppModule{
 		AppModuleBasic: NewAppModuleBasic(),
 		keeper:         keeper,
 		addressCodec:   addressCodec,
 		markerKeeper:   mk,
 		bankKeeper:     bk,
+		exchangeKeeper: ek,
 	}
 }
 
@@ -440,6 +442,33 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						{ProtoField: "asset_manager"},
 					},
 				},
+				{
+					RpcMethod: "AcceptPayments",
+					Use:       "accept-payments [authority] [vault_address] [source]",
+					Alias:     []string{"ap"},
+					Short:     "Accept pending payments from a specific source to the vault",
+					Long:      "Look up and settle all OTC trade payments from the specified source directed to the vault.",
+					Example:   fmt.Sprintf("%s accept-payments %s %s %s", txStart, exampleAuthorityAddr, exampleVaultAddr, exampleOwnerAddr),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "authority"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "source"},
+					},
+				},
+				{
+					RpcMethod: "UpdateAssetNAV",
+					Use:       "update-asset-nav [authority] [vault_address] [asset_denom] [asset_price]",
+					Alias:     []string{"uan"},
+					Short:     "Update the vault-specific NAV for a particular asset",
+					Long:      "Set the custom Net Asset Value for an asset held by the vault. Price must be expressed in the vault’s underlying asset.",
+					Example:   fmt.Sprintf("%s update-asset-nav %s %s scope1qz... 1000nhash", txStart, exampleAuthorityAddr, exampleVaultAddr),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "authority"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "asset_denom"},
+						{ProtoField: "asset_price"},
+					},
+				},
 			},
 		},
 		Query: &autocliv1.ServiceCommandDescriptor{
@@ -521,15 +550,16 @@ func init() {
 // ModuleInputs defines the inputs required to initialize the vault module.
 type ModuleInputs struct {
 	depinject.In
-	Config        *modulev1.Module
-	StoreService  store.KVStoreService
-	HeaderService header.Service
-	EventService  event.Service
-	Codec         codec.Codec
-	AddressCodec  address.Codec
-	AuthKeeper    types.AccountKeeper
-	MarkerKeeper  types.MarkerKeeper
-	BankKeeper    types.BankKeeper
+	Config         *modulev1.Module
+	StoreService   store.KVStoreService
+	HeaderService  header.Service
+	EventService   event.Service
+	Codec          codec.Codec
+	AddressCodec   address.Codec
+	AuthKeeper     types.AccountKeeper
+	MarkerKeeper   types.MarkerKeeper
+	BankKeeper     types.BankKeeper
+	ExchangeKeeper types.ExchangeKeeper
 }
 
 // ModuleOutputs defines the outputs of the vault module provider.
@@ -555,8 +585,9 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.AuthKeeper,
 		in.MarkerKeeper,
 		in.BankKeeper,
+		in.ExchangeKeeper,
 	)
-	m := NewAppModule(k, in.MarkerKeeper, in.BankKeeper, in.AddressCodec)
+	m := NewAppModule(k, in.MarkerKeeper, in.BankKeeper, in.ExchangeKeeper, in.AddressCodec)
 	return ModuleOutputs{Keeper: k, Module: m}
 }
 

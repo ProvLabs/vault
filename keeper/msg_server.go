@@ -6,6 +6,7 @@ import (
 
 	"github.com/provlabs/vault/types"
 
+	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -738,4 +739,63 @@ func (k msgServer) SetAssetManager(goCtx context.Context, msg *types.MsgSetAsset
 	k.emitEvent(ctx, types.NewEventAssetManagerSet(vaultAddr.String(), msg.Admin, msg.AssetManager))
 
 	return &types.MsgSetAssetManagerResponse{}, nil
+}
+
+// AcceptPayments looks up and accepts pending payments from a specific source to the vault.
+func (k msgServer) AcceptPayments(goCtx context.Context, msg *types.MsgAcceptPaymentsRequest) (*types.MsgAcceptPaymentsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault: %w", err)
+	}
+	if vault == nil {
+		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+	}
+
+	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+		return nil, fmt.Errorf("failed to validate management authority: %w", err)
+	}
+
+	acceptedIDs, err := k.Keeper.AcceptPaymentsFromSource(ctx, vault, msg.Source)
+	if err != nil {
+		return nil, fmt.Errorf("failed to accept payments: %w", err)
+	}
+
+	return &types.MsgAcceptPaymentsResponse{AcceptedPaymentIds: acceptedIDs}, nil
+}
+
+// UpdateAssetNAV updates the custom NAV for an asset held by the vault.
+func (k msgServer) UpdateAssetNAV(goCtx context.Context, msg *types.MsgUpdateAssetNAVRequest) (*types.MsgUpdateAssetNAVResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault: %w", err)
+	}
+	if vault == nil {
+		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+	}
+
+	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+		return nil, fmt.Errorf("failed to validate management authority: %w", err)
+	}
+
+	if msg.AssetPrice.Denom != vault.UnderlyingAsset {
+		return nil, fmt.Errorf("asset price must be expressed in underlying asset %s, got %s", vault.UnderlyingAsset, msg.AssetPrice.Denom)
+	}
+
+	nav := types.AssetNAV{
+		AssetDenom:  msg.AssetDenom,
+		Price:       msg.AssetPrice,
+		LastUpdated: ctx.BlockTime().Unix(),
+	}
+
+	if err := k.AssetNAV.Set(ctx, collections.Join(vaultAddr, msg.AssetDenom), nav); err != nil {
+		return nil, fmt.Errorf("failed to set asset NAV: %w", err)
+	}
+
+	return &types.MsgUpdateAssetNAVResponse{}, nil
 }

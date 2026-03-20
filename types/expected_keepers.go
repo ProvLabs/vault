@@ -25,6 +25,18 @@ type MarkerKeeper interface {
 	GetUnrestrictedDenomRegex(ctx sdk.Context) (regex string)
 }
 
+type ExchangeKeeper interface {
+	AcceptPayment(ctx sdk.Context, destination sdk.AccAddress, paymentID uint64) error
+	IteratePayments(ctx sdk.Context, addr sdk.AccAddress, cb func(payment Payment) (stop bool, err error)) error
+}
+
+type Payment struct {
+	ID           uint64
+	Source       string
+	SourceAmount sdk.Coins
+	TargetAmount sdk.Coins
+}
+
 type AccountKeeper interface {
 	NewAccount(context.Context, sdk.AccountI) sdk.AccountI
 	NewAccountWithAddress(ctx context.Context, addr sdk.AccAddress) sdk.AccountI

@@ -6,6 +6,7 @@ import (
 	"github.com/provlabs/vault/types"
 	"github.com/provlabs/vault/utils"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -54,6 +55,13 @@ func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom string, vault types.
 	const uyldsFccDenom = "uylds.fcc"
 	if vault.PaymentDenom == uyldsFccDenom || underlyingAsset == uyldsFccDenom {
 		return math.NewInt(1), math.NewInt(1), nil
+	}
+
+	// Check for vault-specific custom NAV first
+	if nav, err := k.AssetNAV.Get(ctx, collections.Join(vault.GetAddress(), srcDenom)); err == nil {
+		if !nav.Price.Amount.IsZero() {
+			return nav.Price.Amount, math.NewInt(1), nil
+		}
 	}
 
 	fwd, errF := k.MarkerKeeper.GetNetAssetValue(ctx, srcDenom, underlyingAsset)
@@ -162,9 +170,16 @@ func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccoun
 	balances := k.BankKeeper.GetAllBalances(ctx, vault.PrincipalMarkerAddress())
 	total := math.ZeroInt()
 	for _, balance := range balances {
-		if balance.Denom == vault.TotalShares.Denom || !vault.IsAcceptedDenom(balance.Denom) {
+		if balance.Denom == vault.TotalShares.Denom {
 			continue
 		}
+		// Include balance if it is an accepted denom OR if we have a custom NAV for it.
+		if !vault.IsAcceptedDenom(balance.Denom) {
+			if hasNAV, _ := k.AssetNAV.Has(ctx, collections.Join(vault.GetAddress(), balance.Denom)); !hasNAV {
+				continue
+			}
+		}
+
 		val, err := k.ToUnderlyingAssetAmount(ctx, vault, balance)
 		if err != nil {
 			return math.Int{}, fmt.Errorf("failed to convert balance to underlying: %w", err)

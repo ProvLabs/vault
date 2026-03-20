@@ -136,3 +136,15 @@ message PendingSwapOut {
   // redeem_denom is the denomination of the asset to be redeemed.
   string redeem_denom = 4;
 }
+
+// AssetNAV represents a vault-specific Net Asset Value for a particular asset.
+message AssetNAV {
+  // asset_denom is the denomination of the asset.
+  string asset_denom = 1;
+
+  // price is the value of one unit of the asset expressed in the vault's underlying asset.
+  cosmos.base.v1beta1.Coin price = 2 [(gogoproto.nullable) = false];
+
+  // last_updated is the block time (in Unix seconds) when this NAV was last updated.
+  int64 last_updated = 3;
+}

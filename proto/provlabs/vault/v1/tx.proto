@@ -86,6 +86,12 @@ service Msg {
   // SetAssetManager sets or clears the optional asset manager address for a vault.
   // The vault admin must sign this transaction. Passing an empty address clears it.
   rpc SetAssetManager(MsgSetAssetManagerRequest) returns (MsgSetAssetManagerResponse);
+
+  // AcceptPayments looks up and accepts pending payments from a specific source to the vault.
+  rpc AcceptPayments(MsgAcceptPaymentsRequest) returns (MsgAcceptPaymentsResponse);
+
+  // UpdateAssetNAV updates the custom NAV for an asset held by the vault.
+  rpc UpdateAssetNAV(MsgUpdateAssetNAVRequest) returns (MsgUpdateAssetNAVResponse);
 }
 
 // MsgCreateVaultRequest is the request message for the CreateVault endpoint.
@@ -446,3 +452,38 @@ message MsgSetAssetManagerRequest {
 
 // MsgSetAssetManagerResponse is the response message for the SetAssetManager endpoint.
 message MsgSetAssetManagerResponse {}
+
+// MsgAcceptPaymentsRequest is the request message for accepting pending payments from a specific source.
+message MsgAcceptPaymentsRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority is the address of the vault administrator or asset manager.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 2;
+  // source is the address of the payment source (e.g. the issuer).
+  string source = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgAcceptPaymentsResponse is the response message for the AcceptPayments endpoint.
+message MsgAcceptPaymentsResponse {
+  // accepted_payment_ids is a list of payment IDs that were successfully accepted.
+  repeated uint64 accepted_payment_ids = 1;
+}
+
+// MsgUpdateAssetNAVRequest is the request message for updating the custom NAV for an asset.
+message MsgUpdateAssetNAVRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority is the address of the vault administrator or asset manager.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 2;
+  // asset_denom is the denomination of the asset being priced.
+  string asset_denom = 3;
+  // asset_price is the new price for the asset, expressed in the vault's underlying asset.
+  cosmos.base.v1beta1.Coin asset_price = 4 [(gogoproto.nullable) = false];
+}
+
+// MsgUpdateAssetNAVResponse is the response message for the UpdateAssetNAV endpoint.
+message MsgUpdateAssetNAVResponse {}

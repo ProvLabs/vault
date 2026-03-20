@@ -49,6 +49,8 @@ import (
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 
+	"github.com/provlabs/vault/types"
+
 	_ "cosmossdk.io/x/feegrant/module"
 	_ "cosmossdk.io/x/upgrade"
 	_ "embed"
@@ -65,6 +67,8 @@ import (
 	_ "github.com/cosmos/cosmos-sdk/x/staking"
 	// Custom Modules
 	_ "github.com/provlabs/vault"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var DefaultNodeHome string
@@ -150,6 +154,7 @@ func AppConfig() depinject.Config {
 		depinject.Provide(
 			ProvideExchangeDummyCustomSigners,
 			ProvideMarkerKeeperStub,
+			ProvideExchangeKeeperStub,
 		),
 		depinject.Supply(
 			map[string]module.AppModuleBasic{
@@ -281,6 +286,19 @@ func (app *SimApp) kvStoreKeys() map[string]*storetypes.KVStoreKey {
 // if used.
 func ProvideMarkerKeeperStub() *markerkeeper.Keeper {
 	return &markerkeeper.Keeper{}
+}
+
+type exchangeKeeperStub struct{}
+
+func (e exchangeKeeperStub) AcceptPayment(ctx sdk.Context, destination sdk.AccAddress, paymentID uint64) error {
+	return nil
+}
+func (e exchangeKeeperStub) IteratePayments(ctx sdk.Context, addr sdk.AccAddress, cb func(payment types.Payment) (stop bool, err error)) error {
+	return nil
+}
+
+func ProvideExchangeKeeperStub() types.ExchangeKeeper {
+	return exchangeKeeperStub{}
 }
 
 func (app *SimApp) AppCodec() codec.Codec {

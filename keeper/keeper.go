@@ -27,9 +27,11 @@ type Keeper struct {
 	AuthKeeper   types.AccountKeeper
 	MarkerKeeper types.MarkerKeeper
 	BankKeeper   types.BankKeeper
+	ExchangeKeeper types.ExchangeKeeper
 
 	AUMFeeAddress         collections.Item[sdk.AccAddress]
 	Vaults                collections.Map[sdk.AccAddress, []byte]
+	AssetNAV              collections.Map[collections.Pair[sdk.AccAddress, string], types.AssetNAV]
 	PayoutVerificationSet collections.KeySet[sdk.AccAddress]
 	PayoutTimeoutQueue    *queue.PayoutTimeoutQueue
 	FeeTimeoutQueue       *queue.FeeTimeoutQueue
@@ -46,6 +48,7 @@ func NewKeeper(
 	authKeeper types.AccountKeeper,
 	markerkeeper types.MarkerKeeper,
 	bankkeeper types.BankKeeper,
+	exchangekeeper types.ExchangeKeeper,
 ) *Keeper {
 	if _, err := addressCodec.BytesToString(authority); err != nil {
 		panic(fmt.Sprintf("invalid authority address %s: %s", authority, err))
@@ -59,6 +62,7 @@ func NewKeeper(
 		authority:             authority,
 		AUMFeeAddress:         collections.NewItem(builder, types.AUMFeeAddressKeyPrefix, types.AUMFeeAddressKeyName, collcodec.KeyToValueCodec(sdk.AccAddressKey)),
 		Vaults:                collections.NewMap(builder, types.VaultsKeyPrefix, types.VaultsName, sdk.AccAddressKey, collections.BytesValue),
+		AssetNAV:              collections.NewMap(builder, types.AssetNAVKeyPrefix, types.AssetNAVName, collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey), codec.CollValue[types.AssetNAV](cdc)),
 		PayoutVerificationSet: collections.NewKeySet(builder, types.VaultPayoutVerificationSetPrefix, types.VaultPayoutVerificationSetName, sdk.AccAddressKey),
 		PayoutTimeoutQueue:    queue.NewPayoutTimeoutQueue(builder),
 		FeeTimeoutQueue:       queue.NewFeeTimeoutQueue(builder),
@@ -66,6 +70,7 @@ func NewKeeper(
 		AuthKeeper:            authKeeper,
 		MarkerKeeper:          markerkeeper,
 		BankKeeper:            bankkeeper,
+		ExchangeKeeper:        exchangekeeper,
 	}
 
 	schema, err := builder.Build()

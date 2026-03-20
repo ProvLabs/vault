@@ -41,6 +41,8 @@ const (
 	Msg_BridgeMintShares_FullMethodName       = "/provlabs.vault.v1.Msg/BridgeMintShares"
 	Msg_BridgeBurnShares_FullMethodName       = "/provlabs.vault.v1.Msg/BridgeBurnShares"
 	Msg_SetAssetManager_FullMethodName        = "/provlabs.vault.v1.Msg/SetAssetManager"
+	Msg_AcceptPayments_FullMethodName         = "/provlabs.vault.v1.Msg/AcceptPayments"
+	Msg_UpdateAssetNAV_FullMethodName         = "/provlabs.vault.v1.Msg/UpdateAssetNAV"
 )
 
 // MsgClient is the client API for Msg service.
@@ -101,6 +103,10 @@ type MsgClient interface {
 	// SetAssetManager sets or clears the optional asset manager address for a vault.
 	// The vault admin must sign this transaction. Passing an empty address clears it.
 	SetAssetManager(ctx context.Context, in *MsgSetAssetManagerRequest, opts ...grpc.CallOption) (*MsgSetAssetManagerResponse, error)
+	// AcceptPayments looks up and accepts pending payments from a specific source to the vault.
+	AcceptPayments(ctx context.Context, in *MsgAcceptPaymentsRequest, opts ...grpc.CallOption) (*MsgAcceptPaymentsResponse, error)
+	// UpdateAssetNAV updates the custom NAV for an asset held by the vault.
+	UpdateAssetNAV(ctx context.Context, in *MsgUpdateAssetNAVRequest, opts ...grpc.CallOption) (*MsgUpdateAssetNAVResponse, error)
 }
 
 type msgClient struct {
@@ -331,6 +337,26 @@ func (c *msgClient) SetAssetManager(ctx context.Context, in *MsgSetAssetManagerR
 	return out, nil
 }
 
+func (c *msgClient) AcceptPayments(ctx context.Context, in *MsgAcceptPaymentsRequest, opts ...grpc.CallOption) (*MsgAcceptPaymentsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgAcceptPaymentsResponse)
+	err := c.cc.Invoke(ctx, Msg_AcceptPayments_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateAssetNAV(ctx context.Context, in *MsgUpdateAssetNAVRequest, opts ...grpc.CallOption) (*MsgUpdateAssetNAVResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgUpdateAssetNAVResponse)
+	err := c.cc.Invoke(ctx, Msg_UpdateAssetNAV_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility.
@@ -389,6 +415,10 @@ type MsgServer interface {
 	// SetAssetManager sets or clears the optional asset manager address for a vault.
 	// The vault admin must sign this transaction. Passing an empty address clears it.
 	SetAssetManager(context.Context, *MsgSetAssetManagerRequest) (*MsgSetAssetManagerResponse, error)
+	// AcceptPayments looks up and accepts pending payments from a specific source to the vault.
+	AcceptPayments(context.Context, *MsgAcceptPaymentsRequest) (*MsgAcceptPaymentsResponse, error)
+	// UpdateAssetNAV updates the custom NAV for an asset held by the vault.
+	UpdateAssetNAV(context.Context, *MsgUpdateAssetNAVRequest) (*MsgUpdateAssetNAVResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -464,6 +494,12 @@ func (UnimplementedMsgServer) BridgeBurnShares(context.Context, *MsgBridgeBurnSh
 }
 func (UnimplementedMsgServer) SetAssetManager(context.Context, *MsgSetAssetManagerRequest) (*MsgSetAssetManagerResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetAssetManager not implemented")
+}
+func (UnimplementedMsgServer) AcceptPayments(context.Context, *MsgAcceptPaymentsRequest) (*MsgAcceptPaymentsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AcceptPayments not implemented")
+}
+func (UnimplementedMsgServer) UpdateAssetNAV(context.Context, *MsgUpdateAssetNAVRequest) (*MsgUpdateAssetNAVResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateAssetNAV not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 func (UnimplementedMsgServer) testEmbeddedByValue()             {}
@@ -882,6 +918,42 @@ func _Msg_SetAssetManager_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_AcceptPayments_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgAcceptPaymentsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).AcceptPayments(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_AcceptPayments_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).AcceptPayments(ctx, req.(*MsgAcceptPaymentsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateAssetNAV_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateAssetNAVRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateAssetNAV(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_UpdateAssetNAV_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateAssetNAV(ctx, req.(*MsgUpdateAssetNAVRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -976,6 +1048,14 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetAssetManager",
 			Handler:    _Msg_SetAssetManager_Handler,
+		},
+		{
+			MethodName: "AcceptPayments",
+			Handler:    _Msg_AcceptPayments_Handler,
+		},
+		{
+			MethodName: "UpdateAssetNAV",
+			Handler:    _Msg_UpdateAssetNAV_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

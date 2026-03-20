@@ -69,6 +69,11 @@ var (
 	AUMFeeAddressKeyPrefix = collections.NewPrefix(8)
 	// AUMFeeAddressKeyName is the human-readable name for the AUM fee address state key.
 	AUMFeeAddressKeyName = "aum_fee_address"
+
+	// AssetNAVKeyPrefix is the prefix for the vault-specific asset NAVs.
+	AssetNAVKeyPrefix = collections.NewPrefix(9)
+	// AssetNAVName is the human-readable name for the asset NAVs collection.
+	AssetNAVName = "asset_nav"
 )
 
 // GetVaultAddress returns the module account address for the given shareDenom.

@@ -89,6 +89,25 @@ func (m *MockAuthKeeper) GetModuleAddress(moduleName string) sdk.AccAddress {
 	return sdk.AccAddress(moduleName)
 }
 
+type MockExchangeKeeper struct {
+	AcceptPaymentFn  func(ctx sdk.Context, destination sdk.AccAddress, paymentID uint64) error
+	IteratePaymentsFn func(ctx sdk.Context, addr sdk.AccAddress, cb func(payment types.Payment) (stop bool, err error)) error
+}
+
+func (m MockExchangeKeeper) AcceptPayment(ctx sdk.Context, destination sdk.AccAddress, paymentID uint64) error {
+	if m.AcceptPaymentFn != nil {
+		return m.AcceptPaymentFn(ctx, destination, paymentID)
+	}
+	return nil
+}
+
+func (m MockExchangeKeeper) IteratePayments(ctx sdk.Context, addr sdk.AccAddress, cb func(payment types.Payment) (stop bool, err error)) error {
+	if m.IteratePaymentsFn != nil {
+		return m.IteratePaymentsFn(ctx, addr, cb)
+	}
+	return nil
+}
+
 // NewVaultKeeper returns an instance of the Keeper with all dependencies mocked.
 func NewVaultKeeper(
 	t testing.TB,
@@ -114,6 +133,7 @@ func NewVaultKeeper(
 		authMock,
 		nil,
 		nil,
+		MockExchangeKeeper{},
 	)
 
 	ctx := wrapper.Ctx.WithHeaderInfo(header.Info{Time: time.Now().UTC()})

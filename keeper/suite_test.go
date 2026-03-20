@@ -30,7 +30,7 @@ type TestSuite struct {
 	simApp *simapp.SimApp
 	ctx    sdk.Context
 
-	k keeper.Keeper
+	k *keeper.Keeper
 
 	adminAddr sdk.AccAddress
 }
@@ -40,7 +40,7 @@ type TestSuite struct {
 func (s *TestSuite) SetupTest() {
 	s.simApp = simapp.Setup(s.T())
 	s.ctx = s.simApp.NewContext(false).WithBlockTime(time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC))
-	s.k = *s.simApp.VaultKeeper
+	s.k = s.simApp.VaultKeeper
 
 	s.adminAddr = sdk.AccAddress("adminAddr___________")
 }

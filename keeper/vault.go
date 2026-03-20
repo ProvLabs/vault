@@ -1,10 +1,12 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/provlabs/vault/types"
 
+	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -421,4 +423,79 @@ func (k *Keeper) autoPauseVault(ctx sdk.Context, vault *types.VaultAccount, reas
 	k.AuthKeeper.SetAccount(ctx, vault) // Updating via SetAccount to skip validation since auto-pausing is triggered by invalid state
 
 	k.emitEvent(ctx, types.NewEventVaultPaused(vault.GetAddress().String(), vault.GetAddress().String(), reason, vault.PausedBalance))
+}
+
+// AcceptPaymentsFromSource looks up and accepts all pending payments from the
+// specified source address to the vault. It settle each payment via the
+// exchange module using a context-based quarantine bypass.
+//
+// For buy-side payments (where the vault receives an asset and pays out its
+// underlying_asset), this function automatically updates the vault-specific
+// NAV for the received asset based on the exchange price.
+//
+// Accepted assets are moved from the vault's controller account to its
+// principal (marker) account to ensure all collateral is held in the correct supply-backing account.
+func (k *Keeper) AcceptPaymentsFromSource(ctx sdk.Context, vault *types.VaultAccount, source string) ([]uint64, error) {
+	acceptedIDs := []uint64{}
+	vaultAddr := vault.GetAddress()
+	principalAddr := vault.PrincipalMarkerAddress()
+
+	// Wrap context with bypass for quarantine
+	// Based on the user summary, we inject a bypass key into the context.
+	// Since we don't have the quarantine package, we use a known key.
+	const QuarantineBypassKey = "quarantine-bypass"
+	bypassCtx := ctx.WithContext(context.WithValue(ctx.Context(), QuarantineBypassKey, true))
+
+	err := k.ExchangeKeeper.IteratePayments(ctx, vaultAddr, func(payment types.Payment) (stop bool, err error) {
+		if payment.Source != source {
+			return false, nil
+		}
+
+		// Step 1: Pre-acceptance - Move TargetAmount from principal to vaultAddr
+		// This ensures the vault account has the funds required by the exchange module to settle.
+		if !payment.TargetAmount.IsZero() {
+			if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx), principalAddr, vaultAddr, payment.TargetAmount); err != nil {
+				return false, fmt.Errorf("failed to move target amount to vault for payment %d: %w", payment.ID, err)
+			}
+		}
+
+		// Step 2: Accept payment with bypass
+		if err := k.ExchangeKeeper.AcceptPayment(bypassCtx, vaultAddr, payment.ID); err != nil {
+			return false, fmt.Errorf("failed to accept payment %d: %w", payment.ID, err)
+		}
+
+		// Step 3: Post-acceptance - Move SourceAmount from vaultAddr to principal
+		// This keeps the vault's assets in the principal (marker) account.
+		if !payment.SourceAmount.IsZero() {
+			if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx), vaultAddr, principalAddr, payment.SourceAmount); err != nil {
+				return false, fmt.Errorf("failed to move source amount to principal for payment %d: %w", payment.ID, err)
+			}
+
+			// Step 4: Update NAV if it was a buy for the vault
+			// A "buy" means the vault received an asset (SourceAmount) and gave up TargetAmount (underlying_asset).
+			if len(payment.SourceAmount) == 1 && len(payment.TargetAmount) == 1 && payment.TargetAmount[0].Denom == vault.UnderlyingAsset {
+				assetDenom := payment.SourceAmount[0].Denom
+				// price = target_amount / source_amount (units of underlying per unit of asset)
+				price := sdk.NewCoin(vault.UnderlyingAsset, payment.TargetAmount[0].Amount.Quo(payment.SourceAmount[0].Amount))
+
+				nav := types.AssetNAV{
+					AssetDenom:  assetDenom,
+					Price:       price,
+					LastUpdated: ctx.BlockTime().Unix(),
+				}
+				if err := k.AssetNAV.Set(ctx, collections.Join(vaultAddr, assetDenom), nav); err != nil {
+					return false, fmt.Errorf("failed to set asset NAV for %s: %w", assetDenom, err)
+				}
+			}
+		}
+
+		acceptedIDs = append(acceptedIDs, payment.ID)
+		return false, nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return acceptedIDs, nil
 }

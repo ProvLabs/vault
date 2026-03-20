@@ -64,14 +64,14 @@ The agent operates as a **Principal Blockchain Engineer** with deep expertise in
 2. **Validation**: Implement message validation and type logic in `types/`.
 3. **Logic**: Build core functionality in `keeper/` using descriptive naming and minimal comments.
 4. **Exposure**: Connect logic to `MsgServer` and `QueryServer`.
-5. **Verification**: Validate via exhaustive table-driven tests with meaningful failure messages.
+5. **Verification**: Validate using exhaustive [table-driven tests](#testing) with meaningful failure messages.
 
 ### Agent Execution Checklist
-Before finalizing a Directive, the agent must verify:
-1. Did I repeat a setup block that should have been a helper?
-2. Is this test logic clearly readable and free of redundant "context wiring"?
-3. Did I use underscores in large numeric literals (e.g., `1_000_000`)?
-4. Are all assertions accompanied by a high-context failure message?
+Before finalizing a Directive, the agent must verify compliance with the project standards:
+1. **Refactoring**: Adhere to the [Refactoring & DRY Mandate](#refactoring--dry-mandate) regarding test setup helpers.
+2. **Readability**: Ensure test logic follows the [Testing](#testing) guidelines for self-documenting code and readability.
+3. **Formatting**: Verify that large numeric literals use underscores as specified in [Code Style & Structure](#code-style--structure).
+4. **Assertions**: Confirm all assertions include high-context failure messages per the [Testing](#testing) standards.
 
 ---
 

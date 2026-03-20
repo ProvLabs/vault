@@ -228,7 +228,8 @@ func (s *TestSuite) TestKeeper_PerformVaultReconcile_CompositeWithOutstandingFee
 		}
 
 		paymentMarkerAddr := markertypes.MustGetMarkerAddress(paymentDenom)
-		paymentMarkerAccount, _ := s.k.MarkerKeeper.GetMarker(s.ctx, paymentMarkerAddr)
+		paymentMarkerAccount, err := s.k.MarkerKeeper.GetMarker(s.ctx, paymentMarkerAddr)
+		s.Require().NoError(err, "failed to get payment marker account")
 		s.k.MarkerKeeper.SetNetAssetValue(s.ctx, paymentMarkerAccount, markertypes.NetAssetValue{
 			Price:  *navPrice,
 			Volume: 1,
@@ -265,7 +266,8 @@ func (s *TestSuite) TestKeeper_PerformVaultReconcile_CompositeWithOutstandingFee
 		}
 		s.Require().True(foundReconcile)
 
-		updatedVault, _ := s.k.GetVault(s.ctx, vaultAddress)
+		updatedVault, err := s.k.GetVault(s.ctx, vaultAddress)
+		s.Require().NoError(err, "failed to get updated vault")
 		s.Require().True(updatedVault.OutstandingAumFee.IsZero(), "all fees should be cleared")
 		
 		provlabsAddr := s.k.GetAUMFeeAddress(s.ctx)
@@ -293,7 +295,8 @@ func (s *TestSuite) TestKeeper_PerformVaultReconcile_CompositeWithOutstandingFee
 		// Total Debt = 256,945 (current on Gross) + 1,000_000 (old) = 1,256,945
 		// Collected = 100,000 (all available)
 		// Remaining = 1,156,945
-		updatedVault, _ := s.k.GetVault(s.ctx, vaultAddress)
+		updatedVault, err := s.k.GetVault(s.ctx, vaultAddress)
+		s.Require().NoError(err, "failed to get updated vault")
 		s.Require().Equal(sdkmath.NewInt(1_156_945), updatedVault.OutstandingAumFee.Amount)
 		
 		provlabsAddr := s.k.GetAUMFeeAddress(s.ctx)
@@ -335,7 +338,8 @@ func (s *TestSuite) TestKeeper_PerformVaultReconcile_CompositeWithOutstandingFee
 		// GROSS = 1,000,000,000
 		// NET = 1,000,000,000 - 100,000,000 = 900,000_000
 		
-		tvv, _ := s.k.GetTVVInUnderlyingAsset(s.ctx, *vault)
+		tvv, err := s.k.GetTVVInUnderlyingAsset(s.ctx, *vault)
+		s.Require().NoError(err, "failed to get TVV in underlying asset")
 		s.Require().Equal(sdkmath.NewInt(1_000_000_000), tvv, "GetTVV returns Gross")
 
 		// Valuation should return Net

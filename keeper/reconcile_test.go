@@ -1838,7 +1838,7 @@ func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts() {
 	s.Require().NoError(s.k.FeeTimeoutQueue.Enqueue(s.ctx, twoMonthsAgo.Unix(), vaultAddr))
 
 	err := s.k.TestAccessor_handleVaultFeeTimeouts(s.T(), s.ctx)
-	s.Require().NoError(err)
+	s.Require().NoError(err, "handleVaultFeeTimeouts should succeed")
 
 	provlabsAddr := s.k.GetAUMFeeAddress(s.ctx)
 
@@ -2164,7 +2164,7 @@ func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts_RetryOnFailure() {
 
 	// Verify FeePeriodStart is UNCHANGED
 	vault, err = s.k.GetVault(s.ctx, vaultAddr)
-	s.Require().NoError(err)
+	s.Require().NoError(err, "failed to get vault after fee timeout handling")
 	s.Require().Equal(twoMonthsAgo.Unix(), vault.FeePeriodStart, "FeePeriodStart should remain unchanged after failed fee collection")
 }
 
@@ -2196,7 +2196,7 @@ func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts_Success() {
 
 	// Call handleVaultFeeTimeouts. Success this time (uylds.fcc doesn't need NAV)
 	err := s.k.TestAccessor_handleVaultFeeTimeouts(s.T(), s.ctx)
-	s.Require().NoError(err)
+	s.Require().NoError(err, "handleVaultFeeTimeouts should succeed")
 
 	// Verify the vault is DEQUEUED from old timeout and ENQUEUED with new timeout
 	foundOld := false
@@ -2252,7 +2252,7 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts_RetryOnFailure() {
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 	err := s.k.TestAccessor_handleVaultInterestTimeouts(s.T(), s.ctx)
-	s.Require().NoError(err)
+	s.Require().NoError(err, "handleVaultInterestTimeouts should not return error")
 
 	// Verify the vault is RE-ENQUEUED with a NEW timeout because we reschedule on failure
 	expectedTimeout := uint64(s.ctx.BlockTime().Unix() + keeper.AutoReconcileTimeout)
@@ -2268,6 +2268,6 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts_RetryOnFailure() {
 
 	// Verify PeriodStart is UNCHANGED
 	vault, err = s.k.GetVault(s.ctx, vaultAddr)
-	s.Require().NoError(err)
+	s.Require().NoError(err, "failed to get vault after interest timeout retry")
 	s.Require().Equal(twoMonthsAgo.Unix(), vault.PeriodStart, "PeriodStart should remain unchanged after failed reconciliation")
 }

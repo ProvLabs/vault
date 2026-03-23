@@ -1846,13 +1846,14 @@ func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts() {
 	s.Require().True(feeCollected.IsPositive(), "fee should be collected for address %s", provlabsAddr)
 
 	found := false
-	s.k.FeeTimeoutQueue.Walk(s.ctx, func(timeout uint64, addr sdk.AccAddress) (bool, error) {
+	err = s.k.FeeTimeoutQueue.Walk(s.ctx, func(timeout uint64, addr sdk.AccAddress) (bool, error) {
 		if addr.Equals(vaultAddr) {
 			found = true
 			s.Require().Greater(int64(timeout), now.Unix())
 		}
 		return false, nil
 	})
+	s.Require().NoError(err)
 	s.Require().True(found, "new fee timeout should be enqueued")
 
 	vault, err = s.k.GetVault(s.ctx, vaultAddr)
@@ -2153,13 +2154,14 @@ func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts_RetryOnFailure() {
 	// Verify the vault is RE-ENQUEUED with a NEW timeout because we don't continue on PerformVaultFeeTransfer failure
 	expectedTimeout := uint64(s.ctx.BlockTime().Unix() + keeper.AutoReconcileTimeout)
 	found := false
-	s.k.FeeTimeoutQueue.Walk(s.ctx, func(timeout uint64, addr sdk.AccAddress) (bool, error) {
+	err = s.k.FeeTimeoutQueue.Walk(s.ctx, func(timeout uint64, addr sdk.AccAddress) (bool, error) {
 		if addr.Equals(vaultAddr) {
 			found = true
 			s.Require().Equal(expectedTimeout, timeout, "vault should be rescheduled with new timeout")
 		}
 		return false, nil
 	})
+	s.Require().NoError(err)
 	s.Require().True(found, "vault should be in the fee timeout queue with new timeout")
 
 	// Verify FeePeriodStart is UNCHANGED
@@ -2201,7 +2203,7 @@ func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts_Success() {
 	// Verify the vault is DEQUEUED from old timeout and ENQUEUED with new timeout
 	foundOld := false
 	foundNew := false
-	s.k.FeeTimeoutQueue.Walk(s.ctx, func(timeout uint64, addr sdk.AccAddress) (bool, error) {
+	err = s.k.FeeTimeoutQueue.Walk(s.ctx, func(timeout uint64, addr sdk.AccAddress) (bool, error) {
 		if addr.Equals(vaultAddr) {
 			if timeout == uint64(twoMonthsAgo.Unix()) {
 				foundOld = true
@@ -2211,6 +2213,7 @@ func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts_Success() {
 		}
 		return false, nil
 	})
+	s.Require().NoError(err)
 	s.Require().False(foundOld, "vault should be dequeued from old timeout")
 	s.Require().True(foundNew, "vault should be enqueued with new timeout")
 }
@@ -2257,13 +2260,14 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts_RetryOnFailure() {
 	// Verify the vault is RE-ENQUEUED with a NEW timeout because we reschedule on failure
 	expectedTimeout := uint64(s.ctx.BlockTime().Unix() + keeper.AutoReconcileTimeout)
 	found := false
-	s.k.PayoutTimeoutQueue.Walk(s.ctx, func(timeout uint64, addr sdk.AccAddress) (bool, error) {
+	err = s.k.PayoutTimeoutQueue.Walk(s.ctx, func(timeout uint64, addr sdk.AccAddress) (bool, error) {
 		if addr.Equals(vaultAddr) {
 			found = true
 			s.Require().Equal(expectedTimeout, timeout, "vault should be rescheduled with new timeout")
 		}
 		return false, nil
 	})
+	s.Require().NoError(err)
 	s.Require().True(found, "vault should be in the interest timeout queue with new timeout")
 
 	// Verify PeriodStart is UNCHANGED

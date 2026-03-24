@@ -27,11 +27,6 @@ const (
 )
 
 var (
-	// AUMFeeAddress is the hardcoded ProvLabs fee collection address.
-	// This byte array represents the address and is prefix-agnostic.
-	// Represents 'pb1evyv7neax9qtxxzuexnhylxyz4guvsyjjqke4h'.
-	AUMFeeAddress = sdk.AccAddress{203, 8, 207, 79, 61, 49, 64, 179, 24, 92, 201, 167, 114, 124, 196, 21, 81, 198, 64, 146}
-
 	// VaultsKeyPrefix is the prefix to retrieve all Vaults
 	VaultsKeyPrefix = collections.NewPrefix(0)
 	// VaultsName is a human-readable name for the vaults collection.
@@ -65,10 +60,27 @@ var (
 	// VaultPendingSwapOutByIdIndexName is a human-readable name for the pending swap out queue by id index.
 	VaultPendingSwapOutByIdIndexName = "pending_swap_out_by_id"
 
-	// AUMFeeAddressKeyPrefix is the prefix for the AUM fee address stored in state.
-	AUMFeeAddressKeyPrefix = collections.NewPrefix(8)
-	// AUMFeeAddressKeyName is the human-readable name for the AUM fee address state key.
-	AUMFeeAddressKeyName = "aum_fee_address"
+	// ParamsKeyPrefix is the prefix for the module parameters.
+	ParamsKeyPrefix = collections.NewPrefix(10)
+	// ParamsKeyName is the human-readable name for the params state key.
+	ParamsKeyName = "params"
+)
+
+var (
+	// DefaultTechFeeAddress is the default ProvLabs fee collection address for local/sim networks.
+	// Represents 'pb1evyv7neax9qtxxzuexnhylxyz4guvsyjjqke4h'.
+	DefaultTechFeeAddress = sdk.AccAddress{203, 8, 207, 79, 61, 49, 64, 179, 24, 92, 201, 167, 114, 124, 196, 21, 81, 198, 64, 146}
+	// TestnetTechFeeAddress is the ProvLabs fee collection address for pio-testnet-1.
+	// NOTE: Initially the same as DefaultTechFeeAddress; will be updated via upgrade handler.
+	TestnetTechFeeAddress = sdk.AccAddress{203, 8, 207, 79, 61, 49, 64, 179, 24, 92, 201, 167, 114, 124, 196, 21, 81, 198, 64, 146}
+	// MainnetTechFeeAddress is the ProvLabs fee collection address for pio-mainnet-1.
+	// NOTE: Initially the same as DefaultTechFeeAddress; will be updated via upgrade handler.
+	MainnetTechFeeAddress = sdk.AccAddress{203, 8, 207, 79, 61, 49, 64, 179, 24, 92, 201, 167, 114, 124, 196, 21, 81, 198, 64, 146}
+)
+
+const (
+	// DefaultAumFeeBips is the default AUM fee rate in basis points (15 bps = 0.15%).
+	DefaultAumFeeBips = 15
 )
 
 // GetVaultAddress returns the module account address for the given shareDenom.

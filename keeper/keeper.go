@@ -7,7 +7,6 @@ import (
 	"github.com/provlabs/vault/types"
 
 	"cosmossdk.io/collections"
-	collcodec "cosmossdk.io/collections/codec"
 	"cosmossdk.io/core/address"
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/store"
@@ -28,7 +27,7 @@ type Keeper struct {
 	MarkerKeeper types.MarkerKeeper
 	BankKeeper   types.BankKeeper
 
-	AUMFeeAddress         collections.Item[sdk.AccAddress]
+	Params                collections.Item[types.Params]
 	Vaults                collections.Map[sdk.AccAddress, []byte]
 	PayoutVerificationSet collections.KeySet[sdk.AccAddress]
 	PayoutTimeoutQueue    *queue.PayoutTimeoutQueue
@@ -57,7 +56,7 @@ func NewKeeper(
 		eventService:          eventService,
 		addressCodec:          addressCodec,
 		authority:             authority,
-		AUMFeeAddress:         collections.NewItem(builder, types.AUMFeeAddressKeyPrefix, types.AUMFeeAddressKeyName, collcodec.KeyToValueCodec(sdk.AccAddressKey)),
+		Params:                collections.NewItem(builder, types.ParamsKeyPrefix, types.ParamsKeyName, codec.CollValue[types.Params](cdc)),
 		Vaults:                collections.NewMap(builder, types.VaultsKeyPrefix, types.VaultsName, sdk.AccAddressKey, collections.BytesValue),
 		PayoutVerificationSet: collections.NewKeySet(builder, types.VaultPayoutVerificationSetPrefix, types.VaultPayoutVerificationSetName, sdk.AccAddressKey),
 		PayoutTimeoutQueue:    queue.NewPayoutTimeoutQueue(builder),
@@ -83,13 +82,12 @@ func (k Keeper) GetAuthority() []byte {
 }
 
 // GetAUMFeeAddress returns the address where AUM fees are collected.
-// It prioritizes the address stored in state, falling back to the hardcoded default.
 func (k Keeper) GetAUMFeeAddress(ctx sdk.Context) sdk.AccAddress {
-	addr, err := k.AUMFeeAddress.Get(ctx)
-	if err == nil && len(addr) > 0 {
-		return addr
+	params, err := k.Params.Get(ctx)
+	if err != nil || len(params.TechFeeAddress) == 0 {
+		return types.DefaultTechFeeAddress
 	}
-	return types.AUMFeeAddress
+	return sdk.MustAccAddressFromBech32(params.TechFeeAddress)
 }
 
 // getLogger returns a logger with vault module context.

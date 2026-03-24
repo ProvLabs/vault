@@ -303,10 +303,11 @@ func (k queryServer) VaultPendingSwapOuts(goCtx context.Context, req *types.Quer
 	)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to paginate vault pending swap outs: %v", err)
-	}
+		}
 
-	return &types.QueryVaultPendingSwapOutsResponse{
+		return &types.QueryVaultPendingSwapOutsResponse{
 		PendingSwapOuts: swapOuts,
 		Pagination:      pageRes,
-	}, nil
-}
+		}, nil
+		}
+

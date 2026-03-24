@@ -739,3 +739,53 @@ func (k msgServer) SetAssetManager(goCtx context.Context, msg *types.MsgSetAsset
 
 	return &types.MsgSetAssetManagerResponse{}, nil
 }
+
+// UpdateParams updates the module parameters.
+func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParamsRequest) (*types.MsgUpdateParamsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if msg.Authority != sdk.AccAddress(k.GetAuthority()).String() {
+		return nil, fmt.Errorf("unauthorized: expected %s got %s", sdk.AccAddress(k.GetAuthority()).String(), msg.Authority)
+	}
+
+	if err := msg.Params.Validate(); err != nil {
+		return nil, fmt.Errorf("invalid params: %w", err)
+	}
+
+	if err := k.Keeper.Params.Set(ctx, msg.Params); err != nil {
+		return nil, fmt.Errorf("failed to set params: %w", err)
+	}
+
+	k.emitEvent(ctx, types.NewEventParamsUpdated(msg.Params))
+
+	return &types.MsgUpdateParamsResponse{}, nil
+}
+
+// UpdateVaultAUMFeeBips updates the AUM fee bips for a specific vault.
+func (k msgServer) UpdateVaultAUMFeeBips(goCtx context.Context, msg *types.MsgUpdateVaultAUMFeeBipsRequest) (*types.MsgUpdateVaultAUMFeeBipsResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault: %w", err)
+	}
+	if vault == nil {
+		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+	}
+
+	params, err := k.Keeper.Params.Get(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get params: %w", err)
+	}
+
+	if msg.Authority != params.TechFeeAddress {
+		return nil, fmt.Errorf("unauthorized: %s is not the tech fee address", msg.Authority)
+	}
+
+	if err := k.Keeper.UpdateVaultAUMFeeBips(ctx, vault, msg.AumFeeBips, msg.Authority); err != nil {
+		return nil, fmt.Errorf("failed to update vault AUM fee bips: %w", err)
+	}
+
+	return &types.MsgUpdateVaultAUMFeeBipsResponse{}, nil
+}

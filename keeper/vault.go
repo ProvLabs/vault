@@ -75,6 +75,11 @@ func (k Keeper) GetVault(ctx sdk.Context, address sdk.AccAddress) (*types.VaultA
 func (k *Keeper) createVaultAccount(ctx sdk.Context, admin, shareDenom, underlyingAsset, paymentDenom string, withdrawalDelay uint64) (*types.VaultAccount, error) {
 	vaultAddr := types.GetVaultAddress(shareDenom)
 
+	params, err := k.Params.Get(ctx)
+	if err != nil {
+		params = types.DefaultParams()
+	}
+
 	vault := types.NewVaultAccount(
 		authtypes.NewBaseAccountWithAddress(vaultAddr),
 		admin,
@@ -82,6 +87,7 @@ func (k *Keeper) createVaultAccount(ctx sdk.Context, admin, shareDenom, underlyi
 		underlyingAsset,
 		paymentDenom,
 		withdrawalDelay,
+		params.DefaultAumFeeBips,
 	)
 
 	if err := vault.Validate(); err != nil {
@@ -421,4 +427,22 @@ func (k *Keeper) autoPauseVault(ctx sdk.Context, vault *types.VaultAccount, reas
 	k.AuthKeeper.SetAccount(ctx, vault) // Updating via SetAccount to skip validation since auto-pausing is triggered by invalid state
 
 	k.emitEvent(ctx, types.NewEventVaultPaused(vault.GetAddress().String(), vault.GetAddress().String(), reason, vault.PausedBalance))
+}
+
+func (k *Keeper) UpdateVaultAUMFeeBips(ctx sdk.Context, vault *types.VaultAccount, bips uint32, authority string) error {
+	if vault.AumFeeBips == bips {
+		return nil
+	}
+
+	if err := k.reconcileVault(ctx, vault); err != nil {
+		return fmt.Errorf("failed to reconcile before bips change: %w", err)
+	}
+
+	vault.AumFeeBips = bips
+	if err := k.SetVaultAccount(ctx, vault); err != nil {
+		return fmt.Errorf("failed to set vault account: %w", err)
+	}
+
+	k.emitEvent(ctx, types.NewEventVaultAUMFeeBipsUpdated(vault.Address, authority, bips))
+	return nil
 }

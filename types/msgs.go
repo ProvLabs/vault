@@ -37,6 +37,8 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgBridgeMintSharesRequest)(nil),
 	(*MsgBridgeBurnSharesRequest)(nil),
 	(*MsgSetAssetManagerRequest)(nil),
+	(*MsgUpdateParamsRequest)(nil),
+	(*MsgUpdateVaultAUMFeeBipsRequest)(nil),
 }
 
 // ValidateBasic performs stateless validation on MsgCreateVaultRequest.
@@ -425,6 +427,25 @@ func (m MsgSetAssetManagerRequest) ValidateBasic() error {
 	}
 	if _, err := sdk.AccAddressFromBech32(m.AssetManager); err != nil {
 		return fmt.Errorf("invalid asset manager address: %q: %w", m.AssetManager, err)
+	}
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgUpdateParamsRequest.
+func (m MsgUpdateParamsRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		return fmt.Errorf("invalid authority address: %q: %w", m.Authority, err)
+	}
+	return m.Params.Validate()
+}
+
+// ValidateBasic performs stateless validation on MsgUpdateVaultAUMFeeBipsRequest.
+func (m MsgUpdateVaultAUMFeeBipsRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		return fmt.Errorf("invalid authority address: %q: %w", m.Authority, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
 	}
 	return nil
 }

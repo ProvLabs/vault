@@ -40,3 +40,33 @@ func (k Keeper) MigrateVaultAccountPaymentDenomDefaults(ctx sdk.Context) error {
 
 	return nil
 }
+
+// MigrateAUMFeeParams initializes the module parameters if they are not already set,
+// and updates existing vaults to use the default AUM fee bips.
+func (k Keeper) MigrateAUMFeeParams(ctx sdk.Context) error {
+	params, err := k.Params.Get(ctx)
+	if err != nil {
+		params = types.DefaultParams()
+		params.TechFeeAddress = types.GetDefaultTechFeeAddress(ctx.ChainID()).String()
+		if err := k.Params.Set(ctx, params); err != nil {
+			return fmt.Errorf("failed to initialize params during migration: %w", err)
+		}
+	}
+
+	allAccounts := k.AuthKeeper.GetAllAccounts(ctx)
+	for _, acc := range allAccounts {
+		v, ok := acc.(*types.VaultAccount)
+		if !ok {
+			continue
+		}
+
+		if v.AumFeeBips == 0 {
+			v.AumFeeBips = params.DefaultAumFeeBips
+			if err := k.SetVaultAccount(ctx, v); err != nil {
+				return fmt.Errorf("failed to update vault account %s during migration: %w", v.Address, err)
+			}
+		}
+	}
+
+	return nil
+}

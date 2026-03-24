@@ -389,7 +389,7 @@ func (k Keeper) CalculateAccruedAUMFee(ctx sdk.Context, vault types.VaultAccount
 	if duration <= 0 {
 		return sdkmath.ZeroInt(), nil
 	}
-	return interest.CalculateAUMFee(totalAssets, duration)
+	return interest.CalculateAUMFee(totalAssets, vault.AumFeeBips, duration)
 }
 
 // CalculateAccruedAUMFeePayment calculates the AUM fees that would have accrued for the vault

@@ -68,7 +68,7 @@ type VaultAccountI interface {
 }
 
 // NewVaultAccount creates a new vault with an optional payment denom allowed for I/O alongside the underlying asset.
-func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyingAsset, paymentDenom string, withdrawalDelay uint64) *VaultAccount {
+func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyingAsset, paymentDenom string, withdrawalDelay uint64, aumFeeBips uint32) *VaultAccount {
 	if paymentDenom == "" {
 		paymentDenom = underlyingAsset
 	}
@@ -88,6 +88,7 @@ func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyi
 		BridgeEnabled:          false,
 		BridgeAddress:          "",
 		OutstandingAumFee:      sdk.NewCoin(paymentDenom, sdkmath.ZeroInt()),
+		AumFeeBips:             aumFeeBips,
 	}
 }
 

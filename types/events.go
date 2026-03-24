@@ -23,7 +23,7 @@ const (
 // NewEventVaultCreated creates a new EventVaultCreated event.
 func NewEventVaultCreated(vault *VaultAccount) *EventVaultCreated {
 	return &EventVaultCreated{
-		VaultAddress:    vault.GetAddress().String(),
+		VaultAddress:    vault.Address,
 		Admin:           vault.Admin,
 		ShareDenom:      vault.TotalShares.Denom,
 		UnderlyingAsset: vault.UnderlyingAsset,
@@ -294,5 +294,21 @@ func NewEventVaultFeeCollected(vaultAddress string, collected, requested, aumSna
 		AumSnapshot:       aumSnapshot.String(),
 		DurationSeconds:   duration,
 		OutstandingAmount: outstanding.String(),
+	}
+}
+
+// NewEventParamsUpdated creates a new EventParamsUpdated event.
+func NewEventParamsUpdated(params Params) *EventParamsUpdated {
+	return &EventParamsUpdated{
+		Params: &params,
+	}
+}
+
+// NewEventVaultAUMFeeBipsUpdated creates a new EventVaultAUMFeeBipsUpdated event.
+func NewEventVaultAUMFeeBipsUpdated(vaultAddress, authority string, aumFeeBips uint32) *EventVaultAUMFeeBipsUpdated {
+	return &EventVaultAUMFeeBipsUpdated{
+		VaultAddress: vaultAddress,
+		Authority:    authority,
+		AumFeeBips:   aumFeeBips,
 	}
 }

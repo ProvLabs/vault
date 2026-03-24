@@ -9,16 +9,19 @@ import (
 
 // DefaultGenesisState returns the default genesis state
 func DefaultGenesisState() *GenesisState {
-	return &GenesisState{}
+	return &GenesisState{
+		Params: DefaultParams(),
+	}
 }
 
 // Validate performs basic genesis state validation returning an error upon any
 // failure.
 func (gs GenesisState) Validate() error {
-	if gs.AumFeeAddress != "" {
-		if _, err := sdk.AccAddressFromBech32(gs.AumFeeAddress); err != nil {
-			return fmt.Errorf("invalid aum fee address: %w", err)
+	if err := gs.Params.Validate(); err != nil {
+		if len(gs.Params.TechFeeAddress) > 0 {
+			return fmt.Errorf("invalid params: %w", err)
 		}
+		// If TechFeeAddress is empty, it's okay because InitGenesis will set it.
 	}
 
 	for i, entry := range gs.PayoutTimeoutQueue {

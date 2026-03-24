@@ -19,11 +19,12 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 		panic(fmt.Errorf("invalid vault genesis state: %w", err))
 	}
 
-	if genState.AumFeeAddress != "" {
-		addr := sdk.MustAccAddressFromBech32(genState.AumFeeAddress)
-		if err := k.AUMFeeAddress.Set(ctx, addr); err != nil {
-			panic(fmt.Errorf("failed to set aum fee address: %w", err))
-		}
+	params := genState.Params
+	if len(params.TechFeeAddress) == 0 {
+		params.TechFeeAddress = types.GetDefaultTechFeeAddress(ctx.ChainID()).String()
+	}
+	if err := k.Params.Set(ctx, params); err != nil {
+		panic(fmt.Errorf("failed to set params: %w", err))
 	}
 
 	accounts := k.AuthKeeper.GetAllAccounts(ctx)
@@ -106,13 +107,12 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 
 // ExportGenesis exports the current state of the vault module.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
-	allAccounts := k.AuthKeeper.GetAllAccounts(ctx)
-
-	var aumFeeAddress string
-	addr, err := k.AUMFeeAddress.Get(ctx)
-	if err == nil && len(addr) > 0 {
-		aumFeeAddress = addr.String()
+	params, err := k.Params.Get(ctx)
+	if err != nil {
+		params = types.DefaultParams()
 	}
+
+	allAccounts := k.AuthKeeper.GetAllAccounts(ctx)
 
 	var vaults []types.VaultAccount
 	for _, acc := range allAccounts {
@@ -157,7 +157,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		PayoutTimeoutQueue:  paymentTimeoutQueue,
 		FeeTimeoutQueue:     feeTimeoutQueue,
 		PendingSwapOutQueue: *pendingSwapOutQueue,
-		AumFeeAddress:       aumFeeAddress,
+		Params:              params,
 	}
 }
 

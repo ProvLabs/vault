@@ -15,6 +15,7 @@
 *_test
 *.test
 testdata/
+coverage.out
 
 # Go build cache
 .cache/

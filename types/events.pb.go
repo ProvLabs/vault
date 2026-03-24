@@ -2174,6 +2174,116 @@ func (m *EventVaultFeeCollected) GetOutstandingAmount() string {
 	return ""
 }
 
+// EventParamsUpdated is an event emitted when the module parameters are updated.
+type EventParamsUpdated struct {
+	// params are the newly updated module parameters.
+	Params *Params `protobuf:"bytes,1,opt,name=params,proto3" json:"params,omitempty"`
+}
+
+func (m *EventParamsUpdated) Reset()         { *m = EventParamsUpdated{} }
+func (m *EventParamsUpdated) String() string { return proto.CompactTextString(m) }
+func (*EventParamsUpdated) ProtoMessage()    {}
+func (*EventParamsUpdated) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5fb7c27aa4ee0453, []int{30}
+}
+func (m *EventParamsUpdated) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventParamsUpdated) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventParamsUpdated.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventParamsUpdated) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventParamsUpdated.Merge(m, src)
+}
+func (m *EventParamsUpdated) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventParamsUpdated) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventParamsUpdated.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventParamsUpdated proto.InternalMessageInfo
+
+func (m *EventParamsUpdated) GetParams() *Params {
+	if m != nil {
+		return m.Params
+	}
+	return nil
+}
+
+// EventVaultAUMFeeBipsUpdated is an event emitted when a vault's AUM fee bips are updated.
+type EventVaultAUMFeeBipsUpdated struct {
+	// vault_address is the bech32 address of the vault.
+	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// authority is the address (tech fee address) that updated the fee bips.
+	Authority string `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`
+	// aum_fee_bips is the newly set AUM fee bips for the vault.
+	AumFeeBips uint32 `protobuf:"varint,3,opt,name=aum_fee_bips,json=aumFeeBips,proto3" json:"aum_fee_bips,omitempty"`
+}
+
+func (m *EventVaultAUMFeeBipsUpdated) Reset()         { *m = EventVaultAUMFeeBipsUpdated{} }
+func (m *EventVaultAUMFeeBipsUpdated) String() string { return proto.CompactTextString(m) }
+func (*EventVaultAUMFeeBipsUpdated) ProtoMessage()    {}
+func (*EventVaultAUMFeeBipsUpdated) Descriptor() ([]byte, []int) {
+	return fileDescriptor_5fb7c27aa4ee0453, []int{31}
+}
+func (m *EventVaultAUMFeeBipsUpdated) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *EventVaultAUMFeeBipsUpdated) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_EventVaultAUMFeeBipsUpdated.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *EventVaultAUMFeeBipsUpdated) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_EventVaultAUMFeeBipsUpdated.Merge(m, src)
+}
+func (m *EventVaultAUMFeeBipsUpdated) XXX_Size() int {
+	return m.Size()
+}
+func (m *EventVaultAUMFeeBipsUpdated) XXX_DiscardUnknown() {
+	xxx_messageInfo_EventVaultAUMFeeBipsUpdated.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_EventVaultAUMFeeBipsUpdated proto.InternalMessageInfo
+
+func (m *EventVaultAUMFeeBipsUpdated) GetVaultAddress() string {
+	if m != nil {
+		return m.VaultAddress
+	}
+	return ""
+}
+
+func (m *EventVaultAUMFeeBipsUpdated) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *EventVaultAUMFeeBipsUpdated) GetAumFeeBips() uint32 {
+	if m != nil {
+		return m.AumFeeBips
+	}
+	return 0
+}
+
 func init() {
 	proto.RegisterType((*EventDeposit)(nil), "provlabs.vault.v1.EventDeposit")
 	proto.RegisterType((*EventWithdraw)(nil), "provlabs.vault.v1.EventWithdraw")
@@ -2205,6 +2315,8 @@ func init() {
 	proto.RegisterType((*EventAssetManagerSet)(nil), "provlabs.vault.v1.EventAssetManagerSet")
 	proto.RegisterType((*EventWithdrawalDelayUpdated)(nil), "provlabs.vault.v1.EventWithdrawalDelayUpdated")
 	proto.RegisterType((*EventVaultFeeCollected)(nil), "provlabs.vault.v1.EventVaultFeeCollected")
+	proto.RegisterType((*EventParamsUpdated)(nil), "provlabs.vault.v1.EventParamsUpdated")
+	proto.RegisterType((*EventVaultAUMFeeBipsUpdated)(nil), "provlabs.vault.v1.EventVaultAUMFeeBipsUpdated")
 }
 
 func init() { proto.RegisterFile("provlabs/vault/v1/events.proto", fileDescriptor_5fb7c27aa4ee0453) }
@@ -9566,6 +9678,338 @@ func (m *EventVaultFeeCollected) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+
+func (m *EventParamsUpdated) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventParamsUpdated) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventParamsUpdated) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Params != nil {
+		{
+			size, err := m.Params.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintEvents(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *EventVaultAUMFeeBipsUpdated) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *EventVaultAUMFeeBipsUpdated) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *EventVaultAUMFeeBipsUpdated) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.AumFeeBips != 0 {
+		i = encodeVarintEvents(dAtA, i, uint64(m.AumFeeBips))
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if len(m.VaultAddress) > 0 {
+		i -= len(m.VaultAddress)
+		copy(dAtA[i:], m.VaultAddress)
+		i = encodeVarintEvents(dAtA, i, uint64(len(m.VaultAddress)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *EventParamsUpdated) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Params != nil {
+		l = m.Params.Size()
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	return n
+}
+
+func (m *EventVaultAUMFeeBipsUpdated) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.VaultAddress)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovEvents(uint64(l))
+	}
+	if m.AumFeeBips != 0 {
+		n += 1 + sovEvents(uint64(m.AumFeeBips))
+	}
+	return n
+}
+
+func (m *EventParamsUpdated) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventParamsUpdated: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventParamsUpdated: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Params", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Params == nil {
+				m.Params = &Params{}
+			}
+			if err := m.Params.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+
+func (m *EventVaultAUMFeeBipsUpdated) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowEvents
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: EventVaultAUMFeeBipsUpdated: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: EventVaultAUMFeeBipsUpdated: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VaultAddress", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.VaultAddress = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthEvents
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AumFeeBips", wireType)
+			}
+			m.AumFeeBips = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowEvents
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.AumFeeBips |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipEvents(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthEvents
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+
 func skipEvents(dAtA []byte) (n int, err error) {
 	l := len(dAtA)
 	iNdEx := 0

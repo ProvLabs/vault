@@ -4645,6 +4645,108 @@ type msgServerTestCase[Req any, CheckArgs any] struct {
 	expectedEvents     sdk.Events
 }
 
+func (s *TestSuite) TestMsgServer_UpdateParams() {
+	type postCheckArgs struct {
+		ExpectedParams types.Params
+	}
+
+	testDef := msgServerTestDef[types.MsgUpdateParamsRequest, types.MsgUpdateParamsResponse, postCheckArgs]{
+		endpointName: "UpdateParams",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).UpdateParams,
+		postCheck: func(msg *types.MsgUpdateParamsRequest, args postCheckArgs) {
+			params, err := s.simApp.VaultKeeper.Params.Get(s.ctx)
+			s.Require().NoError(err)
+			s.Assert().Equal(args.ExpectedParams, params)
+		},
+	}
+
+	authority := sdk.AccAddress(s.simApp.VaultKeeper.GetAuthority()).String()
+	newTechFeeAddr := sdk.AccAddress("new_tech_fee_addr_________").String()
+	newParams := types.Params{
+		TechFeeAddress:    newTechFeeAddr,
+		DefaultAumFeeBips: 20,
+	}
+
+	tc := msgServerTestCase[types.MsgUpdateParamsRequest, postCheckArgs]{
+		name: "happy path",
+		msg: types.MsgUpdateParamsRequest{
+			Authority: authority,
+			Params:    newParams,
+		},
+		postCheckArgs: postCheckArgs{
+			ExpectedParams: newParams,
+		},
+		expectedEvents: sdk.Events{
+			sdk.NewEvent("provlabs.vault.v1.EventParamsUpdated",
+				sdk.NewAttribute("params", "{\"tech_fee_address\":\"provlabs1dejhwhm5v43kshmxv4j47ctyv3e97h6lta047h6ltumef3nf\",\"default_aum_fee_bips\":20}"),
+			),
+		},
+	}
+
+	testDef.expectedResponse = &types.MsgUpdateParamsResponse{}
+	runMsgServerTestCase(s, testDef, tc)
+}
+
+func (s *TestSuite) TestMsgServer_UpdateVaultAUMFeeBips() {
+	type postCheckArgs struct {
+		VaultAddr    sdk.AccAddress
+		ExpectedBips uint32
+	}
+
+	testDef := msgServerTestDef[types.MsgUpdateVaultAUMFeeBipsRequest, types.MsgUpdateVaultAUMFeeBipsResponse, postCheckArgs]{
+		endpointName: "UpdateVaultAUMFeeBips",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).UpdateVaultAUMFeeBips,
+		postCheck: func(msg *types.MsgUpdateVaultAUMFeeBipsRequest, args postCheckArgs) {
+			vault, err := s.simApp.VaultKeeper.GetVault(s.ctx, args.VaultAddr)
+			s.Require().NoError(err)
+			s.Assert().Equal(args.ExpectedBips, vault.AumFeeBips)
+		},
+	}
+
+	techFeeAddr := sdk.AccAddress("tech_fee_addr_____________")
+	underlying := "under"
+	share := "vaultshares"
+	vaultAddr := types.GetVaultAddress(share)
+
+	setup := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), s.adminAddr)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           s.adminAddr.String(),
+			ShareDenom:      share,
+			UnderlyingAsset: underlying,
+		})
+		s.Require().NoError(err)
+
+		params := types.DefaultParams()
+		params.TechFeeAddress = techFeeAddr.String()
+		s.Require().NoError(s.simApp.VaultKeeper.Params.Set(s.ctx, params))
+	}
+
+	tc := msgServerTestCase[types.MsgUpdateVaultAUMFeeBipsRequest, postCheckArgs]{
+		name:  "happy path",
+		setup: setup,
+		msg: types.MsgUpdateVaultAUMFeeBipsRequest{
+			Authority:    techFeeAddr.String(),
+			VaultAddress: vaultAddr.String(),
+			AumFeeBips:   25,
+		},
+		postCheckArgs: postCheckArgs{
+			VaultAddr:    vaultAddr,
+			ExpectedBips: 25,
+		},
+		expectedEvents: sdk.Events{
+			sdk.NewEvent("provlabs.vault.v1.EventVaultAUMFeeBipsUpdated",
+				sdk.NewAttribute("aum_fee_bips", "25"),
+				sdk.NewAttribute("authority", techFeeAddr.String()),
+				sdk.NewAttribute("vault_address", vaultAddr.String()),
+			),
+		},
+	}
+
+	testDef.expectedResponse = &types.MsgUpdateVaultAUMFeeBipsResponse{}
+	runMsgServerTestCase(s, testDef, tc)
+}
+
 // runMsgServerTestCase executes a unit test for a MsgServer endpoint using the given test definition and test case.
 // Req is the request message type.
 // Resp is the expected response message type.

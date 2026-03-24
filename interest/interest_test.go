@@ -156,7 +156,7 @@ func TestCalculateAUMFee(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			fee, err := interest.CalculateAUMFee(tc.aum, tc.duration)
+			fee, err := interest.CalculateAUMFee(tc.aum, 15, tc.duration)
 			if tc.expectErr {
 				require.Errorf(t, err, "test case %q: expected an error but got none", tc.name)
 			} else {

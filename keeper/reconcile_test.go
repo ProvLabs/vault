@@ -1815,7 +1815,7 @@ func (s *TestSuite) TestKeeper_CanPayInterestDuration_WithAUMFee() {
 	year := int64(365 * 24 * time.Hour / time.Second)
 
 	ok, err := s.k.CanPayInterestDuration(s.ctx, vault, year)
-	s.Require().NoError(err)
+	s.Require().NoError(err, "CanPayInterestDuration returned error for vault=%s year=%d", vault.Address, year)
 	s.Require().True(ok, "should succeed even when no payment denom liquidity for fees (deferred)")
 }
 
@@ -2161,7 +2161,7 @@ func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts_RetryOnFailure() {
 		}
 		return false, nil
 	})
-	s.Require().NoError(err)
+	s.Require().NoError(err, "FeeTimeoutQueue.Walk returned unexpected error during retry verification")
 	s.Require().True(found, "vault should be in the fee timeout queue with new timeout")
 
 	// Verify FeePeriodStart is UNCHANGED
@@ -2267,7 +2267,7 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts_RetryOnFailure() {
 		}
 		return false, nil
 	})
-	s.Require().NoError(err)
+	s.Require().NoError(err, "PayoutTimeoutQueue.Walk returned unexpected error during retry verification")
 	s.Require().True(found, "vault should be in the interest timeout queue with new timeout")
 
 	// Verify PeriodStart is UNCHANGED

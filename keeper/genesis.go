@@ -109,8 +109,15 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	allAccounts := k.AuthKeeper.GetAllAccounts(ctx)
 
 	var aumFeeAddress string
-	addr, err := k.AUMFeeAddress.Get(ctx)
-	if err == nil && len(addr) > 0 {
+	has, err := k.AUMFeeAddress.Has(ctx)
+	if err != nil {
+		panic(fmt.Errorf("failed to check AUM fee address: %w", err))
+	}
+	if has {
+		addr, err := k.AUMFeeAddress.Get(ctx)
+		if err != nil {
+			panic(fmt.Errorf("failed to get AUM fee address: %w", err))
+		}
 		aumFeeAddress = addr.String()
 	}
 

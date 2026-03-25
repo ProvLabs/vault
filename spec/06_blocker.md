@@ -3,8 +3,8 @@
 
 This document explains how the vault module uses ABCI block hooks to keep vaults healthy over time and to safely fulfill delayed redemptions.
 
-- **BeginBlocker**: periodic interest accrual & scheduling.
-- **EndBlocker**: processes pending swap-outs (payouts) and advances interest scheduling state.
+- **BeginBlocker**: periodic interest accrual & AUM fee collection.
+- **EndBlocker**: processes pending swap-outs (payouts) and advances interest/fee scheduling state.
 
 ---
 <!-- TOC 2 2 -->
@@ -12,10 +12,11 @@ This document explains how the vault module uses ABCI block hooks to keep vaults
   - [Key Data Structures](#key-data-structures)
   - [BeginBlocker](#beginblocker)
     - [handleVaultInterestTimeouts](#handlevaultinteresttimeouts)
+    - [handleVaultFeeTimeouts](#handlevaultfeetimeouts)
   - [EndBlocker](#endblocker)
     - [processPendingSwapOuts](#processpendingswapouts)
     - [handleReconciledVaults](#handlereconciledvaults)
-  - [Interest Accrual & Transfers](#interest-accrual--transfers)
+  - [Interest & Fee Accrual](#interest--fee-accrual)
   - [Payout Processing Details](#payout-processing-details)
   - [Forecast Window](#forecast-window)
   - [Paused Vault Behavior](#paused-vault-behavior)
@@ -75,6 +76,18 @@ Processing model (safe “collect-then-mutate”):
 
 **Skips paused vaults.** They remain in place until unpaused.
 
+### handleVaultFeeTimeouts
+
+Reconciles the 15 bps AUM technology fee for vaults whose fee timeout has elapsed.
+
+1. **Collect due entries** from `VaultFeeTimeoutQueue` with `timeout <= now`.
+2. **Dequeue** each collected entry before processing.
+3. **PerformVaultFeeTransfer** (atomically via `CacheContext`):
+   - Computes fee based on **Gross TVV**.
+   - Collects from principal marker into the configured ProvLabs collection address.
+   - Any uncollected amount (due to liquidity) is recorded in `outstanding_aum_fee`.
+   - Schedules next fee timeout.
+
 ---
 
 ## EndBlocker
@@ -94,6 +107,10 @@ To prevent a large queue from consuming excessive block time and memory, a maxim
 
    * Skip paused vaults; they remain queued.
 2. **Process each job** (see “Payout Processing Details”).
+   - Each job is processed within its own **CacheContext**.
+   - Failed payouts (recoverable) are rolled back atomically and the user is refunded.
+   - Successful payouts commit their state changes.
+   - This ensures failures do not leave the vault in an inconsistent state and do not interfere with other jobs in the same block.
 
    * Missing vault → dequeue & skip (logged).
    * Paused vault → leave queued (not dequeued).
@@ -115,17 +132,24 @@ This advances vaults from the **verification set**:
 
 ---
 
-## Interest Accrual & Transfers
+## Interest & Fee Accrual
 
 * **ReconcileVault**
-  No-op if paused. If `PeriodStart` is set and `now > PeriodStart`, it calls `PerformVaultInterestTransfer`. Always ensures the vault is in the **verification set** afterward (so it will be re-scheduled).
+  No-op if paused. Ensures both interest and AUM fees are reconciled before any balance-changing action. Uses a single `CacheContext` to ensure both transfers are atomic.
 
 * **PerformVaultInterestTransfer**
   Computes `interestEarned = f(principal, currentRate, duration)`.
 
   * **Positive** → transfer from **reserves (vault account)** → **principal (marker account)**.
   * **Negative** → refund from **principal** → **reserves** (bounded by available principal).
-    Emits `EventVaultReconcile` and leaves `PeriodStart` unchanged (the subsequent scheduler step will roll it forward).
+    Emits `EventVaultReconcile`.
+
+* **PerformVaultFeeTransfer**
+  Computes the 15 bps (0.15% annual) technology fee based on **Gross TVV**.
+  - Collects fee in the configured `payment_denom`.
+  - Transfers from **principal (marker account)** → ProvLabs collection address.
+  - Caps collection at available `payment_denom` balance.
+  - Emits `EventVaultFeeCollected`.
 
 * **UpdateInterestRates**
   Sets `current_rate` and `desired_rate`, emits `EventVaultInterestChange`, and persists the account.

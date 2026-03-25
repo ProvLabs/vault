@@ -9,6 +9,7 @@ This document describes all events emitted by the `x/vault` module and how to us
   - [EventVaultCreated](#eventvaultcreated)
   - [EventVaultPaused](#eventvaultpaused)
   - [EventVaultUnpaused](#eventvaultunpaused)
+  - [EventAssetManagerSet](#eventassetmanagerset)
 - [Swaps](#swaps)
   - [EventSwapIn](#eventswapin)
   - [EventSwapOutRequested](#eventswapoutrequested)
@@ -16,16 +17,21 @@ This document describes all events emitted by the `x/vault` module and how to us
   - [EventSwapOutCompleted](#eventswapoutcompleted)
   - [EventSwapOutRefunded](#eventswapoutrefunded)
   - [How to tell if your SwapOut succeeded](#how-to-tell-if-your-swapout-succeeded)
-- [Interest](#interest)
+- [Interest & Fees](#interest--fees)
   - [EventVaultReconcile](#eventvaultreconcile)
+  - [EventVaultFeeCollected](#eventvaultfeecollected)
   - [EventVaultInterestChange](#eventvaultinterestchange)
   - [EventMinInterestRateUpdated](#eventmininterestrateupdated)
   - [EventMaxInterestRateUpdated](#eventmaxinterestrateupdated)
   - [EventInterestDeposit](#eventinterestdeposit)
   - [EventInterestWithdrawal](#eventinterestwithdrawal)
+- [Principal Management](#principal-management)
+  - [EventDepositPrincipalFunds](#eventdepositprincipalfunds)
+  - [EventWithdrawPrincipalFunds](#eventwithdrawprincipalfunds)
 - [Admin Toggles](#admin-toggles)
   - [EventToggleSwapIn](#eventtoggleswapin)
   - [EventToggleSwapOut](#eventtoggleswapout)
+  - [EventWithdrawalDelayUpdated](#eventwithdrawaldelayupdated)
 - [Bridge](#bridge)
   - [EventBridgeAddressSet](#eventbridgeaddressset)
   - [EventBridgeToggled](#eventbridgetoggled)
@@ -74,6 +80,18 @@ Emitted when a vault is unpaused (user ops re-enabled).
 * `vault_address` — vault
 * `authority` — actor (admin or asset manager)
 * `total_vault_value` — TVV at unpause (coin in underlying denom)
+
+---
+
+### EventAssetManagerSet
+
+Emitted when an asset manager is configured or cleared.
+
+**Fields**
+
+* `vault_address` — vault
+* `admin` — actor
+* `asset_manager` — bech32 address (empty if cleared)
 
 ---
 
@@ -186,6 +204,21 @@ Emitted whenever the module applies accrued interest (positive or negative).
 
 ---
 
+### EventVaultFeeCollected
+
+Emitted when the 15 bps AUM technology fee is collected.
+
+**Fields**
+
+* `vault_address` — vault
+* `collected_amount` — amount actually transferred to ProvLabs (payment denom)
+* `requested_amount` — total accrued fee for this period + any previous unpaid amount (payment denom)
+* `aum_snapshot` — TVV snapshot used for calculation (underlying denom)
+* `outstanding_amount` — remaining unpaid fee after this collection (payment denom)
+* `duration_seconds` — time period covered by this collection
+
+---
+
 ### EventVaultInterestChange
 
 Emitted when the vault’s interest rate configuration changes.
@@ -246,6 +279,32 @@ Emitted when unused interest reserve funds are withdrawn (vault → authority).
 
 ---
 
+## Principal Management
+
+### EventDepositPrincipalFunds
+
+Emitted when principal funds are deposited (authority → vault principal marker).
+
+**Fields**
+
+* `vault_address` — vault
+* `authority` — actor (admin or asset manager)
+* `amount` — coin (must be underlying denom)
+
+---
+
+### EventWithdrawPrincipalFunds
+
+Emitted when principal funds are withdrawn (vault principal marker → authority).
+
+**Fields**
+
+* `vault_address` — vault
+* `authority` — actor (admin or asset manager)
+* `amount` — coin (underlying denom)
+
+---
+
 ## Admin Toggles
 
 ### EventToggleSwapIn
@@ -269,6 +328,18 @@ Emitted when **swap-out** is enabled/disabled.
 * `vault_address` — vault
 * `admin` — actor
 * `enabled` — boolean
+
+---
+
+### EventWithdrawalDelayUpdated
+
+Emitted when the vault's withdrawal delay is updated.
+
+**Fields**
+
+* `vault_address` — vault
+* `authority` — actor (admin or asset manager)
+* `withdrawal_delay_seconds` — new delay value in seconds
 
 ---
 

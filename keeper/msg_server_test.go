@@ -2285,7 +2285,7 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds_Failures() {
 				VaultAddress: vaultAddr.String(),
 				Amount:       sdk.NewInt64Coin(underlying, 1),
 			},
-			expectedErrSubstrs: []string{"failed to reconcile vault interest after deposit", "failed to calculate interest"},
+			expectedErrSubstrs: []string{"failed to reconcile vault after deposit", "failed to calculate interest"},
 		},
 	}
 
@@ -2630,7 +2630,7 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds_Failures() {
 				VaultAddress: vaultAddr.String(),
 				Amount:       sdk.NewInt64Coin(underlying, 1),
 			},
-			expectedErrSubstrs: []string{"failed to reconcile vault interest before withdrawal", "failed to calculate interest"},
+			expectedErrSubstrs: []string{"failed to reconcile vault before withdrawal", "failed to calculate interest"},
 		},
 		{
 			name:  "receipt underlying: unauthorized authority",

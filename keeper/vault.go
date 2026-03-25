@@ -157,7 +157,7 @@ func (k *Keeper) createVaultMarker(ctx sdk.Context, markerManager sdk.AccAddress
 // It performs the following steps:
 //  1. Retrieves the vault configuration for the given vault address.
 //  2. Verifies that swap-in is enabled for the vault.
-//  3. Reconciles any accrued interest from the vault to the marker module (if due).
+//  3. Reconciles the vault (interest and AUM fees) if due.
 //  4. Resolves the vault share marker address.
 //  5. Validates that the provided underlying asset matches the vault’s configured underlying denom.
 //  6. Calculates the number of shares to mint based on the deposit, current supply, and vault balance.
@@ -190,7 +190,7 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 	}
 
 	if err := k.reconcileVault(ctx, vault); err != nil {
-		return nil, fmt.Errorf("failed to reconcile vault interest: %w", err)
+		return nil, fmt.Errorf("failed to reconcile vault: %w", err)
 	}
 
 	principalAddress := vault.PrincipalMarkerAddress()

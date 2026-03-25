@@ -116,7 +116,7 @@ func (k *Keeper) processSwapOutJobs(ctx sdk.Context, jobsToProcess []types.Payou
 	}
 }
 
-// processSingleWithdrawal executes a pending swap-out. It first reconciles vault interest, then converts the user's
+// processSingleWithdrawal executes a pending swap-out. It first reconciles the vault (interest and AUM fees), then converts the user's
 // shares to the redeemable asset amount. It then pays out those assets to the owner and burns their escrowed shares.
 // It returns nil on success and emits an EventSwapOutCompleted. If a failure occurs before payout (e.g., insufficient
 // liquidity), a normal error is returned and can be refunded. If a failure occurs after payout (e.g., transfer to
@@ -137,7 +137,7 @@ func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.P
 	}
 
 	if err := k.reconcileVault(ctx, &vault); err != nil {
-		return fmt.Errorf("failed to reconcile vault interest: %w", err)
+		return fmt.Errorf("failed to reconcile vault: %w", err)
 	}
 
 	assets, err := k.ConvertSharesToRedeemCoin(ctx, vault, req.Shares.Amount, req.RedeemDenom)

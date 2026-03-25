@@ -1264,7 +1264,7 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_Use
 	s.Require().True(interestEarned.IsPositive(), "expected positive interest earned")
 
 	err = s.k.TestAccessor_reconcileVault(s.T(), s.ctx, vault)
-	s.Require().NoError(err, "failed to reconcile vault interest")
+	s.Require().NoError(err, "failed to reconcile vault")
 
 	endVault := s.simApp.BankKeeper.GetBalance(s.ctx, vaultAddr, underlying.Denom).Amount
 	endMarker := s.simApp.BankKeeper.GetBalance(s.ctx, markerAddr, underlying.Denom).Amount

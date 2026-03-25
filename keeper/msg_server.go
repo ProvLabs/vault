@@ -318,7 +318,7 @@ func (k msgServer) DepositInterestFunds(goCtx context.Context, msg *types.MsgDep
 	}
 
 	if err := k.reconcileVault(ctx, vault); err != nil {
-		return nil, fmt.Errorf("failed to reconcile vault interest after deposit: %w", err)
+		return nil, fmt.Errorf("failed to reconcile vault after deposit: %w", err)
 	}
 
 	k.emitEvent(ctx, types.NewEventInterestDeposit(msg.VaultAddress, msg.Authority, msg.Amount))
@@ -349,7 +349,7 @@ func (k msgServer) WithdrawInterestFunds(goCtx context.Context, msg *types.MsgWi
 	}
 
 	if err := k.reconcileVault(ctx, vault); err != nil {
-		return nil, fmt.Errorf("failed to reconcile vault interest before withdrawal: %w", err)
+		return nil, fmt.Errorf("failed to reconcile vault before withdrawal: %w", err)
 	}
 
 	// for receipt tokens, the transfer agent for the authority address is used
@@ -383,7 +383,7 @@ func (k msgServer) DepositPrincipalFunds(goCtx context.Context, msg *types.MsgDe
 	}
 
 	if err := k.reconcileVault(ctx, vault); err != nil {
-		return nil, fmt.Errorf("failed to reconcile vault interest before principal change: %w", err)
+		return nil, fmt.Errorf("failed to reconcile vault before principal change: %w", err)
 	}
 
 	depositFromAddress := sdk.MustAccAddressFromBech32(msg.Authority)
@@ -426,7 +426,7 @@ func (k msgServer) WithdrawPrincipalFunds(goCtx context.Context, msg *types.MsgW
 	}
 
 	if err := k.reconcileVault(ctx, vault); err != nil {
-		return nil, fmt.Errorf("failed to reconcile vault interest before principal change: %w", err)
+		return nil, fmt.Errorf("failed to reconcile vault before principal change: %w", err)
 	}
 
 	authorityAddress := sdk.MustAccAddressFromBech32(msg.Authority)
@@ -501,7 +501,7 @@ func (k msgServer) PauseVault(goCtx context.Context, msg *types.MsgPauseVaultReq
 		return nil, fmt.Errorf("vault %s is already paused", msg.VaultAddress)
 	}
 	if err := k.reconcileVault(ctx, vault); err != nil {
-		return nil, fmt.Errorf("failed to reconcile interest before pausing: %w", err)
+		return nil, fmt.Errorf("failed to reconcile before pausing: %w", err)
 	}
 
 	tvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)

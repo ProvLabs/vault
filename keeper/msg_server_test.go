@@ -4667,24 +4667,72 @@ func (s *TestSuite) TestMsgServer_UpdateParams() {
 		DefaultAumFeeBips: 20,
 	}
 
-	tc := msgServerTestCase[types.MsgUpdateParamsRequest, postCheckArgs]{
-		name: "happy path",
-		msg: types.MsgUpdateParamsRequest{
-			Authority: authority,
-			Params:    newParams,
+	tests := []msgServerTestCase[types.MsgUpdateParamsRequest, postCheckArgs]{
+		{
+			name: "happy path",
+			msg: types.MsgUpdateParamsRequest{
+				Authority: authority,
+				Params:    newParams,
+			},
+			postCheckArgs: postCheckArgs{
+				ExpectedParams: newParams,
+			},
+			expectedEvents: sdk.Events{
+				sdk.NewEvent("provlabs.vault.v1.EventParamsUpdated",
+					sdk.NewAttribute("params", "{\"tech_fee_address\":\"provlabs1dejhwhm5v43kshmxv4j47ctyv3e97h6lta047h6ltumef3nf\",\"default_aum_fee_bips\":20}"),
+				),
+			},
 		},
-		postCheckArgs: postCheckArgs{
-			ExpectedParams: newParams,
+		{
+			name: "unauthorized",
+			msg: types.MsgUpdateParamsRequest{
+				Authority: s.adminAddr.String(),
+				Params:    newParams,
+			},
+			expectedErrSubstrs: []string{"unauthorized"},
+			postCheckArgs: postCheckArgs{
+				ExpectedParams: types.DefaultParams(),
+			},
 		},
-		expectedEvents: sdk.Events{
-			sdk.NewEvent("provlabs.vault.v1.EventParamsUpdated",
-				sdk.NewAttribute("params", "{\"tech_fee_address\":\"provlabs1dejhwhm5v43kshmxv4j47ctyv3e97h6lta047h6ltumef3nf\",\"default_aum_fee_bips\":20}"),
-			),
+		{
+			name: "invalid params - malformed address",
+			msg: types.MsgUpdateParamsRequest{
+				Authority: authority,
+				Params: types.Params{
+					TechFeeAddress: "invalid",
+				},
+			},
+			expectedErrSubstrs: []string{"invalid TechFeeAddress"},
+			postCheckArgs: postCheckArgs{
+				ExpectedParams: types.DefaultParams(),
+			},
+		},
+		{
+			name: "invalid params - out of range bips",
+			msg: types.MsgUpdateParamsRequest{
+				Authority: authority,
+				Params: types.Params{
+					TechFeeAddress:    newTechFeeAddr,
+					DefaultAumFeeBips: 10001,
+				},
+			},
+			expectedErrSubstrs: []string{"invalid DefaultAumFeeBips"},
+			postCheckArgs: postCheckArgs{
+				ExpectedParams: types.DefaultParams(),
+			},
 		},
 	}
 
 	testDef.expectedResponse = &types.MsgUpdateParamsResponse{}
-	runMsgServerTestCase(s, testDef, tc)
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			if tc.name != "happy path" {
+				// Reset params for each failure test
+				s.Require().NoError(s.simApp.VaultKeeper.Params.Set(s.ctx, types.DefaultParams()))
+			}
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
 }
 
 func (s *TestSuite) TestMsgServer_UpdateVaultAUMFeeBips() {
@@ -4697,6 +4745,9 @@ func (s *TestSuite) TestMsgServer_UpdateVaultAUMFeeBips() {
 		endpointName: "UpdateVaultAUMFeeBips",
 		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).UpdateVaultAUMFeeBips,
 		postCheck: func(msg *types.MsgUpdateVaultAUMFeeBipsRequest, args postCheckArgs) {
+			if args.VaultAddr == nil {
+				return
+			}
 			vault, err := s.simApp.VaultKeeper.GetVault(s.ctx, args.VaultAddr)
 			s.Require().NoError(err)
 			s.Assert().Equal(args.ExpectedBips, vault.AumFeeBips)
@@ -4722,29 +4773,76 @@ func (s *TestSuite) TestMsgServer_UpdateVaultAUMFeeBips() {
 		s.Require().NoError(s.simApp.VaultKeeper.Params.Set(s.ctx, params))
 	}
 
-	tc := msgServerTestCase[types.MsgUpdateVaultAUMFeeBipsRequest, postCheckArgs]{
-		name:  "happy path",
-		setup: setup,
-		msg: types.MsgUpdateVaultAUMFeeBipsRequest{
-			Authority:    techFeeAddr.String(),
-			VaultAddress: vaultAddr.String(),
-			AumFeeBips:   25,
+	tests := []msgServerTestCase[types.MsgUpdateVaultAUMFeeBipsRequest, postCheckArgs]{
+		{
+			name:  "happy path",
+			setup: setup,
+			msg: types.MsgUpdateVaultAUMFeeBipsRequest{
+				Authority:    techFeeAddr.String(),
+				VaultAddress: vaultAddr.String(),
+				AumFeeBips:   25,
+			},
+			postCheckArgs: postCheckArgs{
+				VaultAddr:    vaultAddr,
+				ExpectedBips: 25,
+			},
+			expectedEvents: sdk.Events{
+				sdk.NewEvent("provlabs.vault.v1.EventVaultAUMFeeBipsUpdated",
+					sdk.NewAttribute("aum_fee_bips", "25"),
+					sdk.NewAttribute("authority", techFeeAddr.String()),
+					sdk.NewAttribute("vault_address", vaultAddr.String()),
+				),
+			},
 		},
-		postCheckArgs: postCheckArgs{
-			VaultAddr:    vaultAddr,
-			ExpectedBips: 25,
+		{
+			name:  "unauthorized",
+			setup: setup,
+			msg: types.MsgUpdateVaultAUMFeeBipsRequest{
+				Authority:    s.adminAddr.String(),
+				VaultAddress: vaultAddr.String(),
+				AumFeeBips:   50,
+			},
+			expectedErrSubstrs: []string{"unauthorized"},
+			postCheckArgs: postCheckArgs{
+				VaultAddr:    vaultAddr,
+				ExpectedBips: 15, // Default
+			},
 		},
-		expectedEvents: sdk.Events{
-			sdk.NewEvent("provlabs.vault.v1.EventVaultAUMFeeBipsUpdated",
-				sdk.NewAttribute("aum_fee_bips", "25"),
-				sdk.NewAttribute("authority", techFeeAddr.String()),
-				sdk.NewAttribute("vault_address", vaultAddr.String()),
-			),
+		{
+			name:  "vault not found",
+			setup: setup,
+			msg: types.MsgUpdateVaultAUMFeeBipsRequest{
+				Authority:    techFeeAddr.String(),
+				VaultAddress: sdk.AccAddress("nonexistent_________").String(),
+				AumFeeBips:   50,
+			},
+			expectedErrSubstrs: []string{"vault not found"},
+			postCheckArgs: postCheckArgs{
+				VaultAddr: nil,
+			},
+		},
+		{
+			name:  "invalid bips - out of range",
+			setup: setup,
+			msg: types.MsgUpdateVaultAUMFeeBipsRequest{
+				Authority:    techFeeAddr.String(),
+				VaultAddress: vaultAddr.String(),
+				AumFeeBips:   10001,
+			},
+			expectedErrSubstrs: []string{"invalid AUM fee bips"},
+			postCheckArgs: postCheckArgs{
+				VaultAddr:    vaultAddr,
+				ExpectedBips: 15, // Default
+			},
 		},
 	}
 
 	testDef.expectedResponse = &types.MsgUpdateVaultAUMFeeBipsResponse{}
-	runMsgServerTestCase(s, testDef, tc)
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
 }
 
 // runMsgServerTestCase executes a unit test for a MsgServer endpoint using the given test definition and test case.

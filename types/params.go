@@ -8,6 +8,7 @@ import (
 func DefaultParams() Params {
 	return Params{
 		DefaultAumFeeBips: DefaultAumFeeBips,
+		TechFeeAddress:    DefaultTechFeeAddress.String(),
 	}
 }
 

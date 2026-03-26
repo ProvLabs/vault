@@ -62,6 +62,8 @@ func (app *SimApp) RegisterProvenanceModules() error {
 		NewGroupCheckerFunc(app.GroupKeeper),
 	)
 	app.VaultKeeper.MarkerKeeper = app.MarkerKeeper
+	app.VaultKeeper.NameKeeper = app.NameKeeper
+	app.VaultKeeper.AttrKeeper = app.AttributeKeeper
 
 	return app.RegisterModules(
 		name.NewAppModule(app.appCodec, app.NameKeeper, app.AccountKeeper, app.BankKeeper),

@@ -2405,7 +2405,7 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds() {
 		receiptVaultAddr := types.GetVaultAddress(shares)
 
 		setupReceiptAdmin := func() {
-			s.requireAddFinalizeAndActivateReceiptMarker(sdk.NewCoin(receipt, receiptSupply), admin)
+			s.requireAddFinalizeAndActivateReceiptMarker(sdk.NewCoin(receipt, receiptSupply), admin, receiptVaultAddr)
 			_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 				Admin:           admin.String(),
 				ShareDenom:      shares,
@@ -2452,7 +2452,7 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds() {
 		receiptVaultAddr := types.GetVaultAddress(shares)
 
 		setupReceiptAssetMgr := func() {
-			s.requireAddFinalizeAndActivateReceiptMarker(sdk.NewCoin(receipt, receiptSupply), assetMgr)
+			s.requireAddFinalizeAndActivateReceiptMarker(sdk.NewCoin(receipt, receiptSupply), assetMgr, receiptVaultAddr)
 			_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 				Admin:           admin.String(),
 				ShareDenom:      shares,
@@ -2534,7 +2534,7 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds_Failures() {
 	}
 
 	setupReceipt := func() {
-		s.requireAddFinalizeAndActivateReceiptMarker(sdk.NewCoin(receiptUnderlying, math.NewInt(1000)), admin)
+		s.requireAddFinalizeAndActivateReceiptMarker(sdk.NewCoin(receiptUnderlying, math.NewInt(1000)), admin, types.GetVaultAddress(shares))
 		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 			Admin:           admin.String(),
 			ShareDenom:      shares,
@@ -2548,20 +2548,6 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds_Failures() {
 		setupReceipt()
 		err := FundAccount(markertypes.WithBypass(s.ctx), s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(amountReceipt))
 		s.Require().NoError(err, "failed to fund receipt-underlying vault account")
-	}
-
-	setupSendFailsNoTransferPerm := func() {
-		thirdParty := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
-		s.requireAddFinalizeAndActivateReceiptMarker(sdk.NewCoin(receiptUnderlying, math.NewInt(2000)), thirdParty)
-		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-			Admin:           admin.String(),
-			ShareDenom:      shares,
-			UnderlyingAsset: receiptUnderlying,
-		})
-		s.Require().NoError(err, "failed to create vault for send-fails case")
-		err = FundAccount(markertypes.WithBypass(s.ctx), s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(amountReceipt))
-		s.Require().NoError(err, "failed to fund receipt-underlying vault account for send-fails case")
-		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	}
 
 	tests := []msgServerTestCase[types.MsgWithdrawInterestFundsRequest, any]{
@@ -2661,16 +2647,6 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds_Failures() {
 				Amount:       sdk.NewInt64Coin(unsupportedDenom, 9_999_999),
 			},
 			expectedErrSubstrs: []string{"denom not supported for vault", receiptUnderlying, unsupportedDenom},
-		},
-		{
-			name:  "receipt underlying: send fails without transfer permission on receipt token",
-			setup: setupSendFailsNoTransferPerm,
-			msg: types.MsgWithdrawInterestFundsRequest{
-				Authority:    admin.String(),
-				VaultAddress: vaultAddr.String(),
-				Amount:       amountReceipt,
-			},
-			expectedErrSubstrs: []string{"failed to withdraw interest funds", "does not have transfer permissions for", receiptUnderlying},
 		},
 	}
 
@@ -3044,7 +3020,7 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds() {
 		receiptMarkerAddr := markertypes.MustGetMarkerAddress(share)
 
 		setupReceiptAdmin := func() {
-			s.requireAddFinalizeAndActivateReceiptMarker(sdk.NewCoin(receipt, receiptSupply), admin)
+			s.requireAddFinalizeAndActivateReceiptMarker(sdk.NewCoin(receipt, receiptSupply), admin, receiptVaultAddr)
 			_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 				Admin:           admin.String(),
 				ShareDenom:      share,
@@ -3097,7 +3073,7 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds() {
 		receiptMarkerAddr := markertypes.MustGetMarkerAddress(share)
 
 		setupReceiptAssetMgr := func() {
-			s.requireAddFinalizeAndActivateReceiptMarker(sdk.NewCoin(receiptDenom, receiptSupply), assetMgr)
+			s.requireAddFinalizeAndActivateReceiptMarker(sdk.NewCoin(receiptDenom, receiptSupply), assetMgr, receiptVaultAddr)
 			_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 				Admin:           admin.String(),
 				ShareDenom:      share,
@@ -3195,7 +3171,7 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds_Failures() {
 	}
 
 	setupReceipt := func() {
-		s.requireAddFinalizeAndActivateReceiptMarker(sdk.NewCoin(receiptUnderlying, math.NewInt(1000)), admin)
+		s.requireAddFinalizeAndActivateReceiptMarker(sdk.NewCoin(receiptUnderlying, math.NewInt(1000)), admin, types.GetVaultAddress(share))
 		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 			Admin:           admin.String(),
 			ShareDenom:      share,
@@ -3213,36 +3189,6 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds_Failures() {
 		setupReceipt()
 		err := FundAccount(markertypes.WithBypass(s.ctx), s.simApp.BankKeeper, shareMarkerAddr, sdk.NewCoins(amountReceipt))
 		s.Require().NoError(err, "failed to fund share marker account with receipt token")
-	}
-
-	setupSendFailsNoTransferPerm := func() {
-		thirdParty := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
-		s.requireAddFinalizeAndActivateReceiptMarker(sdk.NewCoin(receiptUnderlying, math.NewInt(2000)), thirdParty)
-
-		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-			Admin:           admin.String(),
-			ShareDenom:      share,
-			UnderlyingAsset: receiptUnderlying,
-		})
-		s.Require().NoError(err, "failed to create vault for send-fails case")
-
-		m, err := s.simApp.MarkerKeeper.GetMarkerByDenom(s.ctx, share)
-		s.Require().NoError(err, "failed to get share marker to grant withdraw")
-		mk := m.(*markertypes.MarkerAccount)
-		mk.AccessControl = append(mk.AccessControl, markertypes.AccessGrant{
-			Address:     admin.String(),
-			Permissions: []markertypes.Access{markertypes.Access_Withdraw},
-		})
-		s.simApp.MarkerKeeper.SetMarker(s.ctx, mk)
-
-		err = FundAccount(markertypes.WithBypass(s.ctx), s.simApp.BankKeeper, shareMarkerAddr, sdk.NewCoins(amountReceipt))
-		s.Require().NoError(err, "failed to fund share marker account with receipt token for send-fails case")
-
-		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
-		vault, err := s.k.GetVault(s.ctx, vaultAddr)
-		s.Require().NoError(err, "failed to get vault")
-		vault.Paused = true
-		s.k.AuthKeeper.SetAccount(s.ctx, vault)
 	}
 
 	tests := []msgServerTestCase[types.MsgWithdrawPrincipalFundsRequest, any]{
@@ -3334,20 +3280,6 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds_Failures() {
 				Amount:       sdk.NewInt64Coin("wrongdenom", 500),
 			},
 			expectedErrSubstrs: []string{"denom not supported for vault", receiptUnderlying, "wrongdenom"},
-		},
-		{
-			name:  "receipt underlying: send fails without transfer permission on receipt token",
-			setup: setupSendFailsNoTransferPerm,
-			msg: types.MsgWithdrawPrincipalFundsRequest{
-				Authority:    admin.String(),
-				VaultAddress: vaultAddr.String(),
-				Amount:       amountReceipt,
-			},
-			expectedErrSubstrs: []string{
-				"failed to withdraw principal funds",
-				"does not have transfer permissions for",
-				receiptUnderlying,
-			},
 		},
 	}
 

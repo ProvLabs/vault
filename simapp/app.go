@@ -150,6 +150,8 @@ func AppConfig() depinject.Config {
 		depinject.Provide(
 			ProvideExchangeDummyCustomSigners,
 			ProvideMarkerKeeperStub,
+			ProvideNameKeeperStub,
+			ProvideAttributeKeeperStub,
 		),
 		depinject.Supply(
 			map[string]module.AppModuleBasic{
@@ -281,6 +283,16 @@ func (app *SimApp) kvStoreKeys() map[string]*storetypes.KVStoreKey {
 // if used.
 func ProvideMarkerKeeperStub() *markerkeeper.Keeper {
 	return &markerkeeper.Keeper{}
+}
+
+// ProvideNameKeeperStub returns an empty namekeeper.Keeper instance.
+func ProvideNameKeeperStub() *namekeeper.Keeper {
+	return &namekeeper.Keeper{}
+}
+
+// ProvideAttributeKeeperStub returns an empty attributekeeper.Keeper instance.
+func ProvideAttributeKeeperStub() *attributekeeper.Keeper {
+	return &attributekeeper.Keeper{}
 }
 
 func (app *SimApp) AppCodec() codec.Codec {

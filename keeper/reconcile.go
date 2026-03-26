@@ -274,7 +274,7 @@ func (k Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAccou
 
 	if !toCollect.IsZero() {
 		if err := k.BankKeeper.SendCoins(
-			markertypes.WithBypass(ctx),
+			markertypes.WithTransferAgents(ctx, vault.GetAddress()),
 			principalAddress,
 			provlabsAddr,
 			sdk.NewCoins(toCollect),

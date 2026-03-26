@@ -52,6 +52,17 @@ func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*type
 		return nil, fmt.Errorf("failed to create vault marker: %w", err)
 	}
 
+	// Pre-flight check: ensure the fee account can receive the payment denom from the vault marker.
+	// This prevents creating a vault where tech fees can never be collected due to marker restrictions.
+	if _, err := k.MarkerKeeper.SendRestrictionFn(
+		markertypes.WithTransferAgents(ctx, vault.GetAddress()),
+		vault.PrincipalMarkerAddress(),
+		k.GetAUMFeeAddress(ctx),
+		sdk.NewCoins(sdk.NewInt64Coin(vault.PaymentDenom, 1)),
+	); err != nil {
+		return nil, fmt.Errorf("fee account %s is not permissioned to receive payment denom %s: %w", k.GetAUMFeeAddress(ctx).String(), vault.PaymentDenom, err)
+	}
+
 	k.emitEvent(ctx, types.NewEventVaultCreated(vault))
 	return vault, nil
 }

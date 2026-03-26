@@ -192,7 +192,7 @@ func (s *TestSuite) TestVaultGenesis_ExistingAccountNumberCopied() {
 	vaultAddr := types.GetVaultAddress(shareDenom)
 
 	existing := authtypes.NewBaseAccountWithAddress(vaultAddr)
-	s.Require().NoError(existing.SetAccountNumber(7), "failed to set account number for existing account")
+	s.Require().NoError(existing.SetAccountNumber(999), "failed to set account number for existing account")
 	s.k.AuthKeeper.SetAccount(s.ctx, existing)
 
 	vault := types.VaultAccount{
@@ -213,7 +213,7 @@ func (s *TestSuite) TestVaultGenesis_ExistingAccountNumberCopied() {
 	s.k.InitGenesis(s.ctx, genesis)
 	exported := s.k.ExportGenesis(s.ctx)
 	s.Require().Len(exported.Vaults, 1, "exported genesis should contain exactly one vault")
-	s.Require().Equal(uint64(7), exported.Vaults[0].GetAccountNumber(), "exported vault account number mismatch")
+	s.Require().Equal(uint64(999), exported.Vaults[0].GetAccountNumber(), "exported vault account number mismatch")
 }
 
 func (s *TestSuite) TestVaultGenesis_InitNilDoesNothing() {

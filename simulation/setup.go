@@ -31,6 +31,12 @@ func Setup(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, ak types.AccountKeepe
 
 	denomRegex := mk.GetUnrestrictedDenomRegex(ctx)
 
+	// Ensure tech fee account exists
+	provlabsAddr := k.GetAUMFeeAddress(ctx)
+	if !ak.HasAccount(ctx, provlabsAddr) {
+		ak.SetAccount(ctx, ak.NewAccountWithAddress(ctx, provlabsAddr))
+	}
+
 	// Create global markers for underlying and payment denoms.
 	underlyingDenom := genRandomDenom(r, denomRegex, VaultGlobalDenomSuffix)
 	paymentDenom := genRandomDenom(r, denomRegex, VaultGlobalDenomSuffix)
@@ -41,10 +47,10 @@ func Setup(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, ak types.AccountKeepe
 		return fmt.Errorf("marker keeper is not of type markerkeeper.Keeper")
 	}
 
-	if err := CreateGlobalMarker(ctx, ak, bk, markerKeeper, sdk.NewInt64Coin(underlyingDenom, 100_000_000), accs, false); err != nil {
+	if err := CreateGlobalMarker(ctx, ak, bk, mk, sdk.NewInt64Coin(underlyingDenom, 100_000_000), accs, true); err != nil {
 		return fmt.Errorf("failed to create global marker for underlying: %w", err)
 	}
-	if err := CreateGlobalMarker(ctx, ak, bk, markerKeeper, sdk.NewInt64Coin(paymentDenom, 100_000_000), accs, false); err != nil {
+	if err := CreateGlobalMarker(ctx, ak, bk, mk, sdk.NewInt64Coin(paymentDenom, 100_000_000), accs, false); err != nil {
 		return fmt.Errorf("failed to create global marker for payment: %w", err)
 	}
 

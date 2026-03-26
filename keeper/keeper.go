@@ -82,12 +82,16 @@ func (k Keeper) GetAuthority() []byte {
 }
 
 // GetAUMFeeAddress returns the address where AUM fees are collected.
-func (k Keeper) GetAUMFeeAddress(ctx sdk.Context) sdk.AccAddress {
+func (k Keeper) GetAUMFeeAddress(ctx sdk.Context) (sdk.AccAddress, error) {
 	params, err := k.Params.Get(ctx)
 	if err != nil || len(params.TechFeeAddress) == 0 {
-		return types.DefaultTechFeeAddress
+		return types.GetDefaultTechFeeAddress(ctx.ChainID()), err
 	}
-	return sdk.MustAccAddressFromBech32(params.TechFeeAddress)
+	addr, parseErr := sdk.AccAddressFromBech32(params.TechFeeAddress)
+	if parseErr != nil {
+		return types.GetDefaultTechFeeAddress(ctx.ChainID()), fmt.Errorf("invalid AUM fee address in params %q: %w", params.TechFeeAddress, parseErr)
+	}
+	return addr, nil
 }
 
 // getLogger returns a logger with vault module context.

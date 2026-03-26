@@ -164,7 +164,8 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 				expectedEvents = append(expectedEvents, reconcileEvent)
 
 				// AUM Fee events
-				provLabsAddr := s.k.GetAUMFeeAddress(s.ctx)
+				provLabsAddr, err := s.k.GetAUMFeeAddress(s.ctx)
+				s.Require().NoError(err)
 				expectedEvents = append(expectedEvents, createSendCoinEvents(principalAddress.String(), provLabsAddr.String(), "4ylds")...)
 				feeEvent, err := sdk.TypedEventToEvent(&types.EventVaultFeeCollected{
 					VaultAddress:      vaultAddr.String(),

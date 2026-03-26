@@ -25,7 +25,6 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 }
 
 // MigrateVaultAccountPaymentDenomDefaults updates legacy VaultAccount state created
-...
 // prior to v1.0.13 by normalizing empty payment denom fields.
 //
 // In versions <= v1.0.13, VaultAccount instances could be persisted with an empty

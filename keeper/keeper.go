@@ -85,6 +85,11 @@ func (k Keeper) GetAuthority() []byte {
 	return k.authority
 }
 
+// OpenKVStore returns a KVStore for the module.
+func (k Keeper) OpenKVStore(ctx sdk.Context) store.KVStore {
+	return k.storeService.OpenKVStore(ctx)
+}
+
 // GetAUMFeeAddress returns the address where AUM fees are collected.
 func (k Keeper) GetAUMFeeAddress(ctx sdk.Context) (sdk.AccAddress, error) {
 	params, err := k.Params.Get(ctx)

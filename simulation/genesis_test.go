@@ -40,9 +40,9 @@ func TestRandomizedGenState(t *testing.T) {
 	var vaultGenesis types.GenesisState
 	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &vaultGenesis)
 
-	require.NotNil(t, vaultGenesis.Params)
-	require.LessOrEqual(t, vaultGenesis.Params.DefaultAumFeeBips, uint32(100))
-	require.Equal(t, types.DefaultTechFeeAddress.String(), vaultGenesis.Params.TechFeeAddress)
+	require.NotNil(t, vaultGenesis.Params, "vault genesis params should not be nil")
+	require.LessOrEqual(t, vaultGenesis.Params.DefaultAumFeeBips, uint32(100), "DefaultAumFeeBips should be less than or equal to 100")
+	require.Empty(t, vaultGenesis.Params.TechFeeAddress, "TechFeeAddress should be empty in randomized genesis to allow fallback")
 }
 
 func TestRandomizedGenState_Panics(t *testing.T) {

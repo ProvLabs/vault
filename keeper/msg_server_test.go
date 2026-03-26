@@ -4655,8 +4655,8 @@ func (s *TestSuite) TestMsgServer_UpdateParams() {
 		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).UpdateParams,
 		postCheck: func(msg *types.MsgUpdateParamsRequest, args postCheckArgs) {
 			params, err := s.simApp.VaultKeeper.Params.Get(s.ctx)
-			s.Require().NoError(err)
-			s.Assert().Equal(args.ExpectedParams, params)
+			s.Require().NoError(err, "failed to get vault params after UpdateParams")
+			s.Assert().Equal(args.ExpectedParams, params, "vault params mismatch after UpdateParams")
 		},
 	}
 
@@ -4728,7 +4728,7 @@ func (s *TestSuite) TestMsgServer_UpdateParams() {
 		s.Run(tc.name, func() {
 			if tc.name != "happy path" {
 				// Reset params for each failure test
-				s.Require().NoError(s.simApp.VaultKeeper.Params.Set(s.ctx, types.DefaultParams()))
+				s.Require().NoError(s.simApp.VaultKeeper.Params.Set(s.ctx, types.DefaultParams()), "failed to reset default params")
 			}
 			runMsgServerTestCase(s, testDef, tc)
 		})
@@ -4749,8 +4749,8 @@ func (s *TestSuite) TestMsgServer_UpdateVaultAUMFeeBips() {
 				return
 			}
 			vault, err := s.simApp.VaultKeeper.GetVault(s.ctx, args.VaultAddr)
-			s.Require().NoError(err)
-			s.Assert().Equal(args.ExpectedBips, vault.AumFeeBips)
+			s.Require().NoError(err, "failed to get vault %s after UpdateVaultAUMFeeBips", args.VaultAddr)
+			s.Assert().Equal(args.ExpectedBips, vault.AumFeeBips, "vault AUM fee bips mismatch for vault %s", args.VaultAddr)
 		},
 	}
 
@@ -4766,11 +4766,11 @@ func (s *TestSuite) TestMsgServer_UpdateVaultAUMFeeBips() {
 			ShareDenom:      share,
 			UnderlyingAsset: underlying,
 		})
-		s.Require().NoError(err)
+		s.Require().NoError(err, "failed to create vault %s", share)
 
 		params := types.DefaultParams()
 		params.TechFeeAddress = techFeeAddr.String()
-		s.Require().NoError(s.simApp.VaultKeeper.Params.Set(s.ctx, params))
+		s.Require().NoError(s.simApp.VaultKeeper.Params.Set(s.ctx, params), "failed to set default tech fee address")
 	}
 
 	tests := []msgServerTestCase[types.MsgUpdateVaultAUMFeeBipsRequest, postCheckArgs]{

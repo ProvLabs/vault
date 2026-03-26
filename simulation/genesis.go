@@ -21,7 +21,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 	vaultGenesis := types.GenesisState{
 		Params: types.Params{
 			DefaultAumFeeBips: aumFeeBips,
-			TechFeeAddress:    types.DefaultTechFeeAddress.String(),
+			TechFeeAddress:    "", // Let InitGenesis handle default TechFeeAddress based on chain prefix
 		},
 		Vaults:              []types.VaultAccount{},
 		PayoutTimeoutQueue:  []types.QueueEntry{},

@@ -18,6 +18,8 @@ import (
 )
 
 type Keeper struct {
+	cdc          codec.Codec
+	storeService store.KVStoreService
 	schema       collections.Schema
 	eventService event.Service
 	addressCodec address.Codec
@@ -53,6 +55,8 @@ func NewKeeper(
 	builder := collections.NewSchemaBuilder(storeService)
 
 	keeper := &Keeper{
+		cdc:                   cdc,
+		storeService:          storeService,
 		eventService:          eventService,
 		addressCodec:          addressCodec,
 		authority:             authority,

@@ -31,7 +31,7 @@ import (
 )
 
 // ConsensusVersion defines the current x/vault module consensus version.
-const ConsensusVersion = 1
+const ConsensusVersion = 2
 
 var (
 	_ module.AppModuleBasic      = AppModule{}
@@ -139,6 +139,11 @@ func (m AppModule) EndBlock(ctx context.Context) error {
 func (m AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServer(m.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServer(m.keeper))
+
+	migrator := keeper.NewMigrator(*m.keeper)
+	if err := cfg.RegisterMigration(types.ModuleName, 1, migrator.Migrate1to2); err != nil {
+		panic(fmt.Errorf("failed to register vault migration from v1 to v2: %w", err))
+	}
 }
 
 // AutoCLIOptions defines CLI commands for tx and query.

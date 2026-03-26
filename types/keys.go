@@ -64,6 +64,9 @@ var (
 	ParamsKeyPrefix = collections.NewPrefix(10)
 	// ParamsKeyName is the human-readable name for the params state key.
 	ParamsKeyName = "params"
+
+	// AUMFeeAddressKeyPrefix is the legacy prefix (singleton) for the AUM fee recipient address.
+	AUMFeeAddressKeyPrefix = collections.NewPrefix(8)
 )
 
 var (

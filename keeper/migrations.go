@@ -6,8 +6,26 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provlabs/vault/types"
 )
+// Migrator is a struct for handling in-place store migrations.
+type Migrator struct {
+	keeper Keeper
+}
+
+// NewMigrator returns a new Migrator.
+func NewMigrator(keeper Keeper) Migrator {
+	return Migrator{keeper: keeper}
+}
+
+// Migrate1to2 migrates from version 1 to 2.
+func (m Migrator) Migrate1to2(ctx sdk.Context) error {
+	if err := m.keeper.MigrateVaultAccountPaymentDenomDefaults(ctx); err != nil {
+		return err
+	}
+	return m.keeper.MigrateAUMFeeParams(ctx)
+}
 
 // MigrateVaultAccountPaymentDenomDefaults updates legacy VaultAccount state created
+...
 // prior to v1.0.13 by normalizing empty payment denom fields.
 //
 // In versions <= v1.0.13, VaultAccount instances could be persisted with an empty
@@ -47,7 +65,16 @@ func (k Keeper) MigrateAUMFeeParams(ctx sdk.Context) error {
 	params, err := k.Params.Get(ctx)
 	if err != nil {
 		params = types.DefaultParams()
-		params.TechFeeAddress = types.GetDefaultTechFeeAddress(ctx.ChainID()).String()
+
+		// Attempt to read legacy AUM fee recipient from legacy AUMFeeAddressKeyPrefix (prefix 8).
+		kvStore := k.storeService.OpenKVStore(ctx)
+		bz, err := kvStore.Get(types.AUMFeeAddressKeyPrefix)
+		if err == nil && len(bz) > 0 {
+			params.TechFeeAddress = sdk.AccAddress(bz).String()
+		} else {
+			params.TechFeeAddress = types.GetDefaultTechFeeAddress(ctx.ChainID()).String()
+		}
+
 		if err := k.Params.Set(ctx, params); err != nil {
 			return fmt.Errorf("failed to initialize params during migration: %w", err)
 		}

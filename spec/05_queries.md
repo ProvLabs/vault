@@ -50,10 +50,12 @@ Returns configuration **and live balances** for a specific vault.
   - `address`: principal marker address (the marker backing the share denom)  
   - `coins`: all balances on that marker (most relevantly, the underlying asset)
 - `reserves`: `AccountBalance` of the **vault account** (used for positive interest payments)
+- `total_vault_value`: `Coin` in the underlying asset representing the **Net TVV** (Principal + Accrued Interest - Outstanding AUM Fees).
 
 **Notes**
 - This endpoint resolves the share marker by **share denom**, then reports principal (marker) and reserve (vault) balances.
 - Use this to show current funding, e.g., assets backing shares and interest reserves.
+- `total_vault_value` provides the same "Net" valuation used for share pricing.
 
 ---
 
@@ -80,7 +82,7 @@ Estimates how many **shares** would be minted for a given deposit of assets (und
 - Computes a **pro-rata** share amount based on:
   - total shares outstanding,
   - total principal in the marker,
-  - plus **accrued-but-unapplied interest** via `CalculateVaultTotalAssets`.
+  - plus **accrued-but-unapplied interest** MINUS **accrued AUM fees** via `CalculateVaultTotalAssets`.
 - Floors where necessary to prevent over-mint.
 
 **Common errors**
@@ -110,7 +112,7 @@ Estimates how many **payout assets** (underlying or payment denom) you would rec
 
 **How it works (high level)**
 - Validates the requested payout denom is accepted (underlying or payment denom).
-- Computes a **pro-rata** redemption of the vault’s estimated total assets (principal + accrued interest), then converts underlying → payout denom using current NAV.
+- Computes a **pro-rata** redemption of the vault’s estimated total assets (principal + accrued interest - accrued AUM fees), then converts underlying → payout denom using current NAV.
 - Floors where necessary for safety.
 
 **Common errors**

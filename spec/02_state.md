@@ -16,7 +16,8 @@ Vaults may be configured with an optional **payment denom** in addition to the *
   - [Pending Swap-Out Sequence (prefix 4)](#pending-swapout-sequence-prefix-4)
   - [Pending Swap-Out by Vault Index (prefix 5)](#pending-swapout-by-vault-index-prefix-5)
   - [Pending Swap-Out by ID Index (prefix 6)](#pending-swapout-by-id-index-prefix-6)
-  - [AUM Fee Address (prefix 8)](#aum-fee-address-prefix-8)
+  - [Module Parameters (prefix 10)](#module-parameters-prefix-10)
+  - [Legacy: AUM Fee Address (prefix 8)](#legacy-aum-fee-address-prefix-8)
 - [Deterministic Vault Addressing](#deterministic-vault-addressing)
 - [Genesis Notes](#genesis-notes)
 
@@ -32,7 +33,7 @@ Each vault is an `x/auth` account implementing `VaultAccountI`. The canonical re
 - **Total supply-of-record:** `total_shares` (authoritative across chains; includes locally and externally held shares)  
 - **Bridging controls:** `bridge_address` (the sole authorized external address) and `bridge_enabled` (feature gate)
 - **Asset Management:** optional `asset_manager` address with delegated authority.
-- **AUM Fee State:** `fee_period_start`, `fee_period_timeout`, and `outstanding_aum_fee`.
+- **AUM Fee State:** `fee_period_start`, `fee_period_timeout`, `outstanding_aum_fee`, and `aum_fee_bips`.
 
 `VaultAccount` enforces invariants (e.g., payment denom cannot equal underlying, rate bounds, etc.) and provides helpers like `AcceptedDenoms()` and `ValidateAcceptedDenom`. :contentReference[oaicite:1]{index=1}
 
@@ -113,9 +114,17 @@ Direct lookup by **request ID** (useful to expedite or cancel a single job).
 - **Value:** lightweight pointer to the queued entry (implementation detail)  
 :contentReference[oaicite:10]{index=10}
 
-### AUM Fee Address (prefix 8)
+### Module Parameters (prefix 10)
 
-The address authorized to receive collected AUM technology fees.
+The module's global configuration parameters, managed via governance.
+
+- **Prefix:** `ParamsKeyPrefix` (10)
+- **Key:** none (singleton)
+- **Value:** `types.Params` (contains `tech_fee_address` and `default_aum_fee_bips`)
+
+### Legacy: AUM Fee Address (prefix 8)
+
+The legacy (pre-params) storage for the AUM technology fee recipient address.
 
 - **Prefix:** `AUMFeeAddressKeyPrefix` (8)
 - **Key:** none (singleton)
@@ -132,7 +141,7 @@ Given a **share denom**, the corresponding vault account address is derived dete
 
 ## Genesis Notes
 
-The module defines a minimal `GenesisState` with validation and relies on import/export logic to include **vault accounts** (from `x/auth`) and active **queue entries** (timeouts and pending swap-outs). There are **no module Params** in the vault genesis.  
+The module defines a `GenesisState` with validation and relies on import/export logic to include **vault accounts** (from `x/auth`), **module parameters** (including `tech_fee_address` and `default_aum_fee_bips`), and active **queue entries** (timeouts and pending swap-outs).  
 Genesis must preserve `total_shares`, `bridge_address`, and `bridge_enabled`, and validate that local marker supply does not exceed `total_shares`. :contentReference[oaicite:12]{index=12} :contentReference[oaicite:13]{index=13}
 
 ---

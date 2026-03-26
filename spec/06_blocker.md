@@ -78,13 +78,13 @@ Processing model (safe “collect-then-mutate”):
 
 ### handleVaultFeeTimeouts
 
-Reconciles the 15 bps AUM technology fee for vaults whose fee timeout has elapsed.
+Reconciles the configurable AUM fee for vaults whose fee timeout has elapsed.
 
 1. **Collect due entries** from `VaultFeeTimeoutQueue` with `timeout <= now`.
 2. **Dequeue** each collected entry before processing.
 3. **PerformVaultFeeTransfer** (atomically via `CacheContext`):
-   - Computes fee based on **Gross TVV**.
-   - Collects from principal marker into the configured ProvLabs collection address.
+   - Computes fee based on **Gross TVV** and the vault's `aum_fee_bips`.
+   - Collects from principal marker into the configured `tech_fee_address`.
    - Any uncollected amount (due to liquidity) is recorded in `outstanding_aum_fee`.
    - Schedules next fee timeout.
 
@@ -145,9 +145,9 @@ This advances vaults from the **verification set**:
     Emits `EventVaultReconcile`.
 
 * **PerformVaultFeeTransfer**
-  Computes the 15 bps (0.15% annual) technology fee based on **Gross TVV**.
+  Computes the annual AUM fee based on the vault's `aum_fee_bips` and **Gross TVV**.
   - Collects fee in the configured `payment_denom`.
-  - Transfers from **principal (marker account)** → ProvLabs collection address.
+  - Transfers from **principal (marker account)** → module `tech_fee_address`.
   - Caps collection at available `payment_denom` balance.
   - Emits `EventVaultFeeCollected`.
 

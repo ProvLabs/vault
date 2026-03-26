@@ -29,6 +29,8 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 - [PauseVault](#pausevault)
 - [UnpauseVault](#unpausevault)
 - [SetAssetManager](#setassetmanager)
+- [UpdateVaultAUMFeeBips](#updatevaultaumfeebips)
+- [UpdateParams](#updateparams)
 
 ---
 
@@ -57,12 +59,16 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 | `PauseVault`             | Admin or Asset Manager            |                   ✅ |                 ❌ | Reconciles, snapshots `PausedBalance`, sets paused.                                                           |
 | `UnpauseVault`           | Admin or Asset Manager            |                   ❌ |                 ✅ | Clears `PausedBalance`, unpauses, emits with current TVV.                                                     |
 | `SetAssetManager`        | Admin only                        |                   ✅ |                 ✅ | Sets or clears the delegated asset manager.                                                                   |
+| `UpdateVaultAUMFeeBips`  | Tech Fee Authority only           |                   ✅ |                 ✅ | Updates the AUM fee bips for a specific vault.                                                                |
+| `UpdateParams`           | Gov only                          |                   ✅ |                 ✅ | Updates the global module parameters.                                                                         |
 
 **Notes**
 * *Admin or Asset Manager* indicates that either the vault admin or the delegated asset manager may sign and execute the transaction.
 * **Bridge** operations are restricted to the configured bridge address, not the admin or asset manager.
 * **SwapOut** remains asynchronous (enqueues `request_id` for later processing).
 * **Principal adjustments** and **pause/unpause** operations are allowed for the asset manager as delegated administrative control.
+* **Tech Fee Authority** is the address configured in `Params.tech_fee_address`.
+* **Gov** indicates the message must be signed by the governance module address.
 
 ## CreateVault
 
@@ -269,3 +275,21 @@ Passing an empty `asset_manager` clears the configured value.
 
 * **Request:** `MsgSetAssetManagerRequest { admin, vault_address, asset_manager }`
 * **Response:** `MsgSetAssetManagerResponse {}`
+
+---
+
+## UpdateVaultAUMFeeBips
+
+Tech Fee Authority-only. Updates the AUM fee bips for a specific vault.
+
+* **Request:** `MsgUpdateVaultAUMFeeBipsRequest { authority, vault_address, aum_fee_bips }`
+* **Response:** `MsgUpdateVaultAUMFeeBipsResponse {}`
+
+---
+
+## UpdateParams
+
+Governance-only. Updates the global module parameters.
+
+* **Request:** `MsgUpdateParamsRequest { authority, params }`
+* **Response:** `MsgUpdateParamsResponse {}`

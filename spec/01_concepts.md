@@ -35,7 +35,7 @@ Total share supply is tracked on the vault as **total_shares**, the authoritativ
 - **TVV (Total Vault Value)**: the value of all principal assets, computed and reported in the underlying unit.
     - **Gross TVV**: The literal sum of all assets sitting in the principal marker. Used for interest and fee accruals.
     - **Net TVV**: Gross TVV minus **Outstanding AUM Fees**. This is the authoritative value used for share pricing (NAV) and user-facing valuation.
-- **AUM Technology Fee**: a 15 bps (0.15% annual) fee collected from the vault principal to support protocol maintenance. It is accrued continuously and collected in the vault's configured `payment_denom`.
+- **AUM Fee**: a configurable annual fee (expressed in basis points) collected from the vault principal to support protocol maintenance. It is accrued continuously and collected in the vault's configured `payment_denom` into the module's `tech_fee_address`.
 - **NAV**: conversion rate between denoms, used for valuation and conversions, subject to special-case rules.
 
 - **Total Shares**: the canonical supply-of-record across chains. Local marker supply must never exceed `total_shares`.  
@@ -81,8 +81,9 @@ The keeper ties together state management, account operations, marker integratio
 - **ReconcileVault**: ensures accrued interest is applied and AUM fees are collected before any balance-changing action.
 - **Positive Interest**: paid from vault reserves into the principal marker.
 - **Negative Interest**: refunded from the principal marker into reserves, capped by available funds.
-- **AUM Technology Fee**: 15 bps annual fee collected from the principal marker into the configured ProvLabs collection address.
+- **AUM Fee**: an annual fee (configurable per vault) collected from the principal marker into the configured collection address (`tech_fee_address`). The default rate for new vaults is defined in module parameters.
 - **Rate Controls**: vaults have configurable current/desired rates, and optional min/max bounds.
+- **Fee Controls**: the `tech_fee_address` has the authority to update the `aum_fee_bips` for any vault.
 - **Queues**: vaults rotate between verification, interest timeout, and fee timeout queues to forecast payout ability and auto-reconcile state periodically.
 
 ### Valuation
@@ -129,4 +130,5 @@ The keeper ties together state management, account operations, marker integratio
    - BeginBlocker: runs interest checks and timeouts.  
    - EndBlocker: finalizes swap-out jobs and reconciliations.
 6. **Admin Tools**: manage interest rates, deposits/withdrawals, pausing/unpausing, queue interventions, and assign asset managers.
-7. **Bridge Ops (optional)**: authorized bridge mints/burns local supply under `total_shares` capacity to facilitate cross-chain share movement.
+7. **Tech Fee Authority**: manage the module's technology fee address and update per-vault AUM fee rates (bips) to support protocol maintenance.
+8. **Bridge Ops (optional)**: authorized bridge mints/burns local supply under `total_shares` capacity to facilitate cross-chain share movement.

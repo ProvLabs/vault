@@ -20,6 +20,7 @@ This document describes all events emitted by the `x/vault` module and how to us
 - [Interest & Fees](#interest--fees)
   - [EventVaultReconcile](#eventvaultreconcile)
   - [EventVaultFeeCollected](#eventvaultfeecollected)
+  - [EventVaultAUMFeeBipsUpdated](#eventvaultaumfeebipsupdated)
   - [EventVaultInterestChange](#eventvaultinterestchange)
   - [EventMinInterestRateUpdated](#eventmininterestrateupdated)
   - [EventMaxInterestRateUpdated](#eventmaxinterestrateupdated)
@@ -40,6 +41,8 @@ This document describes all events emitted by the `x/vault` module and how to us
 - [Metadata](#metadata)
   - [EventSetShareDenomMetadata](#eventsetsharedenommetadata)
   - [EventDenomUnit](#eventdenomunit)
+- [Parameters](#parameters)
+  - [EventParamsUpdated](#eventparamsupdated)
 
 ---
 
@@ -187,7 +190,7 @@ Swap-outs are **asynchronous** and complete in `EndBlocker` after the vault’s 
 
 ---
 
-## Interest
+## Interest & Fees
 
 ### EventVaultReconcile
 
@@ -206,7 +209,7 @@ Emitted whenever the module applies accrued interest (positive or negative).
 
 ### EventVaultFeeCollected
 
-Emitted when the 15 bps AUM technology fee is collected.
+Emitted when the AUM technology fee is collected.
 
 **Fields**
 
@@ -216,6 +219,18 @@ Emitted when the 15 bps AUM technology fee is collected.
 * `aum_snapshot` — TVV snapshot used for calculation (underlying denom)
 * `outstanding_amount` — remaining unpaid fee after this collection (payment denom)
 * `duration_seconds` — time period covered by this collection
+
+---
+
+### EventVaultAUMFeeBipsUpdated
+
+Emitted when the AUM fee bips for a vault is updated by the Tech Fee Authority.
+
+**Fields**
+
+* `vault_address` — vault
+* `authority` — actor (Tech Fee Authority)
+* `aum_fee_bips` — new fee rate in basis points
 
 ---
 
@@ -425,3 +440,15 @@ Included inside `EventSetShareDenomMetadata` to describe each denom unit.
 - `denom` — unit name (e.g., `nushare`, `ushare`)
 - `exponent` — power of 10 exponent relative to base unit
 - `aliases` — optional alternative names (may be empty)
+
+---
+
+## Parameters
+
+### EventParamsUpdated
+
+Emitted when the global module parameters are updated via governance.
+
+**Fields**
+
+* `params` — the newly updated module parameters (includes `tech_fee_address` and `default_aum_fee_bips`)

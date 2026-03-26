@@ -38,11 +38,13 @@ const (
 	OpWeightMsgBridgeMintShares      = "op_weight_msg_bridge_mint_shares"
 	OpWeightMsgBridgeBurnShares      = "op_weight_msg_bridge_burn_shares"
 	OpWeightMsgUpdateWithdrawalDelay = "op_weight_msg_update_withdrawal_delay"
+	OpWeightMsgUpdateParams          = "op_weight_msg_update_params"
+	OpWeightMsgUpdateVaultAUMFeeBips = "op_weight_msg_update_vault_aum_fee_bips"
 )
 
 var DefaultWeights = map[string]int{
 	OpWeightMsgCreateVault:           4,
-	OpWeightMsgSwapIn:                25,
+	OpWeightMsgSwapIn:                22,
 	OpWeightMsgSwapOut:               12,
 	OpWeightMsgUpdateInterestRate:    7,
 	OpWeightMsgUpdateMinInterestRate: 2,
@@ -61,6 +63,8 @@ var DefaultWeights = map[string]int{
 	OpWeightMsgBridgeMintShares:      6,
 	OpWeightMsgBridgeBurnShares:      6,
 	OpWeightMsgUpdateWithdrawalDelay: 2,
+	OpWeightMsgUpdateParams:          1,
+	OpWeightMsgUpdateVaultAUMFeeBips: 2,
 }
 
 func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simulation.WeightedOperations {
@@ -85,6 +89,8 @@ func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simula
 		wBridgeMintShares      int
 		wBridgeBurnShares      int
 		wUpdateWithdrawalDelay int
+		wUpdateParams          int
+		wUpdateVaultAUMFeeBips int
 	)
 
 	simState.AppParams.GetOrGenerate(OpWeightMsgCreateVault, &wCreateVault, simState.Rand, func(_ *rand.Rand) { wCreateVault = DefaultWeights[OpWeightMsgCreateVault] })
@@ -107,6 +113,8 @@ func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simula
 	simState.AppParams.GetOrGenerate(OpWeightMsgBridgeMintShares, &wBridgeMintShares, simState.Rand, func(_ *rand.Rand) { wBridgeMintShares = DefaultWeights[OpWeightMsgBridgeMintShares] })
 	simState.AppParams.GetOrGenerate(OpWeightMsgBridgeBurnShares, &wBridgeBurnShares, simState.Rand, func(_ *rand.Rand) { wBridgeBurnShares = DefaultWeights[OpWeightMsgBridgeBurnShares] })
 	simState.AppParams.GetOrGenerate(OpWeightMsgUpdateWithdrawalDelay, &wUpdateWithdrawalDelay, simState.Rand, func(_ *rand.Rand) { wUpdateWithdrawalDelay = DefaultWeights[OpWeightMsgUpdateWithdrawalDelay] })
+	simState.AppParams.GetOrGenerate(OpWeightMsgUpdateParams, &wUpdateParams, simState.Rand, func(_ *rand.Rand) { wUpdateParams = DefaultWeights[OpWeightMsgUpdateParams] })
+	simState.AppParams.GetOrGenerate(OpWeightMsgUpdateVaultAUMFeeBips, &wUpdateVaultAUMFeeBips, simState.Rand, func(_ *rand.Rand) { wUpdateVaultAUMFeeBips = DefaultWeights[OpWeightMsgUpdateVaultAUMFeeBips] })
 
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(wCreateVault, SimulateMsgCreateVault(k)),
@@ -129,6 +137,8 @@ func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simula
 		simulation.NewWeightedOperation(wBridgeMintShares, SimulateMsgBridgeMintShares(k)),
 		simulation.NewWeightedOperation(wBridgeBurnShares, SimulateMsgBridgeBurnShares(k)),
 		simulation.NewWeightedOperation(wUpdateWithdrawalDelay, SimulateMsgUpdateWithdrawalDelay(k)),
+		simulation.NewWeightedOperation(wUpdateParams, SimulateMsgUpdateParams(k)),
+		simulation.NewWeightedOperation(wUpdateVaultAUMFeeBips, SimulateMsgUpdateVaultAUMFeeBips(k)),
 	}
 }
 
@@ -975,5 +985,60 @@ func SimulateMsgUpdateWithdrawalDelay(k keeper.Keeper) simtypes.Operation {
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "successfully updated withdrawal delay"), nil, nil
+	}
+}
+
+func SimulateMsgUpdateParams(k keeper.Keeper) simtypes.Operation {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		authority := sdk.AccAddress(k.GetAuthority())
+
+		params := types.Params{
+			DefaultAumFeeBips: uint32(r.Intn(100)),
+			TechFeeAddress:    types.DefaultTechFeeAddress.String(),
+		}
+
+		msg := &types.MsgUpdateParamsRequest{
+			Authority: authority.String(),
+			Params:    params,
+		}
+
+		handler := keeper.NewMsgServer(&k)
+		_, err := handler.UpdateParams(sdk.WrapSDKContext(ctx), msg)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
+		}
+
+		return simtypes.NewOperationMsg(msg, true, "successfully updated params"), nil, nil
+	}
+}
+
+func SimulateMsgUpdateVaultAUMFeeBips(k keeper.Keeper) simtypes.Operation {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		vaults, err := k.GetVaults(ctx)
+		if err != nil || len(vaults) == 0 {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateVaultAUMFeeBipsRequest{}), "no vaults found"), nil, nil
+		}
+
+		vault := vaults[r.Intn(len(vaults))]
+		params, _ := k.Params.Get(ctx)
+		authority := params.TechFeeAddress
+
+		msg := &types.MsgUpdateVaultAUMFeeBipsRequest{
+			Authority:    authority,
+			VaultAddress: vault.String(),
+			AumFeeBips:   uint32(r.Intn(100)),
+		}
+
+		handler := keeper.NewMsgServer(&k)
+		_, err = handler.UpdateVaultAUMFeeBips(sdk.WrapSDKContext(ctx), msg)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
+		}
+
+		return simtypes.NewOperationMsg(msg, true, "successfully updated vault AUM fee bips"), nil, nil
 	}
 }

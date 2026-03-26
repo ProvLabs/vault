@@ -39,6 +39,10 @@ func TestRandomizedGenState(t *testing.T) {
 
 	var vaultGenesis types.GenesisState
 	simState.Cdc.MustUnmarshalJSON(simState.GenState[types.ModuleName], &vaultGenesis)
+
+	require.NotNil(t, vaultGenesis.Params)
+	require.LessOrEqual(t, vaultGenesis.Params.DefaultAumFeeBips, uint32(100))
+	require.Equal(t, types.DefaultTechFeeAddress.String(), vaultGenesis.Params.TechFeeAddress)
 }
 
 func TestRandomizedGenState_Panics(t *testing.T) {

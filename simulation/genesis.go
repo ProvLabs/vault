@@ -3,6 +3,7 @@ package simulation
 import (
 	"encoding/json"
 	"fmt"
+	"math/rand"
 
 	"github.com/provlabs/vault/types"
 
@@ -11,7 +12,17 @@ import (
 
 // RandomizedGenState generates a random GenesisState for the vault module
 func RandomizedGenState(simState *module.SimulationState) {
+	var aumFeeBips uint32
+	simState.AppParams.GetOrGenerate(
+		"aum_fee_bips", &aumFeeBips, simState.Rand,
+		func(r *rand.Rand) { aumFeeBips = uint32(r.Intn(100)) },
+	)
+
 	vaultGenesis := types.GenesisState{
+		Params: types.Params{
+			DefaultAumFeeBips: aumFeeBips,
+			TechFeeAddress:    types.DefaultTechFeeAddress.String(),
+		},
 		Vaults:              []types.VaultAccount{},
 		PayoutTimeoutQueue:  []types.QueueEntry{},
 		PendingSwapOutQueue: types.PendingSwapOutQueue{},

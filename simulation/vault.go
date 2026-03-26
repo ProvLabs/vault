@@ -173,3 +173,27 @@ func BridgeAssets(ctx sdk.Context, vk *keeper.Keeper, shareDenom string, mintAmo
 	}
 	return nil
 }
+
+// UpdateVaultAUMFeeBips updates the AUM fee bips for a vault.
+func UpdateVaultAUMFeeBips(ctx sdk.Context, vk *keeper.Keeper, shareDenom string, authority string, bips uint32) error {
+	vaultAddr := types.GetVaultAddress(shareDenom)
+	msg := &types.MsgUpdateVaultAUMFeeBipsRequest{
+		Authority:    authority,
+		VaultAddress: vaultAddr.String(),
+		AumFeeBips:   bips,
+	}
+	msgServer := keeper.NewMsgServer(vk)
+	_, err := msgServer.UpdateVaultAUMFeeBips(sdk.WrapSDKContext(ctx), msg)
+	return err
+}
+
+// UpdateParams updates the module parameters.
+func UpdateParams(ctx sdk.Context, vk *keeper.Keeper, authority string, params types.Params) error {
+	msg := &types.MsgUpdateParamsRequest{
+		Authority: authority,
+		Params:    params,
+	}
+	msgServer := keeper.NewMsgServer(vk)
+	_, err := msgServer.UpdateParams(sdk.WrapSDKContext(ctx), msg)
+	return err
+}

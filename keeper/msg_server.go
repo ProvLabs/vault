@@ -783,6 +783,10 @@ func (k msgServer) UpdateVaultAUMFeeBips(goCtx context.Context, msg *types.MsgUp
 		return nil, fmt.Errorf("unauthorized: %s is not the tech fee address", msg.Authority)
 	}
 
+	if msg.AumFeeBips > 10_000 {
+		return nil, fmt.Errorf("invalid AUM fee bips: %d (max 10000)", msg.AumFeeBips)
+	}
+
 	if err := k.Keeper.UpdateVaultAUMFeeBips(ctx, vault, msg.AumFeeBips, msg.Authority); err != nil {
 		return nil, fmt.Errorf("failed to update vault AUM fee bips: %w", err)
 	}

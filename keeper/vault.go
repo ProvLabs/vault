@@ -429,7 +429,17 @@ func (k *Keeper) autoPauseVault(ctx sdk.Context, vault *types.VaultAccount, reas
 	k.emitEvent(ctx, types.NewEventVaultPaused(vault.GetAddress().String(), vault.GetAddress().String(), reason, vault.PausedBalance))
 }
 
+// UpdateVaultAUMFeeBips reconciles outstanding AUM fees for the provided VaultAccount
+// before updating the stored fee rate (in basis points).
+//
+// This method ensures that all fees accrued under the old rate are accounted for
+// before applying the new rate to future periods.
+// It returns an error if the new bips value exceeds 10,000 (100%) or if reconciliation fails.
 func (k *Keeper) UpdateVaultAUMFeeBips(ctx sdk.Context, vault *types.VaultAccount, bips uint32, authority string) error {
+	if bips > 10_000 {
+		return fmt.Errorf("invalid AUM fee bips: %d (max 10000)", bips)
+	}
+
 	if vault.AumFeeBips == bips {
 		return nil
 	}

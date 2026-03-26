@@ -436,7 +436,10 @@ func (m MsgUpdateParamsRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
 		return fmt.Errorf("invalid authority address: %q: %w", m.Authority, err)
 	}
-	return m.Params.Validate()
+	if err := m.Params.Validate(); err != nil {
+		return fmt.Errorf("invalid params for MsgUpdateParamsRequest: %w", err)
+	}
+	return nil
 }
 
 // ValidateBasic performs stateless validation on MsgUpdateVaultAUMFeeBipsRequest.
@@ -446,6 +449,9 @@ func (m MsgUpdateVaultAUMFeeBipsRequest) ValidateBasic() error {
 	}
 	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
 		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	if m.AumFeeBips > 10_000 {
+		return fmt.Errorf("invalid AUM fee bips: %d (max 10000)", m.AumFeeBips)
 	}
 	return nil
 }

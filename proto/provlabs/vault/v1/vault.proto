@@ -107,6 +107,10 @@ message VaultAccount {
   cosmos.base.v1beta1.Coin outstanding_aum_fee = 23 [(gogoproto.nullable) = false];
 
   // aum_fee_bips is the AUM fee rate (in basis points) for this specific vault.
+  // Units: Basis Points (1 bps = 0.01%).
+  // Valid Range: 0 to 10000 (0% to 100%).
+  // A value of 0 disables AUM fee collection for this vault.
+  // Negative values are not supported (uint32).
   uint32 aum_fee_bips = 24;
 }
 

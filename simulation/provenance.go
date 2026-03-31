@@ -61,18 +61,12 @@ func CreateUnrestrictedMarker(ctx context.Context, coin sdk.Coin, admin sdk.AccA
 		Amount:      coin,
 		Manager:     admin.String(),
 		FromAddress: admin.String(),
-		MarkerType:  markertypes.MarkerType_RestrictedCoin, // Must be restricted to allow ACCESS_TRANSFER
+		MarkerType:  markertypes.MarkerType_Coin,
 		AccessList: []markertypes.AccessGrant{
 			{
 				Address: admin.String(),
 				Permissions: markertypes.AccessList{
 					markertypes.Access_Mint, markertypes.Access_Burn, markertypes.Access_Withdraw,
-				},
-			},
-			{
-				Address: types.AUMFeeAddress.String(),
-				Permissions: markertypes.AccessList{
-					markertypes.Access_Transfer,
 				},
 			},
 		},
@@ -83,6 +77,25 @@ func CreateUnrestrictedMarker(ctx context.Context, coin sdk.Coin, admin sdk.AccA
 	}
 	markerMsgServer := markerkeeper.NewMsgServerImpl(keeper)
 	_, err := markerMsgServer.AddFinalizeActivateMarker(ctx, newMarker)
+	return err
+}
+
+// GrantTransferPermission grants transfer permission to an account for a given marker.
+func GrantTransferPermission(ctx context.Context, keeper markerkeeper.Keeper, denom string, grantee sdk.AccAddress, admin sdk.AccAddress) error {
+	msg := &markertypes.MsgAddAccessRequest{
+		Denom:         denom,
+		Administrator: admin.String(),
+		Access: []markertypes.AccessGrant{
+			{
+				Address: grantee.String(),
+				Permissions: markertypes.AccessList{
+					markertypes.Access_Transfer,
+				},
+			},
+		},
+	}
+	markerMsgServer := markerkeeper.NewMsgServerImpl(keeper)
+	_, err := markerMsgServer.AddAccess(ctx, msg)
 	return err
 }
 

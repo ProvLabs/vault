@@ -47,7 +47,7 @@ func Setup(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, ak types.AccountKeepe
 		return fmt.Errorf("marker keeper is not of type markerkeeper.Keeper")
 	}
 
-	if err := CreateGlobalMarker(ctx, ak, bk, mk, sdk.NewInt64Coin(underlyingDenom, 100_000_000), accs, true); err != nil {
+	if err := CreateGlobalMarker(ctx, ak, bk, mk, sdk.NewInt64Coin(underlyingDenom, 100_000_000), accs, false); err != nil {
 		return fmt.Errorf("failed to create global marker for underlying: %w", err)
 	}
 	if err := CreateGlobalMarker(ctx, ak, bk, mk, sdk.NewInt64Coin(paymentDenom, 100_000_000), accs, false); err != nil {

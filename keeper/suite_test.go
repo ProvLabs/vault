@@ -49,6 +49,15 @@ func (s *TestSuite) SetupTest() {
 	}
 }
 
+// EnsureTechFeeAccount ensures that the AUM fee address account exists in the account keeper.
+func (s *TestSuite) EnsureTechFeeAccount() sdk.AccAddress {
+	provlabsAddr := s.k.GetAUMFeeAddress(s.ctx)
+	if !s.simApp.AccountKeeper.HasAccount(s.ctx, provlabsAddr) {
+		s.simApp.AccountKeeper.SetAccount(s.ctx, s.simApp.AccountKeeper.NewAccountWithAddress(s.ctx, provlabsAddr))
+	}
+	return provlabsAddr
+}
+
 // Context returns the current sdk.Context associated with the suite.
 func (s *TestSuite) Context() sdk.Context {
 	return s.ctx

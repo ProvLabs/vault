@@ -261,20 +261,15 @@ func (s *TestSuite) TestSwapOut_FailsWithRestrictedUnderlyingAssetNoAttributes()
 	shareDenom := "vshare"
 	restrictedUnderlyingDenom := "restrictedasset"
 
-	// Ensure tech fee account exists
-	provlabsAddr := s.k.GetAUMFeeAddress(s.ctx)
-	if !s.simApp.AccountKeeper.HasAccount(s.ctx, provlabsAddr) {
-		s.simApp.AccountKeeper.SetAccount(s.ctx, s.simApp.AccountKeeper.NewAccountWithAddress(s.ctx, provlabsAddr))
-	}
+	provlabsAddr := s.EnsureTechFeeAccount()
 
 	restrictedMarkerAddr := markertypes.MustGetMarkerAddress(restrictedUnderlyingDenom)
-	// Grant attribute to provlabsAddr so CreateVault passes
 	if !s.simApp.NameKeeper.NameExists(s.ctx, restrictedUnderlyingDenom) {
-		s.Require().NoError(s.simApp.NameKeeper.SetNameRecord(s.ctx, restrictedUnderlyingDenom, s.adminAddr, false))
+		s.Require().NoError(s.simApp.NameKeeper.SetNameRecord(s.ctx, restrictedUnderlyingDenom, s.adminAddr, false), "should successfully bind name for %s", restrictedUnderlyingDenom)
 	}
 	expireTime := time.Now().Add(24 * time.Hour)
 	attr := attrtypes.NewAttribute(restrictedUnderlyingDenom, provlabsAddr.String(), attrtypes.AttributeType_String, []byte("true"), &expireTime, "")
-	s.Require().NoError(s.simApp.AttributeKeeper.SetAttribute(s.ctx, attr, s.adminAddr))
+	s.Require().NoError(s.simApp.AttributeKeeper.SetAttribute(s.ctx, attr, s.adminAddr), "should successfully set attribute for tech fee account")
 
 	restrictedMarker := markertypes.NewMarkerAccount(
 		authtypes.NewBaseAccountWithAddress(restrictedMarkerAddr),
@@ -283,7 +278,7 @@ func (s *TestSuite) TestSwapOut_FailsWithRestrictedUnderlyingAssetNoAttributes()
 		[]markertypes.AccessGrant{
 			{Address: s.adminAddr.String(), Permissions: markertypes.AccessList{markertypes.Access_Mint, markertypes.Access_Admin, markertypes.Access_Withdraw, markertypes.Access_Burn, markertypes.Access_Transfer}},
 			{Address: s.k.GetAUMFeeAddress(s.ctx).String(), Permissions: markertypes.AccessList{markertypes.Access_Transfer, markertypes.Access_Deposit}},
-			{Address: types.GetVaultAddress(shareDenom).String(), Permissions: markertypes.AccessList{markertypes.Access_Withdraw}},
+			{Address: types.GetVaultAddress(shareDenom).String(), Permissions: markertypes.AccessList{markertypes.Access_Withdraw, markertypes.Access_Transfer}},
 		},
 		markertypes.StatusProposed,
 		markertypes.MarkerType_RestrictedCoin,
@@ -320,20 +315,16 @@ func (s *TestSuite) TestSwapOut_FailsWithRestrictedUnderlyingAssetRequiredAttrib
 	shareDenom := "vshare"
 	restrictedUnderlyingDenom := "restrictedasset"
 
-	// Ensure tech fee account exists
-	provlabsAddr := s.k.GetAUMFeeAddress(s.ctx)
-	if !s.simApp.AccountKeeper.HasAccount(s.ctx, provlabsAddr) {
-		s.simApp.AccountKeeper.SetAccount(s.ctx, s.simApp.AccountKeeper.NewAccountWithAddress(s.ctx, provlabsAddr))
-	}
+	provlabsAddr := s.EnsureTechFeeAccount()
 
 	restrictedMarkerAddr := markertypes.MustGetMarkerAddress(restrictedUnderlyingDenom)
-	// Grant attribute to provlabsAddr so CreateVault passes
-	if !s.simApp.NameKeeper.NameExists(s.ctx, restrictedUnderlyingDenom) {
-		s.Require().NoError(s.simApp.NameKeeper.SetNameRecord(s.ctx, restrictedUnderlyingDenom, s.adminAddr, false))
+	requiredAttr := "you.dont.have.me"
+	if !s.simApp.NameKeeper.NameExists(s.ctx, requiredAttr) {
+		s.Require().NoError(s.simApp.NameKeeper.SetNameRecord(s.ctx, requiredAttr, s.adminAddr, false), "should successfully bind name for %s", requiredAttr)
 	}
 	expireTime := time.Now().Add(24 * time.Hour)
-	attr := attrtypes.NewAttribute(restrictedUnderlyingDenom, provlabsAddr.String(), attrtypes.AttributeType_String, []byte("true"), &expireTime, "")
-	s.Require().NoError(s.simApp.AttributeKeeper.SetAttribute(s.ctx, attr, s.adminAddr))
+	attr := attrtypes.NewAttribute(requiredAttr, provlabsAddr.String(), attrtypes.AttributeType_String, []byte("true"), &expireTime, "")
+	s.Require().NoError(s.simApp.AttributeKeeper.SetAttribute(s.ctx, attr, s.adminAddr), "should successfully set attribute for tech fee account")
 
 	restrictedMarker := markertypes.NewMarkerAccount(
 		authtypes.NewBaseAccountWithAddress(restrictedMarkerAddr),
@@ -380,22 +371,17 @@ func (s *TestSuite) TestSwapOut_SucceedsWithRestrictedUnderlyingAssetRequiredAtt
 	restrictedUnderlyingDenom := "restrictedasset"
 	requiredAttribute := "iamrequired"
 
-	// Ensure tech fee account exists
-	provlabsAddr := s.k.GetAUMFeeAddress(s.ctx)
-	if !s.simApp.AccountKeeper.HasAccount(s.ctx, provlabsAddr) {
-		s.simApp.AccountKeeper.SetAccount(s.ctx, s.simApp.AccountKeeper.NewAccountWithAddress(s.ctx, provlabsAddr))
-	}
+	provlabsAddr := s.EnsureTechFeeAccount()
 
 	s.ctx = s.ctx.WithBlockTime(time.Now().UTC())
 
 	restrictedMarkerAddr := markertypes.MustGetMarkerAddress(restrictedUnderlyingDenom)
-	// Grant attribute to provlabsAddr so CreateVault passes
-	if !s.simApp.NameKeeper.NameExists(s.ctx, restrictedUnderlyingDenom) {
-		s.Require().NoError(s.simApp.NameKeeper.SetNameRecord(s.ctx, restrictedUnderlyingDenom, s.adminAddr, false))
+	if !s.simApp.NameKeeper.NameExists(s.ctx, requiredAttribute) {
+		s.Require().NoError(s.simApp.NameKeeper.SetNameRecord(s.ctx, requiredAttribute, s.adminAddr, false), "should successfully bind name for %s", requiredAttribute)
 	}
 	expireTime := time.Now().Add(24 * time.Hour)
-	attr := attrtypes.NewAttribute(restrictedUnderlyingDenom, provlabsAddr.String(), attrtypes.AttributeType_String, []byte("true"), &expireTime, "")
-	s.Require().NoError(s.simApp.AttributeKeeper.SetAttribute(s.ctx, attr, s.adminAddr))
+	attr := attrtypes.NewAttribute(requiredAttribute, provlabsAddr.String(), attrtypes.AttributeType_String, []byte("true"), &expireTime, "")
+	s.Require().NoError(s.simApp.AttributeKeeper.SetAttribute(s.ctx, attr, s.adminAddr), "should successfully set attribute for tech fee account")
 
 	restrictedMarker := markertypes.NewMarkerAccount(
 		authtypes.NewBaseAccountWithAddress(restrictedMarkerAddr),
@@ -439,7 +425,6 @@ func (s *TestSuite) TestSwapOut_SucceedsWithRestrictedUnderlyingAssetRequiredAtt
 
 	s.simApp.AccountKeeper.SetAccount(s.ctx, s.simApp.AccountKeeper.NewAccountWithAddress(s.ctx, s.adminAddr))
 
-	s.Require().NoError(s.simApp.NameKeeper.SetNameRecord(s.ctx, requiredAttribute, s.adminAddr, false), "should successfully bind the name to the redeemer's address")
 	expireTime = time.Now().Add(24 * time.Hour)
 	attribute := attrtypes.NewAttribute(requiredAttribute, redeemerAddr.String(), attrtypes.AttributeType_String, []byte("true"), &expireTime, "")
 	s.Require().NoError(s.simApp.AttributeKeeper.SetAttribute(s.ctx, attribute, s.adminAddr), "should successfully set the required attribute on the redeemer")

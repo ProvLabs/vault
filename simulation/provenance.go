@@ -35,7 +35,7 @@ func CreateMarker(ctx context.Context, coin sdk.Coin, admin sdk.AccAddress, keep
 			{
 				Address: admin.String(),
 				Permissions: markertypes.AccessList{
-					markertypes.Access_Mint, markertypes.Access_Burn, markertypes.Access_Withdraw,
+					markertypes.Access_Mint, markertypes.Access_Burn, markertypes.Access_Withdraw, markertypes.Access_Admin,
 				},
 			},
 			{
@@ -66,7 +66,7 @@ func CreateUnrestrictedMarker(ctx context.Context, coin sdk.Coin, admin sdk.AccA
 			{
 				Address: admin.String(),
 				Permissions: markertypes.AccessList{
-					markertypes.Access_Mint, markertypes.Access_Burn, markertypes.Access_Withdraw,
+					markertypes.Access_Mint, markertypes.Access_Burn, markertypes.Access_Withdraw, markertypes.Access_Admin,
 				},
 			},
 		},
@@ -82,21 +82,30 @@ func CreateUnrestrictedMarker(ctx context.Context, coin sdk.Coin, admin sdk.AccA
 
 // GrantTransferPermission grants transfer permission to an account for a given marker.
 func GrantTransferPermission(ctx context.Context, keeper markerkeeper.Keeper, denom string, grantee sdk.AccAddress, admin sdk.AccAddress) error {
-	msg := &markertypes.MsgAddAccessRequest{
-		Denom:         denom,
-		Administrator: admin.String(),
-		Access: []markertypes.AccessGrant{
-			{
-				Address: grantee.String(),
-				Permissions: markertypes.AccessList{
-					markertypes.Access_Transfer,
-				},
-			},
-		},
+	return GrantAccess(ctx, keeper, denom, grantee, admin, markertypes.AccessList{markertypes.Access_Transfer})
+}
+
+// GrantWithdrawPermission grants withdraw permission to an account for a given marker.
+func GrantWithdrawPermission(ctx context.Context, keeper markerkeeper.Keeper, denom string, grantee sdk.AccAddress, admin sdk.AccAddress) error {
+	return GrantAccess(ctx, keeper, denom, grantee, admin, markertypes.AccessList{markertypes.Access_Withdraw})
+}
+
+// GrantAccess grants specified permissions to an account for a given marker.
+func GrantAccess(ctx context.Context, keeper markerkeeper.Keeper, denom string, grantee sdk.AccAddress, admin sdk.AccAddress, access markertypes.AccessList) error {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	m, err := keeper.GetMarker(sdkCtx, markertypes.MustGetMarkerAddress(denom))
+	if err != nil {
+		return fmt.Errorf("failed to get marker %s: %w", denom, err)
 	}
-	markerMsgServer := markerkeeper.NewMsgServerImpl(keeper)
-	_, err := markerMsgServer.AddAccess(ctx, msg)
-	return err
+	if m == nil {
+		return fmt.Errorf("marker %s not found", denom)
+	}
+
+	if err := m.GrantAccess(markertypes.NewAccessGrant(grantee, access)); err != nil {
+		return fmt.Errorf("failed to grant access to %s on %s: %w", grantee, denom, err)
+	}
+	keeper.SetMarker(sdkCtx, m)
+	return nil
 }
 
 // AddNav adds a net asset value to a marker.
@@ -128,7 +137,6 @@ func AddAttribute(ctx context.Context, acc sdk.AccAddress, attrName string, nk t
 		return err
 	}
 
-	// name string, address string, attrType AttributeType, value []byte, expirationDate *time.Time, concreteType string
 	attr := NewAttribute(
 		attrName,
 		acc.String(),
@@ -182,7 +190,6 @@ func FundAccount(ctx context.Context, bk types.BankKeeper, addr sdk.AccAddress, 
 
 // NewAttribute creates a new instance of an Attribute.
 func NewAttribute(name string, address string, attrType attrtypes.AttributeType, value []byte, expirationDate *time.Time) attrtypes.Attribute {
-	// Ensure string type values are trimmed.
 	if attrType != attrtypes.AttributeType_Bytes && attrType != attrtypes.AttributeType_Proto {
 		trimmed := strings.TrimSpace(string(value))
 		value = []byte(trimmed)

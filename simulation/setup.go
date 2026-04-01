@@ -17,7 +17,6 @@ import (
 func IsSetup(k keeper.Keeper, ctx sdk.Context) bool {
 	vaults, err := k.GetVaults(ctx)
 	if err != nil {
-		// If there's an error getting vaults, we can consider it not set up.
 		return false
 	}
 	return len(vaults) > 0
@@ -31,42 +30,33 @@ func Setup(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, ak types.AccountKeepe
 
 	denomRegex := mk.GetUnrestrictedDenomRegex(ctx)
 
-	// Ensure tech fee account exists
 	provlabsAddr := k.GetAUMFeeAddress(ctx)
 	if !ak.HasAccount(ctx, provlabsAddr) {
 		ak.SetAccount(ctx, ak.NewAccountWithAddress(ctx, provlabsAddr))
 	}
 
-	// Create global markers for underlying and payment denoms.
 	underlyingDenom := genRandomDenom(r, denomRegex, VaultGlobalDenomSuffix)
 	paymentDenom := genRandomDenom(r, denomRegex, VaultGlobalDenomSuffix)
 
-	// Need to manually cast here
 	markerKeeper, ok := mk.(markerkeeper.Keeper)
 	if !ok {
 		return fmt.Errorf("marker keeper is not of type markerkeeper.Keeper")
 	}
 
 	if err := CreateGlobalMarker(ctx, ak, bk, mk, sdk.NewInt64Coin(underlyingDenom, 100_000_000), accs, false); err != nil {
-		return fmt.Errorf("failed to create global marker for underlying: %w", err)
+		return fmt.Errorf("failed to create global marker for underlying %s: %w", underlyingDenom, err)
 	}
 	if err := CreateGlobalMarker(ctx, ak, bk, mk, sdk.NewInt64Coin(paymentDenom, 100_000_000), accs, false); err != nil {
-		return fmt.Errorf("failed to create global marker for payment: %w", err)
+		return fmt.Errorf("failed to create global marker for payment %s: %w", paymentDenom, err)
 	}
 
-	// Generate a random volume between 1 and 4 for the NAV.
 	volume := uint64(r.Intn(4) + 1)
 	if err := AddNav(ctx, markerKeeper, paymentDenom, ak.GetModuleAddress("mint"), sdk.NewInt64Coin(underlyingDenom, 1), volume); err != nil {
-		return fmt.Errorf("failed to add nav for payment: %w", err)
+		return fmt.Errorf("failed to add nav for payment %s: %w", paymentDenom, err)
 	}
 
-	if err := AddNav(ctx, markerKeeper, underlyingDenom, ak.GetModuleAddress("mint"), sdk.NewInt64Coin(paymentDenom, 1), volume); err != nil {
-		return fmt.Errorf("failed to add nav for payment: %w", err)
-	}
-
-	// Create an initial vault.
 	admin, _ := simtypes.RandomAcc(r, accs)
-	shareDenom := fmt.Sprintf("vaultshare%d", r.Intn(1000))
+	shareDenom := fmt.Sprintf("vaultshare%d", r.Intn(1_000))
 
 	selectedPayment := ""
 	if r.Intn(2) == 0 {

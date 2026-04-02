@@ -3078,7 +3078,7 @@ type VaultAccount struct {
 	FeePeriodTimeout int64 `protobuf:"varint,22,opt,name=fee_period_timeout,json=feePeriodTimeout,proto3" json:"fee_period_timeout,omitempty"`
 	// outstanding_aum_fee is the amount of AUM fee that has been calculated but not yet collected
 	// due to insufficient liquidity in the principal marker. This amount is always denominated
-	// in the module's payment_denom, must be preserved, and is carried into valuation computations.
+	// in the vault's payment_denom, must be preserved, and is carried into valuation computations.
 	OutstandingAumFee *v1beta11.Coin `protobuf:"bytes,23,opt,name=outstanding_aum_fee,json=outstandingAumFee,proto3" json:"outstanding_aum_fee,omitempty"`
 }
 

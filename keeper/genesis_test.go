@@ -82,6 +82,15 @@ func (s *TestSuite) TestVaultGenesis_InitAndExport() {
 
 func (s *TestSuite) TestInitGenesis_PanicOnInvalidTimeout() {
 	vaultAddr := types.GetVaultAddress("panic-vault").String()
+	vault := types.VaultAccount{
+		BaseAccount:         authtypes.NewBaseAccountWithAddress(types.GetVaultAddress("panic-vault")),
+		Admin:               s.adminAddr.String(),
+		TotalShares:         sdk.NewInt64Coin("panic-vault", 0),
+		UnderlyingAsset:     "undercoin",
+		PaymentDenom:        "undercoin",
+		CurrentInterestRate: types.ZeroInterestRate,
+		DesiredInterestRate: types.ZeroInterestRate,
+	}
 
 	tests := []struct {
 		name     string
@@ -91,6 +100,7 @@ func (s *TestSuite) TestInitGenesis_PanicOnInvalidTimeout() {
 		{
 			name: "payout timeout exceeds max int64",
 			genState: &types.GenesisState{
+				Vaults: []types.VaultAccount{vault},
 				PayoutTimeoutQueue: []types.QueueEntry{
 					{Time: uint64(math.MaxInt64) + 1, Addr: vaultAddr},
 				},
@@ -100,6 +110,7 @@ func (s *TestSuite) TestInitGenesis_PanicOnInvalidTimeout() {
 		{
 			name: "fee timeout exceeds max int64",
 			genState: &types.GenesisState{
+				Vaults: []types.VaultAccount{vault},
 				FeeTimeoutQueue: []types.QueueEntry{
 					{Time: uint64(math.MaxInt64) + 1, Addr: vaultAddr},
 				},

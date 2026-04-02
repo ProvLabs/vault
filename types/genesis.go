@@ -21,15 +21,20 @@ func (gs GenesisState) Validate() error {
 		}
 	}
 
+	vaults := make(map[string]bool)
 	for i := range gs.Vaults {
 		if err := gs.Vaults[i].Validate(); err != nil {
 			return fmt.Errorf("invalid vault at index %d: %w", i, err)
 		}
+		vaults[gs.Vaults[i].Address] = true
 	}
 
 	for i, entry := range gs.PayoutTimeoutQueue {
 		if _, err := sdk.AccAddressFromBech32(entry.Addr); err != nil {
 			return fmt.Errorf("invalid payout timeout queue address at index %d: %w", i, err)
+		}
+		if !vaults[entry.Addr] {
+			return fmt.Errorf("payout timeout queue address at index %d is not an imported vault: %s", i, entry.Addr)
 		}
 		if entry.Time > math.MaxInt64 {
 			return fmt.Errorf("payout timeout queue entry at index %d has time %d which exceeds max int64", i, entry.Time)
@@ -39,6 +44,9 @@ func (gs GenesisState) Validate() error {
 	for i, entry := range gs.FeeTimeoutQueue {
 		if _, err := sdk.AccAddressFromBech32(entry.Addr); err != nil {
 			return fmt.Errorf("invalid fee timeout queue address at index %d: %w", i, err)
+		}
+		if !vaults[entry.Addr] {
+			return fmt.Errorf("fee timeout queue address at index %d is not an imported vault: %s", i, entry.Addr)
 		}
 		if entry.Time > math.MaxInt64 {
 			return fmt.Errorf("fee timeout queue entry at index %d has time %d which exceeds max int64", i, entry.Time)

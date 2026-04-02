@@ -119,7 +119,7 @@ The address authorized to receive collected AUM technology fees.
 
 - **Prefix:** `AUMFeeAddressKeyPrefix` (8)
 - **Key:** none (singleton)
-- **Value:** `sdk.AccAddress` (the ProvLabs collection address)
+- **Value:** raw `sdk.AccAddress` bytes (prefix-agnostic ProvLabs collection address)
 
 ---
 

@@ -49,7 +49,9 @@ func (k *Keeper) processPendingSwapOuts(ctx sdk.Context, batchSize int) error {
 // Behavior by case:
 //   - Missing vault: the job is dequeued and skipped.
 //   - Paused vault: the job remains queued (skipped for now) so it can be retried when unpaused.
-//   - Active vault: the job is dequeued and processed.
+//   - Active vault: the job is dequeued on the main context before a per-job cache context is
+//     created, ensuring removal from the queue even on failure. Processing runs inside the cache
+//     context for atomicity; only committed on success.
 //   - On recoverable failure, a refund is attempted. If the refund itself returns a critical error,
 //     the vault is auto-paused with a stable reason string.
 //   - On critical failure during processing, the vault is auto-paused with a stable reason string.
@@ -76,11 +78,9 @@ func (k *Keeper) processSwapOutJobs(ctx sdk.Context, jobsToProcess []types.Payou
 			continue
 		}
 
-		// Use a cache context for each job to ensure that failed withdrawals (and their associated
-		// reconciliations) are rolled back atomically without affecting other jobs in the batch.
-		cacheCtx, write := ctx.CacheContext()
-
-		if err := k.PendingSwapOutQueue.Dequeue(cacheCtx, j.Timestamp, j.VaultAddr, j.ID); err != nil {
+		// Dequeue on the main context immediately. We've already verified the vault exists and is not paused.
+		// This ensures that the job is removed from the queue even if the processing fails and a refund is issued.
+		if err := k.PendingSwapOutQueue.Dequeue(ctx, j.Timestamp, j.VaultAddr, j.ID); err != nil {
 			ctx.Logger().Error(
 				"failed to dequeue withdrawal request",
 				"request_id", j.ID,
@@ -89,6 +89,8 @@ func (k *Keeper) processSwapOutJobs(ctx sdk.Context, jobsToProcess []types.Payou
 			)
 			continue
 		}
+
+		cacheCtx, write := ctx.CacheContext()
 
 		if err := k.processSingleWithdrawal(cacheCtx, j.ID, j.Req, *vault); err != nil {
 			var cErr *types.CriticalError

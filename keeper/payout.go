@@ -98,7 +98,7 @@ func (k *Keeper) processSwapOutJobs(ctx sdk.Context, jobsToProcess []types.Payou
 			}
 
 			reason := k.getRefundReason(err)
-			ctx.Logger().Error(
+			k.getLogger(ctx).Error(
 				"failed to process withdrawal, issuing refund",
 				"withdrawal_id", j.ID,
 				"reason", reason,

@@ -81,7 +81,7 @@ func (k Keeper) reconcileVault(ctx sdk.Context, vault *types.VaultAccount) error
 	}
 
 	if err := k.SafeAddVerification(cacheCtx, v); err != nil {
-		return err
+		return fmt.Errorf("reconcileVault: failed to SafeAddVerification for vault %s: %w", v.GetAddress().String(), err)
 	}
 
 	write()

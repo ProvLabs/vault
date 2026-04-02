@@ -3071,11 +3071,14 @@ type VaultAccount struct {
 	// principal or interest funds). If unset (empty string), only the admin may perform those actions.
 	AssetManager string `protobuf:"bytes,20,opt,name=asset_manager,json=assetManager,proto3" json:"asset_manager,omitempty"`
 	// fee_period_start is the start time (in Unix seconds) of the current AUM fee collection period.
+	// This is a module-managed timestamp kept in sync with the fee timeout queue machinery.
 	FeePeriodStart int64 `protobuf:"varint,21,opt,name=fee_period_start,json=feePeriodStart,proto3" json:"fee_period_start,omitempty"`
 	// fee_period_timeout is the end time (in Unix seconds) of the current AUM fee collection period.
+	// This is a module-managed timestamp kept in sync with the fee timeout queue machinery.
 	FeePeriodTimeout int64 `protobuf:"varint,22,opt,name=fee_period_timeout,json=feePeriodTimeout,proto3" json:"fee_period_timeout,omitempty"`
 	// outstanding_aum_fee is the amount of AUM fee that has been calculated but not yet collected
-	// due to insufficient liquidity in the principal marker.
+	// due to insufficient liquidity in the principal marker. This amount is always denominated
+	// in the module's payment_denom, must be preserved, and is carried into valuation computations.
 	OutstandingAumFee *v1beta11.Coin `protobuf:"bytes,23,opt,name=outstanding_aum_fee,json=outstandingAumFee,proto3" json:"outstanding_aum_fee,omitempty"`
 }
 

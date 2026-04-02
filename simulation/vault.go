@@ -60,11 +60,11 @@ func PrepareVaultMarkers(ctx sdk.Context, ak types.AccountKeeper, mk markerkeepe
 			return fmt.Errorf("failed to get marker for %s: %w", denom, err)
 		}
 		if m.GetMarkerType() == markertypes.MarkerType_RestrictedCoin {
-			if err := GrantTransferPermission(sdk.UnwrapSDKContext(ctx), mk, denom, vaultAddr, mintAddr); err != nil {
+			if err := GrantTransferPermission(ctx, mk, denom, vaultAddr, mintAddr); err != nil {
 				return fmt.Errorf("failed to grant transfer permission for %s: %w", denom, err)
 			}
 		} else {
-			if err := GrantWithdrawPermission(sdk.UnwrapSDKContext(ctx), mk, denom, vaultAddr, mintAddr); err != nil {
+			if err := GrantWithdrawPermission(ctx, mk, denom, vaultAddr, mintAddr); err != nil {
 				return fmt.Errorf("failed to grant withdraw permission for %s: %w", denom, err)
 			}
 		}

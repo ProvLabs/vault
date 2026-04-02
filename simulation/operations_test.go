@@ -28,6 +28,8 @@ type VaultSimTestSuite struct {
 	cdc    codec.Codec
 	accs   []simtypes.Account
 	random *rand.Rand
+
+	provlabsAddr sdk.AccAddress
 }
 
 func TestVaultSimTestSuite(t *testing.T) {
@@ -42,7 +44,23 @@ func (s *VaultSimTestSuite) SetupTest() {
 
 	s.setupAccounts()
 
-	err := simulation.CreateGlobalMarker(s.ctx, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, sdk.NewInt64Coin("underlying2vx", 100_000_000), s.accs, true)
+	s.provlabsAddr = s.app.VaultKeeper.GetAUMFeeAddress(s.ctx)
+	if !s.app.AccountKeeper.HasAccount(s.ctx, s.provlabsAddr) {
+		s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.provlabsAddr))
+	}
+
+	err := simulation.BindName(s.ctx, s.provlabsAddr, simulation.RequiredMarkerAttribute, s.app.NameKeeper)
+	s.Require().NoError(err, "BindName")
+
+	err = simulation.AddAttribute(s.ctx, s.provlabsAddr, s.provlabsAddr, simulation.RequiredMarkerAttribute, s.app.NameKeeper, s.app.AttributeKeeper)
+	s.Require().NoError(err, "AddAttribute aum fee address")
+
+	for _, acc := range s.accs {
+		err := simulation.AddAttribute(s.ctx, s.provlabsAddr, acc.Address, simulation.RequiredMarkerAttribute, s.app.NameKeeper, s.app.AttributeKeeper)
+		s.Require().NoError(err, "AddAttribute account")
+	}
+
+	err = simulation.CreateGlobalMarker(s.ctx, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, sdk.NewInt64Coin("underlying2vx", 100_000_000), s.accs, true)
 	s.Require().NoError(err, "CreateGlobalMarker underlying")
 	err = simulation.CreateGlobalMarker(s.ctx, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, sdk.NewInt64Coin("payment2vx", 100_000_000), s.accs, true)
 	s.Require().NoError(err, "CreateGlobalMarker payment")
@@ -98,8 +116,6 @@ func (s *VaultSimTestSuite) TestSimulateMsgSwapOut() {
 
 	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "", "underlyingshare", selected, s.accs)
 	s.Require().NoError(err, "CreateVault")
-	err = simulation.AddAttribute(s.ctx, selected.Address, simulation.RequiredMarkerAttribute, s.app.NameKeeper, s.app.AttributeKeeper)
-	s.Require().NoError(err, "AddAttribute")
 	err = simulation.SwapIn(s.ctx, s.app.VaultKeeper, selected, "underlyingshare", sdk.NewInt64Coin("underlying2vx", 100))
 	s.Require().NoError(err, "SwapIn")
 
@@ -181,8 +197,6 @@ func (s *VaultSimTestSuite) TestSimulateMsgExpeditePendingSwapOut() {
 
 	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "", "underlyingshare", admin, s.accs)
 	s.Require().NoError(err, "CreateVault")
-	err = simulation.AddAttribute(s.ctx, user.Address, simulation.RequiredMarkerAttribute, s.app.NameKeeper, s.app.AttributeKeeper)
-	s.Require().NoError(err, "AddAttribute")
 	err = simulation.SwapIn(s.ctx, s.app.VaultKeeper, user, "underlyingshare", sdk.NewInt64Coin("underlying2vx", 100))
 	s.Require().NoError(err, "SwapIn")
 	shares := s.app.BankKeeper.GetBalance(s.ctx, user.Address, "underlyingshare")
@@ -238,8 +252,6 @@ func (s *VaultSimTestSuite) TestSimulateMsgWithdrawInterestFunds() {
 	s.Require().NoError(err, "CreateVault")
 	_, err = simulation.DepositInterestFunds(s.ctx, s.app.VaultKeeper, "underlyingshare", sdk.NewInt64Coin("underlying2vx", 100))
 	s.Require().NoError(err, "DepositInterest")
-	err = simulation.AddAttribute(s.ctx, admin.Address, simulation.RequiredMarkerAttribute, s.app.NameKeeper, s.app.AttributeKeeper)
-	s.Require().NoError(err, "AddAttribute")
 
 	op := simulation.SimulateMsgWithdrawInterestFunds(*s.app.VaultKeeper)
 	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
@@ -259,8 +271,6 @@ func (s *VaultSimTestSuite) TestSimulateMsgWithdrawPrincipalFunds() {
 	s.Require().NoError(err, "PauseVault")
 	_, err = simulation.DepositPrincipalFunds(s.ctx, s.app.VaultKeeper, "underlyingshare", sdk.NewInt64Coin("underlying2vx", 100))
 	s.Require().NoError(err, "DepositPrincipal")
-	err = simulation.AddAttribute(s.ctx, admin.Address, simulation.RequiredMarkerAttribute, s.app.NameKeeper, s.app.AttributeKeeper)
-	s.Require().NoError(err, "AddAttribute")
 
 	op := simulation.SimulateMsgWithdrawPrincipalFunds(*s.app.VaultKeeper)
 	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")

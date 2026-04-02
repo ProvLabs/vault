@@ -48,7 +48,7 @@ func CreateMarker(ctx context.Context, coin sdk.Coin, admin sdk.AccAddress, keep
 		SupplyFixed:            true,
 		AllowGovernanceControl: true,
 		AllowForcedTransfer:    false,
-		RequiredAttributes:     []string{},
+		RequiredAttributes:     []string{RequiredMarkerAttribute},
 	}
 	markerMsgServer := markerkeeper.NewMsgServerImpl(keeper)
 	_, err := markerMsgServer.AddFinalizeActivateMarker(ctx, newMarker)
@@ -130,13 +130,8 @@ func AddNav(ctx context.Context, keeper markerkeeper.Keeper, denom string, admin
 	return err
 }
 
-// AddAttribute adds an attribute to an account.
-func AddAttribute(ctx context.Context, acc sdk.AccAddress, attrName string, nk types.NameKeeper, ak types.AttributeKeeper) error {
-	err := nk.SetNameRecord(sdk.UnwrapSDKContext(ctx), attrName, acc, false)
-	if err != nil {
-		return err
-	}
-
+// AddAttribute adds an attribute to an account using the provided owner to authorize the action.
+func AddAttribute(ctx context.Context, owner sdk.AccAddress, acc sdk.AccAddress, attrName string, nk types.NameKeeper, ak types.AttributeKeeper) error {
 	attr := NewAttribute(
 		attrName,
 		acc.String(),
@@ -145,7 +140,16 @@ func AddAttribute(ctx context.Context, acc sdk.AccAddress, attrName string, nk t
 		nil,
 	)
 
-	return ak.SetAttribute(sdk.UnwrapSDKContext(ctx), attr, acc)
+	return ak.SetAttribute(sdk.UnwrapSDKContext(ctx), attr, owner)
+}
+
+// BindName ensures that a name is bound to an address if it doesn't already exist.
+func BindName(ctx context.Context, acc sdk.AccAddress, name string, nk types.NameKeeper) error {
+	err := nk.SetNameRecord(sdk.UnwrapSDKContext(ctx), name, acc, false)
+	if err != nil && strings.Contains(err.Error(), "already bound") {
+		return nil
+	}
+	return err
 }
 
 // MarkerExists checks if a marker with the given denom exists.

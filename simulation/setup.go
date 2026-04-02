@@ -22,7 +22,9 @@ func IsSetup(k keeper.Keeper, ctx sdk.Context) bool {
 	return len(vaults) > 0
 }
 
-// Setup ensures the simulation is ready by creating global markers and an initial vault if none exist.
+// Setup ensures the simulation is ready by initializing the AUM fee collector account, binding the
+// required marker attribute name, granting that attribute to all simulation accounts, creating global
+// markers, and creating an initial vault if none exist.
 func Setup(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper, mk types.MarkerKeeper, accs []simtypes.Account) error {
 	if IsSetup(k, ctx) {
 		return nil

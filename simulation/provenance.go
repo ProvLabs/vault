@@ -20,7 +20,7 @@ import (
 )
 
 const (
-	RequiredMarkerAttribute = "restricted.attribute"
+	RequiredMarkerAttribute = "simulation.restricted"
 )
 
 // CreateMarker creates a new restricted marker of type COIN.

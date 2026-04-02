@@ -60,9 +60,9 @@ func (s *VaultSimTestSuite) SetupTest() {
 		s.Require().NoError(err, "AddAttribute account")
 	}
 
-	err = simulation.CreateGlobalMarker(s.ctx, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, sdk.NewInt64Coin("underlying2vx", 100_000_000), s.accs, true)
+	err = simulation.CreateGlobalMarker(s.ctx, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, sdk.NewInt64Coin("underlying2vx", 100_000_000), s.accs, true, s.provlabsAddr)
 	s.Require().NoError(err, "CreateGlobalMarker underlying")
-	err = simulation.CreateGlobalMarker(s.ctx, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, sdk.NewInt64Coin("payment2vx", 100_000_000), s.accs, true)
+	err = simulation.CreateGlobalMarker(s.ctx, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, sdk.NewInt64Coin("payment2vx", 100_000_000), s.accs, true, s.provlabsAddr)
 	s.Require().NoError(err, "CreateGlobalMarker payment")
 }
 

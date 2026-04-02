@@ -33,32 +33,36 @@ func Setup(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, ak types.AccountKeepe
 	denomRegex := mk.GetUnrestrictedDenomRegex(ctx)
 
 	provlabsAddr := k.GetAUMFeeAddress(ctx)
-	if !ak.HasAccount(ctx, provlabsAddr) {
-		ak.SetAccount(ctx, ak.NewAccountWithAddress(ctx, provlabsAddr))
-	}
-
 	feeCollectorAddr := ak.GetModuleAddress("fee_collector")
-	if !ak.HasAccount(ctx, feeCollectorAddr) {
-		ak.SetAccount(ctx, ak.NewAccountWithAddress(ctx, feeCollectorAddr))
+
+	// perform bootstrap inside a cache context to ensure atomicity
+	cacheCtx, write := ctx.CacheContext()
+	if !ak.HasAccount(cacheCtx, provlabsAddr) {
+		ak.SetAccount(cacheCtx, ak.NewAccountWithAddress(cacheCtx, provlabsAddr))
 	}
 
-	if err := BindName(ctx, provlabsAddr, RequiredMarkerAttribute, k.NameKeeper); err != nil {
+	if !ak.HasAccount(cacheCtx, feeCollectorAddr) {
+		ak.SetAccount(cacheCtx, ak.NewAccountWithAddress(cacheCtx, feeCollectorAddr))
+	}
+
+	if err := BindName(cacheCtx, provlabsAddr, RequiredMarkerAttribute, k.NameKeeper); err != nil {
 		return fmt.Errorf("failed to bind name to aum fee address: %w", err)
 	}
 
-	if err := AddAttribute(ctx, provlabsAddr, provlabsAddr, RequiredMarkerAttribute, k.NameKeeper, k.AttrKeeper); err != nil {
+	if err := AddAttribute(cacheCtx, provlabsAddr, provlabsAddr, RequiredMarkerAttribute, k.NameKeeper, k.AttrKeeper); err != nil {
 		return fmt.Errorf("failed to add attribute to aum fee address: %w", err)
 	}
 
-	if err := AddAttribute(ctx, provlabsAddr, feeCollectorAddr, RequiredMarkerAttribute, k.NameKeeper, k.AttrKeeper); err != nil {
+	if err := AddAttribute(cacheCtx, provlabsAddr, feeCollectorAddr, RequiredMarkerAttribute, k.NameKeeper, k.AttrKeeper); err != nil {
 		return fmt.Errorf("failed to add attribute to fee collector address: %w", err)
 	}
 
 	for _, acc := range accs {
-		if err := AddAttribute(ctx, provlabsAddr, acc.Address, RequiredMarkerAttribute, k.NameKeeper, k.AttrKeeper); err != nil {
+		if err := AddAttribute(cacheCtx, provlabsAddr, acc.Address, RequiredMarkerAttribute, k.NameKeeper, k.AttrKeeper); err != nil {
 			return fmt.Errorf("failed to add attribute to account %s: %w", acc.Address, err)
 		}
 	}
+	write()
 
 	underlyingDenom := genRandomDenom(r, denomRegex, VaultGlobalDenomSuffix)
 	paymentDenom := genRandomDenom(r, denomRegex, VaultGlobalDenomSuffix)

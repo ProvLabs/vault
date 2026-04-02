@@ -187,7 +187,7 @@ Swap-outs are **asynchronous** and complete in `EndBlocker` after the vault’s 
 
 ---
 
-## Interest
+## Interest & Fees
 
 ### EventVaultReconcile
 

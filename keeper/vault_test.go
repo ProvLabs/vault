@@ -261,16 +261,9 @@ func (s *TestSuite) TestSwapOut_FailsWithRestrictedUnderlyingAssetNoAttributes()
 	shareDenom := "vshare"
 	restrictedUnderlyingDenom := "restrictedasset"
 
-	provlabsAddr := s.EnsureTechFeeAccount()
+	s.SetupTechFeeAccount(restrictedUnderlyingDenom)
 
 	restrictedMarkerAddr := markertypes.MustGetMarkerAddress(restrictedUnderlyingDenom)
-	if !s.simApp.NameKeeper.NameExists(s.ctx, restrictedUnderlyingDenom) {
-		s.Require().NoError(s.simApp.NameKeeper.SetNameRecord(s.ctx, restrictedUnderlyingDenom, s.adminAddr, false), "should successfully bind name for %s", restrictedUnderlyingDenom)
-	}
-	expireTime := time.Now().Add(24 * time.Hour)
-	attr := attrtypes.NewAttribute(restrictedUnderlyingDenom, provlabsAddr.String(), attrtypes.AttributeType_String, []byte("true"), &expireTime, "")
-	s.Require().NoError(s.simApp.AttributeKeeper.SetAttribute(s.ctx, attr, s.adminAddr), "should successfully set attribute for tech fee account")
-
 	restrictedMarker := markertypes.NewMarkerAccount(
 		authtypes.NewBaseAccountWithAddress(restrictedMarkerAddr),
 		sdk.NewInt64Coin(restrictedUnderlyingDenom, 1_000_000),
@@ -315,17 +308,10 @@ func (s *TestSuite) TestSwapOut_FailsWithRestrictedUnderlyingAssetRequiredAttrib
 	shareDenom := "vshare"
 	restrictedUnderlyingDenom := "restrictedasset"
 
-	provlabsAddr := s.EnsureTechFeeAccount()
+	requiredAttr := "you.dont.have.me"
+	s.SetupTechFeeAccount(requiredAttr)
 
 	restrictedMarkerAddr := markertypes.MustGetMarkerAddress(restrictedUnderlyingDenom)
-	requiredAttr := "you.dont.have.me"
-	if !s.simApp.NameKeeper.NameExists(s.ctx, requiredAttr) {
-		s.Require().NoError(s.simApp.NameKeeper.SetNameRecord(s.ctx, requiredAttr, s.adminAddr, false), "should successfully bind name for %s", requiredAttr)
-	}
-	expireTime := time.Now().Add(24 * time.Hour)
-	attr := attrtypes.NewAttribute(requiredAttr, provlabsAddr.String(), attrtypes.AttributeType_String, []byte("true"), &expireTime, "")
-	s.Require().NoError(s.simApp.AttributeKeeper.SetAttribute(s.ctx, attr, s.adminAddr), "should successfully set attribute for tech fee account")
-
 	restrictedMarker := markertypes.NewMarkerAccount(
 		authtypes.NewBaseAccountWithAddress(restrictedMarkerAddr),
 		sdk.NewInt64Coin(restrictedUnderlyingDenom, 1_000_000),
@@ -371,18 +357,11 @@ func (s *TestSuite) TestSwapOut_SucceedsWithRestrictedUnderlyingAssetRequiredAtt
 	restrictedUnderlyingDenom := "restrictedasset"
 	requiredAttribute := "iamrequired"
 
-	provlabsAddr := s.EnsureTechFeeAccount()
+	s.SetupTechFeeAccount(requiredAttribute)
 
 	s.ctx = s.ctx.WithBlockTime(time.Now().UTC())
 
 	restrictedMarkerAddr := markertypes.MustGetMarkerAddress(restrictedUnderlyingDenom)
-	if !s.simApp.NameKeeper.NameExists(s.ctx, requiredAttribute) {
-		s.Require().NoError(s.simApp.NameKeeper.SetNameRecord(s.ctx, requiredAttribute, s.adminAddr, false), "should successfully bind name for %s", requiredAttribute)
-	}
-	expireTime := time.Now().Add(24 * time.Hour)
-	attr := attrtypes.NewAttribute(requiredAttribute, provlabsAddr.String(), attrtypes.AttributeType_String, []byte("true"), &expireTime, "")
-	s.Require().NoError(s.simApp.AttributeKeeper.SetAttribute(s.ctx, attr, s.adminAddr), "should successfully set attribute for tech fee account")
-
 	restrictedMarker := markertypes.NewMarkerAccount(
 		authtypes.NewBaseAccountWithAddress(restrictedMarkerAddr),
 		sdk.NewInt64Coin(restrictedUnderlyingDenom, 1_000_000),
@@ -425,7 +404,7 @@ func (s *TestSuite) TestSwapOut_SucceedsWithRestrictedUnderlyingAssetRequiredAtt
 
 	s.simApp.AccountKeeper.SetAccount(s.ctx, s.simApp.AccountKeeper.NewAccountWithAddress(s.ctx, s.adminAddr))
 
-	expireTime = time.Now().Add(24 * time.Hour)
+	expireTime := time.Now().Add(24 * time.Hour)
 	attribute := attrtypes.NewAttribute(requiredAttribute, redeemerAddr.String(), attrtypes.AttributeType_String, []byte("true"), &expireTime, "")
 	s.Require().NoError(s.simApp.AttributeKeeper.SetAttribute(s.ctx, attribute, s.adminAddr), "should successfully set the required attribute on the redeemer")
 

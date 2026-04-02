@@ -15,9 +15,15 @@ func DefaultGenesisState() *GenesisState {
 // Validate performs basic genesis state validation returning an error upon any
 // failure.
 func (gs GenesisState) Validate() error {
-	if gs.AumFeeAddress != "" {
-		if _, err := sdk.AccAddressFromBech32(gs.AumFeeAddress); err != nil {
-			return fmt.Errorf("invalid aum fee address: %w", err)
+	if len(gs.AumFeeAddress) > 0 {
+		if len(gs.AumFeeAddress) != 20 { // Standard address length check, or use sdk.VerifyAddressFormat
+			return fmt.Errorf("invalid aum fee address length: expected 20 bytes, got %d", len(gs.AumFeeAddress))
+		}
+	}
+
+	for i := range gs.Vaults {
+		if err := gs.Vaults[i].Validate(); err != nil {
+			return fmt.Errorf("invalid vault at index %d: %w", i, err)
 		}
 	}
 

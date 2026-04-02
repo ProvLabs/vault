@@ -19,9 +19,8 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 		panic(fmt.Errorf("invalid vault genesis state: %w", err))
 	}
 
-	if genState.AumFeeAddress != "" {
-		addr := sdk.MustAccAddressFromBech32(genState.AumFeeAddress)
-		if err := k.AUMFeeAddress.Set(ctx, addr); err != nil {
+	if len(genState.AumFeeAddress) > 0 {
+		if err := k.AUMFeeAddress.Set(ctx, genState.AumFeeAddress); err != nil {
 			panic(fmt.Errorf("failed to set aum fee address: %w", err))
 		}
 	}
@@ -52,10 +51,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 		} else {
 			vaultAcc := k.AuthKeeper.NewAccount(ctx, v).(types.VaultAccountI)
 			k.AuthKeeper.SetAccount(ctx, vaultAcc)
-		}
-
-		if err := v.Validate(); err != nil {
-			panic(fmt.Errorf("invalid vault at index %d: %w", i, err))
 		}
 
 		if err := k.SetVaultLookup(ctx, v); err != nil {
@@ -108,7 +103,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	allAccounts := k.AuthKeeper.GetAllAccounts(ctx)
 
-	var aumFeeAddress string
+	var aumFeeAddress []byte
 	has, err := k.AUMFeeAddress.Has(ctx)
 	if err != nil {
 		panic(fmt.Errorf("failed to check AUM fee address: %w", err))
@@ -118,7 +113,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		if err != nil {
 			panic(fmt.Errorf("failed to get AUM fee address: %w", err))
 		}
-		aumFeeAddress = addr.String()
+		aumFeeAddress = addr.Bytes()
 	}
 
 	var vaults []types.VaultAccount

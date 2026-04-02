@@ -61,13 +61,13 @@ func (k Keeper) reconcileVault(ctx sdk.Context, vault *types.VaultAccount) error
 		if err := k.PerformVaultFeeTransfer(cacheCtx, v); err != nil {
 			return fmt.Errorf("perform vault fee transfer: %w", err)
 		}
+		if err := k.SafeEnqueueFeeTimeout(cacheCtx, v); err != nil {
+			return fmt.Errorf("enqueue fee timeout after transfer: %w", err)
+		}
 	}
 
 	if v.PeriodStart != 0 {
 		if currentBlockTime > v.PeriodStart {
-			if err := k.SafeEnqueueFeeTimeout(cacheCtx, v); err != nil {
-				return fmt.Errorf("enqueue fee timeout: %w", err)
-			}
 			if err := k.publishShareNav(cacheCtx, v); err != nil {
 				return fmt.Errorf("publish share nav: %w", err)
 			}
@@ -405,6 +405,9 @@ func (k Keeper) CalculateAccruedAUMFeePayment(ctx sdk.Context, vault types.Vault
 	feeUnderlying, err := k.CalculateAccruedAUMFee(ctx, vault, totalAssets)
 	if err != nil {
 		return sdk.Coin{}, fmt.Errorf("failed to calculate accrued AUM fee: %w", err)
+	}
+	if feeUnderlying.IsZero() {
+		return sdk.NewCoin(vault.PaymentDenom, sdkmath.ZeroInt()), nil
 	}
 	feePayment, err := k.FromUnderlyingAssetAmount(ctx, vault, feeUnderlying, vault.PaymentDenom)
 	if err != nil {

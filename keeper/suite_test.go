@@ -136,6 +136,24 @@ func normalizeEvent(event sdk.Event) sdk.Event {
 	return event
 }
 
+// SetupTechFeeAccount ensures the AUM fee collector account exists and has the required
+// attributes to receive the specified restricted asset. It returns the fee collector address.
+func (s *TestSuite) SetupTechFeeAccount(restrictedUnderlyingDenom string) sdk.AccAddress {
+	provlabsAddr := s.k.GetAUMFeeAddress(s.ctx)
+	if !s.simApp.AccountKeeper.HasAccount(s.ctx, provlabsAddr) {
+		s.simApp.AccountKeeper.SetAccount(s.ctx, s.simApp.AccountKeeper.NewAccountWithAddress(s.ctx, provlabsAddr))
+	}
+
+	if !s.simApp.NameKeeper.NameExists(s.ctx, restrictedUnderlyingDenom) {
+		s.Require().NoError(s.simApp.NameKeeper.SetNameRecord(s.ctx, restrictedUnderlyingDenom, s.adminAddr, false), "should successfully bind name for %s", restrictedUnderlyingDenom)
+	}
+	expireTime := time.Now().Add(24 * time.Hour)
+	attr := attrtypes.NewAttribute(restrictedUnderlyingDenom, provlabsAddr.String(), attrtypes.AttributeType_String, []byte("true"), &expireTime, "")
+	s.Require().NoError(s.simApp.AttributeKeeper.SetAttribute(s.ctx, attr, s.adminAddr), "should successfully set attribute for tech fee account")
+
+	return provlabsAddr
+}
+
 // requireAddFinalizeAndActivateMarker creates a restricted marker with the
 // provided denom and supply, then finalizes and activates it. It fails the
 // test immediately on any error.

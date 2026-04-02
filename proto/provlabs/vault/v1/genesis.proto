@@ -55,5 +55,5 @@ message GenesisState {
 
   // aum_fee_address is the address where AUM fees are collected.
   // If empty, the hardcoded default is used.
-  string aum_fee_address = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  bytes aum_fee_address = 5 [(cosmos_proto.scalar) = "cosmos.AddressBytes"];
 }

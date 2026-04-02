@@ -235,7 +235,7 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidVault() {
 		DesiredInterestRate: types.ZeroInterestRate,
 	}
 	genesis := &types.GenesisState{Vaults: []types.VaultAccount{vault}}
-	expectedPanic := "invalid vault at index 0: invalid admin address: empty address string is not allowed"
+	expectedPanic := "invalid vault genesis state: invalid vault at index 0: invalid admin address: empty address string is not allowed"
 	s.Require().PanicsWithError(expectedPanic, func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on invalid vault")
 }
 

@@ -46,15 +46,15 @@ func (k *Keeper) processPendingSwapOuts(ctx sdk.Context, batchSize int) error {
 }
 
 // processSwapOutJobs iterates pending swap-out jobs collected for this block and executes them.
-// Behavior by case:
-//   - Missing vault: the job is dequeued and skipped.
-//   - Paused vault: the job remains queued (skipped for now) so it can be retried when unpaused.
-//   - Active vault: the job is dequeued on the main context before a per-job cache context is
-//     created, ensuring removal from the queue even on failure. Processing runs inside the cache
-//     context for atomicity; only committed on success.
-//   - On recoverable failure, a refund is attempted. If the refund itself returns a critical error,
-//     the vault is auto-paused with a stable reason string.
-//   - On critical failure during processing, the vault is auto-paused with a stable reason string.
+//
+// The processing strategy involves:
+// 1. Verifying the vault exists and is not paused.
+// 2. Dequeuing the job on the main context immediately to ensure it is only attempted once,
+//    preventing infinite retry loops if a failure occurs during processing or refund.
+// 3. Executing the withdrawal logic (reconciliation, payout, and burning) within a single
+//    cache context to ensure atomicity. Changes are only committed to the main state on success.
+// 4. Handling recoverable failures by issuing a refund on the main context.
+// 5. Handling critical or unrecoverable failures by auto-pausing the associated vault.
 func (k *Keeper) processSwapOutJobs(ctx sdk.Context, jobsToProcess []types.PayoutJob) {
 	for _, j := range jobsToProcess {
 		vault, ok := k.tryGetVault(ctx, j.VaultAddr)
@@ -78,8 +78,6 @@ func (k *Keeper) processSwapOutJobs(ctx sdk.Context, jobsToProcess []types.Payou
 			continue
 		}
 
-		// Dequeue on the main context immediately. We've already verified the vault exists and is not paused.
-		// This ensures that the job is removed from the queue even if the processing fails and a refund is issued.
 		if err := k.PendingSwapOutQueue.Dequeue(ctx, j.Timestamp, j.VaultAddr, j.ID); err != nil {
 			ctx.Logger().Error(
 				"failed to dequeue withdrawal request",

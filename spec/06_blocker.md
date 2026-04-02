@@ -81,12 +81,16 @@ Processing model (safe “collect-then-mutate”):
 Reconciles the 15 bps AUM technology fee for vaults whose fee timeout has elapsed.
 
 1. **Collect due entries** from `VaultFeeTimeoutQueue` with `timeout <= now`.
-2. **Dequeue** each collected entry before processing.
-3. **PerformVaultFeeTransfer** (atomically via `CacheContext`):
-   - Computes fee based on **Gross TVV**.
-   - Collects from principal marker into the configured ProvLabs collection address.
-   - Any uncollected amount (due to liquidity) is recorded in `outstanding_aum_fee`.
-   - Schedules next fee timeout.
+2. **Dequeue** each collected entry from the main context before processing to ensure it is not retried if a transient error occurs.
+3. **Attempt Atomic Reconciliation** (via `atomicallyReconcileFee` using `CacheContext`):
+   - **PerformVaultFeeTransfer**:
+     - Computes fee based on **Gross TVV**.
+     - Collects from principal marker into the configured ProvLabs collection address.
+     - **Success (Partial/Full Collection)**: If the marker lacks liquidity, the uncollected remainder is recorded in `outstanding_aum_fee`. This is considered a successful transfer.
+     - **Schedules next fee timeout** and commits state changes.
+   - **Failure (Transient Error)**:
+     - If reconciliation fails (e.g., missing NAV for denom conversion), the `CacheContext` is discarded.
+     - **Rescheduling**: The vault's fee timeout is rescheduled to the next block window (`rescheduleFeeTimeout`) on the main context to preserve accrued fees while preventing block-to-block retry loops.
 
 ---
 
@@ -160,7 +164,7 @@ This advances vaults from the **verification set**:
 
 * **processSingleWithdrawal** (called from `processPendingSwapOuts`)
 
-  1. **Reconcile interest** for the vault.
+  1. **ReconcileVault** (reconcile both interest and AUM fees using a single `CacheContext`/atomic transfer).
   2. Convert **shares → payout coin** (`underlying_asset` or optional **payment denom**), using current NAV and pro-rata TVV.
   3. **Payout assets** from **principal (marker)** → **owner** with transfer-agent context.
   4. **Burn shares**: move escrowed shares **vault → principal**, then `BurnCoin`.

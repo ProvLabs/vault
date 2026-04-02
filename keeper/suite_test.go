@@ -195,6 +195,7 @@ func (s *TestSuite) requireAddFinalizeAndActivateMarker(coin sdk.Coin, manager s
 // for the given coin and grants the grantee full permissions (mint, burn, transfer,
 // withdraw, deposit). This is used to replicate a receipt token. It fails the test if any step errors.
 func (s *TestSuite) requireAddFinalizeAndActivateReceiptMarker(coin sdk.Coin, grantees ...sdk.AccAddress) {
+	s.Require().NotEmpty(grantees, "requireAddFinalizeAndActivateReceiptMarker: grantees must not be empty")
 	markerAddr, err := markertypes.MarkerAddress(coin.Denom)
 	s.Require().NoError(err, "MarkerAddress(%q)", coin.Denom)
 

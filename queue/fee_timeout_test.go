@@ -103,9 +103,14 @@ func TestFeeTimeoutQueueRemoveAllTimeoutsForVault(t *testing.T) {
 
 	require.NoError(t, q.RemoveAllForVault(ctx, a1), "remove all fee timeouts for a1 should succeed")
 
+	seenA2 := false
 	err := q.Walk(ctx, func(timestamp uint64, address sdk.AccAddress) (bool, error) {
+		if address.Equals(a2) {
+			seenA2 = true
+		}
 		require.False(t, address.Equals(a1), "fee timeout queue should not include any entries for a1 after removal")
 		return false, nil
 	})
 	require.NoError(t, err, "walking the fee timeout queue after removal should not error")
+	require.True(t, seenA2, "fee timeout for a2 should still exist in the queue after a1 removal")
 }

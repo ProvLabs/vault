@@ -159,13 +159,12 @@ func MarkerExists(ctx sdk.Context, markerKeeper types.MarkerKeeper, denom string
 }
 
 // CreateGlobalMarker creates a new marker and distributes its coins to a given set of accounts.
-func CreateGlobalMarker(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, mk types.MarkerKeeper, underlying sdk.Coin, accs []simtypes.Account, restricted bool) error {
+func CreateGlobalMarker(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, mk markerkeeper.Keeper, underlying sdk.Coin, accs []simtypes.Account, restricted bool) error {
 	var err error
-	markerKeeper := mk.(markerkeeper.Keeper)
 	if restricted {
-		err = CreateMarker(sdk.UnwrapSDKContext(ctx), sdk.NewInt64Coin(underlying.Denom, underlying.Amount.Int64()), ak.GetModuleAddress("mint"), markerKeeper)
+		err = CreateMarker(sdk.UnwrapSDKContext(ctx), sdk.NewInt64Coin(underlying.Denom, underlying.Amount.Int64()), ak.GetModuleAddress("mint"), mk)
 	} else {
-		err = CreateUnrestrictedMarker(sdk.UnwrapSDKContext(ctx), sdk.NewInt64Coin(underlying.Denom, underlying.Amount.Int64()), ak.GetModuleAddress("mint"), markerKeeper)
+		err = CreateUnrestrictedMarker(sdk.UnwrapSDKContext(ctx), sdk.NewInt64Coin(underlying.Denom, underlying.Amount.Int64()), ak.GetModuleAddress("mint"), mk)
 	}
 
 	if err != nil {

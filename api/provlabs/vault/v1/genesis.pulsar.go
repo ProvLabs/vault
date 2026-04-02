@@ -2481,7 +2481,8 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// QueueEntry is a (time, addr) pair used by the vault payout deferral queue.
+// QueueEntry is a (time, addr) pair used by various vault timeout queues
+// (e.g., payout deferral and fee collection).
 type QueueEntry struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

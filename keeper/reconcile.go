@@ -29,6 +29,16 @@ const (
 //
 // This should be called before any transaction that changes vault principal/reserves or depends on the
 // current interest state.
+//
+// The reconciliation is performed atomically using a cache context. If any part of the process fails,
+// all state changes (interest transfers, fee transfers, and queue updates) are rolled back.
+// To ensure a clean state, the operation works on a cloned copy of the vault and only updates
+// the original object upon successful completion.
+//
+// The process follows a strict mathematical ordering:
+// 1. Interest is processed first to ensure the Total Vault Value (TVV) is updated.
+// 2. AUM fees are then calculated and collected based on the post-interest TVV.
+// 3. Timeouts are rescheduled and the updated NAV is published.
 func (k Keeper) reconcileVault(ctx sdk.Context, vault *types.VaultAccount) error {
 	if vault == nil {
 		return fmt.Errorf("vault account cannot be nil")
@@ -37,25 +47,24 @@ func (k Keeper) reconcileVault(ctx sdk.Context, vault *types.VaultAccount) error
 		return nil
 	}
 
-	// Create a cache context to ensure interest and fee transfers are atomic.
-	// If any part of the reconciliation fails, we want to roll back all state changes
-	// (e.g., interest transfers, fee transfers, and queue updates).
 	cacheCtx, write := ctx.CacheContext()
-
-	// Work on a copy to ensure we don't leave the caller's vault object in an
-	// inconsistent "half-mutated" state if an error occurs.
 	v := vault.Clone()
-
 	currentBlockTime := cacheCtx.BlockTime().Unix()
+
+	if v.PeriodStart != 0 && currentBlockTime > v.PeriodStart {
+		if err := k.PerformVaultInterestTransfer(cacheCtx, v); err != nil {
+			return fmt.Errorf("perform vault interest transfer: %w", err)
+		}
+	}
+
+	if v.FeePeriodStart != 0 {
+		if err := k.PerformVaultFeeTransfer(cacheCtx, v); err != nil {
+			return fmt.Errorf("perform vault fee transfer: %w", err)
+		}
+	}
 
 	if v.PeriodStart != 0 {
 		if currentBlockTime > v.PeriodStart {
-			if err := k.PerformVaultInterestTransfer(cacheCtx, v); err != nil {
-				return fmt.Errorf("perform vault interest transfer: %w", err)
-			}
-			if err := k.PerformVaultFeeTransfer(cacheCtx, v); err != nil {
-				return fmt.Errorf("perform vault fee transfer: %w", err)
-			}
 			if err := k.SafeEnqueueFeeTimeout(cacheCtx, v); err != nil {
 				return fmt.Errorf("enqueue fee timeout: %w", err)
 			}
@@ -76,8 +85,6 @@ func (k Keeper) reconcileVault(ctx sdk.Context, vault *types.VaultAccount) error
 	}
 
 	write()
-
-	// Update the original vault object with the successful changes.
 	*vault = *v
 	return nil
 }
@@ -518,37 +525,41 @@ func (k Keeper) handleVaultInterestTimeouts(ctx sdk.Context) error {
 // If any step fails, the entire operation is reverted.
 func (k Keeper) atomicallyReconcileInterest(ctx sdk.Context, vault *types.VaultAccount, timeout int64) error {
 	cacheCtx, write := ctx.CacheContext()
-	if err := k.PerformVaultInterestTransfer(cacheCtx, vault); err != nil {
+	v := vault.Clone()
+
+	if err := k.PerformVaultInterestTransfer(cacheCtx, v); err != nil {
 		return fmt.Errorf("failed to perform vault interest transfer: %w", err)
 	}
 
-	if err := k.PayoutTimeoutQueue.Dequeue(cacheCtx, timeout, vault.GetAddress()); err != nil {
-		return fmt.Errorf("failed to dequeue interest timeout: %w", err)
-	}
-
-	if err := k.SafeEnqueueTimeout(cacheCtx, vault); err != nil {
+	if err := k.SafeEnqueueTimeout(cacheCtx, v); err != nil {
 		return fmt.Errorf("failed to reset interest period: %w", err)
 	}
 
 	write()
+	*vault = *v
 	return nil
 }
 
-// rescheduleInterestTimeout pushes a vault's interest timeout to the next window without
-// updating its PeriodStart. This is used when a reconciliation attempt fails due to
-// transient errors, preventing block-to-block retries while preserving accrued interest.
+// rescheduleInterestTimeout pushes a vault's interest timeout to the next window.
+// This is used when a reconciliation attempt fails due to transient errors, preventing
+// block-to-block retries.
+//
+// NOTE: This resets the PeriodStart to the current block time via SafeEnqueueTimeout.
 func (k Keeper) rescheduleInterestTimeout(ctx sdk.Context, vault *types.VaultAccount, oldTimeout int64) {
-	newTimeout := ctx.BlockTime().Unix() + AutoReconcileTimeout
+	// Dequeue on the main context first to ensure it's removed even if the atomic part fails.
 	if err := k.PayoutTimeoutQueue.Dequeue(ctx, oldTimeout, vault.GetAddress()); err != nil {
 		ctx.Logger().Error("failed to dequeue old interest timeout", "vault", vault.GetAddress().String(), "err", err)
+		return
 	}
-	vault.PeriodTimeout = newTimeout
-	if err := k.SetVaultAccount(ctx, vault); err != nil {
-		ctx.Logger().Error("failed to update vault timeout", "vault", vault.GetAddress().String(), "err", err)
+
+	cacheCtx, write := ctx.CacheContext()
+	v := vault.Clone()
+	if err := k.SafeEnqueueTimeout(cacheCtx, v); err != nil {
+		ctx.Logger().Error("failed to reschedule interest timeout", "vault", vault.GetAddress().String(), "err", err)
+		return
 	}
-	if err := k.PayoutTimeoutQueue.Enqueue(ctx, newTimeout, vault.GetAddress()); err != nil {
-		ctx.Logger().Error("failed to enqueue new interest timeout", "vault", vault.GetAddress().String(), "err", err)
-	}
+	write()
+	*vault = *v
 }
 
 // tryGetVault returns the vault if found, or false if the vault is missing or invalid.
@@ -691,36 +702,40 @@ func (k Keeper) handleVaultFeeTimeouts(ctx sdk.Context) error {
 // cache context. If any step fails, the entire operation is reverted.
 func (k Keeper) atomicallyReconcileFee(ctx sdk.Context, vault *types.VaultAccount, timeout int64) error {
 	cacheCtx, write := ctx.CacheContext()
-	if err := k.PerformVaultFeeTransfer(cacheCtx, vault); err != nil {
+	v := vault.Clone()
+
+	if err := k.PerformVaultFeeTransfer(cacheCtx, v); err != nil {
 		return fmt.Errorf("failed to perform vault fee transfer: %w", err)
 	}
 
-	if err := k.FeeTimeoutQueue.Dequeue(cacheCtx, timeout, vault.GetAddress()); err != nil {
-		return fmt.Errorf("failed to dequeue fee timeout: %w", err)
-	}
-
-	if err := k.SafeEnqueueFeeTimeout(cacheCtx, vault); err != nil {
+	if err := k.SafeEnqueueFeeTimeout(cacheCtx, v); err != nil {
 		return fmt.Errorf("failed to reset fee period: %w", err)
 	}
 
 	write()
+	*vault = *v
 	return nil
 }
 
-// rescheduleFeeTimeout pushes a vault's fee timeout to the next window without updating
-// its FeePeriodStart. This is used when a fee collection attempt fails due to transient
-// errors (e.g. missing NAVs), preventing block-to-block retries while preserving accrued fees.
+// rescheduleFeeTimeout pushes a vault's fee timeout to the next window.
+// This is used when a fee collection attempt fails due to transient errors
+// (e.g. missing NAVs), preventing block-to-block retries.
+//
+// NOTE: This resets the FeePeriodStart to the current block time via SafeEnqueueFeeTimeout.
 func (k Keeper) rescheduleFeeTimeout(ctx sdk.Context, vault *types.VaultAccount, oldTimeout int64) {
-	newTimeout := ctx.BlockTime().Unix() + AutoReconcileTimeout
+	// Dequeue on the main context first to ensure it's removed even if the atomic part fails.
 	if err := k.FeeTimeoutQueue.Dequeue(ctx, oldTimeout, vault.GetAddress()); err != nil {
 		ctx.Logger().Error("failed to dequeue old fee timeout", "vault", vault.GetAddress().String(), "err", err)
+		return
 	}
-	vault.FeePeriodTimeout = newTimeout
-	if err := k.SetVaultAccount(ctx, vault); err != nil {
-		ctx.Logger().Error("failed to update vault fee timeout", "vault", vault.GetAddress().String(), "err", err)
+
+	cacheCtx, write := ctx.CacheContext()
+	v := vault.Clone()
+	if err := k.SafeEnqueueFeeTimeout(cacheCtx, v); err != nil {
+		ctx.Logger().Error("failed to reschedule fee timeout", "vault", vault.GetAddress().String(), "err", err)
+		return
 	}
-	if err := k.FeeTimeoutQueue.Enqueue(ctx, newTimeout, vault.GetAddress()); err != nil {
-		ctx.Logger().Error("failed to enqueue new fee timeout", "vault", vault.GetAddress().String(), "err", err)
-	}
+	write()
+	*vault = *v
 }
 

@@ -34,7 +34,10 @@ func (p *FeeTimeoutQueue) Enqueue(ctx sdk.Context, feeTimeout int64, vaultAddr s
 	if feeTimeout < 0 {
 		return fmt.Errorf("feeTimeout cannot be negative")
 	}
-	return p.keyset.Set(ctx, collections.Join(uint64(feeTimeout), vaultAddr))
+	if err := p.keyset.Set(ctx, collections.Join(uint64(feeTimeout), vaultAddr)); err != nil {
+		return fmt.Errorf("enqueue fee timeout: %w", err)
+	}
+	return nil
 }
 
 // Dequeue removes a specific timeout entry (feeTimeout, vault)
@@ -43,7 +46,10 @@ func (p *FeeTimeoutQueue) Dequeue(ctx sdk.Context, feeTimeout int64, vaultAddr s
 	if feeTimeout < 0 {
 		return fmt.Errorf("feeTimeout cannot be negative")
 	}
-	return p.keyset.Remove(ctx, collections.Join(uint64(feeTimeout), vaultAddr))
+	if err := p.keyset.Remove(ctx, collections.Join(uint64(feeTimeout), vaultAddr)); err != nil {
+		return fmt.Errorf("dequeue fee timeout: %w", err)
+	}
+	return nil
 }
 
 
@@ -53,19 +59,25 @@ func (p *FeeTimeoutQueue) WalkDue(ctx sdk.Context, nowSec int64, fn func(feeTime
 	if nowSec < 0 {
 		return fmt.Errorf("nowSec cannot be negative")
 	}
-	return p.keyset.Walk(ctx, nil, func(key collections.Pair[uint64, sdk.AccAddress]) (stop bool, err error) {
+	if err := p.keyset.Walk(ctx, nil, func(key collections.Pair[uint64, sdk.AccAddress]) (stop bool, err error) {
 		if key.K1() > uint64(nowSec) {
 			return true, nil
 		}
 		return fn(key.K1(), key.K2())
-	})
+	}); err != nil {
+		return fmt.Errorf("walk fee timeouts: %w", err)
+	}
+	return nil
 }
 
 // Walk iterates over all entries in the FeeTimeoutQueue.
 func (p *FeeTimeoutQueue) Walk(ctx sdk.Context, fn func(feeTimeout uint64, vaultAddr sdk.AccAddress) (stop bool, err error)) error {
-	return p.keyset.Walk(ctx, nil, func(key collections.Pair[uint64, sdk.AccAddress]) (stop bool, err error) {
+	if err := p.keyset.Walk(ctx, nil, func(key collections.Pair[uint64, sdk.AccAddress]) (stop bool, err error) {
 		return fn(key.K1(), key.K2())
-	})
+	}); err != nil {
+		return fmt.Errorf("walk fee timeouts: %w", err)
+	}
+	return nil
 }
 
 // RemoveAllForVault deletes all fee timeout entries in the
@@ -73,19 +85,18 @@ func (p *FeeTimeoutQueue) Walk(ctx sdk.Context, fn func(feeTimeout uint64, vault
 func (p *FeeTimeoutQueue) RemoveAllForVault(ctx sdk.Context, vaultAddr sdk.AccAddress) error {
 	var keys []collections.Pair[uint64, sdk.AccAddress]
 
-	err := p.keyset.Walk(ctx, nil, func(kv collections.Pair[uint64, sdk.AccAddress]) (bool, error) {
+	if err := p.keyset.Walk(ctx, nil, func(kv collections.Pair[uint64, sdk.AccAddress]) (bool, error) {
 		if kv.K2().Equals(vaultAddr) {
 			keys = append(keys, kv)
 		}
 		return false, nil
-	})
-	if err != nil {
-		return err
+	}); err != nil {
+		return fmt.Errorf("walk fee timeouts: %w", err)
 	}
 
 	for _, key := range keys {
 		if err := p.keyset.Remove(ctx, key); err != nil {
-			return err
+			return fmt.Errorf("remove fee timeout: %w", err)
 		}
 	}
 	return nil

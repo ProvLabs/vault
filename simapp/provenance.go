@@ -18,9 +18,11 @@ import (
 // used by the SimApp, including name, attribute, marker, and vault modules.
 //
 // It performs the following actions:
-//   - Registers the KV store keys required by the modules.
+//   - Registers the KV store keys required by the name, attribute, and marker modules.
 //   - Initializes the NameKeeper, AttributeKeeper, and MarkerKeeper using the legacy Provenance wiring pattern.
-//   - Injects the MarkerKeeper into the VaultKeeper to fulfill its dependency.
+//   - Injects the MarkerKeeper, NameKeeper, and AttributeKeeper into the VaultKeeper (via app.VaultKeeper.MarkerKeeper,
+//     app.VaultKeeper.NameKeeper, and app.VaultKeeper.AttrKeeper) to enable restricted marker management,
+//     name resolution, and attribute-based gating within the vault module.
 //   - Registers the modules with the app for inclusion in BeginBlocker, EndBlocker, InitGenesis, etc.
 //
 // This function is typically called during app initialization to ensure

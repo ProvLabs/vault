@@ -117,6 +117,47 @@ func (s *TestSuite) TestInitGenesis_PanicOnInvalidTimeout() {
 	}
 }
 
+func (s *TestSuite) TestVaultGenesis_RoundTrip_FeeTimeoutAndAumFeeAddress() {
+	shareDenom := "vaultshare_fee"
+	underlying := "under_fee"
+	vaultAddr := types.GetVaultAddress(shareDenom)
+	admin := s.adminAddr.String()
+	aumFeeAddress := sdk.AccAddress{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}
+
+	vault := types.VaultAccount{
+		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
+		Admin:               admin,
+		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
+		UnderlyingAsset:     underlying,
+		PaymentDenom:        underlying,
+		CurrentInterestRate: types.ZeroInterestRate,
+		DesiredInterestRate: types.ZeroInterestRate,
+	}
+
+	now := time.Now().Unix()
+	future := now + 1000
+
+	genesis := &types.GenesisState{
+		Vaults: []types.VaultAccount{vault},
+		FeeTimeoutQueue: []types.QueueEntry{
+			{Time: uint64(future), Addr: vaultAddr.String()},
+		},
+		AumFeeAddress: aumFeeAddress.Bytes(),
+	}
+
+	s.k.InitGenesis(s.ctx, genesis)
+
+	exported := s.k.ExportGenesis(s.ctx)
+	s.Require().Len(exported.FeeTimeoutQueue, 1, "exported genesis should contain exactly one fee timeout entry")
+	s.Require().Equal(vaultAddr.String(), exported.FeeTimeoutQueue[0].Addr, "fee timeout entry address mismatch")
+	s.Require().Equal(uint64(future), exported.FeeTimeoutQueue[0].Time, "fee timeout entry time mismatch")
+	s.Require().Equal(aumFeeAddress.Bytes(), exported.AumFeeAddress, "exported AUM fee address mismatch")
+
+	// Verify the AUM fee address was actually set in the keeper
+	storedAddr := s.k.GetAUMFeeAddress(s.ctx)
+	s.Require().Equal(aumFeeAddress, storedAddr, "stored AUM fee address mismatch in keeper")
+}
+
 func (s *TestSuite) TestVaultGenesis_RoundTrip_PastAndFutureTimeouts() {
 	shareDenom := "vaultshare2"
 	underlying := "under2"

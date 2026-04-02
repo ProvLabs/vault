@@ -20,11 +20,11 @@ import (
 )
 
 const (
-	RequiredMarkerAttribute = "kyc.jackthecat.vault"
+	RequiredMarkerAttribute = "restricted.attribute"
 )
 
 // CreateMarker creates a new restricted marker of type COIN.
-func CreateMarker(ctx context.Context, coin sdk.Coin, admin sdk.AccAddress, keeper markerkeeper.Keeper) error {
+func CreateMarker(ctx context.Context, coin sdk.Coin, admin sdk.AccAddress, keeper markerkeeper.Keeper, feeCollector sdk.AccAddress) error {
 	// Add a marker with deposit permissions so that it can be found by the sim.
 	newMarker := &markertypes.MsgAddFinalizeActivateMarkerRequest{
 		Amount:      coin,
@@ -40,6 +40,12 @@ func CreateMarker(ctx context.Context, coin sdk.Coin, admin sdk.AccAddress, keep
 			},
 			{
 				Address: types.AUMFeeAddress.String(),
+				Permissions: markertypes.AccessList{
+					markertypes.Access_Transfer,
+				},
+			},
+			{
+				Address: feeCollector.String(),
 				Permissions: markertypes.AccessList{
 					markertypes.Access_Transfer,
 				},
@@ -144,12 +150,21 @@ func AddAttribute(ctx context.Context, owner sdk.AccAddress, acc sdk.AccAddress,
 }
 
 // BindName ensures that a name is bound to an address if it doesn't already exist.
+// If the name has multiple segments (separated by dots), it attempts to bind
+// each parent segment recursively from right to left.
 func BindName(ctx context.Context, acc sdk.AccAddress, name string, nk types.NameKeeper) error {
-	err := nk.SetNameRecord(sdk.UnwrapSDKContext(ctx), name, acc, false)
-	if err != nil && strings.Contains(err.Error(), "already bound") {
-		return nil
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	segments := strings.Split(name, ".")
+	for i := len(segments); i > 0; i-- {
+		currentName := strings.Join(segments[i-1:], ".")
+		if !nk.NameExists(sdkCtx, currentName) {
+			err := nk.SetNameRecord(sdkCtx, currentName, acc, false)
+			if err != nil && !strings.Contains(err.Error(), "already bound") {
+				return fmt.Errorf("failed to bind name %s: %w", currentName, err)
+			}
+		}
 	}
-	return err
+	return nil
 }
 
 // MarkerExists checks if a marker with the given denom exists.
@@ -159,10 +174,10 @@ func MarkerExists(ctx sdk.Context, markerKeeper types.MarkerKeeper, denom string
 }
 
 // CreateGlobalMarker creates a new marker and distributes its coins to a given set of accounts.
-func CreateGlobalMarker(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, mk markerkeeper.Keeper, underlying sdk.Coin, accs []simtypes.Account, restricted bool) error {
+func CreateGlobalMarker(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, mk markerkeeper.Keeper, underlying sdk.Coin, accs []simtypes.Account, restricted bool, feeCollector sdk.AccAddress) error {
 	var err error
 	if restricted {
-		err = CreateMarker(sdk.UnwrapSDKContext(ctx), sdk.NewInt64Coin(underlying.Denom, underlying.Amount.Int64()), ak.GetModuleAddress("mint"), mk)
+		err = CreateMarker(sdk.UnwrapSDKContext(ctx), sdk.NewInt64Coin(underlying.Denom, underlying.Amount.Int64()), ak.GetModuleAddress("mint"), mk, feeCollector)
 	} else {
 		err = CreateUnrestrictedMarker(sdk.UnwrapSDKContext(ctx), sdk.NewInt64Coin(underlying.Denom, underlying.Amount.Int64()), ak.GetModuleAddress("mint"), mk)
 	}

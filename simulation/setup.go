@@ -37,12 +37,21 @@ func Setup(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, ak types.AccountKeepe
 		ak.SetAccount(ctx, ak.NewAccountWithAddress(ctx, provlabsAddr))
 	}
 
+	feeCollectorAddr := ak.GetModuleAddress("fee_collector")
+	if !ak.HasAccount(ctx, feeCollectorAddr) {
+		ak.SetAccount(ctx, ak.NewAccountWithAddress(ctx, feeCollectorAddr))
+	}
+
 	if err := BindName(ctx, provlabsAddr, RequiredMarkerAttribute, k.NameKeeper); err != nil {
 		return fmt.Errorf("failed to bind name to aum fee address: %w", err)
 	}
 
 	if err := AddAttribute(ctx, provlabsAddr, provlabsAddr, RequiredMarkerAttribute, k.NameKeeper, k.AttrKeeper); err != nil {
 		return fmt.Errorf("failed to add attribute to aum fee address: %w", err)
+	}
+
+	if err := AddAttribute(ctx, provlabsAddr, feeCollectorAddr, RequiredMarkerAttribute, k.NameKeeper, k.AttrKeeper); err != nil {
+		return fmt.Errorf("failed to add attribute to fee collector address: %w", err)
 	}
 
 	for _, acc := range accs {
@@ -59,10 +68,10 @@ func Setup(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, ak types.AccountKeepe
 		return fmt.Errorf("marker keeper is not of type markerkeeper.Keeper")
 	}
 
-	if err := CreateGlobalMarker(ctx, ak, bk, markerKeeper, sdk.NewInt64Coin(underlyingDenom, 100_000_000), accs, true); err != nil {
+	if err := CreateGlobalMarker(ctx, ak, bk, markerKeeper, sdk.NewInt64Coin(underlyingDenom, 1_000_000_000), accs, false, feeCollectorAddr); err != nil {
 		return fmt.Errorf("failed to create global marker for underlying %s: %w", underlyingDenom, err)
 	}
-	if err := CreateGlobalMarker(ctx, ak, bk, markerKeeper, sdk.NewInt64Coin(paymentDenom, 100_000_000), accs, true); err != nil {
+	if err := CreateGlobalMarker(ctx, ak, bk, markerKeeper, sdk.NewInt64Coin(paymentDenom, 1_000_000_000), accs, false, feeCollectorAddr); err != nil {
 		return fmt.Errorf("failed to create global marker for payment %s: %w", paymentDenom, err)
 	}
 

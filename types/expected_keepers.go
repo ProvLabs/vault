@@ -49,6 +49,7 @@ type BankKeeper interface {
 
 type NameKeeper interface {
 	SetNameRecord(ctx sdk.Context, name string, addr sdk.AccAddress, restrict bool) error
+	NameExists(ctx sdk.Context, name string) bool
 }
 
 type AttributeKeeper interface {

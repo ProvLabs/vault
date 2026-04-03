@@ -29,7 +29,19 @@ type VaultAttributer interface {
 	GetWithdrawalDelaySeconds() uint64
 }
 
-// CreateVault creates the vault based on the provided attributes.
+// CreateVault creates a new vault and its corresponding share marker atomically.
+//
+// The process involves:
+// 1. Creating and persisting a new VaultAccount and its lookup entries.
+// 2. Initializing the fee timeout queue for the new vault.
+// 3. Creating, finalizing, and activating a restricted marker for the vault's shares.
+// 4. Performing a pre-flight check against the principal/payment path by calling
+//    SendRestrictionFn with vault.PrincipalMarkerAddress() to ensure the fee
+//    collection address is permissioned to receive the payment denomination.
+//
+// All steps are performed within a cache context. If any step fails, including the
+// pre-flight permission check, all state changes are discarded to prevent the creation
+// of inconsistent or "orphan" vaults.
 func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*types.VaultAccount, error) {
 	underlying := attributes.GetUnderlyingAsset()
 	payment := attributes.GetPaymentDenom()
@@ -43,15 +55,29 @@ func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*type
 		return nil, fmt.Errorf("underlying asset marker %q not found", underlying)
 	}
 
-	vault, err := k.createVaultAccount(ctx, attributes.GetAdmin(), attributes.GetShareDenom(), underlying, payment, withdrawalDelay)
+	cacheCtx, write := ctx.CacheContext()
+
+	vault, err := k.createVaultAccount(cacheCtx, attributes.GetAdmin(), attributes.GetShareDenom(), underlying, payment, withdrawalDelay)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create vault account: %w", err)
 	}
 
-	if _, err := k.createVaultMarker(ctx, vault.GetAddress(), vault.TotalShares.Denom, vault.UnderlyingAsset); err != nil {
+	if _, err := k.createVaultMarker(cacheCtx, vault.GetAddress(), vault.TotalShares.Denom, vault.UnderlyingAsset); err != nil {
 		return nil, fmt.Errorf("failed to create vault marker: %w", err)
 	}
 
+	if recipient, err := k.MarkerKeeper.SendRestrictionFn(
+		markertypes.WithTransferAgents(cacheCtx, vault.GetAddress()),
+		vault.PrincipalMarkerAddress(),
+		k.GetAUMFeeAddress(cacheCtx),
+		sdk.NewCoins(sdk.NewInt64Coin(vault.PaymentDenom, 1)),
+	); err != nil {
+		return nil, fmt.Errorf("fee account %s is not permissioned to receive payment denom %s: %w", k.GetAUMFeeAddress(cacheCtx).String(), vault.PaymentDenom, err)
+	} else if !recipient.Equals(k.GetAUMFeeAddress(cacheCtx)) {
+		return nil, fmt.Errorf("effective recipient %s differs from expected fee collector %s for payment denom %s", recipient.String(), k.GetAUMFeeAddress(cacheCtx).String(), vault.PaymentDenom)
+	}
+
+	write()
 	k.emitEvent(ctx, types.NewEventVaultCreated(vault))
 	return vault, nil
 }
@@ -71,7 +97,8 @@ func (k Keeper) GetVault(ctx sdk.Context, address sdk.AccAddress) (*types.VaultA
 	return nil, nil
 }
 
-// createVaultAccount creates and stores a new vault account.
+// createVaultAccount creates and stores a new vault account and initializes its fee tracking.
+// It verifies that the vault address is available and not already associated with another account.
 func (k *Keeper) createVaultAccount(ctx sdk.Context, admin, shareDenom, underlyingAsset, paymentDenom string, withdrawalDelay uint64) (*types.VaultAccount, error) {
 	vaultAddr := types.GetVaultAddress(shareDenom)
 
@@ -102,9 +129,8 @@ func (k *Keeper) createVaultAccount(ctx sdk.Context, admin, shareDenom, underlyi
 	if vaultAcc != nil {
 		if _, ok := vaultAcc.(types.VaultAccountI); ok {
 			return nil, fmt.Errorf("vault address already exists for %s", vaultAddr.String())
-		} else if vaultAcc.GetSequence() > 0 {
-			return nil, fmt.Errorf("account at %s is not a vault account", vaultAddr.String())
 		}
+		return nil, fmt.Errorf("account at %s already exists and is not a vault account", vaultAddr.String())
 	}
 	vaultAcc = k.AuthKeeper.NewAccount(ctx, vault).(types.VaultAccountI)
 	k.AuthKeeper.SetAccount(ctx, vaultAcc)

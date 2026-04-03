@@ -1014,7 +1014,8 @@ func (s *TestSuite) TestEstimateTotalVaultValue_FullScenario() {
 	vault.OutstandingAumFee = sdk.NewInt64Coin(underlyingDenom, 50)
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
-	// Advance 1 year. Expected: (1000 + 105 interest) - 1 accrued fee - 50 outstanding = 1054.
+	// Advance 1 year. Expected (Continuous Compounding):
+	// Principal (1000) + Accrued Interest (105) - Accrued Fee (1) - Outstanding Fee (50) = 1054.
 	s.ctx = s.ctx.WithBlockTime(startTime.Add(time.Second * 31_536_000))
 
 	estimatedTVV, err := s.k.EstimateTotalVaultValue(s.ctx, vault)

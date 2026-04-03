@@ -2166,11 +2166,11 @@ func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts_RetryOnFailure() {
 	s.Require().NoError(err, "FeeTimeoutQueue.Walk returned unexpected error during retry verification")
 	s.Require().True(found, "vault should be in the fee timeout queue with new timeout")
 
-	// Verify FeePeriodStart is UNCHANGED
+	// Verify FeePeriodStart is UPDATED (because reschedule now uses SafeEnqueueFeeTimeout which resets the period)
 	vault, err = s.k.GetVault(s.ctx, vaultAddr)
-	s.Require().NoError(err, "failed to get vault after fee timeout handling")
-	s.Require().Equal(twoMonthsAgo.Unix(), vault.FeePeriodStart, "FeePeriodStart should remain unchanged after failed fee collection")
-}
+	s.Require().NoError(err, "failed to get vault after fee timeout retry")
+	s.Require().Equal(s.ctx.BlockTime().Unix(), vault.FeePeriodStart, "FeePeriodStart should be updated to now after rescheduling")
+	}
 
 func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts_Success() {
 	s.SetupTest()
@@ -2249,12 +2249,10 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts_RetryOnFailure() {
 	// Enqueue it in PayoutTimeoutQueue
 	s.Require().NoError(s.k.PayoutTimeoutQueue.Enqueue(s.ctx, twoMonthsAgo.Unix(), vaultAddr), "failed to enqueue vault")
 
-	// Trigger an error in PerformVaultInterestTransfer by providing an invalid interest rate string.
-	// This will cause k.PerformVaultInterestTransfer to fail during CalculateInterestEarned.
-	s.SetVaultRatesAndPeriod(vault, "invalid-rate", "0.1", twoMonthsAgo.Unix(), twoMonthsAgo.Unix())
-	vault.PeriodStart = twoMonthsAgo.Unix()
-	vault.PeriodTimeout = twoMonthsAgo.Unix()
-	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+	// Trigger an error in CanPayInterestDuration by funding the principal marker with a denom
+	// that lacks a NAV conversion rate to the underlying asset.
+	// This simulates a transient error without making the VaultAccount itself invalid.
+	s.FundMarker(shareDenom, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 1000)))
 
 	err := s.k.TestAccessor_handleVaultInterestTimeouts(s.T(), s.ctx)
 	s.Require().NoError(err, "handleVaultInterestTimeouts should not return error")
@@ -2272,8 +2270,8 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts_RetryOnFailure() {
 	s.Require().NoError(err, "PayoutTimeoutQueue.Walk returned unexpected error during retry verification")
 	s.Require().True(found, "vault should be in the interest timeout queue with new timeout")
 
-	// Verify PeriodStart is UNCHANGED
+	// Verify PeriodStart is UPDATED (because reschedule now uses SafeEnqueueTimeout which resets the period)
 	vault, err = s.k.GetVault(s.ctx, vaultAddr)
 	s.Require().NoError(err, "failed to get vault after interest timeout retry")
-	s.Require().Equal(twoMonthsAgo.Unix(), vault.PeriodStart, "PeriodStart should remain unchanged after failed reconciliation")
+	s.Require().Equal(s.ctx.BlockTime().Unix(), vault.PeriodStart, "PeriodStart should be updated to now after rescheduling")
 }

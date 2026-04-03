@@ -15,6 +15,7 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	suite "github.com/stretchr/testify/suite"
 
@@ -43,6 +44,18 @@ func (s *TestSuite) SetupTest() {
 	s.k = *s.simApp.VaultKeeper
 
 	s.adminAddr = sdk.AccAddress("adminAddr___________")
+	if !s.simApp.AccountKeeper.HasAccount(s.ctx, s.adminAddr) {
+		s.simApp.AccountKeeper.SetAccount(s.ctx, s.simApp.AccountKeeper.NewAccountWithAddress(s.ctx, s.adminAddr))
+	}
+}
+
+// EnsureTechFeeAccount ensures that the AUM fee address account exists in the account keeper.
+func (s *TestSuite) EnsureTechFeeAccount() sdk.AccAddress {
+	provlabsAddr := s.k.GetAUMFeeAddress(s.ctx)
+	if !s.simApp.AccountKeeper.HasAccount(s.ctx, provlabsAddr) {
+		s.simApp.AccountKeeper.SetAccount(s.ctx, s.simApp.AccountKeeper.NewAccountWithAddress(s.ctx, provlabsAddr))
+	}
+	return provlabsAddr
 }
 
 // Context returns the current sdk.Context associated with the suite.
@@ -123,6 +136,24 @@ func normalizeEvent(event sdk.Event) sdk.Event {
 	return event
 }
 
+// SetupTechFeeAccount ensures the AUM fee collector account exists and has the required
+// attributes to receive the specified restricted asset. It returns the fee collector address.
+func (s *TestSuite) SetupTechFeeAccount(restrictedUnderlyingDenom string) sdk.AccAddress {
+	provlabsAddr := s.k.GetAUMFeeAddress(s.ctx)
+	if !s.simApp.AccountKeeper.HasAccount(s.ctx, provlabsAddr) {
+		s.simApp.AccountKeeper.SetAccount(s.ctx, s.simApp.AccountKeeper.NewAccountWithAddress(s.ctx, provlabsAddr))
+	}
+
+	if !s.simApp.NameKeeper.NameExists(s.ctx, restrictedUnderlyingDenom) {
+		s.Require().NoError(s.simApp.NameKeeper.SetNameRecord(s.ctx, restrictedUnderlyingDenom, s.adminAddr, false), "should successfully bind name for %s", restrictedUnderlyingDenom)
+	}
+	expireTime := time.Now().Add(24 * time.Hour)
+	attr := attrtypes.NewAttribute(restrictedUnderlyingDenom, provlabsAddr.String(), attrtypes.AttributeType_String, []byte("true"), &expireTime, "")
+	s.Require().NoError(s.simApp.AttributeKeeper.SetAttribute(s.ctx, attr, s.adminAddr), "should successfully set attribute for tech fee account")
+
+	return provlabsAddr
+}
+
 // requireAddFinalizeAndActivateMarker creates a restricted marker with the
 // provided denom and supply, then finalizes and activates it. It fails the
 // test immediately on any error.
@@ -133,6 +164,27 @@ func (s *TestSuite) requireAddFinalizeAndActivateMarker(coin sdk.Coin, manager s
 		markerType = markertypes.MarkerType_RestrictedCoin
 	}
 	s.Require().NoError(err, "MarkerAddress(%q)", coin.Denom)
+
+	// Ensure the tech fee and admin accounts exist
+	if !s.simApp.AccountKeeper.HasAccount(s.ctx, s.adminAddr) {
+		s.simApp.AccountKeeper.SetAccount(s.ctx, s.simApp.AccountKeeper.NewAccountWithAddress(s.ctx, s.adminAddr))
+	}
+	provlabsAddr := s.k.GetAUMFeeAddress(s.ctx)
+	if !s.simApp.AccountKeeper.HasAccount(s.ctx, provlabsAddr) {
+		s.simApp.AccountKeeper.SetAccount(s.ctx, s.simApp.AccountKeeper.NewAccountWithAddress(s.ctx, provlabsAddr))
+	}
+
+	// Ensure the tech fee account has the required attributes for restricted markers
+	for _, attrName := range reqAttrs {
+		// Only set the name if it's not already bound
+		if !s.simApp.NameKeeper.NameExists(s.ctx, attrName) {
+			s.Require().NoError(s.simApp.NameKeeper.SetNameRecord(s.ctx, attrName, s.adminAddr, false), "should successfully bind the name")
+		}
+		expireTime := time.Now().Add(365 * 24 * time.Hour)
+		attribute := attrtypes.NewAttribute(attrName, provlabsAddr.String(), attrtypes.AttributeType_String, []byte("true"), &expireTime, "")
+		s.Require().NoError(s.simApp.AttributeKeeper.SetAttribute(s.ctx, attribute, s.adminAddr), "should successfully set the required attribute on the tech fee account")
+	}
+
 	marker := &markertypes.MarkerAccount{
 		BaseAccount: &authtypes.BaseAccount{Address: markerAddr.String()},
 		Manager:     manager.String(),
@@ -160,26 +212,42 @@ func (s *TestSuite) requireAddFinalizeAndActivateMarker(coin sdk.Coin, manager s
 // requireAddFinalizeAndActivateReceiptMarker creates and activates a restricted marker
 // for the given coin and grants the grantee full permissions (mint, burn, transfer,
 // withdraw, deposit). This is used to replicate a receipt token. It fails the test if any step errors.
-func (s *TestSuite) requireAddFinalizeAndActivateReceiptMarker(coin sdk.Coin, grantee sdk.AccAddress) {
+func (s *TestSuite) requireAddFinalizeAndActivateReceiptMarker(coin sdk.Coin, grantees ...sdk.AccAddress) {
+	s.Require().NotEmpty(grantees, "requireAddFinalizeAndActivateReceiptMarker: grantees must not be empty")
 	markerAddr, err := markertypes.MarkerAddress(coin.Denom)
 	s.Require().NoError(err, "MarkerAddress(%q)", coin.Denom)
 
+	// Ensure the tech fee account has any required attributes if this was a restricted marker.
+	// For receipt markers, we usually don't have required attributes but we give the tech fee account transfer permission
+	// so it can receive the tokens if the marker is restricted.
+	provlabsAddr := s.k.GetAUMFeeAddress(s.ctx)
+
+	accessControl := make([]markertypes.AccessGrant, len(grantees)+1)
+	for i, grantee := range grantees {
+		accessControl[i] = markertypes.AccessGrant{
+			Address: grantee.String(),
+			Permissions: markertypes.AccessList{
+				markertypes.Access_Mint,
+				markertypes.Access_Burn,
+				markertypes.Access_Transfer,
+				markertypes.Access_Withdraw,
+				markertypes.Access_Deposit,
+			},
+		}
+	}
+	accessControl[len(grantees)] = markertypes.AccessGrant{
+		Address: provlabsAddr.String(),
+		Permissions: markertypes.AccessList{
+			markertypes.Access_Transfer,
+			markertypes.Access_Deposit,
+		},
+	}
+
 	marker := &markertypes.MarkerAccount{
 		BaseAccount: &authtypes.BaseAccount{Address: markerAddr.String()},
-		Manager:     grantee.String(),
-		AccessControl: []markertypes.AccessGrant{
-			{
-				Address: grantee.String(),
-				Permissions: markertypes.AccessList{
-					markertypes.Access_Mint,
-					markertypes.Access_Burn,
-					markertypes.Access_Transfer,
-					markertypes.Access_Withdraw,
-					markertypes.Access_Deposit,
-				},
-			},
-		},
-		Status:                 markertypes.StatusProposed,
+		Manager:     grantees[0].String(),
+		AccessControl: accessControl,
+		Status:        markertypes.StatusProposed,
 		Denom:                  coin.Denom,
 		Supply:                 coin.Amount,
 		MarkerType:             markertypes.MarkerType_RestrictedCoin,

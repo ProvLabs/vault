@@ -12,10 +12,10 @@ Vaults may be configured with an optional **payment denom** in addition to the *
   - [Payout Verification Set (prefix 1)](#payout-verification-set-prefix-1)
   - [Payout Timeout Queue (prefix 2)](#payout-timeout-queue-prefix-2)
   - [Vault Fee Timeout Queue (prefix 7)](#vault-fee-timeout-queue-prefix-7)
-  - [Pending Swap-Out Queue (prefix 3)](#pending-swapout-queue-prefix-3)
-  - [Pending Swap-Out Sequence (prefix 4)](#pending-swapout-sequence-prefix-4)
-  - [Pending Swap-Out by Vault Index (prefix 5)](#pending-swapout-by-vault-index-prefix-5)
-  - [Pending Swap-Out by ID Index (prefix 6)](#pending-swapout-by-id-index-prefix-6)
+  - [Pending Swap-Out Queue (prefix 3)](#pending-swap-out-queue-prefix-3)
+  - [Pending Swap-Out Sequence (prefix 4)](#pending-swap-out-sequence-prefix-4)
+  - [Pending Swap-Out by Vault Index (prefix 5)](#pending-swap-out-by-vault-index-prefix-5)
+  - [Pending Swap-Out by ID Index (prefix 6)](#pending-swap-out-by-id-index-prefix-6)
   - [Module Parameters (prefix 10)](#module-parameters-prefix-10)
   - [Legacy: AUM Fee Address (prefix 8)](#legacy-aum-fee-address-prefix-8)
 - [Deterministic Vault Addressing](#deterministic-vault-addressing)
@@ -128,7 +128,7 @@ The legacy (pre-params) storage for the AUM technology fee recipient address.
 
 - **Prefix:** `AUMFeeAddressKeyPrefix` (8)
 - **Key:** none (singleton)
-- **Value:** `sdk.AccAddress` (the ProvLabs collection address)
+- **Value:** raw `sdk.AccAddress` bytes (prefix-agnostic ProvLabs collection address)
 
 ---
 

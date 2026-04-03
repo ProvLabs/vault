@@ -72,5 +72,5 @@ func (k *Keeper) FindVaultAccount(ctx sdk.Context, id string) (*types.VaultAccou
 		return vault, nil
 	}
 
-	return nil, fmt.Errorf("vault with id '%s' not found", id)
+	return nil, fmt.Errorf("vault with id '%s' not found: %w", id, types.ErrVaultNotFound)
 }

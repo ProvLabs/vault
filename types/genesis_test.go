@@ -4,6 +4,8 @@ import (
 	"math"
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/provlabs/vault/types"
@@ -13,6 +15,15 @@ import (
 func TestGenesisState_Validate(t *testing.T) {
 	validAddr := utils.TestAddress().Bech32
 	invalidAddr := "invalid-address"
+	validVault := types.VaultAccount{
+		BaseAccount:         authtypes.NewBaseAccountWithAddress(sdk.MustAccAddressFromBech32(validAddr)),
+		Admin:               validAddr,
+		UnderlyingAsset:     "under",
+		PaymentDenom:        "under",
+		TotalShares:         sdk.NewInt64Coin("share", 0),
+		CurrentInterestRate: types.ZeroInterestRate,
+		DesiredInterestRate: types.ZeroInterestRate,
+	}
 
 	tests := []struct {
 		name        string
@@ -26,6 +37,13 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			name: "valid payout timeout queue",
 			genState: types.GenesisState{
+				Vaults: []types.VaultAccount{
+					func() types.VaultAccount {
+						v := validVault
+						v.PeriodTimeout = 100
+						return v
+					}(),
+				},
 				PayoutTimeoutQueue: []types.QueueEntry{
 					{Time: 100, Addr: validAddr},
 				},
@@ -43,6 +61,13 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			name: "time exceeds max int64 in payout timeout queue",
 			genState: types.GenesisState{
+				Vaults: []types.VaultAccount{
+					func() types.VaultAccount {
+						v := validVault
+						v.PeriodTimeout = math.MinInt64
+						return v
+					}(),
+				},
 				PayoutTimeoutQueue: []types.QueueEntry{
 					{Time: uint64(math.MaxInt64) + 1, Addr: validAddr},
 				},
@@ -52,6 +77,13 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			name: "valid fee timeout queue",
 			genState: types.GenesisState{
+				Vaults: []types.VaultAccount{
+					func() types.VaultAccount {
+						v := validVault
+						v.FeePeriodTimeout = 100
+						return v
+					}(),
+				},
 				FeeTimeoutQueue: []types.QueueEntry{
 					{Time: 100, Addr: validAddr},
 				},
@@ -69,6 +101,13 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			name: "time exceeds max int64 in fee timeout queue",
 			genState: types.GenesisState{
+				Vaults: []types.VaultAccount{
+					func() types.VaultAccount {
+						v := validVault
+						v.FeePeriodTimeout = math.MinInt64
+						return v
+					}(),
+				},
 				FeeTimeoutQueue: []types.QueueEntry{
 					{Time: uint64(math.MaxInt64) + 1, Addr: validAddr},
 				},

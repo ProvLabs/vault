@@ -22,12 +22,14 @@ type Keeper struct {
 	storeService store.KVStoreService
 	schema       collections.Schema
 	eventService event.Service
-	addressCodec address.Codec
+	AddressCodec address.Codec
 	authority    []byte
 
 	AuthKeeper   types.AccountKeeper
 	MarkerKeeper types.MarkerKeeper
 	BankKeeper   types.BankKeeper
+	NameKeeper   types.NameKeeper
+	AttrKeeper   types.AttributeKeeper
 
 	Params                collections.Item[types.Params]
 	Vaults                collections.Map[sdk.AccAddress, []byte]
@@ -47,6 +49,8 @@ func NewKeeper(
 	authKeeper types.AccountKeeper,
 	markerkeeper types.MarkerKeeper,
 	bankkeeper types.BankKeeper,
+	namekeeper types.NameKeeper,
+	attributekeeper types.AttributeKeeper,
 ) *Keeper {
 	if _, err := addressCodec.BytesToString(authority); err != nil {
 		panic(fmt.Sprintf("invalid authority address %s: %s", authority, err))
@@ -58,7 +62,7 @@ func NewKeeper(
 		cdc:                   cdc,
 		storeService:          storeService,
 		eventService:          eventService,
-		addressCodec:          addressCodec,
+		AddressCodec:          addressCodec,
 		authority:             authority,
 		Params:                collections.NewItem(builder, types.ParamsKeyPrefix, types.ParamsKeyName, codec.CollValue[types.Params](cdc)),
 		Vaults:                collections.NewMap(builder, types.VaultsKeyPrefix, types.VaultsName, sdk.AccAddressKey, collections.BytesValue),
@@ -69,6 +73,8 @@ func NewKeeper(
 		AuthKeeper:            authKeeper,
 		MarkerKeeper:          markerkeeper,
 		BankKeeper:            bankkeeper,
+		NameKeeper:            namekeeper,
+		AttrKeeper:            attributekeeper,
 	}
 
 	schema, err := builder.Build()

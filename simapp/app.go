@@ -150,6 +150,8 @@ func AppConfig() depinject.Config {
 		depinject.Provide(
 			ProvideExchangeDummyCustomSigners,
 			ProvideMarkerKeeperStub,
+			ProvideNameKeeperStub,
+			ProvideAttributeKeeperStub,
 		),
 		depinject.Supply(
 			map[string]module.AppModuleBasic{
@@ -281,6 +283,34 @@ func (app *SimApp) kvStoreKeys() map[string]*storetypes.KVStoreKey {
 // if used.
 func ProvideMarkerKeeperStub() *markerkeeper.Keeper {
 	return &markerkeeper.Keeper{}
+}
+
+// ProvideNameKeeperStub returns an empty namekeeper.Keeper instance.
+//
+// This stub is used to satisfy dependency injection requirements when wiring
+// the Vault module in the app module configuration. It allows the Vault module
+// to be included in the dependency graph even though the actual NameKeeper
+// is initialized separately using the legacy Provenance wiring in SimApp.
+//
+// This function should only be used during app setup and should not be relied
+// on at runtime, as the returned keeper is not fully configured and will panic
+// if used.
+func ProvideNameKeeperStub() *namekeeper.Keeper {
+	return &namekeeper.Keeper{}
+}
+
+// ProvideAttributeKeeperStub returns an empty attributekeeper.Keeper instance.
+//
+// This stub is used to satisfy dependency injection requirements when wiring
+// the Vault module in the app module configuration. It allows the Vault module
+// to be included in the dependency graph even though the actual AttributeKeeper
+// is initialized separately using the legacy Provenance wiring in SimApp.
+//
+// This function should only be used during app setup and should not be relied
+// on at runtime, as the returned keeper is not fully configured and will panic
+// if used.
+func ProvideAttributeKeeperStub() *attributekeeper.Keeper {
+	return &attributekeeper.Keeper{}
 }
 
 func (app *SimApp) AppCodec() codec.Codec {

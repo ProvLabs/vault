@@ -62,10 +62,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 			k.AuthKeeper.SetAccount(ctx, vaultAcc)
 		}
 
-		if err := v.Validate(); err != nil {
-			panic(fmt.Errorf("invalid vault at index %d: %w", i, err))
-		}
-
 		if err := k.SetVaultLookup(ctx, v); err != nil {
 			panic(fmt.Errorf("failed to store vault %s: %w", v.Address, err))
 		}
@@ -75,6 +71,9 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 		addr, err := sdk.AccAddressFromBech32(entry.Addr)
 		if err != nil {
 			panic(fmt.Errorf("invalid address in payout timeout queue: %w", err))
+		}
+		if _, ok := k.tryGetVault(ctx, addr); !ok {
+			panic(fmt.Errorf("payout timeout queue entry for non-existent vault %s", entry.Addr))
 		}
 		if entry.Time > math.MaxInt64 {
 			panic(fmt.Errorf("payout timeout queue entry for %s has time %d which exceeds max int64", entry.Addr, entry.Time))
@@ -88,6 +87,9 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 		addr, err := sdk.AccAddressFromBech32(entry.Addr)
 		if err != nil {
 			panic(fmt.Errorf("invalid address in fee timeout queue: %w", err))
+		}
+		if _, ok := k.tryGetVault(ctx, addr); !ok {
+			panic(fmt.Errorf("fee timeout queue entry for non-existent vault %s", entry.Addr))
 		}
 		if entry.Time > math.MaxInt64 {
 			panic(fmt.Errorf("fee timeout queue entry for %s has time %d which exceeds max int64", entry.Addr, entry.Time))
@@ -112,7 +114,6 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	}
 }
 
-// ExportGenesis exports the current state of the vault module.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	params, err := k.Params.Get(ctx)
 	if err != nil {

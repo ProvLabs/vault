@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/provlabs/vault/types"
@@ -76,6 +77,9 @@ func (k queryServer) Vault(goCtx context.Context, req *types.QueryVaultRequest) 
 
 	vault, err := k.FindVaultAccount(ctx, req.Id)
 	if err != nil {
+		if errors.Is(err, types.ErrVaultNotFound) {
+			return nil, status.Errorf(codes.NotFound, "vault account %s not found", req.Id)
+		}
 		return nil, status.Errorf(codes.Internal, "failed to find vault account %s: %v", req.Id, err)
 	}
 
@@ -278,11 +282,17 @@ func (k queryServer) VaultPendingSwapOuts(goCtx context.Context, req *types.Quer
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
+	if req.Id == "" {
+		return nil, status.Error(codes.InvalidArgument, "id must be provided")
+	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	vault, err := k.FindVaultAccount(ctx, req.Id)
 	if err != nil {
+		if errors.Is(err, types.ErrVaultNotFound) {
+			return nil, status.Errorf(codes.NotFound, "vault account %s not found", req.Id)
+		}
 		return nil, status.Errorf(codes.Internal, "failed to find vault account %s: %v", req.Id, err)
 	}
 

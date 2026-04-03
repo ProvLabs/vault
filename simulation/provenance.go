@@ -20,11 +20,11 @@ import (
 )
 
 const (
-	RequiredMarkerAttribute = "kyc.jackthecat.vault"
+	RequiredMarkerAttribute = "simulation.restricted"
 )
 
 // CreateMarker creates a new restricted marker of type COIN.
-func CreateMarker(ctx context.Context, coin sdk.Coin, admin sdk.AccAddress, keeper markerkeeper.Keeper) error {
+func CreateMarker(ctx context.Context, coin sdk.Coin, admin sdk.AccAddress, keeper markerkeeper.Keeper, feeCollector sdk.AccAddress) error {
 	// Add a marker with deposit permissions so that it can be found by the sim.
 	newMarker := &markertypes.MsgAddFinalizeActivateMarkerRequest{
 		Amount:      coin,
@@ -35,7 +35,19 @@ func CreateMarker(ctx context.Context, coin sdk.Coin, admin sdk.AccAddress, keep
 			{
 				Address: admin.String(),
 				Permissions: markertypes.AccessList{
-					markertypes.Access_Mint, markertypes.Access_Burn, markertypes.Access_Withdraw,
+					markertypes.Access_Mint, markertypes.Access_Burn, markertypes.Access_Withdraw, markertypes.Access_Admin,
+				},
+			},
+			{
+				Address: types.AUMFeeAddress.String(),
+				Permissions: markertypes.AccessList{
+					markertypes.Access_Transfer,
+				},
+			},
+			{
+				Address: feeCollector.String(),
+				Permissions: markertypes.AccessList{
+					markertypes.Access_Transfer,
 				},
 			},
 		},
@@ -60,7 +72,7 @@ func CreateUnrestrictedMarker(ctx context.Context, coin sdk.Coin, admin sdk.AccA
 			{
 				Address: admin.String(),
 				Permissions: markertypes.AccessList{
-					markertypes.Access_Mint, markertypes.Access_Burn, markertypes.Access_Withdraw,
+					markertypes.Access_Mint, markertypes.Access_Burn, markertypes.Access_Withdraw, markertypes.Access_Admin,
 				},
 			},
 		},
@@ -72,6 +84,34 @@ func CreateUnrestrictedMarker(ctx context.Context, coin sdk.Coin, admin sdk.AccA
 	markerMsgServer := markerkeeper.NewMsgServerImpl(keeper)
 	_, err := markerMsgServer.AddFinalizeActivateMarker(ctx, newMarker)
 	return err
+}
+
+// GrantTransferPermission grants transfer permission to an account for a given marker.
+func GrantTransferPermission(ctx context.Context, keeper markerkeeper.Keeper, denom string, grantee sdk.AccAddress, admin sdk.AccAddress) error {
+	return GrantAccess(ctx, keeper, denom, grantee, admin, markertypes.AccessList{markertypes.Access_Transfer})
+}
+
+// GrantWithdrawPermission grants withdraw permission to an account for a given marker.
+func GrantWithdrawPermission(ctx context.Context, keeper markerkeeper.Keeper, denom string, grantee sdk.AccAddress, admin sdk.AccAddress) error {
+	return GrantAccess(ctx, keeper, denom, grantee, admin, markertypes.AccessList{markertypes.Access_Withdraw})
+}
+
+// GrantAccess grants specified permissions to an account for a given marker.
+func GrantAccess(ctx context.Context, keeper markerkeeper.Keeper, denom string, grantee sdk.AccAddress, admin sdk.AccAddress, access markertypes.AccessList) error {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	m, err := keeper.GetMarker(sdkCtx, markertypes.MustGetMarkerAddress(denom))
+	if err != nil {
+		return fmt.Errorf("failed to get marker %s: %w", denom, err)
+	}
+	if m == nil {
+		return fmt.Errorf("marker %s not found", denom)
+	}
+
+	if err := m.GrantAccess(markertypes.NewAccessGrant(grantee, access)); err != nil {
+		return fmt.Errorf("failed to grant access to %s on %s: %w", grantee, denom, err)
+	}
+	keeper.SetMarker(sdkCtx, m)
+	return nil
 }
 
 // AddNav adds a net asset value to a marker.
@@ -96,14 +136,8 @@ func AddNav(ctx context.Context, keeper markerkeeper.Keeper, denom string, admin
 	return err
 }
 
-// AddAttribute adds an attribute to an account.
-func AddAttribute(ctx context.Context, acc sdk.AccAddress, attrName string, nk types.NameKeeper, ak types.AttributeKeeper) error {
-	err := nk.SetNameRecord(sdk.UnwrapSDKContext(ctx), attrName, acc, false)
-	if err != nil {
-		return err
-	}
-
-	// name string, address string, attrType AttributeType, value []byte, expirationDate *time.Time, concreteType string
+// AddAttribute adds an attribute to an account using the provided owner to authorize the action.
+func AddAttribute(ctx context.Context, owner sdk.AccAddress, acc sdk.AccAddress, attrName string, nk types.NameKeeper, ak types.AttributeKeeper) error {
 	attr := NewAttribute(
 		attrName,
 		acc.String(),
@@ -112,7 +146,25 @@ func AddAttribute(ctx context.Context, acc sdk.AccAddress, attrName string, nk t
 		nil,
 	)
 
-	return ak.SetAttribute(sdk.UnwrapSDKContext(ctx), attr, acc)
+	return ak.SetAttribute(sdk.UnwrapSDKContext(ctx), attr, owner)
+}
+
+// BindName ensures that a name is bound to an address if it doesn't already exist.
+// If the name has multiple segments (separated by dots), it attempts to bind
+// each parent segment recursively from right to left.
+func BindName(ctx context.Context, acc sdk.AccAddress, name string, nk types.NameKeeper) error {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	segments := strings.Split(name, ".")
+	for i := len(segments); i > 0; i-- {
+		currentName := strings.Join(segments[i-1:], ".")
+		if !nk.NameExists(sdkCtx, currentName) {
+			err := nk.SetNameRecord(sdkCtx, currentName, acc, false)
+			if err != nil && !strings.Contains(err.Error(), "already bound") {
+				return fmt.Errorf("failed to bind name %s: %w", currentName, err)
+			}
+		}
+	}
+	return nil
 }
 
 // MarkerExists checks if a marker with the given denom exists.
@@ -122,10 +174,10 @@ func MarkerExists(ctx sdk.Context, markerKeeper types.MarkerKeeper, denom string
 }
 
 // CreateGlobalMarker creates a new marker and distributes its coins to a given set of accounts.
-func CreateGlobalMarker(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, mk markerkeeper.Keeper, underlying sdk.Coin, accs []simtypes.Account, restricted bool) error {
+func CreateGlobalMarker(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, mk markerkeeper.Keeper, underlying sdk.Coin, accs []simtypes.Account, restricted bool, feeCollector sdk.AccAddress) error {
 	var err error
 	if restricted {
-		err = CreateMarker(sdk.UnwrapSDKContext(ctx), sdk.NewInt64Coin(underlying.Denom, underlying.Amount.Int64()), ak.GetModuleAddress("mint"), mk)
+		err = CreateMarker(sdk.UnwrapSDKContext(ctx), sdk.NewInt64Coin(underlying.Denom, underlying.Amount.Int64()), ak.GetModuleAddress("mint"), mk, feeCollector)
 	} else {
 		err = CreateUnrestrictedMarker(sdk.UnwrapSDKContext(ctx), sdk.NewInt64Coin(underlying.Denom, underlying.Amount.Int64()), ak.GetModuleAddress("mint"), mk)
 	}
@@ -156,7 +208,6 @@ func FundAccount(ctx context.Context, bk types.BankKeeper, addr sdk.AccAddress, 
 
 // NewAttribute creates a new instance of an Attribute.
 func NewAttribute(name string, address string, attrType attrtypes.AttributeType, value []byte, expirationDate *time.Time) attrtypes.Attribute {
-	// Ensure string type values are trimmed.
 	if attrType != attrtypes.AttributeType_Bytes && attrType != attrtypes.AttributeType_Proto {
 		trimmed := strings.TrimSpace(string(value))
 		value = []byte(trimmed)

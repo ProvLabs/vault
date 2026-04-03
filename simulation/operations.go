@@ -15,6 +15,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+
+	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
 )
 
 const (
@@ -152,7 +154,7 @@ func SimulateMsgCreateVault(k keeper.Keeper) simtypes.Operation {
 		}
 
 		admin, _ := simtypes.RandomAcc(r, accs)
-		denom := fmt.Sprintf("vaulttoken%d", r.Intn(100000))
+		denom := fmt.Sprintf("vaulttoken%d", r.Intn(100_000))
 
 		underlying, err := getRandomDenom(r, k, ctx, admin)
 		if err != nil {
@@ -164,6 +166,14 @@ func SimulateMsgCreateVault(k keeper.Keeper) simtypes.Operation {
 		}
 		if payment == underlying {
 			payment = ""
+		}
+
+		markerKeeper, ok := k.MarkerKeeper.(markerkeeper.Keeper)
+		if !ok {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "marker keeper is not of type markerkeeper.Keeper"), nil, fmt.Errorf("marker keeper is not of type markerkeeper.Keeper")
+		}
+		if err := PrepareVaultMarkers(ctx, k.AuthKeeper, markerKeeper, underlying, payment, denom); err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "failed to prepare vault markers"), nil, err
 		}
 
 		msg := &types.MsgCreateVaultRequest{
@@ -205,7 +215,7 @@ func SimulateMsgSwapIn(k keeper.Keeper) simtypes.Operation {
 		}
 
 		// Calculate 1/1000 of the balance
-		portion := balance.Amount.Quo(math.NewInt(1000))
+		portion := balance.Amount.Quo(math.NewInt(1_000))
 		if portion.IsZero() {
 			// If portion is zero, the balance is too low to deposit a meaningful portion.
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSwapInRequest{}), "balance too low to swap in a portion"), nil, nil

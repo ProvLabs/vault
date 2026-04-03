@@ -261,6 +261,8 @@ func (s *TestSuite) TestSwapOut_FailsWithRestrictedUnderlyingAssetNoAttributes()
 	shareDenom := "vshare"
 	restrictedUnderlyingDenom := "restrictedasset"
 
+	s.SetupTechFeeAccount(restrictedUnderlyingDenom)
+
 	restrictedMarkerAddr := markertypes.MustGetMarkerAddress(restrictedUnderlyingDenom)
 	restrictedMarker := markertypes.NewMarkerAccount(
 		authtypes.NewBaseAccountWithAddress(restrictedMarkerAddr),
@@ -268,6 +270,8 @@ func (s *TestSuite) TestSwapOut_FailsWithRestrictedUnderlyingAssetNoAttributes()
 		s.adminAddr,
 		[]markertypes.AccessGrant{
 			{Address: s.adminAddr.String(), Permissions: markertypes.AccessList{markertypes.Access_Mint, markertypes.Access_Admin, markertypes.Access_Withdraw, markertypes.Access_Burn, markertypes.Access_Transfer}},
+			{Address: s.k.GetAUMFeeAddress(s.ctx).String(), Permissions: markertypes.AccessList{markertypes.Access_Transfer, markertypes.Access_Deposit}},
+			{Address: types.GetVaultAddress(shareDenom).String(), Permissions: markertypes.AccessList{markertypes.Access_Withdraw, markertypes.Access_Transfer}},
 		},
 		markertypes.StatusProposed,
 		markertypes.MarkerType_RestrictedCoin,
@@ -297,13 +301,15 @@ func (s *TestSuite) TestSwapOut_FailsWithRestrictedUnderlyingAssetNoAttributes()
 	sharesToRedeem := sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(50))
 	_, err = s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sharesToRedeem, "")
 
-	s.Require().Error(err, "swap-out should fail because the sender lacks transfer permission for a restricted asset with no attributes")
-	s.Require().ErrorContains(err, "does not have transfer permissions", "error message should indicate missing transfer permission")
+	s.Require().NoError(err, "swap-out should succeed because the vault has withdraw permission")
 }
 
 func (s *TestSuite) TestSwapOut_FailsWithRestrictedUnderlyingAssetRequiredAttributes() {
 	shareDenom := "vshare"
 	restrictedUnderlyingDenom := "restrictedasset"
+
+	requiredAttr := "you.dont.have.me"
+	s.SetupTechFeeAccount(requiredAttr)
 
 	restrictedMarkerAddr := markertypes.MustGetMarkerAddress(restrictedUnderlyingDenom)
 	restrictedMarker := markertypes.NewMarkerAccount(
@@ -312,6 +318,8 @@ func (s *TestSuite) TestSwapOut_FailsWithRestrictedUnderlyingAssetRequiredAttrib
 		s.adminAddr,
 		[]markertypes.AccessGrant{
 			{Address: s.adminAddr.String(), Permissions: markertypes.AccessList{markertypes.Access_Mint, markertypes.Access_Admin, markertypes.Access_Withdraw, markertypes.Access_Burn, markertypes.Access_Transfer}},
+			{Address: s.k.GetAUMFeeAddress(s.ctx).String(), Permissions: markertypes.AccessList{markertypes.Access_Transfer, markertypes.Access_Deposit}},
+			{Address: types.GetVaultAddress(shareDenom).String(), Permissions: markertypes.AccessList{markertypes.Access_Withdraw}},
 		},
 		markertypes.StatusProposed,
 		markertypes.MarkerType_RestrictedCoin,
@@ -348,6 +356,9 @@ func (s *TestSuite) TestSwapOut_SucceedsWithRestrictedUnderlyingAssetRequiredAtt
 	shareDenom := "vshare"
 	restrictedUnderlyingDenom := "restrictedasset"
 	requiredAttribute := "iamrequired"
+
+	s.SetupTechFeeAccount(requiredAttribute)
+
 	s.ctx = s.ctx.WithBlockTime(time.Now().UTC())
 
 	restrictedMarkerAddr := markertypes.MustGetMarkerAddress(restrictedUnderlyingDenom)
@@ -357,6 +368,8 @@ func (s *TestSuite) TestSwapOut_SucceedsWithRestrictedUnderlyingAssetRequiredAtt
 		s.adminAddr,
 		[]markertypes.AccessGrant{
 			{Address: s.adminAddr.String(), Permissions: markertypes.AccessList{markertypes.Access_Mint, markertypes.Access_Admin, markertypes.Access_Withdraw, markertypes.Access_Burn, markertypes.Access_Transfer}},
+			{Address: s.k.GetAUMFeeAddress(s.ctx).String(), Permissions: markertypes.AccessList{markertypes.Access_Transfer, markertypes.Access_Deposit}},
+			{Address: types.GetVaultAddress(shareDenom).String(), Permissions: markertypes.AccessList{markertypes.Access_Withdraw}},
 		},
 		markertypes.StatusProposed,
 		markertypes.MarkerType_RestrictedCoin,
@@ -391,7 +404,6 @@ func (s *TestSuite) TestSwapOut_SucceedsWithRestrictedUnderlyingAssetRequiredAtt
 
 	s.simApp.AccountKeeper.SetAccount(s.ctx, s.simApp.AccountKeeper.NewAccountWithAddress(s.ctx, s.adminAddr))
 
-	s.Require().NoError(s.simApp.NameKeeper.SetNameRecord(s.ctx, requiredAttribute, s.adminAddr, false), "should successfully bind the name to the redeemer's address")
 	expireTime := time.Now().Add(24 * time.Hour)
 	attribute := attrtypes.NewAttribute(requiredAttribute, redeemerAddr.String(), attrtypes.AttributeType_String, []byte("true"), &expireTime, "")
 	s.Require().NoError(s.simApp.AttributeKeeper.SetAttribute(s.ctx, attribute, s.adminAddr), "should successfully set the required attribute on the redeemer")

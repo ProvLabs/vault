@@ -259,6 +259,14 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 				s.assertBalance(ownerAddr, shareDenom, shares.Amount)
 				reason := types.RefundReasonRecipientMissingAttributes
 
+				var entries []types.PendingSwapOut
+				err := s.k.PendingSwapOutQueue.Walk(s.ctx, func(_ int64, _ uint64, _ sdk.AccAddress, req types.PendingSwapOut) (bool, error) {
+					entries = append(entries, req)
+					return false, nil
+				})
+				s.Require().NoError(err, "walking the queue should not error")
+				s.Require().Empty(entries, "queue should be empty after a failed payout is refunded")
+
 				expectedEvents := sdk.Events{}
 				expectedEvents = append(expectedEvents, createSendCoinEvents(vaultAddr.String(), ownerAddr.String(), shares.String())...)
 				expectedEvent, err := sdk.TypedEventToEvent(types.NewEventSwapOutRefunded(vaultAddr.String(), ownerAddr.String(), shares, reqID, reason))

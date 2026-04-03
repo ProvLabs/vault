@@ -24,7 +24,8 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// QueueEntry is a (time, addr) pair used by the vault payout deferral queue.
+// QueueEntry is a (time, addr) pair used by various vault timeout queues
+// (e.g., payout deferral and fee collection).
 type QueueEntry struct {
 	// time is the UNIX timestamp (in seconds) when the entry becomes eligible.
 	Time uint64 `protobuf:"varint,1,opt,name=time,proto3" json:"time,omitempty"`

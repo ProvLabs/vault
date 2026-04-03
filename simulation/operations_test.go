@@ -44,19 +44,21 @@ func (s *VaultSimTestSuite) SetupTest() {
 
 	s.setupAccounts()
 
-	s.provlabsAddr = s.app.VaultKeeper.GetAUMFeeAddress(s.ctx)
+	var err error
+	s.provlabsAddr, err = s.app.VaultKeeper.GetAUMFeeAddress(s.ctx)
+	s.Require().NoError(err, "GetAUMFeeAddress")
 	if !s.app.AccountKeeper.HasAccount(s.ctx, s.provlabsAddr) {
 		s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.provlabsAddr))
 	}
 
-	err := simulation.BindName(s.ctx, s.provlabsAddr, simulation.RequiredMarkerAttribute, s.app.NameKeeper)
+	err = simulation.BindName(s.ctx, s.provlabsAddr, simulation.RequiredMarkerAttribute, s.app.NameKeeper)
 	s.Require().NoError(err, "BindName")
 
 	err = simulation.AddAttribute(s.ctx, s.provlabsAddr, s.provlabsAddr, simulation.RequiredMarkerAttribute, s.app.NameKeeper, s.app.AttributeKeeper)
 	s.Require().NoError(err, "AddAttribute aum fee address")
 
 	for _, acc := range s.accs {
-		err := simulation.AddAttribute(s.ctx, s.provlabsAddr, acc.Address, simulation.RequiredMarkerAttribute, s.app.NameKeeper, s.app.AttributeKeeper)
+		err = simulation.AddAttribute(s.ctx, s.provlabsAddr, acc.Address, simulation.RequiredMarkerAttribute, s.app.NameKeeper, s.app.AttributeKeeper)
 		s.Require().NoError(err, "AddAttribute account")
 	}
 

@@ -37,6 +37,7 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			name: "valid payout timeout queue",
 			genState: types.GenesisState{
+				Params: types.DefaultParams(),
 				Vaults: []types.VaultAccount{
 					func() types.VaultAccount {
 						v := validVault
@@ -52,6 +53,7 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			name: "invalid address in payout timeout queue",
 			genState: types.GenesisState{
+				Params: types.DefaultParams(),
 				PayoutTimeoutQueue: []types.QueueEntry{
 					{Time: 100, Addr: invalidAddr},
 				},
@@ -61,6 +63,7 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			name: "time exceeds max int64 in payout timeout queue",
 			genState: types.GenesisState{
+				Params: types.DefaultParams(),
 				Vaults: []types.VaultAccount{
 					func() types.VaultAccount {
 						v := validVault
@@ -77,6 +80,7 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			name: "valid fee timeout queue",
 			genState: types.GenesisState{
+				Params: types.DefaultParams(),
 				Vaults: []types.VaultAccount{
 					func() types.VaultAccount {
 						v := validVault
@@ -92,6 +96,7 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			name: "invalid address in fee timeout queue",
 			genState: types.GenesisState{
+				Params: types.DefaultParams(),
 				FeeTimeoutQueue: []types.QueueEntry{
 					{Time: 100, Addr: invalidAddr},
 				},
@@ -101,6 +106,7 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			name: "time exceeds max int64 in fee timeout queue",
 			genState: types.GenesisState{
+				Params: types.DefaultParams(),
 				Vaults: []types.VaultAccount{
 					func() types.VaultAccount {
 						v := validVault

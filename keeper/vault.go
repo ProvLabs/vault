@@ -66,15 +66,20 @@ func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*type
 		return nil, fmt.Errorf("failed to create vault marker: %w", err)
 	}
 
+	feeAddr, err := k.GetAUMFeeAddress(cacheCtx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get AUM fee address: %w", err)
+	}
+
 	if recipient, err := k.MarkerKeeper.SendRestrictionFn(
 		markertypes.WithTransferAgents(cacheCtx, vault.GetAddress()),
 		vault.PrincipalMarkerAddress(),
-		k.GetAUMFeeAddress(cacheCtx),
+		feeAddr,
 		sdk.NewCoins(sdk.NewInt64Coin(vault.PaymentDenom, 1)),
 	); err != nil {
-		return nil, fmt.Errorf("fee account %s is not permissioned to receive payment denom %s: %w", k.GetAUMFeeAddress(cacheCtx).String(), vault.PaymentDenom, err)
-	} else if !recipient.Equals(k.GetAUMFeeAddress(cacheCtx)) {
-		return nil, fmt.Errorf("effective recipient %s differs from expected fee collector %s for payment denom %s", recipient.String(), k.GetAUMFeeAddress(cacheCtx).String(), vault.PaymentDenom)
+		return nil, fmt.Errorf("fee account %s is not permissioned to receive payment denom %s: %w", feeAddr.String(), vault.PaymentDenom, err)
+	} else if !recipient.Equals(feeAddr) {
+		return nil, fmt.Errorf("effective recipient %s differs from expected fee collector %s for payment denom %s", recipient.String(), feeAddr.String(), vault.PaymentDenom)
 	}
 
 	write()

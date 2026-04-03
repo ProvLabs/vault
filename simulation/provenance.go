@@ -39,7 +39,7 @@ func CreateMarker(ctx context.Context, coin sdk.Coin, admin sdk.AccAddress, keep
 				},
 			},
 			{
-				Address: types.AUMFeeAddress.String(),
+				Address: types.DefaultTechFeeAddress.String(),
 				Permissions: markertypes.AccessList{
 					markertypes.Access_Transfer,
 				},

@@ -17,7 +17,6 @@ Vaults may be configured with an optional **payment denom** in addition to the *
   - [Pending Swap-Out by Vault Index (prefix 5)](#pending-swap-out-by-vault-index-prefix-5)
   - [Pending Swap-Out by ID Index (prefix 6)](#pending-swap-out-by-id-index-prefix-6)
   - [Module Parameters (prefix 10)](#module-parameters-prefix-10)
-  - [Legacy: AUM Fee Address (prefix 8)](#legacy-aum-fee-address-prefix-8)
 - [Deterministic Vault Addressing](#deterministic-vault-addressing)
 - [Genesis Notes](#genesis-notes)
 
@@ -121,14 +120,6 @@ The module's global configuration parameters, managed via governance.
 - **Prefix:** `ParamsKeyPrefix` (10)
 - **Key:** none (singleton)
 - **Value:** `types.Params` (contains `tech_fee_address` and `default_aum_fee_bips`)
-
-### Legacy: AUM Fee Address (prefix 8)
-
-The legacy (pre-params) storage for the AUM technology fee recipient address.
-
-- **Prefix:** `AUMFeeAddressKeyPrefix` (8)
-- **Key:** none (singleton)
-- **Value:** raw `sdk.AccAddress` bytes (prefix-agnostic ProvLabs collection address)
 
 ---
 

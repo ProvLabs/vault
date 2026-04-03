@@ -66,13 +66,15 @@ func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*type
 		return nil, fmt.Errorf("failed to create vault marker: %w", err)
 	}
 
-	if _, err := k.MarkerKeeper.SendRestrictionFn(
+	if recipient, err := k.MarkerKeeper.SendRestrictionFn(
 		markertypes.WithTransferAgents(cacheCtx, vault.GetAddress()),
 		vault.PrincipalMarkerAddress(),
 		k.GetAUMFeeAddress(cacheCtx),
 		sdk.NewCoins(sdk.NewInt64Coin(vault.PaymentDenom, 1)),
 	); err != nil {
 		return nil, fmt.Errorf("fee account %s is not permissioned to receive payment denom %s: %w", k.GetAUMFeeAddress(cacheCtx).String(), vault.PaymentDenom, err)
+	} else if !recipient.Equals(k.GetAUMFeeAddress(cacheCtx)) {
+		return nil, fmt.Errorf("effective recipient %s differs from expected fee collector %s for payment denom %s", recipient.String(), k.GetAUMFeeAddress(cacheCtx).String(), vault.PaymentDenom)
 	}
 
 	write()
@@ -121,9 +123,8 @@ func (k *Keeper) createVaultAccount(ctx sdk.Context, admin, shareDenom, underlyi
 	if vaultAcc != nil {
 		if _, ok := vaultAcc.(types.VaultAccountI); ok {
 			return nil, fmt.Errorf("vault address already exists for %s", vaultAddr.String())
-		} else if vaultAcc.GetSequence() > 0 {
-			return nil, fmt.Errorf("account at %s is not a vault account", vaultAddr.String())
 		}
+		return nil, fmt.Errorf("account at %s already exists and is not a vault account", vaultAddr.String())
 	}
 	vaultAcc = k.AuthKeeper.NewAccount(ctx, vault).(types.VaultAccountI)
 	k.AuthKeeper.SetAccount(ctx, vaultAcc)

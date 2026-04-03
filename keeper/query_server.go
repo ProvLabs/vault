@@ -282,6 +282,9 @@ func (k queryServer) VaultPendingSwapOuts(goCtx context.Context, req *types.Quer
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
+	if req.Id == "" {
+		return nil, status.Error(codes.InvalidArgument, "id must be provided")
+	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

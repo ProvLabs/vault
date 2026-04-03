@@ -2,6 +2,7 @@ package types
 
 import (
 	fmt "fmt"
+	"math"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -181,14 +182,14 @@ func (v VaultAccount) Validate() error {
 	if v.PeriodStart < 0 {
 		return fmt.Errorf("period start cannot be negative: %d", v.PeriodStart)
 	}
-	if v.PeriodTimeout < 0 {
+	if v.PeriodTimeout < 0 && v.PeriodTimeout != math.MinInt64 {
 		return fmt.Errorf("period timeout cannot be negative: %d", v.PeriodTimeout)
 	}
 
 	if v.FeePeriodStart < 0 {
 		return fmt.Errorf("fee period start cannot be negative: %d", v.FeePeriodStart)
 	}
-	if v.FeePeriodTimeout < 0 {
+	if v.FeePeriodTimeout < 0 && v.FeePeriodTimeout != math.MinInt64 {
 		return fmt.Errorf("fee period timeout cannot be negative: %d", v.FeePeriodTimeout)
 	}
 

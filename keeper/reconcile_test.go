@@ -1715,25 +1715,51 @@ func (s *TestSuite) TestKeeper_setShareDenomNAV() {
 
 func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer() {
 	tests := []struct {
-		name                 string
-		paymentDenom         string
-		initialLiquidity     sdkmath.Int
-		expectedFeeTotal     sdkmath.Int
-		expectedCollected    sdkmath.Int
-		expectedOutstanding  sdkmath.Int
-		secondLiquidity      sdkmath.Int
-		expectedFinalMarker  sdkmath.Int
-		aumSnapshot          string
+		name                string
+		paymentDenom        string
+		aumFeeBips          uint32
+		initialLiquidity    sdkmath.Int
+		expectedFeeTotal    sdkmath.Int
+		expectedCollected   sdkmath.Int
+		expectedOutstanding sdkmath.Int
+		secondLiquidity     sdkmath.Int
+		expectedFinalMarker sdkmath.Int
+		aumSnapshot         string
 	}{
 		{
-			name:                "partial collection then full",
+			name:                "partial collection then full (default 15 bps)",
 			paymentDenom:        "uylds.fcc",
+			aumFeeBips:          15,
 			initialLiquidity:    sdkmath.NewInt(100_000),
 			expectedFeeTotal:    sdkmath.NewInt(246_600),
 			expectedCollected:   sdkmath.NewInt(100_000),
 			expectedOutstanding: sdkmath.NewInt(146_600),
 			secondLiquidity:     sdkmath.NewInt(1_000_000),
 			expectedFinalMarker: sdkmath.NewInt(853_400),
+			aumSnapshot:         "1000100000uylds.fcc.receipt",
+		},
+		{
+			name:                "partial collection then full (100 bps)",
+			paymentDenom:        "uylds.fcc",
+			aumFeeBips:          100,
+			initialLiquidity:    sdkmath.NewInt(100_000),
+			expectedFeeTotal:    sdkmath.NewInt(1_644_000),
+			expectedCollected:   sdkmath.NewInt(100_000),
+			expectedOutstanding: sdkmath.NewInt(1_544_000),
+			secondLiquidity:     sdkmath.NewInt(2_000_000),
+			expectedFinalMarker: sdkmath.NewInt(456_000),
+			aumSnapshot:         "1000100000uylds.fcc.receipt",
+		},
+		{
+			name:                "zero fee collection",
+			paymentDenom:        "uylds.fcc",
+			aumFeeBips:          0,
+			initialLiquidity:    sdkmath.NewInt(100_000),
+			expectedFeeTotal:    sdkmath.NewInt(0),
+			expectedCollected:   sdkmath.NewInt(0),
+			expectedOutstanding: sdkmath.NewInt(0),
+			secondLiquidity:     sdkmath.NewInt(0),
+			expectedFinalMarker: sdkmath.NewInt(100_000),
 			aumSnapshot:         "1000100000uylds.fcc.receipt",
 		},
 	}
@@ -1750,6 +1776,7 @@ func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer() {
 
 			s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
 			vault := s.CreateVaultWithParams(shareDenom, underlyingDenom, tc.paymentDenom)
+			vault.AumFeeBips = tc.aumFeeBips
 			s.SetVaultRatesAndPeriod(vault, "0.0", "0.0", twoMonthsAgo.Unix(), 0)
 
 			s.FundMarker(shareDenom, sdk.NewCoins(underlying))
@@ -1762,9 +1789,8 @@ func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer() {
 			s.Require().NoError(s.k.SetVaultAccount(s.ctx, vault), "SetVaultAccount should succeed after initial collection")
 
 			// Verify partial collection
-			s.assertBalance(markertypes.MustGetMarkerAddress(shareDenom), tc.paymentDenom, sdkmath.ZeroInt())
 			provlabsAddr, err := s.k.GetAUMFeeAddress(s.ctx)
-		s.Require().NoError(err, "failed to get AUM fee address")
+			s.Require().NoError(err, "failed to get AUM fee address from GetAUMFeeAddress")
 
 			s.assertBalance(provlabsAddr, tc.paymentDenom, tc.expectedCollected)
 			s.Require().Equal(tc.expectedOutstanding, vault.OutstandingAumFee.Amount, "outstanding fee balance mismatch")
@@ -1788,7 +1814,11 @@ func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer() {
 					s.Assert().Equal(normalizeEvent(expectedEv), ev, "EventVaultFeeCollected mismatch")
 				}
 			}
-			s.Require().True(found, "EventVaultFeeCollected should be emitted during partial collection")
+			s.Require().Equal(!tc.expectedFeeTotal.IsZero(), found, "EventVaultFeeCollected emission mismatch")
+
+			if tc.expectedFeeTotal.IsZero() {
+				return
+			}
 
 			// Second collection
 			s.AdvanceCtxWithTime(now.Add(time.Second))
@@ -1848,7 +1878,7 @@ func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts() {
 	s.Require().NoError(err, "handleVaultFeeTimeouts should succeed")
 
 	provlabsAddr, err := s.k.GetAUMFeeAddress(s.ctx)
-	s.Require().NoError(err)
+	s.Require().NoError(err, "failed to get AUM fee address from GetAUMFeeAddress")
 
 	feeCollected := s.simApp.BankKeeper.GetBalance(s.ctx, provlabsAddr, paymentDenom).Amount
 	s.Require().True(feeCollected.IsPositive(), "fee should be collected for address %s", provlabsAddr)

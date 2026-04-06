@@ -476,6 +476,7 @@ message MsgUpdateVaultAUMFeeBipsRequest {
   // vault_address is the bech32 address of the vault to update.
   string vault_address = 2;
   // aum_fee_bips is the new fee rate (in basis points) for the vault.
+  // The value must be between 0 and 10,000 (inclusive), where 10,000 represents 100%.
   uint32 aum_fee_bips = 3;
 }
 

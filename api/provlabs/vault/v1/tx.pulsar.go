@@ -23914,6 +23914,7 @@ type MsgUpdateVaultAUMFeeBipsRequest struct {
 	// vault_address is the bech32 address of the vault to update.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// aum_fee_bips is the new fee rate (in basis points) for the vault.
+	// The value must be between 0 and 10,000 (inclusive), where 10,000 represents 100%.
 	AumFeeBips uint32 `protobuf:"varint,3,opt,name=aum_fee_bips,json=aumFeeBips,proto3" json:"aum_fee_bips,omitempty"`
 }
 

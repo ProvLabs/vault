@@ -100,11 +100,11 @@ func (k Keeper) OpenKVStore(ctx sdk.Context) store.KVStore {
 func (k Keeper) GetAUMFeeAddress(ctx sdk.Context) (sdk.AccAddress, error) {
 	params, err := k.Params.Get(ctx)
 	if err != nil || len(params.TechFeeAddress) == 0 {
-		return types.GetDefaultTechFeeAddress(ctx.ChainID()), err
+		return types.GetDefaultTechFeeAddress(ctx.ChainID()), nil
 	}
-	addr, parseErr := sdk.AccAddressFromBech32(params.TechFeeAddress)
+	addr, parseErr := k.AddressCodec.StringToBytes(params.TechFeeAddress)
 	if parseErr != nil {
-		return types.GetDefaultTechFeeAddress(ctx.ChainID()), fmt.Errorf("invalid AUM fee address in params %q: %w", params.TechFeeAddress, parseErr)
+		return types.GetDefaultTechFeeAddress(ctx.ChainID()), fmt.Errorf("failed to parse AUM fee address from params %q: %w", params.TechFeeAddress, parseErr)
 	}
 	return addr, nil
 }

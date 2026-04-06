@@ -44,7 +44,9 @@ func (s *VaultSimTestSuite) SetupTest() {
 
 	s.setupAccounts()
 
-	s.provlabsAddr = s.app.VaultKeeper.GetAUMFeeAddress(s.ctx)
+	provlabsAddr, err := s.app.VaultKeeper.GetAUMFeeAddress(s.ctx)
+	s.Require().NoError(err, "failed to get AUM fee address")
+	s.provlabsAddr = provlabsAddr
 	if !s.app.AccountKeeper.HasAccount(s.ctx, s.provlabsAddr) {
 		s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.provlabsAddr))
 	}

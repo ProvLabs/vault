@@ -320,3 +320,21 @@ func (k queryServer) VaultPendingSwapOuts(goCtx context.Context, req *types.Quer
 		Pagination:      pageRes,
 	}, nil
 }
+
+// Params returns the current module parameters.
+func (k queryServer) Params(goCtx context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	params, err := k.Keeper.Params.Get(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get params: %v", err)
+	}
+
+	return &types.QueryParamsResponse{
+		Params: params,
+	}, nil
+}

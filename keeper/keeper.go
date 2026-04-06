@@ -19,6 +19,8 @@ import (
 )
 
 type Keeper struct {
+	cdc          codec.Codec
+	storeService store.KVStoreService
 	schema       collections.Schema
 	eventService event.Service
 	AddressCodec address.Codec
@@ -30,7 +32,7 @@ type Keeper struct {
 	NameKeeper   types.NameKeeper
 	AttrKeeper   types.AttributeKeeper
 
-	AUMFeeAddress         collections.Item[sdk.AccAddress]
+	Params                collections.Item[types.Params]
 	Vaults                collections.Map[sdk.AccAddress, []byte]
 	PayoutVerificationSet collections.KeySet[sdk.AccAddress]
 	PayoutTimeoutQueue    *queue.PayoutTimeoutQueue
@@ -58,10 +60,12 @@ func NewKeeper(
 	builder := collections.NewSchemaBuilder(storeService)
 
 	keeper := &Keeper{
+		cdc:                   cdc,
+		storeService:          storeService,
 		eventService:          eventService,
 		AddressCodec:          addressCodec,
 		authority:             authority,
-		AUMFeeAddress:         collections.NewItem(builder, types.AUMFeeAddressKeyPrefix, types.AUMFeeAddressKeyName, collcodec.KeyToValueCodec(sdk.AccAddressKey)),
+		Params:                collections.NewItem(builder, types.ParamsKeyPrefix, types.ParamsKeyName, codec.CollValue[types.Params](cdc)),
 		Vaults:                collections.NewMap(builder, types.VaultsKeyPrefix, types.VaultsName, sdk.AccAddressKey, collections.BytesValue),
 		PayoutVerificationSet: collections.NewKeySet(builder, types.VaultPayoutVerificationSetPrefix, types.VaultPayoutVerificationSetName, sdk.AccAddressKey),
 		PayoutTimeoutQueue:    queue.NewPayoutTimeoutQueue(builder),
@@ -88,14 +92,22 @@ func (k Keeper) GetAuthority() []byte {
 	return k.authority
 }
 
+// OpenKVStore returns a KVStore for the module.
+func (k Keeper) OpenKVStore(ctx sdk.Context) store.KVStore {
+	return k.storeService.OpenKVStore(ctx)
+}
+
 // GetAUMFeeAddress returns the address where AUM fees are collected.
-// It prioritizes the address stored in state, falling back to the hardcoded default.
-func (k Keeper) GetAUMFeeAddress(ctx sdk.Context) sdk.AccAddress {
-	addr, err := k.AUMFeeAddress.Get(ctx)
-	if err == nil && len(addr) > 0 {
-		return addr
+func (k Keeper) GetAUMFeeAddress(ctx sdk.Context) (sdk.AccAddress, error) {
+	params, err := k.Params.Get(ctx)
+	if err != nil || len(params.TechFeeAddress) == 0 {
+		return types.GetDefaultTechFeeAddress(ctx.ChainID()), err
 	}
-	return types.AUMFeeAddress
+	addr, parseErr := sdk.AccAddressFromBech32(params.TechFeeAddress)
+	if parseErr != nil {
+		return types.GetDefaultTechFeeAddress(ctx.ChainID()), fmt.Errorf("invalid AUM fee address in params %q: %w", params.TechFeeAddress, parseErr)
+	}
+	return addr, nil
 }
 
 // getLogger returns a logger with vault module context.

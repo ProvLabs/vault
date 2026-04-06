@@ -106,8 +106,15 @@ message VaultAccount {
 
   // outstanding_aum_fee is the amount of AUM fee that has been calculated but not yet collected
   // due to insufficient liquidity in the principal marker. This amount is always denominated
-  // in the VaultAccount.payment_denom, must be preserved, and is carried into valuation computations.
+  // in the vault's payment_denom, must be preserved, and is carried into valuation computations.
   cosmos.base.v1beta1.Coin outstanding_aum_fee = 23 [(gogoproto.nullable) = false];
+
+  // aum_fee_bips is the AUM fee rate (in basis points) for this specific vault.
+  // Units: Basis Points (1 bps = 0.01%).
+  // Valid Range: 0 to 10000 (0% to 100%).
+  // A value of 0 disables AUM fee collection for this vault.
+  // Negative values are not supported (uint32).
+  uint32 aum_fee_bips = 24;
 }
 
 // AccountBalance represents the coin balance of a single account.

@@ -106,7 +106,7 @@ message VaultAccount {
 
   // outstanding_aum_fee is the amount of AUM fee that has been calculated but not yet collected
   // due to insufficient liquidity in the principal marker. This amount is always denominated
-  // in the vault's payment_denom, must be preserved, and is carried into valuation computations.
+  // in the VaultAccount.payment_denom, must be preserved, and is carried into valuation computations.
   cosmos.base.v1beta1.Coin outstanding_aum_fee = 23 [(gogoproto.nullable) = false];
 }
 

@@ -394,7 +394,7 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPendingSwapOutHasUnknownVault
 			},
 		},
 	}
-	expectedPanic := fmt.Sprintf("pending queue entry for unknown vault %s", badVaultAddr.String())
+	expectedPanic := fmt.Sprintf("invalid vault genesis state: pending swap out queue vault address at index 0 is not an imported vault: %s", badVaultAddr.String())
 	s.Require().PanicsWithError(expectedPanic, func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on unknown vault")
 }
 
@@ -432,6 +432,30 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPendingSwapOutHasBadVaultAddr
 			},
 		},
 	}
-	expectedPanic := "invalid vault address in pending swap out queue: decoding bech32 failed: invalid separator index -1"
+	expectedPanic := "invalid vault genesis state: invalid vault address in pending swap out queue at index 0: decoding bech32 failed: invalid separator index -1"
 	s.Require().PanicsWithError(expectedPanic, func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on bad vault address")
+}
+
+func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPayoutTimeoutHasUnknownVault() {
+	badVaultAddr := types.GetVaultAddress("baddenom")
+
+	genesis := &types.GenesisState{
+		PayoutTimeoutQueue: []types.QueueEntry{
+			{Time: 1000, Addr: badVaultAddr.String()},
+		},
+	}
+	expectedPanic := fmt.Sprintf("invalid vault genesis state: payout timeout queue address at index 0 is not an imported vault: %s", badVaultAddr.String())
+	s.Require().PanicsWithError(expectedPanic, func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on unknown vault in payout timeout queue")
+}
+
+func (s *TestSuite) TestVaultGenesis_InitPanicsWhenFeeTimeoutHasUnknownVault() {
+	badVaultAddr := types.GetVaultAddress("baddenom")
+
+	genesis := &types.GenesisState{
+		FeeTimeoutQueue: []types.QueueEntry{
+			{Time: 1000, Addr: badVaultAddr.String()},
+		},
+	}
+	expectedPanic := fmt.Sprintf("invalid vault genesis state: fee timeout queue address at index 0 is not an imported vault: %s", badVaultAddr.String())
+	s.Require().PanicsWithError(expectedPanic, func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on unknown vault in fee timeout queue")
 }

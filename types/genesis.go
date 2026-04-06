@@ -16,8 +16,8 @@ func DefaultGenesisState() *GenesisState {
 // failure.
 func (gs GenesisState) Validate() error {
 	if len(gs.AumFeeAddress) > 0 {
-		if len(gs.AumFeeAddress) != 20 { // Standard address length check, or use sdk.VerifyAddressFormat
-			return fmt.Errorf("invalid aum fee address length: expected 20 bytes, got %d", len(gs.AumFeeAddress))
+		if err := sdk.VerifyAddressFormat(gs.AumFeeAddress); err != nil {
+			return fmt.Errorf("invalid aum fee address: %w", err)
 		}
 	}
 
@@ -75,6 +75,15 @@ func (gs GenesisState) Validate() error {
 
 		if entry.Time > math.MaxInt64 {
 			return fmt.Errorf("fee timeout queue entry at index %d has time %d which exceeds max int64", i, entry.Time)
+		}
+	}
+
+	for i, entry := range gs.PendingSwapOutQueue.Entries {
+		if _, err := sdk.AccAddressFromBech32(entry.SwapOut.VaultAddress); err != nil {
+			return fmt.Errorf("invalid vault address in pending swap out queue at index %d: %w", i, err)
+		}
+		if _, exists := vaults[entry.SwapOut.VaultAddress]; !exists {
+			return fmt.Errorf("pending swap out queue vault address at index %d is not an imported vault: %s", i, entry.SwapOut.VaultAddress)
 		}
 	}
 

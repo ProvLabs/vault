@@ -114,6 +114,49 @@ func TestGenesisState_Validate(t *testing.T) {
 			},
 			expectedErr: "fee timeout queue entry at index 0 has time 9223372036854775808 which exceeds max int64",
 		},
+		{
+			name: "invalid vault address in pending swap out queue",
+			genState: types.GenesisState{
+				PendingSwapOutQueue: types.PendingSwapOutQueue{
+					Entries: []types.PendingSwapOutQueueEntry{
+						{
+							SwapOut: types.PendingSwapOut{
+								VaultAddress: "invalid-address",
+							},
+						},
+					},
+				},
+			},
+			expectedErr: "invalid vault address in pending swap out queue at index 0",
+		},
+		{
+			name: "vault address not an imported vault in pending swap out queue",
+			genState: types.GenesisState{
+				PendingSwapOutQueue: types.PendingSwapOutQueue{
+					Entries: []types.PendingSwapOutQueueEntry{
+						{
+							SwapOut: types.PendingSwapOut{
+								VaultAddress: validAddr,
+							},
+						},
+					},
+				},
+			},
+			expectedErr: "pending swap out queue vault address at index 0 is not an imported vault",
+		},
+		{
+			name: "valid aum fee address",
+			genState: types.GenesisState{
+				AumFeeAddress: sdk.AccAddress{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}.Bytes(),
+			},
+		},
+		{
+			name: "invalid aum fee address (too long)",
+			genState: types.GenesisState{
+				AumFeeAddress: make([]byte, 256),
+			},
+			expectedErr: "invalid aum fee address",
+		},
 	}
 
 	for _, tt := range tests {

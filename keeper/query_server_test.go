@@ -27,6 +27,7 @@ func (s *TestSuite) TestQueryServer_Vault() {
 			s.Assert().Equal(expected.Vault.Admin, actual.Vault.Admin, "vault admin")
 			s.Assert().Equal(expected.Vault.TotalShares, actual.Vault.TotalShares, "vault total shares")
 			s.Assert().Equal(expected.Vault.UnderlyingAsset, actual.Vault.UnderlyingAsset, "vault underlying asset")
+			s.Assert().Equal(expected.Vault.AumFeeBips, actual.Vault.AumFeeBips, "vault AUM fee bips")
 			s.Assert().Equal(expected.Principal.Address, actual.Principal.Address, "principal address")
 			s.Assert().Equal(expected.Principal.Coins, actual.Principal.Coins, "principal coins")
 			s.Assert().Equal(expected.Reserves.Address, actual.Reserves.Address, "reserves address")

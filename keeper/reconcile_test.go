@@ -1755,6 +1755,7 @@ func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer() {
 
 			err := s.k.PerformVaultFeeTransfer(s.ctx, vault)
 			s.Require().NoError(err, "PerformVaultFeeTransfer should not error during initial collection")
+			s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 			// Verify partial collection
 			s.assertBalance(markertypes.MustGetMarkerAddress(shareDenom), tc.paymentDenom, sdkmath.ZeroInt())
@@ -1790,6 +1791,7 @@ func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer() {
 
 			err = s.k.PerformVaultFeeTransfer(s.ctx, vault)
 			s.Require().NoError(err, "PerformVaultFeeTransfer should not error during second collection")
+			s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 			vault, err = s.k.GetVault(s.ctx, types.GetVaultAddress(shareDenom))
 			s.Require().NoError(err, "failed to get vault for share denom %s", shareDenom)

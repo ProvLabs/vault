@@ -32,12 +32,12 @@ type VaultAttributer interface {
 // CreateVault creates a new vault and its corresponding share marker atomically.
 //
 // The process involves:
-// 1. Creating and persisting a new VaultAccount and its lookup entries.
-// 2. Initializing the fee timeout queue for the new vault.
-// 3. Creating, finalizing, and activating a restricted marker for the vault's shares.
-// 4. Performing a pre-flight check against the principal/payment path by calling
-//    SendRestrictionFn with vault.PrincipalMarkerAddress() to ensure the fee
-//    collection address is permissioned to receive the payment denomination.
+//  1. Creating and persisting a new VaultAccount and its lookup entries.
+//  2. Initializing the fee timeout queue for the new vault.
+//  3. Creating, finalizing, and activating a restricted marker for the vault's shares.
+//  4. Performing a pre-flight check against the principal/payment path by calling
+//     SendRestrictionFn with vault.PrincipalMarkerAddress() to ensure the fee
+//     collection address is permissioned to receive the payment denomination.
 //
 // All steps are performed within a cache context. If any step fails, including the
 // pre-flight permission check, all state changes are discarded to prevent the creation

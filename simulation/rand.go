@@ -185,16 +185,16 @@ func getRandomInterestRate(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, vault
 	if minStr == "" {
 		minStr = "-1.0"
 	}
-	min := math.LegacyMustNewDecFromStr(minStr)
+	minRate := math.LegacyMustNewDecFromStr(minStr)
 
 	maxStr := vault.GetMaxInterestRate()
 	if maxStr == "" {
 		maxStr = "2.0"
 	}
-	max := math.LegacyMustNewDecFromStr(maxStr)
+	maxRate := math.LegacyMustNewDecFromStr(maxStr)
 
-	randomDec := simtypes.RandomDecAmount(r, max.Sub(min))
-	resultDec := min.Add(randomDec)
+	randomDec := simtypes.RandomDecAmount(r, maxRate.Sub(minRate))
+	resultDec := minRate.Add(randomDec)
 
 	return resultDec.String(), nil
 }

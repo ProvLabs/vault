@@ -51,7 +51,7 @@ func (s *VaultSimTestSuite) SetupTest() {
 		s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.provlabsAddr))
 	}
 
-	err := simulation.BindName(s.ctx, s.provlabsAddr, simulation.RequiredMarkerAttribute, s.app.NameKeeper)
+	err = simulation.BindName(s.ctx, s.provlabsAddr, simulation.RequiredMarkerAttribute, s.app.NameKeeper)
 	s.Require().NoError(err, "BindName")
 
 	err = simulation.AddAttribute(s.ctx, s.provlabsAddr, s.provlabsAddr, simulation.RequiredMarkerAttribute, s.app.NameKeeper, s.app.AttributeKeeper)

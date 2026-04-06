@@ -740,4 +740,3 @@ func (k Keeper) rescheduleFeeTimeout(ctx sdk.Context, vault *types.VaultAccount,
 	write()
 	*vault = *v
 }
-

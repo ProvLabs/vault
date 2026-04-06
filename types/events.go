@@ -296,3 +296,19 @@ func NewEventVaultFeeCollected(vaultAddress string, collected, requested, aumSna
 		OutstandingAmount: outstanding.String(),
 	}
 }
+
+// NewEventParamsUpdated creates a new EventParamsUpdated event.
+func NewEventParamsUpdated(params Params) *EventParamsUpdated {
+	return &EventParamsUpdated{
+		Params: &params,
+	}
+}
+
+// NewEventVaultAUMFeeBipsUpdated creates a new EventVaultAUMFeeBipsUpdated event.
+func NewEventVaultAUMFeeBipsUpdated(vaultAddress, authority string, aumFeeBips uint32) *EventVaultAUMFeeBipsUpdated {
+	return &EventVaultAUMFeeBipsUpdated{
+		VaultAddress: vaultAddress,
+		Authority:    authority,
+		AumFeeBips:   aumFeeBips,
+	}
+}

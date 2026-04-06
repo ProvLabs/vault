@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/provlabs/vault/types"
 	"github.com/provlabs/vault/utils"
 
 	sdkmath "cosmossdk.io/math"
@@ -70,7 +69,7 @@ func CalculateInterestEarned(principal sdk.Coin, rate string, periodSeconds int6
 //
 // Formula:
 //
-//     Fee = (AUM * (bips / 10000) * duration) / 31536000 (SecondsPerYear)
+//	Fee = (AUM * (bips / 10000) * duration) / 31536000 (SecondsPerYear)
 //
 // Returns the fee as a truncated sdkmath.Int.
 func CalculateAUMFee(aum sdkmath.Int, bips uint32, duration int64) (sdkmath.Int, error) {

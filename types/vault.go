@@ -4,10 +4,10 @@ import (
 	fmt "fmt"
 	"math"
 
-	sdkmath "cosmossdk.io/math"
-
 	gproto "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/protoadapt"
+
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -150,31 +150,31 @@ func (v VaultAccount) Validate() error {
 		return fmt.Errorf("invalid desired interest rate: %s", v.DesiredInterestRate)
 	}
 
-	var min, max sdkmath.LegacyDec
+	var minRate, maxRate sdkmath.LegacyDec
 	hasMin := v.MinInterestRate != ""
 	hasMax := v.MaxInterestRate != ""
 
 	if hasMin {
-		min, err = sdkmath.LegacyNewDecFromStr(v.MinInterestRate)
+		minRate, err = sdkmath.LegacyNewDecFromStr(v.MinInterestRate)
 		if err != nil {
 			return fmt.Errorf("invalid min interest rate: %s", v.MinInterestRate)
 		}
 	}
 	if hasMax {
-		max, err = sdkmath.LegacyNewDecFromStr(v.MaxInterestRate)
+		maxRate, err = sdkmath.LegacyNewDecFromStr(v.MaxInterestRate)
 		if err != nil {
 			return fmt.Errorf("invalid max interest rate: %s", v.MaxInterestRate)
 		}
 	}
 
-	if hasMin && hasMax && min.GT(max) {
-		return fmt.Errorf("minimum interest rate %s cannot be greater than maximum interest rate %s", min, max)
+	if hasMin && hasMax && minRate.GT(maxRate) {
+		return fmt.Errorf("minimum interest rate %s cannot be greater than maximum interest rate %s", minRate, maxRate)
 	}
-	if hasMin && des.LT(min) {
-		return fmt.Errorf("desired interest rate %s is less than minimum interest rate %s", des, min)
+	if hasMin && des.LT(minRate) {
+		return fmt.Errorf("desired interest rate %s is less than minimum interest rate %s", des, minRate)
 	}
-	if hasMax && des.GT(max) {
-		return fmt.Errorf("desired interest rate %s is greater than maximum interest rate %s", des, max)
+	if hasMax && des.GT(maxRate) {
+		return fmt.Errorf("desired interest rate %s is greater than maximum interest rate %s", des, maxRate)
 	}
 	if !cur.IsZero() && !cur.Equal(des) {
 		return fmt.Errorf("current interest rate must be zero or equal to desired (current=%s desired=%s)", cur, des)

@@ -3,6 +3,7 @@ package provlabs.vault.v1;
 
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
+import "provlabs/vault/v1/params.proto";
 import "provlabs/vault/v1/vault.proto";
 
 option go_package = "github.com/provlabs/vault/types";
@@ -53,7 +54,6 @@ message GenesisState {
   // given UNIX timestamp (seconds). These entries are re-enqueued on InitGenesis.
   repeated QueueEntry fee_timeout_queue = 4 [(gogoproto.nullable) = false];
 
-  // aum_fee_address is the address where AUM fees are collected.
-  // If empty, the hardcoded default is used.
-  bytes aum_fee_address = 5 [(cosmos_proto.scalar) = "cosmos.AddressBytes"];
+  // params defines the module parameters.
+  Params params = 5 [(gogoproto.nullable) = false];
 }

@@ -3140,9 +3140,10 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds_Failures() {
 	shareMarkerAddr := markertypes.MustGetMarkerAddress(share)
 	amountRegular := sdk.NewInt64Coin(underlying, 500)
 	amountReceipt := sdk.NewInt64Coin(receiptUnderlying, 500)
+	requireAttrs := "thisisattri.restricted"
 
 	setupRegular := func() {
-		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin)
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin, requireAttrs)
 		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 			Admin:           admin.String(),
 			ShareDenom:      share,
@@ -3166,12 +3167,12 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds_Failures() {
 
 	setupRegularWithShareFunds := func() {
 		setupRegular()
-		err := FundAccount(s.ctx, s.simApp.BankKeeper, shareMarkerAddr, sdk.NewCoins(amountRegular))
+		err := FundAccount(markertypes.WithBypass(s.ctx), s.simApp.BankKeeper, shareMarkerAddr, sdk.NewCoins(amountRegular))
 		s.Require().NoError(err, "failed to fund share marker account")
 	}
 
 	setupReceipt := func() {
-		s.requireAddFinalizeAndActivateReceiptMarker(sdk.NewCoin(receiptUnderlying, math.NewInt(1000)), admin, types.GetVaultAddress(share))
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(receiptUnderlying, math.NewInt(1000)), admin, requireAttrs)
 		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 			Admin:           admin.String(),
 			ShareDenom:      share,
@@ -3189,6 +3190,38 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds_Failures() {
 		setupReceipt()
 		err := FundAccount(markertypes.WithBypass(s.ctx), s.simApp.BankKeeper, shareMarkerAddr, sdk.NewCoins(amountReceipt))
 		s.Require().NoError(err, "failed to fund share marker account with receipt token")
+	}
+
+	setupSendFailsNoTransferPerm := func() {
+		thirdParty := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+		// The receipt token is created and managed by thirdParty. admin has NO permissions on it.
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(receiptUnderlying, math.NewInt(2000)), thirdParty, requireAttrs)
+
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      share,
+			UnderlyingAsset: receiptUnderlying,
+		})
+		s.Require().NoError(err, "failed to create vault for send-fails case")
+
+		m, err := s.simApp.MarkerKeeper.GetMarkerByDenom(s.ctx, share)
+		s.Require().NoError(err, "failed to get share marker to grant withdraw")
+		mk := m.(*markertypes.MarkerAccount)
+		// admin is granted Withdraw on the VAULT'S share marker, but still lacks permission on the receipt underlying marker.
+		mk.AccessControl = append(mk.AccessControl, markertypes.AccessGrant{
+			Address:     admin.String(),
+			Permissions: []markertypes.Access{markertypes.Access_Withdraw},
+		})
+		s.simApp.MarkerKeeper.SetMarker(s.ctx, mk)
+
+		err = FundAccount(markertypes.WithBypass(s.ctx), s.simApp.BankKeeper, shareMarkerAddr, sdk.NewCoins(amountReceipt))
+		s.Require().NoError(err, "failed to fund share marker account with receipt token for send-fails case")
+
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+		vault, err := s.k.GetVault(s.ctx, vaultAddr)
+		s.Require().NoError(err, "failed to get vault")
+		vault.Paused = true
+		s.k.AuthKeeper.SetAccount(s.ctx, vault)
 	}
 
 	tests := []msgServerTestCase[types.MsgWithdrawPrincipalFundsRequest, any]{
@@ -3272,14 +3305,18 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds_Failures() {
 			expectedErrSubstrs: []string{"failed to withdraw principal funds", "insufficient funds"},
 		},
 		{
-			name:  "receipt underlying: invalid asset for vault",
-			setup: setupReceipt,
+			name:  "receipt underlying: send fails without transfer permission on receipt token",
+			setup: setupSendFailsNoTransferPerm,
 			msg: types.MsgWithdrawPrincipalFundsRequest{
 				Authority:    admin.String(),
 				VaultAddress: vaultAddr.String(),
-				Amount:       sdk.NewInt64Coin("wrongdenom", 500),
+				Amount:       amountReceipt,
 			},
-			expectedErrSubstrs: []string{"denom not supported for vault", receiptUnderlying, "wrongdenom"},
+			expectedErrSubstrs: []string{
+				"failed to withdraw principal funds",
+				"does not contain the \"receiptunder\" required attribute",
+				requireAttrs,
+			},
 		},
 	}
 

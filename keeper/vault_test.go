@@ -285,9 +285,21 @@ func (s *TestSuite) TestSwapOut_FailsWithRestrictedUnderlyingAssetNoAttributes()
 		underlying: restrictedUnderlyingDenom,
 	}
 	vault, err := s.k.CreateVault(s.ctx, vaultCfg)
-	s.Require().NoError(err, "vault creation with restricted underlying should succeed")
+	s.Require().NoError(err, "vault creation with restricted underlying should succeed when vault has transfer permission")
 	vault.SwapOutEnabled = true
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	marker, err := s.simApp.MarkerKeeper.GetMarker(s.ctx, restrictedMarkerAddr)
+	s.Require().NoError(err, "should fetch active marker")
+	activeMarker := marker.(*markertypes.MarkerAccount)
+
+	// Now REMOVE the transfer permission from the vault to test the "fail-on-no-attributes" path
+	activeMarker.AccessControl = []markertypes.AccessGrant{
+		{Address: s.adminAddr.String(), Permissions: markertypes.AccessList{markertypes.Access_Mint, markertypes.Access_Admin, markertypes.Access_Withdraw, markertypes.Access_Burn, markertypes.Access_Transfer}},
+		{Address: s.k.GetAUMFeeAddress(s.ctx).String(), Permissions: markertypes.AccessList{markertypes.Access_Transfer, markertypes.Access_Deposit}},
+		{Address: types.GetVaultAddress(shareDenom).String(), Permissions: markertypes.AccessList{markertypes.Access_Withdraw}},
+	}
+	s.simApp.MarkerKeeper.SetMarker(s.ctx, activeMarker)
 
 	initialTVV := int64(500)
 	s.Require().NoError(s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), restrictedUnderlyingDenom, sdk.NewCoins(sdk.NewInt64Coin(restrictedUnderlyingDenom, initialTVV))))
@@ -301,7 +313,8 @@ func (s *TestSuite) TestSwapOut_FailsWithRestrictedUnderlyingAssetNoAttributes()
 	sharesToRedeem := sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(50))
 	_, err = s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sharesToRedeem, "")
 
-	s.Require().NoError(err, "swap-out should succeed because the vault has withdraw permission")
+	s.Require().Error(err, "swap-out should fail because the vault lacks transfer permission and the asset is restricted (even with no attributes)")
+	s.Require().ErrorContains(err, "does not have transfer permissions", "error should indicate missing transfer permissions")
 }
 
 func (s *TestSuite) TestSwapOut_FailsWithRestrictedUnderlyingAssetRequiredAttributes() {

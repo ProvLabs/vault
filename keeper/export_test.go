@@ -89,3 +89,9 @@ func (k Keeper) TestAccessor_setShareDenomNAV(t *testing.T, ctx context.Context,
 	t.Helper()
 	return k.setShareDenomNAV(sdk.UnwrapSDKContext(ctx), vault, vaultMarker, tvv)
 }
+
+// TestAccessor_checkPayoutRestrictions exposes this keeper's checkPayoutRestrictions function for unit tests.
+func (k Keeper) TestAccessor_checkPayoutRestrictions(t *testing.T, ctx context.Context, vault *types.VaultAccount, owner sdk.AccAddress, assets sdk.Coin) error {
+	t.Helper()
+	return k.checkPayoutRestrictions(sdk.UnwrapSDKContext(ctx), vault, owner, assets)
+}

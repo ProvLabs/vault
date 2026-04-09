@@ -2550,6 +2550,20 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds_Failures() {
 		s.Require().NoError(err, "failed to fund receipt-underlying vault account")
 	}
 
+	setupSendFailsNoTransferPerm := func() {
+		thirdParty := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+		s.requireAddFinalizeAndActivateReceiptMarker(sdk.NewCoin(receiptUnderlying, math.NewInt(2000)), thirdParty, admin, markertypes.MustGetMarkerAddress(shares))
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      shares,
+			UnderlyingAsset: receiptUnderlying,
+		})
+		s.Require().NoError(err, "failed to create vault for send-fails case")
+		err = FundAccount(markertypes.WithBypass(s.ctx), s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(amountReceipt))
+		s.Require().NoError(err, "failed to fund receipt-underlying vault account for send-fails case")
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	}
+
 	tests := []msgServerTestCase[types.MsgWithdrawInterestFundsRequest, any]{
 		{
 			name: "vault does not exist",
@@ -2647,6 +2661,16 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds_Failures() {
 				Amount:       sdk.NewInt64Coin(unsupportedDenom, 9_999_999),
 			},
 			expectedErrSubstrs: []string{"denom not supported for vault", receiptUnderlying, unsupportedDenom},
+		},
+		{
+			name:  "receipt underlying: send fails without transfer permission on receipt token",
+			setup: setupSendFailsNoTransferPerm,
+			msg: types.MsgWithdrawInterestFundsRequest{
+				Authority:    admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Amount:       amountReceipt,
+			},
+			expectedErrSubstrs: []string{"failed to withdraw interest funds", "does not have transfer permissions for", receiptUnderlying},
 		},
 	}
 

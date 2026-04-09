@@ -158,6 +158,9 @@ func (s *TestSuite) SetupTechFeeAccount(restrictedUnderlyingDenom string) sdk.Ac
 // provided denom and supply, then finalizes and activates it. It fails the
 // test immediately on any error.
 func (s *TestSuite) requireAddFinalizeAndActivateMarker(coin sdk.Coin, manager sdk.AccAddress, reqAttrs ...string) {
+	if m, _ := s.simApp.MarkerKeeper.GetMarkerByDenom(s.ctx, coin.Denom); m != nil {
+		return
+	}
 	markerAddr, err := markertypes.MarkerAddress(coin.Denom)
 	markerType := markertypes.MarkerType_Coin
 	if len(reqAttrs) > 0 {

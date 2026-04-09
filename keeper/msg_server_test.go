@@ -2552,7 +2552,7 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds_Failures() {
 
 	setupSendFailsNoTransferPerm := func() {
 		thirdParty := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
-		s.requireAddFinalizeAndActivateReceiptMarker(sdk.NewCoin(receiptUnderlying, math.NewInt(2000)), thirdParty, admin, markertypes.MustGetMarkerAddress(shares))
+		s.requireAddFinalizeAndActivateReceiptMarker(sdk.NewCoin(receiptUnderlying, math.NewInt(2000)), thirdParty, markertypes.MustGetMarkerAddress(shares))
 		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 			Admin:           admin.String(),
 			ShareDenom:      shares,
@@ -4670,7 +4670,7 @@ func runMsgServerTestCase[Req any, Resp any, CheckArgs any](
 		s.Assert().NoErrorf(err, "%s error", td.endpointName)
 		s.Assert().Equalf(td.expectedResponse, resp, "%s response", td.endpointName)
 	} else {
-		s.Assert().Errorf(err, "%s error", td.endpointName)
+		s.Require().Errorf(err, "%s error", td.endpointName)
 		for _, substr := range tc.expectedErrSubstrs {
 			s.Assert().Containsf(err.Error(), substr, "%s error missing expected substring", td.endpointName)
 		}

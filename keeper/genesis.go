@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/provlabs/vault/types"
 
@@ -78,6 +79,19 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	if err := k.PendingSwapOutQueue.Import(ctx, &genState.PendingSwapOutQueue); err != nil {
 		panic(fmt.Errorf("failed to import pending swap out queue: %w", err))
 	}
+
+	for _, addrStr := range genState.PayoutVerificationSet {
+		addr, err := sdk.AccAddressFromBech32(addrStr)
+		if err != nil {
+			panic(fmt.Errorf("invalid address in payout verification set: %w", err))
+		}
+		if _, ok := k.tryGetVault(ctx, addr); !ok {
+			panic(fmt.Errorf("payout verification set entry for unknown vault %s", addrStr))
+		}
+		if err := k.PayoutVerificationSet.Set(ctx, addr); err != nil {
+			panic(fmt.Errorf("failed to restore payout verification entry for %s: %w", addrStr, err))
+		}
+	}
 }
 
 // ExportGenesis exports the current state of the vault module.
@@ -109,10 +123,21 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		panic(fmt.Errorf("failed to export pending swap out queue: %w", err))
 	}
 
+	var payoutVerificationAddrs []string
+	err = k.PayoutVerificationSet.Walk(ctx, nil, func(addr sdk.AccAddress) (bool, error) {
+		payoutVerificationAddrs = append(payoutVerificationAddrs, addr.String())
+		return false, nil
+	})
+	if err != nil {
+		panic(fmt.Errorf("failed to walk payout verification set: %w", err))
+	}
+	sort.Strings(payoutVerificationAddrs)
+
 	return &types.GenesisState{
-		Vaults:              vaults,
-		PayoutTimeoutQueue:  paymentTimeoutQueue,
-		PendingSwapOutQueue: *pendingSwapOutQueue,
+		Vaults:                  vaults,
+		PayoutTimeoutQueue:      paymentTimeoutQueue,
+		PendingSwapOutQueue:     *pendingSwapOutQueue,
+		PayoutVerificationSet:   payoutVerificationAddrs,
 	}
 }
 

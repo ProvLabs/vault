@@ -268,6 +268,126 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPendingSwapOutHasUnknownVault
 	s.Require().Panics(func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on invalid genesis state")
 }
 
+func (s *TestSuite) TestVaultGenesis_PayoutVerificationSetRestoredFromGenesis() {
+	shareDenom := "pvverify"
+	underlying := "underpv"
+	admin := s.adminAddr.String()
+	vaultAddr := types.GetVaultAddress(shareDenom)
+
+	vault := types.VaultAccount{
+		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
+		Admin:               admin,
+		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
+		UnderlyingAsset:     underlying,
+		PaymentDenom:        underlying,
+		CurrentInterestRate: types.ZeroInterestRate,
+		DesiredInterestRate: types.ZeroInterestRate,
+	}
+
+	genesis := &types.GenesisState{
+		Vaults:                []types.VaultAccount{vault},
+		PayoutTimeoutQueue:    []types.QueueEntry{},
+		PendingSwapOutQueue:   types.PendingSwapOutQueue{},
+		PayoutVerificationSet: []string{vaultAddr.String()},
+	}
+
+	s.k.InitGenesis(s.ctx, genesis)
+	s.assertInPayoutVerificationQueue(vaultAddr, true)
+}
+
+func (s *TestSuite) TestVaultGenesis_PayoutVerificationSetExportSortedAndRoundTrip() {
+	shareDenom := "pvverify2"
+	underlying := "underpv2"
+	admin := s.adminAddr.String()
+	vaultAddrA := types.GetVaultAddress(shareDenom)
+	vaultAddrB := types.GetVaultAddress("otherdenom")
+
+	vA := types.VaultAccount{
+		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddrA),
+		Admin:               admin,
+		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
+		UnderlyingAsset:     underlying,
+		PaymentDenom:        underlying,
+		CurrentInterestRate: types.ZeroInterestRate,
+		DesiredInterestRate: types.ZeroInterestRate,
+	}
+	vB := types.VaultAccount{
+		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddrB),
+		Admin:               admin,
+		TotalShares:         sdk.NewInt64Coin("otherdenom", 0),
+		UnderlyingAsset:     underlying,
+		PaymentDenom:        underlying,
+		CurrentInterestRate: types.ZeroInterestRate,
+		DesiredInterestRate: types.ZeroInterestRate,
+	}
+
+	genesis := &types.GenesisState{
+		Vaults:              []types.VaultAccount{vA, vB},
+		PayoutTimeoutQueue:  []types.QueueEntry{},
+		PendingSwapOutQueue: types.PendingSwapOutQueue{},
+	}
+
+	s.k.InitGenesis(s.ctx, genesis)
+	s.Require().NoError(s.k.PayoutVerificationSet.Set(s.ctx, vaultAddrB))
+	s.Require().NoError(s.k.PayoutVerificationSet.Set(s.ctx, vaultAddrA))
+
+	exported := s.k.ExportGenesis(s.ctx)
+	s.Require().Len(exported.PayoutVerificationSet, 2, "export should list both vaults")
+	s.Require().Equal(vaultAddrA.String(), exported.PayoutVerificationSet[0], "exported set should be sorted")
+	s.Require().Equal(vaultAddrB.String(), exported.PayoutVerificationSet[1], "exported set should be sorted")
+}
+
+func (s *TestSuite) TestVaultGenesis_PayoutVerificationSetDuplicatePanics() {
+	shareDenom := "pvverify4"
+	underlying := "underpv4"
+	admin := s.adminAddr.String()
+	vaultAddr := types.GetVaultAddress(shareDenom)
+
+	vault := types.VaultAccount{
+		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
+		Admin:               admin,
+		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
+		UnderlyingAsset:     underlying,
+		CurrentInterestRate: types.ZeroInterestRate,
+		DesiredInterestRate: types.ZeroInterestRate,
+	}
+
+	genesis := &types.GenesisState{
+		Vaults:                []types.VaultAccount{vault},
+		PayoutTimeoutQueue:    []types.QueueEntry{},
+		PendingSwapOutQueue:   types.PendingSwapOutQueue{},
+		PayoutVerificationSet: []string{vaultAddr.String(), vaultAddr.String()},
+	}
+
+	s.Require().Panics(func() { s.k.InitGenesis(s.ctx, genesis) }, "duplicate payout verification address should fail validation")
+}
+
+func (s *TestSuite) TestVaultGenesis_PayoutVerificationSetUnknownVaultPanics() {
+	shareDenom := "pvverify3"
+	underlying := "underpv3"
+	admin := s.adminAddr.String()
+	vaultAddr := types.GetVaultAddress(shareDenom)
+	other := types.GetVaultAddress("nope")
+
+	vault := types.VaultAccount{
+		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
+		Admin:               admin,
+		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
+		UnderlyingAsset:     underlying,
+		CurrentInterestRate: types.ZeroInterestRate,
+		DesiredInterestRate: types.ZeroInterestRate,
+	}
+
+	genesis := &types.GenesisState{
+		Vaults:                []types.VaultAccount{vault},
+		PayoutTimeoutQueue:    []types.QueueEntry{},
+		PendingSwapOutQueue:   types.PendingSwapOutQueue{},
+		PayoutVerificationSet: []string{other.String()},
+	}
+
+	s.Require().Panics(func() { s.k.InitGenesis(s.ctx, genesis) }, "unknown vault in payout verification set should panic")
+}
+
 func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPendingSwapOutHasBadVaultAddress() {
 	shareDenom := "vaultshare"
 	underlying := "undercoin"

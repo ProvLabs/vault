@@ -198,7 +198,6 @@ func (m *PendingSwapOutQueue) GetEntries() []PendingSwapOutQueueEntry {
 }
 
 // GenesisState defines the vault module's genesis state.
-// NOTE: payout verification queue is not imported or exported.  It will always be empty after endblocker processes it.
 type GenesisState struct {
 	// vaults defines the vaults that exist at genesis.
 	Vaults []VaultAccount `protobuf:"bytes,1,rep,name=vaults,proto3" json:"vaults"`
@@ -208,6 +207,8 @@ type GenesisState struct {
 	PayoutTimeoutQueue []QueueEntry `protobuf:"bytes,2,rep,name=payout_timeout_queue,json=payoutTimeoutQueue,proto3" json:"payout_timeout_queue"`
 	// pending_swap_out_queue contains entries for pending swap outs.
 	PendingSwapOutQueue PendingSwapOutQueue `protobuf:"bytes,3,opt,name=pending_swap_out_queue,json=pendingSwapOutQueue,proto3" json:"pending_swap_out_queue"`
+	// payout_verification_set lists vault addresses pending payout/reconciliation verification.
+	PayoutVerificationSet []string `protobuf:"bytes,4,rep,name=payout_verification_set,json=payoutVerificationSet,proto3" json:"payout_verification_set,omitempty"`
 }
 
 func (m *GenesisState) Reset()         { *m = GenesisState{} }
@@ -262,6 +263,13 @@ func (m *GenesisState) GetPendingSwapOutQueue() PendingSwapOutQueue {
 		return m.PendingSwapOutQueue
 	}
 	return PendingSwapOutQueue{}
+}
+
+func (m *GenesisState) GetPayoutVerificationSet() []string {
+	if m != nil {
+		return m.PayoutVerificationSet
+	}
+	return nil
 }
 
 func init() {
@@ -444,6 +452,15 @@ func (m *GenesisState) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if len(m.PayoutVerificationSet) > 0 {
+		for iNdEx := len(m.PayoutVerificationSet) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.PayoutVerificationSet[iNdEx])
+			copy(dAtA[i:], m.PayoutVerificationSet[iNdEx])
+			i = encodeVarintGenesis(dAtA, i, uint64(len(m.PayoutVerificationSet[iNdEx])))
+			i--
+			dAtA[i] = 0x22
+		}
+	}
 	{
 		size, err := m.PendingSwapOutQueue.MarshalToSizedBuffer(dAtA[:i])
 		if err != nil {
@@ -567,6 +584,12 @@ func (m *GenesisState) Size() (n int) {
 	}
 	l = m.PendingSwapOutQueue.Size()
 	n += 1 + l + sovGenesis(uint64(l))
+	if len(m.PayoutVerificationSet) > 0 {
+		for _, s := range m.PayoutVerificationSet {
+			l = len(s)
+			n += 1 + l + sovGenesis(uint64(l))
+		}
+	}
 	return n
 }
 
@@ -1030,6 +1053,38 @@ func (m *GenesisState) Unmarshal(dAtA []byte) error {
 			if err := m.PendingSwapOutQueue.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PayoutVerificationSet", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowGenesis
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthGenesis
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.PayoutVerificationSet = append(m.PayoutVerificationSet, string(dAtA[iNdEx:postIndex]))
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

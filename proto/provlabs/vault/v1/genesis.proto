@@ -33,7 +33,6 @@ message PendingSwapOutQueue {
 }
 
 // GenesisState defines the vault module's genesis state.
-// NOTE: payout verification queue is not imported or exported.  It will always be empty after endblocker processes it.
 message GenesisState {
   // vaults defines the vaults that exist at genesis.
   repeated VaultAccount vaults = 1 [(gogoproto.nullable) = false];
@@ -45,4 +44,9 @@ message GenesisState {
 
   // pending_swap_out_queue contains entries for pending swap outs.
   PendingSwapOutQueue pending_swap_out_queue = 3 [(gogoproto.nullable) = false];
+
+  // payout_verification_set lists vault addresses (bech32) that are queued for
+  // payout/reconciliation verification in EndBlocker. Export/import preserves this
+  // across chain upgrades so vaults are not dropped from the reconciliation lifecycle.
+  repeated string payout_verification_set = 4;
 }

@@ -296,7 +296,7 @@ func (s *TestSuite) TestSwapOut_FailsWithRestrictedUnderlyingAssetNoAttributes()
 	// Now REMOVE the transfer permission from the vault to test the "fail-on-no-attributes" path
 	activeMarker.AccessControl = []markertypes.AccessGrant{
 		{Address: s.adminAddr.String(), Permissions: markertypes.AccessList{markertypes.Access_Mint, markertypes.Access_Admin, markertypes.Access_Withdraw, markertypes.Access_Burn, markertypes.Access_Transfer}},
-		{Address: s.k.GetAUMFeeAddress(s.ctx).String(), Permissions: markertypes.AccessList{markertypes.Access_Transfer, markertypes.Access_Deposit}},
+		{Address: s.EnsureTechFeeAccount().String(), Permissions: markertypes.AccessList{markertypes.Access_Transfer, markertypes.Access_Deposit}},
 		{Address: types.GetVaultAddress(shareDenom).String(), Permissions: markertypes.AccessList{markertypes.Access_Withdraw}},
 	}
 	s.simApp.MarkerKeeper.SetMarker(s.ctx, activeMarker)

@@ -258,15 +258,16 @@ func (s *TestSuite) TestKeeper_PerformVaultReconcile_CompositeWithOutstandingFee
 
 		// Verify event shows Gross principal
 		events := normalizeEvents(s.ctx.EventManager().Events())
-		foundReconcile := false
-		for _, ev := range events {
-			if ev.Type == "provlabs.vault.v1.EventVaultReconcile" {
-				foundReconcile = true
-				s.Require().Equal("1001000000underlying", getAttribute(ev, "principal_before"), "principal_before mismatch in Case 1")
-				s.Require().Equal(expectedInterest.String()+"underlying", getAttribute(ev, "interest_earned"), "interest_earned mismatch in Case 1")
+		var reconcileEv *sdk.Event
+		for i := range events {
+			if events[i].Type == "provlabs.vault.v1.EventVaultReconcile" {
+				reconcileEv = &events[i]
+				break
 			}
 		}
-		s.Require().True(foundReconcile, "EventVaultReconcile should be emitted in Case 1")
+		s.Require().NotNil(reconcileEv, "EventVaultReconcile should be emitted in Case 1 (events: %v)", events)
+		s.Require().Equal("1001000000underlying", getAttribute(*reconcileEv, "principal_before"), "principal_before mismatch in Case 1")
+		s.Require().Equal(expectedInterest.String()+"underlying", getAttribute(*reconcileEv, "interest_earned"), "interest_earned mismatch in Case 1")
 
 		updatedVault, err := s.k.GetVault(s.ctx, vaultAddress)
 		s.Require().NoError(err, "failed to get updated vault")
@@ -326,12 +327,16 @@ func (s *TestSuite) TestKeeper_PerformVaultReconcile_CompositeWithOutstandingFee
 		s.Require().NoError(err, "reconcileVault should not error for case: Interest Accrual on Debted Assets")
 
 		events := normalizeEvents(s.ctx.EventManager().Events())
-		for _, ev := range events {
-			if ev.Type == "provlabs.vault.v1.EventVaultReconcile" {
-				s.Require().Equal("1500000000underlying", getAttribute(ev, "principal_before"), "principal_before mismatch in Case 3")
-				s.Require().Equal(expectedInterest.String()+"underlying", getAttribute(ev, "interest_earned"), "interest_earned mismatch in Case 3")
+		var reconcileEv *sdk.Event
+		for i := range events {
+			if events[i].Type == "provlabs.vault.v1.EventVaultReconcile" {
+				reconcileEv = &events[i]
+				break
 			}
 		}
+		s.Require().NotNil(reconcileEv, "EventVaultReconcile should be emitted in Case 3 (events: %v)", events)
+		s.Require().Equal("1500000000underlying", getAttribute(*reconcileEv, "principal_before"), "principal_before mismatch in Case 3")
+		s.Require().Equal(expectedInterest.String()+"underlying", getAttribute(*reconcileEv, "interest_earned"), "interest_earned mismatch in Case 3")
 	})
 
 	s.Run("Case 4: Net Valuation for Share Pricing", func() {
@@ -374,11 +379,16 @@ func (s *TestSuite) TestKeeper_PerformVaultReconcile_CompositeWithOutstandingFee
 		s.Require().NoError(err, "reconcileVault should not error for case: Negative Interest with Liabilities")
 
 		events := normalizeEvents(s.ctx.EventManager().Events())
-		for _, ev := range events {
-			if ev.Type == "provlabs.vault.v1.EventVaultReconcile" {
-				s.Require().Equal(expectedRefund.Neg().String()+"underlying", getAttribute(ev, "interest_earned"), "interest_earned mismatch in Case 5")
+		var reconcileEv *sdk.Event
+		for i := range events {
+			if events[i].Type == "provlabs.vault.v1.EventVaultReconcile" {
+				reconcileEv = &events[i]
+				break
 			}
 		}
+		s.Require().NotNil(reconcileEv, "EventVaultReconcile should be emitted in Case 5 (events: %v)", events)
+		s.Require().Equal(expectedRefund.Neg().String()+"underlying", getAttribute(*reconcileEv, "interest_earned"), "interest_earned mismatch in Case 5")
+
 		// Vault reserves should increase by refund
 		s.assertBalance(vaultAddress, underlyingDenom, sdkmath.NewInt(1_040_262_904))
 	})

@@ -64,19 +64,15 @@ func (k Keeper) reconcileVault(ctx sdk.Context, vault *types.VaultAccount) error
 		if err := k.SafeEnqueueFeeTimeout(cacheCtx, v); err != nil {
 			return fmt.Errorf("enqueue fee timeout after transfer: %w", err)
 		}
+	} else {
+		if err := k.SafeEnqueueFeeTimeout(cacheCtx, v); err != nil {
+			return fmt.Errorf("enqueue fee timeout: %w", err)
+		}
 	}
 
-	if v.PeriodStart != 0 {
-		if currentBlockTime > v.PeriodStart {
-			if err := k.publishShareNav(cacheCtx, v); err != nil {
-				return fmt.Errorf("publish share nav: %w", err)
-			}
-		}
-	} else {
-		if v.FeePeriodStart == 0 {
-			if err := k.SafeEnqueueFeeTimeout(cacheCtx, v); err != nil {
-				return fmt.Errorf("enqueue fee timeout: %w", err)
-			}
+	if v.PeriodStart != 0 && currentBlockTime > v.PeriodStart {
+		if err := k.publishShareNav(cacheCtx, v); err != nil {
+			return fmt.Errorf("publish share nav: %w", err)
 		}
 	}
 

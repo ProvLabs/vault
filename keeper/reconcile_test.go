@@ -2321,3 +2321,34 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts_RetryOnFailure() {
 	s.Require().NoError(err, "failed to get vault after interest timeout retry")
 	s.Require().Equal(s.ctx.BlockTime().Unix(), vault.PeriodStart, "PeriodStart should be updated to now after rescheduling")
 }
+
+func (s *TestSuite) TestReconcileVault_BootstrapFeePeriod() {
+	shareDenom := "vaultshares"
+	underlying := sdk.NewInt64Coin("underlying", 1_000_000_000)
+	totalShares := sdk.NewInt64Coin(shareDenom, 1_000_000_000_000_000)
+	testBlockTime := time.Now()
+	periodStart := testBlockTime.Add(-1 * time.Hour).Unix()
+
+	// Setup vault with PeriodStart set but FeePeriodStart = 0
+	vaultAddr, vault := s.setupReconcileVault("0.25", periodStart, false, underlying, shareDenom, totalShares, testBlockTime)
+	
+	// Manually set FeePeriodStart to 0 to simulate the bug scenario
+	vault.FeePeriodStart = 0
+	vault.FeePeriodTimeout = 0
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	// Verify initial state
+	v, err := s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err)
+	s.Require().Equal(int64(0), v.FeePeriodStart, "FeePeriodStart should be 0 initially")
+
+	// Call reconcileVault
+	err = s.k.TestAccessor_reconcileVault(s.T(), s.ctx, v)
+	s.Require().NoError(err)
+
+	// Verify FeePeriodStart is bootstrapped (should be equal to current block time)
+	v, err = s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err)
+	s.Require().NotEqual(int64(0), v.FeePeriodStart, "FeePeriodStart should have been bootstrapped")
+	s.Require().Equal(testBlockTime.Unix(), v.FeePeriodStart, "FeePeriodStart should be set to current block time")
+}

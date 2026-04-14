@@ -995,8 +995,8 @@ func SimulateMsgUpdateWithdrawalDelay(k keeper.Keeper) simtypes.Operation {
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "successfully updated withdrawal delay"), nil, nil
-		}
-		}
+	}
+}
 func SimulateMsgUpdateParams(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,

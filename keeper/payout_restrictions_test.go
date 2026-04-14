@@ -60,7 +60,7 @@ func (s *TestSuite) TestCheckPayoutRestrictions() {
 				if !s.simApp.NameKeeper.NameExists(s.ctx, requiredAttr) {
 					s.Require().NoError(s.simApp.NameKeeper.SetNameRecord(s.ctx, requiredAttr, s.adminAddr, false))
 				}
-				expireTime := time.Now().Add(24 * time.Hour)
+				expireTime := s.ctx.BlockTime().Add(24 * time.Hour)
 				attr := attrtypes.NewAttribute(requiredAttr, ownerAddr.String(), attrtypes.AttributeType_String, []byte("true"), &expireTime, "")
 				s.Require().NoError(s.simApp.AttributeKeeper.SetAttribute(s.ctx, attr, s.adminAddr))
 			}

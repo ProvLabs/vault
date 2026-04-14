@@ -271,7 +271,7 @@ func (k Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAccou
 
 	provlabsAddr, err := k.GetAUMFeeAddress(ctx)
 	if err != nil {
-		k.getLogger(ctx).Error(fmt.Sprintf("failed to get AUM fee address (using default): %v", err))
+		return fmt.Errorf("failed to get AUM fee address: %w", err)
 	}
 
 	principalAddress := vault.PrincipalMarkerAddress()

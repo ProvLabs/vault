@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/provlabs/vault/queue"
@@ -99,13 +100,22 @@ func (k Keeper) OpenKVStore(ctx sdk.Context) store.KVStore {
 // GetAUMFeeAddress returns the address where AUM fees are collected.
 func (k Keeper) GetAUMFeeAddress(ctx sdk.Context) (sdk.AccAddress, error) {
 	params, err := k.Params.Get(ctx)
-	if err != nil || len(params.TechFeeAddress) == 0 {
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return types.GetDefaultTechFeeAddress(ctx.ChainID()), nil
+		}
+		return nil, fmt.Errorf("failed to retrieve params: %w", err)
+	}
+
+	if len(params.TechFeeAddress) == 0 {
 		return types.GetDefaultTechFeeAddress(ctx.ChainID()), nil
 	}
+
 	addr, parseErr := k.AddressCodec.StringToBytes(params.TechFeeAddress)
 	if parseErr != nil {
-		return types.GetDefaultTechFeeAddress(ctx.ChainID()), fmt.Errorf("failed to parse AUM fee address from params %q: %w", params.TechFeeAddress, parseErr)
+		return nil, fmt.Errorf("failed to parse AUM fee address from params %q: %w", params.TechFeeAddress, parseErr)
 	}
+
 	return addr, nil
 }
 

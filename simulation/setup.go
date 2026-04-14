@@ -32,7 +32,10 @@ func Setup(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, ak types.AccountKeepe
 
 	denomRegex := mk.GetUnrestrictedDenomRegex(ctx)
 
-	provlabsAddr := k.GetAUMFeeAddress(ctx)
+	provlabsAddr, err := k.GetAUMFeeAddress(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get aum fee address: %w", err)
+	}
 	feeCollectorAddr := ak.GetModuleAddress("fee_collector")
 
 	// perform bootstrap inside a cache context to ensure atomicity

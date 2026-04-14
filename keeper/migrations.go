@@ -3,8 +3,9 @@ package keeper
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/provlabs/vault/types"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // MigrateVaultAccountPaymentDenomDefaults updates legacy VaultAccount state created

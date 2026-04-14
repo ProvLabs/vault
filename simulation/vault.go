@@ -41,7 +41,7 @@ func CreateVault(ctx sdk.Context, vk *keeper.Keeper, ak types.AccountKeeper, bk 
 		WithdrawalDelaySeconds: interest.SecondsPerDay,
 	}
 	msgServer := keeper.NewMsgServer(vk)
-	_, err := msgServer.CreateVault(sdk.WrapSDKContext(ctx), newVault)
+	_, err := msgServer.CreateVault(ctx, newVault)
 	return err
 }
 
@@ -95,7 +95,7 @@ func SwapOut(ctx sdk.Context, vk *keeper.Keeper, user simtypes.Account, shares s
 		RedeemDenom:  redeemDenom,
 	}
 	msgServer := keeper.NewMsgServer(vk)
-	_, err := msgServer.SwapOut(sdk.WrapSDKContext(ctx), swapOut)
+	_, err := msgServer.SwapOut(ctx, swapOut)
 	return err
 }
 

@@ -39,12 +39,6 @@ func CreateMarker(ctx context.Context, coin sdk.Coin, admin sdk.AccAddress, keep
 				},
 			},
 			{
-				Address: types.AUMFeeAddress.String(),
-				Permissions: markertypes.AccessList{
-					markertypes.Access_Transfer,
-				},
-			},
-			{
 				Address: feeCollector.String(),
 				Permissions: markertypes.AccessList{
 					markertypes.Access_Transfer,

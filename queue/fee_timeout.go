@@ -52,7 +52,6 @@ func (p *FeeTimeoutQueue) Dequeue(ctx sdk.Context, feeTimeout int64, vaultAddr s
 	return nil
 }
 
-
 // WalkDue iterates over all entries in the FeeTimeoutQueue with
 // a timeout timestamp <= nowSec. For each due entry, the callback is invoked.
 func (p *FeeTimeoutQueue) WalkDue(ctx sdk.Context, nowSec int64, fn func(feeTimeout uint64, vaultAddr sdk.AccAddress) (stop bool, err error)) error {

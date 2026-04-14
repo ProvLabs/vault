@@ -32,6 +32,7 @@ func (s *TestSuite) TestVaultGenesis_InitAndExport() {
 	vault.PeriodTimeout = past
 
 	genesis := &types.GenesisState{
+		Params: types.DefaultParams(),
 		Vaults: []types.VaultAccount{vault},
 		PayoutTimeoutQueue: []types.QueueEntry{
 			{Time: uint64(past), Addr: vaultAddr.String()},
@@ -102,6 +103,7 @@ func (s *TestSuite) TestInitGenesis_PanicOnInvalidTimeout() {
 		{
 			name: "payout timeout exceeds max int64",
 			genState: &types.GenesisState{
+				Params: types.DefaultParams(),
 				Vaults: []types.VaultAccount{
 					func() types.VaultAccount {
 						v := vault
@@ -118,6 +120,7 @@ func (s *TestSuite) TestInitGenesis_PanicOnInvalidTimeout() {
 		{
 			name: "fee timeout exceeds max int64",
 			genState: &types.GenesisState{
+				Params: types.DefaultParams(),
 				Vaults: []types.VaultAccount{
 					func() types.VaultAccount {
 						v := vault
@@ -141,7 +144,7 @@ func (s *TestSuite) TestInitGenesis_PanicOnInvalidTimeout() {
 		})
 	}
 }
-func (s *TestSuite) TestVaultGenesis_RoundTrip_FeeTimeoutAndAumFeeAddress() {
+func (s *TestSuite) TestVaultGenesis_RoundTrip_FeeTimeoutAndParams() {
 	shareDenom := "vaultshare_fee"
 	underlying := "under_fee"
 	vaultAddr := types.GetVaultAddress(shareDenom)
@@ -162,12 +165,17 @@ func (s *TestSuite) TestVaultGenesis_RoundTrip_FeeTimeoutAndAumFeeAddress() {
 		FeePeriodTimeout:    future,
 	}
 
+	params := types.Params{
+		TechFeeAddress:    aumFeeAddress.String(),
+		DefaultAumFeeBips: 100,
+	}
+
 	genesis := &types.GenesisState{
 		Vaults: []types.VaultAccount{vault},
 		FeeTimeoutQueue: []types.QueueEntry{
 			{Time: uint64(future), Addr: vaultAddr.String()},
 		},
-		AumFeeAddress: aumFeeAddress.Bytes(),
+		Params: params,
 	}
 
 	s.k.InitGenesis(s.ctx, genesis)
@@ -176,10 +184,11 @@ func (s *TestSuite) TestVaultGenesis_RoundTrip_FeeTimeoutAndAumFeeAddress() {
 	s.Require().Len(exported.FeeTimeoutQueue, 1, "exported genesis should contain exactly one fee timeout entry")
 	s.Require().Equal(vaultAddr.String(), exported.FeeTimeoutQueue[0].Addr, "fee timeout entry address mismatch")
 	s.Require().Equal(uint64(future), exported.FeeTimeoutQueue[0].Time, "fee timeout entry time mismatch")
-	s.Require().Equal(aumFeeAddress.Bytes(), exported.AumFeeAddress, "exported AUM fee address mismatch")
+	s.Require().Equal(params, exported.Params, "exported Params mismatch")
 
 	// Verify the AUM fee address was actually set in the keeper
-	storedAddr := s.k.GetAUMFeeAddress(s.ctx)
+	storedAddr, err := s.k.GetAUMFeeAddress(s.ctx)
+	s.Require().NoError(err, "failed to get AUM fee address")
 	s.Require().Equal(aumFeeAddress, storedAddr, "stored AUM fee address mismatch in keeper")
 }
 
@@ -221,6 +230,7 @@ func (s *TestSuite) TestVaultGenesis_RoundTrip_PastAndFutureTimeouts() {
 	}
 
 	genesis := &types.GenesisState{
+		Params: types.DefaultParams(),
 		Vaults: []types.VaultAccount{vault1, vault2},
 		PayoutTimeoutQueue: []types.QueueEntry{
 			{Time: uint64(past), Addr: vaultAddr1.String()},
@@ -256,6 +266,7 @@ func (s *TestSuite) TestVaultGenesis_InvalidTimeoutAddressPanics() {
 	}
 
 	genesis := &types.GenesisState{
+		Params: types.DefaultParams(),
 		Vaults: []types.VaultAccount{vault},
 		PayoutTimeoutQueue: []types.QueueEntry{
 			{Time: now, Addr: "invalid-bech32"},
@@ -288,6 +299,7 @@ func (s *TestSuite) TestVaultGenesis_ExistingAccountNumberCopied() {
 	}
 
 	genesis := &types.GenesisState{
+		Params:              types.DefaultParams(),
 		Vaults:              []types.VaultAccount{vault},
 		PendingSwapOutQueue: types.PendingSwapOutQueue{},
 	}
@@ -316,7 +328,10 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidVault() {
 		CurrentInterestRate: types.ZeroInterestRate,
 		DesiredInterestRate: types.ZeroInterestRate,
 	}
-	genesis := &types.GenesisState{Vaults: []types.VaultAccount{vault}}
+	genesis := &types.GenesisState{
+		Params: types.DefaultParams(),
+		Vaults: []types.VaultAccount{vault},
+	}
 	expectedPanic := "invalid vault genesis state: invalid vault at index 0: invalid admin address: empty address string is not allowed"
 	s.Require().PanicsWithError(expectedPanic, func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on invalid vault")
 }
@@ -338,6 +353,7 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidPendingSwapOut() {
 	}
 
 	genesis := &types.GenesisState{
+		Params: types.DefaultParams(),
 		Vaults: []types.VaultAccount{vault},
 		PendingSwapOutQueue: types.PendingSwapOutQueue{
 			LatestSequenceNumber: 55,
@@ -377,6 +393,7 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPendingSwapOutHasUnknownVault
 	}
 
 	genesis := &types.GenesisState{
+		Params: types.DefaultParams(),
 		Vaults: []types.VaultAccount{vault},
 		PendingSwapOutQueue: types.PendingSwapOutQueue{
 			LatestSequenceNumber: 55,
@@ -415,6 +432,7 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPendingSwapOutHasBadVaultAddr
 	}
 
 	genesis := &types.GenesisState{
+		Params: types.DefaultParams(),
 		Vaults: []types.VaultAccount{vault},
 		PendingSwapOutQueue: types.PendingSwapOutQueue{
 			LatestSequenceNumber: 55,
@@ -440,6 +458,7 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPayoutTimeoutHasUnknownVault(
 	badVaultAddr := types.GetVaultAddress("baddenom")
 
 	genesis := &types.GenesisState{
+		Params: types.DefaultParams(),
 		PayoutTimeoutQueue: []types.QueueEntry{
 			{Time: 1000, Addr: badVaultAddr.String()},
 		},
@@ -452,6 +471,7 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsWhenFeeTimeoutHasUnknownVault() {
 	badVaultAddr := types.GetVaultAddress("baddenom")
 
 	genesis := &types.GenesisState{
+		Params: types.DefaultParams(),
 		FeeTimeoutQueue: []types.QueueEntry{
 			{Time: 1000, Addr: badVaultAddr.String()},
 		},

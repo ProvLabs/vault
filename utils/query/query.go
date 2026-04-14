@@ -59,7 +59,7 @@ func RunTestCase[R any, S any](s TestSuiter, td TestDef[R, S], tc TestCase[R, S]
 		tc.Setup()
 	}
 
-	goCtx := sdk.WrapSDKContext(s.Context())
+	goCtx := s.Context()
 	var resp *S
 	var err error
 	testFunc := func() {

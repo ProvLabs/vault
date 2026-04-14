@@ -270,7 +270,7 @@ func (s *TestSuite) TestSwapOut_FailsWithRestrictedUnderlyingAssetNoAttributes()
 		s.adminAddr,
 		[]markertypes.AccessGrant{
 			{Address: s.adminAddr.String(), Permissions: markertypes.AccessList{markertypes.Access_Mint, markertypes.Access_Admin, markertypes.Access_Withdraw, markertypes.Access_Burn, markertypes.Access_Transfer}},
-			{Address: s.k.GetAUMFeeAddress(s.ctx).String(), Permissions: markertypes.AccessList{markertypes.Access_Transfer, markertypes.Access_Deposit}},
+			{Address: s.EnsureTechFeeAccount().String(), Permissions: markertypes.AccessList{markertypes.Access_Transfer, markertypes.Access_Deposit}},
 			{Address: types.GetVaultAddress(shareDenom).String(), Permissions: markertypes.AccessList{markertypes.Access_Withdraw, markertypes.Access_Transfer}},
 		},
 		markertypes.StatusProposed,
@@ -331,7 +331,7 @@ func (s *TestSuite) TestSwapOut_FailsWithRestrictedUnderlyingAssetRequiredAttrib
 		s.adminAddr,
 		[]markertypes.AccessGrant{
 			{Address: s.adminAddr.String(), Permissions: markertypes.AccessList{markertypes.Access_Mint, markertypes.Access_Admin, markertypes.Access_Withdraw, markertypes.Access_Burn, markertypes.Access_Transfer}},
-			{Address: s.k.GetAUMFeeAddress(s.ctx).String(), Permissions: markertypes.AccessList{markertypes.Access_Transfer, markertypes.Access_Deposit}},
+			{Address: s.EnsureTechFeeAccount().String(), Permissions: markertypes.AccessList{markertypes.Access_Transfer, markertypes.Access_Deposit}},
 			{Address: types.GetVaultAddress(shareDenom).String(), Permissions: markertypes.AccessList{markertypes.Access_Withdraw}},
 		},
 		markertypes.StatusProposed,
@@ -381,7 +381,7 @@ func (s *TestSuite) TestSwapOut_SucceedsWithRestrictedUnderlyingAssetRequiredAtt
 		s.adminAddr,
 		[]markertypes.AccessGrant{
 			{Address: s.adminAddr.String(), Permissions: markertypes.AccessList{markertypes.Access_Mint, markertypes.Access_Admin, markertypes.Access_Withdraw, markertypes.Access_Burn, markertypes.Access_Transfer}},
-			{Address: s.k.GetAUMFeeAddress(s.ctx).String(), Permissions: markertypes.AccessList{markertypes.Access_Transfer, markertypes.Access_Deposit}},
+			{Address: s.EnsureTechFeeAccount().String(), Permissions: markertypes.AccessList{markertypes.Access_Transfer, markertypes.Access_Deposit}},
 			{Address: types.GetVaultAddress(shareDenom).String(), Permissions: markertypes.AccessList{markertypes.Access_Withdraw}},
 		},
 		markertypes.StatusProposed,

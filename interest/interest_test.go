@@ -112,6 +112,7 @@ func TestCalculateAUMFee(t *testing.T) {
 	tests := []struct {
 		name        string
 		aum         sdkmath.Int
+		bips        uint32
 		duration    int64
 		expectedFee sdkmath.Int
 		expectErr   bool
@@ -119,36 +120,49 @@ func TestCalculateAUMFee(t *testing.T) {
 		{
 			name:        "zero AUM",
 			aum:         sdkmath.ZeroInt(),
+			bips:        15,
 			duration:    interest.SecondsPerYear,
 			expectedFee: sdkmath.ZeroInt(),
 		},
 		{
 			name:        "zero duration",
 			aum:         sdkmath.NewInt(1_000_000),
+			bips:        15,
 			duration:    0,
+			expectedFee: sdkmath.ZeroInt(),
+		},
+		{
+			name:        "zero bips",
+			aum:         sdkmath.NewInt(1_000_000),
+			bips:        0,
+			duration:    interest.SecondsPerYear,
 			expectedFee: sdkmath.ZeroInt(),
 		},
 		{
 			name:        "1 year at 15 bps (1,000,000 AUM)",
 			aum:         sdkmath.NewInt(1_000_000),
+			bips:        15,
 			duration:    interest.SecondsPerYear,
 			expectedFee: sdkmath.NewInt(1_500), // 1,000,000 * 0.0015
 		},
 		{
 			name:        "6 months at 15 bps (1,000,000 AUM)",
 			aum:         sdkmath.NewInt(1_000_000),
+			bips:        15,
 			duration:    interest.SecondsPerYear / 2,
 			expectedFee: sdkmath.NewInt(750),
 		},
 		{
 			name:        "negative duration errors",
 			aum:         sdkmath.NewInt(1_000_000),
+			bips:        15,
 			duration:    -1,
 			expectErr:   true,
 		},
 		{
 			name:      "negative aum errors",
 			aum:       sdkmath.NewInt(-1_000_000),
+			bips:      15,
 			duration:  interest.SecondsPerYear,
 			expectErr: true,
 		},
@@ -156,7 +170,7 @@ func TestCalculateAUMFee(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			fee, err := interest.CalculateAUMFee(tc.aum, tc.duration)
+			fee, err := interest.CalculateAUMFee(tc.aum, tc.bips, tc.duration)
 			if tc.expectErr {
 				require.Errorf(t, err, "test case %q: expected an error but got none", tc.name)
 			} else {

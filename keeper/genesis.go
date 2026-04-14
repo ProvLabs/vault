@@ -19,10 +19,19 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 		panic(fmt.Errorf("invalid vault genesis state: %w", err))
 	}
 
-	if len(genState.AumFeeAddress) > 0 {
-		if err := k.AUMFeeAddress.Set(ctx, genState.AumFeeAddress); err != nil {
-			panic(fmt.Errorf("failed to set aum fee address: %w", err))
-		}
+	params := types.DefaultParams()
+	if len(genState.Params.TechFeeAddress) > 0 {
+		params.TechFeeAddress = genState.Params.TechFeeAddress
+	} else {
+		// Fallback to chain-specific default if TechFeeAddress is not provided.
+		params.TechFeeAddress = types.GetDefaultTechFeeAddress(ctx.ChainID()).String()
+	}
+	if genState.Params.DefaultAumFeeBips > 0 {
+		params.DefaultAumFeeBips = genState.Params.DefaultAumFeeBips
+	}
+
+	if err := k.Params.Set(ctx, params); err != nil {
+		panic(fmt.Errorf("failed to set params: %w", err))
 	}
 
 	accounts := k.AuthKeeper.GetAllAccounts(ctx)
@@ -107,20 +116,12 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 
 // ExportGenesis exports the current state of the vault module.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
-	allAccounts := k.AuthKeeper.GetAllAccounts(ctx)
-
-	var aumFeeAddress []byte
-	has, err := k.AUMFeeAddress.Has(ctx)
+	params, err := k.Params.Get(ctx)
 	if err != nil {
-		panic(fmt.Errorf("failed to check AUM fee address: %w", err))
+		params = types.DefaultParams()
 	}
-	if has {
-		addr, err := k.AUMFeeAddress.Get(ctx)
-		if err != nil {
-			panic(fmt.Errorf("failed to get AUM fee address: %w", err))
-		}
-		aumFeeAddress = addr.Bytes()
-	}
+
+	allAccounts := k.AuthKeeper.GetAllAccounts(ctx)
 
 	var vaults []types.VaultAccount
 	for _, acc := range allAccounts {
@@ -165,6 +166,6 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		PayoutTimeoutQueue:  paymentTimeoutQueue,
 		FeeTimeoutQueue:     feeTimeoutQueue,
 		PendingSwapOutQueue: *pendingSwapOutQueue,
-		AumFeeAddress:       aumFeeAddress,
+		Params:              params,
 	}
 }

@@ -51,7 +51,8 @@ func (s *TestSuite) SetupTest() {
 
 // EnsureTechFeeAccount ensures that the AUM fee address account exists in the account keeper.
 func (s *TestSuite) EnsureTechFeeAccount() sdk.AccAddress {
-	provlabsAddr := s.k.GetAUMFeeAddress(s.ctx)
+	provlabsAddr, err := s.k.GetAUMFeeAddress(s.ctx)
+	s.Require().NoError(err, "failed to get AUM fee address")
 	if !s.simApp.AccountKeeper.HasAccount(s.ctx, provlabsAddr) {
 		s.simApp.AccountKeeper.SetAccount(s.ctx, s.simApp.AccountKeeper.NewAccountWithAddress(s.ctx, provlabsAddr))
 	}
@@ -139,7 +140,8 @@ func normalizeEvent(event sdk.Event) sdk.Event {
 // SetupTechFeeAccount ensures the AUM fee collector account exists and has the required
 // attributes to receive the specified restricted asset. It returns the fee collector address.
 func (s *TestSuite) SetupTechFeeAccount(restrictedUnderlyingDenom string) sdk.AccAddress {
-	provlabsAddr := s.k.GetAUMFeeAddress(s.ctx)
+	provlabsAddr, err := s.k.GetAUMFeeAddress(s.ctx)
+	s.Require().NoError(err, "failed to get AUM fee address")
 	if !s.simApp.AccountKeeper.HasAccount(s.ctx, provlabsAddr) {
 		s.simApp.AccountKeeper.SetAccount(s.ctx, s.simApp.AccountKeeper.NewAccountWithAddress(s.ctx, provlabsAddr))
 	}
@@ -172,7 +174,8 @@ func (s *TestSuite) requireAddFinalizeAndActivateMarker(coin sdk.Coin, manager s
 	if !s.simApp.AccountKeeper.HasAccount(s.ctx, s.adminAddr) {
 		s.simApp.AccountKeeper.SetAccount(s.ctx, s.simApp.AccountKeeper.NewAccountWithAddress(s.ctx, s.adminAddr))
 	}
-	provlabsAddr := s.k.GetAUMFeeAddress(s.ctx)
+	provlabsAddr, err := s.k.GetAUMFeeAddress(s.ctx)
+	s.Require().NoError(err, "failed to get AUM fee address")
 	if !s.simApp.AccountKeeper.HasAccount(s.ctx, provlabsAddr) {
 		s.simApp.AccountKeeper.SetAccount(s.ctx, s.simApp.AccountKeeper.NewAccountWithAddress(s.ctx, provlabsAddr))
 	}
@@ -223,7 +226,8 @@ func (s *TestSuite) requireAddFinalizeAndActivateReceiptMarker(coin sdk.Coin, gr
 	// Ensure the tech fee account has any required attributes if this was a restricted marker.
 	// For receipt markers, we usually don't have required attributes but we give the tech fee account transfer permission
 	// so it can receive the tokens if the marker is restricted.
-	provlabsAddr := s.k.GetAUMFeeAddress(s.ctx)
+	provlabsAddr, err := s.k.GetAUMFeeAddress(s.ctx)
+	s.Require().NoError(err, "failed to get AUM fee address")
 
 	accessControl := make([]markertypes.AccessGrant, len(grantees)+1)
 	for i, grantee := range grantees {

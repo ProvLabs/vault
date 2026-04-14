@@ -48,13 +48,13 @@ func (k *Keeper) processPendingSwapOuts(ctx sdk.Context, batchSize int) error {
 // processSwapOutJobs iterates pending swap-out jobs collected for this block and executes them.
 //
 // The processing strategy involves:
-// 1. Verifying the vault exists and is not paused.
-// 2. Dequeuing the job on the main context immediately to ensure it is only attempted once,
-//    preventing infinite retry loops if a failure occurs during processing or refund.
-// 3. Executing the withdrawal logic (reconciliation, payout, and burning) within a single
-//    cache context to ensure atomicity. Changes are only committed to the main state on success.
-// 4. Handling recoverable failures by issuing a refund on the main context.
-// 5. Handling critical or unrecoverable failures by auto-pausing the associated vault.
+//  1. Verifying the vault exists and is not paused.
+//  2. Dequeuing the job on the main context immediately to ensure it is only attempted once,
+//     preventing infinite retry loops if a failure occurs during processing or refund.
+//  3. Executing the withdrawal logic (reconciliation, payout, and burning) within a single
+//     cache context to ensure atomicity. Changes are only committed to the main state on success.
+//  4. Handling recoverable failures by issuing a refund on the main context.
+//  5. Handling critical or unrecoverable failures by auto-pausing the associated vault.
 func (k *Keeper) processSwapOutJobs(ctx sdk.Context, jobsToProcess []types.PayoutJob) {
 	for _, j := range jobsToProcess {
 		vault, ok := k.tryGetVault(ctx, j.VaultAddr)

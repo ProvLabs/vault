@@ -175,7 +175,7 @@ func SimulateMsgCreateVault(k keeper.Keeper) simtypes.Operation {
 		}
 
 		handler := keeper.NewMsgServer(&k)
-		_, err = handler.CreateVault(sdk.WrapSDKContext(ctx), msg)
+		_, err = handler.CreateVault(ctx, msg)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 		}
@@ -226,7 +226,7 @@ func SimulateMsgSwapIn(k keeper.Keeper) simtypes.Operation {
 		}
 
 		handler := keeper.NewMsgServer(&k)
-		_, err = handler.SwapIn(sdk.WrapSDKContext(ctx), msg)
+		_, err = handler.SwapIn(ctx, msg)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "failed to swap in"), nil, nil
 		}
@@ -274,7 +274,7 @@ func SimulateMsgSwapOut(k keeper.Keeper) simtypes.Operation {
 		}
 
 		handler := keeper.NewMsgServer(&k)
-		_, err = handler.SwapOut(sdk.WrapSDKContext(ctx), msg)
+		_, err = handler.SwapOut(ctx, msg)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), "failed to swap out"), nil, nil
 		}
@@ -320,7 +320,7 @@ func SimulateMsgUpdateInterestRate(k keeper.Keeper) simtypes.Operation {
 		}
 
 		handler := keeper.NewMsgServer(&k)
-		_, err = handler.UpdateInterestRate(sdk.WrapSDKContext(ctx), msg)
+		_, err = handler.UpdateInterestRate(ctx, msg)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 		}
@@ -360,7 +360,7 @@ func SimulateMsgUpdateMinInterestRate(k keeper.Keeper) simtypes.Operation {
 		}
 
 		handler := keeper.NewMsgServer(&k)
-		_, err = handler.UpdateMinInterestRate(sdk.WrapSDKContext(ctx), msg)
+		_, err = handler.UpdateMinInterestRate(ctx, msg)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 		}
@@ -400,7 +400,7 @@ func SimulateMsgUpdateMaxInterestRate(k keeper.Keeper) simtypes.Operation {
 		}
 
 		handler := keeper.NewMsgServer(&k)
-		_, err = handler.UpdateMaxInterestRate(sdk.WrapSDKContext(ctx), msg)
+		_, err = handler.UpdateMaxInterestRate(ctx, msg)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 		}
@@ -434,7 +434,7 @@ func SimulateMsgToggleSwapIn(k keeper.Keeper) simtypes.Operation {
 		}
 
 		handler := keeper.NewMsgServer(&k)
-		_, err = handler.ToggleSwapIn(sdk.WrapSDKContext(ctx), msg)
+		_, err = handler.ToggleSwapIn(ctx, msg)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 		}
@@ -468,7 +468,7 @@ func SimulateMsgToggleSwapOut(k keeper.Keeper) simtypes.Operation {
 		}
 
 		handler := keeper.NewMsgServer(&k)
-		_, err = handler.ToggleSwapOut(sdk.WrapSDKContext(ctx), msg)
+		_, err = handler.ToggleSwapOut(ctx, msg)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 		}
@@ -523,7 +523,7 @@ func SimulateMsgDepositInterestFunds(k keeper.Keeper) simtypes.Operation {
 		}
 
 		handler := keeper.NewMsgServer(&k)
-		_, err = handler.DepositInterestFunds(sdk.WrapSDKContext(ctx), msg)
+		_, err = handler.DepositInterestFunds(ctx, msg)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 		}
@@ -564,7 +564,7 @@ func SimulateMsgWithdrawInterestFunds(k keeper.Keeper) simtypes.Operation {
 		}
 
 		handler := keeper.NewMsgServer(&k)
-		_, err = handler.WithdrawInterestFunds(sdk.WrapSDKContext(ctx), msg)
+		_, err = handler.WithdrawInterestFunds(ctx, msg)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 		}
@@ -618,7 +618,7 @@ func SimulateMsgDepositPrincipalFunds(k keeper.Keeper) simtypes.Operation {
 		}
 
 		handler := keeper.NewMsgServer(&k)
-		_, err = handler.DepositPrincipalFunds(sdk.WrapSDKContext(ctx), msg)
+		_, err = handler.DepositPrincipalFunds(ctx, msg)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 		}
@@ -661,7 +661,7 @@ func SimulateMsgWithdrawPrincipalFunds(k keeper.Keeper) simtypes.Operation {
 		}
 
 		handler := keeper.NewMsgServer(&k)
-		_, err = handler.WithdrawPrincipalFunds(sdk.WrapSDKContext(ctx), msg)
+		_, err = handler.WithdrawPrincipalFunds(ctx, msg)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 		}
@@ -700,7 +700,7 @@ func SimulateMsgExpeditePendingSwapOut(k keeper.Keeper) simtypes.Operation {
 		}
 
 		handler := keeper.NewMsgServer(&k)
-		_, err = handler.ExpeditePendingSwapOut(sdk.WrapSDKContext(ctx), msg)
+		_, err = handler.ExpeditePendingSwapOut(ctx, msg)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 		}
@@ -734,7 +734,7 @@ func SimulateMsgPauseVault(k keeper.Keeper) simtypes.Operation {
 		}
 
 		handler := keeper.NewMsgServer(&k)
-		_, err = handler.PauseVault(sdk.WrapSDKContext(ctx), msg)
+		_, err = handler.PauseVault(ctx, msg)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 		}
@@ -768,7 +768,7 @@ func SimulateMsgUnpauseVault(k keeper.Keeper) simtypes.Operation {
 		}
 
 		handler := keeper.NewMsgServer(&k)
-		_, err = handler.UnpauseVault(sdk.WrapSDKContext(ctx), msg)
+		_, err = handler.UnpauseVault(ctx, msg)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 		}
@@ -803,7 +803,7 @@ func SimulateMsgToggleBridge(k keeper.Keeper) simtypes.Operation {
 		}
 
 		handler := keeper.NewMsgServer(&k)
-		_, err = handler.ToggleBridge(sdk.WrapSDKContext(ctx), msg)
+		_, err = handler.ToggleBridge(ctx, msg)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 		}
@@ -841,7 +841,7 @@ func SimulateMsgSetBridgeAddress(k keeper.Keeper) simtypes.Operation {
 		}
 
 		handler := keeper.NewMsgServer(&k)
-		_, err = handler.SetBridgeAddress(sdk.WrapSDKContext(ctx), msg)
+		_, err = handler.SetBridgeAddress(ctx, msg)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 		}
@@ -886,7 +886,7 @@ func SimulateMsgBridgeMintShares(k keeper.Keeper) simtypes.Operation {
 		}
 
 		handler := keeper.NewMsgServer(&k)
-		_, err = handler.BridgeMintShares(sdk.WrapSDKContext(ctx), msg)
+		_, err = handler.BridgeMintShares(ctx, msg)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 		}
@@ -925,7 +925,7 @@ func SimulateMsgBridgeBurnShares(k keeper.Keeper) simtypes.Operation {
 		}
 
 		handler := keeper.NewMsgServer(&k)
-		_, err = handler.BridgeBurnShares(sdk.WrapSDKContext(ctx), msg)
+		_, err = handler.BridgeBurnShares(ctx, msg)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 		}
@@ -979,7 +979,7 @@ func SimulateMsgUpdateWithdrawalDelay(k keeper.Keeper) simtypes.Operation {
 		}
 
 		handler := keeper.NewMsgServer(&k)
-		_, err = handler.UpdateWithdrawalDelay(sdk.WrapSDKContext(ctx), msg)
+		_, err = handler.UpdateWithdrawalDelay(ctx, msg)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
 		}

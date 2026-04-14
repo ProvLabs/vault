@@ -37,6 +37,7 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			name: "valid payout timeout queue",
 			genState: types.GenesisState{
+				Params: types.DefaultParams(),
 				Vaults: []types.VaultAccount{
 					func() types.VaultAccount {
 						v := validVault
@@ -52,6 +53,7 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			name: "invalid address in payout timeout queue",
 			genState: types.GenesisState{
+				Params: types.DefaultParams(),
 				PayoutTimeoutQueue: []types.QueueEntry{
 					{Time: 100, Addr: invalidAddr},
 				},
@@ -61,6 +63,7 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			name: "time exceeds max int64 in payout timeout queue",
 			genState: types.GenesisState{
+				Params: types.DefaultParams(),
 				Vaults: []types.VaultAccount{
 					func() types.VaultAccount {
 						v := validVault
@@ -77,6 +80,7 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			name: "valid fee timeout queue",
 			genState: types.GenesisState{
+				Params: types.DefaultParams(),
 				Vaults: []types.VaultAccount{
 					func() types.VaultAccount {
 						v := validVault
@@ -92,6 +96,7 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			name: "invalid address in fee timeout queue",
 			genState: types.GenesisState{
+				Params: types.DefaultParams(),
 				FeeTimeoutQueue: []types.QueueEntry{
 					{Time: 100, Addr: invalidAddr},
 				},
@@ -101,6 +106,7 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			name: "time exceeds max int64 in fee timeout queue",
 			genState: types.GenesisState{
+				Params: types.DefaultParams(),
 				Vaults: []types.VaultAccount{
 					func() types.VaultAccount {
 						v := validVault
@@ -117,6 +123,7 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			name: "invalid vault address in pending swap out queue",
 			genState: types.GenesisState{
+				Params: types.DefaultParams(),
 				PendingSwapOutQueue: types.PendingSwapOutQueue{
 					Entries: []types.PendingSwapOutQueueEntry{
 						{
@@ -132,6 +139,7 @@ func TestGenesisState_Validate(t *testing.T) {
 		{
 			name: "vault address not an imported vault in pending swap out queue",
 			genState: types.GenesisState{
+				Params: types.DefaultParams(),
 				PendingSwapOutQueue: types.PendingSwapOutQueue{
 					Entries: []types.PendingSwapOutQueueEntry{
 						{
@@ -145,17 +153,23 @@ func TestGenesisState_Validate(t *testing.T) {
 			expectedErr: "pending swap out queue vault address at index 0 is not an imported vault",
 		},
 		{
-			name: "valid aum fee address",
+			name: "invalid tech fee address in params",
 			genState: types.GenesisState{
-				AumFeeAddress: sdk.AccAddress{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}.Bytes(),
+				Params: types.Params{
+					TechFeeAddress: "invalid",
+				},
 			},
+			expectedErr: "invalid params: invalid TechFeeAddress",
 		},
 		{
-			name: "invalid aum fee address (too long)",
+			name: "invalid default aum fee bips in params",
 			genState: types.GenesisState{
-				AumFeeAddress: make([]byte, 256),
+				Params: types.Params{
+					TechFeeAddress:    validAddr,
+					DefaultAumFeeBips: 10_001,
+				},
 			},
-			expectedErr: "invalid aum fee address",
+			expectedErr: "invalid params: invalid DefaultAumFeeBips",
 		},
 	}
 

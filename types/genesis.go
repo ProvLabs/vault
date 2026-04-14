@@ -9,15 +9,17 @@ import (
 
 // DefaultGenesisState returns the default genesis state
 func DefaultGenesisState() *GenesisState {
-	return &GenesisState{}
+	return &GenesisState{
+		Params: DefaultParams(),
+	}
 }
 
 // Validate performs basic genesis state validation returning an error upon any
 // failure.
 func (gs GenesisState) Validate() error {
-	if len(gs.AumFeeAddress) > 0 {
-		if err := sdk.VerifyAddressFormat(gs.AumFeeAddress); err != nil {
-			return fmt.Errorf("invalid aum fee address: %w", err)
+	if len(gs.Params.TechFeeAddress) > 0 {
+		if err := gs.Params.Validate(); err != nil {
+			return fmt.Errorf("invalid params: %w", err)
 		}
 	}
 

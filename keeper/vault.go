@@ -32,12 +32,12 @@ type VaultAttributer interface {
 // CreateVault creates a new vault and its corresponding share marker atomically.
 //
 // The process involves:
-// 1. Creating and persisting a new VaultAccount and its lookup entries.
-// 2. Initializing the fee timeout queue for the new vault.
-// 3. Creating, finalizing, and activating a restricted marker for the vault's shares.
-// 4. Performing a pre-flight check against the principal/payment path by calling
-//    SendRestrictionFn with vault.PrincipalMarkerAddress() to ensure the fee
-//    collection address is permissioned to receive the payment denomination.
+//  1. Creating and persisting a new VaultAccount and its lookup entries.
+//  2. Initializing the fee timeout queue for the new vault.
+//  3. Creating, finalizing, and activating a restricted marker for the vault's shares.
+//  4. Performing a pre-flight check against the principal/payment path by calling
+//     SendRestrictionFn with vault.PrincipalMarkerAddress() to ensure the fee
+//     collection address is permissioned to receive the payment denomination.
 //
 // All steps are performed within a cache context. If any step fails, including the
 // pre-flight permission check, all state changes are discarded to prevent the creation
@@ -66,15 +66,20 @@ func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*type
 		return nil, fmt.Errorf("failed to create vault marker: %w", err)
 	}
 
+	provlabsAddr, err := k.GetAUMFeeAddress(cacheCtx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get AUM fee address: %w", err)
+	}
+
 	if recipient, err := k.MarkerKeeper.SendRestrictionFn(
 		markertypes.WithTransferAgents(cacheCtx, vault.GetAddress()),
 		vault.PrincipalMarkerAddress(),
-		k.GetAUMFeeAddress(cacheCtx),
+		provlabsAddr,
 		sdk.NewCoins(sdk.NewInt64Coin(vault.PaymentDenom, 1)),
 	); err != nil {
-		return nil, fmt.Errorf("fee account %s is not permissioned to receive payment denom %s: %w", k.GetAUMFeeAddress(cacheCtx).String(), vault.PaymentDenom, err)
-	} else if !recipient.Equals(k.GetAUMFeeAddress(cacheCtx)) {
-		return nil, fmt.Errorf("effective recipient %s differs from expected fee collector %s for payment denom %s", recipient.String(), k.GetAUMFeeAddress(cacheCtx).String(), vault.PaymentDenom)
+		return nil, fmt.Errorf("fee account %s is not permissioned to receive payment denom %s: %w", provlabsAddr.String(), vault.PaymentDenom, err)
+	} else if !recipient.Equals(provlabsAddr) {
+		return nil, fmt.Errorf("effective recipient %s differs from expected fee collector %s for payment denom %s", recipient.String(), provlabsAddr.String(), vault.PaymentDenom)
 	}
 
 	write()
@@ -102,6 +107,11 @@ func (k Keeper) GetVault(ctx sdk.Context, address sdk.AccAddress) (*types.VaultA
 func (k *Keeper) createVaultAccount(ctx sdk.Context, admin, shareDenom, underlyingAsset, paymentDenom string, withdrawalDelay uint64) (*types.VaultAccount, error) {
 	vaultAddr := types.GetVaultAddress(shareDenom)
 
+	params, err := k.Params.Get(ctx)
+	if err != nil {
+		params = types.DefaultParams()
+	}
+
 	vault := types.NewVaultAccount(
 		authtypes.NewBaseAccountWithAddress(vaultAddr),
 		admin,
@@ -109,6 +119,7 @@ func (k *Keeper) createVaultAccount(ctx sdk.Context, admin, shareDenom, underlyi
 		underlyingAsset,
 		paymentDenom,
 		withdrawalDelay,
+		params.DefaultAumFeeBips,
 	)
 
 	if err := vault.Validate(); err != nil {
@@ -447,4 +458,32 @@ func (k *Keeper) autoPauseVault(ctx sdk.Context, vault *types.VaultAccount, reas
 	k.AuthKeeper.SetAccount(ctx, vault) // Updating via SetAccount to skip validation since auto-pausing is triggered by invalid state
 
 	k.emitEvent(ctx, types.NewEventVaultPaused(vault.GetAddress().String(), vault.GetAddress().String(), reason, vault.PausedBalance))
+}
+
+// UpdateVaultAUMFeeBips reconciles outstanding AUM fees for the provided VaultAccount
+// before updating the stored fee rate (in basis points).
+//
+// This method ensures that all fees accrued under the old rate are accounted for
+// before applying the new rate to future periods.
+// It returns an error if the new bips value exceeds 10,000 (100%) or if reconciliation fails.
+func (k *Keeper) UpdateVaultAUMFeeBips(ctx sdk.Context, vault *types.VaultAccount, bips uint32, authority string) error {
+	if bips > 10_000 {
+		return fmt.Errorf("invalid AUM fee bips: %d (max 10000)", bips)
+	}
+
+	if vault.AumFeeBips == bips {
+		return nil
+	}
+
+	if err := k.reconcileVault(ctx, vault); err != nil {
+		return fmt.Errorf("failed to reconcile before bips change: %w", err)
+	}
+
+	vault.AumFeeBips = bips
+	if err := k.SetVaultAccount(ctx, vault); err != nil {
+		return fmt.Errorf("failed to set vault account: %w", err)
+	}
+
+	k.emitEvent(ctx, types.NewEventVaultAUMFeeBipsUpdated(vault.Address, authority, bips))
+	return nil
 }

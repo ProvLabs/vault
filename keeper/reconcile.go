@@ -269,7 +269,10 @@ func (k Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAccou
 		return nil
 	}
 
-	provlabsAddr := k.GetAUMFeeAddress(ctx)
+	provlabsAddr, err := k.GetAUMFeeAddress(ctx)
+	if err != nil {
+		k.getLogger(ctx).Error(fmt.Sprintf("failed to get AUM fee address (using default): %v", err))
+	}
 
 	principalAddress := vault.PrincipalMarkerAddress()
 	balance := k.BankKeeper.GetBalance(ctx, principalAddress, vault.PaymentDenom)
@@ -392,7 +395,7 @@ func (k Keeper) CalculateAccruedAUMFee(ctx sdk.Context, vault types.VaultAccount
 	if duration <= 0 {
 		return sdkmath.ZeroInt(), nil
 	}
-	return interest.CalculateAUMFee(totalAssets, duration)
+	return interest.CalculateAUMFee(totalAssets, vault.AumFeeBips, duration)
 }
 
 // CalculateAccruedAUMFeePayment calculates the AUM fees that would have accrued for the vault
@@ -737,4 +740,3 @@ func (k Keeper) rescheduleFeeTimeout(ctx sdk.Context, vault *types.VaultAccount,
 	write()
 	*vault = *v
 }
-

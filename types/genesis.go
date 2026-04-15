@@ -78,12 +78,17 @@ func (gs GenesisState) Validate() error {
 		}
 	}
 
-	for i, entry := range gs.PendingSwapOutQueue.Entries {
-		if _, err := sdk.AccAddressFromBech32(entry.SwapOut.VaultAddress); err != nil {
-			return fmt.Errorf("invalid vault address in pending swap out queue at index %d: %w", i, err)
-		}
-		if _, exists := vaults[entry.SwapOut.VaultAddress]; !exists {
-			return fmt.Errorf("pending swap out queue vault address at index %d is not an imported vault: %s", i, entry.SwapOut.VaultAddress)
+	if gs.PendingSwapOutQueue.Entries != nil {
+		for i, entry := range gs.PendingSwapOutQueue.Entries {
+			if entry.SwapOut.VaultAddress == "" {
+				return fmt.Errorf("nil SwapOut in pending swap out queue at index %d", i)
+			}
+			if _, err := sdk.AccAddressFromBech32(entry.SwapOut.VaultAddress); err != nil {
+				return fmt.Errorf("invalid vault address in pending swap out queue at index %d: %w", i, err)
+			}
+			if _, exists := vaults[entry.SwapOut.VaultAddress]; !exists {
+				return fmt.Errorf("pending swap out queue vault address at index %d is not an imported vault: %s", i, entry.SwapOut.VaultAddress)
+			}
 		}
 	}
 

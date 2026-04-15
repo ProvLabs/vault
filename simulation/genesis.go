@@ -6,12 +6,16 @@ import (
 
 	"github.com/provlabs/vault/types"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
 // RandomizedGenState generates a random GenesisState for the vault module
 func RandomizedGenState(simState *module.SimulationState) {
-	techFeeAddr := simState.Accounts[simState.Rand.Intn(len(simState.Accounts))].Address
+	var techFeeAddr sdk.AccAddress
+	if len(simState.Accounts) > 0 {
+		techFeeAddr = simState.Accounts[simState.Rand.Intn(len(simState.Accounts))].Address
+	}
 
 	vaultGenesis := types.GenesisState{
 		Vaults:              []types.VaultAccount{},

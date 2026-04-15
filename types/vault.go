@@ -193,6 +193,9 @@ func (v VaultAccount) Validate() error {
 	if v.FeePeriodTimeout < 0 && v.FeePeriodTimeout != math.MinInt64 {
 		return fmt.Errorf("fee period timeout cannot be negative: %d", v.FeePeriodTimeout)
 	}
+	if v.AumFeeBips > 10_000 {
+		return fmt.Errorf("AUM fee bips cannot exceed 10,000: %d", v.AumFeeBips)
+	}
 
 	if !v.OutstandingAumFee.Amount.IsNil() && v.OutstandingAumFee.IsNegative() {
 		return fmt.Errorf("outstanding AUM fee cannot be negative: %s", v.OutstandingAumFee)

@@ -4615,6 +4615,118 @@ func (s *TestSuite) TestMsgServer_SetAssetManager_Failures() {
 	}
 }
 
+func (s *TestSuite) TestMsgServer_UpdateVaultAUMFeeBips() {
+	type postCheckArgs struct {
+		VaultAddress    sdk.AccAddress
+		ExpectedEnabled uint32
+	}
+
+	testDef := msgServerTestDef[types.MsgUpdateVaultAUMFeeBipsRequest, types.MsgUpdateVaultAUMFeeBipsResponse, postCheckArgs]{
+		endpointName: "UpdateVaultAUMFeeBips",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).UpdateVaultAUMFeeBips,
+		postCheck: func(msg *types.MsgUpdateVaultAUMFeeBipsRequest, args postCheckArgs) {
+			vault, err := s.k.GetVault(s.ctx, args.VaultAddress)
+			s.Require().NoError(err, "failed to get vault at address %s in post-check", args.VaultAddress)
+			s.Assert().Equal(args.ExpectedEnabled, vault.AumFeeBips, "AUM fee bips state mismatch for vault %s", args.VaultAddress)
+		},
+	}
+
+	underlyingDenom := "underlying"
+	shareDenom := "vaultshares"
+	admin := s.adminAddr
+	techFeeAddr := s.EnsureTechFeeAccount()
+	otherUser := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1000))
+	vaultAddr := types.GetVaultAddress(shareDenom)
+
+	setup := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), admin)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      shareDenom,
+			UnderlyingAsset: underlyingDenom,
+		})
+		s.Require().NoError(err, "failed to create vault in UpdateVaultAUMFeeBips setup for share denom %s", shareDenom)
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+		s.ctx = s.ctx.WithBlockTime(time.Now())
+	}
+
+	tests := []struct {
+		name               string
+		setup              func()
+		msg                types.MsgUpdateVaultAUMFeeBipsRequest
+		postCheckArgs      postCheckArgs
+		expectedEvents     sdk.Events
+		expectedErrSubstrs []string
+	}{
+		{
+			name:  "happy path - update bips",
+			setup: setup,
+			msg: types.MsgUpdateVaultAUMFeeBipsRequest{
+				Authority:    techFeeAddr.String(),
+				VaultAddress: vaultAddr.String(),
+				AumFeeBips:   20,
+			},
+			postCheckArgs: postCheckArgs{
+				VaultAddress:    vaultAddr,
+				ExpectedEnabled: 20,
+			},
+			expectedEvents: sdk.Events{
+				sdk.NewEvent("provlabs.vault.v1.EventVaultAUMFeeBipsUpdated",
+					sdk.NewAttribute("aum_fee_bips", "20"),
+					sdk.NewAttribute("authority", techFeeAddr.String()),
+					sdk.NewAttribute("vault_address", vaultAddr.String()),
+				),
+			},
+		},
+		{
+			name:  "failure - vault not found",
+			setup: func() { /* no setup */ },
+			msg: types.MsgUpdateVaultAUMFeeBipsRequest{
+				Authority:    techFeeAddr.String(),
+				VaultAddress: vaultAddr.String(),
+				AumFeeBips:   20,
+			},
+			expectedErrSubstrs: []string{"vault not found"},
+		},
+		{
+			name:  "failure - unauthorized authority",
+			setup: setup,
+			msg: types.MsgUpdateVaultAUMFeeBipsRequest{
+				Authority:    otherUser.String(),
+				VaultAddress: vaultAddr.String(),
+				AumFeeBips:   20,
+			},
+			expectedErrSubstrs: []string{"unauthorized"},
+		},
+		{
+			name:  "failure - invalid bips",
+			setup: setup,
+			msg: types.MsgUpdateVaultAUMFeeBipsRequest{
+				Authority:    techFeeAddr.String(),
+				VaultAddress: vaultAddr.String(),
+				AumFeeBips:   10001,
+			},
+			expectedErrSubstrs: []string{"invalid AUM fee bips"},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			tc := msgServerTestCase[types.MsgUpdateVaultAUMFeeBipsRequest, postCheckArgs]{
+				name:               tt.name,
+				setup:              tt.setup,
+				msg:                tt.msg,
+				postCheckArgs:      tt.postCheckArgs,
+				expectedEvents:     tt.expectedEvents,
+				expectedErrSubstrs: tt.expectedErrSubstrs,
+			}
+
+			testDef.expectedResponse = &types.MsgUpdateVaultAUMFeeBipsResponse{}
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
 // msgServerTestDef defines the configuration for testing a specific MsgServer endpoint.
 // Req is the request message type.
 // Resp is the expected response message type.

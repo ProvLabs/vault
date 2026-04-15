@@ -231,8 +231,8 @@ func (k Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vault
 	return nil
 }
 
-// PerformVaultFeeTransfer computes and collects the 15 bps technology fee (0.15% annual)
-// from the vault's principal marker account.
+// PerformVaultFeeTransfer computes and collects the AUM technology fee
+// from the vault's principal marker account using its configured AumFeeBips.
 //
 // The fee is calculated based on the **Gross TVV** (the literal sum of all assets in the marker)
 // and collected in the vault's configured PaymentDenom.

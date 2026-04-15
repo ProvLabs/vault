@@ -71,7 +71,7 @@ Processing model (safe “collect-then-mutate”):
      * If **sufficient** → execute `PerformVaultInterestTransfer` (emits `EventVaultReconcile`) and mark **reconciled**.
 4. **Advance state**:
 
-   * For **reconciled** vaults → `resetVaultInterestPeriods` (starts new period and enqueues next timeout).
+   * For **reconciled** vaults → `SafeEnqueuePayoutTimeout` (starts new period and enqueues next timeout).
    * For **depleted** vaults → `handleDepletedVaults` (sets `current_rate = "0"`; interest disabled, desired preserved).
 
 **Skips paused vaults.** They remain in place until unpaused.
@@ -90,8 +90,7 @@ Reconciles the 15 bps AUM technology fee for vaults whose fee timeout has elapse
      - **Schedules next fee timeout** and commits state changes.
    - **Failure (Transient Error)**:
      - If reconciliation fails (e.g., missing NAV for denom conversion), the `CacheContext` is discarded.
-     - **Rescheduling**: The vault's fee timeout is rescheduled to the next block window (`rescheduleFeeTimeout`) on the main context to preserve accrued fees while preventing block-to-block retry loops.
-
+     - **Rescheduling**: The vault's fee timeout is rescheduled to the next block window (`RescheduleFeeTimeout`) on the main context to preserve accrued fees while preventing block-to-block retry loops.
 ---
 
 ## EndBlocker
@@ -131,7 +130,7 @@ This advances vaults from the **verification set**:
 2. **Remove** each from the set (before processing).
 3. **Partition** into:
 
-   * **Payable**: can cover the **forecast window** (see below) → re-enqueue next timeout (`SafeEnqueueTimeout`).
+   * **Payable**: can cover the **forecast window** (see below) → re-enqueue next timeout (`SafeEnqueuePayoutTimeout`).
    * **Depleted**: cannot cover forecast → disable interest (`current_rate = "0"`; desired preserved).
 
 ---

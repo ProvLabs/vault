@@ -201,7 +201,7 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 
 	switch {
 	case !prevEnabled && nextEnabled:
-		if err := k.SafeAddVerification(ctx, vault); err != nil {
+		if err := k.SafeAddPayoutVerification(ctx, vault); err != nil {
 			return nil, fmt.Errorf("failed to enqueue vault payout verification: %w", err)
 		}
 	case prevEnabled && !nextEnabled:
@@ -562,7 +562,7 @@ func (k msgServer) UnpauseVault(goCtx context.Context, msg *types.MsgUnpauseVaul
 		return nil, fmt.Errorf("failed to get TVV before pausing: %w", err)
 	}
 
-	if err := k.SafeAddVerification(ctx, vault); err != nil {
+	if err := k.SafeAddPayoutVerification(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to enqueue vault payout verification: %w", err)
 	}
 

@@ -251,10 +251,10 @@ func (s *TestSuite) requireAddFinalizeAndActivateReceiptMarker(coin sdk.Coin, gr
 	}
 
 	marker := &markertypes.MarkerAccount{
-		BaseAccount: &authtypes.BaseAccount{Address: markerAddr.String()},
-		Manager:     grantees[0].String(),
-		AccessControl: accessControl,
-		Status:        markertypes.StatusProposed,
+		BaseAccount:            &authtypes.BaseAccount{Address: markerAddr.String()},
+		Manager:                grantees[0].String(),
+		AccessControl:          accessControl,
+		Status:                 markertypes.StatusProposed,
 		Denom:                  coin.Denom,
 		Supply:                 coin.Amount,
 		MarkerType:             markertypes.MarkerType_RestrictedCoin,
@@ -411,8 +411,8 @@ func (s *TestSuite) SetVaultRatesAndPeriod(vault *types.VaultAccount, currentRat
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 }
 
-// AdvanceCtxWithTime updates the suite's context block time.
-func (s *TestSuite) AdvanceCtxWithTime(t time.Time) {
+// SetCtxBlockTime updates the suite's context block time and resets the event manager.
+func (s *TestSuite) SetCtxBlockTime(t time.Time) {
 	s.ctx = s.ctx.WithBlockTime(t).WithEventManager(sdk.NewEventManager())
 }
 

@@ -52,9 +52,9 @@ func (s *TestSuite) TestKeeper_ReconcileVault() {
 			inPayoutQueue:     true,
 		},
 		{
-			name:              "interest period has elasped, should pay interest and update period start",
-			interestRate:      "0.25",
-			periodStart:       pastTime.Unix(),
+			name:         "interest period has elasped, should pay interest and update period start",
+			interestRate: "0.25",
+			periodStart:  pastTime.Unix(),
 			// Fee is calculated on TVV AFTER interest transfer.
 			// Initial TVV: 1,000,000,000. Interest: 41,952,013.
 			// TVV after interest: 1,041,952,013.
@@ -100,9 +100,9 @@ func (s *TestSuite) TestKeeper_ReconcileVault() {
 			},
 		},
 		{
-			name:              "interest period has elasped, should pay negative interest and update period start",
-			interestRate:      "-0.25",
-			periodStart:       pastTime.Unix(),
+			name:         "interest period has elasped, should pay negative interest and update period start",
+			interestRate: "-0.25",
+			periodStart:  pastTime.Unix(),
 			// Initial TVV: 1,000,000,000. Interest: -40,262,904.
 			// TVV after interest: 959,737,096.
 			// Fee: 959,737,096 * 0.0015 * 5,184,000 / 31,536,000 = 236,647
@@ -272,7 +272,7 @@ func (s *TestSuite) TestKeeper_PerformVaultReconcile_CompositeWithOutstandingFee
 		updatedVault, err := s.k.GetVault(s.ctx, vaultAddress)
 		s.Require().NoError(err, "failed to get updated vault")
 		s.Require().True(updatedVault.OutstandingAumFee.IsZero(), "all fees should be cleared")
-		
+
 		provlabsAddr, err := s.k.GetAUMFeeAddress(s.ctx)
 		s.Require().NoError(err, "failed to get AUM fee address")
 		// TVV after interest = 1,001,000,000 + 41,993,965 = 1,042,993,965
@@ -302,7 +302,7 @@ func (s *TestSuite) TestKeeper_PerformVaultReconcile_CompositeWithOutstandingFee
 		updatedVault, err := s.k.GetVault(s.ctx, vaultAddress)
 		s.Require().NoError(err, "failed to get updated vault")
 		s.Require().Equal(sdkmath.NewInt(1_156_945), updatedVault.OutstandingAumFee.Amount, "outstanding fee balance mismatch in Case 2")
-		
+
 		provlabsAddr, err := s.k.GetAUMFeeAddress(s.ctx)
 		s.Require().NoError(err, "failed to get AUM fee address")
 		s.assertBalance(provlabsAddr, paymentDenom, sdkmath.NewInt(100_000))
@@ -346,7 +346,7 @@ func (s *TestSuite) TestKeeper_PerformVaultReconcile_CompositeWithOutstandingFee
 
 		// GROSS = 1,000,000,000
 		// NET = 1,000,000,000 - 100,000,000 = 900,000_000
-		
+
 		tvv, err := s.k.GetTVVInUnderlyingAsset(s.ctx, *vault)
 		s.Require().NoError(err, "failed to get TVV in underlying asset")
 		s.Require().Equal(sdkmath.NewInt(1_000_000_000), tvv, "GetTVV returns Gross")
@@ -409,7 +409,7 @@ func (s *TestSuite) TestKeeper_PerformVaultReconcile_CompositeWithOutstandingFee
 		// Fee = 256,919
 		// Debt (Net of NAV) = 50,000,000 * 2 = 100,000,000
 		// Net Valuation = (1,000,000,000 + 41,952,013) - 256,919 - 100,000,000 = 941,695,094
-		
+
 		val, err := s.k.CalculateVaultTotalAssets(s.ctx, vault, sdk.NewInt64Coin(underlyingDenom, 1_000_000_000))
 		s.Require().NoError(err, "CalculateVaultTotalAssets should not error for case: Non-1:1 NAV Composite Conversion")
 		s.Require().Equal(sdkmath.NewInt(941_695_094), val, "valuation should correctly convert secondary debt via NAV")
@@ -1792,7 +1792,7 @@ func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer() {
 			s.FundMarker(shareDenom, sdk.NewCoins(underlying))
 			s.FundMarker(shareDenom, sdk.NewCoins(sdk.NewCoin(tc.paymentDenom, tc.initialLiquidity)))
 
-			s.AdvanceCtxWithTime(now)
+			s.SetCtxBlockTime(now)
 
 			err := s.k.PerformVaultFeeTransfer(s.ctx, vault)
 			s.Require().NoError(err, "PerformVaultFeeTransfer should not error during initial collection")
@@ -1831,7 +1831,7 @@ func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer() {
 			}
 
 			// Second collection
-			s.AdvanceCtxWithTime(now.Add(time.Second))
+			s.SetCtxBlockTime(now.Add(time.Second))
 			s.FundMarker(shareDenom, sdk.NewCoins(sdk.NewCoin(tc.paymentDenom, tc.secondLiquidity)))
 
 			err = s.k.PerformVaultFeeTransfer(s.ctx, vault)
@@ -2331,7 +2331,7 @@ func (s *TestSuite) TestReconcileVault_BootstrapFeePeriod() {
 
 	// Setup vault with PeriodStart set but FeePeriodStart = 0
 	vaultAddr, vault := s.setupReconcileVault("0.25", periodStart, false, underlying, shareDenom, totalShares, testBlockTime)
-	
+
 	// Manually set FeePeriodStart to 0 to simulate the bug scenario
 	vault.FeePeriodStart = 0
 	vault.FeePeriodTimeout = 0

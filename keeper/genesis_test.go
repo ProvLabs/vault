@@ -138,6 +138,7 @@ func (s *TestSuite) TestInitGenesis_PanicOnInvalidTimeout() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
+			s.SetupTest()
 			s.Require().PanicsWithError(tt.panicMsg, func() {
 				s.k.InitGenesis(s.ctx, tt.genState)
 			})

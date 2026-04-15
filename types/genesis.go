@@ -17,10 +17,8 @@ func DefaultGenesisState() *GenesisState {
 // Validate performs basic genesis state validation returning an error upon any
 // failure.
 func (gs GenesisState) Validate() error {
-	if len(gs.Params.TechFeeAddress) > 0 {
-		if err := gs.Params.Validate(); err != nil {
-			return fmt.Errorf("invalid params: %w", err)
-		}
+	if err := gs.Params.Validate(); err != nil {
+		return fmt.Errorf("invalid params: %w", err)
 	}
 
 	vaults := make(map[string]VaultAccount)

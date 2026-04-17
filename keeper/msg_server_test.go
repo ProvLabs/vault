@@ -3329,6 +3329,16 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds_Failures() {
 			expectedErrSubstrs: []string{"failed to withdraw principal funds", "insufficient funds"},
 		},
 		{
+			name:  "receipt underlying: invalid asset for vault",
+			setup: setupReceipt,
+			msg: types.MsgWithdrawPrincipalFundsRequest{
+				Authority:    admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Amount:       sdk.NewInt64Coin("wrongdenom", 500),
+			},
+			expectedErrSubstrs: []string{"denom not supported for vault", receiptUnderlying, "wrongdenom"},
+		},
+		{
 			name:  "receipt underlying: send fails without transfer permission on receipt token",
 			setup: setupSendFailsNoTransferPerm,
 			msg: types.MsgWithdrawPrincipalFundsRequest{

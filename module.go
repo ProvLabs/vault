@@ -183,6 +183,22 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 							Name:  "withdrawal-delay-seconds",
 							Usage: "Minimum delay (in seconds) before a queued swap-out can complete. Set to 0 for no delay.",
 						},
+						"min_swap_in_value": {
+							Name:  "min-swap-in-value",
+							Usage: "Minimum value required for a deposit, measured in the underlying_asset. Set to 0 or empty for no minimum.",
+						},
+						"min_swap_out_value": {
+							Name:  "min-swap-out-value",
+							Usage: "Minimum value required for a withdrawal, measured in the underlying_asset. Set to 0 or empty for no minimum.",
+						},
+						"max_swap_in_value": {
+							Name:  "max-swap-in-value",
+							Usage: "Maximum value allowed for a deposit, measured in the underlying_asset. Set to empty for no maximum. Set to 0 to block all deposits.",
+						},
+						"max_swap_out_value": {
+							Name:  "max-swap-out-value",
+							Usage: "Maximum value allowed for a withdrawal, measured in the underlying_asset. Set to empty for no maximum. Set to 0 to block all withdrawals.",
+						},
 					},
 				},
 				{
@@ -262,6 +278,58 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						{ProtoField: "authority"},
 						{ProtoField: "vault_address"},
 						{ProtoField: "new_rate"},
+					},
+				},
+				{
+					RpcMethod: "UpdateMinSwapInValue",
+					Use:       "update-min-swap-in-value [authority] [vault_address] [min_swap_in_value]",
+					Alias:     []string{"umsiv"},
+					Short:     "Update the minimum allowed value for a swap-in operation",
+					Long:      "Set a floor for swap-in deposits. Pass an empty string or '0' to clear. Value is in underlying_asset units.",
+					Example:   fmt.Sprintf("%s update-min-swap-in-value %s %s 100", txStart, exampleAuthorityAddr, exampleVaultAddr),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "authority"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "min_swap_in_value"},
+					},
+				},
+				{
+					RpcMethod: "UpdateMinSwapOutValue",
+					Use:       "update-min-swap-out-value [authority] [vault_address] [min_swap_out_value]",
+					Alias:     []string{"umsov"},
+					Short:     "Update the minimum allowed value for a swap-out operation",
+					Long:      "Set a floor for swap-out withdrawals. Pass an empty string or '0' to clear. Value is in underlying_asset units.",
+					Example:   fmt.Sprintf("%s update-min-swap-out-value %s %s 100", txStart, exampleAuthorityAddr, exampleVaultAddr),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "authority"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "min_swap_out_value"},
+					},
+				},
+				{
+					RpcMethod: "UpdateMaxSwapInValue",
+					Use:       "update-max-swap-in-value [authority] [vault_address] [max_swap_in_value]",
+					Alias:     []string{"umaxiv"},
+					Short:     "Update the maximum allowed value for a swap-in operation",
+					Long:      "Set a ceiling for swap-in deposits. Pass an empty string to clear. Pass '0' to block all deposits. Value is in underlying_asset units.",
+					Example:   fmt.Sprintf("%s update-max-swap-in-value %s %s 1000", txStart, exampleAuthorityAddr, exampleVaultAddr),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "authority"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "max_swap_in_value"},
+					},
+				},
+				{
+					RpcMethod: "UpdateMaxSwapOutValue",
+					Use:       "update-max-swap-out-value [authority] [vault_address] [max_swap_out_value]",
+					Alias:     []string{"umaxov"},
+					Short:     "Update the maximum allowed value for a swap-out operation",
+					Long:      "Set a ceiling for swap-out withdrawals. Pass an empty string to clear. Pass '0' to block all withdrawals. Value is in underlying_asset units.",
+					Example:   fmt.Sprintf("%s update-max-swap-out-value %s %s 1000", txStart, exampleAuthorityAddr, exampleVaultAddr),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "authority"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "max_swap_out_value"},
 					},
 				},
 				{

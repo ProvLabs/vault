@@ -343,6 +343,61 @@ func getRandomVaultAsset(r *rand.Rand, vault *types.VaultAccount) string {
 	return vault.PaymentDenom
 }
 
+// getRandomMinSwapValue generates a random valid minimum swap value for a given vault.
+func getRandomMinSwapValue(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, vaultAddr sdk.AccAddress, isSwapIn bool) (string, error) {
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return "", err
+	}
+	if vault == nil {
+		return "", fmt.Errorf("received nil vault")
+	}
+
+	maxStr := vault.MaxSwapInValue
+	if !isSwapIn {
+		maxStr = vault.MaxSwapOutValue
+	}
+
+	upperBound := math.NewInt(1_000_000)
+	if maxStr != "" {
+		maxVal, ok := math.NewIntFromString(maxStr)
+		if ok && !maxVal.IsZero() {
+			upperBound = maxVal
+		}
+	}
+
+	randomVal := simtypes.RandomAmount(r, upperBound)
+	return randomVal.String(), nil
+}
+
+// getRandomMaxSwapValue generates a random valid maximum swap value for a given vault.
+func getRandomMaxSwapValue(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, vaultAddr sdk.AccAddress, isSwapIn bool) (string, error) {
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return "", err
+	}
+	if vault == nil {
+		return "", fmt.Errorf("received nil vault")
+	}
+
+	minStr := vault.MinSwapInValue
+	if !isSwapIn {
+		minStr = vault.MinSwapOutValue
+	}
+
+	lowerBound := math.ZeroInt()
+	if minStr != "" {
+		minVal, ok := math.NewIntFromString(minStr)
+		if ok {
+			lowerBound = minVal
+		}
+	}
+
+	upperBound := lowerBound.Add(math.NewInt(2_000_000))
+	randomVal := simtypes.RandomAmount(r, upperBound.Sub(lowerBound)).Add(lowerBound)
+	return randomVal.String(), nil
+}
+
 // getRandomAccountWithDenom finds a random account from a list that has a positive balance of a given denomination.
 func getRandomAccountWithDenom(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, accs []simtypes.Account, denom string) (simtypes.Account, sdk.Coin, error) {
 	r.Shuffle(len(accs), func(i, j int) {
@@ -356,4 +411,26 @@ func getRandomAccountWithDenom(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, a
 	}
 
 	return simtypes.Account{}, sdk.Coin{}, fmt.Errorf("no account has positive %s balance", denom)
+}
+
+// getRandomManagementAuthority returns a random management authority (admin or asset manager) for a given vault.
+func getRandomManagementAuthority(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, vault *types.VaultAccount, accs []simtypes.Account) (simtypes.Account, error) {
+	adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
+	if err != nil {
+		return simtypes.Account{}, err
+	}
+
+	authorityAddr := adminAddr
+	if vault.AssetManager != "" && r.Intn(2) == 1 {
+		if am, err := sdk.AccAddressFromBech32(vault.AssetManager); err == nil {
+			authorityAddr = am
+		}
+	}
+
+	authority, found := simtypes.FindAccount(accs, authorityAddr)
+	if !found {
+		return simtypes.Account{}, fmt.Errorf("authority account not found in simulation accounts")
+	}
+
+	return authority, nil
 }

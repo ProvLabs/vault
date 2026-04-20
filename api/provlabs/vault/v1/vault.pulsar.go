@@ -3403,22 +3403,26 @@ type VaultAccount struct {
 	// min_swap_in_value is a string representing the minimum value required for a deposit.
 	// - The value is measured in the underlying_asset.
 	// - Incoming payment_denom deposits are converted to this unit before checking.
+	// - Values must be non-negative (>= 0).
 	// - If empty ("") or "0", there is no minimum limit.
 	MinSwapInValue string `protobuf:"bytes,25,opt,name=min_swap_in_value,json=minSwapInValue,proto3" json:"min_swap_in_value,omitempty"`
 	// min_swap_out_value is a string representing the minimum value required for a withdrawal.
 	// - The value is measured in the underlying_asset.
 	// - Outgoing redemptions are converted to this unit before checking.
+	// - Values must be non-negative (>= 0).
 	// - If empty ("") or "0", there is no minimum limit.
 	MinSwapOutValue string `protobuf:"bytes,26,opt,name=min_swap_out_value,json=minSwapOutValue,proto3" json:"min_swap_out_value,omitempty"`
 	// max_swap_in_value is a string representing the maximum value allowed for a deposit.
 	// - The value is measured in the underlying_asset.
 	// - Incoming payment_denom deposits are converted to this unit before checking.
+	// - Values must be non-negative (>= 0).
 	// - An empty string "" indicates no maximum limit.
 	// - A value of "0" blocks all deposits.
 	MaxSwapInValue string `protobuf:"bytes,27,opt,name=max_swap_in_value,json=maxSwapInValue,proto3" json:"max_swap_in_value,omitempty"`
 	// max_swap_out_value is a string representing the maximum value allowed for a withdrawal.
 	// - The value is measured in the underlying_asset.
 	// - Outgoing redemptions are converted to this unit before checking.
+	// - Values must be non-negative (>= 0).
 	// - An empty string "" indicates no maximum limit.
 	// - A value of "0" blocks all withdrawals.
 	MaxSwapOutValue string `protobuf:"bytes,28,opt,name=max_swap_out_value,json=maxSwapOutValue,proto3" json:"max_swap_out_value,omitempty"`

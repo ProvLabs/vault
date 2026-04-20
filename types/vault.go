@@ -213,18 +213,28 @@ func (v VaultAccount) Validate() error {
 		if !ok {
 			return fmt.Errorf("invalid min swap in value: %s", v.MinSwapInValue)
 		}
+		if min.IsNegative() {
+			return fmt.Errorf("min swap in value must be non-negative: %s", v.MinSwapInValue)
+		}
 		if v.MaxSwapInValue != "" {
 			max, ok := sdkmath.NewIntFromString(v.MaxSwapInValue)
 			if !ok {
 				return fmt.Errorf("invalid max swap in value: %s", v.MaxSwapInValue)
+			}
+			if max.IsNegative() {
+				return fmt.Errorf("max swap in value must be non-negative: %s", v.MaxSwapInValue)
 			}
 			if !max.IsZero() && min.GT(max) {
 				return fmt.Errorf("min swap in value %s cannot be greater than max swap in value %s", v.MinSwapInValue, v.MaxSwapInValue)
 			}
 		}
 	} else if v.MaxSwapInValue != "" {
-		if _, ok := sdkmath.NewIntFromString(v.MaxSwapInValue); !ok {
+		val, ok := sdkmath.NewIntFromString(v.MaxSwapInValue)
+		if !ok {
 			return fmt.Errorf("invalid max swap in value: %s", v.MaxSwapInValue)
+		}
+		if val.IsNegative() {
+			return fmt.Errorf("max swap in value must be non-negative: %s", v.MaxSwapInValue)
 		}
 	}
 
@@ -233,18 +243,28 @@ func (v VaultAccount) Validate() error {
 		if !ok {
 			return fmt.Errorf("invalid min swap out value: %s", v.MinSwapOutValue)
 		}
+		if min.IsNegative() {
+			return fmt.Errorf("min swap out value must be non-negative: %s", v.MinSwapOutValue)
+		}
 		if v.MaxSwapOutValue != "" {
 			max, ok := sdkmath.NewIntFromString(v.MaxSwapOutValue)
 			if !ok {
 				return fmt.Errorf("invalid max swap out value: %s", v.MaxSwapOutValue)
+			}
+			if max.IsNegative() {
+				return fmt.Errorf("max swap out value must be non-negative: %s", v.MaxSwapOutValue)
 			}
 			if !max.IsZero() && min.GT(max) {
 				return fmt.Errorf("min swap out value %s cannot be greater than max swap out value %s", v.MinSwapOutValue, v.MaxSwapOutValue)
 			}
 		}
 	} else if v.MaxSwapOutValue != "" {
-		if _, ok := sdkmath.NewIntFromString(v.MaxSwapOutValue); !ok {
+		val, ok := sdkmath.NewIntFromString(v.MaxSwapOutValue)
+		if !ok {
 			return fmt.Errorf("invalid max swap out value: %s", v.MaxSwapOutValue)
+		}
+		if val.IsNegative() {
+			return fmt.Errorf("max swap out value must be non-negative: %s", v.MaxSwapOutValue)
 		}
 	}
 

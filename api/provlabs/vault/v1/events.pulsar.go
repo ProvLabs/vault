@@ -23169,7 +23169,8 @@ type EventMinSwapInValueUpdated struct {
 	// authority is the address (admin or asset manager) that updated the limit.
 	Authority string `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`
 	// min_swap_in is the newly set minimum swap-in value, measured in the underlying_asset.
-	// An empty string "" or "0" indicates the minimum was cleared / no configured minimum.
+	// - Values must be non-negative (>= 0).
+	// - An empty string "" or "0" indicates the minimum was cleared / no configured minimum.
 	MinSwapIn string `protobuf:"bytes,3,opt,name=min_swap_in,json=minSwapIn,proto3" json:"min_swap_in,omitempty"`
 }
 
@@ -23225,7 +23226,8 @@ type EventMinSwapOutValueUpdated struct {
 	// authority is the address (admin or asset manager) that updated the limit.
 	Authority string `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`
 	// min_swap_out is the newly set minimum swap-out value, measured in the underlying_asset.
-	// An empty string "" or "0" indicates the minimum was cleared / no configured minimum.
+	// - Values must be non-negative (>= 0).
+	// - An empty string "" or "0" indicates the minimum was cleared / no configured minimum.
 	MinSwapOut string `protobuf:"bytes,3,opt,name=min_swap_out,json=minSwapOut,proto3" json:"min_swap_out,omitempty"`
 }
 
@@ -23281,6 +23283,7 @@ type EventMaxSwapInValueUpdated struct {
 	// authority is the address (admin or asset manager) that updated the limit.
 	Authority string `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`
 	// max_swap_in is the newly set maximum swap-in value, measured in the underlying_asset.
+	// - Values must be non-negative (>= 0).
 	// - An empty string "" indicates no maximum limit.
 	// - A value of "0" blocks all deposits.
 	MaxSwapIn string `protobuf:"bytes,3,opt,name=max_swap_in,json=maxSwapIn,proto3" json:"max_swap_in,omitempty"`
@@ -23338,6 +23341,7 @@ type EventMaxSwapOutValueUpdated struct {
 	// authority is the address (admin or asset manager) that updated the limit.
 	Authority string `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`
 	// max_swap_out is the newly set maximum swap-out value, measured in the underlying_asset.
+	// - Values must be non-negative (>= 0).
 	// - An empty string "" indicates no maximum limit.
 	// - A value of "0" blocks all withdrawals.
 	MaxSwapOut string `protobuf:"bytes,3,opt,name=max_swap_out,json=maxSwapOut,proto3" json:"max_swap_out,omitempty"`

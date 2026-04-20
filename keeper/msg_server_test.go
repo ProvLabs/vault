@@ -662,7 +662,7 @@ func (s *TestSuite) TestMsgServer_SwapOut() {
 		s.ctx = s.ctx.WithBlockTime(time.Now())
 
 		_, err = s.k.SwapIn(s.ctx, vaultAddr, ownerAddr, deposit)
-		s.Require().NoError(err, "initial SwapIn should succeed")
+		s.Require().NoError(err, "initial SwapIn should succeed for owner %s and vault %s", ownerAddr, vaultAddr)
 	}
 
 	testCases := []struct {
@@ -741,7 +741,7 @@ func (s *TestSuite) TestMsgServer_SwapOut_Failures() {
 			s.Require().NoError(err, "funding owner should succeed")
 
 			_, err = s.k.SwapIn(s.ctx, vaultAddr, owner, initialAssets)
-			s.Require().NoError(err, "initial SwapIn should succeed")
+			s.Require().NoError(err, "initial SwapIn should succeed for vault %s and owner %s", vaultAddr, owner)
 			vault.Paused = vaultPaused
 			s.k.AuthKeeper.SetAccount(s.ctx, vault)
 		}
@@ -915,7 +915,7 @@ func (s *TestSuite) TestMsgServer_ToggleSwapOut() {
 			setup: func() {
 				setup(false)()
 				vault, err := s.k.GetVault(s.ctx, vaultAddr)
-				s.Require().NoError(err, "failed to get vault in setup for address %s", vaultAddr)
+				s.Require().NoError(err, "failed to get vault %s for manual swap-out toggle", vaultAddr)
 				vault.SwapOutEnabled = true
 				s.k.AuthKeeper.SetAccount(s.ctx, vault)
 			},
@@ -941,7 +941,7 @@ func (s *TestSuite) TestMsgServer_ToggleSwapOut() {
 			setup: func() {
 				setup(false)()
 				vault, err := s.k.GetVault(s.ctx, vaultAddr)
-				s.Require().NoError(err, "failed to get vault in setup for address %s", vaultAddr)
+				s.Require().NoError(err, "failed to get vault %s for paused toggle setup", vaultAddr)
 				vault.SwapOutEnabled = true
 				vault.Paused = true
 				s.k.AuthKeeper.SetAccount(s.ctx, vault)

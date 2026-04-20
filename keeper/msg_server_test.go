@@ -505,8 +505,8 @@ func (s *TestSuite) TestMsgServer_SwapIn_Failures() {
 			vault.Paused = vaultPaused
 			s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
-			err = FundAccount(s.ctx, s.simApp.BankKeeper, owner, sdk.NewCoins(assets))
-			s.Require().NoError(err, "funding owner with initial underlying should succeed")
+			err = FundAccount(s.ctx, s.simApp.BankKeeper, owner, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1000)))
+			s.Require().NoError(err, "funding owner with underlying should succeed")
 		}
 	}
 
@@ -586,7 +586,7 @@ func (s *TestSuite) TestMsgServer_SwapIn_Failures() {
 			setup: func() {
 				setup(true, false, "", "")()
 				err := s.simApp.BankKeeper.SendCoins(s.ctx, owner, authtypes.NewModuleAddress("burn"),
-					sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 50)))
+					sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 950)))
 				s.Require().NoError(err, "reducing owner's balance should succeed")
 			},
 			msg:                types.MsgSwapInRequest{Owner: owner.String(), VaultAddress: vaultAddr.String(), Assets: assets},
@@ -719,11 +719,11 @@ func (s *TestSuite) TestMsgServer_SwapOut_Failures() {
 	shareDenom := "vaultshares"
 	owner := s.adminAddr
 	vaultAddr := types.GetVaultAddress(shareDenom)
-	initialAssets := sdk.NewInt64Coin(underlyingDenom, 100)
+	initialAssets := sdk.NewInt64Coin(underlyingDenom, 1000)
 
 	setup := func(swapOutEnabled, vaultPaused bool, minSwapOut, maxSwapOut string) func() {
 		return func() {
-			s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), owner)
+			s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(2000)), owner)
 			vault, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 				Admin:           owner.String(),
 				ShareDenom:      shareDenom,
@@ -1145,6 +1145,16 @@ func (s *TestSuite) TestMsgServer_UpdateMinSwapInValue_Failures() {
 			},
 			expectedErrSubstrs: []string{"invalid min swap in value"},
 		},
+		{
+			name:  "negative value",
+			setup: setup,
+			msg: types.MsgUpdateMinSwapInValueRequest{
+				Authority:      admin.String(),
+				VaultAddress:   types.GetVaultAddress(share).String(),
+				MinSwapInValue: "-1",
+			},
+			expectedErrSubstrs: []string{"must be non-negative"},
+		},
 	}
 
 	for _, tc := range tests {
@@ -1283,6 +1293,16 @@ func (s *TestSuite) TestMsgServer_UpdateMinSwapOutValue_Failures() {
 				MinSwapOutValue: "invalid",
 			},
 			expectedErrSubstrs: []string{"invalid min swap out value"},
+		},
+		{
+			name:  "negative value",
+			setup: setup,
+			msg: types.MsgUpdateMinSwapOutValueRequest{
+				Authority:       admin.String(),
+				VaultAddress:    types.GetVaultAddress(share).String(),
+				MinSwapOutValue: "-1",
+			},
+			expectedErrSubstrs: []string{"must be non-negative"},
 		},
 	}
 
@@ -1423,6 +1443,16 @@ func (s *TestSuite) TestMsgServer_UpdateMaxSwapInValue_Failures() {
 			},
 			expectedErrSubstrs: []string{"invalid max swap in value"},
 		},
+		{
+			name:  "negative value",
+			setup: setup,
+			msg: types.MsgUpdateMaxSwapInValueRequest{
+				Authority:      admin.String(),
+				VaultAddress:   types.GetVaultAddress(share).String(),
+				MaxSwapInValue: "-1",
+			},
+			expectedErrSubstrs: []string{"must be non-negative"},
+		},
 	}
 
 	for _, tc := range tests {
@@ -1561,6 +1591,16 @@ func (s *TestSuite) TestMsgServer_UpdateMaxSwapOutValue_Failures() {
 				MaxSwapOutValue: "invalid",
 			},
 			expectedErrSubstrs: []string{"invalid max swap out value"},
+		},
+		{
+			name:  "negative value",
+			setup: setup,
+			msg: types.MsgUpdateMaxSwapOutValueRequest{
+				Authority:       admin.String(),
+				VaultAddress:    types.GetVaultAddress(share).String(),
+				MaxSwapOutValue: "-1",
+			},
+			expectedErrSubstrs: []string{"must be non-negative"},
 		},
 	}
 

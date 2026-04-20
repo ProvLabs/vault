@@ -124,12 +124,22 @@ message MsgCreateVaultRequest {
   // must wait in the pending queue before being processed.
   uint64 withdrawal_delay_seconds = 5;
   // min_swap_in_value is the minimum value required for a deposit, measured in the underlying_asset.
+  // - Values must be non-negative (>= 0).
+  // - An empty string "" or "0" indicates no minimum.
   string min_swap_in_value = 6 [(cosmos_proto.scalar) = "cosmos.IntString"];
   // min_swap_out_value is the minimum value required for a withdrawal, measured in the underlying_asset.
+  // - Values must be non-negative (>= 0).
+  // - An empty string "" or "0" indicates no minimum.
   string min_swap_out_value = 7 [(cosmos_proto.scalar) = "cosmos.IntString"];
   // max_swap_in_value is the maximum value allowed for a deposit, measured in the underlying_asset.
+  // - Values must be non-negative (>= 0).
+  // - An empty string "" indicates no maximum limit.
+  // - A value of "0" blocks all deposits.
   string max_swap_in_value = 8 [(cosmos_proto.scalar) = "cosmos.IntString"];
   // max_swap_out_value is the maximum value allowed for a withdrawal, measured in the underlying_asset.
+  // - Values must be non-negative (>= 0).
+  // - An empty string "" indicates no maximum limit.
+  // - A value of "0" blocks all withdrawals.
   string max_swap_out_value = 9 [(cosmos_proto.scalar) = "cosmos.IntString"];
 }
 

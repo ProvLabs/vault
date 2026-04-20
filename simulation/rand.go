@@ -414,7 +414,7 @@ func getRandomAccountWithDenom(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, a
 }
 
 // getRandomManagementAuthority returns a random management authority (admin or asset manager) for a given vault.
-func getRandomManagementAuthority(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, vault *types.VaultAccount, accs []simtypes.Account) (simtypes.Account, error) {
+func getRandomManagementAuthority(r *rand.Rand, ctx sdk.Context, vault *types.VaultAccount, accs []simtypes.Account) (simtypes.Account, error) {
 	adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
 	if err != nil {
 		return simtypes.Account{}, err

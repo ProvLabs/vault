@@ -348,7 +348,7 @@ func SimulateMsgUpdateInterestRate(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateInterestRateRequest{}), "unable to get random vault"), nil, err
 		}
 
-		authority, err := getRandomManagementAuthority(r, k, ctx, vault, accs)
+		authority, err := getRandomManagementAuthority(r, ctx, vault, accs)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateInterestRateRequest{}), "unable to get random authority"), nil, nil
 		}
@@ -536,7 +536,7 @@ func SimulateMsgDepositInterestFunds(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositInterestFundsRequest{}), "unable to get random vault"), nil, err
 		}
 
-		authority, err := getRandomManagementAuthority(r, k, ctx, vault, accs)
+		authority, err := getRandomManagementAuthority(r, ctx, vault, accs)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositInterestFundsRequest{}), "unable to get random authority"), nil, nil
 		}
@@ -591,7 +591,7 @@ func SimulateMsgWithdrawInterestFunds(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawInterestFundsRequest{}), "unable to get random vault"), nil, err
 		}
 
-		authority, err := getRandomManagementAuthority(r, k, ctx, vault, accs)
+		authority, err := getRandomManagementAuthority(r, ctx, vault, accs)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawInterestFundsRequest{}), "unable to get random authority"), nil, nil
 		}
@@ -632,7 +632,7 @@ func SimulateMsgDepositPrincipalFunds(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositPrincipalFundsRequest{}), "unable to get random vault"), nil, err
 		}
 
-		authority, err := getRandomManagementAuthority(r, k, ctx, vault, accs)
+		authority, err := getRandomManagementAuthority(r, ctx, vault, accs)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositPrincipalFundsRequest{}), "unable to get random authority"), nil, nil
 		}
@@ -654,7 +654,7 @@ func SimulateMsgDepositPrincipalFunds(k keeper.Keeper) simtypes.Operation {
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositPrincipalFundsRequest{}), "error generating random amount"), nil, err
 		}
-		amount := sdk.NewCoin(vault.UnderlyingAsset, amountInt)
+		amount := sdk.NewCoin(asset, amountInt)
 
 		msg := &types.MsgDepositPrincipalFundsRequest{
 			VaultAddress: vault.GetAddress().String(),
@@ -686,7 +686,7 @@ func SimulateMsgWithdrawPrincipalFunds(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawPrincipalFundsRequest{}), "unable to get random vault"), nil, err
 		}
 
-		authority, err := getRandomManagementAuthority(r, k, ctx, vault, accs)
+		authority, err := getRandomManagementAuthority(r, ctx, vault, accs)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawPrincipalFundsRequest{}), "unable to get random authority"), nil, nil
 		}
@@ -697,7 +697,7 @@ func SimulateMsgWithdrawPrincipalFunds(k keeper.Keeper) simtypes.Operation {
 		if balance.IsZero() {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawPrincipalFundsRequest{}), "no underlying asset funds"), nil, nil
 		}
-		amount := sdk.NewInt64Coin(vault.UnderlyingAsset, r.Int63n(balance.Amount.Int64()))
+		amount := sdk.NewInt64Coin(asset, r.Int63n(balance.Amount.Int64()))
 
 		msg := &types.MsgWithdrawPrincipalFundsRequest{
 			VaultAddress: vault.GetAddress().String(),
@@ -729,7 +729,7 @@ func SimulateMsgExpeditePendingSwapOut(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgExpeditePendingSwapOutRequest{}), "unable to get random vault"), nil, err
 		}
 
-		authority, err := getRandomManagementAuthority(r, k, ctx, vault, accs)
+		authority, err := getRandomManagementAuthority(r, ctx, vault, accs)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgExpeditePendingSwapOutRequest{}), "unable to get random authority"), nil, nil
 		}
@@ -768,7 +768,7 @@ func SimulateMsgPauseVault(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgPauseVaultRequest{}), "unable to get random vault"), nil, err
 		}
 
-		authority, err := getRandomManagementAuthority(r, k, ctx, vault, accs)
+		authority, err := getRandomManagementAuthority(r, ctx, vault, accs)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgPauseVaultRequest{}), "unable to get random authority"), nil, nil
 		}
@@ -802,7 +802,7 @@ func SimulateMsgUnpauseVault(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUnpauseVaultRequest{}), "unable to get random vault"), nil, err
 		}
 
-		authority, err := getRandomManagementAuthority(r, k, ctx, vault, accs)
+		authority, err := getRandomManagementAuthority(r, ctx, vault, accs)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUnpauseVaultRequest{}), "unable to get random authority"), nil, nil
 		}
@@ -993,7 +993,7 @@ func SimulateMsgUpdateWithdrawalDelay(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateWithdrawalDelayRequest{}), "unable to get random vault"), nil, err
 		}
 
-		authority, err := getRandomManagementAuthority(r, k, ctx, vault, accs)
+		authority, err := getRandomManagementAuthority(r, ctx, vault, accs)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateWithdrawalDelayRequest{}), "unable to get random authority"), nil, nil
 		}
@@ -1115,7 +1115,7 @@ func SimulateMsgUpdateMinSwapInValue(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateMinSwapInValueRequest{}), "unable to get random vault"), nil, nil
 		}
 
-		authority, err := getRandomManagementAuthority(r, k, ctx, vault, accs)
+		authority, err := getRandomManagementAuthority(r, ctx, vault, accs)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateMinSwapInValueRequest{}), "unable to get random authority"), nil, nil
 		}
@@ -1155,7 +1155,7 @@ func SimulateMsgUpdateMinSwapOutValue(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateMinSwapOutValueRequest{}), "unable to get random vault"), nil, nil
 		}
 
-		authority, err := getRandomManagementAuthority(r, k, ctx, vault, accs)
+		authority, err := getRandomManagementAuthority(r, ctx, vault, accs)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateMinSwapOutValueRequest{}), "unable to get random authority"), nil, nil
 		}
@@ -1195,7 +1195,7 @@ func SimulateMsgUpdateMaxSwapInValue(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateMaxSwapInValueRequest{}), "unable to get random vault"), nil, nil
 		}
 
-		authority, err := getRandomManagementAuthority(r, k, ctx, vault, accs)
+		authority, err := getRandomManagementAuthority(r, ctx, vault, accs)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateMaxSwapInValueRequest{}), "unable to get random authority"), nil, nil
 		}
@@ -1235,7 +1235,7 @@ func SimulateMsgUpdateMaxSwapOutValue(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateMaxSwapOutValueRequest{}), "unable to get random vault"), nil, nil
 		}
 
-		authority, err := getRandomManagementAuthority(r, k, ctx, vault, accs)
+		authority, err := getRandomManagementAuthority(r, ctx, vault, accs)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateMaxSwapOutValueRequest{}), "unable to get random authority"), nil, nil
 		}

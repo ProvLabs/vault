@@ -1123,7 +1123,7 @@ func (s *TestSuite) TestMsgServer_UpdateMinSwapInValue_Failures() {
 				VaultAddress:   types.GetVaultAddress(share).String(),
 				MinSwapInValue: "invalid",
 			},
-			expectedErrSubstrs: []string{"invalid min swap in value"},
+			expectedErrSubstrs: []string{"failed to set MinSwapIn", "invalid min value"},
 		},
 		{
 			name:  "negative value",
@@ -1133,7 +1133,7 @@ func (s *TestSuite) TestMsgServer_UpdateMinSwapInValue_Failures() {
 				VaultAddress:   types.GetVaultAddress(share).String(),
 				MinSwapInValue: "-1",
 			},
-			expectedErrSubstrs: []string{"must be non-negative"},
+			expectedErrSubstrs: []string{"failed to set MinSwapIn", "must be non-negative"},
 		},
 	}
 
@@ -1272,7 +1272,7 @@ func (s *TestSuite) TestMsgServer_UpdateMinSwapOutValue_Failures() {
 				VaultAddress:    types.GetVaultAddress(share).String(),
 				MinSwapOutValue: "invalid",
 			},
-			expectedErrSubstrs: []string{"invalid min swap out value"},
+			expectedErrSubstrs: []string{"failed to set MinSwapOut", "invalid min value"},
 		},
 		{
 			name:  "negative value",
@@ -1282,7 +1282,7 @@ func (s *TestSuite) TestMsgServer_UpdateMinSwapOutValue_Failures() {
 				VaultAddress:    types.GetVaultAddress(share).String(),
 				MinSwapOutValue: "-1",
 			},
-			expectedErrSubstrs: []string{"must be non-negative"},
+			expectedErrSubstrs: []string{"failed to set MinSwapOut", "must be non-negative"},
 		},
 	}
 
@@ -1421,7 +1421,7 @@ func (s *TestSuite) TestMsgServer_UpdateMaxSwapInValue_Failures() {
 				VaultAddress:   types.GetVaultAddress(share).String(),
 				MaxSwapInValue: "invalid",
 			},
-			expectedErrSubstrs: []string{"invalid max swap in value"},
+			expectedErrSubstrs: []string{"failed to set MaxSwapIn", "invalid max value"},
 		},
 		{
 			name:  "negative value",
@@ -1431,7 +1431,7 @@ func (s *TestSuite) TestMsgServer_UpdateMaxSwapInValue_Failures() {
 				VaultAddress:   types.GetVaultAddress(share).String(),
 				MaxSwapInValue: "-1",
 			},
-			expectedErrSubstrs: []string{"must be non-negative"},
+			expectedErrSubstrs: []string{"failed to set MaxSwapIn", "must be non-negative"},
 		},
 	}
 
@@ -1570,7 +1570,7 @@ func (s *TestSuite) TestMsgServer_UpdateMaxSwapOutValue_Failures() {
 				VaultAddress:    types.GetVaultAddress(share).String(),
 				MaxSwapOutValue: "invalid",
 			},
-			expectedErrSubstrs: []string{"invalid max swap out value"},
+			expectedErrSubstrs: []string{"failed to set MaxSwapOut", "invalid max value"},
 		},
 		{
 			name:  "negative value",
@@ -1580,7 +1580,7 @@ func (s *TestSuite) TestMsgServer_UpdateMaxSwapOutValue_Failures() {
 				VaultAddress:    types.GetVaultAddress(share).String(),
 				MaxSwapOutValue: "-1",
 			},
-			expectedErrSubstrs: []string{"must be non-negative"},
+			expectedErrSubstrs: []string{"failed to set MaxSwapOut", "must be non-negative"},
 		},
 	}
 

@@ -562,6 +562,35 @@ func TestVaultAccount_Validate(t *testing.T) {
 			},
 			expectedErr: "outstanding AUM fee denom  does not match payment denom uusd",
 		},
+		{
+			name: "invalid swap-in limits",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
+				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
+				CurrentInterestRate: "0.0",
+				DesiredInterestRate: "0.0",
+				MinSwapInValue:      "abc",
+			},
+			expectedErr: "failed to validate swap-in limits: invalid min value: abc",
+		},
+		{
+			name: "invalid swap-out limits",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
+				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
+				CurrentInterestRate: "0.0",
+				DesiredInterestRate: "0.0",
+				MinSwapOutValue:     "1000",
+				MaxSwapOutValue:     "500",
+			},
+			expectedErr: "failed to validate swap-out limits: min value 1000 cannot be greater than max value 500",
+		},
 	}
 
 	for _, tc := range tests {
@@ -782,105 +811,85 @@ func TestValidateSwapLimits(t *testing.T) {
 		name        string
 		min         string
 		max         string
-		isSwapIn    bool
 		expectedErr string
 	}{
 		{
 			name:        "valid - both empty",
 			min:         "",
 			max:         "",
-			isSwapIn:    true,
 			expectedErr: "",
 		},
 		{
 			name:        "valid - min set, max empty",
 			min:         "100",
 			max:         "",
-			isSwapIn:    true,
 			expectedErr: "",
 		},
 		{
 			name:        "valid - min empty, max set",
 			min:         "",
 			max:         "1000",
-			isSwapIn:    true,
 			expectedErr: "",
 		},
 		{
 			name:        "valid - both set, min < max",
 			min:         "100",
 			max:         "1000",
-			isSwapIn:    true,
 			expectedErr: "",
 		},
 		{
 			name:        "valid - both set, min == max",
 			min:         "500",
 			max:         "500",
-			isSwapIn:    true,
 			expectedErr: "",
 		},
 		{
 			name:        "invalid - max is 0",
 			min:         "0",
 			max:         "0",
-			isSwapIn:    true,
-			expectedErr: "max swap in value cannot be zero; use toggle messages to disable swaps",
+			expectedErr: "max value cannot be zero; use toggle messages to disable swaps",
 		},
 		{
 			name:        "invalid - min not an integer",
 			min:         "abc",
 			max:         "",
-			isSwapIn:    true,
-			expectedErr: "invalid min swap in value: abc",
+			expectedErr: "invalid min value: abc",
 		},
 		{
 			name:        "invalid - max not an integer",
 			min:         "",
 			max:         "1.5",
-			isSwapIn:    true,
-			expectedErr: "invalid max swap in value: 1.5",
+			expectedErr: "invalid max value: 1.5",
 		},
 		{
 			name:        "invalid - min is negative",
 			min:         "-10",
 			max:         "",
-			isSwapIn:    true,
-			expectedErr: "min swap in value must be non-negative: -10",
+			expectedErr: "min value must be non-negative: -10",
 		},
 		{
 			name:        "invalid - max is negative",
 			min:         "",
 			max:         "-50",
-			isSwapIn:    true,
-			expectedErr: "max swap in value must be non-negative: -50",
+			expectedErr: "max value must be non-negative: -50",
 		},
 		{
-			name:        "invalid - min > max (swap in)",
+			name:        "invalid - min > max",
 			min:         "1000",
 			max:         "500",
-			isSwapIn:    true,
-			expectedErr: "min swap in value 1000 cannot be greater than max swap in value 500",
-		},
-		{
-			name:        "invalid - min > max (swap out)",
-			min:         "1000",
-			max:         "500",
-			isSwapIn:    false,
-			expectedErr: "min swap out value 1000 cannot be greater than max swap out value 500",
+			expectedErr: "min value 1000 cannot be greater than max value 500",
 		},
 		{
 			name:        "invalid - min > 0, max is 0",
 			min:         "100",
 			max:         "0",
-			isSwapIn:    true,
-			expectedErr: "max swap in value cannot be zero",
+			expectedErr: "max value cannot be zero",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := types.ValidateSwapLimits(tt.min, tt.max, tt.isSwapIn)
+			err := types.ValidateSwapLimits(tt.min, tt.max)
 			if tt.expectedErr == "" {
 				assert.NoError(t, err, "Test case %q: expected no error, but got %v", tt.name, err)
 			} else {

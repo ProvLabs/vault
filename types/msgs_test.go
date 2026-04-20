@@ -143,7 +143,7 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 				UnderlyingAsset: "uusd",
 				MinSwapInValue:  "abc",
 			},
-			expectedErr: fmt.Errorf("invalid min swap in value: abc"),
+			expectedErr: fmt.Errorf("invalid swap-in limits: invalid min value: abc"),
 		},
 		{
 			name: "negative min swap in",
@@ -153,7 +153,7 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 				UnderlyingAsset: "uusd",
 				MinSwapInValue:  "-100",
 			},
-			expectedErr: fmt.Errorf("min swap in value must be non-negative: -100"),
+			expectedErr: fmt.Errorf("invalid swap-in limits: min value must be non-negative: -100"),
 		},
 		{
 			name: "min swap in > max swap in",
@@ -164,7 +164,7 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 				MinSwapInValue:  "1000",
 				MaxSwapInValue:  "500",
 			},
-			expectedErr: fmt.Errorf("min swap in value 1000 cannot be greater than max swap in value 500"),
+			expectedErr: fmt.Errorf("invalid swap-in limits: min value 1000 cannot be greater than max value 500"),
 		},
 		{
 			name: "min swap out > max swap out",
@@ -175,7 +175,7 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 				MinSwapOutValue: "2000",
 				MaxSwapOutValue: "1000",
 			},
-			expectedErr: fmt.Errorf("min swap out value 2000 cannot be greater than max swap out value 1000"),
+			expectedErr: fmt.Errorf("invalid swap-out limits: min value 2000 cannot be greater than max value 1000"),
 		},
 		{
 			name: "max swap in is zero",
@@ -185,7 +185,7 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 				UnderlyingAsset: "uusd",
 				MaxSwapInValue:  "0",
 			},
-			expectedErr: fmt.Errorf("max swap in value cannot be zero"),
+			expectedErr: fmt.Errorf("invalid swap-in limits: max value cannot be zero"),
 		},
 	}
 
@@ -1680,7 +1680,7 @@ func TestMsgUpdateSwapLimits_ValidateBasic(t *testing.T) {
 					VaultAddress:   vault,
 					MinSwapInValue: "abc",
 				},
-				expectedErr: "invalid min swap in value",
+				expectedErr: "invalid swap-in limits: invalid min value",
 			},
 			{
 				name: "negative value",
@@ -1689,7 +1689,7 @@ func TestMsgUpdateSwapLimits_ValidateBasic(t *testing.T) {
 					VaultAddress:   vault,
 					MinSwapInValue: "-1",
 				},
-				expectedErr: "min swap in value must be non-negative",
+				expectedErr: "invalid swap-in limits: min value must be non-negative",
 			},
 		}
 		runTests(t, tests)
@@ -1731,7 +1731,7 @@ func TestMsgUpdateSwapLimits_ValidateBasic(t *testing.T) {
 					VaultAddress:    vault,
 					MinSwapOutValue: "abc",
 				},
-				expectedErr: "invalid min swap out value",
+				expectedErr: "invalid swap-out limits: invalid min value",
 			},
 			{
 				name: "negative value",
@@ -1740,7 +1740,7 @@ func TestMsgUpdateSwapLimits_ValidateBasic(t *testing.T) {
 					VaultAddress:    vault,
 					MinSwapOutValue: "-5",
 				},
-				expectedErr: "min swap out value must be non-negative",
+				expectedErr: "invalid swap-out limits: min value must be non-negative",
 			},
 		}
 		runTests(t, tests)
@@ -1782,7 +1782,7 @@ func TestMsgUpdateSwapLimits_ValidateBasic(t *testing.T) {
 					VaultAddress:   vault,
 					MaxSwapInValue: "abc",
 				},
-				expectedErr: "invalid max swap in value",
+				expectedErr: "invalid swap-in limits: invalid max value",
 			},
 			{
 				name: "negative value",
@@ -1791,7 +1791,7 @@ func TestMsgUpdateSwapLimits_ValidateBasic(t *testing.T) {
 					VaultAddress:   vault,
 					MaxSwapInValue: "-10",
 				},
-				expectedErr: "max swap in value must be non-negative",
+				expectedErr: "invalid swap-in limits: max value must be non-negative",
 			},
 			{
 				name: "zero value (invalid)",
@@ -1800,7 +1800,7 @@ func TestMsgUpdateSwapLimits_ValidateBasic(t *testing.T) {
 					VaultAddress:   vault,
 					MaxSwapInValue: "0",
 				},
-				expectedErr: "max swap in value cannot be zero",
+				expectedErr: "invalid swap-in limits: max value cannot be zero",
 			},
 		}
 		runTests(t, tests)
@@ -1842,7 +1842,7 @@ func TestMsgUpdateSwapLimits_ValidateBasic(t *testing.T) {
 					VaultAddress:    vault,
 					MaxSwapOutValue: "abc",
 				},
-				expectedErr: "invalid max swap out value",
+				expectedErr: "invalid swap-out limits: invalid max value",
 			},
 			{
 				name: "negative value",
@@ -1851,7 +1851,7 @@ func TestMsgUpdateSwapLimits_ValidateBasic(t *testing.T) {
 					VaultAddress:    vault,
 					MaxSwapOutValue: "-100",
 				},
-				expectedErr: "max swap out value must be non-negative",
+				expectedErr: "invalid swap-out limits: max value must be non-negative",
 			},
 			{
 				name: "zero value (invalid)",
@@ -1860,7 +1860,7 @@ func TestMsgUpdateSwapLimits_ValidateBasic(t *testing.T) {
 					VaultAddress:    vault,
 					MaxSwapOutValue: "0",
 				},
-				expectedErr: "max swap out value cannot be zero",
+				expectedErr: "invalid swap-out limits: max value cannot be zero",
 			},
 		}
 		runTests(t, tests)

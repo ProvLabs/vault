@@ -77,12 +77,12 @@ func (m MsgCreateVaultRequest) ValidateBasic() error {
 		return fmt.Errorf("withdrawal delay cannot exceed %d seconds", MaxWithdrawalDelay)
 	}
 
-	if err := ValidateSwapLimits(m.MinSwapInValue, m.MaxSwapInValue, true); err != nil {
-		return err
+	if err := ValidateSwapLimits(m.MinSwapInValue, m.MaxSwapInValue); err != nil {
+		return fmt.Errorf("invalid swap-in limits: %w", err)
 	}
 
-	if err := ValidateSwapLimits(m.MinSwapOutValue, m.MaxSwapOutValue, false); err != nil {
-		return err
+	if err := ValidateSwapLimits(m.MinSwapOutValue, m.MaxSwapOutValue); err != nil {
+		return fmt.Errorf("invalid swap-out limits: %w", err)
 	}
 
 	return nil
@@ -476,7 +476,10 @@ func (m MsgUpdateMinSwapInValueRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
 		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
 	}
-	return ValidateSwapLimits(m.MinSwapInValue, "", true)
+	if err := ValidateSwapLimits(m.MinSwapInValue, ""); err != nil {
+		return fmt.Errorf("invalid swap-in limits: %w", err)
+	}
+	return nil
 }
 
 // ValidateBasic performs stateless validation on MsgUpdateMinSwapOutValueRequest.
@@ -487,7 +490,10 @@ func (m MsgUpdateMinSwapOutValueRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
 		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
 	}
-	return ValidateSwapLimits(m.MinSwapOutValue, "", false)
+	if err := ValidateSwapLimits(m.MinSwapOutValue, ""); err != nil {
+		return fmt.Errorf("invalid swap-out limits: %w", err)
+	}
+	return nil
 }
 
 // ValidateBasic performs stateless validation on MsgUpdateMaxSwapInValueRequest.
@@ -498,7 +504,10 @@ func (m MsgUpdateMaxSwapInValueRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
 		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
 	}
-	return ValidateSwapLimits("", m.MaxSwapInValue, true)
+	if err := ValidateSwapLimits("", m.MaxSwapInValue); err != nil {
+		return fmt.Errorf("invalid swap-in limits: %w", err)
+	}
+	return nil
 }
 
 // ValidateBasic performs stateless validation on MsgUpdateMaxSwapOutValueRequest.
@@ -509,5 +518,8 @@ func (m MsgUpdateMaxSwapOutValueRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
 		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
 	}
-	return ValidateSwapLimits("", m.MaxSwapOutValue, false)
+	if err := ValidateSwapLimits("", m.MaxSwapOutValue); err != nil {
+		return fmt.Errorf("invalid swap-out limits: %w", err)
+	}
+	return nil
 }

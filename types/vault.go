@@ -102,6 +102,45 @@ func (v VaultAccount) Clone() *VaultAccount {
 	return protoadapt.MessageV1Of(gproto.Clone(protoadapt.MessageV2Of(&v))).(*VaultAccount)
 }
 
+// ValidateSwapLimits ensures that the provided min and max swap values are valid
+// integers, non-negative, and consistent (min <= max).
+// An empty string represents no limit. For maximums, "0" blocks all operations.
+func ValidateSwapLimits(minStr, maxStr string, isSwapIn bool) error {
+	label := "swap out"
+	if isSwapIn {
+		label = "swap in"
+	}
+
+	var minVal sdkmath.Int
+	if minStr != "" {
+		var ok bool
+		minVal, ok = sdkmath.NewIntFromString(minStr)
+		if !ok {
+			return fmt.Errorf("invalid min %s value: %s", label, minStr)
+		}
+		if minVal.IsNegative() {
+			return fmt.Errorf("min %s value must be non-negative: %s", label, minStr)
+		}
+	} else {
+		minVal = sdkmath.ZeroInt()
+	}
+
+	if maxStr != "" {
+		maxVal, ok := sdkmath.NewIntFromString(maxStr)
+		if !ok {
+			return fmt.Errorf("invalid max %s value: %s", label, maxStr)
+		}
+		if maxVal.IsNegative() {
+			return fmt.Errorf("max %s value must be non-negative: %s", label, maxStr)
+		}
+		if !maxVal.IsZero() && minVal.GT(maxVal) {
+			return fmt.Errorf("min %s value %s cannot be greater than max %s value %s", label, minStr, label, maxStr)
+		}
+	}
+
+	return nil
+}
+
 // Validate performs a series of checks to ensure the VaultAccount is correctly configured.
 func (v VaultAccount) Validate() error {
 	if v.BaseAccount == nil {
@@ -208,64 +247,12 @@ func (v VaultAccount) Validate() error {
 		return fmt.Errorf("outstanding AUM fee denom %s does not match payment denom %s", v.OutstandingAumFee.Denom, v.PaymentDenom)
 	}
 
-	if v.MinSwapInValue != "" {
-		min, ok := sdkmath.NewIntFromString(v.MinSwapInValue)
-		if !ok {
-			return fmt.Errorf("invalid min swap in value: %s", v.MinSwapInValue)
-		}
-		if min.IsNegative() {
-			return fmt.Errorf("min swap in value must be non-negative: %s", v.MinSwapInValue)
-		}
-		if v.MaxSwapInValue != "" {
-			max, ok := sdkmath.NewIntFromString(v.MaxSwapInValue)
-			if !ok {
-				return fmt.Errorf("invalid max swap in value: %s", v.MaxSwapInValue)
-			}
-			if max.IsNegative() {
-				return fmt.Errorf("max swap in value must be non-negative: %s", v.MaxSwapInValue)
-			}
-			if !max.IsZero() && min.GT(max) {
-				return fmt.Errorf("min swap in value %s cannot be greater than max swap in value %s", v.MinSwapInValue, v.MaxSwapInValue)
-			}
-		}
-	} else if v.MaxSwapInValue != "" {
-		val, ok := sdkmath.NewIntFromString(v.MaxSwapInValue)
-		if !ok {
-			return fmt.Errorf("invalid max swap in value: %s", v.MaxSwapInValue)
-		}
-		if val.IsNegative() {
-			return fmt.Errorf("max swap in value must be non-negative: %s", v.MaxSwapInValue)
-		}
+	if err := ValidateSwapLimits(v.MinSwapInValue, v.MaxSwapInValue, true); err != nil {
+		return err
 	}
 
-	if v.MinSwapOutValue != "" {
-		min, ok := sdkmath.NewIntFromString(v.MinSwapOutValue)
-		if !ok {
-			return fmt.Errorf("invalid min swap out value: %s", v.MinSwapOutValue)
-		}
-		if min.IsNegative() {
-			return fmt.Errorf("min swap out value must be non-negative: %s", v.MinSwapOutValue)
-		}
-		if v.MaxSwapOutValue != "" {
-			max, ok := sdkmath.NewIntFromString(v.MaxSwapOutValue)
-			if !ok {
-				return fmt.Errorf("invalid max swap out value: %s", v.MaxSwapOutValue)
-			}
-			if max.IsNegative() {
-				return fmt.Errorf("max swap out value must be non-negative: %s", v.MaxSwapOutValue)
-			}
-			if !max.IsZero() && min.GT(max) {
-				return fmt.Errorf("min swap out value %s cannot be greater than max swap out value %s", v.MinSwapOutValue, v.MaxSwapOutValue)
-			}
-		}
-	} else if v.MaxSwapOutValue != "" {
-		val, ok := sdkmath.NewIntFromString(v.MaxSwapOutValue)
-		if !ok {
-			return fmt.Errorf("invalid max swap out value: %s", v.MaxSwapOutValue)
-		}
-		if val.IsNegative() {
-			return fmt.Errorf("max swap out value must be non-negative: %s", v.MaxSwapOutValue)
-		}
+	if err := ValidateSwapLimits(v.MinSwapOutValue, v.MaxSwapOutValue, false); err != nil {
+		return err
 	}
 
 	return nil

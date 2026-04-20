@@ -776,3 +776,117 @@ func TestPendingSwapOut_Validate(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateSwapLimits(t *testing.T) {
+	tests := []struct {
+		name        string
+		min         string
+		max         string
+		isSwapIn    bool
+		expectedErr string
+	}{
+		{
+			name:        "valid - both empty",
+			min:         "",
+			max:         "",
+			isSwapIn:    true,
+			expectedErr: "",
+		},
+		{
+			name:        "valid - min set, max empty",
+			min:         "100",
+			max:         "",
+			isSwapIn:    true,
+			expectedErr: "",
+		},
+		{
+			name:        "valid - min empty, max set",
+			min:         "",
+			max:         "1000",
+			isSwapIn:    true,
+			expectedErr: "",
+		},
+		{
+			name:        "valid - both set, min < max",
+			min:         "100",
+			max:         "1000",
+			isSwapIn:    true,
+			expectedErr: "",
+		},
+		{
+			name:        "valid - both set, min == max",
+			min:         "500",
+			max:         "500",
+			isSwapIn:    true,
+			expectedErr: "",
+		},
+		{
+			name:        "valid - max is 0 (blocking)",
+			min:         "0",
+			max:         "0",
+			isSwapIn:    true,
+			expectedErr: "",
+		},
+		{
+			name:        "invalid - min not an integer",
+			min:         "abc",
+			max:         "",
+			isSwapIn:    true,
+			expectedErr: "invalid min swap in value: abc",
+		},
+		{
+			name:        "invalid - max not an integer",
+			min:         "",
+			max:         "1.5",
+			isSwapIn:    true,
+			expectedErr: "invalid max swap in value: 1.5",
+		},
+		{
+			name:        "invalid - min is negative",
+			min:         "-10",
+			max:         "",
+			isSwapIn:    true,
+			expectedErr: "min swap in value must be non-negative: -10",
+		},
+		{
+			name:        "invalid - max is negative",
+			min:         "",
+			max:         "-50",
+			isSwapIn:    true,
+			expectedErr: "max swap in value must be non-negative: -50",
+		},
+		{
+			name:        "invalid - min > max (swap in)",
+			min:         "1000",
+			max:         "500",
+			isSwapIn:    true,
+			expectedErr: "min swap in value 1000 cannot be greater than max swap in value 500",
+		},
+		{
+			name:        "invalid - min > max (swap out)",
+			min:         "1000",
+			max:         "500",
+			isSwapIn:    false,
+			expectedErr: "min swap out value 1000 cannot be greater than max swap out value 500",
+		},
+		{
+			name:        "valid - min > 0, max is 0 (blocking)",
+			min:         "100",
+			max:         "0",
+			isSwapIn:    true,
+			expectedErr: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := types.ValidateSwapLimits(tt.min, tt.max, tt.isSwapIn)
+			if tt.expectedErr == "" {
+				assert.NoError(t, err)
+			} else {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), tt.expectedErr)
+			}
+		})
+	}
+}

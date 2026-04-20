@@ -75,44 +75,12 @@ func (m MsgCreateVaultRequest) ValidateBasic() error {
 		return fmt.Errorf("withdrawal delay cannot exceed %d seconds", MaxWithdrawalDelay)
 	}
 
-	if m.MinSwapInValue != "" {
-		val, ok := sdkmath.NewIntFromString(m.MinSwapInValue)
-		if !ok {
-			return fmt.Errorf("invalid min swap in value: %q", m.MinSwapInValue)
-		}
-		if val.IsNegative() {
-			return fmt.Errorf("min swap in value must be non-negative: %q", m.MinSwapInValue)
-		}
+	if err := ValidateSwapLimits(m.MinSwapInValue, m.MaxSwapInValue, true); err != nil {
+		return err
 	}
 
-	if m.MinSwapOutValue != "" {
-		val, ok := sdkmath.NewIntFromString(m.MinSwapOutValue)
-		if !ok {
-			return fmt.Errorf("invalid min swap out value: %q", m.MinSwapOutValue)
-		}
-		if val.IsNegative() {
-			return fmt.Errorf("min swap out value must be non-negative: %q", m.MinSwapOutValue)
-		}
-	}
-
-	if m.MaxSwapInValue != "" {
-		val, ok := sdkmath.NewIntFromString(m.MaxSwapInValue)
-		if !ok {
-			return fmt.Errorf("invalid max swap in value: %q", m.MaxSwapInValue)
-		}
-		if val.IsNegative() {
-			return fmt.Errorf("max swap in value must be non-negative: %q", m.MaxSwapInValue)
-		}
-	}
-
-	if m.MaxSwapOutValue != "" {
-		val, ok := sdkmath.NewIntFromString(m.MaxSwapOutValue)
-		if !ok {
-			return fmt.Errorf("invalid max swap out value: %q", m.MaxSwapOutValue)
-		}
-		if val.IsNegative() {
-			return fmt.Errorf("max swap out value must be non-negative: %q", m.MaxSwapOutValue)
-		}
+	if err := ValidateSwapLimits(m.MinSwapOutValue, m.MaxSwapOutValue, false); err != nil {
+		return err
 	}
 
 	return nil
@@ -506,16 +474,7 @@ func (m MsgUpdateMinSwapInValueRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
 		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
 	}
-	if m.MinSwapInValue != "" {
-		val, ok := sdkmath.NewIntFromString(m.MinSwapInValue)
-		if !ok {
-			return fmt.Errorf("invalid min swap in value: %q: %w", m.MinSwapInValue, errors.New("not a valid integer"))
-		}
-		if val.IsNegative() {
-			return fmt.Errorf("min swap in value must be non-negative: %q", m.MinSwapInValue)
-		}
-	}
-	return nil
+	return ValidateSwapLimits(m.MinSwapInValue, "", true)
 }
 
 // ValidateBasic performs stateless validation on MsgUpdateMinSwapOutValueRequest.
@@ -526,16 +485,7 @@ func (m MsgUpdateMinSwapOutValueRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
 		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
 	}
-	if m.MinSwapOutValue != "" {
-		val, ok := sdkmath.NewIntFromString(m.MinSwapOutValue)
-		if !ok {
-			return fmt.Errorf("invalid min swap out value: %q: %w", m.MinSwapOutValue, errors.New("not a valid integer"))
-		}
-		if val.IsNegative() {
-			return fmt.Errorf("min swap out value must be non-negative: %q", m.MinSwapOutValue)
-		}
-	}
-	return nil
+	return ValidateSwapLimits(m.MinSwapOutValue, "", false)
 }
 
 // ValidateBasic performs stateless validation on MsgUpdateMaxSwapInValueRequest.
@@ -546,16 +496,7 @@ func (m MsgUpdateMaxSwapInValueRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
 		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
 	}
-	if m.MaxSwapInValue != "" {
-		val, ok := sdkmath.NewIntFromString(m.MaxSwapInValue)
-		if !ok {
-			return fmt.Errorf("invalid max swap in value: %q: %w", m.MaxSwapInValue, errors.New("not a valid integer"))
-		}
-		if val.IsNegative() {
-			return fmt.Errorf("max swap in value must be non-negative: %q", m.MaxSwapInValue)
-		}
-	}
-	return nil
+	return ValidateSwapLimits("", m.MaxSwapInValue, true)
 }
 
 // ValidateBasic performs stateless validation on MsgUpdateMaxSwapOutValueRequest.
@@ -566,14 +507,5 @@ func (m MsgUpdateMaxSwapOutValueRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
 		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
 	}
-	if m.MaxSwapOutValue != "" {
-		val, ok := sdkmath.NewIntFromString(m.MaxSwapOutValue)
-		if !ok {
-			return fmt.Errorf("invalid max swap out value: %q: %w", m.MaxSwapOutValue, errors.New("not a valid integer"))
-		}
-		if val.IsNegative() {
-			return fmt.Errorf("max swap out value must be non-negative: %q", m.MaxSwapOutValue)
-		}
-	}
-	return nil
+	return ValidateSwapLimits("", m.MaxSwapOutValue, false)
 }

@@ -529,30 +529,9 @@ func (k *Keeper) UpdateVaultAUMFeeBips(ctx sdk.Context, vault *types.VaultAccoun
 
 // SetMinSwapInValue updates the minimum swap-in value for a vault.
 func (k *Keeper) SetMinSwapInValue(ctx sdk.Context, vault *types.VaultAccount, minSwapIn string, authority string) error {
-	var minVal sdkmath.Int
-	if minSwapIn != "" {
-		var ok bool
-		minVal, ok = sdkmath.NewIntFromString(minSwapIn)
-		if !ok {
-			return fmt.Errorf("invalid min swap in value: %s", minSwapIn)
-		}
-		if minVal.IsNegative() {
-			return fmt.Errorf("min swap in value must be non-negative: %s", minSwapIn)
-		}
-	} else {
-		minVal = sdkmath.ZeroInt()
+	if err := types.ValidateSwapLimits(minSwapIn, vault.MaxSwapInValue, true); err != nil {
+		return err
 	}
-
-	if vault.MaxSwapInValue != "" {
-		maxVal, ok := sdkmath.NewIntFromString(vault.MaxSwapInValue)
-		if !ok {
-			return fmt.Errorf("failed to parse existing max swap in value: %s", vault.MaxSwapInValue)
-		}
-		if !maxVal.IsZero() && minVal.GT(maxVal) {
-			return fmt.Errorf("min swap in value %s cannot be greater than max swap in value %s", minSwapIn, vault.MaxSwapInValue)
-		}
-	}
-
 	if vault.MinSwapInValue == minSwapIn {
 		return nil
 	}
@@ -566,30 +545,9 @@ func (k *Keeper) SetMinSwapInValue(ctx sdk.Context, vault *types.VaultAccount, m
 
 // SetMinSwapOutValue updates the minimum swap-out value for a vault.
 func (k *Keeper) SetMinSwapOutValue(ctx sdk.Context, vault *types.VaultAccount, minSwapOut string, authority string) error {
-	var minVal sdkmath.Int
-	if minSwapOut != "" {
-		var ok bool
-		minVal, ok = sdkmath.NewIntFromString(minSwapOut)
-		if !ok {
-			return fmt.Errorf("invalid min swap out value: %s", minSwapOut)
-		}
-		if minVal.IsNegative() {
-			return fmt.Errorf("min swap out value must be non-negative: %s", minSwapOut)
-		}
-	} else {
-		minVal = sdkmath.ZeroInt()
+	if err := types.ValidateSwapLimits(minSwapOut, vault.MaxSwapOutValue, false); err != nil {
+		return err
 	}
-
-	if vault.MaxSwapOutValue != "" {
-		maxVal, ok := sdkmath.NewIntFromString(vault.MaxSwapOutValue)
-		if !ok {
-			return fmt.Errorf("failed to parse existing max swap out value: %s", vault.MaxSwapOutValue)
-		}
-		if !maxVal.IsZero() && minVal.GT(maxVal) {
-			return fmt.Errorf("min swap out value %s cannot be greater than max swap out value %s", minSwapOut, vault.MaxSwapOutValue)
-		}
-	}
-
 	if vault.MinSwapOutValue == minSwapOut {
 		return nil
 	}
@@ -603,28 +561,9 @@ func (k *Keeper) SetMinSwapOutValue(ctx sdk.Context, vault *types.VaultAccount, 
 
 // SetMaxSwapInValue updates the maximum swap-in value for a vault.
 func (k *Keeper) SetMaxSwapInValue(ctx sdk.Context, vault *types.VaultAccount, maxSwapIn string, authority string) error {
-	var maxVal sdkmath.Int
-	if maxSwapIn != "" {
-		var ok bool
-		maxVal, ok = sdkmath.NewIntFromString(maxSwapIn)
-		if !ok {
-			return fmt.Errorf("invalid max swap in value: %s", maxSwapIn)
-		}
-		if maxVal.IsNegative() {
-			return fmt.Errorf("max swap in value must be non-negative: %s", maxSwapIn)
-		}
+	if err := types.ValidateSwapLimits(vault.MinSwapInValue, maxSwapIn, true); err != nil {
+		return err
 	}
-
-	if maxSwapIn != "" && !maxVal.IsZero() && vault.MinSwapInValue != "" {
-		minVal, ok := sdkmath.NewIntFromString(vault.MinSwapInValue)
-		if !ok {
-			return fmt.Errorf("failed to parse existing min swap in value: %s", vault.MinSwapInValue)
-		}
-		if minVal.GT(maxVal) {
-			return fmt.Errorf("max swap in value %s cannot be less than min swap in value %s", maxSwapIn, vault.MinSwapInValue)
-		}
-	}
-
 	if vault.MaxSwapInValue == maxSwapIn {
 		return nil
 	}
@@ -638,28 +577,9 @@ func (k *Keeper) SetMaxSwapInValue(ctx sdk.Context, vault *types.VaultAccount, m
 
 // SetMaxSwapOutValue updates the maximum swap-out value for a vault.
 func (k *Keeper) SetMaxSwapOutValue(ctx sdk.Context, vault *types.VaultAccount, maxSwapOut string, authority string) error {
-	var maxVal sdkmath.Int
-	if maxSwapOut != "" {
-		var ok bool
-		maxVal, ok = sdkmath.NewIntFromString(maxSwapOut)
-		if !ok {
-			return fmt.Errorf("invalid max swap out value: %s", maxSwapOut)
-		}
-		if maxVal.IsNegative() {
-			return fmt.Errorf("max swap out value must be non-negative: %s", maxSwapOut)
-		}
+	if err := types.ValidateSwapLimits(vault.MinSwapOutValue, maxSwapOut, false); err != nil {
+		return err
 	}
-
-	if maxSwapOut != "" && !maxVal.IsZero() && vault.MinSwapOutValue != "" {
-		minVal, ok := sdkmath.NewIntFromString(vault.MinSwapOutValue)
-		if !ok {
-			return fmt.Errorf("failed to parse existing min swap out value: %s", vault.MinSwapOutValue)
-		}
-		if minVal.GT(maxVal) {
-			return fmt.Errorf("max swap out value %s cannot be less than min swap out value %s", maxSwapOut, vault.MinSwapOutValue)
-		}
-	}
-
 	if vault.MaxSwapOutValue == maxSwapOut {
 		return nil
 	}

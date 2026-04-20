@@ -4,18 +4,40 @@ The `x/vault` module provides a system for tokenized vaults built on Provenance�
 Vaults allow users to deposit underlying assets in exchange for vault shares, redeem those shares later, and participate in configurable interest accrual.  
 Each vault is configured with both an **underlying asset denom** (the backing collateral) and an optional **payment denom**.  
 The payment denom provides a secondary unit for payouts and redemptions: users can request to redeem shares into either the underlying asset or the configured payment denom (if supported), with conversions handled via on-chain NAV pricing.  
-The module manages vault lifecycle, share issuance, redemptions, dual-asset accounting, interest accrual, and time-based job queues for automated processing.  
+The module manages vault lifecycle, share issuance, redemptions, dual-asset accounting, interest accrual, AUM fee collection, and time-based job queues for automated processing.  
 Total share supply is tracked on the vault as **total_shares**, the authoritative supply-of-record across chains; local marker supply must never exceed this amount.
+
+---
+<!-- TOC -->
+- [Key Definitions](#key-definitions)
+  - [Marker Authority Rules](#marker-authority-rules)
+  - [Special Case: YLDS Peg Mode](#special-case-ylds-peg-mode)
+- [Keeper Responsibilities](#keeper-responsibilities)
+  - [Vault Lifecycle](#vault-lifecycle)
+  - [Swap Operations](#swap-operations)
+  - [Interest & Fee Management](#interest--fee-management)
+  - [Valuation](#valuation)
+  - [Queues & Jobs](#queues--jobs)
+  - [Genesis](#genesis)
+  - [Block Hooks](#block-hooks)
+- [Error Handling & Safety](#error-handling--safety)
+- [High-Level Flow](#high-level-flow)
+
+---
 
 ## Key Definitions
 
 - **Underlying Asset**: the base denom that defines vault value and payouts. TVV is always expressed in this unit.  
 - **Payment Denom (Secondary)**: an optional denom configured on a vault. It may be a normal swappable token (e.g., `uusdc`) or a restricted **receipt token** used for accounting. Swapability is determined by marker configuration.  
 - **Receipt Token**: a restricted marker that may be set as the payment denom. The only account with transfer authority is the holder of the receipt itself, which represents deployed capital (e.g., receipts into a fund). User swap-out to a receipt token is not possible unless the marker explicitly grants transfer authority. 
-- **Principal**: the vault’s total assets held in the **share marker account**, including underlying balances and any payment denom balances (normal or receipt).  
-- **Reserves**: the vault account balance used to pay positive interest or receive refunds from negative interest.  
-- **TVV (Total Vault Value)**: the value of all principal assets, computed and reported in the underlying unit.  
-- **NAV**: conversion rate between denoms, used for valuation and conversions, subject to special-case rules.  
+- **Principal**: the vault’s total assets held in the **share marker account**, including underlying balances and any payment denom balances (normal or receipt).
+- **Reserves**: the vault account balance used to pay positive interest or receive refunds from negative interest.
+- **TVV (Total Vault Value)**: the value of all principal assets, computed and reported in the underlying unit.
+    - **Gross TVV**: The literal sum of all assets sitting in the principal marker. Used for interest and fee accruals.
+    - **Net TVV**: Gross TVV minus **Outstanding AUM Fees**. This is the authoritative value used for share pricing (NAV) and user-facing valuation.
+- **AUM Technology Fee**: a 15 bps (0.15% annual) fee collected from the vault principal to support protocol maintenance. It is accrued continuously and collected in the vault's configured `payment_denom`.
+- **NAV**: conversion rate between denoms, used for valuation and conversions, subject to special-case rules.
+
 - **Total Shares**: the canonical supply-of-record across chains. Local marker supply must never exceed `total_shares`.  
 - **Asset Manager**: an optional delegated operator address with limited management authority. When set, this account can perform certain administrative actions (e.g., fund management operations) in addition to the vault admin. If unset, only the vault admin holds these permissions.
 
@@ -55,12 +77,13 @@ The keeper ties together state management, account operations, marker integratio
 - **BridgeMintShares**: authorized bridge mints local shares up to the capacity defined by `total_shares - local_supply`, then transfers them to the bridge.
 - **BridgeBurnShares**: authorized bridge returns shares to the vault and burns them from the marker, reducing local supply without changing `total_shares`.
 
-### Interest Management
-- **ReconcileVaultInterest**: ensures accrued interest is applied before any balance-changing action.
+### Interest & Fee Management
+- **ReconcileVault**: ensures accrued interest is applied and AUM fees are collected before any balance-changing action.
 - **Positive Interest**: paid from vault reserves into the principal marker.
 - **Negative Interest**: refunded from the principal marker into reserves, capped by available funds.
+- **AUM Technology Fee**: 15 bps annual fee collected from the principal marker into the configured ProvLabs collection address.
 - **Rate Controls**: vaults have configurable current/desired rates, and optional min/max bounds.
-- **Queues**: vaults rotate between verification and timeout queues to forecast payout ability and auto-reconcile interest periodically.
+- **Queues**: vaults rotate between verification, interest timeout, and fee timeout queues to forecast payout ability and auto-reconcile state periodically.
 
 ### Valuation
 - **NAV Calculations**: conversion functions based on Net Asset Value (NAV) between denominations.  
@@ -70,6 +93,7 @@ The keeper ties together state management, account operations, marker integratio
 
 ### Queues & Jobs
 - **Payout Timeout Queue**: tracks when vaults must be revisited for automatic interest reconciliation.
+- **Fee Timeout Queue**: tracks when vaults must be revisited for automatic AUM fee collection.
 - **Payout Verification Set**: temporary holding set for vaults awaiting validation after rate changes or reconciliations.
 - **Pending Swap-Out Queue**: time-ordered queue of withdrawal requests, processed in EndBlocker. Jobs include owner, vault, shares, redeem denom, and request ID.
 

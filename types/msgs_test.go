@@ -106,16 +106,6 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 			expectedErr: fmt.Errorf("invalid payment denom: %q: %w", "inv@lid$", fmt.Errorf("invalid denom: %s", "inv@lid$")),
 		},
 		{
-			name: "payment denom equals underlying (not allowed)",
-			msg: types.MsgCreateVaultRequest{
-				Admin:           admin,
-				ShareDenom:      "vaultshare",
-				UnderlyingAsset: "uusd",
-				PaymentDenom:    "uusd",
-			},
-			expectedErr: fmt.Errorf("payment (%q) denom cannot equal underlying asset denom (%q)", "uusd", "uusd"),
-		},
-		{
 			name: "share denom equals underlying (not allowed)",
 			msg: types.MsgCreateVaultRequest{
 				Admin:           admin,
@@ -639,6 +629,75 @@ func TestMsgUpdateInterestRateRequest_ValidateBasic(t *testing.T) {
 				NewRate:      "bad",
 			},
 			expectedErr: fmt.Errorf("invalid interest rate: %q", "bad"),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.expectedErr != nil {
+				assert.Error(t, err, "expected error for case %q", tc.name)
+				assert.Contains(t, err.Error(), tc.expectedErr.Error(), "error should contain expected substring for case %q", tc.name)
+			} else {
+				assert.NoError(t, err, "expected no error for case %q", tc.name)
+			}
+		})
+	}
+}
+
+func TestMsgUpdateWithdrawalDelayRequest_ValidateBasic(t *testing.T) {
+	authority := utils.TestAddress().Bech32
+	vault := utils.TestAddress().Bech32
+
+	tests := []struct {
+		name        string
+		msg         types.MsgUpdateWithdrawalDelayRequest
+		expectedErr error
+	}{
+		{
+			name: "valid - zero delay",
+			msg: types.MsgUpdateWithdrawalDelayRequest{
+				Authority:              authority,
+				VaultAddress:           vault,
+				WithdrawalDelaySeconds: 0,
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "valid - max delay",
+			msg: types.MsgUpdateWithdrawalDelayRequest{
+				Authority:              authority,
+				VaultAddress:           vault,
+				WithdrawalDelaySeconds: types.MaxWithdrawalDelay,
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "invalid authority",
+			msg: types.MsgUpdateWithdrawalDelayRequest{
+				Authority:              "bad",
+				VaultAddress:           vault,
+				WithdrawalDelaySeconds: 1,
+			},
+			expectedErr: fmt.Errorf("invalid authority address: %q", "bad"),
+		},
+		{
+			name: "invalid vault address",
+			msg: types.MsgUpdateWithdrawalDelayRequest{
+				Authority:              authority,
+				VaultAddress:           "bad",
+				WithdrawalDelaySeconds: 1,
+			},
+			expectedErr: fmt.Errorf("invalid vault address: %q", "bad"),
+		},
+		{
+			name: "delay exceeds max",
+			msg: types.MsgUpdateWithdrawalDelayRequest{
+				Authority:              authority,
+				VaultAddress:           vault,
+				WithdrawalDelaySeconds: types.MaxWithdrawalDelay + 1,
+			},
+			expectedErr: fmt.Errorf("withdrawal delay cannot exceed %d seconds", types.MaxWithdrawalDelay),
 		},
 	}
 
@@ -1224,10 +1283,10 @@ func TestMsgSetBridgeAddressRequest_ValidateBasic(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
 			if tc.expectedErr != nil {
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), tc.expectedErr.Error())
+				assert.Error(t, err, "expected error for test case %q", tc.name)
+				assert.Contains(t, err.Error(), tc.expectedErr.Error(), "error message mismatch for test case %q", tc.name)
 			} else {
-				assert.NoError(t, err)
+				assert.NoError(t, err, "unexpected error for test case %q", tc.name)
 			}
 		})
 	}
@@ -1275,10 +1334,10 @@ func TestMsgToggleBridgeRequest_ValidateBasic(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
 			if tc.expectedErr != nil {
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), tc.expectedErr.Error())
+				assert.Error(t, err, "expected error for test case %q", tc.name)
+				assert.Contains(t, err.Error(), tc.expectedErr.Error(), "error message mismatch for test case %q", tc.name)
 			} else {
-				assert.NoError(t, err)
+				assert.NoError(t, err, "unexpected error for test case %q", tc.name)
 			}
 		})
 	}
@@ -1344,10 +1403,10 @@ func TestMsgBridgeMintSharesRequest_ValidateBasic(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
 			if tc.expectedErr != nil {
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), tc.expectedErr.Error())
+				assert.Error(t, err, "expected error for test case %q", tc.name)
+				assert.Contains(t, err.Error(), tc.expectedErr.Error(), "error message mismatch for test case %q", tc.name)
 			} else {
-				assert.NoError(t, err)
+				assert.NoError(t, err, "unexpected error for test case %q", tc.name)
 			}
 		})
 	}
@@ -1413,10 +1472,10 @@ func TestMsgBridgeBurnSharesRequest_ValidateBasic(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
 			if tc.expectedErr != nil {
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), tc.expectedErr.Error())
+				assert.Error(t, err, "expected error for test case %q", tc.name)
+				assert.Contains(t, err.Error(), tc.expectedErr.Error(), "error message mismatch for test case %q", tc.name)
 			} else {
-				assert.NoError(t, err)
+				assert.NoError(t, err, "unexpected error for test case %q", tc.name)
 			}
 		})
 	}

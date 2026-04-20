@@ -22,6 +22,7 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgUpdateMinInterestRateRequest)(nil),
 	(*MsgUpdateMaxInterestRateRequest)(nil),
 	(*MsgUpdateInterestRateRequest)(nil),
+	(*MsgUpdateWithdrawalDelayRequest)(nil),
 	(*MsgToggleSwapInRequest)(nil),
 	(*MsgToggleSwapOutRequest)(nil),
 	(*MsgDepositInterestFundsRequest)(nil),
@@ -36,6 +37,8 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgBridgeMintSharesRequest)(nil),
 	(*MsgBridgeBurnSharesRequest)(nil),
 	(*MsgSetAssetManagerRequest)(nil),
+	(*MsgUpdateParamsRequest)(nil),
+	(*MsgUpdateVaultAUMFeeBipsRequest)(nil),
 }
 
 // ValidateBasic performs stateless validation on MsgCreateVaultRequest.
@@ -59,9 +62,6 @@ func (m MsgCreateVaultRequest) ValidateBasic() error {
 		}
 	}
 
-	if m.UnderlyingAsset == m.PaymentDenom {
-		return fmt.Errorf("payment (%q) denom cannot equal underlying asset denom (%q)", m.PaymentDenom, m.UnderlyingAsset)
-	}
 	if m.ShareDenom == m.UnderlyingAsset {
 		return fmt.Errorf("share denom (%q) cannot equal underlying asset denom (%q)", m.ShareDenom, m.UnderlyingAsset)
 	}
@@ -214,6 +214,20 @@ func (m MsgUpdateInterestRateRequest) ValidateBasic() error {
 	}
 	if _, err := sdkmath.LegacyNewDecFromStr(m.NewRate); err != nil {
 		return fmt.Errorf("invalid interest rate: %q: %w", m.NewRate, err)
+	}
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgUpdateWithdrawalDelayRequest.
+func (m MsgUpdateWithdrawalDelayRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		return fmt.Errorf("invalid authority address: %q: %w", m.Authority, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	if m.WithdrawalDelaySeconds > MaxWithdrawalDelay {
+		return fmt.Errorf("withdrawal delay cannot exceed %d seconds", MaxWithdrawalDelay)
 	}
 	return nil
 }
@@ -413,6 +427,31 @@ func (m MsgSetAssetManagerRequest) ValidateBasic() error {
 	}
 	if _, err := sdk.AccAddressFromBech32(m.AssetManager); err != nil {
 		return fmt.Errorf("invalid asset manager address: %q: %w", m.AssetManager, err)
+	}
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgUpdateParamsRequest.
+func (m MsgUpdateParamsRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		return fmt.Errorf("invalid authority address: %q: %w", m.Authority, err)
+	}
+	if err := m.Params.Validate(); err != nil {
+		return fmt.Errorf("invalid params for MsgUpdateParamsRequest: %w", err)
+	}
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgUpdateVaultAUMFeeBipsRequest.
+func (m MsgUpdateVaultAUMFeeBipsRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		return fmt.Errorf("invalid authority address: %q: %w", m.Authority, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	if m.AumFeeBips > 10_000 {
+		return fmt.Errorf("invalid AUM fee bips: %d (max 10000)", m.AumFeeBips)
 	}
 	return nil
 }

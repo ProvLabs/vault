@@ -2,6 +2,10 @@ package types
 
 import (
 	fmt "fmt"
+	"math"
+
+	gproto "google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/protoadapt"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -65,7 +69,10 @@ type VaultAccountI interface {
 }
 
 // NewVaultAccount creates a new vault with an optional payment denom allowed for I/O alongside the underlying asset.
-func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyingAsset, paymentDenom string, withdrawalDelay uint64) *VaultAccount {
+func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyingAsset, paymentDenom string, withdrawalDelay uint64, aumFeeBips uint32) *VaultAccount {
+	if paymentDenom == "" {
+		paymentDenom = underlyingAsset
+	}
 	return &VaultAccount{
 		BaseAccount:            baseAcc,
 		Admin:                  admin,
@@ -81,12 +88,15 @@ func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyi
 		PausedBalance:          sdk.Coin{},
 		BridgeEnabled:          false,
 		BridgeAddress:          "",
+		OutstandingAumFee:      sdk.NewCoin(paymentDenom, sdkmath.ZeroInt()),
+		AumFeeBips:             aumFeeBips,
+		MinSwapInValue:         "",
 	}
 }
 
-// Clone makes a MarkerAccount instance copy.
+// Clone makes a VaultAccount instance copy.
 func (v VaultAccount) Clone() *VaultAccount {
-	return proto.Clone(&v).(*VaultAccount)
+	return protoadapt.MessageV1Of(gproto.Clone(protoadapt.MessageV2Of(&v))).(*VaultAccount)
 }
 
 // Validate performs a series of checks to ensure the VaultAccount is correctly configured.
@@ -108,17 +118,13 @@ func (v VaultAccount) Validate() error {
 	if v.TotalShares.IsNegative() {
 		return fmt.Errorf("total shares cannot be negative: %s", v.TotalShares)
 	}
+
 	if err := sdk.ValidateDenom(v.UnderlyingAsset); err != nil {
 		return fmt.Errorf("invalid underlying asset denom: %s", v.UnderlyingAsset)
 	}
 
-	if v.PaymentDenom != "" {
-		if err := sdk.ValidateDenom(v.PaymentDenom); err != nil {
-			return fmt.Errorf("invalid payment denom: %q: %w", v.PaymentDenom, err)
-		}
-		if v.PaymentDenom == v.UnderlyingAsset {
-			return fmt.Errorf("payment (%q) denom cannot equal underlying asset denom (%q)", v.PaymentDenom, v.UnderlyingAsset)
-		}
+	if err := sdk.ValidateDenom(v.PaymentDenom); err != nil {
+		return fmt.Errorf("invalid payment denom: %q: %w", v.PaymentDenom, err)
 	}
 
 	if v.AssetManager != "" {
@@ -145,34 +151,58 @@ func (v VaultAccount) Validate() error {
 		return fmt.Errorf("invalid desired interest rate: %s", v.DesiredInterestRate)
 	}
 
-	var min, max sdkmath.LegacyDec
+	var minRate, maxRate sdkmath.LegacyDec
 	hasMin := v.MinInterestRate != ""
 	hasMax := v.MaxInterestRate != ""
 
 	if hasMin {
-		min, err = sdkmath.LegacyNewDecFromStr(v.MinInterestRate)
+		minRate, err = sdkmath.LegacyNewDecFromStr(v.MinInterestRate)
 		if err != nil {
 			return fmt.Errorf("invalid min interest rate: %s", v.MinInterestRate)
 		}
 	}
 	if hasMax {
-		max, err = sdkmath.LegacyNewDecFromStr(v.MaxInterestRate)
+		maxRate, err = sdkmath.LegacyNewDecFromStr(v.MaxInterestRate)
 		if err != nil {
 			return fmt.Errorf("invalid max interest rate: %s", v.MaxInterestRate)
 		}
 	}
 
-	if hasMin && hasMax && min.GT(max) {
-		return fmt.Errorf("minimum interest rate %s cannot be greater than maximum interest rate %s", min, max)
+	if hasMin && hasMax && minRate.GT(maxRate) {
+		return fmt.Errorf("minimum interest rate %s cannot be greater than maximum interest rate %s", minRate, maxRate)
 	}
-	if hasMin && des.LT(min) {
-		return fmt.Errorf("desired interest rate %s is less than minimum interest rate %s", des, min)
+	if hasMin && des.LT(minRate) {
+		return fmt.Errorf("desired interest rate %s is less than minimum interest rate %s", des, minRate)
 	}
-	if hasMax && des.GT(max) {
-		return fmt.Errorf("desired interest rate %s is greater than maximum interest rate %s", des, max)
+	if hasMax && des.GT(maxRate) {
+		return fmt.Errorf("desired interest rate %s is greater than maximum interest rate %s", des, maxRate)
 	}
 	if !cur.IsZero() && !cur.Equal(des) {
 		return fmt.Errorf("current interest rate must be zero or equal to desired (current=%s desired=%s)", cur, des)
+	}
+
+	if v.PeriodStart < 0 {
+		return fmt.Errorf("period start cannot be negative: %d", v.PeriodStart)
+	}
+	if v.PeriodTimeout < 0 && v.PeriodTimeout != math.MinInt64 {
+		return fmt.Errorf("period timeout cannot be negative: %d", v.PeriodTimeout)
+	}
+
+	if v.FeePeriodStart < 0 {
+		return fmt.Errorf("fee period start cannot be negative: %d", v.FeePeriodStart)
+	}
+	if v.FeePeriodTimeout < 0 && v.FeePeriodTimeout != math.MinInt64 {
+		return fmt.Errorf("fee period timeout cannot be negative: %d", v.FeePeriodTimeout)
+	}
+	if v.AumFeeBips > 10_000 {
+		return fmt.Errorf("AUM fee bips cannot exceed 10,000: %d", v.AumFeeBips)
+	}
+
+	if !v.OutstandingAumFee.Amount.IsNil() && v.OutstandingAumFee.IsNegative() {
+		return fmt.Errorf("outstanding AUM fee cannot be negative: %s", v.OutstandingAumFee)
+	}
+	if (v.OutstandingAumFee.Denom != "" || (!v.OutstandingAumFee.Amount.IsNil() && !v.OutstandingAumFee.Amount.IsZero())) && v.OutstandingAumFee.Denom != v.PaymentDenom {
+		return fmt.Errorf("outstanding AUM fee denom %s does not match payment denom %s", v.OutstandingAumFee.Denom, v.PaymentDenom)
 	}
 
 	return nil
@@ -274,4 +304,49 @@ func (v VaultAccount) ValidateManagementAuthority(authority string) error {
 		return nil
 	}
 	return fmt.Errorf("unauthorized authority: %s", authority)
+}
+
+// NewPendingSwapOut creates a new PendingSwapOut object.
+func NewPendingSwapOut(owner sdk.AccAddress, vaultAddr sdk.AccAddress, shares sdk.Coin, redeemDenom string) PendingSwapOut {
+	return PendingSwapOut{
+		Owner:        owner.String(),
+		VaultAddress: vaultAddr.String(),
+		Shares:       shares,
+		RedeemDenom:  redeemDenom,
+	}
+}
+
+// Validate performs basic checks on a PendingSwapOut request.
+func (p PendingSwapOut) Validate() error {
+	if _, err := sdk.AccAddressFromBech32(p.Owner); err != nil {
+		return fmt.Errorf("invalid owner address %s: %w", p.Owner, err)
+	}
+
+	if _, err := sdk.AccAddressFromBech32(p.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address %s: %w", p.VaultAddress, err)
+	}
+
+	if !p.Shares.IsValid() {
+		return fmt.Errorf("invalid shares: %s", p.Shares.String())
+	}
+
+	if p.Shares.IsZero() {
+		return fmt.Errorf("shares cannot be zero")
+	}
+
+	if p.RedeemDenom == "" {
+		return fmt.Errorf("redeem denom cannot be empty")
+	}
+
+	return nil
+}
+{
+		return fmt.Errorf("shares cannot be zero")
+	}
+
+	if p.RedeemDenom == "" {
+		return fmt.Errorf("redeem denom cannot be empty")
+	}
+
+	return nil
 }

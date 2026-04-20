@@ -64,10 +64,10 @@ func (s *TestSuite) TestFindVaultAccount() {
 			setup: func() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlying1, 1000), s.adminAddr)
 				created, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: s.adminAddr.String(), ShareDenom: shareDenom1, UnderlyingAsset: underlying1})
-				s.Require().NoError(err)
+				s.Require().NoError(err, "vault creation should succeed")
 				// Re-fetch to get full account details
 				vault1, err = s.k.GetVault(s.ctx, created.GetAddress())
-				s.Require().NoError(err)
+				s.Require().NoError(err, "fetching created vault should succeed")
 			},
 			idToFind:      func() string { return vault1.GetAddress().String() },
 			expectedVault: func() *types.VaultAccount { return vault1 },
@@ -78,9 +78,9 @@ func (s *TestSuite) TestFindVaultAccount() {
 			setup: func() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlying1, 1000), s.adminAddr)
 				created, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: s.adminAddr.String(), ShareDenom: shareDenom1, UnderlyingAsset: underlying1})
-				s.Require().NoError(err)
+				s.Require().NoError(err, "vault creation should succeed")
 				vault1, err = s.k.GetVault(s.ctx, created.GetAddress())
-				s.Require().NoError(err)
+				s.Require().NoError(err, "fetching created vault should succeed")
 			},
 			idToFind:      func() string { return shareDenom1 },
 			expectedVault: func() *types.VaultAccount { return vault1 },
@@ -91,7 +91,7 @@ func (s *TestSuite) TestFindVaultAccount() {
 			setup: func() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlying1, 1000), s.adminAddr)
 				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: s.adminAddr.String(), ShareDenom: shareDenom1, UnderlyingAsset: underlying1})
-				s.Require().NoError(err)
+				s.Require().NoError(err, "vault creation should succeed")
 			},
 			idToFind:      func() string { return nonExistentAddr.String() },
 			expectedVault: func() *types.VaultAccount { return nil },
@@ -117,13 +117,13 @@ func (s *TestSuite) TestFindVaultAccount() {
 			actualVault, err := s.k.FindVaultAccount(s.ctx, tc.idToFind())
 
 			if tc.expectErr {
-				s.Require().Error(err)
-				s.Require().ErrorContains(err, tc.errContains)
-				s.Require().Nil(actualVault)
+				s.Require().Error(err, "case %q: expected error", tc.name)
+				s.Require().ErrorContains(err, tc.errContains, "case %q: error message mismatch", tc.name)
+				s.Require().Nil(actualVault, "case %q: vault should be nil on error", tc.name)
 			} else {
-				s.Require().NoError(err)
-				s.Require().NotNil(actualVault)
-				s.Require().Equal(tc.expectedVault(), actualVault)
+				s.Require().NoError(err, "case %q: expected no error", tc.name)
+				s.Require().NotNil(actualVault, "case %q: vault should be found", tc.name)
+				s.Require().Equal(tc.expectedVault(), actualVault, "case %q: vault mismatch", tc.name)
 			}
 		})
 	}

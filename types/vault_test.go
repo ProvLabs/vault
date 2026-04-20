@@ -7,6 +7,7 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/provlabs/vault/types"
@@ -36,8 +37,10 @@ func TestVaultAccount_Validate(t *testing.T) {
 				Admin:               validAdmin,
 				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
 				CurrentInterestRate: validInterest,
 				DesiredInterestRate: validInterest,
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
 			},
 			expectedErr: "",
 		},
@@ -48,8 +51,10 @@ func TestVaultAccount_Validate(t *testing.T) {
 				Admin:               validAdmin,
 				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
 				CurrentInterestRate: validInterest,
 				DesiredInterestRate: validInterest,
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
 			},
 			expectedErr: "base account cannot be nil",
 		},
@@ -60,10 +65,12 @@ func TestVaultAccount_Validate(t *testing.T) {
 				Admin:               validAdmin,
 				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
 				CurrentInterestRate: "0.00",
 				DesiredInterestRate: "0.04",
 				MinInterestRate:     "0.03",
 				MaxInterestRate:     "0.05",
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
 			},
 			expectedErr: "",
 		},
@@ -74,8 +81,10 @@ func TestVaultAccount_Validate(t *testing.T) {
 				Admin:               "invalid-address",
 				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
 				CurrentInterestRate: validInterest,
 				DesiredInterestRate: validInterest,
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
 			},
 			expectedErr: "invalid admin address",
 		},
@@ -86,8 +95,10 @@ func TestVaultAccount_Validate(t *testing.T) {
 				Admin:               validAdmin,
 				TotalShares:         sdk.Coin{Denom: "", Amount: math.NewInt(0)},
 				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
 				CurrentInterestRate: validInterest,
 				DesiredInterestRate: validInterest,
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
 			},
 			expectedErr: "invalid share denom",
 		},
@@ -98,8 +109,10 @@ func TestVaultAccount_Validate(t *testing.T) {
 				Admin:               validAdmin,
 				TotalShares:         sdk.Coin{Denom: invalidDenom, Amount: math.NewInt(0)},
 				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
 				CurrentInterestRate: validInterest,
 				DesiredInterestRate: validInterest,
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
 			},
 			expectedErr: "invalid share denom",
 		},
@@ -112,6 +125,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 				UnderlyingAsset:     "",
 				CurrentInterestRate: validInterest,
 				DesiredInterestRate: validInterest,
+				OutstandingAumFee:   sdk.Coin{Denom: "", Amount: math.NewInt(0)},
 			},
 			expectedErr: "invalid underlying asset denom: ",
 		},
@@ -124,11 +138,12 @@ func TestVaultAccount_Validate(t *testing.T) {
 				UnderlyingAsset:     invalidDenom,
 				CurrentInterestRate: validInterest,
 				DesiredInterestRate: validInterest,
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
 			},
 			expectedErr: fmt.Sprintf("invalid underlying asset denom: %s", invalidDenom),
 		},
 		{
-			name: "payment denom omitted => ok",
+			name: "payment denom omitted => fails validation",
 			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
@@ -137,8 +152,9 @@ func TestVaultAccount_Validate(t *testing.T) {
 				PaymentDenom:        "",
 				CurrentInterestRate: validInterest,
 				DesiredInterestRate: validInterest,
+				OutstandingAumFee:   sdk.Coin{Denom: "", Amount: math.NewInt(0)},
 			},
-			expectedErr: "",
+			expectedErr: "invalid payment denom: \"\": invalid denom: ",
 		},
 		{
 			name: "payment denom valid and distinct => ok",
@@ -150,6 +166,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 				PaymentDenom:        "usdc",
 				CurrentInterestRate: validInterest,
 				DesiredInterestRate: validInterest,
+				OutstandingAumFee:   sdk.NewInt64Coin("usdc", 0),
 			},
 			expectedErr: "",
 		},
@@ -163,21 +180,9 @@ func TestVaultAccount_Validate(t *testing.T) {
 				PaymentDenom:        "inv@lid$",
 				CurrentInterestRate: validInterest,
 				DesiredInterestRate: validInterest,
+				OutstandingAumFee:   sdk.Coin{Denom: "inv@lid$", Amount: math.NewInt(0)},
 			},
 			expectedErr: "invalid payment denom",
-		},
-		{
-			name: "payment denom equals underlying => error",
-			vaultAccount: types.VaultAccount{
-				BaseAccount:         baseAcc,
-				Admin:               validAdmin,
-				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
-				UnderlyingAsset:     "uusd",
-				PaymentDenom:        "uusd",
-				CurrentInterestRate: validInterest,
-				DesiredInterestRate: validInterest,
-			},
-			expectedErr: "cannot equal underlying asset denom",
 		},
 		{
 			name: "invalid current interest rate",
@@ -186,8 +191,10 @@ func TestVaultAccount_Validate(t *testing.T) {
 				Admin:               validAdmin,
 				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
 				CurrentInterestRate: invalidInterest,
 				DesiredInterestRate: validInterest,
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
 			},
 			expectedErr: "invalid current interest rate",
 		},
@@ -198,8 +205,10 @@ func TestVaultAccount_Validate(t *testing.T) {
 				Admin:               validAdmin,
 				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
 				CurrentInterestRate: validInterest,
 				DesiredInterestRate: invalidInterest,
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
 			},
 			expectedErr: "invalid desired interest rate",
 		},
@@ -210,10 +219,12 @@ func TestVaultAccount_Validate(t *testing.T) {
 				Admin:               validAdmin,
 				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
 				CurrentInterestRate: "0.00",
 				DesiredInterestRate: "0.10",
 				MinInterestRate:     "0.10",
 				MaxInterestRate:     "0.10",
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
 			},
 			expectedErr: "",
 		},
@@ -224,10 +235,12 @@ func TestVaultAccount_Validate(t *testing.T) {
 				Admin:               validAdmin,
 				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
 				CurrentInterestRate: "0.00",
 				DesiredInterestRate: "0.03",
 				MinInterestRate:     "0.01",
 				MaxInterestRate:     "0.05",
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
 			},
 			expectedErr: "",
 		},
@@ -238,10 +251,12 @@ func TestVaultAccount_Validate(t *testing.T) {
 				Admin:               validAdmin,
 				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
 				CurrentInterestRate: "0.00",
 				DesiredInterestRate: "0.00",
 				MinInterestRate:     "nope",
 				MaxInterestRate:     "",
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
 			},
 			expectedErr: "invalid min interest rate",
 		},
@@ -252,10 +267,12 @@ func TestVaultAccount_Validate(t *testing.T) {
 				Admin:               validAdmin,
 				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
 				CurrentInterestRate: "0.00",
 				DesiredInterestRate: "0.00",
 				MinInterestRate:     "",
 				MaxInterestRate:     "nope",
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
 			},
 			expectedErr: "invalid max interest rate",
 		},
@@ -266,10 +283,12 @@ func TestVaultAccount_Validate(t *testing.T) {
 				Admin:               validAdmin,
 				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
 				CurrentInterestRate: "0.00",
 				DesiredInterestRate: "0.07",
 				MinInterestRate:     "0.08",
 				MaxInterestRate:     "0.05",
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
 			},
 			expectedErr: "cannot be greater than maximum interest rate",
 		},
@@ -280,10 +299,12 @@ func TestVaultAccount_Validate(t *testing.T) {
 				Admin:               validAdmin,
 				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
 				CurrentInterestRate: "0.00",
 				DesiredInterestRate: "0.02",
 				MinInterestRate:     "0.03",
 				MaxInterestRate:     "",
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
 			},
 			expectedErr: "less than minimum interest rate",
 		},
@@ -294,10 +315,12 @@ func TestVaultAccount_Validate(t *testing.T) {
 				Admin:               validAdmin,
 				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
 				CurrentInterestRate: "0.00",
 				DesiredInterestRate: "0.06",
 				MinInterestRate:     "",
 				MaxInterestRate:     "0.05",
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
 			},
 			expectedErr: "greater than maximum interest rate",
 		},
@@ -308,8 +331,10 @@ func TestVaultAccount_Validate(t *testing.T) {
 				Admin:               validAdmin,
 				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
 				CurrentInterestRate: "0.03",
 				DesiredInterestRate: "0.04",
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
 			},
 			expectedErr: "current interest rate must be zero or equal to desired",
 		},
@@ -320,9 +345,11 @@ func TestVaultAccount_Validate(t *testing.T) {
 				Admin:               validAdmin,
 				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
 				CurrentInterestRate: "0.00",
 				DesiredInterestRate: "0.03",
 				MinInterestRate:     "0.03",
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
 			},
 			expectedErr: "",
 		},
@@ -333,13 +360,14 @@ func TestVaultAccount_Validate(t *testing.T) {
 				Admin:               validAdmin,
 				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
 				CurrentInterestRate: "0.00",
 				DesiredInterestRate: "0.07",
 				MaxInterestRate:     "0.07",
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
 			},
 			expectedErr: "",
 		},
-		// New Test Cases
 		{
 			name: "invalid total shares (negative)",
 			vaultAccount: types.VaultAccount{
@@ -347,8 +375,10 @@ func TestVaultAccount_Validate(t *testing.T) {
 				Admin:               validAdmin,
 				TotalShares:         sdk.Coin{Denom: validDenom, Amount: math.NewInt(-100)},
 				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
 				CurrentInterestRate: "0.0",
 				DesiredInterestRate: "0.0",
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
 			},
 			expectedErr: "total shares cannot be negative",
 		},
@@ -359,10 +389,12 @@ func TestVaultAccount_Validate(t *testing.T) {
 				Admin:               validAdmin,
 				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
 				CurrentInterestRate: "0.0",
 				DesiredInterestRate: "0.0",
 				BridgeAddress:       validBridgeAddress,
 				BridgeEnabled:       true,
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
 			},
 			expectedErr: "",
 		},
@@ -373,10 +405,12 @@ func TestVaultAccount_Validate(t *testing.T) {
 				Admin:               validAdmin,
 				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
 				CurrentInterestRate: "0.0",
 				DesiredInterestRate: "0.0",
 				BridgeAddress:       "invalid-bridge-address",
 				BridgeEnabled:       true,
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
 			},
 			expectedErr: "invalid bridge address",
 		},
@@ -387,10 +421,12 @@ func TestVaultAccount_Validate(t *testing.T) {
 				Admin:               validAdmin,
 				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
 				CurrentInterestRate: "0.0",
 				DesiredInterestRate: "0.0",
 				BridgeAddress:       "",
 				BridgeEnabled:       true,
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
 			},
 			expectedErr: "bridge cannot be enabled without a bridge address",
 		},
@@ -402,8 +438,10 @@ func TestVaultAccount_Validate(t *testing.T) {
 				AssetManager:        validAssetManager,
 				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
 				CurrentInterestRate: "0.0",
 				DesiredInterestRate: "0.0",
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
 			},
 			expectedErr: "",
 		},
@@ -415,10 +453,114 @@ func TestVaultAccount_Validate(t *testing.T) {
 				AssetManager:        "not-a-bech32",
 				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
 				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
 				CurrentInterestRate: "0.0",
 				DesiredInterestRate: "0.0",
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
 			},
 			expectedErr: "invalid asset manager address",
+		},
+		{
+			name: "negative period start",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
+				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
+				CurrentInterestRate: "0.0",
+				DesiredInterestRate: "0.0",
+				PeriodStart:         -1,
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
+			},
+			expectedErr: "period start cannot be negative",
+		},
+		{
+			name: "negative period timeout",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
+				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
+				CurrentInterestRate: "0.0",
+				DesiredInterestRate: "0.0",
+				PeriodTimeout:       -1,
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
+			},
+			expectedErr: "period timeout cannot be negative",
+		},
+		{
+			name: "negative fee period start",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
+				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
+				CurrentInterestRate: "0.0",
+				DesiredInterestRate: "0.0",
+				FeePeriodStart:      -1,
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
+			},
+			expectedErr: "fee period start cannot be negative",
+		},
+		{
+			name: "negative fee period timeout",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
+				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
+				CurrentInterestRate: "0.0",
+				DesiredInterestRate: "0.0",
+				FeePeriodTimeout:    -1,
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
+			},
+			expectedErr: "fee period timeout cannot be negative",
+		},
+		{
+			name: "outstanding AUM fee denom mismatch",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
+				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
+				CurrentInterestRate: "0.0",
+				DesiredInterestRate: "0.0",
+				OutstandingAumFee:   sdk.NewInt64Coin("wrong", 100),
+			},
+			expectedErr: "outstanding AUM fee denom wrong does not match payment denom uusd",
+		},
+		{
+			name: "negative outstanding AUM fee",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
+				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
+				CurrentInterestRate: "0.0",
+				DesiredInterestRate: "0.0",
+				OutstandingAumFee:   sdk.Coin{Denom: "uusd", Amount: math.NewInt(-1)},
+			},
+			expectedErr: "outstanding AUM fee cannot be negative",
+		},
+		{
+			name: "non-zero outstanding AUM fee with empty denom",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
+				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
+				CurrentInterestRate: "0.0",
+				DesiredInterestRate: "0.0",
+				OutstandingAumFee:   sdk.Coin{Denom: "", Amount: math.NewInt(100)},
+			},
+			expectedErr: "outstanding AUM fee denom  does not match payment denom uusd",
 		},
 	}
 
@@ -426,10 +568,10 @@ func TestVaultAccount_Validate(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.vaultAccount.Validate()
 			if tc.expectedErr != "" {
-				assert.Error(t, err, "expected an error")
-				assert.Contains(t, err.Error(), tc.expectedErr, "error should contain expected message")
+				require.Error(t, err, "expected an error for test case: %s", tc.name)
+				require.Contains(t, err.Error(), tc.expectedErr, "error should contain expected message for test case: %s", tc.name)
 			} else {
-				assert.NoError(t, err, "expected no error")
+				require.NoError(t, err, "expected no error for test case: %s", tc.name)
 			}
 		})
 	}
@@ -534,60 +676,102 @@ func TestVaultAccount_ValidateAcceptedCoin(t *testing.T) {
 	assert.Contains(t, err.Error(), "denom not supported for vault", "error should indicate unsupported denom")
 }
 
-func TestVaultAccount_ValidateManagementAuthority(t *testing.T) {
-	admin := utils.TestAddress().Bech32
-	assetMgr := utils.TestAddress().Bech32
-	other := utils.TestAddress().Bech32
+func TestPendingSwapOut_Validate(t *testing.T) {
+	validOwner := utils.TestAddress().Bech32
+	validVault := utils.TestAddress().Bech32
+	validDenom := "vshare"
+	validRedeem := "uusd"
+	invalidBech32 := "invalidaddress"
+
+	baseReq := types.PendingSwapOut{
+		Owner:        validOwner,
+		VaultAddress: validVault,
+		Shares:       sdk.NewInt64Coin(validDenom, 100),
+		RedeemDenom:  validRedeem,
+	}
+
+	const invalidBech32ErrPrefix = "decoding bech32 failed:"
 
 	tests := []struct {
-		name       string
-		va         types.VaultAccount
-		authority  string
-		shouldPass bool
+		name           string
+		pendingSwapOut types.PendingSwapOut
+		expectedErr    string
 	}{
 		{
-			name:       "admin allowed",
-			va:         types.VaultAccount{Admin: admin, AssetManager: ""},
-			authority:  admin,
-			shouldPass: true,
+			name:           "valid request",
+			pendingSwapOut: baseReq,
+			expectedErr:    "",
 		},
 		{
-			name:       "asset manager allowed",
-			va:         types.VaultAccount{Admin: admin, AssetManager: assetMgr},
-			authority:  assetMgr,
-			shouldPass: true,
+			name: "invalid owner address",
+			pendingSwapOut: types.PendingSwapOut{
+				Owner:        invalidBech32,
+				VaultAddress: validVault,
+				Shares:       baseReq.Shares,
+				RedeemDenom:  validRedeem,
+			},
+			expectedErr: fmt.Sprintf("invalid owner address %s: %s", invalidBech32, invalidBech32ErrPrefix),
 		},
 		{
-			name:       "non-admin with no asset manager set => denied",
-			va:         types.VaultAccount{Admin: admin, AssetManager: ""},
-			authority:  other,
-			shouldPass: false,
+			name: "invalid vault address",
+			pendingSwapOut: types.PendingSwapOut{
+				Owner:        validOwner,
+				VaultAddress: invalidBech32,
+				Shares:       baseReq.Shares,
+				RedeemDenom:  validRedeem,
+			},
+			expectedErr: fmt.Sprintf("invalid vault address %s: %s", invalidBech32, invalidBech32ErrPrefix),
 		},
 		{
-			name:       "non-admin, non-asset-manager => denied",
-			va:         types.VaultAccount{Admin: admin, AssetManager: assetMgr},
-			authority:  other,
-			shouldPass: false,
+			name: "invalid shares (negative)",
+			pendingSwapOut: types.PendingSwapOut{
+				Owner:        validOwner,
+				VaultAddress: validVault,
+				Shares:       sdk.Coin{Denom: validDenom, Amount: math.NewInt(-10)},
+				RedeemDenom:  validRedeem,
+			},
+			expectedErr: "invalid shares: -10vshare",
 		},
 		{
-			name:       "empty authority => denied",
-			va:         types.VaultAccount{Admin: admin, AssetManager: assetMgr},
-			authority:  "",
-			shouldPass: false,
+			name: "invalid shares (zero amount)",
+			pendingSwapOut: types.PendingSwapOut{
+				Owner:        validOwner,
+				VaultAddress: validVault,
+				Shares:       sdk.NewInt64Coin(validDenom, 0),
+				RedeemDenom:  validRedeem,
+			},
+			expectedErr: "shares cannot be zero",
+		},
+		{
+			name: "invalid shares (empty denom)",
+			pendingSwapOut: types.PendingSwapOut{
+				Owner:        validOwner,
+				VaultAddress: validVault,
+				Shares:       sdk.Coin{Denom: "", Amount: math.NewInt(10)},
+				RedeemDenom:  validRedeem,
+			},
+			expectedErr: "invalid shares: 10",
+		},
+		{
+			name: "empty redeem denom",
+			pendingSwapOut: types.PendingSwapOut{
+				Owner:        validOwner,
+				VaultAddress: validVault,
+				Shares:       baseReq.Shares,
+				RedeemDenom:  "",
+			},
+			expectedErr: "redeem denom cannot be empty",
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			err := tc.va.ValidateManagementAuthority(tc.authority)
-			if tc.shouldPass {
-				assert.NoError(t, err, "expected authority to be accepted")
+			err := tc.pendingSwapOut.Validate()
+			if tc.expectedErr != "" {
+				require.Error(t, err, "expected an error for test case: %s", tc.name)
+				require.Contains(t, err.Error(), tc.expectedErr, "error should contain expected message for test case: %s", tc.name)
 			} else {
-				assert.Error(t, err, "expected authority to be rejected")
-				assert.Contains(t, err.Error(), "unauthorized authority", "error should indicate unauthorized")
-				if tc.authority != "" {
-					assert.Contains(t, err.Error(), tc.authority, "error should include the provided authority")
-				}
+				require.NoError(t, err, "expected no error for test case: %s", tc.name)
 			}
 		})
 	}

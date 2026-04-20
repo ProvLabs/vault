@@ -12,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -38,6 +39,7 @@ import (
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	vaulttypes "github.com/provlabs/vault/types"
 )
 
 func init() {
@@ -119,7 +121,7 @@ func TestAppImportExport(t *testing.T) {
 	}
 	app, err := NewSimApp(logger, db, nil, true, appOpts, baseAppOpts...)
 	require.NoError(t, err, "NewSimApp failed")
-	require.Equal(t, "SimApp", app.Name())
+	require.Equal(t, "SimApp", app.Name(), "app name mismatch")
 	if !simcli.FlagSigverifyTxValue {
 		app.SetNotSigverifyTx()
 	}
@@ -133,7 +135,7 @@ func TestAppImportExport(t *testing.T) {
 		app.BaseApp,
 		appStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-		simtestutil.SimulationOperations(app, app.AppCodec(), config),
+		simtestutil.BuildSimulationOperations(app, app.AppCodec(), config, app.txConfig),
 		map[string]bool{}, // TODO: add custom module operations if needed
 		config,
 		app.AppCodec(),
@@ -166,7 +168,7 @@ func TestAppImportExport(t *testing.T) {
 
 	var genesisState map[string]json.RawMessage
 	err = json.Unmarshal(exported.AppState, &genesisState)
-	require.NoError(t, err)
+	require.NoError(t, err, "failed to unmarshal genesis state")
 
 	ctxA := app.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight(), Time: lastBlockTime})
 	ctxB := newApp.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight(), Time: lastBlockTime})
@@ -192,9 +194,11 @@ func TestAppImportExport(t *testing.T) {
 			stakingtypes.HistoricalInfoKey, stakingtypes.UnbondingIDKey, stakingtypes.UnbondingIndexKey,
 			stakingtypes.UnbondingTypeKey, stakingtypes.ValidatorUpdatesKey,
 		},
-		authzkeeper.StoreKey:   {authzkeeper.GrantQueuePrefix},
-		feegrant.StoreKey:      {feegrant.FeeAllowanceQueueKeyPrefix},
-		slashingtypes.StoreKey: {slashingtypes.ValidatorMissedBlockBitmapKeyPrefix},
+		authzkeeper.StoreKey:    {authzkeeper.GrantQueuePrefix},
+		feegrant.StoreKey:       {feegrant.FeeAllowanceQueueKeyPrefix},
+		slashingtypes.StoreKey:  {slashingtypes.ValidatorMissedBlockBitmapKeyPrefix},
+		vaulttypes.StoreKey:     {vaulttypes.VaultPayoutVerificationSetPrefix},
+		attributetypes.StoreKey: {attributetypes.AttributeAddrLookupKeyPrefix},
 	}
 
 	storeKeys := app.GetStoreKeys()
@@ -232,6 +236,7 @@ func TestAppImportExport(t *testing.T) {
 }
 
 func TestAppSimulationAfterImport(t *testing.T) {
+
 	config, db, dir, logger, skip, err := setupSimulation("leveldb-app-sim", "Simulation")
 	if skip {
 		t.Skip("skipping application simulation after import")
@@ -251,7 +256,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 	app, err := NewSimApp(logger, db, nil, true, appOpts, baseAppOpts...)
 	require.NoError(t, err, "NewSimApp failed")
-	require.Equal(t, "SimApp", app.Name())
+	require.Equal(t, "SimApp", app.Name(), "app name mismatch")
 	if !simcli.FlagSigverifyTxValue {
 		app.SetNotSigverifyTx()
 	}
@@ -263,7 +268,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		app.BaseApp,
 		appStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-		simtestutil.SimulationOperations(app, app.AppCodec(), config),
+		simtestutil.BuildSimulationOperations(app, app.AppCodec(), config, app.txConfig),
 		map[string]bool{}, // TODO: add custom module operations if needed,
 		config,
 		app.AppCodec(),
@@ -313,12 +318,12 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		newApp.BaseApp,
 		appStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-		simtestutil.SimulationOperations(newApp, newApp.AppCodec(), config),
+		simtestutil.BuildSimulationOperations(newApp, newApp.AppCodec(), config, newApp.txConfig),
 		map[string]bool{}, // TODO: add custom module operations if needed,
 		config,
 		app.AppCodec(),
 	)
-	require.NoError(t, err)
+	require.NoError(t, err, "simulation from seed failed")
 }
 
 func TestFullAppSimulation(t *testing.T) {
@@ -341,7 +346,7 @@ func TestFullAppSimulation(t *testing.T) {
 
 	app, err := NewSimApp(logger, db, nil, true, appOpts, baseAppOpts...)
 	require.NoError(t, err, "NewSimApp failed")
-	require.Equal(t, "SimApp", app.Name())
+	require.Equal(t, "SimApp", app.Name(), "app name mismatch")
 	if !simcli.FlagSigverifyTxValue {
 		app.SetNotSigverifyTx()
 	}
@@ -355,7 +360,7 @@ func TestFullAppSimulation(t *testing.T) {
 		app.BaseApp,
 		appStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-		simtestutil.SimulationOperations(app, app.AppCodec(), config),
+		simtestutil.BuildSimulationOperations(app, app.AppCodec(), config, app.txConfig),
 		map[string]bool{}, // TODO: add custom module operations if needed,
 		config,
 		app.AppCodec(),
@@ -388,7 +393,7 @@ func TestSimple(t *testing.T) {
 
 	app, err := NewSimApp(logger, db, nil, true, appOpts, baseAppOpts...)
 	require.NoError(t, err, "NewSimApp failed")
-	require.Equal(t, "SimApp", app.Name())
+	require.Equal(t, "SimApp", app.Name(), "app name mismatch")
 	if !simcli.FlagSigverifyTxValue {
 		app.SetNotSigverifyTx()
 	}
@@ -400,7 +405,7 @@ func TestSimple(t *testing.T) {
 		app.BaseApp,
 		appStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
 		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-		simtestutil.SimulationOperations(app, app.AppCodec(), config),
+		simtestutil.BuildSimulationOperations(app, app.AppCodec(), config, app.txConfig),
 		map[string]bool{}, // TODO: add custom module operations if needed,
 		config,
 		app.AppCodec(),
@@ -465,7 +470,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			db := dbm.NewMemDB()
 			app, err := NewSimApp(logger, db, nil, true, appOpts, interBlockCacheOpt(), baseapp.SetChainID(config.ChainID))
 			require.NoError(t, err, "NewSimApp failed")
-			require.Equal(t, "SimApp", app.Name())
+			require.Equal(t, "SimApp", app.Name(), "app name mismatch")
 			if !simcli.FlagSigverifyTxValue {
 				app.SetNotSigverifyTx()
 			}
@@ -481,12 +486,12 @@ func TestAppStateDeterminism(t *testing.T) {
 				app.BaseApp,
 				appStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
 				simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-				simtestutil.SimulationOperations(app, app.AppCodec(), config),
+				simtestutil.BuildSimulationOperations(app, app.AppCodec(), config, app.txConfig),
 				map[string]bool{}, // TODO: add custom module operations if needed,
 				config,
 				app.AppCodec(),
 			)
-			require.NoError(t, err)
+			require.NoError(t, err, "simulation attempt failed")
 
 			appHash := app.LastCommitID().Hash
 			appHashList[j] = appHash

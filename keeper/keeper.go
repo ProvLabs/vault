@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/provlabs/vault/queue"
@@ -18,18 +19,24 @@ import (
 )
 
 type Keeper struct {
+	cdc          codec.Codec
+	storeService store.KVStoreService
 	schema       collections.Schema
 	eventService event.Service
-	addressCodec address.Codec
+	AddressCodec address.Codec
 	authority    []byte
 
 	AuthKeeper   types.AccountKeeper
 	MarkerKeeper types.MarkerKeeper
 	BankKeeper   types.BankKeeper
+	NameKeeper   types.NameKeeper
+	AttrKeeper   types.AttributeKeeper
 
+	Params                collections.Item[types.Params]
 	Vaults                collections.Map[sdk.AccAddress, []byte]
 	PayoutVerificationSet collections.KeySet[sdk.AccAddress]
 	PayoutTimeoutQueue    *queue.PayoutTimeoutQueue
+	FeeTimeoutQueue       *queue.FeeTimeoutQueue
 	PendingSwapOutQueue   *queue.PendingSwapOutQueue
 }
 
@@ -43,6 +50,8 @@ func NewKeeper(
 	authKeeper types.AccountKeeper,
 	markerkeeper types.MarkerKeeper,
 	bankkeeper types.BankKeeper,
+	namekeeper types.NameKeeper,
+	attributekeeper types.AttributeKeeper,
 ) *Keeper {
 	if _, err := addressCodec.BytesToString(authority); err != nil {
 		panic(fmt.Sprintf("invalid authority address %s: %s", authority, err))
@@ -51,16 +60,22 @@ func NewKeeper(
 	builder := collections.NewSchemaBuilder(storeService)
 
 	keeper := &Keeper{
+		cdc:                   cdc,
+		storeService:          storeService,
 		eventService:          eventService,
-		addressCodec:          addressCodec,
+		AddressCodec:          addressCodec,
 		authority:             authority,
+		Params:                collections.NewItem(builder, types.ParamsKeyPrefix, types.ParamsKeyName, codec.CollValue[types.Params](cdc)),
 		Vaults:                collections.NewMap(builder, types.VaultsKeyPrefix, types.VaultsName, sdk.AccAddressKey, collections.BytesValue),
 		PayoutVerificationSet: collections.NewKeySet(builder, types.VaultPayoutVerificationSetPrefix, types.VaultPayoutVerificationSetName, sdk.AccAddressKey),
 		PayoutTimeoutQueue:    queue.NewPayoutTimeoutQueue(builder),
+		FeeTimeoutQueue:       queue.NewFeeTimeoutQueue(builder),
 		PendingSwapOutQueue:   queue.NewPendingSwapOutQueue(builder, cdc),
 		AuthKeeper:            authKeeper,
 		MarkerKeeper:          markerkeeper,
 		BankKeeper:            bankkeeper,
+		NameKeeper:            namekeeper,
+		AttrKeeper:            attributekeeper,
 	}
 
 	schema, err := builder.Build()
@@ -75,6 +90,33 @@ func NewKeeper(
 // GetAuthority returns the module's authority.
 func (k Keeper) GetAuthority() []byte {
 	return k.authority
+}
+
+// OpenKVStore returns a KVStore for the module.
+func (k Keeper) OpenKVStore(ctx sdk.Context) store.KVStore {
+	return k.storeService.OpenKVStore(ctx)
+}
+
+// GetAUMFeeAddress returns the address where AUM fees are collected.
+func (k Keeper) GetAUMFeeAddress(ctx sdk.Context) (sdk.AccAddress, error) {
+	params, err := k.Params.Get(ctx)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return types.GetDefaultTechFeeAddress(ctx.ChainID()), nil
+		}
+		return nil, fmt.Errorf("failed to retrieve params: %w", err)
+	}
+
+	if len(params.TechFeeAddress) == 0 {
+		return types.GetDefaultTechFeeAddress(ctx.ChainID()), nil
+	}
+
+	addr, parseErr := k.AddressCodec.StringToBytes(params.TechFeeAddress)
+	if parseErr != nil {
+		return nil, fmt.Errorf("failed to parse AUM fee address from params %q: %w", params.TechFeeAddress, parseErr)
+	}
+
+	return addr, nil
 }
 
 // getLogger returns a logger with vault module context.

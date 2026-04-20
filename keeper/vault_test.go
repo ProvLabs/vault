@@ -16,20 +16,7 @@ import (
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
-type vaultAttrs struct {
-	admin                  string
-	share                  string
-	underlying             string
-	payment                string
-	withdrawalDelaySeconds uint64
-	expected               types.VaultAccount
-}
-
-func (v vaultAttrs) GetAdmin() string                  { return v.admin }
-func (v vaultAttrs) GetShareDenom() string             { return v.share }
-func (v vaultAttrs) GetUnderlyingAsset() string        { return v.underlying }
-func (v vaultAttrs) GetPaymentDenom() string           { return v.payment }
-func (v vaultAttrs) GetWithdrawalDelaySeconds() uint64 { return v.withdrawalDelaySeconds }
+// TestKeeperTestSuite is handled in suite_test.go
 
 func (s *TestSuite) TestCreateVault_Success() {
 	share := "vaultshare"
@@ -43,15 +30,15 @@ func (s *TestSuite) TestCreateVault_Success() {
 	}
 
 	vault, err := s.k.CreateVault(s.ctx, attrs)
-	s.Require().NoError(err)
-	s.Require().Equal(attrs.admin, vault.Admin)
-	s.Require().Equal(attrs.share, vault.TotalShares.Denom)
-	s.Require().Equal(attrs.underlying, vault.UnderlyingAsset)
+	s.Require().NoError(err, "CreateVault should succeed for valid attributes")
+	s.Require().Equal(attrs.admin, vault.Admin, "vault admin should match request")
+	s.Require().Equal(attrs.share, vault.TotalShares.Denom, "vault share denom should match request")
+	s.Require().Equal(attrs.underlying, vault.UnderlyingAsset, "vault underlying asset should match request")
 
 	addr := types.GetVaultAddress(share)
 	stored, err := s.k.GetVault(s.ctx, addr)
-	s.Require().NoError(err)
-	s.Require().Equal(vault.Address, stored.Address)
+	s.Require().NoError(err, "GetVault should succeed for existing vault")
+	s.Require().Equal(vault.Address, stored.Address, "stored vault address should match created vault address")
 }
 
 func (s *TestSuite) TestCreateVault_AssetMarkerMissing() {
@@ -82,7 +69,8 @@ func (s *TestSuite) TestCreateVault_DuplicateMarkerFails() {
 	}
 
 	_, err := s.k.CreateVault(s.ctx, attrs)
-	s.Require().ErrorContains(err, "already exists")
+	s.Require().Error(err, "CreateVault should fail for duplicate marker")
+	s.Require().ErrorContains(err, "already exists", "error message should mention duplicate marker")
 }
 
 func (s *TestSuite) TestCreateVault_InvalidDenomFails() {
@@ -94,7 +82,8 @@ func (s *TestSuite) TestCreateVault_InvalidDenomFails() {
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(attrs.underlying, 1000), s.adminAddr)
 
 	_, err := s.k.CreateVault(s.ctx, attrs)
-	s.Require().ErrorContains(err, "invalid denom")
+	s.Require().Error(err, "CreateVault should fail for invalid share denom")
+	s.Require().ErrorContains(err, "invalid denom", "error message should mention invalid denom")
 }
 
 func (s *TestSuite) TestCreateVault_InvalidAdminFails() {
@@ -109,7 +98,8 @@ func (s *TestSuite) TestCreateVault_InvalidAdminFails() {
 	}
 
 	_, err := s.k.CreateVault(s.ctx, attrs)
-	s.Require().ErrorContains(err, "invalid admin address")
+	s.Require().Error(err, "CreateVault should fail for invalid admin address")
+	s.Require().ErrorContains(err, "invalid admin address", "error message should mention invalid admin address")
 }
 
 func (s *TestSuite) TestSwapIn_MultiAsset() {
@@ -200,20 +190,25 @@ func (s *TestSuite) TestSwapOut_MultiAsset() {
 	s.assertBalance(redeemerAddr, shareDenom, initialShares.Sub(sharesToRedeemForPayment.Amount))
 	s.assertBalance(vault.GetAddress(), shareDenom, sharesToRedeemForPayment.Amount)
 
-	sharesToRedeemForUnderlying := sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(5))
-	reqID2, err := s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sharesToRedeemForUnderlying, "")
+	sharesToRedeemForDefaultPayment := sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(5))
+	reqID2, err := s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sharesToRedeemForDefaultPayment, "")
 	s.Require().NoError(err, "should successfully queue swap out for the default underlying asset")
 	s.Require().Equal(uint64(1), reqID2, "second request id should be 1")
+
+	sharesToRedeemForUnderlying := sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(8))
+	reqID3, err := s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sharesToRedeemForUnderlying, underlyingDenom)
+	s.Require().NoError(err, "should successfully queue swap out for the default underlying asset")
+	s.Require().Equal(uint64(2), reqID3, "third request id should be 2")
 
 	err = s.k.TestAccessor_processPendingSwapOuts(s.T(), s.ctx, keeper.MaxSwapOutBatchSize)
 	s.Require().NoError(err, "processing pending withdrawals should not fail")
 
 	// --- Assert Final Balances ---
-	s.assertBalance(redeemerAddr, paymentDenom, math.NewInt(24))
-	s.assertBalance(redeemerAddr, underlyingDenom, math.NewInt(6))
+	s.assertBalance(redeemerAddr, paymentDenom, math.NewInt(36))
+	s.assertBalance(redeemerAddr, underlyingDenom, math.NewInt(10))
 
 	// --- Test 3: Unaccepted Denom ---
-	_, err = s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sharesToRedeemForUnderlying, unacceptedDenom)
+	_, err = s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sharesToRedeemForDefaultPayment, unacceptedDenom)
 	s.Require().Error(err, "should fail to swap out for an unaccepted asset")
 	s.Require().ErrorContains(err, "denom not supported for vault", "error should indicate the denom is not accepted")
 }
@@ -228,8 +223,8 @@ func (s *TestSuite) TestSwapOut_FailsWhenDisabled() {
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 	_, err := s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sdk.NewInt64Coin(shareDenom, 10), "")
-	s.Require().Error(err, "swap out should fail when disabled")
-	s.Require().ErrorContains(err, "swaps are not enabled", "error should mention swaps are disabled")
+	s.Require().Error(err, "SwapOut should fail when swaps are disabled")
+	s.Require().ErrorContains(err, "swaps are not enabled", "error message should mention swaps are disabled")
 }
 
 func (s *TestSuite) TestSwapOut_FailsWithInsufficientShares() {
@@ -266,6 +261,8 @@ func (s *TestSuite) TestSwapOut_FailsWithRestrictedUnderlyingAssetNoAttributes()
 	shareDenom := "vshare"
 	restrictedUnderlyingDenom := "restrictedasset"
 
+	s.SetupTechFeeAccount(restrictedUnderlyingDenom)
+
 	restrictedMarkerAddr := markertypes.MustGetMarkerAddress(restrictedUnderlyingDenom)
 	restrictedMarker := markertypes.NewMarkerAccount(
 		authtypes.NewBaseAccountWithAddress(restrictedMarkerAddr),
@@ -273,6 +270,8 @@ func (s *TestSuite) TestSwapOut_FailsWithRestrictedUnderlyingAssetNoAttributes()
 		s.adminAddr,
 		[]markertypes.AccessGrant{
 			{Address: s.adminAddr.String(), Permissions: markertypes.AccessList{markertypes.Access_Mint, markertypes.Access_Admin, markertypes.Access_Withdraw, markertypes.Access_Burn, markertypes.Access_Transfer}},
+			{Address: s.EnsureTechFeeAccount().String(), Permissions: markertypes.AccessList{markertypes.Access_Transfer, markertypes.Access_Deposit}},
+			{Address: types.GetVaultAddress(shareDenom).String(), Permissions: markertypes.AccessList{markertypes.Access_Withdraw, markertypes.Access_Transfer}},
 		},
 		markertypes.StatusProposed,
 		markertypes.MarkerType_RestrictedCoin,
@@ -286,9 +285,21 @@ func (s *TestSuite) TestSwapOut_FailsWithRestrictedUnderlyingAssetNoAttributes()
 		underlying: restrictedUnderlyingDenom,
 	}
 	vault, err := s.k.CreateVault(s.ctx, vaultCfg)
-	s.Require().NoError(err, "vault creation with restricted underlying should succeed")
+	s.Require().NoError(err, "vault creation with restricted underlying should succeed when vault has transfer permission")
 	vault.SwapOutEnabled = true
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	marker, err := s.simApp.MarkerKeeper.GetMarker(s.ctx, restrictedMarkerAddr)
+	s.Require().NoError(err, "should fetch active marker")
+	activeMarker := marker.(*markertypes.MarkerAccount)
+
+	// Now REMOVE the transfer permission from the vault to test the "fail-on-no-attributes" path
+	activeMarker.AccessControl = []markertypes.AccessGrant{
+		{Address: s.adminAddr.String(), Permissions: markertypes.AccessList{markertypes.Access_Mint, markertypes.Access_Admin, markertypes.Access_Withdraw, markertypes.Access_Burn, markertypes.Access_Transfer}},
+		{Address: s.EnsureTechFeeAccount().String(), Permissions: markertypes.AccessList{markertypes.Access_Transfer, markertypes.Access_Deposit}},
+		{Address: types.GetVaultAddress(shareDenom).String(), Permissions: markertypes.AccessList{markertypes.Access_Withdraw}},
+	}
+	s.simApp.MarkerKeeper.SetMarker(s.ctx, activeMarker)
 
 	initialTVV := int64(500)
 	s.Require().NoError(s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), restrictedUnderlyingDenom, sdk.NewCoins(sdk.NewInt64Coin(restrictedUnderlyingDenom, initialTVV))))
@@ -302,13 +313,16 @@ func (s *TestSuite) TestSwapOut_FailsWithRestrictedUnderlyingAssetNoAttributes()
 	sharesToRedeem := sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(50))
 	_, err = s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sharesToRedeem, "")
 
-	s.Require().Error(err, "swap-out should fail because the sender lacks transfer permission for a restricted asset with no attributes")
-	s.Require().ErrorContains(err, "does not have transfer permissions", "error message should indicate missing transfer permission")
+	s.Require().Error(err, "swap-out should fail because the vault lacks transfer permission and the asset is restricted (even with no attributes)")
+	s.Require().ErrorContains(err, "does not have transfer permissions", "error should indicate missing transfer permissions")
 }
 
 func (s *TestSuite) TestSwapOut_FailsWithRestrictedUnderlyingAssetRequiredAttributes() {
 	shareDenom := "vshare"
 	restrictedUnderlyingDenom := "restrictedasset"
+
+	requiredAttr := "you.dont.have.me"
+	s.SetupTechFeeAccount(requiredAttr)
 
 	restrictedMarkerAddr := markertypes.MustGetMarkerAddress(restrictedUnderlyingDenom)
 	restrictedMarker := markertypes.NewMarkerAccount(
@@ -317,6 +331,8 @@ func (s *TestSuite) TestSwapOut_FailsWithRestrictedUnderlyingAssetRequiredAttrib
 		s.adminAddr,
 		[]markertypes.AccessGrant{
 			{Address: s.adminAddr.String(), Permissions: markertypes.AccessList{markertypes.Access_Mint, markertypes.Access_Admin, markertypes.Access_Withdraw, markertypes.Access_Burn, markertypes.Access_Transfer}},
+			{Address: s.EnsureTechFeeAccount().String(), Permissions: markertypes.AccessList{markertypes.Access_Transfer, markertypes.Access_Deposit}},
+			{Address: types.GetVaultAddress(shareDenom).String(), Permissions: markertypes.AccessList{markertypes.Access_Withdraw}},
 		},
 		markertypes.StatusProposed,
 		markertypes.MarkerType_RestrictedCoin,
@@ -353,6 +369,9 @@ func (s *TestSuite) TestSwapOut_SucceedsWithRestrictedUnderlyingAssetRequiredAtt
 	shareDenom := "vshare"
 	restrictedUnderlyingDenom := "restrictedasset"
 	requiredAttribute := "iamrequired"
+
+	s.SetupTechFeeAccount(requiredAttribute)
+
 	s.ctx = s.ctx.WithBlockTime(time.Now().UTC())
 
 	restrictedMarkerAddr := markertypes.MustGetMarkerAddress(restrictedUnderlyingDenom)
@@ -362,6 +381,8 @@ func (s *TestSuite) TestSwapOut_SucceedsWithRestrictedUnderlyingAssetRequiredAtt
 		s.adminAddr,
 		[]markertypes.AccessGrant{
 			{Address: s.adminAddr.String(), Permissions: markertypes.AccessList{markertypes.Access_Mint, markertypes.Access_Admin, markertypes.Access_Withdraw, markertypes.Access_Burn, markertypes.Access_Transfer}},
+			{Address: s.EnsureTechFeeAccount().String(), Permissions: markertypes.AccessList{markertypes.Access_Transfer, markertypes.Access_Deposit}},
+			{Address: types.GetVaultAddress(shareDenom).String(), Permissions: markertypes.AccessList{markertypes.Access_Withdraw}},
 		},
 		markertypes.StatusProposed,
 		markertypes.MarkerType_RestrictedCoin,
@@ -396,9 +417,8 @@ func (s *TestSuite) TestSwapOut_SucceedsWithRestrictedUnderlyingAssetRequiredAtt
 
 	s.simApp.AccountKeeper.SetAccount(s.ctx, s.simApp.AccountKeeper.NewAccountWithAddress(s.ctx, s.adminAddr))
 
-	s.Require().NoError(s.simApp.NameKeeper.SetNameRecord(s.ctx, requiredAttribute, s.adminAddr, false), "should successfully bind the name to the redeemer's address")
 	expireTime := time.Now().Add(24 * time.Hour)
-	attribute := attrtypes.NewAttribute(requiredAttribute, redeemerAddr.String(), attrtypes.AttributeType_String, []byte("true"), &expireTime)
+	attribute := attrtypes.NewAttribute(requiredAttribute, redeemerAddr.String(), attrtypes.AttributeType_String, []byte("true"), &expireTime, "")
 	s.Require().NoError(s.simApp.AttributeKeeper.SetAttribute(s.ctx, attribute, s.adminAddr), "should successfully set the required attribute on the redeemer")
 
 	sharesToRedeem := sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(50))
@@ -457,11 +477,11 @@ func (s *TestSuite) TestSetMinInterestRate_ValidationBlocksWhenAboveExistingMax(
 
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	err = s.k.SetMinInterestRate(s.ctx, v, "0.50")
-	s.Require().Error(err)
-	s.Require().Contains(err.Error(), "minimum interest rate")
-	s.Require().Equal("0.40", v.MaxInterestRate)
-	s.Require().Equal("", v.MinInterestRate)
-	s.Require().Len(s.ctx.EventManager().Events(), 0)
+	s.Require().Error(err, "setting min interest rate above max should fail")
+	s.Require().Contains(err.Error(), "minimum interest rate", "error message mismatch when setting min > max")
+	s.Require().Equal("0.40", v.MaxInterestRate, "max interest rate should remain unchanged")
+	s.Require().Equal("", v.MinInterestRate, "min interest rate should remain unchanged")
+	s.Require().Empty(s.ctx.EventManager().Events(), "no events should be emitted on validation failure")
 }
 
 func (s *TestSuite) TestSetMaxInterestRate_ValidationBlocksWhenBelowExistingMin() {
@@ -471,17 +491,17 @@ func (s *TestSuite) TestSetMaxInterestRate_ValidationBlocksWhenBelowExistingMin(
 
 	attrs := vaultAttrs{admin: s.adminAddr.String(), share: share, underlying: base}
 	v, err := s.k.CreateVault(s.ctx, attrs)
-	s.Require().NoError(err)
+	s.Require().NoError(err, "CreateVault should succeed")
 
-	s.Require().NoError(s.k.SetMinInterestRate(s.ctx, v, "-0.50"))
+	s.Require().NoError(s.k.SetMinInterestRate(s.ctx, v, "-0.50"), "setting min interest rate should succeed")
 
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	err = s.k.SetMaxInterestRate(s.ctx, v, "-0.60")
-	s.Require().Error(err)
-	s.Require().Contains(err.Error(), "minimum interest rate")
-	s.Require().Equal("-0.50", v.MinInterestRate)
-	s.Require().Equal("", v.MaxInterestRate)
-	s.Require().Len(s.ctx.EventManager().Events(), 0)
+	s.Require().Error(err, "setting max interest rate below min should fail")
+	s.Require().Contains(err.Error(), "minimum interest rate", "error message mismatch when setting max < min")
+	s.Require().Equal("-0.50", v.MinInterestRate, "min interest rate should remain unchanged")
+	s.Require().Equal("", v.MaxInterestRate, "max interest rate should remain unchanged")
+	s.Require().Empty(s.ctx.EventManager().Events(), "no events should be emitted on validation failure")
 }
 
 func (s *TestSuite) TestValidateInterestRateLimits() {
@@ -604,7 +624,7 @@ func (s *TestSuite) TestUpdateInterestRate_BoundsEnforced() {
 	addr := types.GetVaultAddress(share)
 
 	v, err := s.k.GetVault(s.ctx, addr)
-	s.Require().NoError(err)
+	s.Require().NoError(err, "GetVault should succeed")
 
 	s.Require().NoError(s.k.UpdateInterestRates(s.ctx, v, "0.10", "0.10"), "should set initial min/max rates without error")
 	s.k.AuthKeeper.SetAccount(s.ctx, v)
@@ -623,8 +643,8 @@ func (s *TestSuite) TestUpdateInterestRate_BoundsEnforced() {
 	s.Require().NoError(err, "updating interest rate to 0.25 should not error")
 	v2, err := s.k.GetVault(s.ctx, addr)
 	s.Require().NoError(err, "getting vault after interest rate update should not error")
-	s.Require().Equal("0.25", v2.CurrentInterestRate)
-	s.Require().Equal("0.25", v2.DesiredInterestRate)
+	s.Require().Equal("0.25", v2.CurrentInterestRate, "current interest rate mismatch after update")
+	s.Require().Equal("0.25", v2.DesiredInterestRate, "desired interest rate mismatch after update")
 
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	_, err = srv.UpdateInterestRate(s.ctx, &types.MsgUpdateInterestRateRequest{
@@ -632,7 +652,7 @@ func (s *TestSuite) TestUpdateInterestRate_BoundsEnforced() {
 		VaultAddress: addr.String(),
 		NewRate:      "0.05",
 	})
-	s.Require().Error(err, "updating interest rate to 0.05 should error")
+	s.Require().Error(err, "updating interest rate to 0.05 (below min 0.10) should error")
 
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	_, err = srv.UpdateInterestRate(s.ctx, &types.MsgUpdateInterestRateRequest{
@@ -640,7 +660,7 @@ func (s *TestSuite) TestUpdateInterestRate_BoundsEnforced() {
 		VaultAddress: addr.String(),
 		NewRate:      "0.60",
 	})
-	s.Require().Error(err, "updating interest rate to 0.60 should error")
+	s.Require().Error(err, "updating interest rate to 0.60 (above max 0.50) should error")
 }
 
 func (s *TestSuite) TestAutoPauseVault_SetsPausedAndEmitsEvent() {
@@ -678,4 +698,43 @@ func (s *TestSuite) TestAutoPauseVault_SetsPausedAndEmitsEvent() {
 	}
 	s.Require().True(hasAddr, "event should include vault_address attribute")
 	s.Require().True(hasReason, "event should include reason attribute")
+}
+
+func (s *TestSuite) TestSetWithdrawalDelay() {
+	share := "jackthecatshare"
+	under := "georgethedogunder"
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(under, 1_000_000), s.adminAddr)
+
+	attrs := vaultAttrs{
+		admin:      s.adminAddr.String(),
+		share:      share,
+		underlying: under,
+	}
+	vault, err := s.k.CreateVault(s.ctx, attrs)
+	s.Require().NoError(err, "CreateVault should succeed")
+
+	vaultAddr := types.GetVaultAddress(share)
+	authorityAddr := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+	authority := authorityAddr.String()
+	delay := uint64(3600)
+
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	err = s.k.SetWithdrawalDelay(s.ctx, vault, delay, authority)
+	s.Require().NoError(err, "SetWithdrawalDelay should succeed")
+
+	updated, err := s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "GetVault should succeed after SetWithdrawalDelay")
+	s.Require().NotNil(updated, "vault should exist after SetWithdrawalDelay")
+	s.Require().Equal(delay, updated.WithdrawalDelaySeconds, "WithdrawalDelaySeconds should be updated")
+
+	expectedEvents := sdk.Events{
+		sdk.NewEvent("provlabs.vault.v1.EventWithdrawalDelayUpdated",
+			sdk.NewAttribute("authority", authority),
+			sdk.NewAttribute("vault_address", vaultAddr.String()),
+			sdk.NewAttribute("withdrawal_delay_seconds", fmt.Sprintf("%d", delay)),
+		),
+	}
+
+	evs := s.ctx.EventManager().Events()
+	s.Require().Equal(normalizeEvents(expectedEvents), normalizeEvents(evs), "events should match expected EventWithdrawalDelayUpdated")
 }

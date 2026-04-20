@@ -26,6 +26,7 @@ const (
 	Msg_UpdateMinInterestRate_FullMethodName  = "/provlabs.vault.v1.Msg/UpdateMinInterestRate"
 	Msg_UpdateMaxInterestRate_FullMethodName  = "/provlabs.vault.v1.Msg/UpdateMaxInterestRate"
 	Msg_UpdateInterestRate_FullMethodName     = "/provlabs.vault.v1.Msg/UpdateInterestRate"
+	Msg_UpdateWithdrawalDelay_FullMethodName  = "/provlabs.vault.v1.Msg/UpdateWithdrawalDelay"
 	Msg_ToggleSwapIn_FullMethodName           = "/provlabs.vault.v1.Msg/ToggleSwapIn"
 	Msg_ToggleSwapOut_FullMethodName          = "/provlabs.vault.v1.Msg/ToggleSwapOut"
 	Msg_DepositInterestFunds_FullMethodName   = "/provlabs.vault.v1.Msg/DepositInterestFunds"
@@ -40,6 +41,8 @@ const (
 	Msg_BridgeMintShares_FullMethodName       = "/provlabs.vault.v1.Msg/BridgeMintShares"
 	Msg_BridgeBurnShares_FullMethodName       = "/provlabs.vault.v1.Msg/BridgeBurnShares"
 	Msg_SetAssetManager_FullMethodName        = "/provlabs.vault.v1.Msg/SetAssetManager"
+	Msg_UpdateParams_FullMethodName           = "/provlabs.vault.v1.Msg/UpdateParams"
+	Msg_UpdateVaultAUMFeeBips_FullMethodName  = "/provlabs.vault.v1.Msg/UpdateVaultAUMFeeBips"
 )
 
 // MsgClient is the client API for Msg service.
@@ -63,6 +66,8 @@ type MsgClient interface {
 	UpdateMaxInterestRate(ctx context.Context, in *MsgUpdateMaxInterestRateRequest, opts ...grpc.CallOption) (*MsgUpdateMaxInterestRateResponse, error)
 	// UpdateInterestRate allows the interest admin to update the current annual interest rate within limits.
 	UpdateInterestRate(ctx context.Context, in *MsgUpdateInterestRateRequest, opts ...grpc.CallOption) (*MsgUpdateInterestRateResponse, error)
+	// UpdateWithdrawalDelay allows updating the withdrawal delay for a vault.
+	UpdateWithdrawalDelay(ctx context.Context, in *MsgUpdateWithdrawalDelayRequest, opts ...grpc.CallOption) (*MsgUpdateWithdrawalDelayResponse, error)
 	// ToggleSwapIn allows enabling or disabling swap-in operations for a vault.
 	ToggleSwapIn(ctx context.Context, in *MsgToggleSwapInRequest, opts ...grpc.CallOption) (*MsgToggleSwapInResponse, error)
 	// ToggleSwapOut allows enabling or disabling swap-out operations for a vault.
@@ -98,6 +103,10 @@ type MsgClient interface {
 	// SetAssetManager sets or clears the optional asset manager address for a vault.
 	// The vault admin must sign this transaction. Passing an empty address clears it.
 	SetAssetManager(ctx context.Context, in *MsgSetAssetManagerRequest, opts ...grpc.CallOption) (*MsgSetAssetManagerResponse, error)
+	// UpdateParams updates the module parameters.
+	UpdateParams(ctx context.Context, in *MsgUpdateParamsRequest, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
+	// UpdateVaultAUMFeeBips updates the AUM fee bips for a specific vault.
+	UpdateVaultAUMFeeBips(ctx context.Context, in *MsgUpdateVaultAUMFeeBipsRequest, opts ...grpc.CallOption) (*MsgUpdateVaultAUMFeeBipsResponse, error)
 }
 
 type msgClient struct {
@@ -172,6 +181,16 @@ func (c *msgClient) UpdateInterestRate(ctx context.Context, in *MsgUpdateInteres
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(MsgUpdateInterestRateResponse)
 	err := c.cc.Invoke(ctx, Msg_UpdateInterestRate_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateWithdrawalDelay(ctx context.Context, in *MsgUpdateWithdrawalDelayRequest, opts ...grpc.CallOption) (*MsgUpdateWithdrawalDelayResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgUpdateWithdrawalDelayResponse)
+	err := c.cc.Invoke(ctx, Msg_UpdateWithdrawalDelay_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -318,6 +337,26 @@ func (c *msgClient) SetAssetManager(ctx context.Context, in *MsgSetAssetManagerR
 	return out, nil
 }
 
+func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParamsRequest, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgUpdateParamsResponse)
+	err := c.cc.Invoke(ctx, Msg_UpdateParams_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateVaultAUMFeeBips(ctx context.Context, in *MsgUpdateVaultAUMFeeBipsRequest, opts ...grpc.CallOption) (*MsgUpdateVaultAUMFeeBipsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgUpdateVaultAUMFeeBipsResponse)
+	err := c.cc.Invoke(ctx, Msg_UpdateVaultAUMFeeBips_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility.
@@ -339,6 +378,8 @@ type MsgServer interface {
 	UpdateMaxInterestRate(context.Context, *MsgUpdateMaxInterestRateRequest) (*MsgUpdateMaxInterestRateResponse, error)
 	// UpdateInterestRate allows the interest admin to update the current annual interest rate within limits.
 	UpdateInterestRate(context.Context, *MsgUpdateInterestRateRequest) (*MsgUpdateInterestRateResponse, error)
+	// UpdateWithdrawalDelay allows updating the withdrawal delay for a vault.
+	UpdateWithdrawalDelay(context.Context, *MsgUpdateWithdrawalDelayRequest) (*MsgUpdateWithdrawalDelayResponse, error)
 	// ToggleSwapIn allows enabling or disabling swap-in operations for a vault.
 	ToggleSwapIn(context.Context, *MsgToggleSwapInRequest) (*MsgToggleSwapInResponse, error)
 	// ToggleSwapOut allows enabling or disabling swap-out operations for a vault.
@@ -374,6 +415,10 @@ type MsgServer interface {
 	// SetAssetManager sets or clears the optional asset manager address for a vault.
 	// The vault admin must sign this transaction. Passing an empty address clears it.
 	SetAssetManager(context.Context, *MsgSetAssetManagerRequest) (*MsgSetAssetManagerResponse, error)
+	// UpdateParams updates the module parameters.
+	UpdateParams(context.Context, *MsgUpdateParamsRequest) (*MsgUpdateParamsResponse, error)
+	// UpdateVaultAUMFeeBips updates the AUM fee bips for a specific vault.
+	UpdateVaultAUMFeeBips(context.Context, *MsgUpdateVaultAUMFeeBipsRequest) (*MsgUpdateVaultAUMFeeBipsResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -404,6 +449,9 @@ func (UnimplementedMsgServer) UpdateMaxInterestRate(context.Context, *MsgUpdateM
 }
 func (UnimplementedMsgServer) UpdateInterestRate(context.Context, *MsgUpdateInterestRateRequest) (*MsgUpdateInterestRateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateInterestRate not implemented")
+}
+func (UnimplementedMsgServer) UpdateWithdrawalDelay(context.Context, *MsgUpdateWithdrawalDelayRequest) (*MsgUpdateWithdrawalDelayResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateWithdrawalDelay not implemented")
 }
 func (UnimplementedMsgServer) ToggleSwapIn(context.Context, *MsgToggleSwapInRequest) (*MsgToggleSwapInResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ToggleSwapIn not implemented")
@@ -446,6 +494,12 @@ func (UnimplementedMsgServer) BridgeBurnShares(context.Context, *MsgBridgeBurnSh
 }
 func (UnimplementedMsgServer) SetAssetManager(context.Context, *MsgSetAssetManagerRequest) (*MsgSetAssetManagerResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetAssetManager not implemented")
+}
+func (UnimplementedMsgServer) UpdateParams(context.Context, *MsgUpdateParamsRequest) (*MsgUpdateParamsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateParams not implemented")
+}
+func (UnimplementedMsgServer) UpdateVaultAUMFeeBips(context.Context, *MsgUpdateVaultAUMFeeBipsRequest) (*MsgUpdateVaultAUMFeeBipsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateVaultAUMFeeBips not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 func (UnimplementedMsgServer) testEmbeddedByValue()             {}
@@ -590,6 +644,24 @@ func _Msg_UpdateInterestRate_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).UpdateInterestRate(ctx, req.(*MsgUpdateInterestRateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateWithdrawalDelay_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateWithdrawalDelayRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateWithdrawalDelay(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_UpdateWithdrawalDelay_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateWithdrawalDelay(ctx, req.(*MsgUpdateWithdrawalDelayRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -846,6 +918,42 @@ func _Msg_SetAssetManager_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_UpdateParams_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateParamsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateParams(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_UpdateParams_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateParams(ctx, req.(*MsgUpdateParamsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateVaultAUMFeeBips_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateVaultAUMFeeBipsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateVaultAUMFeeBips(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_UpdateVaultAUMFeeBips_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateVaultAUMFeeBips(ctx, req.(*MsgUpdateVaultAUMFeeBipsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -880,6 +988,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateInterestRate",
 			Handler:    _Msg_UpdateInterestRate_Handler,
+		},
+		{
+			MethodName: "UpdateWithdrawalDelay",
+			Handler:    _Msg_UpdateWithdrawalDelay_Handler,
 		},
 		{
 			MethodName: "ToggleSwapIn",
@@ -936,6 +1048,14 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetAssetManager",
 			Handler:    _Msg_SetAssetManager_Handler,
+		},
+		{
+			MethodName: "UpdateParams",
+			Handler:    _Msg_UpdateParams_Handler,
+		},
+		{
+			MethodName: "UpdateVaultAUMFeeBips",
+			Handler:    _Msg_UpdateVaultAUMFeeBips_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

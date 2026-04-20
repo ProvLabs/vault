@@ -1,7 +1,6 @@
 package queue
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/provlabs/vault/types"
@@ -11,10 +10,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// PayoutTimeoutQueue manages scheduled payout distributions for vaults.
 type PayoutTimeoutQueue struct {
 	keyset collections.KeySet[collections.Pair[uint64, sdk.AccAddress]]
 }
 
+// NewPayoutTimeoutQueue initializes a new PayoutTimeoutQueue using the
+// provided collections schema builder.
 func NewPayoutTimeoutQueue(builder *collections.SchemaBuilder) *PayoutTimeoutQueue {
 	endKeyCodec := collections.PairKeyCodec(
 		collections.Uint64Key,
@@ -27,61 +29,75 @@ func NewPayoutTimeoutQueue(builder *collections.SchemaBuilder) *PayoutTimeoutQue
 
 // Enqueue schedules a vault for timeout processing by inserting an
 // entry into the PayoutTimeoutQueue keyed by (periodTimeout, vault address).
-func (p *PayoutTimeoutQueue) Enqueue(ctx context.Context, periodTimeout int64, vaultAddr sdk.AccAddress) error {
+func (p *PayoutTimeoutQueue) Enqueue(ctx sdk.Context, periodTimeout int64, vaultAddr sdk.AccAddress) error {
 	if periodTimeout < 0 {
 		return fmt.Errorf("periodTimeout cannot be negative")
 	}
-	return p.keyset.Set(ctx, collections.Join(uint64(periodTimeout), vaultAddr))
+	if err := p.keyset.Set(ctx, collections.Join(uint64(periodTimeout), vaultAddr)); err != nil {
+		return fmt.Errorf("enqueue payout timeout: %w", err)
+	}
+	return nil
 }
 
 // Dequeue removes a specific timeout entry (periodTimeout, vault)
 // from the PayoutTimeoutQueue.
-func (p *PayoutTimeoutQueue) Dequeue(ctx context.Context, periodTimeout int64, vaultAddr sdk.AccAddress) error {
+func (p *PayoutTimeoutQueue) Dequeue(ctx sdk.Context, periodTimeout int64, vaultAddr sdk.AccAddress) error {
 	if periodTimeout < 0 {
 		return fmt.Errorf("periodTimeout cannot be negative")
 	}
-	return p.keyset.Remove(ctx, collections.Join(uint64(periodTimeout), vaultAddr))
+	if err := p.keyset.Remove(ctx, collections.Join(uint64(periodTimeout), vaultAddr)); err != nil {
+		return fmt.Errorf("dequeue payout timeout: %w", err)
+	}
+	return nil
 }
 
 // WalkDue iterates over all entries in the PayoutTimeoutQueue with
 // a timeout timestamp <= nowSec. For each due entry, the callback is invoked.
 // Iteration stops when a key with time > nowSec is encountered (since keys are
 // ordered) or when the callback returns stop=true or an error.
-func (p *PayoutTimeoutQueue) WalkDue(ctx context.Context, nowSec int64, fn func(periodTimeout uint64, vaultAddr sdk.AccAddress) (stop bool, err error)) error {
-	return p.keyset.Walk(ctx, nil, func(key collections.Pair[uint64, sdk.AccAddress]) (stop bool, err error) {
+func (p *PayoutTimeoutQueue) WalkDue(ctx sdk.Context, nowSec int64, fn func(periodTimeout uint64, vaultAddr sdk.AccAddress) (stop bool, err error)) error {
+	if nowSec < 0 {
+		return fmt.Errorf("nowSec cannot be negative")
+	}
+	if err := p.keyset.Walk(ctx, nil, func(key collections.Pair[uint64, sdk.AccAddress]) (stop bool, err error) {
 		if key.K1() > uint64(nowSec) {
 			return true, nil
 		}
 		return fn(key.K1(), key.K2())
-	})
+	}); err != nil {
+		return fmt.Errorf("walk payout timeouts: %w", err)
+	}
+	return nil
 }
 
 // Walk iterates over all entries in the PayoutTimeoutQueue.
 // Iteration stops when the callback returns stop=true or an error.
-func (p *PayoutTimeoutQueue) Walk(ctx context.Context, fn func(periodTimeout uint64, vaultAddr sdk.AccAddress) (stop bool, err error)) error {
-	return p.keyset.Walk(ctx, nil, func(key collections.Pair[uint64, sdk.AccAddress]) (stop bool, err error) {
+func (p *PayoutTimeoutQueue) Walk(ctx sdk.Context, fn func(periodTimeout uint64, vaultAddr sdk.AccAddress) (stop bool, err error)) error {
+	if err := p.keyset.Walk(ctx, nil, func(key collections.Pair[uint64, sdk.AccAddress]) (stop bool, err error) {
 		return fn(key.K1(), key.K2())
-	})
+	}); err != nil {
+		return fmt.Errorf("walk payout timeouts: %w", err)
+	}
+	return nil
 }
 
 // RemoveAllForVault deletes all timeout entries in the
 // PayoutTimeoutQueue for the given vault address.
-func (p *PayoutTimeoutQueue) RemoveAllForVault(ctx context.Context, vaultAddr sdk.AccAddress) error {
+func (p *PayoutTimeoutQueue) RemoveAllForVault(ctx sdk.Context, vaultAddr sdk.AccAddress) error {
 	var keys []collections.Pair[uint64, sdk.AccAddress]
 
-	err := p.keyset.Walk(ctx, nil, func(kv collections.Pair[uint64, sdk.AccAddress]) (bool, error) {
+	if err := p.keyset.Walk(ctx, nil, func(kv collections.Pair[uint64, sdk.AccAddress]) (bool, error) {
 		if kv.K2().Equals(vaultAddr) {
 			keys = append(keys, kv)
 		}
 		return false, nil
-	})
-	if err != nil {
-		return err
+	}); err != nil {
+		return fmt.Errorf("walk payout timeouts: %w", err)
 	}
 
 	for _, key := range keys {
 		if err := p.keyset.Remove(ctx, key); err != nil {
-			return err
+			return fmt.Errorf("remove payout timeout: %w", err)
 		}
 	}
 	return nil

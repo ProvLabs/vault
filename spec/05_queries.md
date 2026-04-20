@@ -10,6 +10,7 @@ All endpoints are defined in `vault.v1.Query` and exposed over gRPC and REST (HT
   - [EstimateSwapIn](#estimateswapin)
   - [EstimateSwapOut](#estimateswapout)
   - [PendingSwapOuts](#pendingswapouts)
+  - [VaultPendingSwapOuts](#vaultpendingswapouts)
 
 ---
 

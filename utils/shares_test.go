@@ -84,7 +84,7 @@ func TestCalculateAssetsFromShares(t *testing.T) {
 			)
 			if tc.expectErr {
 				require.Error(t, err, "expected error for case: %s", tc.name)
-				require.EqualError(t, err, tc.errMsg)
+				require.EqualErrorf(t, err, tc.errMsg, "error message mismatch for case: %s", tc.name)
 			} else {
 				require.NoError(t, err, "unexpected error for case: %s", tc.name)
 				require.Equal(t, tc.expected, result, fmt.Sprintf("unexpected assets for shares=%s totalShares=%s totalAssets=%s", tc.shares, tc.totalShares, tc.totalAssets))
@@ -190,7 +190,7 @@ func TestCalculateSharesProRataFraction(t *testing.T) {
 
 			if tc.expectErr {
 				require.Error(t, err, "expected error for case: %s", tc.name)
-				require.EqualError(t, err, tc.expectedErrText, "unexpected error text for case: %s", tc.name)
+				require.EqualErrorf(t, err, tc.expectedErrText, "unexpected error text for case: %s", tc.name)
 				return
 			}
 
@@ -217,8 +217,8 @@ func TestSmallFirstSwapInThenHugeSwapInThenSwapOut(t *testing.T) {
 
 	shareDenom := "shares"
 	firstShares, err := utils.CalculateSharesProRataFraction(firstIn, sdkmath.NewInt(1), totalAssets, totalShares, shareDenom)
-	require.NoError(t, err, "first swap-in conversion should not error")
-	require.Equal(t, firstIn.Mul(utils.ShareScalar), firstShares.Amount, "first swap-in should mint amount * ShareScalar")
+	require.NoErrorf(t, err, "first swap-in conversion should not error")
+	require.Equalf(t, firstIn.Mul(utils.ShareScalar), firstShares.Amount, "first swap-in should mint amount * ShareScalar")
 
 	totalAssets = totalAssets.Add(firstIn)
 	totalShares = totalShares.Add(firstShares.Amount)
@@ -229,7 +229,7 @@ func TestSmallFirstSwapInThenHugeSwapInThenSwapOut(t *testing.T) {
 
 	assetDenom := "underlying"
 	outAll, err := utils.CalculateRedeemProRataFraction(firstShares.Amount, totalShares, totalAssets, sdkmath.NewInt(1), sdkmath.NewInt(1), assetDenom)
-	require.NoError(t, err, "swap-out conversion should not error")
+	require.NoErrorf(t, err, "swap-out conversion should not error")
 
 	require.Truef(t,
 		outAll.Amount.GTE(firstIn),
@@ -260,18 +260,18 @@ func TestVeryLargeInitialSwapInRoundTrip(t *testing.T) {
 
 	shareDenom := "shares"
 	minted, err := utils.CalculateSharesProRataFraction(largeIn, sdkmath.NewInt(1), totalAssets, totalShares, shareDenom)
-	require.NoError(t, err, "large swap-in conversion should not error")
-	require.Equal(t, largeIn.Mul(utils.ShareScalar), minted.Amount, "minted shares should equal swap-in * ShareScalar")
+	require.NoErrorf(t, err, "large swap-in conversion should not error")
+	require.Equalf(t, largeIn.Mul(utils.ShareScalar), minted.Amount, "minted shares should equal swap-in * ShareScalar")
 
 	totalAssets = totalAssets.Add(largeIn)
 	totalShares = totalShares.Add(minted.Amount)
 
 	assetDenom := "underlying"
 	out, err := utils.CalculateRedeemProRataFraction(minted.Amount, totalShares, totalAssets, sdkmath.NewInt(1), sdkmath.NewInt(1), assetDenom)
-	require.NoError(t, err, "swap-out conversion should not error")
+	require.NoErrorf(t, err, "swap-out conversion should not error")
 
 	price := totalAssets.Mul(utils.ShareScalar).Quo(totalShares)
-	require.Equal(t, sdkmath.NewInt(1), price, "implied price should be exactly 1 asset per ShareScalar shares at large scale")
+	require.Equalf(t, sdkmath.NewInt(1), price, "implied price should be exactly 1 asset per ShareScalar shares at large scale")
 
 	require.Truef(t,
 		out.Amount.GTE(largeIn.SubRaw(1)),

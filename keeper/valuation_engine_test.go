@@ -87,19 +87,19 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 			setup: func() {
 				pmtMarkerAddr := markertypes.MustGetMarkerAddress(paymentDenom)
 				pmtMarkerAcct, err := s.k.MarkerKeeper.GetMarker(s.ctx, pmtMarkerAddr)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "should fetch marker for %s", paymentDenom)
 				err = s.k.MarkerKeeper.SetNetAssetValue(s.ctx, pmtMarkerAcct, markertypes.NetAssetValue{
 					Price:  sdk.NewInt64Coin(underlyingDenom, 3),
 					Volume: 2,
 				}, "fwd-old")
-				s.Require().NoError(err)
+				s.Require().NoError(err, "setting old forward NAV should succeed")
 				s.setReverseNAV(underlyingDenom, paymentDenom, 5, 7)
 				s.bumpHeight()
 				err = s.k.MarkerKeeper.SetNetAssetValue(s.ctx, pmtMarkerAcct, markertypes.NetAssetValue{
 					Price:  sdk.NewInt64Coin(underlyingDenom, 6),
 					Volume: 4,
 				}, "fwd-new")
-				s.Require().NoError(err)
+				s.Require().NoError(err, "setting new forward NAV should succeed")
 			},
 			expectedNumerator:   6,
 			expectedDenominator: 4,
@@ -110,13 +110,13 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 			setup: func() {
 				pmtMarkerAddr := markertypes.MustGetMarkerAddress(paymentDenom)
 				pmtMarkerAcct, err := s.k.MarkerKeeper.GetMarker(s.ctx, pmtMarkerAddr)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "should fetch marker for %s", paymentDenom)
 				s.setReverseNAV(underlyingDenom, paymentDenom, 11, 5)
 				err = s.k.MarkerKeeper.SetNetAssetValue(s.ctx, pmtMarkerAcct, markertypes.NetAssetValue{
 					Price:  sdk.NewInt64Coin(underlyingDenom, 9),
 					Volume: 3,
 				}, "fwd-same-height")
-				s.Require().NoError(err)
+				s.Require().NoError(err, "setting forward NAV at same height should succeed")
 			},
 			expectedNumerator:   9,
 			expectedDenominator: 3,
@@ -142,14 +142,14 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 			testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
 			num, den, err := testKeeper.UnitPriceFraction(s.ctx, tc.fromDenom, vault)
 			if tc.expectedErrorContains != "" {
-				s.Require().Error(err, "case %q", tc.name)
-				s.Require().Contains(err.Error(), tc.expectedErrorContains, "case %q", tc.name)
+				s.Require().Error(err, "expected error for case %q", tc.name)
+				s.Require().Contains(err.Error(), tc.expectedErrorContains, "error message mismatch for case %q", tc.name)
 				return
 			}
-			s.Require().NoError(err, "case %q", tc.name)
-			s.Require().Equal(math.NewInt(tc.expectedNumerator), num, "case %q numerator", tc.name)
-			s.Require().Equal(math.NewInt(tc.expectedDenominator), den, "case %q denominator", tc.name)
-			s.Require().True(den.IsPositive(), "case %q denominator positive", tc.name)
+			s.Require().NoError(err, "unexpected error for case %q", tc.name)
+			s.Require().Equal(math.NewInt(tc.expectedNumerator), num, "numerator mismatch for case %q", tc.name)
+			s.Require().Equal(math.NewInt(tc.expectedDenominator), den, "denominator mismatch for case %q", tc.name)
+			s.Require().True(den.IsPositive(), "denominator must be positive for case %q", tc.name)
 		})
 	}
 }
@@ -177,6 +177,38 @@ func (s *TestSuite) TestToUnderlyingAssetAmount() {
 	_, err = testKeeper.ToUnderlyingAssetAmount(s.ctx, *vault, sdk.NewInt64Coin("unknown", 5))
 	s.Require().Error(err, "should error when NAV missing for input denom")
 	s.Require().Contains(err.Error(), "nav not found", "error should mention missing NAV")
+}
+
+func (s *TestSuite) TestFromUnderlyingAssetAmount() {
+	underlyingDenom := "ylds"
+	paymentDenom := "usdc"
+	shareDenom := "vshare"
+	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
+
+	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
+
+	// 1 Underlying = 1/2 Payment (PriceNum=1, PriceDen=2)
+	// FromUnderlying(2 ylds) = 2 * 2 / 1 = 4 usdc
+	val, err := testKeeper.FromUnderlyingAssetAmount(s.ctx, *vault, math.NewInt(2), paymentDenom)
+	s.Require().NoError(err, "from-underlying should succeed for valid NAV")
+	s.Require().Equal(math.NewInt(4), val, "2 ylds at 1/2 should be 4 usdc")
+
+	// Identity path
+	valIdentity, err := testKeeper.FromUnderlyingAssetAmount(s.ctx, *vault, math.NewInt(100), underlyingDenom)
+	s.Require().NoError(err, "identity from-underlying should succeed")
+	s.Require().Equal(math.NewInt(100), valIdentity, "100 ylds should be 100 ylds")
+
+	// Missing NAV
+	_, err = testKeeper.FromUnderlyingAssetAmount(s.ctx, *vault, math.NewInt(5), "unknown")
+	s.Require().Error(err, "should error when NAV missing for target denom")
+	s.Require().Contains(err.Error(), "nav not found", "error should mention missing NAV")
+
+	// Zero price error
+	s.bumpHeight()
+	s.setReverseNAV(underlyingDenom, "zeroprice", 0, 1)
+	_, err = testKeeper.FromUnderlyingAssetAmount(s.ctx, *vault, math.NewInt(5), "zeroprice")
+	s.Require().Error(err, "should error for zero price numerator")
+	s.Require().Contains(err.Error(), "price is zero", "error should mention zero price")
 }
 
 func (s *TestSuite) TestToUnderlyingAssetAmount_IdentityFastPath() {
@@ -965,6 +997,32 @@ func (s *TestSuite) TestEstimateTotalVaultValue_MultiAsset_WithNAV_WithNegativeI
 	s.Require().Equal(expectedCoin, estimatedTVV, "estimated TVV should equal base principal (with NAV) and subtract negative interest")
 }
 
+func (s *TestSuite) TestEstimateTotalVaultValue_FullScenario() {
+	underlyingDenom := "ylds"
+	shareDenom := "vshare"
+	vault := s.setupBaseVault(underlyingDenom, shareDenom)
+
+	// Setup: 1000 principal, 50 outstanding fee, 10% rate.
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(
+		sdk.NewInt64Coin(underlyingDenom, 1_000),
+	)))
+
+	startTime := s.ctx.BlockTime()
+	vault.PeriodStart = startTime.Unix()
+	vault.FeePeriodStart = startTime.Unix()
+	vault.CurrentInterestRate = "0.1"
+	vault.OutstandingAumFee = sdk.NewInt64Coin(underlyingDenom, 50)
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	// Advance 1 year. Expected (Continuous Compounding):
+	// Principal (1000) + Accrued Interest (105) - Accrued Fee (1) - Outstanding Fee (50) = 1054.
+	s.ctx = s.ctx.WithBlockTime(startTime.Add(time.Second * 31_536_000))
+
+	estimatedTVV, err := s.k.EstimateTotalVaultValue(s.ctx, vault)
+	s.Require().NoError(err)
+	s.Require().Equal(sdk.NewInt64Coin(underlyingDenom, 1_054), estimatedTVV)
+}
+
 func (s *TestSuite) TestEstimateTotalVaultValue_ErrorPropagation() {
 	underlyingDenom := "ylds"
 	paymentDenom := "usdc"
@@ -982,5 +1040,5 @@ func (s *TestSuite) TestEstimateTotalVaultValue_ErrorPropagation() {
 	_, err := testKeeper.EstimateTotalVaultValue(s.ctx, vault)
 
 	s.Require().Error(err, "estimation should error if GetTVV errors")
-	s.Require().Contains(err.Error(), "get tvv: nav not found for usdc/ylds", "error should propagate from missing NAV")
+	s.Require().Contains(err.Error(), "nav not found for usdc/ylds", "error should propagate from missing NAV")
 }

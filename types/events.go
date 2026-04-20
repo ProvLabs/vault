@@ -275,3 +275,40 @@ func NewEventAssetManagerSet(vaultAddress, admin, assetManager string) *EventAss
 		AssetManager: assetManager,
 	}
 }
+
+// NewEventWithdrawalDelayUpdated creates a new EventWithdrawalDelayUpdated event.
+func NewEventWithdrawalDelayUpdated(vaultAddress, authority string, withdrawalDelaySeconds uint64) *EventWithdrawalDelayUpdated {
+	return &EventWithdrawalDelayUpdated{
+		VaultAddress:           vaultAddress,
+		Authority:              authority,
+		WithdrawalDelaySeconds: withdrawalDelaySeconds,
+	}
+}
+
+// NewEventVaultFeeCollected creates a new EventVaultFeeCollected event.
+func NewEventVaultFeeCollected(vaultAddress string, collected, requested, aumSnapshot, outstanding sdk.Coin, duration int64) *EventVaultFeeCollected {
+	return &EventVaultFeeCollected{
+		VaultAddress:      vaultAddress,
+		CollectedAmount:   collected.String(),
+		RequestedAmount:   requested.String(),
+		AumSnapshot:       aumSnapshot.String(),
+		DurationSeconds:   duration,
+		OutstandingAmount: outstanding.String(),
+	}
+}
+
+// NewEventParamsUpdated creates a new EventParamsUpdated event.
+func NewEventParamsUpdated(params Params) *EventParamsUpdated {
+	return &EventParamsUpdated{
+		Params: &params,
+	}
+}
+
+// NewEventVaultAUMFeeBipsUpdated creates a new EventVaultAUMFeeBipsUpdated event.
+func NewEventVaultAUMFeeBipsUpdated(vaultAddress, authority string, aumFeeBips uint32) *EventVaultAUMFeeBipsUpdated {
+	return &EventVaultAUMFeeBipsUpdated{
+		VaultAddress: vaultAddress,
+		Authority:    authority,
+		AumFeeBips:   aumFeeBips,
+	}
+}

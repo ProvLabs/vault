@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/provlabs/vault/types"
 
@@ -18,13 +19,30 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 		panic(fmt.Errorf("invalid vault genesis state: %w", err))
 	}
 
+	params := types.DefaultParams()
+	if len(genState.Params.TechFeeAddress) > 0 {
+		params.TechFeeAddress = genState.Params.TechFeeAddress
+	} else {
+		// Fallback to chain-specific default if TechFeeAddress is not provided.
+		params.TechFeeAddress = types.GetDefaultTechFeeAddress(ctx.ChainID()).String()
+	}
+	if genState.Params.DefaultAumFeeBips > 0 {
+		params.DefaultAumFeeBips = genState.Params.DefaultAumFeeBips
+	}
+
+	if err := k.Params.Set(ctx, params); err != nil {
+		panic(fmt.Errorf("failed to set params: %w", err))
+	}
+
 	accounts := k.AuthKeeper.GetAllAccounts(ctx)
 	for _, acc := range accounts {
 		if v, ok := acc.(types.VaultAccountI); ok {
 			if err := v.Validate(); err != nil {
 				panic(err)
 			}
-			k.SetVaultLookup(ctx, v.Clone())
+			if err := k.SetVaultLookup(ctx, v.Clone()); err != nil {
+				panic(fmt.Errorf("failed to set vault lookup for existing vault %s: %w", v.GetAddress(), err))
+			}
 		}
 	}
 
@@ -44,21 +62,40 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 			k.AuthKeeper.SetAccount(ctx, vaultAcc)
 		}
 
-		if err := v.Validate(); err != nil {
-			panic(fmt.Errorf("invalid vault at index %d: %w", i, err))
-		}
-
 		if err := k.SetVaultLookup(ctx, v); err != nil {
 			panic(fmt.Errorf("failed to store vault %s: %w", v.Address, err))
 		}
 	}
+
 	for _, entry := range genState.PayoutTimeoutQueue {
 		addr, err := sdk.AccAddressFromBech32(entry.Addr)
 		if err != nil {
-			panic(fmt.Errorf("invalid address in timeout queue: %w", err))
+			panic(fmt.Errorf("invalid address in payout timeout queue: %w", err))
+		}
+		if _, ok := k.tryGetVault(ctx, addr); !ok {
+			panic(fmt.Errorf("payout timeout queue entry for non-existent vault %s", entry.Addr))
+		}
+		if entry.Time > math.MaxInt64 {
+			panic(fmt.Errorf("payout timeout queue entry for %s has time %d which exceeds max int64", entry.Addr, entry.Time))
 		}
 		if err := k.PayoutTimeoutQueue.Enqueue(ctx, int64(entry.Time), addr); err != nil {
-			panic(fmt.Errorf("failed to enqueue vault timeout for %s: %w", entry.Addr, err))
+			panic(fmt.Errorf("failed to enqueue vault payout timeout for %s: %w", entry.Addr, err))
+		}
+	}
+
+	for _, entry := range genState.FeeTimeoutQueue {
+		addr, err := sdk.AccAddressFromBech32(entry.Addr)
+		if err != nil {
+			panic(fmt.Errorf("invalid address in fee timeout queue: %w", err))
+		}
+		if _, ok := k.tryGetVault(ctx, addr); !ok {
+			panic(fmt.Errorf("fee timeout queue entry for non-existent vault %s", entry.Addr))
+		}
+		if entry.Time > math.MaxInt64 {
+			panic(fmt.Errorf("fee timeout queue entry for %s has time %d which exceeds max int64", entry.Addr, entry.Time))
+		}
+		if err := k.FeeTimeoutQueue.Enqueue(ctx, int64(entry.Time), addr); err != nil {
+			panic(fmt.Errorf("failed to enqueue vault fee timeout for %s: %w", entry.Addr, err))
 		}
 	}
 
@@ -79,6 +116,11 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 
 // ExportGenesis exports the current state of the vault module.
 func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
+	params, err := k.Params.Get(ctx)
+	if err != nil {
+		params = types.DefaultParams()
+	}
+
 	allAccounts := k.AuthKeeper.GetAllAccounts(ctx)
 
 	var vaults []types.VaultAccount
@@ -90,7 +132,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 
 	paymentTimeoutQueue := make([]types.QueueEntry, 0)
 
-	err := k.PayoutTimeoutQueue.Walk(ctx, func(periodTimeout uint64, vaultAddr sdk.AccAddress) (stop bool, err error) {
+	err = k.PayoutTimeoutQueue.Walk(ctx, func(periodTimeout uint64, vaultAddr sdk.AccAddress) (stop bool, err error) {
 		paymentTimeoutQueue = append(paymentTimeoutQueue, types.QueueEntry{
 			Time: periodTimeout,
 			Addr: vaultAddr.String(),
@@ -101,6 +143,19 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		panic(fmt.Errorf("failed to walk payout timeout queue: %w", err))
 	}
 
+	feeTimeoutQueue := make([]types.QueueEntry, 0)
+
+	err = k.FeeTimeoutQueue.Walk(ctx, func(feeTimeout uint64, vaultAddr sdk.AccAddress) (stop bool, err error) {
+		feeTimeoutQueue = append(feeTimeoutQueue, types.QueueEntry{
+			Time: feeTimeout,
+			Addr: vaultAddr.String(),
+		})
+		return false, nil
+	})
+	if err != nil {
+		panic(fmt.Errorf("failed to walk fee timeout queue: %w", err))
+	}
+
 	pendingSwapOutQueue, err := k.PendingSwapOutQueue.Export(ctx)
 	if err != nil {
 		panic(fmt.Errorf("failed to export pending swap out queue: %w", err))
@@ -109,11 +164,8 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	return &types.GenesisState{
 		Vaults:              vaults,
 		PayoutTimeoutQueue:  paymentTimeoutQueue,
+		FeeTimeoutQueue:     feeTimeoutQueue,
 		PendingSwapOutQueue: *pendingSwapOutQueue,
+		Params:              params,
 	}
-}
-
-func vaultExists(ctx sdk.Context, k Keeper, addr sdk.AccAddress) bool {
-	_, err := k.GetVault(ctx, addr)
-	return err == nil
 }

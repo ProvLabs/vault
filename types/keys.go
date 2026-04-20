@@ -36,6 +36,10 @@ var (
 	VaultPayoutTimeoutQueuePrefix = collections.NewPrefix(2)
 	// VaultPayoutTimeoutQueueName is a human-readable name for the payout timeout queue collection.
 	VaultPayoutTimeoutQueueName = "vault_payout_timeout_queue"
+	// VaultFeeTimeoutQueuePrefix is the prefix to retrieve all VaultFeeTimeoutQueue.
+	VaultFeeTimeoutQueuePrefix = collections.NewPrefix(7)
+	// VaultFeeTimeoutQueueName is a human-readable name for the fee timeout queue collection.
+	VaultFeeTimeoutQueueName = "vault_fee_timeout_queue"
 	// VaultPendingSwapOutQueuePrefix is the prefix to retrieve all VaultPendingSwapOutQueue.
 	VaultPendingSwapOutQueuePrefix = collections.NewPrefix(3)
 	// VaultPendingSwapOutQueueName is a human-readable name for the pending swap out queue collection.
@@ -52,6 +56,28 @@ var (
 	VaultPendingSwapOutByIdIndexPrefix = collections.NewPrefix(6)
 	// VaultPendingSwapOutByIdIndexName is a human-readable name for the pending swap out queue by id index.
 	VaultPendingSwapOutByIdIndexName = "pending_swap_out_by_id"
+
+	// ParamsKeyPrefix is the prefix for the module parameters.
+	ParamsKeyPrefix = collections.NewPrefix(10)
+	// ParamsKeyName is the human-readable name for the params state key.
+	ParamsKeyName = "params"
+)
+
+var (
+	// DefaultTechFeeAddress is the default ProvLabs fee collection address for local/sim networks.
+	// Represents 'pb1evyv7neax9qtxxzuexnhylxyz4guvsyjjqke4h'.
+	DefaultTechFeeAddress = sdk.AccAddress{203, 8, 207, 79, 61, 49, 64, 179, 24, 92, 201, 167, 114, 124, 196, 21, 81, 198, 64, 146}
+	// TestnetTechFeeAddress is the ProvLabs fee collection address for pio-testnet-1.
+	// NOTE: Initially the same as DefaultTechFeeAddress; will be updated via upgrade handler.
+	TestnetTechFeeAddress = sdk.AccAddress{203, 8, 207, 79, 61, 49, 64, 179, 24, 92, 201, 167, 114, 124, 196, 21, 81, 198, 64, 146}
+	// MainnetTechFeeAddress is the ProvLabs fee collection address for pio-mainnet-1.
+	// NOTE: Initially the same as DefaultTechFeeAddress; will be updated via upgrade handler.
+	MainnetTechFeeAddress = sdk.AccAddress{203, 8, 207, 79, 61, 49, 64, 179, 24, 92, 201, 167, 114, 124, 196, 21, 81, 198, 64, 146}
+)
+
+const (
+	// DefaultAumFeeBips is the default AUM fee rate in basis points (15 bps = 0.15%).
+	DefaultAumFeeBips = 15
 )
 
 // GetVaultAddress returns the module account address for the given shareDenom.

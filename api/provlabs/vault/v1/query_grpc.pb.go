@@ -25,6 +25,7 @@ const (
 	Query_EstimateSwapOut_FullMethodName      = "/provlabs.vault.v1.Query/EstimateSwapOut"
 	Query_PendingSwapOuts_FullMethodName      = "/provlabs.vault.v1.Query/PendingSwapOuts"
 	Query_VaultPendingSwapOuts_FullMethodName = "/provlabs.vault.v1.Query/VaultPendingSwapOuts"
+	Query_Params_FullMethodName               = "/provlabs.vault.v1.Query/Params"
 )
 
 // QueryClient is the client API for Query service.
@@ -45,6 +46,8 @@ type QueryClient interface {
 	PendingSwapOuts(ctx context.Context, in *QueryPendingSwapOutsRequest, opts ...grpc.CallOption) (*QueryPendingSwapOutsResponse, error)
 	// VaultPendingSwapOuts returns a paginated list of all pending swap outs for a specific vault.
 	VaultPendingSwapOuts(ctx context.Context, in *QueryVaultPendingSwapOutsRequest, opts ...grpc.CallOption) (*QueryVaultPendingSwapOutsResponse, error)
+	// Params returns the current module parameters.
+	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
 }
 
 type queryClient struct {
@@ -115,6 +118,16 @@ func (c *queryClient) VaultPendingSwapOuts(ctx context.Context, in *QueryVaultPe
 	return out, nil
 }
 
+func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(QueryParamsResponse)
+	err := c.cc.Invoke(ctx, Query_Params_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility.
@@ -133,6 +146,8 @@ type QueryServer interface {
 	PendingSwapOuts(context.Context, *QueryPendingSwapOutsRequest) (*QueryPendingSwapOutsResponse, error)
 	// VaultPendingSwapOuts returns a paginated list of all pending swap outs for a specific vault.
 	VaultPendingSwapOuts(context.Context, *QueryVaultPendingSwapOutsRequest) (*QueryVaultPendingSwapOutsResponse, error)
+	// Params returns the current module parameters.
+	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -160,6 +175,9 @@ func (UnimplementedQueryServer) PendingSwapOuts(context.Context, *QueryPendingSw
 }
 func (UnimplementedQueryServer) VaultPendingSwapOuts(context.Context, *QueryVaultPendingSwapOutsRequest) (*QueryVaultPendingSwapOutsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VaultPendingSwapOuts not implemented")
+}
+func (UnimplementedQueryServer) Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 func (UnimplementedQueryServer) testEmbeddedByValue()               {}
@@ -290,6 +308,24 @@ func _Query_VaultPendingSwapOuts_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryParamsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Params(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_Params_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Params(ctx, req.(*QueryParamsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -320,6 +356,10 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "VaultPendingSwapOuts",
 			Handler:    _Query_VaultPendingSwapOuts_Handler,
+		},
+		{
+			MethodName: "Params",
+			Handler:    _Query_Params_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

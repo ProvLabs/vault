@@ -27,6 +27,7 @@ func (s *TestSuite) TestQueryServer_Vault() {
 			s.Assert().Equal(expected.Vault.Admin, actual.Vault.Admin, "vault admin")
 			s.Assert().Equal(expected.Vault.TotalShares, actual.Vault.TotalShares, "vault total shares")
 			s.Assert().Equal(expected.Vault.UnderlyingAsset, actual.Vault.UnderlyingAsset, "vault underlying asset")
+			s.Assert().Equal(expected.Vault.AumFeeBips, actual.Vault.AumFeeBips, "vault AUM fee bips")
 			s.Assert().Equal(expected.Principal.Address, actual.Principal.Address, "principal address")
 			s.Assert().Equal(expected.Principal.Coins, actual.Principal.Coins, "principal coins")
 			s.Assert().Equal(expected.Reserves.Address, actual.Reserves.Address, "reserves address")
@@ -66,7 +67,7 @@ func (s *TestSuite) TestQueryServer_Vault() {
 			Setup: setupVaults,
 			Req:   &types.QueryVaultRequest{Id: addr1.String()},
 			ExpectedResp: &types.QueryVaultResponse{
-				Vault: *types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, underlying, payment, 0),
+				Vault: *types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, underlying, payment, 0, 15),
 				Principal: types.AccountBalance{
 					Address: markerAddr1.String(),
 					Coins:   sdk.NewCoins(sdk.NewInt64Coin(underlying, 100), sdk.NewInt64Coin(payment, 250)),
@@ -83,7 +84,7 @@ func (s *TestSuite) TestQueryServer_Vault() {
 			Setup: setupVaults,
 			Req:   &types.QueryVaultRequest{Id: shareDenom2},
 			ExpectedResp: &types.QueryVaultResponse{
-				Vault: *types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, underlying, payment, 0),
+				Vault: *types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, underlying, payment, 0, 15),
 				Principal: types.AccountBalance{
 					Address: markerAddr2.String(),
 					Coins:   sdk.NewCoins(sdk.NewInt64Coin(underlying, 200), sdk.NewInt64Coin(payment, 100)),
@@ -141,6 +142,7 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 				ShareDenom      string
 				UnderlyingAsset string
 				PaymentDenom    string
+				AumFeeBips      uint32
 				IsPaused        bool
 			}
 
@@ -153,6 +155,7 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 						ShareDenom:      v.GetTotalShares().Denom,
 						UnderlyingAsset: v.GetUnderlyingAsset(),
 						PaymentDenom:    v.GetPaymentDenom(),
+						AumFeeBips:      v.AumFeeBips,
 						IsPaused:        v.GetPaused(),
 					})
 				}
@@ -199,7 +202,7 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 			Req: &types.QueryVaultsRequest{},
 			ExpectedResp: &types.QueryVaultsResponse{
 				Vaults: []types.VaultAccount{
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", "usdc", 0),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", "usdc", 0, 15),
 				},
 				Pagination: &query.PageResponse{Total: 1},
 			},
@@ -235,9 +238,9 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 			Req: &types.QueryVaultsRequest{},
 			ExpectedResp: &types.QueryVaultsResponse{
 				Vaults: []types.VaultAccount{
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", "usdc", 0),
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash", "usdc", 0),
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr3), admin, shareDenom3, "usdf", "usdc", 0),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", "usdc", 0, 15),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash", "usdc", 0, 15),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr3), admin, shareDenom3, "usdf", "usdc", 0, 15),
 				},
 				Pagination: &query.PageResponse{Total: 3},
 			},
@@ -275,8 +278,8 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 			},
 			ExpectedResp: &types.QueryVaultsResponse{
 				Vaults: []types.VaultAccount{
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr3), admin, shareDenom3, "usdf", "usdc", 0),
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", "usdc", 0),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr3), admin, shareDenom3, "usdf", "usdc", 0, 15),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", "usdc", 0, 15),
 				},
 				Pagination: &query.PageResponse{
 					NextKey: []byte("not nil"),
@@ -316,8 +319,8 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 			},
 			ExpectedResp: &types.QueryVaultsResponse{
 				Vaults: []types.VaultAccount{
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", "usdc", 0),
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash", "usdc", 0),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", "usdc", 0, 15),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash", "usdc", 0, 15),
 				},
 				Pagination: &query.PageResponse{Total: 3},
 			},
@@ -355,7 +358,7 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 			},
 			ExpectedResp: &types.QueryVaultsResponse{
 				Vaults: []types.VaultAccount{
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash", "usdc", 0),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash", "usdc", 0, 15),
 				},
 				Pagination: &query.PageResponse{},
 			},
@@ -393,9 +396,9 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 			},
 			ExpectedResp: &types.QueryVaultsResponse{
 				Vaults: []types.VaultAccount{
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", "usdc", 0),
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash", "usdc", 0),
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr3), admin, shareDenom3, "usdf", "usdc", 0),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", "usdc", 0, 15),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash", "usdc", 0, 15),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr3), admin, shareDenom3, "usdf", "usdc", 0, 15),
 				},
 				Pagination: &query.PageResponse{Total: 3},
 			},
@@ -433,8 +436,8 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 			},
 			ExpectedResp: &types.QueryVaultsResponse{
 				Vaults: []types.VaultAccount{
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash", "usdc", 0),
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", "usdc", 0),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash", "usdc", 0, 15),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", "usdc", 0, 15),
 				},
 				Pagination: &query.PageResponse{
 					NextKey: []byte("not nil"),
@@ -469,6 +472,11 @@ func (s *TestSuite) TestQueryServer_EstimateSwapIn() {
 	testDef := querytest.TestDef[types.QueryEstimateSwapInRequest, types.QueryEstimateSwapInResponse]{
 		QueryName: "EstimateSwapIn",
 		Query:     keeper.NewQueryServer(s.simApp.VaultKeeper).EstimateSwapIn,
+		ManualEquality: func(s querytest.TestSuiter, expected, actual *types.QueryEstimateSwapInResponse) {
+			s.Require().NotNil(actual, "actual response should not be nil")
+			s.Require().NotNil(expected, "expected response should not be nil")
+			s.Assert().Equal(expected.Assets, actual.Assets, "assets mismatch")
+		},
 	}
 
 	underlyingDenom := "uylds.fcc"
@@ -523,7 +531,7 @@ func (s *TestSuite) TestQueryServer_EstimateSwapIn() {
 				})
 				s.Require().NoError(err, "vault creation should succeed")
 				vault, err := s.k.GetVault(s.ctx, vaultAddr)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "getting vault should succeed")
 				vault.Paused = true
 				s.k.AuthKeeper.SetAccount(s.ctx, vault)
 			},
@@ -542,7 +550,7 @@ func (s *TestSuite) TestQueryServer_EstimateSwapIn() {
 				})
 				s.Require().NoError(err, "vault creation should succeed")
 				vault, err := s.k.GetVault(s.ctx, vaultAddr)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "getting vault should succeed")
 				vault.SwapInEnabled = false
 				s.k.AuthKeeper.SetAccount(s.ctx, vault)
 			},
@@ -600,6 +608,11 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 	testDef := querytest.TestDef[types.QueryEstimateSwapOutRequest, types.QueryEstimateSwapOutResponse]{
 		QueryName: "EstimateSwapOut",
 		Query:     keeper.NewQueryServer(s.simApp.VaultKeeper).EstimateSwapOut,
+		ManualEquality: func(s querytest.TestSuiter, expected, actual *types.QueryEstimateSwapOutResponse) {
+			s.Require().NotNil(actual, "actual response should not be nil")
+			s.Require().NotNil(expected, "expected response should not be nil")
+			s.Assert().Equal(expected.Assets, actual.Assets, "assets mismatch")
+		},
 	}
 
 	underlyingDenom := "uylds.fcc"
@@ -630,7 +643,7 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 			},
 			Req: &types.QueryEstimateSwapOutRequest{
 				VaultAddress: vaultAddr.String(),
-				Shares:       sharesToSwap.Amount,
+				Shares:       sharesToSwap.Amount.String(),
 			},
 			ExpectedResp: &types.QueryEstimateSwapOutResponse{
 				Assets: sdk.NewInt64Coin(underlyingDenom, 100),
@@ -656,7 +669,7 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 			},
 			Req: &types.QueryEstimateSwapOutRequest{
 				VaultAddress: vaultAddr.String(),
-				Shares:       sharesToSwap.Amount,
+				Shares:       sharesToSwap.Amount.String(),
 				RedeemDenom:  paymentDenom,
 			},
 			ExpectedResp: &types.QueryEstimateSwapOutResponse{
@@ -678,7 +691,7 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 			},
 			Req: &types.QueryEstimateSwapOutRequest{
 				VaultAddress: vaultAddr.String(),
-				Shares:       sharesToSwap.Amount,
+				Shares:       sharesToSwap.Amount.String(),
 			},
 			ExpectedErrSubstrs: []string{"swap-out disabled or vault paused", "FailedPrecondition"},
 		},
@@ -697,7 +710,7 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 			},
 			Req: &types.QueryEstimateSwapOutRequest{
 				VaultAddress: vaultAddr.String(),
-				Shares:       sharesToSwap.Amount,
+				Shares:       sharesToSwap.Amount.String(),
 			},
 			ExpectedErrSubstrs: []string{"swap-out disabled or vault paused", "FailedPrecondition"},
 		},
@@ -732,10 +745,25 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 			},
 			Req: &types.QueryEstimateSwapOutRequest{
 				VaultAddress: vaultAddr.String(),
-				Shares:       math.NewInt(100),
+				Shares:       math.NewInt(100).String(),
 				RedeemDenom:  "wrongdenom",
 			},
 			ExpectedErrSubstrs: []string{"unsupported redeem denom"},
+		},
+		{
+			Name: "fails with incorrect shares string",
+			Setup: func() {
+				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
+				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin: admin, ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom,
+				})
+				s.Require().NoError(err, "vault creation should succeed")
+			},
+			Req: &types.QueryEstimateSwapOutRequest{
+				VaultAddress: vaultAddr.String(),
+				Shares:       "bogus",
+			},
+			ExpectedErrSubstrs: []string{"invalid shares amount \"bogus\" : must be a valid integer"},
 		},
 	}
 
@@ -756,7 +784,6 @@ func (s *TestSuite) TestQueryServer_VaultPendingSwapOuts() {
 
 			s.Require().Len(actual.PendingSwapOuts, len(expected.PendingSwapOuts), "unexpected number of pending swap outs returned")
 
-			// Custom comparison to ignore time drift in tests
 			for i := range expected.PendingSwapOuts {
 				s.Assert().Equal(expected.PendingSwapOuts[i].RequestId, actual.PendingSwapOuts[i].RequestId, "request id mismatch for entry %d", i)
 				s.Assert().Equal(expected.PendingSwapOuts[i].PendingSwapOut, actual.PendingSwapOuts[i].PendingSwapOut, "pending swap out mismatch for entry %d", i)
@@ -776,26 +803,22 @@ func (s *TestSuite) TestQueryServer_VaultPendingSwapOuts() {
 		},
 	}
 
-	// --- Test Data Setup ---
-	underlyingAsset := "stake_vpso" // Use a unique denom to avoid test conflicts
+	underlyingAsset := "stake_vpso"
 	shareDenomA, shareDenomB := "vshare_a", "vshare_b"
 	vaultAddrA := types.GetVaultAddress(shareDenomA)
 	vaultAddrB := types.GetVaultAddress(shareDenomB)
 
 	owner1, owner2, owner3, owner4 := sdk.AccAddress("owner1______________"), sdk.AccAddress("owner2______________"), sdk.AccAddress("owner3______________"), sdk.AccAddress("owner4______________")
 
-	// Requests for Vault A
-	reqA1 := &types.PendingSwapOut{Owner: owner1.String(), VaultAddress: vaultAddrA.String(), Shares: sdk.NewInt64Coin(shareDenomA, 100)}
-	reqA2 := &types.PendingSwapOut{Owner: owner2.String(), VaultAddress: vaultAddrA.String(), Shares: sdk.NewInt64Coin(shareDenomA, 200)}
+	reqA1 := &types.PendingSwapOut{Owner: owner1.String(), VaultAddress: vaultAddrA.String(), Shares: sdk.NewInt64Coin(shareDenomA, 100), RedeemDenom: underlyingAsset}
+	reqA2 := &types.PendingSwapOut{Owner: owner2.String(), VaultAddress: vaultAddrA.String(), Shares: sdk.NewInt64Coin(shareDenomA, 200), RedeemDenom: underlyingAsset}
 
-	// Requests for Vault B
-	reqB1 := &types.PendingSwapOut{Owner: owner3.String(), VaultAddress: vaultAddrB.String(), Shares: sdk.NewInt64Coin(shareDenomB, 300)}
-	reqB2 := &types.PendingSwapOut{Owner: owner4.String(), VaultAddress: vaultAddrB.String(), Shares: sdk.NewInt64Coin(shareDenomB, 400)}
+	reqB1 := &types.PendingSwapOut{Owner: owner3.String(), VaultAddress: vaultAddrB.String(), Shares: sdk.NewInt64Coin(shareDenomB, 300), RedeemDenom: underlyingAsset}
+	reqB2 := &types.PendingSwapOut{Owner: owner4.String(), VaultAddress: vaultAddrB.String(), Shares: sdk.NewInt64Coin(shareDenomB, 400), RedeemDenom: underlyingAsset}
 
-	timeA1, timeA2 := time.Now().Add(1*time.Hour), time.Now().Add(2*time.Hour)
-	timeB1, timeB2 := time.Now().Add(3*time.Hour), time.Now().Add(4*time.Hour)
+	timeA1, timeA2 := time.Now().Add(1*time.Hour).Truncate(time.Second), time.Now().Add(2*time.Hour).Truncate(time.Second)
+	timeB1, timeB2 := time.Now().Add(3*time.Hour).Truncate(time.Second), time.Now().Add(4*time.Hour).Truncate(time.Second)
 
-	// Base setup creates both vaults and populates Vault B with 2 entries.
 	baseSetup := func() {
 		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingAsset, 1_000_000), s.adminAddr)
 		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: s.adminAddr.String(), ShareDenom: shareDenomA, UnderlyingAsset: underlyingAsset})
@@ -803,7 +826,6 @@ func (s *TestSuite) TestQueryServer_VaultPendingSwapOuts() {
 		_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: s.adminAddr.String(), ShareDenom: shareDenomB, UnderlyingAsset: underlyingAsset})
 		s.Require().NoError(err, "creating vault B")
 
-		// Vault B always has 2 entries
 		_, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, timeB1.Unix(), reqB1)
 		s.Require().NoError(err, "populating pending swap out queue for vault B1")
 		_, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, timeB2.Unix(), reqB2)
@@ -816,12 +838,12 @@ func (s *TestSuite) TestQueryServer_VaultPendingSwapOuts() {
 			Setup: func() {
 				baseSetup()
 				_, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, timeA1.Unix(), reqA1)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "populating pending swap out queue for vault A1")
 			},
 			Req: &types.QueryVaultPendingSwapOutsRequest{Id: vaultAddrA.String()},
 			ExpectedResp: &types.QueryVaultPendingSwapOutsResponse{
 				PendingSwapOuts: []types.PendingSwapOutWithTimeout{
-					{RequestId: 2, PendingSwapOut: *reqA1, Timeout: timeA1.Truncate(time.Second)},
+					{RequestId: 2, PendingSwapOut: *reqA1, Timeout: timeA1},
 				},
 				Pagination: &query.PageResponse{Total: 1},
 			},
@@ -838,8 +860,8 @@ func (s *TestSuite) TestQueryServer_VaultPendingSwapOuts() {
 			Req: &types.QueryVaultPendingSwapOutsRequest{Id: vaultAddrA.String()},
 			ExpectedResp: &types.QueryVaultPendingSwapOutsResponse{
 				PendingSwapOuts: []types.PendingSwapOutWithTimeout{
-					{RequestId: 2, PendingSwapOut: *reqA1, Timeout: timeA1.Truncate(time.Second)},
-					{RequestId: 3, PendingSwapOut: *reqA2, Timeout: timeA2.Truncate(time.Second)},
+					{RequestId: 2, PendingSwapOut: *reqA1, Timeout: timeA1},
+					{RequestId: 3, PendingSwapOut: *reqA2, Timeout: timeA2},
 				},
 				Pagination: &query.PageResponse{Total: 2},
 			},
@@ -859,7 +881,7 @@ func (s *TestSuite) TestQueryServer_VaultPendingSwapOuts() {
 			},
 			ExpectedResp: &types.QueryVaultPendingSwapOutsResponse{
 				PendingSwapOuts: []types.PendingSwapOutWithTimeout{
-					{RequestId: 2, PendingSwapOut: *reqA1, Timeout: timeA1.Truncate(time.Second)},
+					{RequestId: 2, PendingSwapOut: *reqA1, Timeout: timeA1},
 				},
 				Pagination: &query.PageResponse{NextKey: []byte("not nil"), Total: 2},
 			},
@@ -936,7 +958,7 @@ func (s *TestSuite) TestQueryServer_PendingSwapOuts() {
 			Name: "happy path - single swap out",
 			Setup: func() {
 				_, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, payoutTime1.Unix(), swapOut1)
-				s.Require().NoError(err)
+				s.Require().NoError(err, "populating pending swap out queue")
 			},
 			Req: &types.QueryPendingSwapOutsRequest{},
 			ExpectedResp: &types.QueryPendingSwapOutsResponse{

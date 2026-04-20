@@ -4,8 +4,8 @@ import (
 	context "context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/marker/types"
 )
@@ -49,6 +49,7 @@ type BankKeeper interface {
 
 type NameKeeper interface {
 	SetNameRecord(ctx sdk.Context, name string, addr sdk.AccAddress, restrict bool) error
+	NameExists(ctx sdk.Context, name string) bool
 }
 
 type AttributeKeeper interface {

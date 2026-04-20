@@ -11,6 +11,7 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 const (
@@ -27,6 +28,10 @@ func CreateVault(ctx sdk.Context, vk *keeper.Keeper, ak types.AccountKeeper, bk 
 		return fmt.Errorf("payment denom marker %s does not exist", paymentDenom)
 	}
 
+	if err := PrepareVaultMarkers(ctx, ak, mk, underlying, paymentDenom, share); err != nil {
+		return err
+	}
+
 	// Create a vault that uses the marker as an underlying asset
 	newVault := &types.MsgCreateVaultRequest{
 		Admin:                  admin.Address.String(),
@@ -36,8 +41,35 @@ func CreateVault(ctx sdk.Context, vk *keeper.Keeper, ak types.AccountKeeper, bk 
 		WithdrawalDelaySeconds: interest.SecondsPerDay,
 	}
 	msgServer := keeper.NewMsgServer(vk)
-	_, err := msgServer.CreateVault(sdk.WrapSDKContext(ctx), newVault)
+	_, err := msgServer.CreateVault(ctx, newVault)
 	return err
+}
+
+// PrepareVaultMarkers grants the necessary permissions to the predicted vault address
+// for its underlying and payment markers. This is required for the vault creation
+// pre-flight check and for collecting AUM fees.
+func PrepareVaultMarkers(ctx sdk.Context, ak types.AccountKeeper, mk markerkeeper.Keeper, underlying, paymentDenom, share string) error {
+	vaultAddr := types.GetVaultAddress(share)
+	mintAddr := ak.GetModuleAddress("mint")
+	for _, denom := range []string{underlying, paymentDenom} {
+		if denom == "" {
+			continue
+		}
+		m, err := mk.GetMarker(ctx, markertypes.MustGetMarkerAddress(denom))
+		if err != nil {
+			return fmt.Errorf("failed to get marker for %s: %w", denom, err)
+		}
+		if m.GetMarkerType() == markertypes.MarkerType_RestrictedCoin {
+			if err := GrantTransferPermission(ctx, mk, denom, vaultAddr, mintAddr); err != nil {
+				return fmt.Errorf("failed to grant transfer permission for %s: %w", denom, err)
+			}
+		} else {
+			if err := GrantWithdrawPermission(ctx, mk, denom, vaultAddr, mintAddr); err != nil {
+				return fmt.Errorf("failed to grant withdraw permission for %s: %w", denom, err)
+			}
+		}
+	}
+	return nil
 }
 
 // SwapIn performs a swap in for a user.
@@ -63,7 +95,7 @@ func SwapOut(ctx sdk.Context, vk *keeper.Keeper, user simtypes.Account, shares s
 		RedeemDenom:  redeemDenom,
 	}
 	msgServer := keeper.NewMsgServer(vk)
-	_, err := msgServer.SwapOut(sdk.WrapSDKContext(ctx), swapOut)
+	_, err := msgServer.SwapOut(ctx, swapOut)
 	return err
 }
 
@@ -132,7 +164,9 @@ func SetVaultBridge(ctx sdk.Context, vk *keeper.Keeper, shareDenom string, bridg
 	vault.BridgeAddress = bridgeAddr.String()
 	vault.BridgeEnabled = enabled
 
-	vk.AuthKeeper.SetAccount(ctx, vault)
+	if err := vk.SetVaultAccount(ctx, vault); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -150,7 +184,9 @@ func UpdateVaultTotalShares(ctx sdk.Context, vk *keeper.Keeper, shares sdk.Coin)
 
 	vault.TotalShares = shares
 
-	vk.AuthKeeper.SetAccount(ctx, vault)
+	if err := vk.SetVaultAccount(ctx, vault); err != nil {
+		return err
+	}
 	return nil
 }
 

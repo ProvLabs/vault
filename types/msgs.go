@@ -87,6 +87,18 @@ func (m MsgCreateVaultRequest) ValidateBasic() error {
 		}
 	}
 
+	if m.MaxSwapInValue != "" {
+		if _, ok := sdkmath.NewIntFromString(m.MaxSwapInValue); !ok {
+			return fmt.Errorf("invalid max swap in value: %q", m.MaxSwapInValue)
+		}
+	}
+
+	if m.MaxSwapOutValue != "" {
+		if _, ok := sdkmath.NewIntFromString(m.MaxSwapOutValue); !ok {
+			return fmt.Errorf("invalid max swap out value: %q", m.MaxSwapOutValue)
+		}
+	}
+
 	return nil
 }
 
@@ -472,8 +484,8 @@ func (m MsgUpdateVaultAUMFeeBipsRequest) ValidateBasic() error {
 
 // ValidateBasic performs stateless validation on MsgUpdateMinSwapInValueRequest.
 func (m MsgUpdateMinSwapInValueRequest) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
-		return fmt.Errorf("invalid admin address: %q: %w", m.Admin, err)
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		return fmt.Errorf("invalid authority address: %q: %w", m.Authority, err)
 	}
 	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
 		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
@@ -488,8 +500,8 @@ func (m MsgUpdateMinSwapInValueRequest) ValidateBasic() error {
 
 // ValidateBasic performs stateless validation on MsgUpdateMinSwapOutValueRequest.
 func (m MsgUpdateMinSwapOutValueRequest) ValidateBasic() error {
-	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
-		return fmt.Errorf("invalid admin address: %q: %w", m.Admin, err)
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		return fmt.Errorf("invalid authority address: %q: %w", m.Authority, err)
 	}
 	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
 		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
@@ -497,6 +509,38 @@ func (m MsgUpdateMinSwapOutValueRequest) ValidateBasic() error {
 	if m.MinSwapOutValue != "" {
 		if _, ok := sdkmath.NewIntFromString(m.MinSwapOutValue); !ok {
 			return fmt.Errorf("invalid min swap out value: %q: %w", m.MinSwapOutValue, errors.New("not a valid integer"))
+		}
+	}
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgUpdateMaxSwapInValueRequest.
+func (m MsgUpdateMaxSwapInValueRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		return fmt.Errorf("invalid authority address: %q: %w", m.Authority, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	if m.MaxSwapInValue != "" {
+		if _, ok := sdkmath.NewIntFromString(m.MaxSwapInValue); !ok {
+			return fmt.Errorf("invalid max swap in value: %q: %w", m.MaxSwapInValue, errors.New("not a valid integer"))
+		}
+	}
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgUpdateMaxSwapOutValueRequest.
+func (m MsgUpdateMaxSwapOutValueRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		return fmt.Errorf("invalid authority address: %q: %w", m.Authority, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	if m.MaxSwapOutValue != "" {
+		if _, ok := sdkmath.NewIntFromString(m.MaxSwapOutValue); !ok {
+			return fmt.Errorf("invalid max swap out value: %q: %w", m.MaxSwapOutValue, errors.New("not a valid integer"))
 		}
 	}
 	return nil

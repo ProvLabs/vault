@@ -328,6 +328,8 @@ type vaultAttrs struct {
 	withdrawalDelaySeconds uint64
 	minSwapIn              string
 	minSwapOut             string
+	maxSwapIn              string
+	maxSwapOut             string
 	expected               types.VaultAccount
 }
 
@@ -338,6 +340,8 @@ func (v vaultAttrs) GetPaymentDenom() string           { return v.payment }
 func (v vaultAttrs) GetWithdrawalDelaySeconds() uint64 { return v.withdrawalDelaySeconds }
 func (v vaultAttrs) GetMinSwapInValue() string         { return v.minSwapIn }
 func (v vaultAttrs) GetMinSwapOutValue() string        { return v.minSwapOut }
+func (v vaultAttrs) GetMaxSwapInValue() string         { return v.maxSwapIn }
+func (v vaultAttrs) GetMaxSwapOutValue() string        { return v.maxSwapOut }
 
 // setupBaseVaultRestricted creates a vault with a restricted underlying asset.
 // It establishes a marker for the underlying asset, requiring a specific attribute for transfers.

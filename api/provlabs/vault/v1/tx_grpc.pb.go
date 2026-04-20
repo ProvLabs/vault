@@ -29,6 +29,8 @@ const (
 	Msg_UpdateWithdrawalDelay_FullMethodName  = "/provlabs.vault.v1.Msg/UpdateWithdrawalDelay"
 	Msg_UpdateMinSwapInValue_FullMethodName   = "/provlabs.vault.v1.Msg/UpdateMinSwapInValue"
 	Msg_UpdateMinSwapOutValue_FullMethodName  = "/provlabs.vault.v1.Msg/UpdateMinSwapOutValue"
+	Msg_UpdateMaxSwapInValue_FullMethodName   = "/provlabs.vault.v1.Msg/UpdateMaxSwapInValue"
+	Msg_UpdateMaxSwapOutValue_FullMethodName  = "/provlabs.vault.v1.Msg/UpdateMaxSwapOutValue"
 	Msg_ToggleSwapIn_FullMethodName           = "/provlabs.vault.v1.Msg/ToggleSwapIn"
 	Msg_ToggleSwapOut_FullMethodName          = "/provlabs.vault.v1.Msg/ToggleSwapOut"
 	Msg_DepositInterestFunds_FullMethodName   = "/provlabs.vault.v1.Msg/DepositInterestFunds"
@@ -74,6 +76,10 @@ type MsgClient interface {
 	UpdateMinSwapInValue(ctx context.Context, in *MsgUpdateMinSwapInValueRequest, opts ...grpc.CallOption) (*MsgUpdateMinSwapInValueResponse, error)
 	// UpdateMinSwapOutValue sets the minimum allowed value for a swap-out operation.
 	UpdateMinSwapOutValue(ctx context.Context, in *MsgUpdateMinSwapOutValueRequest, opts ...grpc.CallOption) (*MsgUpdateMinSwapOutValueResponse, error)
+	// UpdateMaxSwapInValue sets the maximum allowed value for a swap-in operation.
+	UpdateMaxSwapInValue(ctx context.Context, in *MsgUpdateMaxSwapInValueRequest, opts ...grpc.CallOption) (*MsgUpdateMaxSwapInValueResponse, error)
+	// UpdateMaxSwapOutValue sets the maximum allowed value for a swap-out operation.
+	UpdateMaxSwapOutValue(ctx context.Context, in *MsgUpdateMaxSwapOutValueRequest, opts ...grpc.CallOption) (*MsgUpdateMaxSwapOutValueResponse, error)
 	// ToggleSwapIn allows enabling or disabling swap-in operations for a vault.
 	ToggleSwapIn(ctx context.Context, in *MsgToggleSwapInRequest, opts ...grpc.CallOption) (*MsgToggleSwapInResponse, error)
 	// ToggleSwapOut allows enabling or disabling swap-out operations for a vault.
@@ -217,6 +223,26 @@ func (c *msgClient) UpdateMinSwapOutValue(ctx context.Context, in *MsgUpdateMinS
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(MsgUpdateMinSwapOutValueResponse)
 	err := c.cc.Invoke(ctx, Msg_UpdateMinSwapOutValue_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateMaxSwapInValue(ctx context.Context, in *MsgUpdateMaxSwapInValueRequest, opts ...grpc.CallOption) (*MsgUpdateMaxSwapInValueResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgUpdateMaxSwapInValueResponse)
+	err := c.cc.Invoke(ctx, Msg_UpdateMaxSwapInValue_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateMaxSwapOutValue(ctx context.Context, in *MsgUpdateMaxSwapOutValueRequest, opts ...grpc.CallOption) (*MsgUpdateMaxSwapOutValueResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgUpdateMaxSwapOutValueResponse)
+	err := c.cc.Invoke(ctx, Msg_UpdateMaxSwapOutValue_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -410,6 +436,10 @@ type MsgServer interface {
 	UpdateMinSwapInValue(context.Context, *MsgUpdateMinSwapInValueRequest) (*MsgUpdateMinSwapInValueResponse, error)
 	// UpdateMinSwapOutValue sets the minimum allowed value for a swap-out operation.
 	UpdateMinSwapOutValue(context.Context, *MsgUpdateMinSwapOutValueRequest) (*MsgUpdateMinSwapOutValueResponse, error)
+	// UpdateMaxSwapInValue sets the maximum allowed value for a swap-in operation.
+	UpdateMaxSwapInValue(context.Context, *MsgUpdateMaxSwapInValueRequest) (*MsgUpdateMaxSwapInValueResponse, error)
+	// UpdateMaxSwapOutValue sets the maximum allowed value for a swap-out operation.
+	UpdateMaxSwapOutValue(context.Context, *MsgUpdateMaxSwapOutValueRequest) (*MsgUpdateMaxSwapOutValueResponse, error)
 	// ToggleSwapIn allows enabling or disabling swap-in operations for a vault.
 	ToggleSwapIn(context.Context, *MsgToggleSwapInRequest) (*MsgToggleSwapInResponse, error)
 	// ToggleSwapOut allows enabling or disabling swap-out operations for a vault.
@@ -488,6 +518,12 @@ func (UnimplementedMsgServer) UpdateMinSwapInValue(context.Context, *MsgUpdateMi
 }
 func (UnimplementedMsgServer) UpdateMinSwapOutValue(context.Context, *MsgUpdateMinSwapOutValueRequest) (*MsgUpdateMinSwapOutValueResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateMinSwapOutValue not implemented")
+}
+func (UnimplementedMsgServer) UpdateMaxSwapInValue(context.Context, *MsgUpdateMaxSwapInValueRequest) (*MsgUpdateMaxSwapInValueResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateMaxSwapInValue not implemented")
+}
+func (UnimplementedMsgServer) UpdateMaxSwapOutValue(context.Context, *MsgUpdateMaxSwapOutValueRequest) (*MsgUpdateMaxSwapOutValueResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateMaxSwapOutValue not implemented")
 }
 func (UnimplementedMsgServer) ToggleSwapIn(context.Context, *MsgToggleSwapInRequest) (*MsgToggleSwapInResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ToggleSwapIn not implemented")
@@ -734,6 +770,42 @@ func _Msg_UpdateMinSwapOutValue_Handler(srv interface{}, ctx context.Context, de
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MsgServer).UpdateMinSwapOutValue(ctx, req.(*MsgUpdateMinSwapOutValueRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateMaxSwapInValue_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateMaxSwapInValueRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateMaxSwapInValue(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_UpdateMaxSwapInValue_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateMaxSwapInValue(ctx, req.(*MsgUpdateMaxSwapInValueRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateMaxSwapOutValue_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateMaxSwapOutValueRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateMaxSwapOutValue(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_UpdateMaxSwapOutValue_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateMaxSwapOutValue(ctx, req.(*MsgUpdateMaxSwapOutValueRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1072,6 +1144,14 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateMinSwapOutValue",
 			Handler:    _Msg_UpdateMinSwapOutValue_Handler,
+		},
+		{
+			MethodName: "UpdateMaxSwapInValue",
+			Handler:    _Msg_UpdateMaxSwapInValue_Handler,
+		},
+		{
+			MethodName: "UpdateMaxSwapOutValue",
+			Handler:    _Msg_UpdateMaxSwapOutValue_Handler,
 		},
 		{
 			MethodName: "ToggleSwapIn",

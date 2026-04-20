@@ -255,11 +255,11 @@ func (k msgServer) UpdateMinSwapInValue(goCtx context.Context, msg *types.MsgUpd
 	if vault == nil {
 		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
 	}
-	if err := vault.ValidateAdmin(msg.Admin); err != nil {
-		return nil, fmt.Errorf("failed to validate admin: %w", err)
+	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+		return nil, fmt.Errorf("unauthorized: %w", err)
 	}
 
-	if err := k.SetMinSwapInValue(ctx, vault, msg.MinSwapInValue); err != nil {
+	if err := k.SetMinSwapInValue(ctx, vault, msg.MinSwapInValue, msg.Authority); err != nil {
 		return nil, fmt.Errorf("failed to set min swap in value: %w", err)
 	}
 
@@ -278,15 +278,61 @@ func (k msgServer) UpdateMinSwapOutValue(goCtx context.Context, msg *types.MsgUp
 	if vault == nil {
 		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
 	}
-	if err := vault.ValidateAdmin(msg.Admin); err != nil {
-		return nil, fmt.Errorf("failed to validate admin: %w", err)
+	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+		return nil, fmt.Errorf("unauthorized: %w", err)
 	}
 
-	if err := k.SetMinSwapOutValue(ctx, vault, msg.MinSwapOutValue); err != nil {
+	if err := k.SetMinSwapOutValue(ctx, vault, msg.MinSwapOutValue, msg.Authority); err != nil {
 		return nil, fmt.Errorf("failed to set min swap out value: %w", err)
 	}
 
 	return &types.MsgUpdateMinSwapOutValueResponse{}, nil
+}
+
+// UpdateMaxSwapInValue sets the maximum allowed value for a swap-in operation.
+func (k msgServer) UpdateMaxSwapInValue(goCtx context.Context, msg *types.MsgUpdateMaxSwapInValueRequest) (*types.MsgUpdateMaxSwapInValueResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault: %w", err)
+	}
+	if vault == nil {
+		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+	}
+	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+		return nil, fmt.Errorf("unauthorized: %w", err)
+	}
+
+	if err := k.SetMaxSwapInValue(ctx, vault, msg.MaxSwapInValue, msg.Authority); err != nil {
+		return nil, fmt.Errorf("failed to set max swap in value: %w", err)
+	}
+
+	return &types.MsgUpdateMaxSwapInValueResponse{}, nil
+}
+
+// UpdateMaxSwapOutValue sets the maximum allowed value for a swap-out operation.
+func (k msgServer) UpdateMaxSwapOutValue(goCtx context.Context, msg *types.MsgUpdateMaxSwapOutValueRequest) (*types.MsgUpdateMaxSwapOutValueResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault: %w", err)
+	}
+	if vault == nil {
+		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+	}
+	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+		return nil, fmt.Errorf("unauthorized: %w", err)
+	}
+
+	if err := k.SetMaxSwapOutValue(ctx, vault, msg.MaxSwapOutValue, msg.Authority); err != nil {
+		return nil, fmt.Errorf("failed to set max swap out value: %w", err)
+	}
+
+	return &types.MsgUpdateMaxSwapOutValueResponse{}, nil
 }
 
 // ToggleSwapIn enables or disables swap-in operations for a vault.

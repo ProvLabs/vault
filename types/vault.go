@@ -69,7 +69,7 @@ type VaultAccountI interface {
 }
 
 // NewVaultAccount creates a new vault with an optional payment denom allowed for I/O alongside the underlying asset.
-func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyingAsset, paymentDenom string, withdrawalDelay uint64, aumFeeBips uint32, minSwapInValue, minSwapOutValue string) *VaultAccount {
+func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyingAsset, paymentDenom string, withdrawalDelay uint64, aumFeeBips uint32, minSwapInValue, minSwapOutValue, maxSwapInValue, maxSwapOutValue string) *VaultAccount {
 	if paymentDenom == "" {
 		paymentDenom = underlyingAsset
 	}
@@ -92,6 +92,8 @@ func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyi
 		AumFeeBips:             aumFeeBips,
 		MinSwapInValue:         minSwapInValue,
 		MinSwapOutValue:        minSwapOutValue,
+		MaxSwapInValue:         maxSwapInValue,
+		MaxSwapOutValue:        maxSwapOutValue,
 	}
 }
 
@@ -207,14 +209,42 @@ func (v VaultAccount) Validate() error {
 	}
 
 	if v.MinSwapInValue != "" {
-		if _, ok := sdkmath.NewIntFromString(v.MinSwapInValue); !ok {
+		min, ok := sdkmath.NewIntFromString(v.MinSwapInValue)
+		if !ok {
 			return fmt.Errorf("invalid min swap in value: %s", v.MinSwapInValue)
+		}
+		if v.MaxSwapInValue != "" {
+			max, ok := sdkmath.NewIntFromString(v.MaxSwapInValue)
+			if !ok {
+				return fmt.Errorf("invalid max swap in value: %s", v.MaxSwapInValue)
+			}
+			if !max.IsZero() && min.GT(max) {
+				return fmt.Errorf("min swap in value %s cannot be greater than max swap in value %s", v.MinSwapInValue, v.MaxSwapInValue)
+			}
+		}
+	} else if v.MaxSwapInValue != "" {
+		if _, ok := sdkmath.NewIntFromString(v.MaxSwapInValue); !ok {
+			return fmt.Errorf("invalid max swap in value: %s", v.MaxSwapInValue)
 		}
 	}
 
 	if v.MinSwapOutValue != "" {
-		if _, ok := sdkmath.NewIntFromString(v.MinSwapOutValue); !ok {
+		min, ok := sdkmath.NewIntFromString(v.MinSwapOutValue)
+		if !ok {
 			return fmt.Errorf("invalid min swap out value: %s", v.MinSwapOutValue)
+		}
+		if v.MaxSwapOutValue != "" {
+			max, ok := sdkmath.NewIntFromString(v.MaxSwapOutValue)
+			if !ok {
+				return fmt.Errorf("invalid max swap out value: %s", v.MaxSwapOutValue)
+			}
+			if !max.IsZero() && min.GT(max) {
+				return fmt.Errorf("min swap out value %s cannot be greater than max swap out value %s", v.MinSwapOutValue, v.MaxSwapOutValue)
+			}
+		}
+	} else if v.MaxSwapOutValue != "" {
+		if _, ok := sdkmath.NewIntFromString(v.MaxSwapOutValue); !ok {
+			return fmt.Errorf("invalid max swap out value: %s", v.MaxSwapOutValue)
 		}
 	}
 

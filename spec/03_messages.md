@@ -21,6 +21,8 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 - [UpdateWithdrawalDelay](#updatewithdrawaldelay)
 - [UpdateMinSwapInValue](#updateminswapinvalue)
 - [UpdateMinSwapOutValue](#updateminswapoutvalue)
+- [UpdateMaxSwapInValue](#updatemaxswapinvalue)
+- [UpdateMaxSwapOutValue](#updatemaxswapoutvalue)
 - [ToggleSwapIn](#toggleswapin)
 - [ToggleSwapOut](#toggleswapout)
 - [DepositInterestFunds](#depositinterestfunds)
@@ -50,8 +52,10 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 | `UpdateMaxInterestRate`  | Admin only                        |                   ✅ |                 ✅ | Validates and updates the maximum allowable interest rate.                                                    |
 | `UpdateInterestRate`     | Admin or Asset Manager            |                   ✅ |                 ✅ | Validates bounds, may reconcile, updates enable/disable flows.                                                |
 | `UpdateWithdrawalDelay`  | Admin or Asset Manager            |                   ✅ |                 ✅ | Updates the withdrawal delay for future swap-out requests.                                                    |
-| `UpdateMinSwapInValue`   | Admin only                        |                   ✅ |                 ✅ | Updates the minimum allowed value for a swap-in operation.                                                    |
-| `UpdateMinSwapOutValue`  | Admin only                        |                   ✅ |                 ✅ | Updates the minimum allowed value for a swap-out operation.                                                   |
+| `UpdateMinSwapInValue`   | Admin or Asset Manager            |                   ✅ |                 ✅ | Updates the minimum allowed value for a swap-in operation.                                                    |
+| `UpdateMinSwapOutValue`  | Admin or Asset Manager            |                   ✅ |                 ✅ | Updates the minimum allowed value for a swap-out operation.                                                   |
+| `UpdateMaxSwapInValue`   | Admin or Asset Manager            |                   ✅ |                 ✅ | Updates the maximum allowed value for a swap-in operation.                                                    |
+| `UpdateMaxSwapOutValue`  | Admin or Asset Manager            |                   ✅ |                 ✅ | Updates the maximum allowed value for a swap-out operation.                                                   |
 | `ToggleSwapIn`           | Admin only                        |                   ✅ |                 ✅ | Allows enabling or disabling swap-in operations.                                                              |
 | `ToggleSwapOut`          | Admin only                        |                   ✅ |                 ✅ | Allows enabling or disabling swap-out operations.                                                             |
 | `DepositInterestFunds`   | Admin or Asset Manager            |                   ✅ |                 ✅ | Underlying denom only; reconciles after deposit.                                                              |
@@ -71,10 +75,10 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 
 ## CreateVault
 
-Creates a new vault account with a configured underlying asset, optional payment denom, withdrawal delay, and minimum swap values.
+Creates a new vault account with a configured underlying asset, optional payment denom, withdrawal delay, and minimum/maximum swap values.
 The creator is recorded as vault admin.
 
-* **Request:** `MsgCreateVaultRequest { admin, share_denom, underlying_asset, payment_denom?, withdrawal_delay_seconds, min_swap_in_value?, min_swap_out_value? }`
+* **Request:** `MsgCreateVaultRequest { admin, share_denom, underlying_asset, payment_denom?, withdrawal_delay_seconds, min_swap_in_value?, min_swap_out_value?, max_swap_in_value?, max_swap_out_value? }`
 * **Response:** `MsgCreateVaultResponse {}`
 
 ---
@@ -148,19 +152,37 @@ Admin or Asset Manager. Updates the withdrawal delay for future swap-out request
 
 ## UpdateMinSwapInValue
 
-Admin-only. Updates the minimum allowed value for a swap-in operation.
+Admin or Asset Manager. Updates the minimum allowed value for a swap-in operation.
 
-* **Request:** `MsgUpdateMinSwapInValueRequest { admin, vault_address, min_swap_in_value }`
+* **Request:** `MsgUpdateMinSwapInValueRequest { authority, vault_address, min_swap_in_value }`
 * **Response:** `MsgUpdateMinSwapInValueResponse {}`
 
 ---
 
 ## UpdateMinSwapOutValue
 
-Admin-only. Updates the minimum allowed value for a swap-out operation.
+Admin or Asset Manager. Updates the minimum allowed value for a swap-out operation.
 
-* **Request:** `MsgUpdateMinSwapOutValueRequest { admin, vault_address, min_swap_out_value }`
+* **Request:** `MsgUpdateMinSwapOutValueRequest { authority, vault_address, min_swap_out_value }`
 * **Response:** `MsgUpdateMinSwapOutValueResponse {}`
+
+---
+
+## UpdateMaxSwapInValue
+
+Admin or Asset Manager. Updates the maximum allowed value for a swap-in operation.
+
+* **Request:** `MsgUpdateMaxSwapInValueRequest { authority, vault_address, max_swap_in_value }`
+* **Response:** `MsgUpdateMaxSwapInValueResponse {}`
+
+---
+
+## UpdateMaxSwapOutValue
+
+Admin or Asset Manager. Updates the maximum allowed value for a swap-out operation.
+
+* **Request:** `MsgUpdateMaxSwapOutValueRequest { authority, vault_address, max_swap_out_value }`
+* **Response:** `MsgUpdateMaxSwapOutValueResponse {}`
 
 ---
 

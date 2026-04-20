@@ -1616,15 +1616,39 @@ func TestMsgUpdateSwapLimits_ValidateBasic(t *testing.T) {
 	authority := utils.TestAddress().Bech32
 	vault := utils.TestAddress().Bech32
 
+	type testCase struct {
+		name        string
+		msg         sdk.Msg
+		expectedErr string
+	}
+
+	runTests := func(t *testing.T, tests []testCase) {
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				var err error
+				if m, ok := tt.msg.(interface{ ValidateBasic() error }); ok {
+					err = m.ValidateBasic()
+				} else {
+					t.Fatalf("msg does not implement ValidateBasic")
+				}
+
+				if tt.expectedErr == "" {
+					assert.NoError(t, err, "Test %q: expected no error, but got %v", tt.name, err)
+				} else {
+					assert.Error(t, err, "Test %q: expected error containing %q, but got none", tt.name, tt.expectedErr)
+					if err != nil {
+						assert.Contains(t, err.Error(), tt.expectedErr, "Test %q: error message mismatch; expected it to contain %q, but got %q", tt.name, tt.expectedErr, err.Error())
+					}
+				}
+			})
+		}
+	}
+
 	t.Run("UpdateMinSwapInValue", func(t *testing.T) {
-		tests := []struct {
-			name        string
-			msg         types.MsgUpdateMinSwapInValueRequest
-			expectedErr string
-		}{
+		tests := []testCase{
 			{
 				name: "valid",
-				msg: types.MsgUpdateMinSwapInValueRequest{
+				msg: &types.MsgUpdateMinSwapInValueRequest{
 					Authority:      authority,
 					VaultAddress:   vault,
 					MinSwapInValue: "100",
@@ -1633,7 +1657,7 @@ func TestMsgUpdateSwapLimits_ValidateBasic(t *testing.T) {
 			},
 			{
 				name: "invalid authority",
-				msg: types.MsgUpdateMinSwapInValueRequest{
+				msg: &types.MsgUpdateMinSwapInValueRequest{
 					Authority:      "bad",
 					VaultAddress:   vault,
 					MinSwapInValue: "100",
@@ -1641,8 +1665,17 @@ func TestMsgUpdateSwapLimits_ValidateBasic(t *testing.T) {
 				expectedErr: "invalid authority address",
 			},
 			{
+				name: "invalid vault address",
+				msg: &types.MsgUpdateMinSwapInValueRequest{
+					Authority:      authority,
+					VaultAddress:   "bad",
+					MinSwapInValue: "100",
+				},
+				expectedErr: "invalid vault address",
+			},
+			{
 				name: "invalid value (not int)",
-				msg: types.MsgUpdateMinSwapInValueRequest{
+				msg: &types.MsgUpdateMinSwapInValueRequest{
 					Authority:      authority,
 					VaultAddress:   vault,
 					MinSwapInValue: "abc",
@@ -1651,7 +1684,7 @@ func TestMsgUpdateSwapLimits_ValidateBasic(t *testing.T) {
 			},
 			{
 				name: "negative value",
-				msg: types.MsgUpdateMinSwapInValueRequest{
+				msg: &types.MsgUpdateMinSwapInValueRequest{
 					Authority:      authority,
 					VaultAddress:   vault,
 					MinSwapInValue: "-1",
@@ -1659,28 +1692,14 @@ func TestMsgUpdateSwapLimits_ValidateBasic(t *testing.T) {
 				expectedErr: "min swap in value must be non-negative",
 			},
 		}
-		for _, tt := range tests {
-			t.Run(tt.name, func(t *testing.T) {
-				err := tt.msg.ValidateBasic()
-				if tt.expectedErr == "" {
-					assert.NoError(t, err)
-				} else {
-					assert.Error(t, err)
-					assert.Contains(t, err.Error(), tt.expectedErr)
-				}
-			})
-		}
+		runTests(t, tests)
 	})
 
 	t.Run("UpdateMinSwapOutValue", func(t *testing.T) {
-		tests := []struct {
-			name        string
-			msg         types.MsgUpdateMinSwapOutValueRequest
-			expectedErr string
-		}{
+		tests := []testCase{
 			{
 				name: "valid",
-				msg: types.MsgUpdateMinSwapOutValueRequest{
+				msg: &types.MsgUpdateMinSwapOutValueRequest{
 					Authority:       authority,
 					VaultAddress:    vault,
 					MinSwapOutValue: "200",
@@ -1688,8 +1707,35 @@ func TestMsgUpdateSwapLimits_ValidateBasic(t *testing.T) {
 				expectedErr: "",
 			},
 			{
+				name: "invalid authority",
+				msg: &types.MsgUpdateMinSwapOutValueRequest{
+					Authority:       "bad",
+					VaultAddress:    vault,
+					MinSwapOutValue: "100",
+				},
+				expectedErr: "invalid authority address",
+			},
+			{
+				name: "invalid vault address",
+				msg: &types.MsgUpdateMinSwapOutValueRequest{
+					Authority:       authority,
+					VaultAddress:    "bad",
+					MinSwapOutValue: "100",
+				},
+				expectedErr: "invalid vault address",
+			},
+			{
+				name: "invalid value (not int)",
+				msg: &types.MsgUpdateMinSwapOutValueRequest{
+					Authority:       authority,
+					VaultAddress:    vault,
+					MinSwapOutValue: "abc",
+				},
+				expectedErr: "invalid min swap out value",
+			},
+			{
 				name: "negative value",
-				msg: types.MsgUpdateMinSwapOutValueRequest{
+				msg: &types.MsgUpdateMinSwapOutValueRequest{
 					Authority:       authority,
 					VaultAddress:    vault,
 					MinSwapOutValue: "-5",
@@ -1697,28 +1743,14 @@ func TestMsgUpdateSwapLimits_ValidateBasic(t *testing.T) {
 				expectedErr: "min swap out value must be non-negative",
 			},
 		}
-		for _, tt := range tests {
-			t.Run(tt.name, func(t *testing.T) {
-				err := tt.msg.ValidateBasic()
-				if tt.expectedErr == "" {
-					assert.NoError(t, err)
-				} else {
-					assert.Error(t, err)
-					assert.Contains(t, err.Error(), tt.expectedErr)
-				}
-			})
-		}
+		runTests(t, tests)
 	})
 
 	t.Run("UpdateMaxSwapInValue", func(t *testing.T) {
-		tests := []struct {
-			name        string
-			msg         types.MsgUpdateMaxSwapInValueRequest
-			expectedErr string
-		}{
+		tests := []testCase{
 			{
 				name: "valid",
-				msg: types.MsgUpdateMaxSwapInValueRequest{
+				msg: &types.MsgUpdateMaxSwapInValueRequest{
 					Authority:      authority,
 					VaultAddress:   vault,
 					MaxSwapInValue: "1000",
@@ -1726,8 +1758,35 @@ func TestMsgUpdateSwapLimits_ValidateBasic(t *testing.T) {
 				expectedErr: "",
 			},
 			{
+				name: "invalid authority",
+				msg: &types.MsgUpdateMaxSwapInValueRequest{
+					Authority:      "bad",
+					VaultAddress:   vault,
+					MaxSwapInValue: "1000",
+				},
+				expectedErr: "invalid authority address",
+			},
+			{
+				name: "invalid vault address",
+				msg: &types.MsgUpdateMaxSwapInValueRequest{
+					Authority:      authority,
+					VaultAddress:   "bad",
+					MaxSwapInValue: "1000",
+				},
+				expectedErr: "invalid vault address",
+			},
+			{
+				name: "invalid value (not int)",
+				msg: &types.MsgUpdateMaxSwapInValueRequest{
+					Authority:      authority,
+					VaultAddress:   vault,
+					MaxSwapInValue: "abc",
+				},
+				expectedErr: "invalid max swap in value",
+			},
+			{
 				name: "negative value",
-				msg: types.MsgUpdateMaxSwapInValueRequest{
+				msg: &types.MsgUpdateMaxSwapInValueRequest{
 					Authority:      authority,
 					VaultAddress:   vault,
 					MaxSwapInValue: "-10",
@@ -1735,8 +1794,8 @@ func TestMsgUpdateSwapLimits_ValidateBasic(t *testing.T) {
 				expectedErr: "max swap in value must be non-negative",
 			},
 			{
-				name: "zero value (blocked)",
-				msg: types.MsgUpdateMaxSwapInValueRequest{
+				name: "zero value (invalid)",
+				msg: &types.MsgUpdateMaxSwapInValueRequest{
 					Authority:      authority,
 					VaultAddress:   vault,
 					MaxSwapInValue: "0",
@@ -1744,28 +1803,14 @@ func TestMsgUpdateSwapLimits_ValidateBasic(t *testing.T) {
 				expectedErr: "max swap in value cannot be zero",
 			},
 		}
-		for _, tt := range tests {
-			t.Run(tt.name, func(t *testing.T) {
-				err := tt.msg.ValidateBasic()
-				if tt.expectedErr == "" {
-					assert.NoError(t, err)
-				} else {
-					assert.Error(t, err)
-					assert.Contains(t, err.Error(), tt.expectedErr)
-				}
-			})
-		}
+		runTests(t, tests)
 	})
 
 	t.Run("UpdateMaxSwapOutValue", func(t *testing.T) {
-		tests := []struct {
-			name        string
-			msg         types.MsgUpdateMaxSwapOutValueRequest
-			expectedErr string
-		}{
+		tests := []testCase{
 			{
 				name: "valid",
-				msg: types.MsgUpdateMaxSwapOutValueRequest{
+				msg: &types.MsgUpdateMaxSwapOutValueRequest{
 					Authority:       authority,
 					VaultAddress:    vault,
 					MaxSwapOutValue: "2000",
@@ -1773,8 +1818,35 @@ func TestMsgUpdateSwapLimits_ValidateBasic(t *testing.T) {
 				expectedErr: "",
 			},
 			{
+				name: "invalid authority",
+				msg: &types.MsgUpdateMaxSwapOutValueRequest{
+					Authority:       "bad",
+					VaultAddress:    vault,
+					MaxSwapOutValue: "1000",
+				},
+				expectedErr: "invalid authority address",
+			},
+			{
+				name: "invalid vault address",
+				msg: &types.MsgUpdateMaxSwapOutValueRequest{
+					Authority:       authority,
+					VaultAddress:    "bad",
+					MaxSwapOutValue: "1000",
+				},
+				expectedErr: "invalid vault address",
+			},
+			{
+				name: "invalid value (not int)",
+				msg: &types.MsgUpdateMaxSwapOutValueRequest{
+					Authority:       authority,
+					VaultAddress:    vault,
+					MaxSwapOutValue: "abc",
+				},
+				expectedErr: "invalid max swap out value",
+			},
+			{
 				name: "negative value",
-				msg: types.MsgUpdateMaxSwapOutValueRequest{
+				msg: &types.MsgUpdateMaxSwapOutValueRequest{
 					Authority:       authority,
 					VaultAddress:    vault,
 					MaxSwapOutValue: "-100",
@@ -1782,8 +1854,8 @@ func TestMsgUpdateSwapLimits_ValidateBasic(t *testing.T) {
 				expectedErr: "max swap out value must be non-negative",
 			},
 			{
-				name: "zero value (blocked)",
-				msg: types.MsgUpdateMaxSwapOutValueRequest{
+				name: "zero value (invalid)",
+				msg: &types.MsgUpdateMaxSwapOutValueRequest{
 					Authority:       authority,
 					VaultAddress:    vault,
 					MaxSwapOutValue: "0",
@@ -1791,16 +1863,6 @@ func TestMsgUpdateSwapLimits_ValidateBasic(t *testing.T) {
 				expectedErr: "max swap out value cannot be zero",
 			},
 		}
-		for _, tt := range tests {
-			t.Run(tt.name, func(t *testing.T) {
-				err := tt.msg.ValidateBasic()
-				if tt.expectedErr == "" {
-					assert.NoError(t, err)
-				} else {
-					assert.Error(t, err)
-					assert.Contains(t, err.Error(), tt.expectedErr)
-				}
-			})
-		}
+		runTests(t, tests)
 	})
 }

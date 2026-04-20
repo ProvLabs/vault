@@ -69,7 +69,7 @@ type VaultAccountI interface {
 }
 
 // NewVaultAccount creates a new vault with an optional payment denom allowed for I/O alongside the underlying asset.
-func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyingAsset, paymentDenom string, withdrawalDelay uint64, aumFeeBips uint32) *VaultAccount {
+func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyingAsset, paymentDenom string, withdrawalDelay uint64, aumFeeBips uint32, minSwapInValue, minSwapOutValue string) *VaultAccount {
 	if paymentDenom == "" {
 		paymentDenom = underlyingAsset
 	}
@@ -90,7 +90,8 @@ func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyi
 		BridgeAddress:          "",
 		OutstandingAumFee:      sdk.NewCoin(paymentDenom, sdkmath.ZeroInt()),
 		AumFeeBips:             aumFeeBips,
-		MinSwapInValue:         "",
+		MinSwapInValue:         minSwapInValue,
+		MinSwapOutValue:        minSwapOutValue,
 	}
 }
 
@@ -203,6 +204,18 @@ func (v VaultAccount) Validate() error {
 	}
 	if (v.OutstandingAumFee.Denom != "" || (!v.OutstandingAumFee.Amount.IsNil() && !v.OutstandingAumFee.Amount.IsZero())) && v.OutstandingAumFee.Denom != v.PaymentDenom {
 		return fmt.Errorf("outstanding AUM fee denom %s does not match payment denom %s", v.OutstandingAumFee.Denom, v.PaymentDenom)
+	}
+
+	if v.MinSwapInValue != "" {
+		if _, ok := sdkmath.NewIntFromString(v.MinSwapInValue); !ok {
+			return fmt.Errorf("invalid min swap in value: %s", v.MinSwapInValue)
+		}
+	}
+
+	if v.MinSwapOutValue != "" {
+		if _, ok := sdkmath.NewIntFromString(v.MinSwapOutValue); !ok {
+			return fmt.Errorf("invalid min swap out value: %s", v.MinSwapOutValue)
+		}
 	}
 
 	return nil
@@ -331,16 +344,6 @@ func (p PendingSwapOut) Validate() error {
 	}
 
 	if p.Shares.IsZero() {
-		return fmt.Errorf("shares cannot be zero")
-	}
-
-	if p.RedeemDenom == "" {
-		return fmt.Errorf("redeem denom cannot be empty")
-	}
-
-	return nil
-}
-{
 		return fmt.Errorf("shares cannot be zero")
 	}
 

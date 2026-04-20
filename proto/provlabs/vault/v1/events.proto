@@ -377,3 +377,23 @@ message EventVaultAUMFeeBipsUpdated {
   // aum_fee_bips is the newly set AUM fee bips for the vault.
   uint32 aum_fee_bips = 3;
 }
+
+// EventMinSwapInValueUpdated is an event emitted when a vault's minimum swap-in value is updated.
+message EventMinSwapInValueUpdated {
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // admin is the address of the account that updated the limit.
+  string admin = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // min_swap_in is the newly set minimum swap-in value, measured in the underlying_asset.
+  string min_swap_in = 3;
+}
+
+// EventMinSwapOutValueUpdated is an event emitted when a vault's minimum swap-out value is updated.
+message EventMinSwapOutValueUpdated {
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // admin is the address of the account that updated the limit.
+  string admin = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // min_swap_out is the newly set minimum swap-out value, measured in the underlying_asset.
+  string min_swap_out = 3;
+}

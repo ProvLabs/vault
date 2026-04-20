@@ -39,6 +39,8 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgSetAssetManagerRequest)(nil),
 	(*MsgUpdateParamsRequest)(nil),
 	(*MsgUpdateVaultAUMFeeBipsRequest)(nil),
+	(*MsgUpdateMinSwapInValueRequest)(nil),
+	(*MsgUpdateMinSwapOutValueRequest)(nil),
 }
 
 // ValidateBasic performs stateless validation on MsgCreateVaultRequest.
@@ -71,6 +73,18 @@ func (m MsgCreateVaultRequest) ValidateBasic() error {
 
 	if m.WithdrawalDelaySeconds > MaxWithdrawalDelay {
 		return fmt.Errorf("withdrawal delay cannot exceed %d seconds", MaxWithdrawalDelay)
+	}
+
+	if m.MinSwapInValue != "" {
+		if _, ok := sdkmath.NewIntFromString(m.MinSwapInValue); !ok {
+			return fmt.Errorf("invalid min swap in value: %q", m.MinSwapInValue)
+		}
+	}
+
+	if m.MinSwapOutValue != "" {
+		if _, ok := sdkmath.NewIntFromString(m.MinSwapOutValue); !ok {
+			return fmt.Errorf("invalid min swap out value: %q", m.MinSwapOutValue)
+		}
 	}
 
 	return nil
@@ -452,6 +466,38 @@ func (m MsgUpdateVaultAUMFeeBipsRequest) ValidateBasic() error {
 	}
 	if m.AumFeeBips > 10_000 {
 		return fmt.Errorf("invalid AUM fee bips: %d (max 10000)", m.AumFeeBips)
+	}
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgUpdateMinSwapInValueRequest.
+func (m MsgUpdateMinSwapInValueRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
+		return fmt.Errorf("invalid admin address: %q: %w", m.Admin, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	if m.MinSwapInValue != "" {
+		if _, ok := sdkmath.NewIntFromString(m.MinSwapInValue); !ok {
+			return fmt.Errorf("invalid min swap in value: %q: %w", m.MinSwapInValue, errors.New("not a valid integer"))
+		}
+	}
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgUpdateMinSwapOutValueRequest.
+func (m MsgUpdateMinSwapOutValueRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
+		return fmt.Errorf("invalid admin address: %q: %w", m.Admin, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	if m.MinSwapOutValue != "" {
+		if _, ok := sdkmath.NewIntFromString(m.MinSwapOutValue); !ok {
+			return fmt.Errorf("invalid min swap out value: %q: %w", m.MinSwapOutValue, errors.New("not a valid integer"))
+		}
 	}
 	return nil
 }

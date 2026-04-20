@@ -121,6 +121,12 @@ message VaultAccount {
   // - Incoming payment_denom deposits are converted to this unit before checking.
   // - If empty ("") or "0", there is no minimum limit.
   string min_swap_in_value = 25 [(cosmos_proto.scalar) = "cosmos.IntString"];
+
+  // min_swap_out_value is a string representing the minimum value required for a withdrawal.
+  // - The value is measured in the underlying_asset.
+  // - Outgoing redemptions are converted to this unit before checking.
+  // - If empty ("") or "0", there is no minimum limit.
+  string min_swap_out_value = 26 [(cosmos_proto.scalar) = "cosmos.IntString"];
 }
 
 // AccountBalance represents the coin balance of a single account.

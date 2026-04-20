@@ -243,6 +243,52 @@ func (k msgServer) UpdateWithdrawalDelay(goCtx context.Context, msg *types.MsgUp
 	return &types.MsgUpdateWithdrawalDelayResponse{}, nil
 }
 
+// UpdateMinSwapInValue sets the minimum allowed value for a swap-in operation.
+func (k msgServer) UpdateMinSwapInValue(goCtx context.Context, msg *types.MsgUpdateMinSwapInValueRequest) (*types.MsgUpdateMinSwapInValueResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault: %w", err)
+	}
+	if vault == nil {
+		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+	}
+	if err := vault.ValidateAdmin(msg.Admin); err != nil {
+		return nil, fmt.Errorf("failed to validate admin: %w", err)
+	}
+
+	if err := k.SetMinSwapInValue(ctx, vault, msg.MinSwapInValue); err != nil {
+		return nil, fmt.Errorf("failed to set min swap in value: %w", err)
+	}
+
+	return &types.MsgUpdateMinSwapInValueResponse{}, nil
+}
+
+// UpdateMinSwapOutValue sets the minimum allowed value for a swap-out operation.
+func (k msgServer) UpdateMinSwapOutValue(goCtx context.Context, msg *types.MsgUpdateMinSwapOutValueRequest) (*types.MsgUpdateMinSwapOutValueResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vault, err := k.GetVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault: %w", err)
+	}
+	if vault == nil {
+		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+	}
+	if err := vault.ValidateAdmin(msg.Admin); err != nil {
+		return nil, fmt.Errorf("failed to validate admin: %w", err)
+	}
+
+	if err := k.SetMinSwapOutValue(ctx, vault, msg.MinSwapOutValue); err != nil {
+		return nil, fmt.Errorf("failed to set min swap out value: %w", err)
+	}
+
+	return &types.MsgUpdateMinSwapOutValueResponse{}, nil
+}
+
 // ToggleSwapIn enables or disables swap-in operations for a vault.
 func (k msgServer) ToggleSwapIn(goCtx context.Context, msg *types.MsgToggleSwapInRequest) (*types.MsgToggleSwapInResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)

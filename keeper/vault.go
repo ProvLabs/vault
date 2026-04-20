@@ -588,6 +588,7 @@ func (k *Keeper) SetMaxSwapOutValue(ctx sdk.Context, vault *types.VaultAccount, 
 	return nil
 }
 
+// AllowSwapInAmount checks whether a swap-in amount meets the minimum and maximum value requirements for a vault.
 func (k *Keeper) AllowSwapInAmount(ctx sdk.Context, swapInAssest sdk.Coin, vault types.VaultAccount) (bool, string, error) {
 	assetInUnderlying, err := k.ToUnderlyingAssetAmount(ctx, vault, swapInAssest)
 	if err != nil {
@@ -611,7 +612,7 @@ func (k *Keeper) AllowSwapInAmount(ctx sdk.Context, swapInAssest sdk.Coin, vault
 	return true, "", nil
 }
 
-// AllowSwapOutAmount checks whether a swap-out amount meets the minimum and maximum value requirement for a vault.
+// AllowSwapOutAmount checks whether a swap-out amount meets the minimum and maximum value requirements for a vault.
 func (k *Keeper) AllowSwapOutAmount(ctx sdk.Context, assets sdk.Coin, vault types.VaultAccount) (bool, string, error) {
 	assetInUnderlying, err := k.ToUnderlyingAssetAmount(ctx, vault, assets)
 	if err != nil {

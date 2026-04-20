@@ -29,6 +29,7 @@ Each vault is an `x/auth` account implementing `VaultAccountI`. The canonical re
 - Admin address, share denom, underlying asset, optional **payment denom** (must differ from underlying)  
 - Interest configuration: `CurrentInterestRate`, `DesiredInterestRate`, optional `MinInterestRate`/`MaxInterestRate` bounds  
 - Swap toggles, `WithdrawalDelaySeconds`, pause flags/reason and `PausedBalance` snapshot  
+- **Min Swap Values:** `min_swap_in_value` and `min_swap_out_value` (measured in underlying asset)
 - **Total supply-of-record:** `total_shares` (authoritative across chains; includes locally and externally held shares)  
 - **Bridging controls:** `bridge_address` (the sole authorized external address) and `bridge_enabled` (feature gate)
 - **Asset Management:** optional `asset_manager` address with delegated authority.

@@ -1007,8 +1007,8 @@ func (s *TestSuite) TestMsgServer_UpdateMinSwapInValue() {
 		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).UpdateMinSwapInValue,
 		postCheck: func(msg *types.MsgUpdateMinSwapInValueRequest, args postCheckArgs) {
 			vault, err := s.k.GetVault(s.ctx, args.VaultAddress)
-			s.Require().NoError(err)
-			s.Require().Equal(args.NewValue, vault.MinSwapInValue)
+			s.Require().NoError(err, "failed to fetch vault after UpdateMinSwapInValue")
+			s.Require().Equal(args.NewValue, vault.MinSwapInValue, "vault MinSwapInValue mismatch: expected %s got %s", args.NewValue, vault.MinSwapInValue)
 		},
 	}
 
@@ -1016,17 +1016,12 @@ func (s *TestSuite) TestMsgServer_UpdateMinSwapInValue() {
 	share := "vaultshares"
 	admin := s.adminAddr
 	assetManager := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
-	vaultAddr := types.GetVaultAddress(share)
+	var vaultAddr sdk.AccAddress
 
 	setup := func() {
-		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin)
-		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-			Admin:           admin.String(),
-			ShareDenom:      share,
-			UnderlyingAsset: underlying,
-		})
-		s.Require().NoError(err)
-		vault, _ := s.k.GetVault(s.ctx, vaultAddr)
+		vaultAddr = s.CreateAndActivateVault(admin, share, underlying)
+		vault, err := s.k.GetVault(s.ctx, vaultAddr)
+		s.Require().NoError(err, "unexpected error fetching vault for asset manager setup at address %s", vaultAddr.String())
 		vault.AssetManager = assetManager.String()
 		s.k.AuthKeeper.SetAccount(s.ctx, vault)
 	}
@@ -1037,11 +1032,11 @@ func (s *TestSuite) TestMsgServer_UpdateMinSwapInValue() {
 			setup: setup,
 			msg: types.MsgUpdateMinSwapInValueRequest{
 				Authority:      admin.String(),
-				VaultAddress:   vaultAddr.String(),
+				VaultAddress:   types.GetVaultAddress(share).String(),
 				MinSwapInValue: "500",
 			},
 			postCheckArgs: postCheckArgs{
-				VaultAddress: vaultAddr,
+				VaultAddress: types.GetVaultAddress(share),
 				NewValue:     "500",
 				Authority:    admin.String(),
 			},
@@ -1049,7 +1044,7 @@ func (s *TestSuite) TestMsgServer_UpdateMinSwapInValue() {
 				sdk.NewEvent("provlabs.vault.v1.EventMinSwapInValueUpdated",
 					sdk.NewAttribute("authority", admin.String()),
 					sdk.NewAttribute("min_swap_in", "500"),
-					sdk.NewAttribute("vault_address", vaultAddr.String()),
+					sdk.NewAttribute("vault_address", types.GetVaultAddress(share).String()),
 				),
 			},
 		},
@@ -1058,11 +1053,11 @@ func (s *TestSuite) TestMsgServer_UpdateMinSwapInValue() {
 			setup: setup,
 			msg: types.MsgUpdateMinSwapInValueRequest{
 				Authority:      assetManager.String(),
-				VaultAddress:   vaultAddr.String(),
+				VaultAddress:   types.GetVaultAddress(share).String(),
 				MinSwapInValue: "600",
 			},
 			postCheckArgs: postCheckArgs{
-				VaultAddress: vaultAddr,
+				VaultAddress: types.GetVaultAddress(share),
 				NewValue:     "600",
 				Authority:    assetManager.String(),
 			},
@@ -1070,7 +1065,7 @@ func (s *TestSuite) TestMsgServer_UpdateMinSwapInValue() {
 				sdk.NewEvent("provlabs.vault.v1.EventMinSwapInValueUpdated",
 					sdk.NewAttribute("authority", assetManager.String()),
 					sdk.NewAttribute("min_swap_in", "600"),
-					sdk.NewAttribute("vault_address", vaultAddr.String()),
+					sdk.NewAttribute("vault_address", types.GetVaultAddress(share).String()),
 				),
 			},
 		},
@@ -1095,16 +1090,9 @@ func (s *TestSuite) TestMsgServer_UpdateMinSwapInValue_Failures() {
 	share := "vaultshares"
 	admin := s.adminAddr
 	other := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
-	vaultAddr := types.GetVaultAddress(share)
 
 	setup := func() {
-		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin)
-		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-			Admin:           admin.String(),
-			ShareDenom:      share,
-			UnderlyingAsset: underlying,
-		})
-		s.Require().NoError(err)
+		_ = s.CreateAndActivateVault(admin, share, underlying)
 	}
 
 	tests := []msgServerTestCase[types.MsgUpdateMinSwapInValueRequest, any]{
@@ -1122,7 +1110,7 @@ func (s *TestSuite) TestMsgServer_UpdateMinSwapInValue_Failures() {
 			setup: setup,
 			msg: types.MsgUpdateMinSwapInValueRequest{
 				Authority:      other.String(),
-				VaultAddress:   vaultAddr.String(),
+				VaultAddress:   types.GetVaultAddress(share).String(),
 				MinSwapInValue: "100",
 			},
 			expectedErrSubstrs: []string{"unauthorized"},
@@ -1132,7 +1120,7 @@ func (s *TestSuite) TestMsgServer_UpdateMinSwapInValue_Failures() {
 			setup: setup,
 			msg: types.MsgUpdateMinSwapInValueRequest{
 				Authority:      admin.String(),
-				VaultAddress:   vaultAddr.String(),
+				VaultAddress:   types.GetVaultAddress(share).String(),
 				MinSwapInValue: "invalid",
 			},
 			expectedErrSubstrs: []string{"invalid min swap in value"},
@@ -1158,8 +1146,8 @@ func (s *TestSuite) TestMsgServer_UpdateMinSwapOutValue() {
 		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).UpdateMinSwapOutValue,
 		postCheck: func(msg *types.MsgUpdateMinSwapOutValueRequest, args postCheckArgs) {
 			vault, err := s.k.GetVault(s.ctx, args.VaultAddress)
-			s.Require().NoError(err)
-			s.Require().Equal(args.NewValue, vault.MinSwapOutValue)
+			s.Require().NoError(err, "failed to fetch vault after UpdateMinSwapOutValue")
+			s.Require().Equal(args.NewValue, vault.MinSwapOutValue, "vault MinSwapOutValue mismatch: expected %s got %s", args.NewValue, vault.MinSwapOutValue)
 		},
 	}
 
@@ -1167,17 +1155,12 @@ func (s *TestSuite) TestMsgServer_UpdateMinSwapOutValue() {
 	share := "vaultshares"
 	admin := s.adminAddr
 	assetManager := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
-	vaultAddr := types.GetVaultAddress(share)
+	var vaultAddr sdk.AccAddress
 
 	setup := func() {
-		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin)
-		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-			Admin:           admin.String(),
-			ShareDenom:      share,
-			UnderlyingAsset: underlying,
-		})
-		s.Require().NoError(err)
-		vault, _ := s.k.GetVault(s.ctx, vaultAddr)
+		vaultAddr = s.CreateAndActivateVault(admin, share, underlying)
+		vault, err := s.k.GetVault(s.ctx, vaultAddr)
+		s.Require().NoError(err, "unexpected error fetching vault for asset manager setup at address %s", vaultAddr.String())
 		vault.AssetManager = assetManager.String()
 		s.k.AuthKeeper.SetAccount(s.ctx, vault)
 	}
@@ -1188,11 +1171,11 @@ func (s *TestSuite) TestMsgServer_UpdateMinSwapOutValue() {
 			setup: setup,
 			msg: types.MsgUpdateMinSwapOutValueRequest{
 				Authority:       admin.String(),
-				VaultAddress:    vaultAddr.String(),
+				VaultAddress:    types.GetVaultAddress(share).String(),
 				MinSwapOutValue: "300",
 			},
 			postCheckArgs: postCheckArgs{
-				VaultAddress: vaultAddr,
+				VaultAddress: types.GetVaultAddress(share),
 				NewValue:     "300",
 				Authority:    admin.String(),
 			},
@@ -1200,7 +1183,7 @@ func (s *TestSuite) TestMsgServer_UpdateMinSwapOutValue() {
 				sdk.NewEvent("provlabs.vault.v1.EventMinSwapOutValueUpdated",
 					sdk.NewAttribute("authority", admin.String()),
 					sdk.NewAttribute("min_swap_out", "300"),
-					sdk.NewAttribute("vault_address", vaultAddr.String()),
+					sdk.NewAttribute("vault_address", types.GetVaultAddress(share).String()),
 				),
 			},
 		},
@@ -1209,11 +1192,11 @@ func (s *TestSuite) TestMsgServer_UpdateMinSwapOutValue() {
 			setup: setup,
 			msg: types.MsgUpdateMinSwapOutValueRequest{
 				Authority:       assetManager.String(),
-				VaultAddress:    vaultAddr.String(),
+				VaultAddress:    types.GetVaultAddress(share).String(),
 				MinSwapOutValue: "400",
 			},
 			postCheckArgs: postCheckArgs{
-				VaultAddress: vaultAddr,
+				VaultAddress: types.GetVaultAddress(share),
 				NewValue:     "400",
 				Authority:    assetManager.String(),
 			},
@@ -1221,7 +1204,7 @@ func (s *TestSuite) TestMsgServer_UpdateMinSwapOutValue() {
 				sdk.NewEvent("provlabs.vault.v1.EventMinSwapOutValueUpdated",
 					sdk.NewAttribute("authority", assetManager.String()),
 					sdk.NewAttribute("min_swap_out", "400"),
-					sdk.NewAttribute("vault_address", vaultAddr.String()),
+					sdk.NewAttribute("vault_address", types.GetVaultAddress(share).String()),
 				),
 			},
 		},
@@ -1246,16 +1229,9 @@ func (s *TestSuite) TestMsgServer_UpdateMinSwapOutValue_Failures() {
 	share := "vaultshares"
 	admin := s.adminAddr
 	other := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
-	vaultAddr := types.GetVaultAddress(share)
 
 	setup := func() {
-		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin)
-		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-			Admin:           admin.String(),
-			ShareDenom:      share,
-			UnderlyingAsset: underlying,
-		})
-		s.Require().NoError(err)
+		_ = s.CreateAndActivateVault(admin, share, underlying)
 	}
 
 	tests := []msgServerTestCase[types.MsgUpdateMinSwapOutValueRequest, any]{
@@ -1273,7 +1249,7 @@ func (s *TestSuite) TestMsgServer_UpdateMinSwapOutValue_Failures() {
 			setup: setup,
 			msg: types.MsgUpdateMinSwapOutValueRequest{
 				Authority:       other.String(),
-				VaultAddress:    vaultAddr.String(),
+				VaultAddress:    types.GetVaultAddress(share).String(),
 				MinSwapOutValue: "100",
 			},
 			expectedErrSubstrs: []string{"unauthorized"},
@@ -1283,7 +1259,7 @@ func (s *TestSuite) TestMsgServer_UpdateMinSwapOutValue_Failures() {
 			setup: setup,
 			msg: types.MsgUpdateMinSwapOutValueRequest{
 				Authority:       admin.String(),
-				VaultAddress:    vaultAddr.String(),
+				VaultAddress:    types.GetVaultAddress(share).String(),
 				MinSwapOutValue: "invalid",
 			},
 			expectedErrSubstrs: []string{"invalid min swap out value"},
@@ -1309,8 +1285,8 @@ func (s *TestSuite) TestMsgServer_UpdateMaxSwapInValue() {
 		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).UpdateMaxSwapInValue,
 		postCheck: func(msg *types.MsgUpdateMaxSwapInValueRequest, args postCheckArgs) {
 			vault, err := s.k.GetVault(s.ctx, args.VaultAddress)
-			s.Require().NoError(err)
-			s.Require().Equal(args.NewValue, vault.MaxSwapInValue)
+			s.Require().NoError(err, "failed to fetch vault after UpdateMaxSwapInValue")
+			s.Require().Equal(args.NewValue, vault.MaxSwapInValue, "vault MaxSwapInValue mismatch: expected %s got %s", args.NewValue, vault.MaxSwapInValue)
 		},
 	}
 
@@ -1318,17 +1294,12 @@ func (s *TestSuite) TestMsgServer_UpdateMaxSwapInValue() {
 	share := "vaultshares"
 	admin := s.adminAddr
 	assetManager := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
-	vaultAddr := types.GetVaultAddress(share)
+	var vaultAddr sdk.AccAddress
 
 	setup := func() {
-		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin)
-		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-			Admin:           admin.String(),
-			ShareDenom:      share,
-			UnderlyingAsset: underlying,
-		})
-		s.Require().NoError(err)
-		vault, _ := s.k.GetVault(s.ctx, vaultAddr)
+		vaultAddr = s.CreateAndActivateVault(admin, share, underlying)
+		vault, err := s.k.GetVault(s.ctx, vaultAddr)
+		s.Require().NoError(err, "unexpected error fetching vault for asset manager setup at address %s", vaultAddr.String())
 		vault.AssetManager = assetManager.String()
 		s.k.AuthKeeper.SetAccount(s.ctx, vault)
 	}
@@ -1339,11 +1310,11 @@ func (s *TestSuite) TestMsgServer_UpdateMaxSwapInValue() {
 			setup: setup,
 			msg: types.MsgUpdateMaxSwapInValueRequest{
 				Authority:      admin.String(),
-				VaultAddress:   vaultAddr.String(),
+				VaultAddress:   types.GetVaultAddress(share).String(),
 				MaxSwapInValue: "5000",
 			},
 			postCheckArgs: postCheckArgs{
-				VaultAddress: vaultAddr,
+				VaultAddress: types.GetVaultAddress(share),
 				NewValue:     "5000",
 				Authority:    admin.String(),
 			},
@@ -1351,7 +1322,7 @@ func (s *TestSuite) TestMsgServer_UpdateMaxSwapInValue() {
 				sdk.NewEvent("provlabs.vault.v1.EventMaxSwapInValueUpdated",
 					sdk.NewAttribute("authority", admin.String()),
 					sdk.NewAttribute("max_swap_in", "5000"),
-					sdk.NewAttribute("vault_address", vaultAddr.String()),
+					sdk.NewAttribute("vault_address", types.GetVaultAddress(share).String()),
 				),
 			},
 		},
@@ -1360,11 +1331,11 @@ func (s *TestSuite) TestMsgServer_UpdateMaxSwapInValue() {
 			setup: setup,
 			msg: types.MsgUpdateMaxSwapInValueRequest{
 				Authority:      assetManager.String(),
-				VaultAddress:   vaultAddr.String(),
+				VaultAddress:   types.GetVaultAddress(share).String(),
 				MaxSwapInValue: "6000",
 			},
 			postCheckArgs: postCheckArgs{
-				VaultAddress: vaultAddr,
+				VaultAddress: types.GetVaultAddress(share),
 				NewValue:     "6000",
 				Authority:    assetManager.String(),
 			},
@@ -1372,7 +1343,7 @@ func (s *TestSuite) TestMsgServer_UpdateMaxSwapInValue() {
 				sdk.NewEvent("provlabs.vault.v1.EventMaxSwapInValueUpdated",
 					sdk.NewAttribute("authority", assetManager.String()),
 					sdk.NewAttribute("max_swap_in", "6000"),
-					sdk.NewAttribute("vault_address", vaultAddr.String()),
+					sdk.NewAttribute("vault_address", types.GetVaultAddress(share).String()),
 				),
 			},
 		},
@@ -1397,16 +1368,9 @@ func (s *TestSuite) TestMsgServer_UpdateMaxSwapInValue_Failures() {
 	share := "vaultshares"
 	admin := s.adminAddr
 	other := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
-	vaultAddr := types.GetVaultAddress(share)
 
 	setup := func() {
-		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin)
-		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-			Admin:           admin.String(),
-			ShareDenom:      share,
-			UnderlyingAsset: underlying,
-		})
-		s.Require().NoError(err)
+		_ = s.CreateAndActivateVault(admin, share, underlying)
 	}
 
 	tests := []msgServerTestCase[types.MsgUpdateMaxSwapInValueRequest, any]{
@@ -1424,7 +1388,7 @@ func (s *TestSuite) TestMsgServer_UpdateMaxSwapInValue_Failures() {
 			setup: setup,
 			msg: types.MsgUpdateMaxSwapInValueRequest{
 				Authority:      other.String(),
-				VaultAddress:   vaultAddr.String(),
+				VaultAddress:   types.GetVaultAddress(share).String(),
 				MaxSwapInValue: "100",
 			},
 			expectedErrSubstrs: []string{"unauthorized"},
@@ -1434,7 +1398,7 @@ func (s *TestSuite) TestMsgServer_UpdateMaxSwapInValue_Failures() {
 			setup: setup,
 			msg: types.MsgUpdateMaxSwapInValueRequest{
 				Authority:      admin.String(),
-				VaultAddress:   vaultAddr.String(),
+				VaultAddress:   types.GetVaultAddress(share).String(),
 				MaxSwapInValue: "invalid",
 			},
 			expectedErrSubstrs: []string{"invalid max swap in value"},
@@ -1460,8 +1424,8 @@ func (s *TestSuite) TestMsgServer_UpdateMaxSwapOutValue() {
 		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).UpdateMaxSwapOutValue,
 		postCheck: func(msg *types.MsgUpdateMaxSwapOutValueRequest, args postCheckArgs) {
 			vault, err := s.k.GetVault(s.ctx, args.VaultAddress)
-			s.Require().NoError(err)
-			s.Require().Equal(args.NewValue, vault.MaxSwapOutValue)
+			s.Require().NoError(err, "failed to fetch vault after UpdateMaxSwapOutValue")
+			s.Require().Equal(args.NewValue, vault.MaxSwapOutValue, "vault MaxSwapOutValue mismatch: expected %s got %s", args.NewValue, vault.MaxSwapOutValue)
 		},
 	}
 
@@ -1469,17 +1433,12 @@ func (s *TestSuite) TestMsgServer_UpdateMaxSwapOutValue() {
 	share := "vaultshares"
 	admin := s.adminAddr
 	assetManager := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
-	vaultAddr := types.GetVaultAddress(share)
+	var vaultAddr sdk.AccAddress
 
 	setup := func() {
-		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin)
-		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-			Admin:           admin.String(),
-			ShareDenom:      share,
-			UnderlyingAsset: underlying,
-		})
-		s.Require().NoError(err)
-		vault, _ := s.k.GetVault(s.ctx, vaultAddr)
+		vaultAddr = s.CreateAndActivateVault(admin, share, underlying)
+		vault, err := s.k.GetVault(s.ctx, vaultAddr)
+		s.Require().NoError(err, "unexpected error fetching vault for asset manager setup at address %s", vaultAddr.String())
 		vault.AssetManager = assetManager.String()
 		s.k.AuthKeeper.SetAccount(s.ctx, vault)
 	}
@@ -1490,11 +1449,11 @@ func (s *TestSuite) TestMsgServer_UpdateMaxSwapOutValue() {
 			setup: setup,
 			msg: types.MsgUpdateMaxSwapOutValueRequest{
 				Authority:       admin.String(),
-				VaultAddress:    vaultAddr.String(),
+				VaultAddress:    types.GetVaultAddress(share).String(),
 				MaxSwapOutValue: "3000",
 			},
 			postCheckArgs: postCheckArgs{
-				VaultAddress: vaultAddr,
+				VaultAddress: types.GetVaultAddress(share),
 				NewValue:     "3000",
 				Authority:    admin.String(),
 			},
@@ -1502,7 +1461,7 @@ func (s *TestSuite) TestMsgServer_UpdateMaxSwapOutValue() {
 				sdk.NewEvent("provlabs.vault.v1.EventMaxSwapOutValueUpdated",
 					sdk.NewAttribute("authority", admin.String()),
 					sdk.NewAttribute("max_swap_out", "3000"),
-					sdk.NewAttribute("vault_address", vaultAddr.String()),
+					sdk.NewAttribute("vault_address", types.GetVaultAddress(share).String()),
 				),
 			},
 		},
@@ -1511,11 +1470,11 @@ func (s *TestSuite) TestMsgServer_UpdateMaxSwapOutValue() {
 			setup: setup,
 			msg: types.MsgUpdateMaxSwapOutValueRequest{
 				Authority:       assetManager.String(),
-				VaultAddress:    vaultAddr.String(),
+				VaultAddress:    types.GetVaultAddress(share).String(),
 				MaxSwapOutValue: "4000",
 			},
 			postCheckArgs: postCheckArgs{
-				VaultAddress: vaultAddr,
+				VaultAddress: types.GetVaultAddress(share),
 				NewValue:     "4000",
 				Authority:    assetManager.String(),
 			},
@@ -1523,7 +1482,7 @@ func (s *TestSuite) TestMsgServer_UpdateMaxSwapOutValue() {
 				sdk.NewEvent("provlabs.vault.v1.EventMaxSwapOutValueUpdated",
 					sdk.NewAttribute("authority", assetManager.String()),
 					sdk.NewAttribute("max_swap_out", "4000"),
-					sdk.NewAttribute("vault_address", vaultAddr.String()),
+					sdk.NewAttribute("vault_address", types.GetVaultAddress(share).String()),
 				),
 			},
 		},
@@ -1548,16 +1507,9 @@ func (s *TestSuite) TestMsgServer_UpdateMaxSwapOutValue_Failures() {
 	share := "vaultshares"
 	admin := s.adminAddr
 	other := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
-	vaultAddr := types.GetVaultAddress(share)
 
 	setup := func() {
-		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin)
-		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-			Admin:           admin.String(),
-			ShareDenom:      share,
-			UnderlyingAsset: underlying,
-		})
-		s.Require().NoError(err)
+		_ = s.CreateAndActivateVault(admin, share, underlying)
 	}
 
 	tests := []msgServerTestCase[types.MsgUpdateMaxSwapOutValueRequest, any]{
@@ -1575,7 +1527,7 @@ func (s *TestSuite) TestMsgServer_UpdateMaxSwapOutValue_Failures() {
 			setup: setup,
 			msg: types.MsgUpdateMaxSwapOutValueRequest{
 				Authority:       other.String(),
-				VaultAddress:    vaultAddr.String(),
+				VaultAddress:    types.GetVaultAddress(share).String(),
 				MaxSwapOutValue: "100",
 			},
 			expectedErrSubstrs: []string{"unauthorized"},
@@ -1585,7 +1537,7 @@ func (s *TestSuite) TestMsgServer_UpdateMaxSwapOutValue_Failures() {
 			setup: setup,
 			msg: types.MsgUpdateMaxSwapOutValueRequest{
 				Authority:       admin.String(),
-				VaultAddress:    vaultAddr.String(),
+				VaultAddress:    types.GetVaultAddress(share).String(),
 				MaxSwapOutValue: "invalid",
 			},
 			expectedErrSubstrs: []string{"invalid max swap out value"},

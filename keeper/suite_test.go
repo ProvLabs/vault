@@ -404,6 +404,19 @@ func (s *TestSuite) CreateVaultWithParams(shareDenom, underlyingDenom, paymentDe
 	return vault
 }
 
+// CreateAndActivateVault creates a marker for the underlying asset and then creates the vault itself.
+// It returns the newly created vault address.
+func (s *TestSuite) CreateAndActivateVault(admin sdk.AccAddress, share, underlying string) sdk.AccAddress {
+	s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, sdkmath.NewInt(1000)), admin)
+	_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+		Admin:           admin.String(),
+		ShareDenom:      share,
+		UnderlyingAsset: underlying,
+	})
+	s.Require().NoError(err, "failed to create vault for share denom %s and underlying %s", share, underlying)
+	return types.GetVaultAddress(share)
+}
+
 // FundMarker mints and sends the provided coins to the marker account associated with the share denom.
 func (s *TestSuite) FundMarker(shareDenom string, coins sdk.Coins) {
 	markerAddr := markertypes.MustGetMarkerAddress(shareDenom)

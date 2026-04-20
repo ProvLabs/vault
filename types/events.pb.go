@@ -2423,9 +2423,8 @@ type EventMaxSwapInValueUpdated struct {
 	// authority is the address (admin or asset manager) that updated the limit.
 	Authority string `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`
 	// max_swap_in is the newly set maximum swap-in value, measured in the underlying_asset.
-	// - Values must be non-negative (>= 0).
+	// - Values must be positive (> 0).
 	// - An empty string "" indicates no maximum limit.
-	// - A value of "0" blocks all deposits.
 	MaxSwapIn string `protobuf:"bytes,3,opt,name=max_swap_in,json=maxSwapIn,proto3" json:"max_swap_in,omitempty"`
 }
 
@@ -2490,9 +2489,8 @@ type EventMaxSwapOutValueUpdated struct {
 	// authority is the address (admin or asset manager) that updated the limit.
 	Authority string `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`
 	// max_swap_out is the newly set maximum swap-out value, measured in the underlying_asset.
-	// - Values must be non-negative (>= 0).
+	// - Values must be positive (> 0).
 	// - An empty string "" indicates no maximum limit.
-	// - A value of "0" blocks all withdrawals.
 	MaxSwapOut string `protobuf:"bytes,3,opt,name=max_swap_out,json=maxSwapOut,proto3" json:"max_swap_out,omitempty"`
 }
 

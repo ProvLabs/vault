@@ -173,7 +173,7 @@ An empty string "" or "0" clears the limit.
 ## UpdateMaxSwapInValue
 
 Admin or Asset Manager. Updates the maximum allowed value for a swap-in operation.
-An empty string "" clears the limit. A value of "0" blocks all deposits.
+An empty string "" clears the limit. Values must be positive (> 0).
 
 * **Request:** `MsgUpdateMaxSwapInValueRequest { authority, vault_address, max_swap_in_value }`
 * **Response:** `MsgUpdateMaxSwapInValueResponse {}`
@@ -183,7 +183,7 @@ An empty string "" clears the limit. A value of "0" blocks all deposits.
 ## UpdateMaxSwapOutValue
 
 Admin or Asset Manager. Updates the maximum allowed value for a swap-out operation.
-An empty string "" clears the limit. A value of "0" blocks all withdrawals.
+An empty string "" clears the limit. Values must be positive (> 0).
 
 * **Request:** `MsgUpdateMaxSwapOutValueRequest { authority, vault_address, max_swap_out_value }`
 * **Response:** `MsgUpdateMaxSwapOutValueResponse {}`

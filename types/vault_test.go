@@ -821,11 +821,11 @@ func TestValidateSwapLimits(t *testing.T) {
 			expectedErr: "",
 		},
 		{
-			name:        "valid - max is 0 (blocking)",
+			name:        "invalid - max is 0",
 			min:         "0",
 			max:         "0",
 			isSwapIn:    true,
-			expectedErr: "",
+			expectedErr: "max swap in value cannot be zero; use toggle messages to disable swaps",
 		},
 		{
 			name:        "invalid - min not an integer",
@@ -870,11 +870,11 @@ func TestValidateSwapLimits(t *testing.T) {
 			expectedErr: "min swap out value 1000 cannot be greater than max swap out value 500",
 		},
 		{
-			name:        "valid - min > 0, max is 0 (blocking)",
+			name:        "invalid - min > 0, max is 0",
 			min:         "100",
 			max:         "0",
 			isSwapIn:    true,
-			expectedErr: "",
+			expectedErr: "max swap in value cannot be zero",
 		},
 	}
 

@@ -215,14 +215,14 @@ func SimulateMsgCreateVault(k keeper.Keeper) simtypes.Operation {
 			if !ok {
 				min = math.ZeroInt()
 			}
-			msg.MaxSwapInValue = min.Add(math.NewInt(int64(r.Intn(10000) + 1000))).String()
+			msg.MaxSwapInValue = min.Add(math.NewInt(int64(r.Intn(10000) + 1))).String()
 		}
 		if r.Intn(2) == 0 {
 			min, ok := math.NewIntFromString(msg.MinSwapOutValue)
 			if !ok {
 				min = math.ZeroInt()
 			}
-			msg.MaxSwapOutValue = min.Add(math.NewInt(int64(r.Intn(10000) + 1000))).String()
+			msg.MaxSwapOutValue = min.Add(math.NewInt(int64(r.Intn(10000) + 1))).String()
 		}
 
 		handler := keeper.NewMsgServer(&k)

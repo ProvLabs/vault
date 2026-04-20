@@ -133,7 +133,10 @@ func ValidateSwapLimits(minStr, maxStr string, isSwapIn bool) error {
 		if maxVal.IsNegative() {
 			return fmt.Errorf("max %s value must be non-negative: %s", label, maxStr)
 		}
-		if !maxVal.IsZero() && minVal.GT(maxVal) {
+		if maxVal.IsZero() {
+			return fmt.Errorf("max %s value cannot be zero; use toggle messages to disable swaps", label)
+		}
+		if minVal.GT(maxVal) {
 			return fmt.Errorf("min %s value %s cannot be greater than max %s value %s", label, minStr, label, maxStr)
 		}
 	}

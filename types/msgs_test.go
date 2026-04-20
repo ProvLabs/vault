@@ -177,6 +177,16 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 			},
 			expectedErr: fmt.Errorf("min swap out value 2000 cannot be greater than max swap out value 1000"),
 		},
+		{
+			name: "max swap in is zero",
+			msg: types.MsgCreateVaultRequest{
+				Admin:           admin,
+				ShareDenom:      "vaultshare",
+				UnderlyingAsset: "uusd",
+				MaxSwapInValue:  "0",
+			},
+			expectedErr: fmt.Errorf("max swap in value cannot be zero"),
+		},
 	}
 
 	for _, tc := range tests {
@@ -1724,6 +1734,15 @@ func TestMsgUpdateSwapLimits_ValidateBasic(t *testing.T) {
 				},
 				expectedErr: "max swap in value must be non-negative",
 			},
+			{
+				name: "zero value (blocked)",
+				msg: types.MsgUpdateMaxSwapInValueRequest{
+					Authority:      authority,
+					VaultAddress:   vault,
+					MaxSwapInValue: "0",
+				},
+				expectedErr: "max swap in value cannot be zero",
+			},
 		}
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
@@ -1761,6 +1780,15 @@ func TestMsgUpdateSwapLimits_ValidateBasic(t *testing.T) {
 					MaxSwapOutValue: "-100",
 				},
 				expectedErr: "max swap out value must be non-negative",
+			},
+			{
+				name: "zero value (blocked)",
+				msg: types.MsgUpdateMaxSwapOutValueRequest{
+					Authority:       authority,
+					VaultAddress:    vault,
+					MaxSwapOutValue: "0",
+				},
+				expectedErr: "max swap out value cannot be zero",
 			},
 		}
 		for _, tt := range tests {

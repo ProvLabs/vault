@@ -126,16 +126,14 @@ type VaultAccount struct {
 	// max_swap_in_value is a string representing the maximum value allowed for a deposit.
 	// - The value is measured in the underlying_asset.
 	// - Incoming payment_denom deposits are converted to this unit before checking.
-	// - Values must be non-negative (>= 0).
+	// - Values must be positive (> 0).
 	// - An empty string "" indicates no maximum limit.
-	// - A value of "0" blocks all deposits.
 	MaxSwapInValue string `protobuf:"bytes,27,opt,name=max_swap_in_value,json=maxSwapInValue,proto3" json:"max_swap_in_value,omitempty"`
 	// max_swap_out_value is a string representing the maximum value allowed for a withdrawal.
 	// - The value is measured in the underlying_asset.
 	// - Outgoing redemptions are converted to this unit before checking.
-	// - Values must be non-negative (>= 0).
+	// - Values must be positive (> 0).
 	// - An empty string "" indicates no maximum limit.
-	// - A value of "0" blocks all withdrawals.
 	MaxSwapOutValue string `protobuf:"bytes,28,opt,name=max_swap_out_value,json=maxSwapOutValue,proto3" json:"max_swap_out_value,omitempty"`
 }
 

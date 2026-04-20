@@ -132,14 +132,12 @@ message MsgCreateVaultRequest {
   // - An empty string "" or "0" indicates no minimum.
   string min_swap_out_value = 7 [(cosmos_proto.scalar) = "cosmos.IntString"];
   // max_swap_in_value is the maximum value allowed for a deposit, measured in the underlying_asset.
-  // - Values must be non-negative (>= 0).
-  // - An empty string "" indicates no maximum limit.
-  // - A value of "0" blocks all deposits.
+  // - Values must be positive (> 0).
+  // - An empty string "" clears the maximum / represents no maximum.
   string max_swap_in_value = 8 [(cosmos_proto.scalar) = "cosmos.IntString"];
   // max_swap_out_value is the maximum value allowed for a withdrawal, measured in the underlying_asset.
-  // - Values must be non-negative (>= 0).
+  // - Values must be positive (> 0).
   // - An empty string "" indicates no maximum limit.
-  // - A value of "0" blocks all withdrawals.
   string max_swap_out_value = 9 [(cosmos_proto.scalar) = "cosmos.IntString"];
 }
 
@@ -314,9 +312,8 @@ message MsgUpdateMaxSwapInValueRequest {
   // vault_address is the bech32 address of the vault.
   string vault_address = 2;
   // max_swap_in_value is the maximum value allowed for a deposit, measured in the underlying_asset.
-  // - Values must be non-negative (>= 0).
+  // - Values must be positive (> 0).
   // - An empty string "" clears the maximum / represents no maximum.
-  // - A value of "0" blocks all deposits.
   string max_swap_in_value = 3 [(cosmos_proto.scalar) = "cosmos.IntString"];
 }
 
@@ -332,9 +329,8 @@ message MsgUpdateMaxSwapOutValueRequest {
   // vault_address is the bech32 address of the vault.
   string vault_address = 2;
   // max_swap_out_value is the maximum value allowed for a withdrawal, measured in the underlying_asset.
-  // - Values must be non-negative (>= 0).
+  // - Values must be positive (> 0).
   // - An empty string "" clears the maximum / represents no maximum.
-  // - A value of "0" blocks all withdrawals.
   string max_swap_out_value = 3 [(cosmos_proto.scalar) = "cosmos.IntString"];
 }
 

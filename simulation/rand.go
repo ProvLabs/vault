@@ -395,6 +395,9 @@ func getRandomMaxSwapValue(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, vault
 
 	upperBound := lowerBound.Add(math.NewInt(2_000_000))
 	randomVal := simtypes.RandomAmount(r, upperBound.Sub(lowerBound)).Add(lowerBound)
+	if randomVal.IsZero() {
+		randomVal = math.NewInt(1)
+	}
 	return randomVal.String(), nil
 }
 

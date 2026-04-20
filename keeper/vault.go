@@ -530,7 +530,7 @@ func (k *Keeper) UpdateVaultAUMFeeBips(ctx sdk.Context, vault *types.VaultAccoun
 // SetMinSwapInValue updates the minimum swap-in value for a vault.
 func (k *Keeper) SetMinSwapInValue(ctx sdk.Context, vault *types.VaultAccount, minSwapIn string, authority string) error {
 	if err := types.ValidateSwapLimits(minSwapIn, vault.MaxSwapInValue, true); err != nil {
-		return err
+		return fmt.Errorf("failed to set MinSwapIn: %w", err)
 	}
 	if vault.MinSwapInValue == minSwapIn {
 		return nil
@@ -546,7 +546,7 @@ func (k *Keeper) SetMinSwapInValue(ctx sdk.Context, vault *types.VaultAccount, m
 // SetMinSwapOutValue updates the minimum swap-out value for a vault.
 func (k *Keeper) SetMinSwapOutValue(ctx sdk.Context, vault *types.VaultAccount, minSwapOut string, authority string) error {
 	if err := types.ValidateSwapLimits(minSwapOut, vault.MaxSwapOutValue, false); err != nil {
-		return err
+		return fmt.Errorf("failed to set MinSwapOut: %w", err)
 	}
 	if vault.MinSwapOutValue == minSwapOut {
 		return nil
@@ -562,7 +562,7 @@ func (k *Keeper) SetMinSwapOutValue(ctx sdk.Context, vault *types.VaultAccount, 
 // SetMaxSwapInValue updates the maximum swap-in value for a vault.
 func (k *Keeper) SetMaxSwapInValue(ctx sdk.Context, vault *types.VaultAccount, maxSwapIn string, authority string) error {
 	if err := types.ValidateSwapLimits(vault.MinSwapInValue, maxSwapIn, true); err != nil {
-		return err
+		return fmt.Errorf("failed to set MaxSwapIn: %w", err)
 	}
 	if vault.MaxSwapInValue == maxSwapIn {
 		return nil
@@ -578,7 +578,7 @@ func (k *Keeper) SetMaxSwapInValue(ctx sdk.Context, vault *types.VaultAccount, m
 // SetMaxSwapOutValue updates the maximum swap-out value for a vault.
 func (k *Keeper) SetMaxSwapOutValue(ctx sdk.Context, vault *types.VaultAccount, maxSwapOut string, authority string) error {
 	if err := types.ValidateSwapLimits(vault.MinSwapOutValue, maxSwapOut, false); err != nil {
-		return err
+		return fmt.Errorf("failed to set MaxSwapOut: %w", err)
 	}
 	if vault.MaxSwapOutValue == maxSwapOut {
 		return nil

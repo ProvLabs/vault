@@ -78,6 +78,12 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 Creates a new vault account with a configured underlying asset, optional payment denom, withdrawal delay, and minimum/maximum swap values.
 The creator is recorded as vault admin.
 
+* **Units:** All swap limit values (`min_swap_in_value`, `min_swap_out_value`, `max_swap_in_value`, `max_swap_out_value`) are denominated in the vault's **underlying_asset**.
+* **Clearing Limits:** 
+    * Minimums: An empty string "" or the string "0" clears/disables the minimum limit.
+    * Maximums: An empty string "" clears/disables the maximum limit.
+* **Constraints:** Any provided maximum swap value must be **positive (> 0)**. A value of "0" is invalid and will be rejected.
+
 * **Request:** `MsgCreateVaultRequest { admin, share_denom, underlying_asset, payment_denom?, withdrawal_delay_seconds, min_swap_in_value?, min_swap_out_value?, max_swap_in_value?, max_swap_out_value? }`
 * **Response:** `MsgCreateVaultResponse {}`
 
@@ -153,7 +159,7 @@ Admin or Asset Manager. Updates the withdrawal delay for future swap-out request
 ## UpdateMinSwapInValue
 
 Admin or Asset Manager. Updates the minimum allowed value for a swap-in operation.
-An empty string "" or "0" clears the limit.
+An empty string "" or "0" clears the limit. Values are in **underlying_asset** units.
 
 * **Request:** `MsgUpdateMinSwapInValueRequest { authority, vault_address, min_swap_in_value }`
 * **Response:** `MsgUpdateMinSwapInValueResponse {}`
@@ -163,7 +169,7 @@ An empty string "" or "0" clears the limit.
 ## UpdateMinSwapOutValue
 
 Admin or Asset Manager. Updates the minimum allowed value for a swap-out operation.
-An empty string "" or "0" clears the limit.
+An empty string "" or "0" clears the limit. Values are in **underlying_asset** units.
 
 * **Request:** `MsgUpdateMinSwapOutValueRequest { authority, vault_address, min_swap_out_value }`
 * **Response:** `MsgUpdateMinSwapOutValueResponse {}`
@@ -173,7 +179,7 @@ An empty string "" or "0" clears the limit.
 ## UpdateMaxSwapInValue
 
 Admin or Asset Manager. Updates the maximum allowed value for a swap-in operation.
-An empty string "" clears the limit. Values must be positive (> 0).
+An empty string "" clears the limit. Values must be **positive (> 0)** and are in **underlying_asset** units.
 
 * **Request:** `MsgUpdateMaxSwapInValueRequest { authority, vault_address, max_swap_in_value }`
 * **Response:** `MsgUpdateMaxSwapInValueResponse {}`
@@ -183,7 +189,7 @@ An empty string "" clears the limit. Values must be positive (> 0).
 ## UpdateMaxSwapOutValue
 
 Admin or Asset Manager. Updates the maximum allowed value for a swap-out operation.
-An empty string "" clears the limit. Values must be positive (> 0).
+An empty string "" clears the limit. Values must be **positive (> 0)** and are in **underlying_asset** units.
 
 * **Request:** `MsgUpdateMaxSwapOutValueRequest { authority, vault_address, max_swap_out_value }`
 * **Response:** `MsgUpdateMaxSwapOutValueResponse {}`

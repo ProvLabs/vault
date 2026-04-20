@@ -882,10 +882,12 @@ func TestValidateSwapLimits(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			err := types.ValidateSwapLimits(tt.min, tt.max, tt.isSwapIn)
 			if tt.expectedErr == "" {
-				assert.NoError(t, err)
+				assert.NoError(t, err, "Test case %q: expected no error, but got %v", tt.name, err)
 			} else {
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), tt.expectedErr)
+				assert.Error(t, err, "Test case %q: expected error containing %q, but got none", tt.name, tt.expectedErr)
+				if err != nil {
+					assert.Contains(t, err.Error(), tt.expectedErr, "Test case %q: error message mismatch; expected it to contain %q, but got %q", tt.name, tt.expectedErr, err.Error())
+				}
 			}
 		})
 	}

@@ -41,6 +41,8 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgUpdateVaultAUMFeeBipsRequest)(nil),
 	(*MsgUpdateMinSwapInValueRequest)(nil),
 	(*MsgUpdateMinSwapOutValueRequest)(nil),
+	(*MsgUpdateMaxSwapInValueRequest)(nil),
+	(*MsgUpdateMaxSwapOutValueRequest)(nil),
 }
 
 // ValidateBasic performs stateless validation on MsgCreateVaultRequest.

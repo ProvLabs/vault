@@ -69,6 +69,17 @@ type VaultAccountI interface {
 }
 
 // NewVaultAccount creates a new vault with an optional payment denom allowed for I/O alongside the underlying asset.
+//
+// The vault's operational limits are configured via:
+//   - withdrawalDelay: minimum seconds a swap-out must wait in queue.
+//   - aumFeeBips: annual management fee in basis points (1/100th of 1%).
+//   - minSwapInValue / minSwapOutValue: minimum amount of underlying asset required for swaps.
+//     An empty string "" or "0" indicates no minimum limit.
+//   - maxSwapInValue / maxSwapOutValue: maximum allowed amount of underlying asset for swaps.
+//     An empty string "" indicates no maximum limit. A value of "0" is invalid and rejected
+//     by validation (administrators should use Toggle messages to disable operations instead).
+//
+// All swap limit values are represented as integer strings (cosmos.IntString).
 func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyingAsset, paymentDenom string, withdrawalDelay uint64, aumFeeBips uint32, minSwapInValue, minSwapOutValue, maxSwapInValue, maxSwapOutValue string) *VaultAccount {
 	if paymentDenom == "" {
 		paymentDenom = underlyingAsset

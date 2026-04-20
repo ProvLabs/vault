@@ -153,6 +153,7 @@ Admin or Asset Manager. Updates the withdrawal delay for future swap-out request
 ## UpdateMinSwapInValue
 
 Admin or Asset Manager. Updates the minimum allowed value for a swap-in operation.
+An empty string "" or "0" clears the limit.
 
 * **Request:** `MsgUpdateMinSwapInValueRequest { authority, vault_address, min_swap_in_value }`
 * **Response:** `MsgUpdateMinSwapInValueResponse {}`
@@ -162,6 +163,7 @@ Admin or Asset Manager. Updates the minimum allowed value for a swap-in operatio
 ## UpdateMinSwapOutValue
 
 Admin or Asset Manager. Updates the minimum allowed value for a swap-out operation.
+An empty string "" or "0" clears the limit.
 
 * **Request:** `MsgUpdateMinSwapOutValueRequest { authority, vault_address, min_swap_out_value }`
 * **Response:** `MsgUpdateMinSwapOutValueResponse {}`
@@ -171,6 +173,7 @@ Admin or Asset Manager. Updates the minimum allowed value for a swap-out operati
 ## UpdateMaxSwapInValue
 
 Admin or Asset Manager. Updates the maximum allowed value for a swap-in operation.
+An empty string "" clears the limit. A value of "0" blocks all deposits.
 
 * **Request:** `MsgUpdateMaxSwapInValueRequest { authority, vault_address, max_swap_in_value }`
 * **Response:** `MsgUpdateMaxSwapInValueResponse {}`
@@ -180,6 +183,7 @@ Admin or Asset Manager. Updates the maximum allowed value for a swap-in operatio
 ## UpdateMaxSwapOutValue
 
 Admin or Asset Manager. Updates the maximum allowed value for a swap-out operation.
+An empty string "" clears the limit. A value of "0" blocks all withdrawals.
 
 * **Request:** `MsgUpdateMaxSwapOutValueRequest { authority, vault_address, max_swap_out_value }`
 * **Response:** `MsgUpdateMaxSwapOutValueResponse {}`

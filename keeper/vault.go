@@ -604,7 +604,7 @@ func (k *Keeper) AllowSwapInAmount(ctx sdk.Context, swapInAssest sdk.Coin, vault
 
 	if len(vault.MaxSwapInValue) != 0 {
 		maxLimit, ok := sdkmath.NewIntFromString(vault.MaxSwapInValue)
-		if ok && !maxLimit.IsZero() && assetInUnderlying.GT(maxLimit) {
+		if ok && assetInUnderlying.GT(maxLimit) {
 			return false, "is above the maximum allowed value", nil
 		}
 	}
@@ -628,7 +628,7 @@ func (k *Keeper) AllowSwapOutAmount(ctx sdk.Context, assets sdk.Coin, vault type
 
 	if len(vault.MaxSwapOutValue) != 0 {
 		maxLimit, ok := sdkmath.NewIntFromString(vault.MaxSwapOutValue)
-		if ok && !maxLimit.IsZero() && assetInUnderlying.GT(maxLimit) {
+		if ok && assetInUnderlying.GT(maxLimit) {
 			return false, "is above the maximum allowed value", nil
 		}
 	}

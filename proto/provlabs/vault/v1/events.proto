@@ -385,6 +385,7 @@ message EventMinSwapInValueUpdated {
   // authority is the address (admin or asset manager) that updated the limit.
   string authority = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // min_swap_in is the newly set minimum swap-in value, measured in the underlying_asset.
+  // An empty string "" or "0" indicates the minimum was cleared / no configured minimum.
   string min_swap_in = 3;
 }
 
@@ -395,6 +396,7 @@ message EventMinSwapOutValueUpdated {
   // authority is the address (admin or asset manager) that updated the limit.
   string authority = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // min_swap_out is the newly set minimum swap-out value, measured in the underlying_asset.
+  // An empty string "" or "0" indicates the minimum was cleared / no configured minimum.
   string min_swap_out = 3;
 }
 
@@ -405,6 +407,8 @@ message EventMaxSwapInValueUpdated {
   // authority is the address (admin or asset manager) that updated the limit.
   string authority = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // max_swap_in is the newly set maximum swap-in value, measured in the underlying_asset.
+  // - An empty string "" indicates no maximum limit.
+  // - A value of "0" blocks all deposits.
   string max_swap_in = 3;
 }
 
@@ -415,5 +419,7 @@ message EventMaxSwapOutValueUpdated {
   // authority is the address (admin or asset manager) that updated the limit.
   string authority = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // max_swap_out is the newly set maximum swap-out value, measured in the underlying_asset.
+  // - An empty string "" indicates no maximum limit.
+  // - A value of "0" blocks all withdrawals.
   string max_swap_out = 3;
 }

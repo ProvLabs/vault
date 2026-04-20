@@ -26613,7 +26613,7 @@ type MsgUpdateMinSwapInValueRequest struct {
 	// vault_address is the bech32 address of the vault.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// min_swap_in_value is the minimum value required for a deposit, measured in the underlying_asset.
-	// An empty string "" or "0" represents no minimum.
+	// An empty string "" or "0" clears the minimum / represents no minimum.
 	MinSwapInValue string `protobuf:"bytes,3,opt,name=min_swap_in_value,json=minSwapInValue,proto3" json:"min_swap_in_value,omitempty"`
 }
 
@@ -26696,7 +26696,7 @@ type MsgUpdateMinSwapOutValueRequest struct {
 	// vault_address is the bech32 address of the vault.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// min_swap_out_value is the minimum value required for a withdrawal, measured in the underlying_asset.
-	// An empty string "" or "0" represents no minimum.
+	// An empty string "" or "0" clears the minimum / represents no minimum.
 	MinSwapOutValue string `protobuf:"bytes,3,opt,name=min_swap_out_value,json=minSwapOutValue,proto3" json:"min_swap_out_value,omitempty"`
 }
 
@@ -26779,7 +26779,8 @@ type MsgUpdateMaxSwapInValueRequest struct {
 	// vault_address is the bech32 address of the vault.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// max_swap_in_value is the maximum value allowed for a deposit, measured in the underlying_asset.
-	// An empty string "" or "0" represents no maximum.
+	// - An empty string "" clears the maximum / represents no maximum.
+	// - A value of "0" blocks all deposits.
 	MaxSwapInValue string `protobuf:"bytes,3,opt,name=max_swap_in_value,json=maxSwapInValue,proto3" json:"max_swap_in_value,omitempty"`
 }
 
@@ -26862,7 +26863,8 @@ type MsgUpdateMaxSwapOutValueRequest struct {
 	// vault_address is the bech32 address of the vault.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// max_swap_out_value is the maximum value allowed for a withdrawal, measured in the underlying_asset.
-	// An empty string "" or "0" represents no maximum.
+	// - An empty string "" clears the maximum / represents no maximum.
+	// - A value of "0" blocks all withdrawals.
 	MaxSwapOutValue string `protobuf:"bytes,3,opt,name=max_swap_out_value,json=maxSwapOutValue,proto3" json:"max_swap_out_value,omitempty"`
 }
 

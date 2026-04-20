@@ -540,6 +540,16 @@ func (s *TestSuite) TestMsgServer_SwapIn_Failures() {
 			},
 			expectedErrSubstrs: []string{"above the maximum allowed value"},
 		},
+		{
+			name:  "swap in blocked by zero maximum",
+			setup: setup(true, false, "", "0"),
+			msg: types.MsgSwapInRequest{
+				Owner:        owner.String(),
+				VaultAddress: vaultAddr.String(),
+				Assets:       sdk.NewInt64Coin(underlyingDenom, 1),
+			},
+			expectedErrSubstrs: []string{"above the maximum allowed value"},
+		},
 
 		{
 			name:  "swap in enabled, vaulted paused",
@@ -768,6 +778,16 @@ func (s *TestSuite) TestMsgServer_SwapOut_Failures() {
 				Owner:        owner.String(),
 				VaultAddress: vaultAddr.String(),
 				Assets:       sdk.NewInt64Coin(shareDenom, 150_000_000),
+			},
+			expectedErrSubstrs: []string{"above the maximum allowed value"},
+		},
+		{
+			name:  "swap out blocked by zero maximum",
+			setup: setup(true, false, "", "0"),
+			msg: types.MsgSwapOutRequest{
+				Owner:        owner.String(),
+				VaultAddress: vaultAddr.String(),
+				Assets:       sdk.NewInt64Coin(shareDenom, 1_000_000),
 			},
 			expectedErrSubstrs: []string{"above the maximum allowed value"},
 		},

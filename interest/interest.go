@@ -65,6 +65,36 @@ func CalculateInterestEarned(principal sdk.Coin, rate string, periodSeconds int6
 	return interestAmountDec.TruncateInt(), nil
 }
 
+// CalculateAUMFee computes the technology fee based on the vault's AUM and configured basis points.
+//
+// Formula:
+//
+//	Fee = (AUM * (bips / 10000) * duration) / 31536000 (SecondsPerYear)
+//
+// Returns the fee as a truncated sdkmath.Int.
+func CalculateAUMFee(aum sdkmath.Int, bips uint32, duration int64) (sdkmath.Int, error) {
+	if aum.IsNegative() {
+		return sdkmath.Int{}, errors.New("aum cannot be negative")
+	}
+	if duration < 0 {
+		return sdkmath.Int{}, errors.New("duration cannot be negative")
+	}
+	if duration == 0 || aum.IsZero() || bips == 0 {
+		return sdkmath.ZeroInt(), nil
+	}
+
+	rate := sdkmath.LegacyNewDec(int64(bips)).Quo(sdkmath.LegacyNewDec(10_000))
+
+	// Fee = (AUM * rate * duration) / SecondsPerYear
+	aumDec := sdkmath.LegacyNewDecFromInt(aum)
+
+	durationDec := sdkmath.LegacyNewDec(duration)
+	yearDec := sdkmath.LegacyNewDec(SecondsPerYear)
+
+	fee := aumDec.Mul(rate).Mul(durationDec).Quo(yearDec)
+	return fee.TruncateInt(), nil
+}
+
 // CalculateExpiration determines the epoch time at which a vault will no longer be
 // able to pay the required interest on a principal amount.
 //

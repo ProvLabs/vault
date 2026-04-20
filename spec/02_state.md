@@ -11,10 +11,12 @@ Vaults may be configured with an optional **payment denom** in addition to the *
   - [Vault Lookup (prefix 0)](#vault-lookup-prefix-0)
   - [Payout Verification Set (prefix 1)](#payout-verification-set-prefix-1)
   - [Payout Timeout Queue (prefix 2)](#payout-timeout-queue-prefix-2)
-  - [Pending Swap-Out Queue (prefix 3)](#pending-swapout-queue-prefix-3)
-  - [Pending Swap-Out Sequence (prefix 4)](#pending-swapout-sequence-prefix-4)
-  - [Pending Swap-Out by Vault Index (prefix 5)](#pending-swapout-by-vault-index-prefix-5)
-  - [Pending Swap-Out by ID Index (prefix 6)](#pending-swapout-by-id-index-prefix-6)
+  - [Vault Fee Timeout Queue (prefix 7)](#vault-fee-timeout-queue-prefix-7)
+  - [Pending Swap-Out Queue (prefix 3)](#pending-swap-out-queue-prefix-3)
+  - [Pending Swap-Out Sequence (prefix 4)](#pending-swap-out-sequence-prefix-4)
+  - [Pending Swap-Out by Vault Index (prefix 5)](#pending-swap-out-by-vault-index-prefix-5)
+  - [Pending Swap-Out by ID Index (prefix 6)](#pending-swap-out-by-id-index-prefix-6)
+  - [AUM Fee Address (prefix 8)](#aum-fee-address-prefix-8)
 - [Deterministic Vault Addressing](#deterministic-vault-addressing)
 - [Genesis Notes](#genesis-notes)
 
@@ -29,6 +31,8 @@ Each vault is an `x/auth` account implementing `VaultAccountI`. The canonical re
 - Swap toggles, `WithdrawalDelaySeconds`, pause flags/reason and `PausedBalance` snapshot  
 - **Total supply-of-record:** `total_shares` (authoritative across chains; includes locally and externally held shares)  
 - **Bridging controls:** `bridge_address` (the sole authorized external address) and `bridge_enabled` (feature gate)
+- **Asset Management:** optional `asset_manager` address with delegated authority.
+- **AUM Fee State:** `fee_period_start`, `fee_period_timeout`, and `outstanding_aum_fee`.
 
 `VaultAccount` enforces invariants (e.g., payment denom cannot equal underlying, rate bounds, etc.) and provides helpers like `AcceptedDenoms()` and `ValidateAcceptedDenom`. :contentReference[oaicite:1]{index=1}
 
@@ -67,6 +71,14 @@ A time-ordered queue scheduling when a vault should be revisited for **automatic
 - **Value:** none  
 :contentReference[oaicite:5]{index=5}
 
+### Vault Fee Timeout Queue (prefix 7)
+
+A time-ordered queue scheduling when a vault should be revisited for **automatic AUM fee collection**.
+
+- **Prefix:** `VaultFeeTimeoutQueuePrefix` (7)  
+- **Key:** `(uint64 timeoutSeconds, sdk.AccAddress vault)`  
+- **Value:** none
+
 ### Pending Swap-Out Queue (prefix 3)
 
 Holds **withdrawal jobs** created by `SwapOut`. Jobs are processed after the vault’s `WithdrawalDelaySeconds` and include pointers to the vault and the original request.
@@ -100,6 +112,14 @@ Direct lookup by **request ID** (useful to expedite or cancel a single job).
 - **Key:** `uint64 id`  
 - **Value:** lightweight pointer to the queued entry (implementation detail)  
 :contentReference[oaicite:10]{index=10}
+
+### AUM Fee Address (prefix 8)
+
+The address authorized to receive collected AUM technology fees.
+
+- **Prefix:** `AUMFeeAddressKeyPrefix` (8)
+- **Key:** none (singleton)
+- **Value:** raw `sdk.AccAddress` bytes (prefix-agnostic ProvLabs collection address)
 
 ---
 

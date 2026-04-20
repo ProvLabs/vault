@@ -4,6 +4,7 @@ import "cosmossdk.io/errors"
 
 var (
 	ErrInvalidRequest = errors.Register(ModuleName, 0, "invalid request")
+	ErrVaultNotFound  = errors.Register(ModuleName, 1, "vault not found")
 )
 
 // CriticalError wraps an error that represents a critical, unrecoverable failure

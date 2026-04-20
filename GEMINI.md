@@ -40,16 +40,22 @@ The agent operates as a **Principal Blockchain Engineer** with deep expertise in
 - **Logging**: Use the module-scoped logger via `k.getLogger(ctx)`. Log messages should be structured and informative.
 - **Context Awareness**: `ctx sdk.Context` (or `context.Context` for gRPC) must be the first argument for all service-layer functions.
 
+### Refactoring & DRY Mandate
+- **Rule of Three**: If a setup block (marker creation, vault setup, funding) appears in three or more tests, it MUST be extracted into a helper in `suite_test.go`.
+- **Proactive Consolidation**: Before implementing a new test or fixing a bug, scan the surrounding file for setup duplication. If found, refactor into helpers BEFORE applying the fix or feature.
+- **Table-Driven Preference**: Convert existing sequential tests to table-driven patterns when adding new test cases to an existing function.
+
 ### Documentation
 - **Godocs for Everything**: Every exported function, interface, and type must have clear, high-context Godoc comments describing the "why" and architectural context.
 - **Protobuf Documentation**: Ensure all fields and messages in `.proto` files are thoroughly documented, as these propagate to generated code and public API specs.
 - **GEMINI.md**: Update this file when adding new modules or significant architectural patterns.
 
 ### Testing
-- **Table-Driven Tests**: Use standard table-driven patterns for unit and integration tests to ensure exhaustive coverage of edge cases.
-- **Self-Documenting Code**: Avoid internal comments within test logic. Instead, use descriptive variable names and clear logic flow that "reads" like a description of the test case.
-- **Reusable Test Helpers**: Abstract repeated operations (e.g., account setup, vault creation, state assertions) into reusable functions to keep test suites clean and maintainable.
-- **Meaningful Require/Assert Messages**: **Every** assertion must include a descriptive failure message that provides context:
+- **Table-Driven Tests**: **Mandatory** for unit and integration tests to ensure exhaustive coverage of edge cases.
+- **Descriptive Test Case Names**: Each test case in a table must have a clear, descriptive name that explains the scenario being tested (e.g., "interest period has elapsed, should pay interest").
+- **Self-Documenting Code**: Avoid internal comments within test logic. Instead, use descriptive variable names and clear logic flow that "reads" like a description of the test case. Eliminate redundant comments that merely restate the code's action.
+- **Global Reusable Test Helpers**: Abstract repeated operations (e.g., account setup, vault creation, state assertions) into reusable functions in `suite_test.go` to keep test suites clean and maintainable.
+- **Meaningful Require/Assert Messages**: **Every** assertion must include a descriptive failure message that provides context and explains the expected outcome versus the actual result:
     - *Good*: `s.Require().NoError(err, "failed to create vault for share denom %s", sharedenom)`
     - *Good*: `s.Equal(expectedSupply, actualSupply, "vault marker supply mismatch after swap-in for user %s", userAddr)`
 
@@ -58,7 +64,14 @@ The agent operates as a **Principal Blockchain Engineer** with deep expertise in
 2. **Validation**: Implement message validation and type logic in `types/`.
 3. **Logic**: Build core functionality in `keeper/` using descriptive naming and minimal comments.
 4. **Exposure**: Connect logic to `MsgServer` and `QueryServer`.
-5. **Verification**: Validate via exhaustive table-driven tests with meaningful failure messages.
+5. **Verification**: Validate using exhaustive [table-driven tests](#testing) with meaningful failure messages.
+
+### Agent Execution Checklist
+Before finalizing a Directive, the agent must verify compliance with the project standards:
+1. **Refactoring**: Adhere to the [Refactoring & DRY Mandate](#refactoring--dry-mandate) regarding test setup helpers.
+2. **Readability**: Ensure test logic follows the [Testing](#testing) guidelines for self-documenting code and readability.
+3. **Formatting**: Verify that large numeric literals use underscores as specified in [Code Style & Structure](#code-style--structure).
+4. **Assertions**: Confirm all assertions include high-context failure messages per the [Testing](#testing) standards.
 
 ---
 

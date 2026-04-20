@@ -86,20 +86,24 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ client.TxEncodingCo
 // AppModule implements the core vault module functionality.
 type AppModule struct {
 	AppModuleBasic
-	keeper       *keeper.Keeper
-	addressCodec address.Codec
-	markerKeeper types.MarkerKeeper
-	bankKeeper   types.BankKeeper
+	keeper          *keeper.Keeper
+	addressCodec    address.Codec
+	markerKeeper    types.MarkerKeeper
+	bankKeeper      types.BankKeeper
+	nameKeeper      types.NameKeeper
+	attributeKeeper types.AttributeKeeper
 }
 
 // NewAppModule creates a new AppModule instance.
-func NewAppModule(keeper *keeper.Keeper, mk types.MarkerKeeper, bk types.BankKeeper, addressCodec address.Codec) AppModule {
+func NewAppModule(keeper *keeper.Keeper, mk types.MarkerKeeper, bk types.BankKeeper, nk types.NameKeeper, attk types.AttributeKeeper, addressCodec address.Codec) AppModule {
 	return AppModule{
-		AppModuleBasic: NewAppModuleBasic(),
-		keeper:         keeper,
-		addressCodec:   addressCodec,
-		markerKeeper:   mk,
-		bankKeeper:     bk,
+		AppModuleBasic:  NewAppModuleBasic(),
+		keeper:          keeper,
+		addressCodec:    addressCodec,
+		markerKeeper:    mk,
+		bankKeeper:      bk,
+		nameKeeper:      nk,
+		attributeKeeper: attk,
 	}
 }
 
@@ -440,6 +444,31 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						{ProtoField: "asset_manager"},
 					},
 				},
+				{
+					RpcMethod: "UpdateParams",
+					Use:       "update-params [authority] [params]",
+					Alias:     []string{"up"},
+					Short:     "Update module parameters",
+					Long:      "Update the module-level parameters. Requires governance authority.",
+					Example:   fmt.Sprintf("%s update-params %s '{\"tech_fee_address\":\"%s\",\"default_aum_fee_bips\":15}'", txStart, exampleAuthorityAddr, exampleAuthorityAddr),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "authority"},
+						{ProtoField: "params"},
+					},
+				},
+				{
+					RpcMethod: "UpdateVaultAUMFeeBips",
+					Use:       "update-vault-aum-fee-bips [authority] [vault_address] [aum_fee_bips]",
+					Alias:     []string{"uvafb"},
+					Short:     "Update AUM fee bips for a specific vault",
+					Long:      "Update the AUM fee rate (in basis points) for a specific vault. Requires tech fee authority.",
+					Example:   fmt.Sprintf("%s update-vault-aum-fee-bips %s %s 20", txStart, exampleAuthorityAddr, exampleVaultAddr),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "authority"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "aum_fee_bips"},
+					},
+				},
 			},
 		},
 		Query: &autocliv1.ServiceCommandDescriptor{
@@ -508,6 +537,14 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						{ProtoField: "id"},
 					},
 				},
+				{
+					RpcMethod: "Params",
+					Use:       "params",
+					Alias:     []string{"p"},
+					Short:     "Query the current module parameters",
+					Long:      "Return the module-level parameters (tech fee address and default fee rate).",
+					Example:   fmt.Sprintf("%s params", queryStart),
+				},
 			},
 		},
 	}
@@ -530,6 +567,8 @@ type ModuleInputs struct {
 	AuthKeeper    types.AccountKeeper
 	MarkerKeeper  types.MarkerKeeper
 	BankKeeper    types.BankKeeper
+	NameKeeper    types.NameKeeper
+	AttrKeeper    types.AttributeKeeper
 }
 
 // ModuleOutputs defines the outputs of the vault module provider.
@@ -555,8 +594,10 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.AuthKeeper,
 		in.MarkerKeeper,
 		in.BankKeeper,
+		in.NameKeeper,
+		in.AttrKeeper,
 	)
-	m := NewAppModule(k, in.MarkerKeeper, in.BankKeeper, in.AddressCodec)
+	m := NewAppModule(k, in.MarkerKeeper, in.BankKeeper, in.NameKeeper, in.AttrKeeper, in.AddressCodec)
 	return ModuleOutputs{Keeper: k, Module: m}
 }
 

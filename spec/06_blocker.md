@@ -3,8 +3,8 @@
 
 This document explains how the vault module uses ABCI block hooks to keep vaults healthy over time and to safely fulfill delayed redemptions.
 
-- **BeginBlocker**: periodic interest accrual & scheduling.
-- **EndBlocker**: processes pending swap-outs (payouts) and advances interest scheduling state.
+- **BeginBlocker**: periodic interest accrual & AUM fee collection.
+- **EndBlocker**: processes pending swap-outs (payouts) and advances interest/fee scheduling state.
 
 ---
 <!-- TOC 2 2 -->
@@ -12,10 +12,11 @@ This document explains how the vault module uses ABCI block hooks to keep vaults
   - [Key Data Structures](#key-data-structures)
   - [BeginBlocker](#beginblocker)
     - [handleVaultInterestTimeouts](#handlevaultinteresttimeouts)
+    - [handleVaultFeeTimeouts](#handlevaultfeetimeouts)
   - [EndBlocker](#endblocker)
     - [processPendingSwapOuts](#processpendingswapouts)
     - [handleReconciledVaults](#handlereconciledvaults)
-  - [Interest Accrual & Transfers](#interest-accrual--transfers)
+  - [Interest & Fee Accrual](#interest--fee-accrual)
   - [Payout Processing Details](#payout-processing-details)
   - [Forecast Window](#forecast-window)
   - [Paused Vault Behavior](#paused-vault-behavior)
@@ -64,17 +65,32 @@ Processing model (safe “collect-then-mutate”):
 3. **For each vault**:
 
    * Compute `periodDuration` as `timeout - PeriodStart` (fallback to `now - PeriodStart` if needed).
-   * **Check ability to pay/refund** over `periodDuration` via `CanPayoutDuration`.
+   * **Check ability to pay/refund** over `periodDuration` via `CanPayInterestDuration`.
 
      * If **insufficient** → mark **depleted**.
      * If **sufficient** → execute `PerformVaultInterestTransfer` (emits `EventVaultReconcile`) and mark **reconciled**.
 4. **Advance state**:
 
-   * For **reconciled** vaults → `resetVaultInterestPeriods` (starts new period and enqueues next timeout).
+   * For **reconciled** vaults → `SafeEnqueuePayoutTimeout` (starts new period and enqueues next timeout).
    * For **depleted** vaults → `handleDepletedVaults` (sets `current_rate = "0"`; interest disabled, desired preserved).
 
 **Skips paused vaults.** They remain in place until unpaused.
 
+### handleVaultFeeTimeouts
+
+Reconciles the 15 bps AUM technology fee for vaults whose fee timeout has elapsed.
+
+1. **Collect due entries** from `VaultFeeTimeoutQueue` with `timeout <= now`.
+2. **Dequeue** each collected entry from the main context before processing to ensure it is not retried if a transient error occurs.
+3. **Attempt Atomic Reconciliation** (via `atomicallyReconcileFee` using `CacheContext`):
+   - **PerformVaultFeeTransfer**:
+     - Computes fee based on **Gross TVV**.
+     - Collects from principal marker into the configured ProvLabs collection address.
+     - **Success (Partial/Full Collection)**: If the marker lacks liquidity, the uncollected remainder is recorded in `outstanding_aum_fee`. This is considered a successful transfer.
+     - **Schedules next fee timeout** and commits state changes.
+   - **Failure (Transient Error)**:
+     - If reconciliation fails (e.g., missing NAV for denom conversion), the `CacheContext` is discarded.
+     - **Rescheduling**: The vault's fee timeout is rescheduled to the next block window (`RescheduleFeeTimeout`) on the main context to preserve accrued fees while preventing block-to-block retry loops.
 ---
 
 ## EndBlocker
@@ -94,6 +110,10 @@ To prevent a large queue from consuming excessive block time and memory, a maxim
 
    * Skip paused vaults; they remain queued.
 2. **Process each job** (see “Payout Processing Details”).
+   - Each job is processed within its own **CacheContext**.
+   - Failed payouts (recoverable) are rolled back atomically and the user is refunded.
+   - Successful payouts commit their state changes.
+   - This ensures failures do not leave the vault in an inconsistent state and do not interfere with other jobs in the same block.
 
    * Missing vault → dequeue & skip (logged).
    * Paused vault → leave queued (not dequeued).
@@ -110,22 +130,29 @@ This advances vaults from the **verification set**:
 2. **Remove** each from the set (before processing).
 3. **Partition** into:
 
-   * **Payable**: can cover the **forecast window** (see below) → re-enqueue next timeout (`SafeEnqueueTimeout`).
+   * **Payable**: can cover the **forecast window** (see below) → re-enqueue next timeout (`SafeEnqueuePayoutTimeout`).
    * **Depleted**: cannot cover forecast → disable interest (`current_rate = "0"`; desired preserved).
 
 ---
 
-## Interest Accrual & Transfers
+## Interest & Fee Accrual
 
-* **ReconcileVaultInterest**
-  No-op if paused. If `PeriodStart` is set and `now > PeriodStart`, it calls `PerformVaultInterestTransfer`. Always ensures the vault is in the **verification set** afterward (so it will be re-scheduled).
+* **ReconcileVault**
+  No-op if paused. Ensures both interest and AUM fees are reconciled before any balance-changing action. Uses a single `CacheContext` to ensure both transfers are atomic.
 
 * **PerformVaultInterestTransfer**
   Computes `interestEarned = f(principal, currentRate, duration)`.
 
   * **Positive** → transfer from **reserves (vault account)** → **principal (marker account)**.
   * **Negative** → refund from **principal** → **reserves** (bounded by available principal).
-    Emits `EventVaultReconcile` and leaves `PeriodStart` unchanged (the subsequent scheduler step will roll it forward).
+    Emits `EventVaultReconcile`.
+
+* **PerformVaultFeeTransfer**
+  Computes the 15 bps (0.15% annual) technology fee based on **Gross TVV**.
+  - Collects fee in the configured `payment_denom`.
+  - Transfers from **principal (marker account)** → ProvLabs collection address.
+  - Caps collection at available `payment_denom` balance.
+  - Emits `EventVaultFeeCollected`.
 
 * **UpdateInterestRates**
   Sets `current_rate` and `desired_rate`, emits `EventVaultInterestChange`, and persists the account.
@@ -136,7 +163,7 @@ This advances vaults from the **verification set**:
 
 * **processSingleWithdrawal** (called from `processPendingSwapOuts`)
 
-  1. **Reconcile interest** for the vault.
+  1. **ReconcileVault** (reconcile both interest and AUM fees using a single `CacheContext`/atomic transfer).
   2. Convert **shares → payout coin** (`underlying_asset` or optional **payment denom**), using current NAV and pro-rata TVV.
   3. **Payout assets** from **principal (marker)** → **owner** with transfer-agent context.
   4. **Burn shares**: move escrowed shares **vault → principal**, then `BurnCoin`.
@@ -154,7 +181,7 @@ This advances vaults from the **verification set**:
 
 * **AutoReconcilePayoutDuration = 24 hours**
   Used when deciding if a vault remains **payable**.
-  `handleReconciledVaults` calls `partitionVaults` which uses `CanPayoutDuration` over this window:
+  `handleReconciledVaults` calls `partitionVaults` which uses `CanPayInterestDuration` over this window:
 
   * **Positive interest** → must have reserves ≥ forecasted interest.
   * **Negative interest** → principal must be > 0.

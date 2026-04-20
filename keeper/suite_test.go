@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
@@ -14,6 +15,7 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	suite "github.com/stretchr/testify/suite"
 
@@ -38,10 +40,23 @@ type TestSuite struct {
 // commonly used test fixtures such as the vault keeper and an admin address.
 func (s *TestSuite) SetupTest() {
 	s.simApp = simapp.Setup(s.T())
-	s.ctx = s.simApp.NewContext(false)
+	s.ctx = s.simApp.NewContext(false).WithBlockTime(time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC))
 	s.k = *s.simApp.VaultKeeper
 
 	s.adminAddr = sdk.AccAddress("adminAddr___________")
+	if !s.simApp.AccountKeeper.HasAccount(s.ctx, s.adminAddr) {
+		s.simApp.AccountKeeper.SetAccount(s.ctx, s.simApp.AccountKeeper.NewAccountWithAddress(s.ctx, s.adminAddr))
+	}
+}
+
+// EnsureTechFeeAccount ensures that the AUM fee address account exists in the account keeper.
+func (s *TestSuite) EnsureTechFeeAccount() sdk.AccAddress {
+	provlabsAddr, err := s.k.GetAUMFeeAddress(s.ctx)
+	s.Require().NoError(err, "failed to get AUM fee address")
+	if !s.simApp.AccountKeeper.HasAccount(s.ctx, provlabsAddr) {
+		s.simApp.AccountKeeper.SetAccount(s.ctx, s.simApp.AccountKeeper.NewAccountWithAddress(s.ctx, provlabsAddr))
+	}
+	return provlabsAddr
 }
 
 // Context returns the current sdk.Context associated with the suite.
@@ -109,23 +124,73 @@ func (s *TestSuite) assertVaultAndMarkerBalances(vaultAddr sdk.AccAddress, share
 // event comparison in tests resilient to JSON/string formatting differences.
 func normalizeEvents(events sdk.Events) sdk.Events {
 	for i := range events {
-		for j := range events[i].Attributes {
-			events[i].Attributes[j].Value = strings.Trim(events[i].Attributes[j].Value, `"`)
-		}
+		events[i] = normalizeEvent(events[i])
 	}
 	return events
+}
+
+// normalizeEvent trims surrounding quotes from event attribute values.
+func normalizeEvent(event sdk.Event) sdk.Event {
+	for i := range event.Attributes {
+		event.Attributes[i].Value = strings.Trim(event.Attributes[i].Value, `"`)
+	}
+	return event
+}
+
+// SetupTechFeeAccount ensures the AUM fee collector account exists and has the required
+// attributes to receive the specified restricted asset. It returns the fee collector address.
+func (s *TestSuite) SetupTechFeeAccount(restrictedUnderlyingDenom string) sdk.AccAddress {
+	provlabsAddr, err := s.k.GetAUMFeeAddress(s.ctx)
+	s.Require().NoError(err, "failed to get AUM fee address")
+	if !s.simApp.AccountKeeper.HasAccount(s.ctx, provlabsAddr) {
+		s.simApp.AccountKeeper.SetAccount(s.ctx, s.simApp.AccountKeeper.NewAccountWithAddress(s.ctx, provlabsAddr))
+	}
+
+	if !s.simApp.NameKeeper.NameExists(s.ctx, restrictedUnderlyingDenom) {
+		s.Require().NoError(s.simApp.NameKeeper.SetNameRecord(s.ctx, restrictedUnderlyingDenom, s.adminAddr, false), "should successfully bind name for %s", restrictedUnderlyingDenom)
+	}
+	expireTime := time.Now().Add(24 * time.Hour)
+	attr := attrtypes.NewAttribute(restrictedUnderlyingDenom, provlabsAddr.String(), attrtypes.AttributeType_String, []byte("true"), &expireTime, "")
+	s.Require().NoError(s.simApp.AttributeKeeper.SetAttribute(s.ctx, attr, s.adminAddr), "should successfully set attribute for tech fee account")
+
+	return provlabsAddr
 }
 
 // requireAddFinalizeAndActivateMarker creates a restricted marker with the
 // provided denom and supply, then finalizes and activates it. It fails the
 // test immediately on any error.
 func (s *TestSuite) requireAddFinalizeAndActivateMarker(coin sdk.Coin, manager sdk.AccAddress, reqAttrs ...string) {
+	if m, _ := s.simApp.MarkerKeeper.GetMarkerByDenom(s.ctx, coin.Denom); m != nil {
+		return
+	}
 	markerAddr, err := markertypes.MarkerAddress(coin.Denom)
 	markerType := markertypes.MarkerType_Coin
 	if len(reqAttrs) > 0 {
 		markerType = markertypes.MarkerType_RestrictedCoin
 	}
 	s.Require().NoError(err, "MarkerAddress(%q)", coin.Denom)
+
+	// Ensure the tech fee and admin accounts exist
+	if !s.simApp.AccountKeeper.HasAccount(s.ctx, s.adminAddr) {
+		s.simApp.AccountKeeper.SetAccount(s.ctx, s.simApp.AccountKeeper.NewAccountWithAddress(s.ctx, s.adminAddr))
+	}
+	provlabsAddr, err := s.k.GetAUMFeeAddress(s.ctx)
+	s.Require().NoError(err, "failed to get AUM fee address")
+	if !s.simApp.AccountKeeper.HasAccount(s.ctx, provlabsAddr) {
+		s.simApp.AccountKeeper.SetAccount(s.ctx, s.simApp.AccountKeeper.NewAccountWithAddress(s.ctx, provlabsAddr))
+	}
+
+	// Ensure the tech fee account has the required attributes for restricted markers
+	for _, attrName := range reqAttrs {
+		// Only set the name if it's not already bound
+		if !s.simApp.NameKeeper.NameExists(s.ctx, attrName) {
+			s.Require().NoError(s.simApp.NameKeeper.SetNameRecord(s.ctx, attrName, s.adminAddr, false), "should successfully bind the name")
+		}
+		expireTime := time.Now().Add(365 * 24 * time.Hour)
+		attribute := attrtypes.NewAttribute(attrName, provlabsAddr.String(), attrtypes.AttributeType_String, []byte("true"), &expireTime, "")
+		s.Require().NoError(s.simApp.AttributeKeeper.SetAttribute(s.ctx, attribute, s.adminAddr), "should successfully set the required attribute on the tech fee account")
+	}
+
 	marker := &markertypes.MarkerAccount{
 		BaseAccount: &authtypes.BaseAccount{Address: markerAddr.String()},
 		Manager:     manager.String(),
@@ -153,25 +218,42 @@ func (s *TestSuite) requireAddFinalizeAndActivateMarker(coin sdk.Coin, manager s
 // requireAddFinalizeAndActivateReceiptMarker creates and activates a restricted marker
 // for the given coin and grants the grantee full permissions (mint, burn, transfer,
 // withdraw, deposit). This is used to replicate a receipt token. It fails the test if any step errors.
-func (s *TestSuite) requireAddFinalizeAndActivateReceiptMarker(coin sdk.Coin, grantee sdk.AccAddress) {
+func (s *TestSuite) requireAddFinalizeAndActivateReceiptMarker(coin sdk.Coin, grantees ...sdk.AccAddress) {
+	s.Require().NotEmpty(grantees, "requireAddFinalizeAndActivateReceiptMarker: grantees must not be empty")
 	markerAddr, err := markertypes.MarkerAddress(coin.Denom)
 	s.Require().NoError(err, "MarkerAddress(%q)", coin.Denom)
 
-	marker := &markertypes.MarkerAccount{
-		BaseAccount: &authtypes.BaseAccount{Address: markerAddr.String()},
-		Manager:     grantee.String(),
-		AccessControl: []markertypes.AccessGrant{
-			{
-				Address: grantee.String(),
-				Permissions: markertypes.AccessList{
-					markertypes.Access_Mint,
-					markertypes.Access_Burn,
-					markertypes.Access_Transfer,
-					markertypes.Access_Withdraw,
-					markertypes.Access_Deposit,
-				},
+	// Ensure the tech fee account has any required attributes if this was a restricted marker.
+	// For receipt markers, we usually don't have required attributes but we give the tech fee account transfer permission
+	// so it can receive the tokens if the marker is restricted.
+	provlabsAddr, err := s.k.GetAUMFeeAddress(s.ctx)
+	s.Require().NoError(err, "failed to get AUM fee address")
+
+	accessControl := make([]markertypes.AccessGrant, len(grantees)+1)
+	for i, grantee := range grantees {
+		accessControl[i] = markertypes.AccessGrant{
+			Address: grantee.String(),
+			Permissions: markertypes.AccessList{
+				markertypes.Access_Mint,
+				markertypes.Access_Burn,
+				markertypes.Access_Transfer,
+				markertypes.Access_Withdraw,
+				markertypes.Access_Deposit,
 			},
+		}
+	}
+	accessControl[len(grantees)] = markertypes.AccessGrant{
+		Address: provlabsAddr.String(),
+		Permissions: markertypes.AccessList{
+			markertypes.Access_Transfer,
+			markertypes.Access_Deposit,
 		},
+	}
+
+	marker := &markertypes.MarkerAccount{
+		BaseAccount:            &authtypes.BaseAccount{Address: markerAddr.String()},
+		Manager:                grantees[0].String(),
+		AccessControl:          accessControl,
 		Status:                 markertypes.StatusProposed,
 		Denom:                  coin.Denom,
 		Supply:                 coin.Amount,
@@ -236,6 +318,23 @@ func createSendCoinEvents(fromAddress, toAddress string, amount string) []sdk.Ev
 	return events
 }
 
+// vaultAttrs is a simple implementation of the types.VaultCreator interface
+// for use in testing.
+type vaultAttrs struct {
+	admin                  string
+	share                  string
+	underlying             string
+	payment                string
+	withdrawalDelaySeconds uint64
+	expected               types.VaultAccount
+}
+
+func (v vaultAttrs) GetAdmin() string                  { return v.admin }
+func (v vaultAttrs) GetShareDenom() string             { return v.share }
+func (v vaultAttrs) GetUnderlyingAsset() string        { return v.underlying }
+func (v vaultAttrs) GetPaymentDenom() string           { return v.payment }
+func (v vaultAttrs) GetWithdrawalDelaySeconds() uint64 { return v.withdrawalDelaySeconds }
+
 // setupBaseVaultRestricted creates a vault with a restricted underlying asset.
 // It establishes a marker for the underlying asset, requiring a specific attribute for transfers.
 // An optional paymentDenom can be provided for the vault's configuration.
@@ -283,6 +382,38 @@ func (s *TestSuite) setupBaseVault(underlyingDenom, shareDenom string, paymentDe
 	s.Require().NoError(err, "vault creation should succeed")
 
 	return vault
+}
+
+// CreateVaultWithParams creates a vault with the given parameters and returns the vault account.
+func (s *TestSuite) CreateVaultWithParams(shareDenom, underlyingDenom, paymentDenom string) *types.VaultAccount {
+	vault, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+		Admin:           s.adminAddr.String(),
+		ShareDenom:      shareDenom,
+		UnderlyingAsset: underlyingDenom,
+		PaymentDenom:    paymentDenom,
+	})
+	s.Require().NoError(err, "CreateVault should succeed for %s", shareDenom)
+	return vault
+}
+
+// FundMarker mints and sends the provided coins to the marker account associated with the share denom.
+func (s *TestSuite) FundMarker(shareDenom string, coins sdk.Coins) {
+	markerAddr := markertypes.MustGetMarkerAddress(shareDenom)
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, coins), "funding marker %s should not error", shareDenom)
+}
+
+// SetVaultRatesAndPeriod updates a vault's interest rates and fee period settings.
+func (s *TestSuite) SetVaultRatesAndPeriod(vault *types.VaultAccount, currentRate, desiredRate string, feeStart, feeTimeout int64) {
+	vault.CurrentInterestRate = currentRate
+	vault.DesiredInterestRate = desiredRate
+	vault.FeePeriodStart = feeStart
+	vault.FeePeriodTimeout = feeTimeout
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+}
+
+// SetCtxBlockTime updates the suite's context block time and resets the event manager.
+func (s *TestSuite) SetCtxBlockTime(t time.Time) {
+	s.ctx = s.ctx.WithBlockTime(t).WithEventManager(sdk.NewEventManager())
 }
 
 // createMarkerMintCoinEvents builds the expected event sequence for minting
@@ -447,6 +578,38 @@ func (s *TestSuite) bumpHeight() {
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
 }
 
+// setupReconcileVault initializes a vault with the provided parameters, including markers and funding.
+func (s *TestSuite) setupReconcileVault(interestRate string, periodStartSeconds int64, paused bool, underlying sdk.Coin, shareDenom string, totalShares sdk.Coin, testBlockTime time.Time) (sdk.AccAddress, *types.VaultAccount) {
+	s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
+	vaultAddr := types.GetVaultAddress(shareDenom)
+	_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+		Admin:           s.adminAddr.String(),
+		ShareDenom:      shareDenom,
+		UnderlyingAsset: underlying.Denom,
+	})
+	s.Require().NoError(err, "failed to create vault for share denom %s", shareDenom)
+
+	vault, err := s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "failed to get vault for address %s", vaultAddr.String())
+	vault.CurrentInterestRate = interestRate
+	vault.DesiredInterestRate = interestRate
+	vault.PeriodStart = periodStartSeconds
+	vault.FeePeriodStart = periodStartSeconds
+	vault.Paused = paused
+	vault.TotalShares = totalShares
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	err = FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(underlying))
+	s.Require().NoError(err, "failed to fund vault account %s with %s", vaultAddr.String(), underlying.String())
+	err = FundAccount(s.ctx, s.simApp.BankKeeper, markertypes.MustGetMarkerAddress(shareDenom), sdk.NewCoins(underlying))
+	s.Require().NoError(err, "failed to fund share marker account for denom %s with %s", shareDenom, underlying.String())
+
+	s.ctx = s.ctx.WithBlockTime(testBlockTime)
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+
+	return vaultAddr, vault
+}
+
 // createBridgeMintSharesEventsExact returns the exact ordered events a successful
 // BridgeMintShares emits: marker mint to the share marker, withdraw to the bridge,
 // then the vault EventBridgeMintShares—suitable for strict equality checks in tests.
@@ -512,6 +675,15 @@ func createReconcileEvents(vaultAddr, markerAddr sdk.AccAddress, interest, princ
 	return allEvents
 }
 
+func getAttribute(ev sdk.Event, key string) string {
+	for _, attr := range ev.Attributes {
+		if string(attr.Key) == key {
+			return string(attr.Value)
+		}
+	}
+	return ""
+}
+
 // expectedWithSimpleAPY calculates the total amount (principal + interest)
 // using a simple APY formula.
 func expectedWithSimpleAPY(baseAmt sdkmath.Int, rateStr string, seconds int64) (sdkmath.Int, error) {
@@ -524,4 +696,16 @@ func expectedWithSimpleAPY(baseAmt sdkmath.Int, rateStr string, seconds int64) (
 	timeFraction := durationDec.Quo(secondsPerYearDec)
 	interestDec := baseAmt.ToLegacyDec().Mul(rateDec).Mul(timeFraction)
 	return baseAmt.Add(interestDec.TruncateInt()), nil
+}
+
+// createVaultFeeCollectedEvent constructs the expected EventVaultFeeCollected event.
+func createVaultFeeCollectedEvent(vaultAddr sdk.AccAddress, aumSnapshot, collected, requested, outstanding sdk.Coin, duration int64) sdk.Event {
+	return sdk.NewEvent("provlabs.vault.v1.EventVaultFeeCollected",
+		sdk.NewAttribute("aum_snapshot", aumSnapshot.String()),
+		sdk.NewAttribute("collected_amount", collected.String()),
+		sdk.NewAttribute("duration_seconds", fmt.Sprintf("%v", duration)),
+		sdk.NewAttribute("outstanding_amount", outstanding.String()),
+		sdk.NewAttribute("requested_amount", requested.String()),
+		sdk.NewAttribute("vault_address", vaultAddr.String()),
+	)
 }

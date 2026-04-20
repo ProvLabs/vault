@@ -37,7 +37,7 @@ func (k *Keeper) processPendingSwapOuts(ctx sdk.Context, batchSize int) error {
 	})
 	if err != nil {
 		ctx.Logger().Error("error during pending withdrawal queue walk", "error", err)
-		return err
+		return fmt.Errorf("failed to walk pending swap out queue: %w", err)
 	}
 
 	k.processSwapOutJobs(ctx, jobsToProcess)
@@ -46,13 +46,15 @@ func (k *Keeper) processPendingSwapOuts(ctx sdk.Context, batchSize int) error {
 }
 
 // processSwapOutJobs iterates pending swap-out jobs collected for this block and executes them.
-// Behavior by case:
-//   - Missing vault: the job is dequeued and skipped.
-//   - Paused vault: the job remains queued (skipped for now) so it can be retried when unpaused.
-//   - Active vault: the job is dequeued and processed.
-//   - On recoverable failure, a refund is attempted. If the refund itself returns a critical error,
-//     the vault is auto-paused with a stable reason string.
-//   - On critical failure during processing, the vault is auto-paused with a stable reason string.
+//
+// The processing strategy involves:
+//  1. Verifying the vault exists and is not paused.
+//  2. Dequeuing the job on the main context immediately to ensure it is only attempted once,
+//     preventing infinite retry loops if a failure occurs during processing or refund.
+//  3. Executing the withdrawal logic (reconciliation, payout, and burning) within a single
+//     cache context to ensure atomicity. Changes are only committed to the main state on success.
+//  4. Handling recoverable failures by issuing a refund on the main context.
+//  5. Handling critical or unrecoverable failures by auto-pausing the associated vault.
 func (k *Keeper) processSwapOutJobs(ctx sdk.Context, jobsToProcess []types.PayoutJob) {
 	for _, j := range jobsToProcess {
 		vault, ok := k.tryGetVault(ctx, j.VaultAddr)
@@ -86,7 +88,9 @@ func (k *Keeper) processSwapOutJobs(ctx sdk.Context, jobsToProcess []types.Payou
 			continue
 		}
 
-		if err := k.processSingleWithdrawal(ctx, j.ID, j.Req, *vault); err != nil {
+		cacheCtx, write := ctx.CacheContext()
+
+		if err := k.processSingleWithdrawal(cacheCtx, j.ID, j.Req, *vault); err != nil {
 			var cErr *types.CriticalError
 			if errors.As(err, &cErr) {
 				k.autoPauseVault(ctx, vault, cErr.Reason)
@@ -94,7 +98,7 @@ func (k *Keeper) processSwapOutJobs(ctx sdk.Context, jobsToProcess []types.Payou
 			}
 
 			reason := k.getRefundReason(err)
-			ctx.Logger().Error(
+			k.getLogger(ctx).Error(
 				"failed to process withdrawal, issuing refund",
 				"withdrawal_id", j.ID,
 				"reason", reason,
@@ -106,11 +110,13 @@ func (k *Keeper) processSwapOutJobs(ctx sdk.Context, jobsToProcess []types.Payou
 					k.autoPauseVault(ctx, vault, cErr.Reason)
 				}
 			}
+		} else {
+			write()
 		}
 	}
 }
 
-// processSingleWithdrawal executes a pending swap-out. It first reconciles vault interest, then converts the user's
+// processSingleWithdrawal executes a pending swap-out. It first reconciles the vault (interest and AUM fees), then converts the user's
 // shares to the redeemable asset amount. It then pays out those assets to the owner and burns their escrowed shares.
 // It returns nil on success and emits an EventSwapOutCompleted. If a failure occurs before payout (e.g., insufficient
 // liquidity), a normal error is returned and can be refunded. If a failure occurs after payout (e.g., transfer to
@@ -130,8 +136,8 @@ func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.P
 		return fmt.Errorf("invalid principal address for denom %s: %w", req.Shares.Denom, err)
 	}
 
-	if err := k.reconcileVaultInterest(ctx, &vault); err != nil {
-		return fmt.Errorf("failed to reconcile vault interest: %w", err)
+	if err := k.reconcileVault(ctx, &vault); err != nil {
+		return fmt.Errorf("failed to reconcile vault: %w", err)
 	}
 
 	assets, err := k.ConvertSharesToRedeemCoin(ctx, vault, req.Shares.Amount, req.RedeemDenom)
@@ -140,7 +146,7 @@ func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.P
 	}
 
 	if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, vaultAddr), principalAddress, ownerAddr, sdk.NewCoins(assets)); err != nil {
-		return err
+		return fmt.Errorf("failed to payout assets to owner: %w", err)
 	}
 
 	if err := k.BankKeeper.SendCoins(ctx, vaultAddr, principalAddress, sdk.NewCoins(req.Shares)); err != nil {

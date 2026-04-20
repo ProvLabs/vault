@@ -61,10 +61,10 @@ func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom string, vault types.
 
 	if fwd == nil && rev == nil {
 		if errF != nil {
-			return math.Int{}, math.Int{}, errF
+			return math.Int{}, math.Int{}, fmt.Errorf("failed to get forward nav: %w", errF)
 		}
 		if errR != nil {
-			return math.Int{}, math.Int{}, errR
+			return math.Int{}, math.Int{}, fmt.Errorf("failed to get reverse nav: %w", errR)
 		}
 		return math.Int{}, math.Int{}, fmt.Errorf("nav not found for %s/%s", srcDenom, underlyingAsset)
 	}
@@ -115,9 +115,28 @@ func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom string, vault types.
 func (k Keeper) ToUnderlyingAssetAmount(ctx sdk.Context, vault types.VaultAccount, in sdk.Coin) (math.Int, error) {
 	priceAmount, volume, err := k.UnitPriceFraction(ctx, in.Denom, vault)
 	if err != nil {
-		return math.Int{}, err
+		return math.Int{}, fmt.Errorf("failed to get unit price fraction: %w", err)
 	}
 	return in.Amount.Mul(priceAmount).Quo(volume), nil
+}
+
+// FromUnderlyingAssetAmount converts an amount of vault.UnderlyingAsset into
+// the equivalent value in targetDenom using integer floor arithmetic.
+//
+// Formula:
+//
+//	value_in_target = inAmount * priceDenominator / priceNumerator
+//
+// where (priceNumerator, priceDenominator) are from UnitPriceFraction(targetDenom → underlying).
+func (k Keeper) FromUnderlyingAssetAmount(ctx sdk.Context, vault types.VaultAccount, inAmount math.Int, targetDenom string) (math.Int, error) {
+	priceNum, priceDen, err := k.UnitPriceFraction(ctx, targetDenom, vault)
+	if err != nil {
+		return math.Int{}, fmt.Errorf("failed to get unit price fraction: %w", err)
+	}
+	if priceNum.IsZero() {
+		return math.Int{}, fmt.Errorf("zero price for %s/%s", targetDenom, vault.UnderlyingAsset)
+	}
+	return inAmount.Mul(priceDen).Quo(priceNum), nil
 }
 
 // GetTVVInUnderlyingAsset returns the Total Vault Value (TVV) expressed in
@@ -148,7 +167,7 @@ func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccoun
 		}
 		val, err := k.ToUnderlyingAssetAmount(ctx, vault, balance)
 		if err != nil {
-			return math.Int{}, err
+			return math.Int{}, fmt.Errorf("failed to convert balance to underlying: %w", err)
 		}
 		total = total.Add(val)
 	}
@@ -169,7 +188,7 @@ func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccoun
 func (k Keeper) GetNAVPerShareInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccount) (math.Int, error) {
 	tvv, err := k.GetTVVInUnderlyingAsset(ctx, vault)
 	if err != nil {
-		return math.Int{}, err
+		return math.Int{}, fmt.Errorf("failed to get TVV: %w", err)
 	}
 
 	if vault.TotalShares.IsZero() {
@@ -192,11 +211,11 @@ func (k Keeper) GetNAVPerShareInUnderlyingAsset(ctx sdk.Context, vault types.Vau
 func (k Keeper) ConvertDepositToSharesInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccount, in sdk.Coin) (sdk.Coin, error) {
 	priceNum, priceDen, err := k.UnitPriceFraction(ctx, in.Denom, vault)
 	if err != nil {
-		return sdk.Coin{}, err
+		return sdk.Coin{}, fmt.Errorf("failed to get unit price fraction: %w", err)
 	}
 	tvv, err := k.GetTVVInUnderlyingAsset(ctx, vault)
 	if err != nil {
-		return sdk.Coin{}, err
+		return sdk.Coin{}, fmt.Errorf("failed to get TVV: %w", err)
 	}
 	amountNumerator := in.Amount.Mul(priceNum)
 	return utils.CalculateSharesProRataFraction(amountNumerator, priceDen, tvv, vault.TotalShares.Amount, vault.TotalShares.Denom)
@@ -220,11 +239,11 @@ func (k Keeper) ConvertSharesToRedeemCoin(ctx sdk.Context, vault types.VaultAcco
 	}
 	tvv, err := k.GetTVVInUnderlyingAsset(ctx, vault)
 	if err != nil {
-		return sdk.Coin{}, err
+		return sdk.Coin{}, fmt.Errorf("failed to get TVV: %w", err)
 	}
 	priceNum, priceDen, err := k.UnitPriceFraction(ctx, redeemDenom, vault)
 	if err != nil {
-		return sdk.Coin{}, err
+		return sdk.Coin{}, fmt.Errorf("failed to get unit price fraction: %w", err)
 	}
 	if priceNum.IsZero() {
 		return sdk.Coin{}, fmt.Errorf("zero price for %s/%s", redeemDenom, vault.UnderlyingAsset)

@@ -110,6 +110,10 @@ func TestPayoutTimeoutQueueWalkDueTimeouts(t *testing.T) {
 	require.NoError(t, q.Enqueue(ctx, 75, a2), "enqueue payout timeout (75) for a2 should succeed")
 	require.NoError(t, q.Enqueue(ctx, 500, a1), "enqueue payout timeout (500) for a1 should succeed")
 
+	require.EqualError(t, q.WalkDue(ctx, -1, func(ts uint64, _ sdk.AccAddress) (bool, error) {
+		return false, nil
+	}), "nowSec cannot be negative", "WalkDue with negative timestamp should return specific error")
+
 	var seen []uint64
 	require.NoError(t, q.WalkDue(ctx, 100, func(ts uint64, _ sdk.AccAddress) (bool, error) {
 		seen = append(seen, ts)
@@ -158,9 +162,14 @@ func TestPayoutTimeoutQueueRemoveAllTimeoutsForVault(t *testing.T) {
 
 	require.NoError(t, q.RemoveAllForVault(ctx, a1), "remove all timeouts for a1 should succeed")
 
+	seenA2 := false
 	err := q.Walk(ctx, func(timestamp uint64, address sdk.AccAddress) (bool, error) {
+		if address.Equals(a2) {
+			seenA2 = true
+		}
 		require.False(t, address.Equals(a1), "payout timeout queue should not include any entries for a1 after removal")
 		return false, nil
 	})
 	require.NoError(t, err, "walking the payout timeout queue after removal should not error")
+	require.True(t, seenA2, "payout timeout for a2 should still exist in the queue after a1 removal")
 }

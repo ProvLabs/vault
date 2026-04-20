@@ -16,20 +16,7 @@ import (
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
-type vaultAttrs struct {
-	admin                  string
-	share                  string
-	underlying             string
-	payment                string
-	withdrawalDelaySeconds uint64
-	expected               types.VaultAccount
-}
-
-func (v vaultAttrs) GetAdmin() string                  { return v.admin }
-func (v vaultAttrs) GetShareDenom() string             { return v.share }
-func (v vaultAttrs) GetUnderlyingAsset() string        { return v.underlying }
-func (v vaultAttrs) GetPaymentDenom() string           { return v.payment }
-func (v vaultAttrs) GetWithdrawalDelaySeconds() uint64 { return v.withdrawalDelaySeconds }
+// TestKeeperTestSuite is handled in suite_test.go
 
 func (s *TestSuite) TestCreateVault_Success() {
 	share := "vaultshare"
@@ -274,6 +261,8 @@ func (s *TestSuite) TestSwapOut_FailsWithRestrictedUnderlyingAssetNoAttributes()
 	shareDenom := "vshare"
 	restrictedUnderlyingDenom := "restrictedasset"
 
+	s.SetupTechFeeAccount(restrictedUnderlyingDenom)
+
 	restrictedMarkerAddr := markertypes.MustGetMarkerAddress(restrictedUnderlyingDenom)
 	restrictedMarker := markertypes.NewMarkerAccount(
 		authtypes.NewBaseAccountWithAddress(restrictedMarkerAddr),
@@ -281,6 +270,8 @@ func (s *TestSuite) TestSwapOut_FailsWithRestrictedUnderlyingAssetNoAttributes()
 		s.adminAddr,
 		[]markertypes.AccessGrant{
 			{Address: s.adminAddr.String(), Permissions: markertypes.AccessList{markertypes.Access_Mint, markertypes.Access_Admin, markertypes.Access_Withdraw, markertypes.Access_Burn, markertypes.Access_Transfer}},
+			{Address: s.EnsureTechFeeAccount().String(), Permissions: markertypes.AccessList{markertypes.Access_Transfer, markertypes.Access_Deposit}},
+			{Address: types.GetVaultAddress(shareDenom).String(), Permissions: markertypes.AccessList{markertypes.Access_Withdraw, markertypes.Access_Transfer}},
 		},
 		markertypes.StatusProposed,
 		markertypes.MarkerType_RestrictedCoin,
@@ -294,9 +285,21 @@ func (s *TestSuite) TestSwapOut_FailsWithRestrictedUnderlyingAssetNoAttributes()
 		underlying: restrictedUnderlyingDenom,
 	}
 	vault, err := s.k.CreateVault(s.ctx, vaultCfg)
-	s.Require().NoError(err, "vault creation with restricted underlying should succeed")
+	s.Require().NoError(err, "vault creation with restricted underlying should succeed when vault has transfer permission")
 	vault.SwapOutEnabled = true
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	marker, err := s.simApp.MarkerKeeper.GetMarker(s.ctx, restrictedMarkerAddr)
+	s.Require().NoError(err, "should fetch active marker")
+	activeMarker := marker.(*markertypes.MarkerAccount)
+
+	// Now REMOVE the transfer permission from the vault to test the "fail-on-no-attributes" path
+	activeMarker.AccessControl = []markertypes.AccessGrant{
+		{Address: s.adminAddr.String(), Permissions: markertypes.AccessList{markertypes.Access_Mint, markertypes.Access_Admin, markertypes.Access_Withdraw, markertypes.Access_Burn, markertypes.Access_Transfer}},
+		{Address: s.EnsureTechFeeAccount().String(), Permissions: markertypes.AccessList{markertypes.Access_Transfer, markertypes.Access_Deposit}},
+		{Address: types.GetVaultAddress(shareDenom).String(), Permissions: markertypes.AccessList{markertypes.Access_Withdraw}},
+	}
+	s.simApp.MarkerKeeper.SetMarker(s.ctx, activeMarker)
 
 	initialTVV := int64(500)
 	s.Require().NoError(s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), restrictedUnderlyingDenom, sdk.NewCoins(sdk.NewInt64Coin(restrictedUnderlyingDenom, initialTVV))))
@@ -310,13 +313,16 @@ func (s *TestSuite) TestSwapOut_FailsWithRestrictedUnderlyingAssetNoAttributes()
 	sharesToRedeem := sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(50))
 	_, err = s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sharesToRedeem, "")
 
-	s.Require().Error(err, "swap-out should fail because the sender lacks transfer permission for a restricted asset with no attributes")
-	s.Require().ErrorContains(err, "does not have transfer permissions", "error message should indicate missing transfer permission")
+	s.Require().Error(err, "swap-out should fail because the vault lacks transfer permission and the asset is restricted (even with no attributes)")
+	s.Require().ErrorContains(err, "does not have transfer permissions", "error should indicate missing transfer permissions")
 }
 
 func (s *TestSuite) TestSwapOut_FailsWithRestrictedUnderlyingAssetRequiredAttributes() {
 	shareDenom := "vshare"
 	restrictedUnderlyingDenom := "restrictedasset"
+
+	requiredAttr := "you.dont.have.me"
+	s.SetupTechFeeAccount(requiredAttr)
 
 	restrictedMarkerAddr := markertypes.MustGetMarkerAddress(restrictedUnderlyingDenom)
 	restrictedMarker := markertypes.NewMarkerAccount(
@@ -325,6 +331,8 @@ func (s *TestSuite) TestSwapOut_FailsWithRestrictedUnderlyingAssetRequiredAttrib
 		s.adminAddr,
 		[]markertypes.AccessGrant{
 			{Address: s.adminAddr.String(), Permissions: markertypes.AccessList{markertypes.Access_Mint, markertypes.Access_Admin, markertypes.Access_Withdraw, markertypes.Access_Burn, markertypes.Access_Transfer}},
+			{Address: s.EnsureTechFeeAccount().String(), Permissions: markertypes.AccessList{markertypes.Access_Transfer, markertypes.Access_Deposit}},
+			{Address: types.GetVaultAddress(shareDenom).String(), Permissions: markertypes.AccessList{markertypes.Access_Withdraw}},
 		},
 		markertypes.StatusProposed,
 		markertypes.MarkerType_RestrictedCoin,
@@ -361,6 +369,9 @@ func (s *TestSuite) TestSwapOut_SucceedsWithRestrictedUnderlyingAssetRequiredAtt
 	shareDenom := "vshare"
 	restrictedUnderlyingDenom := "restrictedasset"
 	requiredAttribute := "iamrequired"
+
+	s.SetupTechFeeAccount(requiredAttribute)
+
 	s.ctx = s.ctx.WithBlockTime(time.Now().UTC())
 
 	restrictedMarkerAddr := markertypes.MustGetMarkerAddress(restrictedUnderlyingDenom)
@@ -370,6 +381,8 @@ func (s *TestSuite) TestSwapOut_SucceedsWithRestrictedUnderlyingAssetRequiredAtt
 		s.adminAddr,
 		[]markertypes.AccessGrant{
 			{Address: s.adminAddr.String(), Permissions: markertypes.AccessList{markertypes.Access_Mint, markertypes.Access_Admin, markertypes.Access_Withdraw, markertypes.Access_Burn, markertypes.Access_Transfer}},
+			{Address: s.EnsureTechFeeAccount().String(), Permissions: markertypes.AccessList{markertypes.Access_Transfer, markertypes.Access_Deposit}},
+			{Address: types.GetVaultAddress(shareDenom).String(), Permissions: markertypes.AccessList{markertypes.Access_Withdraw}},
 		},
 		markertypes.StatusProposed,
 		markertypes.MarkerType_RestrictedCoin,
@@ -404,7 +417,6 @@ func (s *TestSuite) TestSwapOut_SucceedsWithRestrictedUnderlyingAssetRequiredAtt
 
 	s.simApp.AccountKeeper.SetAccount(s.ctx, s.simApp.AccountKeeper.NewAccountWithAddress(s.ctx, s.adminAddr))
 
-	s.Require().NoError(s.simApp.NameKeeper.SetNameRecord(s.ctx, requiredAttribute, s.adminAddr, false), "should successfully bind the name to the redeemer's address")
 	expireTime := time.Now().Add(24 * time.Hour)
 	attribute := attrtypes.NewAttribute(requiredAttribute, redeemerAddr.String(), attrtypes.AttributeType_String, []byte("true"), &expireTime, "")
 	s.Require().NoError(s.simApp.AttributeKeeper.SetAttribute(s.ctx, attribute, s.adminAddr), "should successfully set the required attribute on the redeemer")

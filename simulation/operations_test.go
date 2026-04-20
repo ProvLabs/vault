@@ -28,6 +28,8 @@ type VaultSimTestSuite struct {
 	cdc    codec.Codec
 	accs   []simtypes.Account
 	random *rand.Rand
+
+	provlabsAddr sdk.AccAddress
 }
 
 func TestVaultSimTestSuite(t *testing.T) {
@@ -36,15 +38,33 @@ func TestVaultSimTestSuite(t *testing.T) {
 
 func (s *VaultSimTestSuite) SetupTest() {
 	s.app = simapp.Setup(s.T())
-	s.ctx = s.app.BaseApp.NewContext(false)
+	s.ctx = s.app.BaseApp.NewContext(false).WithBlockTime(time.Now())
 	s.cdc = s.app.AppCodec()
 	s.random = rand.New(rand.NewSource(1))
 
 	s.setupAccounts()
 
-	err := simulation.CreateGlobalMarker(s.ctx, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, sdk.NewInt64Coin("underlying2vx", 100_000_000), s.accs, true)
+	provlabsAddr, err := s.app.VaultKeeper.GetAUMFeeAddress(s.ctx)
+	s.Require().NoError(err, "failed to get AUM fee address")
+	s.provlabsAddr = provlabsAddr
+	if !s.app.AccountKeeper.HasAccount(s.ctx, s.provlabsAddr) {
+		s.app.AccountKeeper.SetAccount(s.ctx, s.app.AccountKeeper.NewAccountWithAddress(s.ctx, s.provlabsAddr))
+	}
+
+	err = simulation.BindName(s.ctx, s.provlabsAddr, simulation.RequiredMarkerAttribute, s.app.NameKeeper)
+	s.Require().NoError(err, "BindName")
+
+	err = simulation.AddAttribute(s.ctx, s.provlabsAddr, s.provlabsAddr, simulation.RequiredMarkerAttribute, s.app.NameKeeper, s.app.AttributeKeeper)
+	s.Require().NoError(err, "AddAttribute aum fee address")
+
+	for _, acc := range s.accs {
+		err := simulation.AddAttribute(s.ctx, s.provlabsAddr, acc.Address, simulation.RequiredMarkerAttribute, s.app.NameKeeper, s.app.AttributeKeeper)
+		s.Require().NoError(err, "AddAttribute account")
+	}
+
+	err = simulation.CreateGlobalMarker(s.ctx, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, sdk.NewInt64Coin("underlying2vx", 100_000_000), s.accs, true, s.provlabsAddr)
 	s.Require().NoError(err, "CreateGlobalMarker underlying")
-	err = simulation.CreateGlobalMarker(s.ctx, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, sdk.NewInt64Coin("payment2vx", 100_000_000), s.accs, true)
+	err = simulation.CreateGlobalMarker(s.ctx, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, sdk.NewInt64Coin("payment2vx", 100_000_000), s.accs, true, s.provlabsAddr)
 	s.Require().NoError(err, "CreateGlobalMarker payment")
 }
 
@@ -71,7 +91,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgCreateVault() {
 
 	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
 	s.Require().NoError(err, "SimulateMsgCreateVault")
-	s.Require().True(opMsg.OK, "operationMsg.OK")
+	s.Require().True(opMsg.OK, "expected %s operation to be successful, but got: %s", opMsg.Name, opMsg.Comment)
 	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
 	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
 	s.Require().Len(futureOps, 0, "futureOperations")
@@ -86,7 +106,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgSwapIn() {
 	op := simulation.SimulateMsgSwapIn(*s.app.VaultKeeper)
 	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
 	s.Require().NoError(err, "SimulateMsgSwapIn")
-	s.Require().True(opMsg.OK, "operationMsg.OK")
+	s.Require().True(opMsg.OK, "expected %s operation to be successful, but got: %s", opMsg.Name, opMsg.Comment)
 	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
 	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
 	s.Require().Len(futureOps, 0, "futureOperations")
@@ -98,15 +118,13 @@ func (s *VaultSimTestSuite) TestSimulateMsgSwapOut() {
 
 	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "", "underlyingshare", selected, s.accs)
 	s.Require().NoError(err, "CreateVault")
-	err = simulation.AddAttribute(s.ctx, selected.Address, simulation.RequiredMarkerAttribute, s.app.NameKeeper, s.app.AttributeKeeper)
-	s.Require().NoError(err, "AddAttribute")
 	err = simulation.SwapIn(s.ctx, s.app.VaultKeeper, selected, "underlyingshare", sdk.NewInt64Coin("underlying2vx", 100))
 	s.Require().NoError(err, "SwapIn")
 
 	op := simulation.SimulateMsgSwapOut(*s.app.VaultKeeper)
 	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
 	s.Require().NoError(err, "SimulateMsgSwapOut")
-	s.Require().True(opMsg.OK, "operationMsg.OK")
+	s.Require().True(opMsg.OK, "expected %s operation to be successful, but got: %s", opMsg.Name, opMsg.Comment)
 	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
 	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
 	s.Require().Len(futureOps, 0, "futureOperations")
@@ -121,7 +139,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgToggleSwapIn() {
 	op := simulation.SimulateMsgToggleSwapIn(*s.app.VaultKeeper)
 	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
 	s.Require().NoError(err, "SimulateMsgToggleSwapIn")
-	s.Require().True(opMsg.OK, "operationMsg.OK")
+	s.Require().True(opMsg.OK, "expected %s operation to be successful, but got: %s", opMsg.Name, opMsg.Comment)
 	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
 	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
 	s.Require().Len(futureOps, 0, "futureOperations")
@@ -136,7 +154,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgToggleSwapOut() {
 	op := simulation.SimulateMsgToggleSwapOut(*s.app.VaultKeeper)
 	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
 	s.Require().NoError(err, "SimulateMsgToggleSwapOut")
-	s.Require().True(opMsg.OK, "operationMsg.OK")
+	s.Require().True(opMsg.OK, "expected %s operation to be successful, but got: %s", opMsg.Name, opMsg.Comment)
 	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
 	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
 	s.Require().Len(futureOps, 0, "futureOperations")
@@ -151,7 +169,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgPauseVault() {
 	op := simulation.SimulateMsgPauseVault(*s.app.VaultKeeper)
 	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
 	s.Require().NoError(err, "SimulateMsgPauseVault")
-	s.Require().True(opMsg.OK, "operationMsg.OK")
+	s.Require().True(opMsg.OK, "expected %s operation to be successful, but got: %s", opMsg.Name, opMsg.Comment)
 	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
 	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
 	s.Require().Len(futureOps, 0, "futureOperations")
@@ -168,7 +186,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgUnpauseVault() {
 	op := simulation.SimulateMsgUnpauseVault(*s.app.VaultKeeper)
 	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
 	s.Require().NoError(err, "SimulateMsgUnpauseVault")
-	s.Require().True(opMsg.OK, "operationMsg.OK")
+	s.Require().True(opMsg.OK, "expected %s operation to be successful, but got: %s", opMsg.Name, opMsg.Comment)
 	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
 	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
 	s.Require().Len(futureOps, 0, "futureOperations")
@@ -181,8 +199,6 @@ func (s *VaultSimTestSuite) TestSimulateMsgExpeditePendingSwapOut() {
 
 	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "", "underlyingshare", admin, s.accs)
 	s.Require().NoError(err, "CreateVault")
-	err = simulation.AddAttribute(s.ctx, user.Address, simulation.RequiredMarkerAttribute, s.app.NameKeeper, s.app.AttributeKeeper)
-	s.Require().NoError(err, "AddAttribute")
 	err = simulation.SwapIn(s.ctx, s.app.VaultKeeper, user, "underlyingshare", sdk.NewInt64Coin("underlying2vx", 100))
 	s.Require().NoError(err, "SwapIn")
 	shares := s.app.BankKeeper.GetBalance(s.ctx, user.Address, "underlyingshare")
@@ -193,7 +209,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgExpeditePendingSwapOut() {
 	op := simulation.SimulateMsgExpeditePendingSwapOut(*s.app.VaultKeeper)
 	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
 	s.Require().NoError(err, "SimulateMsgExpediteSwapOut")
-	s.Require().True(opMsg.OK, "operationMsg.OK")
+	s.Require().True(opMsg.OK, "expected %s operation to be successful, but got: %s", opMsg.Name, opMsg.Comment)
 	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
 	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
 	s.Require().Len(futureOps, 0, "futureOperations")
@@ -208,7 +224,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgDepositInterestFunds() {
 	op := simulation.SimulateMsgDepositInterestFunds(*s.app.VaultKeeper)
 	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
 	s.Require().NoError(err, "SimulateMsgDepositInterest")
-	s.Require().True(opMsg.OK, "operationMsg.OK")
+	s.Require().True(opMsg.OK, "expected %s operation to be successful, but got: %s", opMsg.Name, opMsg.Comment)
 	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
 	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
 	s.Require().Len(futureOps, 0, "futureOperations")
@@ -225,7 +241,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgDepositPrincipalFunds() {
 	op := simulation.SimulateMsgDepositPrincipalFunds(*s.app.VaultKeeper)
 	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
 	s.Require().NoError(err, "SimulateMsgDepositPrincipal")
-	s.Require().True(opMsg.OK, "operationMsg.OK")
+	s.Require().True(opMsg.OK, "expected %s operation to be successful, but got: %s", opMsg.Name, opMsg.Comment)
 	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
 	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
 	s.Require().Len(futureOps, 0, "futureOperations")
@@ -238,13 +254,11 @@ func (s *VaultSimTestSuite) TestSimulateMsgWithdrawInterestFunds() {
 	s.Require().NoError(err, "CreateVault")
 	_, err = simulation.DepositInterestFunds(s.ctx, s.app.VaultKeeper, "underlyingshare", sdk.NewInt64Coin("underlying2vx", 100))
 	s.Require().NoError(err, "DepositInterest")
-	err = simulation.AddAttribute(s.ctx, admin.Address, simulation.RequiredMarkerAttribute, s.app.NameKeeper, s.app.AttributeKeeper)
-	s.Require().NoError(err, "AddAttribute")
 
 	op := simulation.SimulateMsgWithdrawInterestFunds(*s.app.VaultKeeper)
 	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
 	s.Require().NoError(err, "SimulateMsgWithdrawInterest")
-	s.Require().True(opMsg.OK, "operationMsg.OK")
+	s.Require().True(opMsg.OK, "expected %s operation to be successful, but got: %s", opMsg.Name, opMsg.Comment)
 	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
 	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
 	s.Require().Len(futureOps, 0, "futureOperations")
@@ -259,13 +273,11 @@ func (s *VaultSimTestSuite) TestSimulateMsgWithdrawPrincipalFunds() {
 	s.Require().NoError(err, "PauseVault")
 	_, err = simulation.DepositPrincipalFunds(s.ctx, s.app.VaultKeeper, "underlyingshare", sdk.NewInt64Coin("underlying2vx", 100))
 	s.Require().NoError(err, "DepositPrincipal")
-	err = simulation.AddAttribute(s.ctx, admin.Address, simulation.RequiredMarkerAttribute, s.app.NameKeeper, s.app.AttributeKeeper)
-	s.Require().NoError(err, "AddAttribute")
 
 	op := simulation.SimulateMsgWithdrawPrincipalFunds(*s.app.VaultKeeper)
 	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
 	s.Require().NoError(err, "SimulateMsgWithdrawPrincipal")
-	s.Require().True(opMsg.OK, "operationMsg.OK")
+	s.Require().True(opMsg.OK, "expected %s operation to be successful, but got: %s", opMsg.Name, opMsg.Comment)
 	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
 	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
 	s.Require().Len(futureOps, 0, "futureOperations")
@@ -280,7 +292,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgUpdateInterestRate() {
 	op := simulation.SimulateMsgUpdateInterestRate(*s.app.VaultKeeper)
 	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
 	s.Require().NoError(err, "SimulateMsgUpdateInterestRate")
-	s.Require().True(opMsg.OK, "operationMsg.OK")
+	s.Require().True(opMsg.OK, "expected %s operation to be successful, but got: %s", opMsg.Name, opMsg.Comment)
 	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
 	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
 	s.Require().Len(futureOps, 0, "futureOperations")
@@ -295,7 +307,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgUpdateMinInterestRate() {
 	op := simulation.SimulateMsgUpdateMinInterestRate(*s.app.VaultKeeper)
 	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
 	s.Require().NoError(err, "SimulateMsgUpdateMinInterestRate")
-	s.Require().True(opMsg.OK, "operationMsg.OK")
+	s.Require().True(opMsg.OK, "expected %s operation to be successful, but got: %s", opMsg.Name, opMsg.Comment)
 	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
 	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
 	s.Require().Len(futureOps, 0, "futureOperations")
@@ -310,7 +322,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgUpdateMaxInterestRate() {
 	op := simulation.SimulateMsgUpdateMaxInterestRate(*s.app.VaultKeeper)
 	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
 	s.Require().NoError(err, "SimulateMsgUpdateMaxInterestRate")
-	s.Require().True(opMsg.OK, "operationMsg.OK")
+	s.Require().True(opMsg.OK, "expected %s operation to be successful, but got: %s", opMsg.Name, opMsg.Comment)
 	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
 	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
 	s.Require().Len(futureOps, 0, "futureOperations")
@@ -328,7 +340,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgToggleBridge() {
 	op := simulation.SimulateMsgToggleBridge(*s.app.VaultKeeper)
 	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
 	s.Require().NoError(err, "SimulateMsgToggleBridge")
-	s.Require().True(opMsg.OK, "operationMsg.OK")
+	s.Require().True(opMsg.OK, "expected %s operation to be successful, but got: %s", opMsg.Name, opMsg.Comment)
 	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
 	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
 	s.Require().Len(futureOps, 0, "futureOperations")
@@ -343,7 +355,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgSetBridgeAddress() {
 	op := simulation.SimulateMsgSetBridgeAddress(*s.app.VaultKeeper)
 	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
 	s.Require().NoError(err, "SimulateMsgSetBridgeAddress")
-	s.Require().True(opMsg.OK, "operationMsg.OK")
+	s.Require().True(opMsg.OK, "expected %s operation to be successful, but got: %s", opMsg.Name, opMsg.Comment)
 	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
 	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
 	s.Require().Len(futureOps, 0, "futureOperations")
@@ -356,10 +368,10 @@ func (s *VaultSimTestSuite) TestSimulateMsgBridgeMintShares() {
 	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "", "underlyingshare", admin, s.accs)
 	s.Require().NoError(err, "CreateVault")
 
-	err = simulation.BridgeAssets(s.ctx, s.app.VaultKeeper, "underlyingshare", sdk.NewInt64Coin("underlyingshare", 1000), sdk.NewInt64Coin("underlyingshare", 500))
+	err = simulation.BridgeAssets(s.ctx, s.app.VaultKeeper, "underlyingshare", sdk.NewInt64Coin("underlyingshare", 1_000), sdk.NewInt64Coin("underlyingshare", 500))
 	s.Require().NoError(err, "BridgeAssets")
 
-	err = simulation.UpdateVaultTotalShares(s.ctx, s.app.VaultKeeper, sdk.NewInt64Coin("underlyingshare", 1000))
+	err = simulation.UpdateVaultTotalShares(s.ctx, s.app.VaultKeeper, sdk.NewInt64Coin("underlyingshare", 1_000))
 	s.Require().NoError(err, "UpdateVaultTotalShares")
 
 	err = simulation.SetVaultBridge(s.ctx, s.app.VaultKeeper, "underlyingshare", bridge.Address, true)
@@ -368,7 +380,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgBridgeMintShares() {
 	op := simulation.SimulateMsgBridgeMintShares(*s.app.VaultKeeper)
 	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
 	s.Require().NoError(err, "SimulateMsgBridgeMintShares")
-	s.Require().True(opMsg.OK, "operationMsg.OK")
+	s.Require().True(opMsg.OK, "expected %s operation to be successful, but got: %s", opMsg.Name, opMsg.Comment)
 	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
 	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
 	s.Require().Len(futureOps, 0, "futureOperations")
@@ -384,18 +396,17 @@ func (s *VaultSimTestSuite) TestSimulateMsgBridgeBurnShares() {
 	err = simulation.SetVaultBridge(s.ctx, s.app.VaultKeeper, "underlyingshare", bridge.Address, true)
 	s.Require().NoError(err, "SetVaultBridge")
 
-	err = simulation.UpdateVaultTotalShares(s.ctx, s.app.VaultKeeper, sdk.NewInt64Coin("underlyingshare", 1000))
+	err = simulation.UpdateVaultTotalShares(s.ctx, s.app.VaultKeeper, sdk.NewInt64Coin("underlyingshare", 1_000))
 	s.Require().NoError(err, "UpdateVaultTotalShares")
 
-	// give bridge account some shares
-	shares := sdk.NewInt64Coin("underlyingshare", 1000)
+	shares := sdk.NewInt64Coin("underlyingshare", 1_000)
 	err = FundAccount(s.ctx, s.app.BankKeeper, bridge.Address, sdk.NewCoins(shares))
 	s.Require().NoError(err, "FundAccount for bridge")
 
 	op := simulation.SimulateMsgBridgeBurnShares(*s.app.VaultKeeper)
 	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
 	s.Require().NoError(err, "SimulateMsgBridgeBurnShares")
-	s.Require().True(opMsg.OK, "operationMsg.OK")
+	s.Require().True(opMsg.OK, "expected %s operation to be successful, but got: %s", opMsg.Name, opMsg.Comment)
 	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
 	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
 	s.Require().Len(futureOps, 0, "futureOperations")
@@ -410,11 +421,38 @@ func (s *VaultSimTestSuite) TestSimulateMsgUpdateWithdrawalDelay() {
 	op := simulation.SimulateMsgUpdateWithdrawalDelay(*s.app.VaultKeeper)
 	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
 	s.Require().NoError(err, "SimulateMsgUpdateWithdrawalDelay")
-	s.Require().True(opMsg.OK, "operationMsg.OK")
+	s.Require().True(opMsg.OK, "expected %s operation to be successful, but got: %s", opMsg.Name, opMsg.Comment)
 	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
 	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
 	s.Require().Len(futureOps, 0, "futureOperations")
 }
+
+func (s *VaultSimTestSuite) TestSimulateMsgUpdateParams() {
+	op := simulation.SimulateMsgUpdateParams(*s.app.VaultKeeper)
+
+	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
+	s.Require().NoError(err, "SimulateMsgUpdateParams")
+	s.Require().True(opMsg.OK, "expected %s operation to be successful, but got: %s", opMsg.Name, opMsg.Comment)
+	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
+	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
+	s.Require().Len(futureOps, 0, "futureOperations")
+}
+
+func (s *VaultSimTestSuite) TestSimulateMsgUpdateVaultAUMFeeBips() {
+	selected := s.accs[0]
+
+	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "", "underlyingshare", selected, s.accs)
+	s.Require().NoError(err, "CreateVault")
+
+	op := simulation.SimulateMsgUpdateVaultAUMFeeBips(*s.app.VaultKeeper)
+	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
+	s.Require().NoError(err, "SimulateMsgUpdateVaultAUMFeeBips")
+	s.Require().True(opMsg.OK, "expected %s operation to be successful, but got: %s", opMsg.Name, opMsg.Comment)
+	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
+	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
+	s.Require().Len(futureOps, 0, "futureOperations")
+}
+
 
 // GenerateTestingAccounts generates n new accounts, creates them (in state) and gives each 1 million power worth of bond tokens.
 func GenerateTestingAccounts(t *testing.T, ctx sdk.Context, app *simapp.SimApp, r *rand.Rand, n int) []simtypes.Account {

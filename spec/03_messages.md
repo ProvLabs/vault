@@ -18,6 +18,7 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 - [UpdateMinInterestRate](#updatemininterestrate)
 - [UpdateMaxInterestRate](#updatemaxinterestrate)
 - [UpdateInterestRate](#updateinterestrate)
+- [UpdateWithdrawalDelay](#updatewithdrawaldelay)
 - [ToggleSwapIn](#toggleswapin)
 - [ToggleSwapOut](#toggleswapout)
 - [DepositInterestFunds](#depositinterestfunds)
@@ -27,8 +28,10 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 - [ExpeditePendingSwapOut](#expeditependingswapout)
 - [PauseVault](#pausevault)
 - [UnpauseVault](#unpausevault)
+- [SetAssetManager](#setassetmanager)
 
 ---
+
 
 ## Endpoint Gating Matrix
 
@@ -44,6 +47,7 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 | `UpdateMinInterestRate`  | Admin only                        |                   ✅ |                 ✅ | Validates and updates the minimum allowable interest rate.                                                    |
 | `UpdateMaxInterestRate`  | Admin only                        |                   ✅ |                 ✅ | Validates and updates the maximum allowable interest rate.                                                    |
 | `UpdateInterestRate`     | Admin or Asset Manager            |                   ✅ |                 ✅ | Validates bounds, may reconcile, updates enable/disable flows.                                                |
+| `UpdateWithdrawalDelay`  | Admin or Asset Manager            |                   ✅ |                 ✅ | Updates the withdrawal delay for future swap-out requests.                                                    |
 | `ToggleSwapIn`           | Admin only                        |                   ✅ |                 ✅ | Allows enabling or disabling swap-in operations.                                                              |
 | `ToggleSwapOut`          | Admin only                        |                   ✅ |                 ✅ | Allows enabling or disabling swap-out operations.                                                             |
 | `DepositInterestFunds`   | Admin or Asset Manager            |                   ✅ |                 ✅ | Underlying denom only; reconciles after deposit.                                                              |
@@ -126,6 +130,15 @@ Transitions may enqueue or clear payout verification / timeout entries.
 
 * **Request:** `MsgUpdateInterestRateRequest { authority, vault_address, new_rate }`
 * **Response:** `MsgUpdateInterestRateResponse {}`
+
+---
+
+## UpdateWithdrawalDelay
+
+Admin or Asset Manager. Updates the withdrawal delay for future swap-out requests.
+
+* **Request:** `MsgUpdateWithdrawalDelayRequest { authority, vault_address, withdrawal_delay_seconds }`
+* **Response:** `MsgUpdateWithdrawalDelayResponse {}`
 
 ---
 

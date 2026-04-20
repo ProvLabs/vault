@@ -2,11 +2,12 @@ package types
 
 import (
 	fmt "fmt"
-
-	sdkmath "cosmossdk.io/math"
+	"math"
 
 	gproto "google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/protoadapt"
+
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -68,7 +69,7 @@ type VaultAccountI interface {
 }
 
 // NewVaultAccount creates a new vault with an optional payment denom allowed for I/O alongside the underlying asset.
-func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyingAsset, paymentDenom string, withdrawalDelay uint64) *VaultAccount {
+func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyingAsset, paymentDenom string, withdrawalDelay uint64, aumFeeBips uint32) *VaultAccount {
 	if paymentDenom == "" {
 		paymentDenom = underlyingAsset
 	}
@@ -87,6 +88,8 @@ func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyi
 		PausedBalance:          sdk.Coin{},
 		BridgeEnabled:          false,
 		BridgeAddress:          "",
+		OutstandingAumFee:      sdk.NewCoin(paymentDenom, sdkmath.ZeroInt()),
+		AumFeeBips:             aumFeeBips,
 	}
 }
 
@@ -147,34 +150,58 @@ func (v VaultAccount) Validate() error {
 		return fmt.Errorf("invalid desired interest rate: %s", v.DesiredInterestRate)
 	}
 
-	var min, max sdkmath.LegacyDec
+	var minRate, maxRate sdkmath.LegacyDec
 	hasMin := v.MinInterestRate != ""
 	hasMax := v.MaxInterestRate != ""
 
 	if hasMin {
-		min, err = sdkmath.LegacyNewDecFromStr(v.MinInterestRate)
+		minRate, err = sdkmath.LegacyNewDecFromStr(v.MinInterestRate)
 		if err != nil {
 			return fmt.Errorf("invalid min interest rate: %s", v.MinInterestRate)
 		}
 	}
 	if hasMax {
-		max, err = sdkmath.LegacyNewDecFromStr(v.MaxInterestRate)
+		maxRate, err = sdkmath.LegacyNewDecFromStr(v.MaxInterestRate)
 		if err != nil {
 			return fmt.Errorf("invalid max interest rate: %s", v.MaxInterestRate)
 		}
 	}
 
-	if hasMin && hasMax && min.GT(max) {
-		return fmt.Errorf("minimum interest rate %s cannot be greater than maximum interest rate %s", min, max)
+	if hasMin && hasMax && minRate.GT(maxRate) {
+		return fmt.Errorf("minimum interest rate %s cannot be greater than maximum interest rate %s", minRate, maxRate)
 	}
-	if hasMin && des.LT(min) {
-		return fmt.Errorf("desired interest rate %s is less than minimum interest rate %s", des, min)
+	if hasMin && des.LT(minRate) {
+		return fmt.Errorf("desired interest rate %s is less than minimum interest rate %s", des, minRate)
 	}
-	if hasMax && des.GT(max) {
-		return fmt.Errorf("desired interest rate %s is greater than maximum interest rate %s", des, max)
+	if hasMax && des.GT(maxRate) {
+		return fmt.Errorf("desired interest rate %s is greater than maximum interest rate %s", des, maxRate)
 	}
 	if !cur.IsZero() && !cur.Equal(des) {
 		return fmt.Errorf("current interest rate must be zero or equal to desired (current=%s desired=%s)", cur, des)
+	}
+
+	if v.PeriodStart < 0 {
+		return fmt.Errorf("period start cannot be negative: %d", v.PeriodStart)
+	}
+	if v.PeriodTimeout < 0 && v.PeriodTimeout != math.MinInt64 {
+		return fmt.Errorf("period timeout cannot be negative: %d", v.PeriodTimeout)
+	}
+
+	if v.FeePeriodStart < 0 {
+		return fmt.Errorf("fee period start cannot be negative: %d", v.FeePeriodStart)
+	}
+	if v.FeePeriodTimeout < 0 && v.FeePeriodTimeout != math.MinInt64 {
+		return fmt.Errorf("fee period timeout cannot be negative: %d", v.FeePeriodTimeout)
+	}
+	if v.AumFeeBips > 10_000 {
+		return fmt.Errorf("AUM fee bips cannot exceed 10,000: %d", v.AumFeeBips)
+	}
+
+	if !v.OutstandingAumFee.Amount.IsNil() && v.OutstandingAumFee.IsNegative() {
+		return fmt.Errorf("outstanding AUM fee cannot be negative: %s", v.OutstandingAumFee)
+	}
+	if (v.OutstandingAumFee.Denom != "" || (!v.OutstandingAumFee.Amount.IsNil() && !v.OutstandingAumFee.Amount.IsZero())) && v.OutstandingAumFee.Denom != v.PaymentDenom {
+		return fmt.Errorf("outstanding AUM fee denom %s does not match payment denom %s", v.OutstandingAumFee.Denom, v.PaymentDenom)
 	}
 
 	return nil

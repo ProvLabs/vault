@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -15,17 +17,23 @@ const (
 
 // BeginBlocker is a hook that is called at the beginning of every block.
 func (k *Keeper) BeginBlocker(ctx sdk.Context) error {
-	return k.handleVaultInterestTimeouts(ctx)
+	if err := k.handleVaultInterestTimeouts(ctx); err != nil {
+		return fmt.Errorf("failed to handle vault interest timeouts: %w", err)
+	}
+	if err := k.handleVaultFeeTimeouts(ctx); err != nil {
+		return fmt.Errorf("failed to handle vault fee timeouts: %w", err)
+	}
+	return nil
 }
 
 // EndBlocker is a hook that is called at the end of every block.
 func (k *Keeper) EndBlocker(ctx sdk.Context) error {
 	if err := k.processPendingSwapOuts(ctx, MaxSwapOutBatchSize); err != nil {
-		return err
+		return fmt.Errorf("failed to process pending swap outs: %w", err)
 	}
 
 	if err := k.handleReconciledVaults(ctx); err != nil {
-		return err
+		return fmt.Errorf("failed to handle reconciled vaults: %w", err)
 	}
 
 	return nil

@@ -6,7 +6,6 @@ import (
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
@@ -132,6 +131,7 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 				vault, err = s.k.GetVault(s.ctx, vaultAddr)
 				s.Require().NoError(err, "should successfully get vault")
 				vault.PeriodStart = 1
+				vault.FeePeriodStart = 1
 				s.Require().NoError(s.k.SetVaultAccount(s.ctx, vault), "must update vault account period")
 				s.Require().NotNil(vault, "vault should not be nil")
 
@@ -146,7 +146,10 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 				return ownerAddr, id
 			},
 			posthandler: func(ownerAddr sdk.AccAddress, reqID uint64, shareDenom string, vaultAddr sdk.AccAddress, principalAddress sdk.AccAddress, shares sdk.Coin, testBlockTime time.Time) {
-				s.assertBalance(ownerAddr, underlyingDenom, assets.Amount)
+				// Fee calculation: 50 * 0.0015 * testBlockTime.Unix() / 31,536,000
+				// For current epoch (~1.7B), fee is 4.
+				expectedAssets := sdk.NewInt64Coin(underlyingDenom, 46)
+				s.assertBalance(ownerAddr, underlyingDenom, expectedAssets.Amount)
 				supply := s.k.BankKeeper.GetSupply(s.ctx, shareDenom)
 				s.Require().True(supply.Amount.IsZero(), "total supply of shares should be zero after burn")
 
@@ -159,11 +162,27 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 				reconcileEvent, err := sdk.TypedEventToEvent(types.NewEventVaultReconcile(vaultAddr.String(), assets, assets, vault.CurrentInterestRate, testBlockTime.Unix()-1, math.NewInt(0)))
 				s.Require().NoError(err, "should not error converting typed EventVaultReconciled")
 				expectedEvents = append(expectedEvents, reconcileEvent)
-				expectedEvents = append(expectedEvents, createMarkerSetNAV(shareDenom, assets, "vault", shares.Amount.Uint64()))
-				expectedEvents = append(expectedEvents, createSendCoinEvents(principalAddress.String(), ownerAddr.String(), sdk.NewCoins(assets).String())...)
+
+				// AUM Fee events
+				provLabsAddr, err := s.k.GetAUMFeeAddress(s.ctx)
+				s.Require().NoError(err, "failed to get AUM fee address")
+				expectedEvents = append(expectedEvents, createSendCoinEvents(principalAddress.String(), provLabsAddr.String(), "4ylds")...)
+				feeEvent, err := sdk.TypedEventToEvent(&types.EventVaultFeeCollected{
+					VaultAddress:      vaultAddr.String(),
+					CollectedAmount:   "4ylds",
+					RequestedAmount:   "4ylds",
+					AumSnapshot:       "50ylds",
+					DurationSeconds:   testBlockTime.Unix() - 1,
+					OutstandingAmount: "0ylds",
+				})
+				s.Require().NoError(err, "TypedEventToEvent should not error for EventVaultFeeCollected")
+				expectedEvents = append(expectedEvents, feeEvent)
+
+				expectedEvents = append(expectedEvents, createMarkerSetNAV(shareDenom, expectedAssets, "vault", shares.Amount.Uint64()))
+				expectedEvents = append(expectedEvents, createSendCoinEvents(principalAddress.String(), ownerAddr.String(), sdk.NewCoins(expectedAssets).String())...)
 				expectedEvents = append(expectedEvents, createSendCoinEvents(vaultAddr.String(), principalAddress.String(), shares.String())...)
 				expectedEvents = append(expectedEvents, createMarkerBurn(vaultAddr, principalAddress, shares)...)
-				typedEvent, err := sdk.TypedEventToEvent(types.NewEventSwapOutCompleted(vaultAddr.String(), ownerAddr.String(), assets, reqID))
+				typedEvent, err := sdk.TypedEventToEvent(types.NewEventSwapOutCompleted(vaultAddr.String(), ownerAddr.String(), expectedAssets, reqID))
 				s.Require().NoError(err, "should not error converting typed EventSwapOutCompleted")
 				expectedEvents = append(expectedEvents, typedEvent)
 				s.Assert().Equal(
@@ -239,12 +258,15 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 				s.assertBalance(ownerAddr, shareDenom, shares.Amount)
 				reason := types.RefundReasonRecipientMissingAttributes
 
+				var entries []types.PendingSwapOut
+				err := s.k.PendingSwapOutQueue.Walk(s.ctx, func(_ int64, _ uint64, _ sdk.AccAddress, req types.PendingSwapOut) (bool, error) {
+					entries = append(entries, req)
+					return false, nil
+				})
+				s.Require().NoError(err, "walking the queue should not error")
+				s.Require().Empty(entries, "queue should be empty after a failed payout is refunded")
+
 				expectedEvents := sdk.Events{}
-				expectedEvents = append(expectedEvents, sdk.NewEvent(
-					banktypes.EventTypeCoinSpent,
-					sdk.NewAttribute(banktypes.AttributeKeySpender, principalAddress.String()),
-					sdk.NewAttribute(sdk.AttributeKeyAmount, assets.String()),
-				))
 				expectedEvents = append(expectedEvents, createSendCoinEvents(vaultAddr.String(), ownerAddr.String(), shares.String())...)
 				expectedEvent, err := sdk.TypedEventToEvent(types.NewEventSwapOutRefunded(vaultAddr.String(), ownerAddr.String(), shares, reqID, reason))
 				s.Require().NoError(err, "should not error converting typed EventSwapOutRefunded")

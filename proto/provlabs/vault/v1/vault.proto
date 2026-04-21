@@ -115,6 +115,34 @@ message VaultAccount {
   // A value of 0 disables AUM fee collection for this vault.
   // Negative values are not supported (uint32).
   uint32 aum_fee_bips = 24;
+
+  // min_swap_in_value is a string representing the minimum value required for a deposit.
+  // - The value is measured in the underlying_asset.
+  // - Incoming payment_denom deposits are converted to this unit before checking.
+  // - Values must be non-negative (>= 0).
+  // - If empty ("") or "0", there is no minimum limit.
+  string min_swap_in_value = 25 [(cosmos_proto.scalar) = "cosmos.IntString"];
+
+  // min_swap_out_value is a string representing the minimum value required for a withdrawal.
+  // - The value is measured in the underlying_asset.
+  // - Outgoing redemptions are converted to this unit before checking.
+  // - Values must be non-negative (>= 0).
+  // - If empty ("") or "0", there is no minimum limit.
+  string min_swap_out_value = 26 [(cosmos_proto.scalar) = "cosmos.IntString"];
+
+  // max_swap_in_value is a string representing the maximum value allowed for a deposit.
+  // - The value is measured in the underlying_asset.
+  // - Incoming payment_denom deposits are converted to this unit before checking.
+  // - Values must be positive (> 0).
+  // - An empty string "" indicates no maximum limit.
+  string max_swap_in_value = 27 [(cosmos_proto.scalar) = "cosmos.IntString"];
+
+  // max_swap_out_value is a string representing the maximum value allowed for a withdrawal.
+  // - The value is measured in the underlying_asset.
+  // - Outgoing redemptions are converted to this unit before checking.
+  // - Values must be positive (> 0).
+  // - An empty string "" indicates no maximum limit.
+  string max_swap_out_value = 28 [(cosmos_proto.scalar) = "cosmos.IntString"];
 }
 
 // AccountBalance represents the coin balance of a single account.

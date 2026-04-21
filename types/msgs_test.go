@@ -135,6 +135,58 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 			},
 			expectedErr: fmt.Errorf("withdrawal delay cannot exceed %d seconds", types.MaxWithdrawalDelay),
 		},
+		{
+			name: "invalid min swap in (not an integer)",
+			msg: types.MsgCreateVaultRequest{
+				Admin:           admin,
+				ShareDenom:      "vaultshare",
+				UnderlyingAsset: "uusd",
+				MinSwapInValue:  "abc",
+			},
+			expectedErr: fmt.Errorf("invalid swap-in limits: invalid min value: abc"),
+		},
+		{
+			name: "negative min swap in",
+			msg: types.MsgCreateVaultRequest{
+				Admin:           admin,
+				ShareDenom:      "vaultshare",
+				UnderlyingAsset: "uusd",
+				MinSwapInValue:  "-100",
+			},
+			expectedErr: fmt.Errorf("invalid swap-in limits: min value must be non-negative: -100"),
+		},
+		{
+			name: "min swap in > max swap in",
+			msg: types.MsgCreateVaultRequest{
+				Admin:           admin,
+				ShareDenom:      "vaultshare",
+				UnderlyingAsset: "uusd",
+				MinSwapInValue:  "1000",
+				MaxSwapInValue:  "500",
+			},
+			expectedErr: fmt.Errorf("invalid swap-in limits: min value 1000 cannot be greater than max value 500"),
+		},
+		{
+			name: "min swap out > max swap out",
+			msg: types.MsgCreateVaultRequest{
+				Admin:           admin,
+				ShareDenom:      "vaultshare",
+				UnderlyingAsset: "uusd",
+				MinSwapOutValue: "2000",
+				MaxSwapOutValue: "1000",
+			},
+			expectedErr: fmt.Errorf("invalid swap-out limits: min value 2000 cannot be greater than max value 1000"),
+		},
+		{
+			name: "max swap in is zero",
+			msg: types.MsgCreateVaultRequest{
+				Admin:           admin,
+				ShareDenom:      "vaultshare",
+				UnderlyingAsset: "uusd",
+				MaxSwapInValue:  "0",
+			},
+			expectedErr: fmt.Errorf("invalid swap-in limits: max value cannot be zero"),
+		},
 	}
 
 	for _, tc := range tests {
@@ -1558,4 +1610,259 @@ func TestMsgSetAssetManagerRequest_ValidateBasic(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestMsgUpdateSwapLimits_ValidateBasic(t *testing.T) {
+	authority := utils.TestAddress().Bech32
+	vault := utils.TestAddress().Bech32
+
+	type testCase struct {
+		name        string
+		msg         sdk.Msg
+		expectedErr string
+	}
+
+	runTests := func(t *testing.T, tests []testCase) {
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				var err error
+				if m, ok := tt.msg.(interface{ ValidateBasic() error }); ok {
+					err = m.ValidateBasic()
+				} else {
+					t.Fatalf("msg does not implement ValidateBasic")
+				}
+
+				if tt.expectedErr == "" {
+					assert.NoError(t, err, "Test %q: expected no error, but got %v", tt.name, err)
+				} else {
+					assert.Error(t, err, "Test %q: expected error containing %q, but got none", tt.name, tt.expectedErr)
+					if err != nil {
+						assert.Contains(t, err.Error(), tt.expectedErr, "Test %q: error message mismatch; expected it to contain %q, but got %q", tt.name, tt.expectedErr, err.Error())
+					}
+				}
+			})
+		}
+	}
+
+	t.Run("UpdateMinSwapInValue", func(t *testing.T) {
+		tests := []testCase{
+			{
+				name: "valid",
+				msg: &types.MsgUpdateMinSwapInValueRequest{
+					Authority:      authority,
+					VaultAddress:   vault,
+					MinSwapInValue: "100",
+				},
+				expectedErr: "",
+			},
+			{
+				name: "invalid authority",
+				msg: &types.MsgUpdateMinSwapInValueRequest{
+					Authority:      "bad",
+					VaultAddress:   vault,
+					MinSwapInValue: "100",
+				},
+				expectedErr: "invalid authority address",
+			},
+			{
+				name: "invalid vault address",
+				msg: &types.MsgUpdateMinSwapInValueRequest{
+					Authority:      authority,
+					VaultAddress:   "bad",
+					MinSwapInValue: "100",
+				},
+				expectedErr: "invalid vault address",
+			},
+			{
+				name: "invalid value (not int)",
+				msg: &types.MsgUpdateMinSwapInValueRequest{
+					Authority:      authority,
+					VaultAddress:   vault,
+					MinSwapInValue: "abc",
+				},
+				expectedErr: "invalid swap-in limits: invalid min value",
+			},
+			{
+				name: "negative value",
+				msg: &types.MsgUpdateMinSwapInValueRequest{
+					Authority:      authority,
+					VaultAddress:   vault,
+					MinSwapInValue: "-1",
+				},
+				expectedErr: "invalid swap-in limits: min value must be non-negative",
+			},
+		}
+		runTests(t, tests)
+	})
+
+	t.Run("UpdateMinSwapOutValue", func(t *testing.T) {
+		tests := []testCase{
+			{
+				name: "valid",
+				msg: &types.MsgUpdateMinSwapOutValueRequest{
+					Authority:       authority,
+					VaultAddress:    vault,
+					MinSwapOutValue: "200",
+				},
+				expectedErr: "",
+			},
+			{
+				name: "invalid authority",
+				msg: &types.MsgUpdateMinSwapOutValueRequest{
+					Authority:       "bad",
+					VaultAddress:    vault,
+					MinSwapOutValue: "100",
+				},
+				expectedErr: "invalid authority address",
+			},
+			{
+				name: "invalid vault address",
+				msg: &types.MsgUpdateMinSwapOutValueRequest{
+					Authority:       authority,
+					VaultAddress:    "bad",
+					MinSwapOutValue: "100",
+				},
+				expectedErr: "invalid vault address",
+			},
+			{
+				name: "invalid value (not int)",
+				msg: &types.MsgUpdateMinSwapOutValueRequest{
+					Authority:       authority,
+					VaultAddress:    vault,
+					MinSwapOutValue: "abc",
+				},
+				expectedErr: "invalid swap-out limits: invalid min value",
+			},
+			{
+				name: "negative value",
+				msg: &types.MsgUpdateMinSwapOutValueRequest{
+					Authority:       authority,
+					VaultAddress:    vault,
+					MinSwapOutValue: "-5",
+				},
+				expectedErr: "invalid swap-out limits: min value must be non-negative",
+			},
+		}
+		runTests(t, tests)
+	})
+
+	t.Run("UpdateMaxSwapInValue", func(t *testing.T) {
+		tests := []testCase{
+			{
+				name: "valid",
+				msg: &types.MsgUpdateMaxSwapInValueRequest{
+					Authority:      authority,
+					VaultAddress:   vault,
+					MaxSwapInValue: "1000",
+				},
+				expectedErr: "",
+			},
+			{
+				name: "invalid authority",
+				msg: &types.MsgUpdateMaxSwapInValueRequest{
+					Authority:      "bad",
+					VaultAddress:   vault,
+					MaxSwapInValue: "1000",
+				},
+				expectedErr: "invalid authority address",
+			},
+			{
+				name: "invalid vault address",
+				msg: &types.MsgUpdateMaxSwapInValueRequest{
+					Authority:      authority,
+					VaultAddress:   "bad",
+					MaxSwapInValue: "1000",
+				},
+				expectedErr: "invalid vault address",
+			},
+			{
+				name: "invalid value (not int)",
+				msg: &types.MsgUpdateMaxSwapInValueRequest{
+					Authority:      authority,
+					VaultAddress:   vault,
+					MaxSwapInValue: "abc",
+				},
+				expectedErr: "invalid swap-in limits: invalid max value",
+			},
+			{
+				name: "negative value",
+				msg: &types.MsgUpdateMaxSwapInValueRequest{
+					Authority:      authority,
+					VaultAddress:   vault,
+					MaxSwapInValue: "-10",
+				},
+				expectedErr: "invalid swap-in limits: max value must be non-negative",
+			},
+			{
+				name: "zero value (invalid)",
+				msg: &types.MsgUpdateMaxSwapInValueRequest{
+					Authority:      authority,
+					VaultAddress:   vault,
+					MaxSwapInValue: "0",
+				},
+				expectedErr: "invalid swap-in limits: max value cannot be zero",
+			},
+		}
+		runTests(t, tests)
+	})
+
+	t.Run("UpdateMaxSwapOutValue", func(t *testing.T) {
+		tests := []testCase{
+			{
+				name: "valid",
+				msg: &types.MsgUpdateMaxSwapOutValueRequest{
+					Authority:       authority,
+					VaultAddress:    vault,
+					MaxSwapOutValue: "2000",
+				},
+				expectedErr: "",
+			},
+			{
+				name: "invalid authority",
+				msg: &types.MsgUpdateMaxSwapOutValueRequest{
+					Authority:       "bad",
+					VaultAddress:    vault,
+					MaxSwapOutValue: "1000",
+				},
+				expectedErr: "invalid authority address",
+			},
+			{
+				name: "invalid vault address",
+				msg: &types.MsgUpdateMaxSwapOutValueRequest{
+					Authority:       authority,
+					VaultAddress:    "bad",
+					MaxSwapOutValue: "1000",
+				},
+				expectedErr: "invalid vault address",
+			},
+			{
+				name: "invalid value (not int)",
+				msg: &types.MsgUpdateMaxSwapOutValueRequest{
+					Authority:       authority,
+					VaultAddress:    vault,
+					MaxSwapOutValue: "abc",
+				},
+				expectedErr: "invalid swap-out limits: invalid max value",
+			},
+			{
+				name: "negative value",
+				msg: &types.MsgUpdateMaxSwapOutValueRequest{
+					Authority:       authority,
+					VaultAddress:    vault,
+					MaxSwapOutValue: "-100",
+				},
+				expectedErr: "invalid swap-out limits: max value must be non-negative",
+			},
+			{
+				name: "zero value (invalid)",
+				msg: &types.MsgUpdateMaxSwapOutValueRequest{
+					Authority:       authority,
+					VaultAddress:    vault,
+					MaxSwapOutValue: "0",
+				},
+				expectedErr: "invalid swap-out limits: max value cannot be zero",
+			},
+		}
+		runTests(t, tests)
+	})
 }

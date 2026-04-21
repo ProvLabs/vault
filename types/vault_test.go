@@ -562,6 +562,35 @@ func TestVaultAccount_Validate(t *testing.T) {
 			},
 			expectedErr: "outstanding AUM fee denom  does not match payment denom uusd",
 		},
+		{
+			name: "invalid swap-in limits",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
+				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
+				CurrentInterestRate: "0.0",
+				DesiredInterestRate: "0.0",
+				MinSwapInValue:      "abc",
+			},
+			expectedErr: "failed to validate swap-in limits: invalid min value: abc",
+		},
+		{
+			name: "invalid swap-out limits",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
+				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
+				CurrentInterestRate: "0.0",
+				DesiredInterestRate: "0.0",
+				MinSwapOutValue:     "1000",
+				MaxSwapOutValue:     "500",
+			},
+			expectedErr: "failed to validate swap-out limits: min value 1000 cannot be greater than max value 500",
+		},
 	}
 
 	for _, tc := range tests {
@@ -772,6 +801,102 @@ func TestPendingSwapOut_Validate(t *testing.T) {
 				require.Contains(t, err.Error(), tc.expectedErr, "error should contain expected message for test case: %s", tc.name)
 			} else {
 				require.NoError(t, err, "expected no error for test case: %s", tc.name)
+			}
+		})
+	}
+}
+
+func TestValidateSwapLimits(t *testing.T) {
+	tests := []struct {
+		name        string
+		min         string
+		max         string
+		expectedErr string
+	}{
+		{
+			name:        "valid - both empty",
+			min:         "",
+			max:         "",
+			expectedErr: "",
+		},
+		{
+			name:        "valid - min set, max empty",
+			min:         "100",
+			max:         "",
+			expectedErr: "",
+		},
+		{
+			name:        "valid - min empty, max set",
+			min:         "",
+			max:         "1000",
+			expectedErr: "",
+		},
+		{
+			name:        "valid - both set, min < max",
+			min:         "100",
+			max:         "1000",
+			expectedErr: "",
+		},
+		{
+			name:        "valid - both set, min == max",
+			min:         "500",
+			max:         "500",
+			expectedErr: "",
+		},
+		{
+			name:        "invalid - max is 0",
+			min:         "0",
+			max:         "0",
+			expectedErr: "max value cannot be zero; use toggle messages to disable swaps",
+		},
+		{
+			name:        "invalid - min not an integer",
+			min:         "abc",
+			max:         "",
+			expectedErr: "invalid min value: abc",
+		},
+		{
+			name:        "invalid - max not an integer",
+			min:         "",
+			max:         "1.5",
+			expectedErr: "invalid max value: 1.5",
+		},
+		{
+			name:        "invalid - min is negative",
+			min:         "-10",
+			max:         "",
+			expectedErr: "min value must be non-negative: -10",
+		},
+		{
+			name:        "invalid - max is negative",
+			min:         "",
+			max:         "-50",
+			expectedErr: "max value must be non-negative: -50",
+		},
+		{
+			name:        "invalid - min > max",
+			min:         "1000",
+			max:         "500",
+			expectedErr: "min value 1000 cannot be greater than max value 500",
+		},
+		{
+			name:        "invalid - min > 0, max is 0",
+			min:         "100",
+			max:         "0",
+			expectedErr: "max value cannot be zero",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := types.ValidateSwapLimits(tt.min, tt.max)
+			if tt.expectedErr == "" {
+				assert.NoError(t, err, "Test case %q: expected no error, but got %v", tt.name, err)
+			} else {
+				assert.Error(t, err, "Test case %q: expected error containing %q, but got none", tt.name, tt.expectedErr)
+				if err != nil {
+					assert.Contains(t, err.Error(), tt.expectedErr, "Test case %q: error message mismatch; expected it to contain %q, but got %q", tt.name, tt.expectedErr, err.Error())
+				}
 			}
 		})
 	}

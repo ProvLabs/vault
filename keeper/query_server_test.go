@@ -28,6 +28,10 @@ func (s *TestSuite) TestQueryServer_Vault() {
 			s.Assert().Equal(expected.Vault.TotalShares, actual.Vault.TotalShares, "vault total shares")
 			s.Assert().Equal(expected.Vault.UnderlyingAsset, actual.Vault.UnderlyingAsset, "vault underlying asset")
 			s.Assert().Equal(expected.Vault.AumFeeBips, actual.Vault.AumFeeBips, "vault AUM fee bips")
+			s.Assert().Equal(expected.Vault.MinSwapInValue, actual.Vault.MinSwapInValue, "vault MinSwapInValue")
+			s.Assert().Equal(expected.Vault.MinSwapOutValue, actual.Vault.MinSwapOutValue, "vault MinSwapOutValue")
+			s.Assert().Equal(expected.Vault.MaxSwapInValue, actual.Vault.MaxSwapInValue, "vault MaxSwapInValue")
+			s.Assert().Equal(expected.Vault.MaxSwapOutValue, actual.Vault.MaxSwapOutValue, "vault MaxSwapOutValue")
 			s.Assert().Equal(expected.Principal.Address, actual.Principal.Address, "principal address")
 			s.Assert().Equal(expected.Principal.Coins, actual.Principal.Coins, "principal coins")
 			s.Assert().Equal(expected.Reserves.Address, actual.Reserves.Address, "reserves address")
@@ -67,7 +71,7 @@ func (s *TestSuite) TestQueryServer_Vault() {
 			Setup: setupVaults,
 			Req:   &types.QueryVaultRequest{Id: addr1.String()},
 			ExpectedResp: &types.QueryVaultResponse{
-				Vault: *types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, underlying, payment, 0, 15),
+				Vault: *types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, underlying, payment, 0, 15, "", "", "", ""),
 				Principal: types.AccountBalance{
 					Address: markerAddr1.String(),
 					Coins:   sdk.NewCoins(sdk.NewInt64Coin(underlying, 100), sdk.NewInt64Coin(payment, 250)),
@@ -84,7 +88,7 @@ func (s *TestSuite) TestQueryServer_Vault() {
 			Setup: setupVaults,
 			Req:   &types.QueryVaultRequest{Id: shareDenom2},
 			ExpectedResp: &types.QueryVaultResponse{
-				Vault: *types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, underlying, payment, 0, 15),
+				Vault: *types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, underlying, payment, 0, 15, "", "", "", ""),
 				Principal: types.AccountBalance{
 					Address: markerAddr2.String(),
 					Coins:   sdk.NewCoins(sdk.NewInt64Coin(underlying, 200), sdk.NewInt64Coin(payment, 100)),
@@ -144,9 +148,13 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 				PaymentDenom    string
 				AumFeeBips      uint32
 				IsPaused        bool
-			}
+				MinSwapInValue  string
+				MinSwapOutValue string
+				MaxSwapInValue  string
+				MaxSwapOutValue string
+				}
 
-			toViews := func(vs []types.VaultAccount) []vaultView {
+				toViews := func(vs []types.VaultAccount) []vaultView {
 				out := make([]vaultView, 0, len(vs))
 				for _, v := range vs {
 					out = append(out, vaultView{
@@ -157,11 +165,14 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 						PaymentDenom:    v.GetPaymentDenom(),
 						AumFeeBips:      v.AumFeeBips,
 						IsPaused:        v.GetPaused(),
+						MinSwapInValue:  v.MinSwapInValue,
+						MinSwapOutValue: v.MinSwapOutValue,
+						MaxSwapInValue:  v.MaxSwapInValue,
+						MaxSwapOutValue: v.MaxSwapOutValue,
 					})
 				}
 				return out
-			}
-
+				}
 			s.Assert().ElementsMatch(toViews(expected.Vaults), toViews(actual.Vaults), "vaults do not match")
 
 			if expected.Pagination != nil {
@@ -202,7 +213,7 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 			Req: &types.QueryVaultsRequest{},
 			ExpectedResp: &types.QueryVaultsResponse{
 				Vaults: []types.VaultAccount{
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", "usdc", 0, 15),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", "usdc", 0, 15, "", "", "", ""),
 				},
 				Pagination: &query.PageResponse{Total: 1},
 			},
@@ -238,9 +249,9 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 			Req: &types.QueryVaultsRequest{},
 			ExpectedResp: &types.QueryVaultsResponse{
 				Vaults: []types.VaultAccount{
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", "usdc", 0, 15),
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash", "usdc", 0, 15),
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr3), admin, shareDenom3, "usdf", "usdc", 0, 15),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", "usdc", 0, 15, "", "", "", ""),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash", "usdc", 0, 15, "", "", "", ""),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr3), admin, shareDenom3, "usdf", "usdc", 0, 15, "", "", "", ""),
 				},
 				Pagination: &query.PageResponse{Total: 3},
 			},
@@ -278,8 +289,8 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 			},
 			ExpectedResp: &types.QueryVaultsResponse{
 				Vaults: []types.VaultAccount{
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr3), admin, shareDenom3, "usdf", "usdc", 0, 15),
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", "usdc", 0, 15),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr3), admin, shareDenom3, "usdf", "usdc", 0, 15, "", "", "", ""),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", "usdc", 0, 15, "", "", "", ""),
 				},
 				Pagination: &query.PageResponse{
 					NextKey: []byte("not nil"),
@@ -319,8 +330,8 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 			},
 			ExpectedResp: &types.QueryVaultsResponse{
 				Vaults: []types.VaultAccount{
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", "usdc", 0, 15),
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash", "usdc", 0, 15),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", "usdc", 0, 15, "", "", "", ""),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash", "usdc", 0, 15, "", "", "", ""),
 				},
 				Pagination: &query.PageResponse{Total: 3},
 			},
@@ -358,7 +369,7 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 			},
 			ExpectedResp: &types.QueryVaultsResponse{
 				Vaults: []types.VaultAccount{
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash", "usdc", 0, 15),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash", "usdc", 0, 15, "", "", "", ""),
 				},
 				Pagination: &query.PageResponse{},
 			},
@@ -396,9 +407,9 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 			},
 			ExpectedResp: &types.QueryVaultsResponse{
 				Vaults: []types.VaultAccount{
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", "usdc", 0, 15),
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash", "usdc", 0, 15),
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr3), admin, shareDenom3, "usdf", "usdc", 0, 15),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", "usdc", 0, 15, "", "", "", ""),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash", "usdc", 0, 15, "", "", "", ""),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr3), admin, shareDenom3, "usdf", "usdc", 0, 15, "", "", "", ""),
 				},
 				Pagination: &query.PageResponse{Total: 3},
 			},
@@ -436,8 +447,8 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 			},
 			ExpectedResp: &types.QueryVaultsResponse{
 				Vaults: []types.VaultAccount{
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash", "usdc", 0, 15),
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", "usdc", 0, 15),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash", "usdc", 0, 15, "", "", "", ""),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", "usdc", 0, 15, "", "", "", ""),
 				},
 				Pagination: &query.PageResponse{
 					NextKey: []byte("not nil"),

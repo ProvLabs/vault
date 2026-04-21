@@ -69,7 +69,18 @@ type VaultAccountI interface {
 }
 
 // NewVaultAccount creates a new vault with an optional payment denom allowed for I/O alongside the underlying asset.
-func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyingAsset, paymentDenom string, withdrawalDelay uint64, aumFeeBips uint32) *VaultAccount {
+//
+// The vault's operational limits are configured via:
+//   - withdrawalDelay: minimum seconds a swap-out must wait in queue.
+//   - aumFeeBips: annual management fee in basis points (1/100th of 1%).
+//   - minSwapInValue / minSwapOutValue: minimum amount of underlying asset required for swaps.
+//     An empty string "" or "0" indicates no minimum limit.
+//   - maxSwapInValue / maxSwapOutValue: maximum allowed amount of underlying asset for swaps.
+//     An empty string "" indicates no maximum limit. A value of "0" is invalid and rejected
+//     by validation (administrators should use Toggle messages to disable operations instead).
+//
+// All swap limit values are represented as integer strings (cosmos.IntString).
+func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyingAsset, paymentDenom string, withdrawalDelay uint64, aumFeeBips uint32, minSwapInValue, minSwapOutValue, maxSwapInValue, maxSwapOutValue string) *VaultAccount {
 	if paymentDenom == "" {
 		paymentDenom = underlyingAsset
 	}
@@ -90,12 +101,53 @@ func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyi
 		BridgeAddress:          "",
 		OutstandingAumFee:      sdk.NewCoin(paymentDenom, sdkmath.ZeroInt()),
 		AumFeeBips:             aumFeeBips,
+		MinSwapInValue:         minSwapInValue,
+		MinSwapOutValue:        minSwapOutValue,
+		MaxSwapInValue:         maxSwapInValue,
+		MaxSwapOutValue:        maxSwapOutValue,
 	}
 }
 
 // Clone makes a VaultAccount instance copy.
 func (v VaultAccount) Clone() *VaultAccount {
 	return protoadapt.MessageV1Of(gproto.Clone(protoadapt.MessageV2Of(&v))).(*VaultAccount)
+}
+
+// ValidateSwapLimits ensures that the provided min and max swap values are valid
+// integers, non-negative, and consistent (min <= max).
+// An empty string represents no limit. For maximums, "0" blocks all operations.
+func ValidateSwapLimits(minStr, maxStr string) error {
+	var minVal sdkmath.Int
+	if minStr != "" {
+		var ok bool
+		minVal, ok = sdkmath.NewIntFromString(minStr)
+		if !ok {
+			return fmt.Errorf("invalid min value: %s", minStr)
+		}
+		if minVal.IsNegative() {
+			return fmt.Errorf("min value must be non-negative: %s", minStr)
+		}
+	} else {
+		minVal = sdkmath.ZeroInt()
+	}
+
+	if maxStr != "" {
+		maxVal, ok := sdkmath.NewIntFromString(maxStr)
+		if !ok {
+			return fmt.Errorf("invalid max value: %s", maxStr)
+		}
+		if maxVal.IsNegative() {
+			return fmt.Errorf("max value must be non-negative: %s", maxStr)
+		}
+		if maxVal.IsZero() {
+			return fmt.Errorf("max value cannot be zero; use toggle messages to disable swaps")
+		}
+		if minVal.GT(maxVal) {
+			return fmt.Errorf("min value %s cannot be greater than max value %s", minStr, maxStr)
+		}
+	}
+
+	return nil
 }
 
 // Validate performs a series of checks to ensure the VaultAccount is correctly configured.
@@ -202,6 +254,14 @@ func (v VaultAccount) Validate() error {
 	}
 	if (v.OutstandingAumFee.Denom != "" || (!v.OutstandingAumFee.Amount.IsNil() && !v.OutstandingAumFee.Amount.IsZero())) && v.OutstandingAumFee.Denom != v.PaymentDenom {
 		return fmt.Errorf("outstanding AUM fee denom %s does not match payment denom %s", v.OutstandingAumFee.Denom, v.PaymentDenom)
+	}
+
+	if err := ValidateSwapLimits(v.MinSwapInValue, v.MaxSwapInValue); err != nil {
+		return fmt.Errorf("failed to validate swap-in limits: %w", err)
+	}
+
+	if err := ValidateSwapLimits(v.MinSwapOutValue, v.MaxSwapOutValue); err != nil {
+		return fmt.Errorf("failed to validate swap-out limits: %w", err)
 	}
 
 	return nil

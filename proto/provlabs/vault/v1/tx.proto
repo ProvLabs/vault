@@ -39,6 +39,18 @@ service Msg {
   // UpdateWithdrawalDelay allows updating the withdrawal delay for a vault.
   rpc UpdateWithdrawalDelay(MsgUpdateWithdrawalDelayRequest) returns (MsgUpdateWithdrawalDelayResponse);
 
+  // UpdateMinSwapInValue sets the minimum allowed value for a swap-in operation.
+  rpc UpdateMinSwapInValue(MsgUpdateMinSwapInValueRequest) returns (MsgUpdateMinSwapInValueResponse);
+
+  // UpdateMinSwapOutValue sets the minimum allowed value for a swap-out operation.
+  rpc UpdateMinSwapOutValue(MsgUpdateMinSwapOutValueRequest) returns (MsgUpdateMinSwapOutValueResponse);
+
+  // UpdateMaxSwapInValue sets the maximum allowed value for a swap-in operation.
+  rpc UpdateMaxSwapInValue(MsgUpdateMaxSwapInValueRequest) returns (MsgUpdateMaxSwapInValueResponse);
+
+  // UpdateMaxSwapOutValue sets the maximum allowed value for a swap-out operation.
+  rpc UpdateMaxSwapOutValue(MsgUpdateMaxSwapOutValueRequest) returns (MsgUpdateMaxSwapOutValueResponse);
+
   // ToggleSwapIn allows enabling or disabling swap-in operations for a vault.
   rpc ToggleSwapIn(MsgToggleSwapInRequest) returns (MsgToggleSwapInResponse);
 
@@ -111,6 +123,22 @@ message MsgCreateVaultRequest {
   // withdrawal_delay_seconds is the time period (in seconds) that a withdrawal
   // must wait in the pending queue before being processed.
   uint64 withdrawal_delay_seconds = 5;
+  // min_swap_in_value is the minimum value required for a deposit, measured in the underlying_asset.
+  // - Values must be non-negative (>= 0).
+  // - An empty string "" or "0" indicates no minimum.
+  string min_swap_in_value = 6 [(cosmos_proto.scalar) = "cosmos.IntString"];
+  // min_swap_out_value is the minimum value required for a withdrawal, measured in the underlying_asset.
+  // - Values must be non-negative (>= 0).
+  // - An empty string "" or "0" indicates no minimum.
+  string min_swap_out_value = 7 [(cosmos_proto.scalar) = "cosmos.IntString"];
+  // max_swap_in_value is the maximum value allowed for a deposit, measured in the underlying_asset.
+  // - Values must be positive (> 0).
+  // - An empty string "" clears the maximum / represents no maximum.
+  string max_swap_in_value = 8 [(cosmos_proto.scalar) = "cosmos.IntString"];
+  // max_swap_out_value is the maximum value allowed for a withdrawal, measured in the underlying_asset.
+  // - Values must be positive (> 0).
+  // - An empty string "" indicates no maximum limit.
+  string max_swap_out_value = 9 [(cosmos_proto.scalar) = "cosmos.IntString"];
 }
 
 // MsgCreateVaultResponse is the response message for the CreateVault endpoint.
@@ -240,6 +268,74 @@ message MsgUpdateWithdrawalDelayRequest {
 
 // MsgUpdateWithdrawalDelayResponse is the response message for the UpdateWithdrawalDelay endpoint.
 message MsgUpdateWithdrawalDelayResponse {}
+
+// MsgUpdateMinSwapInValueRequest is the request message for updating the minimum swap-in value of a vault.
+message MsgUpdateMinSwapInValueRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority is the bech32 address of the vault administrator or asset manager.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 2;
+  // min_swap_in_value is the minimum value required for a deposit, measured in the underlying_asset.
+  // - Values must be non-negative (>= 0).
+  // - An empty string "" or "0" clears the minimum / represents no minimum.
+  string min_swap_in_value = 3 [(cosmos_proto.scalar) = "cosmos.IntString"];
+}
+
+// MsgUpdateMinSwapInValueResponse is the response message for the UpdateMinSwapInValue endpoint.
+message MsgUpdateMinSwapInValueResponse {}
+
+// MsgUpdateMinSwapOutValueRequest is the request message for updating the minimum swap-out value of a vault.
+message MsgUpdateMinSwapOutValueRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority is the bech32 address of the vault administrator or asset manager.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 2;
+  // min_swap_out_value is the minimum value required for a withdrawal, measured in the underlying_asset.
+  // - Values must be non-negative (>= 0).
+  // - An empty string "" or "0" clears the minimum / represents no minimum.
+  string min_swap_out_value = 3 [(cosmos_proto.scalar) = "cosmos.IntString"];
+}
+
+// MsgUpdateMinSwapOutValueResponse is the response message for the UpdateMinSwapOutValue endpoint.
+message MsgUpdateMinSwapOutValueResponse {}
+
+// MsgUpdateMaxSwapInValueRequest is the request message for updating the maximum swap-in value of a vault.
+message MsgUpdateMaxSwapInValueRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority is the bech32 address of the vault administrator or asset manager.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 2;
+  // max_swap_in_value is the maximum value allowed for a deposit, measured in the underlying_asset.
+  // - Values must be positive (> 0).
+  // - An empty string "" clears the maximum / represents no maximum.
+  string max_swap_in_value = 3 [(cosmos_proto.scalar) = "cosmos.IntString"];
+}
+
+// MsgUpdateMaxSwapInValueResponse is the response message for the UpdateMaxSwapInValue endpoint.
+message MsgUpdateMaxSwapInValueResponse {}
+
+// MsgUpdateMaxSwapOutValueRequest is the request message for updating the maximum swap-out value of a vault.
+message MsgUpdateMaxSwapOutValueRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority is the bech32 address of the vault administrator or asset manager.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 2;
+  // max_swap_out_value is the maximum value allowed for a withdrawal, measured in the underlying_asset.
+  // - Values must be positive (> 0).
+  // - An empty string "" clears the maximum / represents no maximum.
+  string max_swap_out_value = 3 [(cosmos_proto.scalar) = "cosmos.IntString"];
+}
+
+// MsgUpdateMaxSwapOutValueResponse is the response message for the UpdateMaxSwapOutValue endpoint.
+message MsgUpdateMaxSwapOutValueResponse {}
 
 // MsgToggleSwapInRequest is the request message for enabling or disabling swap-in operations for a vault.
 message MsgToggleSwapInRequest {

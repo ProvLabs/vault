@@ -312,3 +312,39 @@ func NewEventVaultAUMFeeBipsUpdated(vaultAddress, authority string, aumFeeBips u
 		AumFeeBips:   aumFeeBips,
 	}
 }
+
+// NewEventMinSwapInValueUpdated creates a new EventMinSwapInValueUpdated event.
+func NewEventMinSwapInValueUpdated(vaultAddress, authority, minSwapIn string) *EventMinSwapInValueUpdated {
+	return &EventMinSwapInValueUpdated{
+		VaultAddress: vaultAddress,
+		Authority:    authority,
+		MinSwapIn:    minSwapIn,
+	}
+}
+
+// NewEventMinSwapOutValueUpdated creates a new EventMinSwapOutValueUpdated event.
+func NewEventMinSwapOutValueUpdated(vaultAddress, authority, minSwapOut string) *EventMinSwapOutValueUpdated {
+	return &EventMinSwapOutValueUpdated{
+		VaultAddress: vaultAddress,
+		Authority:    authority,
+		MinSwapOut:   minSwapOut,
+	}
+}
+
+// NewEventMaxSwapInValueUpdated creates a new EventMaxSwapInValueUpdated event.
+func NewEventMaxSwapInValueUpdated(vaultAddress, authority, maxSwapIn string) *EventMaxSwapInValueUpdated {
+	return &EventMaxSwapInValueUpdated{
+		VaultAddress: vaultAddress,
+		Authority:    authority,
+		MaxSwapIn:    maxSwapIn,
+	}
+}
+
+// NewEventMaxSwapOutValueUpdated creates a new EventMaxSwapOutValueUpdated event.
+func NewEventMaxSwapOutValueUpdated(vaultAddress, authority, maxSwapOut string) *EventMaxSwapOutValueUpdated {
+	return &EventMaxSwapOutValueUpdated{
+		VaultAddress: vaultAddress,
+		Authority:    authority,
+		MaxSwapOut:   maxSwapOut,
+	}
+}

@@ -43,12 +43,9 @@ func (k msgServer) SetShareDenomMetadata(goCtx context.Context, msg *types.MsgSe
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
-	vault, err := k.GetVault(ctx, vaultAddr)
+	vault, err := k.getVault(ctx, vaultAddr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get vault: %w", err)
-	}
-	if vault == nil {
-		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+		return nil, err
 	}
 	if err := vault.ValidateAdmin(msg.Admin); err != nil {
 		return nil, fmt.Errorf("failed to validate admin: %w", err)
@@ -107,12 +104,9 @@ func (k msgServer) UpdateMinInterestRate(goCtx context.Context, msg *types.MsgUp
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
-	vault, err := k.GetVault(ctx, vaultAddr)
+	vault, err := k.getVault(ctx, vaultAddr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get vault: %w", err)
-	}
-	if vault == nil {
-		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+		return nil, err
 	}
 	if err := vault.ValidateAdmin(msg.Admin); err != nil {
 		return nil, fmt.Errorf("failed to validate admin: %w", err)
@@ -132,12 +126,9 @@ func (k msgServer) UpdateMaxInterestRate(goCtx context.Context, msg *types.MsgUp
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
-	vault, err := k.GetVault(ctx, vaultAddr)
+	vault, err := k.getVault(ctx, vaultAddr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get vault: %w", err)
-	}
-	if vault == nil {
-		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+		return nil, err
 	}
 	if err := vault.ValidateAdmin(msg.Admin); err != nil {
 		return nil, fmt.Errorf("failed to validate admin: %w", err)
@@ -155,12 +146,9 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
-	vault, err := k.GetVault(ctx, vaultAddr)
+	vault, err := k.getVault(ctx, vaultAddr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get vault: %w", err)
-	}
-	if vault == nil {
-		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+		return nil, err
 	}
 	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, fmt.Errorf("failed to validate management authority: %w", err)
@@ -225,12 +213,9 @@ func (k msgServer) UpdateWithdrawalDelay(goCtx context.Context, msg *types.MsgUp
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
-	vault, err := k.GetVault(ctx, vaultAddr)
+	vault, err := k.getVault(ctx, vaultAddr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get vault: %w", err)
-	}
-	if vault == nil {
-		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+		return nil, err
 	}
 	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, fmt.Errorf("failed to validate management authority: %w", err)
@@ -243,18 +228,95 @@ func (k msgServer) UpdateWithdrawalDelay(goCtx context.Context, msg *types.MsgUp
 	return &types.MsgUpdateWithdrawalDelayResponse{}, nil
 }
 
+// UpdateMinSwapInValue sets the minimum allowed value for a swap-in operation.
+func (k msgServer) UpdateMinSwapInValue(goCtx context.Context, msg *types.MsgUpdateMinSwapInValueRequest) (*types.MsgUpdateMinSwapInValueResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vault, err := k.getVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, err
+	}
+	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+		return nil, fmt.Errorf("unauthorized: %w", err)
+	}
+
+	if err := k.SetMinSwapInValue(ctx, vault, msg.MinSwapInValue, msg.Authority); err != nil {
+		return nil, fmt.Errorf("failed to set min swap in value: %w", err)
+	}
+
+	return &types.MsgUpdateMinSwapInValueResponse{}, nil
+}
+
+// UpdateMinSwapOutValue sets the minimum allowed value for a swap-out operation.
+func (k msgServer) UpdateMinSwapOutValue(goCtx context.Context, msg *types.MsgUpdateMinSwapOutValueRequest) (*types.MsgUpdateMinSwapOutValueResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vault, err := k.getVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, err
+	}
+	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+		return nil, fmt.Errorf("unauthorized: %w", err)
+	}
+
+	if err := k.SetMinSwapOutValue(ctx, vault, msg.MinSwapOutValue, msg.Authority); err != nil {
+		return nil, fmt.Errorf("failed to set min swap out value: %w", err)
+	}
+
+	return &types.MsgUpdateMinSwapOutValueResponse{}, nil
+}
+
+// UpdateMaxSwapInValue sets the maximum allowed value for a swap-in operation.
+func (k msgServer) UpdateMaxSwapInValue(goCtx context.Context, msg *types.MsgUpdateMaxSwapInValueRequest) (*types.MsgUpdateMaxSwapInValueResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vault, err := k.getVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, err
+	}
+	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+		return nil, fmt.Errorf("unauthorized: %w", err)
+	}
+
+	if err := k.SetMaxSwapInValue(ctx, vault, msg.MaxSwapInValue, msg.Authority); err != nil {
+		return nil, fmt.Errorf("failed to set max swap in value: %w", err)
+	}
+
+	return &types.MsgUpdateMaxSwapInValueResponse{}, nil
+}
+
+// UpdateMaxSwapOutValue sets the maximum allowed value for a swap-out operation.
+func (k msgServer) UpdateMaxSwapOutValue(goCtx context.Context, msg *types.MsgUpdateMaxSwapOutValueRequest) (*types.MsgUpdateMaxSwapOutValueResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vault, err := k.getVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, err
+	}
+	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+		return nil, fmt.Errorf("unauthorized: %w", err)
+	}
+
+	if err := k.SetMaxSwapOutValue(ctx, vault, msg.MaxSwapOutValue, msg.Authority); err != nil {
+		return nil, fmt.Errorf("failed to set max swap out value: %w", err)
+	}
+
+	return &types.MsgUpdateMaxSwapOutValueResponse{}, nil
+}
+
 // ToggleSwapIn enables or disables swap-in operations for a vault.
 func (k msgServer) ToggleSwapIn(goCtx context.Context, msg *types.MsgToggleSwapInRequest) (*types.MsgToggleSwapInResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
 
-	vault, err := k.GetVault(ctx, vaultAddr)
+	vault, err := k.getVault(ctx, vaultAddr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get vault: %w", err)
-	}
-	if vault == nil {
-		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+		return nil, err
 	}
 	if err := vault.ValidateAdmin(msg.Admin); err != nil {
 		return nil, fmt.Errorf("failed to validate admin: %w", err)
@@ -272,12 +334,9 @@ func (k msgServer) ToggleSwapOut(goCtx context.Context, msg *types.MsgToggleSwap
 
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
 
-	vault, err := k.GetVault(ctx, vaultAddr)
+	vault, err := k.getVault(ctx, vaultAddr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get vault: %w", err)
-	}
-	if vault == nil {
-		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+		return nil, err
 	}
 	if err := vault.ValidateAdmin(msg.Admin); err != nil {
 		return nil, fmt.Errorf("failed to validate admin: %w", err)
@@ -297,12 +356,9 @@ func (k msgServer) DepositInterestFunds(goCtx context.Context, msg *types.MsgDep
 	authorityAddr := sdk.MustAccAddressFromBech32(msg.Authority)
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
 
-	vault, err := k.GetVault(ctx, vaultAddr)
+	vault, err := k.getVault(ctx, vaultAddr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get vault: %w", err)
-	}
-	if vault == nil {
-		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+		return nil, err
 	}
 
 	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
@@ -333,12 +389,9 @@ func (k msgServer) WithdrawInterestFunds(goCtx context.Context, msg *types.MsgWi
 	authorityAddr := sdk.MustAccAddressFromBech32(msg.Authority)
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
 
-	vault, err := k.GetVault(ctx, vaultAddr)
+	vault, err := k.getVault(ctx, vaultAddr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get vault: %w", err)
-	}
-	if vault == nil {
-		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+		return nil, err
 	}
 
 	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
@@ -367,12 +420,9 @@ func (k msgServer) DepositPrincipalFunds(goCtx context.Context, msg *types.MsgDe
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
-	vault, err := k.GetVault(ctx, vaultAddr)
+	vault, err := k.getVault(ctx, vaultAddr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get vault: %w", err)
-	}
-	if vault == nil {
-		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+		return nil, err
 	}
 	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, fmt.Errorf("failed to validate management authority: %w", err)
@@ -410,12 +460,9 @@ func (k msgServer) WithdrawPrincipalFunds(goCtx context.Context, msg *types.MsgW
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
-	vault, err := k.GetVault(ctx, vaultAddr)
+	vault, err := k.getVault(ctx, vaultAddr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get vault: %w", err)
-	}
-	if vault == nil {
-		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+		return nil, err
 	}
 	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, fmt.Errorf("failed to validate management authority: %w", err)
@@ -461,12 +508,9 @@ func (k msgServer) ExpeditePendingSwapOut(goCtx context.Context, msg *types.MsgE
 	}
 
 	vaultAddr := sdk.MustAccAddressFromBech32(swapOut.VaultAddress)
-	vault, err := k.GetVault(ctx, vaultAddr)
+	vault, err := k.getVault(ctx, vaultAddr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get vault: %w", err)
-	}
-	if vault == nil {
-		return nil, fmt.Errorf("vault not found: %s", vaultAddr)
+		return nil, err
 	}
 	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, fmt.Errorf("failed to validate management authority: %w", err)
@@ -486,12 +530,9 @@ func (k msgServer) PauseVault(goCtx context.Context, msg *types.MsgPauseVaultReq
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
-	vault, err := k.GetVault(ctx, vaultAddr)
+	vault, err := k.getVault(ctx, vaultAddr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get vault: %w", err)
-	}
-	if vault == nil {
-		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+		return nil, err
 	}
 	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, fmt.Errorf("failed to validate management authority: %w", err)
@@ -531,12 +572,9 @@ func (k msgServer) UnpauseVault(goCtx context.Context, msg *types.MsgUnpauseVaul
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
-	vault, err := k.GetVault(ctx, vaultAddr)
+	vault, err := k.getVault(ctx, vaultAddr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get vault: %w", err)
-	}
-	if vault == nil {
-		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+		return nil, err
 	}
 	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, fmt.Errorf("failed to validate management authority: %w", err)
@@ -576,12 +614,9 @@ func (k msgServer) SetBridgeAddress(goCtx context.Context, msg *types.MsgSetBrid
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
-	vault, err := k.GetVault(ctx, vaultAddr)
+	vault, err := k.getVault(ctx, vaultAddr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get vault: %w", err)
-	}
-	if vault == nil {
-		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+		return nil, err
 	}
 	if err := vault.ValidateAdmin(msg.Admin); err != nil {
 		return nil, fmt.Errorf("failed to validate admin: %w", err)
@@ -602,12 +637,9 @@ func (k msgServer) ToggleBridge(goCtx context.Context, msg *types.MsgToggleBridg
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
-	vault, err := k.GetVault(ctx, vaultAddr)
+	vault, err := k.getVault(ctx, vaultAddr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get vault: %w", err)
-	}
-	if vault == nil {
-		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+		return nil, err
 	}
 	if err := vault.ValidateAdmin(msg.Admin); err != nil {
 		return nil, fmt.Errorf("failed to validate admin: %w", err)
@@ -631,12 +663,9 @@ func (k msgServer) BridgeMintShares(goCtx context.Context, msg *types.MsgBridgeM
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
 	bridgeAddr := sdk.MustAccAddressFromBech32(msg.Bridge)
 
-	vault, err := k.GetVault(ctx, vaultAddr)
+	vault, err := k.getVault(ctx, vaultAddr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get vault: %w", err)
-	}
-	if vault == nil {
-		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+		return nil, err
 	}
 	if !vault.BridgeEnabled {
 		return nil, fmt.Errorf("bridge is disabled for vault %s", msg.VaultAddress)
@@ -678,12 +707,9 @@ func (k msgServer) BridgeBurnShares(goCtx context.Context, msg *types.MsgBridgeB
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
 	bridgeAddr := sdk.MustAccAddressFromBech32(msg.Bridge)
 
-	vault, err := k.GetVault(ctx, vaultAddr)
+	vault, err := k.getVault(ctx, vaultAddr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get vault: %w", err)
-	}
-	if vault == nil {
-		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+		return nil, err
 	}
 	if !vault.BridgeEnabled {
 		return nil, fmt.Errorf("bridge is disabled for vault %s", msg.VaultAddress)
@@ -717,12 +743,9 @@ func (k msgServer) SetAssetManager(goCtx context.Context, msg *types.MsgSetAsset
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
-	vault, err := k.GetVault(ctx, vaultAddr)
+	vault, err := k.getVault(ctx, vaultAddr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get vault: %w", err)
-	}
-	if vault == nil {
-		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+		return nil, err
 	}
 
 	if err := vault.ValidateAdmin(msg.Admin); err != nil {
@@ -766,12 +789,9 @@ func (k msgServer) UpdateVaultAUMFeeBips(goCtx context.Context, msg *types.MsgUp
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
-	vault, err := k.GetVault(ctx, vaultAddr)
+	vault, err := k.getVault(ctx, vaultAddr)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get vault: %w", err)
-	}
-	if vault == nil {
-		return nil, fmt.Errorf("vault not found: %s", msg.VaultAddress)
+		return nil, err
 	}
 
 	params, err := k.Keeper.Params.Get(ctx)

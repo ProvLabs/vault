@@ -27,6 +27,10 @@ type VaultAttributer interface {
 	GetUnderlyingAsset() string
 	GetPaymentDenom() string
 	GetWithdrawalDelaySeconds() uint64
+	GetMinSwapInValue() string
+	GetMinSwapOutValue() string
+	GetMaxSwapInValue() string
+	GetMaxSwapOutValue() string
 }
 
 // CreateVault creates a new vault and its corresponding share marker atomically.
@@ -46,6 +50,10 @@ func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*type
 	underlying := attributes.GetUnderlyingAsset()
 	payment := attributes.GetPaymentDenom()
 	withdrawalDelay := attributes.GetWithdrawalDelaySeconds()
+	minSwapIn := attributes.GetMinSwapInValue()
+	minSwapOut := attributes.GetMinSwapOutValue()
+	maxSwapIn := attributes.GetMaxSwapInValue()
+	maxSwapOut := attributes.GetMaxSwapOutValue()
 
 	underlyingAssetAddr, err := markertypes.MarkerAddress(underlying)
 	if err != nil {
@@ -57,7 +65,7 @@ func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*type
 
 	cacheCtx, write := ctx.CacheContext()
 
-	vault, err := k.createVaultAccount(cacheCtx, attributes.GetAdmin(), attributes.GetShareDenom(), underlying, payment, withdrawalDelay)
+	vault, err := k.createVaultAccount(cacheCtx, attributes.GetAdmin(), attributes.GetShareDenom(), underlying, payment, withdrawalDelay, minSwapIn, minSwapOut, maxSwapIn, maxSwapOut)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create vault account: %w", err)
 	}
@@ -87,8 +95,7 @@ func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*type
 	return vault, nil
 }
 
-// GetVault finds a vault by a given address.
-//
+// GetVault returns the vault account for the given address.
 // This function will return nil if nothing exists at this address.
 func (k Keeper) GetVault(ctx sdk.Context, address sdk.AccAddress) (*types.VaultAccount, error) {
 	mac := k.AuthKeeper.GetAccount(ctx, address)
@@ -102,9 +109,21 @@ func (k Keeper) GetVault(ctx sdk.Context, address sdk.AccAddress) (*types.VaultA
 	return nil, nil
 }
 
+// getVault returns the vault at the given address, or an error if it does not exist.
+func (k Keeper) getVault(ctx sdk.Context, addr sdk.AccAddress) (*types.VaultAccount, error) {
+	vault, err := k.GetVault(ctx, addr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault: %w", err)
+	}
+	if vault == nil {
+		return nil, fmt.Errorf("vault not found: %s", addr.String())
+	}
+	return vault, nil
+}
+
 // createVaultAccount creates and stores a new vault account and initializes its fee tracking.
 // It verifies that the vault address is available and not already associated with another account.
-func (k *Keeper) createVaultAccount(ctx sdk.Context, admin, shareDenom, underlyingAsset, paymentDenom string, withdrawalDelay uint64) (*types.VaultAccount, error) {
+func (k *Keeper) createVaultAccount(ctx sdk.Context, admin, shareDenom, underlyingAsset, paymentDenom string, withdrawalDelay uint64, minSwapIn, minSwapOut, maxSwapIn, maxSwapOut string) (*types.VaultAccount, error) {
 	vaultAddr := types.GetVaultAddress(shareDenom)
 
 	params, err := k.Params.Get(ctx)
@@ -120,6 +139,10 @@ func (k *Keeper) createVaultAccount(ctx sdk.Context, admin, shareDenom, underlyi
 		paymentDenom,
 		withdrawalDelay,
 		params.DefaultAumFeeBips,
+		minSwapIn,
+		minSwapOut,
+		maxSwapIn,
+		maxSwapOut,
 	)
 
 	if err := vault.Validate(); err != nil {
@@ -226,6 +249,14 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 		return nil, fmt.Errorf("failed to validate asset: %w", err)
 	}
 
+	accept, reason, err := k.AllowSwapInAmount(ctx, asset, *vault)
+	if err != nil {
+		return nil, fmt.Errorf("swap in amount not allowed: %w", err)
+	}
+	if !accept {
+		return nil, fmt.Errorf("failed to swap in: swap in amount %s %s for vault %s", asset.String(), reason, vaultAddr.String())
+	}
+
 	if err := k.reconcileVault(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to reconcile vault: %w", err)
 	}
@@ -313,6 +344,14 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 	assets, err := k.ConvertSharesToRedeemCoin(ctx, *vault, shares.Amount, redeemDenom)
 	if err != nil {
 		return 0, fmt.Errorf("failed to calculate assets from shares: %w", err)
+	}
+
+	accept, reason, err := k.AllowSwapOutAmount(ctx, assets, *vault)
+	if err != nil {
+		return 0, fmt.Errorf("swap out amount not allowed: %w", err)
+	}
+	if !accept {
+		return 0, fmt.Errorf("failed to swap out: swap out amount %s %s for vault %s", assets.String(), reason, vaultAddr.String())
 	}
 
 	if err := k.checkPayoutRestrictions(ctx, vault, owner, assets); err != nil {
@@ -486,4 +525,113 @@ func (k *Keeper) UpdateVaultAUMFeeBips(ctx sdk.Context, vault *types.VaultAccoun
 
 	k.emitEvent(ctx, types.NewEventVaultAUMFeeBipsUpdated(vault.Address, authority, bips))
 	return nil
+}
+
+// SetMinSwapInValue updates the minimum swap-in value for a vault.
+func (k *Keeper) SetMinSwapInValue(ctx sdk.Context, vault *types.VaultAccount, minSwapIn string, authority string) error {
+	if err := types.ValidateSwapLimits(minSwapIn, vault.MaxSwapInValue); err != nil {
+		return fmt.Errorf("failed to set MinSwapIn: %w", err)
+	}
+	if vault.MinSwapInValue == minSwapIn {
+		return nil
+	}
+	vault.MinSwapInValue = minSwapIn
+	if err := k.SetVaultAccount(ctx, vault); err != nil {
+		return fmt.Errorf("failed to set vault account: %w", err)
+	}
+	k.emitEvent(ctx, types.NewEventMinSwapInValueUpdated(vault.Address, authority, minSwapIn))
+	return nil
+}
+
+// SetMinSwapOutValue updates the minimum swap-out value for a vault.
+func (k *Keeper) SetMinSwapOutValue(ctx sdk.Context, vault *types.VaultAccount, minSwapOut string, authority string) error {
+	if err := types.ValidateSwapLimits(minSwapOut, vault.MaxSwapOutValue); err != nil {
+		return fmt.Errorf("failed to set MinSwapOut: %w", err)
+	}
+	if vault.MinSwapOutValue == minSwapOut {
+		return nil
+	}
+	vault.MinSwapOutValue = minSwapOut
+	if err := k.SetVaultAccount(ctx, vault); err != nil {
+		return fmt.Errorf("failed to set vault account: %w", err)
+	}
+	k.emitEvent(ctx, types.NewEventMinSwapOutValueUpdated(vault.Address, authority, minSwapOut))
+	return nil
+}
+
+// SetMaxSwapInValue updates the maximum swap-in value for a vault.
+func (k *Keeper) SetMaxSwapInValue(ctx sdk.Context, vault *types.VaultAccount, maxSwapIn string, authority string) error {
+	if err := types.ValidateSwapLimits(vault.MinSwapInValue, maxSwapIn); err != nil {
+		return fmt.Errorf("failed to set MaxSwapIn: %w", err)
+	}
+	if vault.MaxSwapInValue == maxSwapIn {
+		return nil
+	}
+	vault.MaxSwapInValue = maxSwapIn
+	if err := k.SetVaultAccount(ctx, vault); err != nil {
+		return fmt.Errorf("failed to set vault account: %w", err)
+	}
+	k.emitEvent(ctx, types.NewEventMaxSwapInValueUpdated(vault.Address, authority, maxSwapIn))
+	return nil
+}
+
+// SetMaxSwapOutValue updates the maximum swap-out value for a vault.
+func (k *Keeper) SetMaxSwapOutValue(ctx sdk.Context, vault *types.VaultAccount, maxSwapOut string, authority string) error {
+	if err := types.ValidateSwapLimits(vault.MinSwapOutValue, maxSwapOut); err != nil {
+		return fmt.Errorf("failed to set MaxSwapOut: %w", err)
+	}
+	if vault.MaxSwapOutValue == maxSwapOut {
+		return nil
+	}
+	vault.MaxSwapOutValue = maxSwapOut
+	if err := k.SetVaultAccount(ctx, vault); err != nil {
+		return fmt.Errorf("failed to set vault account: %w", err)
+	}
+	k.emitEvent(ctx, types.NewEventMaxSwapOutValueUpdated(vault.Address, authority, maxSwapOut))
+	return nil
+}
+
+// AllowSwapInAmount checks whether a swap-in amount meets the minimum and maximum value requirements for a vault.
+func (k *Keeper) AllowSwapInAmount(ctx sdk.Context, swapInAsset sdk.Coin, vault types.VaultAccount) (bool, string, error) {
+	assetInUnderlying, err := k.ToUnderlyingAssetAmount(ctx, vault, swapInAsset)
+	if err != nil {
+		return false, "", fmt.Errorf("failed to convert swap in asset to underlying asset amount: %w", err)
+	}
+
+	return checkLimit(assetInUnderlying, vault.MinSwapInValue, vault.MaxSwapInValue)
+}
+
+// AllowSwapOutAmount checks whether a swap-out amount meets the minimum and maximum value requirements for a vault.
+func (k *Keeper) AllowSwapOutAmount(ctx sdk.Context, assets sdk.Coin, vault types.VaultAccount) (bool, string, error) {
+	assetInUnderlying, err := k.ToUnderlyingAssetAmount(ctx, vault, assets)
+	if err != nil {
+		return false, "", fmt.Errorf("failed to convert assets to underlying asset amount: %w", err)
+	}
+
+	return checkLimit(assetInUnderlying, vault.MinSwapOutValue, vault.MaxSwapOutValue)
+}
+
+// checkLimit compares an underlying asset amount against the configured min/max limits.
+func checkLimit(amount sdkmath.Int, minStr, maxStr string) (bool, string, error) {
+	if minStr != "" {
+		minVal, ok := sdkmath.NewIntFromString(minStr)
+		if !ok {
+			return false, "", fmt.Errorf("failed to parse minimum limit: %s", minStr)
+		}
+		if !minVal.IsZero() && amount.LT(minVal) {
+			return false, "is below the minimum required value", nil
+		}
+	}
+
+	if maxStr != "" {
+		maxVal, ok := sdkmath.NewIntFromString(maxStr)
+		if !ok {
+			return false, "", fmt.Errorf("failed to parse maximum limit: %s", maxStr)
+		}
+		if !maxVal.IsZero() && amount.GT(maxVal) {
+			return false, "is above the maximum allowed value", nil
+		}
+	}
+
+	return true, "", nil
 }

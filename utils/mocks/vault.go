@@ -99,6 +99,9 @@ func (m *MockExchangeKeeper) CreatePayment(_ context.Context, _ *exchangetypes.M
 func (m *MockExchangeKeeper) AcceptPayment(_ context.Context, _ *exchangetypes.MsgAcceptPaymentRequest) (*exchangetypes.MsgAcceptPaymentResponse, error) {
 	return &exchangetypes.MsgAcceptPaymentResponse{}, nil
 }
+func (m *MockExchangeKeeper) GetPayment(_ context.Context, _ *exchangetypes.QueryGetPaymentRequest) (*exchangetypes.QueryGetPaymentResponse, error) {
+	return &exchangetypes.QueryGetPaymentResponse{}, nil
+}
 
 // NewVaultKeeper returns an instance of the Keeper with all dependencies mocked.
 func NewVaultKeeper(

@@ -47,6 +47,8 @@ const (
 	Msg_SetAssetManager_FullMethodName        = "/provlabs.vault.v1.Msg/SetAssetManager"
 	Msg_UpdateParams_FullMethodName           = "/provlabs.vault.v1.Msg/UpdateParams"
 	Msg_UpdateVaultAUMFeeBips_FullMethodName  = "/provlabs.vault.v1.Msg/UpdateVaultAUMFeeBips"
+	Msg_CreateRwaPayment_FullMethodName       = "/provlabs.vault.v1.Msg/CreateRwaPayment"
+	Msg_AcceptRwaPayment_FullMethodName       = "/provlabs.vault.v1.Msg/AcceptRwaPayment"
 )
 
 // MsgClient is the client API for Msg service.
@@ -119,6 +121,12 @@ type MsgClient interface {
 	UpdateParams(ctx context.Context, in *MsgUpdateParamsRequest, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
 	// UpdateVaultAUMFeeBips updates the AUM fee bips for a specific vault.
 	UpdateVaultAUMFeeBips(ctx context.Context, in *MsgUpdateVaultAUMFeeBipsRequest, opts ...grpc.CallOption) (*MsgUpdateVaultAUMFeeBipsResponse, error)
+	// CreateRwaPayment initiates a P2P payment from the vault to a target account.
+	// May be signed by the vault admin or the configured asset manager.
+	CreateRwaPayment(ctx context.Context, in *MsgCreateRwaPaymentRequest, opts ...grpc.CallOption) (*MsgCreateRwaPaymentResponse, error)
+	// AcceptRwaPayment accepts an incoming P2P payment request for the vault.
+	// May be signed by the vault admin or the configured asset manager.
+	AcceptRwaPayment(ctx context.Context, in *MsgAcceptRwaPaymentRequest, opts ...grpc.CallOption) (*MsgAcceptRwaPaymentResponse, error)
 }
 
 type msgClient struct {
@@ -409,6 +417,26 @@ func (c *msgClient) UpdateVaultAUMFeeBips(ctx context.Context, in *MsgUpdateVaul
 	return out, nil
 }
 
+func (c *msgClient) CreateRwaPayment(ctx context.Context, in *MsgCreateRwaPaymentRequest, opts ...grpc.CallOption) (*MsgCreateRwaPaymentResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgCreateRwaPaymentResponse)
+	err := c.cc.Invoke(ctx, Msg_CreateRwaPayment_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) AcceptRwaPayment(ctx context.Context, in *MsgAcceptRwaPaymentRequest, opts ...grpc.CallOption) (*MsgAcceptRwaPaymentResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgAcceptRwaPaymentResponse)
+	err := c.cc.Invoke(ctx, Msg_AcceptRwaPayment_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility.
@@ -479,6 +507,12 @@ type MsgServer interface {
 	UpdateParams(context.Context, *MsgUpdateParamsRequest) (*MsgUpdateParamsResponse, error)
 	// UpdateVaultAUMFeeBips updates the AUM fee bips for a specific vault.
 	UpdateVaultAUMFeeBips(context.Context, *MsgUpdateVaultAUMFeeBipsRequest) (*MsgUpdateVaultAUMFeeBipsResponse, error)
+	// CreateRwaPayment initiates a P2P payment from the vault to a target account.
+	// May be signed by the vault admin or the configured asset manager.
+	CreateRwaPayment(context.Context, *MsgCreateRwaPaymentRequest) (*MsgCreateRwaPaymentResponse, error)
+	// AcceptRwaPayment accepts an incoming P2P payment request for the vault.
+	// May be signed by the vault admin or the configured asset manager.
+	AcceptRwaPayment(context.Context, *MsgAcceptRwaPaymentRequest) (*MsgAcceptRwaPaymentResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -572,6 +606,12 @@ func (UnimplementedMsgServer) UpdateParams(context.Context, *MsgUpdateParamsRequ
 }
 func (UnimplementedMsgServer) UpdateVaultAUMFeeBips(context.Context, *MsgUpdateVaultAUMFeeBipsRequest) (*MsgUpdateVaultAUMFeeBipsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateVaultAUMFeeBips not implemented")
+}
+func (UnimplementedMsgServer) CreateRwaPayment(context.Context, *MsgCreateRwaPaymentRequest) (*MsgCreateRwaPaymentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateRwaPayment not implemented")
+}
+func (UnimplementedMsgServer) AcceptRwaPayment(context.Context, *MsgAcceptRwaPaymentRequest) (*MsgAcceptRwaPaymentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AcceptRwaPayment not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 func (UnimplementedMsgServer) testEmbeddedByValue()             {}
@@ -1098,6 +1138,42 @@ func _Msg_UpdateVaultAUMFeeBips_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_CreateRwaPayment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreateRwaPaymentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CreateRwaPayment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_CreateRwaPayment_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CreateRwaPayment(ctx, req.(*MsgCreateRwaPaymentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_AcceptRwaPayment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgAcceptRwaPaymentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).AcceptRwaPayment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_AcceptRwaPayment_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).AcceptRwaPayment(ctx, req.(*MsgAcceptRwaPaymentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1216,6 +1292,14 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateVaultAUMFeeBips",
 			Handler:    _Msg_UpdateVaultAUMFeeBips_Handler,
+		},
+		{
+			MethodName: "CreateRwaPayment",
+			Handler:    _Msg_CreateRwaPayment_Handler,
+		},
+		{
+			MethodName: "AcceptRwaPayment",
+			Handler:    _Msg_AcceptRwaPayment_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -60,4 +60,5 @@ type AttributeKeeper interface {
 type ExchangeMsgServer interface {
 	CreatePayment(ctx context.Context, req *exchangetypes.MsgCreatePaymentRequest) (*exchangetypes.MsgCreatePaymentResponse, error)
 	AcceptPayment(ctx context.Context, req *exchangetypes.MsgAcceptPaymentRequest) (*exchangetypes.MsgAcceptPaymentResponse, error)
+	GetPayment(ctx context.Context, req *exchangetypes.QueryGetPaymentRequest) (*exchangetypes.QueryGetPaymentResponse, error)
 }

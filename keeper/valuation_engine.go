@@ -213,10 +213,22 @@ func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccoun
 				return math.Int{}, fmt.Errorf("invalid volume for nft %s nav", balance.Denom)
 			}
 
+			// Value = (Balance * Price) / Volume
 			assetValue := balance.Amount.Mul(nav.Price.Amount).Quo(vol)
+
+			// APPLY ADVANCE RATE (DISCOUNT) FOR NFT ASSETS
+			if vault.AdvanceRate != "" {
+				ar, err := math.LegacyNewDecFromStr(vault.AdvanceRate)
+				if err == nil && !ar.IsNil() && !ar.Equal(math.LegacyOneDec()) {
+					// We multiply the discovered value by the advance rate (e.g., 0.8)
+					discountedValue := ar.MulInt(assetValue).TruncateInt()
+					assetValue = discountedValue
+				}
+			}
+
 			total = total.Add(assetValue)
 			continue
-		}
+			}
 
 		if !vault.IsAcceptedDenom(balance.Denom) {
 			continue
@@ -229,6 +241,70 @@ func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccoun
 		total = total.Add(val)
 	}
 	return total, nil
+}
+
+// GetLiquidityBreakdown calculates the breakdown between cash (fungible underlying)
+// and collateral (NFT/RWA assets) for a vault.
+func (k Keeper) GetLiquidityBreakdown(ctx sdk.Context, vault types.VaultAccount) (types.LiquidityBreakdown, error) {
+	principalAddr := vault.PrincipalMarkerAddress()
+	balances := k.BankKeeper.GetAllBalances(ctx, principalAddr)
+
+	cash := math.ZeroInt()
+	collateral := math.ZeroInt()
+
+	for _, coin := range balances {
+		if coin.Denom == vault.TotalShares.Denom {
+			continue
+		}
+
+		// Check if this is a unique NFT marker (supply = 1)
+		marker, err := k.MarkerKeeper.GetMarkerByDenom(ctx, coin.Denom)
+		if err == nil && marker != nil && marker.GetSupply().Amount.Equal(math.OneInt()) {
+			nav, err := k.getNetAssetValue(ctx, coin.Denom, vault.UnderlyingAsset)
+			if err != nil {
+				return types.LiquidityBreakdown{}, fmt.Errorf("failed to get nav for nft %s: %w", coin.Denom, err)
+			}
+			if nav == nil {
+				return types.LiquidityBreakdown{}, fmt.Errorf("nav not found for nft %s/%s", coin.Denom, vault.UnderlyingAsset)
+			}
+			vol, ok := math.NewIntFromString(nav.Volume)
+			if !ok || vol.IsZero() {
+				return types.LiquidityBreakdown{}, fmt.Errorf("invalid volume for nft %s nav", coin.Denom)
+			}
+
+			assetValue := coin.Amount.Mul(nav.Price.Amount).Quo(vol)
+			if vault.AdvanceRate != "" {
+				ar, err := math.LegacyNewDecFromStr(vault.AdvanceRate)
+				if err == nil && !ar.IsNil() && !ar.Equal(math.LegacyOneDec()) {
+					assetValue = ar.MulInt(assetValue).TruncateInt()
+				}
+			}
+			collateral = collateral.Add(assetValue)
+			continue
+		}
+
+		if coin.Denom == vault.UnderlyingAsset {
+			cash = cash.Add(coin.Amount)
+		} else if vault.IsAcceptedDenom(coin.Denom) {
+			val, err := k.ToUnderlyingAssetAmount(ctx, vault, coin)
+			if err == nil {
+				cash = cash.Add(val)
+			}
+		}
+	}
+
+	total := cash.Add(collateral)
+	ratio := math.LegacyZeroDec()
+	if !total.IsZero() {
+		ratio = math.LegacyNewDecFromInt(collateral).Quo(math.LegacyNewDecFromInt(total))
+	}
+
+	return types.LiquidityBreakdown{
+		CashAmount:       sdk.NewCoin(vault.UnderlyingAsset, cash),
+		CollateralAmount: sdk.NewCoin(vault.UnderlyingAsset, collateral),
+		TotalValue:       sdk.NewCoin(vault.UnderlyingAsset, total),
+		Ratio:            ratio.String(),
+	}, nil
 }
 
 // GetNAVPerShareInUnderlyingAsset returns the floor NAV per share in units of

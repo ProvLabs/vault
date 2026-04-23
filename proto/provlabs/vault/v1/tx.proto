@@ -105,7 +105,59 @@ service Msg {
 
   // UpdateVaultAUMFeeBips updates the AUM fee bips for a specific vault.
   rpc UpdateVaultAUMFeeBips(MsgUpdateVaultAUMFeeBipsRequest) returns (MsgUpdateVaultAUMFeeBipsResponse);
+
+  // CreateRwaPayment initiates a P2P payment from the vault to a target account.
+  // May be signed by the vault admin or the configured asset manager.
+  rpc CreateRwaPayment(MsgCreateRwaPaymentRequest) returns (MsgCreateRwaPaymentResponse);
+
+  // AcceptRwaPayment accepts an incoming P2P payment request for the vault.
+  // May be signed by the vault admin or the configured asset manager.
+  rpc AcceptRwaPayment(MsgAcceptRwaPaymentRequest) returns (MsgAcceptRwaPaymentResponse);
 }
+
+// MsgCreateRwaPaymentRequest initiates a P2P payment from the vault's principal account.
+message MsgCreateRwaPaymentRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority is the vault administrator or asset manager.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 2;
+  // target is the recipient of the payment.
+  string target = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // source_amount is the funds moved from the vault to the target.
+  repeated cosmos.base.v1beta1.Coin source_amount = 4 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+  // target_amount is the funds moved from the target to the vault.
+  repeated cosmos.base.v1beta1.Coin target_amount = 5 [
+    (gogoproto.nullable) = false,
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins"
+  ];
+  // external_id is a unique identifier for this payment.
+  string external_id = 6;
+}
+
+// MsgCreateRwaPaymentResponse defines the response for CreateRwaPayment.
+message MsgCreateRwaPaymentResponse {}
+
+// MsgAcceptRwaPaymentRequest accepts an existing P2P payment where the vault is the target.
+message MsgAcceptRwaPaymentRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority is the vault administrator or asset manager.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 2;
+  // source is the account that created the payment.
+  string source = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // external_id is the unique identifier of the payment to accept.
+  string external_id = 4;
+}
+
+// MsgAcceptRwaPaymentResponse defines the response for AcceptRwaPayment.
+message MsgAcceptRwaPaymentResponse {}
 
 // MsgCreateVaultRequest is the request message for the CreateVault endpoint.
 message MsgCreateVaultRequest {

@@ -2,8 +2,8 @@
 package vaultv1
 
 import (
-	v1beta1 "cosmossdk.io/api/cosmos/bank/v1beta1"
-	v1beta11 "cosmossdk.io/api/cosmos/base/v1beta1"
+	v1beta11 "cosmossdk.io/api/cosmos/bank/v1beta1"
+	v1beta1 "cosmossdk.io/api/cosmos/base/v1beta1"
 	_ "cosmossdk.io/api/cosmos/msg/v1"
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
@@ -16,6 +16,2218 @@ import (
 	reflect "reflect"
 	sync "sync"
 )
+
+var _ protoreflect.List = (*_MsgCreateRwaPaymentRequest_4_list)(nil)
+
+type _MsgCreateRwaPaymentRequest_4_list struct {
+	list *[]*v1beta1.Coin
+}
+
+func (x *_MsgCreateRwaPaymentRequest_4_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_MsgCreateRwaPaymentRequest_4_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_MsgCreateRwaPaymentRequest_4_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_MsgCreateRwaPaymentRequest_4_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_MsgCreateRwaPaymentRequest_4_list) AppendMutable() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_MsgCreateRwaPaymentRequest_4_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_MsgCreateRwaPaymentRequest_4_list) NewElement() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_MsgCreateRwaPaymentRequest_4_list) IsValid() bool {
+	return x.list != nil
+}
+
+var _ protoreflect.List = (*_MsgCreateRwaPaymentRequest_5_list)(nil)
+
+type _MsgCreateRwaPaymentRequest_5_list struct {
+	list *[]*v1beta1.Coin
+}
+
+func (x *_MsgCreateRwaPaymentRequest_5_list) Len() int {
+	if x.list == nil {
+		return 0
+	}
+	return len(*x.list)
+}
+
+func (x *_MsgCreateRwaPaymentRequest_5_list) Get(i int) protoreflect.Value {
+	return protoreflect.ValueOfMessage((*x.list)[i].ProtoReflect())
+}
+
+func (x *_MsgCreateRwaPaymentRequest_5_list) Set(i int, value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	(*x.list)[i] = concreteValue
+}
+
+func (x *_MsgCreateRwaPaymentRequest_5_list) Append(value protoreflect.Value) {
+	valueUnwrapped := value.Message()
+	concreteValue := valueUnwrapped.Interface().(*v1beta1.Coin)
+	*x.list = append(*x.list, concreteValue)
+}
+
+func (x *_MsgCreateRwaPaymentRequest_5_list) AppendMutable() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	*x.list = append(*x.list, v)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_MsgCreateRwaPaymentRequest_5_list) Truncate(n int) {
+	for i := n; i < len(*x.list); i++ {
+		(*x.list)[i] = nil
+	}
+	*x.list = (*x.list)[:n]
+}
+
+func (x *_MsgCreateRwaPaymentRequest_5_list) NewElement() protoreflect.Value {
+	v := new(v1beta1.Coin)
+	return protoreflect.ValueOfMessage(v.ProtoReflect())
+}
+
+func (x *_MsgCreateRwaPaymentRequest_5_list) IsValid() bool {
+	return x.list != nil
+}
+
+var (
+	md_MsgCreateRwaPaymentRequest               protoreflect.MessageDescriptor
+	fd_MsgCreateRwaPaymentRequest_authority     protoreflect.FieldDescriptor
+	fd_MsgCreateRwaPaymentRequest_vault_address protoreflect.FieldDescriptor
+	fd_MsgCreateRwaPaymentRequest_target        protoreflect.FieldDescriptor
+	fd_MsgCreateRwaPaymentRequest_source_amount protoreflect.FieldDescriptor
+	fd_MsgCreateRwaPaymentRequest_target_amount protoreflect.FieldDescriptor
+	fd_MsgCreateRwaPaymentRequest_external_id   protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_provlabs_vault_v1_tx_proto_init()
+	md_MsgCreateRwaPaymentRequest = File_provlabs_vault_v1_tx_proto.Messages().ByName("MsgCreateRwaPaymentRequest")
+	fd_MsgCreateRwaPaymentRequest_authority = md_MsgCreateRwaPaymentRequest.Fields().ByName("authority")
+	fd_MsgCreateRwaPaymentRequest_vault_address = md_MsgCreateRwaPaymentRequest.Fields().ByName("vault_address")
+	fd_MsgCreateRwaPaymentRequest_target = md_MsgCreateRwaPaymentRequest.Fields().ByName("target")
+	fd_MsgCreateRwaPaymentRequest_source_amount = md_MsgCreateRwaPaymentRequest.Fields().ByName("source_amount")
+	fd_MsgCreateRwaPaymentRequest_target_amount = md_MsgCreateRwaPaymentRequest.Fields().ByName("target_amount")
+	fd_MsgCreateRwaPaymentRequest_external_id = md_MsgCreateRwaPaymentRequest.Fields().ByName("external_id")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgCreateRwaPaymentRequest)(nil)
+
+type fastReflection_MsgCreateRwaPaymentRequest MsgCreateRwaPaymentRequest
+
+func (x *MsgCreateRwaPaymentRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgCreateRwaPaymentRequest)(x)
+}
+
+func (x *MsgCreateRwaPaymentRequest) slowProtoReflect() protoreflect.Message {
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[0]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgCreateRwaPaymentRequest_messageType fastReflection_MsgCreateRwaPaymentRequest_messageType
+var _ protoreflect.MessageType = fastReflection_MsgCreateRwaPaymentRequest_messageType{}
+
+type fastReflection_MsgCreateRwaPaymentRequest_messageType struct{}
+
+func (x fastReflection_MsgCreateRwaPaymentRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgCreateRwaPaymentRequest)(nil)
+}
+func (x fastReflection_MsgCreateRwaPaymentRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgCreateRwaPaymentRequest)
+}
+func (x fastReflection_MsgCreateRwaPaymentRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCreateRwaPaymentRequest
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgCreateRwaPaymentRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCreateRwaPaymentRequest
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgCreateRwaPaymentRequest) Type() protoreflect.MessageType {
+	return _fastReflection_MsgCreateRwaPaymentRequest_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgCreateRwaPaymentRequest) New() protoreflect.Message {
+	return new(fastReflection_MsgCreateRwaPaymentRequest)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgCreateRwaPaymentRequest) Interface() protoreflect.ProtoMessage {
+	return (*MsgCreateRwaPaymentRequest)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgCreateRwaPaymentRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Authority != "" {
+		value := protoreflect.ValueOfString(x.Authority)
+		if !f(fd_MsgCreateRwaPaymentRequest_authority, value) {
+			return
+		}
+	}
+	if x.VaultAddress != "" {
+		value := protoreflect.ValueOfString(x.VaultAddress)
+		if !f(fd_MsgCreateRwaPaymentRequest_vault_address, value) {
+			return
+		}
+	}
+	if x.Target != "" {
+		value := protoreflect.ValueOfString(x.Target)
+		if !f(fd_MsgCreateRwaPaymentRequest_target, value) {
+			return
+		}
+	}
+	if len(x.SourceAmount) != 0 {
+		value := protoreflect.ValueOfList(&_MsgCreateRwaPaymentRequest_4_list{list: &x.SourceAmount})
+		if !f(fd_MsgCreateRwaPaymentRequest_source_amount, value) {
+			return
+		}
+	}
+	if len(x.TargetAmount) != 0 {
+		value := protoreflect.ValueOfList(&_MsgCreateRwaPaymentRequest_5_list{list: &x.TargetAmount})
+		if !f(fd_MsgCreateRwaPaymentRequest_target_amount, value) {
+			return
+		}
+	}
+	if x.ExternalId != "" {
+		value := protoreflect.ValueOfString(x.ExternalId)
+		if !f(fd_MsgCreateRwaPaymentRequest_external_id, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgCreateRwaPaymentRequest) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "provlabs.vault.v1.MsgCreateRwaPaymentRequest.authority":
+		return x.Authority != ""
+	case "provlabs.vault.v1.MsgCreateRwaPaymentRequest.vault_address":
+		return x.VaultAddress != ""
+	case "provlabs.vault.v1.MsgCreateRwaPaymentRequest.target":
+		return x.Target != ""
+	case "provlabs.vault.v1.MsgCreateRwaPaymentRequest.source_amount":
+		return len(x.SourceAmount) != 0
+	case "provlabs.vault.v1.MsgCreateRwaPaymentRequest.target_amount":
+		return len(x.TargetAmount) != 0
+	case "provlabs.vault.v1.MsgCreateRwaPaymentRequest.external_id":
+		return x.ExternalId != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgCreateRwaPaymentRequest"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.MsgCreateRwaPaymentRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCreateRwaPaymentRequest) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "provlabs.vault.v1.MsgCreateRwaPaymentRequest.authority":
+		x.Authority = ""
+	case "provlabs.vault.v1.MsgCreateRwaPaymentRequest.vault_address":
+		x.VaultAddress = ""
+	case "provlabs.vault.v1.MsgCreateRwaPaymentRequest.target":
+		x.Target = ""
+	case "provlabs.vault.v1.MsgCreateRwaPaymentRequest.source_amount":
+		x.SourceAmount = nil
+	case "provlabs.vault.v1.MsgCreateRwaPaymentRequest.target_amount":
+		x.TargetAmount = nil
+	case "provlabs.vault.v1.MsgCreateRwaPaymentRequest.external_id":
+		x.ExternalId = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgCreateRwaPaymentRequest"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.MsgCreateRwaPaymentRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgCreateRwaPaymentRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "provlabs.vault.v1.MsgCreateRwaPaymentRequest.authority":
+		value := x.Authority
+		return protoreflect.ValueOfString(value)
+	case "provlabs.vault.v1.MsgCreateRwaPaymentRequest.vault_address":
+		value := x.VaultAddress
+		return protoreflect.ValueOfString(value)
+	case "provlabs.vault.v1.MsgCreateRwaPaymentRequest.target":
+		value := x.Target
+		return protoreflect.ValueOfString(value)
+	case "provlabs.vault.v1.MsgCreateRwaPaymentRequest.source_amount":
+		if len(x.SourceAmount) == 0 {
+			return protoreflect.ValueOfList(&_MsgCreateRwaPaymentRequest_4_list{})
+		}
+		listValue := &_MsgCreateRwaPaymentRequest_4_list{list: &x.SourceAmount}
+		return protoreflect.ValueOfList(listValue)
+	case "provlabs.vault.v1.MsgCreateRwaPaymentRequest.target_amount":
+		if len(x.TargetAmount) == 0 {
+			return protoreflect.ValueOfList(&_MsgCreateRwaPaymentRequest_5_list{})
+		}
+		listValue := &_MsgCreateRwaPaymentRequest_5_list{list: &x.TargetAmount}
+		return protoreflect.ValueOfList(listValue)
+	case "provlabs.vault.v1.MsgCreateRwaPaymentRequest.external_id":
+		value := x.ExternalId
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgCreateRwaPaymentRequest"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.MsgCreateRwaPaymentRequest does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCreateRwaPaymentRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "provlabs.vault.v1.MsgCreateRwaPaymentRequest.authority":
+		x.Authority = value.Interface().(string)
+	case "provlabs.vault.v1.MsgCreateRwaPaymentRequest.vault_address":
+		x.VaultAddress = value.Interface().(string)
+	case "provlabs.vault.v1.MsgCreateRwaPaymentRequest.target":
+		x.Target = value.Interface().(string)
+	case "provlabs.vault.v1.MsgCreateRwaPaymentRequest.source_amount":
+		lv := value.List()
+		clv := lv.(*_MsgCreateRwaPaymentRequest_4_list)
+		x.SourceAmount = *clv.list
+	case "provlabs.vault.v1.MsgCreateRwaPaymentRequest.target_amount":
+		lv := value.List()
+		clv := lv.(*_MsgCreateRwaPaymentRequest_5_list)
+		x.TargetAmount = *clv.list
+	case "provlabs.vault.v1.MsgCreateRwaPaymentRequest.external_id":
+		x.ExternalId = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgCreateRwaPaymentRequest"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.MsgCreateRwaPaymentRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCreateRwaPaymentRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "provlabs.vault.v1.MsgCreateRwaPaymentRequest.source_amount":
+		if x.SourceAmount == nil {
+			x.SourceAmount = []*v1beta1.Coin{}
+		}
+		value := &_MsgCreateRwaPaymentRequest_4_list{list: &x.SourceAmount}
+		return protoreflect.ValueOfList(value)
+	case "provlabs.vault.v1.MsgCreateRwaPaymentRequest.target_amount":
+		if x.TargetAmount == nil {
+			x.TargetAmount = []*v1beta1.Coin{}
+		}
+		value := &_MsgCreateRwaPaymentRequest_5_list{list: &x.TargetAmount}
+		return protoreflect.ValueOfList(value)
+	case "provlabs.vault.v1.MsgCreateRwaPaymentRequest.authority":
+		panic(fmt.Errorf("field authority of message provlabs.vault.v1.MsgCreateRwaPaymentRequest is not mutable"))
+	case "provlabs.vault.v1.MsgCreateRwaPaymentRequest.vault_address":
+		panic(fmt.Errorf("field vault_address of message provlabs.vault.v1.MsgCreateRwaPaymentRequest is not mutable"))
+	case "provlabs.vault.v1.MsgCreateRwaPaymentRequest.target":
+		panic(fmt.Errorf("field target of message provlabs.vault.v1.MsgCreateRwaPaymentRequest is not mutable"))
+	case "provlabs.vault.v1.MsgCreateRwaPaymentRequest.external_id":
+		panic(fmt.Errorf("field external_id of message provlabs.vault.v1.MsgCreateRwaPaymentRequest is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgCreateRwaPaymentRequest"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.MsgCreateRwaPaymentRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgCreateRwaPaymentRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "provlabs.vault.v1.MsgCreateRwaPaymentRequest.authority":
+		return protoreflect.ValueOfString("")
+	case "provlabs.vault.v1.MsgCreateRwaPaymentRequest.vault_address":
+		return protoreflect.ValueOfString("")
+	case "provlabs.vault.v1.MsgCreateRwaPaymentRequest.target":
+		return protoreflect.ValueOfString("")
+	case "provlabs.vault.v1.MsgCreateRwaPaymentRequest.source_amount":
+		list := []*v1beta1.Coin{}
+		return protoreflect.ValueOfList(&_MsgCreateRwaPaymentRequest_4_list{list: &list})
+	case "provlabs.vault.v1.MsgCreateRwaPaymentRequest.target_amount":
+		list := []*v1beta1.Coin{}
+		return protoreflect.ValueOfList(&_MsgCreateRwaPaymentRequest_5_list{list: &list})
+	case "provlabs.vault.v1.MsgCreateRwaPaymentRequest.external_id":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgCreateRwaPaymentRequest"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.MsgCreateRwaPaymentRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgCreateRwaPaymentRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.MsgCreateRwaPaymentRequest", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgCreateRwaPaymentRequest) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCreateRwaPaymentRequest) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgCreateRwaPaymentRequest) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgCreateRwaPaymentRequest) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgCreateRwaPaymentRequest)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.Authority)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.VaultAddress)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Target)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if len(x.SourceAmount) > 0 {
+			for _, e := range x.SourceAmount {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		if len(x.TargetAmount) > 0 {
+			for _, e := range x.TargetAmount {
+				l = options.Size(e)
+				n += 1 + l + runtime.Sov(uint64(l))
+			}
+		}
+		l = len(x.ExternalId)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgCreateRwaPaymentRequest)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.ExternalId) > 0 {
+			i -= len(x.ExternalId)
+			copy(dAtA[i:], x.ExternalId)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ExternalId)))
+			i--
+			dAtA[i] = 0x32
+		}
+		if len(x.TargetAmount) > 0 {
+			for iNdEx := len(x.TargetAmount) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.TargetAmount[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x2a
+			}
+		}
+		if len(x.SourceAmount) > 0 {
+			for iNdEx := len(x.SourceAmount) - 1; iNdEx >= 0; iNdEx-- {
+				encoded, err := options.Marshal(x.SourceAmount[iNdEx])
+				if err != nil {
+					return protoiface.MarshalOutput{
+						NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+						Buf:               input.Buf,
+					}, err
+				}
+				i -= len(encoded)
+				copy(dAtA[i:], encoded)
+				i = runtime.EncodeVarint(dAtA, i, uint64(len(encoded)))
+				i--
+				dAtA[i] = 0x22
+			}
+		}
+		if len(x.Target) > 0 {
+			i -= len(x.Target)
+			copy(dAtA[i:], x.Target)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Target)))
+			i--
+			dAtA[i] = 0x1a
+		}
+		if len(x.VaultAddress) > 0 {
+			i -= len(x.VaultAddress)
+			copy(dAtA[i:], x.VaultAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.VaultAddress)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.Authority) > 0 {
+			i -= len(x.Authority)
+			copy(dAtA[i:], x.Authority)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Authority)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgCreateRwaPaymentRequest)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateRwaPaymentRequest: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateRwaPaymentRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Authority = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field VaultAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.VaultAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Target", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Target = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 4:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field SourceAmount", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.SourceAmount = append(x.SourceAmount, &v1beta1.Coin{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.SourceAmount[len(x.SourceAmount)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 5:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field TargetAmount", wireType)
+				}
+				var msglen int
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					msglen |= int(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				if msglen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + msglen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.TargetAmount = append(x.TargetAmount, &v1beta1.Coin{})
+				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.TargetAmount[len(x.TargetAmount)-1]); err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				iNdEx = postIndex
+			case 6:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ExternalId", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.ExternalId = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_MsgCreateRwaPaymentResponse protoreflect.MessageDescriptor
+)
+
+func init() {
+	file_provlabs_vault_v1_tx_proto_init()
+	md_MsgCreateRwaPaymentResponse = File_provlabs_vault_v1_tx_proto.Messages().ByName("MsgCreateRwaPaymentResponse")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgCreateRwaPaymentResponse)(nil)
+
+type fastReflection_MsgCreateRwaPaymentResponse MsgCreateRwaPaymentResponse
+
+func (x *MsgCreateRwaPaymentResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgCreateRwaPaymentResponse)(x)
+}
+
+func (x *MsgCreateRwaPaymentResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[1]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgCreateRwaPaymentResponse_messageType fastReflection_MsgCreateRwaPaymentResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgCreateRwaPaymentResponse_messageType{}
+
+type fastReflection_MsgCreateRwaPaymentResponse_messageType struct{}
+
+func (x fastReflection_MsgCreateRwaPaymentResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgCreateRwaPaymentResponse)(nil)
+}
+func (x fastReflection_MsgCreateRwaPaymentResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgCreateRwaPaymentResponse)
+}
+func (x fastReflection_MsgCreateRwaPaymentResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCreateRwaPaymentResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgCreateRwaPaymentResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgCreateRwaPaymentResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgCreateRwaPaymentResponse) Type() protoreflect.MessageType {
+	return _fastReflection_MsgCreateRwaPaymentResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgCreateRwaPaymentResponse) New() protoreflect.Message {
+	return new(fastReflection_MsgCreateRwaPaymentResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgCreateRwaPaymentResponse) Interface() protoreflect.ProtoMessage {
+	return (*MsgCreateRwaPaymentResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgCreateRwaPaymentResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgCreateRwaPaymentResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgCreateRwaPaymentResponse"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.MsgCreateRwaPaymentResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCreateRwaPaymentResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgCreateRwaPaymentResponse"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.MsgCreateRwaPaymentResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgCreateRwaPaymentResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgCreateRwaPaymentResponse"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.MsgCreateRwaPaymentResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCreateRwaPaymentResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgCreateRwaPaymentResponse"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.MsgCreateRwaPaymentResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCreateRwaPaymentResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgCreateRwaPaymentResponse"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.MsgCreateRwaPaymentResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgCreateRwaPaymentResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgCreateRwaPaymentResponse"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.MsgCreateRwaPaymentResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgCreateRwaPaymentResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.MsgCreateRwaPaymentResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgCreateRwaPaymentResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgCreateRwaPaymentResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgCreateRwaPaymentResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgCreateRwaPaymentResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgCreateRwaPaymentResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgCreateRwaPaymentResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgCreateRwaPaymentResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateRwaPaymentResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgCreateRwaPaymentResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_MsgAcceptRwaPaymentRequest               protoreflect.MessageDescriptor
+	fd_MsgAcceptRwaPaymentRequest_authority     protoreflect.FieldDescriptor
+	fd_MsgAcceptRwaPaymentRequest_vault_address protoreflect.FieldDescriptor
+	fd_MsgAcceptRwaPaymentRequest_source        protoreflect.FieldDescriptor
+	fd_MsgAcceptRwaPaymentRequest_external_id   protoreflect.FieldDescriptor
+)
+
+func init() {
+	file_provlabs_vault_v1_tx_proto_init()
+	md_MsgAcceptRwaPaymentRequest = File_provlabs_vault_v1_tx_proto.Messages().ByName("MsgAcceptRwaPaymentRequest")
+	fd_MsgAcceptRwaPaymentRequest_authority = md_MsgAcceptRwaPaymentRequest.Fields().ByName("authority")
+	fd_MsgAcceptRwaPaymentRequest_vault_address = md_MsgAcceptRwaPaymentRequest.Fields().ByName("vault_address")
+	fd_MsgAcceptRwaPaymentRequest_source = md_MsgAcceptRwaPaymentRequest.Fields().ByName("source")
+	fd_MsgAcceptRwaPaymentRequest_external_id = md_MsgAcceptRwaPaymentRequest.Fields().ByName("external_id")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgAcceptRwaPaymentRequest)(nil)
+
+type fastReflection_MsgAcceptRwaPaymentRequest MsgAcceptRwaPaymentRequest
+
+func (x *MsgAcceptRwaPaymentRequest) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgAcceptRwaPaymentRequest)(x)
+}
+
+func (x *MsgAcceptRwaPaymentRequest) slowProtoReflect() protoreflect.Message {
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgAcceptRwaPaymentRequest_messageType fastReflection_MsgAcceptRwaPaymentRequest_messageType
+var _ protoreflect.MessageType = fastReflection_MsgAcceptRwaPaymentRequest_messageType{}
+
+type fastReflection_MsgAcceptRwaPaymentRequest_messageType struct{}
+
+func (x fastReflection_MsgAcceptRwaPaymentRequest_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgAcceptRwaPaymentRequest)(nil)
+}
+func (x fastReflection_MsgAcceptRwaPaymentRequest_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgAcceptRwaPaymentRequest)
+}
+func (x fastReflection_MsgAcceptRwaPaymentRequest_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgAcceptRwaPaymentRequest
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgAcceptRwaPaymentRequest) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgAcceptRwaPaymentRequest
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgAcceptRwaPaymentRequest) Type() protoreflect.MessageType {
+	return _fastReflection_MsgAcceptRwaPaymentRequest_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgAcceptRwaPaymentRequest) New() protoreflect.Message {
+	return new(fastReflection_MsgAcceptRwaPaymentRequest)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgAcceptRwaPaymentRequest) Interface() protoreflect.ProtoMessage {
+	return (*MsgAcceptRwaPaymentRequest)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgAcceptRwaPaymentRequest) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+	if x.Authority != "" {
+		value := protoreflect.ValueOfString(x.Authority)
+		if !f(fd_MsgAcceptRwaPaymentRequest_authority, value) {
+			return
+		}
+	}
+	if x.VaultAddress != "" {
+		value := protoreflect.ValueOfString(x.VaultAddress)
+		if !f(fd_MsgAcceptRwaPaymentRequest_vault_address, value) {
+			return
+		}
+	}
+	if x.Source != "" {
+		value := protoreflect.ValueOfString(x.Source)
+		if !f(fd_MsgAcceptRwaPaymentRequest_source, value) {
+			return
+		}
+	}
+	if x.ExternalId != "" {
+		value := protoreflect.ValueOfString(x.ExternalId)
+		if !f(fd_MsgAcceptRwaPaymentRequest_external_id, value) {
+			return
+		}
+	}
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgAcceptRwaPaymentRequest) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	case "provlabs.vault.v1.MsgAcceptRwaPaymentRequest.authority":
+		return x.Authority != ""
+	case "provlabs.vault.v1.MsgAcceptRwaPaymentRequest.vault_address":
+		return x.VaultAddress != ""
+	case "provlabs.vault.v1.MsgAcceptRwaPaymentRequest.source":
+		return x.Source != ""
+	case "provlabs.vault.v1.MsgAcceptRwaPaymentRequest.external_id":
+		return x.ExternalId != ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgAcceptRwaPaymentRequest"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.MsgAcceptRwaPaymentRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgAcceptRwaPaymentRequest) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	case "provlabs.vault.v1.MsgAcceptRwaPaymentRequest.authority":
+		x.Authority = ""
+	case "provlabs.vault.v1.MsgAcceptRwaPaymentRequest.vault_address":
+		x.VaultAddress = ""
+	case "provlabs.vault.v1.MsgAcceptRwaPaymentRequest.source":
+		x.Source = ""
+	case "provlabs.vault.v1.MsgAcceptRwaPaymentRequest.external_id":
+		x.ExternalId = ""
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgAcceptRwaPaymentRequest"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.MsgAcceptRwaPaymentRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgAcceptRwaPaymentRequest) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	case "provlabs.vault.v1.MsgAcceptRwaPaymentRequest.authority":
+		value := x.Authority
+		return protoreflect.ValueOfString(value)
+	case "provlabs.vault.v1.MsgAcceptRwaPaymentRequest.vault_address":
+		value := x.VaultAddress
+		return protoreflect.ValueOfString(value)
+	case "provlabs.vault.v1.MsgAcceptRwaPaymentRequest.source":
+		value := x.Source
+		return protoreflect.ValueOfString(value)
+	case "provlabs.vault.v1.MsgAcceptRwaPaymentRequest.external_id":
+		value := x.ExternalId
+		return protoreflect.ValueOfString(value)
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgAcceptRwaPaymentRequest"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.MsgAcceptRwaPaymentRequest does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgAcceptRwaPaymentRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	case "provlabs.vault.v1.MsgAcceptRwaPaymentRequest.authority":
+		x.Authority = value.Interface().(string)
+	case "provlabs.vault.v1.MsgAcceptRwaPaymentRequest.vault_address":
+		x.VaultAddress = value.Interface().(string)
+	case "provlabs.vault.v1.MsgAcceptRwaPaymentRequest.source":
+		x.Source = value.Interface().(string)
+	case "provlabs.vault.v1.MsgAcceptRwaPaymentRequest.external_id":
+		x.ExternalId = value.Interface().(string)
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgAcceptRwaPaymentRequest"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.MsgAcceptRwaPaymentRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgAcceptRwaPaymentRequest) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "provlabs.vault.v1.MsgAcceptRwaPaymentRequest.authority":
+		panic(fmt.Errorf("field authority of message provlabs.vault.v1.MsgAcceptRwaPaymentRequest is not mutable"))
+	case "provlabs.vault.v1.MsgAcceptRwaPaymentRequest.vault_address":
+		panic(fmt.Errorf("field vault_address of message provlabs.vault.v1.MsgAcceptRwaPaymentRequest is not mutable"))
+	case "provlabs.vault.v1.MsgAcceptRwaPaymentRequest.source":
+		panic(fmt.Errorf("field source of message provlabs.vault.v1.MsgAcceptRwaPaymentRequest is not mutable"))
+	case "provlabs.vault.v1.MsgAcceptRwaPaymentRequest.external_id":
+		panic(fmt.Errorf("field external_id of message provlabs.vault.v1.MsgAcceptRwaPaymentRequest is not mutable"))
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgAcceptRwaPaymentRequest"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.MsgAcceptRwaPaymentRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgAcceptRwaPaymentRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	case "provlabs.vault.v1.MsgAcceptRwaPaymentRequest.authority":
+		return protoreflect.ValueOfString("")
+	case "provlabs.vault.v1.MsgAcceptRwaPaymentRequest.vault_address":
+		return protoreflect.ValueOfString("")
+	case "provlabs.vault.v1.MsgAcceptRwaPaymentRequest.source":
+		return protoreflect.ValueOfString("")
+	case "provlabs.vault.v1.MsgAcceptRwaPaymentRequest.external_id":
+		return protoreflect.ValueOfString("")
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgAcceptRwaPaymentRequest"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.MsgAcceptRwaPaymentRequest does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgAcceptRwaPaymentRequest) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.MsgAcceptRwaPaymentRequest", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgAcceptRwaPaymentRequest) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgAcceptRwaPaymentRequest) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgAcceptRwaPaymentRequest) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgAcceptRwaPaymentRequest) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgAcceptRwaPaymentRequest)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		l = len(x.Authority)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.VaultAddress)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.Source)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.ExternalId)
+		if l > 0 {
+			n += 1 + l + runtime.Sov(uint64(l))
+		}
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgAcceptRwaPaymentRequest)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.ExternalId) > 0 {
+			i -= len(x.ExternalId)
+			copy(dAtA[i:], x.ExternalId)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.ExternalId)))
+			i--
+			dAtA[i] = 0x22
+		}
+		if len(x.Source) > 0 {
+			i -= len(x.Source)
+			copy(dAtA[i:], x.Source)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Source)))
+			i--
+			dAtA[i] = 0x1a
+		}
+		if len(x.VaultAddress) > 0 {
+			i -= len(x.VaultAddress)
+			copy(dAtA[i:], x.VaultAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.VaultAddress)))
+			i--
+			dAtA[i] = 0x12
+		}
+		if len(x.Authority) > 0 {
+			i -= len(x.Authority)
+			copy(dAtA[i:], x.Authority)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.Authority)))
+			i--
+			dAtA[i] = 0xa
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgAcceptRwaPaymentRequest)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgAcceptRwaPaymentRequest: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgAcceptRwaPaymentRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			case 1:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Authority = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 2:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field VaultAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.VaultAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 3:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Source", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.Source = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 4:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field ExternalId", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.ExternalId = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
+
+var (
+	md_MsgAcceptRwaPaymentResponse protoreflect.MessageDescriptor
+)
+
+func init() {
+	file_provlabs_vault_v1_tx_proto_init()
+	md_MsgAcceptRwaPaymentResponse = File_provlabs_vault_v1_tx_proto.Messages().ByName("MsgAcceptRwaPaymentResponse")
+}
+
+var _ protoreflect.Message = (*fastReflection_MsgAcceptRwaPaymentResponse)(nil)
+
+type fastReflection_MsgAcceptRwaPaymentResponse MsgAcceptRwaPaymentResponse
+
+func (x *MsgAcceptRwaPaymentResponse) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_MsgAcceptRwaPaymentResponse)(x)
+}
+
+func (x *MsgAcceptRwaPaymentResponse) slowProtoReflect() protoreflect.Message {
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+var _fastReflection_MsgAcceptRwaPaymentResponse_messageType fastReflection_MsgAcceptRwaPaymentResponse_messageType
+var _ protoreflect.MessageType = fastReflection_MsgAcceptRwaPaymentResponse_messageType{}
+
+type fastReflection_MsgAcceptRwaPaymentResponse_messageType struct{}
+
+func (x fastReflection_MsgAcceptRwaPaymentResponse_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_MsgAcceptRwaPaymentResponse)(nil)
+}
+func (x fastReflection_MsgAcceptRwaPaymentResponse_messageType) New() protoreflect.Message {
+	return new(fastReflection_MsgAcceptRwaPaymentResponse)
+}
+func (x fastReflection_MsgAcceptRwaPaymentResponse_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgAcceptRwaPaymentResponse
+}
+
+// Descriptor returns message descriptor, which contains only the protobuf
+// type information for the message.
+func (x *fastReflection_MsgAcceptRwaPaymentResponse) Descriptor() protoreflect.MessageDescriptor {
+	return md_MsgAcceptRwaPaymentResponse
+}
+
+// Type returns the message type, which encapsulates both Go and protobuf
+// type information. If the Go type information is not needed,
+// it is recommended that the message descriptor be used instead.
+func (x *fastReflection_MsgAcceptRwaPaymentResponse) Type() protoreflect.MessageType {
+	return _fastReflection_MsgAcceptRwaPaymentResponse_messageType
+}
+
+// New returns a newly allocated and mutable empty message.
+func (x *fastReflection_MsgAcceptRwaPaymentResponse) New() protoreflect.Message {
+	return new(fastReflection_MsgAcceptRwaPaymentResponse)
+}
+
+// Interface unwraps the message reflection interface and
+// returns the underlying ProtoMessage interface.
+func (x *fastReflection_MsgAcceptRwaPaymentResponse) Interface() protoreflect.ProtoMessage {
+	return (*MsgAcceptRwaPaymentResponse)(x)
+}
+
+// Range iterates over every populated field in an undefined order,
+// calling f for each field descriptor and value encountered.
+// Range returns immediately if f returns false.
+// While iterating, mutating operations may only be performed
+// on the current field descriptor.
+func (x *fastReflection_MsgAcceptRwaPaymentResponse) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+}
+
+// Has reports whether a field is populated.
+//
+// Some fields have the property of nullability where it is possible to
+// distinguish between the default value of a field and whether the field
+// was explicitly populated with the default value. Singular message fields,
+// member fields of a oneof, and proto2 scalar fields are nullable. Such
+// fields are populated only if explicitly set.
+//
+// In other cases (aside from the nullable cases above),
+// a proto3 scalar field is populated if it contains a non-zero value, and
+// a repeated field is populated if it is non-empty.
+func (x *fastReflection_MsgAcceptRwaPaymentResponse) Has(fd protoreflect.FieldDescriptor) bool {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgAcceptRwaPaymentResponse"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.MsgAcceptRwaPaymentResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Clear clears the field such that a subsequent Has call reports false.
+//
+// Clearing an extension field clears both the extension type and value
+// associated with the given field number.
+//
+// Clear is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgAcceptRwaPaymentResponse) Clear(fd protoreflect.FieldDescriptor) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgAcceptRwaPaymentResponse"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.MsgAcceptRwaPaymentResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Get retrieves the value for a field.
+//
+// For unpopulated scalars, it returns the default value, where
+// the default value of a bytes scalar is guaranteed to be a copy.
+// For unpopulated composite types, it returns an empty, read-only view
+// of the value; to obtain a mutable reference, use Mutable.
+func (x *fastReflection_MsgAcceptRwaPaymentResponse) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+	switch descriptor.FullName() {
+	default:
+		if descriptor.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgAcceptRwaPaymentResponse"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.MsgAcceptRwaPaymentResponse does not contain field %s", descriptor.FullName()))
+	}
+}
+
+// Set stores the value for a field.
+//
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType.
+// When setting a composite type, it is unspecified whether the stored value
+// aliases the source's memory in any way. If the composite value is an
+// empty, read-only value, then it panics.
+//
+// Set is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgAcceptRwaPaymentResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgAcceptRwaPaymentResponse"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.MsgAcceptRwaPaymentResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// Mutable returns a mutable reference to a composite type.
+//
+// If the field is unpopulated, it may allocate a composite value.
+// For a field belonging to a oneof, it implicitly clears any other field
+// that may be currently set within the same oneof.
+// For extension fields, it implicitly stores the provided ExtensionType
+// if not already stored.
+// It panics if the field does not contain a composite type.
+//
+// Mutable is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgAcceptRwaPaymentResponse) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgAcceptRwaPaymentResponse"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.MsgAcceptRwaPaymentResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// NewField returns a new value that is assignable to the field
+// for the given descriptor. For scalars, this returns the default value.
+// For lists, maps, and messages, this returns a new, empty, mutable value.
+func (x *fastReflection_MsgAcceptRwaPaymentResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+	switch fd.FullName() {
+	default:
+		if fd.IsExtension() {
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgAcceptRwaPaymentResponse"))
+		}
+		panic(fmt.Errorf("message provlabs.vault.v1.MsgAcceptRwaPaymentResponse does not contain field %s", fd.FullName()))
+	}
+}
+
+// WhichOneof reports which field within the oneof is populated,
+// returning nil if none are populated.
+// It panics if the oneof descriptor does not belong to this message.
+func (x *fastReflection_MsgAcceptRwaPaymentResponse) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+	switch d.FullName() {
+	default:
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.MsgAcceptRwaPaymentResponse", d.FullName()))
+	}
+	panic("unreachable")
+}
+
+// GetUnknown retrieves the entire list of unknown fields.
+// The caller may only mutate the contents of the RawFields
+// if the mutated bytes are stored back into the message with SetUnknown.
+func (x *fastReflection_MsgAcceptRwaPaymentResponse) GetUnknown() protoreflect.RawFields {
+	return x.unknownFields
+}
+
+// SetUnknown stores an entire list of unknown fields.
+// The raw fields must be syntactically valid according to the wire format.
+// An implementation may panic if this is not the case.
+// Once stored, the caller must not mutate the content of the RawFields.
+// An empty RawFields may be passed to clear the fields.
+//
+// SetUnknown is a mutating operation and unsafe for concurrent use.
+func (x *fastReflection_MsgAcceptRwaPaymentResponse) SetUnknown(fields protoreflect.RawFields) {
+	x.unknownFields = fields
+}
+
+// IsValid reports whether the message is valid.
+//
+// An invalid message is an empty, read-only value.
+//
+// An invalid message often corresponds to a nil pointer of the concrete
+// message type, but the details are implementation dependent.
+// Validity is not part of the protobuf data model, and may not
+// be preserved in marshaling or other operations.
+func (x *fastReflection_MsgAcceptRwaPaymentResponse) IsValid() bool {
+	return x != nil
+}
+
+// ProtoMethods returns optional fastReflectionFeature-path implementations of various operations.
+// This method may return nil.
+//
+// The returned methods type is identical to
+// "google.golang.org/protobuf/runtime/protoiface".Methods.
+// Consult the protoiface package documentation for details.
+func (x *fastReflection_MsgAcceptRwaPaymentResponse) ProtoMethods() *protoiface.Methods {
+	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
+		x := input.Message.Interface().(*MsgAcceptRwaPaymentResponse)
+		if x == nil {
+			return protoiface.SizeOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Size:              0,
+			}
+		}
+		options := runtime.SizeInputToOptions(input)
+		_ = options
+		var n int
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			n += len(x.unknownFields)
+		}
+		return protoiface.SizeOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Size:              n,
+		}
+	}
+
+	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
+		x := input.Message.Interface().(*MsgAcceptRwaPaymentResponse)
+		if x == nil {
+			return protoiface.MarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Buf:               input.Buf,
+			}, nil
+		}
+		options := runtime.MarshalInputToOptions(input)
+		_ = options
+		size := options.Size(x)
+		dAtA := make([]byte, size)
+		i := len(dAtA)
+		_ = i
+		var l int
+		_ = l
+		if x.unknownFields != nil {
+			i -= len(x.unknownFields)
+			copy(dAtA[i:], x.unknownFields)
+		}
+		if input.Buf != nil {
+			input.Buf = append(input.Buf, dAtA...)
+		} else {
+			input.Buf = dAtA
+		}
+		return protoiface.MarshalOutput{
+			NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+			Buf:               input.Buf,
+		}, nil
+	}
+	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
+		x := input.Message.Interface().(*MsgAcceptRwaPaymentResponse)
+		if x == nil {
+			return protoiface.UnmarshalOutput{
+				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
+				Flags:             input.Flags,
+			}, nil
+		}
+		options := runtime.UnmarshalInputToOptions(input)
+		_ = options
+		dAtA := input.Buf
+		l := len(dAtA)
+		iNdEx := 0
+		for iNdEx < l {
+			preIndex := iNdEx
+			var wire uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+				}
+				if iNdEx >= l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				wire |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			fieldNum := int32(wire >> 3)
+			wireType := int(wire & 0x7)
+			if wireType == 4 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgAcceptRwaPaymentResponse: wiretype end group for non-group")
+			}
+			if fieldNum <= 0 {
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: MsgAcceptRwaPaymentResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			}
+			switch fieldNum {
+			default:
+				iNdEx = preIndex
+				skippy, err := runtime.Skip(dAtA[iNdEx:])
+				if err != nil {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
+				}
+				if (skippy < 0) || (iNdEx+skippy) < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if (iNdEx + skippy) > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				if !options.DiscardUnknown {
+					x.unknownFields = append(x.unknownFields, dAtA[iNdEx:iNdEx+skippy]...)
+				}
+				iNdEx += skippy
+			}
+		}
+
+		if iNdEx > l {
+			return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+		}
+		return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, nil
+	}
+	return &protoiface.Methods{
+		NoUnkeyedLiterals: struct{}{},
+		Flags:             protoiface.SupportMarshalDeterministic | protoiface.SupportUnmarshalDiscardUnknown,
+		Size:              size,
+		Marshal:           marshal,
+		Unmarshal:         unmarshal,
+		Merge:             nil,
+		CheckInitialized:  nil,
+	}
+}
 
 var (
 	md_MsgCreateVaultRequest                          protoreflect.MessageDescriptor
@@ -53,7 +2265,7 @@ func (x *MsgCreateVaultRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgCreateVaultRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[0]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -953,7 +3165,7 @@ func (x *MsgCreateVaultResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgCreateVaultResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[1]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1377,7 +3589,7 @@ func (x *MsgSetShareDenomMetadataRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgSetShareDenomMetadataRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[2]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1540,7 +3752,7 @@ func (x *fastReflection_MsgSetShareDenomMetadataRequest) Get(descriptor protoref
 func (x *fastReflection_MsgSetShareDenomMetadataRequest) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "provlabs.vault.v1.MsgSetShareDenomMetadataRequest.metadata":
-		x.Metadata = value.Message().Interface().(*v1beta1.Metadata)
+		x.Metadata = value.Message().Interface().(*v1beta11.Metadata)
 	case "provlabs.vault.v1.MsgSetShareDenomMetadataRequest.admin":
 		x.Admin = value.Interface().(string)
 	case "provlabs.vault.v1.MsgSetShareDenomMetadataRequest.vault_address":
@@ -1567,7 +3779,7 @@ func (x *fastReflection_MsgSetShareDenomMetadataRequest) Mutable(fd protoreflect
 	switch fd.FullName() {
 	case "provlabs.vault.v1.MsgSetShareDenomMetadataRequest.metadata":
 		if x.Metadata == nil {
-			x.Metadata = new(v1beta1.Metadata)
+			x.Metadata = new(v1beta11.Metadata)
 		}
 		return protoreflect.ValueOfMessage(x.Metadata.ProtoReflect())
 	case "provlabs.vault.v1.MsgSetShareDenomMetadataRequest.admin":
@@ -1588,7 +3800,7 @@ func (x *fastReflection_MsgSetShareDenomMetadataRequest) Mutable(fd protoreflect
 func (x *fastReflection_MsgSetShareDenomMetadataRequest) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "provlabs.vault.v1.MsgSetShareDenomMetadataRequest.metadata":
-		m := new(v1beta1.Metadata)
+		m := new(v1beta11.Metadata)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "provlabs.vault.v1.MsgSetShareDenomMetadataRequest.admin":
 		return protoreflect.ValueOfString("")
@@ -1811,7 +4023,7 @@ func (x *fastReflection_MsgSetShareDenomMetadataRequest) ProtoMethods() *protoif
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				if x.Metadata == nil {
-					x.Metadata = &v1beta1.Metadata{}
+					x.Metadata = &v1beta11.Metadata{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Metadata); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
@@ -1934,7 +4146,7 @@ func (x *MsgSetShareDenomMetadataResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgSetShareDenomMetadataResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[3]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2296,7 +4508,7 @@ func (x *MsgSwapInRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgSwapInRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[4]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2463,7 +4675,7 @@ func (x *fastReflection_MsgSwapInRequest) Set(fd protoreflect.FieldDescriptor, v
 	case "provlabs.vault.v1.MsgSwapInRequest.vault_address":
 		x.VaultAddress = value.Interface().(string)
 	case "provlabs.vault.v1.MsgSwapInRequest.assets":
-		x.Assets = value.Message().Interface().(*v1beta11.Coin)
+		x.Assets = value.Message().Interface().(*v1beta1.Coin)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgSwapInRequest"))
@@ -2486,7 +4698,7 @@ func (x *fastReflection_MsgSwapInRequest) Mutable(fd protoreflect.FieldDescripto
 	switch fd.FullName() {
 	case "provlabs.vault.v1.MsgSwapInRequest.assets":
 		if x.Assets == nil {
-			x.Assets = new(v1beta11.Coin)
+			x.Assets = new(v1beta1.Coin)
 		}
 		return protoreflect.ValueOfMessage(x.Assets.ProtoReflect())
 	case "provlabs.vault.v1.MsgSwapInRequest.owner":
@@ -2511,7 +4723,7 @@ func (x *fastReflection_MsgSwapInRequest) NewField(fd protoreflect.FieldDescript
 	case "provlabs.vault.v1.MsgSwapInRequest.vault_address":
 		return protoreflect.ValueOfString("")
 	case "provlabs.vault.v1.MsgSwapInRequest.assets":
-		m := new(v1beta11.Coin)
+		m := new(v1beta1.Coin)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
@@ -2794,7 +5006,7 @@ func (x *fastReflection_MsgSwapInRequest) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				if x.Assets == nil {
-					x.Assets = &v1beta11.Coin{}
+					x.Assets = &v1beta1.Coin{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Assets); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
@@ -2855,7 +5067,7 @@ func (x *MsgSwapInResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgSwapInResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[5]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2992,7 +5204,7 @@ func (x *fastReflection_MsgSwapInResponse) Get(descriptor protoreflect.FieldDesc
 func (x *fastReflection_MsgSwapInResponse) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
 	case "provlabs.vault.v1.MsgSwapInResponse.shares_received":
-		x.SharesReceived = value.Message().Interface().(*v1beta11.Coin)
+		x.SharesReceived = value.Message().Interface().(*v1beta1.Coin)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgSwapInResponse"))
@@ -3015,7 +5227,7 @@ func (x *fastReflection_MsgSwapInResponse) Mutable(fd protoreflect.FieldDescript
 	switch fd.FullName() {
 	case "provlabs.vault.v1.MsgSwapInResponse.shares_received":
 		if x.SharesReceived == nil {
-			x.SharesReceived = new(v1beta11.Coin)
+			x.SharesReceived = new(v1beta1.Coin)
 		}
 		return protoreflect.ValueOfMessage(x.SharesReceived.ProtoReflect())
 	default:
@@ -3032,7 +5244,7 @@ func (x *fastReflection_MsgSwapInResponse) Mutable(fd protoreflect.FieldDescript
 func (x *fastReflection_MsgSwapInResponse) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
 	case "provlabs.vault.v1.MsgSwapInResponse.shares_received":
-		m := new(v1beta11.Coin)
+		m := new(v1beta1.Coin)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
@@ -3229,7 +5441,7 @@ func (x *fastReflection_MsgSwapInResponse) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				if x.SharesReceived == nil {
-					x.SharesReceived = &v1beta11.Coin{}
+					x.SharesReceived = &v1beta1.Coin{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.SharesReceived); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
@@ -3296,7 +5508,7 @@ func (x *MsgSwapOutRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgSwapOutRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[6]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3476,7 +5688,7 @@ func (x *fastReflection_MsgSwapOutRequest) Set(fd protoreflect.FieldDescriptor, 
 	case "provlabs.vault.v1.MsgSwapOutRequest.vault_address":
 		x.VaultAddress = value.Interface().(string)
 	case "provlabs.vault.v1.MsgSwapOutRequest.assets":
-		x.Assets = value.Message().Interface().(*v1beta11.Coin)
+		x.Assets = value.Message().Interface().(*v1beta1.Coin)
 	case "provlabs.vault.v1.MsgSwapOutRequest.redeem_denom":
 		x.RedeemDenom = value.Interface().(string)
 	default:
@@ -3501,7 +5713,7 @@ func (x *fastReflection_MsgSwapOutRequest) Mutable(fd protoreflect.FieldDescript
 	switch fd.FullName() {
 	case "provlabs.vault.v1.MsgSwapOutRequest.assets":
 		if x.Assets == nil {
-			x.Assets = new(v1beta11.Coin)
+			x.Assets = new(v1beta1.Coin)
 		}
 		return protoreflect.ValueOfMessage(x.Assets.ProtoReflect())
 	case "provlabs.vault.v1.MsgSwapOutRequest.owner":
@@ -3528,7 +5740,7 @@ func (x *fastReflection_MsgSwapOutRequest) NewField(fd protoreflect.FieldDescrip
 	case "provlabs.vault.v1.MsgSwapOutRequest.vault_address":
 		return protoreflect.ValueOfString("")
 	case "provlabs.vault.v1.MsgSwapOutRequest.assets":
-		m := new(v1beta11.Coin)
+		m := new(v1beta1.Coin)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	case "provlabs.vault.v1.MsgSwapOutRequest.redeem_denom":
 		return protoreflect.ValueOfString("")
@@ -3824,7 +6036,7 @@ func (x *fastReflection_MsgSwapOutRequest) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				if x.Assets == nil {
-					x.Assets = &v1beta11.Coin{}
+					x.Assets = &v1beta1.Coin{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Assets); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
@@ -3917,7 +6129,7 @@ func (x *MsgSwapOutResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgSwapOutResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[7]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4325,7 +6537,7 @@ func (x *MsgUpdateMinInterestRateRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgUpdateMinInterestRateRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[8]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4867,7 +7079,7 @@ func (x *MsgUpdateMinInterestRateResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgUpdateMinInterestRateResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[9]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[13]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5229,7 +7441,7 @@ func (x *MsgUpdateMaxInterestRateRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgUpdateMaxInterestRateRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[10]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[14]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5771,7 +7983,7 @@ func (x *MsgUpdateMaxInterestRateResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgUpdateMaxInterestRateResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[11]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[15]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6133,7 +8345,7 @@ func (x *MsgUpdateInterestRateRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgUpdateInterestRateRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[12]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[16]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6675,7 +8887,7 @@ func (x *MsgUpdateInterestRateResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgUpdateInterestRateResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[13]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[17]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7037,7 +9249,7 @@ func (x *MsgUpdateWithdrawalDelayRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgUpdateWithdrawalDelayRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[14]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[18]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7563,7 +9775,7 @@ func (x *MsgUpdateWithdrawalDelayResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgUpdateWithdrawalDelayResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[15]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[19]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7925,7 +10137,7 @@ func (x *MsgUpdateMinSwapInValueRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgUpdateMinSwapInValueRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[16]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[20]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8467,7 +10679,7 @@ func (x *MsgUpdateMinSwapInValueResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgUpdateMinSwapInValueResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[17]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[21]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8829,7 +11041,7 @@ func (x *MsgUpdateMinSwapOutValueRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgUpdateMinSwapOutValueRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[18]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[22]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9371,7 +11583,7 @@ func (x *MsgUpdateMinSwapOutValueResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgUpdateMinSwapOutValueResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[19]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[23]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9733,7 +11945,7 @@ func (x *MsgUpdateMaxSwapInValueRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgUpdateMaxSwapInValueRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[20]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[24]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10275,7 +12487,7 @@ func (x *MsgUpdateMaxSwapInValueResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgUpdateMaxSwapInValueResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[21]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[25]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10637,7 +12849,7 @@ func (x *MsgUpdateMaxSwapOutValueRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgUpdateMaxSwapOutValueRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[22]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[26]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11179,7 +13391,7 @@ func (x *MsgUpdateMaxSwapOutValueResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgUpdateMaxSwapOutValueResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[23]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[27]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11541,7 +13753,7 @@ func (x *MsgToggleSwapInRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgToggleSwapInRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[24]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[28]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12073,7 +14285,7 @@ func (x *MsgToggleSwapInResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgToggleSwapInResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[25]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[29]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12435,7 +14647,7 @@ func (x *MsgToggleSwapOutRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgToggleSwapOutRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[26]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[30]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12967,7 +15179,7 @@ func (x *MsgToggleSwapOutResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgToggleSwapOutResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[27]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[31]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13329,7 +15541,7 @@ func (x *MsgDepositInterestFundsRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgDepositInterestFundsRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[28]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[32]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13496,7 +15708,7 @@ func (x *fastReflection_MsgDepositInterestFundsRequest) Set(fd protoreflect.Fiel
 	case "provlabs.vault.v1.MsgDepositInterestFundsRequest.vault_address":
 		x.VaultAddress = value.Interface().(string)
 	case "provlabs.vault.v1.MsgDepositInterestFundsRequest.amount":
-		x.Amount = value.Message().Interface().(*v1beta11.Coin)
+		x.Amount = value.Message().Interface().(*v1beta1.Coin)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgDepositInterestFundsRequest"))
@@ -13519,7 +15731,7 @@ func (x *fastReflection_MsgDepositInterestFundsRequest) Mutable(fd protoreflect.
 	switch fd.FullName() {
 	case "provlabs.vault.v1.MsgDepositInterestFundsRequest.amount":
 		if x.Amount == nil {
-			x.Amount = new(v1beta11.Coin)
+			x.Amount = new(v1beta1.Coin)
 		}
 		return protoreflect.ValueOfMessage(x.Amount.ProtoReflect())
 	case "provlabs.vault.v1.MsgDepositInterestFundsRequest.authority":
@@ -13544,7 +15756,7 @@ func (x *fastReflection_MsgDepositInterestFundsRequest) NewField(fd protoreflect
 	case "provlabs.vault.v1.MsgDepositInterestFundsRequest.vault_address":
 		return protoreflect.ValueOfString("")
 	case "provlabs.vault.v1.MsgDepositInterestFundsRequest.amount":
-		m := new(v1beta11.Coin)
+		m := new(v1beta1.Coin)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
@@ -13827,7 +16039,7 @@ func (x *fastReflection_MsgDepositInterestFundsRequest) ProtoMethods() *protoifa
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				if x.Amount == nil {
-					x.Amount = &v1beta11.Coin{}
+					x.Amount = &v1beta1.Coin{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Amount); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
@@ -13886,7 +16098,7 @@ func (x *MsgDepositInterestFundsResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgDepositInterestFundsResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[29]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[33]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14248,7 +16460,7 @@ func (x *MsgWithdrawInterestFundsRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgWithdrawInterestFundsRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[30]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[34]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14415,7 +16627,7 @@ func (x *fastReflection_MsgWithdrawInterestFundsRequest) Set(fd protoreflect.Fie
 	case "provlabs.vault.v1.MsgWithdrawInterestFundsRequest.vault_address":
 		x.VaultAddress = value.Interface().(string)
 	case "provlabs.vault.v1.MsgWithdrawInterestFundsRequest.amount":
-		x.Amount = value.Message().Interface().(*v1beta11.Coin)
+		x.Amount = value.Message().Interface().(*v1beta1.Coin)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgWithdrawInterestFundsRequest"))
@@ -14438,7 +16650,7 @@ func (x *fastReflection_MsgWithdrawInterestFundsRequest) Mutable(fd protoreflect
 	switch fd.FullName() {
 	case "provlabs.vault.v1.MsgWithdrawInterestFundsRequest.amount":
 		if x.Amount == nil {
-			x.Amount = new(v1beta11.Coin)
+			x.Amount = new(v1beta1.Coin)
 		}
 		return protoreflect.ValueOfMessage(x.Amount.ProtoReflect())
 	case "provlabs.vault.v1.MsgWithdrawInterestFundsRequest.authority":
@@ -14463,7 +16675,7 @@ func (x *fastReflection_MsgWithdrawInterestFundsRequest) NewField(fd protoreflec
 	case "provlabs.vault.v1.MsgWithdrawInterestFundsRequest.vault_address":
 		return protoreflect.ValueOfString("")
 	case "provlabs.vault.v1.MsgWithdrawInterestFundsRequest.amount":
-		m := new(v1beta11.Coin)
+		m := new(v1beta1.Coin)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
@@ -14746,7 +16958,7 @@ func (x *fastReflection_MsgWithdrawInterestFundsRequest) ProtoMethods() *protoif
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				if x.Amount == nil {
-					x.Amount = &v1beta11.Coin{}
+					x.Amount = &v1beta1.Coin{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Amount); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
@@ -14805,7 +17017,7 @@ func (x *MsgWithdrawInterestFundsResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgWithdrawInterestFundsResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[31]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[35]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15167,7 +17379,7 @@ func (x *MsgDepositPrincipalFundsRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgDepositPrincipalFundsRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[32]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[36]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15334,7 +17546,7 @@ func (x *fastReflection_MsgDepositPrincipalFundsRequest) Set(fd protoreflect.Fie
 	case "provlabs.vault.v1.MsgDepositPrincipalFundsRequest.vault_address":
 		x.VaultAddress = value.Interface().(string)
 	case "provlabs.vault.v1.MsgDepositPrincipalFundsRequest.amount":
-		x.Amount = value.Message().Interface().(*v1beta11.Coin)
+		x.Amount = value.Message().Interface().(*v1beta1.Coin)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgDepositPrincipalFundsRequest"))
@@ -15357,7 +17569,7 @@ func (x *fastReflection_MsgDepositPrincipalFundsRequest) Mutable(fd protoreflect
 	switch fd.FullName() {
 	case "provlabs.vault.v1.MsgDepositPrincipalFundsRequest.amount":
 		if x.Amount == nil {
-			x.Amount = new(v1beta11.Coin)
+			x.Amount = new(v1beta1.Coin)
 		}
 		return protoreflect.ValueOfMessage(x.Amount.ProtoReflect())
 	case "provlabs.vault.v1.MsgDepositPrincipalFundsRequest.authority":
@@ -15382,7 +17594,7 @@ func (x *fastReflection_MsgDepositPrincipalFundsRequest) NewField(fd protoreflec
 	case "provlabs.vault.v1.MsgDepositPrincipalFundsRequest.vault_address":
 		return protoreflect.ValueOfString("")
 	case "provlabs.vault.v1.MsgDepositPrincipalFundsRequest.amount":
-		m := new(v1beta11.Coin)
+		m := new(v1beta1.Coin)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
@@ -15665,7 +17877,7 @@ func (x *fastReflection_MsgDepositPrincipalFundsRequest) ProtoMethods() *protoif
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				if x.Amount == nil {
-					x.Amount = &v1beta11.Coin{}
+					x.Amount = &v1beta1.Coin{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Amount); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
@@ -15724,7 +17936,7 @@ func (x *MsgDepositPrincipalFundsResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgDepositPrincipalFundsResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[33]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[37]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16086,7 +18298,7 @@ func (x *MsgWithdrawPrincipalFundsRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgWithdrawPrincipalFundsRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[34]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[38]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16253,7 +18465,7 @@ func (x *fastReflection_MsgWithdrawPrincipalFundsRequest) Set(fd protoreflect.Fi
 	case "provlabs.vault.v1.MsgWithdrawPrincipalFundsRequest.vault_address":
 		x.VaultAddress = value.Interface().(string)
 	case "provlabs.vault.v1.MsgWithdrawPrincipalFundsRequest.amount":
-		x.Amount = value.Message().Interface().(*v1beta11.Coin)
+		x.Amount = value.Message().Interface().(*v1beta1.Coin)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgWithdrawPrincipalFundsRequest"))
@@ -16276,7 +18488,7 @@ func (x *fastReflection_MsgWithdrawPrincipalFundsRequest) Mutable(fd protoreflec
 	switch fd.FullName() {
 	case "provlabs.vault.v1.MsgWithdrawPrincipalFundsRequest.amount":
 		if x.Amount == nil {
-			x.Amount = new(v1beta11.Coin)
+			x.Amount = new(v1beta1.Coin)
 		}
 		return protoreflect.ValueOfMessage(x.Amount.ProtoReflect())
 	case "provlabs.vault.v1.MsgWithdrawPrincipalFundsRequest.authority":
@@ -16301,7 +18513,7 @@ func (x *fastReflection_MsgWithdrawPrincipalFundsRequest) NewField(fd protorefle
 	case "provlabs.vault.v1.MsgWithdrawPrincipalFundsRequest.vault_address":
 		return protoreflect.ValueOfString("")
 	case "provlabs.vault.v1.MsgWithdrawPrincipalFundsRequest.amount":
-		m := new(v1beta11.Coin)
+		m := new(v1beta1.Coin)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
@@ -16584,7 +18796,7 @@ func (x *fastReflection_MsgWithdrawPrincipalFundsRequest) ProtoMethods() *protoi
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				if x.Amount == nil {
-					x.Amount = &v1beta11.Coin{}
+					x.Amount = &v1beta1.Coin{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Amount); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
@@ -16643,7 +18855,7 @@ func (x *MsgWithdrawPrincipalFundsResponse) ProtoReflect() protoreflect.Message 
 }
 
 func (x *MsgWithdrawPrincipalFundsResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[35]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[39]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17003,7 +19215,7 @@ func (x *MsgExpeditePendingSwapOutRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgExpeditePendingSwapOutRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[36]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[40]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17467,7 +19679,7 @@ func (x *MsgExpeditePendingSwapOutResponse) ProtoReflect() protoreflect.Message 
 }
 
 func (x *MsgExpeditePendingSwapOutResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[37]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[41]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17829,7 +20041,7 @@ func (x *MsgPauseVaultRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgPauseVaultRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[38]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[42]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18371,7 +20583,7 @@ func (x *MsgPauseVaultResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgPauseVaultResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[39]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[43]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18731,7 +20943,7 @@ func (x *MsgUnpauseVaultRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgUnpauseVaultRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[40]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[44]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19211,7 +21423,7 @@ func (x *MsgUnpauseVaultResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgUnpauseVaultResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[41]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[45]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19573,7 +21785,7 @@ func (x *MsgSetBridgeAddressRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgSetBridgeAddressRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[42]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[46]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20115,7 +22327,7 @@ func (x *MsgSetBridgeAddressResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgSetBridgeAddressResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[43]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[47]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20477,7 +22689,7 @@ func (x *MsgToggleBridgeRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgToggleBridgeRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[44]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[48]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21009,7 +23221,7 @@ func (x *MsgToggleBridgeResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgToggleBridgeResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[45]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[49]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21371,7 +23583,7 @@ func (x *MsgBridgeMintSharesRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgBridgeMintSharesRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[46]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[50]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21538,7 +23750,7 @@ func (x *fastReflection_MsgBridgeMintSharesRequest) Set(fd protoreflect.FieldDes
 	case "provlabs.vault.v1.MsgBridgeMintSharesRequest.vault_address":
 		x.VaultAddress = value.Interface().(string)
 	case "provlabs.vault.v1.MsgBridgeMintSharesRequest.shares":
-		x.Shares = value.Message().Interface().(*v1beta11.Coin)
+		x.Shares = value.Message().Interface().(*v1beta1.Coin)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgBridgeMintSharesRequest"))
@@ -21561,7 +23773,7 @@ func (x *fastReflection_MsgBridgeMintSharesRequest) Mutable(fd protoreflect.Fiel
 	switch fd.FullName() {
 	case "provlabs.vault.v1.MsgBridgeMintSharesRequest.shares":
 		if x.Shares == nil {
-			x.Shares = new(v1beta11.Coin)
+			x.Shares = new(v1beta1.Coin)
 		}
 		return protoreflect.ValueOfMessage(x.Shares.ProtoReflect())
 	case "provlabs.vault.v1.MsgBridgeMintSharesRequest.bridge":
@@ -21586,7 +23798,7 @@ func (x *fastReflection_MsgBridgeMintSharesRequest) NewField(fd protoreflect.Fie
 	case "provlabs.vault.v1.MsgBridgeMintSharesRequest.vault_address":
 		return protoreflect.ValueOfString("")
 	case "provlabs.vault.v1.MsgBridgeMintSharesRequest.shares":
-		m := new(v1beta11.Coin)
+		m := new(v1beta1.Coin)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
@@ -21869,7 +24081,7 @@ func (x *fastReflection_MsgBridgeMintSharesRequest) ProtoMethods() *protoiface.M
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				if x.Shares == nil {
-					x.Shares = &v1beta11.Coin{}
+					x.Shares = &v1beta1.Coin{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Shares); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
@@ -21928,7 +24140,7 @@ func (x *MsgBridgeMintSharesResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgBridgeMintSharesResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[47]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[51]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22290,7 +24502,7 @@ func (x *MsgBridgeBurnSharesRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgBridgeBurnSharesRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[48]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[52]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22457,7 +24669,7 @@ func (x *fastReflection_MsgBridgeBurnSharesRequest) Set(fd protoreflect.FieldDes
 	case "provlabs.vault.v1.MsgBridgeBurnSharesRequest.vault_address":
 		x.VaultAddress = value.Interface().(string)
 	case "provlabs.vault.v1.MsgBridgeBurnSharesRequest.shares":
-		x.Shares = value.Message().Interface().(*v1beta11.Coin)
+		x.Shares = value.Message().Interface().(*v1beta1.Coin)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.MsgBridgeBurnSharesRequest"))
@@ -22480,7 +24692,7 @@ func (x *fastReflection_MsgBridgeBurnSharesRequest) Mutable(fd protoreflect.Fiel
 	switch fd.FullName() {
 	case "provlabs.vault.v1.MsgBridgeBurnSharesRequest.shares":
 		if x.Shares == nil {
-			x.Shares = new(v1beta11.Coin)
+			x.Shares = new(v1beta1.Coin)
 		}
 		return protoreflect.ValueOfMessage(x.Shares.ProtoReflect())
 	case "provlabs.vault.v1.MsgBridgeBurnSharesRequest.bridge":
@@ -22505,7 +24717,7 @@ func (x *fastReflection_MsgBridgeBurnSharesRequest) NewField(fd protoreflect.Fie
 	case "provlabs.vault.v1.MsgBridgeBurnSharesRequest.vault_address":
 		return protoreflect.ValueOfString("")
 	case "provlabs.vault.v1.MsgBridgeBurnSharesRequest.shares":
-		m := new(v1beta11.Coin)
+		m := new(v1beta1.Coin)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
 	default:
 		if fd.IsExtension() {
@@ -22788,7 +25000,7 @@ func (x *fastReflection_MsgBridgeBurnSharesRequest) ProtoMethods() *protoiface.M
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				if x.Shares == nil {
-					x.Shares = &v1beta11.Coin{}
+					x.Shares = &v1beta1.Coin{}
 				}
 				if err := options.Unmarshal(dAtA[iNdEx:postIndex], x.Shares); err != nil {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, err
@@ -22847,7 +25059,7 @@ func (x *MsgBridgeBurnSharesResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgBridgeBurnSharesResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[49]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[53]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -23209,7 +25421,7 @@ func (x *MsgSetAssetManagerRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgSetAssetManagerRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[50]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[54]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -23751,7 +25963,7 @@ func (x *MsgSetAssetManagerResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgSetAssetManagerResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[51]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[55]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -24111,7 +26323,7 @@ func (x *MsgUpdateParamsRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgUpdateParamsRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[52]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[56]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -24606,7 +26818,7 @@ func (x *MsgUpdateParamsResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgUpdateParamsResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[53]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[57]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -24968,7 +27180,7 @@ func (x *MsgUpdateVaultAUMFeeBipsRequest) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgUpdateVaultAUMFeeBipsRequest) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[54]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[58]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -25494,7 +27706,7 @@ func (x *MsgUpdateVaultAUMFeeBipsResponse) ProtoReflect() protoreflect.Message {
 }
 
 func (x *MsgUpdateVaultAUMFeeBipsResponse) slowProtoReflect() protoreflect.Message {
-	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[55]
+	mi := &file_provlabs_vault_v1_tx_proto_msgTypes[59]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -25845,6 +28057,206 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// MsgCreateRwaPaymentRequest initiates a P2P payment from the vault's principal account.
+type MsgCreateRwaPaymentRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// authority is the vault administrator or asset manager.
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// vault_address is the bech32 address of the vault.
+	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// target is the recipient of the payment.
+	Target string `protobuf:"bytes,3,opt,name=target,proto3" json:"target,omitempty"`
+	// source_amount is the funds moved from the vault to the target.
+	SourceAmount []*v1beta1.Coin `protobuf:"bytes,4,rep,name=source_amount,json=sourceAmount,proto3" json:"source_amount,omitempty"`
+	// target_amount is the funds moved from the target to the vault.
+	TargetAmount []*v1beta1.Coin `protobuf:"bytes,5,rep,name=target_amount,json=targetAmount,proto3" json:"target_amount,omitempty"`
+	// external_id is a unique identifier for this payment.
+	ExternalId string `protobuf:"bytes,6,opt,name=external_id,json=externalId,proto3" json:"external_id,omitempty"`
+}
+
+func (x *MsgCreateRwaPaymentRequest) Reset() {
+	*x = MsgCreateRwaPaymentRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[0]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgCreateRwaPaymentRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgCreateRwaPaymentRequest) ProtoMessage() {}
+
+// Deprecated: Use MsgCreateRwaPaymentRequest.ProtoReflect.Descriptor instead.
+func (*MsgCreateRwaPaymentRequest) Descriptor() ([]byte, []int) {
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *MsgCreateRwaPaymentRequest) GetAuthority() string {
+	if x != nil {
+		return x.Authority
+	}
+	return ""
+}
+
+func (x *MsgCreateRwaPaymentRequest) GetVaultAddress() string {
+	if x != nil {
+		return x.VaultAddress
+	}
+	return ""
+}
+
+func (x *MsgCreateRwaPaymentRequest) GetTarget() string {
+	if x != nil {
+		return x.Target
+	}
+	return ""
+}
+
+func (x *MsgCreateRwaPaymentRequest) GetSourceAmount() []*v1beta1.Coin {
+	if x != nil {
+		return x.SourceAmount
+	}
+	return nil
+}
+
+func (x *MsgCreateRwaPaymentRequest) GetTargetAmount() []*v1beta1.Coin {
+	if x != nil {
+		return x.TargetAmount
+	}
+	return nil
+}
+
+func (x *MsgCreateRwaPaymentRequest) GetExternalId() string {
+	if x != nil {
+		return x.ExternalId
+	}
+	return ""
+}
+
+// MsgCreateRwaPaymentResponse defines the response for CreateRwaPayment.
+type MsgCreateRwaPaymentResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *MsgCreateRwaPaymentResponse) Reset() {
+	*x = MsgCreateRwaPaymentResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[1]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgCreateRwaPaymentResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgCreateRwaPaymentResponse) ProtoMessage() {}
+
+// Deprecated: Use MsgCreateRwaPaymentResponse.ProtoReflect.Descriptor instead.
+func (*MsgCreateRwaPaymentResponse) Descriptor() ([]byte, []int) {
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{1}
+}
+
+// MsgAcceptRwaPaymentRequest accepts an existing P2P payment where the vault is the target.
+type MsgAcceptRwaPaymentRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// authority is the vault administrator or asset manager.
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// vault_address is the bech32 address of the vault.
+	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
+	// source is the account that created the payment.
+	Source string `protobuf:"bytes,3,opt,name=source,proto3" json:"source,omitempty"`
+	// external_id is the unique identifier of the payment to accept.
+	ExternalId string `protobuf:"bytes,4,opt,name=external_id,json=externalId,proto3" json:"external_id,omitempty"`
+}
+
+func (x *MsgAcceptRwaPaymentRequest) Reset() {
+	*x = MsgAcceptRwaPaymentRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgAcceptRwaPaymentRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgAcceptRwaPaymentRequest) ProtoMessage() {}
+
+// Deprecated: Use MsgAcceptRwaPaymentRequest.ProtoReflect.Descriptor instead.
+func (*MsgAcceptRwaPaymentRequest) Descriptor() ([]byte, []int) {
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *MsgAcceptRwaPaymentRequest) GetAuthority() string {
+	if x != nil {
+		return x.Authority
+	}
+	return ""
+}
+
+func (x *MsgAcceptRwaPaymentRequest) GetVaultAddress() string {
+	if x != nil {
+		return x.VaultAddress
+	}
+	return ""
+}
+
+func (x *MsgAcceptRwaPaymentRequest) GetSource() string {
+	if x != nil {
+		return x.Source
+	}
+	return ""
+}
+
+func (x *MsgAcceptRwaPaymentRequest) GetExternalId() string {
+	if x != nil {
+		return x.ExternalId
+	}
+	return ""
+}
+
+// MsgAcceptRwaPaymentResponse defines the response for AcceptRwaPayment.
+type MsgAcceptRwaPaymentResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *MsgAcceptRwaPaymentResponse) Reset() {
+	*x = MsgAcceptRwaPaymentResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *MsgAcceptRwaPaymentResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MsgAcceptRwaPaymentResponse) ProtoMessage() {}
+
+// Deprecated: Use MsgAcceptRwaPaymentResponse.ProtoReflect.Descriptor instead.
+func (*MsgAcceptRwaPaymentResponse) Descriptor() ([]byte, []int) {
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{3}
+}
+
 // MsgCreateVaultRequest is the request message for the CreateVault endpoint.
 type MsgCreateVaultRequest struct {
 	state         protoimpl.MessageState
@@ -25884,7 +28296,7 @@ type MsgCreateVaultRequest struct {
 func (x *MsgCreateVaultRequest) Reset() {
 	*x = MsgCreateVaultRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[0]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -25898,7 +28310,7 @@ func (*MsgCreateVaultRequest) ProtoMessage() {}
 
 // Deprecated: Use MsgCreateVaultRequest.ProtoReflect.Descriptor instead.
 func (*MsgCreateVaultRequest) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{0}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *MsgCreateVaultRequest) GetAdmin() string {
@@ -25977,7 +28389,7 @@ type MsgCreateVaultResponse struct {
 func (x *MsgCreateVaultResponse) Reset() {
 	*x = MsgCreateVaultResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[1]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -25991,7 +28403,7 @@ func (*MsgCreateVaultResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgCreateVaultResponse.ProtoReflect.Descriptor instead.
 func (*MsgCreateVaultResponse) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{1}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *MsgCreateVaultResponse) GetVaultAddress() string {
@@ -26009,7 +28421,7 @@ type MsgSetShareDenomMetadataRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// metadata is the bank module Metadata to assign to the vault's share denom.
-	Metadata *v1beta1.Metadata `protobuf:"bytes,1,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	Metadata *v1beta11.Metadata `protobuf:"bytes,1,opt,name=metadata,proto3" json:"metadata,omitempty"`
 	// admin is the address of the vault administrator authorizing this update.
 	Admin string `protobuf:"bytes,2,opt,name=admin,proto3" json:"admin,omitempty"`
 	// vault_address is the bech32 address of the vault whose share denom metadata is being set.
@@ -26019,7 +28431,7 @@ type MsgSetShareDenomMetadataRequest struct {
 func (x *MsgSetShareDenomMetadataRequest) Reset() {
 	*x = MsgSetShareDenomMetadataRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[2]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -26033,10 +28445,10 @@ func (*MsgSetShareDenomMetadataRequest) ProtoMessage() {}
 
 // Deprecated: Use MsgSetShareDenomMetadataRequest.ProtoReflect.Descriptor instead.
 func (*MsgSetShareDenomMetadataRequest) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{2}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *MsgSetShareDenomMetadataRequest) GetMetadata() *v1beta1.Metadata {
+func (x *MsgSetShareDenomMetadataRequest) GetMetadata() *v1beta11.Metadata {
 	if x != nil {
 		return x.Metadata
 	}
@@ -26067,7 +28479,7 @@ type MsgSetShareDenomMetadataResponse struct {
 func (x *MsgSetShareDenomMetadataResponse) Reset() {
 	*x = MsgSetShareDenomMetadataResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[3]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -26081,7 +28493,7 @@ func (*MsgSetShareDenomMetadataResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgSetShareDenomMetadataResponse.ProtoReflect.Descriptor instead.
 func (*MsgSetShareDenomMetadataResponse) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{3}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{7}
 }
 
 // MsgSwapInRequest is the request message for depositing underlying assets into a vault in exchange for shares.
@@ -26095,13 +28507,13 @@ type MsgSwapInRequest struct {
 	// vault_address is the address of the target vault.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// assets is the amount of underlying assets to deposit.
-	Assets *v1beta11.Coin `protobuf:"bytes,3,opt,name=assets,proto3" json:"assets,omitempty"`
+	Assets *v1beta1.Coin `protobuf:"bytes,3,opt,name=assets,proto3" json:"assets,omitempty"`
 }
 
 func (x *MsgSwapInRequest) Reset() {
 	*x = MsgSwapInRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[4]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -26115,7 +28527,7 @@ func (*MsgSwapInRequest) ProtoMessage() {}
 
 // Deprecated: Use MsgSwapInRequest.ProtoReflect.Descriptor instead.
 func (*MsgSwapInRequest) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{4}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *MsgSwapInRequest) GetOwner() string {
@@ -26132,7 +28544,7 @@ func (x *MsgSwapInRequest) GetVaultAddress() string {
 	return ""
 }
 
-func (x *MsgSwapInRequest) GetAssets() *v1beta11.Coin {
+func (x *MsgSwapInRequest) GetAssets() *v1beta1.Coin {
 	if x != nil {
 		return x.Assets
 	}
@@ -26146,13 +28558,13 @@ type MsgSwapInResponse struct {
 	unknownFields protoimpl.UnknownFields
 
 	// shares_received is the amount of vault shares minted to the depositor.
-	SharesReceived *v1beta11.Coin `protobuf:"bytes,1,opt,name=shares_received,json=sharesReceived,proto3" json:"shares_received,omitempty"`
+	SharesReceived *v1beta1.Coin `protobuf:"bytes,1,opt,name=shares_received,json=sharesReceived,proto3" json:"shares_received,omitempty"`
 }
 
 func (x *MsgSwapInResponse) Reset() {
 	*x = MsgSwapInResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[5]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -26166,10 +28578,10 @@ func (*MsgSwapInResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgSwapInResponse.ProtoReflect.Descriptor instead.
 func (*MsgSwapInResponse) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{5}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{9}
 }
 
-func (x *MsgSwapInResponse) GetSharesReceived() *v1beta11.Coin {
+func (x *MsgSwapInResponse) GetSharesReceived() *v1beta1.Coin {
 	if x != nil {
 		return x.SharesReceived
 	}
@@ -26187,7 +28599,7 @@ type MsgSwapOutRequest struct {
 	// vault_address is the address of the vault to redeem from.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// assets is the amount of underlying assets to withdraw.
-	Assets *v1beta11.Coin `protobuf:"bytes,3,opt,name=assets,proto3" json:"assets,omitempty"`
+	Assets *v1beta1.Coin `protobuf:"bytes,3,opt,name=assets,proto3" json:"assets,omitempty"`
 	// redeem_denom selects the payout coin.
 	// - If empty, defaults to the vault’s payment_denom.
 	// - Must be either the vault’s underlying_asset or its payment_denom.
@@ -26197,7 +28609,7 @@ type MsgSwapOutRequest struct {
 func (x *MsgSwapOutRequest) Reset() {
 	*x = MsgSwapOutRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[6]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -26211,7 +28623,7 @@ func (*MsgSwapOutRequest) ProtoMessage() {}
 
 // Deprecated: Use MsgSwapOutRequest.ProtoReflect.Descriptor instead.
 func (*MsgSwapOutRequest) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{6}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *MsgSwapOutRequest) GetOwner() string {
@@ -26228,7 +28640,7 @@ func (x *MsgSwapOutRequest) GetVaultAddress() string {
 	return ""
 }
 
-func (x *MsgSwapOutRequest) GetAssets() *v1beta11.Coin {
+func (x *MsgSwapOutRequest) GetAssets() *v1beta1.Coin {
 	if x != nil {
 		return x.Assets
 	}
@@ -26255,7 +28667,7 @@ type MsgSwapOutResponse struct {
 func (x *MsgSwapOutResponse) Reset() {
 	*x = MsgSwapOutResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[7]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -26269,7 +28681,7 @@ func (*MsgSwapOutResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgSwapOutResponse.ProtoReflect.Descriptor instead.
 func (*MsgSwapOutResponse) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{7}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *MsgSwapOutResponse) GetRequestId() uint64 {
@@ -26297,7 +28709,7 @@ type MsgUpdateMinInterestRateRequest struct {
 func (x *MsgUpdateMinInterestRateRequest) Reset() {
 	*x = MsgUpdateMinInterestRateRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[8]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -26311,7 +28723,7 @@ func (*MsgUpdateMinInterestRateRequest) ProtoMessage() {}
 
 // Deprecated: Use MsgUpdateMinInterestRateRequest.ProtoReflect.Descriptor instead.
 func (*MsgUpdateMinInterestRateRequest) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{8}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *MsgUpdateMinInterestRateRequest) GetAdmin() string {
@@ -26345,7 +28757,7 @@ type MsgUpdateMinInterestRateResponse struct {
 func (x *MsgUpdateMinInterestRateResponse) Reset() {
 	*x = MsgUpdateMinInterestRateResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[9]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[13]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -26359,7 +28771,7 @@ func (*MsgUpdateMinInterestRateResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgUpdateMinInterestRateResponse.ProtoReflect.Descriptor instead.
 func (*MsgUpdateMinInterestRateResponse) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{9}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{13}
 }
 
 // MsgUpdateMaxInterestRateRequest is the request message for updating the maximum interest rate of a vault.
@@ -26380,7 +28792,7 @@ type MsgUpdateMaxInterestRateRequest struct {
 func (x *MsgUpdateMaxInterestRateRequest) Reset() {
 	*x = MsgUpdateMaxInterestRateRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[10]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[14]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -26394,7 +28806,7 @@ func (*MsgUpdateMaxInterestRateRequest) ProtoMessage() {}
 
 // Deprecated: Use MsgUpdateMaxInterestRateRequest.ProtoReflect.Descriptor instead.
 func (*MsgUpdateMaxInterestRateRequest) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{10}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *MsgUpdateMaxInterestRateRequest) GetAdmin() string {
@@ -26428,7 +28840,7 @@ type MsgUpdateMaxInterestRateResponse struct {
 func (x *MsgUpdateMaxInterestRateResponse) Reset() {
 	*x = MsgUpdateMaxInterestRateResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[11]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[15]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -26442,7 +28854,7 @@ func (*MsgUpdateMaxInterestRateResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgUpdateMaxInterestRateResponse.ProtoReflect.Descriptor instead.
 func (*MsgUpdateMaxInterestRateResponse) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{11}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{15}
 }
 
 // MsgUpdateInterestRateRequest is the request message for updating the annual interest rate of a vault.
@@ -26462,7 +28874,7 @@ type MsgUpdateInterestRateRequest struct {
 func (x *MsgUpdateInterestRateRequest) Reset() {
 	*x = MsgUpdateInterestRateRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[12]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[16]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -26476,7 +28888,7 @@ func (*MsgUpdateInterestRateRequest) ProtoMessage() {}
 
 // Deprecated: Use MsgUpdateInterestRateRequest.ProtoReflect.Descriptor instead.
 func (*MsgUpdateInterestRateRequest) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{12}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *MsgUpdateInterestRateRequest) GetAuthority() string {
@@ -26510,7 +28922,7 @@ type MsgUpdateInterestRateResponse struct {
 func (x *MsgUpdateInterestRateResponse) Reset() {
 	*x = MsgUpdateInterestRateResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[13]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[17]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -26524,7 +28936,7 @@ func (*MsgUpdateInterestRateResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgUpdateInterestRateResponse.ProtoReflect.Descriptor instead.
 func (*MsgUpdateInterestRateResponse) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{13}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{17}
 }
 
 // MsgUpdateWithdrawalDelayRequest is the request message for updating the withdrawal delay of a vault.
@@ -26545,7 +28957,7 @@ type MsgUpdateWithdrawalDelayRequest struct {
 func (x *MsgUpdateWithdrawalDelayRequest) Reset() {
 	*x = MsgUpdateWithdrawalDelayRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[14]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[18]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -26559,7 +28971,7 @@ func (*MsgUpdateWithdrawalDelayRequest) ProtoMessage() {}
 
 // Deprecated: Use MsgUpdateWithdrawalDelayRequest.ProtoReflect.Descriptor instead.
 func (*MsgUpdateWithdrawalDelayRequest) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{14}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *MsgUpdateWithdrawalDelayRequest) GetAuthority() string {
@@ -26593,7 +29005,7 @@ type MsgUpdateWithdrawalDelayResponse struct {
 func (x *MsgUpdateWithdrawalDelayResponse) Reset() {
 	*x = MsgUpdateWithdrawalDelayResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[15]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[19]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -26607,7 +29019,7 @@ func (*MsgUpdateWithdrawalDelayResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgUpdateWithdrawalDelayResponse.ProtoReflect.Descriptor instead.
 func (*MsgUpdateWithdrawalDelayResponse) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{15}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{19}
 }
 
 // MsgUpdateMinSwapInValueRequest is the request message for updating the minimum swap-in value of a vault.
@@ -26629,7 +29041,7 @@ type MsgUpdateMinSwapInValueRequest struct {
 func (x *MsgUpdateMinSwapInValueRequest) Reset() {
 	*x = MsgUpdateMinSwapInValueRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[16]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[20]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -26643,7 +29055,7 @@ func (*MsgUpdateMinSwapInValueRequest) ProtoMessage() {}
 
 // Deprecated: Use MsgUpdateMinSwapInValueRequest.ProtoReflect.Descriptor instead.
 func (*MsgUpdateMinSwapInValueRequest) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{16}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *MsgUpdateMinSwapInValueRequest) GetAuthority() string {
@@ -26677,7 +29089,7 @@ type MsgUpdateMinSwapInValueResponse struct {
 func (x *MsgUpdateMinSwapInValueResponse) Reset() {
 	*x = MsgUpdateMinSwapInValueResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[17]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[21]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -26691,7 +29103,7 @@ func (*MsgUpdateMinSwapInValueResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgUpdateMinSwapInValueResponse.ProtoReflect.Descriptor instead.
 func (*MsgUpdateMinSwapInValueResponse) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{17}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{21}
 }
 
 // MsgUpdateMinSwapOutValueRequest is the request message for updating the minimum swap-out value of a vault.
@@ -26713,7 +29125,7 @@ type MsgUpdateMinSwapOutValueRequest struct {
 func (x *MsgUpdateMinSwapOutValueRequest) Reset() {
 	*x = MsgUpdateMinSwapOutValueRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[18]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[22]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -26727,7 +29139,7 @@ func (*MsgUpdateMinSwapOutValueRequest) ProtoMessage() {}
 
 // Deprecated: Use MsgUpdateMinSwapOutValueRequest.ProtoReflect.Descriptor instead.
 func (*MsgUpdateMinSwapOutValueRequest) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{18}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *MsgUpdateMinSwapOutValueRequest) GetAuthority() string {
@@ -26761,7 +29173,7 @@ type MsgUpdateMinSwapOutValueResponse struct {
 func (x *MsgUpdateMinSwapOutValueResponse) Reset() {
 	*x = MsgUpdateMinSwapOutValueResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[19]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[23]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -26775,7 +29187,7 @@ func (*MsgUpdateMinSwapOutValueResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgUpdateMinSwapOutValueResponse.ProtoReflect.Descriptor instead.
 func (*MsgUpdateMinSwapOutValueResponse) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{19}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{23}
 }
 
 // MsgUpdateMaxSwapInValueRequest is the request message for updating the maximum swap-in value of a vault.
@@ -26797,7 +29209,7 @@ type MsgUpdateMaxSwapInValueRequest struct {
 func (x *MsgUpdateMaxSwapInValueRequest) Reset() {
 	*x = MsgUpdateMaxSwapInValueRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[20]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[24]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -26811,7 +29223,7 @@ func (*MsgUpdateMaxSwapInValueRequest) ProtoMessage() {}
 
 // Deprecated: Use MsgUpdateMaxSwapInValueRequest.ProtoReflect.Descriptor instead.
 func (*MsgUpdateMaxSwapInValueRequest) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{20}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *MsgUpdateMaxSwapInValueRequest) GetAuthority() string {
@@ -26845,7 +29257,7 @@ type MsgUpdateMaxSwapInValueResponse struct {
 func (x *MsgUpdateMaxSwapInValueResponse) Reset() {
 	*x = MsgUpdateMaxSwapInValueResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[21]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[25]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -26859,7 +29271,7 @@ func (*MsgUpdateMaxSwapInValueResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgUpdateMaxSwapInValueResponse.ProtoReflect.Descriptor instead.
 func (*MsgUpdateMaxSwapInValueResponse) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{21}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{25}
 }
 
 // MsgUpdateMaxSwapOutValueRequest is the request message for updating the maximum swap-out value of a vault.
@@ -26881,7 +29293,7 @@ type MsgUpdateMaxSwapOutValueRequest struct {
 func (x *MsgUpdateMaxSwapOutValueRequest) Reset() {
 	*x = MsgUpdateMaxSwapOutValueRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[22]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[26]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -26895,7 +29307,7 @@ func (*MsgUpdateMaxSwapOutValueRequest) ProtoMessage() {}
 
 // Deprecated: Use MsgUpdateMaxSwapOutValueRequest.ProtoReflect.Descriptor instead.
 func (*MsgUpdateMaxSwapOutValueRequest) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{22}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *MsgUpdateMaxSwapOutValueRequest) GetAuthority() string {
@@ -26929,7 +29341,7 @@ type MsgUpdateMaxSwapOutValueResponse struct {
 func (x *MsgUpdateMaxSwapOutValueResponse) Reset() {
 	*x = MsgUpdateMaxSwapOutValueResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[23]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[27]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -26943,7 +29355,7 @@ func (*MsgUpdateMaxSwapOutValueResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgUpdateMaxSwapOutValueResponse.ProtoReflect.Descriptor instead.
 func (*MsgUpdateMaxSwapOutValueResponse) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{23}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{27}
 }
 
 // MsgToggleSwapInRequest is the request message for enabling or disabling swap-in operations for a vault.
@@ -26963,7 +29375,7 @@ type MsgToggleSwapInRequest struct {
 func (x *MsgToggleSwapInRequest) Reset() {
 	*x = MsgToggleSwapInRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[24]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[28]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -26977,7 +29389,7 @@ func (*MsgToggleSwapInRequest) ProtoMessage() {}
 
 // Deprecated: Use MsgToggleSwapInRequest.ProtoReflect.Descriptor instead.
 func (*MsgToggleSwapInRequest) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{24}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *MsgToggleSwapInRequest) GetAdmin() string {
@@ -27011,7 +29423,7 @@ type MsgToggleSwapInResponse struct {
 func (x *MsgToggleSwapInResponse) Reset() {
 	*x = MsgToggleSwapInResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[25]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[29]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -27025,7 +29437,7 @@ func (*MsgToggleSwapInResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgToggleSwapInResponse.ProtoReflect.Descriptor instead.
 func (*MsgToggleSwapInResponse) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{25}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{29}
 }
 
 // MsgToggleSwapOutRequest is the request message for enabling or disabling swap-out operations for a vault.
@@ -27045,7 +29457,7 @@ type MsgToggleSwapOutRequest struct {
 func (x *MsgToggleSwapOutRequest) Reset() {
 	*x = MsgToggleSwapOutRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[26]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[30]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -27059,7 +29471,7 @@ func (*MsgToggleSwapOutRequest) ProtoMessage() {}
 
 // Deprecated: Use MsgToggleSwapOutRequest.ProtoReflect.Descriptor instead.
 func (*MsgToggleSwapOutRequest) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{26}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *MsgToggleSwapOutRequest) GetAdmin() string {
@@ -27093,7 +29505,7 @@ type MsgToggleSwapOutResponse struct {
 func (x *MsgToggleSwapOutResponse) Reset() {
 	*x = MsgToggleSwapOutResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[27]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[31]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -27107,7 +29519,7 @@ func (*MsgToggleSwapOutResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgToggleSwapOutResponse.ProtoReflect.Descriptor instead.
 func (*MsgToggleSwapOutResponse) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{27}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{31}
 }
 
 // MsgDepositInterestFundsRequest is the request message for depositing funds to be used for paying interest.
@@ -27122,13 +29534,13 @@ type MsgDepositInterestFundsRequest struct {
 	// vault_address is the bech32 address of the vault to which funds are being deposited.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// amount is the amount of funds to deposit.
-	Amount *v1beta11.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
+	Amount *v1beta1.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
 }
 
 func (x *MsgDepositInterestFundsRequest) Reset() {
 	*x = MsgDepositInterestFundsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[28]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[32]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -27142,7 +29554,7 @@ func (*MsgDepositInterestFundsRequest) ProtoMessage() {}
 
 // Deprecated: Use MsgDepositInterestFundsRequest.ProtoReflect.Descriptor instead.
 func (*MsgDepositInterestFundsRequest) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{28}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *MsgDepositInterestFundsRequest) GetAuthority() string {
@@ -27159,7 +29571,7 @@ func (x *MsgDepositInterestFundsRequest) GetVaultAddress() string {
 	return ""
 }
 
-func (x *MsgDepositInterestFundsRequest) GetAmount() *v1beta11.Coin {
+func (x *MsgDepositInterestFundsRequest) GetAmount() *v1beta1.Coin {
 	if x != nil {
 		return x.Amount
 	}
@@ -27176,7 +29588,7 @@ type MsgDepositInterestFundsResponse struct {
 func (x *MsgDepositInterestFundsResponse) Reset() {
 	*x = MsgDepositInterestFundsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[29]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[33]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -27190,7 +29602,7 @@ func (*MsgDepositInterestFundsResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgDepositInterestFundsResponse.ProtoReflect.Descriptor instead.
 func (*MsgDepositInterestFundsResponse) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{29}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{33}
 }
 
 // MsgWithdrawInterestFundsRequest is the request message for withdrawing unused interest funds.
@@ -27204,13 +29616,13 @@ type MsgWithdrawInterestFundsRequest struct {
 	// vault_address is the bech32 address of the vault from which funds are being withdrawn.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// amount is the amount of funds to withdraw.
-	Amount *v1beta11.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
+	Amount *v1beta1.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
 }
 
 func (x *MsgWithdrawInterestFundsRequest) Reset() {
 	*x = MsgWithdrawInterestFundsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[30]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[34]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -27224,7 +29636,7 @@ func (*MsgWithdrawInterestFundsRequest) ProtoMessage() {}
 
 // Deprecated: Use MsgWithdrawInterestFundsRequest.ProtoReflect.Descriptor instead.
 func (*MsgWithdrawInterestFundsRequest) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{30}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *MsgWithdrawInterestFundsRequest) GetAuthority() string {
@@ -27241,7 +29653,7 @@ func (x *MsgWithdrawInterestFundsRequest) GetVaultAddress() string {
 	return ""
 }
 
-func (x *MsgWithdrawInterestFundsRequest) GetAmount() *v1beta11.Coin {
+func (x *MsgWithdrawInterestFundsRequest) GetAmount() *v1beta1.Coin {
 	if x != nil {
 		return x.Amount
 	}
@@ -27258,7 +29670,7 @@ type MsgWithdrawInterestFundsResponse struct {
 func (x *MsgWithdrawInterestFundsResponse) Reset() {
 	*x = MsgWithdrawInterestFundsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[31]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[35]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -27272,7 +29684,7 @@ func (*MsgWithdrawInterestFundsResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgWithdrawInterestFundsResponse.ProtoReflect.Descriptor instead.
 func (*MsgWithdrawInterestFundsResponse) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{31}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{35}
 }
 
 // MsgDepositPrincipalFundsRequest is the request message for depositing principal funds into a vault.
@@ -27287,13 +29699,13 @@ type MsgDepositPrincipalFundsRequest struct {
 	// vault_address is the bech32 address of the vault to which funds are being deposited.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// amount is the amount of funds to deposit.
-	Amount *v1beta11.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
+	Amount *v1beta1.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
 }
 
 func (x *MsgDepositPrincipalFundsRequest) Reset() {
 	*x = MsgDepositPrincipalFundsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[32]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[36]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -27307,7 +29719,7 @@ func (*MsgDepositPrincipalFundsRequest) ProtoMessage() {}
 
 // Deprecated: Use MsgDepositPrincipalFundsRequest.ProtoReflect.Descriptor instead.
 func (*MsgDepositPrincipalFundsRequest) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{32}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *MsgDepositPrincipalFundsRequest) GetAuthority() string {
@@ -27324,7 +29736,7 @@ func (x *MsgDepositPrincipalFundsRequest) GetVaultAddress() string {
 	return ""
 }
 
-func (x *MsgDepositPrincipalFundsRequest) GetAmount() *v1beta11.Coin {
+func (x *MsgDepositPrincipalFundsRequest) GetAmount() *v1beta1.Coin {
 	if x != nil {
 		return x.Amount
 	}
@@ -27341,7 +29753,7 @@ type MsgDepositPrincipalFundsResponse struct {
 func (x *MsgDepositPrincipalFundsResponse) Reset() {
 	*x = MsgDepositPrincipalFundsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[33]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[37]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -27355,7 +29767,7 @@ func (*MsgDepositPrincipalFundsResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgDepositPrincipalFundsResponse.ProtoReflect.Descriptor instead.
 func (*MsgDepositPrincipalFundsResponse) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{33}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{37}
 }
 
 // MsgWithdrawPrincipalFundsRequest is the request message for withdrawing principal funds from a vault.
@@ -27369,13 +29781,13 @@ type MsgWithdrawPrincipalFundsRequest struct {
 	// vault_address is the bech32 address of the vault from which funds are being withdrawn.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// amount is the amount of funds to withdraw.
-	Amount *v1beta11.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
+	Amount *v1beta1.Coin `protobuf:"bytes,3,opt,name=amount,proto3" json:"amount,omitempty"`
 }
 
 func (x *MsgWithdrawPrincipalFundsRequest) Reset() {
 	*x = MsgWithdrawPrincipalFundsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[34]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[38]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -27389,7 +29801,7 @@ func (*MsgWithdrawPrincipalFundsRequest) ProtoMessage() {}
 
 // Deprecated: Use MsgWithdrawPrincipalFundsRequest.ProtoReflect.Descriptor instead.
 func (*MsgWithdrawPrincipalFundsRequest) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{34}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *MsgWithdrawPrincipalFundsRequest) GetAuthority() string {
@@ -27406,7 +29818,7 @@ func (x *MsgWithdrawPrincipalFundsRequest) GetVaultAddress() string {
 	return ""
 }
 
-func (x *MsgWithdrawPrincipalFundsRequest) GetAmount() *v1beta11.Coin {
+func (x *MsgWithdrawPrincipalFundsRequest) GetAmount() *v1beta1.Coin {
 	if x != nil {
 		return x.Amount
 	}
@@ -27423,7 +29835,7 @@ type MsgWithdrawPrincipalFundsResponse struct {
 func (x *MsgWithdrawPrincipalFundsResponse) Reset() {
 	*x = MsgWithdrawPrincipalFundsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[35]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[39]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -27437,7 +29849,7 @@ func (*MsgWithdrawPrincipalFundsResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgWithdrawPrincipalFundsResponse.ProtoReflect.Descriptor instead.
 func (*MsgWithdrawPrincipalFundsResponse) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{35}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{39}
 }
 
 // MsgExpeditePendingSwapOutRequest is the request message for expediting a swap out from a vault.
@@ -27455,7 +29867,7 @@ type MsgExpeditePendingSwapOutRequest struct {
 func (x *MsgExpeditePendingSwapOutRequest) Reset() {
 	*x = MsgExpeditePendingSwapOutRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[36]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[40]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -27469,7 +29881,7 @@ func (*MsgExpeditePendingSwapOutRequest) ProtoMessage() {}
 
 // Deprecated: Use MsgExpeditePendingSwapOutRequest.ProtoReflect.Descriptor instead.
 func (*MsgExpeditePendingSwapOutRequest) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{36}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *MsgExpeditePendingSwapOutRequest) GetAuthority() string {
@@ -27496,7 +29908,7 @@ type MsgExpeditePendingSwapOutResponse struct {
 func (x *MsgExpeditePendingSwapOutResponse) Reset() {
 	*x = MsgExpeditePendingSwapOutResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[37]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[41]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -27510,7 +29922,7 @@ func (*MsgExpeditePendingSwapOutResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgExpeditePendingSwapOutResponse.ProtoReflect.Descriptor instead.
 func (*MsgExpeditePendingSwapOutResponse) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{37}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{41}
 }
 
 // MsgPauseVaultRequest is the request message to pause a vault. When processed,
@@ -27532,7 +29944,7 @@ type MsgPauseVaultRequest struct {
 func (x *MsgPauseVaultRequest) Reset() {
 	*x = MsgPauseVaultRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[38]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[42]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -27546,7 +29958,7 @@ func (*MsgPauseVaultRequest) ProtoMessage() {}
 
 // Deprecated: Use MsgPauseVaultRequest.ProtoReflect.Descriptor instead.
 func (*MsgPauseVaultRequest) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{38}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{42}
 }
 
 func (x *MsgPauseVaultRequest) GetAuthority() string {
@@ -27580,7 +29992,7 @@ type MsgPauseVaultResponse struct {
 func (x *MsgPauseVaultResponse) Reset() {
 	*x = MsgPauseVaultResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[39]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[43]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -27594,7 +30006,7 @@ func (*MsgPauseVaultResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgPauseVaultResponse.ProtoReflect.Descriptor instead.
 func (*MsgPauseVaultResponse) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{39}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{43}
 }
 
 // MsgUnpauseVaultRequest is the request message to unpause a vault. When processed,
@@ -27613,7 +30025,7 @@ type MsgUnpauseVaultRequest struct {
 func (x *MsgUnpauseVaultRequest) Reset() {
 	*x = MsgUnpauseVaultRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[40]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[44]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -27627,7 +30039,7 @@ func (*MsgUnpauseVaultRequest) ProtoMessage() {}
 
 // Deprecated: Use MsgUnpauseVaultRequest.ProtoReflect.Descriptor instead.
 func (*MsgUnpauseVaultRequest) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{40}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{44}
 }
 
 func (x *MsgUnpauseVaultRequest) GetAuthority() string {
@@ -27654,7 +30066,7 @@ type MsgUnpauseVaultResponse struct {
 func (x *MsgUnpauseVaultResponse) Reset() {
 	*x = MsgUnpauseVaultResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[41]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[45]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -27668,7 +30080,7 @@ func (*MsgUnpauseVaultResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgUnpauseVaultResponse.ProtoReflect.Descriptor instead.
 func (*MsgUnpauseVaultResponse) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{41}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{45}
 }
 
 // MsgSetBridgeAddressRequest is the request message for configuring the bridge address for a vault.
@@ -27688,7 +30100,7 @@ type MsgSetBridgeAddressRequest struct {
 func (x *MsgSetBridgeAddressRequest) Reset() {
 	*x = MsgSetBridgeAddressRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[42]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[46]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -27702,7 +30114,7 @@ func (*MsgSetBridgeAddressRequest) ProtoMessage() {}
 
 // Deprecated: Use MsgSetBridgeAddressRequest.ProtoReflect.Descriptor instead.
 func (*MsgSetBridgeAddressRequest) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{42}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{46}
 }
 
 func (x *MsgSetBridgeAddressRequest) GetAdmin() string {
@@ -27736,7 +30148,7 @@ type MsgSetBridgeAddressResponse struct {
 func (x *MsgSetBridgeAddressResponse) Reset() {
 	*x = MsgSetBridgeAddressResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[43]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[47]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -27750,7 +30162,7 @@ func (*MsgSetBridgeAddressResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgSetBridgeAddressResponse.ProtoReflect.Descriptor instead.
 func (*MsgSetBridgeAddressResponse) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{43}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{47}
 }
 
 // MsgToggleBridgeRequest is the request message for enabling or disabling the bridge for a vault.
@@ -27770,7 +30182,7 @@ type MsgToggleBridgeRequest struct {
 func (x *MsgToggleBridgeRequest) Reset() {
 	*x = MsgToggleBridgeRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[44]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[48]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -27784,7 +30196,7 @@ func (*MsgToggleBridgeRequest) ProtoMessage() {}
 
 // Deprecated: Use MsgToggleBridgeRequest.ProtoReflect.Descriptor instead.
 func (*MsgToggleBridgeRequest) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{44}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{48}
 }
 
 func (x *MsgToggleBridgeRequest) GetAdmin() string {
@@ -27818,7 +30230,7 @@ type MsgToggleBridgeResponse struct {
 func (x *MsgToggleBridgeResponse) Reset() {
 	*x = MsgToggleBridgeResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[45]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[49]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -27832,7 +30244,7 @@ func (*MsgToggleBridgeResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgToggleBridgeResponse.ProtoReflect.Descriptor instead.
 func (*MsgToggleBridgeResponse) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{45}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{49}
 }
 
 // MsgBridgeMintSharesRequest is the request message for minting local share marker supply; must be signed by the configured bridge address.
@@ -27846,13 +30258,13 @@ type MsgBridgeMintSharesRequest struct {
 	// vault_address is the bech32 address of the vault whose local share marker supply will be increased.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// shares is the amount of shares to mint into local marker supply.
-	Shares *v1beta11.Coin `protobuf:"bytes,3,opt,name=shares,proto3" json:"shares,omitempty"`
+	Shares *v1beta1.Coin `protobuf:"bytes,3,opt,name=shares,proto3" json:"shares,omitempty"`
 }
 
 func (x *MsgBridgeMintSharesRequest) Reset() {
 	*x = MsgBridgeMintSharesRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[46]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[50]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -27866,7 +30278,7 @@ func (*MsgBridgeMintSharesRequest) ProtoMessage() {}
 
 // Deprecated: Use MsgBridgeMintSharesRequest.ProtoReflect.Descriptor instead.
 func (*MsgBridgeMintSharesRequest) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{46}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{50}
 }
 
 func (x *MsgBridgeMintSharesRequest) GetBridge() string {
@@ -27883,7 +30295,7 @@ func (x *MsgBridgeMintSharesRequest) GetVaultAddress() string {
 	return ""
 }
 
-func (x *MsgBridgeMintSharesRequest) GetShares() *v1beta11.Coin {
+func (x *MsgBridgeMintSharesRequest) GetShares() *v1beta1.Coin {
 	if x != nil {
 		return x.Shares
 	}
@@ -27900,7 +30312,7 @@ type MsgBridgeMintSharesResponse struct {
 func (x *MsgBridgeMintSharesResponse) Reset() {
 	*x = MsgBridgeMintSharesResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[47]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[51]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -27914,7 +30326,7 @@ func (*MsgBridgeMintSharesResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgBridgeMintSharesResponse.ProtoReflect.Descriptor instead.
 func (*MsgBridgeMintSharesResponse) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{47}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{51}
 }
 
 // MsgBridgeBurnSharesRequest is the request message for burning local share marker supply; must be signed by the configured bridge address.
@@ -27928,13 +30340,13 @@ type MsgBridgeBurnSharesRequest struct {
 	// vault_address is the bech32 address of the vault whose local share marker supply will be decreased.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// shares is the amount of shares to burn from local marker supply.
-	Shares *v1beta11.Coin `protobuf:"bytes,3,opt,name=shares,proto3" json:"shares,omitempty"`
+	Shares *v1beta1.Coin `protobuf:"bytes,3,opt,name=shares,proto3" json:"shares,omitempty"`
 }
 
 func (x *MsgBridgeBurnSharesRequest) Reset() {
 	*x = MsgBridgeBurnSharesRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[48]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[52]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -27948,7 +30360,7 @@ func (*MsgBridgeBurnSharesRequest) ProtoMessage() {}
 
 // Deprecated: Use MsgBridgeBurnSharesRequest.ProtoReflect.Descriptor instead.
 func (*MsgBridgeBurnSharesRequest) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{48}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{52}
 }
 
 func (x *MsgBridgeBurnSharesRequest) GetBridge() string {
@@ -27965,7 +30377,7 @@ func (x *MsgBridgeBurnSharesRequest) GetVaultAddress() string {
 	return ""
 }
 
-func (x *MsgBridgeBurnSharesRequest) GetShares() *v1beta11.Coin {
+func (x *MsgBridgeBurnSharesRequest) GetShares() *v1beta1.Coin {
 	if x != nil {
 		return x.Shares
 	}
@@ -27982,7 +30394,7 @@ type MsgBridgeBurnSharesResponse struct {
 func (x *MsgBridgeBurnSharesResponse) Reset() {
 	*x = MsgBridgeBurnSharesResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[49]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[53]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -27996,7 +30408,7 @@ func (*MsgBridgeBurnSharesResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgBridgeBurnSharesResponse.ProtoReflect.Descriptor instead.
 func (*MsgBridgeBurnSharesResponse) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{49}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{53}
 }
 
 // MsgSetAssetManagerRequest sets or clears the optional asset manager address for a vault.
@@ -28017,7 +30429,7 @@ type MsgSetAssetManagerRequest struct {
 func (x *MsgSetAssetManagerRequest) Reset() {
 	*x = MsgSetAssetManagerRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[50]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[54]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -28031,7 +30443,7 @@ func (*MsgSetAssetManagerRequest) ProtoMessage() {}
 
 // Deprecated: Use MsgSetAssetManagerRequest.ProtoReflect.Descriptor instead.
 func (*MsgSetAssetManagerRequest) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{50}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{54}
 }
 
 func (x *MsgSetAssetManagerRequest) GetAdmin() string {
@@ -28065,7 +30477,7 @@ type MsgSetAssetManagerResponse struct {
 func (x *MsgSetAssetManagerResponse) Reset() {
 	*x = MsgSetAssetManagerResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[51]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[55]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -28079,7 +30491,7 @@ func (*MsgSetAssetManagerResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgSetAssetManagerResponse.ProtoReflect.Descriptor instead.
 func (*MsgSetAssetManagerResponse) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{51}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{55}
 }
 
 // MsgUpdateParamsRequest is the request message for updating the module parameters.
@@ -28097,7 +30509,7 @@ type MsgUpdateParamsRequest struct {
 func (x *MsgUpdateParamsRequest) Reset() {
 	*x = MsgUpdateParamsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[52]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[56]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -28111,7 +30523,7 @@ func (*MsgUpdateParamsRequest) ProtoMessage() {}
 
 // Deprecated: Use MsgUpdateParamsRequest.ProtoReflect.Descriptor instead.
 func (*MsgUpdateParamsRequest) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{52}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{56}
 }
 
 func (x *MsgUpdateParamsRequest) GetAuthority() string {
@@ -28138,7 +30550,7 @@ type MsgUpdateParamsResponse struct {
 func (x *MsgUpdateParamsResponse) Reset() {
 	*x = MsgUpdateParamsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[53]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[57]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -28152,7 +30564,7 @@ func (*MsgUpdateParamsResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgUpdateParamsResponse.ProtoReflect.Descriptor instead.
 func (*MsgUpdateParamsResponse) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{53}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{57}
 }
 
 // MsgUpdateVaultAUMFeeBipsRequest is the request message for updating the AUM fee bips for a specific vault.
@@ -28173,7 +30585,7 @@ type MsgUpdateVaultAUMFeeBipsRequest struct {
 func (x *MsgUpdateVaultAUMFeeBipsRequest) Reset() {
 	*x = MsgUpdateVaultAUMFeeBipsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[54]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[58]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -28187,7 +30599,7 @@ func (*MsgUpdateVaultAUMFeeBipsRequest) ProtoMessage() {}
 
 // Deprecated: Use MsgUpdateVaultAUMFeeBipsRequest.ProtoReflect.Descriptor instead.
 func (*MsgUpdateVaultAUMFeeBipsRequest) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{54}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{58}
 }
 
 func (x *MsgUpdateVaultAUMFeeBipsRequest) GetAuthority() string {
@@ -28221,7 +30633,7 @@ type MsgUpdateVaultAUMFeeBipsResponse struct {
 func (x *MsgUpdateVaultAUMFeeBipsResponse) Reset() {
 	*x = MsgUpdateVaultAUMFeeBipsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[55]
+		mi := &file_provlabs_vault_v1_tx_proto_msgTypes[59]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -28235,7 +30647,7 @@ func (*MsgUpdateVaultAUMFeeBipsResponse) ProtoMessage() {}
 
 // Deprecated: Use MsgUpdateVaultAUMFeeBipsResponse.ProtoReflect.Descriptor instead.
 func (*MsgUpdateVaultAUMFeeBipsResponse) Descriptor() ([]byte, []int) {
-	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{55}
+	return file_provlabs_vault_v1_tx_proto_rawDescGZIP(), []int{59}
 }
 
 var File_provlabs_vault_v1_tx_proto protoreflect.FileDescriptor
@@ -28254,7 +30666,53 @@ var file_provlabs_vault_v1_tx_proto_rawDesc = []byte{
 	0x6f, 0x74, 0x6f, 0x1a, 0x14, 0x67, 0x6f, 0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67,
 	0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x1e, 0x70, 0x72, 0x6f, 0x76, 0x6c,
 	0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x2f, 0x70, 0x61, 0x72,
-	0x61, 0x6d, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x86, 0x04, 0x0a, 0x15, 0x4d, 0x73,
+	0x61, 0x6d, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xc0, 0x03, 0x0a, 0x1a, 0x4d, 0x73,
+	0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x52, 0x77, 0x61, 0x50, 0x61, 0x79, 0x6d, 0x65, 0x6e,
+	0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x36, 0x0a, 0x09, 0x61, 0x75, 0x74, 0x68,
+	0x6f, 0x72, 0x69, 0x74, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d,
+	0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53,
+	0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79,
+	0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x30, 0x0a, 0x06, 0x74, 0x61, 0x72, 0x67, 0x65, 0x74, 0x18,
+	0x03, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52,
+	0x06, 0x74, 0x61, 0x72, 0x67, 0x65, 0x74, 0x12, 0x70, 0x0a, 0x0d, 0x73, 0x6f, 0x75, 0x72, 0x63,
+	0x65, 0x5f, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x04, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19,
+	0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62,
+	0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x30, 0xc8, 0xde, 0x1f, 0x00, 0xaa,
+	0xdf, 0x1f, 0x28, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f,
+	0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f,
+	0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x73, 0x52, 0x0c, 0x73, 0x6f, 0x75,
+	0x72, 0x63, 0x65, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x70, 0x0a, 0x0d, 0x74, 0x61, 0x72,
+	0x67, 0x65, 0x74, 0x5f, 0x61, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x18, 0x05, 0x20, 0x03, 0x28, 0x0b,
+	0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76,
+	0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x30, 0xc8, 0xde, 0x1f,
+	0x00, 0xaa, 0xdf, 0x1f, 0x28, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64,
+	0x6b, 0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x73, 0x52, 0x0c, 0x74,
+	0x61, 0x72, 0x67, 0x65, 0x74, 0x41, 0x6d, 0x6f, 0x75, 0x6e, 0x74, 0x12, 0x1f, 0x0a, 0x0b, 0x65,
+	0x78, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x5f, 0x69, 0x64, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x0a, 0x65, 0x78, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x49, 0x64, 0x3a, 0x0e, 0x82, 0xe7,
+	0xb0, 0x2a, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x22, 0x1d, 0x0a, 0x1b,
+	0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x52, 0x77, 0x61, 0x50, 0x61, 0x79, 0x6d,
+	0x65, 0x6e, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0xdc, 0x01, 0x0a, 0x1a,
+	0x4d, 0x73, 0x67, 0x41, 0x63, 0x63, 0x65, 0x70, 0x74, 0x52, 0x77, 0x61, 0x50, 0x61, 0x79, 0x6d,
+	0x65, 0x6e, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x36, 0x0a, 0x09, 0x61, 0x75,
+	0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2,
+	0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69,
+	0x74, 0x79, 0x12, 0x23, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72,
+	0x65, 0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74,
+	0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x30, 0x0a, 0x06, 0x73, 0x6f, 0x75, 0x72, 0x63,
+	0x65, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e,
+	0x67, 0x52, 0x06, 0x73, 0x6f, 0x75, 0x72, 0x63, 0x65, 0x12, 0x1f, 0x0a, 0x0b, 0x65, 0x78, 0x74,
+	0x65, 0x72, 0x6e, 0x61, 0x6c, 0x5f, 0x69, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a,
+	0x65, 0x78, 0x74, 0x65, 0x72, 0x6e, 0x61, 0x6c, 0x49, 0x64, 0x3a, 0x0e, 0x82, 0xe7, 0xb0, 0x2a,
+	0x09, 0x61, 0x75, 0x74, 0x68, 0x6f, 0x72, 0x69, 0x74, 0x79, 0x22, 0x1d, 0x0a, 0x1b, 0x4d, 0x73,
+	0x67, 0x41, 0x63, 0x63, 0x65, 0x70, 0x74, 0x52, 0x77, 0x61, 0x50, 0x61, 0x79, 0x6d, 0x65, 0x6e,
+	0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x86, 0x04, 0x0a, 0x15, 0x4d, 0x73,
 	0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x52, 0x65, 0x71, 0x75,
 	0x65, 0x73, 0x74, 0x12, 0x2e, 0x0a, 0x05, 0x61, 0x64, 0x6d, 0x69, 0x6e, 0x18, 0x01, 0x20, 0x01,
 	0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41,
@@ -28661,7 +31119,7 @@ var file_provlabs_vault_v1_tx_proto_rawDesc = []byte{
 	0x42, 0x69, 0x70, 0x73, 0x3a, 0x0e, 0x82, 0xe7, 0xb0, 0x2a, 0x09, 0x61, 0x75, 0x74, 0x68, 0x6f,
 	0x72, 0x69, 0x74, 0x79, 0x22, 0x22, 0x0a, 0x20, 0x4d, 0x73, 0x67, 0x55, 0x70, 0x64, 0x61, 0x74,
 	0x65, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x55, 0x4d, 0x46, 0x65, 0x65, 0x42, 0x69, 0x70, 0x73,
-	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x32, 0xea, 0x19, 0x0a, 0x03, 0x4d, 0x73, 0x67,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x32, 0xd0, 0x1b, 0x0a, 0x03, 0x4d, 0x73, 0x67,
 	0x12, 0x62, 0x0a, 0x0b, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x12,
 	0x28, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74,
 	0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x56, 0x61, 0x75,
@@ -28867,20 +31325,35 @@ var file_provlabs_vault_v1_tx_proto_rawDesc = []byte{
 	0x70, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x33, 0x2e, 0x70, 0x72, 0x6f, 0x76,
 	0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73,
 	0x67, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x55, 0x4d, 0x46,
-	0x65, 0x65, 0x42, 0x69, 0x70, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x1a, 0x05,
-	0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0xbf, 0x01, 0x0a, 0x15, 0x63, 0x6f, 0x6d, 0x2e, 0x70, 0x72,
-	0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x42,
-	0x07, 0x54, 0x78, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x37, 0x67, 0x69, 0x74, 0x68,
-	0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f,
-	0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61,
-	0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c,
-	0x74, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x50, 0x56, 0x58, 0xaa, 0x02, 0x11, 0x50, 0x72, 0x6f, 0x76,
-	0x6c, 0x61, 0x62, 0x73, 0x2e, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x11,
-	0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x5c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56,
-	0x31, 0xe2, 0x02, 0x1d, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x5c, 0x56, 0x61, 0x75,
-	0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74,
-	0x61, 0xea, 0x02, 0x13, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x3a, 0x3a, 0x56, 0x61,
-	0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x65, 0x65, 0x42, 0x69, 0x70, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x71,
+	0x0a, 0x10, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x52, 0x77, 0x61, 0x50, 0x61, 0x79, 0x6d, 0x65,
+	0x6e, 0x74, 0x12, 0x2d, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61,
+	0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65,
+	0x52, 0x77, 0x61, 0x50, 0x61, 0x79, 0x6d, 0x65, 0x6e, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x1a, 0x2e, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75,
+	0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x52,
+	0x77, 0x61, 0x50, 0x61, 0x79, 0x6d, 0x65, 0x6e, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x12, 0x71, 0x0a, 0x10, 0x41, 0x63, 0x63, 0x65, 0x70, 0x74, 0x52, 0x77, 0x61, 0x50, 0x61,
+	0x79, 0x6d, 0x65, 0x6e, 0x74, 0x12, 0x2d, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73,
+	0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x41, 0x63, 0x63,
+	0x65, 0x70, 0x74, 0x52, 0x77, 0x61, 0x50, 0x61, 0x79, 0x6d, 0x65, 0x6e, 0x74, 0x52, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x1a, 0x2e, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e,
+	0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x2e, 0x4d, 0x73, 0x67, 0x41, 0x63, 0x63, 0x65,
+	0x70, 0x74, 0x52, 0x77, 0x61, 0x50, 0x61, 0x79, 0x6d, 0x65, 0x6e, 0x74, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x1a, 0x05, 0x80, 0xe7, 0xb0, 0x2a, 0x01, 0x42, 0xbf, 0x01, 0x0a, 0x15,
+	0x63, 0x6f, 0x6d, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75,
+	0x6c, 0x74, 0x2e, 0x76, 0x31, 0x42, 0x07, 0x54, 0x78, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01,
+	0x5a, 0x37, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x6f,
+	0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69, 0x2f,
+	0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76,
+	0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x50, 0x56, 0x58, 0xaa,
+	0x02, 0x11, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x56, 0x61, 0x75, 0x6c, 0x74,
+	0x2e, 0x56, 0x31, 0xca, 0x02, 0x11, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x5c, 0x56,
+	0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1d, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61,
+	0x62, 0x73, 0x5c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d,
+	0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x13, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61,
+	0x62, 0x73, 0x3a, 0x3a, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -28895,141 +31368,151 @@ func file_provlabs_vault_v1_tx_proto_rawDescGZIP() []byte {
 	return file_provlabs_vault_v1_tx_proto_rawDescData
 }
 
-var file_provlabs_vault_v1_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 56)
+var file_provlabs_vault_v1_tx_proto_msgTypes = make([]protoimpl.MessageInfo, 60)
 var file_provlabs_vault_v1_tx_proto_goTypes = []interface{}{
-	(*MsgCreateVaultRequest)(nil),             // 0: provlabs.vault.v1.MsgCreateVaultRequest
-	(*MsgCreateVaultResponse)(nil),            // 1: provlabs.vault.v1.MsgCreateVaultResponse
-	(*MsgSetShareDenomMetadataRequest)(nil),   // 2: provlabs.vault.v1.MsgSetShareDenomMetadataRequest
-	(*MsgSetShareDenomMetadataResponse)(nil),  // 3: provlabs.vault.v1.MsgSetShareDenomMetadataResponse
-	(*MsgSwapInRequest)(nil),                  // 4: provlabs.vault.v1.MsgSwapInRequest
-	(*MsgSwapInResponse)(nil),                 // 5: provlabs.vault.v1.MsgSwapInResponse
-	(*MsgSwapOutRequest)(nil),                 // 6: provlabs.vault.v1.MsgSwapOutRequest
-	(*MsgSwapOutResponse)(nil),                // 7: provlabs.vault.v1.MsgSwapOutResponse
-	(*MsgUpdateMinInterestRateRequest)(nil),   // 8: provlabs.vault.v1.MsgUpdateMinInterestRateRequest
-	(*MsgUpdateMinInterestRateResponse)(nil),  // 9: provlabs.vault.v1.MsgUpdateMinInterestRateResponse
-	(*MsgUpdateMaxInterestRateRequest)(nil),   // 10: provlabs.vault.v1.MsgUpdateMaxInterestRateRequest
-	(*MsgUpdateMaxInterestRateResponse)(nil),  // 11: provlabs.vault.v1.MsgUpdateMaxInterestRateResponse
-	(*MsgUpdateInterestRateRequest)(nil),      // 12: provlabs.vault.v1.MsgUpdateInterestRateRequest
-	(*MsgUpdateInterestRateResponse)(nil),     // 13: provlabs.vault.v1.MsgUpdateInterestRateResponse
-	(*MsgUpdateWithdrawalDelayRequest)(nil),   // 14: provlabs.vault.v1.MsgUpdateWithdrawalDelayRequest
-	(*MsgUpdateWithdrawalDelayResponse)(nil),  // 15: provlabs.vault.v1.MsgUpdateWithdrawalDelayResponse
-	(*MsgUpdateMinSwapInValueRequest)(nil),    // 16: provlabs.vault.v1.MsgUpdateMinSwapInValueRequest
-	(*MsgUpdateMinSwapInValueResponse)(nil),   // 17: provlabs.vault.v1.MsgUpdateMinSwapInValueResponse
-	(*MsgUpdateMinSwapOutValueRequest)(nil),   // 18: provlabs.vault.v1.MsgUpdateMinSwapOutValueRequest
-	(*MsgUpdateMinSwapOutValueResponse)(nil),  // 19: provlabs.vault.v1.MsgUpdateMinSwapOutValueResponse
-	(*MsgUpdateMaxSwapInValueRequest)(nil),    // 20: provlabs.vault.v1.MsgUpdateMaxSwapInValueRequest
-	(*MsgUpdateMaxSwapInValueResponse)(nil),   // 21: provlabs.vault.v1.MsgUpdateMaxSwapInValueResponse
-	(*MsgUpdateMaxSwapOutValueRequest)(nil),   // 22: provlabs.vault.v1.MsgUpdateMaxSwapOutValueRequest
-	(*MsgUpdateMaxSwapOutValueResponse)(nil),  // 23: provlabs.vault.v1.MsgUpdateMaxSwapOutValueResponse
-	(*MsgToggleSwapInRequest)(nil),            // 24: provlabs.vault.v1.MsgToggleSwapInRequest
-	(*MsgToggleSwapInResponse)(nil),           // 25: provlabs.vault.v1.MsgToggleSwapInResponse
-	(*MsgToggleSwapOutRequest)(nil),           // 26: provlabs.vault.v1.MsgToggleSwapOutRequest
-	(*MsgToggleSwapOutResponse)(nil),          // 27: provlabs.vault.v1.MsgToggleSwapOutResponse
-	(*MsgDepositInterestFundsRequest)(nil),    // 28: provlabs.vault.v1.MsgDepositInterestFundsRequest
-	(*MsgDepositInterestFundsResponse)(nil),   // 29: provlabs.vault.v1.MsgDepositInterestFundsResponse
-	(*MsgWithdrawInterestFundsRequest)(nil),   // 30: provlabs.vault.v1.MsgWithdrawInterestFundsRequest
-	(*MsgWithdrawInterestFundsResponse)(nil),  // 31: provlabs.vault.v1.MsgWithdrawInterestFundsResponse
-	(*MsgDepositPrincipalFundsRequest)(nil),   // 32: provlabs.vault.v1.MsgDepositPrincipalFundsRequest
-	(*MsgDepositPrincipalFundsResponse)(nil),  // 33: provlabs.vault.v1.MsgDepositPrincipalFundsResponse
-	(*MsgWithdrawPrincipalFundsRequest)(nil),  // 34: provlabs.vault.v1.MsgWithdrawPrincipalFundsRequest
-	(*MsgWithdrawPrincipalFundsResponse)(nil), // 35: provlabs.vault.v1.MsgWithdrawPrincipalFundsResponse
-	(*MsgExpeditePendingSwapOutRequest)(nil),  // 36: provlabs.vault.v1.MsgExpeditePendingSwapOutRequest
-	(*MsgExpeditePendingSwapOutResponse)(nil), // 37: provlabs.vault.v1.MsgExpeditePendingSwapOutResponse
-	(*MsgPauseVaultRequest)(nil),              // 38: provlabs.vault.v1.MsgPauseVaultRequest
-	(*MsgPauseVaultResponse)(nil),             // 39: provlabs.vault.v1.MsgPauseVaultResponse
-	(*MsgUnpauseVaultRequest)(nil),            // 40: provlabs.vault.v1.MsgUnpauseVaultRequest
-	(*MsgUnpauseVaultResponse)(nil),           // 41: provlabs.vault.v1.MsgUnpauseVaultResponse
-	(*MsgSetBridgeAddressRequest)(nil),        // 42: provlabs.vault.v1.MsgSetBridgeAddressRequest
-	(*MsgSetBridgeAddressResponse)(nil),       // 43: provlabs.vault.v1.MsgSetBridgeAddressResponse
-	(*MsgToggleBridgeRequest)(nil),            // 44: provlabs.vault.v1.MsgToggleBridgeRequest
-	(*MsgToggleBridgeResponse)(nil),           // 45: provlabs.vault.v1.MsgToggleBridgeResponse
-	(*MsgBridgeMintSharesRequest)(nil),        // 46: provlabs.vault.v1.MsgBridgeMintSharesRequest
-	(*MsgBridgeMintSharesResponse)(nil),       // 47: provlabs.vault.v1.MsgBridgeMintSharesResponse
-	(*MsgBridgeBurnSharesRequest)(nil),        // 48: provlabs.vault.v1.MsgBridgeBurnSharesRequest
-	(*MsgBridgeBurnSharesResponse)(nil),       // 49: provlabs.vault.v1.MsgBridgeBurnSharesResponse
-	(*MsgSetAssetManagerRequest)(nil),         // 50: provlabs.vault.v1.MsgSetAssetManagerRequest
-	(*MsgSetAssetManagerResponse)(nil),        // 51: provlabs.vault.v1.MsgSetAssetManagerResponse
-	(*MsgUpdateParamsRequest)(nil),            // 52: provlabs.vault.v1.MsgUpdateParamsRequest
-	(*MsgUpdateParamsResponse)(nil),           // 53: provlabs.vault.v1.MsgUpdateParamsResponse
-	(*MsgUpdateVaultAUMFeeBipsRequest)(nil),   // 54: provlabs.vault.v1.MsgUpdateVaultAUMFeeBipsRequest
-	(*MsgUpdateVaultAUMFeeBipsResponse)(nil),  // 55: provlabs.vault.v1.MsgUpdateVaultAUMFeeBipsResponse
-	(*v1beta1.Metadata)(nil),                  // 56: cosmos.bank.v1beta1.Metadata
-	(*v1beta11.Coin)(nil),                     // 57: cosmos.base.v1beta1.Coin
-	(*Params)(nil),                            // 58: provlabs.vault.v1.Params
+	(*MsgCreateRwaPaymentRequest)(nil),        // 0: provlabs.vault.v1.MsgCreateRwaPaymentRequest
+	(*MsgCreateRwaPaymentResponse)(nil),       // 1: provlabs.vault.v1.MsgCreateRwaPaymentResponse
+	(*MsgAcceptRwaPaymentRequest)(nil),        // 2: provlabs.vault.v1.MsgAcceptRwaPaymentRequest
+	(*MsgAcceptRwaPaymentResponse)(nil),       // 3: provlabs.vault.v1.MsgAcceptRwaPaymentResponse
+	(*MsgCreateVaultRequest)(nil),             // 4: provlabs.vault.v1.MsgCreateVaultRequest
+	(*MsgCreateVaultResponse)(nil),            // 5: provlabs.vault.v1.MsgCreateVaultResponse
+	(*MsgSetShareDenomMetadataRequest)(nil),   // 6: provlabs.vault.v1.MsgSetShareDenomMetadataRequest
+	(*MsgSetShareDenomMetadataResponse)(nil),  // 7: provlabs.vault.v1.MsgSetShareDenomMetadataResponse
+	(*MsgSwapInRequest)(nil),                  // 8: provlabs.vault.v1.MsgSwapInRequest
+	(*MsgSwapInResponse)(nil),                 // 9: provlabs.vault.v1.MsgSwapInResponse
+	(*MsgSwapOutRequest)(nil),                 // 10: provlabs.vault.v1.MsgSwapOutRequest
+	(*MsgSwapOutResponse)(nil),                // 11: provlabs.vault.v1.MsgSwapOutResponse
+	(*MsgUpdateMinInterestRateRequest)(nil),   // 12: provlabs.vault.v1.MsgUpdateMinInterestRateRequest
+	(*MsgUpdateMinInterestRateResponse)(nil),  // 13: provlabs.vault.v1.MsgUpdateMinInterestRateResponse
+	(*MsgUpdateMaxInterestRateRequest)(nil),   // 14: provlabs.vault.v1.MsgUpdateMaxInterestRateRequest
+	(*MsgUpdateMaxInterestRateResponse)(nil),  // 15: provlabs.vault.v1.MsgUpdateMaxInterestRateResponse
+	(*MsgUpdateInterestRateRequest)(nil),      // 16: provlabs.vault.v1.MsgUpdateInterestRateRequest
+	(*MsgUpdateInterestRateResponse)(nil),     // 17: provlabs.vault.v1.MsgUpdateInterestRateResponse
+	(*MsgUpdateWithdrawalDelayRequest)(nil),   // 18: provlabs.vault.v1.MsgUpdateWithdrawalDelayRequest
+	(*MsgUpdateWithdrawalDelayResponse)(nil),  // 19: provlabs.vault.v1.MsgUpdateWithdrawalDelayResponse
+	(*MsgUpdateMinSwapInValueRequest)(nil),    // 20: provlabs.vault.v1.MsgUpdateMinSwapInValueRequest
+	(*MsgUpdateMinSwapInValueResponse)(nil),   // 21: provlabs.vault.v1.MsgUpdateMinSwapInValueResponse
+	(*MsgUpdateMinSwapOutValueRequest)(nil),   // 22: provlabs.vault.v1.MsgUpdateMinSwapOutValueRequest
+	(*MsgUpdateMinSwapOutValueResponse)(nil),  // 23: provlabs.vault.v1.MsgUpdateMinSwapOutValueResponse
+	(*MsgUpdateMaxSwapInValueRequest)(nil),    // 24: provlabs.vault.v1.MsgUpdateMaxSwapInValueRequest
+	(*MsgUpdateMaxSwapInValueResponse)(nil),   // 25: provlabs.vault.v1.MsgUpdateMaxSwapInValueResponse
+	(*MsgUpdateMaxSwapOutValueRequest)(nil),   // 26: provlabs.vault.v1.MsgUpdateMaxSwapOutValueRequest
+	(*MsgUpdateMaxSwapOutValueResponse)(nil),  // 27: provlabs.vault.v1.MsgUpdateMaxSwapOutValueResponse
+	(*MsgToggleSwapInRequest)(nil),            // 28: provlabs.vault.v1.MsgToggleSwapInRequest
+	(*MsgToggleSwapInResponse)(nil),           // 29: provlabs.vault.v1.MsgToggleSwapInResponse
+	(*MsgToggleSwapOutRequest)(nil),           // 30: provlabs.vault.v1.MsgToggleSwapOutRequest
+	(*MsgToggleSwapOutResponse)(nil),          // 31: provlabs.vault.v1.MsgToggleSwapOutResponse
+	(*MsgDepositInterestFundsRequest)(nil),    // 32: provlabs.vault.v1.MsgDepositInterestFundsRequest
+	(*MsgDepositInterestFundsResponse)(nil),   // 33: provlabs.vault.v1.MsgDepositInterestFundsResponse
+	(*MsgWithdrawInterestFundsRequest)(nil),   // 34: provlabs.vault.v1.MsgWithdrawInterestFundsRequest
+	(*MsgWithdrawInterestFundsResponse)(nil),  // 35: provlabs.vault.v1.MsgWithdrawInterestFundsResponse
+	(*MsgDepositPrincipalFundsRequest)(nil),   // 36: provlabs.vault.v1.MsgDepositPrincipalFundsRequest
+	(*MsgDepositPrincipalFundsResponse)(nil),  // 37: provlabs.vault.v1.MsgDepositPrincipalFundsResponse
+	(*MsgWithdrawPrincipalFundsRequest)(nil),  // 38: provlabs.vault.v1.MsgWithdrawPrincipalFundsRequest
+	(*MsgWithdrawPrincipalFundsResponse)(nil), // 39: provlabs.vault.v1.MsgWithdrawPrincipalFundsResponse
+	(*MsgExpeditePendingSwapOutRequest)(nil),  // 40: provlabs.vault.v1.MsgExpeditePendingSwapOutRequest
+	(*MsgExpeditePendingSwapOutResponse)(nil), // 41: provlabs.vault.v1.MsgExpeditePendingSwapOutResponse
+	(*MsgPauseVaultRequest)(nil),              // 42: provlabs.vault.v1.MsgPauseVaultRequest
+	(*MsgPauseVaultResponse)(nil),             // 43: provlabs.vault.v1.MsgPauseVaultResponse
+	(*MsgUnpauseVaultRequest)(nil),            // 44: provlabs.vault.v1.MsgUnpauseVaultRequest
+	(*MsgUnpauseVaultResponse)(nil),           // 45: provlabs.vault.v1.MsgUnpauseVaultResponse
+	(*MsgSetBridgeAddressRequest)(nil),        // 46: provlabs.vault.v1.MsgSetBridgeAddressRequest
+	(*MsgSetBridgeAddressResponse)(nil),       // 47: provlabs.vault.v1.MsgSetBridgeAddressResponse
+	(*MsgToggleBridgeRequest)(nil),            // 48: provlabs.vault.v1.MsgToggleBridgeRequest
+	(*MsgToggleBridgeResponse)(nil),           // 49: provlabs.vault.v1.MsgToggleBridgeResponse
+	(*MsgBridgeMintSharesRequest)(nil),        // 50: provlabs.vault.v1.MsgBridgeMintSharesRequest
+	(*MsgBridgeMintSharesResponse)(nil),       // 51: provlabs.vault.v1.MsgBridgeMintSharesResponse
+	(*MsgBridgeBurnSharesRequest)(nil),        // 52: provlabs.vault.v1.MsgBridgeBurnSharesRequest
+	(*MsgBridgeBurnSharesResponse)(nil),       // 53: provlabs.vault.v1.MsgBridgeBurnSharesResponse
+	(*MsgSetAssetManagerRequest)(nil),         // 54: provlabs.vault.v1.MsgSetAssetManagerRequest
+	(*MsgSetAssetManagerResponse)(nil),        // 55: provlabs.vault.v1.MsgSetAssetManagerResponse
+	(*MsgUpdateParamsRequest)(nil),            // 56: provlabs.vault.v1.MsgUpdateParamsRequest
+	(*MsgUpdateParamsResponse)(nil),           // 57: provlabs.vault.v1.MsgUpdateParamsResponse
+	(*MsgUpdateVaultAUMFeeBipsRequest)(nil),   // 58: provlabs.vault.v1.MsgUpdateVaultAUMFeeBipsRequest
+	(*MsgUpdateVaultAUMFeeBipsResponse)(nil),  // 59: provlabs.vault.v1.MsgUpdateVaultAUMFeeBipsResponse
+	(*v1beta1.Coin)(nil),                      // 60: cosmos.base.v1beta1.Coin
+	(*v1beta11.Metadata)(nil),                 // 61: cosmos.bank.v1beta1.Metadata
+	(*Params)(nil),                            // 62: provlabs.vault.v1.Params
 }
 var file_provlabs_vault_v1_tx_proto_depIdxs = []int32{
-	56, // 0: provlabs.vault.v1.MsgSetShareDenomMetadataRequest.metadata:type_name -> cosmos.bank.v1beta1.Metadata
-	57, // 1: provlabs.vault.v1.MsgSwapInRequest.assets:type_name -> cosmos.base.v1beta1.Coin
-	57, // 2: provlabs.vault.v1.MsgSwapInResponse.shares_received:type_name -> cosmos.base.v1beta1.Coin
-	57, // 3: provlabs.vault.v1.MsgSwapOutRequest.assets:type_name -> cosmos.base.v1beta1.Coin
-	57, // 4: provlabs.vault.v1.MsgDepositInterestFundsRequest.amount:type_name -> cosmos.base.v1beta1.Coin
-	57, // 5: provlabs.vault.v1.MsgWithdrawInterestFundsRequest.amount:type_name -> cosmos.base.v1beta1.Coin
-	57, // 6: provlabs.vault.v1.MsgDepositPrincipalFundsRequest.amount:type_name -> cosmos.base.v1beta1.Coin
-	57, // 7: provlabs.vault.v1.MsgWithdrawPrincipalFundsRequest.amount:type_name -> cosmos.base.v1beta1.Coin
-	57, // 8: provlabs.vault.v1.MsgBridgeMintSharesRequest.shares:type_name -> cosmos.base.v1beta1.Coin
-	57, // 9: provlabs.vault.v1.MsgBridgeBurnSharesRequest.shares:type_name -> cosmos.base.v1beta1.Coin
-	58, // 10: provlabs.vault.v1.MsgUpdateParamsRequest.params:type_name -> provlabs.vault.v1.Params
-	0,  // 11: provlabs.vault.v1.Msg.CreateVault:input_type -> provlabs.vault.v1.MsgCreateVaultRequest
-	2,  // 12: provlabs.vault.v1.Msg.SetShareDenomMetadata:input_type -> provlabs.vault.v1.MsgSetShareDenomMetadataRequest
-	4,  // 13: provlabs.vault.v1.Msg.SwapIn:input_type -> provlabs.vault.v1.MsgSwapInRequest
-	6,  // 14: provlabs.vault.v1.Msg.SwapOut:input_type -> provlabs.vault.v1.MsgSwapOutRequest
-	8,  // 15: provlabs.vault.v1.Msg.UpdateMinInterestRate:input_type -> provlabs.vault.v1.MsgUpdateMinInterestRateRequest
-	10, // 16: provlabs.vault.v1.Msg.UpdateMaxInterestRate:input_type -> provlabs.vault.v1.MsgUpdateMaxInterestRateRequest
-	12, // 17: provlabs.vault.v1.Msg.UpdateInterestRate:input_type -> provlabs.vault.v1.MsgUpdateInterestRateRequest
-	14, // 18: provlabs.vault.v1.Msg.UpdateWithdrawalDelay:input_type -> provlabs.vault.v1.MsgUpdateWithdrawalDelayRequest
-	16, // 19: provlabs.vault.v1.Msg.UpdateMinSwapInValue:input_type -> provlabs.vault.v1.MsgUpdateMinSwapInValueRequest
-	18, // 20: provlabs.vault.v1.Msg.UpdateMinSwapOutValue:input_type -> provlabs.vault.v1.MsgUpdateMinSwapOutValueRequest
-	20, // 21: provlabs.vault.v1.Msg.UpdateMaxSwapInValue:input_type -> provlabs.vault.v1.MsgUpdateMaxSwapInValueRequest
-	22, // 22: provlabs.vault.v1.Msg.UpdateMaxSwapOutValue:input_type -> provlabs.vault.v1.MsgUpdateMaxSwapOutValueRequest
-	24, // 23: provlabs.vault.v1.Msg.ToggleSwapIn:input_type -> provlabs.vault.v1.MsgToggleSwapInRequest
-	26, // 24: provlabs.vault.v1.Msg.ToggleSwapOut:input_type -> provlabs.vault.v1.MsgToggleSwapOutRequest
-	28, // 25: provlabs.vault.v1.Msg.DepositInterestFunds:input_type -> provlabs.vault.v1.MsgDepositInterestFundsRequest
-	30, // 26: provlabs.vault.v1.Msg.WithdrawInterestFunds:input_type -> provlabs.vault.v1.MsgWithdrawInterestFundsRequest
-	32, // 27: provlabs.vault.v1.Msg.DepositPrincipalFunds:input_type -> provlabs.vault.v1.MsgDepositPrincipalFundsRequest
-	34, // 28: provlabs.vault.v1.Msg.WithdrawPrincipalFunds:input_type -> provlabs.vault.v1.MsgWithdrawPrincipalFundsRequest
-	36, // 29: provlabs.vault.v1.Msg.ExpeditePendingSwapOut:input_type -> provlabs.vault.v1.MsgExpeditePendingSwapOutRequest
-	38, // 30: provlabs.vault.v1.Msg.PauseVault:input_type -> provlabs.vault.v1.MsgPauseVaultRequest
-	40, // 31: provlabs.vault.v1.Msg.UnpauseVault:input_type -> provlabs.vault.v1.MsgUnpauseVaultRequest
-	42, // 32: provlabs.vault.v1.Msg.SetBridgeAddress:input_type -> provlabs.vault.v1.MsgSetBridgeAddressRequest
-	44, // 33: provlabs.vault.v1.Msg.ToggleBridge:input_type -> provlabs.vault.v1.MsgToggleBridgeRequest
-	46, // 34: provlabs.vault.v1.Msg.BridgeMintShares:input_type -> provlabs.vault.v1.MsgBridgeMintSharesRequest
-	48, // 35: provlabs.vault.v1.Msg.BridgeBurnShares:input_type -> provlabs.vault.v1.MsgBridgeBurnSharesRequest
-	50, // 36: provlabs.vault.v1.Msg.SetAssetManager:input_type -> provlabs.vault.v1.MsgSetAssetManagerRequest
-	52, // 37: provlabs.vault.v1.Msg.UpdateParams:input_type -> provlabs.vault.v1.MsgUpdateParamsRequest
-	54, // 38: provlabs.vault.v1.Msg.UpdateVaultAUMFeeBips:input_type -> provlabs.vault.v1.MsgUpdateVaultAUMFeeBipsRequest
-	1,  // 39: provlabs.vault.v1.Msg.CreateVault:output_type -> provlabs.vault.v1.MsgCreateVaultResponse
-	3,  // 40: provlabs.vault.v1.Msg.SetShareDenomMetadata:output_type -> provlabs.vault.v1.MsgSetShareDenomMetadataResponse
-	5,  // 41: provlabs.vault.v1.Msg.SwapIn:output_type -> provlabs.vault.v1.MsgSwapInResponse
-	7,  // 42: provlabs.vault.v1.Msg.SwapOut:output_type -> provlabs.vault.v1.MsgSwapOutResponse
-	9,  // 43: provlabs.vault.v1.Msg.UpdateMinInterestRate:output_type -> provlabs.vault.v1.MsgUpdateMinInterestRateResponse
-	11, // 44: provlabs.vault.v1.Msg.UpdateMaxInterestRate:output_type -> provlabs.vault.v1.MsgUpdateMaxInterestRateResponse
-	13, // 45: provlabs.vault.v1.Msg.UpdateInterestRate:output_type -> provlabs.vault.v1.MsgUpdateInterestRateResponse
-	15, // 46: provlabs.vault.v1.Msg.UpdateWithdrawalDelay:output_type -> provlabs.vault.v1.MsgUpdateWithdrawalDelayResponse
-	17, // 47: provlabs.vault.v1.Msg.UpdateMinSwapInValue:output_type -> provlabs.vault.v1.MsgUpdateMinSwapInValueResponse
-	19, // 48: provlabs.vault.v1.Msg.UpdateMinSwapOutValue:output_type -> provlabs.vault.v1.MsgUpdateMinSwapOutValueResponse
-	21, // 49: provlabs.vault.v1.Msg.UpdateMaxSwapInValue:output_type -> provlabs.vault.v1.MsgUpdateMaxSwapInValueResponse
-	23, // 50: provlabs.vault.v1.Msg.UpdateMaxSwapOutValue:output_type -> provlabs.vault.v1.MsgUpdateMaxSwapOutValueResponse
-	25, // 51: provlabs.vault.v1.Msg.ToggleSwapIn:output_type -> provlabs.vault.v1.MsgToggleSwapInResponse
-	27, // 52: provlabs.vault.v1.Msg.ToggleSwapOut:output_type -> provlabs.vault.v1.MsgToggleSwapOutResponse
-	29, // 53: provlabs.vault.v1.Msg.DepositInterestFunds:output_type -> provlabs.vault.v1.MsgDepositInterestFundsResponse
-	31, // 54: provlabs.vault.v1.Msg.WithdrawInterestFunds:output_type -> provlabs.vault.v1.MsgWithdrawInterestFundsResponse
-	33, // 55: provlabs.vault.v1.Msg.DepositPrincipalFunds:output_type -> provlabs.vault.v1.MsgDepositPrincipalFundsResponse
-	35, // 56: provlabs.vault.v1.Msg.WithdrawPrincipalFunds:output_type -> provlabs.vault.v1.MsgWithdrawPrincipalFundsResponse
-	37, // 57: provlabs.vault.v1.Msg.ExpeditePendingSwapOut:output_type -> provlabs.vault.v1.MsgExpeditePendingSwapOutResponse
-	39, // 58: provlabs.vault.v1.Msg.PauseVault:output_type -> provlabs.vault.v1.MsgPauseVaultResponse
-	41, // 59: provlabs.vault.v1.Msg.UnpauseVault:output_type -> provlabs.vault.v1.MsgUnpauseVaultResponse
-	43, // 60: provlabs.vault.v1.Msg.SetBridgeAddress:output_type -> provlabs.vault.v1.MsgSetBridgeAddressResponse
-	45, // 61: provlabs.vault.v1.Msg.ToggleBridge:output_type -> provlabs.vault.v1.MsgToggleBridgeResponse
-	47, // 62: provlabs.vault.v1.Msg.BridgeMintShares:output_type -> provlabs.vault.v1.MsgBridgeMintSharesResponse
-	49, // 63: provlabs.vault.v1.Msg.BridgeBurnShares:output_type -> provlabs.vault.v1.MsgBridgeBurnSharesResponse
-	51, // 64: provlabs.vault.v1.Msg.SetAssetManager:output_type -> provlabs.vault.v1.MsgSetAssetManagerResponse
-	53, // 65: provlabs.vault.v1.Msg.UpdateParams:output_type -> provlabs.vault.v1.MsgUpdateParamsResponse
-	55, // 66: provlabs.vault.v1.Msg.UpdateVaultAUMFeeBips:output_type -> provlabs.vault.v1.MsgUpdateVaultAUMFeeBipsResponse
-	39, // [39:67] is the sub-list for method output_type
-	11, // [11:39] is the sub-list for method input_type
-	11, // [11:11] is the sub-list for extension type_name
-	11, // [11:11] is the sub-list for extension extendee
-	0,  // [0:11] is the sub-list for field type_name
+	60, // 0: provlabs.vault.v1.MsgCreateRwaPaymentRequest.source_amount:type_name -> cosmos.base.v1beta1.Coin
+	60, // 1: provlabs.vault.v1.MsgCreateRwaPaymentRequest.target_amount:type_name -> cosmos.base.v1beta1.Coin
+	61, // 2: provlabs.vault.v1.MsgSetShareDenomMetadataRequest.metadata:type_name -> cosmos.bank.v1beta1.Metadata
+	60, // 3: provlabs.vault.v1.MsgSwapInRequest.assets:type_name -> cosmos.base.v1beta1.Coin
+	60, // 4: provlabs.vault.v1.MsgSwapInResponse.shares_received:type_name -> cosmos.base.v1beta1.Coin
+	60, // 5: provlabs.vault.v1.MsgSwapOutRequest.assets:type_name -> cosmos.base.v1beta1.Coin
+	60, // 6: provlabs.vault.v1.MsgDepositInterestFundsRequest.amount:type_name -> cosmos.base.v1beta1.Coin
+	60, // 7: provlabs.vault.v1.MsgWithdrawInterestFundsRequest.amount:type_name -> cosmos.base.v1beta1.Coin
+	60, // 8: provlabs.vault.v1.MsgDepositPrincipalFundsRequest.amount:type_name -> cosmos.base.v1beta1.Coin
+	60, // 9: provlabs.vault.v1.MsgWithdrawPrincipalFundsRequest.amount:type_name -> cosmos.base.v1beta1.Coin
+	60, // 10: provlabs.vault.v1.MsgBridgeMintSharesRequest.shares:type_name -> cosmos.base.v1beta1.Coin
+	60, // 11: provlabs.vault.v1.MsgBridgeBurnSharesRequest.shares:type_name -> cosmos.base.v1beta1.Coin
+	62, // 12: provlabs.vault.v1.MsgUpdateParamsRequest.params:type_name -> provlabs.vault.v1.Params
+	4,  // 13: provlabs.vault.v1.Msg.CreateVault:input_type -> provlabs.vault.v1.MsgCreateVaultRequest
+	6,  // 14: provlabs.vault.v1.Msg.SetShareDenomMetadata:input_type -> provlabs.vault.v1.MsgSetShareDenomMetadataRequest
+	8,  // 15: provlabs.vault.v1.Msg.SwapIn:input_type -> provlabs.vault.v1.MsgSwapInRequest
+	10, // 16: provlabs.vault.v1.Msg.SwapOut:input_type -> provlabs.vault.v1.MsgSwapOutRequest
+	12, // 17: provlabs.vault.v1.Msg.UpdateMinInterestRate:input_type -> provlabs.vault.v1.MsgUpdateMinInterestRateRequest
+	14, // 18: provlabs.vault.v1.Msg.UpdateMaxInterestRate:input_type -> provlabs.vault.v1.MsgUpdateMaxInterestRateRequest
+	16, // 19: provlabs.vault.v1.Msg.UpdateInterestRate:input_type -> provlabs.vault.v1.MsgUpdateInterestRateRequest
+	18, // 20: provlabs.vault.v1.Msg.UpdateWithdrawalDelay:input_type -> provlabs.vault.v1.MsgUpdateWithdrawalDelayRequest
+	20, // 21: provlabs.vault.v1.Msg.UpdateMinSwapInValue:input_type -> provlabs.vault.v1.MsgUpdateMinSwapInValueRequest
+	22, // 22: provlabs.vault.v1.Msg.UpdateMinSwapOutValue:input_type -> provlabs.vault.v1.MsgUpdateMinSwapOutValueRequest
+	24, // 23: provlabs.vault.v1.Msg.UpdateMaxSwapInValue:input_type -> provlabs.vault.v1.MsgUpdateMaxSwapInValueRequest
+	26, // 24: provlabs.vault.v1.Msg.UpdateMaxSwapOutValue:input_type -> provlabs.vault.v1.MsgUpdateMaxSwapOutValueRequest
+	28, // 25: provlabs.vault.v1.Msg.ToggleSwapIn:input_type -> provlabs.vault.v1.MsgToggleSwapInRequest
+	30, // 26: provlabs.vault.v1.Msg.ToggleSwapOut:input_type -> provlabs.vault.v1.MsgToggleSwapOutRequest
+	32, // 27: provlabs.vault.v1.Msg.DepositInterestFunds:input_type -> provlabs.vault.v1.MsgDepositInterestFundsRequest
+	34, // 28: provlabs.vault.v1.Msg.WithdrawInterestFunds:input_type -> provlabs.vault.v1.MsgWithdrawInterestFundsRequest
+	36, // 29: provlabs.vault.v1.Msg.DepositPrincipalFunds:input_type -> provlabs.vault.v1.MsgDepositPrincipalFundsRequest
+	38, // 30: provlabs.vault.v1.Msg.WithdrawPrincipalFunds:input_type -> provlabs.vault.v1.MsgWithdrawPrincipalFundsRequest
+	40, // 31: provlabs.vault.v1.Msg.ExpeditePendingSwapOut:input_type -> provlabs.vault.v1.MsgExpeditePendingSwapOutRequest
+	42, // 32: provlabs.vault.v1.Msg.PauseVault:input_type -> provlabs.vault.v1.MsgPauseVaultRequest
+	44, // 33: provlabs.vault.v1.Msg.UnpauseVault:input_type -> provlabs.vault.v1.MsgUnpauseVaultRequest
+	46, // 34: provlabs.vault.v1.Msg.SetBridgeAddress:input_type -> provlabs.vault.v1.MsgSetBridgeAddressRequest
+	48, // 35: provlabs.vault.v1.Msg.ToggleBridge:input_type -> provlabs.vault.v1.MsgToggleBridgeRequest
+	50, // 36: provlabs.vault.v1.Msg.BridgeMintShares:input_type -> provlabs.vault.v1.MsgBridgeMintSharesRequest
+	52, // 37: provlabs.vault.v1.Msg.BridgeBurnShares:input_type -> provlabs.vault.v1.MsgBridgeBurnSharesRequest
+	54, // 38: provlabs.vault.v1.Msg.SetAssetManager:input_type -> provlabs.vault.v1.MsgSetAssetManagerRequest
+	56, // 39: provlabs.vault.v1.Msg.UpdateParams:input_type -> provlabs.vault.v1.MsgUpdateParamsRequest
+	58, // 40: provlabs.vault.v1.Msg.UpdateVaultAUMFeeBips:input_type -> provlabs.vault.v1.MsgUpdateVaultAUMFeeBipsRequest
+	0,  // 41: provlabs.vault.v1.Msg.CreateRwaPayment:input_type -> provlabs.vault.v1.MsgCreateRwaPaymentRequest
+	2,  // 42: provlabs.vault.v1.Msg.AcceptRwaPayment:input_type -> provlabs.vault.v1.MsgAcceptRwaPaymentRequest
+	5,  // 43: provlabs.vault.v1.Msg.CreateVault:output_type -> provlabs.vault.v1.MsgCreateVaultResponse
+	7,  // 44: provlabs.vault.v1.Msg.SetShareDenomMetadata:output_type -> provlabs.vault.v1.MsgSetShareDenomMetadataResponse
+	9,  // 45: provlabs.vault.v1.Msg.SwapIn:output_type -> provlabs.vault.v1.MsgSwapInResponse
+	11, // 46: provlabs.vault.v1.Msg.SwapOut:output_type -> provlabs.vault.v1.MsgSwapOutResponse
+	13, // 47: provlabs.vault.v1.Msg.UpdateMinInterestRate:output_type -> provlabs.vault.v1.MsgUpdateMinInterestRateResponse
+	15, // 48: provlabs.vault.v1.Msg.UpdateMaxInterestRate:output_type -> provlabs.vault.v1.MsgUpdateMaxInterestRateResponse
+	17, // 49: provlabs.vault.v1.Msg.UpdateInterestRate:output_type -> provlabs.vault.v1.MsgUpdateInterestRateResponse
+	19, // 50: provlabs.vault.v1.Msg.UpdateWithdrawalDelay:output_type -> provlabs.vault.v1.MsgUpdateWithdrawalDelayResponse
+	21, // 51: provlabs.vault.v1.Msg.UpdateMinSwapInValue:output_type -> provlabs.vault.v1.MsgUpdateMinSwapInValueResponse
+	23, // 52: provlabs.vault.v1.Msg.UpdateMinSwapOutValue:output_type -> provlabs.vault.v1.MsgUpdateMinSwapOutValueResponse
+	25, // 53: provlabs.vault.v1.Msg.UpdateMaxSwapInValue:output_type -> provlabs.vault.v1.MsgUpdateMaxSwapInValueResponse
+	27, // 54: provlabs.vault.v1.Msg.UpdateMaxSwapOutValue:output_type -> provlabs.vault.v1.MsgUpdateMaxSwapOutValueResponse
+	29, // 55: provlabs.vault.v1.Msg.ToggleSwapIn:output_type -> provlabs.vault.v1.MsgToggleSwapInResponse
+	31, // 56: provlabs.vault.v1.Msg.ToggleSwapOut:output_type -> provlabs.vault.v1.MsgToggleSwapOutResponse
+	33, // 57: provlabs.vault.v1.Msg.DepositInterestFunds:output_type -> provlabs.vault.v1.MsgDepositInterestFundsResponse
+	35, // 58: provlabs.vault.v1.Msg.WithdrawInterestFunds:output_type -> provlabs.vault.v1.MsgWithdrawInterestFundsResponse
+	37, // 59: provlabs.vault.v1.Msg.DepositPrincipalFunds:output_type -> provlabs.vault.v1.MsgDepositPrincipalFundsResponse
+	39, // 60: provlabs.vault.v1.Msg.WithdrawPrincipalFunds:output_type -> provlabs.vault.v1.MsgWithdrawPrincipalFundsResponse
+	41, // 61: provlabs.vault.v1.Msg.ExpeditePendingSwapOut:output_type -> provlabs.vault.v1.MsgExpeditePendingSwapOutResponse
+	43, // 62: provlabs.vault.v1.Msg.PauseVault:output_type -> provlabs.vault.v1.MsgPauseVaultResponse
+	45, // 63: provlabs.vault.v1.Msg.UnpauseVault:output_type -> provlabs.vault.v1.MsgUnpauseVaultResponse
+	47, // 64: provlabs.vault.v1.Msg.SetBridgeAddress:output_type -> provlabs.vault.v1.MsgSetBridgeAddressResponse
+	49, // 65: provlabs.vault.v1.Msg.ToggleBridge:output_type -> provlabs.vault.v1.MsgToggleBridgeResponse
+	51, // 66: provlabs.vault.v1.Msg.BridgeMintShares:output_type -> provlabs.vault.v1.MsgBridgeMintSharesResponse
+	53, // 67: provlabs.vault.v1.Msg.BridgeBurnShares:output_type -> provlabs.vault.v1.MsgBridgeBurnSharesResponse
+	55, // 68: provlabs.vault.v1.Msg.SetAssetManager:output_type -> provlabs.vault.v1.MsgSetAssetManagerResponse
+	57, // 69: provlabs.vault.v1.Msg.UpdateParams:output_type -> provlabs.vault.v1.MsgUpdateParamsResponse
+	59, // 70: provlabs.vault.v1.Msg.UpdateVaultAUMFeeBips:output_type -> provlabs.vault.v1.MsgUpdateVaultAUMFeeBipsResponse
+	1,  // 71: provlabs.vault.v1.Msg.CreateRwaPayment:output_type -> provlabs.vault.v1.MsgCreateRwaPaymentResponse
+	3,  // 72: provlabs.vault.v1.Msg.AcceptRwaPayment:output_type -> provlabs.vault.v1.MsgAcceptRwaPaymentResponse
+	43, // [43:73] is the sub-list for method output_type
+	13, // [13:43] is the sub-list for method input_type
+	13, // [13:13] is the sub-list for extension type_name
+	13, // [13:13] is the sub-list for extension extendee
+	0,  // [0:13] is the sub-list for field type_name
 }
 
 func init() { file_provlabs_vault_v1_tx_proto_init() }
@@ -29040,7 +31523,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 	file_provlabs_vault_v1_params_proto_init()
 	if !protoimpl.UnsafeEnabled {
 		file_provlabs_vault_v1_tx_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgCreateVaultRequest); i {
+			switch v := v.(*MsgCreateRwaPaymentRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29052,7 +31535,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgCreateVaultResponse); i {
+			switch v := v.(*MsgCreateRwaPaymentResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29064,7 +31547,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgSetShareDenomMetadataRequest); i {
+			switch v := v.(*MsgAcceptRwaPaymentRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29076,7 +31559,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgSetShareDenomMetadataResponse); i {
+			switch v := v.(*MsgAcceptRwaPaymentResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29088,7 +31571,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgSwapInRequest); i {
+			switch v := v.(*MsgCreateVaultRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29100,7 +31583,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgSwapInResponse); i {
+			switch v := v.(*MsgCreateVaultResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29112,7 +31595,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgSwapOutRequest); i {
+			switch v := v.(*MsgSetShareDenomMetadataRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29124,7 +31607,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgSwapOutResponse); i {
+			switch v := v.(*MsgSetShareDenomMetadataResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29136,7 +31619,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgUpdateMinInterestRateRequest); i {
+			switch v := v.(*MsgSwapInRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29148,7 +31631,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgUpdateMinInterestRateResponse); i {
+			switch v := v.(*MsgSwapInResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29160,7 +31643,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgUpdateMaxInterestRateRequest); i {
+			switch v := v.(*MsgSwapOutRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29172,7 +31655,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgUpdateMaxInterestRateResponse); i {
+			switch v := v.(*MsgSwapOutResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29184,7 +31667,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgUpdateInterestRateRequest); i {
+			switch v := v.(*MsgUpdateMinInterestRateRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29196,7 +31679,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgUpdateInterestRateResponse); i {
+			switch v := v.(*MsgUpdateMinInterestRateResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29208,7 +31691,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgUpdateWithdrawalDelayRequest); i {
+			switch v := v.(*MsgUpdateMaxInterestRateRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29220,7 +31703,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgUpdateWithdrawalDelayResponse); i {
+			switch v := v.(*MsgUpdateMaxInterestRateResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29232,7 +31715,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgUpdateMinSwapInValueRequest); i {
+			switch v := v.(*MsgUpdateInterestRateRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29244,7 +31727,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgUpdateMinSwapInValueResponse); i {
+			switch v := v.(*MsgUpdateInterestRateResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29256,7 +31739,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgUpdateMinSwapOutValueRequest); i {
+			switch v := v.(*MsgUpdateWithdrawalDelayRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29268,7 +31751,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgUpdateMinSwapOutValueResponse); i {
+			switch v := v.(*MsgUpdateWithdrawalDelayResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29280,7 +31763,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgUpdateMaxSwapInValueRequest); i {
+			switch v := v.(*MsgUpdateMinSwapInValueRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29292,7 +31775,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgUpdateMaxSwapInValueResponse); i {
+			switch v := v.(*MsgUpdateMinSwapInValueResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29304,7 +31787,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgUpdateMaxSwapOutValueRequest); i {
+			switch v := v.(*MsgUpdateMinSwapOutValueRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29316,7 +31799,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[23].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgUpdateMaxSwapOutValueResponse); i {
+			switch v := v.(*MsgUpdateMinSwapOutValueResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29328,7 +31811,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[24].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgToggleSwapInRequest); i {
+			switch v := v.(*MsgUpdateMaxSwapInValueRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29340,7 +31823,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[25].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgToggleSwapInResponse); i {
+			switch v := v.(*MsgUpdateMaxSwapInValueResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29352,7 +31835,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[26].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgToggleSwapOutRequest); i {
+			switch v := v.(*MsgUpdateMaxSwapOutValueRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29364,7 +31847,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[27].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgToggleSwapOutResponse); i {
+			switch v := v.(*MsgUpdateMaxSwapOutValueResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29376,7 +31859,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[28].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgDepositInterestFundsRequest); i {
+			switch v := v.(*MsgToggleSwapInRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29388,7 +31871,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[29].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgDepositInterestFundsResponse); i {
+			switch v := v.(*MsgToggleSwapInResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29400,7 +31883,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[30].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgWithdrawInterestFundsRequest); i {
+			switch v := v.(*MsgToggleSwapOutRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29412,7 +31895,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[31].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgWithdrawInterestFundsResponse); i {
+			switch v := v.(*MsgToggleSwapOutResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29424,7 +31907,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[32].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgDepositPrincipalFundsRequest); i {
+			switch v := v.(*MsgDepositInterestFundsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29436,7 +31919,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[33].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgDepositPrincipalFundsResponse); i {
+			switch v := v.(*MsgDepositInterestFundsResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29448,7 +31931,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[34].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgWithdrawPrincipalFundsRequest); i {
+			switch v := v.(*MsgWithdrawInterestFundsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29460,7 +31943,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[35].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgWithdrawPrincipalFundsResponse); i {
+			switch v := v.(*MsgWithdrawInterestFundsResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29472,7 +31955,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[36].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgExpeditePendingSwapOutRequest); i {
+			switch v := v.(*MsgDepositPrincipalFundsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29484,7 +31967,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[37].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgExpeditePendingSwapOutResponse); i {
+			switch v := v.(*MsgDepositPrincipalFundsResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29496,7 +31979,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[38].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgPauseVaultRequest); i {
+			switch v := v.(*MsgWithdrawPrincipalFundsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29508,7 +31991,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[39].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgPauseVaultResponse); i {
+			switch v := v.(*MsgWithdrawPrincipalFundsResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29520,7 +32003,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[40].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgUnpauseVaultRequest); i {
+			switch v := v.(*MsgExpeditePendingSwapOutRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29532,7 +32015,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[41].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgUnpauseVaultResponse); i {
+			switch v := v.(*MsgExpeditePendingSwapOutResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29544,7 +32027,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[42].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgSetBridgeAddressRequest); i {
+			switch v := v.(*MsgPauseVaultRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29556,7 +32039,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[43].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgSetBridgeAddressResponse); i {
+			switch v := v.(*MsgPauseVaultResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29568,7 +32051,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[44].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgToggleBridgeRequest); i {
+			switch v := v.(*MsgUnpauseVaultRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29580,7 +32063,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[45].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgToggleBridgeResponse); i {
+			switch v := v.(*MsgUnpauseVaultResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29592,7 +32075,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[46].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgBridgeMintSharesRequest); i {
+			switch v := v.(*MsgSetBridgeAddressRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29604,7 +32087,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[47].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgBridgeMintSharesResponse); i {
+			switch v := v.(*MsgSetBridgeAddressResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29616,7 +32099,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[48].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgBridgeBurnSharesRequest); i {
+			switch v := v.(*MsgToggleBridgeRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29628,7 +32111,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[49].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgBridgeBurnSharesResponse); i {
+			switch v := v.(*MsgToggleBridgeResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29640,7 +32123,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[50].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgSetAssetManagerRequest); i {
+			switch v := v.(*MsgBridgeMintSharesRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29652,7 +32135,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[51].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgSetAssetManagerResponse); i {
+			switch v := v.(*MsgBridgeMintSharesResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29664,7 +32147,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[52].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgUpdateParamsRequest); i {
+			switch v := v.(*MsgBridgeBurnSharesRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29676,7 +32159,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[53].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgUpdateParamsResponse); i {
+			switch v := v.(*MsgBridgeBurnSharesResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29688,7 +32171,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[54].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*MsgUpdateVaultAUMFeeBipsRequest); i {
+			switch v := v.(*MsgSetAssetManagerRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -29700,6 +32183,54 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_tx_proto_msgTypes[55].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgSetAssetManagerResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_provlabs_vault_v1_tx_proto_msgTypes[56].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgUpdateParamsRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_provlabs_vault_v1_tx_proto_msgTypes[57].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgUpdateParamsResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_provlabs_vault_v1_tx_proto_msgTypes[58].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*MsgUpdateVaultAUMFeeBipsRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_provlabs_vault_v1_tx_proto_msgTypes[59].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*MsgUpdateVaultAUMFeeBipsResponse); i {
 			case 0:
 				return &v.state
@@ -29718,7 +32249,7 @@ func file_provlabs_vault_v1_tx_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_provlabs_vault_v1_tx_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   56,
+			NumMessages:   60,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

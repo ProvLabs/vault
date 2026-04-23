@@ -143,6 +143,11 @@ message VaultAccount {
   // - Values must be positive (> 0).
   // - An empty string "" indicates no maximum limit.
   string max_swap_out_value = 28 [(cosmos_proto.scalar) = "cosmos.IntString"];
+
+  // advance_rate is a decimal string (e.g., "0.8" for 80%) used to discount the value
+  // of NFT/RWA assets when calculating the Total Vault Value.
+  // If empty or "1.0", no discount is applied.
+  string advance_rate = 29 [(cosmos_proto.scalar) = "cosmos.DecString"];
 }
 
 // AccountBalance represents the coin balance of a single account.

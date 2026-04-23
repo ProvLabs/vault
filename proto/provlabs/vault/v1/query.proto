@@ -3,6 +3,7 @@ package provlabs.vault.v1;
 
 import "cosmos/base/query/v1beta1/pagination.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "google/protobuf/timestamp.proto";
@@ -125,6 +126,20 @@ message QueryVaultResponse {
   // interest (at query block height), but excludes reserves. The value is approximate and may differ
   // from the reconciled amount.
   cosmos.base.v1beta1.Coin total_vault_value = 4 [(gogoproto.nullable) = false];
+  // liquidity_breakdown provides a detailed view of cash vs collateral.
+  LiquidityBreakdown liquidity_breakdown = 5 [(gogoproto.nullable) = false];
+}
+
+// LiquidityBreakdown provides a detailed breakdown of a vault's assets.
+message LiquidityBreakdown {
+  // cash_amount is the amount of fungible underlying asset held as liquid buffer.
+  cosmos.base.v1beta1.Coin cash_amount = 1 [(gogoproto.nullable) = false];
+  // collateral_amount is the estimated value of all non-fungible (NFT) assets.
+  cosmos.base.v1beta1.Coin collateral_amount = 2 [(gogoproto.nullable) = false];
+  // total_value is the sum of cash and collateral (TVV).
+  cosmos.base.v1beta1.Coin total_value = 3 [(gogoproto.nullable) = false];
+  // ratio is the current collateralization ratio (collateral / total_value).
+  string ratio = 4 [(cosmos_proto.scalar) = "cosmos.DecString"];
 }
 
 // QueryEstimateSwapInRequest is the request message for the Query/EstimateSwapIn endpoint.

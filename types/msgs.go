@@ -43,6 +43,8 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgUpdateMinSwapOutValueRequest)(nil),
 	(*MsgUpdateMaxSwapInValueRequest)(nil),
 	(*MsgUpdateMaxSwapOutValueRequest)(nil),
+	(*MsgCreateRwaPaymentRequest)(nil),
+	(*MsgAcceptRwaPaymentRequest)(nil),
 }
 
 // ValidateBasic performs stateless validation on MsgCreateVaultRequest.
@@ -520,6 +522,49 @@ func (m MsgUpdateMaxSwapOutValueRequest) ValidateBasic() error {
 	}
 	if err := ValidateSwapLimits("", m.MaxSwapOutValue); err != nil {
 		return fmt.Errorf("invalid swap-out limits: %w", err)
+	}
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgCreateRwaPaymentRequest.
+func (m MsgCreateRwaPaymentRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		return fmt.Errorf("invalid authority address: %q: %w", m.Authority, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.Target); err != nil {
+		return fmt.Errorf("invalid target address: %q: %w", m.Target, err)
+	}
+	if err := m.SourceAmount.Validate(); err != nil {
+		return fmt.Errorf("invalid source amount: %w", err)
+	}
+	if err := m.TargetAmount.Validate(); err != nil {
+		return fmt.Errorf("invalid target amount: %w", err)
+	}
+	if m.SourceAmount.IsZero() && m.TargetAmount.IsZero() {
+		return errors.New("source amount and target amount cannot both be zero")
+	}
+	if m.ExternalId == "" {
+		return errors.New("external id cannot be empty")
+	}
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgAcceptRwaPaymentRequest.
+func (m MsgAcceptRwaPaymentRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		return fmt.Errorf("invalid authority address: %q: %w", m.Authority, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.Source); err != nil {
+		return fmt.Errorf("invalid source address: %q: %w", m.Source, err)
+	}
+	if m.ExternalId == "" {
+		return errors.New("external id cannot be empty")
 	}
 	return nil
 }

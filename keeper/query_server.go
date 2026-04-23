@@ -96,6 +96,11 @@ func (k queryServer) Vault(goCtx context.Context, req *types.QueryVaultRequest) 
 		return nil, status.Errorf(codes.Internal, "failed to estimate total vault value: %v", err)
 	}
 
+	breakdown, err := k.GetLiquidityBreakdown(ctx, *vault)
+	if err != nil {
+		ctx.Logger().Error("failed to get liquidity breakdown", "vault", vault.Address, "err", err)
+	}
+
 	return &types.QueryVaultResponse{
 		Vault: *vault,
 		Principal: types.AccountBalance{
@@ -106,7 +111,8 @@ func (k queryServer) Vault(goCtx context.Context, req *types.QueryVaultRequest) 
 			Address: vault.GetAddress().String(),
 			Coins:   reserves,
 		},
-		TotalVaultValue: tvv,
+		TotalVaultValue:    tvv,
+		LiquidityBreakdown: breakdown,
 	}, nil
 }
 

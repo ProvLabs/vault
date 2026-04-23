@@ -58,14 +58,16 @@ func (s *TestSuite) TestQueryServer_Vault() {
 		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(payment, 1), s.adminAddr)
 
 		// Set NAVs for the supply=1 markers to avoid valuation failures
-		s.Require().NoError(s.k.NetAssetValues.Set(s.ctx, collections.Join(addr1, payment), types.VaultNAV{
-			Price:  sdk.NewInt64Coin(underlying, 1),
-			Volume: math.OneInt().String(),
-		}))
-		s.Require().NoError(s.k.NetAssetValues.Set(s.ctx, collections.Join(addr1, underlying), types.VaultNAV{
-			Price:  sdk.NewInt64Coin(underlying, 1),
-			Volume: math.OneInt().String(),
-		}))
+		for _, addr := range []sdk.AccAddress{addr1, addr2} {
+			s.Require().NoError(s.k.NetAssetValues.Set(s.ctx, collections.Join(addr, payment), types.VaultNAV{
+				Price:  sdk.NewInt64Coin(underlying, 1),
+				Volume: math.OneInt().String(),
+			}))
+			s.Require().NoError(s.k.NetAssetValues.Set(s.ctx, collections.Join(addr, underlying), types.VaultNAV{
+				Price:  sdk.NewInt64Coin(underlying, 1),
+				Volume: math.OneInt().String(),
+			}))
+		}
 
 		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: admin, ShareDenom: shareDenom1, UnderlyingAsset: underlying, PaymentDenom: payment})
 		s.Require().NoError(err, "create vault1 should succeed")

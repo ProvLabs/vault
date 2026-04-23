@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
@@ -128,7 +129,9 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 			if tc.setup != nil {
 				tc.setup()
 			}
+			vaultAddr := sdk.AccAddress("vault_______________")
 			vault := types.VaultAccount{
+				BaseAccount:     &authtypes.BaseAccount{Address: vaultAddr.String()},
 				UnderlyingAsset: underlyingDenom,
 				PaymentDenom:    paymentDenom,
 				TotalShares:     sdk.NewInt64Coin(shareDenom, 0),

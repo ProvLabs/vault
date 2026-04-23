@@ -207,6 +207,12 @@ func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccoun
 			continue
 		}
 
+		// Underlying asset is always valued 1:1, even if supply = 1
+		if balance.Denom == vault.UnderlyingAsset {
+			total = total.Add(balance.Amount)
+			continue
+		}
+
 		marker, err := k.MarkerKeeper.GetMarkerByDenom(ctx, balance.Denom)
 		if err == nil && marker != nil && marker.GetSupply().Amount.Equal(math.OneInt()) {
 			nav, err := k.getNetAssetValue(ctx, vault.GetAddress(), balance.Denom, vault.UnderlyingAsset)
@@ -239,7 +245,7 @@ func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccoun
 			}
 
 		if !vault.IsAcceptedDenom(balance.Denom) {
-			return math.Int{}, fmt.Errorf("strict valuation failure: balance held in unaccepted denom %s", balance.Denom)
+			continue
 		}
 
 		val, err := k.ToUnderlyingAssetAmount(ctx, vault, balance)
@@ -268,6 +274,12 @@ func (k Keeper) GetLiquidityBreakdown(ctx sdk.Context, vault types.VaultAccount)
 
 	for _, coin := range balances {
 		if coin.Denom == vault.TotalShares.Denom {
+			continue
+		}
+
+		// Underlying asset is always cash 1:1
+		if coin.Denom == vault.UnderlyingAsset {
+			cash = cash.Add(coin.Amount)
 			continue
 		}
 
@@ -305,8 +317,6 @@ func (k Keeper) GetLiquidityBreakdown(ctx sdk.Context, vault types.VaultAccount)
 				return types.LiquidityBreakdown{}, fmt.Errorf("strict valuation failure: failed to convert balance %s to underlying: %w", coin.Denom, err)
 			}
 			cash = cash.Add(val)
-		} else {
-			return types.LiquidityBreakdown{}, fmt.Errorf("strict valuation failure: balance held in unaccepted denom %s", coin.Denom)
 		}
 	}
 

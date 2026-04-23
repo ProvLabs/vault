@@ -1,13 +1,17 @@
 package simapp
 
 import (
+	"context"
 	"io"
 	"os"
 	"path/filepath"
 
 	vaultkeeper "github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
+	exchangetypes "github.com/provenance-io/provenance/x/exchange"
 	"google.golang.org/protobuf/proto"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/depinject"
@@ -321,12 +325,36 @@ func (app *SimApp) AppCodec() codec.Codec {
 	return app.appCodec
 }
 
+type exchangeStub struct{}
+
+func (s exchangeStub) CreatePayment(context.Context, *exchangetypes.MsgCreatePaymentRequest) (*exchangetypes.MsgCreatePaymentResponse, error) {
+	return nil, nil
+}
+func (s exchangeStub) AcceptPayment(context.Context, *exchangetypes.MsgAcceptPaymentRequest) (*exchangetypes.MsgAcceptPaymentResponse, error) {
+	return nil, nil
+}
+func (s exchangeStub) RejectPayment(context.Context, *exchangetypes.MsgRejectPaymentRequest) (*exchangetypes.MsgRejectPaymentResponse, error) {
+	return nil, nil
+}
+func (s exchangeStub) GetPayment(context.Context, *exchangetypes.QueryGetPaymentRequest) (*exchangetypes.QueryGetPaymentResponse, error) {
+	return nil, nil
+}
+
+type holdStub struct{}
+
+func (s holdStub) GetHoldCoin(sdk.Context, sdk.AccAddress, string) (sdk.Coin, error) {
+	return sdk.Coin{}, nil
+}
+func (s holdStub) GetAllHolds(sdk.Context, sdk.AccAddress) (sdk.Coins, error) {
+	return sdk.Coins{}, nil
+}
+
 // ProvideExchangeKeeperStub returns a dummy types.ExchangeMsgServer instance.
 func ProvideExchangeKeeperStub() types.ExchangeMsgServer {
-	return nil
+	return exchangeStub{}
 }
 
 // ProvideHoldKeeperStub returns a dummy types.HoldKeeper instance.
 func ProvideHoldKeeperStub() types.HoldKeeper {
-	return nil
+	return holdStub{}
 }

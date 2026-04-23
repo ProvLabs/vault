@@ -17,7 +17,6 @@ import (
 // the vault module's local high-precision NAV store before falling back to the
 // marker module's standard NAV.
 func (k Keeper) getNetAssetValue(ctx sdk.Context, markerDenom, priceDenom string) (*types.NetAssetValue, error) {
-	// 1. Try local vault module override (supports sdk.Int volume)
 	localNav, err := k.NetAssetValues.Get(ctx, collections.Join(markerDenom, priceDenom))
 	if err == nil {
 		return &localNav, nil
@@ -26,10 +25,9 @@ func (k Keeper) getNetAssetValue(ctx sdk.Context, markerDenom, priceDenom string
 		return nil, fmt.Errorf("failed to get local nav for %s/%s: %w", markerDenom, priceDenom, err)
 	}
 
-	// 2. Fall back to marker module standard NAV (uint64 volume)
 	markerNav, err := k.MarkerKeeper.GetNetAssetValue(ctx, markerDenom, priceDenom)
 	if err != nil {
-		return nil, err // propagates marker lookup errors
+		return nil, err
 	}
 	if markerNav == nil {
 		return nil, nil
@@ -42,7 +40,12 @@ func (k Keeper) getNetAssetValue(ctx sdk.Context, markerDenom, priceDenom string
 	}, nil
 }
 
-// UnitPriceFraction returns the unit price of srcDenom expressed in underlyingAsset
+// GetTVVInUnderlyingAsset calculates the Total Vault Value (TVV) by summing the
+// values of all assets held in the vault's principal marker account, expressed
+// in the vault's UnderlyingAsset. This includes both fungible markers and
+// unique NFT markers (supply = 1) valued via their individual NAV records.
+func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccount) (math.Int, error) {
+
 // as an integer fraction (numerator, denominator) using Net Asset Value (NAV).
 //
 // Semantics
@@ -201,10 +204,8 @@ func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccoun
 			continue
 		}
 
-		// Check if this is a unique NFT marker (supply = 1)
 		marker, err := k.MarkerKeeper.GetMarkerByDenom(ctx, balance.Denom)
 		if err == nil && marker != nil && marker.GetSupply().Amount.Equal(math.OneInt()) {
-			// This is a unique RWA/NFT asset. Get its specific NAV.
 			nav, err := k.getNetAssetValue(ctx, balance.Denom, vault.UnderlyingAsset)
 			if err != nil {
 				return math.Int{}, fmt.Errorf("failed to get nav for nft %s: %w", balance.Denom, err)
@@ -217,7 +218,6 @@ func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccoun
 				return math.Int{}, fmt.Errorf("invalid volume for nft %s nav", balance.Denom)
 			}
 
-			// Value = (Balance * Price) / Volume
 			assetValue := balance.Amount.Mul(nav.Price.Amount).Quo(vol)
 			total = total.Add(assetValue)
 			continue

@@ -86,11 +86,13 @@ func (k Keeper) reconcileVault(ctx sdk.Context, vault *types.VaultAccount) error
 }
 
 // setShareDenomNAV publishes the Net Asset Value (NAV) for a vault’s share denom
-// in terms of the underlying asset.
+// in terms of its underlying asset.
 //
 // The NAV price is set to the vault’s total value in underlying units (TVV),
 // and the NAV volume is set to the total number of shares. It utilizes the
 // vault module's local high-precision NAV store to support sdk.Int volume.
+// If the share volume fits within a uint64, it also mirrors the NAV to the
+// marker module for backward compatibility with external integrations.
 func (k Keeper) setShareDenomNAV(ctx sdk.Context, vault *types.VaultAccount, tvv sdkmath.Int) error {
 	shareDenom := vault.TotalShares.Denom
 	underlyingDenom := vault.UnderlyingAsset
@@ -101,12 +103,10 @@ func (k Keeper) setShareDenomNAV(ctx sdk.Context, vault *types.VaultAccount, tvv
 		UpdatedBlockHeight: uint64(ctx.BlockHeight()),
 	}
 
-	// 1. Set in local high-precision store
 	if err := k.NetAssetValues.Set(ctx, collections.Join(shareDenom, underlyingDenom), nav); err != nil {
 		return fmt.Errorf("failed to set local share nav: %w", err)
 	}
 
-	// 2. Also try to set in marker module for backward compatibility (if volume fits in uint64)
 	if vault.TotalShares.Amount.IsUint64() {
 		vaultMarker, err := k.MarkerKeeper.GetMarker(ctx, vault.PrincipalMarkerAddress())
 		if err != nil {

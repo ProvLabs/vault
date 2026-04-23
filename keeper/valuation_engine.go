@@ -40,12 +40,7 @@ func (k Keeper) getNetAssetValue(ctx sdk.Context, markerDenom, priceDenom string
 	}, nil
 }
 
-// GetTVVInUnderlyingAsset calculates the Total Vault Value (TVV) by summing the
-// values of all assets held in the vault's principal marker account, expressed
-// in the vault's UnderlyingAsset. This includes both fungible markers and
-// unique NFT markers (supply = 1) valued via their individual NAV records.
-func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccount) (math.Int, error) {
-
+// UnitPriceFraction returns the unit price of srcDenom expressed in underlyingAsset
 // as an integer fraction (numerator, denominator) using Net Asset Value (NAV).
 //
 // Semantics

@@ -92,10 +92,11 @@ type AppModule struct {
 	bankKeeper      types.BankKeeper
 	nameKeeper      types.NameKeeper
 	attributeKeeper types.AttributeKeeper
+	exchangeKeeper  types.ExchangeMsgServer
 }
 
 // NewAppModule creates a new AppModule instance.
-func NewAppModule(keeper *keeper.Keeper, mk types.MarkerKeeper, bk types.BankKeeper, nk types.NameKeeper, attk types.AttributeKeeper, addressCodec address.Codec) AppModule {
+func NewAppModule(keeper *keeper.Keeper, mk types.MarkerKeeper, bk types.BankKeeper, nk types.NameKeeper, attk types.AttributeKeeper, ek types.ExchangeMsgServer, addressCodec address.Codec) AppModule {
 	return AppModule{
 		AppModuleBasic:  NewAppModuleBasic(),
 		keeper:          keeper,
@@ -104,6 +105,7 @@ func NewAppModule(keeper *keeper.Keeper, mk types.MarkerKeeper, bk types.BankKee
 		bankKeeper:      bk,
 		nameKeeper:      nk,
 		attributeKeeper: attk,
+		exchangeKeeper:  ek,
 	}
 }
 
@@ -635,8 +637,9 @@ type ModuleInputs struct {
 	AuthKeeper    types.AccountKeeper
 	MarkerKeeper  types.MarkerKeeper
 	BankKeeper    types.BankKeeper
-	NameKeeper    types.NameKeeper
-	AttrKeeper    types.AttributeKeeper
+	NameKeeper     types.NameKeeper
+	AttrKeeper     types.AttributeKeeper
+	ExchangeKeeper types.ExchangeMsgServer
 }
 
 // ModuleOutputs defines the outputs of the vault module provider.
@@ -664,8 +667,9 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.BankKeeper,
 		in.NameKeeper,
 		in.AttrKeeper,
+		in.ExchangeKeeper,
 	)
-	m := NewAppModule(k, in.MarkerKeeper, in.BankKeeper, in.NameKeeper, in.AttrKeeper, in.AddressCodec)
+	m := NewAppModule(k, in.MarkerKeeper, in.BankKeeper, in.NameKeeper, in.AttrKeeper, in.ExchangeKeeper, in.AddressCodec)
 	return ModuleOutputs{Keeper: k, Module: m}
 }
 

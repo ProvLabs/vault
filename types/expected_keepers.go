@@ -7,20 +7,21 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
-	"github.com/provenance-io/provenance/x/marker/types"
+	exchangetypes "github.com/provenance-io/provenance/x/exchange"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 type MarkerKeeper interface {
 	MintCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) error
 	BurnCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) error
-	AddFinalizeAndActivateMarker(ctx sdk.Context, marker types.MarkerAccountI) error
+	AddFinalizeAndActivateMarker(ctx sdk.Context, marker markertypes.MarkerAccountI) error
 	TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, amount sdk.Coin) error
 	WithdrawCoins(ctx sdk.Context, caller sdk.AccAddress, recipient sdk.AccAddress, denom string, coins sdk.Coins) error
-	GetMarker(ctx sdk.Context, address sdk.AccAddress) (types.MarkerAccountI, error)
-	GetMarkerByDenom(ctx sdk.Context, denom string) (types.MarkerAccountI, error)
+	GetMarker(ctx sdk.Context, address sdk.AccAddress) (markertypes.MarkerAccountI, error)
+	GetMarkerByDenom(ctx sdk.Context, denom string) (markertypes.MarkerAccountI, error)
 	IsMarkerAccount(ctx sdk.Context, addr sdk.AccAddress) bool
-	GetNetAssetValue(ctx sdk.Context, markerDenom, priceDenom string) (*types.NetAssetValue, error)
-	SetNetAssetValue(ctx sdk.Context, marker types.MarkerAccountI, netAssetValue types.NetAssetValue, source string) error
+	GetNetAssetValue(ctx sdk.Context, markerDenom, priceDenom string) (*markertypes.NetAssetValue, error)
+	SetNetAssetValue(ctx sdk.Context, marker markertypes.MarkerAccountI, netAssetValue markertypes.NetAssetValue, source string) error
 	SendRestrictionFn(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error)
 	GetUnrestrictedDenomRegex(ctx sdk.Context) (regex string)
 }
@@ -54,4 +55,9 @@ type NameKeeper interface {
 
 type AttributeKeeper interface {
 	SetAttribute(ctx sdk.Context, attr attrtypes.Attribute, owner sdk.AccAddress) error
+}
+
+type ExchangeMsgServer interface {
+	CreatePayment(ctx context.Context, req *exchangetypes.MsgCreatePaymentRequest) (*exchangetypes.MsgCreatePaymentResponse, error)
+	AcceptPayment(ctx context.Context, req *exchangetypes.MsgAcceptPaymentRequest) (*exchangetypes.MsgAcceptPaymentResponse, error)
 }

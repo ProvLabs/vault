@@ -30,7 +30,9 @@ type Keeper struct {
 	MarkerKeeper types.MarkerKeeper
 	BankKeeper   types.BankKeeper
 	NameKeeper   types.NameKeeper
-	AttrKeeper   types.AttributeKeeper
+	AttrKeeper            types.AttributeKeeper
+	ExchangeKeeper        types.ExchangeMsgServer
+
 
 	Params                collections.Item[types.Params]
 	Vaults                collections.Map[sdk.AccAddress, []byte]
@@ -54,6 +56,7 @@ func NewKeeper(
 	bankkeeper types.BankKeeper,
 	namekeeper types.NameKeeper,
 	attributekeeper types.AttributeKeeper,
+	exchangekeeper types.ExchangeMsgServer,
 ) *Keeper {
 	if _, err := addressCodec.BytesToString(authority); err != nil {
 		panic(fmt.Sprintf("invalid authority address %s: %s", authority, err))
@@ -79,6 +82,7 @@ func NewKeeper(
 		BankKeeper:            bankkeeper,
 		NameKeeper:            namekeeper,
 		AttrKeeper:            attributekeeper,
+		ExchangeKeeper:        exchangekeeper,
 	}
 
 	schema, err := builder.Build()

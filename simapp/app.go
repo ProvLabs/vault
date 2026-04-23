@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	vaultkeeper "github.com/provlabs/vault/keeper"
+	"github.com/provlabs/vault/types"
 	"google.golang.org/protobuf/proto"
 
 	"cosmossdk.io/core/appconfig"
@@ -110,7 +111,7 @@ type SimApp struct {
 	NameKeeper      namekeeper.Keeper
 	AttributeKeeper attributekeeper.Keeper
 	MarkerKeeper    markerkeeper.Keeper
-	// ExchangeKeeper  exchangekeeper.Keeper
+	ExchangeKeeper  types.ExchangeMsgServer
 	// Custom Modules
 	VaultKeeper *vaultkeeper.Keeper
 
@@ -152,6 +153,7 @@ func AppConfig() depinject.Config {
 			ProvideMarkerKeeperStub,
 			ProvideNameKeeperStub,
 			ProvideAttributeKeeperStub,
+			ProvideExchangeKeeperStub,
 		),
 		depinject.Supply(
 			map[string]module.AppModuleBasic{
@@ -315,4 +317,9 @@ func ProvideAttributeKeeperStub() *attributekeeper.Keeper {
 
 func (app *SimApp) AppCodec() codec.Codec {
 	return app.appCodec
+}
+
+// ProvideExchangeKeeperStub returns a dummy types.ExchangeMsgServer instance.
+func ProvideExchangeKeeperStub() types.ExchangeMsgServer {
+	return nil
 }

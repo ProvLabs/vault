@@ -9,6 +9,8 @@ import (
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
 
+	exchangetypes "github.com/provenance-io/provenance/x/exchange"
+
 	"cosmossdk.io/core/header"
 	storetypes "cosmossdk.io/store/types"
 
@@ -89,6 +91,15 @@ func (m *MockAuthKeeper) GetModuleAddress(moduleName string) sdk.AccAddress {
 	return sdk.AccAddress(moduleName)
 }
 
+type MockExchangeKeeper struct{}
+
+func (m *MockExchangeKeeper) CreatePayment(_ context.Context, _ *exchangetypes.MsgCreatePaymentRequest) (*exchangetypes.MsgCreatePaymentResponse, error) {
+	return &exchangetypes.MsgCreatePaymentResponse{}, nil
+}
+func (m *MockExchangeKeeper) AcceptPayment(_ context.Context, _ *exchangetypes.MsgAcceptPaymentRequest) (*exchangetypes.MsgAcceptPaymentResponse, error) {
+	return &exchangetypes.MsgAcceptPaymentResponse{}, nil
+}
+
 // NewVaultKeeper returns an instance of the Keeper with all dependencies mocked.
 func NewVaultKeeper(
 	t testing.TB,
@@ -103,6 +114,7 @@ func NewVaultKeeper(
 	sdkCfg.SetBech32PrefixForConsensusNode("provlabsvalcons", "provlabsvalconspub")
 	types.RegisterInterfaces(cfg.InterfaceRegistry)
 	authMock := NewMockAuthKeeper()
+	exchangeMock := &MockExchangeKeeper{}
 
 	k := keeper.NewKeeper(
 		cfg.Codec,
@@ -116,6 +128,7 @@ func NewVaultKeeper(
 		nil,
 		nil,
 		nil,
+		exchangeMock,
 	)
 
 	ctx := wrapper.Ctx.WithHeaderInfo(header.Info{Time: time.Now().UTC()})

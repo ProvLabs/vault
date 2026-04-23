@@ -1663,9 +1663,9 @@ func (s *TestSuite) TestKeeper_setShareDenomNAV() {
 			expectNAVEvent: true,
 		},
 		{
-			name:           "overflow shares returns error and skips NAV",
+			name:           "overflow shares - now succeeds with high-precision store",
 			shares:         overflowShares,
-			expectErr:      true,
+			expectErr:      false,
 			expectNAVEvent: false,
 		},
 	}
@@ -1685,7 +1685,6 @@ func (s *TestSuite) TestKeeper_setShareDenomNAV() {
 						s.T(),
 						s.ctx,
 						vault,
-						marker,
 						tvv,
 					)
 				},

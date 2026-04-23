@@ -6,7 +6,6 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provlabs/vault/types"
 )
 
@@ -85,9 +84,9 @@ func (k Keeper) TestAccessor_refundWithdrawal(t *testing.T, ctx context.Context,
 }
 
 // TestAccessor_setShareDenomNAV exposes this keeper's setShareDenomNAV function for unit tests.
-func (k Keeper) TestAccessor_setShareDenomNAV(t *testing.T, ctx context.Context, vault *types.VaultAccount, vaultMarker markertypes.MarkerAccountI, tvv sdkmath.Int) error {
+func (k Keeper) TestAccessor_setShareDenomNAV(t *testing.T, ctx context.Context, vault *types.VaultAccount, tvv sdkmath.Int) error {
 	t.Helper()
-	return k.setShareDenomNAV(sdk.UnwrapSDKContext(ctx), vault, vaultMarker, tvv)
+	return k.setShareDenomNAV(sdk.UnwrapSDKContext(ctx), vault, tvv)
 }
 
 // TestAccessor_checkPayoutRestrictions exposes this keeper's checkPayoutRestrictions function for unit tests.

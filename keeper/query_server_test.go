@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"time"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -55,6 +56,17 @@ func (s *TestSuite) TestQueryServer_Vault() {
 	setupVaults := func() {
 		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlying, 1), s.adminAddr)
 		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(payment, 1), s.adminAddr)
+
+		// Set NAVs for the supply=1 markers to avoid valuation failures
+		s.Require().NoError(s.k.NetAssetValues.Set(s.ctx, collections.Join(payment, underlying), types.NetAssetValue{
+			Price:  sdk.NewInt64Coin(underlying, 1),
+			Volume: math.OneInt().String(),
+		}))
+		s.Require().NoError(s.k.NetAssetValues.Set(s.ctx, collections.Join(underlying, underlying), types.NetAssetValue{
+			Price:  sdk.NewInt64Coin(underlying, 1),
+			Volume: math.OneInt().String(),
+		}))
+
 		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: admin, ShareDenom: shareDenom1, UnderlyingAsset: underlying, PaymentDenom: payment})
 		s.Require().NoError(err, "create vault1 should succeed")
 		_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: admin, ShareDenom: shareDenom2, UnderlyingAsset: underlying, PaymentDenom: payment})
@@ -503,6 +515,13 @@ func (s *TestSuite) TestQueryServer_EstimateSwapIn() {
 			Name: "happy path underlying deposit (peg)",
 			Setup: func() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
+				// Ensure supply=1 markers have a NAV
+				if s.k.BankKeeper.GetSupply(s.ctx, underlyingDenom).Amount.Equal(math.OneInt()) {
+					s.k.NetAssetValues.Set(s.ctx, collections.Join(underlyingDenom, underlyingDenom), types.NetAssetValue{
+						Price:  sdk.NewCoin(underlyingDenom, math.OneInt()),
+						Volume: math.OneInt().String(),
+					})
+				}
 				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 					Admin: admin, ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom,
 				})
@@ -520,6 +539,14 @@ func (s *TestSuite) TestQueryServer_EstimateSwapIn() {
 			Name: "happy path payment deposit (peg 1:1)",
 			Setup: func() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
+				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(paymentDenom, math.NewInt(1000)), s.adminAddr)
+				// Ensure supply=1 markers have a NAV
+				if s.k.BankKeeper.GetSupply(s.ctx, underlyingDenom).Amount.Equal(math.OneInt()) {
+					s.k.NetAssetValues.Set(s.ctx, collections.Join(paymentDenom, underlyingDenom), types.NetAssetValue{
+						Price:  sdk.NewCoin(underlyingDenom, math.OneInt()),
+						Volume: math.OneInt().String(),
+					})
+				}
 				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 					Admin: admin, ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom,
 				})
@@ -638,6 +665,13 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 			Name: "happy path redeem to underlying (peg)",
 			Setup: func() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
+				// Ensure supply=1 markers have a NAV
+				if s.k.BankKeeper.GetSupply(s.ctx, underlyingDenom).Amount.Equal(math.OneInt()) {
+					s.k.NetAssetValues.Set(s.ctx, collections.Join(underlyingDenom, underlyingDenom), types.NetAssetValue{
+						Price:  sdk.NewCoin(underlyingDenom, math.OneInt()),
+						Volume: math.OneInt().String(),
+					})
+				}
 				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 					Admin: admin, ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom,
 				})
@@ -664,6 +698,14 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 			Name: "happy path redeem to payment denom (peg 1:1)",
 			Setup: func() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
+				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(paymentDenom, math.NewInt(1000)), s.adminAddr)
+				// Ensure supply=1 markers have a NAV
+				if s.k.BankKeeper.GetSupply(s.ctx, underlyingDenom).Amount.Equal(math.OneInt()) {
+					s.k.NetAssetValues.Set(s.ctx, collections.Join(paymentDenom, underlyingDenom), types.NetAssetValue{
+						Price:  sdk.NewCoin(underlyingDenom, math.OneInt()),
+						Volume: math.OneInt().String(),
+					})
+				}
 				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 					Admin: admin, ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom,
 				})

@@ -1,8 +1,10 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
+	"cosmossdk.io/collections"
 	"github.com/provlabs/vault/types"
 	"github.com/provlabs/vault/utils"
 
@@ -11,8 +13,37 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// getNetAssetValue retrieves the Net Asset Value (NAV) for a marker, prioritizing
+// the vault module's local high-precision NAV store before falling back to the
+// marker module's standard NAV.
+func (k Keeper) getNetAssetValue(ctx sdk.Context, markerDenom, priceDenom string) (*types.NetAssetValue, error) {
+	// 1. Try local vault module override (supports sdk.Int volume)
+	localNav, err := k.NetAssetValues.Get(ctx, collections.Join(markerDenom, priceDenom))
+	if err == nil {
+		return &localNav, nil
+	}
+	if !errors.Is(err, collections.ErrNotFound) {
+		return nil, fmt.Errorf("failed to get local nav for %s/%s: %w", markerDenom, priceDenom, err)
+	}
+
+	// 2. Fall back to marker module standard NAV (uint64 volume)
+	markerNav, err := k.MarkerKeeper.GetNetAssetValue(ctx, markerDenom, priceDenom)
+	if err != nil {
+		return nil, err // propagates marker lookup errors
+	}
+	if markerNav == nil {
+		return nil, nil
+	}
+
+	return &types.NetAssetValue{
+		Price:              markerNav.Price,
+		Volume:             math.NewIntFromUint64(markerNav.Volume).String(),
+		UpdatedBlockHeight: markerNav.UpdatedBlockHeight,
+	}, nil
+}
+
 // UnitPriceFraction returns the unit price of srcDenom expressed in underlyingAsset
-// as an integer fraction (numerator, denominator) using marker Net Asset Value (NAV).
+// as an integer fraction (numerator, denominator) using Net Asset Value (NAV).
 //
 // Semantics
 //   - Forward NAV (srcDenom → underlyingAsset):
@@ -56,8 +87,8 @@ func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom string, vault types.
 		return math.NewInt(1), math.NewInt(1), nil
 	}
 
-	fwd, errF := k.MarkerKeeper.GetNetAssetValue(ctx, srcDenom, underlyingAsset)
-	rev, errR := k.MarkerKeeper.GetNetAssetValue(ctx, underlyingAsset, srcDenom)
+	fwd, errF := k.getNetAssetValue(ctx, srcDenom, underlyingAsset)
+	rev, errR := k.getNetAssetValue(ctx, underlyingAsset, srcDenom)
 
 	if fwd == nil && rev == nil {
 		if errF != nil {
@@ -80,26 +111,30 @@ func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom string, vault types.
 	}
 
 	if useForward {
-		if fwd.Volume == 0 {
+		volAmt, ok := math.NewIntFromString(fwd.Volume)
+		if !ok {
+			return math.Int{}, math.Int{}, fmt.Errorf("invalid nav volume: %s", fwd.Volume)
+		}
+		if volAmt.IsZero() {
 			return math.Int{}, math.Int{}, fmt.Errorf("nav volume is zero for %s/%s", srcDenom, underlyingAsset)
 		}
 		if fwd.Price.Amount.IsZero() {
 			return math.Int{}, math.Int{}, fmt.Errorf("nav price is zero for %s/%s", srcDenom, underlyingAsset)
 		}
-		priceAmt := fwd.Price.Amount
-		volAmt := math.NewIntFromUint64(fwd.Volume)
-		return priceAmt, volAmt, nil
+		return fwd.Price.Amount, volAmt, nil
 	}
 
+	volAmt, ok := math.NewIntFromString(rev.Volume)
+	if !ok {
+		return math.Int{}, math.Int{}, fmt.Errorf("invalid nav volume: %s", rev.Volume)
+	}
+	if volAmt.IsZero() {
+		return math.Int{}, math.Int{}, fmt.Errorf("nav volume is zero for %s/%s", underlyingAsset, srcDenom)
+	}
 	if rev.Price.Amount.IsZero() {
 		return math.Int{}, math.Int{}, fmt.Errorf("nav price is zero for %s/%s", underlyingAsset, srcDenom)
 	}
-	if rev.Volume == 0 {
-		return math.Int{}, math.Int{}, fmt.Errorf("nav volume is zero for %s/%s", underlyingAsset, srcDenom)
-	}
-	priceAmt := math.NewIntFromUint64(rev.Volume)
-	volAmt := rev.Price.Amount
-	return priceAmt, volAmt, nil
+	return volAmt, rev.Price.Amount, nil
 }
 
 // ToUnderlyingAssetAmount converts an input coin into its value expressed in
@@ -162,9 +197,36 @@ func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccoun
 	balances := k.BankKeeper.GetAllBalances(ctx, vault.PrincipalMarkerAddress())
 	total := math.ZeroInt()
 	for _, balance := range balances {
-		if balance.Denom == vault.TotalShares.Denom || !vault.IsAcceptedDenom(balance.Denom) {
+		if balance.Denom == vault.TotalShares.Denom {
 			continue
 		}
+
+		// Check if this is a unique NFT marker (supply = 1)
+		marker, err := k.MarkerKeeper.GetMarkerByDenom(ctx, balance.Denom)
+		if err == nil && marker != nil && marker.GetSupply().Amount.Equal(math.OneInt()) {
+			// This is a unique RWA/NFT asset. Get its specific NAV.
+			nav, err := k.getNetAssetValue(ctx, balance.Denom, vault.UnderlyingAsset)
+			if err != nil {
+				return math.Int{}, fmt.Errorf("failed to get nav for nft %s: %w", balance.Denom, err)
+			}
+			if nav == nil {
+				return math.Int{}, fmt.Errorf("nav not found for nft %s/%s", balance.Denom, vault.UnderlyingAsset)
+			}
+			vol, ok := math.NewIntFromString(nav.Volume)
+			if !ok || vol.IsZero() {
+				return math.Int{}, fmt.Errorf("invalid volume for nft %s nav", balance.Denom)
+			}
+
+			// Value = (Balance * Price) / Volume
+			assetValue := balance.Amount.Mul(nav.Price.Amount).Quo(vol)
+			total = total.Add(assetValue)
+			continue
+		}
+
+		if !vault.IsAcceptedDenom(balance.Denom) {
+			continue
+		}
+
 		val, err := k.ToUnderlyingAssetAmount(ctx, vault, balance)
 		if err != nil {
 			return math.Int{}, fmt.Errorf("failed to convert balance to underlying: %w", err)

@@ -38,6 +38,8 @@ type Keeper struct {
 	PayoutTimeoutQueue    *queue.PayoutTimeoutQueue
 	FeeTimeoutQueue       *queue.FeeTimeoutQueue
 	PendingSwapOutQueue   *queue.PendingSwapOutQueue
+
+	NetAssetValues collections.Map[collections.Pair[string, string], types.NetAssetValue]
 }
 
 // NewMsgServer creates a new Keeper for the module.
@@ -71,6 +73,7 @@ func NewKeeper(
 		PayoutTimeoutQueue:    queue.NewPayoutTimeoutQueue(builder),
 		FeeTimeoutQueue:       queue.NewFeeTimeoutQueue(builder),
 		PendingSwapOutQueue:   queue.NewPendingSwapOutQueue(builder, cdc),
+		NetAssetValues:        collections.NewMap(builder, types.NetAssetValueKeyPrefix, types.NetAssetValueName, collections.PairKeyCodec(collections.StringKey, collections.StringKey), codec.CollValue[types.NetAssetValue](cdc)),
 		AuthKeeper:            authKeeper,
 		MarkerKeeper:          markerkeeper,
 		BankKeeper:            bankkeeper,

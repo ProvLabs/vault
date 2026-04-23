@@ -80,31 +80,35 @@ type VaultAccountI interface {
 //     by validation (administrators should use Toggle messages to disable operations instead).
 //
 // All swap limit values are represented as integer strings (cosmos.IntString).
-func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyingAsset, paymentDenom string, withdrawalDelay uint64, aumFeeBips uint32, minSwapInValue, minSwapOutValue, maxSwapInValue, maxSwapOutValue string) *VaultAccount {
+func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyingAsset, paymentDenom string, withdrawalDelay uint64, aumFeeBips uint32, minSwapInValue, minSwapOutValue, maxSwapInValue, maxSwapOutValue string, model VaultModel, collateralPortfolio, yldsWallet, orderBook string) *VaultAccount {
 	if paymentDenom == "" {
 		paymentDenom = underlyingAsset
 	}
 	return &VaultAccount{
-		BaseAccount:            baseAcc,
-		Admin:                  admin,
-		TotalShares:            sdk.Coin{Denom: shareDenom, Amount: sdkmath.ZeroInt()},
-		UnderlyingAsset:        underlyingAsset,
-		PaymentDenom:           paymentDenom,
-		CurrentInterestRate:    ZeroInterestRate,
-		DesiredInterestRate:    ZeroInterestRate,
-		SwapInEnabled:          true,
-		SwapOutEnabled:         true,
-		WithdrawalDelaySeconds: withdrawalDelay,
-		Paused:                 false,
-		PausedBalance:          sdk.Coin{},
-		BridgeEnabled:          false,
-		BridgeAddress:          "",
-		OutstandingAumFee:      sdk.NewCoin(paymentDenom, sdkmath.ZeroInt()),
-		AumFeeBips:             aumFeeBips,
-		MinSwapInValue:         minSwapInValue,
-		MinSwapOutValue:        minSwapOutValue,
-		MaxSwapInValue:         maxSwapInValue,
-		MaxSwapOutValue:        maxSwapOutValue,
+		BaseAccount:                baseAcc,
+		Admin:                      admin,
+		TotalShares:                sdk.Coin{Denom: shareDenom, Amount: sdkmath.ZeroInt()},
+		UnderlyingAsset:            underlyingAsset,
+		PaymentDenom:               paymentDenom,
+		CurrentInterestRate:        ZeroInterestRate,
+		DesiredInterestRate:        ZeroInterestRate,
+		SwapInEnabled:              true,
+		SwapOutEnabled:             true,
+		WithdrawalDelaySeconds:     withdrawalDelay,
+		Paused:                     false,
+		PausedBalance:              sdk.Coin{},
+		BridgeEnabled:              false,
+		BridgeAddress:              "",
+		OutstandingAumFee:          sdk.NewCoin(paymentDenom, sdkmath.ZeroInt()),
+		AumFeeBips:                 aumFeeBips,
+		MinSwapInValue:             minSwapInValue,
+		MinSwapOutValue:            minSwapOutValue,
+		MaxSwapInValue:             maxSwapInValue,
+		MaxSwapOutValue:            maxSwapOutValue,
+		Model:                      model,
+		CollateralPortfolioAddress: collateralPortfolio,
+		YldsWalletAddress:          yldsWallet,
+		OrderBookAddress:           orderBook,
 	}
 }
 
@@ -262,6 +266,26 @@ func (v VaultAccount) Validate() error {
 
 	if err := ValidateSwapLimits(v.MinSwapOutValue, v.MaxSwapOutValue); err != nil {
 		return fmt.Errorf("failed to validate swap-out limits: %w", err)
+	}
+
+	if v.Model == VaultModel_VAULT_MODEL_M1_ALWAYS_ON_LIQUIDITY {
+		if v.CollateralPortfolioAddress == "" {
+			return fmt.Errorf("collateral portfolio address is required for Model 1")
+		}
+		if _, err := sdk.AccAddressFromBech32(v.CollateralPortfolioAddress); err != nil {
+			return fmt.Errorf("invalid collateral portfolio address: %w", err)
+		}
+		if v.OrderBookAddress == "" {
+			return fmt.Errorf("order book address is required for Model 1")
+		}
+		if _, err := sdk.AccAddressFromBech32(v.OrderBookAddress); err != nil {
+			return fmt.Errorf("invalid order book address: %w", err)
+		}
+		if v.YldsWalletAddress != "" {
+			if _, err := sdk.AccAddressFromBech32(v.YldsWalletAddress); err != nil {
+				return fmt.Errorf("invalid ylds wallet address: %w", err)
+			}
+		}
 	}
 
 	return nil

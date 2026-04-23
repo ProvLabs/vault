@@ -17,35 +17,39 @@ import (
 )
 
 var (
-	md_VaultAccount                          protoreflect.MessageDescriptor
-	fd_VaultAccount_base_account             protoreflect.FieldDescriptor
-	fd_VaultAccount_total_shares             protoreflect.FieldDescriptor
-	fd_VaultAccount_underlying_asset         protoreflect.FieldDescriptor
-	fd_VaultAccount_payment_denom            protoreflect.FieldDescriptor
-	fd_VaultAccount_admin                    protoreflect.FieldDescriptor
-	fd_VaultAccount_current_interest_rate    protoreflect.FieldDescriptor
-	fd_VaultAccount_desired_interest_rate    protoreflect.FieldDescriptor
-	fd_VaultAccount_min_interest_rate        protoreflect.FieldDescriptor
-	fd_VaultAccount_max_interest_rate        protoreflect.FieldDescriptor
-	fd_VaultAccount_period_start             protoreflect.FieldDescriptor
-	fd_VaultAccount_period_timeout           protoreflect.FieldDescriptor
-	fd_VaultAccount_swap_in_enabled          protoreflect.FieldDescriptor
-	fd_VaultAccount_swap_out_enabled         protoreflect.FieldDescriptor
-	fd_VaultAccount_withdrawal_delay_seconds protoreflect.FieldDescriptor
-	fd_VaultAccount_paused                   protoreflect.FieldDescriptor
-	fd_VaultAccount_paused_balance           protoreflect.FieldDescriptor
-	fd_VaultAccount_paused_reason            protoreflect.FieldDescriptor
-	fd_VaultAccount_bridge_address           protoreflect.FieldDescriptor
-	fd_VaultAccount_bridge_enabled           protoreflect.FieldDescriptor
-	fd_VaultAccount_asset_manager            protoreflect.FieldDescriptor
-	fd_VaultAccount_fee_period_start         protoreflect.FieldDescriptor
-	fd_VaultAccount_fee_period_timeout       protoreflect.FieldDescriptor
-	fd_VaultAccount_outstanding_aum_fee      protoreflect.FieldDescriptor
-	fd_VaultAccount_aum_fee_bips             protoreflect.FieldDescriptor
-	fd_VaultAccount_min_swap_in_value        protoreflect.FieldDescriptor
-	fd_VaultAccount_min_swap_out_value       protoreflect.FieldDescriptor
-	fd_VaultAccount_max_swap_in_value        protoreflect.FieldDescriptor
-	fd_VaultAccount_max_swap_out_value       protoreflect.FieldDescriptor
+	md_VaultAccount                              protoreflect.MessageDescriptor
+	fd_VaultAccount_base_account                 protoreflect.FieldDescriptor
+	fd_VaultAccount_total_shares                 protoreflect.FieldDescriptor
+	fd_VaultAccount_underlying_asset             protoreflect.FieldDescriptor
+	fd_VaultAccount_payment_denom                protoreflect.FieldDescriptor
+	fd_VaultAccount_admin                        protoreflect.FieldDescriptor
+	fd_VaultAccount_current_interest_rate        protoreflect.FieldDescriptor
+	fd_VaultAccount_desired_interest_rate        protoreflect.FieldDescriptor
+	fd_VaultAccount_min_interest_rate            protoreflect.FieldDescriptor
+	fd_VaultAccount_max_interest_rate            protoreflect.FieldDescriptor
+	fd_VaultAccount_period_start                 protoreflect.FieldDescriptor
+	fd_VaultAccount_period_timeout               protoreflect.FieldDescriptor
+	fd_VaultAccount_swap_in_enabled              protoreflect.FieldDescriptor
+	fd_VaultAccount_swap_out_enabled             protoreflect.FieldDescriptor
+	fd_VaultAccount_withdrawal_delay_seconds     protoreflect.FieldDescriptor
+	fd_VaultAccount_paused                       protoreflect.FieldDescriptor
+	fd_VaultAccount_paused_balance               protoreflect.FieldDescriptor
+	fd_VaultAccount_paused_reason                protoreflect.FieldDescriptor
+	fd_VaultAccount_bridge_address               protoreflect.FieldDescriptor
+	fd_VaultAccount_bridge_enabled               protoreflect.FieldDescriptor
+	fd_VaultAccount_asset_manager                protoreflect.FieldDescriptor
+	fd_VaultAccount_fee_period_start             protoreflect.FieldDescriptor
+	fd_VaultAccount_fee_period_timeout           protoreflect.FieldDescriptor
+	fd_VaultAccount_outstanding_aum_fee          protoreflect.FieldDescriptor
+	fd_VaultAccount_aum_fee_bips                 protoreflect.FieldDescriptor
+	fd_VaultAccount_min_swap_in_value            protoreflect.FieldDescriptor
+	fd_VaultAccount_min_swap_out_value           protoreflect.FieldDescriptor
+	fd_VaultAccount_max_swap_in_value            protoreflect.FieldDescriptor
+	fd_VaultAccount_max_swap_out_value           protoreflect.FieldDescriptor
+	fd_VaultAccount_model                        protoreflect.FieldDescriptor
+	fd_VaultAccount_collateral_portfolio_address protoreflect.FieldDescriptor
+	fd_VaultAccount_ylds_wallet_address          protoreflect.FieldDescriptor
+	fd_VaultAccount_order_book_address           protoreflect.FieldDescriptor
 )
 
 func init() {
@@ -79,6 +83,10 @@ func init() {
 	fd_VaultAccount_min_swap_out_value = md_VaultAccount.Fields().ByName("min_swap_out_value")
 	fd_VaultAccount_max_swap_in_value = md_VaultAccount.Fields().ByName("max_swap_in_value")
 	fd_VaultAccount_max_swap_out_value = md_VaultAccount.Fields().ByName("max_swap_out_value")
+	fd_VaultAccount_model = md_VaultAccount.Fields().ByName("model")
+	fd_VaultAccount_collateral_portfolio_address = md_VaultAccount.Fields().ByName("collateral_portfolio_address")
+	fd_VaultAccount_ylds_wallet_address = md_VaultAccount.Fields().ByName("ylds_wallet_address")
+	fd_VaultAccount_order_book_address = md_VaultAccount.Fields().ByName("order_book_address")
 }
 
 var _ protoreflect.Message = (*fastReflection_VaultAccount)(nil)
@@ -314,6 +322,30 @@ func (x *fastReflection_VaultAccount) Range(f func(protoreflect.FieldDescriptor,
 			return
 		}
 	}
+	if x.Model != 0 {
+		value := protoreflect.ValueOfEnum((protoreflect.EnumNumber)(x.Model))
+		if !f(fd_VaultAccount_model, value) {
+			return
+		}
+	}
+	if x.CollateralPortfolioAddress != "" {
+		value := protoreflect.ValueOfString(x.CollateralPortfolioAddress)
+		if !f(fd_VaultAccount_collateral_portfolio_address, value) {
+			return
+		}
+	}
+	if x.YldsWalletAddress != "" {
+		value := protoreflect.ValueOfString(x.YldsWalletAddress)
+		if !f(fd_VaultAccount_ylds_wallet_address, value) {
+			return
+		}
+	}
+	if x.OrderBookAddress != "" {
+		value := protoreflect.ValueOfString(x.OrderBookAddress)
+		if !f(fd_VaultAccount_order_book_address, value) {
+			return
+		}
+	}
 }
 
 // Has reports whether a field is populated.
@@ -385,6 +417,14 @@ func (x *fastReflection_VaultAccount) Has(fd protoreflect.FieldDescriptor) bool 
 		return x.MaxSwapInValue != ""
 	case "provlabs.vault.v1.VaultAccount.max_swap_out_value":
 		return x.MaxSwapOutValue != ""
+	case "provlabs.vault.v1.VaultAccount.model":
+		return x.Model != 0
+	case "provlabs.vault.v1.VaultAccount.collateral_portfolio_address":
+		return x.CollateralPortfolioAddress != ""
+	case "provlabs.vault.v1.VaultAccount.ylds_wallet_address":
+		return x.YldsWalletAddress != ""
+	case "provlabs.vault.v1.VaultAccount.order_book_address":
+		return x.OrderBookAddress != ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.VaultAccount"))
@@ -457,6 +497,14 @@ func (x *fastReflection_VaultAccount) Clear(fd protoreflect.FieldDescriptor) {
 		x.MaxSwapInValue = ""
 	case "provlabs.vault.v1.VaultAccount.max_swap_out_value":
 		x.MaxSwapOutValue = ""
+	case "provlabs.vault.v1.VaultAccount.model":
+		x.Model = 0
+	case "provlabs.vault.v1.VaultAccount.collateral_portfolio_address":
+		x.CollateralPortfolioAddress = ""
+	case "provlabs.vault.v1.VaultAccount.ylds_wallet_address":
+		x.YldsWalletAddress = ""
+	case "provlabs.vault.v1.VaultAccount.order_book_address":
+		x.OrderBookAddress = ""
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.VaultAccount"))
@@ -557,6 +605,18 @@ func (x *fastReflection_VaultAccount) Get(descriptor protoreflect.FieldDescripto
 	case "provlabs.vault.v1.VaultAccount.max_swap_out_value":
 		value := x.MaxSwapOutValue
 		return protoreflect.ValueOfString(value)
+	case "provlabs.vault.v1.VaultAccount.model":
+		value := x.Model
+		return protoreflect.ValueOfEnum((protoreflect.EnumNumber)(value))
+	case "provlabs.vault.v1.VaultAccount.collateral_portfolio_address":
+		value := x.CollateralPortfolioAddress
+		return protoreflect.ValueOfString(value)
+	case "provlabs.vault.v1.VaultAccount.ylds_wallet_address":
+		value := x.YldsWalletAddress
+		return protoreflect.ValueOfString(value)
+	case "provlabs.vault.v1.VaultAccount.order_book_address":
+		value := x.OrderBookAddress
+		return protoreflect.ValueOfString(value)
 	default:
 		if descriptor.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.VaultAccount"))
@@ -633,6 +693,14 @@ func (x *fastReflection_VaultAccount) Set(fd protoreflect.FieldDescriptor, value
 		x.MaxSwapInValue = value.Interface().(string)
 	case "provlabs.vault.v1.VaultAccount.max_swap_out_value":
 		x.MaxSwapOutValue = value.Interface().(string)
+	case "provlabs.vault.v1.VaultAccount.model":
+		x.Model = (VaultModel)(value.Enum())
+	case "provlabs.vault.v1.VaultAccount.collateral_portfolio_address":
+		x.CollateralPortfolioAddress = value.Interface().(string)
+	case "provlabs.vault.v1.VaultAccount.ylds_wallet_address":
+		x.YldsWalletAddress = value.Interface().(string)
+	case "provlabs.vault.v1.VaultAccount.order_book_address":
+		x.OrderBookAddress = value.Interface().(string)
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.VaultAccount"))
@@ -721,6 +789,14 @@ func (x *fastReflection_VaultAccount) Mutable(fd protoreflect.FieldDescriptor) p
 		panic(fmt.Errorf("field max_swap_in_value of message provlabs.vault.v1.VaultAccount is not mutable"))
 	case "provlabs.vault.v1.VaultAccount.max_swap_out_value":
 		panic(fmt.Errorf("field max_swap_out_value of message provlabs.vault.v1.VaultAccount is not mutable"))
+	case "provlabs.vault.v1.VaultAccount.model":
+		panic(fmt.Errorf("field model of message provlabs.vault.v1.VaultAccount is not mutable"))
+	case "provlabs.vault.v1.VaultAccount.collateral_portfolio_address":
+		panic(fmt.Errorf("field collateral_portfolio_address of message provlabs.vault.v1.VaultAccount is not mutable"))
+	case "provlabs.vault.v1.VaultAccount.ylds_wallet_address":
+		panic(fmt.Errorf("field ylds_wallet_address of message provlabs.vault.v1.VaultAccount is not mutable"))
+	case "provlabs.vault.v1.VaultAccount.order_book_address":
+		panic(fmt.Errorf("field order_book_address of message provlabs.vault.v1.VaultAccount is not mutable"))
 	default:
 		if fd.IsExtension() {
 			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.VaultAccount"))
@@ -793,6 +869,14 @@ func (x *fastReflection_VaultAccount) NewField(fd protoreflect.FieldDescriptor) 
 	case "provlabs.vault.v1.VaultAccount.max_swap_in_value":
 		return protoreflect.ValueOfString("")
 	case "provlabs.vault.v1.VaultAccount.max_swap_out_value":
+		return protoreflect.ValueOfString("")
+	case "provlabs.vault.v1.VaultAccount.model":
+		return protoreflect.ValueOfEnum(0)
+	case "provlabs.vault.v1.VaultAccount.collateral_portfolio_address":
+		return protoreflect.ValueOfString("")
+	case "provlabs.vault.v1.VaultAccount.ylds_wallet_address":
+		return protoreflect.ValueOfString("")
+	case "provlabs.vault.v1.VaultAccount.order_book_address":
 		return protoreflect.ValueOfString("")
 	default:
 		if fd.IsExtension() {
@@ -965,6 +1049,21 @@ func (x *fastReflection_VaultAccount) ProtoMethods() *protoiface.Methods {
 		if l > 0 {
 			n += 2 + l + runtime.Sov(uint64(l))
 		}
+		if x.Model != 0 {
+			n += 2 + runtime.Sov(uint64(x.Model))
+		}
+		l = len(x.CollateralPortfolioAddress)
+		if l > 0 {
+			n += 2 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.YldsWalletAddress)
+		if l > 0 {
+			n += 2 + l + runtime.Sov(uint64(l))
+		}
+		l = len(x.OrderBookAddress)
+		if l > 0 {
+			n += 2 + l + runtime.Sov(uint64(l))
+		}
 		if x.unknownFields != nil {
 			n += len(x.unknownFields)
 		}
@@ -993,6 +1092,40 @@ func (x *fastReflection_VaultAccount) ProtoMethods() *protoiface.Methods {
 		if x.unknownFields != nil {
 			i -= len(x.unknownFields)
 			copy(dAtA[i:], x.unknownFields)
+		}
+		if len(x.OrderBookAddress) > 0 {
+			i -= len(x.OrderBookAddress)
+			copy(dAtA[i:], x.OrderBookAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.OrderBookAddress)))
+			i--
+			dAtA[i] = 0x2
+			i--
+			dAtA[i] = 0x82
+		}
+		if len(x.YldsWalletAddress) > 0 {
+			i -= len(x.YldsWalletAddress)
+			copy(dAtA[i:], x.YldsWalletAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.YldsWalletAddress)))
+			i--
+			dAtA[i] = 0x1
+			i--
+			dAtA[i] = 0xfa
+		}
+		if len(x.CollateralPortfolioAddress) > 0 {
+			i -= len(x.CollateralPortfolioAddress)
+			copy(dAtA[i:], x.CollateralPortfolioAddress)
+			i = runtime.EncodeVarint(dAtA, i, uint64(len(x.CollateralPortfolioAddress)))
+			i--
+			dAtA[i] = 0x1
+			i--
+			dAtA[i] = 0xf2
+		}
+		if x.Model != 0 {
+			i = runtime.EncodeVarint(dAtA, i, uint64(x.Model))
+			i--
+			dAtA[i] = 0x1
+			i--
+			dAtA[i] = 0xe8
 		}
 		if len(x.MaxSwapOutValue) > 0 {
 			i -= len(x.MaxSwapOutValue)
@@ -2078,6 +2211,121 @@ func (x *fastReflection_VaultAccount) ProtoMethods() *protoiface.Methods {
 					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
 				}
 				x.MaxSwapOutValue = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 29:
+				if wireType != 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field Model", wireType)
+				}
+				x.Model = 0
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					x.Model |= VaultModel(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+			case 30:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field CollateralPortfolioAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.CollateralPortfolioAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 31:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field YldsWalletAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.YldsWalletAddress = string(dAtA[iNdEx:postIndex])
+				iNdEx = postIndex
+			case 32:
+				if wireType != 2 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: wrong wireType = %d for field OrderBookAddress", wireType)
+				}
+				var stringLen uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrIntOverflow
+					}
+					if iNdEx >= l {
+						return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					stringLen |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				intStringLen := int(stringLen)
+				if intStringLen < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				postIndex := iNdEx + intStringLen
+				if postIndex < 0 {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, runtime.ErrInvalidLength
+				}
+				if postIndex > l {
+					return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, io.ErrUnexpectedEOF
+				}
+				x.OrderBookAddress = string(dAtA[iNdEx:postIndex])
 				iNdEx = postIndex
 			default:
 				iNdEx = preIndex
@@ -3312,6 +3560,55 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// VaultModel defines the operational model of the vault.
+type VaultModel int32
+
+const (
+	// VAULT_MODEL_UNSPECIFIED is the default value.
+	VaultModel_VAULT_MODEL_UNSPECIFIED VaultModel = 0
+	// VAULT_MODEL_M1_ALWAYS_ON_LIQUIDITY is the Always-On Liquidity Buffer model (Model 1).
+	VaultModel_VAULT_MODEL_M1_ALWAYS_ON_LIQUIDITY VaultModel = 1
+)
+
+// Enum value maps for VaultModel.
+var (
+	VaultModel_name = map[int32]string{
+		0: "VAULT_MODEL_UNSPECIFIED",
+		1: "VAULT_MODEL_M1_ALWAYS_ON_LIQUIDITY",
+	}
+	VaultModel_value = map[string]int32{
+		"VAULT_MODEL_UNSPECIFIED":            0,
+		"VAULT_MODEL_M1_ALWAYS_ON_LIQUIDITY": 1,
+	}
+)
+
+func (x VaultModel) Enum() *VaultModel {
+	p := new(VaultModel)
+	*p = x
+	return p
+}
+
+func (x VaultModel) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (VaultModel) Descriptor() protoreflect.EnumDescriptor {
+	return file_provlabs_vault_v1_vault_proto_enumTypes[0].Descriptor()
+}
+
+func (VaultModel) Type() protoreflect.EnumType {
+	return &file_provlabs_vault_v1_vault_proto_enumTypes[0]
+}
+
+func (x VaultModel) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use VaultModel.Descriptor instead.
+func (VaultModel) EnumDescriptor() ([]byte, []int) {
+	return file_provlabs_vault_v1_vault_proto_rawDescGZIP(), []int{0}
+}
+
 // VaultAccount represents a central holding place for assets, governed by a set of rules.
 // It is based on the ERC-4626 standard and builds upon the Provenance Marker module.
 type VaultAccount struct {
@@ -3424,6 +3721,14 @@ type VaultAccount struct {
 	// - Values must be positive (> 0).
 	// - An empty string "" indicates no maximum limit.
 	MaxSwapOutValue string `protobuf:"bytes,28,opt,name=max_swap_out_value,json=maxSwapOutValue,proto3" json:"max_swap_out_value,omitempty"`
+	// model is the operational model of the vault.
+	Model VaultModel `protobuf:"varint,29,opt,name=model,proto3,enum=provlabs.vault.v1.VaultModel" json:"model,omitempty"`
+	// collateral_portfolio_address is the address of the staging area for Model 1 (e.g., the issuer's wallet or an order book).
+	CollateralPortfolioAddress string `protobuf:"bytes,30,opt,name=collateral_portfolio_address,json=collateralPortfolioAddress,proto3" json:"collateral_portfolio_address,omitempty"`
+	// ylds_wallet_address is the address of the secondary YLDS backstop for Model 1.
+	YldsWalletAddress string `protobuf:"bytes,31,opt,name=ylds_wallet_address,json=yldsWalletAddress,proto3" json:"ylds_wallet_address,omitempty"`
+	// order_book_address is the address of the order book (x/exchange module target) for Model 1.
+	OrderBookAddress string `protobuf:"bytes,32,opt,name=order_book_address,json=orderBookAddress,proto3" json:"order_book_address,omitempty"`
 }
 
 func (x *VaultAccount) Reset() {
@@ -3642,6 +3947,34 @@ func (x *VaultAccount) GetMaxSwapOutValue() string {
 	return ""
 }
 
+func (x *VaultAccount) GetModel() VaultModel {
+	if x != nil {
+		return x.Model
+	}
+	return VaultModel_VAULT_MODEL_UNSPECIFIED
+}
+
+func (x *VaultAccount) GetCollateralPortfolioAddress() string {
+	if x != nil {
+		return x.CollateralPortfolioAddress
+	}
+	return ""
+}
+
+func (x *VaultAccount) GetYldsWalletAddress() string {
+	if x != nil {
+		return x.YldsWalletAddress
+	}
+	return ""
+}
+
+func (x *VaultAccount) GetOrderBookAddress() string {
+	if x != nil {
+		return x.OrderBookAddress
+	}
+	return ""
+}
+
 // AccountBalance represents the coin balance of a single account.
 type AccountBalance struct {
 	state         protoimpl.MessageState
@@ -3765,7 +4098,7 @@ var file_provlabs_vault_v1_vault_proto_rawDesc = []byte{
 	0x74, 0x6f, 0x1a, 0x19, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x5f, 0x70, 0x72, 0x6f, 0x74, 0x6f,
 	0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x1a, 0x14, 0x67,
 	0x6f, 0x67, 0x6f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x67, 0x6f, 0x67, 0x6f, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x22, 0x8a, 0x0c, 0x0a, 0x0c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x63, 0x63,
+	0x6f, 0x74, 0x6f, 0x22, 0xad, 0x0e, 0x0a, 0x0c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x63, 0x63,
 	0x6f, 0x75, 0x6e, 0x74, 0x12, 0x49, 0x0a, 0x0c, 0x62, 0x61, 0x73, 0x65, 0x5f, 0x61, 0x63, 0x63,
 	0x6f, 0x75, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x63, 0x6f, 0x73,
 	0x6d, 0x6f, 0x73, 0x2e, 0x61, 0x75, 0x74, 0x68, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31,
@@ -3862,43 +4195,66 @@ var file_provlabs_vault_v1_vault_proto_rawDesc = []byte{
 	0x6c, 0x75, 0x65, 0x18, 0x1c, 0x20, 0x01, 0x28, 0x09, 0x42, 0x14, 0xd2, 0xb4, 0x2d, 0x10, 0x63,
 	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x49, 0x6e, 0x74, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52,
 	0x0f, 0x6d, 0x61, 0x78, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x56, 0x61, 0x6c, 0x75, 0x65,
-	0x22, 0x97, 0x01, 0x0a, 0x0e, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x42, 0x61, 0x6c, 0x61,
-	0x6e, 0x63, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x61, 0x0a,
-	0x05, 0x63, 0x6f, 0x69, 0x6e, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
-	0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x30, 0xc8, 0xde, 0x1f, 0x00, 0xaa, 0xdf, 0x1f,
-	0x28, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63, 0x6f, 0x73, 0x6d,
-	0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b, 0x2f, 0x74, 0x79,
-	0x70, 0x65, 0x73, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x73, 0x52, 0x05, 0x63, 0x6f, 0x69, 0x6e, 0x73,
-	0x3a, 0x08, 0x88, 0xa0, 0x1f, 0x00, 0xe8, 0xa0, 0x1f, 0x00, 0x22, 0xdb, 0x01, 0x0a, 0x0e, 0x50,
-	0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74, 0x12, 0x2e, 0x0a,
-	0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4,
-	0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
-	0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x12, 0x3d, 0x0a,
-	0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x02,
-	0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73,
-	0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x0c,
-	0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x37, 0x0a, 0x06,
-	0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63,
-	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65, 0x74,
-	0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x73,
-	0x68, 0x61, 0x72, 0x65, 0x73, 0x12, 0x21, 0x0a, 0x0c, 0x72, 0x65, 0x64, 0x65, 0x65, 0x6d, 0x5f,
-	0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x72, 0x65, 0x64,
-	0x65, 0x65, 0x6d, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x42, 0xc2, 0x01, 0x0a, 0x15, 0x63, 0x6f, 0x6d,
-	0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e,
-	0x76, 0x31, 0x42, 0x0a, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01,
-	0x5a, 0x37, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x6f,
-	0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69, 0x2f,
-	0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76,
-	0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x50, 0x56, 0x58, 0xaa,
-	0x02, 0x11, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x56, 0x61, 0x75, 0x6c, 0x74,
-	0x2e, 0x56, 0x31, 0xca, 0x02, 0x11, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x5c, 0x56,
-	0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1d, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61,
-	0x62, 0x73, 0x5c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d,
-	0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x13, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61,
-	0x62, 0x73, 0x3a, 0x3a, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70,
-	0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x12, 0x33, 0x0a, 0x05, 0x6d, 0x6f, 0x64, 0x65, 0x6c, 0x18, 0x1d, 0x20, 0x01, 0x28, 0x0e, 0x32,
+	0x1d, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74,
+	0x2e, 0x76, 0x31, 0x2e, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x4d, 0x6f, 0x64, 0x65, 0x6c, 0x52, 0x05,
+	0x6d, 0x6f, 0x64, 0x65, 0x6c, 0x12, 0x5a, 0x0a, 0x1c, 0x63, 0x6f, 0x6c, 0x6c, 0x61, 0x74, 0x65,
+	0x72, 0x61, 0x6c, 0x5f, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x5f, 0x61, 0x64,
+	0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x1e, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d,
+	0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53,
+	0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x1a, 0x63, 0x6f, 0x6c, 0x6c, 0x61, 0x74, 0x65, 0x72, 0x61,
+	0x6c, 0x50, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x12, 0x48, 0x0a, 0x13, 0x79, 0x6c, 0x64, 0x73, 0x5f, 0x77, 0x61, 0x6c, 0x6c, 0x65, 0x74,
+	0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x18, 0x1f, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18,
+	0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65,
+	0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x11, 0x79, 0x6c, 0x64, 0x73, 0x57, 0x61,
+	0x6c, 0x6c, 0x65, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12, 0x46, 0x0a, 0x12, 0x6f,
+	0x72, 0x64, 0x65, 0x72, 0x5f, 0x62, 0x6f, 0x6f, 0x6b, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x18, 0x20, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e,
+	0x67, 0x52, 0x10, 0x6f, 0x72, 0x64, 0x65, 0x72, 0x42, 0x6f, 0x6f, 0x6b, 0x41, 0x64, 0x64, 0x72,
+	0x65, 0x73, 0x73, 0x22, 0x97, 0x01, 0x0a, 0x0e, 0x41, 0x63, 0x63, 0x6f, 0x75, 0x6e, 0x74, 0x42,
+	0x61, 0x6c, 0x61, 0x6e, 0x63, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73,
+	0x12, 0x61, 0x0a, 0x05, 0x63, 0x6f, 0x69, 0x6e, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32,
+	0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31,
+	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x30, 0xc8, 0xde, 0x1f, 0x00,
+	0xaa, 0xdf, 0x1f, 0x28, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x63,
+	0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2f, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2d, 0x73, 0x64, 0x6b,
+	0x2f, 0x74, 0x79, 0x70, 0x65, 0x73, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x73, 0x52, 0x05, 0x63, 0x6f,
+	0x69, 0x6e, 0x73, 0x3a, 0x08, 0x88, 0xa0, 0x1f, 0x00, 0xe8, 0xa0, 0x1f, 0x00, 0x22, 0xdb, 0x01,
+	0x0a, 0x0e, 0x50, 0x65, 0x6e, 0x64, 0x69, 0x6e, 0x67, 0x53, 0x77, 0x61, 0x70, 0x4f, 0x75, 0x74,
+	0x12, 0x2e, 0x0a, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x42,
+	0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72,
+	0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x05, 0x6f, 0x77, 0x6e, 0x65, 0x72,
+	0x12, 0x3d, 0x0a, 0x0d, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x5f, 0x61, 0x64, 0x64, 0x72, 0x65, 0x73,
+	0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x18, 0xd2, 0xb4, 0x2d, 0x14, 0x63, 0x6f, 0x73,
+	0x6d, 0x6f, 0x73, 0x2e, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x53, 0x74, 0x72, 0x69, 0x6e,
+	0x67, 0x52, 0x0c, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x41, 0x64, 0x64, 0x72, 0x65, 0x73, 0x73, 0x12,
+	0x37, 0x0a, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0b, 0x32,
+	0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31,
+	0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00,
+	0x52, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x12, 0x21, 0x0a, 0x0c, 0x72, 0x65, 0x64, 0x65,
+	0x65, 0x6d, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b,
+	0x72, 0x65, 0x64, 0x65, 0x65, 0x6d, 0x44, 0x65, 0x6e, 0x6f, 0x6d, 0x2a, 0x51, 0x0a, 0x0a, 0x56,
+	0x61, 0x75, 0x6c, 0x74, 0x4d, 0x6f, 0x64, 0x65, 0x6c, 0x12, 0x1b, 0x0a, 0x17, 0x56, 0x41, 0x55,
+	0x4c, 0x54, 0x5f, 0x4d, 0x4f, 0x44, 0x45, 0x4c, 0x5f, 0x55, 0x4e, 0x53, 0x50, 0x45, 0x43, 0x49,
+	0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x26, 0x0a, 0x22, 0x56, 0x41, 0x55, 0x4c, 0x54, 0x5f,
+	0x4d, 0x4f, 0x44, 0x45, 0x4c, 0x5f, 0x4d, 0x31, 0x5f, 0x41, 0x4c, 0x57, 0x41, 0x59, 0x53, 0x5f,
+	0x4f, 0x4e, 0x5f, 0x4c, 0x49, 0x51, 0x55, 0x49, 0x44, 0x49, 0x54, 0x59, 0x10, 0x01, 0x42, 0xc2,
+	0x01, 0x0a, 0x15, 0x63, 0x6f, 0x6d, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e,
+	0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x42, 0x0a, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x50,
+	0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x37, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63,
+	0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c,
+	0x74, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76,
+	0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2,
+	0x02, 0x03, 0x50, 0x56, 0x58, 0xaa, 0x02, 0x11, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73,
+	0x2e, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x11, 0x50, 0x72, 0x6f, 0x76,
+	0x6c, 0x61, 0x62, 0x73, 0x5c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1d,
+	0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x5c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56,
+	0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x13,
+	0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x3a, 0x3a, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a,
+	0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -3913,26 +4269,29 @@ func file_provlabs_vault_v1_vault_proto_rawDescGZIP() []byte {
 	return file_provlabs_vault_v1_vault_proto_rawDescData
 }
 
+var file_provlabs_vault_v1_vault_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_provlabs_vault_v1_vault_proto_msgTypes = make([]protoimpl.MessageInfo, 3)
 var file_provlabs_vault_v1_vault_proto_goTypes = []interface{}{
-	(*VaultAccount)(nil),        // 0: provlabs.vault.v1.VaultAccount
-	(*AccountBalance)(nil),      // 1: provlabs.vault.v1.AccountBalance
-	(*PendingSwapOut)(nil),      // 2: provlabs.vault.v1.PendingSwapOut
-	(*v1beta1.BaseAccount)(nil), // 3: cosmos.auth.v1beta1.BaseAccount
-	(*v1beta11.Coin)(nil),       // 4: cosmos.base.v1beta1.Coin
+	(VaultModel)(0),             // 0: provlabs.vault.v1.VaultModel
+	(*VaultAccount)(nil),        // 1: provlabs.vault.v1.VaultAccount
+	(*AccountBalance)(nil),      // 2: provlabs.vault.v1.AccountBalance
+	(*PendingSwapOut)(nil),      // 3: provlabs.vault.v1.PendingSwapOut
+	(*v1beta1.BaseAccount)(nil), // 4: cosmos.auth.v1beta1.BaseAccount
+	(*v1beta11.Coin)(nil),       // 5: cosmos.base.v1beta1.Coin
 }
 var file_provlabs_vault_v1_vault_proto_depIdxs = []int32{
-	3, // 0: provlabs.vault.v1.VaultAccount.base_account:type_name -> cosmos.auth.v1beta1.BaseAccount
-	4, // 1: provlabs.vault.v1.VaultAccount.total_shares:type_name -> cosmos.base.v1beta1.Coin
-	4, // 2: provlabs.vault.v1.VaultAccount.paused_balance:type_name -> cosmos.base.v1beta1.Coin
-	4, // 3: provlabs.vault.v1.VaultAccount.outstanding_aum_fee:type_name -> cosmos.base.v1beta1.Coin
-	4, // 4: provlabs.vault.v1.AccountBalance.coins:type_name -> cosmos.base.v1beta1.Coin
-	4, // 5: provlabs.vault.v1.PendingSwapOut.shares:type_name -> cosmos.base.v1beta1.Coin
-	6, // [6:6] is the sub-list for method output_type
-	6, // [6:6] is the sub-list for method input_type
-	6, // [6:6] is the sub-list for extension type_name
-	6, // [6:6] is the sub-list for extension extendee
-	0, // [0:6] is the sub-list for field type_name
+	4, // 0: provlabs.vault.v1.VaultAccount.base_account:type_name -> cosmos.auth.v1beta1.BaseAccount
+	5, // 1: provlabs.vault.v1.VaultAccount.total_shares:type_name -> cosmos.base.v1beta1.Coin
+	5, // 2: provlabs.vault.v1.VaultAccount.paused_balance:type_name -> cosmos.base.v1beta1.Coin
+	5, // 3: provlabs.vault.v1.VaultAccount.outstanding_aum_fee:type_name -> cosmos.base.v1beta1.Coin
+	0, // 4: provlabs.vault.v1.VaultAccount.model:type_name -> provlabs.vault.v1.VaultModel
+	5, // 5: provlabs.vault.v1.AccountBalance.coins:type_name -> cosmos.base.v1beta1.Coin
+	5, // 6: provlabs.vault.v1.PendingSwapOut.shares:type_name -> cosmos.base.v1beta1.Coin
+	7, // [7:7] is the sub-list for method output_type
+	7, // [7:7] is the sub-list for method input_type
+	7, // [7:7] is the sub-list for extension type_name
+	7, // [7:7] is the sub-list for extension extendee
+	0, // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_provlabs_vault_v1_vault_proto_init() }
@@ -3983,13 +4342,14 @@ func file_provlabs_vault_v1_vault_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_provlabs_vault_v1_vault_proto_rawDesc,
-			NumEnums:      0,
+			NumEnums:      1,
 			NumMessages:   3,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
 		GoTypes:           file_provlabs_vault_v1_vault_proto_goTypes,
 		DependencyIndexes: file_provlabs_vault_v1_vault_proto_depIdxs,
+		EnumInfos:         file_provlabs_vault_v1_vault_proto_enumTypes,
 		MessageInfos:      file_provlabs_vault_v1_vault_proto_msgTypes,
 	}.Build()
 	File_provlabs_vault_v1_vault_proto = out.File

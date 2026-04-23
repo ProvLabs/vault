@@ -7,6 +7,7 @@ import "cosmos/msg/v1/msg.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "provlabs/vault/v1/params.proto";
+import "provlabs/vault/v1/vault.proto";
 
 option go_package = "github.com/provlabs/vault/types";
 
@@ -105,6 +106,10 @@ service Msg {
 
   // UpdateVaultAUMFeeBips updates the AUM fee bips for a specific vault.
   rpc UpdateVaultAUMFeeBips(MsgUpdateVaultAUMFeeBipsRequest) returns (MsgUpdateVaultAUMFeeBipsResponse);
+
+  // UpdateAssetNAV updates the Net Asset Value (NAV) for a specific asset within a vault.
+  // This is used for the vault's internal NAV system.
+  rpc UpdateAssetNAV(MsgUpdateAssetNAVRequest) returns (MsgUpdateAssetNAVResponse);
 }
 
 // MsgCreateVaultRequest is the request message for the CreateVault endpoint.
@@ -139,6 +144,15 @@ message MsgCreateVaultRequest {
   // - Values must be positive (> 0).
   // - An empty string "" indicates no maximum limit.
   string max_swap_out_value = 9 [(cosmos_proto.scalar) = "cosmos.IntString"];
+
+  // model is the operational model of the vault.
+  VaultModel model = 10;
+  // collateral_portfolio_address is the address of the staging area for Model 1.
+  string collateral_portfolio_address = 11 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // ylds_wallet_address is the address of the secondary YLDS backstop for Model 1.
+  string ylds_wallet_address = 12 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // order_book_address is the address of the order book for Model 1.
+  string order_book_address = 13 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 // MsgCreateVaultResponse is the response message for the CreateVault endpoint.
@@ -578,3 +592,22 @@ message MsgUpdateVaultAUMFeeBipsRequest {
 
 // MsgUpdateVaultAUMFeeBipsResponse is the response message for the UpdateVaultAUMFeeBips endpoint.
 message MsgUpdateVaultAUMFeeBipsResponse {}
+
+// MsgUpdateAssetNAVRequest defines the request to update the internal NAV for an asset in a vault.
+message MsgUpdateAssetNAVRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority is the address of the vault administrator or asset manager.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 2;
+  // asset_id is the unique identifier for the asset (e.g., denom or Scope ID).
+  string asset_id = 3;
+  // price is the value of one unit of the asset expressed in the vault's underlying_asset.
+  cosmos.base.v1beta1.Coin price = 4 [(gogoproto.nullable) = false];
+  // volume is the number of units the price applies to (default is 1).
+  uint64 volume = 5;
+}
+
+// MsgUpdateAssetNAVResponse defines the response for updating an asset's internal NAV.
+message MsgUpdateAssetNAVResponse {}

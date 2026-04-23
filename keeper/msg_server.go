@@ -813,3 +813,36 @@ func (k msgServer) UpdateVaultAUMFeeBips(goCtx context.Context, msg *types.MsgUp
 
 	return &types.MsgUpdateVaultAUMFeeBipsResponse{}, nil
 }
+
+// UpdateAssetNAV updates the internal NAV for a specific asset within a vault.
+func (k msgServer) UpdateAssetNAV(goCtx context.Context, msg *types.MsgUpdateAssetNAVRequest) (*types.MsgUpdateAssetNAVResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vault, err := k.getVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+		return nil, fmt.Errorf("failed to validate management authority: %w", err)
+	}
+
+	if msg.Volume == 0 {
+		return nil, fmt.Errorf("volume cannot be zero")
+	}
+
+	nav := types.AssetNAV{
+		VaultAddress:       msg.VaultAddress,
+		AssetId:            msg.AssetId,
+		Price:              msg.Price,
+		Volume:             msg.Volume,
+		UpdatedBlockHeight: ctx.BlockHeight(),
+	}
+
+	if err := k.Keeper.SetAssetNAV(ctx, vaultAddr, nav); err != nil {
+		return nil, fmt.Errorf("failed to set asset nav: %w", err)
+	}
+
+	return &types.MsgUpdateAssetNAVResponse{}, nil
+}

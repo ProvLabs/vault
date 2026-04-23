@@ -31,6 +31,10 @@ type VaultAttributer interface {
 	GetMinSwapOutValue() string
 	GetMaxSwapInValue() string
 	GetMaxSwapOutValue() string
+	GetModel() types.VaultModel
+	GetCollateralPortfolioAddress() string
+	GetYldsWalletAddress() string
+	GetOrderBookAddress() string
 }
 
 // CreateVault creates a new vault and its corresponding share marker atomically.
@@ -54,6 +58,10 @@ func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*type
 	minSwapOut := attributes.GetMinSwapOutValue()
 	maxSwapIn := attributes.GetMaxSwapInValue()
 	maxSwapOut := attributes.GetMaxSwapOutValue()
+	model := attributes.GetModel()
+	collateralPortfolio := attributes.GetCollateralPortfolioAddress()
+	yldsWallet := attributes.GetYldsWalletAddress()
+	orderBook := attributes.GetOrderBookAddress()
 
 	underlyingAssetAddr, err := markertypes.MarkerAddress(underlying)
 	if err != nil {
@@ -65,7 +73,7 @@ func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*type
 
 	cacheCtx, write := ctx.CacheContext()
 
-	vault, err := k.createVaultAccount(cacheCtx, attributes.GetAdmin(), attributes.GetShareDenom(), underlying, payment, withdrawalDelay, minSwapIn, minSwapOut, maxSwapIn, maxSwapOut)
+	vault, err := k.createVaultAccount(cacheCtx, attributes.GetAdmin(), attributes.GetShareDenom(), underlying, payment, withdrawalDelay, minSwapIn, minSwapOut, maxSwapIn, maxSwapOut, model, collateralPortfolio, yldsWallet, orderBook)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create vault account: %w", err)
 	}
@@ -123,7 +131,7 @@ func (k Keeper) getVault(ctx sdk.Context, addr sdk.AccAddress) (*types.VaultAcco
 
 // createVaultAccount creates and stores a new vault account and initializes its fee tracking.
 // It verifies that the vault address is available and not already associated with another account.
-func (k *Keeper) createVaultAccount(ctx sdk.Context, admin, shareDenom, underlyingAsset, paymentDenom string, withdrawalDelay uint64, minSwapIn, minSwapOut, maxSwapIn, maxSwapOut string) (*types.VaultAccount, error) {
+func (k *Keeper) createVaultAccount(ctx sdk.Context, admin, shareDenom, underlyingAsset, paymentDenom string, withdrawalDelay uint64, minSwapIn, minSwapOut, maxSwapIn, maxSwapOut string, model types.VaultModel, collateralPortfolio, yldsWallet, orderBook string) (*types.VaultAccount, error) {
 	vaultAddr := types.GetVaultAddress(shareDenom)
 
 	params, err := k.Params.Get(ctx)
@@ -143,6 +151,10 @@ func (k *Keeper) createVaultAccount(ctx sdk.Context, admin, shareDenom, underlyi
 		minSwapOut,
 		maxSwapIn,
 		maxSwapOut,
+		model,
+		collateralPortfolio,
+		yldsWallet,
+		orderBook,
 	)
 
 	if err := vault.Validate(); err != nil {
@@ -262,6 +274,18 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 	}
 
 	principalAddress := vault.PrincipalMarkerAddress()
+
+	// Model 1: Always-On Liquidity Buffer logic
+	if vault.Model == types.VaultModel_VAULT_MODEL_M1_ALWAYS_ON_LIQUIDITY {
+		// In M1, we match the incoming deposit with a Scope from the staging area.
+		// For now, we assume the asset manager/admin has already staged the Scope.
+		// TODO: Implement actual x/exchange matching and settlement.
+		
+		// 1. Identification: The vault identifies a "match" in the Order Book.
+		// 2. Settlement: Scope (Issuer -> Vault), USDC (User -> Issuer/Vault).
+		
+		k.getLogger(ctx).Info("Model 1 SwapIn: Matching with staged asset", "vault", vault.Address, "user", recipient.String())
+	}
 
 	shares, err := k.ConvertDepositToSharesInUnderlyingAsset(ctx, *vault, asset)
 	if err != nil {

@@ -43,6 +43,7 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgUpdateMinSwapOutValueRequest)(nil),
 	(*MsgUpdateMaxSwapInValueRequest)(nil),
 	(*MsgUpdateMaxSwapOutValueRequest)(nil),
+	(*MsgUpdateAssetNAVRequest)(nil),
 }
 
 // ValidateBasic performs stateless validation on MsgCreateVaultRequest.
@@ -85,6 +86,46 @@ func (m MsgCreateVaultRequest) ValidateBasic() error {
 		return fmt.Errorf("invalid swap-out limits: %w", err)
 	}
 
+	if m.Model == VaultModel_VAULT_MODEL_M1_ALWAYS_ON_LIQUIDITY {
+		if m.CollateralPortfolioAddress == "" {
+			return errors.New("collateral portfolio address is required for Model 1")
+		}
+		if _, err := sdk.AccAddressFromBech32(m.CollateralPortfolioAddress); err != nil {
+			return fmt.Errorf("invalid collateral portfolio address: %w", err)
+		}
+		if m.OrderBookAddress == "" {
+			return errors.New("order book address is required for Model 1")
+		}
+		if _, err := sdk.AccAddressFromBech32(m.OrderBookAddress); err != nil {
+			return fmt.Errorf("invalid order book address: %w", err)
+		}
+		if m.YldsWalletAddress != "" {
+			if _, err := sdk.AccAddressFromBech32(m.YldsWalletAddress); err != nil {
+				return fmt.Errorf("invalid ylds wallet address: %w", err)
+			}
+		}
+	}
+
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgUpdateAssetNAVRequest.
+func (m MsgUpdateAssetNAVRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		return fmt.Errorf("invalid authority address: %q: %w", m.Authority, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	if strings.TrimSpace(m.AssetId) == "" {
+		return errors.New("asset id cannot be empty")
+	}
+	if err := m.Price.Validate(); err != nil {
+		return fmt.Errorf("invalid price coin: %w", err)
+	}
+	if m.Volume == 0 {
+		return errors.New("volume cannot be zero")
+	}
 	return nil
 }
 

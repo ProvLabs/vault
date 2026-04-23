@@ -47,6 +47,7 @@ const (
 	Msg_SetAssetManager_FullMethodName        = "/provlabs.vault.v1.Msg/SetAssetManager"
 	Msg_UpdateParams_FullMethodName           = "/provlabs.vault.v1.Msg/UpdateParams"
 	Msg_UpdateVaultAUMFeeBips_FullMethodName  = "/provlabs.vault.v1.Msg/UpdateVaultAUMFeeBips"
+	Msg_UpdateAssetNAV_FullMethodName         = "/provlabs.vault.v1.Msg/UpdateAssetNAV"
 )
 
 // MsgClient is the client API for Msg service.
@@ -119,6 +120,9 @@ type MsgClient interface {
 	UpdateParams(ctx context.Context, in *MsgUpdateParamsRequest, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
 	// UpdateVaultAUMFeeBips updates the AUM fee bips for a specific vault.
 	UpdateVaultAUMFeeBips(ctx context.Context, in *MsgUpdateVaultAUMFeeBipsRequest, opts ...grpc.CallOption) (*MsgUpdateVaultAUMFeeBipsResponse, error)
+	// UpdateAssetNAV updates the Net Asset Value (NAV) for a specific asset within a vault.
+	// This is used for the vault's internal NAV system.
+	UpdateAssetNAV(ctx context.Context, in *MsgUpdateAssetNAVRequest, opts ...grpc.CallOption) (*MsgUpdateAssetNAVResponse, error)
 }
 
 type msgClient struct {
@@ -409,6 +413,16 @@ func (c *msgClient) UpdateVaultAUMFeeBips(ctx context.Context, in *MsgUpdateVaul
 	return out, nil
 }
 
+func (c *msgClient) UpdateAssetNAV(ctx context.Context, in *MsgUpdateAssetNAVRequest, opts ...grpc.CallOption) (*MsgUpdateAssetNAVResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgUpdateAssetNAVResponse)
+	err := c.cc.Invoke(ctx, Msg_UpdateAssetNAV_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility.
@@ -479,6 +493,9 @@ type MsgServer interface {
 	UpdateParams(context.Context, *MsgUpdateParamsRequest) (*MsgUpdateParamsResponse, error)
 	// UpdateVaultAUMFeeBips updates the AUM fee bips for a specific vault.
 	UpdateVaultAUMFeeBips(context.Context, *MsgUpdateVaultAUMFeeBipsRequest) (*MsgUpdateVaultAUMFeeBipsResponse, error)
+	// UpdateAssetNAV updates the Net Asset Value (NAV) for a specific asset within a vault.
+	// This is used for the vault's internal NAV system.
+	UpdateAssetNAV(context.Context, *MsgUpdateAssetNAVRequest) (*MsgUpdateAssetNAVResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -572,6 +589,9 @@ func (UnimplementedMsgServer) UpdateParams(context.Context, *MsgUpdateParamsRequ
 }
 func (UnimplementedMsgServer) UpdateVaultAUMFeeBips(context.Context, *MsgUpdateVaultAUMFeeBipsRequest) (*MsgUpdateVaultAUMFeeBipsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateVaultAUMFeeBips not implemented")
+}
+func (UnimplementedMsgServer) UpdateAssetNAV(context.Context, *MsgUpdateAssetNAVRequest) (*MsgUpdateAssetNAVResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateAssetNAV not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 func (UnimplementedMsgServer) testEmbeddedByValue()             {}
@@ -1098,6 +1118,24 @@ func _Msg_UpdateVaultAUMFeeBips_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_UpdateAssetNAV_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateAssetNAVRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateAssetNAV(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_UpdateAssetNAV_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateAssetNAV(ctx, req.(*MsgUpdateAssetNAVRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1216,6 +1254,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateVaultAUMFeeBips",
 			Handler:    _Msg_UpdateVaultAUMFeeBips_Handler,
+		},
+		{
+			MethodName: "UpdateAssetNAV",
+			Handler:    _Msg_UpdateAssetNAV_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

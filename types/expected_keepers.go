@@ -1,13 +1,15 @@
 package types
 
 import (
-	context "context"
+	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
+	exchangetypes "github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/marker/types"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
 type MarkerKeeper interface {
@@ -54,4 +56,18 @@ type NameKeeper interface {
 
 type AttributeKeeper interface {
 	SetAttribute(ctx sdk.Context, attr attrtypes.Attribute, owner sdk.AccAddress) error
+}
+
+type ExchangeKeeper interface {
+	GetOrder(ctx sdk.Context, orderID uint64) (exchangetypes.OrderI, error)
+}
+
+type HoldKeeper interface {
+	AddHold(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coins, reason string) error
+	ReleaseHold(ctx sdk.Context, addr sdk.AccAddress, funds sdk.Coins) error
+	GetHoldCoin(ctx sdk.Context, addr sdk.AccAddress, denom string) (sdk.Coin, error)
+}
+
+type MetadataKeeper interface {
+	GetScope(ctx sdk.Context, scopeID metadatatypes.MetadataAddress) (metadatatypes.Scope, bool)
 }

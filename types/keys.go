@@ -57,6 +57,11 @@ var (
 	// VaultPendingSwapOutByIdIndexName is a human-readable name for the pending swap out queue by id index.
 	VaultPendingSwapOutByIdIndexName = "pending_swap_out_by_id"
 
+	// VaultAssetNAVPrefix is the prefix for the internal asset NAVs.
+	VaultAssetNAVPrefix = collections.NewPrefix(11)
+	// VaultAssetNAVName is the human-readable name for the internal asset NAVs.
+	VaultAssetNAVName = "asset_nav"
+
 	// ParamsKeyPrefix is the prefix for the module parameters.
 	ParamsKeyPrefix = collections.NewPrefix(10)
 	// ParamsKeyName is the human-readable name for the params state key.

@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	"cosmossdk.io/collections"
 	"github.com/provlabs/vault/types"
 	"github.com/provlabs/vault/utils"
 
@@ -48,6 +49,20 @@ func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom string, vault types.
 		return math.NewInt(1), math.NewInt(1), nil
 	}
 
+	// 1. Check vault's internal NAV system
+	vaultAddr := sdk.MustAccAddressFromBech32(vault.Address)
+	nav, err := k.AssetNAVs.Get(ctx, collections.Join(vaultAddr, srcDenom))
+	if err == nil {
+		if nav.Price.Amount.IsZero() {
+			return math.Int{}, math.Int{}, fmt.Errorf("internal nav price is zero for %s/%s", srcDenom, underlyingAsset)
+		}
+		if nav.Volume == 0 {
+			return math.Int{}, math.Int{}, fmt.Errorf("internal nav volume is zero for %s/%s", srcDenom, underlyingAsset)
+		}
+		return nav.Price.Amount, math.NewIntFromUint64(nav.Volume), nil
+	}
+
+	// 2. Fallback to existing logic (Marker NAV)
 	// For now, if either the vault’s underlying asset or payment denom is "uylds.fcc",
 	// we assume a 1:1 equivalence between the payment denom and the underlying denom.
 	// See https://github.com/ProvLabs/vault/issues/73 for details.
@@ -159,18 +174,59 @@ func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccoun
 	if vault.Paused {
 		return vault.PausedBalance.Amount, nil
 	}
-	balances := k.BankKeeper.GetAllBalances(ctx, vault.PrincipalMarkerAddress())
+
 	total := math.ZeroInt()
+	vaultAddr := sdk.MustAccAddressFromBech32(vault.Address)
+
+	// 1. Sum up fungible assets from the principal marker account
+	balances := k.BankKeeper.GetAllBalances(ctx, vault.PrincipalMarkerAddress())
 	for _, balance := range balances {
 		if balance.Denom == vault.TotalShares.Denom || !vault.IsAcceptedDenom(balance.Denom) {
 			continue
 		}
 		val, err := k.ToUnderlyingAssetAmount(ctx, vault, balance)
 		if err != nil {
-			return math.Int{}, fmt.Errorf("failed to convert balance to underlying: %w", err)
+			return math.Int{}, fmt.Errorf("failed to convert balance %s to underlying: %w", balance, err)
 		}
 		total = total.Add(val)
 	}
+
+	// 2. Sum up any non-fungible assets (Scopes) that have an internal NAV record
+	// NOTE: This assumes the vault is the owner of these assets.
+	// We iterate through internal NAVs for this vault.
+	iter, err := k.AssetNAVs.Iterate(ctx, collections.NewPrefixedPairRange[sdk.AccAddress, string](vaultAddr))
+	if err != nil {
+		return math.Int{}, fmt.Errorf("failed to iterate internal navs: %w", err)
+	}
+	defer iter.Close()
+
+	for ; iter.Valid(); iter.Next() {
+		key, err := iter.Key()
+		if err != nil {
+			return math.Int{}, fmt.Errorf("failed to get internal nav key: %w", err)
+		}
+		assetID := key.K2()
+
+		// If it's a denom we already processed in the marker balances, skip it.
+		// (Internal NAVs for denoms are used for conversion in ToUnderlyingAssetAmount above)
+		if vault.IsAcceptedDenom(assetID) {
+			continue
+		}
+
+		// TODO: Implement Scope ownership check and balance retrieval.
+		// For now, if an internal NAV exists for a non-denom assetID (Scope), 
+		// we assume it represents 1 unit of that asset owned by the vault.
+		nav, err := iter.Value()
+		if err != nil {
+			return math.Int{}, fmt.Errorf("failed to get internal nav value for %s: %w", assetID, err)
+		}
+
+		// value = volume_held * price / price_volume
+		// For a Scope, we assume volume_held = 1 for now.
+		assetValue := nav.Price.Amount.Quo(math.NewIntFromUint64(nav.Volume))
+		total = total.Add(assetValue)
+	}
+
 	return total, nil
 }
 

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"cosmossdk.io/collections"
 	"github.com/provlabs/vault/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -39,6 +40,10 @@ func (k *Keeper) SetVaultLookup(ctx context.Context, vault *types.VaultAccount) 
 	}
 
 	return k.Vaults.Set(ctx, addr, []byte{})
+}
+
+func (k *Keeper) SetAssetNAV(ctx sdk.Context, vaultAddr sdk.AccAddress, nav types.AssetNAV) error {
+	return k.AssetNAVs.Set(ctx, collections.Join(vaultAddr, nav.AssetId), nav)
 }
 
 // SetVaultAccount validates and persists a VaultAccount using the auth keeper.

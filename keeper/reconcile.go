@@ -108,14 +108,14 @@ func (k Keeper) setShareDenomNAV(ctx sdk.Context, vault *types.VaultAccount, tvv
 	}
 
 	if vault.TotalShares.Amount.IsUint64() {
-		vaultMarker, err := k.MarkerKeeper.GetMarker(ctx, vault.PrincipalMarkerAddress())
+		shareMarker, err := k.MarkerKeeper.GetMarker(ctx, vault.ShareMarkerAddress())
 		if err != nil {
-			return fmt.Errorf("failed to get principal marker for legacy nav: %w", err)
+			return fmt.Errorf("failed to get share marker for legacy nav: %w", err)
 		}
 
 		if err := k.MarkerKeeper.SetNetAssetValue(
 			ctx,
-			vaultMarker,
+			shareMarker,
 			markertypes.NetAssetValue{
 				Price:              nav.Price,
 				Volume:             vault.TotalShares.Amount.Uint64(),

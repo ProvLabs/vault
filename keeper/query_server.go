@@ -98,7 +98,8 @@ func (k queryServer) Vault(goCtx context.Context, req *types.QueryVaultRequest) 
 
 	breakdown, err := k.GetLiquidityBreakdown(ctx, *vault)
 	if err != nil {
-		ctx.Logger().Error("failed to get liquidity breakdown", "vault", vault.Address, "err", err)
+		k.getLogger(ctx).Error("failed to get liquidity breakdown", "vault", vault.Address, "err", err)
+		return nil, status.Errorf(codes.Internal, "failed to get liquidity breakdown for vault %s: %v", vault.Address, err)
 	}
 
 	return &types.QueryVaultResponse{

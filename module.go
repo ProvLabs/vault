@@ -86,28 +86,24 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ client.TxEncodingCo
 // AppModule implements the core vault module functionality.
 type AppModule struct {
 	AppModuleBasic
-	keeper          *keeper.Keeper
-	addressCodec    address.Codec
-	markerKeeper    types.MarkerKeeper
-	bankKeeper      types.BankKeeper
-	nameKeeper      types.NameKeeper
-	attributeKeeper types.AttributeKeeper
-	holdKeeper      types.HoldKeeper
-	exchangeKeeper  types.ExchangeMsgServer
+	keeper       *keeper.Keeper
+	addressCodec address.Codec
+	markerKeeper types.MarkerKeeper
+	bankKeeper   types.BankKeeper
+	nameKeeper   types.NameKeeper
+	attrKeeper   types.AttributeKeeper
 }
 
 // NewAppModule creates a new AppModule instance.
-func NewAppModule(keeper *keeper.Keeper, mk types.MarkerKeeper, bk types.BankKeeper, nk types.NameKeeper, attk types.AttributeKeeper, hk types.HoldKeeper, ek types.ExchangeMsgServer, addressCodec address.Codec) AppModule {
+func NewAppModule(keeper *keeper.Keeper, mk types.MarkerKeeper, bk types.BankKeeper, nk types.NameKeeper, attk types.AttributeKeeper, addressCodec address.Codec) AppModule {
 	return AppModule{
-		AppModuleBasic:  NewAppModuleBasic(),
-		keeper:          keeper,
-		addressCodec:    addressCodec,
-		markerKeeper:    mk,
-		bankKeeper:      bk,
-		nameKeeper:      nk,
-		attributeKeeper: attk,
-		holdKeeper:      hk,
-		exchangeKeeper:  ek,
+		AppModuleBasic: NewAppModuleBasic(),
+		keeper:         keeper,
+		addressCodec:   addressCodec,
+		markerKeeper:   mk,
+		bankKeeper:     bk,
+		nameKeeper:     nk,
+		attrKeeper:     attk,
 	}
 }
 
@@ -552,12 +548,8 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						{ProtoField: "authority"},
 						{ProtoField: "vault_address"},
 						{ProtoField: "denom"},
-					},
-					FlagOptions: map[string]*autocliv1.FlagOptions{
-						"nav": {
-							Name:  "nav",
-							Usage: "The new localized NAV object (JSON). Prefer positional args for simple updates.",
-						},
+						{ProtoField: "nav.price"},
+						{ProtoField: "nav.volume"},
 					},
 				},
 				{
@@ -721,7 +713,7 @@ type ModuleInputs struct {
 	NameKeeper     types.NameKeeper
 	AttrKeeper     types.AttributeKeeper
 	HoldKeeper     types.HoldKeeper
-	ExchangeKeeper types.ExchangeMsgServer
+	ExchangeKeeper types.ExchangeKeeper
 }
 
 // ModuleOutputs defines the outputs of the vault module provider.
@@ -752,7 +744,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.HoldKeeper,
 		in.ExchangeKeeper,
 	)
-	m := NewAppModule(k, in.MarkerKeeper, in.BankKeeper, in.NameKeeper, in.AttrKeeper, in.HoldKeeper, in.ExchangeKeeper, in.AddressCodec)
+	m := NewAppModule(k, in.MarkerKeeper, in.BankKeeper, in.NameKeeper, in.AttrKeeper, in.AddressCodec)
 	return ModuleOutputs{Keeper: k, Module: m}
 }
 

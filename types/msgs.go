@@ -543,8 +543,10 @@ func (m MsgUpdateVaultAssetNAVRequest) ValidateBasic() error {
 	if err := m.Nav.Price.Validate(); err != nil {
 		return fmt.Errorf("invalid nav price: %w", err)
 	}
-	if _, ok := sdkmath.NewIntFromString(m.Nav.Volume); !ok {
+	if vol, ok := sdkmath.NewIntFromString(m.Nav.Volume); !ok {
 		return fmt.Errorf("invalid nav volume: %s", m.Nav.Volume)
+	} else if !vol.IsPositive() {
+		return fmt.Errorf("invalid nav volume: must be positive: %s", m.Nav.Volume)
 	}
 	return nil
 }

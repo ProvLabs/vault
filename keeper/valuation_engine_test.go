@@ -546,42 +546,65 @@ func (s *TestSuite) TestGetTVVInUnderlyingAsset_IncludesNFTMarkers() {
 	underlyingDenom := "ylds"
 	shareDenom := "vshare"
 	nftDenom := "rwa.nft.001"
-	vault := s.setupBaseVault(underlyingDenom, shareDenom)
 
-	// 1. Create a unique NFT marker (supply = 1)
-	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(nftDenom, 1), s.adminAddr)
+	cases := []struct {
+		name          string
+		setup         func(vault *types.VaultAccount)
+		expectedTVV   math.Int
+		expectedError string
+	}{
+		{
+			name: "NFT only",
+			setup: func(vault *types.VaultAccount) {
+				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(nftDenom, 1), s.adminAddr)
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, s.adminAddr, sdk.NewCoins(sdk.NewInt64Coin(nftDenom, 1))))
+				s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(nftDenom, 1))))
 
-	// 2. Fund the admin with the NFT
-	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, s.adminAddr, sdk.NewCoins(sdk.NewInt64Coin(nftDenom, 1))), "funding admin with NFT should succeed")
+				nav := types.VaultNAV{
+					Price:              sdk.NewInt64Coin(underlyingDenom, 500),
+					Volume:             math.OneInt().String(),
+					UpdatedBlockHeight: uint64(s.ctx.BlockHeight()),
+				}
+				s.Require().NoError(s.k.NetAssetValues.Set(s.ctx, collections.Join(vault.GetAddress(), nftDenom), nav))
+			},
+			expectedTVV: math.NewInt(500),
+		},
+		{
+			name: "NFT + fungible",
+			setup: func(vault *types.VaultAccount) {
+				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(nftDenom, 1), s.adminAddr)
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, s.adminAddr, sdk.NewCoins(sdk.NewInt64Coin(nftDenom, 1))))
+				s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(nftDenom, 1))))
 
-	// 3. Fund the vault with the NFT
-	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(
-		sdk.NewInt64Coin(nftDenom, 1),
-	)), "funding vault with NFT should succeed")
+				nav := types.VaultNAV{
+					Price:              sdk.NewInt64Coin(underlyingDenom, 500),
+					Volume:             math.OneInt().String(),
+					UpdatedBlockHeight: uint64(s.ctx.BlockHeight()),
+				}
+				s.Require().NoError(s.k.NetAssetValues.Set(s.ctx, collections.Join(vault.GetAddress(), nftDenom), nav))
 
-	// 4. Set NAV for the NFT (Price = 500 ylds, Volume = 1)
-	// We use the new local store via a helper or direct set if we want to test the new path.
-	nav := types.VaultNAV{
-		Price:              sdk.NewInt64Coin(underlyingDenom, 500),
-		Volume:             math.OneInt().String(),
-		UpdatedBlockHeight: uint64(s.ctx.BlockHeight()),
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 100))))
+			},
+			expectedTVV: math.NewInt(600),
+		},
 	}
-	err := s.k.NetAssetValues.Set(s.ctx, collections.Join(vault.GetAddress(), nftDenom), nav)
-	s.Require().NoError(err, "setting local NFT nav should succeed")
 
-	// 4. Verify TVV includes the NFT value
-	tvv, err := s.k.GetTVVInUnderlyingAsset(s.ctx, *vault)
-	s.Require().NoError(err, "TVV calculation with NFT should succeed")
-	s.Require().Equal(math.NewInt(500), tvv, "TVV should equal the NFT's NAV (500 ylds)")
+	for _, tc := range cases {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			vault := s.setupBaseVault(underlyingDenom, shareDenom)
+			tc.setup(vault)
 
-	// 5. Add some fungible underlying to the principal
-	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(
-		sdk.NewInt64Coin(underlyingDenom, 100),
-	)), "funding vault with ylds should succeed")
-
-	tvvWithFungible, err := s.k.GetTVVInUnderlyingAsset(s.ctx, *vault)
-	s.Require().NoError(err, "TVV calculation with NFT and fungible should succeed")
-	s.Require().Equal(math.NewInt(600), tvvWithFungible, "TVV should be 500 (NFT) + 100 (ylds) = 600 ylds")
+			tvv, err := s.k.GetTVVInUnderlyingAsset(s.ctx, *vault)
+			if tc.expectedError != "" {
+				s.Require().Error(err, "GetTVVInUnderlyingAsset should fail for case %q", tc.name)
+				s.Require().Contains(err.Error(), tc.expectedError, "error message mismatch for case %q", tc.name)
+				return
+			}
+			s.Require().NoError(err, "GetTVVInUnderlyingAsset should succeed for case %q", tc.name)
+			s.Require().Equal(tc.expectedTVV, tvv, "Total Vault Value mismatch for case %q", tc.name)
+		})
+	}
 }
 
 func (s *TestSuite) TestEstimateTotalVaultValue_Paused() {
@@ -1032,8 +1055,8 @@ func (s *TestSuite) TestEstimateTotalVaultValue_FullScenario() {
 	s.ctx = s.ctx.WithBlockTime(startTime.Add(time.Second * 31_536_000))
 
 	estimatedTVV, err := s.k.EstimateTotalVaultValue(s.ctx, vault)
-	s.Require().NoError(err)
-	s.Require().Equal(sdk.NewInt64Coin(underlyingDenom, 1_054), estimatedTVV)
+	s.Require().NoError(err, "estimation should succeed in full scenario")
+	s.Require().Equal(sdk.NewInt64Coin(underlyingDenom, 1_054), estimatedTVV, "Total Vault Value mismatch in full scenario")
 }
 
 func (s *TestSuite) TestEstimateTotalVaultValue_ErrorPropagation() {

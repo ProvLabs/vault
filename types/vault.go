@@ -347,9 +347,15 @@ func (v *VaultAccount) ValidateAcceptedCoin(c sdk.Coin) error {
 	return v.ValidateAcceptedDenom(c.Denom)
 }
 
-// PrincipalMarkerAddress returns the share-denom marker address that holds the
-// vault’s principal (i.e., the marker account backing the vault’s shares).
+// PrincipalMarkerAddress returns the account address of the marker
+// that represents the vault's underlying asset principal.
 func (v VaultAccount) PrincipalMarkerAddress() sdk.AccAddress {
+	return markertypes.MustGetMarkerAddress(v.UnderlyingAsset)
+}
+
+// ShareMarkerAddress returns the account address of the marker
+// that represents the vault's share denom.
+func (v VaultAccount) ShareMarkerAddress() sdk.AccAddress {
 	return markertypes.MustGetMarkerAddress(v.TotalShares.Denom)
 }
 

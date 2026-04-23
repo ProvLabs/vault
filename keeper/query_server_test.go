@@ -62,11 +62,11 @@ func (s *TestSuite) TestQueryServer_Vault() {
 			s.Require().NoError(s.k.NetAssetValues.Set(s.ctx, collections.Join(addr, payment), types.VaultNAV{
 				Price:  sdk.NewInt64Coin(underlying, 1),
 				Volume: math.OneInt().String(),
-			}))
+			}), "failed to seed local payment NAV for vault %s", addr)
 			s.Require().NoError(s.k.NetAssetValues.Set(s.ctx, collections.Join(addr, underlying), types.VaultNAV{
 				Price:  sdk.NewInt64Coin(underlying, 1),
 				Volume: math.OneInt().String(),
-			}))
+			}), "failed to seed local underlying NAV for vault %s", addr)
 		}
 
 		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: admin, ShareDenom: shareDenom1, UnderlyingAsset: underlying, PaymentDenom: payment})
@@ -517,13 +517,10 @@ func (s *TestSuite) TestQueryServer_EstimateSwapIn() {
 			Name: "happy path underlying deposit (peg)",
 			Setup: func() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
-				// Ensure supply=1 markers have a NAV
-				if s.k.BankKeeper.GetSupply(s.ctx, underlyingDenom).Amount.Equal(math.OneInt()) {
-					s.k.NetAssetValues.Set(s.ctx, collections.Join(types.GetVaultAddress(shareDenom), underlyingDenom), types.VaultNAV{
-						Price:  sdk.NewCoin(underlyingDenom, math.OneInt()),
-						Volume: math.OneInt().String(),
-					})
-				}
+				s.Require().NoError(s.k.NetAssetValues.Set(s.ctx, collections.Join(types.GetVaultAddress(shareDenom), underlyingDenom), types.VaultNAV{
+					Price:  sdk.NewCoin(underlyingDenom, math.OneInt()),
+					Volume: math.OneInt().String(),
+				}), "failed to seed local underlying NAV for vault %s", shareDenom)
 				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 					Admin: admin, ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom,
 				})
@@ -542,13 +539,10 @@ func (s *TestSuite) TestQueryServer_EstimateSwapIn() {
 			Setup: func() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
 				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(paymentDenom, math.NewInt(1000)), s.adminAddr)
-				// Ensure supply=1 markers have a NAV
-				if s.k.BankKeeper.GetSupply(s.ctx, underlyingDenom).Amount.Equal(math.OneInt()) {
-					s.k.NetAssetValues.Set(s.ctx, collections.Join(types.GetVaultAddress(shareDenom), paymentDenom), types.VaultNAV{
-						Price:  sdk.NewCoin(underlyingDenom, math.OneInt()),
-						Volume: math.OneInt().String(),
-					})
-				}
+				s.Require().NoError(s.k.NetAssetValues.Set(s.ctx, collections.Join(types.GetVaultAddress(shareDenom), paymentDenom), types.VaultNAV{
+					Price:  sdk.NewCoin(underlyingDenom, math.OneInt()),
+					Volume: math.OneInt().String(),
+				}), "failed to seed local payment NAV for vault %s", shareDenom)
 				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 					Admin: admin, ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom,
 				})
@@ -667,13 +661,10 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 			Name: "happy path redeem to underlying (peg)",
 			Setup: func() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
-				// Ensure supply=1 markers have a NAV
-				if s.k.BankKeeper.GetSupply(s.ctx, underlyingDenom).Amount.Equal(math.OneInt()) {
-					s.k.NetAssetValues.Set(s.ctx, collections.Join(types.GetVaultAddress(shareDenom), underlyingDenom), types.VaultNAV{
-						Price:  sdk.NewCoin(underlyingDenom, math.OneInt()),
-						Volume: math.OneInt().String(),
-					})
-				}
+				s.Require().NoError(s.k.NetAssetValues.Set(s.ctx, collections.Join(types.GetVaultAddress(shareDenom), underlyingDenom), types.VaultNAV{
+					Price:  sdk.NewCoin(underlyingDenom, math.OneInt()),
+					Volume: math.OneInt().String(),
+				}), "failed to seed local underlying NAV for vault %s", shareDenom)
 				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 					Admin: admin, ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom,
 				})
@@ -701,13 +692,10 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 			Setup: func() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
 				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(paymentDenom, math.NewInt(1000)), s.adminAddr)
-				// Ensure supply=1 markers have a NAV
-				if s.k.BankKeeper.GetSupply(s.ctx, underlyingDenom).Amount.Equal(math.OneInt()) {
-					s.k.NetAssetValues.Set(s.ctx, collections.Join(types.GetVaultAddress(shareDenom), paymentDenom), types.VaultNAV{
-						Price:  sdk.NewCoin(underlyingDenom, math.OneInt()),
-						Volume: math.OneInt().String(),
-					})
-				}
+				s.Require().NoError(s.k.NetAssetValues.Set(s.ctx, collections.Join(types.GetVaultAddress(shareDenom), paymentDenom), types.VaultNAV{
+					Price:  sdk.NewCoin(underlyingDenom, math.OneInt()),
+					Volume: math.OneInt().String(),
+				}), "failed to seed local payment NAV for vault %s", shareDenom)
 				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 					Admin: admin, ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom,
 				})

@@ -134,11 +134,13 @@ message QueryVaultResponse {
 message LiquidityBreakdown {
   // cash_amount is the amount of fungible underlying asset held as liquid buffer.
   cosmos.base.v1beta1.Coin cash_amount = 1 [(gogoproto.nullable) = false];
-  // collateral_amount is the estimated value of all non-fungible (NFT) assets.
+  // collateral_amount is the risk-adjusted (advance-rate discounted) valuation
+  // of all non-fungible (NFT) assets.
   cosmos.base.v1beta1.Coin collateral_amount = 2 [(gogoproto.nullable) = false];
   // total_value is the sum of cash and collateral (TVV).
   cosmos.base.v1beta1.Coin total_value = 3 [(gogoproto.nullable) = false];
   // ratio is the current collateralization ratio (collateral / total_value).
+  // If total_value is zero, this ratio is reported as "0".
   string ratio = 4 [(cosmos_proto.scalar) = "cosmos.DecString"];
 }
 

@@ -57,14 +57,28 @@ type AttributeKeeper interface {
 	SetAttribute(ctx sdk.Context, attr attrtypes.Attribute, owner sdk.AccAddress) error
 }
 
+// HoldKeeper provides a read-only view of assets that are currently "locked"
+// in an account without being moved. The vault module uses this to ensure that
+// assets committed to pending P2P trades are still included in Total Vault Value
+// (TVV) calculations and liquidity breakdowns.
 type HoldKeeper interface {
+	// GetHoldCoin returns the amount of a specific denom that is currently on hold for an address.
 	GetHoldCoin(ctx sdk.Context, addr sdk.AccAddress, denom string) (sdk.Coin, error)
+	// GetAllHolds returns all coins currently on hold for a specific address.
 	GetAllHolds(ctx sdk.Context, addr sdk.AccAddress) (sdk.Coins, error)
 }
 
-type ExchangeMsgServer interface {
+// ExchangeKeeper defines the narrowed x/exchange interface used by the vault
+// to coordinate the lifecycle of peer-to-peer (P2P) payments. It exposes both
+// message server endpoints for initiating/settling trades and query endpoints
+// for retrieving payment details.
+type ExchangeKeeper interface {
+	// CreatePayment initiates a new P2P payment proposal.
 	CreatePayment(ctx context.Context, req *exchangetypes.MsgCreatePaymentRequest) (*exchangetypes.MsgCreatePaymentResponse, error)
+	// AcceptPayment finalizes an incoming payment proposal, triggering asset movement.
 	AcceptPayment(ctx context.Context, req *exchangetypes.MsgAcceptPaymentRequest) (*exchangetypes.MsgAcceptPaymentResponse, error)
+	// RejectPayment declines a pending payment proposal targeting the caller.
 	RejectPayment(ctx context.Context, req *exchangetypes.MsgRejectPaymentRequest) (*exchangetypes.MsgRejectPaymentResponse, error)
+	// GetPayment retrieves the details of a specific payment by its source and external ID.
 	GetPayment(ctx context.Context, req *exchangetypes.QueryGetPaymentRequest) (*exchangetypes.QueryGetPaymentResponse, error)
 }

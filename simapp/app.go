@@ -116,7 +116,7 @@ type SimApp struct {
 	AttributeKeeper attributekeeper.Keeper
 	MarkerKeeper    markerkeeper.Keeper
 	HoldKeeper      types.HoldKeeper
-	ExchangeKeeper  types.ExchangeMsgServer
+	ExchangeKeeper  types.ExchangeKeeper
 	// Custom Modules
 	VaultKeeper *vaultkeeper.Keeper
 
@@ -328,16 +328,16 @@ func (app *SimApp) AppCodec() codec.Codec {
 type exchangeStub struct{}
 
 func (s exchangeStub) CreatePayment(context.Context, *exchangetypes.MsgCreatePaymentRequest) (*exchangetypes.MsgCreatePaymentResponse, error) {
-	return nil, nil
+	return &exchangetypes.MsgCreatePaymentResponse{}, nil
 }
 func (s exchangeStub) AcceptPayment(context.Context, *exchangetypes.MsgAcceptPaymentRequest) (*exchangetypes.MsgAcceptPaymentResponse, error) {
-	return nil, nil
+	return &exchangetypes.MsgAcceptPaymentResponse{}, nil
 }
 func (s exchangeStub) RejectPayment(context.Context, *exchangetypes.MsgRejectPaymentRequest) (*exchangetypes.MsgRejectPaymentResponse, error) {
-	return nil, nil
+	return &exchangetypes.MsgRejectPaymentResponse{}, nil
 }
 func (s exchangeStub) GetPayment(context.Context, *exchangetypes.QueryGetPaymentRequest) (*exchangetypes.QueryGetPaymentResponse, error) {
-	return nil, nil
+	return &exchangetypes.QueryGetPaymentResponse{}, nil
 }
 
 type holdStub struct{}
@@ -349,8 +349,8 @@ func (s holdStub) GetAllHolds(sdk.Context, sdk.AccAddress) (sdk.Coins, error) {
 	return sdk.Coins{}, nil
 }
 
-// ProvideExchangeKeeperStub returns a dummy types.ExchangeMsgServer instance.
-func ProvideExchangeKeeperStub() types.ExchangeMsgServer {
+// ProvideExchangeKeeperStub returns a dummy types.ExchangeKeeper instance.
+func ProvideExchangeKeeperStub() types.ExchangeKeeper {
 	return exchangeStub{}
 }
 

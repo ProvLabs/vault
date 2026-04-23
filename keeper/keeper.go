@@ -30,9 +30,10 @@ type Keeper struct {
 	MarkerKeeper types.MarkerKeeper
 	BankKeeper   types.BankKeeper
 	NameKeeper   types.NameKeeper
-	AttrKeeper   types.AttributeKeeper
-	HoldKeeper   types.HoldKeeper
-	ExchangeKeeper        types.ExchangeMsgServer
+	AttrKeeper            types.AttributeKeeper
+	HoldKeeper            types.HoldKeeper
+	ExchangeKeeper        types.ExchangeKeeper
+
 
 
 
@@ -59,7 +60,7 @@ func NewKeeper(
 	namekeeper types.NameKeeper,
 	attributekeeper types.AttributeKeeper,
 	holdkeeper types.HoldKeeper,
-	exchangekeeper types.ExchangeMsgServer,
+	exchangekeeper types.ExchangeKeeper,
 ) *Keeper {
 	if _, err := addressCodec.BytesToString(authority); err != nil {
 		panic(fmt.Sprintf("invalid authority address %s: %s", authority, err))

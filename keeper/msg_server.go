@@ -816,7 +816,6 @@ func (k msgServer) UpdateVaultAUMFeeBips(goCtx context.Context, msg *types.MsgUp
 	return &types.MsgUpdateVaultAUMFeeBipsResponse{}, nil
 }
 
-// UpdateVaultAssetNAV manually sets or updates a localized NAV for a specific denom.
 func (k msgServer) UpdateVaultAssetNAV(goCtx context.Context, msg *types.MsgUpdateVaultAssetNAVRequest) (*types.MsgUpdateVaultAssetNAVResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -829,7 +828,11 @@ func (k msgServer) UpdateVaultAssetNAV(goCtx context.Context, msg *types.MsgUpda
 		return nil, fmt.Errorf("unauthorized: %w", err)
 	}
 
-	if err := k.NetAssetValues.Set(ctx, collections.Join(vaultAddr, msg.Denom), msg.Nav); err != nil {
+	// Normalize NAV: set updated block height to current height
+	nav := msg.Nav
+	nav.UpdatedBlockHeight = uint64(ctx.BlockHeight())
+
+	if err := k.NetAssetValues.Set(ctx, collections.Join(vaultAddr, msg.Denom), nav); err != nil {
 		return nil, fmt.Errorf("failed to set local vault nav: %w", err)
 	}
 

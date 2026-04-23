@@ -197,9 +197,10 @@ func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccoun
 
 	// INCLUDE ASSETS ON HOLD (Task 4.2)
 	holds, err := k.HoldKeeper.GetAllHolds(ctx, principalAddr)
-	if err == nil {
-		balances = balances.Add(holds...)
+	if err != nil {
+		return math.Int{}, fmt.Errorf("GetAllHolds failed for principalAddr %s: %w", principalAddr, err)
 	}
+	balances = balances.Add(holds...)
 
 	total := math.ZeroInt()
 	for _, balance := range balances {
@@ -263,11 +264,11 @@ func (k Keeper) GetLiquidityBreakdown(ctx sdk.Context, vault types.VaultAccount)
 	principalAddr := vault.PrincipalMarkerAddress()
 	balances := k.BankKeeper.GetAllBalances(ctx, principalAddr)
 
-	// INCLUDE ASSETS ON HOLD
 	holds, err := k.HoldKeeper.GetAllHolds(ctx, principalAddr)
-	if err == nil {
-		balances = balances.Add(holds...)
+	if err != nil {
+		return types.LiquidityBreakdown{}, fmt.Errorf("GetAllHolds failed for principalAddr %s: %w", principalAddr, err)
 	}
+	balances = balances.Add(holds...)
 
 	cash := math.ZeroInt()
 	collateral := math.ZeroInt()

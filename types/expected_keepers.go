@@ -57,8 +57,14 @@ type AttributeKeeper interface {
 	SetAttribute(ctx sdk.Context, attr attrtypes.Attribute, owner sdk.AccAddress) error
 }
 
+type HoldKeeper interface {
+	GetHoldCoin(ctx sdk.Context, addr sdk.AccAddress, denom string) (sdk.Coin, error)
+	GetAllHolds(ctx sdk.Context, addr sdk.AccAddress) (sdk.Coins, error)
+}
+
 type ExchangeMsgServer interface {
 	CreatePayment(ctx context.Context, req *exchangetypes.MsgCreatePaymentRequest) (*exchangetypes.MsgCreatePaymentResponse, error)
 	AcceptPayment(ctx context.Context, req *exchangetypes.MsgAcceptPaymentRequest) (*exchangetypes.MsgAcceptPaymentResponse, error)
+	RejectPayment(ctx context.Context, req *exchangetypes.MsgRejectPaymentRequest) (*exchangetypes.MsgRejectPaymentResponse, error)
 	GetPayment(ctx context.Context, req *exchangetypes.QueryGetPaymentRequest) (*exchangetypes.QueryGetPaymentResponse, error)
 }

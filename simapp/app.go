@@ -111,6 +111,7 @@ type SimApp struct {
 	NameKeeper      namekeeper.Keeper
 	AttributeKeeper attributekeeper.Keeper
 	MarkerKeeper    markerkeeper.Keeper
+	HoldKeeper      types.HoldKeeper
 	ExchangeKeeper  types.ExchangeMsgServer
 	// Custom Modules
 	VaultKeeper *vaultkeeper.Keeper
@@ -154,6 +155,7 @@ func AppConfig() depinject.Config {
 			ProvideNameKeeperStub,
 			ProvideAttributeKeeperStub,
 			ProvideExchangeKeeperStub,
+			ProvideHoldKeeperStub,
 		),
 		depinject.Supply(
 			map[string]module.AppModuleBasic{
@@ -321,5 +323,10 @@ func (app *SimApp) AppCodec() codec.Codec {
 
 // ProvideExchangeKeeperStub returns a dummy types.ExchangeMsgServer instance.
 func ProvideExchangeKeeperStub() types.ExchangeMsgServer {
+	return nil
+}
+
+// ProvideHoldKeeperStub returns a dummy types.HoldKeeper instance.
+func ProvideHoldKeeperStub() types.HoldKeeper {
 	return nil
 }

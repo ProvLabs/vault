@@ -97,13 +97,13 @@ func (k Keeper) setShareDenomNAV(ctx sdk.Context, vault *types.VaultAccount, tvv
 	shareDenom := vault.TotalShares.Denom
 	underlyingDenom := vault.UnderlyingAsset
 
-	nav := types.NetAssetValue{
+	nav := types.VaultNAV{
 		Price:              sdk.NewCoin(underlyingDenom, tvv),
 		Volume:             vault.TotalShares.Amount.String(),
 		UpdatedBlockHeight: uint64(ctx.BlockHeight()),
 	}
 
-	if err := k.NetAssetValues.Set(ctx, collections.Join(shareDenom, underlyingDenom), nav); err != nil {
+	if err := k.NetAssetValues.Set(ctx, collections.Join(vault.GetAddress(), shareDenom), nav); err != nil {
 		return fmt.Errorf("failed to set local share nav: %w", err)
 	}
 

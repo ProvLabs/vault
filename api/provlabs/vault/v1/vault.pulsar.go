@@ -3366,29 +3366,29 @@ func (x *fastReflection_PendingSwapOut) ProtoMethods() *protoiface.Methods {
 }
 
 var (
-	md_NetAssetValue                      protoreflect.MessageDescriptor
-	fd_NetAssetValue_price                protoreflect.FieldDescriptor
-	fd_NetAssetValue_volume               protoreflect.FieldDescriptor
-	fd_NetAssetValue_updated_block_height protoreflect.FieldDescriptor
+	md_VaultNAV                      protoreflect.MessageDescriptor
+	fd_VaultNAV_price                protoreflect.FieldDescriptor
+	fd_VaultNAV_volume               protoreflect.FieldDescriptor
+	fd_VaultNAV_updated_block_height protoreflect.FieldDescriptor
 )
 
 func init() {
 	file_provlabs_vault_v1_vault_proto_init()
-	md_NetAssetValue = File_provlabs_vault_v1_vault_proto.Messages().ByName("NetAssetValue")
-	fd_NetAssetValue_price = md_NetAssetValue.Fields().ByName("price")
-	fd_NetAssetValue_volume = md_NetAssetValue.Fields().ByName("volume")
-	fd_NetAssetValue_updated_block_height = md_NetAssetValue.Fields().ByName("updated_block_height")
+	md_VaultNAV = File_provlabs_vault_v1_vault_proto.Messages().ByName("VaultNAV")
+	fd_VaultNAV_price = md_VaultNAV.Fields().ByName("price")
+	fd_VaultNAV_volume = md_VaultNAV.Fields().ByName("volume")
+	fd_VaultNAV_updated_block_height = md_VaultNAV.Fields().ByName("updated_block_height")
 }
 
-var _ protoreflect.Message = (*fastReflection_NetAssetValue)(nil)
+var _ protoreflect.Message = (*fastReflection_VaultNAV)(nil)
 
-type fastReflection_NetAssetValue NetAssetValue
+type fastReflection_VaultNAV VaultNAV
 
-func (x *NetAssetValue) ProtoReflect() protoreflect.Message {
-	return (*fastReflection_NetAssetValue)(x)
+func (x *VaultNAV) ProtoReflect() protoreflect.Message {
+	return (*fastReflection_VaultNAV)(x)
 }
 
-func (x *NetAssetValue) slowProtoReflect() protoreflect.Message {
+func (x *VaultNAV) slowProtoReflect() protoreflect.Message {
 	mi := &file_provlabs_vault_v1_vault_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -3400,43 +3400,43 @@ func (x *NetAssetValue) slowProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-var _fastReflection_NetAssetValue_messageType fastReflection_NetAssetValue_messageType
-var _ protoreflect.MessageType = fastReflection_NetAssetValue_messageType{}
+var _fastReflection_VaultNAV_messageType fastReflection_VaultNAV_messageType
+var _ protoreflect.MessageType = fastReflection_VaultNAV_messageType{}
 
-type fastReflection_NetAssetValue_messageType struct{}
+type fastReflection_VaultNAV_messageType struct{}
 
-func (x fastReflection_NetAssetValue_messageType) Zero() protoreflect.Message {
-	return (*fastReflection_NetAssetValue)(nil)
+func (x fastReflection_VaultNAV_messageType) Zero() protoreflect.Message {
+	return (*fastReflection_VaultNAV)(nil)
 }
-func (x fastReflection_NetAssetValue_messageType) New() protoreflect.Message {
-	return new(fastReflection_NetAssetValue)
+func (x fastReflection_VaultNAV_messageType) New() protoreflect.Message {
+	return new(fastReflection_VaultNAV)
 }
-func (x fastReflection_NetAssetValue_messageType) Descriptor() protoreflect.MessageDescriptor {
-	return md_NetAssetValue
+func (x fastReflection_VaultNAV_messageType) Descriptor() protoreflect.MessageDescriptor {
+	return md_VaultNAV
 }
 
 // Descriptor returns message descriptor, which contains only the protobuf
 // type information for the message.
-func (x *fastReflection_NetAssetValue) Descriptor() protoreflect.MessageDescriptor {
-	return md_NetAssetValue
+func (x *fastReflection_VaultNAV) Descriptor() protoreflect.MessageDescriptor {
+	return md_VaultNAV
 }
 
 // Type returns the message type, which encapsulates both Go and protobuf
 // type information. If the Go type information is not needed,
 // it is recommended that the message descriptor be used instead.
-func (x *fastReflection_NetAssetValue) Type() protoreflect.MessageType {
-	return _fastReflection_NetAssetValue_messageType
+func (x *fastReflection_VaultNAV) Type() protoreflect.MessageType {
+	return _fastReflection_VaultNAV_messageType
 }
 
 // New returns a newly allocated and mutable empty message.
-func (x *fastReflection_NetAssetValue) New() protoreflect.Message {
-	return new(fastReflection_NetAssetValue)
+func (x *fastReflection_VaultNAV) New() protoreflect.Message {
+	return new(fastReflection_VaultNAV)
 }
 
 // Interface unwraps the message reflection interface and
 // returns the underlying ProtoMessage interface.
-func (x *fastReflection_NetAssetValue) Interface() protoreflect.ProtoMessage {
-	return (*NetAssetValue)(x)
+func (x *fastReflection_VaultNAV) Interface() protoreflect.ProtoMessage {
+	return (*VaultNAV)(x)
 }
 
 // Range iterates over every populated field in an undefined order,
@@ -3444,22 +3444,22 @@ func (x *fastReflection_NetAssetValue) Interface() protoreflect.ProtoMessage {
 // Range returns immediately if f returns false.
 // While iterating, mutating operations may only be performed
 // on the current field descriptor.
-func (x *fastReflection_NetAssetValue) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
+func (x *fastReflection_VaultNAV) Range(f func(protoreflect.FieldDescriptor, protoreflect.Value) bool) {
 	if x.Price != nil {
 		value := protoreflect.ValueOfMessage(x.Price.ProtoReflect())
-		if !f(fd_NetAssetValue_price, value) {
+		if !f(fd_VaultNAV_price, value) {
 			return
 		}
 	}
 	if x.Volume != "" {
 		value := protoreflect.ValueOfString(x.Volume)
-		if !f(fd_NetAssetValue_volume, value) {
+		if !f(fd_VaultNAV_volume, value) {
 			return
 		}
 	}
 	if x.UpdatedBlockHeight != uint64(0) {
 		value := protoreflect.ValueOfUint64(x.UpdatedBlockHeight)
-		if !f(fd_NetAssetValue_updated_block_height, value) {
+		if !f(fd_VaultNAV_updated_block_height, value) {
 			return
 		}
 	}
@@ -3476,19 +3476,19 @@ func (x *fastReflection_NetAssetValue) Range(f func(protoreflect.FieldDescriptor
 // In other cases (aside from the nullable cases above),
 // a proto3 scalar field is populated if it contains a non-zero value, and
 // a repeated field is populated if it is non-empty.
-func (x *fastReflection_NetAssetValue) Has(fd protoreflect.FieldDescriptor) bool {
+func (x *fastReflection_VaultNAV) Has(fd protoreflect.FieldDescriptor) bool {
 	switch fd.FullName() {
-	case "provlabs.vault.v1.NetAssetValue.price":
+	case "provlabs.vault.v1.VaultNAV.price":
 		return x.Price != nil
-	case "provlabs.vault.v1.NetAssetValue.volume":
+	case "provlabs.vault.v1.VaultNAV.volume":
 		return x.Volume != ""
-	case "provlabs.vault.v1.NetAssetValue.updated_block_height":
+	case "provlabs.vault.v1.VaultNAV.updated_block_height":
 		return x.UpdatedBlockHeight != uint64(0)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.NetAssetValue"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.VaultNAV"))
 		}
-		panic(fmt.Errorf("message provlabs.vault.v1.NetAssetValue does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.VaultNAV does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -3498,19 +3498,19 @@ func (x *fastReflection_NetAssetValue) Has(fd protoreflect.FieldDescriptor) bool
 // associated with the given field number.
 //
 // Clear is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_NetAssetValue) Clear(fd protoreflect.FieldDescriptor) {
+func (x *fastReflection_VaultNAV) Clear(fd protoreflect.FieldDescriptor) {
 	switch fd.FullName() {
-	case "provlabs.vault.v1.NetAssetValue.price":
+	case "provlabs.vault.v1.VaultNAV.price":
 		x.Price = nil
-	case "provlabs.vault.v1.NetAssetValue.volume":
+	case "provlabs.vault.v1.VaultNAV.volume":
 		x.Volume = ""
-	case "provlabs.vault.v1.NetAssetValue.updated_block_height":
+	case "provlabs.vault.v1.VaultNAV.updated_block_height":
 		x.UpdatedBlockHeight = uint64(0)
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.NetAssetValue"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.VaultNAV"))
 		}
-		panic(fmt.Errorf("message provlabs.vault.v1.NetAssetValue does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.VaultNAV does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -3520,22 +3520,22 @@ func (x *fastReflection_NetAssetValue) Clear(fd protoreflect.FieldDescriptor) {
 // the default value of a bytes scalar is guaranteed to be a copy.
 // For unpopulated composite types, it returns an empty, read-only view
 // of the value; to obtain a mutable reference, use Mutable.
-func (x *fastReflection_NetAssetValue) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_VaultNAV) Get(descriptor protoreflect.FieldDescriptor) protoreflect.Value {
 	switch descriptor.FullName() {
-	case "provlabs.vault.v1.NetAssetValue.price":
+	case "provlabs.vault.v1.VaultNAV.price":
 		value := x.Price
 		return protoreflect.ValueOfMessage(value.ProtoReflect())
-	case "provlabs.vault.v1.NetAssetValue.volume":
+	case "provlabs.vault.v1.VaultNAV.volume":
 		value := x.Volume
 		return protoreflect.ValueOfString(value)
-	case "provlabs.vault.v1.NetAssetValue.updated_block_height":
+	case "provlabs.vault.v1.VaultNAV.updated_block_height":
 		value := x.UpdatedBlockHeight
 		return protoreflect.ValueOfUint64(value)
 	default:
 		if descriptor.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.NetAssetValue"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.VaultNAV"))
 		}
-		panic(fmt.Errorf("message provlabs.vault.v1.NetAssetValue does not contain field %s", descriptor.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.VaultNAV does not contain field %s", descriptor.FullName()))
 	}
 }
 
@@ -3549,19 +3549,19 @@ func (x *fastReflection_NetAssetValue) Get(descriptor protoreflect.FieldDescript
 // empty, read-only value, then it panics.
 //
 // Set is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_NetAssetValue) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
+func (x *fastReflection_VaultNAV) Set(fd protoreflect.FieldDescriptor, value protoreflect.Value) {
 	switch fd.FullName() {
-	case "provlabs.vault.v1.NetAssetValue.price":
+	case "provlabs.vault.v1.VaultNAV.price":
 		x.Price = value.Message().Interface().(*v1beta11.Coin)
-	case "provlabs.vault.v1.NetAssetValue.volume":
+	case "provlabs.vault.v1.VaultNAV.volume":
 		x.Volume = value.Interface().(string)
-	case "provlabs.vault.v1.NetAssetValue.updated_block_height":
+	case "provlabs.vault.v1.VaultNAV.updated_block_height":
 		x.UpdatedBlockHeight = value.Uint()
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.NetAssetValue"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.VaultNAV"))
 		}
-		panic(fmt.Errorf("message provlabs.vault.v1.NetAssetValue does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.VaultNAV does not contain field %s", fd.FullName()))
 	}
 }
 
@@ -3575,52 +3575,52 @@ func (x *fastReflection_NetAssetValue) Set(fd protoreflect.FieldDescriptor, valu
 // It panics if the field does not contain a composite type.
 //
 // Mutable is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_NetAssetValue) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_VaultNAV) Mutable(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "provlabs.vault.v1.NetAssetValue.price":
+	case "provlabs.vault.v1.VaultNAV.price":
 		if x.Price == nil {
 			x.Price = new(v1beta11.Coin)
 		}
 		return protoreflect.ValueOfMessage(x.Price.ProtoReflect())
-	case "provlabs.vault.v1.NetAssetValue.volume":
-		panic(fmt.Errorf("field volume of message provlabs.vault.v1.NetAssetValue is not mutable"))
-	case "provlabs.vault.v1.NetAssetValue.updated_block_height":
-		panic(fmt.Errorf("field updated_block_height of message provlabs.vault.v1.NetAssetValue is not mutable"))
+	case "provlabs.vault.v1.VaultNAV.volume":
+		panic(fmt.Errorf("field volume of message provlabs.vault.v1.VaultNAV is not mutable"))
+	case "provlabs.vault.v1.VaultNAV.updated_block_height":
+		panic(fmt.Errorf("field updated_block_height of message provlabs.vault.v1.VaultNAV is not mutable"))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.NetAssetValue"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.VaultNAV"))
 		}
-		panic(fmt.Errorf("message provlabs.vault.v1.NetAssetValue does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.VaultNAV does not contain field %s", fd.FullName()))
 	}
 }
 
 // NewField returns a new value that is assignable to the field
 // for the given descriptor. For scalars, this returns the default value.
 // For lists, maps, and messages, this returns a new, empty, mutable value.
-func (x *fastReflection_NetAssetValue) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
+func (x *fastReflection_VaultNAV) NewField(fd protoreflect.FieldDescriptor) protoreflect.Value {
 	switch fd.FullName() {
-	case "provlabs.vault.v1.NetAssetValue.price":
+	case "provlabs.vault.v1.VaultNAV.price":
 		m := new(v1beta11.Coin)
 		return protoreflect.ValueOfMessage(m.ProtoReflect())
-	case "provlabs.vault.v1.NetAssetValue.volume":
+	case "provlabs.vault.v1.VaultNAV.volume":
 		return protoreflect.ValueOfString("")
-	case "provlabs.vault.v1.NetAssetValue.updated_block_height":
+	case "provlabs.vault.v1.VaultNAV.updated_block_height":
 		return protoreflect.ValueOfUint64(uint64(0))
 	default:
 		if fd.IsExtension() {
-			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.NetAssetValue"))
+			panic(fmt.Errorf("proto3 declared messages do not support extensions: provlabs.vault.v1.VaultNAV"))
 		}
-		panic(fmt.Errorf("message provlabs.vault.v1.NetAssetValue does not contain field %s", fd.FullName()))
+		panic(fmt.Errorf("message provlabs.vault.v1.VaultNAV does not contain field %s", fd.FullName()))
 	}
 }
 
 // WhichOneof reports which field within the oneof is populated,
 // returning nil if none are populated.
 // It panics if the oneof descriptor does not belong to this message.
-func (x *fastReflection_NetAssetValue) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
+func (x *fastReflection_VaultNAV) WhichOneof(d protoreflect.OneofDescriptor) protoreflect.FieldDescriptor {
 	switch d.FullName() {
 	default:
-		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.NetAssetValue", d.FullName()))
+		panic(fmt.Errorf("%s is not a oneof field in provlabs.vault.v1.VaultNAV", d.FullName()))
 	}
 	panic("unreachable")
 }
@@ -3628,7 +3628,7 @@ func (x *fastReflection_NetAssetValue) WhichOneof(d protoreflect.OneofDescriptor
 // GetUnknown retrieves the entire list of unknown fields.
 // The caller may only mutate the contents of the RawFields
 // if the mutated bytes are stored back into the message with SetUnknown.
-func (x *fastReflection_NetAssetValue) GetUnknown() protoreflect.RawFields {
+func (x *fastReflection_VaultNAV) GetUnknown() protoreflect.RawFields {
 	return x.unknownFields
 }
 
@@ -3639,7 +3639,7 @@ func (x *fastReflection_NetAssetValue) GetUnknown() protoreflect.RawFields {
 // An empty RawFields may be passed to clear the fields.
 //
 // SetUnknown is a mutating operation and unsafe for concurrent use.
-func (x *fastReflection_NetAssetValue) SetUnknown(fields protoreflect.RawFields) {
+func (x *fastReflection_VaultNAV) SetUnknown(fields protoreflect.RawFields) {
 	x.unknownFields = fields
 }
 
@@ -3651,7 +3651,7 @@ func (x *fastReflection_NetAssetValue) SetUnknown(fields protoreflect.RawFields)
 // message type, but the details are implementation dependent.
 // Validity is not part of the protobuf data model, and may not
 // be preserved in marshaling or other operations.
-func (x *fastReflection_NetAssetValue) IsValid() bool {
+func (x *fastReflection_VaultNAV) IsValid() bool {
 	return x != nil
 }
 
@@ -3661,9 +3661,9 @@ func (x *fastReflection_NetAssetValue) IsValid() bool {
 // The returned methods type is identical to
 // "google.golang.org/protobuf/runtime/protoiface".Methods.
 // Consult the protoiface package documentation for details.
-func (x *fastReflection_NetAssetValue) ProtoMethods() *protoiface.Methods {
+func (x *fastReflection_VaultNAV) ProtoMethods() *protoiface.Methods {
 	size := func(input protoiface.SizeInput) protoiface.SizeOutput {
-		x := input.Message.Interface().(*NetAssetValue)
+		x := input.Message.Interface().(*VaultNAV)
 		if x == nil {
 			return protoiface.SizeOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -3696,7 +3696,7 @@ func (x *fastReflection_NetAssetValue) ProtoMethods() *protoiface.Methods {
 	}
 
 	marshal := func(input protoiface.MarshalInput) (protoiface.MarshalOutput, error) {
-		x := input.Message.Interface().(*NetAssetValue)
+		x := input.Message.Interface().(*VaultNAV)
 		if x == nil {
 			return protoiface.MarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -3752,7 +3752,7 @@ func (x *fastReflection_NetAssetValue) ProtoMethods() *protoiface.Methods {
 		}, nil
 	}
 	unmarshal := func(input protoiface.UnmarshalInput) (protoiface.UnmarshalOutput, error) {
-		x := input.Message.Interface().(*NetAssetValue)
+		x := input.Message.Interface().(*VaultNAV)
 		if x == nil {
 			return protoiface.UnmarshalOutput{
 				NoUnkeyedLiterals: input.NoUnkeyedLiterals,
@@ -3784,10 +3784,10 @@ func (x *fastReflection_NetAssetValue) ProtoMethods() *protoiface.Methods {
 			fieldNum := int32(wire >> 3)
 			wireType := int(wire & 0x7)
 			if wireType == 4 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: NetAssetValue: wiretype end group for non-group")
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: VaultNAV: wiretype end group for non-group")
 			}
 			if fieldNum <= 0 {
-				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: NetAssetValue: illegal tag %d (wire type %d)", fieldNum, wire)
+				return protoiface.UnmarshalOutput{NoUnkeyedLiterals: input.NoUnkeyedLiterals, Flags: input.Flags}, fmt.Errorf("proto: VaultNAV: illegal tag %d (wire type %d)", fieldNum, wire)
 			}
 			switch fieldNum {
 			case 1:
@@ -4376,23 +4376,23 @@ func (x *PendingSwapOut) GetRedeemDenom() string {
 	return ""
 }
 
-// NetAssetValue defines the net asset value of a marker or other asset.
+// VaultNAV defines a localized net asset value for a specific asset within a vault.
 // It uses an IntString for volume to support high-precision RWA valuations.
-type NetAssetValue struct {
+type VaultNAV struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// price is the total value of the asset's volume in a specific denom.
+	// price is the total value of the asset's volume in a specific denom (typically vault underlying).
 	Price *v1beta11.Coin `protobuf:"bytes,1,opt,name=price,proto3" json:"price,omitempty"`
 	// volume is the amount of the asset associated with the price.
 	Volume string `protobuf:"bytes,2,opt,name=volume,proto3" json:"volume,omitempty"`
-	// updated_block_height is the block height when the NAV was last updated.
+	// updated_block_height is the block height when this localized NAV was last updated.
 	UpdatedBlockHeight uint64 `protobuf:"varint,3,opt,name=updated_block_height,json=updatedBlockHeight,proto3" json:"updated_block_height,omitempty"`
 }
 
-func (x *NetAssetValue) Reset() {
-	*x = NetAssetValue{}
+func (x *VaultNAV) Reset() {
+	*x = VaultNAV{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_provlabs_vault_v1_vault_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -4400,32 +4400,32 @@ func (x *NetAssetValue) Reset() {
 	}
 }
 
-func (x *NetAssetValue) String() string {
+func (x *VaultNAV) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*NetAssetValue) ProtoMessage() {}
+func (*VaultNAV) ProtoMessage() {}
 
-// Deprecated: Use NetAssetValue.ProtoReflect.Descriptor instead.
-func (*NetAssetValue) Descriptor() ([]byte, []int) {
+// Deprecated: Use VaultNAV.ProtoReflect.Descriptor instead.
+func (*VaultNAV) Descriptor() ([]byte, []int) {
 	return file_provlabs_vault_v1_vault_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *NetAssetValue) GetPrice() *v1beta11.Coin {
+func (x *VaultNAV) GetPrice() *v1beta11.Coin {
 	if x != nil {
 		return x.Price
 	}
 	return nil
 }
 
-func (x *NetAssetValue) GetVolume() string {
+func (x *VaultNAV) GetVolume() string {
 	if x != nil {
 		return x.Volume
 	}
 	return ""
 }
 
-func (x *NetAssetValue) GetUpdatedBlockHeight() uint64 {
+func (x *VaultNAV) GetUpdatedBlockHeight() uint64 {
 	if x != nil {
 		return x.UpdatedBlockHeight
 	}
@@ -4569,30 +4569,30 @@ var file_provlabs_vault_v1_vault_proto_rawDesc = []byte{
 	0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x06, 0x73, 0x68, 0x61, 0x72, 0x65, 0x73, 0x12, 0x21,
 	0x0a, 0x0c, 0x72, 0x65, 0x64, 0x65, 0x65, 0x6d, 0x5f, 0x64, 0x65, 0x6e, 0x6f, 0x6d, 0x18, 0x04,
 	0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x72, 0x65, 0x64, 0x65, 0x65, 0x6d, 0x44, 0x65, 0x6e, 0x6f,
-	0x6d, 0x22, 0xa6, 0x01, 0x0a, 0x0d, 0x4e, 0x65, 0x74, 0x41, 0x73, 0x73, 0x65, 0x74, 0x56, 0x61,
-	0x6c, 0x75, 0x65, 0x12, 0x35, 0x0a, 0x05, 0x70, 0x72, 0x69, 0x63, 0x65, 0x18, 0x01, 0x20, 0x01,
-	0x28, 0x0b, 0x32, 0x19, 0x2e, 0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65,
-	0x2e, 0x76, 0x31, 0x62, 0x65, 0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8,
-	0xde, 0x1f, 0x00, 0x52, 0x05, 0x70, 0x72, 0x69, 0x63, 0x65, 0x12, 0x2c, 0x0a, 0x06, 0x76, 0x6f,
-	0x6c, 0x75, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x14, 0xd2, 0xb4, 0x2d, 0x10,
-	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x49, 0x6e, 0x74, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67,
-	0x52, 0x06, 0x76, 0x6f, 0x6c, 0x75, 0x6d, 0x65, 0x12, 0x30, 0x0a, 0x14, 0x75, 0x70, 0x64, 0x61,
-	0x74, 0x65, 0x64, 0x5f, 0x62, 0x6c, 0x6f, 0x63, 0x6b, 0x5f, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74,
-	0x18, 0x03, 0x20, 0x01, 0x28, 0x04, 0x52, 0x12, 0x75, 0x70, 0x64, 0x61, 0x74, 0x65, 0x64, 0x42,
-	0x6c, 0x6f, 0x63, 0x6b, 0x48, 0x65, 0x69, 0x67, 0x68, 0x74, 0x42, 0xc2, 0x01, 0x0a, 0x15, 0x63,
-	0x6f, 0x6d, 0x2e, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c,
-	0x74, 0x2e, 0x76, 0x31, 0x42, 0x0a, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x50, 0x72, 0x6f, 0x74, 0x6f,
-	0x50, 0x01, 0x5a, 0x37, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70,
-	0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70,
-	0x69, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74,
-	0x2f, 0x76, 0x31, 0x3b, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x50, 0x56,
-	0x58, 0xaa, 0x02, 0x11, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x56, 0x61, 0x75,
-	0x6c, 0x74, 0x2e, 0x56, 0x31, 0xca, 0x02, 0x11, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73,
-	0x5c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1d, 0x50, 0x72, 0x6f, 0x76,
-	0x6c, 0x61, 0x62, 0x73, 0x5c, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50,
-	0x42, 0x4d, 0x65, 0x74, 0x61, 0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x13, 0x50, 0x72, 0x6f, 0x76,
-	0x6c, 0x61, 0x62, 0x73, 0x3a, 0x3a, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62,
-	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x6d, 0x22, 0xa1, 0x01, 0x0a, 0x08, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x4e, 0x41, 0x56, 0x12, 0x35,
+	0x0a, 0x05, 0x70, 0x72, 0x69, 0x63, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x19, 0x2e,
+	0x63, 0x6f, 0x73, 0x6d, 0x6f, 0x73, 0x2e, 0x62, 0x61, 0x73, 0x65, 0x2e, 0x76, 0x31, 0x62, 0x65,
+	0x74, 0x61, 0x31, 0x2e, 0x43, 0x6f, 0x69, 0x6e, 0x42, 0x04, 0xc8, 0xde, 0x1f, 0x00, 0x52, 0x05,
+	0x70, 0x72, 0x69, 0x63, 0x65, 0x12, 0x2c, 0x0a, 0x06, 0x76, 0x6f, 0x6c, 0x75, 0x6d, 0x65, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x09, 0x42, 0x14, 0xd2, 0xb4, 0x2d, 0x10, 0x63, 0x6f, 0x73, 0x6d, 0x6f,
+	0x73, 0x2e, 0x49, 0x6e, 0x74, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x52, 0x06, 0x76, 0x6f, 0x6c,
+	0x75, 0x6d, 0x65, 0x12, 0x30, 0x0a, 0x14, 0x75, 0x70, 0x64, 0x61, 0x74, 0x65, 0x64, 0x5f, 0x62,
+	0x6c, 0x6f, 0x63, 0x6b, 0x5f, 0x68, 0x65, 0x69, 0x67, 0x68, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28,
+	0x04, 0x52, 0x12, 0x75, 0x70, 0x64, 0x61, 0x74, 0x65, 0x64, 0x42, 0x6c, 0x6f, 0x63, 0x6b, 0x48,
+	0x65, 0x69, 0x67, 0x68, 0x74, 0x42, 0xc2, 0x01, 0x0a, 0x15, 0x63, 0x6f, 0x6d, 0x2e, 0x70, 0x72,
+	0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x76, 0x31, 0x42,
+	0x0a, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x50, 0x72, 0x6f, 0x74, 0x6f, 0x50, 0x01, 0x5a, 0x37, 0x67,
+	0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x70, 0x72, 0x6f, 0x76, 0x6c, 0x61,
+	0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x70, 0x72, 0x6f,
+	0x76, 0x6c, 0x61, 0x62, 0x73, 0x2f, 0x76, 0x61, 0x75, 0x6c, 0x74, 0x2f, 0x76, 0x31, 0x3b, 0x76,
+	0x61, 0x75, 0x6c, 0x74, 0x76, 0x31, 0xa2, 0x02, 0x03, 0x50, 0x56, 0x58, 0xaa, 0x02, 0x11, 0x50,
+	0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x2e, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x2e, 0x56, 0x31,
+	0xca, 0x02, 0x11, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x5c, 0x56, 0x61, 0x75, 0x6c,
+	0x74, 0x5c, 0x56, 0x31, 0xe2, 0x02, 0x1d, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x5c,
+	0x56, 0x61, 0x75, 0x6c, 0x74, 0x5c, 0x56, 0x31, 0x5c, 0x47, 0x50, 0x42, 0x4d, 0x65, 0x74, 0x61,
+	0x64, 0x61, 0x74, 0x61, 0xea, 0x02, 0x13, 0x50, 0x72, 0x6f, 0x76, 0x6c, 0x61, 0x62, 0x73, 0x3a,
+	0x3a, 0x56, 0x61, 0x75, 0x6c, 0x74, 0x3a, 0x3a, 0x56, 0x31, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x33,
 }
 
 var (
@@ -4612,7 +4612,7 @@ var file_provlabs_vault_v1_vault_proto_goTypes = []interface{}{
 	(*VaultAccount)(nil),        // 0: provlabs.vault.v1.VaultAccount
 	(*AccountBalance)(nil),      // 1: provlabs.vault.v1.AccountBalance
 	(*PendingSwapOut)(nil),      // 2: provlabs.vault.v1.PendingSwapOut
-	(*NetAssetValue)(nil),       // 3: provlabs.vault.v1.NetAssetValue
+	(*VaultNAV)(nil),            // 3: provlabs.vault.v1.VaultNAV
 	(*v1beta1.BaseAccount)(nil), // 4: cosmos.auth.v1beta1.BaseAccount
 	(*v1beta11.Coin)(nil),       // 5: cosmos.base.v1beta1.Coin
 }
@@ -4623,7 +4623,7 @@ var file_provlabs_vault_v1_vault_proto_depIdxs = []int32{
 	5, // 3: provlabs.vault.v1.VaultAccount.outstanding_aum_fee:type_name -> cosmos.base.v1beta1.Coin
 	5, // 4: provlabs.vault.v1.AccountBalance.coins:type_name -> cosmos.base.v1beta1.Coin
 	5, // 5: provlabs.vault.v1.PendingSwapOut.shares:type_name -> cosmos.base.v1beta1.Coin
-	5, // 6: provlabs.vault.v1.NetAssetValue.price:type_name -> cosmos.base.v1beta1.Coin
+	5, // 6: provlabs.vault.v1.VaultNAV.price:type_name -> cosmos.base.v1beta1.Coin
 	7, // [7:7] is the sub-list for method output_type
 	7, // [7:7] is the sub-list for method input_type
 	7, // [7:7] is the sub-list for extension type_name
@@ -4674,7 +4674,7 @@ func file_provlabs_vault_v1_vault_proto_init() {
 			}
 		}
 		file_provlabs_vault_v1_vault_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*NetAssetValue); i {
+			switch v := v.(*VaultNAV); i {
 			case 0:
 				return &v.state
 			case 1:

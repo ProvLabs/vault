@@ -19,36 +19,39 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Msg_CreateVault_FullMethodName            = "/provlabs.vault.v1.Msg/CreateVault"
-	Msg_SetShareDenomMetadata_FullMethodName  = "/provlabs.vault.v1.Msg/SetShareDenomMetadata"
-	Msg_SwapIn_FullMethodName                 = "/provlabs.vault.v1.Msg/SwapIn"
-	Msg_SwapOut_FullMethodName                = "/provlabs.vault.v1.Msg/SwapOut"
-	Msg_UpdateMinInterestRate_FullMethodName  = "/provlabs.vault.v1.Msg/UpdateMinInterestRate"
-	Msg_UpdateMaxInterestRate_FullMethodName  = "/provlabs.vault.v1.Msg/UpdateMaxInterestRate"
-	Msg_UpdateInterestRate_FullMethodName     = "/provlabs.vault.v1.Msg/UpdateInterestRate"
-	Msg_UpdateWithdrawalDelay_FullMethodName  = "/provlabs.vault.v1.Msg/UpdateWithdrawalDelay"
-	Msg_UpdateMinSwapInValue_FullMethodName   = "/provlabs.vault.v1.Msg/UpdateMinSwapInValue"
-	Msg_UpdateMinSwapOutValue_FullMethodName  = "/provlabs.vault.v1.Msg/UpdateMinSwapOutValue"
-	Msg_UpdateMaxSwapInValue_FullMethodName   = "/provlabs.vault.v1.Msg/UpdateMaxSwapInValue"
-	Msg_UpdateMaxSwapOutValue_FullMethodName  = "/provlabs.vault.v1.Msg/UpdateMaxSwapOutValue"
-	Msg_ToggleSwapIn_FullMethodName           = "/provlabs.vault.v1.Msg/ToggleSwapIn"
-	Msg_ToggleSwapOut_FullMethodName          = "/provlabs.vault.v1.Msg/ToggleSwapOut"
-	Msg_DepositInterestFunds_FullMethodName   = "/provlabs.vault.v1.Msg/DepositInterestFunds"
-	Msg_WithdrawInterestFunds_FullMethodName  = "/provlabs.vault.v1.Msg/WithdrawInterestFunds"
-	Msg_DepositPrincipalFunds_FullMethodName  = "/provlabs.vault.v1.Msg/DepositPrincipalFunds"
-	Msg_WithdrawPrincipalFunds_FullMethodName = "/provlabs.vault.v1.Msg/WithdrawPrincipalFunds"
-	Msg_ExpeditePendingSwapOut_FullMethodName = "/provlabs.vault.v1.Msg/ExpeditePendingSwapOut"
-	Msg_PauseVault_FullMethodName             = "/provlabs.vault.v1.Msg/PauseVault"
-	Msg_UnpauseVault_FullMethodName           = "/provlabs.vault.v1.Msg/UnpauseVault"
-	Msg_SetBridgeAddress_FullMethodName       = "/provlabs.vault.v1.Msg/SetBridgeAddress"
-	Msg_ToggleBridge_FullMethodName           = "/provlabs.vault.v1.Msg/ToggleBridge"
-	Msg_BridgeMintShares_FullMethodName       = "/provlabs.vault.v1.Msg/BridgeMintShares"
-	Msg_BridgeBurnShares_FullMethodName       = "/provlabs.vault.v1.Msg/BridgeBurnShares"
-	Msg_SetAssetManager_FullMethodName        = "/provlabs.vault.v1.Msg/SetAssetManager"
-	Msg_UpdateParams_FullMethodName           = "/provlabs.vault.v1.Msg/UpdateParams"
-	Msg_UpdateVaultAUMFeeBips_FullMethodName  = "/provlabs.vault.v1.Msg/UpdateVaultAUMFeeBips"
-	Msg_CreateRwaPayment_FullMethodName       = "/provlabs.vault.v1.Msg/CreateRwaPayment"
-	Msg_AcceptRwaPayment_FullMethodName       = "/provlabs.vault.v1.Msg/AcceptRwaPayment"
+	Msg_CreateVault_FullMethodName             = "/provlabs.vault.v1.Msg/CreateVault"
+	Msg_SetShareDenomMetadata_FullMethodName   = "/provlabs.vault.v1.Msg/SetShareDenomMetadata"
+	Msg_SwapIn_FullMethodName                  = "/provlabs.vault.v1.Msg/SwapIn"
+	Msg_SwapOut_FullMethodName                 = "/provlabs.vault.v1.Msg/SwapOut"
+	Msg_UpdateMinInterestRate_FullMethodName   = "/provlabs.vault.v1.Msg/UpdateMinInterestRate"
+	Msg_UpdateMaxInterestRate_FullMethodName   = "/provlabs.vault.v1.Msg/UpdateMaxInterestRate"
+	Msg_UpdateInterestRate_FullMethodName      = "/provlabs.vault.v1.Msg/UpdateInterestRate"
+	Msg_UpdateWithdrawalDelay_FullMethodName   = "/provlabs.vault.v1.Msg/UpdateWithdrawalDelay"
+	Msg_UpdateMinSwapInValue_FullMethodName    = "/provlabs.vault.v1.Msg/UpdateMinSwapInValue"
+	Msg_UpdateMinSwapOutValue_FullMethodName   = "/provlabs.vault.v1.Msg/UpdateMinSwapOutValue"
+	Msg_UpdateMaxSwapInValue_FullMethodName    = "/provlabs.vault.v1.Msg/UpdateMaxSwapInValue"
+	Msg_UpdateMaxSwapOutValue_FullMethodName   = "/provlabs.vault.v1.Msg/UpdateMaxSwapOutValue"
+	Msg_ToggleSwapIn_FullMethodName            = "/provlabs.vault.v1.Msg/ToggleSwapIn"
+	Msg_ToggleSwapOut_FullMethodName           = "/provlabs.vault.v1.Msg/ToggleSwapOut"
+	Msg_DepositInterestFunds_FullMethodName    = "/provlabs.vault.v1.Msg/DepositInterestFunds"
+	Msg_WithdrawInterestFunds_FullMethodName   = "/provlabs.vault.v1.Msg/WithdrawInterestFunds"
+	Msg_DepositPrincipalFunds_FullMethodName   = "/provlabs.vault.v1.Msg/DepositPrincipalFunds"
+	Msg_WithdrawPrincipalFunds_FullMethodName  = "/provlabs.vault.v1.Msg/WithdrawPrincipalFunds"
+	Msg_ExpeditePendingSwapOut_FullMethodName  = "/provlabs.vault.v1.Msg/ExpeditePendingSwapOut"
+	Msg_PauseVault_FullMethodName              = "/provlabs.vault.v1.Msg/PauseVault"
+	Msg_UnpauseVault_FullMethodName            = "/provlabs.vault.v1.Msg/UnpauseVault"
+	Msg_SetBridgeAddress_FullMethodName        = "/provlabs.vault.v1.Msg/SetBridgeAddress"
+	Msg_ToggleBridge_FullMethodName            = "/provlabs.vault.v1.Msg/ToggleBridge"
+	Msg_BridgeMintShares_FullMethodName        = "/provlabs.vault.v1.Msg/BridgeMintShares"
+	Msg_BridgeBurnShares_FullMethodName        = "/provlabs.vault.v1.Msg/BridgeBurnShares"
+	Msg_SetAssetManager_FullMethodName         = "/provlabs.vault.v1.Msg/SetAssetManager"
+	Msg_UpdateParams_FullMethodName            = "/provlabs.vault.v1.Msg/UpdateParams"
+	Msg_UpdateVaultAUMFeeBips_FullMethodName   = "/provlabs.vault.v1.Msg/UpdateVaultAUMFeeBips"
+	Msg_UpdateVaultAssetNAV_FullMethodName     = "/provlabs.vault.v1.Msg/UpdateVaultAssetNAV"
+	Msg_VaultDepositAsset_FullMethodName       = "/provlabs.vault.v1.Msg/VaultDepositAsset"
+	Msg_VaultWithdrawAsset_FullMethodName      = "/provlabs.vault.v1.Msg/VaultWithdrawAsset"
+	Msg_VaultSettleAssetPayment_FullMethodName = "/provlabs.vault.v1.Msg/VaultSettleAssetPayment"
+	Msg_VaultRejectAssetPayment_FullMethodName = "/provlabs.vault.v1.Msg/VaultRejectAssetPayment"
 )
 
 // MsgClient is the client API for Msg service.
@@ -121,12 +124,16 @@ type MsgClient interface {
 	UpdateParams(ctx context.Context, in *MsgUpdateParamsRequest, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
 	// UpdateVaultAUMFeeBips updates the AUM fee bips for a specific vault.
 	UpdateVaultAUMFeeBips(ctx context.Context, in *MsgUpdateVaultAUMFeeBipsRequest, opts ...grpc.CallOption) (*MsgUpdateVaultAUMFeeBipsResponse, error)
-	// CreateRwaPayment initiates a P2P payment from the vault to a target account.
-	// May be signed by the vault admin or the configured asset manager.
-	CreateRwaPayment(ctx context.Context, in *MsgCreateRwaPaymentRequest, opts ...grpc.CallOption) (*MsgCreateRwaPaymentResponse, error)
-	// AcceptRwaPayment accepts an incoming P2P payment request for the vault.
-	// May be signed by the vault admin or the configured asset manager.
-	AcceptRwaPayment(ctx context.Context, in *MsgAcceptRwaPaymentRequest, opts ...grpc.CallOption) (*MsgAcceptRwaPaymentResponse, error)
+	// UpdateVaultAssetNAV manually sets or updates a localized NAV for a specific denom within a vault.
+	UpdateVaultAssetNAV(ctx context.Context, in *MsgUpdateVaultAssetNAVRequest, opts ...grpc.CallOption) (*MsgUpdateVaultAssetNAVResponse, error)
+	// VaultDepositAsset initiates a P2P payment proposal where the vault expects to receive an asset.
+	VaultDepositAsset(ctx context.Context, in *MsgVaultDepositAssetRequest, opts ...grpc.CallOption) (*MsgVaultDepositAssetResponse, error)
+	// VaultWithdrawAsset initiates a P2P payment proposal where the vault expects to give an asset.
+	VaultWithdrawAsset(ctx context.Context, in *MsgVaultWithdrawAssetRequest, opts ...grpc.CallOption) (*MsgVaultWithdrawAssetResponse, error)
+	// VaultSettleAssetPayment finalizes a trade proposed by the Asset Manager where the vault is the target.
+	VaultSettleAssetPayment(ctx context.Context, in *MsgVaultSettleAssetPaymentRequest, opts ...grpc.CallOption) (*MsgVaultSettleAssetPaymentResponse, error)
+	// VaultRejectAssetPayment cancels/declines a trade proposal targeting the vault.
+	VaultRejectAssetPayment(ctx context.Context, in *MsgVaultRejectAssetPaymentRequest, opts ...grpc.CallOption) (*MsgVaultRejectAssetPaymentResponse, error)
 }
 
 type msgClient struct {
@@ -417,20 +424,50 @@ func (c *msgClient) UpdateVaultAUMFeeBips(ctx context.Context, in *MsgUpdateVaul
 	return out, nil
 }
 
-func (c *msgClient) CreateRwaPayment(ctx context.Context, in *MsgCreateRwaPaymentRequest, opts ...grpc.CallOption) (*MsgCreateRwaPaymentResponse, error) {
+func (c *msgClient) UpdateVaultAssetNAV(ctx context.Context, in *MsgUpdateVaultAssetNAVRequest, opts ...grpc.CallOption) (*MsgUpdateVaultAssetNAVResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(MsgCreateRwaPaymentResponse)
-	err := c.cc.Invoke(ctx, Msg_CreateRwaPayment_FullMethodName, in, out, cOpts...)
+	out := new(MsgUpdateVaultAssetNAVResponse)
+	err := c.cc.Invoke(ctx, Msg_UpdateVaultAssetNAV_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *msgClient) AcceptRwaPayment(ctx context.Context, in *MsgAcceptRwaPaymentRequest, opts ...grpc.CallOption) (*MsgAcceptRwaPaymentResponse, error) {
+func (c *msgClient) VaultDepositAsset(ctx context.Context, in *MsgVaultDepositAssetRequest, opts ...grpc.CallOption) (*MsgVaultDepositAssetResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(MsgAcceptRwaPaymentResponse)
-	err := c.cc.Invoke(ctx, Msg_AcceptRwaPayment_FullMethodName, in, out, cOpts...)
+	out := new(MsgVaultDepositAssetResponse)
+	err := c.cc.Invoke(ctx, Msg_VaultDepositAsset_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) VaultWithdrawAsset(ctx context.Context, in *MsgVaultWithdrawAssetRequest, opts ...grpc.CallOption) (*MsgVaultWithdrawAssetResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgVaultWithdrawAssetResponse)
+	err := c.cc.Invoke(ctx, Msg_VaultWithdrawAsset_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) VaultSettleAssetPayment(ctx context.Context, in *MsgVaultSettleAssetPaymentRequest, opts ...grpc.CallOption) (*MsgVaultSettleAssetPaymentResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgVaultSettleAssetPaymentResponse)
+	err := c.cc.Invoke(ctx, Msg_VaultSettleAssetPayment_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) VaultRejectAssetPayment(ctx context.Context, in *MsgVaultRejectAssetPaymentRequest, opts ...grpc.CallOption) (*MsgVaultRejectAssetPaymentResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgVaultRejectAssetPaymentResponse)
+	err := c.cc.Invoke(ctx, Msg_VaultRejectAssetPayment_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -507,12 +544,16 @@ type MsgServer interface {
 	UpdateParams(context.Context, *MsgUpdateParamsRequest) (*MsgUpdateParamsResponse, error)
 	// UpdateVaultAUMFeeBips updates the AUM fee bips for a specific vault.
 	UpdateVaultAUMFeeBips(context.Context, *MsgUpdateVaultAUMFeeBipsRequest) (*MsgUpdateVaultAUMFeeBipsResponse, error)
-	// CreateRwaPayment initiates a P2P payment from the vault to a target account.
-	// May be signed by the vault admin or the configured asset manager.
-	CreateRwaPayment(context.Context, *MsgCreateRwaPaymentRequest) (*MsgCreateRwaPaymentResponse, error)
-	// AcceptRwaPayment accepts an incoming P2P payment request for the vault.
-	// May be signed by the vault admin or the configured asset manager.
-	AcceptRwaPayment(context.Context, *MsgAcceptRwaPaymentRequest) (*MsgAcceptRwaPaymentResponse, error)
+	// UpdateVaultAssetNAV manually sets or updates a localized NAV for a specific denom within a vault.
+	UpdateVaultAssetNAV(context.Context, *MsgUpdateVaultAssetNAVRequest) (*MsgUpdateVaultAssetNAVResponse, error)
+	// VaultDepositAsset initiates a P2P payment proposal where the vault expects to receive an asset.
+	VaultDepositAsset(context.Context, *MsgVaultDepositAssetRequest) (*MsgVaultDepositAssetResponse, error)
+	// VaultWithdrawAsset initiates a P2P payment proposal where the vault expects to give an asset.
+	VaultWithdrawAsset(context.Context, *MsgVaultWithdrawAssetRequest) (*MsgVaultWithdrawAssetResponse, error)
+	// VaultSettleAssetPayment finalizes a trade proposed by the Asset Manager where the vault is the target.
+	VaultSettleAssetPayment(context.Context, *MsgVaultSettleAssetPaymentRequest) (*MsgVaultSettleAssetPaymentResponse, error)
+	// VaultRejectAssetPayment cancels/declines a trade proposal targeting the vault.
+	VaultRejectAssetPayment(context.Context, *MsgVaultRejectAssetPaymentRequest) (*MsgVaultRejectAssetPaymentResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -607,11 +648,20 @@ func (UnimplementedMsgServer) UpdateParams(context.Context, *MsgUpdateParamsRequ
 func (UnimplementedMsgServer) UpdateVaultAUMFeeBips(context.Context, *MsgUpdateVaultAUMFeeBipsRequest) (*MsgUpdateVaultAUMFeeBipsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateVaultAUMFeeBips not implemented")
 }
-func (UnimplementedMsgServer) CreateRwaPayment(context.Context, *MsgCreateRwaPaymentRequest) (*MsgCreateRwaPaymentResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateRwaPayment not implemented")
+func (UnimplementedMsgServer) UpdateVaultAssetNAV(context.Context, *MsgUpdateVaultAssetNAVRequest) (*MsgUpdateVaultAssetNAVResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateVaultAssetNAV not implemented")
 }
-func (UnimplementedMsgServer) AcceptRwaPayment(context.Context, *MsgAcceptRwaPaymentRequest) (*MsgAcceptRwaPaymentResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AcceptRwaPayment not implemented")
+func (UnimplementedMsgServer) VaultDepositAsset(context.Context, *MsgVaultDepositAssetRequest) (*MsgVaultDepositAssetResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VaultDepositAsset not implemented")
+}
+func (UnimplementedMsgServer) VaultWithdrawAsset(context.Context, *MsgVaultWithdrawAssetRequest) (*MsgVaultWithdrawAssetResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VaultWithdrawAsset not implemented")
+}
+func (UnimplementedMsgServer) VaultSettleAssetPayment(context.Context, *MsgVaultSettleAssetPaymentRequest) (*MsgVaultSettleAssetPaymentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VaultSettleAssetPayment not implemented")
+}
+func (UnimplementedMsgServer) VaultRejectAssetPayment(context.Context, *MsgVaultRejectAssetPaymentRequest) (*MsgVaultRejectAssetPaymentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VaultRejectAssetPayment not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 func (UnimplementedMsgServer) testEmbeddedByValue()             {}
@@ -1138,38 +1188,92 @@ func _Msg_UpdateVaultAUMFeeBips_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_CreateRwaPayment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgCreateRwaPaymentRequest)
+func _Msg_UpdateVaultAssetNAV_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateVaultAssetNAVRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).CreateRwaPayment(ctx, in)
+		return srv.(MsgServer).UpdateVaultAssetNAV(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Msg_CreateRwaPayment_FullMethodName,
+		FullMethod: Msg_UpdateVaultAssetNAV_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).CreateRwaPayment(ctx, req.(*MsgCreateRwaPaymentRequest))
+		return srv.(MsgServer).UpdateVaultAssetNAV(ctx, req.(*MsgUpdateVaultAssetNAVRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_AcceptRwaPayment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgAcceptRwaPaymentRequest)
+func _Msg_VaultDepositAsset_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgVaultDepositAssetRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MsgServer).AcceptRwaPayment(ctx, in)
+		return srv.(MsgServer).VaultDepositAsset(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Msg_AcceptRwaPayment_FullMethodName,
+		FullMethod: Msg_VaultDepositAsset_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).AcceptRwaPayment(ctx, req.(*MsgAcceptRwaPaymentRequest))
+		return srv.(MsgServer).VaultDepositAsset(ctx, req.(*MsgVaultDepositAssetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_VaultWithdrawAsset_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgVaultWithdrawAssetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).VaultWithdrawAsset(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_VaultWithdrawAsset_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).VaultWithdrawAsset(ctx, req.(*MsgVaultWithdrawAssetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_VaultSettleAssetPayment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgVaultSettleAssetPaymentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).VaultSettleAssetPayment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_VaultSettleAssetPayment_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).VaultSettleAssetPayment(ctx, req.(*MsgVaultSettleAssetPaymentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_VaultRejectAssetPayment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgVaultRejectAssetPaymentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).VaultRejectAssetPayment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_VaultRejectAssetPayment_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).VaultRejectAssetPayment(ctx, req.(*MsgVaultRejectAssetPaymentRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1294,12 +1398,24 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Msg_UpdateVaultAUMFeeBips_Handler,
 		},
 		{
-			MethodName: "CreateRwaPayment",
-			Handler:    _Msg_CreateRwaPayment_Handler,
+			MethodName: "UpdateVaultAssetNAV",
+			Handler:    _Msg_UpdateVaultAssetNAV_Handler,
 		},
 		{
-			MethodName: "AcceptRwaPayment",
-			Handler:    _Msg_AcceptRwaPayment_Handler,
+			MethodName: "VaultDepositAsset",
+			Handler:    _Msg_VaultDepositAsset_Handler,
+		},
+		{
+			MethodName: "VaultWithdrawAsset",
+			Handler:    _Msg_VaultWithdrawAsset_Handler,
+		},
+		{
+			MethodName: "VaultSettleAssetPayment",
+			Handler:    _Msg_VaultSettleAssetPayment_Handler,
+		},
+		{
+			MethodName: "VaultRejectAssetPayment",
+			Handler:    _Msg_VaultRejectAssetPayment_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

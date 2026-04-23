@@ -16,8 +16,8 @@ import (
 // getNetAssetValue retrieves the Net Asset Value (NAV) for a marker, prioritizing
 // the vault module's local high-precision NAV store before falling back to the
 // marker module's standard NAV.
-func (k Keeper) getNetAssetValue(ctx sdk.Context, markerDenom, priceDenom string) (*types.NetAssetValue, error) {
-	localNav, err := k.NetAssetValues.Get(ctx, collections.Join(markerDenom, priceDenom))
+func (k Keeper) getNetAssetValue(ctx sdk.Context, vaultAddr sdk.AccAddress, markerDenom, priceDenom string) (*types.VaultNAV, error) {
+	localNav, err := k.NetAssetValues.Get(ctx, collections.Join(vaultAddr, markerDenom))
 	if err == nil {
 		return &localNav, nil
 	}
@@ -33,7 +33,7 @@ func (k Keeper) getNetAssetValue(ctx sdk.Context, markerDenom, priceDenom string
 		return nil, nil
 	}
 
-	return &types.NetAssetValue{
+	return &types.VaultNAV{
 		Price:              markerNav.Price,
 		Volume:             math.NewIntFromUint64(markerNav.Volume).String(),
 		UpdatedBlockHeight: markerNav.UpdatedBlockHeight,
@@ -85,8 +85,8 @@ func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom string, vault types.
 		return math.NewInt(1), math.NewInt(1), nil
 	}
 
-	fwd, errF := k.getNetAssetValue(ctx, srcDenom, underlyingAsset)
-	rev, errR := k.getNetAssetValue(ctx, underlyingAsset, srcDenom)
+	fwd, errF := k.getNetAssetValue(ctx, vault.GetAddress(), srcDenom, underlyingAsset)
+	rev, errR := k.getNetAssetValue(ctx, vault.GetAddress(), underlyingAsset, srcDenom)
 
 	if fwd == nil && rev == nil {
 		if errF != nil {
@@ -192,7 +192,15 @@ func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccoun
 	if vault.Paused {
 		return vault.PausedBalance.Amount, nil
 	}
-	balances := k.BankKeeper.GetAllBalances(ctx, vault.PrincipalMarkerAddress())
+	principalAddr := vault.PrincipalMarkerAddress()
+	balances := k.BankKeeper.GetAllBalances(ctx, principalAddr)
+
+	// INCLUDE ASSETS ON HOLD (Task 4.2)
+	holds, err := k.HoldKeeper.GetAllHolds(ctx, principalAddr)
+	if err == nil {
+		balances = balances.Add(holds...)
+	}
+
 	total := math.ZeroInt()
 	for _, balance := range balances {
 		if balance.Denom == vault.TotalShares.Denom {
@@ -201,16 +209,16 @@ func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccoun
 
 		marker, err := k.MarkerKeeper.GetMarkerByDenom(ctx, balance.Denom)
 		if err == nil && marker != nil && marker.GetSupply().Amount.Equal(math.OneInt()) {
-			nav, err := k.getNetAssetValue(ctx, balance.Denom, vault.UnderlyingAsset)
+			nav, err := k.getNetAssetValue(ctx, vault.GetAddress(), balance.Denom, vault.UnderlyingAsset)
 			if err != nil {
 				return math.Int{}, fmt.Errorf("failed to get nav for nft %s: %w", balance.Denom, err)
 			}
 			if nav == nil {
-				return math.Int{}, fmt.Errorf("nav not found for nft %s/%s", balance.Denom, vault.UnderlyingAsset)
+				return math.Int{}, fmt.Errorf("strict valuation failure: no nav found for nft %s/%s", balance.Denom, vault.UnderlyingAsset)
 			}
 			vol, ok := math.NewIntFromString(nav.Volume)
 			if !ok || vol.IsZero() {
-				return math.Int{}, fmt.Errorf("invalid volume for nft %s nav", balance.Denom)
+				return math.Int{}, fmt.Errorf("strict valuation failure: invalid volume for nft %s nav", balance.Denom)
 			}
 
 			// Value = (Balance * Price) / Volume
@@ -231,12 +239,12 @@ func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccoun
 			}
 
 		if !vault.IsAcceptedDenom(balance.Denom) {
-			continue
+			return math.Int{}, fmt.Errorf("strict valuation failure: balance held in unaccepted denom %s", balance.Denom)
 		}
 
 		val, err := k.ToUnderlyingAssetAmount(ctx, vault, balance)
 		if err != nil {
-			return math.Int{}, fmt.Errorf("failed to convert balance to underlying: %w", err)
+			return math.Int{}, fmt.Errorf("strict valuation failure: failed to convert balance %s to underlying: %w", balance.Denom, err)
 		}
 		total = total.Add(val)
 	}
@@ -249,6 +257,12 @@ func (k Keeper) GetLiquidityBreakdown(ctx sdk.Context, vault types.VaultAccount)
 	principalAddr := vault.PrincipalMarkerAddress()
 	balances := k.BankKeeper.GetAllBalances(ctx, principalAddr)
 
+	// INCLUDE ASSETS ON HOLD
+	holds, err := k.HoldKeeper.GetAllHolds(ctx, principalAddr)
+	if err == nil {
+		balances = balances.Add(holds...)
+	}
+
 	cash := math.ZeroInt()
 	collateral := math.ZeroInt()
 
@@ -260,16 +274,16 @@ func (k Keeper) GetLiquidityBreakdown(ctx sdk.Context, vault types.VaultAccount)
 		// Check if this is a unique NFT marker (supply = 1)
 		marker, err := k.MarkerKeeper.GetMarkerByDenom(ctx, coin.Denom)
 		if err == nil && marker != nil && marker.GetSupply().Amount.Equal(math.OneInt()) {
-			nav, err := k.getNetAssetValue(ctx, coin.Denom, vault.UnderlyingAsset)
+			nav, err := k.getNetAssetValue(ctx, vault.GetAddress(), coin.Denom, vault.UnderlyingAsset)
 			if err != nil {
 				return types.LiquidityBreakdown{}, fmt.Errorf("failed to get nav for nft %s: %w", coin.Denom, err)
 			}
 			if nav == nil {
-				return types.LiquidityBreakdown{}, fmt.Errorf("nav not found for nft %s/%s", coin.Denom, vault.UnderlyingAsset)
+				return types.LiquidityBreakdown{}, fmt.Errorf("strict valuation failure: no nav found for nft %s/%s", coin.Denom, vault.UnderlyingAsset)
 			}
 			vol, ok := math.NewIntFromString(nav.Volume)
 			if !ok || vol.IsZero() {
-				return types.LiquidityBreakdown{}, fmt.Errorf("invalid volume for nft %s nav", coin.Denom)
+				return types.LiquidityBreakdown{}, fmt.Errorf("strict valuation failure: invalid volume for nft %s nav", coin.Denom)
 			}
 
 			assetValue := coin.Amount.Mul(nav.Price.Amount).Quo(vol)
@@ -287,9 +301,12 @@ func (k Keeper) GetLiquidityBreakdown(ctx sdk.Context, vault types.VaultAccount)
 			cash = cash.Add(coin.Amount)
 		} else if vault.IsAcceptedDenom(coin.Denom) {
 			val, err := k.ToUnderlyingAssetAmount(ctx, vault, coin)
-			if err == nil {
-				cash = cash.Add(val)
+			if err != nil {
+				return types.LiquidityBreakdown{}, fmt.Errorf("strict valuation failure: failed to convert balance %s to underlying: %w", coin.Denom, err)
 			}
+			cash = cash.Add(val)
+		} else {
+			return types.LiquidityBreakdown{}, fmt.Errorf("strict valuation failure: balance held in unaccepted denom %s", coin.Denom)
 		}
 	}
 

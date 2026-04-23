@@ -58,11 +58,11 @@ func (s *TestSuite) TestQueryServer_Vault() {
 		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(payment, 1), s.adminAddr)
 
 		// Set NAVs for the supply=1 markers to avoid valuation failures
-		s.Require().NoError(s.k.NetAssetValues.Set(s.ctx, collections.Join(payment, underlying), types.NetAssetValue{
+		s.Require().NoError(s.k.NetAssetValues.Set(s.ctx, collections.Join(addr1, payment), types.VaultNAV{
 			Price:  sdk.NewInt64Coin(underlying, 1),
 			Volume: math.OneInt().String(),
 		}))
-		s.Require().NoError(s.k.NetAssetValues.Set(s.ctx, collections.Join(underlying, underlying), types.NetAssetValue{
+		s.Require().NoError(s.k.NetAssetValues.Set(s.ctx, collections.Join(addr1, underlying), types.VaultNAV{
 			Price:  sdk.NewInt64Coin(underlying, 1),
 			Volume: math.OneInt().String(),
 		}))
@@ -517,7 +517,7 @@ func (s *TestSuite) TestQueryServer_EstimateSwapIn() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
 				// Ensure supply=1 markers have a NAV
 				if s.k.BankKeeper.GetSupply(s.ctx, underlyingDenom).Amount.Equal(math.OneInt()) {
-					s.k.NetAssetValues.Set(s.ctx, collections.Join(underlyingDenom, underlyingDenom), types.NetAssetValue{
+					s.k.NetAssetValues.Set(s.ctx, collections.Join(types.GetVaultAddress(shareDenom), underlyingDenom), types.VaultNAV{
 						Price:  sdk.NewCoin(underlyingDenom, math.OneInt()),
 						Volume: math.OneInt().String(),
 					})
@@ -542,7 +542,7 @@ func (s *TestSuite) TestQueryServer_EstimateSwapIn() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(paymentDenom, math.NewInt(1000)), s.adminAddr)
 				// Ensure supply=1 markers have a NAV
 				if s.k.BankKeeper.GetSupply(s.ctx, underlyingDenom).Amount.Equal(math.OneInt()) {
-					s.k.NetAssetValues.Set(s.ctx, collections.Join(paymentDenom, underlyingDenom), types.NetAssetValue{
+					s.k.NetAssetValues.Set(s.ctx, collections.Join(types.GetVaultAddress(shareDenom), paymentDenom), types.VaultNAV{
 						Price:  sdk.NewCoin(underlyingDenom, math.OneInt()),
 						Volume: math.OneInt().String(),
 					})
@@ -667,7 +667,7 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
 				// Ensure supply=1 markers have a NAV
 				if s.k.BankKeeper.GetSupply(s.ctx, underlyingDenom).Amount.Equal(math.OneInt()) {
-					s.k.NetAssetValues.Set(s.ctx, collections.Join(underlyingDenom, underlyingDenom), types.NetAssetValue{
+					s.k.NetAssetValues.Set(s.ctx, collections.Join(types.GetVaultAddress(shareDenom), underlyingDenom), types.VaultNAV{
 						Price:  sdk.NewCoin(underlyingDenom, math.OneInt()),
 						Volume: math.OneInt().String(),
 					})
@@ -701,7 +701,7 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(paymentDenom, math.NewInt(1000)), s.adminAddr)
 				// Ensure supply=1 markers have a NAV
 				if s.k.BankKeeper.GetSupply(s.ctx, underlyingDenom).Amount.Equal(math.OneInt()) {
-					s.k.NetAssetValues.Set(s.ctx, collections.Join(paymentDenom, underlyingDenom), types.NetAssetValue{
+					s.k.NetAssetValues.Set(s.ctx, collections.Join(types.GetVaultAddress(shareDenom), paymentDenom), types.VaultNAV{
 						Price:  sdk.NewCoin(underlyingDenom, math.OneInt()),
 						Volume: math.OneInt().String(),
 					})

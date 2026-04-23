@@ -99,8 +99,20 @@ func (m *MockExchangeKeeper) CreatePayment(_ context.Context, _ *exchangetypes.M
 func (m *MockExchangeKeeper) AcceptPayment(_ context.Context, _ *exchangetypes.MsgAcceptPaymentRequest) (*exchangetypes.MsgAcceptPaymentResponse, error) {
 	return &exchangetypes.MsgAcceptPaymentResponse{}, nil
 }
+func (m *MockExchangeKeeper) RejectPayment(_ context.Context, _ *exchangetypes.MsgRejectPaymentRequest) (*exchangetypes.MsgRejectPaymentResponse, error) {
+	return &exchangetypes.MsgRejectPaymentResponse{}, nil
+}
 func (m *MockExchangeKeeper) GetPayment(_ context.Context, _ *exchangetypes.QueryGetPaymentRequest) (*exchangetypes.QueryGetPaymentResponse, error) {
 	return &exchangetypes.QueryGetPaymentResponse{}, nil
+}
+
+type MockHoldKeeper struct{}
+
+func (m *MockHoldKeeper) GetHoldCoin(_ sdk.Context, _ sdk.AccAddress, _ string) (sdk.Coin, error) {
+	return sdk.Coin{}, nil
+}
+func (m *MockHoldKeeper) GetAllHolds(_ sdk.Context, _ sdk.AccAddress) (sdk.Coins, error) {
+	return sdk.Coins{}, nil
 }
 
 // NewVaultKeeper returns an instance of the Keeper with all dependencies mocked.
@@ -118,6 +130,7 @@ func NewVaultKeeper(
 	types.RegisterInterfaces(cfg.InterfaceRegistry)
 	authMock := NewMockAuthKeeper()
 	exchangeMock := &MockExchangeKeeper{}
+	holdMock := &MockHoldKeeper{}
 
 	k := keeper.NewKeeper(
 		cfg.Codec,
@@ -131,6 +144,7 @@ func NewVaultKeeper(
 		nil,
 		nil,
 		nil,
+		holdMock,
 		exchangeMock,
 	)
 

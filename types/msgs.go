@@ -43,8 +43,11 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgUpdateMinSwapOutValueRequest)(nil),
 	(*MsgUpdateMaxSwapInValueRequest)(nil),
 	(*MsgUpdateMaxSwapOutValueRequest)(nil),
-	(*MsgCreateRwaPaymentRequest)(nil),
-	(*MsgAcceptRwaPaymentRequest)(nil),
+	(*MsgUpdateVaultAssetNAVRequest)(nil),
+	(*MsgVaultDepositAssetRequest)(nil),
+	(*MsgVaultWithdrawAssetRequest)(nil),
+	(*MsgVaultSettleAssetPaymentRequest)(nil),
+	(*MsgVaultRejectAssetPaymentRequest)(nil),
 }
 
 // ValidateBasic performs stateless validation on MsgCreateVaultRequest.
@@ -526,8 +529,28 @@ func (m MsgUpdateMaxSwapOutValueRequest) ValidateBasic() error {
 	return nil
 }
 
-// ValidateBasic performs stateless validation on MsgCreateRwaPaymentRequest.
-func (m MsgCreateRwaPaymentRequest) ValidateBasic() error {
+// ValidateBasic performs stateless validation on MsgUpdateVaultAssetNAVRequest.
+func (m MsgUpdateVaultAssetNAVRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		return fmt.Errorf("invalid authority address: %q: %w", m.Authority, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	if err := sdk.ValidateDenom(m.Denom); err != nil {
+		return fmt.Errorf("invalid denom: %q: %w", m.Denom, err)
+	}
+	if err := m.Nav.Price.Validate(); err != nil {
+		return fmt.Errorf("invalid nav price: %w", err)
+	}
+	if _, ok := sdkmath.NewIntFromString(m.Nav.Volume); !ok {
+		return fmt.Errorf("invalid nav volume: %s", m.Nav.Volume)
+	}
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgVaultDepositAssetRequest.
+func (m MsgVaultDepositAssetRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
 		return fmt.Errorf("invalid authority address: %q: %w", m.Authority, err)
 	}
@@ -537,14 +560,14 @@ func (m MsgCreateRwaPaymentRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.Target); err != nil {
 		return fmt.Errorf("invalid target address: %q: %w", m.Target, err)
 	}
-	if err := m.SourceAmount.Validate(); err != nil {
-		return fmt.Errorf("invalid source amount: %w", err)
+	if err := m.Asset.Validate(); err != nil {
+		return fmt.Errorf("invalid asset amount: %w", err)
 	}
-	if err := m.TargetAmount.Validate(); err != nil {
-		return fmt.Errorf("invalid target amount: %w", err)
+	if err := m.Payment.Validate(); err != nil {
+		return fmt.Errorf("invalid payment amount: %w", err)
 	}
-	if m.SourceAmount.IsZero() && m.TargetAmount.IsZero() {
-		return errors.New("source amount and target amount cannot both be zero")
+	if m.Asset.IsZero() && m.Payment.IsZero() {
+		return errors.New("asset and payment cannot both be zero")
 	}
 	if m.ExternalId == "" {
 		return errors.New("external id cannot be empty")
@@ -552,8 +575,51 @@ func (m MsgCreateRwaPaymentRequest) ValidateBasic() error {
 	return nil
 }
 
-// ValidateBasic performs stateless validation on MsgAcceptRwaPaymentRequest.
-func (m MsgAcceptRwaPaymentRequest) ValidateBasic() error {
+// ValidateBasic performs stateless validation on MsgVaultWithdrawAssetRequest.
+func (m MsgVaultWithdrawAssetRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		return fmt.Errorf("invalid authority address: %q: %w", m.Authority, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.Target); err != nil {
+		return fmt.Errorf("invalid target address: %q: %w", m.Target, err)
+	}
+	if err := m.Asset.Validate(); err != nil {
+		return fmt.Errorf("invalid asset amount: %w", err)
+	}
+	if err := m.Payment.Validate(); err != nil {
+		return fmt.Errorf("invalid payment amount: %w", err)
+	}
+	if m.Asset.IsZero() && m.Payment.IsZero() {
+		return errors.New("asset and payment cannot both be zero")
+	}
+	if m.ExternalId == "" {
+		return errors.New("external id cannot be empty")
+	}
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgVaultSettleAssetPaymentRequest.
+func (m MsgVaultSettleAssetPaymentRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		return fmt.Errorf("invalid authority address: %q: %w", m.Authority, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.Source); err != nil {
+		return fmt.Errorf("invalid source address: %q: %w", m.Source, err)
+	}
+	if m.ExternalId == "" {
+		return errors.New("external id cannot be empty")
+	}
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgVaultRejectAssetPaymentRequest.
+func (m MsgVaultRejectAssetPaymentRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
 		return fmt.Errorf("invalid authority address: %q: %w", m.Authority, err)
 	}

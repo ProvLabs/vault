@@ -558,12 +558,12 @@ func (s *TestSuite) TestGetTVVInUnderlyingAsset_IncludesNFTMarkers() {
 
 	// 4. Set NAV for the NFT (Price = 500 ylds, Volume = 1)
 	// We use the new local store via a helper or direct set if we want to test the new path.
-	nav := types.NetAssetValue{
+	nav := types.VaultNAV{
 		Price:              sdk.NewInt64Coin(underlyingDenom, 500),
 		Volume:             math.OneInt().String(),
 		UpdatedBlockHeight: uint64(s.ctx.BlockHeight()),
 	}
-	err := s.k.NetAssetValues.Set(s.ctx, collections.Join(nftDenom, underlyingDenom), nav)
+	err := s.k.NetAssetValues.Set(s.ctx, collections.Join(vault.GetAddress(), nftDenom), nav)
 	s.Require().NoError(err, "setting local NFT nav should succeed")
 
 	// 4. Verify TVV includes the NFT value

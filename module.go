@@ -92,11 +92,12 @@ type AppModule struct {
 	bankKeeper      types.BankKeeper
 	nameKeeper      types.NameKeeper
 	attributeKeeper types.AttributeKeeper
+	holdKeeper      types.HoldKeeper
 	exchangeKeeper  types.ExchangeMsgServer
 }
 
 // NewAppModule creates a new AppModule instance.
-func NewAppModule(keeper *keeper.Keeper, mk types.MarkerKeeper, bk types.BankKeeper, nk types.NameKeeper, attk types.AttributeKeeper, ek types.ExchangeMsgServer, addressCodec address.Codec) AppModule {
+func NewAppModule(keeper *keeper.Keeper, mk types.MarkerKeeper, bk types.BankKeeper, nk types.NameKeeper, attk types.AttributeKeeper, hk types.HoldKeeper, ek types.ExchangeMsgServer, addressCodec address.Codec) AppModule {
 	return AppModule{
 		AppModuleBasic:  NewAppModuleBasic(),
 		keeper:          keeper,
@@ -105,6 +106,7 @@ func NewAppModule(keeper *keeper.Keeper, mk types.MarkerKeeper, bk types.BankKee
 		bankKeeper:      bk,
 		nameKeeper:      nk,
 		attributeKeeper: attk,
+		holdKeeper:      hk,
 		exchangeKeeper:  ek,
 	}
 }
@@ -539,6 +541,85 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						{ProtoField: "aum_fee_bips"},
 					},
 				},
+				{
+					RpcMethod: "UpdateVaultAssetNAV",
+					Use:       "update-vault-asset-nav [authority] [vault_address] [denom] [price_coin] [volume]",
+					Alias:     []string{"uvan"},
+					Short:     "Manually update the NAV for a specific asset within a vault",
+					Long:      "Sets a localized Net Asset Value (NAV) for an asset. Price coin is the total value for the given volume. Volume is a high-precision integer string.",
+					Example:   fmt.Sprintf("%s update-vault-asset-nav %s %s rwa.nft.001 500nhash 1", txStart, exampleAuthorityAddr, exampleVaultAddr),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "authority"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "denom"},
+					},
+					FlagOptions: map[string]*autocliv1.FlagOptions{
+						"nav": {
+							Name:  "nav",
+							Usage: "The new localized NAV object (JSON). Prefer positional args for simple updates.",
+						},
+					},
+				},
+				{
+					RpcMethod: "VaultDepositAsset",
+					Use:       "deposit-asset [authority] [vault_address] [target] [asset_coins] [payment_coins] [external_id]",
+					Alias:     []string{"da"},
+					Short:     "Vault proposes to receive an asset in exchange for payment (e.g. buying an NFT)",
+					Long:      "Initiates a P2P trade where the vault is the source, giving 'payment_coins' and expecting 'asset_coins' from 'target'.",
+					Example:   fmt.Sprintf("%s deposit-asset %s %s %s 1rwa.nft.001 1000000usdc trade-123", txStart, exampleAuthorityAddr, exampleVaultAddr, exampleOwnerAddr),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "authority"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "target"},
+						{ProtoField: "asset"},
+						{ProtoField: "payment"},
+						{ProtoField: "external_id"},
+					},
+				},
+				{
+					RpcMethod: "VaultWithdrawAsset",
+					Use:       "withdraw-asset [authority] [vault_address] [target] [asset_coins] [payment_coins] [external_id]",
+					Alias:     []string{"wa"},
+					Short:     "Vault proposes to give an asset in exchange for payment (e.g. selling an NFT)",
+					Long:      "Initiates a P2P trade where the vault is the source, giving 'asset_coins' and expecting 'payment_coins' from 'target'.",
+					Example:   fmt.Sprintf("%s withdraw-asset %s %s %s 1rwa.nft.001 1100000usdc sale-456", txStart, exampleAuthorityAddr, exampleVaultAddr, exampleOwnerAddr),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "authority"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "target"},
+						{ProtoField: "asset"},
+						{ProtoField: "payment"},
+						{ProtoField: "external_id"},
+					},
+				},
+				{
+					RpcMethod: "VaultSettleAssetPayment",
+					Use:       "settle-asset-payment [authority] [vault_address] [source] [external_id]",
+					Alias:     []string{"sap"},
+					Short:     "Accept and settle an incoming trade proposal targeting the vault",
+					Long:      "Finalizes a P2P payment where the vault is the target. Triggers atomic NAV discovery and share price reconciliation.",
+					Example:   fmt.Sprintf("%s settle-asset-payment %s %s %s trade-123", txStart, exampleAuthorityAddr, exampleVaultAddr, exampleOwnerAddr),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "authority"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "source"},
+						{ProtoField: "external_id"},
+					},
+				},
+				{
+					RpcMethod: "VaultRejectAssetPayment",
+					Use:       "reject-asset-payment [authority] [vault_address] [source] [external_id]",
+					Alias:     []string{"rap"},
+					Short:     "Reject an incoming trade proposal targeting the vault",
+					Long:      "Declines a pending P2P payment request made by another account targeting this vault.",
+					Example:   fmt.Sprintf("%s reject-asset-payment %s %s %s junk-trade", txStart, exampleAuthorityAddr, exampleVaultAddr, exampleOwnerAddr),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "authority"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "source"},
+						{ProtoField: "external_id"},
+					},
+				},
 			},
 		},
 		Query: &autocliv1.ServiceCommandDescriptor{
@@ -639,6 +720,7 @@ type ModuleInputs struct {
 	BankKeeper    types.BankKeeper
 	NameKeeper     types.NameKeeper
 	AttrKeeper     types.AttributeKeeper
+	HoldKeeper     types.HoldKeeper
 	ExchangeKeeper types.ExchangeMsgServer
 }
 
@@ -667,9 +749,10 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.BankKeeper,
 		in.NameKeeper,
 		in.AttrKeeper,
+		in.HoldKeeper,
 		in.ExchangeKeeper,
 	)
-	m := NewAppModule(k, in.MarkerKeeper, in.BankKeeper, in.NameKeeper, in.AttrKeeper, in.ExchangeKeeper, in.AddressCodec)
+	m := NewAppModule(k, in.MarkerKeeper, in.BankKeeper, in.NameKeeper, in.AttrKeeper, in.HoldKeeper, in.ExchangeKeeper, in.AddressCodec)
 	return ModuleOutputs{Keeper: k, Module: m}
 }
 

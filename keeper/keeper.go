@@ -30,8 +30,10 @@ type Keeper struct {
 	MarkerKeeper types.MarkerKeeper
 	BankKeeper   types.BankKeeper
 	NameKeeper   types.NameKeeper
-	AttrKeeper            types.AttributeKeeper
+	AttrKeeper   types.AttributeKeeper
+	HoldKeeper   types.HoldKeeper
 	ExchangeKeeper        types.ExchangeMsgServer
+
 
 
 	Params                collections.Item[types.Params]
@@ -41,7 +43,7 @@ type Keeper struct {
 	FeeTimeoutQueue       *queue.FeeTimeoutQueue
 	PendingSwapOutQueue   *queue.PendingSwapOutQueue
 
-	NetAssetValues collections.Map[collections.Pair[string, string], types.NetAssetValue]
+	NetAssetValues collections.Map[collections.Pair[sdk.AccAddress, string], types.VaultNAV]
 }
 
 // NewMsgServer creates a new Keeper for the module.
@@ -56,6 +58,7 @@ func NewKeeper(
 	bankkeeper types.BankKeeper,
 	namekeeper types.NameKeeper,
 	attributekeeper types.AttributeKeeper,
+	holdkeeper types.HoldKeeper,
 	exchangekeeper types.ExchangeMsgServer,
 ) *Keeper {
 	if _, err := addressCodec.BytesToString(authority); err != nil {
@@ -76,12 +79,13 @@ func NewKeeper(
 		PayoutTimeoutQueue:    queue.NewPayoutTimeoutQueue(builder),
 		FeeTimeoutQueue:       queue.NewFeeTimeoutQueue(builder),
 		PendingSwapOutQueue:   queue.NewPendingSwapOutQueue(builder, cdc),
-		NetAssetValues:        collections.NewMap(builder, types.NetAssetValueKeyPrefix, types.NetAssetValueName, collections.PairKeyCodec(collections.StringKey, collections.StringKey), codec.CollValue[types.NetAssetValue](cdc)),
+		NetAssetValues:        collections.NewMap(builder, types.NetAssetValueKeyPrefix, types.NetAssetValueName, collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey), codec.CollValue[types.VaultNAV](cdc)),
 		AuthKeeper:            authKeeper,
 		MarkerKeeper:          markerkeeper,
 		BankKeeper:            bankkeeper,
 		NameKeeper:            namekeeper,
 		AttrKeeper:            attributekeeper,
+		HoldKeeper:            holdkeeper,
 		ExchangeKeeper:        exchangekeeper,
 	}
 

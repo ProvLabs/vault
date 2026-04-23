@@ -816,8 +816,28 @@ func (k msgServer) UpdateVaultAUMFeeBips(goCtx context.Context, msg *types.MsgUp
 	return &types.MsgUpdateVaultAUMFeeBipsResponse{}, nil
 }
 
-// CreateRwaPayment initiates a P2P payment from the vault's principal account.
-func (k msgServer) CreateRwaPayment(goCtx context.Context, msg *types.MsgCreateRwaPaymentRequest) (*types.MsgCreateRwaPaymentResponse, error) {
+// UpdateVaultAssetNAV manually sets or updates a localized NAV for a specific denom.
+func (k msgServer) UpdateVaultAssetNAV(goCtx context.Context, msg *types.MsgUpdateVaultAssetNAVRequest) (*types.MsgUpdateVaultAssetNAVResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vault, err := k.getVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, err
+	}
+	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+		return nil, fmt.Errorf("unauthorized: %w", err)
+	}
+
+	if err := k.NetAssetValues.Set(ctx, collections.Join(vaultAddr, msg.Denom), msg.Nav); err != nil {
+		return nil, fmt.Errorf("failed to set local vault nav: %w", err)
+	}
+
+	return &types.MsgUpdateVaultAssetNAVResponse{}, nil
+}
+
+// VaultDepositAsset initiates a P2P payment proposal where the vault expects to receive an asset.
+func (k msgServer) VaultDepositAsset(goCtx context.Context, msg *types.MsgVaultDepositAssetRequest) (*types.MsgVaultDepositAssetResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
@@ -833,46 +853,24 @@ func (k msgServer) CreateRwaPayment(goCtx context.Context, msg *types.MsgCreateR
 	exchangeMsg := &exchangetypes.MsgCreatePaymentRequest{
 		Payment: exchangetypes.Payment{
 			Source:       principalAddr.String(),
-			SourceAmount: msg.SourceAmount,
+			SourceAmount: msg.Payment, // Giving payment
 			Target:       msg.Target,
-			TargetAmount: msg.TargetAmount,
+			TargetAmount: msg.Asset, // Receiving asset
 			ExternalId:   msg.ExternalId,
 		},
 	}
 
-	// We use the vault's principal (marker) as the source. This requires WithBypass
-	// because the module is acting as the marker authority.
 	if _, err := k.ExchangeKeeper.CreatePayment(markertypes.WithBypass(ctx), exchangeMsg); err != nil {
 		return nil, fmt.Errorf("failed to create exchange payment: %w", err)
 	}
 
-	// ATOMIC NAV DISCOVERY (Symmetric):
-	// If the vault is the SOURCE of a payment that includes an NFT marker (supply=1),
-	// we record the trade price as the new high-precision NAV.
-	// Logic: Vault pays NFT (SourceAmount) -> User pays USDC (TargetAmount).
-	if len(msg.SourceAmount) > 0 && len(msg.TargetAmount) == 1 {
-		targetCoin := msg.TargetAmount[0]
-		if targetCoin.Denom == vault.UnderlyingAsset {
-			for _, srcCoin := range msg.SourceAmount {
-				marker, err := k.MarkerKeeper.GetMarkerByDenom(ctx, srcCoin.Denom)
-				if err == nil && marker != nil && marker.GetSupply().Amount.Equal(sdkmath.OneInt()) {
-					newNav := types.NetAssetValue{
-						Price:              targetCoin,
-						Volume:             srcCoin.Amount.String(),
-						UpdatedBlockHeight: uint64(ctx.BlockHeight()),
-					}
-					if err := k.NetAssetValues.Set(ctx, collections.Join(srcCoin.Denom, vault.UnderlyingAsset), newNav); err != nil {
-						k.getLogger(ctx).Error("failed to update discovered nav", "denom", srcCoin.Denom, "err", err)
-					}
-				}
-			}
-		}
-	}
+	k.recordDiscoveredNAV(ctx, vaultAddr, vault.UnderlyingAsset, msg.Asset, msg.Payment)
 
-	return &types.MsgCreateRwaPaymentResponse{}, nil
+	return &types.MsgVaultDepositAssetResponse{}, nil
 }
 
-func (k msgServer) AcceptRwaPayment(goCtx context.Context, msg *types.MsgAcceptRwaPaymentRequest) (*types.MsgAcceptRwaPaymentResponse, error) {
+// VaultWithdrawAsset initiates a P2P payment proposal where the vault expects to give an asset.
+func (k msgServer) VaultWithdrawAsset(goCtx context.Context, msg *types.MsgVaultWithdrawAssetRequest) (*types.MsgVaultWithdrawAssetResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
@@ -884,7 +882,39 @@ func (k msgServer) AcceptRwaPayment(goCtx context.Context, msg *types.MsgAcceptR
 		return nil, fmt.Errorf("unauthorized: %w", err)
 	}
 
-	// 1. Fetch payment details BEFORE acceptance for NAV discovery
+	principalAddr := vault.PrincipalMarkerAddress()
+	exchangeMsg := &exchangetypes.MsgCreatePaymentRequest{
+		Payment: exchangetypes.Payment{
+			Source:       principalAddr.String(),
+			SourceAmount: msg.Asset, // Giving asset
+			Target:       msg.Target,
+			TargetAmount: msg.Payment, // Receiving payment
+			ExternalId:   msg.ExternalId,
+		},
+	}
+
+	if _, err := k.ExchangeKeeper.CreatePayment(markertypes.WithBypass(ctx), exchangeMsg); err != nil {
+		return nil, fmt.Errorf("failed to create exchange payment: %w", err)
+	}
+
+	k.recordDiscoveredNAV(ctx, vaultAddr, vault.UnderlyingAsset, msg.Asset, msg.Payment)
+
+	return &types.MsgVaultWithdrawAssetResponse{}, nil
+}
+
+// VaultSettleAssetPayment finalizes a trade proposed by the Asset Manager where the vault is the target.
+func (k msgServer) VaultSettleAssetPayment(goCtx context.Context, msg *types.MsgVaultSettleAssetPaymentRequest) (*types.MsgVaultSettleAssetPaymentResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vault, err := k.getVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, err
+	}
+	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+		return nil, fmt.Errorf("unauthorized: %w", err)
+	}
+
 	paymentResp, err := k.ExchangeKeeper.GetPayment(ctx, &exchangetypes.QueryGetPaymentRequest{
 		Source:     msg.Source,
 		ExternalId: msg.ExternalId,
@@ -894,7 +924,6 @@ func (k msgServer) AcceptRwaPayment(goCtx context.Context, msg *types.MsgAcceptR
 	}
 	payment := paymentResp.Payment
 
-	// 2. Accept the payment
 	principalAddr := vault.PrincipalMarkerAddress()
 	exchangeMsg := &exchangetypes.MsgAcceptPaymentRequest{
 		Payment: exchangetypes.Payment{
@@ -908,35 +937,63 @@ func (k msgServer) AcceptRwaPayment(goCtx context.Context, msg *types.MsgAcceptR
 		return nil, fmt.Errorf("failed to accept exchange payment: %w", err)
 	}
 
-	// 3. ATOMIC NAV DISCOVERY:
-	// If the vault is the TARGET of a payment that includes an NFT marker (supply=1),
-	// we automatically update the local NAV record for that NFT based on the trade price.
-	// Logic: Source pays NFT (SourceAmount) -> Vault pays USDC (TargetAmount).
-	// Price = USDC / NFT volume.
-	if len(payment.SourceAmount) > 0 && len(payment.TargetAmount) == 1 {
-		targetCoin := payment.TargetAmount[0]
-		if targetCoin.Denom == vault.UnderlyingAsset {
-			for _, srcCoin := range payment.SourceAmount {
-				marker, err := k.MarkerKeeper.GetMarkerByDenom(ctx, srcCoin.Denom)
-				if err == nil && marker != nil && marker.GetSupply().Amount.Equal(sdkmath.OneInt()) {
-					// Record the trade price as the new high-precision NAV
-					newNav := types.NetAssetValue{
-						Price:              targetCoin,
-						Volume:             srcCoin.Amount.String(),
-						UpdatedBlockHeight: uint64(ctx.BlockHeight()),
-					}
-					if err := k.NetAssetValues.Set(ctx, collections.Join(srcCoin.Denom, vault.UnderlyingAsset), newNav); err != nil {
-						k.getLogger(ctx).Error("failed to update discovered nav", "denom", srcCoin.Denom, "err", err)
-					}
-				}
-			}
-		}
-	}
+	k.recordDiscoveredNAV(ctx, vaultAddr, vault.UnderlyingAsset, payment.SourceAmount, payment.TargetAmount)
 
-	// 4. Reconcile vault state
 	if err := k.reconcileVault(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to reconcile vault after RWA payment: %w", err)
 	}
 
-	return &types.MsgAcceptRwaPaymentResponse{}, nil
+	return &types.MsgVaultSettleAssetPaymentResponse{}, nil
+}
+
+// recordDiscoveredNAV attempts to extract a new Net Asset Value (NAV) from a
+// trade pair and persists it to the vault's local high-precision store.
+// It only records a NAV if exactly one asset and one payment coin are present,
+// and the asset is a unique NFT marker (supply = 1) priced in the vault's
+// underlying asset.
+func (k msgServer) recordDiscoveredNAV(ctx sdk.Context, vaultAddr sdk.AccAddress, underlyingDenom string, assets, payments sdk.Coins) {
+	if len(assets) == 1 && len(payments) == 1 {
+		assetCoin := assets[0]
+		paymentCoin := payments[0]
+		if paymentCoin.Denom == underlyingDenom {
+			marker, err := k.MarkerKeeper.GetMarkerByDenom(ctx, assetCoin.Denom)
+			if err == nil && marker != nil && marker.GetSupply().Amount.Equal(sdkmath.OneInt()) {
+				newNav := types.VaultNAV{
+					Price:              paymentCoin,
+					Volume:             assetCoin.Amount.String(),
+					UpdatedBlockHeight: uint64(ctx.BlockHeight()),
+				}
+				if err := k.NetAssetValues.Set(ctx, collections.Join(vaultAddr, assetCoin.Denom), newNav); err != nil {
+					k.getLogger(ctx).Error("failed to update discovered nav", "vault", vaultAddr.String(), "denom", assetCoin.Denom, "err", err)
+				}
+			}
+		}
+	}
+}
+
+// VaultRejectAssetPayment cancels/declines a trade proposal targeting the vault.
+func (k msgServer) VaultRejectAssetPayment(goCtx context.Context, msg *types.MsgVaultRejectAssetPaymentRequest) (*types.MsgVaultRejectAssetPaymentResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vault, err := k.getVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, err
+	}
+	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+		return nil, fmt.Errorf("unauthorized: %w", err)
+	}
+
+	principalAddr := vault.PrincipalMarkerAddress()
+	exchangeMsg := &exchangetypes.MsgRejectPaymentRequest{
+		Source:     msg.Source,
+		Target:     principalAddr.String(),
+		ExternalId: msg.ExternalId,
+	}
+
+	if _, err := k.ExchangeKeeper.RejectPayment(markertypes.WithBypass(ctx), exchangeMsg); err != nil {
+		return nil, fmt.Errorf("failed to reject exchange payment: %w", err)
+	}
+
+	return &types.MsgVaultRejectAssetPaymentResponse{}, nil
 }

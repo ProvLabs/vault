@@ -180,15 +180,15 @@ message PendingSwapOut {
   string redeem_denom = 4;
 }
 
-// NetAssetValue defines the net asset value of a marker or other asset.
+// VaultNAV defines a localized net asset value for a specific asset within a vault.
 // It uses an IntString for volume to support high-precision RWA valuations.
-message NetAssetValue {
-  // price is the total value of the asset's volume in a specific denom.
+message VaultNAV {
+  // price is the total value of the asset's volume in a specific denom (typically vault underlying).
   cosmos.base.v1beta1.Coin price = 1 [(gogoproto.nullable) = false];
 
   // volume is the amount of the asset associated with the price.
   string volume = 2 [(cosmos_proto.scalar) = "cosmos.IntString"];
 
-  // updated_block_height is the block height when the NAV was last updated.
+  // updated_block_height is the block height when this localized NAV was last updated.
   uint64 updated_block_height = 3;
 }

@@ -867,8 +867,6 @@ func (k msgServer) VaultDepositAsset(goCtx context.Context, msg *types.MsgVaultD
 		return nil, fmt.Errorf("failed to create exchange payment: %w", err)
 	}
 
-	k.recordDiscoveredNAV(ctx, vaultAddr, vault.UnderlyingAsset, msg.Asset, msg.Payment)
-
 	return &types.MsgVaultDepositAssetResponse{}, nil
 }
 
@@ -899,8 +897,6 @@ func (k msgServer) VaultWithdrawAsset(goCtx context.Context, msg *types.MsgVault
 	if _, err := k.ExchangeKeeper.CreatePayment(markertypes.WithBypass(ctx), exchangeMsg); err != nil {
 		return nil, fmt.Errorf("failed to create exchange payment: %w", err)
 	}
-
-	k.recordDiscoveredNAV(ctx, vaultAddr, vault.UnderlyingAsset, msg.Asset, msg.Payment)
 
 	return &types.MsgVaultWithdrawAssetResponse{}, nil
 }

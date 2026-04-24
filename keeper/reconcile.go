@@ -108,7 +108,7 @@ func (k Keeper) setShareDenomNAV(ctx sdk.Context, vault *types.VaultAccount, tvv
 	}
 
 	if vault.TotalShares.Amount.IsUint64() {
-		shareMarker, err := k.MarkerKeeper.GetMarker(ctx, vault.ShareMarkerAddress())
+		shareMarker, err := k.MarkerKeeper.GetMarker(ctx, vault.PrincipalMarkerAddress())
 		if err != nil {
 			return fmt.Errorf("failed to get share marker for legacy nav: %w", err)
 		}

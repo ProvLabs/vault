@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"math"
 
+	"cosmossdk.io/collections"
+
 	"github.com/provlabs/vault/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -112,6 +114,16 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	if err := k.PendingSwapOutQueue.Import(ctx, &genState.PendingSwapOutQueue); err != nil {
 		panic(fmt.Errorf("failed to import pending swap out queue: %w", err))
 	}
+
+	for _, entry := range genState.NetAssetValues {
+		vaultAddr, err := sdk.AccAddressFromBech32(entry.VaultAddress)
+		if err != nil {
+			panic(fmt.Errorf("invalid vault address in net asset values: %w", err))
+		}
+		if err := k.NetAssetValues.Set(ctx, collections.Join(vaultAddr, entry.Denom), entry.Nav); err != nil {
+			panic(fmt.Errorf("failed to set net asset value for vault %s and denom %s: %w", entry.VaultAddress, entry.Denom, err))
+		}
+	}
 }
 
 // ExportGenesis exports the current state of the vault module.
@@ -161,11 +173,25 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		panic(fmt.Errorf("failed to export pending swap out queue: %w", err))
 	}
 
+	var netAssetValues []types.NetAssetValueGenesisEntry
+	err = k.NetAssetValues.Walk(ctx, nil, func(key collections.Pair[sdk.AccAddress, string], value types.VaultNAV) (stop bool, err error) {
+		netAssetValues = append(netAssetValues, types.NetAssetValueGenesisEntry{
+			VaultAddress: key.K1().String(),
+			Denom:        key.K2(),
+			Nav:          value,
+		})
+		return false, nil
+	})
+	if err != nil {
+		panic(fmt.Errorf("failed to walk net asset values: %w", err))
+	}
+
 	return &types.GenesisState{
 		Vaults:              vaults,
 		PayoutTimeoutQueue:  paymentTimeoutQueue,
 		FeeTimeoutQueue:     feeTimeoutQueue,
 		PendingSwapOutQueue: *pendingSwapOutQueue,
 		Params:              params,
+		NetAssetValues:      netAssetValues,
 	}
 }

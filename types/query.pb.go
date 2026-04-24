@@ -547,11 +547,13 @@ func (m *QueryVaultResponse) GetLiquidityBreakdown() LiquidityBreakdown {
 type LiquidityBreakdown struct {
 	// cash_amount is the amount of fungible underlying asset held as liquid buffer.
 	CashAmount types.Coin `protobuf:"bytes,1,opt,name=cash_amount,json=cashAmount,proto3" json:"cash_amount"`
-	// collateral_amount is the estimated value of all non-fungible (NFT) assets.
+	// collateral_amount is the risk-adjusted (advance-rate discounted) valuation
+	// of all non-fungible (NFT) assets.
 	CollateralAmount types.Coin `protobuf:"bytes,2,opt,name=collateral_amount,json=collateralAmount,proto3" json:"collateral_amount"`
 	// total_value is the sum of cash and collateral (TVV).
 	TotalValue types.Coin `protobuf:"bytes,3,opt,name=total_value,json=totalValue,proto3" json:"total_value"`
 	// ratio is the current collateralization ratio (collateral / total_value).
+	// If total_value is zero, this ratio is reported as "0".
 	Ratio string `protobuf:"bytes,4,opt,name=ratio,proto3" json:"ratio,omitempty"`
 }
 

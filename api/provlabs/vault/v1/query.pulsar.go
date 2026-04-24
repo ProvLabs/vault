@@ -8905,11 +8905,13 @@ type LiquidityBreakdown struct {
 
 	// cash_amount is the amount of fungible underlying asset held as liquid buffer.
 	CashAmount *v1beta11.Coin `protobuf:"bytes,1,opt,name=cash_amount,json=cashAmount,proto3" json:"cash_amount,omitempty"`
-	// collateral_amount is the estimated value of all non-fungible (NFT) assets.
+	// collateral_amount is the risk-adjusted (advance-rate discounted) valuation
+	// of all non-fungible (NFT) assets.
 	CollateralAmount *v1beta11.Coin `protobuf:"bytes,2,opt,name=collateral_amount,json=collateralAmount,proto3" json:"collateral_amount,omitempty"`
 	// total_value is the sum of cash and collateral (TVV).
 	TotalValue *v1beta11.Coin `protobuf:"bytes,3,opt,name=total_value,json=totalValue,proto3" json:"total_value,omitempty"`
 	// ratio is the current collateralization ratio (collateral / total_value).
+	// If total_value is zero, this ratio is reported as "0".
 	Ratio string `protobuf:"bytes,4,opt,name=ratio,proto3" json:"ratio,omitempty"`
 }
 

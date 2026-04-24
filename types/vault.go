@@ -375,7 +375,6 @@ func NewPendingSwapOut(owner sdk.AccAddress, vaultAddr sdk.AccAddress, shares sd
 	}
 }
 
-// Validate performs basic checks on a PendingSwapOut request.
 func (p PendingSwapOut) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(p.Owner); err != nil {
 		return fmt.Errorf("invalid owner address %s: %w", p.Owner, err)
@@ -397,5 +396,24 @@ func (p PendingSwapOut) Validate() error {
 		return fmt.Errorf("redeem denom cannot be empty")
 	}
 
+	return nil
+}
+
+// Validate performs basic checks on a VaultNAV record.
+func (v VaultNAV) Validate() error {
+	if !v.Price.IsValid() {
+		return fmt.Errorf("invalid price: %s", v.Price.String())
+	}
+	if v.Price.IsNegative() {
+		return fmt.Errorf("price cannot be negative: %s", v.Price.String())
+	}
+	if v.Volume == "" {
+		return fmt.Errorf("volume cannot be empty")
+	}
+	if vol, ok := sdkmath.NewIntFromString(v.Volume); !ok {
+		return fmt.Errorf("invalid volume: %s", v.Volume)
+	} else if vol.IsNegative() {
+		return fmt.Errorf("volume cannot be negative: %s", v.Volume)
+	}
 	return nil
 }

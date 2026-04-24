@@ -21,16 +21,13 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 		panic(fmt.Errorf("invalid vault genesis state: %w", err))
 	}
 
-	params := types.DefaultParams()
-	if len(genState.Params.TechFeeAddress) > 0 {
-		params.TechFeeAddress = genState.Params.TechFeeAddress
-	} else {
-		// Fallback to chain-specific default if TechFeeAddress is not provided.
+	params := genState.Params
+	// If TechFeeAddress is missing, we use the chain-specific default.
+	if len(params.TechFeeAddress) == 0 {
 		params.TechFeeAddress = types.GetDefaultTechFeeAddress(ctx.ChainID()).String()
 	}
-	if genState.Params.DefaultAumFeeBips > 0 {
-		params.DefaultAumFeeBips = genState.Params.DefaultAumFeeBips
-	}
+	// NOTE: DefaultAumFeeBips is allowed to be 0, so we don't default it if it's 0.
+	// It's already validated by genState.Validate() -> Params.Validate().
 
 	if err := k.Params.Set(ctx, params); err != nil {
 		panic(fmt.Errorf("failed to set params: %w", err))

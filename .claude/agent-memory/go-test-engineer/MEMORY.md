@@ -1,0 +1,4 @@
+- [Suite test conventions](suite_conventions.md) — keeper tests live on `*TestSuite` (suite_test.go); helpers like `requireAddFinalizeAndActivateMarker`, `setupBaseVault`, `setupSinglePaymentDenomVault`, `EnsureTechFeeAccount`, `CreateAndFundAccount`, `bumpHeight`, `setReverseNAV` are reusable.
+- [Msg server test pattern](msg_server_test_pattern.md) — table-driven via generic `msgServerTestDef[Req, Resp, postCheckArgs]` + `runMsgServerTestCase`; setup/postCheck callbacks; expectedEvents and expectedErrSubstrs.
+- [Mocks](mocks.md) — `utils/mocks/vault.go` exposes `MockExchangeKeeper` and `MockHoldKeeper` (zero-return stubs); useful for unit isolation but real keeper tests use simapp wiring.
+- [Query test pattern](query_test_pattern.md) — `querytest.TestDef`/`querytest.RunTestCase` with `ManualEquality` for partial comparisons; preferred over hand-rolled response asserts.

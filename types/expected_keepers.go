@@ -56,13 +56,3 @@ type AttributeKeeper interface {
 	SetAttribute(ctx sdk.Context, attr attrtypes.Attribute, owner sdk.AccAddress) error
 }
 
-// HoldKeeper provides a read-only view of assets that are currently "locked"
-// in an account without being moved. The vault module uses this to ensure that
-// assets on hold are still included in Total Vault Value (TVV) calculations
-// and liquidity breakdowns.
-type HoldKeeper interface {
-	// GetHoldCoin returns the amount of a specific denom that is currently on hold for an address.
-	GetHoldCoin(ctx sdk.Context, addr sdk.AccAddress, denom string) (sdk.Coin, error)
-	// GetAllHolds returns all coins currently on hold for a specific address.
-	GetAllHolds(ctx sdk.Context, addr sdk.AccAddress) (sdk.Coins, error)
-}

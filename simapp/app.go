@@ -6,10 +6,7 @@ import (
 	"path/filepath"
 
 	vaultkeeper "github.com/provlabs/vault/keeper"
-	"github.com/provlabs/vault/types"
 	"google.golang.org/protobuf/proto"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/depinject"
@@ -113,7 +110,6 @@ type SimApp struct {
 	NameKeeper      namekeeper.Keeper
 	AttributeKeeper attributekeeper.Keeper
 	MarkerKeeper    markerkeeper.Keeper
-	HoldKeeper      types.HoldKeeper
 	// Custom Modules
 	VaultKeeper *vaultkeeper.Keeper
 
@@ -155,7 +151,6 @@ func AppConfig() depinject.Config {
 			ProvideMarkerKeeperStub,
 			ProvideNameKeeperStub,
 			ProvideAttributeKeeperStub,
-			ProvideHoldKeeperStub,
 		),
 		depinject.Supply(
 			map[string]module.AppModuleBasic{
@@ -321,16 +316,3 @@ func (app *SimApp) AppCodec() codec.Codec {
 	return app.appCodec
 }
 
-type holdStub struct{}
-
-func (s holdStub) GetHoldCoin(sdk.Context, sdk.AccAddress, string) (sdk.Coin, error) {
-	return sdk.Coin{}, nil
-}
-func (s holdStub) GetAllHolds(sdk.Context, sdk.AccAddress) (sdk.Coins, error) {
-	return sdk.Coins{}, nil
-}
-
-// ProvideHoldKeeperStub returns a dummy types.HoldKeeper instance.
-func ProvideHoldKeeperStub() types.HoldKeeper {
-	return holdStub{}
-}

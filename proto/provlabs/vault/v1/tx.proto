@@ -7,6 +7,7 @@ import "cosmos/msg/v1/msg.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "provlabs/vault/v1/params.proto";
+import "provlabs/vault/v1/vault.proto";
 
 option go_package = "github.com/provlabs/vault/types";
 
@@ -105,7 +106,27 @@ service Msg {
 
   // UpdateVaultAUMFeeBips updates the AUM fee bips for a specific vault.
   rpc UpdateVaultAUMFeeBips(MsgUpdateVaultAUMFeeBipsRequest) returns (MsgUpdateVaultAUMFeeBipsResponse);
+
+  // UpdateVaultAssetNAV manually sets or updates a localized NAV for a specific denom within a vault.
+  rpc UpdateVaultAssetNAV(MsgUpdateVaultAssetNAVRequest) returns (MsgUpdateVaultAssetNAVResponse);
 }
+
+// MsgUpdateVaultAssetNAVRequest manually sets or updates a localized NAV for a specific denom.
+message MsgUpdateVaultAssetNAVRequest {
+  option (cosmos.msg.v1.signer) = "authority";
+
+  // authority is the vault administrator or asset manager.
+  string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // vault_address is the bech32 address of the vault.
+  string vault_address = 2;
+  // denom is the asset denomination to update.
+  string denom = 3;
+  // nav is the new localized net asset value.
+  provlabs.vault.v1.VaultNAV nav = 4 [(gogoproto.nullable) = false];
+}
+
+// MsgUpdateVaultAssetNAVResponse defines the response for UpdateVaultAssetNAV.
+message MsgUpdateVaultAssetNAVResponse {}
 
 // MsgCreateVaultRequest is the request message for the CreateVault endpoint.
 message MsgCreateVaultRequest {

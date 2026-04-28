@@ -43,6 +43,7 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgUpdateMinSwapOutValueRequest)(nil),
 	(*MsgUpdateMaxSwapInValueRequest)(nil),
 	(*MsgUpdateMaxSwapOutValueRequest)(nil),
+	(*MsgUpdateVaultAssetNAVRequest)(nil),
 }
 
 // ValidateBasic performs stateless validation on MsgCreateVaultRequest.
@@ -520,6 +521,28 @@ func (m MsgUpdateMaxSwapOutValueRequest) ValidateBasic() error {
 	}
 	if err := ValidateSwapLimits("", m.MaxSwapOutValue); err != nil {
 		return fmt.Errorf("invalid swap-out limits: %w", err)
+	}
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgUpdateVaultAssetNAVRequest.
+func (m MsgUpdateVaultAssetNAVRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		return fmt.Errorf("invalid authority address: %q: %w", m.Authority, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	if err := sdk.ValidateDenom(m.Denom); err != nil {
+		return fmt.Errorf("invalid denom: %q: %w", m.Denom, err)
+	}
+	if err := m.Nav.Price.Validate(); err != nil {
+		return fmt.Errorf("invalid nav price: %w", err)
+	}
+	if vol, ok := sdkmath.NewIntFromString(m.Nav.Volume); !ok {
+		return fmt.Errorf("invalid nav volume: %s", m.Nav.Volume)
+	} else if !vol.IsPositive() {
+		return fmt.Errorf("invalid nav volume: must be positive: %s", m.Nav.Volume)
 	}
 	return nil
 }

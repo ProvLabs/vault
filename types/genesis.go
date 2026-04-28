@@ -92,5 +92,20 @@ func (gs GenesisState) Validate() error {
 		}
 	}
 
+	for i, entry := range gs.NetAssetValues {
+		if _, err := sdk.AccAddressFromBech32(entry.VaultAddress); err != nil {
+			return fmt.Errorf("invalid net asset value vault address at index %d: %w", i, err)
+		}
+		if _, exists := vaults[entry.VaultAddress]; !exists {
+			return fmt.Errorf("net asset value vault address at index %d is not an imported vault: %s", i, entry.VaultAddress)
+		}
+		if entry.Denom == "" {
+			return fmt.Errorf("empty denom in net asset value entry at index %d", i)
+		}
+		if err := entry.Nav.Validate(); err != nil {
+			return fmt.Errorf("invalid net asset value at index %d: %w", i, err)
+		}
+	}
+
 	return nil
 }

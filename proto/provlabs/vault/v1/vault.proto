@@ -143,6 +143,11 @@ message VaultAccount {
   // - Values must be positive (> 0).
   // - An empty string "" indicates no maximum limit.
   string max_swap_out_value = 28 [(cosmos_proto.scalar) = "cosmos.IntString"];
+
+  // advance_rate is a decimal string (e.g., "0.8" for 80%) used to discount the value
+  // of NFT/RWA assets when calculating the Total Vault Value.
+  // If empty or "1.0", no discount is applied.
+  string advance_rate = 29 [(cosmos_proto.scalar) = "cosmos.DecString"];
 }
 
 // AccountBalance represents the coin balance of a single account.
@@ -173,4 +178,17 @@ message PendingSwapOut {
 
   // redeem_denom is the denomination of the asset to be redeemed.
   string redeem_denom = 4;
+}
+
+// VaultNAV defines a localized net asset value for a specific asset within a vault.
+// It uses an IntString for volume to support high-precision RWA valuations.
+message VaultNAV {
+  // price is the total value of the asset's volume in a specific denom (typically vault underlying).
+  cosmos.base.v1beta1.Coin price = 1 [(gogoproto.nullable) = false];
+
+  // volume is the amount of the asset associated with the price.
+  string volume = 2 [(cosmos_proto.scalar) = "cosmos.IntString"];
+
+  // updated_block_height is the block height when this localized NAV was last updated.
+  uint64 updated_block_height = 3;
 }

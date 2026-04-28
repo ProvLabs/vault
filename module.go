@@ -86,24 +86,24 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ client.TxEncodingCo
 // AppModule implements the core vault module functionality.
 type AppModule struct {
 	AppModuleBasic
-	keeper          *keeper.Keeper
-	addressCodec    address.Codec
-	markerKeeper    types.MarkerKeeper
-	bankKeeper      types.BankKeeper
-	nameKeeper      types.NameKeeper
-	attributeKeeper types.AttributeKeeper
+	keeper       *keeper.Keeper
+	addressCodec address.Codec
+	markerKeeper types.MarkerKeeper
+	bankKeeper   types.BankKeeper
+	nameKeeper   types.NameKeeper
+	attrKeeper   types.AttributeKeeper
 }
 
 // NewAppModule creates a new AppModule instance.
 func NewAppModule(keeper *keeper.Keeper, mk types.MarkerKeeper, bk types.BankKeeper, nk types.NameKeeper, attk types.AttributeKeeper, addressCodec address.Codec) AppModule {
 	return AppModule{
-		AppModuleBasic:  NewAppModuleBasic(),
-		keeper:          keeper,
-		addressCodec:    addressCodec,
-		markerKeeper:    mk,
-		bankKeeper:      bk,
-		nameKeeper:      nk,
-		attributeKeeper: attk,
+		AppModuleBasic: NewAppModuleBasic(),
+		keeper:         keeper,
+		addressCodec:   addressCodec,
+		markerKeeper:   mk,
+		bankKeeper:     bk,
+		nameKeeper:     nk,
+		attrKeeper:     attk,
 	}
 }
 
@@ -537,6 +537,21 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						{ProtoField: "aum_fee_bips"},
 					},
 				},
+				{
+					RpcMethod: "UpdateVaultAssetNAV",
+					Use:       "update-vault-asset-nav [authority] [vault_address] [denom] [price_coin] [volume]",
+					Alias:     []string{"uvan"},
+					Short:     "Manually update the NAV for a specific asset within a vault",
+					Long:      "Sets a localized Net Asset Value (NAV) for an asset. Price coin is the total value for the given volume. Volume is a high-precision integer string.",
+					Example:   fmt.Sprintf("%s update-vault-asset-nav %s %s rwa.nft.001 500nhash 1", txStart, exampleAuthorityAddr, exampleVaultAddr),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "authority"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "denom"},
+						{ProtoField: "nav.price"},
+						{ProtoField: "nav.volume"},
+					},
+				},
 			},
 		},
 		Query: &autocliv1.ServiceCommandDescriptor{
@@ -637,6 +652,7 @@ type ModuleInputs struct {
 	BankKeeper    types.BankKeeper
 	NameKeeper    types.NameKeeper
 	AttrKeeper    types.AttributeKeeper
+	HoldKeeper    types.HoldKeeper
 }
 
 // ModuleOutputs defines the outputs of the vault module provider.
@@ -664,6 +680,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.BankKeeper,
 		in.NameKeeper,
 		in.AttrKeeper,
+		in.HoldKeeper,
 	)
 	m := NewAppModule(k, in.MarkerKeeper, in.BankKeeper, in.NameKeeper, in.AttrKeeper, in.AddressCodec)
 	return ModuleOutputs{Keeper: k, Module: m}

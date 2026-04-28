@@ -46,17 +46,18 @@ const (
 	OpWeightMsgUpdateMinSwapOutValue = "op_weight_msg_update_min_swap_out_value"
 	OpWeightMsgUpdateMaxSwapInValue  = "op_weight_msg_update_max_swap_in_value"
 	OpWeightMsgUpdateMaxSwapOutValue = "op_weight_msg_update_max_swap_out_value"
+	OpWeightMsgUpdateVaultAssetNAV   = "op_weight_msg_update_vault_asset_nav"
 )
 
 var DefaultWeights = map[string]int{
 	OpWeightMsgCreateVault:           4,
-	OpWeightMsgSwapIn:                18,
-	OpWeightMsgSwapOut:               8,
-	OpWeightMsgUpdateInterestRate:    7,
+	OpWeightMsgSwapIn:                17,
+	OpWeightMsgSwapOut:               9,
+	OpWeightMsgUpdateInterestRate:    6,
 	OpWeightMsgUpdateMinInterestRate: 2,
 	OpWeightMsgUpdateMaxInterestRate: 2,
-	OpWeightMsgToggleSwapIn:          6,
-	OpWeightMsgToggleSwapOut:         6,
+	OpWeightMsgToggleSwapIn:          4,
+	OpWeightMsgToggleSwapOut:         4,
 	OpWeightMsgDepositInterest:       3,
 	OpWeightMsgWithdrawInterest:      3,
 	OpWeightMsgDepositPrincipal:      3,
@@ -66,15 +67,16 @@ var DefaultWeights = map[string]int{
 	OpWeightMsgUnpauseVault:          2,
 	OpWeightMsgToggleBridge:          2,
 	OpWeightMsgSetBridgeAddress:      2,
-	OpWeightMsgBridgeMintShares:      6,
-	OpWeightMsgBridgeBurnShares:      6,
+	OpWeightMsgBridgeMintShares:      5,
+	OpWeightMsgBridgeBurnShares:      5,
 	OpWeightMsgUpdateWithdrawalDelay: 2,
-	OpWeightMsgUpdateParams:          1,
+	OpWeightMsgUpdateParams:          2,
 	OpWeightMsgUpdateVaultAUMFeeBips: 2,
 	OpWeightMsgUpdateMinSwapInValue:  2,
 	OpWeightMsgUpdateMinSwapOutValue: 2,
 	OpWeightMsgUpdateMaxSwapInValue:  2,
 	OpWeightMsgUpdateMaxSwapOutValue: 2,
+	OpWeightMsgUpdateVaultAssetNAV:   6,
 }
 
 func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simulation.WeightedOperations {
@@ -105,6 +107,7 @@ func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simula
 		wUpdateMinSwapOutValue int
 		wUpdateMaxSwapInValue  int
 		wUpdateMaxSwapOutValue int
+		wUpdateVaultAssetNAV   int
 	)
 
 	simState.AppParams.GetOrGenerate(OpWeightMsgCreateVault, &wCreateVault, simState.Rand, func(_ *rand.Rand) { wCreateVault = DefaultWeights[OpWeightMsgCreateVault] })
@@ -133,6 +136,7 @@ func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simula
 	simState.AppParams.GetOrGenerate(OpWeightMsgUpdateMinSwapOutValue, &wUpdateMinSwapOutValue, simState.Rand, func(_ *rand.Rand) { wUpdateMinSwapOutValue = DefaultWeights[OpWeightMsgUpdateMinSwapOutValue] })
 	simState.AppParams.GetOrGenerate(OpWeightMsgUpdateMaxSwapInValue, &wUpdateMaxSwapInValue, simState.Rand, func(_ *rand.Rand) { wUpdateMaxSwapInValue = DefaultWeights[OpWeightMsgUpdateMaxSwapInValue] })
 	simState.AppParams.GetOrGenerate(OpWeightMsgUpdateMaxSwapOutValue, &wUpdateMaxSwapOutValue, simState.Rand, func(_ *rand.Rand) { wUpdateMaxSwapOutValue = DefaultWeights[OpWeightMsgUpdateMaxSwapOutValue] })
+	simState.AppParams.GetOrGenerate(OpWeightMsgUpdateVaultAssetNAV, &wUpdateVaultAssetNAV, simState.Rand, func(_ *rand.Rand) { wUpdateVaultAssetNAV = DefaultWeights[OpWeightMsgUpdateVaultAssetNAV] })
 
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(wCreateVault, SimulateMsgCreateVault(k)),
@@ -161,6 +165,7 @@ func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simula
 		simulation.NewWeightedOperation(wUpdateMinSwapOutValue, SimulateMsgUpdateMinSwapOutValue(k)),
 		simulation.NewWeightedOperation(wUpdateMaxSwapInValue, SimulateMsgUpdateMaxSwapInValue(k)),
 		simulation.NewWeightedOperation(wUpdateMaxSwapOutValue, SimulateMsgUpdateMaxSwapOutValue(k)),
+		simulation.NewWeightedOperation(wUpdateVaultAssetNAV, SimulateMsgUpdateVaultAssetNAV(k)),
 	}
 }
 
@@ -1258,5 +1263,46 @@ func SimulateMsgUpdateMaxSwapOutValue(k keeper.Keeper) simtypes.Operation {
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "successfully updated max swap out"), nil, nil
+	}
+}
+
+func SimulateMsgUpdateVaultAssetNAV(k keeper.Keeper) simtypes.Operation {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateVaultAssetNAVRequest{}), "unable to setup initial state"), nil, err
+		}
+
+		vault, err := getRandomVault(r, k, ctx)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateVaultAssetNAVRequest{}), "unable to get random vault"), nil, nil
+		}
+
+		authority, err := getRandomManagementAuthority(r, ctx, vault, accs)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateVaultAssetNAVRequest{}), "unable to get random authority"), nil, nil
+		}
+
+		denom := getRandomVaultAsset(r, vault)
+		msg := &types.MsgUpdateVaultAssetNAVRequest{
+			Authority:    authority.Address.String(),
+			VaultAddress: vault.GetAddress().String(),
+			Denom:        denom,
+			Nav: types.VaultNAV{
+				Price:              sdk.NewInt64Coin(vault.UnderlyingAsset, int64(r.Intn(1000)+1)),
+				Volume:             math.NewInt(int64(r.Intn(100)+1)).String(),
+				UpdatedBlockHeight: uint64(ctx.BlockHeight()),
+			},
+		}
+
+		handler := keeper.NewMsgServer(&k)
+		_, err = handler.UpdateVaultAssetNAV(ctx, msg)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
+		}
+
+		return simtypes.NewOperationMsg(msg, true, "successfully updated asset nav"), nil, nil
 	}
 }

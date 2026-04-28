@@ -89,6 +89,15 @@ func (m *MockAuthKeeper) GetModuleAddress(moduleName string) sdk.AccAddress {
 	return sdk.AccAddress(moduleName)
 }
 
+type MockHoldKeeper struct{}
+
+func (m *MockHoldKeeper) GetHoldCoin(_ sdk.Context, _ sdk.AccAddress, _ string) (sdk.Coin, error) {
+	return sdk.Coin{}, nil
+}
+func (m *MockHoldKeeper) GetAllHolds(_ sdk.Context, _ sdk.AccAddress) (sdk.Coins, error) {
+	return sdk.Coins{}, nil
+}
+
 // NewVaultKeeper returns an instance of the Keeper with all dependencies mocked.
 func NewVaultKeeper(
 	t testing.TB,
@@ -103,11 +112,11 @@ func NewVaultKeeper(
 	sdkCfg.SetBech32PrefixForConsensusNode("provlabsvalcons", "provlabsvalconspub")
 	types.RegisterInterfaces(cfg.InterfaceRegistry)
 	authMock := NewMockAuthKeeper()
+	holdMock := &MockHoldKeeper{}
 
 	k := keeper.NewKeeper(
 		cfg.Codec,
 		runtime.NewKVStoreService(key),
-
 		runtime.ProvideEventService(),
 		addresscodec.NewBech32Codec("provlabs"),
 		authtypes.NewModuleAddress(govtypes.ModuleName),
@@ -116,6 +125,7 @@ func NewVaultKeeper(
 		nil,
 		nil,
 		nil,
+		holdMock,
 	)
 
 	ctx := wrapper.Ctx.WithHeaderInfo(header.Info{Time: time.Now().UTC()})

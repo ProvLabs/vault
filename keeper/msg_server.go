@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"cosmossdk.io/collections"
 	"github.com/provlabs/vault/types"
 
 	sdkmath "cosmossdk.io/math"
@@ -812,4 +813,27 @@ func (k msgServer) UpdateVaultAUMFeeBips(goCtx context.Context, msg *types.MsgUp
 	}
 
 	return &types.MsgUpdateVaultAUMFeeBipsResponse{}, nil
+}
+
+func (k msgServer) UpdateVaultAssetNAV(goCtx context.Context, msg *types.MsgUpdateVaultAssetNAVRequest) (*types.MsgUpdateVaultAssetNAVResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vault, err := k.getVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, err
+	}
+	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+		return nil, fmt.Errorf("unauthorized: %w", err)
+	}
+
+	// Normalize NAV: set updated block height to current height
+	nav := msg.Nav
+	nav.UpdatedBlockHeight = uint64(ctx.BlockHeight())
+
+	if err := k.NetAssetValues.Set(ctx, collections.Join(vaultAddr, msg.Denom), nav); err != nil {
+		return nil, fmt.Errorf("failed to set local vault nav: %w", err)
+	}
+
+	return &types.MsgUpdateVaultAssetNAVResponse{}, nil
 }

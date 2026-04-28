@@ -1610,7 +1610,6 @@ func (s *TestSuite) TestKeeper_setShareDenomNAV() {
 	shareDenom := "vaultshares"
 	underlyingDenom := "underlying"
 	vaultAddr := types.GetVaultAddress(shareDenom)
-	markerAddr := markertypes.MustGetMarkerAddress(shareDenom)
 
 	validShares := sdk.NewInt64Coin(shareDenom, 1_000_000)
 
@@ -1622,7 +1621,7 @@ func (s *TestSuite) TestKeeper_setShareDenomNAV() {
 
 	tvv := sdkmath.NewInt(123_456)
 
-	setup := func(shares sdk.Coin) (*types.VaultAccount, markertypes.MarkerAccountI) {
+	setup := func(shares sdk.Coin) *types.VaultAccount {
 		s.requireAddFinalizeAndActivateMarker(
 			sdk.NewInt64Coin(underlyingDenom, 1),
 			s.adminAddr,
@@ -1633,21 +1632,17 @@ func (s *TestSuite) TestKeeper_setShareDenomNAV() {
 			ShareDenom:      shareDenom,
 			UnderlyingAsset: underlyingDenom,
 		})
-		s.Require().NoError(err, "CreateVault should not error in setup")
+		s.Require().NoError(err, "CreateVault should not error in setup for share denom %s", shareDenom)
 
 		vault, err := s.k.GetVault(s.ctx, vaultAddr)
-		s.Require().NoError(err, "GetVault should not error in setup")
-		s.Require().NotNil(vault, "vault should not be nil in setup")
+		s.Require().NoError(err, "GetVault should not error in setup for address %s", vaultAddr)
+		s.Require().NotNil(vault, "vault should not be nil in setup for address %s", vaultAddr)
 
 		vault.TotalShares = shares
 		s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
-		marker, err := s.k.MarkerKeeper.GetMarker(s.ctx, markerAddr)
-		s.Require().NoError(err, "GetMarker should not error in setup")
-		s.Require().NotNil(marker, "marker should not be nil in setup")
-
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
-		return vault, marker
+		return vault
 	}
 
 	tests := []struct {
@@ -1663,9 +1658,9 @@ func (s *TestSuite) TestKeeper_setShareDenomNAV() {
 			expectNAVEvent: true,
 		},
 		{
-			name:           "overflow shares returns error and skips NAV",
+			name:           "overflow shares - now succeeds with high-precision store",
 			shares:         overflowShares,
-			expectErr:      true,
+			expectErr:      false,
 			expectNAVEvent: false,
 		},
 	}
@@ -1673,10 +1668,9 @@ func (s *TestSuite) TestKeeper_setShareDenomNAV() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			s.SetupTest()
-			vault, marker := setup(tc.shares)
+			vault := setup(tc.shares)
 
 			s.Require().NotNil(vault, "vault should not be nil for test case %q", tc.name)
-			s.Require().NotNil(marker, "marker should not be nil for test case %q", tc.name)
 
 			var err error
 			s.Require().NotPanics(
@@ -1685,7 +1679,6 @@ func (s *TestSuite) TestKeeper_setShareDenomNAV() {
 						s.T(),
 						s.ctx,
 						vault,
-						marker,
 						tvv,
 					)
 				},

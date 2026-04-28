@@ -24,31 +24,42 @@ const (
 )
 
 // CreateMarker creates a new restricted marker of type COIN.
-func CreateMarker(ctx context.Context, coin sdk.Coin, admin sdk.AccAddress, keeper markerkeeper.Keeper, feeCollector sdk.AccAddress) error {
-	// Add a marker with deposit permissions so that it can be found by the sim.
-	newMarker := &markertypes.MsgAddFinalizeActivateMarkerRequest{
-		Amount:      coin,
-		Manager:     admin.String(),
-		FromAddress: admin.String(),
-		MarkerType:  markertypes.MarkerType_RestrictedCoin,
-		AccessList: []markertypes.AccessGrant{
-			{
-				Address: admin.String(),
-				Permissions: markertypes.AccessList{
-					markertypes.Access_Mint, markertypes.Access_Burn, markertypes.Access_Withdraw, markertypes.Access_Admin,
-				},
-			},
-			{
-				Address: feeCollector.String(),
-				Permissions: markertypes.AccessList{
-					markertypes.Access_Transfer,
-				},
+func CreateMarker(ctx context.Context, coin sdk.Coin, admin sdk.AccAddress, keeper markerkeeper.Keeper, feeCollector sdk.AccAddress, accs []simtypes.Account) error {
+	accessList := []markertypes.AccessGrant{
+		{
+			Address: admin.String(),
+			Permissions: markertypes.AccessList{
+				markertypes.Access_Mint, markertypes.Access_Burn, markertypes.Access_Withdraw, markertypes.Access_Admin,
 			},
 		},
-		SupplyFixed:            true,
+		{
+			Address: feeCollector.String(),
+			Permissions: markertypes.AccessList{
+				markertypes.Access_Transfer,
+			},
+		},
+	}
+
+	for _, acc := range accs {
+		accessList = append(accessList, markertypes.AccessGrant{
+			Address: acc.Address.String(),
+			Permissions: markertypes.AccessList{
+				markertypes.Access_Withdraw,
+			},
+		})
+	}
+
+	// Add a marker with deposit permissions so that it can be found by the sim.
+	newMarker := &markertypes.MsgAddFinalizeActivateMarkerRequest{
+		Amount:             coin,
+		Manager:            admin.String(),
+		FromAddress:        admin.String(),
+		MarkerType:         markertypes.MarkerType_RestrictedCoin,
+		AccessList:         accessList,
+		SupplyFixed:        true,
 		AllowGovernanceControl: true,
-		AllowForcedTransfer:    false,
-		RequiredAttributes:     []string{RequiredMarkerAttribute},
+		AllowForcedTransfer: false,
+		RequiredAttributes: []string{RequiredMarkerAttribute},
 	}
 	markerMsgServer := markerkeeper.NewMsgServerImpl(keeper)
 	_, err := markerMsgServer.AddFinalizeActivateMarker(ctx, newMarker)
@@ -171,7 +182,7 @@ func MarkerExists(ctx sdk.Context, markerKeeper types.MarkerKeeper, denom string
 func CreateGlobalMarker(ctx sdk.Context, ak types.AccountKeeper, bk types.BankKeeper, mk markerkeeper.Keeper, underlying sdk.Coin, accs []simtypes.Account, restricted bool, feeCollector sdk.AccAddress) error {
 	var err error
 	if restricted {
-		err = CreateMarker(sdk.UnwrapSDKContext(ctx), sdk.NewInt64Coin(underlying.Denom, underlying.Amount.Int64()), ak.GetModuleAddress("mint"), mk, feeCollector)
+		err = CreateMarker(sdk.UnwrapSDKContext(ctx), sdk.NewInt64Coin(underlying.Denom, underlying.Amount.Int64()), ak.GetModuleAddress("mint"), mk, feeCollector, accs)
 	} else {
 		err = CreateUnrestrictedMarker(sdk.UnwrapSDKContext(ctx), sdk.NewInt64Coin(underlying.Denom, underlying.Amount.Int64()), ak.GetModuleAddress("mint"), mk)
 	}

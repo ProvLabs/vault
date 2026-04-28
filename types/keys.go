@@ -61,6 +61,11 @@ var (
 	ParamsKeyPrefix = collections.NewPrefix(10)
 	// ParamsKeyName is the human-readable name for the params state key.
 	ParamsKeyName = "params"
+
+	// NetAssetValueKeyPrefix is the prefix for the Net Asset Value collection.
+	NetAssetValueKeyPrefix = collections.NewPrefix(11)
+	// NetAssetValueName is the human-readable name for the NAV collection.
+	NetAssetValueName = "net_asset_values"
 )
 
 var (

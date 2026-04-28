@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"math"
 
+	"cosmossdk.io/collections"
+
 	"github.com/provlabs/vault/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,16 +21,13 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 		panic(fmt.Errorf("invalid vault genesis state: %w", err))
 	}
 
-	params := types.DefaultParams()
-	if len(genState.Params.TechFeeAddress) > 0 {
-		params.TechFeeAddress = genState.Params.TechFeeAddress
-	} else {
-		// Fallback to chain-specific default if TechFeeAddress is not provided.
+	params := genState.Params
+	// If TechFeeAddress is missing, we use the chain-specific default.
+	if len(params.TechFeeAddress) == 0 {
 		params.TechFeeAddress = types.GetDefaultTechFeeAddress(ctx.ChainID()).String()
 	}
-	if genState.Params.DefaultAumFeeBips > 0 {
-		params.DefaultAumFeeBips = genState.Params.DefaultAumFeeBips
-	}
+	// NOTE: DefaultAumFeeBips is allowed to be 0, so we don't default it if it's 0.
+	// It's already validated by genState.Validate() -> Params.Validate().
 
 	if err := k.Params.Set(ctx, params); err != nil {
 		panic(fmt.Errorf("failed to set params: %w", err))
@@ -112,6 +111,16 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	if err := k.PendingSwapOutQueue.Import(ctx, &genState.PendingSwapOutQueue); err != nil {
 		panic(fmt.Errorf("failed to import pending swap out queue: %w", err))
 	}
+
+	for _, entry := range genState.NetAssetValues {
+		vaultAddr, err := sdk.AccAddressFromBech32(entry.VaultAddress)
+		if err != nil {
+			panic(fmt.Errorf("invalid vault address in net asset values: %w", err))
+		}
+		if err := k.NetAssetValues.Set(ctx, collections.Join(vaultAddr, entry.Denom), entry.Nav); err != nil {
+			panic(fmt.Errorf("failed to set net asset value for vault %s and denom %s: %w", entry.VaultAddress, entry.Denom, err))
+		}
+	}
 }
 
 // ExportGenesis exports the current state of the vault module.
@@ -161,11 +170,25 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		panic(fmt.Errorf("failed to export pending swap out queue: %w", err))
 	}
 
+	var netAssetValues []types.NetAssetValueGenesisEntry
+	err = k.NetAssetValues.Walk(ctx, nil, func(key collections.Pair[sdk.AccAddress, string], value types.VaultNAV) (stop bool, err error) {
+		netAssetValues = append(netAssetValues, types.NetAssetValueGenesisEntry{
+			VaultAddress: key.K1().String(),
+			Denom:        key.K2(),
+			Nav:          value,
+		})
+		return false, nil
+	})
+	if err != nil {
+		panic(fmt.Errorf("failed to walk net asset values: %w", err))
+	}
+
 	return &types.GenesisState{
 		Vaults:              vaults,
 		PayoutTimeoutQueue:  paymentTimeoutQueue,
 		FeeTimeoutQueue:     feeTimeoutQueue,
 		PendingSwapOutQueue: *pendingSwapOutQueue,
 		Params:              params,
+		NetAssetValues:      netAssetValues,
 	}
 }

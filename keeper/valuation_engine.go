@@ -1,8 +1,10 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
+	"cosmossdk.io/collections"
 	"github.com/provlabs/vault/types"
 	"github.com/provlabs/vault/utils"
 
@@ -11,8 +13,35 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// getNetAssetValue retrieves the Net Asset Value (NAV) for a marker, prioritizing
+// the vault module's local high-precision NAV store before falling back to the
+// marker module's standard NAV.
+func (k Keeper) getNetAssetValue(ctx sdk.Context, vaultAddr sdk.AccAddress, markerDenom, priceDenom string) (*types.VaultNAV, error) {
+	localNav, err := k.NetAssetValues.Get(ctx, collections.Join(vaultAddr, markerDenom))
+	if err == nil {
+		return &localNav, nil
+	}
+	if !errors.Is(err, collections.ErrNotFound) {
+		return nil, fmt.Errorf("failed to get local nav for %s/%s: %w", markerDenom, priceDenom, err)
+	}
+
+	markerNav, err := k.MarkerKeeper.GetNetAssetValue(ctx, markerDenom, priceDenom)
+	if err != nil {
+		return nil, err
+	}
+	if markerNav == nil {
+		return nil, nil
+	}
+
+	return &types.VaultNAV{
+		Price:              markerNav.Price,
+		Volume:             math.NewIntFromUint64(markerNav.Volume).String(),
+		UpdatedBlockHeight: markerNav.UpdatedBlockHeight,
+	}, nil
+}
+
 // UnitPriceFraction returns the unit price of srcDenom expressed in underlyingAsset
-// as an integer fraction (numerator, denominator) using marker Net Asset Value (NAV).
+// as an integer fraction (numerator, denominator) using Net Asset Value (NAV).
 //
 // Semantics
 //   - Forward NAV (srcDenom → underlyingAsset):
@@ -56,8 +85,8 @@ func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom string, vault types.
 		return math.NewInt(1), math.NewInt(1), nil
 	}
 
-	fwd, errF := k.MarkerKeeper.GetNetAssetValue(ctx, srcDenom, underlyingAsset)
-	rev, errR := k.MarkerKeeper.GetNetAssetValue(ctx, underlyingAsset, srcDenom)
+	fwd, errF := k.getNetAssetValue(ctx, vault.GetAddress(), srcDenom, underlyingAsset)
+	rev, errR := k.getNetAssetValue(ctx, vault.GetAddress(), underlyingAsset, srcDenom)
 
 	if fwd == nil && rev == nil {
 		if errF != nil {
@@ -80,26 +109,30 @@ func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom string, vault types.
 	}
 
 	if useForward {
-		if fwd.Volume == 0 {
+		volAmt, ok := math.NewIntFromString(fwd.Volume)
+		if !ok {
+			return math.Int{}, math.Int{}, fmt.Errorf("invalid nav volume: %s", fwd.Volume)
+		}
+		if volAmt.IsZero() {
 			return math.Int{}, math.Int{}, fmt.Errorf("nav volume is zero for %s/%s", srcDenom, underlyingAsset)
 		}
 		if fwd.Price.Amount.IsZero() {
 			return math.Int{}, math.Int{}, fmt.Errorf("nav price is zero for %s/%s", srcDenom, underlyingAsset)
 		}
-		priceAmt := fwd.Price.Amount
-		volAmt := math.NewIntFromUint64(fwd.Volume)
-		return priceAmt, volAmt, nil
+		return fwd.Price.Amount, volAmt, nil
 	}
 
+	volAmt, ok := math.NewIntFromString(rev.Volume)
+	if !ok {
+		return math.Int{}, math.Int{}, fmt.Errorf("invalid nav volume: %s", rev.Volume)
+	}
+	if volAmt.IsZero() {
+		return math.Int{}, math.Int{}, fmt.Errorf("nav volume is zero for %s/%s", underlyingAsset, srcDenom)
+	}
 	if rev.Price.Amount.IsZero() {
 		return math.Int{}, math.Int{}, fmt.Errorf("nav price is zero for %s/%s", underlyingAsset, srcDenom)
 	}
-	if rev.Volume == 0 {
-		return math.Int{}, math.Int{}, fmt.Errorf("nav volume is zero for %s/%s", underlyingAsset, srcDenom)
-	}
-	priceAmt := math.NewIntFromUint64(rev.Volume)
-	volAmt := rev.Price.Amount
-	return priceAmt, volAmt, nil
+	return volAmt, rev.Price.Amount, nil
 }
 
 // ToUnderlyingAssetAmount converts an input coin into its value expressed in
@@ -159,19 +192,145 @@ func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccoun
 	if vault.Paused {
 		return vault.PausedBalance.Amount, nil
 	}
-	balances := k.BankKeeper.GetAllBalances(ctx, vault.PrincipalMarkerAddress())
+	principalAddr := vault.PrincipalMarkerAddress()
+	balances := k.BankKeeper.GetAllBalances(ctx, principalAddr)
+
+	// INCLUDE ASSETS ON HOLD (Task 4.2)
+	holds, err := k.HoldKeeper.GetAllHolds(ctx, principalAddr)
+	if err != nil {
+		return math.Int{}, fmt.Errorf("GetAllHolds failed for principalAddr %s: %w", principalAddr, err)
+	}
+	balances = balances.Add(holds...)
+
 	total := math.ZeroInt()
 	for _, balance := range balances {
-		if balance.Denom == vault.TotalShares.Denom || !vault.IsAcceptedDenom(balance.Denom) {
+		if balance.Denom == vault.TotalShares.Denom {
 			continue
 		}
+
+		// Underlying asset is always valued 1:1, even if supply = 1
+		if balance.Denom == vault.UnderlyingAsset {
+			total = total.Add(balance.Amount)
+			continue
+		}
+
+		marker, err := k.MarkerKeeper.GetMarkerByDenom(ctx, balance.Denom)
+		if err == nil && marker != nil && marker.GetSupply().Amount.Equal(math.OneInt()) {
+			nav, err := k.getNetAssetValue(ctx, vault.GetAddress(), balance.Denom, vault.UnderlyingAsset)
+			if err != nil {
+				return math.Int{}, fmt.Errorf("failed to get nav for nft %s: %w", balance.Denom, err)
+			}
+			if nav == nil {
+				return math.Int{}, fmt.Errorf("strict valuation failure: no nav found for nft %s/%s", balance.Denom, vault.UnderlyingAsset)
+			}
+			vol, ok := math.NewIntFromString(nav.Volume)
+			if !ok || vol.IsZero() {
+				return math.Int{}, fmt.Errorf("strict valuation failure: invalid volume for nft %s nav", balance.Denom)
+			}
+
+			// Value = (Balance * Price) / Volume
+			assetValue := balance.Amount.Mul(nav.Price.Amount).Quo(vol)
+
+			// APPLY ADVANCE RATE (DISCOUNT) FOR NFT ASSETS
+			if vault.AdvanceRate != "" {
+				ar, err := math.LegacyNewDecFromStr(vault.AdvanceRate)
+				if err == nil && !ar.IsNil() && !ar.Equal(math.LegacyOneDec()) {
+					// We multiply the discovered value by the advance rate (e.g., 0.8)
+					discountedValue := ar.MulInt(assetValue).TruncateInt()
+					assetValue = discountedValue
+				}
+			}
+
+			total = total.Add(assetValue)
+			continue
+			}
+
+		if !vault.IsAcceptedDenom(balance.Denom) {
+			continue
+		}
+
 		val, err := k.ToUnderlyingAssetAmount(ctx, vault, balance)
 		if err != nil {
-			return math.Int{}, fmt.Errorf("failed to convert balance to underlying: %w", err)
+			return math.Int{}, fmt.Errorf("strict valuation failure: failed to convert balance %s to underlying: %w", balance.Denom, err)
 		}
 		total = total.Add(val)
 	}
 	return total, nil
+}
+
+// GetLiquidityBreakdown calculates the breakdown between cash (fungible underlying)
+// and collateral (NFT/RWA assets) for a vault.
+func (k Keeper) GetLiquidityBreakdown(ctx sdk.Context, vault types.VaultAccount) (types.LiquidityBreakdown, error) {
+	principalAddr := vault.PrincipalMarkerAddress()
+	balances := k.BankKeeper.GetAllBalances(ctx, principalAddr)
+
+	holds, err := k.HoldKeeper.GetAllHolds(ctx, principalAddr)
+	if err != nil {
+		return types.LiquidityBreakdown{}, fmt.Errorf("GetAllHolds failed for principalAddr %s: %w", principalAddr, err)
+	}
+	balances = balances.Add(holds...)
+
+	cash := math.ZeroInt()
+	collateral := math.ZeroInt()
+
+	for _, coin := range balances {
+		if coin.Denom == vault.TotalShares.Denom {
+			continue
+		}
+
+		// Underlying asset is always cash 1:1
+		if coin.Denom == vault.UnderlyingAsset {
+			cash = cash.Add(coin.Amount)
+			continue
+		}
+
+		// Check if this is a unique NFT marker (supply = 1)
+		marker, err := k.MarkerKeeper.GetMarkerByDenom(ctx, coin.Denom)
+		if err == nil && marker != nil && marker.GetSupply().Amount.Equal(math.OneInt()) {
+			nav, err := k.getNetAssetValue(ctx, vault.GetAddress(), coin.Denom, vault.UnderlyingAsset)
+			if err != nil {
+				return types.LiquidityBreakdown{}, fmt.Errorf("failed to get nav for nft %s: %w", coin.Denom, err)
+			}
+			if nav == nil {
+				return types.LiquidityBreakdown{}, fmt.Errorf("strict valuation failure: no nav found for nft %s/%s", coin.Denom, vault.UnderlyingAsset)
+			}
+			vol, ok := math.NewIntFromString(nav.Volume)
+			if !ok || vol.IsZero() {
+				return types.LiquidityBreakdown{}, fmt.Errorf("strict valuation failure: invalid volume for nft %s nav", coin.Denom)
+			}
+
+			assetValue := coin.Amount.Mul(nav.Price.Amount).Quo(vol)
+			if vault.AdvanceRate != "" {
+				ar, err := math.LegacyNewDecFromStr(vault.AdvanceRate)
+				if err == nil && !ar.IsNil() && !ar.Equal(math.LegacyOneDec()) {
+					assetValue = ar.MulInt(assetValue).TruncateInt()
+				}
+			}
+			collateral = collateral.Add(assetValue)
+			continue
+		}
+
+		if vault.IsAcceptedDenom(coin.Denom) {
+			val, err := k.ToUnderlyingAssetAmount(ctx, vault, coin)
+			if err != nil {
+				return types.LiquidityBreakdown{}, fmt.Errorf("strict valuation failure: failed to convert balance %s to underlying: %w", coin.Denom, err)
+			}
+			cash = cash.Add(val)
+		}
+	}
+
+	total := cash.Add(collateral)
+	ratio := math.LegacyZeroDec()
+	if !total.IsZero() {
+		ratio = math.LegacyNewDecFromInt(collateral).Quo(math.LegacyNewDecFromInt(total))
+	}
+
+	return types.LiquidityBreakdown{
+		CashAmount:       sdk.NewCoin(vault.UnderlyingAsset, cash),
+		CollateralAmount: sdk.NewCoin(vault.UnderlyingAsset, collateral),
+		TotalValue:       sdk.NewCoin(vault.UnderlyingAsset, total),
+		Ratio:            ratio.String(),
+	}, nil
 }
 
 // GetNAVPerShareInUnderlyingAsset returns the floor NAV per share in units of

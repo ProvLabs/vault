@@ -86,24 +86,24 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, _ client.TxEncodingCo
 // AppModule implements the core vault module functionality.
 type AppModule struct {
 	AppModuleBasic
-	keeper       *keeper.Keeper
-	addressCodec address.Codec
-	markerKeeper types.MarkerKeeper
-	bankKeeper   types.BankKeeper
-	nameKeeper   types.NameKeeper
-	attrKeeper   types.AttributeKeeper
+	keeper          *keeper.Keeper
+	addressCodec    address.Codec
+	markerKeeper    types.MarkerKeeper
+	bankKeeper      types.BankKeeper
+	nameKeeper      types.NameKeeper
+	attributeKeeper types.AttributeKeeper
 }
 
 // NewAppModule creates a new AppModule instance.
 func NewAppModule(keeper *keeper.Keeper, mk types.MarkerKeeper, bk types.BankKeeper, nk types.NameKeeper, attk types.AttributeKeeper, addressCodec address.Codec) AppModule {
 	return AppModule{
-		AppModuleBasic: NewAppModuleBasic(),
-		keeper:         keeper,
-		addressCodec:   addressCodec,
-		markerKeeper:   mk,
-		bankKeeper:     bk,
-		nameKeeper:     nk,
-		attrKeeper:     attk,
+		AppModuleBasic:  NewAppModuleBasic(),
+		keeper:          keeper,
+		addressCodec:    addressCodec,
+		markerKeeper:    mk,
+		bankKeeper:      bk,
+		nameKeeper:      nk,
+		attributeKeeper: attk,
 	}
 }
 

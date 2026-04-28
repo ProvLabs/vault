@@ -7,20 +7,20 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	"github.com/provenance-io/provenance/x/marker/types"
 )
 
 type MarkerKeeper interface {
 	MintCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) error
 	BurnCoin(ctx sdk.Context, caller sdk.AccAddress, coin sdk.Coin) error
-	AddFinalizeAndActivateMarker(ctx sdk.Context, marker markertypes.MarkerAccountI) error
+	AddFinalizeAndActivateMarker(ctx sdk.Context, marker types.MarkerAccountI) error
 	TransferCoin(ctx sdk.Context, from, to, admin sdk.AccAddress, amount sdk.Coin) error
 	WithdrawCoins(ctx sdk.Context, caller sdk.AccAddress, recipient sdk.AccAddress, denom string, coins sdk.Coins) error
-	GetMarker(ctx sdk.Context, address sdk.AccAddress) (markertypes.MarkerAccountI, error)
-	GetMarkerByDenom(ctx sdk.Context, denom string) (markertypes.MarkerAccountI, error)
+	GetMarker(ctx sdk.Context, address sdk.AccAddress) (types.MarkerAccountI, error)
+	GetMarkerByDenom(ctx sdk.Context, denom string) (types.MarkerAccountI, error)
 	IsMarkerAccount(ctx sdk.Context, addr sdk.AccAddress) bool
-	GetNetAssetValue(ctx sdk.Context, markerDenom, priceDenom string) (*markertypes.NetAssetValue, error)
-	SetNetAssetValue(ctx sdk.Context, marker markertypes.MarkerAccountI, netAssetValue markertypes.NetAssetValue, source string) error
+	GetNetAssetValue(ctx sdk.Context, markerDenom, priceDenom string) (*types.NetAssetValue, error)
+	SetNetAssetValue(ctx sdk.Context, marker types.MarkerAccountI, netAssetValue types.NetAssetValue, source string) error
 	SendRestrictionFn(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error)
 	GetUnrestrictedDenomRegex(ctx sdk.Context) (regex string)
 }
@@ -58,12 +58,11 @@ type AttributeKeeper interface {
 
 // HoldKeeper provides a read-only view of assets that are currently "locked"
 // in an account without being moved. The vault module uses this to ensure that
-// assets committed to pending P2P trades are still included in Total Vault Value
-// (TVV) calculations and liquidity breakdowns.
+// assets on hold are still included in Total Vault Value (TVV) calculations
+// and liquidity breakdowns.
 type HoldKeeper interface {
 	// GetHoldCoin returns the amount of a specific denom that is currently on hold for an address.
 	GetHoldCoin(ctx sdk.Context, addr sdk.AccAddress, denom string) (sdk.Coin, error)
 	// GetAllHolds returns all coins currently on hold for a specific address.
 	GetAllHolds(ctx sdk.Context, addr sdk.AccAddress) (sdk.Coins, error)
 }
-

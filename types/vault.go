@@ -375,6 +375,7 @@ func NewPendingSwapOut(owner sdk.AccAddress, vaultAddr sdk.AccAddress, shares sd
 	}
 }
 
+// Validate performs basic checks on a PendingSwapOut request.
 func (p PendingSwapOut) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(p.Owner); err != nil {
 		return fmt.Errorf("invalid owner address %s: %w", p.Owner, err)

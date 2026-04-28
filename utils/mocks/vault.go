@@ -117,6 +117,7 @@ func NewVaultKeeper(
 	k := keeper.NewKeeper(
 		cfg.Codec,
 		runtime.NewKVStoreService(key),
+
 		runtime.ProvideEventService(),
 		addresscodec.NewBech32Codec("provlabs"),
 		authtypes.NewModuleAddress(govtypes.ModuleName),

@@ -50,7 +50,6 @@ func CreateVault(ctx sdk.Context, vk *keeper.Keeper, ak types.AccountKeeper, bk 
 // pre-flight check and for collecting AUM fees.
 func PrepareVaultMarkers(ctx sdk.Context, ak types.AccountKeeper, mk markerkeeper.Keeper, underlying, paymentDenom, share string) error {
 	vaultAddr := types.GetVaultAddress(share)
-	principalAddr := markertypes.MustGetMarkerAddress(share)
 	mintAddr := ak.GetModuleAddress("mint")
 	for _, denom := range []string{underlying, paymentDenom} {
 		if denom == "" {
@@ -60,13 +59,13 @@ func PrepareVaultMarkers(ctx sdk.Context, ak types.AccountKeeper, mk markerkeepe
 		if err != nil {
 			return fmt.Errorf("failed to get marker for %s: %w", denom, err)
 		}
-		for _, grantee := range []sdk.AccAddress{vaultAddr, principalAddr} {
-			accessList := markertypes.AccessList{markertypes.Access_Withdraw, markertypes.Access_Deposit}
-			if m.GetMarkerType() == markertypes.MarkerType_RestrictedCoin {
-				accessList = append(accessList, markertypes.Access_Transfer)
+		if m.GetMarkerType() == markertypes.MarkerType_RestrictedCoin {
+			if err := GrantTransferPermission(ctx, mk, denom, vaultAddr, mintAddr); err != nil {
+				return fmt.Errorf("failed to grant transfer permission for %s: %w", denom, err)
 			}
-			if err := GrantAccess(ctx, mk, denom, grantee, mintAddr, accessList); err != nil {
-				return fmt.Errorf("failed to grant permissions for %s to %s: %w", denom, grantee, err)
+		} else {
+			if err := GrantWithdrawPermission(ctx, mk, denom, vaultAddr, mintAddr); err != nil {
+				return fmt.Errorf("failed to grant withdraw permission for %s: %w", denom, err)
 			}
 		}
 	}

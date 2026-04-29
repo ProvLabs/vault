@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -5389,6 +5390,126 @@ func (s *TestSuite) TestMsgServer_UpdateVaultAUMFeeBips() {
 			}
 
 			testDef.expectedResponse = &types.MsgUpdateVaultAUMFeeBipsResponse{}
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_UpdateVaultAssetNAV() {
+	type postCheckArgs struct {
+		VaultAddress sdk.AccAddress
+		Denom        string
+		ExpectedNav  types.VaultNAV
+	}
+
+	testBlockHeight := int64(42)
+
+	testDef := msgServerTestDef[types.MsgUpdateVaultAssetNAVRequest, types.MsgUpdateVaultAssetNAVResponse, postCheckArgs]{
+		endpointName: "UpdateVaultAssetNAV",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).UpdateVaultAssetNAV,
+		postCheck: func(msg *types.MsgUpdateVaultAssetNAVRequest, args postCheckArgs) {
+			storedNav, err := s.k.NetAssetValues.Get(s.ctx, collections.Join(args.VaultAddress, args.Denom))
+			s.Require().NoError(err, "local NAV should be present in store for vault %s denom %s", args.VaultAddress, args.Denom)
+			s.Assert().Equal(args.ExpectedNav.Price, storedNav.Price, "stored NAV price mismatch for vault %s denom %s", args.VaultAddress, args.Denom)
+			s.Assert().Equal(args.ExpectedNav.Volume, storedNav.Volume, "stored NAV volume mismatch for vault %s denom %s", args.VaultAddress, args.Denom)
+			s.Assert().Equal(uint64(testBlockHeight), storedNav.UpdatedBlockHeight, "stored NAV block height must equal current block height, not the caller-supplied value, for vault %s denom %s", args.VaultAddress, args.Denom)
+		},
+	}
+
+	underlyingDenom := "ylds"
+	paymentDenom := "usdc"
+	shareDenom := "vaultshares"
+	admin := s.adminAddr
+	otherUser := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1_000))
+	vaultAddr := types.GetVaultAddress(shareDenom)
+
+	setup := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingDenom, 1_000), admin)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           admin.String(),
+			ShareDenom:      shareDenom,
+			UnderlyingAsset: underlyingDenom,
+			PaymentDenom:    paymentDenom,
+		})
+		s.Require().NoError(err, "failed to create vault in UpdateVaultAssetNAV setup for share denom %s", shareDenom)
+		s.ctx = s.ctx.WithBlockHeight(testBlockHeight).WithEventManager(sdk.NewEventManager())
+	}
+
+	navPrice := sdk.NewInt64Coin(underlyingDenom, 1_000_000)
+	navVolume := "500000"
+
+	tests := []struct {
+		name               string
+		setup              func()
+		msg                types.MsgUpdateVaultAssetNAVRequest
+		postCheckArgs      postCheckArgs
+		expectedEvents     sdk.Events
+		expectedErrSubstrs []string
+	}{
+		{
+			name:  "happy path - NAV stored with block height normalized to current block",
+			setup: setup,
+			msg: types.MsgUpdateVaultAssetNAVRequest{
+				Authority:    admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Denom:        paymentDenom,
+				Nav: types.VaultNAV{
+					Price:              navPrice,
+					Volume:             navVolume,
+					UpdatedBlockHeight: 999, // caller-supplied height; must be overwritten
+				},
+			},
+			postCheckArgs: postCheckArgs{
+				VaultAddress: vaultAddr,
+				Denom:        paymentDenom,
+				ExpectedNav: types.VaultNAV{
+					Price:  navPrice,
+					Volume: navVolume,
+				},
+			},
+			expectedEvents: sdk.Events{},
+		},
+		{
+			name:  "failure - vault not found",
+			setup: func() { /* no vault created */ },
+			msg: types.MsgUpdateVaultAssetNAVRequest{
+				Authority:    admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Denom:        paymentDenom,
+				Nav: types.VaultNAV{
+					Price:  navPrice,
+					Volume: navVolume,
+				},
+			},
+			expectedErrSubstrs: []string{"vault not found"},
+		},
+		{
+			name:  "failure - unauthorized authority",
+			setup: setup,
+			msg: types.MsgUpdateVaultAssetNAVRequest{
+				Authority:    otherUser.String(),
+				VaultAddress: vaultAddr.String(),
+				Denom:        paymentDenom,
+				Nav: types.VaultNAV{
+					Price:  navPrice,
+					Volume: navVolume,
+				},
+			},
+			expectedErrSubstrs: []string{"unauthorized"},
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			tc := msgServerTestCase[types.MsgUpdateVaultAssetNAVRequest, postCheckArgs]{
+				name:               tt.name,
+				setup:              tt.setup,
+				msg:                tt.msg,
+				postCheckArgs:      tt.postCheckArgs,
+				expectedEvents:     tt.expectedEvents,
+				expectedErrSubstrs: tt.expectedErrSubstrs,
+			}
+			testDef.expectedResponse = &types.MsgUpdateVaultAssetNAVResponse{}
 			runMsgServerTestCase(s, testDef, tc)
 		})
 	}

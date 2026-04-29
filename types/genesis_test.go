@@ -171,6 +171,93 @@ func TestGenesisState_Validate(t *testing.T) {
 			},
 			expectedErr: "invalid params: invalid DefaultAumFeeBips",
 		},
+		{
+			name: "valid net asset value entry for imported vault",
+			genState: types.GenesisState{
+				Params: types.DefaultParams(),
+				Vaults: []types.VaultAccount{validVault},
+				NetAssetValues: []types.NetAssetValueGenesisEntry{
+					{
+						VaultAddress: validAddr,
+						Denom:        "payment",
+						Nav: types.VaultNAV{
+							Price:  sdk.NewInt64Coin("under", 1_000_000),
+							Volume: "1000000",
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "invalid bech32 vault address in net asset value entry",
+			genState: types.GenesisState{
+				Params: types.DefaultParams(),
+				NetAssetValues: []types.NetAssetValueGenesisEntry{
+					{
+						VaultAddress: "not-a-bech32-address",
+						Denom:        "payment",
+						Nav: types.VaultNAV{
+							Price:  sdk.NewInt64Coin("under", 1),
+							Volume: "1",
+						},
+					},
+				},
+			},
+			expectedErr: "invalid net asset value vault address at index 0",
+		},
+		{
+			name: "net asset value vault address is not an imported vault",
+			genState: types.GenesisState{
+				Params: types.DefaultParams(),
+				NetAssetValues: []types.NetAssetValueGenesisEntry{
+					{
+						VaultAddress: validAddr,
+						Denom:        "payment",
+						Nav: types.VaultNAV{
+							Price:  sdk.NewInt64Coin("under", 1),
+							Volume: "1",
+						},
+					},
+				},
+			},
+			expectedErr: "net asset value vault address at index 0 is not an imported vault",
+		},
+		{
+			name: "empty denom in net asset value entry",
+			genState: types.GenesisState{
+				Params: types.DefaultParams(),
+				Vaults: []types.VaultAccount{validVault},
+				NetAssetValues: []types.NetAssetValueGenesisEntry{
+					{
+						VaultAddress: validAddr,
+						Denom:        "",
+						Nav: types.VaultNAV{
+							Price:  sdk.NewInt64Coin("under", 1),
+							Volume: "1",
+						},
+					},
+				},
+			},
+			expectedErr: "empty denom in net asset value entry at index 0",
+		},
+		{
+			name: "invalid nav in net asset value entry",
+			genState: types.GenesisState{
+				Params: types.DefaultParams(),
+				Vaults: []types.VaultAccount{validVault},
+				NetAssetValues: []types.NetAssetValueGenesisEntry{
+					{
+						VaultAddress: validAddr,
+						Denom:        "payment",
+						Nav: types.VaultNAV{
+							Price:  sdk.NewInt64Coin("under", 1),
+							Volume: "",
+						},
+					},
+				},
+			},
+			expectedErr: "invalid net asset value at index 0",
+		},
 	}
 
 	for _, tt := range tests {

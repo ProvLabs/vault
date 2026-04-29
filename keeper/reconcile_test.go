@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"time"
 
+	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -1691,6 +1692,13 @@ func (s *TestSuite) TestKeeper_setShareDenomNAV() {
 				s.Require().Error(err, "expected setShareDenomNAV to return an error for test case %q (shares=%s)", tc.name, tc.shares.String())
 			} else {
 				s.Require().NoError(err, "expected setShareDenomNAV to succeed for test case %q (shares=%s)", tc.name, tc.shares.String())
+
+				localNav, navErr := s.k.NetAssetValues.Get(s.ctx, collections.Join(vaultAddr, shareDenom))
+				s.Require().NoError(navErr, "local NetAssetValues store should contain an entry for vault %s denom %s after setShareDenomNAV (test case %q)", vaultAddr, shareDenom, tc.name)
+				s.Require().Equal(tvv, localNav.Price.Amount, "local NAV price amount should equal TVV for test case %q (shares=%s)", tc.name, tc.shares.String())
+				s.Require().Equal(vault.UnderlyingAsset, localNav.Price.Denom, "local NAV price denom should equal underlying asset for test case %q", tc.name)
+				s.Require().Equal(tc.shares.Amount.String(), localNav.Volume, "local NAV volume should equal vault total shares amount for test case %q (shares=%s)", tc.name, tc.shares.String())
+				s.Require().Equal(uint64(s.ctx.BlockHeight()), localNav.UpdatedBlockHeight, "local NAV block height should equal current block height for test case %q", tc.name)
 			}
 
 			events := normalizeEvents(s.ctx.EventManager().Events())

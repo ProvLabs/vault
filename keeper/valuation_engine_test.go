@@ -122,6 +122,50 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 			expectedNumerator:   9,
 			expectedDenominator: 3,
 		},
+		{
+			name:      "local-store-forward-nav-takes-priority-over-marker-module",
+			fromDenom: paymentDenom,
+			setup: func() {
+				// marker module already has forward NAV price=1/volume=2 from setupSinglePaymentDenomVault
+				// local store overrides with price=7/volume=3
+				vaultAddr := sdk.AccAddress("vault_______________")
+				s.Require().NoError(s.k.NetAssetValues.Set(s.ctx, collections.Join(vaultAddr, paymentDenom), types.VaultNAV{
+					Price:              sdk.NewInt64Coin(underlyingDenom, 7),
+					Volume:             "3",
+					UpdatedBlockHeight: uint64(s.ctx.BlockHeight()),
+				}), "seeding local forward NAV for local-store priority test")
+			},
+			expectedNumerator:   7,
+			expectedDenominator: 3,
+		},
+		{
+			name:      "local-store-forward-nav-invalid-volume-string-returns-error",
+			fromDenom: paymentDenom,
+			setup: func() {
+				vaultAddr := sdk.AccAddress("vault_______________")
+				s.Require().NoError(s.k.NetAssetValues.Set(s.ctx, collections.Join(vaultAddr, paymentDenom), types.VaultNAV{
+					Price:              sdk.NewInt64Coin(underlyingDenom, 1),
+					Volume:             "not-a-number",
+					UpdatedBlockHeight: uint64(s.ctx.BlockHeight()),
+				}), "seeding local forward NAV with invalid volume for error path test")
+			},
+			expectedErrorContains: "invalid nav volume",
+		},
+		{
+			name:      "local-store-reverse-nav-invalid-volume-string-returns-error",
+			fromDenom: paymentDenom,
+			setup: func() {
+				vaultAddr := sdk.AccAddress("vault_______________")
+				// set local reverse NAV at a higher block height so it is selected over the marker forward NAV
+				s.bumpHeight()
+				s.Require().NoError(s.k.NetAssetValues.Set(s.ctx, collections.Join(vaultAddr, underlyingDenom), types.VaultNAV{
+					Price:              sdk.NewInt64Coin(paymentDenom, 1),
+					Volume:             "not-a-number",
+					UpdatedBlockHeight: uint64(s.ctx.BlockHeight()),
+				}), "seeding local reverse NAV with invalid volume for error path test")
+			},
+			expectedErrorContains: "invalid nav volume",
+		},
 	}
 
 	for _, tc := range cases {
@@ -570,7 +614,7 @@ func (s *TestSuite) TestGetTVVInUnderlyingAsset_IncludesNFTMarkers() {
 			expectedTVV: math.NewInt(500),
 		},
 		{
-			name: "NFT + fungible",
+			name: "NFT + fungible underlying",
 			setup: func(vault *types.VaultAccount) {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(nftDenom, 1), s.adminAddr)
 				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, s.adminAddr, sdk.NewCoins(sdk.NewInt64Coin(nftDenom, 1))))
@@ -586,6 +630,69 @@ func (s *TestSuite) TestGetTVVInUnderlyingAsset_IncludesNFTMarkers() {
 				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 100))))
 			},
 			expectedTVV: math.NewInt(600),
+		},
+		{
+			name: "NFT with advance rate discount applied to valuation",
+			setup: func(vault *types.VaultAccount) {
+				vault.AdvanceRate = "0.8"
+				s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(nftDenom, 1), s.adminAddr)
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, s.adminAddr, sdk.NewCoins(sdk.NewInt64Coin(nftDenom, 1))))
+				s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(nftDenom, 1))))
+
+				s.Require().NoError(s.k.NetAssetValues.Set(s.ctx, collections.Join(vault.GetAddress(), nftDenom), types.VaultNAV{
+					Price:              sdk.NewInt64Coin(underlyingDenom, 500),
+					Volume:             math.OneInt().String(),
+					UpdatedBlockHeight: uint64(s.ctx.BlockHeight()),
+				}), "seeding NFT NAV for advance rate test")
+			},
+			// 500 * 0.8 = 400
+			expectedTVV: math.NewInt(400),
+		},
+		{
+			name: "NFT with identity advance rate does not discount valuation",
+			setup: func(vault *types.VaultAccount) {
+				vault.AdvanceRate = "1.0"
+				s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(nftDenom, 1), s.adminAddr)
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, s.adminAddr, sdk.NewCoins(sdk.NewInt64Coin(nftDenom, 1))))
+				s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(nftDenom, 1))))
+
+				s.Require().NoError(s.k.NetAssetValues.Set(s.ctx, collections.Join(vault.GetAddress(), nftDenom), types.VaultNAV{
+					Price:              sdk.NewInt64Coin(underlyingDenom, 500),
+					Volume:             math.OneInt().String(),
+					UpdatedBlockHeight: uint64(s.ctx.BlockHeight()),
+				}), "seeding NFT NAV for identity advance rate test")
+			},
+			// advance rate == 1.0 is treated as no-op in the code
+			expectedTVV: math.NewInt(500),
+		},
+		{
+			name: "NFT with no NAV set returns strict valuation failure",
+			setup: func(vault *types.VaultAccount) {
+				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(nftDenom, 1), s.adminAddr)
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, s.adminAddr, sdk.NewCoins(sdk.NewInt64Coin(nftDenom, 1))))
+				s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(nftDenom, 1))))
+				// intentionally no NAV set for nftDenom
+			},
+			expectedError: "strict valuation failure: no nav found for nft",
+		},
+		{
+			name: "NFT with zero volume in NAV returns strict valuation failure",
+			setup: func(vault *types.VaultAccount) {
+				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(nftDenom, 1), s.adminAddr)
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, s.adminAddr, sdk.NewCoins(sdk.NewInt64Coin(nftDenom, 1))))
+				s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(nftDenom, 1))))
+
+				s.Require().NoError(s.k.NetAssetValues.Set(s.ctx, collections.Join(vault.GetAddress(), nftDenom), types.VaultNAV{
+					Price:              sdk.NewInt64Coin(underlyingDenom, 500),
+					Volume:             "0",
+					UpdatedBlockHeight: uint64(s.ctx.BlockHeight()),
+				}), "seeding NFT NAV with zero volume for error path test")
+			},
+			expectedError: "strict valuation failure: invalid volume for nft",
 		},
 	}
 

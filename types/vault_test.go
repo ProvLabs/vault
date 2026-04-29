@@ -806,6 +806,82 @@ func TestPendingSwapOut_Validate(t *testing.T) {
 	}
 }
 
+func TestVaultNAV_Validate(t *testing.T) {
+	validPrice := sdk.NewInt64Coin("ylds", 1_000_000)
+
+	tests := []struct {
+		name        string
+		nav         types.VaultNAV
+		expectedErr string
+	}{
+		{
+			name: "valid nav with positive price and positive volume",
+			nav: types.VaultNAV{
+				Price:  validPrice,
+				Volume: "1000000",
+			},
+		},
+		{
+			name: "valid nav with zero price amount",
+			nav: types.VaultNAV{
+				Price:  sdk.NewInt64Coin("ylds", 0),
+				Volume: "1",
+			},
+		},
+		{
+			name: "valid nav with zero volume",
+			nav: types.VaultNAV{
+				Price:  validPrice,
+				Volume: "0",
+			},
+		},
+		{
+			name: "invalid price - bad denom",
+			nav: types.VaultNAV{
+				Price:  sdk.Coin{Denom: "!invalid!", Amount: math.NewInt(1)},
+				Volume: "1",
+			},
+			expectedErr: "invalid price",
+		},
+		{
+			name: "empty volume",
+			nav: types.VaultNAV{
+				Price:  validPrice,
+				Volume: "",
+			},
+			expectedErr: "volume cannot be empty",
+		},
+		{
+			name: "non-numeric volume string",
+			nav: types.VaultNAV{
+				Price:  validPrice,
+				Volume: "not-a-number",
+			},
+			expectedErr: "invalid volume",
+		},
+		{
+			name: "negative volume",
+			nav: types.VaultNAV{
+				Price:  validPrice,
+				Volume: "-1",
+			},
+			expectedErr: "volume cannot be negative",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.nav.Validate()
+			if tt.expectedErr == "" {
+				require.NoError(t, err, "Validate() should not return an error for test case %q", tt.name)
+			} else {
+				require.Error(t, err, "Validate() should return an error for test case %q", tt.name)
+				require.Contains(t, err.Error(), tt.expectedErr, "Validate() error message mismatch for test case %q", tt.name)
+			}
+		})
+	}
+}
+
 func TestValidateSwapLimits(t *testing.T) {
 	tests := []struct {
 		name        string

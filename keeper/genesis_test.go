@@ -5,6 +5,7 @@ import (
 	"math"
 	"time"
 
+	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -479,4 +480,144 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsWhenFeeTimeoutHasUnknownVault() {
 	}
 	expectedPanic := fmt.Sprintf("invalid vault genesis state: fee timeout queue address at index 0 is not an imported vault: %s", badVaultAddr.String())
 	s.Require().PanicsWithError(expectedPanic, func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on unknown vault in fee timeout queue")
+}
+
+func (s *TestSuite) TestVaultGenesis_NAVRoundTrip() {
+	shareDenom := "navshare"
+	underlyingDenom := "ylds"
+	paymentDenom := "usdc"
+	admin := s.adminAddr.String()
+	vaultAddr := types.GetVaultAddress(shareDenom)
+
+	navPrice := sdk.NewInt64Coin(underlyingDenom, 1_000_000)
+	navVolume := "500000"
+
+	vault := types.VaultAccount{
+		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
+		Admin:               admin,
+		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
+		UnderlyingAsset:     underlyingDenom,
+		PaymentDenom:        underlyingDenom,
+		CurrentInterestRate: types.ZeroInterestRate,
+		DesiredInterestRate: types.ZeroInterestRate,
+	}
+
+	genesis := &types.GenesisState{
+		Params: types.DefaultParams(),
+		Vaults: []types.VaultAccount{vault},
+		NetAssetValues: []types.NetAssetValueGenesisEntry{
+			{
+				VaultAddress: vaultAddr.String(),
+				Denom:        paymentDenom,
+				Nav: types.VaultNAV{
+					Price:              navPrice,
+					Volume:             navVolume,
+					UpdatedBlockHeight: 10,
+				},
+			},
+		},
+	}
+
+	s.k.InitGenesis(s.ctx, genesis)
+
+	storedNav, err := s.k.NetAssetValues.Get(s.ctx, collections.Join(vaultAddr, paymentDenom))
+	s.Require().NoError(err, "NAV should be retrievable from store after InitGenesis for vault %s denom %s", vaultAddr, paymentDenom)
+	s.Require().Equal(navPrice, storedNav.Price, "stored NAV price mismatch after InitGenesis")
+	s.Require().Equal(navVolume, storedNav.Volume, "stored NAV volume mismatch after InitGenesis")
+	s.Require().Equal(uint64(10), storedNav.UpdatedBlockHeight, "stored NAV block height mismatch after InitGenesis")
+
+	exported := s.k.ExportGenesis(s.ctx)
+	s.Require().Len(exported.NetAssetValues, 1, "exported genesis should contain exactly one NAV entry")
+	exportedEntry := exported.NetAssetValues[0]
+	s.Require().Equal(vaultAddr.String(), exportedEntry.VaultAddress, "exported NAV vault address mismatch")
+	s.Require().Equal(paymentDenom, exportedEntry.Denom, "exported NAV denom mismatch")
+	s.Require().Equal(navPrice, exportedEntry.Nav.Price, "exported NAV price mismatch")
+	s.Require().Equal(navVolume, exportedEntry.Nav.Volume, "exported NAV volume mismatch")
+}
+
+func (s *TestSuite) TestVaultGenesis_InitPanicsWhenNAVHasInvalidVaultAddress() {
+	shareDenom := "navshare"
+	underlyingDenom := "ylds"
+	admin := s.adminAddr.String()
+	vaultAddr := types.GetVaultAddress(shareDenom)
+
+	vault := types.VaultAccount{
+		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
+		Admin:               admin,
+		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
+		UnderlyingAsset:     underlyingDenom,
+		PaymentDenom:        underlyingDenom,
+		CurrentInterestRate: types.ZeroInterestRate,
+		DesiredInterestRate: types.ZeroInterestRate,
+	}
+
+	genesis := &types.GenesisState{
+		Params: types.DefaultParams(),
+		Vaults: []types.VaultAccount{vault},
+		NetAssetValues: []types.NetAssetValueGenesisEntry{
+			{
+				VaultAddress: "not-a-valid-bech32",
+				Denom:        "usdc",
+				Nav: types.VaultNAV{
+					Price:  sdk.NewInt64Coin(underlyingDenom, 1),
+					Volume: "1",
+				},
+			},
+		},
+	}
+
+	s.Require().Panics(func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic when NAV entry has invalid vault address")
+}
+
+func (s *TestSuite) TestVaultGenesis_ExportIncludesMultipleNAVEntries() {
+	shareDenom1 := "share1"
+	shareDenom2 := "share2"
+	underlyingDenom := "ylds"
+	admin := s.adminAddr.String()
+
+	vault1Addr := types.GetVaultAddress(shareDenom1)
+	vault2Addr := types.GetVaultAddress(shareDenom2)
+
+	makeVault := func(shareDenom string, addr sdk.AccAddress) types.VaultAccount {
+		return types.VaultAccount{
+			BaseAccount:         authtypes.NewBaseAccountWithAddress(addr),
+			Admin:               admin,
+			TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
+			UnderlyingAsset:     underlyingDenom,
+			PaymentDenom:        underlyingDenom,
+			CurrentInterestRate: types.ZeroInterestRate,
+			DesiredInterestRate: types.ZeroInterestRate,
+		}
+	}
+
+	genesis := &types.GenesisState{
+		Params: types.DefaultParams(),
+		Vaults: []types.VaultAccount{
+			makeVault(shareDenom1, vault1Addr),
+			makeVault(shareDenom2, vault2Addr),
+		},
+		NetAssetValues: []types.NetAssetValueGenesisEntry{
+			{
+				VaultAddress: vault1Addr.String(),
+				Denom:        "usdc",
+				Nav: types.VaultNAV{
+					Price:  sdk.NewInt64Coin(underlyingDenom, 1_000),
+					Volume: "500",
+				},
+			},
+			{
+				VaultAddress: vault2Addr.String(),
+				Denom:        "usdc",
+				Nav: types.VaultNAV{
+					Price:  sdk.NewInt64Coin(underlyingDenom, 2_000),
+					Volume: "1000",
+				},
+			},
+		},
+	}
+
+	s.k.InitGenesis(s.ctx, genesis)
+
+	exported := s.k.ExportGenesis(s.ctx)
+	s.Require().Len(exported.NetAssetValues, 2, "exported genesis should contain exactly two NAV entries")
 }

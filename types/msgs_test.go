@@ -1866,3 +1866,124 @@ func TestMsgUpdateSwapLimits_ValidateBasic(t *testing.T) {
 		runTests(t, tests)
 	})
 }
+
+func TestMsgUpdateVaultAssetNAVRequest_ValidateBasic(t *testing.T) {
+	authority := utils.TestAddress().Bech32
+	vault := utils.TestAddress().Bech32
+	validNav := types.VaultNAV{
+		Price:  sdk.NewInt64Coin("ylds", 1_000_000),
+		Volume: "1000000",
+	}
+
+	tests := []struct {
+		name        string
+		msg         types.MsgUpdateVaultAssetNAVRequest
+		expectedErr string
+	}{
+		{
+			name: "valid request",
+			msg: types.MsgUpdateVaultAssetNAVRequest{
+				Authority:    authority,
+				VaultAddress: vault,
+				Denom:        "mytoken",
+				Nav:          validNav,
+			},
+		},
+		{
+			name: "invalid authority address",
+			msg: types.MsgUpdateVaultAssetNAVRequest{
+				Authority:    "bad",
+				VaultAddress: vault,
+				Denom:        "mytoken",
+				Nav:          validNav,
+			},
+			expectedErr: "invalid authority address",
+		},
+		{
+			name: "invalid vault address",
+			msg: types.MsgUpdateVaultAssetNAVRequest{
+				Authority:    authority,
+				VaultAddress: "bad",
+				Denom:        "mytoken",
+				Nav:          validNav,
+			},
+			expectedErr: "invalid vault address",
+		},
+		{
+			name: "invalid denom",
+			msg: types.MsgUpdateVaultAssetNAVRequest{
+				Authority:    authority,
+				VaultAddress: vault,
+				Denom:        "!invalid!",
+				Nav:          validNav,
+			},
+			expectedErr: "invalid denom",
+		},
+		{
+			name: "invalid nav price - bad denom",
+			msg: types.MsgUpdateVaultAssetNAVRequest{
+				Authority:    authority,
+				VaultAddress: vault,
+				Denom:        "mytoken",
+				Nav: types.VaultNAV{
+					Price:  sdk.Coin{Denom: "!bad!", Amount: sdkmath.NewInt(1)},
+					Volume: "1",
+				},
+			},
+			expectedErr: "invalid nav price",
+		},
+		{
+			name: "non-parseable nav volume",
+			msg: types.MsgUpdateVaultAssetNAVRequest{
+				Authority:    authority,
+				VaultAddress: vault,
+				Denom:        "mytoken",
+				Nav: types.VaultNAV{
+					Price:  sdk.NewInt64Coin("ylds", 1),
+					Volume: "not-a-number",
+				},
+			},
+			expectedErr: "invalid nav volume",
+		},
+		{
+			name: "nav volume is zero - not positive",
+			msg: types.MsgUpdateVaultAssetNAVRequest{
+				Authority:    authority,
+				VaultAddress: vault,
+				Denom:        "mytoken",
+				Nav: types.VaultNAV{
+					Price:  sdk.NewInt64Coin("ylds", 1),
+					Volume: "0",
+				},
+			},
+			expectedErr: "invalid nav volume: must be positive",
+		},
+		{
+			name: "nav volume is negative - not positive",
+			msg: types.MsgUpdateVaultAssetNAVRequest{
+				Authority:    authority,
+				VaultAddress: vault,
+				Denom:        "mytoken",
+				Nav: types.VaultNAV{
+					Price:  sdk.NewInt64Coin("ylds", 1),
+					Volume: "-100",
+				},
+			},
+			expectedErr: "invalid nav volume: must be positive",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.msg.ValidateBasic()
+			if tt.expectedErr == "" {
+				assert.NoError(t, err, "ValidateBasic() should not return an error for test case %q", tt.name)
+			} else {
+				assert.Error(t, err, "ValidateBasic() should return an error for test case %q", tt.name)
+				if err != nil {
+					assert.Contains(t, err.Error(), tt.expectedErr, "ValidateBasic() error message mismatch for test case %q", tt.name)
+				}
+			}
+		})
+	}
+}

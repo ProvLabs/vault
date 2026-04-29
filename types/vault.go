@@ -405,16 +405,13 @@ func (v VaultNAV) Validate() error {
 	if !v.Price.IsValid() {
 		return fmt.Errorf("invalid price: %s", v.Price.String())
 	}
-	if v.Price.IsNegative() {
-		return fmt.Errorf("price cannot be negative: %s", v.Price.String())
-	}
 	if v.Volume == "" {
 		return fmt.Errorf("volume cannot be empty")
 	}
 	if vol, ok := sdkmath.NewIntFromString(v.Volume); !ok {
 		return fmt.Errorf("invalid volume: %s", v.Volume)
-	} else if vol.IsNegative() {
-		return fmt.Errorf("volume cannot be negative: %s", v.Volume)
+	} else if !vol.IsPositive() {
+		return fmt.Errorf("volume must be positive: %s", v.Volume)
 	}
 	return nil
 }

@@ -1266,6 +1266,9 @@ func SimulateMsgUpdateMaxSwapOutValue(k keeper.Keeper) simtypes.Operation {
 	}
 }
 
+// SimulateMsgUpdateVaultAssetNAV generates a random UpdateVaultAssetNAV operation for
+// fuzz/simulation testing. It picks a random vault and a management-authorized account,
+// then submits a NAV update for a randomly selected vault asset denom.
 func SimulateMsgUpdateVaultAssetNAV(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
@@ -1291,9 +1294,9 @@ func SimulateMsgUpdateVaultAssetNAV(k keeper.Keeper) simtypes.Operation {
 			VaultAddress: vault.GetAddress().String(),
 			Denom:        denom,
 			Nav: types.VaultNAV{
-				Price:              sdk.NewInt64Coin(vault.UnderlyingAsset, int64(r.Intn(1000)+1)),
-				Volume:             math.NewInt(int64(r.Intn(100)+1)).String(),
-				UpdatedBlockHeight: uint64(ctx.BlockHeight()),
+				Price:  sdk.NewInt64Coin(vault.UnderlyingAsset, int64(r.Intn(1000)+1)),
+				Volume: math.NewInt(int64(r.Intn(100)+1)).String(),
+				// UpdatedBlockHeight is overwritten by the handler; zero here is intentional.
 			},
 		}
 

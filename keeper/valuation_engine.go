@@ -11,6 +11,7 @@ import (
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 // getNetAssetValue retrieves the Net Asset Value (NAV) for a marker, prioritizing
@@ -27,7 +28,7 @@ func (k Keeper) getNetAssetValue(ctx sdk.Context, vaultAddr sdk.AccAddress, mark
 
 	markerNav, err := k.MarkerKeeper.GetNetAssetValue(ctx, markerDenom, priceDenom)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get marker nav for %s/%s: %w", markerDenom, priceDenom, err)
 	}
 	if markerNav == nil {
 		return nil, nil
@@ -206,36 +207,37 @@ func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccoun
 			continue
 		}
 
-		marker, err := k.MarkerKeeper.GetMarkerByDenom(ctx, balance.Denom)
-		if err == nil && marker != nil && marker.GetSupply().Amount.Equal(math.OneInt()) {
-			nav, err := k.getNetAssetValue(ctx, vault.GetAddress(), balance.Denom, vault.UnderlyingAsset)
+		// Use markertypes.MarkerAddress + GetMarker directly so that we can
+		// distinguish "denom is not a registered marker" (nil marker, nil error)
+		// from a genuine storage error (non-nil error). GetMarkerByDenom conflates
+		// both into a single error return, which would mask real store failures.
+		markerAddr, addrErr := markertypes.MarkerAddress(balance.Denom)
+		if addrErr == nil {
+			marker, err := k.MarkerKeeper.GetMarker(ctx, markerAddr)
 			if err != nil {
-				return math.Int{}, fmt.Errorf("failed to get nav for nft %s: %w", balance.Denom, err)
+				return math.Int{}, fmt.Errorf("failed to get marker for balance denom %s: %w", balance.Denom, err)
 			}
-			if nav == nil {
-				return math.Int{}, fmt.Errorf("strict valuation failure: no nav found for nft %s/%s", balance.Denom, vault.UnderlyingAsset)
-			}
-			vol, ok := math.NewIntFromString(nav.Volume)
-			if !ok || vol.IsZero() {
-				return math.Int{}, fmt.Errorf("strict valuation failure: invalid volume for nft %s nav", balance.Denom)
-			}
-
-			// Value = (Balance * Price) / Volume
-			assetValue := balance.Amount.Mul(nav.Price.Amount).Quo(vol)
-
-			// APPLY ADVANCE RATE (DISCOUNT) FOR NFT ASSETS
-			if vault.AdvanceRate != "" {
-				ar, err := math.LegacyNewDecFromStr(vault.AdvanceRate)
-				if err == nil && !ar.IsNil() && !ar.Equal(math.LegacyOneDec()) {
-					// We multiply the discovered value by the advance rate (e.g., 0.8)
-					discountedValue := ar.MulInt(assetValue).TruncateInt()
-					assetValue = discountedValue
+			if marker != nil && marker.GetSupply().Amount.Equal(math.OneInt()) {
+				nav, err := k.getNetAssetValue(ctx, vault.GetAddress(), balance.Denom, vault.UnderlyingAsset)
+				if err != nil {
+					return math.Int{}, fmt.Errorf("failed to get nav for nft %s: %w", balance.Denom, err)
 				}
-			}
+				if nav == nil {
+					return math.Int{}, fmt.Errorf("strict valuation failure: no nav found for nft %s/%s", balance.Denom, vault.UnderlyingAsset)
+				}
+				vol, ok := math.NewIntFromString(nav.Volume)
+				if !ok || vol.IsZero() {
+					return math.Int{}, fmt.Errorf("strict valuation failure: invalid volume for nft %s nav", balance.Denom)
+				}
 
-			total = total.Add(assetValue)
-			continue
+				// Price is total underlying units for Volume units of the NFT.
+				// Dividing by volume normalizes to a per-unit value, then scales by balance.
+				assetValue := balance.Amount.Mul(nav.Price.Amount).Quo(vol)
+
+				total = total.Add(assetValue)
+				continue
 			}
+		}
 
 		if !vault.IsAcceptedDenom(balance.Denom) {
 			continue

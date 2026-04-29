@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -717,6 +718,22 @@ func expectedWithSimpleAPY(baseAmt sdkmath.Int, rateStr string, seconds int64) (
 	timeFraction := durationDec.Quo(secondsPerYearDec)
 	interestDec := baseAmt.ToLegacyDec().Mul(rateDec).Mul(timeFraction)
 	return baseAmt.Add(interestDec.TruncateInt()), nil
+}
+
+// requireSeedLocalNAV writes a VaultNAV entry into the keeper's NetAssetValues store for
+// the given vault address and denom. UpdatedBlockHeight is set to the current block height.
+// This helper centralises the boilerplate used across multiple test setups so that changes
+// to VaultNAV field names or the collection key only need to be made in one place.
+func (s *TestSuite) requireSeedLocalNAV(vaultAddr sdk.AccAddress, denom string, price sdk.Coin, volume sdkmath.Int) {
+	s.T().Helper()
+	s.Require().NoError(
+		s.k.NetAssetValues.Set(s.ctx, collections.Join(vaultAddr, denom), types.VaultNAV{
+			Price:              price,
+			Volume:             volume.String(),
+			UpdatedBlockHeight: uint64(s.ctx.BlockHeight()),
+		}),
+		"failed to seed local NAV for vault %s denom %s", vaultAddr, denom,
+	)
 }
 
 // createVaultFeeCollectedEvent constructs the expected EventVaultFeeCollected event.

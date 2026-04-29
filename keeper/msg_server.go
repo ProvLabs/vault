@@ -815,16 +815,29 @@ func (k msgServer) UpdateVaultAUMFeeBips(goCtx context.Context, msg *types.MsgUp
 	return &types.MsgUpdateVaultAUMFeeBipsResponse{}, nil
 }
 
+// UpdateVaultAssetNAV stores a caller-supplied NAV for a specific denom within the
+// vault's local high-precision store. The caller-supplied UpdatedBlockHeight is
+// discarded and replaced with the current block height to prevent timestamp spoofing.
+// Only the vault's management authority may call this method.
 func (k msgServer) UpdateVaultAssetNAV(goCtx context.Context, msg *types.MsgUpdateVaultAssetNAVRequest) (*types.MsgUpdateVaultAssetNAVResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vaultAddr, err := sdk.AccAddressFromBech32(msg.VaultAddress)
+	if err != nil {
+		return nil, fmt.Errorf("invalid vault address: %w", err)
+	}
 	vault, err := k.getVault(ctx, vaultAddr)
 	if err != nil {
 		return nil, err
 	}
 	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, fmt.Errorf("unauthorized: %w", err)
+	}
+	if err := sdk.ValidateDenom(msg.Denom); err != nil {
+		return nil, fmt.Errorf("invalid denom: %w", err)
+	}
+	if err := msg.Nav.Validate(); err != nil {
+		return nil, fmt.Errorf("invalid nav: %w", err)
 	}
 
 	// Normalize NAV: set updated block height to current height

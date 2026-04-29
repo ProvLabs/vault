@@ -829,11 +829,12 @@ func TestVaultNAV_Validate(t *testing.T) {
 			},
 		},
 		{
-			name: "valid nav with zero volume",
+			name: "invalid nav with zero volume",
 			nav: types.VaultNAV{
 				Price:  validPrice,
 				Volume: "0",
 			},
+			expectedErr: "volume must be positive",
 		},
 		{
 			name: "invalid price - bad denom",
@@ -865,7 +866,7 @@ func TestVaultNAV_Validate(t *testing.T) {
 				Price:  validPrice,
 				Volume: "-1",
 			},
-			expectedErr: "volume cannot be negative",
+			expectedErr: "volume must be positive",
 		},
 	}
 

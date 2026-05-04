@@ -207,10 +207,7 @@ func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccoun
 			continue
 		}
 
-		// Use markertypes.MarkerAddress + GetMarker directly so that we can
-		// distinguish "denom is not a registered marker" (nil marker, nil error)
-		// from a genuine storage error (non-nil error). GetMarkerByDenom conflates
-		// both into a single error return, which would mask real store failures.
+		// GetMarker (vs. GetMarkerByDenom) lets us distinguish "not a marker" from a real store error.
 		markerAddr, addrErr := markertypes.MarkerAddress(balance.Denom)
 		if addrErr == nil {
 			marker, err := k.MarkerKeeper.GetMarker(ctx, markerAddr)
@@ -218,18 +215,14 @@ func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccoun
 				return math.Int{}, fmt.Errorf("failed to get marker for balance denom %s: %w", balance.Denom, err)
 			}
 			if marker != nil && marker.GetSupply().Amount.Equal(math.OneInt()) {
-				// NFT/single-supply path. The vault's local NAV store is the explicit
-				// opt-in: an admin must set a local NAV record for this denom for it
-				// to contribute to TVV. If no NAV is set, the balance is treated as
-				// dust and skipped, which prevents an attacker from DoS'ing TVV (and
-				// therefore reconcile / swap-in / swap-out) by sending a stray
-				// supply-1 marker to the principal address.
+				// Local NAV is the admin's opt-in to count an NFT toward TVV. Without
+				// one the balance is dust; treating it as an error would let any
+				// stray supply-1 marker DoS reconcile/swap-in/swap-out.
 				nav, err := k.getNetAssetValue(ctx, vault.GetAddress(), balance.Denom, vault.UnderlyingAsset)
 				if err != nil {
 					return math.Int{}, fmt.Errorf("failed to get nav for nft %s: %w", balance.Denom, err)
 				}
 				if nav == nil {
-					// No admin-set NAV → dust; do not contribute to TVV.
 					continue
 				}
 				vol, ok := math.NewIntFromString(nav.Volume)
@@ -237,10 +230,7 @@ func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccoun
 					return math.Int{}, fmt.Errorf("strict valuation failure: invalid volume for nft %s nav", balance.Denom)
 				}
 
-				// Price is total underlying units for Volume units of the NFT.
-				// Dividing by volume normalizes to a per-unit value, then scales by balance.
 				assetValue := balance.Amount.Mul(nav.Price.Amount).Quo(vol)
-
 				total = total.Add(assetValue)
 				continue
 			}

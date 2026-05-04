@@ -92,6 +92,7 @@ func (gs GenesisState) Validate() error {
 		}
 	}
 
+	navKeys := make(map[string]struct{}, len(gs.NetAssetValues))
 	for i, entry := range gs.NetAssetValues {
 		if _, err := sdk.AccAddressFromBech32(entry.VaultAddress); err != nil {
 			return fmt.Errorf("invalid net asset value vault address at index %d: %w", i, err)
@@ -105,6 +106,13 @@ func (gs GenesisState) Validate() error {
 		if err := entry.Nav.Validate(); err != nil {
 			return fmt.Errorf("invalid net asset value at index %d: %w", i, err)
 		}
+		// Use \x00 as the separator so it cannot collide with any valid bech32 or denom byte.
+		key := entry.VaultAddress + "\x00" + entry.Denom
+		if _, dup := navKeys[key]; dup {
+			return fmt.Errorf("duplicate net asset value entry at index %d for vault %s denom %s",
+				i, entry.VaultAddress, entry.Denom)
+		}
+		navKeys[key] = struct{}{}
 	}
 
 	return nil

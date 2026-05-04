@@ -258,6 +258,57 @@ func TestGenesisState_Validate(t *testing.T) {
 			},
 			expectedErr: "invalid net asset value at index 0",
 		},
+		{
+			name: "duplicate (vault_address, denom) in net asset value entries",
+			genState: types.GenesisState{
+				Params: types.DefaultParams(),
+				Vaults: []types.VaultAccount{validVault},
+				NetAssetValues: []types.NetAssetValueGenesisEntry{
+					{
+						VaultAddress: validAddr,
+						Denom:        "payment",
+						Nav: types.VaultNAV{
+							Price:  sdk.NewInt64Coin("under", 1),
+							Volume: "1",
+						},
+					},
+					{
+						VaultAddress: validAddr,
+						Denom:        "payment",
+						Nav: types.VaultNAV{
+							Price:  sdk.NewInt64Coin("under", 2),
+							Volume: "2",
+						},
+					},
+				},
+			},
+			expectedErr: "duplicate net asset value entry at index 1",
+		},
+		{
+			name: "same vault, distinct denoms - net asset value entries are valid",
+			genState: types.GenesisState{
+				Params: types.DefaultParams(),
+				Vaults: []types.VaultAccount{validVault},
+				NetAssetValues: []types.NetAssetValueGenesisEntry{
+					{
+						VaultAddress: validAddr,
+						Denom:        "paymentA",
+						Nav: types.VaultNAV{
+							Price:  sdk.NewInt64Coin("under", 1),
+							Volume: "1",
+						},
+					},
+					{
+						VaultAddress: validAddr,
+						Denom:        "paymentB",
+						Nav: types.VaultNAV{
+							Price:  sdk.NewInt64Coin("under", 2),
+							Volume: "2",
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for _, tt := range tests {

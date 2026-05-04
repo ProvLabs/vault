@@ -615,14 +615,28 @@ func (s *TestSuite) TestGetTVVInUnderlyingAsset_IncludesNFTMarkers() {
 			expectedTVV: math.NewInt(600),
 		},
 		{
-			name: "NFT with no NAV set returns strict valuation failure",
+			name: "NFT with no NAV set is treated as dust and skipped",
 			setup: func(vault *types.VaultAccount) {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(nftDenom, 1), s.adminAddr)
 				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, s.adminAddr, sdk.NewCoins(sdk.NewInt64Coin(nftDenom, 1))))
 				s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(nftDenom, 1))))
-				// intentionally no NAV set for nftDenom
+				// intentionally no NAV set for nftDenom; the local NAV is the
+				// admin opt-in for an NFT to contribute to TVV. Without it, the
+				// balance must be treated as dust so that an attacker cannot DoS
+				// TVV by sending a random supply-1 marker to the principal.
 			},
-			expectedError: "strict valuation failure: no nav found for nft",
+			expectedTVV: math.ZeroInt(),
+		},
+		{
+			name: "NFT dust + fungible underlying values only the underlying",
+			setup: func(vault *types.VaultAccount) {
+				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(nftDenom, 1), s.adminAddr)
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, s.adminAddr, sdk.NewCoins(sdk.NewInt64Coin(nftDenom, 1))))
+				s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(nftDenom, 1))))
+				// no local NAV: dust NFT must not poison the loop or contribute to TVV.
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 100))))
+			},
+			expectedTVV: math.NewInt(100),
 		},
 		{
 			name: "NFT with zero volume in NAV returns strict valuation failure",

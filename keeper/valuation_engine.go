@@ -218,12 +218,19 @@ func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccoun
 				return math.Int{}, fmt.Errorf("failed to get marker for balance denom %s: %w", balance.Denom, err)
 			}
 			if marker != nil && marker.GetSupply().Amount.Equal(math.OneInt()) {
+				// NFT/single-supply path. The vault's local NAV store is the explicit
+				// opt-in: an admin must set a local NAV record for this denom for it
+				// to contribute to TVV. If no NAV is set, the balance is treated as
+				// dust and skipped, which prevents an attacker from DoS'ing TVV (and
+				// therefore reconcile / swap-in / swap-out) by sending a stray
+				// supply-1 marker to the principal address.
 				nav, err := k.getNetAssetValue(ctx, vault.GetAddress(), balance.Denom, vault.UnderlyingAsset)
 				if err != nil {
 					return math.Int{}, fmt.Errorf("failed to get nav for nft %s: %w", balance.Denom, err)
 				}
 				if nav == nil {
-					return math.Int{}, fmt.Errorf("strict valuation failure: no nav found for nft %s/%s", balance.Denom, vault.UnderlyingAsset)
+					// No admin-set NAV → dust; do not contribute to TVV.
+					continue
 				}
 				vol, ok := math.NewIntFromString(nav.Volume)
 				if !ok || vol.IsZero() {

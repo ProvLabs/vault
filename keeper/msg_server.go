@@ -848,5 +848,7 @@ func (k msgServer) UpdateVaultAssetNAV(goCtx context.Context, msg *types.MsgUpda
 		return nil, fmt.Errorf("failed to set local vault nav: %w", err)
 	}
 
+	k.emitEvent(ctx, types.NewEventVaultAssetNAVUpdated(msg.VaultAddress, msg.Authority, msg.Denom, nav))
+
 	return &types.MsgUpdateVaultAssetNAVResponse{}, nil
 }

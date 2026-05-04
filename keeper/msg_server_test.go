@@ -5467,7 +5467,16 @@ func (s *TestSuite) TestMsgServer_UpdateVaultAssetNAV() {
 					Volume: navVolume,
 				},
 			},
-			expectedEvents: sdk.Events{},
+			expectedEvents: sdk.Events{
+				sdk.NewEvent("provlabs.vault.v1.EventVaultAssetNAVUpdated",
+					sdk.NewAttribute("authority", admin.String()),
+					sdk.NewAttribute("denom", paymentDenom),
+					sdk.NewAttribute("price", navPrice.String()),
+					sdk.NewAttribute("updated_block_height", fmt.Sprintf("%d", testBlockHeight)),
+					sdk.NewAttribute("vault_address", vaultAddr.String()),
+					sdk.NewAttribute("volume", navVolume),
+				),
+			},
 		},
 		{
 			name:  "failure - vault not found",

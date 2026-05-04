@@ -348,3 +348,17 @@ func NewEventMaxSwapOutValueUpdated(vaultAddress, authority, maxSwapOut string) 
 		MaxSwapOut:   maxSwapOut,
 	}
 }
+
+// NewEventVaultAssetNAVUpdated creates a new EventVaultAssetNAVUpdated event.
+// It captures the post-normalization NAV (i.e. the block height has been
+// rewritten to the current ctx.BlockHeight by the message server).
+func NewEventVaultAssetNAVUpdated(vaultAddress, authority, denom string, nav VaultNAV) *EventVaultAssetNAVUpdated {
+	return &EventVaultAssetNAVUpdated{
+		VaultAddress:       vaultAddress,
+		Authority:          authority,
+		Denom:              denom,
+		Price:              nav.Price.String(),
+		Volume:             nav.Volume,
+		UpdatedBlockHeight: nav.UpdatedBlockHeight,
+	}
+}

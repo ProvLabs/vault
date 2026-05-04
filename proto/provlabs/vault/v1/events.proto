@@ -425,3 +425,22 @@ message EventMaxSwapOutValueUpdated {
   // - An empty string "" indicates no maximum limit.
   string max_swap_out = 3;
 }
+
+// EventVaultAssetNAVUpdated is an event emitted when a vault's localized
+// (high-precision) Net Asset Value for a specific asset denom is updated via
+// MsgUpdateVaultAssetNAV.
+message EventVaultAssetNAVUpdated {
+  // vault_address is the bech32 address of the vault whose NAV was updated.
+  string vault_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // authority is the bech32 address (admin or asset manager) that updated the NAV.
+  string authority = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // denom is the asset denom whose NAV was updated.
+  string denom = 3;
+  // price is the value of `volume` units of `denom`, expressed in the vault's
+  // underlying asset (string form of cosmos.base.v1beta1.Coin).
+  string price = 4;
+  // volume is the amount of `denom` associated with `price`, as an integer string.
+  string volume = 5 [(cosmos_proto.scalar) = "cosmos.IntString"];
+  // updated_block_height is the block height at which the NAV was recorded.
+  uint64 updated_block_height = 6;
+}

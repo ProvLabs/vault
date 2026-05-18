@@ -828,12 +828,7 @@ func (k msgServer) UpdateVaultNAV(goCtx context.Context, msg *types.MsgUpdateVau
 		return nil, fmt.Errorf("failed to validate NAV authority: %w", err)
 	}
 
-	nav := types.VaultNAV{
-		Denom:  msg.Denom,
-		Price:  msg.Price,
-		Volume: msg.Volume,
-		Source: msg.Source,
-	}
+	nav := types.NewVaultNAV(msg.Denom, msg.Price, msg.Volume, msg.Source)
 	if err := k.SetVaultNAV(ctx, vault, nav, msg.Signer); err != nil {
 		return nil, fmt.Errorf("failed to update vault NAV: %w", err)
 	}

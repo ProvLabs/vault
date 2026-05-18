@@ -47,12 +47,6 @@ func (k *Keeper) SetVaultNAV(ctx sdk.Context, vault *types.VaultAccount, nav typ
 
 	k.emitEvent(ctx, types.NewEventNAVUpdated(vault.Address, nav, signer))
 
-	// TVV reconcile trigger extension point: a NAV mutation must trigger an
-	// immediate TVV reconcile. The actual reconcile wiring is intentionally added
-	// alongside the settlement-reconcile work so that every reconcile-triggering
-	// path lives in a single PR. This is the documented hook where that call
-	// belongs once the settlement work lands.
-
 	return nil
 }
 

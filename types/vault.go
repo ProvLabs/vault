@@ -425,3 +425,14 @@ func (p PendingSwapOut) Validate() error {
 
 	return nil
 }
+
+// NewVaultNAV creates a new VaultNAV entry for the given denom, pricing
+// volume units at price and attributing the entry to source.
+func NewVaultNAV(denom string, price sdk.Coin, volume sdkmath.Int, source string) VaultNAV {
+	return VaultNAV{
+		Denom:  denom,
+		Price:  price,
+		Volume: volume,
+		Source: source,
+	}
+}

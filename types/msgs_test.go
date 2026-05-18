@@ -1866,3 +1866,195 @@ func TestMsgUpdateSwapLimits_ValidateBasic(t *testing.T) {
 		runTests(t, tests)
 	})
 }
+
+func TestMsgUpdateVaultNAVRequest_ValidateBasic(t *testing.T) {
+	addr := utils.TestAddress().Bech32
+
+	tests := []struct {
+		name        string
+		msg         types.MsgUpdateVaultNAVRequest
+		expectedErr string
+	}{
+		{
+			name: "valid",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin("under", 100),
+				Volume:       sdkmath.NewInt(1),
+				Source:       "oracle",
+			},
+			expectedErr: "",
+		},
+		{
+			name: "valid with empty source",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin("under", 100),
+				Volume:       sdkmath.NewInt(1),
+			},
+			expectedErr: "",
+		},
+		{
+			name: "invalid signer",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       "bad",
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin("under", 100),
+				Volume:       sdkmath.NewInt(1),
+			},
+			expectedErr: "invalid signer address",
+		},
+		{
+			name: "invalid vault address",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: "bad",
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin("under", 100),
+				Volume:       sdkmath.NewInt(1),
+			},
+			expectedErr: "invalid vault address",
+		},
+		{
+			name: "invalid denom",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "bad denom",
+				Price:        sdk.NewInt64Coin("under", 100),
+				Volume:       sdkmath.NewInt(1),
+			},
+			expectedErr: "invalid denom",
+		},
+		{
+			name: "invalid price coin",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.Coin{Denom: "under", Amount: sdkmath.NewInt(-1)},
+				Volume:       sdkmath.NewInt(1),
+			},
+			expectedErr: "invalid price coin",
+		},
+		{
+			name: "zero price",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin("under", 0),
+				Volume:       sdkmath.NewInt(1),
+			},
+			expectedErr: "price amount must be positive",
+		},
+		{
+			name: "nil volume",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin("under", 100),
+			},
+			expectedErr: "volume must be positive",
+		},
+		{
+			name: "zero volume",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin("under", 100),
+				Volume:       sdkmath.ZeroInt(),
+			},
+			expectedErr: "volume must be positive",
+		},
+		{
+			name: "negative volume",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin("under", 100),
+				Volume:       sdkmath.NewInt(-1),
+			},
+			expectedErr: "volume must be positive",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.expectedErr != "" {
+				assert.Error(t, err, "expected error for case %q", tc.name)
+				assert.Contains(t, err.Error(), tc.expectedErr, "error should contain expected substring for case %q", tc.name)
+			} else {
+				assert.NoError(t, err, "expected no error for case %q", tc.name)
+			}
+		})
+	}
+}
+
+func TestMsgUpdateNAVAuthorityRequest_ValidateBasic(t *testing.T) {
+	addr := utils.TestAddress().Bech32
+
+	tests := []struct {
+		name        string
+		msg         types.MsgUpdateNAVAuthorityRequest
+		expectedErr string
+	}{
+		{
+			name: "valid",
+			msg: types.MsgUpdateNAVAuthorityRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				NewAuthority: addr,
+			},
+			expectedErr: "",
+		},
+		{
+			name: "invalid signer",
+			msg: types.MsgUpdateNAVAuthorityRequest{
+				Signer:       "bad",
+				VaultAddress: addr,
+				NewAuthority: addr,
+			},
+			expectedErr: "invalid signer address",
+		},
+		{
+			name: "invalid vault address",
+			msg: types.MsgUpdateNAVAuthorityRequest{
+				Signer:       addr,
+				VaultAddress: "bad",
+				NewAuthority: addr,
+			},
+			expectedErr: "invalid vault address",
+		},
+		{
+			name: "invalid new authority",
+			msg: types.MsgUpdateNAVAuthorityRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				NewAuthority: "bad",
+			},
+			expectedErr: "invalid new authority address",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.msg.ValidateBasic()
+			if tc.expectedErr != "" {
+				assert.Error(t, err, "expected error for case %q", tc.name)
+				assert.Contains(t, err.Error(), tc.expectedErr, "error should contain expected substring for case %q", tc.name)
+			} else {
+				assert.NoError(t, err, "expected no error for case %q", tc.name)
+			}
+		})
+	}
+}

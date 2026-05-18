@@ -591,6 +591,51 @@ func TestVaultAccount_Validate(t *testing.T) {
 			},
 			expectedErr: "failed to validate swap-out limits: min value 1000 cannot be greater than max value 500",
 		},
+		{
+			name: "invalid nav authority address",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				NavAuthority:        "not-a-bech32",
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
+				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
+				CurrentInterestRate: "0.0",
+				DesiredInterestRate: "0.0",
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
+			},
+			expectedErr: "invalid nav authority address",
+		},
+		{
+			name: "valid nav authority address",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				NavAuthority:        validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
+				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
+				CurrentInterestRate: "0.0",
+				DesiredInterestRate: "0.0",
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
+			},
+			expectedErr: "",
+		},
+		{
+			name: "empty nav authority is valid (treated as admin)",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				NavAuthority:        "",
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
+				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
+				CurrentInterestRate: "0.0",
+				DesiredInterestRate: "0.0",
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
+			},
+			expectedErr: "",
+		},
 	}
 
 	for _, tc := range tests {
@@ -601,6 +646,137 @@ func TestVaultAccount_Validate(t *testing.T) {
 				require.Contains(t, err.Error(), tc.expectedErr, "error should contain expected message for test case: %s", tc.name)
 			} else {
 				require.NoError(t, err, "expected no error for test case: %s", tc.name)
+			}
+		})
+	}
+}
+
+func TestNewVaultAccount_DefaultsNavAuthorityToAdmin(t *testing.T) {
+	admin := utils.TestAddress().Bech32
+	baseAcc := authtypes.NewBaseAccountWithAddress(sdk.MustAccAddressFromBech32(admin))
+
+	tests := []struct {
+		name         string
+		admin        string
+		paymentDenom string
+	}{
+		{
+			name:         "nav authority equals admin when payment denom is set",
+			admin:        admin,
+			paymentDenom: "usdc",
+		},
+		{
+			name:         "nav authority equals admin when payment denom is empty",
+			admin:        admin,
+			paymentDenom: "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			vault := types.NewVaultAccount(baseAcc, tc.admin, "vshare", "uusd", tc.paymentDenom, 0, 0, "", "", "", "")
+			require.Equal(t, tc.admin, vault.NavAuthority, "NewVaultAccount should set NavAuthority to admin for case: %s", tc.name)
+		})
+	}
+}
+
+func TestVaultAccount_GetNAVAuthority(t *testing.T) {
+	admin := utils.TestAddress().Bech32
+	oracle := utils.TestAddress().Bech32
+
+	tests := []struct {
+		name              string
+		navAuthority      string
+		vaultAdmin        string
+		expectedAuthority string
+	}{
+		{
+			name:              "returns nav_authority when explicitly set",
+			navAuthority:      oracle,
+			vaultAdmin:        admin,
+			expectedAuthority: oracle,
+		},
+		{
+			name:              "returns admin when nav_authority is empty",
+			navAuthority:      "",
+			vaultAdmin:        admin,
+			expectedAuthority: admin,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			vault := &types.VaultAccount{
+				Admin:        tc.vaultAdmin,
+				NavAuthority: tc.navAuthority,
+			}
+			got := vault.GetNAVAuthority()
+			require.Equal(t, tc.expectedAuthority, got, "GetNAVAuthority mismatch for case: %s", tc.name)
+		})
+	}
+}
+
+func TestVaultAccount_ValidateNAVAuthority(t *testing.T) {
+	admin := utils.TestAddress().Bech32
+	oracle := utils.TestAddress().Bech32
+	other := utils.TestAddress().Bech32
+
+	tests := []struct {
+		name         string
+		navAuthority string
+		vaultAdmin   string
+		signer       string
+		expectedErr  string
+	}{
+		{
+			name:         "signer matches explicit nav authority",
+			navAuthority: oracle,
+			vaultAdmin:   admin,
+			signer:       oracle,
+			expectedErr:  "",
+		},
+		{
+			name:         "signer matches admin when nav authority is empty",
+			navAuthority: "",
+			vaultAdmin:   admin,
+			signer:       admin,
+			expectedErr:  "",
+		},
+		{
+			name:         "signer does not match explicit nav authority",
+			navAuthority: oracle,
+			vaultAdmin:   admin,
+			signer:       other,
+			expectedErr:  "is not the vault NAV authority",
+		},
+		{
+			name:         "admin does not satisfy explicit nav authority",
+			navAuthority: oracle,
+			vaultAdmin:   admin,
+			signer:       admin,
+			expectedErr:  "is not the vault NAV authority",
+		},
+		{
+			name:         "non-admin signer fails when nav authority is empty",
+			navAuthority: "",
+			vaultAdmin:   admin,
+			signer:       other,
+			expectedErr:  "is not the vault NAV authority",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			vault := &types.VaultAccount{
+				Admin:        tc.vaultAdmin,
+				NavAuthority: tc.navAuthority,
+			}
+			err := vault.ValidateNAVAuthority(tc.signer)
+			if tc.expectedErr != "" {
+				require.Error(t, err, "expected an error for case: %s", tc.name)
+				require.Contains(t, err.Error(), tc.expectedErr, "error should contain expected substring for case: %s", tc.name)
+			} else {
+				require.NoError(t, err, "expected no error for case: %s", tc.name)
 			}
 		})
 	}

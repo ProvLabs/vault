@@ -92,5 +92,39 @@ func (gs GenesisState) Validate() error {
 		}
 	}
 
+	navKeys := make(map[string]bool)
+	for i, entry := range gs.Navs {
+		if _, err := sdk.AccAddressFromBech32(entry.VaultAddress); err != nil {
+			return fmt.Errorf("invalid nav vault address at index %d: %w", i, err)
+		}
+		v, exists := vaults[entry.VaultAddress]
+		if !exists {
+			return fmt.Errorf("nav entry at index %d is not for an imported vault: %s", i, entry.VaultAddress)
+		}
+		if err := sdk.ValidateDenom(entry.Nav.Denom); err != nil {
+			return fmt.Errorf("invalid nav denom at index %d: %w", i, err)
+		}
+		if entry.Nav.Denom == v.UnderlyingAsset {
+			return fmt.Errorf("nav entry at index %d prices the vault underlying asset %s", i, entry.Nav.Denom)
+		}
+		if entry.Nav.Denom == v.TotalShares.Denom {
+			return fmt.Errorf("nav entry at index %d prices the vault share denom %s", i, entry.Nav.Denom)
+		}
+		if err := entry.Nav.Price.Validate(); err != nil {
+			return fmt.Errorf("invalid nav price at index %d: %w", i, err)
+		}
+		if !entry.Nav.Price.Amount.IsPositive() {
+			return fmt.Errorf("nav price at index %d must be positive", i)
+		}
+		if entry.Nav.Volume.IsNil() || !entry.Nav.Volume.IsPositive() {
+			return fmt.Errorf("nav volume at index %d must be positive", i)
+		}
+		key := entry.VaultAddress + "/" + entry.Nav.Denom
+		if navKeys[key] {
+			return fmt.Errorf("duplicate nav entry for vault %s denom %s", entry.VaultAddress, entry.Nav.Denom)
+		}
+		navKeys[key] = true
+	}
+
 	return nil
 }

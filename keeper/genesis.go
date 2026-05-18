@@ -6,6 +6,8 @@ import (
 
 	"github.com/provlabs/vault/types"
 
+	"cosmossdk.io/collections"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -112,6 +114,16 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	if err := k.PendingSwapOutQueue.Import(ctx, &genState.PendingSwapOutQueue); err != nil {
 		panic(fmt.Errorf("failed to import pending swap out queue: %w", err))
 	}
+
+	for _, entry := range genState.Navs {
+		addr, err := sdk.AccAddressFromBech32(entry.VaultAddress)
+		if err != nil {
+			panic(fmt.Errorf("invalid vault address in nav entry: %w", err))
+		}
+		if err := k.NAVs.Set(ctx, collections.Join(addr, entry.Nav.Denom), entry.Nav); err != nil {
+			panic(fmt.Errorf("failed to import vault nav for %s/%s: %w", entry.VaultAddress, entry.Nav.Denom, err))
+		}
+	}
 }
 
 // ExportGenesis exports the current state of the vault module.
@@ -161,11 +173,24 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 		panic(fmt.Errorf("failed to export pending swap out queue: %w", err))
 	}
 
+	navs := make([]types.VaultNAVEntry, 0)
+	err = k.NAVs.Walk(ctx, nil, func(key collections.Pair[sdk.AccAddress, string], value types.VaultNAV) (stop bool, err error) {
+		navs = append(navs, types.VaultNAVEntry{
+			VaultAddress: key.K1().String(),
+			Nav:          value,
+		})
+		return false, nil
+	})
+	if err != nil {
+		panic(fmt.Errorf("failed to walk vault navs: %w", err))
+	}
+
 	return &types.GenesisState{
 		Vaults:              vaults,
 		PayoutTimeoutQueue:  paymentTimeoutQueue,
 		FeeTimeoutQueue:     feeTimeoutQueue,
 		PendingSwapOutQueue: *pendingSwapOutQueue,
 		Params:              params,
+		Navs:                navs,
 	}
 }

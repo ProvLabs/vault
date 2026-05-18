@@ -87,6 +87,7 @@ func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyi
 	return &VaultAccount{
 		BaseAccount:            baseAcc,
 		Admin:                  admin,
+		NavAuthority:           admin,
 		TotalShares:            sdk.Coin{Denom: shareDenom, Amount: sdkmath.ZeroInt()},
 		UnderlyingAsset:        underlyingAsset,
 		PaymentDenom:           paymentDenom,
@@ -181,6 +182,12 @@ func (v VaultAccount) Validate() error {
 	if v.AssetManager != "" {
 		if _, err := sdk.AccAddressFromBech32(v.AssetManager); err != nil {
 			return fmt.Errorf("invalid asset manager address: %w", err)
+		}
+	}
+
+	if v.NavAuthority != "" {
+		if _, err := sdk.AccAddressFromBech32(v.NavAuthority); err != nil {
+			return fmt.Errorf("invalid nav authority address: %w", err)
 		}
 	}
 
@@ -302,6 +309,25 @@ func (v *VaultAccount) IsInterestRateInRange(rate sdkmath.LegacyDec) (bool, erro
 func (v *VaultAccount) ValidateAdmin(admin string) error {
 	if v.Admin != admin {
 		return fmt.Errorf("unauthorized: %s is not the vault admin", admin)
+	}
+	return nil
+}
+
+// GetNAVAuthority returns the address authorized to mutate the vault's internal
+// NAV table. When nav_authority is unset, the vault admin is treated as the NAV
+// authority.
+func (v *VaultAccount) GetNAVAuthority() string {
+	if v.NavAuthority != "" {
+		return v.NavAuthority
+	}
+	return v.Admin
+}
+
+// ValidateNAVAuthority returns an error if the given address is not the vault's
+// NAV authority.
+func (v *VaultAccount) ValidateNAVAuthority(signer string) error {
+	if signer != v.GetNAVAuthority() {
+		return fmt.Errorf("unauthorized: %s is not the vault NAV authority", signer)
 	}
 	return nil
 }

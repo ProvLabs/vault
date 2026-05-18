@@ -43,6 +43,8 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgUpdateMinSwapOutValueRequest)(nil),
 	(*MsgUpdateMaxSwapInValueRequest)(nil),
 	(*MsgUpdateMaxSwapOutValueRequest)(nil),
+	(*MsgUpdateVaultNAVRequest)(nil),
+	(*MsgUpdateNAVAuthorityRequest)(nil),
 }
 
 // ValidateBasic performs stateless validation on MsgCreateVaultRequest.
@@ -520,6 +522,43 @@ func (m MsgUpdateMaxSwapOutValueRequest) ValidateBasic() error {
 	}
 	if err := ValidateSwapLimits("", m.MaxSwapOutValue); err != nil {
 		return fmt.Errorf("invalid swap-out limits: %w", err)
+	}
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgUpdateVaultNAVRequest.
+func (m MsgUpdateVaultNAVRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Signer); err != nil {
+		return fmt.Errorf("invalid signer address: %q: %w", m.Signer, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	if err := sdk.ValidateDenom(m.Denom); err != nil {
+		return fmt.Errorf("invalid denom: %q: %w", m.Denom, err)
+	}
+	if err := m.Price.Validate(); err != nil {
+		return fmt.Errorf("invalid price coin %v: %w", m.Price, err)
+	}
+	if !m.Price.Amount.IsPositive() {
+		return fmt.Errorf("price amount must be positive, got %s", m.Price.Amount)
+	}
+	if m.Volume.IsNil() || !m.Volume.IsPositive() {
+		return fmt.Errorf("volume must be positive")
+	}
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgUpdateNAVAuthorityRequest.
+func (m MsgUpdateNAVAuthorityRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Signer); err != nil {
+		return fmt.Errorf("invalid signer address: %q: %w", m.Signer, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.NewAuthority); err != nil {
+		return fmt.Errorf("invalid new authority address: %q: %w", m.NewAuthority, err)
 	}
 	return nil
 }

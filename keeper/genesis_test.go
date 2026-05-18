@@ -480,3 +480,230 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsWhenFeeTimeoutHasUnknownVault() {
 	expectedPanic := fmt.Sprintf("invalid vault genesis state: fee timeout queue address at index 0 is not an imported vault: %s", badVaultAddr.String())
 	s.Require().PanicsWithError(expectedPanic, func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on unknown vault in fee timeout queue")
 }
+
+// TestVaultGenesis_RoundTrip_NAVs verifies the internal NAV table survives a
+// genesis export/import round trip.
+func (s *TestSuite) TestVaultGenesis_RoundTrip_NAVs() {
+	shareDenom := "navshare"
+	underlying := "navunder"
+	admin := s.adminAddr.String()
+	vaultAddr := types.GetVaultAddress(shareDenom)
+
+	vault := types.VaultAccount{
+		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
+		Admin:               admin,
+		NavAuthority:        admin,
+		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
+		UnderlyingAsset:     underlying,
+		PaymentDenom:        underlying,
+		CurrentInterestRate: types.ZeroInterestRate,
+		DesiredInterestRate: types.ZeroInterestRate,
+	}
+
+	updatedTime := time.Unix(1700000000, 0).UTC()
+	navs := []types.VaultNAVEntry{
+		{
+			VaultAddress: vaultAddr.String(),
+			Nav: types.VaultNAV{
+				Denom:              "rwaone",
+				Price:              sdk.NewInt64Coin(underlying, 150),
+				Volume:             sdkmath.NewInt(3),
+				Source:             "oracle-one",
+				UpdatedBlockHeight: 7,
+				UpdatedTime:        updatedTime,
+			},
+		},
+		{
+			VaultAddress: vaultAddr.String(),
+			Nav: types.VaultNAV{
+				Denom:              "rwatwo",
+				Price:              sdk.Coin{Denom: underlying, Amount: sdkmath.NewInt(2)},
+				Volume:             sdkmath.NewInt(1),
+				UpdatedBlockHeight: 9,
+				UpdatedTime:        updatedTime,
+			},
+		},
+	}
+
+	genesis := &types.GenesisState{
+		Params: types.DefaultParams(),
+		Vaults: []types.VaultAccount{vault},
+		Navs:   navs,
+	}
+
+	s.k.InitGenesis(s.ctx, genesis)
+
+	storedNav, err := s.k.GetVaultNAV(s.ctx, vaultAddr, "rwaone")
+	s.Require().NoError(err, "NAV should exist after InitGenesis")
+	s.Assert().Equal(sdk.NewInt64Coin(underlying, 150), storedNav.Price, "imported NAV price mismatch")
+	s.Assert().Equal(sdkmath.NewInt(3), storedNav.Volume, "imported NAV volume mismatch")
+	s.Assert().Equal("oracle-one", storedNav.Source, "imported NAV source mismatch")
+
+	exported := s.k.ExportGenesis(s.ctx)
+	s.Require().Len(exported.Navs, len(navs), "exported genesis should contain every NAV entry")
+	s.Assert().ElementsMatch(navs, exported.Navs, "exported NAV table should match the imported table")
+}
+
+// TestVaultGenesis_InitPanicsOnInvalidNAV verifies genesis validation rejects
+// NAV entries that price a self-priced denom or carry a non-positive price or volume.
+func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidNAV() {
+	shareDenom := "navshare"
+	underlying := "navunder"
+	vaultAddr := types.GetVaultAddress(shareDenom)
+
+	vault := types.VaultAccount{
+		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
+		Admin:               s.adminAddr.String(),
+		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
+		UnderlyingAsset:     underlying,
+		PaymentDenom:        underlying,
+		CurrentInterestRate: types.ZeroInterestRate,
+		DesiredInterestRate: types.ZeroInterestRate,
+	}
+
+	tests := []struct {
+		name        string
+		nav         types.VaultNAV
+		expectPanic string
+	}{
+		{
+			name: "prices the vault underlying asset",
+			nav: types.VaultNAV{
+				Denom:       underlying,
+				Price:       sdk.NewInt64Coin(underlying, 1),
+				Volume:      sdkmath.NewInt(1),
+				UpdatedTime: time.Unix(1700000000, 0).UTC(),
+			},
+			expectPanic: "invalid vault genesis state: nav entry at index 0 prices the vault underlying asset navunder",
+		},
+		{
+			name: "prices the vault share denom",
+			nav: types.VaultNAV{
+				Denom:       shareDenom,
+				Price:       sdk.NewInt64Coin(underlying, 1),
+				Volume:      sdkmath.NewInt(1),
+				UpdatedTime: time.Unix(1700000000, 0).UTC(),
+			},
+			expectPanic: "invalid vault genesis state: nav entry at index 0 prices the vault share denom navshare",
+		},
+		{
+			name: "non-positive price",
+			nav: types.VaultNAV{
+				Denom:       "rwa",
+				Price:       sdk.NewInt64Coin(underlying, 0),
+				Volume:      sdkmath.NewInt(1),
+				UpdatedTime: time.Unix(1700000000, 0).UTC(),
+			},
+			expectPanic: "invalid vault genesis state: nav price at index 0 must be positive",
+		},
+		{
+			name: "zero volume",
+			nav: types.VaultNAV{
+				Denom:       "rwa",
+				Price:       sdk.NewInt64Coin(underlying, 1),
+				Volume:      sdkmath.ZeroInt(),
+				UpdatedTime: time.Unix(1700000000, 0).UTC(),
+			},
+			expectPanic: "invalid vault genesis state: nav volume at index 0 must be positive",
+		},
+		{
+			name: "negative volume",
+			nav: types.VaultNAV{
+				Denom:       "rwa",
+				Price:       sdk.NewInt64Coin(underlying, 1),
+				Volume:      sdkmath.NewInt(-1),
+				UpdatedTime: time.Unix(1700000000, 0).UTC(),
+			},
+			expectPanic: "invalid vault genesis state: nav volume at index 0 must be positive",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			genesis := &types.GenesisState{
+				Params: types.DefaultParams(),
+				Vaults: []types.VaultAccount{vault},
+				Navs:   []types.VaultNAVEntry{{VaultAddress: vaultAddr.String(), Nav: tt.nav}},
+			}
+			s.Require().PanicsWithError(tt.expectPanic, func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on an invalid NAV entry")
+		})
+	}
+}
+
+// TestVaultGenesis_ExportNAVs_MultipleVaults verifies ExportGenesis includes NAV
+// entries from all vaults, not just the first one.
+func (s *TestSuite) TestVaultGenesis_ExportNAVs_MultipleVaults() {
+	shareDenomA := "shareA"
+	shareDenomB := "shareB"
+	underlyingA := "underA"
+	underlyingB := "underB"
+	admin := s.adminAddr.String()
+	vaultAddrA := types.GetVaultAddress(shareDenomA)
+	vaultAddrB := types.GetVaultAddress(shareDenomB)
+
+	vaultA := types.VaultAccount{
+		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddrA),
+		Admin:               admin,
+		NavAuthority:        admin,
+		TotalShares:         sdk.NewInt64Coin(shareDenomA, 0),
+		UnderlyingAsset:     underlyingA,
+		PaymentDenom:        underlyingA,
+		CurrentInterestRate: types.ZeroInterestRate,
+		DesiredInterestRate: types.ZeroInterestRate,
+	}
+	vaultB := types.VaultAccount{
+		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddrB),
+		Admin:               admin,
+		NavAuthority:        admin,
+		TotalShares:         sdk.NewInt64Coin(shareDenomB, 0),
+		UnderlyingAsset:     underlyingB,
+		PaymentDenom:        underlyingB,
+		CurrentInterestRate: types.ZeroInterestRate,
+		DesiredInterestRate: types.ZeroInterestRate,
+	}
+
+	navEntriesA := []types.VaultNAVEntry{
+		{
+			VaultAddress: vaultAddrA.String(),
+			Nav: types.VaultNAV{
+				Denom:              "rwa1",
+				Price:              sdk.NewInt64Coin(underlyingA, 100),
+				Volume:             sdkmath.NewInt(3),
+				UpdatedBlockHeight: 5,
+			},
+		},
+		{
+			VaultAddress: vaultAddrA.String(),
+			Nav: types.VaultNAV{
+				Denom:              "rwa2",
+				Price:              sdk.NewInt64Coin(underlyingA, 200),
+				Volume:             sdkmath.NewInt(7),
+				UpdatedBlockHeight: 5,
+			},
+		},
+	}
+	navEntriesB := []types.VaultNAVEntry{
+		{
+			VaultAddress: vaultAddrB.String(),
+			Nav: types.VaultNAV{
+				Denom:              "bond",
+				Price:              sdk.NewInt64Coin(underlyingB, 999),
+				Volume:             sdkmath.NewInt(1),
+				UpdatedBlockHeight: 5,
+			},
+		},
+	}
+
+	allNavs := append(navEntriesA, navEntriesB...)
+	genesis := &types.GenesisState{
+		Params: types.DefaultParams(),
+		Vaults: []types.VaultAccount{vaultA, vaultB},
+		Navs:   allNavs,
+	}
+
+	s.k.InitGenesis(s.ctx, genesis)
+
+	exported := s.k.ExportGenesis(s.ctx)
+	s.Require().Len(exported.Navs, len(allNavs), "ExportGenesis should include NAVs from all vaults")
+	s.Assert().ElementsMatch(allNavs, exported.Navs, "exported NAV table should match the imported table across both vaults")
+}

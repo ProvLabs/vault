@@ -215,6 +215,13 @@ func (s *TestSuite) requireAddFinalizeAndActivateMarker(coin sdk.Coin, manager s
 	s.Require().NoError(err, "AddFinalizeAndActivateMarker(%s)", coin.Denom)
 }
 
+// requireSimpleMarker registers denom as an unrestricted Coin marker so it passes the
+// marker-existence check in SetVaultNAV. Use this in tests that set NAVs for external
+// asset denoms (e.g. "rwa", "bond") that are not otherwise created by setupBaseVault.
+func (s *TestSuite) requireSimpleMarker(denom string) {
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(denom, 0), s.adminAddr)
+}
+
 // requireAddFinalizeAndActivateReceiptMarker creates and activates a restricted marker
 // for the given coin and grants the grantee full permissions (mint, burn, transfer,
 // withdraw, deposit). This is used to replicate a receipt token. It fails the test if any step errors.
@@ -762,8 +769,13 @@ func buildSingleVaultGenesisState(shareDenom, underlying, admin string, navs []t
 
 // setupVaultWithNavs builds a single-vault genesis state, initialises it via
 // InitGenesis, and returns the genesis state for use in export assertions.
+// Each NAV denom is registered as a marker first so the entries pass the
+// marker-existence check enforced by InitGenesis.
 func (s *TestSuite) setupVaultWithNavs(shareDenom, underlying, admin string, navs []types.VaultNAVEntry) *types.GenesisState {
 	genesis := buildSingleVaultGenesisState(shareDenom, underlying, admin, navs)
+	for _, entry := range navs {
+		s.requireSimpleMarker(entry.Nav.Denom)
+	}
 	s.k.InitGenesis(s.ctx, genesis)
 	return genesis
 }

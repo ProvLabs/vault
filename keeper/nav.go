@@ -15,11 +15,15 @@ import (
 // and source; the updated block height and time are stamped from ctx before the
 // entry is stored.
 //
-// The denom may not be the vault's share denom or its underlying asset, both of
-// which derive their value elsewhere (the share denom from valuation and the
-// underlying asset from its implicit 1:1 self price). The price must be a valid
-// positive coin denominated in the vault's underlying asset, and the volume must
-// be positive.
+// The denom may not be the vault's share denom, whose value is derived from
+// the vault's total holdings rather than set externally. The denom must also
+// be a registered marker on-chain. The price must be a valid positive coin
+// denominated in one of the vault's accepted denoms (underlying asset or
+// payment denom), and the volume must be positive.
+//
+// This method does NOT verify that signer is authorized to mutate the vault's
+// NAV table; signer is recorded for event attribution only. Callers must run
+// vault.ValidateNAVAuthority (or an equivalent check) before invoking it.
 //
 // An EventNAVUpdated event is emitted with signer recorded as the NAV authority
 // that performed the update.
@@ -27,20 +31,23 @@ func (k *Keeper) SetVaultNAV(ctx sdk.Context, vault *types.VaultAccount, nav typ
 	if nav.Denom == vault.TotalShares.Denom {
 		return fmt.Errorf("cannot set NAV for vault share denom %q", nav.Denom)
 	}
-	if nav.Denom == vault.UnderlyingAsset {
-		return fmt.Errorf("cannot set NAV for vault underlying asset %q; it is always priced 1:1", nav.Denom)
-	}
 	if err := nav.Price.Validate(); err != nil {
 		return fmt.Errorf("invalid NAV price: %w", err)
 	}
 	if !nav.Price.Amount.IsPositive() {
 		return fmt.Errorf("NAV price amount must be positive, got %s", nav.Price.Amount)
 	}
-	if nav.Price.Denom != vault.UnderlyingAsset {
-		return fmt.Errorf("NAV price denom must be the vault underlying asset %q, got %q", vault.UnderlyingAsset, nav.Price.Denom)
+	if !vault.IsAcceptedDenom(nav.Price.Denom) {
+		return fmt.Errorf("NAV price denom %q must be an accepted vault denom %v", nav.Price.Denom, vault.AcceptedDenoms())
 	}
 	if nav.Volume.IsNil() || !nav.Volume.IsPositive() {
 		return fmt.Errorf("NAV volume must be positive")
+	}
+	if len(nav.Source) > types.MaxNAVSourceLength {
+		return fmt.Errorf("NAV source too long (expected <= %d, actual: %d)", types.MaxNAVSourceLength, len(nav.Source))
+	}
+	if _, err := k.MarkerKeeper.GetMarkerByDenom(ctx, nav.Denom); err != nil {
+		return fmt.Errorf("NAV denom %q is not a registered marker: %w", nav.Denom, err)
 	}
 
 	nav.UpdatedBlockHeight = ctx.BlockHeight()

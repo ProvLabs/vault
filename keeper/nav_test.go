@@ -120,6 +120,7 @@ func (s *TestSuite) TestKeeper_SetVaultNAV_OverwriteReStamps() {
 		s.Run(tc.name, func() {
 			vault := s.setupBaseVault(tc.underlying, tc.share)
 			vaultAddr := types.GetVaultAddress(tc.share)
+			s.requireSimpleMarker(tc.navDenom)
 
 			baseCtx := s.ctx
 			firstTime := baseCtx.BlockTime().UTC()
@@ -144,6 +145,110 @@ func (s *TestSuite) TestKeeper_SetVaultNAV_OverwriteReStamps() {
 			s.Assert().Equal(tc.want.price, storedSecond.Price, "overwrite should update the price")
 			s.Assert().Equal(tc.want.volume, storedSecond.Volume, "overwrite should update the volume")
 			s.Assert().Equal(tc.want.source, storedSecond.Source, "overwrite should update the source")
+		})
+	}
+}
+
+// TestKeeper_SetVaultNAV_RejectsInvalidInput verifies SetVaultNAV rejects every
+// invalid input before persisting an entry: the vault share denom, an invalid
+// price coin, a non-positive price amount, a price denom outside the vault's
+// accepted denoms, a nil or non-positive volume, and a denom that is not a
+// registered marker.
+func (s *TestSuite) TestKeeper_SetVaultNAV_RejectsInvalidInput() {
+	underlying := "under"
+	share := "vaultshares"
+	registeredDenom := "rwa"
+	vault := s.setupBaseVault(underlying, share)
+	vaultAddr := types.GetVaultAddress(share)
+	s.requireSimpleMarker(registeredDenom)
+
+	tests := []struct {
+		name              string
+		nav               types.VaultNAV
+		expectedErrSubstr string
+	}{
+		{
+			name: "rejects the vault share denom",
+			nav: types.VaultNAV{
+				Denom:  share,
+				Price:  sdk.NewInt64Coin(underlying, 100),
+				Volume: sdkmath.NewInt(1),
+			},
+			expectedErrSubstr: "cannot set NAV for vault share denom",
+		},
+		{
+			name: "rejects an invalid price coin",
+			nav: types.VaultNAV{
+				Denom:  registeredDenom,
+				Price:  sdk.Coin{Denom: underlying, Amount: sdkmath.NewInt(-1)},
+				Volume: sdkmath.NewInt(1),
+			},
+			expectedErrSubstr: "invalid NAV price",
+		},
+		{
+			name: "rejects a zero price amount",
+			nav: types.VaultNAV{
+				Denom:  registeredDenom,
+				Price:  sdk.NewInt64Coin(underlying, 0),
+				Volume: sdkmath.NewInt(1),
+			},
+			expectedErrSubstr: "NAV price amount must be positive",
+		},
+		{
+			name: "rejects a price denom outside the vault accepted denoms",
+			nav: types.VaultNAV{
+				Denom:  registeredDenom,
+				Price:  sdk.NewInt64Coin("notaccepted", 100),
+				Volume: sdkmath.NewInt(1),
+			},
+			expectedErrSubstr: "must be an accepted vault denom",
+		},
+		{
+			name: "rejects a nil volume",
+			nav: types.VaultNAV{
+				Denom:  registeredDenom,
+				Price:  sdk.NewInt64Coin(underlying, 100),
+				Volume: sdkmath.Int{},
+			},
+			expectedErrSubstr: "NAV volume must be positive",
+		},
+		{
+			name: "rejects a zero volume",
+			nav: types.VaultNAV{
+				Denom:  registeredDenom,
+				Price:  sdk.NewInt64Coin(underlying, 100),
+				Volume: sdkmath.ZeroInt(),
+			},
+			expectedErrSubstr: "NAV volume must be positive",
+		},
+		{
+			name: "rejects a negative volume",
+			nav: types.VaultNAV{
+				Denom:  registeredDenom,
+				Price:  sdk.NewInt64Coin(underlying, 100),
+				Volume: sdkmath.NewInt(-1),
+			},
+			expectedErrSubstr: "NAV volume must be positive",
+		},
+		{
+			name: "rejects a denom that is not a registered marker",
+			nav: types.VaultNAV{
+				Denom:  "ghostdenom",
+				Price:  sdk.NewInt64Coin(underlying, 100),
+				Volume: sdkmath.NewInt(1),
+			},
+			expectedErrSubstr: "is not a registered marker",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			err := s.k.SetVaultNAV(s.ctx, vault, tc.nav, s.adminAddr.String())
+			s.Require().Error(err, "SetVaultNAV should reject input for case %q", tc.name)
+			s.Assert().Contains(err.Error(), tc.expectedErrSubstr, "SetVaultNAV error for case %q should mention %q", tc.name, tc.expectedErrSubstr)
+
+			_, getErr := s.k.GetVaultNAV(s.ctx, vaultAddr, tc.nav.Denom)
+			s.Assert().ErrorIs(getErr, collections.ErrNotFound, "SetVaultNAV must not persist an entry for rejected input %q", tc.name)
 		})
 	}
 }

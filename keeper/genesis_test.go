@@ -539,16 +539,6 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidNAV() {
 		expectPanic string
 	}{
 		{
-			name: "prices the vault underlying asset",
-			nav: types.VaultNAV{
-				Denom:       underlying,
-				Price:       sdk.NewInt64Coin(underlying, 1),
-				Volume:      sdkmath.NewInt(1),
-				UpdatedTime: time.Unix(1700000000, 0).UTC(),
-			},
-			expectPanic: "invalid vault genesis state: nav entry at index 0 prices the vault underlying asset navunder",
-		},
-		{
 			name: "prices the vault share denom",
 			nav: types.VaultNAV{
 				Denom:       shareDenom,
@@ -597,6 +587,39 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidNAV() {
 			s.Require().PanicsWithError(tt.expectPanic, func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on an invalid NAV entry")
 		})
 	}
+}
+
+// TestVaultGenesis_InitPanicsOnUnregisteredNAVMarker verifies InitGenesis rejects
+// a NAV entry whose denom passes stateless genesis validation but is not a
+// registered marker on-chain, matching the invariant enforced by the runtime
+// SetVaultNAV path.
+func (s *TestSuite) TestVaultGenesis_InitPanicsOnUnregisteredNAVMarker() {
+	shareDenom := "navmkrshare"
+	underlying := "navmkrunder"
+	vaultAddr := types.GetVaultAddress(shareDenom)
+
+	genesis := buildSingleVaultGenesisState(shareDenom, underlying, s.adminAddr.String(),
+		[]types.VaultNAVEntry{{
+			VaultAddress: vaultAddr.String(),
+			Nav: types.VaultNAV{
+				Denom:       "unregisteredrwa",
+				Price:       sdk.NewInt64Coin(underlying, 100),
+				Volume:      sdkmath.NewInt(1),
+				UpdatedTime: time.Unix(1700000000, 0).UTC(),
+			},
+		}})
+
+	var recovered any
+	func() {
+		defer func() { recovered = recover() }()
+		s.k.InitGenesis(s.ctx, genesis)
+	}()
+
+	s.Require().NotNil(recovered, "InitGenesis should panic when a NAV denom is not a registered marker")
+	err, ok := recovered.(error)
+	s.Require().True(ok, "panic value should be an error, got %T", recovered)
+	s.Require().ErrorContains(err, `nav denom "unregisteredrwa"`)
+	s.Require().ErrorContains(err, "is not a registered marker")
 }
 
 // TestVaultGenesis_ExportNAVs_MultipleVaults verifies ExportGenesis includes NAV
@@ -650,6 +673,10 @@ func (s *TestSuite) TestVaultGenesis_ExportNAVs_MultipleVaults() {
 		Params: types.DefaultParams(),
 		Vaults: []types.VaultAccount{vaultA, vaultB},
 		Navs:   allNavs,
+	}
+
+	for _, entry := range allNavs {
+		s.requireSimpleMarker(entry.Nav.Denom)
 	}
 
 	s.k.InitGenesis(s.ctx, genesis)

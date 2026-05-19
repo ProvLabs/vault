@@ -5477,6 +5477,7 @@ func (s *TestSuite) TestMsgServer_UpdateVaultNAV() {
 
 	baseSetup := func() {
 		s.setupBaseVault(underlying, share)
+		s.requireSimpleMarker(navDenom)
 		s.ctx = s.ctx.WithBlockHeight(100)
 	}
 
@@ -5634,16 +5635,16 @@ func (s *TestSuite) TestMsgServer_UpdateVaultNAV_Failures() {
 			expectedErrSubstrs: []string{"cannot set NAV for vault share denom"},
 		},
 		{
-			name:  "rejects vault underlying asset",
+			name:  "rejects unregistered marker denom",
 			setup: setup,
 			msg: types.MsgUpdateVaultNAVRequest{
 				Signer:       admin.String(),
 				VaultAddress: vaultAddr.String(),
-				Denom:        underlying,
+				Denom:        "notamarker",
 				Price:        sdk.NewInt64Coin(underlying, 100),
 				Volume:       sdkmath.NewInt(1),
 			},
-			expectedErrSubstrs: []string{"cannot set NAV for vault underlying asset"},
+			expectedErrSubstrs: []string{"is not a registered marker"},
 		},
 		{
 			name:  "rejects zero price",
@@ -5796,6 +5797,7 @@ func (s *TestSuite) TestMsgServer_UpdateNAVAuthority_RotationChangesNAVAuthority
 	vaultAddr := types.GetVaultAddress(share)
 
 	s.setupBaseVault(underlying, share)
+	s.requireSimpleMarker("rwa")
 	msgServer := keeper.NewMsgServer(s.simApp.VaultKeeper)
 
 	_, err := msgServer.UpdateNAVAuthority(s.ctx, &types.MsgUpdateNAVAuthorityRequest{
@@ -5827,4 +5829,62 @@ func (s *TestSuite) TestMsgServer_UpdateNAVAuthority_RotationChangesNAVAuthority
 	nav, err := s.k.GetVaultNAV(s.ctx, vaultAddr, "rwa")
 	s.Require().NoError(err, "NAV should exist after the new authority update")
 	s.Assert().Equal(sdk.NewInt64Coin(underlying, 100), nav.Price, "NAV price mismatch")
+}
+
+// TestMsgServer_UpdateNAVAuthority_ResetToEmptyFallsBackToAdmin verifies that an
+// UpdateNAVAuthority message with an empty new authority clears the explicit NAV
+// authority, after which the vault admin again resolves as the NAV authority and
+// the previously delegated authority loses its NAV update rights.
+func (s *TestSuite) TestMsgServer_UpdateNAVAuthority_ResetToEmptyFallsBackToAdmin() {
+	underlying := "under"
+	share := "vaultshares"
+	admin := s.adminAddr
+	oracle := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1000))
+	vaultAddr := types.GetVaultAddress(share)
+
+	s.setupBaseVault(underlying, share)
+	s.requireSimpleMarker("rwa")
+	msgServer := keeper.NewMsgServer(s.simApp.VaultKeeper)
+
+	_, err := msgServer.UpdateNAVAuthority(s.ctx, &types.MsgUpdateNAVAuthorityRequest{
+		Signer:       admin.String(),
+		VaultAddress: vaultAddr.String(),
+		NewAuthority: oracle.String(),
+	})
+	s.Require().NoError(err, "admin should be able to delegate the nav authority to the oracle")
+
+	_, err = msgServer.UpdateNAVAuthority(s.ctx, &types.MsgUpdateNAVAuthorityRequest{
+		Signer:       admin.String(),
+		VaultAddress: vaultAddr.String(),
+		NewAuthority: "",
+	})
+	s.Require().NoError(err, "admin should be able to reset the nav authority to empty")
+
+	vault, err := s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "failed to get vault after resetting the nav authority")
+	s.Assert().Empty(vault.NavAuthority, "reset should clear the explicit nav authority")
+	s.Assert().Equal(admin.String(), vault.GetNAVAuthority(), "cleared nav authority should fall back to the vault admin")
+
+	_, err = msgServer.UpdateVaultNAV(s.ctx, &types.MsgUpdateVaultNAVRequest{
+		Signer:       oracle.String(),
+		VaultAddress: vaultAddr.String(),
+		Denom:        "rwa",
+		Price:        sdk.NewInt64Coin(underlying, 100),
+		Volume:       sdkmath.NewInt(1),
+	})
+	s.Require().Error(err, "the former delegated authority should lose NAV update rights after the reset")
+	s.Assert().Contains(err.Error(), "is not the vault NAV authority", "unexpected error for the former authority")
+
+	_, err = msgServer.UpdateVaultNAV(s.ctx, &types.MsgUpdateVaultNAVRequest{
+		Signer:       admin.String(),
+		VaultAddress: vaultAddr.String(),
+		Denom:        "rwa",
+		Price:        sdk.NewInt64Coin(underlying, 100),
+		Volume:       sdkmath.NewInt(1),
+	})
+	s.Require().NoError(err, "the admin should regain NAV update rights after the reset")
+
+	nav, err := s.k.GetVaultNAV(s.ctx, vaultAddr, "rwa")
+	s.Require().NoError(err, "NAV should exist after the admin update following the reset")
+	s.Assert().Equal(sdk.NewInt64Coin(underlying, 100), nav.Price, "NAV price mismatch after reset")
 }

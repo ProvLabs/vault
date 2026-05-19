@@ -104,9 +104,6 @@ func (gs GenesisState) Validate() error {
 		if err := sdk.ValidateDenom(entry.Nav.Denom); err != nil {
 			return fmt.Errorf("invalid nav denom at index %d: %w", i, err)
 		}
-		if entry.Nav.Denom == v.UnderlyingAsset {
-			return fmt.Errorf("nav entry at index %d prices the vault underlying asset %s", i, entry.Nav.Denom)
-		}
 		if entry.Nav.Denom == v.TotalShares.Denom {
 			return fmt.Errorf("nav entry at index %d prices the vault share denom %s", i, entry.Nav.Denom)
 		}
@@ -116,11 +113,14 @@ func (gs GenesisState) Validate() error {
 		if !entry.Nav.Price.Amount.IsPositive() {
 			return fmt.Errorf("nav price at index %d must be positive", i)
 		}
-		if entry.Nav.Price.Denom != v.UnderlyingAsset {
-			return fmt.Errorf("nav price denom at index %d must be %s, got %s", i, v.UnderlyingAsset, entry.Nav.Price.Denom)
+		if !v.IsAcceptedDenom(entry.Nav.Price.Denom) {
+			return fmt.Errorf("nav price denom at index %d %q is not an accepted denom for vault %s", i, entry.Nav.Price.Denom, entry.VaultAddress)
 		}
 		if entry.Nav.Volume.IsNil() || !entry.Nav.Volume.IsPositive() {
 			return fmt.Errorf("nav volume at index %d must be positive", i)
+		}
+		if len(entry.Nav.Source) > MaxNAVSourceLength {
+			return fmt.Errorf("nav source at index %d too long (expected <= %d, actual: %d)", i, MaxNAVSourceLength, len(entry.Nav.Source))
 		}
 		key := entry.VaultAddress + "/" + entry.Nav.Denom
 		if navKeys[key] {

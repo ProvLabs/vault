@@ -778,6 +778,55 @@ func TestVaultAccount_ValidateNAVAuthority(t *testing.T) {
 	}
 }
 
+func TestNewVaultNAV(t *testing.T) {
+	tests := []struct {
+		name           string
+		denom          string
+		price          sdk.Coin
+		volume         math.Int
+		source         string
+		expectedDenom  string
+		expectedPrice  sdk.Coin
+		expectedVolume math.Int
+		expectedSource string
+	}{
+		{
+			name:           "all fields populated",
+			denom:          "rwa",
+			price:          sdk.NewInt64Coin("under", 1_000_000),
+			volume:         math.NewInt(500_000),
+			source:         "oracle-x",
+			expectedDenom:  "rwa",
+			expectedPrice:  sdk.NewInt64Coin("under", 1_000_000),
+			expectedVolume: math.NewInt(500_000),
+			expectedSource: "oracle-x",
+		},
+		{
+			name:           "empty source is preserved",
+			denom:          "bond",
+			price:          sdk.NewInt64Coin("usdc", 250),
+			volume:         math.NewInt(1),
+			source:         "",
+			expectedDenom:  "bond",
+			expectedPrice:  sdk.NewInt64Coin("usdc", 250),
+			expectedVolume: math.NewInt(1),
+			expectedSource: "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			nav := types.NewVaultNAV(tc.denom, tc.price, tc.volume, tc.source)
+			require.Equal(t, tc.expectedDenom, nav.Denom, "NewVaultNAV denom mismatch for case: %s", tc.name)
+			require.Equal(t, tc.expectedPrice, nav.Price, "NewVaultNAV price mismatch for case: %s", tc.name)
+			require.Equal(t, tc.expectedVolume, nav.Volume, "NewVaultNAV volume mismatch for case: %s", tc.name)
+			require.Equal(t, tc.expectedSource, nav.Source, "NewVaultNAV source mismatch for case: %s", tc.name)
+			require.Zero(t, nav.UpdatedBlockHeight, "NewVaultNAV should not stamp a block height for case: %s", tc.name)
+			require.True(t, nav.UpdatedTime.IsZero(), "NewVaultNAV should not stamp an updated time for case: %s", tc.name)
+		})
+	}
+}
+
 func TestVaultAccount_AcceptedDenoms(t *testing.T) {
 	tests := []struct {
 		name            string

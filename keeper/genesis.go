@@ -120,6 +120,9 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 		if err != nil {
 			panic(fmt.Errorf("invalid vault address in nav entry: %w", err))
 		}
+		if _, err := k.MarkerKeeper.GetMarkerByDenom(ctx, entry.Nav.Denom); err != nil {
+			panic(fmt.Errorf("nav denom %q for vault %s is not a registered marker: %w", entry.Nav.Denom, entry.VaultAddress, err))
+		}
 		if err := k.NAVs.Set(ctx, collections.Join(addr, entry.Nav.Denom), entry.Nav); err != nil {
 			panic(fmt.Errorf("failed to import vault nav for %s/%s: %w", entry.VaultAddress, entry.Nav.Denom, err))
 		}

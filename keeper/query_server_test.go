@@ -1149,6 +1149,10 @@ func (s *TestSuite) TestQueryServer_VaultNavs() {
 	otherVault := s.setupBaseVault("under2", "vaultshares2")
 
 	navDenoms := []string{"rwaa", "rwab", "rwac", "rwad", "rwae"}
+	for _, denom := range navDenoms {
+		s.requireSimpleMarker(denom)
+	}
+	s.requireSimpleMarker("otherrwa")
 	for i, denom := range navDenoms {
 		nav := types.VaultNAV{Denom: denom, Price: sdk.NewInt64Coin(underlying, int64(100+i)), Volume: math.NewInt(int64(i + 1))}
 		s.Require().NoError(s.k.SetVaultNAV(s.ctx, vault, nav, s.adminAddr.String()), "failed to seed NAV for %s", denom)
@@ -1168,6 +1172,21 @@ func (s *TestSuite) TestQueryServer_VaultNavs() {
 		_, err := queryServer.VaultNavs(s.ctx, &types.QueryVaultNavsRequest{Id: types.GetVaultAddress("nope").String()})
 		s.Require().Error(err, "VaultNavs should error for a missing vault")
 		s.Assert().Contains(err.Error(), "not found", "unexpected error")
+	})
+
+	s.Run("nil request returns InvalidArgument", func() {
+		_, err := queryServer.VaultNavs(s.ctx, nil)
+		s.Require().Error(err, "VaultNavs should reject a nil request")
+		s.Assert().Contains(err.Error(), "id must be provided", "unexpected error for a nil request")
+	})
+
+	s.Run("invalid pagination request is rejected", func() {
+		_, err := queryServer.VaultNavs(s.ctx, &types.QueryVaultNavsRequest{
+			Id:         vaultAddr.String(),
+			Pagination: &query.PageRequest{Key: []byte{0x01}, Offset: 1},
+		})
+		s.Require().Error(err, "VaultNavs should reject a page request that sets both key and offset")
+		s.Assert().Contains(err.Error(), "failed to paginate vault navs", "unexpected error for an invalid page request")
 	})
 
 	s.Run("returns all entries for the vault", func() {
@@ -1226,6 +1245,7 @@ func (s *TestSuite) TestQueryServer_NavValue() {
 	vaultAddr := types.GetVaultAddress(share)
 
 	vault := s.setupBaseVault(underlying, share)
+	s.requireSimpleMarker(navDenom)
 	s.ctx = s.ctx.WithBlockHeight(42)
 	price := sdk.NewInt64Coin(underlying, 1234)
 	seeded := types.VaultNAV{Denom: navDenom, Price: price, Volume: math.NewInt(7), Source: "oracle-x"}
@@ -1265,5 +1285,17 @@ func (s *TestSuite) TestQueryServer_NavValue() {
 		_, err := queryServer.NavValue(s.ctx, &types.QueryNavValueRequest{Id: vaultAddr.String()})
 		s.Require().Error(err, "NavValue should reject an empty denom")
 		s.Assert().Contains(err.Error(), "denom must be provided", "unexpected error")
+	})
+
+	s.Run("rejects empty id", func() {
+		_, err := queryServer.NavValue(s.ctx, &types.QueryNavValueRequest{Denom: navDenom})
+		s.Require().Error(err, "NavValue should reject an empty id")
+		s.Assert().Contains(err.Error(), "id must be provided", "unexpected error")
+	})
+
+	s.Run("nil request returns InvalidArgument", func() {
+		_, err := queryServer.NavValue(s.ctx, nil)
+		s.Require().Error(err, "NavValue should reject a nil request")
+		s.Assert().Contains(err.Error(), "id must be provided", "unexpected error for a nil request")
 	})
 }

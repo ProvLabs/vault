@@ -1979,6 +1979,29 @@ func TestMsgUpdateVaultNAVRequest_ValidateBasic(t *testing.T) {
 			},
 			expectedErr: "volume must be positive",
 		},
+		{
+			name: "source at max length",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin("under", 100),
+				Volume:       sdkmath.NewInt(1),
+				Source:       strings.Repeat("a", types.MaxNAVSourceLength),
+			},
+		},
+		{
+			name: "source too long",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin("under", 100),
+				Volume:       sdkmath.NewInt(1),
+				Source:       strings.Repeat("a", types.MaxNAVSourceLength+1),
+			},
+			expectedErr: "source too long",
+		},
 	})
 }
 

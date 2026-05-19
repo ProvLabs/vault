@@ -13,6 +13,10 @@ import (
 
 const maxDenomMetadataDescriptionLength = 200
 
+// MaxNAVSourceLength bounds the VaultNAV.source attribution string to keep
+// per-entry state and emitted events from being inflated by an unbounded value.
+const MaxNAVSourceLength = 200
+
 // AllRequestMsgs defines all the Msg*Request messages.
 var AllRequestMsgs = []sdk.Msg{
 	(*MsgCreateVaultRequest)(nil),
@@ -545,6 +549,9 @@ func (m MsgUpdateVaultNAVRequest) ValidateBasic() error {
 	}
 	if m.Volume.IsNil() || !m.Volume.IsPositive() {
 		return fmt.Errorf("volume must be positive")
+	}
+	if len(m.Source) > MaxNAVSourceLength {
+		return fmt.Errorf("source too long (expected <= %d, actual: %d)", MaxNAVSourceLength, len(m.Source))
 	}
 	return nil
 }

@@ -243,24 +243,6 @@ func TestGenesisState_Validate(t *testing.T) {
 			expectedErr: "invalid nav denom at index 0",
 		},
 		{
-			name: "nav entry prices the vault underlying asset",
-			genState: types.GenesisState{
-				Params: types.DefaultParams(),
-				Vaults: []types.VaultAccount{validVault},
-				Navs: []types.VaultNAVEntry{
-					{
-						VaultAddress: validAddr,
-						Nav: types.VaultNAV{
-							Denom:  "under",
-							Price:  sdk.NewInt64Coin("under", 100),
-							Volume: sdkmath.NewInt(1),
-						},
-					},
-				},
-			},
-			expectedErr: "nav entry at index 0 prices the vault underlying asset under",
-		},
-		{
 			name: "nav entry prices the vault share denom",
 			genState: types.GenesisState{
 				Params: types.DefaultParams(),
@@ -277,6 +259,24 @@ func TestGenesisState_Validate(t *testing.T) {
 				},
 			},
 			expectedErr: "nav entry at index 0 prices the vault share denom share",
+		},
+		{
+			name: "nav entry has an invalid price coin",
+			genState: types.GenesisState{
+				Params: types.DefaultParams(),
+				Vaults: []types.VaultAccount{validVault},
+				Navs: []types.VaultNAVEntry{
+					{
+						VaultAddress: validAddr,
+						Nav: types.VaultNAV{
+							Denom:  "rwa",
+							Price:  sdk.Coin{Denom: "under", Amount: sdkmath.NewInt(-1)},
+							Volume: sdkmath.NewInt(1),
+						},
+					},
+				},
+			},
+			expectedErr: "invalid nav price at index 0",
 		},
 		{
 			name: "nav entry has zero price amount",
@@ -333,7 +333,7 @@ func TestGenesisState_Validate(t *testing.T) {
 			expectedErr: "nav volume at index 0 must be positive",
 		},
 		{
-			name: "nav price denom does not match vault underlying asset",
+			name: "nav price denom is not an accepted vault denom",
 			genState: types.GenesisState{
 				Params: types.DefaultParams(),
 				Vaults: []types.VaultAccount{validVault},
@@ -348,7 +348,7 @@ func TestGenesisState_Validate(t *testing.T) {
 					},
 				},
 			},
-			expectedErr: "nav price denom at index 0 must be under, got wrongdenom",
+			expectedErr: `nav price denom at index 0 "wrongdenom" is not an accepted denom`,
 		},
 		{
 			name: "duplicate nav entry for the same vault and denom",

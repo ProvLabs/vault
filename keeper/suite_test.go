@@ -730,3 +730,21 @@ func createVaultFeeCollectedEvent(vaultAddr sdk.AccAddress, aumSnapshot, collect
 		sdk.NewAttribute("vault_address", vaultAddr.String()),
 	)
 }
+
+// makeGenesisVaultAccount constructs a minimal VaultAccount for genesis state tests.
+// Both the underlying asset and payment denom are set to underlying, and both interest
+// rates are initialised to ZeroInterestRate. admin is assigned as both Admin and
+// NavAuthority.
+func makeGenesisVaultAccount(shareDenom, underlying, admin string) types.VaultAccount {
+	vaultAddr := types.GetVaultAddress(shareDenom)
+	return types.VaultAccount{
+		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
+		Admin:               admin,
+		NavAuthority:        admin,
+		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
+		UnderlyingAsset:     underlying,
+		PaymentDenom:        underlying,
+		CurrentInterestRate: types.ZeroInterestRate,
+		DesiredInterestRate: types.ZeroInterestRate,
+	}
+}

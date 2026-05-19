@@ -488,17 +488,7 @@ func (s *TestSuite) TestVaultGenesis_RoundTrip_NAVs() {
 	underlying := "navunder"
 	admin := s.adminAddr.String()
 	vaultAddr := types.GetVaultAddress(shareDenom)
-
-	vault := types.VaultAccount{
-		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
-		Admin:               admin,
-		NavAuthority:        admin,
-		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
-		UnderlyingAsset:     underlying,
-		PaymentDenom:        underlying,
-		CurrentInterestRate: types.ZeroInterestRate,
-		DesiredInterestRate: types.ZeroInterestRate,
-	}
+	vault := makeGenesisVaultAccount(shareDenom, underlying, admin)
 
 	updatedTime := time.Unix(1700000000, 0).UTC()
 	navs := []types.VaultNAVEntry{
@@ -550,16 +540,7 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidNAV() {
 	shareDenom := "navshare"
 	underlying := "navunder"
 	vaultAddr := types.GetVaultAddress(shareDenom)
-
-	vault := types.VaultAccount{
-		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
-		Admin:               s.adminAddr.String(),
-		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
-		UnderlyingAsset:     underlying,
-		PaymentDenom:        underlying,
-		CurrentInterestRate: types.ZeroInterestRate,
-		DesiredInterestRate: types.ZeroInterestRate,
-	}
+	vault := makeGenesisVaultAccount(shareDenom, underlying, s.adminAddr.String())
 
 	tests := []struct {
 		name        string
@@ -641,26 +622,8 @@ func (s *TestSuite) TestVaultGenesis_ExportNAVs_MultipleVaults() {
 	vaultAddrA := types.GetVaultAddress(shareDenomA)
 	vaultAddrB := types.GetVaultAddress(shareDenomB)
 
-	vaultA := types.VaultAccount{
-		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddrA),
-		Admin:               admin,
-		NavAuthority:        admin,
-		TotalShares:         sdk.NewInt64Coin(shareDenomA, 0),
-		UnderlyingAsset:     underlyingA,
-		PaymentDenom:        underlyingA,
-		CurrentInterestRate: types.ZeroInterestRate,
-		DesiredInterestRate: types.ZeroInterestRate,
-	}
-	vaultB := types.VaultAccount{
-		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddrB),
-		Admin:               admin,
-		NavAuthority:        admin,
-		TotalShares:         sdk.NewInt64Coin(shareDenomB, 0),
-		UnderlyingAsset:     underlyingB,
-		PaymentDenom:        underlyingB,
-		CurrentInterestRate: types.ZeroInterestRate,
-		DesiredInterestRate: types.ZeroInterestRate,
-	}
+	vaultA := makeGenesisVaultAccount(shareDenomA, underlyingA, admin)
+	vaultB := makeGenesisVaultAccount(shareDenomB, underlyingB, admin)
 
 	navEntriesA := []types.VaultNAVEntry{
 		{

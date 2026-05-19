@@ -1285,7 +1285,16 @@ func SimulateMsgUpdateVaultNAV(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateVaultNAVRequest{}), "unable to get random vault"), nil, err
 		}
 
-		navDenom := getRandomVaultAsset(r, vault)
+		markerKeeper, ok := k.MarkerKeeper.(markerkeeper.Keeper)
+		if !ok {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateVaultNAVRequest{}), "marker keeper is not of type markerkeeper.Keeper"), nil, fmt.Errorf("marker keeper is not of type markerkeeper.Keeper")
+		}
+
+		navDenom := genRandomDenom(r, k.MarkerKeeper.GetUnrestrictedDenomRegex(ctx), VaultGlobalDenomSuffix)
+		if err := CreateUnrestrictedMarker(ctx, sdk.NewInt64Coin(navDenom, 1_000_000_000), k.AuthKeeper.GetModuleAddress("mint"), markerKeeper); err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateVaultNAVRequest{}), "unable to create nav marker"), nil, err
+		}
+
 		priceDenom := getRandomVaultAsset(r, vault)
 		priceAmount := math.NewInt(int64(r.Intn(1_000_000) + 1))
 		volume := math.NewInt(int64(r.Intn(1_000_000) + 1))

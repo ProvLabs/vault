@@ -312,7 +312,7 @@ func (s *TestSuite) TestGetNAVPerShareInUnderlyingAsset_FloorsToZeroForTinyPerSh
 	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
 	navPerShareAsset, err := testKeeper.GetNAVPerShareInUnderlyingAsset(s.ctx, *vault)
 	s.Require().NoError(err, "nav per share should compute without error")
-	s.Require().Equal(math.ZeroInt().String(), navPerShareAsset.String(), "with scaled shares, integer NAV/share should floor to 0")
+	s.Require().Equal(math.ZeroInt(), navPerShareAsset, "with scaled shares, integer NAV/share should floor to 0")
 }
 
 func (s *TestSuite) TestGetNAVPerShareInUnderlyingAsset_ZeroSupplyAndNormalNAV() {

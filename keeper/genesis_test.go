@@ -549,6 +549,16 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidNAV() {
 			expectPanic: "invalid vault genesis state: nav entry at index 0 prices the vault share denom navshare",
 		},
 		{
+			name: "self-referential price denom",
+			nav: types.VaultNAV{
+				Denom:       "rwa",
+				Price:       sdk.NewInt64Coin("rwa", 100),
+				Volume:      sdkmath.NewInt(1),
+				UpdatedTime: time.Unix(1700000000, 0).UTC(),
+			},
+			expectPanic: "invalid vault genesis state: nav entry at index 0 has matching denom and price denom \"rwa\"",
+		},
+		{
 			name: "non-positive price",
 			nav: types.VaultNAV{
 				Denom:       "rwa",

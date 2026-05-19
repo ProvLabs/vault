@@ -107,6 +107,9 @@ func (gs GenesisState) Validate() error {
 		if entry.Nav.Denom == v.TotalShares.Denom {
 			return fmt.Errorf("nav entry at index %d prices the vault share denom %s", i, entry.Nav.Denom)
 		}
+		if entry.Nav.Denom == entry.Nav.Price.Denom {
+			return fmt.Errorf("nav entry at index %d has matching denom and price denom %q", i, entry.Nav.Denom)
+		}
 		if err := entry.Nav.Price.Validate(); err != nil {
 			return fmt.Errorf("invalid nav price at index %d: %w", i, err)
 		}

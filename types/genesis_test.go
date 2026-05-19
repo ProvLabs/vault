@@ -261,6 +261,24 @@ func TestGenesisState_Validate(t *testing.T) {
 			expectedErr: "nav entry at index 0 prices the vault share denom share",
 		},
 		{
+			name: "nav entry has self-referential price denom",
+			genState: types.GenesisState{
+				Params: types.DefaultParams(),
+				Vaults: []types.VaultAccount{validVault},
+				Navs: []types.VaultNAVEntry{
+					{
+						VaultAddress: validAddr,
+						Nav: types.VaultNAV{
+							Denom:  "rwa",
+							Price:  sdk.NewInt64Coin("rwa", 100),
+							Volume: sdkmath.NewInt(1),
+						},
+					},
+				},
+			},
+			expectedErr: "nav entry at index 0 has matching denom and price denom",
+		},
+		{
 			name: "nav entry has an invalid price coin",
 			genState: types.GenesisState{
 				Params: types.DefaultParams(),

@@ -1,0 +1,51 @@
+name: Provenance Drift Check
+
+# Detects when the pinned github.com/provenance-io/provenance version trails
+# upstream provenance-io/provenance main, and opens (or refreshes) a tracking
+# issue when it does. Runs on a weekly schedule and can be triggered manually.
+
+on:
+  schedule:
+    # Mondays at 13:00 UTC.
+    - cron: '0 13 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    name: Check Provenance version drift
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for drift
+        id: drift
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: ./scripts/check-provenance-version.sh --report-file provenance-drift-report.md
+
+      - name: Open or refresh drift issue
+        if: steps.drift.outputs.drift == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          label="provenance-drift"
+          title="Provenance dependency is behind upstream main"
+          # Ensure the tracking label exists (no-op if it already does).
+          gh label create "$label" --color FFA500 \
+            --description "Pinned Provenance version trails upstream main" 2>/dev/null || true
+          existing="$(gh issue list --state open --label "$label" \
+            --json number --jq '.[0].number // empty')"
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body-file provenance-drift-report.md
+            echo "Refreshed existing drift issue #$existing."
+          else
+            gh issue create --title "$title" --label "$label" \
+              --body-file provenance-drift-report.md
+            echo "Opened a new drift issue."
+          fi

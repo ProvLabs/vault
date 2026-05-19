@@ -1868,13 +1868,9 @@ func TestMsgUpdateSwapLimits_ValidateBasic(t *testing.T) {
 }
 
 func TestMsgUpdateVaultNAVRequest_ValidateBasic(t *testing.T) {
-	addr := utils.TestAddress().Bech32
+	addr := NewTestAddress()
 
-	tests := []struct {
-		name        string
-		msg         types.MsgUpdateVaultNAVRequest
-		expectedErr string
-	}{
+	RunValidateBasicTable(t, []validateBasicCase{
 		{
 			name: "valid",
 			msg: types.MsgUpdateVaultNAVRequest{
@@ -1885,7 +1881,6 @@ func TestMsgUpdateVaultNAVRequest_ValidateBasic(t *testing.T) {
 				Volume:       sdkmath.NewInt(1),
 				Source:       "oracle",
 			},
-			expectedErr: "",
 		},
 		{
 			name: "valid with empty source",
@@ -1896,7 +1891,6 @@ func TestMsgUpdateVaultNAVRequest_ValidateBasic(t *testing.T) {
 				Price:        sdk.NewInt64Coin("under", 100),
 				Volume:       sdkmath.NewInt(1),
 			},
-			expectedErr: "",
 		},
 		{
 			name: "invalid signer",
@@ -1985,29 +1979,13 @@ func TestMsgUpdateVaultNAVRequest_ValidateBasic(t *testing.T) {
 			},
 			expectedErr: "volume must be positive",
 		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			err := tc.msg.ValidateBasic()
-			if tc.expectedErr != "" {
-				assert.Error(t, err, "expected error for case %q", tc.name)
-				assert.Contains(t, err.Error(), tc.expectedErr, "error should contain expected substring for case %q", tc.name)
-			} else {
-				assert.NoError(t, err, "expected no error for case %q", tc.name)
-			}
-		})
-	}
+	})
 }
 
 func TestMsgUpdateNAVAuthorityRequest_ValidateBasic(t *testing.T) {
-	addr := utils.TestAddress().Bech32
+	addr := NewTestAddress()
 
-	tests := []struct {
-		name        string
-		msg         types.MsgUpdateNAVAuthorityRequest
-		expectedErr string
-	}{
+	RunValidateBasicTable(t, []validateBasicCase{
 		{
 			name: "valid",
 			msg: types.MsgUpdateNAVAuthorityRequest{
@@ -2015,7 +1993,14 @@ func TestMsgUpdateNAVAuthorityRequest_ValidateBasic(t *testing.T) {
 				VaultAddress: addr,
 				NewAuthority: addr,
 			},
-			expectedErr: "",
+		},
+		{
+			name: "valid with empty new authority (resets to admin)",
+			msg: types.MsgUpdateNAVAuthorityRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				NewAuthority: "",
+			},
 		},
 		{
 			name: "invalid signer",
@@ -2044,17 +2029,5 @@ func TestMsgUpdateNAVAuthorityRequest_ValidateBasic(t *testing.T) {
 			},
 			expectedErr: "invalid new authority address",
 		},
-	}
-
-	for _, tc := range tests {
-		t.Run(tc.name, func(t *testing.T) {
-			err := tc.msg.ValidateBasic()
-			if tc.expectedErr != "" {
-				assert.Error(t, err, "expected error for case %q", tc.name)
-				assert.Contains(t, err.Error(), tc.expectedErr, "error should contain expected substring for case %q", tc.name)
-			} else {
-				assert.NoError(t, err, "expected no error for case %q", tc.name)
-			}
-		})
-	}
+	})
 }

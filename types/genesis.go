@@ -116,6 +116,9 @@ func (gs GenesisState) Validate() error {
 		if !entry.Nav.Price.Amount.IsPositive() {
 			return fmt.Errorf("nav price at index %d must be positive", i)
 		}
+		if entry.Nav.Price.Denom != v.UnderlyingAsset {
+			return fmt.Errorf("nav price denom at index %d must be %s, got %s", i, v.UnderlyingAsset, entry.Nav.Price.Denom)
+		}
 		if entry.Nav.Volume.IsNil() || !entry.Nav.Volume.IsPositive() {
 			return fmt.Errorf("nav volume at index %d must be positive", i)
 		}

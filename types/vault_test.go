@@ -652,8 +652,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 }
 
 func TestNewVaultAccount_DefaultsNavAuthorityToAdmin(t *testing.T) {
-	admin := utils.TestAddress().Bech32
-	baseAcc := authtypes.NewBaseAccountWithAddress(sdk.MustAccAddressFromBech32(admin))
+	admin, _, _, baseAcc := makeNAVAuthorityFixtures()
 
 	tests := []struct {
 		name         string
@@ -681,8 +680,7 @@ func TestNewVaultAccount_DefaultsNavAuthorityToAdmin(t *testing.T) {
 }
 
 func TestVaultAccount_GetNAVAuthority(t *testing.T) {
-	admin := utils.TestAddress().Bech32
-	oracle := utils.TestAddress().Bech32
+	admin, oracle, _, _ := makeNAVAuthorityFixtures()
 
 	tests := []struct {
 		name              string
@@ -717,9 +715,7 @@ func TestVaultAccount_GetNAVAuthority(t *testing.T) {
 }
 
 func TestVaultAccount_ValidateNAVAuthority(t *testing.T) {
-	admin := utils.TestAddress().Bech32
-	oracle := utils.TestAddress().Bech32
-	other := utils.TestAddress().Bech32
+	admin, oracle, other, _ := makeNAVAuthorityFixtures()
 
 	tests := []struct {
 		name         string

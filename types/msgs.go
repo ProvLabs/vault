@@ -557,8 +557,10 @@ func (m MsgUpdateNAVAuthorityRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
 		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
 	}
-	if _, err := sdk.AccAddressFromBech32(m.NewAuthority); err != nil {
-		return fmt.Errorf("invalid new authority address: %q: %w", m.NewAuthority, err)
+	if m.NewAuthority != "" {
+		if _, err := sdk.AccAddressFromBech32(m.NewAuthority); err != nil {
+			return fmt.Errorf("invalid new authority address: %q: %w", m.NewAuthority, err)
+		}
 	}
 	return nil
 }

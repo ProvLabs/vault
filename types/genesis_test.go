@@ -333,6 +333,24 @@ func TestGenesisState_Validate(t *testing.T) {
 			expectedErr: "nav volume at index 0 must be positive",
 		},
 		{
+			name: "nav price denom does not match vault underlying asset",
+			genState: types.GenesisState{
+				Params: types.DefaultParams(),
+				Vaults: []types.VaultAccount{validVault},
+				Navs: []types.VaultNAVEntry{
+					{
+						VaultAddress: validAddr,
+						Nav: types.VaultNAV{
+							Denom:  "rwa",
+							Price:  sdk.NewInt64Coin("wrongdenom", 100),
+							Volume: sdkmath.NewInt(1),
+						},
+					},
+				},
+			},
+			expectedErr: "nav price denom at index 0 must be under, got wrongdenom",
+		},
+		{
 			name: "duplicate nav entry for the same vault and denom",
 			genState: types.GenesisState{
 				Params: types.DefaultParams(),

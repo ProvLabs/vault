@@ -31,6 +31,9 @@ func (k *Keeper) SetVaultNAV(ctx sdk.Context, vault *types.VaultAccount, nav typ
 	if nav.Denom == vault.TotalShares.Denom {
 		return fmt.Errorf("cannot set NAV for vault share denom %q", nav.Denom)
 	}
+	if nav.Denom == nav.Price.Denom {
+		return fmt.Errorf("NAV denom %q and price denom must differ", nav.Denom)
+	}
 	if err := nav.Price.Validate(); err != nil {
 		return fmt.Errorf("invalid NAV price: %w", err)
 	}

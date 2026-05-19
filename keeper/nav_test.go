@@ -231,6 +231,15 @@ func (s *TestSuite) TestKeeper_SetVaultNAV_RejectsInvalidInput() {
 			expectedErrSubstr: "NAV volume must be positive",
 		},
 		{
+			name: "rejects self-referential price denom matching nav denom",
+			nav: types.VaultNAV{
+				Denom:  registeredDenom,
+				Price:  sdk.NewInt64Coin(registeredDenom, 100),
+				Volume: sdkmath.NewInt(1),
+			},
+			expectedErrSubstr: "price denom must differ",
+		},
+		{
 			name: "rejects a denom that is not a registered marker",
 			nav: types.VaultNAV{
 				Denom:  "ghostdenom",

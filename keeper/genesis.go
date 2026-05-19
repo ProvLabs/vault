@@ -124,11 +124,8 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 		if !ok {
 			panic(fmt.Errorf("nav entry for unknown vault %s", entry.VaultAddress))
 		}
-		if entry.Nav.Denom == vault.TotalShares.Denom {
-			panic(fmt.Errorf("cannot set NAV for vault share denom %q in vault %s", entry.Nav.Denom, entry.VaultAddress))
-		}
-		if entry.Nav.Denom == entry.Nav.Price.Denom {
-			panic(fmt.Errorf("NAV denom %q and price denom must differ in vault %s", entry.Nav.Denom, entry.VaultAddress))
+		if err := validateVaultNAVFields(vault, entry.Nav); err != nil {
+			panic(fmt.Errorf("invalid nav entry for vault %s: %w", entry.VaultAddress, err))
 		}
 		if _, err := k.MarkerKeeper.GetMarkerByDenom(ctx, entry.Nav.Denom); err != nil {
 			panic(fmt.Errorf("nav denom %q for vault %s is not a registered marker: %w", entry.Nav.Denom, entry.VaultAddress, err))

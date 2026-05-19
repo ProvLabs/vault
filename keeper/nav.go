@@ -10,24 +10,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// SetVaultNAV creates or updates the internal net asset value entry for a denom
-// held by the given vault. The nav argument supplies the denom, price, volume,
-// and source; the updated block height and time are stamped from ctx before the
-// entry is stored.
-//
-// The denom may not be the vault's share denom, whose value is derived from
-// the vault's total holdings rather than set externally. The denom must also
-// be a registered marker on-chain. The price must be a valid positive coin
-// denominated in one of the vault's accepted denoms (underlying asset or
-// payment denom), and the volume must be positive.
-//
-// This method does NOT verify that signer is authorized to mutate the vault's
-// NAV table; signer is recorded for event attribution only. Callers must run
-// vault.ValidateNAVAuthority (or an equivalent check) before invoking it.
-//
-// An EventNAVUpdated event is emitted with signer recorded as the NAV authority
-// that performed the update.
-func (k *Keeper) SetVaultNAV(ctx sdk.Context, vault *types.VaultAccount, nav types.VaultNAV, signer string) error {
+// validateVaultNAVFields checks all stateless constraints on a NAV entry
+// against its vault. It does not verify chain state (e.g. registered markers).
+func validateVaultNAVFields(vault *types.VaultAccount, nav types.VaultNAV) error {
 	if nav.Denom == vault.TotalShares.Denom {
 		return fmt.Errorf("cannot set NAV for vault share denom %q", nav.Denom)
 	}
@@ -48,6 +33,30 @@ func (k *Keeper) SetVaultNAV(ctx sdk.Context, vault *types.VaultAccount, nav typ
 	}
 	if len(nav.Source) > types.MaxNAVSourceLength {
 		return fmt.Errorf("NAV source too long (expected <= %d, actual: %d)", types.MaxNAVSourceLength, len(nav.Source))
+	}
+	return nil
+}
+
+// SetVaultNAV creates or updates the internal net asset value entry for a denom
+// held by the given vault. The nav argument supplies the denom, price, volume,
+// and source; the updated block height and time are stamped from ctx before the
+// entry is stored.
+//
+// The denom may not be the vault's share denom, whose value is derived from
+// the vault's total holdings rather than set externally. The denom must also
+// be a registered marker on-chain. The price must be a valid positive coin
+// denominated in one of the vault's accepted denoms (underlying asset or
+// payment denom), and the volume must be positive.
+//
+// This method does NOT verify that signer is authorized to mutate the vault's
+// NAV table; signer is recorded for event attribution only. Callers must run
+// vault.ValidateNAVAuthority (or an equivalent check) before invoking it.
+//
+// An EventNAVUpdated event is emitted with signer recorded as the NAV authority
+// that performed the update.
+func (k *Keeper) SetVaultNAV(ctx sdk.Context, vault *types.VaultAccount, nav types.VaultNAV, signer string) error {
+	if err := validateVaultNAVFields(vault, nav); err != nil {
+		return err
 	}
 	if _, err := k.MarkerKeeper.GetMarkerByDenom(ctx, nav.Denom); err != nil {
 		return fmt.Errorf("NAV denom %q is not a registered marker: %w", nav.Denom, err)

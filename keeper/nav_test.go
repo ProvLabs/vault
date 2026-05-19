@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"strings"
 	"time"
 
 	"cosmossdk.io/collections"
@@ -229,6 +230,16 @@ func (s *TestSuite) TestKeeper_SetVaultNAV_RejectsInvalidInput() {
 				Volume: sdkmath.NewInt(-1),
 			},
 			expectedErrSubstr: "NAV volume must be positive",
+		},
+		{
+			name: "rejects a source that exceeds the max length",
+			nav: types.VaultNAV{
+				Denom:  registeredDenom,
+				Price:  sdk.NewInt64Coin(underlying, 100),
+				Volume: sdkmath.NewInt(1),
+				Source: strings.Repeat("x", types.MaxNAVSourceLength+1),
+			},
+			expectedErrSubstr: "NAV source too long",
 		},
 		{
 			name: "rejects self-referential price denom matching nav denom",

@@ -822,7 +822,7 @@ func (k msgServer) UpdateVaultNAV(goCtx context.Context, msg *types.MsgUpdateVau
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
 	vault, err := k.getVault(ctx, vaultAddr)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get vault %s: %w", msg.VaultAddress, err)
 	}
 	if err := vault.ValidateNAVAuthority(msg.Signer); err != nil {
 		return nil, fmt.Errorf("failed to validate NAV authority: %w", err)
@@ -844,7 +844,7 @@ func (k msgServer) UpdateNAVAuthority(goCtx context.Context, msg *types.MsgUpdat
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
 	vault, err := k.getVault(ctx, vaultAddr)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get vault %s: %w", msg.VaultAddress, err)
 	}
 	if err := vault.ValidateAdmin(msg.Signer); err != nil {
 		return nil, fmt.Errorf("failed to validate admin: %w", err)

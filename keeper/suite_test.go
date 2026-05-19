@@ -748,3 +748,22 @@ func makeGenesisVaultAccount(shareDenom, underlying, admin string) types.VaultAc
 		DesiredInterestRate: types.ZeroInterestRate,
 	}
 }
+
+// buildSingleVaultGenesisState constructs a GenesisState containing one vault and the
+// provided NAV entries without touching chain state. Use this to prepare a genesis
+// payload for panic/validation tests where InitGenesis must not be called in advance.
+func buildSingleVaultGenesisState(shareDenom, underlying, admin string, navs []types.VaultNAVEntry) *types.GenesisState {
+	return &types.GenesisState{
+		Params: types.DefaultParams(),
+		Vaults: []types.VaultAccount{makeGenesisVaultAccount(shareDenom, underlying, admin)},
+		Navs:   navs,
+	}
+}
+
+// setupVaultWithNavs builds a single-vault genesis state, initialises it via
+// InitGenesis, and returns the genesis state for use in export assertions.
+func (s *TestSuite) setupVaultWithNavs(shareDenom, underlying, admin string, navs []types.VaultNAVEntry) *types.GenesisState {
+	genesis := buildSingleVaultGenesisState(shareDenom, underlying, admin, navs)
+	s.k.InitGenesis(s.ctx, genesis)
+	return genesis
+}

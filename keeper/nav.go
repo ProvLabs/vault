@@ -18,7 +18,8 @@ import (
 // The denom may not be the vault's share denom or its underlying asset, both of
 // which derive their value elsewhere (the share denom from valuation and the
 // underlying asset from its implicit 1:1 self price). The price must be a valid
-// positive coin and the volume must be positive.
+// positive coin denominated in the vault's underlying asset, and the volume must
+// be positive.
 //
 // An EventNAVUpdated event is emitted with signer recorded as the NAV authority
 // that performed the update.
@@ -34,6 +35,9 @@ func (k *Keeper) SetVaultNAV(ctx sdk.Context, vault *types.VaultAccount, nav typ
 	}
 	if !nav.Price.Amount.IsPositive() {
 		return fmt.Errorf("NAV price amount must be positive, got %s", nav.Price.Amount)
+	}
+	if nav.Price.Denom != vault.UnderlyingAsset {
+		return fmt.Errorf("NAV price denom must be the vault underlying asset %q, got %q", vault.UnderlyingAsset, nav.Price.Denom)
 	}
 	if nav.Volume.IsNil() || !nav.Volume.IsPositive() {
 		return fmt.Errorf("NAV volume must be positive")

@@ -486,9 +486,7 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsWhenFeeTimeoutHasUnknownVault() {
 func (s *TestSuite) TestVaultGenesis_RoundTrip_NAVs() {
 	shareDenom := "navshare"
 	underlying := "navunder"
-	admin := s.adminAddr.String()
 	vaultAddr := types.GetVaultAddress(shareDenom)
-	vault := makeGenesisVaultAccount(shareDenom, underlying, admin)
 
 	updatedTime := time.Unix(1700000000, 0).UTC()
 	navs := []types.VaultNAVEntry{
@@ -515,13 +513,7 @@ func (s *TestSuite) TestVaultGenesis_RoundTrip_NAVs() {
 		},
 	}
 
-	genesis := &types.GenesisState{
-		Params: types.DefaultParams(),
-		Vaults: []types.VaultAccount{vault},
-		Navs:   navs,
-	}
-
-	s.k.InitGenesis(s.ctx, genesis)
+	genesis := s.setupVaultWithNavs(shareDenom, underlying, s.adminAddr.String(), navs)
 
 	storedNav, err := s.k.GetVaultNAV(s.ctx, vaultAddr, "rwaone")
 	s.Require().NoError(err, "NAV should exist after InitGenesis")
@@ -530,8 +522,8 @@ func (s *TestSuite) TestVaultGenesis_RoundTrip_NAVs() {
 	s.Assert().Equal("oracle-one", storedNav.Source, "imported NAV source mismatch")
 
 	exported := s.k.ExportGenesis(s.ctx)
-	s.Require().Len(exported.Navs, len(navs), "exported genesis should contain every NAV entry")
-	s.Assert().ElementsMatch(navs, exported.Navs, "exported NAV table should match the imported table")
+	s.Require().Len(exported.Navs, len(genesis.Navs), "exported genesis should contain every NAV entry")
+	s.Assert().ElementsMatch(genesis.Navs, exported.Navs, "exported NAV table should match the imported table")
 }
 
 // TestVaultGenesis_InitPanicsOnInvalidNAV verifies genesis validation rejects
@@ -540,7 +532,6 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidNAV() {
 	shareDenom := "navshare"
 	underlying := "navunder"
 	vaultAddr := types.GetVaultAddress(shareDenom)
-	vault := makeGenesisVaultAccount(shareDenom, underlying, s.adminAddr.String())
 
 	tests := []struct {
 		name        string
@@ -601,11 +592,8 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidNAV() {
 
 	for _, tt := range tests {
 		s.Run(tt.name, func() {
-			genesis := &types.GenesisState{
-				Params: types.DefaultParams(),
-				Vaults: []types.VaultAccount{vault},
-				Navs:   []types.VaultNAVEntry{{VaultAddress: vaultAddr.String(), Nav: tt.nav}},
-			}
+			genesis := buildSingleVaultGenesisState(shareDenom, underlying, s.adminAddr.String(),
+				[]types.VaultNAVEntry{{VaultAddress: vaultAddr.String(), Nav: tt.nav}})
 			s.Require().PanicsWithError(tt.expectPanic, func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on an invalid NAV entry")
 		})
 	}

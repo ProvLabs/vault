@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"time"
+
 	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -46,49 +48,102 @@ func (s *TestSuite) TestKeeper_GetVaultNAV_NotFound() {
 // updates the block height and time on the stored entry rather than preserving the
 // values from the first write.
 func (s *TestSuite) TestKeeper_SetVaultNAV_OverwriteReStamps() {
-	underlying := "under"
-	share := "vaultshares"
-	navDenom := "rwa"
-	vaultAddr := types.GetVaultAddress(share)
-	vault := s.setupBaseVault(underlying, share)
-
-	firstHeight := int64(10)
-	firstTime := s.ctx.BlockTime()
-	s.ctx = s.ctx.WithBlockHeight(firstHeight)
-
-	firstNav := types.VaultNAV{
-		Denom:  navDenom,
-		Price:  sdk.NewInt64Coin(underlying, 100),
-		Volume: sdkmath.NewInt(5),
-		Source: "oracle-first",
+	type wantFields struct {
+		price  sdk.Coin
+		volume sdkmath.Int
+		source string
 	}
-	s.Require().NoError(s.k.SetVaultNAV(s.ctx, vault, firstNav, s.adminAddr.String()), "first SetVaultNAV should succeed")
-
-	storedFirst, err := s.k.GetVaultNAV(s.ctx, vaultAddr, navDenom)
-	s.Require().NoError(err, "GetVaultNAV should return the first entry")
-	s.Assert().Equal(firstHeight, storedFirst.UpdatedBlockHeight, "first write should stamp the block height")
-	s.Assert().Equal(firstTime.UTC(), storedFirst.UpdatedTime, "first write should stamp the block time")
-
-	secondHeight := int64(20)
-	secondTime := firstTime.Add(0).UTC()
-	s.ctx = s.ctx.WithBlockHeight(secondHeight)
-	// Advance block time by a meaningful offset to distinguish from first write.
-	s.ctx = s.ctx.WithBlockTime(firstTime.Add(0))
-	secondTime = s.ctx.BlockTime().UTC()
-
-	secondNav := types.VaultNAV{
-		Denom:  navDenom,
-		Price:  sdk.NewInt64Coin(underlying, 200),
-		Volume: sdkmath.NewInt(10),
-		Source: "oracle-second",
+	cases := []struct {
+		name         string
+		underlying   string
+		share        string
+		navDenom     string
+		firstHeight  int64
+		firstNav     types.VaultNAV
+		secondHeight int64
+		secondNav    types.VaultNAV
+		want         wantFields
+	}{
+		{
+			name:        "overwrite re-stamps height, time, price, volume, and source",
+			underlying:  "under",
+			share:       "vaultshares",
+			navDenom:    "rwa",
+			firstHeight: 10,
+			firstNav: types.VaultNAV{
+				Denom:  "rwa",
+				Price:  sdk.NewInt64Coin("under", 100),
+				Volume: sdkmath.NewInt(5),
+				Source: "oracle-first",
+			},
+			secondHeight: 20,
+			secondNav: types.VaultNAV{
+				Denom:  "rwa",
+				Price:  sdk.NewInt64Coin("under", 200),
+				Volume: sdkmath.NewInt(10),
+				Source: "oracle-second",
+			},
+			want: wantFields{
+				price:  sdk.NewInt64Coin("under", 200),
+				volume: sdkmath.NewInt(10),
+				source: "oracle-second",
+			},
+		},
+		{
+			name:        "overwrite with same source still re-stamps block metadata",
+			underlying:  "usdc",
+			share:       "usdcshares",
+			navDenom:    "bond",
+			firstHeight: 1,
+			firstNav: types.VaultNAV{
+				Denom:  "bond",
+				Price:  sdk.NewInt64Coin("usdc", 1_000),
+				Volume: sdkmath.NewInt(1),
+				Source: "static-oracle",
+			},
+			secondHeight: 2,
+			secondNav: types.VaultNAV{
+				Denom:  "bond",
+				Price:  sdk.NewInt64Coin("usdc", 1_050),
+				Volume: sdkmath.NewInt(2),
+				Source: "static-oracle",
+			},
+			want: wantFields{
+				price:  sdk.NewInt64Coin("usdc", 1_050),
+				volume: sdkmath.NewInt(2),
+				source: "static-oracle",
+			},
+		},
 	}
-	s.Require().NoError(s.k.SetVaultNAV(s.ctx, vault, secondNav, s.adminAddr.String()), "second SetVaultNAV should succeed")
 
-	storedSecond, err := s.k.GetVaultNAV(s.ctx, vaultAddr, navDenom)
-	s.Require().NoError(err, "GetVaultNAV should return the overwritten entry")
-	s.Assert().Equal(secondHeight, storedSecond.UpdatedBlockHeight, "overwrite should re-stamp the block height to the second write height")
-	s.Assert().Equal(secondTime, storedSecond.UpdatedTime, "overwrite should re-stamp the block time to the second write time")
-	s.Assert().Equal(sdk.NewInt64Coin(underlying, 200), storedSecond.Price, "overwrite should update the price")
-	s.Assert().Equal(sdkmath.NewInt(10), storedSecond.Volume, "overwrite should update the volume")
-	s.Assert().Equal("oracle-second", storedSecond.Source, "overwrite should update the source")
+	for _, tc := range cases {
+		s.Run(tc.name, func() {
+			vault := s.setupBaseVault(tc.underlying, tc.share)
+			vaultAddr := types.GetVaultAddress(tc.share)
+
+			baseCtx := s.ctx
+			firstTime := baseCtx.BlockTime().UTC()
+			ctx1 := baseCtx.WithBlockHeight(tc.firstHeight)
+
+			s.Require().NoError(s.k.SetVaultNAV(ctx1, vault, tc.firstNav, s.adminAddr.String()), "first SetVaultNAV should succeed")
+
+			storedFirst, err := s.k.GetVaultNAV(ctx1, vaultAddr, tc.navDenom)
+			s.Require().NoError(err, "GetVaultNAV should return the first entry")
+			s.Assert().Equal(tc.firstHeight, storedFirst.UpdatedBlockHeight, "first write should stamp the block height")
+			s.Assert().Equal(firstTime, storedFirst.UpdatedTime, "first write should stamp the block time")
+
+			secondTime := firstTime.Add(time.Second)
+			ctx2 := ctx1.WithBlockHeight(tc.secondHeight).WithBlockTime(secondTime)
+
+			s.Require().NoError(s.k.SetVaultNAV(ctx2, vault, tc.secondNav, s.adminAddr.String()), "second SetVaultNAV should succeed")
+
+			storedSecond, err := s.k.GetVaultNAV(ctx2, vaultAddr, tc.navDenom)
+			s.Require().NoError(err, "GetVaultNAV should return the overwritten entry")
+			s.Assert().Equal(tc.secondHeight, storedSecond.UpdatedBlockHeight, "overwrite should re-stamp the block height")
+			s.Assert().Equal(secondTime.UTC(), storedSecond.UpdatedTime, "overwrite should re-stamp the block time")
+			s.Assert().Equal(tc.want.price, storedSecond.Price, "overwrite should update the price")
+			s.Assert().Equal(tc.want.volume, storedSecond.Volume, "overwrite should update the volume")
+			s.Assert().Equal(tc.want.source, storedSecond.Source, "overwrite should update the source")
+		})
+	}
 }

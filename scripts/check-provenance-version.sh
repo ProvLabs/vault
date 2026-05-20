@@ -131,7 +131,7 @@ build_report() {
 	if [[ "$drift" == true ]]; then
 		echo "**Drift detected: the pin is ${behind} commit(s) behind \`${UPSTREAM_REPO}\` main.**"
 		echo
-		echo "Commits on \`main\` not in the current pin (most recent ${behind}, truncated to 25):"
+		echo "Commits on \`main\` not in the current pin (up to 25 shown of ${behind}):"
 		echo
 		echo "${commit_list}"
 		echo

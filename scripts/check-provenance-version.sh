@@ -110,7 +110,7 @@ fi
 behind="$(printf '%s' "$compare_json" | jq_py 'print(d.get("ahead_by",0))')"
 status="$(printf '%s' "$compare_json" | jq_py 'print(d.get("status",""))')"
 commit_list="$(printf '%s' "$compare_json" | jq_py '
-[print("- " + c["commit"]["message"].splitlines()[0]) for c in d.get("commits",[])[-25:]]' || true)"
+[print("- " + ((c["commit"]["message"] or "").splitlines() or ["(no message)"])[0]) for c in d.get("commits",[])[-25:]]' || true)"
 
 drift=false
 if [[ "$status" != "identical" && "${behind:-0}" -gt 0 ]]; then

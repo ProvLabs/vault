@@ -194,7 +194,11 @@ func (k Keeper) GetNAVPerShareInUnderlyingAsset(ctx sdk.Context, vault types.Vau
 	if vault.TotalShares.IsZero() {
 		return math.ZeroInt(), nil
 	}
-	return tvv.Quo(vault.TotalShares.Amount), nil
+	result := tvv.Quo(vault.TotalShares.Amount)
+	if result.IsZero() {
+		return math.ZeroInt(), nil
+	}
+	return result, nil
 }
 
 // ConvertSharesToRedeemCoin converts a share amount into a payout coin in redeemDenom

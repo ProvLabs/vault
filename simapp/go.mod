@@ -14,7 +14,7 @@ require (
 	cosmossdk.io/x/upgrade v0.2.0
 	github.com/cometbft/cometbft v0.38.21
 	github.com/cosmos/cosmos-db v1.1.3
-	github.com/cosmos/cosmos-sdk v0.53.6
+	github.com/cosmos/cosmos-sdk v0.53.5
 	github.com/provenance-io/provenance v1.3.2-0.20260519172448-9b0fb12c99b3
 	github.com/provlabs/vault v1.0.15
 	github.com/spf13/cobra v1.10.2

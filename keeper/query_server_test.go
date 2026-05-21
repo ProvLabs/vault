@@ -7,13 +7,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
 	"github.com/provlabs/vault/utils"
 	querytest "github.com/provlabs/vault/utils/query"
-
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 func (s *TestSuite) TestQueryServer_Vault() {
@@ -59,6 +58,12 @@ func (s *TestSuite) TestQueryServer_Vault() {
 		s.Require().NoError(err, "create vault1 should succeed")
 		_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: admin, ShareDenom: shareDenom2, UnderlyingAsset: underlying, PaymentDenom: payment})
 		s.Require().NoError(err, "create vault2 should succeed")
+		vault1, err := s.k.GetVault(s.ctx, addr1)
+		s.Require().NoError(err, "get vault1 should succeed for NAV seeding")
+		s.setVaultNAV(vault1, payment, sdk.NewInt64Coin(underlying, 1), 1)
+		vault2, err := s.k.GetVault(s.ctx, addr2)
+		s.Require().NoError(err, "get vault2 should succeed for NAV seeding")
+		s.setVaultNAV(vault2, payment, sdk.NewInt64Coin(underlying, 1), 1)
 		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin(underlying, 40))), "fund reserves for vault1 should succeed")
 		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr1, sdk.NewCoins(sdk.NewInt64Coin(underlying, 100), sdk.NewInt64Coin(payment, 250))), "fund principal (marker) for vault1 should succeed")
 		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, addr2, sdk.NewCoins(sdk.NewInt64Coin(underlying, 20))), "fund reserves for vault2 should succeed")
@@ -517,13 +522,17 @@ func (s *TestSuite) TestQueryServer_EstimateSwapIn() {
 			},
 		},
 		{
-			Name: "happy path payment deposit (peg 1:1)",
+			Name: "happy path payment deposit with 1:1 internal NAV",
 			Setup: func() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
+				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(paymentDenom, math.NewInt(1000)), s.adminAddr)
 				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 					Admin: admin, ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom,
 				})
 				s.Require().NoError(err, "vault creation should succeed")
+				vault, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err, "get vault should succeed for NAV seeding")
+				s.setVaultNAV(vault, paymentDenom, sdk.NewInt64Coin(underlyingDenom, 1), 1)
 			},
 			Req: &types.QueryEstimateSwapInRequest{
 				VaultAddress: vaultAddr.String(),
@@ -661,9 +670,10 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 			},
 		},
 		{
-			Name: "happy path redeem to payment denom (peg 1:1)",
+			Name: "happy path redeem to payment denom with 1:1 internal NAV",
 			Setup: func() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
+				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(paymentDenom, math.NewInt(1000)), s.adminAddr)
 				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 					Admin: admin, ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom,
 				})
@@ -677,6 +687,7 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 				s.Require().NotNil(vault, "vault should not be nil")
 				vault.TotalShares = sharesToSwap
 				s.k.AuthKeeper.SetAccount(s.ctx, vault)
+				s.setVaultNAV(vault, paymentDenom, sdk.NewInt64Coin(underlyingDenom, 1), 1)
 			},
 			Req: &types.QueryEstimateSwapOutRequest{
 				VaultAddress: vaultAddr.String(),

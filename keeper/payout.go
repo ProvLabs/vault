@@ -224,6 +224,9 @@ func (k Keeper) getRefundReason(err error) string {
 	if errors.Is(err, sdkerrors.ErrInsufficientFunds) {
 		return types.RefundReasonInsufficientFunds
 	}
+	if errors.Is(err, ErrInternalNAVNotFound) {
+		return types.RefundReasonNavNotFound
+	}
 
 	errMsg := err.Error()
 
@@ -238,8 +241,6 @@ func (k Keeper) getRefundReason(err error) string {
 		return types.RefundReasonPermissionDenied
 	case strings.Contains(errMsg, "cannot be sent to the fee collector"):
 		return types.RefundReasonRecipientInvalid
-	case strings.Contains(errMsg, "nav not found"):
-		return types.RefundReasonNavNotFound
 	case strings.Contains(errMsg, "failed to reconcile"):
 		return types.RefundReasonReconcileFailure
 	}

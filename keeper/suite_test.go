@@ -570,35 +570,41 @@ func createSwapInEvents(owner, vaultAddr, markerAddr sdk.AccAddress, asset, shar
 }
 
 // setupSinglePaymentDenomVault is a comprehensive helper that creates a vault with
-// an underlying asset, a share denom, and a single payment denom. It creates all markers,
-// withdraws funds to the admin, creates the vault with the paymentDenom configured,
-// and sets a custom NAV for the payment denom to the underlying denom.
+// an underlying asset, a share denom, and a single payment denom. It creates all
+// markers, withdraws funds to the admin, creates the vault with the paymentDenom
+// configured, and seeds an Internal NAV entry pricing one paymentDenom unit at
+// price/volume underlying.
 func (s *TestSuite) setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom string, price, volume int64) *types.VaultAccount {
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 2_000_000), s.adminAddr)
 	s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, paymentDenom, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 100_000)))
 	vault := s.setupBaseVault(underlyingDenom, shareDenom, paymentDenom)
 
-	paymentMarkerAddr := markertypes.MustGetMarkerAddress(paymentDenom)
-	paymentMarkerAccount, err := s.k.MarkerKeeper.GetMarker(s.ctx, paymentMarkerAddr)
-	s.Require().NoError(err, "should fetch payment marker for NAV setup")
-	s.Require().NoError(s.k.MarkerKeeper.SetNetAssetValue(s.ctx, paymentMarkerAccount, markertypes.NetAssetValue{
-		Price:  sdk.NewInt64Coin(underlyingDenom, price),
-		Volume: uint64(volume),
-	}, "test"), "should set NAV %s->%s=%d/%d", paymentDenom, underlyingDenom, price, volume)
+	if paymentDenom != underlyingDenom {
+		s.setVaultNAV(vault, paymentDenom, sdk.NewInt64Coin(underlyingDenom, price), volume)
+	}
 
 	return vault
 }
 
-// setReverseNAV sets a reverse net asset value on the underlying denom marker,
-// allowing the vault to value the underlying in terms of the payment denom.
-func (s *TestSuite) setReverseNAV(underlyingDenom, paymentDenom string, price, volume int64) {
-	underlyingMarkerAddr := markertypes.MustGetMarkerAddress(underlyingDenom)
-	underlyingMarkerAccount, err := s.k.MarkerKeeper.GetMarker(s.ctx, underlyingMarkerAddr)
-	s.Require().NoError(err, "should fetch underlying marker for reverse NAV setup")
-	s.Require().NoError(s.k.MarkerKeeper.SetNetAssetValue(s.ctx, underlyingMarkerAccount, markertypes.NetAssetValue{
-		Price:  sdk.NewInt64Coin(paymentDenom, price),
-		Volume: uint64(volume),
-	}, "test-reverse"), "should set reverse NAV %s->%s=%d/%d", underlyingDenom, paymentDenom, price, volume)
+// setVaultNAV seeds an Internal NAV entry on the given vault for denom, pricing
+// volume units at price (which must be denominated in the vault's underlying
+// asset). The entry is recorded under the admin signer used by the suite.
+func (s *TestSuite) setVaultNAV(vault *types.VaultAccount, denom string, price sdk.Coin, volume int64) {
+	nav := types.NewVaultNAV(denom, price, sdkmath.NewInt(volume), "test")
+	s.Require().NoError(s.k.SetVaultNAV(s.ctx, vault, nav, s.adminAddr.String()),
+		"should set internal NAV %s -> %s=%s/%d", denom, price.Denom, price.Amount, volume)
+}
+
+// setVaultPaymentDenomWithNAV mutates the vault to use paymentDenom, persists
+// the account, and seeds the corresponding Internal NAV entry pricing one
+// paymentDenom unit at (price.Amount / volume) underlying. Use this in tests
+// that need to attach a payment denom to an already-created vault and price
+// it against the underlying in a single step (replaces the inline
+// `vault.PaymentDenom = X; SetAccount; setVaultNAV` triplet).
+func (s *TestSuite) setVaultPaymentDenomWithNAV(vault *types.VaultAccount, paymentDenom string, price sdk.Coin, volume int64) {
+	vault.PaymentDenom = paymentDenom
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+	s.setVaultNAV(vault, paymentDenom, price, volume)
 }
 
 // bumpHeight increments the suite's context block height by 1.

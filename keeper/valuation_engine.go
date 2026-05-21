@@ -70,11 +70,15 @@ func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom string, vault types.
 		)
 		return math.Int{}, math.Int{}, fmt.Errorf("internal NAV volume must be positive for denom %q on vault %s", srcDenom, vault.GetAddress())
 	}
-	if !nav.Price.Amount.IsPositive() {
+	if nav.Price.Amount.IsNil() || !nav.Price.Amount.IsPositive() {
+		priceForLog := "<nil>"
+		if !nav.Price.Amount.IsNil() {
+			priceForLog = nav.Price.String()
+		}
 		k.getLogger(ctx).Error("internal NAV invariant violated: non-positive price",
 			"vault", vault.GetAddress().String(),
 			"denom", srcDenom,
-			"price", nav.Price.String(),
+			"price", priceForLog,
 		)
 		return math.Int{}, math.Int{}, fmt.Errorf("internal NAV price must be positive for denom %q on vault %s", srcDenom, vault.GetAddress())
 	}

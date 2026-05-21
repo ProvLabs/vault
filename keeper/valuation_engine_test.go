@@ -91,6 +91,23 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 			},
 			expectedErrorContains: "internal NAV price must be positive",
 		},
+		{
+			name:      "internal-nav-price-nil",
+			fromDenom: paymentDenom,
+			setup: func() {
+				s.bumpHeight()
+				s.Require().NoError(s.k.NAVs.Set(
+					s.ctx,
+					collections.Join(vault.GetAddress(), paymentDenom),
+					types.VaultNAV{
+						Denom:  paymentDenom,
+						Price:  sdk.Coin{Denom: underlyingDenom, Amount: math.Int{}},
+						Volume: math.NewInt(1),
+					},
+				), "should write a nil-amount price NAV directly to storage to exercise the defensive guard")
+			},
+			expectedErrorContains: "internal NAV price must be positive",
+		},
 	}
 
 	for _, tc := range cases {

@@ -5,79 +5,39 @@ description: How to scope work to the current branch's diff against main — enu
 
 # Branch Diff Analysis
 
-When a task is scoped to "the current branch" or "this PR", anchor your work to the actual diff against main. Do not reason about the entire codebase; do not invent context that isn't in the diff.
+When a task is scoped to "the current branch" or "this PR", anchor your work to the actual diff. Do not reason about the entire codebase; do not invent context that isn't in the diff.
 
-## Step 1: Confirm the base branch
+## Get the diff report
 
-In this repo the base is `main`. Confirm with `git rev-parse --abbrev-ref HEAD` to know what you're diffing *from*, and verify `main` exists locally with `git rev-parse --verify main`.
-
-If the user mentions a different base (e.g., `release/x.y`), use that instead.
-
-## Step 2: Enumerate changed files
+Run `scripts/run.sh` from the skill directory. It produces a structured report:
 
 ```bash
-git diff main...HEAD --name-only
+${CLAUDE_PLUGIN_ROOT:-.claude/skills/branch-diff-analysis}/scripts/run.sh [--base=<ref>]
 ```
 
-The `...` (three dots) form gives the diff vs the merge base, which is what reviewers see. Two dots (`..`) gives a diff vs current main HEAD, which can include unrelated changes from main and is usually wrong for PR review.
+The report contains:
 
-Categorize files into:
+- Current branch, base ref, merge-base SHA, total file count.
+- Changed files **grouped by category** (Go source, Go tests, Protobuf, Generated, Config / build, Docs, Other) with `+added / -removed` line counts per file.
+- A **test coverage cross-check** listing changed Go source files that have no `*_test.go` modification in the same package.
+- A **function-level summary** listing every function name that appears in a diff hunk header.
 
-- **Go source** (`.go`, excluding `*_test.go`) — code under review/test.
-- **Tests** (`*_test.go`) — verify they cover the source changes.
-- **Proto** (`.proto`) — schema changes; require `make proto-all`.
-- **Generated** (`*.pb.go`, `*.pulsar.go`, OpenAPI/swagger output) — derived; review only for unexpected churn.
-- **Config / build** (`Makefile`, `go.mod`, `go.sum`, CI YAML) — flag separately.
-- **Docs** (`*.md`, `spec/`) — review for consistency with code changes.
+Default base is `main`. Override with `--base=release/x.y` if the user specifies a different base.
 
-## Step 3: Get the diff content
+## What to do with the report
 
-```bash
-git diff main...HEAD
-```
+The script handles the mechanical parts. Your job is the judgment:
 
-For large diffs, prefer per-file:
+1. **Map functions to changed branches.** For each function the report names, open the per-file diff (`git diff <base>...HEAD -- <path>`) and identify which `if/else`, `switch`, error paths, and return paths actually changed. Don't reason about untouched branches.
 
-```bash
-git diff main...HEAD -- <path>
-```
+2. **Confirm error-wrapping conventions.** Any new error return must wrap with `fmt.Errorf("failed to X: %w", err)` (or `errorsmod.Wrap...` for typed cosmos-sdk errors). Flag bare returns.
 
-When you need just the function-level summary:
+3. **Check Godoc coverage.** Every new exported identifier needs a Godoc.
 
-```bash
-git diff main...HEAD --stat
-```
+4. **Use the cross-check list.** Files in the "without matching test change" list need either a test added or a written justification for skipping (e.g., the change is a pure rename, the function is already covered by an integration test elsewhere).
 
-## Step 4: Map changes to functions and branches
+5. **Frame findings in your output** with file paths and line numbers from the diff. Do not make claims about code that wasn't changed unless the change directly depends on it.
 
-For every changed `.go` file, list:
+## Generated files
 
-- Which functions/methods were added, modified, or removed.
-- For each modified function, which branches (if/else, switch cases, error paths, return paths) changed.
-- Any new error wrapping introduced — confirm it follows the repo's `fmt.Errorf("failed to X: %w", err)` pattern (or `errorsmod.Wrap...` for typed cosmos-sdk errors).
-- Any new exported identifier — confirm it has a Godoc.
-
-This map is the input to a focused review or test pass. Do not write tests for code that didn't change; do not review code that didn't change unless the diff has a direct dependency on it.
-
-## Step 5: Cross-check tests vs source
-
-For each changed source file, find the corresponding `*_test.go` (or `suite_test.go` for the package). Confirm:
-
-- Each changed function has a test that exercises the changed branches.
-- Existing tests still pass conceptually (no signature drift, no behavior assumption broken).
-- If a new helper or type was added, it has at least one test, or a justification for skipping.
-
-## Step 6: Frame scope in your output
-
-When reporting findings, anchor each to a specific file and line from the diff. Don't make claims about code that wasn't changed unless the change directly depends on it.
-
-## Quick reference
-
-| Goal | Command |
-|------|---------|
-| Files changed | `git diff main...HEAD --name-only` |
-| Line counts | `git diff main...HEAD --stat` |
-| Full diff | `git diff main...HEAD` |
-| Per-file diff | `git diff main...HEAD -- <path>` |
-| Commits on branch | `git log main..HEAD --oneline` |
-| Merge base | `git merge-base main HEAD` |
+Anything in the "Generated" bucket (`*.pb.go`, `*.pulsar.go`, swagger output) is derived. Review only for unexpected churn — never write tests against generated code. If a `.proto` file changed without a regenerated `*.pb.go`, flag that `make proto-all` was likely skipped.

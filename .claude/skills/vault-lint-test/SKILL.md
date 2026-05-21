@@ -5,56 +5,36 @@ description: Run the vault repo's full local verification — format, lint, unit
 
 # vault-lint-test
 
-Run the vault repo's standard local-verification chain and report pass/fail. This is the same chain that runs in CI for unit work; running it locally catches most issues before pushing.
-
-## Order of operations
-
-Run these targets sequentially. **Stop at the first failure** and surface the failing output. Do not continue to later steps if an earlier one failed — the later results will be misleading.
-
-| Step | Target | What it does | Approx duration |
-|------|--------|--------------|-----------------|
-| 1 | `make format` | Runs `gofumpt -l -w` and `goimports-reviser` over `keeper/*`. Modifies files in place. | seconds |
-| 2 | `make lint` | Runs `golangci-lint run --timeout=10m`. | 1–5 min |
-| 3 | `make test-unit` | Runs `go test -cover -race -v ./...` over keeper/interest/queue/types. Produces `coverage.out` and `coverage.html`. | 1–3 min |
-| 4 | `make test-sim-simple` | Simplest module simulation: `TestSimple` against `./simapp` with 50 blocks, block size 100, seed 99, 1h timeout. | 5–15 min |
-| 5 | `make test-sim-nondeterminism` | Non-determinism check: `TestAppStateDeterminism` with memdb, 50 blocks, block size 100, 24h timeout. | 5–15 min |
-
-## How to run
-
-From the repo root:
+Run `scripts/run.sh` from this skill directory. The script orchestrates the chain, stops at the first failure, captures per-step logs under `$TMPDIR/vault-lint-test/`, and prints a status table.
 
 ```bash
-make format && make lint && make test-unit && make test-sim-simple && make test-sim-nondeterminism
+${CLAUDE_PLUGIN_ROOT:-.claude/skills/vault-lint-test}/scripts/run.sh [--fast] [--from=N]
 ```
 
-If you only have a few minutes (e.g., the user wants a quick sanity check), default to **steps 1–3** and ask whether to continue into the sims. Sims take long enough that they shouldn't be implicit on every invocation.
+## Mode selection (you decide)
 
-## Handling failures
+The script accepts flags; choose them based on the change context:
 
-- **format produces a diff**: `gofumpt` / `goimports-reviser` already wrote the fixes. Re-stage and continue.
-- **lint failures**: Report the exact `golangci-lint` finding (file:line + linter name). Do not auto-fix lint findings — the user reviews them; many are stylistic and may need a `//nolint` with rationale instead of a code change.
-- **test-unit failures**: Show the failing test name and the assertion message. Re-run the single failing test in verbose mode (`go test -v -run TestName ./path/...`) to get cleaner output if the full-suite log is noisy.
-- **sim failures**: Sims are seeded and deterministic. If `test-sim-simple` fails, capture the seed and block height from the output — those are the keys to reproducing. If `test-sim-nondeterminism` fails, that means two seeds produced divergent state hashes, which is a consensus-breaking bug — flag it as critical.
+- **Default (no flags)** — all 5 steps. Use when verifying a PR, after merging main, or any non-trivial code change.
+- **`--fast`** — skip the two sims. Pick this when:
+  - The change is documentation-only (no `.go`, `.proto`, no genesis-touching code).
+  - The user explicitly asks for a fast loop (e.g., iterating on a single failing test).
+  - A previous run in this session already passed the sims and only test files or godocs have changed since.
+- **`--from=N`** — resume at step N (1=format, 2=lint, 3=test-unit, 4=sim-simple, 5=sim-nondeterminism). Use after fixing a failure to skip re-running passed steps.
 
-## When to skip the sims
+Sims add 10–30 minutes — don't run them implicitly when `--fast` is justified.
 
-The sims add 10–30 minutes. Skip them when:
-- The change is documentation-only (no `.go`, `.proto`, no genesis-touching code).
-- The user explicitly asks for a fast loop (e.g., during iterative fixing of a single test).
-- A previous run in this session already passed the sims and the only changes since are confined to test files or godocs.
+## Interpreting failures
 
-Otherwise, run them. The whole point of the sims is to catch state-machine bugs that unit tests miss.
+The script's status table tells you which step failed and gives a one-line summary. To act on it:
 
-## Reporting back
+- **lint FAIL** — do NOT auto-fix. Report the `file:line + linter` from the table to the user. Many findings are stylistic and may warrant a `//nolint` with rationale instead of a code change. Let the user decide.
+- **test-unit FAIL** — re-run the named test in verbose mode for a cleaner trace:
+  ```bash
+  go test -v -run <TestName> ./<path>/...
+  ```
+- **test-sim-simple FAIL** — the table shows `seed=X, block=Y`. Those reproduce the failure. Investigate the state machine at that block height with that seed.
+- **test-sim-nondeterminism FAIL** — two seeds produced divergent state hashes. This is a **CRITICAL** consensus-breaking bug. Flag it as critical regardless of how the trigger looks.
+- **format MODIFIED** — `gofumpt`/`goimports-reviser` rewrote files. Re-stage them and continue; this is not a failure.
 
-After the chain completes (pass or first-fail), report:
-
-```text
-make format    : PASS (no changes needed) | MODIFIED (N files reformatted)
-make lint      : PASS | FAIL — first failing rule and location
-make test-unit : PASS (X tests, coverage Y%) | FAIL — failing test name
-make test-sim-simple        : PASS | SKIPPED | FAIL — seed, block, reason
-make test-sim-nondeterminism: PASS | SKIPPED | FAIL — state hash divergence details
-```
-
-Keep it terse. The user can drill into specifics if they care.
+Full per-step output lives in the log directory printed by the script.

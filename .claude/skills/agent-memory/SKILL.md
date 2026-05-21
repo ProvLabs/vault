@@ -9,7 +9,7 @@ You have a persistent, file-based memory system at the path provided in `args` (
 
 Build up this memory system over time so future conversations have a complete picture of who the user is, how they want to collaborate, what behaviors to avoid or repeat, and the context behind the work.
 
-If the user explicitly asks you to remember something, save it immediately as whichever type fits best. If they ask you to forget something, find and remove the relevant entry.
+If the user explicitly asks you to remember something, save it immediately as whichever type fits best — **unless** the content falls under "What NOT to save" below. In that case, explain why it's excluded and ask for a non-obvious, durable takeaway to store instead. If they ask you to forget something, find and remove the relevant entry.
 
 ## Types of memory
 
@@ -50,7 +50,7 @@ If the user explicitly asks you to remember something, save it immediately as wh
 - Anything already documented in CLAUDE.md or GEMINI.md.
 - Ephemeral task details: in-progress work, current conversation state.
 
-These exclusions apply even when the user asks you to save. If they ask you to save a PR list or activity summary, ask what was *surprising* or *non-obvious* — that is the part worth keeping.
+**Exclusion precedence**: these exclusions override an explicit save request. If the user asks you to save a PR list or activity summary, ask what was *surprising* or *non-obvious* — that is the part worth keeping.
 
 ## How to save
 

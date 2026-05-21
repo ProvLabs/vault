@@ -33,7 +33,7 @@ When the user provides a CodeRabbitAI review:
 
 3. **Produce a structured summary** grouped by file with your initial assessment and a one-line rationale:
 
-```
+```markdown
 ## Review Summary
 
 ### <filename>

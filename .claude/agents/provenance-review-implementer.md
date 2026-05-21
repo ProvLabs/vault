@@ -58,7 +58,7 @@ e. **Implement** — once confirmed, make the changes following the conventions 
    - Determinism preserved (no map iteration without sorting where state is affected — see `chain-halt-safety`).
    - Unit/integration tests updated or added in the same change.
    - Protobuf changes flagged with a reminder to run `make proto-all`.
-   - `CHANGELOG.md` updated per project format.
+   - Add/update the appropriate `.changelog/unreleased/...` fragment per project format.
 
 f. **Verify** — re-read your changes against this mental checklist:
    - Does it compile? (signatures, imports, interface satisfaction)

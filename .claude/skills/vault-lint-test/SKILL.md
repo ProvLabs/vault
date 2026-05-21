@@ -49,7 +49,7 @@ Otherwise, run them. The whole point of the sims is to catch state-machine bugs 
 
 After the chain completes (pass or first-fail), report:
 
-```
+```text
 make format    : PASS (no changes needed) | MODIFIED (N files reformatted)
 make lint      : PASS | FAIL — first failing rule and location
 make test-unit : PASS (X tests, coverage Y%) | FAIL — failing test name

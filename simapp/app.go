@@ -40,9 +40,6 @@ import (
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	// IBC Modules
-	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
-	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 
 	// Provenance Modules
 	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
@@ -103,9 +100,6 @@ type SimApp struct {
 	GovKeeper          *govkeeper.Keeper
 	DistributionKeeper *distributionkeeper.Keeper
 
-	// IBC Modules
-	CapabilityKeeper *capabilitykeeper.Keeper
-	IBCKeeper        *ibckeeper.Keeper
 	// Provenance Modules
 	NameKeeper      namekeeper.Keeper
 	AttributeKeeper attributekeeper.Keeper
@@ -211,10 +205,6 @@ func NewSimApp(
 	}
 
 	app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
-
-	if err := app.RegisterLegacyModules(); err != nil {
-		return nil, err
-	}
 
 	if err := app.RegisterProvenanceModules(); err != nil {
 		return nil, err

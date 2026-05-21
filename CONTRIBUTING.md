@@ -415,3 +415,26 @@ For most contributions, the process is:
 6. Add a `.changelog` entry with `.changelog/add-change.sh`.
 7. Push to your fork and open a PR against `provlabs/vault:main`.
 8. Let the GitHub workflows run the full verification (including sims) before merge.
+
+---
+
+## 9. Keeping the Provenance Dependency in Sync
+
+The vault module pins `github.com/provenance-io/provenance` to a specific upstream
+`main` commit through a `replace` directive in `go.mod`. Upstream moves ahead of
+that pin over time. Three tools help detect and triage this drift:
+
+* **`make check-provenance-version`** — compares the pinned commit against
+  `provenance-io/provenance` `main` and prints how many commits behind it is. Run
+  it locally before opening a dependency-bump PR.
+
+* **Provenance Drift Check workflow** — `.github/workflows/provenance-drift.yml`
+  runs weekly (and on demand via *Run workflow*). When the pin trails upstream it
+  opens or refreshes a tracking issue labeled `provenance-drift`.
+
+* **`provenance-drift` Claude Code agent** — defined in
+  `.claude/agents/provenance-drift.md`. Invoke it for a human-readable summary of
+  the commits, notable PRs, and likely breaking changes between the pin and
+  upstream `main`.
+
+All three reuse `scripts/check-provenance-version.sh`.

@@ -16,13 +16,14 @@ A Provenance Blockchain module for managing vaults.
     - [Helper Scripts](#helper-scripts)
   - [Protobuf](#protobuf)
     - [Generating Protobuf Files](#generating-protobuf-files)
+  - [Dependency Maintenance](#dependency-maintenance)
   - [Specifications](#specifications)
 
 ## Prerequisites
 
 Before you begin, ensure you have the following installed:
 
-- [Go](https://go.dev/doc/install) (version 1.21 or later)
+- [Go](https://go.dev/doc/install) (version 1.25.8 or later)
 - [Buf CLI](https://buf.build/docs/installation)
 - [jq](https://jqlang.github.io/jq/download/)
 
@@ -117,6 +118,22 @@ To regenerate the Go code from the `.proto` files, run:
 ```bash
 make proto-all
 ```
+
+## Dependency Maintenance
+
+This module tracks a pinned commit of [Provenance](https://github.com/provenance-io/provenance),
+set through a `replace` directive in `go.mod`. Upstream moves ahead of that pin over
+time. To check whether the pin has fallen behind upstream `main`:
+
+```bash
+make check-provenance-version
+```
+
+This reports how many commits behind upstream the pin is and lists the new commits.
+A weekly GitHub Action (`.github/workflows/provenance-drift.yml`) runs the same check
+and opens a `provenance-drift` tracking issue when drift is found. For a detailed
+breakdown of upstream changes and breaking-change risk, run the `provenance-drift`
+Claude Code agent defined in `.claude/agents/provenance-drift.md`.
 
 ## Specifications
 

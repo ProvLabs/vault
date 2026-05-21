@@ -27,12 +27,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/ibc-go/modules/capability"
-	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
-	ibc "github.com/cosmos/ibc-go/v8/modules/core"
-	"github.com/cosmos/ibc-go/v8/modules/core/exported"
-	solomachine "github.com/cosmos/ibc-go/v8/modules/light-clients/06-solomachine"
-	tendermint "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 
 	attribute "github.com/provenance-io/provenance/x/attribute"
 	attributetypes "github.com/provenance-io/provenance/x/attribute/types"
@@ -109,13 +103,9 @@ func NewRootCmd() *cobra.Command {
 	}
 
 	modules := map[string]appmodule.AppModule{
-		capabilitytypes.ModuleName: capability.AppModule{},
-		exported.ModuleName:        ibc.AppModule{},
-		tendermint.ModuleName:      tendermint.AppModule{},
-		solomachine.ModuleName:     solomachine.AppModule{},
-		attributetypes.ModuleName:  attribute.AppModule{},
-		markertypes.ModuleName:     marker.AppModule{},
-		nametypes.ModuleName:       name.AppModule{},
+		attributetypes.ModuleName: attribute.AppModule{},
+		markertypes.ModuleName:    marker.AppModule{},
+		nametypes.ModuleName:      name.AppModule{},
 	}
 	for name, mod := range modules {
 		moduleBasicManager[name] = module.CoreAppModuleBasicAdaptor(name, mod)

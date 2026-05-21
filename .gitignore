@@ -33,6 +33,8 @@ vendor/
 .env
 *.local
 .vaulty
+.claude/settings.local.json
+.claude/agent-memory/
 
 # macOS specific files
 .AppleDouble

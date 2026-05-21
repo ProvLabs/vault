@@ -1,4 +1,4 @@
-.PHONY: proto-format proto-lint proto-gen proto-swagger-gen license format lint build run test-unit swagger-serve
+.PHONY: proto-format proto-lint proto-gen proto-swagger-gen license format lint build run test-unit swagger-serve check-provenance-version
 all: proto-all format lint test-unit build
 
 ifeq (,$(GO))
@@ -93,3 +93,6 @@ test-unit:
 	@go tool cover -html=coverage.out -o coverage.html
 	@go tool cover -func=coverage.out
 	@echo "Coverage report: coverage.html"
+
+check-provenance-version:
+	@./scripts/check-provenance-version.sh

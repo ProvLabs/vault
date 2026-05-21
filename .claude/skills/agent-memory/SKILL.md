@@ -5,7 +5,7 @@ description: Persistent, file-based agent memory system used by every sub-agent 
 
 # Agent Memory System
 
-You have a persistent, file-based memory system at the path provided in `args` (e.g., `.claude/agent-memory/<your-agent-name>/`). That directory already exists — write to it directly with the Write tool (do not run mkdir or check for its existence).
+You have a persistent, file-based memory system at the path provided in `args` (e.g., `.claude/agent-memory/<your-agent-name>/`). `.claude/agent-memory/` is gitignored, so the directory is local to this clone and may not exist yet — create it on first write (e.g., `mkdir -p` via Bash, or rely on the Write tool to create parent directories) before writing.
 
 Build up this memory system over time so future conversations have a complete picture of who the user is, how they want to collaborate, what behaviors to avoid or repeat, and the context behind the work.
 
@@ -99,4 +99,4 @@ Memory is for information useful in *future* conversations. For the current conv
 - **Plan** when aligning with the user on a non-trivial implementation approach.
 - **Tasks** when tracking discrete steps in this session.
 
-Since this memory directory is committed via version control and shared with the team, tailor memories to this project.
+This memory directory is gitignored and local to each developer's clone — memories are not shared with the team. Tailor entries to this project, but assume only you (this agent, in this clone) will read them back.

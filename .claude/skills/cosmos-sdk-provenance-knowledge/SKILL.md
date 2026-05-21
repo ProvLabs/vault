@@ -81,7 +81,7 @@ Cosmos-sdk uses typed errors that carry a codespace and code so RPC clients can 
 - **Send restrictions**: enforced via `SendRestrictionFn` hooks registered with the bank keeper. They must apply to all transfer paths — direct `MsgSend`, `MsgMultiSend`, `SendCoinsFromModuleToAccount`, IBC, authz grants, and CosmWasm-driven transfers.
 - **Required attributes**: each restricted marker can require recipient attributes. Enforcement runs before any transfer. Empty attribute lists effectively unrestrict the marker — flag that.
 - **Access roles**: `MINT`, `BURN`, `DEPOSIT`, `WITHDRAW`, `DELETE`, `ADMIN`, `TRANSFER`. Audit who can grant these and which msgs require which role.
-- **Marker states**: `PROPOSED` → `ACTIVE` → `FINALIZED` (with `CANCELLED`/`DESTROYED` terminal states). Proposed markers cannot be used until finalized.
+- **Marker states**: `PROPOSED` → `ACTIVE` → `FINALIZED` (with `CANCELLED`/`DESTROYED` terminal states). `PROPOSED` markers are not yet usable — mint/burn/transfer operations require the marker to be `ACTIVE` (the normal operating state) or `FINALIZED` (which additionally locks supply). When auditing state transitions, gate on `ACTIVE`/`FINALIZED`, not on `FINALIZED` alone.
 - **Forced transfer**: `MsgTransferRequest` lets an admin move restricted marker coins. Audit that only authorized parties can call it.
 
 ## Other Provenance modules to know

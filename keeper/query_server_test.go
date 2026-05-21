@@ -58,12 +58,8 @@ func (s *TestSuite) TestQueryServer_Vault() {
 		s.Require().NoError(err, "create vault1 should succeed")
 		_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: admin, ShareDenom: shareDenom2, UnderlyingAsset: underlying, PaymentDenom: payment})
 		s.Require().NoError(err, "create vault2 should succeed")
-		vault1, err := s.k.GetVault(s.ctx, addr1)
-		s.Require().NoError(err, "get vault1 should succeed for NAV seeding")
-		s.setVaultNAV(vault1, payment, sdk.NewInt64Coin(underlying, 1), 1)
-		vault2, err := s.k.GetVault(s.ctx, addr2)
-		s.Require().NoError(err, "get vault2 should succeed for NAV seeding")
-		s.setVaultNAV(vault2, payment, sdk.NewInt64Coin(underlying, 1), 1)
+		s.seedVaultNAV(addr1, payment, sdk.NewInt64Coin(underlying, 1), 1)
+		s.seedVaultNAV(addr2, payment, sdk.NewInt64Coin(underlying, 1), 1)
 		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin(underlying, 40))), "fund reserves for vault1 should succeed")
 		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr1, sdk.NewCoins(sdk.NewInt64Coin(underlying, 100), sdk.NewInt64Coin(payment, 250))), "fund principal (marker) for vault1 should succeed")
 		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, addr2, sdk.NewCoins(sdk.NewInt64Coin(underlying, 20))), "fund reserves for vault2 should succeed")
@@ -530,9 +526,7 @@ func (s *TestSuite) TestQueryServer_EstimateSwapIn() {
 					Admin: admin, ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom,
 				})
 				s.Require().NoError(err, "vault creation should succeed")
-				vault, err := s.k.GetVault(s.ctx, vaultAddr)
-				s.Require().NoError(err, "get vault should succeed for NAV seeding")
-				s.setVaultNAV(vault, paymentDenom, sdk.NewInt64Coin(underlyingDenom, 1), 1)
+				s.seedVaultNAV(vaultAddr, paymentDenom, sdk.NewInt64Coin(underlyingDenom, 1), 1)
 			},
 			Req: &types.QueryEstimateSwapInRequest{
 				VaultAddress: vaultAddr.String(),

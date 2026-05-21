@@ -586,6 +586,16 @@ func (s *TestSuite) setupSinglePaymentDenomVault(underlyingDenom, shareDenom, pa
 	return vault
 }
 
+// seedVaultNAV looks up the vault by address and seeds an Internal NAV entry on
+// it for denom, pricing volume units at price. Combines the common
+// GetVault + setVaultNAV pair used across table-driven tests.
+func (s *TestSuite) seedVaultNAV(addr sdk.AccAddress, denom string, price sdk.Coin, volume int64) *types.VaultAccount {
+	vault, err := s.k.GetVault(s.ctx, addr)
+	s.Require().NoError(err, "get vault %s should succeed for NAV seeding", addr)
+	s.setVaultNAV(vault, denom, price, volume)
+	return vault
+}
+
 // setVaultNAV seeds an Internal NAV entry on the given vault for denom, pricing
 // volume units at price (which must be denominated in the vault's underlying
 // asset). The entry is recorded under the admin signer used by the suite.

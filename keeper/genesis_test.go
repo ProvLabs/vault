@@ -5,6 +5,7 @@ import (
 	"math"
 	"time"
 
+	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -694,4 +695,38 @@ func (s *TestSuite) TestVaultGenesis_ExportNAVs_MultipleVaults() {
 	exported := s.k.ExportGenesis(s.ctx)
 	s.Require().Len(exported.Navs, len(allNavs), "ExportGenesis should include NAVs from all vaults")
 	s.Assert().ElementsMatch(allNavs, exported.Navs, "exported NAV table should match the imported table across both vaults")
+}
+
+// TestVaultGenesis_ExportPanicsOnNAVKeyValueDenomMismatch verifies that ExportGenesis
+// surfaces a key/value denom mismatch in the NAVs collection instead of silently
+// dropping the key denom. The SetVaultNAV write path enforces equality by construction,
+// so this guard exists to catch any future write path that violates the invariant.
+func (s *TestSuite) TestVaultGenesis_ExportPanicsOnNAVKeyValueDenomMismatch() {
+	shareDenom := "navmismatch"
+	underlying := "navmismatchunder"
+	vaultAddr := types.GetVaultAddress(shareDenom)
+
+	genesis := &types.GenesisState{
+		Params: types.DefaultParams(),
+		Vaults: []types.VaultAccount{makeGenesisVaultAccount(shareDenom, underlying, s.adminAddr.String())},
+	}
+	s.k.InitGenesis(s.ctx, genesis)
+
+	nav := types.VaultNAV{
+		Denom:       "valuedenom",
+		Price:       sdk.NewInt64Coin(underlying, 1),
+		Volume:      sdkmath.NewInt(1),
+		UpdatedTime: time.Unix(1700000000, 0).UTC(),
+	}
+	s.Require().NoError(
+		s.k.NAVs.Set(s.ctx, collections.Join(vaultAddr, "keydenom"), nav),
+		"writing a mismatched NAV row should succeed at the collection level",
+	)
+
+	expectedPanic := fmt.Sprintf(`nav key/value denom mismatch for vault %s: key="keydenom" value="valuedenom"`, vaultAddr)
+	s.Require().PanicsWithError(
+		"failed to walk vault navs: "+expectedPanic,
+		func() { s.k.ExportGenesis(s.ctx) },
+		"ExportGenesis should panic when a NAV row's key denom does not match value.Denom",
+	)
 }

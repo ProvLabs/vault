@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import fnmatch
+import os
 import re
 import subprocess
 import sys
@@ -160,7 +161,6 @@ def main() -> int:
     args = parse_args()
 
     root = repo_toplevel()
-    import os
     os.chdir(root)
 
     verify_base(args.base)

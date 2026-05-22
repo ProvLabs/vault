@@ -23,7 +23,7 @@ query($owner:String!,$repo:String!,$pr:Int!){
           path
           line
           comments(first:50){
-            nodes{ databaseId author{login} body createdAt url }
+            nodes{ author{login} body createdAt url }
           }
         }
       }

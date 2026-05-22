@@ -125,6 +125,8 @@ def render(threads: list[dict]) -> tuple[str, int, int]:
 
     normalized = []
     for t in threads:
+        if not t.get("comments"):
+            continue
         first = t["comments"][0]
         normalized.append({
             "author": normalize_author(first["author"] or ""),

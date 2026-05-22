@@ -78,3 +78,22 @@ func (k *Keeper) SetVaultNAV(ctx sdk.Context, vault *types.VaultAccount, nav typ
 func (k *Keeper) GetVaultNAV(ctx sdk.Context, vaultAddr sdk.AccAddress, denom string) (types.VaultNAV, error) {
 	return k.NAVs.Get(ctx, collections.Join(vaultAddr, denom))
 }
+
+// SetNAVAuthority rotates the address authorized to mutate the vault's internal
+// NAV table. The caller is responsible for verifying that signer is authorized
+// to perform this rotation (typically via vault.ValidateAdmin); signer is
+// recorded on the emitted EventNAVAuthorityUpdated for attribution only.
+//
+// When newAuthority equals the current vault.NavAuthority this is a no-op: the
+// vault is left unchanged and no event is emitted.
+func (k *Keeper) SetNAVAuthority(ctx sdk.Context, vault *types.VaultAccount, newAuthority, signer string) error {
+	if vault.NavAuthority == newAuthority {
+		return nil
+	}
+	vault.NavAuthority = newAuthority
+	if err := k.SetVaultAccount(ctx, vault); err != nil {
+		return fmt.Errorf("failed to set vault account: %w", err)
+	}
+	k.emitEvent(ctx, types.NewEventNAVAuthorityUpdated(vault.Address, signer, newAuthority))
+	return nil
+}

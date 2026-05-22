@@ -849,13 +849,9 @@ func (k msgServer) UpdateNAVAuthority(goCtx context.Context, msg *types.MsgUpdat
 	if err := vault.ValidateAdmin(msg.Signer); err != nil {
 		return nil, fmt.Errorf("failed to validate admin: %w", err)
 	}
-
-	vault.NavAuthority = msg.NewAuthority
-	if err := k.SetVaultAccount(ctx, vault); err != nil {
-		return nil, fmt.Errorf("failed to set vault account: %w", err)
+	if err := k.SetNAVAuthority(ctx, vault, msg.NewAuthority, msg.Signer); err != nil {
+		return nil, fmt.Errorf("failed to set NAV authority: %w", err)
 	}
-
-	k.emitEvent(ctx, types.NewEventNAVAuthorityUpdated(vault.Address, msg.Signer, msg.NewAuthority))
 
 	return &types.MsgUpdateNAVAuthorityResponse{}, nil
 }

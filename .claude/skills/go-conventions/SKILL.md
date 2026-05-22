@@ -40,7 +40,9 @@ All large numeric literals use underscore digit separators: `1_000_000`, not `10
 
 ## 6. Logging
 
-- All logging goes through the module-scoped logger via `k.getLogger(ctx)`.
+- All logging in the `keeper/` package goes through the module-scoped logger via `k.getLogger(ctx)`.
+- `ctx.Logger()` is **not permitted** in keeper files — it produces unscoped logs that are harder to filter and attribute to the vault module. The only exception is the `getLogger` helper itself, which wraps `ctx.Logger()` to add the `module=x/vault` field.
+- When replacing or writing log calls, preserve existing structured fields (e.g. `"vault"`, `"err"`).
 - No `fmt.Println`, `log.Println`, or other unstructured logging.
 - Log messages are structured (key-value fields), informative, and not redundant with the error being returned.
 

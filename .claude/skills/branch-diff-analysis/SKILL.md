@@ -9,10 +9,10 @@ When a task is scoped to "the current branch" or "this PR", anchor your work to 
 
 ## Get the diff report
 
-Run `scripts/run.sh` from the skill directory. It produces a structured report:
+Run `scripts/run.py` from the skill directory. It produces a structured report:
 
 ```bash
-${CLAUDE_PLUGIN_ROOT:-.claude/skills/branch-diff-analysis}/scripts/run.sh [--base=<ref>]
+python3 ${CLAUDE_PLUGIN_ROOT:-.claude/skills/branch-diff-analysis}/scripts/run.py [--base=<ref>]
 ```
 
 The report contains:

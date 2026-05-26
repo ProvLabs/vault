@@ -74,6 +74,10 @@ issues/
 openapi/
 tmp-swagger-gen/
 
+# Python bytecode caches (skill helper scripts)
+__pycache__/
+*.pyc
+
 # Go version file
 .go-version
 

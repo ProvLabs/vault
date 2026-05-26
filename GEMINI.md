@@ -37,7 +37,7 @@ The agent operates as a **Principal Blockchain Engineer** with deep expertise in
 - **Number Formatting**: Use underscores as digit separators in large numeric literals (e.g., `123_456_789` instead of `123456789`) to improve readability.
 - **Cleanliness**: Proactively eliminate unused code and obsolete comments.
 - **Error Handling**: **Always** wrap errors with context: `fmt.Errorf("failed to [action]: %w", err)`.
-- **Logging**: Use the module-scoped logger via `k.getLogger(ctx)`. Log messages should be structured and informative.
+- **Logging**: Use the module-scoped logger via `k.getLogger(ctx)` for all logging in keeper files. `ctx.Logger()` is **not permitted** in the keeper package because it produces unscoped logs that are harder to filter and attribute to the vault module. The only exception is the `getLogger` helper itself, which wraps `ctx.Logger()` to add the `module=x/vault` field. Log messages should be structured and informative, preserving existing key-value fields (e.g. `"vault"`, `"err"`).
 - **Context Awareness**: `ctx sdk.Context` (or `context.Context` for gRPC) must be the first argument for all service-layer functions.
 
 ### Refactoring & DRY Mandate

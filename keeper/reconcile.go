@@ -136,7 +136,7 @@ func (k Keeper) publishShareNav(ctx sdk.Context, vault *types.VaultAccount) erro
 	}
 
 	if err := k.setShareDenomNAV(ctx, vault, vaultMarker, tvv); err != nil {
-		ctx.Logger().Error("failed to publish share NAV", "err", err)
+		k.getLogger(ctx).Error("failed to publish share NAV", "err", err)
 	}
 	return nil
 }
@@ -494,7 +494,7 @@ func (k Keeper) handleVaultInterestTimeouts(ctx sdk.Context) error {
 
 		canPay, err := k.CanPayInterestDuration(ctx, vault, periodDuration)
 		if err != nil {
-			ctx.Logger().Error("failed to check payout ability, rescheduling", "vault", addr.String(), "err", err)
+			k.getLogger(ctx).Error("failed to check payout ability, rescheduling", "vault", addr.String(), "err", err)
 			k.reschedulePayoutTimeout(ctx, vault, int64(timeout))
 			continue
 		}
@@ -502,13 +502,13 @@ func (k Keeper) handleVaultInterestTimeouts(ctx sdk.Context) error {
 		if !canPay {
 			depleted = append(depleted, vault)
 			if err := k.PayoutTimeoutQueue.Dequeue(ctx, int64(timeout), addr); err != nil {
-				ctx.Logger().Error("CRITICAL: failed to dequeue interest timeout, skipping", "vault", addr.String(), "err", err)
+				k.getLogger(ctx).Error("CRITICAL: failed to dequeue interest timeout, skipping", "vault", addr.String(), "err", err)
 			}
 			continue
 		}
 
 		if err := k.atomicallyReconcileInterest(ctx, vault, int64(timeout)); err != nil {
-			ctx.Logger().Error("failed to reconcile interest atomically, rescheduling", "vault", addr.String(), "err", err)
+			k.getLogger(ctx).Error("failed to reconcile interest atomically, rescheduling", "vault", addr.String(), "err", err)
 			k.reschedulePayoutTimeout(ctx, vault, int64(timeout))
 			continue
 		}
@@ -545,7 +545,7 @@ func (k Keeper) atomicallyReconcileInterest(ctx sdk.Context, vault *types.VaultA
 // NOTE: This preserves the PeriodStart to ensure accrued interest is not lost.
 func (k Keeper) reschedulePayoutTimeout(ctx sdk.Context, vault *types.VaultAccount, oldTimeout int64) {
 	if err := k.ReschedulePayoutTimeout(ctx, vault, oldTimeout); err != nil {
-		ctx.Logger().Error("failed to reschedule payout timeout", "vault", vault.GetAddress().String(), "err", err)
+		k.getLogger(ctx).Error("failed to reschedule payout timeout", "vault", vault.GetAddress().String(), "err", err)
 	}
 }
 
@@ -554,11 +554,11 @@ func (k Keeper) reschedulePayoutTimeout(ctx sdk.Context, vault *types.VaultAccou
 func (k Keeper) tryGetVault(ctx sdk.Context, addr sdk.AccAddress) (*types.VaultAccount, bool) {
 	vault, err := k.GetVault(ctx, addr)
 	if err != nil {
-		ctx.Logger().Error("failed to get vault", "address", addr.String(), "error", err)
+		k.getLogger(ctx).Error("failed to get vault", "address", addr.String(), "error", err)
 		return nil, false
 	}
 	if vault == nil {
-		ctx.Logger().Error("vault not found", "address", addr.String())
+		k.getLogger(ctx).Error("vault not found", "address", addr.String())
 		return nil, false
 	}
 	return vault, true
@@ -587,7 +587,7 @@ func (k Keeper) handleReconciledVaults(ctx sdk.Context) error {
 
 	for _, addr := range keysToProcess {
 		if err := k.PayoutVerificationSet.Remove(ctx, addr); err != nil {
-			ctx.Logger().Error("CRITICAL: failed to remove from payout verification set, skipping", "vault", addr.String(), "err", err)
+			k.getLogger(ctx).Error("CRITICAL: failed to remove from payout verification set, skipping", "vault", addr.String(), "err", err)
 			continue
 		}
 
@@ -611,7 +611,7 @@ func (k Keeper) partitionVaults(ctx sdk.Context, vaults []*types.VaultAccount) (
 	for _, v := range vaults {
 		ok, err := k.CanPayInterestDuration(ctx, v, AutoReconcilePayoutDuration)
 		if err != nil {
-			ctx.Logger().Error("failed to check payout ability", "vault", v.GetAddress().String(), "err", err)
+			k.getLogger(ctx).Error("failed to check payout ability", "vault", v.GetAddress().String(), "err", err)
 			continue
 		}
 		if ok {
@@ -628,7 +628,7 @@ func (k Keeper) partitionVaults(ctx sdk.Context, vaults []*types.VaultAccount) (
 func (k Keeper) handlePayableVaults(ctx sdk.Context, payouts []*types.VaultAccount) {
 	for _, v := range payouts {
 		if err := k.SafeEnqueuePayoutTimeout(ctx, v); err != nil {
-			ctx.Logger().Error("failed to enqueue timeout", "vault", v.GetAddress().String(), "err", err)
+			k.getLogger(ctx).Error("failed to enqueue timeout", "vault", v.GetAddress().String(), "err", err)
 		}
 	}
 }
@@ -638,7 +638,7 @@ func (k Keeper) handlePayableVaults(ctx sdk.Context, payouts []*types.VaultAccou
 func (k Keeper) handleDepletedVaults(ctx sdk.Context, failedPayouts []*types.VaultAccount) {
 	for _, record := range failedPayouts {
 		if err := k.UpdateInterestRates(ctx, record, types.ZeroInterestRate, record.DesiredInterestRate); err != nil {
-			ctx.Logger().Error("failed to update interest rates", "vault", record.GetAddress().String(), "err", err)
+			k.getLogger(ctx).Error("failed to update interest rates", "vault", record.GetAddress().String(), "err", err)
 		}
 	}
 }
@@ -675,7 +675,7 @@ func (k Keeper) handleVaultFeeTimeouts(ctx sdk.Context) error {
 		}
 
 		if err := k.atomicallyReconcileFee(ctx, vault, int64(timeout)); err != nil {
-			ctx.Logger().Error("failed to collect AUM fee atomically, rescheduling", "vault", addr.String(), "err", err)
+			k.getLogger(ctx).Error("failed to collect AUM fee atomically, rescheduling", "vault", addr.String(), "err", err)
 			k.rescheduleFeeTimeout(ctx, vault, int64(timeout))
 			continue
 		}
@@ -711,6 +711,6 @@ func (k Keeper) atomicallyReconcileFee(ctx sdk.Context, vault *types.VaultAccoun
 // NOTE: This preserves the FeePeriodStart to ensure accrued fees are not lost.
 func (k Keeper) rescheduleFeeTimeout(ctx sdk.Context, vault *types.VaultAccount, oldTimeout int64) {
 	if err := k.RescheduleFeeTimeout(ctx, vault, oldTimeout); err != nil {
-		ctx.Logger().Error("failed to reschedule fee timeout", "vault", vault.GetAddress().String(), "err", err)
+		k.getLogger(ctx).Error("failed to reschedule fee timeout", "vault", vault.GetAddress().String(), "err", err)
 	}
 }

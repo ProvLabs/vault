@@ -19,7 +19,7 @@ Within each section, threads are grouped by file (sorted alphabetically) then by
 ## Invocation
 
 ```bash
-${CLAUDE_PLUGIN_ROOT:-.claude/skills/pr-review}/scripts/run.sh <PR#> [--repo <owner/repo>]
+python3 ${CLAUDE_PLUGIN_ROOT:-.claude/skills/pr-review}/scripts/run.py <PR#> [--repo <owner/repo>]
 ```
 
 If the user didn't give a PR number, ask before running. The `--repo` flag is only needed when the current directory isn't a clone of the PR's repo.
@@ -27,7 +27,7 @@ If the user didn't give a PR number, ask before running. The `--repo` flag is on
 ## Prerequisites
 
 - **`gh`** — authenticated via `gh auth login`. The skill uses `gh api graphql`.
-- **`jq`** — used to filter, group, and render.
+- **`python3`** — standard library only; used for filtering, grouping, and rendering.
 - **`git`** — must be run from inside a git repo whose `origin` (or `--repo`) points at a GitHub repository.
 
 ## Output format

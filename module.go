@@ -31,7 +31,13 @@ import (
 )
 
 // ConsensusVersion defines the current x/vault module consensus version.
-const ConsensusVersion = 1
+//
+// Bumped from 1 to 2 to accompany MigrateInternalNAVSeedFromMarker, which seeds
+// the Internal NAV table from the Marker module's NAV store and defaults
+// nav_authority to the vault admin. The upstream provenance upgrade handler is
+// responsible for invoking the migration during the upgrade that switches the
+// pricing engine to Internal-NAV-only reads.
+const ConsensusVersion = 2
 
 var (
 	_ module.AppModuleBasic      = AppModule{}

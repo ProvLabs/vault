@@ -1866,3 +1866,202 @@ func TestMsgUpdateSwapLimits_ValidateBasic(t *testing.T) {
 		runTests(t, tests)
 	})
 }
+
+func TestMsgUpdateVaultNAVRequest_ValidateBasic(t *testing.T) {
+	addr := NewTestAddress()
+
+	RunValidateBasicTable(t, []validateBasicCase{
+		{
+			name: "valid",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin("under", 100),
+				Volume:       sdkmath.NewInt(1),
+				Source:       "oracle",
+			},
+		},
+		{
+			name: "valid with empty source",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin("under", 100),
+				Volume:       sdkmath.NewInt(1),
+			},
+		},
+		{
+			name: "invalid signer",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       "bad",
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin("under", 100),
+				Volume:       sdkmath.NewInt(1),
+			},
+			expectedErr: "invalid signer address",
+		},
+		{
+			name: "invalid vault address",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: "bad",
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin("under", 100),
+				Volume:       sdkmath.NewInt(1),
+			},
+			expectedErr: "invalid vault address",
+		},
+		{
+			name: "invalid denom",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "bad denom",
+				Price:        sdk.NewInt64Coin("under", 100),
+				Volume:       sdkmath.NewInt(1),
+			},
+			expectedErr: "invalid denom",
+		},
+		{
+			name: "invalid price coin",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.Coin{Denom: "under", Amount: sdkmath.NewInt(-1)},
+				Volume:       sdkmath.NewInt(1),
+			},
+			expectedErr: "invalid price coin",
+		},
+		{
+			name: "zero price",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin("under", 0),
+				Volume:       sdkmath.NewInt(1),
+			},
+			expectedErr: "price amount must be positive",
+		},
+		{
+			name: "denom equals price denom",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin("rwa", 100),
+				Volume:       sdkmath.NewInt(1),
+			},
+			expectedErr: `NAV denom "rwa" and price denom must differ`,
+		},
+		{
+			name: "nil volume",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin("under", 100),
+			},
+			expectedErr: "volume must be positive",
+		},
+		{
+			name: "zero volume",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin("under", 100),
+				Volume:       sdkmath.ZeroInt(),
+			},
+			expectedErr: "volume must be positive",
+		},
+		{
+			name: "negative volume",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin("under", 100),
+				Volume:       sdkmath.NewInt(-1),
+			},
+			expectedErr: "volume must be positive",
+		},
+		{
+			name: "source at max length",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin("under", 100),
+				Volume:       sdkmath.NewInt(1),
+				Source:       strings.Repeat("a", types.MaxNAVSourceLength),
+			},
+		},
+		{
+			name: "source too long",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin("under", 100),
+				Volume:       sdkmath.NewInt(1),
+				Source:       strings.Repeat("a", types.MaxNAVSourceLength+1),
+			},
+			expectedErr: "source too long",
+		},
+	})
+}
+
+func TestMsgUpdateNAVAuthorityRequest_ValidateBasic(t *testing.T) {
+	addr := NewTestAddress()
+
+	RunValidateBasicTable(t, []validateBasicCase{
+		{
+			name: "valid",
+			msg: types.MsgUpdateNAVAuthorityRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				NewAuthority: addr,
+			},
+		},
+		{
+			name: "valid with empty new authority (resets to admin)",
+			msg: types.MsgUpdateNAVAuthorityRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				NewAuthority: "",
+			},
+		},
+		{
+			name: "invalid signer",
+			msg: types.MsgUpdateNAVAuthorityRequest{
+				Signer:       "bad",
+				VaultAddress: addr,
+				NewAuthority: addr,
+			},
+			expectedErr: "invalid signer address",
+		},
+		{
+			name: "invalid vault address",
+			msg: types.MsgUpdateNAVAuthorityRequest{
+				Signer:       addr,
+				VaultAddress: "bad",
+				NewAuthority: addr,
+			},
+			expectedErr: "invalid vault address",
+		},
+		{
+			name: "invalid new authority",
+			msg: types.MsgUpdateNAVAuthorityRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				NewAuthority: "bad",
+			},
+			expectedErr: "invalid new authority address",
+		},
+	})
+}

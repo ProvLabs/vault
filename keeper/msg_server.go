@@ -813,3 +813,45 @@ func (k msgServer) UpdateVaultAUMFeeBips(goCtx context.Context, msg *types.MsgUp
 
 	return &types.MsgUpdateVaultAUMFeeBipsResponse{}, nil
 }
+
+// UpdateVaultNAV creates or updates a vault's internal NAV entry for a denom.
+// Only the vault's NAV authority is authorized to perform this operation.
+func (k msgServer) UpdateVaultNAV(goCtx context.Context, msg *types.MsgUpdateVaultNAVRequest) (*types.MsgUpdateVaultNAVResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vault, err := k.getVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault %s: %w", msg.VaultAddress, err)
+	}
+	if err := vault.ValidateNAVAuthority(msg.Signer); err != nil {
+		return nil, fmt.Errorf("failed to validate NAV authority: %w", err)
+	}
+
+	nav := types.NewVaultNAV(msg.Denom, msg.Price, msg.Volume, msg.Source)
+	if err := k.SetVaultNAV(ctx, vault, nav, msg.Signer); err != nil {
+		return nil, fmt.Errorf("failed to update vault NAV: %w", err)
+	}
+
+	return &types.MsgUpdateVaultNAVResponse{}, nil
+}
+
+// UpdateNAVAuthority rotates the address authorized to mutate a vault's internal
+// NAV table. Only the vault admin is authorized to perform this operation.
+func (k msgServer) UpdateNAVAuthority(goCtx context.Context, msg *types.MsgUpdateNAVAuthorityRequest) (*types.MsgUpdateNAVAuthorityResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vault, err := k.getVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault %s: %w", msg.VaultAddress, err)
+	}
+	if err := vault.ValidateAdmin(msg.Signer); err != nil {
+		return nil, fmt.Errorf("failed to validate admin: %w", err)
+	}
+	if err := k.SetNAVAuthority(ctx, vault, msg.NewAuthority, msg.Signer); err != nil {
+		return nil, fmt.Errorf("failed to set NAV authority: %w", err)
+	}
+
+	return &types.MsgUpdateNAVAuthorityResponse{}, nil
+}

@@ -348,3 +348,26 @@ func NewEventMaxSwapOutValueUpdated(vaultAddress, authority, maxSwapOut string) 
 		MaxSwapOut:   maxSwapOut,
 	}
 }
+
+// NewEventNAVUpdated creates a new EventNAVUpdated event from a stored VaultNAV.
+// signer is the NAV authority address that performed the update.
+func NewEventNAVUpdated(vaultAddress string, nav VaultNAV, signer string) *EventNAVUpdated {
+	return &EventNAVUpdated{
+		VaultAddress:       vaultAddress,
+		Denom:              nav.Denom,
+		Price:              nav.Price.String(),
+		Volume:             nav.Volume.String(),
+		Source:             nav.Source,
+		Signer:             signer,
+		UpdatedBlockHeight: nav.UpdatedBlockHeight,
+	}
+}
+
+// NewEventNAVAuthorityUpdated creates a new EventNAVAuthorityUpdated event.
+func NewEventNAVAuthorityUpdated(vaultAddress, admin, newAuthority string) *EventNAVAuthorityUpdated {
+	return &EventNAVAuthorityUpdated{
+		VaultAddress: vaultAddress,
+		Admin:        admin,
+		NewAuthority: newAuthority,
+	}
+}

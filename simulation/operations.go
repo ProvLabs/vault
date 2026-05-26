@@ -46,6 +46,8 @@ const (
 	OpWeightMsgUpdateMinSwapOutValue = "op_weight_msg_update_min_swap_out_value"
 	OpWeightMsgUpdateMaxSwapInValue  = "op_weight_msg_update_max_swap_in_value"
 	OpWeightMsgUpdateMaxSwapOutValue = "op_weight_msg_update_max_swap_out_value"
+	OpWeightMsgUpdateVaultNAV        = "op_weight_msg_update_vault_nav"
+	OpWeightMsgUpdateNAVAuthority    = "op_weight_msg_update_nav_authority"
 )
 
 var DefaultWeights = map[string]int{
@@ -71,10 +73,12 @@ var DefaultWeights = map[string]int{
 	OpWeightMsgUpdateWithdrawalDelay: 2,
 	OpWeightMsgUpdateParams:          1,
 	OpWeightMsgUpdateVaultAUMFeeBips: 2,
-	OpWeightMsgUpdateMinSwapInValue:  2,
-	OpWeightMsgUpdateMinSwapOutValue: 2,
+	OpWeightMsgUpdateMinSwapInValue:  1,
+	OpWeightMsgUpdateMinSwapOutValue: 1,
 	OpWeightMsgUpdateMaxSwapInValue:  2,
 	OpWeightMsgUpdateMaxSwapOutValue: 2,
+	OpWeightMsgUpdateVaultNAV:        1,
+	OpWeightMsgUpdateNAVAuthority:    1,
 }
 
 func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simulation.WeightedOperations {
@@ -105,6 +109,8 @@ func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simula
 		wUpdateMinSwapOutValue int
 		wUpdateMaxSwapInValue  int
 		wUpdateMaxSwapOutValue int
+		wUpdateVaultNAV        int
+		wUpdateNAVAuthority    int
 	)
 
 	simState.AppParams.GetOrGenerate(OpWeightMsgCreateVault, &wCreateVault, simState.Rand, func(_ *rand.Rand) { wCreateVault = DefaultWeights[OpWeightMsgCreateVault] })
@@ -133,6 +139,8 @@ func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simula
 	simState.AppParams.GetOrGenerate(OpWeightMsgUpdateMinSwapOutValue, &wUpdateMinSwapOutValue, simState.Rand, func(_ *rand.Rand) { wUpdateMinSwapOutValue = DefaultWeights[OpWeightMsgUpdateMinSwapOutValue] })
 	simState.AppParams.GetOrGenerate(OpWeightMsgUpdateMaxSwapInValue, &wUpdateMaxSwapInValue, simState.Rand, func(_ *rand.Rand) { wUpdateMaxSwapInValue = DefaultWeights[OpWeightMsgUpdateMaxSwapInValue] })
 	simState.AppParams.GetOrGenerate(OpWeightMsgUpdateMaxSwapOutValue, &wUpdateMaxSwapOutValue, simState.Rand, func(_ *rand.Rand) { wUpdateMaxSwapOutValue = DefaultWeights[OpWeightMsgUpdateMaxSwapOutValue] })
+	simState.AppParams.GetOrGenerate(OpWeightMsgUpdateVaultNAV, &wUpdateVaultNAV, simState.Rand, func(_ *rand.Rand) { wUpdateVaultNAV = DefaultWeights[OpWeightMsgUpdateVaultNAV] })
+	simState.AppParams.GetOrGenerate(OpWeightMsgUpdateNAVAuthority, &wUpdateNAVAuthority, simState.Rand, func(_ *rand.Rand) { wUpdateNAVAuthority = DefaultWeights[OpWeightMsgUpdateNAVAuthority] })
 
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(wCreateVault, SimulateMsgCreateVault(k)),
@@ -161,6 +169,8 @@ func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simula
 		simulation.NewWeightedOperation(wUpdateMinSwapOutValue, SimulateMsgUpdateMinSwapOutValue(k)),
 		simulation.NewWeightedOperation(wUpdateMaxSwapInValue, SimulateMsgUpdateMaxSwapInValue(k)),
 		simulation.NewWeightedOperation(wUpdateMaxSwapOutValue, SimulateMsgUpdateMaxSwapOutValue(k)),
+		simulation.NewWeightedOperation(wUpdateVaultNAV, SimulateMsgUpdateVaultNAV(k)),
+		simulation.NewWeightedOperation(wUpdateNAVAuthority, SimulateMsgUpdateNAVAuthority(k)),
 	}
 }
 
@@ -1258,5 +1268,87 @@ func SimulateMsgUpdateMaxSwapOutValue(k keeper.Keeper) simtypes.Operation {
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "successfully updated max swap out"), nil, nil
+	}
+}
+
+func SimulateMsgUpdateVaultNAV(k keeper.Keeper) simtypes.Operation {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateVaultNAVRequest{}), "unable to setup initial state"), nil, err
+		}
+
+		vault, err := getRandomVault(r, k, ctx)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateVaultNAVRequest{}), "unable to get random vault"), nil, err
+		}
+
+		markerKeeper, ok := k.MarkerKeeper.(markerkeeper.Keeper)
+		if !ok {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateVaultNAVRequest{}), "marker keeper is not of type markerkeeper.Keeper"), nil, fmt.Errorf("marker keeper is not of type markerkeeper.Keeper")
+		}
+
+		navDenom := genRandomDenom(r, k.MarkerKeeper.GetUnrestrictedDenomRegex(ctx), VaultGlobalDenomSuffix)
+		if err := CreateUnrestrictedMarker(ctx, sdk.NewInt64Coin(navDenom, 1_000_000_000), k.AuthKeeper.GetModuleAddress("mint"), markerKeeper); err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateVaultNAVRequest{}), "unable to create nav marker"), nil, err
+		}
+
+		priceDenom := getRandomVaultAsset(r, vault)
+		priceAmount := math.NewInt(int64(r.Intn(1_000_000) + 1))
+		volume := math.NewInt(int64(r.Intn(1_000_000) + 1))
+
+		msg := &types.MsgUpdateVaultNAVRequest{
+			Signer:       vault.GetNAVAuthority(),
+			VaultAddress: vault.GetAddress().String(),
+			Denom:        navDenom,
+			Price:        sdk.NewCoin(priceDenom, priceAmount),
+			Volume:       volume,
+		}
+
+		handler := keeper.NewMsgServer(&k)
+		_, err = handler.UpdateVaultNAV(ctx, msg)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
+		}
+
+		return simtypes.NewOperationMsg(msg, true, "successfully updated vault NAV"), nil, nil
+	}
+}
+
+func SimulateMsgUpdateNAVAuthority(k keeper.Keeper) simtypes.Operation {
+	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateNAVAuthorityRequest{}), "unable to setup initial state"), nil, err
+		}
+
+		vault, err := getRandomVault(r, k, ctx)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateNAVAuthorityRequest{}), "unable to get random vault"), nil, err
+		}
+
+		var newAuthority string
+		if r.Intn(4) != 0 {
+			newAcc, _ := simtypes.RandomAcc(r, accs)
+			newAuthority = newAcc.Address.String()
+		}
+
+		msg := &types.MsgUpdateNAVAuthorityRequest{
+			Signer:       vault.Admin,
+			VaultAddress: vault.GetAddress().String(),
+			NewAuthority: newAuthority,
+		}
+
+		handler := keeper.NewMsgServer(&k)
+		_, err = handler.UpdateNAVAuthority(ctx, msg)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
+		}
+
+		return simtypes.NewOperationMsg(msg, true, "successfully updated NAV authority"), nil, nil
 	}
 }

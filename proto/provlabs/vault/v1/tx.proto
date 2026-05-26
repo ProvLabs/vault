@@ -105,6 +105,14 @@ service Msg {
 
   // UpdateVaultAUMFeeBips updates the AUM fee bips for a specific vault.
   rpc UpdateVaultAUMFeeBips(MsgUpdateVaultAUMFeeBipsRequest) returns (MsgUpdateVaultAUMFeeBipsResponse);
+
+  // UpdateVaultNAV creates or updates a vault's internal net asset value entry for a denom.
+  // Must be signed by the vault's NAV authority.
+  rpc UpdateVaultNAV(MsgUpdateVaultNAVRequest) returns (MsgUpdateVaultNAVResponse);
+
+  // UpdateNAVAuthority rotates the address authorized to mutate a vault's internal NAV table.
+  // Must be signed by the vault admin.
+  rpc UpdateNAVAuthority(MsgUpdateNAVAuthorityRequest) returns (MsgUpdateNAVAuthorityResponse);
 }
 
 // MsgCreateVaultRequest is the request message for the CreateVault endpoint.
@@ -578,3 +586,47 @@ message MsgUpdateVaultAUMFeeBipsRequest {
 
 // MsgUpdateVaultAUMFeeBipsResponse is the response message for the UpdateVaultAUMFeeBips endpoint.
 message MsgUpdateVaultAUMFeeBipsResponse {}
+
+// MsgUpdateVaultNAVRequest is the request message for creating or updating a vault's internal NAV entry.
+message MsgUpdateVaultNAVRequest {
+  option (cosmos.msg.v1.signer) = "signer";
+
+  // signer is the address of the vault's NAV authority authorizing this update.
+  string signer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // vault_address is the bech32 address of the vault whose NAV entry is being updated.
+  string vault_address = 2;
+  // denom is the asset denomination being priced. It must not be the vault's
+  // share denom. The underlying asset is a valid denom (e.g. to record its
+  // price in payment-denom terms).
+  string denom = 3;
+  // price is the total value of `volume` units of the denom, denominated in
+  // one of the vault's accepted denoms (underlying asset or payment denom).
+  cosmos.base.v1beta1.Coin price = 4 [(gogoproto.nullable) = false];
+  // volume is the number of units of the denom that price covers. It must be positive.
+  string volume = 5 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+  // source identifies the origin of this NAV update (for example an oracle name).
+  // It is optional.
+  string source = 6;
+}
+
+// MsgUpdateVaultNAVResponse is the response message for the UpdateVaultNAV endpoint.
+message MsgUpdateVaultNAVResponse {}
+
+// MsgUpdateNAVAuthorityRequest is the request message for rotating a vault's NAV authority.
+message MsgUpdateNAVAuthorityRequest {
+  option (cosmos.msg.v1.signer) = "signer";
+
+  // signer is the address of the vault administrator authorizing this rotation.
+  string signer = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  // vault_address is the bech32 address of the vault whose NAV authority is being rotated.
+  string vault_address = 2;
+  // new_authority is the address that will be authorized to mutate the vault's internal NAV table.
+  string new_authority = 3 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}
+
+// MsgUpdateNAVAuthorityResponse is the response message for the UpdateNAVAuthority endpoint.
+message MsgUpdateNAVAuthorityResponse {}

@@ -1,0 +1,1 @@
+* Added an internal NAV system: a per-vault, per-denom NAV table with a designated NAV authority, `UpdateVaultNAV` and `UpdateNAVAuthority` transactions, `VaultNavs` and `NavValue` queries, genesis import/export, and `EventNAVUpdated`/`EventNAVAuthorityUpdated` events [#189](https://github.com/provlabs/vault/issues/189).

@@ -338,3 +338,71 @@ func (k queryServer) Params(goCtx context.Context, req *types.QueryParamsRequest
 		Params: params,
 	}, nil
 }
+
+// VaultNavs returns a paginated list of all internal NAV entries for a vault.
+func (k queryServer) VaultNavs(goCtx context.Context, req *types.QueryVaultNavsRequest) (*types.QueryVaultNavsResponse, error) {
+	if req == nil || req.Id == "" {
+		return nil, status.Error(codes.InvalidArgument, "id must be provided")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vault, err := k.FindVaultAccount(ctx, req.Id)
+	if err != nil {
+		if errors.Is(err, types.ErrVaultNotFound) {
+			return nil, status.Errorf(codes.NotFound, "vault account %s not found", req.Id)
+		}
+		return nil, status.Errorf(codes.Internal, "failed to find vault account %s: %v", req.Id, err)
+	}
+	vaultAddr := vault.GetAddress()
+
+	navs, pageRes, err := query.CollectionPaginate(
+		ctx,
+		k.NAVs,
+		req.Pagination,
+		func(_ collections.Pair[sdk.AccAddress, string], value types.VaultNAV) (types.VaultNAV, error) {
+			return value, nil
+		},
+		query.WithCollectionPaginationPairPrefix[sdk.AccAddress, string](vaultAddr),
+	)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to paginate vault navs: %v", err)
+	}
+
+	return &types.QueryVaultNavsResponse{
+		Navs:       navs,
+		Pagination: pageRes,
+	}, nil
+}
+
+// NavValue returns a single internal NAV entry for a vault and denom, or NotFound.
+func (k queryServer) NavValue(goCtx context.Context, req *types.QueryNavValueRequest) (*types.QueryNavValueResponse, error) {
+	if req == nil || req.Id == "" {
+		return nil, status.Error(codes.InvalidArgument, "id must be provided")
+	}
+	if req.Denom == "" {
+		return nil, status.Error(codes.InvalidArgument, "denom must be provided")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vault, err := k.FindVaultAccount(ctx, req.Id)
+	if err != nil {
+		if errors.Is(err, types.ErrVaultNotFound) {
+			return nil, status.Errorf(codes.NotFound, "vault account %s not found", req.Id)
+		}
+		return nil, status.Errorf(codes.Internal, "failed to find vault account %s: %v", req.Id, err)
+	}
+
+	nav, err := k.GetVaultNAV(ctx, vault.GetAddress(), req.Denom)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return nil, status.Errorf(codes.NotFound, "no NAV entry for vault %s denom %s", req.Id, req.Denom)
+		}
+		return nil, status.Errorf(codes.Internal, "failed to get vault nav: %v", err)
+	}
+
+	return &types.QueryNavValueResponse{
+		Nav: nav,
+	}, nil
+}

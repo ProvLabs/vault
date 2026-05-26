@@ -272,3 +272,123 @@ func (s *TestSuite) TestKeeper_SetVaultNAV_RejectsInvalidInput() {
 		})
 	}
 }
+
+// TestKeeper_SetNAVAuthority_PersistsAndEmits verifies that a SetNAVAuthority
+// call that changes the value assigns the new authority on the vault account,
+// persists the change via SetVaultAccount, and emits a single
+// EventNAVAuthorityUpdated with the supplied signer recorded for attribution.
+// Both a rotation to an explicit address and a reset to the empty string
+// (fall-back-to-admin) flow through the same write path.
+func (s *TestSuite) TestKeeper_SetNAVAuthority_PersistsAndEmits() {
+	cases := []struct {
+		name                string
+		underlying          string
+		share               string
+		seedAuthority       string
+		newAuthorityIsEmpty bool
+	}{
+		{
+			name:                "rotate from default (empty) to explicit address",
+			underlying:          "undera",
+			share:               "vaultsharesa",
+			seedAuthority:       "",
+			newAuthorityIsEmpty: false,
+		},
+		{
+			name:                "rotate from one explicit address to another",
+			underlying:          "underb",
+			share:               "vaultsharesb",
+			seedAuthority:       "preexisting",
+			newAuthorityIsEmpty: false,
+		},
+		{
+			name:                "reset explicit authority back to empty",
+			underlying:          "underc",
+			share:               "vaultsharesc",
+			seedAuthority:       "preexisting",
+			newAuthorityIsEmpty: true,
+		},
+	}
+
+	for _, tc := range cases {
+		s.Run(tc.name, func() {
+			vault := s.setupBaseVault(tc.underlying, tc.share)
+			vaultAddr := types.GetVaultAddress(tc.share)
+			oracle := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1_000))
+
+			seedAuthority := ""
+			if tc.seedAuthority != "" {
+				seedAuthority = s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1_000)).String()
+				vault.NavAuthority = seedAuthority
+				s.Require().NoError(s.k.SetVaultAccount(s.ctx, vault), "seeding initial NavAuthority should succeed")
+			}
+
+			newAuthority := oracle.String()
+			if tc.newAuthorityIsEmpty {
+				newAuthority = ""
+			}
+
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			err := s.k.SetNAVAuthority(s.ctx, vault, newAuthority, s.adminAddr.String())
+			s.Require().NoError(err, "SetNAVAuthority should succeed")
+
+			stored, err := s.k.GetVault(s.ctx, vaultAddr)
+			s.Require().NoError(err, "GetVault after SetNAVAuthority should succeed")
+			s.Assert().Equal(newAuthority, stored.NavAuthority, "NavAuthority should be persisted as %q", newAuthority)
+
+			var matches []sdk.Event
+			for _, ev := range s.ctx.EventManager().Events() {
+				if ev.Type == "provlabs.vault.v1.EventNAVAuthorityUpdated" {
+					matches = append(matches, ev)
+				}
+			}
+			s.Require().Len(matches, 1, "SetNAVAuthority should emit exactly one EventNAVAuthorityUpdated")
+
+			attrs := map[string]string{}
+			for _, a := range matches[0].Attributes {
+				attrs[a.Key] = a.Value
+			}
+			s.Assert().Equal(`"`+s.adminAddr.String()+`"`, attrs["admin"], "event admin attribute should record the signer")
+			s.Assert().Equal(`"`+newAuthority+`"`, attrs["new_authority"], "event new_authority attribute should record the new authority")
+			s.Assert().Equal(`"`+vaultAddr.String()+`"`, attrs["vault_address"], "event vault_address attribute should record the vault")
+		})
+	}
+}
+
+// TestKeeper_SetNAVAuthority_NoOpWhenUnchanged verifies that calling
+// SetNAVAuthority with the value already stored on the vault is a no-op: the
+// call succeeds, the vault account is not rewritten with an event, and no
+// EventNAVAuthorityUpdated event is emitted. This guards future keeper callers
+// (sims, direct invocations) from emitting spurious authority-rotation events.
+func (s *TestSuite) TestKeeper_SetNAVAuthority_NoOpWhenUnchanged() {
+	underlying := "under"
+	share := "vaultshares"
+	vault := s.setupBaseVault(underlying, share)
+	vaultAddr := types.GetVaultAddress(share)
+	oracle := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1_000))
+
+	s.Require().NoError(
+		s.k.SetNAVAuthority(s.ctx, vault, oracle.String(), s.adminAddr.String()),
+		"initial rotation should succeed",
+	)
+
+	before, err := s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "GetVault after initial rotation should succeed")
+
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	s.Require().NoError(
+		s.k.SetNAVAuthority(s.ctx, vault, oracle.String(), s.adminAddr.String()),
+		"re-setting NAV authority to its current value should be a no-op",
+	)
+
+	for _, ev := range s.ctx.EventManager().Events() {
+		s.Assert().NotEqualf(
+			"provlabs.vault.v1.EventNAVAuthorityUpdated", ev.Type,
+			"no-op SetNAVAuthority should not emit EventNAVAuthorityUpdated",
+		)
+	}
+
+	after, err := s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "GetVault after no-op SetNAVAuthority should succeed")
+	s.Assert().Equal(before.NavAuthority, after.NavAuthority, "no-op should leave NavAuthority untouched")
+}

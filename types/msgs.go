@@ -544,6 +544,9 @@ func (m MsgUpdateVaultNAVRequest) ValidateBasic() error {
 	if err := m.Price.Validate(); err != nil {
 		return fmt.Errorf("invalid price coin %v: %w", m.Price, err)
 	}
+	if m.Denom == m.Price.Denom {
+		return fmt.Errorf("NAV denom %q and price denom must differ", m.Denom)
+	}
 	if !m.Price.Amount.IsPositive() {
 		return fmt.Errorf("price amount must be positive, got %s", m.Price.Amount)
 	}

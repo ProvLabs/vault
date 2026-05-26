@@ -413,3 +413,71 @@ func (s *TestSuite) TestKeeper_MigrateInternalNAVSeedFromMarker() {
 		s.Require().False(ok, "non-vault account should not be converted by migration")
 	})
 }
+
+// TestVaultModule_RunMigrationsV1ToV2 exercises the registered v1->v2 migration
+// end-to-end through the SDK module manager, the same path an upstream upgrade
+// handler uses via runModuleMigrations / app.mm.RunMigrations. The test fails
+// if module.go stops calling cfg.RegisterMigration for vault v1->v2: in that
+// case RunMigrations returns "module ... has unregistered migrations" and the
+// version map advance never happens.
+func (s *TestSuite) TestVaultModule_RunMigrationsV1ToV2() {
+	s.SetupTest()
+
+	underlying := "ylds"
+	payment := "usdc"
+	share := "vshare-mm"
+	vault := s.setupSinglePaymentDenomVault(underlying, share, payment, 3, 2)
+
+	// Take the current chain version map and rewind only the vault module to
+	// v1; every other module stays at its current version so RunMigrations is
+	// a no-op for them.
+	fromVM := s.simApp.ModuleManager.GetVersionMap()
+	fromVM[types.ModuleName] = 1
+
+	newVM, err := s.simApp.ModuleManager.RunMigrations(s.ctx, s.simApp.Configurator(), fromVM)
+	s.Require().NoError(err, "RunMigrations must succeed; vault v1->v2 handler must be registered")
+	s.Require().Equal(uint64(2), newVM[types.ModuleName], "vault module version should advance to 2")
+
+	got, err := s.simApp.VaultKeeper.NAVs.Get(s.ctx, collections.Join(vault.GetAddress(), payment))
+	s.Require().NoError(err, "NAV should be seeded by the v1->v2 migration")
+	s.Require().Equal(payment, got.Denom, "seeded NAV denom should be payment denom")
+	s.Require().Equal(underlying, got.Price.Denom, "seeded NAV price denom should be underlying")
+	s.Require().Equal(sdkmath.NewInt(3), got.Price.Amount, "seeded NAV price amount should match forward marker price")
+	s.Require().Equal(sdkmath.NewInt(2), got.Volume, "seeded NAV volume should match forward marker volume")
+	s.Require().Equal(keeper.MigrationNAVSeedSource, got.Source, "seeded NAV source should mark this entry as a migration seed")
+}
+
+// TestVaultModule_RunMigrationsNoOpAtCurrentVersion confirms that when the
+// version map already shows vault at ConsensusVersion, RunMigrations is a
+// no-op: it does not re-run the v1->v2 seed, so any operator-supplied internal
+// NAV entries are preserved on chains that have already migrated.
+func (s *TestSuite) TestVaultModule_RunMigrationsNoOpAtCurrentVersion() {
+	s.SetupTest()
+
+	underlying := "ylds"
+	payment := "usdc"
+	share := "vshare-mm-noop"
+	vault := s.setupSinglePaymentDenomVault(underlying, share, payment, 3, 2)
+
+	// Seed an operator-supplied internal NAV that the migration must not
+	// overwrite if RunMigrations is correctly a no-op at the current version.
+	existing := types.VaultNAV{
+		Denom:  payment,
+		Price:  sdk.NewInt64Coin(underlying, 99),
+		Volume: sdkmath.NewInt(100),
+		Source: "operator-supplied",
+	}
+	s.Require().NoError(s.simApp.VaultKeeper.SetVaultNAV(s.ctx, vault, existing, vault.Admin), "seeding existing NAV must succeed")
+
+	fromVM := s.simApp.ModuleManager.GetVersionMap()
+
+	newVM, err := s.simApp.ModuleManager.RunMigrations(s.ctx, s.simApp.Configurator(), fromVM)
+	s.Require().NoError(err, "RunMigrations should succeed when versions match")
+	s.Require().Equal(fromVM[types.ModuleName], newVM[types.ModuleName], "vault module version should remain unchanged")
+
+	got, err := s.simApp.VaultKeeper.NAVs.Get(s.ctx, collections.Join(vault.GetAddress(), payment))
+	s.Require().NoError(err, "operator-supplied NAV should still be readable")
+	s.Require().Equal(sdkmath.NewInt(99), got.Price.Amount, "operator-supplied NAV price must not be overwritten")
+	s.Require().Equal(sdkmath.NewInt(100), got.Volume, "operator-supplied NAV volume must not be overwritten")
+	s.Require().Equal("operator-supplied", got.Source, "operator-supplied NAV source must not be overwritten")
+}

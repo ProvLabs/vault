@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"time"
 
+	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
@@ -1187,7 +1188,16 @@ func (s *TestSuite) TestKeeper_CanPayInterestDuration_NegativeInterest_Composite
 	s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 10_000_000_000_000), s.adminAddr)
 
-	_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: s.adminAddr.String(), ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom})
+	_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+		Admin:           s.adminAddr.String(),
+		ShareDenom:      shareDenom,
+		UnderlyingAsset: underlyingDenom,
+		PaymentDenom:    paymentDenom,
+		InitialPaymentNav: &types.InitialVaultNAV{
+			Price:  sdk.NewInt64Coin(underlyingDenom, 1),
+			Volume: sdkmath.OneInt(),
+		},
+	})
 	s.Require().NoError(err, "failed to create composite vault in TestKeeper_CanPayInterestDuration_NegativeInterest_Composite_InsufficientUnderlying")
 
 	vault, err := s.k.GetVault(s.ctx, vaultAddr)
@@ -1357,6 +1367,10 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_Use
 		ShareDenom:      shareDenom,
 		UnderlyingAsset: underlying.Denom,
 		PaymentDenom:    paymentDenom,
+		InitialPaymentNav: &types.InitialVaultNAV{
+			Price:  sdk.NewInt64Coin(underlying.Denom, 1),
+			Volume: sdkmath.OneInt(),
+		},
 	})
 	s.Require().NoError(err, "expected CreateVault to succeed")
 
@@ -1566,6 +1580,10 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_NegativeInterest_Com
 		ShareDenom:      shareDenom,
 		UnderlyingAsset: underlyingDenom,
 		PaymentDenom:    paymentDenom,
+		InitialPaymentNav: &types.InitialVaultNAV{
+			Price:  sdk.NewInt64Coin(underlyingDenom, 1),
+			Volume: sdkmath.OneInt(),
+		},
 	})
 	s.Require().NoError(err, "CreateVault with composite structure should succeed")
 
@@ -1856,6 +1874,7 @@ func (s *TestSuite) TestKeeper_CanPayInterestDuration_WithAUMFee() {
 	underlying := sdk.NewInt64Coin(underlyingDenom, 1_000_000_000)
 
 	s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 1_000_000_000), s.adminAddr)
 	vault := s.CreateVaultWithParams(shareDenom, underlyingDenom, paymentDenom)
 	s.SetVaultRatesAndPeriod(vault, "0.0", "", 0, 0)
 	s.FundMarker(shareDenom, sdk.NewCoins(underlying))
@@ -2178,8 +2197,12 @@ func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts_RetryOnFailure() {
 	twoMonthsAgo := now.Add(-60 * 24 * time.Hour)
 
 	s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 1_000_000_000), s.adminAddr)
 
 	vault := s.CreateVaultWithParams(shareDenom, underlyingDenom, paymentDenom)
+	// Remove the bootstrap NAV so PerformVaultFeeTransfer hits the missing-NAV path.
+	s.Require().NoError(s.k.NAVs.Remove(s.ctx, collections.Join(vault.GetAddress(), paymentDenom)),
+		"removing bootstrap NAV for %q should succeed", paymentDenom)
 
 	// CreateVaultWithParams enqueues an initial timeout, we must remove it to have a clean test
 	s.Require().NoError(s.k.FeeTimeoutQueue.Dequeue(s.ctx, vault.FeePeriodTimeout, vaultAddr), "failed to dequeue vault from FeeTimeoutQueue")
@@ -2235,6 +2258,7 @@ func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts_Success() {
 	twoMonthsAgo := now.Add(-60 * 24 * time.Hour)
 
 	s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 1_000_000_000), s.adminAddr)
 
 	vault := s.CreateVaultWithParams(shareDenom, underlyingDenom, paymentDenom)
 
@@ -2283,8 +2307,13 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts_RetryOnFailure() {
 	twoMonthsAgo := now.Add(-60 * 24 * time.Hour)
 
 	s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 1_000_000_000), s.adminAddr)
 
 	vault := s.CreateVaultWithParams(shareDenom, underlyingDenom, paymentDenom)
+	// Remove the bootstrap NAV so CanPayInterestDuration hits the missing-NAV path
+	// when GetTVVInUnderlyingAsset iterates the principal balance.
+	s.Require().NoError(s.k.NAVs.Remove(s.ctx, collections.Join(vault.GetAddress(), paymentDenom)),
+		"removing bootstrap NAV for %q should succeed", paymentDenom)
 
 	// CreateVaultWithParams enqueues an initial fee timeout, and also sets up the vault.
 	// We want to test interest timeouts, which use PayoutTimeoutQueue.

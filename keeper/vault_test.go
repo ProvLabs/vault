@@ -7,13 +7,12 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
 	"github.com/provlabs/vault/utils"
-
-	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 // TestKeeperTestSuite is handled in suite_test.go
@@ -100,6 +99,95 @@ func (s *TestSuite) TestCreateVault_InvalidAdminFails() {
 	_, err := s.k.CreateVault(s.ctx, attrs)
 	s.Require().Error(err, "CreateVault should fail for invalid admin address")
 	s.Require().ErrorContains(err, "invalid admin address", "error message should mention invalid admin address")
+}
+
+// TestCreateVault_DistinctPaymentDenomSeedsNAV verifies that creating a vault
+// with payment_denom != underlying_asset persists the bootstrap NAV entry in
+// the same atomic operation, so the valuation engine can convert payment-denom
+// balances without an out-of-band setup step.
+func (s *TestSuite) TestCreateVault_DistinctPaymentDenomSeedsNAV() {
+	share := "vshare.bootstrap"
+	underlying := "ulying"
+	payment := "upay"
+
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlying, 1_000_000), s.adminAddr)
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(payment, 1_000_000), s.adminAddr)
+
+	attrs := vaultAttrs{
+		admin:      s.adminAddr.String(),
+		share:      share,
+		underlying: underlying,
+		payment:    payment,
+		initialPaymentNav: &types.InitialVaultNAV{
+			Price:  sdk.NewInt64Coin(underlying, 3),
+			Volume: math.NewInt(2),
+			Source: "create-bootstrap",
+		},
+	}
+
+	vault, err := s.k.CreateVault(s.ctx, attrs)
+	s.Require().NoError(err, "CreateVault should succeed when initial payment NAV is supplied")
+
+	stored, err := s.k.GetVaultNAV(s.ctx, vault.GetAddress(), payment)
+	s.Require().NoError(err, "bootstrap NAV should be persisted for payment denom %q", payment)
+	s.Require().Equal(payment, stored.Denom, "stored NAV denom should be payment denom")
+	s.Require().Equal(sdk.NewInt64Coin(underlying, 3), stored.Price, "stored NAV price should match supplied price")
+	s.Require().Equal(math.NewInt(2), stored.Volume, "stored NAV volume should match supplied volume")
+	s.Require().Equal("create-bootstrap", stored.Source, "stored NAV source should match supplied attribution")
+}
+
+// TestCreateVault_MissingInitialPaymentNAVFails verifies that creating a vault
+// with payment_denom != underlying_asset fails when the bootstrap NAV is
+// omitted. The check is enforced at ValidateBasic so an operator cannot stand
+// up a vault that would silently stall fee collection and payment-denom
+// swap-outs.
+func (s *TestSuite) TestCreateVault_MissingInitialPaymentNAVFails() {
+	share := "vshare.missing.nav"
+	underlying := "ulying"
+	payment := "upay"
+
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlying, 1_000_000), s.adminAddr)
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(payment, 1_000_000), s.adminAddr)
+
+	_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+		Admin:           s.adminAddr.String(),
+		ShareDenom:      share,
+		UnderlyingAsset: underlying,
+		PaymentDenom:    payment,
+	})
+	s.Require().Error(err, "CreateVault should reject a vault with mismatched denoms and no initial NAV")
+	s.Require().ErrorContains(err, "initial payment NAV is required", "error should call out missing bootstrap NAV")
+}
+
+// TestCreateVault_InitialPaymentNAVRolledBackOnFailure verifies that the
+// bootstrap NAV is written under the same cache context as the rest of vault
+// creation: a downstream failure (here, the share-denom marker already exists)
+// rolls back the NAV alongside the vault account.
+func (s *TestSuite) TestCreateVault_InitialPaymentNAVRolledBackOnFailure() {
+	share := "vshare.rollback"
+	underlying := "ulying"
+	payment := "upay"
+
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlying, 1_000_000), s.adminAddr)
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(payment, 1_000_000), s.adminAddr)
+	// Pre-create a marker at the share denom so createVaultMarker fails.
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(share, 1), s.adminAddr)
+
+	vaultAddr := types.GetVaultAddress(share)
+	_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+		Admin:           s.adminAddr.String(),
+		ShareDenom:      share,
+		UnderlyingAsset: underlying,
+		PaymentDenom:    payment,
+		InitialPaymentNav: &types.InitialVaultNAV{
+			Price:  sdk.NewInt64Coin(underlying, 1),
+			Volume: math.OneInt(),
+		},
+	})
+	s.Require().Error(err, "CreateVault should fail when the share marker already exists")
+
+	_, navErr := s.k.GetVaultNAV(s.ctx, vaultAddr, payment)
+	s.Require().Error(navErr, "bootstrap NAV must not be persisted when create fails")
 }
 
 func (s *TestSuite) TestSwapIn_MultiAsset() {

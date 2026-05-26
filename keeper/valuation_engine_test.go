@@ -233,9 +233,11 @@ func (s *TestSuite) TestGetTVVInUnderlyingAsset_ErrorPropagation() {
 	paymentDenom := "usdc"
 	shareDenom := "vshare"
 
-	vault := s.setupBaseVault(underlyingDenom, shareDenom, paymentDenom)
-
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 1_000_000), s.adminAddr)
+	vault := s.setupBaseVault(underlyingDenom, shareDenom, paymentDenom)
+	s.Require().NoError(s.k.NAVs.Remove(s.ctx, collections.Join(vault.GetAddress(), paymentDenom)),
+		"removing bootstrap NAV should succeed so the no-NAV path is exercised")
+
 	s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, paymentDenom, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 10)))
 	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 10))), "funding principal should succeed")
 
@@ -467,6 +469,7 @@ func (s *TestSuite) TestGetTVVInUnderlyingAsset_AcceptedDenomFiltering() {
 	unacceptedDenom := "paymenow"
 	shareDenom := "vshare"
 
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 1_000_000), s.adminAddr)
 	vault := s.setupBaseVault(underlyingDenom, shareDenom, paymentDenom)
 
 	initialShareSupply := sdk.NewCoin(shareDenom, utils.ShareScalar)
@@ -483,7 +486,6 @@ func (s *TestSuite) TestGetTVVInUnderlyingAsset_AcceptedDenomFiltering() {
 		sdk.NewInt64Coin(underlyingDenom, 5),
 	)
 
-	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 1_000_000), s.adminAddr)
 	s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, paymentDenom, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 100)))
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(unacceptedDenom, 1_000_000), s.adminAddr)
 	s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, unacceptedDenom, sdk.NewCoins(sdk.NewInt64Coin(unacceptedDenom, 50)))
@@ -825,9 +827,11 @@ func (s *TestSuite) TestEstimateTotalVaultValue_ErrorPropagation() {
 	underlyingDenom := "ylds"
 	paymentDenom := "usdc"
 	shareDenom := "vshare"
-	vault := s.setupBaseVault(underlyingDenom, shareDenom, paymentDenom)
-
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 1_000_000), s.adminAddr)
+	vault := s.setupBaseVault(underlyingDenom, shareDenom, paymentDenom)
+	s.Require().NoError(s.k.NAVs.Remove(s.ctx, collections.Join(vault.GetAddress(), paymentDenom)),
+		"removing bootstrap NAV should succeed so the no-NAV path is exercised")
+
 	s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, paymentDenom, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 10)))
 
 	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(

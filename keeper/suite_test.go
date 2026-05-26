@@ -337,18 +337,38 @@ type vaultAttrs struct {
 	minSwapOut             string
 	maxSwapIn              string
 	maxSwapOut             string
+	initialPaymentNav      *types.InitialVaultNAV
 	expected               types.VaultAccount
 }
 
-func (v vaultAttrs) GetAdmin() string                  { return v.admin }
-func (v vaultAttrs) GetShareDenom() string             { return v.share }
-func (v vaultAttrs) GetUnderlyingAsset() string        { return v.underlying }
-func (v vaultAttrs) GetPaymentDenom() string           { return v.payment }
-func (v vaultAttrs) GetWithdrawalDelaySeconds() uint64 { return v.withdrawalDelaySeconds }
-func (v vaultAttrs) GetMinSwapInValue() string         { return v.minSwapIn }
-func (v vaultAttrs) GetMinSwapOutValue() string        { return v.minSwapOut }
-func (v vaultAttrs) GetMaxSwapInValue() string         { return v.maxSwapIn }
-func (v vaultAttrs) GetMaxSwapOutValue() string        { return v.maxSwapOut }
+func (v vaultAttrs) GetAdmin() string                             { return v.admin }
+func (v vaultAttrs) GetShareDenom() string                        { return v.share }
+func (v vaultAttrs) GetUnderlyingAsset() string                   { return v.underlying }
+func (v vaultAttrs) GetPaymentDenom() string                      { return v.payment }
+func (v vaultAttrs) GetWithdrawalDelaySeconds() uint64            { return v.withdrawalDelaySeconds }
+func (v vaultAttrs) GetMinSwapInValue() string                    { return v.minSwapIn }
+func (v vaultAttrs) GetMinSwapOutValue() string                   { return v.minSwapOut }
+func (v vaultAttrs) GetMaxSwapInValue() string                    { return v.maxSwapIn }
+func (v vaultAttrs) GetMaxSwapOutValue() string                   { return v.maxSwapOut }
+func (v vaultAttrs) GetInitialPaymentNav() *types.InitialVaultNAV { return v.initialPaymentNav }
+
+// initialPaymentNAVOrDefault returns the supplied initial NAV when set;
+// otherwise it returns a 1:1 placeholder priced in underlyingDenom suitable
+// for setupBaseVault helpers. Returns nil when the vault does not require a
+// payment-denom NAV (paymentDenom is empty or equals the underlying asset).
+func initialPaymentNAVOrDefault(initial *types.InitialVaultNAV, paymentDenom, underlyingDenom string) *types.InitialVaultNAV {
+	if paymentDenom == "" || paymentDenom == underlyingDenom {
+		return nil
+	}
+	if initial != nil {
+		return initial
+	}
+	return &types.InitialVaultNAV{
+		Price:  sdk.NewInt64Coin(underlyingDenom, 1),
+		Volume: sdkmath.OneInt(),
+		Source: "test-bootstrap",
+	}
+}
 
 // setupBaseVaultRestricted creates a vault with a restricted underlying asset.
 // It establishes a marker for the underlying asset, requiring a specific attribute for transfers.
@@ -363,10 +383,11 @@ func (s *TestSuite) setupBaseVaultRestricted(underlyingDenom, shareDenom string,
 	}
 
 	vaultCfg := vaultAttrs{
-		admin:      s.adminAddr.String(),
-		share:      shareDenom,
-		underlying: underlyingDenom,
-		payment:    pDenom,
+		admin:             s.adminAddr.String(),
+		share:             shareDenom,
+		underlying:        underlyingDenom,
+		payment:           pDenom,
+		initialPaymentNav: initialPaymentNAVOrDefault(nil, pDenom, underlyingDenom),
 	}
 	vault, err := s.k.CreateVault(s.ctx, vaultCfg)
 	s.Require().NoError(err, "vault creation should succeed")
@@ -388,10 +409,11 @@ func (s *TestSuite) setupBaseVault(underlyingDenom, shareDenom string, paymentDe
 	}
 
 	vaultCfg := vaultAttrs{
-		admin:      s.adminAddr.String(),
-		share:      shareDenom,
-		underlying: underlyingDenom,
-		payment:    pDenom,
+		admin:             s.adminAddr.String(),
+		share:             shareDenom,
+		underlying:        underlyingDenom,
+		payment:           pDenom,
+		initialPaymentNav: initialPaymentNAVOrDefault(nil, pDenom, underlyingDenom),
 	}
 	vault, err := s.k.CreateVault(s.ctx, vaultCfg)
 	s.Require().NoError(err, "vault creation should succeed")
@@ -402,10 +424,11 @@ func (s *TestSuite) setupBaseVault(underlyingDenom, shareDenom string, paymentDe
 // CreateVaultWithParams creates a vault with the given parameters and returns the vault account.
 func (s *TestSuite) CreateVaultWithParams(shareDenom, underlyingDenom, paymentDenom string) *types.VaultAccount {
 	vault, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-		Admin:           s.adminAddr.String(),
-		ShareDenom:      shareDenom,
-		UnderlyingAsset: underlyingDenom,
-		PaymentDenom:    paymentDenom,
+		Admin:             s.adminAddr.String(),
+		ShareDenom:        shareDenom,
+		UnderlyingAsset:   underlyingDenom,
+		PaymentDenom:      paymentDenom,
+		InitialPaymentNav: initialPaymentNAVOrDefault(nil, paymentDenom, underlyingDenom),
 	})
 	s.Require().NoError(err, "CreateVault should succeed for %s", shareDenom)
 	return vault

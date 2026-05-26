@@ -38,8 +38,64 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 				ShareDenom:      "vaultshare",
 				UnderlyingAsset: "uusd",
 				PaymentDenom:    "usdc",
+				InitialPaymentNav: &types.InitialVaultNAV{
+					Price:  sdk.NewInt64Coin("uusd", 1),
+					Volume: sdkmath.OneInt(),
+					Source: "test",
+				},
 			},
 			expectedErr: nil,
+		},
+		{
+			name: "missing initial NAV when payment denom differs",
+			msg: types.MsgCreateVaultRequest{
+				Admin:           admin,
+				ShareDenom:      "vaultshare",
+				UnderlyingAsset: "uusd",
+				PaymentDenom:    "usdc",
+			},
+			expectedErr: fmt.Errorf("invalid initial payment NAV: initial_payment_nav is required when payment_denom %q differs from underlying_asset %q", "usdc", "uusd"),
+		},
+		{
+			name: "initial NAV supplied without payment denom",
+			msg: types.MsgCreateVaultRequest{
+				Admin:           admin,
+				ShareDenom:      "vaultshare",
+				UnderlyingAsset: "uusd",
+				InitialPaymentNav: &types.InitialVaultNAV{
+					Price:  sdk.NewInt64Coin("uusd", 1),
+					Volume: sdkmath.OneInt(),
+				},
+			},
+			expectedErr: fmt.Errorf("invalid initial payment NAV: initial_payment_nav must be omitted when payment_denom is empty or equals underlying_asset"),
+		},
+		{
+			name: "initial NAV price denom mismatches underlying",
+			msg: types.MsgCreateVaultRequest{
+				Admin:           admin,
+				ShareDenom:      "vaultshare",
+				UnderlyingAsset: "uusd",
+				PaymentDenom:    "usdc",
+				InitialPaymentNav: &types.InitialVaultNAV{
+					Price:  sdk.NewInt64Coin("other", 1),
+					Volume: sdkmath.OneInt(),
+				},
+			},
+			expectedErr: fmt.Errorf("invalid initial payment NAV: price denom %q must equal underlying_asset %q", "other", "uusd"),
+		},
+		{
+			name: "initial NAV volume non-positive",
+			msg: types.MsgCreateVaultRequest{
+				Admin:           admin,
+				ShareDenom:      "vaultshare",
+				UnderlyingAsset: "uusd",
+				PaymentDenom:    "usdc",
+				InitialPaymentNav: &types.InitialVaultNAV{
+					Price:  sdk.NewInt64Coin("uusd", 1),
+					Volume: sdkmath.ZeroInt(),
+				},
+			},
+			expectedErr: fmt.Errorf("invalid initial payment NAV: volume must be positive"),
 		},
 		{
 			name: "admin empty",

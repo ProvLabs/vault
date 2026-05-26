@@ -30264,10 +30264,11 @@ type MsgUpdateVaultNAVRequest struct {
 	// vault_address is the bech32 address of the vault whose NAV entry is being updated.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// denom is the asset denomination being priced. It must not be the vault's
-	// share denom or its underlying asset, both of which derive their value elsewhere.
+	// share denom. The underlying asset is a valid denom (e.g. to record its
+	// price in payment-denom terms).
 	Denom string `protobuf:"bytes,3,opt,name=denom,proto3" json:"denom,omitempty"`
-	// price is the total value of `volume` units of the denom, denominated in the
-	// vault's underlying asset.
+	// price is the total value of `volume` units of the denom, denominated in
+	// one of the vault's accepted denoms (underlying asset or payment denom).
 	Price *v1beta11.Coin `protobuf:"bytes,4,opt,name=price,proto3" json:"price,omitempty"`
 	// volume is the number of units of the denom that price covers. It must be positive.
 	Volume string `protobuf:"bytes,5,opt,name=volume,proto3" json:"volume,omitempty"`

@@ -1,0 +1,1 @@
+* Convert the `.claude/skills/*/scripts/` helpers (pr-review, branch-diff-analysis, vault-lint-test) from Bash + `jq` to Python 3 stdlib equivalents [PR 200](https://github.com/provlabs/vault/pull/200).

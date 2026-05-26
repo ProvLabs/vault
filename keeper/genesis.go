@@ -185,6 +185,9 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 
 	navs := make([]types.VaultNAVEntry, 0)
 	err = k.NAVs.Walk(ctx, nil, func(key collections.Pair[sdk.AccAddress, string], value types.VaultNAV) (stop bool, err error) {
+		if key.K2() != value.Denom {
+			return true, fmt.Errorf("nav key/value denom mismatch for vault %s: key=%q value=%q", key.K1(), key.K2(), value.Denom)
+		}
 		navs = append(navs, types.VaultNAVEntry{
 			VaultAddress: key.K1().String(),
 			Nav:          value,

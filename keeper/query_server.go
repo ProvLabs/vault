@@ -44,11 +44,11 @@ func (k queryServer) Vaults(goCtx context.Context, req *types.QueryVaultsRequest
 		func(key sdk.AccAddress, _ []byte) (include bool, err error) {
 			vault, err := k.GetVault(ctx, key)
 			if err != nil {
-				ctx.Logger().Error("failed to get vault during pagination", "key", key.String(), "error", err)
+				k.getLogger(ctx).Error("failed to get vault during pagination", "key", key.String(), "error", err)
 				return false, nil
 			}
 			if vault == nil {
-				ctx.Logger().Error("nil vault found during pagination", "key", key.String())
+				k.getLogger(ctx).Error("nil vault found during pagination", "key", key.String())
 				return false, nil
 			}
 			vaults = append(vaults, *vault)

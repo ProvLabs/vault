@@ -36,7 +36,7 @@ func (k *Keeper) processPendingSwapOuts(ctx sdk.Context, batchSize int) error {
 		return false, nil
 	})
 	if err != nil {
-		ctx.Logger().Error("error during pending withdrawal queue walk", "error", err)
+		k.getLogger(ctx).Error("error during pending withdrawal queue walk", "error", err)
 		return fmt.Errorf("failed to walk pending swap out queue: %w", err)
 	}
 
@@ -60,12 +60,12 @@ func (k *Keeper) processSwapOutJobs(ctx sdk.Context, jobsToProcess []types.Payou
 		vault, ok := k.tryGetVault(ctx, j.VaultAddr)
 		if !ok {
 			if err := k.PendingSwapOutQueue.Dequeue(ctx, j.Timestamp, j.VaultAddr, j.ID); err != nil {
-				ctx.Logger().Error(
+				k.getLogger(ctx).Error(
 					fmt.Sprintf("CRITICAL: failed to dequeue withdrawal request %d for non-existent vault %s", j.ID, j.VaultAddr),
 					"error", err,
 				)
 			} else {
-				ctx.Logger().Error(
+				k.getLogger(ctx).Error(
 					"dequeued and skipped pending withdrawal for non-existent vault",
 					"request_id", j.ID,
 					"vault_address", j.VaultAddr.String(),
@@ -79,7 +79,7 @@ func (k *Keeper) processSwapOutJobs(ctx sdk.Context, jobsToProcess []types.Payou
 		}
 
 		if err := k.PendingSwapOutQueue.Dequeue(ctx, j.Timestamp, j.VaultAddr, j.ID); err != nil {
-			ctx.Logger().Error(
+			k.getLogger(ctx).Error(
 				"failed to dequeue withdrawal request",
 				"request_id", j.ID,
 				"vault_address", j.VaultAddr.String(),
@@ -154,7 +154,7 @@ func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.P
 			"failed to transfer %s shares from %s to principal %s for burning",
 			req.Shares, vaultAddr, principalAddress,
 		)
-		ctx.Logger().Error("CRITICAL: "+errMsg, "error", err)
+		k.getLogger(ctx).Error("CRITICAL: "+errMsg, "error", err)
 		return types.CriticalErr(errMsg, fmt.Errorf("%s: %w", errMsg, err))
 	}
 
@@ -163,7 +163,7 @@ func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.P
 			"failed to burn %s shares from account %s after successful payout",
 			req.Shares, vaultAddr,
 		)
-		ctx.Logger().Error("CRITICAL: "+errMsg, "error", err)
+		k.getLogger(ctx).Error("CRITICAL: "+errMsg, "error", err)
 		return types.CriticalErr(errMsg, fmt.Errorf("%s: %w", errMsg, err))
 	}
 
@@ -175,7 +175,7 @@ func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.P
 			"failed to deduct %s shares from vault %s total shares after successful payout",
 			req.Shares, vaultAddr,
 		)
-		ctx.Logger().Error("CRITICAL: "+errMsg, "error", err)
+		k.getLogger(ctx).Error("CRITICAL: "+errMsg, "error", err)
 		return types.CriticalErr(errMsg, fmt.Errorf("%s: %w", errMsg, err))
 	}
 
@@ -184,7 +184,7 @@ func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.P
 			"failed to update vault account %s after successful payout",
 			vaultAddr,
 		)
-		ctx.Logger().Error("CRITICAL: "+errMsg, "error", err)
+		k.getLogger(ctx).Error("CRITICAL: "+errMsg, "error", err)
 		return types.CriticalErr(errMsg, fmt.Errorf("%s: %w", errMsg, err))
 	}
 
@@ -211,7 +211,7 @@ func (k *Keeper) refundWithdrawal(ctx sdk.Context, id uint64, req types.PendingS
 			"failed to refund %s shares from vault %s to owner %s",
 			req.Shares, vaultAddr, ownerAddr,
 		)
-		ctx.Logger().Error("CRITICAL: "+errMsg, "error", err)
+		k.getLogger(ctx).Error("CRITICAL: "+errMsg, "error", err)
 		return types.CriticalErr(errMsg, fmt.Errorf("%s: %w", errMsg, err))
 	}
 

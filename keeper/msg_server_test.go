@@ -5888,3 +5888,47 @@ func (s *TestSuite) TestMsgServer_UpdateNAVAuthority_ResetToEmptyFallsBackToAdmi
 	s.Require().NoError(err, "NAV should exist after the admin update following the reset")
 	s.Assert().Equal(sdk.NewInt64Coin(underlying, 100), nav.Price, "NAV price mismatch after reset")
 }
+
+// TestMsgServer_UpdateNAVAuthority_NoOpWhenUnchanged verifies that calling
+// UpdateNAVAuthority with the current NAV authority is a no-op: the call
+// succeeds, the vault is left untouched, and no EventNAVAuthorityUpdated event
+// is emitted.
+func (s *TestSuite) TestMsgServer_UpdateNAVAuthority_NoOpWhenUnchanged() {
+	underlying := "under"
+	share := "vaultshares"
+	admin := s.adminAddr
+	oracle := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1000))
+	vaultAddr := types.GetVaultAddress(share)
+
+	s.setupBaseVault(underlying, share)
+	msgServer := keeper.NewMsgServer(s.simApp.VaultKeeper)
+
+	_, err := msgServer.UpdateNAVAuthority(s.ctx, &types.MsgUpdateNAVAuthorityRequest{
+		Signer:       admin.String(),
+		VaultAddress: vaultAddr.String(),
+		NewAuthority: oracle.String(),
+	})
+	s.Require().NoError(err, "initial rotation should succeed")
+
+	vaultBefore, err := s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "failed to read vault after initial rotation")
+
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	_, err = msgServer.UpdateNAVAuthority(s.ctx, &types.MsgUpdateNAVAuthorityRequest{
+		Signer:       admin.String(),
+		VaultAddress: vaultAddr.String(),
+		NewAuthority: oracle.String(),
+	})
+	s.Require().NoError(err, "re-setting the NAV authority to its current value should be a no-op")
+
+	for _, ev := range s.ctx.EventManager().Events() {
+		s.Assert().NotEqualf(
+			"provlabs.vault.v1.EventNAVAuthorityUpdated", ev.Type,
+			"no-op UpdateNAVAuthority should not emit EventNAVAuthorityUpdated",
+		)
+	}
+
+	vaultAfter, err := s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "failed to read vault after no-op rotation")
+	s.Assert().Equal(vaultBefore.NavAuthority, vaultAfter.NavAuthority, "no-op rotation should leave NavAuthority untouched")
+}

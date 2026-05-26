@@ -480,7 +480,7 @@ func (k *Keeper) SetWithdrawalDelay(ctx sdk.Context, vault *types.VaultAccount, 
 // critical, unrecoverable error for a specific vault. The provided reason should be a stable,
 // hard-coded string suitable for persistence and later auditing.
 func (k *Keeper) autoPauseVault(ctx sdk.Context, vault *types.VaultAccount, reason string) {
-	ctx.Logger().Error(
+	k.getLogger(ctx).Error(
 		"Auto-pausing vault due to critical error",
 		"vault_address", vault.GetAddress().String(),
 		"reason", reason,
@@ -488,7 +488,7 @@ func (k *Keeper) autoPauseVault(ctx sdk.Context, vault *types.VaultAccount, reas
 
 	tvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
 	if err != nil {
-		ctx.Logger().Error("Failed to get TVV in underlying asset", "vault_address", vault.GetAddress().String(), "error", err)
+		k.getLogger(ctx).Error("Failed to get TVV in underlying asset", "vault_address", vault.GetAddress().String(), "error", err)
 	}
 
 	vault.Paused = true

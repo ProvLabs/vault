@@ -5,10 +5,10 @@ description: Run the vault repo's full local verification — format, lint, unit
 
 # vault-lint-test
 
-Run `scripts/run.sh` from this skill directory. The script orchestrates the chain, stops at the first failure, captures per-step logs under `$TMPDIR/vault-lint-test/`, and prints a status table.
+Run `scripts/run.py` from this skill directory. The script orchestrates the chain, stops at the first failure, captures per-step logs under `$TMPDIR/vault-lint-test/`, and prints a status table.
 
 ```bash
-${CLAUDE_PLUGIN_ROOT:-.claude/skills/vault-lint-test}/scripts/run.sh [--fast] [--from=N]
+python3 ${CLAUDE_PLUGIN_ROOT:-.claude/skills/vault-lint-test}/scripts/run.py [--fast] [--from=N]
 ```
 
 ## Mode selection (you decide)

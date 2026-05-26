@@ -149,19 +149,27 @@ func (k Keeper) MigrateInternalNAVSeedFromMarker(ctx sdk.Context) error {
 // rule: when both directions exist, the one with the greater UpdatedBlockHeight
 // wins; when only one exists, that entry is used.
 //
-// Returns an error if no Marker NAV is available in either direction, or if the
-// selected NAV has a zero price amount or zero volume.
+// Both directions are queried unconditionally so a transient error on one
+// lookup does not prevent the migration from using a valid NAV from the other
+// direction. An error is returned only when no usable NAV is available — that
+// is, when both lookups return nil. In that case the surfaced error names the
+// failing direction (if any) so operators can diagnose the underlying Marker
+// store issue; if both lookups returned (nil, nil), the migration aborts with a
+// "no marker NAV available" error naming the vault.
+//
+// Also returns an error if the selected NAV has a zero price amount or zero
+// volume.
 func (k Keeper) buildInternalNAVFromMarker(ctx sdk.Context, vault *types.VaultAccount) (types.VaultNAV, error) {
 	fwd, errF := k.MarkerKeeper.GetNetAssetValue(ctx, vault.PaymentDenom, vault.UnderlyingAsset)
-	if errF != nil {
-		return types.VaultNAV{}, fmt.Errorf("failed to read forward marker NAV for vault %s (%s/%s): %w", vault.Address, vault.PaymentDenom, vault.UnderlyingAsset, errF)
-	}
 	rev, errR := k.MarkerKeeper.GetNetAssetValue(ctx, vault.UnderlyingAsset, vault.PaymentDenom)
-	if errR != nil {
-		return types.VaultNAV{}, fmt.Errorf("failed to read reverse marker NAV for vault %s (%s/%s): %w", vault.Address, vault.UnderlyingAsset, vault.PaymentDenom, errR)
-	}
 
 	if fwd == nil && rev == nil {
+		if errF != nil {
+			return types.VaultNAV{}, fmt.Errorf("failed to read forward marker NAV for vault %s (%s/%s): %w", vault.Address, vault.PaymentDenom, vault.UnderlyingAsset, errF)
+		}
+		if errR != nil {
+			return types.VaultNAV{}, fmt.Errorf("failed to read reverse marker NAV for vault %s (%s/%s): %w", vault.Address, vault.UnderlyingAsset, vault.PaymentDenom, errR)
+		}
 		return types.VaultNAV{}, fmt.Errorf("no marker NAV available to seed internal NAV for vault %s (payment %s, underlying %s)", vault.Address, vault.PaymentDenom, vault.UnderlyingAsset)
 	}
 

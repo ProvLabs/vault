@@ -34,9 +34,9 @@ import (
 //
 // Bumped from 1 to 2 to accompany MigrateInternalNAVSeedFromMarker, which seeds
 // the Internal NAV table from the Marker module's NAV store and defaults
-// nav_authority to the vault admin. The upstream provenance upgrade handler is
-// responsible for invoking the migration during the upgrade that switches the
-// pricing engine to Internal-NAV-only reads.
+// nav_authority to the vault admin. A v1->v2 migration handler is registered
+// in RegisterServices so the SDK module manager can drive the migration via
+// RunMigrations when an upstream upgrade handler advances the chain.
 const ConsensusVersion = 2
 
 var (
@@ -145,10 +145,16 @@ func (m AppModule) EndBlock(ctx context.Context) error {
 	return m.keeper.EndBlocker(sdk.UnwrapSDKContext(ctx))
 }
 
-// RegisterServices registers gRPC query and message services.
+// RegisterServices registers gRPC query and message services and any module
+// migration handlers required by the current ConsensusVersion.
 func (m AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServer(m.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServer(m.keeper))
+
+	migrator := keeper.NewMigrator(m.keeper)
+	if err := cfg.RegisterMigration(types.ModuleName, 1, migrator.Migrate1to2); err != nil {
+		panic(fmt.Sprintf("failed to register %s v1->v2 migration: %v", types.ModuleName, err))
+	}
 }
 
 // AutoCLIOptions defines CLI commands for tx and query.

@@ -1,0 +1,1 @@
+* Add `MigrateInternalNAVSeedFromMarker` to seed the Internal NAV table from Marker NAV for vaults whose payment denom differs from underlying, and default `nav_authority` to the vault admin when unset [#191](https://github.com/provlabs/vault/issues/191).

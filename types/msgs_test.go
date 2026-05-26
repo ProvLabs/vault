@@ -1948,6 +1948,17 @@ func TestMsgUpdateVaultNAVRequest_ValidateBasic(t *testing.T) {
 			expectedErr: "price amount must be positive",
 		},
 		{
+			name: "denom equals price denom",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin("rwa", 100),
+				Volume:       sdkmath.NewInt(1),
+			},
+			expectedErr: `NAV denom "rwa" and price denom must differ`,
+		},
+		{
 			name: "nil volume",
 			msg: types.MsgUpdateVaultNAVRequest{
 				Signer:       addr,

@@ -596,10 +596,11 @@ message MsgUpdateVaultNAVRequest {
   // vault_address is the bech32 address of the vault whose NAV entry is being updated.
   string vault_address = 2;
   // denom is the asset denomination being priced. It must not be the vault's
-  // share denom or its underlying asset, both of which derive their value elsewhere.
+  // share denom. The underlying asset is a valid denom (e.g. to record its
+  // price in payment-denom terms).
   string denom = 3;
-  // price is the total value of `volume` units of the denom, denominated in the
-  // vault's underlying asset.
+  // price is the total value of `volume` units of the denom, denominated in
+  // one of the vault's accepted denoms (underlying asset or payment denom).
   cosmos.base.v1beta1.Coin price = 4 [(gogoproto.nullable) = false];
   // volume is the number of units of the denom that price covers. It must be positive.
   string volume = 5 [

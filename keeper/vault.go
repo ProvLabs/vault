@@ -114,14 +114,11 @@ func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*type
 // The NAV is written via SetVaultNAV so that field-level invariants, marker
 // existence, and event emission match every other internal NAV update.
 func (k *Keeper) seedInitialPaymentNAV(ctx sdk.Context, vault *types.VaultAccount, initial *types.InitialVaultNAV) error {
-	if vault.PaymentDenom == "" || vault.PaymentDenom == vault.UnderlyingAsset {
-		if initial != nil {
-			return fmt.Errorf("initial payment NAV supplied but payment denom %q does not require one", vault.PaymentDenom)
-		}
-		return nil
+	if err := types.ValidateInitialPaymentNAV(vault.PaymentDenom, vault.UnderlyingAsset, initial); err != nil {
+		return fmt.Errorf("invalid initial payment NAV: %w", err)
 	}
 	if initial == nil {
-		return fmt.Errorf("initial payment NAV is required when payment denom %q differs from underlying asset %q", vault.PaymentDenom, vault.UnderlyingAsset)
+		return nil
 	}
 
 	nav := types.NewVaultNAV(vault.PaymentDenom, initial.Price, initial.Volume, initial.Source)

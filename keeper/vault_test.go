@@ -156,7 +156,7 @@ func (s *TestSuite) TestCreateVault_MissingInitialPaymentNAVFails() {
 		PaymentDenom:    payment,
 	})
 	s.Require().Error(err, "CreateVault should reject a vault with mismatched denoms and no initial NAV")
-	s.Require().ErrorContains(err, "initial payment NAV is required", "error should call out missing bootstrap NAV")
+	s.Require().ErrorContains(err, "initial_payment_nav is required", "error should call out missing bootstrap NAV")
 }
 
 // TestCreateVault_InitialPaymentNAVRolledBackOnFailure verifies that the

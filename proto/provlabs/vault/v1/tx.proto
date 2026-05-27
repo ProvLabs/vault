@@ -7,6 +7,7 @@ import "cosmos/msg/v1/msg.proto";
 import "cosmos_proto/cosmos.proto";
 import "gogoproto/gogo.proto";
 import "provlabs/vault/v1/params.proto";
+import "provlabs/vault/v1/vault.proto";
 
 option go_package = "github.com/provlabs/vault/types";
 
@@ -147,6 +148,13 @@ message MsgCreateVaultRequest {
   // - Values must be positive (> 0).
   // - An empty string "" indicates no maximum limit.
   string max_swap_out_value = 9 [(cosmos_proto.scalar) = "cosmos.IntString"];
+  // initial_payment_nav seeds the per-vault Internal NAV entry for payment_denom
+  // at creation, ensuring fee accrual and payment-denom swap-outs are operational
+  // from block one. The entry's denom is implicitly payment_denom; the price
+  // denom must be underlying_asset.
+  // - Required when payment_denom is set and payment_denom != underlying_asset.
+  // - Must be omitted when payment_denom is empty or equal to underlying_asset.
+  InitialVaultNAV initial_payment_nav = 10;
 }
 
 // MsgCreateVaultResponse is the response message for the CreateVault endpoint.

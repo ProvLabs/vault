@@ -179,6 +179,27 @@ message VaultNAV {
   ];
 }
 
+// InitialVaultNAV seeds a per-vault Internal NAV entry at vault creation time.
+// It is the stateless subset of VaultNAV (no updated_block_height or
+// updated_time, which are stamped by the keeper when the entry is persisted)
+// and omits the denom, which is implied by the field that carries it on the
+// containing message (e.g. payment_denom on MsgCreateVaultRequest).
+message InitialVaultNAV {
+  // price is the total value of `volume` units of the priced denom, denominated
+  // in one of the vault's accepted denoms (typically the underlying asset).
+  cosmos.base.v1beta1.Coin price = 1 [(gogoproto.nullable) = false];
+  // volume is the number of units of the priced denom that price covers. It
+  // must be positive; the per-unit value is price divided by volume.
+  string volume = 2 [
+    (cosmos_proto.scalar) = "cosmos.Int",
+    (gogoproto.customtype) = "cosmossdk.io/math.Int",
+    (gogoproto.nullable) = false
+  ];
+  // source identifies the origin of this NAV entry (for example an oracle name
+  // or the settlement path).
+  string source = 3;
+}
+
 // AccountBalance represents the coin balance of a single account.
 message AccountBalance {
   option (gogoproto.equal) = false;

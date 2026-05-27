@@ -213,6 +213,13 @@ func SimulateMsgCreateVault(k keeper.Keeper) simtypes.Operation {
 			PaymentDenom:           payment,
 			WithdrawalDelaySeconds: interest.SecondsPerDay,
 		}
+		if payment != "" && payment != underlying {
+			msg.InitialPaymentNav = &types.InitialVaultNAV{
+				Price:  sdk.NewInt64Coin(underlying, 1),
+				Volume: math.OneInt(),
+				Source: "simulation",
+			}
+		}
 
 		if r.Intn(2) == 0 {
 			msg.MinSwapInValue = math.NewInt(int64(r.Intn(1000))).String()
@@ -1109,7 +1116,6 @@ func SimulateMsgUpdateVaultAUMFeeBips(k keeper.Keeper) simtypes.Operation {
 		return simtypes.NewOperationMsg(msg, true, "successfully updated vault aum fee bips"), nil, nil
 	}
 }
-
 
 func SimulateMsgUpdateMinSwapInValue(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,

@@ -88,7 +88,7 @@ func (s *TestSuite) TestKeeper_MigrateInternalNAVSeedFromMarker() {
 		payment := "usdc"
 		share := "vshare1"
 
-		vault := s.setupSinglePaymentDenomVault(underlying, share, payment, 3, 2)
+		vault := s.setupLegacyPaymentDenomVault(underlying, share, payment, 3, 2)
 
 		err := s.simApp.VaultKeeper.MigrateInternalNAVSeedFromMarker(s.ctx)
 		s.Require().NoError(err, "migration should succeed when forward marker NAV exists")
@@ -110,16 +110,10 @@ func (s *TestSuite) TestKeeper_MigrateInternalNAVSeedFromMarker() {
 
 		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlying, 2_000_000), s.adminAddr)
 		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(payment, 2_000_000), s.adminAddr)
-		vault, err := s.k.CreateVault(s.ctx, vaultAttrs{
-			admin:      s.adminAddr.String(),
-			share:      share,
-			underlying: underlying,
-			payment:    payment,
-		})
-		s.Require().NoError(err, "vault creation should succeed")
+		vault := s.createLegacyVaultAccount(share, underlying, payment)
 		s.setReverseNAV(underlying, payment, 5, 7)
 
-		err = s.simApp.VaultKeeper.MigrateInternalNAVSeedFromMarker(s.ctx)
+		err := s.simApp.VaultKeeper.MigrateInternalNAVSeedFromMarker(s.ctx)
 		s.Require().NoError(err, "migration should succeed when only reverse marker NAV exists")
 
 		got, err := s.simApp.VaultKeeper.NAVs.Get(s.ctx, collections.Join(vault.GetAddress(), payment))
@@ -136,7 +130,7 @@ func (s *TestSuite) TestKeeper_MigrateInternalNAVSeedFromMarker() {
 		payment := "usdc"
 		share := "vshare3"
 
-		vault := s.setupSinglePaymentDenomVault(underlying, share, payment, 3, 2)
+		vault := s.setupLegacyPaymentDenomVault(underlying, share, payment, 3, 2)
 		s.bumpHeight()
 		s.setReverseNAV(underlying, payment, 11, 5)
 
@@ -178,15 +172,9 @@ func (s *TestSuite) TestKeeper_MigrateInternalNAVSeedFromMarker() {
 
 		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlying, 2_000_000), s.adminAddr)
 		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(payment, 2_000_000), s.adminAddr)
-		vault, err := s.k.CreateVault(s.ctx, vaultAttrs{
-			admin:      s.adminAddr.String(),
-			share:      share,
-			underlying: underlying,
-			payment:    payment,
-		})
-		s.Require().NoError(err, "vault creation should succeed")
+		vault := s.createLegacyVaultAccount(share, underlying, payment)
 
-		err = s.simApp.VaultKeeper.MigrateInternalNAVSeedFromMarker(s.ctx)
+		err := s.simApp.VaultKeeper.MigrateInternalNAVSeedFromMarker(s.ctx)
 		s.Require().NoError(err, "migration must not error on uylds.fcc peg vault even without marker NAV")
 
 		got, err := s.simApp.VaultKeeper.NAVs.Get(s.ctx, collections.Join(vault.GetAddress(), payment))
@@ -206,15 +194,9 @@ func (s *TestSuite) TestKeeper_MigrateInternalNAVSeedFromMarker() {
 
 		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlying, 2_000_000), s.adminAddr)
 		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(payment, 2_000_000), s.adminAddr)
-		vault, err := s.k.CreateVault(s.ctx, vaultAttrs{
-			admin:      s.adminAddr.String(),
-			share:      share,
-			underlying: underlying,
-			payment:    payment,
-		})
-		s.Require().NoError(err, "vault creation should succeed")
+		vault := s.createLegacyVaultAccount(share, underlying, payment)
 
-		err = s.simApp.VaultKeeper.MigrateInternalNAVSeedFromMarker(s.ctx)
+		err := s.simApp.VaultKeeper.MigrateInternalNAVSeedFromMarker(s.ctx)
 		s.Require().NoError(err, "migration must not error on uylds.fcc peg vault even without marker NAV")
 
 		got, err := s.simApp.VaultKeeper.NAVs.Get(s.ctx, collections.Join(vault.GetAddress(), payment))
@@ -233,15 +215,9 @@ func (s *TestSuite) TestKeeper_MigrateInternalNAVSeedFromMarker() {
 
 		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlying, 2_000_000), s.adminAddr)
 		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(payment, 2_000_000), s.adminAddr)
-		vault, err := s.k.CreateVault(s.ctx, vaultAttrs{
-			admin:      s.adminAddr.String(),
-			share:      share,
-			underlying: underlying,
-			payment:    payment,
-		})
-		s.Require().NoError(err, "vault creation should succeed")
+		vault := s.createLegacyVaultAccount(share, underlying, payment)
 
-		err = s.simApp.VaultKeeper.MigrateInternalNAVSeedFromMarker(s.ctx)
+		err := s.simApp.VaultKeeper.MigrateInternalNAVSeedFromMarker(s.ctx)
 		s.Require().Error(err, "migration must fail when no marker NAV exists for a non-peg vault")
 		s.Require().Contains(err.Error(), vault.Address, "error message should name the unpriced vault")
 		s.Require().Contains(err.Error(), "no marker NAV available", "error message should explain the cause")
@@ -253,7 +229,7 @@ func (s *TestSuite) TestKeeper_MigrateInternalNAVSeedFromMarker() {
 		payment := "usdc"
 		share := "vshare8"
 
-		vault := s.setupSinglePaymentDenomVault(underlying, share, payment, 3, 2)
+		vault := s.setupLegacyPaymentDenomVault(underlying, share, payment, 3, 2)
 
 		existing := types.VaultNAV{
 			Denom:  payment,
@@ -279,7 +255,7 @@ func (s *TestSuite) TestKeeper_MigrateInternalNAVSeedFromMarker() {
 		payment := "usdc"
 		share := "vshare9"
 
-		vault := s.setupSinglePaymentDenomVault(underlying, share, payment, 3, 2)
+		vault := s.setupLegacyPaymentDenomVault(underlying, share, payment, 3, 2)
 
 		err := s.simApp.VaultKeeper.MigrateInternalNAVSeedFromMarker(s.ctx)
 		s.Require().NoError(err, "first migration run should succeed")
@@ -326,21 +302,15 @@ func (s *TestSuite) TestKeeper_MigrateInternalNAVSeedFromMarker() {
 		pegShare := "share1"
 		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(pegUnderlying, 2_000_000), s.adminAddr)
 		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(pegPayment, 2_000_000), s.adminAddr)
-		pegVault, err := s.k.CreateVault(s.ctx, vaultAttrs{
-			admin:      s.adminAddr.String(),
-			share:      pegShare,
-			underlying: pegUnderlying,
-			payment:    pegPayment,
-		})
-		s.Require().NoError(err, "peg vault creation should succeed")
+		pegVault := s.createLegacyVaultAccount(pegShare, pegUnderlying, pegPayment)
 
 		// mismatched-denom vault with forward NAV: must be seeded.
 		seededUnderlying := "asset2"
 		seededPayment := "asset2pay"
 		seededShare := "share2"
-		seededVault := s.setupSinglePaymentDenomVault(seededUnderlying, seededShare, seededPayment, 3, 2)
+		seededVault := s.setupLegacyPaymentDenomVault(seededUnderlying, seededShare, seededPayment, 3, 2)
 
-		err = s.simApp.VaultKeeper.MigrateInternalNAVSeedFromMarker(s.ctx)
+		err := s.simApp.VaultKeeper.MigrateInternalNAVSeedFromMarker(s.ctx)
 		s.Require().NoError(err, "mixed-fleet migration should succeed")
 
 		gotIdentity, err := s.simApp.VaultKeeper.GetVault(s.ctx, identityVault.GetAddress())
@@ -368,7 +338,7 @@ func (s *TestSuite) TestKeeper_MigrateInternalNAVSeedFromMarker() {
 		payment := "usdc"
 		share := "vshare11"
 
-		vault := s.setupSinglePaymentDenomVault(underlying, share, payment, 3, 2)
+		vault := s.setupLegacyPaymentDenomVault(underlying, share, payment, 3, 2)
 
 		em := sdk.NewEventManager()
 		s.ctx = s.ctx.WithEventManager(em)
@@ -398,7 +368,7 @@ func (s *TestSuite) TestKeeper_MigrateInternalNAVSeedFromMarker() {
 		underlying := "ylds"
 		payment := "usdc"
 		share := "vshare12"
-		vault := s.setupSinglePaymentDenomVault(underlying, share, payment, 3, 2)
+		vault := s.setupLegacyPaymentDenomVault(underlying, share, payment, 3, 2)
 
 		err := s.simApp.VaultKeeper.MigrateInternalNAVSeedFromMarker(s.ctx)
 		s.Require().NoError(err, "non-vault accounts should not break migration")
@@ -426,7 +396,7 @@ func (s *TestSuite) TestVaultModule_RunMigrations() {
 		underlying := "ylds"
 		payment := "usdc"
 		share := "vshare-mm-v1"
-		vault := s.setupSinglePaymentDenomVault(underlying, share, payment, 3, 2)
+		vault := s.setupLegacyPaymentDenomVault(underlying, share, payment, 3, 2)
 
 		fromVM := s.simApp.ModuleManager.GetVersionMap()
 		fromVM[types.ModuleName] = 1
@@ -449,7 +419,7 @@ func (s *TestSuite) TestVaultModule_RunMigrations() {
 		underlying := "ylds"
 		payment := "usdc"
 		share := "vshare-mm-noop"
-		vault := s.setupSinglePaymentDenomVault(underlying, share, payment, 3, 2)
+		vault := s.setupLegacyPaymentDenomVault(underlying, share, payment, 3, 2)
 
 		existing := types.VaultNAV{
 			Denom:  payment,
@@ -479,18 +449,12 @@ func (s *TestSuite) TestVaultModule_RunMigrations() {
 
 		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlying, 2_000_000), s.adminAddr)
 		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(payment, 2_000_000), s.adminAddr)
-		vault, err := s.k.CreateVault(s.ctx, vaultAttrs{
-			admin:      s.adminAddr.String(),
-			share:      share,
-			underlying: underlying,
-			payment:    payment,
-		})
-		s.Require().NoError(err, "vault creation should succeed for share %s", share)
+		vault := s.createLegacyVaultAccount(share, underlying, payment)
 
 		fromVM := s.simApp.ModuleManager.GetVersionMap()
 		fromVM[types.ModuleName] = 1
 
-		_, err = s.simApp.ModuleManager.RunMigrations(s.ctx, s.simApp.Configurator(), fromVM)
+		_, err := s.simApp.ModuleManager.RunMigrations(s.ctx, s.simApp.Configurator(), fromVM)
 		s.Require().Error(err, "RunMigrations should propagate the inner migration error for unpriceable vault %s", vault.Address)
 		s.ErrorContains(err, vault.Address, "propagated error should name the unpriceable vault")
 		s.ErrorContains(err, "no marker NAV available", "propagated error should explain the cause")

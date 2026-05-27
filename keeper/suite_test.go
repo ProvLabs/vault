@@ -609,6 +609,74 @@ func (s *TestSuite) setupSinglePaymentDenomVault(underlyingDenom, shareDenom, pa
 	return vault
 }
 
+// createLegacyVaultAccount stores a *types.VaultAccount directly via the
+// AccountKeeper, bypassing keeper.CreateVault entirely. Use this in migration
+// tests that need to simulate a pre-v2 vault in state: one that was persisted
+// before the InitialPaymentNAV requirement existed and therefore has no
+// Internal NAV entry for its payment denom. The caller is responsible for
+// registering any markers the vault depends on (e.g. payment + underlying).
+func (s *TestSuite) createLegacyVaultAccount(shareDenom, underlyingDenom, paymentDenom string) *types.VaultAccount {
+	addr := types.GetVaultAddress(shareDenom)
+	if paymentDenom == "" {
+		paymentDenom = underlyingDenom
+	}
+	vault := &types.VaultAccount{
+		BaseAccount:         authtypes.NewBaseAccountWithAddress(addr),
+		Admin:               s.adminAddr.String(),
+		NavAuthority:        s.adminAddr.String(),
+		TotalShares:         sdk.NewCoin(shareDenom, sdkmath.ZeroInt()),
+		UnderlyingAsset:     underlyingDenom,
+		PaymentDenom:        paymentDenom,
+		CurrentInterestRate: types.ZeroInterestRate,
+		DesiredInterestRate: types.ZeroInterestRate,
+	}
+	acct := s.simApp.AccountKeeper.NewAccount(s.ctx, vault)
+	vaultAcct, ok := acct.(*types.VaultAccount)
+	s.Require().True(ok, "new account should return a *types.VaultAccount for a VaultAccount prototype")
+	s.simApp.AccountKeeper.SetAccount(s.ctx, vaultAcct)
+	return vaultAcct
+}
+
+// setForwardMarkerNAV sets a payment->underlying net asset value on the payment
+// denom marker. Used by migration tests so MigrateInternalNAVSeedFromMarker can
+// read a forward marker NAV via MarkerKeeper.GetNetAssetValue.
+func (s *TestSuite) setForwardMarkerNAV(paymentDenom, underlyingDenom string, price, volume int64) {
+	paymentMarkerAddr := markertypes.MustGetMarkerAddress(paymentDenom)
+	paymentMarkerAccount, err := s.k.MarkerKeeper.GetMarker(s.ctx, paymentMarkerAddr)
+	s.Require().NoError(err, "should fetch payment marker for forward NAV setup")
+	s.Require().NoError(s.k.MarkerKeeper.SetNetAssetValue(s.ctx, paymentMarkerAccount, markertypes.NetAssetValue{
+		Price:  sdk.NewInt64Coin(underlyingDenom, price),
+		Volume: uint64(volume),
+	}, "test"), "should set forward marker NAV %s->%s=%d/%d", paymentDenom, underlyingDenom, price, volume)
+}
+
+// setReverseNAV sets an underlying->payment net asset value on the underlying
+// denom marker. Used by migration tests so MigrateInternalNAVSeedFromMarker can
+// read a reverse marker NAV via MarkerKeeper.GetNetAssetValue and synthesize a
+// single-sided Internal NAV from it.
+func (s *TestSuite) setReverseNAV(underlyingDenom, paymentDenom string, price, volume int64) {
+	underlyingMarkerAddr := markertypes.MustGetMarkerAddress(underlyingDenom)
+	underlyingMarkerAccount, err := s.k.MarkerKeeper.GetMarker(s.ctx, underlyingMarkerAddr)
+	s.Require().NoError(err, "should fetch underlying marker for reverse NAV setup")
+	s.Require().NoError(s.k.MarkerKeeper.SetNetAssetValue(s.ctx, underlyingMarkerAccount, markertypes.NetAssetValue{
+		Price:  sdk.NewInt64Coin(paymentDenom, price),
+		Volume: uint64(volume),
+	}, "test-reverse"), "should set reverse marker NAV %s->%s=%d/%d", underlyingDenom, paymentDenom, price, volume)
+}
+
+// setupLegacyPaymentDenomVault wires up a pre-v2 fixture for migration tests:
+// registers payment + underlying markers, persists a VaultAccount directly via
+// AccountKeeper so no InitialPaymentNAV is required, and sets a forward
+// payment->underlying marker NAV. The returned vault has no Internal NAV entry
+// so MigrateInternalNAVSeedFromMarker has work to do.
+func (s *TestSuite) setupLegacyPaymentDenomVault(underlyingDenom, shareDenom, paymentDenom string, price, volume int64) *types.VaultAccount {
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingDenom, 2_000_000), s.adminAddr)
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 2_000_000), s.adminAddr)
+	vault := s.createLegacyVaultAccount(shareDenom, underlyingDenom, paymentDenom)
+	s.setForwardMarkerNAV(paymentDenom, underlyingDenom, price, volume)
+	return vault
+}
+
 // seedVaultNAV looks up the vault by address and seeds an Internal NAV entry on
 // it for denom, pricing volume units at price. Combines the common
 // GetVault + setVaultNAV pair used across table-driven tests.

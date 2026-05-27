@@ -12,7 +12,7 @@ import (
 )
 
 // MigrationNAVSeedSource is the value recorded on the source field of every
-// VaultNAV entry created by MigrateInternalNAVSeedFromMarker. It identifies the
+// VaultNAV entry created by migrateInternalNAVSeedFromMarker. It identifies the
 // entry as a one-time seed from the Marker module's NAV table so indexers can
 // distinguish migrated entries from oracle- or operator-supplied updates.
 const MigrationNAVSeedSource = "x/vault internal NAV seed migration"
@@ -58,9 +58,15 @@ func (k Keeper) MigrateVaultAccountPaymentDenomDefaults(ctx sdk.Context) error {
 	return nil
 }
 
-// MigrateInternalNAVSeedFromMarker seeds the Internal NAV table for every vault
+// migrateInternalNAVSeedFromMarker seeds the Internal NAV table for every vault
 // that will need an Internal NAV entry once the pricing engine switches to
 // Internal-NAV-only reads.
+//
+// It is unexported on purpose: the only supported entry point is the
+// Migrator.Migrate1to2 handler registered with the SDK module manager via
+// module.RegisterServices. Running it directly from a downstream upgrade
+// handler would bypass the ConsensusVersion tracking that makes the migration
+// fire exactly once per chain.
 //
 // For each VaultAccount in state the migration:
 //  1. Defaults v.NavAuthority to v.Admin when empty.
@@ -89,10 +95,9 @@ func (k Keeper) MigrateVaultAccountPaymentDenomDefaults(ctx sdk.Context) error {
 // Failing the migration is preferred over silently leaving the vault
 // unpriceable post-upgrade.
 //
-// This function is intended to be executed once from an upgrade handler. It is
-// idempotent on subsequent runs because pre-existing Internal NAV entries are
-// preserved in step 3.
-func (k Keeper) MigrateInternalNAVSeedFromMarker(ctx sdk.Context) error {
+// The migration is idempotent on subsequent runs because pre-existing Internal
+// NAV entries are preserved in step 3.
+func (k Keeper) migrateInternalNAVSeedFromMarker(ctx sdk.Context) error {
 	accounts := k.AuthKeeper.GetAllAccounts(ctx)
 
 	for _, acc := range accounts {

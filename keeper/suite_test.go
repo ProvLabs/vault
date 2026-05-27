@@ -638,7 +638,7 @@ func (s *TestSuite) createLegacyVaultAccount(shareDenom, underlyingDenom, paymen
 }
 
 // setForwardMarkerNAV sets a payment->underlying net asset value on the payment
-// denom marker. Used by migration tests so MigrateInternalNAVSeedFromMarker can
+// denom marker. Used by migration tests so Migrate1to2 can
 // read a forward marker NAV via MarkerKeeper.GetNetAssetValue.
 func (s *TestSuite) setForwardMarkerNAV(paymentDenom, underlyingDenom string, price, volume int64) {
 	paymentMarkerAddr := markertypes.MustGetMarkerAddress(paymentDenom)
@@ -651,7 +651,7 @@ func (s *TestSuite) setForwardMarkerNAV(paymentDenom, underlyingDenom string, pr
 }
 
 // setReverseNAV sets an underlying->payment net asset value on the underlying
-// denom marker. Used by migration tests so MigrateInternalNAVSeedFromMarker can
+// denom marker. Used by migration tests so Migrate1to2 can
 // read a reverse marker NAV via MarkerKeeper.GetNetAssetValue and synthesize a
 // single-sided Internal NAV from it.
 func (s *TestSuite) setReverseNAV(underlyingDenom, paymentDenom string, price, volume int64) {
@@ -668,7 +668,7 @@ func (s *TestSuite) setReverseNAV(underlyingDenom, paymentDenom string, price, v
 // registers payment + underlying markers, persists a VaultAccount directly via
 // AccountKeeper so no InitialPaymentNAV is required, and sets a forward
 // payment->underlying marker NAV. The returned vault has no Internal NAV entry
-// so MigrateInternalNAVSeedFromMarker has work to do.
+// so Migrate1to2 has work to do.
 func (s *TestSuite) setupLegacyPaymentDenomVault(underlyingDenom, shareDenom, paymentDenom string, price, volume int64) *types.VaultAccount {
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingDenom, 2_000_000), s.adminAddr)
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 2_000_000), s.adminAddr)

@@ -32,8 +32,8 @@ import (
 
 // ConsensusVersion defines the current x/vault module consensus version.
 //
-// Bumped from 1 to 2 to accompany MigrateInternalNAVSeedFromMarker, which seeds
-// the Internal NAV table from the Marker module's NAV store and defaults
+// Bumped from 1 to 2 to accompany Migrator.Migrate1to2, which seeds the
+// Internal NAV table from the Marker module's NAV store and defaults
 // nav_authority to the vault admin. A v1->v2 migration handler is registered
 // in RegisterServices so the SDK module manager can drive the migration via
 // RunMigrations when an upstream upgrade handler advances the chain.

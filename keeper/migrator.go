@@ -20,8 +20,8 @@ func NewMigrator(k *Keeper) Migrator {
 
 // Migrate1to2 advances the vault module from ConsensusVersion 1 to 2 by
 // seeding the Internal NAV table from Marker NAVs and defaulting nav_authority
-// to the vault admin when unset. The work is delegated to
-// MigrateInternalNAVSeedFromMarker, which is idempotent across retries.
+// to the vault admin when unset. The work is delegated to the unexported
+// migrateInternalNAVSeedFromMarker, which is idempotent across retries.
 func (m Migrator) Migrate1to2(ctx sdk.Context) error {
-	return m.keeper.MigrateInternalNAVSeedFromMarker(ctx)
+	return m.keeper.migrateInternalNAVSeedFromMarker(ctx)
 }

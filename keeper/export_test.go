@@ -95,3 +95,8 @@ func (k Keeper) TestAccessor_checkPayoutRestrictions(t *testing.T, ctx context.C
 	t.Helper()
 	return k.checkPayoutRestrictions(sdk.UnwrapSDKContext(ctx), vault, owner, assets)
 }
+
+// TestAccessor_getRefundReason exposes this keeper's getRefundReason function for unit tests.
+func (k Keeper) TestAccessor_getRefundReason(err error) string {
+	return k.getRefundReason(err)
+}

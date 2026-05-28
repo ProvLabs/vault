@@ -30,6 +30,7 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 		expectedNumerator     int64
 		expectedDenominator   int64
 		expectedErrorContains string
+		expectedSentinel      error
 	}{
 		{
 			name:                "identity-src-equals-underlying",
@@ -80,6 +81,7 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 			name:                  "nav-missing",
 			fromDenom:             "unknown",
 			expectedErrorContains: "nav not found",
+			expectedSentinel:      types.ErrNavNotFound,
 		},
 		{
 			name:      "both-present-forward-newer-selected",
@@ -144,6 +146,9 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 			if tc.expectedErrorContains != "" {
 				s.Require().Error(err, "expected error for case %q", tc.name)
 				s.Require().Contains(err.Error(), tc.expectedErrorContains, "error message mismatch for case %q", tc.name)
+				if tc.expectedSentinel != nil {
+					s.Require().ErrorIs(err, tc.expectedSentinel, "error should carry the typed sentinel for case %q", tc.name)
+				}
 				return
 			}
 			s.Require().NoError(err, "unexpected error for case %q", tc.name)
@@ -427,6 +432,7 @@ func (s *TestSuite) TestConvertSharesToRedeemCoin_AssetAndPaymentPaths() {
 	_, err = testKeeper.ConvertSharesToRedeemCoin(s.ctx, *vault, utils.ShareScalar, "unknown")
 	s.Require().Error(err, "should error when redeem denom has no NAV to underlying")
 	s.Require().Contains(err.Error(), "nav not found", "error should indicate missing NAV mapping")
+	s.Require().ErrorIs(err, types.ErrNavNotFound, "missing NAV error should carry the typed ErrNavNotFound sentinel through the conversion")
 }
 
 func (s *TestSuite) TestConvertSharesToRedeemCoin_ZeroAndDustRedemption() {

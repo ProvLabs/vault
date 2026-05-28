@@ -66,7 +66,7 @@ func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom string, vault types.
 		if errR != nil {
 			return math.Int{}, math.Int{}, fmt.Errorf("failed to get reverse nav: %w", errR)
 		}
-		return math.Int{}, math.Int{}, fmt.Errorf("nav not found for %s/%s", srcDenom, underlyingAsset)
+		return math.Int{}, math.Int{}, fmt.Errorf("%w for %s/%s", types.ErrNavNotFound, srcDenom, underlyingAsset)
 	}
 
 	useForward := false

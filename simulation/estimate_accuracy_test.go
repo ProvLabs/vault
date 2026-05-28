@@ -69,14 +69,12 @@ func (s *VaultSimTestSuite) setPaymentNav(paymentDenom, underlyingDenom string, 
 // settled result exactly.
 func (s *VaultSimTestSuite) TestEstimateSwapInAccuracy() {
 	tests := []struct {
-		name     string
-		maxDelta math.Int
+		name string
 		// setup configures the vault and returns the depositor, the vault address, and the deposit.
 		setup func() (depositor simtypes.Account, vaultAddr sdk.AccAddress, deposit sdk.Coin)
 	}{
 		{
-			name:     "underlying deposit into empty vault",
-			maxDelta: math.ZeroInt(),
+			name: "underlying deposit into empty vault",
 			setup: func() (simtypes.Account, sdk.AccAddress, sdk.Coin) {
 				s.SetupTest()
 				vault := s.newAccuracyVault(s.accs[0], "underlying2vx", "", "accswapinA")
@@ -84,8 +82,7 @@ func (s *VaultSimTestSuite) TestEstimateSwapInAccuracy() {
 			},
 		},
 		{
-			name:     "underlying deposit into seeded vault",
-			maxDelta: math.ZeroInt(),
+			name: "underlying deposit into seeded vault",
 			setup: func() (simtypes.Account, sdk.AccAddress, sdk.Coin) {
 				s.SetupTest()
 				vault := s.newAccuracyVault(s.accs[0], "underlying2vx", "", "accswapinB")
@@ -94,8 +91,7 @@ func (s *VaultSimTestSuite) TestEstimateSwapInAccuracy() {
 			},
 		},
 		{
-			name:     "payment-denom deposit uses NAV conversion",
-			maxDelta: math.ZeroInt(),
+			name: "payment-denom deposit uses NAV conversion",
 			setup: func() (simtypes.Account, sdk.AccAddress, sdk.Coin) {
 				s.SetupTest()
 				vault := s.newAccuracyVault(s.accs[0], "underlying2vx", "payment2vx", "accswapinC")
@@ -105,8 +101,7 @@ func (s *VaultSimTestSuite) TestEstimateSwapInAccuracy() {
 			},
 		},
 		{
-			name:     "underlying deposit with accrued interest",
-			maxDelta: math.ZeroInt(),
+			name: "underlying deposit with accrued interest",
 			setup: func() (simtypes.Account, sdk.AccAddress, sdk.Coin) {
 				s.SetupTest()
 				vault := s.newAccuracyVault(s.accs[0], "underlying2vx", "", "accswapinD")
@@ -138,14 +133,15 @@ func (s *VaultSimTestSuite) TestEstimateSwapInAccuracy() {
 			})
 			s.Require().NoError(err, "SwapIn for vault %s deposit %s", vaultAddr, deposit)
 
+			s.Require().Equal(estResp.Assets.Denom, swapResp.SharesReceived.Denom, "estimate vs actual share denom mismatch for vault %s", vaultAddr)
+
 			sharesAfter := s.app.BankKeeper.GetBalance(s.ctx, depositor.Address, swapResp.SharesReceived.Denom)
 			credited := sharesAfter.Sub(sharesBefore)
 			s.Require().Equal(swapResp.SharesReceived, credited, "minted share balance delta should equal reported SharesReceived for vault %s", vaultAddr)
 
-			s.Require().Equal(estResp.Assets.Denom, swapResp.SharesReceived.Denom, "estimate vs actual share denom mismatch for vault %s", vaultAddr)
 			delta := estResp.Assets.Amount.Sub(swapResp.SharesReceived.Amount).Abs()
 			s.T().Logf("EstimateSwapIn accuracy [%s]: estimate=%s actual=%s delta=%s", tc.name, estResp.Assets, swapResp.SharesReceived, delta)
-			s.Require().True(delta.LTE(tc.maxDelta), "estimate %s and actual %s diverge by %s (max %s) for vault %s", estResp.Assets, swapResp.SharesReceived, delta, tc.maxDelta, vaultAddr)
+			s.Require().True(delta.IsZero(), "estimate %s and actual %s diverge by %s for vault %s", estResp.Assets, swapResp.SharesReceived, delta, vaultAddr)
 		})
 	}
 }
@@ -158,14 +154,12 @@ func (s *VaultSimTestSuite) TestEstimateSwapInAccuracy() {
 // disagree on the default for an empty redeem denom (underlying vs payment respectively).
 func (s *VaultSimTestSuite) TestEstimateSwapOutAccuracy() {
 	tests := []struct {
-		name     string
-		maxDelta math.Int
+		name string
 		// setup configures the vault and returns the owner, vault address, shares to redeem, and redeem denom.
 		setup func() (owner simtypes.Account, vaultAddr sdk.AccAddress, shares sdk.Coin, redeemDenom string)
 	}{
 		{
-			name:     "full underlying redeem, no interest",
-			maxDelta: math.ZeroInt(),
+			name: "full underlying redeem, no interest",
 			setup: func() (simtypes.Account, sdk.AccAddress, sdk.Coin, string) {
 				s.SetupTest()
 				vault := s.newAccuracyVault(s.accs[0], "underlying2vx", "", "accswapoutA")
@@ -176,8 +170,7 @@ func (s *VaultSimTestSuite) TestEstimateSwapOutAccuracy() {
 			},
 		},
 		{
-			name:     "partial underlying redeem, no interest",
-			maxDelta: math.ZeroInt(),
+			name: "partial underlying redeem, no interest",
 			setup: func() (simtypes.Account, sdk.AccAddress, sdk.Coin, string) {
 				s.SetupTest()
 				vault := s.newAccuracyVault(s.accs[0], "underlying2vx", "", "accswapoutB")
@@ -188,8 +181,7 @@ func (s *VaultSimTestSuite) TestEstimateSwapOutAccuracy() {
 			},
 		},
 		{
-			name:     "payment-denom redeem uses NAV conversion",
-			maxDelta: math.ZeroInt(),
+			name: "payment-denom redeem uses NAV conversion",
 			setup: func() (simtypes.Account, sdk.AccAddress, sdk.Coin, string) {
 				s.SetupTest()
 				vault := s.newAccuracyVault(s.accs[0], "underlying2vx", "payment2vx", "accswapoutC")
@@ -202,8 +194,7 @@ func (s *VaultSimTestSuite) TestEstimateSwapOutAccuracy() {
 			},
 		},
 		{
-			name:     "underlying redeem with accrued interest",
-			maxDelta: math.ZeroInt(),
+			name: "underlying redeem with accrued interest",
 			setup: func() (simtypes.Account, sdk.AccAddress, sdk.Coin, string) {
 				s.SetupTest()
 				vault := s.newAccuracyVault(s.accs[0], "underlying2vx", "", "accswapoutD")
@@ -249,7 +240,7 @@ func (s *VaultSimTestSuite) TestEstimateSwapOutAccuracy() {
 
 			delta := estResp.Assets.Amount.Sub(actualPayout.Amount).Abs()
 			s.T().Logf("EstimateSwapOut accuracy [%s]: estimate=%s actual=%s delta=%s", tc.name, estResp.Assets, actualPayout, delta)
-			s.Require().True(delta.LTE(tc.maxDelta), "estimate %s and actual payout %s diverge by %s (max %s) for vault %s", estResp.Assets, actualPayout, delta, tc.maxDelta, vaultAddr)
+			s.Require().True(delta.IsZero(), "estimate %s and actual payout %s diverge by %s for vault %s", estResp.Assets, actualPayout, delta, vaultAddr)
 		})
 	}
 }

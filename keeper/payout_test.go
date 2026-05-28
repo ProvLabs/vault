@@ -664,6 +664,11 @@ func (s *TestSuite) TestKeeper_GetRefundReason() {
 			err:            errors.New("a brand new failure mode we have never seen"),
 			expectedReason: types.RefundReasonUnknown,
 		},
+		{
+			name:           "nil error returns unknown without panicking",
+			err:            nil,
+			expectedReason: types.RefundReasonUnknown,
+		},
 	}
 
 	for _, tc := range tests {

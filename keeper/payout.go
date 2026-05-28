@@ -224,6 +224,10 @@ func (k *Keeper) refundWithdrawal(ctx sdk.Context, id uint64, req types.PendingS
 // matched with errors.Is; x/marker send-restriction failures are untyped and fall through to
 // markerRefundReason. Unrecognized errors return RefundReasonUnknown.
 func (k Keeper) getRefundReason(err error) string {
+	if err == nil {
+		return types.RefundReasonUnknown
+	}
+
 	switch {
 	case errors.Is(err, sdkerrors.ErrInsufficientFunds):
 		return types.RefundReasonInsufficientFunds

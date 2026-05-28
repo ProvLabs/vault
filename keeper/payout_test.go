@@ -1,11 +1,13 @@
 package keeper_test
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
@@ -597,6 +599,150 @@ func (s *TestSuite) TestKeeper_RefundWithdrawal_AddressErrors() {
 			err := s.k.TestAccessor_refundWithdrawal(s.T(), s.ctx, 1, tc.req, types.RefundReasonRecipientMissingAttributes)
 			s.Require().Error(err, "should return an error for invalid address parsing")
 			s.Require().ErrorContains(err, tc.expectedError, "the error message should contain the expected address parsing failure")
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_GetRefundReason() {
+	tests := []struct {
+		name           string
+		err            error
+		expectedReason string
+	}{
+		{
+			name:           "insufficient funds is classified from the typed sdk error",
+			err:            fmt.Errorf("failed to payout assets to owner: %w", sdkerrors.ErrInsufficientFunds),
+			expectedReason: types.RefundReasonInsufficientFunds,
+		},
+		{
+			name:           "nav not found is classified from the typed sentinel",
+			err:            fmt.Errorf("failed to convert shares to redeem coin: %w", types.ErrNavNotFound),
+			expectedReason: types.RefundReasonNavNotFound,
+		},
+		{
+			name:           "reconcile failure is classified from the typed sentinel",
+			err:            fmt.Errorf("%w: failed to reconcile vault: boom", types.ErrReconcileFailure),
+			expectedReason: types.RefundReasonReconcileFailure,
+		},
+		{
+			name:           "marker not active matches the real upstream send message",
+			err:            errors.New("cannot send vaultshares coins: marker status (proposed) is not active"),
+			expectedReason: types.RefundReasonMarkerNotActive,
+		},
+		{
+			name:           "marker not active matches the real upstream withdraw message",
+			err:            errors.New("cannot withdraw 100vaultshares from vaultshares marker (cosmos1abc): marker status (finalized) is not active"),
+			expectedReason: types.RefundReasonMarkerNotActive,
+		},
+		{
+			name:           "single missing required attribute matches the real upstream message",
+			err:            errors.New(`address cosmos1abc does not contain the "vaultshares" required attribute: "kyc.pb"`),
+			expectedReason: types.RefundReasonRecipientMissingAttributes,
+		},
+		{
+			name:           "multiple missing required attributes matches the pluralized upstream message",
+			err:            errors.New(`address cosmos1abc does not contain the "vaultshares" required attributes: "kyc.pb", "accredited.pb"`),
+			expectedReason: types.RefundReasonRecipientMissingAttributes,
+		},
+		{
+			name:           "sender on deny list matches the real upstream message",
+			err:            errors.New("cosmos1abc is on deny list for sending restricted marker"),
+			expectedReason: types.RefundReasonPermissionDenied,
+		},
+		{
+			name:           "sender without transfer permission matches the real upstream message",
+			err:            errors.New("cosmos1abc does not have transfer permissions for vaultshares"),
+			expectedReason: types.RefundReasonPermissionDenied,
+		},
+		{
+			name:           "restricted denom sent to fee collector matches the real upstream message",
+			err:            errors.New("restricted denom vaultshares cannot be sent to the fee collector"),
+			expectedReason: types.RefundReasonRecipientInvalid,
+		},
+		{
+			name:           "unrecognized error falls through to unknown",
+			err:            errors.New("a brand new failure mode we have never seen"),
+			expectedReason: types.RefundReasonUnknown,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			reason := s.k.TestAccessor_getRefundReason(tc.err)
+			s.Equal(tc.expectedReason, reason, "getRefundReason should classify %q as %s", tc.err, tc.expectedReason)
+		})
+	}
+}
+
+// TestKeeper_ProcessSingleWithdrawal_TypedSentinels verifies that the in-module failure paths wrap
+// their errors with the typed sentinels, so the %w chain stays intact from the point of failure all
+// the way to getRefundReason. A broken chain would silently downgrade the refund reason to unknown.
+func (s *TestSuite) TestKeeper_ProcessSingleWithdrawal_TypedSentinels() {
+	underlyingDenom := "ylds"
+	assets := sdk.NewInt64Coin(underlyingDenom, 50)
+
+	escrowVault := func(shareDenom string, vaultAddr sdk.AccAddress) (*types.VaultAccount, sdk.AccAddress, sdk.Coin) {
+		ownerAddr := s.CreateAndFundAccount(assets)
+		vault := s.setupBaseVault(underlyingDenom, shareDenom)
+		minted, err := s.k.SwapIn(s.ctx, vaultAddr, ownerAddr, assets)
+		s.Require().NoError(err, "should swap in assets for share denom %s", shareDenom)
+		s.Require().NoError(
+			s.k.BankKeeper.SendCoins(s.ctx, ownerAddr, vault.GetAddress(), sdk.NewCoins(*minted)),
+			"should escrow shares into vault account for share denom %s", shareDenom,
+		)
+		return vault, ownerAddr, *minted
+	}
+
+	tests := []struct {
+		name             string
+		setup            func() (types.PendingSwapOut, types.VaultAccount)
+		expectedSentinel error
+		expectedReason   string
+	}{
+		{
+			name: "reconcile failure surfaces the typed ErrReconcileFailure sentinel",
+			setup: func() (types.PendingSwapOut, types.VaultAccount) {
+				shareDenom := "vsharerecon"
+				vaultAddr := types.GetVaultAddress(shareDenom)
+				vault, ownerAddr, minted := escrowVault(shareDenom, vaultAddr)
+				vault.PeriodStart = 1
+				vault.CurrentInterestRate = "abc"
+				s.k.AuthKeeper.SetAccount(s.ctx, vault)
+				return types.PendingSwapOut{
+					Owner:        ownerAddr.String(),
+					VaultAddress: vaultAddr.String(),
+					RedeemDenom:  underlyingDenom,
+					Shares:       minted,
+				}, *vault
+			},
+			expectedSentinel: types.ErrReconcileFailure,
+			expectedReason:   types.RefundReasonReconcileFailure,
+		},
+		{
+			name: "missing redeem NAV surfaces the typed ErrNavNotFound sentinel",
+			setup: func() (types.PendingSwapOut, types.VaultAccount) {
+				shareDenom := "vsharenav"
+				vaultAddr := types.GetVaultAddress(shareDenom)
+				vault, ownerAddr, minted := escrowVault(shareDenom, vaultAddr)
+				return types.PendingSwapOut{
+					Owner:        ownerAddr.String(),
+					VaultAddress: vaultAddr.String(),
+					RedeemDenom:  "badredeemdenom",
+					Shares:       minted,
+				}, *vault
+			},
+			expectedSentinel: types.ErrNavNotFound,
+			expectedReason:   types.RefundReasonNavNotFound,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			req, vault := tc.setup()
+			err := s.k.TestAccessor_processSingleWithdrawal(s.T(), s.ctx, 1, req, vault)
+			s.Require().Error(err, "processSingleWithdrawal should fail for %q", tc.name)
+			s.Require().ErrorIs(err, tc.expectedSentinel, "error should carry the typed sentinel for %q", tc.name)
+			s.Equal(tc.expectedReason, s.k.TestAccessor_getRefundReason(err), "refund reason mismatch for %q", tc.name)
 		})
 	}
 }

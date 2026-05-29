@@ -250,6 +250,19 @@ func (s *TestSuite) TestConvertDepositToSharesInUnderlyingAsset_OversizedNAVRetu
 	s.Require().ErrorContains(err, "integer overflow", "error should originate from the SafeMul overflow guard")
 }
 
+func (s *TestSuite) TestConvertSharesToRedeemCoin_OversizedNAVReturnsErrorNotPanic() {
+	underlyingDenom := "ylds"
+	paymentDenom := "usdc"
+	shareDenom := "vshare"
+	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
+	s.overrideNAV(underlyingDenom, paymentDenom, oversizedNAVPrice(), 1)
+
+	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
+	_, err := testKeeper.ConvertSharesToRedeemCoin(s.ctx, *vault, oversizedNAVPrice(), paymentDenom)
+	s.Require().Error(err, "oversized reverse NAV must degrade to an error, not panic, when redeeming shares to a payout coin")
+	s.Require().ErrorContains(err, "integer overflow", "error should originate from the SafeMul overflow guard")
+}
+
 func (s *TestSuite) TestToUnderlyingAssetAmount_IdentityFastPath() {
 	underlyingDenom := "ylds"
 	shareDenom := "vshare"

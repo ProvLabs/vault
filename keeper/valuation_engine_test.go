@@ -211,6 +211,58 @@ func (s *TestSuite) TestFromUnderlyingAssetAmount() {
 	s.Require().Contains(err.Error(), "price is zero", "error should mention zero price")
 }
 
+func (s *TestSuite) TestToUnderlyingAssetAmount_OversizedNAVReturnsErrorNotPanic() {
+	underlyingDenom := "ylds"
+	paymentDenom := "usdc"
+	shareDenom := "vshare"
+	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
+	s.overrideNAV(paymentDenom, underlyingDenom, oversizedNAVPrice(), 1)
+
+	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
+	_, err := testKeeper.ToUnderlyingAssetAmount(s.ctx, *vault, sdk.NewCoin(paymentDenom, oversizedNAVPrice()))
+	s.Require().Error(err, "oversized NAV must degrade to an error, not panic, on the TVV multiplication path")
+	s.Require().ErrorContains(err, "integer overflow", "error should originate from the SafeMul overflow guard")
+}
+
+func (s *TestSuite) TestFromUnderlyingAssetAmount_OversizedNAVReturnsErrorNotPanic() {
+	underlyingDenom := "ylds"
+	paymentDenom := "usdc"
+	shareDenom := "vshare"
+	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
+	s.overrideNAV(underlyingDenom, paymentDenom, oversizedNAVPrice(), 1)
+
+	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
+	_, err := testKeeper.FromUnderlyingAssetAmount(s.ctx, *vault, oversizedNAVPrice(), paymentDenom)
+	s.Require().Error(err, "oversized reverse NAV must degrade to an error, not panic, on the conversion path")
+	s.Require().ErrorContains(err, "integer overflow", "error should originate from the SafeMul overflow guard")
+}
+
+func (s *TestSuite) TestConvertDepositToSharesInUnderlyingAsset_OversizedNAVReturnsErrorNotPanic() {
+	underlyingDenom := "ylds"
+	paymentDenom := "usdc"
+	shareDenom := "vshare"
+	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
+	s.overrideNAV(paymentDenom, underlyingDenom, oversizedNAVPrice(), 1)
+
+	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
+	_, err := testKeeper.ConvertDepositToSharesInUnderlyingAsset(s.ctx, *vault, sdk.NewCoin(paymentDenom, oversizedNAVPrice()))
+	s.Require().Error(err, "oversized NAV must degrade to an error, not panic, when converting a deposit to shares")
+	s.Require().ErrorContains(err, "integer overflow", "error should originate from the SafeMul overflow guard")
+}
+
+func (s *TestSuite) TestConvertSharesToRedeemCoin_OversizedNAVReturnsErrorNotPanic() {
+	underlyingDenom := "ylds"
+	paymentDenom := "usdc"
+	shareDenom := "vshare"
+	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
+	s.overrideNAV(underlyingDenom, paymentDenom, oversizedNAVPrice(), 1)
+
+	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
+	_, err := testKeeper.ConvertSharesToRedeemCoin(s.ctx, *vault, oversizedNAVPrice(), paymentDenom)
+	s.Require().Error(err, "oversized reverse NAV must degrade to an error, not panic, when redeeming shares to a payout coin")
+	s.Require().ErrorContains(err, "integer overflow", "error should originate from the SafeMul overflow guard")
+}
+
 func (s *TestSuite) TestToUnderlyingAssetAmount_IdentityFastPath() {
 	underlyingDenom := "ylds"
 	shareDenom := "vshare"

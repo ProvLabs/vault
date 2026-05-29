@@ -34,8 +34,8 @@ const (
 // This function returns the interest as a `cosmosmath.Int`, truncating any fractional part to ensure compatibility with coin amounts.
 // It uses deterministic arithmetic via `cosmosmath.LegacyDec` and approximates e^x using a Maclaurin series (`utils.ExpDec`).
 func CalculateInterestEarned(principal sdk.Coin, rate string, periodSeconds int64) (amount sdkmath.Int, err error) {
-	// Recover any LegacyDec overflow panic so block hooks return an error and skip
-	// the vault instead of halting the chain.
+	// Recover any LegacyDec overflow panic so callers receive an error and skip the
+	// vault instead of propagating the panic.
 	defer func() {
 		if rec := recover(); rec != nil {
 			amount = sdkmath.Int{}

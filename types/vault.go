@@ -24,7 +24,7 @@ const (
 	MaxWithdrawalDelay = 31_536_000 * 2
 
 	// MaxAbsInterestRate is the absolute ceiling on any interest rate's magnitude (100.0 == 10,000% APR),
-	// bounding the e^(rt) exponent so an admin-set rate cannot overflow the LegacyDec math and halt the chain.
+	// bounding the e^(rt) exponent so an admin-set rate cannot overflow the LegacyDec interest math.
 	MaxAbsInterestRate = "100.0"
 )
 

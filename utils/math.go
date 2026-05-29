@@ -13,10 +13,9 @@ import (
 //
 // Note: x is cosmosmath.LegacyDec; higher `terms` -> greater accuracy.
 //
-// A large |x| overflows the LegacyDec accumulator, which panics. Since ExpDec runs
-// inside the block hooks, that overflow is recovered and returned as an error so a
-// single vault cannot halt the chain. Callers should still bound x upstream (see
-// types.MaxAbsInterestRate); this guard is defense-in-depth.
+// A large |x| overflows the LegacyDec accumulator, which panics; that overflow is
+// recovered and returned as an error instead. Callers should still bound x upstream
+// (see types.MaxAbsInterestRate); this guard is defense-in-depth.
 func ExpDec(x math.LegacyDec, terms int) (result math.LegacyDec, err error) {
 	defer func() {
 		if rec := recover(); rec != nil {

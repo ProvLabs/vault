@@ -631,6 +631,26 @@ func (s *TestSuite) setupReconcileVault(interestRate string, periodStartSeconds 
 	return vaultAddr, vault
 }
 
+// setupBridgeVault creates and activates the underlying marker, creates a vault for
+// the given share/underlying denoms, enables bridging to bridgeAddr, records the
+// share supply-of-record via TotalShares, and persists the vault. It returns the
+// stored vault account. Callers create and fund bridgeAddr themselves because the
+// message under test usually needs the bridge address before this setup runs.
+func (s *TestSuite) setupBridgeVault(underlying, share string, bridgeAddr sdk.AccAddress, totalShares sdkmath.Int) *types.VaultAccount {
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlying, 2_000_000), s.adminAddr)
+	v, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+		Admin:           s.adminAddr.String(),
+		ShareDenom:      share,
+		UnderlyingAsset: underlying,
+	})
+	s.Require().NoError(err, "setup: expected vault creation to succeed for share %s", share)
+	v.BridgeEnabled = true
+	v.BridgeAddress = bridgeAddr.String()
+	v.TotalShares = sdk.NewCoin(share, totalShares)
+	s.k.AuthKeeper.SetAccount(s.ctx, v)
+	return v
+}
+
 // createBridgeMintSharesEventsExact returns the exact ordered events a successful
 // BridgeMintShares emits: marker mint to the share marker, withdraw to the bridge,
 // then the vault EventBridgeMintShares—suitable for strict equality checks in tests.

@@ -117,7 +117,11 @@ func (k Keeper) ToUnderlyingAssetAmount(ctx sdk.Context, vault types.VaultAccoun
 	if err != nil {
 		return math.Int{}, fmt.Errorf("failed to get unit price fraction: %w", err)
 	}
-	return in.Amount.Mul(priceAmount).Quo(volume), nil
+	product, err := in.Amount.SafeMul(priceAmount)
+	if err != nil {
+		return math.Int{}, fmt.Errorf("failed to multiply amount %s by price %s: %w", in.Amount, priceAmount, err)
+	}
+	return product.Quo(volume), nil
 }
 
 // FromUnderlyingAssetAmount converts an amount of vault.UnderlyingAsset into
@@ -136,7 +140,11 @@ func (k Keeper) FromUnderlyingAssetAmount(ctx sdk.Context, vault types.VaultAcco
 	if priceNum.IsZero() {
 		return math.Int{}, fmt.Errorf("zero price for %s/%s", targetDenom, vault.UnderlyingAsset)
 	}
-	return inAmount.Mul(priceDen).Quo(priceNum), nil
+	product, err := inAmount.SafeMul(priceDen)
+	if err != nil {
+		return math.Int{}, fmt.Errorf("failed to multiply amount %s by price denominator %s: %w", inAmount, priceDen, err)
+	}
+	return product.Quo(priceNum), nil
 }
 
 // GetTVVInUnderlyingAsset returns the Total Vault Value (TVV) expressed in
@@ -217,7 +225,10 @@ func (k Keeper) ConvertDepositToSharesInUnderlyingAsset(ctx sdk.Context, vault t
 	if err != nil {
 		return sdk.Coin{}, fmt.Errorf("failed to get TVV: %w", err)
 	}
-	amountNumerator := in.Amount.Mul(priceNum)
+	amountNumerator, err := in.Amount.SafeMul(priceNum)
+	if err != nil {
+		return sdk.Coin{}, fmt.Errorf("failed to multiply amount %s by price numerator %s: %w", in.Amount, priceNum, err)
+	}
 	return utils.CalculateSharesProRataFraction(amountNumerator, priceDen, tvv, vault.TotalShares.Amount, vault.TotalShares.Denom)
 }
 

@@ -227,6 +227,20 @@ func TestVaultAccount_Validate(t *testing.T) {
 			expectedErr: "exceeds maximum allowed magnitude",
 		},
 		{
+			name: "desired interest rate above absolute ceiling",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
+				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
+				CurrentInterestRate: "0.00",
+				DesiredInterestRate: "1000000.0",
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
+			},
+			expectedErr: "invalid desired interest rate",
+		},
+		{
 			name: "max interest rate above absolute ceiling",
 			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,

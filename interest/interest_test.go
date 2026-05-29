@@ -90,6 +90,13 @@ func TestCalculateInterestEarned(t *testing.T) {
 			periodSeconds:    interest.SecondsPerYear * 10,
 			expectedInterest: sdkmath.NewInt(349_858_807_576),
 		},
+		{
+			name:             "extreme rate returns overflow error instead of panicking",
+			principal:        baseCoin(100_000_000),
+			rate:             "1000000000000.0",
+			periodSeconds:    interest.SecondsPerYear,
+			expectedErrorMsg: "overflow",
+		},
 	}
 
 	for _, tc := range tests {
@@ -153,11 +160,11 @@ func TestCalculateAUMFee(t *testing.T) {
 			expectedFee: sdkmath.NewInt(750),
 		},
 		{
-			name:        "negative duration errors",
-			aum:         sdkmath.NewInt(1_000_000),
-			bips:        15,
-			duration:    -1,
-			expectErr:   true,
+			name:      "negative duration errors",
+			aum:       sdkmath.NewInt(1_000_000),
+			bips:      15,
+			duration:  -1,
+			expectErr: true,
 		},
 		{
 			name:      "negative aum errors",

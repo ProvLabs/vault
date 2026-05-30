@@ -4895,23 +4895,12 @@ func (s *TestSuite) TestMsgServer_BridgeMintShares() {
 
 	underlying := "under"
 	share := "vaultshares"
-	admin := s.adminAddr
 	bridge := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
 	vaultAddr := types.GetVaultAddress(share)
 	minted := sdk.NewInt64Coin(share, 250_000_000)
 
 	setup := func() {
-		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1_000_000)), admin)
-		v, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-			Admin:           admin.String(),
-			ShareDenom:      share,
-			UnderlyingAsset: underlying,
-		})
-		s.Require().NoError(err, "setup: expected vault creation to succeed")
-		v.BridgeEnabled = true
-		v.BridgeAddress = bridge.String()
-		v.TotalShares = sdk.NewCoin(share, math.NewInt(10_000_000_000))
-		s.k.AuthKeeper.SetAccount(s.ctx, v)
+		s.setupBridgeVault(underlying, share, bridge, math.NewInt(10_000_000_000))
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	}
 
@@ -4957,23 +4946,12 @@ func (s *TestSuite) TestMsgServer_BridgeMintShares_SupplyAndBalances() {
 
 	underlying := "underx"
 	share := "vaultsharex"
-	admin := s.adminAddr
 	bridge := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
 	vaultAddr := types.GetVaultAddress(share)
 	minted := sdk.NewInt64Coin(share, 1_000)
 
 	setup := func() {
-		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(10_000)), admin)
-		v, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-			Admin:           admin.String(),
-			ShareDenom:      share,
-			UnderlyingAsset: underlying,
-		})
-		s.Require().NoError(err, "setup: expected vault creation success")
-		v.TotalShares = sdk.NewCoin(share, math.NewInt(9_999_999))
-		v.BridgeAddress = bridge.String()
-		v.BridgeEnabled = true
-		s.k.AuthKeeper.SetAccount(s.ctx, v)
+		s.setupBridgeVault(underlying, share, bridge, math.NewInt(9_999_999))
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	}
 
@@ -5006,22 +4984,11 @@ func (s *TestSuite) TestMsgServer_BridgeMintShares_ErrorMessages() {
 
 	underlying := "erru"
 	share := "errshare"
-	admin := s.adminAddr
 	bridge := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
 	vaultAddr := types.GetVaultAddress(share)
 
 	setup := func() {
-		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1_000_000)), admin)
-		v, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-			Admin:           admin.String(),
-			ShareDenom:      share,
-			UnderlyingAsset: underlying,
-		})
-		s.Require().NoError(err, "setup: vault creation should succeed")
-		v.TotalShares = sdk.NewCoin(share, math.NewInt(100))
-		v.BridgeAddress = bridge.String()
-		v.BridgeEnabled = true
-		s.k.AuthKeeper.SetAccount(s.ctx, v)
+		s.setupBridgeVault(underlying, share, bridge, math.NewInt(100))
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	}
 
@@ -5061,28 +5028,15 @@ func (s *TestSuite) TestMsgServer_BridgeBurnShares() {
 
 	underlying := "under"
 	share := "vaultshares"
-	admin := s.adminAddr
 	vaultAddr := types.GetVaultAddress(share)
 	markerAddr := markertypes.MustGetMarkerAddress(share)
 	bridgeAddr := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
 	burn := sdk.NewInt64Coin(share, 100_000_000)
 
 	setup := func() {
-		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlying, 2_000_000), admin)
-		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-			Admin:           admin.String(),
-			ShareDenom:      share,
-			UnderlyingAsset: underlying,
-		})
-		s.Require().NoError(err, "expected vault creation to succeed")
+		s.setupBridgeVault(underlying, share, bridgeAddr, math.ZeroInt())
 
-		v, err := s.k.GetVault(s.ctx, vaultAddr)
-		s.Require().NoError(err, "expected vault retrieval to succeed")
-		v.BridgeEnabled = true
-		v.BridgeAddress = bridgeAddr.String()
-		s.k.AuthKeeper.SetAccount(s.ctx, v)
-
-		err = s.k.MarkerKeeper.MintCoin(s.ctx, vaultAddr, burn)
+		err := s.k.MarkerKeeper.MintCoin(s.ctx, vaultAddr, burn)
 		s.Require().NoError(err, "expected marker mint to succeed")
 		err = s.k.MarkerKeeper.WithdrawCoins(s.ctx, vaultAddr, bridgeAddr, share, sdk.NewCoins(burn))
 		s.Require().NoError(err, "expected marker withdraw to bridge to succeed")
@@ -5141,12 +5095,7 @@ func (s *TestSuite) TestMsgServer_BridgeBurnShares_Failures() {
 	}
 
 	enabled := func() {
-		base()
-		v, err := s.k.GetVault(s.ctx, vaultAddr)
-		s.Require().NoError(err, "expected vault retrieval to succeed")
-		v.BridgeEnabled = true
-		v.BridgeAddress = bridgeAddr.String()
-		s.k.AuthKeeper.SetAccount(s.ctx, v)
+		s.setupBridgeVault(underlying, share, bridgeAddr, math.ZeroInt())
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	}
 
@@ -5226,6 +5175,73 @@ func (s *TestSuite) TestMsgServer_BridgeBurnShares_Failures() {
 			runMsgServerTestCase(s, testDef, tc)
 		})
 	}
+}
+
+// TestMsgServer_BridgeShares_MintBurnMintCycle_TotalSharesInvariant pins the bridge supply-of-record
+// model: bridge mint/burn move the local/remote split of an existing cross-chain supply and never
+// mutate vault.TotalShares, so a burn re-widens the mint capacity (TotalShares - local_supply) by the
+// burned amount while local supply can never exceed TotalShares. See spec/01_concepts.md.
+func (s *TestSuite) TestMsgServer_BridgeShares_MintBurnMintCycle_TotalSharesInvariant() {
+	underlying := "cyclu"
+	share := "cycleshare"
+	vaultAddr := types.GetVaultAddress(share)
+	bridgeAddr := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+	totalShares := math.NewInt(1_000_000)
+
+	msgServer := keeper.NewMsgServer(s.simApp.VaultKeeper)
+
+	s.setupBridgeVault(underlying, share, bridgeAddr, totalShares)
+
+	assertInvariant := func(step string) {
+		v, err := s.k.GetVault(s.ctx, vaultAddr)
+		s.Require().NoError(err, "%s: expected vault retrieval to succeed", step)
+		s.Assert().Equal(totalShares.String(), v.TotalShares.Amount.String(),
+			"%s: TotalShares must be invariant across bridge ops", step)
+		supply := s.k.BankKeeper.GetSupply(s.ctx, share)
+		s.Assert().False(supply.Amount.GT(v.TotalShares.Amount),
+			"%s: local supply %s must never exceed TotalShares %s", step, supply.Amount, v.TotalShares.Amount)
+	}
+
+	_, err := msgServer.BridgeMintShares(s.ctx, &types.MsgBridgeMintSharesRequest{
+		VaultAddress: vaultAddr.String(),
+		Bridge:       bridgeAddr.String(),
+		Shares:       sdk.NewInt64Coin(share, 600_000),
+	})
+	s.Require().NoError(err, "first mint within capacity should succeed")
+	s.Assert().Equal(int64(600_000), s.k.BankKeeper.GetSupply(s.ctx, share).Amount.Int64(),
+		"local supply should reflect first mint")
+	s.assertBalance(bridgeAddr, share, math.NewInt(600_000))
+	assertInvariant("after first mint")
+
+	_, err = msgServer.BridgeBurnShares(s.ctx, &types.MsgBridgeBurnSharesRequest{
+		VaultAddress: vaultAddr.String(),
+		Bridge:       bridgeAddr.String(),
+		Shares:       sdk.NewInt64Coin(share, 400_000),
+	})
+	s.Require().NoError(err, "burn within bridge balance should succeed")
+	s.Assert().Equal(int64(200_000), s.k.BankKeeper.GetSupply(s.ctx, share).Amount.Int64(),
+		"local supply should drop by the burned amount")
+	s.assertBalance(bridgeAddr, share, math.NewInt(200_000))
+	assertInvariant("after burn")
+
+	_, err = msgServer.BridgeMintShares(s.ctx, &types.MsgBridgeMintSharesRequest{
+		VaultAddress: vaultAddr.String(),
+		Bridge:       bridgeAddr.String(),
+		Shares:       sdk.NewInt64Coin(share, 800_000),
+	})
+	s.Require().NoError(err, "burn re-widened capacity to 800_000; second mint to the cap should succeed")
+	s.Assert().Equal(int64(1_000_000), s.k.BankKeeper.GetSupply(s.ctx, share).Amount.Int64(),
+		"local supply should reach TotalShares after minting to the re-widened cap")
+	assertInvariant("after second mint")
+
+	_, err = msgServer.BridgeMintShares(s.ctx, &types.MsgBridgeMintSharesRequest{
+		VaultAddress: vaultAddr.String(),
+		Bridge:       bridgeAddr.String(),
+		Shares:       sdk.NewInt64Coin(share, 1),
+	})
+	s.Require().Error(err, "minting beyond TotalShares must be rejected: local supply can never exceed the supply-of-record")
+	s.Assert().Contains(err.Error(), "mint exceeds capacity", "expected capacity rejection")
+	assertInvariant("after over-cap mint rejected")
 }
 
 func (s *TestSuite) TestMsgServer_SetAssetManager_Failures() {

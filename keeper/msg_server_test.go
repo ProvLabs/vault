@@ -1504,6 +1504,16 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate_Failures() {
 			setup:              setup,
 			expectedErrSubstrs: []string{"unauthorized authority"},
 		},
+		{
+			name: "rate above absolute ceiling is rejected",
+			msg: types.MsgUpdateInterestRateRequest{
+				Authority:    owner.String(),
+				VaultAddress: vaultAddr.String(),
+				NewRate:      "150.0",
+			},
+			setup:              setup,
+			expectedErrSubstrs: []string{"invalid new rate", "exceeds maximum allowed magnitude"},
+		},
 	}
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
@@ -1666,6 +1676,16 @@ func (s *TestSuite) TestMsgServer_UpdateMinInterestRate_Failures() {
 				MinRate:      "0.06",
 			},
 			expectedErrSubstrs: []string{"minimum interest rate", "greater than", "maximum"},
+		},
+		{
+			name:  "min below negative absolute ceiling is rejected",
+			setup: setup,
+			msg: types.MsgUpdateMinInterestRateRequest{
+				Admin:        admin.String(),
+				VaultAddress: vaultAddr.String(),
+				MinRate:      "-150.0",
+			},
+			expectedErrSubstrs: []string{"invalid min interest rate", "exceeds maximum allowed magnitude"},
 		},
 	}
 
@@ -1848,6 +1868,16 @@ func (s *TestSuite) TestMsgServer_UpdateMaxInterestRate_Failures() {
 				"cannot be greater than",
 				"maximum interest rate",
 			},
+		},
+		{
+			name:  "max above absolute ceiling is rejected",
+			setup: baseSetup,
+			msg: types.MsgUpdateMaxInterestRateRequest{
+				Admin:        admin.String(),
+				VaultAddress: vaultAddr.String(),
+				MaxRate:      "150.0",
+			},
+			expectedErrSubstrs: []string{"invalid max interest rate", "exceeds maximum allowed magnitude"},
 		},
 	}
 

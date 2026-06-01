@@ -170,6 +170,9 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 	if err != nil {
 		return nil, fmt.Errorf("invalid new rate: %w", err)
 	}
+	if err := types.ValidateInterestRateMagnitude(newRate); err != nil {
+		return nil, fmt.Errorf("invalid new rate: %w", err)
+	}
 	ok, err := vault.IsInterestRateInRange(newRate)
 	if err != nil {
 		return nil, fmt.Errorf("failed to validate interest range: %w", err)

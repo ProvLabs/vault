@@ -16,14 +16,34 @@ import (
 )
 
 const (
-	ZeroInterestRate   = "0.0"
-	MaxWithdrawalDelay = 31536000 * 2 // 2 years in seconds
+	// ZeroInterestRate is the canonical decimal string for a disabled (zero) interest rate.
+	ZeroInterestRate = "0.0"
+
+	// MaxWithdrawalDelay caps the swap-out withdrawal delay in seconds (2 years).
+	MaxWithdrawalDelay = 31_536_000 * 2
+
+	// MaxAbsInterestRate is the absolute ceiling on any interest rate's magnitude (100.0 == 10,000% APR),
+	// bounding the e^(rt) exponent so an admin-set rate cannot overflow the LegacyDec interest math.
+	MaxAbsInterestRate = "100.0"
 )
 
 var (
 	_ sdk.AccountI             = (*VaultAccount)(nil)
 	_ authtypes.GenesisAccount = (*VaultAccount)(nil)
+
+	// maxAbsInterestRateDec is the parsed form of MaxAbsInterestRate, computed once.
+	maxAbsInterestRateDec = sdkmath.LegacyMustNewDecFromStr(MaxAbsInterestRate)
 )
+
+// ValidateInterestRateMagnitude returns an error if the absolute value of rate
+// exceeds the MaxAbsInterestRate ceiling. The check is symmetric: a large negative
+// rate overflows the e^(rt) series exactly as a large positive one does.
+func ValidateInterestRateMagnitude(rate sdkmath.LegacyDec) error {
+	if rate.Abs().GT(maxAbsInterestRateDec) {
+		return fmt.Errorf("interest rate %s exceeds maximum allowed magnitude %s", rate, MaxAbsInterestRate)
+	}
+	return nil
+}
 
 // VaultAccountI defines the interface for a Vault account.
 type VaultAccountI interface {
@@ -142,9 +162,15 @@ func (v VaultAccount) Validate() error {
 	if err != nil {
 		return fmt.Errorf("invalid current interest rate: %s", v.CurrentInterestRate)
 	}
+	if err := ValidateInterestRateMagnitude(cur); err != nil {
+		return fmt.Errorf("invalid current interest rate: %w", err)
+	}
 	des, err := sdkmath.LegacyNewDecFromStr(v.DesiredInterestRate)
 	if err != nil {
 		return fmt.Errorf("invalid desired interest rate: %s", v.DesiredInterestRate)
+	}
+	if err := ValidateInterestRateMagnitude(des); err != nil {
+		return fmt.Errorf("invalid desired interest rate: %w", err)
 	}
 
 	var min, max sdkmath.LegacyDec
@@ -156,11 +182,17 @@ func (v VaultAccount) Validate() error {
 		if err != nil {
 			return fmt.Errorf("invalid min interest rate: %s", v.MinInterestRate)
 		}
+		if err := ValidateInterestRateMagnitude(minRate); err != nil {
+			return fmt.Errorf("invalid min interest rate: %w", err)
+		}
 	}
 	if hasMax {
 		max, err = sdkmath.LegacyNewDecFromStr(v.MaxInterestRate)
 		if err != nil {
 			return fmt.Errorf("invalid max interest rate: %s", v.MaxInterestRate)
+		}
+		if err := ValidateInterestRateMagnitude(maxRate); err != nil {
+			return fmt.Errorf("invalid max interest rate: %w", err)
 		}
 	}
 

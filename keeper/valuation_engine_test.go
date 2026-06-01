@@ -179,6 +179,87 @@ func (s *TestSuite) TestToUnderlyingAssetAmount() {
 	s.Require().Contains(err.Error(), "nav not found", "error should mention missing NAV")
 }
 
+func (s *TestSuite) TestFromUnderlyingAssetAmount() {
+	underlyingDenom := "ylds"
+	paymentDenom := "usdc"
+	shareDenom := "vshare"
+	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
+
+	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
+
+	// 1 Underlying = 1/2 Payment (PriceNum=1, PriceDen=2)
+	// FromUnderlying(2 ylds) = 2 * 2 / 1 = 4 usdc
+	val, err := testKeeper.FromUnderlyingAssetAmount(s.ctx, *vault, math.NewInt(2), paymentDenom)
+	s.Require().NoError(err, "from-underlying should succeed for valid NAV")
+	s.Require().Equal(math.NewInt(4), val, "2 ylds at 1/2 should be 4 usdc")
+
+	// Identity path
+	valIdentity, err := testKeeper.FromUnderlyingAssetAmount(s.ctx, *vault, math.NewInt(100), underlyingDenom)
+	s.Require().NoError(err, "identity from-underlying should succeed")
+	s.Require().Equal(math.NewInt(100), valIdentity, "100 ylds should be 100 ylds")
+
+	// Missing NAV
+	_, err = testKeeper.FromUnderlyingAssetAmount(s.ctx, *vault, math.NewInt(5), "unknown")
+	s.Require().Error(err, "should error when NAV missing for target denom")
+	s.Require().Contains(err.Error(), "nav not found", "error should mention missing NAV")
+
+	// Zero price error
+	s.bumpHeight()
+	s.setReverseNAV(underlyingDenom, "zeroprice", 0, 1)
+	_, err = testKeeper.FromUnderlyingAssetAmount(s.ctx, *vault, math.NewInt(5), "zeroprice")
+	s.Require().Error(err, "should error for zero price numerator")
+	s.Require().Contains(err.Error(), "price is zero", "error should mention zero price")
+}
+
+func (s *TestSuite) TestNAVConversion_OversizedNAVReturnsErrorNotPanic() {
+	vault, testKeeper, underlyingDenom, paymentDenom := s.setupOversizedNAVVault()
+
+	tests := []struct {
+		name string
+		run  func() error
+	}{
+		{
+			name: "valuing a payment balance in underlying overflows the forward NAV multiply",
+			run: func() error {
+				s.overrideNAV(paymentDenom, underlyingDenom, oversizedNAVPrice(), 1)
+				_, err := testKeeper.ToUnderlyingAssetAmount(s.ctx, *vault, sdk.NewCoin(paymentDenom, oversizedNAVPrice()))
+				return err
+			},
+		},
+		{
+			name: "valuing underlying in a payment denom overflows the reverse NAV multiply",
+			run: func() error {
+				s.overrideNAV(underlyingDenom, paymentDenom, oversizedNAVPrice(), 1)
+				_, err := testKeeper.FromUnderlyingAssetAmount(s.ctx, *vault, oversizedNAVPrice(), paymentDenom)
+				return err
+			},
+		},
+		{
+			name: "converting an oversized deposit to shares overflows the forward NAV multiply",
+			run: func() error {
+				s.overrideNAV(paymentDenom, underlyingDenom, oversizedNAVPrice(), 1)
+				_, err := testKeeper.ConvertDepositToSharesInUnderlyingAsset(s.ctx, *vault, sdk.NewCoin(paymentDenom, oversizedNAVPrice()))
+				return err
+			},
+		},
+		{
+			name: "redeeming shares to a payout coin overflows the reverse NAV multiply",
+			run: func() error {
+				s.overrideNAV(underlyingDenom, paymentDenom, oversizedNAVPrice(), 1)
+				_, err := testKeeper.ConvertSharesToRedeemCoin(s.ctx, *vault, oversizedNAVPrice(), paymentDenom)
+				return err
+			},
+		},
+	}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			err := tc.run()
+			s.Require().Error(err, "oversized NAV must degrade to an error, not panic: %s", tc.name)
+			s.Require().ErrorContains(err, "integer overflow", "error should originate from the SafeMul overflow guard: %s", tc.name)
+		})
+	}
+}
+
 func (s *TestSuite) TestToUnderlyingAssetAmount_IdentityFastPath() {
 	underlyingDenom := "ylds"
 	shareDenom := "vshare"
@@ -244,6 +325,24 @@ func (s *TestSuite) TestGetTVVInUnderlyingAsset_ErrorPropagation() {
 
 	s.Require().Error(err, "get TVV should error when accepted payment denom lacks NAV")
 	s.Require().Contains(err.Error(), "nav not found for usdc/ylds", "error should propagate from missing NAV")
+}
+
+func (s *TestSuite) TestGetTVVInUnderlyingAsset_AccumulatorOverflowReturnsErrorNotPanic() {
+	vault, testKeeper, underlyingDenom, paymentDenom := s.setupOversizedNAVVault()
+	s.overrideNAV(paymentDenom, underlyingDenom, maxValidNAVPrice(), 1)
+
+	principalAddress := vault.PrincipalMarkerAddress()
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, principalAddress, sdk.NewCoins(
+		sdk.NewInt64Coin(paymentDenom, 1),
+	)), "funding principal with one payment unit should succeed")
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, principalAddress, sdk.NewCoins(
+		sdk.NewInt64Coin(underlyingDenom, 100),
+	)), "funding principal with a small underlying balance should succeed")
+
+	_, err := testKeeper.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	s.Require().Error(err, "summing balances past the 256-bit ceiling must degrade to an error, not panic")
+	s.Require().ErrorContains(err, "integer overflow", "error should originate from the SafeAdd accumulator guard")
+	s.Require().ErrorContains(err, "total vault value", "error should carry the accumulator's wrapping context")
 }
 
 func (s *TestSuite) TestGetTVVInUnderlyingAsset_ExcludesReserves() {

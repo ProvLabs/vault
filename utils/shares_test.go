@@ -2,6 +2,7 @@ package utils_test
 
 import (
 	"fmt"
+	"math/big"
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
@@ -9,6 +10,13 @@ import (
 	"github.com/provlabs/vault/utils"
 	"github.com/stretchr/testify/require"
 )
+
+// nearMaxInt returns an sdkmath.Int equal to 2^255, the largest power of two
+// that still fits within sdkmath.Int's 256-bit ceiling. Multiplying two of
+// these overflows, exercising the SafeMul guards on the NAV/TVV paths.
+func nearMaxInt() sdkmath.Int {
+	return sdkmath.NewIntFromBigInt(new(big.Int).Lsh(big.NewInt(1), 255))
+}
 
 func TestCalculateAssetsFromShares(t *testing.T) {
 	assetDenom := "asset"
@@ -24,6 +32,7 @@ func TestCalculateAssetsFromShares(t *testing.T) {
 		expected    sdk.Coin
 		expectErr   bool
 		errMsg      string
+		errContains string
 	}{
 		{
 			name:        "proportional redeem with virtual offsets",
@@ -70,6 +79,14 @@ func TestCalculateAssetsFromShares(t *testing.T) {
 			expectErr:   true,
 			errMsg:      "invalid input: negative values not allowed",
 		},
+		{
+			name:        "oversized shares and assets overflow returns error instead of panicking",
+			shares:      nearMaxInt(),
+			totalShares: sdkmath.NewInt(1_000_000),
+			totalAssets: nearMaxInt(),
+			expectErr:   true,
+			errContains: "integer overflow",
+		},
 	}
 
 	for _, tc := range tests {
@@ -84,7 +101,11 @@ func TestCalculateAssetsFromShares(t *testing.T) {
 			)
 			if tc.expectErr {
 				require.Error(t, err, "expected error for case: %s", tc.name)
-				require.EqualError(t, err, tc.errMsg)
+				if tc.errContains != "" {
+					require.ErrorContains(t, err, tc.errContains, "error message mismatch for case: %s", tc.name)
+				} else {
+					require.EqualErrorf(t, err, tc.errMsg, "error message mismatch for case: %s", tc.name)
+				}
 			} else {
 				require.NoError(t, err, "unexpected error for case: %s", tc.name)
 				require.Equal(t, tc.expected, result, fmt.Sprintf("unexpected assets for shares=%s totalShares=%s totalAssets=%s", tc.shares, tc.totalShares, tc.totalAssets))
@@ -105,6 +126,7 @@ func TestCalculateSharesProRataFraction(t *testing.T) {
 		expected        sdk.Coin
 		expectErr       bool
 		expectedErrText string
+		errContains     string
 	}{
 		{
 			name:        "first deposit mints amount * ShareScalar (price 1:1)",
@@ -182,6 +204,24 @@ func TestCalculateSharesProRataFraction(t *testing.T) {
 			expectErr:       true,
 			expectedErrText: "invalid input: negative values not allowed",
 		},
+		{
+			name:        "oversized first deposit overflows share scalar and returns error",
+			amountNum:   nearMaxInt(),
+			amountDen:   sdkmath.NewInt(1),
+			totalAssets: sdkmath.NewInt(0),
+			totalShares: sdkmath.NewInt(0),
+			expectErr:   true,
+			errContains: "integer overflow",
+		},
+		{
+			name:        "oversized priced deposit overflows pro-rata path and returns error",
+			amountNum:   nearMaxInt(),
+			amountDen:   sdkmath.NewInt(1),
+			totalAssets: sdkmath.NewInt(100),
+			totalShares: nearMaxInt(),
+			expectErr:   true,
+			errContains: "integer overflow",
+		},
 	}
 
 	for _, tc := range tests {
@@ -190,7 +230,11 @@ func TestCalculateSharesProRataFraction(t *testing.T) {
 
 			if tc.expectErr {
 				require.Error(t, err, "expected error for case: %s", tc.name)
-				require.EqualError(t, err, tc.expectedErrText, "unexpected error text for case: %s", tc.name)
+				if tc.errContains != "" {
+					require.ErrorContains(t, err, tc.errContains, "unexpected error text for case: %s", tc.name)
+					return
+				}
+				require.EqualErrorf(t, err, tc.expectedErrText, "unexpected error text for case: %s", tc.name)
 				return
 			}
 

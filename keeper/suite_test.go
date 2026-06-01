@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"strconv"
 	"strings"
 	"testing"
@@ -430,6 +431,19 @@ func (s *TestSuite) setupSinglePaymentDenomVault(underlyingDenom, shareDenom, pa
 	return vault
 }
 
+// setupOversizedNAVVault builds a single-payment-denom vault primed for the NAV
+// overflow guard tests. It returns the vault, a keeper wired with the marker and
+// bank keepers, and the underlying and payment denoms used to stage oversized
+// NAVs.
+func (s *TestSuite) setupOversizedNAVVault() (*types.VaultAccount, keeper.Keeper, string, string) {
+	underlyingDenom := "ylds"
+	paymentDenom := "usdc"
+	shareDenom := "vshare"
+	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
+	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
+	return vault, testKeeper, underlyingDenom, paymentDenom
+}
+
 // setReverseNAV sets a reverse net asset value on the underlying denom marker,
 // allowing the vault to value the underlying in terms of the payment denom.
 func (s *TestSuite) setReverseNAV(underlyingDenom, paymentDenom string, price, volume int64) {
@@ -445,6 +459,89 @@ func (s *TestSuite) setReverseNAV(underlyingDenom, paymentDenom string, price, v
 // bumpHeight increments the suite's context block height by 1.
 func (s *TestSuite) bumpHeight() {
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+}
+
+// oversizedNAVPrice returns a NAV price amount (2^200) large enough that
+// multiplying it by a comparable balance exceeds the 256-bit sdkmath.Int
+// ceiling. It models the attacker-controlled price the marker module does not
+// bound, and exercises the SafeMul overflow guards on the valuation paths.
+func oversizedNAVPrice() sdkmath.Int {
+	return sdkmath.NewIntFromBigInt(new(big.Int).Lsh(big.NewInt(1), 200))
+}
+
+// maxValidNAVPrice returns the largest value an sdkmath.Int can hold (2^256-1).
+// As a NAV price it converts a single unit of a denom to the maximum
+// representable underlying value, leaving no headroom in the TVV accumulator so
+// that any additional balance trips the SafeAdd overflow guard in
+// GetTVVInUnderlyingAsset without the per-balance SafeMul overflowing first.
+func maxValidNAVPrice() sdkmath.Int {
+	return sdkmath.NewIntFromBigInt(new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(1)))
+}
+
+// overrideNAV sets, at a fresh (newest) block height, a net asset value on the
+// marker for navMarkerDenom priced in priceDenom. It lets tests stage oversized
+// prices that the marker module accepts without bound, so the valuation paths
+// can be driven into overflow.
+func (s *TestSuite) overrideNAV(navMarkerDenom, priceDenom string, price sdkmath.Int, volume uint64) {
+	s.bumpHeight()
+	markerAcct, err := s.k.MarkerKeeper.GetMarker(s.ctx, markertypes.MustGetMarkerAddress(navMarkerDenom))
+	s.Require().NoError(err, "should fetch %s marker for NAV override", navMarkerDenom)
+	s.Require().NoError(s.k.MarkerKeeper.SetNetAssetValue(s.ctx, markerAcct, markertypes.NetAssetValue{
+		Price:  sdk.NewCoin(priceDenom, price),
+		Volume: volume,
+	}, "test-oversized"), "should override NAV on %s priced in %s", navMarkerDenom, priceDenom)
+}
+
+// setupReconcileVault initializes a vault with the provided parameters, including markers and funding.
+func (s *TestSuite) setupReconcileVault(interestRate string, periodStartSeconds int64, paused bool, underlying sdk.Coin, shareDenom string, totalShares sdk.Coin, testBlockTime time.Time) (sdk.AccAddress, *types.VaultAccount) {
+	s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
+	vaultAddr := types.GetVaultAddress(shareDenom)
+	_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+		Admin:           s.adminAddr.String(),
+		ShareDenom:      shareDenom,
+		UnderlyingAsset: underlying.Denom,
+	})
+	s.Require().NoError(err, "failed to create vault for share denom %s", shareDenom)
+
+	vault, err := s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "failed to get vault for address %s", vaultAddr.String())
+	vault.CurrentInterestRate = interestRate
+	vault.DesiredInterestRate = interestRate
+	vault.PeriodStart = periodStartSeconds
+	vault.FeePeriodStart = periodStartSeconds
+	vault.Paused = paused
+	vault.TotalShares = totalShares
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	err = FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(underlying))
+	s.Require().NoError(err, "failed to fund vault account %s with %s", vaultAddr.String(), underlying.String())
+	err = FundAccount(s.ctx, s.simApp.BankKeeper, markertypes.MustGetMarkerAddress(shareDenom), sdk.NewCoins(underlying))
+	s.Require().NoError(err, "failed to fund share marker account for denom %s with %s", shareDenom, underlying.String())
+
+	s.ctx = s.ctx.WithBlockTime(testBlockTime)
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+
+	return vaultAddr, vault
+}
+
+// setupBridgeVault creates and activates the underlying marker, creates a vault for
+// the given share/underlying denoms, enables bridging to bridgeAddr, records the
+// share supply-of-record via TotalShares, and persists the vault. It returns the
+// stored vault account. Callers create and fund bridgeAddr themselves because the
+// message under test usually needs the bridge address before this setup runs.
+func (s *TestSuite) setupBridgeVault(underlying, share string, bridgeAddr sdk.AccAddress, totalShares sdkmath.Int) *types.VaultAccount {
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlying, 2_000_000), s.adminAddr)
+	v, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+		Admin:           s.adminAddr.String(),
+		ShareDenom:      share,
+		UnderlyingAsset: underlying,
+	})
+	s.Require().NoError(err, "setup: expected vault creation to succeed for share %s", share)
+	v.BridgeEnabled = true
+	v.BridgeAddress = bridgeAddr.String()
+	v.TotalShares = sdk.NewCoin(share, totalShares)
+	s.k.AuthKeeper.SetAccount(s.ctx, v)
+	return v
 }
 
 // createBridgeMintSharesEventsExact returns the exact ordered events a successful

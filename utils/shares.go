@@ -57,14 +57,23 @@ func CalculateSharesProRataFraction(
 		return sdk.Coin{}, fmt.Errorf("invalid input: zero denominator")
 	}
 	if totalAssets.IsZero() && totalShares.IsZero() {
-		shares := amountNumerator.Mul(ShareScalar).Quo(amountDenominator)
-		return sdk.NewCoin(shareDenom, shares), nil
+		scaled, err := amountNumerator.SafeMul(ShareScalar)
+		if err != nil {
+			return sdk.Coin{}, fmt.Errorf("failed to multiply amount numerator %s by share scalar %s: %w", amountNumerator, ShareScalar, err)
+		}
+		return sdk.NewCoin(shareDenom, scaled.Quo(amountDenominator)), nil
 	}
 	ta := totalAssets.Add(VirtualAssets)
 	ts := totalShares.Add(VirtualShares)
-	den := amountDenominator.Mul(ta)
-	shares := amountNumerator.Mul(ts).Quo(den)
-	return sdk.NewCoin(shareDenom, shares), nil
+	den, err := amountDenominator.SafeMul(ta)
+	if err != nil {
+		return sdk.Coin{}, fmt.Errorf("failed to multiply amount denominator %s by total assets %s: %w", amountDenominator, ta, err)
+	}
+	numerator, err := amountNumerator.SafeMul(ts)
+	if err != nil {
+		return sdk.Coin{}, fmt.Errorf("failed to multiply amount numerator %s by total shares %s: %w", amountNumerator, ts, err)
+	}
+	return sdk.NewCoin(shareDenom, numerator.Quo(den)), nil
 }
 
 // CalculateRedeemProRataFraction computes the payout amount for redeeming shares
@@ -100,8 +109,18 @@ func CalculateRedeemProRataFraction(shares math.Int, totalShares math.Int, total
 		return sdk.Coin{}, fmt.Errorf("invalid input: zero price numerator")
 	}
 	ta := totalAssets.Add(VirtualAssets)
-	num := shares.Mul(ta).Mul(priceDenominator)
-	den := ts.Mul(priceNumerator)
+	sharesTa, err := shares.SafeMul(ta)
+	if err != nil {
+		return sdk.Coin{}, fmt.Errorf("failed to multiply shares %s by total assets %s: %w", shares, ta, err)
+	}
+	num, err := sharesTa.SafeMul(priceDenominator)
+	if err != nil {
+		return sdk.Coin{}, fmt.Errorf("failed to multiply shares-assets product %s by price denominator %s: %w", sharesTa, priceDenominator, err)
+	}
+	den, err := ts.SafeMul(priceNumerator)
+	if err != nil {
+		return sdk.Coin{}, fmt.Errorf("failed to multiply total shares %s by price numerator %s: %w", ts, priceNumerator, err)
+	}
 	out := num.Quo(den)
 	return sdk.NewCoin(payoutDenom, out), nil
 }

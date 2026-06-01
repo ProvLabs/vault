@@ -330,6 +330,29 @@ func (s *TestSuite) TestGetTVVInUnderlyingAsset_ErrorPropagation() {
 	s.Require().Contains(err.Error(), "nav not found for usdc/ylds", "error should propagate from missing NAV")
 }
 
+func (s *TestSuite) TestGetTVVInUnderlyingAsset_AccumulatorOverflowReturnsErrorNotPanic() {
+	underlyingDenom := "ylds"
+	paymentDenom := "usdc"
+	shareDenom := "vshare"
+	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 1)
+
+	s.overrideNAV(paymentDenom, underlyingDenom, maxValidNAVPrice(), 1)
+
+	principalAddress := vault.PrincipalMarkerAddress()
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, principalAddress, sdk.NewCoins(
+		sdk.NewInt64Coin(paymentDenom, 1),
+	)), "funding principal with one payment unit should succeed")
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, principalAddress, sdk.NewCoins(
+		sdk.NewInt64Coin(underlyingDenom, 100),
+	)), "funding principal with a small underlying balance should succeed")
+
+	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
+	_, err := testKeeper.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	s.Require().Error(err, "summing balances past the 256-bit ceiling must degrade to an error, not panic")
+	s.Require().ErrorContains(err, "integer overflow", "error should originate from the SafeAdd accumulator guard")
+	s.Require().ErrorContains(err, "total vault value", "error should carry the accumulator's wrapping context")
+}
+
 func (s *TestSuite) TestGetTVVInUnderlyingAsset_ExcludesReserves() {
 	underlyingDenom := "ylds"
 	shareDenom := "vshare"

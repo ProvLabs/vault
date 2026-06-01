@@ -177,7 +177,10 @@ func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccoun
 		if err != nil {
 			return math.Int{}, fmt.Errorf("failed to convert balance to underlying: %w", err)
 		}
-		total = total.Add(val)
+		total, err = total.SafeAdd(val)
+		if err != nil {
+			return math.Int{}, fmt.Errorf("failed to add balance %s to total vault value: %w", val, err)
+		}
 	}
 	return total, nil
 }

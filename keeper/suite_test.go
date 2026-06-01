@@ -608,6 +608,15 @@ func oversizedNAVPrice() sdkmath.Int {
 	return sdkmath.NewIntFromBigInt(new(big.Int).Lsh(big.NewInt(1), 200))
 }
 
+// maxValidNAVPrice returns the largest value an sdkmath.Int can hold (2^256-1).
+// As a NAV price it converts a single unit of a denom to the maximum
+// representable underlying value, leaving no headroom in the TVV accumulator so
+// that any additional balance trips the SafeAdd overflow guard in
+// GetTVVInUnderlyingAsset without the per-balance SafeMul overflowing first.
+func maxValidNAVPrice() sdkmath.Int {
+	return sdkmath.NewIntFromBigInt(new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(1)))
+}
+
 // overrideNAV sets, at a fresh (newest) block height, a net asset value on the
 // marker for navMarkerDenom priced in priceDenom. It lets tests stage oversized
 // prices that the marker module accepts without bound, so the valuation paths

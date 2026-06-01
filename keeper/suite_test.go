@@ -583,6 +583,19 @@ func (s *TestSuite) setupSinglePaymentDenomVault(underlyingDenom, shareDenom, pa
 	return vault
 }
 
+// setupOversizedNAVVault builds a single-payment-denom vault primed for the NAV
+// overflow guard tests. It returns the vault, a keeper wired with the marker and
+// bank keepers, and the underlying and payment denoms used to stage oversized
+// NAVs.
+func (s *TestSuite) setupOversizedNAVVault() (*types.VaultAccount, keeper.Keeper, string, string) {
+	underlyingDenom := "ylds"
+	paymentDenom := "usdc"
+	shareDenom := "vshare"
+	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
+	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
+	return vault, testKeeper, underlyingDenom, paymentDenom
+}
+
 // setReverseNAV sets a reverse net asset value on the underlying denom marker,
 // allowing the vault to value the underlying in terms of the payment denom.
 func (s *TestSuite) setReverseNAV(underlyingDenom, paymentDenom string, price, volume int64) {

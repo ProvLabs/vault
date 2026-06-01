@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"strconv"
 	"strings"
 	"testing"
@@ -582,6 +583,19 @@ func (s *TestSuite) setupSinglePaymentDenomVault(underlyingDenom, shareDenom, pa
 	return vault
 }
 
+// setupOversizedNAVVault builds a single-payment-denom vault primed for the NAV
+// overflow guard tests. It returns the vault, a keeper wired with the marker and
+// bank keepers, and the underlying and payment denoms used to stage oversized
+// NAVs.
+func (s *TestSuite) setupOversizedNAVVault() (*types.VaultAccount, keeper.Keeper, string, string) {
+	underlyingDenom := "ylds"
+	paymentDenom := "usdc"
+	shareDenom := "vshare"
+	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
+	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
+	return vault, testKeeper, underlyingDenom, paymentDenom
+}
+
 // setReverseNAV sets a reverse net asset value on the underlying denom marker,
 // allowing the vault to value the underlying in terms of the payment denom.
 func (s *TestSuite) setReverseNAV(underlyingDenom, paymentDenom string, price, volume int64) {
@@ -597,6 +611,37 @@ func (s *TestSuite) setReverseNAV(underlyingDenom, paymentDenom string, price, v
 // bumpHeight increments the suite's context block height by 1.
 func (s *TestSuite) bumpHeight() {
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)
+}
+
+// oversizedNAVPrice returns a NAV price amount (2^200) large enough that
+// multiplying it by a comparable balance exceeds the 256-bit sdkmath.Int
+// ceiling. It models the attacker-controlled price the marker module does not
+// bound, and exercises the SafeMul overflow guards on the valuation paths.
+func oversizedNAVPrice() sdkmath.Int {
+	return sdkmath.NewIntFromBigInt(new(big.Int).Lsh(big.NewInt(1), 200))
+}
+
+// maxValidNAVPrice returns the largest value an sdkmath.Int can hold (2^256-1).
+// As a NAV price it converts a single unit of a denom to the maximum
+// representable underlying value, leaving no headroom in the TVV accumulator so
+// that any additional balance trips the SafeAdd overflow guard in
+// GetTVVInUnderlyingAsset without the per-balance SafeMul overflowing first.
+func maxValidNAVPrice() sdkmath.Int {
+	return sdkmath.NewIntFromBigInt(new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(1)))
+}
+
+// overrideNAV sets, at a fresh (newest) block height, a net asset value on the
+// marker for navMarkerDenom priced in priceDenom. It lets tests stage oversized
+// prices that the marker module accepts without bound, so the valuation paths
+// can be driven into overflow.
+func (s *TestSuite) overrideNAV(navMarkerDenom, priceDenom string, price sdkmath.Int, volume uint64) {
+	s.bumpHeight()
+	markerAcct, err := s.k.MarkerKeeper.GetMarker(s.ctx, markertypes.MustGetMarkerAddress(navMarkerDenom))
+	s.Require().NoError(err, "should fetch %s marker for NAV override", navMarkerDenom)
+	s.Require().NoError(s.k.MarkerKeeper.SetNetAssetValue(s.ctx, markerAcct, markertypes.NetAssetValue{
+		Price:  sdk.NewCoin(priceDenom, price),
+		Volume: volume,
+	}, "test-oversized"), "should override NAV on %s priced in %s", navMarkerDenom, priceDenom)
 }
 
 // setupReconcileVault initializes a vault with the provided parameters, including markers and funding.

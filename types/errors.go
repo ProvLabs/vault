@@ -1,10 +1,21 @@
 package types
 
-import "cosmossdk.io/errors"
+import (
+	stderrors "errors"
+
+	"cosmossdk.io/errors"
+)
 
 var (
 	ErrInvalidRequest = errors.Register(ModuleName, 0, "invalid request")
 	ErrVaultNotFound  = errors.Register(ModuleName, 1, "vault not found")
+)
+
+// Refund-classification sentinel errors raised inside this module and wrapped at their source, so
+// getRefundReason can classify them with errors.Is instead of matching free-form error text.
+var (
+	ErrNavNotFound      = stderrors.New("nav not found")
+	ErrReconcileFailure = stderrors.New("reconcile failure")
 )
 
 // CriticalError wraps an error that represents a critical, unrecoverable failure

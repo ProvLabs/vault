@@ -179,6 +179,55 @@ func (s *TestSuite) TestFromUnderlyingAssetAmount() {
 	s.Require().Contains(err.Error(), "no internal NAV entry for denom", "error should mention missing internal NAV")
 }
 
+func (s *TestSuite) TestNAVConversion_OversizedNAVReturnsErrorNotPanic() {
+	vault, testKeeper, underlyingDenom, paymentDenom := s.setupOversizedNAVVault()
+
+	tests := []struct {
+		name string
+		run  func() error
+	}{
+		{
+			name: "valuing a payment balance in underlying overflows the forward NAV multiply",
+			run: func() error {
+				s.seedOversizedNAV(vault, paymentDenom, underlyingDenom, oversizedNAVPrice(), math.OneInt())
+				_, err := testKeeper.ToUnderlyingAssetAmount(s.ctx, *vault, sdk.NewCoin(paymentDenom, oversizedNAVPrice()))
+				return err
+			},
+		},
+		{
+			name: "valuing underlying in a payment denom overflows the reverse NAV multiply",
+			run: func() error {
+				s.seedOversizedNAV(vault, paymentDenom, underlyingDenom, math.OneInt(), oversizedNAVPrice())
+				_, err := testKeeper.FromUnderlyingAssetAmount(s.ctx, *vault, oversizedNAVPrice(), paymentDenom)
+				return err
+			},
+		},
+		{
+			name: "converting an oversized deposit to shares overflows the forward NAV multiply",
+			run: func() error {
+				s.seedOversizedNAV(vault, paymentDenom, underlyingDenom, oversizedNAVPrice(), math.OneInt())
+				_, err := testKeeper.ConvertDepositToSharesInUnderlyingAsset(s.ctx, *vault, sdk.NewCoin(paymentDenom, oversizedNAVPrice()))
+				return err
+			},
+		},
+		{
+			name: "redeeming shares to a payout coin overflows the reverse NAV multiply",
+			run: func() error {
+				s.seedOversizedNAV(vault, paymentDenom, underlyingDenom, math.OneInt(), oversizedNAVPrice())
+				_, err := testKeeper.ConvertSharesToRedeemCoin(s.ctx, *vault, oversizedNAVPrice(), paymentDenom)
+				return err
+			},
+		},
+	}
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			err := tc.run()
+			s.Require().Error(err, "oversized NAV must degrade to an error, not panic: %s", tc.name)
+			s.Require().ErrorContains(err, "integer overflow", "error should originate from the SafeMul overflow guard: %s", tc.name)
+		})
+	}
+}
+
 func (s *TestSuite) TestToUnderlyingAssetAmount_IdentityFastPath() {
 	underlyingDenom := "ylds"
 	shareDenom := "vshare"
@@ -246,6 +295,24 @@ func (s *TestSuite) TestGetTVVInUnderlyingAsset_ErrorPropagation() {
 
 	s.Require().Error(err, "get TVV should error when accepted payment denom lacks NAV")
 	s.Require().Contains(err.Error(), "no internal NAV entry for denom \"usdc\"", "error should propagate from missing internal NAV")
+}
+
+func (s *TestSuite) TestGetTVVInUnderlyingAsset_AccumulatorOverflowReturnsErrorNotPanic() {
+	vault, testKeeper, underlyingDenom, paymentDenom := s.setupOversizedNAVVault()
+	s.seedOversizedNAV(vault, paymentDenom, underlyingDenom, maxValidNAVPrice(), math.OneInt())
+
+	principalAddress := vault.PrincipalMarkerAddress()
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, principalAddress, sdk.NewCoins(
+		sdk.NewInt64Coin(paymentDenom, 1),
+	)), "funding principal with one payment unit should succeed")
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, principalAddress, sdk.NewCoins(
+		sdk.NewInt64Coin(underlyingDenom, 100),
+	)), "funding principal with a small underlying balance should succeed")
+
+	_, err := testKeeper.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	s.Require().Error(err, "summing balances past the 256-bit ceiling must degrade to an error, not panic")
+	s.Require().ErrorContains(err, "integer overflow", "error should originate from the SafeAdd accumulator guard")
+	s.Require().ErrorContains(err, "total vault value", "error should carry the accumulator's wrapping context")
 }
 
 func (s *TestSuite) TestGetTVVInUnderlyingAsset_ExcludesReserves() {

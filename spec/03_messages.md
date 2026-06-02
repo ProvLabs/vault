@@ -301,7 +301,7 @@ Admin-only. Enables or disables bridge operations for a vault.
 
 ## BridgeMintShares
 
-Mints local share marker supply to the bridge within capacity (`total_shares - local_supply`) and transfers the minted shares to the bridge address.
+Mints local share marker supply to the bridge within capacity (`total_shares - local_supply`) and transfers the minted shares to the bridge address. The mint re-materializes shares that already exist on a remote chain, so it raises local supply toward `total_shares` but does **not** change `total_shares`.
 
 * **Request:** `MsgBridgeMintSharesRequest { bridge, vault_address, shares }`
 * **Response:** `MsgBridgeMintSharesResponse {}`
@@ -310,7 +310,9 @@ Mints local share marker supply to the bridge within capacity (`total_shares - l
 
 ## BridgeBurnShares
 
-Transfers shares from the bridge back to the vault and burns them from the marker, reducing local supply (does not change `total_shares`).
+Transfers shares from the bridge back to the vault and burns them from the marker, reducing local supply. It does **not** change `total_shares`: a bridged-out share still exists on the remote chain, so — unlike the local redemption path — no `total_shares` decrement is performed. The burn re-widens mint capacity (`total_shares - local_supply`) by the burned amount, allowing those shares to be re-minted when they return.
+
+See [Bridge Trust Model & Supply-of-Record](01_concepts.md#bridge-trust-model--supply-of-record) for the full model and the off-chain operator trust assumption.
 
 * **Request:** `MsgBridgeBurnSharesRequest { bridge, vault_address, shares }`
 * **Response:** `MsgBridgeBurnSharesResponse {}`

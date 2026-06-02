@@ -1,0 +1,1 @@
+* Aligned `AutoCLI` positional argument order with proto definitions for `CreateVault` (`[admin] [share_denom] [underlying_asset]`) and `SetShareDenomMetadata` (`[metadata] [admin] [vault_address]`). **Client API breaking:** scripts using the previous positional order must be updated [#135](https://github.com/provlabs/vault/issues/135).

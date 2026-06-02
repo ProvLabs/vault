@@ -158,6 +158,9 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 	if err != nil {
 		return nil, fmt.Errorf("invalid new rate: %w", err)
 	}
+	if err := types.ValidateInterestRateMagnitude(newRate); err != nil {
+		return nil, fmt.Errorf("invalid new rate: %w", err)
+	}
 	ok, err := vault.IsInterestRateInRange(newRate)
 	if err != nil {
 		return nil, fmt.Errorf("failed to validate interest range: %w", err)
@@ -728,6 +731,8 @@ func (k msgServer) BridgeBurnShares(goCtx context.Context, msg *types.MsgBridgeB
 		return nil, fmt.Errorf("failed to transfer shares from bridge to vault: %w", err)
 	}
 
+	// Intentionally does not decrement vault.TotalShares: bridged-out shares still exist on the
+	// remote chain, so TotalShares (the cross-chain supply-of-record) is unchanged. See spec/01_concepts.md.
 	if err := k.MarkerKeeper.BurnCoin(ctx, vaultAddr, msg.Shares); err != nil {
 		return nil, fmt.Errorf("failed to burn shares from marker: %w", err)
 	}

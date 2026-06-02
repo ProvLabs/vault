@@ -33,7 +33,18 @@ const (
 //
 // This function returns the interest as a `cosmosmath.Int`, truncating any fractional part to ensure compatibility with coin amounts.
 // It uses deterministic arithmetic via `cosmosmath.LegacyDec` and approximates e^x using a Maclaurin series (`utils.ExpDec`).
-func CalculateInterestEarned(principal sdk.Coin, rate string, periodSeconds int64) (sdkmath.Int, error) {
+func CalculateInterestEarned(principal sdk.Coin, rate string, periodSeconds int64) (amount sdkmath.Int, err error) {
+	// Recover any LegacyDec overflow panic so callers receive an error and skip the
+	// vault instead of propagating the panic. This guard covers both the ExpDec
+	// Maclaurin accumulator and the subsequent p.Mul(eRt) final-amount multiply,
+	// neither of which has a SafeMul equivalent in LegacyDec.
+	defer func() {
+		if rec := recover(); rec != nil {
+			amount = sdkmath.Int{}
+			err = fmt.Errorf("interest calculation overflow (rate=%s, periodSeconds=%d): %v", rate, periodSeconds, rec)
+		}
+	}()
+
 	r, err := sdkmath.LegacyNewDecFromStr(rate)
 	if err != nil {
 		return sdkmath.Int{}, fmt.Errorf("invalid rate string: %w", err)
@@ -52,8 +63,11 @@ func CalculateInterestEarned(principal sdk.Coin, rate string, periodSeconds int6
 	// rt
 	rt := r.Mul(t)
 
-	// e_rt = e^(rt) using the deterministic Exp function from the SDK
-	eRt := utils.ExpDec(rt, EulerPrecision)
+	// e_rt = e^(rt) using the deterministic Maclaurin series approximation
+	eRt, err := utils.ExpDec(rt, EulerPrecision)
+	if err != nil {
+		return sdkmath.Int{}, fmt.Errorf("failed to compute e^(rt): %w", err)
+	}
 
 	// final amount A = P * e^(rt)
 	finalAmount := p.Mul(eRt)

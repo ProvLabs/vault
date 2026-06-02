@@ -176,15 +176,15 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "CreateVault",
-					Use:       "create [admin] [underlying_asset] [share_denom]",
+					Use:       "create [admin] [share_denom] [underlying_asset]",
 					Alias:     []string{"c", "new"},
 					Short:     "Create a new vault",
 					Long:      "Create a new vault with an underlying asset and share denom. Optionally set a default payment denom for redemptions and a withdrawal delay that queues swap-outs until the delay elapses.",
-					Example:   fmt.Sprintf("%s create %s nhash svnhash --payment-denom nhash --withdrawal-delay-seconds 86400", txStart, exampleAdminAddr),
+					Example:   fmt.Sprintf("%s create %s svnhash nhash --payment-denom nhash --withdrawal-delay-seconds 86400", txStart, exampleAdminAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "admin"},
-						{ProtoField: "underlying_asset"},
 						{ProtoField: "share_denom"},
+						{ProtoField: "underlying_asset"},
 					},
 					FlagOptions: map[string]*autocliv1.FlagOptions{
 						"payment_denom": {
@@ -215,15 +215,15 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 				},
 				{
 					RpcMethod: "SetShareDenomMetadata",
-					Use:       "set-share-denom-metadata [admin] [vault_address] [metadata]",
+					Use:       "set-share-denom-metadata [metadata] [admin] [vault_address]",
 					Alias:     []string{"ssdm"},
 					Short:     "Set bank metadata for a vault’s share denom",
 					Long:      "Set on-chain bank metadata for the share denom of a vault. Provide a full metadata JSON object.",
-					Example:   fmt.Sprintf("%s set-share-denom-metadata %s %s '%s'", txStart, exampleAdminAddr, exampleVaultAddr, exampleMetadata),
+					Example:   fmt.Sprintf("%s set-share-denom-metadata '%s' %s %s", txStart, exampleMetadata, exampleAdminAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "metadata"},
 						{ProtoField: "admin"},
 						{ProtoField: "vault_address"},
-						{ProtoField: "metadata"},
 					},
 				},
 				{

@@ -464,8 +464,11 @@ func (k *Keeper) SetMaxInterestRate(ctx sdk.Context, vault *types.VaultAccount, 
 }
 
 // ValidateInterestRateLimits checks that the provided minimum and maximum interest
-// rates are valid decimal values and that the minimum rate is not greater than
-// the maximum rate. Empty values are treated as unset and pass validation.
+// rates are valid decimal values, that neither exceeds the MaxAbsInterestRate
+// ceiling in magnitude, and that the minimum rate is not greater than the maximum
+// rate. The magnitude ceiling stops an admin from configuring bounds large enough
+// to overflow the e^(rt) interest math and panic inside the block hooks. Empty
+// values are treated as unset and pass validation.
 func (k Keeper) ValidateInterestRateLimits(minRateStr, maxRateStr string) error {
 	var minRate, maxRate sdkmath.LegacyDec
 	var err error
@@ -476,12 +479,18 @@ func (k Keeper) ValidateInterestRateLimits(minRateStr, maxRateStr string) error 
 		if err != nil {
 			return fmt.Errorf("invalid min interest rate: %w", err)
 		}
+		if err := types.ValidateInterestRateMagnitude(minRate); err != nil {
+			return fmt.Errorf("invalid min interest rate: %w", err)
+		}
 		hasMin = true
 	}
 
 	if maxRateStr != "" {
 		maxRate, err = sdkmath.LegacyNewDecFromStr(maxRateStr)
 		if err != nil {
+			return fmt.Errorf("invalid max interest rate: %w", err)
+		}
+		if err := types.ValidateInterestRateMagnitude(maxRate); err != nil {
 			return fmt.Errorf("invalid max interest rate: %w", err)
 		}
 		hasMax = true

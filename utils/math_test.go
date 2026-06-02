@@ -50,10 +50,54 @@ func TestExpDec(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			result := utils.ExpDec(tc.input, tc.terms)
+			result, err := utils.ExpDec(tc.input, tc.terms)
+			require.NoError(t, err, "ExpDec returned an unexpected error")
 			got, _ := result.Float64()
 			diff := math.Abs(got - tc.expected)
 			require.LessOrEqual(t, diff, tc.tolerance, "expected %f, got %f", tc.expected, got)
+		})
+	}
+}
+
+func TestExpDecOverflow(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   sdkmath.LegacyDec
+		terms   int
+		wantErr bool
+	}{
+		{
+			name:    "large positive exponent overflows and returns error",
+			input:   sdkmath.LegacyNewDec(1_000_000),
+			terms:   17,
+			wantErr: true,
+		},
+		{
+			name:    "large negative exponent overflows and returns error",
+			input:   sdkmath.LegacyNewDec(-1_000_000),
+			terms:   17,
+			wantErr: true,
+		},
+		{
+			name:    "moderate exponent does not overflow",
+			input:   sdkmath.LegacyNewDec(10),
+			terms:   17,
+			wantErr: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			var err error
+			require.NotPanics(t, func() {
+				_, err = utils.ExpDec(tc.input, tc.terms)
+			}, "ExpDec must never panic, even on overflow, for input %s", tc.input)
+
+			if tc.wantErr {
+				require.ErrorContains(t, err, "overflow", "expected an overflow error for input %s", tc.input)
+			} else {
+				require.NoError(t, err, "did not expect an error for input %s", tc.input)
+			}
 		})
 	}
 }
@@ -72,7 +116,8 @@ func TestExpDecConvergenceToE(t *testing.T) {
 	for terms := 1; terms <= maxTerms; terms++ {
 		start := time.Now()
 
-		result := utils.ExpDec(x, terms)
+		result, expErr := utils.ExpDec(x, terms)
+		require.NoErrorf(t, expErr, "ExpDec failed for terms=%d", terms)
 
 		elapsed := time.Since(start).Microseconds()
 

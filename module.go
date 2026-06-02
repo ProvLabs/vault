@@ -690,17 +690,18 @@ func init() {
 // ModuleInputs defines the inputs required to initialize the vault module.
 type ModuleInputs struct {
 	depinject.In
-	Config        *modulev1.Module
-	StoreService  store.KVStoreService
-	HeaderService header.Service
-	EventService  event.Service
-	Codec         codec.Codec
-	AddressCodec  address.Codec
-	AuthKeeper    types.AccountKeeper
-	MarkerKeeper  types.MarkerKeeper
-	BankKeeper    types.BankKeeper
-	NameKeeper    types.NameKeeper
-	AttrKeeper    types.AttributeKeeper
+	Config         *modulev1.Module
+	StoreService   store.KVStoreService
+	HeaderService  header.Service
+	EventService   event.Service
+	Codec          codec.Codec
+	AddressCodec   address.Codec
+	AuthKeeper     types.AccountKeeper
+	MarkerKeeper   types.MarkerKeeper
+	BankKeeper     types.BankKeeper
+	NameKeeper     types.NameKeeper
+	AttrKeeper     types.AttributeKeeper
+	ExchangeKeeper types.ExchangeKeeper
 }
 
 // ModuleOutputs defines the outputs of the vault module provider.
@@ -728,6 +729,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.BankKeeper,
 		in.NameKeeper,
 		in.AttrKeeper,
+		in.ExchangeKeeper,
 	)
 	m := NewAppModule(k, in.MarkerKeeper, in.BankKeeper, in.NameKeeper, in.AttrKeeper, in.AddressCodec)
 	return ModuleOutputs{Keeper: k, Module: m}

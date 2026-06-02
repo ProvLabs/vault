@@ -70,9 +70,9 @@ var (
 	// TestnetTechFeeAddress is the ProvLabs fee collection address for pio-testnet-1.
 	// NOTE: Initially the same as DefaultTechFeeAddress; will be updated via upgrade handler.
 	TestnetTechFeeAddress = sdk.AccAddress{203, 8, 207, 79, 61, 49, 64, 179, 24, 92, 201, 167, 114, 124, 196, 21, 81, 198, 64, 146}
-	// MainnetTechFeeAddress is the ProvLabs fee collection address for pio-mainnet-1.
-	// NOTE: Initially the same as DefaultTechFeeAddress; will be updated via upgrade handler.
-	MainnetTechFeeAddress = sdk.AccAddress{203, 8, 207, 79, 61, 49, 64, 179, 24, 92, 201, 167, 114, 124, 196, 21, 81, 198, 64, 146}
+	// MainnetTechFeeAddress is the ProvLabs fee collection group policy address for pio-mainnet-1.
+	// Represents 'pb144z5tr4lk85xvhrplsrh6gmclr8pgpv76fqjt23gzz9awrmh4laqclqdun'.
+	MainnetTechFeeAddress = sdk.AccAddress{173, 69, 69, 142, 191, 177, 232, 102, 92, 97, 252, 7, 125, 35, 120, 248, 206, 20, 5, 158, 210, 65, 37, 170, 40, 16, 139, 215, 15, 119, 175, 250}
 )
 
 const (

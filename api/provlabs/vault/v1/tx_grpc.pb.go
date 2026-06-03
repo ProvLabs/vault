@@ -49,6 +49,8 @@ const (
 	Msg_UpdateVaultAUMFeeBips_FullMethodName  = "/provlabs.vault.v1.Msg/UpdateVaultAUMFeeBips"
 	Msg_UpdateVaultNAV_FullMethodName         = "/provlabs.vault.v1.Msg/UpdateVaultNAV"
 	Msg_UpdateNAVAuthority_FullMethodName     = "/provlabs.vault.v1.Msg/UpdateNAVAuthority"
+	Msg_AcceptAsset_FullMethodName            = "/provlabs.vault.v1.Msg/AcceptAsset"
+	Msg_RejectAsset_FullMethodName            = "/provlabs.vault.v1.Msg/RejectAsset"
 )
 
 // MsgClient is the client API for Msg service.
@@ -127,6 +129,14 @@ type MsgClient interface {
 	// UpdateNAVAuthority rotates the address authorized to mutate a vault's internal NAV table.
 	// Must be signed by the vault admin.
 	UpdateNAVAuthority(ctx context.Context, in *MsgUpdateNAVAuthorityRequest, opts ...grpc.CallOption) (*MsgUpdateNAVAuthorityResponse, error)
+	// AcceptAsset settles a pending exchange-module payment whose target is the vault,
+	// exchanging an external asset for the vault's payment denom.
+	// Must be signed by the vault's asset manager.
+	AcceptAsset(ctx context.Context, in *MsgAcceptAssetRequest, opts ...grpc.CallOption) (*MsgAcceptAssetResponse, error)
+	// RejectAsset declines a pending exchange-module payment whose target is the vault,
+	// causing the exchange module to cancel it and refund the source's escrow.
+	// Must be signed by the vault's asset manager.
+	RejectAsset(ctx context.Context, in *MsgRejectAssetRequest, opts ...grpc.CallOption) (*MsgRejectAssetResponse, error)
 }
 
 type msgClient struct {
@@ -437,6 +447,26 @@ func (c *msgClient) UpdateNAVAuthority(ctx context.Context, in *MsgUpdateNAVAuth
 	return out, nil
 }
 
+func (c *msgClient) AcceptAsset(ctx context.Context, in *MsgAcceptAssetRequest, opts ...grpc.CallOption) (*MsgAcceptAssetResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgAcceptAssetResponse)
+	err := c.cc.Invoke(ctx, Msg_AcceptAsset_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) RejectAsset(ctx context.Context, in *MsgRejectAssetRequest, opts ...grpc.CallOption) (*MsgRejectAssetResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgRejectAssetResponse)
+	err := c.cc.Invoke(ctx, Msg_RejectAsset_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility.
@@ -513,6 +543,14 @@ type MsgServer interface {
 	// UpdateNAVAuthority rotates the address authorized to mutate a vault's internal NAV table.
 	// Must be signed by the vault admin.
 	UpdateNAVAuthority(context.Context, *MsgUpdateNAVAuthorityRequest) (*MsgUpdateNAVAuthorityResponse, error)
+	// AcceptAsset settles a pending exchange-module payment whose target is the vault,
+	// exchanging an external asset for the vault's payment denom.
+	// Must be signed by the vault's asset manager.
+	AcceptAsset(context.Context, *MsgAcceptAssetRequest) (*MsgAcceptAssetResponse, error)
+	// RejectAsset declines a pending exchange-module payment whose target is the vault,
+	// causing the exchange module to cancel it and refund the source's escrow.
+	// Must be signed by the vault's asset manager.
+	RejectAsset(context.Context, *MsgRejectAssetRequest) (*MsgRejectAssetResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -612,6 +650,12 @@ func (UnimplementedMsgServer) UpdateVaultNAV(context.Context, *MsgUpdateVaultNAV
 }
 func (UnimplementedMsgServer) UpdateNAVAuthority(context.Context, *MsgUpdateNAVAuthorityRequest) (*MsgUpdateNAVAuthorityResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateNAVAuthority not implemented")
+}
+func (UnimplementedMsgServer) AcceptAsset(context.Context, *MsgAcceptAssetRequest) (*MsgAcceptAssetResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AcceptAsset not implemented")
+}
+func (UnimplementedMsgServer) RejectAsset(context.Context, *MsgRejectAssetRequest) (*MsgRejectAssetResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RejectAsset not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 func (UnimplementedMsgServer) testEmbeddedByValue()             {}
@@ -1174,6 +1218,42 @@ func _Msg_UpdateNAVAuthority_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_AcceptAsset_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgAcceptAssetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).AcceptAsset(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_AcceptAsset_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).AcceptAsset(ctx, req.(*MsgAcceptAssetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_RejectAsset_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgRejectAssetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).RejectAsset(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_RejectAsset_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).RejectAsset(ctx, req.(*MsgRejectAssetRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1300,6 +1380,14 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateNAVAuthority",
 			Handler:    _Msg_UpdateNAVAuthority_Handler,
+		},
+		{
+			MethodName: "AcceptAsset",
+			Handler:    _Msg_AcceptAsset_Handler,
+		},
+		{
+			MethodName: "RejectAsset",
+			Handler:    _Msg_RejectAsset_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

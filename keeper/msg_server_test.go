@@ -6145,6 +6145,22 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Failures() {
 			expectedErrSubstrs: []string{"exactly one leg"},
 		},
 		{
+			name: "payment denom on both legs",
+			setup: func() *types.MsgAcceptAssetRequest {
+				vault, _ := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+				vaultAddr := vault.GetAddress()
+				source := s.CreateAndFundAccount(sdk.NewInt64Coin(paymentDenom, 5))
+				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)), sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 3), sdk.NewInt64Coin(asset, 2)), "bothlegs")
+				return &types.MsgAcceptAssetRequest{
+					Authority:    s.adminAddr.String(),
+					VaultAddress: vaultAddr.String(),
+					Source:       source.String(),
+					ExternalId:   "bothlegs",
+				}
+			},
+			expectedErrSubstrs: []string{"exactly one leg"},
+		},
+		{
 			name: "insufficient principal balance",
 			setup: func() *types.MsgAcceptAssetRequest {
 				vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)

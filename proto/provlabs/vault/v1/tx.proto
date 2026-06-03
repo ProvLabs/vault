@@ -117,12 +117,12 @@ service Msg {
 
   // AcceptAsset settles a pending exchange-module payment whose target is the vault,
   // exchanging an external asset for the vault's payment denom.
-  // Must be signed by the vault's asset manager.
+  // Must be signed by the vault admin or the vault's asset manager.
   rpc AcceptAsset(MsgAcceptAssetRequest) returns (MsgAcceptAssetResponse);
 
   // RejectAsset declines a pending exchange-module payment whose target is the vault,
   // causing the exchange module to cancel it and refund the source's escrow.
-  // Must be signed by the vault's asset manager.
+  // Must be signed by the vault admin or the vault's asset manager.
   rpc RejectAsset(MsgRejectAssetRequest) returns (MsgRejectAssetResponse);
 }
 
@@ -656,7 +656,7 @@ message MsgUpdateNAVAuthorityResponse {}
 message MsgAcceptAssetRequest {
   option (cosmos.msg.v1.signer) = "authority";
 
-  // authority is the address of the vault's asset manager authorizing the settlement.
+  // authority is the address of the vault admin or asset manager authorizing the settlement.
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // vault_address is the bech32 address of the vault, which must be the payment's target.
   string vault_address = 2;
@@ -675,7 +675,7 @@ message MsgAcceptAssetResponse {}
 message MsgRejectAssetRequest {
   option (cosmos.msg.v1.signer) = "authority";
 
-  // authority is the address of the vault's asset manager authorizing the rejection.
+  // authority is the address of the vault admin or asset manager authorizing the rejection.
   string authority = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   // vault_address is the bech32 address of the vault, which must be the payment's target.
   string vault_address = 2;

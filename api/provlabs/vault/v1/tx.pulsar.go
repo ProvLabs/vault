@@ -32486,7 +32486,7 @@ type MsgAcceptAssetRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// authority is the address of the vault's asset manager authorizing the settlement.
+	// authority is the address of the vault admin or asset manager authorizing the settlement.
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	// vault_address is the bech32 address of the vault, which must be the payment's target.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
@@ -32579,7 +32579,7 @@ type MsgRejectAssetRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// authority is the address of the vault's asset manager authorizing the rejection.
+	// authority is the address of the vault admin or asset manager authorizing the rejection.
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
 	// vault_address is the bech32 address of the vault, which must be the payment's target.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`

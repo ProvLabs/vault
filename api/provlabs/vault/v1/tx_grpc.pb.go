@@ -131,11 +131,11 @@ type MsgClient interface {
 	UpdateNAVAuthority(ctx context.Context, in *MsgUpdateNAVAuthorityRequest, opts ...grpc.CallOption) (*MsgUpdateNAVAuthorityResponse, error)
 	// AcceptAsset settles a pending exchange-module payment whose target is the vault,
 	// exchanging an external asset for the vault's payment denom.
-	// Must be signed by the vault's asset manager.
+	// Must be signed by the vault admin or the vault's asset manager.
 	AcceptAsset(ctx context.Context, in *MsgAcceptAssetRequest, opts ...grpc.CallOption) (*MsgAcceptAssetResponse, error)
 	// RejectAsset declines a pending exchange-module payment whose target is the vault,
 	// causing the exchange module to cancel it and refund the source's escrow.
-	// Must be signed by the vault's asset manager.
+	// Must be signed by the vault admin or the vault's asset manager.
 	RejectAsset(ctx context.Context, in *MsgRejectAssetRequest, opts ...grpc.CallOption) (*MsgRejectAssetResponse, error)
 }
 
@@ -545,11 +545,11 @@ type MsgServer interface {
 	UpdateNAVAuthority(context.Context, *MsgUpdateNAVAuthorityRequest) (*MsgUpdateNAVAuthorityResponse, error)
 	// AcceptAsset settles a pending exchange-module payment whose target is the vault,
 	// exchanging an external asset for the vault's payment denom.
-	// Must be signed by the vault's asset manager.
+	// Must be signed by the vault admin or the vault's asset manager.
 	AcceptAsset(context.Context, *MsgAcceptAssetRequest) (*MsgAcceptAssetResponse, error)
 	// RejectAsset declines a pending exchange-module payment whose target is the vault,
 	// causing the exchange module to cancel it and refund the source's escrow.
-	// Must be signed by the vault's asset manager.
+	// Must be signed by the vault admin or the vault's asset manager.
 	RejectAsset(context.Context, *MsgRejectAssetRequest) (*MsgRejectAssetResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }

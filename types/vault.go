@@ -182,7 +182,7 @@ func (v VaultAccount) Validate() error {
 		if err != nil {
 			return fmt.Errorf("invalid min interest rate: %s", v.MinInterestRate)
 		}
-		if err := ValidateInterestRateMagnitude(minRate); err != nil {
+		if err := ValidateInterestRateMagnitude(min); err != nil {
 			return fmt.Errorf("invalid min interest rate: %w", err)
 		}
 	}
@@ -191,7 +191,7 @@ func (v VaultAccount) Validate() error {
 		if err != nil {
 			return fmt.Errorf("invalid max interest rate: %s", v.MaxInterestRate)
 		}
-		if err := ValidateInterestRateMagnitude(maxRate); err != nil {
+		if err := ValidateInterestRateMagnitude(max); err != nil {
 			return fmt.Errorf("invalid max interest rate: %w", err)
 		}
 	}

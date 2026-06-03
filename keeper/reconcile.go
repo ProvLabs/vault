@@ -294,7 +294,11 @@ func (k Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAccou
 	}
 
 	periodDuration := currentBlockTime - vault.FeePeriodStart
-	vault.OutstandingAumFee = totalOutstanding.Sub(toCollect)
+	remainingOutstanding, err := totalOutstanding.SafeSub(toCollect)
+	if err != nil {
+		return fmt.Errorf("failed to subtract collected %s from outstanding AUM fee %s: %w", toCollect, totalOutstanding, err)
+	}
+	vault.OutstandingAumFee = remainingOutstanding
 	vault.FeePeriodStart = currentBlockTime
 
 	k.emitEvent(ctx, types.NewEventVaultFeeCollected(

@@ -1,0 +1,1 @@
+This release adds overflow protection to interest-rate and NAV calculations, including an absolute interest-rate ceiling and safe multiplication guards that return errors instead of panicking the block hook.

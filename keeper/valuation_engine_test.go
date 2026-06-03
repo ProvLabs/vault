@@ -496,6 +496,53 @@ func (s *TestSuite) TestConvertSharesToRedeemCoin_AssetAndPaymentPaths() {
 	s.Require().Contains(err.Error(), "nav not found", "error should indicate missing NAV mapping")
 }
 
+func (s *TestSuite) TestConvertAndNav_PriceNetOfOutstandingAumFee() {
+	underlyingDenom := "ylds"
+	paymentDenom := "usdc"
+	shareDenom := "vshare"
+	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
+
+	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(
+		sdk.NewInt64Coin(underlyingDenom, 1000),
+		sdk.NewInt64Coin(paymentDenom, 10),
+	)), "should fund vault marker for gross TVV")
+
+	grossTVV, err := testKeeper.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	s.Require().NoError(err, "should compute gross TVV")
+	s.Require().Equal(math.NewInt(1005), grossTVV, "gross TVV = 1000 underlying + 10 payment at 1/2")
+
+	totalShares := sdk.NewCoin(shareDenom, grossTVV.Mul(utils.ShareScalar))
+	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), totalShares), "should mint share supply")
+	vault.TotalShares = totalShares
+	vault.OutstandingAumFee = sdk.NewInt64Coin(paymentDenom, 10)
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	netTVV, err := testKeeper.GetNetTVVInUnderlyingAsset(s.ctx, *vault)
+	s.Require().NoError(err, "should compute net TVV")
+	s.Require().Equal(math.NewInt(1000), netTVV, "net TVV = gross 1005 minus outstanding fee (10 payment at 1/2 = 5 underlying)")
+
+	deposit := sdk.NewInt64Coin(underlyingDenom, 1000)
+	mintedShares, err := testKeeper.ConvertDepositToSharesInUnderlyingAsset(s.ctx, *vault, deposit)
+	s.Require().NoError(err, "deposit conversion should succeed")
+	expectedNetMint, err := utils.CalculateSharesProRataFraction(deposit.Amount, math.NewInt(1), netTVV, totalShares.Amount, shareDenom)
+	s.Require().NoError(err, "should compute net-priced deposit shares")
+	expectedGrossMint, err := utils.CalculateSharesProRataFraction(deposit.Amount, math.NewInt(1), grossTVV, totalShares.Amount, shareDenom)
+	s.Require().NoError(err, "should compute gross-priced deposit shares")
+	s.Require().Equal(expectedNetMint.Amount, mintedShares.Amount, "deposit must be priced off net TVV")
+	s.Require().True(mintedShares.Amount.GT(expectedGrossMint.Amount), "net pricing mints more shares per deposit than gross pricing would (gross overstates TVV)")
+
+	redeemShares := grossTVV.Mul(utils.ShareScalar)
+	redeemed, err := testKeeper.ConvertSharesToRedeemCoin(s.ctx, *vault, redeemShares, underlyingDenom)
+	s.Require().NoError(err, "redeem conversion should succeed")
+	expectedNetRedeem, err := utils.CalculateRedeemProRataFraction(redeemShares, totalShares.Amount, netTVV, math.NewInt(1), math.NewInt(1), underlyingDenom)
+	s.Require().NoError(err, "should compute net-priced redemption")
+	expectedGrossRedeem, err := utils.CalculateRedeemProRataFraction(redeemShares, totalShares.Amount, grossTVV, math.NewInt(1), math.NewInt(1), underlyingDenom)
+	s.Require().NoError(err, "should compute gross-priced redemption")
+	s.Require().Equal(expectedNetRedeem.Amount, redeemed.Amount, "redemption must be priced off net TVV")
+	s.Require().True(redeemed.Amount.LT(expectedGrossRedeem.Amount), "net pricing pays out less per share than gross pricing would (gross overstates TVV)")
+}
+
 func (s *TestSuite) TestConvertSharesToRedeemCoin_ZeroAndDustRedemption() {
 	underlyingDenom := "ylds"
 	shareDenom := "vshare"

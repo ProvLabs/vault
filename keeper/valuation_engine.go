@@ -191,22 +191,28 @@ func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccoun
 // This is the authoritative valuation basis for share pricing and the published share
 // NAV: it represents the equity actually owned by shareholders, excluding the AUM fee
 // already owed to the fee collector but not yet transferred out of the principal marker.
-// GetTVVInUnderlyingAsset supplies the gross sum of principal-marker balances (and honors
-// the paused fast-path); this method subtracts the OutstandingAumFee converted to
-// underlying units and floors the result at zero.
+//
+// Paused fast-path:
+//   - If vault.Paused is true, this returns vault.PausedBalance.Amount directly. The paused
+//     balance is captured net of the OutstandingAumFee liability at pause time, so paused
+//     pricing stays frozen and NAV-independent.
+//
+// When not paused, GetTVVInUnderlyingAsset supplies the gross sum of principal-marker
+// balances; this method subtracts the OutstandingAumFee converted to underlying units and
+// floors the result at zero.
 func (k Keeper) GetNetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccount) (math.Int, error) {
 	gross, err := k.GetTVVInUnderlyingAsset(ctx, vault)
 	if err != nil {
-		return math.Int{}, err
+		return math.Int{}, fmt.Errorf("failed to get gross TVV: %w", err)
+	}
+	if vault.Paused {
+		return gross, nil
 	}
 	outstanding, err := k.CalculateOutstandingFeeUnderlying(ctx, vault)
 	if err != nil {
 		return math.Int{}, fmt.Errorf("failed to calculate outstanding AUM fee: %w", err)
 	}
-	net, err := gross.SafeSub(outstanding)
-	if err != nil {
-		return math.Int{}, fmt.Errorf("failed to subtract outstanding AUM fee %s from TVV %s: %w", outstanding, gross, err)
-	}
+	net := gross.Sub(outstanding)
 	if net.IsNegative() {
 		return math.ZeroInt(), nil
 	}

@@ -495,9 +495,9 @@ func (k *Keeper) autoPauseVault(ctx sdk.Context, vault *types.VaultAccount, reas
 		"reason", reason,
 	)
 
-	tvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
+	tvv, err := k.GetNetTVVInUnderlyingAsset(ctx, *vault)
 	if err != nil {
-		k.getLogger(ctx).Error("Failed to get TVV in underlying asset", "vault_address", vault.GetAddress().String(), "error", err)
+		k.getLogger(ctx).Error("Failed to get net TVV in underlying asset", "vault_address", vault.GetAddress().String(), "error", err)
 	}
 
 	vault.Paused = true

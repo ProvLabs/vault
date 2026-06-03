@@ -492,58 +492,6 @@ func (s *TestSuite) overrideNAV(navMarkerDenom, priceDenom string, price sdkmath
 	}, "test-oversized"), "should override NAV on %s priced in %s", navMarkerDenom, priceDenom)
 }
 
-// setupReconcileVault initializes a vault with the provided parameters, including markers and funding.
-func (s *TestSuite) setupReconcileVault(interestRate string, periodStartSeconds int64, paused bool, underlying sdk.Coin, shareDenom string, totalShares sdk.Coin, testBlockTime time.Time) (sdk.AccAddress, *types.VaultAccount) {
-	s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
-	vaultAddr := types.GetVaultAddress(shareDenom)
-	_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-		Admin:           s.adminAddr.String(),
-		ShareDenom:      shareDenom,
-		UnderlyingAsset: underlying.Denom,
-	})
-	s.Require().NoError(err, "failed to create vault for share denom %s", shareDenom)
-
-	vault, err := s.k.GetVault(s.ctx, vaultAddr)
-	s.Require().NoError(err, "failed to get vault for address %s", vaultAddr.String())
-	vault.CurrentInterestRate = interestRate
-	vault.DesiredInterestRate = interestRate
-	vault.PeriodStart = periodStartSeconds
-	vault.FeePeriodStart = periodStartSeconds
-	vault.Paused = paused
-	vault.TotalShares = totalShares
-	s.k.AuthKeeper.SetAccount(s.ctx, vault)
-
-	err = FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(underlying))
-	s.Require().NoError(err, "failed to fund vault account %s with %s", vaultAddr.String(), underlying.String())
-	err = FundAccount(s.ctx, s.simApp.BankKeeper, markertypes.MustGetMarkerAddress(shareDenom), sdk.NewCoins(underlying))
-	s.Require().NoError(err, "failed to fund share marker account for denom %s with %s", shareDenom, underlying.String())
-
-	s.ctx = s.ctx.WithBlockTime(testBlockTime)
-	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
-
-	return vaultAddr, vault
-}
-
-// setupBridgeVault creates and activates the underlying marker, creates a vault for
-// the given share/underlying denoms, enables bridging to bridgeAddr, records the
-// share supply-of-record via TotalShares, and persists the vault. It returns the
-// stored vault account. Callers create and fund bridgeAddr themselves because the
-// message under test usually needs the bridge address before this setup runs.
-func (s *TestSuite) setupBridgeVault(underlying, share string, bridgeAddr sdk.AccAddress, totalShares sdkmath.Int) *types.VaultAccount {
-	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlying, 2_000_000), s.adminAddr)
-	v, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-		Admin:           s.adminAddr.String(),
-		ShareDenom:      share,
-		UnderlyingAsset: underlying,
-	})
-	s.Require().NoError(err, "setup: expected vault creation to succeed for share %s", share)
-	v.BridgeEnabled = true
-	v.BridgeAddress = bridgeAddr.String()
-	v.TotalShares = sdk.NewCoin(share, totalShares)
-	s.k.AuthKeeper.SetAccount(s.ctx, v)
-	return v
-}
-
 // createBridgeMintSharesEventsExact returns the exact ordered events a successful
 // BridgeMintShares emits: marker mint to the share marker, withdraw to the bridge,
 // then the vault EventBridgeMintShares—suitable for strict equality checks in tests.

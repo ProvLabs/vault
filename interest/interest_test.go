@@ -2,6 +2,7 @@ package interest_test
 
 import (
 	"math"
+	"math/big"
 	"strconv"
 	"testing"
 	"time"
@@ -184,6 +185,39 @@ func TestCalculateAUMFee(t *testing.T) {
 				require.NoErrorf(t, err, "test case %q: unexpected error during AUM fee calculation", tc.name)
 				require.Truef(t, tc.expectedFee.Equal(fee), "test case %q: fee amount mismatch; expected %s, got %s", tc.name, tc.expectedFee, fee)
 			}
+		})
+	}
+}
+
+// TestCalculateAUMFeeOverflow proves the recover guard turns a LegacyDec overflow into an
+// error instead of panicking.
+func TestCalculateAUMFeeOverflow(t *testing.T) {
+	tests := []struct {
+		name     string
+		aum      sdkmath.Int
+		bips     uint32
+		duration int64
+	}{
+		{
+			name:     "near-max AUM over a one year period overflows the decimal multiply",
+			aum:      sdkmath.NewIntFromBigInt(new(big.Int).Lsh(big.NewInt(1), 255)),
+			bips:     10_000,
+			duration: interest.SecondsPerYear,
+		},
+		{
+			name:     "max AUM over a single second overflows the decimal multiply",
+			aum:      sdkmath.NewIntFromBigInt(new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(1))),
+			bips:     10_000,
+			duration: 2,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			fee, err := interest.CalculateAUMFee(tc.aum, tc.bips, tc.duration)
+			require.Errorf(t, err, "test case %q: oversized AUM must degrade to an error, not panic", tc.name)
+			require.Containsf(t, err.Error(), "overflow", "test case %q: error should originate from the recover guard", tc.name)
+			require.Truef(t, fee.IsNil(), "test case %q: fee should be the zero-value sdkmath.Int on overflow, got %s", tc.name, fee)
 		})
 	}
 }

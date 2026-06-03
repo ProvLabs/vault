@@ -9,6 +9,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/provenance-io/provenance/x/exchange"
 )
 
 const maxDenomMetadataDescriptionLength = 200
@@ -49,6 +50,8 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgUpdateMaxSwapOutValueRequest)(nil),
 	(*MsgUpdateVaultNAVRequest)(nil),
 	(*MsgUpdateNAVAuthorityRequest)(nil),
+	(*MsgAcceptAssetRequest)(nil),
+	(*MsgRejectAssetRequest)(nil),
 }
 
 // ValidateBasic performs stateless validation on MsgCreateVaultRequest.
@@ -613,6 +616,40 @@ func (m MsgUpdateNAVAuthorityRequest) ValidateBasic() error {
 		if _, err := sdk.AccAddressFromBech32(m.NewAuthority); err != nil {
 			return fmt.Errorf("invalid new authority address: %q: %w", m.NewAuthority, err)
 		}
+	}
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgAcceptAssetRequest.
+func (m MsgAcceptAssetRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		return fmt.Errorf("invalid authority address: %q: %w", m.Authority, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.Source); err != nil {
+		return fmt.Errorf("invalid source address: %q: %w", m.Source, err)
+	}
+	if err := exchange.ValidateExternalID(m.ExternalId); err != nil {
+		return err
+	}
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgRejectAssetRequest.
+func (m MsgRejectAssetRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		return fmt.Errorf("invalid authority address: %q: %w", m.Authority, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.Source); err != nil {
+		return fmt.Errorf("invalid source address: %q: %w", m.Source, err)
+	}
+	if err := exchange.ValidateExternalID(m.ExternalId); err != nil {
+		return err
 	}
 	return nil
 }

@@ -16,7 +16,9 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	"github.com/cosmos/gogoproto/proto"
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
+	"github.com/provenance-io/provenance/x/exchange"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	suite "github.com/stretchr/testify/suite"
 
@@ -221,6 +223,58 @@ func (s *TestSuite) requireAddFinalizeAndActivateMarker(coin sdk.Coin, manager s
 // asset denoms (e.g. "rwa", "bond") that are not otherwise created by setupBaseVault.
 func (s *TestSuite) requireSimpleMarker(denom string) {
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(denom, 0), s.adminAddr)
+}
+
+// setupAssetSettlementVault creates a vault whose payment denom differs from its underlying
+// asset. Both the underlying and payment denoms are non-restricted Coin markers (CreateVault's
+// fee-collector preflight requires the payment denom to be a marker). It returns the vault and
+// its principal marker address.
+func (s *TestSuite) setupAssetSettlementVault(underlying, share, paymentDenom string) (*types.VaultAccount, sdk.AccAddress) {
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlying, 1_000_000), s.adminAddr)
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 1_000_000), s.adminAddr)
+
+	vault, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+		Admin:           s.adminAddr.String(),
+		ShareDenom:      share,
+		UnderlyingAsset: underlying,
+		PaymentDenom:    paymentDenom,
+		InitialPaymentNav: &types.InitialVaultNAV{
+			Price:  sdk.NewInt64Coin(underlying, 1),
+			Volume: sdkmath.OneInt(),
+		},
+	})
+	s.Require().NoError(err, "failed to create asset settlement vault")
+
+	return vault, vault.PrincipalMarkerAddress()
+}
+
+// createPayment creates an exchange payment from source to target and places the escrow hold.
+func (s *TestSuite) createPayment(source, target sdk.AccAddress, sourceAmount, targetAmount sdk.Coins, externalID string) {
+	err := s.simApp.ExchangeKeeper.CreatePayment(s.ctx, &exchange.Payment{
+		Source:       source.String(),
+		SourceAmount: sourceAmount,
+		Target:       target.String(),
+		TargetAmount: targetAmount,
+		ExternalId:   externalID,
+	})
+	s.Require().NoError(err, "failed to create payment %q", externalID)
+}
+
+// requireTypedEventEmitted asserts that the given typed event was emitted on the current context.
+func (s *TestSuite) requireTypedEventEmitted(want proto.Message) {
+	s.T().Helper()
+	expected, err := sdk.TypedEventToEvent(want)
+	s.Require().NoError(err, "failed to convert expected typed event")
+
+	found := false
+	for _, ev := range s.ctx.EventManager().Events() {
+		if ev.Type != expected.Type {
+			continue
+		}
+		found = true
+		s.Assert().Equal(normalizeEvent(expected), normalizeEvent(ev), "%s attributes mismatch", expected.Type)
+	}
+	s.Assert().Truef(found, "expected typed event %s to be emitted", expected.Type)
 }
 
 // requireAddFinalizeAndActivateReceiptMarker creates and activates a restricted marker

@@ -7,6 +7,9 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 # concurrency is not defined in here because this job usually doesn't
 # run long enough to need cancelling, and it's okay for it to run multiple
 # times for the same PR.

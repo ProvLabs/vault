@@ -1409,3 +1409,197 @@ func (s *TestSuite) TestQueryServer_NavValue() {
 		s.Assert().Contains(err.Error(), "id must be provided", "unexpected error for a nil request")
 	})
 }
+
+// TestQueryServer_VaultPayment verifies the VaultPayment query returns a single
+// payment targeting the vault and reports NotFound for unknown or mistargeted payments.
+func (s *TestSuite) TestQueryServer_VaultPayment() {
+	underlying, share, paymentDenom, asset := "under", "vshare", "pay", "rwacoin"
+
+	vault, _ := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+	vaultAddr := vault.GetAddress()
+
+	source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
+	sourceAmount := sdk.NewCoins(sdk.NewInt64Coin(asset, 10))
+	targetAmount := sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5))
+	s.createPayment(source, vaultAddr, sourceAmount, targetAmount, "invoice-1")
+
+	otherSource := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
+	otherTarget := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+	s.createPayment(otherSource, otherTarget, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), nil, "elsewhere")
+
+	queryServer := keeper.NewQueryServer(s.simApp.VaultKeeper)
+
+	s.Run("returns the payment", func() {
+		resp, err := queryServer.VaultPayment(s.ctx, &types.QueryVaultPaymentRequest{
+			Id:         vaultAddr.String(),
+			Source:     source.String(),
+			ExternalId: "invoice-1",
+		})
+		s.Require().NoError(err, "VaultPayment should succeed")
+		s.Assert().Equal(source.String(), resp.Payment.Source, "VaultPayment source mismatch")
+		s.Assert().Equal(vaultAddr.String(), resp.Payment.Target, "VaultPayment target mismatch")
+		s.Assert().Equal(sourceAmount, resp.Payment.SourceAmount, "VaultPayment source amount mismatch")
+		s.Assert().Equal(targetAmount, resp.Payment.TargetAmount, "VaultPayment target amount mismatch")
+		s.Assert().Equal("invoice-1", resp.Payment.ExternalId, "VaultPayment external id mismatch")
+	})
+
+	s.Run("resolves by share denom", func() {
+		resp, err := queryServer.VaultPayment(s.ctx, &types.QueryVaultPaymentRequest{
+			Id:         share,
+			Source:     source.String(),
+			ExternalId: "invoice-1",
+		})
+		s.Require().NoError(err, "VaultPayment should resolve a vault by its share denom")
+		s.Assert().Equal("invoice-1", resp.Payment.ExternalId, "VaultPayment external id mismatch")
+	})
+
+	s.Run("unknown external id returns NotFound", func() {
+		_, err := queryServer.VaultPayment(s.ctx, &types.QueryVaultPaymentRequest{
+			Id:         vaultAddr.String(),
+			Source:     source.String(),
+			ExternalId: "missing",
+		})
+		s.Require().Error(err, "VaultPayment should error for an unknown external id")
+		s.Assert().Contains(err.Error(), "no payment", "unexpected error")
+	})
+
+	s.Run("payment for another target returns NotFound", func() {
+		_, err := queryServer.VaultPayment(s.ctx, &types.QueryVaultPaymentRequest{
+			Id:         vaultAddr.String(),
+			Source:     otherSource.String(),
+			ExternalId: "elsewhere",
+		})
+		s.Require().Error(err, "VaultPayment should not return a payment targeting another account")
+		s.Assert().Contains(err.Error(), "no payment", "unexpected error")
+	})
+
+	s.Run("missing vault returns NotFound", func() {
+		_, err := queryServer.VaultPayment(s.ctx, &types.QueryVaultPaymentRequest{
+			Id:         types.GetVaultAddress("nope").String(),
+			Source:     source.String(),
+			ExternalId: "invoice-1",
+		})
+		s.Require().Error(err, "VaultPayment should error for a missing vault")
+		s.Assert().Contains(err.Error(), "not found", "unexpected error")
+	})
+
+	s.Run("invalid source returns InvalidArgument", func() {
+		_, err := queryServer.VaultPayment(s.ctx, &types.QueryVaultPaymentRequest{
+			Id:         vaultAddr.String(),
+			Source:     "not-an-address",
+			ExternalId: "invoice-1",
+		})
+		s.Require().Error(err, "VaultPayment should reject an invalid source")
+		s.Assert().Contains(err.Error(), "invalid source", "unexpected error")
+	})
+
+	s.Run("rejects empty source", func() {
+		_, err := queryServer.VaultPayment(s.ctx, &types.QueryVaultPaymentRequest{Id: vaultAddr.String()})
+		s.Require().Error(err, "VaultPayment should reject an empty source")
+		s.Assert().Contains(err.Error(), "source must be provided", "unexpected error")
+	})
+
+	s.Run("rejects empty id", func() {
+		_, err := queryServer.VaultPayment(s.ctx, &types.QueryVaultPaymentRequest{Source: source.String()})
+		s.Require().Error(err, "VaultPayment should reject an empty id")
+		s.Assert().Contains(err.Error(), "id must be provided", "unexpected error")
+	})
+
+	s.Run("nil request returns InvalidArgument", func() {
+		_, err := queryServer.VaultPayment(s.ctx, nil)
+		s.Require().Error(err, "VaultPayment should reject a nil request")
+		s.Assert().Contains(err.Error(), "id must be provided", "unexpected error for a nil request")
+	})
+}
+
+// TestQueryServer_VaultPayments verifies the VaultPayments query returns every payment
+// targeting the vault, excludes payments for other targets, and paginates the results.
+func (s *TestSuite) TestQueryServer_VaultPayments() {
+	underlying, share, paymentDenom, asset := "under", "vshare", "pay", "rwacoin"
+
+	vault, _ := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+	vaultAddr := vault.GetAddress()
+
+	externalIDs := []string{"p-1", "p-2", "p-3", "p-4", "p-5"}
+	for _, externalID := range externalIDs {
+		source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
+		s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)), externalID)
+	}
+
+	otherSource := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
+	otherTarget := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+	s.createPayment(otherSource, otherTarget, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), nil, "elsewhere")
+
+	queryServer := keeper.NewQueryServer(s.simApp.VaultKeeper)
+
+	s.Run("rejects empty id", func() {
+		_, err := queryServer.VaultPayments(s.ctx, &types.QueryVaultPaymentsRequest{})
+		s.Require().Error(err, "VaultPayments should reject an empty id")
+		s.Assert().Contains(err.Error(), "id must be provided", "unexpected error")
+	})
+
+	s.Run("nil request returns InvalidArgument", func() {
+		_, err := queryServer.VaultPayments(s.ctx, nil)
+		s.Require().Error(err, "VaultPayments should reject a nil request")
+		s.Assert().Contains(err.Error(), "id must be provided", "unexpected error for a nil request")
+	})
+
+	s.Run("missing vault returns NotFound", func() {
+		_, err := queryServer.VaultPayments(s.ctx, &types.QueryVaultPaymentsRequest{Id: types.GetVaultAddress("nope").String()})
+		s.Require().Error(err, "VaultPayments should error for a missing vault")
+		s.Assert().Contains(err.Error(), "not found", "unexpected error")
+	})
+
+	s.Run("returns every payment targeting the vault", func() {
+		resp, err := queryServer.VaultPayments(s.ctx, &types.QueryVaultPaymentsRequest{Id: vaultAddr.String()})
+		s.Require().NoError(err, "VaultPayments should succeed")
+		s.Require().Len(resp.Payments, len(externalIDs), "VaultPayments should return every payment targeting the vault")
+		got := make([]string, len(resp.Payments))
+		for i, payment := range resp.Payments {
+			s.Assert().Equal(vaultAddr.String(), payment.Target, "VaultPayments returned a payment for another target")
+			got[i] = payment.ExternalId
+		}
+		s.Assert().ElementsMatch(externalIDs, got, "VaultPayments returned unexpected external ids")
+	})
+
+	s.Run("resolves by share denom", func() {
+		resp, err := queryServer.VaultPayments(s.ctx, &types.QueryVaultPaymentsRequest{Id: share})
+		s.Require().NoError(err, "VaultPayments should resolve a vault by its share denom")
+		s.Assert().Len(resp.Payments, len(externalIDs), "VaultPayments should return every payment for the vault")
+	})
+
+	s.Run("paginates entries", func() {
+		seen := make([]string, 0, len(externalIDs))
+		var nextKey []byte
+		pages := 0
+		for {
+			resp, err := queryServer.VaultPayments(s.ctx, &types.QueryVaultPaymentsRequest{
+				Id:         vaultAddr.String(),
+				Pagination: &query.PageRequest{Key: nextKey, Limit: 2},
+			})
+			s.Require().NoError(err, "VaultPayments page query should succeed")
+			s.Require().LessOrEqual(len(resp.Payments), 2, "page should not exceed the requested limit")
+			for _, payment := range resp.Payments {
+				seen = append(seen, payment.ExternalId)
+			}
+			pages++
+			if resp.Pagination == nil || len(resp.Pagination.NextKey) == 0 {
+				break
+			}
+			nextKey = resp.Pagination.NextKey
+			s.Require().LessOrEqual(pages, len(externalIDs)+1, "pagination did not terminate")
+		}
+		s.Assert().Equal(3, pages, "expected three pages for five entries at limit 2")
+		s.Assert().ElementsMatch(externalIDs, seen, "pagination did not visit every payment exactly once")
+	})
+
+	s.Run("offset pagination reports total", func() {
+		resp, err := queryServer.VaultPayments(s.ctx, &types.QueryVaultPaymentsRequest{
+			Id:         vaultAddr.String(),
+			Pagination: &query.PageRequest{Offset: 4, Limit: 10, CountTotal: true},
+		})
+		s.Require().NoError(err, "VaultPayments offset query should succeed")
+		s.Assert().Len(resp.Payments, 1, "offset of 4 over 5 entries should return one entry")
+		s.Assert().Equal(uint64(len(externalIDs)), resp.Pagination.Total, "CountTotal should report every payment for the vault")
+	})
+}

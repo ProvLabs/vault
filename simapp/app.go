@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	vaultkeeper "github.com/provlabs/vault/keeper"
+	vaulttypes "github.com/provlabs/vault/types"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
@@ -349,18 +350,22 @@ func ProvideAttributeKeeperStub() *attributekeeper.Keeper {
 	return &attributekeeper.Keeper{}
 }
 
-// ProvideExchangeKeeperStub returns an empty exchangekeeper.Keeper instance.
+// ProvideExchangeKeeperStub returns an empty types.ExchangeKeeper instance.
 //
 // This stub is used to satisfy dependency injection requirements when wiring
 // the Vault module in the app module configuration. It allows the Vault module
 // to be included in the dependency graph even though the actual ExchangeKeeper
 // is initialized separately using the legacy Provenance wiring in SimApp.
 //
+// It returns the vaultExchangeKeeper adapter so the stub satisfies the full
+// types.ExchangeKeeper interface, including the GetPaymentsWithTarget lookup that
+// the raw exchange keeper exposes only through its query server.
+//
 // This function should only be used during app setup and should not be relied
 // on at runtime, as the returned keeper is not fully configured and will panic
 // if used.
-func ProvideExchangeKeeperStub() exchangekeeper.Keeper {
-	return exchangekeeper.Keeper{}
+func ProvideExchangeKeeperStub() vaulttypes.ExchangeKeeper {
+	return vaultExchangeKeeper{}
 }
 
 func (app *SimApp) AppCodec() codec.Codec {

@@ -58,9 +58,10 @@ type AttributeKeeper interface {
 }
 
 // ExchangeKeeper defines the subset of the Provenance exchange module keeper
-// that the vault module relies on to settle peer-to-peer asset payments.
+// that the vault module relies on to settle and inspect peer-to-peer asset payments.
 type ExchangeKeeper interface {
 	GetPayment(ctx sdk.Context, source sdk.AccAddress, externalID string) (*exchange.Payment, error)
 	AcceptPayment(ctx sdk.Context, payment *exchange.Payment) error
 	RejectPayment(ctx sdk.Context, target, source sdk.AccAddress, externalID string) error
+	GetPaymentsWithTarget(ctx context.Context, req *exchange.QueryGetPaymentsWithTargetRequest) (*exchange.QueryGetPaymentsWithTargetResponse, error)
 }

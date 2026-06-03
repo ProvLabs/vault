@@ -15,6 +15,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+
+	"github.com/provenance-io/provenance/x/exchange"
 )
 
 var _ types.QueryServer = &queryServer{}
@@ -405,4 +407,88 @@ func (k queryServer) NavValue(goCtx context.Context, req *types.QueryNavValueReq
 	return &types.QueryNavValueResponse{
 		Nav: nav,
 	}, nil
+}
+
+// VaultPayment returns a single pending exchange-module payment targeting a vault,
+// identified by the payment's source and external id, or NotFound.
+func (k queryServer) VaultPayment(goCtx context.Context, req *types.QueryVaultPaymentRequest) (*types.QueryVaultPaymentResponse, error) {
+	if req == nil || req.Id == "" {
+		return nil, status.Error(codes.InvalidArgument, "id must be provided")
+	}
+	if req.Source == "" {
+		return nil, status.Error(codes.InvalidArgument, "source must be provided")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vault, err := k.FindVaultAccount(ctx, req.Id)
+	if err != nil {
+		if errors.Is(err, types.ErrVaultNotFound) {
+			return nil, status.Errorf(codes.NotFound, "vault account %s not found", req.Id)
+		}
+		return nil, status.Errorf(codes.Internal, "failed to find vault account %s: %v", req.Id, err)
+	}
+
+	sourceAddr, err := sdk.AccAddressFromBech32(req.Source)
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid source: %v", err)
+	}
+
+	payment, err := k.ExchangeKeeper.GetPayment(ctx, sourceAddr, req.ExternalId)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get payment: %v", err)
+	}
+	if payment == nil || payment.Target != vault.GetAddress().String() {
+		return nil, status.Errorf(codes.NotFound, "no payment for source %s and external id %q targeting vault %s", req.Source, req.ExternalId, req.Id)
+	}
+
+	return &types.QueryVaultPaymentResponse{
+		Payment: toPayment(payment),
+	}, nil
+}
+
+// VaultPayments returns a paginated list of all pending exchange-module payments targeting a vault.
+func (k queryServer) VaultPayments(goCtx context.Context, req *types.QueryVaultPaymentsRequest) (*types.QueryVaultPaymentsResponse, error) {
+	if req == nil || req.Id == "" {
+		return nil, status.Error(codes.InvalidArgument, "id must be provided")
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vault, err := k.FindVaultAccount(ctx, req.Id)
+	if err != nil {
+		if errors.Is(err, types.ErrVaultNotFound) {
+			return nil, status.Errorf(codes.NotFound, "vault account %s not found", req.Id)
+		}
+		return nil, status.Errorf(codes.Internal, "failed to find vault account %s: %v", req.Id, err)
+	}
+
+	res, err := k.ExchangeKeeper.GetPaymentsWithTarget(goCtx, &exchange.QueryGetPaymentsWithTargetRequest{
+		Target:     vault.GetAddress().String(),
+		Pagination: req.Pagination,
+	})
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get payments for vault %s: %v", req.Id, err)
+	}
+
+	payments := make([]types.Payment, 0, len(res.Payments))
+	for _, payment := range res.Payments {
+		payments = append(payments, toPayment(payment))
+	}
+
+	return &types.QueryVaultPaymentsResponse{
+		Payments:   payments,
+		Pagination: res.Pagination,
+	}, nil
+}
+
+// toPayment maps an exchange-module payment into the vault module's Payment view.
+func toPayment(payment *exchange.Payment) types.Payment {
+	return types.Payment{
+		Source:       payment.Source,
+		SourceAmount: payment.SourceAmount,
+		Target:       payment.Target,
+		TargetAmount: payment.TargetAmount,
+		ExternalId:   payment.ExternalId,
+	}
 }

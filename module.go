@@ -677,6 +677,30 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						{ProtoField: "denom"},
 					},
 				},
+				{
+					RpcMethod: "VaultPayment",
+					Use:       "payment [id] [source] [external_id]",
+					Alias:     []string{"pmt"},
+					Short:     "Query a single pending exchange-module payment targeting a vault",
+					Long:      "Fetch the pending payment targeting the provided vault address or share denom, identified by the payment's source account and external id.",
+					Example:   fmt.Sprintf("%s payment %s %s invoice-001", queryStart, exampleVaultAddr, exampleVaultAddr),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "id"},
+						{ProtoField: "source"},
+						{ProtoField: "external_id", Optional: true},
+					},
+				},
+				{
+					RpcMethod: "VaultPayments",
+					Use:       "payments [id]",
+					Alias:     []string{"pmts"},
+					Short:     "Query all pending exchange-module payments targeting a vault",
+					Long:      "List the pending payments targeting the provided vault address or share denom.",
+					Example:   fmt.Sprintf("%s payments %s", queryStart, exampleVaultAddr),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "id"},
+					},
+				},
 			},
 		},
 	}

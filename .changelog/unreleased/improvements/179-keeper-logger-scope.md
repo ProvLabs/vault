@@ -1,1 +1,0 @@
-* Replaced all `ctx.Logger()` calls in the keeper package with the module-scoped `k.getLogger(ctx)` for consistent, structured logging attributed to `x/vault`, and documented the convention in `GEMINI.md` [#179](https://github.com/provlabs/vault/issues/179).

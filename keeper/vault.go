@@ -70,7 +70,7 @@ func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*type
 		return nil, fmt.Errorf("failed to create vault account: %w", err)
 	}
 
-	if _, err := k.createVaultMarker(cacheCtx, vault.GetAddress(), vault.TotalShares.Denom, vault.UnderlyingAsset); err != nil {
+	if _, err := k.createVaultMarker(cacheCtx, vault.GetAddress(), vault.TotalShares.Denom); err != nil {
 		return nil, fmt.Errorf("failed to create vault marker: %w", err)
 	}
 
@@ -171,7 +171,7 @@ func (k *Keeper) createVaultAccount(ctx sdk.Context, admin, shareDenom, underlyi
 }
 
 // createVaultMarker creates, finalizes, and activates a new restricted marker for the vault's share denomination.
-func (k *Keeper) createVaultMarker(ctx sdk.Context, markerManager sdk.AccAddress, shareDenom, underlyingAsset string) (*markertypes.MarkerAccount, error) {
+func (k *Keeper) createVaultMarker(ctx sdk.Context, markerManager sdk.AccAddress, shareDenom string) (*markertypes.MarkerAccount, error) {
 	vaultShareMarkerAddress, err := markertypes.MarkerAddress(shareDenom)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get vault share marker address: %w", err)

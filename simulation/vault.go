@@ -20,7 +20,7 @@ const (
 )
 
 // CreateVault creates a new vault with a marker and funds accounts.
-func CreateVault(ctx sdk.Context, vk *keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper, mk markerkeeper.Keeper, underlying, paymentDenom, share string, admin simtypes.Account, accs []simtypes.Account) error {
+func CreateVault(ctx sdk.Context, vk *keeper.Keeper, ak types.AccountKeeper, _ types.BankKeeper, mk markerkeeper.Keeper, underlying, paymentDenom, share string, admin simtypes.Account, _ []simtypes.Account) error {
 	if !MarkerExists(ctx, mk, underlying) {
 		return fmt.Errorf("underlying marker %s does not exist", underlying)
 	}

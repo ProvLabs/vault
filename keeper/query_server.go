@@ -300,7 +300,7 @@ func (k queryServer) VaultPendingSwapOuts(goCtx context.Context, req *types.Quer
 		ctx,
 		k.PendingSwapOutQueue.IndexedMap,
 		req.Pagination,
-		func(key collections.Triple[int64, uint64, sdk.AccAddress], value types.PendingSwapOut) (include bool, err error) {
+		func(key collections.Triple[int64, uint64, sdk.AccAddress], _ types.PendingSwapOut) (include bool, err error) {
 			return vault.Address == key.K3().String(), nil
 		},
 		func(key collections.Triple[int64, uint64, sdk.AccAddress], value types.PendingSwapOut) (types.PendingSwapOutWithTimeout, error) {

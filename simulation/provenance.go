@@ -91,7 +91,7 @@ func GrantWithdrawPermission(ctx context.Context, keeper markerkeeper.Keeper, de
 }
 
 // GrantAccess grants specified permissions to an account for a given marker.
-func GrantAccess(ctx context.Context, keeper markerkeeper.Keeper, denom string, grantee sdk.AccAddress, admin sdk.AccAddress, access markertypes.AccessList) error {
+func GrantAccess(ctx context.Context, keeper markerkeeper.Keeper, denom string, grantee sdk.AccAddress, _ sdk.AccAddress, access markertypes.AccessList) error {
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
 	m, err := keeper.GetMarker(sdkCtx, markertypes.MustGetMarkerAddress(denom))
 	if err != nil {
@@ -104,7 +104,9 @@ func GrantAccess(ctx context.Context, keeper markerkeeper.Keeper, denom string, 
 	if err := m.GrantAccess(markertypes.NewAccessGrant(grantee, access)); err != nil {
 		return fmt.Errorf("failed to grant access to %s on %s: %w", grantee, denom, err)
 	}
-	keeper.SetMarker(sdkCtx, m)
+	if err := keeper.SetMarker(sdkCtx, m); err != nil {
+		return fmt.Errorf("failed to set marker %s: %w", denom, err)
+	}
 	return nil
 }
 
@@ -131,7 +133,7 @@ func AddNav(ctx context.Context, keeper markerkeeper.Keeper, denom string, admin
 }
 
 // AddAttribute adds an attribute to an account using the provided owner to authorize the action.
-func AddAttribute(ctx context.Context, owner sdk.AccAddress, acc sdk.AccAddress, attrName string, nk types.NameKeeper, ak types.AttributeKeeper) error {
+func AddAttribute(ctx context.Context, owner sdk.AccAddress, acc sdk.AccAddress, attrName string, _ types.NameKeeper, ak types.AttributeKeeper) error {
 	attr := NewAttribute(
 		attrName,
 		acc.String(),

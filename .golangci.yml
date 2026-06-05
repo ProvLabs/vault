@@ -59,6 +59,11 @@ issues:
     - text: "Use of weak random number generator"
       linters:
         - gosec
+    # The op_weight_* simulation keys are operation identifiers, not credentials.
+    - path: simulation/operations\.go
+      text: "G101: Potential hardcoded credentials"
+      linters:
+        - gosec
     - text: "comment on exported var"
       linters:
         - revive
@@ -87,12 +92,15 @@ linters-settings:
         allow:
           - $gostd
 
+          - github.com/provlabs/vault
+
           - github.com/armon/go-metrics
 
           - cosmossdk.io/api
           - cosmossdk.io/client/v2
           - cosmossdk.io/collections
           - cosmossdk.io/core
+          - cosmossdk.io/depinject
           - cosmossdk.io/errors
           - cosmossdk.io/log
           - cosmossdk.io/math

@@ -52,10 +52,10 @@ var (
 	VaultPendingSwapOutByVaultIndexPrefix = collections.NewPrefix(5)
 	// VaultPendingSwapOutByVaultIndexName is a human-readable name for the pending swap out queue vault index.
 	VaultPendingSwapOutByVaultIndexName = "pending_swap_out_by_vault"
-	// VaultPendingSwapOutByIdIndexPrefix is the prefix for the pending swap out queue by id index.
-	VaultPendingSwapOutByIdIndexPrefix = collections.NewPrefix(6)
-	// VaultPendingSwapOutByIdIndexName is a human-readable name for the pending swap out queue by id index.
-	VaultPendingSwapOutByIdIndexName = "pending_swap_out_by_id"
+	// VaultPendingSwapOutByIDIndexPrefix is the prefix for the pending swap out queue by id index.
+	VaultPendingSwapOutByIDIndexPrefix = collections.NewPrefix(6)
+	// VaultPendingSwapOutByIDIndexName is a human-readable name for the pending swap out queue by id index.
+	VaultPendingSwapOutByIDIndexName = "pending_swap_out_by_id"
 
 	// ParamsKeyPrefix is the prefix for the module parameters.
 	ParamsKeyPrefix = collections.NewPrefix(10)

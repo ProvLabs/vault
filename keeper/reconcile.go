@@ -515,7 +515,7 @@ func (k Keeper) handleVaultInterestTimeouts(ctx sdk.Context) error {
 			continue
 		}
 
-		if err := k.atomicallyReconcileInterest(ctx, vault, int64(timeout)); err != nil {
+		if err := k.atomicallyReconcileInterest(ctx, vault); err != nil {
 			k.getLogger(ctx).Error("failed to reconcile interest atomically, rescheduling", "vault", addr.String(), "err", err)
 			k.reschedulePayoutTimeout(ctx, vault, int64(timeout))
 			continue
@@ -529,7 +529,7 @@ func (k Keeper) handleVaultInterestTimeouts(ctx sdk.Context) error {
 // atomicallyReconcileInterest performs the interest transfer, dequeues the current
 // timeout, and enqueues the next period timeout within a single atomic cache context.
 // If any step fails, the entire operation is reverted.
-func (k Keeper) atomicallyReconcileInterest(ctx sdk.Context, vault *types.VaultAccount, timeout int64) error {
+func (k Keeper) atomicallyReconcileInterest(ctx sdk.Context, vault *types.VaultAccount) error {
 	cacheCtx, write := ctx.CacheContext()
 	v := vault.Clone()
 
@@ -682,7 +682,7 @@ func (k Keeper) handleVaultFeeTimeouts(ctx sdk.Context) error {
 			continue
 		}
 
-		if err := k.atomicallyReconcileFee(ctx, vault, int64(timeout)); err != nil {
+		if err := k.atomicallyReconcileFee(ctx, vault); err != nil {
 			k.getLogger(ctx).Error("failed to collect AUM fee atomically, rescheduling", "vault", addr.String(), "err", err)
 			k.rescheduleFeeTimeout(ctx, vault, int64(timeout))
 			continue
@@ -695,7 +695,7 @@ func (k Keeper) handleVaultFeeTimeouts(ctx sdk.Context) error {
 // atomicallyReconcileFee performs the AUM fee collection, dequeues the current
 // fee timeout, and enqueues the next fee period timeout within a single atomic
 // cache context. If any step fails, the entire operation is reverted.
-func (k Keeper) atomicallyReconcileFee(ctx sdk.Context, vault *types.VaultAccount, timeout int64) error {
+func (k Keeper) atomicallyReconcileFee(ctx sdk.Context, vault *types.VaultAccount) error {
 	cacheCtx, write := ctx.CacheContext()
 	v := vault.Clone()
 

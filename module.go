@@ -145,6 +145,17 @@ func (m AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServer(m.keeper))
 }
 
+// Proto field names referenced by the AutoCLI positional argument descriptors.
+const (
+	fieldAdmin        = "admin"
+	fieldVaultAddress = "vault_address"
+	fieldAssets       = "assets"
+	fieldAuthority    = "authority"
+	fieldEnabled      = "enabled"
+	fieldAmount       = "amount"
+	fieldShares       = "shares"
+)
+
 // AutoCLIOptions defines CLI commands for tx and query.
 func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 	txStart := fmt.Sprintf("%s tx %s", version.AppName, types.ModuleName)
@@ -170,7 +181,7 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Long:      "Create a new vault with an underlying asset and share denom. Optionally set a default payment denom for redemptions and a withdrawal delay that queues swap-outs until the delay elapses.",
 					Example:   fmt.Sprintf("%s create %s svnhash nhash --payment-denom nhash --withdrawal-delay-seconds 86400", txStart, exampleAdminAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "admin"},
+						{ProtoField: fieldAdmin},
 						{ProtoField: "share_denom"},
 						{ProtoField: "underlying_asset"},
 					},
@@ -210,8 +221,8 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Example:   fmt.Sprintf("%s set-share-denom-metadata '%s' %s %s", txStart, exampleMetadata, exampleAdminAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "metadata"},
-						{ProtoField: "admin"},
-						{ProtoField: "vault_address"},
+						{ProtoField: fieldAdmin},
+						{ProtoField: fieldVaultAddress},
 					},
 				},
 				{
@@ -223,8 +234,8 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Example:   fmt.Sprintf("%s swap-in %s %s 1000nhash", txStart, exampleOwnerAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "owner"},
-						{ProtoField: "vault_address"},
-						{ProtoField: "assets"},
+						{ProtoField: fieldVaultAddress},
+						{ProtoField: fieldAssets},
 					},
 				},
 				{
@@ -236,8 +247,8 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Example:   fmt.Sprintf("%s swap-out %s %s 100svnhash nhash", txStart, exampleOwnerAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "owner"},
-						{ProtoField: "vault_address"},
-						{ProtoField: "assets"},
+						{ProtoField: fieldVaultAddress},
+						{ProtoField: fieldAssets},
 						{ProtoField: "redeem_denom", Optional: true},
 					},
 				},
@@ -249,8 +260,8 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Long:      "Set a floor for the annual interest rate. Pass an empty string to clear. Rate is a decimal (e.g. 0.01 for 1%).",
 					Example:   fmt.Sprintf("%s update-min-interest-rate %s %s 0.01", txStart, exampleAdminAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "admin"},
-						{ProtoField: "vault_address"},
+						{ProtoField: fieldAdmin},
+						{ProtoField: fieldVaultAddress},
 						{ProtoField: "min_rate"},
 					},
 				},
@@ -262,8 +273,8 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Long:      "Set a ceiling for the annual interest rate. Pass an empty string to clear. Rate is a decimal (e.g. 0.10 for 10%).",
 					Example:   fmt.Sprintf("%s update-max-interest-rate %s %s 0.10", txStart, exampleAdminAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "admin"},
-						{ProtoField: "vault_address"},
+						{ProtoField: fieldAdmin},
+						{ProtoField: fieldVaultAddress},
 						{ProtoField: "max_rate"},
 					},
 				},
@@ -275,8 +286,8 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Long:      "Update the current or target annual interest rate for a vault. Rate is a decimal (e.g. 0.05 for 5%).",
 					Example:   fmt.Sprintf("%s update-interest-rate %s %s 0.05", txStart, exampleAuthorityAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "authority"},
-						{ProtoField: "vault_address"},
+						{ProtoField: fieldAuthority},
+						{ProtoField: fieldVaultAddress},
 						{ProtoField: "new_rate"},
 					},
 				},
@@ -288,8 +299,8 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Long:      "Set a floor for swap-in deposits. Pass an empty string or '0' to clear. Value is in underlying_asset units.",
 					Example:   fmt.Sprintf("%s update-min-swap-in-value %s %s 100", txStart, exampleAuthorityAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "authority"},
-						{ProtoField: "vault_address"},
+						{ProtoField: fieldAuthority},
+						{ProtoField: fieldVaultAddress},
 						{ProtoField: "min_swap_in_value"},
 					},
 				},
@@ -301,8 +312,8 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Long:      "Set a floor for swap-out withdrawals. Pass an empty string or '0' to clear. Value is in underlying_asset units.",
 					Example:   fmt.Sprintf("%s update-min-swap-out-value %s %s 100", txStart, exampleAuthorityAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "authority"},
-						{ProtoField: "vault_address"},
+						{ProtoField: fieldAuthority},
+						{ProtoField: fieldVaultAddress},
 						{ProtoField: "min_swap_out_value"},
 					},
 				},
@@ -314,8 +325,8 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Long:      "Set a ceiling for swap-in deposits. Pass an empty string to clear. Pass '0' to block all deposits. Value is in underlying_asset units.",
 					Example:   fmt.Sprintf("%s update-max-swap-in-value %s %s 1000", txStart, exampleAuthorityAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "authority"},
-						{ProtoField: "vault_address"},
+						{ProtoField: fieldAuthority},
+						{ProtoField: fieldVaultAddress},
 						{ProtoField: "max_swap_in_value"},
 					},
 				},
@@ -327,8 +338,8 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Long:      "Set a ceiling for swap-out withdrawals. Pass an empty string to clear. Pass '0' to block all withdrawals. Value is in underlying_asset units.",
 					Example:   fmt.Sprintf("%s update-max-swap-out-value %s %s 1000", txStart, exampleAuthorityAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "authority"},
-						{ProtoField: "vault_address"},
+						{ProtoField: fieldAuthority},
+						{ProtoField: fieldVaultAddress},
 						{ProtoField: "max_swap_out_value"},
 					},
 				},
@@ -340,9 +351,9 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Long:      "Enable or disable user deposits (swap-in). Set enabled to true or false.",
 					Example:   fmt.Sprintf("%s toggle-swap-in %s %s false", txStart, exampleAdminAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "admin"},
-						{ProtoField: "vault_address"},
-						{ProtoField: "enabled"},
+						{ProtoField: fieldAdmin},
+						{ProtoField: fieldVaultAddress},
+						{ProtoField: fieldEnabled},
 					},
 				},
 				{
@@ -353,9 +364,9 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Long:      "Enable or disable user redemptions (swap-out). Set enabled to true or false.",
 					Example:   fmt.Sprintf("%s toggle-swap-out %s %s false", txStart, exampleAdminAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "admin"},
-						{ProtoField: "vault_address"},
-						{ProtoField: "enabled"},
+						{ProtoField: fieldAdmin},
+						{ProtoField: fieldVaultAddress},
+						{ProtoField: fieldEnabled},
 					},
 				},
 				{
@@ -366,9 +377,9 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Long:      "Deposit coins used exclusively for interest payouts. Amount is one or more coins, e.g. 5000nhash.",
 					Example:   fmt.Sprintf("%s deposit-interest-funds %s %s 5000nhash", txStart, exampleAuthorityAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "authority"},
-						{ProtoField: "vault_address"},
-						{ProtoField: "amount"},
+						{ProtoField: fieldAuthority},
+						{ProtoField: fieldVaultAddress},
+						{ProtoField: fieldAmount},
 					},
 				},
 				{
@@ -379,9 +390,9 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Long:      "Withdraw coins from the vault’s interest pool that are not allocated or required for current payouts.",
 					Example:   fmt.Sprintf("%s withdraw-interest-funds %s %s 1000nhash", txStart, exampleAuthorityAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "authority"},
-						{ProtoField: "vault_address"},
-						{ProtoField: "amount"},
+						{ProtoField: fieldAuthority},
+						{ProtoField: fieldVaultAddress},
+						{ProtoField: fieldAmount},
 					},
 				},
 				{
@@ -392,9 +403,9 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Long:      "Deposit principal coins managed by the vault. These funds back redemptions and operations per policy.",
 					Example:   fmt.Sprintf("%s deposit-principal-funds %s %s 100000nhash", txStart, exampleAuthorityAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "authority"},
-						{ProtoField: "vault_address"},
-						{ProtoField: "amount"},
+						{ProtoField: fieldAuthority},
+						{ProtoField: fieldVaultAddress},
+						{ProtoField: fieldAmount},
 					},
 				},
 				{
@@ -405,9 +416,9 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Long:      "Withdraw principal coins managed by the vault. This reduces available backing for redemptions.",
 					Example:   fmt.Sprintf("%s withdraw-principal-funds %s %s 10000nhash", txStart, exampleAuthorityAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "authority"},
-						{ProtoField: "vault_address"},
-						{ProtoField: "amount"},
+						{ProtoField: fieldAuthority},
+						{ProtoField: fieldVaultAddress},
+						{ProtoField: fieldAmount},
 					},
 				},
 				{
@@ -418,7 +429,7 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Long:      "Prioritize a pending swap-out request to be processed sooner if policy permits.",
 					Example:   fmt.Sprintf("%s expedite-pending-swap-out %s 1", txStart, exampleAuthorityAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "authority"},
+						{ProtoField: fieldAuthority},
 						{ProtoField: "request_id"},
 					},
 				},
@@ -430,8 +441,8 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Long:      "Pause user-facing operations such as swap-in and swap-out. Provide a short reason string.",
 					Example:   fmt.Sprintf("%s pause %s %s 'rebalancing collateral'", txStart, exampleAuthorityAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "authority"},
-						{ProtoField: "vault_address"},
+						{ProtoField: fieldAuthority},
+						{ProtoField: fieldVaultAddress},
 						{ProtoField: "reason"},
 					},
 				},
@@ -443,8 +454,8 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Long:      "Resume user-facing operations after a pause.",
 					Example:   fmt.Sprintf("%s unpause %s %s", txStart, exampleAuthorityAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "authority"},
-						{ProtoField: "vault_address"},
+						{ProtoField: fieldAuthority},
+						{ProtoField: fieldVaultAddress},
 					},
 				},
 				{
@@ -455,8 +466,8 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Long:      "Configure the bridge address authorized to mint or burn share supply for cross-domain workflows.",
 					Example:   fmt.Sprintf("%s set-bridge-address %s %s %s", txStart, exampleAdminAddr, exampleVaultAddr, exampleBridgeAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "admin"},
-						{ProtoField: "vault_address"},
+						{ProtoField: fieldAdmin},
+						{ProtoField: fieldVaultAddress},
 						{ProtoField: "bridge_address"},
 					},
 				},
@@ -468,9 +479,9 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Long:      "Turn the bridge capability on or off for the specified vault.",
 					Example:   fmt.Sprintf("%s toggle-bridge %s %s true", txStart, exampleAdminAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "admin"},
-						{ProtoField: "vault_address"},
-						{ProtoField: "enabled"},
+						{ProtoField: fieldAdmin},
+						{ProtoField: fieldVaultAddress},
+						{ProtoField: fieldEnabled},
 					},
 				},
 				{
@@ -482,8 +493,8 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Example:   fmt.Sprintf("%s bridge-mint-shares %s %s 100svnhash", txStart, exampleBridgeAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "bridge"},
-						{ProtoField: "vault_address"},
-						{ProtoField: "shares"},
+						{ProtoField: fieldVaultAddress},
+						{ProtoField: fieldShares},
 					},
 				},
 				{
@@ -495,8 +506,8 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Example:   fmt.Sprintf("%s bridge-burn-shares %s %s 100svnhash", txStart, exampleBridgeAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "bridge"},
-						{ProtoField: "vault_address"},
-						{ProtoField: "shares"},
+						{ProtoField: fieldVaultAddress},
+						{ProtoField: fieldShares},
 					},
 				},
 				{
@@ -507,8 +518,8 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Long:      "Configure an asset manager with authority over specific admin actions. Pass empty string to clear.",
 					Example:   fmt.Sprintf("%s set-asset-manager %s %s %s", txStart, exampleAdminAddr, exampleVaultAddr, exampleAssetMgrAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "admin"},
-						{ProtoField: "vault_address"},
+						{ProtoField: fieldAdmin},
+						{ProtoField: fieldVaultAddress},
 						{ProtoField: "asset_manager"},
 					},
 				},
@@ -520,7 +531,7 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Long:      "Update the module-level parameters. Requires governance authority.",
 					Example:   fmt.Sprintf("%s update-params %s '{\"tech_fee_address\":\"%s\",\"default_aum_fee_bips\":15}'", txStart, exampleAuthorityAddr, exampleAuthorityAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "authority"},
+						{ProtoField: fieldAuthority},
 						{ProtoField: "params"},
 					},
 				},
@@ -532,8 +543,8 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Long:      "Update the AUM fee rate (in basis points) for a specific vault. Requires tech fee authority.",
 					Example:   fmt.Sprintf("%s update-vault-aum-fee-bips %s %s 20", txStart, exampleAuthorityAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "authority"},
-						{ProtoField: "vault_address"},
+						{ProtoField: fieldAuthority},
+						{ProtoField: fieldVaultAddress},
 						{ProtoField: "aum_fee_bips"},
 					},
 				},
@@ -569,8 +580,8 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Long:      "Simulate a swap-in to estimate the shares minted for the provided assets at current conversion.",
 					Example:   fmt.Sprintf("%s estimate-swap-in %s 1000nhash", queryStart, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "vault_address"},
-						{ProtoField: "assets"},
+						{ProtoField: fieldVaultAddress},
+						{ProtoField: fieldAssets},
 					},
 				},
 				{
@@ -581,8 +592,8 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Long:      "Simulate a swap-out to estimate the assets returned for the provided shares. Optionally specify a redeem denom.",
 					Example:   fmt.Sprintf("%s estimate-swap-out %s 1000000svnhash nhash", queryStart, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "vault_address"},
-						{ProtoField: "shares"},
+						{ProtoField: fieldVaultAddress},
+						{ProtoField: fieldShares},
 						{ProtoField: "redeem_denom", Optional: true},
 					},
 				},

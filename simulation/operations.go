@@ -192,7 +192,7 @@ func SimulateMsgCreateVault(k keeper.Keeper) simtypes.Operation {
 		if !ok {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "marker keeper is not of type markerkeeper.Keeper"), nil, fmt.Errorf("marker keeper is not of type markerkeeper.Keeper")
 		}
-		if err := PrepareVaultMarkers(ctx, k.AuthKeeper, markerKeeper, underlying, payment, denom); err != nil {
+		if err = PrepareVaultMarkers(ctx, k.AuthKeeper, markerKeeper, underlying, payment, denom); err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "failed to prepare vault markers"), nil, err
 		}
 

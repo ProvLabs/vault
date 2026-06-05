@@ -19,12 +19,7 @@ jobs:
       - uses: actions/setup-go@3041bf56c941b39c61721a86cd11f3bb1338122a # v5.2.0
         with:
           go-version-file: 'go.mod'
-      - uses: golangci/golangci-lint-action@55c2c1448f86e01eaae002a5a3a9624417608d84 # v6.5.2
+      - uses: golangci/golangci-lint-action@82606bf257cbaff209d206a39f5134f0cfbfd2ee # v9.2.1
         with:
-          version: v1.61
-          # Build from source with the repo's Go toolchain. The prebuilt v1.61
-          # binary is compiled with go1.23 and refuses to run against the go1.25
-          # target in go.mod ("Go language version used to build golangci-lint is
-          # lower than the targeted Go version").
-          install-mode: goinstall
+          version: v2.12.2
           args: --timeout 10m

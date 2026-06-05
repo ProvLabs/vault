@@ -46,8 +46,9 @@ func (gs GenesisState) Validate() error {
 		}
 		payoutQueueAddrs[entry.Addr] = true
 
-		if entry.Time != uint64(v.PeriodTimeout) {
-			return fmt.Errorf("payout timeout queue time mismatch for vault %s: expected %d, got %d", entry.Addr, uint64(v.PeriodTimeout), entry.Time)
+		expectedPeriodTimeout := uint64(v.PeriodTimeout) //nolint:gosec // G115: PeriodTimeout is validated non-negative.
+		if entry.Time != expectedPeriodTimeout {
+			return fmt.Errorf("payout timeout queue time mismatch for vault %s: expected %d, got %d", entry.Addr, expectedPeriodTimeout, entry.Time)
 		}
 
 		if entry.Time > math.MaxInt64 {
@@ -69,8 +70,9 @@ func (gs GenesisState) Validate() error {
 		}
 		feeQueueAddrs[entry.Addr] = true
 
-		if entry.Time != uint64(v.FeePeriodTimeout) {
-			return fmt.Errorf("fee timeout queue time mismatch for vault %s: expected %d, got %d", entry.Addr, uint64(v.FeePeriodTimeout), entry.Time)
+		expectedFeePeriodTimeout := uint64(v.FeePeriodTimeout) //nolint:gosec // G115: FeePeriodTimeout is validated non-negative.
+		if entry.Time != expectedFeePeriodTimeout {
+			return fmt.Errorf("fee timeout queue time mismatch for vault %s: expected %d, got %d", entry.Addr, expectedFeePeriodTimeout, entry.Time)
 		}
 
 		if entry.Time > math.MaxInt64 {

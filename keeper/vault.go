@@ -70,7 +70,7 @@ func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*type
 		return nil, fmt.Errorf("failed to create vault account: %w", err)
 	}
 
-	if _, err := k.createVaultMarker(cacheCtx, vault.GetAddress(), vault.TotalShares.Denom); err != nil {
+	if _, err = k.createVaultMarker(cacheCtx, vault.GetAddress(), vault.TotalShares.Denom); err != nil {
 		return nil, fmt.Errorf("failed to create vault marker: %w", err)
 	}
 
@@ -245,7 +245,7 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 		return nil, fmt.Errorf("swaps are not enabled for vault %s", vaultAddr.String())
 	}
 
-	if err := vault.ValidateAcceptedCoin(asset); err != nil {
+	if err = vault.ValidateAcceptedCoin(asset); err != nil {
 		return nil, fmt.Errorf("failed to validate asset: %w", err)
 	}
 
@@ -257,7 +257,7 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 		return nil, fmt.Errorf("failed to swap in: swap in amount %s %s for vault %s", asset.String(), reason, vaultAddr.String())
 	}
 
-	if err := k.reconcileVault(ctx, vault); err != nil {
+	if err = k.reconcileVault(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to reconcile vault: %w", err)
 	}
 
@@ -337,7 +337,7 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 		redeemDenom = vault.PaymentDenom
 	}
 
-	if err := vault.ValidateAcceptedDenom(redeemDenom); err != nil {
+	if err = vault.ValidateAcceptedDenom(redeemDenom); err != nil {
 		return 0, fmt.Errorf("failed to validate redeem denom: %w", err)
 	}
 
@@ -354,15 +354,15 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 		return 0, fmt.Errorf("failed to swap out: swap out amount %s %s for vault %s", assets.String(), reason, vaultAddr.String())
 	}
 
-	if err := k.checkPayoutRestrictions(ctx, vault, owner, assets); err != nil {
+	if err = k.checkPayoutRestrictions(ctx, vault, owner, assets); err != nil {
 		return 0, fmt.Errorf("failed to check payout restrictions: %w", err)
 	}
 
-	if err := k.BankKeeper.SendCoins(ctx, owner, vault.GetAddress(), sdk.NewCoins(shares)); err != nil {
+	if err = k.BankKeeper.SendCoins(ctx, owner, vault.GetAddress(), sdk.NewCoins(shares)); err != nil {
 		return 0, fmt.Errorf("failed to escrow shares: %w", err)
 	}
 
-	payoutTime := ctx.BlockTime().Unix() + int64(vault.WithdrawalDelaySeconds)
+	payoutTime := ctx.BlockTime().Unix() + int64(vault.WithdrawalDelaySeconds) //nolint:gosec // G115: WithdrawalDelaySeconds is validated <= MaxWithdrawalDelay.
 
 	pendingReq := types.NewPendingSwapOut(owner, vaultAddr, shares, redeemDenom)
 	requestID, err := k.PendingSwapOutQueue.Enqueue(ctx, payoutTime, &pendingReq)
@@ -446,7 +446,7 @@ func (k Keeper) ValidateInterestRateLimits(minRateStr, maxRateStr string) error 
 		if err != nil {
 			return fmt.Errorf("invalid min interest rate: %w", err)
 		}
-		if err := types.ValidateInterestRateMagnitude(minRate); err != nil {
+		if err = types.ValidateInterestRateMagnitude(minRate); err != nil {
 			return fmt.Errorf("invalid min interest rate: %w", err)
 		}
 		hasMin = true

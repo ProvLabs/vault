@@ -1,1 +1,0 @@
-* Implemented global governance parameters for AUM fees and granular per-vault fee rate (bips) management, migrating hardcoded fee logic to a formal Params structure with authorized update capabilities [#180](https://github.com/provlabs/vault/issues/180).

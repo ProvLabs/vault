@@ -56,7 +56,9 @@ service Query {
 
   // NavValue returns a single internal NAV entry for a vault and denom.
   rpc NavValue(QueryNavValueRequest) returns (QueryNavValueResponse) {
-    option (google.api.http).get = "/vault/v1/vaults/{id}/navs/{denom}";
+    // denom uses a multi-segment capture so denominations containing "/"
+    // (e.g. "ibc/..." or "factory/...") route correctly.
+    option (google.api.http).get = "/vault/v1/vaults/{id}/navs/{denom=**}";
   }
 
   // VaultPayment returns a single pending exchange-module payment targeting a vault,

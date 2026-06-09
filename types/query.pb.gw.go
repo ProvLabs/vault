@@ -1225,7 +1225,7 @@ var (
 
 	pattern_Query_VaultNavs_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"vault", "v1", "vaults", "id", "navs"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_NavValue_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 1, 0, 4, 1, 5, 5}, []string{"vault", "v1", "vaults", "id", "navs", "denom"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_NavValue_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4, 3, 0, 4, 1, 5, 5}, []string{"vault", "v1", "vaults", "id", "navs", "denom"}, "", runtime.AssumeColonVerbOpt(false)))
 
 	pattern_Query_VaultPayment_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3, 2, 4}, []string{"vault", "v1", "vaults", "id", "payment"}, "", runtime.AssumeColonVerbOpt(false)))
 

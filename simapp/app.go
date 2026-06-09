@@ -371,3 +371,8 @@ func ProvideExchangeKeeperStub() vaulttypes.ExchangeKeeper {
 func (app *SimApp) AppCodec() codec.Codec {
 	return app.appCodec
 }
+
+// TxConfig returns the SimApp's TxConfig, used by tests to build and sign transactions.
+func (app *SimApp) TxConfig() client.TxConfig {
+	return app.txConfig
+}

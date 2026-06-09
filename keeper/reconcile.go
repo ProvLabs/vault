@@ -259,7 +259,11 @@ func (k Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAccou
 		return fmt.Errorf("failed to calculate accrued AUM fee payment: %w", err)
 	}
 
-	totalOutstanding := vault.OutstandingAumFee.Add(newFeePayment)
+	totalOutstandingAmount, err := vault.OutstandingAumFee.Amount.SafeAdd(newFeePayment.Amount)
+	if err != nil {
+		return fmt.Errorf("failed to add new fee payment %s to outstanding AUM fee %s: %w", newFeePayment, vault.OutstandingAumFee, err)
+	}
+	totalOutstanding := sdk.NewCoin(vault.PaymentDenom, totalOutstandingAmount)
 	if totalOutstanding.IsZero() {
 		vault.FeePeriodStart = currentBlockTime
 		return nil
@@ -290,7 +294,11 @@ func (k Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAccou
 	}
 
 	periodDuration := currentBlockTime - vault.FeePeriodStart
-	vault.OutstandingAumFee = totalOutstanding.Sub(toCollect)
+	remainingOutstanding, err := totalOutstanding.SafeSub(toCollect)
+	if err != nil {
+		return fmt.Errorf("failed to subtract collected %s from outstanding AUM fee %s: %w", toCollect, totalOutstanding, err)
+	}
+	vault.OutstandingAumFee = remainingOutstanding
 	vault.FeePeriodStart = currentBlockTime
 
 	k.emitEvent(ctx, types.NewEventVaultFeeCollected(

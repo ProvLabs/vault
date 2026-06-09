@@ -86,7 +86,14 @@ func CalculateInterestEarned(principal sdk.Coin, rate string, periodSeconds int6
 //	Fee = (AUM * (bips / 10000) * duration) / 31536000 (SecondsPerYear)
 //
 // Returns the fee as a truncated sdkmath.Int.
-func CalculateAUMFee(aum sdkmath.Int, bips uint32, duration int64) (sdkmath.Int, error) {
+func CalculateAUMFee(aum sdkmath.Int, bips uint32, duration int64) (fee sdkmath.Int, err error) {
+	defer func() {
+		if rec := recover(); rec != nil {
+			fee = sdkmath.Int{}
+			err = fmt.Errorf("aum fee calculation overflow (aum=%s, bips=%d, duration=%d): %v", aum, bips, duration, rec)
+		}
+	}()
+
 	if aum.IsNegative() {
 		return sdkmath.Int{}, errors.New("aum cannot be negative")
 	}
@@ -105,8 +112,8 @@ func CalculateAUMFee(aum sdkmath.Int, bips uint32, duration int64) (sdkmath.Int,
 	durationDec := sdkmath.LegacyNewDec(duration)
 	yearDec := sdkmath.LegacyNewDec(SecondsPerYear)
 
-	fee := aumDec.Mul(rate).Mul(durationDec).Quo(yearDec)
-	return fee.TruncateInt(), nil
+	feeDec := aumDec.Mul(rate).Mul(durationDec).Quo(yearDec)
+	return feeDec.TruncateInt(), nil
 }
 
 // CalculateExpiration determines the epoch time at which a vault will no longer be

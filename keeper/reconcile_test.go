@@ -1866,6 +1866,50 @@ func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer() {
 	}
 }
 
+func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer_OversizedTVVDegradesToError() {
+	vault, _, underlyingDenom, paymentDenom := s.setupOversizedNAVVault()
+	s.seedOversizedNAV(vault, paymentDenom, underlyingDenom, maxValidNAVPrice(), sdkmath.OneInt())
+
+	principalAddress := vault.PrincipalMarkerAddress()
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, principalAddress, sdk.NewCoins(
+		sdk.NewInt64Coin(paymentDenom, 1),
+	)), "funding principal with one payment unit should drive TVV to the 256-bit ceiling")
+
+	now := s.ctx.BlockTime()
+	twoMonthsAgo := now.Add(-60 * 24 * time.Hour)
+	vault.AumFeeBips = 10_000
+	s.SetVaultRatesAndPeriod(vault, "0.0", "0.0", twoMonthsAgo.Unix(), 0)
+	s.SetCtxBlockTime(now)
+
+	err := s.k.PerformVaultFeeTransfer(s.ctx, vault)
+	s.Require().Error(err, "an oversized TVV must degrade to an error, not panic the BeginBlock fee hook")
+	s.Require().ErrorContains(err, "overflow", "error should originate from the CalculateAUMFee recover guard")
+}
+
+func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer_OutstandingFeeOverflowDegradesToError() {
+	s.SetupTest()
+	shareDenom := "fee.shares"
+	underlyingDenom := "uylds.fcc.receipt"
+	paymentDenom := "uylds.fcc"
+	underlying := sdk.NewInt64Coin(underlyingDenom, 1_000_000_000)
+	now := s.ctx.BlockTime()
+	twoMonthsAgo := now.Add(-60 * 24 * time.Hour)
+
+	s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
+	vault := s.CreateVaultWithParams(shareDenom, underlyingDenom, paymentDenom)
+	vault.AumFeeBips = 100
+	vault.OutstandingAumFee = sdk.NewCoin(paymentDenom, maxValidNAVPrice())
+	s.SetVaultRatesAndPeriod(vault, "0.0", "0.0", twoMonthsAgo.Unix(), 0)
+
+	s.FundMarker(shareDenom, sdk.NewCoins(underlying))
+	s.FundMarker(shareDenom, sdk.NewCoins(sdk.NewCoin(paymentDenom, sdkmath.NewInt(100_000))))
+	s.SetCtxBlockTime(now)
+
+	err := s.k.PerformVaultFeeTransfer(s.ctx, vault)
+	s.Require().Error(err, "an outstanding fee at the 256-bit ceiling must degrade to an error, not panic the BeginBlock fee hook")
+	s.Require().ErrorContains(err, "overflow", "error should originate from the SafeAdd guard on outstanding AUM fee")
+}
+
 func (s *TestSuite) TestKeeper_CanPayInterestDuration_WithAUMFee() {
 	s.SetupTest()
 	shareDenom := "fee.payout.shares"

@@ -17,12 +17,11 @@ import (
 // distinguish migrated entries from oracle- or operator-supplied updates.
 const MigrationNAVSeedSource = "x/vault internal NAV seed migration"
 
-// uyldsFccDenom is the temporary 1:1 peg denom. A vault whose payment_denom or
-// underlying_asset is this denom is priced 1:1, but the pricing engine reads
-// that price from an explicit Internal NAV entry rather than a fast-path:
-// UnitPriceFraction only short-circuits the identity case (srcDenom ==
-// underlying_asset). Accordingly, this migration does not skip such vaults; it
-// seeds an explicit (Price.Amount=1, Volume=1) Internal NAV entry for them. See
+// uyldsFccDenom is the temporary 1:1 peg denom. For non-identity vault pairs
+// where payment_denom or underlying_asset is this denom, migration seeds an
+// explicit (Price.Amount=1, Volume=1) Internal NAV entry so pricing reads from
+// Internal NAV. Identity pairs (payment_denom == underlying_asset) are still
+// skipped earlier because internal NAV denom/price-denom would collide. See
 // https://github.com/ProvLabs/vault/issues/73.
 const uyldsFccDenom = "uylds.fcc"
 

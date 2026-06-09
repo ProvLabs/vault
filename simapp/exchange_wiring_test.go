@@ -143,6 +143,14 @@ func TestExchangePaymentTxWiring(t *testing.T) {
 				require.Equalf(t, uint32(0), txResult.Code, "tx for case %q should succeed: %s", tc.name, txResult.Log)
 			} else {
 				require.NotEqualf(t, uint32(0), txResult.Code, "tx for case %q should be rejected by signer extraction", tc.name)
+				require.Containsf(
+					t,
+					txResult.Log,
+					"pubKey does not match signer address",
+					"tx for case %q should fail signer auth, got log: %s",
+					tc.name,
+					txResult.Log,
+				)
 			}
 
 			_, err = app.Commit()

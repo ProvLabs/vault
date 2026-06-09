@@ -1896,6 +1896,7 @@ func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer_OutstandingFeeOverflowDeg
 	twoMonthsAgo := now.Add(-60 * 24 * time.Hour)
 
 	s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 1_000_000_000), s.adminAddr)
 	vault := s.CreateVaultWithParams(shareDenom, underlyingDenom, paymentDenom)
 	vault.AumFeeBips = 100
 	vault.OutstandingAumFee = sdk.NewCoin(paymentDenom, maxValidNAVPrice())

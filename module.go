@@ -683,7 +683,7 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Alias:     []string{"pmt"},
 					Short:     "Query a single pending exchange-module payment targeting a vault",
 					Long:      "Fetch the pending payment targeting the provided vault address or share denom, identified by the payment's source account and external id.",
-					Example:   fmt.Sprintf("%s payment %s %s invoice-001", queryStart, exampleVaultAddr, exampleVaultAddr),
+					Example:   fmt.Sprintf("%s payment %s %s invoice-001", queryStart, exampleVaultAddr, exampleOwnerAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "id"},
 						{ProtoField: "source"},

@@ -752,8 +752,20 @@ func (s *TestSuite) TestEstimateTotalVaultValue_MultiAsset_Table() {
 
 			s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(tc.underlyingDenom, 1_000_000), s.adminAddr)
 			s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(tc.paymentDenom, 1_000_000), s.adminAddr)
-			s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, tc.underlyingDenom, sdk.NewCoins(sdk.NewInt64Coin(tc.underlyingDenom, 110)))
-			s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, tc.paymentDenom, sdk.NewCoins(sdk.NewInt64Coin(tc.paymentDenom, 50)))
+			s.Require().NoError(
+				s.k.MarkerKeeper.WithdrawCoins(
+					s.ctx, s.adminAddr, s.adminAddr, tc.underlyingDenom,
+					sdk.NewCoins(sdk.NewInt64Coin(tc.underlyingDenom, 110)),
+				),
+				"withdrawing underlying marker funds should succeed for case %q", tc.name,
+			)
+			s.Require().NoError(
+				s.k.MarkerKeeper.WithdrawCoins(
+					s.ctx, s.adminAddr, s.adminAddr, tc.paymentDenom,
+					sdk.NewCoins(sdk.NewInt64Coin(tc.paymentDenom, 50)),
+				),
+				"withdrawing payment marker funds should succeed for case %q", tc.name,
+			)
 
 			vault, err := s.k.CreateVault(s.ctx, vaultAttrs{admin: s.adminAddr.String(), share: tc.shareDenom, underlying: tc.underlyingDenom})
 			s.Require().NoError(err, "vault creation should succeed for case %q", tc.name)

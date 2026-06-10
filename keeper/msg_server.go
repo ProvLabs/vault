@@ -943,6 +943,10 @@ func (k msgServer) AcceptAsset(goCtx context.Context, msg *types.MsgAcceptAssetR
 
 	k.emitEvent(ctx, types.NewEventAssetAccepted(msg.VaultAddress, msg.Source, msg.ExternalId, payment.SourceAmount, payment.TargetAmount, direction))
 
+	if err := k.applySettlementNAV(ctx, vault, assetCoin, paymentCoin, direction, msg.Authority); err != nil {
+		return nil, err
+	}
+
 	return &types.MsgAcceptAssetResponse{}, nil
 }
 

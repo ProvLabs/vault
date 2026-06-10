@@ -1449,7 +1449,10 @@ func (s *TestSuite) TestQueryServer_NavValue() {
 // TestQueryServer_VaultPayment verifies the VaultPayment query returns a single
 // payment targeting the vault and reports NotFound for unknown or mistargeted payments.
 func (s *TestSuite) TestQueryServer_VaultPayment() {
-	underlying, share, paymentDenom, asset := "under", "vshare", "pay", "rwacoin"
+	underlying := "under"
+	share := "vshare"
+	paymentDenom := "pay"
+	asset := "rwacoin"
 
 	vault, _ := s.setupAssetSettlementVault(underlying, share, paymentDenom)
 	vaultAddr := vault.GetAddress()
@@ -1575,7 +1578,10 @@ func (s *TestSuite) TestQueryServer_VaultPayment() {
 // TestQueryServer_VaultPayments verifies the VaultPayments query returns every payment
 // targeting the vault, excludes payments for other targets, and paginates the results.
 func (s *TestSuite) TestQueryServer_VaultPayments() {
-	underlying, share, paymentDenom, asset := "under", "vshare", "pay", "rwacoin"
+	underlying := "under"
+	share := "vshare"
+	paymentDenom := "pay"
+	asset := "rwacoin"
 
 	vault, _ := s.setupAssetSettlementVault(underlying, share, paymentDenom)
 	vaultAddr := vault.GetAddress()

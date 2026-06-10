@@ -104,6 +104,12 @@ func (k Keeper) TestAccessor_checkSettlementNAVGuardrail(t *testing.T, ctx conte
 	return k.checkSettlementNAVGuardrail(sdk.UnwrapSDKContext(ctx), vault, assetCoin, paymentCoin)
 }
 
+// TestAccessor_applySettlementNAV exposes this keeper's applySettlementNAV function for unit tests.
+func (k Keeper) TestAccessor_applySettlementNAV(t *testing.T, ctx context.Context, vault *types.VaultAccount, assetCoin, paymentCoin sdk.Coin, direction, signer string) error {
+	t.Helper()
+	return k.applySettlementNAV(sdk.UnwrapSDKContext(ctx), vault, assetCoin, paymentCoin, direction, signer)
+}
+
 // TestAccessor_settlementLegCoins exposes the settlementLegCoins function for unit tests.
 func (k Keeper) TestAccessor_settlementLegCoins(t *testing.T, payment *exchange.Payment, direction string) (sdk.Coin, sdk.Coin, error) {
 	t.Helper()

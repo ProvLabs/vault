@@ -834,6 +834,10 @@ func (k msgServer) UpdateVaultNAV(goCtx context.Context, msg *types.MsgUpdateVau
 		return nil, fmt.Errorf("failed to validate NAV authority: %w", err)
 	}
 
+	if err := k.reconcileVault(ctx, vault); err != nil {
+		return nil, fmt.Errorf("failed to reconcile vault before NAV update: %w", err)
+	}
+
 	nav := types.NewVaultNAV(msg.Denom, msg.Price, msg.Volume, msg.Source)
 	if err := k.SetVaultNAV(ctx, vault, nav, msg.Signer); err != nil {
 		return nil, fmt.Errorf("failed to update vault NAV: %w", err)
@@ -913,6 +917,10 @@ func (k msgServer) AcceptAsset(goCtx context.Context, msg *types.MsgAcceptAssetR
 	}
 	if err := k.checkSettlementNAVGuardrail(ctx, vault, assetCoin, paymentCoin); err != nil {
 		return nil, err
+	}
+
+	if err := k.reconcileVault(ctx, vault); err != nil {
+		return nil, fmt.Errorf("failed to reconcile vault before settlement: %w", err)
 	}
 
 	principalAddr := vault.PrincipalMarkerAddress()

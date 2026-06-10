@@ -5760,6 +5760,97 @@ func (s *TestSuite) TestMsgServer_UpdateVaultNAV_Failures() {
 	}
 }
 
+func (s *TestSuite) TestMsgServer_UpdateVaultNAV_Reconcile() {
+	underlying := "under"
+	share := "vaultshares"
+	navDenom := "rwa"
+	testBlockTime := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+
+	tests := []struct {
+		name                 string
+		interestRate         string
+		paused               bool
+		useUnregisteredDenom bool
+		expectedErrContains  string
+		expectedReconciles   int
+	}{
+		{
+			name:               "successful NAV update with an elapsed interest period reconciles exactly once, before the NAV write",
+			interestRate:       "4.20",
+			expectedReconciles: 1,
+		},
+		{
+			name:               "paused vault accepts the NAV update but does not reconcile",
+			interestRate:       "4.20",
+			paused:             true,
+			expectedReconciles: 0,
+		},
+		{
+			name:                 "NAV update that fails validation reconciles first, relying on tx revert to discard it",
+			interestRate:         "4.20",
+			useUnregisteredDenom: true,
+			expectedErrContains:  "is not a registered marker",
+			expectedReconciles:   1,
+		},
+		{
+			name:                "failed reconcile aborts the NAV update",
+			interestRate:        "1000000.0",
+			expectedErrContains: "failed to reconcile vault before NAV update",
+			expectedReconciles:  0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			origCtx := s.ctx
+			defer func() { s.ctx = origCtx }()
+			s.ctx, _ = s.ctx.CacheContext()
+
+			vaultAddr, _ := s.setupReconcileVault(tc.interestRate, testBlockTime.Add(-3*time.Hour).Unix(), tc.paused, sdk.NewInt64Coin(underlying, 1_000), share, sdk.NewInt64Coin(share, 0), testBlockTime)
+			denom := navDenom
+			if tc.useUnregisteredDenom {
+				denom = "notamarker"
+			} else {
+				s.requireSimpleMarker(navDenom)
+			}
+
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).UpdateVaultNAV(s.ctx, &types.MsgUpdateVaultNAVRequest{
+				Signer:       s.adminAddr.String(),
+				VaultAddress: vaultAddr.String(),
+				Denom:        denom,
+				Price:        sdk.NewInt64Coin(underlying, 100),
+				Volume:       sdkmath.NewInt(1),
+				Source:       "oracle",
+			})
+
+			reconcileCount := 0
+			reconcileIdx := -1
+			updatedIdx := -1
+			for i, ev := range s.ctx.EventManager().Events() {
+				switch ev.Type {
+				case "provlabs.vault.v1.EventVaultReconcile":
+					reconcileCount++
+					reconcileIdx = i
+				case "provlabs.vault.v1.EventNAVUpdated":
+					updatedIdx = i
+				}
+			}
+
+			if tc.expectedErrContains != "" {
+				s.Require().ErrorContains(err, tc.expectedErrContains, "UpdateVaultNAV should fail for case %q", tc.name)
+			} else {
+				s.Require().NoError(err, "UpdateVaultNAV should succeed for case %q", tc.name)
+			}
+			s.Assert().Equal(tc.expectedReconciles, reconcileCount, "EventVaultReconcile count mismatch for case %q", tc.name)
+			if tc.expectedErrContains == "" && tc.expectedReconciles > 0 {
+				s.Require().GreaterOrEqual(updatedIdx, 0, "EventNAVUpdated should be emitted for case %q", tc.name)
+				s.Assert().Less(reconcileIdx, updatedIdx, "reconcile events should precede EventNAVUpdated for case %q", tc.name)
+			}
+		})
+	}
+}
+
 // TestMsgServer_UpdateNAVAuthority verifies that the vault admin can rotate the
 // NAV authority and that the rotation is persisted on the vault account.
 func (s *TestSuite) TestMsgServer_UpdateNAVAuthority() {
@@ -6538,6 +6629,103 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_SettlementNAV() {
 			s.Assert().Equal(tc.expectedNavVolume, stored.Volume, "stored NAV volume mismatch for case %q", tc.name)
 			s.Assert().Equal(vaultAddr.String(), stored.Source, "stored NAV source should be the vault address for case %q", tc.name)
 			s.requireTypedEventEmitted(types.NewEventNAVUpdated(vaultAddr.String(), stored, s.adminAddr.String()))
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_AcceptAsset_Reconcile() {
+	underlying := "under"
+	share := "vshare"
+	paymentDenom := "pay"
+	asset := "rwacoin"
+	externalID := "settle-reconcile"
+
+	tests := []struct {
+		name                string
+		interestRate        string
+		seedNav             *types.VaultNAV
+		expectedErrContains string
+		expectedReconciles  int
+	}{
+		{
+			name:               "successful settlement with an elapsed interest period reconciles exactly once, before the transfers",
+			interestRate:       "4.20",
+			expectedReconciles: 1,
+		},
+		{
+			name:                "settlement rejected by the NAV guardrail does not reconcile",
+			interestRate:        "4.20",
+			seedNav:             &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(paymentDenom, 9), Volume: sdkmath.NewInt(10)},
+			expectedErrContains: "does not match internal NAV",
+			expectedReconciles:  0,
+		},
+		{
+			name:                "failed reconcile aborts the settlement",
+			interestRate:        "1000000.0",
+			expectedErrContains: "failed to reconcile vault before settlement",
+			expectedReconciles:  0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			origCtx := s.ctx
+			defer func() { s.ctx = origCtx }()
+			s.ctx, _ = s.ctx.CacheContext()
+
+			vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+			vaultAddr := vault.GetAddress()
+			s.requireSimpleMarker(asset)
+
+			if tc.seedNav != nil {
+				s.Require().NoError(
+					s.k.SetVaultNAV(s.ctx, vault, *tc.seedNav, s.adminAddr.String()),
+					"failed to seed internal NAV for denom %s", tc.seedNav.Denom,
+				)
+			}
+
+			// An elapsed interest period makes the reconcile observable via EventVaultReconcile.
+			vault.CurrentInterestRate = tc.interestRate
+			vault.DesiredInterestRate = tc.interestRate
+			vault.PeriodStart = s.ctx.BlockTime().Add(-3 * time.Hour).Unix()
+			s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+			source := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1_000))
+			s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, source, sdk.NewCoins(sdk.NewInt64Coin(asset, 10))), "failed to fund source with the settlement asset")
+			s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5))), "failed to fund principal with the settlement payment")
+			s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)), externalID)
+
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).AcceptAsset(s.ctx, &types.MsgAcceptAssetRequest{
+				Authority:    s.adminAddr.String(),
+				VaultAddress: vaultAddr.String(),
+				Source:       source.String(),
+				ExternalId:   externalID,
+			})
+
+			reconcileCount := 0
+			reconcileIdx := -1
+			acceptedIdx := -1
+			for i, ev := range s.ctx.EventManager().Events() {
+				switch ev.Type {
+				case "provlabs.vault.v1.EventVaultReconcile":
+					reconcileCount++
+					reconcileIdx = i
+				case "provlabs.vault.v1.EventAssetAccepted":
+					acceptedIdx = i
+				}
+			}
+
+			if tc.expectedErrContains != "" {
+				s.Require().ErrorContains(err, tc.expectedErrContains, "AcceptAsset should fail for case %q", tc.name)
+			} else {
+				s.Require().NoError(err, "AcceptAsset should succeed for case %q", tc.name)
+			}
+			s.Assert().Equal(tc.expectedReconciles, reconcileCount, "EventVaultReconcile count mismatch for case %q", tc.name)
+			if tc.expectedErrContains == "" && tc.expectedReconciles > 0 {
+				s.Require().GreaterOrEqual(acceptedIdx, 0, "EventAssetAccepted should be emitted for case %q", tc.name)
+				s.Assert().Less(reconcileIdx, acceptedIdx, "reconcile events should precede EventAssetAccepted for case %q", tc.name)
+			}
 		})
 	}
 }

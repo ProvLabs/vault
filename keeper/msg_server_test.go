@@ -6198,6 +6198,152 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Failures() {
 	}
 }
 
+func (s *TestSuite) TestMsgServer_AcceptAsset_NAVGuardrail() {
+	underlying, share, paymentDenom, asset := "under", "vshare", "pay", "rwacoin"
+	externalID := "guardrail"
+
+	tests := []struct {
+		name               string
+		seedNav            *types.VaultNAV
+		fundSource         sdk.Coins
+		fundPrincipal      sdk.Coins
+		sourceAmount       sdk.Coins
+		targetAmount       sdk.Coins
+		expectedErrSubstrs []string
+	}{
+		{
+			name:          "inbound settlement at the exact NAV price passes the guardrail",
+			seedNav:       &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(paymentDenom, 5), Volume: sdkmath.NewInt(10)},
+			fundSource:    sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+			fundPrincipal: sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			sourceAmount:  sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+			targetAmount:  sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+		},
+		{
+			name:               "inbound settlement off the NAV price is rejected",
+			seedNav:            &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(paymentDenom, 6), Volume: sdkmath.NewInt(10)},
+			fundSource:         sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+			fundPrincipal:      sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			sourceAmount:       sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+			targetAmount:       sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			expectedErrSubstrs: []string{"does not match internal NAV", "10rwacoin", "5pay", "6pay"},
+		},
+		{
+			name:          "no NAV entry skips the guardrail for a first acquisition",
+			fundSource:    sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+			fundPrincipal: sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			sourceAmount:  sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+			targetAmount:  sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+		},
+		{
+			name:          "outbound settlement at the exact NAV price passes the guardrail",
+			seedNav:       &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(paymentDenom, 5), Volume: sdkmath.NewInt(10)},
+			fundSource:    sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			fundPrincipal: sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+			sourceAmount:  sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			targetAmount:  sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+		},
+		{
+			name:               "outbound settlement off the NAV price is rejected",
+			seedNav:            &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(paymentDenom, 5), Volume: sdkmath.NewInt(10)},
+			fundSource:         sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 4)),
+			fundPrincipal:      sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+			sourceAmount:       sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 4)),
+			targetAmount:       sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+			expectedErrSubstrs: []string{"does not match internal NAV", "10rwacoin", "4pay", "5pay"},
+		},
+		{
+			name:               "fractional NAV price that floor math would accept is rejected",
+			seedNav:            &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(paymentDenom, 3), Volume: sdkmath.NewInt(2)},
+			fundSource:         sdk.NewCoins(sdk.NewInt64Coin(asset, 3)),
+			fundPrincipal:      sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 4)),
+			sourceAmount:       sdk.NewCoins(sdk.NewInt64Coin(asset, 3)),
+			targetAmount:       sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 4)),
+			expectedErrSubstrs: []string{"does not match internal NAV"},
+		},
+		{
+			name:          "fractional NAV price settled at an exact multiple passes the guardrail",
+			seedNav:       &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(paymentDenom, 3), Volume: sdkmath.NewInt(2)},
+			fundSource:    sdk.NewCoins(sdk.NewInt64Coin(asset, 4)),
+			fundPrincipal: sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 6)),
+			sourceAmount:  sdk.NewCoins(sdk.NewInt64Coin(asset, 4)),
+			targetAmount:  sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 6)),
+		},
+		{
+			name:               "NAV priced in a denom other than the settlement payment is rejected",
+			seedNav:            &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(underlying, 5), Volume: sdkmath.NewInt(10)},
+			fundSource:         sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+			fundPrincipal:      sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			sourceAmount:       sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+			targetAmount:       sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			expectedErrSubstrs: []string{"is priced in"},
+		},
+		{
+			name:               "asset leg with multiple coins cannot be priced and is rejected",
+			fundSource:         sdk.NewCoins(sdk.NewInt64Coin(asset, 10), sdk.NewInt64Coin("othercoin", 5)),
+			fundPrincipal:      sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			sourceAmount:       sdk.NewCoins(sdk.NewInt64Coin(asset, 10), sdk.NewInt64Coin("othercoin", 5)),
+			targetAmount:       sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			expectedErrSubstrs: []string{"exactly one coin"},
+		},
+		{
+			name:               "empty asset leg cannot be priced and is rejected",
+			fundPrincipal:      sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			sourceAmount:       sdk.NewCoins(),
+			targetAmount:       sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			expectedErrSubstrs: []string{"exactly one coin"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			origCtx := s.ctx
+			defer func() { s.ctx = origCtx }()
+			s.ctx, _ = s.ctx.CacheContext()
+
+			vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+			vaultAddr := vault.GetAddress()
+
+			if tc.seedNav != nil {
+				s.requireSimpleMarker(tc.seedNav.Denom)
+				s.Require().NoError(
+					s.k.SetVaultNAV(s.ctx, vault, *tc.seedNav, s.adminAddr.String()),
+					"failed to seed internal NAV for denom %s", tc.seedNav.Denom,
+				)
+			}
+
+			source := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1_000))
+			if !tc.fundSource.IsZero() {
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, source, tc.fundSource), "failed to fund source with %s", tc.fundSource)
+			}
+			if !tc.fundPrincipal.IsZero() {
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, tc.fundPrincipal), "failed to fund principal with %s", tc.fundPrincipal)
+			}
+
+			s.createPayment(source, vaultAddr, tc.sourceAmount, tc.targetAmount, externalID)
+
+			resp, err := keeper.NewMsgServer(s.simApp.VaultKeeper).AcceptAsset(s.ctx, &types.MsgAcceptAssetRequest{
+				Authority:    s.adminAddr.String(),
+				VaultAddress: vaultAddr.String(),
+				Source:       source.String(),
+				ExternalId:   externalID,
+			})
+
+			if len(tc.expectedErrSubstrs) == 0 {
+				s.Require().NoError(err, "AcceptAsset should pass the guardrail for case %q", tc.name)
+				s.Assert().Equal(&types.MsgAcceptAssetResponse{}, resp, "AcceptAsset response for case %q", tc.name)
+				return
+			}
+
+			s.Require().Error(err, "AcceptAsset should fail the guardrail for case %q", tc.name)
+			s.Assert().Nil(resp, "AcceptAsset response should be nil on error for case %q", tc.name)
+			for _, substr := range tc.expectedErrSubstrs {
+				s.Assert().Containsf(err.Error(), substr, "AcceptAsset error missing expected substring for case %q", tc.name)
+			}
+		})
+	}
+}
+
 func (s *TestSuite) TestMsgServer_AcceptAsset_InsufficientPrincipalDoesNotSettle() {
 	underlying, share, paymentDenom, asset := "under", "vshare", "pay", "rwacoin"
 	externalID := "short-noop"

@@ -904,6 +904,14 @@ func (k msgServer) AcceptAsset(goCtx context.Context, msg *types.MsgAcceptAssetR
 		return nil, err
 	}
 
+	assetCoin, paymentCoin, err := settlementLegCoins(payment, direction)
+	if err != nil {
+		return nil, err
+	}
+	if err := k.checkSettlementNAVGuardrail(ctx, vault, assetCoin, paymentCoin); err != nil {
+		return nil, err
+	}
+
 	principalAddr := vault.PrincipalMarkerAddress()
 
 	for _, coin := range payment.TargetAmount {

@@ -4,8 +4,10 @@ import (
 	"context"
 	"testing"
 
+	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/provenance-io/provenance/x/exchange"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provlabs/vault/types"
 )
@@ -94,4 +96,29 @@ func (k Keeper) TestAccessor_setShareDenomNAV(t *testing.T, ctx context.Context,
 func (k Keeper) TestAccessor_checkPayoutRestrictions(t *testing.T, ctx context.Context, vault *types.VaultAccount, owner sdk.AccAddress, assets sdk.Coin) error {
 	t.Helper()
 	return k.checkPayoutRestrictions(sdk.UnwrapSDKContext(ctx), vault, owner, assets)
+}
+
+// TestAccessor_checkSettlementNAVGuardrail exposes this keeper's checkSettlementNAVGuardrail function for unit tests.
+func (k Keeper) TestAccessor_checkSettlementNAVGuardrail(t *testing.T, ctx context.Context, vault *types.VaultAccount, assetCoin, paymentCoin sdk.Coin) error {
+	t.Helper()
+	return k.checkSettlementNAVGuardrail(sdk.UnwrapSDKContext(ctx), vault, assetCoin, paymentCoin)
+}
+
+// TestAccessor_settlementLegCoins exposes the settlementLegCoins function for unit tests.
+func (k Keeper) TestAccessor_settlementLegCoins(t *testing.T, payment *exchange.Payment, direction string) (sdk.Coin, sdk.Coin, error) {
+	t.Helper()
+	return settlementLegCoins(payment, direction)
+}
+
+// TestAccessor_corruptVaultNAV writes undecodable bytes at the internal NAV entry for
+// vaultAddr/denom so unit tests can exercise NAV lookup failures other than not-found.
+func (k Keeper) TestAccessor_corruptVaultNAV(t *testing.T, ctx context.Context, vaultAddr sdk.AccAddress, denom string) error {
+	t.Helper()
+	keyCodec := collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey)
+	key := collections.Join(vaultAddr, denom)
+	buf := make([]byte, keyCodec.Size(key))
+	if _, err := keyCodec.Encode(buf, key); err != nil {
+		return err
+	}
+	return k.storeService.OpenKVStore(ctx).Set(append(types.NAVsKeyPrefix.Bytes(), buf...), []byte{0xFF})
 }

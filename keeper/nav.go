@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/provlabs/vault/types"
@@ -77,6 +78,41 @@ func (k *Keeper) SetVaultNAV(ctx sdk.Context, vault *types.VaultAccount, nav typ
 // denom. It returns collections.ErrNotFound when no entry exists.
 func (k *Keeper) GetVaultNAV(ctx sdk.Context, vaultAddr sdk.AccAddress, denom string) (types.VaultNAV, error) {
 	return k.NAVs.Get(ctx, collections.Join(vaultAddr, denom))
+}
+
+// checkSettlementNAVGuardrail requires an asset settlement to trade exactly at the
+// vault's internal NAV entry for the asset denom, so the manager cannot settle at
+// off-NAV prices. Equality is checked by cross-multiplication
+// (assetAmount * navPrice == paymentAmount * navVolume) to avoid rounding. When no
+// entry exists (first acquisition) the guardrail is skipped.
+func (k *Keeper) checkSettlementNAVGuardrail(ctx sdk.Context, vault *types.VaultAccount, assetCoin, paymentCoin sdk.Coin) error {
+	nav, err := k.GetVaultNAV(ctx, vault.GetAddress(), assetCoin.Denom)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return nil
+		}
+		return fmt.Errorf("failed to get internal NAV for denom %q on vault %s: %w", assetCoin.Denom, vault.Address, err)
+	}
+
+	if nav.Price.Denom != paymentCoin.Denom {
+		return fmt.Errorf("settlement of %s for %s is priced in %q but internal NAV for %q on vault %s is priced in %q",
+			assetCoin, paymentCoin, paymentCoin.Denom, assetCoin.Denom, vault.Address, nav.Price.Denom)
+	}
+
+	assetValue, err := assetCoin.Amount.SafeMul(nav.Price.Amount)
+	if err != nil {
+		return fmt.Errorf("failed to multiply settlement asset amount %s by NAV price %s: %w", assetCoin.Amount, nav.Price.Amount, err)
+	}
+	paymentValue, err := paymentCoin.Amount.SafeMul(nav.Volume)
+	if err != nil {
+		return fmt.Errorf("failed to multiply settlement payment amount %s by NAV volume %s: %w", paymentCoin.Amount, nav.Volume, err)
+	}
+	if !assetValue.Equal(paymentValue) {
+		return fmt.Errorf("settlement of %s for %s does not match internal NAV of %s per %s%s on vault %s",
+			assetCoin, paymentCoin, nav.Price, nav.Volume, assetCoin.Denom, vault.Address)
+	}
+
+	return nil
 }
 
 // RemoveVaultNAV deletes the internal net asset value entry for a denom held

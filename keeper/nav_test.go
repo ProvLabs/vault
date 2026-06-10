@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"math/big"
 	"strings"
 	"time"
 
@@ -279,9 +280,6 @@ func (s *TestSuite) TestKeeper_SetVaultNAV_RejectsInvalidInput() {
 // EventNAVAuthorityUpdated with the supplied signer recorded for attribution.
 // Both a rotation to an explicit address and a reset to the empty string
 // (fall-back-to-admin) flow through the same write path.
-// TestKeeper_RemoveVaultNAV verifies RemoveVaultNAV deletes an existing entry
-// and emits exactly one EventNAVRemoved carrying the last recorded price and
-// volume, and that removing a denom with no entry fails without emitting.
 func (s *TestSuite) TestKeeper_RemoveVaultNAV() {
 	cases := []struct {
 		name                string
@@ -361,6 +359,101 @@ func (s *TestSuite) TestKeeper_RemoveVaultNAV() {
 			s.Assert().Equal(`"`+tc.navDenom+`"`, attrs["denom"], "event denom attribute should record the removed denom")
 			s.Assert().Equal(`"`+tc.expectedLastPrice+`"`, attrs["last_price"], "event last_price attribute should record the last stored price")
 			s.Assert().Equal(`"`+tc.expectedLastVolume+`"`, attrs["last_volume"], "event last_volume attribute should record the last stored volume")
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_CheckSettlementNAVGuardrail() {
+	underlying := "under"
+	share := "vaultshares"
+	asset := "rwa"
+	hugeAmt := sdkmath.NewIntFromBigInt(new(big.Int).Lsh(big.NewInt(1), 130))
+
+	tests := []struct {
+		name                string
+		seedNav             *types.VaultNAV
+		corruptNav          bool
+		assetCoin           sdk.Coin
+		paymentCoin         sdk.Coin
+		expectedErrContains string
+	}{
+		{
+			name:        "no NAV entry for the asset denom skips the guardrail",
+			assetCoin:   sdk.NewInt64Coin(asset, 10),
+			paymentCoin: sdk.NewInt64Coin(underlying, 5),
+		},
+		{
+			name:                "undecodable NAV entry propagates a non-NotFound lookup error",
+			corruptNav:          true,
+			assetCoin:           sdk.NewInt64Coin(asset, 10),
+			paymentCoin:         sdk.NewInt64Coin(underlying, 5),
+			expectedErrContains: "failed to get internal NAV for denom \"rwa\"",
+		},
+		{
+			name:                "NAV priced in a different denom than the payment coin is rejected",
+			seedNav:             &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(underlying, 5), Volume: sdkmath.NewInt(10)},
+			assetCoin:           sdk.NewInt64Coin(asset, 10),
+			paymentCoin:         sdk.NewInt64Coin("pay", 5),
+			expectedErrContains: "is priced in",
+		},
+		{
+			name:                "asset amount times NAV price overflowing 256 bits returns an error",
+			seedNav:             &types.VaultNAV{Denom: asset, Price: sdk.NewCoin(underlying, hugeAmt), Volume: sdkmath.NewInt(1)},
+			assetCoin:           sdk.NewCoin(asset, hugeAmt),
+			paymentCoin:         sdk.NewInt64Coin(underlying, 5),
+			expectedErrContains: "failed to multiply settlement asset amount",
+		},
+		{
+			name:                "payment amount times NAV volume overflowing 256 bits returns an error",
+			seedNav:             &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(underlying, 1), Volume: hugeAmt},
+			assetCoin:           sdk.NewInt64Coin(asset, 1),
+			paymentCoin:         sdk.NewCoin(underlying, hugeAmt),
+			expectedErrContains: "failed to multiply settlement payment amount",
+		},
+		{
+			name:                "settlement off the NAV price is rejected",
+			seedNav:             &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(underlying, 6), Volume: sdkmath.NewInt(10)},
+			assetCoin:           sdk.NewInt64Coin(asset, 10),
+			paymentCoin:         sdk.NewInt64Coin(underlying, 5),
+			expectedErrContains: "does not match internal NAV",
+		},
+		{
+			name:        "settlement at the exact NAV price passes the guardrail",
+			seedNav:     &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(underlying, 5), Volume: sdkmath.NewInt(10)},
+			assetCoin:   sdk.NewInt64Coin(asset, 10),
+			paymentCoin: sdk.NewInt64Coin(underlying, 5),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			origCtx := s.ctx
+			defer func() { s.ctx = origCtx }()
+			s.ctx, _ = s.ctx.CacheContext()
+
+			vault := s.setupBaseVault(underlying, share)
+
+			if tc.seedNav != nil {
+				s.Require().NoError(
+					s.k.NAVs.Set(s.ctx, collections.Join(vault.GetAddress(), tc.seedNav.Denom), *tc.seedNav),
+					"failed to seed NAV entry for denom %s", tc.seedNav.Denom,
+				)
+			}
+			if tc.corruptNav {
+				s.Require().NoError(
+					s.k.TestAccessor_corruptVaultNAV(s.T(), s.ctx, vault.GetAddress(), tc.assetCoin.Denom),
+					"failed to corrupt NAV entry for denom %s", tc.assetCoin.Denom,
+				)
+			}
+
+			err := s.k.TestAccessor_checkSettlementNAVGuardrail(s.T(), s.ctx, vault, tc.assetCoin, tc.paymentCoin)
+
+			if tc.expectedErrContains == "" {
+				s.Require().NoError(err, "guardrail should pass for asset %s payment %s", tc.assetCoin, tc.paymentCoin)
+				return
+			}
+
+			s.Require().ErrorContains(err, tc.expectedErrContains, "guardrail error mismatch for asset %s payment %s", tc.assetCoin, tc.paymentCoin)
 		})
 	}
 }

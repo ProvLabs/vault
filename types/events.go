@@ -372,6 +372,17 @@ func NewEventNAVUpdated(vaultAddress string, nav VaultNAV, signer string) *Event
 	}
 }
 
+// NewEventNAVRemoved creates a new EventNAVRemoved event from the last stored
+// VaultNAV entry for the denom before it was removed.
+func NewEventNAVRemoved(vaultAddress string, nav VaultNAV) *EventNAVRemoved {
+	return &EventNAVRemoved{
+		VaultAddress: vaultAddress,
+		Denom:        nav.Denom,
+		LastPrice:    nav.Price.String(),
+		LastVolume:   nav.Volume.String(),
+	}
+}
+
 // NewEventNAVAuthorityUpdated creates a new EventNAVAuthorityUpdated event.
 func NewEventNAVAuthorityUpdated(vaultAddress, admin, newAuthority string) *EventNAVAuthorityUpdated {
 	return &EventNAVAuthorityUpdated{

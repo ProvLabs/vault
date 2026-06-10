@@ -279,6 +279,92 @@ func (s *TestSuite) TestKeeper_SetVaultNAV_RejectsInvalidInput() {
 // EventNAVAuthorityUpdated with the supplied signer recorded for attribution.
 // Both a rotation to an explicit address and a reset to the empty string
 // (fall-back-to-admin) flow through the same write path.
+// TestKeeper_RemoveVaultNAV verifies RemoveVaultNAV deletes an existing entry
+// and emits exactly one EventNAVRemoved carrying the last recorded price and
+// volume, and that removing a denom with no entry fails without emitting.
+func (s *TestSuite) TestKeeper_RemoveVaultNAV() {
+	cases := []struct {
+		name                string
+		underlying          string
+		share               string
+		navDenom            string
+		seedNav             *types.VaultNAV
+		expectedErrContains string
+		expectedLastPrice   string
+		expectedLastVolume  string
+	}{
+		{
+			name:       "existing entry is deleted and EventNAVRemoved carries the last price",
+			underlying: "under",
+			share:      "vaultshares",
+			navDenom:   "rwa",
+			seedNav: &types.VaultNAV{
+				Denom:  "rwa",
+				Price:  sdk.NewInt64Coin("under", 1_000_000),
+				Volume: sdkmath.NewInt(500_000),
+				Source: "settlement",
+			},
+			expectedLastPrice:  "1000000under",
+			expectedLastVolume: "500000",
+		},
+		{
+			name:                "denom with no entry returns an error and emits nothing",
+			underlying:          "usdc",
+			share:               "usdcshares",
+			navDenom:            "bond",
+			seedNav:             nil,
+			expectedErrContains: "failed to get internal NAV for denom \"bond\"",
+		},
+	}
+
+	for _, tc := range cases {
+		s.Run(tc.name, func() {
+			vault := s.setupBaseVault(tc.underlying, tc.share)
+			vaultAddr := types.GetVaultAddress(tc.share)
+
+			if tc.seedNav != nil {
+				s.requireSimpleMarker(tc.navDenom)
+				s.Require().NoError(
+					s.k.SetVaultNAV(s.ctx, vault, *tc.seedNav, s.adminAddr.String()),
+					"seeding NAV entry for denom %s should succeed", tc.navDenom,
+				)
+			}
+
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			err := s.k.RemoveVaultNAV(s.ctx, vault, tc.navDenom)
+
+			var removedEvents []sdk.Event
+			for _, ev := range s.ctx.EventManager().Events() {
+				if ev.Type == "provlabs.vault.v1.EventNAVRemoved" {
+					removedEvents = append(removedEvents, ev)
+				}
+			}
+
+			if tc.expectedErrContains != "" {
+				s.Require().ErrorContains(err, tc.expectedErrContains, "RemoveVaultNAV should fail for denom %s with no entry", tc.navDenom)
+				s.Assert().ErrorIs(err, collections.ErrNotFound, "RemoveVaultNAV should wrap collections.ErrNotFound for denom %s", tc.navDenom)
+				s.Assert().Empty(removedEvents, "failed RemoveVaultNAV should not emit EventNAVRemoved for denom %s", tc.navDenom)
+				return
+			}
+
+			s.Require().NoError(err, "RemoveVaultNAV should succeed for seeded denom %s", tc.navDenom)
+
+			_, err = s.k.GetVaultNAV(s.ctx, vaultAddr, tc.navDenom)
+			s.Assert().ErrorIs(err, collections.ErrNotFound, "NAV entry for denom %s should be deleted after RemoveVaultNAV", tc.navDenom)
+
+			s.Require().Len(removedEvents, 1, "RemoveVaultNAV should emit exactly one EventNAVRemoved for denom %s", tc.navDenom)
+			attrs := map[string]string{}
+			for _, a := range removedEvents[0].Attributes {
+				attrs[a.Key] = a.Value
+			}
+			s.Assert().Equal(`"`+vaultAddr.String()+`"`, attrs["vault_address"], "event vault_address attribute should record the vault")
+			s.Assert().Equal(`"`+tc.navDenom+`"`, attrs["denom"], "event denom attribute should record the removed denom")
+			s.Assert().Equal(`"`+tc.expectedLastPrice+`"`, attrs["last_price"], "event last_price attribute should record the last stored price")
+			s.Assert().Equal(`"`+tc.expectedLastVolume+`"`, attrs["last_volume"], "event last_volume attribute should record the last stored volume")
+		})
+	}
+}
+
 func (s *TestSuite) TestKeeper_SetNAVAuthority_PersistsAndEmits() {
 	cases := []struct {
 		name                string

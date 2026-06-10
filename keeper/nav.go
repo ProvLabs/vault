@@ -79,6 +79,29 @@ func (k *Keeper) GetVaultNAV(ctx sdk.Context, vaultAddr sdk.AccAddress, denom st
 	return k.NAVs.Get(ctx, collections.Join(vaultAddr, denom))
 }
 
+// RemoveVaultNAV deletes the internal net asset value entry for a denom held
+// by the given vault and emits an EventNAVRemoved carrying the last recorded
+// price and volume. It exists for settlement flows that drain the vault's last
+// unit of a denom: a price entry for an asset the vault no longer holds must
+// not linger in the pricing table, but its final price is still worth
+// surfacing to downstream consumers via the event.
+//
+// It returns an error when no entry exists for the denom. Callers remove
+// entries they have just read or written (e.g. immediately after a settlement
+// upsert), so a missing entry indicates a caller bug rather than a benign
+// no-op.
+func (k *Keeper) RemoveVaultNAV(ctx sdk.Context, vault *types.VaultAccount, denom string) error {
+	nav, err := k.GetVaultNAV(ctx, vault.GetAddress(), denom)
+	if err != nil {
+		return fmt.Errorf("failed to get internal NAV for denom %q on vault %s: %w", denom, vault.Address, err)
+	}
+	if err := k.NAVs.Remove(ctx, collections.Join(vault.GetAddress(), denom)); err != nil {
+		return fmt.Errorf("failed to remove internal NAV for denom %q on vault %s: %w", denom, vault.Address, err)
+	}
+	k.emitEvent(ctx, types.NewEventNAVRemoved(vault.Address, nav))
+	return nil
+}
+
 // SetNAVAuthority rotates the address authorized to mutate the vault's internal
 // NAV table. The caller is responsible for verifying that signer is authorized
 // to perform this rotation (typically via vault.ValidateAdmin); signer is

@@ -1,13 +1,16 @@
 package simulation
 
 import (
+	"errors"
 	"fmt"
+	"math/big"
 	"math/rand"
 
 	"github.com/provlabs/vault/interest"
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -1379,13 +1382,51 @@ type paymentCreator interface {
 	CreatePayment(ctx sdk.Context, payment *exchange.Payment) error
 }
 
+// settlementAmounts picks the source and target leg amounts for a staged payment. When the
+// vault already has an internal NAV for its underlying asset, the amounts are an exact
+// multiple of the reduced NAV ratio so the settlement passes the exact-price guardrail
+// (random amounts would NoOp on every settlement after the first); when no NAV exists yet
+// (first acquisition, guardrail skipped) the amounts are random.
+func settlementAmounts(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, vault *types.VaultAccount, sourceDenom string, portion math.Int) (sourceAmount, targetAmount math.Int, err error) {
+	nav, err := k.GetVaultNAV(ctx, vault.GetAddress(), vault.UnderlyingAsset)
+	if err != nil {
+		if !errors.Is(err, collections.ErrNotFound) {
+			return math.Int{}, math.Int{}, fmt.Errorf("failed to get internal NAV for denom %q: %w", vault.UnderlyingAsset, err)
+		}
+		sourceAmount, err = simtypes.RandPositiveInt(r, portion)
+		if err != nil {
+			return math.Int{}, math.Int{}, err
+		}
+		return sourceAmount, math.NewInt(int64(r.Intn(1_000) + 1)), nil
+	}
+
+	gcd := new(big.Int).GCD(nil, nil, nav.Price.Amount.BigInt(), nav.Volume.BigInt())
+	unitPayment := nav.Price.Amount.Quo(math.NewIntFromBigInt(gcd))
+	unitAsset := nav.Volume.Quo(math.NewIntFromBigInt(gcd))
+
+	sourceUnit, targetUnit := unitAsset, unitPayment
+	if sourceDenom == vault.PaymentDenom {
+		sourceUnit, targetUnit = unitPayment, unitAsset
+	}
+	maxMultiple := portion.Quo(sourceUnit)
+	if maxMultiple.IsZero() {
+		return math.Int{}, math.Int{}, fmt.Errorf("source balance too low for an exact-NAV settlement of %s per %s%s", nav.Price, nav.Volume, vault.UnderlyingAsset)
+	}
+	multiple, err := simtypes.RandPositiveInt(r, maxMultiple)
+	if err != nil {
+		return math.Int{}, math.Int{}, err
+	}
+	return sourceUnit.Mul(multiple), targetUnit.Mul(multiple), nil
+}
+
 // stagePayment creates a pending exchange payment targeting the vault, drawing the source leg
 // from an account that already holds the chosen denom. The settlement direction is chosen at
 // random: one leg always carries the vault's payment denom and the other its underlying asset,
-// which is the shape AcceptAsset requires. Funds are never minted because the vault denoms are
-// fixed-supply markers; inflating their circulating supply would trip the marker module's
-// BeginBlocker supply reconciliation. The created payment is returned so callers can stage the
-// principal marker for the leg the vault must pay out.
+// which is the shape AcceptAsset requires. Leg amounts come from settlementAmounts so repeat
+// settlements trade at the vault's internal NAV. Funds are never minted because the vault
+// denoms are fixed-supply markers; inflating their circulating supply would trip the marker
+// module's BeginBlocker supply reconciliation. The created payment is returned so callers can
+// stage the principal marker for the leg the vault must pay out.
 func stagePayment(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, vault *types.VaultAccount, accs []simtypes.Account) (*exchange.Payment, error) {
 	creator, ok := k.ExchangeKeeper.(paymentCreator)
 	if !ok {
@@ -1411,7 +1452,7 @@ func stagePayment(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, vault *types.V
 	if portion.IsZero() {
 		return nil, fmt.Errorf("source balance too low to stage a payment")
 	}
-	sourceAmount, err := simtypes.RandPositiveInt(r, portion)
+	sourceAmount, targetAmount, err := settlementAmounts(ctx, r, k, vault, sourceDenom, portion)
 	if err != nil {
 		return nil, err
 	}
@@ -1420,7 +1461,7 @@ func stagePayment(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, vault *types.V
 		Source:       source.Address.String(),
 		SourceAmount: sdk.NewCoins(sdk.NewCoin(sourceDenom, sourceAmount)),
 		Target:       vault.GetAddress().String(),
-		TargetAmount: sdk.NewCoins(sdk.NewCoin(targetDenom, math.NewInt(int64(r.Intn(1_000)+1)))),
+		TargetAmount: sdk.NewCoins(sdk.NewCoin(targetDenom, targetAmount)),
 		ExternalId:   fmt.Sprintf("p2p-sim-%d", r.Intn(1_000_000_000)),
 	}
 	if err := creator.CreatePayment(ctx, payment); err != nil {

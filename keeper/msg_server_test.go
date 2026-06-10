@@ -6607,6 +6607,7 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_SettlementNAV() {
 			updatedIdx, ok := eventIndex["provlabs.vault.v1.EventNAVUpdated"]
 			s.Require().True(ok, "EventNAVUpdated should be emitted for case %q", tc.name)
 			s.Assert().Less(acceptedIdx, updatedIdx, "EventAssetAccepted should be emitted before EventNAVUpdated")
+			s.requireTypedEventEmitted(markertypes.NewEventSetNetAssetValue(asset, tc.expectedNavPrice, tc.expectedNavVolume.Uint64(), vaultAddr.String()))
 
 			if tc.expectNavRemoved {
 				_, err := s.k.GetVaultNAV(s.ctx, vaultAddr, asset)

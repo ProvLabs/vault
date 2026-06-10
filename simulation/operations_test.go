@@ -501,6 +501,11 @@ func (s *VaultSimTestSuite) TestSimulateMsgAcceptAsset() {
 	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
 	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
 	s.Require().Len(futureOps, 0, "futureOperations")
+
+	opMsg, futureOps, err = op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
+	s.Require().NoError(err, "SimulateMsgAcceptAsset with a seeded internal NAV")
+	s.Require().True(opMsg.OK, "expected %s operation against a seeded internal NAV to be successful, but got: %s", opMsg.Name, opMsg.Comment)
+	s.Require().Len(futureOps, 0, "futureOperations on the seeded-NAV settlement")
 }
 
 func (s *VaultSimTestSuite) TestSimulateMsgRejectAsset() {

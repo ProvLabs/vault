@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	"math/big"
+
 	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,6 +21,7 @@ func (s *TestSuite) TestKeeper_ApplySettlementNAV() {
 		name                string
 		registerAssetMarker bool
 		fundPrincipal       sdk.Coins
+		assetAmount         sdkmath.Int
 		direction           string
 		expectedErrContains string
 		expectNavRemoved    bool
@@ -26,25 +29,36 @@ func (s *TestSuite) TestKeeper_ApplySettlementNAV() {
 		{
 			name:                "inbound settlement upserts the NAV and keeps it even when the principal holds none of the asset",
 			registerAssetMarker: true,
+			assetAmount:         sdkmath.NewInt(10),
 			direction:           types.AssetDirectionInbound,
 		},
 		{
 			name:                "outbound settlement with a remaining principal balance keeps the NAV entry",
 			registerAssetMarker: true,
 			fundPrincipal:       sdk.NewCoins(sdk.NewInt64Coin(asset, 5)),
+			assetAmount:         sdkmath.NewInt(10),
 			direction:           types.AssetDirectionOutbound,
 		},
 		{
 			name:                "outbound settlement with a drained principal removes the NAV entry",
 			registerAssetMarker: true,
+			assetAmount:         sdkmath.NewInt(10),
 			direction:           types.AssetDirectionOutbound,
 			expectNavRemoved:    true,
 		},
 		{
 			name:                "asset denom without a registered marker fails the upsert",
 			registerAssetMarker: false,
+			assetAmount:         sdkmath.NewInt(10),
 			direction:           types.AssetDirectionInbound,
 			expectedErrContains: "failed to update internal NAV from settlement",
+		},
+		{
+			name:                "asset amount that overflows the marker NAV volume fails the publish",
+			registerAssetMarker: true,
+			assetAmount:         sdkmath.NewIntFromBigInt(new(big.Int).Lsh(big.NewInt(1), 70)),
+			direction:           types.AssetDirectionInbound,
+			expectedErrContains: "failed to publish settlement NAV to marker",
 		},
 	}
 
@@ -63,7 +77,7 @@ func (s *TestSuite) TestKeeper_ApplySettlementNAV() {
 				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, tc.fundPrincipal), "failed to fund principal with %s", tc.fundPrincipal)
 			}
 
-			assetCoin := sdk.NewInt64Coin(asset, 10)
+			assetCoin := sdk.NewCoin(asset, tc.assetAmount)
 			paymentCoin := sdk.NewInt64Coin(paymentDenom, 5)
 
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
@@ -93,7 +107,7 @@ func (s *TestSuite) TestKeeper_ApplySettlementNAV() {
 			stored, err := s.k.GetVaultNAV(s.ctx, vaultAddr, asset)
 			s.Require().NoError(err, "NAV entry for %s should exist after settlement", asset)
 			s.Assert().Equal(paymentCoin, stored.Price, "stored NAV price should be the payment coin for case %q", tc.name)
-			s.Assert().Equal(sdkmath.NewInt(10), stored.Volume, "stored NAV volume should be the asset amount for case %q", tc.name)
+			s.Assert().Equal(tc.assetAmount, stored.Volume, "stored NAV volume should be the asset amount for case %q", tc.name)
 			s.Assert().Equal(vaultAddr.String(), stored.Source, "stored NAV source should be the vault address for case %q", tc.name)
 		})
 	}

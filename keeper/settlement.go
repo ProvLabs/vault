@@ -12,14 +12,18 @@ import (
 
 // applySettlementNAV records a settlement's price in the vault's internal NAV table:
 // the asset denom's entry is upserted with the single-sided settlement price
-// (paymentCoin per assetCoin.Amount units), sourced to the vault itself. When an
-// outbound settlement leaves the principal marker holding none of the asset denom,
-// the entry is removed so a stale price cannot linger for an asset the vault no
-// longer holds.
+// (paymentCoin per assetCoin.Amount units), sourced to the vault itself, and the
+// upserted price is published downstream to the marker module. When an outbound
+// settlement leaves the principal marker holding none of the asset denom, the
+// internal entry is removed so a stale price cannot linger for an asset the vault
+// no longer holds; the marker NAV is left as-is (publishing simply stops).
 func (k *Keeper) applySettlementNAV(ctx sdk.Context, vault *types.VaultAccount, assetCoin, paymentCoin sdk.Coin, direction, signer string) error {
 	nav := types.NewVaultNAV(assetCoin.Denom, paymentCoin, assetCoin.Amount, vault.Address)
 	if err := k.SetVaultNAV(ctx, vault, nav, signer); err != nil {
 		return fmt.Errorf("failed to update internal NAV from settlement: %w", err)
+	}
+	if err := k.publishAssetNAVToMarker(ctx, vault, nav); err != nil {
+		return fmt.Errorf("failed to publish settlement NAV to marker: %w", err)
 	}
 
 	if direction != types.AssetDirectionOutbound {

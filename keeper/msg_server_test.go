@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"time"
 
 	"cosmossdk.io/collections"
@@ -5618,6 +5619,12 @@ func (s *TestSuite) TestMsgServer_UpdateVaultNAV() {
 						sdk.NewAttribute("vault_address", vaultAddr.String()),
 						sdk.NewAttribute("volume", tt.volume.String()),
 					),
+					sdk.NewEvent("provenance.marker.v1.EventSetNetAssetValue",
+						sdk.NewAttribute("denom", navDenom),
+						sdk.NewAttribute("price", tt.price.String()),
+						sdk.NewAttribute("source", vaultAddr.String()),
+						sdk.NewAttribute("volume", tt.volume.String()),
+					),
 				},
 			}
 			runMsgServerTestCase(s, testDef, tc)
@@ -5728,6 +5735,21 @@ func (s *TestSuite) TestMsgServer_UpdateVaultNAV_Failures() {
 				Volume:       sdkmath.NewInt(-1),
 			},
 			expectedErrSubstrs: []string{"NAV volume must be positive"},
+		},
+		{
+			name: "rejects volume that overflows the marker NAV volume",
+			setup: func() {
+				setup()
+				s.requireSimpleMarker("rwa")
+			},
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin(underlying, 100),
+				Volume:       sdkmath.NewIntFromBigInt(new(big.Int).Lsh(big.NewInt(1), 70)),
+			},
+			expectedErrSubstrs: []string{"failed to publish vault NAV to marker", "overflows the marker NAV volume"},
 		},
 	}
 

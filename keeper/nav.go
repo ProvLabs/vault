@@ -9,6 +9,8 @@ import (
 	"cosmossdk.io/collections"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 // validateVaultNAVFields checks all stateless constraints on a NAV entry
@@ -112,6 +114,26 @@ func (k *Keeper) checkSettlementNAVGuardrail(ctx sdk.Context, vault *types.Vault
 			assetCoin, paymentCoin, nav.Price, nav.Volume, assetCoin.Denom, vault.Address)
 	}
 
+	return nil
+}
+
+// publishAssetNAVToMarker mirrors an internal NAV entry into the marker module's
+// NAV records for the entry's denom, attributed to the vault address so
+// downstream consumers can tell vault-originated prices apart from other
+// sources. This is a one-way downstream publish: the internal table stays the
+// vault's pricing source of truth and is never read back from the marker.
+func (k *Keeper) publishAssetNAVToMarker(ctx sdk.Context, vault *types.VaultAccount, nav types.VaultNAV) error {
+	if !nav.Volume.IsUint64() {
+		return fmt.Errorf("internal NAV volume %s for denom %q on vault %s overflows the marker NAV volume (uint64)", nav.Volume, nav.Denom, vault.Address)
+	}
+	marker, err := k.MarkerKeeper.GetMarkerByDenom(ctx, nav.Denom)
+	if err != nil {
+		return fmt.Errorf("failed to get marker for NAV denom %q: %w", nav.Denom, err)
+	}
+	markerNAV := markertypes.NetAssetValue{Price: nav.Price, Volume: nav.Volume.Uint64()}
+	if err := k.MarkerKeeper.SetNetAssetValue(ctx, marker, markerNAV, vault.Address); err != nil {
+		return fmt.Errorf("failed to set marker NAV for denom %q on vault %s: %w", nav.Denom, vault.Address, err)
+	}
 	return nil
 }
 

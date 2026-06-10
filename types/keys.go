@@ -61,6 +61,11 @@ var (
 	ParamsKeyPrefix = collections.NewPrefix(10)
 	// ParamsKeyName is the human-readable name for the params state key.
 	ParamsKeyName = "params"
+
+	// NAVsKeyPrefix is the prefix for the internal NAV table, keyed by (vault address, denom).
+	NAVsKeyPrefix = collections.NewPrefix(11)
+	// NAVsName is a human-readable name for the internal NAV table collection.
+	NAVsName = "vault_navs"
 )
 
 var (

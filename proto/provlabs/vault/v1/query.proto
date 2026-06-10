@@ -47,6 +47,16 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/vault/v1/params";
   }
+
+  // VaultNavs returns a paginated list of all internal NAV entries for a vault.
+  rpc VaultNavs(QueryVaultNavsRequest) returns (QueryVaultNavsResponse) {
+    option (google.api.http).get = "/vault/v1/vaults/{id}/navs";
+  }
+
+  // NavValue returns a single internal NAV entry for a vault and denom.
+  rpc NavValue(QueryNavValueRequest) returns (QueryNavValueResponse) {
+    option (google.api.http).get = "/vault/v1/vaults/{id}/navs/{denom}";
+  }
 }
 
 // QueryVaultPendingSwapOutsRequest is the request message for the Query/VaultPendingSwapOuts endpoint.
@@ -178,4 +188,34 @@ message QueryParamsRequest {}
 message QueryParamsResponse {
   // params defines the vault module parameters.
   Params params = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryVaultNavsRequest is the request message for the Query/VaultNavs endpoint.
+message QueryVaultNavsRequest {
+  // id is the bech32 address of the vault or the vault's share denom to query.
+  string id = 1;
+  // pagination defines an optional pagination for the request.
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryVaultNavsResponse is the response message for the Query/VaultNavs endpoint.
+message QueryVaultNavsResponse {
+  // navs is the list of internal NAV entries held by the vault.
+  repeated VaultNAV navs = 1 [(gogoproto.nullable) = false];
+  // pagination defines the pagination in the response.
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryNavValueRequest is the request message for the Query/NavValue endpoint.
+message QueryNavValueRequest {
+  // id is the bech32 address of the vault or the vault's share denom to query.
+  string id = 1;
+  // denom is the asset denomination whose NAV entry is being queried.
+  string denom = 2;
+}
+
+// QueryNavValueResponse is the response message for the Query/NavValue endpoint.
+message QueryNavValueResponse {
+  // nav is the internal NAV entry for the requested vault and denom.
+  VaultNAV nav = 1 [(gogoproto.nullable) = false];
 }

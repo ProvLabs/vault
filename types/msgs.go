@@ -13,6 +13,10 @@ import (
 
 const maxDenomMetadataDescriptionLength = 200
 
+// MaxNAVSourceLength bounds the VaultNAV.source attribution string to keep
+// per-entry state and emitted events from being inflated by an unbounded value.
+const MaxNAVSourceLength = 200
+
 // AllRequestMsgs defines all the Msg*Request messages.
 var AllRequestMsgs = []sdk.Msg{
 	(*MsgCreateVaultRequest)(nil),
@@ -43,6 +47,8 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgUpdateMinSwapOutValueRequest)(nil),
 	(*MsgUpdateMaxSwapInValueRequest)(nil),
 	(*MsgUpdateMaxSwapOutValueRequest)(nil),
+	(*MsgUpdateVaultNAVRequest)(nil),
+	(*MsgUpdateNAVAuthorityRequest)(nil),
 }
 
 // ValidateBasic performs stateless validation on MsgCreateVaultRequest.
@@ -85,6 +91,48 @@ func (m MsgCreateVaultRequest) ValidateBasic() error {
 		return fmt.Errorf("invalid swap-out limits: %w", err)
 	}
 
+	if err := ValidateInitialPaymentNAV(m.PaymentDenom, m.UnderlyingAsset, m.InitialPaymentNav); err != nil {
+		return fmt.Errorf("invalid initial payment NAV: %w", err)
+	}
+
+	return nil
+}
+
+// ValidateInitialPaymentNAV performs stateless validation on an initial
+// payment-denom NAV supplied at vault creation. The NAV must be present when
+// paymentDenom is set and differs from underlyingAsset, and must be absent
+// otherwise (the identity 1:1 price applies and storing a NAV for the
+// underlying asset is rejected by the keeper anyway).
+//
+// When present, the NAV's price must be denominated in underlyingAsset with a
+// positive amount, volume must be positive, and the source string must not
+// exceed MaxNAVSourceLength.
+func ValidateInitialPaymentNAV(paymentDenom, underlyingAsset string, nav *InitialVaultNAV) error {
+	requiresNAV := paymentDenom != "" && paymentDenom != underlyingAsset
+	if !requiresNAV {
+		if nav != nil {
+			return fmt.Errorf("initial_payment_nav must be omitted when payment_denom is empty or equals underlying_asset")
+		}
+		return nil
+	}
+	if nav == nil {
+		return fmt.Errorf("initial_payment_nav is required when payment_denom %q differs from underlying_asset %q", paymentDenom, underlyingAsset)
+	}
+	if err := nav.Price.Validate(); err != nil {
+		return fmt.Errorf("invalid price coin %v: %w", nav.Price, err)
+	}
+	if nav.Price.Denom != underlyingAsset {
+		return fmt.Errorf("price denom %q must equal underlying_asset %q", nav.Price.Denom, underlyingAsset)
+	}
+	if !nav.Price.Amount.IsPositive() {
+		return fmt.Errorf("price amount must be positive, got %s", nav.Price.Amount)
+	}
+	if nav.Volume.IsNil() || !nav.Volume.IsPositive() {
+		return fmt.Errorf("volume must be positive")
+	}
+	if len(nav.Source) > MaxNAVSourceLength {
+		return fmt.Errorf("source too long (expected <= %d, actual: %d)", MaxNAVSourceLength, len(nav.Source))
+	}
 	return nil
 }
 
@@ -520,6 +568,51 @@ func (m MsgUpdateMaxSwapOutValueRequest) ValidateBasic() error {
 	}
 	if err := ValidateSwapLimits("", m.MaxSwapOutValue); err != nil {
 		return fmt.Errorf("invalid swap-out limits: %w", err)
+	}
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgUpdateVaultNAVRequest.
+func (m MsgUpdateVaultNAVRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Signer); err != nil {
+		return fmt.Errorf("invalid signer address: %q: %w", m.Signer, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	if err := sdk.ValidateDenom(m.Denom); err != nil {
+		return fmt.Errorf("invalid denom: %q: %w", m.Denom, err)
+	}
+	if err := m.Price.Validate(); err != nil {
+		return fmt.Errorf("invalid price coin %v: %w", m.Price, err)
+	}
+	if m.Denom == m.Price.Denom {
+		return fmt.Errorf("NAV denom %q and price denom must differ", m.Denom)
+	}
+	if !m.Price.Amount.IsPositive() {
+		return fmt.Errorf("price amount must be positive, got %s", m.Price.Amount)
+	}
+	if m.Volume.IsNil() || !m.Volume.IsPositive() {
+		return fmt.Errorf("volume must be positive")
+	}
+	if len(m.Source) > MaxNAVSourceLength {
+		return fmt.Errorf("source too long (expected <= %d, actual: %d)", MaxNAVSourceLength, len(m.Source))
+	}
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgUpdateNAVAuthorityRequest.
+func (m MsgUpdateNAVAuthorityRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Signer); err != nil {
+		return fmt.Errorf("invalid signer address: %q: %w", m.Signer, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	if m.NewAuthority != "" {
+		if _, err := sdk.AccAddressFromBech32(m.NewAuthority); err != nil {
+			return fmt.Errorf("invalid new authority address: %q: %w", m.NewAuthority, err)
+		}
 	}
 	return nil
 }

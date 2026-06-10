@@ -47,6 +47,8 @@ const (
 	Msg_SetAssetManager_FullMethodName        = "/provlabs.vault.v1.Msg/SetAssetManager"
 	Msg_UpdateParams_FullMethodName           = "/provlabs.vault.v1.Msg/UpdateParams"
 	Msg_UpdateVaultAUMFeeBips_FullMethodName  = "/provlabs.vault.v1.Msg/UpdateVaultAUMFeeBips"
+	Msg_UpdateVaultNAV_FullMethodName         = "/provlabs.vault.v1.Msg/UpdateVaultNAV"
+	Msg_UpdateNAVAuthority_FullMethodName     = "/provlabs.vault.v1.Msg/UpdateNAVAuthority"
 )
 
 // MsgClient is the client API for Msg service.
@@ -119,6 +121,12 @@ type MsgClient interface {
 	UpdateParams(ctx context.Context, in *MsgUpdateParamsRequest, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
 	// UpdateVaultAUMFeeBips updates the AUM fee bips for a specific vault.
 	UpdateVaultAUMFeeBips(ctx context.Context, in *MsgUpdateVaultAUMFeeBipsRequest, opts ...grpc.CallOption) (*MsgUpdateVaultAUMFeeBipsResponse, error)
+	// UpdateVaultNAV creates or updates a vault's internal net asset value entry for a denom.
+	// Must be signed by the vault's NAV authority.
+	UpdateVaultNAV(ctx context.Context, in *MsgUpdateVaultNAVRequest, opts ...grpc.CallOption) (*MsgUpdateVaultNAVResponse, error)
+	// UpdateNAVAuthority rotates the address authorized to mutate a vault's internal NAV table.
+	// Must be signed by the vault admin.
+	UpdateNAVAuthority(ctx context.Context, in *MsgUpdateNAVAuthorityRequest, opts ...grpc.CallOption) (*MsgUpdateNAVAuthorityResponse, error)
 }
 
 type msgClient struct {
@@ -409,6 +417,26 @@ func (c *msgClient) UpdateVaultAUMFeeBips(ctx context.Context, in *MsgUpdateVaul
 	return out, nil
 }
 
+func (c *msgClient) UpdateVaultNAV(ctx context.Context, in *MsgUpdateVaultNAVRequest, opts ...grpc.CallOption) (*MsgUpdateVaultNAVResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgUpdateVaultNAVResponse)
+	err := c.cc.Invoke(ctx, Msg_UpdateVaultNAV_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateNAVAuthority(ctx context.Context, in *MsgUpdateNAVAuthorityRequest, opts ...grpc.CallOption) (*MsgUpdateNAVAuthorityResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgUpdateNAVAuthorityResponse)
+	err := c.cc.Invoke(ctx, Msg_UpdateNAVAuthority_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 // All implementations must embed UnimplementedMsgServer
 // for forward compatibility.
@@ -479,6 +507,12 @@ type MsgServer interface {
 	UpdateParams(context.Context, *MsgUpdateParamsRequest) (*MsgUpdateParamsResponse, error)
 	// UpdateVaultAUMFeeBips updates the AUM fee bips for a specific vault.
 	UpdateVaultAUMFeeBips(context.Context, *MsgUpdateVaultAUMFeeBipsRequest) (*MsgUpdateVaultAUMFeeBipsResponse, error)
+	// UpdateVaultNAV creates or updates a vault's internal net asset value entry for a denom.
+	// Must be signed by the vault's NAV authority.
+	UpdateVaultNAV(context.Context, *MsgUpdateVaultNAVRequest) (*MsgUpdateVaultNAVResponse, error)
+	// UpdateNAVAuthority rotates the address authorized to mutate a vault's internal NAV table.
+	// Must be signed by the vault admin.
+	UpdateNAVAuthority(context.Context, *MsgUpdateNAVAuthorityRequest) (*MsgUpdateNAVAuthorityResponse, error)
 	mustEmbedUnimplementedMsgServer()
 }
 
@@ -572,6 +606,12 @@ func (UnimplementedMsgServer) UpdateParams(context.Context, *MsgUpdateParamsRequ
 }
 func (UnimplementedMsgServer) UpdateVaultAUMFeeBips(context.Context, *MsgUpdateVaultAUMFeeBipsRequest) (*MsgUpdateVaultAUMFeeBipsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateVaultAUMFeeBips not implemented")
+}
+func (UnimplementedMsgServer) UpdateVaultNAV(context.Context, *MsgUpdateVaultNAVRequest) (*MsgUpdateVaultNAVResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateVaultNAV not implemented")
+}
+func (UnimplementedMsgServer) UpdateNAVAuthority(context.Context, *MsgUpdateNAVAuthorityRequest) (*MsgUpdateNAVAuthorityResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateNAVAuthority not implemented")
 }
 func (UnimplementedMsgServer) mustEmbedUnimplementedMsgServer() {}
 func (UnimplementedMsgServer) testEmbeddedByValue()             {}
@@ -1098,6 +1138,42 @@ func _Msg_UpdateVaultAUMFeeBips_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_UpdateVaultNAV_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateVaultNAVRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateVaultNAV(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_UpdateVaultNAV_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateVaultNAV(ctx, req.(*MsgUpdateVaultNAVRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateNAVAuthority_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateNAVAuthorityRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateNAVAuthority(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_UpdateNAVAuthority_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateNAVAuthority(ctx, req.(*MsgUpdateNAVAuthorityRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Msg_ServiceDesc is the grpc.ServiceDesc for Msg service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1216,6 +1292,14 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateVaultAUMFeeBips",
 			Handler:    _Msg_UpdateVaultAUMFeeBips_Handler,
+		},
+		{
+			MethodName: "UpdateVaultNAV",
+			Handler:    _Msg_UpdateVaultNAV_Handler,
+		},
+		{
+			MethodName: "UpdateNAVAuthority",
+			Handler:    _Msg_UpdateNAVAuthority_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

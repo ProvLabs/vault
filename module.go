@@ -31,7 +31,13 @@ import (
 )
 
 // ConsensusVersion defines the current x/vault module consensus version.
-const ConsensusVersion = 1
+//
+// Bumped from 1 to 2 to accompany Migrator.Migrate1to2, which seeds the
+// Internal NAV table from the Marker module's NAV store and defaults
+// nav_authority to the vault admin. A v1->v2 migration handler is registered
+// in RegisterServices so the SDK module manager can drive the migration via
+// RunMigrations when an upstream upgrade handler advances the chain.
+const ConsensusVersion = 2
 
 var (
 	_ module.AppModuleBasic      = AppModule{}
@@ -139,10 +145,16 @@ func (m AppModule) EndBlock(ctx context.Context) error {
 	return m.keeper.EndBlocker(sdk.UnwrapSDKContext(ctx))
 }
 
-// RegisterServices registers gRPC query and message services.
+// RegisterServices registers gRPC query and message services and any module
+// migration handlers required by the current ConsensusVersion.
 func (m AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServer(m.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), keeper.NewQueryServer(m.keeper))
+
+	migrator := keeper.NewMigrator(m.keeper)
+	if err := cfg.RegisterMigration(types.ModuleName, 1, migrator.Migrate1to2); err != nil {
+		panic(fmt.Sprintf("failed to register %s v1->v2 migration: %v", types.ModuleName, err))
+	}
 }
 
 // AutoCLIOptions defines CLI commands for tx and query.
@@ -537,6 +549,35 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						{ProtoField: "aum_fee_bips"},
 					},
 				},
+				{
+					RpcMethod: "UpdateVaultNAV",
+					Use:       "update-vault-nav [signer] [vault_address] [denom] [price] [volume] [source]",
+					Alias:     []string{"uvn"},
+					Short:     "Create or update a vault's internal NAV entry for a denom",
+					Long:      "Set the internal net asset value for a denom held by a vault. price is the total value of volume units, denominated in the vault's underlying asset. Must be signed by the vault's NAV authority. The denom cannot be the vault's share denom or underlying asset.",
+					Example:   fmt.Sprintf("%s update-vault-nav %s %s usdc 1000000nhash 1000000 my-oracle", txStart, exampleAuthorityAddr, exampleVaultAddr),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "signer"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "denom"},
+						{ProtoField: "price"},
+						{ProtoField: "volume"},
+						{ProtoField: "source", Optional: true},
+					},
+				},
+				{
+					RpcMethod: "UpdateNAVAuthority",
+					Use:       "update-nav-authority [signer] [vault_address] [new_authority]",
+					Alias:     []string{"una"},
+					Short:     "Rotate the address authorized to update a vault's internal NAV table",
+					Long:      "Set the NAV authority for a vault. Must be signed by the vault admin.",
+					Example:   fmt.Sprintf("%s update-nav-authority %s %s %s", txStart, exampleAdminAddr, exampleVaultAddr, exampleAssetMgrAddr),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "signer"},
+						{ProtoField: "vault_address"},
+						{ProtoField: "new_authority"},
+					},
+				},
 			},
 		},
 		Query: &autocliv1.ServiceCommandDescriptor{
@@ -612,6 +653,29 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:     "Query the current module parameters",
 					Long:      "Return the module-level parameters (tech fee address and default fee rate).",
 					Example:   fmt.Sprintf("%s params", queryStart),
+				},
+				{
+					RpcMethod: "VaultNavs",
+					Use:       "navs [id]",
+					Alias:     []string{"vn"},
+					Short:     "Query all internal NAV entries for a vault",
+					Long:      "List the internal NAV table entries for the provided vault address or share denom.",
+					Example:   fmt.Sprintf("%s navs %s", queryStart, exampleVaultAddr),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "id"},
+					},
+				},
+				{
+					RpcMethod: "NavValue",
+					Use:       "nav-value [id] [denom]",
+					Alias:     []string{"nv"},
+					Short:     "Query a single internal NAV entry for a vault and denom",
+					Long:      "Fetch the internal NAV entry for the provided vault address or share denom and asset denom.",
+					Example:   fmt.Sprintf("%s nav-value %s usdc", queryStart, exampleVaultAddr),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "id"},
+						{ProtoField: "denom"},
+					},
 				},
 			},
 		},

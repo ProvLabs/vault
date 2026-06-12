@@ -260,6 +260,52 @@ func (s *TestSuite) createPayment(source, target sdk.AccAddress, sourceAmount, t
 	s.Require().NoError(err, "failed to create payment %q", externalID)
 }
 
+// acceptAssetScenario describes the shared fixture for an AcceptAsset settlement test:
+// the vault denoms, an optional simple marker for the external asset, an optional seeded
+// internal NAV, funding for the payment source and the vault principal, and the staged
+// payment legs.
+type acceptAssetScenario struct {
+	underlying    string
+	share         string
+	paymentDenom  string
+	assetMarker   string          // external asset denom to register as a simple marker; empty skips registration
+	seedNav       *types.VaultNAV // internal NAV to seed before settlement; nil skips seeding
+	fundSource    sdk.Coins       // coins minted to the payment source; zero skips funding
+	fundPrincipal sdk.Coins       // coins minted to the vault principal; zero skips funding
+	sourceAmount  sdk.Coins       // payment source leg
+	targetAmount  sdk.Coins       // payment target leg
+	externalID    string
+}
+
+// setupAcceptAssetScenario builds the common AcceptAsset test fixture: an asset-settlement
+// vault, the optional asset marker and seeded NAV, a funded source account (which always
+// carries a stake coin) and principal, and a staged payment from the source to the vault.
+// It returns the vault, its principal marker address, and the payment source address.
+func (s *TestSuite) setupAcceptAssetScenario(sc acceptAssetScenario) (*types.VaultAccount, sdk.AccAddress, sdk.AccAddress) {
+	vault, principalAddr := s.setupAssetSettlementVault(sc.underlying, sc.share, sc.paymentDenom)
+	if sc.assetMarker != "" {
+		s.requireSimpleMarker(sc.assetMarker)
+	}
+
+	if sc.seedNav != nil {
+		s.Require().NoError(
+			s.k.SetVaultNAV(s.ctx, vault, *sc.seedNav, s.adminAddr.String()),
+			"failed to seed internal NAV for denom %s", sc.seedNav.Denom,
+		)
+	}
+
+	source := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1_000))
+	if !sc.fundSource.IsZero() {
+		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, source, sc.fundSource), "failed to fund source with %s", sc.fundSource)
+	}
+	if !sc.fundPrincipal.IsZero() {
+		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sc.fundPrincipal), "failed to fund principal with %s", sc.fundPrincipal)
+	}
+
+	s.createPayment(source, vault.GetAddress(), sc.sourceAmount, sc.targetAmount, sc.externalID)
+	return vault, principalAddr, source
+}
+
 // requireTypedEventEmitted asserts that the given typed event was emitted on the current context.
 func (s *TestSuite) requireTypedEventEmitted(want proto.Message) {
 	s.T().Helper()

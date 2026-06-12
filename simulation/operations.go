@@ -1395,7 +1395,7 @@ func settlementAmounts(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, vault *ty
 		}
 		sourceAmount, err = simtypes.RandPositiveInt(r, portion)
 		if err != nil {
-			return math.Int{}, math.Int{}, err
+			return math.Int{}, math.Int{}, fmt.Errorf("failed to sample source amount for first settlement: %w", err)
 		}
 		return sourceAmount, math.NewInt(int64(r.Intn(1_000) + 1)), nil
 	}
@@ -1414,7 +1414,7 @@ func settlementAmounts(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, vault *ty
 	}
 	multiple, err := simtypes.RandPositiveInt(r, maxMultiple)
 	if err != nil {
-		return math.Int{}, math.Int{}, err
+		return math.Int{}, math.Int{}, fmt.Errorf("failed to sample settlement multiple: %w", err)
 	}
 	return sourceUnit.Mul(multiple), targetUnit.Mul(multiple), nil
 }

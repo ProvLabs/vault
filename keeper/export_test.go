@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"cosmossdk.io/collections"
@@ -130,7 +131,10 @@ func (k Keeper) TestAccessor_corruptVaultNAV(t *testing.T, ctx context.Context, 
 	key := collections.Join(vaultAddr, denom)
 	buf := make([]byte, keyCodec.Size(key))
 	if _, err := keyCodec.Encode(buf, key); err != nil {
-		return err
+		return fmt.Errorf("failed to encode NAV key for denom %q: %w", denom, err)
 	}
-	return k.storeService.OpenKVStore(ctx).Set(append(types.NAVsKeyPrefix.Bytes(), buf...), []byte{0xFF})
+	if err := k.storeService.OpenKVStore(ctx).Set(append(types.NAVsKeyPrefix.Bytes(), buf...), []byte{0xFF}); err != nil {
+		return fmt.Errorf("failed to write corrupt NAV bytes for denom %q: %w", denom, err)
+	}
+	return nil
 }

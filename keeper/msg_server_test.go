@@ -6520,26 +6520,19 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_NAVGuardrail() {
 			defer func() { s.ctx = origCtx }()
 			s.ctx, _ = s.ctx.CacheContext()
 
-			vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+			vault, _, source := s.setupAcceptAssetScenario(acceptAssetScenario{
+				underlying:    underlying,
+				share:         share,
+				paymentDenom:  paymentDenom,
+				assetMarker:   asset,
+				seedNav:       tc.seedNav,
+				fundSource:    tc.fundSource,
+				fundPrincipal: tc.fundPrincipal,
+				sourceAmount:  tc.sourceAmount,
+				targetAmount:  tc.targetAmount,
+				externalID:    externalID,
+			})
 			vaultAddr := vault.GetAddress()
-			s.requireSimpleMarker(asset)
-
-			if tc.seedNav != nil {
-				s.Require().NoError(
-					s.k.SetVaultNAV(s.ctx, vault, *tc.seedNav, s.adminAddr.String()),
-					"failed to seed internal NAV for denom %s", tc.seedNav.Denom,
-				)
-			}
-
-			source := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1_000))
-			if !tc.fundSource.IsZero() {
-				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, source, tc.fundSource), "failed to fund source with %s", tc.fundSource)
-			}
-			if !tc.fundPrincipal.IsZero() {
-				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, tc.fundPrincipal), "failed to fund principal with %s", tc.fundPrincipal)
-			}
-
-			s.createPayment(source, vaultAddr, tc.sourceAmount, tc.targetAmount, externalID)
 
 			resp, err := keeper.NewMsgServer(s.simApp.VaultKeeper).AcceptAsset(s.ctx, &types.MsgAcceptAssetRequest{
 				Authority:    s.adminAddr.String(),
@@ -6654,24 +6647,23 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_SettlementNAV() {
 			defer func() { s.ctx = origCtx }()
 			s.ctx, _ = s.ctx.CacheContext()
 
-			vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
-			vaultAddr := vault.GetAddress()
+			assetMarker := ""
 			if tc.registerAssetMarker {
-				s.requireSimpleMarker(asset)
+				assetMarker = asset
 			}
-
-			if tc.seedNav != nil {
-				s.Require().NoError(
-					s.k.SetVaultNAV(s.ctx, vault, *tc.seedNav, s.adminAddr.String()),
-					"failed to seed internal NAV for denom %s", tc.seedNav.Denom,
-				)
-			}
-
-			source := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1_000))
-			s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, source, tc.fundSource), "failed to fund source with %s", tc.fundSource)
-			s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, tc.fundPrincipal), "failed to fund principal with %s", tc.fundPrincipal)
-
-			s.createPayment(source, vaultAddr, tc.sourceAmount, tc.targetAmount, externalID)
+			vault, _, source := s.setupAcceptAssetScenario(acceptAssetScenario{
+				underlying:    underlying,
+				share:         share,
+				paymentDenom:  paymentDenom,
+				assetMarker:   assetMarker,
+				seedNav:       tc.seedNav,
+				fundSource:    tc.fundSource,
+				fundPrincipal: tc.fundPrincipal,
+				sourceAmount:  tc.sourceAmount,
+				targetAmount:  tc.targetAmount,
+				externalID:    externalID,
+			})
+			vaultAddr := vault.GetAddress()
 
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 			_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).AcceptAsset(s.ctx, &types.MsgAcceptAssetRequest{
@@ -6765,27 +6757,25 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Reconcile() {
 			defer func() { s.ctx = origCtx }()
 			s.ctx, _ = s.ctx.CacheContext()
 
-			vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+			vault, _, source := s.setupAcceptAssetScenario(acceptAssetScenario{
+				underlying:    underlying,
+				share:         share,
+				paymentDenom:  paymentDenom,
+				assetMarker:   asset,
+				seedNav:       tc.seedNav,
+				fundSource:    sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+				fundPrincipal: sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+				sourceAmount:  sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+				targetAmount:  sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+				externalID:    externalID,
+			})
 			vaultAddr := vault.GetAddress()
-			s.requireSimpleMarker(asset)
-
-			if tc.seedNav != nil {
-				s.Require().NoError(
-					s.k.SetVaultNAV(s.ctx, vault, *tc.seedNav, s.adminAddr.String()),
-					"failed to seed internal NAV for denom %s", tc.seedNav.Denom,
-				)
-			}
 
 			// An elapsed interest period makes the reconcile observable via EventVaultReconcile.
 			vault.CurrentInterestRate = tc.interestRate
 			vault.DesiredInterestRate = tc.interestRate
 			vault.PeriodStart = s.ctx.BlockTime().Add(-3 * time.Hour).Unix()
 			s.k.AuthKeeper.SetAccount(s.ctx, vault)
-
-			source := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1_000))
-			s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, source, sdk.NewCoins(sdk.NewInt64Coin(asset, 10))), "failed to fund source with the settlement asset")
-			s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5))), "failed to fund principal with the settlement payment")
-			s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)), externalID)
 
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 			_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).AcceptAsset(s.ctx, &types.MsgAcceptAssetRequest{

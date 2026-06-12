@@ -140,7 +140,7 @@ Entries are written by four paths:
 3. **Settlements** — each `AcceptAsset` records the realized settlement price as the asset denom's entry (and removes the entry when an outbound settlement drains the denom from the principal).
 4. **Migration seeding** — a one-time upgrade migration seeded entries from existing marker-module NAVs.
 
-Updates from paths 2 and 3 are also **published one-way to the marker module**, attributed to the vault address, so downstream marker-NAV consumers can distinguish vault-originated prices. The vault never reads these back — the internal table remains authoritative.
+NAV upserts from paths 2 and 3 are also **published one-way to the marker module**, attributed to the vault address, so downstream marker-NAV consumers can distinguish vault-originated prices. Removals are internal-only: when a settlement drains a denom and its entry is deleted, the marker NAV is left as-is — publishing simply stops. The vault never reads marker NAVs back — the internal table remains authoritative.
 
 ### P2P Settlement Workflow
 

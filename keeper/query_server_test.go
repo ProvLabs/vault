@@ -1,12 +1,14 @@
 package keeper_test
 
 import (
+	"strings"
 	"time"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/provenance-io/provenance/x/exchange"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
 	"github.com/provlabs/vault/keeper"
@@ -1541,6 +1543,25 @@ func (s *TestSuite) TestQueryServer_VaultPayment() {
 			req:         &types.QueryVaultPaymentRequest{Id: vaultAddr.String()},
 			expectErr:   true,
 			errContains: "source must be provided",
+		},
+		{
+			name: "external id over the exchange length limit returns InvalidArgument",
+			req: &types.QueryVaultPaymentRequest{
+				Id:         vaultAddr.String(),
+				Source:     source.String(),
+				ExternalId: strings.Repeat("x", exchange.MaxExternalIDLength+1),
+			},
+			expectErr:   true,
+			errContains: "invalid external id",
+		},
+		{
+			name: "empty external id is a valid payment key, returns NotFound when no such payment exists",
+			req: &types.QueryVaultPaymentRequest{
+				Id:     vaultAddr.String(),
+				Source: source.String(),
+			},
+			expectErr:   true,
+			errContains: "no payment",
 		},
 		{
 			name:        "rejects empty id",

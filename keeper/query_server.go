@@ -418,6 +418,9 @@ func (k queryServer) VaultPayment(goCtx context.Context, req *types.QueryVaultPa
 	if req.Source == "" {
 		return nil, status.Error(codes.InvalidArgument, "source must be provided")
 	}
+	if err := exchange.ValidateExternalID(req.ExternalId); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid external id: %v", err)
+	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

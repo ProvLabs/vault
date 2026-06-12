@@ -423,6 +423,22 @@ func (v VaultAccount) ValidateManagementAuthority(authority string) error {
 	return fmt.Errorf("unauthorized authority: %s", authority)
 }
 
+// ValidateAssetManagerAuthority checks whether the given address is the vault's asset
+// manager. It guards actions reserved for the asset manager alone (e.g. P2P settlement),
+// where the admin is deliberately excluded: the field is a role, not a person, so a vault
+// owner who wants a composite approval workflow (e.g. admin and manager both sign) points
+// the asset manager at a group address rather than the module offering per-vault
+// configurability. A vault with no asset manager cannot perform these actions at all.
+func (v VaultAccount) ValidateAssetManagerAuthority(authority string) error {
+	if v.AssetManager == "" {
+		return fmt.Errorf("no asset manager set")
+	}
+	if authority != v.AssetManager {
+		return fmt.Errorf("unauthorized authority: %s", authority)
+	}
+	return nil
+}
+
 // NewPendingSwapOut creates a new PendingSwapOut object.
 func NewPendingSwapOut(owner sdk.AccAddress, vaultAddr sdk.AccAddress, shares sdk.Coin, redeemDenom string) PendingSwapOut {
 	return PendingSwapOut{

@@ -7,6 +7,7 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
 	"github.com/provlabs/vault/utils"
 )
@@ -466,7 +467,7 @@ func (s *TestSuite) TestConvertAndNav_PriceNetOfOutstandingAumFee() {
 	shareDenom := "vshare"
 	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
 
-	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
+	testKeeper := s.k
 	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(
 		sdk.NewInt64Coin(underlyingDenom, 1000),
 		sdk.NewInt64Coin(paymentDenom, 10),
@@ -513,7 +514,7 @@ func (s *TestSuite) TestGetNetTVVInUnderlyingAsset_FloorsAtZeroWhenOutstandingEx
 	shareDenom := "vshare"
 	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
 
-	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
+	testKeeper := s.k
 	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(
 		sdk.NewInt64Coin(underlyingDenom, 100),
 	)), "should fund vault marker for gross TVV")

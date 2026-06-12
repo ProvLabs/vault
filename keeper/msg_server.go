@@ -834,9 +834,16 @@ func (k msgServer) UpdateVaultNAV(goCtx context.Context, msg *types.MsgUpdateVau
 		return nil, fmt.Errorf("failed to validate NAV authority: %w", err)
 	}
 
+	if err := k.reconcileVault(ctx, vault); err != nil {
+		return nil, fmt.Errorf("failed to reconcile vault before NAV update: %w", err)
+	}
+
 	nav := types.NewVaultNAV(msg.Denom, msg.Price, msg.Volume, msg.Source)
 	if err := k.SetVaultNAV(ctx, vault, nav, msg.Signer); err != nil {
 		return nil, fmt.Errorf("failed to update vault NAV: %w", err)
+	}
+	if err := k.publishAssetNAVToMarker(ctx, vault, nav); err != nil {
+		return nil, fmt.Errorf("failed to publish vault NAV to marker: %w", err)
 	}
 
 	return &types.MsgUpdateVaultNAVResponse{}, nil
@@ -863,8 +870,8 @@ func (k msgServer) UpdateNAVAuthority(goCtx context.Context, msg *types.MsgUpdat
 }
 
 // AcceptAsset settles a pending exchange-module payment whose target is the vault,
-// exchanging an external asset for the vault's payment denom. Either the vault admin
-// or the asset manager may sign it.
+// exchanging an external asset for the vault's payment denom. Only the vault's asset
+// manager may sign it; the admin cannot settle.
 //
 // The exchange module's AcceptPayment operates on the caller's primary account, so the
 // vault account is used as an atomic staging hop while the principal marker account
@@ -883,8 +890,8 @@ func (k msgServer) AcceptAsset(goCtx context.Context, msg *types.MsgAcceptAssetR
 	if err != nil {
 		return nil, err
 	}
-	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
-		return nil, fmt.Errorf("failed to validate management authority: %w", err)
+	if err := vault.ValidateAssetManagerAuthority(msg.Authority); err != nil {
+		return nil, fmt.Errorf("failed to validate asset manager authority: %w", err)
 	}
 
 	sourceAddr := sdk.MustAccAddressFromBech32(msg.Source)
@@ -902,6 +909,18 @@ func (k msgServer) AcceptAsset(goCtx context.Context, msg *types.MsgAcceptAssetR
 	direction, err := assetSettlementDirection(vault, payment)
 	if err != nil {
 		return nil, err
+	}
+
+	assetCoin, paymentCoin, err := settlementLegCoins(payment, direction)
+	if err != nil {
+		return nil, err
+	}
+	if err := k.checkSettlementNAVGuardrail(ctx, vault, assetCoin, paymentCoin); err != nil {
+		return nil, err
+	}
+
+	if err := k.reconcileVault(ctx, vault); err != nil {
+		return nil, fmt.Errorf("failed to reconcile vault before settlement: %w", err)
 	}
 
 	principalAddr := vault.PrincipalMarkerAddress()
@@ -935,12 +954,16 @@ func (k msgServer) AcceptAsset(goCtx context.Context, msg *types.MsgAcceptAssetR
 
 	k.emitEvent(ctx, types.NewEventAssetAccepted(msg.VaultAddress, msg.Source, msg.ExternalId, payment.SourceAmount, payment.TargetAmount, direction))
 
+	if err := k.applySettlementNAV(ctx, vault, assetCoin, paymentCoin, direction, msg.Authority); err != nil {
+		return nil, err
+	}
+
 	return &types.MsgAcceptAssetResponse{}, nil
 }
 
 // RejectAsset declines a pending exchange-module payment whose target is the vault. The
-// exchange module cancels the payment and refunds the source's escrow. Either the vault
-// admin or the asset manager may sign it.
+// exchange module cancels the payment and refunds the source's escrow. Only the vault's
+// asset manager may sign it; the admin cannot reject.
 func (k msgServer) RejectAsset(goCtx context.Context, msg *types.MsgRejectAssetRequest) (*types.MsgRejectAssetResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -949,8 +972,8 @@ func (k msgServer) RejectAsset(goCtx context.Context, msg *types.MsgRejectAssetR
 	if err != nil {
 		return nil, err
 	}
-	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
-		return nil, fmt.Errorf("failed to validate management authority: %w", err)
+	if err := vault.ValidateAssetManagerAuthority(msg.Authority); err != nil {
+		return nil, fmt.Errorf("failed to validate asset manager authority: %w", err)
 	}
 
 	sourceAddr := sdk.MustAccAddressFromBech32(msg.Source)

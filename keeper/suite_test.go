@@ -37,6 +37,9 @@ type TestSuite struct {
 	k keeper.Keeper
 
 	adminAddr sdk.AccAddress
+	// assetManagerAddr is the asset manager assigned by setupAssetSettlementVault; settlement
+	// messages (AcceptAsset/RejectAsset) must be signed by it, never by the admin.
+	assetManagerAddr sdk.AccAddress
 }
 
 // SetupTest initializes a new SimApp and context for each test and seeds
@@ -49,6 +52,11 @@ func (s *TestSuite) SetupTest() {
 	s.adminAddr = sdk.AccAddress("adminAddr___________")
 	if !s.simApp.AccountKeeper.HasAccount(s.ctx, s.adminAddr) {
 		s.simApp.AccountKeeper.SetAccount(s.ctx, s.simApp.AccountKeeper.NewAccountWithAddress(s.ctx, s.adminAddr))
+	}
+
+	s.assetManagerAddr = sdk.AccAddress("assetManagerAddr____")
+	if !s.simApp.AccountKeeper.HasAccount(s.ctx, s.assetManagerAddr) {
+		s.simApp.AccountKeeper.SetAccount(s.ctx, s.simApp.AccountKeeper.NewAccountWithAddress(s.ctx, s.assetManagerAddr))
 	}
 }
 
@@ -227,8 +235,9 @@ func (s *TestSuite) requireSimpleMarker(denom string) {
 
 // setupAssetSettlementVault creates a vault whose payment denom differs from its underlying
 // asset. Both the underlying and payment denoms are non-restricted Coin markers (CreateVault's
-// fee-collector preflight requires the payment denom to be a marker). It returns the vault and
-// its principal marker address.
+// fee-collector preflight requires the payment denom to be a marker). Settlement messages are
+// asset-manager-only, so the suite's assetManagerAddr is assigned to the vault. It returns the
+// vault and its principal marker address.
 func (s *TestSuite) setupAssetSettlementVault(underlying, share, paymentDenom string) (*types.VaultAccount, sdk.AccAddress) {
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlying, 1_000_000), s.adminAddr)
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 1_000_000), s.adminAddr)
@@ -245,6 +254,16 @@ func (s *TestSuite) setupAssetSettlementVault(underlying, share, paymentDenom st
 	})
 	s.Require().NoError(err, "failed to create asset settlement vault")
 
+	_, err = keeper.NewMsgServer(s.simApp.VaultKeeper).SetAssetManager(s.ctx, &types.MsgSetAssetManagerRequest{
+		Admin:        s.adminAddr.String(),
+		VaultAddress: vault.GetAddress().String(),
+		AssetManager: s.assetManagerAddr.String(),
+	})
+	s.Require().NoError(err, "failed to set asset manager %s on settlement vault %s", s.assetManagerAddr, vault.GetAddress())
+
+	vault, err = s.k.GetVault(s.ctx, vault.GetAddress())
+	s.Require().NoError(err, "failed to reload settlement vault %s after setting the asset manager", vault.GetAddress())
+
 	return vault, vault.PrincipalMarkerAddress()
 }
 
@@ -258,6 +277,52 @@ func (s *TestSuite) createPayment(source, target sdk.AccAddress, sourceAmount, t
 		ExternalId:   externalID,
 	})
 	s.Require().NoError(err, "failed to create payment %q", externalID)
+}
+
+// acceptAssetScenario describes the shared fixture for an AcceptAsset settlement test:
+// the vault denoms, an optional simple marker for the external asset, an optional seeded
+// internal NAV, funding for the payment source and the vault principal, and the staged
+// payment legs.
+type acceptAssetScenario struct {
+	underlying    string
+	share         string
+	paymentDenom  string
+	assetMarker   string          // external asset denom to register as a simple marker; empty skips registration
+	seedNav       *types.VaultNAV // internal NAV to seed before settlement; nil skips seeding
+	fundSource    sdk.Coins       // coins minted to the payment source; zero skips funding
+	fundPrincipal sdk.Coins       // coins minted to the vault principal; zero skips funding
+	sourceAmount  sdk.Coins       // payment source leg
+	targetAmount  sdk.Coins       // payment target leg
+	externalID    string
+}
+
+// setupAcceptAssetScenario builds the common AcceptAsset test fixture: an asset-settlement
+// vault, the optional asset marker and seeded NAV, a funded source account (which always
+// carries a stake coin) and principal, and a staged payment from the source to the vault.
+// It returns the vault, its principal marker address, and the payment source address.
+func (s *TestSuite) setupAcceptAssetScenario(sc acceptAssetScenario) (*types.VaultAccount, sdk.AccAddress, sdk.AccAddress) {
+	vault, principalAddr := s.setupAssetSettlementVault(sc.underlying, sc.share, sc.paymentDenom)
+	if sc.assetMarker != "" {
+		s.requireSimpleMarker(sc.assetMarker)
+	}
+
+	if sc.seedNav != nil {
+		s.Require().NoError(
+			s.k.SetVaultNAV(s.ctx, vault, *sc.seedNav, s.adminAddr.String()),
+			"failed to seed internal NAV for denom %s", sc.seedNav.Denom,
+		)
+	}
+
+	source := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1_000))
+	if !sc.fundSource.IsZero() {
+		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, source, sc.fundSource), "failed to fund source with %s", sc.fundSource)
+	}
+	if !sc.fundPrincipal.IsZero() {
+		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sc.fundPrincipal), "failed to fund principal with %s", sc.fundPrincipal)
+	}
+
+	s.createPayment(source, vault.GetAddress(), sc.sourceAmount, sc.targetAmount, sc.externalID)
+	return vault, principalAddr, source
 }
 
 // requireTypedEventEmitted asserts that the given typed event was emitted on the current context.

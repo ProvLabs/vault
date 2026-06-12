@@ -37,6 +37,12 @@ This document describes all events emitted by the `x/vault` module and how to us
   - [EventBridgeToggled](#eventbridgetoggled)
   - [EventBridgeMintShares](#eventbridgemintshares)
   - [EventBridgeBurnShares](#eventbridgeburnshares)
+- [Settlement & NAV](#settlement--nav)
+  - [EventAssetAccepted](#eventassetaccepted)
+  - [EventAssetRejected](#eventassetrejected)
+  - [EventNAVUpdated](#eventnavupdated)
+  - [EventNAVRemoved](#eventnavremoved)
+  - [EventNAVAuthorityUpdated](#eventnavauthorityupdated)
 - [Metadata](#metadata)
   - [EventSetShareDenomMetadata](#eventsetsharedenommetadata)
   - [EventDenomUnit](#eventdenomunit)
@@ -394,6 +400,89 @@ Emitted when shares are **burned from the bridge** balance.
 * `vault_address` — vault
 * `bridge` — bridge signer
 * `shares` — burned share amount
+
+---
+
+## Settlement & NAV
+
+### EventAssetAccepted
+
+Emitted when the vault's asset manager settles a pending `x/exchange` payment targeting the vault (via `MsgAcceptAsset`).
+
+**Fields**
+
+* `vault_address` — vault that settled the payment
+* `source` — account that created the settled payment
+* `external_id` — payment identifier (unique per source)
+* `source_amount` — funds the source paid the vault (coins string)
+* `target_amount` — funds the vault paid the source (coins string)
+* `direction` — `"inbound"` (asset moved into the vault) or `"outbound"` (asset moved out), relative to the vault's payment denom
+
+**Notes**
+
+* An `EventNAVUpdated` for the settled asset denom follows in the same tx, carrying the settlement price. When an outbound settlement drains the denom, an `EventNAVRemoved` follows that.
+
+---
+
+### EventAssetRejected
+
+Emitted when the vault's asset manager declines a pending `x/exchange` payment targeting the vault (via `MsgRejectAsset`). The exchange module refunds the source's escrow.
+
+**Fields**
+
+* `vault_address` — vault that rejected the payment
+* `source` — account that created the rejected payment
+* `external_id` — payment identifier (unique per source)
+
+---
+
+### EventNAVUpdated
+
+Emitted when a vault's internal NAV entry for a denom is created or updated — by `MsgUpdateVaultNAV` or by a settlement (`MsgAcceptAsset`).
+
+**Fields**
+
+* `vault_address` — vault
+* `denom` — asset denom the entry prices
+* `price` — total value of `volume` units of the denom (coin string)
+* `volume` — number of units `price` covers
+* `source` — origin of the update (e.g., oracle name; the vault address for settlement-driven updates)
+* `signer` — address that performed the update
+* `updated_block_height` — block height of the update
+
+**Notes**
+
+* The upserted NAV is also published to the **marker module**, attributed to the vault address, so a `provenance.marker.v1.EventSetNetAssetValue` is emitted alongside.
+
+---
+
+### EventNAVRemoved
+
+Emitted when a vault's internal NAV entry for a denom is removed — currently when an outbound settlement leaves the vault's principal holding zero of the denom.
+
+**Fields**
+
+* `vault_address` — vault
+* `denom` — asset denom whose entry was removed
+* `last_price` — total value of `last_volume` units recorded before removal (coin string)
+* `last_volume` — number of units `last_price` covered
+
+**Notes**
+
+* When a settlement both prices and drains a denom, this event follows an `EventNAVUpdated` for the same denom in the same tx; `last_price`/`last_volume` carry that final settlement price. Consumers maintaining a local price cache must process both event types.
+* The marker module's NAV is left as-is — publishing simply stops.
+
+---
+
+### EventNAVAuthorityUpdated
+
+Emitted when a vault's NAV authority is rotated (via `MsgUpdateNAVAuthority`).
+
+**Fields**
+
+* `vault_address` — vault
+* `admin` — vault administrator that performed the rotation
+* `new_authority` — address now authorized to mutate the internal NAV table
 
 ---
 

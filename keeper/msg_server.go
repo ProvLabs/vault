@@ -883,7 +883,7 @@ func (k msgServer) AcceptAsset(goCtx context.Context, msg *types.MsgAcceptAssetR
 	if err != nil {
 		return nil, err
 	}
-	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+	if err = vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, fmt.Errorf("failed to validate management authority: %w", err)
 	}
 
@@ -949,7 +949,7 @@ func (k msgServer) RejectAsset(goCtx context.Context, msg *types.MsgRejectAssetR
 	if err != nil {
 		return nil, err
 	}
-	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+	if err = vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, fmt.Errorf("failed to validate management authority: %w", err)
 	}
 

@@ -14,7 +14,7 @@ import (
 func (k *Keeper) GetVaults(ctx context.Context) ([]sdk.AccAddress, error) {
 	vaults := []sdk.AccAddress{}
 
-	err := k.Vaults.Walk(ctx, nil, func(key sdk.AccAddress, val []byte) (stop bool, err error) {
+	err := k.Vaults.Walk(ctx, nil, func(key sdk.AccAddress, _ []byte) (stop bool, err error) {
 		vaults = append(vaults, key)
 		return false, nil
 	})

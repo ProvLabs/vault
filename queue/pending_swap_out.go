@@ -40,8 +40,8 @@ func NewPendingSwapOutIndexes(sb *collections.SchemaBuilder) PendingSwapOutIndex
 		),
 		ByID: indexes.NewUnique(
 			sb,
-			types.VaultPendingSwapOutByIdIndexPrefix,
-			types.VaultPendingSwapOutByIdIndexName,
+			types.VaultPendingSwapOutByIDIndexPrefix,
+			types.VaultPendingSwapOutByIDIndexName,
 			collections.Uint64Key,
 			collections.TripleKeyCodec(collections.Int64Key, collections.Uint64Key, sdk.AccAddressKey),
 			func(pk collections.Triple[int64, uint64, sdk.AccAddress], _ types.PendingSwapOut) (uint64, error) {

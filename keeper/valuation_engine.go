@@ -1,105 +1,89 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/provlabs/vault/types"
 	"github.com/provlabs/vault/utils"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// UnitPriceFraction returns the unit price of srcDenom expressed in underlyingAsset
-// as an integer fraction (numerator, denominator) using marker Net Asset Value (NAV).
+// ErrInternalNAVNotFound is returned by UnitPriceFraction (and any helper that
+// composes it) when no Internal NAV entry exists for the requested denom on the
+// target vault. Callers should match this with errors.Is to classify the
+// failure (e.g. swap refund classification in getRefundReason) without
+// relying on the formatted error string.
+var ErrInternalNAVNotFound = errors.New("internal NAV entry not found")
+
+// UnitPriceFraction returns the unit price of srcDenom expressed in the vault's
+// underlying asset as an integer fraction (numerator, denominator), sourced
+// exclusively from the per-vault Internal NAV table.
 //
-// Semantics
-//   - Forward NAV (srcDenom → underlyingAsset):
-//     NAV.Price is total underlying units for NAV.Volume units of srcDenom.
-//     1 srcDenom = NAV.Price.Amount / NAV.Volume underlyingAsset → (num, den) = (NAV.Price.Amount, NAV.Volume).
-//   - Reverse NAV (underlyingAsset → srcDenom):
-//     NAV.Price is total srcDenom units for NAV.Volume units of underlyingAsset.
-//     1 srcDenom = NAV.Volume / NAV.Price.Amount underlyingAsset → (num, den) = (NAV.Volume, NAV.Price.Amount).
+// # Semantics
 //
-// The result is integer (floor-safe) arithmetic.
+// The Internal NAV entry for a denom records the price of `volume` units of the
+// denom denominated in the vault's underlying asset:
 //
-// Source selection
-// - Identity/peg fast-paths return (1, 1):
-//   - If srcDenom == underlyingAsset
-//   - If underlyingAsset == "uylds.fcc" (temporary 1:1 peg; see https://github.com/ProvLabs/vault/issues/73)
-//   - If vault.PaymentDenom == "uylds.fcc" (temporary 1:1 peg; see https://github.com/ProvLabs/vault/issues/73)
+//	1 srcDenom = nav.Price.Amount / nav.Volume underlying
+//	(num, den) = (nav.Price.Amount, nav.Volume)
 //
-// - Otherwise read both forward and reverse NAVs:
-//   - If only one exists, use it.
-//   - If both exist, choose the one with the greater UpdatedBlockHeight (newest).
+// Suitable for floor(x * num / den) integer arithmetic.
+//
+// Identity fast-path
+//   - If srcDenom == vault.UnderlyingAsset, returns (1, 1) without a lookup.
+//     This also covers single-denom vaults where payment_denom == underlying.
 //
 // Errors
-// - If neither NAV exists, return the lookup error (if any) or "nav not found for src/underlying".
-// - For the selected NAV direction:
-//   - Forward: error if NAV.Volume == 0 or NAV.Price.Amount == 0.
-//   - Reverse: error if NAV.Price.Amount == 0 or NAV.Volume == 0.
-//
-// Returns
-// - (num, den) as math.Int, suitable for floor(x * num / den).
+//   - Wraps ErrInternalNAVNotFound when no entry exists for srcDenom on this
+//     vault. Callers should classify with errors.Is(err, ErrInternalNAVNotFound)
+//     rather than matching on the formatted error string.
+//   - Returns wrapped errors for any other Internal NAV lookup failure.
+//   - Defensive: rejects nav.Volume <= 0 or nav.Price.Amount <= 0 (these are
+//     already enforced at NAV-write time by validateVaultNAVFields).
 func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom string, vault types.VaultAccount) (num, den math.Int, err error) {
-	underlyingAsset := vault.UnderlyingAsset
-	if srcDenom == underlyingAsset {
+	if srcDenom == vault.UnderlyingAsset {
 		return math.NewInt(1), math.NewInt(1), nil
 	}
 
-	// For now, if either the vault’s underlying asset or payment denom is "uylds.fcc",
-	// we assume a 1:1 equivalence between the payment denom and the underlying denom.
-	// See https://github.com/ProvLabs/vault/issues/73 for details.
-	const uyldsFccDenom = "uylds.fcc"
-	if vault.PaymentDenom == uyldsFccDenom || underlyingAsset == uyldsFccDenom {
-		return math.NewInt(1), math.NewInt(1), nil
-	}
-
-	fwd, errF := k.MarkerKeeper.GetNetAssetValue(ctx, srcDenom, underlyingAsset)
-	rev, errR := k.MarkerKeeper.GetNetAssetValue(ctx, underlyingAsset, srcDenom)
-
-	if fwd == nil && rev == nil {
-		if errF != nil {
-			return math.Int{}, math.Int{}, fmt.Errorf("failed to get forward nav: %w", errF)
+	nav, err := k.GetVaultNAV(ctx, vault.GetAddress(), srcDenom)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return math.Int{}, math.Int{}, fmt.Errorf("no internal NAV entry for denom %q on vault %s: %w", srcDenom, vault.GetAddress(), ErrInternalNAVNotFound)
 		}
-		if errR != nil {
-			return math.Int{}, math.Int{}, fmt.Errorf("failed to get reverse nav: %w", errR)
-		}
-		return math.Int{}, math.Int{}, fmt.Errorf("nav not found for %s/%s", srcDenom, underlyingAsset)
+		return math.Int{}, math.Int{}, fmt.Errorf("failed to get internal NAV for denom %q on vault %s: %w", srcDenom, vault.GetAddress(), err)
 	}
 
-	useForward := false
-	switch {
-	case fwd != nil && rev == nil:
-		useForward = true
-	case fwd == nil && rev != nil:
-		useForward = false
-	default:
-		useForward = fwd.UpdatedBlockHeight >= rev.UpdatedBlockHeight
+	if nav.Volume.IsNil() || !nav.Volume.IsPositive() {
+		volumeForLog := "<nil>"
+		if !nav.Volume.IsNil() {
+			volumeForLog = nav.Volume.String()
+		}
+		k.getLogger(ctx).Error("internal NAV invariant violated: non-positive volume",
+			"vault", vault.GetAddress().String(),
+			"denom", srcDenom,
+			"volume", volumeForLog,
+		)
+		return math.Int{}, math.Int{}, fmt.Errorf("internal NAV volume must be positive for denom %q on vault %s", srcDenom, vault.GetAddress())
+	}
+	if nav.Price.Amount.IsNil() || !nav.Price.Amount.IsPositive() {
+		priceForLog := "<nil>"
+		if !nav.Price.Amount.IsNil() {
+			priceForLog = nav.Price.String()
+		}
+		k.getLogger(ctx).Error("internal NAV invariant violated: non-positive price",
+			"vault", vault.GetAddress().String(),
+			"denom", srcDenom,
+			"price", priceForLog,
+		)
+		return math.Int{}, math.Int{}, fmt.Errorf("internal NAV price must be positive for denom %q on vault %s", srcDenom, vault.GetAddress())
 	}
 
-	if useForward {
-		if fwd.Volume == 0 {
-			return math.Int{}, math.Int{}, fmt.Errorf("nav volume is zero for %s/%s", srcDenom, underlyingAsset)
-		}
-		if fwd.Price.Amount.IsZero() {
-			return math.Int{}, math.Int{}, fmt.Errorf("nav price is zero for %s/%s", srcDenom, underlyingAsset)
-		}
-		priceAmt := fwd.Price.Amount
-		volAmt := math.NewIntFromUint64(fwd.Volume)
-		return priceAmt, volAmt, nil
-	}
-
-	if rev.Price.Amount.IsZero() {
-		return math.Int{}, math.Int{}, fmt.Errorf("nav price is zero for %s/%s", underlyingAsset, srcDenom)
-	}
-	if rev.Volume == 0 {
-		return math.Int{}, math.Int{}, fmt.Errorf("nav volume is zero for %s/%s", underlyingAsset, srcDenom)
-	}
-	priceAmt := math.NewIntFromUint64(rev.Volume)
-	volAmt := rev.Price.Amount
-	return priceAmt, volAmt, nil
+	return nav.Price.Amount, nav.Volume, nil
 }
 
 // ToUnderlyingAssetAmount converts an input coin into its value expressed in
@@ -185,6 +169,40 @@ func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccoun
 	return total, nil
 }
 
+// GetNetTVVInUnderlyingAsset returns the Total Vault Value (TVV) expressed in
+// vault.UnderlyingAsset, net of the vault's OutstandingAumFee liability.
+//
+// This is the authoritative valuation basis for share pricing and the published share
+// NAV: it represents the equity actually owned by shareholders, excluding the AUM fee
+// already owed to the fee collector but not yet transferred out of the principal marker.
+//
+// Paused fast-path:
+//   - If vault.Paused is true, this returns vault.PausedBalance.Amount directly. The paused
+//     balance is captured net of the OutstandingAumFee liability at pause time, so paused
+//     pricing stays frozen and NAV-independent.
+//
+// When not paused, GetTVVInUnderlyingAsset supplies the gross sum of principal-marker
+// balances; this method subtracts the OutstandingAumFee converted to underlying units and
+// floors the result at zero.
+func (k Keeper) GetNetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccount) (math.Int, error) {
+	gross, err := k.GetTVVInUnderlyingAsset(ctx, vault)
+	if err != nil {
+		return math.Int{}, fmt.Errorf("failed to get gross TVV: %w", err)
+	}
+	if vault.Paused {
+		return gross, nil
+	}
+	outstanding, err := k.CalculateOutstandingFeeUnderlying(ctx, vault)
+	if err != nil {
+		return math.Int{}, fmt.Errorf("failed to calculate outstanding AUM fee: %w", err)
+	}
+	net := gross.Sub(outstanding)
+	if net.IsNegative() {
+		return math.ZeroInt(), nil
+	}
+	return net, nil
+}
+
 // GetNAVPerShareInUnderlyingAsset returns the floor NAV per share in units of
 // vault.UnderlyingAsset.
 //
@@ -193,11 +211,11 @@ func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccoun
 //     vault.PausedBalance.Amount (ignores live TVV and share supply).
 //
 // Computation (when not paused):
-//   - TVV(underlying) is obtained from GetTVVInUnderlyingAsset (includes current vault holdings in underlying units).
+//   - TVV(underlying) is obtained from GetNetTVVInUnderlyingAsset (net of the OutstandingAumFee liability).
 //   - totalShareSupply is taken from vault.TotalShares.Amount (the recorded share supply).
 //   - If total shares == 0, returns 0. Otherwise returns TVV / totalShareSupply (floor).
 func (k Keeper) GetNAVPerShareInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccount) (math.Int, error) {
-	tvv, err := k.GetTVVInUnderlyingAsset(ctx, vault)
+	tvv, err := k.GetNetTVVInUnderlyingAsset(ctx, vault)
 	if err != nil {
 		return math.Int{}, fmt.Errorf("failed to get TVV: %w", err)
 	}
@@ -224,7 +242,7 @@ func (k Keeper) ConvertDepositToSharesInUnderlyingAsset(ctx sdk.Context, vault t
 	if err != nil {
 		return sdk.Coin{}, fmt.Errorf("failed to get unit price fraction: %w", err)
 	}
-	tvv, err := k.GetTVVInUnderlyingAsset(ctx, vault)
+	tvv, err := k.GetNetTVVInUnderlyingAsset(ctx, vault)
 	if err != nil {
 		return sdk.Coin{}, fmt.Errorf("failed to get TVV: %w", err)
 	}
@@ -251,7 +269,7 @@ func (k Keeper) ConvertSharesToRedeemCoin(ctx sdk.Context, vault types.VaultAcco
 	if !shares.IsPositive() {
 		return sdk.NewCoin(redeemDenom, math.ZeroInt()), nil
 	}
-	tvv, err := k.GetTVVInUnderlyingAsset(ctx, vault)
+	tvv, err := k.GetNetTVVInUnderlyingAsset(ctx, vault)
 	if err != nil {
 		return sdk.Coin{}, fmt.Errorf("failed to get TVV: %w", err)
 	}
@@ -281,11 +299,11 @@ func (k Keeper) ConvertSharesToRedeemCoin(ctx sdk.Context, vault types.VaultAcco
 func (k Keeper) EstimateTotalVaultValue(ctx sdk.Context, vault *types.VaultAccount) (sdk.Coin, error) {
 	baseAmt, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
 	if err != nil {
-		return sdk.Coin{}, fmt.Errorf("get tvv: %w", err)
+		return sdk.Coin{}, fmt.Errorf("failed to get tvv: %w", err)
 	}
 	estAmt, err := k.CalculateVaultTotalAssets(ctx, vault, sdk.Coin{Denom: vault.UnderlyingAsset, Amount: baseAmt})
 	if err != nil {
-		return sdk.Coin{}, fmt.Errorf("estimate tvv: %w", err)
+		return sdk.Coin{}, fmt.Errorf("failed to estimate tvv: %w", err)
 	}
 	return sdk.Coin{Denom: vault.UnderlyingAsset, Amount: estAmt}, nil
 }

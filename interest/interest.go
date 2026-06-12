@@ -35,7 +35,9 @@ const (
 // It uses deterministic arithmetic via `cosmosmath.LegacyDec` and approximates e^x using a Maclaurin series (`utils.ExpDec`).
 func CalculateInterestEarned(principal sdk.Coin, rate string, periodSeconds int64) (amount sdkmath.Int, err error) {
 	// Recover any LegacyDec overflow panic so callers receive an error and skip the
-	// vault instead of propagating the panic.
+	// vault instead of propagating the panic. This guard covers both the ExpDec
+	// Maclaurin accumulator and the subsequent p.Mul(eRt) final-amount multiply,
+	// neither of which has a SafeMul equivalent in LegacyDec.
 	defer func() {
 		if rec := recover(); rec != nil {
 			amount = sdkmath.Int{}

@@ -3,14 +3,12 @@ package keeper
 import (
 	"fmt"
 
-	"github.com/provlabs/vault/types"
-
 	sdkmath "cosmossdk.io/math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
+
+	"github.com/provlabs/vault/types"
 )
 
 const (
@@ -31,6 +29,7 @@ type VaultAttributer interface {
 	GetMinSwapOutValue() string
 	GetMaxSwapInValue() string
 	GetMaxSwapOutValue() string
+	GetInitialPaymentNav() *types.InitialVaultNAV
 }
 
 // CreateVault creates a new vault and its corresponding share marker atomically.
@@ -42,6 +41,9 @@ type VaultAttributer interface {
 //  4. Performing a pre-flight check against the principal/payment path by calling
 //     SendRestrictionFn with vault.PrincipalMarkerAddress() to ensure the fee
 //     collection address is permissioned to receive the payment denomination.
+//  5. Seeding the per-vault Internal NAV entry for the payment denom when it
+//     differs from the underlying asset, so the valuation engine can convert
+//     payment-denom balances and fee payouts without an out-of-band setup step.
 //
 // All steps are performed within a cache context. If any step fails, including the
 // pre-flight permission check, all state changes are discarded to prevent the creation
@@ -54,6 +56,7 @@ func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*type
 	minSwapOut := attributes.GetMinSwapOutValue()
 	maxSwapIn := attributes.GetMaxSwapInValue()
 	maxSwapOut := attributes.GetMaxSwapOutValue()
+	initialNAV := attributes.GetInitialPaymentNav()
 
 	underlyingAssetAddr, err := markertypes.MarkerAddress(underlying)
 	if err != nil {
@@ -90,9 +93,39 @@ func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*type
 		return nil, fmt.Errorf("effective recipient %s differs from expected fee collector %s for payment denom %s", recipient.String(), provlabsAddr.String(), vault.PaymentDenom)
 	}
 
+	if err := k.seedInitialPaymentNAV(cacheCtx, vault, initialNAV); err != nil {
+		return nil, fmt.Errorf("failed to seed initial payment NAV: %w", err)
+	}
+
 	write()
 	k.emitEvent(ctx, types.NewEventVaultCreated(vault))
 	return vault, nil
+}
+
+// seedInitialPaymentNAV persists the optional bootstrap NAV for a vault's
+// payment denom when payment_denom differs from underlying_asset. The caller
+// must have already validated the stateless shape of initial via
+// types.ValidateInitialPaymentNAV (typically through MsgCreateVaultRequest.ValidateBasic).
+//
+// When payment_denom equals underlying_asset, no NAV is required (the
+// valuation engine's identity fast-path applies) and initial must be nil; the
+// function returns an error rather than silently dropping a stray entry.
+//
+// The NAV is written via SetVaultNAV so that field-level invariants, marker
+// existence, and event emission match every other internal NAV update.
+func (k *Keeper) seedInitialPaymentNAV(ctx sdk.Context, vault *types.VaultAccount, initial *types.InitialVaultNAV) error {
+	if err := types.ValidateInitialPaymentNAV(vault.PaymentDenom, vault.UnderlyingAsset, initial); err != nil {
+		return fmt.Errorf("invalid initial payment NAV: %w", err)
+	}
+	if initial == nil {
+		return nil
+	}
+
+	nav := types.NewVaultNAV(vault.PaymentDenom, initial.Price, initial.Volume, initial.Source)
+	if err := k.SetVaultNAV(ctx, vault, nav, vault.Admin); err != nil {
+		return fmt.Errorf("failed to set initial payment NAV: %w", err)
+	}
+	return nil
 }
 
 // GetVault returns the vault account for the given address.
@@ -495,9 +528,9 @@ func (k *Keeper) autoPauseVault(ctx sdk.Context, vault *types.VaultAccount, reas
 		"reason", reason,
 	)
 
-	tvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
+	tvv, err := k.GetNetTVVInUnderlyingAsset(ctx, *vault)
 	if err != nil {
-		k.getLogger(ctx).Error("Failed to get TVV in underlying asset", "vault_address", vault.GetAddress().String(), "error", err)
+		k.getLogger(ctx).Error("Failed to get net TVV in underlying asset", "vault_address", vault.GetAddress().String(), "error", err)
 	}
 
 	vault.Paused = true

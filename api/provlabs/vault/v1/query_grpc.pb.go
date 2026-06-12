@@ -26,6 +26,10 @@ const (
 	Query_PendingSwapOuts_FullMethodName      = "/provlabs.vault.v1.Query/PendingSwapOuts"
 	Query_VaultPendingSwapOuts_FullMethodName = "/provlabs.vault.v1.Query/VaultPendingSwapOuts"
 	Query_Params_FullMethodName               = "/provlabs.vault.v1.Query/Params"
+	Query_VaultNavs_FullMethodName            = "/provlabs.vault.v1.Query/VaultNavs"
+	Query_NavValue_FullMethodName             = "/provlabs.vault.v1.Query/NavValue"
+	Query_VaultPayment_FullMethodName         = "/provlabs.vault.v1.Query/VaultPayment"
+	Query_VaultPayments_FullMethodName        = "/provlabs.vault.v1.Query/VaultPayments"
 )
 
 // QueryClient is the client API for Query service.
@@ -48,6 +52,16 @@ type QueryClient interface {
 	VaultPendingSwapOuts(ctx context.Context, in *QueryVaultPendingSwapOutsRequest, opts ...grpc.CallOption) (*QueryVaultPendingSwapOutsResponse, error)
 	// Params returns the current module parameters.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
+	// VaultNavs returns a paginated list of all internal NAV entries for a vault.
+	VaultNavs(ctx context.Context, in *QueryVaultNavsRequest, opts ...grpc.CallOption) (*QueryVaultNavsResponse, error)
+	// NavValue returns a single internal NAV entry for a vault and denom.
+	NavValue(ctx context.Context, in *QueryNavValueRequest, opts ...grpc.CallOption) (*QueryNavValueResponse, error)
+	// VaultPayment returns a single pending exchange-module payment targeting a vault,
+	// identified by the payment's source account and external id.
+	VaultPayment(ctx context.Context, in *QueryVaultPaymentRequest, opts ...grpc.CallOption) (*QueryVaultPaymentResponse, error)
+	// VaultPayments returns a paginated list of all pending exchange-module payments
+	// targeting a vault.
+	VaultPayments(ctx context.Context, in *QueryVaultPaymentsRequest, opts ...grpc.CallOption) (*QueryVaultPaymentsResponse, error)
 }
 
 type queryClient struct {
@@ -128,6 +142,46 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 	return out, nil
 }
 
+func (c *queryClient) VaultNavs(ctx context.Context, in *QueryVaultNavsRequest, opts ...grpc.CallOption) (*QueryVaultNavsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(QueryVaultNavsResponse)
+	err := c.cc.Invoke(ctx, Query_VaultNavs_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) NavValue(ctx context.Context, in *QueryNavValueRequest, opts ...grpc.CallOption) (*QueryNavValueResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(QueryNavValueResponse)
+	err := c.cc.Invoke(ctx, Query_NavValue_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) VaultPayment(ctx context.Context, in *QueryVaultPaymentRequest, opts ...grpc.CallOption) (*QueryVaultPaymentResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(QueryVaultPaymentResponse)
+	err := c.cc.Invoke(ctx, Query_VaultPayment_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *queryClient) VaultPayments(ctx context.Context, in *QueryVaultPaymentsRequest, opts ...grpc.CallOption) (*QueryVaultPaymentsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(QueryVaultPaymentsResponse)
+	err := c.cc.Invoke(ctx, Query_VaultPayments_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 // All implementations must embed UnimplementedQueryServer
 // for forward compatibility.
@@ -148,6 +202,16 @@ type QueryServer interface {
 	VaultPendingSwapOuts(context.Context, *QueryVaultPendingSwapOutsRequest) (*QueryVaultPendingSwapOutsResponse, error)
 	// Params returns the current module parameters.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
+	// VaultNavs returns a paginated list of all internal NAV entries for a vault.
+	VaultNavs(context.Context, *QueryVaultNavsRequest) (*QueryVaultNavsResponse, error)
+	// NavValue returns a single internal NAV entry for a vault and denom.
+	NavValue(context.Context, *QueryNavValueRequest) (*QueryNavValueResponse, error)
+	// VaultPayment returns a single pending exchange-module payment targeting a vault,
+	// identified by the payment's source account and external id.
+	VaultPayment(context.Context, *QueryVaultPaymentRequest) (*QueryVaultPaymentResponse, error)
+	// VaultPayments returns a paginated list of all pending exchange-module payments
+	// targeting a vault.
+	VaultPayments(context.Context, *QueryVaultPaymentsRequest) (*QueryVaultPaymentsResponse, error)
 	mustEmbedUnimplementedQueryServer()
 }
 
@@ -178,6 +242,18 @@ func (UnimplementedQueryServer) VaultPendingSwapOuts(context.Context, *QueryVaul
 }
 func (UnimplementedQueryServer) Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
+}
+func (UnimplementedQueryServer) VaultNavs(context.Context, *QueryVaultNavsRequest) (*QueryVaultNavsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VaultNavs not implemented")
+}
+func (UnimplementedQueryServer) NavValue(context.Context, *QueryNavValueRequest) (*QueryNavValueResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method NavValue not implemented")
+}
+func (UnimplementedQueryServer) VaultPayment(context.Context, *QueryVaultPaymentRequest) (*QueryVaultPaymentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VaultPayment not implemented")
+}
+func (UnimplementedQueryServer) VaultPayments(context.Context, *QueryVaultPaymentsRequest) (*QueryVaultPaymentsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VaultPayments not implemented")
 }
 func (UnimplementedQueryServer) mustEmbedUnimplementedQueryServer() {}
 func (UnimplementedQueryServer) testEmbeddedByValue()               {}
@@ -326,6 +402,78 @@ func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_VaultNavs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryVaultNavsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).VaultNavs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_VaultNavs_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).VaultNavs(ctx, req.(*QueryVaultNavsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_NavValue_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryNavValueRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).NavValue(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_NavValue_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).NavValue(ctx, req.(*QueryNavValueRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_VaultPayment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryVaultPaymentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).VaultPayment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_VaultPayment_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).VaultPayment(ctx, req.(*QueryVaultPaymentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Query_VaultPayments_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryVaultPaymentsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).VaultPayments(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Query_VaultPayments_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).VaultPayments(ctx, req.(*QueryVaultPaymentsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Query_ServiceDesc is the grpc.ServiceDesc for Query service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -360,6 +508,22 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Params",
 			Handler:    _Query_Params_Handler,
+		},
+		{
+			MethodName: "VaultNavs",
+			Handler:    _Query_VaultNavs_Handler,
+		},
+		{
+			MethodName: "NavValue",
+			Handler:    _Query_NavValue_Handler,
+		},
+		{
+			MethodName: "VaultPayment",
+			Handler:    _Query_VaultPayment_Handler,
+		},
+		{
+			MethodName: "VaultPayments",
+			Handler:    _Query_VaultPayments_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

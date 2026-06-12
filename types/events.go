@@ -20,6 +20,15 @@ const (
 	RefundReasonUnknown                    = "unknown_error"
 )
 
+const (
+	// AssetDirectionInbound indicates an external asset moved into the vault in
+	// exchange for the vault's payment denom (payment_denom is the target leg).
+	AssetDirectionInbound = "inbound"
+	// AssetDirectionOutbound indicates an asset moved out of the vault in
+	// exchange for the vault's payment denom (payment_denom is the source leg).
+	AssetDirectionOutbound = "outbound"
+)
+
 // NewEventVaultCreated creates a new EventVaultCreated event.
 func NewEventVaultCreated(vault *VaultAccount) *EventVaultCreated {
 	return &EventVaultCreated{
@@ -346,5 +355,50 @@ func NewEventMaxSwapOutValueUpdated(vaultAddress, authority, maxSwapOut string) 
 		VaultAddress: vaultAddress,
 		Authority:    authority,
 		MaxSwapOut:   maxSwapOut,
+	}
+}
+
+// NewEventNAVUpdated creates a new EventNAVUpdated event from a stored VaultNAV.
+// signer is the NAV authority address that performed the update.
+func NewEventNAVUpdated(vaultAddress string, nav VaultNAV, signer string) *EventNAVUpdated {
+	return &EventNAVUpdated{
+		VaultAddress:       vaultAddress,
+		Denom:              nav.Denom,
+		Price:              nav.Price.String(),
+		Volume:             nav.Volume.String(),
+		Source:             nav.Source,
+		Signer:             signer,
+		UpdatedBlockHeight: nav.UpdatedBlockHeight,
+	}
+}
+
+// NewEventNAVAuthorityUpdated creates a new EventNAVAuthorityUpdated event.
+func NewEventNAVAuthorityUpdated(vaultAddress, admin, newAuthority string) *EventNAVAuthorityUpdated {
+	return &EventNAVAuthorityUpdated{
+		VaultAddress: vaultAddress,
+		Admin:        admin,
+		NewAuthority: newAuthority,
+	}
+}
+
+// NewEventAssetAccepted creates a new EventAssetAccepted event. direction is one
+// of AssetDirectionInbound or AssetDirectionOutbound.
+func NewEventAssetAccepted(vaultAddress, source, externalID string, sourceAmount, targetAmount sdk.Coins, direction string) *EventAssetAccepted {
+	return &EventAssetAccepted{
+		VaultAddress: vaultAddress,
+		Source:       source,
+		ExternalId:   externalID,
+		SourceAmount: sourceAmount.String(),
+		TargetAmount: targetAmount.String(),
+		Direction:    direction,
+	}
+}
+
+// NewEventAssetRejected creates a new EventAssetRejected event.
+func NewEventAssetRejected(vaultAddress, source, externalID string) *EventAssetRejected {
+	return &EventAssetRejected{
+		VaultAddress: vaultAddress,
+		Source:       source,
+		ExternalId:   externalID,
 	}
 }

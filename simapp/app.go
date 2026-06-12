@@ -1,12 +1,15 @@
 package simapp
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 
 	vaultkeeper "github.com/provlabs/vault/keeper"
+	vaulttypes "github.com/provlabs/vault/types"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/reflect/protoreflect"
 
 	"cosmossdk.io/core/appconfig"
 	"cosmossdk.io/depinject"
@@ -21,9 +24,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
@@ -43,7 +48,10 @@ import (
 
 	// Provenance Modules
 	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
+	exchangekeeper "github.com/provenance-io/provenance/x/exchange/keeper"
+	holdkeeper "github.com/provenance-io/provenance/x/hold/keeper"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
+	metadatakeeper "github.com/provenance-io/provenance/x/metadata/keeper"
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 
 	_ "cosmossdk.io/x/feegrant/module"
@@ -86,7 +94,7 @@ type SimApp struct {
 
 	// Cosmos Modules
 	AccountKeeper   authkeeper.AccountKeeper
-	BankKeeper      bankkeeper.Keeper
+	BankKeeper      bankkeeper.BaseKeeper
 	ConsensusKeeper consensuskeeper.Keeper
 	CrisisKeeper    *crisiskeeper.Keeper
 	ParamsKeeper    paramskeeper.Keeper
@@ -104,7 +112,9 @@ type SimApp struct {
 	NameKeeper      namekeeper.Keeper
 	AttributeKeeper attributekeeper.Keeper
 	MarkerKeeper    markerkeeper.Keeper
-	// ExchangeKeeper  exchangekeeper.Keeper
+	MetadataKeeper  metadatakeeper.Keeper
+	HoldKeeper      holdkeeper.Keeper
+	ExchangeKeeper  exchangekeeper.Keeper
 	// Custom Modules
 	VaultKeeper *vaultkeeper.Keeper
 
@@ -120,20 +130,56 @@ func init() {
 	DefaultNodeHome = filepath.Join(userHomeDir, ".simapp")
 }
 
-// ProvideExchangeDummyCustomSigners returns a slice of dummy CustomGetSigner functions
-// for the exchange module. These are used to register placeholder signer functions for
-// specific message types (e.g., MsgAcceptPaymentRequest, MsgCreatePaymentRequest) to
-// satisfy the signing context validation during app initialization.
-func ProvideExchangeDummyCustomSigners() []signing.CustomGetSigner {
+// ProvideExchangeCustomSigners returns the CustomGetSigner functions for the exchange
+// module message types whose signer is nested inside a Payment field rather than being a
+// top-level address field. MsgCreatePaymentRequest is signed by the payment source and
+// MsgAcceptPaymentRequest is signed by the payment target. Registering these is required
+// both to pass signing context validation during app initialization and to allow the
+// SimApp to process real exchange payment transactions.
+func ProvideExchangeCustomSigners() []signing.CustomGetSigner {
 	return []signing.CustomGetSigner{
 		{
-			MsgType: "provenance.exchange.v1.MsgAcceptPaymentRequest",
-			Fn:      func(proto.Message) ([][]byte, error) { return [][]byte{}, nil },
+			MsgType: "provenance.exchange.v1.MsgCreatePaymentRequest",
+			Fn:      paymentFieldSigner("source"),
 		},
 		{
-			MsgType: "provenance.exchange.v1.MsgCreatePaymentRequest",
-			Fn:      func(proto.Message) ([][]byte, error) { return [][]byte{}, nil },
+			MsgType: "provenance.exchange.v1.MsgAcceptPaymentRequest",
+			Fn:      paymentFieldSigner("target"),
 		},
+	}
+}
+
+// paymentFieldSigner returns a GetSigners function that extracts the signer address from
+// the named string field (e.g. "source" or "target") of a message's nested, non-nullable
+// Payment field. The bech32 prefix is read at call time so the account address codec
+// always matches the chain's configured prefix.
+func paymentFieldSigner(fieldName string) func(proto.Message) ([][]byte, error) {
+	return func(msgIn proto.Message) (addrs [][]byte, err error) {
+		defer func() {
+			if r := recover(); r != nil {
+				err = fmt.Errorf("panic (recovered) getting payment.%s as a signer: %v", fieldName, r)
+			}
+		}()
+
+		msg := msgIn.ProtoReflect()
+		pmtDesc := msg.Descriptor().Fields().ByName("payment")
+		if pmtDesc == nil {
+			return nil, fmt.Errorf("no payment field found in %s", msg.Descriptor().FullName())
+		}
+
+		pmt := msg.Get(pmtDesc).Message()
+		fieldDesc := pmt.Descriptor().Fields().ByName(protoreflect.Name(fieldName))
+		if fieldDesc == nil {
+			return nil, fmt.Errorf("no payment.%s field found in %s", fieldName, msg.Descriptor().FullName())
+		}
+
+		b32 := pmt.Get(fieldDesc).String()
+		addrCodec := addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix())
+		addr, err := addrCodec.StringToBytes(b32)
+		if err != nil {
+			return nil, fmt.Errorf("error decoding payment.%s address %q: %w", fieldName, b32, err)
+		}
+		return [][]byte{addr}, nil
 	}
 }
 
@@ -142,10 +188,11 @@ func AppConfig() depinject.Config {
 	return depinject.Configs(
 		appconfig.LoadYAML(AppConfigYAML),
 		depinject.Provide(
-			ProvideExchangeDummyCustomSigners,
+			ProvideExchangeCustomSigners,
 			ProvideMarkerKeeperStub,
 			ProvideNameKeeperStub,
 			ProvideAttributeKeeperStub,
+			ProvideExchangeKeeperStub,
 		),
 		depinject.Supply(
 			map[string]module.AppModuleBasic{
@@ -303,6 +350,29 @@ func ProvideAttributeKeeperStub() *attributekeeper.Keeper {
 	return &attributekeeper.Keeper{}
 }
 
+// ProvideExchangeKeeperStub returns an empty types.ExchangeKeeper instance.
+//
+// This stub is used to satisfy dependency injection requirements when wiring
+// the Vault module in the app module configuration. It allows the Vault module
+// to be included in the dependency graph even though the actual ExchangeKeeper
+// is initialized separately using the legacy Provenance wiring in SimApp.
+//
+// It returns the vaultExchangeKeeper adapter so the stub satisfies the full
+// types.ExchangeKeeper interface, including the GetPaymentsWithTarget lookup that
+// the raw exchange keeper exposes only through its query server.
+//
+// This function should only be used during app setup and should not be relied
+// on at runtime, as the returned keeper is not fully configured and will panic
+// if used.
+func ProvideExchangeKeeperStub() vaulttypes.ExchangeKeeper {
+	return vaultExchangeKeeper{}
+}
+
 func (app *SimApp) AppCodec() codec.Codec {
 	return app.appCodec
+}
+
+// TxConfig returns the SimApp's TxConfig, used by tests to build and sign transactions.
+func (app *SimApp) TxConfig() client.TxConfig {
+	return app.txConfig
 }

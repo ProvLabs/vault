@@ -453,6 +453,75 @@ func (s *VaultSimTestSuite) TestSimulateMsgUpdateVaultAUMFeeBips() {
 	s.Require().Len(futureOps, 0, "futureOperations")
 }
 
+func (s *VaultSimTestSuite) TestSimulateMsgUpdateVaultNAV() {
+	selected := s.accs[0]
+
+	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "", "underlyingshare", selected, s.accs)
+	s.Require().NoError(err, "CreateVault")
+
+	op := simulation.SimulateMsgUpdateVaultNAV(*s.app.VaultKeeper)
+	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
+	s.Require().NoError(err, "SimulateMsgUpdateVaultNAV")
+	s.Require().True(opMsg.OK, "expected %s operation to be successful, but got: %s", opMsg.Name, opMsg.Comment)
+	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
+	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
+	s.Require().Len(futureOps, 0, "futureOperations")
+}
+
+func (s *VaultSimTestSuite) TestSimulateMsgUpdateNAVAuthority() {
+	selected := s.accs[0]
+
+	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "", "underlyingshare", selected, s.accs)
+	s.Require().NoError(err, "CreateVault")
+
+	op := simulation.SimulateMsgUpdateNAVAuthority(*s.app.VaultKeeper)
+	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
+	s.Require().NoError(err, "SimulateMsgUpdateNAVAuthority")
+	s.Require().True(opMsg.OK, "expected %s operation to be successful, but got: %s", opMsg.Name, opMsg.Comment)
+	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
+	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
+	s.Require().Len(futureOps, 0, "futureOperations")
+}
+
+func (s *VaultSimTestSuite) TestSimulateMsgAcceptAsset() {
+	selected := s.accs[0]
+
+	err := simulation.CreateGlobalMarker(s.ctx, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, sdk.NewInt64Coin("acceptunder2vx", 100_000_000), s.accs, false, s.provlabsAddr)
+	s.Require().NoError(err, "CreateGlobalMarker underlying")
+	err = simulation.CreateGlobalMarker(s.ctx, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, sdk.NewInt64Coin("acceptpay2vx", 100_000_000), s.accs, false, s.provlabsAddr)
+	s.Require().NoError(err, "CreateGlobalMarker payment")
+
+	err = simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "acceptunder2vx", "acceptpay2vx", "acceptshare", selected, s.accs)
+	s.Require().NoError(err, "CreateVault")
+
+	op := simulation.SimulateMsgAcceptAsset(*s.app.VaultKeeper)
+	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
+	s.Require().NoError(err, "SimulateMsgAcceptAsset")
+	s.Require().True(opMsg.OK, "expected %s operation to be successful, but got: %s", opMsg.Name, opMsg.Comment)
+	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
+	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
+	s.Require().Len(futureOps, 0, "futureOperations")
+}
+
+func (s *VaultSimTestSuite) TestSimulateMsgRejectAsset() {
+	selected := s.accs[0]
+
+	err := simulation.CreateGlobalMarker(s.ctx, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, sdk.NewInt64Coin("rejectunder2vx", 100_000_000), s.accs, false, s.provlabsAddr)
+	s.Require().NoError(err, "CreateGlobalMarker underlying")
+	err = simulation.CreateGlobalMarker(s.ctx, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, sdk.NewInt64Coin("rejectpay2vx", 100_000_000), s.accs, false, s.provlabsAddr)
+	s.Require().NoError(err, "CreateGlobalMarker payment")
+
+	err = simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "rejectunder2vx", "rejectpay2vx", "rejectshare", selected, s.accs)
+	s.Require().NoError(err, "CreateVault")
+
+	op := simulation.SimulateMsgRejectAsset(*s.app.VaultKeeper)
+	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
+	s.Require().NoError(err, "SimulateMsgRejectAsset")
+	s.Require().True(opMsg.OK, "expected %s operation to be successful, but got: %s", opMsg.Name, opMsg.Comment)
+	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
+	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
+	s.Require().Len(futureOps, 0, "futureOperations")
+}
 
 // GenerateTestingAccounts generates n new accounts, creates them (in state) and gives each 1 million power worth of bond tokens.
 func GenerateTestingAccounts(t *testing.T, ctx sdk.Context, app *simapp.SimApp, r *rand.Rand, n int) []simtypes.Account {

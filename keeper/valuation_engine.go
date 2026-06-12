@@ -169,6 +169,40 @@ func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccoun
 	return total, nil
 }
 
+// GetNetTVVInUnderlyingAsset returns the Total Vault Value (TVV) expressed in
+// vault.UnderlyingAsset, net of the vault's OutstandingAumFee liability.
+//
+// This is the authoritative valuation basis for share pricing and the published share
+// NAV: it represents the equity actually owned by shareholders, excluding the AUM fee
+// already owed to the fee collector but not yet transferred out of the principal marker.
+//
+// Paused fast-path:
+//   - If vault.Paused is true, this returns vault.PausedBalance.Amount directly. The paused
+//     balance is captured net of the OutstandingAumFee liability at pause time, so paused
+//     pricing stays frozen and NAV-independent.
+//
+// When not paused, GetTVVInUnderlyingAsset supplies the gross sum of principal-marker
+// balances; this method subtracts the OutstandingAumFee converted to underlying units and
+// floors the result at zero.
+func (k Keeper) GetNetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccount) (math.Int, error) {
+	gross, err := k.GetTVVInUnderlyingAsset(ctx, vault)
+	if err != nil {
+		return math.Int{}, fmt.Errorf("failed to get gross TVV: %w", err)
+	}
+	if vault.Paused {
+		return gross, nil
+	}
+	outstanding, err := k.CalculateOutstandingFeeUnderlying(ctx, vault)
+	if err != nil {
+		return math.Int{}, fmt.Errorf("failed to calculate outstanding AUM fee: %w", err)
+	}
+	net := gross.Sub(outstanding)
+	if net.IsNegative() {
+		return math.ZeroInt(), nil
+	}
+	return net, nil
+}
+
 // GetNAVPerShareInUnderlyingAsset returns the floor NAV per share in units of
 // vault.UnderlyingAsset.
 //
@@ -177,11 +211,11 @@ func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccoun
 //     vault.PausedBalance.Amount (ignores live TVV and share supply).
 //
 // Computation (when not paused):
-//   - TVV(underlying) is obtained from GetTVVInUnderlyingAsset (includes current vault holdings in underlying units).
+//   - TVV(underlying) is obtained from GetNetTVVInUnderlyingAsset (net of the OutstandingAumFee liability).
 //   - totalShareSupply is taken from vault.TotalShares.Amount (the recorded share supply).
 //   - If total shares == 0, returns 0. Otherwise returns TVV / totalShareSupply (floor).
 func (k Keeper) GetNAVPerShareInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccount) (math.Int, error) {
-	tvv, err := k.GetTVVInUnderlyingAsset(ctx, vault)
+	tvv, err := k.GetNetTVVInUnderlyingAsset(ctx, vault)
 	if err != nil {
 		return math.Int{}, fmt.Errorf("failed to get TVV: %w", err)
 	}
@@ -208,7 +242,7 @@ func (k Keeper) ConvertDepositToSharesInUnderlyingAsset(ctx sdk.Context, vault t
 	if err != nil {
 		return sdk.Coin{}, fmt.Errorf("failed to get unit price fraction: %w", err)
 	}
-	tvv, err := k.GetTVVInUnderlyingAsset(ctx, vault)
+	tvv, err := k.GetNetTVVInUnderlyingAsset(ctx, vault)
 	if err != nil {
 		return sdk.Coin{}, fmt.Errorf("failed to get TVV: %w", err)
 	}
@@ -235,7 +269,7 @@ func (k Keeper) ConvertSharesToRedeemCoin(ctx sdk.Context, vault types.VaultAcco
 	if !shares.IsPositive() {
 		return sdk.NewCoin(redeemDenom, math.ZeroInt()), nil
 	}
-	tvv, err := k.GetTVVInUnderlyingAsset(ctx, vault)
+	tvv, err := k.GetNetTVVInUnderlyingAsset(ctx, vault)
 	if err != nil {
 		return sdk.Coin{}, fmt.Errorf("failed to get TVV: %w", err)
 	}

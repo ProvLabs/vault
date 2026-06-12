@@ -6094,10 +6094,7 @@ func (s *TestSuite) TestMsgServer_UpdateNAVAuthority_NoOpWhenUnchanged() {
 }
 
 func (s *TestSuite) TestMsgServer_AcceptAsset_Inbound() {
-	underlying := "under"
-	share := "vshare"
-	paymentDenom := "pay"
-	asset := "rwacoin"
+	underlying, share, paymentDenom, asset := "under", "vshare", "pay", "rwacoin"
 	externalID := "p2p-inbound"
 
 	vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
@@ -6132,10 +6129,7 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Inbound() {
 }
 
 func (s *TestSuite) TestMsgServer_AcceptAsset_Outbound() {
-	underlying := "under"
-	share := "vshare"
-	paymentDenom := "pay"
-	asset := "rwacoin"
+	underlying, share, paymentDenom, asset := "under", "vshare", "pay", "rwacoin"
 	externalID := "p2p-outbound"
 
 	vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
@@ -6177,11 +6171,106 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Outbound() {
 	s.requireTypedEventEmitted(types.NewEventAssetAccepted(vaultAddr.String(), source.String(), externalID, sourceAmount, targetAmount, types.AssetDirectionOutbound))
 }
 
+func (s *TestSuite) TestMsgServer_AcceptAsset_RestrictedMarker() {
+	underlying, share, paymentDenom, restrictedDenom := "under", "vshare", "pay", "restrictedrwa"
+	externalID := "p2p-restricted"
+
+	tests := []struct {
+		name                      string
+		grantVaultMarkerTransfer  bool
+		grantSourceMarkerTransfer bool
+		expectedErrSubstrs        []string
+	}{
+		{
+			name:                      "vault and source both hold marker transfer access, restricted settlement succeeds",
+			grantVaultMarkerTransfer:  true,
+			grantSourceMarkerTransfer: true,
+		},
+		{
+			name:                     "source without marker transfer access, agentless exchange escrow transfer is blocked",
+			grantVaultMarkerTransfer: true,
+			expectedErrSubstrs:       []string{"failed to accept payment", "does not have transfer permissions"},
+		},
+		{
+			name:                      "vault without marker transfer access, vault-as-transfer-agent hop to principal is blocked",
+			grantSourceMarkerTransfer: true,
+			expectedErrSubstrs:        []string{"failed to move source amount from vault to principal", "have ACCESS_TRANSFER on restrictedrwa marker"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			origCtx := s.ctx
+			defer func() { s.ctx = origCtx }()
+			s.ctx, _ = s.ctx.CacheContext()
+
+			vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+			vaultAddr := vault.GetAddress()
+			source := s.CreateAndFundAccount(sdk.NewInt64Coin(underlying, 1))
+
+			grants := []markertypes.AccessGrant{
+				{Address: s.adminAddr.String(), Permissions: markertypes.AccessList{
+					markertypes.Access_Mint, markertypes.Access_Burn, markertypes.Access_Withdraw,
+					markertypes.Access_Admin, markertypes.Access_Transfer,
+				}},
+			}
+			if tc.grantVaultMarkerTransfer {
+				grants = append(grants, markertypes.AccessGrant{Address: vaultAddr.String(), Permissions: markertypes.AccessList{markertypes.Access_Transfer}})
+			}
+			if tc.grantSourceMarkerTransfer {
+				grants = append(grants, markertypes.AccessGrant{Address: source.String(), Permissions: markertypes.AccessList{markertypes.Access_Transfer}})
+			}
+			restrictedMarker := markertypes.NewMarkerAccount(
+				authtypes.NewBaseAccountWithAddress(markertypes.MustGetMarkerAddress(restrictedDenom)),
+				sdk.NewInt64Coin(restrictedDenom, 1_000_000),
+				s.adminAddr,
+				grants,
+				markertypes.StatusProposed,
+				markertypes.MarkerType_RestrictedCoin,
+				false, true, false, []string{},
+			)
+			s.Require().NoError(s.simApp.MarkerKeeper.AddFinalizeAndActivateMarker(s.ctx, restrictedMarker), "failed to create restricted marker %s", restrictedDenom)
+			s.Require().NoError(s.simApp.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, source, restrictedDenom, sdk.NewCoins(sdk.NewInt64Coin(restrictedDenom, 10))), "failed to fund source %s with restricted marker denom %s", source, restrictedDenom)
+			s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5))), "failed to fund principal %s with payment denom %s", principalAddr, paymentDenom)
+
+			sourceAmount := sdk.NewCoins(sdk.NewInt64Coin(restrictedDenom, 10))
+			targetAmount := sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5))
+			s.createPayment(source, vaultAddr, sourceAmount, targetAmount, externalID)
+
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			resp, err := keeper.NewMsgServer(s.simApp.VaultKeeper).AcceptAsset(s.ctx, &types.MsgAcceptAssetRequest{
+				Authority:    s.adminAddr.String(),
+				VaultAddress: vaultAddr.String(),
+				Source:       source.String(),
+				ExternalId:   externalID,
+			})
+
+			if len(tc.expectedErrSubstrs) > 0 {
+				s.Require().Error(err, "AcceptAsset of restricted marker denom %s should fail for case %q", restrictedDenom, tc.name)
+				s.Assert().Nil(resp, "AcceptAsset response should be nil on error for case %q", tc.name)
+				for _, substr := range tc.expectedErrSubstrs {
+					s.Assert().Containsf(err.Error(), substr, "AcceptAsset error missing expected substring for case %q", tc.name)
+				}
+				return
+			}
+
+			s.Require().NoError(err, "AcceptAsset of restricted marker denom %s should succeed when vault %s and source %s hold transfer access", restrictedDenom, vaultAddr, source)
+			s.Assert().Equal(&types.MsgAcceptAssetResponse{}, resp, "AcceptAsset restricted marker response")
+
+			s.assertBalance(source, restrictedDenom, sdkmath.NewInt(0))
+			s.assertBalance(source, paymentDenom, sdkmath.NewInt(5))
+			s.assertBalance(principalAddr, restrictedDenom, sdkmath.NewInt(10))
+			s.assertBalance(principalAddr, paymentDenom, sdkmath.NewInt(0))
+			s.assertBalance(vaultAddr, restrictedDenom, sdkmath.NewInt(0))
+			s.assertBalance(vaultAddr, paymentDenom, sdkmath.NewInt(0))
+
+			s.requireTypedEventEmitted(types.NewEventAssetAccepted(vaultAddr.String(), source.String(), externalID, sourceAmount, targetAmount, types.AssetDirectionInbound))
+		})
+	}
+}
+
 func (s *TestSuite) TestMsgServer_AcceptAsset_Failures() {
-	underlying := "under"
-	share := "vshare"
-	paymentDenom := "pay"
-	asset := "rwacoin"
+	underlying, share, paymentDenom, asset := "under", "vshare", "pay", "rwacoin"
 
 	tests := []struct {
 		name string
@@ -6324,10 +6413,7 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Failures() {
 }
 
 func (s *TestSuite) TestMsgServer_AcceptAsset_NAVGuardrail() {
-	underlying := "under"
-	share := "vshare"
-	paymentDenom := "pay"
-	asset := "rwacoin"
+	underlying, share, paymentDenom, asset := "under", "vshare", "pay", "rwacoin"
 	externalID := "guardrail"
 
 	tests := []struct {
@@ -6732,10 +6818,7 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Reconcile() {
 }
 
 func (s *TestSuite) TestMsgServer_AcceptAsset_InsufficientPrincipalDoesNotSettle() {
-	underlying := "under"
-	share := "vshare"
-	paymentDenom := "pay"
-	asset := "rwacoin"
+	underlying, share, paymentDenom, asset := "under", "vshare", "pay", "rwacoin"
 	externalID := "short-noop"
 
 	vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
@@ -6761,10 +6844,7 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_InsufficientPrincipalDoesNotSettle
 }
 
 func (s *TestSuite) TestMsgServer_RejectAsset() {
-	underlying := "under"
-	share := "vshare"
-	paymentDenom := "pay"
-	asset := "rwacoin"
+	underlying, share, paymentDenom, asset := "under", "vshare", "pay", "rwacoin"
 	externalID := "p2p-reject"
 
 	vault, _ := s.setupAssetSettlementVault(underlying, share, paymentDenom)
@@ -6792,10 +6872,7 @@ func (s *TestSuite) TestMsgServer_RejectAsset() {
 }
 
 func (s *TestSuite) TestMsgServer_RejectAsset_Failures() {
-	underlying := "under"
-	share := "vshare"
-	paymentDenom := "pay"
-	asset := "rwacoin"
+	underlying, share, paymentDenom, asset := "under", "vshare", "pay", "rwacoin"
 
 	tests := []struct {
 		name               string

@@ -113,8 +113,9 @@ func (k Keeper) setShareDenomNAV(ctx sdk.Context, vault *types.VaultAccount, vau
 
 // publishShareNav records the Net Asset Value (NAV) for the vault's share denom
 // in terms of its underlying asset. It fetches the vault’s principal marker,
-// computes the total value of vault assets in underlying units (TVV), and
-// attempts to set the NAV as (Price = TVV in underlying, Volume = total shares).
+// computes the net total value of vault assets in underlying units (TVV net of the
+// OutstandingAumFee liability), and attempts to set the NAV as
+// (Price = net TVV in underlying, Volume = total shares).
 // If no shares exist or the TVV is non-positive, no NAV is published.
 //
 // If NAV publication fails, the error is logged and the operation continues
@@ -127,7 +128,7 @@ func (k Keeper) publishShareNav(ctx sdk.Context, vault *types.VaultAccount) erro
 	if !vault.TotalShares.IsPositive() {
 		return nil
 	}
-	tvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
+	tvv, err := k.GetNetTVVInUnderlyingAsset(ctx, *vault)
 	if err != nil {
 		return fmt.Errorf("failed to get TVV: %w", err)
 	}

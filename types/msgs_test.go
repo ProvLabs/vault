@@ -2213,7 +2213,7 @@ func TestMsgAcceptAssetRequest_ValidateBasic(t *testing.T) {
 				Source:       source,
 				ExternalId:   strings.Repeat("x", 101),
 			},
-			expectedErr: "invalid external id",
+			expectedErr: "invalid external id: invalid external id \"xxxxx...xxxxx\" (length 101): max length 100",
 		},
 	})
 }
@@ -2309,7 +2309,7 @@ func TestMsgRejectAssetRequest_ValidateBasic(t *testing.T) {
 				Source:       source,
 				ExternalId:   strings.Repeat("x", 101),
 			},
-			expectedErr: "invalid external id",
+			expectedErr: "invalid external id: invalid external id \"xxxxx...xxxxx\" (length 101): max length 100",
 		},
 	})
 }

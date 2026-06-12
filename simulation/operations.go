@@ -1490,6 +1490,16 @@ func stagePrincipal(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, vault *types
 	return nil
 }
 
+// randomManagementAuthority picks the signer for an asset settlement message at random
+// from the vault's accepted management authorities: the admin and, when set, the asset
+// manager.
+func randomManagementAuthority(r *rand.Rand, vault *types.VaultAccount) string {
+	if vault.AssetManager != "" && r.Intn(2) == 0 {
+		return vault.AssetManager
+	}
+	return vault.Admin
+}
+
 func SimulateMsgAcceptAsset(k keeper.Keeper) simtypes.Operation {
 	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
 		accs []simtypes.Account, chainID string,
@@ -1516,7 +1526,7 @@ func SimulateMsgAcceptAsset(k keeper.Keeper) simtypes.Operation {
 		}
 
 		msg := &types.MsgAcceptAssetRequest{
-			Authority:    vault.Admin,
+			Authority:    randomManagementAuthority(r, vault),
 			VaultAddress: vault.GetAddress().String(),
 			Source:       payment.Source,
 			ExternalId:   payment.ExternalId,
@@ -1554,7 +1564,7 @@ func SimulateMsgRejectAsset(k keeper.Keeper) simtypes.Operation {
 		}
 
 		msg := &types.MsgRejectAssetRequest{
-			Authority:    vault.Admin,
+			Authority:    randomManagementAuthority(r, vault),
 			VaultAddress: vault.GetAddress().String(),
 			Source:       payment.Source,
 			ExternalId:   payment.ExternalId,

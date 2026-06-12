@@ -7,6 +7,7 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
 	"github.com/provlabs/vault/utils"
 )
@@ -460,6 +461,76 @@ func (s *TestSuite) TestConvertSharesToRedeemCoin_AssetAndPaymentPaths() {
 	s.Require().Contains(err.Error(), "no internal NAV entry for denom", "error should indicate missing internal NAV mapping")
 }
 
+func (s *TestSuite) TestConvertAndNav_PriceNetOfOutstandingAumFee() {
+	underlyingDenom := "ylds"
+	paymentDenom := "usdc"
+	shareDenom := "vshare"
+	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
+
+	testKeeper := s.k
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(
+		sdk.NewInt64Coin(underlyingDenom, 1000),
+		sdk.NewInt64Coin(paymentDenom, 10),
+	)), "should fund vault marker for gross TVV")
+
+	grossTVV, err := testKeeper.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	s.Require().NoError(err, "should compute gross TVV")
+	s.Require().Equal(math.NewInt(1005), grossTVV, "gross TVV = 1000 underlying + 10 payment at 1/2")
+
+	totalShares := sdk.NewCoin(shareDenom, grossTVV.Mul(utils.ShareScalar))
+	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), totalShares), "should mint share supply")
+	vault.TotalShares = totalShares
+	vault.OutstandingAumFee = sdk.NewInt64Coin(paymentDenom, 10)
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	netTVV, err := testKeeper.GetNetTVVInUnderlyingAsset(s.ctx, *vault)
+	s.Require().NoError(err, "should compute net TVV")
+	s.Require().Equal(math.NewInt(1000), netTVV, "net TVV = gross 1005 minus outstanding fee (10 payment at 1/2 = 5 underlying)")
+
+	deposit := sdk.NewInt64Coin(underlyingDenom, 1000)
+	mintedShares, err := testKeeper.ConvertDepositToSharesInUnderlyingAsset(s.ctx, *vault, deposit)
+	s.Require().NoError(err, "deposit conversion should succeed")
+	expectedNetMint, err := utils.CalculateSharesProRataFraction(deposit.Amount, math.NewInt(1), netTVV, totalShares.Amount, shareDenom)
+	s.Require().NoError(err, "should compute net-priced deposit shares")
+	expectedGrossMint, err := utils.CalculateSharesProRataFraction(deposit.Amount, math.NewInt(1), grossTVV, totalShares.Amount, shareDenom)
+	s.Require().NoError(err, "should compute gross-priced deposit shares")
+	s.Require().Equal(expectedNetMint.Amount, mintedShares.Amount, "deposit must be priced off net TVV")
+	s.Require().True(mintedShares.Amount.GT(expectedGrossMint.Amount), "net pricing mints more shares per deposit than gross pricing would (gross overstates TVV)")
+
+	redeemShares := grossTVV.Mul(utils.ShareScalar)
+	redeemed, err := testKeeper.ConvertSharesToRedeemCoin(s.ctx, *vault, redeemShares, underlyingDenom)
+	s.Require().NoError(err, "redeem conversion should succeed")
+	expectedNetRedeem, err := utils.CalculateRedeemProRataFraction(redeemShares, totalShares.Amount, netTVV, math.NewInt(1), math.NewInt(1), underlyingDenom)
+	s.Require().NoError(err, "should compute net-priced redemption")
+	expectedGrossRedeem, err := utils.CalculateRedeemProRataFraction(redeemShares, totalShares.Amount, grossTVV, math.NewInt(1), math.NewInt(1), underlyingDenom)
+	s.Require().NoError(err, "should compute gross-priced redemption")
+	s.Require().Equal(expectedNetRedeem.Amount, redeemed.Amount, "redemption must be priced off net TVV")
+	s.Require().True(redeemed.Amount.LT(expectedGrossRedeem.Amount), "net pricing pays out less per share than gross pricing would (gross overstates TVV)")
+}
+
+func (s *TestSuite) TestGetNetTVVInUnderlyingAsset_FloorsAtZeroWhenOutstandingExceedsGross() {
+	underlyingDenom := "ylds"
+	paymentDenom := "usdc"
+	shareDenom := "vshare"
+	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
+
+	testKeeper := s.k
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(
+		sdk.NewInt64Coin(underlyingDenom, 100),
+	)), "should fund vault marker for gross TVV")
+
+	grossTVV, err := testKeeper.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	s.Require().NoError(err, "should compute gross TVV")
+	s.Require().Equal(math.NewInt(100), grossTVV, "gross TVV should equal funded underlying balance")
+
+	vault.OutstandingAumFee = sdk.NewInt64Coin(paymentDenom, 1000)
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	netTVV, err := testKeeper.GetNetTVVInUnderlyingAsset(s.ctx, *vault)
+	s.Require().NoError(err, "net TVV should not error when outstanding fee exceeds gross TVV")
+	s.Require().True(netTVV.IsZero(), "net TVV should floor at zero when outstanding fee (500 underlying) exceeds gross TVV (100)")
+}
+
 func (s *TestSuite) TestConvertSharesToRedeemCoin_ZeroAndDustRedemption() {
 	underlyingDenom := "ylds"
 	shareDenom := "vshare"
@@ -528,6 +599,29 @@ func (s *TestSuite) TestGetTVVInUnderlyingAsset_PausedUsesPausedBalance() {
 	tvv, err := testKeeper.GetTVVInUnderlyingAsset(s.ctx, *vault)
 	s.Require().NoError(err, "GetTVVInUnderlyingAsset should not error when paused")
 	s.Require().Equal(math.NewInt(42), tvv, "when paused, TVV should equal vault.PausedBalance.Amount regardless of principal contents")
+}
+
+func (s *TestSuite) TestGetNetTVVInUnderlyingAsset_PausedReturnsPausedBalanceWithoutNAV() {
+	underlyingDenom := "ylds"
+	paymentDenom := "usdc"
+	shareDenom := "vshare"
+	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
+
+	principal := vault.PrincipalMarkerAddress()
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, principal, sdk.NewCoins(
+		sdk.NewInt64Coin(underlyingDenom, 9999),
+		sdk.NewInt64Coin(paymentDenom, 9999),
+	)), "funding principal balances before pause should succeed")
+
+	vault.Paused = true
+	vault.PausedBalance = sdk.NewInt64Coin(underlyingDenom, 42)
+	vault.OutstandingAumFee = sdk.NewInt64Coin("nonav", 100)
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
+	netTVV, err := testKeeper.GetNetTVVInUnderlyingAsset(s.ctx, *vault)
+	s.Require().NoError(err, "paused net TVV must not require a NAV lookup for the outstanding fee")
+	s.Require().Equal(math.NewInt(42), netTVV, "when paused, net TVV should equal vault.PausedBalance.Amount without subtracting the outstanding fee")
 }
 
 func (s *TestSuite) TestGetTVVInUnderlyingAsset_AcceptedDenomFiltering() {

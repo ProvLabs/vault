@@ -632,7 +632,7 @@ func (m MsgAcceptAssetRequest) ValidateBasic() error {
 		return fmt.Errorf("invalid source address: %q: %w", m.Source, err)
 	}
 	if err := exchange.ValidateExternalID(m.ExternalId); err != nil {
-		return err
+		return fmt.Errorf("invalid external id: %w", err)
 	}
 	return nil
 }
@@ -649,7 +649,7 @@ func (m MsgRejectAssetRequest) ValidateBasic() error {
 		return fmt.Errorf("invalid source address: %q: %w", m.Source, err)
 	}
 	if err := exchange.ValidateExternalID(m.ExternalId); err != nil {
-		return err
+		return fmt.Errorf("invalid external id: %w", err)
 	}
 	return nil
 }

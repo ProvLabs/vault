@@ -1,12 +1,14 @@
 package keeper_test
 
 import (
+	"strings"
 	"time"
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/provenance-io/provenance/x/exchange"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
 	"github.com/provlabs/vault/keeper"
@@ -1248,8 +1250,6 @@ func (s *TestSuite) TestQueryServer_PendingSwapOuts() {
 	}
 }
 
-// TestQueryServer_VaultNavs verifies the VaultNavs query returns the entries for
-// a single vault, paginates correctly, and excludes other vaults' entries.
 // TestQueryServer_VaultNavs verifies the VaultNavs query returns every internal
 // NAV entry for a vault, rejects malformed requests, and paginates the results.
 // The vault fixture is shared across cases because every case is a read-only query.
@@ -1449,10 +1449,7 @@ func (s *TestSuite) TestQueryServer_NavValue() {
 // TestQueryServer_VaultPayment verifies the VaultPayment query returns a single
 // payment targeting the vault and reports NotFound for unknown or mistargeted payments.
 func (s *TestSuite) TestQueryServer_VaultPayment() {
-	underlying := "under"
-	share := "vshare"
-	paymentDenom := "pay"
-	asset := "rwacoin"
+	underlying, share, paymentDenom, asset := "under", "vshare", "pay", "rwacoin"
 
 	vault, _ := s.setupAssetSettlementVault(underlying, share, paymentDenom)
 	vaultAddr := vault.GetAddress()
@@ -1548,6 +1545,25 @@ func (s *TestSuite) TestQueryServer_VaultPayment() {
 			errContains: "source must be provided",
 		},
 		{
+			name: "external id over the exchange length limit returns InvalidArgument",
+			req: &types.QueryVaultPaymentRequest{
+				Id:         vaultAddr.String(),
+				Source:     source.String(),
+				ExternalId: strings.Repeat("x", exchange.MaxExternalIDLength+1),
+			},
+			expectErr:   true,
+			errContains: "invalid external id",
+		},
+		{
+			name: "empty external id is a valid payment key, returns NotFound when no such payment exists",
+			req: &types.QueryVaultPaymentRequest{
+				Id:     vaultAddr.String(),
+				Source: source.String(),
+			},
+			expectErr:   true,
+			errContains: "no payment",
+		},
+		{
 			name:        "rejects empty id",
 			req:         &types.QueryVaultPaymentRequest{Source: source.String()},
 			expectErr:   true,
@@ -1578,10 +1594,7 @@ func (s *TestSuite) TestQueryServer_VaultPayment() {
 // TestQueryServer_VaultPayments verifies the VaultPayments query returns every payment
 // targeting the vault, excludes payments for other targets, and paginates the results.
 func (s *TestSuite) TestQueryServer_VaultPayments() {
-	underlying := "under"
-	share := "vshare"
-	paymentDenom := "pay"
-	asset := "rwacoin"
+	underlying, share, paymentDenom, asset := "under", "vshare", "pay", "rwacoin"
 
 	vault, _ := s.setupAssetSettlementVault(underlying, share, paymentDenom)
 	vaultAddr := vault.GetAddress()

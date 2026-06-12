@@ -890,6 +890,9 @@ func (k msgServer) AcceptAsset(goCtx context.Context, msg *types.MsgAcceptAssetR
 	if err != nil {
 		return nil, err
 	}
+	// TODO: Decide who may settle before merge: admin, asset manager, or both.
+	// ValidateManagementAuthority currently accepts either; restrict to the asset
+	// manager (when set) if that is the product decision. See PR #212 review threads.
 	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, fmt.Errorf("failed to validate management authority: %w", err)
 	}
@@ -972,6 +975,9 @@ func (k msgServer) RejectAsset(goCtx context.Context, msg *types.MsgRejectAssetR
 	if err != nil {
 		return nil, err
 	}
+	// TODO: Decide who may reject before merge: admin, asset manager, or both.
+	// ValidateManagementAuthority currently accepts either; restrict to the asset
+	// manager (when set) if that is the product decision. See PR #212 review threads.
 	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, fmt.Errorf("failed to validate management authority: %w", err)
 	}

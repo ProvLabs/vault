@@ -1248,8 +1248,6 @@ func (s *TestSuite) TestQueryServer_PendingSwapOuts() {
 	}
 }
 
-// TestQueryServer_VaultNavs verifies the VaultNavs query returns the entries for
-// a single vault, paginates correctly, and excludes other vaults' entries.
 // TestQueryServer_VaultNavs verifies the VaultNavs query returns every internal
 // NAV entry for a vault, rejects malformed requests, and paginates the results.
 // The vault fixture is shared across cases because every case is a read-only query.

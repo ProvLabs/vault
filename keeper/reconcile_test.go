@@ -411,6 +411,86 @@ func (s *TestSuite) TestKeeper_PerformVaultReconcile_CompositeWithOutstandingFee
 	})
 }
 
+func (s *TestSuite) TestKeeper_ReconcileLeavesUncollectedFee_PricesOffNetTVV() {
+	shareDenom := "underfunded.shares"
+	underlyingDenom := "underlying"
+	paymentDenom := "payment"
+	vaultAddress := types.GetVaultAddress(shareDenom)
+	testBlockTime := time.Date(2024, 3, 1, 0, 0, 0, 0, time.UTC)
+	pastTime := testBlockTime.Add(-60 * 24 * time.Hour)
+
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingDenom, 10_000_000_000), s.adminAddr)
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 10_000_000_000), s.adminAddr)
+
+	vault := s.CreateVaultWithParams(shareDenom, underlyingDenom, paymentDenom)
+	vault.CurrentInterestRate = "0"
+	vault.DesiredInterestRate = "0"
+	vault.AumFeeBips = 0
+	vault.PeriodStart = pastTime.Unix()
+	vault.FeePeriodStart = pastTime.Unix()
+	vault.OutstandingAumFee = sdk.NewInt64Coin(paymentDenom, 100_000_000)
+	totalShares := sdk.NewInt64Coin(shareDenom, 1_000_000)
+	vault.TotalShares = totalShares
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), totalShares), "should mint share supply")
+
+	paymentMarkerAddr := markertypes.MustGetMarkerAddress(paymentDenom)
+	paymentMarkerAccount, err := s.k.MarkerKeeper.GetMarker(s.ctx, paymentMarkerAddr)
+	s.Require().NoError(err, "should fetch payment marker for NAV setup")
+	s.Require().NoError(s.k.MarkerKeeper.SetNetAssetValue(s.ctx, paymentMarkerAccount, markertypes.NetAssetValue{
+		Price:  sdk.NewInt64Coin(underlyingDenom, 1),
+		Volume: 1,
+	}, "test"), "should set payment->underlying NAV at 1:1")
+
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vault.PrincipalMarkerAddress(), sdk.NewCoins(
+		sdk.NewInt64Coin(underlyingDenom, 1_000_000_000),
+	)), "should fund principal marker with underlying only, leaving no payment-denom liquidity to pay the fee")
+
+	s.SetCtxBlockTime(testBlockTime)
+
+	err = s.k.TestAccessor_reconcileVault(s.T(), s.ctx, vault)
+	s.Require().NoError(err, "reconcileVault should not error")
+
+	reconciled, err := s.k.GetVault(s.ctx, vaultAddress)
+	s.Require().NoError(err, "should fetch reconciled vault")
+
+	s.Require().Equal(sdkmath.NewInt(100_000_000), reconciled.OutstandingAumFee.Amount, "fee could not be collected, so the full liability survives reconcile")
+	provlabsAddr, err := s.k.GetAUMFeeAddress(s.ctx)
+	s.Require().NoError(err, "should get AUM fee address")
+	s.assertBalance(provlabsAddr, paymentDenom, sdkmath.ZeroInt())
+
+	grossTVV, err := s.k.GetTVVInUnderlyingAsset(s.ctx, *reconciled)
+	s.Require().NoError(err, "should compute gross TVV")
+	s.Require().Equal(sdkmath.NewInt(1_000_000_000), grossTVV, "gross TVV still counts the assets backing the unpaid fee")
+	netTVV, err := s.k.GetNetTVVInUnderlyingAsset(s.ctx, *reconciled)
+	s.Require().NoError(err, "should compute net TVV")
+	s.Require().Equal(sdkmath.NewInt(900_000_000), netTVV, "net TVV = gross 1,000,000,000 minus outstanding fee 100,000,000, so gross > net even after reconcile")
+
+	grossView := *reconciled
+	grossView.OutstandingAumFee = sdk.NewInt64Coin(paymentDenom, 0)
+
+	navNet, err := s.k.GetNAVPerShareInUnderlyingAsset(s.ctx, *reconciled)
+	s.Require().NoError(err, "should compute net NAV per share")
+	s.Require().Equal(sdkmath.NewInt(900), navNet, "net NAV per share = 900,000,000 / 1,000,000")
+	navGross, err := s.k.GetNAVPerShareInUnderlyingAsset(s.ctx, grossView)
+	s.Require().NoError(err, "should compute gross NAV per share")
+	s.Require().Equal(sdkmath.NewInt(1_000), navGross, "gross NAV per share = 1,000,000,000 / 1,000,000")
+
+	deposit := sdk.NewInt64Coin(underlyingDenom, 1_000_000)
+	netMint, err := s.k.ConvertDepositToSharesInUnderlyingAsset(s.ctx, *reconciled, deposit)
+	s.Require().NoError(err, "net deposit conversion should succeed")
+	grossMint, err := s.k.ConvertDepositToSharesInUnderlyingAsset(s.ctx, grossView, deposit)
+	s.Require().NoError(err, "gross deposit conversion should succeed")
+	s.Require().True(netMint.Amount.GT(grossMint.Amount), "net pricing mints more shares per deposit than gross would (gross overstates TVV)")
+
+	redeemShares := sdkmath.NewInt(100_000)
+	netRedeem, err := s.k.ConvertSharesToRedeemCoin(s.ctx, *reconciled, redeemShares, underlyingDenom)
+	s.Require().NoError(err, "net redeem conversion should succeed")
+	grossRedeem, err := s.k.ConvertSharesToRedeemCoin(s.ctx, grossView, redeemShares, underlyingDenom)
+	s.Require().NoError(err, "gross redeem conversion should succeed")
+	s.Require().True(netRedeem.Amount.LT(grossRedeem.Amount), "net pricing pays out less per share than gross would (gross overstates TVV)")
+}
+
 func (s *TestSuite) TestKeeper_CalculateVaultTotalAssets() {
 	shareDenom := "vaultshares"
 	underlying := sdk.NewInt64Coin("underlying", 1_000_000_000)

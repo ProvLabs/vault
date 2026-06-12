@@ -549,9 +549,9 @@ func (k msgServer) PauseVault(goCtx context.Context, msg *types.MsgPauseVaultReq
 		return nil, fmt.Errorf("failed to reconcile before pausing: %w", err)
 	}
 
-	tvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
+	tvv, err := k.GetNetTVVInUnderlyingAsset(ctx, *vault)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get TVV before pausing: %w", err)
+		return nil, fmt.Errorf("failed to get net TVV before pausing: %w", err)
 	}
 
 	vault.PausedBalance = sdk.NewCoin(vault.UnderlyingAsset, tvv)

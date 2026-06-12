@@ -6169,6 +6169,11 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Outbound() {
 	s.assertBalance(vaultAddr, paymentDenom, sdkmath.NewInt(0))
 
 	s.requireTypedEventEmitted(types.NewEventAssetAccepted(vaultAddr.String(), source.String(), externalID, sourceAmount, targetAmount, types.AssetDirectionOutbound))
+
+	drainedNAV := types.NewVaultNAV(asset, sdk.NewInt64Coin(paymentDenom, 5), sdkmath.NewInt(10), vaultAddr.String())
+	s.requireTypedEventEmitted(types.NewEventNAVRemoved(vaultAddr.String(), drainedNAV))
+	_, err = s.k.GetVaultNAV(s.ctx, vaultAddr, asset)
+	s.Assert().ErrorIs(err, collections.ErrNotFound, "NAV entry for %s should be removed after the draining outbound settlement", asset)
 }
 
 func (s *TestSuite) TestMsgServer_AcceptAsset_RestrictedMarker() {

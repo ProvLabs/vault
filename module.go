@@ -677,6 +677,30 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 						{ProtoField: "denom"},
 					},
 				},
+				{
+					RpcMethod: "VaultPayment",
+					Use:       "payment [id] [source] [external_id]",
+					Alias:     []string{"pmt"},
+					Short:     "Query a single pending exchange-module payment targeting a vault",
+					Long:      "Fetch the pending payment targeting the provided vault address or share denom, identified by the payment's source account and external id.",
+					Example:   fmt.Sprintf("%s payment %s %s invoice-001", queryStart, exampleVaultAddr, exampleOwnerAddr),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "id"},
+						{ProtoField: "source"},
+						{ProtoField: "external_id", Optional: true},
+					},
+				},
+				{
+					RpcMethod: "VaultPayments",
+					Use:       "payments [id]",
+					Alias:     []string{"pmts"},
+					Short:     "Query all pending exchange-module payments targeting a vault",
+					Long:      "List the pending payments targeting the provided vault address or share denom.",
+					Example:   fmt.Sprintf("%s payments %s", queryStart, exampleVaultAddr),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: "id"},
+					},
+				},
 			},
 		},
 	}
@@ -690,17 +714,18 @@ func init() {
 // ModuleInputs defines the inputs required to initialize the vault module.
 type ModuleInputs struct {
 	depinject.In
-	Config        *modulev1.Module
-	StoreService  store.KVStoreService
-	HeaderService header.Service
-	EventService  event.Service
-	Codec         codec.Codec
-	AddressCodec  address.Codec
-	AuthKeeper    types.AccountKeeper
-	MarkerKeeper  types.MarkerKeeper
-	BankKeeper    types.BankKeeper
-	NameKeeper    types.NameKeeper
-	AttrKeeper    types.AttributeKeeper
+	Config         *modulev1.Module
+	StoreService   store.KVStoreService
+	HeaderService  header.Service
+	EventService   event.Service
+	Codec          codec.Codec
+	AddressCodec   address.Codec
+	AuthKeeper     types.AccountKeeper
+	MarkerKeeper   types.MarkerKeeper
+	BankKeeper     types.BankKeeper
+	NameKeeper     types.NameKeeper
+	AttrKeeper     types.AttributeKeeper
+	ExchangeKeeper types.ExchangeKeeper
 }
 
 // ModuleOutputs defines the outputs of the vault module provider.
@@ -728,6 +753,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.BankKeeper,
 		in.NameKeeper,
 		in.AttrKeeper,
+		in.ExchangeKeeper,
 	)
 	m := NewAppModule(k, in.MarkerKeeper, in.BankKeeper, in.NameKeeper, in.AttrKeeper, in.AddressCodec)
 	return ModuleOutputs{Keeper: k, Module: m}

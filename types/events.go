@@ -20,6 +20,15 @@ const (
 	RefundReasonUnknown                    = "unknown_error"
 )
 
+const (
+	// AssetDirectionInbound indicates an external asset moved into the vault in
+	// exchange for the vault's payment denom (payment_denom is the target leg).
+	AssetDirectionInbound = "inbound"
+	// AssetDirectionOutbound indicates an asset moved out of the vault in
+	// exchange for the vault's payment denom (payment_denom is the source leg).
+	AssetDirectionOutbound = "outbound"
+)
+
 // NewEventVaultCreated creates a new EventVaultCreated event.
 func NewEventVaultCreated(vault *VaultAccount) *EventVaultCreated {
 	return &EventVaultCreated{
@@ -369,5 +378,27 @@ func NewEventNAVAuthorityUpdated(vaultAddress, admin, newAuthority string) *Even
 		VaultAddress: vaultAddress,
 		Admin:        admin,
 		NewAuthority: newAuthority,
+	}
+}
+
+// NewEventAssetAccepted creates a new EventAssetAccepted event. direction is one
+// of AssetDirectionInbound or AssetDirectionOutbound.
+func NewEventAssetAccepted(vaultAddress, source, externalID string, sourceAmount, targetAmount sdk.Coins, direction string) *EventAssetAccepted {
+	return &EventAssetAccepted{
+		VaultAddress: vaultAddress,
+		Source:       source,
+		ExternalId:   externalID,
+		SourceAmount: sourceAmount.String(),
+		TargetAmount: targetAmount.String(),
+		Direction:    direction,
+	}
+}
+
+// NewEventAssetRejected creates a new EventAssetRejected event.
+func NewEventAssetRejected(vaultAddress, source, externalID string) *EventAssetRejected {
+	return &EventAssetRejected{
+		VaultAddress: vaultAddress,
+		Source:       source,
+		ExternalId:   externalID,
 	}
 }

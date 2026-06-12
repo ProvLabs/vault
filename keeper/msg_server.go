@@ -10,6 +10,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/provenance-io/provenance/x/exchange"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -859,4 +860,125 @@ func (k msgServer) UpdateNAVAuthority(goCtx context.Context, msg *types.MsgUpdat
 	}
 
 	return &types.MsgUpdateNAVAuthorityResponse{}, nil
+}
+
+// AcceptAsset settles a pending exchange-module payment whose target is the vault,
+// exchanging an external asset for the vault's payment denom. Either the vault admin
+// or the asset manager may sign it.
+//
+// The exchange module's AcceptPayment operates on the caller's primary account, so the
+// vault account is used as an atomic staging hop while the principal marker account
+// remains the long-term store:
+//
+//	Principal -> Vault (target_amount), AcceptPayment, Vault -> Principal (source_amount)
+//
+// All steps run in the message handler; any failure reverts the whole transaction. The
+// settlement direction (inbound or outbound) is derived from which payment leg carries
+// the vault's payment denom.
+func (k msgServer) AcceptAsset(goCtx context.Context, msg *types.MsgAcceptAssetRequest) (*types.MsgAcceptAssetResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vault, err := k.getVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, err
+	}
+	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+		return nil, fmt.Errorf("failed to validate management authority: %w", err)
+	}
+
+	sourceAddr := sdk.MustAccAddressFromBech32(msg.Source)
+	payment, err := k.ExchangeKeeper.GetPayment(ctx, sourceAddr, msg.ExternalId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get payment: %w", err)
+	}
+	if payment == nil {
+		return nil, fmt.Errorf("payment not found for source %s and external id %q", msg.Source, msg.ExternalId)
+	}
+	if payment.Target != msg.VaultAddress {
+		return nil, fmt.Errorf("payment target %s is not vault %s", payment.Target, msg.VaultAddress)
+	}
+
+	direction, err := assetSettlementDirection(vault, payment)
+	if err != nil {
+		return nil, err
+	}
+
+	principalAddr := vault.PrincipalMarkerAddress()
+
+	for _, coin := range payment.TargetAmount {
+		if bal := k.BankKeeper.GetBalance(ctx, principalAddr, coin.Denom); bal.Amount.LT(coin.Amount) {
+			return nil, fmt.Errorf("insufficient principal balance for %s: have %s, need %s", coin.Denom, bal.Amount, coin.Amount)
+		}
+	}
+
+	// TODO(#192 marker-attribute-preflight): if a staged asset is a restricted marker, these
+	// Principal <-> Vault transfers require the vault account to satisfy the marker's transfer
+	// rules. The marker-attribute-preflight investigation determines whether an attribute
+	// check is needed here.
+
+	if !payment.TargetAmount.IsZero() {
+		if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, vaultAddr), principalAddr, vaultAddr, payment.TargetAmount); err != nil {
+			return nil, fmt.Errorf("failed to stage target amount from principal to vault: %w", err)
+		}
+	}
+
+	if err := k.ExchangeKeeper.AcceptPayment(ctx, payment); err != nil {
+		return nil, fmt.Errorf("failed to accept payment: %w", err)
+	}
+
+	if !payment.SourceAmount.IsZero() {
+		if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, vaultAddr), vaultAddr, principalAddr, payment.SourceAmount); err != nil {
+			return nil, fmt.Errorf("failed to move source amount from vault to principal: %w", err)
+		}
+	}
+
+	k.emitEvent(ctx, types.NewEventAssetAccepted(msg.VaultAddress, msg.Source, msg.ExternalId, payment.SourceAmount, payment.TargetAmount, direction))
+
+	return &types.MsgAcceptAssetResponse{}, nil
+}
+
+// RejectAsset declines a pending exchange-module payment whose target is the vault. The
+// exchange module cancels the payment and refunds the source's escrow. Either the vault
+// admin or the asset manager may sign it.
+func (k msgServer) RejectAsset(goCtx context.Context, msg *types.MsgRejectAssetRequest) (*types.MsgRejectAssetResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vault, err := k.getVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, err
+	}
+	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+		return nil, fmt.Errorf("failed to validate management authority: %w", err)
+	}
+
+	sourceAddr := sdk.MustAccAddressFromBech32(msg.Source)
+	if err := k.ExchangeKeeper.RejectPayment(ctx, vaultAddr, sourceAddr, msg.ExternalId); err != nil {
+		return nil, fmt.Errorf("failed to reject payment: %w", err)
+	}
+
+	k.emitEvent(ctx, types.NewEventAssetRejected(msg.VaultAddress, msg.Source, msg.ExternalId))
+
+	return &types.MsgRejectAssetResponse{}, nil
+}
+
+// assetSettlementDirection determines whether a payment settles inbound or outbound for a
+// vault, based on which leg carries the vault's payment denom. The vault only settles
+// payments where its payment denom is exactly one of the two legs: it pays the payment
+// denom out (inbound, target leg) or receives it in (outbound, source leg). A payment with
+// the payment denom on neither leg, or on both, cannot be settled.
+func assetSettlementDirection(vault *types.VaultAccount, payment *exchange.Payment) (string, error) {
+	paymentDenom := vault.PaymentDenom
+	sourceHasPayment := payment.SourceAmount.AmountOf(paymentDenom).IsPositive()
+	targetHasPayment := payment.TargetAmount.AmountOf(paymentDenom).IsPositive()
+
+	switch {
+	case targetHasPayment && !sourceHasPayment:
+		return types.AssetDirectionInbound, nil
+	case sourceHasPayment && !targetHasPayment:
+		return types.AssetDirectionOutbound, nil
+	default:
+		return "", fmt.Errorf("payment must carry vault payment denom %q on exactly one leg: source_amount=%q target_amount=%q", paymentDenom, payment.SourceAmount, payment.TargetAmount)
+	}
 }

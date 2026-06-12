@@ -2121,3 +2121,195 @@ func TestMsgUpdateNAVAuthorityRequest_ValidateBasic(t *testing.T) {
 		},
 	})
 }
+
+func TestMsgAcceptAssetRequest_ValidateBasic(t *testing.T) {
+	authority := NewTestAddress()
+	vaultAddr := NewTestAddress()
+	source := NewTestAddress()
+
+	RunValidateBasicTable(t, []validateBasicCase{
+		{
+			name: "valid",
+			msg: types.MsgAcceptAssetRequest{
+				Authority:    authority,
+				VaultAddress: vaultAddr,
+				Source:       source,
+				ExternalId:   "payment-1",
+			},
+		},
+		{
+			name: "valid with empty external id",
+			msg: types.MsgAcceptAssetRequest{
+				Authority:    authority,
+				VaultAddress: vaultAddr,
+				Source:       source,
+				ExternalId:   "",
+			},
+		},
+		{
+			name: "valid with max length external id",
+			msg: types.MsgAcceptAssetRequest{
+				Authority:    authority,
+				VaultAddress: vaultAddr,
+				Source:       source,
+				ExternalId:   strings.Repeat("x", 100),
+			},
+		},
+		{
+			name: "invalid authority",
+			msg: types.MsgAcceptAssetRequest{
+				Authority:    "bad",
+				VaultAddress: vaultAddr,
+				Source:       source,
+				ExternalId:   "payment-1",
+			},
+			expectedErr: "invalid authority address",
+		},
+		{
+			name: "empty authority",
+			msg: types.MsgAcceptAssetRequest{
+				Authority:    "",
+				VaultAddress: vaultAddr,
+				Source:       source,
+				ExternalId:   "payment-1",
+			},
+			expectedErr: "invalid authority address",
+		},
+		{
+			name: "invalid vault address",
+			msg: types.MsgAcceptAssetRequest{
+				Authority:    authority,
+				VaultAddress: "bad",
+				Source:       source,
+				ExternalId:   "payment-1",
+			},
+			expectedErr: "invalid vault address",
+		},
+		{
+			name: "invalid source",
+			msg: types.MsgAcceptAssetRequest{
+				Authority:    authority,
+				VaultAddress: vaultAddr,
+				Source:       "bad",
+				ExternalId:   "payment-1",
+			},
+			expectedErr: "invalid source address",
+		},
+		{
+			name: "empty source",
+			msg: types.MsgAcceptAssetRequest{
+				Authority:    authority,
+				VaultAddress: vaultAddr,
+				Source:       "",
+				ExternalId:   "payment-1",
+			},
+			expectedErr: "invalid source address",
+		},
+		{
+			name: "external id too long",
+			msg: types.MsgAcceptAssetRequest{
+				Authority:    authority,
+				VaultAddress: vaultAddr,
+				Source:       source,
+				ExternalId:   strings.Repeat("x", 101),
+			},
+			expectedErr: "invalid external id: invalid external id \"xxxxx...xxxxx\" (length 101): max length 100",
+		},
+	})
+}
+
+func TestMsgRejectAssetRequest_ValidateBasic(t *testing.T) {
+	authority := NewTestAddress()
+	vaultAddr := NewTestAddress()
+	source := NewTestAddress()
+
+	RunValidateBasicTable(t, []validateBasicCase{
+		{
+			name: "valid",
+			msg: types.MsgRejectAssetRequest{
+				Authority:    authority,
+				VaultAddress: vaultAddr,
+				Source:       source,
+				ExternalId:   "payment-1",
+			},
+		},
+		{
+			name: "valid with empty external id",
+			msg: types.MsgRejectAssetRequest{
+				Authority:    authority,
+				VaultAddress: vaultAddr,
+				Source:       source,
+				ExternalId:   "",
+			},
+		},
+		{
+			name: "valid with max length external id",
+			msg: types.MsgRejectAssetRequest{
+				Authority:    authority,
+				VaultAddress: vaultAddr,
+				Source:       source,
+				ExternalId:   strings.Repeat("x", 100),
+			},
+		},
+		{
+			name: "invalid authority",
+			msg: types.MsgRejectAssetRequest{
+				Authority:    "bad",
+				VaultAddress: vaultAddr,
+				Source:       source,
+				ExternalId:   "payment-1",
+			},
+			expectedErr: "invalid authority address",
+		},
+		{
+			name: "empty authority",
+			msg: types.MsgRejectAssetRequest{
+				Authority:    "",
+				VaultAddress: vaultAddr,
+				Source:       source,
+				ExternalId:   "payment-1",
+			},
+			expectedErr: "invalid authority address",
+		},
+		{
+			name: "invalid vault address",
+			msg: types.MsgRejectAssetRequest{
+				Authority:    authority,
+				VaultAddress: "bad",
+				Source:       source,
+				ExternalId:   "payment-1",
+			},
+			expectedErr: "invalid vault address",
+		},
+		{
+			name: "invalid source",
+			msg: types.MsgRejectAssetRequest{
+				Authority:    authority,
+				VaultAddress: vaultAddr,
+				Source:       "bad",
+				ExternalId:   "payment-1",
+			},
+			expectedErr: "invalid source address",
+		},
+		{
+			name: "empty source",
+			msg: types.MsgRejectAssetRequest{
+				Authority:    authority,
+				VaultAddress: vaultAddr,
+				Source:       "",
+				ExternalId:   "payment-1",
+			},
+			expectedErr: "invalid source address",
+		},
+		{
+			name: "external id too long",
+			msg: types.MsgRejectAssetRequest{
+				Authority:    authority,
+				VaultAddress: vaultAddr,
+				Source:       source,
+				ExternalId:   strings.Repeat("x", 101),
+			},
+			expectedErr: "invalid external id: invalid external id \"xxxxx...xxxxx\" (length 101): max length 100",
+		},
+	})
+}

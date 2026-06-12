@@ -72,8 +72,8 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 | `SetAssetManager`        | Admin only                        |                   ✅ |                 ✅ | Sets or clears the delegated asset manager.                                                                   |
 | `UpdateVaultNAV`         | NAV authority only                |                   ✅ |                 ✅ | Reconciles first (skipped while paused), upserts the internal NAV entry, publishes it to the marker module.   |
 | `UpdateNAVAuthority`     | Admin only                        |                   ✅ |                 ✅ | Rotates the address authorized to mutate the internal NAV table.                                              |
-| `AcceptAsset`            | Admin or Asset Manager            |                   ✅ |                 ✅ | Reconciles first, enforces the internal-NAV price guardrail, settles the `x/exchange` payment, records and publishes the settlement NAV. |
-| `RejectAsset`            | Admin or Asset Manager            |                   ✅ |                 ✅ | Declines a pending `x/exchange` payment; the exchange module refunds the source's escrow.                     |
+| `AcceptAsset`            | Asset Manager only                |                   ✅ |                 ✅ | Reconciles first, enforces the internal-NAV price guardrail, settles the `x/exchange` payment, records and publishes the settlement NAV. |
+| `RejectAsset`            | Asset Manager only                |                   ✅ |                 ✅ | Declines a pending `x/exchange` payment; the exchange module refunds the source's escrow.                     |
 
 **Notes**
 * *Admin or Asset Manager* indicates that either the vault admin or the delegated asset manager may sign and execute the transaction.
@@ -81,6 +81,7 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 * **SwapOut** remains asynchronous (enqueues `request_id` for later processing).
 * **Principal adjustments** and **pause/unpause** operations are allowed for the asset manager as delegated administrative control.
 * *NAV authority only* means the vault's configured `nav_authority`; when none is set, the vault admin acts as the NAV authority.
+* *Asset Manager only* means exactly the vault's configured `asset_manager` — the admin cannot sign, and a vault with no asset manager cannot execute the message. The field is a role, not a person: composite approval workflows (e.g. admin and manager both sign) are configured by pointing `asset_manager` at a group address.
 
 ## CreateVault
 
@@ -364,7 +365,7 @@ Admin-only. Rotates the address authorized to mutate the vault's internal NAV ta
 
 ## AcceptAsset
 
-Admin or Asset Manager. Settles a pending `x/exchange` payment whose target is the vault, exchanging an external asset for the vault's payment denom. The payment is identified by its `source` account and `external_id`.
+Asset Manager only — the admin cannot settle, and a vault without an asset manager cannot settle at all. Settles a pending `x/exchange` payment whose target is the vault, exchanging an external asset for the vault's payment denom. The payment is identified by its `source` account and `external_id`.
 
 Exactly one payment leg must carry the vault's `payment_denom`; the **settlement direction** is derived from which leg that is:
 
@@ -390,7 +391,7 @@ Any failure reverts the whole transaction.
 
 ## RejectAsset
 
-Admin or Asset Manager. Declines a pending `x/exchange` payment whose target is the vault. The exchange module cancels the payment and refunds the source's escrow. No vault state changes.
+Asset Manager only — the admin cannot reject, and a vault without an asset manager cannot reject at all. Declines a pending `x/exchange` payment whose target is the vault. The exchange module cancels the payment and refunds the source's escrow. No vault state changes.
 
 * **Request:** `MsgRejectAssetRequest { authority, vault_address, source, external_id }`
 * **Response:** `MsgRejectAssetResponse {}`

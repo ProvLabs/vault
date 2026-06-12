@@ -853,6 +853,58 @@ func TestVaultAccount_ValidateNAVAuthority(t *testing.T) {
 	}
 }
 
+func TestVaultAccount_ValidateAssetManagerAuthority(t *testing.T) {
+	admin, manager, other, _ := makeNAVAuthorityFixtures()
+
+	tests := []struct {
+		name         string
+		assetManager string
+		authority    string
+		expectedErr  string
+	}{
+		{
+			name:         "asset manager may settle",
+			assetManager: manager,
+			authority:    manager,
+			expectedErr:  "",
+		},
+		{
+			name:         "admin may not settle even when an asset manager is set",
+			assetManager: manager,
+			authority:    admin,
+			expectedErr:  "unauthorized authority",
+		},
+		{
+			name:         "stranger may not settle",
+			assetManager: manager,
+			authority:    other,
+			expectedErr:  "unauthorized authority",
+		},
+		{
+			name:         "no asset manager set disables settlement, even for the admin",
+			assetManager: "",
+			authority:    admin,
+			expectedErr:  "no asset manager set",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			vault := types.VaultAccount{
+				Admin:        admin,
+				AssetManager: tc.assetManager,
+			}
+			err := vault.ValidateAssetManagerAuthority(tc.authority)
+			if tc.expectedErr != "" {
+				require.Error(t, err, "expected an error for case: %s", tc.name)
+				require.Contains(t, err.Error(), tc.expectedErr, "error should contain expected substring for case: %s", tc.name)
+			} else {
+				require.NoError(t, err, "expected no error for case: %s", tc.name)
+			}
+		})
+	}
+}
+
 func TestNewVaultNAV(t *testing.T) {
 	tests := []struct {
 		name           string

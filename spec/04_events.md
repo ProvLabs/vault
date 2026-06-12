@@ -407,7 +407,7 @@ Emitted when shares are **burned from the bridge** balance.
 
 ### EventAssetAccepted
 
-Emitted when an authority settles a pending `x/exchange` payment targeting the vault (via `MsgAcceptAsset`).
+Emitted when the vault's asset manager settles a pending `x/exchange` payment targeting the vault (via `MsgAcceptAsset`).
 
 **Fields**
 
@@ -426,7 +426,7 @@ Emitted when an authority settles a pending `x/exchange` payment targeting the v
 
 ### EventAssetRejected
 
-Emitted when an authority declines a pending `x/exchange` payment targeting the vault (via `MsgRejectAsset`). The exchange module refunds the source's escrow.
+Emitted when the vault's asset manager declines a pending `x/exchange` payment targeting the vault (via `MsgRejectAsset`). The exchange module refunds the source's escrow.
 
 **Fields**
 

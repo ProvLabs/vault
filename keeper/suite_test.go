@@ -37,6 +37,9 @@ type TestSuite struct {
 	k keeper.Keeper
 
 	adminAddr sdk.AccAddress
+	// assetManagerAddr is the asset manager assigned by setupAssetSettlementVault; settlement
+	// messages (AcceptAsset/RejectAsset) must be signed by it, never by the admin.
+	assetManagerAddr sdk.AccAddress
 }
 
 // SetupTest initializes a new SimApp and context for each test and seeds
@@ -49,6 +52,11 @@ func (s *TestSuite) SetupTest() {
 	s.adminAddr = sdk.AccAddress("adminAddr___________")
 	if !s.simApp.AccountKeeper.HasAccount(s.ctx, s.adminAddr) {
 		s.simApp.AccountKeeper.SetAccount(s.ctx, s.simApp.AccountKeeper.NewAccountWithAddress(s.ctx, s.adminAddr))
+	}
+
+	s.assetManagerAddr = sdk.AccAddress("assetManagerAddr____")
+	if !s.simApp.AccountKeeper.HasAccount(s.ctx, s.assetManagerAddr) {
+		s.simApp.AccountKeeper.SetAccount(s.ctx, s.simApp.AccountKeeper.NewAccountWithAddress(s.ctx, s.assetManagerAddr))
 	}
 }
 
@@ -227,8 +235,9 @@ func (s *TestSuite) requireSimpleMarker(denom string) {
 
 // setupAssetSettlementVault creates a vault whose payment denom differs from its underlying
 // asset. Both the underlying and payment denoms are non-restricted Coin markers (CreateVault's
-// fee-collector preflight requires the payment denom to be a marker). It returns the vault and
-// its principal marker address.
+// fee-collector preflight requires the payment denom to be a marker). Settlement messages are
+// asset-manager-only, so the suite's assetManagerAddr is assigned to the vault. It returns the
+// vault and its principal marker address.
 func (s *TestSuite) setupAssetSettlementVault(underlying, share, paymentDenom string) (*types.VaultAccount, sdk.AccAddress) {
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlying, 1_000_000), s.adminAddr)
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 1_000_000), s.adminAddr)
@@ -244,6 +253,16 @@ func (s *TestSuite) setupAssetSettlementVault(underlying, share, paymentDenom st
 		},
 	})
 	s.Require().NoError(err, "failed to create asset settlement vault")
+
+	_, err = keeper.NewMsgServer(s.simApp.VaultKeeper).SetAssetManager(s.ctx, &types.MsgSetAssetManagerRequest{
+		Admin:        s.adminAddr.String(),
+		VaultAddress: vault.GetAddress().String(),
+		AssetManager: s.assetManagerAddr.String(),
+	})
+	s.Require().NoError(err, "failed to set asset manager %s on settlement vault %s", s.assetManagerAddr, vault.GetAddress())
+
+	vault, err = s.k.GetVault(s.ctx, vault.GetAddress())
+	s.Require().NoError(err, "failed to reload settlement vault %s after setting the asset manager", vault.GetAddress())
 
 	return vault, vault.PrincipalMarkerAddress()
 }

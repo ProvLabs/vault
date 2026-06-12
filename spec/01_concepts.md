@@ -71,7 +71,7 @@ The keeper ties together state management, account operations, marker integratio
 - **GetVault**: retrieves and validates a vault account by address.
 - **Pause/Unpause**: admins can pause a vault, freezing operations and fixing balances, or unpause to resume operations.
 - **Bridge Controls**: configure a single **bridge address** and **enable/disable** bridging; capacity checks ensure local marker supply never exceeds `total_shares`.
-- **SetAssetManager**: assigns or clears the optional delegated **asset manager** address. When set, both the admin and asset manager may perform privileged actions on the vault.
+- **SetAssetManager**: assigns or clears the optional delegated **asset manager** address. When set, both the admin and asset manager may perform privileged actions on the vault — except P2P settlement (`AcceptAsset`/`RejectAsset`), which only the asset manager may perform. The field is a role, not a person: composite approval workflows are configured by pointing it at a group address.
 
 ### Swap Operations
 - **SwapIn**: deposit underlying assets, mint shares, and transfer them to the depositor.
@@ -144,7 +144,7 @@ NAV upserts from paths 2 and 3 are also **published one-way to the marker module
 
 ### P2P Settlement Workflow
 
-External counterparties propose trades by creating `x/exchange` **payments** that target the vault, escrowing their side. The vault's authority then settles (`AcceptAsset`) or declines (`RejectAsset`) each pending payment; rejection refunds the counterparty's escrow.
+External counterparties propose trades by creating `x/exchange` **payments** that target the vault, escrowing their side. The vault's **asset manager** then settles (`AcceptAsset`) or declines (`RejectAsset`) each pending payment; rejection refunds the counterparty's escrow. The admin cannot settle or reject — a vault without an asset manager has no settlement capability until one is assigned.
 
 Exactly one payment leg must carry the vault's payment denom, which determines the **direction**: *inbound* (vault receives an external asset, pays payment denom) or *outbound* (vault pays out an asset, receives payment denom). Each leg must be a single coin, and the asset denom must be a registered marker.
 
@@ -166,7 +166,7 @@ TVV currently sums only the vault's **accepted denoms** (underlying and payment 
 - **Refund Path**: failed withdrawals attempt to return escrowed shares to the user, with reason codes emitted for transparency.
 - **Validation**: strict checks on denoms, admin permissions, share supply, and marker restrictions ensure consistency and prevent misconfiguration.
 - **Supply Guardrails**: bridge mints beyond capacity are rejected; burns require the configured bridge address.
-- **Delegated Authority**: when an asset manager is set, either the admin or asset manager may perform operations that require vault authority. If cleared, only the admin retains this capability.
+- **Delegated Authority**: when an asset manager is set, either the admin or asset manager may perform operations that require vault authority. If cleared, only the admin retains this capability. P2P settlement is the exception: `AcceptAsset`/`RejectAsset` accept only the asset manager, never the admin.
 
 ---
 
@@ -181,4 +181,4 @@ TVV currently sums only the vault's **accepted denoms** (underlying and payment 
    - EndBlocker: finalizes swap-out jobs and reconciliations.
 6. **Admin Tools**: manage interest rates, deposits/withdrawals, pausing/unpausing, queue interventions, and assign asset managers.
 7. **Bridge Ops (optional)**: authorized bridge mints/burns local supply under `total_shares` capacity to facilitate cross-chain share movement.
-8. **P2P Settlement (optional)**: counterparties propose `x/exchange` payments targeting the vault; the admin or asset manager accepts (settling at the internal-NAV price and recording the result) or rejects (refunding escrow).
+8. **P2P Settlement (optional)**: counterparties propose `x/exchange` payments targeting the vault; the asset manager accepts (settling at the internal-NAV price and recording the result) or rejects (refunding escrow).

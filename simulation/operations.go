@@ -1490,14 +1490,25 @@ func stagePrincipal(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, vault *types
 	return nil
 }
 
-// randomManagementAuthority picks the signer for an asset settlement message at random
-// from the vault's accepted management authorities: the admin and, when set, the asset
-// manager.
-func randomManagementAuthority(r *rand.Rand, vault *types.VaultAccount) string {
-	if vault.AssetManager != "" && r.Intn(2) == 0 {
-		return vault.AssetManager
+// ensureSettlementAuthority returns the vault's asset manager, assigning a random simulation
+// account to the role first when the vault has none. Settlement messages are asset-manager-only
+// (the admin cannot settle), and simulation vaults are created without an asset manager, so
+// without this step AcceptAsset/RejectAsset would permanently NoOp.
+func ensureSettlementAuthority(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, vault *types.VaultAccount, accs []simtypes.Account) (string, error) {
+	if vault.AssetManager != "" {
+		return vault.AssetManager, nil
 	}
-	return vault.Admin
+
+	manager, _ := simtypes.RandomAcc(r, accs)
+	handler := keeper.NewMsgServer(&k)
+	if _, err := handler.SetAssetManager(ctx, &types.MsgSetAssetManagerRequest{
+		Admin:        vault.Admin,
+		VaultAddress: vault.GetAddress().String(),
+		AssetManager: manager.Address.String(),
+	}); err != nil {
+		return "", fmt.Errorf("failed to assign an asset manager for settlement: %w", err)
+	}
+	return manager.Address.String(), nil
 }
 
 func SimulateMsgAcceptAsset(k keeper.Keeper) simtypes.Operation {
@@ -1516,6 +1527,11 @@ func SimulateMsgAcceptAsset(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgAcceptAssetRequest{}), "no vault with a payment denom"), nil, nil
 		}
 
+		authority, err := ensureSettlementAuthority(ctx, r, k, vault, accs)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgAcceptAssetRequest{}), err.Error()), nil, nil
+		}
+
 		payment, err := stagePayment(ctx, r, k, vault, accs)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgAcceptAssetRequest{}), err.Error()), nil, nil
@@ -1526,7 +1542,7 @@ func SimulateMsgAcceptAsset(k keeper.Keeper) simtypes.Operation {
 		}
 
 		msg := &types.MsgAcceptAssetRequest{
-			Authority:    randomManagementAuthority(r, vault),
+			Authority:    authority,
 			VaultAddress: vault.GetAddress().String(),
 			Source:       payment.Source,
 			ExternalId:   payment.ExternalId,
@@ -1558,13 +1574,18 @@ func SimulateMsgRejectAsset(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgRejectAssetRequest{}), "no vault with a payment denom"), nil, nil
 		}
 
+		authority, err := ensureSettlementAuthority(ctx, r, k, vault, accs)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgRejectAssetRequest{}), err.Error()), nil, nil
+		}
+
 		payment, err := stagePayment(ctx, r, k, vault, accs)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgRejectAssetRequest{}), err.Error()), nil, nil
 		}
 
 		msg := &types.MsgRejectAssetRequest{
-			Authority:    randomManagementAuthority(r, vault),
+			Authority:    authority,
 			VaultAddress: vault.GetAddress().String(),
 			Source:       payment.Source,
 			ExternalId:   payment.ExternalId,

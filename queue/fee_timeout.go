@@ -59,7 +59,7 @@ func (p *FeeTimeoutQueue) WalkDue(ctx sdk.Context, nowSec int64, fn func(feeTime
 		return fmt.Errorf("nowSec cannot be negative")
 	}
 	if err := p.keyset.Walk(ctx, nil, func(key collections.Pair[uint64, sdk.AccAddress]) (stop bool, err error) {
-		if key.K1() > uint64(nowSec) {
+		if key.K1() > uint64(nowSec) { //nolint:gosec // G115: nowSec is guarded non-negative above.
 			return true, nil
 		}
 		return fn(key.K1(), key.K2())

@@ -151,7 +151,7 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 	if err != nil {
 		return nil, err
 	}
-	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+	if err = vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, fmt.Errorf("failed to validate management authority: %w", err)
 	}
 
@@ -159,7 +159,7 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 	if err != nil {
 		return nil, fmt.Errorf("invalid new rate: %w", err)
 	}
-	if err := types.ValidateInterestRateMagnitude(newRate); err != nil {
+	if err = types.ValidateInterestRateMagnitude(newRate); err != nil {
 		return nil, fmt.Errorf("invalid new rate: %w", err)
 	}
 	ok, err := vault.IsInterestRateInRange(newRate)
@@ -221,7 +221,7 @@ func (k msgServer) UpdateWithdrawalDelay(goCtx context.Context, msg *types.MsgUp
 	if err != nil {
 		return nil, err
 	}
-	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+	if err = vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, fmt.Errorf("failed to validate management authority: %w", err)
 	}
 
@@ -365,7 +365,7 @@ func (k msgServer) DepositInterestFunds(goCtx context.Context, msg *types.MsgDep
 		return nil, err
 	}
 
-	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+	if err = vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, fmt.Errorf("failed to validate management authority: %w", err)
 	}
 
@@ -398,7 +398,7 @@ func (k msgServer) WithdrawInterestFunds(goCtx context.Context, msg *types.MsgWi
 		return nil, err
 	}
 
-	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+	if err = vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, fmt.Errorf("failed to validate management authority: %w", err)
 	}
 	if vault.UnderlyingAsset != msg.Amount.Denom {
@@ -428,7 +428,7 @@ func (k msgServer) DepositPrincipalFunds(goCtx context.Context, msg *types.MsgDe
 	if err != nil {
 		return nil, err
 	}
-	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+	if err = vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, fmt.Errorf("failed to validate management authority: %w", err)
 	}
 
@@ -468,7 +468,7 @@ func (k msgServer) WithdrawPrincipalFunds(goCtx context.Context, msg *types.MsgW
 	if err != nil {
 		return nil, err
 	}
-	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+	if err = vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, fmt.Errorf("failed to validate management authority: %w", err)
 	}
 
@@ -516,7 +516,7 @@ func (k msgServer) ExpeditePendingSwapOut(goCtx context.Context, msg *types.MsgE
 	if err != nil {
 		return nil, err
 	}
-	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+	if err = vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, fmt.Errorf("failed to validate management authority: %w", err)
 	}
 
@@ -538,14 +538,14 @@ func (k msgServer) PauseVault(goCtx context.Context, msg *types.MsgPauseVaultReq
 	if err != nil {
 		return nil, err
 	}
-	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+	if err = vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, fmt.Errorf("failed to validate management authority: %w", err)
 	}
 
 	if vault.Paused {
 		return nil, fmt.Errorf("vault %s is already paused", msg.VaultAddress)
 	}
-	if err := k.reconcileVault(ctx, vault); err != nil {
+	if err = k.reconcileVault(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to reconcile before pausing: %w", err)
 	}
 
@@ -580,7 +580,7 @@ func (k msgServer) UnpauseVault(goCtx context.Context, msg *types.MsgUnpauseVaul
 	if err != nil {
 		return nil, err
 	}
-	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+	if err = vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, fmt.Errorf("failed to validate management authority: %w", err)
 	}
 
@@ -588,14 +588,14 @@ func (k msgServer) UnpauseVault(goCtx context.Context, msg *types.MsgUnpauseVaul
 		return nil, fmt.Errorf("vault %s is not paused", msg.VaultAddress)
 	}
 
-	if err := k.UpdateInterestRates(ctx, vault, vault.DesiredInterestRate, vault.DesiredInterestRate); err != nil {
+	if err = k.UpdateInterestRates(ctx, vault, vault.DesiredInterestRate, vault.DesiredInterestRate); err != nil {
 		return nil, fmt.Errorf("failed to update interest rates: %w", err)
 	}
 
 	vault.PausedBalance = sdk.Coin{}
 	vault.Paused = false
 	vault.PausedReason = ""
-	if err := k.SetVaultAccount(ctx, vault); err != nil {
+	if err = k.SetVaultAccount(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to set vault account: %w", err)
 	}
 
@@ -781,7 +781,7 @@ func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParam
 		return nil, fmt.Errorf("invalid params: %w", err)
 	}
 
-	if err := k.Keeper.Params.Set(ctx, msg.Params); err != nil {
+	if err := k.Params.Set(ctx, msg.Params); err != nil {
 		return nil, fmt.Errorf("failed to set params: %w", err)
 	}
 
@@ -800,7 +800,7 @@ func (k msgServer) UpdateVaultAUMFeeBips(goCtx context.Context, msg *types.MsgUp
 		return nil, err
 	}
 
-	params, err := k.Keeper.Params.Get(ctx)
+	params, err := k.Params.Get(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get params: %w", err)
 	}
@@ -883,7 +883,7 @@ func (k msgServer) AcceptAsset(goCtx context.Context, msg *types.MsgAcceptAssetR
 	if err != nil {
 		return nil, err
 	}
-	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+	if err = vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, fmt.Errorf("failed to validate management authority: %w", err)
 	}
 
@@ -949,7 +949,7 @@ func (k msgServer) RejectAsset(goCtx context.Context, msg *types.MsgRejectAssetR
 	if err != nil {
 		return nil, err
 	}
-	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+	if err = vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, fmt.Errorf("failed to validate management authority: %w", err)
 	}
 

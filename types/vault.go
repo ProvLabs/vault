@@ -224,14 +224,14 @@ func (v VaultAccount) Validate() error {
 	if err != nil {
 		return fmt.Errorf("invalid current interest rate: %s", v.CurrentInterestRate)
 	}
-	if err := ValidateInterestRateMagnitude(cur); err != nil {
+	if err = ValidateInterestRateMagnitude(cur); err != nil {
 		return fmt.Errorf("invalid current interest rate: %w", err)
 	}
 	des, err := sdkmath.LegacyNewDecFromStr(v.DesiredInterestRate)
 	if err != nil {
 		return fmt.Errorf("invalid desired interest rate: %s", v.DesiredInterestRate)
 	}
-	if err := ValidateInterestRateMagnitude(des); err != nil {
+	if err = ValidateInterestRateMagnitude(des); err != nil {
 		return fmt.Errorf("invalid desired interest rate: %w", err)
 	}
 
@@ -244,7 +244,7 @@ func (v VaultAccount) Validate() error {
 		if err != nil {
 			return fmt.Errorf("invalid min interest rate: %s", v.MinInterestRate)
 		}
-		if err := ValidateInterestRateMagnitude(minRate); err != nil {
+		if err = ValidateInterestRateMagnitude(minRate); err != nil {
 			return fmt.Errorf("invalid min interest rate: %w", err)
 		}
 	}

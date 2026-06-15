@@ -34,7 +34,7 @@ run: build
 
 gofumpt_cmd=mvdan.cc/gofumpt
 goimports_reviser_cmd=github.com/incu6us/goimports-reviser/v3
-golangci_lint_cmd=github.com/golangci/golangci-lint/cmd/golangci-lint
+golangci_lint_cmd=github.com/golangci/golangci-lint/v2/cmd/golangci-lint
 
 FILES := $(shell find . -name "*.go" -not -path "./e2e/*" -not -path "./simapp/*" -not -name "*.pb.go" -not -name "*.pb.gw.go" -not -name "*.pulsar.go")
 

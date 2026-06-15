@@ -16,6 +16,9 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
+// zeroRate is the default decimal interest rate used when a vault has no rate set.
+const zeroRate = "0.0"
+
 // genRandomDenom generates a random denominator string with a given suffix.
 func genRandomDenom(r *rand.Rand, regex, suffix string) string {
 	denom := randomUnrestrictedDenom(r, regex, suffix)
@@ -222,14 +225,14 @@ func getRandomMinInterestRate(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, va
 	// Get current rate
 	currentStr := vault.GetCurrentInterestRate()
 	if currentStr == "" {
-		currentStr = "0.0"
+		currentStr = zeroRate
 	}
 	currentRate := math.LegacyMustNewDecFromStr(currentStr)
 
 	// Get desired rate
 	desiredStr := vault.DesiredInterestRate
 	if desiredStr == "" {
-		desiredStr = "0.0"
+		desiredStr = zeroRate
 	}
 	desiredRate := math.LegacyMustNewDecFromStr(desiredStr)
 
@@ -277,14 +280,14 @@ func getRandomMaxInterestRate(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, va
 	// Get current rate
 	currentStr := vault.GetCurrentInterestRate()
 	if currentStr == "" {
-		currentStr = "0.0"
+		currentStr = zeroRate
 	}
 	currentRate := math.LegacyMustNewDecFromStr(currentStr)
 
 	// Get desired rate
 	desiredStr := vault.DesiredInterestRate
 	if desiredStr == "" {
-		desiredStr = "0.0"
+		desiredStr = zeroRate
 	}
 	desiredRate := math.LegacyMustNewDecFromStr(desiredStr)
 
@@ -417,7 +420,7 @@ func getRandomAccountWithDenom(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, a
 }
 
 // getRandomManagementAuthority returns a random management authority (admin or asset manager) for a given vault.
-func getRandomManagementAuthority(r *rand.Rand, ctx sdk.Context, vault *types.VaultAccount, accs []simtypes.Account) (simtypes.Account, error) {
+func getRandomManagementAuthority(r *rand.Rand, _ sdk.Context, vault *types.VaultAccount, accs []simtypes.Account) (simtypes.Account, error) {
 	adminAddr, err := sdk.AccAddressFromBech32(vault.Admin)
 	if err != nil {
 		return simtypes.Account{}, err

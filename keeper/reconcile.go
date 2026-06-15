@@ -186,7 +186,7 @@ func (k Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vault
 		if reserves.Amount.LT(interestEarned) {
 			return fmt.Errorf("insufficient reserves to pay interest")
 		}
-		if err := k.BankKeeper.SendCoins(
+		if err = k.BankKeeper.SendCoins(
 			markertypes.WithBypass(ctx),
 			vaultAddr,
 			principalAddress,
@@ -203,7 +203,7 @@ func (k Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vault
 		if owed.IsZero() {
 			actualInterest = sdkmath.ZeroInt()
 		} else {
-			if err := k.BankKeeper.SendCoins(
+			if err = k.BankKeeper.SendCoins(
 				markertypes.WithBypass(ctx),
 				principalAddress,
 				vaultAddr,
@@ -284,7 +284,7 @@ func (k Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAccou
 	}
 
 	if !toCollect.IsZero() {
-		if err := k.BankKeeper.SendCoins(
+		if err = k.BankKeeper.SendCoins(
 			markertypes.WithTransferAgents(ctx, vault.GetAddress()),
 			principalAddress,
 			provlabsAddr,
@@ -486,17 +486,17 @@ func (k Keeper) handleVaultInterestTimeouts(ctx sdk.Context) error {
 	}
 
 	for _, key := range keysToProcess {
-		timeout := key.K1()
+		timeoutUnix := int64(key.K1()) //nolint:gosec // G115: queue key is a bounded unix-second timestamp.
 		addr := key.K2()
 
 		vault, ok := k.tryGetVault(ctx, addr)
 		if !ok {
 			// clean up queue if vault no longer exists
-			_ = k.PayoutTimeoutQueue.Dequeue(ctx, int64(timeout), addr)
+			_ = k.PayoutTimeoutQueue.Dequeue(ctx, timeoutUnix, addr)
 			continue
 		}
 
-		periodDuration := int64(timeout) - vault.PeriodStart
+		periodDuration := timeoutUnix - vault.PeriodStart
 		if periodDuration < 0 {
 			periodDuration = now - vault.PeriodStart
 		}
@@ -504,21 +504,21 @@ func (k Keeper) handleVaultInterestTimeouts(ctx sdk.Context) error {
 		canPay, err := k.CanPayInterestDuration(ctx, vault, periodDuration)
 		if err != nil {
 			k.getLogger(ctx).Error("failed to check payout ability, rescheduling", "vault", addr.String(), "err", err)
-			k.reschedulePayoutTimeout(ctx, vault, int64(timeout))
+			k.reschedulePayoutTimeout(ctx, vault, timeoutUnix)
 			continue
 		}
 
 		if !canPay {
 			depleted = append(depleted, vault)
-			if err := k.PayoutTimeoutQueue.Dequeue(ctx, int64(timeout), addr); err != nil {
+			if err := k.PayoutTimeoutQueue.Dequeue(ctx, timeoutUnix, addr); err != nil {
 				k.getLogger(ctx).Error("CRITICAL: failed to dequeue interest timeout, skipping", "vault", addr.String(), "err", err)
 			}
 			continue
 		}
 
-		if err := k.atomicallyReconcileInterest(ctx, vault, int64(timeout)); err != nil {
+		if err := k.atomicallyReconcileInterest(ctx, vault); err != nil {
 			k.getLogger(ctx).Error("failed to reconcile interest atomically, rescheduling", "vault", addr.String(), "err", err)
-			k.reschedulePayoutTimeout(ctx, vault, int64(timeout))
+			k.reschedulePayoutTimeout(ctx, vault, timeoutUnix)
 			continue
 		}
 	}
@@ -530,7 +530,7 @@ func (k Keeper) handleVaultInterestTimeouts(ctx sdk.Context) error {
 // atomicallyReconcileInterest performs the interest transfer, dequeues the current
 // timeout, and enqueues the next period timeout within a single atomic cache context.
 // If any step fails, the entire operation is reverted.
-func (k Keeper) atomicallyReconcileInterest(ctx sdk.Context, vault *types.VaultAccount, timeout int64) error {
+func (k Keeper) atomicallyReconcileInterest(ctx sdk.Context, vault *types.VaultAccount) error {
 	cacheCtx, write := ctx.CacheContext()
 	v := vault.Clone()
 
@@ -673,19 +673,19 @@ func (k Keeper) handleVaultFeeTimeouts(ctx sdk.Context) error {
 	}
 
 	for _, key := range keysToProcess {
-		timeout := key.K1()
+		timeoutUnix := int64(key.K1()) //nolint:gosec // G115: queue key is a bounded unix-second timestamp.
 		addr := key.K2()
 
 		vault, ok := k.tryGetVault(ctx, addr)
 		if !ok {
 			// clean up queue if vault no longer exists
-			_ = k.FeeTimeoutQueue.Dequeue(ctx, int64(timeout), addr)
+			_ = k.FeeTimeoutQueue.Dequeue(ctx, timeoutUnix, addr)
 			continue
 		}
 
-		if err := k.atomicallyReconcileFee(ctx, vault, int64(timeout)); err != nil {
+		if err := k.atomicallyReconcileFee(ctx, vault); err != nil {
 			k.getLogger(ctx).Error("failed to collect AUM fee atomically, rescheduling", "vault", addr.String(), "err", err)
-			k.rescheduleFeeTimeout(ctx, vault, int64(timeout))
+			k.rescheduleFeeTimeout(ctx, vault, timeoutUnix)
 			continue
 		}
 	}
@@ -696,7 +696,7 @@ func (k Keeper) handleVaultFeeTimeouts(ctx sdk.Context) error {
 // atomicallyReconcileFee performs the AUM fee collection, dequeues the current
 // fee timeout, and enqueues the next fee period timeout within a single atomic
 // cache context. If any step fails, the entire operation is reverted.
-func (k Keeper) atomicallyReconcileFee(ctx sdk.Context, vault *types.VaultAccount, timeout int64) error {
+func (k Keeper) atomicallyReconcileFee(ctx sdk.Context, vault *types.VaultAccount) error {
 	cacheCtx, write := ctx.CacheContext()
 	v := vault.Clone()
 

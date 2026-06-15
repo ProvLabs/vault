@@ -17,6 +17,7 @@ require (
 	github.com/cosmos/gogoproto v1.7.2
 	github.com/golang/protobuf v1.5.4
 	github.com/golangci/golangci-lint/v2 v2.12.2
+	github.com/google/uuid v1.6.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/incu6us/goimports-reviser/v3 v3.8.2
 	github.com/provenance-io/provenance v1.3.2-0.20260519172448-9b0fb12c99b3
@@ -216,7 +217,6 @@ require (
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/orderedcode v0.0.1 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
-	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.14 // indirect
 	github.com/googleapis/gax-go/v2 v2.17.0 // indirect
 	github.com/gordonklaus/ineffassign v0.2.0 // indirect

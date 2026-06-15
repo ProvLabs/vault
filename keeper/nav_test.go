@@ -9,7 +9,9 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/google/uuid"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	"github.com/provlabs/vault/types"
 )
 
@@ -261,6 +263,15 @@ func (s *TestSuite) TestKeeper_SetVaultNAV_RejectsInvalidInput() {
 			},
 			expectedErrSubstr: "is not a registered marker",
 		},
+		{
+			name: "rejects a malformed nft/ denom via the marker check",
+			nav: types.VaultNAV{
+				Denom:  "nft/notabech32",
+				Price:  sdk.NewInt64Coin(underlying, 100),
+				Volume: sdkmath.NewInt(1),
+			},
+			expectedErrSubstr: "is not a registered marker",
+		},
 	}
 
 	for _, tc := range tests {
@@ -273,6 +284,30 @@ func (s *TestSuite) TestKeeper_SetVaultNAV_RejectsInvalidInput() {
 			s.Assert().ErrorIs(getErr, collections.ErrNotFound, "SetVaultNAV must not persist an entry for rejected input %q", tc.name)
 		})
 	}
+}
+
+func (s *TestSuite) TestKeeper_SetVaultNAV_MetadataDenomSkipsMarkerCheck() {
+	underlying := "under"
+	share := "vaultshares"
+	vault := s.setupBaseVault(underlying, share)
+	vaultAddr := types.GetVaultAddress(share)
+
+	navDenom := metadatatypes.ScopeMetadataAddress(uuid.MustParse("00000000-0000-4000-8000-000000000003")).Denom()
+	nav := types.VaultNAV{
+		Denom:  navDenom,
+		Price:  sdk.NewInt64Coin(underlying, 100),
+		Volume: sdkmath.NewInt(1),
+	}
+
+	s.Require().NoError(s.k.SetVaultNAV(s.ctx, vault, nav, s.adminAddr.String()), "SetVaultNAV should accept an nft/ denom without a registered marker")
+
+	stored, err := s.k.GetVaultNAV(s.ctx, vaultAddr, navDenom)
+	s.Require().NoError(err, "internal NAV for nft/ denom %s should be written", navDenom)
+	s.Assert().Equal(nav.Price, stored.Price, "stored NAV price for nft/ denom")
+	s.Assert().Equal(nav.Volume, stored.Volume, "stored NAV volume for nft/ denom")
+
+	_, markerErr := s.simApp.MarkerKeeper.GetMarkerByDenom(s.ctx, navDenom)
+	s.Assert().Error(markerErr, "nft/ denom %s must not be a registered marker", navDenom)
 }
 
 // TestKeeper_SetNAVAuthority_PersistsAndEmits verifies that a SetNAVAuthority

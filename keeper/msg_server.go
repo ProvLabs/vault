@@ -842,8 +842,10 @@ func (k msgServer) UpdateVaultNAV(goCtx context.Context, msg *types.MsgUpdateVau
 	if err := k.SetVaultNAV(ctx, vault, nav, msg.Signer); err != nil {
 		return nil, fmt.Errorf("failed to update vault NAV: %w", err)
 	}
-	if err := k.publishAssetNAVToMarker(ctx, vault, nav); err != nil {
-		return nil, fmt.Errorf("failed to publish vault NAV to marker: %w", err)
+	if !isMetadataDenom(msg.Denom) {
+		if err := k.publishAssetNAVToMarker(ctx, vault, nav); err != nil {
+			return nil, fmt.Errorf("failed to publish vault NAV to marker: %w", err)
+		}
 	}
 
 	return &types.MsgUpdateVaultNAVResponse{}, nil

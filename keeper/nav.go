@@ -11,7 +11,18 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
+
+// isMetadataDenom reports whether denom is a well-formed metadata value-owner
+// denom (nft/<bech32-metadata-addr>), such as the coin minted for a scope. These
+// denoms are legitimate vault assets but are barred from being markers, so the
+// marker requirement and marker NAV mirror are skipped for them. A malformed
+// nft/... string is not a metadata denom and remains subject to the marker check.
+func isMetadataDenom(denom string) bool {
+	_, err := metadatatypes.MetadataAddressFromDenom(denom)
+	return err == nil
+}
 
 // validateVaultNAVFields checks all stateless constraints on a NAV entry
 // against its vault. It does not verify chain state (e.g. registered markers).
@@ -47,7 +58,9 @@ func validateVaultNAVFields(vault *types.VaultAccount, nav types.VaultNAV) error
 //
 // The denom may not be the vault's share denom, whose value is derived from
 // the vault's total holdings rather than set externally. The denom must also
-// be a registered marker on-chain. The price must be a valid positive coin
+// be a registered marker on-chain, except for metadata value-owner denoms
+// (nft/<scope-id>), which are legitimate vault assets but cannot be markers.
+// The price must be a valid positive coin
 // denominated in one of the vault's accepted denoms (underlying asset or
 // payment denom), and the volume must be positive.
 //
@@ -61,8 +74,10 @@ func (k *Keeper) SetVaultNAV(ctx sdk.Context, vault *types.VaultAccount, nav typ
 	if err := validateVaultNAVFields(vault, nav); err != nil {
 		return err
 	}
-	if _, err := k.MarkerKeeper.GetMarkerByDenom(ctx, nav.Denom); err != nil {
-		return fmt.Errorf("NAV denom %q is not a registered marker: %w", nav.Denom, err)
+	if !isMetadataDenom(nav.Denom) {
+		if _, err := k.MarkerKeeper.GetMarkerByDenom(ctx, nav.Denom); err != nil {
+			return fmt.Errorf("NAV denom %q is not a registered marker: %w", nav.Denom, err)
+		}
 	}
 
 	nav.UpdatedBlockHeight = ctx.BlockHeight()

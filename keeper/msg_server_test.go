@@ -13,8 +13,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/google/uuid"
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
@@ -6746,6 +6748,103 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_SettlementNAV() {
 			s.Assert().Equal(vaultAddr.String(), stored.Source, "stored NAV source should be the vault address for case %q", tc.name)
 			s.requireTypedEventEmitted(types.NewEventNAVUpdated(vaultAddr.String(), stored, s.assetManagerAddr.String()))
 		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_AcceptAsset_SettlementNAV_MetadataDenom() {
+	underlying := "under"
+	share := "vshare"
+	paymentDenom := "pay"
+	asset := metadatatypes.ScopeMetadataAddress(uuid.MustParse("00000000-0000-4000-8000-000000000001")).Denom()
+	externalID := "settle-nav-nft"
+
+	origCtx := s.ctx
+	defer func() { s.ctx = origCtx }()
+	s.ctx, _ = s.ctx.CacheContext()
+
+	vault, principalAddr, source := s.setupAcceptAssetScenario(acceptAssetScenario{
+		underlying:    underlying,
+		share:         share,
+		paymentDenom:  paymentDenom,
+		fundSource:    sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+		fundPrincipal: sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+		sourceAmount:  sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+		targetAmount:  sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+		externalID:    externalID,
+	})
+	vaultAddr := vault.GetAddress()
+
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).AcceptAsset(s.ctx, &types.MsgAcceptAssetRequest{
+		Authority:    s.assetManagerAddr.String(),
+		VaultAddress: vaultAddr.String(),
+		Source:       source.String(),
+		ExternalId:   externalID,
+	})
+	s.Require().NoError(err, "AcceptAsset should settle an nft/ asset denom without a registered marker")
+
+	stored, err := s.k.GetVaultNAV(s.ctx, vaultAddr, asset)
+	s.Require().NoError(err, "internal NAV entry for nft/ denom %s should exist after settlement", asset)
+	s.Assert().Equal(sdk.NewInt64Coin(paymentDenom, 5), stored.Price, "stored NAV price for nft/ denom")
+	s.Assert().Equal(sdkmath.NewInt(10), stored.Volume, "stored NAV volume for nft/ denom")
+	s.Assert().Equal(vaultAddr.String(), stored.Source, "stored NAV source should be the vault address")
+	s.requireTypedEventEmitted(types.NewEventNAVUpdated(vaultAddr.String(), stored, s.assetManagerAddr.String()))
+
+	_, markerErr := s.simApp.MarkerKeeper.GetMarkerByDenom(s.ctx, asset)
+	s.Assert().Error(markerErr, "nft/ asset denom %s must not be a registered marker", asset)
+	for _, ev := range s.ctx.EventManager().Events() {
+		s.Assert().NotEqual("provenance.marker.v1.EventSetNetAssetValue", ev.Type, "no marker NAV event should be emitted for an nft/ denom")
+	}
+
+	const secondID = "settle-nav-nft-2"
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, source, sdk.NewCoins(sdk.NewInt64Coin(asset, 10))), "fund source for second settlement")
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 6))), "fund principal for second settlement")
+	s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 6)), secondID)
+
+	_, err = keeper.NewMsgServer(s.simApp.VaultKeeper).AcceptAsset(s.ctx, &types.MsgAcceptAssetRequest{
+		Authority:    s.assetManagerAddr.String(),
+		VaultAddress: vaultAddr.String(),
+		Source:       source.String(),
+		ExternalId:   secondID,
+	})
+	s.Require().ErrorContains(err, "does not match internal NAV", "off-NAV settlement of the nft/ denom should be rejected by the guardrail")
+}
+
+func (s *TestSuite) TestMsgServer_UpdateVaultNAV_MetadataDenom() {
+	underlying := "under"
+	share := "vaultshares"
+	navDenom := metadatatypes.ScopeMetadataAddress(uuid.MustParse("00000000-0000-4000-8000-000000000002")).Denom()
+	admin := s.adminAddr
+	vaultAddr := types.GetVaultAddress(share)
+
+	origCtx := s.ctx
+	defer func() { s.ctx = origCtx }()
+	s.ctx, _ = s.ctx.CacheContext()
+
+	s.setupBaseVault(underlying, share)
+	s.ctx = s.ctx.WithBlockHeight(100).WithEventManager(sdk.NewEventManager())
+
+	price := sdk.NewInt64Coin(underlying, 100)
+	volume := sdkmath.NewInt(2)
+	_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).UpdateVaultNAV(s.ctx, &types.MsgUpdateVaultNAVRequest{
+		Signer:       admin.String(),
+		VaultAddress: vaultAddr.String(),
+		Denom:        navDenom,
+		Price:        price,
+		Volume:       volume,
+		Source:       "oracle-nft",
+	})
+	s.Require().NoError(err, "UpdateVaultNAV should accept an nft/ denom without a registered marker")
+
+	nav, err := s.k.GetVaultNAV(s.ctx, vaultAddr, navDenom)
+	s.Require().NoError(err, "internal NAV for nft/ denom %s should be written", navDenom)
+	s.Assert().Equal(price, nav.Price, "stored NAV price for nft/ denom")
+	s.Assert().Equal(volume, nav.Volume, "stored NAV volume for nft/ denom")
+
+	_, markerErr := s.simApp.MarkerKeeper.GetMarkerByDenom(s.ctx, navDenom)
+	s.Assert().Error(markerErr, "nft/ denom %s must not be a registered marker", navDenom)
+	for _, ev := range s.ctx.EventManager().Events() {
+		s.Assert().NotEqual("provenance.marker.v1.EventSetNetAssetValue", ev.Type, "no marker NAV event should be emitted for an nft/ denom")
 	}
 }
 

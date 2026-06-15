@@ -156,7 +156,7 @@ Settlement is atomic and layers several protections:
 
 ### Valuation Scope
 
-TVV currently sums only the vault's **accepted denoms** (underlying and payment denom) held at the principal marker. External assets acquired through settlement sit in the principal and are priced in the internal NAV table, but are **not yet included** in TVV; extending valuation to NAV-priced multi-asset holdings is future work.
+TVV sums every denom held at the principal marker that has a vault internal NAV, expressed in the underlying unit. The underlying and payment denoms are valued as before; any other held asset acquired through settlement (e.g. an `nft/scope…` coin) is valued at its internal NAV — chained through the payment denom to the underlying when the NAV is priced in the payment denom. A held denom with no internal NAV entry contributes nothing and is skipped (it does not fail valuation), while an accepted denom missing its NAV remains an error (a misconfiguration). Because TVV is the base for interest, the AUM fee, and NAV per share, a vault's value and that fee/interest/share-price base move when the NAV authority updates a held asset's NAV — a deliberate economic/trust surface.
 
 ---
 

@@ -7,6 +7,9 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/google/uuid"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
+
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
 	"github.com/provlabs/vault/utils"
@@ -16,6 +19,7 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 	underlyingDenom := "underlying"
 	paymentDenom := "usdc"
 	shareDenom := "vshare"
+	heldAsset := metadatatypes.ScopeMetadataAddress(uuid.MustParse("00000000-0000-4000-8000-0000000000e5")).Denom()
 	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
 
 	cases := []struct {
@@ -42,6 +46,17 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 			name:                  "internal-nav-missing-for-denom",
 			fromDenom:             "unknown",
 			expectedErrorContains: "no internal NAV entry for denom",
+		},
+		{
+			name:      "payment-priced-asset-chains-through-payment-nav",
+			fromDenom: heldAsset,
+			setup: func() {
+				s.bumpHeight()
+				s.setVaultNAV(vault, paymentDenom, sdk.NewInt64Coin(underlyingDenom, 1), 2)
+				s.setVaultNAV(vault, heldAsset, sdk.NewInt64Coin(paymentDenom, 6), 1)
+			},
+			expectedNumerator:   6,
+			expectedDenominator: 2,
 		},
 		{
 			name:      "internal-nav-overwritten-uses-latest",
@@ -314,6 +329,120 @@ func (s *TestSuite) TestGetTVVInUnderlyingAsset_AccumulatorOverflowReturnsErrorN
 	s.Require().Error(err, "summing balances past the 256-bit ceiling must degrade to an error, not panic")
 	s.Require().ErrorContains(err, "integer overflow", "error should originate from the SafeAdd accumulator guard")
 	s.Require().ErrorContains(err, "total vault value", "error should carry the accumulator's wrapping context")
+}
+
+func (s *TestSuite) TestGetTVVInUnderlyingAsset_IncludesUnderlyingPricedHeldAsset() {
+	underlyingDenom := "ylds"
+	shareDenom := "vshare"
+	vault := s.setupBaseVault(underlyingDenom, shareDenom)
+
+	heldAsset := metadatatypes.ScopeMetadataAddress(uuid.MustParse("00000000-0000-4000-8000-0000000000a1")).Denom()
+	s.setVaultNAV(vault, heldAsset, sdk.NewInt64Coin(underlyingDenom, 3), 2)
+
+	principal := vault.PrincipalMarkerAddress()
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principal, sdk.NewCoins(
+		sdk.NewInt64Coin(underlyingDenom, 100),
+		sdk.NewInt64Coin(heldAsset, 10),
+	)), "funding principal with underlying and a NAV-priced held asset should succeed")
+
+	tvv, err := s.k.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	s.Require().NoError(err, "TVV should value the NAV-priced held asset without error")
+	s.Require().Equal(math.NewInt(115), tvv, "TVV should be 100 underlying + floor(10 * 3 / 2) = 115")
+}
+
+func (s *TestSuite) TestGetTVVInUnderlyingAsset_IncludesPaymentPricedHeldAsset() {
+	underlyingDenom := "ylds"
+	paymentDenom := "usdc"
+	shareDenom := "vshare"
+	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 3, 1)
+
+	heldAsset := metadatatypes.ScopeMetadataAddress(uuid.MustParse("00000000-0000-4000-8000-0000000000b2")).Denom()
+	s.setVaultNAV(vault, heldAsset, sdk.NewInt64Coin(paymentDenom, 5), 2)
+
+	principal := vault.PrincipalMarkerAddress()
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principal, sdk.NewCoins(
+		sdk.NewInt64Coin(underlyingDenom, 100),
+		sdk.NewInt64Coin(paymentDenom, 4),
+		sdk.NewInt64Coin(heldAsset, 10),
+	)), "funding principal with underlying, payment, and a payment-priced held asset should succeed")
+
+	tvv, err := s.k.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	s.Require().NoError(err, "TVV should chain a payment-priced held asset through to the underlying without error")
+	s.Require().Equal(math.NewInt(187), tvv, "TVV should be 100 underlying + (4 usdc * 3) + (10 asset * 5/2 usdc * 3) = 100 + 12 + 75 = 187")
+}
+
+func (s *TestSuite) TestGetTVVInUnderlyingAsset_SkipsHeldAssetWithoutNAV() {
+	underlyingDenom := "ylds"
+	shareDenom := "vshare"
+	vault := s.setupBaseVault(underlyingDenom, shareDenom)
+
+	heldAsset := metadatatypes.ScopeMetadataAddress(uuid.MustParse("00000000-0000-4000-8000-0000000000c3")).Denom()
+
+	principal := vault.PrincipalMarkerAddress()
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principal, sdk.NewCoins(
+		sdk.NewInt64Coin(underlyingDenom, 100),
+		sdk.NewInt64Coin(heldAsset, 10),
+	)), "funding principal with underlying and a held asset lacking a NAV should succeed")
+
+	tvv, err := s.k.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	s.Require().NoError(err, "a held asset with no internal NAV must be skipped without failing TVV")
+	s.Require().Equal(math.NewInt(100), tvv, "TVV should count only the 100 underlying and ignore the un-priced held asset")
+}
+
+func (s *TestSuite) TestGetTVVInUnderlyingAsset_AcceptedDenomMissingNAVStillErrors() {
+	underlyingDenom := "ylds"
+	paymentDenom := "usdc"
+	shareDenom := "vshare"
+
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 1_000_000), s.adminAddr)
+	vault := s.setupBaseVault(underlyingDenom, shareDenom, paymentDenom)
+	s.Require().NoError(s.k.NAVs.Remove(s.ctx, collections.Join(vault.GetAddress(), paymentDenom)),
+		"removing the bootstrap payment NAV should succeed so the missing-NAV path is exercised")
+
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vault.PrincipalMarkerAddress(),
+		sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 10))), "funding principal with the payment denom should succeed")
+
+	_, err := s.k.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	s.Require().Error(err, "an accepted denom with no NAV is a misconfiguration and must still error")
+	s.Require().Contains(err.Error(), "no internal NAV entry for denom \"usdc\"", "error should propagate from the missing accepted-denom NAV")
+}
+
+func (s *TestSuite) TestGetTVVInUnderlyingAsset_InterestAndFeeAccrueOnHeldAssetBase() {
+	underlyingDenom := "ylds"
+	shareDenom := "vshare"
+	vault := s.setupBaseVault(underlyingDenom, shareDenom)
+	vault.AumFeeBips = 100
+	s.SetVaultRatesAndPeriod(vault, "0.10", "0.10", 1, 0)
+	vault.PeriodStart = 1
+
+	heldAsset := metadatatypes.ScopeMetadataAddress(uuid.MustParse("00000000-0000-4000-8000-0000000000d4")).Denom()
+	s.setVaultNAV(vault, heldAsset, sdk.NewInt64Coin(underlyingDenom, 1), 1)
+
+	principal := vault.PrincipalMarkerAddress()
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principal,
+		sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1_000_000))), "funding principal with underlying should succeed")
+
+	baseWithoutAsset, err := s.k.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	s.Require().NoError(err, "computing the underlying-only TVV base should succeed")
+	interestWithoutAsset, err := s.k.CalculateAccruedInterest(s.ctx, *vault, sdk.NewCoin(underlyingDenom, baseWithoutAsset))
+	s.Require().NoError(err, "computing interest on the underlying-only base should succeed")
+	feeWithoutAsset, err := s.k.CalculateAccruedAUMFee(s.ctx, *vault, baseWithoutAsset)
+	s.Require().NoError(err, "computing the AUM fee on the underlying-only base should succeed")
+
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principal,
+		sdk.NewCoins(sdk.NewInt64Coin(heldAsset, 500_000))), "funding principal with a NAV-priced held asset should succeed")
+
+	baseWithAsset, err := s.k.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	s.Require().NoError(err, "computing the TVV base including the held asset should succeed")
+	interestWithAsset, err := s.k.CalculateAccruedInterest(s.ctx, *vault, sdk.NewCoin(underlyingDenom, baseWithAsset))
+	s.Require().NoError(err, "computing interest on the larger base should succeed")
+	feeWithAsset, err := s.k.CalculateAccruedAUMFee(s.ctx, *vault, baseWithAsset)
+	s.Require().NoError(err, "computing the AUM fee on the larger base should succeed")
+
+	s.Require().Equal(math.NewInt(1_500_000), baseWithAsset, "TVV base should grow by the held asset's NAV value (1_000_000 + 500_000)")
+	s.Require().True(baseWithAsset.GT(baseWithoutAsset), "held asset should enlarge the TVV base")
+	s.Require().True(interestWithAsset.GT(interestWithoutAsset), "interest should accrue on the larger base that includes the held asset")
+	s.Require().True(feeWithAsset.GT(feeWithoutAsset), "the AUM fee should accrue on the larger base that includes the held asset")
 }
 
 func (s *TestSuite) TestGetTVVInUnderlyingAsset_ExcludesReserves() {
@@ -654,8 +783,6 @@ func (s *TestSuite) TestGetTVVInUnderlyingAsset_AcceptedDenomFiltering() {
 	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), coinsToSend), "funding principal should succeed")
 
 	s.setVaultNAV(vault, paymentDenom, sdk.NewInt64Coin(underlyingDenom, 2), 1)
-	// unacceptedDenom intentionally has no internal NAV entry — TVV must skip it
-	// before attempting any price lookup, so its balance never reaches UnitPriceFraction.
 
 	testKeeper := s.k
 	tvv, err := testKeeper.GetTVVInUnderlyingAsset(s.ctx, *vault)

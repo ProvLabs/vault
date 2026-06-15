@@ -27,10 +27,19 @@ var ErrInternalNAVNotFound = errors.New("internal NAV entry not found")
 // # Semantics
 //
 // The Internal NAV entry for a denom records the price of `volume` units of the
-// denom denominated in the vault's underlying asset:
+// denom denominated in one of the vault's accepted denoms (the underlying asset
+// or the payment denom):
 //
-//	1 srcDenom = nav.Price.Amount / nav.Volume underlying
-//	(num, den) = (nav.Price.Amount, nav.Volume)
+//	1 srcDenom = nav.Price.Amount / nav.Volume nav.Price.Denom
+//
+// When nav.Price.Denom is the underlying asset, the returned fraction is simply
+// (nav.Price.Amount, nav.Volume). When it is the payment denom (only possible
+// when payment_denom != underlying, e.g. a held nft/scope… asset settled against
+// the payment denom), the fraction is chained through the payment denom's own
+// price so the result is always expressed in the underlying asset:
+//
+//	1 srcDenom = (nav.Price.Amount * pNum) / (nav.Volume * pDen) underlying
+//	(pNum, pDen) = UnitPriceFraction(nav.Price.Denom)  // payment -> underlying
 //
 // Suitable for floor(x * num / den) integer arithmetic.
 //
@@ -83,7 +92,26 @@ func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom string, vault types.
 		return math.Int{}, math.Int{}, fmt.Errorf("internal NAV price must be positive for denom %q on vault %s", srcDenom, vault.GetAddress())
 	}
 
-	return nav.Price.Amount, nav.Volume, nil
+	if nav.Price.Denom == vault.UnderlyingAsset {
+		return nav.Price.Amount, nav.Volume, nil
+	}
+
+	if nav.Price.Denom == srcDenom {
+		return math.Int{}, math.Int{}, fmt.Errorf("internal NAV for denom %q on vault %s is self-priced in %q", srcDenom, vault.GetAddress(), nav.Price.Denom)
+	}
+	pNum, pDen, err := k.UnitPriceFraction(ctx, nav.Price.Denom, vault)
+	if err != nil {
+		return math.Int{}, math.Int{}, fmt.Errorf("failed to convert NAV price denom %q for denom %q on vault %s to underlying: %w", nav.Price.Denom, srcDenom, vault.GetAddress(), err)
+	}
+	num, err = nav.Price.Amount.SafeMul(pNum)
+	if err != nil {
+		return math.Int{}, math.Int{}, fmt.Errorf("failed to scale NAV price %s by payment price numerator %s: %w", nav.Price.Amount, pNum, err)
+	}
+	den, err = nav.Volume.SafeMul(pDen)
+	if err != nil {
+		return math.Int{}, math.Int{}, fmt.Errorf("failed to scale NAV volume %s by payment price denominator %s: %w", nav.Volume, pDen, err)
+	}
+	return num, den, nil
 }
 
 // ToUnderlyingAssetAmount converts an input coin into its value expressed in
@@ -145,8 +173,18 @@ func (k Keeper) FromUnderlyingAssetAmount(ctx sdk.Context, vault types.VaultAcco
 //
 // Computation (when not paused):
 //   - Iterate all non-share-denom balances at the marker (principal) account.
-//   - Convert each balance to underlying units via ToUnderlyingAssetAmount.
+//   - Convert each balance to underlying units via ToUnderlyingAssetAmount, which
+//     values the underlying/payment denom at their identity/internal-NAV price and
+//     any other held denom (e.g. nft/scope… acquired via AcceptAsset) at its vault
+//     internal NAV.
+//   - A non-accepted held denom with no internal NAV entry is skipped (not valued,
+//     not an error). An accepted denom (underlying/payment) is expected to always
+//     carry a NAV, so a missing one propagates as an error (misconfiguration guard).
 //   - Sum the converted amounts (floor at each multiplication/division step).
+//
+// Because a held asset's internal NAV is set by the NAV authority, a vault's TVV
+// (and the interest/fee/share-price base derived from it) moves when that NAV is
+// updated — a deliberate economic/trust surface.
 func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccount) (math.Int, error) {
 	if vault.Paused {
 		return vault.PausedBalance.Amount, nil
@@ -154,11 +192,14 @@ func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccoun
 	balances := k.BankKeeper.GetAllBalances(ctx, vault.PrincipalMarkerAddress())
 	total := math.ZeroInt()
 	for _, balance := range balances {
-		if balance.Denom == vault.TotalShares.Denom || !vault.IsAcceptedDenom(balance.Denom) {
+		if balance.Denom == vault.TotalShares.Denom {
 			continue
 		}
 		val, err := k.ToUnderlyingAssetAmount(ctx, vault, balance)
 		if err != nil {
+			if errors.Is(err, ErrInternalNAVNotFound) && !vault.IsAcceptedDenom(balance.Denom) {
+				continue
+			}
 			return math.Int{}, fmt.Errorf("failed to convert balance to underlying: %w", err)
 		}
 		total, err = total.SafeAdd(val)

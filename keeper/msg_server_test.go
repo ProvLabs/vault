@@ -6177,6 +6177,85 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Outbound() {
 	s.Assert().ErrorIs(err, collections.ErrNotFound, "NAV entry for %s should be removed after the draining outbound settlement", asset)
 }
 
+func (s *TestSuite) TestMsgServer_AcceptAsset_ZeroPriceOutbound() {
+	underlying, share, paymentDenom, asset := "under", "vshare", "pay", "rwacoin"
+	externalID := "p2p-outbound-zero"
+
+	vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+	vaultAddr := vault.GetAddress()
+	s.requireSimpleMarker(asset)
+
+	source := s.CreateAndFundAccount(sdk.NewInt64Coin(underlying, 1))
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10))), "failed to fund principal with asset")
+
+	sourceAmount := sdk.NewCoins()
+	targetAmount := sdk.NewCoins(sdk.NewInt64Coin(asset, 10))
+	s.createPayment(source, vaultAddr, sourceAmount, targetAmount, externalID)
+
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	resp, err := keeper.NewMsgServer(s.simApp.VaultKeeper).AcceptAsset(s.ctx, &types.MsgAcceptAssetRequest{
+		Authority:    s.assetManagerAddr.String(),
+		VaultAddress: vaultAddr.String(),
+		Source:       source.String(),
+		ExternalId:   externalID,
+	})
+	s.Require().NoError(err, "AcceptAsset zero-price outbound should succeed")
+	s.Assert().Equal(&types.MsgAcceptAssetResponse{}, resp, "AcceptAsset zero-price outbound response")
+
+	s.assertBalance(source, asset, sdkmath.NewInt(10))
+	s.assertBalance(source, paymentDenom, sdkmath.NewInt(0))
+	s.assertBalance(principalAddr, asset, sdkmath.NewInt(0))
+	s.assertBalance(principalAddr, paymentDenom, sdkmath.NewInt(0))
+	s.assertBalance(vaultAddr, asset, sdkmath.NewInt(0))
+	s.assertBalance(vaultAddr, paymentDenom, sdkmath.NewInt(0))
+
+	s.requireTypedEventEmitted(types.NewEventAssetAccepted(vaultAddr.String(), source.String(), externalID, sourceAmount, targetAmount, types.AssetDirectionOutbound))
+
+	drainedNAV := types.NewVaultNAV(asset, sdk.NewInt64Coin(paymentDenom, 0), targetAmount[0].Amount, vaultAddr.String())
+	s.requireTypedEventEmitted(types.NewEventNAVRemoved(vaultAddr.String(), drainedNAV))
+	_, err = s.k.GetVaultNAV(s.ctx, vaultAddr, asset)
+	s.Assert().ErrorIs(err, collections.ErrNotFound, "NAV entry for %s should be removed after the draining zero-price outbound settlement", asset)
+}
+
+func (s *TestSuite) TestMsgServer_AcceptAsset_ZeroPriceInbound() {
+	underlying, share, paymentDenom, asset := "under", "vshare", "pay", "rwacoin"
+	externalID := "p2p-inbound-zero"
+
+	vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+	vaultAddr := vault.GetAddress()
+	s.requireSimpleMarker(asset)
+
+	source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
+
+	sourceAmount := sdk.NewCoins(sdk.NewInt64Coin(asset, 10))
+	targetAmount := sdk.NewCoins()
+	s.createPayment(source, vaultAddr, sourceAmount, targetAmount, externalID)
+
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	resp, err := keeper.NewMsgServer(s.simApp.VaultKeeper).AcceptAsset(s.ctx, &types.MsgAcceptAssetRequest{
+		Authority:    s.assetManagerAddr.String(),
+		VaultAddress: vaultAddr.String(),
+		Source:       source.String(),
+		ExternalId:   externalID,
+	})
+	s.Require().NoError(err, "AcceptAsset zero-price inbound should succeed")
+	s.Assert().Equal(&types.MsgAcceptAssetResponse{}, resp, "AcceptAsset zero-price inbound response")
+
+	s.assertBalance(source, asset, sdkmath.NewInt(0))
+	s.assertBalance(source, paymentDenom, sdkmath.NewInt(0))
+	s.assertBalance(principalAddr, asset, sdkmath.NewInt(10))
+	s.assertBalance(principalAddr, paymentDenom, sdkmath.NewInt(0))
+	s.assertBalance(vaultAddr, asset, sdkmath.NewInt(0))
+	s.assertBalance(vaultAddr, paymentDenom, sdkmath.NewInt(0))
+
+	s.requireTypedEventEmitted(types.NewEventAssetAccepted(vaultAddr.String(), source.String(), externalID, sourceAmount, targetAmount, types.AssetDirectionInbound))
+
+	stored, err := s.k.GetVaultNAV(s.ctx, vaultAddr, asset)
+	s.Require().NoError(err, "NAV entry for %s should exist after the zero-price inbound settlement", asset)
+	s.Assert().Equal(sdk.NewInt64Coin(paymentDenom, 0), stored.Price, "stored NAV price should be the zero payment coin")
+	s.Assert().Equal(sourceAmount[0].Amount, stored.Volume, "stored NAV volume should be the asset amount")
+}
+
 func (s *TestSuite) TestMsgServer_AcceptAsset_RestrictedMarker() {
 	underlying, share, paymentDenom, restrictedDenom := "under", "vshare", "pay", "restrictedrwa"
 	externalID := "p2p-restricted"
@@ -6544,14 +6623,14 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_NAVGuardrail() {
 			fundPrincipal:      sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
 			sourceAmount:       sdk.NewCoins(sdk.NewInt64Coin(asset, 10), sdk.NewInt64Coin("othercoin", 5)),
 			targetAmount:       sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
-			expectedErrSubstrs: []string{"exactly one coin"},
+			expectedErrSubstrs: []string{"one asset coin"},
 		},
 		{
 			name:               "empty asset leg cannot be priced and is rejected",
 			fundPrincipal:      sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
 			sourceAmount:       sdk.NewCoins(),
 			targetAmount:       sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
-			expectedErrSubstrs: []string{"exactly one coin"},
+			expectedErrSubstrs: []string{"one asset coin"},
 		},
 	}
 

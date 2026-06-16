@@ -144,28 +144,29 @@ func (s *TestSuite) TestSettlementLegCoins() {
 			sourceAmount:        sdk.NewCoins(),
 			targetAmount:        sdk.NewCoins(sdk.NewInt64Coin("pay", 5)),
 			direction:           types.AssetDirectionInbound,
-			expectedErrContains: "exactly one coin",
+			expectedErrContains: "one asset coin",
 		},
 		{
 			name:                "asset leg with multiple coins is rejected",
 			sourceAmount:        sdk.NewCoins(sdk.NewInt64Coin("rwa", 10), sdk.NewInt64Coin("othercoin", 5)),
 			targetAmount:        sdk.NewCoins(sdk.NewInt64Coin("pay", 5)),
 			direction:           types.AssetDirectionInbound,
-			expectedErrContains: "exactly one coin",
+			expectedErrContains: "one asset coin",
 		},
 		{
-			name:                "empty payment leg is rejected",
+			name:                "empty payment leg yields a zero payment coin for a zero-priced settlement",
 			sourceAmount:        sdk.NewCoins(sdk.NewInt64Coin("rwa", 10)),
 			targetAmount:        sdk.NewCoins(),
 			direction:           types.AssetDirectionInbound,
-			expectedErrContains: "exactly one coin",
+			expectedAssetCoin:   sdk.NewInt64Coin("rwa", 10),
+			expectedPaymentCoin: sdk.NewInt64Coin("pay", 0),
 		},
 		{
 			name:                "payment leg with multiple coins is rejected",
 			sourceAmount:        sdk.NewCoins(sdk.NewInt64Coin("rwa", 10)),
 			targetAmount:        sdk.NewCoins(sdk.NewInt64Coin("pay", 5), sdk.NewInt64Coin("othercoin", 5)),
 			direction:           types.AssetDirectionInbound,
-			expectedErrContains: "exactly one coin",
+			expectedErrContains: "at most one payment coin",
 		},
 	}
 
@@ -173,7 +174,7 @@ func (s *TestSuite) TestSettlementLegCoins() {
 		s.Run(tc.name, func() {
 			payment := &exchange.Payment{SourceAmount: tc.sourceAmount, TargetAmount: tc.targetAmount}
 
-			assetCoin, paymentCoin, err := s.k.TestAccessor_settlementLegCoins(s.T(), payment, tc.direction)
+			assetCoin, paymentCoin, err := s.k.TestAccessor_settlementLegCoins(s.T(), payment, tc.direction, "pay")
 
 			if tc.expectedErrContains != "" {
 				s.Require().ErrorContains(err, tc.expectedErrContains, "settlementLegCoins should reject source=%s target=%s", tc.sourceAmount, tc.targetAmount)

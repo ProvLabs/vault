@@ -913,7 +913,7 @@ func (k msgServer) AcceptAsset(goCtx context.Context, msg *types.MsgAcceptAssetR
 		return nil, err
 	}
 
-	assetCoin, paymentCoin, err := settlementLegCoins(payment, direction)
+	assetCoin, paymentCoin, err := settlementLegCoins(payment, direction, vault.PaymentDenom)
 	if err != nil {
 		return nil, err
 	}
@@ -989,10 +989,15 @@ func (k msgServer) RejectAsset(goCtx context.Context, msg *types.MsgRejectAssetR
 }
 
 // assetSettlementDirection determines whether a payment settles inbound or outbound for a
-// vault, based on which leg carries the vault's payment denom. The vault only settles
-// payments where its payment denom is exactly one of the two legs: it pays the payment
-// denom out (inbound, target leg) or receives it in (outbound, source leg). A payment with
-// the payment denom on neither leg, or on both, cannot be settled.
+// vault, based on which leg carries the vault's payment denom. The vault settles payments
+// where its payment denom is exactly one of the two legs: it pays the payment denom out
+// (inbound, target leg) or receives it in (outbound, source leg). A payment with the
+// payment denom on both legs cannot be settled.
+//
+// A zero-priced asset carries the payment denom on neither leg (the zero coin is stripped),
+// so direction is inferred from the leg holding the asset: an asset on the source leg moves
+// into the vault (inbound), an asset on the target leg moves out (outbound). A zero-priced
+// payment with an asset on both legs, or on neither, cannot be settled.
 func assetSettlementDirection(vault *types.VaultAccount, payment *exchange.Payment) (string, error) {
 	paymentDenom := vault.PaymentDenom
 	sourceHasPayment := payment.SourceAmount.AmountOf(paymentDenom).IsPositive()
@@ -1003,7 +1008,18 @@ func assetSettlementDirection(vault *types.VaultAccount, payment *exchange.Payme
 		return types.AssetDirectionInbound, nil
 	case sourceHasPayment && !targetHasPayment:
 		return types.AssetDirectionOutbound, nil
-	default:
+	case sourceHasPayment && targetHasPayment:
 		return "", fmt.Errorf("payment must carry vault payment denom %q on exactly one leg: source_amount=%q target_amount=%q", paymentDenom, payment.SourceAmount, payment.TargetAmount)
+	}
+
+	// Neither leg carries the payment denom: a zero-priced settlement. Infer direction
+	// from the leg holding the asset.
+	switch {
+	case payment.TargetAmount.IsZero() && !payment.SourceAmount.IsZero():
+		return types.AssetDirectionInbound, nil
+	case payment.SourceAmount.IsZero() && !payment.TargetAmount.IsZero():
+		return types.AssetDirectionOutbound, nil
+	default:
+		return "", fmt.Errorf("zero-priced payment must carry the asset on exactly one leg: source_amount=%q target_amount=%q", payment.SourceAmount, payment.TargetAmount)
 	}
 }

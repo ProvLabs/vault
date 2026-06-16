@@ -118,9 +118,9 @@ func (k Keeper) TestAccessor_publishAssetNAVToMarker(t *testing.T, ctx context.C
 }
 
 // TestAccessor_settlementLegCoins exposes the settlementLegCoins function for unit tests.
-func (k Keeper) TestAccessor_settlementLegCoins(t *testing.T, payment *exchange.Payment, direction string) (sdk.Coin, sdk.Coin, error) {
+func (k Keeper) TestAccessor_settlementLegCoins(t *testing.T, payment *exchange.Payment, direction, paymentDenom string) (sdk.Coin, sdk.Coin, error) {
 	t.Helper()
-	return settlementLegCoins(payment, direction)
+	return settlementLegCoins(payment, direction, paymentDenom)
 }
 
 // TestAccessor_corruptVaultNAV writes undecodable bytes at the internal NAV entry for

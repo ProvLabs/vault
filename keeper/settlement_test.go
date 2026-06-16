@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/exchange"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provlabs/vault/types"
 )
 
@@ -186,4 +187,121 @@ func (s *TestSuite) TestSettlementLegCoins() {
 			s.Assert().Equal(tc.expectedPaymentCoin, paymentCoin, "payment coin mismatch for direction %s", tc.direction)
 		})
 	}
+}
+
+func (s *TestSuite) TestKeeper_StageAndReturnPrincipal() {
+	underlying, share, paymentDenom := "under", "vshare", "pay"
+	restricted, free := "restrictedrwa", "freerwa"
+
+	tests := []struct {
+		name    string
+		deposit bool // true exercises returnToPrincipal (vault -> principal); false stageFromPrincipal (principal -> vault)
+		// seed funds the endpoints for the case and returns the amount to transfer.
+		seed  func(vault *types.VaultAccount) sdk.Coins
+		denom string
+		moved sdkmath.Int
+	}{
+		{
+			name:    "zero amount is a no-op and moves no funds",
+			deposit: true,
+			seed: func(vault *types.VaultAccount) sdk.Coins {
+				s.requireSimpleMarker(free)
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vault.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(free, 10))), "failed to fund vault with %s", free)
+				return sdk.NewCoins()
+			},
+			denom: free,
+			moved: sdkmath.NewInt(0),
+		},
+		{
+			name:    "unrestricted coins return from vault to principal",
+			deposit: true,
+			seed: func(vault *types.VaultAccount) sdk.Coins {
+				s.requireSimpleMarker(free)
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vault.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(free, 10))), "failed to fund vault with %s", free)
+				return sdk.NewCoins(sdk.NewInt64Coin(free, 10))
+			},
+			denom: free,
+			moved: sdkmath.NewInt(10),
+		},
+		{
+			name:    "restricted coins return into the principal marker via bypass",
+			deposit: true,
+			seed: func(vault *types.VaultAccount) sdk.Coins {
+				s.requireRestrictedMarker(restricted)
+				s.Require().NoError(s.simApp.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, vault.GetAddress(), restricted, sdk.NewCoins(sdk.NewInt64Coin(restricted, 10))), "failed to fund vault with %s", restricted)
+				return sdk.NewCoins(sdk.NewInt64Coin(restricted, 10))
+			},
+			denom: restricted,
+			moved: sdkmath.NewInt(10),
+		},
+		{
+			name:    "restricted coins stage out of the principal marker via bypass",
+			deposit: false,
+			seed: func(vault *types.VaultAccount) sdk.Coins {
+				s.requireRestrictedMarker(restricted)
+				s.Require().NoError(s.simApp.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, vault.GetAddress(), restricted, sdk.NewCoins(sdk.NewInt64Coin(restricted, 10))), "failed to fund vault with %s", restricted)
+				s.Require().NoError(s.simApp.BankKeeper.SendCoins(markertypes.WithBypass(s.ctx), vault.GetAddress(), vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(restricted, 10))), "failed to seed principal with %s", restricted)
+				return sdk.NewCoins(sdk.NewInt64Coin(restricted, 10))
+			},
+			denom: restricted,
+			moved: sdkmath.NewInt(10),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			origCtx := s.ctx
+			defer func() { s.ctx = origCtx }()
+			s.ctx, _ = s.ctx.CacheContext()
+
+			vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+			vaultAddr := vault.GetAddress()
+
+			from, to := principalAddr, vaultAddr
+			if tc.deposit {
+				from, to = vaultAddr, principalAddr
+			}
+
+			amt := tc.seed(vault)
+			fromBefore := s.simApp.BankKeeper.GetBalance(s.ctx, from, tc.denom).Amount
+			toBefore := s.simApp.BankKeeper.GetBalance(s.ctx, to, tc.denom).Amount
+
+			var err error
+			if tc.deposit {
+				err = s.k.TestAccessor_returnToPrincipal(s.T(), s.ctx, vault, amt)
+			} else {
+				err = s.k.TestAccessor_stageFromPrincipal(s.T(), s.ctx, vault, amt)
+			}
+			s.Require().NoError(err, "transfer should succeed for case %q", tc.name)
+
+			s.assertBalance(from, tc.denom, fromBefore.Sub(tc.moved))
+			s.assertBalance(to, tc.denom, toBefore.Add(tc.moved))
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_ReturnToPrincipal_BypassIsLoadBearing() {
+	underlying, share, paymentDenom, restricted := "under", "vshare", "pay", "restrictedrwa"
+
+	origCtx := s.ctx
+	defer func() { s.ctx = origCtx }()
+	s.ctx, _ = s.ctx.CacheContext()
+
+	vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+	vaultAddr := vault.GetAddress()
+
+	s.requireRestrictedMarker(restricted)
+	s.Require().NoError(s.simApp.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, vaultAddr, restricted, sdk.NewCoins(sdk.NewInt64Coin(restricted, 10))), "failed to fund vault with %s", restricted)
+
+	amt := sdk.NewCoins(sdk.NewInt64Coin(restricted, 10))
+
+	// A plain send (no bypass) into the principal marker is blocked by the marker send
+	// restriction. Run it in a throwaway cache so its partial debit cannot affect the real send.
+	plainCtx, _ := s.ctx.CacheContext()
+	plainErr := s.simApp.BankKeeper.SendCoins(plainCtx, vaultAddr, principalAddr, amt)
+	s.Require().Error(plainErr, "a plain send of a restricted denom into the principal marker should be blocked by the marker send restriction")
+
+	s.Require().NoError(s.k.TestAccessor_returnToPrincipal(s.T(), s.ctx, vault, amt), "returnToPrincipal should bypass the marker restriction and move the funds")
+	s.assertBalance(vaultAddr, restricted, sdkmath.NewInt(0))
+	s.assertBalance(principalAddr, restricted, sdkmath.NewInt(10))
 }

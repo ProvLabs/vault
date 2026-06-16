@@ -233,6 +233,27 @@ func (s *TestSuite) requireSimpleMarker(denom string) {
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(denom, 0), s.adminAddr)
 }
 
+// requireRestrictedMarker creates, finalizes, and activates a restricted-coin marker for the
+// denom with the suite admin holding full access. Callers seed holders via WithdrawCoins.
+func (s *TestSuite) requireRestrictedMarker(denom string) {
+	grants := []markertypes.AccessGrant{
+		{Address: s.adminAddr.String(), Permissions: markertypes.AccessList{
+			markertypes.Access_Mint, markertypes.Access_Burn, markertypes.Access_Withdraw,
+			markertypes.Access_Admin, markertypes.Access_Transfer, markertypes.Access_Deposit,
+		}},
+	}
+	marker := markertypes.NewMarkerAccount(
+		authtypes.NewBaseAccountWithAddress(markertypes.MustGetMarkerAddress(denom)),
+		sdk.NewInt64Coin(denom, 1_000_000),
+		s.adminAddr,
+		grants,
+		markertypes.StatusProposed,
+		markertypes.MarkerType_RestrictedCoin,
+		false, true, false, []string{},
+	)
+	s.Require().NoError(s.simApp.MarkerKeeper.AddFinalizeAndActivateMarker(s.ctx, marker), "failed to create restricted marker %s", denom)
+}
+
 // setupAssetSettlementVault creates a vault whose payment denom differs from its underlying
 // asset. Both the underlying and payment denoms are non-restricted Coin markers (CreateVault's
 // fee-collector preflight requires the payment denom to be a marker). Settlement messages are

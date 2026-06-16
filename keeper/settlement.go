@@ -8,7 +8,36 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/provenance-io/provenance/x/exchange"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
+
+// stageFromPrincipal moves coins from the vault's own principal marker into the vault
+// account, for example to fund the asset leg of an outbound settlement before AcceptPayment
+// pays it out. A zero amount is a no-op.
+//
+// Both endpoints are derived from the vault, so the transfer is always an internal hop
+// between the vault and its own principal marker, and the marker send restriction is
+// bypassed: the vault owns the marker, and restricted-marker rules (transfer access,
+// required attributes) are enforced at the vault's boundary by AcceptPayment, which escrows
+// assets in (source -> vault) and pays them out (vault -> source) under the send restriction.
+// Once a settlement has cleared that boundary, this internal hop should not be restricted again.
+func (k *Keeper) stageFromPrincipal(ctx sdk.Context, vault *types.VaultAccount, amt sdk.Coins) error {
+	if amt.IsZero() {
+		return nil
+	}
+	return k.BankKeeper.SendCoins(markertypes.WithBypass(ctx), vault.PrincipalMarkerAddress(), vault.GetAddress(), amt)
+}
+
+// returnToPrincipal moves coins from the vault account into its own principal marker, for
+// example to stow the funds received from a settlement. A zero amount is a no-op. Both
+// endpoints are derived from the vault and the marker send restriction is bypassed for the
+// same reason as stageFromPrincipal.
+func (k *Keeper) returnToPrincipal(ctx sdk.Context, vault *types.VaultAccount, amt sdk.Coins) error {
+	if amt.IsZero() {
+		return nil
+	}
+	return k.BankKeeper.SendCoins(markertypes.WithBypass(ctx), vault.GetAddress(), vault.PrincipalMarkerAddress(), amt)
+}
 
 // applySettlementNAV records a settlement's price in the vault's internal NAV table:
 // the asset denom's entry is upserted with the single-sided settlement price

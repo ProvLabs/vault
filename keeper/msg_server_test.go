@@ -6277,9 +6277,8 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_RestrictedMarker() {
 			expectedErrSubstrs:       []string{"failed to accept payment", "does not have transfer permissions"},
 		},
 		{
-			name:                      "vault without marker transfer access, vault-as-transfer-agent hop to principal is blocked",
+			name:                      "vault without marker transfer access still settles because the internal hop to principal is bypassed",
 			grantSourceMarkerTransfer: true,
-			expectedErrSubstrs:        []string{"failed to move source amount from vault to principal", "have ACCESS_TRANSFER on restrictedrwa marker"},
 		},
 	}
 

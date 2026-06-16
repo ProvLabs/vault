@@ -933,25 +933,16 @@ func (k msgServer) AcceptAsset(goCtx context.Context, msg *types.MsgAcceptAssetR
 		}
 	}
 
-	// TODO(#192 marker-attribute-preflight): if a staged asset is a restricted marker, these
-	// Principal <-> Vault transfers require the vault account to satisfy the marker's transfer
-	// rules. The marker-attribute-preflight investigation determines whether an attribute
-	// check is needed here.
-
-	if !payment.TargetAmount.IsZero() {
-		if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, vaultAddr), principalAddr, vaultAddr, payment.TargetAmount); err != nil {
-			return nil, fmt.Errorf("failed to stage target amount from principal to vault: %w", err)
-		}
+	if err := k.stageFromPrincipal(ctx, vault, payment.TargetAmount); err != nil {
+		return nil, fmt.Errorf("failed to stage target amount from principal to vault: %w", err)
 	}
 
 	if err := k.ExchangeKeeper.AcceptPayment(ctx, payment); err != nil {
 		return nil, fmt.Errorf("failed to accept payment: %w", err)
 	}
 
-	if !payment.SourceAmount.IsZero() {
-		if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, vaultAddr), vaultAddr, principalAddr, payment.SourceAmount); err != nil {
-			return nil, fmt.Errorf("failed to move source amount from vault to principal: %w", err)
-		}
+	if err := k.returnToPrincipal(ctx, vault, payment.SourceAmount); err != nil {
+		return nil, fmt.Errorf("failed to move source amount from vault to principal: %w", err)
 	}
 
 	k.emitEvent(ctx, types.NewEventAssetAccepted(msg.VaultAddress, msg.Source, msg.ExternalId, payment.SourceAmount, payment.TargetAmount, direction))

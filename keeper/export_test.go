@@ -123,6 +123,18 @@ func (k Keeper) TestAccessor_settlementLegCoins(t *testing.T, payment *exchange.
 	return settlementLegCoins(payment, direction, paymentDenom)
 }
 
+// TestAccessor_stageFromPrincipal exposes this keeper's stageFromPrincipal function for unit tests.
+func (k Keeper) TestAccessor_stageFromPrincipal(t *testing.T, ctx context.Context, vault *types.VaultAccount, amt sdk.Coins) error {
+	t.Helper()
+	return k.stageFromPrincipal(sdk.UnwrapSDKContext(ctx), vault, amt)
+}
+
+// TestAccessor_returnToPrincipal exposes this keeper's returnToPrincipal function for unit tests.
+func (k Keeper) TestAccessor_returnToPrincipal(t *testing.T, ctx context.Context, vault *types.VaultAccount, amt sdk.Coins) error {
+	t.Helper()
+	return k.returnToPrincipal(sdk.UnwrapSDKContext(ctx), vault, amt)
+}
+
 // TestAccessor_corruptVaultNAV writes undecodable bytes at the internal NAV entry for
 // vaultAddr/denom so unit tests can exercise NAV lookup failures other than not-found.
 func (k Keeper) TestAccessor_corruptVaultNAV(t *testing.T, ctx context.Context, vaultAddr sdk.AccAddress, denom string) error {

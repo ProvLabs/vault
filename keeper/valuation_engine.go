@@ -52,8 +52,10 @@ var ErrInternalNAVNotFound = errors.New("internal NAV entry not found")
 //     vault. Callers should classify with errors.Is(err, ErrInternalNAVNotFound)
 //     rather than matching on the formatted error string.
 //   - Returns wrapped errors for any other Internal NAV lookup failure.
-//   - Defensive: rejects nav.Volume <= 0 or nav.Price.Amount <= 0 (these are
-//     already enforced at NAV-write time by validateVaultNAVFields).
+//   - Defensive: rejects nav.Volume <= 0 or a negative nav.Price.Amount (these
+//     are already enforced at NAV-write time by validateVaultNAVFields). A zero
+//     price is permitted (a held asset written down to zero) and yields a zero
+//     unit price.
 func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom string, vault types.VaultAccount) (num, den math.Int, err error) {
 	if srcDenom == vault.UnderlyingAsset {
 		return math.NewInt(1), math.NewInt(1), nil
@@ -79,17 +81,17 @@ func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom string, vault types.
 		)
 		return math.Int{}, math.Int{}, fmt.Errorf("internal NAV volume must be positive for denom %q on vault %s", srcDenom, vault.GetAddress())
 	}
-	if nav.Price.Amount.IsNil() || !nav.Price.Amount.IsPositive() {
+	if nav.Price.Amount.IsNil() || nav.Price.Amount.IsNegative() {
 		priceForLog := "<nil>"
 		if !nav.Price.Amount.IsNil() {
 			priceForLog = nav.Price.String()
 		}
-		k.getLogger(ctx).Error("internal NAV invariant violated: non-positive price",
+		k.getLogger(ctx).Error("internal NAV invariant violated: negative price",
 			"vault", vault.GetAddress().String(),
 			"denom", srcDenom,
 			"price", priceForLog,
 		)
-		return math.Int{}, math.Int{}, fmt.Errorf("internal NAV price must be positive for denom %q on vault %s", srcDenom, vault.GetAddress())
+		return math.Int{}, math.Int{}, fmt.Errorf("internal NAV price must not be negative for denom %q on vault %s", srcDenom, vault.GetAddress())
 	}
 
 	if nav.Price.Denom == vault.UnderlyingAsset {

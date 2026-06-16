@@ -576,7 +576,11 @@ func (m MsgUpdateMaxSwapOutValueRequest) ValidateBasic() error {
 	return nil
 }
 
-// ValidateBasic performs stateless validation on MsgUpdateVaultNAVRequest.
+// ValidateBasic performs stateless validation on MsgUpdateVaultNAVRequest. A
+// zero price is permitted here so a held, non-accepted asset can be written down
+// to zero (negative amounts are still rejected by Price.Validate); the stricter
+// "must be positive" rule for accepted denoms is stateful and enforced by the
+// keeper in validateVaultNAVFields.
 func (m MsgUpdateVaultNAVRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.Signer); err != nil {
 		return fmt.Errorf("invalid signer address: %q: %w", m.Signer, err)
@@ -592,9 +596,6 @@ func (m MsgUpdateVaultNAVRequest) ValidateBasic() error {
 	}
 	if m.Denom == m.Price.Denom {
 		return fmt.Errorf("NAV denom %q and price denom must differ", m.Denom)
-	}
-	if !m.Price.Amount.IsPositive() {
-		return fmt.Errorf("price amount must be positive, got %s", m.Price.Amount)
 	}
 	if m.Volume.IsNil() || !m.Volume.IsPositive() {
 		return fmt.Errorf("volume must be positive")

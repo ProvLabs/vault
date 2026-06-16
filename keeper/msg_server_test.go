@@ -5595,6 +5595,13 @@ func (s *TestSuite) TestMsgServer_UpdateVaultNAV() {
 			volume: sdkmath.NewInt(3),
 			source: "oracle-c",
 		},
+		{
+			name:   "held denom written down to a zero NAV",
+			setup:  baseSetup,
+			price:  sdk.NewInt64Coin(underlying, 0),
+			volume: sdkmath.NewInt(1),
+			source: "bankruptcy-writedown",
+		},
 	}
 
 	for _, tt := range tests {
@@ -5703,16 +5710,16 @@ func (s *TestSuite) TestMsgServer_UpdateVaultNAV_Failures() {
 			expectedErrSubstrs: []string{"is not a registered marker"},
 		},
 		{
-			name:  "rejects zero price",
+			name:  "rejects negative price",
 			setup: setup,
 			msg: types.MsgUpdateVaultNAVRequest{
 				Signer:       admin.String(),
 				VaultAddress: vaultAddr.String(),
 				Denom:        "rwa",
-				Price:        sdk.NewInt64Coin(underlying, 0),
+				Price:        sdk.Coin{Denom: underlying, Amount: sdkmath.NewInt(-1)},
 				Volume:       sdkmath.NewInt(1),
 			},
-			expectedErrSubstrs: []string{"NAV price amount must be positive"},
+			expectedErrSubstrs: []string{"invalid NAV price"},
 		},
 		{
 			name:  "rejects zero volume",

@@ -297,7 +297,7 @@ func TestGenesisState_Validate(t *testing.T) {
 			expectedErr: "invalid nav price at index 0",
 		},
 		{
-			name: "nav entry has zero price amount",
+			name: "nav entry for a held denom may have a zero price amount",
 			genState: types.GenesisState{
 				Params: types.DefaultParams(),
 				Vaults: []types.VaultAccount{validVault},
@@ -312,7 +312,28 @@ func TestGenesisState_Validate(t *testing.T) {
 					},
 				},
 			},
-			expectedErr: "nav price at index 0 must be positive",
+		},
+		{
+			name: "nav entry for an accepted denom has zero price amount",
+			genState: types.GenesisState{
+				Params: types.DefaultParams(),
+				Vaults: []types.VaultAccount{func() types.VaultAccount {
+					v := validVault
+					v.PaymentDenom = "pay"
+					return v
+				}()},
+				Navs: []types.VaultNAVEntry{
+					{
+						VaultAddress: validAddr,
+						Nav: types.VaultNAV{
+							Denom:  "pay",
+							Price:  sdk.NewInt64Coin("under", 0),
+							Volume: sdkmath.NewInt(1),
+						},
+					},
+				},
+			},
+			expectedErr: `nav price at index 0 for accepted denom "pay" must be positive`,
 		},
 		{
 			name: "nav entry has zero volume",

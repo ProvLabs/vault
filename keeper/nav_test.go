@@ -156,7 +156,7 @@ func (s *TestSuite) TestKeeper_SetVaultNAV_OverwriteReStamps() {
 
 // TestKeeper_SetVaultNAV_RejectsInvalidInput verifies SetVaultNAV rejects every
 // invalid input before persisting an entry: the vault share denom, an invalid
-// price coin, a non-positive price amount, a price denom outside the vault's
+// price coin, a negative price amount, a price denom outside the vault's
 // accepted denoms, a nil or non-positive volume, and a denom that is not a
 // registered marker.
 func (s *TestSuite) TestKeeper_SetVaultNAV_RejectsInvalidInput() {
@@ -191,13 +191,13 @@ func (s *TestSuite) TestKeeper_SetVaultNAV_RejectsInvalidInput() {
 			expectedErrSubstr: "invalid NAV price",
 		},
 		{
-			name: "rejects a zero price amount",
+			name: "rejects a negative price amount",
 			nav: types.VaultNAV{
 				Denom:  registeredDenom,
-				Price:  sdk.NewInt64Coin(underlying, 0),
+				Price:  sdk.Coin{Denom: underlying, Amount: sdkmath.NewInt(-1)},
 				Volume: sdkmath.NewInt(1),
 			},
-			expectedErrSubstr: "NAV price amount must be positive",
+			expectedErrSubstr: "invalid NAV price",
 		},
 		{
 			name: "rejects a price denom outside the vault accepted denoms",
@@ -284,6 +284,57 @@ func (s *TestSuite) TestKeeper_SetVaultNAV_RejectsInvalidInput() {
 			s.Assert().ErrorIs(getErr, collections.ErrNotFound, "SetVaultNAV must not persist an entry for rejected input %q", tc.name)
 		})
 	}
+}
+
+// TestKeeper_SetVaultNAV_AllowsZeroPriceForHeldDenom verifies the authority can
+// write a held, non-accepted asset down to a zero NAV (e.g. a seized or retired
+// asset) and that the zero price is persisted.
+func (s *TestSuite) TestKeeper_SetVaultNAV_AllowsZeroPriceForHeldDenom() {
+	underlying := "under"
+	share := "vaultshares"
+	heldDenom := "rwa"
+	vault := s.setupBaseVault(underlying, share)
+	vaultAddr := types.GetVaultAddress(share)
+	s.requireSimpleMarker(heldDenom)
+
+	s.Require().False(vault.IsAcceptedDenom(heldDenom), "%q must be a held, non-accepted denom for this test", heldDenom)
+
+	nav := types.VaultNAV{
+		Denom:  heldDenom,
+		Price:  sdk.NewInt64Coin(underlying, 0),
+		Volume: sdkmath.NewInt(1),
+	}
+	s.Require().NoError(s.k.SetVaultNAV(s.ctx, vault, nav, s.adminAddr.String()), "SetVaultNAV should accept a zero price for a held denom")
+
+	stored, err := s.k.GetVaultNAV(s.ctx, vaultAddr, heldDenom)
+	s.Require().NoError(err, "zero-price NAV for held denom %s should be written", heldDenom)
+	s.Assert().True(stored.Price.Amount.IsZero(), "stored NAV price for held denom should be zero, got %s", stored.Price.Amount)
+}
+
+// TestKeeper_SetVaultNAV_RejectsZeroPriceForAcceptedDenom verifies the > 0 rule
+// is still enforced for accepted denoms (here the payment denom), so the
+// redemption and AUM-fee conversion math never sees a zero accepted-denom price.
+func (s *TestSuite) TestKeeper_SetVaultNAV_RejectsZeroPriceForAcceptedDenom() {
+	underlying := "under"
+	share := "vaultshares"
+	payment := "pay"
+	vault := s.setupSinglePaymentDenomVault(underlying, share, payment, 1, 1)
+	vaultAddr := types.GetVaultAddress(share)
+
+	s.Require().True(vault.IsAcceptedDenom(payment), "%q must be an accepted denom for this test", payment)
+
+	nav := types.VaultNAV{
+		Denom:  payment,
+		Price:  sdk.NewInt64Coin(underlying, 0),
+		Volume: sdkmath.NewInt(1),
+	}
+	err := s.k.SetVaultNAV(s.ctx, vault, nav, s.adminAddr.String())
+	s.Require().Error(err, "SetVaultNAV should reject a zero price for an accepted denom")
+	s.Assert().Contains(err.Error(), `NAV price amount for accepted denom "pay" must be positive`, "error should name the accepted denom")
+
+	stored, getErr := s.k.GetVaultNAV(s.ctx, vaultAddr, payment)
+	s.Require().NoError(getErr, "the pre-seeded positive payment NAV should still be present")
+	s.Assert().True(stored.Price.Amount.IsPositive(), "the rejected zero write must not overwrite the existing payment NAV")
 }
 
 func (s *TestSuite) TestKeeper_SetVaultNAV_MetadataDenomSkipsMarkerCheck() {

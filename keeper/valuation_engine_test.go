@@ -90,8 +90,9 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 			expectedErrorContains: "internal NAV volume must be positive",
 		},
 		{
-			// Defensive guard mirror: non-positive price.
-			name:      "internal-nav-price-non-positive",
+			// A zero price is a legitimate write-down of a held asset to zero. The
+			// engine must accept it and yield a zero unit price rather than erroring.
+			name:      "internal-nav-price-zero-yields-zero",
 			fromDenom: paymentDenom,
 			setup: func() {
 				s.bumpHeight()
@@ -103,12 +104,34 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 						Price:  sdk.NewInt64Coin(underlyingDenom, 0),
 						Volume: math.NewInt(1),
 					},
-				), "should write a zero-price NAV directly to storage to exercise the defensive guard")
+				), "should write a zero-price NAV directly to storage to exercise the zero-value path")
 			},
-			expectedErrorContains: "internal NAV price must be positive",
+			expectedNumerator:   0,
+			expectedDenominator: 1,
 		},
 		{
-			name:      "internal-nav-price-nil",
+			// Defensive guard: a negative price can only arise from corrupted state
+			// and must be rejected.
+			name:      "internal-nav-price-negative",
+			fromDenom: paymentDenom,
+			setup: func() {
+				s.bumpHeight()
+				s.Require().NoError(s.k.NAVs.Set(
+					s.ctx,
+					collections.Join(vault.GetAddress(), paymentDenom),
+					types.VaultNAV{
+						Denom:  paymentDenom,
+						Price:  sdk.Coin{Denom: underlyingDenom, Amount: math.NewInt(-1)},
+						Volume: math.NewInt(1),
+					},
+				), "should write a negative-price NAV directly to storage to exercise the defensive guard")
+			},
+			expectedErrorContains: "internal NAV price must not be negative",
+		},
+		{
+			// A nil price amount round-trips through storage as zero, so it is read
+			// back as a legitimate zero-value NAV rather than tripping the guard.
+			name:      "internal-nav-price-nil-normalizes-to-zero",
 			fromDenom: paymentDenom,
 			setup: func() {
 				s.bumpHeight()
@@ -120,9 +143,10 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 						Price:  sdk.Coin{Denom: underlyingDenom, Amount: math.Int{}},
 						Volume: math.NewInt(1),
 					},
-				), "should write a nil-amount price NAV directly to storage to exercise the defensive guard")
+				), "should write a nil-amount price NAV directly to storage")
 			},
-			expectedErrorContains: "internal NAV price must be positive",
+			expectedNumerator:   0,
+			expectedDenominator: 1,
 		},
 	}
 

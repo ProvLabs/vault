@@ -90,6 +90,19 @@ Test amounts use underscore separators too: `sdk.NewInt(1_000_000)`, not `sdk.Ne
 
 Only assert on log output when it is directly relevant to the case being validated. Don't over-specify.
 
+## 11. No Godocs on test functions
+
+`TestXxx` functions and methods do NOT require Godoc comments, and reviewers should not request them. The general "Godocs on every exported symbol" rule does not apply to tests — a `TestXxx` method's intent must instead be carried by:
+
+- a descriptive test name (`TestKeeper_SetVaultNAV_RejectsZeroPriceForAcceptedDenom`),
+- descriptive `name` fields on each table case,
+- descriptive variable names, and
+- high-context `Require`/`Assert` failure messages.
+
+This keeps large, fast-moving suites maintainable. Adding a Godoc is allowed when it genuinely clarifies a subtle scenario, but it is never required and its absence is not a finding.
+
+Test helpers, shared fixtures, and the suite type/methods in `suite_test.go` are NOT tests — they are exported support code and still require Godocs per the standard rule.
+
 ## Self-review checklist
 
 Before declaring tests done, confirm:
@@ -102,4 +115,5 @@ Before declaring tests done, confirm:
 - [ ] All happy paths covered
 - [ ] Large numeric literals use underscore separators
 - [ ] No inline comments that restate the code
+- [ ] Test functions are not flagged for missing Godocs (helpers/suite code still need them)
 - [ ] `ctx` is first argument in all service-layer calls

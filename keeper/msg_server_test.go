@@ -5515,9 +5515,6 @@ func runMsgServerTestCase[Req any, Resp any, CheckArgs any](
 	td.postCheck(&tc.msg, tc.postCheckArgs)
 }
 
-// TestMsgServer_UpdateVaultNAV exercises the happy paths of the UpdateVaultNAV
-// handler: a first NAV write, an overwrite of an existing entry, and a write
-// against a paused vault (NAV updates are administrative and remain allowed).
 func (s *TestSuite) TestMsgServer_UpdateVaultNAV() {
 	underlying := "under"
 	share := "vaultshares"
@@ -5581,19 +5578,6 @@ func (s *TestSuite) TestMsgServer_UpdateVaultNAV() {
 			price:  sdk.NewInt64Coin(underlying, 250),
 			volume: sdkmath.NewInt(5),
 			source: "oracle-b",
-		},
-		{
-			name: "paused vault still accepts NAV update",
-			setup: func() {
-				baseSetup()
-				vault, err := s.k.GetVault(s.ctx, vaultAddr)
-				s.Require().NoError(err, "failed to get vault for paused setup")
-				vault.Paused = true
-				s.k.AuthKeeper.SetAccount(s.ctx, vault)
-			},
-			price:  sdk.NewInt64Coin(underlying, 300),
-			volume: sdkmath.NewInt(3),
-			source: "oracle-c",
 		},
 		{
 			name:   "held denom written down to a zero NAV",
@@ -5760,6 +5744,24 @@ func (s *TestSuite) TestMsgServer_UpdateVaultNAV_Failures() {
 			},
 			expectedErrSubstrs: []string{"failed to publish vault NAV to marker", "overflows the marker NAV volume"},
 		},
+		{
+			name: "rejects NAV update while vault is paused",
+			setup: func() {
+				setup()
+				vault, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err, "failed to get vault %s for paused setup", vaultAddr)
+				vault.Paused = true
+				s.k.AuthKeeper.SetAccount(s.ctx, vault)
+			},
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin(underlying, 100),
+				Volume:       sdkmath.NewInt(1),
+			},
+			expectedErrSubstrs: []string{"is paused", "NAV cannot be updated while paused"},
+		},
 	}
 
 	for _, tc := range tests {
@@ -5789,10 +5791,11 @@ func (s *TestSuite) TestMsgServer_UpdateVaultNAV_Reconcile() {
 			expectedReconciles: 1,
 		},
 		{
-			name:               "paused vault accepts the NAV update but does not reconcile",
-			interestRate:       "4.20",
-			paused:             true,
-			expectedReconciles: 0,
+			name:                "paused vault rejects the NAV update before reconciling",
+			interestRate:        "4.20",
+			paused:              true,
+			expectedErrContains: "NAV cannot be updated while paused",
+			expectedReconciles:  0,
 		},
 		{
 			name:                 "NAV update that fails validation reconciles first, relying on tx revert to discard it",
@@ -6514,6 +6517,27 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Failures() {
 				}
 			},
 			expectedErrSubstrs: []string{"insufficient principal balance"},
+		},
+		{
+			name: "rejects settlement while vault is paused",
+			setup: func() *types.MsgAcceptAssetRequest {
+				vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+				vaultAddr := vault.GetAddress()
+				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5))), "fund principal")
+				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)), "paused")
+				paused, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err, "failed to get vault %s for paused setup", vaultAddr)
+				paused.Paused = true
+				s.k.AuthKeeper.SetAccount(s.ctx, paused)
+				return &types.MsgAcceptAssetRequest{
+					Authority:    s.assetManagerAddr.String(),
+					VaultAddress: vaultAddr.String(),
+					Source:       source.String(),
+					ExternalId:   "paused",
+				}
+			},
+			expectedErrSubstrs: []string{"is paused", "assets cannot be accepted while paused"},
 		},
 	}
 

@@ -833,6 +833,9 @@ func (k msgServer) UpdateVaultNAV(goCtx context.Context, msg *types.MsgUpdateVau
 	if err := vault.ValidateNAVAuthority(msg.Signer); err != nil {
 		return nil, fmt.Errorf("failed to validate NAV authority: %w", err)
 	}
+	if vault.Paused {
+		return nil, fmt.Errorf("vault %s is paused: NAV cannot be updated while paused", msg.VaultAddress)
+	}
 
 	if err := k.reconcileVault(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to reconcile vault before NAV update: %w", err)
@@ -894,6 +897,9 @@ func (k msgServer) AcceptAsset(goCtx context.Context, msg *types.MsgAcceptAssetR
 	}
 	if err = vault.ValidateAssetManagerAuthority(msg.Authority); err != nil {
 		return nil, fmt.Errorf("failed to validate asset manager authority: %w", err)
+	}
+	if vault.Paused {
+		return nil, fmt.Errorf("vault %s is paused: assets cannot be accepted while paused", msg.VaultAddress)
 	}
 
 	sourceAddr := sdk.MustAccAddressFromBech32(msg.Source)

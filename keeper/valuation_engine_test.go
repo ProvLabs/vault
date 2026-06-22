@@ -31,24 +31,24 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 		expectedErrorContains string
 	}{
 		{
-			name:                "identity-src-equals-underlying",
+			name:                "source denom equals underlying returns identity fraction without a lookup",
 			fromDenom:           underlyingDenom,
 			expectedNumerator:   1,
 			expectedDenominator: 1,
 		},
 		{
-			name:                "internal-nav-payment-to-underlying",
+			name:                "payment denom converts to underlying via its internal NAV",
 			fromDenom:           paymentDenom,
 			expectedNumerator:   1,
 			expectedDenominator: 2,
 		},
 		{
-			name:                  "internal-nav-missing-for-denom",
+			name:                  "missing internal NAV for denom returns not-found error",
 			fromDenom:             "unknown",
 			expectedErrorContains: "no internal NAV entry for denom",
 		},
 		{
-			name:      "payment-priced-asset-chains-through-payment-nav",
+			name:      "payment priced asset chains through the payment denom NAV to underlying",
 			fromDenom: heldAsset,
 			setup: func() {
 				s.bumpHeight()
@@ -59,7 +59,7 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 			expectedDenominator: 2,
 		},
 		{
-			name:      "internal-nav-overwritten-uses-latest",
+			name:      "overwritten internal NAV uses the latest entry",
 			fromDenom: paymentDenom,
 			setup: func() {
 				s.bumpHeight()
@@ -73,7 +73,7 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 			// volume, but UnitPriceFraction also defends against it in case state
 			// is ever corrupted (e.g. by a future migration). Bypass write-side
 			// validation by writing directly to the NAVs collection.
-			name:      "internal-nav-volume-non-positive",
+			name:      "non-positive internal NAV volume is rejected by the defensive guard",
 			fromDenom: paymentDenom,
 			setup: func() {
 				s.bumpHeight()
@@ -92,7 +92,7 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 		{
 			// A zero price is a legitimate write-down of a held asset to zero. The
 			// engine must accept it and yield a zero unit price rather than erroring.
-			name:      "internal-nav-price-zero-yields-zero",
+			name:      "zero internal NAV price yields a zero unit price",
 			fromDenom: paymentDenom,
 			setup: func() {
 				s.bumpHeight()
@@ -112,7 +112,7 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 		{
 			// Defensive guard: a negative price can only arise from corrupted state
 			// and must be rejected.
-			name:      "internal-nav-price-negative",
+			name:      "negative internal NAV price is rejected by the defensive guard",
 			fromDenom: paymentDenom,
 			setup: func() {
 				s.bumpHeight()
@@ -131,7 +131,7 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 		{
 			// A nil price amount round-trips through storage as zero, so it is read
 			// back as a legitimate zero-value NAV rather than tripping the guard.
-			name:      "internal-nav-price-nil-normalizes-to-zero",
+			name:      "nil internal NAV price normalizes to zero through storage",
 			fromDenom: paymentDenom,
 			setup: func() {
 				s.bumpHeight()

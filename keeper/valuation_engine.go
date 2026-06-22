@@ -20,6 +20,14 @@ import (
 // relying on the formatted error string.
 var ErrInternalNAVNotFound = errors.New("internal NAV entry not found")
 
+// ErrInternalNAVPriceCycle is returned by UnitPriceFraction when a vault's
+// Internal NAV table chains a denom's price back onto a denom already being
+// resolved on the same path (a self-price or a longer loop). SetVaultNAV's
+// accepted-denom validation makes this unreachable for normally-written state,
+// but the engine detects it defensively so a NAV seeded outside that path (e.g.
+// by a migration or a direct write) can never drive unbounded recursion.
+var ErrInternalNAVPriceCycle = errors.New("internal NAV price chain contains a cycle")
+
 // UnitPriceFraction returns the unit price of srcDenom expressed in the vault's
 // underlying asset as an integer fraction (numerator, denominator), sourced
 // exclusively from the per-vault Internal NAV table.
@@ -56,9 +64,28 @@ var ErrInternalNAVNotFound = errors.New("internal NAV entry not found")
 //     are already enforced at NAV-write time by validateVaultNAVFields). A zero
 //     price is permitted (a held asset written down to zero) and yields a zero
 //     unit price.
+//   - Wraps ErrInternalNAVPriceCycle if the price chain ever revisits a denom
+//     already being resolved (a self-price or a longer loop). This is the hard
+//     termination guarantee for the recursion below.
 func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom string, vault types.VaultAccount) (num, den math.Int, err error) {
+	return k.unitPriceFraction(ctx, srcDenom, vault, nil)
+}
+
+// unitPriceFraction is the recursive core of UnitPriceFraction. It threads a
+// visited set of the denoms already being resolved on the current path so the
+// recursion is guaranteed to terminate for any Internal NAV table: each
+// payment-denom hop adds one denom to the finite set, and revisiting a denom is
+// reported as ErrInternalNAVPriceCycle instead of recursing again. SetVaultNAV's
+// accepted-denom rule keeps real chains to a single hop
+// (srcDenom -> payment -> underlying); the visited set is the hard stop that does
+// not depend on that invariant holding for state seeded by other paths.
+func (k Keeper) unitPriceFraction(ctx sdk.Context, srcDenom string, vault types.VaultAccount, visited map[string]struct{}) (num, den math.Int, err error) {
 	if srcDenom == vault.UnderlyingAsset {
 		return math.NewInt(1), math.NewInt(1), nil
+	}
+
+	if _, seen := visited[srcDenom]; seen {
+		return math.Int{}, math.Int{}, fmt.Errorf("price chain revisits denom %q on vault %s: %w", srcDenom, vault.GetAddress(), ErrInternalNAVPriceCycle)
 	}
 
 	nav, err := k.GetVaultNAV(ctx, vault.GetAddress(), srcDenom)
@@ -98,10 +125,12 @@ func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom string, vault types.
 		return nav.Price.Amount, nav.Volume, nil
 	}
 
-	if nav.Price.Denom == srcDenom {
-		return math.Int{}, math.Int{}, fmt.Errorf("internal NAV for denom %q on vault %s is self-priced in %q", srcDenom, vault.GetAddress(), nav.Price.Denom)
+	if visited == nil {
+		visited = make(map[string]struct{})
 	}
-	pNum, pDen, err := k.UnitPriceFraction(ctx, nav.Price.Denom, vault)
+	visited[srcDenom] = struct{}{}
+
+	pNum, pDen, err := k.unitPriceFraction(ctx, nav.Price.Denom, vault, visited)
 	if err != nil {
 		return math.Int{}, math.Int{}, fmt.Errorf("failed to convert NAV price denom %q for denom %q on vault %s to underlying: %w", nav.Price.Denom, srcDenom, vault.GetAddress(), err)
 	}

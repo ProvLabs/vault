@@ -148,6 +148,49 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 			expectedNumerator:   0,
 			expectedDenominator: 1,
 		},
+		{
+			name:      "self-priced denom seeded outside validation reports cycle instead of recursing without bound",
+			fromDenom: "selfpriced",
+			setup: func() {
+				s.bumpHeight()
+				s.Require().NoError(s.k.NAVs.Set(
+					s.ctx,
+					collections.Join(vault.GetAddress(), "selfpriced"),
+					types.VaultNAV{
+						Denom:  "selfpriced",
+						Price:  sdk.NewInt64Coin("selfpriced", 1),
+						Volume: math.NewInt(1),
+					},
+				), "should write a self-priced NAV directly to storage to exercise the cycle guard")
+			},
+			expectedErrorContains: "contains a cycle",
+		},
+		{
+			name:      "two denom loop with a priced in b and b priced in a reports cycle instead of overflowing the stack",
+			fromDenom: "cyclea",
+			setup: func() {
+				s.bumpHeight()
+				s.Require().NoError(s.k.NAVs.Set(
+					s.ctx,
+					collections.Join(vault.GetAddress(), "cyclea"),
+					types.VaultNAV{
+						Denom:  "cyclea",
+						Price:  sdk.NewInt64Coin("cycleb", 1),
+						Volume: math.NewInt(1),
+					},
+				), "should write the first leg of the price cycle directly to storage")
+				s.Require().NoError(s.k.NAVs.Set(
+					s.ctx,
+					collections.Join(vault.GetAddress(), "cycleb"),
+					types.VaultNAV{
+						Denom:  "cycleb",
+						Price:  sdk.NewInt64Coin("cyclea", 1),
+						Volume: math.NewInt(1),
+					},
+				), "should write the second leg of the price cycle directly to storage")
+			},
+			expectedErrorContains: "contains a cycle",
+		},
 	}
 
 	for _, tc := range cases {

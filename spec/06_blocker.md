@@ -195,6 +195,11 @@ This advances vaults from the **verification set**:
 
   * Interest is **not** reconciled while paused.
   * Pending swap-outs remain **queued** (not dequeued) until unpaused.
+* A paused vault freezes its value at the `PausedBalance` snapshot, so operations that would change that value are rejected:
+
+  * **UpdateVaultNAV** is rejected — a NAV write would assert a price the frozen vault ignores until unpause.
+  * **AcceptAsset** is rejected — settlement moves principal funds and the vault's value.
+  * **RejectAsset** remains available — it only cancels a pending payment and refunds the source's escrow, with no vault state change.
 * Admins can still:
 
   * **Deposit/Withdraw principal** (only while paused).

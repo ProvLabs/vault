@@ -43,11 +43,12 @@ var ErrInternalNAVPriceCycle = errors.New("internal NAV price chain contains a c
 // When nav.Price.Denom is the underlying asset, the returned fraction is simply
 // (nav.Price.Amount, nav.Volume). When it is the payment denom (only possible
 // when payment_denom != underlying, e.g. a held nft/scope… asset settled against
-// the payment denom), the fraction is chained through the payment denom's own
-// price so the result is always expressed in the underlying asset:
+// the payment denom), the chain continues through the payment denom's own price
+// so the result is always expressed in the underlying asset. The fraction is the
+// product of every entry's price over the product of every entry's volume along
+// the chain srcDenom -> ... -> underlying:
 //
-//	1 srcDenom = (nav.Price.Amount * pNum) / (nav.Volume * pDen) underlying
-//	(pNum, pDen) = UnitPriceFraction(nav.Price.Denom)  // payment -> underlying
+//	1 srcDenom = (price_0 * price_1 * …) / (volume_0 * volume_1 * …) underlying
 //
 // Suitable for floor(x * num / den) integer arithmetic.
 //
@@ -65,83 +66,71 @@ var ErrInternalNAVPriceCycle = errors.New("internal NAV price chain contains a c
 //     price is permitted (a held asset written down to zero) and yields a zero
 //     unit price.
 //   - Wraps ErrInternalNAVPriceCycle if the price chain ever revisits a denom
-//     already being resolved (a self-price or a longer loop). This is the hard
-//     termination guarantee for the recursion below.
-func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom string, vault types.VaultAccount) (num, den math.Int, err error) {
-	return k.unitPriceFraction(ctx, srcDenom, vault, nil)
-}
+//     already seen on the walk (a self-price or a longer loop). Walking a finite,
+//     non-repeating set of denoms is the hard termination guarantee.
+//
+// The value is the product of every entry's price over the product of every
+// entry's volume along the chain srcDenom -> ... -> underlying. The loop walks
+// that chain, accumulating (num, den), and stops at the underlying. The visited
+// set bounds the walk to the number of distinct denoms regardless of how the NAV
+// table was seeded, so it terminates even for state written outside SetVaultNAV's
+// accepted-denom validation. Under that validation real chains are a single hop
+// (srcDenom -> payment -> underlying).
+func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom string, vault types.VaultAccount) (math.Int, math.Int, error) {
+	num, den := math.NewInt(1), math.NewInt(1)
+	visited := make(map[string]struct{})
 
-// unitPriceFraction is the recursive core of UnitPriceFraction. It threads a
-// visited set of the denoms already being resolved on the current path so the
-// recursion is guaranteed to terminate for any Internal NAV table: each
-// payment-denom hop adds one denom to the finite set, and revisiting a denom is
-// reported as ErrInternalNAVPriceCycle instead of recursing again. SetVaultNAV's
-// accepted-denom rule keeps real chains to a single hop
-// (srcDenom -> payment -> underlying); the visited set is the hard stop that does
-// not depend on that invariant holding for state seeded by other paths.
-func (k Keeper) unitPriceFraction(ctx sdk.Context, srcDenom string, vault types.VaultAccount, visited map[string]struct{}) (num, den math.Int, err error) {
-	if srcDenom == vault.UnderlyingAsset {
-		return math.NewInt(1), math.NewInt(1), nil
-	}
-
-	if _, seen := visited[srcDenom]; seen {
-		return math.Int{}, math.Int{}, fmt.Errorf("price chain revisits denom %q on vault %s: %w", srcDenom, vault.GetAddress(), ErrInternalNAVPriceCycle)
-	}
-
-	nav, err := k.GetVaultNAV(ctx, vault.GetAddress(), srcDenom)
-	if err != nil {
-		if errors.Is(err, collections.ErrNotFound) {
-			return math.Int{}, math.Int{}, fmt.Errorf("no internal NAV entry for denom %q on vault %s: %w", srcDenom, vault.GetAddress(), ErrInternalNAVNotFound)
+	for denom := srcDenom; denom != vault.UnderlyingAsset; {
+		if _, seen := visited[denom]; seen {
+			return math.Int{}, math.Int{}, fmt.Errorf("price chain revisits denom %q on vault %s: %w", denom, vault.GetAddress(), ErrInternalNAVPriceCycle)
 		}
-		return math.Int{}, math.Int{}, fmt.Errorf("failed to get internal NAV for denom %q on vault %s: %w", srcDenom, vault.GetAddress(), err)
-	}
+		visited[denom] = struct{}{}
 
-	if nav.Volume.IsNil() || !nav.Volume.IsPositive() {
-		volumeForLog := "<nil>"
-		if !nav.Volume.IsNil() {
-			volumeForLog = nav.Volume.String()
+		nav, err := k.GetVaultNAV(ctx, vault.GetAddress(), denom)
+		if err != nil {
+			if errors.Is(err, collections.ErrNotFound) {
+				return math.Int{}, math.Int{}, fmt.Errorf("no internal NAV entry for denom %q on vault %s: %w", denom, vault.GetAddress(), ErrInternalNAVNotFound)
+			}
+			return math.Int{}, math.Int{}, fmt.Errorf("failed to get internal NAV for denom %q on vault %s: %w", denom, vault.GetAddress(), err)
 		}
-		k.getLogger(ctx).Error("internal NAV invariant violated: non-positive volume",
-			"vault", vault.GetAddress().String(),
-			"denom", srcDenom,
-			"volume", volumeForLog,
-		)
-		return math.Int{}, math.Int{}, fmt.Errorf("internal NAV volume must be positive for denom %q on vault %s", srcDenom, vault.GetAddress())
-	}
-	if nav.Price.Amount.IsNil() || nav.Price.Amount.IsNegative() {
-		priceForLog := "<nil>"
-		if !nav.Price.Amount.IsNil() {
-			priceForLog = nav.Price.String()
+
+		if nav.Volume.IsNil() || !nav.Volume.IsPositive() {
+			volumeForLog := "<nil>"
+			if !nav.Volume.IsNil() {
+				volumeForLog = nav.Volume.String()
+			}
+			k.getLogger(ctx).Error("internal NAV invariant violated: non-positive volume",
+				"vault", vault.GetAddress().String(),
+				"denom", denom,
+				"volume", volumeForLog,
+			)
+			return math.Int{}, math.Int{}, fmt.Errorf("internal NAV volume must be positive for denom %q on vault %s", denom, vault.GetAddress())
 		}
-		k.getLogger(ctx).Error("internal NAV invariant violated: negative price",
-			"vault", vault.GetAddress().String(),
-			"denom", srcDenom,
-			"price", priceForLog,
-		)
-		return math.Int{}, math.Int{}, fmt.Errorf("internal NAV price must not be negative for denom %q on vault %s", srcDenom, vault.GetAddress())
+		if nav.Price.Amount.IsNil() || nav.Price.Amount.IsNegative() {
+			priceForLog := "<nil>"
+			if !nav.Price.Amount.IsNil() {
+				priceForLog = nav.Price.String()
+			}
+			k.getLogger(ctx).Error("internal NAV invariant violated: negative price",
+				"vault", vault.GetAddress().String(),
+				"denom", denom,
+				"price", priceForLog,
+			)
+			return math.Int{}, math.Int{}, fmt.Errorf("internal NAV price must not be negative for denom %q on vault %s", denom, vault.GetAddress())
+		}
+
+		num, err = num.SafeMul(nav.Price.Amount)
+		if err != nil {
+			return math.Int{}, math.Int{}, fmt.Errorf("failed to scale price chain numerator %s by NAV price %s for denom %q: %w", num, nav.Price.Amount, denom, err)
+		}
+		den, err = den.SafeMul(nav.Volume)
+		if err != nil {
+			return math.Int{}, math.Int{}, fmt.Errorf("failed to scale price chain denominator %s by NAV volume %s for denom %q: %w", den, nav.Volume, denom, err)
+		}
+
+		denom = nav.Price.Denom
 	}
 
-	if nav.Price.Denom == vault.UnderlyingAsset {
-		return nav.Price.Amount, nav.Volume, nil
-	}
-
-	if visited == nil {
-		visited = make(map[string]struct{})
-	}
-	visited[srcDenom] = struct{}{}
-
-	pNum, pDen, err := k.unitPriceFraction(ctx, nav.Price.Denom, vault, visited)
-	if err != nil {
-		return math.Int{}, math.Int{}, fmt.Errorf("failed to convert NAV price denom %q for denom %q on vault %s to underlying: %w", nav.Price.Denom, srcDenom, vault.GetAddress(), err)
-	}
-	num, err = nav.Price.Amount.SafeMul(pNum)
-	if err != nil {
-		return math.Int{}, math.Int{}, fmt.Errorf("failed to scale NAV price %s by payment price numerator %s: %w", nav.Price.Amount, pNum, err)
-	}
-	den, err = nav.Volume.SafeMul(pDen)
-	if err != nil {
-		return math.Int{}, math.Int{}, fmt.Errorf("failed to scale NAV volume %s by payment price denominator %s: %w", nav.Volume, pDen, err)
-	}
 	return num, den, nil
 }
 

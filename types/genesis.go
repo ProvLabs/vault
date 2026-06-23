@@ -46,8 +46,9 @@ func (gs GenesisState) Validate() error {
 		}
 		payoutQueueAddrs[entry.Addr] = true
 
-		if entry.Time != uint64(v.PeriodTimeout) {
-			return fmt.Errorf("payout timeout queue time mismatch for vault %s: expected %d, got %d", entry.Addr, uint64(v.PeriodTimeout), entry.Time)
+		expectedPeriodTimeout := uint64(v.PeriodTimeout) //nolint:gosec // G115: PeriodTimeout is validated non-negative.
+		if entry.Time != expectedPeriodTimeout {
+			return fmt.Errorf("payout timeout queue time mismatch for vault %s: expected %d, got %d", entry.Addr, expectedPeriodTimeout, entry.Time)
 		}
 
 		if entry.Time > math.MaxInt64 {
@@ -69,8 +70,9 @@ func (gs GenesisState) Validate() error {
 		}
 		feeQueueAddrs[entry.Addr] = true
 
-		if entry.Time != uint64(v.FeePeriodTimeout) {
-			return fmt.Errorf("fee timeout queue time mismatch for vault %s: expected %d, got %d", entry.Addr, uint64(v.FeePeriodTimeout), entry.Time)
+		expectedFeePeriodTimeout := uint64(v.FeePeriodTimeout) //nolint:gosec // G115: FeePeriodTimeout is validated non-negative.
+		if entry.Time != expectedFeePeriodTimeout {
+			return fmt.Errorf("fee timeout queue time mismatch for vault %s: expected %d, got %d", entry.Addr, expectedFeePeriodTimeout, entry.Time)
 		}
 
 		if entry.Time > math.MaxInt64 {
@@ -90,6 +92,46 @@ func (gs GenesisState) Validate() error {
 				return fmt.Errorf("pending swap out queue vault address at index %d is not an imported vault: %s", i, entry.SwapOut.VaultAddress)
 			}
 		}
+	}
+
+	navKeys := make(map[string]bool)
+	for i, entry := range gs.Navs {
+		if _, err := sdk.AccAddressFromBech32(entry.VaultAddress); err != nil {
+			return fmt.Errorf("invalid nav vault address at index %d: %w", i, err)
+		}
+		v, exists := vaults[entry.VaultAddress]
+		if !exists {
+			return fmt.Errorf("nav entry at index %d is not for an imported vault: %s", i, entry.VaultAddress)
+		}
+		if err := sdk.ValidateDenom(entry.Nav.Denom); err != nil {
+			return fmt.Errorf("invalid nav denom at index %d: %w", i, err)
+		}
+		if entry.Nav.Denom == v.TotalShares.Denom {
+			return fmt.Errorf("nav entry at index %d prices the vault share denom %s", i, entry.Nav.Denom)
+		}
+		if entry.Nav.Denom == entry.Nav.Price.Denom {
+			return fmt.Errorf("nav entry at index %d has matching denom and price denom %q", i, entry.Nav.Denom)
+		}
+		if err := entry.Nav.Price.Validate(); err != nil {
+			return fmt.Errorf("invalid nav price at index %d: %w", i, err)
+		}
+		if v.IsAcceptedDenom(entry.Nav.Denom) && !entry.Nav.Price.Amount.IsPositive() {
+			return fmt.Errorf("nav price at index %d for accepted denom %q must be positive", i, entry.Nav.Denom)
+		}
+		if !v.IsAcceptedDenom(entry.Nav.Price.Denom) {
+			return fmt.Errorf("nav price denom at index %d %q is not an accepted denom for vault %s", i, entry.Nav.Price.Denom, entry.VaultAddress)
+		}
+		if entry.Nav.Volume.IsNil() || !entry.Nav.Volume.IsPositive() {
+			return fmt.Errorf("nav volume at index %d must be positive", i)
+		}
+		if len(entry.Nav.Source) > MaxNAVSourceLength {
+			return fmt.Errorf("nav source at index %d too long (expected <= %d, actual: %d)", i, MaxNAVSourceLength, len(entry.Nav.Source))
+		}
+		key := entry.VaultAddress + "/" + entry.Nav.Denom
+		if navKeys[key] {
+			return fmt.Errorf("duplicate nav entry for vault %s denom %s", entry.VaultAddress, entry.Nav.Denom)
+		}
+		navKeys[key] = true
 	}
 
 	return nil

@@ -1,0 +1,1 @@
+* Add a net TVV calculation that subtracts the outstanding AUM fee liability from gross vault value, and use it as the valuation basis for share NAV publication, NAV per share, deposit/redeem conversions, and the captured paused balance [PR 213](https://github.com/provlabs/vault/pull/213).

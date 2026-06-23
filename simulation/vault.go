@@ -7,6 +7,8 @@ import (
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
@@ -20,7 +22,7 @@ const (
 )
 
 // CreateVault creates a new vault with a marker and funds accounts.
-func CreateVault(ctx sdk.Context, vk *keeper.Keeper, ak types.AccountKeeper, bk types.BankKeeper, mk markerkeeper.Keeper, underlying, paymentDenom, share string, admin simtypes.Account, accs []simtypes.Account) error {
+func CreateVault(ctx sdk.Context, vk *keeper.Keeper, ak types.AccountKeeper, _ types.BankKeeper, mk markerkeeper.Keeper, underlying, paymentDenom, share string, admin simtypes.Account, _ []simtypes.Account) error {
 	if !MarkerExists(ctx, mk, underlying) {
 		return fmt.Errorf("underlying marker %s does not exist", underlying)
 	}
@@ -39,6 +41,13 @@ func CreateVault(ctx sdk.Context, vk *keeper.Keeper, ak types.AccountKeeper, bk 
 		UnderlyingAsset:        underlying,
 		PaymentDenom:           paymentDenom,
 		WithdrawalDelaySeconds: interest.SecondsPerDay,
+	}
+	if paymentDenom != "" && paymentDenom != underlying {
+		newVault.InitialPaymentNav = &types.InitialVaultNAV{
+			Price:  sdk.NewInt64Coin(underlying, 1),
+			Volume: sdkmath.OneInt(),
+			Source: "simulation",
+		}
 	}
 	msgServer := keeper.NewMsgServer(vk)
 	_, err := msgServer.CreateVault(ctx, newVault)

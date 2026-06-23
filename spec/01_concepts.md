@@ -20,6 +20,8 @@ Total share supply is tracked on the vault as **total_shares**, the authoritativ
   - [Queues & Jobs](#queues--jobs)
   - [Genesis](#genesis)
   - [Block Hooks](#block-hooks)
+- [Bridge Trust Model & Supply-of-Record](#bridge-trust-model--supply-of-record)
+- [Internal NAV & Multi-Asset Settlement](#internal-nav--multi-asset-settlement)
 - [Error Handling & Safety](#error-handling--safety)
 - [High-Level Flow](#high-level-flow)
 
@@ -37,6 +39,8 @@ Total share supply is tracked on the vault as **total_shares**, the authoritativ
     - **Net TVV**: Gross TVV minus **Outstanding AUM Fees**. This is the authoritative value used for share pricing (NAV) and user-facing valuation.
 - **AUM Technology Fee**: a 15 bps (0.15% annual) fee collected from the vault principal to support protocol maintenance. It is accrued continuously and collected in the vault's configured `payment_denom`.
 - **NAV**: conversion rate between denoms, used for valuation and conversions, subject to special-case rules.
+- **Internal NAV Table**: per-vault price entries (`price` for `volume` units of a denom) that are the **sole source of truth** for the valuation engine's conversions. The module never reads external oracles or marker NAVs at valuation time.
+- **NAV Authority**: an optional per-vault address authorized to maintain the internal NAV table via `UpdateVaultNAV`. The vault admin acts as NAV authority when unset; the admin rotates it via `UpdateNAVAuthority`.
 
 - **Total Shares**: the canonical supply-of-record across chains. Local marker supply must never exceed `total_shares`.  
 - **Asset Manager**: an optional delegated operator address with limited management authority. When set, this account can perform certain administrative actions (e.g., fund management operations) in addition to the vault admin. If unset, only the vault admin holds these permissions.
@@ -67,7 +71,7 @@ The keeper ties together state management, account operations, marker integratio
 - **GetVault**: retrieves and validates a vault account by address.
 - **Pause/Unpause**: admins can pause a vault, freezing operations and fixing balances, or unpause to resume operations.
 - **Bridge Controls**: configure a single **bridge address** and **enable/disable** bridging; capacity checks ensure local marker supply never exceeds `total_shares`.
-- **SetAssetManager**: assigns or clears the optional delegated **asset manager** address. When set, both the admin and asset manager may perform privileged actions on the vault.
+- **SetAssetManager**: assigns or clears the optional delegated **asset manager** address. When set, both the admin and asset manager may perform privileged actions on the vault — except P2P settlement (`AcceptAsset`/`RejectAsset`), which only the asset manager may perform. The field is a role, not a person: composite approval workflows are configured by pointing it at a group address.
 
 ### Swap Operations
 - **SwapIn**: deposit underlying assets, mint shares, and transfer them to the depositor.
@@ -109,13 +113,60 @@ The keeper ties together state management, account operations, marker integratio
 
 ---
 
+## Bridge Trust Model & Supply-of-Record
+
+Bridging lets vault shares move across chains. The on-chain accounting model and its trust boundary are as follows.
+
+- **`total_shares` is the cross-chain supply-of-record.** It counts every issued share, whether currently held locally (local marker/bank supply) or on a remote chain. Local supply is always a subset bounded by `total_shares`. Only `SwapIn` (mint) and the redemption payout path (`processSingleWithdrawal`, burn) change `total_shares`, because only those create or destroy shares outright.
+
+- **Bridge ops move the local/remote split; they do not change `total_shares`.** `BridgeMintShares` re-materializes shares that already exist remotely (local supply rises toward `total_shares`); `BridgeBurnShares` reflects shares leaving for a remote chain (local supply falls). Neither mints new supply nor destroys shares — they only shift where existing shares live. This is why `BridgeBurnShares` deliberately does **not** perform the `SafeSub`+persist of `total_shares` that the local redemption path does: a bridged-out share still exists, just elsewhere.
+
+- **Capacity is the only on-chain guardrail.** A mint is rejected when it would push local supply above `total_shares` (`available = total_shares - local_supply`). A burn lowering local supply re-widens that capacity by exactly the burned amount, so a later mint can bring those same shares back. Consequently, NAV per share (`Net TVV / total_shares`) is invariant across bridge mint/burn — they cannot dilute holders.
+
+- **Trust boundary (accepted assumption).** Both handlers are gated solely on the configured `bridge_address`; there is **no on-chain reconciliation** that a local mint corresponds to a genuine remote burn (or vice versa). Keeping the local/remote split honest is the responsibility of the off-chain bridge operator. A compromised or dishonest bridge key could mint local supply up to `total_shares` without real remote backing; this is bounded by `total_shares` (it can never inflate beyond the supply-of-record or move NAV per share) and is an accepted operator-trust assumption, not an on-chain accounting flaw. Admins can disable bridging (`bridge_enabled`) or rotate `bridge_address` to contain a compromised operator.
+
+## Internal NAV & Multi-Asset Settlement
+
+Vaults can take in **external assets** beyond the underlying and payment denoms, settling them peer-to-peer against the vault's payment denom. Two pieces make this work: the **internal NAV table** (the module's own price book) and the **p2p settlement workflow** built on `x/exchange` payments.
+
+### Internal NAV Table
+
+Each vault carries its own table of price entries, one per asset denom. An entry records `price` (a coin in one of the vault's accepted denoms) for `volume` units of the denom; the per-unit value is `price / volume`, kept as an exact fraction. The valuation engine converts denoms **exclusively** through this table — no oracle or marker-module reads happen at valuation time, so pricing is deterministic and admin-auditable.
+
+Entries are written by four paths:
+
+1. **Creation seed** — an optional `InitialVaultNAV` bootstraps the payment denom's price when the vault is created.
+2. **NAV authority updates** — the configured `nav_authority` (the admin when unset) maintains entries via `UpdateVaultNAV`.
+3. **Settlements** — each `AcceptAsset` records the realized settlement price as the asset denom's entry (and removes the entry when an outbound settlement drains the denom from the principal).
+4. **Migration seeding** — a one-time upgrade migration seeded entries from existing marker-module NAVs.
+
+NAV upserts from paths 2 and 3 are also **published one-way to the marker module**, attributed to the vault address, so downstream marker-NAV consumers can distinguish vault-originated prices. Removals are internal-only: when a settlement drains a denom and its entry is deleted, the marker NAV is left as-is — publishing simply stops. The vault never reads marker NAVs back — the internal table remains authoritative.
+
+### P2P Settlement Workflow
+
+External counterparties propose trades by creating `x/exchange` **payments** that target the vault, escrowing their side. The vault's **asset manager** then settles (`AcceptAsset`) or declines (`RejectAsset`) each pending payment; rejection refunds the counterparty's escrow. The admin cannot settle or reject — a vault without an asset manager has no settlement capability until one is assigned.
+
+Exactly one payment leg must carry the vault's payment denom, which determines the **direction**: *inbound* (vault receives an external asset, pays payment denom) or *outbound* (vault pays out an asset, receives payment denom). Each leg must be a single coin, and the asset denom must be a registered marker.
+
+Settlement is atomic and layers several protections:
+
+- **Reconcile-first** — accrued interest and fees settle against the pre-settlement TVV.
+- **Exact-price guardrail** — when an internal NAV entry exists for the asset, the settlement legs must match its price exactly (cross-multiplied, no rounding tolerance). A first acquisition has no entry and skips the check; thereafter the authority must update the NAV (`UpdateVaultNAV`) before settling at a different price. This makes every price change an explicit, evented action rather than a side effect of trade flow.
+- **Price recording** — the realized settlement price becomes the asset's internal NAV entry and is published to the marker module. When an outbound settlement empties the principal of the asset, the entry is removed so a stale price cannot linger.
+
+### Valuation Scope
+
+TVV sums every denom held at the principal marker that has a vault internal NAV, expressed in the underlying unit. The underlying and payment denoms are valued as before; any other held asset acquired through settlement (e.g. an `nft/scope…` coin) is valued at its internal NAV — chained through the payment denom to the underlying when the NAV is priced in the payment denom. A held denom with no internal NAV entry contributes nothing and is skipped (it does not fail valuation), while an accepted denom missing its NAV remains an error (a misconfiguration). Because TVV is the base for interest, the AUM fee, and NAV per share, a vault's value and that fee/interest/share-price base move when the NAV authority updates a held asset's NAV — a deliberate economic/trust surface.
+
+---
+
 ## Error Handling & Safety
 
 - **Auto-Pause**: vaults encountering unrecoverable errors during processing are paused automatically, with a stable reason recorded and event emitted.
 - **Refund Path**: failed withdrawals attempt to return escrowed shares to the user, with reason codes emitted for transparency.
 - **Validation**: strict checks on denoms, admin permissions, share supply, and marker restrictions ensure consistency and prevent misconfiguration.
 - **Supply Guardrails**: bridge mints beyond capacity are rejected; burns require the configured bridge address.
-- **Delegated Authority**: when an asset manager is set, either the admin or asset manager may perform operations that require vault authority. If cleared, only the admin retains this capability.
+- **Delegated Authority**: when an asset manager is set, either the admin or asset manager may perform operations that require vault authority. If cleared, only the admin retains this capability. P2P settlement is the exception: `AcceptAsset`/`RejectAsset` accept only the asset manager, never the admin.
 
 ---
 
@@ -130,3 +181,4 @@ The keeper ties together state management, account operations, marker integratio
    - EndBlocker: finalizes swap-out jobs and reconciliations.
 6. **Admin Tools**: manage interest rates, deposits/withdrawals, pausing/unpausing, queue interventions, and assign asset managers.
 7. **Bridge Ops (optional)**: authorized bridge mints/burns local supply under `total_shares` capacity to facilitate cross-chain share movement.
+8. **P2P Settlement (optional)**: counterparties propose `x/exchange` payments targeting the vault; the asset manager accepts (settling at the internal-NAV price and recording the result) or rejects (refunding escrow).

@@ -26,14 +26,16 @@ type Keeper struct {
 	AddressCodec address.Codec
 	authority    []byte
 
-	AuthKeeper   types.AccountKeeper
-	MarkerKeeper types.MarkerKeeper
-	BankKeeper   types.BankKeeper
-	NameKeeper   types.NameKeeper
-	AttrKeeper   types.AttributeKeeper
+	AuthKeeper     types.AccountKeeper
+	MarkerKeeper   types.MarkerKeeper
+	BankKeeper     types.BankKeeper
+	NameKeeper     types.NameKeeper
+	AttrKeeper     types.AttributeKeeper
+	ExchangeKeeper types.ExchangeKeeper
 
 	Params                collections.Item[types.Params]
 	Vaults                collections.Map[sdk.AccAddress, []byte]
+	NAVs                  collections.Map[collections.Pair[sdk.AccAddress, string], types.VaultNAV]
 	PayoutVerificationSet collections.KeySet[sdk.AccAddress]
 	PayoutTimeoutQueue    *queue.PayoutTimeoutQueue
 	FeeTimeoutQueue       *queue.FeeTimeoutQueue
@@ -52,6 +54,7 @@ func NewKeeper(
 	bankkeeper types.BankKeeper,
 	namekeeper types.NameKeeper,
 	attributekeeper types.AttributeKeeper,
+	exchangekeeper types.ExchangeKeeper,
 ) *Keeper {
 	if _, err := addressCodec.BytesToString(authority); err != nil {
 		panic(fmt.Sprintf("invalid authority address %s: %s", authority, err))
@@ -67,6 +70,7 @@ func NewKeeper(
 		authority:             authority,
 		Params:                collections.NewItem(builder, types.ParamsKeyPrefix, types.ParamsKeyName, codec.CollValue[types.Params](cdc)),
 		Vaults:                collections.NewMap(builder, types.VaultsKeyPrefix, types.VaultsName, sdk.AccAddressKey, collections.BytesValue),
+		NAVs:                  collections.NewMap(builder, types.NAVsKeyPrefix, types.NAVsName, collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey), codec.CollValue[types.VaultNAV](cdc)),
 		PayoutVerificationSet: collections.NewKeySet(builder, types.VaultPayoutVerificationSetPrefix, types.VaultPayoutVerificationSetName, sdk.AccAddressKey),
 		PayoutTimeoutQueue:    queue.NewPayoutTimeoutQueue(builder),
 		FeeTimeoutQueue:       queue.NewFeeTimeoutQueue(builder),
@@ -76,6 +80,7 @@ func NewKeeper(
 		BankKeeper:            bankkeeper,
 		NameKeeper:            namekeeper,
 		AttrKeeper:            attributekeeper,
+		ExchangeKeeper:        exchangekeeper,
 	}
 
 	schema, err := builder.Build()

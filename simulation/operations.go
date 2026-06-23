@@ -1,13 +1,16 @@
 package simulation
 
 import (
+	"errors"
 	"fmt"
+	"math/big"
 	"math/rand"
 
 	"github.com/provlabs/vault/interest"
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -16,7 +19,9 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 
+	"github.com/provenance-io/provenance/x/exchange"
 	markerkeeper "github.com/provenance-io/provenance/x/marker/keeper"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 const (
@@ -46,11 +51,15 @@ const (
 	OpWeightMsgUpdateMinSwapOutValue = "op_weight_msg_update_min_swap_out_value"
 	OpWeightMsgUpdateMaxSwapInValue  = "op_weight_msg_update_max_swap_in_value"
 	OpWeightMsgUpdateMaxSwapOutValue = "op_weight_msg_update_max_swap_out_value"
+	OpWeightMsgUpdateVaultNAV        = "op_weight_msg_update_vault_nav"
+	OpWeightMsgUpdateNAVAuthority    = "op_weight_msg_update_nav_authority"
+	OpWeightMsgAcceptAsset           = "op_weight_msg_accept_asset"
+	OpWeightMsgRejectAsset           = "op_weight_msg_reject_asset"
 )
 
 var DefaultWeights = map[string]int{
 	OpWeightMsgCreateVault:           4,
-	OpWeightMsgSwapIn:                18,
+	OpWeightMsgSwapIn:                14,
 	OpWeightMsgSwapOut:               8,
 	OpWeightMsgUpdateInterestRate:    7,
 	OpWeightMsgUpdateMinInterestRate: 2,
@@ -71,10 +80,14 @@ var DefaultWeights = map[string]int{
 	OpWeightMsgUpdateWithdrawalDelay: 2,
 	OpWeightMsgUpdateParams:          1,
 	OpWeightMsgUpdateVaultAUMFeeBips: 2,
-	OpWeightMsgUpdateMinSwapInValue:  2,
-	OpWeightMsgUpdateMinSwapOutValue: 2,
+	OpWeightMsgUpdateMinSwapInValue:  1,
+	OpWeightMsgUpdateMinSwapOutValue: 1,
 	OpWeightMsgUpdateMaxSwapInValue:  2,
 	OpWeightMsgUpdateMaxSwapOutValue: 2,
+	OpWeightMsgUpdateVaultNAV:        1,
+	OpWeightMsgUpdateNAVAuthority:    1,
+	OpWeightMsgAcceptAsset:           2,
+	OpWeightMsgRejectAsset:           2,
 }
 
 func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simulation.WeightedOperations {
@@ -105,6 +118,10 @@ func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simula
 		wUpdateMinSwapOutValue int
 		wUpdateMaxSwapInValue  int
 		wUpdateMaxSwapOutValue int
+		wUpdateVaultNAV        int
+		wUpdateNAVAuthority    int
+		wAcceptAsset           int
+		wRejectAsset           int
 	)
 
 	simState.AppParams.GetOrGenerate(OpWeightMsgCreateVault, &wCreateVault, simState.Rand, func(_ *rand.Rand) { wCreateVault = DefaultWeights[OpWeightMsgCreateVault] })
@@ -133,6 +150,10 @@ func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simula
 	simState.AppParams.GetOrGenerate(OpWeightMsgUpdateMinSwapOutValue, &wUpdateMinSwapOutValue, simState.Rand, func(_ *rand.Rand) { wUpdateMinSwapOutValue = DefaultWeights[OpWeightMsgUpdateMinSwapOutValue] })
 	simState.AppParams.GetOrGenerate(OpWeightMsgUpdateMaxSwapInValue, &wUpdateMaxSwapInValue, simState.Rand, func(_ *rand.Rand) { wUpdateMaxSwapInValue = DefaultWeights[OpWeightMsgUpdateMaxSwapInValue] })
 	simState.AppParams.GetOrGenerate(OpWeightMsgUpdateMaxSwapOutValue, &wUpdateMaxSwapOutValue, simState.Rand, func(_ *rand.Rand) { wUpdateMaxSwapOutValue = DefaultWeights[OpWeightMsgUpdateMaxSwapOutValue] })
+	simState.AppParams.GetOrGenerate(OpWeightMsgUpdateVaultNAV, &wUpdateVaultNAV, simState.Rand, func(_ *rand.Rand) { wUpdateVaultNAV = DefaultWeights[OpWeightMsgUpdateVaultNAV] })
+	simState.AppParams.GetOrGenerate(OpWeightMsgUpdateNAVAuthority, &wUpdateNAVAuthority, simState.Rand, func(_ *rand.Rand) { wUpdateNAVAuthority = DefaultWeights[OpWeightMsgUpdateNAVAuthority] })
+	simState.AppParams.GetOrGenerate(OpWeightMsgAcceptAsset, &wAcceptAsset, simState.Rand, func(_ *rand.Rand) { wAcceptAsset = DefaultWeights[OpWeightMsgAcceptAsset] })
+	simState.AppParams.GetOrGenerate(OpWeightMsgRejectAsset, &wRejectAsset, simState.Rand, func(_ *rand.Rand) { wRejectAsset = DefaultWeights[OpWeightMsgRejectAsset] })
 
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(wCreateVault, SimulateMsgCreateVault(k)),
@@ -161,12 +182,16 @@ func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simula
 		simulation.NewWeightedOperation(wUpdateMinSwapOutValue, SimulateMsgUpdateMinSwapOutValue(k)),
 		simulation.NewWeightedOperation(wUpdateMaxSwapInValue, SimulateMsgUpdateMaxSwapInValue(k)),
 		simulation.NewWeightedOperation(wUpdateMaxSwapOutValue, SimulateMsgUpdateMaxSwapOutValue(k)),
+		simulation.NewWeightedOperation(wUpdateVaultNAV, SimulateMsgUpdateVaultNAV(k)),
+		simulation.NewWeightedOperation(wUpdateNAVAuthority, SimulateMsgUpdateNAVAuthority(k)),
+		simulation.NewWeightedOperation(wAcceptAsset, SimulateMsgAcceptAsset(k)),
+		simulation.NewWeightedOperation(wRejectAsset, SimulateMsgRejectAsset(k)),
 	}
 }
 
 func SimulateMsgCreateVault(k keeper.Keeper) simtypes.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simtypes.Account, chainID string,
+	return func(r *rand.Rand, _ *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, _ string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
@@ -192,7 +217,7 @@ func SimulateMsgCreateVault(k keeper.Keeper) simtypes.Operation {
 		if !ok {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "marker keeper is not of type markerkeeper.Keeper"), nil, fmt.Errorf("marker keeper is not of type markerkeeper.Keeper")
 		}
-		if err := PrepareVaultMarkers(ctx, k.AuthKeeper, markerKeeper, underlying, payment, denom); err != nil {
+		if err = PrepareVaultMarkers(ctx, k.AuthKeeper, markerKeeper, underlying, payment, denom); err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "failed to prepare vault markers"), nil, err
 		}
 
@@ -203,6 +228,13 @@ func SimulateMsgCreateVault(k keeper.Keeper) simtypes.Operation {
 			PaymentDenom:           payment,
 			WithdrawalDelaySeconds: interest.SecondsPerDay,
 		}
+		if payment != "" && payment != underlying {
+			msg.InitialPaymentNav = &types.InitialVaultNAV{
+				Price:  sdk.NewInt64Coin(underlying, 1),
+				Volume: math.OneInt(),
+				Source: "simulation",
+			}
+		}
 
 		if r.Intn(2) == 0 {
 			msg.MinSwapInValue = math.NewInt(int64(r.Intn(1000))).String()
@@ -211,18 +243,18 @@ func SimulateMsgCreateVault(k keeper.Keeper) simtypes.Operation {
 			msg.MinSwapOutValue = math.NewInt(int64(r.Intn(1000))).String()
 		}
 		if r.Intn(2) == 0 {
-			min, ok := math.NewIntFromString(msg.MinSwapInValue)
+			minSwapIn, ok := math.NewIntFromString(msg.MinSwapInValue)
 			if !ok {
-				min = math.ZeroInt()
+				minSwapIn = math.ZeroInt()
 			}
-			msg.MaxSwapInValue = min.Add(math.NewInt(int64(r.Intn(10000) + 1))).String()
+			msg.MaxSwapInValue = minSwapIn.Add(math.NewInt(int64(r.Intn(10000) + 1))).String()
 		}
 		if r.Intn(2) == 0 {
-			min, ok := math.NewIntFromString(msg.MinSwapOutValue)
+			minSwapOut, ok := math.NewIntFromString(msg.MinSwapOutValue)
 			if !ok {
-				min = math.ZeroInt()
+				minSwapOut = math.ZeroInt()
 			}
-			msg.MaxSwapOutValue = min.Add(math.NewInt(int64(r.Intn(10000) + 1))).String()
+			msg.MaxSwapOutValue = minSwapOut.Add(math.NewInt(int64(r.Intn(10000) + 1))).String()
 		}
 
 		handler := keeper.NewMsgServer(&k)
@@ -236,8 +268,8 @@ func SimulateMsgCreateVault(k keeper.Keeper) simtypes.Operation {
 }
 
 func SimulateMsgSwapIn(k keeper.Keeper) simtypes.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simtypes.Account, chainID string,
+	return func(r *rand.Rand, _ *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, _ string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
@@ -287,8 +319,8 @@ func SimulateMsgSwapIn(k keeper.Keeper) simtypes.Operation {
 }
 
 func SimulateMsgSwapOut(k keeper.Keeper) simtypes.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simtypes.Account, chainID string,
+	return func(r *rand.Rand, _ *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, _ string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
@@ -335,8 +367,8 @@ func SimulateMsgSwapOut(k keeper.Keeper) simtypes.Operation {
 }
 
 func SimulateMsgUpdateInterestRate(k keeper.Keeper) simtypes.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simtypes.Account, chainID string,
+	return func(r *rand.Rand, _ *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, _ string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
@@ -375,8 +407,8 @@ func SimulateMsgUpdateInterestRate(k keeper.Keeper) simtypes.Operation {
 }
 
 func SimulateMsgUpdateMinInterestRate(k keeper.Keeper) simtypes.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simtypes.Account, chainID string,
+	return func(r *rand.Rand, _ *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, _ string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
@@ -415,8 +447,8 @@ func SimulateMsgUpdateMinInterestRate(k keeper.Keeper) simtypes.Operation {
 }
 
 func SimulateMsgUpdateMaxInterestRate(k keeper.Keeper) simtypes.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simtypes.Account, chainID string,
+	return func(r *rand.Rand, _ *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, _ string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
@@ -455,8 +487,8 @@ func SimulateMsgUpdateMaxInterestRate(k keeper.Keeper) simtypes.Operation {
 }
 
 func SimulateMsgToggleSwapIn(k keeper.Keeper) simtypes.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simtypes.Account, chainID string,
+	return func(r *rand.Rand, _ *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, _ string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
@@ -489,8 +521,8 @@ func SimulateMsgToggleSwapIn(k keeper.Keeper) simtypes.Operation {
 }
 
 func SimulateMsgToggleSwapOut(k keeper.Keeper) simtypes.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simtypes.Account, chainID string,
+	return func(r *rand.Rand, _ *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, _ string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
@@ -523,8 +555,8 @@ func SimulateMsgToggleSwapOut(k keeper.Keeper) simtypes.Operation {
 }
 
 func SimulateMsgDepositInterestFunds(k keeper.Keeper) simtypes.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simtypes.Account, chainID string,
+	return func(r *rand.Rand, _ *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, _ string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
@@ -578,8 +610,8 @@ func SimulateMsgDepositInterestFunds(k keeper.Keeper) simtypes.Operation {
 }
 
 func SimulateMsgWithdrawInterestFunds(k keeper.Keeper) simtypes.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simtypes.Account, chainID string,
+	return func(r *rand.Rand, _ *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, _ string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
@@ -619,8 +651,8 @@ func SimulateMsgWithdrawInterestFunds(k keeper.Keeper) simtypes.Operation {
 }
 
 func SimulateMsgDepositPrincipalFunds(k keeper.Keeper) simtypes.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simtypes.Account, chainID string,
+	return func(r *rand.Rand, _ *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, _ string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
@@ -673,8 +705,8 @@ func SimulateMsgDepositPrincipalFunds(k keeper.Keeper) simtypes.Operation {
 }
 
 func SimulateMsgWithdrawPrincipalFunds(k keeper.Keeper) simtypes.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simtypes.Account, chainID string,
+	return func(r *rand.Rand, _ *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, _ string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
@@ -716,8 +748,8 @@ func SimulateMsgWithdrawPrincipalFunds(k keeper.Keeper) simtypes.Operation {
 }
 
 func SimulateMsgExpeditePendingSwapOut(k keeper.Keeper) simtypes.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simtypes.Account, chainID string,
+	return func(r *rand.Rand, _ *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, _ string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
@@ -755,8 +787,8 @@ func SimulateMsgExpeditePendingSwapOut(k keeper.Keeper) simtypes.Operation {
 }
 
 func SimulateMsgPauseVault(k keeper.Keeper) simtypes.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simtypes.Account, chainID string,
+	return func(r *rand.Rand, _ *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, _ string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
@@ -789,8 +821,8 @@ func SimulateMsgPauseVault(k keeper.Keeper) simtypes.Operation {
 }
 
 func SimulateMsgUnpauseVault(k keeper.Keeper) simtypes.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simtypes.Account, chainID string,
+	return func(r *rand.Rand, _ *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, _ string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
@@ -823,8 +855,8 @@ func SimulateMsgUnpauseVault(k keeper.Keeper) simtypes.Operation {
 }
 
 func SimulateMsgToggleBridge(k keeper.Keeper) simtypes.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simtypes.Account, chainID string,
+	return func(r *rand.Rand, _ *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, _ string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
@@ -859,8 +891,8 @@ func SimulateMsgToggleBridge(k keeper.Keeper) simtypes.Operation {
 
 // SimulateMsgSetBridgeAddress creates a message to set the bridge address for a vault
 func SimulateMsgSetBridgeAddress(k keeper.Keeper) simtypes.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simtypes.Account, chainID string,
+	return func(r *rand.Rand, _ *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, _ string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
@@ -897,8 +929,8 @@ func SimulateMsgSetBridgeAddress(k keeper.Keeper) simtypes.Operation {
 
 // SimulateMsgBridgeMintShares creates a message to mint shares to the bridge address
 func SimulateMsgBridgeMintShares(k keeper.Keeper) simtypes.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simtypes.Account, chainID string,
+	return func(r *rand.Rand, _ *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, _ string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
@@ -942,8 +974,8 @@ func SimulateMsgBridgeMintShares(k keeper.Keeper) simtypes.Operation {
 
 // SimulateMsgBridgeBurnShares creates a message to burn shares from the bridge address
 func SimulateMsgBridgeBurnShares(k keeper.Keeper) simtypes.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simtypes.Account, chainID string,
+	return func(r *rand.Rand, _ *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, _ string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
@@ -980,8 +1012,8 @@ func SimulateMsgBridgeBurnShares(k keeper.Keeper) simtypes.Operation {
 }
 
 func SimulateMsgUpdateWithdrawalDelay(k keeper.Keeper) simtypes.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simtypes.Account, chainID string,
+	return func(r *rand.Rand, _ *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, _ string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
@@ -1026,8 +1058,8 @@ func SimulateMsgUpdateWithdrawalDelay(k keeper.Keeper) simtypes.Operation {
 	}
 }
 func SimulateMsgUpdateParams(k keeper.Keeper) simtypes.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simtypes.Account, chainID string,
+	return func(r *rand.Rand, _ *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, _ string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
@@ -1061,8 +1093,8 @@ func SimulateMsgUpdateParams(k keeper.Keeper) simtypes.Operation {
 }
 
 func SimulateMsgUpdateVaultAUMFeeBips(k keeper.Keeper) simtypes.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simtypes.Account, chainID string,
+	return func(r *rand.Rand, _ *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, _ string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
@@ -1100,10 +1132,9 @@ func SimulateMsgUpdateVaultAUMFeeBips(k keeper.Keeper) simtypes.Operation {
 	}
 }
 
-
 func SimulateMsgUpdateMinSwapInValue(k keeper.Keeper) simtypes.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simtypes.Account, chainID string,
+	return func(r *rand.Rand, _ *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, _ string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
@@ -1142,8 +1173,8 @@ func SimulateMsgUpdateMinSwapInValue(k keeper.Keeper) simtypes.Operation {
 }
 
 func SimulateMsgUpdateMinSwapOutValue(k keeper.Keeper) simtypes.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simtypes.Account, chainID string,
+	return func(r *rand.Rand, _ *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, _ string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
@@ -1182,8 +1213,8 @@ func SimulateMsgUpdateMinSwapOutValue(k keeper.Keeper) simtypes.Operation {
 }
 
 func SimulateMsgUpdateMaxSwapInValue(k keeper.Keeper) simtypes.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simtypes.Account, chainID string,
+	return func(r *rand.Rand, _ *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, _ string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
@@ -1222,8 +1253,8 @@ func SimulateMsgUpdateMaxSwapInValue(k keeper.Keeper) simtypes.Operation {
 }
 
 func SimulateMsgUpdateMaxSwapOutValue(k keeper.Keeper) simtypes.Operation {
-	return func(r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context,
-		accs []simtypes.Account, chainID string,
+	return func(r *rand.Rand, _ *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, _ string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
 		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
 		if err != nil {
@@ -1258,5 +1289,314 @@ func SimulateMsgUpdateMaxSwapOutValue(k keeper.Keeper) simtypes.Operation {
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "successfully updated max swap out"), nil, nil
+	}
+}
+
+func SimulateMsgUpdateVaultNAV(k keeper.Keeper) simtypes.Operation {
+	return func(r *rand.Rand, _ *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, _ string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateVaultNAVRequest{}), "unable to setup initial state"), nil, err
+		}
+
+		vault, err := getRandomVault(r, k, ctx)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateVaultNAVRequest{}), "unable to get random vault"), nil, err
+		}
+
+		markerKeeper, ok := k.MarkerKeeper.(markerkeeper.Keeper)
+		if !ok {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateVaultNAVRequest{}), "marker keeper is not of type markerkeeper.Keeper"), nil, fmt.Errorf("marker keeper is not of type markerkeeper.Keeper")
+		}
+
+		navDenom := genRandomDenom(r, k.MarkerKeeper.GetUnrestrictedDenomRegex(ctx), VaultGlobalDenomSuffix)
+		if err = CreateUnrestrictedMarker(ctx, sdk.NewInt64Coin(navDenom, 1_000_000_000), k.AuthKeeper.GetModuleAddress("mint"), markerKeeper); err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateVaultNAVRequest{}), "unable to create nav marker"), nil, err
+		}
+
+		priceDenom := getRandomVaultAsset(r, vault)
+		priceAmount := math.NewInt(int64(r.Intn(1_000_000) + 1))
+		volume := math.NewInt(int64(r.Intn(1_000_000) + 1))
+
+		msg := &types.MsgUpdateVaultNAVRequest{
+			Signer:       vault.GetNAVAuthority(),
+			VaultAddress: vault.GetAddress().String(),
+			Denom:        navDenom,
+			Price:        sdk.NewCoin(priceDenom, priceAmount),
+			Volume:       volume,
+		}
+
+		handler := keeper.NewMsgServer(&k)
+		_, err = handler.UpdateVaultNAV(ctx, msg)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
+		}
+
+		return simtypes.NewOperationMsg(msg, true, "successfully updated vault NAV"), nil, nil
+	}
+}
+
+func SimulateMsgUpdateNAVAuthority(k keeper.Keeper) simtypes.Operation {
+	return func(r *rand.Rand, _ *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, _ string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateNAVAuthorityRequest{}), "unable to setup initial state"), nil, err
+		}
+
+		vault, err := getRandomVault(r, k, ctx)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateNAVAuthorityRequest{}), "unable to get random vault"), nil, err
+		}
+
+		var newAuthority string
+		if r.Intn(4) != 0 {
+			newAcc, _ := simtypes.RandomAcc(r, accs)
+			newAuthority = newAcc.Address.String()
+		}
+
+		msg := &types.MsgUpdateNAVAuthorityRequest{
+			Signer:       vault.Admin,
+			VaultAddress: vault.GetAddress().String(),
+			NewAuthority: newAuthority,
+		}
+
+		handler := keeper.NewMsgServer(&k)
+		_, err = handler.UpdateNAVAuthority(ctx, msg)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
+		}
+
+		return simtypes.NewOperationMsg(msg, true, "successfully updated NAV authority"), nil, nil
+	}
+}
+
+// paymentCreator is the subset of the exchange keeper used to stage pending payments for
+// asset settlement simulations. The production ExchangeKeeper interface intentionally omits
+// CreatePayment, so simulations type-assert to this local interface to construct the P2P
+// payment that AcceptAsset and RejectAsset settle against.
+type paymentCreator interface {
+	CreatePayment(ctx sdk.Context, payment *exchange.Payment) error
+}
+
+// settlementAmounts picks the source and target leg amounts for a staged payment. When the
+// vault already has an internal NAV for its underlying asset, the amounts are an exact
+// multiple of the reduced NAV ratio so the settlement passes the exact-price guardrail
+// (random amounts would NoOp on every settlement after the first); when no NAV exists yet
+// (first acquisition, guardrail skipped) the amounts are random.
+func settlementAmounts(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, vault *types.VaultAccount, sourceDenom string, portion math.Int) (sourceAmount, targetAmount math.Int, err error) {
+	nav, err := k.GetVaultNAV(ctx, vault.GetAddress(), vault.UnderlyingAsset)
+	if err != nil {
+		if !errors.Is(err, collections.ErrNotFound) {
+			return math.Int{}, math.Int{}, fmt.Errorf("failed to get internal NAV for denom %q: %w", vault.UnderlyingAsset, err)
+		}
+		sourceAmount, err = simtypes.RandPositiveInt(r, portion)
+		if err != nil {
+			return math.Int{}, math.Int{}, fmt.Errorf("failed to sample source amount for first settlement: %w", err)
+		}
+		return sourceAmount, math.NewInt(int64(r.Intn(1_000) + 1)), nil
+	}
+
+	gcd := new(big.Int).GCD(nil, nil, nav.Price.Amount.BigInt(), nav.Volume.BigInt())
+	unitPayment := nav.Price.Amount.Quo(math.NewIntFromBigInt(gcd))
+	unitAsset := nav.Volume.Quo(math.NewIntFromBigInt(gcd))
+
+	sourceUnit, targetUnit := unitAsset, unitPayment
+	if sourceDenom == vault.PaymentDenom {
+		sourceUnit, targetUnit = unitPayment, unitAsset
+	}
+	maxMultiple := portion.Quo(sourceUnit)
+	if maxMultiple.IsZero() {
+		return math.Int{}, math.Int{}, fmt.Errorf("source balance too low for an exact-NAV settlement of %s per %s%s", nav.Price, nav.Volume, vault.UnderlyingAsset)
+	}
+	multiple, err := simtypes.RandPositiveInt(r, maxMultiple)
+	if err != nil {
+		return math.Int{}, math.Int{}, fmt.Errorf("failed to sample settlement multiple: %w", err)
+	}
+	return sourceUnit.Mul(multiple), targetUnit.Mul(multiple), nil
+}
+
+// stagePayment creates a pending exchange payment targeting the vault, drawing the source leg
+// from an account that already holds the chosen denom. The settlement direction is chosen at
+// random: one leg always carries the vault's payment denom and the other its underlying asset,
+// which is the shape AcceptAsset requires. Leg amounts come from settlementAmounts so repeat
+// settlements trade at the vault's internal NAV. Funds are never minted because the vault
+// denoms are fixed-supply markers; inflating their circulating supply would trip the marker
+// module's BeginBlocker supply reconciliation. The created payment is returned so callers can
+// stage the principal marker for the leg the vault must pay out.
+func stagePayment(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, vault *types.VaultAccount, accs []simtypes.Account) (*exchange.Payment, error) {
+	creator, ok := k.ExchangeKeeper.(paymentCreator)
+	if !ok {
+		return nil, fmt.Errorf("exchange keeper does not support creating payments")
+	}
+
+	paymentDenom := vault.PaymentDenom
+	assetDenom := vault.UnderlyingAsset
+	if assetDenom == paymentDenom {
+		return nil, fmt.Errorf("vault underlying and payment denom are identical")
+	}
+
+	sourceDenom, targetDenom := assetDenom, paymentDenom
+	if r.Intn(2) == 0 {
+		sourceDenom, targetDenom = paymentDenom, assetDenom
+	}
+
+	source, sourceBalance, err := getRandomAccountWithDenom(r, k, ctx, accs, sourceDenom)
+	if err != nil {
+		return nil, err
+	}
+	portion := sourceBalance.Amount.Quo(math.NewInt(1_000))
+	if portion.IsZero() {
+		return nil, fmt.Errorf("source balance too low to stage a payment")
+	}
+	sourceAmount, targetAmount, err := settlementAmounts(ctx, r, k, vault, sourceDenom, portion)
+	if err != nil {
+		return nil, err
+	}
+
+	payment := &exchange.Payment{
+		Source:       source.Address.String(),
+		SourceAmount: sdk.NewCoins(sdk.NewCoin(sourceDenom, sourceAmount)),
+		Target:       vault.GetAddress().String(),
+		TargetAmount: sdk.NewCoins(sdk.NewCoin(targetDenom, targetAmount)),
+		ExternalId:   fmt.Sprintf("p2p-sim-%d", r.Intn(1_000_000_000)),
+	}
+	if err := creator.CreatePayment(ctx, payment); err != nil {
+		return nil, fmt.Errorf("failed to create payment: %w", err)
+	}
+
+	return payment, nil
+}
+
+// stagePrincipal moves the target leg of a payment into the vault's principal marker from an
+// account that already holds the denom, so AcceptAsset can pay it out. Funds are transferred
+// rather than minted to preserve the fixed-supply marker invariant.
+func stagePrincipal(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, vault *types.VaultAccount, accs []simtypes.Account, targetAmount sdk.Coins) error {
+	for _, coin := range targetAmount {
+		funder, balance, err := getRandomAccountWithDenom(r, k, ctx, accs, coin.Denom)
+		if err != nil {
+			return err
+		}
+		if balance.Amount.LT(coin.Amount) {
+			return fmt.Errorf("no account holds enough %s to fund the principal marker", coin.Denom)
+		}
+		if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx), funder.Address, vault.PrincipalMarkerAddress(), sdk.NewCoins(coin)); err != nil {
+			return fmt.Errorf("failed to fund principal marker: %w", err)
+		}
+	}
+	return nil
+}
+
+// ensureSettlementAuthority returns the vault's asset manager, assigning a random simulation
+// account to the role first when the vault has none. Settlement messages are asset-manager-only
+// (the admin cannot settle), and simulation vaults are created without an asset manager, so
+// without this step AcceptAsset/RejectAsset would permanently NoOp.
+func ensureSettlementAuthority(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, vault *types.VaultAccount, accs []simtypes.Account) (string, error) {
+	if vault.AssetManager != "" {
+		return vault.AssetManager, nil
+	}
+
+	manager, _ := simtypes.RandomAcc(r, accs)
+	handler := keeper.NewMsgServer(&k)
+	if _, err := handler.SetAssetManager(ctx, &types.MsgSetAssetManagerRequest{
+		Admin:        vault.Admin,
+		VaultAddress: vault.GetAddress().String(),
+		AssetManager: manager.Address.String(),
+	}); err != nil {
+		return "", fmt.Errorf("failed to assign an asset manager for settlement: %w", err)
+	}
+	return manager.Address.String(), nil
+}
+
+func SimulateMsgAcceptAsset(k keeper.Keeper) simtypes.Operation {
+	return func(r *rand.Rand, _ *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, _ string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgAcceptAssetRequest{}), "unable to setup initial state"), nil, err
+		}
+
+		vault, err := getRandomVaultWithCondition(r, k, ctx, func(vault types.VaultAccount) bool {
+			return vault.PaymentDenom != ""
+		})
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgAcceptAssetRequest{}), "no vault with a payment denom"), nil, nil
+		}
+
+		authority, err := ensureSettlementAuthority(ctx, r, k, vault, accs)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgAcceptAssetRequest{}), err.Error()), nil, nil
+		}
+
+		payment, err := stagePayment(ctx, r, k, vault, accs)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgAcceptAssetRequest{}), err.Error()), nil, nil
+		}
+
+		if err = stagePrincipal(ctx, r, k, vault, accs, payment.TargetAmount); err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgAcceptAssetRequest{}), err.Error()), nil, nil
+		}
+
+		msg := &types.MsgAcceptAssetRequest{
+			Authority:    authority,
+			VaultAddress: vault.GetAddress().String(),
+			Source:       payment.Source,
+			ExternalId:   payment.ExternalId,
+		}
+
+		handler := keeper.NewMsgServer(&k)
+		_, err = handler.AcceptAsset(ctx, msg)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
+		}
+
+		return simtypes.NewOperationMsg(msg, true, "successfully accepted asset"), nil, nil
+	}
+}
+
+func SimulateMsgRejectAsset(k keeper.Keeper) simtypes.Operation {
+	return func(r *rand.Rand, _ *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, _ string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgRejectAssetRequest{}), "unable to setup initial state"), nil, err
+		}
+
+		vault, err := getRandomVaultWithCondition(r, k, ctx, func(vault types.VaultAccount) bool {
+			return vault.PaymentDenom != ""
+		})
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgRejectAssetRequest{}), "no vault with a payment denom"), nil, nil
+		}
+
+		authority, err := ensureSettlementAuthority(ctx, r, k, vault, accs)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgRejectAssetRequest{}), err.Error()), nil, nil
+		}
+
+		payment, err := stagePayment(ctx, r, k, vault, accs)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgRejectAssetRequest{}), err.Error()), nil, nil
+		}
+
+		msg := &types.MsgRejectAssetRequest{
+			Authority:    authority,
+			VaultAddress: vault.GetAddress().String(),
+			Source:       payment.Source,
+			ExternalId:   payment.ExternalId,
+		}
+
+		handler := keeper.NewMsgServer(&k)
+		_, err = handler.RejectAsset(ctx, msg)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
+		}
+
+		return simtypes.NewOperationMsg(msg, true, "successfully rejected asset"), nil, nil
 	}
 }

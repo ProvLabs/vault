@@ -724,7 +724,7 @@ func (s *TestSuite) TestKeeper_ProcessSingleWithdrawal_TypedSentinels() {
 			expectedReason:   types.RefundReasonReconcileFailure,
 		},
 		{
-			name: "missing redeem NAV surfaces the typed ErrNavNotFound sentinel",
+			name: "missing redeem NAV surfaces the typed ErrInternalNAVNotFound sentinel",
 			setup: func() (types.PendingSwapOut, types.VaultAccount) {
 				shareDenom := "vsharenav"
 				vaultAddr := types.GetVaultAddress(shareDenom)
@@ -736,7 +736,7 @@ func (s *TestSuite) TestKeeper_ProcessSingleWithdrawal_TypedSentinels() {
 					Shares:       minted,
 				}, *vault
 			},
-			expectedSentinel: types.ErrNavNotFound,
+			expectedSentinel: keeper.ErrInternalNAVNotFound,
 			expectedReason:   types.RefundReasonNavNotFound,
 		},
 	}

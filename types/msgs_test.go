@@ -38,8 +38,64 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 				ShareDenom:      "vaultshare",
 				UnderlyingAsset: "uusd",
 				PaymentDenom:    "usdc",
+				InitialPaymentNav: &types.InitialVaultNAV{
+					Price:  sdk.NewInt64Coin("uusd", 1),
+					Volume: sdkmath.OneInt(),
+					Source: "test",
+				},
 			},
 			expectedErr: nil,
+		},
+		{
+			name: "missing initial NAV when payment denom differs",
+			msg: types.MsgCreateVaultRequest{
+				Admin:           admin,
+				ShareDenom:      "vaultshare",
+				UnderlyingAsset: "uusd",
+				PaymentDenom:    "usdc",
+			},
+			expectedErr: fmt.Errorf("invalid initial payment NAV: initial_payment_nav is required when payment_denom %q differs from underlying_asset %q", "usdc", "uusd"),
+		},
+		{
+			name: "initial NAV supplied without payment denom",
+			msg: types.MsgCreateVaultRequest{
+				Admin:           admin,
+				ShareDenom:      "vaultshare",
+				UnderlyingAsset: "uusd",
+				InitialPaymentNav: &types.InitialVaultNAV{
+					Price:  sdk.NewInt64Coin("uusd", 1),
+					Volume: sdkmath.OneInt(),
+				},
+			},
+			expectedErr: fmt.Errorf("invalid initial payment NAV: initial_payment_nav must be omitted when payment_denom is empty or equals underlying_asset"),
+		},
+		{
+			name: "initial NAV price denom mismatches underlying",
+			msg: types.MsgCreateVaultRequest{
+				Admin:           admin,
+				ShareDenom:      "vaultshare",
+				UnderlyingAsset: "uusd",
+				PaymentDenom:    "usdc",
+				InitialPaymentNav: &types.InitialVaultNAV{
+					Price:  sdk.NewInt64Coin("other", 1),
+					Volume: sdkmath.OneInt(),
+				},
+			},
+			expectedErr: fmt.Errorf("invalid initial payment NAV: price denom %q must equal underlying_asset %q", "other", "uusd"),
+		},
+		{
+			name: "initial NAV volume non-positive",
+			msg: types.MsgCreateVaultRequest{
+				Admin:           admin,
+				ShareDenom:      "vaultshare",
+				UnderlyingAsset: "uusd",
+				PaymentDenom:    "usdc",
+				InitialPaymentNav: &types.InitialVaultNAV{
+					Price:  sdk.NewInt64Coin("uusd", 1),
+					Volume: sdkmath.ZeroInt(),
+				},
+			},
+			expectedErr: fmt.Errorf("invalid initial payment NAV: volume must be positive"),
 		},
 		{
 			name: "admin empty",
@@ -1864,5 +1920,397 @@ func TestMsgUpdateSwapLimits_ValidateBasic(t *testing.T) {
 			},
 		}
 		runTests(t, tests)
+	})
+}
+
+func TestMsgUpdateVaultNAVRequest_ValidateBasic(t *testing.T) {
+	addr := NewTestAddress()
+
+	RunValidateBasicTable(t, []validateBasicCase{
+		{
+			name: "valid",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin("under", 100),
+				Volume:       sdkmath.NewInt(1),
+				Source:       "oracle",
+			},
+		},
+		{
+			name: "valid with empty source",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin("under", 100),
+				Volume:       sdkmath.NewInt(1),
+			},
+		},
+		{
+			name: "invalid signer",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       "bad",
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin("under", 100),
+				Volume:       sdkmath.NewInt(1),
+			},
+			expectedErr: "invalid signer address",
+		},
+		{
+			name: "invalid vault address",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: "bad",
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin("under", 100),
+				Volume:       sdkmath.NewInt(1),
+			},
+			expectedErr: "invalid vault address",
+		},
+		{
+			name: "invalid denom",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "bad denom",
+				Price:        sdk.NewInt64Coin("under", 100),
+				Volume:       sdkmath.NewInt(1),
+			},
+			expectedErr: "invalid denom",
+		},
+		{
+			name: "invalid price coin",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.Coin{Denom: "under", Amount: sdkmath.NewInt(-1)},
+				Volume:       sdkmath.NewInt(1),
+			},
+			expectedErr: "invalid price coin",
+		},
+		{
+			// A zero price is allowed at this stateless layer; the accepted-denom
+			// "must be positive" rule is enforced statefully in the keeper.
+			name: "zero price is allowed statelessly",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin("under", 0),
+				Volume:       sdkmath.NewInt(1),
+			},
+		},
+		{
+			name: "denom equals price denom",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin("rwa", 100),
+				Volume:       sdkmath.NewInt(1),
+			},
+			expectedErr: `NAV denom "rwa" and price denom must differ`,
+		},
+		{
+			name: "nil volume",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin("under", 100),
+			},
+			expectedErr: "volume must be positive",
+		},
+		{
+			name: "zero volume",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin("under", 100),
+				Volume:       sdkmath.ZeroInt(),
+			},
+			expectedErr: "volume must be positive",
+		},
+		{
+			name: "negative volume",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin("under", 100),
+				Volume:       sdkmath.NewInt(-1),
+			},
+			expectedErr: "volume must be positive",
+		},
+		{
+			name: "source at max length",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin("under", 100),
+				Volume:       sdkmath.NewInt(1),
+				Source:       strings.Repeat("a", types.MaxNAVSourceLength),
+			},
+		},
+		{
+			name: "source too long",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin("under", 100),
+				Volume:       sdkmath.NewInt(1),
+				Source:       strings.Repeat("a", types.MaxNAVSourceLength+1),
+			},
+			expectedErr: "source too long",
+		},
+	})
+}
+
+func TestMsgUpdateNAVAuthorityRequest_ValidateBasic(t *testing.T) {
+	addr := NewTestAddress()
+
+	RunValidateBasicTable(t, []validateBasicCase{
+		{
+			name: "valid",
+			msg: types.MsgUpdateNAVAuthorityRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				NewAuthority: addr,
+			},
+		},
+		{
+			name: "valid with empty new authority (resets to admin)",
+			msg: types.MsgUpdateNAVAuthorityRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				NewAuthority: "",
+			},
+		},
+		{
+			name: "invalid signer",
+			msg: types.MsgUpdateNAVAuthorityRequest{
+				Signer:       "bad",
+				VaultAddress: addr,
+				NewAuthority: addr,
+			},
+			expectedErr: "invalid signer address",
+		},
+		{
+			name: "invalid vault address",
+			msg: types.MsgUpdateNAVAuthorityRequest{
+				Signer:       addr,
+				VaultAddress: "bad",
+				NewAuthority: addr,
+			},
+			expectedErr: "invalid vault address",
+		},
+		{
+			name: "invalid new authority",
+			msg: types.MsgUpdateNAVAuthorityRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				NewAuthority: "bad",
+			},
+			expectedErr: "invalid new authority address",
+		},
+	})
+}
+
+func TestMsgAcceptAssetRequest_ValidateBasic(t *testing.T) {
+	authority := NewTestAddress()
+	vaultAddr := NewTestAddress()
+	source := NewTestAddress()
+
+	RunValidateBasicTable(t, []validateBasicCase{
+		{
+			name: "valid",
+			msg: types.MsgAcceptAssetRequest{
+				Authority:    authority,
+				VaultAddress: vaultAddr,
+				Source:       source,
+				ExternalId:   "payment-1",
+			},
+		},
+		{
+			name: "valid with empty external id",
+			msg: types.MsgAcceptAssetRequest{
+				Authority:    authority,
+				VaultAddress: vaultAddr,
+				Source:       source,
+				ExternalId:   "",
+			},
+		},
+		{
+			name: "valid with max length external id",
+			msg: types.MsgAcceptAssetRequest{
+				Authority:    authority,
+				VaultAddress: vaultAddr,
+				Source:       source,
+				ExternalId:   strings.Repeat("x", 100),
+			},
+		},
+		{
+			name: "invalid authority",
+			msg: types.MsgAcceptAssetRequest{
+				Authority:    "bad",
+				VaultAddress: vaultAddr,
+				Source:       source,
+				ExternalId:   "payment-1",
+			},
+			expectedErr: "invalid authority address",
+		},
+		{
+			name: "empty authority",
+			msg: types.MsgAcceptAssetRequest{
+				Authority:    "",
+				VaultAddress: vaultAddr,
+				Source:       source,
+				ExternalId:   "payment-1",
+			},
+			expectedErr: "invalid authority address",
+		},
+		{
+			name: "invalid vault address",
+			msg: types.MsgAcceptAssetRequest{
+				Authority:    authority,
+				VaultAddress: "bad",
+				Source:       source,
+				ExternalId:   "payment-1",
+			},
+			expectedErr: "invalid vault address",
+		},
+		{
+			name: "invalid source",
+			msg: types.MsgAcceptAssetRequest{
+				Authority:    authority,
+				VaultAddress: vaultAddr,
+				Source:       "bad",
+				ExternalId:   "payment-1",
+			},
+			expectedErr: "invalid source address",
+		},
+		{
+			name: "empty source",
+			msg: types.MsgAcceptAssetRequest{
+				Authority:    authority,
+				VaultAddress: vaultAddr,
+				Source:       "",
+				ExternalId:   "payment-1",
+			},
+			expectedErr: "invalid source address",
+		},
+		{
+			name: "external id too long",
+			msg: types.MsgAcceptAssetRequest{
+				Authority:    authority,
+				VaultAddress: vaultAddr,
+				Source:       source,
+				ExternalId:   strings.Repeat("x", 101),
+			},
+			expectedErr: "invalid external id: invalid external id \"xxxxx...xxxxx\" (length 101): max length 100",
+		},
+	})
+}
+
+func TestMsgRejectAssetRequest_ValidateBasic(t *testing.T) {
+	authority := NewTestAddress()
+	vaultAddr := NewTestAddress()
+	source := NewTestAddress()
+
+	RunValidateBasicTable(t, []validateBasicCase{
+		{
+			name: "valid",
+			msg: types.MsgRejectAssetRequest{
+				Authority:    authority,
+				VaultAddress: vaultAddr,
+				Source:       source,
+				ExternalId:   "payment-1",
+			},
+		},
+		{
+			name: "valid with empty external id",
+			msg: types.MsgRejectAssetRequest{
+				Authority:    authority,
+				VaultAddress: vaultAddr,
+				Source:       source,
+				ExternalId:   "",
+			},
+		},
+		{
+			name: "valid with max length external id",
+			msg: types.MsgRejectAssetRequest{
+				Authority:    authority,
+				VaultAddress: vaultAddr,
+				Source:       source,
+				ExternalId:   strings.Repeat("x", 100),
+			},
+		},
+		{
+			name: "invalid authority",
+			msg: types.MsgRejectAssetRequest{
+				Authority:    "bad",
+				VaultAddress: vaultAddr,
+				Source:       source,
+				ExternalId:   "payment-1",
+			},
+			expectedErr: "invalid authority address",
+		},
+		{
+			name: "empty authority",
+			msg: types.MsgRejectAssetRequest{
+				Authority:    "",
+				VaultAddress: vaultAddr,
+				Source:       source,
+				ExternalId:   "payment-1",
+			},
+			expectedErr: "invalid authority address",
+		},
+		{
+			name: "invalid vault address",
+			msg: types.MsgRejectAssetRequest{
+				Authority:    authority,
+				VaultAddress: "bad",
+				Source:       source,
+				ExternalId:   "payment-1",
+			},
+			expectedErr: "invalid vault address",
+		},
+		{
+			name: "invalid source",
+			msg: types.MsgRejectAssetRequest{
+				Authority:    authority,
+				VaultAddress: vaultAddr,
+				Source:       "bad",
+				ExternalId:   "payment-1",
+			},
+			expectedErr: "invalid source address",
+		},
+		{
+			name: "empty source",
+			msg: types.MsgRejectAssetRequest{
+				Authority:    authority,
+				VaultAddress: vaultAddr,
+				Source:       "",
+				ExternalId:   "payment-1",
+			},
+			expectedErr: "invalid source address",
+		},
+		{
+			name: "external id too long",
+			msg: types.MsgRejectAssetRequest{
+				Authority:    authority,
+				VaultAddress: vaultAddr,
+				Source:       source,
+				ExternalId:   strings.Repeat("x", 101),
+			},
+			expectedErr: "invalid external id: invalid external id \"xxxxx...xxxxx\" (length 101): max length 100",
+		},
 	})
 }

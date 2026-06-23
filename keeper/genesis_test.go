@@ -5,6 +5,7 @@ import (
 	"math"
 	"time"
 
+	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -479,4 +480,253 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsWhenFeeTimeoutHasUnknownVault() {
 	}
 	expectedPanic := fmt.Sprintf("invalid vault genesis state: fee timeout queue address at index 0 is not an imported vault: %s", badVaultAddr.String())
 	s.Require().PanicsWithError(expectedPanic, func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on unknown vault in fee timeout queue")
+}
+
+// TestVaultGenesis_RoundTrip_NAVs verifies the internal NAV table survives a
+// genesis export/import round trip.
+func (s *TestSuite) TestVaultGenesis_RoundTrip_NAVs() {
+	shareDenom := "navshare"
+	underlying := "navunder"
+	vaultAddr := types.GetVaultAddress(shareDenom)
+
+	updatedTime := time.Unix(1700000000, 0).UTC()
+	navs := []types.VaultNAVEntry{
+		{
+			VaultAddress: vaultAddr.String(),
+			Nav: types.VaultNAV{
+				Denom:              "rwaone",
+				Price:              sdk.NewInt64Coin(underlying, 150),
+				Volume:             sdkmath.NewInt(3),
+				Source:             "oracle-one",
+				UpdatedBlockHeight: 7,
+				UpdatedTime:        updatedTime,
+			},
+		},
+		{
+			VaultAddress: vaultAddr.String(),
+			Nav: types.VaultNAV{
+				Denom:              "rwatwo",
+				Price:              sdk.Coin{Denom: underlying, Amount: sdkmath.NewInt(2)},
+				Volume:             sdkmath.NewInt(1),
+				UpdatedBlockHeight: 9,
+				UpdatedTime:        updatedTime,
+			},
+		},
+	}
+
+	genesis := s.setupVaultWithNavs(shareDenom, underlying, s.adminAddr.String(), navs)
+
+	storedNav, err := s.k.GetVaultNAV(s.ctx, vaultAddr, "rwaone")
+	s.Require().NoError(err, "NAV should exist after InitGenesis")
+	s.Assert().Equal(sdk.NewInt64Coin(underlying, 150), storedNav.Price, "imported NAV price mismatch")
+	s.Assert().Equal(sdkmath.NewInt(3), storedNav.Volume, "imported NAV volume mismatch")
+	s.Assert().Equal("oracle-one", storedNav.Source, "imported NAV source mismatch")
+
+	exported := s.k.ExportGenesis(s.ctx)
+	s.Require().Len(exported.Navs, len(genesis.Navs), "exported genesis should contain every NAV entry")
+	s.Assert().ElementsMatch(genesis.Navs, exported.Navs, "exported NAV table should match the imported table")
+}
+
+// TestVaultGenesis_InitPanicsOnInvalidNAV verifies genesis validation rejects
+// NAV entries that price a self-priced denom or carry a non-positive price or volume.
+func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidNAV() {
+	shareDenom := "navshare"
+	underlying := "navunder"
+	vaultAddr := types.GetVaultAddress(shareDenom)
+
+	tests := []struct {
+		name        string
+		nav         types.VaultNAV
+		expectPanic string
+	}{
+		{
+			name: "prices the vault share denom",
+			nav: types.VaultNAV{
+				Denom:       shareDenom,
+				Price:       sdk.NewInt64Coin(underlying, 1),
+				Volume:      sdkmath.NewInt(1),
+				UpdatedTime: time.Unix(1700000000, 0).UTC(),
+			},
+			expectPanic: "invalid vault genesis state: nav entry at index 0 prices the vault share denom navshare",
+		},
+		{
+			name: "self-referential price denom",
+			nav: types.VaultNAV{
+				Denom:       "rwa",
+				Price:       sdk.NewInt64Coin("rwa", 100),
+				Volume:      sdkmath.NewInt(1),
+				UpdatedTime: time.Unix(1700000000, 0).UTC(),
+			},
+			expectPanic: "invalid vault genesis state: nav entry at index 0 has matching denom and price denom \"rwa\"",
+		},
+		{
+			name: "negative price",
+			nav: types.VaultNAV{
+				Denom:       "rwa",
+				Price:       sdk.Coin{Denom: underlying, Amount: sdkmath.NewInt(-1)},
+				Volume:      sdkmath.NewInt(1),
+				UpdatedTime: time.Unix(1700000000, 0).UTC(),
+			},
+			expectPanic: "invalid vault genesis state: invalid nav price at index 0: negative coin amount: -1",
+		},
+		{
+			name: "zero volume",
+			nav: types.VaultNAV{
+				Denom:       "rwa",
+				Price:       sdk.NewInt64Coin(underlying, 1),
+				Volume:      sdkmath.ZeroInt(),
+				UpdatedTime: time.Unix(1700000000, 0).UTC(),
+			},
+			expectPanic: "invalid vault genesis state: nav volume at index 0 must be positive",
+		},
+		{
+			name: "negative volume",
+			nav: types.VaultNAV{
+				Denom:       "rwa",
+				Price:       sdk.NewInt64Coin(underlying, 1),
+				Volume:      sdkmath.NewInt(-1),
+				UpdatedTime: time.Unix(1700000000, 0).UTC(),
+			},
+			expectPanic: "invalid vault genesis state: nav volume at index 0 must be positive",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			genesis := buildSingleVaultGenesisState(shareDenom, underlying, s.adminAddr.String(),
+				[]types.VaultNAVEntry{{VaultAddress: vaultAddr.String(), Nav: tt.nav}})
+			s.Require().PanicsWithError(tt.expectPanic, func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on an invalid NAV entry")
+		})
+	}
+}
+
+// TestVaultGenesis_InitPanicsOnUnregisteredNAVMarker verifies InitGenesis rejects
+// a NAV entry whose denom passes stateless genesis validation but is not a
+// registered marker on-chain, matching the invariant enforced by the runtime
+// SetVaultNAV path.
+func (s *TestSuite) TestVaultGenesis_InitPanicsOnUnregisteredNAVMarker() {
+	shareDenom := "navmkrshare"
+	underlying := "navmkrunder"
+	vaultAddr := types.GetVaultAddress(shareDenom)
+
+	genesis := buildSingleVaultGenesisState(shareDenom, underlying, s.adminAddr.String(),
+		[]types.VaultNAVEntry{{
+			VaultAddress: vaultAddr.String(),
+			Nav: types.VaultNAV{
+				Denom:       "unregisteredrwa",
+				Price:       sdk.NewInt64Coin(underlying, 100),
+				Volume:      sdkmath.NewInt(1),
+				UpdatedTime: time.Unix(1700000000, 0).UTC(),
+			},
+		}})
+
+	var recovered any
+	func() {
+		defer func() { recovered = recover() }()
+		s.k.InitGenesis(s.ctx, genesis)
+	}()
+
+	s.Require().NotNil(recovered, "InitGenesis should panic when a NAV denom is not a registered marker")
+	err, ok := recovered.(error)
+	s.Require().True(ok, "panic value should be an error, got %T", recovered)
+	s.Require().ErrorContains(err, `nav denom "unregisteredrwa"`)
+	s.Require().ErrorContains(err, "is not a registered marker")
+}
+
+// TestVaultGenesis_ExportNAVs_MultipleVaults verifies ExportGenesis includes NAV
+// entries from all vaults, not just the first one.
+func (s *TestSuite) TestVaultGenesis_ExportNAVs_MultipleVaults() {
+	shareDenomA := "shareA"
+	shareDenomB := "shareB"
+	underlyingA := "underA"
+	underlyingB := "underB"
+	admin := s.adminAddr.String()
+	vaultAddrA := types.GetVaultAddress(shareDenomA)
+	vaultAddrB := types.GetVaultAddress(shareDenomB)
+
+	vaultA := makeGenesisVaultAccount(shareDenomA, underlyingA, admin)
+	vaultB := makeGenesisVaultAccount(shareDenomB, underlyingB, admin)
+
+	navEntriesA := []types.VaultNAVEntry{
+		{
+			VaultAddress: vaultAddrA.String(),
+			Nav: types.VaultNAV{
+				Denom:              "rwa1",
+				Price:              sdk.NewInt64Coin(underlyingA, 100),
+				Volume:             sdkmath.NewInt(3),
+				UpdatedBlockHeight: 5,
+			},
+		},
+		{
+			VaultAddress: vaultAddrA.String(),
+			Nav: types.VaultNAV{
+				Denom:              "rwa2",
+				Price:              sdk.NewInt64Coin(underlyingA, 200),
+				Volume:             sdkmath.NewInt(7),
+				UpdatedBlockHeight: 5,
+			},
+		},
+	}
+	navEntriesB := []types.VaultNAVEntry{
+		{
+			VaultAddress: vaultAddrB.String(),
+			Nav: types.VaultNAV{
+				Denom:              "bond",
+				Price:              sdk.NewInt64Coin(underlyingB, 999),
+				Volume:             sdkmath.NewInt(1),
+				UpdatedBlockHeight: 5,
+			},
+		},
+	}
+
+	allNavs := append(navEntriesA, navEntriesB...)
+	genesis := &types.GenesisState{
+		Params: types.DefaultParams(),
+		Vaults: []types.VaultAccount{vaultA, vaultB},
+		Navs:   allNavs,
+	}
+
+	for _, entry := range allNavs {
+		s.requireSimpleMarker(entry.Nav.Denom)
+	}
+
+	s.k.InitGenesis(s.ctx, genesis)
+
+	exported := s.k.ExportGenesis(s.ctx)
+	s.Require().Len(exported.Navs, len(allNavs), "ExportGenesis should include NAVs from all vaults")
+	s.Assert().ElementsMatch(allNavs, exported.Navs, "exported NAV table should match the imported table across both vaults")
+}
+
+// TestVaultGenesis_ExportPanicsOnNAVKeyValueDenomMismatch verifies that ExportGenesis
+// surfaces a key/value denom mismatch in the NAVs collection instead of silently
+// dropping the key denom. The SetVaultNAV write path enforces equality by construction,
+// so this guard exists to catch any future write path that violates the invariant.
+func (s *TestSuite) TestVaultGenesis_ExportPanicsOnNAVKeyValueDenomMismatch() {
+	shareDenom := "navmismatch"
+	underlying := "navmismatchunder"
+	vaultAddr := types.GetVaultAddress(shareDenom)
+
+	genesis := &types.GenesisState{
+		Params: types.DefaultParams(),
+		Vaults: []types.VaultAccount{makeGenesisVaultAccount(shareDenom, underlying, s.adminAddr.String())},
+	}
+	s.k.InitGenesis(s.ctx, genesis)
+
+	nav := types.VaultNAV{
+		Denom:       "valuedenom",
+		Price:       sdk.NewInt64Coin(underlying, 1),
+		Volume:      sdkmath.NewInt(1),
+		UpdatedTime: time.Unix(1700000000, 0).UTC(),
+	}
+	s.Require().NoError(
+		s.k.NAVs.Set(s.ctx, collections.Join(vaultAddr, "keydenom"), nav),
+		"writing a mismatched NAV row should succeed at the collection level",
+	)
+
+	expectedPanic := fmt.Sprintf(`nav key/value denom mismatch for vault %s: key="keydenom" value="valuedenom"`, vaultAddr)
+	s.Require().PanicsWithError(
+		"failed to walk vault navs: "+expectedPanic,
+		func() { s.k.ExportGenesis(s.ctx) },
+		"ExportGenesis should panic when a NAV row's key denom does not match value.Denom",
+	)
 }

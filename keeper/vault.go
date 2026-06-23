@@ -31,6 +31,7 @@ type VaultAttributer interface {
 	GetMinSwapOutValue() string
 	GetMaxSwapInValue() string
 	GetMaxSwapOutValue() string
+	GetInitialPaymentNav() *types.InitialVaultNAV
 }
 
 // CreateVault creates a new vault and its corresponding share marker atomically.
@@ -42,6 +43,9 @@ type VaultAttributer interface {
 //  4. Performing a pre-flight check against the principal/payment path by calling
 //     SendRestrictionFn with vault.PrincipalMarkerAddress() to ensure the fee
 //     collection address is permissioned to receive the payment denomination.
+//  5. Seeding the per-vault Internal NAV entry for the payment denom when it
+//     differs from the underlying asset, so the valuation engine can convert
+//     payment-denom balances and fee payouts without an out-of-band setup step.
 //
 // All steps are performed within a cache context. If any step fails, including the
 // pre-flight permission check, all state changes are discarded to prevent the creation
@@ -54,6 +58,7 @@ func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*type
 	minSwapOut := attributes.GetMinSwapOutValue()
 	maxSwapIn := attributes.GetMaxSwapInValue()
 	maxSwapOut := attributes.GetMaxSwapOutValue()
+	initialNAV := attributes.GetInitialPaymentNav()
 
 	underlyingAssetAddr, err := markertypes.MarkerAddress(underlying)
 	if err != nil {
@@ -70,7 +75,7 @@ func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*type
 		return nil, fmt.Errorf("failed to create vault account: %w", err)
 	}
 
-	if _, err := k.createVaultMarker(cacheCtx, vault.GetAddress(), vault.TotalShares.Denom, vault.UnderlyingAsset); err != nil {
+	if _, err = k.createVaultMarker(cacheCtx, vault.GetAddress(), vault.TotalShares.Denom); err != nil {
 		return nil, fmt.Errorf("failed to create vault marker: %w", err)
 	}
 
@@ -90,9 +95,39 @@ func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*type
 		return nil, fmt.Errorf("effective recipient %s differs from expected fee collector %s for payment denom %s", recipient.String(), provlabsAddr.String(), vault.PaymentDenom)
 	}
 
+	if err := k.seedInitialPaymentNAV(cacheCtx, vault, initialNAV); err != nil {
+		return nil, fmt.Errorf("failed to seed initial payment NAV: %w", err)
+	}
+
 	write()
 	k.emitEvent(ctx, types.NewEventVaultCreated(vault))
 	return vault, nil
+}
+
+// seedInitialPaymentNAV persists the optional bootstrap NAV for a vault's
+// payment denom when payment_denom differs from underlying_asset. The caller
+// must have already validated the stateless shape of initial via
+// types.ValidateInitialPaymentNAV (typically through MsgCreateVaultRequest.ValidateBasic).
+//
+// When payment_denom equals underlying_asset, no NAV is required (the
+// valuation engine's identity fast-path applies) and initial must be nil; the
+// function returns an error rather than silently dropping a stray entry.
+//
+// The NAV is written via SetVaultNAV so that field-level invariants, marker
+// existence, and event emission match every other internal NAV update.
+func (k *Keeper) seedInitialPaymentNAV(ctx sdk.Context, vault *types.VaultAccount, initial *types.InitialVaultNAV) error {
+	if err := types.ValidateInitialPaymentNAV(vault.PaymentDenom, vault.UnderlyingAsset, initial); err != nil {
+		return fmt.Errorf("invalid initial payment NAV: %w", err)
+	}
+	if initial == nil {
+		return nil
+	}
+
+	nav := types.NewVaultNAV(vault.PaymentDenom, initial.Price, initial.Volume, initial.Source)
+	if err := k.SetVaultNAV(ctx, vault, nav, vault.Admin); err != nil {
+		return fmt.Errorf("failed to set initial payment NAV: %w", err)
+	}
+	return nil
 }
 
 // GetVault returns the vault account for the given address.
@@ -171,7 +206,7 @@ func (k *Keeper) createVaultAccount(ctx sdk.Context, admin, shareDenom, underlyi
 }
 
 // createVaultMarker creates, finalizes, and activates a new restricted marker for the vault's share denomination.
-func (k *Keeper) createVaultMarker(ctx sdk.Context, markerManager sdk.AccAddress, shareDenom, underlyingAsset string) (*markertypes.MarkerAccount, error) {
+func (k *Keeper) createVaultMarker(ctx sdk.Context, markerManager sdk.AccAddress, shareDenom string) (*markertypes.MarkerAccount, error) {
 	vaultShareMarkerAddress, err := markertypes.MarkerAddress(shareDenom)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get vault share marker address: %w", err)
@@ -245,7 +280,7 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 		return nil, fmt.Errorf("swaps are not enabled for vault %s", vaultAddr.String())
 	}
 
-	if err := vault.ValidateAcceptedCoin(asset); err != nil {
+	if err = vault.ValidateAcceptedCoin(asset); err != nil {
 		return nil, fmt.Errorf("failed to validate asset: %w", err)
 	}
 
@@ -257,7 +292,7 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 		return nil, fmt.Errorf("failed to swap in: swap in amount %s %s for vault %s", asset.String(), reason, vaultAddr.String())
 	}
 
-	if err := k.reconcileVault(ctx, vault); err != nil {
+	if err = k.reconcileVault(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to reconcile vault: %w", err)
 	}
 
@@ -337,7 +372,7 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 		redeemDenom = vault.PaymentDenom
 	}
 
-	if err := vault.ValidateAcceptedDenom(redeemDenom); err != nil {
+	if err = vault.ValidateAcceptedDenom(redeemDenom); err != nil {
 		return 0, fmt.Errorf("failed to validate redeem denom: %w", err)
 	}
 
@@ -354,15 +389,15 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 		return 0, fmt.Errorf("failed to swap out: swap out amount %s %s for vault %s", assets.String(), reason, vaultAddr.String())
 	}
 
-	if err := k.checkPayoutRestrictions(ctx, vault, owner, assets); err != nil {
+	if err = k.checkPayoutRestrictions(ctx, vault, owner, assets); err != nil {
 		return 0, fmt.Errorf("failed to check payout restrictions: %w", err)
 	}
 
-	if err := k.BankKeeper.SendCoins(ctx, owner, vault.GetAddress(), sdk.NewCoins(shares)); err != nil {
+	if err = k.BankKeeper.SendCoins(ctx, owner, vault.GetAddress(), sdk.NewCoins(shares)); err != nil {
 		return 0, fmt.Errorf("failed to escrow shares: %w", err)
 	}
 
-	payoutTime := ctx.BlockTime().Unix() + int64(vault.WithdrawalDelaySeconds)
+	payoutTime := ctx.BlockTime().Unix() + int64(vault.WithdrawalDelaySeconds) //nolint:gosec // G115: WithdrawalDelaySeconds is validated <= MaxWithdrawalDelay.
 
 	pendingReq := types.NewPendingSwapOut(owner, vaultAddr, shares, redeemDenom)
 	requestID, err := k.PendingSwapOutQueue.Enqueue(ctx, payoutTime, &pendingReq)
@@ -431,8 +466,11 @@ func (k *Keeper) SetMaxInterestRate(ctx sdk.Context, vault *types.VaultAccount, 
 }
 
 // ValidateInterestRateLimits checks that the provided minimum and maximum interest
-// rates are valid decimal values and that the minimum rate is not greater than
-// the maximum rate. Empty values are treated as unset and pass validation.
+// rates are valid decimal values, that neither exceeds the MaxAbsInterestRate
+// ceiling in magnitude, and that the minimum rate is not greater than the maximum
+// rate. The magnitude ceiling stops an admin from configuring bounds large enough
+// to overflow the e^(rt) interest math and panic inside the block hooks. Empty
+// values are treated as unset and pass validation.
 func (k Keeper) ValidateInterestRateLimits(minRateStr, maxRateStr string) error {
 	var minRate, maxRate sdkmath.LegacyDec
 	var err error
@@ -443,12 +481,18 @@ func (k Keeper) ValidateInterestRateLimits(minRateStr, maxRateStr string) error 
 		if err != nil {
 			return fmt.Errorf("invalid min interest rate: %w", err)
 		}
+		if err = types.ValidateInterestRateMagnitude(minRate); err != nil {
+			return fmt.Errorf("invalid min interest rate: %w", err)
+		}
 		hasMin = true
 	}
 
 	if maxRateStr != "" {
 		maxRate, err = sdkmath.LegacyNewDecFromStr(maxRateStr)
 		if err != nil {
+			return fmt.Errorf("invalid max interest rate: %w", err)
+		}
+		if err := types.ValidateInterestRateMagnitude(maxRate); err != nil {
 			return fmt.Errorf("invalid max interest rate: %w", err)
 		}
 		hasMax = true
@@ -486,9 +530,9 @@ func (k *Keeper) autoPauseVault(ctx sdk.Context, vault *types.VaultAccount, reas
 		"reason", reason,
 	)
 
-	tvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
+	tvv, err := k.GetNetTVVInUnderlyingAsset(ctx, *vault)
 	if err != nil {
-		k.getLogger(ctx).Error("Failed to get TVV in underlying asset", "vault_address", vault.GetAddress().String(), "error", err)
+		k.getLogger(ctx).Error("Failed to get net TVV in underlying asset", "vault_address", vault.GetAddress().String(), "error", err)
 	}
 
 	vault.Paused = true

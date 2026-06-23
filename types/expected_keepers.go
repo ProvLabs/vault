@@ -7,6 +7,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
+	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -54,4 +55,13 @@ type NameKeeper interface {
 
 type AttributeKeeper interface {
 	SetAttribute(ctx sdk.Context, attr attrtypes.Attribute, owner sdk.AccAddress) error
+}
+
+// ExchangeKeeper defines the subset of the Provenance exchange module keeper
+// that the vault module relies on to settle and inspect peer-to-peer asset payments.
+type ExchangeKeeper interface {
+	GetPayment(ctx sdk.Context, source sdk.AccAddress, externalID string) (*exchange.Payment, error)
+	AcceptPayment(ctx sdk.Context, payment *exchange.Payment) error
+	RejectPayment(ctx sdk.Context, target, source sdk.AccAddress, externalID string) error
+	GetPaymentsWithTarget(ctx context.Context, req *exchange.QueryGetPaymentsWithTargetRequest) (*exchange.QueryGetPaymentsWithTargetResponse, error)
 }

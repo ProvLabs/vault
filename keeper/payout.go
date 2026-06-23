@@ -145,11 +145,11 @@ func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.P
 		return fmt.Errorf("failed to convert shares to redeem coin for single withdrawal: %w", err)
 	}
 
-	if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, vaultAddr), principalAddress, ownerAddr, sdk.NewCoins(assets)); err != nil {
+	if err = k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, vaultAddr), principalAddress, ownerAddr, sdk.NewCoins(assets)); err != nil {
 		return fmt.Errorf("failed to payout assets to owner: %w", err)
 	}
 
-	if err := k.BankKeeper.SendCoins(ctx, vaultAddr, principalAddress, sdk.NewCoins(req.Shares)); err != nil {
+	if err = k.BankKeeper.SendCoins(ctx, vaultAddr, principalAddress, sdk.NewCoins(req.Shares)); err != nil {
 		errMsg := fmt.Sprintf(
 			"failed to transfer %s shares from %s to principal %s for burning",
 			req.Shares, vaultAddr, principalAddress,
@@ -158,7 +158,7 @@ func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.P
 		return types.CriticalErr(errMsg, fmt.Errorf("%s: %w", errMsg, err))
 	}
 
-	if err := k.MarkerKeeper.BurnCoin(ctx, vaultAddr, req.Shares); err != nil {
+	if err = k.MarkerKeeper.BurnCoin(ctx, vaultAddr, req.Shares); err != nil {
 		errMsg := fmt.Sprintf(
 			"failed to burn %s shares from account %s after successful payout",
 			req.Shares, vaultAddr,
@@ -226,6 +226,9 @@ func (k *Keeper) refundWithdrawal(ctx sdk.Context, id uint64, req types.PendingS
 func (k Keeper) getRefundReason(err error) string {
 	if err == nil {
 		return types.RefundReasonUnknown
+	}
+	if errors.Is(err, ErrInternalNAVNotFound) {
+		return types.RefundReasonNavNotFound
 	}
 
 	switch {

@@ -2,6 +2,7 @@ package interest_test
 
 import (
 	"math"
+	"math/big"
 	"strconv"
 	"testing"
 	"time"
@@ -90,6 +91,13 @@ func TestCalculateInterestEarned(t *testing.T) {
 			periodSeconds:    interest.SecondsPerYear * 10,
 			expectedInterest: sdkmath.NewInt(349_858_807_576),
 		},
+		{
+			name:             "extreme rate returns overflow error instead of panicking",
+			principal:        baseCoin(100_000_000),
+			rate:             "1000000000000.0",
+			periodSeconds:    interest.SecondsPerYear,
+			expectedErrorMsg: "overflow",
+		},
 	}
 
 	for _, tc := range tests {
@@ -110,12 +118,13 @@ func TestCalculateInterestEarned(t *testing.T) {
 
 func TestCalculateAUMFee(t *testing.T) {
 	tests := []struct {
-		name        string
-		aum         sdkmath.Int
-		bips        uint32
-		duration    int64
-		expectedFee sdkmath.Int
-		expectErr   bool
+		name                string
+		aum                 sdkmath.Int
+		bips                uint32
+		duration            int64
+		expectedFee         sdkmath.Int
+		expectErr           bool
+		expectedErrContains string
 	}{
 		{
 			name:        "zero AUM",
@@ -153,18 +162,36 @@ func TestCalculateAUMFee(t *testing.T) {
 			expectedFee: sdkmath.NewInt(750),
 		},
 		{
-			name:        "negative duration errors",
-			aum:         sdkmath.NewInt(1_000_000),
-			bips:        15,
-			duration:    -1,
-			expectErr:   true,
+			name:                "negative duration errors",
+			aum:                 sdkmath.NewInt(1_000_000),
+			bips:                15,
+			duration:            -1,
+			expectErr:           true,
+			expectedErrContains: "duration cannot be negative",
 		},
 		{
-			name:      "negative aum errors",
-			aum:       sdkmath.NewInt(-1_000_000),
-			bips:      15,
-			duration:  interest.SecondsPerYear,
-			expectErr: true,
+			name:                "negative aum errors",
+			aum:                 sdkmath.NewInt(-1_000_000),
+			bips:                15,
+			duration:            interest.SecondsPerYear,
+			expectErr:           true,
+			expectedErrContains: "aum cannot be negative",
+		},
+		{
+			name:                "near-max AUM over a one year period overflows the decimal multiply",
+			aum:                 sdkmath.NewIntFromBigInt(new(big.Int).Lsh(big.NewInt(1), 255)),
+			bips:                10_000,
+			duration:            interest.SecondsPerYear,
+			expectErr:           true,
+			expectedErrContains: "overflow",
+		},
+		{
+			name:                "max AUM over a single second overflows the decimal multiply",
+			aum:                 sdkmath.NewIntFromBigInt(new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(1))),
+			bips:                10_000,
+			duration:            2,
+			expectErr:           true,
+			expectedErrContains: "overflow",
 		},
 	}
 
@@ -173,6 +200,8 @@ func TestCalculateAUMFee(t *testing.T) {
 			fee, err := interest.CalculateAUMFee(tc.aum, tc.bips, tc.duration)
 			if tc.expectErr {
 				require.Errorf(t, err, "test case %q: expected an error but got none", tc.name)
+				require.Containsf(t, err.Error(), tc.expectedErrContains, "test case %q: error %q should contain %q", tc.name, err, tc.expectedErrContains)
+				require.Truef(t, fee.IsNil(), "test case %q: fee should be the zero-value sdkmath.Int on error, got %s", tc.name, fee)
 			} else {
 				require.NoErrorf(t, err, "test case %q: unexpected error during AUM fee calculation", tc.name)
 				require.Truef(t, tc.expectedFee.Equal(fee), "test case %q: fee amount mismatch; expected %s, got %s", tc.name, tc.expectedFee, fee)

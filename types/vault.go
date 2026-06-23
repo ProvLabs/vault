@@ -17,14 +17,34 @@ import (
 )
 
 const (
-	ZeroInterestRate   = "0.0"
-	MaxWithdrawalDelay = 31536000 * 2 // 2 years in seconds
+	// ZeroInterestRate is the canonical decimal string for a disabled (zero) interest rate.
+	ZeroInterestRate = "0.0"
+
+	// MaxWithdrawalDelay caps the swap-out withdrawal delay in seconds (2 years).
+	MaxWithdrawalDelay = 31_536_000 * 2
+
+	// MaxAbsInterestRate is the absolute ceiling on any interest rate's magnitude (100.0 == 10,000% APR),
+	// bounding the e^(rt) exponent so an admin-set rate cannot overflow the LegacyDec interest math.
+	MaxAbsInterestRate = "100.0"
 )
 
 var (
 	_ sdk.AccountI             = (*VaultAccount)(nil)
 	_ authtypes.GenesisAccount = (*VaultAccount)(nil)
+
+	// maxAbsInterestRateDec is the parsed form of MaxAbsInterestRate, computed once.
+	maxAbsInterestRateDec = sdkmath.LegacyMustNewDecFromStr(MaxAbsInterestRate)
 )
+
+// ValidateInterestRateMagnitude returns an error if the absolute value of rate
+// exceeds the MaxAbsInterestRate ceiling. The check is symmetric: a large negative
+// rate overflows the e^(rt) series exactly as a large positive one does.
+func ValidateInterestRateMagnitude(rate sdkmath.LegacyDec) error {
+	if rate.Abs().GT(maxAbsInterestRateDec) {
+		return fmt.Errorf("interest rate %s exceeds maximum allowed magnitude %s", rate, MaxAbsInterestRate)
+	}
+	return nil
+}
 
 // VaultAccountI defines the interface for a Vault account.
 type VaultAccountI interface {
@@ -87,6 +107,7 @@ func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyi
 	return &VaultAccount{
 		BaseAccount:            baseAcc,
 		Admin:                  admin,
+		NavAuthority:           admin,
 		TotalShares:            sdk.Coin{Denom: shareDenom, Amount: sdkmath.ZeroInt()},
 		UnderlyingAsset:        underlyingAsset,
 		PaymentDenom:           paymentDenom,
@@ -184,6 +205,12 @@ func (v VaultAccount) Validate() error {
 		}
 	}
 
+	if v.NavAuthority != "" {
+		if _, err := sdk.AccAddressFromBech32(v.NavAuthority); err != nil {
+			return fmt.Errorf("invalid nav authority address: %w", err)
+		}
+	}
+
 	if v.BridgeAddress != "" {
 		if _, err := sdk.AccAddressFromBech32(v.BridgeAddress); err != nil {
 			return fmt.Errorf("invalid bridge address: %w", err)
@@ -197,9 +224,15 @@ func (v VaultAccount) Validate() error {
 	if err != nil {
 		return fmt.Errorf("invalid current interest rate: %s", v.CurrentInterestRate)
 	}
+	if err = ValidateInterestRateMagnitude(cur); err != nil {
+		return fmt.Errorf("invalid current interest rate: %w", err)
+	}
 	des, err := sdkmath.LegacyNewDecFromStr(v.DesiredInterestRate)
 	if err != nil {
 		return fmt.Errorf("invalid desired interest rate: %s", v.DesiredInterestRate)
+	}
+	if err = ValidateInterestRateMagnitude(des); err != nil {
+		return fmt.Errorf("invalid desired interest rate: %w", err)
 	}
 
 	var minRate, maxRate sdkmath.LegacyDec
@@ -211,11 +244,17 @@ func (v VaultAccount) Validate() error {
 		if err != nil {
 			return fmt.Errorf("invalid min interest rate: %s", v.MinInterestRate)
 		}
+		if err = ValidateInterestRateMagnitude(minRate); err != nil {
+			return fmt.Errorf("invalid min interest rate: %w", err)
+		}
 	}
 	if hasMax {
 		maxRate, err = sdkmath.LegacyNewDecFromStr(v.MaxInterestRate)
 		if err != nil {
 			return fmt.Errorf("invalid max interest rate: %s", v.MaxInterestRate)
+		}
+		if err := ValidateInterestRateMagnitude(maxRate); err != nil {
+			return fmt.Errorf("invalid max interest rate: %w", err)
 		}
 	}
 
@@ -306,6 +345,25 @@ func (v *VaultAccount) ValidateAdmin(admin string) error {
 	return nil
 }
 
+// GetNAVAuthority returns the address authorized to mutate the vault's internal
+// NAV table. When nav_authority is unset, the vault admin is treated as the NAV
+// authority.
+func (v *VaultAccount) GetNAVAuthority() string {
+	if v.NavAuthority != "" {
+		return v.NavAuthority
+	}
+	return v.Admin
+}
+
+// ValidateNAVAuthority returns an error if the given address is not the vault's
+// NAV authority.
+func (v *VaultAccount) ValidateNAVAuthority(signer string) error {
+	if signer != v.GetNAVAuthority() {
+		return fmt.Errorf("unauthorized: %s is not the vault NAV authority", signer)
+	}
+	return nil
+}
+
 func (v *VaultAccount) ValuationDenom() string {
 	return v.UnderlyingAsset
 }
@@ -365,6 +423,22 @@ func (v VaultAccount) ValidateManagementAuthority(authority string) error {
 	return fmt.Errorf("unauthorized authority: %s", authority)
 }
 
+// ValidateAssetManagerAuthority checks whether the given address is the vault's asset
+// manager. It guards actions reserved for the asset manager alone (e.g. P2P settlement),
+// where the admin is deliberately excluded: the field is a role, not a person, so a vault
+// owner who wants a composite approval workflow (e.g. admin and manager both sign) points
+// the asset manager at a group address rather than the module offering per-vault
+// configurability. A vault with no asset manager cannot perform these actions at all.
+func (v VaultAccount) ValidateAssetManagerAuthority(authority string) error {
+	if v.AssetManager == "" {
+		return fmt.Errorf("no asset manager set")
+	}
+	if authority != v.AssetManager {
+		return fmt.Errorf("unauthorized authority: %s", authority)
+	}
+	return nil
+}
+
 // NewPendingSwapOut creates a new PendingSwapOut object.
 func NewPendingSwapOut(owner sdk.AccAddress, vaultAddr sdk.AccAddress, shares sdk.Coin, redeemDenom string) PendingSwapOut {
 	return PendingSwapOut{
@@ -398,4 +472,15 @@ func (p PendingSwapOut) Validate() error {
 	}
 
 	return nil
+}
+
+// NewVaultNAV creates a new VaultNAV entry for the given denom, pricing
+// volume units at price and attributing the entry to source.
+func NewVaultNAV(denom string, price sdk.Coin, volume sdkmath.Int, source string) VaultNAV {
+	return VaultNAV{
+		Denom:  denom,
+		Price:  price,
+		Volume: volume,
+		Source: source,
+	}
 }

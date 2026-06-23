@@ -3,16 +3,20 @@ package keeper_test
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"time"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/google/uuid"
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
@@ -2162,6 +2166,16 @@ func (s *TestSuite) TestMsgServer_UpdateInterestRate_Failures() {
 			setup:              setup,
 			expectedErrSubstrs: []string{"unauthorized authority"},
 		},
+		{
+			name: "rate above absolute ceiling is rejected",
+			msg: types.MsgUpdateInterestRateRequest{
+				Authority:    owner.String(),
+				VaultAddress: vaultAddr.String(),
+				NewRate:      "150.0",
+			},
+			setup:              setup,
+			expectedErrSubstrs: []string{"invalid new rate", "exceeds maximum allowed magnitude"},
+		},
 	}
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
@@ -2324,6 +2338,16 @@ func (s *TestSuite) TestMsgServer_UpdateMinInterestRate_Failures() {
 				MinRate:      "0.06",
 			},
 			expectedErrSubstrs: []string{"minimum interest rate", "greater than", "maximum"},
+		},
+		{
+			name:  "min below negative absolute ceiling is rejected",
+			setup: setup,
+			msg: types.MsgUpdateMinInterestRateRequest{
+				Admin:        admin.String(),
+				VaultAddress: vaultAddr.String(),
+				MinRate:      "-150.0",
+			},
+			expectedErrSubstrs: []string{"invalid min interest rate", "exceeds maximum allowed magnitude"},
 		},
 	}
 
@@ -2506,6 +2530,16 @@ func (s *TestSuite) TestMsgServer_UpdateMaxInterestRate_Failures() {
 				"cannot be greater than",
 				"maximum interest rate",
 			},
+		},
+		{
+			name:  "max above absolute ceiling is rejected",
+			setup: baseSetup,
+			msg: types.MsgUpdateMaxInterestRateRequest{
+				Admin:        admin.String(),
+				VaultAddress: vaultAddr.String(),
+				MaxRate:      "150.0",
+			},
+			expectedErrSubstrs: []string{"invalid max interest rate", "exceeds maximum allowed magnitude"},
 		},
 	}
 
@@ -4895,23 +4929,12 @@ func (s *TestSuite) TestMsgServer_BridgeMintShares() {
 
 	underlying := "under"
 	share := "vaultshares"
-	admin := s.adminAddr
 	bridge := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
 	vaultAddr := types.GetVaultAddress(share)
 	minted := sdk.NewInt64Coin(share, 250_000_000)
 
 	setup := func() {
-		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1_000_000)), admin)
-		v, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-			Admin:           admin.String(),
-			ShareDenom:      share,
-			UnderlyingAsset: underlying,
-		})
-		s.Require().NoError(err, "setup: expected vault creation to succeed")
-		v.BridgeEnabled = true
-		v.BridgeAddress = bridge.String()
-		v.TotalShares = sdk.NewCoin(share, math.NewInt(10_000_000_000))
-		s.k.AuthKeeper.SetAccount(s.ctx, v)
+		s.setupBridgeVault(underlying, share, bridge, math.NewInt(10_000_000_000))
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	}
 
@@ -4957,23 +4980,12 @@ func (s *TestSuite) TestMsgServer_BridgeMintShares_SupplyAndBalances() {
 
 	underlying := "underx"
 	share := "vaultsharex"
-	admin := s.adminAddr
 	bridge := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
 	vaultAddr := types.GetVaultAddress(share)
 	minted := sdk.NewInt64Coin(share, 1_000)
 
 	setup := func() {
-		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(10_000)), admin)
-		v, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-			Admin:           admin.String(),
-			ShareDenom:      share,
-			UnderlyingAsset: underlying,
-		})
-		s.Require().NoError(err, "setup: expected vault creation success")
-		v.TotalShares = sdk.NewCoin(share, math.NewInt(9_999_999))
-		v.BridgeAddress = bridge.String()
-		v.BridgeEnabled = true
-		s.k.AuthKeeper.SetAccount(s.ctx, v)
+		s.setupBridgeVault(underlying, share, bridge, math.NewInt(9_999_999))
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	}
 
@@ -5006,22 +5018,11 @@ func (s *TestSuite) TestMsgServer_BridgeMintShares_ErrorMessages() {
 
 	underlying := "erru"
 	share := "errshare"
-	admin := s.adminAddr
 	bridge := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
 	vaultAddr := types.GetVaultAddress(share)
 
 	setup := func() {
-		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1_000_000)), admin)
-		v, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-			Admin:           admin.String(),
-			ShareDenom:      share,
-			UnderlyingAsset: underlying,
-		})
-		s.Require().NoError(err, "setup: vault creation should succeed")
-		v.TotalShares = sdk.NewCoin(share, math.NewInt(100))
-		v.BridgeAddress = bridge.String()
-		v.BridgeEnabled = true
-		s.k.AuthKeeper.SetAccount(s.ctx, v)
+		s.setupBridgeVault(underlying, share, bridge, math.NewInt(100))
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	}
 
@@ -5061,28 +5062,15 @@ func (s *TestSuite) TestMsgServer_BridgeBurnShares() {
 
 	underlying := "under"
 	share := "vaultshares"
-	admin := s.adminAddr
 	vaultAddr := types.GetVaultAddress(share)
 	markerAddr := markertypes.MustGetMarkerAddress(share)
 	bridgeAddr := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
 	burn := sdk.NewInt64Coin(share, 100_000_000)
 
 	setup := func() {
-		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlying, 2_000_000), admin)
-		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-			Admin:           admin.String(),
-			ShareDenom:      share,
-			UnderlyingAsset: underlying,
-		})
-		s.Require().NoError(err, "expected vault creation to succeed")
+		s.setupBridgeVault(underlying, share, bridgeAddr, math.ZeroInt())
 
-		v, err := s.k.GetVault(s.ctx, vaultAddr)
-		s.Require().NoError(err, "expected vault retrieval to succeed")
-		v.BridgeEnabled = true
-		v.BridgeAddress = bridgeAddr.String()
-		s.k.AuthKeeper.SetAccount(s.ctx, v)
-
-		err = s.k.MarkerKeeper.MintCoin(s.ctx, vaultAddr, burn)
+		err := s.k.MarkerKeeper.MintCoin(s.ctx, vaultAddr, burn)
 		s.Require().NoError(err, "expected marker mint to succeed")
 		err = s.k.MarkerKeeper.WithdrawCoins(s.ctx, vaultAddr, bridgeAddr, share, sdk.NewCoins(burn))
 		s.Require().NoError(err, "expected marker withdraw to bridge to succeed")
@@ -5141,12 +5129,7 @@ func (s *TestSuite) TestMsgServer_BridgeBurnShares_Failures() {
 	}
 
 	enabled := func() {
-		base()
-		v, err := s.k.GetVault(s.ctx, vaultAddr)
-		s.Require().NoError(err, "expected vault retrieval to succeed")
-		v.BridgeEnabled = true
-		v.BridgeAddress = bridgeAddr.String()
-		s.k.AuthKeeper.SetAccount(s.ctx, v)
+		s.setupBridgeVault(underlying, share, bridgeAddr, math.ZeroInt())
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	}
 
@@ -5226,6 +5209,73 @@ func (s *TestSuite) TestMsgServer_BridgeBurnShares_Failures() {
 			runMsgServerTestCase(s, testDef, tc)
 		})
 	}
+}
+
+// TestMsgServer_BridgeShares_MintBurnMintCycle_TotalSharesInvariant pins the bridge supply-of-record
+// model: bridge mint/burn move the local/remote split of an existing cross-chain supply and never
+// mutate vault.TotalShares, so a burn re-widens the mint capacity (TotalShares - local_supply) by the
+// burned amount while local supply can never exceed TotalShares. See spec/01_concepts.md.
+func (s *TestSuite) TestMsgServer_BridgeShares_MintBurnMintCycle_TotalSharesInvariant() {
+	underlying := "cyclu"
+	share := "cycleshare"
+	vaultAddr := types.GetVaultAddress(share)
+	bridgeAddr := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+	totalShares := math.NewInt(1_000_000)
+
+	msgServer := keeper.NewMsgServer(s.simApp.VaultKeeper)
+
+	s.setupBridgeVault(underlying, share, bridgeAddr, totalShares)
+
+	assertInvariant := func(step string) {
+		v, err := s.k.GetVault(s.ctx, vaultAddr)
+		s.Require().NoError(err, "%s: expected vault retrieval to succeed", step)
+		s.Assert().Equal(totalShares.String(), v.TotalShares.Amount.String(),
+			"%s: TotalShares must be invariant across bridge ops", step)
+		supply := s.k.BankKeeper.GetSupply(s.ctx, share)
+		s.Assert().False(supply.Amount.GT(v.TotalShares.Amount),
+			"%s: local supply %s must never exceed TotalShares %s", step, supply.Amount, v.TotalShares.Amount)
+	}
+
+	_, err := msgServer.BridgeMintShares(s.ctx, &types.MsgBridgeMintSharesRequest{
+		VaultAddress: vaultAddr.String(),
+		Bridge:       bridgeAddr.String(),
+		Shares:       sdk.NewInt64Coin(share, 600_000),
+	})
+	s.Require().NoError(err, "first mint within capacity should succeed")
+	s.Assert().Equal(int64(600_000), s.k.BankKeeper.GetSupply(s.ctx, share).Amount.Int64(),
+		"local supply should reflect first mint")
+	s.assertBalance(bridgeAddr, share, math.NewInt(600_000))
+	assertInvariant("after first mint")
+
+	_, err = msgServer.BridgeBurnShares(s.ctx, &types.MsgBridgeBurnSharesRequest{
+		VaultAddress: vaultAddr.String(),
+		Bridge:       bridgeAddr.String(),
+		Shares:       sdk.NewInt64Coin(share, 400_000),
+	})
+	s.Require().NoError(err, "burn within bridge balance should succeed")
+	s.Assert().Equal(int64(200_000), s.k.BankKeeper.GetSupply(s.ctx, share).Amount.Int64(),
+		"local supply should drop by the burned amount")
+	s.assertBalance(bridgeAddr, share, math.NewInt(200_000))
+	assertInvariant("after burn")
+
+	_, err = msgServer.BridgeMintShares(s.ctx, &types.MsgBridgeMintSharesRequest{
+		VaultAddress: vaultAddr.String(),
+		Bridge:       bridgeAddr.String(),
+		Shares:       sdk.NewInt64Coin(share, 800_000),
+	})
+	s.Require().NoError(err, "burn re-widened capacity to 800_000; second mint to the cap should succeed")
+	s.Assert().Equal(int64(1_000_000), s.k.BankKeeper.GetSupply(s.ctx, share).Amount.Int64(),
+		"local supply should reach TotalShares after minting to the re-widened cap")
+	assertInvariant("after second mint")
+
+	_, err = msgServer.BridgeMintShares(s.ctx, &types.MsgBridgeMintSharesRequest{
+		VaultAddress: vaultAddr.String(),
+		Bridge:       bridgeAddr.String(),
+		Shares:       sdk.NewInt64Coin(share, 1),
+	})
+	s.Require().Error(err, "minting beyond TotalShares must be rejected: local supply can never exceed the supply-of-record")
+	s.Assert().Contains(err.Error(), "mint exceeds capacity", "expected capacity rejection")
+	assertInvariant("after over-cap mint rejected")
 }
 
 func (s *TestSuite) TestMsgServer_SetAssetManager_Failures() {
@@ -5463,4 +5513,1707 @@ func runMsgServerTestCase[Req any, Resp any, CheckArgs any](
 	)
 
 	td.postCheck(&tc.msg, tc.postCheckArgs)
+}
+
+func (s *TestSuite) TestMsgServer_UpdateVaultNAV() {
+	underlying := "under"
+	share := "vaultshares"
+	navDenom := "rwa"
+	admin := s.adminAddr
+	vaultAddr := types.GetVaultAddress(share)
+
+	baseSetup := func() {
+		s.setupBaseVault(underlying, share)
+		s.requireSimpleMarker(navDenom)
+		s.ctx = s.ctx.WithBlockHeight(100)
+	}
+
+	type postCheckArgs struct {
+		denom  string
+		price  sdk.Coin
+		volume sdkmath.Int
+		source string
+		height int64
+	}
+
+	testDef := msgServerTestDef[types.MsgUpdateVaultNAVRequest, types.MsgUpdateVaultNAVResponse, postCheckArgs]{
+		endpointName:     "UpdateVaultNAV",
+		endpoint:         keeper.NewMsgServer(s.simApp.VaultKeeper).UpdateVaultNAV,
+		expectedResponse: &types.MsgUpdateVaultNAVResponse{},
+		postCheck: func(_ *types.MsgUpdateVaultNAVRequest, args postCheckArgs) {
+			nav, err := s.k.GetVaultNAV(s.ctx, vaultAddr, args.denom)
+			s.Require().NoError(err, "post-check: failed to get NAV for %s", args.denom)
+			s.Assert().Equal(args.denom, nav.Denom, "post-check: NAV denom mismatch")
+			s.Assert().Equal(args.price, nav.Price, "post-check: NAV price mismatch")
+			s.Assert().Equal(args.volume, nav.Volume, "post-check: NAV volume mismatch")
+			s.Assert().Equal(args.source, nav.Source, "post-check: NAV source mismatch")
+			s.Assert().Equal(args.height, nav.UpdatedBlockHeight, "post-check: NAV block height mismatch")
+			s.Assert().Equal(s.ctx.BlockTime().UTC(), nav.UpdatedTime, "post-check: NAV updated time mismatch")
+		},
+	}
+
+	tests := []struct {
+		name   string
+		setup  func()
+		price  sdk.Coin
+		volume sdkmath.Int
+		source string
+	}{
+		{
+			name:   "first NAV write",
+			setup:  baseSetup,
+			price:  sdk.NewInt64Coin(underlying, 100),
+			volume: sdkmath.NewInt(1),
+			source: "oracle-a",
+		},
+		{
+			name: "overwrite existing NAV",
+			setup: func() {
+				baseSetup()
+				vault, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err, "failed to get vault for overwrite setup")
+				seed := types.VaultNAV{Denom: navDenom, Price: sdk.NewInt64Coin(underlying, 50), Volume: sdkmath.NewInt(2)}
+				s.Require().NoError(s.k.SetVaultNAV(s.ctx, vault, seed, admin.String()), "failed to seed NAV")
+			},
+			price:  sdk.NewInt64Coin(underlying, 250),
+			volume: sdkmath.NewInt(5),
+			source: "oracle-b",
+		},
+		{
+			name:   "held denom written down to a zero NAV",
+			setup:  baseSetup,
+			price:  sdk.NewInt64Coin(underlying, 0),
+			volume: sdkmath.NewInt(1),
+			source: "bankruptcy-writedown",
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			tc := msgServerTestCase[types.MsgUpdateVaultNAVRequest, postCheckArgs]{
+				name:  tt.name,
+				setup: tt.setup,
+				msg: types.MsgUpdateVaultNAVRequest{
+					Signer:       admin.String(),
+					VaultAddress: vaultAddr.String(),
+					Denom:        navDenom,
+					Price:        tt.price,
+					Volume:       tt.volume,
+					Source:       tt.source,
+				},
+				postCheckArgs: postCheckArgs{denom: navDenom, price: tt.price, volume: tt.volume, source: tt.source, height: 100},
+				expectedEvents: sdk.Events{
+					sdk.NewEvent("provlabs.vault.v1.EventNAVUpdated",
+						sdk.NewAttribute("denom", navDenom),
+						sdk.NewAttribute("price", tt.price.String()),
+						sdk.NewAttribute("signer", admin.String()),
+						sdk.NewAttribute("source", tt.source),
+						sdk.NewAttribute("updated_block_height", "100"),
+						sdk.NewAttribute("vault_address", vaultAddr.String()),
+						sdk.NewAttribute("volume", tt.volume.String()),
+					),
+					sdk.NewEvent("provenance.marker.v1.EventSetNetAssetValue",
+						sdk.NewAttribute("denom", navDenom),
+						sdk.NewAttribute("price", tt.price.String()),
+						sdk.NewAttribute("source", vaultAddr.String()),
+						sdk.NewAttribute("volume", tt.volume.String()),
+					),
+				},
+			}
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
+// TestMsgServer_UpdateVaultNAV_Failures covers authority enforcement, denom
+// validation, price/volume validation, and the missing-vault path.
+func (s *TestSuite) TestMsgServer_UpdateVaultNAV_Failures() {
+	underlying := "under"
+	share := "vaultshares"
+	admin := s.adminAddr
+	other := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1000))
+	vaultAddr := types.GetVaultAddress(share)
+
+	setup := func() {
+		s.setupBaseVault(underlying, share)
+	}
+
+	testDef := msgServerTestDef[types.MsgUpdateVaultNAVRequest, types.MsgUpdateVaultNAVResponse, any]{
+		endpointName: "UpdateVaultNAV",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).UpdateVaultNAV,
+		postCheck:    nil,
+	}
+
+	tests := []msgServerTestCase[types.MsgUpdateVaultNAVRequest, any]{
+		{
+			name:  "vault does not exist",
+			setup: func() {},
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       admin.String(),
+				VaultAddress: types.GetVaultAddress("doesnotexist").String(),
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin(underlying, 100),
+				Volume:       sdkmath.NewInt(1),
+			},
+			expectedErrSubstrs: []string{"vault not found"},
+		},
+		{
+			name:  "wrong signer is not the NAV authority",
+			setup: setup,
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       other.String(),
+				VaultAddress: vaultAddr.String(),
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin(underlying, 100),
+				Volume:       sdkmath.NewInt(1),
+			},
+			expectedErrSubstrs: []string{"unauthorized", "is not the vault NAV authority"},
+		},
+		{
+			name:  "rejects vault share denom",
+			setup: setup,
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Denom:        share,
+				Price:        sdk.NewInt64Coin(underlying, 100),
+				Volume:       sdkmath.NewInt(1),
+			},
+			expectedErrSubstrs: []string{"cannot set NAV for vault share denom"},
+		},
+		{
+			name:  "rejects unregistered marker denom",
+			setup: setup,
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Denom:        "notamarker",
+				Price:        sdk.NewInt64Coin(underlying, 100),
+				Volume:       sdkmath.NewInt(1),
+			},
+			expectedErrSubstrs: []string{"is not a registered marker"},
+		},
+		{
+			name:  "rejects negative price",
+			setup: setup,
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Denom:        "rwa",
+				Price:        sdk.Coin{Denom: underlying, Amount: sdkmath.NewInt(-1)},
+				Volume:       sdkmath.NewInt(1),
+			},
+			expectedErrSubstrs: []string{"invalid NAV price"},
+		},
+		{
+			name:  "rejects zero volume",
+			setup: setup,
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin(underlying, 100),
+				Volume:       sdkmath.ZeroInt(),
+			},
+			expectedErrSubstrs: []string{"NAV volume must be positive"},
+		},
+		{
+			name:  "rejects negative volume",
+			setup: setup,
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin(underlying, 100),
+				Volume:       sdkmath.NewInt(-1),
+			},
+			expectedErrSubstrs: []string{"NAV volume must be positive"},
+		},
+		{
+			name: "rejects volume that overflows the marker NAV volume",
+			setup: func() {
+				setup()
+				s.requireSimpleMarker("rwa")
+			},
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin(underlying, 100),
+				Volume:       sdkmath.NewIntFromBigInt(new(big.Int).Lsh(big.NewInt(1), 70)),
+			},
+			expectedErrSubstrs: []string{"failed to publish vault NAV to marker", "overflows the marker NAV volume"},
+		},
+		{
+			name: "rejects NAV update while vault is paused",
+			setup: func() {
+				setup()
+				vault, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err, "failed to get vault %s for paused setup", vaultAddr)
+				vault.Paused = true
+				s.k.AuthKeeper.SetAccount(s.ctx, vault)
+			},
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin(underlying, 100),
+				Volume:       sdkmath.NewInt(1),
+			},
+			expectedErrSubstrs: []string{"is paused", "NAV cannot be updated while paused"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_UpdateVaultNAV_Reconcile() {
+	underlying := "under"
+	share := "vaultshares"
+	navDenom := "rwa"
+	testBlockTime := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+
+	tests := []struct {
+		name                 string
+		interestRate         string
+		paused               bool
+		useUnregisteredDenom bool
+		expectedErrContains  string
+		expectedReconciles   int
+	}{
+		{
+			name:               "successful NAV update with an elapsed interest period reconciles exactly once, before the NAV write",
+			interestRate:       "4.20",
+			expectedReconciles: 1,
+		},
+		{
+			name:                "paused vault rejects the NAV update before reconciling",
+			interestRate:        "4.20",
+			paused:              true,
+			expectedErrContains: "NAV cannot be updated while paused",
+			expectedReconciles:  0,
+		},
+		{
+			name:                 "NAV update that fails validation reconciles first, relying on tx revert to discard it",
+			interestRate:         "4.20",
+			useUnregisteredDenom: true,
+			expectedErrContains:  "is not a registered marker",
+			expectedReconciles:   1,
+		},
+		{
+			name:                "failed reconcile aborts the NAV update",
+			interestRate:        "1000000.0",
+			expectedErrContains: "failed to reconcile vault before NAV update",
+			expectedReconciles:  0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			origCtx := s.ctx
+			defer func() { s.ctx = origCtx }()
+			s.ctx, _ = s.ctx.CacheContext()
+
+			vaultAddr, _ := s.setupReconcileVault(tc.interestRate, testBlockTime.Add(-3*time.Hour).Unix(), tc.paused, sdk.NewInt64Coin(underlying, 1_000), share, sdk.NewInt64Coin(share, 0), testBlockTime)
+			denom := navDenom
+			if tc.useUnregisteredDenom {
+				denom = "notamarker"
+			} else {
+				s.requireSimpleMarker(navDenom)
+			}
+
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).UpdateVaultNAV(s.ctx, &types.MsgUpdateVaultNAVRequest{
+				Signer:       s.adminAddr.String(),
+				VaultAddress: vaultAddr.String(),
+				Denom:        denom,
+				Price:        sdk.NewInt64Coin(underlying, 100),
+				Volume:       sdkmath.NewInt(1),
+				Source:       "oracle",
+			})
+
+			reconcileCount := 0
+			reconcileIdx := -1
+			updatedIdx := -1
+			for i, ev := range s.ctx.EventManager().Events() {
+				switch ev.Type {
+				case "provlabs.vault.v1.EventVaultReconcile":
+					reconcileCount++
+					reconcileIdx = i
+				case "provlabs.vault.v1.EventNAVUpdated":
+					updatedIdx = i
+				}
+			}
+
+			if tc.expectedErrContains != "" {
+				s.Require().ErrorContains(err, tc.expectedErrContains, "UpdateVaultNAV should fail for case %q", tc.name)
+			} else {
+				s.Require().NoError(err, "UpdateVaultNAV should succeed for case %q", tc.name)
+			}
+			s.Assert().Equal(tc.expectedReconciles, reconcileCount, "EventVaultReconcile count mismatch for case %q", tc.name)
+			if tc.expectedErrContains == "" && tc.expectedReconciles > 0 {
+				s.Require().GreaterOrEqual(updatedIdx, 0, "EventNAVUpdated should be emitted for case %q", tc.name)
+				s.Assert().Less(reconcileIdx, updatedIdx, "reconcile events should precede EventNAVUpdated for case %q", tc.name)
+			}
+		})
+	}
+}
+
+// TestMsgServer_UpdateNAVAuthority verifies that the vault admin can rotate the
+// NAV authority and that the rotation is persisted on the vault account.
+func (s *TestSuite) TestMsgServer_UpdateNAVAuthority() {
+	underlying := "under"
+	share := "vaultshares"
+	admin := s.adminAddr
+	newAuthority := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1000))
+	vaultAddr := types.GetVaultAddress(share)
+
+	testDef := msgServerTestDef[types.MsgUpdateNAVAuthorityRequest, types.MsgUpdateNAVAuthorityResponse, string]{
+		endpointName:     "UpdateNAVAuthority",
+		endpoint:         keeper.NewMsgServer(s.simApp.VaultKeeper).UpdateNAVAuthority,
+		expectedResponse: &types.MsgUpdateNAVAuthorityResponse{},
+		postCheck: func(_ *types.MsgUpdateNAVAuthorityRequest, expectedAuthority string) {
+			vault, err := s.k.GetVault(s.ctx, vaultAddr)
+			s.Require().NoError(err, "post-check: failed to get vault")
+			s.Assert().Equal(expectedAuthority, vault.NavAuthority, "post-check: nav authority mismatch")
+			s.Assert().Equal(expectedAuthority, vault.GetNAVAuthority(), "post-check: resolved nav authority mismatch")
+		},
+	}
+
+	tc := msgServerTestCase[types.MsgUpdateNAVAuthorityRequest, string]{
+		name: "admin rotates nav authority",
+		setup: func() {
+			s.setupBaseVault(underlying, share)
+		},
+		msg: types.MsgUpdateNAVAuthorityRequest{
+			Signer:       admin.String(),
+			VaultAddress: vaultAddr.String(),
+			NewAuthority: newAuthority.String(),
+		},
+		postCheckArgs: newAuthority.String(),
+		expectedEvents: sdk.Events{
+			sdk.NewEvent("provlabs.vault.v1.EventNAVAuthorityUpdated",
+				sdk.NewAttribute("admin", admin.String()),
+				sdk.NewAttribute("new_authority", newAuthority.String()),
+				sdk.NewAttribute("vault_address", vaultAddr.String()),
+			),
+		},
+	}
+
+	s.Run(tc.name, func() {
+		runMsgServerTestCase(s, testDef, tc)
+	})
+}
+
+// TestMsgServer_UpdateNAVAuthority_Failures covers admin enforcement and the
+// missing-vault path for the UpdateNAVAuthority handler.
+func (s *TestSuite) TestMsgServer_UpdateNAVAuthority_Failures() {
+	underlying := "under"
+	share := "vaultshares"
+	admin := s.adminAddr
+	other := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1000))
+	vaultAddr := types.GetVaultAddress(share)
+
+	setup := func() {
+		s.setupBaseVault(underlying, share)
+	}
+
+	testDef := msgServerTestDef[types.MsgUpdateNAVAuthorityRequest, types.MsgUpdateNAVAuthorityResponse, any]{
+		endpointName: "UpdateNAVAuthority",
+		endpoint:     keeper.NewMsgServer(s.simApp.VaultKeeper).UpdateNAVAuthority,
+		postCheck:    nil,
+	}
+
+	tests := []msgServerTestCase[types.MsgUpdateNAVAuthorityRequest, any]{
+		{
+			name:  "vault does not exist",
+			setup: func() {},
+			msg: types.MsgUpdateNAVAuthorityRequest{
+				Signer:       admin.String(),
+				VaultAddress: types.GetVaultAddress("doesnotexist").String(),
+				NewAuthority: other.String(),
+			},
+			expectedErrSubstrs: []string{"vault not found"},
+		},
+		{
+			name:  "signer is not the vault admin",
+			setup: setup,
+			msg: types.MsgUpdateNAVAuthorityRequest{
+				Signer:       other.String(),
+				VaultAddress: vaultAddr.String(),
+				NewAuthority: other.String(),
+			},
+			expectedErrSubstrs: []string{"unauthorized", "is not the vault admin"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
+// TestMsgServer_UpdateNAVAuthority_RotationChangesNAVAuthority verifies that
+// after a rotation only the new authority can update NAVs and the prior admin
+// loses NAV authority.
+func (s *TestSuite) TestMsgServer_UpdateNAVAuthority_RotationChangesNAVAuthority() {
+	underlying := "under"
+	share := "vaultshares"
+	admin := s.adminAddr
+	oracle := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1000))
+	vaultAddr := types.GetVaultAddress(share)
+
+	s.setupBaseVault(underlying, share)
+	s.requireSimpleMarker("rwa")
+	msgServer := keeper.NewMsgServer(s.simApp.VaultKeeper)
+
+	_, err := msgServer.UpdateNAVAuthority(s.ctx, &types.MsgUpdateNAVAuthorityRequest{
+		Signer:       admin.String(),
+		VaultAddress: vaultAddr.String(),
+		NewAuthority: oracle.String(),
+	})
+	s.Require().NoError(err, "admin should be able to rotate the nav authority")
+
+	_, err = msgServer.UpdateVaultNAV(s.ctx, &types.MsgUpdateVaultNAVRequest{
+		Signer:       admin.String(),
+		VaultAddress: vaultAddr.String(),
+		Denom:        "rwa",
+		Price:        sdk.NewInt64Coin(underlying, 100),
+		Volume:       sdkmath.NewInt(1),
+	})
+	s.Require().Error(err, "former admin should no longer be the nav authority")
+	s.Assert().Contains(err.Error(), "is not the vault NAV authority", "unexpected error for stale authority")
+
+	_, err = msgServer.UpdateVaultNAV(s.ctx, &types.MsgUpdateVaultNAVRequest{
+		Signer:       oracle.String(),
+		VaultAddress: vaultAddr.String(),
+		Denom:        "rwa",
+		Price:        sdk.NewInt64Coin(underlying, 100),
+		Volume:       sdkmath.NewInt(1),
+	})
+	s.Require().NoError(err, "new nav authority should be able to update NAVs")
+
+	nav, err := s.k.GetVaultNAV(s.ctx, vaultAddr, "rwa")
+	s.Require().NoError(err, "NAV should exist after the new authority update")
+	s.Assert().Equal(sdk.NewInt64Coin(underlying, 100), nav.Price, "NAV price mismatch")
+}
+
+// TestMsgServer_UpdateNAVAuthority_ResetToEmptyFallsBackToAdmin verifies that an
+// UpdateNAVAuthority message with an empty new authority clears the explicit NAV
+// authority, after which the vault admin again resolves as the NAV authority and
+// the previously delegated authority loses its NAV update rights.
+func (s *TestSuite) TestMsgServer_UpdateNAVAuthority_ResetToEmptyFallsBackToAdmin() {
+	underlying := "under"
+	share := "vaultshares"
+	admin := s.adminAddr
+	oracle := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1000))
+	vaultAddr := types.GetVaultAddress(share)
+
+	s.setupBaseVault(underlying, share)
+	s.requireSimpleMarker("rwa")
+	msgServer := keeper.NewMsgServer(s.simApp.VaultKeeper)
+
+	_, err := msgServer.UpdateNAVAuthority(s.ctx, &types.MsgUpdateNAVAuthorityRequest{
+		Signer:       admin.String(),
+		VaultAddress: vaultAddr.String(),
+		NewAuthority: oracle.String(),
+	})
+	s.Require().NoError(err, "admin should be able to delegate the nav authority to the oracle")
+
+	_, err = msgServer.UpdateNAVAuthority(s.ctx, &types.MsgUpdateNAVAuthorityRequest{
+		Signer:       admin.String(),
+		VaultAddress: vaultAddr.String(),
+		NewAuthority: "",
+	})
+	s.Require().NoError(err, "admin should be able to reset the nav authority to empty")
+
+	vault, err := s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "failed to get vault after resetting the nav authority")
+	s.Assert().Empty(vault.NavAuthority, "reset should clear the explicit nav authority")
+	s.Assert().Equal(admin.String(), vault.GetNAVAuthority(), "cleared nav authority should fall back to the vault admin")
+
+	_, err = msgServer.UpdateVaultNAV(s.ctx, &types.MsgUpdateVaultNAVRequest{
+		Signer:       oracle.String(),
+		VaultAddress: vaultAddr.String(),
+		Denom:        "rwa",
+		Price:        sdk.NewInt64Coin(underlying, 100),
+		Volume:       sdkmath.NewInt(1),
+	})
+	s.Require().Error(err, "the former delegated authority should lose NAV update rights after the reset")
+	s.Assert().Contains(err.Error(), "is not the vault NAV authority", "unexpected error for the former authority")
+
+	_, err = msgServer.UpdateVaultNAV(s.ctx, &types.MsgUpdateVaultNAVRequest{
+		Signer:       admin.String(),
+		VaultAddress: vaultAddr.String(),
+		Denom:        "rwa",
+		Price:        sdk.NewInt64Coin(underlying, 100),
+		Volume:       sdkmath.NewInt(1),
+	})
+	s.Require().NoError(err, "the admin should regain NAV update rights after the reset")
+
+	nav, err := s.k.GetVaultNAV(s.ctx, vaultAddr, "rwa")
+	s.Require().NoError(err, "NAV should exist after the admin update following the reset")
+	s.Assert().Equal(sdk.NewInt64Coin(underlying, 100), nav.Price, "NAV price mismatch after reset")
+}
+
+// TestMsgServer_UpdateNAVAuthority_NoOpWhenUnchanged verifies that calling
+// UpdateNAVAuthority with the current NAV authority is a no-op: the call
+// succeeds, the vault is left untouched, and no EventNAVAuthorityUpdated event
+// is emitted.
+func (s *TestSuite) TestMsgServer_UpdateNAVAuthority_NoOpWhenUnchanged() {
+	underlying := "under"
+	share := "vaultshares"
+	admin := s.adminAddr
+	oracle := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1000))
+	vaultAddr := types.GetVaultAddress(share)
+
+	s.setupBaseVault(underlying, share)
+	msgServer := keeper.NewMsgServer(s.simApp.VaultKeeper)
+
+	_, err := msgServer.UpdateNAVAuthority(s.ctx, &types.MsgUpdateNAVAuthorityRequest{
+		Signer:       admin.String(),
+		VaultAddress: vaultAddr.String(),
+		NewAuthority: oracle.String(),
+	})
+	s.Require().NoError(err, "initial rotation should succeed")
+
+	vaultBefore, err := s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "failed to read vault after initial rotation")
+
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	_, err = msgServer.UpdateNAVAuthority(s.ctx, &types.MsgUpdateNAVAuthorityRequest{
+		Signer:       admin.String(),
+		VaultAddress: vaultAddr.String(),
+		NewAuthority: oracle.String(),
+	})
+	s.Require().NoError(err, "re-setting the NAV authority to its current value should be a no-op")
+
+	for _, ev := range s.ctx.EventManager().Events() {
+		s.Assert().NotEqualf(
+			"provlabs.vault.v1.EventNAVAuthorityUpdated", ev.Type,
+			"no-op UpdateNAVAuthority should not emit EventNAVAuthorityUpdated",
+		)
+	}
+
+	vaultAfter, err := s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "failed to read vault after no-op rotation")
+	s.Assert().Equal(vaultBefore.NavAuthority, vaultAfter.NavAuthority, "no-op rotation should leave NavAuthority untouched")
+}
+
+func (s *TestSuite) TestMsgServer_AcceptAsset_Inbound() {
+	underlying, share, paymentDenom, asset := "under", "vshare", "pay", "rwacoin"
+	externalID := "p2p-inbound"
+
+	vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+	vaultAddr := vault.GetAddress()
+	s.requireSimpleMarker(asset)
+
+	source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5))), "failed to fund principal with payment denom")
+
+	sourceAmount := sdk.NewCoins(sdk.NewInt64Coin(asset, 10))
+	targetAmount := sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5))
+	s.createPayment(source, vaultAddr, sourceAmount, targetAmount, externalID)
+
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	resp, err := keeper.NewMsgServer(s.simApp.VaultKeeper).AcceptAsset(s.ctx, &types.MsgAcceptAssetRequest{
+		Authority:    s.assetManagerAddr.String(),
+		VaultAddress: vaultAddr.String(),
+		Source:       source.String(),
+		ExternalId:   externalID,
+	})
+	s.Require().NoError(err, "AcceptAsset inbound should succeed")
+	s.Assert().Equal(&types.MsgAcceptAssetResponse{}, resp, "AcceptAsset inbound response")
+
+	s.assertBalance(source, asset, sdkmath.NewInt(0))
+	s.assertBalance(source, paymentDenom, sdkmath.NewInt(5))
+	s.assertBalance(principalAddr, asset, sdkmath.NewInt(10))
+	s.assertBalance(principalAddr, paymentDenom, sdkmath.NewInt(0))
+	s.assertBalance(vaultAddr, asset, sdkmath.NewInt(0))
+	s.assertBalance(vaultAddr, paymentDenom, sdkmath.NewInt(0))
+
+	s.requireTypedEventEmitted(types.NewEventAssetAccepted(vaultAddr.String(), source.String(), externalID, sourceAmount, targetAmount, types.AssetDirectionInbound))
+}
+
+func (s *TestSuite) TestMsgServer_AcceptAsset_Outbound() {
+	underlying, share, paymentDenom, asset := "under", "vshare", "pay", "rwacoin"
+	externalID := "p2p-outbound"
+
+	vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+	vaultAddr := vault.GetAddress()
+	s.requireSimpleMarker(asset)
+
+	source := s.CreateAndFundAccount(sdk.NewInt64Coin(paymentDenom, 5))
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10))), "failed to fund principal with asset")
+
+	sourceAmount := sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5))
+	targetAmount := sdk.NewCoins(sdk.NewInt64Coin(asset, 10))
+	s.createPayment(source, vaultAddr, sourceAmount, targetAmount, externalID)
+
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	resp, err := keeper.NewMsgServer(s.simApp.VaultKeeper).AcceptAsset(s.ctx, &types.MsgAcceptAssetRequest{
+		Authority:    s.assetManagerAddr.String(),
+		VaultAddress: vaultAddr.String(),
+		Source:       source.String(),
+		ExternalId:   externalID,
+	})
+	s.Require().NoError(err, "AcceptAsset outbound should succeed")
+	s.Assert().Equal(&types.MsgAcceptAssetResponse{}, resp, "AcceptAsset outbound response")
+
+	s.assertBalance(source, paymentDenom, sdkmath.NewInt(0))
+	s.assertBalance(source, asset, sdkmath.NewInt(10))
+	s.assertBalance(principalAddr, asset, sdkmath.NewInt(0))
+	s.assertBalance(principalAddr, paymentDenom, sdkmath.NewInt(5))
+	s.assertBalance(vaultAddr, asset, sdkmath.NewInt(0))
+	s.assertBalance(vaultAddr, paymentDenom, sdkmath.NewInt(0))
+
+	s.requireTypedEventEmitted(types.NewEventAssetAccepted(vaultAddr.String(), source.String(), externalID, sourceAmount, targetAmount, types.AssetDirectionOutbound))
+
+	drainedNAV := types.NewVaultNAV(asset, sourceAmount[0], targetAmount[0].Amount, vaultAddr.String())
+	s.requireTypedEventEmitted(types.NewEventNAVRemoved(vaultAddr.String(), drainedNAV))
+	_, err = s.k.GetVaultNAV(s.ctx, vaultAddr, asset)
+	s.Assert().ErrorIs(err, collections.ErrNotFound, "NAV entry for %s should be removed after the draining outbound settlement", asset)
+}
+
+func (s *TestSuite) TestMsgServer_AcceptAsset_ZeroPriceOutbound() {
+	underlying, share, paymentDenom, asset := "under", "vshare", "pay", "rwacoin"
+	externalID := "p2p-outbound-zero"
+
+	vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+	vaultAddr := vault.GetAddress()
+	s.requireSimpleMarker(asset)
+
+	source := s.CreateAndFundAccount(sdk.NewInt64Coin(underlying, 1))
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10))), "failed to fund principal with asset")
+
+	sourceAmount := sdk.NewCoins()
+	targetAmount := sdk.NewCoins(sdk.NewInt64Coin(asset, 10))
+	s.createPayment(source, vaultAddr, sourceAmount, targetAmount, externalID)
+
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	resp, err := keeper.NewMsgServer(s.simApp.VaultKeeper).AcceptAsset(s.ctx, &types.MsgAcceptAssetRequest{
+		Authority:    s.assetManagerAddr.String(),
+		VaultAddress: vaultAddr.String(),
+		Source:       source.String(),
+		ExternalId:   externalID,
+	})
+	s.Require().NoError(err, "AcceptAsset zero-price outbound should succeed")
+	s.Assert().Equal(&types.MsgAcceptAssetResponse{}, resp, "AcceptAsset zero-price outbound response")
+
+	s.assertBalance(source, asset, sdkmath.NewInt(10))
+	s.assertBalance(source, paymentDenom, sdkmath.NewInt(0))
+	s.assertBalance(principalAddr, asset, sdkmath.NewInt(0))
+	s.assertBalance(principalAddr, paymentDenom, sdkmath.NewInt(0))
+	s.assertBalance(vaultAddr, asset, sdkmath.NewInt(0))
+	s.assertBalance(vaultAddr, paymentDenom, sdkmath.NewInt(0))
+
+	s.requireTypedEventEmitted(types.NewEventAssetAccepted(vaultAddr.String(), source.String(), externalID, sourceAmount, targetAmount, types.AssetDirectionOutbound))
+
+	drainedNAV := types.NewVaultNAV(asset, sdk.NewInt64Coin(paymentDenom, 0), targetAmount[0].Amount, vaultAddr.String())
+	s.requireTypedEventEmitted(types.NewEventNAVRemoved(vaultAddr.String(), drainedNAV))
+	_, err = s.k.GetVaultNAV(s.ctx, vaultAddr, asset)
+	s.Assert().ErrorIs(err, collections.ErrNotFound, "NAV entry for %s should be removed after the draining zero-price outbound settlement", asset)
+}
+
+func (s *TestSuite) TestMsgServer_AcceptAsset_ZeroPriceInbound() {
+	underlying, share, paymentDenom, asset := "under", "vshare", "pay", "rwacoin"
+	externalID := "p2p-inbound-zero"
+
+	vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+	vaultAddr := vault.GetAddress()
+	s.requireSimpleMarker(asset)
+
+	source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
+
+	sourceAmount := sdk.NewCoins(sdk.NewInt64Coin(asset, 10))
+	targetAmount := sdk.NewCoins()
+	s.createPayment(source, vaultAddr, sourceAmount, targetAmount, externalID)
+
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	resp, err := keeper.NewMsgServer(s.simApp.VaultKeeper).AcceptAsset(s.ctx, &types.MsgAcceptAssetRequest{
+		Authority:    s.assetManagerAddr.String(),
+		VaultAddress: vaultAddr.String(),
+		Source:       source.String(),
+		ExternalId:   externalID,
+	})
+	s.Require().NoError(err, "AcceptAsset zero-price inbound should succeed")
+	s.Assert().Equal(&types.MsgAcceptAssetResponse{}, resp, "AcceptAsset zero-price inbound response")
+
+	s.assertBalance(source, asset, sdkmath.NewInt(0))
+	s.assertBalance(source, paymentDenom, sdkmath.NewInt(0))
+	s.assertBalance(principalAddr, asset, sdkmath.NewInt(10))
+	s.assertBalance(principalAddr, paymentDenom, sdkmath.NewInt(0))
+	s.assertBalance(vaultAddr, asset, sdkmath.NewInt(0))
+	s.assertBalance(vaultAddr, paymentDenom, sdkmath.NewInt(0))
+
+	s.requireTypedEventEmitted(types.NewEventAssetAccepted(vaultAddr.String(), source.String(), externalID, sourceAmount, targetAmount, types.AssetDirectionInbound))
+
+	stored, err := s.k.GetVaultNAV(s.ctx, vaultAddr, asset)
+	s.Require().NoError(err, "NAV entry for %s should exist after the zero-price inbound settlement", asset)
+	s.Assert().Equal(sdk.NewInt64Coin(paymentDenom, 0), stored.Price, "stored NAV price should be the zero payment coin")
+	s.Assert().Equal(sourceAmount[0].Amount, stored.Volume, "stored NAV volume should be the asset amount")
+}
+
+func (s *TestSuite) TestMsgServer_AcceptAsset_RestrictedMarker() {
+	underlying, share, paymentDenom, restrictedDenom := "under", "vshare", "pay", "restrictedrwa"
+	externalID := "p2p-restricted"
+
+	tests := []struct {
+		name                      string
+		grantVaultMarkerTransfer  bool
+		grantSourceMarkerTransfer bool
+		expectedErrSubstrs        []string
+	}{
+		{
+			name:                      "vault and source both hold marker transfer access, restricted settlement succeeds",
+			grantVaultMarkerTransfer:  true,
+			grantSourceMarkerTransfer: true,
+		},
+		{
+			name:                     "source without marker transfer access, agentless exchange escrow transfer is blocked",
+			grantVaultMarkerTransfer: true,
+			expectedErrSubstrs:       []string{"failed to accept payment", "does not have transfer permissions"},
+		},
+		{
+			name:                      "vault without marker transfer access still settles because the internal hop to principal is bypassed",
+			grantSourceMarkerTransfer: true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			origCtx := s.ctx
+			defer func() { s.ctx = origCtx }()
+			s.ctx, _ = s.ctx.CacheContext()
+
+			vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+			vaultAddr := vault.GetAddress()
+			source := s.CreateAndFundAccount(sdk.NewInt64Coin(underlying, 1))
+
+			grants := []markertypes.AccessGrant{
+				{Address: s.adminAddr.String(), Permissions: markertypes.AccessList{
+					markertypes.Access_Mint, markertypes.Access_Burn, markertypes.Access_Withdraw,
+					markertypes.Access_Admin, markertypes.Access_Transfer,
+				}},
+			}
+			if tc.grantVaultMarkerTransfer {
+				grants = append(grants, markertypes.AccessGrant{Address: vaultAddr.String(), Permissions: markertypes.AccessList{markertypes.Access_Transfer}})
+			}
+			if tc.grantSourceMarkerTransfer {
+				grants = append(grants, markertypes.AccessGrant{Address: source.String(), Permissions: markertypes.AccessList{markertypes.Access_Transfer}})
+			}
+			restrictedMarker := markertypes.NewMarkerAccount(
+				authtypes.NewBaseAccountWithAddress(markertypes.MustGetMarkerAddress(restrictedDenom)),
+				sdk.NewInt64Coin(restrictedDenom, 1_000_000),
+				s.adminAddr,
+				grants,
+				markertypes.StatusProposed,
+				markertypes.MarkerType_RestrictedCoin,
+				false, true, false, []string{},
+			)
+			s.Require().NoError(s.simApp.MarkerKeeper.AddFinalizeAndActivateMarker(s.ctx, restrictedMarker), "failed to create restricted marker %s", restrictedDenom)
+			s.Require().NoError(s.simApp.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, source, restrictedDenom, sdk.NewCoins(sdk.NewInt64Coin(restrictedDenom, 10))), "failed to fund source %s with restricted marker denom %s", source, restrictedDenom)
+			s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5))), "failed to fund principal %s with payment denom %s", principalAddr, paymentDenom)
+
+			sourceAmount := sdk.NewCoins(sdk.NewInt64Coin(restrictedDenom, 10))
+			targetAmount := sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5))
+			s.createPayment(source, vaultAddr, sourceAmount, targetAmount, externalID)
+
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			resp, err := keeper.NewMsgServer(s.simApp.VaultKeeper).AcceptAsset(s.ctx, &types.MsgAcceptAssetRequest{
+				Authority:    s.assetManagerAddr.String(),
+				VaultAddress: vaultAddr.String(),
+				Source:       source.String(),
+				ExternalId:   externalID,
+			})
+
+			if len(tc.expectedErrSubstrs) > 0 {
+				s.Require().Error(err, "AcceptAsset of restricted marker denom %s should fail for case %q", restrictedDenom, tc.name)
+				s.Assert().Nil(resp, "AcceptAsset response should be nil on error for case %q", tc.name)
+				for _, substr := range tc.expectedErrSubstrs {
+					s.Assert().Containsf(err.Error(), substr, "AcceptAsset error missing expected substring for case %q", tc.name)
+				}
+				return
+			}
+
+			s.Require().NoError(err, "AcceptAsset of restricted marker denom %s should succeed when vault %s and source %s hold transfer access", restrictedDenom, vaultAddr, source)
+			s.Assert().Equal(&types.MsgAcceptAssetResponse{}, resp, "AcceptAsset restricted marker response")
+
+			s.assertBalance(source, restrictedDenom, sdkmath.NewInt(0))
+			s.assertBalance(source, paymentDenom, sdkmath.NewInt(5))
+			s.assertBalance(principalAddr, restrictedDenom, sdkmath.NewInt(10))
+			s.assertBalance(principalAddr, paymentDenom, sdkmath.NewInt(0))
+			s.assertBalance(vaultAddr, restrictedDenom, sdkmath.NewInt(0))
+			s.assertBalance(vaultAddr, paymentDenom, sdkmath.NewInt(0))
+
+			s.requireTypedEventEmitted(types.NewEventAssetAccepted(vaultAddr.String(), source.String(), externalID, sourceAmount, targetAmount, types.AssetDirectionInbound))
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_AcceptAsset_Failures() {
+	underlying, share, paymentDenom, asset := "under", "vshare", "pay", "rwacoin"
+
+	tests := []struct {
+		name string
+		// setup returns the request to send. It is responsible for any vault, payment, and
+		// funding state required by the case.
+		setup              func() *types.MsgAcceptAssetRequest
+		expectedErrSubstrs []string
+	}{
+		{
+			name: "vault does not exist",
+			setup: func() *types.MsgAcceptAssetRequest {
+				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
+				return &types.MsgAcceptAssetRequest{
+					Authority:    s.adminAddr.String(),
+					VaultAddress: types.GetVaultAddress("missing").String(),
+					Source:       source.String(),
+					ExternalId:   "none",
+				}
+			},
+			expectedErrSubstrs: []string{"not found"},
+		},
+		{
+			name: "unauthorized signer",
+			setup: func() *types.MsgAcceptAssetRequest {
+				vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+				vaultAddr := vault.GetAddress()
+				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
+				stranger := s.CreateAndFundAccount(sdk.NewInt64Coin(underlying, 1))
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5))), "fund principal")
+				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)), "unauth")
+				return &types.MsgAcceptAssetRequest{
+					Authority:    stranger.String(),
+					VaultAddress: vaultAddr.String(),
+					Source:       source.String(),
+					ExternalId:   "unauth",
+				}
+			},
+			expectedErrSubstrs: []string{"failed to validate asset manager authority", "unauthorized authority"},
+		},
+		{
+			name: "admin cannot settle, only the asset manager may",
+			setup: func() *types.MsgAcceptAssetRequest {
+				vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+				vaultAddr := vault.GetAddress()
+				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5))), "fund principal")
+				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)), "admin-settle")
+				return &types.MsgAcceptAssetRequest{
+					Authority:    s.adminAddr.String(),
+					VaultAddress: vaultAddr.String(),
+					Source:       source.String(),
+					ExternalId:   "admin-settle",
+				}
+			},
+			expectedErrSubstrs: []string{"failed to validate asset manager authority", "unauthorized authority"},
+		},
+		{
+			name: "vault without an asset manager cannot settle",
+			setup: func() *types.MsgAcceptAssetRequest {
+				vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+				vaultAddr := vault.GetAddress()
+				_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).SetAssetManager(s.ctx, &types.MsgSetAssetManagerRequest{
+					Admin:        s.adminAddr.String(),
+					VaultAddress: vaultAddr.String(),
+					AssetManager: "",
+				})
+				s.Require().NoError(err, "failed to clear asset manager on vault %s", vaultAddr)
+				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5))), "fund principal")
+				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)), "no-mgr")
+				return &types.MsgAcceptAssetRequest{
+					Authority:    s.adminAddr.String(),
+					VaultAddress: vaultAddr.String(),
+					Source:       source.String(),
+					ExternalId:   "no-mgr",
+				}
+			},
+			expectedErrSubstrs: []string{"failed to validate asset manager authority", "no asset manager set"},
+		},
+		{
+			name: "payment not found",
+			setup: func() *types.MsgAcceptAssetRequest {
+				vault, _ := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+				vaultAddr := vault.GetAddress()
+				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
+				return &types.MsgAcceptAssetRequest{
+					Authority:    s.assetManagerAddr.String(),
+					VaultAddress: vaultAddr.String(),
+					Source:       source.String(),
+					ExternalId:   "ghost",
+				}
+			},
+			expectedErrSubstrs: []string{"payment not found"},
+		},
+		{
+			name: "payment target mismatch",
+			setup: func() *types.MsgAcceptAssetRequest {
+				vault, _ := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+				vaultAddr := vault.GetAddress()
+				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
+				other := s.CreateAndFundAccount(sdk.NewInt64Coin(underlying, 1))
+				s.createPayment(source, other, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)), "mismatch")
+				return &types.MsgAcceptAssetRequest{
+					Authority:    s.assetManagerAddr.String(),
+					VaultAddress: vaultAddr.String(),
+					Source:       source.String(),
+					ExternalId:   "mismatch",
+				}
+			},
+			expectedErrSubstrs: []string{"is not vault"},
+		},
+		{
+			name: "payment denom on neither leg",
+			setup: func() *types.MsgAcceptAssetRequest {
+				vault, _ := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+				vaultAddr := vault.GetAddress()
+				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
+				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)), "noleg")
+				return &types.MsgAcceptAssetRequest{
+					Authority:    s.assetManagerAddr.String(),
+					VaultAddress: vaultAddr.String(),
+					Source:       source.String(),
+					ExternalId:   "noleg",
+				}
+			},
+			expectedErrSubstrs: []string{"exactly one leg"},
+		},
+		{
+			name: "payment denom on both legs",
+			setup: func() *types.MsgAcceptAssetRequest {
+				vault, _ := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+				vaultAddr := vault.GetAddress()
+				source := s.CreateAndFundAccount(sdk.NewInt64Coin(paymentDenom, 5))
+				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)), sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 3), sdk.NewInt64Coin(asset, 2)), "bothlegs")
+				return &types.MsgAcceptAssetRequest{
+					Authority:    s.assetManagerAddr.String(),
+					VaultAddress: vaultAddr.String(),
+					Source:       source.String(),
+					ExternalId:   "bothlegs",
+				}
+			},
+			expectedErrSubstrs: []string{"exactly one leg"},
+		},
+		{
+			name: "insufficient principal balance",
+			setup: func() *types.MsgAcceptAssetRequest {
+				vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+				vaultAddr := vault.GetAddress()
+				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 4))), "fund principal short")
+				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)), "short")
+				return &types.MsgAcceptAssetRequest{
+					Authority:    s.assetManagerAddr.String(),
+					VaultAddress: vaultAddr.String(),
+					Source:       source.String(),
+					ExternalId:   "short",
+				}
+			},
+			expectedErrSubstrs: []string{"insufficient principal balance"},
+		},
+		{
+			name: "rejects settlement while vault is paused",
+			setup: func() *types.MsgAcceptAssetRequest {
+				vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+				vaultAddr := vault.GetAddress()
+				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5))), "fund principal")
+				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)), "paused")
+				paused, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err, "failed to get vault %s for paused setup", vaultAddr)
+				paused.Paused = true
+				s.k.AuthKeeper.SetAccount(s.ctx, paused)
+				return &types.MsgAcceptAssetRequest{
+					Authority:    s.assetManagerAddr.String(),
+					VaultAddress: vaultAddr.String(),
+					Source:       source.String(),
+					ExternalId:   "paused",
+				}
+			},
+			expectedErrSubstrs: []string{"is paused", "assets cannot be accepted while paused"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			origCtx := s.ctx
+			defer func() { s.ctx = origCtx }()
+			s.ctx, _ = s.ctx.CacheContext()
+
+			msg := tc.setup()
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+
+			resp, err := keeper.NewMsgServer(s.simApp.VaultKeeper).AcceptAsset(s.ctx, msg)
+			s.Require().Error(err, "AcceptAsset should fail for case %q", tc.name)
+			s.Assert().Nil(resp, "AcceptAsset response should be nil on error for case %q", tc.name)
+			for _, substr := range tc.expectedErrSubstrs {
+				s.Assert().Containsf(err.Error(), substr, "AcceptAsset error missing expected substring for case %q", tc.name)
+			}
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_AcceptAsset_NAVGuardrail() {
+	underlying, share, paymentDenom, asset := "under", "vshare", "pay", "rwacoin"
+	externalID := "guardrail"
+
+	tests := []struct {
+		name               string
+		seedNav            *types.VaultNAV
+		fundSource         sdk.Coins
+		fundPrincipal      sdk.Coins
+		sourceAmount       sdk.Coins
+		targetAmount       sdk.Coins
+		expectedErrSubstrs []string
+	}{
+		{
+			name:          "inbound settlement at the exact NAV price passes the guardrail",
+			seedNav:       &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(paymentDenom, 5), Volume: sdkmath.NewInt(10)},
+			fundSource:    sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+			fundPrincipal: sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			sourceAmount:  sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+			targetAmount:  sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+		},
+		{
+			name:               "inbound settlement off the NAV price is rejected",
+			seedNav:            &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(paymentDenom, 6), Volume: sdkmath.NewInt(10)},
+			fundSource:         sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+			fundPrincipal:      sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			sourceAmount:       sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+			targetAmount:       sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			expectedErrSubstrs: []string{"does not match internal NAV", "10rwacoin", "5pay", "6pay"},
+		},
+		{
+			name:          "no NAV entry skips the guardrail for a first acquisition",
+			fundSource:    sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+			fundPrincipal: sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			sourceAmount:  sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+			targetAmount:  sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+		},
+		{
+			name:          "outbound settlement at the exact NAV price passes the guardrail",
+			seedNav:       &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(paymentDenom, 5), Volume: sdkmath.NewInt(10)},
+			fundSource:    sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			fundPrincipal: sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+			sourceAmount:  sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			targetAmount:  sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+		},
+		{
+			name:               "outbound settlement off the NAV price is rejected",
+			seedNav:            &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(paymentDenom, 5), Volume: sdkmath.NewInt(10)},
+			fundSource:         sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 4)),
+			fundPrincipal:      sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+			sourceAmount:       sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 4)),
+			targetAmount:       sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+			expectedErrSubstrs: []string{"does not match internal NAV", "10rwacoin", "4pay", "5pay"},
+		},
+		{
+			name:               "fractional NAV price that floor math would accept is rejected",
+			seedNav:            &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(paymentDenom, 3), Volume: sdkmath.NewInt(2)},
+			fundSource:         sdk.NewCoins(sdk.NewInt64Coin(asset, 3)),
+			fundPrincipal:      sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 4)),
+			sourceAmount:       sdk.NewCoins(sdk.NewInt64Coin(asset, 3)),
+			targetAmount:       sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 4)),
+			expectedErrSubstrs: []string{"does not match internal NAV"},
+		},
+		{
+			name:          "fractional NAV price settled at an exact multiple passes the guardrail",
+			seedNav:       &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(paymentDenom, 3), Volume: sdkmath.NewInt(2)},
+			fundSource:    sdk.NewCoins(sdk.NewInt64Coin(asset, 4)),
+			fundPrincipal: sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 6)),
+			sourceAmount:  sdk.NewCoins(sdk.NewInt64Coin(asset, 4)),
+			targetAmount:  sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 6)),
+		},
+		{
+			name:               "NAV priced in a denom other than the settlement payment is rejected",
+			seedNav:            &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(underlying, 5), Volume: sdkmath.NewInt(10)},
+			fundSource:         sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+			fundPrincipal:      sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			sourceAmount:       sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+			targetAmount:       sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			expectedErrSubstrs: []string{"is priced in"},
+		},
+		{
+			name:               "asset leg with multiple coins cannot be priced and is rejected",
+			fundSource:         sdk.NewCoins(sdk.NewInt64Coin(asset, 10), sdk.NewInt64Coin("othercoin", 5)),
+			fundPrincipal:      sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			sourceAmount:       sdk.NewCoins(sdk.NewInt64Coin(asset, 10), sdk.NewInt64Coin("othercoin", 5)),
+			targetAmount:       sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			expectedErrSubstrs: []string{"one asset coin"},
+		},
+		{
+			name:               "empty asset leg cannot be priced and is rejected",
+			fundPrincipal:      sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			sourceAmount:       sdk.NewCoins(),
+			targetAmount:       sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			expectedErrSubstrs: []string{"one asset coin"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			origCtx := s.ctx
+			defer func() { s.ctx = origCtx }()
+			s.ctx, _ = s.ctx.CacheContext()
+
+			vault, _, source := s.setupAcceptAssetScenario(acceptAssetScenario{
+				underlying:    underlying,
+				share:         share,
+				paymentDenom:  paymentDenom,
+				assetMarker:   asset,
+				seedNav:       tc.seedNav,
+				fundSource:    tc.fundSource,
+				fundPrincipal: tc.fundPrincipal,
+				sourceAmount:  tc.sourceAmount,
+				targetAmount:  tc.targetAmount,
+				externalID:    externalID,
+			})
+			vaultAddr := vault.GetAddress()
+
+			resp, err := keeper.NewMsgServer(s.simApp.VaultKeeper).AcceptAsset(s.ctx, &types.MsgAcceptAssetRequest{
+				Authority:    s.assetManagerAddr.String(),
+				VaultAddress: vaultAddr.String(),
+				Source:       source.String(),
+				ExternalId:   externalID,
+			})
+
+			if len(tc.expectedErrSubstrs) == 0 {
+				s.Require().NoError(err, "AcceptAsset should pass the guardrail for case %q", tc.name)
+				s.Assert().Equal(&types.MsgAcceptAssetResponse{}, resp, "AcceptAsset response for case %q", tc.name)
+				return
+			}
+
+			s.Require().Error(err, "AcceptAsset should fail the guardrail for case %q", tc.name)
+			s.Assert().Nil(resp, "AcceptAsset response should be nil on error for case %q", tc.name)
+			for _, substr := range tc.expectedErrSubstrs {
+				s.Assert().Containsf(err.Error(), substr, "AcceptAsset error missing expected substring for case %q", tc.name)
+			}
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_AcceptAsset_SettlementNAV() {
+	underlying := "under"
+	share := "vshare"
+	paymentDenom := "pay"
+	asset := "rwacoin"
+	externalID := "settle-nav"
+
+	tests := []struct {
+		name                string
+		registerAssetMarker bool
+		seedNav             *types.VaultNAV
+		fundSource          sdk.Coins
+		fundPrincipal       sdk.Coins
+		sourceAmount        sdk.Coins
+		targetAmount        sdk.Coins
+		expectedNavPrice    sdk.Coin
+		expectedNavVolume   sdkmath.Int
+		expectNavRemoved    bool
+		expectedErrContains string
+	}{
+		{
+			name:                "inbound first acquisition seeds the internal NAV from the settlement price",
+			registerAssetMarker: true,
+			fundSource:          sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+			fundPrincipal:       sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			sourceAmount:        sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+			targetAmount:        sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			expectedNavPrice:    sdk.NewInt64Coin(paymentDenom, 5),
+			expectedNavVolume:   sdkmath.NewInt(10),
+		},
+		{
+			name:                "inbound settlement at the NAV price re-prices the entry from the settlement legs",
+			registerAssetMarker: true,
+			seedNav:             &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(paymentDenom, 1), Volume: sdkmath.NewInt(2)},
+			fundSource:          sdk.NewCoins(sdk.NewInt64Coin(asset, 4)),
+			fundPrincipal:       sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 2)),
+			sourceAmount:        sdk.NewCoins(sdk.NewInt64Coin(asset, 4)),
+			targetAmount:        sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 2)),
+			expectedNavPrice:    sdk.NewInt64Coin(paymentDenom, 2),
+			expectedNavVolume:   sdkmath.NewInt(4),
+		},
+		{
+			name:                "fractional first acquisition stores the exact settlement price and volume",
+			registerAssetMarker: true,
+			fundSource:          sdk.NewCoins(sdk.NewInt64Coin(asset, 3)),
+			fundPrincipal:       sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 10)),
+			sourceAmount:        sdk.NewCoins(sdk.NewInt64Coin(asset, 3)),
+			targetAmount:        sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 10)),
+			expectedNavPrice:    sdk.NewInt64Coin(paymentDenom, 10),
+			expectedNavVolume:   sdkmath.NewInt(3),
+		},
+		{
+			name:                "outbound settlement leaving a principal balance keeps the NAV entry",
+			registerAssetMarker: true,
+			seedNav:             &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(paymentDenom, 5), Volume: sdkmath.NewInt(10)},
+			fundSource:          sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			fundPrincipal:       sdk.NewCoins(sdk.NewInt64Coin(asset, 20)),
+			sourceAmount:        sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			targetAmount:        sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+			expectedNavPrice:    sdk.NewInt64Coin(paymentDenom, 5),
+			expectedNavVolume:   sdkmath.NewInt(10),
+		},
+		{
+			name:                "outbound settlement draining the principal removes the NAV entry",
+			registerAssetMarker: true,
+			seedNav:             &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(paymentDenom, 5), Volume: sdkmath.NewInt(10)},
+			fundSource:          sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			fundPrincipal:       sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+			sourceAmount:        sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			targetAmount:        sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+			expectedNavPrice:    sdk.NewInt64Coin(paymentDenom, 5),
+			expectedNavVolume:   sdkmath.NewInt(10),
+			expectNavRemoved:    true,
+		},
+		{
+			name:                "asset denom that is not a registered marker fails the settlement",
+			registerAssetMarker: false,
+			fundSource:          sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+			fundPrincipal:       sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			sourceAmount:        sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+			targetAmount:        sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			expectedErrContains: "is not a registered marker",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			origCtx := s.ctx
+			defer func() { s.ctx = origCtx }()
+			s.ctx, _ = s.ctx.CacheContext()
+
+			assetMarker := ""
+			if tc.registerAssetMarker {
+				assetMarker = asset
+			}
+			vault, _, source := s.setupAcceptAssetScenario(acceptAssetScenario{
+				underlying:    underlying,
+				share:         share,
+				paymentDenom:  paymentDenom,
+				assetMarker:   assetMarker,
+				seedNav:       tc.seedNav,
+				fundSource:    tc.fundSource,
+				fundPrincipal: tc.fundPrincipal,
+				sourceAmount:  tc.sourceAmount,
+				targetAmount:  tc.targetAmount,
+				externalID:    externalID,
+			})
+			vaultAddr := vault.GetAddress()
+
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).AcceptAsset(s.ctx, &types.MsgAcceptAssetRequest{
+				Authority:    s.assetManagerAddr.String(),
+				VaultAddress: vaultAddr.String(),
+				Source:       source.String(),
+				ExternalId:   externalID,
+			})
+
+			if tc.expectedErrContains != "" {
+				s.Require().ErrorContains(err, tc.expectedErrContains, "AcceptAsset should fail for case %q", tc.name)
+				return
+			}
+			s.Require().NoError(err, "AcceptAsset should succeed for case %q", tc.name)
+
+			eventIndex := map[string]int{}
+			for i, ev := range s.ctx.EventManager().Events() {
+				if _, seen := eventIndex[ev.Type]; !seen {
+					eventIndex[ev.Type] = i
+				}
+			}
+			acceptedIdx, ok := eventIndex["provlabs.vault.v1.EventAssetAccepted"]
+			s.Require().True(ok, "EventAssetAccepted should be emitted for case %q", tc.name)
+			updatedIdx, ok := eventIndex["provlabs.vault.v1.EventNAVUpdated"]
+			s.Require().True(ok, "EventNAVUpdated should be emitted for case %q", tc.name)
+			s.Assert().Less(acceptedIdx, updatedIdx, "EventAssetAccepted should be emitted before EventNAVUpdated")
+			s.requireTypedEventEmitted(markertypes.NewEventSetNetAssetValue(asset, tc.expectedNavPrice, tc.expectedNavVolume.Uint64(), vaultAddr.String()))
+
+			if tc.expectNavRemoved {
+				_, err := s.k.GetVaultNAV(s.ctx, vaultAddr, asset)
+				s.Assert().ErrorIs(err, collections.ErrNotFound, "NAV entry for %s should be removed after draining the principal", asset)
+				removedIdx, ok := eventIndex["provlabs.vault.v1.EventNAVRemoved"]
+				s.Require().True(ok, "EventNAVRemoved should be emitted for case %q", tc.name)
+				s.Assert().Less(updatedIdx, removedIdx, "EventNAVUpdated should be emitted before EventNAVRemoved")
+				s.requireTypedEventEmitted(types.NewEventNAVRemoved(vaultAddr.String(), types.VaultNAV{
+					Denom:  asset,
+					Price:  tc.expectedNavPrice,
+					Volume: tc.expectedNavVolume,
+				}))
+				return
+			}
+
+			s.Assert().NotContains(eventIndex, "provlabs.vault.v1.EventNAVRemoved", "EventNAVRemoved should not be emitted for case %q", tc.name)
+			stored, err := s.k.GetVaultNAV(s.ctx, vaultAddr, asset)
+			s.Require().NoError(err, "NAV entry for %s should exist after settlement", asset)
+			s.Assert().Equal(tc.expectedNavPrice, stored.Price, "stored NAV price mismatch for case %q", tc.name)
+			s.Assert().Equal(tc.expectedNavVolume, stored.Volume, "stored NAV volume mismatch for case %q", tc.name)
+			s.Assert().Equal(vaultAddr.String(), stored.Source, "stored NAV source should be the vault address for case %q", tc.name)
+			s.requireTypedEventEmitted(types.NewEventNAVUpdated(vaultAddr.String(), stored, s.assetManagerAddr.String()))
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_AcceptAsset_SettlementNAV_MetadataDenom() {
+	underlying := "under"
+	share := "vshare"
+	paymentDenom := "pay"
+	asset := metadatatypes.ScopeMetadataAddress(uuid.MustParse("00000000-0000-4000-8000-000000000001")).Denom()
+	externalID := "settle-nav-nft"
+
+	origCtx := s.ctx
+	defer func() { s.ctx = origCtx }()
+	s.ctx, _ = s.ctx.CacheContext()
+
+	vault, principalAddr, source := s.setupAcceptAssetScenario(acceptAssetScenario{
+		underlying:    underlying,
+		share:         share,
+		paymentDenom:  paymentDenom,
+		fundSource:    sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+		fundPrincipal: sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+		sourceAmount:  sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+		targetAmount:  sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+		externalID:    externalID,
+	})
+	vaultAddr := vault.GetAddress()
+
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).AcceptAsset(s.ctx, &types.MsgAcceptAssetRequest{
+		Authority:    s.assetManagerAddr.String(),
+		VaultAddress: vaultAddr.String(),
+		Source:       source.String(),
+		ExternalId:   externalID,
+	})
+	s.Require().NoError(err, "AcceptAsset should settle an nft/ asset denom without a registered marker")
+
+	stored, err := s.k.GetVaultNAV(s.ctx, vaultAddr, asset)
+	s.Require().NoError(err, "internal NAV entry for nft/ denom %s should exist after settlement", asset)
+	s.Assert().Equal(sdk.NewInt64Coin(paymentDenom, 5), stored.Price, "stored NAV price for nft/ denom")
+	s.Assert().Equal(sdkmath.NewInt(10), stored.Volume, "stored NAV volume for nft/ denom")
+	s.Assert().Equal(vaultAddr.String(), stored.Source, "stored NAV source should be the vault address")
+	s.requireTypedEventEmitted(types.NewEventNAVUpdated(vaultAddr.String(), stored, s.assetManagerAddr.String()))
+
+	_, markerErr := s.simApp.MarkerKeeper.GetMarkerByDenom(s.ctx, asset)
+	s.Assert().Error(markerErr, "nft/ asset denom %s must not be a registered marker", asset)
+	for _, ev := range s.ctx.EventManager().Events() {
+		s.Assert().NotEqual("provenance.marker.v1.EventSetNetAssetValue", ev.Type, "no marker NAV event should be emitted for an nft/ denom")
+	}
+
+	const secondID = "settle-nav-nft-2"
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, source, sdk.NewCoins(sdk.NewInt64Coin(asset, 10))), "fund source for second settlement")
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 6))), "fund principal for second settlement")
+	s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 6)), secondID)
+
+	_, err = keeper.NewMsgServer(s.simApp.VaultKeeper).AcceptAsset(s.ctx, &types.MsgAcceptAssetRequest{
+		Authority:    s.assetManagerAddr.String(),
+		VaultAddress: vaultAddr.String(),
+		Source:       source.String(),
+		ExternalId:   secondID,
+	})
+	s.Require().ErrorContains(err, "does not match internal NAV", "off-NAV settlement of the nft/ denom should be rejected by the guardrail")
+}
+
+func (s *TestSuite) TestMsgServer_UpdateVaultNAV_MetadataDenom() {
+	underlying := "under"
+	share := "vaultshares"
+	navDenom := metadatatypes.ScopeMetadataAddress(uuid.MustParse("00000000-0000-4000-8000-000000000002")).Denom()
+	admin := s.adminAddr
+	vaultAddr := types.GetVaultAddress(share)
+
+	origCtx := s.ctx
+	defer func() { s.ctx = origCtx }()
+	s.ctx, _ = s.ctx.CacheContext()
+
+	s.setupBaseVault(underlying, share)
+	s.ctx = s.ctx.WithBlockHeight(100).WithEventManager(sdk.NewEventManager())
+
+	price := sdk.NewInt64Coin(underlying, 100)
+	volume := sdkmath.NewInt(2)
+	_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).UpdateVaultNAV(s.ctx, &types.MsgUpdateVaultNAVRequest{
+		Signer:       admin.String(),
+		VaultAddress: vaultAddr.String(),
+		Denom:        navDenom,
+		Price:        price,
+		Volume:       volume,
+		Source:       "oracle-nft",
+	})
+	s.Require().NoError(err, "UpdateVaultNAV should accept an nft/ denom without a registered marker")
+
+	nav, err := s.k.GetVaultNAV(s.ctx, vaultAddr, navDenom)
+	s.Require().NoError(err, "internal NAV for nft/ denom %s should be written", navDenom)
+	s.Assert().Equal(price, nav.Price, "stored NAV price for nft/ denom")
+	s.Assert().Equal(volume, nav.Volume, "stored NAV volume for nft/ denom")
+
+	_, markerErr := s.simApp.MarkerKeeper.GetMarkerByDenom(s.ctx, navDenom)
+	s.Assert().Error(markerErr, "nft/ denom %s must not be a registered marker", navDenom)
+	for _, ev := range s.ctx.EventManager().Events() {
+		s.Assert().NotEqual("provenance.marker.v1.EventSetNetAssetValue", ev.Type, "no marker NAV event should be emitted for an nft/ denom")
+	}
+}
+
+func (s *TestSuite) TestMsgServer_AcceptAsset_Reconcile() {
+	underlying := "under"
+	share := "vshare"
+	paymentDenom := "pay"
+	asset := "rwacoin"
+	externalID := "settle-reconcile"
+
+	tests := []struct {
+		name                string
+		interestRate        string
+		seedNav             *types.VaultNAV
+		expectedErrContains string
+		expectedReconciles  int
+	}{
+		{
+			name:               "successful settlement with an elapsed interest period reconciles exactly once, before the transfers",
+			interestRate:       "4.20",
+			expectedReconciles: 1,
+		},
+		{
+			name:                "settlement rejected by the NAV guardrail does not reconcile",
+			interestRate:        "4.20",
+			seedNav:             &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(paymentDenom, 9), Volume: sdkmath.NewInt(10)},
+			expectedErrContains: "does not match internal NAV",
+			expectedReconciles:  0,
+		},
+		{
+			name:                "failed reconcile aborts the settlement",
+			interestRate:        "1000000.0",
+			expectedErrContains: "failed to reconcile vault before settlement",
+			expectedReconciles:  0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			origCtx := s.ctx
+			defer func() { s.ctx = origCtx }()
+			s.ctx, _ = s.ctx.CacheContext()
+
+			vault, _, source := s.setupAcceptAssetScenario(acceptAssetScenario{
+				underlying:    underlying,
+				share:         share,
+				paymentDenom:  paymentDenom,
+				assetMarker:   asset,
+				seedNav:       tc.seedNav,
+				fundSource:    sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+				fundPrincipal: sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+				sourceAmount:  sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+				targetAmount:  sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+				externalID:    externalID,
+			})
+			vaultAddr := vault.GetAddress()
+
+			// An elapsed interest period makes the reconcile observable via EventVaultReconcile.
+			vault.CurrentInterestRate = tc.interestRate
+			vault.DesiredInterestRate = tc.interestRate
+			vault.PeriodStart = s.ctx.BlockTime().Add(-3 * time.Hour).Unix()
+			s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).AcceptAsset(s.ctx, &types.MsgAcceptAssetRequest{
+				Authority:    s.assetManagerAddr.String(),
+				VaultAddress: vaultAddr.String(),
+				Source:       source.String(),
+				ExternalId:   externalID,
+			})
+
+			reconcileCount := 0
+			reconcileIdx := -1
+			acceptedIdx := -1
+			for i, ev := range s.ctx.EventManager().Events() {
+				switch ev.Type {
+				case "provlabs.vault.v1.EventVaultReconcile":
+					reconcileCount++
+					reconcileIdx = i
+				case "provlabs.vault.v1.EventAssetAccepted":
+					acceptedIdx = i
+				}
+			}
+
+			if tc.expectedErrContains != "" {
+				s.Require().ErrorContains(err, tc.expectedErrContains, "AcceptAsset should fail for case %q", tc.name)
+			} else {
+				s.Require().NoError(err, "AcceptAsset should succeed for case %q", tc.name)
+			}
+			s.Assert().Equal(tc.expectedReconciles, reconcileCount, "EventVaultReconcile count mismatch for case %q", tc.name)
+			if tc.expectedErrContains == "" && tc.expectedReconciles > 0 {
+				s.Require().GreaterOrEqual(acceptedIdx, 0, "EventAssetAccepted should be emitted for case %q", tc.name)
+				s.Assert().Less(reconcileIdx, acceptedIdx, "reconcile events should precede EventAssetAccepted for case %q", tc.name)
+			}
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_AcceptAsset_InsufficientPrincipalDoesNotSettle() {
+	underlying, share, paymentDenom, asset := "under", "vshare", "pay", "rwacoin"
+	externalID := "short-noop"
+
+	vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+	vaultAddr := vault.GetAddress()
+
+	source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 4))), "fund principal short")
+	s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)), externalID)
+
+	_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).AcceptAsset(s.ctx, &types.MsgAcceptAssetRequest{
+		Authority:    s.assetManagerAddr.String(),
+		VaultAddress: vaultAddr.String(),
+		Source:       source.String(),
+		ExternalId:   externalID,
+	})
+	s.Require().Error(err, "AcceptAsset should fail when principal is short")
+
+	stored, getErr := s.simApp.ExchangeKeeper.GetPayment(s.ctx, source, externalID)
+	s.Require().NoError(getErr, "GetPayment after failed settle")
+	s.Require().NotNil(stored, "payment should remain in escrow after a failed settle")
+	s.assertBalance(source, asset, sdkmath.NewInt(10))
+	s.assertBalance(principalAddr, paymentDenom, sdkmath.NewInt(4))
+}
+
+func (s *TestSuite) TestMsgServer_RejectAsset() {
+	underlying, share, paymentDenom, asset := "under", "vshare", "pay", "rwacoin"
+	externalID := "p2p-reject"
+
+	vault, _ := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+	vaultAddr := vault.GetAddress()
+
+	source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
+	s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)), externalID)
+
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	resp, err := keeper.NewMsgServer(s.simApp.VaultKeeper).RejectAsset(s.ctx, &types.MsgRejectAssetRequest{
+		Authority:    s.assetManagerAddr.String(),
+		VaultAddress: vaultAddr.String(),
+		Source:       source.String(),
+		ExternalId:   externalID,
+	})
+	s.Require().NoError(err, "RejectAsset should succeed")
+	s.Assert().Equal(&types.MsgRejectAssetResponse{}, resp, "RejectAsset response")
+
+	stored, getErr := s.simApp.ExchangeKeeper.GetPayment(s.ctx, source, externalID)
+	s.Require().NoError(getErr, "GetPayment after reject")
+	s.Assert().Nil(stored, "payment should be deleted after reject")
+	s.assertBalance(source, asset, sdkmath.NewInt(10))
+
+	s.requireTypedEventEmitted(types.NewEventAssetRejected(vaultAddr.String(), source.String(), externalID))
+}
+
+func (s *TestSuite) TestMsgServer_RejectAsset_Failures() {
+	underlying, share, paymentDenom, asset := "under", "vshare", "pay", "rwacoin"
+
+	tests := []struct {
+		name               string
+		setup              func() *types.MsgRejectAssetRequest
+		expectedErrSubstrs []string
+	}{
+		{
+			name: "vault does not exist",
+			setup: func() *types.MsgRejectAssetRequest {
+				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
+				return &types.MsgRejectAssetRequest{
+					Authority:    s.adminAddr.String(),
+					VaultAddress: types.GetVaultAddress("missing").String(),
+					Source:       source.String(),
+					ExternalId:   "none",
+				}
+			},
+			expectedErrSubstrs: []string{"not found"},
+		},
+		{
+			name: "unauthorized signer",
+			setup: func() *types.MsgRejectAssetRequest {
+				vault, _ := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+				vaultAddr := vault.GetAddress()
+				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
+				stranger := s.CreateAndFundAccount(sdk.NewInt64Coin(underlying, 1))
+				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)), "unauth")
+				return &types.MsgRejectAssetRequest{
+					Authority:    stranger.String(),
+					VaultAddress: vaultAddr.String(),
+					Source:       source.String(),
+					ExternalId:   "unauth",
+				}
+			},
+			expectedErrSubstrs: []string{"failed to validate asset manager authority", "unauthorized authority"},
+		},
+		{
+			name: "admin cannot reject, only the asset manager may",
+			setup: func() *types.MsgRejectAssetRequest {
+				vault, _ := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+				vaultAddr := vault.GetAddress()
+				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
+				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)), "admin-reject")
+				return &types.MsgRejectAssetRequest{
+					Authority:    s.adminAddr.String(),
+					VaultAddress: vaultAddr.String(),
+					Source:       source.String(),
+					ExternalId:   "admin-reject",
+				}
+			},
+			expectedErrSubstrs: []string{"failed to validate asset manager authority", "unauthorized authority"},
+		},
+		{
+			name: "vault without an asset manager cannot reject",
+			setup: func() *types.MsgRejectAssetRequest {
+				vault, _ := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+				vaultAddr := vault.GetAddress()
+				_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).SetAssetManager(s.ctx, &types.MsgSetAssetManagerRequest{
+					Admin:        s.adminAddr.String(),
+					VaultAddress: vaultAddr.String(),
+					AssetManager: "",
+				})
+				s.Require().NoError(err, "failed to clear asset manager on vault %s", vaultAddr)
+				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
+				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)), "no-mgr")
+				return &types.MsgRejectAssetRequest{
+					Authority:    s.adminAddr.String(),
+					VaultAddress: vaultAddr.String(),
+					Source:       source.String(),
+					ExternalId:   "no-mgr",
+				}
+			},
+			expectedErrSubstrs: []string{"failed to validate asset manager authority", "no asset manager set"},
+		},
+		{
+			name: "payment does not exist",
+			setup: func() *types.MsgRejectAssetRequest {
+				vault, _ := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+				vaultAddr := vault.GetAddress()
+				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
+				return &types.MsgRejectAssetRequest{
+					Authority:    s.assetManagerAddr.String(),
+					VaultAddress: vaultAddr.String(),
+					Source:       source.String(),
+					ExternalId:   "ghost",
+				}
+			},
+			expectedErrSubstrs: []string{"failed to reject payment"},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			origCtx := s.ctx
+			defer func() { s.ctx = origCtx }()
+			s.ctx, _ = s.ctx.CacheContext()
+
+			msg := tc.setup()
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+
+			resp, err := keeper.NewMsgServer(s.simApp.VaultKeeper).RejectAsset(s.ctx, msg)
+			s.Require().Error(err, "RejectAsset should fail for case %q", tc.name)
+			s.Assert().Nil(resp, "RejectAsset response should be nil on error for case %q", tc.name)
+			for _, substr := range tc.expectedErrSubstrs {
+				s.Assert().Containsf(err.Error(), substr, "RejectAsset error missing expected substring for case %q", tc.name)
+			}
+		})
+	}
 }

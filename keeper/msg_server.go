@@ -10,6 +10,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/provenance-io/provenance/x/exchange"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
@@ -150,12 +151,15 @@ func (k msgServer) UpdateInterestRate(goCtx context.Context, msg *types.MsgUpdat
 	if err != nil {
 		return nil, err
 	}
-	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+	if err = vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, fmt.Errorf("failed to validate management authority: %w", err)
 	}
 
 	newRate, err := sdkmath.LegacyNewDecFromStr(msg.NewRate)
 	if err != nil {
+		return nil, fmt.Errorf("invalid new rate: %w", err)
+	}
+	if err = types.ValidateInterestRateMagnitude(newRate); err != nil {
 		return nil, fmt.Errorf("invalid new rate: %w", err)
 	}
 	ok, err := vault.IsInterestRateInRange(newRate)
@@ -217,7 +221,7 @@ func (k msgServer) UpdateWithdrawalDelay(goCtx context.Context, msg *types.MsgUp
 	if err != nil {
 		return nil, err
 	}
-	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+	if err = vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, fmt.Errorf("failed to validate management authority: %w", err)
 	}
 
@@ -361,7 +365,7 @@ func (k msgServer) DepositInterestFunds(goCtx context.Context, msg *types.MsgDep
 		return nil, err
 	}
 
-	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+	if err = vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, fmt.Errorf("failed to validate management authority: %w", err)
 	}
 
@@ -394,7 +398,7 @@ func (k msgServer) WithdrawInterestFunds(goCtx context.Context, msg *types.MsgWi
 		return nil, err
 	}
 
-	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+	if err = vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, fmt.Errorf("failed to validate management authority: %w", err)
 	}
 	if vault.UnderlyingAsset != msg.Amount.Denom {
@@ -424,7 +428,7 @@ func (k msgServer) DepositPrincipalFunds(goCtx context.Context, msg *types.MsgDe
 	if err != nil {
 		return nil, err
 	}
-	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+	if err = vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, fmt.Errorf("failed to validate management authority: %w", err)
 	}
 
@@ -464,7 +468,7 @@ func (k msgServer) WithdrawPrincipalFunds(goCtx context.Context, msg *types.MsgW
 	if err != nil {
 		return nil, err
 	}
-	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+	if err = vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, fmt.Errorf("failed to validate management authority: %w", err)
 	}
 
@@ -512,7 +516,7 @@ func (k msgServer) ExpeditePendingSwapOut(goCtx context.Context, msg *types.MsgE
 	if err != nil {
 		return nil, err
 	}
-	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+	if err = vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, fmt.Errorf("failed to validate management authority: %w", err)
 	}
 
@@ -534,20 +538,20 @@ func (k msgServer) PauseVault(goCtx context.Context, msg *types.MsgPauseVaultReq
 	if err != nil {
 		return nil, err
 	}
-	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+	if err = vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, fmt.Errorf("failed to validate management authority: %w", err)
 	}
 
 	if vault.Paused {
 		return nil, fmt.Errorf("vault %s is already paused", msg.VaultAddress)
 	}
-	if err := k.reconcileVault(ctx, vault); err != nil {
+	if err = k.reconcileVault(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to reconcile before pausing: %w", err)
 	}
 
-	tvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
+	tvv, err := k.GetNetTVVInUnderlyingAsset(ctx, *vault)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get TVV before pausing: %w", err)
+		return nil, fmt.Errorf("failed to get net TVV before pausing: %w", err)
 	}
 
 	vault.PausedBalance = sdk.NewCoin(vault.UnderlyingAsset, tvv)
@@ -576,7 +580,7 @@ func (k msgServer) UnpauseVault(goCtx context.Context, msg *types.MsgUnpauseVaul
 	if err != nil {
 		return nil, err
 	}
-	if err := vault.ValidateManagementAuthority(msg.Authority); err != nil {
+	if err = vault.ValidateManagementAuthority(msg.Authority); err != nil {
 		return nil, fmt.Errorf("failed to validate management authority: %w", err)
 	}
 
@@ -584,14 +588,14 @@ func (k msgServer) UnpauseVault(goCtx context.Context, msg *types.MsgUnpauseVaul
 		return nil, fmt.Errorf("vault %s is not paused", msg.VaultAddress)
 	}
 
-	if err := k.UpdateInterestRates(ctx, vault, vault.DesiredInterestRate, vault.DesiredInterestRate); err != nil {
+	if err = k.UpdateInterestRates(ctx, vault, vault.DesiredInterestRate, vault.DesiredInterestRate); err != nil {
 		return nil, fmt.Errorf("failed to update interest rates: %w", err)
 	}
 
 	vault.PausedBalance = sdk.Coin{}
 	vault.Paused = false
 	vault.PausedReason = ""
-	if err := k.SetVaultAccount(ctx, vault); err != nil {
+	if err = k.SetVaultAccount(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to set vault account: %w", err)
 	}
 
@@ -728,6 +732,8 @@ func (k msgServer) BridgeBurnShares(goCtx context.Context, msg *types.MsgBridgeB
 		return nil, fmt.Errorf("failed to transfer shares from bridge to vault: %w", err)
 	}
 
+	// Intentionally does not decrement vault.TotalShares: bridged-out shares still exist on the
+	// remote chain, so TotalShares (the cross-chain supply-of-record) is unchanged. See spec/01_concepts.md.
 	if err := k.MarkerKeeper.BurnCoin(ctx, vaultAddr, msg.Shares); err != nil {
 		return nil, fmt.Errorf("failed to burn shares from marker: %w", err)
 	}
@@ -775,7 +781,7 @@ func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParam
 		return nil, fmt.Errorf("invalid params: %w", err)
 	}
 
-	if err := k.Keeper.Params.Set(ctx, msg.Params); err != nil {
+	if err := k.Params.Set(ctx, msg.Params); err != nil {
 		return nil, fmt.Errorf("failed to set params: %w", err)
 	}
 
@@ -794,7 +800,7 @@ func (k msgServer) UpdateVaultAUMFeeBips(goCtx context.Context, msg *types.MsgUp
 		return nil, err
 	}
 
-	params, err := k.Keeper.Params.Get(ctx)
+	params, err := k.Params.Get(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get params: %w", err)
 	}
@@ -812,4 +818,205 @@ func (k msgServer) UpdateVaultAUMFeeBips(goCtx context.Context, msg *types.MsgUp
 	}
 
 	return &types.MsgUpdateVaultAUMFeeBipsResponse{}, nil
+}
+
+// UpdateVaultNAV creates or updates a vault's internal NAV entry for a denom.
+// Only the vault's NAV authority is authorized to perform this operation.
+func (k msgServer) UpdateVaultNAV(goCtx context.Context, msg *types.MsgUpdateVaultNAVRequest) (*types.MsgUpdateVaultNAVResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vault, err := k.getVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault %s: %w", msg.VaultAddress, err)
+	}
+	if err := vault.ValidateNAVAuthority(msg.Signer); err != nil {
+		return nil, fmt.Errorf("failed to validate NAV authority: %w", err)
+	}
+	if vault.Paused {
+		return nil, fmt.Errorf("vault %s is paused: NAV cannot be updated while paused", msg.VaultAddress)
+	}
+
+	if err := k.reconcileVault(ctx, vault); err != nil {
+		return nil, fmt.Errorf("failed to reconcile vault before NAV update: %w", err)
+	}
+
+	nav := types.NewVaultNAV(msg.Denom, msg.Price, msg.Volume, msg.Source)
+	if err := k.SetVaultNAV(ctx, vault, nav, msg.Signer); err != nil {
+		return nil, fmt.Errorf("failed to update vault NAV: %w", err)
+	}
+	if !isMetadataDenom(msg.Denom) {
+		if err := k.publishAssetNAVToMarker(ctx, vault, nav); err != nil {
+			return nil, fmt.Errorf("failed to publish vault NAV to marker: %w", err)
+		}
+	}
+
+	return &types.MsgUpdateVaultNAVResponse{}, nil
+}
+
+// UpdateNAVAuthority rotates the address authorized to mutate a vault's internal
+// NAV table. Only the vault admin is authorized to perform this operation.
+func (k msgServer) UpdateNAVAuthority(goCtx context.Context, msg *types.MsgUpdateNAVAuthorityRequest) (*types.MsgUpdateNAVAuthorityResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vault, err := k.getVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault %s: %w", msg.VaultAddress, err)
+	}
+	if err := vault.ValidateAdmin(msg.Signer); err != nil {
+		return nil, fmt.Errorf("failed to validate admin: %w", err)
+	}
+	if err := k.SetNAVAuthority(ctx, vault, msg.NewAuthority, msg.Signer); err != nil {
+		return nil, fmt.Errorf("failed to set NAV authority: %w", err)
+	}
+
+	return &types.MsgUpdateNAVAuthorityResponse{}, nil
+}
+
+// AcceptAsset settles a pending exchange-module payment whose target is the vault,
+// exchanging an external asset for the vault's payment denom. Only the vault's asset
+// manager may sign it; the admin cannot settle.
+//
+// The exchange module's AcceptPayment operates on the caller's primary account, so the
+// vault account is used as an atomic staging hop while the principal marker account
+// remains the long-term store:
+//
+//	Principal -> Vault (target_amount), AcceptPayment, Vault -> Principal (source_amount)
+//
+// All steps run in the message handler; any failure reverts the whole transaction. The
+// settlement direction (inbound or outbound) is derived from which payment leg carries
+// the vault's payment denom.
+func (k msgServer) AcceptAsset(goCtx context.Context, msg *types.MsgAcceptAssetRequest) (*types.MsgAcceptAssetResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vault, err := k.getVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, err
+	}
+	if err = vault.ValidateAssetManagerAuthority(msg.Authority); err != nil {
+		return nil, fmt.Errorf("failed to validate asset manager authority: %w", err)
+	}
+	if vault.Paused {
+		return nil, fmt.Errorf("vault %s is paused: assets cannot be accepted while paused", msg.VaultAddress)
+	}
+
+	sourceAddr := sdk.MustAccAddressFromBech32(msg.Source)
+	payment, err := k.ExchangeKeeper.GetPayment(ctx, sourceAddr, msg.ExternalId)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get payment: %w", err)
+	}
+	if payment == nil {
+		return nil, fmt.Errorf("payment not found for source %s and external id %q", msg.Source, msg.ExternalId)
+	}
+	if payment.Target != msg.VaultAddress {
+		return nil, fmt.Errorf("payment target %s is not vault %s", payment.Target, msg.VaultAddress)
+	}
+
+	direction, err := assetSettlementDirection(vault, payment)
+	if err != nil {
+		return nil, err
+	}
+
+	assetCoin, paymentCoin, err := settlementLegCoins(payment, direction, vault.PaymentDenom)
+	if err != nil {
+		return nil, err
+	}
+	if err := k.checkSettlementNAVGuardrail(ctx, vault, assetCoin, paymentCoin); err != nil {
+		return nil, err
+	}
+
+	if err := k.reconcileVault(ctx, vault); err != nil {
+		return nil, fmt.Errorf("failed to reconcile vault before settlement: %w", err)
+	}
+
+	principalAddr := vault.PrincipalMarkerAddress()
+
+	for _, coin := range payment.TargetAmount {
+		if bal := k.BankKeeper.GetBalance(ctx, principalAddr, coin.Denom); bal.Amount.LT(coin.Amount) {
+			return nil, fmt.Errorf("insufficient principal balance for %s: have %s, need %s", coin.Denom, bal.Amount, coin.Amount)
+		}
+	}
+
+	if err := k.stageFromPrincipal(ctx, vault, payment.TargetAmount); err != nil {
+		return nil, fmt.Errorf("failed to stage target amount from principal to vault: %w", err)
+	}
+
+	if err := k.ExchangeKeeper.AcceptPayment(ctx, payment); err != nil {
+		return nil, fmt.Errorf("failed to accept payment: %w", err)
+	}
+
+	if err := k.returnToPrincipal(ctx, vault, payment.SourceAmount); err != nil {
+		return nil, fmt.Errorf("failed to move source amount from vault to principal: %w", err)
+	}
+
+	k.emitEvent(ctx, types.NewEventAssetAccepted(msg.VaultAddress, msg.Source, msg.ExternalId, payment.SourceAmount, payment.TargetAmount, direction))
+
+	if err := k.applySettlementNAV(ctx, vault, assetCoin, paymentCoin, direction, msg.Authority); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgAcceptAssetResponse{}, nil
+}
+
+// RejectAsset declines a pending exchange-module payment whose target is the vault. The
+// exchange module cancels the payment and refunds the source's escrow. Only the vault's
+// asset manager may sign it; the admin cannot reject.
+func (k msgServer) RejectAsset(goCtx context.Context, msg *types.MsgRejectAssetRequest) (*types.MsgRejectAssetResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vault, err := k.getVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, err
+	}
+	if err := vault.ValidateAssetManagerAuthority(msg.Authority); err != nil {
+		return nil, fmt.Errorf("failed to validate asset manager authority: %w", err)
+	}
+
+	sourceAddr := sdk.MustAccAddressFromBech32(msg.Source)
+	if err := k.ExchangeKeeper.RejectPayment(ctx, vaultAddr, sourceAddr, msg.ExternalId); err != nil {
+		return nil, fmt.Errorf("failed to reject payment: %w", err)
+	}
+
+	k.emitEvent(ctx, types.NewEventAssetRejected(msg.VaultAddress, msg.Source, msg.ExternalId))
+
+	return &types.MsgRejectAssetResponse{}, nil
+}
+
+// assetSettlementDirection determines whether a payment settles inbound or outbound for a
+// vault, based on which leg carries the vault's payment denom. The vault settles payments
+// where its payment denom is exactly one of the two legs: it pays the payment denom out
+// (inbound, target leg) or receives it in (outbound, source leg). A payment with the
+// payment denom on both legs cannot be settled.
+//
+// A zero-priced asset carries the payment denom on neither leg (the zero coin is stripped),
+// so direction is inferred from the leg holding the asset: an asset on the source leg moves
+// into the vault (inbound), an asset on the target leg moves out (outbound). A zero-priced
+// payment with an asset on both legs, or on neither, cannot be settled.
+func assetSettlementDirection(vault *types.VaultAccount, payment *exchange.Payment) (string, error) {
+	paymentDenom := vault.PaymentDenom
+	sourceHasPayment := payment.SourceAmount.AmountOf(paymentDenom).IsPositive()
+	targetHasPayment := payment.TargetAmount.AmountOf(paymentDenom).IsPositive()
+
+	switch {
+	case targetHasPayment && !sourceHasPayment:
+		return types.AssetDirectionInbound, nil
+	case sourceHasPayment && !targetHasPayment:
+		return types.AssetDirectionOutbound, nil
+	case sourceHasPayment && targetHasPayment:
+		return "", fmt.Errorf("payment must carry vault payment denom %q on exactly one leg: source_amount=%q target_amount=%q", paymentDenom, payment.SourceAmount, payment.TargetAmount)
+	}
+
+	// Neither leg carries the payment denom: a zero-priced settlement. Infer direction
+	// from the leg holding the asset.
+	switch {
+	case payment.TargetAmount.IsZero() && !payment.SourceAmount.IsZero():
+		return types.AssetDirectionInbound, nil
+	case payment.SourceAmount.IsZero() && !payment.TargetAmount.IsZero():
+		return types.AssetDirectionOutbound, nil
+	default:
+		return "", fmt.Errorf("zero-priced payment must carry the asset on exactly one leg: source_amount=%q target_amount=%q", payment.SourceAmount, payment.TargetAmount)
+	}
 }

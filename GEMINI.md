@@ -46,7 +46,7 @@ The agent operates as a **Principal Blockchain Engineer** with deep expertise in
 - **Table-Driven Preference**: Convert existing sequential tests to table-driven patterns when adding new test cases to an existing function.
 
 ### Documentation
-- **Godocs for Everything**: Every exported function, interface, and type must have clear, high-context Godoc comments describing the "why" and architectural context.
+- **Godocs for Exported Symbols**: Every exported function, interface, and type must have clear, high-context Godoc comments describing the "why" and architectural context. **Exception**: `TestXxx` functions and methods do NOT require Godocs (see [Testing](#testing)).
 - **Protobuf Documentation**: Ensure all fields and messages in `.proto` files are thoroughly documented, as these propagate to generated code and public API specs.
 - **GEMINI.md**: Update this file when adding new modules or significant architectural patterns.
 
@@ -54,6 +54,7 @@ The agent operates as a **Principal Blockchain Engineer** with deep expertise in
 - **Table-Driven Tests**: **Mandatory** for unit and integration tests to ensure exhaustive coverage of edge cases.
 - **Descriptive Test Case Names**: Each test case in a table must have a clear, descriptive name that explains the scenario being tested (e.g., "interest period has elapsed, should pay interest").
 - **Self-Documenting Code**: Avoid internal comments within test logic. Instead, use descriptive variable names and clear logic flow that "reads" like a description of the test case. Eliminate redundant comments that merely restate the code's action.
+- **No Godocs Required on Test Functions**: `TestXxx` functions and methods do NOT require Godoc comments. Their intent must instead be carried by a descriptive test name, descriptive test-case names, descriptive variable names, and high-context `Require`/`Assert` failure messages. This keeps large, fast-moving test suites maintainable. Test helpers, shared fixtures, and the suite type/methods in `suite_test.go` are NOT tests and still require Godocs.
 - **Global Reusable Test Helpers**: Abstract repeated operations (e.g., account setup, vault creation, state assertions) into reusable functions in `suite_test.go` to keep test suites clean and maintainable.
 - **Meaningful Require/Assert Messages**: **Every** assertion must include a descriptive failure message that provides context and explains the expected outcome versus the actual result:
     - *Good*: `s.Require().NoError(err, "failed to create vault for share denom %s", sharedenom)`

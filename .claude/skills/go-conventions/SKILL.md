@@ -23,7 +23,7 @@ These are the standards every change in the vault repo must meet. They are deriv
 ## 3. Self-documenting code & comment hygiene
 
 - **Inline comments**: every inline comment must explain *why*, not *what*. If a comment restates what the code does, delete the comment and rename/restructure the code so the intent is obvious.
-- **Godocs**: every exported function, type, and interface MUST have a Godoc comment that explains *why* and the architectural context. `// Foo does foo.` is not acceptable.
+- **Godocs**: every exported function, type, and interface MUST have a Godoc comment that explains *why* and the architectural context. `// Foo does foo.` is not acceptable. **Exception**: `TestXxx` functions and methods do NOT require Godocs — their intent comes from descriptive test/case names, variable names, and assertion messages. Test helpers, shared fixtures, and the suite type/methods in `suite_test.go` are not tests and still require Godocs.
 - **Protobuf**: every `.proto` message and field must be documented — proto docs flow into generated code and public APIs.
 - **Obsolete comments**: delete comments that reference removed code, outdated behavior, or completed TODOs.
 

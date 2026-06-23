@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"math/big"
 	"strings"
 	"time"
 
@@ -8,6 +9,9 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/google/uuid"
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	"github.com/provlabs/vault/types"
 )
 
@@ -152,7 +156,7 @@ func (s *TestSuite) TestKeeper_SetVaultNAV_OverwriteReStamps() {
 
 // TestKeeper_SetVaultNAV_RejectsInvalidInput verifies SetVaultNAV rejects every
 // invalid input before persisting an entry: the vault share denom, an invalid
-// price coin, a non-positive price amount, a price denom outside the vault's
+// price coin, a negative price amount, a price denom outside the vault's
 // accepted denoms, a nil or non-positive volume, and a denom that is not a
 // registered marker.
 func (s *TestSuite) TestKeeper_SetVaultNAV_RejectsInvalidInput() {
@@ -187,13 +191,13 @@ func (s *TestSuite) TestKeeper_SetVaultNAV_RejectsInvalidInput() {
 			expectedErrSubstr: "invalid NAV price",
 		},
 		{
-			name: "rejects a zero price amount",
+			name: "rejects a negative price amount",
 			nav: types.VaultNAV{
 				Denom:  registeredDenom,
-				Price:  sdk.NewInt64Coin(underlying, 0),
+				Price:  sdk.Coin{Denom: underlying, Amount: sdkmath.NewInt(-1)},
 				Volume: sdkmath.NewInt(1),
 			},
-			expectedErrSubstr: "NAV price amount must be positive",
+			expectedErrSubstr: "invalid NAV price",
 		},
 		{
 			name: "rejects a price denom outside the vault accepted denoms",
@@ -259,6 +263,15 @@ func (s *TestSuite) TestKeeper_SetVaultNAV_RejectsInvalidInput() {
 			},
 			expectedErrSubstr: "is not a registered marker",
 		},
+		{
+			name: "rejects a malformed nft/ denom via the marker check",
+			nav: types.VaultNAV{
+				Denom:  "nft/notabech32",
+				Price:  sdk.NewInt64Coin(underlying, 100),
+				Volume: sdkmath.NewInt(1),
+			},
+			expectedErrSubstr: "is not a registered marker",
+		},
 	}
 
 	for _, tc := range tests {
@@ -273,12 +286,336 @@ func (s *TestSuite) TestKeeper_SetVaultNAV_RejectsInvalidInput() {
 	}
 }
 
+// TestKeeper_SetVaultNAV_AllowsZeroPriceForHeldDenom verifies the authority can
+// write a held, non-accepted asset down to a zero NAV (e.g. a seized or retired
+// asset) and that the zero price is persisted.
+func (s *TestSuite) TestKeeper_SetVaultNAV_AllowsZeroPriceForHeldDenom() {
+	underlying := "under"
+	share := "vaultshares"
+	heldDenom := "rwa"
+	vault := s.setupBaseVault(underlying, share)
+	vaultAddr := types.GetVaultAddress(share)
+	s.requireSimpleMarker(heldDenom)
+
+	s.Require().False(vault.IsAcceptedDenom(heldDenom), "%q must be a held, non-accepted denom for this test", heldDenom)
+
+	nav := types.VaultNAV{
+		Denom:  heldDenom,
+		Price:  sdk.NewInt64Coin(underlying, 0),
+		Volume: sdkmath.NewInt(1),
+	}
+	s.Require().NoError(s.k.SetVaultNAV(s.ctx, vault, nav, s.adminAddr.String()), "SetVaultNAV should accept a zero price for a held denom")
+
+	stored, err := s.k.GetVaultNAV(s.ctx, vaultAddr, heldDenom)
+	s.Require().NoError(err, "zero-price NAV for held denom %s should be written", heldDenom)
+	s.Assert().True(stored.Price.Amount.IsZero(), "stored NAV price for held denom should be zero, got %s", stored.Price.Amount)
+}
+
+// TestKeeper_SetVaultNAV_RejectsZeroPriceForAcceptedDenom verifies the > 0 rule
+// is still enforced for accepted denoms (here the payment denom), so the
+// redemption and AUM-fee conversion math never sees a zero accepted-denom price.
+func (s *TestSuite) TestKeeper_SetVaultNAV_RejectsZeroPriceForAcceptedDenom() {
+	underlying := "under"
+	share := "vaultshares"
+	payment := "pay"
+	vault := s.setupSinglePaymentDenomVault(underlying, share, payment, 1, 1)
+	vaultAddr := types.GetVaultAddress(share)
+
+	s.Require().True(vault.IsAcceptedDenom(payment), "%q must be an accepted denom for this test", payment)
+
+	nav := types.VaultNAV{
+		Denom:  payment,
+		Price:  sdk.NewInt64Coin(underlying, 0),
+		Volume: sdkmath.NewInt(1),
+	}
+	err := s.k.SetVaultNAV(s.ctx, vault, nav, s.adminAddr.String())
+	s.Require().Error(err, "SetVaultNAV should reject a zero price for an accepted denom")
+	s.Assert().Contains(err.Error(), `NAV price amount for accepted denom "pay" must be positive`, "error should name the accepted denom")
+
+	stored, getErr := s.k.GetVaultNAV(s.ctx, vaultAddr, payment)
+	s.Require().NoError(getErr, "the pre-seeded positive payment NAV should still be present")
+	s.Assert().True(stored.Price.Amount.IsPositive(), "the rejected zero write must not overwrite the existing payment NAV")
+}
+
+func (s *TestSuite) TestKeeper_SetVaultNAV_MetadataDenomSkipsMarkerCheck() {
+	underlying := "under"
+	share := "vaultshares"
+	vault := s.setupBaseVault(underlying, share)
+	vaultAddr := types.GetVaultAddress(share)
+
+	navDenom := metadatatypes.ScopeMetadataAddress(uuid.MustParse("00000000-0000-4000-8000-000000000003")).Denom()
+	nav := types.VaultNAV{
+		Denom:  navDenom,
+		Price:  sdk.NewInt64Coin(underlying, 100),
+		Volume: sdkmath.NewInt(1),
+	}
+
+	s.Require().NoError(s.k.SetVaultNAV(s.ctx, vault, nav, s.adminAddr.String()), "SetVaultNAV should accept an nft/ denom without a registered marker")
+
+	stored, err := s.k.GetVaultNAV(s.ctx, vaultAddr, navDenom)
+	s.Require().NoError(err, "internal NAV for nft/ denom %s should be written", navDenom)
+	s.Assert().Equal(nav.Price, stored.Price, "stored NAV price for nft/ denom")
+	s.Assert().Equal(nav.Volume, stored.Volume, "stored NAV volume for nft/ denom")
+
+	_, markerErr := s.simApp.MarkerKeeper.GetMarkerByDenom(s.ctx, navDenom)
+	s.Assert().Error(markerErr, "nft/ denom %s must not be a registered marker", navDenom)
+}
+
 // TestKeeper_SetNAVAuthority_PersistsAndEmits verifies that a SetNAVAuthority
 // call that changes the value assigns the new authority on the vault account,
 // persists the change via SetVaultAccount, and emits a single
 // EventNAVAuthorityUpdated with the supplied signer recorded for attribution.
 // Both a rotation to an explicit address and a reset to the empty string
 // (fall-back-to-admin) flow through the same write path.
+func (s *TestSuite) TestKeeper_RemoveVaultNAV() {
+	cases := []struct {
+		name                string
+		underlying          string
+		share               string
+		navDenom            string
+		seedNav             *types.VaultNAV
+		expectedErrContains string
+		expectedLastPrice   string
+		expectedLastVolume  string
+	}{
+		{
+			name:       "existing entry is deleted and EventNAVRemoved carries the last price",
+			underlying: "under",
+			share:      "vaultshares",
+			navDenom:   "rwa",
+			seedNav: &types.VaultNAV{
+				Denom:  "rwa",
+				Price:  sdk.NewInt64Coin("under", 1_000_000),
+				Volume: sdkmath.NewInt(500_000),
+				Source: "settlement",
+			},
+			expectedLastPrice:  "1000000under",
+			expectedLastVolume: "500000",
+		},
+		{
+			name:                "denom with no entry returns an error and emits nothing",
+			underlying:          "usdc",
+			share:               "usdcshares",
+			navDenom:            "bond",
+			seedNav:             nil,
+			expectedErrContains: "failed to get internal NAV for denom \"bond\"",
+		},
+	}
+
+	for _, tc := range cases {
+		s.Run(tc.name, func() {
+			vault := s.setupBaseVault(tc.underlying, tc.share)
+			vaultAddr := types.GetVaultAddress(tc.share)
+
+			if tc.seedNav != nil {
+				s.requireSimpleMarker(tc.navDenom)
+				s.Require().NoError(
+					s.k.SetVaultNAV(s.ctx, vault, *tc.seedNav, s.adminAddr.String()),
+					"seeding NAV entry for denom %s should succeed", tc.navDenom,
+				)
+			}
+
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			err := s.k.RemoveVaultNAV(s.ctx, vault, tc.navDenom)
+
+			var removedEvents []sdk.Event
+			for _, ev := range s.ctx.EventManager().Events() {
+				if ev.Type == "provlabs.vault.v1.EventNAVRemoved" {
+					removedEvents = append(removedEvents, ev)
+				}
+			}
+
+			if tc.expectedErrContains != "" {
+				s.Require().ErrorContains(err, tc.expectedErrContains, "RemoveVaultNAV should fail for denom %s with no entry", tc.navDenom)
+				s.Assert().ErrorIs(err, collections.ErrNotFound, "RemoveVaultNAV should wrap collections.ErrNotFound for denom %s", tc.navDenom)
+				s.Assert().Empty(removedEvents, "failed RemoveVaultNAV should not emit EventNAVRemoved for denom %s", tc.navDenom)
+				return
+			}
+
+			s.Require().NoError(err, "RemoveVaultNAV should succeed for seeded denom %s", tc.navDenom)
+
+			_, err = s.k.GetVaultNAV(s.ctx, vaultAddr, tc.navDenom)
+			s.Assert().ErrorIs(err, collections.ErrNotFound, "NAV entry for denom %s should be deleted after RemoveVaultNAV", tc.navDenom)
+
+			s.Require().Len(removedEvents, 1, "RemoveVaultNAV should emit exactly one EventNAVRemoved for denom %s", tc.navDenom)
+			attrs := map[string]string{}
+			for _, a := range removedEvents[0].Attributes {
+				attrs[a.Key] = a.Value
+			}
+			s.Assert().Equal(`"`+vaultAddr.String()+`"`, attrs["vault_address"], "event vault_address attribute should record the vault")
+			s.Assert().Equal(`"`+tc.navDenom+`"`, attrs["denom"], "event denom attribute should record the removed denom")
+			s.Assert().Equal(`"`+tc.expectedLastPrice+`"`, attrs["last_price"], "event last_price attribute should record the last stored price")
+			s.Assert().Equal(`"`+tc.expectedLastVolume+`"`, attrs["last_volume"], "event last_volume attribute should record the last stored volume")
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_CheckSettlementNAVGuardrail() {
+	underlying := "under"
+	share := "vaultshares"
+	asset := "rwa"
+	hugeAmt := sdkmath.NewIntFromBigInt(new(big.Int).Lsh(big.NewInt(1), 130))
+
+	tests := []struct {
+		name                string
+		seedNav             *types.VaultNAV
+		corruptNav          bool
+		assetCoin           sdk.Coin
+		paymentCoin         sdk.Coin
+		expectedErrContains string
+	}{
+		{
+			name:        "no NAV entry for the asset denom skips the guardrail",
+			assetCoin:   sdk.NewInt64Coin(asset, 10),
+			paymentCoin: sdk.NewInt64Coin(underlying, 5),
+		},
+		{
+			name:                "undecodable NAV entry propagates a non-NotFound lookup error",
+			corruptNav:          true,
+			assetCoin:           sdk.NewInt64Coin(asset, 10),
+			paymentCoin:         sdk.NewInt64Coin(underlying, 5),
+			expectedErrContains: "failed to get internal NAV for denom \"rwa\"",
+		},
+		{
+			name:                "NAV priced in a different denom than the payment coin is rejected",
+			seedNav:             &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(underlying, 5), Volume: sdkmath.NewInt(10)},
+			assetCoin:           sdk.NewInt64Coin(asset, 10),
+			paymentCoin:         sdk.NewInt64Coin("pay", 5),
+			expectedErrContains: "is priced in",
+		},
+		{
+			name:                "asset amount times NAV price overflowing 256 bits returns an error",
+			seedNav:             &types.VaultNAV{Denom: asset, Price: sdk.NewCoin(underlying, hugeAmt), Volume: sdkmath.NewInt(1)},
+			assetCoin:           sdk.NewCoin(asset, hugeAmt),
+			paymentCoin:         sdk.NewInt64Coin(underlying, 5),
+			expectedErrContains: "failed to multiply settlement asset amount",
+		},
+		{
+			name:                "payment amount times NAV volume overflowing 256 bits returns an error",
+			seedNav:             &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(underlying, 1), Volume: hugeAmt},
+			assetCoin:           sdk.NewInt64Coin(asset, 1),
+			paymentCoin:         sdk.NewCoin(underlying, hugeAmt),
+			expectedErrContains: "failed to multiply settlement payment amount",
+		},
+		{
+			name:                "settlement off the NAV price is rejected",
+			seedNav:             &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(underlying, 6), Volume: sdkmath.NewInt(10)},
+			assetCoin:           sdk.NewInt64Coin(asset, 10),
+			paymentCoin:         sdk.NewInt64Coin(underlying, 5),
+			expectedErrContains: "does not match internal NAV",
+		},
+		{
+			name:        "settlement at the exact NAV price passes the guardrail",
+			seedNav:     &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(underlying, 5), Volume: sdkmath.NewInt(10)},
+			assetCoin:   sdk.NewInt64Coin(asset, 10),
+			paymentCoin: sdk.NewInt64Coin(underlying, 5),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			origCtx := s.ctx
+			defer func() { s.ctx = origCtx }()
+			s.ctx, _ = s.ctx.CacheContext()
+
+			vault := s.setupBaseVault(underlying, share)
+
+			if tc.seedNav != nil {
+				s.Require().NoError(
+					s.k.NAVs.Set(s.ctx, collections.Join(vault.GetAddress(), tc.seedNav.Denom), *tc.seedNav),
+					"failed to seed NAV entry for denom %s", tc.seedNav.Denom,
+				)
+			}
+			if tc.corruptNav {
+				s.Require().NoError(
+					s.k.TestAccessor_corruptVaultNAV(s.T(), s.ctx, vault.GetAddress(), tc.assetCoin.Denom),
+					"failed to corrupt NAV entry for denom %s", tc.assetCoin.Denom,
+				)
+			}
+
+			err := s.k.TestAccessor_checkSettlementNAVGuardrail(s.T(), s.ctx, vault, tc.assetCoin, tc.paymentCoin)
+
+			if tc.expectedErrContains == "" {
+				s.Require().NoError(err, "guardrail should pass for asset %s payment %s", tc.assetCoin, tc.paymentCoin)
+				return
+			}
+
+			s.Require().ErrorContains(err, tc.expectedErrContains, "guardrail error mismatch for asset %s payment %s", tc.assetCoin, tc.paymentCoin)
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_PublishAssetNAVToMarker() {
+	underlying := "under"
+	share := "vshare"
+	paymentDenom := "pay"
+	asset := "rwacoin"
+
+	tests := []struct {
+		name                string
+		registerAssetMarker bool
+		volume              sdkmath.Int
+		expectedErrContains string
+	}{
+		{
+			name:                "registered marker denom publishes the marker NAV attributed to the vault address",
+			registerAssetMarker: true,
+			volume:              sdkmath.NewInt(10),
+		},
+		{
+			name:                "volume that does not fit in uint64 is rejected before the marker lookup",
+			volume:              sdkmath.NewIntFromBigInt(new(big.Int).Lsh(big.NewInt(1), 70)),
+			expectedErrContains: "overflows the marker NAV volume",
+		},
+		{
+			name:                "NAV denom without a registered marker fails the lookup",
+			volume:              sdkmath.NewInt(10),
+			expectedErrContains: "failed to get marker for NAV denom",
+		},
+		{
+			name:                "marker NAV the marker module rejects propagates the error",
+			registerAssetMarker: true,
+			volume:              sdkmath.ZeroInt(),
+			expectedErrContains: "failed to set marker NAV for denom",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			origCtx := s.ctx
+			defer func() { s.ctx = origCtx }()
+			s.ctx, _ = s.ctx.CacheContext()
+
+			vault, _ := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+			if tc.registerAssetMarker {
+				s.requireSimpleMarker(asset)
+			}
+			nav := types.VaultNAV{
+				Denom:  asset,
+				Price:  sdk.NewInt64Coin(paymentDenom, 5),
+				Volume: tc.volume,
+				Source: vault.Address,
+			}
+
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			err := s.k.TestAccessor_publishAssetNAVToMarker(s.T(), s.ctx, vault, nav)
+
+			if tc.expectedErrContains != "" {
+				s.Require().ErrorContains(err, tc.expectedErrContains, "publishAssetNAVToMarker should fail for denom %s volume %s", nav.Denom, nav.Volume)
+				return
+			}
+			s.Require().NoError(err, "publishAssetNAVToMarker should succeed for denom %s volume %s", nav.Denom, nav.Volume)
+
+			stored, err := s.k.MarkerKeeper.GetNetAssetValue(s.ctx, asset, paymentDenom)
+			s.Require().NoError(err, "failed to read marker NAV for %s priced in %s", asset, paymentDenom)
+			s.Require().NotNil(stored, "marker NAV for %s priced in %s should exist after publish", asset, paymentDenom)
+			s.Assert().Equal(nav.Price, stored.Price, "marker NAV price should match the internal NAV price for %s", asset)
+			s.Assert().Equal(nav.Volume.Uint64(), stored.Volume, "marker NAV volume should match the internal NAV volume for %s", asset)
+			s.requireTypedEventEmitted(markertypes.NewEventSetNetAssetValue(asset, nav.Price, nav.Volume.Uint64(), vault.Address))
+		})
+	}
+}
+
 func (s *TestSuite) TestKeeper_SetNAVAuthority_PersistsAndEmits() {
 	cases := []struct {
 		name                string

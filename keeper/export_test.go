@@ -2,10 +2,13 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
+	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/provenance-io/provenance/x/exchange"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	"github.com/provlabs/vault/types"
 )
@@ -94,4 +97,56 @@ func (k Keeper) TestAccessor_setShareDenomNAV(t *testing.T, ctx context.Context,
 func (k Keeper) TestAccessor_checkPayoutRestrictions(t *testing.T, ctx context.Context, vault *types.VaultAccount, owner sdk.AccAddress, assets sdk.Coin) error {
 	t.Helper()
 	return k.checkPayoutRestrictions(sdk.UnwrapSDKContext(ctx), vault, owner, assets)
+}
+
+// TestAccessor_checkSettlementNAVGuardrail exposes this keeper's checkSettlementNAVGuardrail function for unit tests.
+func (k Keeper) TestAccessor_checkSettlementNAVGuardrail(t *testing.T, ctx context.Context, vault *types.VaultAccount, assetCoin, paymentCoin sdk.Coin) error {
+	t.Helper()
+	return k.checkSettlementNAVGuardrail(sdk.UnwrapSDKContext(ctx), vault, assetCoin, paymentCoin)
+}
+
+// TestAccessor_applySettlementNAV exposes this keeper's applySettlementNAV function for unit tests.
+func (k Keeper) TestAccessor_applySettlementNAV(t *testing.T, ctx context.Context, vault *types.VaultAccount, assetCoin, paymentCoin sdk.Coin, direction, signer string) error {
+	t.Helper()
+	return k.applySettlementNAV(sdk.UnwrapSDKContext(ctx), vault, assetCoin, paymentCoin, direction, signer)
+}
+
+// TestAccessor_publishAssetNAVToMarker exposes this keeper's publishAssetNAVToMarker function for unit tests.
+func (k Keeper) TestAccessor_publishAssetNAVToMarker(t *testing.T, ctx context.Context, vault *types.VaultAccount, nav types.VaultNAV) error {
+	t.Helper()
+	return k.publishAssetNAVToMarker(sdk.UnwrapSDKContext(ctx), vault, nav)
+}
+
+// TestAccessor_settlementLegCoins exposes the settlementLegCoins function for unit tests.
+func (k Keeper) TestAccessor_settlementLegCoins(t *testing.T, payment *exchange.Payment, direction, paymentDenom string) (sdk.Coin, sdk.Coin, error) {
+	t.Helper()
+	return settlementLegCoins(payment, direction, paymentDenom)
+}
+
+// TestAccessor_stageFromPrincipal exposes this keeper's stageFromPrincipal function for unit tests.
+func (k Keeper) TestAccessor_stageFromPrincipal(t *testing.T, ctx context.Context, vault *types.VaultAccount, amt sdk.Coins) error {
+	t.Helper()
+	return k.stageFromPrincipal(sdk.UnwrapSDKContext(ctx), vault, amt)
+}
+
+// TestAccessor_returnToPrincipal exposes this keeper's returnToPrincipal function for unit tests.
+func (k Keeper) TestAccessor_returnToPrincipal(t *testing.T, ctx context.Context, vault *types.VaultAccount, amt sdk.Coins) error {
+	t.Helper()
+	return k.returnToPrincipal(sdk.UnwrapSDKContext(ctx), vault, amt)
+}
+
+// TestAccessor_corruptVaultNAV writes undecodable bytes at the internal NAV entry for
+// vaultAddr/denom so unit tests can exercise NAV lookup failures other than not-found.
+func (k Keeper) TestAccessor_corruptVaultNAV(t *testing.T, ctx context.Context, vaultAddr sdk.AccAddress, denom string) error {
+	t.Helper()
+	keyCodec := collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey)
+	key := collections.Join(vaultAddr, denom)
+	buf := make([]byte, keyCodec.Size(key))
+	if _, err := keyCodec.Encode(buf, key); err != nil {
+		return fmt.Errorf("failed to encode NAV key for denom %q: %w", denom, err)
+	}
+	if err := k.storeService.OpenKVStore(ctx).Set(append(types.NAVsKeyPrefix.Bytes(), buf...), []byte{0xFF}); err != nil {
+		return fmt.Errorf("failed to write corrupt NAV bytes for denom %q: %w", denom, err)
+	}
+	return nil
 }

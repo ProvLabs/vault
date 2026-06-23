@@ -7,6 +7,9 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/google/uuid"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
+
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
 	"github.com/provlabs/vault/utils"
@@ -16,6 +19,7 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 	underlyingDenom := "underlying"
 	paymentDenom := "usdc"
 	shareDenom := "vshare"
+	heldAsset := metadatatypes.ScopeMetadataAddress(uuid.MustParse("00000000-0000-4000-8000-0000000000e5")).Denom()
 	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
 
 	cases := []struct {
@@ -27,24 +31,35 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 		expectedErrorContains string
 	}{
 		{
-			name:                "identity-src-equals-underlying",
+			name:                "source denom equals underlying returns identity fraction without a lookup",
 			fromDenom:           underlyingDenom,
 			expectedNumerator:   1,
 			expectedDenominator: 1,
 		},
 		{
-			name:                "internal-nav-payment-to-underlying",
+			name:                "payment denom converts to underlying via its internal NAV",
 			fromDenom:           paymentDenom,
 			expectedNumerator:   1,
 			expectedDenominator: 2,
 		},
 		{
-			name:                  "internal-nav-missing-for-denom",
+			name:                  "missing internal NAV for denom returns not-found error",
 			fromDenom:             "unknown",
 			expectedErrorContains: "no internal NAV entry for denom",
 		},
 		{
-			name:      "internal-nav-overwritten-uses-latest",
+			name:      "payment priced asset chains through the payment denom NAV to underlying",
+			fromDenom: heldAsset,
+			setup: func() {
+				s.bumpHeight()
+				s.setVaultNAV(vault, paymentDenom, sdk.NewInt64Coin(underlyingDenom, 1), 2)
+				s.setVaultNAV(vault, heldAsset, sdk.NewInt64Coin(paymentDenom, 6), 1)
+			},
+			expectedNumerator:   6,
+			expectedDenominator: 2,
+		},
+		{
+			name:      "overwritten internal NAV uses the latest entry",
 			fromDenom: paymentDenom,
 			setup: func() {
 				s.bumpHeight()
@@ -58,7 +73,7 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 			// volume, but UnitPriceFraction also defends against it in case state
 			// is ever corrupted (e.g. by a future migration). Bypass write-side
 			// validation by writing directly to the NAVs collection.
-			name:      "internal-nav-volume-non-positive",
+			name:      "non-positive internal NAV volume is rejected by the defensive guard",
 			fromDenom: paymentDenom,
 			setup: func() {
 				s.bumpHeight()
@@ -75,8 +90,9 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 			expectedErrorContains: "internal NAV volume must be positive",
 		},
 		{
-			// Defensive guard mirror: non-positive price.
-			name:      "internal-nav-price-non-positive",
+			// A zero price is a legitimate write-down of a held asset to zero. The
+			// engine must accept it and yield a zero unit price rather than erroring.
+			name:      "zero internal NAV price yields a zero unit price",
 			fromDenom: paymentDenom,
 			setup: func() {
 				s.bumpHeight()
@@ -88,12 +104,34 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 						Price:  sdk.NewInt64Coin(underlyingDenom, 0),
 						Volume: math.NewInt(1),
 					},
-				), "should write a zero-price NAV directly to storage to exercise the defensive guard")
+				), "should write a zero-price NAV directly to storage to exercise the zero-value path")
 			},
-			expectedErrorContains: "internal NAV price must be positive",
+			expectedNumerator:   0,
+			expectedDenominator: 1,
 		},
 		{
-			name:      "internal-nav-price-nil",
+			// Defensive guard: a negative price can only arise from corrupted state
+			// and must be rejected.
+			name:      "negative internal NAV price is rejected by the defensive guard",
+			fromDenom: paymentDenom,
+			setup: func() {
+				s.bumpHeight()
+				s.Require().NoError(s.k.NAVs.Set(
+					s.ctx,
+					collections.Join(vault.GetAddress(), paymentDenom),
+					types.VaultNAV{
+						Denom:  paymentDenom,
+						Price:  sdk.Coin{Denom: underlyingDenom, Amount: math.NewInt(-1)},
+						Volume: math.NewInt(1),
+					},
+				), "should write a negative-price NAV directly to storage to exercise the defensive guard")
+			},
+			expectedErrorContains: "internal NAV price must not be negative",
+		},
+		{
+			// A nil price amount round-trips through storage as zero, so it is read
+			// back as a legitimate zero-value NAV rather than tripping the guard.
+			name:      "nil internal NAV price normalizes to zero through storage",
 			fromDenom: paymentDenom,
 			setup: func() {
 				s.bumpHeight()
@@ -105,9 +143,53 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 						Price:  sdk.Coin{Denom: underlyingDenom, Amount: math.Int{}},
 						Volume: math.NewInt(1),
 					},
-				), "should write a nil-amount price NAV directly to storage to exercise the defensive guard")
+				), "should write a nil-amount price NAV directly to storage")
 			},
-			expectedErrorContains: "internal NAV price must be positive",
+			expectedNumerator:   0,
+			expectedDenominator: 1,
+		},
+		{
+			name:      "self-priced denom seeded outside validation reports cycle instead of recursing without bound",
+			fromDenom: "selfpriced",
+			setup: func() {
+				s.bumpHeight()
+				s.Require().NoError(s.k.NAVs.Set(
+					s.ctx,
+					collections.Join(vault.GetAddress(), "selfpriced"),
+					types.VaultNAV{
+						Denom:  "selfpriced",
+						Price:  sdk.NewInt64Coin("selfpriced", 1),
+						Volume: math.NewInt(1),
+					},
+				), "should write a self-priced NAV directly to storage to exercise the cycle guard")
+			},
+			expectedErrorContains: "contains a cycle",
+		},
+		{
+			name:      "two denom loop with a priced in b and b priced in a reports cycle instead of overflowing the stack",
+			fromDenom: "cyclea",
+			setup: func() {
+				s.bumpHeight()
+				s.Require().NoError(s.k.NAVs.Set(
+					s.ctx,
+					collections.Join(vault.GetAddress(), "cyclea"),
+					types.VaultNAV{
+						Denom:  "cyclea",
+						Price:  sdk.NewInt64Coin("cycleb", 1),
+						Volume: math.NewInt(1),
+					},
+				), "should write the first leg of the price cycle directly to storage")
+				s.Require().NoError(s.k.NAVs.Set(
+					s.ctx,
+					collections.Join(vault.GetAddress(), "cycleb"),
+					types.VaultNAV{
+						Denom:  "cycleb",
+						Price:  sdk.NewInt64Coin("cyclea", 1),
+						Volume: math.NewInt(1),
+					},
+				), "should write the second leg of the price cycle directly to storage")
+			},
+			expectedErrorContains: "contains a cycle",
 		},
 	}
 
@@ -314,6 +396,120 @@ func (s *TestSuite) TestGetTVVInUnderlyingAsset_AccumulatorOverflowReturnsErrorN
 	s.Require().Error(err, "summing balances past the 256-bit ceiling must degrade to an error, not panic")
 	s.Require().ErrorContains(err, "integer overflow", "error should originate from the SafeAdd accumulator guard")
 	s.Require().ErrorContains(err, "total vault value", "error should carry the accumulator's wrapping context")
+}
+
+func (s *TestSuite) TestGetTVVInUnderlyingAsset_IncludesUnderlyingPricedHeldAsset() {
+	underlyingDenom := "ylds"
+	shareDenom := "vshare"
+	vault := s.setupBaseVault(underlyingDenom, shareDenom)
+
+	heldAsset := metadatatypes.ScopeMetadataAddress(uuid.MustParse("00000000-0000-4000-8000-0000000000a1")).Denom()
+	s.setVaultNAV(vault, heldAsset, sdk.NewInt64Coin(underlyingDenom, 3), 2)
+
+	principal := vault.PrincipalMarkerAddress()
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principal, sdk.NewCoins(
+		sdk.NewInt64Coin(underlyingDenom, 100),
+		sdk.NewInt64Coin(heldAsset, 10),
+	)), "funding principal with underlying and a NAV-priced held asset should succeed")
+
+	tvv, err := s.k.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	s.Require().NoError(err, "TVV should value the NAV-priced held asset without error")
+	s.Require().Equal(math.NewInt(115), tvv, "TVV should be 100 underlying + floor(10 * 3 / 2) = 115")
+}
+
+func (s *TestSuite) TestGetTVVInUnderlyingAsset_IncludesPaymentPricedHeldAsset() {
+	underlyingDenom := "ylds"
+	paymentDenom := "usdc"
+	shareDenom := "vshare"
+	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 3, 1)
+
+	heldAsset := metadatatypes.ScopeMetadataAddress(uuid.MustParse("00000000-0000-4000-8000-0000000000b2")).Denom()
+	s.setVaultNAV(vault, heldAsset, sdk.NewInt64Coin(paymentDenom, 5), 2)
+
+	principal := vault.PrincipalMarkerAddress()
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principal, sdk.NewCoins(
+		sdk.NewInt64Coin(underlyingDenom, 100),
+		sdk.NewInt64Coin(paymentDenom, 4),
+		sdk.NewInt64Coin(heldAsset, 10),
+	)), "funding principal with underlying, payment, and a payment-priced held asset should succeed")
+
+	tvv, err := s.k.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	s.Require().NoError(err, "TVV should chain a payment-priced held asset through to the underlying without error")
+	s.Require().Equal(math.NewInt(187), tvv, "TVV should be 100 underlying + (4 usdc * 3) + (10 asset * 5/2 usdc * 3) = 100 + 12 + 75 = 187")
+}
+
+func (s *TestSuite) TestGetTVVInUnderlyingAsset_SkipsHeldAssetWithoutNAV() {
+	underlyingDenom := "ylds"
+	shareDenom := "vshare"
+	vault := s.setupBaseVault(underlyingDenom, shareDenom)
+
+	heldAsset := metadatatypes.ScopeMetadataAddress(uuid.MustParse("00000000-0000-4000-8000-0000000000c3")).Denom()
+
+	principal := vault.PrincipalMarkerAddress()
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principal, sdk.NewCoins(
+		sdk.NewInt64Coin(underlyingDenom, 100),
+		sdk.NewInt64Coin(heldAsset, 10),
+	)), "funding principal with underlying and a held asset lacking a NAV should succeed")
+
+	tvv, err := s.k.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	s.Require().NoError(err, "a held asset with no internal NAV must be skipped without failing TVV")
+	s.Require().Equal(math.NewInt(100), tvv, "TVV should count only the 100 underlying and ignore the un-priced held asset")
+}
+
+func (s *TestSuite) TestGetTVVInUnderlyingAsset_AcceptedDenomMissingNAVStillErrors() {
+	underlyingDenom := "ylds"
+	paymentDenom := "usdc"
+	shareDenom := "vshare"
+
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 1_000_000), s.adminAddr)
+	vault := s.setupBaseVault(underlyingDenom, shareDenom, paymentDenom)
+	s.Require().NoError(s.k.NAVs.Remove(s.ctx, collections.Join(vault.GetAddress(), paymentDenom)),
+		"removing the bootstrap payment NAV should succeed so the missing-NAV path is exercised")
+
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vault.PrincipalMarkerAddress(),
+		sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 10))), "funding principal with the payment denom should succeed")
+
+	_, err := s.k.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	s.Require().Error(err, "an accepted denom with no NAV is a misconfiguration and must still error")
+	s.Require().Contains(err.Error(), "no internal NAV entry for denom \"usdc\"", "error should propagate from the missing accepted-denom NAV")
+}
+
+func (s *TestSuite) TestGetTVVInUnderlyingAsset_InterestAndFeeAccrueOnHeldAssetBase() {
+	underlyingDenom := "ylds"
+	shareDenom := "vshare"
+	vault := s.setupBaseVault(underlyingDenom, shareDenom)
+	vault.AumFeeBips = 100
+	s.SetVaultRatesAndPeriod(vault, "0.10", "0.10", 1, 0)
+	vault.PeriodStart = 1
+
+	heldAsset := metadatatypes.ScopeMetadataAddress(uuid.MustParse("00000000-0000-4000-8000-0000000000d4")).Denom()
+	s.setVaultNAV(vault, heldAsset, sdk.NewInt64Coin(underlyingDenom, 1), 1)
+
+	principal := vault.PrincipalMarkerAddress()
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principal,
+		sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1_000_000))), "funding principal with underlying should succeed")
+
+	baseWithoutAsset, err := s.k.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	s.Require().NoError(err, "computing the underlying-only TVV base should succeed")
+	interestWithoutAsset, err := s.k.CalculateAccruedInterest(s.ctx, *vault, sdk.NewCoin(underlyingDenom, baseWithoutAsset))
+	s.Require().NoError(err, "computing interest on the underlying-only base should succeed")
+	feeWithoutAsset, err := s.k.CalculateAccruedAUMFee(s.ctx, *vault, baseWithoutAsset)
+	s.Require().NoError(err, "computing the AUM fee on the underlying-only base should succeed")
+
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principal,
+		sdk.NewCoins(sdk.NewInt64Coin(heldAsset, 500_000))), "funding principal with a NAV-priced held asset should succeed")
+
+	baseWithAsset, err := s.k.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	s.Require().NoError(err, "computing the TVV base including the held asset should succeed")
+	interestWithAsset, err := s.k.CalculateAccruedInterest(s.ctx, *vault, sdk.NewCoin(underlyingDenom, baseWithAsset))
+	s.Require().NoError(err, "computing interest on the larger base should succeed")
+	feeWithAsset, err := s.k.CalculateAccruedAUMFee(s.ctx, *vault, baseWithAsset)
+	s.Require().NoError(err, "computing the AUM fee on the larger base should succeed")
+
+	s.Require().Equal(math.NewInt(1_500_000), baseWithAsset, "TVV base should grow by the held asset's NAV value (1_000_000 + 500_000)")
+	s.Require().True(baseWithAsset.GT(baseWithoutAsset), "held asset should enlarge the TVV base")
+	s.Require().True(interestWithAsset.GT(interestWithoutAsset), "interest should accrue on the larger base that includes the held asset")
+	s.Require().True(feeWithAsset.GT(feeWithoutAsset), "the AUM fee should accrue on the larger base that includes the held asset")
 }
 
 func (s *TestSuite) TestGetTVVInUnderlyingAsset_ExcludesReserves() {
@@ -654,8 +850,6 @@ func (s *TestSuite) TestGetTVVInUnderlyingAsset_AcceptedDenomFiltering() {
 	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), coinsToSend), "funding principal should succeed")
 
 	s.setVaultNAV(vault, paymentDenom, sdk.NewInt64Coin(underlyingDenom, 2), 1)
-	// unacceptedDenom intentionally has no internal NAV entry — TVV must skip it
-	// before attempting any price lookup, so its balance never reaches UnitPriceFraction.
 
 	testKeeper := s.k
 	tvv, err := testKeeper.GetTVVInUnderlyingAsset(s.ctx, *vault)

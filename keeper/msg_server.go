@@ -833,10 +833,22 @@ func (k msgServer) UpdateVaultNAV(goCtx context.Context, msg *types.MsgUpdateVau
 	if err := vault.ValidateNAVAuthority(msg.Signer); err != nil {
 		return nil, fmt.Errorf("failed to validate NAV authority: %w", err)
 	}
+	if vault.Paused {
+		return nil, fmt.Errorf("vault %s is paused: NAV cannot be updated while paused", msg.VaultAddress)
+	}
+
+	if err := k.reconcileVault(ctx, vault); err != nil {
+		return nil, fmt.Errorf("failed to reconcile vault before NAV update: %w", err)
+	}
 
 	nav := types.NewVaultNAV(msg.Denom, msg.Price, msg.Volume, msg.Source)
 	if err := k.SetVaultNAV(ctx, vault, nav, msg.Signer); err != nil {
 		return nil, fmt.Errorf("failed to update vault NAV: %w", err)
+	}
+	if !isMetadataDenom(msg.Denom) {
+		if err := k.publishAssetNAVToMarker(ctx, vault, nav); err != nil {
+			return nil, fmt.Errorf("failed to publish vault NAV to marker: %w", err)
+		}
 	}
 
 	return &types.MsgUpdateVaultNAVResponse{}, nil
@@ -863,8 +875,8 @@ func (k msgServer) UpdateNAVAuthority(goCtx context.Context, msg *types.MsgUpdat
 }
 
 // AcceptAsset settles a pending exchange-module payment whose target is the vault,
-// exchanging an external asset for the vault's payment denom. Either the vault admin
-// or the asset manager may sign it.
+// exchanging an external asset for the vault's payment denom. Only the vault's asset
+// manager may sign it; the admin cannot settle.
 //
 // The exchange module's AcceptPayment operates on the caller's primary account, so the
 // vault account is used as an atomic staging hop while the principal marker account
@@ -883,8 +895,11 @@ func (k msgServer) AcceptAsset(goCtx context.Context, msg *types.MsgAcceptAssetR
 	if err != nil {
 		return nil, err
 	}
-	if err = vault.ValidateManagementAuthority(msg.Authority); err != nil {
-		return nil, fmt.Errorf("failed to validate management authority: %w", err)
+	if err = vault.ValidateAssetManagerAuthority(msg.Authority); err != nil {
+		return nil, fmt.Errorf("failed to validate asset manager authority: %w", err)
+	}
+	if vault.Paused {
+		return nil, fmt.Errorf("vault %s is paused: assets cannot be accepted while paused", msg.VaultAddress)
 	}
 
 	sourceAddr := sdk.MustAccAddressFromBech32(msg.Source)
@@ -904,6 +919,18 @@ func (k msgServer) AcceptAsset(goCtx context.Context, msg *types.MsgAcceptAssetR
 		return nil, err
 	}
 
+	assetCoin, paymentCoin, err := settlementLegCoins(payment, direction, vault.PaymentDenom)
+	if err != nil {
+		return nil, err
+	}
+	if err := k.checkSettlementNAVGuardrail(ctx, vault, assetCoin, paymentCoin); err != nil {
+		return nil, err
+	}
+
+	if err := k.reconcileVault(ctx, vault); err != nil {
+		return nil, fmt.Errorf("failed to reconcile vault before settlement: %w", err)
+	}
+
 	principalAddr := vault.PrincipalMarkerAddress()
 
 	for _, coin := range payment.TargetAmount {
@@ -912,35 +939,30 @@ func (k msgServer) AcceptAsset(goCtx context.Context, msg *types.MsgAcceptAssetR
 		}
 	}
 
-	// TODO(#192 marker-attribute-preflight): if a staged asset is a restricted marker, these
-	// Principal <-> Vault transfers require the vault account to satisfy the marker's transfer
-	// rules. The marker-attribute-preflight investigation determines whether an attribute
-	// check is needed here.
-
-	if !payment.TargetAmount.IsZero() {
-		if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, vaultAddr), principalAddr, vaultAddr, payment.TargetAmount); err != nil {
-			return nil, fmt.Errorf("failed to stage target amount from principal to vault: %w", err)
-		}
+	if err := k.stageFromPrincipal(ctx, vault, payment.TargetAmount); err != nil {
+		return nil, fmt.Errorf("failed to stage target amount from principal to vault: %w", err)
 	}
 
 	if err := k.ExchangeKeeper.AcceptPayment(ctx, payment); err != nil {
 		return nil, fmt.Errorf("failed to accept payment: %w", err)
 	}
 
-	if !payment.SourceAmount.IsZero() {
-		if err := k.BankKeeper.SendCoins(markertypes.WithTransferAgents(ctx, vaultAddr), vaultAddr, principalAddr, payment.SourceAmount); err != nil {
-			return nil, fmt.Errorf("failed to move source amount from vault to principal: %w", err)
-		}
+	if err := k.returnToPrincipal(ctx, vault, payment.SourceAmount); err != nil {
+		return nil, fmt.Errorf("failed to move source amount from vault to principal: %w", err)
 	}
 
 	k.emitEvent(ctx, types.NewEventAssetAccepted(msg.VaultAddress, msg.Source, msg.ExternalId, payment.SourceAmount, payment.TargetAmount, direction))
+
+	if err := k.applySettlementNAV(ctx, vault, assetCoin, paymentCoin, direction, msg.Authority); err != nil {
+		return nil, err
+	}
 
 	return &types.MsgAcceptAssetResponse{}, nil
 }
 
 // RejectAsset declines a pending exchange-module payment whose target is the vault. The
-// exchange module cancels the payment and refunds the source's escrow. Either the vault
-// admin or the asset manager may sign it.
+// exchange module cancels the payment and refunds the source's escrow. Only the vault's
+// asset manager may sign it; the admin cannot reject.
 func (k msgServer) RejectAsset(goCtx context.Context, msg *types.MsgRejectAssetRequest) (*types.MsgRejectAssetResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -949,8 +971,8 @@ func (k msgServer) RejectAsset(goCtx context.Context, msg *types.MsgRejectAssetR
 	if err != nil {
 		return nil, err
 	}
-	if err = vault.ValidateManagementAuthority(msg.Authority); err != nil {
-		return nil, fmt.Errorf("failed to validate management authority: %w", err)
+	if err := vault.ValidateAssetManagerAuthority(msg.Authority); err != nil {
+		return nil, fmt.Errorf("failed to validate asset manager authority: %w", err)
 	}
 
 	sourceAddr := sdk.MustAccAddressFromBech32(msg.Source)
@@ -964,10 +986,15 @@ func (k msgServer) RejectAsset(goCtx context.Context, msg *types.MsgRejectAssetR
 }
 
 // assetSettlementDirection determines whether a payment settles inbound or outbound for a
-// vault, based on which leg carries the vault's payment denom. The vault only settles
-// payments where its payment denom is exactly one of the two legs: it pays the payment
-// denom out (inbound, target leg) or receives it in (outbound, source leg). A payment with
-// the payment denom on neither leg, or on both, cannot be settled.
+// vault, based on which leg carries the vault's payment denom. The vault settles payments
+// where its payment denom is exactly one of the two legs: it pays the payment denom out
+// (inbound, target leg) or receives it in (outbound, source leg). A payment with the
+// payment denom on both legs cannot be settled.
+//
+// A zero-priced asset carries the payment denom on neither leg (the zero coin is stripped),
+// so direction is inferred from the leg holding the asset: an asset on the source leg moves
+// into the vault (inbound), an asset on the target leg moves out (outbound). A zero-priced
+// payment with an asset on both legs, or on neither, cannot be settled.
 func assetSettlementDirection(vault *types.VaultAccount, payment *exchange.Payment) (string, error) {
 	paymentDenom := vault.PaymentDenom
 	sourceHasPayment := payment.SourceAmount.AmountOf(paymentDenom).IsPositive()
@@ -978,7 +1005,18 @@ func assetSettlementDirection(vault *types.VaultAccount, payment *exchange.Payme
 		return types.AssetDirectionInbound, nil
 	case sourceHasPayment && !targetHasPayment:
 		return types.AssetDirectionOutbound, nil
-	default:
+	case sourceHasPayment && targetHasPayment:
 		return "", fmt.Errorf("payment must carry vault payment denom %q on exactly one leg: source_amount=%q target_amount=%q", paymentDenom, payment.SourceAmount, payment.TargetAmount)
+	}
+
+	// Neither leg carries the payment denom: a zero-priced settlement. Infer direction
+	// from the leg holding the asset.
+	switch {
+	case payment.TargetAmount.IsZero() && !payment.SourceAmount.IsZero():
+		return types.AssetDirectionInbound, nil
+	case payment.SourceAmount.IsZero() && !payment.TargetAmount.IsZero():
+		return types.AssetDirectionOutbound, nil
+	default:
+		return "", fmt.Errorf("zero-priced payment must carry the asset on exactly one leg: source_amount=%q target_amount=%q", payment.SourceAmount, payment.TargetAmount)
 	}
 }

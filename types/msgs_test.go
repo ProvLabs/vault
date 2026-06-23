@@ -1993,7 +1993,9 @@ func TestMsgUpdateVaultNAVRequest_ValidateBasic(t *testing.T) {
 			expectedErr: "invalid price coin",
 		},
 		{
-			name: "zero price",
+			// A zero price is allowed at this stateless layer; the accepted-denom
+			// "must be positive" rule is enforced statefully in the keeper.
+			name: "zero price is allowed statelessly",
 			msg: types.MsgUpdateVaultNAVRequest{
 				Signer:       addr,
 				VaultAddress: addr,
@@ -2001,7 +2003,6 @@ func TestMsgUpdateVaultNAVRequest_ValidateBasic(t *testing.T) {
 				Price:        sdk.NewInt64Coin("under", 0),
 				Volume:       sdkmath.NewInt(1),
 			},
-			expectedErr: "price amount must be positive",
 		},
 		{
 			name: "denom equals price denom",

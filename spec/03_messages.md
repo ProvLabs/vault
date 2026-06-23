@@ -33,6 +33,10 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 - [PauseVault](#pausevault)
 - [UnpauseVault](#unpausevault)
 - [SetAssetManager](#setassetmanager)
+- [UpdateVaultNAV](#updatevaultnav)
+- [UpdateNAVAuthority](#updatenavauthority)
+- [AcceptAsset](#acceptasset)
+- [RejectAsset](#rejectasset)
 
 ---
 
@@ -66,12 +70,18 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 | `PauseVault`             | Admin or Asset Manager            |                   ✅ |                 ❌ | Reconciles, snapshots `PausedBalance`, sets paused.                                                           |
 | `UnpauseVault`           | Admin or Asset Manager            |                   ❌ |                 ✅ | Clears `PausedBalance`, unpauses, emits with current TVV.                                                     |
 | `SetAssetManager`        | Admin only                        |                   ✅ |                 ✅ | Sets or clears the delegated asset manager.                                                                   |
+| `UpdateVaultNAV`         | NAV authority only                |                   ✅ |                 ❌ | Rejected while paused (value is frozen at `PausedBalance`); otherwise reconciles first, upserts the internal NAV entry, publishes it to the marker module. |
+| `UpdateNAVAuthority`     | Admin only                        |                   ✅ |                 ✅ | Rotates the address authorized to mutate the internal NAV table.                                              |
+| `AcceptAsset`            | Asset Manager only                |                   ✅ |                 ❌ | Rejected while paused (settlement would move value); otherwise reconciles first, enforces the internal-NAV price guardrail, settles the `x/exchange` payment, records and publishes the settlement NAV. |
+| `RejectAsset`            | Asset Manager only                |                   ✅ |                 ✅ | Declines a pending `x/exchange` payment; the exchange module refunds the source's escrow.                     |
 
 **Notes**
 * *Admin or Asset Manager* indicates that either the vault admin or the delegated asset manager may sign and execute the transaction.
 * **Bridge** operations are restricted to the configured bridge address, not the admin or asset manager.
 * **SwapOut** remains asynchronous (enqueues `request_id` for later processing).
 * **Principal adjustments** and **pause/unpause** operations are allowed for the asset manager as delegated administrative control.
+* *NAV authority only* means the vault's configured `nav_authority`; when none is set, the vault admin acts as the NAV authority.
+* *Asset Manager only* means exactly the vault's configured `asset_manager` — the admin cannot sign, and a vault with no asset manager cannot execute the message. The field is a role, not a person: composite approval workflows (e.g. admin and manager both sign) are configured by pointing `asset_manager` at a group address.
 
 ## CreateVault
 
@@ -326,3 +336,64 @@ Passing an empty `asset_manager` clears the configured value.
 
 * **Request:** `MsgSetAssetManagerRequest { admin, vault_address, asset_manager }`
 * **Response:** `MsgSetAssetManagerResponse {}`
+
+---
+
+## UpdateVaultNAV
+
+NAV authority only (the vault admin when no `nav_authority` is configured). Creates or updates the vault's **internal NAV entry** for a denom: the price of `volume` units of `denom`, denominated in one of the vault's accepted denoms.
+
+The handler is **rejected while the vault is paused**: a paused vault freezes its value at `PausedBalance`, so a NAV update would assert a price that the vault deliberately ignores until unpause. When not paused, the handler reconciles the vault first, so accrued interest settles against the TVV that held before the price change. After the upsert, the NAV is published downstream to the **marker module**, attributed to the vault address.
+
+* `denom` must not be the vault's share denom and must be a registered marker.
+* `volume` must be positive. The per-unit value is `price / volume`.
+* `source` is an optional origin label (e.g., an oracle name).
+
+* **Request:** `MsgUpdateVaultNAVRequest { signer, vault_address, denom, price, volume, source? }`
+* **Response:** `MsgUpdateVaultNAVResponse {}`
+
+---
+
+## UpdateNAVAuthority
+
+Admin-only. Rotates the address authorized to mutate the vault's internal NAV table via `UpdateVaultNAV`.
+
+* **Request:** `MsgUpdateNAVAuthorityRequest { signer, vault_address, new_authority }`
+* **Response:** `MsgUpdateNAVAuthorityResponse {}`
+
+---
+
+## AcceptAsset
+
+Asset Manager only — the admin cannot settle, and a vault without an asset manager cannot settle at all. Settles a pending `x/exchange` payment whose target is the vault, exchanging an external asset for the vault's payment denom. The payment is identified by its `source` account and `external_id`.
+
+Settlement is **rejected while the vault is paused**: a paused vault freezes its value at `PausedBalance`, and settling would move principal funds and the vault's value. Reject the payment or unpause first.
+
+Exactly one payment leg must carry the vault's `payment_denom`; the **settlement direction** is derived from which leg that is:
+
+* **Inbound** — payment denom on the target leg: the vault receives the asset (`source_amount`) and pays the payment denom (`target_amount`).
+* **Outbound** — payment denom on the source leg: the vault pays the asset (`target_amount`) and receives the payment denom (`source_amount`).
+
+Each leg must carry exactly one coin, and the asset denom must be a registered marker.
+
+Settlement layers several responsibilities into one atomic transaction:
+
+1. **Reconcile** — the vault reconciles before any value change, so interest settles against the pre-settlement TVV.
+2. **NAV guardrail** — when an internal NAV entry exists for the asset denom, the settlement legs must match its price exactly (cross-multiplied, no rounding). A first acquisition (no entry) skips the check.
+3. **Settle** — funds stage through the vault account as an atomic hop (`Principal -> Vault`, exchange `AcceptPayment`, `Vault -> Principal`); the principal marker remains the long-term store.
+4. **Internal NAV upsert** — the settlement price is recorded as the asset denom's internal NAV entry, sourced to the vault. When an outbound settlement drains the principal of the asset denom, the entry is removed (see `EventNAVRemoved`).
+5. **Marker publish** — the upserted NAV is published to the marker module, attributed to the vault address.
+
+Any failure reverts the whole transaction.
+
+* **Request:** `MsgAcceptAssetRequest { authority, vault_address, source, external_id }`
+* **Response:** `MsgAcceptAssetResponse {}`
+
+---
+
+## RejectAsset
+
+Asset Manager only — the admin cannot reject, and a vault without an asset manager cannot reject at all. Declines a pending `x/exchange` payment whose target is the vault. The exchange module cancels the payment and refunds the source's escrow. No vault state changes, so this remains available even while the vault is paused.
+
+* **Request:** `MsgRejectAssetRequest { authority, vault_address, source, external_id }`
+* **Response:** `MsgRejectAssetResponse {}`

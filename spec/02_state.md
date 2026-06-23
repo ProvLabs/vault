@@ -17,6 +17,7 @@ Vaults may be configured with an optional **payment denom** in addition to the *
   - [Pending Swap-Out by Vault Index (prefix 5)](#pending-swap-out-by-vault-index-prefix-5)
   - [Pending Swap-Out by ID Index (prefix 6)](#pending-swap-out-by-id-index-prefix-6)
   - [AUM Fee Address (prefix 8)](#aum-fee-address-prefix-8)
+  - [Internal NAV Table (prefix 11)](#internal-nav-table-prefix-11)
 - [Deterministic Vault Addressing](#deterministic-vault-addressing)
 - [Genesis Notes](#genesis-notes)
 
@@ -32,8 +33,9 @@ Each vault is an `x/auth` account implementing `VaultAccountI`. The canonical re
 - **Swap Limits:** `min_swap_in_value`, `min_swap_out_value`, `max_swap_in_value`, and `max_swap_out_value` (measured in underlying asset)
 - **Total supply-of-record:** `total_shares` (authoritative across chains; includes locally and externally held shares)  
 - **Bridging controls:** `bridge_address` (the sole authorized external address) and `bridge_enabled` (feature gate)
-- **Asset Management:** optional `asset_manager` address with delegated authority.
+- **Asset Management:** optional `asset_manager` address with delegated authority; it is also the sole authority for P2P settlement (`AcceptAsset`/`RejectAsset`).
 - **AUM Fee State:** `fee_period_start`, `fee_period_timeout`, and `outstanding_aum_fee`.
+- **NAV Authority:** optional `nav_authority` address authorized to mutate the vault's internal NAV table via `MsgUpdateVaultNAV`; the admin acts as NAV authority when unset.
 
 `VaultAccount` enforces invariants (e.g., payment denom cannot equal underlying, rate bounds, etc.) and provides helpers like `AcceptedDenoms()` and `ValidateAcceptedDenom`. :contentReference[oaicite:1]{index=1}
 
@@ -121,6 +123,14 @@ The address authorized to receive collected AUM technology fees.
 - **Prefix:** `AUMFeeAddressKeyPrefix` (8)
 - **Key:** none (singleton)
 - **Value:** raw `sdk.AccAddress` bytes (prefix-agnostic ProvLabs collection address)
+
+### Internal NAV Table (prefix 11)
+
+Per-vault price entries for asset denoms the vault holds or settles. The vault module is the **sole source of truth** for these values; the valuation engine reads them for TVV/share pricing. Entries are written by the NAV authority (`MsgUpdateVaultNAV`) and by p2p settlements (`MsgAcceptAsset`), which also remove an entry when an outbound settlement drains the denom from the principal.
+
+- **Prefix:** `NAVsKeyPrefix` (11)
+- **Key:** `(sdk.AccAddress vault, string denom)`
+- **Value:** `types.VaultNAV { denom, price, volume, source, updated_block_height, updated_time }` — `price` is the total value of `volume` units of `denom`; per-unit value is `price / volume`
 
 ---
 

@@ -608,6 +608,55 @@ func (s *TestSuite) SetCtxBlockTime(t time.Time) {
 	s.ctx = s.ctx.WithBlockTime(t).WithEventManager(sdk.NewEventManager())
 }
 
+// enqueueDueSwapOut creates a funded owner and base vault, swaps assets in, escrows the
+// resulting shares into the vault account, and enqueues a due pending swap-out redeeming
+// the underlying asset. It returns the owner, the escrowed shares, the request id, and the
+// queued request. It consolidates the swap-out setup repeated across the payout tests.
+func (s *TestSuite) enqueueDueSwapOut(underlyingDenom, shareDenom string, assets sdk.Coin, duePayoutTime int64) (sdk.AccAddress, sdk.Coin, uint64, types.PendingSwapOut) {
+	ownerAddr := s.CreateAndFundAccount(assets)
+	vault := s.setupBaseVault(underlyingDenom, shareDenom)
+
+	minted, err := s.k.SwapIn(s.ctx, vault.GetAddress(), ownerAddr, assets)
+	s.Require().NoError(err, "should successfully swap in assets for share denom %s", shareDenom)
+	s.Require().NoError(
+		s.k.BankKeeper.SendCoins(s.ctx, ownerAddr, vault.GetAddress(), sdk.NewCoins(*minted)),
+		"should escrow %s shares into vault account %s", minted, vault.GetAddress(),
+	)
+
+	req := types.PendingSwapOut{
+		Owner:        ownerAddr.String(),
+		VaultAddress: vault.GetAddress().String(),
+		RedeemDenom:  underlyingDenom,
+		Shares:       *minted,
+	}
+	id, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, duePayoutTime, &req)
+	s.Require().NoError(err, "should successfully enqueue due swap-out for share denom %s", shareDenom)
+
+	return ownerAddr, *minted, id, req
+}
+
+// assertSwapOutEntryPreservedAndPaused verifies the invariant that protects escrowed funds when a
+// swap-out hits a critical, unrecoverable failure: the pending request is still in the queue, the
+// vault is paused, the owner was not paid, and the escrowed shares remain on the vault account. This
+// is the state a fixed processSwapOutJobs must leave behind so the request can be settled after unpause.
+func (s *TestSuite) assertSwapOutEntryPreservedAndPaused(reqID uint64, vaultAddr, ownerAddr sdk.AccAddress, escrowedShares sdk.Coin, underlyingDenom string) {
+	var entries []uint64
+	err := s.k.PendingSwapOutQueue.Walk(s.ctx, func(_ int64, id uint64, _ sdk.AccAddress, _ types.PendingSwapOut) (bool, error) {
+		entries = append(entries, id)
+		return false, nil
+	})
+	s.Require().NoError(err, "walking the queue should not error")
+	s.Require().Equal([]uint64{reqID}, entries, "request %d must remain queued after a critical failure", reqID)
+
+	vault, err := s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "should successfully get vault %s", vaultAddr)
+	s.Require().NotNil(vault, "vault %s should not be nil", vaultAddr)
+	s.Require().True(vault.Paused, "vault %s must be paused after a critical failure", vaultAddr)
+
+	s.assertBalance(ownerAddr, underlyingDenom, sdkmath.ZeroInt())
+	s.assertBalance(vaultAddr, escrowedShares.Denom, escrowedShares.Amount)
+}
+
 // createMarkerMintCoinEvents builds the expected event sequence for minting
 // marker coins and sending them to a recipient.
 func createMarkerMintCoinEvents(markerModule, admin, recipient sdk.AccAddress, coin sdk.Coin) []sdk.Event {

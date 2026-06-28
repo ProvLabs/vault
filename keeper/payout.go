@@ -62,6 +62,11 @@ func (k *Keeper) processPendingSwapOuts(ctx sdk.Context, batchSize int) error {
 //  4. Handling critical or unrecoverable failures by auto-pausing the vault and discarding the cache so
 //     the request is preserved. Because paused vaults are skipped, the preserved request waits for an
 //     unpause rather than re-executing, so it is never double-processed.
+//
+// A failed Dequeue is itself treated as a critical, unrecoverable failure for any vault that still exists.
+// Such a failure is deterministic for a given entry, so without intervention the same request would be
+// re-collected and re-attempted every block in an unbounded loop. Auto-pausing the vault breaks that loop,
+// signals operators, and preserves the escrowed shares (the cache is discarded) until the store issue is resolved.
 func (k *Keeper) processSwapOutJobs(ctx sdk.Context, jobsToProcess []types.PayoutJob) {
 	for _, j := range jobsToProcess {
 		vault, ok := k.tryGetVault(ctx, j.VaultAddr)
@@ -90,12 +95,14 @@ func (k *Keeper) processSwapOutJobs(ctx sdk.Context, jobsToProcess []types.Payou
 		err := k.processSingleWithdrawal(cacheCtx, j.ID, j.Req, *vault)
 		if err == nil {
 			if derr := k.PendingSwapOutQueue.Dequeue(cacheCtx, j.Timestamp, j.VaultAddr, j.ID); derr != nil {
+				errMsg := fmt.Sprintf("failed to dequeue withdrawal request %d after successful payout", j.ID)
 				k.getLogger(ctx).Error(
-					"failed to dequeue withdrawal request after successful payout",
+					"CRITICAL: "+errMsg,
 					"request_id", j.ID,
 					"vault_address", j.VaultAddr.String(),
 					"error", derr,
 				)
+				k.autoPauseVault(ctx, vault, errMsg)
 				continue
 			}
 			write()
@@ -117,12 +124,14 @@ func (k *Keeper) processSwapOutJobs(ctx sdk.Context, jobsToProcess []types.Payou
 
 		refundCtx, refundWrite := ctx.CacheContext()
 		if derr := k.PendingSwapOutQueue.Dequeue(refundCtx, j.Timestamp, j.VaultAddr, j.ID); derr != nil {
+			errMsg := fmt.Sprintf("failed to dequeue withdrawal request %d before refund", j.ID)
 			k.getLogger(ctx).Error(
-				"failed to dequeue withdrawal request before refund",
+				"CRITICAL: "+errMsg,
 				"request_id", j.ID,
 				"vault_address", j.VaultAddr.String(),
 				"error", derr,
 			)
+			k.autoPauseVault(ctx, vault, errMsg)
 			continue
 		}
 		if rerr := k.refundWithdrawal(refundCtx, j.ID, j.Req, reason); rerr != nil {

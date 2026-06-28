@@ -191,16 +191,24 @@ func (k Keeper) FromUnderlyingAssetAmount(ctx sdk.Context, vault types.VaultAcco
 //     address for vault.PrincipalMarkerAddress().
 //   - The vault account’s own balances are treated as *reserves* and are not included here.
 //
-// Computation (when not paused):
-//   - Iterate all non-share-denom balances at the marker (principal) account.
-//   - Convert each balance to underlying units via ToUnderlyingAssetAmount, which
-//     values the underlying/payment denom at their identity/internal-NAV price and
-//     any other held denom (e.g. nft/scope… acquired via AcceptAsset) at its vault
-//     internal NAV.
-//   - A non-accepted held denom with no internal NAV entry is skipped (not valued,
-//     not an error). An accepted denom (underlying/payment) is expected to always
-//     carry a NAV, so a missing one propagates as an error (misconfiguration guard).
+// Computation (when not paused), valuing only the denoms the vault actually prices
+// rather than everything parked at the principal marker:
+//   - First, value each accepted denom (underlying, and payment when configured) from
+//     its principal balance via ToUnderlyingAssetAmount. The underlying takes the
+//     identity price; the payment denom takes its internal NAV. An accepted denom that
+//     holds a balance but carries no NAV is a misconfiguration and propagates as an
+//     error (the underlying never needs a NAV thanks to the identity fast-path).
+//   - Then, iterate this vault's internal NAV entries and value any held denom
+//     (e.g. nft/scope… acquired via AcceptAsset) from its principal balance at its
+//     internal NAV. Accepted denoms and the share denom are skipped here because the
+//     accepted denoms are already valued above and the share denom is never priced.
 //   - Sum the converted amounts (floor at each multiplication/division step).
+//
+// Iterating the NAV table (a protocol-controlled key set written only by SetVaultNAV
+// and settlement) rather than every principal balance makes the cost O(valued denoms):
+// a denom parked at the principal with no NAV entry is never visited, so it is neither
+// valued nor able to inflate the per-call work. This preserves the prior behavior in
+// which such denoms were skipped.
 //
 // Because a held asset's internal NAV is set by the NAV authority, a vault's TVV
 // (and the interest/fee/share-price base derived from it) moves when that NAV is
@@ -209,24 +217,49 @@ func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccoun
 	if vault.Paused {
 		return vault.PausedBalance.Amount, nil
 	}
-	balances := k.BankKeeper.GetAllBalances(ctx, vault.PrincipalMarkerAddress())
+
+	principal := vault.PrincipalMarkerAddress()
 	total := math.ZeroInt()
-	for _, balance := range balances {
-		if balance.Denom == vault.TotalShares.Denom {
+
+	for _, denom := range vault.AcceptedDenoms() {
+		balance := k.BankKeeper.GetBalance(ctx, principal, denom)
+		if balance.IsZero() {
 			continue
 		}
 		val, err := k.ToUnderlyingAssetAmount(ctx, vault, balance)
 		if err != nil {
-			if errors.Is(err, ErrInternalNAVNotFound) && !vault.IsAcceptedDenom(balance.Denom) {
-				continue
-			}
-			return math.Int{}, fmt.Errorf("failed to convert balance to underlying: %w", err)
+			return math.Int{}, fmt.Errorf("failed to convert accepted denom %q balance to underlying: %w", denom, err)
 		}
 		total, err = total.SafeAdd(val)
 		if err != nil {
 			return math.Int{}, fmt.Errorf("failed to add balance %s to total vault value: %w", val, err)
 		}
 	}
+
+	navRange := collections.NewPrefixedPairRange[sdk.AccAddress, string](vault.GetAddress())
+	err := k.NAVs.Walk(ctx, navRange, func(key collections.Pair[sdk.AccAddress, string], _ types.VaultNAV) (bool, error) {
+		denom := key.K2()
+		if denom == vault.TotalShares.Denom || vault.IsAcceptedDenom(denom) {
+			return false, nil
+		}
+		balance := k.BankKeeper.GetBalance(ctx, principal, denom)
+		if balance.IsZero() {
+			return false, nil
+		}
+		val, err := k.ToUnderlyingAssetAmount(ctx, vault, balance)
+		if err != nil {
+			return true, fmt.Errorf("failed to convert held denom %q balance to underlying: %w", denom, err)
+		}
+		total, err = total.SafeAdd(val)
+		if err != nil {
+			return true, fmt.Errorf("failed to add balance %s to total vault value: %w", val, err)
+		}
+		return false, nil
+	})
+	if err != nil {
+		return math.Int{}, fmt.Errorf("failed to iterate vault NAV entries for %s: %w", vault.GetAddress(), err)
+	}
+
 	return total, nil
 }
 

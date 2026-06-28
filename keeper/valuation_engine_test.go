@@ -7,7 +7,6 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/google/uuid"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 

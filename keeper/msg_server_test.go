@@ -4413,6 +4413,87 @@ func (s *TestSuite) TestMsgServer_PauseVault_Failures() {
 	}
 }
 
+func (s *TestSuite) TestMsgServer_PauseVault_ReconcileFailureStillPauses() {
+	reason := "emergency"
+
+	tests := []struct {
+		name                string
+		setup               func() (sdk.AccAddress, string)
+		expectedPauseAmount int64
+	}{
+		{
+			name: "insufficient reserves to settle positive interest",
+			setup: func() (sdk.AccAddress, string) {
+				underlying := "under"
+				share := "vaultshares"
+				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(10_000)), s.adminAddr)
+				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+					Admin:           s.adminAddr.String(),
+					ShareDenom:      share,
+					UnderlyingAsset: underlying,
+				})
+				s.Require().NoError(err, "vault creation should succeed for share denom %s", share)
+				vaultAddr := types.GetVaultAddress(share)
+				vault, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err, "loading the vault for setup should succeed")
+
+				oneDay := int64(24 * time.Hour / time.Second)
+				vault.CurrentInterestRate = "1.0"
+				vault.DesiredInterestRate = "1.0"
+				vault.PeriodStart = s.ctx.BlockTime().Unix() - oneDay
+				s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vault.PrincipalMarkerAddress(),
+					sdk.NewCoins(sdk.NewInt64Coin(underlying, 100_000))),
+					"funding the principal marker should succeed so reconcile owes unpayable interest")
+				s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+				return vaultAddr, underlying
+			},
+			expectedPauseAmount: 100_000,
+		},
+		{
+			name: "broken TVV conversion from a missing accepted-denom NAV",
+			setup: func() (sdk.AccAddress, string) {
+				underlying := "ylds"
+				share := "vshare"
+				payment := "usdc"
+				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(payment, 1_000_000), s.adminAddr)
+				vault := s.setupBaseVault(underlying, share, payment)
+				s.Require().NoError(s.k.NAVs.Remove(s.ctx, collections.Join(vault.GetAddress(), payment)),
+					"removing the bootstrap payment NAV should surface the conversion failure")
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vault.PrincipalMarkerAddress(),
+					sdk.NewCoins(sdk.NewInt64Coin(payment, 10))),
+					"funding the principal with an unpriced accepted denom should make TVV conversion error")
+				s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+				return vault.GetAddress(), underlying
+			},
+			expectedPauseAmount: 0,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			vaultAddr, underlying := tc.setup()
+
+			_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).PauseVault(s.ctx, &types.MsgPauseVaultRequest{
+				Authority:    s.adminAddr.String(),
+				VaultAddress: vaultAddr.String(),
+				Reason:       reason,
+			})
+			s.Require().NoError(err, "pause must succeed even when the pre-pause reconcile fails for case %q", tc.name)
+
+			v, err := s.k.GetVault(s.ctx, vaultAddr)
+			s.Require().NoError(err, "loading the paused vault should succeed for case %q", tc.name)
+			s.Assert().True(v.Paused, "vault should be paused after an emergency pause for case %q", tc.name)
+			s.Assert().Equal(reason, v.PausedReason, "paused reason should be recorded for case %q", tc.name)
+			s.Assert().Equal(types.ZeroInterestRate, v.CurrentInterestRate, "pausing should zero the current interest rate for case %q", tc.name)
+			s.Assert().Equal(underlying, v.PausedBalance.Denom, "paused balance should be denominated in the underlying asset for case %q", tc.name)
+			s.Assert().Equal(tc.expectedPauseAmount, v.PausedBalance.Amount.Int64(), "paused balance should be the best-effort TVV snapshot for case %q", tc.name)
+		})
+	}
+}
+
 func (s *TestSuite) TestMsgServer_UnpauseVault() {
 	type postCheckArgs struct {
 		VaultAddress          sdk.AccAddress

@@ -530,6 +530,13 @@ func (k msgServer) ExpeditePendingSwapOut(goCtx context.Context, msg *types.MsgE
 }
 
 // PauseVault pauses a vault, disabling all user-facing operations.
+//
+// Pause is treated as an emergency control: it reconciles outstanding interest and fees
+// first, but a reconcile failure (e.g. insufficient reserves to settle positive interest,
+// or a broken TVV/NAV conversion) must not block the operator from freezing the vault. On
+// such a failure it logs and pauses best-effort, mirroring the automated autoPauseVault
+// path. The frozen PausedBalance is the net TVV when it can be valued, or zero when the
+// valuation itself is what failed.
 func (k msgServer) PauseVault(goCtx context.Context, msg *types.MsgPauseVaultRequest) (*types.MsgPauseVaultResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -545,13 +552,23 @@ func (k msgServer) PauseVault(goCtx context.Context, msg *types.MsgPauseVaultReq
 	if vault.Paused {
 		return nil, fmt.Errorf("vault %s is already paused", msg.VaultAddress)
 	}
+
 	if err = k.reconcileVault(ctx, vault); err != nil {
-		return nil, fmt.Errorf("failed to reconcile before pausing: %w", err)
+		k.getLogger(ctx).Error(
+			"reconcile failed before manual pause; pausing best-effort",
+			"vault", msg.VaultAddress,
+			"err", err,
+		)
 	}
 
 	tvv, err := k.GetNetTVVInUnderlyingAsset(ctx, *vault)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get net TVV before pausing: %w", err)
+		k.getLogger(ctx).Error(
+			"failed to value vault before manual pause; snapshotting zero paused balance",
+			"vault", msg.VaultAddress,
+			"err", err,
+		)
+		tvv = sdkmath.ZeroInt()
 	}
 
 	vault.PausedBalance = sdk.NewCoin(vault.UnderlyingAsset, tvv)

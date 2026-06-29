@@ -198,13 +198,17 @@ func NewEventPendingSwapOutExpedited(requestID uint64, vault, authority string) 
 	}
 }
 
-// NewEventVaultPaused creates a new EventVaultPaused event.
-func NewEventVaultPaused(vaultAddress, authority, reason string, totalVaultValue sdk.Coin) *EventVaultPaused {
+// NewEventVaultPaused creates a new EventVaultPaused event. forced reports
+// whether the pause waived the strict reconcile/valuation gate, and forcedError
+// carries the tolerated error (empty when nothing failed).
+func NewEventVaultPaused(vaultAddress, authority, reason string, totalVaultValue sdk.Coin, forced bool, forcedError string) *EventVaultPaused {
 	return &EventVaultPaused{
 		VaultAddress:    vaultAddress,
 		Authority:       authority,
 		Reason:          reason,
 		TotalVaultValue: totalVaultValue.String(),
+		Forced:          forced,
+		ForcedError:     forcedError,
 	}
 }
 

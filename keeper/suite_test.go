@@ -102,6 +102,33 @@ func FundAccount(ctx context.Context, bankKeeper bankkeeper.Keeper, addr sdk.Acc
 	return bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, amounts)
 }
 
+// countingBankKeeper wraps a types.BankKeeper and records how often the
+// balance-lookup methods are called. It lets a test assert that a keeper path
+// stays bounded to targeted GetBalance lookups over a known denom set and never
+// falls back to the unbounded GetAllBalances walk. This is the regression guard
+// for GetTVVInUnderlyingAsset, whose cost must scale with the denoms the vault
+// actually values rather than everything parked at the principal marker.
+//
+// Only the two lookup methods are overridden; every other BankKeeper method is
+// promoted from the embedded interface and delegates to the real keeper.
+type countingBankKeeper struct {
+	types.BankKeeper
+	getAllBalancesCalls int
+	getBalanceCalls     int
+}
+
+// GetAllBalances records the call before delegating to the wrapped keeper.
+func (c *countingBankKeeper) GetAllBalances(ctx context.Context, addr sdk.AccAddress) sdk.Coins {
+	c.getAllBalancesCalls++
+	return c.BankKeeper.GetAllBalances(ctx, addr)
+}
+
+// GetBalance records the call before delegating to the wrapped keeper.
+func (c *countingBankKeeper) GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin {
+	c.getBalanceCalls++
+	return c.BankKeeper.GetBalance(ctx, addr, denom)
+}
+
 // TestKeeperTestSuite is the entrypoint that runs the keeper TestSuite with testify.
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(TestSuite))

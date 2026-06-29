@@ -4468,7 +4468,7 @@ func (s *TestSuite) TestMsgServer_PauseVault_ForceVsStrict() {
 		force               bool
 		expectErr           bool
 		expectedPauseAmount int64
-		expectForcedError   bool
+		expectedForcedError string
 	}{
 		{
 			name:      "strict pause aborts when reconcile fails on insufficient reserves",
@@ -4488,7 +4488,7 @@ func (s *TestSuite) TestMsgServer_PauseVault_ForceVsStrict() {
 			force:               true,
 			expectErr:           false,
 			expectedPauseAmount: 100_000,
-			expectForcedError:   true,
+			expectedForcedError: "reconcile failed:",
 		},
 		{
 			name:                "force pause proceeds through broken TVV with zero snapshot",
@@ -4496,7 +4496,7 @@ func (s *TestSuite) TestMsgServer_PauseVault_ForceVsStrict() {
 			force:               true,
 			expectErr:           false,
 			expectedPauseAmount: 0,
-			expectForcedError:   true,
+			expectedForcedError: "valuation failed:",
 		},
 	}
 
@@ -4518,6 +4518,7 @@ func (s *TestSuite) TestMsgServer_PauseVault_ForceVsStrict() {
 			if tc.expectErr {
 				s.Require().Error(err, "strict pause must fail when pre-pause bookkeeping fails for case %q", tc.name)
 				s.Assert().False(v.Paused, "vault must remain unpaused after a failed strict pause for case %q", tc.name)
+				s.Assert().Nil(s.findLastEventVaultPaused(), "strict pause must not emit EventVaultPaused for case %q", tc.name)
 				return
 			}
 
@@ -4531,9 +4532,7 @@ func (s *TestSuite) TestMsgServer_PauseVault_ForceVsStrict() {
 			pausedEvent := s.findLastEventVaultPaused()
 			s.Require().NotNil(pausedEvent, "an EventVaultPaused should have been emitted for case %q", tc.name)
 			s.Assert().True(pausedEvent.Forced, "the forced flag should be set on a force pause for case %q", tc.name)
-			if tc.expectForcedError {
-				s.Assert().NotEmpty(pausedEvent.ForcedError, "forced_error should record the tolerated failure for case %q", tc.name)
-			}
+			s.Assert().Contains(pausedEvent.ForcedError, tc.expectedForcedError, "forced_error should identify the tolerated failure for case %q", tc.name)
 		})
 	}
 }

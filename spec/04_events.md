@@ -71,11 +71,11 @@ Emitted when a vault is paused (user ops disabled).
 **Fields**
 
 * `vault_address` — vault
-* `authority` — actor (admin or asset manager)
+* `authority` — actor that triggered the pause. For a manual pause this is the admin or asset manager; for an automated auto-pause it is the vault's own address.
 * `reason` — pause reason. For a manual pause this is the user-supplied reason; for an automated auto-pause it carries the hard-coded reason describing the critical error that forced the pause.
 * `total_vault_value` — snapshot of TVV (coin in underlying denom)
 * `forced` — true when the pause waived the strict reconcile/valuation gate; set by a `force = true` manual pause and by every automated auto-pause
-* `forced_error` — the reconcile and/or valuation error tolerated during a forced manual pause; empty when nothing failed. Only the manual `force` path sets this; auto-pause leaves it empty and folds its error into `reason`. When non-empty, `total_vault_value` may be stale or zero.
+* `forced_error` — the reconcile and/or valuation error tolerated by an explicit `force = true` manual pause; empty when nothing failed. Only the manual `force` path sets this. Auto-pause leaves it empty: the critical error that triggered the pause is carried in `reason`, and any secondary valuation failure while snapshotting the balance is logged only. When non-empty, `total_vault_value` may be stale or zero.
 
 ---
 

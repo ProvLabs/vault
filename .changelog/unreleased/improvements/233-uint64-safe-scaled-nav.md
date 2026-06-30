@@ -1,0 +1,1 @@
+* `setShareDenomNAV` now publishes a uint64-safe share NAV when total shares exceed `uint64` by capping the marker volume at a reference bound and scaling the price proportionally, preserving the price-per-share ratio instead of skipping publication [#233](https://github.com/provlabs/vault/issues/233).

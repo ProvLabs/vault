@@ -99,24 +99,44 @@ func (k Keeper) reconcileVault(ctx sdk.Context, vault *types.VaultAccount) error
 // setShareDenomNAV publishes the Net Asset Value (NAV) for a vault’s share denom
 // in terms of the underlying asset.
 //
-// The NAV price is set to the vault’s total value in underlying units (TVV),
-// and the NAV volume is set to the total number of shares. If the total share
-// amount cannot be represented as a uint64, this method returns an error and
-// does not publish a NAV.
+// A NAV is a price-per-share ratio (Price / Volume), not a function of absolute supply. When the
+// vault's total shares fit in uint64, the NAV is published directly as (Price = TVV, Volume = total
+// shares). When total shares exceed the uint64 ceiling, the volume is capped at navReferenceVolume
+// and the price is scaled down proportionally (price = TVV * volume / totalShares), preserving the
+// price-per-share ratio while keeping the published volume within uint64. All arithmetic is done in
+// sdkmath.Int; only the final bounded volume is converted to uint64.
+//
+// The price division truncates toward zero (rounds down) by design, following the accounting
+// principle of conservatism: the reported per-share value is never rounded above the provable
+// TVV / totalShares ratio. The truncation discards at most one underlying base unit, an economically
+// negligible bias against over-valuation.
+//
+// If the vault has no shares, or the scaled price truncates to zero (a vault whose TVV is vanishingly
+// small relative to its supply), no NAV is published, leaving the previously published NAV in place
+// rather than emitting a misleading zero-value price.
 func (k Keeper) setShareDenomNAV(ctx sdk.Context, vault *types.VaultAccount, vaultMarker markertypes.MarkerAccountI, tvv sdkmath.Int) error {
-	if !vault.TotalShares.Amount.IsUint64() {
-		return fmt.Errorf(
-			"vault total shares overflows uint64: %s",
-			vault.TotalShares.Amount.String(),
+	totalShares := vault.TotalShares.Amount
+	if !totalShares.IsPositive() {
+		return nil
+	}
+
+	volume := sdkmath.MinInt(totalShares, navReferenceVolume)
+	price := tvv.Mul(volume).Quo(totalShares)
+	if !price.IsPositive() {
+		k.getLogger(ctx).Debug("skipping share NAV publication: scaled price truncated to zero",
+			"vault", vault.GetAddress().String(),
+			"tvv", tvv.String(),
+			"total_shares", totalShares.String(),
 		)
+		return nil
 	}
 
 	return k.MarkerKeeper.SetNetAssetValue(
 		ctx,
 		vaultMarker,
 		markertypes.NetAssetValue{
-			Price:  sdk.NewCoin(vault.UnderlyingAsset, tvv),
-			Volume: vault.TotalShares.Amount.Uint64(),
+			Price:  sdk.NewCoin(vault.UnderlyingAsset, price),
+			Volume: volume.Uint64(),
 		},
 		types.ModuleName,
 	)

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/provlabs/vault/interest"
 	"github.com/provlabs/vault/types"
@@ -24,12 +25,12 @@ const (
 // total shares exceed the uint64 ceiling that NetAssetValue.Volume can represent.
 //
 // A NAV is a price-per-share ratio, not a function of absolute supply, so the published volume can
-// be any representative quantity as long as the price is scaled to preserve price/volume. When total
-// shares exceed this reference, setShareDenomNAV publishes (volume = navReferenceVolume, price scaled
-// down proportionally) instead of (volume = total shares), keeping the ratio intact while staying
-// within uint64. The value (10^18) is large enough to retain high price-per-share precision yet
-// comfortably below the uint64 maximum (~1.84 * 10^19).
-var navReferenceVolume = sdkmath.NewInt(1_000_000_000_000_000_000)
+// be any representative quantity as long as the price is scaled to preserve price/volume. It is set
+// to the uint64 maximum so every supply that fits in uint64 publishes its exact share count as the
+// volume (no scaling, price = TVV), and only supplies beyond uint64 are capped at this value with the
+// price scaled down proportionally. Using the uint64 ceiling rather than a smaller bound both avoids
+// needlessly scaling uint64-safe supplies and maximizes price precision in the scaled case.
+var navReferenceVolume = sdkmath.NewIntFromUint64(math.MaxUint64)
 
 // reconcileVault updates interest accounting and collects AUM fees for a vault if a new period has started.
 //
@@ -101,19 +102,23 @@ func (k Keeper) reconcileVault(ctx sdk.Context, vault *types.VaultAccount) error
 //
 // A NAV is a price-per-share ratio (Price / Volume), not a function of absolute supply. When the
 // vault's total shares fit in uint64, the NAV is published directly as (Price = TVV, Volume = total
-// shares). When total shares exceed the uint64 ceiling, the volume is capped at navReferenceVolume
-// and the price is scaled down proportionally (price = TVV * volume / totalShares), preserving the
-// price-per-share ratio while keeping the published volume within uint64. All arithmetic is done in
-// sdkmath.Int; only the final bounded volume is converted to uint64.
+// shares). When total shares exceed uint64, the volume is capped at navReferenceVolume (the uint64
+// maximum) and the price is scaled down proportionally (price = TVV * volume / totalShares),
+// preserving the price-per-share ratio while keeping the published volume within uint64. All
+// arithmetic is done in sdkmath.Int; only the final bounded volume is converted to uint64.
 //
 // The price division truncates toward zero (rounds down) by design, following the accounting
 // principle of conservatism: the reported per-share value is never rounded above the provable
-// TVV / totalShares ratio. The truncation discards at most one underlying base unit, an economically
-// negligible bias against over-valuation.
+// TVV / totalShares ratio. A scaled price that truncates to zero is still published as a zero price so
+// consumers observe the current (near-zero) valuation rather than a stale prior NAV.
 //
-// If the vault has no shares, or the scaled price truncates to zero (a vault whose TVV is vanishingly
-// small relative to its supply), no NAV is published, leaving the previously published NAV in place
-// rather than emitting a misleading zero-value price.
+// All arithmetic is panic-safe: the price scaling uses SafeMul so an arithmetic overflow (a TVV large
+// enough that TVV * volume exceeds the 256-bit Int ceiling) returns an error rather than halting the
+// chain; the final division cannot divide by zero because totalShares is guarded as positive; and a
+// negative price (only reachable from a non-positive TVV, which callers already exclude) is skipped so
+// NewCoin is never handed a negative amount.
+//
+// If the vault has no shares, no NAV is published.
 func (k Keeper) setShareDenomNAV(ctx sdk.Context, vault *types.VaultAccount, vaultMarker markertypes.MarkerAccountI, tvv sdkmath.Int) error {
 	totalShares := vault.TotalShares.Amount
 	if !totalShares.IsPositive() {
@@ -121,9 +126,13 @@ func (k Keeper) setShareDenomNAV(ctx sdk.Context, vault *types.VaultAccount, vau
 	}
 
 	volume := sdkmath.MinInt(totalShares, navReferenceVolume)
-	price := tvv.Mul(volume).Quo(totalShares)
-	if !price.IsPositive() {
-		k.getLogger(ctx).Debug("skipping share NAV publication: scaled price truncated to zero",
+	scaledTVV, err := tvv.SafeMul(volume)
+	if err != nil {
+		return fmt.Errorf("failed to scale TVV %s by NAV volume %s: %w", tvv, volume, err)
+	}
+	price := scaledTVV.Quo(totalShares)
+	if price.IsNegative() {
+		k.getLogger(ctx).Debug("skipping share NAV publication: scaled price is negative",
 			"vault", vault.GetAddress().String(),
 			"tvv", tvv.String(),
 			"total_shares", totalShares.String(),

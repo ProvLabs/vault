@@ -1744,10 +1744,13 @@ func (s *TestSuite) TestKeeper_setShareDenomNAV() {
 		return vault, marker
 	}
 
+	maxInt256 := sdkmath.NewIntFromBigInt(new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(1)))
+
 	tests := []struct {
 		name           string
 		shares         sdkmath.Int
 		tvv            sdkmath.Int
+		expectErr      bool
 		expectNAVEvent bool
 	}{
 		{
@@ -1757,9 +1760,15 @@ func (s *TestSuite) TestKeeper_setShareDenomNAV() {
 			expectNAVEvent: true,
 		},
 		{
-			name:           "shares at the uint64 maximum scale volume and price",
+			name:           "shares at the uint64 maximum publish an exact unscaled NAV",
 			shares:         maxU64,
 			tvv:            sdkmath.NewInt(123_456),
+			expectNAVEvent: true,
+		},
+		{
+			name:           "large uint64-safe supply above 10^18 publishes an exact unscaled NAV",
+			shares:         sdkmath.NewInt(1_500_000_000_000_000_000),
+			tvv:            sdkmath.OneInt(),
 			expectNAVEvent: true,
 		},
 		{
@@ -1775,9 +1784,16 @@ func (s *TestSuite) TestKeeper_setShareDenomNAV() {
 			expectNAVEvent: true,
 		},
 		{
-			name:           "scaled price truncating to zero skips publication",
+			name:           "scaled price truncating to zero publishes a zero-price NAV",
 			shares:         overUint64,
 			tvv:            sdkmath.OneInt(),
+			expectNAVEvent: true,
+		},
+		{
+			name:           "tvv near the 256-bit ceiling overflows safely without panicking",
+			shares:         overUint64,
+			tvv:            maxInt256,
+			expectErr:      true,
 			expectNAVEvent: false,
 		},
 		{
@@ -1804,7 +1820,11 @@ func (s *TestSuite) TestKeeper_setShareDenomNAV() {
 				"setShareDenomNAV should not panic for test case %q (shares=%s tvv=%s)",
 				tc.name, tc.shares.String(), tc.tvv.String(),
 			)
-			s.Require().NoError(err, "setShareDenomNAV should not error for test case %q (shares=%s tvv=%s)", tc.name, tc.shares.String(), tc.tvv.String())
+			if tc.expectErr {
+				s.Require().Error(err, "setShareDenomNAV should return an error for test case %q (shares=%s tvv=%s)", tc.name, tc.shares.String(), tc.tvv.String())
+			} else {
+				s.Require().NoError(err, "setShareDenomNAV should not error for test case %q (shares=%s tvv=%s)", tc.name, tc.shares.String(), tc.tvv.String())
+			}
 
 			found := false
 			for _, ev := range normalizeEvents(s.ctx.EventManager().Events()) {
@@ -1845,6 +1865,11 @@ func (s *TestSuite) TestKeeper_setShareDenomNAV() {
 			s.Assert().True(trueRatio.Sub(publishedRatio).LT(tc.shares),
 				"truncation error must be under one share-unit for test case %q: residual=%s totalShares=%s",
 				tc.name, trueRatio.Sub(publishedRatio).String(), tc.shares.String())
+
+			if expectedPrice.IsZero() {
+				s.Assert().True(stored.Price.Amount.IsZero(),
+					"the marker should accept and store a zero-price NAV for test case %q, got price %s", tc.name, stored.Price.Amount.String())
+			}
 		})
 	}
 }

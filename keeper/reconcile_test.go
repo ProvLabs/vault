@@ -1709,17 +1709,14 @@ func (s *TestSuite) TestKeeper_setShareDenomNAV() {
 	vaultAddr := types.GetVaultAddress(shareDenom)
 	markerAddr := markertypes.MustGetMarkerAddress(shareDenom)
 
-	validShares := sdk.NewInt64Coin(shareDenom, 1_000_000)
+	maxU64 := sdkmath.NewIntFromBigInt(new(big.Int).SetUint64(^uint64(0)))
+	overUint64 := maxU64.Add(sdkmath.OneInt())
 
-	maxU64 := new(big.Int).SetUint64(^uint64(0))
-	overflowShares := sdk.NewCoin(
-		shareDenom,
-		sdkmath.NewIntFromBigInt(new(big.Int).Add(maxU64, big.NewInt(1))),
-	)
+	tenToThe18 := sdkmath.NewIntWithDecimal(1, 18)
+	realisticShares := sdkmath.NewInt(18_000_000).Mul(tenToThe18)
+	realisticTVV := sdkmath.NewInt(18_000_000).Mul(sdkmath.NewIntWithDecimal(1, 6))
 
-	tvv := sdkmath.NewInt(123_456)
-
-	setup := func(shares sdk.Coin) (*types.VaultAccount, markertypes.MarkerAccountI) {
+	setup := func(shares sdkmath.Int) (*types.VaultAccount, markertypes.MarkerAccountI) {
 		s.requireAddFinalizeAndActivateMarker(
 			sdk.NewInt64Coin(underlyingDenom, 1),
 			s.adminAddr,
@@ -1736,7 +1733,7 @@ func (s *TestSuite) TestKeeper_setShareDenomNAV() {
 		s.Require().NoError(err, "GetVault should not error in setup")
 		s.Require().NotNil(vault, "vault should not be nil in setup")
 
-		vault.TotalShares = shares
+		vault.TotalShares = sdk.NewCoin(shareDenom, shares)
 		s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 		marker, err := s.k.MarkerKeeper.GetMarker(s.ctx, markerAddr)
@@ -1749,20 +1746,44 @@ func (s *TestSuite) TestKeeper_setShareDenomNAV() {
 
 	tests := []struct {
 		name           string
-		shares         sdk.Coin
-		expectErr      bool
+		shares         sdkmath.Int
+		tvv            sdkmath.Int
 		expectNAVEvent bool
 	}{
 		{
-			name:           "valid shares publishes NAV",
-			shares:         validShares,
-			expectErr:      false,
+			name:           "shares within uint64 publish an unscaled NAV",
+			shares:         sdkmath.NewInt(1_000_000),
+			tvv:            sdkmath.NewInt(123_456),
 			expectNAVEvent: true,
 		},
 		{
-			name:           "overflow shares returns error and skips NAV",
-			shares:         overflowShares,
-			expectErr:      true,
+			name:           "shares at the uint64 maximum scale volume and price",
+			shares:         maxU64,
+			tvv:            sdkmath.NewInt(123_456),
+			expectNAVEvent: true,
+		},
+		{
+			name:           "shares one past the uint64 maximum publish a scaled NAV",
+			shares:         overUint64,
+			tvv:            sdkmath.NewInt(123_456),
+			expectNAVEvent: true,
+		},
+		{
+			name:           "realistic 18M-share vault past uint64 scales to the reference volume",
+			shares:         realisticShares,
+			tvv:            realisticTVV,
+			expectNAVEvent: true,
+		},
+		{
+			name:           "scaled price truncating to zero skips publication",
+			shares:         overUint64,
+			tvv:            sdkmath.OneInt(),
+			expectNAVEvent: false,
+		},
+		{
+			name:           "vault with no shares skips publication",
+			shares:         sdkmath.ZeroInt(),
+			tvv:            sdkmath.NewInt(123_456),
 			expectNAVEvent: false,
 		},
 	}
@@ -1778,44 +1799,52 @@ func (s *TestSuite) TestKeeper_setShareDenomNAV() {
 			var err error
 			s.Require().NotPanics(
 				func() {
-					err = s.k.TestAccessor_setShareDenomNAV(
-						s.T(),
-						s.ctx,
-						vault,
-						marker,
-						tvv,
-					)
+					err = s.k.TestAccessor_setShareDenomNAV(s.T(), s.ctx, vault, marker, tc.tvv)
 				},
-				"setShareDenomNAV should not panic for test case %q (shares=%s)",
-				tc.name,
-				tc.shares.String(),
+				"setShareDenomNAV should not panic for test case %q (shares=%s tvv=%s)",
+				tc.name, tc.shares.String(), tc.tvv.String(),
 			)
-
-			if tc.expectErr {
-				s.Require().Error(err, "expected setShareDenomNAV to return an error for test case %q (shares=%s)", tc.name, tc.shares.String())
-			} else {
-				s.Require().NoError(err, "expected setShareDenomNAV to succeed for test case %q (shares=%s)", tc.name, tc.shares.String())
-			}
-
-			events := normalizeEvents(s.ctx.EventManager().Events())
+			s.Require().NoError(err, "setShareDenomNAV should not error for test case %q (shares=%s tvv=%s)", tc.name, tc.shares.String(), tc.tvv.String())
 
 			found := false
-			for _, ev := range events {
+			for _, ev := range normalizeEvents(s.ctx.EventManager().Events()) {
 				if ev.Type == "provenance.marker.v1.EventSetNetAssetValue" {
 					found = true
 					break
 				}
 			}
+			s.Require().Equal(tc.expectNAVEvent, found,
+				"NAV event presence mismatch for test case %q: expected=%t got=%t (shares=%s tvv=%s)",
+				tc.name, tc.expectNAVEvent, found, tc.shares.String(), tc.tvv.String())
 
-			s.Require().Equal(
-				tc.expectNAVEvent,
-				found,
-				"NAV event presence mismatch for test case %q: expected=%t got=%t (shares=%s)",
-				tc.name,
-				tc.expectNAVEvent,
-				found,
-				tc.shares.String(),
-			)
+			stored, err := s.k.MarkerKeeper.GetNetAssetValue(s.ctx, shareDenom, underlyingDenom)
+			s.Require().NoError(err, "GetNetAssetValue should not error for test case %q", tc.name)
+
+			if !tc.expectNAVEvent {
+				s.Require().Nil(stored, "no marker NAV should be stored for test case %q (shares=%s tvv=%s)", tc.name, tc.shares.String(), tc.tvv.String())
+				return
+			}
+
+			s.Require().NotNil(stored, "marker NAV should be stored for test case %q (shares=%s tvv=%s)", tc.name, tc.shares.String(), tc.tvv.String())
+
+			expectedVolume := sdkmath.MinInt(tc.shares, keeper.NavReferenceVolume)
+			expectedPrice := tc.tvv.Mul(expectedVolume).Quo(tc.shares)
+
+			s.Assert().Equal(expectedVolume.Uint64(), stored.Volume,
+				"published NAV volume mismatch for test case %q (shares=%s)", tc.name, tc.shares.String())
+			s.Assert().Equal(underlyingDenom, stored.Price.Denom,
+				"published NAV price denom mismatch for test case %q", tc.name)
+			s.Assert().Equal(expectedPrice.String(), stored.Price.Amount.String(),
+				"published NAV price mismatch for test case %q (shares=%s tvv=%s)", tc.name, tc.shares.String(), tc.tvv.String())
+
+			publishedRatio := stored.Price.Amount.Mul(tc.shares)
+			trueRatio := tc.tvv.Mul(expectedVolume)
+			s.Assert().True(publishedRatio.LTE(trueRatio),
+				"published price-per-share must not exceed the true TVV/totalShares ratio for test case %q: published=%s true=%s",
+				tc.name, publishedRatio.String(), trueRatio.String())
+			s.Assert().True(trueRatio.Sub(publishedRatio).LT(tc.shares),
+				"truncation error must be under one share-unit for test case %q: residual=%s totalShares=%s",
+				tc.name, trueRatio.Sub(publishedRatio).String(), tc.shares.String())
 		})
 	}
 }

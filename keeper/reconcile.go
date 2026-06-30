@@ -112,11 +112,13 @@ func (k Keeper) reconcileVault(ctx sdk.Context, vault *types.VaultAccount) error
 // TVV / totalShares ratio. A scaled price that truncates to zero is still published as a zero price so
 // consumers observe the current (near-zero) valuation rather than a stale prior NAV.
 //
-// All arithmetic is panic-safe: the price scaling uses SafeMul so an arithmetic overflow (a TVV large
-// enough that TVV * volume exceeds the 256-bit Int ceiling) returns an error rather than halting the
-// chain; the final division cannot divide by zero because totalShares is guarded as positive; and a
-// negative price (only reachable from a non-positive TVV, which callers already exclude) is skipped so
-// NewCoin is never handed a negative amount.
+// All arithmetic is panic-safe. The intermediate multiply runs only in the scaled branch (total shares
+// beyond uint64); uint64-safe supplies publish Price = TVV directly, so a large valid TVV never trips
+// an overflow there and a publishable NAV is never skipped. In the scaled branch the multiply uses
+// SafeMul, so an arithmetic overflow (a TVV large enough that TVV * volume exceeds the 256-bit Int
+// ceiling) returns an error rather than halting the chain. The final division cannot divide by zero
+// because totalShares is guarded as positive, and a negative price (only reachable from a non-positive
+// TVV, which callers already exclude) is skipped so NewCoin is never handed a negative amount.
 //
 // If the vault has no shares, no NAV is published.
 func (k Keeper) setShareDenomNAV(ctx sdk.Context, vault *types.VaultAccount, vaultMarker markertypes.MarkerAccountI, tvv sdkmath.Int) error {
@@ -125,14 +127,18 @@ func (k Keeper) setShareDenomNAV(ctx sdk.Context, vault *types.VaultAccount, vau
 		return nil
 	}
 
-	volume := sdkmath.MinInt(totalShares, navReferenceVolume)
-	scaledTVV, err := tvv.SafeMul(volume)
-	if err != nil {
-		return fmt.Errorf("failed to scale TVV %s by NAV volume %s: %w", tvv, volume, err)
+	volume := totalShares
+	price := tvv
+	if totalShares.GT(navReferenceVolume) {
+		volume = navReferenceVolume
+		scaledTVV, err := tvv.SafeMul(volume)
+		if err != nil {
+			return fmt.Errorf("failed to scale TVV %s by NAV volume %s: %w", tvv, volume, err)
+		}
+		price = scaledTVV.Quo(totalShares)
 	}
-	price := scaledTVV.Quo(totalShares)
 	if price.IsNegative() {
-		k.getLogger(ctx).Debug("skipping share NAV publication: scaled price is negative",
+		k.getLogger(ctx).Debug("skipping share NAV publication: price is negative",
 			"vault", vault.GetAddress().String(),
 			"tvv", tvv.String(),
 			"total_shares", totalShares.String(),

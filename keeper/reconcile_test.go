@@ -1772,6 +1772,12 @@ func (s *TestSuite) TestKeeper_setShareDenomNAV() {
 			expectNAVEvent: true,
 		},
 		{
+			name:           "uint64-safe supply with a TVV that would overflow the scaled multiply publishes the exact TVV",
+			shares:         maxU64,
+			tvv:            sdkmath.NewIntFromBigInt(new(big.Int).Lsh(big.NewInt(1), 200)),
+			expectNAVEvent: true,
+		},
+		{
 			name:           "shares one past the uint64 maximum publish a scaled NAV",
 			shares:         overUint64,
 			tvv:            sdkmath.NewInt(123_456),
@@ -1847,13 +1853,22 @@ func (s *TestSuite) TestKeeper_setShareDenomNAV() {
 
 			s.Require().NotNil(stored, "marker NAV should be stored for test case %q (shares=%s tvv=%s)", tc.name, tc.shares.String(), tc.tvv.String())
 
-			expectedVolume := sdkmath.MinInt(tc.shares, keeper.NavReferenceVolume)
+			s.Assert().Equal(underlyingDenom, stored.Price.Denom,
+				"published NAV price denom mismatch for test case %q", tc.name)
+
+			if !tc.shares.GT(keeper.NavReferenceVolume) {
+				s.Assert().Equal(tc.shares.Uint64(), stored.Volume,
+					"uint64-safe supply must publish its exact share count as the NAV volume for test case %q (shares=%s)", tc.name, tc.shares.String())
+				s.Assert().Equal(tc.tvv.String(), stored.Price.Amount.String(),
+					"uint64-safe supply must publish Price = TVV without scaling for test case %q (shares=%s tvv=%s)", tc.name, tc.shares.String(), tc.tvv.String())
+				return
+			}
+
+			expectedVolume := keeper.NavReferenceVolume
 			expectedPrice := tc.tvv.Mul(expectedVolume).Quo(tc.shares)
 
 			s.Assert().Equal(expectedVolume.Uint64(), stored.Volume,
-				"published NAV volume mismatch for test case %q (shares=%s)", tc.name, tc.shares.String())
-			s.Assert().Equal(underlyingDenom, stored.Price.Denom,
-				"published NAV price denom mismatch for test case %q", tc.name)
+				"scaled NAV volume must equal the reference volume for test case %q (shares=%s)", tc.name, tc.shares.String())
 			s.Assert().Equal(expectedPrice.String(), stored.Price.Amount.String(),
 				"published NAV price mismatch for test case %q (shares=%s tvv=%s)", tc.name, tc.shares.String(), tc.tvv.String())
 

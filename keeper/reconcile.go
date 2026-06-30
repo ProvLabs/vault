@@ -20,6 +20,17 @@ const (
 	AutoReconcilePayoutDuration = 24 * interest.SecondsPerHour
 )
 
+// navReferenceVolume is the reference share volume used to publish a marker NAV when a vault's
+// total shares exceed the uint64 ceiling that NetAssetValue.Volume can represent.
+//
+// A NAV is a price-per-share ratio, not a function of absolute supply, so the published volume can
+// be any representative quantity as long as the price is scaled to preserve price/volume. When total
+// shares exceed this reference, setShareDenomNAV publishes (volume = navReferenceVolume, price scaled
+// down proportionally) instead of (volume = total shares), keeping the ratio intact while staying
+// within uint64. The value (10^18) is large enough to retain high price-per-share precision yet
+// comfortably below the uint64 maximum (~1.84 * 10^19).
+var navReferenceVolume = sdkmath.NewInt(1_000_000_000_000_000_000)
+
 // reconcileVault updates interest accounting and collects AUM fees for a vault if a new period has started.
 //
 // If this is the first time the vault accrues interest, it triggers the start of a new period

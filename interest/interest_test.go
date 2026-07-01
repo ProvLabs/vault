@@ -210,6 +210,126 @@ func TestCalculateAUMFee(t *testing.T) {
 	}
 }
 
+func TestCalculateAUMFeeDec(t *testing.T) {
+	tests := []struct {
+		name                string
+		aum                 sdkmath.Int
+		bips                uint32
+		duration            int64
+		expectedFee         sdkmath.LegacyDec
+		expectErr           bool
+		expectedErrContains string
+	}{
+		{
+			name:        "zero AUM",
+			aum:         sdkmath.ZeroInt(),
+			bips:        15,
+			duration:    interest.SecondsPerYear,
+			expectedFee: sdkmath.LegacyZeroDec(),
+		},
+		{
+			name:        "zero duration",
+			aum:         sdkmath.NewInt(1_000_000),
+			bips:        15,
+			duration:    0,
+			expectedFee: sdkmath.LegacyZeroDec(),
+		},
+		{
+			name:        "zero bips",
+			aum:         sdkmath.NewInt(1_000_000),
+			bips:        0,
+			duration:    interest.SecondsPerYear,
+			expectedFee: sdkmath.LegacyZeroDec(),
+		},
+		{
+			name:        "1 year at 15 bps (1,000,000 AUM)",
+			aum:         sdkmath.NewInt(1_000_000),
+			bips:        15,
+			duration:    interest.SecondsPerYear,
+			expectedFee: sdkmath.LegacyNewDec(1_500),
+		},
+		{
+			name:        "sub-unit fee is preserved as a fraction, not truncated to zero",
+			aum:         sdkmath.NewInt(100),
+			bips:        15,
+			duration:    interest.SecondsPerYear,
+			expectedFee: sdkmath.LegacyMustNewDecFromStr("0.15"),
+		},
+		{
+			name:                "negative duration errors",
+			aum:                 sdkmath.NewInt(1_000_000),
+			bips:                15,
+			duration:            -1,
+			expectErr:           true,
+			expectedErrContains: "duration cannot be negative",
+		},
+		{
+			name:                "negative aum errors",
+			aum:                 sdkmath.NewInt(-1_000_000),
+			bips:                15,
+			duration:            interest.SecondsPerYear,
+			expectErr:           true,
+			expectedErrContains: "aum cannot be negative",
+		},
+		{
+			name:                "near-max AUM over a one year period overflows the decimal multiply",
+			aum:                 sdkmath.NewIntFromBigInt(new(big.Int).Lsh(big.NewInt(1), 255)),
+			bips:                10_000,
+			duration:            interest.SecondsPerYear,
+			expectErr:           true,
+			expectedErrContains: "overflow",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			fee, err := interest.CalculateAUMFeeDec(tc.aum, tc.bips, tc.duration)
+			if tc.expectErr {
+				require.Errorf(t, err, "test case %q: expected an error but got none", tc.name)
+				require.Containsf(t, err.Error(), tc.expectedErrContains, "test case %q: error %q should contain %q", tc.name, err, tc.expectedErrContains)
+				require.Truef(t, fee.IsNil(), "test case %q: fee should be the zero-value LegacyDec on error, got %s", tc.name, fee)
+			} else {
+				require.NoErrorf(t, err, "test case %q: unexpected error during AUM fee decimal calculation", tc.name)
+				require.Truef(t, tc.expectedFee.Equal(fee), "test case %q: fee amount mismatch; expected %s, got %s", tc.name, tc.expectedFee, fee)
+			}
+		})
+	}
+}
+
+func TestCumulativeAUMFeeTruncationLoss(t *testing.T) {
+	aum := sdkmath.NewInt(100_000_000)
+	bips := uint32(50)
+	blockTime := int64(6)
+	iterations := 10_000
+
+	sumIterativeInt := sdkmath.ZeroInt()
+	sumIterativeDec := sdkmath.LegacyZeroDec()
+	for i := range iterations {
+		feeInt, err := interest.CalculateAUMFee(aum, bips, blockTime)
+		require.NoErrorf(t, err, "iteration %d: truncated fee calculation failed", i)
+		sumIterativeInt = sumIterativeInt.Add(feeInt)
+
+		feeDec, err := interest.CalculateAUMFeeDec(aum, bips, blockTime)
+		require.NoErrorf(t, err, "iteration %d: decimal fee calculation failed", i)
+		sumIterativeDec = sumIterativeDec.Add(feeDec)
+	}
+
+	totalTime := blockTime * int64(iterations)
+	bulkDec, err := interest.CalculateAUMFeeDec(aum, bips, totalTime)
+	require.NoError(t, err, "bulk decimal fee calculation failed")
+
+	require.Truef(t, sumIterativeInt.IsZero(),
+		"per-period integer truncation should collect nothing over short windows, got %s", sumIterativeInt)
+	require.Truef(t, bulkDec.TruncateInt().IsPositive(),
+		"bulk calculation should accrue a positive whole fee, got %s", bulkDec)
+	require.Truef(t, sumIterativeDec.GT(sumIterativeInt.ToLegacyDec()),
+		"decimal accumulation should retain the fee that integer truncation discards (dec=%s, int=%s)", sumIterativeDec, sumIterativeInt)
+
+	drift := bulkDec.Sub(sumIterativeDec).Abs()
+	require.Truef(t, drift.LT(sdkmath.LegacyMustNewDecFromStr("0.000001")),
+		"decimal accumulation should match the bulk calculation within rounding, drift=%s", drift)
+}
+
 func TestCalculateExpiration(t *testing.T) {
 	startTime := int64(1752764321)
 	denom := "vault"

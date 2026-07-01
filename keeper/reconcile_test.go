@@ -2266,6 +2266,47 @@ func (s *TestSuite) TestKeeper_AccrualCalculations() {
 		}
 	})
 
+	s.Run("AccrueAUMFeePayment dust accumulation preserves revenue across short windows", func() {
+		s.SetupTest()
+		vault := setup()
+		vault.AumFeeBips = 15
+
+		aum := underlying.Amount
+		blockTime := int64(6)
+		iterations := int64(10_000)
+		base := pastTime.Unix()
+
+		naiveTruncatedSum := sdkmath.ZeroInt()
+		accumulatedSum := sdkmath.ZeroInt()
+		for i := range iterations {
+			naive, err := interest.CalculateAUMFee(aum, vault.AumFeeBips, blockTime)
+			s.Require().NoError(err, "naive per-window fee calculation failed at iteration %d", i)
+			naiveTruncatedSum = naiveTruncatedSum.Add(naive)
+
+			vault.FeePeriodStart = base + i*blockTime
+			s.ctx = s.ctx.WithBlockTime(time.Unix(base+(i+1)*blockTime, 0).UTC())
+			collected, err := s.k.AccrueAUMFeePayment(s.ctx, vault, aum)
+			s.Require().NoError(err, "AccrueAUMFeePayment failed at iteration %d", i)
+			accumulatedSum = accumulatedSum.Add(collected.Amount)
+		}
+
+		perWindowDec, err := interest.CalculateAUMFeeDec(aum, vault.AumFeeBips, blockTime)
+		s.Require().NoError(err, "per-window decimal fee calculation failed")
+		expectedWhole := perWindowDec.MulInt64(iterations).TruncateInt()
+
+		s.Require().True(naiveTruncatedSum.IsZero(),
+			"per-window integer truncation should collect nothing over short windows, got %s", naiveTruncatedSum)
+		s.Require().True(expectedWhole.IsPositive(),
+			"the accumulated fee should recover a positive whole amount, got %s", expectedWhole)
+		s.Require().Equal(expectedWhole, accumulatedSum,
+			"accumulated fee should equal the truncated cumulative decimal fee (recovered=%s, expected=%s)", accumulatedSum, expectedWhole)
+
+		remainder, err := sdkmath.LegacyNewDecFromStr(vault.FeeRemainder)
+		s.Require().NoError(err, "final fee remainder %q should be parseable", vault.FeeRemainder)
+		s.Require().True(!remainder.IsNegative() && remainder.LT(sdkmath.LegacyOneDec()),
+			"fee remainder must be a fraction in [0,1), got %s", remainder)
+	})
+
 	s.Run("CalculateVaultTotalAssets", func() {
 		s.SetupTest()
 		vault := setup()

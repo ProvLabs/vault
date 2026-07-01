@@ -1277,6 +1277,24 @@ func TestMsgPauseVaultRequest_ValidateBasic(t *testing.T) {
 			},
 			expectedErr: fmt.Errorf("reason cannot be empty"),
 		},
+		{
+			name: "reason at max length",
+			msg: types.MsgPauseVaultRequest{
+				Authority:    addr,
+				VaultAddress: addr,
+				Reason:       strings.Repeat("a", 200),
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "reason exceeds max length",
+			msg: types.MsgPauseVaultRequest{
+				Authority:    addr,
+				VaultAddress: addr,
+				Reason:       strings.Repeat("a", 201),
+			},
+			expectedErr: fmt.Errorf("reason too long (expected <= 200, actual: 201)"),
+		},
 	}
 
 	for _, tc := range tests {

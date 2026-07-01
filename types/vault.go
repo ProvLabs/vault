@@ -303,6 +303,9 @@ func (v VaultAccount) Validate() error {
 		if remainder.IsNegative() {
 			return fmt.Errorf("fee remainder cannot be negative: %s", v.FeeRemainder)
 		}
+		if remainder.GTE(sdkmath.LegacyOneDec()) {
+			return fmt.Errorf("fee remainder must be a sub-unit fraction less than one: %s", v.FeeRemainder)
+		}
 	}
 
 	if err := ValidateSwapLimits(v.MinSwapInValue, v.MaxSwapInValue); err != nil {

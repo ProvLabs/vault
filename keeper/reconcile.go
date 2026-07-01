@@ -389,8 +389,16 @@ func (k Keeper) CalculateAccruedInterest(ctx sdk.Context, vault types.VaultAccou
 	return interest.CalculateInterestEarned(principal, vault.CurrentInterestRate, duration)
 }
 
-// CalculateAccruedAUMFee calculates the AUM fees that would have accrued for the vault
+// CalculateAccruedAUMFee calculates the AUM fees that would be collected for the vault
 // from its FeePeriodStart to the current block time, based on the provided total assets.
+//
+// It mirrors AccrueAUMFeePayment by folding the carried FeeRemainder into the precise
+// accrual before truncation. Without this, the non-mutating valuation path would subtract
+// only the integer-truncated current fee and OutstandingAumFee, understating the liability
+// whenever the carried fraction plus the current accrual crosses a whole underlying unit.
+// Keeping the two paths symmetric ensures share NAV, mint, and redeem calculations recognize
+// the same whole-unit fee that the collection path would realize.
+//
 // It returns the fee amount in the underlying asset and does not mutate state.
 func (k Keeper) CalculateAccruedAUMFee(ctx sdk.Context, vault types.VaultAccount, totalAssets sdkmath.Int) (sdkmath.Int, error) {
 	if vault.FeePeriodStart == 0 {
@@ -400,7 +408,18 @@ func (k Keeper) CalculateAccruedAUMFee(ctx sdk.Context, vault types.VaultAccount
 	if duration <= 0 {
 		return sdkmath.ZeroInt(), nil
 	}
-	return interest.CalculateAUMFee(totalAssets, vault.AumFeeBips, duration)
+
+	feeDec, err := interest.CalculateAUMFeeDec(totalAssets, vault.AumFeeBips, duration)
+	if err != nil {
+		return sdkmath.Int{}, fmt.Errorf("failed to calculate accrued AUM fee: %w", err)
+	}
+
+	carried, err := parseFeeRemainder(vault.FeeRemainder)
+	if err != nil {
+		return sdkmath.Int{}, fmt.Errorf("failed to parse fee remainder %q: %w", vault.FeeRemainder, err)
+	}
+
+	return feeDec.Add(carried).TruncateInt(), nil
 }
 
 // parseFeeRemainder interprets a vault's persisted FeeRemainder string, treating an empty

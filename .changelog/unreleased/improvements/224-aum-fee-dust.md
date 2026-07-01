@@ -1,1 +1,3 @@
 * Accumulate sub-unit AUM fee remainder across reconciliation periods so frequent, short accrual windows no longer discard protocol revenue to truncation [#224](https://github.com/provlabs/vault/issues/224).
+* Fold the carried fee remainder into the non-mutating valuation path so share NAV, mint, and redeem calculations recognize the same whole-unit fee liability the collection path will realize [#224](https://github.com/provlabs/vault/issues/224).
+* Enforce that a vault's persisted fee remainder is a sub-unit fraction in `[0, 1)` during validation, rejecting imported state that would otherwise collect an extra whole-unit AUM fee [#224](https://github.com/provlabs/vault/issues/224).

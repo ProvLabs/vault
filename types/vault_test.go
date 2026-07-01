@@ -771,6 +771,36 @@ func TestVaultAccount_Validate(t *testing.T) {
 			},
 			expectedErr: "fee remainder cannot be negative",
 		},
+		{
+			name: "fee remainder equal to one whole unit is invalid",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
+				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
+				CurrentInterestRate: validInterest,
+				DesiredInterestRate: validInterest,
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
+				FeeRemainder:        "1.000000000000000000",
+			},
+			expectedErr: "fee remainder must be a sub-unit fraction less than one",
+		},
+		{
+			name: "fee remainder exceeding one whole unit is invalid",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
+				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
+				CurrentInterestRate: validInterest,
+				DesiredInterestRate: validInterest,
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
+				FeeRemainder:        "1.5",
+			},
+			expectedErr: "fee remainder must be a sub-unit fraction less than one",
+		},
 	}
 
 	for _, tc := range tests {

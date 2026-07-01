@@ -2132,10 +2132,11 @@ func (s *TestSuite) TestKeeper_AccrualCalculations() {
 		vault := setup()
 
 		tests := []struct {
-			name     string
-			start    int64
-			assets   sdkmath.Int
-			expected sdkmath.Int
+			name      string
+			start     int64
+			assets    sdkmath.Int
+			remainder string
+			expected  sdkmath.Int
 		}{
 			{
 				name:     "no fee period start, should return zero fee",
@@ -2155,11 +2156,26 @@ func (s *TestSuite) TestKeeper_AccrualCalculations() {
 				assets:   sdkmath.ZeroInt(),
 				expected: sdkmath.ZeroInt(),
 			},
+			{
+				name:      "carried remainder crosses a whole unit, should recognize the extra unit",
+				start:     pastTime.Unix(),
+				assets:    underlying.Amount,
+				remainder: "0.7",
+				expected:  sdkmath.NewInt(246_576),
+			},
+			{
+				name:      "carried remainder stays sub-unit, should not add a whole unit",
+				start:     pastTime.Unix(),
+				assets:    underlying.Amount,
+				remainder: "0.5",
+				expected:  sdkmath.NewInt(246_575),
+			},
 		}
 
 		for _, tc := range tests {
 			s.Run(tc.name, func() {
 				vault.FeePeriodStart = tc.start
+				vault.FeeRemainder = tc.remainder
 				amt, err := s.k.CalculateAccruedAUMFee(s.ctx, *vault, tc.assets)
 				s.Require().NoError(err, "accrued AUM fee calculation failed for case: %s", tc.name)
 				s.Require().Equal(tc.expected, amt, "AUM fee mismatch for case: %s", tc.name)

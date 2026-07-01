@@ -479,13 +479,16 @@ func (s *TestSuite) TestKeeper_PerformVaultReconcile_CompositeWithOutstandingFee
 
 		// Accruals on Gross (1b)
 		// Interest = 41,952,013
-		// Fee = 256,919
+		// Fee accrued = 256,919 underlying, but with NAV 1 payment = 2 underlying only
+		// floor(256,919 / 2) = 128,459 payment units are collectible, worth 256,918 underlying.
+		// The leftover 1 underlying floors to zero payment units and carries forward, so it must
+		// not reduce share NAV until it becomes collectible.
 		// Debt (Net of NAV) = 50,000,000 * 2 = 100,000,000
-		// Net Valuation = (1,000,000,000 + 41,952,013) - 256,919 - 100,000,000 = 941,695,094
+		// Net Valuation = (1,000,000,000 + 41,952,013) - 256,918 - 100,000,000 = 941,695,095
 
 		val, err := s.k.CalculateVaultTotalAssets(s.ctx, vault, sdk.NewInt64Coin(underlyingDenom, 1_000_000_000))
 		s.Require().NoError(err, "CalculateVaultTotalAssets should not error for case: Non-1:1 NAV Composite Conversion")
-		s.Require().Equal(sdkmath.NewInt(941_695_094), val, "valuation should correctly convert secondary debt via NAV")
+		s.Require().Equal(sdkmath.NewInt(941_695_095), val, "valuation should exclude uncollectible fee dust under coarse payment denom")
 	})
 }
 

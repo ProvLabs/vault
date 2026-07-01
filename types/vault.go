@@ -303,6 +303,9 @@ func (v VaultAccount) Validate() error {
 		if remainder.IsNegative() {
 			return fmt.Errorf("fee remainder cannot be negative: %s", v.FeeRemainder)
 		}
+		if v.PaymentDenom == v.UnderlyingAsset && !remainder.TruncateInt().IsZero() {
+			return fmt.Errorf("fee remainder must carry less than one whole unit when payment denom equals underlying asset: %s", v.FeeRemainder)
+		}
 	}
 
 	if err := ValidateSwapLimits(v.MinSwapInValue, v.MaxSwapInValue); err != nil {

@@ -1884,6 +1884,75 @@ func (s *TestSuite) TestKeeper_setShareDenomNAV() {
 	}
 }
 
+func (s *TestSuite) TestKeeper_publishShareNav_ClearsStaleNAVOnZeroShares() {
+	shareDenom := "vaultshares"
+	underlyingDenom := "underlying"
+	vaultAddr := types.GetVaultAddress(shareDenom)
+	markerAddr := markertypes.MustGetMarkerAddress(shareDenom)
+
+	setup := func(seedNAV bool) (*types.VaultAccount, markertypes.MarkerAccountI) {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingDenom, 1), s.adminAddr)
+
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           s.adminAddr.String(),
+			ShareDenom:      shareDenom,
+			UnderlyingAsset: underlyingDenom,
+		})
+		s.Require().NoError(err, "CreateVault should not error in setup")
+
+		vault, err := s.k.GetVault(s.ctx, vaultAddr)
+		s.Require().NoError(err, "GetVault should not error in setup")
+
+		marker, err := s.k.MarkerKeeper.GetMarker(s.ctx, markerAddr)
+		s.Require().NoError(err, "GetMarker should not error in setup")
+
+		if seedNAV {
+			s.Require().NoError(s.k.MarkerKeeper.SetNetAssetValue(s.ctx, marker, markertypes.NetAssetValue{
+				Price:  sdk.NewInt64Coin(underlyingDenom, 100),
+				Volume: 1_000,
+			}, types.ModuleName), "seeding a prior share NAV should not error")
+			seeded, err := s.k.MarkerKeeper.GetNetAssetValue(s.ctx, shareDenom, underlyingDenom)
+			s.Require().NoError(err, "reading the seeded NAV should not error")
+			s.Require().NotNil(seeded, "the seeded NAV should exist before the zero-share reconcile")
+		}
+
+		vault.TotalShares = sdk.NewInt64Coin(shareDenom, 0)
+		s.k.AuthKeeper.SetAccount(s.ctx, vault)
+		return vault, marker
+	}
+
+	tests := []struct {
+		name    string
+		seedNAV bool
+	}{
+		{
+			name:    "zero shares with an existing NAV clears the stale price",
+			seedNAV: true,
+		},
+		{
+			name:    "zero shares with no existing NAV is a safe no-op",
+			seedNAV: false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			vault, _ := setup(tc.seedNAV)
+
+			var err error
+			s.Require().NotPanics(func() {
+				err = s.k.TestAccessor_publishShareNav(s.T(), s.ctx, vault)
+			}, "publishShareNav should not panic for test case %q", tc.name)
+			s.Require().NoError(err, "publishShareNav should not error for test case %q", tc.name)
+
+			stored, err := s.k.MarkerKeeper.GetNetAssetValue(s.ctx, shareDenom, underlyingDenom)
+			s.Require().NoError(err, "GetNetAssetValue should not error for test case %q", tc.name)
+			s.Require().Nil(stored, "share NAV must be absent after a zero-share reconcile for test case %q", tc.name)
+		})
+	}
+}
+
 func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer() {
 	tests := []struct {
 		name                string

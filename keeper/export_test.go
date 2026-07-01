@@ -97,6 +97,12 @@ func (k Keeper) TestAccessor_setShareDenomNAV(t *testing.T, ctx context.Context,
 // assert the scaled-volume behavior against the real constant rather than a duplicated literal.
 var NavReferenceVolume = navReferenceVolume
 
+// TestAccessor_publishShareNav exposes this keeper's publishShareNav function for unit tests.
+func (k Keeper) TestAccessor_publishShareNav(t *testing.T, ctx context.Context, vault *types.VaultAccount) error {
+	t.Helper()
+	return k.publishShareNav(sdk.UnwrapSDKContext(ctx), vault)
+}
+
 // TestAccessor_checkPayoutRestrictions exposes this keeper's checkPayoutRestrictions function for unit tests.
 func (k Keeper) TestAccessor_checkPayoutRestrictions(t *testing.T, ctx context.Context, vault *types.VaultAccount, owner sdk.AccAddress, assets sdk.Coin) error {
 	t.Helper()

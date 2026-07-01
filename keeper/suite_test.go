@@ -10,6 +10,7 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -1086,4 +1087,21 @@ func (s *TestSuite) setupVaultWithNavs(shareDenom, underlying, admin string, nav
 	}
 	s.k.InitGenesis(s.ctx, genesis)
 	return genesis
+}
+
+// findLastEventVaultPaused returns the most recent EventVaultPaused decoded from
+// the context event manager, or nil when none has been emitted.
+func (s *TestSuite) findLastEventVaultPaused() *types.EventVaultPaused {
+	events := s.ctx.EventManager().Events()
+	for i := len(events) - 1; i >= 0; i-- {
+		if events[i].Type != "provlabs.vault.v1.EventVaultPaused" {
+			continue
+		}
+		msg, err := sdk.ParseTypedEvent(abci.Event(events[i]))
+		s.Require().NoError(err, "parsing the EventVaultPaused typed event should succeed")
+		paused, ok := msg.(*types.EventVaultPaused)
+		s.Require().True(ok, "parsed event should be *EventVaultPaused")
+		return paused
+	}
+	return nil
 }

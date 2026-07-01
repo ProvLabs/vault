@@ -19,6 +19,11 @@ const maxDenomMetadataDescriptionLength = 200
 // per-entry state and emitted events from being inflated by an unbounded value.
 const MaxNAVSourceLength = 200
 
+// maxPauseReasonLength bounds the operator-supplied pause reason, which is
+// persisted to vault state on every pause, to keep an unbounded value from
+// inflating state.
+const maxPauseReasonLength = 200
+
 // AllRequestMsgs defines all the Msg*Request messages.
 var AllRequestMsgs = []sdk.Msg{
 	(*MsgCreateVaultRequest)(nil),
@@ -404,6 +409,9 @@ func (m MsgPauseVaultRequest) ValidateBasic() error {
 	}
 	if m.Reason == "" {
 		return fmt.Errorf("reason cannot be empty")
+	}
+	if len(m.Reason) > maxPauseReasonLength {
+		return fmt.Errorf("reason too long (expected <= %d, actual: %d)", maxPauseReasonLength, len(m.Reason))
 	}
 	return nil
 }

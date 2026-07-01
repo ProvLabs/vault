@@ -530,6 +530,17 @@ func (k msgServer) ExpeditePendingSwapOut(goCtx context.Context, msg *types.MsgE
 }
 
 // PauseVault pauses a vault, disabling all user-facing operations.
+//
+// By default the pause is strict: it reconciles outstanding interest and fees
+// and snapshots the net TVV first, and any failure (e.g. insufficient reserves
+// to settle positive interest, or a broken TVV/NAV conversion) aborts the pause
+// and leaves the vault unpaused. Setting Force on the request makes the pause an
+// emergency control handled by forcePauseVault: tolerated reconcile/valuation
+// failures are logged and surfaced via EventVaultPaused.forced_error, the frozen
+// PausedBalance is the net TVV when valuable or zero when valuation itself failed,
+// and the account is persisted with validation first, falling back to an
+// unvalidated persist (also surfaced via forced_error) so an invalid-state vault
+// can still be frozen and the saved inconsistency remains auditable.
 func (k msgServer) PauseVault(goCtx context.Context, msg *types.MsgPauseVaultRequest) (*types.MsgPauseVaultResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -545,6 +556,12 @@ func (k msgServer) PauseVault(goCtx context.Context, msg *types.MsgPauseVaultReq
 	if vault.Paused {
 		return nil, fmt.Errorf("vault %s is already paused", msg.VaultAddress)
 	}
+
+	if msg.Force {
+		k.forcePauseVault(ctx, vault, msg.Authority, msg.Reason)
+		return &types.MsgPauseVaultResponse{}, nil
+	}
+
 	if err = k.reconcileVault(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to reconcile before pausing: %w", err)
 	}
@@ -566,7 +583,7 @@ func (k msgServer) PauseVault(goCtx context.Context, msg *types.MsgPauseVaultReq
 		return nil, fmt.Errorf("failed to set vault account: %w", err)
 	}
 
-	k.emitEvent(ctx, types.NewEventVaultPaused(msg.VaultAddress, msg.Authority, msg.Reason, vault.PausedBalance))
+	k.emitEvent(ctx, types.NewEventVaultPaused(msg.VaultAddress, msg.Authority, msg.Reason, vault.PausedBalance, false, ""))
 
 	return &types.MsgPauseVaultResponse{}, nil
 }

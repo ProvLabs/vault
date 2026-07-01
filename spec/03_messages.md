@@ -67,7 +67,7 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 | `DepositPrincipalFunds`  | Admin or Asset Manager            |                   ❌ |                 ✅ | Requires vault to be paused; reconciles then deposit to principal marker.                                     |
 | `WithdrawPrincipalFunds` | Admin or Asset Manager            |                   ❌ |                 ✅ | Requires vault to be paused; reconciles then withdraw from principal marker.                                  |
 | `ExpeditePendingSwapOut` | Admin or Asset Manager            |                   ✅ |                 ✅ | No pause gating;                                                                                              |
-| `PauseVault`             | Admin or Asset Manager            |                   ✅ |                 ❌ | Reconciles, snapshots `PausedBalance`, sets paused.                                                           |
+| `PauseVault`             | Admin or Asset Manager            |                   ✅ |                 ❌ | Strict by default: reconciles, snapshots `PausedBalance`, sets paused; aborts if reconcile/valuation fails. `force=true` pauses best-effort, tolerating failures and recording them on `EventVaultPaused`. |
 | `UnpauseVault`           | Admin or Asset Manager            |                   ❌ |                 ✅ | Clears `PausedBalance`, unpauses, emits with current TVV.                                                     |
 | `SetAssetManager`        | Admin only                        |                   ✅ |                 ✅ | Sets or clears the delegated asset manager.                                                                   |
 | `UpdateVaultNAV`         | NAV authority only                |                   ✅ |                 ❌ | Rejected while paused (value is frozen at `PausedBalance`); otherwise reconciles first, upserts the internal NAV entry, publishes it to the marker module. |
@@ -277,7 +277,11 @@ Admin or Asset Manager. Immediately processes a specific queued swap-out by ID.
 
 Admin or Asset Manager. Pauses a vault, disabling swap-ins and swap-outs, and recording reason + balance snapshot.
 
-* **Request:** `MsgPauseVaultRequest { authority, vault_address, reason }`
+By default the pause is **strict**: it reconciles outstanding interest and fees and values the vault first, and any failure (insufficient reserves to settle positive interest, or a broken TVV/NAV conversion) aborts the request and leaves the vault unpaused. The failed transaction is the operator's signal that the vault is in an unexpected state.
+
+Setting `force = true` makes the pause an **emergency control**: a reconcile or valuation failure is logged and tolerated rather than blocking the freeze. The frozen `PausedBalance` is the net TVV when the vault can be valued, or zero when the valuation itself is what failed, so it may be approximate. Persistence is also best-effort: the handler first writes the paused account with validation, and if that validation fails it falls back to writing without validation so an already-inconsistent vault can still be frozen. Every tolerated failure (reconcile, valuation, and persistence) is recorded on `EventVaultPaused.forced_error`.
+
+* **Request:** `MsgPauseVaultRequest { authority, vault_address, reason, force }`
 * **Response:** `MsgPauseVaultResponse {}`
 
 ---

@@ -768,9 +768,19 @@ func (s *TestSuite) TestAutoPauseVault_SetsPausedAndEmitsEvent() {
 	s.Require().NoError(err, "GetVault should succeed after autoPause")
 	s.Require().True(got.Paused, "vault should be marked paused")
 	s.Require().Equal(reason, got.PausedReason, "paused reason should match provided error")
+	s.Require().Equal(types.ZeroInterestRate, got.CurrentInterestRate, "auto pause should zero the current interest rate to stop accrual, mirroring the operator pause")
 
 	evs := s.ctx.EventManager().Events()
 	s.Require().NotEmpty(evs, "an event should be emitted")
+
+	hasInterestChange := false
+	for _, e := range evs {
+		if e.Type == "provlabs.vault.v1.EventVaultInterestChange" {
+			hasInterestChange = true
+		}
+	}
+	s.Require().True(hasInterestChange, "auto pause should emit an EventVaultInterestChange when zeroing the rate, mirroring the operator pause")
+
 	last := evs[len(evs)-1]
 	s.Require().Equal("provlabs.vault.v1.EventVaultPaused", last.Type, "event type should be EventVaultAutoPaused")
 

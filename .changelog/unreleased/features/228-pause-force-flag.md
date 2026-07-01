@@ -1,0 +1,1 @@
+* Add a `force` flag to `PauseVault` that pauses a vault best-effort when the pre-pause reconcile, valuation, or account persistence fails, falling back to an unvalidated write and recording every tolerated error on `EventVaultPaused.forced_error`; without it the pause stays strict and aborts on failure [#228](https://github.com/provlabs/vault/issues/228).

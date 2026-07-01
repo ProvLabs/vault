@@ -4255,6 +4255,8 @@ func (s *TestSuite) TestMsgServer_PauseVault() {
 			sdk.NewEvent(
 				"provlabs.vault.v1.EventVaultPaused",
 				sdk.NewAttribute("authority", admin.String()),
+				sdk.NewAttribute("forced", "false"),
+				sdk.NewAttribute("forced_error", ""),
 				sdk.NewAttribute("reason", reason),
 				sdk.NewAttribute("total_vault_value", sdk.NewInt64Coin(underlying, 0).String()),
 				sdk.NewAttribute("vault_address", vaultAddr.String()),
@@ -4299,6 +4301,8 @@ func (s *TestSuite) TestMsgServer_PauseVault() {
 			sdk.NewEvent(
 				"provlabs.vault.v1.EventVaultPaused",
 				sdk.NewAttribute("authority", assetMgr.String()),
+				sdk.NewAttribute("forced", "false"),
+				sdk.NewAttribute("forced_error", ""),
 				sdk.NewAttribute("reason", reason),
 				sdk.NewAttribute("total_vault_value", sdk.NewInt64Coin(underlying, 0).String()),
 				sdk.NewAttribute("vault_address", vaultAddr.String()),
@@ -4409,6 +4413,144 @@ func (s *TestSuite) TestMsgServer_PauseVault_Failures() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_PauseVault_ForceVsStrict() {
+	reason := "emergency"
+
+	insufficientReservesSetup := func() (sdk.AccAddress, string) {
+		underlying := "under"
+		share := "vaultshares"
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(10_000)), s.adminAddr)
+		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+			Admin:           s.adminAddr.String(),
+			ShareDenom:      share,
+			UnderlyingAsset: underlying,
+		})
+		s.Require().NoError(err, "vault creation should succeed for share denom %s", share)
+		vaultAddr := types.GetVaultAddress(share)
+		vault, err := s.k.GetVault(s.ctx, vaultAddr)
+		s.Require().NoError(err, "loading the vault for setup should succeed")
+
+		oneDay := int64(24 * time.Hour / time.Second)
+		vault.CurrentInterestRate = "1.0"
+		vault.DesiredInterestRate = "1.0"
+		vault.PeriodStart = s.ctx.BlockTime().Unix() - oneDay
+		s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vault.PrincipalMarkerAddress(),
+			sdk.NewCoins(sdk.NewInt64Coin(underlying, 100_000))),
+			"funding the principal marker should succeed so reconcile owes unpayable interest")
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+		return vaultAddr, underlying
+	}
+
+	brokenTVVSetup := func() (sdk.AccAddress, string) {
+		underlying := "ylds"
+		share := "vshare"
+		payment := "usdc"
+		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(payment, 1_000_000), s.adminAddr)
+		vault := s.setupBaseVault(underlying, share, payment)
+		s.Require().NoError(s.k.NAVs.Remove(s.ctx, collections.Join(vault.GetAddress(), payment)),
+			"removing the bootstrap payment NAV should surface the conversion failure")
+		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vault.PrincipalMarkerAddress(),
+			sdk.NewCoins(sdk.NewInt64Coin(payment, 10))),
+			"funding the principal with an unpriced accepted denom should make TVV conversion error")
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+		return vault.GetAddress(), underlying
+	}
+
+	invalidAccountSetup := func() (sdk.AccAddress, string) {
+		underlying := "uatom"
+		share := "invalidshare"
+		vault := s.setupBaseVault(underlying, share)
+		vault.DesiredInterestRate = "not-a-decimal"
+		s.k.AuthKeeper.SetAccount(s.ctx, vault)
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+		return vault.GetAddress(), underlying
+	}
+
+	tests := []struct {
+		name                string
+		setup               func() (sdk.AccAddress, string)
+		force               bool
+		expectErr           bool
+		expectedPauseAmount int64
+		expectedForcedError string
+	}{
+		{
+			name:      "strict pause aborts when reconcile fails on insufficient reserves",
+			setup:     insufficientReservesSetup,
+			force:     false,
+			expectErr: true,
+		},
+		{
+			name:      "strict pause aborts when TVV conversion fails",
+			setup:     brokenTVVSetup,
+			force:     false,
+			expectErr: true,
+		},
+		{
+			name:                "force pause proceeds through insufficient-reserves reconcile failure",
+			setup:               insufficientReservesSetup,
+			force:               true,
+			expectErr:           false,
+			expectedPauseAmount: 100_000,
+			expectedForcedError: "reconcile failed:",
+		},
+		{
+			name:                "force pause proceeds through broken TVV with zero snapshot",
+			setup:               brokenTVVSetup,
+			force:               true,
+			expectErr:           false,
+			expectedPauseAmount: 0,
+			expectedForcedError: "valuation failed:",
+		},
+		{
+			name:                "force pause persists without validation when the vault account is invalid",
+			setup:               invalidAccountSetup,
+			force:               true,
+			expectErr:           false,
+			expectedPauseAmount: 0,
+			expectedForcedError: "set vault account failed:",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			vaultAddr, underlying := tc.setup()
+
+			_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).PauseVault(s.ctx, &types.MsgPauseVaultRequest{
+				Authority:    s.adminAddr.String(),
+				VaultAddress: vaultAddr.String(),
+				Reason:       reason,
+				Force:        tc.force,
+			})
+
+			v, getErr := s.k.GetVault(s.ctx, vaultAddr)
+			s.Require().NoError(getErr, "loading the vault should succeed for case %q", tc.name)
+
+			if tc.expectErr {
+				s.Require().Error(err, "strict pause must fail when pre-pause bookkeeping fails for case %q", tc.name)
+				s.Assert().False(v.Paused, "vault must remain unpaused after a failed strict pause for case %q", tc.name)
+				s.Assert().Nil(s.findLastEventVaultPaused(), "strict pause must not emit EventVaultPaused for case %q", tc.name)
+				return
+			}
+
+			s.Require().NoError(err, "force pause must succeed even when the pre-pause reconcile fails for case %q", tc.name)
+			s.Assert().True(v.Paused, "vault should be paused after a force pause for case %q", tc.name)
+			s.Assert().Equal(reason, v.PausedReason, "paused reason should be recorded for case %q", tc.name)
+			s.Assert().Equal(types.ZeroInterestRate, v.CurrentInterestRate, "pausing should zero the current interest rate for case %q", tc.name)
+			s.Assert().Equal(underlying, v.PausedBalance.Denom, "paused balance should be denominated in the underlying asset for case %q", tc.name)
+			s.Assert().Equal(tc.expectedPauseAmount, v.PausedBalance.Amount.Int64(), "paused balance should be the best-effort TVV snapshot for case %q", tc.name)
+
+			pausedEvent := s.findLastEventVaultPaused()
+			s.Require().NotNil(pausedEvent, "an EventVaultPaused should have been emitted for case %q", tc.name)
+			s.Assert().True(pausedEvent.Forced, "the forced flag should be set on a force pause for case %q", tc.name)
+			s.Assert().Contains(pausedEvent.ForcedError, tc.expectedForcedError, "forced_error should identify the tolerated failure for case %q", tc.name)
 		})
 	}
 }

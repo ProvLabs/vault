@@ -173,7 +173,7 @@ This advances vaults from the **verification set**:
   On recoverable failure before payout, return escrowed shares **vault → owner** and emit `EventSwapOutRefunded(reason=…)`.
 
 * **Critical errors & auto-pause**
-  If a critical error occurs after payout (e.g., burn failed) or the refund itself fails, the vault is **auto-paused** with a stable reason; further user ops are blocked until admin intervention.
+  If a critical error occurs after payout (e.g., burn failed) or the refund itself fails, the vault is **auto-paused** with a stable reason; further user ops are blocked until admin intervention. Auto-pause emits `EventVaultPaused` with `forced = true` and the critical error captured in `reason` (it leaves `forced_error` empty); the manual `PauseVault` path produces the same `forced = true` signal only when called with `force = true`, recording the tolerated error in `forced_error` instead.
 
 ---
 

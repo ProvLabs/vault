@@ -481,6 +481,13 @@ message MsgPauseVaultRequest {
   // reason is a human-readable explanation for pausing the vault. This is recorded
   // for operators and clients to understand the context (e.g., maintenance or anomaly).
   string reason = 3;
+  // force, when true, allows the pause to proceed even if the pre-pause
+  // reconcile or vault valuation fails. The pause is applied best-effort:
+  // tolerated failures are logged and surfaced on EventVaultPaused, and
+  // PausedBalance may be the net TVV, zero (when valuation itself failed), or
+  // otherwise approximate. When false (default), any reconcile or valuation
+  // failure aborts the pause and the vault remains unpaused.
+  bool force = 4;
 }
 
 // MsgPauseVaultResponse is the response message for the PauseVault endpoint.

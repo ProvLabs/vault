@@ -255,9 +255,9 @@ func (k Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAccou
 		return fmt.Errorf("failed to get TVV: %w", err)
 	}
 
-	newFeePayment, err := k.CalculateAccruedAUMFeePayment(ctx, *vault, tvv)
+	newFeePayment, err := k.AccrueAUMFeePayment(ctx, vault, tvv)
 	if err != nil {
-		return fmt.Errorf("failed to calculate accrued AUM fee payment: %w", err)
+		return fmt.Errorf("failed to accrue AUM fee: %w", err)
 	}
 
 	totalOutstandingAmount, err := vault.OutstandingAumFee.Amount.SafeAdd(newFeePayment.Amount)
@@ -403,17 +403,54 @@ func (k Keeper) CalculateAccruedAUMFee(ctx sdk.Context, vault types.VaultAccount
 	return interest.CalculateAUMFee(totalAssets, vault.AumFeeBips, duration)
 }
 
-// CalculateAccruedAUMFeePayment calculates the AUM fees that would have accrued for the vault
-// from its FeePeriodStart to the current block time, converted to the vault's PaymentDenom.
-func (k Keeper) CalculateAccruedAUMFeePayment(ctx sdk.Context, vault types.VaultAccount, totalAssets sdkmath.Int) (sdk.Coin, error) {
-	feeUnderlying, err := k.CalculateAccruedAUMFee(ctx, vault, totalAssets)
+// parseFeeRemainder interprets a vault's persisted FeeRemainder string, treating an empty
+// value as zero. Legacy vaults created before the field existed carry an empty remainder.
+func parseFeeRemainder(remainder string) (sdkmath.LegacyDec, error) {
+	if remainder == "" {
+		return sdkmath.LegacyZeroDec(), nil
+	}
+	return sdkmath.LegacyNewDecFromStr(remainder)
+}
+
+// AccrueAUMFeePayment computes the AUM fee accrued from the vault's FeePeriodStart to the
+// current block time, folds in the fractional FeeRemainder carried from prior periods, and
+// returns the collectible whole-unit portion converted to the vault's PaymentDenom. The
+// leftover sub-unit fraction is written back to vault.FeeRemainder so that repeated truncation
+// over short accrual windows does not discard protocol revenue.
+//
+// This method mutates vault.FeeRemainder but does not persist the vault; the caller is
+// responsible for persistence. It returns a zero PaymentDenom coin when accrual has not
+// started, no time has elapsed, or no whole unit is yet due.
+func (k Keeper) AccrueAUMFeePayment(ctx sdk.Context, vault *types.VaultAccount, totalAssets sdkmath.Int) (sdk.Coin, error) {
+	zero := sdk.NewCoin(vault.PaymentDenom, sdkmath.ZeroInt())
+
+	if vault.FeePeriodStart == 0 {
+		return zero, nil
+	}
+	duration := ctx.BlockTime().Unix() - vault.FeePeriodStart
+	if duration <= 0 {
+		return zero, nil
+	}
+
+	feeDec, err := interest.CalculateAUMFeeDec(totalAssets, vault.AumFeeBips, duration)
 	if err != nil {
 		return sdk.Coin{}, fmt.Errorf("failed to calculate accrued AUM fee: %w", err)
 	}
-	if feeUnderlying.IsZero() {
-		return sdk.NewCoin(vault.PaymentDenom, sdkmath.ZeroInt()), nil
+
+	carried, err := parseFeeRemainder(vault.FeeRemainder)
+	if err != nil {
+		return sdk.Coin{}, fmt.Errorf("failed to parse fee remainder %q: %w", vault.FeeRemainder, err)
 	}
-	feePayment, err := k.FromUnderlyingAssetAmount(ctx, vault, feeUnderlying, vault.PaymentDenom)
+
+	combined := feeDec.Add(carried)
+	feeUnderlying := combined.TruncateInt()
+	vault.FeeRemainder = combined.Sub(sdkmath.LegacyNewDecFromInt(feeUnderlying)).String()
+
+	if feeUnderlying.IsZero() {
+		return zero, nil
+	}
+
+	feePayment, err := k.FromUnderlyingAssetAmount(ctx, *vault, feeUnderlying, vault.PaymentDenom)
 	if err != nil {
 		return sdk.Coin{}, fmt.Errorf("failed to convert accrued fee to payment denom: %w", err)
 	}

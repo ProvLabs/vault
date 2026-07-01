@@ -2213,7 +2213,7 @@ func (s *TestSuite) TestKeeper_AccrualCalculations() {
 		}
 	})
 
-	s.Run("CalculateAccruedAUMFeePayment", func() {
+	s.Run("AccrueAUMFeePayment", func() {
 		s.SetupTest()
 		vault := setup()
 
@@ -2249,6 +2249,7 @@ func (s *TestSuite) TestKeeper_AccrualCalculations() {
 			s.Run(tc.name, func() {
 				vault.FeePeriodStart = tc.start
 				vault.PaymentDenom = tc.paymentDenom
+				vault.FeeRemainder = ""
 				s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 				if tc.setupNav {
@@ -2258,7 +2259,7 @@ func (s *TestSuite) TestKeeper_AccrualCalculations() {
 					s.setVaultNAV(vault, tc.paymentDenom, sdk.NewInt64Coin(underlyingDenom, 1), 2)
 				}
 
-				amt, err := s.k.CalculateAccruedAUMFeePayment(s.ctx, *vault, underlying.Amount)
+				amt, err := s.k.AccrueAUMFeePayment(s.ctx, vault, underlying.Amount)
 				s.Require().NoError(err, "accrued AUM fee payment calculation failed for case: %s", tc.name)
 				s.Require().Equal(tc.expected, amt, "accrued AUM fee payment coin mismatch for case: %s", tc.name)
 			})

@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/provlabs/vault/types"
 
@@ -554,6 +555,55 @@ func (k *Keeper) autoPauseVault(ctx sdk.Context, vault *types.VaultAccount, reas
 	k.AuthKeeper.SetAccount(ctx, vault) // Updating via SetAccount to skip validation since auto-pausing is triggered by invalid state
 
 	k.emitEvent(ctx, types.NewEventVaultPaused(vault.GetAddress().String(), vault.GetAddress().String(), reason, vault.PausedBalance, true, ""))
+}
+
+// forcePauseVault performs an emergency, best-effort pause for the operator-initiated
+// PauseVault path when Force is set. Unlike the strict pause it never aborts: a failed
+// reconcile or valuation is logged and recorded rather than returned, and the frozen
+// PausedBalance falls back to zero when valuation itself fails. Persistence is attempted
+// first via the validated SetVaultAccount; if validation fails it falls back to the
+// unvalidated SetAccount so an invalid-state vault can still be frozen, recording the
+// failure so the resulting inconsistency saved to state is auditable. Every tolerated
+// failure is joined and surfaced via EventVaultPaused.forced_error. It shares
+// applyPausedState with autoPauseVault so both emergency pause paths perform an
+// identical in-memory paused-state transition.
+func (k *Keeper) forcePauseVault(ctx sdk.Context, vault *types.VaultAccount, authority, reason string) {
+	var forcedErrors []string
+
+	if err := k.reconcileVault(ctx, vault); err != nil {
+		forcedErrors = append(forcedErrors, fmt.Sprintf("reconcile failed: %v", err))
+		k.getLogger(ctx).Error(
+			"reconcile failed before forced pause; pausing best-effort",
+			"vault", vault.GetAddress().String(),
+			"err", err,
+		)
+	}
+
+	tvv, err := k.GetNetTVVInUnderlyingAsset(ctx, *vault)
+	if err != nil {
+		forcedErrors = append(forcedErrors, fmt.Sprintf("valuation failed: %v", err))
+		k.getLogger(ctx).Error(
+			"failed to value vault before forced pause; snapshotting zero paused balance",
+			"vault", vault.GetAddress().String(),
+			"err", err,
+		)
+		tvv = sdkmath.ZeroInt()
+	}
+
+	k.applyPausedState(ctx, vault, reason, sdk.NewCoin(vault.UnderlyingAsset, tvv))
+
+	if err := k.SetVaultAccount(ctx, vault); err != nil {
+		forcedErrors = append(forcedErrors, fmt.Sprintf("set vault account failed: %v", err))
+		k.getLogger(ctx).Error(
+			"failed to validate and set vault account during forced pause; persisting without validation",
+			"vault", vault.GetAddress().String(),
+			"err", err,
+		)
+		k.AuthKeeper.SetAccount(ctx, vault)
+	}
+
+	forcedError := strings.Join(forcedErrors, "; ")
+	k.emitEvent(ctx, types.NewEventVaultPaused(vault.GetAddress().String(), authority, reason, vault.PausedBalance, true, forcedError))
 }
 
 // UpdateVaultAUMFeeBips reconciles outstanding AUM fees for the provided VaultAccount

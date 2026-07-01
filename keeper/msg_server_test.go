@@ -4462,6 +4462,16 @@ func (s *TestSuite) TestMsgServer_PauseVault_ForceVsStrict() {
 		return vault.GetAddress(), underlying
 	}
 
+	invalidAccountSetup := func() (sdk.AccAddress, string) {
+		underlying := "uatom"
+		share := "invalidshare"
+		vault := s.setupBaseVault(underlying, share)
+		vault.DesiredInterestRate = "not-a-decimal"
+		s.k.AuthKeeper.SetAccount(s.ctx, vault)
+		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+		return vault.GetAddress(), underlying
+	}
+
 	tests := []struct {
 		name                string
 		setup               func() (sdk.AccAddress, string)
@@ -4497,6 +4507,14 @@ func (s *TestSuite) TestMsgServer_PauseVault_ForceVsStrict() {
 			expectErr:           false,
 			expectedPauseAmount: 0,
 			expectedForcedError: "valuation failed:",
+		},
+		{
+			name:                "force pause persists without validation when the vault account is invalid",
+			setup:               invalidAccountSetup,
+			force:               true,
+			expectErr:           false,
+			expectedPauseAmount: 0,
+			expectedForcedError: "set vault account failed:",
 		},
 	}
 

@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/provlabs/vault/types"
 
@@ -536,11 +535,12 @@ func (k msgServer) ExpeditePendingSwapOut(goCtx context.Context, msg *types.MsgE
 // and snapshots the net TVV first, and any failure (e.g. insufficient reserves
 // to settle positive interest, or a broken TVV/NAV conversion) aborts the pause
 // and leaves the vault unpaused. Setting Force on the request makes the pause an
-// emergency control that mirrors autoPauseVault: tolerated reconcile/valuation
+// emergency control handled by forcePauseVault: tolerated reconcile/valuation
 // failures are logged and surfaced via EventVaultPaused.forced_error, the frozen
 // PausedBalance is the net TVV when valuable or zero when valuation itself failed,
-// and the account is persisted without validation so an invalid-state vault can
-// still be frozen.
+// and the account is persisted with validation first, falling back to an
+// unvalidated persist (also surfaced via forced_error) so an invalid-state vault
+// can still be frozen and the saved inconsistency remains auditable.
 func (k msgServer) PauseVault(goCtx context.Context, msg *types.MsgPauseVaultRequest) (*types.MsgPauseVaultResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -557,44 +557,33 @@ func (k msgServer) PauseVault(goCtx context.Context, msg *types.MsgPauseVaultReq
 		return nil, fmt.Errorf("vault %s is already paused", msg.VaultAddress)
 	}
 
-	var forcedErrors []string
+	if msg.Force {
+		k.forcePauseVault(ctx, vault, msg.Authority, msg.Reason)
+		return &types.MsgPauseVaultResponse{}, nil
+	}
 
 	if err = k.reconcileVault(ctx, vault); err != nil {
-		if !msg.Force {
-			return nil, fmt.Errorf("failed to reconcile before pausing: %w", err)
-		}
-		forcedErrors = append(forcedErrors, fmt.Sprintf("reconcile failed: %v", err))
-		k.getLogger(ctx).Error(
-			"reconcile failed before forced pause; pausing best-effort",
-			"vault", msg.VaultAddress,
-			"err", err,
-		)
+		return nil, fmt.Errorf("failed to reconcile before pausing: %w", err)
 	}
 
 	tvv, err := k.GetNetTVVInUnderlyingAsset(ctx, *vault)
 	if err != nil {
-		if !msg.Force {
-			return nil, fmt.Errorf("failed to get net TVV before pausing: %w", err)
-		}
-		forcedErrors = append(forcedErrors, fmt.Sprintf("valuation failed: %v", err))
-		k.getLogger(ctx).Error(
-			"failed to value vault before forced pause; snapshotting zero paused balance",
-			"vault", msg.VaultAddress,
-			"err", err,
-		)
-		tvv = sdkmath.ZeroInt()
+		return nil, fmt.Errorf("failed to get net TVV before pausing: %w", err)
 	}
 
-	k.applyPausedState(ctx, vault, msg.Reason, sdk.NewCoin(vault.UnderlyingAsset, tvv))
+	vault.PausedBalance = sdk.NewCoin(vault.UnderlyingAsset, tvv)
+	vault.Paused = true
+	vault.PausedReason = msg.Reason
 
-	if msg.Force {
-		k.AuthKeeper.SetAccount(ctx, vault)
-	} else if err := k.SetVaultAccount(ctx, vault); err != nil {
+	if err := k.UpdateInterestRates(ctx, vault, types.ZeroInterestRate, vault.DesiredInterestRate); err != nil {
+		return nil, fmt.Errorf("failed to update interest rates: %w", err)
+	}
+
+	if err := k.SetVaultAccount(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to set vault account: %w", err)
 	}
 
-	forcedError := strings.Join(forcedErrors, "; ")
-	k.emitEvent(ctx, types.NewEventVaultPaused(msg.VaultAddress, msg.Authority, msg.Reason, vault.PausedBalance, msg.Force, forcedError))
+	k.emitEvent(ctx, types.NewEventVaultPaused(msg.VaultAddress, msg.Authority, msg.Reason, vault.PausedBalance, false, ""))
 
 	return &types.MsgPauseVaultResponse{}, nil
 }

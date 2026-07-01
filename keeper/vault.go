@@ -519,6 +519,21 @@ func (k *Keeper) SetWithdrawalDelay(ctx sdk.Context, vault *types.VaultAccount, 
 	return nil
 }
 
+// applyPausedState performs the in-memory paused-state transition shared by the
+// operator-initiated PauseVault and the automatic autoPauseVault. It snapshots the
+// frozen balance, marks the vault paused with the supplied reason, and zeroes the
+// accruing interest rate while emitting the corresponding EventVaultInterestChange
+// so both paths stop interest accrual identically. It intentionally does not persist
+// the account: the caller chooses SetVaultAccount (validated) or SetAccount
+// (validation-skipped) depending on whether the vault may be in an invalid state.
+func (k *Keeper) applyPausedState(ctx sdk.Context, vault *types.VaultAccount, reason string, pausedBalance sdk.Coin) {
+	vault.PausedBalance = pausedBalance
+	vault.Paused = true
+	vault.PausedReason = reason
+	vault.CurrentInterestRate = types.ZeroInterestRate
+	k.emitEvent(ctx, types.NewEventVaultInterestChange(vault.GetAddress().String(), types.ZeroInterestRate, vault.DesiredInterestRate))
+}
+
 // autoPauseVault sets a vault's state to paused, records the reason, persists it to state,
 // and emits an EventVaultPaused. This function is intended to be called in response to a
 // critical, unrecoverable error for a specific vault. The provided reason should be a stable,
@@ -535,9 +550,7 @@ func (k *Keeper) autoPauseVault(ctx sdk.Context, vault *types.VaultAccount, reas
 		k.getLogger(ctx).Error("Failed to get net TVV in underlying asset", "vault_address", vault.GetAddress().String(), "error", err)
 	}
 
-	vault.Paused = true
-	vault.PausedReason = reason
-	vault.PausedBalance = sdk.Coin{Denom: vault.UnderlyingAsset, Amount: tvv}
+	k.applyPausedState(ctx, vault, reason, sdk.Coin{Denom: vault.UnderlyingAsset, Amount: tvv})
 	k.AuthKeeper.SetAccount(ctx, vault) // Updating via SetAccount to skip validation since auto-pausing is triggered by invalid state
 
 	k.emitEvent(ctx, types.NewEventVaultPaused(vault.GetAddress().String(), vault.GetAddress().String(), reason, vault.PausedBalance, true, ""))

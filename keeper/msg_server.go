@@ -585,11 +585,7 @@ func (k msgServer) PauseVault(goCtx context.Context, msg *types.MsgPauseVaultReq
 		tvv = sdkmath.ZeroInt()
 	}
 
-	vault.PausedBalance = sdk.NewCoin(vault.UnderlyingAsset, tvv)
-	vault.Paused = true
-	vault.PausedReason = msg.Reason
-	vault.CurrentInterestRate = types.ZeroInterestRate
-	k.emitEvent(ctx, types.NewEventVaultInterestChange(vault.GetAddress().String(), types.ZeroInterestRate, vault.DesiredInterestRate))
+	k.applyPausedState(ctx, vault, msg.Reason, sdk.NewCoin(vault.UnderlyingAsset, tvv))
 
 	if msg.Force {
 		k.AuthKeeper.SetAccount(ctx, vault)

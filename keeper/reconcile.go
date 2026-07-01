@@ -178,7 +178,8 @@ func (k Keeper) publishShareNav(ctx sdk.Context, vault *types.VaultAccount) erro
 		return fmt.Errorf("failed to get principal marker: %w", err)
 	}
 	if !vault.TotalShares.IsPositive() {
-		existing, err := k.MarkerKeeper.GetNetAssetValue(ctx, vaultMarker.GetDenom(), vault.UnderlyingAsset)
+		var existing *markertypes.NetAssetValue
+		existing, err = k.MarkerKeeper.GetNetAssetValue(ctx, vaultMarker.GetDenom(), vault.UnderlyingAsset)
 		if err != nil {
 			k.getLogger(ctx).Error("failed to read share NAV while zeroing empty vault", "err", err)
 			return nil
@@ -188,7 +189,7 @@ func (k Keeper) publishShareNav(ctx sdk.Context, vault *types.VaultAccount) erro
 				Price:  sdk.NewCoin(vault.UnderlyingAsset, sdkmath.ZeroInt()),
 				Volume: 0,
 			}
-			if err := k.MarkerKeeper.SetNetAssetValue(ctx, vaultMarker, zeroNAV, types.ModuleName); err != nil {
+			if err = k.MarkerKeeper.SetNetAssetValue(ctx, vaultMarker, zeroNAV, types.ModuleName); err != nil {
 				k.getLogger(ctx).Error("failed to zero share NAV for empty vault", "err", err)
 			}
 		}

@@ -1,12 +1,12 @@
 package keeper_test
 
 import (
+	"fmt"
 	"time"
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/google/uuid"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 
@@ -459,6 +459,49 @@ func (s *TestSuite) TestGetTVVInUnderlyingAsset_SkipsHeldAssetWithoutNAV() {
 	tvv, err := s.k.GetTVVInUnderlyingAsset(s.ctx, *vault)
 	s.Require().NoError(err, "a held asset with no internal NAV must be skipped without failing TVV")
 	s.Require().Equal(math.NewInt(100), tvv, "TVV should count only the 100 underlying and ignore the un-priced held asset")
+}
+
+func (s *TestSuite) TestGetTVVInUnderlyingAsset_UnvaluedPrincipalDenomsDoNotChangeValue() {
+	underlyingDenom := "ylds"
+	paymentDenom := "usdc"
+	shareDenom := "vshare"
+	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
+
+	principal := vault.PrincipalMarkerAddress()
+	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, principal, sdk.NewCoins(
+		sdk.NewInt64Coin(underlyingDenom, 1000),
+		sdk.NewInt64Coin(paymentDenom, 10),
+	)), "funding the principal with the valued underlying and payment balances should succeed")
+
+	spy := &countingBankKeeper{BankKeeper: s.k.BankKeeper}
+	spyKeeper := s.k
+	spyKeeper.BankKeeper = spy
+
+	valuedOnlyTVV, err := spyKeeper.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	s.Require().NoError(err, "computing TVV over only the valued balances should succeed")
+	s.Require().Equal(math.NewInt(1005), valuedOnlyTVV, "TVV of the valued balances should be 1000 underlying + floor(10 usdc * 1/2) = 1005")
+	s.Require().Zero(spy.getAllBalancesCalls, "valuing only the funded balances must not invoke the unbounded GetAllBalances walk")
+	valuedOnlyBalanceLookups := spy.getBalanceCalls
+
+	const parkedUnvaluedDenoms = 25
+	for i := range parkedUnvaluedDenoms {
+		junkDenom := fmt.Sprintf("junk%d", i)
+		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principal,
+			sdk.NewCoins(sdk.NewInt64Coin(junkDenom, int64(100+i)))),
+			"parking unvalued denom %q at the principal should succeed", junkDenom)
+	}
+
+	spy.getAllBalancesCalls = 0
+	spy.getBalanceCalls = 0
+
+	withUnvaluedTVV, err := spyKeeper.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	s.Require().NoError(err, "computing TVV after parking unvalued denoms should succeed")
+	s.Require().Equal(valuedOnlyTVV, withUnvaluedTVV,
+		"parking %d unvalued (no-NAV) denoms at the principal must not change TVV", parkedUnvaluedDenoms)
+	s.Require().Zero(spy.getAllBalancesCalls,
+		"GetTVVInUnderlyingAsset must value denoms from the NAV table, never the unbounded GetAllBalances walk")
+	s.Require().Equal(valuedOnlyBalanceLookups, spy.getBalanceCalls,
+		"balance lookups must stay bounded to the valued denoms and not scale with the %d parked unvalued denoms", parkedUnvaluedDenoms)
 }
 
 func (s *TestSuite) TestGetTVVInUnderlyingAsset_AcceptedDenomMissingNAVStillErrors() {

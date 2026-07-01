@@ -29,6 +29,7 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 		expectedNumerator     int64
 		expectedDenominator   int64
 		expectedErrorContains string
+		expectedSentinel      error
 	}{
 		{
 			name:                "source denom equals underlying returns identity fraction without a lookup",
@@ -46,6 +47,7 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 			name:                  "missing internal NAV for denom returns not-found error",
 			fromDenom:             "unknown",
 			expectedErrorContains: "no internal NAV entry for denom",
+			expectedSentinel:      keeper.ErrInternalNAVNotFound,
 		},
 		{
 			name:      "payment priced asset chains through the payment denom NAV to underlying",
@@ -202,6 +204,9 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 			if tc.expectedErrorContains != "" {
 				s.Require().Error(err, "expected error for case %q", tc.name)
 				s.Require().Contains(err.Error(), tc.expectedErrorContains, "error message mismatch for case %q", tc.name)
+				if tc.expectedSentinel != nil {
+					s.Require().ErrorIs(err, tc.expectedSentinel, "error should carry the typed sentinel for case %q", tc.name)
+				}
 				return
 			}
 			s.Require().NoError(err, "unexpected error for case %q", tc.name)
@@ -655,6 +660,7 @@ func (s *TestSuite) TestConvertSharesToRedeemCoin_AssetAndPaymentPaths() {
 	_, err = testKeeper.ConvertSharesToRedeemCoin(s.ctx, *vault, utils.ShareScalar, "unknown")
 	s.Require().Error(err, "should error when redeem denom has no NAV to underlying")
 	s.Require().Contains(err.Error(), "no internal NAV entry for denom", "error should indicate missing internal NAV mapping")
+	s.Require().ErrorIs(err, keeper.ErrInternalNAVNotFound, "missing NAV error should carry the typed ErrInternalNAVNotFound sentinel through the conversion")
 }
 
 func (s *TestSuite) TestConvertAndNav_PriceNetOfOutstandingAumFee() {

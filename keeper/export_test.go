@@ -99,6 +99,11 @@ func (k Keeper) TestAccessor_checkPayoutRestrictions(t *testing.T, ctx context.C
 	return k.checkPayoutRestrictions(sdk.UnwrapSDKContext(ctx), vault, owner, assets)
 }
 
+// TestAccessor_getRefundReason exposes this keeper's getRefundReason function for unit tests.
+func (k Keeper) TestAccessor_getRefundReason(err error) string {
+	return k.getRefundReason(err)
+}
+
 // TestAccessor_checkSettlementNAVGuardrail exposes this keeper's checkSettlementNAVGuardrail function for unit tests.
 func (k Keeper) TestAccessor_checkSettlementNAVGuardrail(t *testing.T, ctx context.Context, vault *types.VaultAccount, assetCoin, paymentCoin sdk.Coin) error {
 	t.Helper()

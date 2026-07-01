@@ -137,7 +137,7 @@ func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.P
 	}
 
 	if err = k.reconcileVault(ctx, &vault); err != nil {
-		return fmt.Errorf("failed to reconcile vault: %w", err)
+		return fmt.Errorf("%w: failed to reconcile vault: %w", types.ErrReconcileFailure, err)
 	}
 
 	assets, err := k.ConvertSharesToRedeemCoin(ctx, vault, req.Shares.Amount, req.RedeemDenom)
@@ -219,30 +219,46 @@ func (k *Keeper) refundWithdrawal(ctx sdk.Context, id uint64, req types.PendingS
 	return nil
 }
 
-// getRefundReason translates a processing error into a standardized reason string for events.
+// getRefundReason translates a swap-out processing error into a standardized reason string for the
+// EventSwapOutRefunded event. Failures raised inside this module carry typed sentinels and are
+// matched with errors.Is; x/marker send-restriction failures are untyped and fall through to
+// markerRefundReason. Unrecognized errors return RefundReasonUnknown.
 func (k Keeper) getRefundReason(err error) string {
-	if errors.Is(err, sdkerrors.ErrInsufficientFunds) {
-		return types.RefundReasonInsufficientFunds
+	if err == nil {
+		return types.RefundReasonUnknown
 	}
 	if errors.Is(err, ErrInternalNAVNotFound) {
 		return types.RefundReasonNavNotFound
 	}
 
-	errMsg := err.Error()
-
 	switch {
-	case strings.Contains(errMsg, "marker status is not active"):
-		return types.RefundReasonMarkerNotActive
-	case strings.Contains(errMsg, "does not contain") && strings.Contains(errMsg, "required attribute"):
-		return types.RefundReasonRecipientMissingAttributes
-	case strings.Contains(errMsg, "is on deny list"),
-		strings.Contains(errMsg, "does not have transfer permissions"),
-		strings.Contains(errMsg, "does not have access"):
-		return types.RefundReasonPermissionDenied
-	case strings.Contains(errMsg, "cannot be sent to the fee collector"):
-		return types.RefundReasonRecipientInvalid
-	case strings.Contains(errMsg, "failed to reconcile"):
+	case errors.Is(err, sdkerrors.ErrInsufficientFunds):
+		return types.RefundReasonInsufficientFunds
+	case errors.Is(err, types.ErrNavNotFound):
+		return types.RefundReasonNavNotFound
+	case errors.Is(err, types.ErrReconcileFailure):
 		return types.RefundReasonReconcileFailure
+	}
+
+	return markerRefundReason(err)
+}
+
+// markerRefundReason classifies an untyped x/marker send-restriction error by its message text.
+// The marker module exposes these failures only as plain errors, so the substrings here mirror
+// send_restrictions.go and should be revisited when the provenance dependency is bumped.
+// Unrecognized errors return RefundReasonUnknown.
+func markerRefundReason(err error) string {
+	msg := err.Error()
+	switch {
+	case strings.Contains(msg, "marker status") && strings.Contains(msg, "is not active"):
+		return types.RefundReasonMarkerNotActive
+	case strings.Contains(msg, "does not contain") && strings.Contains(msg, "required attribute"):
+		return types.RefundReasonRecipientMissingAttributes
+	case strings.Contains(msg, "is on deny list"),
+		strings.Contains(msg, "does not have transfer permissions"):
+		return types.RefundReasonPermissionDenied
+	case strings.Contains(msg, "cannot be sent to the fee collector"):
+		return types.RefundReasonRecipientInvalid
 	}
 
 	return types.RefundReasonUnknown

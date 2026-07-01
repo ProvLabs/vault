@@ -1801,6 +1801,18 @@ func (s *TestSuite) TestKeeper_setShareDenomNAV() {
 			expectNAVEvent: true,
 		},
 		{
+			name:           "negative TVV in the unscaled range is skipped without handing NewCoin a negative amount",
+			shares:         sdkmath.NewInt(1_000_000),
+			tvv:            sdkmath.NewInt(-123_456),
+			expectNAVEvent: false,
+		},
+		{
+			name:           "negative TVV in the scaled range is skipped after the big.Int path without panicking",
+			shares:         overUint64,
+			tvv:            sdkmath.NewInt(-123_456),
+			expectNAVEvent: false,
+		},
+		{
 			name:           "vault with no shares skips publication",
 			shares:         sdkmath.ZeroInt(),
 			tvv:            sdkmath.NewInt(123_456),
@@ -1884,13 +1896,19 @@ func (s *TestSuite) TestKeeper_setShareDenomNAV() {
 	}
 }
 
-func (s *TestSuite) TestKeeper_publishShareNav_ClearsStaleNAVOnZeroShares() {
+func (s *TestSuite) TestKeeper_publishShareNav_NAVLifecycle() {
 	shareDenom := "vaultshares"
 	underlyingDenom := "underlying"
 	vaultAddr := types.GetVaultAddress(shareDenom)
 	markerAddr := markertypes.MustGetMarkerAddress(shareDenom)
 
-	setup := func(seedNAV bool) (*types.VaultAccount, markertypes.MarkerAccountI) {
+	const (
+		seedNone    = "none"
+		seedNonZero = "nonzero"
+		seedZero    = "zero"
+	)
+
+	setup := func(shares sdkmath.Int, seedMode string) *types.VaultAccount {
 		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingDenom, 1), s.adminAddr)
 
 		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
@@ -1906,39 +1924,64 @@ func (s *TestSuite) TestKeeper_publishShareNav_ClearsStaleNAVOnZeroShares() {
 		marker, err := s.k.MarkerKeeper.GetMarker(s.ctx, markerAddr)
 		s.Require().NoError(err, "GetMarker should not error in setup")
 
-		if seedNAV {
+		switch seedMode {
+		case seedNonZero:
 			s.Require().NoError(s.k.MarkerKeeper.SetNetAssetValue(s.ctx, marker, markertypes.NetAssetValue{
 				Price:  sdk.NewInt64Coin(underlyingDenom, 100),
 				Volume: 1_000,
-			}, types.ModuleName), "seeding a prior share NAV should not error")
-			seeded, err := s.k.MarkerKeeper.GetNetAssetValue(s.ctx, shareDenom, underlyingDenom)
-			s.Require().NoError(err, "reading the seeded NAV should not error")
-			s.Require().NotNil(seeded, "the seeded NAV should exist before the zero-share reconcile")
+			}, types.ModuleName), "seeding a prior non-zero share NAV should not error")
+		case seedZero:
+			s.Require().NoError(s.k.MarkerKeeper.SetNetAssetValue(s.ctx, marker, markertypes.NetAssetValue{
+				Price:  sdk.NewInt64Coin(underlyingDenom, 0),
+				Volume: 0,
+			}, types.ModuleName), "seeding a prior zero share NAV should not error")
 		}
 
-		vault.TotalShares = sdk.NewInt64Coin(shareDenom, 0)
+		vault.TotalShares = sdk.NewCoin(shareDenom, shares)
 		s.k.AuthKeeper.SetAccount(s.ctx, vault)
-		return vault, marker
+		return vault
 	}
 
 	tests := []struct {
-		name    string
-		seedNAV bool
+		name          string
+		shares        sdkmath.Int
+		seedMode      string
+		expectPresent bool
+		expectZeroed  bool
 	}{
 		{
-			name:    "zero shares with an existing NAV clears the stale price",
-			seedNAV: true,
+			name:          "zero shares with an existing non-zero NAV overwrites the stale price with zero",
+			shares:        sdkmath.ZeroInt(),
+			seedMode:      seedNonZero,
+			expectPresent: true,
+			expectZeroed:  true,
 		},
 		{
-			name:    "zero shares with no existing NAV is a safe no-op",
-			seedNAV: false,
+			name:          "zero shares with no existing NAV does not create a spurious NAV",
+			shares:        sdkmath.ZeroInt(),
+			seedMode:      seedNone,
+			expectPresent: false,
+		},
+		{
+			name:          "zero shares with an already-zero NAV is an idempotent no-op",
+			shares:        sdkmath.ZeroInt(),
+			seedMode:      seedZero,
+			expectPresent: true,
+			expectZeroed:  true,
+		},
+		{
+			name:          "positive shares with zero TVV preserves the existing NAV rather than zeroing it",
+			shares:        sdkmath.NewInt(1_000_000),
+			seedMode:      seedNonZero,
+			expectPresent: true,
+			expectZeroed:  false,
 		},
 	}
 
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			s.SetupTest()
-			vault, _ := setup(tc.seedNAV)
+			vault := setup(tc.shares, tc.seedMode)
 
 			var err error
 			s.Require().NotPanics(func() {
@@ -1948,7 +1991,24 @@ func (s *TestSuite) TestKeeper_publishShareNav_ClearsStaleNAVOnZeroShares() {
 
 			stored, err := s.k.MarkerKeeper.GetNetAssetValue(s.ctx, shareDenom, underlyingDenom)
 			s.Require().NoError(err, "GetNetAssetValue should not error for test case %q", tc.name)
-			s.Require().Nil(stored, "share NAV must be absent after a zero-share reconcile for test case %q", tc.name)
+
+			if !tc.expectPresent {
+				s.Require().Nil(stored, "no share NAV should exist after reconcile for test case %q", tc.name)
+				return
+			}
+
+			s.Require().NotNil(stored, "a share NAV should be present after reconcile for test case %q", tc.name)
+			if tc.expectZeroed {
+				s.Assert().True(stored.Price.Amount.IsZero(),
+					"zero-share NAV price should be zero for test case %q, got %s", tc.name, stored.Price.Amount.String())
+				s.Assert().Equal(uint64(0), stored.Volume,
+					"zero-share NAV volume should be zero for test case %q, got %d", tc.name, stored.Volume)
+			} else {
+				s.Assert().Equal(int64(100), stored.Price.Amount.Int64(),
+					"preserved NAV price should equal the seeded value for test case %q", tc.name)
+				s.Assert().Equal(uint64(1_000), stored.Volume,
+					"preserved NAV volume should equal the seeded value for test case %q", tc.name)
+			}
 		})
 	}
 }

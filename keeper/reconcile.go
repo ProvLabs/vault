@@ -166,9 +166,10 @@ func (k Keeper) setShareDenomNAV(ctx sdk.Context, vault *types.VaultAccount, vau
 // When the vault has no shares its price-per-share is undefined. If a non-zero share NAV was
 // previously published, it is overwritten with a zero price (leaving any other price-denom NAV on the
 // marker untouched) so GetNetAssetValue no longer serves a stale price for a share denom that has no
-// supply. The overwrite is skipped when no NAV exists or it is already zero, so a vault that never had
-// shares does not gain a spurious NAV and the zero is emitted at most once. When the TVV is
-// non-positive, no NAV is published.
+// supply. The overwrite is skipped only when no NAV exists or it is already fully zero (zero price and
+// zero volume), so a vault that never had shares does not gain a spurious NAV and the zero is emitted
+// at most once; a NAV left at zero price but non-zero volume (which the scaled truncation path can
+// publish) is still re-zeroed. When the TVV is non-positive, no NAV is published.
 //
 // If NAV publication fails, the error is logged and the operation continues
 // without failing the overall vault reconciliation process.
@@ -184,7 +185,7 @@ func (k Keeper) publishShareNav(ctx sdk.Context, vault *types.VaultAccount) erro
 			k.getLogger(ctx).Error("failed to read share NAV while zeroing empty vault", "err", err)
 			return nil
 		}
-		if existing != nil && !existing.Price.Amount.IsZero() {
+		if existing != nil && (!existing.Price.Amount.IsZero() || existing.Volume != 0) {
 			zeroNAV := markertypes.NetAssetValue{
 				Price:  sdk.NewCoin(vault.UnderlyingAsset, sdkmath.ZeroInt()),
 				Volume: 0,

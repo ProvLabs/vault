@@ -1903,9 +1903,10 @@ func (s *TestSuite) TestKeeper_publishShareNav_NAVLifecycle() {
 	markerAddr := markertypes.MustGetMarkerAddress(shareDenom)
 
 	const (
-		seedNone    = "none"
-		seedNonZero = "nonzero"
-		seedZero    = "zero"
+		seedNone                   = "none"
+		seedNonZero                = "nonzero"
+		seedZero                   = "zero"
+		seedZeroPriceNonZeroVolume = "zeroprice_nonzerovolume"
 	)
 
 	setup := func(shares sdkmath.Int, seedMode string) *types.VaultAccount {
@@ -1935,6 +1936,11 @@ func (s *TestSuite) TestKeeper_publishShareNav_NAVLifecycle() {
 				Price:  sdk.NewInt64Coin(underlyingDenom, 0),
 				Volume: 0,
 			}, types.ModuleName), "seeding a prior zero share NAV should not error")
+		case seedZeroPriceNonZeroVolume:
+			s.Require().NoError(s.k.MarkerKeeper.SetNetAssetValue(s.ctx, marker, markertypes.NetAssetValue{
+				Price:  sdk.NewInt64Coin(underlyingDenom, 0),
+				Volume: 1_000,
+			}, types.ModuleName), "seeding a prior zero-price non-zero-volume share NAV should not error")
 		}
 
 		vault.TotalShares = sdk.NewCoin(shareDenom, shares)
@@ -1966,6 +1972,13 @@ func (s *TestSuite) TestKeeper_publishShareNav_NAVLifecycle() {
 			name:          "zero shares with an already-zero NAV is an idempotent no-op",
 			shares:        sdkmath.ZeroInt(),
 			seedMode:      seedZero,
+			expectPresent: true,
+			expectZeroed:  true,
+		},
+		{
+			name:          "zero shares with a zero-price but non-zero-volume NAV re-zeros the stale volume",
+			shares:        sdkmath.ZeroInt(),
+			seedMode:      seedZeroPriceNonZeroVolume,
 			expectPresent: true,
 			expectZeroed:  true,
 		},

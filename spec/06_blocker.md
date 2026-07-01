@@ -85,6 +85,7 @@ Reconciles the 15 bps AUM technology fee for vaults whose fee timeout has elapse
 3. **Attempt Atomic Reconciliation** (via `atomicallyReconcileFee` using `CacheContext`):
    - **PerformVaultFeeTransfer**:
      - Computes fee based on **Gross TVV**.
+     - Adds the fractional `fee_remainder` carried from prior periods, collects only the whole-unit portion, and stores the new sub-unit fraction back to `fee_remainder` so frequent short accrual windows do not discard revenue to truncation.
      - Collects from principal marker into the configured ProvLabs collection address.
      - **Success (Partial/Full Collection)**: If the marker lacks liquidity, the uncollected remainder is recorded in `outstanding_aum_fee`. This is considered a successful transfer.
      - **Schedules next fee timeout** and commits state changes.

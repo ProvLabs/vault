@@ -144,10 +144,13 @@ type VaultAccount struct {
 	// table via MsgUpdateVaultNAV. If empty, the vault admin is treated as the NAV
 	// authority. It is rotated only via MsgUpdateNAVAuthority.
 	NavAuthority string `protobuf:"bytes,29,opt,name=nav_authority,json=navAuthority,proto3" json:"nav_authority,omitempty"`
-	// fee_remainder is the sub-unit AUM fee, denominated in the underlying_asset,
-	// carried across periods. Each reconciliation adds it to the precise fee before
-	// truncation, collects the whole-unit portion, and stores the new fraction so
-	// truncation does not discard protocol revenue. A decimal string; empty is zero.
+	// fee_remainder is accrued AUM fee value, denominated in the underlying_asset,
+	// that has not yet been collected, carried across periods. Each reconciliation
+	// folds it into the precise fee, collects only the portion representable as whole
+	// payment_denom units, and stores the uncollected remainder so truncation does not
+	// discard protocol revenue. When payment_denom is coarser than underlying_asset,
+	// this can exceed one whole underlying unit until enough value accrues to convert
+	// to a whole payment_denom unit. A decimal string; empty is zero.
 	FeeRemainder string `protobuf:"bytes,30,opt,name=fee_remainder,json=feeRemainder,proto3" json:"fee_remainder,omitempty"`
 }
 

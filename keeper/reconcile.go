@@ -432,14 +432,21 @@ func parseFeeRemainder(remainder string) (sdkmath.LegacyDec, error) {
 }
 
 // AccrueAUMFeePayment computes the AUM fee accrued from the vault's FeePeriodStart to the
-// current block time, folds in the fractional FeeRemainder carried from prior periods, and
-// returns the collectible whole-unit portion converted to the vault's PaymentDenom. The
-// leftover sub-unit fraction is written back to vault.FeeRemainder so that repeated truncation
-// over short accrual windows does not discard protocol revenue.
+// current block time, folds in the FeeRemainder carried from prior periods, and returns the
+// collectible portion converted to the vault's PaymentDenom.
+//
+// FeeRemainder tracks accrued fee value, denominated in the underlying asset, that has not
+// yet been collected. Only the underlying that maps to a whole, non-zero PaymentDenom amount
+// is realized here; the rest is written back to vault.FeeRemainder so it carries forward.
+// This matters when PaymentDenom is coarser than the underlying asset: converting a small
+// whole-underlying amount can floor to zero PaymentDenom units, and deducting that underlying
+// before the conversion would silently discard protocol revenue. Because a coarse PaymentDenom
+// can require several underlying units to accrue before a single PaymentDenom unit is due, the
+// carried remainder may exceed one whole underlying unit until enough value accumulates.
 //
 // This method mutates vault.FeeRemainder but does not persist the vault; the caller is
 // responsible for persistence. It returns a zero PaymentDenom coin when accrual has not
-// started, no time has elapsed, or no whole unit is yet due.
+// started, no time has elapsed, or nothing is yet collectible.
 func (k Keeper) AccrueAUMFeePayment(ctx sdk.Context, vault *types.VaultAccount, totalAssets sdkmath.Int) (sdk.Coin, error) {
 	zero := sdk.NewCoin(vault.PaymentDenom, sdkmath.ZeroInt())
 
@@ -463,9 +470,9 @@ func (k Keeper) AccrueAUMFeePayment(ctx sdk.Context, vault *types.VaultAccount, 
 
 	combined := feeDec.Add(carried)
 	feeUnderlying := combined.TruncateInt()
-	vault.FeeRemainder = combined.Sub(sdkmath.LegacyNewDecFromInt(feeUnderlying)).String()
 
 	if feeUnderlying.IsZero() {
+		vault.FeeRemainder = combined.String()
 		return zero, nil
 	}
 
@@ -473,6 +480,17 @@ func (k Keeper) AccrueAUMFeePayment(ctx sdk.Context, vault *types.VaultAccount, 
 	if err != nil {
 		return sdk.Coin{}, fmt.Errorf("failed to convert accrued fee to payment denom: %w", err)
 	}
+
+	collectedUnderlying := sdkmath.ZeroInt()
+	if feePayment.IsPositive() {
+		collectedUnderlying, err = k.ToUnderlyingAssetAmount(ctx, *vault, sdk.NewCoin(vault.PaymentDenom, feePayment))
+		if err != nil {
+			return sdk.Coin{}, fmt.Errorf("failed to convert collectible fee back to underlying: %w", err)
+		}
+	}
+
+	vault.FeeRemainder = combined.Sub(sdkmath.LegacyNewDecFromInt(collectedUnderlying)).String()
+
 	return sdk.NewCoin(vault.PaymentDenom, feePayment), nil
 }
 

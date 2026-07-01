@@ -2323,6 +2323,50 @@ func (s *TestSuite) TestKeeper_AccrualCalculations() {
 			"fee remainder must be a fraction in [0,1), got %s", remainder)
 	})
 
+	s.Run("AccrueAUMFeePayment carries uncollected underlying under a coarse payment denom", func() {
+		tests := []struct {
+			name              string
+			initialRemainder  string
+			expectedPayment   int64
+			expectedRemainder string
+		}{
+			{
+				name:              "whole underlying unit that floors to zero payment is carried, not dropped",
+				initialRemainder:  "1.5",
+				expectedPayment:   0,
+				expectedRemainder: "1.500000000000000000",
+			},
+			{
+				name:              "carry is collected once it represents a whole payment unit",
+				initialRemainder:  "2.3",
+				expectedPayment:   1,
+				expectedRemainder: "0.300000000000000000",
+			},
+		}
+
+		for _, tc := range tests {
+			s.Run(tc.name, func() {
+				s.SetupTest()
+				vault := setup()
+				vault.AumFeeBips = 0
+
+				payment := "coarsepay"
+				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(payment, 1_000_000), s.adminAddr)
+				s.setVaultPaymentDenomWithNAV(vault, payment, sdk.NewInt64Coin(underlyingDenom, 2), 1)
+
+				vault.FeePeriodStart = pastTime.Unix()
+				vault.FeeRemainder = tc.initialRemainder
+
+				collected, err := s.k.AccrueAUMFeePayment(s.ctx, vault, underlying.Amount)
+				s.Require().NoError(err, "AccrueAUMFeePayment should not error for case %s", tc.name)
+				s.Require().Equal(sdk.NewInt64Coin(payment, tc.expectedPayment).String(), collected.String(),
+					"collected payment mismatch for case %s", tc.name)
+				s.Require().Equal(tc.expectedRemainder, vault.FeeRemainder,
+					"fee remainder should retain uncollected underlying for case %s", tc.name)
+			})
+		}
+	})
+
 	s.Run("CalculateVaultTotalAssets", func() {
 		s.SetupTest()
 		vault := setup()

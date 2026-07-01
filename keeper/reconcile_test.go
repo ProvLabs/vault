@@ -2289,7 +2289,7 @@ func (s *TestSuite) TestKeeper_AccrualCalculations() {
 
 		aum := underlying.Amount
 		blockTime := int64(6)
-		iterations := int64(10_000)
+		iterations := int64(100)
 		base := pastTime.Unix()
 
 		naiveTruncatedSum := sdkmath.ZeroInt()

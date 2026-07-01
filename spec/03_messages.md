@@ -279,7 +279,7 @@ Admin or Asset Manager. Pauses a vault, disabling swap-ins and swap-outs, and re
 
 By default the pause is **strict**: it reconciles outstanding interest and fees and values the vault first, and any failure (insufficient reserves to settle positive interest, or a broken TVV/NAV conversion) aborts the request and leaves the vault unpaused. The failed transaction is the operator's signal that the vault is in an unexpected state.
 
-Setting `force = true` makes the pause an **emergency control**: a reconcile or valuation failure is logged and tolerated rather than blocking the freeze. The frozen `PausedBalance` is the net TVV when the vault can be valued, or zero when the valuation itself is what failed, so it may be approximate. The tolerated error is recorded on `EventVaultPaused.forced_error`.
+Setting `force = true` makes the pause an **emergency control**: a reconcile or valuation failure is logged and tolerated rather than blocking the freeze. The frozen `PausedBalance` is the net TVV when the vault can be valued, or zero when the valuation itself is what failed, so it may be approximate. Persistence is also best-effort: the handler first writes the paused account with validation, and if that validation fails it falls back to writing without validation so an already-inconsistent vault can still be frozen. Every tolerated failure (reconcile, valuation, and persistence) is recorded on `EventVaultPaused.forced_error`.
 
 * **Request:** `MsgPauseVaultRequest { authority, vault_address, reason, force }`
 * **Response:** `MsgPauseVaultResponse {}`

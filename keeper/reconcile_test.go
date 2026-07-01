@@ -198,6 +198,84 @@ func (s *TestSuite) TestKeeper_ReconcileVault() {
 	}
 }
 
+func (s *TestSuite) TestKeeper_ReconcileVault_PersistsDustFeeRemainder() {
+	s.SetupTest()
+
+	shareDenom := "dust.persist.shares"
+	underlyingDenom := "underlying"
+	vaultAddress := types.GetVaultAddress(shareDenom)
+	testBlockTime := time.Date(2024, 3, 1, 0, 0, 0, 0, time.UTC)
+
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingDenom, 10_000_000_000), s.adminAddr)
+	vault := s.CreateVaultWithParams(shareDenom, underlyingDenom, underlyingDenom)
+	vault.AumFeeBips = 15
+	vault.CurrentInterestRate = types.ZeroInterestRate
+	vault.DesiredInterestRate = types.ZeroInterestRate
+	vault.PeriodStart = 0
+	vault.FeePeriodStart = testBlockTime.Add(-6 * time.Second).Unix()
+	vault.FeeRemainder = ""
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	s.FundMarker(shareDenom, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1_000_000_000)))
+	s.ctx = s.ctx.WithBlockTime(testBlockTime)
+
+	err := s.k.TestAccessor_reconcileVault(s.T(), s.ctx, vault)
+	s.Require().NoError(err, "reconcileVault should not error on a short dust-only accrual window")
+
+	persisted, err := s.k.GetVault(s.ctx, vaultAddress)
+	s.Require().NoError(err, "should read the vault back from the store after reconcile")
+
+	remainder, err := sdkmath.LegacyNewDecFromStr(persisted.FeeRemainder)
+	s.Require().NoError(err, "persisted fee remainder %q should parse", persisted.FeeRemainder)
+	s.Require().True(remainder.IsPositive() && remainder.LT(sdkmath.LegacyOneDec()),
+		"a dust-only accrual should persist a positive sub-unit fee remainder, got %s", persisted.FeeRemainder)
+	s.Require().True(persisted.OutstandingAumFee.IsZero(),
+		"dust below one whole unit should not be recorded as an outstanding fee, got %s", persisted.OutstandingAumFee)
+}
+
+func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts_PersistsDustFeeRemainder() {
+	s.SetupTest()
+
+	shareDenom := "dust.timeout.shares"
+	underlyingDenom := "underlying"
+	vaultAddress := types.GetVaultAddress(shareDenom)
+	testBlockTime := time.Date(2024, 3, 1, 0, 0, 0, 0, time.UTC)
+	feeStart := testBlockTime.Add(-6 * time.Second).Unix()
+
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingDenom, 10_000_000_000), s.adminAddr)
+	vault := s.CreateVaultWithParams(shareDenom, underlyingDenom, underlyingDenom)
+	s.Require().NoError(s.k.FeeTimeoutQueue.Dequeue(s.ctx, vault.FeePeriodTimeout, vaultAddress),
+		"clearing the bootstrap fee timeout should succeed")
+
+	vault.AumFeeBips = 15
+	vault.CurrentInterestRate = types.ZeroInterestRate
+	vault.DesiredInterestRate = types.ZeroInterestRate
+	vault.PeriodStart = 0
+	vault.FeePeriodStart = feeStart
+	vault.FeePeriodTimeout = feeStart
+	vault.FeeRemainder = ""
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	s.FundMarker(shareDenom, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1_000_000_000)))
+	s.Require().NoError(s.k.FeeTimeoutQueue.Enqueue(s.ctx, feeStart, vaultAddress),
+		"enqueueing a due fee timeout should succeed")
+
+	s.ctx = s.ctx.WithBlockTime(testBlockTime)
+
+	err := s.k.TestAccessor_handleVaultFeeTimeouts(s.T(), s.ctx)
+	s.Require().NoError(err, "handleVaultFeeTimeouts should not error on a short dust-only accrual window")
+
+	persisted, err := s.k.GetVault(s.ctx, vaultAddress)
+	s.Require().NoError(err, "should read the vault back from the store after the fee timeout runs")
+
+	remainder, err := sdkmath.LegacyNewDecFromStr(persisted.FeeRemainder)
+	s.Require().NoError(err, "persisted fee remainder %q should parse", persisted.FeeRemainder)
+	s.Require().True(remainder.IsPositive() && remainder.LT(sdkmath.LegacyOneDec()),
+		"the fee timeout path should persist a positive sub-unit fee remainder, got %s", persisted.FeeRemainder)
+	s.Require().True(persisted.OutstandingAumFee.IsZero(),
+		"dust below one whole unit should not be recorded as an outstanding fee, got %s", persisted.OutstandingAumFee)
+}
+
 func (s *TestSuite) TestKeeper_PerformVaultReconcile_CompositeWithOutstandingFee() {
 	shareDenom := "composite.shares"
 	underlyingDenom := "underlying"

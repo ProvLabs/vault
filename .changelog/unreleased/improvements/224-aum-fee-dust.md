@@ -1,0 +1,1 @@
+* Accumulate sub-unit AUM fee remainder across reconciliation periods so frequent, short accrual windows no longer discard protocol revenue to truncation [#224](https://github.com/provlabs/vault/issues/224).

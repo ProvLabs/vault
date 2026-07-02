@@ -198,6 +198,84 @@ func (s *TestSuite) TestKeeper_ReconcileVault() {
 	}
 }
 
+func (s *TestSuite) TestKeeper_ReconcileVault_PersistsDustFeeRemainder() {
+	s.SetupTest()
+
+	shareDenom := "dust.persist.shares"
+	underlyingDenom := "underlying"
+	vaultAddress := types.GetVaultAddress(shareDenom)
+	testBlockTime := time.Date(2024, 3, 1, 0, 0, 0, 0, time.UTC)
+
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingDenom, 10_000_000_000), s.adminAddr)
+	vault := s.CreateVaultWithParams(shareDenom, underlyingDenom, underlyingDenom)
+	vault.AumFeeBips = 15
+	vault.CurrentInterestRate = types.ZeroInterestRate
+	vault.DesiredInterestRate = types.ZeroInterestRate
+	vault.PeriodStart = 0
+	vault.FeePeriodStart = testBlockTime.Add(-6 * time.Second).Unix()
+	vault.FeeRemainder = ""
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	s.FundMarker(shareDenom, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1_000_000_000)))
+	s.ctx = s.ctx.WithBlockTime(testBlockTime)
+
+	err := s.k.TestAccessor_reconcileVault(s.T(), s.ctx, vault)
+	s.Require().NoError(err, "reconcileVault should not error on a short dust-only accrual window")
+
+	persisted, err := s.k.GetVault(s.ctx, vaultAddress)
+	s.Require().NoError(err, "should read the vault back from the store after reconcile")
+
+	remainder, err := sdkmath.LegacyNewDecFromStr(persisted.FeeRemainder)
+	s.Require().NoError(err, "persisted fee remainder %q should parse", persisted.FeeRemainder)
+	s.Require().True(remainder.IsPositive() && remainder.LT(sdkmath.LegacyOneDec()),
+		"a dust-only accrual should persist a positive sub-unit fee remainder, got %s", persisted.FeeRemainder)
+	s.Require().True(persisted.OutstandingAumFee.IsZero(),
+		"dust below one whole unit should not be recorded as an outstanding fee, got %s", persisted.OutstandingAumFee)
+}
+
+func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts_PersistsDustFeeRemainder() {
+	s.SetupTest()
+
+	shareDenom := "dust.timeout.shares"
+	underlyingDenom := "underlying"
+	vaultAddress := types.GetVaultAddress(shareDenom)
+	testBlockTime := time.Date(2024, 3, 1, 0, 0, 0, 0, time.UTC)
+	feeStart := testBlockTime.Add(-6 * time.Second).Unix()
+
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingDenom, 10_000_000_000), s.adminAddr)
+	vault := s.CreateVaultWithParams(shareDenom, underlyingDenom, underlyingDenom)
+	s.Require().NoError(s.k.FeeTimeoutQueue.Dequeue(s.ctx, vault.FeePeriodTimeout, vaultAddress),
+		"clearing the bootstrap fee timeout should succeed")
+
+	vault.AumFeeBips = 15
+	vault.CurrentInterestRate = types.ZeroInterestRate
+	vault.DesiredInterestRate = types.ZeroInterestRate
+	vault.PeriodStart = 0
+	vault.FeePeriodStart = feeStart
+	vault.FeePeriodTimeout = feeStart
+	vault.FeeRemainder = ""
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	s.FundMarker(shareDenom, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1_000_000_000)))
+	s.Require().NoError(s.k.FeeTimeoutQueue.Enqueue(s.ctx, feeStart, vaultAddress),
+		"enqueueing a due fee timeout should succeed")
+
+	s.ctx = s.ctx.WithBlockTime(testBlockTime)
+
+	err := s.k.TestAccessor_handleVaultFeeTimeouts(s.T(), s.ctx)
+	s.Require().NoError(err, "handleVaultFeeTimeouts should not error on a short dust-only accrual window")
+
+	persisted, err := s.k.GetVault(s.ctx, vaultAddress)
+	s.Require().NoError(err, "should read the vault back from the store after the fee timeout runs")
+
+	remainder, err := sdkmath.LegacyNewDecFromStr(persisted.FeeRemainder)
+	s.Require().NoError(err, "persisted fee remainder %q should parse", persisted.FeeRemainder)
+	s.Require().True(remainder.IsPositive() && remainder.LT(sdkmath.LegacyOneDec()),
+		"the fee timeout path should persist a positive sub-unit fee remainder, got %s", persisted.FeeRemainder)
+	s.Require().True(persisted.OutstandingAumFee.IsZero(),
+		"dust below one whole unit should not be recorded as an outstanding fee, got %s", persisted.OutstandingAumFee)
+}
+
 func (s *TestSuite) TestKeeper_PerformVaultReconcile_CompositeWithOutstandingFee() {
 	shareDenom := "composite.shares"
 	underlyingDenom := "underlying"
@@ -401,13 +479,16 @@ func (s *TestSuite) TestKeeper_PerformVaultReconcile_CompositeWithOutstandingFee
 
 		// Accruals on Gross (1b)
 		// Interest = 41,952,013
-		// Fee = 256,919
+		// Fee accrued = 256,919 underlying, but with NAV 1 payment = 2 underlying only
+		// floor(256,919 / 2) = 128,459 payment units are collectible, worth 256,918 underlying.
+		// The leftover 1 underlying floors to zero payment units and carries forward, so it must
+		// not reduce share NAV until it becomes collectible.
 		// Debt (Net of NAV) = 50,000,000 * 2 = 100,000,000
-		// Net Valuation = (1,000,000,000 + 41,952,013) - 256,919 - 100,000,000 = 941,695,094
+		// Net Valuation = (1,000,000,000 + 41,952,013) - 256,918 - 100,000,000 = 941,695,095
 
 		val, err := s.k.CalculateVaultTotalAssets(s.ctx, vault, sdk.NewInt64Coin(underlyingDenom, 1_000_000_000))
 		s.Require().NoError(err, "CalculateVaultTotalAssets should not error for case: Non-1:1 NAV Composite Conversion")
-		s.Require().Equal(sdkmath.NewInt(941_695_094), val, "valuation should correctly convert secondary debt via NAV")
+		s.Require().Equal(sdkmath.NewInt(941_695_095), val, "valuation should exclude uncollectible fee dust under coarse payment denom")
 	})
 }
 
@@ -2338,10 +2419,11 @@ func (s *TestSuite) TestKeeper_AccrualCalculations() {
 		vault := setup()
 
 		tests := []struct {
-			name     string
-			start    int64
-			assets   sdkmath.Int
-			expected sdkmath.Int
+			name      string
+			start     int64
+			assets    sdkmath.Int
+			remainder string
+			expected  sdkmath.Int
 		}{
 			{
 				name:     "no fee period start, should return zero fee",
@@ -2361,11 +2443,26 @@ func (s *TestSuite) TestKeeper_AccrualCalculations() {
 				assets:   sdkmath.ZeroInt(),
 				expected: sdkmath.ZeroInt(),
 			},
+			{
+				name:      "carried remainder crosses a whole unit, should recognize the extra unit",
+				start:     pastTime.Unix(),
+				assets:    underlying.Amount,
+				remainder: "0.7",
+				expected:  sdkmath.NewInt(246_576),
+			},
+			{
+				name:      "carried remainder stays sub-unit, should not add a whole unit",
+				start:     pastTime.Unix(),
+				assets:    underlying.Amount,
+				remainder: "0.5",
+				expected:  sdkmath.NewInt(246_575),
+			},
 		}
 
 		for _, tc := range tests {
 			s.Run(tc.name, func() {
 				vault.FeePeriodStart = tc.start
+				vault.FeeRemainder = tc.remainder
 				amt, err := s.k.CalculateAccruedAUMFee(s.ctx, *vault, tc.assets)
 				s.Require().NoError(err, "accrued AUM fee calculation failed for case: %s", tc.name)
 				s.Require().Equal(tc.expected, amt, "AUM fee mismatch for case: %s", tc.name)
@@ -2419,7 +2516,7 @@ func (s *TestSuite) TestKeeper_AccrualCalculations() {
 		}
 	})
 
-	s.Run("CalculateAccruedAUMFeePayment", func() {
+	s.Run("AccrueAUMFeePayment", func() {
 		s.SetupTest()
 		vault := setup()
 
@@ -2455,6 +2552,7 @@ func (s *TestSuite) TestKeeper_AccrualCalculations() {
 			s.Run(tc.name, func() {
 				vault.FeePeriodStart = tc.start
 				vault.PaymentDenom = tc.paymentDenom
+				vault.FeeRemainder = ""
 				s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 				if tc.setupNav {
@@ -2464,9 +2562,94 @@ func (s *TestSuite) TestKeeper_AccrualCalculations() {
 					s.setVaultNAV(vault, tc.paymentDenom, sdk.NewInt64Coin(underlyingDenom, 1), 2)
 				}
 
-				amt, err := s.k.CalculateAccruedAUMFeePayment(s.ctx, *vault, underlying.Amount)
+				amt, err := s.k.AccrueAUMFeePayment(s.ctx, vault, underlying.Amount)
 				s.Require().NoError(err, "accrued AUM fee payment calculation failed for case: %s", tc.name)
 				s.Require().Equal(tc.expected, amt, "accrued AUM fee payment coin mismatch for case: %s", tc.name)
+			})
+		}
+	})
+
+	s.Run("AccrueAUMFeePayment dust accumulation preserves revenue across short windows", func() {
+		s.SetupTest()
+		vault := setup()
+		vault.AumFeeBips = 15
+
+		aum := underlying.Amount
+		blockTime := int64(6)
+		iterations := int64(100)
+		base := pastTime.Unix()
+
+		naiveTruncatedSum := sdkmath.ZeroInt()
+		accumulatedSum := sdkmath.ZeroInt()
+		for i := range iterations {
+			naive, err := interest.CalculateAUMFee(aum, vault.AumFeeBips, blockTime)
+			s.Require().NoError(err, "naive per-window fee calculation failed at iteration %d", i)
+			naiveTruncatedSum = naiveTruncatedSum.Add(naive)
+
+			vault.FeePeriodStart = base + i*blockTime
+			s.ctx = s.ctx.WithBlockTime(time.Unix(base+(i+1)*blockTime, 0).UTC())
+			collected, err := s.k.AccrueAUMFeePayment(s.ctx, vault, aum)
+			s.Require().NoError(err, "AccrueAUMFeePayment failed at iteration %d", i)
+			accumulatedSum = accumulatedSum.Add(collected.Amount)
+		}
+
+		perWindowDec, err := interest.CalculateAUMFeeDec(aum, vault.AumFeeBips, blockTime)
+		s.Require().NoError(err, "per-window decimal fee calculation failed")
+		expectedWhole := perWindowDec.MulInt64(iterations).TruncateInt()
+
+		s.Require().True(naiveTruncatedSum.IsZero(),
+			"per-window integer truncation should collect nothing over short windows, got %s", naiveTruncatedSum)
+		s.Require().True(expectedWhole.IsPositive(),
+			"the accumulated fee should recover a positive whole amount, got %s", expectedWhole)
+		s.Require().Equal(expectedWhole, accumulatedSum,
+			"accumulated fee should equal the truncated cumulative decimal fee (recovered=%s, expected=%s)", accumulatedSum, expectedWhole)
+
+		remainder, err := sdkmath.LegacyNewDecFromStr(vault.FeeRemainder)
+		s.Require().NoError(err, "final fee remainder %q should be parseable", vault.FeeRemainder)
+		s.Require().True(!remainder.IsNegative() && remainder.LT(sdkmath.LegacyOneDec()),
+			"fee remainder must be a fraction in [0,1), got %s", remainder)
+	})
+
+	s.Run("AccrueAUMFeePayment carries uncollected underlying under a coarse payment denom", func() {
+		tests := []struct {
+			name              string
+			initialRemainder  string
+			expectedPayment   int64
+			expectedRemainder string
+		}{
+			{
+				name:              "whole underlying unit that floors to zero payment is carried, not dropped",
+				initialRemainder:  "1.5",
+				expectedPayment:   0,
+				expectedRemainder: "1.500000000000000000",
+			},
+			{
+				name:              "carry is collected once it represents a whole payment unit",
+				initialRemainder:  "2.3",
+				expectedPayment:   1,
+				expectedRemainder: "0.300000000000000000",
+			},
+		}
+
+		for _, tc := range tests {
+			s.Run(tc.name, func() {
+				s.SetupTest()
+				vault := setup()
+				vault.AumFeeBips = 0
+
+				payment := "coarsepay"
+				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(payment, 1_000_000), s.adminAddr)
+				s.setVaultPaymentDenomWithNAV(vault, payment, sdk.NewInt64Coin(underlyingDenom, 2), 1)
+
+				vault.FeePeriodStart = pastTime.Unix()
+				vault.FeeRemainder = tc.initialRemainder
+
+				collected, err := s.k.AccrueAUMFeePayment(s.ctx, vault, underlying.Amount)
+				s.Require().NoError(err, "AccrueAUMFeePayment should not error for case %s", tc.name)
+				s.Require().Equal(sdk.NewInt64Coin(payment, tc.expectedPayment).String(), collected.String(),
+					"collected payment mismatch for case %s", tc.name)
+				s.Require().Equal(tc.expectedRemainder, vault.FeeRemainder,
+					"fee remainder should retain uncollected underlying for case %s", tc.name)
 			})
 		}
 	})

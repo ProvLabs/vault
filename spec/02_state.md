@@ -34,7 +34,7 @@ Each vault is an `x/auth` account implementing `VaultAccountI`. The canonical re
 - **Total supply-of-record:** `total_shares` (authoritative across chains; includes locally and externally held shares)  
 - **Bridging controls:** `bridge_address` (the sole authorized external address) and `bridge_enabled` (feature gate)
 - **Asset Management:** optional `asset_manager` address with delegated authority; it is also the sole authority for P2P settlement (`AcceptAsset`/`RejectAsset`).
-- **AUM Fee State:** `fee_period_start`, `fee_period_timeout`, and `outstanding_aum_fee`.
+- **AUM Fee State:** `fee_period_start`, `fee_period_timeout`, `outstanding_aum_fee`, and `fee_remainder` (accrued-but-uncollected fee, in underlying units, carried across periods so truncation does not discard revenue; it can exceed one whole underlying unit when `payment_denom` is coarser than `underlying_asset`).
 - **NAV Authority:** optional `nav_authority` address authorized to mutate the vault's internal NAV table via `MsgUpdateVaultNAV`; the admin acts as NAV authority when unset.
 
 `VaultAccount` enforces invariants (e.g., payment denom cannot equal underlying, rate bounds, etc.) and provides helpers like `AcceptedDenoms()` and `ValidateAcceptedDenom`. :contentReference[oaicite:1]{index=1}

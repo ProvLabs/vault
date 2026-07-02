@@ -77,6 +77,100 @@ func (s *TestSuite) TestKeeper_MigrateVaultAccountPaymentDenomDefaults() {
 	s.Require().Equal("uylds.fcc", gotVaultA2.PaymentDenom, "vault A PaymentDenom should remain set to UnderlyingAsset after second migration run")
 }
 
+func (s *TestSuite) TestKeeper_MigrateVaultFeeRemainderDefaults() {
+	createVault := func(shareDenom, denom, feeRemainder string) sdk.AccAddress {
+		addr := types.GetVaultAddress(shareDenom)
+		vault := &types.VaultAccount{
+			BaseAccount:         authtypes.NewBaseAccountWithAddress(addr),
+			Admin:               s.adminAddr.String(),
+			TotalShares:         sdk.NewCoin(shareDenom, sdkmath.ZeroInt()),
+			UnderlyingAsset:     denom,
+			PaymentDenom:        denom,
+			CurrentInterestRate: types.ZeroInterestRate,
+			DesiredInterestRate: types.ZeroInterestRate,
+			FeeRemainder:        feeRemainder,
+		}
+		acct := s.simApp.AccountKeeper.NewAccount(s.ctx, vault)
+		vaultAcct, ok := acct.(*types.VaultAccount)
+		s.Require().True(ok, "new account should return a *types.VaultAccount for a VaultAccount prototype")
+		s.simApp.AccountKeeper.SetAccount(s.ctx, vaultAcct)
+		return addr
+	}
+
+	getVault := func(addr sdk.AccAddress) *types.VaultAccount {
+		acc := s.simApp.AccountKeeper.GetAccount(s.ctx, addr)
+		s.Require().NotNil(acc, "vault account %s should exist", addr)
+		v, ok := acc.(*types.VaultAccount)
+		s.Require().True(ok, "account %s should be a VaultAccount", addr)
+		return v
+	}
+
+	zero := sdkmath.LegacyZeroDec().String()
+
+	tests := []struct {
+		name              string
+		shareDenom        string
+		denom             string
+		initialRemainder  string
+		expectedRemainder string
+	}{
+		{
+			name:              "empty remainder is normalized to explicit zero",
+			shareDenom:        "feeremshareEmpty",
+			denom:             "uatom",
+			initialRemainder:  "",
+			expectedRemainder: zero,
+		},
+		{
+			name:              "existing remainder is preserved",
+			shareDenom:        "feeremshareSet",
+			denom:             "uusdc",
+			initialRemainder:  "0.250000000000000000",
+			expectedRemainder: "0.250000000000000000",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			addr := createVault(tc.shareDenom, tc.denom, tc.initialRemainder)
+
+			err := keeper.NewMigrator(s.simApp.VaultKeeper).Migrate1to2(s.ctx)
+			s.Require().NoError(err, "migration should not return an error for case %s", tc.name)
+
+			s.Require().Equal(tc.expectedRemainder, getVault(addr).FeeRemainder,
+				"fee remainder mismatch after migration for case %s", tc.name)
+		})
+	}
+
+	s.Run("non-vault accounts are left untouched", func() {
+		s.SetupTest()
+		nonVaultAddr := sdk.AccAddress([]byte("non-vault-account-addr____"))
+		s.simApp.AccountKeeper.SetAccount(s.ctx, s.simApp.AccountKeeper.NewAccountWithAddress(s.ctx, nonVaultAddr))
+
+		err := keeper.NewMigrator(s.simApp.VaultKeeper).Migrate1to2(s.ctx)
+		s.Require().NoError(err, "migration should not error when a non-vault account exists")
+
+		got := s.simApp.AccountKeeper.GetAccount(s.ctx, nonVaultAddr)
+		s.Require().NotNil(got, "non-vault account should still exist after migration")
+		_, ok := got.(*types.VaultAccount)
+		s.Require().False(ok, "non-vault account should not be converted to a VaultAccount during migration")
+	})
+
+	s.Run("migration is idempotent across consecutive runs", func() {
+		s.SetupTest()
+		emptyAddr := createVault("feeremshareIdempotentEmpty", "uatom", "")
+		existingAddr := createVault("feeremshareIdempotentSet", "uusdc", "0.250000000000000000")
+
+		migrator := keeper.NewMigrator(s.simApp.VaultKeeper)
+		s.Require().NoError(migrator.Migrate1to2(s.ctx), "first migration run should not error")
+		s.Require().NoError(migrator.Migrate1to2(s.ctx), "second migration run should be idempotent and not error")
+
+		s.Require().Equal(zero, getVault(emptyAddr).FeeRemainder, "normalized fee remainder should remain zero after a second migration run")
+		s.Require().Equal("0.250000000000000000", getVault(existingAddr).FeeRemainder, "existing fee remainder should remain unchanged after a second migration run")
+	})
+}
+
 // TestKeeper_MigrateInternalNAVSeedFromMarker exercises the migration that seeds
 // the Internal NAV table from Marker NAVs for vaults whose payment_denom differs
 // from underlying_asset. Each subtest sets up a fresh fleet so cross-test state

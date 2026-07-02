@@ -295,6 +295,19 @@ func (v VaultAccount) Validate() error {
 		return fmt.Errorf("outstanding AUM fee denom %s does not match payment denom %s", v.OutstandingAumFee.Denom, v.PaymentDenom)
 	}
 
+	if v.FeeRemainder != "" {
+		remainder, err := sdkmath.LegacyNewDecFromStr(v.FeeRemainder)
+		if err != nil {
+			return fmt.Errorf("invalid fee remainder: %s", v.FeeRemainder)
+		}
+		if remainder.IsNegative() {
+			return fmt.Errorf("fee remainder cannot be negative: %s", v.FeeRemainder)
+		}
+		if v.PaymentDenom == v.UnderlyingAsset && !remainder.TruncateInt().IsZero() {
+			return fmt.Errorf("fee remainder must carry less than one whole unit when payment denom equals underlying asset: %s", v.FeeRemainder)
+		}
+	}
+
 	if err := ValidateSwapLimits(v.MinSwapInValue, v.MaxSwapInValue); err != nil {
 		return fmt.Errorf("failed to validate swap-in limits: %w", err)
 	}

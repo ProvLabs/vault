@@ -59,6 +59,36 @@ func (k Keeper) MigrateVaultAccountPaymentDenomDefaults(ctx sdk.Context) error {
 	return nil
 }
 
+// migrateVaultFeeRemainderDefaults normalizes the FeeRemainder field on legacy
+// VaultAccount state created before the field existed.
+//
+// The AUM fee dust accumulator (see https://github.com/ProvLabs/vault/issues/224)
+// carries the sub-unit fractional fee in FeeRemainder across reconciliation periods.
+// Vaults persisted before this field existed decode it as an empty string. Runtime
+// code already treats empty as zero, so this migration is a cosmetic normalization
+// that gives every vault an explicit, parseable value.
+//
+// It runs as part of the Migrator.Migrate1to2 handler and is idempotent; vaults
+// that already carry a value are left unchanged.
+func (k Keeper) migrateVaultFeeRemainderDefaults(ctx sdk.Context) error {
+	zero := math.LegacyZeroDec().String()
+
+	for _, acc := range k.AuthKeeper.GetAllAccounts(ctx) {
+		v, ok := acc.(*types.VaultAccount)
+		if !ok {
+			continue
+		}
+		if v.FeeRemainder == "" {
+			v.FeeRemainder = zero
+			if err := k.SetVaultAccount(ctx, v); err != nil {
+				return fmt.Errorf("failed to update vault account %s during fee remainder migration: %w", v.Address, err)
+			}
+		}
+	}
+
+	return nil
+}
+
 // migrateInternalNAVSeedFromMarker seeds the Internal NAV table for every vault
 // that will need an Internal NAV entry once the pricing engine switches to
 // Internal-NAV-only reads.

@@ -79,40 +79,54 @@ func CalculateInterestEarned(principal sdk.Coin, rate string, periodSeconds int6
 	return interestAmountDec.TruncateInt(), nil
 }
 
+// CalculateAUMFeeDec computes the technology fee based on the vault's AUM and configured
+// basis points, returning the precise decimal result without truncation.
+//
+// Formula:
+//
+//	Fee = (AUM * (bips / 10000) * duration) / 31536000 (SecondsPerYear)
+//
+// Callers that collect the fee should carry the fractional part across periods (see the
+// vault's fee_remainder) so repeated truncation does not discard protocol revenue.
+func CalculateAUMFeeDec(aum sdkmath.Int, bips uint32, duration int64) (fee sdkmath.LegacyDec, err error) {
+	defer func() {
+		if rec := recover(); rec != nil {
+			fee = sdkmath.LegacyDec{}
+			err = fmt.Errorf("aum fee calculation overflow (aum=%s, bips=%d, duration=%d): %v", aum, bips, duration, rec)
+		}
+	}()
+
+	if aum.IsNegative() {
+		return sdkmath.LegacyDec{}, errors.New("aum cannot be negative")
+	}
+	if duration < 0 {
+		return sdkmath.LegacyDec{}, errors.New("duration cannot be negative")
+	}
+	if duration == 0 || aum.IsZero() || bips == 0 {
+		return sdkmath.LegacyZeroDec(), nil
+	}
+
+	rate := sdkmath.LegacyNewDec(int64(bips)).Quo(sdkmath.LegacyNewDec(10_000))
+	aumDec := sdkmath.LegacyNewDecFromInt(aum)
+	durationDec := sdkmath.LegacyNewDec(duration)
+	yearDec := sdkmath.LegacyNewDec(SecondsPerYear)
+
+	return aumDec.Mul(rate).Mul(durationDec).Quo(yearDec), nil
+}
+
 // CalculateAUMFee computes the technology fee based on the vault's AUM and configured basis points.
 //
 // Formula:
 //
 //	Fee = (AUM * (bips / 10000) * duration) / 31536000 (SecondsPerYear)
 //
-// Returns the fee as a truncated sdkmath.Int.
-func CalculateAUMFee(aum sdkmath.Int, bips uint32, duration int64) (fee sdkmath.Int, err error) {
-	defer func() {
-		if rec := recover(); rec != nil {
-			fee = sdkmath.Int{}
-			err = fmt.Errorf("aum fee calculation overflow (aum=%s, bips=%d, duration=%d): %v", aum, bips, duration, rec)
-		}
-	}()
-
-	if aum.IsNegative() {
-		return sdkmath.Int{}, errors.New("aum cannot be negative")
+// Returns the fee as a truncated sdkmath.Int. Use CalculateAUMFeeDec when the fractional
+// part must be preserved across reconciliation periods.
+func CalculateAUMFee(aum sdkmath.Int, bips uint32, duration int64) (sdkmath.Int, error) {
+	feeDec, err := CalculateAUMFeeDec(aum, bips, duration)
+	if err != nil {
+		return sdkmath.Int{}, err
 	}
-	if duration < 0 {
-		return sdkmath.Int{}, errors.New("duration cannot be negative")
-	}
-	if duration == 0 || aum.IsZero() || bips == 0 {
-		return sdkmath.ZeroInt(), nil
-	}
-
-	rate := sdkmath.LegacyNewDec(int64(bips)).Quo(sdkmath.LegacyNewDec(10_000))
-
-	// Fee = (AUM * rate * duration) / SecondsPerYear
-	aumDec := sdkmath.LegacyNewDecFromInt(aum)
-
-	durationDec := sdkmath.LegacyNewDec(duration)
-	yearDec := sdkmath.LegacyNewDec(SecondsPerYear)
-
-	feeDec := aumDec.Mul(rate).Mul(durationDec).Quo(yearDec)
 	return feeDec.TruncateInt(), nil
 }
 

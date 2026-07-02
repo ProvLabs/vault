@@ -534,10 +534,7 @@ func (k Keeper) CalculateVaultTotalAssets(ctx sdk.Context, vault *types.VaultAcc
 
 // handleVaultInterestTimeouts checks vaults with expired interest periods and reconciles or disables them.
 // It uses a safe "collect-then-mutate" pattern to comply with the SDK iterator contract.
-//
-// At most limit due entries are visited per invocation so block time stays bounded regardless
-// of backlog size; entries beyond the budget remain due and are handled in subsequent blocks.
-// Paused vaults count against the budget but stay queued until they are unpaused.
+// At most limit due entries are visited per block; the remainder stays queued for later blocks.
 func (k Keeper) handleVaultInterestTimeouts(ctx sdk.Context, limit int) error {
 	now := ctx.BlockTime().Unix()
 
@@ -652,11 +649,9 @@ func (k Keeper) tryGetVault(ctx sdk.Context, addr sdk.AccAddress) (*types.VaultA
 // handleReconciledVaults processes vaults from the payout verification queue using a safe
 // "collect-then-mutate" pattern.
 //
-// It first collects keys for non-paused vaults, visiting at most limit set entries per
-// invocation so block time stays bounded; entries beyond the budget stay in the set for
-// subsequent blocks and paused vaults count against the budget but remain in the set.
-// It then iterates the collected keys, removing each from the set before partitioning
-// them into payable vs depleted groups.
+// It first collects keys for non-paused vaults, visiting at most limit entries per block and
+// leaving the remainder in the set for later blocks. It then iterates the collected keys,
+// removing each from the set before partitioning them into payable vs depleted groups.
 func (k Keeper) handleReconciledVaults(ctx sdk.Context, limit int) error {
 	var keysToProcess []sdk.AccAddress
 	var vaultsToProcess []*types.VaultAccount
@@ -738,10 +733,7 @@ func (k Keeper) handleDepletedVaults(ctx sdk.Context, failedPayouts []*types.Vau
 
 // handleVaultFeeTimeouts checks vaults with expired fee periods and reconciles them.
 // It uses a safe "collect-then-mutate" pattern to comply with the SDK iterator contract.
-//
-// At most limit due entries are visited per invocation so block time stays bounded regardless
-// of backlog size; entries beyond the budget remain due and are handled in subsequent blocks.
-// Paused vaults count against the budget but stay queued until they are unpaused.
+// At most limit due entries are visited per block; the remainder stays queued for later blocks.
 func (k Keeper) handleVaultFeeTimeouts(ctx sdk.Context, limit int) error {
 	now := ctx.BlockTime().Unix()
 

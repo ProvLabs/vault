@@ -8,27 +8,22 @@ import (
 
 const (
 	// MaxSwapOutBatchSize is the maximum number of pending swap-out queue entries
-	// to visit in a single EndBlocker invocation. Every visited entry counts against
-	// the budget, including entries for paused vaults (which are dequeued and refunded
-	// rather than processed), so block time stays bounded regardless of queue depth or
-	// composition. This is a temporary value and we will need to do more analysis on a
-	// proper batch size. See https://github.com/ProvLabs/vault/issues/75.
+	// visited per EndBlocker. Entries for paused vaults count against the budget
+	// and are dequeued and refunded. This is a temporary value and we will need to
+	// do more analysis on a proper batch size.
+	// See https://github.com/ProvLabs/vault/issues/75.
 	MaxSwapOutBatchSize = 100
 
-	// MaxInterestTimeoutsPerBlock is the maximum number of PayoutTimeoutQueue entries
-	// to visit in a single BeginBlocker invocation. Entries beyond the budget remain
-	// due and are picked up in subsequent blocks, keeping interest reconciliation cost
-	// per block bounded regardless of how many vaults time out at once.
+	// MaxInterestTimeoutsPerBlock is the maximum number of PayoutTimeoutQueue
+	// entries visited per BeginBlocker.
 	MaxInterestTimeoutsPerBlock = 100
 
-	// MaxFeeTimeoutsPerBlock is the maximum number of FeeTimeoutQueue entries to visit
-	// in a single BeginBlocker invocation. Entries beyond the budget remain due and are
-	// picked up in subsequent blocks, keeping AUM fee collection cost per block bounded.
+	// MaxFeeTimeoutsPerBlock is the maximum number of FeeTimeoutQueue entries
+	// visited per BeginBlocker.
 	MaxFeeTimeoutsPerBlock = 100
 
 	// MaxPayoutVerificationsPerBlock is the maximum number of PayoutVerificationSet
-	// entries to visit in a single EndBlocker invocation. Entries beyond the budget
-	// stay in the set and are verified in subsequent blocks.
+	// entries visited per EndBlocker.
 	MaxPayoutVerificationsPerBlock = 100
 )
 

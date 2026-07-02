@@ -16,10 +16,9 @@ import (
 // processPendingSwapOuts processes the queue of pending swap-out requests. Called from the EndBlocker,
 // it iterates through requests due for payout at the current block time. It uses a safe "collect-then-mutate"
 // pattern to comply with the SDK iterator contract. It first collects due requests up to the provided `batchSize`,
-// then passes them to `processSwapOutJobs` for execution. Every visited entry counts against the batch budget,
-// including entries for paused vaults, so a queue front-loaded with unprocessable entries cannot extend the
-// per-block iteration cost. Critical, unrecoverable errors during job processing will cause the associated
-// vault to be automatically paused.
+// counting every visited entry (including ones for paused vaults) against the budget, then passes them to
+// `processSwapOutJobs` for execution. Critical, unrecoverable errors during job processing will cause the
+// associated vault to be automatically paused.
 func (k *Keeper) processPendingSwapOuts(ctx sdk.Context, batchSize int) error {
 	now := ctx.BlockTime().Unix()
 	var jobsToProcess []types.PayoutJob
@@ -46,8 +45,7 @@ func (k *Keeper) processPendingSwapOuts(ctx sdk.Context, batchSize int) error {
 // processSwapOutJobs iterates pending swap-out jobs collected for this block and executes them.
 //
 // The processing strategy involves:
-//  1. Verifying the vault exists; jobs for paused vaults are dequeued and refunded so they
-//     cannot permanently occupy the front of the queue and starve processable requests.
+//  1. Verifying the vault exists; jobs for paused vaults are dequeued and refunded.
 //  2. Dequeuing the job on the main context immediately to ensure it is only attempted once,
 //     preventing infinite retry loops if a failure occurs during processing or refund.
 //  3. Executing the withdrawal logic (reconciliation, payout, and burning) within a single
@@ -116,16 +114,16 @@ func (k *Keeper) processSwapOutJobs(ctx sdk.Context, jobsToProcess []types.Payou
 	}
 }
 
-// refundPausedVaultSwapOut dequeues a due swap-out job whose vault is paused and returns the
-// escrowed shares to the owner. Leaving these jobs queued would let them camp at the front of
-// the PendingSwapOutQueue (expedited entries are keyed at timestamp zero) and be re-visited
-// every block, consuming the batch budget and starving processable requests behind them.
-// The vault is already paused, so a critically failed refund is only logged; the job is not
-// retried because it was dequeued first, matching the attempt-once strategy of regular jobs.
+// refundPausedVaultSwapOut atomically dequeues a due swap-out job for a paused vault and
+// refunds the escrowed shares, so paused entries cannot camp at the front of the queue.
+// On any failure the cache context is discarded, keeping the request queued as the record
+// of who is owed shares; it retries on a later block within the batch budget.
 func (k *Keeper) refundPausedVaultSwapOut(ctx sdk.Context, j types.PayoutJob) {
-	if err := k.PendingSwapOutQueue.Dequeue(ctx, j.Timestamp, j.VaultAddr, j.ID); err != nil {
+	cacheCtx, write := ctx.CacheContext()
+
+	if err := k.PendingSwapOutQueue.Dequeue(cacheCtx, j.Timestamp, j.VaultAddr, j.ID); err != nil {
 		k.getLogger(ctx).Error(
-			"CRITICAL: failed to dequeue withdrawal request for paused vault",
+			"failed to dequeue withdrawal request for paused vault, leaving queued",
 			"request_id", j.ID,
 			"vault_address", j.VaultAddr.String(),
 			"error", err,
@@ -133,14 +131,17 @@ func (k *Keeper) refundPausedVaultSwapOut(ctx sdk.Context, j types.PayoutJob) {
 		return
 	}
 
-	if err := k.refundWithdrawal(ctx, j.ID, j.Req, types.RefundReasonVaultPaused); err != nil {
+	if err := k.refundWithdrawal(cacheCtx, j.ID, j.Req, types.RefundReasonVaultPaused); err != nil {
 		k.getLogger(ctx).Error(
-			"CRITICAL: failed to refund withdrawal request for paused vault",
+			"failed to refund withdrawal request for paused vault, leaving queued",
 			"request_id", j.ID,
 			"vault_address", j.VaultAddr.String(),
 			"error", err,
 		)
+		return
 	}
+
+	write()
 }
 
 // processSingleWithdrawal executes a pending swap-out. It first reconciles the vault (interest and AUM fees), then converts the user's

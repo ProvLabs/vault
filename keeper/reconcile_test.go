@@ -2718,41 +2718,44 @@ func (s *TestSuite) TestReconcileVault_BootstrapFeePeriod() {
 	s.Require().Equal(testBlockTime.Unix(), v.FeePeriodStart, "FeePeriodStart should be set to current block time")
 }
 
+// createVaultWithDueInterestTimeout creates a funded vault with a due PayoutTimeoutQueue
+// entry at dueTime, optionally paused, for exercising the per-block visit budget.
+func (s *TestSuite) createVaultWithDueInterestTimeout(info VaultInfo, dueTime int64, paused bool) {
+	s.requireAddFinalizeAndActivateMarker(info.underlying, s.adminAddr)
+	_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+		Admin:           s.adminAddr.String(),
+		ShareDenom:      info.shareDenom,
+		UnderlyingAsset: info.underlying.Denom,
+	})
+	s.Require().NoError(err, "CreateVault should not error for share denom %s", info.shareDenom)
+
+	vault, err := s.k.GetVault(s.ctx, info.vaultAddr)
+	s.Require().NoError(err, "GetVault should not error for vault %s", info.vaultAddr)
+	vault.CurrentInterestRate = "0.1"
+	vault.DesiredInterestRate = "0.1"
+	vault.PeriodStart = dueTime
+	vault.PeriodTimeout = dueTime
+	vault.Paused = paused
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	s.Require().NoError(
+		FundAccount(s.ctx, s.simApp.BankKeeper, info.vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(info.underlying.Denom, 1_000_000))),
+		"funding reserves should not error for vault %s", info.vaultAddr,
+	)
+	s.Require().NoError(
+		FundAccount(s.ctx, s.simApp.BankKeeper, markertypes.MustGetMarkerAddress(info.shareDenom), sdk.NewCoins(info.underlying)),
+		"funding principal should not error for marker %s", info.shareDenom,
+	)
+	s.Require().NoError(
+		s.k.PayoutTimeoutQueue.Enqueue(s.ctx, dueTime, info.vaultAddr),
+		"enqueuing due payout timeout should not error for vault %s", info.vaultAddr,
+	)
+}
+
 func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts_PerBlockVisitBudget() {
 	testBlockTime := time.Now().UTC()
 	dueTime := testBlockTime.Add(-1 * time.Hour).Unix()
 	infos := []VaultInfo{NewVaultInfo(1), NewVaultInfo(2), NewVaultInfo(3)}
-
-	enqueueDueInterestTimeout := func(info VaultInfo) {
-		s.requireAddFinalizeAndActivateMarker(info.underlying, s.adminAddr)
-		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-			Admin:           s.adminAddr.String(),
-			ShareDenom:      info.shareDenom,
-			UnderlyingAsset: info.underlying.Denom,
-		})
-		s.Require().NoError(err, "CreateVault should not error for share denom %s", info.shareDenom)
-
-		vault, err := s.k.GetVault(s.ctx, info.vaultAddr)
-		s.Require().NoError(err, "GetVault should not error for vault %s", info.vaultAddr)
-		vault.CurrentInterestRate = "0.1"
-		vault.DesiredInterestRate = "0.1"
-		vault.PeriodStart = dueTime
-		vault.PeriodTimeout = dueTime
-		s.k.AuthKeeper.SetAccount(s.ctx, vault)
-
-		s.Require().NoError(
-			FundAccount(s.ctx, s.simApp.BankKeeper, info.vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(info.underlying.Denom, 1_000_000))),
-			"funding reserves should not error for vault %s", info.vaultAddr,
-		)
-		s.Require().NoError(
-			FundAccount(s.ctx, s.simApp.BankKeeper, markertypes.MustGetMarkerAddress(info.shareDenom), sdk.NewCoins(info.underlying)),
-			"funding principal should not error for marker %s", info.shareDenom,
-		)
-		s.Require().NoError(
-			s.k.PayoutTimeoutQueue.Enqueue(s.ctx, dueTime, info.vaultAddr),
-			"enqueuing due payout timeout should not error for vault %s", info.vaultAddr,
-		)
-	}
 
 	tests := []struct {
 		name                string
@@ -2781,7 +2784,7 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts_PerBlockVisitBudget()
 			s.SetupTest()
 			s.ctx = s.ctx.WithBlockTime(testBlockTime)
 			for _, info := range infos {
-				enqueueDueInterestTimeout(info)
+				s.createVaultWithDueInterestTimeout(info, dueTime, false)
 			}
 
 			for block, expectedDue := range tc.expectedDuePerBlock {
@@ -2792,6 +2795,49 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts_PerBlockVisitBudget()
 					"due interest timeout backlog mismatch after pass %d with limit %d", block+1, tc.limit,
 				)
 			}
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts_PausedVaultsConsumeVisitBudget() {
+	testBlockTime := time.Now().UTC()
+	pausedDueTime := testBlockTime.Add(-2 * time.Hour).Unix()
+	activeDueTime := testBlockTime.Add(-1 * time.Hour).Unix()
+	pausedInfos := []VaultInfo{NewVaultInfo(1), NewVaultInfo(2)}
+	activeInfo := NewVaultInfo(3)
+
+	tests := []struct {
+		name        string
+		limit       int
+		expectedDue int
+	}{
+		{
+			name:        "budget filled by paused vaults at the queue front starves the active vault",
+			limit:       2,
+			expectedDue: 3,
+		},
+		{
+			name:        "budget larger than the paused front reaches and processes the active vault",
+			limit:       3,
+			expectedDue: 2,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			s.ctx = s.ctx.WithBlockTime(testBlockTime)
+			for _, info := range pausedInfos {
+				s.createVaultWithDueInterestTimeout(info, pausedDueTime, true)
+			}
+			s.createVaultWithDueInterestTimeout(activeInfo, activeDueTime, false)
+
+			err := s.k.TestAccessor_handleVaultInterestTimeouts(s.T(), s.ctx, tc.limit)
+			s.Require().NoError(err, "handleVaultInterestTimeouts should not error with limit %d", tc.limit)
+			s.Require().Equal(
+				tc.expectedDue, s.countDuePayoutTimeouts(testBlockTime.Unix()),
+				"due backlog mismatch with limit %d: paused entries stay queued and count against the budget", tc.limit,
+			)
 		})
 	}
 }

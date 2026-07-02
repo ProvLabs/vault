@@ -15,23 +15,21 @@ import (
 
 // processPendingSwapOuts processes the queue of pending swap-out requests. Called from the EndBlocker,
 // it iterates through requests due for payout at the current block time. It uses a safe "collect-then-mutate"
-// pattern to comply with the SDK iterator contract. It first collects all due requests up to the provided `batchSize`,
-// then passes them to `processSwapOutJobs` for execution. Critical, unrecoverable errors during job processing
-// will cause the associated vault to be automatically paused.
+// pattern to comply with the SDK iterator contract. It first collects due requests up to the provided `batchSize`,
+// then passes them to `processSwapOutJobs` for execution. Every visited entry counts against the batch budget,
+// including entries for paused vaults, so a queue front-loaded with unprocessable entries cannot extend the
+// per-block iteration cost. Critical, unrecoverable errors during job processing will cause the associated
+// vault to be automatically paused.
 func (k *Keeper) processPendingSwapOuts(ctx sdk.Context, batchSize int) error {
 	now := ctx.BlockTime().Unix()
 	var jobsToProcess []types.PayoutJob
 
-	processed := 0
+	visited := 0
 	err := k.PendingSwapOutQueue.WalkDue(ctx, now, func(timestamp int64, id uint64, vaultAddr sdk.AccAddress, req types.PendingSwapOut) (stop bool, err error) {
-		vault, ok := k.tryGetVault(ctx, vaultAddr)
-		if ok && vault.Paused {
-			return false, nil
-		}
-		if processed == batchSize {
+		if visited == batchSize {
 			return true, nil
 		}
-		processed++
+		visited++
 		jobsToProcess = append(jobsToProcess, types.NewPayoutJob(timestamp, id, vaultAddr, req))
 		return false, nil
 	})
@@ -48,7 +46,8 @@ func (k *Keeper) processPendingSwapOuts(ctx sdk.Context, batchSize int) error {
 // processSwapOutJobs iterates pending swap-out jobs collected for this block and executes them.
 //
 // The processing strategy involves:
-//  1. Verifying the vault exists and is not paused.
+//  1. Verifying the vault exists; jobs for paused vaults are dequeued and refunded so they
+//     cannot permanently occupy the front of the queue and starve processable requests.
 //  2. Dequeuing the job on the main context immediately to ensure it is only attempted once,
 //     preventing infinite retry loops if a failure occurs during processing or refund.
 //  3. Executing the withdrawal logic (reconciliation, payout, and burning) within a single
@@ -75,6 +74,7 @@ func (k *Keeper) processSwapOutJobs(ctx sdk.Context, jobsToProcess []types.Payou
 		}
 
 		if vault.Paused {
+			k.refundPausedVaultSwapOut(ctx, j)
 			continue
 		}
 
@@ -113,6 +113,33 @@ func (k *Keeper) processSwapOutJobs(ctx sdk.Context, jobsToProcess []types.Payou
 		} else {
 			write()
 		}
+	}
+}
+
+// refundPausedVaultSwapOut dequeues a due swap-out job whose vault is paused and returns the
+// escrowed shares to the owner. Leaving these jobs queued would let them camp at the front of
+// the PendingSwapOutQueue (expedited entries are keyed at timestamp zero) and be re-visited
+// every block, consuming the batch budget and starving processable requests behind them.
+// The vault is already paused, so a critically failed refund is only logged; the job is not
+// retried because it was dequeued first, matching the attempt-once strategy of regular jobs.
+func (k *Keeper) refundPausedVaultSwapOut(ctx sdk.Context, j types.PayoutJob) {
+	if err := k.PendingSwapOutQueue.Dequeue(ctx, j.Timestamp, j.VaultAddr, j.ID); err != nil {
+		k.getLogger(ctx).Error(
+			"CRITICAL: failed to dequeue withdrawal request for paused vault",
+			"request_id", j.ID,
+			"vault_address", j.VaultAddr.String(),
+			"error", err,
+		)
+		return
+	}
+
+	if err := k.refundWithdrawal(ctx, j.ID, j.Req, types.RefundReasonVaultPaused); err != nil {
+		k.getLogger(ctx).Error(
+			"CRITICAL: failed to refund withdrawal request for paused vault",
+			"request_id", j.ID,
+			"vault_address", j.VaultAddr.String(),
+			"error", err,
+		)
 	}
 }
 

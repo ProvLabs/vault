@@ -143,6 +143,57 @@ func (s *TestSuite) assertInPayoutVerificationQueue(vaultAddr sdk.AccAddress, sh
 	s.Assert().Equal(shouldContain, isInQueue, "vault should be enqueued in payout verification queue at expected period start")
 }
 
+// countDuePayoutTimeouts returns the number of PayoutTimeoutQueue entries with a
+// timeout at or before now, so tests can assert how much of an interest-timeout
+// backlog remains after a capped ABCI pass.
+func (s *TestSuite) countDuePayoutTimeouts(now int64) int {
+	count := 0
+	err := s.k.PayoutTimeoutQueue.WalkDue(s.ctx, now, func(_ uint64, _ sdk.AccAddress) (bool, error) {
+		count++
+		return false, nil
+	})
+	s.Require().NoError(err, "walking due payout timeouts should not error")
+	return count
+}
+
+// countDueFeeTimeouts returns the number of FeeTimeoutQueue entries with a timeout
+// at or before now, so tests can assert how much of a fee-timeout backlog remains
+// after a capped ABCI pass.
+func (s *TestSuite) countDueFeeTimeouts(now int64) int {
+	count := 0
+	err := s.k.FeeTimeoutQueue.WalkDue(s.ctx, now, func(_ uint64, _ sdk.AccAddress) (bool, error) {
+		count++
+		return false, nil
+	})
+	s.Require().NoError(err, "walking due fee timeouts should not error")
+	return count
+}
+
+// countPayoutVerificationEntries returns the number of vault addresses currently in
+// the PayoutVerificationSet, so tests can assert how much of a verification backlog
+// remains after a capped ABCI pass.
+func (s *TestSuite) countPayoutVerificationEntries() int {
+	count := 0
+	err := s.k.PayoutVerificationSet.Walk(s.ctx, nil, func(_ sdk.AccAddress) (bool, error) {
+		count++
+		return false, nil
+	})
+	s.Require().NoError(err, "walking the payout verification set should not error")
+	return count
+}
+
+// countPendingSwapOuts returns the number of entries currently in the
+// PendingSwapOutQueue regardless of due time.
+func (s *TestSuite) countPendingSwapOuts() int {
+	count := 0
+	err := s.k.PendingSwapOutQueue.Walk(s.ctx, func(_ int64, _ uint64, _ sdk.AccAddress, _ types.PendingSwapOut) (bool, error) {
+		count++
+		return false, nil
+	})
+	s.Require().NoError(err, "walking the pending swap out queue should not error")
+	return count
+}
+
 // assertBalance asserts the balance for the provided address and denom equals
 // the expected amount.
 func (s *TestSuite) assertBalance(addr sdk.AccAddress, denom string, expectedAmt sdkmath.Int) {

@@ -271,6 +271,8 @@ Admin or Asset Manager. Immediately processes a specific queued swap-out by ID.
 * **Request:** `MsgExpeditePendingSwapOutRequest { authority, request_id }`
 * **Response:** `MsgExpeditePendingSwapOutResponse {}`
 
+If the vault is paused when the expedited request comes due, the request is dequeued and refunded with `EventSwapOutRefunded{ reason = "vault_paused" }` instead of being paid out.
+
 ---
 
 ## PauseVault

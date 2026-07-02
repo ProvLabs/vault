@@ -190,7 +190,7 @@ Swap-outs are **asynchronous** and complete in `EndBlocker` after the vault’s 
 
 **Operational tips**
 
-* If the vault is **paused** after your request, payout will not occur until unpaused; you may see `EventVaultPaused` followed by a future `EventVaultUnpaused`. Your request will ultimately end in `Completed` or `Refunded`.
+* If the vault is **paused** after your request, the request is not paid out. When the request comes due it is dequeued and refunded with `EventSwapOutRefunded{ reason = "vault_paused" }`; submit a new `MsgSwapOut` after the vault is unpaused.
 * For monitoring systems, index events by `request_id` and `vault_address`, and set a timeout expectation based on `withdrawal_delay_seconds` plus normal block timings.
 
 ---

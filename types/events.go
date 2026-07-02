@@ -17,6 +17,7 @@ const (
 	RefundReasonRecipientInvalid           = "recipient_invalid"
 	RefundReasonNavNotFound                = "nav_not_found"
 	RefundReasonReconcileFailure           = "reconcile_failure"
+	RefundReasonVaultPaused                = "vault_paused"
 	RefundReasonUnknown                    = "unknown_error"
 )
 

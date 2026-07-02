@@ -2,6 +2,8 @@ package keeper
 
 import (
 	"fmt"
+	"math"
+	"math/big"
 
 	"github.com/provlabs/vault/interest"
 	"github.com/provlabs/vault/types"
@@ -19,6 +21,17 @@ const (
 	// sufficient funds to cover future interest payments.
 	AutoReconcilePayoutDuration = 24 * interest.SecondsPerHour
 )
+
+// navReferenceVolume is the reference share volume used to publish a marker NAV when a vault's
+// total shares exceed the uint64 ceiling that NetAssetValue.Volume can represent.
+//
+// A NAV is a price-per-share ratio, not a function of absolute supply, so the published volume can
+// be any representative quantity as long as the price is scaled to preserve price/volume. It is set
+// to the uint64 maximum so every supply that fits in uint64 publishes its exact share count as the
+// volume (no scaling, price = TVV), and only supplies beyond uint64 are capped at this value with the
+// price scaled down proportionally. Using the uint64 ceiling rather than a smaller bound both avoids
+// needlessly scaling uint64-safe supplies and maximizes price precision in the scaled case.
+var navReferenceVolume = sdkmath.NewIntFromUint64(math.MaxUint64)
 
 // reconcileVault updates interest accounting and collects AUM fees for a vault if a new period has started.
 //
@@ -88,24 +101,57 @@ func (k Keeper) reconcileVault(ctx sdk.Context, vault *types.VaultAccount) error
 // setShareDenomNAV publishes the Net Asset Value (NAV) for a vault’s share denom
 // in terms of the underlying asset.
 //
-// The NAV price is set to the vault’s total value in underlying units (TVV),
-// and the NAV volume is set to the total number of shares. If the total share
-// amount cannot be represented as a uint64, this method returns an error and
-// does not publish a NAV.
+// A NAV is a price-per-share ratio (Price / Volume), not a function of absolute supply. When the
+// vault's total shares fit in uint64, the NAV is published directly as (Price = TVV, Volume = total
+// shares). When total shares exceed uint64, the volume is capped at navReferenceVolume (the uint64
+// maximum) and the price is scaled down proportionally (price = TVV * volume / totalShares),
+// preserving the price-per-share ratio while keeping the published volume within uint64. The unscaled
+// branch computes entirely in sdkmath.Int; the scaled branch computes the price through math/big (see
+// the panic-safety note below). Only the final bounded volume is converted to uint64.
+//
+// The price division truncates toward zero (rounds down) by design, following the accounting
+// principle of conservatism: the reported per-share value is never rounded above the provable
+// TVV / totalShares ratio. A scaled price that truncates to zero is still published as a zero price so
+// consumers observe the current (near-zero) valuation rather than a stale prior NAV.
+//
+// All arithmetic is panic-safe and never skips a representable NAV. Unscaled supplies publish
+// Price = TVV directly with no multiply. The scaled price is computed through math/big so the
+// intermediate TVV * volume product cannot overflow the 256-bit sdkmath.Int bound; the final quotient
+// always fits because it is strictly less than TVV (volume < totalShares in the scaled branch), so the
+// conversion back to sdkmath.Int never panics. The final division cannot divide by zero because
+// totalShares is guarded as positive, and a negative price (only reachable from a non-positive TVV,
+// which callers already exclude) is skipped so NewCoin is never handed a negative amount.
+//
+// If the vault has no shares, no NAV is published.
 func (k Keeper) setShareDenomNAV(ctx sdk.Context, vault *types.VaultAccount, vaultMarker markertypes.MarkerAccountI, tvv sdkmath.Int) error {
-	if !vault.TotalShares.Amount.IsUint64() {
-		return fmt.Errorf(
-			"vault total shares overflows uint64: %s",
-			vault.TotalShares.Amount.String(),
+	totalShares := vault.TotalShares.Amount
+	if !totalShares.IsPositive() {
+		return nil
+	}
+
+	volume := totalShares
+	price := tvv
+	if totalShares.GT(navReferenceVolume) {
+		volume = navReferenceVolume
+		scaled := new(big.Int).Mul(tvv.BigInt(), volume.BigInt())
+		scaled.Quo(scaled, totalShares.BigInt())
+		price = sdkmath.NewIntFromBigInt(scaled)
+	}
+	if price.IsNegative() {
+		k.getLogger(ctx).Debug("skipping share NAV publication: price is negative",
+			"vault", vault.GetAddress().String(),
+			"tvv", tvv.String(),
+			"total_shares", totalShares.String(),
 		)
+		return nil
 	}
 
 	return k.MarkerKeeper.SetNetAssetValue(
 		ctx,
 		vaultMarker,
 		markertypes.NetAssetValue{
-			Price:  sdk.NewCoin(vault.UnderlyingAsset, tvv),
-			Volume: vault.TotalShares.Amount.Uint64(),
+			Price:  sdk.NewCoin(vault.UnderlyingAsset, price),
+			Volume: volume.Uint64(),
 		},
 		types.ModuleName,
 	)
@@ -114,9 +160,16 @@ func (k Keeper) setShareDenomNAV(ctx sdk.Context, vault *types.VaultAccount, vau
 // publishShareNav records the Net Asset Value (NAV) for the vault's share denom
 // in terms of its underlying asset. It fetches the vault’s principal marker,
 // computes the net total value of vault assets in underlying units (TVV net of the
-// OutstandingAumFee liability), and attempts to set the NAV as
-// (Price = net TVV in underlying, Volume = total shares).
-// If no shares exist or the TVV is non-positive, no NAV is published.
+// OutstandingAumFee liability), and publishes it via setShareDenomNAV, which encodes the
+// net-TVV-per-share ratio while keeping the marker volume within uint64.
+//
+// When the vault has no shares its price-per-share is undefined. If a non-zero share NAV was
+// previously published, it is overwritten with a zero price (leaving any other price-denom NAV on the
+// marker untouched) so GetNetAssetValue no longer serves a stale price for a share denom that has no
+// supply. The overwrite is skipped only when no NAV exists or it is already fully zero (zero price and
+// zero volume), so a vault that never had shares does not gain a spurious NAV and the zero is emitted
+// at most once; a NAV left at zero price but non-zero volume (which the scaled truncation path can
+// publish) is still re-zeroed. When the TVV is non-positive, no NAV is published.
 //
 // If NAV publication fails, the error is logged and the operation continues
 // without failing the overall vault reconciliation process.
@@ -126,6 +179,21 @@ func (k Keeper) publishShareNav(ctx sdk.Context, vault *types.VaultAccount) erro
 		return fmt.Errorf("failed to get principal marker: %w", err)
 	}
 	if !vault.TotalShares.IsPositive() {
+		var existing *markertypes.NetAssetValue
+		existing, err = k.MarkerKeeper.GetNetAssetValue(ctx, vaultMarker.GetDenom(), vault.UnderlyingAsset)
+		if err != nil {
+			k.getLogger(ctx).Error("failed to read share NAV while zeroing empty vault", "err", err)
+			return nil
+		}
+		if existing != nil && (!existing.Price.Amount.IsZero() || existing.Volume != 0) {
+			zeroNAV := markertypes.NetAssetValue{
+				Price:  sdk.NewCoin(vault.UnderlyingAsset, sdkmath.ZeroInt()),
+				Volume: 0,
+			}
+			if err = k.MarkerKeeper.SetNetAssetValue(ctx, vaultMarker, zeroNAV, types.ModuleName); err != nil {
+				k.getLogger(ctx).Error("failed to zero share NAV for empty vault", "err", err)
+			}
+		}
 		return nil
 	}
 	tvv, err := k.GetNetTVVInUnderlyingAsset(ctx, *vault)

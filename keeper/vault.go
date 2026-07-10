@@ -44,9 +44,11 @@ type VaultAttributer interface {
 //  4. Performing a pre-flight check against the principal/payment path by calling
 //     SendRestrictionFn with vault.PrincipalMarkerAddress() to ensure the fee
 //     collection address is permissioned to receive the payment denomination.
-//  5. Seeding the per-vault Internal NAV entry for the payment denom when it
-//     differs from the underlying asset, so the valuation engine can convert
-//     payment-denom balances and fee payouts without an out-of-band setup step.
+//
+// Vaults are single-denom: the payment denom must be empty (defaulting to the
+// underlying asset) or equal to it, and no initial payment NAV may be supplied.
+// Mixed-denom vaults that predate this restriction remain untouched; only
+// creation is gated.
 //
 // All steps are performed within a cache context. If any step fails, including the
 // pre-flight permission check, all state changes are discarded to prevent the creation
@@ -59,7 +61,13 @@ func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*type
 	minSwapOut := attributes.GetMinSwapOutValue()
 	maxSwapIn := attributes.GetMaxSwapInValue()
 	maxSwapOut := attributes.GetMaxSwapOutValue()
-	initialNAV := attributes.GetInitialPaymentNav()
+
+	if payment != "" && payment != underlying {
+		return nil, fmt.Errorf("payment denom (%q) must be empty or equal underlying asset (%q)", payment, underlying)
+	}
+	if err := types.ValidateInitialPaymentNAV(attributes.GetInitialPaymentNav()); err != nil {
+		return nil, fmt.Errorf("invalid initial payment NAV: %w", err)
+	}
 
 	underlyingAssetAddr, err := markertypes.MarkerAddress(underlying)
 	if err != nil {
@@ -96,39 +104,9 @@ func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*type
 		return nil, fmt.Errorf("effective recipient %s differs from expected fee collector %s for payment denom %s", recipient.String(), provlabsAddr.String(), vault.PaymentDenom)
 	}
 
-	if err := k.seedInitialPaymentNAV(cacheCtx, vault, initialNAV); err != nil {
-		return nil, fmt.Errorf("failed to seed initial payment NAV: %w", err)
-	}
-
 	write()
 	k.emitEvent(ctx, types.NewEventVaultCreated(vault))
 	return vault, nil
-}
-
-// seedInitialPaymentNAV persists the optional bootstrap NAV for a vault's
-// payment denom when payment_denom differs from underlying_asset. The caller
-// must have already validated the stateless shape of initial via
-// types.ValidateInitialPaymentNAV (typically through MsgCreateVaultRequest.ValidateBasic).
-//
-// When payment_denom equals underlying_asset, no NAV is required (the
-// valuation engine's identity fast-path applies) and initial must be nil; the
-// function returns an error rather than silently dropping a stray entry.
-//
-// The NAV is written via SetVaultNAV so that field-level invariants, marker
-// existence, and event emission match every other internal NAV update.
-func (k *Keeper) seedInitialPaymentNAV(ctx sdk.Context, vault *types.VaultAccount, initial *types.InitialVaultNAV) error {
-	if err := types.ValidateInitialPaymentNAV(vault.PaymentDenom, vault.UnderlyingAsset, initial); err != nil {
-		return fmt.Errorf("invalid initial payment NAV: %w", err)
-	}
-	if initial == nil {
-		return nil
-	}
-
-	nav := types.NewVaultNAV(vault.PaymentDenom, initial.Price, initial.Volume, initial.Source)
-	if err := k.SetVaultNAV(ctx, vault, nav, vault.Admin); err != nil {
-		return fmt.Errorf("failed to set initial payment NAV: %w", err)
-	}
-	return nil
 }
 
 // GetVault returns the vault account for the given address.

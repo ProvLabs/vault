@@ -1568,7 +1568,10 @@ type EventVaultPaused struct {
 	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// authority is the address (admin or asset manager) that paused the vault.
 	Authority string `protobuf:"bytes,2,opt,name=authority,proto3" json:"authority,omitempty"`
-	// reason is the reason for pausing the vault.
+	// reason is the reason for pausing the vault. For a manual pause (PauseVault
+	// tx) this is the user-supplied reason. For an automated auto-pause triggered
+	// in the begin/end blocker, this carries the hard-coded reason describing the
+	// critical error that forced the pause.
 	Reason string `protobuf:"bytes,3,opt,name=reason,proto3" json:"reason,omitempty"`
 	// total_vault_value is the total value of the vault's assets at the time of pausing.
 	TotalVaultValue string `protobuf:"bytes,4,opt,name=total_vault_value,json=totalVaultValue,proto3" json:"total_vault_value,omitempty"`
@@ -1576,9 +1579,11 @@ type EventVaultPaused struct {
 	// reconcile/valuation gate. False for a normal strict pause; true for a
 	// forced manual pause and for automated auto-pauses.
 	Forced bool `protobuf:"varint,5,opt,name=forced,proto3" json:"forced,omitempty"`
-	// forced_error records the reconcile and/or valuation error that was
-	// tolerated when forced is true. Empty when nothing failed. When non-empty,
-	// total_vault_value may be stale or zero.
+	// forced_error records the reconcile and/or valuation error tolerated by a
+	// manual force pause (PauseVault tx). Empty when nothing failed. When
+	// non-empty, total_vault_value may be stale or zero. Only the tx path sets
+	// this; automated auto-pauses leave it empty and instead encode their error
+	// in reason.
 	ForcedError string `protobuf:"bytes,6,opt,name=forced_error,json=forcedError,proto3" json:"forced_error,omitempty"`
 }
 

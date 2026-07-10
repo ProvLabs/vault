@@ -43,7 +43,9 @@ type MsgCreateVaultRequest struct {
 	// underlying_asset is the denomination of the asset supported by the vault.
 	UnderlyingAsset string `protobuf:"bytes,3,opt,name=underlying_asset,json=underlyingAsset,proto3" json:"underlying_asset,omitempty"`
 	// payment_denom is the secondary denomination the vault can accept.
-	// if not specified, vault payment_denom will be set to underlying_asset.
+	// Must be empty or equal to underlying_asset; creation with a differing
+	// payment_denom is rejected (vaults are single-denom).
+	// If not specified, vault payment_denom will be set to underlying_asset.
 	PaymentDenom string `protobuf:"bytes,4,opt,name=payment_denom,json=paymentDenom,proto3" json:"payment_denom,omitempty"`
 	// withdrawal_delay_seconds is the time period (in seconds) that a withdrawal
 	// must wait in the pending queue before being processed.
@@ -64,12 +66,10 @@ type MsgCreateVaultRequest struct {
 	// - Values must be positive (> 0).
 	// - An empty string "" indicates no maximum limit.
 	MaxSwapOutValue string `protobuf:"bytes,9,opt,name=max_swap_out_value,json=maxSwapOutValue,proto3" json:"max_swap_out_value,omitempty"`
-	// initial_payment_nav seeds the per-vault Internal NAV entry for payment_denom
-	// at creation, ensuring fee accrual and payment-denom swap-outs are operational
-	// from block one. The entry's denom is implicitly payment_denom; the price
-	// denom must be underlying_asset.
-	// - Required when payment_denom is set and payment_denom != underlying_asset.
-	// - Must be omitted when payment_denom is empty or equal to underlying_asset.
+	// initial_payment_nav must be omitted. It previously seeded the per-vault
+	// Internal NAV entry when payment_denom differed from underlying_asset, a
+	// configuration that can no longer be created (payment_denom must be empty
+	// or equal to underlying_asset, where the identity 1:1 price applies).
 	InitialPaymentNav *InitialVaultNAV `protobuf:"bytes,10,opt,name=initial_payment_nav,json=initialPaymentNav,proto3" json:"initial_payment_nav,omitempty"`
 }
 

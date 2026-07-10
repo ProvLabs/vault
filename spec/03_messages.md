@@ -85,9 +85,10 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 
 ## CreateVault
 
-Creates a new vault account with a configured underlying asset, optional payment denom, withdrawal delay, and minimum/maximum swap values.
+Creates a new vault account with a configured underlying asset, withdrawal delay, and minimum/maximum swap values.
 The creator is recorded as vault admin.
 
+* **Single Denom:** Vaults are created with a single denom. `payment_denom` must be empty (it defaults to `underlying_asset`) or equal to `underlying_asset`; creation with a differing payment denom is rejected. `initial_payment_nav` must be omitted since it only applied to mixed-denom vaults. Existing vaults with mixed denoms are unaffected; only creation is gated.
 * **Units:** All swap limit values (`min_swap_in_value`, `min_swap_out_value`, `max_swap_in_value`, `max_swap_out_value`) are denominated in the vault's **underlying_asset**.
 * **Clearing Limits:** 
     * Minimums: An empty string "" or the string "0" clears/disables the minimum limit.

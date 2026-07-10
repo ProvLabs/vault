@@ -1268,25 +1268,15 @@ func (s *TestSuite) TestKeeper_CanPayInterestDuration_NegativeInterest_Composite
 	s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 10_000_000_000_000), s.adminAddr)
 
-	_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-		Admin:           s.adminAddr.String(),
-		ShareDenom:      shareDenom,
-		UnderlyingAsset: underlyingDenom,
-		PaymentDenom:    paymentDenom,
-		InitialPaymentNav: &types.InitialVaultNAV{
-			Price:  sdk.NewInt64Coin(underlyingDenom, 1),
-			Volume: sdkmath.OneInt(),
-		},
-	})
-	s.Require().NoError(err, "failed to create composite vault in TestKeeper_CanPayInterestDuration_NegativeInterest_Composite_InsufficientUnderlying")
-
-	vault, err := s.k.GetVault(s.ctx, vaultAddr)
-	s.Require().NoError(err, "failed to get composite vault in TestKeeper_CanPayInterestDuration_NegativeInterest_Composite_InsufficientUnderlying")
+	vault := s.createVaultWithPaymentDenom(vaultAttrs{
+		admin:      s.adminAddr.String(),
+		share:      shareDenom,
+		underlying: underlyingDenom,
+	}, paymentDenom)
 
 	vault.CurrentInterestRate = "-0.5"
 	vault.DesiredInterestRate = "-0.5"
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
-	s.setVaultNAV(vault, paymentDenom, sdk.NewInt64Coin(underlyingDenom, 1), 1)
 
 	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(sdk.NewCoin(underlyingDenom, sdkmath.NewInt(1_000_000)))), "failed to fund composite vault in TestKeeper_CanPayInterestDuration_NegativeInterest_Composite_InsufficientUnderlying")
 
@@ -1442,27 +1432,17 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_Use
 	s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 1_000_000_000), s.adminAddr)
 
-	_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-		Admin:           s.adminAddr.String(),
-		ShareDenom:      shareDenom,
-		UnderlyingAsset: underlying.Denom,
-		PaymentDenom:    paymentDenom,
-		InitialPaymentNav: &types.InitialVaultNAV{
-			Price:  sdk.NewInt64Coin(underlying.Denom, 1),
-			Volume: sdkmath.OneInt(),
-		},
-	})
-	s.Require().NoError(err, "expected CreateVault to succeed")
-
-	vault, err := s.k.GetVault(s.ctx, vaultAddr)
-	s.Require().NoError(err, "expected GetVault to succeed after CreateVault")
+	vault := s.createVaultWithPaymentDenom(vaultAttrs{
+		admin:      s.adminAddr.String(),
+		share:      shareDenom,
+		underlying: underlying.Denom,
+	}, paymentDenom)
 
 	vault.CurrentInterestRate = "0.25"
 	vault.DesiredInterestRate = "0.25"
 	vault.PeriodStart = periodStart
 	vault.FeePeriodStart = periodStart
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
-	s.setVaultNAV(vault, paymentDenom, sdk.NewInt64Coin(underlying.Denom, 1), 1)
 
 	s.Require().NoError(
 		FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(underlying)),
@@ -1655,27 +1635,17 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_NegativeInterest_Com
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingDenom, 1000), s.adminAddr)
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 1_000_000_000), s.adminAddr)
 
-	_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-		Admin:           s.adminAddr.String(),
-		ShareDenom:      shareDenom,
-		UnderlyingAsset: underlyingDenom,
-		PaymentDenom:    paymentDenom,
-		InitialPaymentNav: &types.InitialVaultNAV{
-			Price:  sdk.NewInt64Coin(underlyingDenom, 1),
-			Volume: sdkmath.OneInt(),
-		},
-	})
-	s.Require().NoError(err, "CreateVault with composite structure should succeed")
-
-	vault, err := s.k.GetVault(s.ctx, vaultAddr)
-	s.Require().NoError(err, "GetVault should return the created vault")
+	vault := s.createVaultWithPaymentDenom(vaultAttrs{
+		admin:      s.adminAddr.String(),
+		share:      shareDenom,
+		underlying: underlyingDenom,
+	}, paymentDenom)
 
 	vault.CurrentInterestRate = "-0.5"
 	vault.DesiredInterestRate = "-0.5"
 	vault.PeriodStart = periodStart
 	vault.FeePeriodStart = periodStart
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
-	s.setVaultNAV(vault, paymentDenom, sdk.NewInt64Coin(underlyingDenom, 1), 1)
 
 	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1_000_000))), "Funding vault should succeed")
 

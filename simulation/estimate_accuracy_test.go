@@ -21,12 +21,7 @@ import (
 // reports a net-of-fee value while the settled swap reads gross post-reconcile value; leaving the
 // default fee enabled would inject a fee-accounting delta that is unrelated to swap math accuracy.
 func (s *VaultSimTestSuite) newAccuracyVault(admin simtypes.Account, underlying, payment, share string) *types.VaultAccount {
-	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, underlying, payment, share, admin, s.accs)
-	s.Require().NoError(err, "CreateVault for share denom %s", share)
-
-	vault, err := s.app.VaultKeeper.GetVault(s.ctx, types.GetVaultAddress(share))
-	s.Require().NoError(err, "GetVault for share denom %s", share)
-	s.Require().NotNil(vault, "vault for share denom %s should exist after creation", share)
+	vault := s.createVaultWithLegacyPayment(admin, underlying, payment, share)
 
 	vault.AumFeeBips = 0
 	vault.WithdrawalDelaySeconds = 0

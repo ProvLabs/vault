@@ -8,8 +8,11 @@ import (
 
 	"github.com/provlabs/vault/simapp"
 	"github.com/provlabs/vault/simulation"
+	"github.com/provlabs/vault/types"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -75,6 +78,34 @@ func (s *VaultSimTestSuite) setupAccounts() {
 
 func (s *VaultSimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
 	return GenerateTestingAccounts(s.T(), s.ctx, s.app, r, n)
+}
+
+// createVaultWithLegacyPayment creates a single-denom vault via simulation.CreateVault
+// and, when payment differs from underlying, attaches it afterward with a 1:1 internal
+// NAV and marker permissions, simulating a vault that predates the single-denom restriction.
+func (s *VaultSimTestSuite) createVaultWithLegacyPayment(admin simtypes.Account, underlying, payment, share string) *types.VaultAccount {
+	creationPayment := payment
+	if payment != underlying {
+		creationPayment = ""
+	}
+	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, underlying, creationPayment, share, admin, s.accs)
+	s.Require().NoError(err, "CreateVault for share denom %s", share)
+
+	vault, err := s.app.VaultKeeper.GetVault(s.ctx, types.GetVaultAddress(share))
+	s.Require().NoError(err, "GetVault for share denom %s", share)
+	s.Require().NotNil(vault, "vault for share denom %s should exist after creation", share)
+
+	if payment != "" && payment != underlying {
+		s.Require().NoError(
+			simulation.PrepareVaultMarkers(s.ctx, s.app.AccountKeeper, s.app.MarkerKeeper, payment, "", share),
+			"prepare payment marker %s for vault %s", payment, share)
+		vault.PaymentDenom = payment
+		vault.OutstandingAumFee = sdk.NewCoin(payment, vault.OutstandingAumFee.Amount)
+		s.Require().NoError(s.app.VaultKeeper.SetVaultAccount(s.ctx, vault), "SetVaultAccount with legacy payment denom %s", payment)
+		nav := types.NewVaultNAV(payment, sdk.NewInt64Coin(underlying, 1), math.OneInt(), "test")
+		s.Require().NoError(s.app.VaultKeeper.SetVaultNAV(s.ctx, vault, nav, vault.Admin), "seed internal NAV for payment denom %s", payment)
+	}
+	return vault
 }
 
 func (s *VaultSimTestSuite) TestWeightedOperations() {
@@ -491,8 +522,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgAcceptAsset() {
 	err = simulation.CreateGlobalMarker(s.ctx, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, sdk.NewInt64Coin("acceptpay2vx", 100_000_000), s.accs, false, s.provlabsAddr)
 	s.Require().NoError(err, "CreateGlobalMarker payment")
 
-	err = simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "acceptunder2vx", "acceptpay2vx", "acceptshare", selected, s.accs)
-	s.Require().NoError(err, "CreateVault")
+	s.createVaultWithLegacyPayment(selected, "acceptunder2vx", "acceptpay2vx", "acceptshare")
 
 	op := simulation.SimulateMsgAcceptAsset(*s.app.VaultKeeper)
 	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
@@ -516,8 +546,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgRejectAsset() {
 	err = simulation.CreateGlobalMarker(s.ctx, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, sdk.NewInt64Coin("rejectpay2vx", 100_000_000), s.accs, false, s.provlabsAddr)
 	s.Require().NoError(err, "CreateGlobalMarker payment")
 
-	err = simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "rejectunder2vx", "rejectpay2vx", "rejectshare", selected, s.accs)
-	s.Require().NoError(err, "CreateVault")
+	s.createVaultWithLegacyPayment(selected, "rejectunder2vx", "rejectpay2vx", "rejectshare")
 
 	op := simulation.SimulateMsgRejectAsset(*s.app.VaultKeeper)
 	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")

@@ -205,12 +205,9 @@ func SimulateMsgCreateVault(k keeper.Keeper) simtypes.Operation {
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to get random denom for underlying"), nil, nil
 		}
-		payment, err := getRandomDenom(r, k, ctx, admin)
-		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to get random denom for payment"), nil, nil
-		}
-		if payment == underlying {
-			payment = ""
+		payment := ""
+		if r.Intn(2) == 0 {
+			payment = underlying
 		}
 
 		markerKeeper, ok := k.MarkerKeeper.(markerkeeper.Keeper)
@@ -227,13 +224,6 @@ func SimulateMsgCreateVault(k keeper.Keeper) simtypes.Operation {
 			UnderlyingAsset:        underlying,
 			PaymentDenom:           payment,
 			WithdrawalDelaySeconds: interest.SecondsPerDay,
-		}
-		if payment != "" && payment != underlying {
-			msg.InitialPaymentNav = &types.InitialVaultNAV{
-				Price:  sdk.NewInt64Coin(underlying, 1),
-				Volume: math.OneInt(),
-				Source: "simulation",
-			}
 		}
 
 		if r.Intn(2) == 0 {

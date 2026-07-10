@@ -92,7 +92,7 @@ func Setup(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, ak types.AccountKeepe
 
 	selectedPayment := ""
 	if r.Intn(2) == 0 {
-		selectedPayment = paymentDenom
+		selectedPayment = underlyingDenom
 	}
 
 	return CreateVault(ctx, &k, ak, bk, markerKeeper, underlyingDenom, selectedPayment, shareDenom, admin, accs)

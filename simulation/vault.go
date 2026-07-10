@@ -7,8 +7,6 @@ import (
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
 
-	sdkmath "cosmossdk.io/math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
@@ -41,13 +39,6 @@ func CreateVault(ctx sdk.Context, vk *keeper.Keeper, ak types.AccountKeeper, _ t
 		UnderlyingAsset:        underlying,
 		PaymentDenom:           paymentDenom,
 		WithdrawalDelaySeconds: interest.SecondsPerDay,
-	}
-	if paymentDenom != "" && paymentDenom != underlying {
-		newVault.InitialPaymentNav = &types.InitialVaultNAV{
-			Price:  sdk.NewInt64Coin(underlying, 1),
-			Volume: sdkmath.OneInt(),
-			Source: "simulation",
-		}
 	}
 	msgServer := keeper.NewMsgServer(vk)
 	_, err := msgServer.CreateVault(ctx, newVault)

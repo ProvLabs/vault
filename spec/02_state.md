@@ -2,7 +2,7 @@
 
 The Vault module persists **vault accounts**, **interest scheduling metadata**, and **swap-out jobs** using typed collections.  
 Canonical vault accounts live in `x/auth` (as `VaultAccount`), while this module maintains compact lookups and queues for automated processing.  
-Vaults may be configured with an optional **payment denom** in addition to the **underlying asset**; accepted I/O denoms are always the underlying asset and, if set, the payment denom. :contentReference[oaicite:0]{index=0}
+Vaults carry a **payment denom** alongside the **underlying asset**; accepted I/O denoms are always the underlying asset and, if set, the payment denom. New vaults are single-denom: creation rejects a payment denom that differs from the underlying asset (an empty payment denom defaults to it). Vaults created before this restriction may still carry a differing payment denom. :contentReference[oaicite:0]{index=0}
 
 ---
 <!-- TOC -->
@@ -27,7 +27,7 @@ Vaults may be configured with an optional **payment denom** in addition to the *
 
 Each vault is an `x/auth` account implementing `VaultAccountI`. The canonical record contains:
 
-- Admin address, share denom, underlying asset, optional **payment denom** (must differ from underlying)  
+- Admin address, share denom, underlying asset, **payment denom** (equal to the underlying on newly created vaults; may differ only on vaults that predate the single-denom restriction)  
 - Interest configuration: `CurrentInterestRate`, `DesiredInterestRate`, optional `MinInterestRate`/`MaxInterestRate` bounds  
 - Swap toggles, `WithdrawalDelaySeconds`, pause flags/reason and `PausedBalance` snapshot  
 - **Swap Limits:** `min_swap_in_value`, `min_swap_out_value`, `max_swap_in_value`, and `max_swap_out_value` (measured in underlying asset)
@@ -37,7 +37,7 @@ Each vault is an `x/auth` account implementing `VaultAccountI`. The canonical re
 - **AUM Fee State:** `fee_period_start`, `fee_period_timeout`, and `outstanding_aum_fee`.
 - **NAV Authority:** optional `nav_authority` address authorized to mutate the vault's internal NAV table via `MsgUpdateVaultNAV`; the admin acts as NAV authority when unset.
 
-`VaultAccount` enforces invariants (e.g., payment denom cannot equal underlying, rate bounds, etc.) and provides helpers like `AcceptedDenoms()` and `ValidateAcceptedDenom`. :contentReference[oaicite:1]{index=1}
+`VaultAccount` enforces invariants (e.g., valid denoms, rate bounds, etc.) and provides helpers like `AcceptedDenoms()` and `ValidateAcceptedDenom`. :contentReference[oaicite:1]{index=1}
 
 > Note: Because vaults are first-class accounts, the **authoritative storage** for the account itself is `x/auth`. The `x/vault` module adds lookups and queues to operate on those accounts efficiently.
 

@@ -133,14 +133,13 @@ Vaults can take in **external assets** beyond the underlying and payment denoms,
 
 Each vault carries its own table of price entries, one per asset denom. An entry records `price` (a coin in one of the vault's accepted denoms) for `volume` units of the denom; the per-unit value is `price / volume`, kept as an exact fraction. The valuation engine converts denoms **exclusively** through this table — no oracle or marker-module reads happen at valuation time, so pricing is deterministic and admin-auditable.
 
-Entries are written by four paths:
+Entries are written by three paths:
 
-1. **Creation seed** — an optional `InitialVaultNAV` bootstraps the payment denom's price when the vault is created.
-2. **NAV authority updates** — the configured `nav_authority` (the admin when unset) maintains entries via `UpdateVaultNAV`.
-3. **Settlements** — each `AcceptAsset` records the realized settlement price as the asset denom's entry (and removes the entry when an outbound settlement drains the denom from the principal).
-4. **Migration seeding** — a one-time upgrade migration seeded entries from existing marker-module NAVs.
+1. **NAV authority updates** — the configured `nav_authority` (the admin when unset) maintains entries via `UpdateVaultNAV`.
+2. **Settlements** — each `AcceptAsset` records the realized settlement price as the asset denom's entry (and removes the entry when an outbound settlement drains the denom from the principal).
+3. **Migration seeding** — a one-time upgrade migration seeded entries from existing marker-module NAVs.
 
-NAV upserts from paths 2 and 3 are also **published one-way to the marker module**, attributed to the vault address, so downstream marker-NAV consumers can distinguish vault-originated prices. Removals are internal-only: when a settlement drains a denom and its entry is deleted, the marker NAV is left as-is — publishing simply stops. The vault never reads marker NAVs back — the internal table remains authoritative.
+NAV upserts from paths 1 and 2 are also **published one-way to the marker module**, attributed to the vault address, so downstream marker-NAV consumers can distinguish vault-originated prices. Removals are internal-only: when a settlement drains a denom and its entry is deleted, the marker NAV is left as-is — publishing simply stops. The vault never reads marker NAVs back — the internal table remains authoritative.
 
 ### P2P Settlement Workflow
 

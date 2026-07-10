@@ -242,6 +242,80 @@ func (s *TestSuite) TestSwapIn_Failures() {
 	s.Require().ErrorContains(err, "insufficient funds", "error should mention insufficient funds")
 }
 
+func (s *TestSuite) TestSwapIn_ZeroShareDeposit() {
+	tests := []struct {
+		name                string
+		totalShares         math.Int
+		principalBacking    int64
+		deposit             int64
+		expectedShares      math.Int
+		expectedErrContains string
+	}{
+		{
+			name:                "deposit floors to zero shares, should be rejected with no funds moved",
+			totalShares:         math.OneInt(),
+			principalBacking:    1_500_000,
+			deposit:             1,
+			expectedErrContains: "too small to mint shares",
+		},
+		{
+			name:             "deposit just above the zero-share boundary, should mint a share",
+			totalShares:      math.OneInt(),
+			principalBacking: 1_500_000,
+			deposit:          2,
+			expectedShares:   math.OneInt(),
+		},
+	}
+
+	for i, tc := range tests {
+		s.Run(tc.name, func() {
+			underlyingDenom := fmt.Sprintf("ylds%d", i)
+			shareDenom := fmt.Sprintf("vshare%d", i)
+			depositorFunding := math.NewInt(100)
+
+			vault := s.setupBaseVault(underlyingDenom, shareDenom)
+			vault.SwapInEnabled = true
+			vault.TotalShares = sdk.NewCoin(shareDenom, tc.totalShares)
+			s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+			s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), sdk.NewCoin(shareDenom, tc.totalShares)),
+				"should mint initial share supply %s%s", tc.totalShares, shareDenom)
+			s.Require().NoError(s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, underlyingDenom, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, tc.principalBacking))),
+				"should withdraw %d%s of backing to the admin", tc.principalBacking, underlyingDenom)
+			s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, tc.principalBacking))),
+				"should fund vault principal with %d%s of backing", tc.principalBacking, underlyingDenom)
+
+			depositorAddr := s.CreateAndFundAccount(sdk.NewCoin(underlyingDenom, depositorFunding))
+			depositCoin := sdk.NewInt64Coin(underlyingDenom, tc.deposit)
+
+			mintedShares, err := s.k.SwapIn(s.ctx, vault.GetAddress(), depositorAddr, depositCoin)
+
+			if tc.expectedErrContains != "" {
+				s.Require().Error(err, "swap in of %s should be rejected when it converts to zero shares", depositCoin)
+				s.Require().ErrorContains(err, tc.expectedErrContains, "swap in rejection should explain the deposit is too small for vault %s", vault.GetAddress())
+				s.assertBalance(depositorAddr, underlyingDenom, depositorFunding)
+				s.assertBalance(depositorAddr, shareDenom, math.ZeroInt())
+				s.assertBalance(vault.PrincipalMarkerAddress(), underlyingDenom, math.NewInt(tc.principalBacking))
+
+				updatedVault, getErr := s.k.GetVault(s.ctx, vault.GetAddress())
+				s.Require().NoError(getErr, "should get vault %s after rejected swap in", vault.GetAddress())
+				s.Assert().Equal(tc.totalShares.String(), updatedVault.TotalShares.Amount.String(), "vault total shares must be unchanged after rejected swap in for vault %s", vault.GetAddress())
+				return
+			}
+
+			s.Require().NoError(err, "swap in of %s should succeed when it converts to at least one share", depositCoin)
+			s.Require().Equal(tc.expectedShares.String(), mintedShares.Amount.String(), "minted share amount mismatch for deposit %s", depositCoin)
+			s.assertBalance(depositorAddr, underlyingDenom, depositorFunding.SubRaw(tc.deposit))
+			s.assertBalance(depositorAddr, shareDenom, tc.expectedShares)
+			s.assertBalance(vault.PrincipalMarkerAddress(), underlyingDenom, math.NewInt(tc.principalBacking+tc.deposit))
+
+			updatedVault, getErr := s.k.GetVault(s.ctx, vault.GetAddress())
+			s.Require().NoError(getErr, "should get vault %s after successful swap in", vault.GetAddress())
+			s.Assert().Equal(tc.totalShares.Add(tc.expectedShares).String(), updatedVault.TotalShares.Amount.String(), "vault total shares should grow by the minted amount for vault %s", vault.GetAddress())
+		})
+	}
+}
+
 func (s *TestSuite) TestSwapOut_MultiAsset() {
 	underlyingDenom := "ylds"
 	paymentDenom := "usdc"

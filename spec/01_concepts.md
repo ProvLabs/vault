@@ -7,6 +7,14 @@ The payment denom provides a secondary unit for payouts and redemptions: users c
 The module manages vault lifecycle, share issuance, redemptions, dual-asset accounting, interest accrual, AUM fee collection, and time-based job queues for automated processing.  
 Total share supply is tracked on the vault as **total_shares**, the authoritative supply-of-record across chains; local marker supply must never exceed this amount.
 
+> **Deprecation notice:** The mixed-denom vault concept is deprecated. Vaults are moving to a
+> **single underlying denom**: the `payment_denom` configuration (including receipt tokens as
+> payment denoms), the `redeem_denom` payout selection on swap-out, the `initial_payment_nav`
+> creation seed, and the `uylds.fcc` NAV-check exemption will be removed in a future release.
+> Direct principal mutation (`DepositPrincipalFunds`/`WithdrawPrincipalFunds`) is also deprecated
+> and will be reworked into the exchange-backed payments flow (`AcceptAsset`/`RejectAsset`).
+> Do not build new integrations against this surface.
+
 ---
 <!-- TOC -->
 - [Key Definitions](#key-definitions)
@@ -30,8 +38,8 @@ Total share supply is tracked on the vault as **total_shares**, the authoritativ
 ## Key Definitions
 
 - **Underlying Asset**: the base denom that defines vault value and payouts. TVV is always expressed in this unit.  
-- **Payment Denom (Secondary)**: an optional denom configured on a vault. It may be a normal swappable token (e.g., `uusdc`) or a restricted **receipt token** used for accounting. Swapability is determined by marker configuration.  
-- **Receipt Token**: a restricted marker that may be set as the payment denom. The only account with transfer authority is the holder of the receipt itself, which represents deployed capital (e.g., receipts into a fund). User swap-out to a receipt token is not possible unless the marker explicitly grants transfer authority. 
+- **Payment Denom (Secondary)** *(deprecated)*: an optional denom configured on a vault. It may be a normal swappable token (e.g., `uusdc`) or a restricted **receipt token** used for accounting. Swapability is determined by marker configuration. Deprecated in favor of single-denom vaults; see the deprecation notice above.  
+- **Receipt Token** *(deprecated)*: a restricted marker that may be set as the payment denom. The only account with transfer authority is the holder of the receipt itself, which represents deployed capital (e.g., receipts into a fund). User swap-out to a receipt token is not possible unless the marker explicitly grants transfer authority. Deprecated along with the payment denom concept. 
 - **Principal**: the vault’s total assets held in the **share marker account**, including underlying balances and any payment denom balances (normal or receipt).
 - **Reserves**: the vault account balance used to pay positive interest or receive refunds from negative interest.
 - **TVV (Total Vault Value)**: the value of all principal assets, computed and reported in the underlying unit.

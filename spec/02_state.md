@@ -4,6 +4,10 @@ The Vault module persists **vault accounts**, **interest scheduling metadata**, 
 Canonical vault accounts live in `x/auth` (as `VaultAccount`), while this module maintains compact lookups and queues for automated processing.  
 Vaults may be configured with an optional **payment denom** in addition to the **underlying asset**; accepted I/O denoms are always the underlying asset and, if set, the payment denom. :contentReference[oaicite:0]{index=0}
 
+> **Deprecation notice:** The payment denom configuration is deprecated. Vaults are moving to a
+> single underlying denom, and `payment_denom` will be removed in a future release
+> (see `spec/01_concepts.md`).
+
 ---
 <!-- TOC -->
 - [Canonical Vault Accounts (x/auth)](#canonical-vault-accounts-xauth)
@@ -27,7 +31,7 @@ Vaults may be configured with an optional **payment denom** in addition to the *
 
 Each vault is an `x/auth` account implementing `VaultAccountI`. The canonical record contains:
 
-- Admin address, share denom, underlying asset, optional **payment denom** (must differ from underlying)  
+- Admin address, share denom, underlying asset, optional **payment denom** (must differ from underlying; deprecated, collapses to the underlying asset)  
 - Interest configuration: `CurrentInterestRate`, `DesiredInterestRate`, optional `MinInterestRate`/`MaxInterestRate` bounds  
 - Swap toggles, `WithdrawalDelaySeconds`, pause flags/reason and `PausedBalance` snapshot  
 - **Swap Limits:** `min_swap_in_value`, `min_swap_out_value`, `max_swap_in_value`, and `max_swap_out_value` (measured in underlying asset)

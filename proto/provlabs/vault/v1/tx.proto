@@ -68,11 +68,23 @@ service Msg {
 
   // DepositPrincipalFunds allows depositing principal funds into a vault.
   // May be signed by the vault admin or the configured asset manager.
-  rpc DepositPrincipalFunds(MsgDepositPrincipalFundsRequest) returns (MsgDepositPrincipalFundsResponse);
+  //
+  // Deprecated: Direct principal mutation is being replaced by the exchange-backed
+  // payments flow (AcceptAsset/RejectAsset). Do not build new integrations against
+  // this endpoint; it will be removed in a future release.
+  rpc DepositPrincipalFunds(MsgDepositPrincipalFundsRequest) returns (MsgDepositPrincipalFundsResponse) {
+    option deprecated = true;
+  }
 
   // WithdrawPrincipalFunds allows withdrawing principal funds from a vault.
   // May be signed by the vault admin or the configured asset manager.
-  rpc WithdrawPrincipalFunds(MsgWithdrawPrincipalFundsRequest) returns (MsgWithdrawPrincipalFundsResponse);
+  //
+  // Deprecated: Direct principal mutation is being replaced by the exchange-backed
+  // payments flow (AcceptAsset/RejectAsset). Do not build new integrations against
+  // this endpoint; it will be removed in a future release.
+  rpc WithdrawPrincipalFunds(MsgWithdrawPrincipalFundsRequest) returns (MsgWithdrawPrincipalFundsResponse) {
+    option deprecated = true;
+  }
 
   // ExpeditePendingSwapOut expedites a pending swap out from a vault.
   rpc ExpeditePendingSwapOut(MsgExpeditePendingSwapOutRequest) returns (MsgExpeditePendingSwapOutResponse);
@@ -138,7 +150,11 @@ message MsgCreateVaultRequest {
   string underlying_asset = 3;
   // payment_denom is the secondary denomination the vault can accept.
   // if not specified, vault payment_denom will be set to underlying_asset.
-  string payment_denom = 4;
+  //
+  // Deprecated: The mixed-denom vault concept is being flattened into a single
+  // underlying denom. Leave this empty (or equal to underlying_asset); the field
+  // will be removed in a future release.
+  string payment_denom = 4 [deprecated = true];
   // withdrawal_delay_seconds is the time period (in seconds) that a withdrawal
   // must wait in the pending queue before being processed.
   uint64 withdrawal_delay_seconds = 5;
@@ -164,7 +180,10 @@ message MsgCreateVaultRequest {
   // denom must be underlying_asset.
   // - Required when payment_denom is set and payment_denom != underlying_asset.
   // - Must be omitted when payment_denom is empty or equal to underlying_asset.
-  InitialVaultNAV initial_payment_nav = 10;
+  //
+  // Deprecated: This field only applies to mixed-denom vaults, which are being
+  // flattened into a single underlying denom. It will be removed in a future release.
+  InitialVaultNAV initial_payment_nav = 10 [deprecated = true];
 }
 
 // MsgCreateVaultResponse is the response message for the CreateVault endpoint.
@@ -223,7 +242,11 @@ message MsgSwapOutRequest {
   // redeem_denom selects the payout coin.
   // - If empty, defaults to the vault’s payment_denom.
   // - Must be either the vault’s underlying_asset or its payment_denom.
-  string redeem_denom = 4;
+  //
+  // Deprecated: The underlying-or-payment payout choice collapses to the
+  // underlying asset only as vaults move to a single denom. Leave this empty;
+  // the field will be removed in a future release.
+  string redeem_denom = 4 [deprecated = true];
 }
 
 // MsgSwapOutResponse is the response message for the SwapOut endpoint.
@@ -425,7 +448,11 @@ message MsgWithdrawInterestFundsRequest {
 message MsgWithdrawInterestFundsResponse {}
 
 // MsgDepositPrincipalFundsRequest is the request message for depositing principal funds into a vault.
+//
+// Deprecated: Direct principal mutation is being replaced by the exchange-backed
+// payments flow (AcceptAsset/RejectAsset). It will be removed in a future release.
 message MsgDepositPrincipalFundsRequest {
+  option deprecated = true;
   option (cosmos.msg.v1.signer) = "authority";
 
   // authority is the address of the account depositing the funds.
@@ -438,10 +465,19 @@ message MsgDepositPrincipalFundsRequest {
 }
 
 // MsgDepositPrincipalFundsResponse is the response message for the DepositPrincipalFunds endpoint.
-message MsgDepositPrincipalFundsResponse {}
+//
+// Deprecated: Direct principal mutation is being replaced by the exchange-backed
+// payments flow (AcceptAsset/RejectAsset). It will be removed in a future release.
+message MsgDepositPrincipalFundsResponse {
+  option deprecated = true;
+}
 
 // MsgWithdrawPrincipalFundsRequest is the request message for withdrawing principal funds from a vault.
+//
+// Deprecated: Direct principal mutation is being replaced by the exchange-backed
+// payments flow (AcceptAsset/RejectAsset). It will be removed in a future release.
 message MsgWithdrawPrincipalFundsRequest {
+  option deprecated = true;
   option (cosmos.msg.v1.signer) = "authority";
 
   // authority is the address of the vault administrator or asset manager initiating the withdrawal.
@@ -453,7 +489,12 @@ message MsgWithdrawPrincipalFundsRequest {
 }
 
 // MsgWithdrawPrincipalFundsResponse is the response message for the WithdrawPrincipalFunds endpoint.
-message MsgWithdrawPrincipalFundsResponse {}
+//
+// Deprecated: Direct principal mutation is being replaced by the exchange-backed
+// payments flow (AcceptAsset/RejectAsset). It will be removed in a future release.
+message MsgWithdrawPrincipalFundsResponse {
+  option deprecated = true;
+}
 
 // MsgExpeditePendingSwapOutRequest is the request message for expediting a swap out from a vault.
 message MsgExpeditePendingSwapOutRequest {

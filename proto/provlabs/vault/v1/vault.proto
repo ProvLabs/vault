@@ -35,8 +35,13 @@ message VaultAccount {
   //   the vault defaults to paying out in this payment_denom.
   // - NAV Requirement: If payment_denom differs from underlying_asset, it requires an on-chain NAV record
   //   mapping payment_denom -> underlying_asset to value deposits and redemptions.
-  //   (Note: In current versions, this NAV check is strictly enforced unless payment_denom is 'uylds.fcc').
-  string payment_denom = 4;
+  //   (Note: In current versions, this NAV check is strictly enforced unless payment_denom is 'uylds.fcc'.
+  //   This exemption is deprecated along with the field and will be removed with it.)
+  //
+  // Deprecated: The mixed-denom vault concept is being flattened into a single
+  // underlying denom; payment_denom collapses to underlying_asset and will be
+  // removed in a future release.
+  string payment_denom = 4 [deprecated = true];
 
   // admin is the address that has administrative privileges over the vault.
   string admin = 5 [(cosmos_proto.scalar) = "cosmos.AddressString"];
@@ -184,7 +189,12 @@ message VaultNAV {
 // updated_time, which are stamped by the keeper when the entry is persisted)
 // and omits the denom, which is implied by the field that carries it on the
 // containing message (e.g. payment_denom on MsgCreateVaultRequest).
+//
+// Deprecated: Used only by the deprecated initial_payment_nav field on
+// MsgCreateVaultRequest. It will be removed with the mixed-denom vault concept.
 message InitialVaultNAV {
+  option deprecated = true;
+
   // price is the total value of `volume` units of the priced denom, denominated
   // in one of the vault's accepted denoms (typically the underlying asset).
   cosmos.base.v1beta1.Coin price = 1 [(gogoproto.nullable) = false];

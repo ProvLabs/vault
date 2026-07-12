@@ -95,8 +95,12 @@ The creator is recorded as vault admin.
     * Maximums: An empty string "" clears/disables the maximum limit.
 * **Constraints:** Any provided maximum swap value must be **positive (> 0)**. A value of "0" is invalid and will be rejected.
 
-* **Request:** `MsgCreateVaultRequest { admin, share_denom, underlying_asset, payment_denom?, withdrawal_delay_seconds, min_swap_in_value?, min_swap_out_value?, max_swap_in_value?, max_swap_out_value? }`
+* **Request:** `MsgCreateVaultRequest { admin, share_denom, underlying_asset, payment_denom?, withdrawal_delay_seconds, min_swap_in_value?, min_swap_out_value?, max_swap_in_value?, max_swap_out_value?, initial_payment_nav? }`
 * **Response:** `MsgCreateVaultResponse {}`
+
+> **Deprecated:** `payment_denom` and `initial_payment_nav` are deprecated. Vaults are moving to a
+> single underlying denom; leave `payment_denom` empty (or equal to `underlying_asset`) and omit
+> `initial_payment_nav`. Both fields will be removed in a future release.
 
 ---
 
@@ -126,6 +130,10 @@ Swap-outs are queued with respect to `withdrawal_delay_seconds`.
 
 * **Request:** `MsgSwapOutRequest { owner, vault_address, assets (shares), redeem_denom }`
 * **Response:** `MsgSwapOutResponse { request_id }`
+
+> **Deprecated:** `redeem_denom` is deprecated. The underlying-or-payment payout choice collapses
+> to the underlying asset only as vaults move to a single denom. Leave it empty; the field will be
+> removed in a future release.
 
 ---
 
@@ -253,6 +261,10 @@ Vault must be paused to allow this adjustment.
 * **Request:** `MsgDepositPrincipalFundsRequest { authority, vault_address, amount }`
 * **Response:** `MsgDepositPrincipalFundsResponse {}`
 
+> **Deprecated:** Direct principal mutation is being replaced by the exchange-backed payments flow
+> (`AcceptAsset`/`RejectAsset`). Do not build new integrations against this endpoint; it will be
+> removed in a future release.
+
 ---
 
 ## WithdrawPrincipalFunds
@@ -262,6 +274,10 @@ Vault must be paused to allow this adjustment.
 
 * **Request:** `MsgWithdrawPrincipalFundsRequest { authority, vault_address, amount }`
 * **Response:** `MsgWithdrawPrincipalFundsResponse {}`
+
+> **Deprecated:** Direct principal mutation is being replaced by the exchange-backed payments flow
+> (`AcceptAsset`/`RejectAsset`). Do not build new integrations against this endpoint; it will be
+> removed in a future release.
 
 ---
 

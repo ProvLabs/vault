@@ -289,6 +289,10 @@ Emitted when unused interest reserve funds are withdrawn (vault → authority).
 
 ## Principal Management
 
+> **Deprecated:** These events are emitted only by the deprecated `DepositPrincipalFunds` and
+> `WithdrawPrincipalFunds` endpoints, which are being replaced by the exchange-backed payments
+> flow (`AcceptAsset`/`RejectAsset`). They will be removed in a future release.
+
 ### EventDepositPrincipalFunds
 
 Emitted when principal funds are deposited (authority → vault principal marker).

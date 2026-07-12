@@ -94,11 +94,21 @@ type MsgClient interface {
 	// WithdrawInterestFunds allows withdrawing unused interest funds.
 	// May be signed by the vault admin or the configured asset manager.
 	WithdrawInterestFunds(ctx context.Context, in *MsgWithdrawInterestFundsRequest, opts ...grpc.CallOption) (*MsgWithdrawInterestFundsResponse, error)
+	// Deprecated: Do not use.
 	// DepositPrincipalFunds allows depositing principal funds into a vault.
 	// May be signed by the vault admin or the configured asset manager.
+	//
+	// Deprecated: Direct principal mutation is being replaced by the exchange-backed
+	// payments flow (AcceptAsset/RejectAsset). Do not build new integrations against
+	// this endpoint; it will be removed in a future release.
 	DepositPrincipalFunds(ctx context.Context, in *MsgDepositPrincipalFundsRequest, opts ...grpc.CallOption) (*MsgDepositPrincipalFundsResponse, error)
+	// Deprecated: Do not use.
 	// WithdrawPrincipalFunds allows withdrawing principal funds from a vault.
 	// May be signed by the vault admin or the configured asset manager.
+	//
+	// Deprecated: Direct principal mutation is being replaced by the exchange-backed
+	// payments flow (AcceptAsset/RejectAsset). Do not build new integrations against
+	// this endpoint; it will be removed in a future release.
 	WithdrawPrincipalFunds(ctx context.Context, in *MsgWithdrawPrincipalFundsRequest, opts ...grpc.CallOption) (*MsgWithdrawPrincipalFundsResponse, error)
 	// ExpeditePendingSwapOut expedites a pending swap out from a vault.
 	ExpeditePendingSwapOut(ctx context.Context, in *MsgExpeditePendingSwapOutRequest, opts ...grpc.CallOption) (*MsgExpeditePendingSwapOutResponse, error)
@@ -307,6 +317,7 @@ func (c *msgClient) WithdrawInterestFunds(ctx context.Context, in *MsgWithdrawIn
 	return out, nil
 }
 
+// Deprecated: Do not use.
 func (c *msgClient) DepositPrincipalFunds(ctx context.Context, in *MsgDepositPrincipalFundsRequest, opts ...grpc.CallOption) (*MsgDepositPrincipalFundsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(MsgDepositPrincipalFundsResponse)
@@ -317,6 +328,7 @@ func (c *msgClient) DepositPrincipalFunds(ctx context.Context, in *MsgDepositPri
 	return out, nil
 }
 
+// Deprecated: Do not use.
 func (c *msgClient) WithdrawPrincipalFunds(ctx context.Context, in *MsgWithdrawPrincipalFundsRequest, opts ...grpc.CallOption) (*MsgWithdrawPrincipalFundsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(MsgWithdrawPrincipalFundsResponse)
@@ -508,11 +520,21 @@ type MsgServer interface {
 	// WithdrawInterestFunds allows withdrawing unused interest funds.
 	// May be signed by the vault admin or the configured asset manager.
 	WithdrawInterestFunds(context.Context, *MsgWithdrawInterestFundsRequest) (*MsgWithdrawInterestFundsResponse, error)
+	// Deprecated: Do not use.
 	// DepositPrincipalFunds allows depositing principal funds into a vault.
 	// May be signed by the vault admin or the configured asset manager.
+	//
+	// Deprecated: Direct principal mutation is being replaced by the exchange-backed
+	// payments flow (AcceptAsset/RejectAsset). Do not build new integrations against
+	// this endpoint; it will be removed in a future release.
 	DepositPrincipalFunds(context.Context, *MsgDepositPrincipalFundsRequest) (*MsgDepositPrincipalFundsResponse, error)
+	// Deprecated: Do not use.
 	// WithdrawPrincipalFunds allows withdrawing principal funds from a vault.
 	// May be signed by the vault admin or the configured asset manager.
+	//
+	// Deprecated: Direct principal mutation is being replaced by the exchange-backed
+	// payments flow (AcceptAsset/RejectAsset). Do not build new integrations against
+	// this endpoint; it will be removed in a future release.
 	WithdrawPrincipalFunds(context.Context, *MsgWithdrawPrincipalFundsRequest) (*MsgWithdrawPrincipalFundsResponse, error)
 	// ExpeditePendingSwapOut expedites a pending swap out from a vault.
 	ExpeditePendingSwapOut(context.Context, *MsgExpeditePendingSwapOutRequest) (*MsgExpeditePendingSwapOutResponse, error)

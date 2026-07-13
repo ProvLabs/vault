@@ -20,15 +20,12 @@ const (
 )
 
 // CreateVault creates a new vault with a marker and funds accounts.
-func CreateVault(ctx sdk.Context, vk *keeper.Keeper, ak types.AccountKeeper, _ types.BankKeeper, mk markerkeeper.Keeper, underlying, paymentDenom, share string, admin simtypes.Account, _ []simtypes.Account) error {
+func CreateVault(ctx sdk.Context, vk *keeper.Keeper, ak types.AccountKeeper, _ types.BankKeeper, mk markerkeeper.Keeper, underlying, share string, admin simtypes.Account, _ []simtypes.Account) error {
 	if !MarkerExists(ctx, mk, underlying) {
 		return fmt.Errorf("underlying marker %s does not exist", underlying)
 	}
-	if paymentDenom != "" && !MarkerExists(ctx, mk, paymentDenom) {
-		return fmt.Errorf("payment denom marker %s does not exist", paymentDenom)
-	}
 
-	if err := PrepareVaultMarkers(ctx, ak, mk, underlying, paymentDenom, share); err != nil {
+	if err := PrepareVaultMarkers(ctx, ak, mk, underlying, share); err != nil {
 		return err
 	}
 
@@ -37,7 +34,6 @@ func CreateVault(ctx sdk.Context, vk *keeper.Keeper, ak types.AccountKeeper, _ t
 		Admin:                  admin.Address.String(),
 		ShareDenom:             share,
 		UnderlyingAsset:        underlying,
-		PaymentDenom:           paymentDenom,
 		WithdrawalDelaySeconds: interest.SecondsPerDay,
 	}
 	msgServer := keeper.NewMsgServer(vk)
@@ -46,27 +42,22 @@ func CreateVault(ctx sdk.Context, vk *keeper.Keeper, ak types.AccountKeeper, _ t
 }
 
 // PrepareVaultMarkers grants the necessary permissions to the predicted vault address
-// for its underlying and payment markers. This is required for the vault creation
-// pre-flight check and for collecting AUM fees.
-func PrepareVaultMarkers(ctx sdk.Context, ak types.AccountKeeper, mk markerkeeper.Keeper, underlying, paymentDenom, share string) error {
+// for its underlying marker. This is required for the vault creation pre-flight check
+// and for collecting AUM fees.
+func PrepareVaultMarkers(ctx sdk.Context, ak types.AccountKeeper, mk markerkeeper.Keeper, underlying, share string) error {
 	vaultAddr := types.GetVaultAddress(share)
 	mintAddr := ak.GetModuleAddress("mint")
-	for _, denom := range []string{underlying, paymentDenom} {
-		if denom == "" {
-			continue
+	m, err := mk.GetMarker(ctx, markertypes.MustGetMarkerAddress(underlying))
+	if err != nil {
+		return fmt.Errorf("failed to get marker for %s: %w", underlying, err)
+	}
+	if m.GetMarkerType() == markertypes.MarkerType_RestrictedCoin {
+		if err := GrantTransferPermission(ctx, mk, underlying, vaultAddr, mintAddr); err != nil {
+			return fmt.Errorf("failed to grant transfer permission for %s: %w", underlying, err)
 		}
-		m, err := mk.GetMarker(ctx, markertypes.MustGetMarkerAddress(denom))
-		if err != nil {
-			return fmt.Errorf("failed to get marker for %s: %w", denom, err)
-		}
-		if m.GetMarkerType() == markertypes.MarkerType_RestrictedCoin {
-			if err := GrantTransferPermission(ctx, mk, denom, vaultAddr, mintAddr); err != nil {
-				return fmt.Errorf("failed to grant transfer permission for %s: %w", denom, err)
-			}
-		} else {
-			if err := GrantWithdrawPermission(ctx, mk, denom, vaultAddr, mintAddr); err != nil {
-				return fmt.Errorf("failed to grant withdraw permission for %s: %w", denom, err)
-			}
+	} else {
+		if err := GrantWithdrawPermission(ctx, mk, underlying, vaultAddr, mintAddr); err != nil {
+			return fmt.Errorf("failed to grant withdraw permission for %s: %w", underlying, err)
 		}
 	}
 	return nil

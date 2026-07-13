@@ -42,13 +42,12 @@ type MsgCreateVaultRequest struct {
 	ShareDenom string `protobuf:"bytes,2,opt,name=share_denom,json=shareDenom,proto3" json:"share_denom,omitempty"`
 	// underlying_asset is the denomination of the asset supported by the vault.
 	UnderlyingAsset string `protobuf:"bytes,3,opt,name=underlying_asset,json=underlyingAsset,proto3" json:"underlying_asset,omitempty"`
-	// payment_denom is the secondary denomination the vault can accept.
-	// Must be empty or equal to underlying_asset; creation with a differing
-	// payment_denom is rejected (vaults are single-denom).
-	// If not specified, vault payment_denom will be set to underlying_asset.
+	// payment_denom must be empty or equal to underlying_asset; creation with a
+	// differing payment_denom is rejected (vaults are single-denom).
 	//
-	// Deprecated: The mixed-denom vault concept is being flattened into a single
-	// underlying denom. Leave this field empty; it will be removed in a future release.
+	// Deprecated: The mixed-denom vault concept has been flattened into a single
+	// underlying denom. Leave this field empty; deletion is deferred to a future
+	// major release.
 	PaymentDenom string `protobuf:"bytes,4,opt,name=payment_denom,json=paymentDenom,proto3" json:"payment_denom,omitempty"` // Deprecated: Do not use.
 	// withdrawal_delay_seconds is the time period (in seconds) that a withdrawal
 	// must wait in the pending queue before being processed.
@@ -71,11 +70,10 @@ type MsgCreateVaultRequest struct {
 	MaxSwapOutValue string `protobuf:"bytes,9,opt,name=max_swap_out_value,json=maxSwapOutValue,proto3" json:"max_swap_out_value,omitempty"`
 	// initial_payment_nav must be omitted. It previously seeded the per-vault
 	// Internal NAV entry when payment_denom differed from underlying_asset, a
-	// configuration that can no longer be created (payment_denom must be empty
-	// or equal to underlying_asset, where the identity 1:1 price applies).
+	// configuration that can no longer be created.
 	//
 	// Deprecated: mixed-denom vault creation is rejected, so this field has no
-	// remaining use. Omit it; it will be removed in a future release.
+	// remaining use. Omit it; deletion is deferred to a future major release.
 	InitialPaymentNav *InitialVaultNAV `protobuf:"bytes,10,opt,name=initial_payment_nav,json=initialPaymentNav,proto3" json:"initial_payment_nav,omitempty"` // Deprecated: Do not use.
 }
 
@@ -443,13 +441,12 @@ type MsgSwapOutRequest struct {
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// assets is the amount of underlying assets to withdraw.
 	Assets types1.Coin `protobuf:"bytes,3,opt,name=assets,proto3" json:"assets"`
-	// redeem_denom selects the payout coin.
-	// - If empty, defaults to the vault’s payment_denom.
-	// - Must be either the vault’s underlying_asset or its payment_denom.
+	// redeem_denom must be empty or equal to the vault's underlying_asset; the
+	// payout is always the underlying asset.
 	//
-	// Deprecated: The underlying-or-payment payout choice collapses to the
-	// underlying asset only as vaults move to a single denom. Leave this empty;
-	// the field will be removed in a future release.
+	// Deprecated: The underlying-or-payment payout choice has collapsed to the
+	// underlying asset only. Leave this empty; deletion is deferred to a future
+	// major release.
 	RedeemDenom string `protobuf:"bytes,4,opt,name=redeem_denom,json=redeemDenom,proto3" json:"redeem_denom,omitempty"` // Deprecated: Do not use.
 }
 
@@ -3017,11 +3014,10 @@ type MsgUpdateVaultNAVRequest struct {
 	// vault_address is the bech32 address of the vault whose NAV entry is being updated.
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// denom is the asset denomination being priced. It must not be the vault's
-	// share denom. The underlying asset is a valid denom (e.g. to record its
-	// price in payment-denom terms).
+	// share denom.
 	Denom string `protobuf:"bytes,3,opt,name=denom,proto3" json:"denom,omitempty"`
 	// price is the total value of `volume` units of the denom, denominated in
-	// one of the vault's accepted denoms (underlying asset or payment denom).
+	// the vault's underlying asset.
 	Price types1.Coin `protobuf:"bytes,4,opt,name=price,proto3" json:"price"`
 	// volume is the number of units of the denom that price covers. It must be positive.
 	Volume cosmossdk_io_math.Int `protobuf:"bytes,5,opt,name=volume,proto3,customtype=cosmossdk.io/math.Int" json:"volume"`
@@ -3238,8 +3234,8 @@ var xxx_messageInfo_MsgUpdateNAVAuthorityResponse proto.InternalMessageInfo
 
 // MsgAcceptAssetRequest is the request message for settling a pending exchange-module
 // payment whose target is the vault. The payment is identified by its source account and
-// external_id. The vault settles only payments where one leg is the vault's payment_denom;
-// the settlement direction (inbound or outbound) is derived from which leg that is.
+// external_id. The vault settles only payments where one leg is the vault's underlying
+// asset; the settlement direction (inbound or outbound) is derived from which leg that is.
 type MsgAcceptAssetRequest struct {
 	// authority is the address of the vault's asset manager authorizing the settlement.
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
@@ -3767,7 +3763,7 @@ type MsgClient interface {
 	// Must be signed by the vault admin.
 	UpdateNAVAuthority(ctx context.Context, in *MsgUpdateNAVAuthorityRequest, opts ...grpc.CallOption) (*MsgUpdateNAVAuthorityResponse, error)
 	// AcceptAsset settles a pending exchange-module payment whose target is the vault,
-	// exchanging an external asset for the vault's payment denom.
+	// exchanging an external asset for the vault's underlying asset.
 	// Must be signed by the vault's asset manager; the admin cannot settle.
 	AcceptAsset(ctx context.Context, in *MsgAcceptAssetRequest, opts ...grpc.CallOption) (*MsgAcceptAssetResponse, error)
 	// RejectAsset declines a pending exchange-module payment whose target is the vault,
@@ -4155,7 +4151,7 @@ type MsgServer interface {
 	// Must be signed by the vault admin.
 	UpdateNAVAuthority(context.Context, *MsgUpdateNAVAuthorityRequest) (*MsgUpdateNAVAuthorityResponse, error)
 	// AcceptAsset settles a pending exchange-module payment whose target is the vault,
-	// exchanging an external asset for the vault's payment denom.
+	// exchanging an external asset for the vault's underlying asset.
 	// Must be signed by the vault's asset manager; the admin cannot settle.
 	AcceptAsset(context.Context, *MsgAcceptAssetRequest) (*MsgAcceptAssetResponse, error)
 	// RejectAsset declines a pending exchange-module payment whose target is the vault,

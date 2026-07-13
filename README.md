@@ -139,7 +139,7 @@ Claude Code agent defined in `.claude/agents/provenance-drift.md`.
 
 The `spec/` directory contains module documentation:
 
-- [Concepts & Overview](spec/01_concepts.md) — what a vault is, share/asset model, payment denom behavior, module responsibilities.
+- [Concepts & Overview](spec/01_concepts.md) — what a vault is, share/asset model, single-denom behavior, module responsibilities.
 - [State](spec/02_state.md) — canonical vault accounts, queues/collections, addressing, genesis notes.
 - [Msgs](spec/03_messages.md) — tx endpoints, endpoint gating matrix, flows and validation.
 - [Events](spec/04_events.md) — event catalog and operational guidance (incl. swap-out success/refund signaling).

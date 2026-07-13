@@ -112,7 +112,7 @@ Emitted when assets are swapped into shares.
 **Fields**
 
 * `owner` — depositor
-* `amount_in` — assets deposited (underlying denom or payment denom if supported for in-flow)
+* `amount_in` — assets deposited (always the vault's underlying asset)
 * `shares_received` — minted shares
 * `vault_address` — vault
 
@@ -126,7 +126,7 @@ Emitted when a **SwapOut** request is accepted into the **pending** queue. This 
 
 * `vault_address` — vault
 * `owner` — requester (recipient will be the same owner)
-* `redeem_denom` — chosen payout denom (`underlying_asset` or optional `payment_denom`)
+* `redeem_denom` — payout denom; always the vault's `underlying_asset`
 * `shares` — escrowed shares amount
 * `request_id` — **stable handle** for this request
 
@@ -156,7 +156,7 @@ Emitted when a pending swap-out is **successfully paid** in `EndBlocker`.
 
 * `vault_address` — vault
 * `owner` — recipient of funds
-* `assets` — payout amount (in `redeem_denom` that was requested)
+* `assets` — payout amount (in the vault's underlying asset)
 * `request_id` — the completed request
 
 ---
@@ -219,10 +219,10 @@ Emitted when the 15 bps AUM technology fee is collected.
 **Fields**
 
 * `vault_address` — vault
-* `collected_amount` — amount actually transferred to ProvLabs (payment denom)
-* `requested_amount` — total accrued fee for this period + any previous unpaid amount (payment denom)
+* `collected_amount` — amount actually transferred to ProvLabs (underlying denom)
+* `requested_amount` — total accrued fee for this period + any previous unpaid amount (underlying denom)
 * `aum_snapshot` — TVV snapshot used for calculation (underlying denom)
-* `outstanding_amount` — remaining unpaid fee after this collection (payment denom)
+* `outstanding_amount` — remaining unpaid fee after this collection (underlying denom)
 * `duration_seconds` — time period covered by this collection
 
 ---
@@ -422,7 +422,7 @@ Emitted when the vault's asset manager settles a pending `x/exchange` payment ta
 * `external_id` — payment identifier (unique per source)
 * `source_amount` — funds the source paid the vault (coins string)
 * `target_amount` — funds the vault paid the source (coins string)
-* `direction` — `"inbound"` (asset moved into the vault) or `"outbound"` (asset moved out), relative to the vault's payment denom
+* `direction` — `"inbound"` (asset moved into the vault) or `"outbound"` (asset moved out), relative to the vault's underlying asset
 
 **Notes**
 

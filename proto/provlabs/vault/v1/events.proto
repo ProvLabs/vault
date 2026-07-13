@@ -229,7 +229,8 @@ message EventSwapOutRequested {
   string vault_address = 1;
   // owner is the bech32 address of the user who initiated the swap out.
   string owner = 2;
-  // redeem_denom is the denomination of the asset to be redeemed.
+  // redeem_denom is the denomination of the asset to be redeemed. Always the
+  // vault's underlying_asset; retained for event-schema compatibility.
   string redeem_denom = 3;
   // shares is the amount of vault shares the user escrowed for this request.
   string shares = 4;
@@ -505,7 +506,7 @@ message EventAssetAccepted {
   // target_amount is the funds the vault paid the source, rendered as a coins string.
   string target_amount = 5;
   // direction indicates whether the asset moved into the vault ("inbound") or
-  // out of the vault ("outbound") relative to the vault's payment denom.
+  // out of the vault ("outbound") relative to the vault's underlying asset.
   string direction = 6;
 }
 

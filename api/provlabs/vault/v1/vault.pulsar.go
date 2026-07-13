@@ -4712,23 +4712,14 @@ type VaultAccount struct {
 	// underlying_asset is the vault’s single principal collateral AND valuation/base unit.
 	// - Exactly one denom.
 	// - Total Vault Value (TVV) and NAV-per-share are computed and reported in this denom.
-	// - Interest accrual and internal accounting are measured in this denom.
-	// - Any other coin accepted for I/O (i.e. a distinct payment_denom) must have a NAV record priced INTO this denom.
+	// - Interest accrual, fees, and internal accounting are measured in this denom.
+	// - Held assets acquired via settlement must have an internal NAV record priced INTO this denom.
 	UnderlyingAsset string `protobuf:"bytes,3,opt,name=underlying_asset,json=underlyingAsset,proto3" json:"underlying_asset,omitempty"`
-	// payment_denom is the external payment coin supported for user I/O alongside the underlying_asset.
-	//   - Always populated. If not specified during creation, it defaults to underlying_asset.
-	//   - If payment_denom equals underlying_asset, the vault operates as a single-denom vault.
-	//   - If payment_denom differs from underlying_asset, swap-in/out accept either denom (one per call).
-	//   - Default Swap-Out: If a user does not specify a redeem_denom during withdrawal,
-	//     the vault defaults to paying out in this payment_denom.
-	//   - NAV Requirement: If payment_denom differs from underlying_asset, it requires an on-chain NAV record
-	//     mapping payment_denom -> underlying_asset to value deposits and redemptions.
-	//     (Note: In current versions, this NAV check is strictly enforced unless payment_denom is 'uylds.fcc'.
-	//     This exemption is deprecated along with the field and will be removed with it.)
+	// payment_denom always equals underlying_asset. Vaults are single-denom; the
+	// field is inert and retained only for wire compatibility.
 	//
-	// Deprecated: The mixed-denom vault concept is being flattened into a single
-	// underlying denom; payment_denom collapses to underlying_asset and will be
-	// removed in a future release.
+	// Deprecated: The mixed-denom vault concept has been flattened into a single
+	// underlying denom. Deletion of this field is deferred to a future major release.
 	//
 	// Deprecated: Do not use.
 	PaymentDenom string `protobuf:"bytes,4,opt,name=payment_denom,json=paymentDenom,proto3" json:"payment_denom,omitempty"`
@@ -4783,7 +4774,7 @@ type VaultAccount struct {
 	FeePeriodTimeout int64 `protobuf:"varint,22,opt,name=fee_period_timeout,json=feePeriodTimeout,proto3" json:"fee_period_timeout,omitempty"`
 	// outstanding_aum_fee is the amount of AUM fee that has been calculated but not yet collected
 	// due to insufficient liquidity in the principal marker. This amount is always denominated
-	// in the vault's payment_denom, must be preserved, and is carried into valuation computations.
+	// in the vault's underlying_asset, must be preserved, and is carried into valuation computations.
 	OutstandingAumFee *v1beta11.Coin `protobuf:"bytes,23,opt,name=outstanding_aum_fee,json=outstandingAumFee,proto3" json:"outstanding_aum_fee,omitempty"`
 	// aum_fee_bips is the AUM fee rate (in basis points) for this specific vault.
 	// Units: Basis Points (1 bps = 0.01%).
@@ -4793,7 +4784,6 @@ type VaultAccount struct {
 	AumFeeBips uint32 `protobuf:"varint,24,opt,name=aum_fee_bips,json=aumFeeBips,proto3" json:"aum_fee_bips,omitempty"`
 	// min_swap_in_value is a string representing the minimum value required for a deposit.
 	// - The value is measured in the underlying_asset.
-	// - Incoming payment_denom deposits are converted to this unit before checking.
 	// - Values must be non-negative (>= 0).
 	// - If empty ("") or "0", there is no minimum limit.
 	MinSwapInValue string `protobuf:"bytes,25,opt,name=min_swap_in_value,json=minSwapInValue,proto3" json:"min_swap_in_value,omitempty"`
@@ -4805,7 +4795,6 @@ type VaultAccount struct {
 	MinSwapOutValue string `protobuf:"bytes,26,opt,name=min_swap_out_value,json=minSwapOutValue,proto3" json:"min_swap_out_value,omitempty"`
 	// max_swap_in_value is a string representing the maximum value allowed for a deposit.
 	// - The value is measured in the underlying_asset.
-	// - Incoming payment_denom deposits are converted to this unit before checking.
 	// - Values must be positive (> 0).
 	// - An empty string "" indicates no maximum limit.
 	MaxSwapInValue string `protobuf:"bytes,27,opt,name=max_swap_in_value,json=maxSwapInValue,proto3" json:"max_swap_in_value,omitempty"`
@@ -5257,7 +5246,8 @@ type PendingSwapOut struct {
 	VaultAddress string `protobuf:"bytes,2,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// shares are the shares that were escrowed by the user.
 	Shares *v1beta11.Coin `protobuf:"bytes,3,opt,name=shares,proto3" json:"shares,omitempty"`
-	// redeem_denom is the denomination of the asset to be redeemed.
+	// redeem_denom is the denomination of the asset to be redeemed. Always the
+	// vault's underlying_asset; retained for wire compatibility.
 	RedeemDenom string `protobuf:"bytes,4,opt,name=redeem_denom,json=redeemDenom,proto3" json:"redeem_denom,omitempty"`
 }
 

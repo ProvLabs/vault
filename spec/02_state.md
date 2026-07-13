@@ -2,11 +2,11 @@
 
 The Vault module persists **vault accounts**, **interest scheduling metadata**, and **swap-out jobs** using typed collections.  
 Canonical vault accounts live in `x/auth` (as `VaultAccount`), while this module maintains compact lookups and queues for automated processing.  
-Vaults carry a **payment denom** alongside the **underlying asset**; accepted I/O denoms are always the underlying asset and, if set, the payment denom. New vaults are single-denom: creation rejects a payment denom that differs from the underlying asset (an empty payment denom defaults to it). Vaults created before this restriction may still carry a differing payment denom. :contentReference[oaicite:0]{index=0}
+Vaults are strictly **single-denom**: the **underlying asset** is the only accepted I/O denom. Creation rejects a `payment_denom` that differs from the underlying asset (an empty payment denom defaults to it), and the module's v1→v2 state migration flattened any pre-existing mixed-denom vaults so `payment_denom` always equals `underlying_asset`.
 
-> **Deprecation notice:** The payment denom configuration is deprecated. Vaults are moving to a
-> single underlying denom, and `payment_denom` will be removed in a future release
-> (see `spec/01_concepts.md`).
+> **Deprecation notice:** The payment denom functionality has been removed. The `payment_denom`
+> wire field remains for client compatibility and always equals `underlying_asset`; field deletion
+> is deferred to a future major release (see `spec/01_concepts.md`).
 
 ---
 <!-- TOC -->
@@ -24,6 +24,7 @@ Vaults carry a **payment denom** alongside the **underlying asset**; accepted I/
   - [Internal NAV Table (prefix 11)](#internal-nav-table-prefix-11)
 - [Deterministic Vault Addressing](#deterministic-vault-addressing)
 - [Genesis Notes](#genesis-notes)
+  - [State Migration (v1 → v2)](#state-migration-v1--v2)
 
 ---
 
@@ -31,17 +32,17 @@ Vaults carry a **payment denom** alongside the **underlying asset**; accepted I/
 
 Each vault is an `x/auth` account implementing `VaultAccountI`. The canonical record contains:
 
-- Admin address, share denom, underlying asset, deprecated **payment denom** (equal to the underlying on newly created vaults; may differ only on vaults that predate the single-denom restriction)  
+- Admin address, share denom, underlying asset, deprecated **payment denom** (inert; always equal to the underlying asset — enforced at creation, by validation, and by the v1→v2 migration for pre-existing vaults)  
 - Interest configuration: `CurrentInterestRate`, `DesiredInterestRate`, optional `MinInterestRate`/`MaxInterestRate` bounds  
 - Swap toggles, `WithdrawalDelaySeconds`, pause flags/reason and `PausedBalance` snapshot  
 - **Swap Limits:** `min_swap_in_value`, `min_swap_out_value`, `max_swap_in_value`, and `max_swap_out_value` (measured in underlying asset)
 - **Total supply-of-record:** `total_shares` (authoritative across chains; includes locally and externally held shares)  
 - **Bridging controls:** `bridge_address` (the sole authorized external address) and `bridge_enabled` (feature gate)
 - **Asset Management:** optional `asset_manager` address with delegated authority; it is also the sole authority for P2P settlement (`AcceptAsset`/`RejectAsset`).
-- **AUM Fee State:** `fee_period_start`, `fee_period_timeout`, and `outstanding_aum_fee`.
+- **AUM Fee State:** `fee_period_start`, `fee_period_timeout`, and `outstanding_aum_fee` (denominated in the underlying asset).
 - **NAV Authority:** optional `nav_authority` address authorized to mutate the vault's internal NAV table via `MsgUpdateVaultNAV`; the admin acts as NAV authority when unset.
 
-`VaultAccount` enforces invariants (e.g., valid denoms, rate bounds, etc.) and provides helpers like `AcceptedDenoms()` and `ValidateAcceptedDenom`. :contentReference[oaicite:1]{index=1}
+`VaultAccount` enforces invariants (e.g., valid denoms, `payment_denom` empty or equal to the underlying asset, rate bounds, etc.) and provides helpers like `IsAcceptedDenom` and `ValidateAcceptedDenom`, which accept only the underlying asset.
 
 > Note: Because vaults are first-class accounts, the **authoritative storage** for the account itself is `x/auth`. The `x/vault` module adds lookups and queues to operate on those accounts efficiently.
 
@@ -49,7 +50,7 @@ Each vault is an `x/auth` account implementing `VaultAccountI`. The canonical re
 
 ## Collections (x/vault)
 
-The module uses typed collections with fixed **prefix IDs** for clarity and upgrade stability. Bridging introduces no new collections; capacity is computed at runtime from local marker/bank supply vs `total_shares`. :contentReference[oaicite:2]{index=2}
+The module uses typed collections with fixed **prefix IDs** for clarity and upgrade stability. Bridging introduces no new collections; capacity is computed at runtime from local marker/bank supply vs `total_shares`.
 
 ### Vault Lookup (prefix 0)
 
@@ -58,7 +59,7 @@ A compact lookup keyed by vault address. Used to enumerate vaults and cache seri
 - **Prefix:** `VaultsKeyPrefix` (0)  
 - **Key:** `sdk.AccAddress` (vault address)  
 - **Value:** `[]byte` (serialized `VaultAccount`, including `total_shares`, `bridge_address`, `bridge_enabled`)  
-:contentReference[oaicite:3]{index=3}
+
 
 ### Payout Verification Set (prefix 1)
 
@@ -67,7 +68,7 @@ A set of vaults queued for **payout verification** (e.g., after rate changes or 
 - **Prefix:** `VaultPayoutVerificationSetPrefix` (1)  
 - **Key:** `sdk.AccAddress` (vault address)  
 - **Value:** none (keyset)  
-:contentReference[oaicite:4]{index=4}
+
 
 ### Payout Timeout Queue (prefix 2)
 
@@ -76,7 +77,7 @@ A time-ordered queue scheduling when a vault should be revisited for **automatic
 - **Prefix:** `VaultPayoutTimeoutQueuePrefix` (2)  
 - **Key:** typically `(uint64 timeoutSeconds, sdk.AccAddress vault)` (implementation uses typed queue entries)  
 - **Value:** none  
-:contentReference[oaicite:5]{index=5}
+
 
 ### Vault Fee Timeout Queue (prefix 7)
 
@@ -92,7 +93,7 @@ Holds **withdrawal jobs** created by `SwapOut`. Jobs are processed after the vau
 
 - **Prefix:** `VaultPendingSwapOutQueuePrefix` (3)  
 - **Key:** typically `(int64 dueTime, uint64 id)` to maintain time ordering  
-- **Value:** `types.PayoutJob` (wraps the `PendingSwapOut` request and metadata) :contentReference[oaicite:6]{index=6} :contentReference[oaicite:7]{index=7}
+- **Value:** `types.PayoutJob` (wraps the `PendingSwapOut` request and metadata)
 
 ### Pending Swap-Out Sequence (prefix 4)
 
@@ -100,7 +101,7 @@ A monotonic sequence used to assign globally unique **request IDs** for pending 
 
 - **Prefix:** `VaultPendingSwapOutQueueSeqPrefix` (4)  
 - **Value:** last used `uint64` ID (typed by the sequence collection)  
-:contentReference[oaicite:8]{index=8}
+
 
 ### Pending Swap-Out by Vault Index (prefix 5)
 
@@ -109,7 +110,7 @@ Reverse index to list all pending requests for a given vault without scanning th
 - **Prefix:** `VaultPendingSwapOutByVaultIndexPrefix` (5)  
 - **Key:** `(sdk.AccAddress vault, uint64 id)`  
 - **Value:** none  
-:contentReference[oaicite:9]{index=9}
+
 
 ### Pending Swap-Out by ID Index (prefix 6)
 
@@ -118,7 +119,7 @@ Direct lookup by **request ID** (useful to expedite or cancel a single job).
 - **Prefix:** `VaultPendingSwapOutByIdIndexPrefix` (6)  
 - **Key:** `uint64 id`  
 - **Value:** lightweight pointer to the queued entry (implementation detail)  
-:contentReference[oaicite:10]{index=10}
+
 
 ### AUM Fee Address (prefix 8)
 
@@ -134,20 +135,25 @@ Per-vault price entries for asset denoms the vault holds or settles. The vault m
 
 - **Prefix:** `NAVsKeyPrefix` (11)
 - **Key:** `(sdk.AccAddress vault, string denom)`
-- **Value:** `types.VaultNAV { denom, price, volume, source, updated_block_height, updated_time }` — `price` is the total value of `volume` units of `denom`; per-unit value is `price / volume`
+- **Value:** `types.VaultNAV { denom, price, volume, source, updated_block_height, updated_time }` — `price` is the total value of `volume` units of `denom`; per-unit value is `price / volume`. The `price` denom must be the owning vault's underlying asset.
 
 ---
 
 ## Deterministic Vault Addressing
 
 Given a **share denom**, the corresponding vault account address is derived deterministically:  
-`addr = AddressHash("vault/<shareDenom>")`. This enables “find the vault by share denom” without maintaining a separate index. :contentReference[oaicite:11]{index=11}
+`addr = AddressHash("vault/<shareDenom>")`. This enables “find the vault by share denom” without maintaining a separate index.
 
 ---
 
 ## Genesis Notes
 
 The module defines a minimal `GenesisState` with validation and relies on import/export logic to include **vault accounts** (from `x/auth`) and active **queue entries** (timeouts and pending swap-outs). There are **no module Params** in the vault genesis.  
-Genesis must preserve `total_shares`, `bridge_address`, and `bridge_enabled`, and validate that local marker supply does not exceed `total_shares`. :contentReference[oaicite:12]{index=12} :contentReference[oaicite:13]{index=13}
+Genesis must preserve `total_shares`, `bridge_address`, and `bridge_enabled`, and validate that local marker supply does not exceed `total_shares`.  
+Genesis validation also enforces the single-denom model: every NAV entry's `price` denom must equal the owning vault's underlying asset, and `VaultAccount` validation requires `payment_denom` to be empty or equal to the underlying asset.
+
+### State Migration (v1 → v2)
+
+The module's consensus version 1→2 migration flattens any pre-existing mixed-denom vaults into the single-denom model. For each vault it sets `payment_denom = underlying_asset`, re-denominates `outstanding_aum_fee` into the underlying asset, and defaults `nav_authority` to the admin when unset; it also rewrites any pending swap-out's redeem denom to the owning vault's underlying asset. No funds move and no accounts are deleted.
 
 ---

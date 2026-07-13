@@ -172,7 +172,7 @@ linters:
       # are aimed at external integrators, not this repo's internals.
       - linters:
           - staticcheck
-        text: 'SA1019: .*(removed in a future release|removed with the mixed-denom vault concept)'
+        text: 'SA1019: .*(removed in a future release|removed with the mixed-denom vault concept|deferred to a future major release)'
       - linters:
           - revive
         text: don't use leading k in Go names

@@ -13030,7 +13030,7 @@ type QueryEstimateSwapInRequest struct {
 
 	// vault_address is the bech32 address of the vault to query.
 	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// assets is the amount of underlying or payment denom to swap in.
+	// assets is the amount of the underlying asset to swap in.
 	Assets *v1beta11.Coin `protobuf:"bytes,2,opt,name=assets,proto3" json:"assets,omitempty"`
 }
 
@@ -13133,11 +13133,12 @@ type QueryEstimateSwapOutRequest struct {
 	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// shares is the amount of shares to swap out.
 	Shares string `protobuf:"bytes,2,opt,name=shares,proto3" json:"shares,omitempty"`
-	// redeem_denom is the payout denom to estimate; if empty, the underlying asset is used.
+	// redeem_denom must be empty or equal to the vault's underlying_asset; the
+	// estimated payout is always the underlying asset.
 	//
-	// Deprecated: The underlying-or-payment payout choice collapses to the
-	// underlying asset only as vaults move to a single denom. Leave this empty;
-	// the field will be removed in a future release.
+	// Deprecated: The underlying-or-payment payout choice has collapsed to the
+	// underlying asset only. Leave this empty; deletion is deferred to a future
+	// major release.
 	//
 	// Deprecated: Do not use.
 	RedeemDenom string `protobuf:"bytes,3,opt,name=redeem_denom,json=redeemDenom,proto3" json:"redeem_denom,omitempty"`

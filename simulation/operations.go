@@ -205,16 +205,12 @@ func SimulateMsgCreateVault(k keeper.Keeper) simtypes.Operation {
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "unable to get random denom for underlying"), nil, nil
 		}
-		payment := ""
-		if r.Intn(2) == 0 {
-			payment = underlying
-		}
 
 		markerKeeper, ok := k.MarkerKeeper.(markerkeeper.Keeper)
 		if !ok {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "marker keeper is not of type markerkeeper.Keeper"), nil, fmt.Errorf("marker keeper is not of type markerkeeper.Keeper")
 		}
-		if err = PrepareVaultMarkers(ctx, k.AuthKeeper, markerKeeper, underlying, payment, denom); err != nil {
+		if err = PrepareVaultMarkers(ctx, k.AuthKeeper, markerKeeper, underlying, denom); err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgCreateVaultRequest{}), "failed to prepare vault markers"), nil, err
 		}
 
@@ -222,7 +218,6 @@ func SimulateMsgCreateVault(k keeper.Keeper) simtypes.Operation {
 			Admin:                  admin.Address.String(),
 			ShareDenom:             denom,
 			UnderlyingAsset:        underlying,
-			PaymentDenom:           payment,
 			WithdrawalDelaySeconds: interest.SecondsPerDay,
 		}
 
@@ -271,7 +266,7 @@ func SimulateMsgSwapIn(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSwapInRequest{}), "unable to get random vault"), nil, err
 		}
 
-		assetDenom := getRandomVaultAsset(r, vault)
+		assetDenom := vault.UnderlyingAsset
 		owner, balance, err := getRandomAccountWithDenom(r, k, ctx, accs, assetDenom)
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgSwapInRequest{}), "no account has funds for this vault's accepted assets"), nil, nil
@@ -335,10 +330,13 @@ func SimulateMsgSwapOut(k keeper.Keeper) simtypes.Operation {
 		}
 		shares := sdk.NewCoin(vault.TotalShares.Denom, amount)
 
-		// Pick a random asset to receive it in
-		redeemDenom := getRandomVaultAsset(r, vault)
+		// Alternate between the explicit underlying and the empty default so both
+		// redeem-denom request paths stay exercised.
+		redeemDenom := vault.UnderlyingAsset
+		if r.Intn(2) == 0 {
+			redeemDenom = ""
+		}
 
-		// Create and dispatch the message
 		msg := &types.MsgSwapOutRequest{
 			Owner:        owner.Address.String(),
 			VaultAddress: vault.GetAddress().String(),
@@ -659,7 +657,7 @@ func SimulateMsgDepositPrincipalFunds(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositPrincipalFundsRequest{}), "unable to get random authority"), nil, nil
 		}
 
-		asset := getRandomVaultAsset(r, vault)
+		asset := vault.UnderlyingAsset
 		balance := k.BankKeeper.GetBalance(ctx, authority.Address, asset)
 		if balance.IsZero() {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgDepositPrincipalFundsRequest{}), "authority has no funds to deposit"), nil, nil
@@ -714,7 +712,7 @@ func SimulateMsgWithdrawPrincipalFunds(k keeper.Keeper) simtypes.Operation {
 		}
 
 		principalAddr := vault.PrincipalMarkerAddress()
-		asset := getRandomVaultAsset(r, vault)
+		asset := vault.UnderlyingAsset
 		balance := k.BankKeeper.GetBalance(ctx, principalAddr, asset)
 		if balance.IsZero() {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgWithdrawPrincipalFundsRequest{}), "no underlying asset funds"), nil, nil
@@ -1306,7 +1304,7 @@ func SimulateMsgUpdateVaultNAV(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateVaultNAVRequest{}), "unable to create nav marker"), nil, err
 		}
 
-		priceDenom := getRandomVaultAsset(r, vault)
+		priceDenom := vault.UnderlyingAsset
 		priceAmount := math.NewInt(int64(r.Intn(1_000_000) + 1))
 		volume := math.NewInt(int64(r.Intn(1_000_000) + 1))
 
@@ -1377,11 +1375,11 @@ type paymentCreator interface {
 // multiple of the reduced NAV ratio so the settlement passes the exact-price guardrail
 // (random amounts would NoOp on every settlement after the first); when no NAV exists yet
 // (first acquisition, guardrail skipped) the amounts are random.
-func settlementAmounts(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, vault *types.VaultAccount, sourceDenom string, portion math.Int) (sourceAmount, targetAmount math.Int, err error) {
-	nav, err := k.GetVaultNAV(ctx, vault.GetAddress(), vault.UnderlyingAsset)
+func settlementAmounts(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, vault *types.VaultAccount, sourceDenom, assetDenom string, portion math.Int) (sourceAmount, targetAmount math.Int, err error) {
+	nav, err := k.GetVaultNAV(ctx, vault.GetAddress(), assetDenom)
 	if err != nil {
 		if !errors.Is(err, collections.ErrNotFound) {
-			return math.Int{}, math.Int{}, fmt.Errorf("failed to get internal NAV for denom %q: %w", vault.UnderlyingAsset, err)
+			return math.Int{}, math.Int{}, fmt.Errorf("failed to get internal NAV for denom %q: %w", assetDenom, err)
 		}
 		sourceAmount, err = simtypes.RandPositiveInt(r, portion)
 		if err != nil {
@@ -1395,12 +1393,12 @@ func settlementAmounts(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, vault *ty
 	unitAsset := nav.Volume.Quo(math.NewIntFromBigInt(gcd))
 
 	sourceUnit, targetUnit := unitAsset, unitPayment
-	if sourceDenom == vault.PaymentDenom {
+	if sourceDenom == vault.UnderlyingAsset {
 		sourceUnit, targetUnit = unitPayment, unitAsset
 	}
 	maxMultiple := portion.Quo(sourceUnit)
 	if maxMultiple.IsZero() {
-		return math.Int{}, math.Int{}, fmt.Errorf("source balance too low for an exact-NAV settlement of %s per %s%s", nav.Price, nav.Volume, vault.UnderlyingAsset)
+		return math.Int{}, math.Int{}, fmt.Errorf("source balance too low for an exact-NAV settlement of %s per %s%s", nav.Price, nav.Volume, assetDenom)
 	}
 	multiple, err := simtypes.RandPositiveInt(r, maxMultiple)
 	if err != nil {
@@ -1411,27 +1409,26 @@ func settlementAmounts(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, vault *ty
 
 // stagePayment creates a pending exchange payment targeting the vault, drawing the source leg
 // from an account that already holds the chosen denom. The settlement direction is chosen at
-// random: one leg always carries the vault's payment denom and the other its underlying asset,
-// which is the shape AcceptAsset requires. Leg amounts come from settlementAmounts so repeat
-// settlements trade at the vault's internal NAV. Funds are never minted because the vault
-// denoms are fixed-supply markers; inflating their circulating supply would trip the marker
-// module's BeginBlocker supply reconciliation. The created payment is returned so callers can
-// stage the principal marker for the leg the vault must pay out.
+// random: one leg always carries the vault's underlying asset and the other an external asset
+// denom, which is the shape AcceptAsset requires. Leg amounts come from settlementAmounts so
+// repeat settlements trade at the vault's internal NAV. Funds are never minted because the
+// sim denoms are fixed-supply markers; inflating their circulating supply would trip the
+// marker module's BeginBlocker supply reconciliation. The created payment is returned so
+// callers can stage the principal marker for the leg the vault must pay out.
 func stagePayment(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, vault *types.VaultAccount, accs []simtypes.Account) (*exchange.Payment, error) {
 	creator, ok := k.ExchangeKeeper.(paymentCreator)
 	if !ok {
 		return nil, fmt.Errorf("exchange keeper does not support creating payments")
 	}
 
-	paymentDenom := vault.PaymentDenom
-	assetDenom := vault.UnderlyingAsset
-	if assetDenom == paymentDenom {
-		return nil, fmt.Errorf("vault underlying and payment denom are identical")
+	assetDenom, err := getRandomExternalAssetDenom(r, k, ctx, accs, vault.UnderlyingAsset)
+	if err != nil {
+		return nil, err
 	}
 
-	sourceDenom, targetDenom := assetDenom, paymentDenom
+	sourceDenom, targetDenom := assetDenom, vault.UnderlyingAsset
 	if r.Intn(2) == 0 {
-		sourceDenom, targetDenom = paymentDenom, assetDenom
+		sourceDenom, targetDenom = targetDenom, sourceDenom
 	}
 
 	source, sourceBalance, err := getRandomAccountWithDenom(r, k, ctx, accs, sourceDenom)
@@ -1442,7 +1439,7 @@ func stagePayment(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, vault *types.V
 	if portion.IsZero() {
 		return nil, fmt.Errorf("source balance too low to stage a payment")
 	}
-	sourceAmount, targetAmount, err := settlementAmounts(ctx, r, k, vault, sourceDenom, portion)
+	sourceAmount, targetAmount, err := settlementAmounts(ctx, r, k, vault, sourceDenom, assetDenom, portion)
 	if err != nil {
 		return nil, err
 	}
@@ -1510,11 +1507,9 @@ func SimulateMsgAcceptAsset(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgAcceptAssetRequest{}), "unable to setup initial state"), nil, err
 		}
 
-		vault, err := getRandomVaultWithCondition(r, k, ctx, func(vault types.VaultAccount) bool {
-			return vault.PaymentDenom != ""
-		})
+		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgAcceptAssetRequest{}), "no vault with a payment denom"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgAcceptAssetRequest{}), "unable to get random vault"), nil, nil
 		}
 
 		authority, err := ensureSettlementAuthority(ctx, r, k, vault, accs)
@@ -1557,11 +1552,9 @@ func SimulateMsgRejectAsset(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgRejectAssetRequest{}), "unable to setup initial state"), nil, err
 		}
 
-		vault, err := getRandomVaultWithCondition(r, k, ctx, func(vault types.VaultAccount) bool {
-			return vault.PaymentDenom != ""
-		})
+		vault, err := getRandomVault(r, k, ctx)
 		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgRejectAssetRequest{}), "no vault with a payment denom"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgRejectAssetRequest{}), "unable to get random vault"), nil, nil
 		}
 
 		authority, err := ensureSettlementAuthority(ctx, r, k, vault, accs)

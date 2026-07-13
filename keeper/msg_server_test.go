@@ -977,7 +977,7 @@ func (s *TestSuite) TestMsgServer_ToggleSwapOut() {
 			},
 			expectedErrSubstrs: []string{
 				"failed to set swap out enable",
-				"invalid payment denom: \"!TABLES!\": invalid denom: !TABLES!",
+				"must be empty or equal underlying asset",
 			},
 		},
 	}
@@ -1747,7 +1747,7 @@ func (s *TestSuite) TestMsgServer_ToggleSwapIn() {
 			},
 			expectedErrSubstrs: []string{
 				"failed to set swap in enable",
-				"invalid payment denom: \"!TABLES!\": invalid denom: !TABLES!",
+				"must be empty or equal underlying asset",
 			},
 		},
 	}
@@ -4448,16 +4448,11 @@ func (s *TestSuite) TestMsgServer_PauseVault_ForceVsStrict() {
 	}
 
 	brokenTVVSetup := func() (sdk.AccAddress, string) {
-		underlying := "ylds"
-		share := "vshare"
-		payment := "usdc"
-		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(payment, 1_000_000), s.adminAddr)
-		vault := s.setupBaseVault(underlying, share, payment)
-		s.Require().NoError(s.k.NAVs.Remove(s.ctx, collections.Join(vault.GetAddress(), payment)),
-			"removing the bootstrap payment NAV should surface the conversion failure")
-		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vault.PrincipalMarkerAddress(),
-			sdk.NewCoins(sdk.NewInt64Coin(payment, 10))),
-			"funding the principal with an unpriced accepted denom should make TVV conversion error")
+		vault, _, underlying, heldDenom := s.setupOversizedNAVVault()
+		s.seedOversizedNAV(vault, heldDenom, underlying, maxValidNAVPrice(), math.OneInt())
+		s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(),
+			sdk.NewCoins(sdk.NewInt64Coin(heldDenom, 2))),
+			"funding the principal with a held asset priced at the 256-bit ceiling should make TVV conversion overflow")
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 		return vault.GetAddress(), underlying
 	}
@@ -4954,7 +4949,6 @@ func (s *TestSuite) TestMsgServer_ToggleBridge() {
 		vault.BridgeAddress = s.adminAddr.String()
 		s.k.AuthKeeper.SetAccount(s.ctx, vault)
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
-
 	}
 
 	tc := msgServerTestCase[types.MsgToggleBridgeRequest, postCheckArgs]{
@@ -6248,18 +6242,18 @@ func (s *TestSuite) TestMsgServer_UpdateNAVAuthority_NoOpWhenUnchanged() {
 }
 
 func (s *TestSuite) TestMsgServer_AcceptAsset_Inbound() {
-	underlying, share, paymentDenom, asset := "under", "vshare", "pay", "rwacoin"
+	underlying, share, asset := "under", "vshare", "rwacoin"
 	externalID := "p2p-inbound"
 
-	vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+	vault, principalAddr := s.setupAssetSettlementVault(underlying, share)
 	vaultAddr := vault.GetAddress()
 	s.requireSimpleMarker(asset)
 
 	source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
-	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5))), "failed to fund principal with payment denom")
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(underlying, 5))), "failed to fund principal with underlying asset")
 
 	sourceAmount := sdk.NewCoins(sdk.NewInt64Coin(asset, 10))
-	targetAmount := sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5))
+	targetAmount := sdk.NewCoins(sdk.NewInt64Coin(underlying, 5))
 	s.createPayment(source, vaultAddr, sourceAmount, targetAmount, externalID)
 
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
@@ -6273,27 +6267,27 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Inbound() {
 	s.Assert().Equal(&types.MsgAcceptAssetResponse{}, resp, "AcceptAsset inbound response")
 
 	s.assertBalance(source, asset, sdkmath.NewInt(0))
-	s.assertBalance(source, paymentDenom, sdkmath.NewInt(5))
+	s.assertBalance(source, underlying, sdkmath.NewInt(5))
 	s.assertBalance(principalAddr, asset, sdkmath.NewInt(10))
-	s.assertBalance(principalAddr, paymentDenom, sdkmath.NewInt(0))
+	s.assertBalance(principalAddr, underlying, sdkmath.NewInt(0))
 	s.assertBalance(vaultAddr, asset, sdkmath.NewInt(0))
-	s.assertBalance(vaultAddr, paymentDenom, sdkmath.NewInt(0))
+	s.assertBalance(vaultAddr, underlying, sdkmath.NewInt(0))
 
 	s.requireTypedEventEmitted(types.NewEventAssetAccepted(vaultAddr.String(), source.String(), externalID, sourceAmount, targetAmount, types.AssetDirectionInbound))
 }
 
 func (s *TestSuite) TestMsgServer_AcceptAsset_Outbound() {
-	underlying, share, paymentDenom, asset := "under", "vshare", "pay", "rwacoin"
+	underlying, share, asset := "under", "vshare", "rwacoin"
 	externalID := "p2p-outbound"
 
-	vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+	vault, principalAddr := s.setupAssetSettlementVault(underlying, share)
 	vaultAddr := vault.GetAddress()
 	s.requireSimpleMarker(asset)
 
-	source := s.CreateAndFundAccount(sdk.NewInt64Coin(paymentDenom, 5))
+	source := s.CreateAndFundAccount(sdk.NewInt64Coin(underlying, 5))
 	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10))), "failed to fund principal with asset")
 
-	sourceAmount := sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5))
+	sourceAmount := sdk.NewCoins(sdk.NewInt64Coin(underlying, 5))
 	targetAmount := sdk.NewCoins(sdk.NewInt64Coin(asset, 10))
 	s.createPayment(source, vaultAddr, sourceAmount, targetAmount, externalID)
 
@@ -6307,12 +6301,12 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Outbound() {
 	s.Require().NoError(err, "AcceptAsset outbound should succeed")
 	s.Assert().Equal(&types.MsgAcceptAssetResponse{}, resp, "AcceptAsset outbound response")
 
-	s.assertBalance(source, paymentDenom, sdkmath.NewInt(0))
+	s.assertBalance(source, underlying, sdkmath.NewInt(0))
 	s.assertBalance(source, asset, sdkmath.NewInt(10))
 	s.assertBalance(principalAddr, asset, sdkmath.NewInt(0))
-	s.assertBalance(principalAddr, paymentDenom, sdkmath.NewInt(5))
+	s.assertBalance(principalAddr, underlying, sdkmath.NewInt(5))
 	s.assertBalance(vaultAddr, asset, sdkmath.NewInt(0))
-	s.assertBalance(vaultAddr, paymentDenom, sdkmath.NewInt(0))
+	s.assertBalance(vaultAddr, underlying, sdkmath.NewInt(0))
 
 	s.requireTypedEventEmitted(types.NewEventAssetAccepted(vaultAddr.String(), source.String(), externalID, sourceAmount, targetAmount, types.AssetDirectionOutbound))
 
@@ -6323,10 +6317,10 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Outbound() {
 }
 
 func (s *TestSuite) TestMsgServer_AcceptAsset_ZeroPriceOutbound() {
-	underlying, share, paymentDenom, asset := "under", "vshare", "pay", "rwacoin"
+	underlying, share, asset := "under", "vshare", "rwacoin"
 	externalID := "p2p-outbound-zero"
 
-	vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+	vault, principalAddr := s.setupAssetSettlementVault(underlying, share)
 	vaultAddr := vault.GetAddress()
 	s.requireSimpleMarker(asset)
 
@@ -6348,25 +6342,25 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_ZeroPriceOutbound() {
 	s.Assert().Equal(&types.MsgAcceptAssetResponse{}, resp, "AcceptAsset zero-price outbound response")
 
 	s.assertBalance(source, asset, sdkmath.NewInt(10))
-	s.assertBalance(source, paymentDenom, sdkmath.NewInt(0))
+	s.assertBalance(source, underlying, sdkmath.NewInt(1))
 	s.assertBalance(principalAddr, asset, sdkmath.NewInt(0))
-	s.assertBalance(principalAddr, paymentDenom, sdkmath.NewInt(0))
+	s.assertBalance(principalAddr, underlying, sdkmath.NewInt(0))
 	s.assertBalance(vaultAddr, asset, sdkmath.NewInt(0))
-	s.assertBalance(vaultAddr, paymentDenom, sdkmath.NewInt(0))
+	s.assertBalance(vaultAddr, underlying, sdkmath.NewInt(0))
 
 	s.requireTypedEventEmitted(types.NewEventAssetAccepted(vaultAddr.String(), source.String(), externalID, sourceAmount, targetAmount, types.AssetDirectionOutbound))
 
-	drainedNAV := types.NewVaultNAV(asset, sdk.NewInt64Coin(paymentDenom, 0), targetAmount[0].Amount, vaultAddr.String())
+	drainedNAV := types.NewVaultNAV(asset, sdk.NewInt64Coin(underlying, 0), targetAmount[0].Amount, vaultAddr.String())
 	s.requireTypedEventEmitted(types.NewEventNAVRemoved(vaultAddr.String(), drainedNAV))
 	_, err = s.k.GetVaultNAV(s.ctx, vaultAddr, asset)
 	s.Assert().ErrorIs(err, collections.ErrNotFound, "NAV entry for %s should be removed after the draining zero-price outbound settlement", asset)
 }
 
 func (s *TestSuite) TestMsgServer_AcceptAsset_ZeroPriceInbound() {
-	underlying, share, paymentDenom, asset := "under", "vshare", "pay", "rwacoin"
+	underlying, share, asset := "under", "vshare", "rwacoin"
 	externalID := "p2p-inbound-zero"
 
-	vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+	vault, principalAddr := s.setupAssetSettlementVault(underlying, share)
 	vaultAddr := vault.GetAddress()
 	s.requireSimpleMarker(asset)
 
@@ -6387,22 +6381,22 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_ZeroPriceInbound() {
 	s.Assert().Equal(&types.MsgAcceptAssetResponse{}, resp, "AcceptAsset zero-price inbound response")
 
 	s.assertBalance(source, asset, sdkmath.NewInt(0))
-	s.assertBalance(source, paymentDenom, sdkmath.NewInt(0))
+	s.assertBalance(source, underlying, sdkmath.NewInt(0))
 	s.assertBalance(principalAddr, asset, sdkmath.NewInt(10))
-	s.assertBalance(principalAddr, paymentDenom, sdkmath.NewInt(0))
+	s.assertBalance(principalAddr, underlying, sdkmath.NewInt(0))
 	s.assertBalance(vaultAddr, asset, sdkmath.NewInt(0))
-	s.assertBalance(vaultAddr, paymentDenom, sdkmath.NewInt(0))
+	s.assertBalance(vaultAddr, underlying, sdkmath.NewInt(0))
 
 	s.requireTypedEventEmitted(types.NewEventAssetAccepted(vaultAddr.String(), source.String(), externalID, sourceAmount, targetAmount, types.AssetDirectionInbound))
 
 	stored, err := s.k.GetVaultNAV(s.ctx, vaultAddr, asset)
 	s.Require().NoError(err, "NAV entry for %s should exist after the zero-price inbound settlement", asset)
-	s.Assert().Equal(sdk.NewInt64Coin(paymentDenom, 0), stored.Price, "stored NAV price should be the zero payment coin")
+	s.Assert().Equal(sdk.NewInt64Coin(underlying, 0), stored.Price, "stored NAV price should be the zero underlying coin")
 	s.Assert().Equal(sourceAmount[0].Amount, stored.Volume, "stored NAV volume should be the asset amount")
 }
 
 func (s *TestSuite) TestMsgServer_AcceptAsset_RestrictedMarker() {
-	underlying, share, paymentDenom, restrictedDenom := "under", "vshare", "pay", "restrictedrwa"
+	underlying, share, restrictedDenom := "under", "vshare", "restrictedrwa"
 	externalID := "p2p-restricted"
 
 	tests := []struct {
@@ -6433,9 +6427,9 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_RestrictedMarker() {
 			defer func() { s.ctx = origCtx }()
 			s.ctx, _ = s.ctx.CacheContext()
 
-			vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+			vault, principalAddr := s.setupAssetSettlementVault(underlying, share)
 			vaultAddr := vault.GetAddress()
-			source := s.CreateAndFundAccount(sdk.NewInt64Coin(underlying, 1))
+			source := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
 
 			grants := []markertypes.AccessGrant{
 				{Address: s.adminAddr.String(), Permissions: markertypes.AccessList{
@@ -6460,10 +6454,10 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_RestrictedMarker() {
 			)
 			s.Require().NoError(s.simApp.MarkerKeeper.AddFinalizeAndActivateMarker(s.ctx, restrictedMarker), "failed to create restricted marker %s", restrictedDenom)
 			s.Require().NoError(s.simApp.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, source, restrictedDenom, sdk.NewCoins(sdk.NewInt64Coin(restrictedDenom, 10))), "failed to fund source %s with restricted marker denom %s", source, restrictedDenom)
-			s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5))), "failed to fund principal %s with payment denom %s", principalAddr, paymentDenom)
+			s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(underlying, 5))), "failed to fund principal %s with underlying asset %s", principalAddr, underlying)
 
 			sourceAmount := sdk.NewCoins(sdk.NewInt64Coin(restrictedDenom, 10))
-			targetAmount := sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5))
+			targetAmount := sdk.NewCoins(sdk.NewInt64Coin(underlying, 5))
 			s.createPayment(source, vaultAddr, sourceAmount, targetAmount, externalID)
 
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
@@ -6487,11 +6481,11 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_RestrictedMarker() {
 			s.Assert().Equal(&types.MsgAcceptAssetResponse{}, resp, "AcceptAsset restricted marker response")
 
 			s.assertBalance(source, restrictedDenom, sdkmath.NewInt(0))
-			s.assertBalance(source, paymentDenom, sdkmath.NewInt(5))
+			s.assertBalance(source, underlying, sdkmath.NewInt(5))
 			s.assertBalance(principalAddr, restrictedDenom, sdkmath.NewInt(10))
-			s.assertBalance(principalAddr, paymentDenom, sdkmath.NewInt(0))
+			s.assertBalance(principalAddr, underlying, sdkmath.NewInt(0))
 			s.assertBalance(vaultAddr, restrictedDenom, sdkmath.NewInt(0))
-			s.assertBalance(vaultAddr, paymentDenom, sdkmath.NewInt(0))
+			s.assertBalance(vaultAddr, underlying, sdkmath.NewInt(0))
 
 			s.requireTypedEventEmitted(types.NewEventAssetAccepted(vaultAddr.String(), source.String(), externalID, sourceAmount, targetAmount, types.AssetDirectionInbound))
 		})
@@ -6499,7 +6493,7 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_RestrictedMarker() {
 }
 
 func (s *TestSuite) TestMsgServer_AcceptAsset_Failures() {
-	underlying, share, paymentDenom, asset := "under", "vshare", "pay", "rwacoin"
+	underlying, share, asset := "under", "vshare", "rwacoin"
 
 	tests := []struct {
 		name string
@@ -6524,12 +6518,12 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Failures() {
 		{
 			name: "unauthorized signer",
 			setup: func() *types.MsgAcceptAssetRequest {
-				vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+				vault, principalAddr := s.setupAssetSettlementVault(underlying, share)
 				vaultAddr := vault.GetAddress()
 				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
 				stranger := s.CreateAndFundAccount(sdk.NewInt64Coin(underlying, 1))
-				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5))), "fund principal")
-				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)), "unauth")
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(underlying, 5))), "fund principal")
+				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)), "unauth")
 				return &types.MsgAcceptAssetRequest{
 					Authority:    stranger.String(),
 					VaultAddress: vaultAddr.String(),
@@ -6542,11 +6536,11 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Failures() {
 		{
 			name: "admin cannot settle, only the asset manager may",
 			setup: func() *types.MsgAcceptAssetRequest {
-				vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+				vault, principalAddr := s.setupAssetSettlementVault(underlying, share)
 				vaultAddr := vault.GetAddress()
 				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
-				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5))), "fund principal")
-				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)), "admin-settle")
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(underlying, 5))), "fund principal")
+				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)), "admin-settle")
 				return &types.MsgAcceptAssetRequest{
 					Authority:    s.adminAddr.String(),
 					VaultAddress: vaultAddr.String(),
@@ -6559,7 +6553,7 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Failures() {
 		{
 			name: "vault without an asset manager cannot settle",
 			setup: func() *types.MsgAcceptAssetRequest {
-				vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+				vault, principalAddr := s.setupAssetSettlementVault(underlying, share)
 				vaultAddr := vault.GetAddress()
 				_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).SetAssetManager(s.ctx, &types.MsgSetAssetManagerRequest{
 					Admin:        s.adminAddr.String(),
@@ -6568,8 +6562,8 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Failures() {
 				})
 				s.Require().NoError(err, "failed to clear asset manager on vault %s", vaultAddr)
 				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
-				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5))), "fund principal")
-				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)), "no-mgr")
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(underlying, 5))), "fund principal")
+				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)), "no-mgr")
 				return &types.MsgAcceptAssetRequest{
 					Authority:    s.adminAddr.String(),
 					VaultAddress: vaultAddr.String(),
@@ -6582,7 +6576,7 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Failures() {
 		{
 			name: "payment not found",
 			setup: func() *types.MsgAcceptAssetRequest {
-				vault, _ := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+				vault, _ := s.setupAssetSettlementVault(underlying, share)
 				vaultAddr := vault.GetAddress()
 				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
 				return &types.MsgAcceptAssetRequest{
@@ -6597,11 +6591,11 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Failures() {
 		{
 			name: "payment target mismatch",
 			setup: func() *types.MsgAcceptAssetRequest {
-				vault, _ := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+				vault, _ := s.setupAssetSettlementVault(underlying, share)
 				vaultAddr := vault.GetAddress()
 				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
 				other := s.CreateAndFundAccount(sdk.NewInt64Coin(underlying, 1))
-				s.createPayment(source, other, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)), "mismatch")
+				s.createPayment(source, other, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)), "mismatch")
 				return &types.MsgAcceptAssetRequest{
 					Authority:    s.assetManagerAddr.String(),
 					VaultAddress: vaultAddr.String(),
@@ -6612,12 +6606,12 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Failures() {
 			expectedErrSubstrs: []string{"is not vault"},
 		},
 		{
-			name: "payment denom on neither leg",
+			name: "underlying asset on neither leg",
 			setup: func() *types.MsgAcceptAssetRequest {
-				vault, _ := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+				vault, _ := s.setupAssetSettlementVault(underlying, share)
 				vaultAddr := vault.GetAddress()
 				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
-				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)), "noleg")
+				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin("stake", 5)), "noleg")
 				return &types.MsgAcceptAssetRequest{
 					Authority:    s.assetManagerAddr.String(),
 					VaultAddress: vaultAddr.String(),
@@ -6628,12 +6622,12 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Failures() {
 			expectedErrSubstrs: []string{"exactly one leg"},
 		},
 		{
-			name: "payment denom on both legs",
+			name: "underlying asset on both legs",
 			setup: func() *types.MsgAcceptAssetRequest {
-				vault, _ := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+				vault, _ := s.setupAssetSettlementVault(underlying, share)
 				vaultAddr := vault.GetAddress()
-				source := s.CreateAndFundAccount(sdk.NewInt64Coin(paymentDenom, 5))
-				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)), sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 3), sdk.NewInt64Coin(asset, 2)), "bothlegs")
+				source := s.CreateAndFundAccount(sdk.NewInt64Coin(underlying, 5))
+				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)), sdk.NewCoins(sdk.NewInt64Coin(underlying, 3), sdk.NewInt64Coin(asset, 2)), "bothlegs")
 				return &types.MsgAcceptAssetRequest{
 					Authority:    s.assetManagerAddr.String(),
 					VaultAddress: vaultAddr.String(),
@@ -6646,11 +6640,11 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Failures() {
 		{
 			name: "insufficient principal balance",
 			setup: func() *types.MsgAcceptAssetRequest {
-				vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+				vault, principalAddr := s.setupAssetSettlementVault(underlying, share)
 				vaultAddr := vault.GetAddress()
 				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
-				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 4))), "fund principal short")
-				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)), "short")
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(underlying, 4))), "fund principal short")
+				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)), "short")
 				return &types.MsgAcceptAssetRequest{
 					Authority:    s.assetManagerAddr.String(),
 					VaultAddress: vaultAddr.String(),
@@ -6663,11 +6657,11 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Failures() {
 		{
 			name: "rejects settlement while vault is paused",
 			setup: func() *types.MsgAcceptAssetRequest {
-				vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+				vault, principalAddr := s.setupAssetSettlementVault(underlying, share)
 				vaultAddr := vault.GetAddress()
 				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
-				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5))), "fund principal")
-				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)), "paused")
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(underlying, 5))), "fund principal")
+				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)), "paused")
 				paused, err := s.k.GetVault(s.ctx, vaultAddr)
 				s.Require().NoError(err, "failed to get vault %s for paused setup", vaultAddr)
 				paused.Paused = true
@@ -6703,7 +6697,7 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Failures() {
 }
 
 func (s *TestSuite) TestMsgServer_AcceptAsset_NAVGuardrail() {
-	underlying, share, paymentDenom, asset := "under", "vshare", "pay", "rwacoin"
+	underlying, share, asset := "under", "vshare", "rwacoin"
 	externalID := "guardrail"
 
 	tests := []struct {
@@ -6717,84 +6711,75 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_NAVGuardrail() {
 	}{
 		{
 			name:          "inbound settlement at the exact NAV price passes the guardrail",
-			seedNav:       &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(paymentDenom, 5), Volume: sdkmath.NewInt(10)},
+			seedNav:       &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(underlying, 5), Volume: sdkmath.NewInt(10)},
 			fundSource:    sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
-			fundPrincipal: sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			fundPrincipal: sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
 			sourceAmount:  sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
-			targetAmount:  sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			targetAmount:  sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
 		},
 		{
 			name:               "inbound settlement off the NAV price is rejected",
-			seedNav:            &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(paymentDenom, 6), Volume: sdkmath.NewInt(10)},
+			seedNav:            &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(underlying, 6), Volume: sdkmath.NewInt(10)},
 			fundSource:         sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
-			fundPrincipal:      sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			fundPrincipal:      sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
 			sourceAmount:       sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
-			targetAmount:       sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
-			expectedErrSubstrs: []string{"does not match internal NAV", "10rwacoin", "5pay", "6pay"},
+			targetAmount:       sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
+			expectedErrSubstrs: []string{"does not match internal NAV", "10rwacoin", "5under", "6under"},
 		},
 		{
 			name:          "no NAV entry skips the guardrail for a first acquisition",
 			fundSource:    sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
-			fundPrincipal: sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			fundPrincipal: sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
 			sourceAmount:  sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
-			targetAmount:  sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			targetAmount:  sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
 		},
 		{
 			name:          "outbound settlement at the exact NAV price passes the guardrail",
-			seedNav:       &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(paymentDenom, 5), Volume: sdkmath.NewInt(10)},
-			fundSource:    sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			seedNav:       &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(underlying, 5), Volume: sdkmath.NewInt(10)},
+			fundSource:    sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
 			fundPrincipal: sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
-			sourceAmount:  sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			sourceAmount:  sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
 			targetAmount:  sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
 		},
 		{
 			name:               "outbound settlement off the NAV price is rejected",
-			seedNav:            &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(paymentDenom, 5), Volume: sdkmath.NewInt(10)},
-			fundSource:         sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 4)),
+			seedNav:            &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(underlying, 5), Volume: sdkmath.NewInt(10)},
+			fundSource:         sdk.NewCoins(sdk.NewInt64Coin(underlying, 4)),
 			fundPrincipal:      sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
-			sourceAmount:       sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 4)),
+			sourceAmount:       sdk.NewCoins(sdk.NewInt64Coin(underlying, 4)),
 			targetAmount:       sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
-			expectedErrSubstrs: []string{"does not match internal NAV", "10rwacoin", "4pay", "5pay"},
+			expectedErrSubstrs: []string{"does not match internal NAV", "10rwacoin", "4under", "5under"},
 		},
 		{
 			name:               "fractional NAV price that floor math would accept is rejected",
-			seedNav:            &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(paymentDenom, 3), Volume: sdkmath.NewInt(2)},
+			seedNav:            &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(underlying, 3), Volume: sdkmath.NewInt(2)},
 			fundSource:         sdk.NewCoins(sdk.NewInt64Coin(asset, 3)),
-			fundPrincipal:      sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 4)),
+			fundPrincipal:      sdk.NewCoins(sdk.NewInt64Coin(underlying, 4)),
 			sourceAmount:       sdk.NewCoins(sdk.NewInt64Coin(asset, 3)),
-			targetAmount:       sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 4)),
+			targetAmount:       sdk.NewCoins(sdk.NewInt64Coin(underlying, 4)),
 			expectedErrSubstrs: []string{"does not match internal NAV"},
 		},
 		{
 			name:          "fractional NAV price settled at an exact multiple passes the guardrail",
-			seedNav:       &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(paymentDenom, 3), Volume: sdkmath.NewInt(2)},
+			seedNav:       &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(underlying, 3), Volume: sdkmath.NewInt(2)},
 			fundSource:    sdk.NewCoins(sdk.NewInt64Coin(asset, 4)),
-			fundPrincipal: sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 6)),
+			fundPrincipal: sdk.NewCoins(sdk.NewInt64Coin(underlying, 6)),
 			sourceAmount:  sdk.NewCoins(sdk.NewInt64Coin(asset, 4)),
-			targetAmount:  sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 6)),
-		},
-		{
-			name:               "NAV priced in a denom other than the settlement payment is rejected",
-			seedNav:            &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(underlying, 5), Volume: sdkmath.NewInt(10)},
-			fundSource:         sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
-			fundPrincipal:      sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
-			sourceAmount:       sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
-			targetAmount:       sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
-			expectedErrSubstrs: []string{"is priced in"},
+			targetAmount:  sdk.NewCoins(sdk.NewInt64Coin(underlying, 6)),
 		},
 		{
 			name:               "asset leg with multiple coins cannot be priced and is rejected",
 			fundSource:         sdk.NewCoins(sdk.NewInt64Coin(asset, 10), sdk.NewInt64Coin("othercoin", 5)),
-			fundPrincipal:      sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			fundPrincipal:      sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
 			sourceAmount:       sdk.NewCoins(sdk.NewInt64Coin(asset, 10), sdk.NewInt64Coin("othercoin", 5)),
-			targetAmount:       sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			targetAmount:       sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
 			expectedErrSubstrs: []string{"one asset coin"},
 		},
 		{
 			name:               "empty asset leg cannot be priced and is rejected",
-			fundPrincipal:      sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			fundPrincipal:      sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
 			sourceAmount:       sdk.NewCoins(),
-			targetAmount:       sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			targetAmount:       sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
 			expectedErrSubstrs: []string{"one asset coin"},
 		},
 	}
@@ -6808,7 +6793,6 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_NAVGuardrail() {
 			vault, _, source := s.setupAcceptAssetScenario(acceptAssetScenario{
 				underlying:    underlying,
 				share:         share,
-				paymentDenom:  paymentDenom,
 				assetMarker:   asset,
 				seedNav:       tc.seedNav,
 				fundSource:    tc.fundSource,
@@ -6844,7 +6828,6 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_NAVGuardrail() {
 func (s *TestSuite) TestMsgServer_AcceptAsset_SettlementNAV() {
 	underlying := "under"
 	share := "vshare"
-	paymentDenom := "pay"
 	asset := "rwacoin"
 	externalID := "settle-nav"
 
@@ -6865,53 +6848,53 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_SettlementNAV() {
 			name:                "inbound first acquisition seeds the internal NAV from the settlement price",
 			registerAssetMarker: true,
 			fundSource:          sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
-			fundPrincipal:       sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			fundPrincipal:       sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
 			sourceAmount:        sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
-			targetAmount:        sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
-			expectedNavPrice:    sdk.NewInt64Coin(paymentDenom, 5),
+			targetAmount:        sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
+			expectedNavPrice:    sdk.NewInt64Coin(underlying, 5),
 			expectedNavVolume:   sdkmath.NewInt(10),
 		},
 		{
 			name:                "inbound settlement at the NAV price re-prices the entry from the settlement legs",
 			registerAssetMarker: true,
-			seedNav:             &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(paymentDenom, 1), Volume: sdkmath.NewInt(2)},
+			seedNav:             &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(underlying, 1), Volume: sdkmath.NewInt(2)},
 			fundSource:          sdk.NewCoins(sdk.NewInt64Coin(asset, 4)),
-			fundPrincipal:       sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 2)),
+			fundPrincipal:       sdk.NewCoins(sdk.NewInt64Coin(underlying, 2)),
 			sourceAmount:        sdk.NewCoins(sdk.NewInt64Coin(asset, 4)),
-			targetAmount:        sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 2)),
-			expectedNavPrice:    sdk.NewInt64Coin(paymentDenom, 2),
+			targetAmount:        sdk.NewCoins(sdk.NewInt64Coin(underlying, 2)),
+			expectedNavPrice:    sdk.NewInt64Coin(underlying, 2),
 			expectedNavVolume:   sdkmath.NewInt(4),
 		},
 		{
 			name:                "fractional first acquisition stores the exact settlement price and volume",
 			registerAssetMarker: true,
 			fundSource:          sdk.NewCoins(sdk.NewInt64Coin(asset, 3)),
-			fundPrincipal:       sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 10)),
+			fundPrincipal:       sdk.NewCoins(sdk.NewInt64Coin(underlying, 10)),
 			sourceAmount:        sdk.NewCoins(sdk.NewInt64Coin(asset, 3)),
-			targetAmount:        sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 10)),
-			expectedNavPrice:    sdk.NewInt64Coin(paymentDenom, 10),
+			targetAmount:        sdk.NewCoins(sdk.NewInt64Coin(underlying, 10)),
+			expectedNavPrice:    sdk.NewInt64Coin(underlying, 10),
 			expectedNavVolume:   sdkmath.NewInt(3),
 		},
 		{
 			name:                "outbound settlement leaving a principal balance keeps the NAV entry",
 			registerAssetMarker: true,
-			seedNav:             &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(paymentDenom, 5), Volume: sdkmath.NewInt(10)},
-			fundSource:          sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			seedNav:             &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(underlying, 5), Volume: sdkmath.NewInt(10)},
+			fundSource:          sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
 			fundPrincipal:       sdk.NewCoins(sdk.NewInt64Coin(asset, 20)),
-			sourceAmount:        sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			sourceAmount:        sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
 			targetAmount:        sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
-			expectedNavPrice:    sdk.NewInt64Coin(paymentDenom, 5),
+			expectedNavPrice:    sdk.NewInt64Coin(underlying, 5),
 			expectedNavVolume:   sdkmath.NewInt(10),
 		},
 		{
 			name:                "outbound settlement draining the principal removes the NAV entry",
 			registerAssetMarker: true,
-			seedNav:             &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(paymentDenom, 5), Volume: sdkmath.NewInt(10)},
-			fundSource:          sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			seedNav:             &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(underlying, 5), Volume: sdkmath.NewInt(10)},
+			fundSource:          sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
 			fundPrincipal:       sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
-			sourceAmount:        sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			sourceAmount:        sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
 			targetAmount:        sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
-			expectedNavPrice:    sdk.NewInt64Coin(paymentDenom, 5),
+			expectedNavPrice:    sdk.NewInt64Coin(underlying, 5),
 			expectedNavVolume:   sdkmath.NewInt(10),
 			expectNavRemoved:    true,
 		},
@@ -6919,9 +6902,9 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_SettlementNAV() {
 			name:                "asset denom that is not a registered marker fails the settlement",
 			registerAssetMarker: false,
 			fundSource:          sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
-			fundPrincipal:       sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			fundPrincipal:       sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
 			sourceAmount:        sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
-			targetAmount:        sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+			targetAmount:        sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
 			expectedErrContains: "is not a registered marker",
 		},
 	}
@@ -6939,7 +6922,6 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_SettlementNAV() {
 			vault, _, source := s.setupAcceptAssetScenario(acceptAssetScenario{
 				underlying:    underlying,
 				share:         share,
-				paymentDenom:  paymentDenom,
 				assetMarker:   assetMarker,
 				seedNav:       tc.seedNav,
 				fundSource:    tc.fundSource,
@@ -7005,7 +6987,6 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_SettlementNAV() {
 func (s *TestSuite) TestMsgServer_AcceptAsset_SettlementNAV_MetadataDenom() {
 	underlying := "under"
 	share := "vshare"
-	paymentDenom := "pay"
 	asset := metadatatypes.ScopeMetadataAddress(uuid.MustParse("00000000-0000-4000-8000-000000000001")).Denom()
 	externalID := "settle-nav-nft"
 
@@ -7016,11 +6997,10 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_SettlementNAV_MetadataDenom() {
 	vault, principalAddr, source := s.setupAcceptAssetScenario(acceptAssetScenario{
 		underlying:    underlying,
 		share:         share,
-		paymentDenom:  paymentDenom,
 		fundSource:    sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
-		fundPrincipal: sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+		fundPrincipal: sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
 		sourceAmount:  sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
-		targetAmount:  sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+		targetAmount:  sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
 		externalID:    externalID,
 	})
 	vaultAddr := vault.GetAddress()
@@ -7036,7 +7016,7 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_SettlementNAV_MetadataDenom() {
 
 	stored, err := s.k.GetVaultNAV(s.ctx, vaultAddr, asset)
 	s.Require().NoError(err, "internal NAV entry for nft/ denom %s should exist after settlement", asset)
-	s.Assert().Equal(sdk.NewInt64Coin(paymentDenom, 5), stored.Price, "stored NAV price for nft/ denom")
+	s.Assert().Equal(sdk.NewInt64Coin(underlying, 5), stored.Price, "stored NAV price for nft/ denom")
 	s.Assert().Equal(sdkmath.NewInt(10), stored.Volume, "stored NAV volume for nft/ denom")
 	s.Assert().Equal(vaultAddr.String(), stored.Source, "stored NAV source should be the vault address")
 	s.requireTypedEventEmitted(types.NewEventNAVUpdated(vaultAddr.String(), stored, s.assetManagerAddr.String()))
@@ -7049,8 +7029,8 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_SettlementNAV_MetadataDenom() {
 
 	const secondID = "settle-nav-nft-2"
 	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, source, sdk.NewCoins(sdk.NewInt64Coin(asset, 10))), "fund source for second settlement")
-	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 6))), "fund principal for second settlement")
-	s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 6)), secondID)
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(underlying, 6))), "fund principal for second settlement")
+	s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(underlying, 6)), secondID)
 
 	_, err = keeper.NewMsgServer(s.simApp.VaultKeeper).AcceptAsset(s.ctx, &types.MsgAcceptAssetRequest{
 		Authority:    s.assetManagerAddr.String(),
@@ -7102,7 +7082,6 @@ func (s *TestSuite) TestMsgServer_UpdateVaultNAV_MetadataDenom() {
 func (s *TestSuite) TestMsgServer_AcceptAsset_Reconcile() {
 	underlying := "under"
 	share := "vshare"
-	paymentDenom := "pay"
 	asset := "rwacoin"
 	externalID := "settle-reconcile"
 
@@ -7121,7 +7100,7 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Reconcile() {
 		{
 			name:                "settlement rejected by the NAV guardrail does not reconcile",
 			interestRate:        "4.20",
-			seedNav:             &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(paymentDenom, 9), Volume: sdkmath.NewInt(10)},
+			seedNav:             &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(underlying, 9), Volume: sdkmath.NewInt(10)},
 			expectedErrContains: "does not match internal NAV",
 			expectedReconciles:  0,
 		},
@@ -7142,13 +7121,12 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Reconcile() {
 			vault, _, source := s.setupAcceptAssetScenario(acceptAssetScenario{
 				underlying:    underlying,
 				share:         share,
-				paymentDenom:  paymentDenom,
 				assetMarker:   asset,
 				seedNav:       tc.seedNav,
 				fundSource:    sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
-				fundPrincipal: sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+				fundPrincipal: sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
 				sourceAmount:  sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
-				targetAmount:  sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)),
+				targetAmount:  sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
 				externalID:    externalID,
 			})
 			vaultAddr := vault.GetAddress()
@@ -7195,15 +7173,15 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Reconcile() {
 }
 
 func (s *TestSuite) TestMsgServer_AcceptAsset_InsufficientPrincipalDoesNotSettle() {
-	underlying, share, paymentDenom, asset := "under", "vshare", "pay", "rwacoin"
+	underlying, share, asset := "under", "vshare", "rwacoin"
 	externalID := "short-noop"
 
-	vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+	vault, principalAddr := s.setupAssetSettlementVault(underlying, share)
 	vaultAddr := vault.GetAddress()
 
 	source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
-	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 4))), "fund principal short")
-	s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)), externalID)
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(underlying, 4))), "fund principal short")
+	s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)), externalID)
 
 	_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).AcceptAsset(s.ctx, &types.MsgAcceptAssetRequest{
 		Authority:    s.assetManagerAddr.String(),
@@ -7217,18 +7195,18 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_InsufficientPrincipalDoesNotSettle
 	s.Require().NoError(getErr, "GetPayment after failed settle")
 	s.Require().NotNil(stored, "payment should remain in escrow after a failed settle")
 	s.assertBalance(source, asset, sdkmath.NewInt(10))
-	s.assertBalance(principalAddr, paymentDenom, sdkmath.NewInt(4))
+	s.assertBalance(principalAddr, underlying, sdkmath.NewInt(4))
 }
 
 func (s *TestSuite) TestMsgServer_RejectAsset() {
-	underlying, share, paymentDenom, asset := "under", "vshare", "pay", "rwacoin"
+	underlying, share, asset := "under", "vshare", "rwacoin"
 	externalID := "p2p-reject"
 
-	vault, _ := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+	vault, _ := s.setupAssetSettlementVault(underlying, share)
 	vaultAddr := vault.GetAddress()
 
 	source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
-	s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)), externalID)
+	s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)), externalID)
 
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	resp, err := keeper.NewMsgServer(s.simApp.VaultKeeper).RejectAsset(s.ctx, &types.MsgRejectAssetRequest{
@@ -7249,7 +7227,7 @@ func (s *TestSuite) TestMsgServer_RejectAsset() {
 }
 
 func (s *TestSuite) TestMsgServer_RejectAsset_Failures() {
-	underlying, share, paymentDenom, asset := "under", "vshare", "pay", "rwacoin"
+	underlying, share, asset := "under", "vshare", "rwacoin"
 
 	tests := []struct {
 		name               string
@@ -7272,11 +7250,11 @@ func (s *TestSuite) TestMsgServer_RejectAsset_Failures() {
 		{
 			name: "unauthorized signer",
 			setup: func() *types.MsgRejectAssetRequest {
-				vault, _ := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+				vault, _ := s.setupAssetSettlementVault(underlying, share)
 				vaultAddr := vault.GetAddress()
 				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
 				stranger := s.CreateAndFundAccount(sdk.NewInt64Coin(underlying, 1))
-				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)), "unauth")
+				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)), "unauth")
 				return &types.MsgRejectAssetRequest{
 					Authority:    stranger.String(),
 					VaultAddress: vaultAddr.String(),
@@ -7289,10 +7267,10 @@ func (s *TestSuite) TestMsgServer_RejectAsset_Failures() {
 		{
 			name: "admin cannot reject, only the asset manager may",
 			setup: func() *types.MsgRejectAssetRequest {
-				vault, _ := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+				vault, _ := s.setupAssetSettlementVault(underlying, share)
 				vaultAddr := vault.GetAddress()
 				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
-				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)), "admin-reject")
+				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)), "admin-reject")
 				return &types.MsgRejectAssetRequest{
 					Authority:    s.adminAddr.String(),
 					VaultAddress: vaultAddr.String(),
@@ -7305,7 +7283,7 @@ func (s *TestSuite) TestMsgServer_RejectAsset_Failures() {
 		{
 			name: "vault without an asset manager cannot reject",
 			setup: func() *types.MsgRejectAssetRequest {
-				vault, _ := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+				vault, _ := s.setupAssetSettlementVault(underlying, share)
 				vaultAddr := vault.GetAddress()
 				_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).SetAssetManager(s.ctx, &types.MsgSetAssetManagerRequest{
 					Admin:        s.adminAddr.String(),
@@ -7314,7 +7292,7 @@ func (s *TestSuite) TestMsgServer_RejectAsset_Failures() {
 				})
 				s.Require().NoError(err, "failed to clear asset manager on vault %s", vaultAddr)
 				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
-				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)), "no-mgr")
+				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)), "no-mgr")
 				return &types.MsgRejectAssetRequest{
 					Authority:    s.adminAddr.String(),
 					VaultAddress: vaultAddr.String(),
@@ -7327,7 +7305,7 @@ func (s *TestSuite) TestMsgServer_RejectAsset_Failures() {
 		{
 			name: "payment does not exist",
 			setup: func() *types.MsgRejectAssetRequest {
-				vault, _ := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+				vault, _ := s.setupAssetSettlementVault(underlying, share)
 				vaultAddr := vault.GetAddress()
 				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
 				return &types.MsgRejectAssetRequest{

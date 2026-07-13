@@ -892,7 +892,7 @@ func (k msgServer) UpdateNAVAuthority(goCtx context.Context, msg *types.MsgUpdat
 }
 
 // AcceptAsset settles a pending exchange-module payment whose target is the vault,
-// exchanging an external asset for the vault's payment denom. Only the vault's asset
+// exchanging an external asset for the vault's underlying asset. Only the vault's asset
 // manager may sign it; the admin cannot settle.
 //
 // The exchange module's AcceptPayment operates on the caller's primary account, so the
@@ -903,7 +903,7 @@ func (k msgServer) UpdateNAVAuthority(goCtx context.Context, msg *types.MsgUpdat
 //
 // All steps run in the message handler; any failure reverts the whole transaction. The
 // settlement direction (inbound or outbound) is derived from which payment leg carries
-// the vault's payment denom.
+// the vault's underlying asset.
 func (k msgServer) AcceptAsset(goCtx context.Context, msg *types.MsgAcceptAssetRequest) (*types.MsgAcceptAssetResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -936,7 +936,7 @@ func (k msgServer) AcceptAsset(goCtx context.Context, msg *types.MsgAcceptAssetR
 		return nil, err
 	}
 
-	assetCoin, paymentCoin, err := settlementLegCoins(payment, direction, vault.PaymentDenom)
+	assetCoin, paymentCoin, err := settlementLegCoins(payment, direction, vault.UnderlyingAsset)
 	if err != nil {
 		return nil, err
 	}
@@ -1003,30 +1003,30 @@ func (k msgServer) RejectAsset(goCtx context.Context, msg *types.MsgRejectAssetR
 }
 
 // assetSettlementDirection determines whether a payment settles inbound or outbound for a
-// vault, based on which leg carries the vault's payment denom. The vault settles payments
-// where its payment denom is exactly one of the two legs: it pays the payment denom out
-// (inbound, target leg) or receives it in (outbound, source leg). A payment with the
-// payment denom on both legs cannot be settled.
+// vault, based on which leg carries the vault's underlying asset. The vault settles
+// payments where its underlying asset is exactly one of the two legs: it pays the
+// underlying out (inbound, target leg) or receives it in (outbound, source leg). A payment
+// with the underlying on both legs cannot be settled.
 //
-// A zero-priced asset carries the payment denom on neither leg (the zero coin is stripped),
+// A zero-priced asset carries the underlying on neither leg (the zero coin is stripped),
 // so direction is inferred from the leg holding the asset: an asset on the source leg moves
 // into the vault (inbound), an asset on the target leg moves out (outbound). A zero-priced
 // payment with an asset on both legs, or on neither, cannot be settled.
 func assetSettlementDirection(vault *types.VaultAccount, payment *exchange.Payment) (string, error) {
-	paymentDenom := vault.PaymentDenom
-	sourceHasPayment := payment.SourceAmount.AmountOf(paymentDenom).IsPositive()
-	targetHasPayment := payment.TargetAmount.AmountOf(paymentDenom).IsPositive()
+	underlying := vault.UnderlyingAsset
+	sourceHasUnderlying := payment.SourceAmount.AmountOf(underlying).IsPositive()
+	targetHasUnderlying := payment.TargetAmount.AmountOf(underlying).IsPositive()
 
 	switch {
-	case targetHasPayment && !sourceHasPayment:
+	case targetHasUnderlying && !sourceHasUnderlying:
 		return types.AssetDirectionInbound, nil
-	case sourceHasPayment && !targetHasPayment:
+	case sourceHasUnderlying && !targetHasUnderlying:
 		return types.AssetDirectionOutbound, nil
-	case sourceHasPayment && targetHasPayment:
-		return "", fmt.Errorf("payment must carry vault payment denom %q on exactly one leg: source_amount=%q target_amount=%q", paymentDenom, payment.SourceAmount, payment.TargetAmount)
+	case sourceHasUnderlying && targetHasUnderlying:
+		return "", fmt.Errorf("payment must carry vault underlying asset %q on exactly one leg: source_amount=%q target_amount=%q", underlying, payment.SourceAmount, payment.TargetAmount)
 	}
 
-	// Neither leg carries the payment denom: a zero-priced settlement. Infer direction
+	// Neither leg carries the underlying asset: a zero-priced settlement. Infer direction
 	// from the leg holding the asset.
 	switch {
 	case payment.TargetAmount.IsZero() && !payment.SourceAmount.IsZero():

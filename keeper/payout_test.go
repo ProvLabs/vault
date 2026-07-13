@@ -8,7 +8,6 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
 	"github.com/provlabs/vault/keeper"

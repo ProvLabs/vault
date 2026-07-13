@@ -22,10 +22,10 @@ const (
 
 const (
 	// AssetDirectionInbound indicates an external asset moved into the vault in
-	// exchange for the vault's payment denom (payment_denom is the target leg).
+	// exchange for the vault's underlying asset (the underlying is the target leg).
 	AssetDirectionInbound = "inbound"
 	// AssetDirectionOutbound indicates an asset moved out of the vault in
-	// exchange for the vault's payment denom (payment_denom is the source leg).
+	// exchange for the vault's underlying asset (the underlying is the source leg).
 	AssetDirectionOutbound = "outbound"
 )
 

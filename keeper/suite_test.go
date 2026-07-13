@@ -282,22 +282,23 @@ func (s *TestSuite) requireRestrictedMarker(denom string) {
 	s.Require().NoError(s.simApp.MarkerKeeper.AddFinalizeAndActivateMarker(s.ctx, marker), "failed to create restricted marker %s", denom)
 }
 
-// setupAssetSettlementVault creates a vault whose payment denom differs from its underlying
-// asset by attaching the payment denom after creation (mixed-denom creation is rejected).
-// Both the underlying and payment denoms are non-restricted Coin markers. Settlement messages
-// are asset-manager-only, so the suite's assetManagerAddr is assigned to the vault. It returns
-// the vault and its principal marker address.
-func (s *TestSuite) setupAssetSettlementVault(underlying, share, paymentDenom string) (*types.VaultAccount, sdk.AccAddress) {
+// setupAssetSettlementVault creates a single-denom vault (underlying asset only) and assigns
+// the suite's assetManagerAddr as its asset manager, since settlement messages
+// (AcceptAsset/RejectAsset) are asset-manager-only and must never be signed by the admin.
+// The external asset a settlement trades against the underlying is a separate marker denom
+// the caller registers and prices via the vault's internal NAV. It returns the vault and its
+// principal marker address.
+func (s *TestSuite) setupAssetSettlementVault(underlying, share string) (*types.VaultAccount, sdk.AccAddress) {
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlying, 1_000_000), s.adminAddr)
-	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 1_000_000), s.adminAddr)
 
-	vault := s.createVaultWithPaymentDenom(vaultAttrs{
+	vault, err := s.k.CreateVault(s.ctx, vaultAttrs{
 		admin:      s.adminAddr.String(),
 		share:      share,
 		underlying: underlying,
-	}, paymentDenom)
+	})
+	s.Require().NoError(err, "failed to create settlement vault for share denom %s", share)
 
-	_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).SetAssetManager(s.ctx, &types.MsgSetAssetManagerRequest{
+	_, err = keeper.NewMsgServer(s.simApp.VaultKeeper).SetAssetManager(s.ctx, &types.MsgSetAssetManagerRequest{
 		Admin:        s.adminAddr.String(),
 		VaultAddress: vault.GetAddress().String(),
 		AssetManager: s.assetManagerAddr.String(),
@@ -329,7 +330,6 @@ func (s *TestSuite) createPayment(source, target sdk.AccAddress, sourceAmount, t
 type acceptAssetScenario struct {
 	underlying    string
 	share         string
-	paymentDenom  string
 	assetMarker   string          // external asset denom to register as a simple marker; empty skips registration
 	seedNav       *types.VaultNAV // internal NAV to seed before settlement; nil skips seeding
 	fundSource    sdk.Coins       // coins minted to the payment source; zero skips funding
@@ -344,7 +344,7 @@ type acceptAssetScenario struct {
 // carries a stake coin) and principal, and a staged payment from the source to the vault.
 // It returns the vault, its principal marker address, and the payment source address.
 func (s *TestSuite) setupAcceptAssetScenario(sc acceptAssetScenario) (*types.VaultAccount, sdk.AccAddress, sdk.AccAddress) {
-	vault, principalAddr := s.setupAssetSettlementVault(sc.underlying, sc.share, sc.paymentDenom)
+	vault, principalAddr := s.setupAssetSettlementVault(sc.underlying, sc.share)
 	if sc.assetMarker != "" {
 		s.requireSimpleMarker(sc.assetMarker)
 	}
@@ -515,70 +515,50 @@ func (v vaultAttrs) GetMaxSwapInValue() string                    { return v.max
 func (v vaultAttrs) GetMaxSwapOutValue() string                   { return v.maxSwapOut }
 func (v vaultAttrs) GetInitialPaymentNav() *types.InitialVaultNAV { return v.initialPaymentNav }
 
-// createVaultWithPaymentDenom creates a vault via keeper.CreateVault and, when
-// paymentDenom differs from the underlying, attaches it afterward with a 1:1
-// internal NAV, simulating a vault that predates the single-denom restriction.
-func (s *TestSuite) createVaultWithPaymentDenom(cfg vaultAttrs, paymentDenom string) *types.VaultAccount {
-	if paymentDenom == cfg.underlying {
-		cfg.payment = paymentDenom
-	}
+// createSingleDenomVault creates a single-denom vault via keeper.CreateVault, requiring the
+// config to leave the deprecated payment denom empty (or equal to the underlying). It is the
+// shared workhorse behind the base-vault helpers now that vaults are single-denom.
+func (s *TestSuite) createSingleDenomVault(cfg vaultAttrs) *types.VaultAccount {
 	vault, err := s.k.CreateVault(s.ctx, cfg)
 	s.Require().NoError(err, "vault creation should succeed for share denom %s", cfg.share)
-	if paymentDenom != "" && paymentDenom != cfg.underlying {
-		s.setVaultPaymentDenomWithNAV(vault, paymentDenom, sdk.NewInt64Coin(cfg.underlying, 1), 1)
-	}
 	return vault
 }
 
-// setupBaseVaultRestricted creates a vault with a restricted underlying asset.
-// It establishes a marker for the underlying asset, requiring a specific attribute for transfers.
-// An optional paymentDenom can be provided for the vault's configuration.
-// It returns the newly created vault account.
-func (s *TestSuite) setupBaseVaultRestricted(underlyingDenom, shareDenom string, paymentDenom ...string) *types.VaultAccount {
+// setupBaseVaultRestricted creates a single-denom vault with a restricted underlying asset.
+// It establishes a marker for the underlying asset, requiring a specific attribute for
+// transfers, and returns the newly created vault account.
+func (s *TestSuite) setupBaseVaultRestricted(underlyingDenom, shareDenom string) *types.VaultAccount {
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingDenom, 2_000_000), s.adminAddr, simulation.RequiredMarkerAttribute)
 
-	var pDenom string
-	if len(paymentDenom) > 0 {
-		pDenom = paymentDenom[0]
-	}
-
-	vaultCfg := vaultAttrs{
+	return s.createSingleDenomVault(vaultAttrs{
 		admin:      s.adminAddr.String(),
 		share:      shareDenom,
 		underlying: underlyingDenom,
-	}
-	return s.createVaultWithPaymentDenom(vaultCfg, pDenom)
+	})
 }
 
-// setupBaseVault creates and activates markers for the underlying and share denoms,
-// withdraws some underlying coins to the admin, and creates the vault.
-// It can optionally accept a paymentDenom for the vault's configuration.
-// It returns the newly created vault account.
-func (s *TestSuite) setupBaseVault(underlyingDenom, shareDenom string, paymentDenom ...string) *types.VaultAccount {
+// setupBaseVault creates and activates the marker for the underlying denom, withdraws some
+// underlying coins to the admin, and creates a single-denom vault. It returns the newly
+// created vault account.
+func (s *TestSuite) setupBaseVault(underlyingDenom, shareDenom string) *types.VaultAccount {
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingDenom, 2_000_000), s.adminAddr)
 	s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, underlyingDenom, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 100_000)))
 
-	var pDenom string
-	if len(paymentDenom) > 0 {
-		pDenom = paymentDenom[0]
-	}
-
-	vaultCfg := vaultAttrs{
+	return s.createSingleDenomVault(vaultAttrs{
 		admin:      s.adminAddr.String(),
 		share:      shareDenom,
 		underlying: underlyingDenom,
-	}
-	return s.createVaultWithPaymentDenom(vaultCfg, pDenom)
+	})
 }
 
-// CreateVaultWithParams creates a vault with the given parameters and returns the vault account.
-func (s *TestSuite) CreateVaultWithParams(shareDenom, underlyingDenom, paymentDenom string) *types.VaultAccount {
-	vaultCfg := vaultAttrs{
+// CreateVaultWithParams creates a single-denom vault with the given share and underlying
+// denoms and returns the vault account. The underlying marker must already exist.
+func (s *TestSuite) CreateVaultWithParams(shareDenom, underlyingDenom string) *types.VaultAccount {
+	return s.createSingleDenomVault(vaultAttrs{
 		admin:      s.adminAddr.String(),
 		share:      shareDenom,
 		underlying: underlyingDenom,
-	}
-	return s.createVaultWithPaymentDenom(vaultCfg, paymentDenom)
+	})
 }
 
 // CreateAndActivateVault creates a marker for the underlying asset and then creates the vault itself.
@@ -788,20 +768,17 @@ func createSwapInEvents(owner, vaultAddr, markerAddr sdk.AccAddress, asset, shar
 	return allEvents
 }
 
-// setupSinglePaymentDenomVault is a comprehensive helper that creates a vault with
-// an underlying asset, a share denom, and a single payment denom. It creates all
-// markers, withdraws funds to the admin, creates the vault with the paymentDenom
-// configured, and seeds an Internal NAV entry pricing one paymentDenom unit at
-// price/volume underlying.
-func (s *TestSuite) setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom string, price, volume int64) *types.VaultAccount {
-	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 2_000_000), s.adminAddr)
-	s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, paymentDenom, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 100_000)))
-	vault := s.setupBaseVault(underlyingDenom, shareDenom, paymentDenom)
-
-	if paymentDenom != underlyingDenom {
-		s.setVaultNAV(vault, paymentDenom, sdk.NewInt64Coin(underlyingDenom, price), volume)
-	}
-
+// setupHeldAssetVault creates a single-denom vault (underlying + share) and gives it an
+// external held asset: it registers the heldDenom marker, withdraws some to the admin, and
+// seeds the vault's internal NAV pricing volume units of heldDenom at price units of the
+// underlying asset. This models a vault that has acquired a non-underlying asset via
+// settlement and prices it through the internal NAV chain, which is how the valuation engine
+// values held assets under the single-denom design. heldDenom must differ from the underlying.
+func (s *TestSuite) setupHeldAssetVault(underlyingDenom, shareDenom, heldDenom string, price, volume int64) *types.VaultAccount {
+	vault := s.setupBaseVault(underlyingDenom, shareDenom)
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(heldDenom, 2_000_000), s.adminAddr)
+	s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, heldDenom, sdk.NewCoins(sdk.NewInt64Coin(heldDenom, 100_000)))
+	s.setVaultNAV(vault, heldDenom, sdk.NewInt64Coin(underlyingDenom, price), volume)
 	return vault
 }
 
@@ -833,54 +810,17 @@ func (s *TestSuite) createLegacyVaultAccount(shareDenom, underlyingDenom, paymen
 	return vaultAcct
 }
 
-// setForwardMarkerNAV sets a payment->underlying net asset value on the payment
-// denom marker. Used by migration tests so Migrate1to2 can
-// read a forward marker NAV via MarkerKeeper.GetNetAssetValue.
-func (s *TestSuite) setForwardMarkerNAV(paymentDenom, underlyingDenom string, price, volume int64) {
-	paymentMarkerAddr := markertypes.MustGetMarkerAddress(paymentDenom)
-	paymentMarkerAccount, err := s.k.MarkerKeeper.GetMarker(s.ctx, paymentMarkerAddr)
-	s.Require().NoError(err, "should fetch payment marker for forward NAV setup")
-	s.Require().NoError(s.k.MarkerKeeper.SetNetAssetValue(s.ctx, paymentMarkerAccount, markertypes.NetAssetValue{
-		Price:  sdk.NewInt64Coin(underlyingDenom, price),
-		Volume: uint64(volume),
-	}, "test"), "should set forward marker NAV %s->%s=%d/%d", paymentDenom, underlyingDenom, price, volume)
-}
-
-// setupOversizedNAVVault builds a single-payment-denom vault primed for the NAV
-// overflow guard tests. It returns the vault, the suite keeper (fully wired,
-// including the internal NAV table the valuation engine reads), and the
-// underlying and payment denoms used to stage oversized NAVs.
+// setupOversizedNAVVault builds a single-denom vault holding an external asset primed for
+// the NAV overflow guard tests. It returns the vault, the suite keeper (fully wired, including
+// the internal NAV table the valuation engine reads), the underlying denom, and the held-asset
+// denom whose internal NAV the overflow tests overwrite with oversized price/volume via
+// seedOversizedNAV.
 func (s *TestSuite) setupOversizedNAVVault() (*types.VaultAccount, keeper.Keeper, string, string) {
 	underlyingDenom := "ylds"
-	paymentDenom := "usdc"
+	heldDenom := "usdc"
 	shareDenom := "vshare"
-	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
-	return vault, s.k, underlyingDenom, paymentDenom
-}
-
-// setReverseNAV sets a reverse net asset value on the underlying denom marker,
-// allowing the vault to value the underlying in terms of the payment denom.
-func (s *TestSuite) setReverseNAV(underlyingDenom, paymentDenom string, price, volume int64) {
-	underlyingMarkerAddr := markertypes.MustGetMarkerAddress(underlyingDenom)
-	underlyingMarkerAccount, err := s.k.MarkerKeeper.GetMarker(s.ctx, underlyingMarkerAddr)
-	s.Require().NoError(err, "should fetch underlying marker for reverse NAV setup")
-	s.Require().NoError(s.k.MarkerKeeper.SetNetAssetValue(s.ctx, underlyingMarkerAccount, markertypes.NetAssetValue{
-		Price:  sdk.NewInt64Coin(paymentDenom, price),
-		Volume: uint64(volume),
-	}, "test-reverse"), "should set reverse marker NAV %s->%s=%d/%d", underlyingDenom, paymentDenom, price, volume)
-}
-
-// setupLegacyPaymentDenomVault wires up a pre-v2 fixture for migration tests:
-// registers payment + underlying markers, persists a VaultAccount directly via
-// AccountKeeper so no InitialPaymentNAV is required, and sets a forward
-// payment->underlying marker NAV. The returned vault has no Internal NAV entry
-// so Migrate1to2 has work to do.
-func (s *TestSuite) setupLegacyPaymentDenomVault(underlyingDenom, shareDenom, paymentDenom string, price, volume int64) *types.VaultAccount {
-	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingDenom, 2_000_000), s.adminAddr)
-	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 2_000_000), s.adminAddr)
-	vault := s.createLegacyVaultAccount(shareDenom, underlyingDenom, paymentDenom)
-	s.setForwardMarkerNAV(paymentDenom, underlyingDenom, price, volume)
-	return vault
+	vault := s.setupHeldAssetVault(underlyingDenom, shareDenom, heldDenom, 1, 2)
+	return vault, s.k, underlyingDenom, heldDenom
 }
 
 // setVaultNAV seeds an Internal NAV entry on the given vault for denom, pricing
@@ -890,20 +830,6 @@ func (s *TestSuite) setVaultNAV(vault *types.VaultAccount, denom string, price s
 	nav := types.NewVaultNAV(denom, price, sdkmath.NewInt(volume), "test")
 	s.Require().NoError(s.k.SetVaultNAV(s.ctx, vault, nav, s.adminAddr.String()),
 		"should set internal NAV %s -> %s=%s/%d", denom, price.Denom, price.Amount, volume)
-}
-
-// setVaultPaymentDenomWithNAV mutates the vault to use paymentDenom (realigning
-// the outstanding AUM fee denom), persists the account, and seeds an Internal
-// NAV entry pricing volume paymentDenom units at price underlying.
-func (s *TestSuite) setVaultPaymentDenomWithNAV(vault *types.VaultAccount, paymentDenom string, price sdk.Coin, volume int64) {
-	vault.PaymentDenom = paymentDenom
-	outstanding := vault.OutstandingAumFee.Amount
-	if outstanding.IsNil() {
-		outstanding = sdkmath.ZeroInt()
-	}
-	vault.OutstandingAumFee = sdk.NewCoin(paymentDenom, outstanding)
-	s.k.AuthKeeper.SetAccount(s.ctx, vault)
-	s.setVaultNAV(vault, paymentDenom, price, volume)
 }
 
 // bumpHeight increments the suite's context block height by 1.

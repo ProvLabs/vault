@@ -25643,7 +25643,8 @@ type EventSwapOutRequested struct {
 	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
 	// owner is the bech32 address of the user who initiated the swap out.
 	Owner string `protobuf:"bytes,2,opt,name=owner,proto3" json:"owner,omitempty"`
-	// redeem_denom is the denomination of the asset to be redeemed.
+	// redeem_denom is the denomination of the asset to be redeemed. Always the
+	// vault's underlying_asset; retained for event-schema compatibility.
 	RedeemDenom string `protobuf:"bytes,3,opt,name=redeem_denom,json=redeemDenom,proto3" json:"redeem_denom,omitempty"`
 	// shares is the amount of vault shares the user escrowed for this request.
 	Shares string `protobuf:"bytes,4,opt,name=shares,proto3" json:"shares,omitempty"`
@@ -27007,7 +27008,7 @@ type EventAssetAccepted struct {
 	// target_amount is the funds the vault paid the source, rendered as a coins string.
 	TargetAmount string `protobuf:"bytes,5,opt,name=target_amount,json=targetAmount,proto3" json:"target_amount,omitempty"`
 	// direction indicates whether the asset moved into the vault ("inbound") or
-	// out of the vault ("outbound") relative to the vault's payment denom.
+	// out of the vault ("outbound") relative to the vault's underlying asset.
 	Direction string `protobuf:"bytes,6,opt,name=direction,proto3" json:"direction,omitempty"`
 }
 

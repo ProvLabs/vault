@@ -539,6 +539,15 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 			},
 			ExpectedErrSubstrs: []string{"invalid shares amount \"bogus\" : must be a valid integer"},
 		},
+		{
+			Name:  "fails with negative shares",
+			Setup: setupVault,
+			Req: &types.QueryEstimateSwapOutRequest{
+				VaultAddress: vaultAddr.String(),
+				Shares:       "-100",
+			},
+			ExpectedErrSubstrs: []string{"invalid shares amount \"-100\" : must not be negative", "InvalidArgument"},
+		},
 	}
 
 	for _, tc := range tests {

@@ -285,7 +285,7 @@ func (k Keeper) ConvertDepositToSharesInUnderlyingAsset(ctx sdk.Context, vault t
 	if err != nil {
 		return sdk.Coin{}, fmt.Errorf("failed to get TVV: %w", err)
 	}
-	return utils.CalculateSharesProRataFraction(in.Amount, math.OneInt(), tvv, vault.TotalShares.Amount, vault.TotalShares.Denom)
+	return utils.CalculateSharesProRata(in.Amount, tvv, vault.TotalShares.Amount, vault.TotalShares.Denom)
 }
 
 // ConvertSharesToRedeemCoin converts a share amount into a payout coin in the
@@ -302,7 +302,7 @@ func (k Keeper) ConvertSharesToRedeemCoin(ctx sdk.Context, vault types.VaultAcco
 	if err != nil {
 		return sdk.Coin{}, fmt.Errorf("failed to get TVV: %w", err)
 	}
-	return utils.CalculateRedeemProRataFraction(shares, vault.TotalShares.Amount, tvv, math.OneInt(), math.OneInt(), vault.UnderlyingAsset)
+	return utils.CalculateRedeemProRata(shares, vault.TotalShares.Amount, tvv, vault.UnderlyingAsset)
 }
 
 // EstimateTotalVaultValue returns an estimated Total Vault Value (TVV) as a Coin

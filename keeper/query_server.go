@@ -147,9 +147,8 @@ func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstim
 		return nil, status.Errorf(codes.Internal, "failed to estimate total assets: %v", err)
 	}
 
-	estimatedShares, err := utils.CalculateSharesProRataFraction(
+	estimatedShares, err := utils.CalculateSharesProRata(
 		req.Assets.Amount,
-		math.OneInt(),
 		estimatedTVV.Amount,
 		totalShares,
 		vault.TotalShares.Denom,
@@ -202,12 +201,10 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 		return nil, status.Errorf(codes.InvalidArgument, "invalid shares amount \"%s\" : must be a valid integer", req.Shares)
 	}
 
-	estimatedPayout, err := utils.CalculateRedeemProRataFraction(
+	estimatedPayout, err := utils.CalculateRedeemProRata(
 		shares,
 		totalShares,
 		estimatedTVV.Amount,
-		math.OneInt(),
-		math.OneInt(),
 		vault.UnderlyingAsset,
 	)
 	if err != nil {

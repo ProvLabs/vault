@@ -24,103 +24,78 @@ var (
 	VirtualShares = ShareScalar
 )
 
-// CalculateSharesProRataFraction computes minted shares for a deposit using a
-// single-floor, pro-rata formula with virtual offsets and an explicit price fraction.
+// CalculateSharesProRata computes minted shares for a deposit of the vault's
+// underlying asset using a single-floor, pro-rata formula with virtual offsets.
+// Vaults are single-denom, so the deposit amount is already in underlying units
+// and no price conversion applies.
 //
 // Arguments:
-//   - amountNumerator / amountDenominator represent the deposit value expressed
-//     in underlying units as a rational (e.g., amount * priceNum / priceDen).
-//     For underlying deposits, pass (amount, 1).
+//   - amount is the deposit amount in underlying units.
 //   - totalAssets / totalShares are the vault-wide totals prior to the deposit.
 //   - shareDenom is the vault share denom for the resulting coin.
 //
 // Behavior:
 //   - Applies virtual offsets: ta' = totalAssets + VirtualAssets, ts' = totalShares + VirtualShares.
-//   - First deposit mints amount * ShareScalar / amountDenominator.
-//   - Otherwise: shares = floor( amountNumerator * ts' / (amountDenominator * ta') ).
+//   - First deposit mints amount * ShareScalar.
+//   - Otherwise: shares = floor( amount * ts' / ta' ).
 //
-// Errors if any input is negative or if amountDenominator == 0.
-func CalculateSharesProRataFraction(
-	amountNumerator math.Int,
-	amountDenominator math.Int,
+// Errors if any input is negative.
+func CalculateSharesProRata(
+	amount math.Int,
 	totalAssets math.Int,
 	totalShares math.Int,
 	shareDenom string,
 ) (sdk.Coin, error) {
-	if amountNumerator.IsNegative() || amountDenominator.IsNegative() || totalAssets.IsNegative() || totalShares.IsNegative() {
+	if amount.IsNegative() || totalAssets.IsNegative() || totalShares.IsNegative() {
 		return sdk.Coin{}, fmt.Errorf("invalid input: negative values not allowed")
 	}
-	if amountNumerator.IsZero() {
+	if amount.IsZero() {
 		return sdk.NewCoin(shareDenom, math.ZeroInt()), nil
 	}
-	if amountDenominator.IsZero() {
-		return sdk.Coin{}, fmt.Errorf("invalid input: zero denominator")
-	}
 	if totalAssets.IsZero() && totalShares.IsZero() {
-		scaled, err := amountNumerator.SafeMul(ShareScalar)
+		scaled, err := amount.SafeMul(ShareScalar)
 		if err != nil {
-			return sdk.Coin{}, fmt.Errorf("failed to multiply amount numerator %s by share scalar %s: %w", amountNumerator, ShareScalar, err)
+			return sdk.Coin{}, fmt.Errorf("failed to multiply amount %s by share scalar %s: %w", amount, ShareScalar, err)
 		}
-		return sdk.NewCoin(shareDenom, scaled.Quo(amountDenominator)), nil
+		return sdk.NewCoin(shareDenom, scaled), nil
 	}
 	ta := totalAssets.Add(VirtualAssets)
 	ts := totalShares.Add(VirtualShares)
-	den, err := amountDenominator.SafeMul(ta)
+	numerator, err := amount.SafeMul(ts)
 	if err != nil {
-		return sdk.Coin{}, fmt.Errorf("failed to multiply amount denominator %s by total assets %s: %w", amountDenominator, ta, err)
+		return sdk.Coin{}, fmt.Errorf("failed to multiply amount %s by total shares %s: %w", amount, ts, err)
 	}
-	numerator, err := amountNumerator.SafeMul(ts)
-	if err != nil {
-		return sdk.Coin{}, fmt.Errorf("failed to multiply amount numerator %s by total shares %s: %w", amountNumerator, ts, err)
-	}
-	return sdk.NewCoin(shareDenom, numerator.Quo(den)), nil
+	return sdk.NewCoin(shareDenom, numerator.Quo(ta)), nil
 }
 
-// CalculateRedeemProRataFraction computes the payout amount for redeeming shares
-// into an arbitrary payout denom using a single-floor, pro-rata formula with
-// virtual offsets and an explicit price fraction.
+// CalculateRedeemProRata computes the payout amount for redeeming shares into
+// the vault's underlying asset using a single-floor, pro-rata formula with
+// virtual offsets. Vaults are single-denom, so the payout is always in
+// underlying units and no price conversion applies.
 //
 // Arguments:
 //   - shares is the number of vault shares being redeemed.
 //   - totalShares / totalAssets are the vault-wide totals prior to redemption.
-//   - priceNumerator / priceDenominator encode the payout denom’s price in
-//     underlying units (1 payout = priceNum / priceDen underlying). For
-//     underlying payouts, pass (1, 1).
-//   - payoutDenom is the target payout denom for the resulting coin.
+//   - payoutDenom is the underlying asset denom for the resulting coin.
 //
 // Behavior:
 //   - Applies virtual offsets: ta' = totalAssets + VirtualAssets, ts' = totalShares + VirtualShares.
-//   - Computes: payout = floor( shares * ta' * priceDen / (ts' * priceNum) ).
+//   - Computes: payout = floor( shares * ta' / ts' ).
 //   - Returns sdk.Coin(payoutDenom, payout).
 //
-// Errors if any input is negative or if priceNumerator == 0.
-func CalculateRedeemProRataFraction(shares math.Int, totalShares math.Int, totalAssets math.Int, priceNumerator math.Int, priceDenominator math.Int, payoutDenom string) (sdk.Coin, error) {
-	if shares.IsNegative() || totalShares.IsNegative() || totalAssets.IsNegative() || priceNumerator.IsNegative() || priceDenominator.IsNegative() {
+// Errors if any input is negative.
+func CalculateRedeemProRata(shares math.Int, totalShares math.Int, totalAssets math.Int, payoutDenom string) (sdk.Coin, error) {
+	if shares.IsNegative() || totalShares.IsNegative() || totalAssets.IsNegative() {
 		return sdk.Coin{}, fmt.Errorf("invalid input: negative values not allowed")
 	}
 	if shares.IsZero() {
 		return sdk.NewCoin(payoutDenom, math.ZeroInt()), nil
 	}
 	ts := totalShares.Add(VirtualShares)
-	if ts.IsZero() {
-		return sdk.NewCoin(payoutDenom, math.ZeroInt()), nil
-	}
-	if priceNumerator.IsZero() {
-		return sdk.Coin{}, fmt.Errorf("invalid input: zero price numerator")
-	}
 	ta := totalAssets.Add(VirtualAssets)
 	sharesTa, err := shares.SafeMul(ta)
 	if err != nil {
 		return sdk.Coin{}, fmt.Errorf("failed to multiply shares %s by total assets %s: %w", shares, ta, err)
 	}
-	num, err := sharesTa.SafeMul(priceDenominator)
-	if err != nil {
-		return sdk.Coin{}, fmt.Errorf("failed to multiply shares-assets product %s by price denominator %s: %w", sharesTa, priceDenominator, err)
-	}
-	den, err := ts.SafeMul(priceNumerator)
-	if err != nil {
-		return sdk.Coin{}, fmt.Errorf("failed to multiply total shares %s by price numerator %s: %w", ts, priceNumerator, err)
-	}
-	out := num.Quo(den)
-	return sdk.NewCoin(payoutDenom, out), nil
+	return sdk.NewCoin(payoutDenom, sharesTa.Quo(ts)), nil
 }

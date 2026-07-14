@@ -201,5 +201,5 @@ message PendingSwapOut {
 
   // redeem_denom is the denomination of the asset to be redeemed. Always the
   // vault's underlying_asset; retained for wire compatibility.
-  string redeem_denom = 4;
+  string redeem_denom = 4 [deprecated = true];
 }

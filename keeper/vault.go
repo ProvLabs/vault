@@ -256,7 +256,8 @@ func (k *Keeper) createVaultMarker(ctx sdk.Context, markerManager sdk.AccAddress
 //  3. Reconciles the vault (interest and AUM fees) if due.
 //  4. Resolves the vault share marker address.
 //  5. Validates that the provided underlying asset matches the vault’s configured underlying denom.
-//  6. Calculates the number of shares to mint based on the deposit, current supply, and vault balance.
+//  6. Calculates the number of shares to mint based on the deposit, current supply, and vault balance,
+//     rejecting deposits that round down to zero shares before any funds move.
 //  7. Mints the computed amount of shares under the vault’s admin authority.
 //  8. Withdraws the minted shares from the vault to the recipient address.
 //  9. Sends the underlying asset from the recipient to the vault’s marker account.
@@ -306,6 +307,10 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 
 	if err := shares.Validate(); err != nil {
 		return nil, fmt.Errorf("failed to validate shares: %w", err)
+	}
+
+	if !shares.Amount.IsPositive() {
+		return nil, fmt.Errorf("deposit %s is too small to mint shares for vault %s at the current share price", asset, vaultAddr.String())
 	}
 
 	if err := k.MarkerKeeper.MintCoin(ctx, vault.GetAddress(), shares); err != nil {

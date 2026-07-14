@@ -44,14 +44,27 @@ func (k *Keeper) processPendingSwapOuts(ctx sdk.Context, batchSize int) error {
 
 // processSwapOutJobs iterates pending swap-out jobs collected for this block and executes them.
 //
+// A pending request is removed from the queue only when a durable outcome is committed in the same
+// atomic unit as the deletion: a completed payout or a successful refund. The dequeue therefore shares
+// the cache context with its outcome, so on a critical failure both the work and the deletion roll back
+// together and the request, along with the shares escrowed at request time, is preserved for later
+// settlement. This keeps the payout/burn atomicity intact while ensuring escrow can never be stranded
+// by a partially committed outcome.
+//
 // The processing strategy involves:
-//  1. Verifying the vault exists; jobs for paused vaults are dequeued and refunded.
-//  2. Dequeuing the job on the main context immediately to ensure it is only attempted once,
-//     preventing infinite retry loops if a failure occurs during processing or refund.
-//  3. Executing the withdrawal logic (reconciliation, payout, and burning) within a single
-//     cache context to ensure atomicity. Changes are only committed to the main state on success.
-//  4. Handling recoverable failures by issuing a refund on the main context.
-//  5. Handling critical or unrecoverable failures by auto-pausing the associated vault.
+//  1. Verifying the vault exists; jobs for non-existent vaults are dequeued and skipped, and jobs
+//     for paused vaults are dequeued and refunded atomically in their own cache context.
+//  2. Executing the withdrawal logic (reconciliation, payout, and burning) within a cache context, then
+//     dequeuing in that same cache context and committing only on success.
+//  3. Handling recoverable failures by dequeuing and refunding atomically in a fresh cache context.
+//  4. Handling critical or unrecoverable failures by auto-pausing the vault and discarding the cache so
+//     the request is preserved. Because the vault is now paused, the preserved request is refunded on a
+//     later block rather than re-executed, so it is never double-processed.
+//
+// A failed Dequeue on an active vault's job is itself treated as a critical, unrecoverable failure.
+// Such a failure is deterministic for a given entry, so without intervention the same request would be
+// re-collected and re-attempted every block in an unbounded loop. Auto-pausing the vault breaks that loop,
+// signals operators, and preserves the escrowed shares (the cache is discarded) until the store issue is resolved.
 func (k *Keeper) processSwapOutJobs(ctx sdk.Context, jobsToProcess []types.PayoutJob) {
 	for _, j := range jobsToProcess {
 		vault, ok := k.tryGetVault(ctx, j.VaultAddr)
@@ -76,41 +89,57 @@ func (k *Keeper) processSwapOutJobs(ctx sdk.Context, jobsToProcess []types.Payou
 			continue
 		}
 
-		if err := k.PendingSwapOutQueue.Dequeue(ctx, j.Timestamp, j.VaultAddr, j.ID); err != nil {
-			k.getLogger(ctx).Error(
-				"failed to dequeue withdrawal request",
-				"request_id", j.ID,
-				"vault_address", j.VaultAddr.String(),
-				"error", err,
-			)
+		var cErr *types.CriticalError
+		cacheCtx, write := ctx.CacheContext()
+		err := k.processSingleWithdrawal(cacheCtx, j.ID, j.Req, *vault)
+		if err == nil {
+			if derr := k.PendingSwapOutQueue.Dequeue(cacheCtx, j.Timestamp, j.VaultAddr, j.ID); derr != nil {
+				errMsg := fmt.Sprintf("failed to dequeue withdrawal request %d after successful payout", j.ID)
+				k.getLogger(ctx).Error(
+					"CRITICAL: "+errMsg,
+					"request_id", j.ID,
+					"vault_address", j.VaultAddr.String(),
+					"error", derr,
+				)
+				k.autoPauseVault(ctx, vault, errMsg)
+				continue
+			}
+			write()
 			continue
 		}
 
-		cacheCtx, write := ctx.CacheContext()
-
-		if err := k.processSingleWithdrawal(cacheCtx, j.ID, j.Req, *vault); err != nil {
-			var cErr *types.CriticalError
-			if errors.As(err, &cErr) {
-				k.autoPauseVault(ctx, vault, cErr.Reason)
-				continue
-			}
-
-			reason := k.getRefundReason(err)
-			k.getLogger(ctx).Error(
-				"failed to process withdrawal, issuing refund",
-				"withdrawal_id", j.ID,
-				"reason", reason,
-				"error", err,
-			)
-
-			if rerr := k.refundWithdrawal(ctx, j.ID, j.Req, reason); rerr != nil {
-				if errors.As(rerr, &cErr) {
-					k.autoPauseVault(ctx, vault, cErr.Reason)
-				}
-			}
-		} else {
-			write()
+		if errors.As(err, &cErr) {
+			k.autoPauseVault(ctx, vault, cErr.Reason)
+			continue
 		}
+
+		reason := k.getRefundReason(err)
+		k.getLogger(ctx).Error(
+			"failed to process withdrawal, issuing refund",
+			"withdrawal_id", j.ID,
+			"reason", reason,
+			"error", err,
+		)
+
+		refundCtx, refundWrite := ctx.CacheContext()
+		if derr := k.PendingSwapOutQueue.Dequeue(refundCtx, j.Timestamp, j.VaultAddr, j.ID); derr != nil {
+			errMsg := fmt.Sprintf("failed to dequeue withdrawal request %d before refund", j.ID)
+			k.getLogger(ctx).Error(
+				"CRITICAL: "+errMsg,
+				"request_id", j.ID,
+				"vault_address", j.VaultAddr.String(),
+				"error", derr,
+			)
+			k.autoPauseVault(ctx, vault, errMsg)
+			continue
+		}
+		if rerr := k.refundWithdrawal(refundCtx, j.ID, j.Req, reason); rerr != nil {
+			if errors.As(rerr, &cErr) {
+				k.autoPauseVault(ctx, vault, cErr.Reason)
+			}
+			continue
+		}
+		refundWrite()
 	}
 }
 

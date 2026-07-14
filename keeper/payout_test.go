@@ -557,23 +557,7 @@ func (s *TestSuite) TestKeeper_ProcessSwapOutJobs() {
 		{
 			name: "request is dequeued and refunded if vault becomes paused after collection",
 			setup: func(shareDenom string, vaultAddr sdk.AccAddress) (sdk.AccAddress, sdk.Coin, uint64, types.PendingSwapOut) {
-				ownerAddr := s.CreateAndFundAccount(assets)
-				vault := s.setupBaseVault(underlyingDenom, shareDenom)
-
-				minted, err := s.k.SwapIn(s.ctx, vaultAddr, ownerAddr, assets)
-				s.Require().NoError(err, "should successfully swap in assets")
-				s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, ownerAddr, vault.GetAddress(), sdk.NewCoins(*minted)), "should escrow shares into vault account")
-
-				req := types.PendingSwapOut{
-					Owner:        ownerAddr.String(),
-					VaultAddress: vaultAddr.String(),
-					RedeemDenom:  underlyingDenom,
-					Shares:       *minted,
-				}
-				id, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, duePayoutTime, &req)
-				s.Require().NoError(err, "should successfully enqueue request")
-
-				return ownerAddr, *minted, id, req
+				return s.enqueueDueSwapOut(underlyingDenom, shareDenom, assets, duePayoutTime)
 			},
 			act: func(shareDenom string, vaultAddr sdk.AccAddress, ownerAddr sdk.AccAddress, mintedShares sdk.Coin, reqID uint64, req types.PendingSwapOut) {
 				jobs := []types.PayoutJob{
@@ -604,6 +588,107 @@ func (s *TestSuite) TestKeeper_ProcessSwapOutJobs() {
 					normalizeEvents(s.ctx.EventManager().Events()),
 					"a single EventSwapOutRefunded with reason %s should be emitted", types.RefundReasonVaultPaused,
 				)
+			},
+		},
+		{
+			name: "critical share-transfer failure preserves entry, escrow, and pauses vault",
+			setup: func(shareDenom string, vaultAddr sdk.AccAddress) (sdk.AccAddress, sdk.Coin, uint64, types.PendingSwapOut) {
+				return s.enqueueDueSwapOut(underlyingDenom, shareDenom, assets, duePayoutTime)
+			},
+			act: func(shareDenom string, vaultAddr sdk.AccAddress, ownerAddr sdk.AccAddress, mintedShares sdk.Coin, reqID uint64, req types.PendingSwapOut) {
+				principalAddress := markertypes.MustGetMarkerAddress(shareDenom)
+				s.installBankSendFault(func(from, to sdk.AccAddress, amt sdk.Coins) error {
+					if from.Equals(vaultAddr) && to.Equals(principalAddress) && amt.AmountOf(shareDenom).Equal(mintedShares.Amount) {
+						return fmt.Errorf("forced share transfer failure")
+					}
+					return nil
+				})
+				s.k.TestAccessor_processSwapOutJobs(s.T(), s.ctx, []types.PayoutJob{types.NewPayoutJob(duePayoutTime, reqID, vaultAddr, req)})
+			},
+			posthandler: func(ownerAddr sdk.AccAddress, reqID uint64, shareDenom string, vaultAddr sdk.AccAddress, mintedShares sdk.Coin) {
+				s.assertSwapOutEntryPreservedAndPaused(reqID, vaultAddr, ownerAddr, mintedShares, underlyingDenom)
+			},
+		},
+		{
+			name: "critical burn failure preserves entry, escrow, and pauses vault",
+			setup: func(shareDenom string, vaultAddr sdk.AccAddress) (sdk.AccAddress, sdk.Coin, uint64, types.PendingSwapOut) {
+				return s.enqueueDueSwapOut(underlyingDenom, shareDenom, assets, duePayoutTime)
+			},
+			act: func(shareDenom string, vaultAddr sdk.AccAddress, ownerAddr sdk.AccAddress, mintedShares sdk.Coin, reqID uint64, req types.PendingSwapOut) {
+				s.installMarkerBurnFault(func(_ sdk.AccAddress, coin sdk.Coin) error {
+					if coin.Denom == shareDenom {
+						return fmt.Errorf("forced burn failure")
+					}
+					return nil
+				})
+				s.k.TestAccessor_processSwapOutJobs(s.T(), s.ctx, []types.PayoutJob{types.NewPayoutJob(duePayoutTime, reqID, vaultAddr, req)})
+			},
+			posthandler: func(ownerAddr sdk.AccAddress, reqID uint64, shareDenom string, vaultAddr sdk.AccAddress, mintedShares sdk.Coin) {
+				s.assertSwapOutEntryPreservedAndPaused(reqID, vaultAddr, ownerAddr, mintedShares, underlyingDenom)
+			},
+		},
+		{
+			name: "critical refund failure preserves entry, escrow, and pauses vault",
+			setup: func(shareDenom string, vaultAddr sdk.AccAddress) (sdk.AccAddress, sdk.Coin, uint64, types.PendingSwapOut) {
+				return s.enqueueDueSwapOut(underlyingDenom, shareDenom, assets, duePayoutTime)
+			},
+			act: func(shareDenom string, vaultAddr sdk.AccAddress, ownerAddr sdk.AccAddress, mintedShares sdk.Coin, reqID uint64, req types.PendingSwapOut) {
+				principalAddress := markertypes.MustGetMarkerAddress(shareDenom)
+				s.installBankSendFault(func(from, to sdk.AccAddress, amt sdk.Coins) error {
+					if from.Equals(principalAddress) && to.Equals(ownerAddr) {
+						return fmt.Errorf("forced payout failure")
+					}
+					if from.Equals(vaultAddr) && to.Equals(ownerAddr) {
+						return fmt.Errorf("forced refund failure")
+					}
+					return nil
+				})
+				s.k.TestAccessor_processSwapOutJobs(s.T(), s.ctx, []types.PayoutJob{types.NewPayoutJob(duePayoutTime, reqID, vaultAddr, req)})
+			},
+			posthandler: func(ownerAddr sdk.AccAddress, reqID uint64, shareDenom string, vaultAddr sdk.AccAddress, mintedShares sdk.Coin) {
+				s.assertSwapOutEntryPreservedAndPaused(reqID, vaultAddr, ownerAddr, mintedShares, underlyingDenom)
+			},
+		},
+		{
+			name: "preserved entry completes after vault is unpaused",
+			setup: func(shareDenom string, vaultAddr sdk.AccAddress) (sdk.AccAddress, sdk.Coin, uint64, types.PendingSwapOut) {
+				return s.enqueueDueSwapOut(underlyingDenom, shareDenom, assets, duePayoutTime)
+			},
+			act: func(shareDenom string, vaultAddr sdk.AccAddress, ownerAddr sdk.AccAddress, mintedShares sdk.Coin, reqID uint64, req types.PendingSwapOut) {
+				principalAddress := markertypes.MustGetMarkerAddress(shareDenom)
+				failOnce := true
+				s.installBankSendFault(func(from, to sdk.AccAddress, amt sdk.Coins) error {
+					if failOnce && from.Equals(vaultAddr) && to.Equals(principalAddress) && amt.AmountOf(shareDenom).Equal(mintedShares.Amount) {
+						failOnce = false
+						return fmt.Errorf("forced one-time share transfer failure")
+					}
+					return nil
+				})
+				jobs := []types.PayoutJob{types.NewPayoutJob(duePayoutTime, reqID, vaultAddr, req)}
+				s.k.TestAccessor_processSwapOutJobs(s.T(), s.ctx, jobs)
+
+				vault, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err, "should successfully get vault after critical failure")
+				s.Require().True(vault.Paused, "vault should be paused after the critical failure")
+				vault.Paused = false
+				vault.PausedReason = ""
+				s.Require().NoError(s.k.SetVaultAccount(s.ctx, vault), "should successfully unpause vault")
+
+				s.k.TestAccessor_processSwapOutJobs(s.T(), s.ctx, jobs)
+			},
+			posthandler: func(ownerAddr sdk.AccAddress, reqID uint64, shareDenom string, vaultAddr sdk.AccAddress, mintedShares sdk.Coin) {
+				var entries []uint64
+				err := s.k.PendingSwapOutQueue.Walk(s.ctx, func(_ int64, id uint64, _ sdk.AccAddress, _ types.PendingSwapOut) (bool, error) {
+					entries = append(entries, id)
+					return false, nil
+				})
+				s.Require().NoError(err, "walking the queue should not error")
+				s.Require().Empty(entries, "entry should be removed after a successful payout on the second pass")
+
+				s.assertBalance(ownerAddr, underlyingDenom, assets.Amount)
+				s.assertBalance(vaultAddr, mintedShares.Denom, math.ZeroInt())
+				supply := s.k.BankKeeper.GetSupply(s.ctx, shareDenom)
+				s.Require().True(supply.Amount.IsZero(), "share supply should be zero after the burn completes")
 			},
 		},
 	}

@@ -87,32 +87,6 @@ func getRandomVault(r *rand.Rand, k keeper.Keeper, ctx sdk.Context) (*types.Vaul
 	return vault, nil
 }
 
-// getRandomVaultWithCondition gets a random vault that satisfies a given condition.
-func getRandomVaultWithCondition(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, condition func(vault types.VaultAccount) bool) (*types.VaultAccount, error) {
-	allVaultAddrs, err := k.GetVaults(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	var matchingVaults []*types.VaultAccount
-	for _, vaultAddr := range allVaultAddrs {
-		vault, err := k.GetVault(ctx, vaultAddr)
-		if err != nil || vault == nil {
-			continue
-		}
-
-		if condition(*vault) {
-			matchingVaults = append(matchingVaults, vault)
-		}
-	}
-
-	if len(matchingVaults) == 0 {
-		return nil, fmt.Errorf("no vaults found matching condition")
-	}
-
-	return matchingVaults[r.Intn(len(matchingVaults))], nil
-}
-
 // getRandomBridgedVault finds a random vault that has bridging enabled and the bridge address is a sim account.
 func getRandomBridgedVault(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, accs []simtypes.Account, checkBalance bool) (types.VaultAccount, error) {
 	addrs, err := k.GetVaults(sdk.UnwrapSDKContext(ctx))
@@ -335,15 +309,23 @@ func getRandomPendingSwapOut(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, vau
 	return randomID, nil
 }
 
-// getRandomVaultAsset gets a random asset (either underlying or payment) accepted by a vault.
-func getRandomVaultAsset(r *rand.Rand, vault *types.VaultAccount) string {
-	if vault.PaymentDenom == "" {
-		return vault.UnderlyingAsset
+// getRandomExternalAssetDenom finds a global sim marker denom, held by one of the
+// given accounts, that differs from the vault's underlying asset. Settlement
+// operations trade an external asset against the vault's underlying, so a
+// distinct denom is required.
+func getRandomExternalAssetDenom(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, accs []simtypes.Account, underlying string) (string, error) {
+	shuffled := make([]simtypes.Account, len(accs))
+	copy(shuffled, accs)
+	r.Shuffle(len(shuffled), func(i, j int) { shuffled[i], shuffled[j] = shuffled[j], shuffled[i] })
+
+	for _, acc := range shuffled {
+		for _, coin := range k.BankKeeper.GetAllBalances(ctx, acc.Address) {
+			if strings.HasSuffix(coin.Denom, VaultGlobalDenomSuffix) && coin.Denom != underlying {
+				return coin.Denom, nil
+			}
+		}
 	}
-	if r.Intn(2) == 0 {
-		return vault.UnderlyingAsset
-	}
-	return vault.PaymentDenom
+	return "", fmt.Errorf("no account holds a global marker denom distinct from underlying %q", underlying)
 }
 
 // getRandomMinSwapValue generates a random valid minimum swap value for a given vault.

@@ -19,9 +19,12 @@ func NewMigrator(k *Keeper) Migrator {
 }
 
 // Migrate1to2 advances the vault module from ConsensusVersion 1 to 2 by
-// seeding the Internal NAV table from Marker NAVs and defaulting nav_authority
-// to the vault admin when unset. The work is delegated to the unexported
-// migrateInternalNAVSeedFromMarker, which is idempotent across retries.
+// flattening every vault to single-denom: payment denoms collapse onto the
+// underlying asset, outstanding AUM fees are re-denominated into the
+// underlying, pending swap-outs redeem in the underlying, and nav_authority
+// defaults to the vault admin when unset. The work is delegated to the
+// unexported migrateFlattenMixedDenomVaults, which is idempotent across
+// retries.
 func (m Migrator) Migrate1to2(ctx sdk.Context) error {
-	return m.keeper.migrateInternalNAVSeedFromMarker(ctx)
+	return m.keeper.migrateFlattenMixedDenomVaults(ctx)
 }

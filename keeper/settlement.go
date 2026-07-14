@@ -71,12 +71,12 @@ func (k *Keeper) applySettlementNAV(ctx sdk.Context, vault *types.VaultAccount, 
 }
 
 // settlementLegCoins resolves a payment's legs into the single asset coin and the
-// single payment-denom coin for the given settlement direction. The NAV guardrail
+// single underlying-asset coin for the given settlement direction. The NAV guardrail
 // and upsert price exactly one asset coin against one payment coin, so the asset leg
 // with zero or multiple coins is rejected. A zero-priced settlement carries no coin on
 // the payment leg (the zero coin is stripped); an empty payment leg yields a zero coin
-// of paymentDenom, but a payment leg carrying more than one coin is rejected.
-func settlementLegCoins(payment *exchange.Payment, direction, paymentDenom string) (assetCoin, paymentCoin sdk.Coin, err error) {
+// of underlyingDenom, but a payment leg carrying more than one coin is rejected.
+func settlementLegCoins(payment *exchange.Payment, direction, underlyingDenom string) (assetCoin, paymentCoin sdk.Coin, err error) {
 	assetLeg, paymentLeg := payment.TargetAmount, payment.SourceAmount
 	if direction == types.AssetDirectionInbound {
 		assetLeg, paymentLeg = payment.SourceAmount, payment.TargetAmount
@@ -84,7 +84,7 @@ func settlementLegCoins(payment *exchange.Payment, direction, paymentDenom strin
 	if len(assetLeg) != 1 || len(paymentLeg) > 1 {
 		return sdk.Coin{}, sdk.Coin{}, fmt.Errorf("payment legs must carry one asset coin and at most one payment coin to settle against the vault NAV: source_amount=%q target_amount=%q", payment.SourceAmount, payment.TargetAmount)
 	}
-	paymentCoin = sdk.NewInt64Coin(paymentDenom, 0)
+	paymentCoin = sdk.NewInt64Coin(underlyingDenom, 0)
 	if len(paymentLeg) == 1 {
 		paymentCoin = paymentLeg[0]
 	}

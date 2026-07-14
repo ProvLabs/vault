@@ -6,16 +6,15 @@ import (
 	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	"github.com/provenance-io/provenance/x/exchange"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
+
 	"github.com/provlabs/vault/types"
 )
 
 func (s *TestSuite) TestKeeper_ApplySettlementNAV() {
 	underlying := "under"
 	share := "vshare"
-	paymentDenom := "pay"
 	asset := "rwacoin"
 
 	tests := []struct {
@@ -69,7 +68,7 @@ func (s *TestSuite) TestKeeper_ApplySettlementNAV() {
 			defer func() { s.ctx = origCtx }()
 			s.ctx, _ = s.ctx.CacheContext()
 
-			vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+			vault, principalAddr := s.setupAssetSettlementVault(underlying, share)
 			vaultAddr := vault.GetAddress()
 			if tc.registerAssetMarker {
 				s.requireSimpleMarker(asset)
@@ -79,7 +78,7 @@ func (s *TestSuite) TestKeeper_ApplySettlementNAV() {
 			}
 
 			assetCoin := sdk.NewCoin(asset, tc.assetAmount)
-			paymentCoin := sdk.NewInt64Coin(paymentDenom, 5)
+			paymentCoin := sdk.NewInt64Coin(underlying, 5)
 
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 			err := s.k.TestAccessor_applySettlementNAV(s.T(), s.ctx, vault, assetCoin, paymentCoin, tc.direction, s.adminAddr.String())
@@ -190,7 +189,7 @@ func (s *TestSuite) TestSettlementLegCoins() {
 }
 
 func (s *TestSuite) TestKeeper_StageAndReturnPrincipal() {
-	underlying, share, paymentDenom := "under", "vshare", "pay"
+	underlying, share := "under", "vshare"
 	restricted, free := "restrictedrwa", "freerwa"
 
 	tests := []struct {
@@ -254,7 +253,7 @@ func (s *TestSuite) TestKeeper_StageAndReturnPrincipal() {
 			defer func() { s.ctx = origCtx }()
 			s.ctx, _ = s.ctx.CacheContext()
 
-			vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+			vault, principalAddr := s.setupAssetSettlementVault(underlying, share)
 			vaultAddr := vault.GetAddress()
 
 			from, to := principalAddr, vaultAddr
@@ -281,13 +280,13 @@ func (s *TestSuite) TestKeeper_StageAndReturnPrincipal() {
 }
 
 func (s *TestSuite) TestKeeper_ReturnToPrincipal_BypassIsLoadBearing() {
-	underlying, share, paymentDenom, restricted := "under", "vshare", "pay", "restrictedrwa"
+	underlying, share, restricted := "under", "vshare", "restrictedrwa"
 
 	origCtx := s.ctx
 	defer func() { s.ctx = origCtx }()
 	s.ctx, _ = s.ctx.CacheContext()
 
-	vault, principalAddr := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+	vault, principalAddr := s.setupAssetSettlementVault(underlying, share)
 	vaultAddr := vault.GetAddress()
 
 	s.requireRestrictedMarker(restricted)

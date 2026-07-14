@@ -304,11 +304,11 @@ func (k Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vault
 // from the vault's principal marker account using its configured AumFeeBips.
 //
 // The fee is calculated based on the **Gross TVV** (the literal sum of all assets in the marker)
-// and collected in the vault's configured PaymentDenom.
+// and collected in the vault's underlying asset.
 //
 // This method implements a "collect-what-is-available" strategy: it attempts to transfer
 // the total outstanding fee (accrued + previously unpaid), but caps the collection at
-// the principal marker's current PaymentDenom balance. Any uncollected remainder is
+// the principal marker's current underlying-asset balance. Any uncollected remainder is
 // recorded in OutstandingAumFee to be retried during the next reconciliation.
 //
 // An EventVaultFeeCollected is emitted upon success.
@@ -332,7 +332,7 @@ func (k Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAccou
 	if err != nil {
 		return fmt.Errorf("failed to add new fee payment %s to outstanding AUM fee %s: %w", newFeePayment, vault.OutstandingAumFee, err)
 	}
-	totalOutstanding := sdk.NewCoin(vault.PaymentDenom, totalOutstandingAmount)
+	totalOutstanding := sdk.NewCoin(vault.UnderlyingAsset, totalOutstandingAmount)
 	if totalOutstanding.IsZero() {
 		vault.FeePeriodStart = currentBlockTime
 		return nil
@@ -344,7 +344,7 @@ func (k Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAccou
 	}
 
 	principalAddress := vault.PrincipalMarkerAddress()
-	balance := k.BankKeeper.GetBalance(ctx, principalAddress, vault.PaymentDenom)
+	balance := k.BankKeeper.GetBalance(ctx, principalAddress, vault.UnderlyingAsset)
 
 	toCollect := totalOutstanding
 	if balance.Amount.LT(totalOutstanding.Amount) {
@@ -472,29 +472,22 @@ func (k Keeper) CalculateAccruedAUMFee(ctx sdk.Context, vault types.VaultAccount
 }
 
 // CalculateAccruedAUMFeePayment calculates the AUM fees that would have accrued for the vault
-// from its FeePeriodStart to the current block time, converted to the vault's PaymentDenom.
+// from its FeePeriodStart to the current block time, as a coin in the vault's underlying asset.
 func (k Keeper) CalculateAccruedAUMFeePayment(ctx sdk.Context, vault types.VaultAccount, totalAssets sdkmath.Int) (sdk.Coin, error) {
 	feeUnderlying, err := k.CalculateAccruedAUMFee(ctx, vault, totalAssets)
 	if err != nil {
 		return sdk.Coin{}, fmt.Errorf("failed to calculate accrued AUM fee: %w", err)
 	}
-	if feeUnderlying.IsZero() {
-		return sdk.NewCoin(vault.PaymentDenom, sdkmath.ZeroInt()), nil
-	}
-	feePayment, err := k.FromUnderlyingAssetAmount(ctx, vault, feeUnderlying, vault.PaymentDenom)
-	if err != nil {
-		return sdk.Coin{}, fmt.Errorf("failed to convert accrued fee to payment denom: %w", err)
-	}
-	return sdk.NewCoin(vault.PaymentDenom, feePayment), nil
+	return sdk.NewCoin(vault.UnderlyingAsset, feeUnderlying), nil
 }
 
-// CalculateOutstandingFeeUnderlying converts the vault's outstanding AUM fees into
-// the equivalent amount of the underlying asset.
-func (k Keeper) CalculateOutstandingFeeUnderlying(ctx sdk.Context, vault types.VaultAccount) (sdkmath.Int, error) {
+// CalculateOutstandingFeeUnderlying returns the vault's outstanding AUM fee amount.
+// The fee is denominated in the underlying asset, so no conversion is required.
+func (k Keeper) CalculateOutstandingFeeUnderlying(_ sdk.Context, vault types.VaultAccount) (sdkmath.Int, error) {
 	if vault.OutstandingAumFee.IsZero() {
 		return sdkmath.ZeroInt(), nil
 	}
-	return k.ToUnderlyingAssetAmount(ctx, vault, vault.OutstandingAumFee)
+	return vault.OutstandingAumFee.Amount, nil
 }
 
 // CalculateVaultTotalAssets returns the total value of the vault's assets, including the interest

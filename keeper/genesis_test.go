@@ -146,6 +146,7 @@ func (s *TestSuite) TestInitGenesis_PanicOnInvalidTimeout() {
 		})
 	}
 }
+
 func (s *TestSuite) TestVaultGenesis_RoundTrip_FeeTimeoutAndParams() {
 	shareDenom := "vaultshare_fee"
 	underlying := "under_fee"

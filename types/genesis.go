@@ -115,11 +115,8 @@ func (gs GenesisState) Validate() error {
 		if err := entry.Nav.Price.Validate(); err != nil {
 			return fmt.Errorf("invalid nav price at index %d: %w", i, err)
 		}
-		if v.IsAcceptedDenom(entry.Nav.Denom) && !entry.Nav.Price.Amount.IsPositive() {
-			return fmt.Errorf("nav price at index %d for accepted denom %q must be positive", i, entry.Nav.Denom)
-		}
-		if !v.IsAcceptedDenom(entry.Nav.Price.Denom) {
-			return fmt.Errorf("nav price denom at index %d %q is not an accepted denom for vault %s", i, entry.Nav.Price.Denom, entry.VaultAddress)
+		if entry.Nav.Price.Denom != v.UnderlyingAsset {
+			return fmt.Errorf("nav price denom at index %d %q is not the underlying asset for vault %s", i, entry.Nav.Price.Denom, entry.VaultAddress)
 		}
 		if entry.Nav.Volume.IsNil() || !entry.Nav.Volume.IsPositive() {
 			return fmt.Errorf("nav volume at index %d must be positive", i)

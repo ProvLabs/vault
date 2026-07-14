@@ -59,7 +59,7 @@ Returns configuration **and live balances** for a specific vault.
 
 ## EstimateSwapIn
 
-Estimates how many **shares** would be minted for a given deposit of assets (underlying or the optional payment denom).
+Estimates how many **shares** would be minted for a given deposit of the vault's underlying asset.
 
 - **gRPC:** `Query/EstimateSwapIn`
 - **REST:** `GET /vault/v1/vaults/{vault_address}/estimate_swap_in`
@@ -67,7 +67,7 @@ Estimates how many **shares** would be minted for a given deposit of assets (und
 ### Request — `QueryEstimateSwapInRequest`
 - `vault_address`: bech32 vault address.
 - `assets`: `Coin` you plan to deposit.  
-  - `denom` must be accepted by the vault: `underlying_asset` or the configured `payment_denom` (if set).
+  - `denom` must be the vault's `underlying_asset` (the only accepted deposit denom).
 
 ### Response — `QueryEstimateSwapInResponse`
 - `assets`: `Coin` representing the **estimated shares** to be received (denom = vault’s `share_denom`).
@@ -75,8 +75,7 @@ Estimates how many **shares** would be minted for a given deposit of assets (und
 - `time`: UTC block time used for the estimate.
 
 **How it works (high level)**
-- Validates the deposit denom is accepted.
-- Converts deposit → underlying using current NAV (unit price of deposit denom versus underlying).
+- Validates the deposit denom is the vault's underlying asset.
 - Computes a **pro-rata** share amount based on:
   - total shares outstanding,
   - total principal in the marker,
@@ -84,15 +83,14 @@ Estimates how many **shares** would be minted for a given deposit of assets (und
 - Floors where necessary to prevent over-mint.
 
 **Common errors**
-- Unsupported deposit denom.
-- NAV unavailable for the provided pair.
+- Unsupported deposit denom (not the underlying asset).
 - Invalid vault address.
 
 ---
 
 ## EstimateSwapOut
 
-Estimates how many **payout assets** (underlying or payment denom) you would receive for a given amount of **shares**.
+Estimates how many **payout assets** (in the vault's underlying asset) you would receive for a given amount of **shares**.
 
 - **gRPC:** `Query/EstimateSwapOut`
 - **REST:** `GET /vault/v1/vaults/{vault_address}/estimate_swap_out`
@@ -100,22 +98,23 @@ Estimates how many **payout assets** (underlying or payment denom) you would rec
 ### Request — `QueryEstimateSwapOutRequest`
 - `vault_address`: bech32 vault address.
 - `shares`: amount of shares to redeem (as a string-encoded `Int`).
-- `redeem_denom` *(optional)*: payout denom to estimate; if empty, defaults to the vault’s `underlying_asset`.  
-  Must be either `underlying_asset` or the configured `payment_denom` (if set).
+- `redeem_denom` *(optional, deprecated)*: payout denom; must be empty or equal to the vault’s `underlying_asset`.  
+  Deprecated: the payout-denom choice has been removed and payouts are always the underlying asset.
+  Leave it empty; the wire field remains for compatibility, and field deletion is deferred to a
+  future major release.
 
 ### Response — `QueryEstimateSwapOutResponse`
-- `assets`: `Coin` in the **redeem denom**, representing the estimated payout.
+- `assets`: `Coin` in the vault's **underlying asset**, representing the estimated payout.
 - `height`: block height used.
 - `time`: UTC block time used.
 
 **How it works (high level)**
-- Validates the requested payout denom is accepted (underlying or payment denom).
-- Computes a **pro-rata** redemption of the vault’s estimated total assets (principal + accrued interest), then converts underlying → payout denom using current NAV.
+- Validates `redeem_denom` is empty or the vault's underlying asset.
+- Computes a **pro-rata** redemption of the vault’s estimated total assets (principal + accrued interest), expressed in the underlying asset.
 - Floors where necessary for safety.
 
 **Common errors**
-- Unsupported payout denom.
-- NAV unavailable for the payout pair.
+- Unsupported payout denom (not the underlying asset).
 - Invalid vault address.
 
 **Reminder**
@@ -136,7 +135,7 @@ Returns a paginated list of all **queued** swap-out requests, with their `reques
 ### Response — `QueryPendingSwapOutsResponse`
 - `pending_swap_outs`: array of `PendingSwapOutWithTimeout`:
   - `request_id`: unique ID assigned at `MsgSwapOut`.
-  - `pending_swap_out`: the queued request (includes `vault_address`, `owner`, `shares`, `redeem_denom`, etc.).
+  - `pending_swap_out`: the queued request (includes `vault_address`, `owner`, `shares`, and the deprecated `redeem_denom`, which is always the vault's underlying asset).
   - `timeout`: the scheduled block time at/after which the job is eligible for processing.
 - `pagination`: `PageResponse`.
 
@@ -164,7 +163,7 @@ Returns a paginated list of all **queued** swap-out requests for a **specific va
 ### Response — `QueryVaultPendingSwapOutsResponse`
 - `pending_swap_outs`: array of `PendingSwapOutWithTimeout`:
   - `request_id`: unique ID assigned at `MsgSwapOut`.
-  - `pending_swap_out`: the queued request (includes `vault_address`, `owner`, `shares`, `redeem_denom`, etc.).
+  - `pending_swap_out`: the queued request (includes `vault_address`, `owner`, `shares`, and the deprecated `redeem_denom`, which is always the vault's underlying asset).
   - `timeout`: the scheduled block time at/after which the job is eligible for processing.
 - `pagination`: `PageResponse`.
 

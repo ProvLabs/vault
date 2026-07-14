@@ -32,70 +32,24 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 			expectedErr: nil,
 		},
 		{
-			name: "success with distinct payment denom",
+			name: "success with payment denom equal to underlying",
 			msg: types.MsgCreateVaultRequest{
 				Admin:           admin,
 				ShareDenom:      "vaultshare",
 				UnderlyingAsset: "uusd",
-				PaymentDenom:    "usdc",
-				InitialPaymentNav: &types.InitialVaultNAV{
-					Price:  sdk.NewInt64Coin("uusd", 1),
-					Volume: sdkmath.OneInt(),
-					Source: "test",
-				},
+				PaymentDenom:    "uusd",
 			},
 			expectedErr: nil,
 		},
 		{
-			name: "missing initial NAV when payment denom differs",
+			name: "payment denom differs from underlying (not allowed)",
 			msg: types.MsgCreateVaultRequest{
 				Admin:           admin,
 				ShareDenom:      "vaultshare",
 				UnderlyingAsset: "uusd",
 				PaymentDenom:    "usdc",
 			},
-			expectedErr: fmt.Errorf("invalid initial payment NAV: initial_payment_nav is required when payment_denom %q differs from underlying_asset %q", "usdc", "uusd"),
-		},
-		{
-			name: "initial NAV supplied without payment denom",
-			msg: types.MsgCreateVaultRequest{
-				Admin:           admin,
-				ShareDenom:      "vaultshare",
-				UnderlyingAsset: "uusd",
-				InitialPaymentNav: &types.InitialVaultNAV{
-					Price:  sdk.NewInt64Coin("uusd", 1),
-					Volume: sdkmath.OneInt(),
-				},
-			},
-			expectedErr: fmt.Errorf("invalid initial payment NAV: initial_payment_nav must be omitted when payment_denom is empty or equals underlying_asset"),
-		},
-		{
-			name: "initial NAV price denom mismatches underlying",
-			msg: types.MsgCreateVaultRequest{
-				Admin:           admin,
-				ShareDenom:      "vaultshare",
-				UnderlyingAsset: "uusd",
-				PaymentDenom:    "usdc",
-				InitialPaymentNav: &types.InitialVaultNAV{
-					Price:  sdk.NewInt64Coin("other", 1),
-					Volume: sdkmath.OneInt(),
-				},
-			},
-			expectedErr: fmt.Errorf("invalid initial payment NAV: price denom %q must equal underlying_asset %q", "other", "uusd"),
-		},
-		{
-			name: "initial NAV volume non-positive",
-			msg: types.MsgCreateVaultRequest{
-				Admin:           admin,
-				ShareDenom:      "vaultshare",
-				UnderlyingAsset: "uusd",
-				PaymentDenom:    "usdc",
-				InitialPaymentNav: &types.InitialVaultNAV{
-					Price:  sdk.NewInt64Coin("uusd", 1),
-					Volume: sdkmath.ZeroInt(),
-				},
-			},
-			expectedErr: fmt.Errorf("invalid initial payment NAV: volume must be positive"),
+			expectedErr: fmt.Errorf("payment denom (%q) must be empty or equal underlying asset (%q)", "usdc", "uusd"),
 		},
 		{
 			name: "admin empty",
@@ -167,19 +121,18 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 				Admin:           admin,
 				ShareDenom:      "uusd",
 				UnderlyingAsset: "uusd",
-				PaymentDenom:    "usdc",
 			},
 			expectedErr: fmt.Errorf("share denom (%q) cannot equal underlying asset denom (%q)", "uusd", "uusd"),
 		},
 		{
-			name: "share denom equals payment denom (not allowed)",
+			name: "share denom equals payment denom, caught as underlying equality (not allowed)",
 			msg: types.MsgCreateVaultRequest{
 				Admin:           admin,
-				ShareDenom:      "usdc",
+				ShareDenom:      "uusd",
 				UnderlyingAsset: "uusd",
-				PaymentDenom:    "usdc",
+				PaymentDenom:    "uusd",
 			},
-			expectedErr: fmt.Errorf("share denom (%q) cannot equal payment denom (%q)", "usdc", "usdc"),
+			expectedErr: fmt.Errorf("share denom (%q) cannot equal underlying asset denom (%q)", "uusd", "uusd"),
 		},
 		{
 			name: "swap out delay over two years (not allowed)",

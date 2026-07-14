@@ -116,7 +116,7 @@ service Msg {
   rpc UpdateNAVAuthority(MsgUpdateNAVAuthorityRequest) returns (MsgUpdateNAVAuthorityResponse);
 
   // AcceptAsset settles a pending exchange-module payment whose target is the vault,
-  // exchanging an external asset for the vault's payment denom.
+  // exchanging an external asset for the vault's underlying asset.
   // Must be signed by the vault's asset manager; the admin cannot settle.
   rpc AcceptAsset(MsgAcceptAssetRequest) returns (MsgAcceptAssetResponse);
 
@@ -136,9 +136,13 @@ message MsgCreateVaultRequest {
   string share_denom = 2;
   // underlying_asset is the denomination of the asset supported by the vault.
   string underlying_asset = 3;
-  // payment_denom is the secondary denomination the vault can accept.
-  // if not specified, vault payment_denom will be set to underlying_asset.
-  string payment_denom = 4;
+  // payment_denom must be empty or equal to underlying_asset; creation with a
+  // differing payment_denom is rejected (vaults are single-denom).
+  //
+  // Deprecated: The mixed-denom vault concept has been flattened into a single
+  // underlying denom. Leave this field empty; deletion is deferred to a future
+  // major release.
+  string payment_denom = 4 [deprecated = true];
   // withdrawal_delay_seconds is the time period (in seconds) that a withdrawal
   // must wait in the pending queue before being processed.
   uint64 withdrawal_delay_seconds = 5;
@@ -158,13 +162,11 @@ message MsgCreateVaultRequest {
   // - Values must be positive (> 0).
   // - An empty string "" indicates no maximum limit.
   string max_swap_out_value = 9 [(cosmos_proto.scalar) = "cosmos.IntString"];
-  // initial_payment_nav seeds the per-vault Internal NAV entry for payment_denom
-  // at creation, ensuring fee accrual and payment-denom swap-outs are operational
-  // from block one. The entry's denom is implicitly payment_denom; the price
-  // denom must be underlying_asset.
-  // - Required when payment_denom is set and payment_denom != underlying_asset.
-  // - Must be omitted when payment_denom is empty or equal to underlying_asset.
-  InitialVaultNAV initial_payment_nav = 10;
+
+  // Field 10 held initial_payment_nav (InitialVaultNAV), a never-released
+  // mixed-denom creation seed; reserved to prevent reuse.
+  reserved 10;
+  reserved "initial_payment_nav";
 }
 
 // MsgCreateVaultResponse is the response message for the CreateVault endpoint.
@@ -220,10 +222,13 @@ message MsgSwapOutRequest {
   string vault_address = 2;
   // assets is the amount of underlying assets to withdraw.
   cosmos.base.v1beta1.Coin assets = 3 [(gogoproto.nullable) = false];
-  // redeem_denom selects the payout coin.
-  // - If empty, defaults to the vault’s payment_denom.
-  // - Must be either the vault’s underlying_asset or its payment_denom.
-  string redeem_denom = 4;
+  // redeem_denom must be empty or equal to the vault's underlying_asset; the
+  // payout is always the underlying asset.
+  //
+  // Deprecated: The underlying-or-payment payout choice has collapsed to the
+  // underlying asset only. Leave this empty; deletion is deferred to a future
+  // major release.
+  string redeem_denom = 4 [deprecated = true];
 }
 
 // MsgSwapOutResponse is the response message for the SwapOut endpoint.
@@ -621,11 +626,10 @@ message MsgUpdateVaultNAVRequest {
   // vault_address is the bech32 address of the vault whose NAV entry is being updated.
   string vault_address = 2;
   // denom is the asset denomination being priced. It must not be the vault's
-  // share denom. The underlying asset is a valid denom (e.g. to record its
-  // price in payment-denom terms).
+  // share denom.
   string denom = 3;
   // price is the total value of `volume` units of the denom, denominated in
-  // one of the vault's accepted denoms (underlying asset or payment denom).
+  // the vault's underlying asset.
   cosmos.base.v1beta1.Coin price = 4 [(gogoproto.nullable) = false];
   // volume is the number of units of the denom that price covers. It must be positive.
   string volume = 5 [
@@ -658,8 +662,8 @@ message MsgUpdateNAVAuthorityResponse {}
 
 // MsgAcceptAssetRequest is the request message for settling a pending exchange-module
 // payment whose target is the vault. The payment is identified by its source account and
-// external_id. The vault settles only payments where one leg is the vault's payment_denom;
-// the settlement direction (inbound or outbound) is derived from which leg that is.
+// external_id. The vault settles only payments where one leg is the vault's underlying
+// asset; the settlement direction (inbound or outbound) is derived from which leg that is.
 message MsgAcceptAssetRequest {
   option (cosmos.msg.v1.signer) = "authority";
 

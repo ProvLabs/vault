@@ -101,106 +101,72 @@ func (s *TestSuite) TestCreateVault_InvalidAdminFails() {
 	s.Require().ErrorContains(err, "invalid admin address", "error message should mention invalid admin address")
 }
 
-// TestCreateVault_DistinctPaymentDenomSeedsNAV verifies that creating a vault
-// with payment_denom != underlying_asset persists the bootstrap NAV entry in
-// the same atomic operation, so the valuation engine can convert payment-denom
-// balances without an out-of-band setup step.
-func (s *TestSuite) TestCreateVault_DistinctPaymentDenomSeedsNAV() {
-	share := "vshare.bootstrap"
+func (s *TestSuite) TestCreateVault_SingleDenomEnforcement() {
 	underlying := "ulying"
-	payment := "upay"
+	otherDenom := "upay"
 
-	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlying, 1_000_000), s.adminAddr)
-	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(payment, 1_000_000), s.adminAddr)
-
-	attrs := vaultAttrs{
-		admin:      s.adminAddr.String(),
-		share:      share,
-		underlying: underlying,
-		payment:    payment,
-		initialPaymentNav: &types.InitialVaultNAV{
-			Price:  sdk.NewInt64Coin(underlying, 3),
-			Volume: math.NewInt(2),
-			Source: "create-bootstrap",
+	tests := []struct {
+		name                string
+		share               string
+		payment             string
+		expectedErrContains string
+	}{
+		{
+			name:                "payment denom differs from underlying, creation rejected",
+			share:               "vshare.mixed",
+			payment:             otherDenom,
+			expectedErrContains: fmt.Sprintf("payment denom (%q) must be empty or equal underlying asset (%q)", otherDenom, underlying),
+		},
+		{
+			name:    "payment denom equal to underlying, creation succeeds",
+			share:   "vshare.equal",
+			payment: underlying,
+		},
+		{
+			name:  "empty payment denom defaults to underlying, creation succeeds",
+			share: "vshare.default",
 		},
 	}
 
-	vault, err := s.k.CreateVault(s.ctx, attrs)
-	s.Require().NoError(err, "CreateVault should succeed when initial payment NAV is supplied")
-
-	stored, err := s.k.GetVaultNAV(s.ctx, vault.GetAddress(), payment)
-	s.Require().NoError(err, "bootstrap NAV should be persisted for payment denom %q", payment)
-	s.Require().Equal(payment, stored.Denom, "stored NAV denom should be payment denom")
-	s.Require().Equal(sdk.NewInt64Coin(underlying, 3), stored.Price, "stored NAV price should match supplied price")
-	s.Require().Equal(math.NewInt(2), stored.Volume, "stored NAV volume should match supplied volume")
-	s.Require().Equal("create-bootstrap", stored.Source, "stored NAV source should match supplied attribution")
-}
-
-// TestCreateVault_MissingInitialPaymentNAVFails verifies that creating a vault
-// with payment_denom != underlying_asset fails when the bootstrap NAV is
-// omitted. The check is enforced at ValidateBasic so an operator cannot stand
-// up a vault that would silently stall fee collection and payment-denom
-// swap-outs.
-func (s *TestSuite) TestCreateVault_MissingInitialPaymentNAVFails() {
-	share := "vshare.missing.nav"
-	underlying := "ulying"
-	payment := "upay"
-
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlying, 1_000_000), s.adminAddr)
-	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(payment, 1_000_000), s.adminAddr)
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(otherDenom, 1_000_000), s.adminAddr)
 
-	_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-		Admin:           s.adminAddr.String(),
-		ShareDenom:      share,
-		UnderlyingAsset: underlying,
-		PaymentDenom:    payment,
-	})
-	s.Require().Error(err, "CreateVault should reject a vault with mismatched denoms and no initial NAV")
-	s.Require().ErrorContains(err, "initial_payment_nav is required", "error should call out missing bootstrap NAV")
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			vault, err := s.k.CreateVault(s.ctx, vaultAttrs{
+				admin:      s.adminAddr.String(),
+				share:      tc.share,
+				underlying: underlying,
+				payment:    tc.payment,
+			})
+
+			if tc.expectedErrContains != "" {
+				s.Require().Error(err, "CreateVault should reject share denom %s", tc.share)
+				s.Require().ErrorContains(err, tc.expectedErrContains, "rejection reason for share denom %s", tc.share)
+				stored, getErr := s.k.GetVault(s.ctx, types.GetVaultAddress(tc.share))
+				s.Require().NoError(getErr, "vault lookup after rejected creation should not error for share denom %s", tc.share)
+				s.Require().Nil(stored, "no vault account should be persisted after rejected creation of share denom %s", tc.share)
+				return
+			}
+
+			s.Require().NoError(err, "CreateVault should succeed for share denom %s", tc.share)
+			s.Require().Equal(underlying, vault.PaymentDenom, "payment denom should default to the underlying asset for share denom %s", tc.share)
+			_, navErr := s.k.GetVaultNAV(s.ctx, vault.GetAddress(), underlying)
+			s.Require().Error(navErr, "no internal NAV entry should be seeded at creation for share denom %s", tc.share)
+		})
+	}
 }
 
-// TestCreateVault_InitialPaymentNAVRolledBackOnFailure verifies that the
-// bootstrap NAV is written under the same cache context as the rest of vault
-// creation: a downstream failure (here, the share-denom marker already exists)
-// rolls back the NAV alongside the vault account.
-func (s *TestSuite) TestCreateVault_InitialPaymentNAVRolledBackOnFailure() {
-	share := "vshare.rollback"
-	underlying := "ulying"
-	payment := "upay"
-
-	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlying, 1_000_000), s.adminAddr)
-	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(payment, 1_000_000), s.adminAddr)
-	// Pre-create a marker at the share denom so createVaultMarker fails.
-	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(share, 1), s.adminAddr)
-
-	vaultAddr := types.GetVaultAddress(share)
-	_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-		Admin:           s.adminAddr.String(),
-		ShareDenom:      share,
-		UnderlyingAsset: underlying,
-		PaymentDenom:    payment,
-		InitialPaymentNav: &types.InitialVaultNAV{
-			Price:  sdk.NewInt64Coin(underlying, 1),
-			Volume: math.OneInt(),
-		},
-	})
-	s.Require().Error(err, "CreateVault should fail when the share marker already exists")
-
-	_, navErr := s.k.GetVaultNAV(s.ctx, vaultAddr, payment)
-	s.Require().Error(navErr, "bootstrap NAV must not be persisted when create fails")
-}
-
-func (s *TestSuite) TestSwapIn_MultiAsset() {
+func (s *TestSuite) TestSwapIn_SingleDenomEnforcement() {
 	underlyingDenom := "ylds"
-	paymentDenom := "usdc"
-	unacceptedDenom := "junk"
+	unacceptedDenom := "usdc"
 	shareDenom := "vshare"
-	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
+	vault := s.setupBaseVault(underlyingDenom, shareDenom)
 	vault.SwapInEnabled = true
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
-	depositorAddr := s.CreateAndFundAccount(sdk.NewInt64Coin(paymentDenom, 1000))
-	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, depositorAddr, sdk.NewCoins(sdk.NewInt64Coin(unacceptedDenom, 1000))), "should fund depositor with unaccepted denom")
+	depositorAddr := s.CreateAndFundAccount(sdk.NewInt64Coin(underlyingDenom, 1000))
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, depositorAddr, sdk.NewCoins(sdk.NewInt64Coin(unacceptedDenom, 1000))), "should fund depositor with a non-underlying denom")
 
 	totalShares := sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(1000))
 	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1000))), "should fund vault principal with initial TVV")
@@ -208,18 +174,18 @@ func (s *TestSuite) TestSwapIn_MultiAsset() {
 	vault.TotalShares = totalShares
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
-	depositCoin := sdk.NewInt64Coin(paymentDenom, 10)
+	depositCoin := sdk.NewInt64Coin(underlyingDenom, 10)
 	mintedShares, err := s.k.SwapIn(s.ctx, vault.GetAddress(), depositorAddr, depositCoin)
-	s.Require().NoError(err, "should successfully swap in an accepted payment denom")
+	s.Require().NoError(err, "should successfully swap in the underlying asset")
 
-	expectedShares := utils.ShareScalar.MulRaw(5)
-	s.Require().Equal(expectedShares, mintedShares.Amount, "minted shares should be proportional to the payment denom's value in the underlying asset")
+	expectedShares := utils.ShareScalar.MulRaw(10)
+	s.Require().Equal(expectedShares, mintedShares.Amount, "minted shares should be proportional to the underlying deposit at the current share price")
 	s.assertBalance(depositorAddr, shareDenom, expectedShares)
-	s.assertBalance(vault.PrincipalMarkerAddress(), paymentDenom, math.NewInt(10))
+	s.assertBalance(vault.PrincipalMarkerAddress(), underlyingDenom, math.NewInt(1_010))
 
 	unacceptedCoin := sdk.NewInt64Coin(unacceptedDenom, 50)
 	_, err = s.k.SwapIn(s.ctx, vault.GetAddress(), depositorAddr, unacceptedCoin)
-	s.Require().Error(err, "should fail to swap in an unaccepted asset")
+	s.Require().Error(err, "should reject a swap in of a non-underlying denom under single-denom enforcement")
 	s.Require().ErrorContains(err, "denom not supported for vault", "error should indicate the denom is not accepted")
 }
 
@@ -316,16 +282,15 @@ func (s *TestSuite) TestSwapIn_ZeroShareDeposit() {
 	}
 }
 
-func (s *TestSuite) TestSwapOut_MultiAsset() {
+func (s *TestSuite) TestSwapOut_SingleDenomEnforcement() {
 	underlyingDenom := "ylds"
-	paymentDenom := "usdc"
-	unacceptedDenom := "junk"
+	unacceptedDenom := "usdc"
 	shareDenom := "vshare"
 	blockTime := time.Now().UTC()
 	s.ctx = s.ctx.WithBlockTime(blockTime)
 
 	initialShares := utils.ShareScalar.MulRaw(100)
-	vault := s.setupSinglePaymentDenomVault(underlyingDenom, shareDenom, paymentDenom, 1, 2)
+	vault := s.setupBaseVault(underlyingDenom, shareDenom)
 	vault.SwapOutEnabled = true
 	vault.WithdrawalDelaySeconds = 0 // Set to zero for instant processing in the same block's endblocker
 	vault.TotalShares = sdk.NewCoin(shareDenom, initialShares)
@@ -333,45 +298,36 @@ func (s *TestSuite) TestSwapOut_MultiAsset() {
 	redeemerAddr := s.CreateAndFundAccount(sdk.NewCoin(shareDenom, initialShares))
 
 	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(
-		sdk.NewInt64Coin(underlyingDenom, 500),
-		sdk.NewInt64Coin(paymentDenom, 500),
+		sdk.NewInt64Coin(underlyingDenom, 600),
 	)), "should fund vault principal with liquidity")
 
 	vault, err := s.k.GetVault(s.ctx, vault.GetAddress())
 	s.Require().NoError(err, "should get vault")
 	s.Require().NotNil(vault, "vault should not be nil")
-	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(500))), "should mint initial share supply")
+	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(500))), "should mint additional share supply")
 	vault.TotalShares = vault.TotalShares.Add(sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(500)))
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
-	sharesToRedeemForPayment := sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(10))
-	reqID1, err := s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sharesToRedeemForPayment, paymentDenom)
-	s.Require().NoError(err, "should successfully queue swap out for an accepted payment denom")
+	sharesToRedeemExplicit := sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(10))
+	reqID1, err := s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sharesToRedeemExplicit, underlyingDenom)
+	s.Require().NoError(err, "should successfully queue swap out for the explicit underlying asset")
 	s.Require().Equal(uint64(0), reqID1, "first request id should be 0")
 
-	s.assertBalance(redeemerAddr, shareDenom, initialShares.Sub(sharesToRedeemForPayment.Amount))
-	s.assertBalance(vault.GetAddress(), shareDenom, sharesToRedeemForPayment.Amount)
+	s.assertBalance(redeemerAddr, shareDenom, initialShares.Sub(sharesToRedeemExplicit.Amount))
+	s.assertBalance(vault.GetAddress(), shareDenom, sharesToRedeemExplicit.Amount)
 
-	sharesToRedeemForDefaultPayment := sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(5))
-	reqID2, err := s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sharesToRedeemForDefaultPayment, "")
-	s.Require().NoError(err, "should successfully queue swap out for the default underlying asset")
+	sharesToRedeemDefault := sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(5))
+	reqID2, err := s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sharesToRedeemDefault, "")
+	s.Require().NoError(err, "should successfully queue swap out defaulting the redeem denom to the underlying asset")
 	s.Require().Equal(uint64(1), reqID2, "second request id should be 1")
-
-	sharesToRedeemForUnderlying := sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(8))
-	reqID3, err := s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sharesToRedeemForUnderlying, underlyingDenom)
-	s.Require().NoError(err, "should successfully queue swap out for the default underlying asset")
-	s.Require().Equal(uint64(2), reqID3, "third request id should be 2")
 
 	err = s.k.TestAccessor_processPendingSwapOuts(s.T(), s.ctx, keeper.MaxSwapOutBatchSize)
 	s.Require().NoError(err, "processing pending withdrawals should not fail")
 
-	// --- Assert Final Balances ---
-	s.assertBalance(redeemerAddr, paymentDenom, math.NewInt(36))
-	s.assertBalance(redeemerAddr, underlyingDenom, math.NewInt(10))
+	s.assertBalance(redeemerAddr, underlyingDenom, math.NewInt(15))
 
-	// --- Test 3: Unaccepted Denom ---
-	_, err = s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sharesToRedeemForDefaultPayment, unacceptedDenom)
-	s.Require().Error(err, "should fail to swap out for an unaccepted asset")
+	_, err = s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sharesToRedeemDefault, unacceptedDenom)
+	s.Require().Error(err, "should reject a swap out for a non-underlying denom under single-denom enforcement")
 	s.Require().ErrorContains(err, "denom not supported for vault", "error should indicate the denom is not accepted")
 }
 

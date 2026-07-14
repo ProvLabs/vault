@@ -11,8 +11,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 // newAccuracyVault creates a vault for estimate-accuracy testing. It disables the AUM fee and
@@ -20,8 +18,8 @@ import (
 // identical vault state at the same block height. AUM fees are disabled because the estimate
 // reports a net-of-fee value while the settled swap reads gross post-reconcile value; leaving the
 // default fee enabled would inject a fee-accounting delta that is unrelated to swap math accuracy.
-func (s *VaultSimTestSuite) newAccuracyVault(admin simtypes.Account, underlying, payment, share string) *types.VaultAccount {
-	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, underlying, payment, share, admin, s.accs)
+func (s *VaultSimTestSuite) newAccuracyVault(admin simtypes.Account, underlying, share string) *types.VaultAccount {
+	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, underlying, share, admin, s.accs)
 	s.Require().NoError(err, "CreateVault for share denom %s", share)
 
 	vault, err := s.app.VaultKeeper.GetVault(s.ctx, types.GetVaultAddress(share))
@@ -50,19 +48,6 @@ func (s *VaultSimTestSuite) accrueInterest(vaultAddr sdk.AccAddress, rate string
 	s.Require().NoError(FundAccount(s.ctx, s.app.BankKeeper, vaultAddr, sdk.NewCoins(reserves)), "fund reserves %s for vault %s", reserves, vaultAddr)
 }
 
-// setPaymentNav publishes a NAV pricing one unit of paymentDenom at priceInUnderlying units of
-// the vault's underlying asset, giving the valuation engine a conversion rate for multi-denom
-// vaults.
-func (s *VaultSimTestSuite) setPaymentNav(paymentDenom, underlyingDenom string, priceInUnderlying int64) {
-	marker, err := s.app.MarkerKeeper.GetMarker(s.ctx, markertypes.MustGetMarkerAddress(paymentDenom))
-	s.Require().NoError(err, "GetMarker for payment denom %s", paymentDenom)
-	err = s.app.MarkerKeeper.SetNetAssetValue(s.ctx, marker, markertypes.NetAssetValue{
-		Price:  sdk.NewInt64Coin(underlyingDenom, priceInUnderlying),
-		Volume: 1,
-	}, "test")
-	s.Require().NoError(err, "SetNetAssetValue for %s priced in %s", paymentDenom, underlyingDenom)
-}
-
 // TestEstimateSwapInAccuracy validates that the EstimateSwapIn query reports the same number of
 // shares a depositor actually receives from SwapIn, across a range of vault states. Both paths run
 // against the same vault state at the same block height, so an accurate estimate must match the
@@ -77,7 +62,7 @@ func (s *VaultSimTestSuite) TestEstimateSwapInAccuracy() {
 			name: "underlying deposit into empty vault",
 			setup: func() (simtypes.Account, sdk.AccAddress, sdk.Coin) {
 				s.SetupTest()
-				vault := s.newAccuracyVault(s.accs[0], "underlying2vx", "", "accswapinA")
+				vault := s.newAccuracyVault(s.accs[0], "underlying2vx", "accswapinA")
 				return s.accs[1], vault.GetAddress(), sdk.NewInt64Coin("underlying2vx", 1_000_000)
 			},
 		},
@@ -85,26 +70,16 @@ func (s *VaultSimTestSuite) TestEstimateSwapInAccuracy() {
 			name: "underlying deposit into seeded vault",
 			setup: func() (simtypes.Account, sdk.AccAddress, sdk.Coin) {
 				s.SetupTest()
-				vault := s.newAccuracyVault(s.accs[0], "underlying2vx", "", "accswapinB")
+				vault := s.newAccuracyVault(s.accs[0], "underlying2vx", "accswapinB")
 				s.Require().NoError(simulation.SwapIn(s.ctx, s.app.VaultKeeper, s.accs[1], "accswapinB", sdk.NewInt64Coin("underlying2vx", 2_500_000)), "seed swap-in")
 				return s.accs[2], vault.GetAddress(), sdk.NewInt64Coin("underlying2vx", 1_000_000)
-			},
-		},
-		{
-			name: "payment-denom deposit uses NAV conversion",
-			setup: func() (simtypes.Account, sdk.AccAddress, sdk.Coin) {
-				s.SetupTest()
-				vault := s.newAccuracyVault(s.accs[0], "underlying2vx", "payment2vx", "accswapinC")
-				s.setPaymentNav("payment2vx", "underlying2vx", 2)
-				s.Require().NoError(simulation.SwapIn(s.ctx, s.app.VaultKeeper, s.accs[1], "accswapinC", sdk.NewInt64Coin("underlying2vx", 2_000_000)), "seed swap-in")
-				return s.accs[2], vault.GetAddress(), sdk.NewInt64Coin("payment2vx", 500_000)
 			},
 		},
 		{
 			name: "underlying deposit with accrued interest",
 			setup: func() (simtypes.Account, sdk.AccAddress, sdk.Coin) {
 				s.SetupTest()
-				vault := s.newAccuracyVault(s.accs[0], "underlying2vx", "", "accswapinD")
+				vault := s.newAccuracyVault(s.accs[0], "underlying2vx", "accswapinD")
 				s.Require().NoError(simulation.SwapIn(s.ctx, s.app.VaultKeeper, s.accs[1], "accswapinD", sdk.NewInt64Coin("underlying2vx", 3_000_000)), "seed swap-in")
 				s.accrueInterest(vault.GetAddress(), "0.10", 30*24*time.Hour, sdk.NewInt64Coin("underlying2vx", 1_000_000))
 				return s.accs[2], vault.GetAddress(), sdk.NewInt64Coin("underlying2vx", 1_000_000)
@@ -150,8 +125,8 @@ func (s *VaultSimTestSuite) TestEstimateSwapInAccuracy() {
 // owner actually receives once a swap-out settles. SwapOut is asynchronous: the message only
 // escrows shares, and the payout is realized by the EndBlocker. With a zero withdrawal delay the
 // payout settles in the same block as the estimate, so an accurate estimate must match the realized
-// payout exactly. The redeem denom is always passed explicitly because EstimateSwapOut and SwapOut
-// disagree on the default for an empty redeem denom (underlying vs payment respectively).
+// payout exactly. The redeem denom is always passed explicitly so both the query and the message
+// evaluate against the vault's underlying asset.
 func (s *VaultSimTestSuite) TestEstimateSwapOutAccuracy() {
 	tests := []struct {
 		name string
@@ -162,7 +137,7 @@ func (s *VaultSimTestSuite) TestEstimateSwapOutAccuracy() {
 			name: "full underlying redeem, no interest",
 			setup: func() (simtypes.Account, sdk.AccAddress, sdk.Coin, string) {
 				s.SetupTest()
-				vault := s.newAccuracyVault(s.accs[0], "underlying2vx", "", "accswapoutA")
+				vault := s.newAccuracyVault(s.accs[0], "underlying2vx", "accswapoutA")
 				owner := s.accs[1]
 				s.Require().NoError(simulation.SwapIn(s.ctx, s.app.VaultKeeper, owner, "accswapoutA", sdk.NewInt64Coin("underlying2vx", 2_000_000)), "owner swap-in")
 				shares := s.app.BankKeeper.GetBalance(s.ctx, owner.Address, "accswapoutA")
@@ -173,7 +148,7 @@ func (s *VaultSimTestSuite) TestEstimateSwapOutAccuracy() {
 			name: "partial underlying redeem, no interest",
 			setup: func() (simtypes.Account, sdk.AccAddress, sdk.Coin, string) {
 				s.SetupTest()
-				vault := s.newAccuracyVault(s.accs[0], "underlying2vx", "", "accswapoutB")
+				vault := s.newAccuracyVault(s.accs[0], "underlying2vx", "accswapoutB")
 				owner := s.accs[1]
 				s.Require().NoError(simulation.SwapIn(s.ctx, s.app.VaultKeeper, owner, "accswapoutB", sdk.NewInt64Coin("underlying2vx", 2_000_000)), "owner swap-in")
 				bal := s.app.BankKeeper.GetBalance(s.ctx, owner.Address, "accswapoutB")
@@ -181,23 +156,10 @@ func (s *VaultSimTestSuite) TestEstimateSwapOutAccuracy() {
 			},
 		},
 		{
-			name: "payment-denom redeem uses NAV conversion",
-			setup: func() (simtypes.Account, sdk.AccAddress, sdk.Coin, string) {
-				s.SetupTest()
-				vault := s.newAccuracyVault(s.accs[0], "underlying2vx", "payment2vx", "accswapoutC")
-				s.setPaymentNav("payment2vx", "underlying2vx", 2)
-				owner := s.accs[1]
-				s.Require().NoError(simulation.SwapIn(s.ctx, s.app.VaultKeeper, owner, "accswapoutC", sdk.NewInt64Coin("underlying2vx", 2_000_000)), "owner swap-in")
-				s.Require().NoError(FundAccount(s.ctx, s.app.BankKeeper, vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin("payment2vx", 2_000_000))), "fund principal payment liquidity")
-				bal := s.app.BankKeeper.GetBalance(s.ctx, owner.Address, "accswapoutC")
-				return owner, vault.GetAddress(), sdk.NewCoin(bal.Denom, bal.Amount.Quo(math.NewInt(4))), "payment2vx"
-			},
-		},
-		{
 			name: "underlying redeem with accrued interest",
 			setup: func() (simtypes.Account, sdk.AccAddress, sdk.Coin, string) {
 				s.SetupTest()
-				vault := s.newAccuracyVault(s.accs[0], "underlying2vx", "", "accswapoutD")
+				vault := s.newAccuracyVault(s.accs[0], "underlying2vx", "accswapoutD")
 				owner := s.accs[1]
 				s.Require().NoError(simulation.SwapIn(s.ctx, s.app.VaultKeeper, owner, "accswapoutD", sdk.NewInt64Coin("underlying2vx", 3_000_000)), "owner swap-in")
 				s.accrueInterest(vault.GetAddress(), "0.10", 30*24*time.Hour, sdk.NewInt64Coin("underlying2vx", 1_000_000))

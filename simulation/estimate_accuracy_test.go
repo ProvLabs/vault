@@ -125,8 +125,7 @@ func (s *VaultSimTestSuite) TestEstimateSwapInAccuracy() {
 // owner actually receives once a swap-out settles. SwapOut is asynchronous: the message only
 // escrows shares, and the payout is realized by the EndBlocker. With a zero withdrawal delay the
 // payout settles in the same block as the estimate, so an accurate estimate must match the realized
-// payout exactly. The redeem denom is always passed explicitly so both the query and the message
-// evaluate against the vault's underlying asset.
+// payout exactly. The payout is always the vault's underlying asset.
 func (s *VaultSimTestSuite) TestEstimateSwapOutAccuracy() {
 	tests := []struct {
 		name string
@@ -177,7 +176,6 @@ func (s *VaultSimTestSuite) TestEstimateSwapOutAccuracy() {
 			estResp, err := qs.EstimateSwapOut(s.ctx, &types.QueryEstimateSwapOutRequest{
 				VaultAddress: vaultAddr.String(),
 				Shares:       shares.Amount.String(),
-				RedeemDenom:  redeemDenom,
 			})
 			s.Require().NoError(err, "EstimateSwapOut for vault %s shares %s redeem %s", vaultAddr, shares, redeemDenom)
 
@@ -188,7 +186,6 @@ func (s *VaultSimTestSuite) TestEstimateSwapOutAccuracy() {
 				Owner:        owner.Address.String(),
 				VaultAddress: vaultAddr.String(),
 				Assets:       shares,
-				RedeemDenom:  redeemDenom,
 			})
 			s.Require().NoError(err, "SwapOut for vault %s shares %s redeem %s", vaultAddr, shares, redeemDenom)
 

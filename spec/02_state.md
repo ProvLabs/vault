@@ -2,11 +2,12 @@
 
 The Vault module persists **vault accounts**, **interest scheduling metadata**, and **swap-out jobs** using typed collections.  
 Canonical vault accounts live in `x/auth` (as `VaultAccount`), while this module maintains compact lookups and queues for automated processing.  
-Vaults are strictly **single-denom**: the **underlying asset** is the only accepted I/O denom. Creation rejects a `payment_denom` that differs from the underlying asset (an empty payment denom defaults to it), and the module's v1→v2 state migration flattened any pre-existing mixed-denom vaults so `payment_denom` always equals `underlying_asset`.
+Vaults are strictly **single-denom**: the **underlying asset** is the only accepted I/O denom. Creation no longer takes a payment denom (the request field has been removed and reserved), and the module's v1→v2 state migration flattened any pre-existing mixed-denom vaults so `payment_denom` always equals `underlying_asset`.
 
-> **Deprecation notice:** The payment denom functionality has been removed. The `payment_denom`
-> wire field remains for client compatibility and always equals `underlying_asset`; field deletion
-> is deferred to a future major release (see `spec/01_concepts.md`).
+> **Deprecation notice:** The payment denom functionality has been removed. The
+> `VaultAccount.payment_denom` state field remains on the wire so the migration can decode
+> pre-flatten state and always equals `underlying_asset`; field deletion is deferred to a future
+> major release (see `spec/01_concepts.md`).
 
 ---
 <!-- TOC -->

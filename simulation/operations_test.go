@@ -202,7 +202,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgExpeditePendingSwapOut() {
 	err = simulation.SwapIn(s.ctx, s.app.VaultKeeper, user, "underlyingshare", sdk.NewInt64Coin("underlying2vx", 100))
 	s.Require().NoError(err, "SwapIn")
 	shares := s.app.BankKeeper.GetBalance(s.ctx, user.Address, "underlyingshare")
-	err = simulation.SwapOut(s.ctx, s.app.VaultKeeper, user, shares, "underlying2vx")
+	err = simulation.SwapOut(s.ctx, s.app.VaultKeeper, user, shares)
 	s.Require().NoError(err, "SwapOut")
 
 	// Now run the simulation for Expedite

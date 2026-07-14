@@ -481,15 +481,6 @@ func (k Keeper) CalculateAccruedAUMFeePayment(ctx sdk.Context, vault types.Vault
 	return sdk.NewCoin(vault.UnderlyingAsset, feeUnderlying), nil
 }
 
-// CalculateOutstandingFeeUnderlying returns the vault's outstanding AUM fee amount.
-// The fee is denominated in the underlying asset, so no conversion is required.
-func (k Keeper) CalculateOutstandingFeeUnderlying(_ sdk.Context, vault types.VaultAccount) (sdkmath.Int, error) {
-	if vault.OutstandingAumFee.IsZero() {
-		return sdkmath.ZeroInt(), nil
-	}
-	return vault.OutstandingAumFee.Amount, nil
-}
-
 // CalculateVaultTotalAssets returns the total value of the vault's assets, including the interest
 // that would have accrued from PeriodStart to the current block time, and subtracting the
 // AUM fees accrued since FeePeriodStart, without mutating state.
@@ -512,11 +503,7 @@ func (k Keeper) CalculateVaultTotalAssets(ctx sdk.Context, vault *types.VaultAcc
 	}
 	estimated = estimated.Sub(feeAccrued)
 
-	outstandingUnderlying, err := k.CalculateOutstandingFeeUnderlying(ctx, *vault)
-	if err != nil {
-		return sdkmath.Int{}, fmt.Errorf("error converting outstanding fee: %w", err)
-	}
-	estimated = estimated.Sub(outstandingUnderlying)
+	estimated = estimated.Sub(vault.OutstandingAumFee.Amount)
 
 	if estimated.IsNegative() {
 		estimated = sdkmath.ZeroInt()

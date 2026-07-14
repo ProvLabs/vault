@@ -77,13 +77,12 @@ func SwapIn(ctx sdk.Context, vk *keeper.Keeper, user simtypes.Account, shareDeno
 }
 
 // SwapOut performs a swap out for a user.
-func SwapOut(ctx sdk.Context, vk *keeper.Keeper, user simtypes.Account, shares sdk.Coin, redeemDenom string) error {
+func SwapOut(ctx sdk.Context, vk *keeper.Keeper, user simtypes.Account, shares sdk.Coin) error {
 	vaultAddress := types.GetVaultAddress(shares.Denom)
 	swapOut := &types.MsgSwapOutRequest{
 		Owner:        user.Address.String(),
 		VaultAddress: vaultAddress.String(),
 		Assets:       shares,
-		RedeemDenom:  redeemDenom,
 	}
 	msgServer := keeper.NewMsgServer(vk)
 	_, err := msgServer.SwapOut(ctx, swapOut)

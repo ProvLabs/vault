@@ -9,11 +9,13 @@ Total share supply is tracked on the vault as **total_shares**, the authoritativ
 > **Deprecation notice:** The mixed-denom vault functionality has been removed. Vaults are strictly
 > **single underlying denom**: the `payment_denom` configuration (including receipt tokens as
 > payment denoms), the `redeem_denom` payout selection on swap-out, and the `uylds.fcc` NAV-check
-> exemption no longer have any effect. The `payment_denom` and `redeem_denom` wire fields remain
-> for client compatibility (`payment_denom` always equals `underlying_asset`; `redeem_denom` must
-> be empty or the underlying asset); their deletion is deferred to a future major release. The
-> never-released `initial_payment_nav` creation seed (`InitialVaultNAV`) has been removed outright.
-> Do not build new integrations against this surface.
+> exemption no longer exist. The never-released request fields — `payment_denom` and
+> `initial_payment_nav` on `MsgCreateVaultRequest`, and `redeem_denom` on `MsgSwapOutRequest` and
+> `QueryEstimateSwapOutRequest` — have been removed outright and their field numbers reserved. The
+> **state** fields `VaultAccount.payment_denom` (always equal to `underlying_asset`) and
+> `PendingSwapOut.redeem_denom` (always the underlying asset) remain deprecated on the wire so the
+> v1→v2 migration can decode pre-flatten state; their deletion is deferred to a future major
+> release. Do not build new integrations against this surface.
 
 ---
 <!-- TOC -->
@@ -37,7 +39,7 @@ Total share supply is tracked on the vault as **total_shares**, the authoritativ
 ## Key Definitions
 
 - **Underlying Asset**: the base denom that defines vault value and payouts. It is the sole accepted denom for all user I/O, interest, and fees. TVV is always expressed in this unit.  
-- **Payment Denom (Secondary)** *(removed)*: the former optional secondary denom configured on a vault (a normal swappable token or a restricted **receipt token**). The functionality has been removed; the `payment_denom` wire field remains for compatibility and always equals `underlying_asset`. Field deletion is deferred to a future major release.  
+- **Payment Denom (Secondary)** *(removed)*: the former optional secondary denom configured on a vault (a normal swappable token or a restricted **receipt token**). The functionality has been removed; the `VaultAccount.payment_denom` state field remains on the wire for migration decoding and always equals `underlying_asset`. Field deletion is deferred to a future major release.  
 - **Principal**: the vault’s total assets held in the **share marker account**: the underlying asset balance plus any external assets acquired through P2P settlement.
 - **Reserves**: the vault account balance used to pay positive interest or receive refunds from negative interest.
 - **TVV (Total Vault Value)**: the value of all principal assets, computed and reported in the underlying unit.

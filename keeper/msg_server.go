@@ -90,7 +90,7 @@ func (k msgServer) SwapOut(goCtx context.Context, msg *types.MsgSwapOutRequest) 
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
 	ownerAddr := sdk.MustAccAddressFromBech32(msg.Owner)
 
-	requestID, err := k.Keeper.SwapOut(ctx, vaultAddr, ownerAddr, msg.Assets, msg.RedeemDenom)
+	requestID, err := k.Keeper.SwapOut(ctx, vaultAddr, ownerAddr, msg.Assets)
 	if err != nil {
 		return nil, fmt.Errorf("failed to swap out: %w", err)
 	}

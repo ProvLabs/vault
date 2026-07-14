@@ -179,13 +179,11 @@ message QueryEstimateSwapOutRequest {
   string vault_address = 1;
   // shares is the amount of shares to swap out.
   string shares = 2;
-  // redeem_denom must be empty or equal to the vault's underlying_asset; the
-  // estimated payout is always the underlying asset.
-  //
-  // Deprecated: The underlying-or-payment payout choice has collapsed to the
-  // underlying asset only. Leave this empty; deletion is deferred to a future
-  // major release.
-  string redeem_denom = 3 [deprecated = true];
+
+  // Field 3 held redeem_denom, a never-released choice of payout denom; the
+  // estimated payout is always the underlying asset. Reserved to prevent reuse.
+  reserved 3;
+  reserved "redeem_denom";
 }
 
 // QueryEstimateSwapOutResponse is the response message for the Query/EstimateSwapOut endpoint.

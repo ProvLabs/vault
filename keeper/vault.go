@@ -21,14 +21,11 @@ const (
 	NoGovControl    = false
 )
 
-// VaultAttributer provides the attributes for creating a new vault. The deprecated
-// payment_denom request field is still readable here so creation can reject
-// requests that set it to anything meaningful.
+// VaultAttributer provides the attributes for creating a new vault.
 type VaultAttributer interface {
 	GetAdmin() string
 	GetShareDenom() string
 	GetUnderlyingAsset() string
-	GetPaymentDenom() string
 	GetWithdrawalDelaySeconds() uint64
 	GetMinSwapInValue() string
 	GetMinSwapOutValue() string
@@ -46,24 +43,16 @@ type VaultAttributer interface {
 //     SendRestrictionFn with vault.PrincipalMarkerAddress() to ensure the fee
 //     collection address is permissioned to receive the underlying asset.
 //
-// Vaults are single-denom: the deprecated payment denom request field must be
-// empty or equal to the underlying asset.
-//
 // All steps are performed within a cache context. If any step fails, including the
 // pre-flight permission check, all state changes are discarded to prevent the creation
 // of inconsistent or "orphan" vaults.
 func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*types.VaultAccount, error) {
 	underlying := attributes.GetUnderlyingAsset()
-	payment := attributes.GetPaymentDenom()
 	withdrawalDelay := attributes.GetWithdrawalDelaySeconds()
 	minSwapIn := attributes.GetMinSwapInValue()
 	minSwapOut := attributes.GetMinSwapOutValue()
 	maxSwapIn := attributes.GetMaxSwapInValue()
 	maxSwapOut := attributes.GetMaxSwapOutValue()
-
-	if payment != "" && payment != underlying {
-		return nil, fmt.Errorf("payment denom (%q) must be empty or equal underlying asset (%q)", payment, underlying)
-	}
 
 	underlyingAssetAddr, err := markertypes.MarkerAddress(underlying)
 	if err != nil {
@@ -323,10 +312,11 @@ func (k *Keeper) checkPayoutRestrictions(ctx sdk.Context, vault *types.VaultAcco
 	return nil
 }
 
-// SwapOut validates a swap-out request, calculates the resulting assets, escrows the user's shares,
-// and enqueues a pending withdrawal request to be processed by the EndBlocker.
+// SwapOut validates a swap-out request, calculates the resulting assets in the vault's
+// underlying asset, escrows the user's shares, and enqueues a pending withdrawal request
+// to be processed by the EndBlocker.
 // It returns the unique ID of the newly queued request.
-func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, shares sdk.Coin, redeemDenom string) (uint64, error) {
+func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, shares sdk.Coin) (uint64, error) {
 	vault, err := k.GetVault(ctx, vaultAddr)
 	if err != nil {
 		return 0, fmt.Errorf("failed to get vault: %w", err)
@@ -347,15 +337,7 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 		return 0, fmt.Errorf("swap out denom must be share denom %v : %v", shares.Denom, vault.TotalShares.Denom)
 	}
 
-	if redeemDenom == "" {
-		redeemDenom = vault.UnderlyingAsset
-	}
-
-	if err = vault.ValidateAcceptedDenom(redeemDenom); err != nil {
-		return 0, fmt.Errorf("failed to validate redeem denom: %w", err)
-	}
-
-	assets, err := k.ConvertSharesToRedeemCoin(ctx, *vault, shares.Amount, redeemDenom)
+	assets, err := k.ConvertSharesToRedeemCoin(ctx, *vault, shares.Amount)
 	if err != nil {
 		return 0, fmt.Errorf("failed to calculate assets from shares: %w", err)
 	}
@@ -378,13 +360,13 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 
 	payoutTime := ctx.BlockTime().Unix() + int64(vault.WithdrawalDelaySeconds) //nolint:gosec // G115: WithdrawalDelaySeconds is validated <= MaxWithdrawalDelay.
 
-	pendingReq := types.NewPendingSwapOut(owner, vaultAddr, shares, redeemDenom)
+	pendingReq := types.NewPendingSwapOut(owner, vaultAddr, shares, vault.UnderlyingAsset)
 	requestID, err := k.PendingSwapOutQueue.Enqueue(ctx, payoutTime, &pendingReq)
 	if err != nil {
 		return 0, fmt.Errorf("failed to enqueue pending swap out request: %w", err)
 	}
 
-	k.emitEvent(ctx, types.NewEventSwapOutRequested(vaultAddr.String(), owner.String(), redeemDenom, shares, requestID))
+	k.emitEvent(ctx, types.NewEventSwapOutRequested(vaultAddr.String(), owner.String(), vault.UnderlyingAsset, shares, requestID))
 	return requestID, nil
 }
 

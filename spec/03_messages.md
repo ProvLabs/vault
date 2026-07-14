@@ -88,20 +88,19 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 Creates a new vault account with a configured underlying asset, withdrawal delay, and minimum/maximum swap values.
 The creator is recorded as vault admin.
 
-* **Single Denom:** Vaults are strictly single-denom. `payment_denom` must be empty (it defaults to `underlying_asset`) or equal to `underlying_asset`; creation with a differing payment denom is rejected.
+* **Single Denom:** Vaults are strictly single-denom on `underlying_asset`; it is the only denom for deposits, redemptions, interest, and fees.
 * **Units:** All swap limit values (`min_swap_in_value`, `min_swap_out_value`, `max_swap_in_value`, `max_swap_out_value`) are denominated in the vault's **underlying_asset**.
 * **Clearing Limits:** 
     * Minimums: An empty string "" or the string "0" clears/disables the minimum limit.
     * Maximums: An empty string "" clears/disables the maximum limit.
 * **Constraints:** Any provided maximum swap value must be **positive (> 0)**. A value of "0" is invalid and will be rejected.
 
-* **Request:** `MsgCreateVaultRequest { admin, share_denom, underlying_asset, payment_denom?, withdrawal_delay_seconds, min_swap_in_value?, min_swap_out_value?, max_swap_in_value?, max_swap_out_value? }`
+* **Request:** `MsgCreateVaultRequest { admin, share_denom, underlying_asset, withdrawal_delay_seconds, min_swap_in_value?, min_swap_out_value?, max_swap_in_value?, max_swap_out_value? }`
 * **Response:** `MsgCreateVaultResponse {}`
 
-> **Deprecated:** `payment_denom` is inert; the mixed-denom functionality has been removed. Leave
-> it empty (or equal to `underlying_asset`). The wire field remains for compatibility; field
-> deletion is deferred to a future major release. The never-released `initial_payment_nav` field
-> (`InitialVaultNAV`) has been removed outright and its field number reserved.
+> **Removed:** the never-released mixed-denom creation inputs `payment_denom` and
+> `initial_payment_nav` (`InitialVaultNAV`) have been removed from the request and their field
+> numbers reserved.
 
 ---
 
@@ -126,15 +125,14 @@ Deposits the vault's underlying asset into a vault in exchange for newly minted 
 ## SwapOut
 
 Redeems shares from a vault in exchange for the vault's underlying asset.
-Payouts are always made in the underlying asset; `redeem_denom` must be empty or equal to it.
+Payouts are always made in the underlying asset.
 Swap-outs are queued with respect to `withdrawal_delay_seconds`.
 
-* **Request:** `MsgSwapOutRequest { owner, vault_address, assets (shares), redeem_denom }`
+* **Request:** `MsgSwapOutRequest { owner, vault_address, assets (shares) }`
 * **Response:** `MsgSwapOutResponse { request_id }`
 
-> **Deprecated:** `redeem_denom` is inert; the payout-denom choice has been removed and payouts are
-> always the underlying asset. Leave it empty (or set it to the underlying asset). The wire field
-> remains for compatibility; field deletion is deferred to a future major release.
+> **Removed:** the never-released `redeem_denom` payout choice has been removed from the request
+> and its field number reserved; payouts are always the underlying asset.
 
 ---
 

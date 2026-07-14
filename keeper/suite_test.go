@@ -494,7 +494,6 @@ type vaultAttrs struct {
 	admin                  string
 	share                  string
 	underlying             string
-	payment                string
 	withdrawalDelaySeconds uint64
 	minSwapIn              string
 	minSwapOut             string
@@ -506,15 +505,13 @@ type vaultAttrs struct {
 func (v vaultAttrs) GetAdmin() string                  { return v.admin }
 func (v vaultAttrs) GetShareDenom() string             { return v.share }
 func (v vaultAttrs) GetUnderlyingAsset() string        { return v.underlying }
-func (v vaultAttrs) GetPaymentDenom() string           { return v.payment }
 func (v vaultAttrs) GetWithdrawalDelaySeconds() uint64 { return v.withdrawalDelaySeconds }
 func (v vaultAttrs) GetMinSwapInValue() string         { return v.minSwapIn }
 func (v vaultAttrs) GetMinSwapOutValue() string        { return v.minSwapOut }
 func (v vaultAttrs) GetMaxSwapInValue() string         { return v.maxSwapIn }
 func (v vaultAttrs) GetMaxSwapOutValue() string        { return v.maxSwapOut }
 
-// createSingleDenomVault creates a single-denom vault via keeper.CreateVault, requiring the
-// config to leave the deprecated payment denom empty (or equal to the underlying). It is the
+// createSingleDenomVault creates a single-denom vault via keeper.CreateVault. It is the
 // shared workhorse behind the base-vault helpers now that vaults are single-denom.
 func (s *TestSuite) createSingleDenomVault(cfg vaultAttrs) *types.VaultAccount {
 	vault, err := s.k.CreateVault(s.ctx, cfg)

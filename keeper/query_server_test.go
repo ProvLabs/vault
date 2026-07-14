@@ -531,16 +531,6 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 			ExpectedErrSubstrs: []string{"vault with address", "not found"},
 		},
 		{
-			Name:  "unsupported redeem denom",
-			Setup: setupVault,
-			Req: &types.QueryEstimateSwapOutRequest{
-				VaultAddress: vaultAddr.String(),
-				Shares:       math.NewInt(100).String(),
-				RedeemDenom:  "wrongdenom",
-			},
-			ExpectedErrSubstrs: []string{"unsupported redeem denom"},
-		},
-		{
 			Name:  "fails with incorrect shares string",
 			Setup: setupVault,
 			Req: &types.QueryEstimateSwapOutRequest{

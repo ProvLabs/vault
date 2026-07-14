@@ -23,33 +23,13 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 		expectedErr error
 	}{
 		{
-			name: "success without payment denom",
+			name: "success",
 			msg: types.MsgCreateVaultRequest{
 				Admin:           admin,
 				ShareDenom:      "vaultshare",
 				UnderlyingAsset: "uusd",
 			},
 			expectedErr: nil,
-		},
-		{
-			name: "success with payment denom equal to underlying",
-			msg: types.MsgCreateVaultRequest{
-				Admin:           admin,
-				ShareDenom:      "vaultshare",
-				UnderlyingAsset: "uusd",
-				PaymentDenom:    "uusd",
-			},
-			expectedErr: nil,
-		},
-		{
-			name: "payment denom differs from underlying (not allowed)",
-			msg: types.MsgCreateVaultRequest{
-				Admin:           admin,
-				ShareDenom:      "vaultshare",
-				UnderlyingAsset: "uusd",
-				PaymentDenom:    "usdc",
-			},
-			expectedErr: fmt.Errorf("payment denom (%q) must be empty or equal underlying asset (%q)", "usdc", "uusd"),
 		},
 		{
 			name: "admin empty",
@@ -106,31 +86,11 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 			expectedErr: fmt.Errorf("invalid underlying asset: %q: %w", "inv@lid$", fmt.Errorf("invalid denom: %s", "inv@lid$")),
 		},
 		{
-			name: "payment denom invalid",
-			msg: types.MsgCreateVaultRequest{
-				Admin:           admin,
-				ShareDenom:      "vaultshare",
-				UnderlyingAsset: "uusd",
-				PaymentDenom:    "inv@lid$",
-			},
-			expectedErr: fmt.Errorf("invalid payment denom: %q: %w", "inv@lid$", fmt.Errorf("invalid denom: %s", "inv@lid$")),
-		},
-		{
 			name: "share denom equals underlying (not allowed)",
 			msg: types.MsgCreateVaultRequest{
 				Admin:           admin,
 				ShareDenom:      "uusd",
 				UnderlyingAsset: "uusd",
-			},
-			expectedErr: fmt.Errorf("share denom (%q) cannot equal underlying asset denom (%q)", "uusd", "uusd"),
-		},
-		{
-			name: "share denom equals payment denom, caught as underlying equality (not allowed)",
-			msg: types.MsgCreateVaultRequest{
-				Admin:           admin,
-				ShareDenom:      "uusd",
-				UnderlyingAsset: "uusd",
-				PaymentDenom:    "uusd",
 			},
 			expectedErr: fmt.Errorf("share denom (%q) cannot equal underlying asset denom (%q)", "uusd", "uusd"),
 		},
@@ -441,16 +401,6 @@ func TestMsgSwapOutRequest_ValidateBasic(t *testing.T) {
 			expectedErr: nil,
 		},
 		{
-			name: "valid with redeem denom",
-			msg: types.MsgSwapOutRequest{
-				Owner:        owner,
-				VaultAddress: vault,
-				Assets:       sdk.NewInt64Coin("uusd", 100),
-				RedeemDenom:  "usdc",
-			},
-			expectedErr: nil,
-		},
-		{
 			name: "invalid vault address",
 			msg: types.MsgSwapOutRequest{
 				Owner:        owner,
@@ -485,16 +435,6 @@ func TestMsgSwapOutRequest_ValidateBasic(t *testing.T) {
 				Assets:       sdk.NewInt64Coin("uusd", 0),
 			},
 			expectedErr: fmt.Errorf("invalid amount: assets %s must be greater than zero", "uusd"),
-		},
-		{
-			name: "invalid redeem denom",
-			msg: types.MsgSwapOutRequest{
-				Owner:        owner,
-				VaultAddress: vault,
-				Assets:       sdk.NewInt64Coin("uusd", 100),
-				RedeemDenom:  "inv@lid$",
-			},
-			expectedErr: fmt.Errorf("invalid redeem_denom: %w", fmt.Errorf("invalid denom: %s", "inv@lid$")),
 		},
 	}
 

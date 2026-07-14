@@ -330,18 +330,10 @@ func SimulateMsgSwapOut(k keeper.Keeper) simtypes.Operation {
 		}
 		shares := sdk.NewCoin(vault.TotalShares.Denom, amount)
 
-		// Alternate between the explicit underlying and the empty default so both
-		// redeem-denom request paths stay exercised.
-		redeemDenom := vault.UnderlyingAsset
-		if r.Intn(2) == 0 {
-			redeemDenom = ""
-		}
-
 		msg := &types.MsgSwapOutRequest{
 			Owner:        owner.Address.String(),
 			VaultAddress: vault.GetAddress().String(),
 			Assets:       shares,
-			RedeemDenom:  redeemDenom,
 		}
 
 		handler := keeper.NewMsgServer(&k)

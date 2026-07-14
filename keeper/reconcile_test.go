@@ -459,9 +459,9 @@ func (s *TestSuite) TestKeeper_ReconcileLeavesUncollectedFee_PricesOffNetTVV() {
 	s.Require().True(netMint.Amount.GT(grossMint.Amount), "net pricing mints more shares per deposit than gross would (gross overstates TVV)")
 
 	redeemShares := sdkmath.NewInt(100_000)
-	netRedeem, err := s.k.ConvertSharesToRedeemCoin(s.ctx, *reconciled, redeemShares, underlyingDenom)
+	netRedeem, err := s.k.ConvertSharesToRedeemCoin(s.ctx, *reconciled, redeemShares)
 	s.Require().NoError(err, "net redeem conversion should succeed")
-	grossRedeem, err := s.k.ConvertSharesToRedeemCoin(s.ctx, grossView, redeemShares, underlyingDenom)
+	grossRedeem, err := s.k.ConvertSharesToRedeemCoin(s.ctx, grossView, redeemShares)
 	s.Require().NoError(err, "gross redeem conversion should succeed")
 	s.Require().True(netRedeem.Amount.LT(grossRedeem.Amount), "net pricing pays out less per share than gross would (gross overstates TVV)")
 }
@@ -2300,37 +2300,6 @@ func (s *TestSuite) TestKeeper_AccrualCalculations() {
 				amt, err := s.k.CalculateAccruedAUMFee(s.ctx, *vault, tc.assets)
 				s.Require().NoError(err, "accrued AUM fee calculation failed for case: %s", tc.name)
 				s.Require().Equal(tc.expected, amt, "AUM fee mismatch for case: %s", tc.name)
-			})
-		}
-	})
-
-	s.Run("CalculateOutstandingFeeUnderlying", func() {
-		s.SetupTest()
-		vault := setup()
-
-		tests := []struct {
-			name        string
-			outstanding sdk.Coin
-			expected    sdkmath.Int
-		}{
-			{
-				name:        "no outstanding fee, should return zero",
-				outstanding: sdk.NewInt64Coin(underlyingDenom, 0),
-				expected:    sdkmath.ZeroInt(),
-			},
-			{
-				name:        "outstanding fee in underlying denom, should return same amount",
-				outstanding: sdk.NewInt64Coin(underlyingDenom, 500),
-				expected:    sdkmath.NewInt(500),
-			},
-		}
-
-		for _, tc := range tests {
-			s.Run(tc.name, func() {
-				vault.OutstandingAumFee = tc.outstanding
-				amt, err := s.k.CalculateOutstandingFeeUnderlying(s.ctx, *vault)
-				s.Require().NoError(err, "outstanding fee lookup failed for case: %s", tc.name)
-				s.Require().Equal(tc.expected, amt, "outstanding fee underlying amount mismatch for case: %s", tc.name)
 			})
 		}
 	})

@@ -98,10 +98,9 @@ Estimates how many **payout assets** (in the vault's underlying asset) you would
 ### Request — `QueryEstimateSwapOutRequest`
 - `vault_address`: bech32 vault address.
 - `shares`: amount of shares to redeem (as a string-encoded `Int`).
-- `redeem_denom` *(optional, deprecated)*: payout denom; must be empty or equal to the vault’s `underlying_asset`.  
-  Deprecated: the payout-denom choice has been removed and payouts are always the underlying asset.
-  Leave it empty; the wire field remains for compatibility, and field deletion is deferred to a
-  future major release.
+
+> **Removed:** the never-released `redeem_denom` payout choice has been removed from the request
+> and its field number reserved; the estimated payout is always the underlying asset.
 
 ### Response — `QueryEstimateSwapOutResponse`
 - `assets`: `Coin` in the vault's **underlying asset**, representing the estimated payout.
@@ -109,7 +108,6 @@ Estimates how many **payout assets** (in the vault's underlying asset) you would
 - `time`: UTC block time used.
 
 **How it works (high level)**
-- Validates `redeem_denom` is empty or the vault's underlying asset.
 - Computes a **pro-rata** redemption of the vault’s estimated total assets (principal + accrued interest), expressed in the underlying asset.
 - Floors where necessary for safety.
 

@@ -110,28 +110,6 @@ func GrantAccess(ctx context.Context, keeper markerkeeper.Keeper, denom string, 
 	return nil
 }
 
-// AddNav adds a net asset value to a marker.
-func AddNav(ctx context.Context, keeper markerkeeper.Keeper, denom string, admin sdk.AccAddress, price sdk.Coin, volume uint64) error {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	nav := []markertypes.NetAssetValue{
-		{
-			Price:              price,
-			Volume:             volume,
-			UpdatedBlockHeight: uint64(sdkCtx.BlockHeight()),
-		},
-	}
-
-	msg := &markertypes.MsgAddNetAssetValuesRequest{
-		Denom:          denom,
-		Administrator:  admin.String(),
-		NetAssetValues: nav,
-	}
-
-	markerMsgServer := markerkeeper.NewMsgServerImpl(keeper)
-	_, err := markerMsgServer.AddNetAssetValues(ctx, msg)
-	return err
-}
-
 // AddAttribute adds an attribute to an account using the provided owner to authorize the action.
 func AddAttribute(ctx context.Context, owner sdk.AccAddress, acc sdk.AccAddress, attrName string, _ types.NameKeeper, ak types.AttributeKeeper) error {
 	attr := NewAttribute(

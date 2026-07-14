@@ -364,10 +364,6 @@ func (v *VaultAccount) ValidateNAVAuthority(signer string) error {
 	return nil
 }
 
-func (v *VaultAccount) ValuationDenom() string {
-	return v.UnderlyingAsset
-}
-
 // IsAcceptedDenom reports whether denom is allowed for vault I/O. Vaults are
 // single-denom: only the underlying asset is accepted.
 func (v *VaultAccount) IsAcceptedDenom(denom string) bool {

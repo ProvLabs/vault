@@ -938,7 +938,7 @@ func (k msgServer) AcceptAsset(goCtx context.Context, msg *types.MsgAcceptAssetR
 
 	assetCoin, paymentCoin, err := settlementLegCoins(payment, direction, vault.UnderlyingAsset)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to resolve settlement leg coins: %w", err)
 	}
 	if err := k.checkSettlementNAVGuardrail(ctx, vault, assetCoin, paymentCoin); err != nil {
 		return nil, err

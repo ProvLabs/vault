@@ -126,6 +126,11 @@ func (k Keeper) normalizeOutstandingAumFee(ctx sdk.Context, vault *types.VaultAc
 // redeem denom differs from the owning vault's underlying asset. Entries are
 // collected during the walk and written afterwards so the underlying iterator
 // is never invalidated by a concurrent Set.
+//
+// An entry whose vault cannot be loaded is skipped with an error-level log
+// rather than failing the upgrade: the runtime queue processing tolerates the
+// same state by dequeuing such entries, so halting the chain over one orphaned
+// entry would be strictly worse.
 func (k Keeper) migratePendingSwapOutRedeemDenoms(ctx sdk.Context) error {
 	type queuedRewrite struct {
 		key collections.Triple[int64, uint64, sdk.AccAddress]
@@ -134,9 +139,13 @@ func (k Keeper) migratePendingSwapOutRedeemDenoms(ctx sdk.Context) error {
 
 	var rewrites []queuedRewrite
 	err := k.PendingSwapOutQueue.Walk(ctx, func(timestamp int64, id uint64, vaultAddr sdk.AccAddress, req types.PendingSwapOut) (bool, error) {
-		vault, err := k.GetVault(ctx, vaultAddr)
-		if err != nil || vault == nil {
-			return true, fmt.Errorf("failed to load vault %s for pending swap-out %d: %w", vaultAddr, id, err)
+		vault, ok := k.tryGetVault(ctx, vaultAddr)
+		if !ok {
+			k.getLogger(ctx).Error("skipping pending swap-out with no usable vault; queue processing dequeues such entries",
+				"vault", vaultAddr.String(),
+				"swap_out_id", id,
+			)
+			return false, nil
 		}
 		if req.RedeemDenom == vault.UnderlyingAsset {
 			return false, nil

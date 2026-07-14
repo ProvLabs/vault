@@ -150,6 +150,31 @@ func (s *TestSuite) TestKeeper_MigrateFlattenMixedDenomVaults() {
 		s.Require().NoError(err, "conforming swap-out %d should still be readable by id", conformingID)
 		s.Equal(underlying, gotConforming.RedeemDenom, "conforming swap-out should be left redeeming the underlying")
 	})
+
+	s.Run("pending swap-out with no vault account is skipped instead of failing the upgrade", func() {
+		s.SetupTest()
+		legacy := s.createLegacyVaultAccount("vshareorphan", underlying, payment)
+		owner := sdk.AccAddress([]byte("swap-out-owner-addr_______"))
+		orphanVaultAddr := types.GetVaultAddress("vsharemissing")
+
+		orphanReq := types.NewPendingSwapOut(owner, orphanVaultAddr, sdk.NewCoin("vsharemissing", sdkmath.NewInt(50)), payment)
+		orphanID, err := s.simApp.VaultKeeper.PendingSwapOutQueue.Enqueue(s.ctx, 1_000, &orphanReq)
+		s.Require().NoError(err, "enqueueing a swap-out for a non-existent vault must succeed")
+
+		mixedReq := types.NewPendingSwapOut(owner, legacy.GetAddress(), sdk.NewCoin("vshareorphan", sdkmath.NewInt(100)), payment)
+		mixedID, err := s.simApp.VaultKeeper.PendingSwapOutQueue.Enqueue(s.ctx, 2_000, &mixedReq)
+		s.Require().NoError(err, "enqueueing a payment-denom swap-out fixture must succeed")
+
+		runMigration()
+
+		_, gotOrphan, err := s.simApp.VaultKeeper.PendingSwapOutQueue.GetByID(s.ctx, orphanID)
+		s.Require().NoError(err, "orphaned swap-out %d should still be readable by id", orphanID)
+		s.Equal(payment, gotOrphan.RedeemDenom, "orphaned swap-out should be left untouched for queue processing to dequeue")
+
+		_, gotMixed, err := s.simApp.VaultKeeper.PendingSwapOutQueue.GetByID(s.ctx, mixedID)
+		s.Require().NoError(err, "rewritten swap-out %d should still be readable by id", mixedID)
+		s.Equal(underlying, gotMixed.RedeemDenom, "the walk must continue past the orphan and still rewrite mixed-denom entries")
+	})
 }
 
 func (s *TestSuite) TestVaultModule_RunMigrations() {

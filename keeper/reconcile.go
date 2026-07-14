@@ -620,7 +620,7 @@ func (k Keeper) reschedulePayoutTimeout(ctx sdk.Context, vault *types.VaultAccou
 }
 
 // tryGetVault returns the vault if found, or false if the vault is missing or invalid.
-// It should only be used in BeginBlocker/EndBlocker logic where failure is non-critical.
+// It should only be used in BeginBlocker/EndBlocker or migration logic where failure is non-critical.
 func (k Keeper) tryGetVault(ctx sdk.Context, addr sdk.AccAddress) (*types.VaultAccount, bool) {
 	vault, err := k.GetVault(ctx, addr)
 	if err != nil {

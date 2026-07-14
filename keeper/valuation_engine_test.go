@@ -748,10 +748,10 @@ func (s *TestSuite) TestGetNetTVVInUnderlyingAsset_PausedReturnsPausedBalanceWit
 	s.Require().Equal(math.NewInt(42), netTVV, "when paused, net TVV should equal vault.PausedBalance.Amount without subtracting the outstanding fee")
 }
 
-func (s *TestSuite) TestGetTVVInUnderlyingAsset_AcceptedDenomFiltering() {
+func (s *TestSuite) TestGetTVVInUnderlyingAsset_MixedPricedAndUnpricedHeldBalances() {
 	underlyingDenom := "ylds"
 	heldDenom := "usdc"
-	unacceptedDenom := "paymenow"
+	unpricedDenom := "paymenow"
 	shareDenom := "vshare"
 
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(heldDenom, 1_000_000), s.adminAddr)
@@ -767,13 +767,13 @@ func (s *TestSuite) TestGetTVVInUnderlyingAsset_AcceptedDenomFiltering() {
 
 	coinsToSend := sdk.NewCoins(
 		sdk.NewInt64Coin(heldDenom, 100),
-		sdk.NewInt64Coin(unacceptedDenom, 50),
+		sdk.NewInt64Coin(unpricedDenom, 50),
 		sdk.NewInt64Coin(underlyingDenom, 5),
 	)
 
 	s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, heldDenom, sdk.NewCoins(sdk.NewInt64Coin(heldDenom, 100)))
-	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(unacceptedDenom, 1_000_000), s.adminAddr)
-	s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, unacceptedDenom, sdk.NewCoins(sdk.NewInt64Coin(unacceptedDenom, 50)))
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(unpricedDenom, 1_000_000), s.adminAddr)
+	s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, unpricedDenom, sdk.NewCoins(sdk.NewInt64Coin(unpricedDenom, 50)))
 
 	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), coinsToSend), "funding principal should succeed")
 
@@ -785,9 +785,7 @@ func (s *TestSuite) TestGetTVVInUnderlyingAsset_AcceptedDenomFiltering() {
 
 	expectedTVV := math.NewInt(205)
 
-	s.Require().Equal(expectedTVV, tvv, "TVV should only include accepted and non-share balances")
-
-	s.Require().False(vault.IsAcceptedDenom(unacceptedDenom), "unaccepted denom should NOT be an accepted denom")
+	s.Require().Equal(expectedTVV, tvv, "TVV should count the underlying and NAV-priced held balances while skipping the unpriced denom")
 }
 
 func (s *TestSuite) TestEstimateTotalVaultValue_Paused() {

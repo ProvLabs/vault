@@ -6245,16 +6245,19 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Inbound() {
 	underlying, share, asset := "under", "vshare", "rwacoin"
 	externalID := "p2p-inbound"
 
-	vault, principalAddr := s.setupAssetSettlementVault(underlying, share)
-	vaultAddr := vault.GetAddress()
-	s.requireSimpleMarker(asset)
-
-	source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
-	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(underlying, 5))), "failed to fund principal with underlying asset")
-
 	sourceAmount := sdk.NewCoins(sdk.NewInt64Coin(asset, 10))
 	targetAmount := sdk.NewCoins(sdk.NewInt64Coin(underlying, 5))
-	s.createPayment(source, vaultAddr, sourceAmount, targetAmount, externalID)
+	vault, principalAddr, source := s.setupAcceptAssetScenario(acceptAssetScenario{
+		underlying:    underlying,
+		share:         share,
+		assetMarker:   asset,
+		fundSource:    sourceAmount,
+		fundPrincipal: targetAmount,
+		sourceAmount:  sourceAmount,
+		targetAmount:  targetAmount,
+		externalID:    externalID,
+	})
+	vaultAddr := vault.GetAddress()
 
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	resp, err := keeper.NewMsgServer(s.simApp.VaultKeeper).AcceptAsset(s.ctx, &types.MsgAcceptAssetRequest{
@@ -6280,16 +6283,19 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Outbound() {
 	underlying, share, asset := "under", "vshare", "rwacoin"
 	externalID := "p2p-outbound"
 
-	vault, principalAddr := s.setupAssetSettlementVault(underlying, share)
-	vaultAddr := vault.GetAddress()
-	s.requireSimpleMarker(asset)
-
-	source := s.CreateAndFundAccount(sdk.NewInt64Coin(underlying, 5))
-	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10))), "failed to fund principal with asset")
-
 	sourceAmount := sdk.NewCoins(sdk.NewInt64Coin(underlying, 5))
 	targetAmount := sdk.NewCoins(sdk.NewInt64Coin(asset, 10))
-	s.createPayment(source, vaultAddr, sourceAmount, targetAmount, externalID)
+	vault, principalAddr, source := s.setupAcceptAssetScenario(acceptAssetScenario{
+		underlying:    underlying,
+		share:         share,
+		assetMarker:   asset,
+		fundSource:    sourceAmount,
+		fundPrincipal: targetAmount,
+		sourceAmount:  sourceAmount,
+		targetAmount:  targetAmount,
+		externalID:    externalID,
+	})
+	vaultAddr := vault.GetAddress()
 
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	resp, err := keeper.NewMsgServer(s.simApp.VaultKeeper).AcceptAsset(s.ctx, &types.MsgAcceptAssetRequest{
@@ -6320,16 +6326,19 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_ZeroPriceOutbound() {
 	underlying, share, asset := "under", "vshare", "rwacoin"
 	externalID := "p2p-outbound-zero"
 
-	vault, principalAddr := s.setupAssetSettlementVault(underlying, share)
-	vaultAddr := vault.GetAddress()
-	s.requireSimpleMarker(asset)
-
-	source := s.CreateAndFundAccount(sdk.NewInt64Coin(underlying, 1))
-	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10))), "failed to fund principal with asset")
-
 	sourceAmount := sdk.NewCoins()
 	targetAmount := sdk.NewCoins(sdk.NewInt64Coin(asset, 10))
-	s.createPayment(source, vaultAddr, sourceAmount, targetAmount, externalID)
+	vault, principalAddr, source := s.setupAcceptAssetScenario(acceptAssetScenario{
+		underlying:    underlying,
+		share:         share,
+		assetMarker:   asset,
+		fundSource:    sdk.NewCoins(sdk.NewInt64Coin(underlying, 1)),
+		fundPrincipal: targetAmount,
+		sourceAmount:  sourceAmount,
+		targetAmount:  targetAmount,
+		externalID:    externalID,
+	})
+	vaultAddr := vault.GetAddress()
 
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	resp, err := keeper.NewMsgServer(s.simApp.VaultKeeper).AcceptAsset(s.ctx, &types.MsgAcceptAssetRequest{
@@ -6360,15 +6369,18 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_ZeroPriceInbound() {
 	underlying, share, asset := "under", "vshare", "rwacoin"
 	externalID := "p2p-inbound-zero"
 
-	vault, principalAddr := s.setupAssetSettlementVault(underlying, share)
-	vaultAddr := vault.GetAddress()
-	s.requireSimpleMarker(asset)
-
-	source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
-
 	sourceAmount := sdk.NewCoins(sdk.NewInt64Coin(asset, 10))
 	targetAmount := sdk.NewCoins()
-	s.createPayment(source, vaultAddr, sourceAmount, targetAmount, externalID)
+	vault, principalAddr, source := s.setupAcceptAssetScenario(acceptAssetScenario{
+		underlying:   underlying,
+		share:        share,
+		assetMarker:  asset,
+		fundSource:   sourceAmount,
+		sourceAmount: sourceAmount,
+		targetAmount: targetAmount,
+		externalID:   externalID,
+	})
+	vaultAddr := vault.GetAddress()
 
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	resp, err := keeper.NewMsgServer(s.simApp.VaultKeeper).AcceptAsset(s.ctx, &types.MsgAcceptAssetRequest{
@@ -6518,15 +6530,19 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Failures() {
 		{
 			name: "unauthorized signer",
 			setup: func() *types.MsgAcceptAssetRequest {
-				vault, principalAddr := s.setupAssetSettlementVault(underlying, share)
-				vaultAddr := vault.GetAddress()
-				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
+				vault, _, source := s.setupAcceptAssetScenario(acceptAssetScenario{
+					underlying:    underlying,
+					share:         share,
+					fundSource:    sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+					fundPrincipal: sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
+					sourceAmount:  sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+					targetAmount:  sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
+					externalID:    "unauth",
+				})
 				stranger := s.CreateAndFundAccount(sdk.NewInt64Coin(underlying, 1))
-				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(underlying, 5))), "fund principal")
-				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)), "unauth")
 				return &types.MsgAcceptAssetRequest{
 					Authority:    stranger.String(),
-					VaultAddress: vaultAddr.String(),
+					VaultAddress: vault.GetAddress().String(),
 					Source:       source.String(),
 					ExternalId:   "unauth",
 				}
@@ -6536,14 +6552,18 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Failures() {
 		{
 			name: "admin cannot settle, only the asset manager may",
 			setup: func() *types.MsgAcceptAssetRequest {
-				vault, principalAddr := s.setupAssetSettlementVault(underlying, share)
-				vaultAddr := vault.GetAddress()
-				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
-				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(underlying, 5))), "fund principal")
-				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)), "admin-settle")
+				vault, _, source := s.setupAcceptAssetScenario(acceptAssetScenario{
+					underlying:    underlying,
+					share:         share,
+					fundSource:    sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+					fundPrincipal: sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
+					sourceAmount:  sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+					targetAmount:  sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
+					externalID:    "admin-settle",
+				})
 				return &types.MsgAcceptAssetRequest{
 					Authority:    s.adminAddr.String(),
-					VaultAddress: vaultAddr.String(),
+					VaultAddress: vault.GetAddress().String(),
 					Source:       source.String(),
 					ExternalId:   "admin-settle",
 				}
@@ -6553,7 +6573,15 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Failures() {
 		{
 			name: "vault without an asset manager cannot settle",
 			setup: func() *types.MsgAcceptAssetRequest {
-				vault, principalAddr := s.setupAssetSettlementVault(underlying, share)
+				vault, _, source := s.setupAcceptAssetScenario(acceptAssetScenario{
+					underlying:    underlying,
+					share:         share,
+					fundSource:    sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+					fundPrincipal: sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
+					sourceAmount:  sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+					targetAmount:  sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
+					externalID:    "no-mgr",
+				})
 				vaultAddr := vault.GetAddress()
 				_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).SetAssetManager(s.ctx, &types.MsgSetAssetManagerRequest{
 					Admin:        s.adminAddr.String(),
@@ -6561,9 +6589,6 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Failures() {
 					AssetManager: "",
 				})
 				s.Require().NoError(err, "failed to clear asset manager on vault %s", vaultAddr)
-				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
-				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(underlying, 5))), "fund principal")
-				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)), "no-mgr")
 				return &types.MsgAcceptAssetRequest{
 					Authority:    s.adminAddr.String(),
 					VaultAddress: vaultAddr.String(),
@@ -6576,12 +6601,15 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Failures() {
 		{
 			name: "payment not found",
 			setup: func() *types.MsgAcceptAssetRequest {
-				vault, _ := s.setupAssetSettlementVault(underlying, share)
-				vaultAddr := vault.GetAddress()
-				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
+				vault, _, source := s.setupAcceptAssetScenario(acceptAssetScenario{
+					underlying:  underlying,
+					share:       share,
+					fundSource:  sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+					omitPayment: true,
+				})
 				return &types.MsgAcceptAssetRequest{
 					Authority:    s.assetManagerAddr.String(),
-					VaultAddress: vaultAddr.String(),
+					VaultAddress: vault.GetAddress().String(),
 					Source:       source.String(),
 					ExternalId:   "ghost",
 				}
@@ -6591,14 +6619,17 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Failures() {
 		{
 			name: "payment target mismatch",
 			setup: func() *types.MsgAcceptAssetRequest {
-				vault, _ := s.setupAssetSettlementVault(underlying, share)
-				vaultAddr := vault.GetAddress()
-				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
+				vault, _, source := s.setupAcceptAssetScenario(acceptAssetScenario{
+					underlying:  underlying,
+					share:       share,
+					fundSource:  sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+					omitPayment: true,
+				})
 				other := s.CreateAndFundAccount(sdk.NewInt64Coin(underlying, 1))
 				s.createPayment(source, other, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)), "mismatch")
 				return &types.MsgAcceptAssetRequest{
 					Authority:    s.assetManagerAddr.String(),
-					VaultAddress: vaultAddr.String(),
+					VaultAddress: vault.GetAddress().String(),
 					Source:       source.String(),
 					ExternalId:   "mismatch",
 				}
@@ -6608,13 +6639,17 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Failures() {
 		{
 			name: "underlying asset on neither leg",
 			setup: func() *types.MsgAcceptAssetRequest {
-				vault, _ := s.setupAssetSettlementVault(underlying, share)
-				vaultAddr := vault.GetAddress()
-				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
-				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin("stake", 5)), "noleg")
+				vault, _, source := s.setupAcceptAssetScenario(acceptAssetScenario{
+					underlying:   underlying,
+					share:        share,
+					fundSource:   sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+					sourceAmount: sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+					targetAmount: sdk.NewCoins(sdk.NewInt64Coin("stake", 5)),
+					externalID:   "noleg",
+				})
 				return &types.MsgAcceptAssetRequest{
 					Authority:    s.assetManagerAddr.String(),
-					VaultAddress: vaultAddr.String(),
+					VaultAddress: vault.GetAddress().String(),
 					Source:       source.String(),
 					ExternalId:   "noleg",
 				}
@@ -6624,13 +6659,17 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Failures() {
 		{
 			name: "underlying asset on both legs",
 			setup: func() *types.MsgAcceptAssetRequest {
-				vault, _ := s.setupAssetSettlementVault(underlying, share)
-				vaultAddr := vault.GetAddress()
-				source := s.CreateAndFundAccount(sdk.NewInt64Coin(underlying, 5))
-				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)), sdk.NewCoins(sdk.NewInt64Coin(underlying, 3), sdk.NewInt64Coin(asset, 2)), "bothlegs")
+				vault, _, source := s.setupAcceptAssetScenario(acceptAssetScenario{
+					underlying:   underlying,
+					share:        share,
+					fundSource:   sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
+					sourceAmount: sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
+					targetAmount: sdk.NewCoins(sdk.NewInt64Coin(underlying, 3), sdk.NewInt64Coin(asset, 2)),
+					externalID:   "bothlegs",
+				})
 				return &types.MsgAcceptAssetRequest{
 					Authority:    s.assetManagerAddr.String(),
-					VaultAddress: vaultAddr.String(),
+					VaultAddress: vault.GetAddress().String(),
 					Source:       source.String(),
 					ExternalId:   "bothlegs",
 				}
@@ -6640,14 +6679,18 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Failures() {
 		{
 			name: "insufficient principal balance",
 			setup: func() *types.MsgAcceptAssetRequest {
-				vault, principalAddr := s.setupAssetSettlementVault(underlying, share)
-				vaultAddr := vault.GetAddress()
-				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
-				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(underlying, 4))), "fund principal short")
-				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)), "short")
+				vault, _, source := s.setupAcceptAssetScenario(acceptAssetScenario{
+					underlying:    underlying,
+					share:         share,
+					fundSource:    sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+					fundPrincipal: sdk.NewCoins(sdk.NewInt64Coin(underlying, 4)),
+					sourceAmount:  sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+					targetAmount:  sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
+					externalID:    "short",
+				})
 				return &types.MsgAcceptAssetRequest{
 					Authority:    s.assetManagerAddr.String(),
-					VaultAddress: vaultAddr.String(),
+					VaultAddress: vault.GetAddress().String(),
 					Source:       source.String(),
 					ExternalId:   "short",
 				}
@@ -6657,11 +6700,16 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Failures() {
 		{
 			name: "rejects settlement while vault is paused",
 			setup: func() *types.MsgAcceptAssetRequest {
-				vault, principalAddr := s.setupAssetSettlementVault(underlying, share)
+				vault, _, source := s.setupAcceptAssetScenario(acceptAssetScenario{
+					underlying:    underlying,
+					share:         share,
+					fundSource:    sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+					fundPrincipal: sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
+					sourceAmount:  sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+					targetAmount:  sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
+					externalID:    "paused",
+				})
 				vaultAddr := vault.GetAddress()
-				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
-				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(underlying, 5))), "fund principal")
-				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)), "paused")
 				paused, err := s.k.GetVault(s.ctx, vaultAddr)
 				s.Require().NoError(err, "failed to get vault %s for paused setup", vaultAddr)
 				paused.Paused = true
@@ -7176,12 +7224,16 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_InsufficientPrincipalDoesNotSettle
 	underlying, share, asset := "under", "vshare", "rwacoin"
 	externalID := "short-noop"
 
-	vault, principalAddr := s.setupAssetSettlementVault(underlying, share)
+	vault, principalAddr, source := s.setupAcceptAssetScenario(acceptAssetScenario{
+		underlying:    underlying,
+		share:         share,
+		fundSource:    sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+		fundPrincipal: sdk.NewCoins(sdk.NewInt64Coin(underlying, 4)),
+		sourceAmount:  sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+		targetAmount:  sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
+		externalID:    externalID,
+	})
 	vaultAddr := vault.GetAddress()
-
-	source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
-	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(underlying, 4))), "fund principal short")
-	s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)), externalID)
 
 	_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).AcceptAsset(s.ctx, &types.MsgAcceptAssetRequest{
 		Authority:    s.assetManagerAddr.String(),
@@ -7202,11 +7254,15 @@ func (s *TestSuite) TestMsgServer_RejectAsset() {
 	underlying, share, asset := "under", "vshare", "rwacoin"
 	externalID := "p2p-reject"
 
-	vault, _ := s.setupAssetSettlementVault(underlying, share)
+	vault, _, source := s.setupAcceptAssetScenario(acceptAssetScenario{
+		underlying:   underlying,
+		share:        share,
+		fundSource:   sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+		sourceAmount: sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+		targetAmount: sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
+		externalID:   externalID,
+	})
 	vaultAddr := vault.GetAddress()
-
-	source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
-	s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)), externalID)
 
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	resp, err := keeper.NewMsgServer(s.simApp.VaultKeeper).RejectAsset(s.ctx, &types.MsgRejectAssetRequest{
@@ -7250,14 +7306,18 @@ func (s *TestSuite) TestMsgServer_RejectAsset_Failures() {
 		{
 			name: "unauthorized signer",
 			setup: func() *types.MsgRejectAssetRequest {
-				vault, _ := s.setupAssetSettlementVault(underlying, share)
-				vaultAddr := vault.GetAddress()
-				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
+				vault, _, source := s.setupAcceptAssetScenario(acceptAssetScenario{
+					underlying:   underlying,
+					share:        share,
+					fundSource:   sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+					sourceAmount: sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+					targetAmount: sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
+					externalID:   "unauth",
+				})
 				stranger := s.CreateAndFundAccount(sdk.NewInt64Coin(underlying, 1))
-				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)), "unauth")
 				return &types.MsgRejectAssetRequest{
 					Authority:    stranger.String(),
-					VaultAddress: vaultAddr.String(),
+					VaultAddress: vault.GetAddress().String(),
 					Source:       source.String(),
 					ExternalId:   "unauth",
 				}
@@ -7267,13 +7327,17 @@ func (s *TestSuite) TestMsgServer_RejectAsset_Failures() {
 		{
 			name: "admin cannot reject, only the asset manager may",
 			setup: func() *types.MsgRejectAssetRequest {
-				vault, _ := s.setupAssetSettlementVault(underlying, share)
-				vaultAddr := vault.GetAddress()
-				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
-				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)), "admin-reject")
+				vault, _, source := s.setupAcceptAssetScenario(acceptAssetScenario{
+					underlying:   underlying,
+					share:        share,
+					fundSource:   sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+					sourceAmount: sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+					targetAmount: sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
+					externalID:   "admin-reject",
+				})
 				return &types.MsgRejectAssetRequest{
 					Authority:    s.adminAddr.String(),
-					VaultAddress: vaultAddr.String(),
+					VaultAddress: vault.GetAddress().String(),
 					Source:       source.String(),
 					ExternalId:   "admin-reject",
 				}
@@ -7283,7 +7347,14 @@ func (s *TestSuite) TestMsgServer_RejectAsset_Failures() {
 		{
 			name: "vault without an asset manager cannot reject",
 			setup: func() *types.MsgRejectAssetRequest {
-				vault, _ := s.setupAssetSettlementVault(underlying, share)
+				vault, _, source := s.setupAcceptAssetScenario(acceptAssetScenario{
+					underlying:   underlying,
+					share:        share,
+					fundSource:   sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+					sourceAmount: sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+					targetAmount: sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)),
+					externalID:   "no-mgr",
+				})
 				vaultAddr := vault.GetAddress()
 				_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).SetAssetManager(s.ctx, &types.MsgSetAssetManagerRequest{
 					Admin:        s.adminAddr.String(),
@@ -7291,8 +7362,6 @@ func (s *TestSuite) TestMsgServer_RejectAsset_Failures() {
 					AssetManager: "",
 				})
 				s.Require().NoError(err, "failed to clear asset manager on vault %s", vaultAddr)
-				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
-				s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)), "no-mgr")
 				return &types.MsgRejectAssetRequest{
 					Authority:    s.adminAddr.String(),
 					VaultAddress: vaultAddr.String(),
@@ -7305,12 +7374,15 @@ func (s *TestSuite) TestMsgServer_RejectAsset_Failures() {
 		{
 			name: "payment does not exist",
 			setup: func() *types.MsgRejectAssetRequest {
-				vault, _ := s.setupAssetSettlementVault(underlying, share)
-				vaultAddr := vault.GetAddress()
-				source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
+				vault, _, source := s.setupAcceptAssetScenario(acceptAssetScenario{
+					underlying:  underlying,
+					share:       share,
+					fundSource:  sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+					omitPayment: true,
+				})
 				return &types.MsgRejectAssetRequest{
 					Authority:    s.assetManagerAddr.String(),
-					VaultAddress: vaultAddr.String(),
+					VaultAddress: vault.GetAddress().String(),
 					Source:       source.String(),
 					ExternalId:   "ghost",
 				}

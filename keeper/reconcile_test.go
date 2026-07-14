@@ -22,7 +22,11 @@ func (s *TestSuite) TestKeeper_ReconcileVault() {
 	vaultAddress := types.GetVaultAddress(shareDenom)
 	testBlockTime := time.Now()
 	futureTime := testBlockTime.Add(100 * time.Second)
-	pastTime := testBlockTime.Add(-60 * 24 * time.Hour) // ~2 months
+	pastTime := testBlockTime.Add(-60 * 24 * time.Hour)
+	interestEarnedAtPositiveRate := sdkmath.NewInt(41_952_013)
+	feeOnTVVAfterPositiveInterest := sdkmath.NewInt(256_919)
+	interestPaidAtNegativeRate := sdkmath.NewInt(40_262_904)
+	feeOnTVVAfterNegativeInterest := sdkmath.NewInt(236_647)
 
 	tests := []struct {
 		name              string
@@ -52,16 +56,11 @@ func (s *TestSuite) TestKeeper_ReconcileVault() {
 			inPayoutQueue:     true,
 		},
 		{
-			name:         "interest period has elasped, should pay interest and update period start",
-			interestRate: "0.25",
-			periodStart:  pastTime.Unix(),
-			// Fee is calculated on TVV AFTER interest transfer.
-			// Initial TVV: 1,000,000,000. Interest: 41,952,013.
-			// TVV after interest: 1,041,952,013.
-			// Fee: 1,041,952,013 * 0.0015 * 5,184,000 / 31,536,000 = 256,919
-			// Total marker change: 41,952,013 - 256,919 = 41,695,094
-			expectedVaultAmt:  sdkmath.NewInt(958_047_987),
-			expectedMarkerAmt: sdkmath.NewInt(1_041_695_094),
+			name:              "interest period has elasped, should pay interest and update period start",
+			interestRate:      "0.25",
+			periodStart:       pastTime.Unix(),
+			expectedVaultAmt:  underlying.Amount.Sub(interestEarnedAtPositiveRate),
+			expectedMarkerAmt: underlying.Amount.Add(interestEarnedAtPositiveRate).Sub(feeOnTVVAfterPositiveInterest),
 			inPayoutQueue:     true,
 			expectedEvents: func() sdk.Events {
 				markerAddr := markertypes.MustGetMarkerAddress(shareDenom)
@@ -90,7 +89,7 @@ func (s *TestSuite) TestKeeper_ReconcileVault() {
 
 				nav := createMarkerSetNAV(
 					shareDenom,
-					sdk.NewCoin(underlying.Denom, sdkmath.NewInt(1_041_695_094)), // NAV updated with fee
+					sdk.NewCoin(underlying.Denom, sdkmath.NewInt(1_041_695_094)),
 					"vault",
 					totalShares.Amount.Uint64(),
 				)
@@ -100,17 +99,11 @@ func (s *TestSuite) TestKeeper_ReconcileVault() {
 			},
 		},
 		{
-			name:         "interest period has elasped, should pay negative interest and update period start",
-			interestRate: "-0.25",
-			periodStart:  pastTime.Unix(),
-			// Initial TVV: 1,000,000,000. Interest: -40,262,904.
-			// TVV after interest: 959,737,096.
-			// Fee: 959,737,096 * 0.0015 * 5,184,000 / 31,536,000 = 236,647
-			// Total marker change: -40,262,904 - 236,647 = -40,499,551
-			// Marker: 1,000,000,000 - 40,499,551 = 959,500,449
-			// Vault: 1,000,000,000 + 40,262,904 = 1,040,262,904
-			expectedVaultAmt:  sdkmath.NewInt(1_040_262_904),
-			expectedMarkerAmt: sdkmath.NewInt(959_500_449),
+			name:              "interest period has elasped, should pay negative interest and update period start",
+			interestRate:      "-0.25",
+			periodStart:       pastTime.Unix(),
+			expectedVaultAmt:  underlying.Amount.Add(interestPaidAtNegativeRate),
+			expectedMarkerAmt: underlying.Amount.Sub(interestPaidAtNegativeRate).Sub(feeOnTVVAfterNegativeInterest),
 			inPayoutQueue:     true,
 			expectedEvents: func() sdk.Events {
 				markerAddr := markertypes.MustGetMarkerAddress(shareDenom)
@@ -139,7 +132,7 @@ func (s *TestSuite) TestKeeper_ReconcileVault() {
 
 				nav := createMarkerSetNAV(
 					shareDenom,
-					sdk.NewCoin(underlying.Denom, sdkmath.NewInt(959_500_449)), // NAV updated with fee
+					sdk.NewCoin(underlying.Denom, sdkmath.NewInt(959_500_449)),
 					"vault",
 					totalShares.Amount.Uint64(),
 				)
@@ -206,10 +199,7 @@ func (s *TestSuite) TestKeeper_PerformVaultReconcile_CompositeWithOutstandingFee
 	sixtyDays := 60 * 24 * time.Hour
 	pastTime := testBlockTime.Add(-sixtyDays)
 
-	// Local helper for the composite setup. The vault is single-denom; the held asset
-	// (heldDenom) is a non-underlying asset the vault holds at its principal marker and
-	// prices through the internal NAV chain so it contributes to gross TVV.
-	setup := func(outstanding sdk.Coin, markerLiquidity sdk.Coins, navPrice *sdk.Coin) *types.VaultAccount {
+	setupVaultWithHeldAssetAndOutstandingFee := func(outstanding sdk.Coin, markerLiquidity sdk.Coins, heldNavPrice *sdk.Coin) *types.VaultAccount {
 		s.SetupTest()
 		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingDenom, 10_000_000_000), s.adminAddr)
 		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(heldDenom, 10_000_000_000), s.adminAddr)
@@ -224,14 +214,13 @@ func (s *TestSuite) TestKeeper_PerformVaultReconcile_CompositeWithOutstandingFee
 
 		markerAddr := markertypes.MustGetMarkerAddress(shareDenom)
 		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, markerLiquidity), "failed to fund marker account with liquidity")
-		// Fund reserves to pay interest
 		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddress, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1_000_000_000))), "failed to fund vault reserves")
 
-		if navPrice == nil {
-			navPrice = &sdk.Coin{Denom: underlyingDenom, Amount: sdkmath.NewInt(1)}
+		if heldNavPrice == nil {
+			heldNavPrice = &sdk.Coin{Denom: underlyingDenom, Amount: sdkmath.NewInt(1)}
 		}
 
-		s.setVaultNAV(vault, heldDenom, *navPrice, 1)
+		s.setVaultNAV(vault, heldDenom, *heldNavPrice, 1)
 
 		s.ctx = s.ctx.WithBlockTime(testBlockTime).WithEventManager(sdk.NewEventManager())
 		return vault
@@ -241,18 +230,15 @@ func (s *TestSuite) TestKeeper_PerformVaultReconcile_CompositeWithOutstandingFee
 		outstanding := sdk.NewInt64Coin(underlyingDenom, 100_000)
 		markerLiquidity := sdk.NewCoins(
 			sdk.NewInt64Coin(underlyingDenom, 1_000_000_000),
-			sdk.NewInt64Coin(heldDenom, 1_000_000), // Held asset priced 1:1 into TVV
+			sdk.NewInt64Coin(heldDenom, 1_000_000),
 		)
-		vault := setup(outstanding, markerLiquidity, nil) // 1:1 held NAV
+		vault := setupVaultWithHeldAssetAndOutstandingFee(outstanding, markerLiquidity, nil)
 
-		// Interest on GROSS TVV (1,000,000,000 underlying + 1,000,000 held = 1,001,000,000)
-		// 1,001,000,000 * (e^(0.25 * 5184000/31536000) - 1) = 41,993,965
 		expectedInterest := sdkmath.NewInt(41_993_965)
 
 		err := s.k.TestAccessor_reconcileVault(s.T(), s.ctx, vault)
 		s.Require().NoError(err, "reconcileVault should not error for case: Full Collection")
 
-		// Verify event shows Gross principal
 		events := normalizeEvents(s.ctx.EventManager().Events())
 		var reconcileEv *sdk.Event
 		for i := range events {
@@ -263,7 +249,7 @@ func (s *TestSuite) TestKeeper_PerformVaultReconcile_CompositeWithOutstandingFee
 		}
 		s.Require().NotNil(reconcileEv, "EventVaultReconcile should be emitted in Case 1 (events: %v)", events)
 		s.Require().Equal("1001000000underlying", getAttribute(*reconcileEv, "principal_before"), "principal_before mismatch in Case 1")
-		s.Require().Equal(expectedInterest.String()+"underlying", getAttribute(*reconcileEv, "interest_earned"), "interest_earned mismatch in Case 1")
+		s.Require().Equal(expectedInterest.String()+"underlying", getAttribute(*reconcileEv, "interest_earned"), "interest_earned should be 0.25 on gross TVV 1,001,000,000 (underlying + held) over 60 days = 41,993,965 in Case 1")
 
 		updatedVault, err := s.k.GetVault(s.ctx, vaultAddress)
 		s.Require().NoError(err, "failed to get updated vault")
@@ -271,20 +257,14 @@ func (s *TestSuite) TestKeeper_PerformVaultReconcile_CompositeWithOutstandingFee
 
 		provlabsAddr, err := s.k.GetAUMFeeAddress(s.ctx)
 		s.Require().NoError(err, "failed to get AUM fee address")
-		// TVV after interest = 1,001,000,000 + 41,993,965 = 1,042,993,965
-		// Current Fee (15bps): 1,042,993,965 * 0.0015 * 5184000/31536000 = 257,176
-		// Total Debt = 257,176 (current) + 100,000 (outstanding) = 357,176, collected in underlying.
-		s.assertBalance(provlabsAddr, underlyingDenom, sdkmath.NewInt(357_176))
+		currentFeeOnTVVAfterInterest := sdkmath.NewInt(257_176)
+		s.assertBalance(provlabsAddr, underlyingDenom, currentFeeOnTVVAfterInterest.Add(outstanding.Amount))
 	})
 
 	s.Run("Case 2: Partial Collection (Insufficient Underlying Liquidity)", func() {
-		// Single-denom: the fee is collected in the underlying asset from the principal
-		// marker's underlying balance. With interest and AUM bips zeroed, only the pre-set
-		// OutstandingAumFee matters. The marker holds 100,000 underlying against a 1,000,000
-		// liability, so 100,000 is collected and 900,000 survives.
 		outstanding := sdk.NewInt64Coin(underlyingDenom, 1_000_000)
 		markerLiquidity := sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 100_000))
-		vault := setup(outstanding, markerLiquidity, nil)
+		vault := setupVaultWithHeldAssetAndOutstandingFee(outstanding, markerLiquidity, nil)
 		vault.CurrentInterestRate = "0"
 		vault.DesiredInterestRate = "0"
 		vault.AumFeeBips = 0
@@ -295,7 +275,7 @@ func (s *TestSuite) TestKeeper_PerformVaultReconcile_CompositeWithOutstandingFee
 
 		updatedVault, err := s.k.GetVault(s.ctx, vaultAddress)
 		s.Require().NoError(err, "failed to get updated vault")
-		s.Require().Equal(sdkmath.NewInt(900_000), updatedVault.OutstandingAumFee.Amount, "outstanding fee balance mismatch in Case 2")
+		s.Require().Equal(sdkmath.NewInt(900_000), updatedVault.OutstandingAumFee.Amount, "outstanding fee should be the 1,000,000 liability minus the marker's 100,000 of underlying liquidity collected in Case 2")
 
 		provlabsAddr, err := s.k.GetAUMFeeAddress(s.ctx)
 		s.Require().NoError(err, "failed to get AUM fee address")
@@ -303,18 +283,13 @@ func (s *TestSuite) TestKeeper_PerformVaultReconcile_CompositeWithOutstandingFee
 	})
 
 	s.Run("Case 3: Interest Accrual on Debted Assets (Verify Gross Logic)", func() {
-		// Vault has 1,000,000,000 underlying
-		// It OWES 500,000,000 underlying (Outstanding fee)
-		// But an additional 500,000,000 held asset is STILL in the marker (Gross = 1.5b)
 		outstanding := sdk.NewInt64Coin(underlyingDenom, 500_000_000)
 		markerLiquidity := sdk.NewCoins(
 			sdk.NewInt64Coin(underlyingDenom, 1_000_000_000),
 			sdk.NewInt64Coin(heldDenom, 500_000_000),
 		)
-		vault := setup(outstanding, markerLiquidity, nil)
+		vault := setupVaultWithHeldAssetAndOutstandingFee(outstanding, markerLiquidity, nil)
 
-		// Interest on 1.5b (Gross), not 1.0b (Net)
-		// 1,500,000,000 * (e^(0.25 * 5184000/31536000) - 1) = 62,928,020
 		expectedInterest := sdkmath.NewInt(62_928_020)
 
 		err := s.k.TestAccessor_reconcileVault(s.T(), s.ctx, vault)
@@ -330,43 +305,33 @@ func (s *TestSuite) TestKeeper_PerformVaultReconcile_CompositeWithOutstandingFee
 		}
 		s.Require().NotNil(reconcileEv, "EventVaultReconcile should be emitted in Case 3 (events: %v)", events)
 		s.Require().Equal("1500000000underlying", getAttribute(*reconcileEv, "principal_before"), "principal_before mismatch in Case 3")
-		s.Require().Equal(expectedInterest.String()+"underlying", getAttribute(*reconcileEv, "interest_earned"), "interest_earned mismatch in Case 3")
+		s.Require().Equal(expectedInterest.String()+"underlying", getAttribute(*reconcileEv, "interest_earned"), "interest_earned should accrue on gross TVV 1,500,000,000 (not net of the 500,000,000 fee debt) = 62,928,020 in Case 3")
 	})
 
 	s.Run("Case 4: Net Valuation for Share Pricing", func() {
 		outstanding := sdk.NewInt64Coin(underlyingDenom, 100_000_000)
 		markerLiquidity := sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1_000_000_000))
-		vault := setup(outstanding, markerLiquidity, nil)
-
-		// GROSS = 1,000,000,000
-		// NET = 1,000,000,000 - 100,000,000 = 900,000_000
+		vault := setupVaultWithHeldAssetAndOutstandingFee(outstanding, markerLiquidity, nil)
 
 		tvv, err := s.k.GetTVVInUnderlyingAsset(s.ctx, *vault)
 		s.Require().NoError(err, "failed to get TVV in underlying asset")
 		s.Require().Equal(sdkmath.NewInt(1_000_000_000), tvv, "GetTVV returns Gross")
 
-		// Valuation should return Net
-		// Interest on Gross (1b) = 41,952,013
-		// Fee on Updated Gross (1,041,952,013) = 256,919
-		// Debt = 100,000,000
-		// Net Valuation = (1,000,000,000 + 41,952,013) - 256,919 - 100,000,000 = 941,695,094
 		expectedNetValuation := sdkmath.NewInt(941_695_094)
 
 		val, err := s.k.CalculateVaultTotalAssets(s.ctx, vault, sdk.NewInt64Coin(underlyingDenom, 1_000_000_000))
 		s.Require().NoError(err, "CalculateVaultTotalAssets should not error for case: Net Valuation for Share Pricing")
-		s.Require().Equal(expectedNetValuation, val, "valuation should be Net of outstanding fees")
+		s.Require().Equal(expectedNetValuation, val, "valuation should be net of outstanding fees: gross 1,000,000,000 + interest 41,952,013 - fee 256,919 - debt 100,000,000 = 941,695,094")
 	})
 
 	s.Run("Case 5: Negative Interest with Liabilities", func() {
 		outstanding := sdk.NewInt64Coin(underlyingDenom, 100_000)
 		markerLiquidity := sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1_000_000_000))
-		vault := setup(outstanding, markerLiquidity, nil)
+		vault := setupVaultWithHeldAssetAndOutstandingFee(outstanding, markerLiquidity, nil)
 		vault.CurrentInterestRate = "-0.25"
 		vault.DesiredInterestRate = "-0.25"
 		s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
-		// Negative Interest on Gross (1,000,000,000)
-		// 1,000,000,000 * (e^(-0.25 * 5184000/31536000) - 1) = -40,262,904
 		expectedRefund := sdkmath.NewInt(40_262_904)
 
 		err := s.k.TestAccessor_reconcileVault(s.T(), s.ctx, vault)
@@ -381,10 +346,9 @@ func (s *TestSuite) TestKeeper_PerformVaultReconcile_CompositeWithOutstandingFee
 			}
 		}
 		s.Require().NotNil(reconcileEv, "EventVaultReconcile should be emitted in Case 5 (events: %v)", events)
-		s.Require().Equal(expectedRefund.Neg().String()+"underlying", getAttribute(*reconcileEv, "interest_earned"), "interest_earned mismatch in Case 5")
+		s.Require().Equal(expectedRefund.Neg().String()+"underlying", getAttribute(*reconcileEv, "interest_earned"), "interest_earned should be -0.25 on gross TVV 1,000,000,000 over 60 days = -40,262,904 in Case 5")
 
-		// Vault reserves should increase by refund
-		s.assertBalance(vaultAddress, underlyingDenom, sdkmath.NewInt(1_040_262_904))
+		s.assertBalance(vaultAddress, underlyingDenom, sdkmath.NewInt(1_000_000_000).Add(expectedRefund))
 	})
 }
 
@@ -411,12 +375,8 @@ func (s *TestSuite) TestKeeper_ReconcileLeavesUncollectedFee_PricesOffNetTVV() {
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), totalShares), "should mint share supply")
 
-	// Price the held asset 1:1 into the underlying via the internal NAV chain so it backs
-	// the vault's gross TVV.
 	s.setVaultNAV(vault, heldDenom, sdk.NewInt64Coin(underlyingDenom, 1), 1)
 
-	// Back the entire gross TVV with the held asset and leave the principal marker with no
-	// underlying balance, so the underlying-denominated fee cannot be collected.
 	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vault.PrincipalMarkerAddress(), sdk.NewCoins(
 		sdk.NewInt64Coin(heldDenom, 1_000_000_000),
 	)), "should fund principal marker with the held asset only, leaving no underlying liquidity to pay the fee")
@@ -471,7 +431,7 @@ func (s *TestSuite) TestKeeper_CalculateVaultTotalAssets() {
 	underlying := sdk.NewInt64Coin("underlying", 1_000_000_000)
 	vaultAddress := types.GetVaultAddress(shareDenom)
 	testBlockTime := time.Now()
-	pastTime := testBlockTime.Add(-60 * 24 * time.Hour) // ~2 months
+	pastTime := testBlockTime.Add(-60 * 24 * time.Hour)
 
 	setup := func(interestRate string, periodStartSeconds int64) *types.VaultAccount {
 		s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
@@ -749,12 +709,9 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 		expectedEvents sdk.Events
 	}{
 		{
-			name: "no vaults in store",
-			setup: func() {
-				// No setup needed, store is empty
-			},
+			name:  "no vaults in store",
+			setup: func() {},
 			postCheck: func() {
-				// No vaults to check
 				vaults, err := s.k.GetVaults(s.ctx)
 				s.Require().NoError(err, "no vaults: GetVaults should not error")
 				s.Require().Empty(vaults, "no vaults: vaults should be empty")
@@ -794,9 +751,7 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 		{
 			name: "two vaults reconciled, one payable, one depleted",
 			setup: func() {
-				// Vault 1: payable
 				createVaultWithInterest(s, v1, "0.1", testBlockTime.Unix(), testBlockTime.Unix(), true, true)
-				// Vault 2: depleted
 				createVaultWithInterest(s, v2, "0.1", testBlockTime.Unix(), testBlockTime.Unix(), false, true)
 			},
 			postCheck: func() {
@@ -821,7 +776,7 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 				s.k.AuthKeeper.SetAccount(s.ctx, vault)
 			},
 			postCheck: func() {
-				s.assertInPayoutVerificationQueue(v1.vaultAddr, true) // Should still be in the queue
+				s.assertInPayoutVerificationQueue(v1.vaultAddr, true)
 			},
 			expectErr:      false,
 			expectedEvents: sdk.Events{},
@@ -1331,12 +1286,12 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_Use
 	endVault := s.simApp.BankKeeper.GetBalance(s.ctx, vaultAddr, underlying.Denom).Amount
 	endMarker := s.simApp.BankKeeper.GetBalance(s.ctx, markerAddr, underlying.Denom).Amount
 
+	sixtyDayAumFee := sdkmath.NewInt(256_919)
 	expectedVault := startVault.Sub(interestEarned)
-	// Fee for 1,041,952,013 TVV for 60 days is 256,919.
-	expectedMarker := startMarker.Add(interestEarned).Sub(sdkmath.NewInt(256_919))
+	expectedMarker := startMarker.Add(interestEarned).Sub(sixtyDayAumFee)
 
 	s.Require().Equal(expectedVault, endVault, "vault reserves mismatch")
-	s.Require().Equal(sdkmath.NewInt(1_041_695_094), endMarker, "marker principal mismatch")
+	s.Require().Equal(sdkmath.NewInt(1_041_695_094), endMarker, "marker principal should be 1,000,000,000 plus interest 41,952,013 minus the 60-day AUM fee 256,919")
 
 	s.assertVaultAndMarkerBalances(
 		vaultAddr,
@@ -1457,14 +1412,12 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_Use
 	endMarkerUnderlying := s.simApp.BankKeeper.GetBalance(s.ctx, markerAddr, underlying.Denom).Amount
 	endMarkerHeld := s.simApp.BankKeeper.GetBalance(s.ctx, markerAddr, heldDenom).Amount
 
+	sixtyDayAumFee := sdkmath.NewInt(256_919)
 	expectedVault := startVault.Sub(interestEarned)
-	// Single-denom: the AUM fee is collected in the underlying asset, so the underlying marker
-	// balance rises by interest then falls by the fee, while the held asset is untouched.
-	// Fee: 1,041,952,013 * 0.0015 * 5,184,000 / 31,536,000 = 256,919
-	expectedMarkerUnderlying := startMarkerUnderlying.Add(interestEarned).Sub(sdkmath.NewInt(256_919))
+	expectedMarkerUnderlying := startMarkerUnderlying.Add(interestEarned).Sub(sixtyDayAumFee)
 
 	s.Require().Equal(expectedVault, endVault, "expected vault reserves to decrease by TVV-based interest")
-	s.Require().Equal(expectedMarkerUnderlying, endMarkerUnderlying, "expected marker underlying balance to rise by interest and fall by the AUM fee")
+	s.Require().Equal(expectedMarkerUnderlying, endMarkerUnderlying, "expected marker underlying balance to rise by interest and fall by the 15bps 60-day AUM fee of 256,919 on post-interest TVV")
 	s.Require().Equal(heldPortion, endMarkerHeld, "expected marker held-asset balance to be untouched by the underlying-denominated fee")
 
 	s.assertVaultAndMarkerBalances(
@@ -1495,7 +1448,6 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_Use
 			}
 
 			expectedPrincipalBefore := sdk.NewCoin(underlying.Denom, principalTvv)
-			// principal_after in EventVaultReconcile reflects state AFTER interest but BEFORE AUM fees.
 			expectedPrincipalAfter := expectedPrincipalBefore.Add(sdk.NewCoin(underlying.Denom, interestEarned))
 
 			s.Require().Equal(
@@ -1507,7 +1459,7 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_Use
 			s.Require().Equal(
 				expectedPrincipalAfter.String(),
 				principalAfterStr,
-				"expected principal_after to reflect TVV-based principal after transfer",
+				"expected principal_after to reflect TVV-based principal after interest but before AUM fees",
 			)
 
 			s.Require().Equal(
@@ -1635,9 +1587,6 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_NegativeInterest_Com
 	endHeld := s.simApp.BankKeeper.GetBalance(s.ctx, markerAddr, heldDenom)
 
 	s.Require().True(endUnderlying.IsZero(), "Underlying asset should be fully depleted by the capped negative interest")
-	// Single-denom: negative interest first depletes the marker's underlying balance to zero.
-	// The AUM fee is collected in the underlying, but with no underlying left it cannot be
-	// collected, so the held asset is untouched.
 	s.Require().Equal(hugeHeldBalance.Amount, endHeld.Amount, "Held asset should be untouched by the underlying-denominated fee once underlying is depleted")
 }
 
@@ -2017,10 +1966,6 @@ func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer() {
 			shareDenom := "fee.shares"
 			underlyingDenom := "uylds.fcc.receipt"
 			heldDenom := "uylds.fcc"
-			// The held asset supplies the bulk of gross TVV (priced 1:1 into the underlying),
-			// while the scarce underlying balance is the liquidity the underlying-denominated
-			// AUM fee is actually collected from. Gross TVV = held 1,000,000,000 + underlying
-			// initialLiquidity, matching aumSnapshot.
 			heldAmount := sdkmath.NewInt(1_000_000_000)
 			vaultAddr := types.GetVaultAddress(shareDenom)
 			now := s.ctx.BlockTime()
@@ -2042,14 +1987,12 @@ func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer() {
 			s.Require().NoError(err, "PerformVaultFeeTransfer should not error during initial collection")
 			s.Require().NoError(s.k.SetVaultAccount(s.ctx, vault), "SetVaultAccount should succeed after initial collection")
 
-			// Verify partial collection
 			provlabsAddr, err := s.k.GetAUMFeeAddress(s.ctx)
 			s.Require().NoError(err, "failed to get AUM fee address from GetAUMFeeAddress")
 
 			s.assertBalance(provlabsAddr, underlyingDenom, tc.expectedCollected)
 			s.Require().Equal(tc.expectedOutstanding, vault.OutstandingAumFee.Amount, "outstanding fee balance mismatch")
 
-			// Check event
 			events := normalizeEvents(s.ctx.EventManager().Events())
 			found := false
 			for _, ev := range events {
@@ -2065,7 +2008,7 @@ func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer() {
 						sdk.NewCoin(underlyingDenom, tc.expectedOutstanding),
 						int64(60*24*time.Hour/time.Second),
 					)
-					s.Assert().Equal(normalizeEvent(expectedEv), ev, "EventVaultFeeCollected mismatch")
+					s.Assert().Equal(normalizeEvent(expectedEv), ev, "EventVaultFeeCollected mismatch: aum snapshot should equal gross TVV (held 1,000,000,000 priced 1:1 plus underlying liquidity)")
 				}
 			}
 			s.Require().Equal(!tc.expectedFeeTotal.IsZero(), found, "EventVaultFeeCollected emission mismatch")
@@ -2074,7 +2017,6 @@ func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer() {
 				return
 			}
 
-			// Second collection
 			s.SetCtxBlockTime(now.Add(time.Second))
 			s.FundMarker(shareDenom, sdk.NewCoins(sdk.NewCoin(underlyingDenom, tc.secondLiquidity)))
 
@@ -2398,28 +2340,22 @@ func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts_RetryOnFailure() {
 
 	vault := s.CreateVaultWithParams(shareDenom, underlyingDenom)
 
-	// CreateVaultWithParams enqueues an initial timeout, we must remove it to have a clean test
-	s.Require().NoError(s.k.FeeTimeoutQueue.Dequeue(s.ctx, vault.FeePeriodTimeout, vaultAddr), "failed to dequeue vault from FeeTimeoutQueue")
+	s.Require().NoError(s.k.FeeTimeoutQueue.Dequeue(s.ctx, vault.FeePeriodTimeout, vaultAddr), "failed to dequeue the initial fee timeout enqueued by CreateVaultWithParams")
 
 	s.SetVaultRatesAndPeriod(vault, "0.0", "0.0", twoMonthsAgo.Unix(), twoMonthsAgo.Unix())
 
-	// Fund marker with some underlying so TVV is positive
 	s.FundMarker(shareDenom, sdk.NewCoins(underlying))
 
-	// Enqueue it
 	s.Require().NoError(s.k.FeeTimeoutQueue.Enqueue(s.ctx, twoMonthsAgo.Unix(), vaultAddr), "failed to enqueue vault in FeeTimeoutQueue")
 
-	// Trigger a transient error inside PerformVaultFeeTransfer: it calls GetTVVInUnderlyingAsset,
-	// which values held assets through the internal NAV chain. Seed an oversized NAV for the held
-	// denom and fund the principal with a balance that overflows the 256-bit SafeMul, so valuation
-	// (and thus the fee transfer) fails and the vault must be rescheduled without losing its period.
+	// An oversized held-asset NAV plus a nonzero balance overflows the 256-bit SafeMul during
+	// valuation, simulating a transient PerformVaultFeeTransfer failure.
 	s.seedOversizedNAV(vault, heldDenom, underlyingDenom, maxValidNAVPrice(), sdkmath.OneInt())
 	s.FundMarker(shareDenom, sdk.NewCoins(sdk.NewInt64Coin(heldDenom, 2)))
 
 	err := s.k.TestAccessor_handleVaultFeeTimeouts(s.T(), s.ctx)
 	s.Require().NoError(err, "handleVaultFeeTimeouts should not return error even if a vault fails")
 
-	// Verify the vault is RE-ENQUEUED with a NEW timeout because we don't continue on PerformVaultFeeTransfer failure
 	expectedTimeout := uint64(s.ctx.BlockTime().Unix() + keeper.AutoReconcileTimeout)
 	found := false
 	err = s.k.FeeTimeoutQueue.Walk(s.ctx, func(timeout uint64, addr sdk.AccAddress) (bool, error) {
@@ -2430,9 +2366,8 @@ func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts_RetryOnFailure() {
 		return false, nil
 	})
 	s.Require().NoError(err, "FeeTimeoutQueue.Walk returned unexpected error during retry verification")
-	s.Require().True(found, "vault should be in the fee timeout queue with new timeout")
+	s.Require().True(found, "vault should be re-enqueued in the fee timeout queue after the transient failure")
 
-	// Verify FeePeriodStart is preserved
 	updatedVault, err := s.k.GetVault(s.ctx, vaultAddr)
 	s.Require().NoError(err)
 	s.Require().Equal(twoMonthsAgo.Unix(), updatedVault.FeePeriodStart, "FeePeriodStart should be preserved on transient failure")
@@ -2452,22 +2387,17 @@ func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts_Success() {
 
 	vault := s.CreateVaultWithParams(shareDenom, underlyingDenom)
 
-	// CreateVaultWithParams enqueues an initial timeout, we must remove it to have a clean test
-	s.Require().NoError(s.k.FeeTimeoutQueue.Dequeue(s.ctx, vault.FeePeriodTimeout, vaultAddr), "failed to dequeue vault from FeeTimeoutQueue")
+	s.Require().NoError(s.k.FeeTimeoutQueue.Dequeue(s.ctx, vault.FeePeriodTimeout, vaultAddr), "failed to dequeue the initial fee timeout enqueued by CreateVaultWithParams")
 
 	s.SetVaultRatesAndPeriod(vault, "0.0", "0.0", twoMonthsAgo.Unix(), twoMonthsAgo.Unix())
 
-	// Fund marker with some underlying so TVV is positive and the fee is collectible
 	s.FundMarker(shareDenom, sdk.NewCoins(underlying))
 
-	// Enqueue it
 	s.Require().NoError(s.k.FeeTimeoutQueue.Enqueue(s.ctx, twoMonthsAgo.Unix(), vaultAddr), "failed to enqueue vault in FeeTimeoutQueue")
 
-	// Call handleVaultFeeTimeouts. The single-denom fee collects from the underlying balance.
 	err := s.k.TestAccessor_handleVaultFeeTimeouts(s.T(), s.ctx)
 	s.Require().NoError(err, "handleVaultFeeTimeouts should succeed")
 
-	// Verify the vault is DEQUEUED from old timeout and ENQUEUED with new timeout
 	foundOld := false
 	foundNew := false
 	err = s.k.FeeTimeoutQueue.Walk(s.ctx, func(timeout uint64, addr sdk.AccAddress) (bool, error) {
@@ -2501,31 +2431,25 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts_RetryOnFailure() {
 
 	vault := s.CreateVaultWithParams(shareDenom, underlyingDenom)
 
-	// CreateVaultWithParams enqueues an initial fee timeout, and also sets up the vault.
-	// We want to test interest timeouts, which use PayoutTimeoutQueue.
-
+	// The initial fee timeout from CreateVaultWithParams is left in place; this test exercises
+	// the interest PayoutTimeoutQueue.
 	s.SetVaultRatesAndPeriod(vault, "0.1", "0.1", twoMonthsAgo.Unix(), twoMonthsAgo.Unix())
 	vault.PeriodStart = twoMonthsAgo.Unix()
 	vault.PeriodTimeout = twoMonthsAgo.Unix()
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
-	// Fund marker with some underlying so TVV is positive
 	s.FundMarker(shareDenom, sdk.NewCoins(underlying))
 
-	// Enqueue it in PayoutTimeoutQueue
 	s.Require().NoError(s.k.PayoutTimeoutQueue.Enqueue(s.ctx, twoMonthsAgo.Unix(), vaultAddr), "failed to enqueue vault")
 
-	// Trigger a transient error inside CanPayInterestDuration: it calls GetTVVInUnderlyingAsset,
-	// which values held assets through the internal NAV chain. Seed an oversized NAV for the held
-	// denom and fund the principal with a balance that overflows the 256-bit SafeMul, so valuation
-	// fails. This simulates a transient error without making the VaultAccount itself invalid.
+	// An oversized held-asset NAV plus a nonzero balance overflows the 256-bit SafeMul during
+	// valuation, simulating a transient failure without making the VaultAccount itself invalid.
 	s.seedOversizedNAV(vault, heldDenom, underlyingDenom, maxValidNAVPrice(), sdkmath.OneInt())
 	s.FundMarker(shareDenom, sdk.NewCoins(sdk.NewInt64Coin(heldDenom, 2)))
 
 	err := s.k.TestAccessor_handleVaultInterestTimeouts(s.T(), s.ctx)
 	s.Require().NoError(err, "handleVaultInterestTimeouts should not return error")
 
-	// Verify the vault is RE-ENQUEUED with a NEW timeout because we reschedule on failure
 	expectedTimeout := uint64(s.ctx.BlockTime().Unix() + keeper.AutoReconcileTimeout)
 	found := false
 	err = s.k.PayoutTimeoutQueue.Walk(s.ctx, func(timeout uint64, addr sdk.AccAddress) (bool, error) {
@@ -2536,9 +2460,8 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts_RetryOnFailure() {
 		return false, nil
 	})
 	s.Require().NoError(err, "PayoutTimeoutQueue.Walk returned unexpected error during retry verification")
-	s.Require().True(found, "vault should be in the interest timeout queue with new timeout")
+	s.Require().True(found, "vault should be re-enqueued in the interest timeout queue after the transient failure")
 
-	// Verify PeriodStart is preserved
 	updatedVault, err := s.k.GetVault(s.ctx, vaultAddr)
 	s.Require().NoError(err)
 	s.Require().Equal(twoMonthsAgo.Unix(), updatedVault.PeriodStart, "PeriodStart should be preserved on transient failure")
@@ -2551,24 +2474,19 @@ func (s *TestSuite) TestReconcileVault_BootstrapFeePeriod() {
 	testBlockTime := time.Now()
 	periodStart := testBlockTime.Add(-1 * time.Hour).Unix()
 
-	// Setup vault with PeriodStart set but FeePeriodStart = 0
 	vaultAddr, vault := s.setupReconcileVault("0.25", periodStart, false, underlying, shareDenom, totalShares, testBlockTime)
 
-	// Manually set FeePeriodStart to 0 to simulate the bug scenario
 	vault.FeePeriodStart = 0
 	vault.FeePeriodTimeout = 0
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
-	// Verify initial state
 	v, err := s.k.GetVault(s.ctx, vaultAddr)
 	s.Require().NoError(err)
 	s.Require().Equal(int64(0), v.FeePeriodStart, "FeePeriodStart should be 0 initially")
 
-	// Call reconcileVault
 	err = s.k.TestAccessor_reconcileVault(s.T(), s.ctx, v)
 	s.Require().NoError(err)
 
-	// Verify FeePeriodStart is bootstrapped (should be equal to current block time)
 	v, err = s.k.GetVault(s.ctx, vaultAddr)
 	s.Require().NoError(err)
 	s.Require().NotEqual(int64(0), v.FeePeriodStart, "FeePeriodStart should have been bootstrapped")

@@ -251,7 +251,7 @@ func (s *TestSuite) TestSwapOut_RedeemsInUnderlying() {
 	initialShares := utils.ShareScalar.MulRaw(100)
 	vault := s.setupBaseVault(underlyingDenom, shareDenom)
 	vault.SwapOutEnabled = true
-	vault.WithdrawalDelaySeconds = 0 // Set to zero for instant processing in the same block's endblocker
+	vault.WithdrawalDelaySeconds = 0
 	vault.TotalShares = sdk.NewCoin(shareDenom, initialShares)
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 	redeemerAddr := s.CreateAndFundAccount(sdk.NewCoin(shareDenom, initialShares))
@@ -366,7 +366,7 @@ func (s *TestSuite) TestSwapOut_FailsWithRestrictedUnderlyingAssetNoAttributes()
 	s.Require().NoError(err, "should fetch active marker")
 	activeMarker := marker.(*markertypes.MarkerAccount)
 
-	// Now REMOVE the transfer permission from the vault to test the "fail-on-no-attributes" path
+	// Remove the vault's transfer permission to exercise the fail-on-no-attributes path.
 	activeMarker.AccessControl = []markertypes.AccessGrant{
 		{Address: s.adminAddr.String(), Permissions: markertypes.AccessList{markertypes.Access_Mint, markertypes.Access_Admin, markertypes.Access_Withdraw, markertypes.Access_Burn, markertypes.Access_Transfer}},
 		{Address: s.EnsureTechFeeAccount().String(), Permissions: markertypes.AccessList{markertypes.Access_Transfer, markertypes.Access_Deposit}},
@@ -471,7 +471,7 @@ func (s *TestSuite) TestSwapOut_SucceedsWithRestrictedUnderlyingAssetRequiredAtt
 	vault, err := s.k.CreateVault(s.ctx, vaultCfg)
 	s.Require().NoError(err, "vault creation with restricted underlying should succeed")
 	vault.SwapOutEnabled = true
-	vault.WithdrawalDelaySeconds = 0 // Set to zero for same-block processing
+	vault.WithdrawalDelaySeconds = 0
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 	initialTVV := int64(500)

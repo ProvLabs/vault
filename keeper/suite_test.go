@@ -337,11 +337,13 @@ type acceptAssetScenario struct {
 	sourceAmount  sdk.Coins       // payment source leg
 	targetAmount  sdk.Coins       // payment target leg
 	externalID    string
+	omitPayment   bool // skip staging the payment; the test stages its own or exercises a missing payment
 }
 
 // setupAcceptAssetScenario builds the common AcceptAsset test fixture: an asset-settlement
 // vault, the optional asset marker and seeded NAV, a funded source account (which always
-// carries a stake coin) and principal, and a staged payment from the source to the vault.
+// carries a stake coin) and principal, and a staged payment from the source to the vault
+// (unless omitPayment is set).
 // It returns the vault, its principal marker address, and the payment source address.
 func (s *TestSuite) setupAcceptAssetScenario(sc acceptAssetScenario) (*types.VaultAccount, sdk.AccAddress, sdk.AccAddress) {
 	vault, principalAddr := s.setupAssetSettlementVault(sc.underlying, sc.share)
@@ -364,7 +366,9 @@ func (s *TestSuite) setupAcceptAssetScenario(sc acceptAssetScenario) (*types.Vau
 		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sc.fundPrincipal), "failed to fund principal with %s", sc.fundPrincipal)
 	}
 
-	s.createPayment(source, vault.GetAddress(), sc.sourceAmount, sc.targetAmount, sc.externalID)
+	if !sc.omitPayment {
+		s.createPayment(source, vault.GetAddress(), sc.sourceAmount, sc.targetAmount, sc.externalID)
+	}
 	return vault, principalAddr, source
 }
 

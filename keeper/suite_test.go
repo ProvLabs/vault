@@ -1032,6 +1032,7 @@ func makeGenesisVaultAccount(shareDenom, underlying, admin string) types.VaultAc
 		PaymentDenom:        underlying,
 		CurrentInterestRate: types.ZeroInterestRate,
 		DesiredInterestRate: types.ZeroInterestRate,
+		OutstandingAumFee:   sdk.NewInt64Coin(underlying, 0),
 	}
 }
 

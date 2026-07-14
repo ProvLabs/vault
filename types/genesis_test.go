@@ -24,6 +24,7 @@ func TestGenesisState_Validate(t *testing.T) {
 		TotalShares:         sdk.NewInt64Coin("share", 0),
 		CurrentInterestRate: types.ZeroInterestRate,
 		DesiredInterestRate: types.ZeroInterestRate,
+		OutstandingAumFee:   sdk.NewInt64Coin("under", 0),
 	}
 
 	tests := []struct {

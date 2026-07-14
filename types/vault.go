@@ -285,10 +285,13 @@ func (v VaultAccount) Validate() error {
 		return fmt.Errorf("AUM fee bips cannot exceed 10,000: %d", v.AumFeeBips)
 	}
 
-	if !v.OutstandingAumFee.Amount.IsNil() && v.OutstandingAumFee.IsNegative() {
+	if v.OutstandingAumFee.Amount.IsNil() {
+		return fmt.Errorf("outstanding AUM fee amount cannot be nil; use a zero coin of the underlying asset %q", v.UnderlyingAsset)
+	}
+	if v.OutstandingAumFee.IsNegative() {
 		return fmt.Errorf("outstanding AUM fee cannot be negative: %s", v.OutstandingAumFee)
 	}
-	if (v.OutstandingAumFee.Denom != "" || (!v.OutstandingAumFee.Amount.IsNil() && !v.OutstandingAumFee.Amount.IsZero())) && v.OutstandingAumFee.Denom != v.UnderlyingAsset {
+	if (v.OutstandingAumFee.Denom != "" || !v.OutstandingAumFee.Amount.IsZero()) && v.OutstandingAumFee.Denom != v.UnderlyingAsset {
 		return fmt.Errorf("outstanding AUM fee denom %s does not match underlying asset %s", v.OutstandingAumFee.Denom, v.UnderlyingAsset)
 	}
 

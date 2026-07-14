@@ -624,6 +624,20 @@ func TestVaultAccount_Validate(t *testing.T) {
 			expectedErr: "outstanding AUM fee cannot be negative",
 		},
 		{
+			name: "outstanding AUM fee with nil amount is rejected before it can panic consensus math",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
+				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
+				CurrentInterestRate: "0.0",
+				DesiredInterestRate: "0.0",
+				OutstandingAumFee:   sdk.Coin{},
+			},
+			expectedErr: "outstanding AUM fee amount cannot be nil; use a zero coin of the underlying asset \"uusd\"",
+		},
+		{
 			name: "non-zero outstanding AUM fee with empty denom",
 			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
@@ -647,6 +661,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 				PaymentDenom:        "uusd",
 				CurrentInterestRate: "0.0",
 				DesiredInterestRate: "0.0",
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
 				MinSwapInValue:      "abc",
 			},
 			expectedErr: "failed to validate swap-in limits: invalid min value: abc",
@@ -661,6 +676,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 				PaymentDenom:        "uusd",
 				CurrentInterestRate: "0.0",
 				DesiredInterestRate: "0.0",
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
 				MinSwapOutValue:     "1000",
 				MaxSwapOutValue:     "500",
 			},

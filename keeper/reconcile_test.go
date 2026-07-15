@@ -727,7 +727,7 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 		s.Run(tc.name, func() {
 			s.SetupTest()
 			tc.setup()
-			err := s.k.TestAccessor_handleVaultInterestTimeouts(s.T(), s.ctx)
+			err := s.k.TestAccessor_handleVaultInterestTimeouts(s.T(), s.ctx, keeper.MaxInterestTimeoutsPerBlock)
 			s.Require().NoError(err, "test case %s: handleVaultInterestTimeouts should not error", tc.name)
 			if tc.expectRate != "" {
 				vault, err := s.k.GetVault(s.ctx, vaultAddr)
@@ -862,7 +862,7 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 			}
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 
-			err := s.k.TestAccessor_handleReconciledVaults(s.T(), s.ctx)
+			err := s.k.TestAccessor_handleReconciledVaults(s.T(), s.ctx, keeper.MaxPayoutVerificationsPerBlock)
 
 			if tc.expectErr {
 				s.Require().Error(err, "test case %s: expected error from handleReconciledVaults", tc.name)
@@ -2237,7 +2237,7 @@ func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts() {
 
 	s.Require().NoError(s.k.FeeTimeoutQueue.Enqueue(s.ctx, twoMonthsAgo.Unix(), vaultAddr), "failed to enqueue vault in FeeTimeoutQueue")
 
-	err := s.k.TestAccessor_handleVaultFeeTimeouts(s.T(), s.ctx)
+	err := s.k.TestAccessor_handleVaultFeeTimeouts(s.T(), s.ctx, keeper.MaxFeeTimeoutsPerBlock)
 	s.Require().NoError(err, "handleVaultFeeTimeouts should succeed")
 
 	provlabsAddr, err := s.k.GetAUMFeeAddress(s.ctx)
@@ -2555,7 +2555,7 @@ func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts_RetryOnFailure() {
 	// We don't fund the marker with 'other' denom here because that would make GetTVVInUnderlyingAsset fail.
 	// Instead, we rely on the missing NAV for 'other' during fee payment conversion in PerformVaultFeeTransfer.
 
-	err := s.k.TestAccessor_handleVaultFeeTimeouts(s.T(), s.ctx)
+	err := s.k.TestAccessor_handleVaultFeeTimeouts(s.T(), s.ctx, keeper.MaxFeeTimeoutsPerBlock)
 	s.Require().NoError(err, "handleVaultFeeTimeouts should not return error even if a vault fails")
 
 	// Verify the vault is RE-ENQUEUED with a NEW timeout because we don't continue on PerformVaultFeeTransfer failure
@@ -2605,7 +2605,7 @@ func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts_Success() {
 	s.Require().NoError(s.k.FeeTimeoutQueue.Enqueue(s.ctx, twoMonthsAgo.Unix(), vaultAddr), "failed to enqueue vault in FeeTimeoutQueue")
 
 	// Call handleVaultFeeTimeouts. Success this time (uylds.fcc doesn't need NAV)
-	err := s.k.TestAccessor_handleVaultFeeTimeouts(s.T(), s.ctx)
+	err := s.k.TestAccessor_handleVaultFeeTimeouts(s.T(), s.ctx, keeper.MaxFeeTimeoutsPerBlock)
 	s.Require().NoError(err, "handleVaultFeeTimeouts should succeed")
 
 	// Verify the vault is DEQUEUED from old timeout and ENQUEUED with new timeout
@@ -2665,7 +2665,7 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts_RetryOnFailure() {
 	// This simulates a transient error without making the VaultAccount itself invalid.
 	s.FundMarker(shareDenom, sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 1000)))
 
-	err := s.k.TestAccessor_handleVaultInterestTimeouts(s.T(), s.ctx)
+	err := s.k.TestAccessor_handleVaultInterestTimeouts(s.T(), s.ctx, keeper.MaxInterestTimeoutsPerBlock)
 	s.Require().NoError(err, "handleVaultInterestTimeouts should not return error")
 
 	// Verify the vault is RE-ENQUEUED with a NEW timeout because we reschedule on failure
@@ -2716,4 +2716,236 @@ func (s *TestSuite) TestReconcileVault_BootstrapFeePeriod() {
 	s.Require().NoError(err)
 	s.Require().NotEqual(int64(0), v.FeePeriodStart, "FeePeriodStart should have been bootstrapped")
 	s.Require().Equal(testBlockTime.Unix(), v.FeePeriodStart, "FeePeriodStart should be set to current block time")
+}
+
+// createVaultWithDueInterestTimeout creates a funded vault with a due PayoutTimeoutQueue
+// entry at dueTime, optionally paused, for exercising the per-block visit budget.
+func (s *TestSuite) createVaultWithDueInterestTimeout(info VaultInfo, dueTime int64, paused bool) {
+	s.requireAddFinalizeAndActivateMarker(info.underlying, s.adminAddr)
+	_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+		Admin:           s.adminAddr.String(),
+		ShareDenom:      info.shareDenom,
+		UnderlyingAsset: info.underlying.Denom,
+	})
+	s.Require().NoError(err, "CreateVault should not error for share denom %s", info.shareDenom)
+
+	vault, err := s.k.GetVault(s.ctx, info.vaultAddr)
+	s.Require().NoError(err, "GetVault should not error for vault %s", info.vaultAddr)
+	vault.CurrentInterestRate = "0.1"
+	vault.DesiredInterestRate = "0.1"
+	vault.PeriodStart = dueTime
+	vault.PeriodTimeout = dueTime
+	vault.Paused = paused
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	s.Require().NoError(
+		FundAccount(s.ctx, s.simApp.BankKeeper, info.vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(info.underlying.Denom, 1_000_000))),
+		"funding reserves should not error for vault %s", info.vaultAddr,
+	)
+	s.Require().NoError(
+		FundAccount(s.ctx, s.simApp.BankKeeper, markertypes.MustGetMarkerAddress(info.shareDenom), sdk.NewCoins(info.underlying)),
+		"funding principal should not error for marker %s", info.shareDenom,
+	)
+	s.Require().NoError(
+		s.k.PayoutTimeoutQueue.Enqueue(s.ctx, dueTime, info.vaultAddr),
+		"enqueuing due payout timeout should not error for vault %s", info.vaultAddr,
+	)
+}
+
+func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts_PerBlockVisitBudget() {
+	testBlockTime := time.Now().UTC()
+	dueTime := testBlockTime.Add(-1 * time.Hour).Unix()
+	infos := []VaultInfo{NewVaultInfo(1), NewVaultInfo(2), NewVaultInfo(3)}
+
+	tests := []struct {
+		name                string
+		limit               int
+		expectedDuePerBlock []int
+	}{
+		{
+			name:                "zero budget visits nothing and leaves the backlog due",
+			limit:               0,
+			expectedDuePerBlock: []int{3, 3},
+		},
+		{
+			name:                "budget smaller than backlog drains it across blocks",
+			limit:               2,
+			expectedDuePerBlock: []int{1, 0},
+		},
+		{
+			name:                "budget larger than backlog drains it in one block",
+			limit:               keeper.MaxInterestTimeoutsPerBlock,
+			expectedDuePerBlock: []int{0, 0},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			s.ctx = s.ctx.WithBlockTime(testBlockTime)
+			for _, info := range infos {
+				s.createVaultWithDueInterestTimeout(info, dueTime, false)
+			}
+
+			for block, expectedDue := range tc.expectedDuePerBlock {
+				err := s.k.TestAccessor_handleVaultInterestTimeouts(s.T(), s.ctx, tc.limit)
+				s.Require().NoError(err, "handleVaultInterestTimeouts should not error on pass %d with limit %d", block+1, tc.limit)
+				s.Require().Equal(
+					expectedDue, s.countDuePayoutTimeouts(testBlockTime.Unix()),
+					"due interest timeout backlog mismatch after pass %d with limit %d", block+1, tc.limit,
+				)
+			}
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts_PausedVaultsConsumeVisitBudget() {
+	testBlockTime := time.Now().UTC()
+	pausedDueTime := testBlockTime.Add(-2 * time.Hour).Unix()
+	activeDueTime := testBlockTime.Add(-1 * time.Hour).Unix()
+	pausedInfos := []VaultInfo{NewVaultInfo(1), NewVaultInfo(2)}
+	activeInfo := NewVaultInfo(3)
+
+	tests := []struct {
+		name        string
+		limit       int
+		expectedDue int
+	}{
+		{
+			name:        "budget filled by paused vaults at the queue front starves the active vault",
+			limit:       2,
+			expectedDue: 3,
+		},
+		{
+			name:        "budget larger than the paused front reaches and processes the active vault",
+			limit:       3,
+			expectedDue: 2,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			s.ctx = s.ctx.WithBlockTime(testBlockTime)
+			for _, info := range pausedInfos {
+				s.createVaultWithDueInterestTimeout(info, pausedDueTime, true)
+			}
+			s.createVaultWithDueInterestTimeout(activeInfo, activeDueTime, false)
+
+			err := s.k.TestAccessor_handleVaultInterestTimeouts(s.T(), s.ctx, tc.limit)
+			s.Require().NoError(err, "handleVaultInterestTimeouts should not error with limit %d", tc.limit)
+			s.Require().Equal(
+				tc.expectedDue, s.countDuePayoutTimeouts(testBlockTime.Unix()),
+				"due backlog mismatch with limit %d: paused entries stay queued and count against the budget", tc.limit,
+			)
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts_PerBlockVisitBudget() {
+	underlyingDenom := "underlying"
+	paymentDenom := "uylds.fcc"
+	underlying := sdk.NewInt64Coin(underlyingDenom, 1_000_000_000)
+
+	enqueueDueFeeTimeout := func(shareDenom string, dueTime int64) {
+		vault := s.CreateVaultWithParams(shareDenom, underlyingDenom, paymentDenom)
+		s.SetVaultRatesAndPeriod(vault, "0.0", "0.0", dueTime, dueTime)
+		s.setVaultNAV(vault, paymentDenom, sdk.NewInt64Coin(underlyingDenom, 1), 1)
+		s.FundMarker(shareDenom, sdk.NewCoins(underlying, sdk.NewInt64Coin(paymentDenom, 10_000_000)))
+		s.Require().NoError(
+			s.k.FeeTimeoutQueue.Enqueue(s.ctx, dueTime, vault.GetAddress()),
+			"enqueuing due fee timeout should not error for vault %s", vault.GetAddress(),
+		)
+	}
+
+	tests := []struct {
+		name                string
+		limit               int
+		expectedDuePerBlock []int
+	}{
+		{
+			name:                "zero budget visits nothing and leaves the backlog due",
+			limit:               0,
+			expectedDuePerBlock: []int{3, 3},
+		},
+		{
+			name:                "budget smaller than backlog drains it across blocks",
+			limit:               2,
+			expectedDuePerBlock: []int{1, 0},
+		},
+		{
+			name:                "budget larger than backlog drains it in one block",
+			limit:               keeper.MaxFeeTimeoutsPerBlock,
+			expectedDuePerBlock: []int{0, 0},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			now := s.ctx.BlockTime()
+			dueTime := now.Add(-60 * 24 * time.Hour).Unix()
+
+			s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
+			s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(paymentDenom, 1_000_000_000), s.adminAddr)
+			for i := 1; i <= 3; i++ {
+				enqueueDueFeeTimeout(fmt.Sprintf("feebudgetshares%d", i), dueTime)
+			}
+
+			for block, expectedDue := range tc.expectedDuePerBlock {
+				err := s.k.TestAccessor_handleVaultFeeTimeouts(s.T(), s.ctx, tc.limit)
+				s.Require().NoError(err, "handleVaultFeeTimeouts should not error on pass %d with limit %d", block+1, tc.limit)
+				s.Require().Equal(
+					expectedDue, s.countDueFeeTimeouts(now.Unix()),
+					"due fee timeout backlog mismatch after pass %d with limit %d", block+1, tc.limit,
+				)
+			}
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_HandleReconciledVaults_PerBlockVisitBudget() {
+	testBlockTime := time.Now().UTC().Truncate(time.Second)
+	infos := []VaultInfo{NewVaultInfo(1), NewVaultInfo(2), NewVaultInfo(3)}
+
+	tests := []struct {
+		name                string
+		limit               int
+		expectedSetPerBlock []int
+	}{
+		{
+			name:                "zero budget visits nothing and leaves the set untouched",
+			limit:               0,
+			expectedSetPerBlock: []int{3, 3},
+		},
+		{
+			name:                "budget smaller than backlog drains the set across blocks",
+			limit:               2,
+			expectedSetPerBlock: []int{1, 0},
+		},
+		{
+			name:                "budget larger than backlog drains the set in one block",
+			limit:               keeper.MaxPayoutVerificationsPerBlock,
+			expectedSetPerBlock: []int{0, 0},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			s.ctx = s.ctx.WithBlockTime(testBlockTime)
+			for _, info := range infos {
+				createVaultWithInterest(s, info, "0.1", testBlockTime.Unix(), testBlockTime.Unix(), true, true)
+			}
+
+			for block, expectedRemaining := range tc.expectedSetPerBlock {
+				err := s.k.TestAccessor_handleReconciledVaults(s.T(), s.ctx, tc.limit)
+				s.Require().NoError(err, "handleReconciledVaults should not error on pass %d with limit %d", block+1, tc.limit)
+				s.Require().Equal(
+					expectedRemaining, s.countPayoutVerificationEntries(),
+					"payout verification set backlog mismatch after pass %d with limit %d", block+1, tc.limit,
+				)
+			}
+		})
+	}
 }

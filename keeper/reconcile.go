@@ -534,19 +534,24 @@ func (k Keeper) CalculateVaultTotalAssets(ctx sdk.Context, vault *types.VaultAcc
 
 // handleVaultInterestTimeouts checks vaults with expired interest periods and reconciles or disables them.
 // It uses a safe "collect-then-mutate" pattern to comply with the SDK iterator contract.
-func (k Keeper) handleVaultInterestTimeouts(ctx sdk.Context) error {
+// At most limit due entries are visited per block; the remainder stays queued for later blocks.
+func (k Keeper) handleVaultInterestTimeouts(ctx sdk.Context, limit int) error {
 	now := ctx.BlockTime().Unix()
 
 	var keysToProcess []collections.Pair[uint64, sdk.AccAddress]
 	var depleted []*types.VaultAccount
 
+	visited := 0
 	err := k.PayoutTimeoutQueue.WalkDue(ctx, now, func(timeout uint64, addr sdk.AccAddress) (bool, error) {
-		key := collections.Join(timeout, addr)
+		if visited == limit {
+			return true, nil
+		}
+		visited++
 		vault, ok := k.tryGetVault(ctx, addr)
 		if ok && vault.Paused {
 			return false, nil
 		}
-		keysToProcess = append(keysToProcess, key)
+		keysToProcess = append(keysToProcess, collections.Join(timeout, addr))
 		return false, nil
 	})
 	if err != nil {
@@ -644,13 +649,19 @@ func (k Keeper) tryGetVault(ctx sdk.Context, addr sdk.AccAddress) (*types.VaultA
 // handleReconciledVaults processes vaults from the payout verification queue using a safe
 // "collect-then-mutate" pattern.
 //
-// It first collects keys for all non-paused vaults. It then iterates the collected keys, removing
-// each from the set before partitioning them into payable vs depleted groups.
-func (k Keeper) handleReconciledVaults(ctx sdk.Context) error {
+// It first collects keys for non-paused vaults, visiting at most limit entries per block and
+// leaving the remainder in the set for later blocks. It then iterates the collected keys,
+// removing each from the set before partitioning them into payable vs depleted groups.
+func (k Keeper) handleReconciledVaults(ctx sdk.Context, limit int) error {
 	var keysToProcess []sdk.AccAddress
 	var vaultsToProcess []*types.VaultAccount
 
+	visited := 0
 	err := k.PayoutVerificationSet.Walk(ctx, nil, func(addr sdk.AccAddress) (bool, error) {
+		if visited == limit {
+			return true, nil
+		}
+		visited++
 		v, ok := k.tryGetVault(ctx, addr)
 		if ok && v.Paused {
 			return false, nil
@@ -722,18 +733,23 @@ func (k Keeper) handleDepletedVaults(ctx sdk.Context, failedPayouts []*types.Vau
 
 // handleVaultFeeTimeouts checks vaults with expired fee periods and reconciles them.
 // It uses a safe "collect-then-mutate" pattern to comply with the SDK iterator contract.
-func (k Keeper) handleVaultFeeTimeouts(ctx sdk.Context) error {
+// At most limit due entries are visited per block; the remainder stays queued for later blocks.
+func (k Keeper) handleVaultFeeTimeouts(ctx sdk.Context, limit int) error {
 	now := ctx.BlockTime().Unix()
 
 	var keysToProcess []collections.Pair[uint64, sdk.AccAddress]
 
+	visited := 0
 	err := k.FeeTimeoutQueue.WalkDue(ctx, now, func(timeout uint64, addr sdk.AccAddress) (bool, error) {
-		key := collections.Join(timeout, addr)
+		if visited == limit {
+			return true, nil
+		}
+		visited++
 		vault, ok := k.tryGetVault(ctx, addr)
 		if ok && vault.Paused {
 			return false, nil
 		}
-		keysToProcess = append(keysToProcess, key)
+		keysToProcess = append(keysToProcess, collections.Join(timeout, addr))
 		return false, nil
 	})
 	if err != nil {

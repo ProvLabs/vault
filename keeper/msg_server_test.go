@@ -663,9 +663,11 @@ func (s *TestSuite) TestMsgServer_SwapOut() {
 		name               string
 		burnSharesScaled   int64
 		expectedUnderlying int64
+		redeemDenom        string
 	}{
-		{"swap out 30 shares -> queues withdrawal for 30 underlying", 30_000_000, 30},
-		{"swap out 100 shares -> queues withdrawal for 100 underlying", 100_000_000, 100},
+		{"swap out 30 shares -> queues withdrawal for 30 underlying", 30_000_000, 30, ""},
+		{"swap out 100 shares -> queues withdrawal for 100 underlying", 100_000_000, 100, ""},
+		{"deprecated redeem denom equal to underlying still queues withdrawal", 30_000_000, 30, underlyingDenom},
 	}
 
 	for _, tc := range testCases {
@@ -678,6 +680,7 @@ func (s *TestSuite) TestMsgServer_SwapOut() {
 				Owner:        ownerAddr.String(),
 				VaultAddress: vaultAddr.String(),
 				Assets:       escrowedShares,
+				RedeemDenom:  tc.redeemDenom,
 			}
 
 			args := postCheckArgs{
@@ -804,6 +807,17 @@ func (s *TestSuite) TestMsgServer_SwapOut_Failures() {
 				Assets:       sdk.NewInt64Coin(shareDenom, 150_000_000),
 			},
 			expectedErrSubstrs: []string{"vault", "is paused"},
+		},
+		{
+			name:  "deprecated redeem denom different from underlying is rejected",
+			setup: setup(true, false, "", ""),
+			msg: types.MsgSwapOutRequest{
+				Owner:        owner.String(),
+				VaultAddress: vaultAddr.String(),
+				Assets:       sdk.NewInt64Coin(shareDenom, 50_000_000),
+				RedeemDenom:  "otherdenom",
+			},
+			expectedErrSubstrs: []string{"redeem denom is deprecated", underlyingDenom, "otherdenom"},
 		},
 		{
 			name:  "swap out disabled is rejected",

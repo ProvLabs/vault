@@ -90,6 +90,19 @@ func (k msgServer) SwapOut(goCtx context.Context, msg *types.MsgSwapOutRequest) 
 	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
 	ownerAddr := sdk.MustAccAddressFromBech32(msg.Owner)
 
+	if msg.RedeemDenom != "" {
+		vault, err := k.GetVault(ctx, vaultAddr)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get vault: %w", err)
+		}
+		if vault == nil {
+			return nil, fmt.Errorf("vault with address %v not found", msg.VaultAddress)
+		}
+		if msg.RedeemDenom != vault.UnderlyingAsset {
+			return nil, fmt.Errorf("redeem denom is deprecated: the payout is always the underlying asset %q, got %q", vault.UnderlyingAsset, msg.RedeemDenom)
+		}
+	}
+
 	requestID, err := k.Keeper.SwapOut(ctx, vaultAddr, ownerAddr, msg.Assets)
 	if err != nil {
 		return nil, fmt.Errorf("failed to swap out: %w", err)

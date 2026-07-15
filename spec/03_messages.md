@@ -98,9 +98,8 @@ The creator is recorded as vault admin.
 * **Request:** `MsgCreateVaultRequest { admin, share_denom, underlying_asset, withdrawal_delay_seconds, min_swap_in_value?, min_swap_out_value?, max_swap_in_value?, max_swap_out_value? }`
 * **Response:** `MsgCreateVaultResponse {}`
 
-> **Removed:** the never-released mixed-denom creation inputs `payment_denom` and
-> `initial_payment_nav` (`InitialVaultNAV`) have been removed from the request and their field
-> numbers reserved.
+> **Deprecated:** `payment_denom` is deprecated but retained on the wire for compatibility with
+> released clients; if set, it must equal `underlying_asset` or the message is rejected.
 
 ---
 
@@ -131,8 +130,9 @@ Swap-outs are queued with respect to `withdrawal_delay_seconds`.
 * **Request:** `MsgSwapOutRequest { owner, vault_address, assets (shares) }`
 * **Response:** `MsgSwapOutResponse { request_id }`
 
-> **Removed:** the never-released `redeem_denom` payout choice has been removed from the request
-> and its field number reserved; payouts are always the underlying asset.
+> **Deprecated:** `redeem_denom` no longer selects the payout coin; payouts are always the
+> underlying asset. The field is retained on the wire for compatibility with released clients —
+> if set, it must equal the vault's `underlying_asset` or the message is rejected.
 
 ---
 

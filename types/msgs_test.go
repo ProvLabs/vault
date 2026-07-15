@@ -95,6 +95,26 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 			expectedErr: fmt.Errorf("share denom (%q) cannot equal underlying asset denom (%q)", "uusd", "uusd"),
 		},
 		{
+			name: "deprecated payment denom equal to underlying is allowed",
+			msg: types.MsgCreateVaultRequest{
+				Admin:           admin,
+				ShareDenom:      "vaultshare",
+				UnderlyingAsset: "uusd",
+				PaymentDenom:    "uusd",
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "deprecated payment denom different from underlying (not allowed)",
+			msg: types.MsgCreateVaultRequest{
+				Admin:           admin,
+				ShareDenom:      "vaultshare",
+				UnderlyingAsset: "uusd",
+				PaymentDenom:    "ylds",
+			},
+			expectedErr: fmt.Errorf("payment denom is deprecated: vaults are single-denom, so payment denom (%q) must be empty or equal underlying asset (%q)", "ylds", "uusd"),
+		},
+		{
 			name: "swap out delay over two years (not allowed)",
 			msg: types.MsgCreateVaultRequest{
 				Admin:                  admin,
@@ -435,6 +455,26 @@ func TestMsgSwapOutRequest_ValidateBasic(t *testing.T) {
 				Assets:       sdk.NewInt64Coin("uusd", 0),
 			},
 			expectedErr: fmt.Errorf("invalid amount: assets %s must be greater than zero", "uusd"),
+		},
+		{
+			name: "deprecated redeem denom with valid format is allowed",
+			msg: types.MsgSwapOutRequest{
+				Owner:        owner,
+				VaultAddress: vault,
+				Assets:       sdk.NewInt64Coin("uusd", 100),
+				RedeemDenom:  "uusd",
+			},
+			expectedErr: nil,
+		},
+		{
+			name: "deprecated redeem denom with invalid format (not allowed)",
+			msg: types.MsgSwapOutRequest{
+				Owner:        owner,
+				VaultAddress: vault,
+				Assets:       sdk.NewInt64Coin("uusd", 100),
+				RedeemDenom:  "inv@lid$",
+			},
+			expectedErr: fmt.Errorf("invalid redeem denom: %w", fmt.Errorf("invalid denom: %s", "inv@lid$")),
 		},
 	}
 

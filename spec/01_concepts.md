@@ -9,13 +9,14 @@ Total share supply is tracked on the vault as **total_shares**, the authoritativ
 > **Deprecation notice:** The mixed-denom vault functionality has been removed. Vaults are strictly
 > **single underlying denom**: the `payment_denom` configuration (including receipt tokens as
 > payment denoms), the `redeem_denom` payout selection on swap-out, and the `uylds.fcc` NAV-check
-> exemption no longer exist. The never-released request fields — `payment_denom` and
-> `initial_payment_nav` on `MsgCreateVaultRequest`, and `redeem_denom` on `MsgSwapOutRequest` and
-> `QueryEstimateSwapOutRequest` — have been removed outright and their field numbers reserved. The
-> **state** fields `VaultAccount.payment_denom` (always equal to `underlying_asset`) and
-> `PendingSwapOut.redeem_denom` (always the underlying asset) remain deprecated on the wire so the
-> v1→v2 migration can decode pre-flatten state; their deletion is deferred to a future major
-> release. Do not build new integrations against this surface.
+> exemption no longer exist. The released request fields — `payment_denom` on
+> `MsgCreateVaultRequest`, and `redeem_denom` on `MsgSwapOutRequest` and
+> `QueryEstimateSwapOutRequest` — remain on the wire as deprecated so historical transactions and
+> released clients still decode; if set, they must equal the vault's `underlying_asset` or the
+> request is rejected. The **state** fields `VaultAccount.payment_denom` (always equal to
+> `underlying_asset`) and `PendingSwapOut.redeem_denom` (always the underlying asset) remain
+> deprecated on the wire so the v1→v2 migration can decode pre-flatten state; their deletion is
+> deferred to a future major release. Do not build new integrations against this surface.
 
 ---
 <!-- TOC -->

@@ -185,6 +185,10 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 		return nil, status.Errorf(codes.NotFound, "vault with address %q not found", req.VaultAddress)
 	}
 
+	if req.RedeemDenom != "" && req.RedeemDenom != vault.UnderlyingAsset {
+		return nil, status.Errorf(codes.InvalidArgument, "redeem_denom is deprecated: the estimate is always in the underlying asset %q, got %q", vault.UnderlyingAsset, req.RedeemDenom)
+	}
+
 	if vault.Paused || !vault.SwapOutEnabled {
 		return nil, status.Error(codes.FailedPrecondition, "swap-out disabled or vault paused")
 	}

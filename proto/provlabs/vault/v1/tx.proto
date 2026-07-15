@@ -136,6 +136,10 @@ message MsgCreateVaultRequest {
   string share_denom = 2;
   // underlying_asset is the denomination of the asset supported by the vault.
   string underlying_asset = 3;
+  // payment_denom previously configured a secondary accepted denomination.
+  // Vaults are single-denom on underlying_asset; if set, this must equal
+  // underlying_asset. Retained for wire compatibility with released clients.
+  string payment_denom = 4 [deprecated = true];
   // withdrawal_delay_seconds is the time period (in seconds) that a withdrawal
   // must wait in the pending queue before being processed.
   uint64 withdrawal_delay_seconds = 5;
@@ -155,12 +159,6 @@ message MsgCreateVaultRequest {
   // - Values must be positive (> 0).
   // - An empty string "" indicates no maximum limit.
   string max_swap_out_value = 9 [(cosmos_proto.scalar) = "cosmos.IntString"];
-
-  // Field 4 held payment_denom and field 10 held initial_payment_nav
-  // (InitialVaultNAV), never-released mixed-denom creation inputs; reserved to
-  // prevent reuse. Vaults are single-denom on underlying_asset.
-  reserved 4, 10;
-  reserved "payment_denom", "initial_payment_nav";
 }
 
 // MsgCreateVaultResponse is the response message for the CreateVault endpoint.
@@ -216,11 +214,10 @@ message MsgSwapOutRequest {
   string vault_address = 2;
   // assets is the amount of underlying assets to withdraw.
   cosmos.base.v1beta1.Coin assets = 3 [(gogoproto.nullable) = false];
-
-  // Field 4 held redeem_denom, a never-released choice of payout denom; the
-  // payout is always the underlying asset. Reserved to prevent reuse.
-  reserved 4;
-  reserved "redeem_denom";
+  // redeem_denom previously selected the payout coin. The payout is always the
+  // vault's underlying_asset; if set, this must equal underlying_asset.
+  // Retained for wire compatibility with released clients.
+  string redeem_denom = 4 [deprecated = true];
 }
 
 // MsgSwapOutResponse is the response message for the SwapOut endpoint.

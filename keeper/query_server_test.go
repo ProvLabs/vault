@@ -481,6 +481,28 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 			},
 		},
 		{
+			Name:  "deprecated redeem denom equal to underlying still estimates",
+			Setup: setupFundedVault,
+			Req: &types.QueryEstimateSwapOutRequest{
+				VaultAddress: vaultAddr.String(),
+				Shares:       sharesToSwap.Amount.String(),
+				RedeemDenom:  underlyingDenom,
+			},
+			ExpectedResp: &types.QueryEstimateSwapOutResponse{
+				Assets: sdk.NewInt64Coin(underlyingDenom, 100),
+			},
+		},
+		{
+			Name:  "deprecated redeem denom different from underlying is rejected",
+			Setup: setupFundedVault,
+			Req: &types.QueryEstimateSwapOutRequest{
+				VaultAddress: vaultAddr.String(),
+				Shares:       sharesToSwap.Amount.String(),
+				RedeemDenom:  "otherdenom",
+			},
+			ExpectedErrSubstrs: []string{"redeem_denom is deprecated", underlyingDenom, "otherdenom", "InvalidArgument"},
+		},
+		{
 			Name: "fails if vault is paused",
 			Setup: func() {
 				setupVault()

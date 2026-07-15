@@ -107,7 +107,7 @@ func FundAccount(ctx context.Context, bankKeeper bankkeeper.Keeper, addr sdk.Acc
 // balance-lookup methods are called. It lets a test assert that a keeper path
 // stays bounded to targeted GetBalance lookups over a known denom set and never
 // falls back to the unbounded GetAllBalances walk. This is the regression guard
-// for GetTVVInUnderlyingAsset, whose cost must scale with the denoms the vault
+// for GetTVV, whose cost must scale with the denoms the vault
 // actually values rather than everything parked at the principal marker.
 //
 // Only the two lookup methods are overridden; every other BankKeeper method is
@@ -848,7 +848,7 @@ func oversizedNAVPrice() sdkmath.Int {
 // As a NAV price it converts a single unit of a denom to the maximum
 // representable underlying value, leaving no headroom in the TVV accumulator so
 // that any additional balance trips the SafeAdd overflow guard in
-// GetTVVInUnderlyingAsset without the per-balance SafeMul overflowing first.
+// GetTVV without the per-balance SafeMul overflowing first.
 func maxValidNAVPrice() sdkmath.Int {
 	return sdkmath.NewIntFromBigInt(new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(1)))
 }

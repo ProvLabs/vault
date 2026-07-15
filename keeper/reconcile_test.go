@@ -313,7 +313,7 @@ func (s *TestSuite) TestKeeper_PerformVaultReconcile_CompositeWithOutstandingFee
 		markerLiquidity := sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1_000_000_000))
 		vault := setupVaultWithHeldAssetAndOutstandingFee(outstanding, markerLiquidity, nil)
 
-		tvv, err := s.k.GetTVVInUnderlyingAsset(s.ctx, *vault)
+		tvv, err := s.k.GetTVV(s.ctx, *vault)
 		s.Require().NoError(err, "failed to get TVV in underlying asset")
 		s.Require().Equal(sdkmath.NewInt(1_000_000_000), tvv, "GetTVV returns Gross")
 
@@ -394,27 +394,27 @@ func (s *TestSuite) TestKeeper_ReconcileLeavesUncollectedFee_PricesOffNetTVV() {
 	s.Require().NoError(err, "should get AUM fee address")
 	s.assertBalance(provlabsAddr, underlyingDenom, sdkmath.ZeroInt())
 
-	grossTVV, err := s.k.GetTVVInUnderlyingAsset(s.ctx, *reconciled)
+	grossTVV, err := s.k.GetTVV(s.ctx, *reconciled)
 	s.Require().NoError(err, "should compute gross TVV")
 	s.Require().Equal(sdkmath.NewInt(1_000_000_000), grossTVV, "gross TVV still counts the assets backing the unpaid fee")
-	netTVV, err := s.k.GetNetTVVInUnderlyingAsset(s.ctx, *reconciled)
+	netTVV, err := s.k.GetNetTVV(s.ctx, *reconciled)
 	s.Require().NoError(err, "should compute net TVV")
 	s.Require().Equal(sdkmath.NewInt(900_000_000), netTVV, "net TVV = gross 1,000,000,000 minus outstanding fee 100,000,000, so gross > net even after reconcile")
 
 	grossView := *reconciled
 	grossView.OutstandingAumFee = sdk.NewInt64Coin(underlyingDenom, 0)
 
-	navNet, err := s.k.GetNAVPerShareInUnderlyingAsset(s.ctx, *reconciled)
+	navNet, err := s.k.GetNAVPerShare(s.ctx, *reconciled)
 	s.Require().NoError(err, "should compute net NAV per share")
 	s.Require().Equal(sdkmath.NewInt(900), navNet, "net NAV per share = 900,000,000 / 1,000,000")
-	navGross, err := s.k.GetNAVPerShareInUnderlyingAsset(s.ctx, grossView)
+	navGross, err := s.k.GetNAVPerShare(s.ctx, grossView)
 	s.Require().NoError(err, "should compute gross NAV per share")
 	s.Require().Equal(sdkmath.NewInt(1_000), navGross, "gross NAV per share = 1,000,000,000 / 1,000,000")
 
 	deposit := sdk.NewInt64Coin(underlyingDenom, 1_000_000)
-	netMint, err := s.k.ConvertDepositToSharesInUnderlyingAsset(s.ctx, *reconciled, deposit)
+	netMint, err := s.k.ConvertDepositToShares(s.ctx, *reconciled, deposit)
 	s.Require().NoError(err, "net deposit conversion should succeed")
-	grossMint, err := s.k.ConvertDepositToSharesInUnderlyingAsset(s.ctx, grossView, deposit)
+	grossMint, err := s.k.ConvertDepositToShares(s.ctx, grossView, deposit)
 	s.Require().NoError(err, "gross deposit conversion should succeed")
 	s.Require().True(netMint.Amount.GT(grossMint.Amount), "net pricing mints more shares per deposit than gross would (gross overstates TVV)")
 
@@ -1269,7 +1269,7 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_Use
 	s.Require().Equal(underlying.Amount, startVault, "initial vault reserves should match funded amount")
 	s.Require().Equal(underlying.Amount, startMarker, "initial marker principal should match funded amount")
 
-	principalTvv, err := s.k.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	principalTvv, err := s.k.GetTVV(s.ctx, *vault)
 	s.Require().NoError(err, "failed to get TVV in underlying asset")
 	s.Require().True(principalTvv.GT(sdkmath.ZeroInt()), "expected positive TVV")
 
@@ -1394,8 +1394,8 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_Use
 	s.Require().Equal(receiptPortion, startMarkerUnderlying, "expected marker underlying balance to equal receipt portion")
 	s.Require().Equal(heldPortion, startMarkerHeld, "expected marker held-asset balance to equal held portion")
 
-	principalTvv, err := s.k.GetTVVInUnderlyingAsset(s.ctx, *vault)
-	s.Require().NoError(err, "expected GetTVVInUnderlyingAsset to succeed")
+	principalTvv, err := s.k.GetTVV(s.ctx, *vault)
+	s.Require().NoError(err, "expected GetTVV to succeed")
 	s.Require().True(principalTvv.GT(sdkmath.ZeroInt()), "expected TVV principal to be positive for composite principal")
 
 	principalCoin := sdk.NewCoin(underlying.Denom, principalTvv)
@@ -1576,8 +1576,8 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_NegativeInterest_Com
 
 	s.ctx = s.ctx.WithBlockTime(now).WithEventManager(sdk.NewEventManager())
 
-	tvv, err := s.k.GetTVVInUnderlyingAsset(s.ctx, *vault)
-	s.Require().NoError(err, "GetTVVInUnderlyingAsset should succeed")
+	tvv, err := s.k.GetTVV(s.ctx, *vault)
+	s.Require().NoError(err, "GetTVV should succeed")
 	s.Require().True(tvv.GT(sdkmath.NewInt(100_000)), "TVV should be significantly higher than the underlying balance due to the held asset")
 
 	err = s.k.TestAccessor_reconcileVault(s.T(), s.ctx, vault)

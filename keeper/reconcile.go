@@ -196,7 +196,7 @@ func (k Keeper) publishShareNav(ctx sdk.Context, vault *types.VaultAccount) erro
 		}
 		return nil
 	}
-	tvv, err := k.GetNetTVVInUnderlyingAsset(ctx, *vault)
+	tvv, err := k.GetNetTVV(ctx, *vault)
 	if err != nil {
 		return fmt.Errorf("failed to get TVV: %w", err)
 	}
@@ -237,7 +237,7 @@ func (k Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vault
 	principalAddress := vault.PrincipalMarkerAddress()
 
 	reserves := k.BankKeeper.GetBalance(ctx, vaultAddr, denom)
-	principalTvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
+	principalTvv, err := k.GetTVV(ctx, *vault)
 	if err != nil {
 		return fmt.Errorf("failed to get TVV: %w", err)
 	}
@@ -283,7 +283,7 @@ func (k Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vault
 		}
 	}
 
-	principalTvvAfter, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
+	principalTvvAfter, err := k.GetTVV(ctx, *vault)
 	if err != nil {
 		return fmt.Errorf("failed to get TVV after reconciliation: %w", err)
 	}
@@ -318,7 +318,7 @@ func (k Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAccou
 		return nil
 	}
 
-	tvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
+	tvv, err := k.GetTVV(ctx, *vault)
 	if err != nil {
 		return fmt.Errorf("failed to get TVV: %w", err)
 	}
@@ -398,7 +398,7 @@ func (k Keeper) CanPayInterestDuration(ctx sdk.Context, vault *types.VaultAccoun
 	vaultAddr := vault.GetAddress()
 	principalAddr := vault.PrincipalMarkerAddress()
 
-	principalTvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
+	principalTvv, err := k.GetTVV(ctx, *vault)
 	if err != nil {
 		return false, fmt.Errorf("failed to get TVV: %w", err)
 	}

@@ -262,7 +262,7 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 
 	principalAddress := vault.PrincipalMarkerAddress()
 
-	shares, err := k.ConvertDepositToSharesInUnderlyingAsset(ctx, *vault, asset)
+	shares, err := k.ConvertDepositToShares(ctx, *vault, asset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate shares from assets: %w", err)
 	}
@@ -506,7 +506,7 @@ func (k *Keeper) autoPauseVault(ctx sdk.Context, vault *types.VaultAccount, reas
 		"reason", reason,
 	)
 
-	tvv, err := k.GetNetTVVInUnderlyingAsset(ctx, *vault)
+	tvv, err := k.GetNetTVV(ctx, *vault)
 	if err != nil {
 		k.getLogger(ctx).Error("Failed to get net TVV in underlying asset", "vault_address", vault.GetAddress().String(), "error", err)
 	}
@@ -539,7 +539,7 @@ func (k *Keeper) forcePauseVault(ctx sdk.Context, vault *types.VaultAccount, aut
 		)
 	}
 
-	tvv, err := k.GetNetTVVInUnderlyingAsset(ctx, *vault)
+	tvv, err := k.GetNetTVV(ctx, *vault)
 	if err != nil {
 		forcedErrors = append(forcedErrors, fmt.Sprintf("valuation failed: %v", err))
 		k.getLogger(ctx).Error(

@@ -291,7 +291,7 @@ func (s *TestSuite) TestToUnderlyingAssetAmount_IdentityFastPath() {
 	s.Require().Equal(math.NewInt(inputAmount), outAmount, "identity conversion should preserve the input amount for denom %s", underlyingDenom)
 }
 
-func (s *TestSuite) TestGetTVVInUnderlyingAsset_ExcludesSharesAndSumsInAsset() {
+func (s *TestSuite) TestGetTVV_ExcludesSharesAndSumsInAsset() {
 	underlyingDenom := "ylds"
 	heldDenom := "usdc"
 	shareDenom := "vshare"
@@ -304,18 +304,18 @@ func (s *TestSuite) TestGetTVVInUnderlyingAsset_ExcludesSharesAndSumsInAsset() {
 	)), "should fund vault with underlying and held-asset coins")
 
 	testKeeper := s.k
-	totalVaultValueInAsset, err := testKeeper.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	totalVaultValueInAsset, err := testKeeper.GetTVV(s.ctx, *vault)
 	s.Require().NoError(err, "get TVV should succeed")
 	s.Require().Equal(math.NewInt(1005), totalVaultValueInAsset, "1000 ylds + 10 usdc at 1/2 should equal 1005 ylds")
 }
 
-func (s *TestSuite) TestGetTVVInUnderlyingAsset_EmptyAndSharesOnly() {
+func (s *TestSuite) TestGetTVV_EmptyAndSharesOnly() {
 	underlyingDenom := "ylds"
 	shareDenom := "vshare"
 	vault := s.setupBaseVault(underlyingDenom, shareDenom)
 
 	testKeeper := s.k
-	tvvEmpty, err := testKeeper.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	tvvEmpty, err := testKeeper.GetTVV(s.ctx, *vault)
 	s.Require().NoError(err, "get TVV of empty vault should succeed")
 	s.Require().Equal(math.ZeroInt(), tvvEmpty, "TVV of empty vault should be zero")
 
@@ -323,12 +323,12 @@ func (s *TestSuite) TestGetTVVInUnderlyingAsset_EmptyAndSharesOnly() {
 	vault.TotalShares = sdk.NewInt64Coin(shareDenom, 1000)
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
-	tvvSharesOnly, err := testKeeper.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	tvvSharesOnly, err := testKeeper.GetTVV(s.ctx, *vault)
 	s.Require().NoError(err, "get TVV of shares-only vault should succeed")
 	s.Require().Equal(math.ZeroInt(), tvvSharesOnly, "TVV of shares-only vault should be zero")
 }
 
-func (s *TestSuite) TestGetTVVInUnderlyingAsset_AccumulatorOverflowReturnsErrorNotPanic() {
+func (s *TestSuite) TestGetTVV_AccumulatorOverflowReturnsErrorNotPanic() {
 	vault, testKeeper, underlyingDenom, heldDenom := s.setupOversizedNAVVault()
 	s.seedOversizedNAV(vault, heldDenom, underlyingDenom, maxValidNAVPrice(), math.OneInt())
 
@@ -340,13 +340,13 @@ func (s *TestSuite) TestGetTVVInUnderlyingAsset_AccumulatorOverflowReturnsErrorN
 		sdk.NewInt64Coin(underlyingDenom, 100),
 	)), "funding principal with a small underlying balance should succeed")
 
-	_, err := testKeeper.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	_, err := testKeeper.GetTVV(s.ctx, *vault)
 	s.Require().Error(err, "summing balances past the 256-bit ceiling must degrade to an error, not panic")
 	s.Require().ErrorContains(err, "integer overflow", "error should originate from the SafeAdd accumulator guard")
 	s.Require().ErrorContains(err, "total vault value", "error should carry the accumulator's wrapping context")
 }
 
-func (s *TestSuite) TestGetTVVInUnderlyingAsset_IncludesUnderlyingPricedHeldAsset() {
+func (s *TestSuite) TestGetTVV_IncludesUnderlyingPricedHeldAsset() {
 	underlyingDenom := "ylds"
 	shareDenom := "vshare"
 	vault := s.setupBaseVault(underlyingDenom, shareDenom)
@@ -360,12 +360,12 @@ func (s *TestSuite) TestGetTVVInUnderlyingAsset_IncludesUnderlyingPricedHeldAsse
 		sdk.NewInt64Coin(heldAsset, 10),
 	)), "funding principal with underlying and a NAV-priced held asset should succeed")
 
-	tvv, err := s.k.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	tvv, err := s.k.GetTVV(s.ctx, *vault)
 	s.Require().NoError(err, "TVV should value the NAV-priced held asset without error")
 	s.Require().Equal(math.NewInt(115), tvv, "TVV should be 100 underlying + floor(10 * 3 / 2) = 115")
 }
 
-func (s *TestSuite) TestGetTVVInUnderlyingAsset_SkipsHeldAssetWithoutNAV() {
+func (s *TestSuite) TestGetTVV_SkipsHeldAssetWithoutNAV() {
 	underlyingDenom := "ylds"
 	shareDenom := "vshare"
 	vault := s.setupBaseVault(underlyingDenom, shareDenom)
@@ -378,12 +378,12 @@ func (s *TestSuite) TestGetTVVInUnderlyingAsset_SkipsHeldAssetWithoutNAV() {
 		sdk.NewInt64Coin(heldAsset, 10),
 	)), "funding principal with underlying and a held asset lacking a NAV should succeed")
 
-	tvv, err := s.k.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	tvv, err := s.k.GetTVV(s.ctx, *vault)
 	s.Require().NoError(err, "a held asset with no internal NAV must be skipped without failing TVV")
 	s.Require().Equal(math.NewInt(100), tvv, "TVV should count only the 100 underlying and ignore the un-priced held asset")
 }
 
-func (s *TestSuite) TestGetTVVInUnderlyingAsset_UnvaluedPrincipalDenomsDoNotChangeValue() {
+func (s *TestSuite) TestGetTVV_UnvaluedPrincipalDenomsDoNotChangeValue() {
 	underlyingDenom := "ylds"
 	heldDenom := "usdc"
 	shareDenom := "vshare"
@@ -399,7 +399,7 @@ func (s *TestSuite) TestGetTVVInUnderlyingAsset_UnvaluedPrincipalDenomsDoNotChan
 	spyKeeper := s.k
 	spyKeeper.BankKeeper = spy
 
-	valuedOnlyTVV, err := spyKeeper.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	valuedOnlyTVV, err := spyKeeper.GetTVV(s.ctx, *vault)
 	s.Require().NoError(err, "computing TVV over only the valued balances should succeed")
 	s.Require().Equal(math.NewInt(1005), valuedOnlyTVV, "TVV of the valued balances should be 1000 underlying + floor(10 usdc * 1/2) = 1005")
 	s.Require().Zero(spy.getAllBalancesCalls, "valuing only the funded balances must not invoke the unbounded GetAllBalances walk")
@@ -416,17 +416,17 @@ func (s *TestSuite) TestGetTVVInUnderlyingAsset_UnvaluedPrincipalDenomsDoNotChan
 	spy.getAllBalancesCalls = 0
 	spy.getBalanceCalls = 0
 
-	withUnvaluedTVV, err := spyKeeper.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	withUnvaluedTVV, err := spyKeeper.GetTVV(s.ctx, *vault)
 	s.Require().NoError(err, "computing TVV after parking unvalued denoms should succeed")
 	s.Require().Equal(valuedOnlyTVV, withUnvaluedTVV,
 		"parking %d unvalued (no-NAV) denoms at the principal must not change TVV", parkedUnvaluedDenoms)
 	s.Require().Zero(spy.getAllBalancesCalls,
-		"GetTVVInUnderlyingAsset must value denoms from the NAV table, never the unbounded GetAllBalances walk")
+		"GetTVV must value denoms from the NAV table, never the unbounded GetAllBalances walk")
 	s.Require().Equal(valuedOnlyBalanceLookups, spy.getBalanceCalls,
 		"balance lookups must stay bounded to the valued denoms and not scale with the %d parked unvalued denoms", parkedUnvaluedDenoms)
 }
 
-func (s *TestSuite) TestGetTVVInUnderlyingAsset_InterestAndFeeAccrueOnHeldAssetBase() {
+func (s *TestSuite) TestGetTVV_InterestAndFeeAccrueOnHeldAssetBase() {
 	underlyingDenom := "ylds"
 	shareDenom := "vshare"
 	vault := s.setupBaseVault(underlyingDenom, shareDenom)
@@ -441,7 +441,7 @@ func (s *TestSuite) TestGetTVVInUnderlyingAsset_InterestAndFeeAccrueOnHeldAssetB
 	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principal,
 		sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1_000_000))), "funding principal with underlying should succeed")
 
-	baseWithoutAsset, err := s.k.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	baseWithoutAsset, err := s.k.GetTVV(s.ctx, *vault)
 	s.Require().NoError(err, "computing the underlying-only TVV base should succeed")
 	interestWithoutAsset, err := s.k.CalculateAccruedInterest(s.ctx, *vault, sdk.NewCoin(underlyingDenom, baseWithoutAsset))
 	s.Require().NoError(err, "computing interest on the underlying-only base should succeed")
@@ -451,7 +451,7 @@ func (s *TestSuite) TestGetTVVInUnderlyingAsset_InterestAndFeeAccrueOnHeldAssetB
 	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principal,
 		sdk.NewCoins(sdk.NewInt64Coin(heldAsset, 500_000))), "funding principal with a NAV-priced held asset should succeed")
 
-	baseWithAsset, err := s.k.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	baseWithAsset, err := s.k.GetTVV(s.ctx, *vault)
 	s.Require().NoError(err, "computing the TVV base including the held asset should succeed")
 	interestWithAsset, err := s.k.CalculateAccruedInterest(s.ctx, *vault, sdk.NewCoin(underlyingDenom, baseWithAsset))
 	s.Require().NoError(err, "computing interest on the larger base should succeed")
@@ -464,7 +464,7 @@ func (s *TestSuite) TestGetTVVInUnderlyingAsset_InterestAndFeeAccrueOnHeldAssetB
 	s.Require().True(feeWithAsset.GT(feeWithoutAsset), "the AUM fee should accrue on the larger base that includes the held asset")
 }
 
-func (s *TestSuite) TestGetTVVInUnderlyingAsset_ExcludesReserves() {
+func (s *TestSuite) TestGetTVV_ExcludesReserves() {
 	underlyingDenom := "ylds"
 	shareDenom := "vshare"
 	vault := s.setupBaseVault(underlyingDenom, shareDenom)
@@ -473,12 +473,12 @@ func (s *TestSuite) TestGetTVVInUnderlyingAsset_ExcludesReserves() {
 		"sending funds to the vault account (reserves) should succeed")
 
 	testKeeper := s.k
-	tvv, err := testKeeper.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	tvv, err := testKeeper.GetTVV(s.ctx, *vault)
 	s.Require().NoError(err, "computing TVV should not error when only reserves are funded")
 	s.Require().True(tvv.IsZero(), "TVV should be zero because reserves are excluded and principal is unfunded")
 }
 
-func (s *TestSuite) TestGetNAVPerShareInUnderlyingAsset_FloorsToZeroForTinyPerShare() {
+func (s *TestSuite) TestGetNAVPerShare_FloorsToZeroForTinyPerShare() {
 	underlyingDenom := "ylds"
 	heldDenom := "usdc"
 	shareDenom := "vshare"
@@ -496,12 +496,12 @@ func (s *TestSuite) TestGetNAVPerShareInUnderlyingAsset_FloorsToZeroForTinyPerSh
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 	testKeeper := s.k
-	navPerShareAsset, err := testKeeper.GetNAVPerShareInUnderlyingAsset(s.ctx, *vault)
+	navPerShareAsset, err := testKeeper.GetNAVPerShare(s.ctx, *vault)
 	s.Require().NoError(err, "nav per share should compute without error")
 	s.Require().True(navPerShareAsset.IsZero(), "with scaled shares, integer NAV/share should floor to 0")
 }
 
-func (s *TestSuite) TestGetNAVPerShareInUnderlyingAsset_ZeroSupplyAndNormalNAV() {
+func (s *TestSuite) TestGetNAVPerShare_ZeroSupplyAndNormalNAV() {
 	underlyingDenom := "ylds"
 	shareDenom := "vshare"
 	vault := s.setupBaseVault(underlyingDenom, shareDenom)
@@ -511,19 +511,19 @@ func (s *TestSuite) TestGetNAVPerShareInUnderlyingAsset_ZeroSupplyAndNormalNAV()
 		sdk.NewInt64Coin(underlyingDenom, 1000),
 	)), "should fund vault for TVV")
 
-	navPerShareZeroSupply, err := testKeeper.GetNAVPerShareInUnderlyingAsset(s.ctx, *vault)
+	navPerShareZeroSupply, err := testKeeper.GetNAVPerShare(s.ctx, *vault)
 	s.Require().NoError(err, "should not error with zero share supply")
 	s.Require().Equal(math.ZeroInt(), navPerShareZeroSupply, "NAV per share should be zero with zero share supply")
 
 	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), sdk.NewInt64Coin(shareDenom, 500)), "should mint shares")
 	vault.TotalShares = sdk.NewInt64Coin(shareDenom, 500)
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
-	navPerShareNormal, err := testKeeper.GetNAVPerShareInUnderlyingAsset(s.ctx, *vault)
+	navPerShareNormal, err := testKeeper.GetNAVPerShare(s.ctx, *vault)
 	s.Require().NoError(err, "should compute normal NAV per share")
 	s.Require().Equal(math.NewInt(2), navPerShareNormal, "1000 TVV / 500 shares should be 2 NAV per share")
 }
 
-func (s *TestSuite) TestConvertDepositToSharesInUnderlyingAsset_ValuesHeldAssetsInTVV() {
+func (s *TestSuite) TestConvertDepositToShares_ValuesHeldAssetsInTVV() {
 	underlyingDenom := "ylds"
 	heldDenom := "usdc"
 	shareDenom := "vshare"
@@ -535,7 +535,7 @@ func (s *TestSuite) TestConvertDepositToSharesInUnderlyingAsset_ValuesHeldAssets
 		sdk.NewInt64Coin(heldDenom, 10),
 	)), "should fund vault marker for TVV")
 
-	tvv, err := testKeeper.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	tvv, err := testKeeper.GetTVV(s.ctx, *vault)
 	s.Require().NoError(err, "should compute TVV")
 	s.Require().Equal(math.NewInt(1005), tvv, "TVV should value the held-asset balance through its NAV")
 	initialShares := sdk.NewCoin(shareDenom, tvv.Mul(utils.ShareScalar))
@@ -546,18 +546,18 @@ func (s *TestSuite) TestConvertDepositToSharesInUnderlyingAsset_ValuesHeldAssets
 	vault.TotalShares = initialShares
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
-	mintedShares, err := testKeeper.ConvertDepositToSharesInUnderlyingAsset(s.ctx, *vault, sdk.NewInt64Coin(underlyingDenom, 4))
+	mintedShares, err := testKeeper.ConvertDepositToShares(s.ctx, *vault, sdk.NewInt64Coin(underlyingDenom, 4))
 	s.Require().NoError(err, "deposit conversion should succeed")
 	s.Require().Equal(shareDenom, mintedShares.Denom, "minted shares denom should match vault share denom")
 	s.Require().Equal(utils.ShareScalar.Mul(math.NewInt(4)), mintedShares.Amount, "4 underlying should mint 4*ShareScalar shares at parity against the NAV-valued TVV")
 }
 
-func (s *TestSuite) TestConvertDepositToSharesInUnderlyingAsset_InitialDepositMintsAtParity() {
+func (s *TestSuite) TestConvertDepositToShares_InitialDepositMintsAtParity() {
 	underlyingDenom := "ylds"
 	shareDenom := "vshare"
 	vault := s.setupBaseVault(underlyingDenom, shareDenom)
 
-	initialDepositShares, err := s.k.ConvertDepositToSharesInUnderlyingAsset(s.ctx, *vault, sdk.NewInt64Coin(underlyingDenom, 100))
+	initialDepositShares, err := s.k.ConvertDepositToShares(s.ctx, *vault, sdk.NewInt64Coin(underlyingDenom, 100))
 	s.Require().NoError(err, "initial deposit should succeed")
 	s.Require().Equal(utils.ShareScalar.Mul(math.NewInt(100)), initialDepositShares.Amount, "initial deposit should mint shares at parity with ShareScalar")
 }
@@ -597,7 +597,7 @@ func (s *TestSuite) TestConvertAndNav_PriceNetOfOutstandingAumFee() {
 		sdk.NewInt64Coin(heldDenom, 10),
 	)), "should fund vault marker for gross TVV")
 
-	grossTVV, err := testKeeper.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	grossTVV, err := testKeeper.GetTVV(s.ctx, *vault)
 	s.Require().NoError(err, "should compute gross TVV")
 	s.Require().Equal(math.NewInt(1005), grossTVV, "gross TVV = 1000 underlying + 10 held asset at 1/2")
 
@@ -607,12 +607,12 @@ func (s *TestSuite) TestConvertAndNav_PriceNetOfOutstandingAumFee() {
 	vault.OutstandingAumFee = sdk.NewInt64Coin(underlyingDenom, 5)
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
-	netTVV, err := testKeeper.GetNetTVVInUnderlyingAsset(s.ctx, *vault)
+	netTVV, err := testKeeper.GetNetTVV(s.ctx, *vault)
 	s.Require().NoError(err, "should compute net TVV")
 	s.Require().Equal(math.NewInt(1000), netTVV, "net TVV = gross 1005 minus outstanding fee of 5 underlying")
 
 	deposit := sdk.NewInt64Coin(underlyingDenom, 1000)
-	mintedShares, err := testKeeper.ConvertDepositToSharesInUnderlyingAsset(s.ctx, *vault, deposit)
+	mintedShares, err := testKeeper.ConvertDepositToShares(s.ctx, *vault, deposit)
 	s.Require().NoError(err, "deposit conversion should succeed")
 	expectedNetMint, err := utils.CalculateSharesProRata(deposit.Amount, netTVV, totalShares.Amount, shareDenom)
 	s.Require().NoError(err, "should compute net-priced deposit shares")
@@ -632,7 +632,7 @@ func (s *TestSuite) TestConvertAndNav_PriceNetOfOutstandingAumFee() {
 	s.Require().True(redeemed.Amount.LT(expectedGrossRedeem.Amount), "net pricing pays out less per share than gross pricing would (gross overstates TVV)")
 }
 
-func (s *TestSuite) TestGetNetTVVInUnderlyingAsset_FloorsAtZeroWhenOutstandingExceedsGross() {
+func (s *TestSuite) TestGetNetTVV_FloorsAtZeroWhenOutstandingExceedsGross() {
 	underlyingDenom := "ylds"
 	heldDenom := "usdc"
 	shareDenom := "vshare"
@@ -643,14 +643,14 @@ func (s *TestSuite) TestGetNetTVVInUnderlyingAsset_FloorsAtZeroWhenOutstandingEx
 		sdk.NewInt64Coin(underlyingDenom, 100),
 	)), "should fund vault marker for gross TVV")
 
-	grossTVV, err := testKeeper.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	grossTVV, err := testKeeper.GetTVV(s.ctx, *vault)
 	s.Require().NoError(err, "should compute gross TVV")
 	s.Require().Equal(math.NewInt(100), grossTVV, "gross TVV should equal funded underlying balance")
 
 	vault.OutstandingAumFee = sdk.NewInt64Coin(underlyingDenom, 1000)
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
-	netTVV, err := testKeeper.GetNetTVVInUnderlyingAsset(s.ctx, *vault)
+	netTVV, err := testKeeper.GetNetTVV(s.ctx, *vault)
 	s.Require().NoError(err, "net TVV should not error when outstanding fee exceeds gross TVV")
 	s.Require().True(netTVV.IsZero(), "net TVV should floor at zero when outstanding fee (1000 underlying) exceeds gross TVV (100)")
 }
@@ -703,7 +703,7 @@ func (s *TestSuite) TestConvertSharesToRedeemCoin_TVVZero_SupplyNonzero() {
 	s.Require().True(redeemCoin.Amount.IsZero(), "redeemed amount should be zero when TVV is zero")
 }
 
-func (s *TestSuite) TestGetTVVInUnderlyingAsset_PausedUsesPausedBalance() {
+func (s *TestSuite) TestGetTVV_PausedUsesPausedBalance() {
 	underlyingDenom := "ylds"
 	heldDenom := "usdc"
 	shareDenom := "vshare"
@@ -720,12 +720,12 @@ func (s *TestSuite) TestGetTVVInUnderlyingAsset_PausedUsesPausedBalance() {
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 	testKeeper := s.k
-	tvv, err := testKeeper.GetTVVInUnderlyingAsset(s.ctx, *vault)
-	s.Require().NoError(err, "GetTVVInUnderlyingAsset should not error when paused")
+	tvv, err := testKeeper.GetTVV(s.ctx, *vault)
+	s.Require().NoError(err, "GetTVV should not error when paused")
 	s.Require().Equal(math.NewInt(42), tvv, "when paused, TVV should equal vault.PausedBalance.Amount regardless of principal contents")
 }
 
-func (s *TestSuite) TestGetNetTVVInUnderlyingAsset_PausedReturnsPausedBalanceWithoutNAV() {
+func (s *TestSuite) TestGetNetTVV_PausedReturnsPausedBalanceWithoutNAV() {
 	underlyingDenom := "ylds"
 	heldDenom := "usdc"
 	shareDenom := "vshare"
@@ -743,12 +743,12 @@ func (s *TestSuite) TestGetNetTVVInUnderlyingAsset_PausedReturnsPausedBalanceWit
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 	testKeeper := keeper.Keeper{MarkerKeeper: s.k.MarkerKeeper, BankKeeper: s.k.BankKeeper}
-	netTVV, err := testKeeper.GetNetTVVInUnderlyingAsset(s.ctx, *vault)
+	netTVV, err := testKeeper.GetNetTVV(s.ctx, *vault)
 	s.Require().NoError(err, "paused net TVV must not require a NAV lookup for the outstanding fee")
 	s.Require().Equal(math.NewInt(42), netTVV, "when paused, net TVV should equal vault.PausedBalance.Amount without subtracting the outstanding fee")
 }
 
-func (s *TestSuite) TestGetTVVInUnderlyingAsset_MixedPricedAndUnpricedHeldBalances() {
+func (s *TestSuite) TestGetTVV_MixedPricedAndUnpricedHeldBalances() {
 	underlyingDenom := "ylds"
 	heldDenom := "usdc"
 	unpricedDenom := "paymenow"
@@ -780,7 +780,7 @@ func (s *TestSuite) TestGetTVVInUnderlyingAsset_MixedPricedAndUnpricedHeldBalanc
 	s.setVaultNAV(vault, heldDenom, sdk.NewInt64Coin(underlyingDenom, 2), 1)
 
 	testKeeper := s.k
-	tvv, err := testKeeper.GetTVVInUnderlyingAsset(s.ctx, *vault)
+	tvv, err := testKeeper.GetTVV(s.ctx, *vault)
 	s.Require().NoError(err, "TVV calculation should succeed")
 
 	expectedTVV := math.NewInt(205)

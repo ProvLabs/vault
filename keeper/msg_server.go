@@ -566,7 +566,7 @@ func (k msgServer) PauseVault(goCtx context.Context, msg *types.MsgPauseVaultReq
 		return nil, fmt.Errorf("failed to reconcile before pausing: %w", err)
 	}
 
-	tvv, err := k.GetNetTVVInUnderlyingAsset(ctx, *vault)
+	tvv, err := k.GetNetTVV(ctx, *vault)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get net TVV before pausing: %w", err)
 	}
@@ -616,7 +616,7 @@ func (k msgServer) UnpauseVault(goCtx context.Context, msg *types.MsgUnpauseVaul
 		return nil, fmt.Errorf("failed to set vault account: %w", err)
 	}
 
-	tvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
+	tvv, err := k.GetTVV(ctx, *vault)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get TVV before pausing: %w", err)
 	}

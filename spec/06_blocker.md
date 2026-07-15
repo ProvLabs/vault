@@ -58,9 +58,11 @@ At the start of each block, the module reconciles interest for vaults whose **ti
 
 Processing model (safe “collect-then-mutate”):
 
-1. **Collect due entries** from `PayoutTimeoutQueue` with `timeout <= now`.
+1. **Collect due entries** from `PayoutTimeoutQueue` with `timeout <= now`, visiting at most
+   `MaxInterestTimeoutsPerBlock` (currently 100) entries per block; the remainder stays due
+   for later blocks.
 
-   * Skip paused vaults.
+   * Skip paused vaults (they count against the visit budget).
 2. **Dequeue** each collected `(timeout, vault)` before processing (prevents iterator invalidation).
 3. **For each vault**:
 
@@ -80,7 +82,9 @@ Processing model (safe “collect-then-mutate”):
 
 Reconciles the 15 bps AUM technology fee for vaults whose fee timeout has elapsed.
 
-1. **Collect due entries** from `VaultFeeTimeoutQueue` with `timeout <= now`.
+1. **Collect due entries** from `VaultFeeTimeoutQueue` with `timeout <= now`, visiting at most
+   `MaxFeeTimeoutsPerBlock` (currently 100) entries per block; the remainder stays due for
+   later blocks and paused vaults count against the budget.
 2. **Dequeue** each collected entry from the main context before processing to ensure it is not retried if a transient error occurs.
 3. **Attempt Atomic Reconciliation** (via `atomicallyReconcileFee` using `CacheContext`):
    - **PerformVaultFeeTransfer**:
@@ -104,11 +108,9 @@ Ordering is intentional:
 
 At block end, the module fulfills **due swap-out requests**:
 
-To prevent a large queue from consuming excessive block time and memory, a maximum of `MaxSwapOutBatchSize` (currently 100) requests are processed per block.
+To prevent a large queue from consuming excessive block time and memory, a maximum of `MaxSwapOutBatchSize` (currently 100) queue entries are visited per block. Every visited entry counts against the budget, including entries for paused vaults.
 
-1. **Collect due requests** from `PendingSwapOutQueue` with `dueTime <= now`.
-
-   * Skip paused vaults; they remain queued.
+1. **Collect due requests** from `PendingSwapOutQueue` with `dueTime <= now`, up to the batch budget.
 2. **Process each job** (see “Payout Processing Details”).
    - Each job is processed within its own **CacheContext**.
    - Failed payouts (recoverable) are rolled back atomically and the user is refunded.
@@ -116,7 +118,7 @@ To prevent a large queue from consuming excessive block time and memory, a maxim
    - This ensures failures do not leave the vault in an inconsistent state and do not interfere with other jobs in the same block.
 
    * Missing vault → dequeue & skip (logged).
-   * Paused vault → leave queued (not dequeued).
+   * Paused vault → atomically dequeue & refund escrowed shares (`EventSwapOutRefunded{ reason = "vault_paused" }`), so paused entries cannot camp at the front of the queue and starve processable requests. If the refund fails, nothing is committed and the request stays queued to retry on a later block.
 3. Errors:
 
    * **Recoverable** (e.g., insufficient funds, attribute check failure) → attempt **refund** and emit `EventSwapOutRefunded`.
@@ -126,7 +128,8 @@ To prevent a large queue from consuming excessive block time and memory, a maxim
 
 This advances vaults from the **verification set**:
 
-1. **Collect keys** from `PayoutVerificationSet`; skip paused vaults.
+1. **Collect keys** from `PayoutVerificationSet`, visiting at most `MaxPayoutVerificationsPerBlock`
+   (currently 100) entries per block; skip paused vaults (they count against the visit budget).
 2. **Remove** each from the set (before processing).
 3. **Partition** into:
 
@@ -191,10 +194,11 @@ This advances vaults from the **verification set**:
 
 ## Paused Vault Behavior
 
-* **BeginBlocker / EndBlocker** both **skip** paused vaults:
+* **BeginBlocker / EndBlocker** do not process paused vaults:
 
-  * Interest is **not** reconciled while paused.
-  * Pending swap-outs remain **queued** (not dequeued) until unpaused.
+  * Interest is **not** reconciled while paused; timeout entries remain in place until unpaused.
+  * Pending swap-outs that come due while paused are **dequeued and refunded** with
+    `EventSwapOutRefunded{ reason = "vault_paused" }`; owners resubmit after unpause.
 * A paused vault freezes its value at the `PausedBalance` snapshot, so operations that would change that value are rejected:
 
   * **UpdateVaultNAV** is rejected — a NAV write would assert a price the frozen vault ignores until unpause.
@@ -203,7 +207,7 @@ This advances vaults from the **verification set**:
 * Admins can still:
 
   * **Deposit/Withdraw principal** (only while paused).
-  * **ExpeditePendingSwapOut** (has no effect until unpaused; job stays queued).
+  * **ExpeditePendingSwapOut** (an expedited job on a paused vault becomes due immediately and is refunded at the next block).
 
 ---
 
@@ -226,7 +230,8 @@ Submit `MsgSwapOut` → capture `request_id` → watch for `Completed` or `Refun
 ## Safety & Invariants
 
 * **Collect-then-mutate** iteration for all queues/sets (prevents iterator invalidation).
-* **Dequeue before mutate** when processing due items; skipped/paused items remain enqueued.
+* **Per-block visit budgets** on every queue/set walk keep block execution time bounded regardless of backlog size.
+* **Dequeue before mutate** when processing due items; paused timeout/verification entries remain enqueued, while paused swap-out jobs are dequeued and refunded.
 * **Reconcile before supply-affecting ops** (e.g., swap-out payout) to keep NAV and TVV consistent.
 * **Flooring** in conversions prevents over-distribution or share inflation.
 * **Auto-pause on critical errors** creates a safe dead-stop until an admin resolves the issue.

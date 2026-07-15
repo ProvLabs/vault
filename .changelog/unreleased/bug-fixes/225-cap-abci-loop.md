@@ -1,0 +1,1 @@
+* Enforce per-block visit budgets on all ABCI queue processors (interest timeouts, fee timeouts, payout verification set, and pending swap-outs) and dequeue/refund pending swap-outs for paused vaults so they cannot camp at the front of the queue [#225](https://github.com/provlabs/vault/issues/225).

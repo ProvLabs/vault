@@ -15,10 +15,10 @@ import (
 )
 
 // TestAccessor_handleReconciledVaults exposes this keeper's handleReconciledVaults function for unit tests.
-func (k Keeper) TestAccessor_handleReconciledVaults(t *testing.T, ctx context.Context) error {
+func (k Keeper) TestAccessor_handleReconciledVaults(t *testing.T, ctx context.Context, limit int) error {
 	t.Helper()
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	return k.handleReconciledVaults(sdkCtx)
+	return k.handleReconciledVaults(sdkCtx, limit)
 }
 
 // TestAccessor_handlePayableVaults exposes this keeper's handlePayableVaults function for unit tests.
@@ -36,17 +36,17 @@ func (k Keeper) TestAccessor_handleDepletedVaults(t *testing.T, ctx context.Cont
 }
 
 // TestAccessor_handleVaultInterestTimeouts exposes this keeper's handleVaultInterestTimeouts function for unit tests.
-func (k Keeper) TestAccessor_handleVaultInterestTimeouts(t *testing.T, ctx context.Context) error {
+func (k Keeper) TestAccessor_handleVaultInterestTimeouts(t *testing.T, ctx context.Context, limit int) error {
 	t.Helper()
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	return k.handleVaultInterestTimeouts(sdkCtx)
+	return k.handleVaultInterestTimeouts(sdkCtx, limit)
 }
 
 // TestAccessor_handleVaultFeeTimeouts exposes this keeper's handleVaultFeeTimeouts function for unit tests.
-func (k Keeper) TestAccessor_handleVaultFeeTimeouts(t *testing.T, ctx context.Context) error {
+func (k Keeper) TestAccessor_handleVaultFeeTimeouts(t *testing.T, ctx context.Context, limit int) error {
 	t.Helper()
 	sdkCtx := sdk.UnwrapSDKContext(ctx)
-	return k.handleVaultFeeTimeouts(sdkCtx)
+	return k.handleVaultFeeTimeouts(sdkCtx, limit)
 }
 
 // TestAccessor_processSwapOutJobs exposes this keeper's processSwapOutJobs function for unit tests.

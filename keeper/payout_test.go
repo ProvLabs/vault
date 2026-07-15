@@ -259,13 +259,7 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 				s.assertBalance(ownerAddr, shareDenom, shares.Amount)
 				reason := types.RefundReasonRecipientMissingAttributes
 
-				var entries []types.PendingSwapOut
-				err := s.k.PendingSwapOutQueue.Walk(s.ctx, func(_ int64, _ uint64, _ sdk.AccAddress, req types.PendingSwapOut) (bool, error) {
-					entries = append(entries, req)
-					return false, nil
-				})
-				s.Require().NoError(err, "walking the queue should not error")
-				s.Require().Empty(entries, "queue should be empty after a failed payout is refunded")
+				s.Require().Zero(s.countPendingSwapOuts(), "queue should be empty after a failed payout is refunded")
 
 				expectedEvents := sdk.Events{}
 				expectedEvents = append(expectedEvents, createSendCoinEvents(vaultAddr.String(), ownerAddr.String(), shares.String())...)
@@ -351,6 +345,86 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 			batchSize: keeper.MaxSwapOutBatchSize,
 		},
 		{
+			name: "due request for paused vault is dequeued and refunded",
+			setup: func(shareDenom string, vaultAddr sdk.AccAddress, shares sdk.Coin) (sdk.AccAddress, uint64) {
+				ownerAddr := s.CreateAndFundAccount(assets)
+				vault := s.setupBaseVault(underlyingDenom, shareDenom)
+
+				minted, err := s.k.SwapIn(s.ctx, vaultAddr, ownerAddr, assets)
+				s.Require().NoError(err, "should successfully swap in assets")
+				s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, ownerAddr, vault.GetAddress(), sdk.NewCoins(*minted)), "should escrow shares into vault account")
+
+				req := types.PendingSwapOut{
+					Owner:        ownerAddr.String(),
+					VaultAddress: vaultAddr.String(),
+					RedeemDenom:  underlyingDenom,
+					Shares:       *minted,
+				}
+				id, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, duePayoutTime, &req)
+				s.Require().NoError(err, "should successfully enqueue request")
+
+				vault, err = s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err, "should successfully get vault")
+				vault.Paused = true
+				s.Require().NoError(s.k.SetVaultAccount(s.ctx, vault), "should successfully pause vault")
+				return ownerAddr, id
+			},
+			posthandler: func(ownerAddr sdk.AccAddress, reqID uint64, shareDenom string, vaultAddr sdk.AccAddress, principalAddress sdk.AccAddress, shares sdk.Coin, testBlockTime time.Time) {
+				s.assertBalance(ownerAddr, shareDenom, shares.Amount)
+				s.assertBalance(vaultAddr, shareDenom, math.ZeroInt())
+				s.Require().Zero(s.countPendingSwapOuts(), "queue should be empty after the paused-vault request is refunded")
+
+				expectedEvents := sdk.Events{}
+				expectedEvents = append(expectedEvents, createSendCoinEvents(vaultAddr.String(), ownerAddr.String(), shares.String())...)
+				refundEvent, err := sdk.TypedEventToEvent(types.NewEventSwapOutRefunded(vaultAddr.String(), ownerAddr.String(), shares, reqID, types.RefundReasonVaultPaused))
+				s.Require().NoError(err, "should not error converting typed EventSwapOutRefunded")
+				expectedEvents = append(expectedEvents, refundEvent)
+				s.Assert().Equal(
+					normalizeEvents(expectedEvents),
+					normalizeEvents(s.ctx.EventManager().Events()),
+					"a single EventSwapOutRefunded with reason %s should be emitted", types.RefundReasonVaultPaused,
+				)
+			},
+			batchSize: keeper.MaxSwapOutBatchSize,
+		},
+		{
+			name: "paused vault refund failure leaves request queued",
+			setup: func(shareDenom string, vaultAddr sdk.AccAddress, shares sdk.Coin) (sdk.AccAddress, uint64) {
+				ownerAddr := s.CreateAndFundAccount(assets)
+				vault := s.setupBaseVault(underlyingDenom, shareDenom)
+
+				minted, err := s.k.SwapIn(s.ctx, vaultAddr, ownerAddr, assets)
+				s.Require().NoError(err, "should successfully swap in assets")
+				s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, ownerAddr, vault.GetAddress(), sdk.NewCoins(*minted)), "should escrow shares into vault account")
+
+				req := types.PendingSwapOut{
+					Owner:        ownerAddr.String(),
+					VaultAddress: vaultAddr.String(),
+					RedeemDenom:  underlyingDenom,
+					Shares:       *minted,
+				}
+				id, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, duePayoutTime, &req)
+				s.Require().NoError(err, "should successfully enqueue request")
+
+				vault, err = s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err, "should successfully get vault")
+				vault.Paused = true
+				s.Require().NoError(s.k.SetVaultAccount(s.ctx, vault), "should successfully pause vault")
+
+				s.Require().NoError(
+					s.k.BankKeeper.SendCoins(markertypes.WithBypass(s.ctx), vaultAddr, s.adminAddr, sdk.NewCoins(*minted)),
+					"should drain escrowed shares to force the refund to fail",
+				)
+				return ownerAddr, id
+			},
+			posthandler: func(ownerAddr sdk.AccAddress, reqID uint64, shareDenom string, vaultAddr sdk.AccAddress, principalAddress sdk.AccAddress, shares sdk.Coin, testBlockTime time.Time) {
+				s.assertBalance(ownerAddr, shareDenom, math.ZeroInt())
+				s.Require().Equal(1, s.countPendingSwapOuts(), "request should stay queued when the paused-vault refund fails")
+				s.Assert().Empty(s.ctx.EventManager().Events(), "no events should be committed when the refund cache context is discarded")
+			},
+			batchSize: keeper.MaxSwapOutBatchSize,
+		},
+		{
 			name: "request for non-existent vault is skipped and dequeued",
 			setup: func(shareDenom string, vaultAddr sdk.AccAddress, shares sdk.Coin) (sdk.AccAddress, uint64) {
 				ownerAddr := s.CreateAndFundAccount(sdk.Coin{})
@@ -365,13 +439,7 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 				return ownerAddr, id
 			},
 			posthandler: func(ownerAddr sdk.AccAddress, reqID uint64, shareDenom string, vaultAddr sdk.AccAddress, principalAddress sdk.AccAddress, shares sdk.Coin, testBlockTime time.Time) {
-				var entries []types.PendingSwapOut
-				err := s.k.PendingSwapOutQueue.Walk(s.ctx, func(_ int64, _ uint64, _ sdk.AccAddress, req types.PendingSwapOut) (bool, error) {
-					entries = append(entries, req)
-					return false, nil
-				})
-				s.Require().NoError(err, "walking the queue should not error")
-				s.Require().Empty(entries, "queue should be empty after processing the non-existent vault request")
+				s.Require().Zero(s.countPendingSwapOuts(), "queue should be empty after processing the non-existent vault request")
 			},
 			batchSize: keeper.MaxSwapOutBatchSize,
 		},
@@ -410,6 +478,61 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 	}
 }
 
+func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts_PausedFrontSharesBatchBudget() {
+	testBlockTime := time.Now().UTC()
+	duePayoutTime := testBlockTime.Add(-1 * time.Hour).Unix()
+	expeditedTime := int64(0)
+
+	s.SetupTest()
+	s.ctx = s.ctx.WithBlockTime(testBlockTime)
+
+	enqueueEscrowedSwapOut := func(underlyingDenom, shareDenom string, pendingTime int64) (ownerAddr sdk.AccAddress, assets, minted sdk.Coin) {
+		vaultAddr := types.GetVaultAddress(shareDenom)
+		assets = sdk.NewInt64Coin(underlyingDenom, 50)
+		ownerAddr = s.CreateAndFundAccount(assets)
+		vault := s.setupBaseVault(underlyingDenom, shareDenom)
+
+		mintedShares, err := s.k.SwapIn(s.ctx, vaultAddr, ownerAddr, assets)
+		s.Require().NoError(err, "should swap in assets for share denom %s", shareDenom)
+		s.Require().NoError(
+			s.k.BankKeeper.SendCoins(s.ctx, ownerAddr, vault.GetAddress(), sdk.NewCoins(*mintedShares)),
+			"should escrow shares into vault account for share denom %s", shareDenom,
+		)
+
+		req := types.PendingSwapOut{
+			Owner:        ownerAddr.String(),
+			VaultAddress: vaultAddr.String(),
+			RedeemDenom:  underlyingDenom,
+			Shares:       *mintedShares,
+		}
+		_, err = s.k.PendingSwapOutQueue.Enqueue(s.ctx, pendingTime, &req)
+		s.Require().NoError(err, "should enqueue swap out for share denom %s at time %d", shareDenom, pendingTime)
+		return ownerAddr, assets, *mintedShares
+	}
+
+	pausedShareDenom := "vsharefrontpaused"
+	activeShareDenom := "vsharebackactive"
+	pausedOwner, _, pausedShares := enqueueEscrowedSwapOut("pausedylds", pausedShareDenom, expeditedTime)
+	activeOwner, activeAssets, _ := enqueueEscrowedSwapOut("activeylds", activeShareDenom, duePayoutTime)
+
+	pausedVaultAddr := types.GetVaultAddress(pausedShareDenom)
+	pausedVault, err := s.k.GetVault(s.ctx, pausedVaultAddr)
+	s.Require().NoError(err, "should get the vault camped at the front of the queue")
+	pausedVault.Paused = true
+	s.Require().NoError(s.k.SetVaultAccount(s.ctx, pausedVault), "should pause the vault camped at the front of the queue")
+
+	s.Require().NoError(s.k.TestAccessor_processPendingSwapOuts(s.T(), s.ctx, 1), "first block with batch size 1 should not error")
+
+	s.assertBalance(pausedOwner, pausedShareDenom, pausedShares.Amount)
+	s.assertBalance(activeOwner, activeAssets.Denom, math.ZeroInt())
+	s.Require().Equal(1, s.countPendingSwapOuts(), "the paused entry should consume the batch budget and be refunded, leaving only the active request queued")
+
+	s.Require().NoError(s.k.TestAccessor_processPendingSwapOuts(s.T(), s.ctx, 1), "second block with batch size 1 should not error")
+
+	s.assertBalance(activeOwner, activeAssets.Denom, activeAssets.Amount)
+	s.Require().Zero(s.countPendingSwapOuts(), "the active request should be paid out once the paused entry no longer camps at the queue front")
+}
+
 func (s *TestSuite) TestKeeper_ProcessSwapOutJobs() {
 	underlyingDenom := "ylds"
 	assets := sdk.NewInt64Coin(underlyingDenom, 50)
@@ -423,7 +546,7 @@ func (s *TestSuite) TestKeeper_ProcessSwapOutJobs() {
 		posthandler func(ownerAddr sdk.AccAddress, reqID uint64, shareDenom string, vaultAddr sdk.AccAddress, mintedShares sdk.Coin)
 	}{
 		{
-			name: "request is skipped if vault becomes paused after collection",
+			name: "request is dequeued and refunded if vault becomes paused after collection",
 			setup: func(shareDenom string, vaultAddr sdk.AccAddress) (sdk.AccAddress, sdk.Coin, uint64, types.PendingSwapOut) {
 				return s.enqueueDueSwapOut(underlyingDenom, shareDenom, assets, duePayoutTime)
 			},
@@ -440,17 +563,22 @@ func (s *TestSuite) TestKeeper_ProcessSwapOutJobs() {
 				s.k.TestAccessor_processSwapOutJobs(s.T(), s.ctx, jobs)
 			},
 			posthandler: func(ownerAddr sdk.AccAddress, reqID uint64, shareDenom string, vaultAddr sdk.AccAddress, mintedShares sdk.Coin) {
-				var entries []uint64
-				err := s.k.PendingSwapOutQueue.Walk(s.ctx, func(_ int64, id uint64, _ sdk.AccAddress, _ types.PendingSwapOut) (bool, error) {
-					entries = append(entries, id)
-					return false, nil
-				})
-				s.Require().NoError(err, "walking the queue should not error")
-				s.Require().Len(entries, 1, "queue should not be empty because the vault was paused")
+				s.Require().Zero(s.countPendingSwapOuts(), "queue should be empty after the paused-vault request is refunded")
 
 				s.assertBalance(ownerAddr, underlyingDenom, math.ZeroInt())
-				s.assertBalance(vaultAddr, mintedShares.Denom, mintedShares.Amount)
-				s.Assert().Empty(s.ctx.EventManager().Events(), "no events should be emitted for a job skipped due to pause")
+				s.assertBalance(ownerAddr, mintedShares.Denom, mintedShares.Amount)
+				s.assertBalance(vaultAddr, mintedShares.Denom, math.ZeroInt())
+
+				expectedEvents := sdk.Events{}
+				expectedEvents = append(expectedEvents, createSendCoinEvents(vaultAddr.String(), ownerAddr.String(), mintedShares.String())...)
+				refundEvent, err := sdk.TypedEventToEvent(types.NewEventSwapOutRefunded(vaultAddr.String(), ownerAddr.String(), mintedShares, reqID, types.RefundReasonVaultPaused))
+				s.Require().NoError(err, "should not error converting typed EventSwapOutRefunded")
+				expectedEvents = append(expectedEvents, refundEvent)
+				s.Assert().Equal(
+					normalizeEvents(expectedEvents),
+					normalizeEvents(s.ctx.EventManager().Events()),
+					"a single EventSwapOutRefunded with reason %s should be emitted", types.RefundReasonVaultPaused,
+				)
 			},
 		},
 		{

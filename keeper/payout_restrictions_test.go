@@ -5,7 +5,6 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 )
 
@@ -38,7 +37,7 @@ func (s *TestSuite) TestCheckPayoutRestrictions() {
 
 	for i, tc := range tests {
 		s.Run(tc.name, func() {
-			// s.SetupTest() is called by the suite before each Test* method, 
+			// s.SetupTest() is called by the suite before each Test* method,
 			// but s.Run subtests might need their own isolation if they share state.
 			// However, requireAddFinalizeAndActivateMarker will fail if denom is reused.
 			underlyingDenom := fmt.Sprintf("underlying%d", i)

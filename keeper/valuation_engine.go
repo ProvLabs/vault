@@ -35,18 +35,18 @@ var ErrInternalNAVPriceCycle = errors.New("internal NAV price chain contains a c
 // # Semantics
 //
 // The Internal NAV entry for a denom records the price of `volume` units of the
-// denom denominated in one of the vault's accepted denoms (the underlying asset
-// or the payment denom):
+// denom denominated in the vault's underlying asset (held assets acquired via
+// AcceptAsset settlement are priced this way):
 //
 //	1 srcDenom = nav.Price.Amount / nav.Volume nav.Price.Denom
 //
 // When nav.Price.Denom is the underlying asset, the returned fraction is simply
-// (nav.Price.Amount, nav.Volume). When it is the payment denom (only possible
-// when payment_denom != underlying, e.g. a held nft/scope… asset settled against
-// the payment denom), the chain continues through the payment denom's own price
-// so the result is always expressed in the underlying asset. The fraction is the
-// product of every entry's price over the product of every entry's volume along
-// the chain srcDenom -> ... -> underlying:
+// (nav.Price.Amount, nav.Volume). Should an entry's price denom chain onto
+// another priced denom (possible only for state written outside SetVaultNAV's
+// validation, e.g. by a migration or a direct write), the walk continues until
+// the underlying is reached, and the fraction is the product of every entry's
+// price over the product of every entry's volume along the chain
+// srcDenom -> ... -> underlying:
 //
 //	1 srcDenom = (price_0 * price_1 * …) / (volume_0 * volume_1 * …) underlying
 //
@@ -54,7 +54,6 @@ var ErrInternalNAVPriceCycle = errors.New("internal NAV price chain contains a c
 //
 // Identity fast-path
 //   - If srcDenom == vault.UnderlyingAsset, returns (1, 1) without a lookup.
-//     This also covers single-denom vaults where payment_denom == underlying.
 //
 // Errors
 //   - Wraps ErrInternalNAVNotFound when no entry exists for srcDenom on this
@@ -75,7 +74,7 @@ var ErrInternalNAVPriceCycle = errors.New("internal NAV price chain contains a c
 // set bounds the walk to the number of distinct denoms regardless of how the NAV
 // table was seeded, so it terminates even for state written outside SetVaultNAV's
 // accepted-denom validation. Under that validation real chains are a single hop
-// (srcDenom -> payment -> underlying).
+// (srcDenom -> underlying).
 func (k Keeper) UnitPriceFraction(ctx sdk.Context, srcDenom string, vault types.VaultAccount) (math.Int, math.Int, error) {
 	num, den := math.NewInt(1), math.NewInt(1)
 	visited := make(map[string]struct{})
@@ -156,30 +155,7 @@ func (k Keeper) ToUnderlyingAssetAmount(ctx sdk.Context, vault types.VaultAccoun
 	return product.Quo(volume), nil
 }
 
-// FromUnderlyingAssetAmount converts an amount of vault.UnderlyingAsset into
-// the equivalent value in targetDenom using integer floor arithmetic.
-//
-// Formula:
-//
-//	value_in_target = inAmount * priceDenominator / priceNumerator
-//
-// where (priceNumerator, priceDenominator) are from UnitPriceFraction(targetDenom → underlying).
-func (k Keeper) FromUnderlyingAssetAmount(ctx sdk.Context, vault types.VaultAccount, inAmount math.Int, targetDenom string) (math.Int, error) {
-	priceNum, priceDen, err := k.UnitPriceFraction(ctx, targetDenom, vault)
-	if err != nil {
-		return math.Int{}, fmt.Errorf("failed to get unit price fraction: %w", err)
-	}
-	if priceNum.IsZero() {
-		return math.Int{}, fmt.Errorf("zero price for %s/%s", targetDenom, vault.UnderlyingAsset)
-	}
-	product, err := inAmount.SafeMul(priceDen)
-	if err != nil {
-		return math.Int{}, fmt.Errorf("failed to multiply amount %s by price denominator %s: %w", inAmount, priceDen, err)
-	}
-	return product.Quo(priceNum), nil
-}
-
-// GetTVVInUnderlyingAsset returns the Total Vault Value (TVV) expressed in
+// GetTVV returns the Total Vault Value (TVV) expressed in
 // vault.UnderlyingAsset using floor arithmetic.
 //
 // Paused fast-path:
@@ -193,15 +169,11 @@ func (k Keeper) FromUnderlyingAssetAmount(ctx sdk.Context, vault types.VaultAcco
 //
 // Computation (when not paused), valuing only the denoms the vault actually prices
 // rather than everything parked at the principal marker:
-//   - First, value each accepted denom (underlying, and payment when configured) from
-//     its principal balance via ToUnderlyingAssetAmount. The underlying takes the
-//     identity price; the payment denom takes its internal NAV. An accepted denom that
-//     holds a balance but carries no NAV is a misconfiguration and propagates as an
-//     error (the underlying never needs a NAV thanks to the identity fast-path).
+//   - First, count the principal's underlying-asset balance at its identity price.
 //   - Then, iterate this vault's internal NAV entries and value any held denom
 //     (e.g. nft/scope… acquired via AcceptAsset) from its principal balance at its
-//     internal NAV. Accepted denoms and the share denom are skipped here because the
-//     accepted denoms are already valued above and the share denom is never priced.
+//     internal NAV. The underlying and the share denom are skipped here because the
+//     underlying is already counted above and the share denom is never priced.
 //   - Sum the converted amounts (floor at each multiplication/division step).
 //
 // Iterating the NAV table (a protocol-controlled key set written only by SetVaultNAV
@@ -213,33 +185,18 @@ func (k Keeper) FromUnderlyingAssetAmount(ctx sdk.Context, vault types.VaultAcco
 // Because a held asset's internal NAV is set by the NAV authority, a vault's TVV
 // (and the interest/fee/share-price base derived from it) moves when that NAV is
 // updated — a deliberate economic/trust surface.
-func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccount) (math.Int, error) {
+func (k Keeper) GetTVV(ctx sdk.Context, vault types.VaultAccount) (math.Int, error) {
 	if vault.Paused {
 		return vault.PausedBalance.Amount, nil
 	}
 
 	principal := vault.PrincipalMarkerAddress()
-	total := math.ZeroInt()
-
-	for _, denom := range vault.AcceptedDenoms() {
-		balance := k.BankKeeper.GetBalance(ctx, principal, denom)
-		if balance.IsZero() {
-			continue
-		}
-		val, err := k.ToUnderlyingAssetAmount(ctx, vault, balance)
-		if err != nil {
-			return math.Int{}, fmt.Errorf("failed to convert accepted denom %q balance to underlying: %w", denom, err)
-		}
-		total, err = total.SafeAdd(val)
-		if err != nil {
-			return math.Int{}, fmt.Errorf("failed to add balance %s to total vault value: %w", val, err)
-		}
-	}
+	total := k.BankKeeper.GetBalance(ctx, principal, vault.UnderlyingAsset).Amount
 
 	navRange := collections.NewPrefixedPairRange[sdk.AccAddress, string](vault.GetAddress())
 	err := k.NAVs.Walk(ctx, navRange, func(key collections.Pair[sdk.AccAddress, string], _ types.VaultNAV) (bool, error) {
 		denom := key.K2()
-		if denom == vault.TotalShares.Denom || vault.IsAcceptedDenom(denom) {
+		if denom == vault.TotalShares.Denom || denom == vault.UnderlyingAsset {
 			return false, nil
 		}
 		balance := k.BankKeeper.GetBalance(ctx, principal, denom)
@@ -263,7 +220,7 @@ func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccoun
 	return total, nil
 }
 
-// GetNetTVVInUnderlyingAsset returns the Total Vault Value (TVV) expressed in
+// GetNetTVV returns the Total Vault Value (TVV) expressed in
 // vault.UnderlyingAsset, net of the vault's OutstandingAumFee liability.
 //
 // This is the authoritative valuation basis for share pricing and the published share
@@ -275,29 +232,25 @@ func (k Keeper) GetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccoun
 //     balance is captured net of the OutstandingAumFee liability at pause time, so paused
 //     pricing stays frozen and NAV-independent.
 //
-// When not paused, GetTVVInUnderlyingAsset supplies the gross sum of principal-marker
-// balances; this method subtracts the OutstandingAumFee converted to underlying units and
-// floors the result at zero.
-func (k Keeper) GetNetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccount) (math.Int, error) {
-	gross, err := k.GetTVVInUnderlyingAsset(ctx, vault)
+// When not paused, GetTVV supplies the gross sum of principal-marker
+// balances; this method subtracts the OutstandingAumFee (already denominated in the
+// underlying asset) and floors the result at zero.
+func (k Keeper) GetNetTVV(ctx sdk.Context, vault types.VaultAccount) (math.Int, error) {
+	gross, err := k.GetTVV(ctx, vault)
 	if err != nil {
 		return math.Int{}, fmt.Errorf("failed to get gross TVV: %w", err)
 	}
 	if vault.Paused {
 		return gross, nil
 	}
-	outstanding, err := k.CalculateOutstandingFeeUnderlying(ctx, vault)
-	if err != nil {
-		return math.Int{}, fmt.Errorf("failed to calculate outstanding AUM fee: %w", err)
-	}
-	net := gross.Sub(outstanding)
+	net := gross.Sub(vault.OutstandingAumFee.Amount)
 	if net.IsNegative() {
 		return math.ZeroInt(), nil
 	}
 	return net, nil
 }
 
-// GetNAVPerShareInUnderlyingAsset returns the floor NAV per share in units of
+// GetNAVPerShare returns the floor NAV per share in units of
 // vault.UnderlyingAsset.
 //
 // Paused fast-path:
@@ -305,11 +258,11 @@ func (k Keeper) GetNetTVVInUnderlyingAsset(ctx sdk.Context, vault types.VaultAcc
 //     vault.PausedBalance.Amount (ignores live TVV and share supply).
 //
 // Computation (when not paused):
-//   - TVV(underlying) is obtained from GetNetTVVInUnderlyingAsset (net of the OutstandingAumFee liability).
+//   - TVV(underlying) is obtained from GetNetTVV (net of the OutstandingAumFee liability).
 //   - totalShareSupply is taken from vault.TotalShares.Amount (the recorded share supply).
 //   - If total shares == 0, returns 0. Otherwise returns TVV / totalShareSupply (floor).
-func (k Keeper) GetNAVPerShareInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccount) (math.Int, error) {
-	tvv, err := k.GetNetTVVInUnderlyingAsset(ctx, vault)
+func (k Keeper) GetNAVPerShare(ctx sdk.Context, vault types.VaultAccount) (math.Int, error) {
+	tvv, err := k.GetNetTVV(ctx, vault)
 	if err != nil {
 		return math.Int{}, fmt.Errorf("failed to get TVV: %w", err)
 	}
@@ -320,61 +273,36 @@ func (k Keeper) GetNAVPerShareInUnderlyingAsset(ctx sdk.Context, vault types.Vau
 	return tvv.Quo(vault.TotalShares.Amount), nil
 }
 
-// ConvertSharesToRedeemCoin converts a share amount into a payout coin in redeemDenom
-// using the current TVV and total share supply (pro-rata, single-floor arithmetic).
+// ConvertDepositToShares converts a deposit in the vault's
+// underlying asset into the share amount it purchases, using the current net TVV
+// and total share supply (pro-rata, floor arithmetic). Callers validate the
+// deposit denom via ValidateAcceptedCoin, so no price conversion is required.
 //
-// Steps:
-//  1. Look up the unit price fraction for redeemDenom → underlying via UnitPriceFraction.
-//  2. Compute the payout in one step using
-//     CalculateRedeemProRataFraction(shares, totalShares, TVV, priceNum, priceDen)
-//     where TVV is from principal (marker) balances.
-//
-// Returns a coin in redeemDenom. This function performs calculation only; callers
-// must enforce liquidity/policy. If shares <= 0, returns a zero-amount coin.
-func (k Keeper) ConvertDepositToSharesInUnderlyingAsset(ctx sdk.Context, vault types.VaultAccount, in sdk.Coin) (sdk.Coin, error) {
-	priceNum, priceDen, err := k.UnitPriceFraction(ctx, in.Denom, vault)
-	if err != nil {
-		return sdk.Coin{}, fmt.Errorf("failed to get unit price fraction: %w", err)
-	}
-	tvv, err := k.GetNetTVVInUnderlyingAsset(ctx, vault)
+// Returns a coin in the share denom. This function performs calculation only;
+// callers must enforce liquidity/policy.
+func (k Keeper) ConvertDepositToShares(ctx sdk.Context, vault types.VaultAccount, in sdk.Coin) (sdk.Coin, error) {
+	tvv, err := k.GetNetTVV(ctx, vault)
 	if err != nil {
 		return sdk.Coin{}, fmt.Errorf("failed to get TVV: %w", err)
 	}
-	amountNumerator, err := in.Amount.SafeMul(priceNum)
-	if err != nil {
-		return sdk.Coin{}, fmt.Errorf("failed to multiply amount %s by price numerator %s: %w", in.Amount, priceNum, err)
-	}
-	return utils.CalculateSharesProRataFraction(amountNumerator, priceDen, tvv, vault.TotalShares.Amount, vault.TotalShares.Denom)
+	return utils.CalculateSharesProRata(in.Amount, tvv, vault.TotalShares.Amount, vault.TotalShares.Denom)
 }
 
-// ConvertSharesToRedeemCoin converts a share amount into a payout coin in redeemDenom
-// using the current TVV and total share supply (both pro-rata, floor arithmetic).
+// ConvertSharesToRedeemCoin converts a share amount into a payout coin in the
+// vault's underlying asset — the only denom a vault redeems — using the current
+// net TVV and total share supply (pro-rata, floor arithmetic).
 //
-// Steps:
-//  1. Convert shares → underlying via
-//     CalculateAssetsFromShares(shares, totalShares, TVV)
-//     where TVV is from principal (marker) balances.
-//  2. Convert the resulting underlying amount to redeemDenom via FromUnderlyingAssetAmount
-//     (identity fast-path if redeemDenom == vault.UnderlyingAsset).
-//
-// Returns a coin in redeemDenom. This function performs calculation only; callers
-// must enforce liquidity/policy. If shares <= 0, returns a zero-amount coin.
-func (k Keeper) ConvertSharesToRedeemCoin(ctx sdk.Context, vault types.VaultAccount, shares math.Int, redeemDenom string) (sdk.Coin, error) {
+// This function performs calculation only; callers must enforce liquidity/policy.
+// If shares <= 0, returns a zero-amount coin.
+func (k Keeper) ConvertSharesToRedeemCoin(ctx sdk.Context, vault types.VaultAccount, shares math.Int) (sdk.Coin, error) {
 	if !shares.IsPositive() {
-		return sdk.NewCoin(redeemDenom, math.ZeroInt()), nil
+		return sdk.NewCoin(vault.UnderlyingAsset, math.ZeroInt()), nil
 	}
-	tvv, err := k.GetNetTVVInUnderlyingAsset(ctx, vault)
+	tvv, err := k.GetNetTVV(ctx, vault)
 	if err != nil {
 		return sdk.Coin{}, fmt.Errorf("failed to get TVV: %w", err)
 	}
-	priceNum, priceDen, err := k.UnitPriceFraction(ctx, redeemDenom, vault)
-	if err != nil {
-		return sdk.Coin{}, fmt.Errorf("failed to get unit price fraction: %w", err)
-	}
-	if priceNum.IsZero() {
-		return sdk.Coin{}, fmt.Errorf("zero price for %s/%s", redeemDenom, vault.UnderlyingAsset)
-	}
-	return utils.CalculateRedeemProRataFraction(shares, vault.TotalShares.Amount, tvv, priceNum, priceDen, redeemDenom)
+	return utils.CalculateRedeemProRata(shares, vault.TotalShares.Amount, tvv, vault.UnderlyingAsset)
 }
 
 // EstimateTotalVaultValue returns an estimated Total Vault Value (TVV) as a Coin
@@ -387,11 +315,11 @@ func (k Keeper) ConvertSharesToRedeemCoin(ctx sdk.Context, vault types.VaultAcco
 //     block. The result is floor-rounded and suitable for pro-rata calculations.
 //
 // If the vault is paused, the estimation honors the keeper’s paused logic
-// inside GetTVVInUnderlyingAsset.
+// inside GetTVV.
 //
 // Returns an sdk.Coin { Denom: vault.UnderlyingAsset, Amount: ... }.
 func (k Keeper) EstimateTotalVaultValue(ctx sdk.Context, vault *types.VaultAccount) (sdk.Coin, error) {
-	baseAmt, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
+	baseAmt, err := k.GetTVV(ctx, *vault)
 	if err != nil {
 		return sdk.Coin{}, fmt.Errorf("failed to get tvv: %w", err)
 	}

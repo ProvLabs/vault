@@ -22,8 +22,8 @@ func TestCalculateAssetsFromShares(t *testing.T) {
 	assetDenom := "asset"
 
 	// This test name is retained for continuity. Internally it now routes to the
-	// single-floor redeem path (CalculateRedeemProRataFraction) with price 1:1. The intent
-	// remains identical: “given shares and totals, how many assets do I get back?”
+	// single-floor redeem path (CalculateRedeemProRata). The intent remains
+	// identical: “given shares and totals, how many assets do I get back?”
 	tests := []struct {
 		name        string
 		shares      sdkmath.Int
@@ -91,12 +91,10 @@ func TestCalculateAssetsFromShares(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			result, err := utils.CalculateRedeemProRataFraction(
+			result, err := utils.CalculateRedeemProRata(
 				tc.shares,
 				tc.totalShares,
 				tc.totalAssets,
-				sdkmath.NewInt(1), // price numerator (underlying->underlying)
-				sdkmath.NewInt(1), // price denominator
 				assetDenom,
 			)
 			if tc.expectErr {
@@ -114,13 +112,12 @@ func TestCalculateAssetsFromShares(t *testing.T) {
 	}
 }
 
-func TestCalculateSharesProRataFraction(t *testing.T) {
+func TestCalculateSharesProRata(t *testing.T) {
 	shareDenom := "vaultshare"
 
 	tests := []struct {
 		name            string
-		amountNum       sdkmath.Int
-		amountDen       sdkmath.Int
+		amount          sdkmath.Int
 		totalAssets     sdkmath.Int
 		totalShares     sdkmath.Int
 		expected        sdk.Coin
@@ -129,76 +126,44 @@ func TestCalculateSharesProRataFraction(t *testing.T) {
 		errContains     string
 	}{
 		{
-			name:        "first deposit mints amount * ShareScalar (price 1:1)",
-			amountNum:   sdkmath.NewInt(100),
-			amountDen:   sdkmath.NewInt(1),
+			name:        "first deposit mints amount * ShareScalar",
+			amount:      sdkmath.NewInt(100),
 			totalAssets: sdkmath.NewInt(0),
 			totalShares: sdkmath.NewInt(0),
 			expected:    sdk.NewCoin(shareDenom, sdkmath.NewInt(100_000_000)),
 		},
 		{
 			name:        "assets zero but shares non-zero uses pro-rata path",
-			amountNum:   sdkmath.NewInt(1),
-			amountDen:   sdkmath.NewInt(1),
+			amount:      sdkmath.NewInt(1),
 			totalAssets: sdkmath.NewInt(0),
 			totalShares: sdkmath.NewInt(1),
 			expected:    sdk.NewCoin(shareDenom, sdkmath.NewInt(1_000_001)),
 		},
 		{
-			name:        "proportional mint with virtual offsets (price 1:1)",
-			amountNum:   sdkmath.NewInt(50),
-			amountDen:   sdkmath.NewInt(1),
+			name:        "proportional mint with virtual offsets",
+			amount:      sdkmath.NewInt(50),
 			totalAssets: sdkmath.NewInt(100),
 			totalShares: sdkmath.NewInt(200),
 			expected:    sdk.NewCoin(shareDenom, sdkmath.NewInt(495_148)),
 		},
 		{
-			name:        "small deposit precision and offsets (price 1:1)",
-			amountNum:   sdkmath.NewInt(1),
-			amountDen:   sdkmath.NewInt(1),
+			name:        "small deposit precision and offsets",
+			amount:      sdkmath.NewInt(1),
 			totalAssets: sdkmath.NewInt(3),
 			totalShares: sdkmath.NewInt(10),
 			expected:    sdk.NewCoin(shareDenom, sdkmath.NewInt(250_002)),
 		},
 		{
-			name:        "priced deposit 3/2 into non-empty vault",
-			amountNum:   sdkmath.NewInt(6),
-			amountDen:   sdkmath.NewInt(2),
-			totalAssets: sdkmath.NewInt(100),
-			totalShares: sdkmath.NewInt(200),
-			expected:    sdk.NewCoin(shareDenom, sdkmath.NewInt(29_708)),
-		},
-		{
-			name:            "reject negative amount numerator",
-			amountNum:       sdkmath.NewInt(-1),
-			amountDen:       sdkmath.NewInt(1),
+			name:            "reject negative amount",
+			amount:          sdkmath.NewInt(-1),
 			totalAssets:     sdkmath.NewInt(0),
 			totalShares:     sdkmath.NewInt(0),
 			expectErr:       true,
 			expectedErrText: "invalid input: negative values not allowed",
-		},
-		{
-			name:            "reject negative denominator",
-			amountNum:       sdkmath.NewInt(1),
-			amountDen:       sdkmath.NewInt(-1),
-			totalAssets:     sdkmath.NewInt(0),
-			totalShares:     sdkmath.NewInt(0),
-			expectErr:       true,
-			expectedErrText: "invalid input: negative values not allowed",
-		},
-		{
-			name:            "reject zero denominator",
-			amountNum:       sdkmath.NewInt(1),
-			amountDen:       sdkmath.NewInt(0),
-			totalAssets:     sdkmath.NewInt(0),
-			totalShares:     sdkmath.NewInt(0),
-			expectErr:       true,
-			expectedErrText: "invalid input: zero denominator",
 		},
 		{
 			name:            "reject negative totals",
-			amountNum:       sdkmath.NewInt(1),
-			amountDen:       sdkmath.NewInt(1),
+			amount:          sdkmath.NewInt(1),
 			totalAssets:     sdkmath.NewInt(-1),
 			totalShares:     sdkmath.NewInt(0),
 			expectErr:       true,
@@ -206,17 +171,15 @@ func TestCalculateSharesProRataFraction(t *testing.T) {
 		},
 		{
 			name:        "oversized first deposit overflows share scalar and returns error",
-			amountNum:   nearMaxInt(),
-			amountDen:   sdkmath.NewInt(1),
+			amount:      nearMaxInt(),
 			totalAssets: sdkmath.NewInt(0),
 			totalShares: sdkmath.NewInt(0),
 			expectErr:   true,
 			errContains: "integer overflow",
 		},
 		{
-			name:        "oversized priced deposit overflows pro-rata path and returns error",
-			amountNum:   nearMaxInt(),
-			amountDen:   sdkmath.NewInt(1),
+			name:        "oversized deposit overflows pro-rata path and returns error",
+			amount:      nearMaxInt(),
 			totalAssets: sdkmath.NewInt(100),
 			totalShares: nearMaxInt(),
 			expectErr:   true,
@@ -226,7 +189,7 @@ func TestCalculateSharesProRataFraction(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			got, err := utils.CalculateSharesProRataFraction(tc.amountNum, tc.amountDen, tc.totalAssets, tc.totalShares, shareDenom)
+			got, err := utils.CalculateSharesProRata(tc.amount, tc.totalAssets, tc.totalShares, shareDenom)
 
 			if tc.expectErr {
 				require.Error(t, err, "expected error for case: %s", tc.name)
@@ -239,7 +202,7 @@ func TestCalculateSharesProRataFraction(t *testing.T) {
 			}
 
 			require.NoError(t, err, "unexpected error for case: %s", tc.name)
-			require.Equal(t, tc.expected, got, fmt.Sprintf("unexpected shares for amount=%s/%s totalAssets=%s totalShares=%s", tc.amountNum, tc.amountDen, tc.totalAssets, tc.totalShares))
+			require.Equal(t, tc.expected, got, fmt.Sprintf("unexpected shares for amount=%s totalAssets=%s totalShares=%s", tc.amount, tc.totalAssets, tc.totalShares))
 		})
 	}
 }
@@ -260,7 +223,7 @@ func TestSmallFirstSwapInThenHugeSwapInThenSwapOut(t *testing.T) {
 	totalShares := sdkmath.ZeroInt()
 
 	shareDenom := "shares"
-	firstShares, err := utils.CalculateSharesProRataFraction(firstIn, sdkmath.NewInt(1), totalAssets, totalShares, shareDenom)
+	firstShares, err := utils.CalculateSharesProRata(firstIn, totalAssets, totalShares, shareDenom)
 	require.NoErrorf(t, err, "first swap-in conversion should not error")
 	require.Equalf(t, firstIn.Mul(utils.ShareScalar), firstShares.Amount, "first swap-in should mint amount * ShareScalar")
 
@@ -272,7 +235,7 @@ func TestSmallFirstSwapInThenHugeSwapInThenSwapOut(t *testing.T) {
 	totalAssets = totalAssets.Add(hugeIn)
 
 	assetDenom := "underlying"
-	outAll, err := utils.CalculateRedeemProRataFraction(firstShares.Amount, totalShares, totalAssets, sdkmath.NewInt(1), sdkmath.NewInt(1), assetDenom)
+	outAll, err := utils.CalculateRedeemProRata(firstShares.Amount, totalShares, totalAssets, assetDenom)
 	require.NoErrorf(t, err, "swap-out conversion should not error")
 
 	require.Truef(t,
@@ -303,7 +266,7 @@ func TestVeryLargeInitialSwapInRoundTrip(t *testing.T) {
 	totalShares := sdkmath.ZeroInt()
 
 	shareDenom := "shares"
-	minted, err := utils.CalculateSharesProRataFraction(largeIn, sdkmath.NewInt(1), totalAssets, totalShares, shareDenom)
+	minted, err := utils.CalculateSharesProRata(largeIn, totalAssets, totalShares, shareDenom)
 	require.NoErrorf(t, err, "large swap-in conversion should not error")
 	require.Equalf(t, largeIn.Mul(utils.ShareScalar), minted.Amount, "minted shares should equal swap-in * ShareScalar")
 
@@ -311,7 +274,7 @@ func TestVeryLargeInitialSwapInRoundTrip(t *testing.T) {
 	totalShares = totalShares.Add(minted.Amount)
 
 	assetDenom := "underlying"
-	out, err := utils.CalculateRedeemProRataFraction(minted.Amount, totalShares, totalAssets, sdkmath.NewInt(1), sdkmath.NewInt(1), assetDenom)
+	out, err := utils.CalculateRedeemProRata(minted.Amount, totalShares, totalAssets, assetDenom)
 	require.NoErrorf(t, err, "swap-out conversion should not error")
 
 	price := totalAssets.Mul(utils.ShareScalar).Quo(totalShares)

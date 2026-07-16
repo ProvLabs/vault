@@ -197,7 +197,7 @@ func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.P
 		return fmt.Errorf("%w: failed to reconcile vault: %w", types.ErrReconcileFailure, err)
 	}
 
-	assets, err := k.ConvertSharesToRedeemCoin(ctx, vault, req.Shares.Amount, req.RedeemDenom)
+	assets, err := k.ConvertSharesToRedeemCoin(ctx, vault, req.Shares.Amount)
 	if err != nil {
 		return fmt.Errorf("failed to convert shares to redeem coin for single withdrawal: %w", err)
 	}

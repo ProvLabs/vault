@@ -26,13 +26,11 @@ type VaultAttributer interface {
 	GetAdmin() string
 	GetShareDenom() string
 	GetUnderlyingAsset() string
-	GetPaymentDenom() string
 	GetWithdrawalDelaySeconds() uint64
 	GetMinSwapInValue() string
 	GetMinSwapOutValue() string
 	GetMaxSwapInValue() string
 	GetMaxSwapOutValue() string
-	GetInitialPaymentNav() *types.InitialVaultNAV
 }
 
 // CreateVault creates a new vault and its corresponding share marker atomically.
@@ -41,25 +39,20 @@ type VaultAttributer interface {
 //  1. Creating and persisting a new VaultAccount and its lookup entries.
 //  2. Initializing the fee timeout queue for the new vault.
 //  3. Creating, finalizing, and activating a restricted marker for the vault's shares.
-//  4. Performing a pre-flight check against the principal/payment path by calling
+//  4. Performing a pre-flight check against the principal path by calling
 //     SendRestrictionFn with vault.PrincipalMarkerAddress() to ensure the fee
-//     collection address is permissioned to receive the payment denomination.
-//  5. Seeding the per-vault Internal NAV entry for the payment denom when it
-//     differs from the underlying asset, so the valuation engine can convert
-//     payment-denom balances and fee payouts without an out-of-band setup step.
+//     collection address is permissioned to receive the underlying asset.
 //
 // All steps are performed within a cache context. If any step fails, including the
 // pre-flight permission check, all state changes are discarded to prevent the creation
 // of inconsistent or "orphan" vaults.
 func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*types.VaultAccount, error) {
 	underlying := attributes.GetUnderlyingAsset()
-	payment := attributes.GetPaymentDenom()
 	withdrawalDelay := attributes.GetWithdrawalDelaySeconds()
 	minSwapIn := attributes.GetMinSwapInValue()
 	minSwapOut := attributes.GetMinSwapOutValue()
 	maxSwapIn := attributes.GetMaxSwapInValue()
 	maxSwapOut := attributes.GetMaxSwapOutValue()
-	initialNAV := attributes.GetInitialPaymentNav()
 
 	underlyingAssetAddr, err := markertypes.MarkerAddress(underlying)
 	if err != nil {
@@ -71,7 +64,7 @@ func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*type
 
 	cacheCtx, write := ctx.CacheContext()
 
-	vault, err := k.createVaultAccount(cacheCtx, attributes.GetAdmin(), attributes.GetShareDenom(), underlying, payment, withdrawalDelay, minSwapIn, minSwapOut, maxSwapIn, maxSwapOut)
+	vault, err := k.createVaultAccount(cacheCtx, attributes.GetAdmin(), attributes.GetShareDenom(), underlying, withdrawalDelay, minSwapIn, minSwapOut, maxSwapIn, maxSwapOut)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create vault account: %w", err)
 	}
@@ -89,46 +82,16 @@ func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*type
 		markertypes.WithTransferAgents(cacheCtx, vault.GetAddress()),
 		vault.PrincipalMarkerAddress(),
 		provlabsAddr,
-		sdk.NewCoins(sdk.NewInt64Coin(vault.PaymentDenom, 1)),
+		sdk.NewCoins(sdk.NewInt64Coin(vault.UnderlyingAsset, 1)),
 	); err != nil {
-		return nil, fmt.Errorf("fee account %s is not permissioned to receive payment denom %s: %w", provlabsAddr.String(), vault.PaymentDenom, err)
+		return nil, fmt.Errorf("fee account %s is not permissioned to receive underlying asset %s: %w", provlabsAddr.String(), vault.UnderlyingAsset, err)
 	} else if !recipient.Equals(provlabsAddr) {
-		return nil, fmt.Errorf("effective recipient %s differs from expected fee collector %s for payment denom %s", recipient.String(), provlabsAddr.String(), vault.PaymentDenom)
-	}
-
-	if err := k.seedInitialPaymentNAV(cacheCtx, vault, initialNAV); err != nil {
-		return nil, fmt.Errorf("failed to seed initial payment NAV: %w", err)
+		return nil, fmt.Errorf("effective recipient %s differs from expected fee collector %s for underlying asset %s", recipient.String(), provlabsAddr.String(), vault.UnderlyingAsset)
 	}
 
 	write()
 	k.emitEvent(ctx, types.NewEventVaultCreated(vault))
 	return vault, nil
-}
-
-// seedInitialPaymentNAV persists the optional bootstrap NAV for a vault's
-// payment denom when payment_denom differs from underlying_asset. The caller
-// must have already validated the stateless shape of initial via
-// types.ValidateInitialPaymentNAV (typically through MsgCreateVaultRequest.ValidateBasic).
-//
-// When payment_denom equals underlying_asset, no NAV is required (the
-// valuation engine's identity fast-path applies) and initial must be nil; the
-// function returns an error rather than silently dropping a stray entry.
-//
-// The NAV is written via SetVaultNAV so that field-level invariants, marker
-// existence, and event emission match every other internal NAV update.
-func (k *Keeper) seedInitialPaymentNAV(ctx sdk.Context, vault *types.VaultAccount, initial *types.InitialVaultNAV) error {
-	if err := types.ValidateInitialPaymentNAV(vault.PaymentDenom, vault.UnderlyingAsset, initial); err != nil {
-		return fmt.Errorf("invalid initial payment NAV: %w", err)
-	}
-	if initial == nil {
-		return nil
-	}
-
-	nav := types.NewVaultNAV(vault.PaymentDenom, initial.Price, initial.Volume, initial.Source)
-	if err := k.SetVaultNAV(ctx, vault, nav, vault.Admin); err != nil {
-		return fmt.Errorf("failed to set initial payment NAV: %w", err)
-	}
-	return nil
 }
 
 // GetVault returns the vault account for the given address.
@@ -159,7 +122,7 @@ func (k Keeper) getVault(ctx sdk.Context, addr sdk.AccAddress) (*types.VaultAcco
 
 // createVaultAccount creates and stores a new vault account and initializes its fee tracking.
 // It verifies that the vault address is available and not already associated with another account.
-func (k *Keeper) createVaultAccount(ctx sdk.Context, admin, shareDenom, underlyingAsset, paymentDenom string, withdrawalDelay uint64, minSwapIn, minSwapOut, maxSwapIn, maxSwapOut string) (*types.VaultAccount, error) {
+func (k *Keeper) createVaultAccount(ctx sdk.Context, admin, shareDenom, underlyingAsset string, withdrawalDelay uint64, minSwapIn, minSwapOut, maxSwapIn, maxSwapOut string) (*types.VaultAccount, error) {
 	vaultAddr := types.GetVaultAddress(shareDenom)
 
 	params, err := k.Params.Get(ctx)
@@ -172,7 +135,6 @@ func (k *Keeper) createVaultAccount(ctx sdk.Context, admin, shareDenom, underlyi
 		admin,
 		shareDenom,
 		underlyingAsset,
-		paymentDenom,
 		withdrawalDelay,
 		params.DefaultAumFeeBips,
 		minSwapIn,
@@ -300,7 +262,7 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 
 	principalAddress := vault.PrincipalMarkerAddress()
 
-	shares, err := k.ConvertDepositToSharesInUnderlyingAsset(ctx, *vault, asset)
+	shares, err := k.ConvertDepositToShares(ctx, *vault, asset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate shares from assets: %w", err)
 	}
@@ -350,10 +312,11 @@ func (k *Keeper) checkPayoutRestrictions(ctx sdk.Context, vault *types.VaultAcco
 	return nil
 }
 
-// SwapOut validates a swap-out request, calculates the resulting assets, escrows the user's shares,
-// and enqueues a pending withdrawal request to be processed by the EndBlocker.
+// SwapOut validates a swap-out request, calculates the resulting assets in the vault's
+// underlying asset, escrows the user's shares, and enqueues a pending withdrawal request
+// to be processed by the EndBlocker.
 // It returns the unique ID of the newly queued request.
-func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, shares sdk.Coin, redeemDenom string) (uint64, error) {
+func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, shares sdk.Coin) (uint64, error) {
 	vault, err := k.GetVault(ctx, vaultAddr)
 	if err != nil {
 		return 0, fmt.Errorf("failed to get vault: %w", err)
@@ -374,15 +337,7 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 		return 0, fmt.Errorf("swap out denom must be share denom %v : %v", shares.Denom, vault.TotalShares.Denom)
 	}
 
-	if redeemDenom == "" {
-		redeemDenom = vault.PaymentDenom
-	}
-
-	if err = vault.ValidateAcceptedDenom(redeemDenom); err != nil {
-		return 0, fmt.Errorf("failed to validate redeem denom: %w", err)
-	}
-
-	assets, err := k.ConvertSharesToRedeemCoin(ctx, *vault, shares.Amount, redeemDenom)
+	assets, err := k.ConvertSharesToRedeemCoin(ctx, *vault, shares.Amount)
 	if err != nil {
 		return 0, fmt.Errorf("failed to calculate assets from shares: %w", err)
 	}
@@ -405,13 +360,13 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 
 	payoutTime := ctx.BlockTime().Unix() + int64(vault.WithdrawalDelaySeconds) //nolint:gosec // G115: WithdrawalDelaySeconds is validated <= MaxWithdrawalDelay.
 
-	pendingReq := types.NewPendingSwapOut(owner, vaultAddr, shares, redeemDenom)
+	pendingReq := types.NewPendingSwapOut(owner, vaultAddr, shares, vault.UnderlyingAsset)
 	requestID, err := k.PendingSwapOutQueue.Enqueue(ctx, payoutTime, &pendingReq)
 	if err != nil {
 		return 0, fmt.Errorf("failed to enqueue pending swap out request: %w", err)
 	}
 
-	k.emitEvent(ctx, types.NewEventSwapOutRequested(vaultAddr.String(), owner.String(), redeemDenom, shares, requestID))
+	k.emitEvent(ctx, types.NewEventSwapOutRequested(vaultAddr.String(), owner.String(), vault.UnderlyingAsset, shares, requestID))
 	return requestID, nil
 }
 
@@ -551,7 +506,7 @@ func (k *Keeper) autoPauseVault(ctx sdk.Context, vault *types.VaultAccount, reas
 		"reason", reason,
 	)
 
-	tvv, err := k.GetNetTVVInUnderlyingAsset(ctx, *vault)
+	tvv, err := k.GetNetTVV(ctx, *vault)
 	if err != nil {
 		k.getLogger(ctx).Error("Failed to get net TVV in underlying asset", "vault_address", vault.GetAddress().String(), "error", err)
 	}
@@ -584,7 +539,7 @@ func (k *Keeper) forcePauseVault(ctx sdk.Context, vault *types.VaultAccount, aut
 		)
 	}
 
-	tvv, err := k.GetNetTVVInUnderlyingAsset(ctx, *vault)
+	tvv, err := k.GetNetTVV(ctx, *vault)
 	if err != nil {
 		forcedErrors = append(forcedErrors, fmt.Sprintf("valuation failed: %v", err))
 		k.getLogger(ctx).Error(

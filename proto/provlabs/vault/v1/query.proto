@@ -156,7 +156,7 @@ message QueryVaultResponse {
 message QueryEstimateSwapInRequest {
   // vault_address is the bech32 address of the vault to query.
   string vault_address = 1;
-  // assets is the amount of underlying or payment denom to swap in.
+  // assets is the amount of the underlying asset to swap in.
   cosmos.base.v1beta1.Coin assets = 2 [(gogoproto.nullable) = false];
 }
 
@@ -179,8 +179,10 @@ message QueryEstimateSwapOutRequest {
   string vault_address = 1;
   // shares is the amount of shares to swap out.
   string shares = 2;
-  // redeem_denom is the payout denom to estimate; if empty, the underlying asset is used.
-  string redeem_denom = 3;
+  // redeem_denom previously selected the payout denom to estimate. The estimate
+  // is always in the vault's underlying_asset; if set, this must equal
+  // underlying_asset. Retained for wire compatibility with released clients.
+  string redeem_denom = 3 [deprecated = true];
 }
 
 // QueryEstimateSwapOutResponse is the response message for the Query/EstimateSwapOut endpoint.

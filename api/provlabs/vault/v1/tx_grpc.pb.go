@@ -130,7 +130,7 @@ type MsgClient interface {
 	// Must be signed by the vault admin.
 	UpdateNAVAuthority(ctx context.Context, in *MsgUpdateNAVAuthorityRequest, opts ...grpc.CallOption) (*MsgUpdateNAVAuthorityResponse, error)
 	// AcceptAsset settles a pending exchange-module payment whose target is the vault,
-	// exchanging an external asset for the vault's payment denom.
+	// exchanging an external asset for the vault's underlying asset.
 	// Must be signed by the vault's asset manager; the admin cannot settle.
 	AcceptAsset(ctx context.Context, in *MsgAcceptAssetRequest, opts ...grpc.CallOption) (*MsgAcceptAssetResponse, error)
 	// RejectAsset declines a pending exchange-module payment whose target is the vault,
@@ -544,7 +544,7 @@ type MsgServer interface {
 	// Must be signed by the vault admin.
 	UpdateNAVAuthority(context.Context, *MsgUpdateNAVAuthorityRequest) (*MsgUpdateNAVAuthorityResponse, error)
 	// AcceptAsset settles a pending exchange-module payment whose target is the vault,
-	// exchanging an external asset for the vault's payment denom.
+	// exchanging an external asset for the vault's underlying asset.
 	// Must be signed by the vault's asset manager; the admin cannot settle.
 	AcceptAsset(context.Context, *MsgAcceptAssetRequest) (*MsgAcceptAssetResponse, error)
 	// RejectAsset declines a pending exchange-module payment whose target is the vault,

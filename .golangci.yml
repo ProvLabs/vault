@@ -167,6 +167,12 @@ linters:
       - linters:
           - staticcheck
         text: 'ST1003:'
+      # The module must keep implementing its own deprecated payment-denom
+      # surface until it is removed; the deprecation warnings are aimed at
+      # external integrators, not this repo's internals.
+      - linters:
+          - staticcheck
+        text: 'SA1019: .*deferred to a future major release'
       - linters:
           - revive
         text: don't use leading k in Go names

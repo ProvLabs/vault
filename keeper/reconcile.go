@@ -196,7 +196,7 @@ func (k Keeper) publishShareNav(ctx sdk.Context, vault *types.VaultAccount) erro
 		}
 		return nil
 	}
-	tvv, err := k.GetNetTVVInUnderlyingAsset(ctx, *vault)
+	tvv, err := k.GetNetTVV(ctx, *vault)
 	if err != nil {
 		return fmt.Errorf("failed to get TVV: %w", err)
 	}
@@ -237,7 +237,7 @@ func (k Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vault
 	principalAddress := vault.PrincipalMarkerAddress()
 
 	reserves := k.BankKeeper.GetBalance(ctx, vaultAddr, denom)
-	principalTvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
+	principalTvv, err := k.GetTVV(ctx, *vault)
 	if err != nil {
 		return fmt.Errorf("failed to get TVV: %w", err)
 	}
@@ -283,7 +283,7 @@ func (k Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vault
 		}
 	}
 
-	principalTvvAfter, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
+	principalTvvAfter, err := k.GetTVV(ctx, *vault)
 	if err != nil {
 		return fmt.Errorf("failed to get TVV after reconciliation: %w", err)
 	}
@@ -304,11 +304,11 @@ func (k Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vault
 // from the vault's principal marker account using its configured AumFeeBips.
 //
 // The fee is calculated based on the **Gross TVV** (the literal sum of all assets in the marker)
-// and collected in the vault's configured PaymentDenom.
+// and collected in the vault's underlying asset.
 //
 // This method implements a "collect-what-is-available" strategy: it attempts to transfer
 // the total outstanding fee (accrued + previously unpaid), but caps the collection at
-// the principal marker's current PaymentDenom balance. Any uncollected remainder is
+// the principal marker's current underlying-asset balance. Any uncollected remainder is
 // recorded in OutstandingAumFee to be retried during the next reconciliation.
 //
 // An EventVaultFeeCollected is emitted upon success.
@@ -318,7 +318,7 @@ func (k Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAccou
 		return nil
 	}
 
-	tvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
+	tvv, err := k.GetTVV(ctx, *vault)
 	if err != nil {
 		return fmt.Errorf("failed to get TVV: %w", err)
 	}
@@ -332,7 +332,7 @@ func (k Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAccou
 	if err != nil {
 		return fmt.Errorf("failed to add new fee payment %s to outstanding AUM fee %s: %w", newFeePayment, vault.OutstandingAumFee, err)
 	}
-	totalOutstanding := sdk.NewCoin(vault.PaymentDenom, totalOutstandingAmount)
+	totalOutstanding := sdk.NewCoin(vault.UnderlyingAsset, totalOutstandingAmount)
 	if totalOutstanding.IsZero() {
 		vault.FeePeriodStart = currentBlockTime
 		return nil
@@ -344,7 +344,7 @@ func (k Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAccou
 	}
 
 	principalAddress := vault.PrincipalMarkerAddress()
-	balance := k.BankKeeper.GetBalance(ctx, principalAddress, vault.PaymentDenom)
+	balance := k.BankKeeper.GetBalance(ctx, principalAddress, vault.UnderlyingAsset)
 
 	toCollect := totalOutstanding
 	if balance.Amount.LT(totalOutstanding.Amount) {
@@ -398,7 +398,7 @@ func (k Keeper) CanPayInterestDuration(ctx sdk.Context, vault *types.VaultAccoun
 	vaultAddr := vault.GetAddress()
 	principalAddr := vault.PrincipalMarkerAddress()
 
-	principalTvv, err := k.GetTVVInUnderlyingAsset(ctx, *vault)
+	principalTvv, err := k.GetTVV(ctx, *vault)
 	if err != nil {
 		return false, fmt.Errorf("failed to get TVV: %w", err)
 	}
@@ -472,29 +472,13 @@ func (k Keeper) CalculateAccruedAUMFee(ctx sdk.Context, vault types.VaultAccount
 }
 
 // CalculateAccruedAUMFeePayment calculates the AUM fees that would have accrued for the vault
-// from its FeePeriodStart to the current block time, converted to the vault's PaymentDenom.
+// from its FeePeriodStart to the current block time, as a coin in the vault's underlying asset.
 func (k Keeper) CalculateAccruedAUMFeePayment(ctx sdk.Context, vault types.VaultAccount, totalAssets sdkmath.Int) (sdk.Coin, error) {
 	feeUnderlying, err := k.CalculateAccruedAUMFee(ctx, vault, totalAssets)
 	if err != nil {
 		return sdk.Coin{}, fmt.Errorf("failed to calculate accrued AUM fee: %w", err)
 	}
-	if feeUnderlying.IsZero() {
-		return sdk.NewCoin(vault.PaymentDenom, sdkmath.ZeroInt()), nil
-	}
-	feePayment, err := k.FromUnderlyingAssetAmount(ctx, vault, feeUnderlying, vault.PaymentDenom)
-	if err != nil {
-		return sdk.Coin{}, fmt.Errorf("failed to convert accrued fee to payment denom: %w", err)
-	}
-	return sdk.NewCoin(vault.PaymentDenom, feePayment), nil
-}
-
-// CalculateOutstandingFeeUnderlying converts the vault's outstanding AUM fees into
-// the equivalent amount of the underlying asset.
-func (k Keeper) CalculateOutstandingFeeUnderlying(ctx sdk.Context, vault types.VaultAccount) (sdkmath.Int, error) {
-	if vault.OutstandingAumFee.IsZero() {
-		return sdkmath.ZeroInt(), nil
-	}
-	return k.ToUnderlyingAssetAmount(ctx, vault, vault.OutstandingAumFee)
+	return sdk.NewCoin(vault.UnderlyingAsset, feeUnderlying), nil
 }
 
 // CalculateVaultTotalAssets returns the total value of the vault's assets, including the interest
@@ -519,11 +503,7 @@ func (k Keeper) CalculateVaultTotalAssets(ctx sdk.Context, vault *types.VaultAcc
 	}
 	estimated = estimated.Sub(feeAccrued)
 
-	outstandingUnderlying, err := k.CalculateOutstandingFeeUnderlying(ctx, *vault)
-	if err != nil {
-		return sdkmath.Int{}, fmt.Errorf("error converting outstanding fee: %w", err)
-	}
-	estimated = estimated.Sub(outstandingUnderlying)
+	estimated = estimated.Sub(vault.OutstandingAumFee.Amount)
 
 	if estimated.IsNegative() {
 		estimated = sdkmath.ZeroInt()
@@ -632,7 +612,7 @@ func (k Keeper) reschedulePayoutTimeout(ctx sdk.Context, vault *types.VaultAccou
 }
 
 // tryGetVault returns the vault if found, or false if the vault is missing or invalid.
-// It should only be used in BeginBlocker/EndBlocker logic where failure is non-critical.
+// It should only be used in BeginBlocker/EndBlocker or migration logic where failure is non-critical.
 func (k Keeper) tryGetVault(ctx sdk.Context, addr sdk.AccAddress) (*types.VaultAccount, bool) {
 	vault, err := k.GetVault(ctx, addr)
 	if err != nil {

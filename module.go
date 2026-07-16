@@ -190,8 +190,8 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:       "create [admin] [share_denom] [underlying_asset]",
 					Alias:     []string{"c", "new"},
 					Short:     "Create a new vault",
-					Long:      "Create a new vault with an underlying asset and share denom. Optionally set a default payment denom for redemptions and a withdrawal delay that queues swap-outs until the delay elapses.",
-					Example:   fmt.Sprintf("%s create %s svnhash nhash --payment-denom nhash --withdrawal-delay-seconds 86400", txStart, exampleAdminAddr),
+					Long:      "Create a new vault with an underlying asset and share denom. Optionally set a withdrawal delay that queues swap-outs until the delay elapses.",
+					Example:   fmt.Sprintf("%s create %s svnhash nhash --withdrawal-delay-seconds 86400", txStart, exampleAdminAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: fieldAdmin},
 						{ProtoField: "share_denom"},
@@ -200,7 +200,7 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					FlagOptions: map[string]*autocliv1.FlagOptions{
 						"payment_denom": {
 							Name:  "payment-denom",
-							Usage: "Payment denom used for swap-outs and payouts. If omitted, the underlying asset is used.",
+							Usage: "Deprecated: vaults are single-denom. If set, must equal the underlying asset.",
 						},
 						"withdrawal_delay_seconds": {
 							Name:  "withdrawal-delay-seconds",
@@ -254,9 +254,9 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "SwapOut",
 					Use:       "swap-out [owner] [vault_address] [assets] [redeem_denom]",
 					Alias:     []string{"so"},
-					Short:     "Queue a withdrawal by redeeming shares for assets",
-					Long:      "Redeem shares to receive assets. The request is queued and completed later according to vault policy and any configured withdrawal delay.",
-					Example:   fmt.Sprintf("%s swap-out %s %s 100svnhash nhash", txStart, exampleOwnerAddr, exampleVaultAddr),
+					Short:     "Queue a withdrawal by redeeming shares for the underlying asset",
+					Long:      "Redeem shares to receive the vault's underlying asset. The request is queued and completed later according to vault policy and any configured withdrawal delay. The redeem_denom argument is deprecated; if provided, it must equal the vault's underlying asset.",
+					Example:   fmt.Sprintf("%s swap-out %s %s 100svnhash", txStart, exampleOwnerAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "owner"},
 						{ProtoField: fieldVaultAddress},
@@ -629,9 +629,9 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "EstimateSwapOut",
 					Use:       "estimate-swap-out [vault_address] [shares] [redeem_denom]",
 					Alias:     []string{"eso"},
-					Short:     "Estimate assets received for redeeming shares",
-					Long:      "Simulate a swap-out to estimate the assets returned for the provided shares. Optionally specify a redeem denom.",
-					Example:   fmt.Sprintf("%s estimate-swap-out %s 1000000svnhash nhash", queryStart, exampleVaultAddr),
+					Short:     "Estimate underlying assets received for redeeming shares",
+					Long:      "Simulate a swap-out to estimate the underlying assets returned for the provided shares. The redeem_denom argument is deprecated; if provided, it must equal the vault's underlying asset.",
+					Example:   fmt.Sprintf("%s estimate-swap-out %s 1000000svnhash", queryStart, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: fieldVaultAddress},
 						{ProtoField: fieldShares},

@@ -152,9 +152,9 @@ This advances vaults from the **verification set**:
 
 * **PerformVaultFeeTransfer**
   Computes the 15 bps (0.15% annual) technology fee based on **Gross TVV**.
-  - Collects fee in the configured `payment_denom`.
+  - Collects fee in the vault's `underlying_asset`.
   - Transfers from **principal (marker account)** → ProvLabs collection address.
-  - Caps collection at available `payment_denom` balance.
+  - Caps collection at available `underlying_asset` balance.
   - Emits `EventVaultFeeCollected`.
 
 * **UpdateInterestRates**
@@ -167,7 +167,7 @@ This advances vaults from the **verification set**:
 * **processSingleWithdrawal** (called from `processPendingSwapOuts`)
 
   1. **ReconcileVault** (reconcile both interest and AUM fees using a single `CacheContext`/atomic transfer).
-  2. Convert **shares → payout coin** (`underlying_asset` or optional **payment denom**), using current NAV and pro-rata TVV.
+  2. Convert **shares → payout coin** (always the `underlying_asset`), using current NAV and pro-rata TVV.
   3. **Payout assets** from **principal (marker)** → **owner** with transfer-agent context.
   4. **Burn shares**: move escrowed shares **vault → principal**, then `BurnCoin`.
   5. Emit `EventSwapOutCompleted`.
@@ -237,7 +237,3 @@ Submit `MsgSwapOut` → capture `request_id` → watch for `Completed` or `Refun
 * **Auto-pause on critical errors** creates a safe dead-stop until an admin resolves the issue.
 
 ---
-
-```
-::contentReference[oaicite:0]{index=0}
-```

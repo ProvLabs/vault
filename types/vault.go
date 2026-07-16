@@ -70,9 +70,6 @@ type VaultAccountI interface {
 	// GetUnderlyingAsset returns the denom of the asset the vault actually holds.
 	GetUnderlyingAsset() string
 
-	// GetPaymentDenom returns the denom used for fees/interest payments, if any.
-	GetPaymentDenom() string
-
 	// GetWithdrawalDelaySeconds returns the number of seconds that
 	// withdrawals from this vault are delayed after a swap-out request.
 	// A value of 0 means withdrawals are processed immediately in the end blocker.
@@ -88,7 +85,10 @@ type VaultAccountI interface {
 	GetPausedBalance() sdk.Coin
 }
 
-// NewVaultAccount creates a new vault with an optional payment denom allowed for I/O alongside the underlying asset.
+// NewVaultAccount creates a new single-denom vault: the underlying asset is the only
+// denom accepted for deposits, redemptions, fees, and interest. The deprecated
+// payment_denom field is populated with the underlying asset purely for wire
+// compatibility; it carries no independent meaning.
 //
 // The vault's operational limits are configured via:
 //   - withdrawalDelay: minimum seconds a swap-out must wait in queue.
@@ -100,17 +100,14 @@ type VaultAccountI interface {
 //     by validation (administrators should use Toggle messages to disable operations instead).
 //
 // All swap limit values are represented as integer strings (cosmos.IntString).
-func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyingAsset, paymentDenom string, withdrawalDelay uint64, aumFeeBips uint32, minSwapInValue, minSwapOutValue, maxSwapInValue, maxSwapOutValue string) *VaultAccount {
-	if paymentDenom == "" {
-		paymentDenom = underlyingAsset
-	}
+func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyingAsset string, withdrawalDelay uint64, aumFeeBips uint32, minSwapInValue, minSwapOutValue, maxSwapInValue, maxSwapOutValue string) *VaultAccount {
 	return &VaultAccount{
 		BaseAccount:            baseAcc,
 		Admin:                  admin,
 		NavAuthority:           admin,
 		TotalShares:            sdk.Coin{Denom: shareDenom, Amount: sdkmath.ZeroInt()},
 		UnderlyingAsset:        underlyingAsset,
-		PaymentDenom:           paymentDenom,
+		PaymentDenom:           underlyingAsset,
 		CurrentInterestRate:    ZeroInterestRate,
 		DesiredInterestRate:    ZeroInterestRate,
 		SwapInEnabled:          true,
@@ -120,7 +117,7 @@ func NewVaultAccount(baseAcc *authtypes.BaseAccount, admin, shareDenom, underlyi
 		PausedBalance:          sdk.Coin{},
 		BridgeEnabled:          false,
 		BridgeAddress:          "",
-		OutstandingAumFee:      sdk.NewCoin(paymentDenom, sdkmath.ZeroInt()),
+		OutstandingAumFee:      sdk.NewCoin(underlyingAsset, sdkmath.ZeroInt()),
 		AumFeeBips:             aumFeeBips,
 		MinSwapInValue:         minSwapInValue,
 		MinSwapOutValue:        minSwapOutValue,
@@ -195,8 +192,8 @@ func (v VaultAccount) Validate() error {
 		return fmt.Errorf("invalid underlying asset denom: %s", v.UnderlyingAsset)
 	}
 
-	if err := sdk.ValidateDenom(v.PaymentDenom); err != nil {
-		return fmt.Errorf("invalid payment denom: %q: %w", v.PaymentDenom, err)
+	if v.PaymentDenom != "" && v.PaymentDenom != v.UnderlyingAsset {
+		return fmt.Errorf("payment denom %q must be empty or equal underlying asset %q; vaults are single-denom", v.PaymentDenom, v.UnderlyingAsset)
 	}
 
 	if v.AssetManager != "" {
@@ -288,11 +285,14 @@ func (v VaultAccount) Validate() error {
 		return fmt.Errorf("AUM fee bips cannot exceed 10,000: %d", v.AumFeeBips)
 	}
 
-	if !v.OutstandingAumFee.Amount.IsNil() && v.OutstandingAumFee.IsNegative() {
+	if v.OutstandingAumFee.Amount.IsNil() {
+		return fmt.Errorf("outstanding AUM fee amount cannot be nil; use a zero coin of the underlying asset %q", v.UnderlyingAsset)
+	}
+	if v.OutstandingAumFee.IsNegative() {
 		return fmt.Errorf("outstanding AUM fee cannot be negative: %s", v.OutstandingAumFee)
 	}
-	if (v.OutstandingAumFee.Denom != "" || (!v.OutstandingAumFee.Amount.IsNil() && !v.OutstandingAumFee.Amount.IsZero())) && v.OutstandingAumFee.Denom != v.PaymentDenom {
-		return fmt.Errorf("outstanding AUM fee denom %s does not match payment denom %s", v.OutstandingAumFee.Denom, v.PaymentDenom)
+	if (v.OutstandingAumFee.Denom != "" || !v.OutstandingAumFee.Amount.IsZero()) && v.OutstandingAumFee.Denom != v.UnderlyingAsset {
+		return fmt.Errorf("outstanding AUM fee denom %s does not match underlying asset %s", v.OutstandingAumFee.Denom, v.UnderlyingAsset)
 	}
 
 	if err := ValidateSwapLimits(v.MinSwapInValue, v.MaxSwapInValue); err != nil {
@@ -364,37 +364,18 @@ func (v *VaultAccount) ValidateNAVAuthority(signer string) error {
 	return nil
 }
 
-func (v *VaultAccount) ValuationDenom() string {
-	return v.UnderlyingAsset
-}
-
-// AcceptedDenoms returns the list of coin denoms accepted for I/O.
-// Always includes the underlying asset; includes payment_denom only if set and distinct.
-func (v *VaultAccount) AcceptedDenoms() []string {
-	if v.PaymentDenom != "" && v.PaymentDenom != v.UnderlyingAsset {
-		return []string{v.UnderlyingAsset, v.PaymentDenom}
-	}
-	return []string{v.UnderlyingAsset}
-}
-
-// IsAcceptedDenom reports whether denom is allowed by the vault configuration.
+// IsAcceptedDenom reports whether denom is allowed for vault I/O. Vaults are
+// single-denom: only the underlying asset is accepted.
 func (v *VaultAccount) IsAcceptedDenom(denom string) bool {
-	if denom == v.UnderlyingAsset {
-		return true
-	}
-	return v.PaymentDenom != "" && denom == v.PaymentDenom
+	return denom == v.UnderlyingAsset
 }
 
-// ValidateAcceptedDenom returns an error if denom is not supported by the vault.
+// ValidateAcceptedDenom returns an error if denom is not the vault's underlying asset.
 func (v *VaultAccount) ValidateAcceptedDenom(denom string) error {
 	if v.IsAcceptedDenom(denom) {
 		return nil
 	}
-	allowed := v.AcceptedDenoms()
-	if len(allowed) == 1 {
-		return fmt.Errorf(`denom not supported for vault; must be "%s": got "%s"`, allowed[0], denom)
-	}
-	return fmt.Errorf(`denom not supported for vault; must be one of "%s" or "%s": got "%s"`, allowed[0], allowed[1], denom)
+	return fmt.Errorf(`denom not supported for vault; must be "%s": got "%s"`, v.UnderlyingAsset, denom)
 }
 
 // ValidateAcceptedCoin returns an error if the coin amount is zero or its denom is not supported.

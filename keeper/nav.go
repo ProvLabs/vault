@@ -36,11 +36,8 @@ func validateVaultNAVFields(vault *types.VaultAccount, nav types.VaultNAV) error
 	if err := nav.Price.Validate(); err != nil {
 		return fmt.Errorf("invalid NAV price: %w", err)
 	}
-	if vault.IsAcceptedDenom(nav.Denom) && !nav.Price.Amount.IsPositive() {
-		return fmt.Errorf("NAV price amount for accepted denom %q must be positive, got %s", nav.Denom, nav.Price.Amount)
-	}
-	if !vault.IsAcceptedDenom(nav.Price.Denom) {
-		return fmt.Errorf("NAV price denom %q must be an accepted vault denom %v", nav.Price.Denom, vault.AcceptedDenoms())
+	if nav.Price.Denom != vault.UnderlyingAsset {
+		return fmt.Errorf("NAV price denom %q must be the vault underlying asset %q", nav.Price.Denom, vault.UnderlyingAsset)
 	}
 	if nav.Volume.IsNil() || !nav.Volume.IsPositive() {
 		return fmt.Errorf("NAV volume must be positive")
@@ -60,11 +57,9 @@ func validateVaultNAVFields(vault *types.VaultAccount, nav types.VaultNAV) error
 // the vault's total holdings rather than set externally. The denom must also
 // be a registered marker on-chain, except for metadata value-owner denoms
 // (nft/<scope-id>), which are legitimate vault assets but cannot be markers.
-// The price must be a valid coin denominated in one of the vault's accepted
-// denoms (underlying asset or payment denom). Its amount must be positive when
-// the priced denom is itself an accepted denom (e.g. the payment denom), but
-// may be zero for a held, non-accepted denom so the authority can write a
-// worthless asset down to zero. The volume must be positive.
+// The price must be a valid coin denominated in the vault's underlying asset.
+// Its amount may be zero so the authority can write a worthless held asset
+// down to zero. The volume must be positive.
 //
 // This method does NOT verify that signer is authorized to mutate the vault's
 // NAV table; signer is recorded for event attribution only. Callers must run

@@ -143,7 +143,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 			expectedErr: fmt.Sprintf("invalid underlying asset denom: %s", invalidDenom),
 		},
 		{
-			name: "payment denom omitted => fails validation",
+			name: "empty payment denom is valid under single-denom semantics",
 			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
@@ -154,10 +154,10 @@ func TestVaultAccount_Validate(t *testing.T) {
 				DesiredInterestRate: validInterest,
 				OutstandingAumFee:   sdk.Coin{Denom: "", Amount: math.NewInt(0)},
 			},
-			expectedErr: "invalid payment denom: \"\": invalid denom: ",
+			expectedErr: "",
 		},
 		{
-			name: "payment denom valid and distinct => ok",
+			name: "payment denom distinct from underlying is rejected as mixed-denom",
 			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
@@ -166,12 +166,12 @@ func TestVaultAccount_Validate(t *testing.T) {
 				PaymentDenom:        "usdc",
 				CurrentInterestRate: validInterest,
 				DesiredInterestRate: validInterest,
-				OutstandingAumFee:   sdk.NewInt64Coin("usdc", 0),
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
 			},
-			expectedErr: "",
+			expectedErr: `payment denom "usdc" must be empty or equal underlying asset "uusd"; vaults are single-denom`,
 		},
 		{
-			name: "payment denom invalid format => error",
+			name: "payment denom with invalid format is rejected as mixed-denom",
 			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
 				Admin:               validAdmin,
@@ -180,9 +180,9 @@ func TestVaultAccount_Validate(t *testing.T) {
 				PaymentDenom:        "inv@lid$",
 				CurrentInterestRate: validInterest,
 				DesiredInterestRate: validInterest,
-				OutstandingAumFee:   sdk.Coin{Denom: "inv@lid$", Amount: math.NewInt(0)},
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
 			},
-			expectedErr: "invalid payment denom",
+			expectedErr: `payment denom "inv@lid$" must be empty or equal underlying asset "uusd"; vaults are single-denom`,
 		},
 		{
 			name: "invalid current interest rate",
@@ -607,7 +607,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 				DesiredInterestRate: "0.0",
 				OutstandingAumFee:   sdk.NewInt64Coin("wrong", 100),
 			},
-			expectedErr: "outstanding AUM fee denom wrong does not match payment denom uusd",
+			expectedErr: "outstanding AUM fee denom wrong does not match underlying asset uusd",
 		},
 		{
 			name: "negative outstanding AUM fee",
@@ -624,6 +624,20 @@ func TestVaultAccount_Validate(t *testing.T) {
 			expectedErr: "outstanding AUM fee cannot be negative",
 		},
 		{
+			name: "outstanding AUM fee with nil amount is rejected before it can panic consensus math",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:         baseAcc,
+				Admin:               validAdmin,
+				TotalShares:         sdk.NewInt64Coin(validDenom, 0),
+				UnderlyingAsset:     "uusd",
+				PaymentDenom:        "uusd",
+				CurrentInterestRate: "0.0",
+				DesiredInterestRate: "0.0",
+				OutstandingAumFee:   sdk.Coin{},
+			},
+			expectedErr: "outstanding AUM fee amount cannot be nil; use a zero coin of the underlying asset \"uusd\"",
+		},
+		{
 			name: "non-zero outstanding AUM fee with empty denom",
 			vaultAccount: types.VaultAccount{
 				BaseAccount:         baseAcc,
@@ -635,7 +649,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 				DesiredInterestRate: "0.0",
 				OutstandingAumFee:   sdk.Coin{Denom: "", Amount: math.NewInt(100)},
 			},
-			expectedErr: "outstanding AUM fee denom  does not match payment denom uusd",
+			expectedErr: "outstanding AUM fee denom  does not match underlying asset uusd",
 		},
 		{
 			name: "invalid swap-in limits",
@@ -647,6 +661,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 				PaymentDenom:        "uusd",
 				CurrentInterestRate: "0.0",
 				DesiredInterestRate: "0.0",
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
 				MinSwapInValue:      "abc",
 			},
 			expectedErr: "failed to validate swap-in limits: invalid min value: abc",
@@ -661,6 +676,7 @@ func TestVaultAccount_Validate(t *testing.T) {
 				PaymentDenom:        "uusd",
 				CurrentInterestRate: "0.0",
 				DesiredInterestRate: "0.0",
+				OutstandingAumFee:   sdk.NewInt64Coin("uusd", 0),
 				MinSwapOutValue:     "1000",
 				MaxSwapOutValue:     "500",
 			},
@@ -726,30 +742,37 @@ func TestVaultAccount_Validate(t *testing.T) {
 	}
 }
 
-func TestNewVaultAccount_DefaultsNavAuthorityToAdmin(t *testing.T) {
+func TestNewVaultAccount(t *testing.T) {
 	admin, _, _, baseAcc := makeNAVAuthorityFixtures()
 
 	tests := []struct {
-		name         string
-		admin        string
-		paymentDenom string
+		name            string
+		admin           string
+		shareDenom      string
+		underlyingAsset string
 	}{
 		{
-			name:         "nav authority equals admin when payment denom is set",
-			admin:        admin,
-			paymentDenom: "usdc",
+			name:            "seeds single-denom defaults for a standard vault",
+			admin:           admin,
+			shareDenom:      "vshare",
+			underlyingAsset: "uusd",
 		},
 		{
-			name:         "nav authority equals admin when payment denom is empty",
-			admin:        admin,
-			paymentDenom: "",
+			name:            "seeds single-denom defaults for a distinct underlying asset",
+			admin:           admin,
+			shareDenom:      "bondshare",
+			underlyingAsset: "under",
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			vault := types.NewVaultAccount(baseAcc, tc.admin, "vshare", "uusd", tc.paymentDenom, 0, 0, "", "", "", "")
-			require.Equal(t, tc.admin, vault.NavAuthority, "NewVaultAccount should set NavAuthority to admin for case: %s", tc.name)
+			vault := types.NewVaultAccount(baseAcc, tc.admin, tc.shareDenom, tc.underlyingAsset, 0, 0, "", "", "", "")
+			require.Equal(t, tc.admin, vault.NavAuthority, "NewVaultAccount should default NavAuthority to admin for case: %s", tc.name)
+			require.Equal(t, tc.underlyingAsset, vault.PaymentDenom, "NewVaultAccount should set PaymentDenom to the underlying asset for case: %s", tc.name)
+			require.Equal(t, tc.underlyingAsset, vault.UnderlyingAsset, "NewVaultAccount should set UnderlyingAsset for case: %s", tc.name)
+			require.Equal(t, sdk.NewInt64Coin(tc.underlyingAsset, 0), vault.OutstandingAumFee, "NewVaultAccount should seed OutstandingAumFee as a zero coin of the underlying asset for case: %s", tc.name)
+			require.NoError(t, vault.Validate(), "NewVaultAccount should produce a valid single-denom vault for case: %s", tc.name)
 		})
 	}
 }
@@ -954,103 +977,131 @@ func TestNewVaultNAV(t *testing.T) {
 	}
 }
 
-func TestVaultAccount_AcceptedDenoms(t *testing.T) {
+func TestVaultAccount_IsAcceptedDenom(t *testing.T) {
 	tests := []struct {
 		name            string
 		underlyingAsset string
 		paymentDenom    string
-		expectedDenoms  []string
+		denom           string
+		expected        bool
 	}{
 		{
-			name:            "only underlying when payment empty",
+			name:            "underlying asset is accepted",
 			underlyingAsset: "uusd",
-			paymentDenom:    "",
-			expectedDenoms:  []string{"uusd"},
+			denom:           "uusd",
+			expected:        true,
 		},
 		{
-			name:            "only underlying when payment equals underlying",
+			name:            "non-underlying denom is not accepted",
 			underlyingAsset: "uusd",
-			paymentDenom:    "uusd",
-			expectedDenoms:  []string{"uusd"},
+			denom:           "usdc",
+			expected:        false,
 		},
 		{
-			name:            "underlying and payment when distinct",
+			name:            "stale payment denom does not widen acceptance",
 			underlyingAsset: "uusd",
 			paymentDenom:    "usdc",
-			expectedDenoms:  []string{"uusd", "usdc"},
+			denom:           "usdc",
+			expected:        false,
+		},
+		{
+			name:            "underlying still accepted when payment denom mirrors it",
+			underlyingAsset: "uusd",
+			paymentDenom:    "uusd",
+			denom:           "uusd",
+			expected:        true,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			v := types.VaultAccount{UnderlyingAsset: tc.underlyingAsset, PaymentDenom: tc.paymentDenom}
-			got := v.AcceptedDenoms()
-			assert.ElementsMatch(t, tc.expectedDenoms, got, "accepted denoms should match expected")
+			got := v.IsAcceptedDenom(tc.denom)
+			assert.Equal(t, tc.expected, got, "IsAcceptedDenom(%q) mismatch for case: %s", tc.denom, tc.name)
 		})
 	}
 }
 
-func TestVaultAccount_IsAcceptedDenom(t *testing.T) {
-	vaWithMulti := types.VaultAccount{UnderlyingAsset: "uusd", PaymentDenom: "usdc"}
-	assert.True(t, vaWithMulti.IsAcceptedDenom("uusd"), "underlying should be accepted")
-	assert.True(t, vaWithMulti.IsAcceptedDenom("usdc"), "payment denom should be accepted")
-	assert.False(t, vaWithMulti.IsAcceptedDenom("uatom"), "unlisted denom should not be accepted")
-
-	vaUnderlyingOnly := types.VaultAccount{UnderlyingAsset: "uusd", PaymentDenom: ""}
-	assert.True(t, vaUnderlyingOnly.IsAcceptedDenom("uusd"), "underlying should be accepted when payment empty")
-	assert.False(t, vaUnderlyingOnly.IsAcceptedDenom("usdc"), "payment should not be accepted when not configured")
-
-	vaMultiSameDenom := types.VaultAccount{UnderlyingAsset: "uusd", PaymentDenom: "uusd"}
-	assert.True(t, vaMultiSameDenom.IsAcceptedDenom("uusd"), "underlying should be accepted when payment equals underlying")
-	assert.False(t, vaMultiSameDenom.IsAcceptedDenom("usdc"), "unlisted denom should not be accepted when payment equals underlying")
-}
-
 func TestVaultAccount_ValidateAcceptedDenom(t *testing.T) {
-	vaUnderlyingOnly := types.VaultAccount{UnderlyingAsset: "uusd"}
-	err := vaUnderlyingOnly.ValidateAcceptedDenom("uusd")
-	assert.NoError(t, err, "valid underlying should pass")
+	tests := []struct {
+		name            string
+		underlyingAsset string
+		denom           string
+		expectedErr     string
+	}{
+		{
+			name:            "underlying asset passes",
+			underlyingAsset: "uusd",
+			denom:           "uusd",
+			expectedErr:     "",
+		},
+		{
+			name:            "non-underlying denom is rejected",
+			underlyingAsset: "uusd",
+			denom:           "usdc",
+			expectedErr:     `denom not supported for vault; must be "uusd": got "usdc"`,
+		},
+		{
+			name:            "empty denom is rejected",
+			underlyingAsset: "uusd",
+			denom:           "",
+			expectedErr:     `denom not supported for vault; must be "uusd": got ""`,
+		},
+	}
 
-	err = vaUnderlyingOnly.ValidateAcceptedDenom("usdc")
-	assert.Error(t, err, "unlisted denom should error")
-	assert.Contains(t, err.Error(), `denom not supported for vault`, "error should indicate unsupported denom")
-	assert.Contains(t, err.Error(), `"uusd"`, "error should list allowed denom")
-	assert.Contains(t, err.Error(), `"usdc"`, "error should include the provided denom")
-
-	vaWithMulti := types.VaultAccount{UnderlyingAsset: "uusd", PaymentDenom: "usdc"}
-	err = vaWithMulti.ValidateAcceptedDenom("uusd")
-	assert.NoError(t, err, "underlying should pass when dual")
-
-	err = vaWithMulti.ValidateAcceptedDenom("usdc")
-	assert.NoError(t, err, "payment denom should pass when dual")
-
-	err = vaWithMulti.ValidateAcceptedDenom("uatom")
-	assert.Error(t, err, "unlisted denom should error when dual")
-	assert.Contains(t, err.Error(), `"uusd"`, "error should include first allowed denom")
-	assert.Contains(t, err.Error(), `"usdc"`, "error should include second allowed denom")
-	assert.Contains(t, err.Error(), `"uatom"`, "error should include provided denom")
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			v := types.VaultAccount{UnderlyingAsset: tc.underlyingAsset}
+			err := v.ValidateAcceptedDenom(tc.denom)
+			if tc.expectedErr == "" {
+				assert.NoError(t, err, "expected no error for case: %s", tc.name)
+			} else {
+				assert.Error(t, err, "expected an error for case: %s", tc.name)
+				assert.Equal(t, tc.expectedErr, err.Error(), "error message mismatch for case: %s", tc.name)
+			}
+		})
+	}
 }
 
 func TestVaultAccount_ValidateAcceptedCoin(t *testing.T) {
-	vaWithMulti := types.VaultAccount{UnderlyingAsset: "uusd", PaymentDenom: "usdc"}
+	tests := []struct {
+		name            string
+		underlyingAsset string
+		coin            sdk.Coin
+		expectedErr     string
+	}{
+		{
+			name:            "non-zero underlying coin is accepted",
+			underlyingAsset: "uusd",
+			coin:            sdk.NewInt64Coin("uusd", 1),
+			expectedErr:     "",
+		},
+		{
+			name:            "non-underlying denom is rejected",
+			underlyingAsset: "uusd",
+			coin:            sdk.NewInt64Coin("usdc", 5),
+			expectedErr:     `denom not supported for vault; must be "uusd": got "usdc"`,
+		},
+		{
+			name:            "zero amount is rejected before denom check",
+			underlyingAsset: "uusd",
+			coin:            sdk.NewInt64Coin("uusd", 0),
+			expectedErr:     "amount must be greater than zero",
+		},
+	}
 
-	err := vaWithMulti.ValidateAcceptedCoin(sdk.NewInt64Coin("uusd", 1))
-	assert.NoError(t, err, "non-zero underlying coin should be accepted")
-
-	err = vaWithMulti.ValidateAcceptedCoin(sdk.NewInt64Coin("usdc", 5))
-	assert.NoError(t, err, "non-zero payment coin should be accepted")
-
-	err = vaWithMulti.ValidateAcceptedCoin(sdk.NewInt64Coin("uatom", 7))
-	assert.Error(t, err, "unlisted denom should error")
-	assert.Contains(t, err.Error(), "denom not supported for vault", "error should indicate unsupported denom")
-
-	err = vaWithMulti.ValidateAcceptedCoin(sdk.NewInt64Coin("uusd", 0))
-	assert.Error(t, err, "zero amount should error")
-	assert.Equal(t, "amount must be greater than zero", err.Error(), "error should match expected message")
-
-	vaUnderlyingOnly := types.VaultAccount{UnderlyingAsset: "uusd"}
-	err = vaUnderlyingOnly.ValidateAcceptedCoin(sdk.NewInt64Coin("usdc", 3))
-	assert.Error(t, err, "payment denom should not be accepted when not configured")
-	assert.Contains(t, err.Error(), "denom not supported for vault", "error should indicate unsupported denom")
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			v := types.VaultAccount{UnderlyingAsset: tc.underlyingAsset}
+			err := v.ValidateAcceptedCoin(tc.coin)
+			if tc.expectedErr == "" {
+				assert.NoError(t, err, "expected no error for case: %s", tc.name)
+			} else {
+				assert.Error(t, err, "expected an error for case: %s", tc.name)
+				assert.Equal(t, tc.expectedErr, err.Error(), "error message mismatch for case: %s", tc.name)
+			}
+		})
+	}
 }
 
 func TestPendingSwapOut_Validate(t *testing.T) {

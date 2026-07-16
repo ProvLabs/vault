@@ -42,7 +42,7 @@ func (s *TestSuite) TestQueryServer_Vault() {
 	}
 
 	underlying := "uylds.fcc"
-	payment := "usdc"
+	heldAsset := "usdc"
 
 	shareDenom1 := "vault1"
 	addr1 := types.GetVaultAddress(shareDenom1)
@@ -55,31 +55,27 @@ func (s *TestSuite) TestQueryServer_Vault() {
 
 	setupVaults := func() {
 		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlying, 1), s.adminAddr)
-		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(payment, 1), s.adminAddr)
-		initNAV := &types.InitialVaultNAV{
-			Price:  sdk.NewInt64Coin(underlying, 1),
-			Volume: math.OneInt(),
-		}
-		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: admin, ShareDenom: shareDenom1, UnderlyingAsset: underlying, PaymentDenom: payment, InitialPaymentNav: initNAV})
-		s.Require().NoError(err, "create vault1 should succeed")
-		_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{Admin: admin, ShareDenom: shareDenom2, UnderlyingAsset: underlying, PaymentDenom: payment, InitialPaymentNav: initNAV})
-		s.Require().NoError(err, "create vault2 should succeed")
+		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(heldAsset, 1), s.adminAddr)
+		vault1 := s.createSingleDenomVault(vaultAttrs{admin: admin, share: shareDenom1, underlying: underlying})
+		vault2 := s.createSingleDenomVault(vaultAttrs{admin: admin, share: shareDenom2, underlying: underlying})
+		s.setVaultNAV(vault1, heldAsset, sdk.NewInt64Coin(underlying, 1), 1)
+		s.setVaultNAV(vault2, heldAsset, sdk.NewInt64Coin(underlying, 1), 1)
 		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, addr1, sdk.NewCoins(sdk.NewInt64Coin(underlying, 40))), "fund reserves for vault1 should succeed")
-		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr1, sdk.NewCoins(sdk.NewInt64Coin(underlying, 100), sdk.NewInt64Coin(payment, 250))), "fund principal (marker) for vault1 should succeed")
+		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr1, sdk.NewCoins(sdk.NewInt64Coin(underlying, 100), sdk.NewInt64Coin(heldAsset, 250))), "fund principal (marker) for vault1 should succeed")
 		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, addr2, sdk.NewCoins(sdk.NewInt64Coin(underlying, 20))), "fund reserves for vault2 should succeed")
-		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr2, sdk.NewCoins(sdk.NewInt64Coin(underlying, 200), sdk.NewInt64Coin(payment, 100))), "fund principal (marker) for vault2 should succeed")
+		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr2, sdk.NewCoins(sdk.NewInt64Coin(underlying, 200), sdk.NewInt64Coin(heldAsset, 100))), "fund principal (marker) for vault2 should succeed")
 	}
 
 	tests := []querytest.TestCase[types.QueryVaultRequest, types.QueryVaultResponse]{
 		{
-			Name:  "vault found by address (multi-denom principal, uylds.fcc underlying)",
+			Name:  "vault found by address (held asset priced via internal NAV)",
 			Setup: setupVaults,
 			Req:   &types.QueryVaultRequest{Id: addr1.String()},
 			ExpectedResp: &types.QueryVaultResponse{
-				Vault: *types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, underlying, payment, 0, 15, "", "", "", ""),
+				Vault: *types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, underlying, 0, 15, "", "", "", ""),
 				Principal: types.AccountBalance{
 					Address: markerAddr1.String(),
-					Coins:   sdk.NewCoins(sdk.NewInt64Coin(underlying, 100), sdk.NewInt64Coin(payment, 250)),
+					Coins:   sdk.NewCoins(sdk.NewInt64Coin(underlying, 100), sdk.NewInt64Coin(heldAsset, 250)),
 				},
 				Reserves: types.AccountBalance{
 					Address: addr1.String(),
@@ -89,14 +85,14 @@ func (s *TestSuite) TestQueryServer_Vault() {
 			},
 		},
 		{
-			Name:  "vault found by share denom (multi-denom principal, uylds.fcc underlying)",
+			Name:  "vault found by share denom (held asset priced via internal NAV)",
 			Setup: setupVaults,
 			Req:   &types.QueryVaultRequest{Id: shareDenom2},
 			ExpectedResp: &types.QueryVaultResponse{
-				Vault: *types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, underlying, payment, 0, 15, "", "", "", ""),
+				Vault: *types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, underlying, 0, 15, "", "", "", ""),
 				Principal: types.AccountBalance{
 					Address: markerAddr2.String(),
-					Coins:   sdk.NewCoins(sdk.NewInt64Coin(underlying, 200), sdk.NewInt64Coin(payment, 100)),
+					Coins:   sdk.NewCoins(sdk.NewInt64Coin(underlying, 200), sdk.NewInt64Coin(heldAsset, 100)),
 				},
 				Reserves: types.AccountBalance{
 					Address: addr2.String(),
@@ -202,131 +198,53 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 	shareDenom3 := "vault3"
 	addr3 := types.GetVaultAddress(shareDenom3)
 
+	setupThreeVaults := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("stake2", 1), s.adminAddr)
+		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("nhash", 1), s.adminAddr)
+		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("usdf", 1), s.adminAddr)
+		s.CreateVaultWithParams(shareDenom1, "stake2")
+		s.CreateVaultWithParams(shareDenom2, "nhash")
+		s.CreateVaultWithParams(shareDenom3, "usdf")
+	}
+
 	tests := []querytest.TestCase[types.QueryVaultsRequest, types.QueryVaultsResponse]{
 		{
 			Name: "happy path - single vault",
 			Setup: func() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("stake2", 1), s.adminAddr)
-				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("usdc", 1), s.adminAddr)
-				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-					Admin:           admin,
-					ShareDenom:      shareDenom1,
-					UnderlyingAsset: "stake2",
-					PaymentDenom:    "usdc",
-					InitialPaymentNav: &types.InitialVaultNAV{
-						Price:  sdk.NewInt64Coin("stake2", 1),
-						Volume: math.OneInt(),
-					},
-				})
-				s.Require().NoError(err, "vault creation should succeed")
+				s.CreateVaultWithParams(shareDenom1, "stake2")
 			},
 			Req: &types.QueryVaultsRequest{},
 			ExpectedResp: &types.QueryVaultsResponse{
 				Vaults: []types.VaultAccount{
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", "usdc", 0, 15, "", "", "", ""),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", 0, 15, "", "", "", ""),
 				},
 				Pagination: &query.PageResponse{Total: 1},
 			},
 		},
 		{
-			Name: "happy path - multiple vaults",
-			Setup: func() {
-				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("stake2", 1), s.adminAddr)
-				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("nhash", 1), s.adminAddr)
-				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("usdf", 1), s.adminAddr)
-				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("usdc", 1), s.adminAddr)
-				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-					Admin:           admin,
-					ShareDenom:      shareDenom1,
-					UnderlyingAsset: "stake2",
-					PaymentDenom:    "usdc",
-					InitialPaymentNav: &types.InitialVaultNAV{
-						Price:  sdk.NewInt64Coin("stake2", 1),
-						Volume: math.OneInt(),
-					},
-				})
-				s.Require().NoError(err, "vault creation should succeed")
-				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-					Admin:           admin,
-					ShareDenom:      shareDenom2,
-					UnderlyingAsset: "nhash",
-					PaymentDenom:    "usdc",
-					InitialPaymentNav: &types.InitialVaultNAV{
-						Price:  sdk.NewInt64Coin("nhash", 1),
-						Volume: math.OneInt(),
-					},
-				})
-				s.Require().NoError(err, "vault creation should succeed")
-				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-					Admin:           admin,
-					ShareDenom:      shareDenom3,
-					UnderlyingAsset: "usdf",
-					PaymentDenom:    "usdc",
-					InitialPaymentNav: &types.InitialVaultNAV{
-						Price:  sdk.NewInt64Coin("usdf", 1),
-						Volume: math.OneInt(),
-					},
-				})
-				s.Require().NoError(err, "vault creation should succeed")
-			},
-			Req: &types.QueryVaultsRequest{},
+			Name:  "happy path - multiple vaults",
+			Setup: setupThreeVaults,
+			Req:   &types.QueryVaultsRequest{},
 			ExpectedResp: &types.QueryVaultsResponse{
 				Vaults: []types.VaultAccount{
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", "usdc", 0, 15, "", "", "", ""),
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash", "usdc", 0, 15, "", "", "", ""),
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr3), admin, shareDenom3, "usdf", "usdc", 0, 15, "", "", "", ""),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", 0, 15, "", "", "", ""),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash", 0, 15, "", "", "", ""),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr3), admin, shareDenom3, "usdf", 0, 15, "", "", "", ""),
 				},
 				Pagination: &query.PageResponse{Total: 3},
 			},
 		},
 		{
-			Name: "pagination - limits the number of outputs",
-			Setup: func() {
-				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("stake2", 1), s.adminAddr)
-				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("nhash", 1), s.adminAddr)
-				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("usdf", 1), s.adminAddr)
-				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("usdc", 1), s.adminAddr)
-				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-					Admin:           admin,
-					ShareDenom:      shareDenom1,
-					UnderlyingAsset: "stake2",
-					PaymentDenom:    "usdc",
-					InitialPaymentNav: &types.InitialVaultNAV{
-						Price:  sdk.NewInt64Coin("stake2", 1),
-						Volume: math.OneInt(),
-					},
-				})
-				s.Require().NoError(err, "vault creation should succeed")
-				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-					Admin:           admin,
-					ShareDenom:      shareDenom2,
-					UnderlyingAsset: "nhash",
-					PaymentDenom:    "usdc",
-					InitialPaymentNav: &types.InitialVaultNAV{
-						Price:  sdk.NewInt64Coin("nhash", 1),
-						Volume: math.OneInt(),
-					},
-				})
-				s.Require().NoError(err, "vault creation should succeed")
-				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-					Admin:           admin,
-					ShareDenom:      shareDenom3,
-					UnderlyingAsset: "usdf",
-					PaymentDenom:    "usdc",
-					InitialPaymentNav: &types.InitialVaultNAV{
-						Price:  sdk.NewInt64Coin("usdf", 1),
-						Volume: math.OneInt(),
-					},
-				})
-				s.Require().NoError(err, "vault creation should succeed")
-			},
+			Name:  "pagination - limits the number of outputs",
+			Setup: setupThreeVaults,
 			Req: &types.QueryVaultsRequest{
 				Pagination: &query.PageRequest{Limit: 2},
 			},
 			ExpectedResp: &types.QueryVaultsResponse{
 				Vaults: []types.VaultAccount{
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr3), admin, shareDenom3, "usdf", "usdc", 0, 15, "", "", "", ""),
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", "usdc", 0, 15, "", "", "", ""),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr3), admin, shareDenom3, "usdf", 0, 15, "", "", "", ""),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", 0, 15, "", "", "", ""),
 				},
 				Pagination: &query.PageResponse{
 					NextKey: []byte("not nil"),
@@ -334,209 +252,57 @@ func (s *TestSuite) TestQueryServer_Vaults() {
 			},
 		},
 		{
-			Name: "pagination - offset starts at correct location",
-			Setup: func() {
-				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("stake2", 1), s.adminAddr)
-				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("nhash", 1), s.adminAddr)
-				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("usdf", 1), s.adminAddr)
-				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("usdc", 1), s.adminAddr)
-				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-					Admin:           admin,
-					ShareDenom:      shareDenom1,
-					UnderlyingAsset: "stake2",
-					PaymentDenom:    "usdc",
-					InitialPaymentNav: &types.InitialVaultNAV{
-						Price:  sdk.NewInt64Coin("stake2", 1),
-						Volume: math.OneInt(),
-					},
-				})
-				s.Require().NoError(err, "vault creation should succeed")
-				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-					Admin:           admin,
-					ShareDenom:      shareDenom2,
-					UnderlyingAsset: "nhash",
-					PaymentDenom:    "usdc",
-					InitialPaymentNav: &types.InitialVaultNAV{
-						Price:  sdk.NewInt64Coin("nhash", 1),
-						Volume: math.OneInt(),
-					},
-				})
-				s.Require().NoError(err, "vault creation should succeed")
-				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-					Admin:           admin,
-					ShareDenom:      shareDenom3,
-					UnderlyingAsset: "usdf",
-					PaymentDenom:    "usdc",
-					InitialPaymentNav: &types.InitialVaultNAV{
-						Price:  sdk.NewInt64Coin("usdf", 1),
-						Volume: math.OneInt(),
-					},
-				})
-				s.Require().NoError(err, "vault creation should succeed")
-			},
+			Name:  "pagination - offset starts at correct location",
+			Setup: setupThreeVaults,
 			Req: &types.QueryVaultsRequest{
 				Pagination: &query.PageRequest{Offset: 1},
 			},
 			ExpectedResp: &types.QueryVaultsResponse{
 				Vaults: []types.VaultAccount{
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", "usdc", 0, 15, "", "", "", ""),
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash", "usdc", 0, 15, "", "", "", ""),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", 0, 15, "", "", "", ""),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash", 0, 15, "", "", "", ""),
 				},
 				Pagination: &query.PageResponse{Total: 3},
 			},
 		},
 		{
-			Name: "pagination - offset starts at correct location and enforces limit",
-			Setup: func() {
-				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("stake2", 1), s.adminAddr)
-				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("nhash", 1), s.adminAddr)
-				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("usdf", 1), s.adminAddr)
-				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("usdc", 1), s.adminAddr)
-				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-					Admin:           admin,
-					ShareDenom:      shareDenom1,
-					UnderlyingAsset: "stake2",
-					PaymentDenom:    "usdc",
-					InitialPaymentNav: &types.InitialVaultNAV{
-						Price:  sdk.NewInt64Coin("stake2", 1),
-						Volume: math.OneInt(),
-					},
-				})
-				s.Require().NoError(err, "vault creation should succeed")
-				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-					Admin:           admin,
-					ShareDenom:      shareDenom2,
-					UnderlyingAsset: "nhash",
-					PaymentDenom:    "usdc",
-					InitialPaymentNav: &types.InitialVaultNAV{
-						Price:  sdk.NewInt64Coin("nhash", 1),
-						Volume: math.OneInt(),
-					},
-				})
-				s.Require().NoError(err, "vault creation should succeed")
-				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-					Admin:           admin,
-					ShareDenom:      shareDenom3,
-					UnderlyingAsset: "usdf",
-					PaymentDenom:    "usdc",
-					InitialPaymentNav: &types.InitialVaultNAV{
-						Price:  sdk.NewInt64Coin("usdf", 1),
-						Volume: math.OneInt(),
-					},
-				})
-				s.Require().NoError(err, "vault creation should succeed")
-			},
+			Name:  "pagination - offset starts at correct location and enforces limit",
+			Setup: setupThreeVaults,
 			Req: &types.QueryVaultsRequest{
 				Pagination: &query.PageRequest{Offset: 2, Limit: 1},
 			},
 			ExpectedResp: &types.QueryVaultsResponse{
 				Vaults: []types.VaultAccount{
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash", "usdc", 0, 15, "", "", "", ""),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash", 0, 15, "", "", "", ""),
 				},
 				Pagination: &query.PageResponse{},
 			},
 		},
 		{
-			Name: "pagination - enabled count total",
-			Setup: func() {
-				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("stake2", 1), s.adminAddr)
-				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("nhash", 1), s.adminAddr)
-				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("usdf", 1), s.adminAddr)
-				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("usdc", 1), s.adminAddr)
-				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-					Admin:           admin,
-					ShareDenom:      shareDenom1,
-					UnderlyingAsset: "stake2",
-					PaymentDenom:    "usdc",
-					InitialPaymentNav: &types.InitialVaultNAV{
-						Price:  sdk.NewInt64Coin("stake2", 1),
-						Volume: math.OneInt(),
-					},
-				})
-				s.Require().NoError(err, "vault creation should succeed")
-				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-					Admin:           admin,
-					ShareDenom:      shareDenom2,
-					UnderlyingAsset: "nhash",
-					PaymentDenom:    "usdc",
-					InitialPaymentNav: &types.InitialVaultNAV{
-						Price:  sdk.NewInt64Coin("nhash", 1),
-						Volume: math.OneInt(),
-					},
-				})
-				s.Require().NoError(err, "vault creation should succeed")
-				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-					Admin:           admin,
-					ShareDenom:      shareDenom3,
-					UnderlyingAsset: "usdf",
-					PaymentDenom:    "usdc",
-					InitialPaymentNav: &types.InitialVaultNAV{
-						Price:  sdk.NewInt64Coin("usdf", 1),
-						Volume: math.OneInt(),
-					},
-				})
-				s.Require().NoError(err, "vault creation should succeed")
-			},
+			Name:  "pagination - enabled count total",
+			Setup: setupThreeVaults,
 			Req: &types.QueryVaultsRequest{
 				Pagination: &query.PageRequest{CountTotal: true},
 			},
 			ExpectedResp: &types.QueryVaultsResponse{
 				Vaults: []types.VaultAccount{
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", "usdc", 0, 15, "", "", "", ""),
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash", "usdc", 0, 15, "", "", "", ""),
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr3), admin, shareDenom3, "usdf", "usdc", 0, 15, "", "", "", ""),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", 0, 15, "", "", "", ""),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash", 0, 15, "", "", "", ""),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr3), admin, shareDenom3, "usdf", 0, 15, "", "", "", ""),
 				},
 				Pagination: &query.PageResponse{Total: 3},
 			},
 		},
 		{
-			Name: "pagination - reverse provides the results in reverse order",
-			Setup: func() {
-				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("stake2", 1), s.adminAddr)
-				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("nhash", 1), s.adminAddr)
-				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("usdf", 1), s.adminAddr)
-				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("usdc", 1), s.adminAddr)
-				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-					Admin:           admin,
-					ShareDenom:      shareDenom1,
-					UnderlyingAsset: "stake2",
-					PaymentDenom:    "usdc",
-					InitialPaymentNav: &types.InitialVaultNAV{
-						Price:  sdk.NewInt64Coin("stake2", 1),
-						Volume: math.OneInt(),
-					},
-				})
-				s.Require().NoError(err, "vault creation should succeed")
-				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-					Admin:           admin,
-					ShareDenom:      shareDenom2,
-					UnderlyingAsset: "nhash",
-					PaymentDenom:    "usdc",
-					InitialPaymentNav: &types.InitialVaultNAV{
-						Price:  sdk.NewInt64Coin("nhash", 1),
-						Volume: math.OneInt(),
-					},
-				})
-				s.Require().NoError(err, "vault creation should succeed")
-				_, err = s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-					Admin:           admin,
-					ShareDenom:      shareDenom3,
-					UnderlyingAsset: "usdf",
-					PaymentDenom:    "usdc",
-					InitialPaymentNav: &types.InitialVaultNAV{
-						Price:  sdk.NewInt64Coin("usdf", 1),
-						Volume: math.OneInt(),
-					},
-				})
-				s.Require().NoError(err, "vault creation should succeed")
-			},
+			Name:  "pagination - reverse provides the results in reverse order",
+			Setup: setupThreeVaults,
 			Req: &types.QueryVaultsRequest{
 				Pagination: &query.PageRequest{Reverse: true, Limit: 2},
 			},
 			ExpectedResp: &types.QueryVaultsResponse{
 				Vaults: []types.VaultAccount{
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash", "usdc", 0, 15, "", "", "", ""),
-					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", "usdc", 0, 15, "", "", "", ""),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr2), admin, shareDenom2, "nhash", 0, 15, "", "", "", ""),
+					*types.NewVaultAccount(authtypes.NewBaseAccountWithAddress(addr1), admin, shareDenom1, "stake2", 0, 15, "", "", "", ""),
 				},
 				Pagination: &query.PageResponse{
 					NextKey: []byte("not nil"),
@@ -579,25 +345,19 @@ func (s *TestSuite) TestQueryServer_EstimateSwapIn() {
 	}
 
 	underlyingDenom := "uylds.fcc"
-	paymentDenom := "usdc"
 	shareDenom := "vaultshares"
 	vaultAddr := types.GetVaultAddress(shareDenom)
-	admin := s.adminAddr.String()
 	assetsUnderlying := sdk.NewInt64Coin(underlyingDenom, 100)
-	assetsPayment := sdk.NewInt64Coin(paymentDenom, 100)
+
+	setupVault := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
+		s.CreateVaultWithParams(shareDenom, underlyingDenom)
+	}
 
 	tests := []querytest.TestCase[types.QueryEstimateSwapInRequest, types.QueryEstimateSwapInResponse]{
 		{
-			Name: "happy path underlying deposit (peg)",
-			Setup: func() {
-				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
-				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(paymentDenom, math.NewInt(1000)), s.adminAddr)
-				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-					Admin: admin, ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom,
-					InitialPaymentNav: &types.InitialVaultNAV{Price: sdk.NewInt64Coin(underlyingDenom, 1), Volume: math.OneInt()},
-				})
-				s.Require().NoError(err, "vault creation should succeed")
-			},
+			Name:  "happy path underlying deposit (peg)",
+			Setup: setupVault,
 			Req: &types.QueryEstimateSwapInRequest{
 				VaultAddress: vaultAddr.String(),
 				Assets:       assetsUnderlying,
@@ -607,35 +367,9 @@ func (s *TestSuite) TestQueryServer_EstimateSwapIn() {
 			},
 		},
 		{
-			Name: "happy path payment deposit with 1:1 internal NAV",
-			Setup: func() {
-				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
-				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(paymentDenom, math.NewInt(1000)), s.adminAddr)
-				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-					Admin: admin, ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom,
-					InitialPaymentNav: &types.InitialVaultNAV{Price: sdk.NewInt64Coin(underlyingDenom, 1), Volume: math.OneInt()},
-				})
-				s.Require().NoError(err, "vault creation should succeed")
-				s.seedVaultNAV(vaultAddr, paymentDenom, sdk.NewInt64Coin(underlyingDenom, 1), 1)
-			},
-			Req: &types.QueryEstimateSwapInRequest{
-				VaultAddress: vaultAddr.String(),
-				Assets:       assetsPayment,
-			},
-			ExpectedResp: &types.QueryEstimateSwapInResponse{
-				Assets: sdk.NewCoin(shareDenom, assetsPayment.Amount.Mul(utils.ShareScalar)),
-			},
-		},
-		{
 			Name: "fails if vault is paused",
 			Setup: func() {
-				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
-				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(paymentDenom, math.NewInt(1000)), s.adminAddr)
-				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-					Admin: admin, ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom,
-					InitialPaymentNav: &types.InitialVaultNAV{Price: sdk.NewInt64Coin(underlyingDenom, 1), Volume: math.OneInt()},
-				})
-				s.Require().NoError(err, "vault creation should succeed")
+				setupVault()
 				vault, err := s.k.GetVault(s.ctx, vaultAddr)
 				s.Require().NoError(err, "getting vault should succeed")
 				vault.Paused = true
@@ -650,13 +384,7 @@ func (s *TestSuite) TestQueryServer_EstimateSwapIn() {
 		{
 			Name: "fails if swap-in is disabled",
 			Setup: func() {
-				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
-				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(paymentDenom, math.NewInt(1000)), s.adminAddr)
-				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-					Admin: admin, ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom,
-					InitialPaymentNav: &types.InitialVaultNAV{Price: sdk.NewInt64Coin(underlyingDenom, 1), Volume: math.OneInt()},
-				})
-				s.Require().NoError(err, "vault creation should succeed")
+				setupVault()
 				vault, err := s.k.GetVault(s.ctx, vaultAddr)
 				s.Require().NoError(err, "getting vault should succeed")
 				vault.SwapInEnabled = false
@@ -689,16 +417,8 @@ func (s *TestSuite) TestQueryServer_EstimateSwapIn() {
 			ExpectedErrSubstrs: []string{"vault with address", "not found"},
 		},
 		{
-			Name: "unsupported denom",
-			Setup: func() {
-				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
-				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(paymentDenom, math.NewInt(1000)), s.adminAddr)
-				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-					Admin: admin, ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom,
-					InitialPaymentNav: &types.InitialVaultNAV{Price: sdk.NewInt64Coin(underlyingDenom, 1), Volume: math.OneInt()},
-				})
-				s.Require().NoError(err, "vault creation should succeed")
-			},
+			Name:  "unsupported denom",
+			Setup: setupVault,
 			Req: &types.QueryEstimateSwapInRequest{
 				VaultAddress: vaultAddr.String(),
 				Assets:       sdk.NewInt64Coin("otherdenom", 100),
@@ -726,33 +446,32 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 	}
 
 	underlyingDenom := "uylds.fcc"
-	paymentDenom := "usdc"
 	shareDenom := "vaultshares"
 	vaultAddr := types.GetVaultAddress(shareDenom)
-	admin := s.adminAddr.String()
 	sharesToSwap := sdk.NewCoin(shareDenom, math.NewInt(100).Mul(utils.ShareScalar))
+
+	setupVault := func() {
+		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
+		s.CreateVaultWithParams(shareDenom, underlyingDenom)
+	}
+
+	setupFundedVault := func() {
+		setupVault()
+		err := FundAccount(s.ctx, s.simApp.BankKeeper, markertypes.MustGetMarkerAddress(shareDenom), sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 100)))
+		s.Require().NoError(err, "fund marker with underlying should succeed")
+		err = FundAccount(s.ctx, s.simApp.BankKeeper, s.adminAddr, sdk.NewCoins(sharesToSwap))
+		s.Require().NoError(err, "fund owner with shares should succeed")
+		vault, err := s.k.GetVault(s.ctx, vaultAddr)
+		s.Require().NoError(err, "get vault should succeed")
+		s.Require().NotNil(vault, "vault should not be nil")
+		vault.TotalShares = sharesToSwap
+		s.k.AuthKeeper.SetAccount(s.ctx, vault)
+	}
 
 	tests := []querytest.TestCase[types.QueryEstimateSwapOutRequest, types.QueryEstimateSwapOutResponse]{
 		{
-			Name: "happy path redeem to underlying (peg)",
-			Setup: func() {
-				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
-				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(paymentDenom, math.NewInt(1000)), s.adminAddr)
-				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-					Admin: admin, ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom,
-					InitialPaymentNav: &types.InitialVaultNAV{Price: sdk.NewInt64Coin(underlyingDenom, 1), Volume: math.OneInt()},
-				})
-				s.Require().NoError(err, "vault creation should succeed")
-				err = FundAccount(s.ctx, s.simApp.BankKeeper, markertypes.MustGetMarkerAddress(shareDenom), sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 100)))
-				s.Require().NoError(err, "fund marker with underlying should succeed")
-				err = FundAccount(s.ctx, s.simApp.BankKeeper, s.adminAddr, sdk.NewCoins(sharesToSwap))
-				s.Require().NoError(err, "fund owner with shares should succeed")
-				vault, err := s.k.GetVault(s.ctx, vaultAddr)
-				s.Require().NoError(err, "get vault should succeed")
-				s.Require().NotNil(vault, "vault should not be nil")
-				vault.TotalShares = sharesToSwap
-				s.k.AuthKeeper.SetAccount(s.ctx, vault)
-			},
+			Name:  "happy path redeem to underlying (peg)",
+			Setup: setupFundedVault,
 			Req: &types.QueryEstimateSwapOutRequest{
 				VaultAddress: vaultAddr.String(),
 				Shares:       sharesToSwap.Amount.String(),
@@ -762,45 +481,31 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 			},
 		},
 		{
-			Name: "happy path redeem to payment denom with 1:1 internal NAV",
-			Setup: func() {
-				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
-				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(paymentDenom, math.NewInt(1000)), s.adminAddr)
-				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-					Admin: admin, ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom,
-					InitialPaymentNav: &types.InitialVaultNAV{Price: sdk.NewInt64Coin(underlyingDenom, 1), Volume: math.OneInt()},
-				})
-				s.Require().NoError(err, "vault creation should succeed")
-				err = FundAccount(s.ctx, s.simApp.BankKeeper, markertypes.MustGetMarkerAddress(shareDenom), sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 100)))
-				s.Require().NoError(err, "fund marker with underlying should succeed")
-				err = FundAccount(s.ctx, s.simApp.BankKeeper, s.adminAddr, sdk.NewCoins(sharesToSwap))
-				s.Require().NoError(err, "fund owner with shares should succeed")
-				vault, err := s.k.GetVault(s.ctx, vaultAddr)
-				s.Require().NoError(err, "get vault should succeed")
-				s.Require().NotNil(vault, "vault should not be nil")
-				vault.TotalShares = sharesToSwap
-				s.k.AuthKeeper.SetAccount(s.ctx, vault)
-				s.setVaultNAV(vault, paymentDenom, sdk.NewInt64Coin(underlyingDenom, 1), 1)
-			},
+			Name:  "deprecated redeem denom equal to underlying still estimates",
+			Setup: setupFundedVault,
 			Req: &types.QueryEstimateSwapOutRequest{
 				VaultAddress: vaultAddr.String(),
 				Shares:       sharesToSwap.Amount.String(),
-				RedeemDenom:  paymentDenom,
+				RedeemDenom:  underlyingDenom,
 			},
 			ExpectedResp: &types.QueryEstimateSwapOutResponse{
-				Assets: sdk.NewInt64Coin(paymentDenom, 100),
+				Assets: sdk.NewInt64Coin(underlyingDenom, 100),
 			},
+		},
+		{
+			Name:  "deprecated redeem denom different from underlying is rejected",
+			Setup: setupFundedVault,
+			Req: &types.QueryEstimateSwapOutRequest{
+				VaultAddress: vaultAddr.String(),
+				Shares:       sharesToSwap.Amount.String(),
+				RedeemDenom:  "otherdenom",
+			},
+			ExpectedErrSubstrs: []string{"redeem_denom is deprecated", underlyingDenom, "otherdenom", "InvalidArgument"},
 		},
 		{
 			Name: "fails if vault is paused",
 			Setup: func() {
-				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
-				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(paymentDenom, math.NewInt(1000)), s.adminAddr)
-				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-					Admin: admin, ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom,
-					InitialPaymentNav: &types.InitialVaultNAV{Price: sdk.NewInt64Coin(underlyingDenom, 1), Volume: math.OneInt()},
-				})
-				s.Require().NoError(err, "vault creation should succeed")
+				setupVault()
 				vault, err := s.k.GetVault(s.ctx, vaultAddr)
 				s.Require().NoError(err, "getting vault should succeed")
 				vault.Paused = true
@@ -815,13 +520,7 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 		{
 			Name: "fails if swap-out is disabled",
 			Setup: func() {
-				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
-				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(paymentDenom, math.NewInt(1000)), s.adminAddr)
-				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-					Admin: admin, ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom,
-					InitialPaymentNav: &types.InitialVaultNAV{Price: sdk.NewInt64Coin(underlyingDenom, 1), Volume: math.OneInt()},
-				})
-				s.Require().NoError(err, "vault creation should succeed")
+				setupVault()
 				vault, err := s.k.GetVault(s.ctx, vaultAddr)
 				s.Require().NoError(err, "getting vault should succeed")
 				vault.SwapOutEnabled = false
@@ -854,39 +553,22 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 			ExpectedErrSubstrs: []string{"vault with address", "not found"},
 		},
 		{
-			Name: "unsupported redeem denom",
-			Setup: func() {
-				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
-				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(paymentDenom, math.NewInt(1000)), s.adminAddr)
-				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-					Admin: admin, ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom,
-					InitialPaymentNav: &types.InitialVaultNAV{Price: sdk.NewInt64Coin(underlyingDenom, 1), Volume: math.OneInt()},
-				})
-				s.Require().NoError(err, "vault creation should succeed")
-			},
-			Req: &types.QueryEstimateSwapOutRequest{
-				VaultAddress: vaultAddr.String(),
-				Shares:       math.NewInt(100).String(),
-				RedeemDenom:  "wrongdenom",
-			},
-			ExpectedErrSubstrs: []string{"unsupported redeem denom"},
-		},
-		{
-			Name: "fails with incorrect shares string",
-			Setup: func() {
-				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
-				s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(paymentDenom, math.NewInt(1000)), s.adminAddr)
-				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-					Admin: admin, ShareDenom: shareDenom, UnderlyingAsset: underlyingDenom, PaymentDenom: paymentDenom,
-					InitialPaymentNav: &types.InitialVaultNAV{Price: sdk.NewInt64Coin(underlyingDenom, 1), Volume: math.OneInt()},
-				})
-				s.Require().NoError(err, "vault creation should succeed")
-			},
+			Name:  "fails with incorrect shares string",
+			Setup: setupVault,
 			Req: &types.QueryEstimateSwapOutRequest{
 				VaultAddress: vaultAddr.String(),
 				Shares:       "bogus",
 			},
 			ExpectedErrSubstrs: []string{"invalid shares amount \"bogus\" : must be a valid integer"},
+		},
+		{
+			Name:  "fails with negative shares",
+			Setup: setupVault,
+			Req: &types.QueryEstimateSwapOutRequest{
+				VaultAddress: vaultAddr.String(),
+				Shares:       "-100",
+			},
+			ExpectedErrSubstrs: []string{"invalid shares amount \"-100\" : must not be negative", "InvalidArgument"},
 		},
 	}
 
@@ -1449,14 +1131,14 @@ func (s *TestSuite) TestQueryServer_NavValue() {
 // TestQueryServer_VaultPayment verifies the VaultPayment query returns a single
 // payment targeting the vault and reports NotFound for unknown or mistargeted payments.
 func (s *TestSuite) TestQueryServer_VaultPayment() {
-	underlying, share, paymentDenom, asset := "under", "vshare", "pay", "rwacoin"
+	underlying, share, asset := "under", "vshare", "rwacoin"
 
-	vault, _ := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+	vault, _ := s.setupAssetSettlementVault(underlying, share)
 	vaultAddr := vault.GetAddress()
 
 	source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
 	sourceAmount := sdk.NewCoins(sdk.NewInt64Coin(asset, 10))
-	targetAmount := sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5))
+	targetAmount := sdk.NewCoins(sdk.NewInt64Coin(underlying, 5))
 	s.createPayment(source, vaultAddr, sourceAmount, targetAmount, "invoice-1")
 
 	otherSource := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
@@ -1594,15 +1276,15 @@ func (s *TestSuite) TestQueryServer_VaultPayment() {
 // TestQueryServer_VaultPayments verifies the VaultPayments query returns every payment
 // targeting the vault, excludes payments for other targets, and paginates the results.
 func (s *TestSuite) TestQueryServer_VaultPayments() {
-	underlying, share, paymentDenom, asset := "under", "vshare", "pay", "rwacoin"
+	underlying, share, asset := "under", "vshare", "rwacoin"
 
-	vault, _ := s.setupAssetSettlementVault(underlying, share, paymentDenom)
+	vault, _ := s.setupAssetSettlementVault(underlying, share)
 	vaultAddr := vault.GetAddress()
 
 	externalIDs := []string{"p-1", "p-2", "p-3", "p-4", "p-5"}
 	for _, externalID := range externalIDs {
 		source := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))
-		s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(paymentDenom, 5)), externalID)
+		s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(underlying, 5)), externalID)
 	}
 
 	otherSource := s.CreateAndFundAccount(sdk.NewInt64Coin(asset, 10))

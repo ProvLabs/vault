@@ -19,15 +19,7 @@ func (s *TestSuite) TestVaultGenesis_InitAndExport() {
 	admin := s.adminAddr.String()
 	vaultAddr := types.GetVaultAddress(shareDenom)
 
-	vault := types.VaultAccount{
-		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
-		Admin:               admin,
-		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
-		UnderlyingAsset:     underlying,
-		PaymentDenom:        underlying,
-		CurrentInterestRate: types.ZeroInterestRate,
-		DesiredInterestRate: types.ZeroInterestRate,
-	}
+	vault := makeGenesisVaultAccount(shareDenom, underlying, admin)
 
 	past := time.Now().Add(-5 * time.Minute).Unix()
 	vault.PeriodTimeout = past
@@ -86,15 +78,7 @@ func (s *TestSuite) TestVaultGenesis_InitAndExport() {
 
 func (s *TestSuite) TestInitGenesis_PanicOnInvalidTimeout() {
 	vaultAddr := types.GetVaultAddress("panic-vault").String()
-	vault := types.VaultAccount{
-		BaseAccount:         authtypes.NewBaseAccountWithAddress(types.GetVaultAddress("panic-vault")),
-		Admin:               s.adminAddr.String(),
-		TotalShares:         sdk.NewInt64Coin("panic-vault", 0),
-		UnderlyingAsset:     "undercoin",
-		PaymentDenom:        "undercoin",
-		CurrentInterestRate: types.ZeroInterestRate,
-		DesiredInterestRate: types.ZeroInterestRate,
-	}
+	vault := makeGenesisVaultAccount("panic-vault", "undercoin", s.adminAddr.String())
 
 	tests := []struct {
 		name     string
@@ -146,6 +130,7 @@ func (s *TestSuite) TestInitGenesis_PanicOnInvalidTimeout() {
 		})
 	}
 }
+
 func (s *TestSuite) TestVaultGenesis_RoundTrip_FeeTimeoutAndParams() {
 	shareDenom := "vaultshare_fee"
 	underlying := "under_fee"
@@ -156,16 +141,8 @@ func (s *TestSuite) TestVaultGenesis_RoundTrip_FeeTimeoutAndParams() {
 	now := time.Now().Unix()
 	future := now + 1000
 
-	vault := types.VaultAccount{
-		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
-		Admin:               admin,
-		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
-		UnderlyingAsset:     underlying,
-		PaymentDenom:        underlying,
-		CurrentInterestRate: types.ZeroInterestRate,
-		DesiredInterestRate: types.ZeroInterestRate,
-		FeePeriodTimeout:    future,
-	}
+	vault := makeGenesisVaultAccount(shareDenom, underlying, admin)
+	vault.FeePeriodTimeout = future
 
 	params := types.Params{
 		TechFeeAddress:    aumFeeAddress.String(),
@@ -209,27 +186,11 @@ func (s *TestSuite) TestVaultGenesis_RoundTrip_PastAndFutureTimeouts() {
 	past := now.Add(-10 * time.Minute).Unix()
 	future := now.Add(10 * time.Minute).Unix()
 
-	vault1 := types.VaultAccount{
-		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr1),
-		Admin:               admin,
-		TotalShares:         sdk.NewInt64Coin(shareDenom1, 0),
-		UnderlyingAsset:     underlying1,
-		PaymentDenom:        underlying1,
-		CurrentInterestRate: types.ZeroInterestRate,
-		DesiredInterestRate: types.ZeroInterestRate,
-		PeriodTimeout:       past,
-	}
+	vault1 := makeGenesisVaultAccount(shareDenom1, underlying1, admin)
+	vault1.PeriodTimeout = past
 
-	vault2 := types.VaultAccount{
-		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr2),
-		Admin:               admin,
-		TotalShares:         sdk.NewInt64Coin(shareDenom2, 0),
-		UnderlyingAsset:     underlying2,
-		PaymentDenom:        underlying2,
-		CurrentInterestRate: types.ZeroInterestRate,
-		DesiredInterestRate: types.ZeroInterestRate,
-		PeriodTimeout:       future,
-	}
+	vault2 := makeGenesisVaultAccount(shareDenom2, underlying2, admin)
+	vault2.PeriodTimeout = future
 
 	genesis := &types.GenesisState{
 		Params: types.DefaultParams(),
@@ -251,21 +212,12 @@ func (s *TestSuite) TestVaultGenesis_RoundTrip_PastAndFutureTimeouts() {
 func (s *TestSuite) TestVaultGenesis_InvalidTimeoutAddressPanics() {
 	shareDenom := "vaultshare3"
 	underlying := "under3"
-	vaultAddr := types.GetVaultAddress(shareDenom)
 	admin := s.adminAddr.String()
 
 	now := uint64(time.Now().Unix())
 
-	vault := types.VaultAccount{
-		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
-		Admin:               admin,
-		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
-		UnderlyingAsset:     underlying,
-		PaymentDenom:        underlying,
-		CurrentInterestRate: types.ZeroInterestRate,
-		DesiredInterestRate: types.ZeroInterestRate,
-		PeriodTimeout:       int64(now),
-	}
+	vault := makeGenesisVaultAccount(shareDenom, underlying, admin)
+	vault.PeriodTimeout = int64(now)
 
 	genesis := &types.GenesisState{
 		Params: types.DefaultParams(),
@@ -290,15 +242,7 @@ func (s *TestSuite) TestVaultGenesis_ExistingAccountNumberCopied() {
 	s.Require().NoError(existing.SetAccountNumber(999), "failed to set account number for existing account")
 	s.k.AuthKeeper.SetAccount(s.ctx, existing)
 
-	vault := types.VaultAccount{
-		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
-		Admin:               admin,
-		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
-		UnderlyingAsset:     underlying,
-		PaymentDenom:        underlying,
-		CurrentInterestRate: types.ZeroInterestRate,
-		DesiredInterestRate: types.ZeroInterestRate,
-	}
+	vault := makeGenesisVaultAccount(shareDenom, underlying, admin)
 
 	genesis := &types.GenesisState{
 		Params:              types.DefaultParams(),
@@ -342,17 +286,8 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidPendingSwapOut() {
 	shareDenom := "vaultshare"
 	underlying := "undercoin"
 	admin := s.adminAddr.String()
-	vaultAddr := types.GetVaultAddress(shareDenom)
 
-	vault := types.VaultAccount{
-		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
-		Admin:               admin,
-		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
-		UnderlyingAsset:     underlying,
-		PaymentDenom:        underlying,
-		CurrentInterestRate: types.ZeroInterestRate,
-		DesiredInterestRate: types.ZeroInterestRate,
-	}
+	vault := makeGenesisVaultAccount(shareDenom, underlying, admin)
 
 	genesis := &types.GenesisState{
 		Params: types.DefaultParams(),
@@ -381,18 +316,9 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPendingSwapOutHasUnknownVault
 	shareDenom := "vaultshare"
 	underlying := "undercoin"
 	admin := s.adminAddr.String()
-	vaultAddr := types.GetVaultAddress(shareDenom)
 	badVaultAddr := types.GetVaultAddress("baddenom")
 
-	vault := types.VaultAccount{
-		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
-		Admin:               admin,
-		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
-		UnderlyingAsset:     underlying,
-		PaymentDenom:        underlying,
-		CurrentInterestRate: types.ZeroInterestRate,
-		DesiredInterestRate: types.ZeroInterestRate,
-	}
+	vault := makeGenesisVaultAccount(shareDenom, underlying, admin)
 
 	genesis := &types.GenesisState{
 		Params: types.DefaultParams(),
@@ -421,17 +347,8 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPendingSwapOutHasBadVaultAddr
 	shareDenom := "vaultshare"
 	underlying := "undercoin"
 	admin := s.adminAddr.String()
-	vaultAddr := types.GetVaultAddress(shareDenom)
 
-	vault := types.VaultAccount{
-		BaseAccount:         authtypes.NewBaseAccountWithAddress(vaultAddr),
-		Admin:               admin,
-		TotalShares:         sdk.NewInt64Coin(shareDenom, 0),
-		UnderlyingAsset:     underlying,
-		PaymentDenom:        underlying,
-		CurrentInterestRate: types.ZeroInterestRate,
-		DesiredInterestRate: types.ZeroInterestRate,
-	}
+	vault := makeGenesisVaultAccount(shareDenom, underlying, admin)
 
 	genesis := &types.GenesisState{
 		Params: types.DefaultParams(),

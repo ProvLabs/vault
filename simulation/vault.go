@@ -7,8 +7,6 @@ import (
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
 
-	sdkmath "cosmossdk.io/math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
@@ -22,15 +20,12 @@ const (
 )
 
 // CreateVault creates a new vault with a marker and funds accounts.
-func CreateVault(ctx sdk.Context, vk *keeper.Keeper, ak types.AccountKeeper, _ types.BankKeeper, mk markerkeeper.Keeper, underlying, paymentDenom, share string, admin simtypes.Account, _ []simtypes.Account) error {
+func CreateVault(ctx sdk.Context, vk *keeper.Keeper, ak types.AccountKeeper, _ types.BankKeeper, mk markerkeeper.Keeper, underlying, share string, admin simtypes.Account, _ []simtypes.Account) error {
 	if !MarkerExists(ctx, mk, underlying) {
 		return fmt.Errorf("underlying marker %s does not exist", underlying)
 	}
-	if paymentDenom != "" && !MarkerExists(ctx, mk, paymentDenom) {
-		return fmt.Errorf("payment denom marker %s does not exist", paymentDenom)
-	}
 
-	if err := PrepareVaultMarkers(ctx, ak, mk, underlying, paymentDenom, share); err != nil {
+	if err := PrepareVaultMarkers(ctx, ak, mk, underlying, share); err != nil {
 		return err
 	}
 
@@ -39,15 +34,7 @@ func CreateVault(ctx sdk.Context, vk *keeper.Keeper, ak types.AccountKeeper, _ t
 		Admin:                  admin.Address.String(),
 		ShareDenom:             share,
 		UnderlyingAsset:        underlying,
-		PaymentDenom:           paymentDenom,
 		WithdrawalDelaySeconds: interest.SecondsPerDay,
-	}
-	if paymentDenom != "" && paymentDenom != underlying {
-		newVault.InitialPaymentNav = &types.InitialVaultNAV{
-			Price:  sdk.NewInt64Coin(underlying, 1),
-			Volume: sdkmath.OneInt(),
-			Source: "simulation",
-		}
 	}
 	msgServer := keeper.NewMsgServer(vk)
 	_, err := msgServer.CreateVault(ctx, newVault)
@@ -55,27 +42,22 @@ func CreateVault(ctx sdk.Context, vk *keeper.Keeper, ak types.AccountKeeper, _ t
 }
 
 // PrepareVaultMarkers grants the necessary permissions to the predicted vault address
-// for its underlying and payment markers. This is required for the vault creation
-// pre-flight check and for collecting AUM fees.
-func PrepareVaultMarkers(ctx sdk.Context, ak types.AccountKeeper, mk markerkeeper.Keeper, underlying, paymentDenom, share string) error {
+// for its underlying marker. This is required for the vault creation pre-flight check
+// and for collecting AUM fees.
+func PrepareVaultMarkers(ctx sdk.Context, ak types.AccountKeeper, mk markerkeeper.Keeper, underlying, share string) error {
 	vaultAddr := types.GetVaultAddress(share)
 	mintAddr := ak.GetModuleAddress("mint")
-	for _, denom := range []string{underlying, paymentDenom} {
-		if denom == "" {
-			continue
+	m, err := mk.GetMarker(ctx, markertypes.MustGetMarkerAddress(underlying))
+	if err != nil {
+		return fmt.Errorf("failed to get marker for %s: %w", underlying, err)
+	}
+	if m.GetMarkerType() == markertypes.MarkerType_RestrictedCoin {
+		if err := GrantTransferPermission(ctx, mk, underlying, vaultAddr, mintAddr); err != nil {
+			return fmt.Errorf("failed to grant transfer permission for %s: %w", underlying, err)
 		}
-		m, err := mk.GetMarker(ctx, markertypes.MustGetMarkerAddress(denom))
-		if err != nil {
-			return fmt.Errorf("failed to get marker for %s: %w", denom, err)
-		}
-		if m.GetMarkerType() == markertypes.MarkerType_RestrictedCoin {
-			if err := GrantTransferPermission(ctx, mk, denom, vaultAddr, mintAddr); err != nil {
-				return fmt.Errorf("failed to grant transfer permission for %s: %w", denom, err)
-			}
-		} else {
-			if err := GrantWithdrawPermission(ctx, mk, denom, vaultAddr, mintAddr); err != nil {
-				return fmt.Errorf("failed to grant withdraw permission for %s: %w", denom, err)
-			}
+	} else {
+		if err := GrantWithdrawPermission(ctx, mk, underlying, vaultAddr, mintAddr); err != nil {
+			return fmt.Errorf("failed to grant withdraw permission for %s: %w", underlying, err)
 		}
 	}
 	return nil
@@ -95,13 +77,12 @@ func SwapIn(ctx sdk.Context, vk *keeper.Keeper, user simtypes.Account, shareDeno
 }
 
 // SwapOut performs a swap out for a user.
-func SwapOut(ctx sdk.Context, vk *keeper.Keeper, user simtypes.Account, shares sdk.Coin, redeemDenom string) error {
+func SwapOut(ctx sdk.Context, vk *keeper.Keeper, user simtypes.Account, shares sdk.Coin) error {
 	vaultAddress := types.GetVaultAddress(shares.Denom)
 	swapOut := &types.MsgSwapOutRequest{
 		Owner:        user.Address.String(),
 		VaultAddress: vaultAddress.String(),
 		Assets:       shares,
-		RedeemDenom:  redeemDenom,
 	}
 	msgServer := keeper.NewMsgServer(vk)
 	_, err := msgServer.SwapOut(ctx, swapOut)

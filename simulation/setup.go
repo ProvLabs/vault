@@ -68,7 +68,7 @@ func Setup(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, ak types.AccountKeepe
 	write()
 
 	underlyingDenom := genRandomDenom(r, denomRegex, VaultGlobalDenomSuffix)
-	paymentDenom := genRandomDenom(r, denomRegex, VaultGlobalDenomSuffix)
+	externalAssetDenom := genRandomDenom(r, denomRegex, VaultGlobalDenomSuffix)
 
 	markerKeeper, ok := mk.(markerkeeper.Keeper)
 	if !ok {
@@ -78,22 +78,14 @@ func Setup(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, ak types.AccountKeepe
 	if err := CreateGlobalMarker(ctx, ak, bk, markerKeeper, sdk.NewInt64Coin(underlyingDenom, 1_000_000_000), accs, false, feeCollectorAddr); err != nil {
 		return fmt.Errorf("failed to create global marker for underlying %s: %w", underlyingDenom, err)
 	}
-	if err := CreateGlobalMarker(ctx, ak, bk, markerKeeper, sdk.NewInt64Coin(paymentDenom, 1_000_000_000), accs, false, feeCollectorAddr); err != nil {
-		return fmt.Errorf("failed to create global marker for payment %s: %w", paymentDenom, err)
-	}
-
-	volume := uint64(r.Intn(4) + 1)
-	if err := AddNav(ctx, markerKeeper, paymentDenom, ak.GetModuleAddress("mint"), sdk.NewInt64Coin(underlyingDenom, 1), volume); err != nil {
-		return fmt.Errorf("failed to add nav for payment %s: %w", paymentDenom, err)
+	// A second marker distinct from any underlying gives the settlement operations an
+	// external asset to trade against a vault's underlying via AcceptAsset.
+	if err := CreateGlobalMarker(ctx, ak, bk, markerKeeper, sdk.NewInt64Coin(externalAssetDenom, 1_000_000_000), accs, false, feeCollectorAddr); err != nil {
+		return fmt.Errorf("failed to create global marker for external asset %s: %w", externalAssetDenom, err)
 	}
 
 	admin, _ := simtypes.RandomAcc(r, accs)
 	shareDenom := fmt.Sprintf("vaultshare%d", r.Intn(1_000))
 
-	selectedPayment := ""
-	if r.Intn(2) == 0 {
-		selectedPayment = paymentDenom
-	}
-
-	return CreateVault(ctx, &k, ak, bk, markerKeeper, underlyingDenom, selectedPayment, shareDenom, admin, accs)
+	return CreateVault(ctx, &k, ak, bk, markerKeeper, underlyingDenom, shareDenom, admin, accs)
 }

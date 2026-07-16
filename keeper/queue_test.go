@@ -6,12 +6,12 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/stretchr/testify/require"
 
 	kpr "github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
 	"github.com/provlabs/vault/utils"
 	"github.com/provlabs/vault/utils/mocks"
-	"github.com/stretchr/testify/require"
 )
 
 func TestSafeAddPayoutVerification_UpdatesVaultAndQueues(t *testing.T) {

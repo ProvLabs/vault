@@ -1,7 +1,7 @@
 # GEMINI.md - Vault Module
 
 ## Project Description
-The **vault** project is a specialized Cosmos SDK module built for the **Provenance Blockchain**. It provides a robust framework for managing tokenized vaults, leveraging Provenance's native **marker** and **account** models. Key features include share issuance (Swap-In), redemptions (Swap-Out) with configured delays, dynamic interest accrual (positive/negative), and multi-asset accounting (underlying asset vs. optional payment denoms).
+The **vault** project is a specialized Cosmos SDK module built for the **Provenance Blockchain**. It provides a robust framework for managing tokenized vaults, leveraging Provenance's native **marker** and **account** models. Key features include share issuance (Swap-In), redemptions (Swap-Out) with configured delays, dynamic interest accrual (positive/negative), and single-denom accounting in the vault's underlying asset (held assets acquired via P2P settlement are priced through the internal NAV table).
 
 ---
 

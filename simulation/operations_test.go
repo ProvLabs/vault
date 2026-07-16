@@ -64,8 +64,8 @@ func (s *VaultSimTestSuite) SetupTest() {
 
 	err = simulation.CreateGlobalMarker(s.ctx, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, sdk.NewInt64Coin("underlying2vx", 100_000_000), s.accs, true, s.provlabsAddr)
 	s.Require().NoError(err, "CreateGlobalMarker underlying")
-	err = simulation.CreateGlobalMarker(s.ctx, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, sdk.NewInt64Coin("payment2vx", 100_000_000), s.accs, true, s.provlabsAddr)
-	s.Require().NoError(err, "CreateGlobalMarker payment")
+	err = simulation.CreateGlobalMarker(s.ctx, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, sdk.NewInt64Coin("external2vx", 100_000_000), s.accs, true, s.provlabsAddr)
+	s.Require().NoError(err, "CreateGlobalMarker external asset")
 }
 
 func (s *VaultSimTestSuite) setupAccounts() {
@@ -100,7 +100,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgCreateVault() {
 func (s *VaultSimTestSuite) TestSimulateMsgSwapIn() {
 	selected := s.accs[0]
 
-	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "", "underlyingshare", selected, s.accs)
+	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "underlyingshare", selected, s.accs)
 	s.Require().NoError(err, "CreateVault")
 
 	op := simulation.SimulateMsgSwapIn(*s.app.VaultKeeper)
@@ -116,7 +116,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgSwapOut() {
 	s.ctx = s.ctx.WithBlockTime(time.Now())
 	selected := s.accs[0]
 
-	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "", "underlyingshare", selected, s.accs)
+	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "underlyingshare", selected, s.accs)
 	s.Require().NoError(err, "CreateVault")
 	err = simulation.SwapIn(s.ctx, s.app.VaultKeeper, selected, "underlyingshare", sdk.NewInt64Coin("underlying2vx", 100))
 	s.Require().NoError(err, "SwapIn")
@@ -133,7 +133,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgSwapOut() {
 func (s *VaultSimTestSuite) TestSimulateMsgToggleSwapIn() {
 	selected := s.accs[0]
 
-	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "", "underlyingshare", selected, s.accs)
+	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "underlyingshare", selected, s.accs)
 	s.Require().NoError(err, "CreateVault")
 
 	op := simulation.SimulateMsgToggleSwapIn(*s.app.VaultKeeper)
@@ -148,7 +148,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgToggleSwapIn() {
 func (s *VaultSimTestSuite) TestSimulateMsgToggleSwapOut() {
 	selected := s.accs[0]
 
-	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "", "underlyingshare", selected, s.accs)
+	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "underlyingshare", selected, s.accs)
 	s.Require().NoError(err, "CreateVault")
 
 	op := simulation.SimulateMsgToggleSwapOut(*s.app.VaultKeeper)
@@ -163,7 +163,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgToggleSwapOut() {
 func (s *VaultSimTestSuite) TestSimulateMsgPauseVault() {
 	selected := s.accs[0]
 
-	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "", "underlyingshare", selected, s.accs)
+	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "underlyingshare", selected, s.accs)
 	s.Require().NoError(err, "CreateVault")
 
 	op := simulation.SimulateMsgPauseVault(*s.app.VaultKeeper)
@@ -178,7 +178,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgPauseVault() {
 func (s *VaultSimTestSuite) TestSimulateMsgUnpauseVault() {
 	selected := s.accs[0]
 
-	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "", "underlyingshare", selected, s.accs)
+	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "underlyingshare", selected, s.accs)
 	s.Require().NoError(err, "CreateVault")
 	err = simulation.PauseVault(s.ctx, s.app.VaultKeeper, "underlyingshare")
 	s.Require().NoError(err, "PauseVault")
@@ -197,12 +197,12 @@ func (s *VaultSimTestSuite) TestSimulateMsgExpeditePendingSwapOut() {
 	user := s.accs[0]
 	admin := s.accs[1]
 
-	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "", "underlyingshare", admin, s.accs)
+	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "underlyingshare", admin, s.accs)
 	s.Require().NoError(err, "CreateVault")
 	err = simulation.SwapIn(s.ctx, s.app.VaultKeeper, user, "underlyingshare", sdk.NewInt64Coin("underlying2vx", 100))
 	s.Require().NoError(err, "SwapIn")
 	shares := s.app.BankKeeper.GetBalance(s.ctx, user.Address, "underlyingshare")
-	err = simulation.SwapOut(s.ctx, s.app.VaultKeeper, user, shares, "underlying2vx")
+	err = simulation.SwapOut(s.ctx, s.app.VaultKeeper, user, shares)
 	s.Require().NoError(err, "SwapOut")
 
 	// Now run the simulation for Expedite
@@ -218,7 +218,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgExpeditePendingSwapOut() {
 func (s *VaultSimTestSuite) TestSimulateMsgDepositInterestFunds() {
 	admin := s.accs[0]
 
-	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "", "underlyingshare", admin, s.accs)
+	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "underlyingshare", admin, s.accs)
 	s.Require().NoError(err, "CreateVault")
 
 	op := simulation.SimulateMsgDepositInterestFunds(*s.app.VaultKeeper)
@@ -233,7 +233,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgDepositInterestFunds() {
 func (s *VaultSimTestSuite) TestSimulateMsgDepositPrincipalFunds() {
 	admin := s.accs[0]
 
-	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "", "underlyingshare", admin, s.accs)
+	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "underlyingshare", admin, s.accs)
 	s.Require().NoError(err, "CreateVault")
 	err = simulation.PauseVault(s.ctx, s.app.VaultKeeper, "underlyingshare")
 	s.Require().NoError(err, "PauseVault")
@@ -250,7 +250,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgDepositPrincipalFunds() {
 func (s *VaultSimTestSuite) TestSimulateMsgWithdrawInterestFunds() {
 	admin := s.accs[0]
 
-	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "", "underlyingshare", admin, s.accs)
+	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "underlyingshare", admin, s.accs)
 	s.Require().NoError(err, "CreateVault")
 	_, err = simulation.DepositInterestFunds(s.ctx, s.app.VaultKeeper, "underlyingshare", sdk.NewInt64Coin("underlying2vx", 100))
 	s.Require().NoError(err, "DepositInterest")
@@ -267,7 +267,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgWithdrawInterestFunds() {
 func (s *VaultSimTestSuite) TestSimulateMsgWithdrawPrincipalFunds() {
 	admin := s.accs[0]
 
-	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "", "underlyingshare", admin, s.accs)
+	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "underlyingshare", admin, s.accs)
 	s.Require().NoError(err, "CreateVault")
 	err = simulation.PauseVault(s.ctx, s.app.VaultKeeper, "underlyingshare")
 	s.Require().NoError(err, "PauseVault")
@@ -286,7 +286,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgWithdrawPrincipalFunds() {
 func (s *VaultSimTestSuite) TestSimulateMsgUpdateInterestRate() {
 	selected := s.accs[0]
 
-	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "", "underlyingshare", selected, s.accs)
+	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "underlyingshare", selected, s.accs)
 	s.Require().NoError(err, "CreateVault")
 
 	op := simulation.SimulateMsgUpdateInterestRate(*s.app.VaultKeeper)
@@ -301,7 +301,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgUpdateInterestRate() {
 func (s *VaultSimTestSuite) TestSimulateMsgUpdateMinInterestRate() {
 	selected := s.accs[0]
 
-	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "", "underlyingshare", selected, s.accs)
+	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "underlyingshare", selected, s.accs)
 	s.Require().NoError(err, "CreateVault")
 
 	op := simulation.SimulateMsgUpdateMinInterestRate(*s.app.VaultKeeper)
@@ -316,7 +316,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgUpdateMinInterestRate() {
 func (s *VaultSimTestSuite) TestSimulateMsgUpdateMaxInterestRate() {
 	selected := s.accs[0]
 
-	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "", "underlyingshare", selected, s.accs)
+	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "underlyingshare", selected, s.accs)
 	s.Require().NoError(err, "CreateVault")
 
 	op := simulation.SimulateMsgUpdateMaxInterestRate(*s.app.VaultKeeper)
@@ -331,7 +331,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgUpdateMaxInterestRate() {
 func (s *VaultSimTestSuite) TestSimulateMsgToggleBridge() {
 	selected := s.accs[0]
 
-	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "", "underlyingshare", selected, s.accs)
+	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "underlyingshare", selected, s.accs)
 	s.Require().NoError(err, "CreateVault")
 
 	err = simulation.SetVaultBridge(s.ctx, s.app.VaultKeeper, "underlyingshare", sdk.AccAddress("bridgeaddr"), true)
@@ -349,7 +349,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgToggleBridge() {
 func (s *VaultSimTestSuite) TestSimulateMsgSetBridgeAddress() {
 	selected := s.accs[0]
 
-	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "", "underlyingshare", selected, s.accs)
+	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "underlyingshare", selected, s.accs)
 	s.Require().NoError(err, "CreateVault")
 
 	op := simulation.SimulateMsgSetBridgeAddress(*s.app.VaultKeeper)
@@ -365,7 +365,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgBridgeMintShares() {
 	admin := s.accs[0]
 	bridge := s.accs[1]
 
-	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "", "underlyingshare", admin, s.accs)
+	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "underlyingshare", admin, s.accs)
 	s.Require().NoError(err, "CreateVault")
 
 	err = simulation.BridgeAssets(s.ctx, s.app.VaultKeeper, "underlyingshare", sdk.NewInt64Coin("underlyingshare", 1_000), sdk.NewInt64Coin("underlyingshare", 500))
@@ -390,7 +390,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgBridgeBurnShares() {
 	admin := s.accs[0]
 	bridge := s.accs[1]
 
-	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "", "underlyingshare", admin, s.accs)
+	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "underlyingshare", admin, s.accs)
 	s.Require().NoError(err, "CreateVault")
 
 	err = simulation.SetVaultBridge(s.ctx, s.app.VaultKeeper, "underlyingshare", bridge.Address, true)
@@ -415,7 +415,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgBridgeBurnShares() {
 func (s *VaultSimTestSuite) TestSimulateMsgUpdateWithdrawalDelay() {
 	selected := s.accs[0]
 
-	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "", "underlyingshare", selected, s.accs)
+	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "underlyingshare", selected, s.accs)
 	s.Require().NoError(err, "CreateVault")
 
 	op := simulation.SimulateMsgUpdateWithdrawalDelay(*s.app.VaultKeeper)
@@ -441,7 +441,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgUpdateParams() {
 func (s *VaultSimTestSuite) TestSimulateMsgUpdateVaultAUMFeeBips() {
 	selected := s.accs[0]
 
-	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "", "underlyingshare", selected, s.accs)
+	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "underlyingshare", selected, s.accs)
 	s.Require().NoError(err, "CreateVault")
 
 	op := simulation.SimulateMsgUpdateVaultAUMFeeBips(*s.app.VaultKeeper)
@@ -456,7 +456,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgUpdateVaultAUMFeeBips() {
 func (s *VaultSimTestSuite) TestSimulateMsgUpdateVaultNAV() {
 	selected := s.accs[0]
 
-	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "", "underlyingshare", selected, s.accs)
+	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "underlyingshare", selected, s.accs)
 	s.Require().NoError(err, "CreateVault")
 
 	op := simulation.SimulateMsgUpdateVaultNAV(*s.app.VaultKeeper)
@@ -471,7 +471,7 @@ func (s *VaultSimTestSuite) TestSimulateMsgUpdateVaultNAV() {
 func (s *VaultSimTestSuite) TestSimulateMsgUpdateNAVAuthority() {
 	selected := s.accs[0]
 
-	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "", "underlyingshare", selected, s.accs)
+	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "underlyingshare", selected, s.accs)
 	s.Require().NoError(err, "CreateVault")
 
 	op := simulation.SimulateMsgUpdateNAVAuthority(*s.app.VaultKeeper)
@@ -488,10 +488,10 @@ func (s *VaultSimTestSuite) TestSimulateMsgAcceptAsset() {
 
 	err := simulation.CreateGlobalMarker(s.ctx, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, sdk.NewInt64Coin("acceptunder2vx", 100_000_000), s.accs, false, s.provlabsAddr)
 	s.Require().NoError(err, "CreateGlobalMarker underlying")
-	err = simulation.CreateGlobalMarker(s.ctx, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, sdk.NewInt64Coin("acceptpay2vx", 100_000_000), s.accs, false, s.provlabsAddr)
-	s.Require().NoError(err, "CreateGlobalMarker payment")
+	err = simulation.CreateGlobalMarker(s.ctx, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, sdk.NewInt64Coin("acceptexternal2vx", 100_000_000), s.accs, false, s.provlabsAddr)
+	s.Require().NoError(err, "CreateGlobalMarker external asset")
 
-	err = simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "acceptunder2vx", "acceptpay2vx", "acceptshare", selected, s.accs)
+	err = simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "acceptunder2vx", "acceptshare", selected, s.accs)
 	s.Require().NoError(err, "CreateVault")
 
 	op := simulation.SimulateMsgAcceptAsset(*s.app.VaultKeeper)
@@ -513,10 +513,10 @@ func (s *VaultSimTestSuite) TestSimulateMsgRejectAsset() {
 
 	err := simulation.CreateGlobalMarker(s.ctx, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, sdk.NewInt64Coin("rejectunder2vx", 100_000_000), s.accs, false, s.provlabsAddr)
 	s.Require().NoError(err, "CreateGlobalMarker underlying")
-	err = simulation.CreateGlobalMarker(s.ctx, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, sdk.NewInt64Coin("rejectpay2vx", 100_000_000), s.accs, false, s.provlabsAddr)
-	s.Require().NoError(err, "CreateGlobalMarker payment")
+	err = simulation.CreateGlobalMarker(s.ctx, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, sdk.NewInt64Coin("rejectexternal2vx", 100_000_000), s.accs, false, s.provlabsAddr)
+	s.Require().NoError(err, "CreateGlobalMarker external asset")
 
-	err = simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "rejectunder2vx", "rejectpay2vx", "rejectshare", selected, s.accs)
+	err = simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "rejectunder2vx", "rejectshare", selected, s.accs)
 	s.Require().NoError(err, "CreateVault")
 
 	op := simulation.SimulateMsgRejectAsset(*s.app.VaultKeeper)

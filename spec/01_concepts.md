@@ -2,16 +2,26 @@
 
 The `x/vault` module provides a system for tokenized vaults built on Provenance’s marker and account model.  
 Vaults allow users to deposit underlying assets in exchange for vault shares, redeem those shares later, and participate in configurable interest accrual.  
-Each vault is configured with both an **underlying asset denom** (the backing collateral) and an optional **payment denom**.  
-The payment denom provides a secondary unit for payouts and redemptions: users can request to redeem shares into either the underlying asset or the configured payment denom (if supported), with conversions handled via on-chain NAV pricing.  
-The module manages vault lifecycle, share issuance, redemptions, dual-asset accounting, interest accrual, AUM fee collection, and time-based job queues for automated processing.  
+Each vault is strictly **single-denom**: it is configured with one **underlying asset denom** (the backing collateral), which is the only accepted denom for deposits, redemptions, interest, and AUM fees.  
+The module manages vault lifecycle, share issuance, redemptions, interest accrual, AUM fee collection, and time-based job queues for automated processing.  
 Total share supply is tracked on the vault as **total_shares**, the authoritative supply-of-record across chains; local marker supply must never exceed this amount.
+
+> **Deprecation notice:** The mixed-denom vault functionality has been removed. Vaults are strictly
+> **single underlying denom**: the `payment_denom` configuration (including receipt tokens as
+> payment denoms), the `redeem_denom` payout selection on swap-out, and the `uylds.fcc` NAV-check
+> exemption no longer exist. The released request fields — `payment_denom` on
+> `MsgCreateVaultRequest`, and `redeem_denom` on `MsgSwapOutRequest` and
+> `QueryEstimateSwapOutRequest` — remain on the wire as deprecated so historical transactions and
+> released clients still decode; if set, they must equal the vault's `underlying_asset` or the
+> request is rejected. The **state** fields `VaultAccount.payment_denom` (always equal to
+> `underlying_asset`) and `PendingSwapOut.redeem_denom` (always the underlying asset) remain
+> deprecated on the wire so the v1→v2 migration can decode pre-flatten state; their deletion is
+> deferred to a future major release. Do not build new integrations against this surface.
 
 ---
 <!-- TOC -->
 - [Key Definitions](#key-definitions)
   - [Marker Authority Rules](#marker-authority-rules)
-  - [Special Case: YLDS Peg Mode](#special-case-ylds-peg-mode)
 - [Keeper Responsibilities](#keeper-responsibilities)
   - [Vault Lifecycle](#vault-lifecycle)
   - [Swap Operations](#swap-operations)
@@ -29,15 +39,14 @@ Total share supply is tracked on the vault as **total_shares**, the authoritativ
 
 ## Key Definitions
 
-- **Underlying Asset**: the base denom that defines vault value and payouts. TVV is always expressed in this unit.  
-- **Payment Denom (Secondary)**: an optional denom configured on a vault. It may be a normal swappable token (e.g., `uusdc`) or a restricted **receipt token** used for accounting. Swapability is determined by marker configuration.  
-- **Receipt Token**: a restricted marker that may be set as the payment denom. The only account with transfer authority is the holder of the receipt itself, which represents deployed capital (e.g., receipts into a fund). User swap-out to a receipt token is not possible unless the marker explicitly grants transfer authority. 
-- **Principal**: the vault’s total assets held in the **share marker account**, including underlying balances and any payment denom balances (normal or receipt).
+- **Underlying Asset**: the base denom that defines vault value and payouts. It is the sole accepted denom for all user I/O, interest, and fees. TVV is always expressed in this unit.  
+- **Payment Denom (Secondary)** *(removed)*: the former optional secondary denom configured on a vault (a normal swappable token or a restricted **receipt token**). The functionality has been removed; the `VaultAccount.payment_denom` state field remains on the wire for migration decoding and always equals `underlying_asset`. Field deletion is deferred to a future major release.  
+- **Principal**: the vault’s total assets held in the **share marker account**: the underlying asset balance plus any external assets acquired through P2P settlement.
 - **Reserves**: the vault account balance used to pay positive interest or receive refunds from negative interest.
 - **TVV (Total Vault Value)**: the value of all principal assets, computed and reported in the underlying unit.
     - **Gross TVV**: The literal sum of all assets sitting in the principal marker. Used for interest and fee accruals.
     - **Net TVV**: Gross TVV minus **Outstanding AUM Fees**. This is the authoritative value used for share pricing (NAV) and user-facing valuation.
-- **AUM Technology Fee**: a 15 bps (0.15% annual) fee collected from the vault principal to support protocol maintenance. It is accrued continuously and collected in the vault's configured `payment_denom`.
+- **AUM Technology Fee**: a 15 bps (0.15% annual) fee collected from the vault principal to support protocol maintenance. It is accrued continuously and collected in the vault's underlying asset.
 - **NAV**: conversion rate between denoms, used for valuation and conversions, subject to special-case rules.
 - **Internal NAV Table**: per-vault price entries (`price` for `volume` units of a denom) that are the **sole source of truth** for the valuation engine's conversions. The module never reads external oracles or marker NAVs at valuation time.
 - **NAV Authority**: an optional per-vault address authorized to maintain the internal NAV table via `UpdateVaultNAV`. The vault admin acts as NAV authority when unset; the admin rotates it via `UpdateNAVAuthority`.
@@ -51,14 +60,8 @@ All user I/O must satisfy **both** layers:
 1) **Vault-level gates** — the vault must be unpaused and the relevant toggle (`SwapIn`/`SwapOut`) must be enabled.  
 2) **Marker permissions** — the marker for the target denom (including the **underlying**) must allow the transfer (attributes, restrictions, transfer authority).  
 
-Examples:  
-- `uylds.fcc` is a restricted marker with required attributes; users must satisfy those attributes to deposit/withdraw even when vault toggles are enabled.  
-- Receipt tokens typically deny public transfers; therefore user swap-out to a receipt token is not possible regardless of vault toggles.
-
-### Special Case: YLDS Peg Mode
-
-If a vault’s underlying is set to `uylds.fcc`, all conversions are treated as **1:1** with YLDS regardless of NAV.  
-This means any configured payment denom (normal token or receipt token) is valued **1:1** with `uylds.fcc` for TVV and estimates.
+Example:  
+- `uylds.fcc` is a restricted marker with required attributes; users must satisfy those attributes to deposit/withdraw even when vault toggles are enabled.
 
 ---
 
@@ -99,7 +102,7 @@ The keeper ties together state management, account operations, marker integratio
 - **Payout Timeout Queue**: tracks when vaults must be revisited for automatic interest reconciliation.
 - **Fee Timeout Queue**: tracks when vaults must be revisited for automatic AUM fee collection.
 - **Payout Verification Set**: temporary holding set for vaults awaiting validation after rate changes or reconciliations.
-- **Pending Swap-Out Queue**: time-ordered queue of withdrawal requests, processed in EndBlocker. Jobs include owner, vault, shares, redeem denom, and request ID.
+- **Pending Swap-Out Queue**: time-ordered queue of withdrawal requests, processed in EndBlocker. Jobs include owner, vault, shares, and request ID; payouts are always made in the vault's underlying asset.
 
 ### Genesis
 - **InitGenesis**: loads vault accounts, queue entries, and validates stored state.
@@ -127,26 +130,25 @@ Bridging lets vault shares move across chains. The on-chain accounting model and
 
 ## Internal NAV & Multi-Asset Settlement
 
-Vaults can take in **external assets** beyond the underlying and payment denoms, settling them peer-to-peer against the vault's payment denom. Two pieces make this work: the **internal NAV table** (the module's own price book) and the **p2p settlement workflow** built on `x/exchange` payments.
+Vaults can take in **external assets** beyond the underlying asset, settling them peer-to-peer against the vault's underlying asset. Two pieces make this work: the **internal NAV table** (the module's own price book) and the **p2p settlement workflow** built on `x/exchange` payments.
 
 ### Internal NAV Table
 
-Each vault carries its own table of price entries, one per asset denom. An entry records `price` (a coin in one of the vault's accepted denoms) for `volume` units of the denom; the per-unit value is `price / volume`, kept as an exact fraction. The valuation engine converts denoms **exclusively** through this table — no oracle or marker-module reads happen at valuation time, so pricing is deterministic and admin-auditable.
+Each vault carries its own table of price entries, one per asset denom. An entry records `price` (a coin in the vault's underlying asset) for `volume` units of the denom; the per-unit value is `price / volume`, kept as an exact fraction. The valuation engine converts denoms **exclusively** through this table — no oracle or marker-module reads happen at valuation time, so pricing is deterministic and admin-auditable.
 
-Entries are written by four paths:
+Entries are written by three paths:
 
-1. **Creation seed** — an optional `InitialVaultNAV` bootstraps the payment denom's price when the vault is created.
-2. **NAV authority updates** — the configured `nav_authority` (the admin when unset) maintains entries via `UpdateVaultNAV`.
-3. **Settlements** — each `AcceptAsset` records the realized settlement price as the asset denom's entry (and removes the entry when an outbound settlement drains the denom from the principal).
-4. **Migration seeding** — a one-time upgrade migration seeded entries from existing marker-module NAVs.
+1. **NAV authority updates** — the configured `nav_authority` (the admin when unset) maintains entries via `UpdateVaultNAV`.
+2. **Settlements** — each `AcceptAsset` records the realized settlement price as the asset denom's entry (and removes the entry when an outbound settlement drains the denom from the principal).
+3. **Migration seeding** — a one-time upgrade migration seeded entries from existing marker-module NAVs.
 
-NAV upserts from paths 2 and 3 are also **published one-way to the marker module**, attributed to the vault address, so downstream marker-NAV consumers can distinguish vault-originated prices. Removals are internal-only: when a settlement drains a denom and its entry is deleted, the marker NAV is left as-is — publishing simply stops. The vault never reads marker NAVs back — the internal table remains authoritative.
+NAV upserts from paths 1 and 2 are also **published one-way to the marker module**, attributed to the vault address, so downstream marker-NAV consumers can distinguish vault-originated prices. Removals are internal-only: when a settlement drains a denom and its entry is deleted, the marker NAV is left as-is — publishing simply stops. The vault never reads marker NAVs back — the internal table remains authoritative.
 
 ### P2P Settlement Workflow
 
 External counterparties propose trades by creating `x/exchange` **payments** that target the vault, escrowing their side. The vault's **asset manager** then settles (`AcceptAsset`) or declines (`RejectAsset`) each pending payment; rejection refunds the counterparty's escrow. The admin cannot settle or reject — a vault without an asset manager has no settlement capability until one is assigned.
 
-Exactly one payment leg must carry the vault's payment denom, which determines the **direction**: *inbound* (vault receives an external asset, pays payment denom) or *outbound* (vault pays out an asset, receives payment denom). Each leg must be a single coin, and the asset denom must be a registered marker.
+Exactly one payment leg must carry the vault's underlying asset, which determines the **direction**: *inbound* (vault receives an external asset, pays underlying) or *outbound* (vault pays out an asset, receives underlying). Each leg must be a single coin, and the asset denom must be a registered marker.
 
 Settlement is atomic and layers several protections:
 
@@ -156,7 +158,7 @@ Settlement is atomic and layers several protections:
 
 ### Valuation Scope
 
-TVV sums every denom held at the principal marker that has a vault internal NAV, expressed in the underlying unit. The underlying and payment denoms are valued as before; any other held asset acquired through settlement (e.g. an `nft/scope…` coin) is valued at its internal NAV — chained through the payment denom to the underlying when the NAV is priced in the payment denom. A held denom with no internal NAV entry contributes nothing and is skipped (it does not fail valuation), while an accepted denom missing its NAV remains an error (a misconfiguration). Because TVV is the base for interest, the AUM fee, and NAV per share, a vault's value and that fee/interest/share-price base move when the NAV authority updates a held asset's NAV — a deliberate economic/trust surface.
+TVV sums every denom held at the principal marker that has a vault internal NAV, expressed in the underlying unit. The underlying asset is counted at its identity price; any other held asset acquired through settlement (e.g. an `nft/scope…` coin) is valued at its internal NAV, which is priced directly in the underlying asset. A held denom with no internal NAV entry contributes nothing and is skipped (it does not fail valuation). Because TVV is the base for interest, the AUM fee, and NAV per share, a vault's value and that fee/interest/share-price base move when the NAV authority updates a held asset's NAV — a deliberate economic/trust surface.
 
 ---
 

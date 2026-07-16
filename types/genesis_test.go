@@ -24,6 +24,7 @@ func TestGenesisState_Validate(t *testing.T) {
 		TotalShares:         sdk.NewInt64Coin("share", 0),
 		CurrentInterestRate: types.ZeroInterestRate,
 		DesiredInterestRate: types.ZeroInterestRate,
+		OutstandingAumFee:   sdk.NewInt64Coin("under", 0),
 	}
 
 	tests := []struct {
@@ -314,7 +315,7 @@ func TestGenesisState_Validate(t *testing.T) {
 			},
 		},
 		{
-			name: "nav entry for an accepted denom has zero price amount",
+			name: "mixed-denom vault is rejected",
 			genState: types.GenesisState{
 				Params: types.DefaultParams(),
 				Vaults: []types.VaultAccount{func() types.VaultAccount {
@@ -322,18 +323,8 @@ func TestGenesisState_Validate(t *testing.T) {
 					v.PaymentDenom = "pay"
 					return v
 				}()},
-				Navs: []types.VaultNAVEntry{
-					{
-						VaultAddress: validAddr,
-						Nav: types.VaultNAV{
-							Denom:  "pay",
-							Price:  sdk.NewInt64Coin("under", 0),
-							Volume: sdkmath.NewInt(1),
-						},
-					},
-				},
 			},
-			expectedErr: `nav price at index 0 for accepted denom "pay" must be positive`,
+			expectedErr: `invalid vault at index 0: payment denom "pay" must be empty or equal underlying asset "under"; vaults are single-denom`,
 		},
 		{
 			name: "nav entry has zero volume",
@@ -372,7 +363,7 @@ func TestGenesisState_Validate(t *testing.T) {
 			expectedErr: "nav volume at index 0 must be positive",
 		},
 		{
-			name: "nav price denom is not an accepted vault denom",
+			name: "nav price denom is not the underlying asset",
 			genState: types.GenesisState{
 				Params: types.DefaultParams(),
 				Vaults: []types.VaultAccount{validVault},
@@ -387,7 +378,7 @@ func TestGenesisState_Validate(t *testing.T) {
 					},
 				},
 			},
-			expectedErr: `nav price denom at index 0 "wrongdenom" is not an accepted denom`,
+			expectedErr: `nav price denom at index 0 "wrongdenom" is not the underlying asset for vault`,
 		},
 		{
 			name: "duplicate nav entry for the same vault and denom",

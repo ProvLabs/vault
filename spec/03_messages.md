@@ -85,17 +85,21 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 
 ## CreateVault
 
-Creates a new vault account with a configured underlying asset, optional payment denom, withdrawal delay, and minimum/maximum swap values.
+Creates a new vault account with a configured underlying asset, withdrawal delay, and minimum/maximum swap values.
 The creator is recorded as vault admin.
 
+* **Single Denom:** Vaults are strictly single-denom on `underlying_asset`; it is the only denom for deposits, redemptions, interest, and fees.
 * **Units:** All swap limit values (`min_swap_in_value`, `min_swap_out_value`, `max_swap_in_value`, `max_swap_out_value`) are denominated in the vault's **underlying_asset**.
 * **Clearing Limits:** 
     * Minimums: An empty string "" or the string "0" clears/disables the minimum limit.
     * Maximums: An empty string "" clears/disables the maximum limit.
 * **Constraints:** Any provided maximum swap value must be **positive (> 0)**. A value of "0" is invalid and will be rejected.
 
-* **Request:** `MsgCreateVaultRequest { admin, share_denom, underlying_asset, payment_denom?, withdrawal_delay_seconds, min_swap_in_value?, min_swap_out_value?, max_swap_in_value?, max_swap_out_value? }`
+* **Request:** `MsgCreateVaultRequest { admin, share_denom, underlying_asset, withdrawal_delay_seconds, min_swap_in_value?, min_swap_out_value?, max_swap_in_value?, max_swap_out_value? }`
 * **Response:** `MsgCreateVaultResponse {}`
+
+> **Deprecated:** `payment_denom` is deprecated but retained on the wire for compatibility with
+> released clients; if set, it must equal `underlying_asset` or the message is rejected.
 
 ---
 
@@ -110,7 +114,7 @@ Admin-only. Sets Bank module metadata for a vault’s share denom, defining how 
 
 ## SwapIn
 
-Deposits accepted assets (underlying or payment denom) into a vault in exchange for newly minted shares.
+Deposits the vault's underlying asset into a vault in exchange for newly minted shares. The underlying asset is the only accepted deposit denom.
 
 * **Request:** `MsgSwapInRequest { owner, vault_address, assets }`
 * **Response:** `MsgSwapInResponse {}`
@@ -119,12 +123,16 @@ Deposits accepted assets (underlying or payment denom) into a vault in exchange 
 
 ## SwapOut
 
-Redeems shares from a vault in exchange for assets.
-The `redeem_denom` field selects whether the user wants underlying or the vault’s optional payment denom.
+Redeems shares from a vault in exchange for the vault's underlying asset.
+Payouts are always made in the underlying asset.
 Swap-outs are queued with respect to `withdrawal_delay_seconds`.
 
-* **Request:** `MsgSwapOutRequest { owner, vault_address, assets (shares), redeem_denom }`
+* **Request:** `MsgSwapOutRequest { owner, vault_address, assets (shares) }`
 * **Response:** `MsgSwapOutResponse { request_id }`
+
+> **Deprecated:** `redeem_denom` no longer selects the payout coin; payouts are always the
+> underlying asset. The field is retained on the wire for compatibility with released clients —
+> if set, it must equal the vault's `underlying_asset` or the message is rejected.
 
 ---
 
@@ -347,7 +355,7 @@ Passing an empty `asset_manager` clears the configured value.
 
 ## UpdateVaultNAV
 
-NAV authority only (the vault admin when no `nav_authority` is configured). Creates or updates the vault's **internal NAV entry** for a denom: the price of `volume` units of `denom`, denominated in one of the vault's accepted denoms.
+NAV authority only (the vault admin when no `nav_authority` is configured). Creates or updates the vault's **internal NAV entry** for a denom: the price of `volume` units of `denom`, denominated in the vault's underlying asset.
 
 The handler is **rejected while the vault is paused**: a paused vault freezes its value at `PausedBalance`, so a NAV update would assert a price that the vault deliberately ignores until unpause. When not paused, the handler reconciles the vault first, so accrued interest settles against the TVV that held before the price change. After the upsert, the NAV is published downstream to the **marker module**, attributed to the vault address.
 
@@ -371,14 +379,14 @@ Admin-only. Rotates the address authorized to mutate the vault's internal NAV ta
 
 ## AcceptAsset
 
-Asset Manager only — the admin cannot settle, and a vault without an asset manager cannot settle at all. Settles a pending `x/exchange` payment whose target is the vault, exchanging an external asset for the vault's payment denom. The payment is identified by its `source` account and `external_id`.
+Asset Manager only — the admin cannot settle, and a vault without an asset manager cannot settle at all. Settles a pending `x/exchange` payment whose target is the vault, exchanging an external asset for the vault's underlying asset. The payment is identified by its `source` account and `external_id`.
 
 Settlement is **rejected while the vault is paused**: a paused vault freezes its value at `PausedBalance`, and settling would move principal funds and the vault's value. Reject the payment or unpause first.
 
-Exactly one payment leg must carry the vault's `payment_denom`; the **settlement direction** is derived from which leg that is:
+Exactly one payment leg must carry the vault's underlying asset; the **settlement direction** is derived from which leg that is:
 
-* **Inbound** — payment denom on the target leg: the vault receives the asset (`source_amount`) and pays the payment denom (`target_amount`).
-* **Outbound** — payment denom on the source leg: the vault pays the asset (`target_amount`) and receives the payment denom (`source_amount`).
+* **Inbound** — underlying asset on the target leg: the vault receives the asset (`source_amount`) and pays the underlying asset (`target_amount`).
+* **Outbound** — underlying asset on the source leg: the vault pays the asset (`target_amount`) and receives the underlying asset (`source_amount`).
 
 Each leg must carry exactly one coin, and the asset denom must be a registered marker.
 

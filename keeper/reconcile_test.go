@@ -2038,7 +2038,7 @@ func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer_OversizedTVVDegradesToErr
 	s.seedOversizedNAV(vault, heldDenom, underlyingDenom, maxValidNAVPrice(), sdkmath.OneInt())
 
 	principalAddress := vault.PrincipalMarkerAddress()
-	s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, principalAddress, sdk.NewCoins(
+	s.Require().NoError(s.k.BankKeeper.SendCoins(markertypes.WithBypass(s.ctx), s.adminAddr, principalAddress, sdk.NewCoins(
 		sdk.NewInt64Coin(heldDenom, 1),
 	)), "funding principal with one held-asset unit should drive TVV to the 256-bit ceiling")
 

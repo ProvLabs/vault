@@ -9,6 +9,8 @@ import (
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
 // migrateFlattenMixedDenomVaults rewrites all vault state so every vault is
@@ -167,6 +169,55 @@ func (k Keeper) migratePendingSwapOutRedeemDenoms(ctx sdk.Context) error {
 	for _, rewrite := range rewrites {
 		if err := k.PendingSwapOutQueue.IndexedMap.Set(ctx, rewrite.key, rewrite.req); err != nil {
 			return fmt.Errorf("failed to rewrite pending swap-out %d: %w", rewrite.key.K2(), err)
+		}
+	}
+
+	return nil
+}
+
+// migrateEnableMarkerDepositProtection enables require_deposit_access on every
+// vault's share marker and grants the vault address deposit access, skipping
+// (with an error log) any vault whose marker cannot be loaded. Idempotent.
+func (k Keeper) migrateEnableMarkerDepositProtection(ctx sdk.Context) error {
+	for _, acc := range k.AuthKeeper.GetAllAccounts(ctx) {
+		vault, ok := acc.(*types.VaultAccount)
+		if !ok {
+			continue
+		}
+
+		marker, err := k.MarkerKeeper.GetMarkerByDenom(ctx, vault.TotalShares.Denom)
+		if err != nil {
+			k.getLogger(ctx).Error("skipping deposit protection for vault with no loadable share marker",
+				"vault", vault.Address,
+				"share_denom", vault.TotalShares.Denom,
+				"err", err,
+			)
+			continue
+		}
+
+		changed := false
+		if !marker.RequiresDepositAccess() {
+			marker.SetRequireDepositAccess(true)
+			changed = true
+		}
+
+		vaultAddr := vault.GetAddress()
+		if !marker.AddressHasAccess(vaultAddr, markertypes.Access_Deposit) {
+			grant := markertypes.NewAccessGrant(vaultAddr, markertypes.AccessList{markertypes.Access_Deposit})
+			if err := marker.GrantAccess(grant); err != nil {
+				return fmt.Errorf("failed to grant deposit access to vault %s on share marker %s: %w", vault.Address, vault.TotalShares.Denom, err)
+			}
+			changed = true
+		}
+
+		if changed {
+			k.getLogger(ctx).Info("enabled deposit protection on vault share marker",
+				"vault", vault.Address,
+				"share_denom", vault.TotalShares.Denom,
+			)
+			if err := k.MarkerKeeper.SetMarker(ctx, marker); err != nil {
+				return fmt.Errorf("failed to persist deposit protection on share marker %s: %w", vault.TotalShares.Denom, err)
+			}
 		}
 	}
 

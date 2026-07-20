@@ -100,7 +100,7 @@ func FundAccount(ctx context.Context, bankKeeper bankkeeper.Keeper, addr sdk.Acc
 	if err := bankKeeper.MintCoins(ctx, minttypes.ModuleName, amounts); err != nil {
 		return err
 	}
-	return bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, addr, amounts)
+	return bankKeeper.SendCoinsFromModuleToAccount(markertypes.WithBypass(ctx), minttypes.ModuleName, addr, amounts)
 }
 
 // countingBankKeeper wraps a types.BankKeeper and records how often the

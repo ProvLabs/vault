@@ -4,6 +4,9 @@ import (
 	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
+	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
@@ -214,5 +217,97 @@ func (s *TestSuite) TestVaultModule_RunMigrations() {
 		got, ok := acct.(*types.VaultAccount)
 		s.Require().True(ok, "account at %s should remain a VaultAccount", legacy.Address)
 		s.Equal(payment, got.PaymentDenom, "a matching version map must not trigger the flatten")
+	})
+}
+
+func (s *TestSuite) TestKeeper_MigrateEnableMarkerDepositProtection() {
+	underlying := "ylds"
+
+	runMigration := func() {
+		s.Require().NoError(keeper.NewMigrator(s.simApp.VaultKeeper).Migrate1to2(s.ctx), "1->2 migration should succeed")
+	}
+
+	createLegacyShareMarker := func(shareDenom string) sdk.AccAddress {
+		vaultAddr := types.GetVaultAddress(shareDenom)
+		legacyMarker := markertypes.NewMarkerAccount(
+			authtypes.NewBaseAccountWithAddress(markertypes.MustGetMarkerAddress(shareDenom)),
+			sdk.NewInt64Coin(shareDenom, 0),
+			vaultAddr,
+			[]markertypes.AccessGrant{
+				{
+					Address: vaultAddr.String(),
+					Permissions: []markertypes.Access{
+						markertypes.Access_Mint,
+						markertypes.Access_Burn,
+						markertypes.Access_Withdraw,
+					},
+				},
+			},
+			markertypes.StatusProposed,
+			markertypes.MarkerType_Coin,
+			false, false, false, []string{},
+		)
+		s.Require().NoError(s.simApp.MarkerKeeper.AddFinalizeAndActivateMarker(s.ctx, legacyMarker), "creating legacy share marker %s should succeed", shareDenom)
+		return vaultAddr
+	}
+
+	getShareMarker := func(shareDenom string) markertypes.MarkerAccountI {
+		marker, err := s.simApp.MarkerKeeper.GetMarkerByDenom(s.ctx, shareDenom)
+		s.Require().NoError(err, "share marker %s should exist", shareDenom)
+		return marker
+	}
+
+	s.Run("legacy share marker gains deposit protection and vault deposit access", func() {
+		s.SetupTest()
+		shareDenom := "vsharelegacy"
+		s.createLegacyVaultAccount(shareDenom, underlying, underlying)
+		vaultAddr := createLegacyShareMarker(shareDenom)
+
+		runMigration()
+
+		marker := getShareMarker(shareDenom)
+		s.True(marker.RequiresDepositAccess(), "migration must enable require_deposit_access on legacy share marker %s", shareDenom)
+		s.True(marker.AddressHasAccess(vaultAddr, markertypes.Access_Deposit), "migration must grant the vault deposit access on share marker %s", shareDenom)
+		s.True(marker.AddressHasAccess(vaultAddr, markertypes.Access_Mint), "existing mint grant must survive the deposit grant merge")
+		s.True(marker.AddressHasAccess(vaultAddr, markertypes.Access_Burn), "existing burn grant must survive the deposit grant merge")
+		s.True(marker.AddressHasAccess(vaultAddr, markertypes.Access_Withdraw), "existing withdraw grant must survive the deposit grant merge")
+	})
+
+	s.Run("second run is idempotent", func() {
+		s.SetupTest()
+		shareDenom := "vshareidem"
+		s.createLegacyVaultAccount(shareDenom, underlying, underlying)
+		createLegacyShareMarker(shareDenom)
+
+		runMigration()
+		first := getShareMarker(shareDenom)
+		runMigration()
+		second := getShareMarker(shareDenom)
+
+		s.Equal(first, second, "an already-protected share marker must not be modified by a second migration run")
+	})
+
+	s.Run("vault with missing share marker is skipped without failing", func() {
+		s.SetupTest()
+		shareDenom := "vsharenomarker"
+		s.createLegacyVaultAccount(shareDenom, underlying, underlying)
+
+		runMigration()
+
+		_, err := s.simApp.MarkerKeeper.GetMarkerByDenom(s.ctx, shareDenom)
+		s.Require().Error(err, "migration must not conjure a share marker for a vault that has none")
+	})
+
+	s.Run("markers created by current CreateVault are left untouched", func() {
+		s.SetupTest()
+		shareDenom := "vsharecurrent"
+		s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlying, 1_000_000), s.adminAddr)
+		s.CreateVaultWithParams(shareDenom, underlying)
+		before := getShareMarker(shareDenom)
+
+		runMigration()
+
+		after := getShareMarker(shareDenom)
+		s.Equal(before, after, "a marker already carrying deposit protection from creation must pass through the migration unchanged")
 	})
 }

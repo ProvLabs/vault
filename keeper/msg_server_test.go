@@ -49,6 +49,7 @@ func (s *TestSuite) TestMsgServer_CreateVault() {
 			s.False(marker.HasGovernanceEnabled(), "vault marker %s should not have governance enabled", postCheckArgs.ShareDenom)
 			s.True(marker.GetMarkerType() == markertypes.MarkerType_Coin, "vault marker %s should be of type COIN", postCheckArgs.ShareDenom)
 			s.False(marker.HasGovernanceEnabled(), "vault marker %s should not allow governance control", postCheckArgs.ShareDenom)
+			s.True(marker.RequiresDepositAccess(), "vault marker %s should require deposit access for incoming coins", postCheckArgs.ShareDenom)
 
 			access := marker.GetAccessList()
 			s.Require().Len(access, 1, "expected exactly one access entry for vault marker %s", postCheckArgs.ShareDenom)
@@ -58,6 +59,7 @@ func (s *TestSuite) TestMsgServer_CreateVault() {
 					markertypes.Access_Mint,
 					markertypes.Access_Burn,
 					markertypes.Access_Withdraw,
+					markertypes.Access_Deposit,
 				},
 				access[0].Permissions,
 				"vault marker %s permissions mismatch", postCheckArgs.ShareDenom,
@@ -4464,7 +4466,7 @@ func (s *TestSuite) TestMsgServer_PauseVault_ForceVsStrict() {
 	brokenTVVSetup := func() (sdk.AccAddress, string) {
 		vault, _, underlying, heldDenom := s.setupOversizedNAVVault()
 		s.seedOversizedNAV(vault, heldDenom, underlying, maxValidNAVPrice(), math.OneInt())
-		s.Require().NoError(s.k.BankKeeper.SendCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(),
+		s.Require().NoError(s.k.BankKeeper.SendCoins(markertypes.WithBypass(s.ctx), s.adminAddr, vault.PrincipalMarkerAddress(),
 			sdk.NewCoins(sdk.NewInt64Coin(heldDenom, 2))),
 			"funding the principal with a held asset priced at the 256-bit ceiling should make TVV conversion overflow")
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())

@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -19,12 +21,14 @@ func NewMigrator(k *Keeper) Migrator {
 }
 
 // Migrate1to2 advances the vault module from ConsensusVersion 1 to 2 by
-// flattening every vault to single-denom: payment denoms collapse onto the
-// underlying asset, outstanding AUM fees are re-denominated into the
-// underlying, pending swap-outs redeem in the underlying, and nav_authority
-// defaults to the vault admin when unset. The work is delegated to the
-// unexported migrateFlattenMixedDenomVaults, which is idempotent across
-// retries.
+// flattening every vault to single-denom and enabling deposit protection on
+// every vault's share marker. Both steps are idempotent across retries.
 func (m Migrator) Migrate1to2(ctx sdk.Context) error {
-	return m.keeper.migrateFlattenMixedDenomVaults(ctx)
+	if err := m.keeper.migrateFlattenMixedDenomVaults(ctx); err != nil {
+		return fmt.Errorf("failed to flatten mixed-denom vaults: %w", err)
+	}
+	if err := m.keeper.migrateEnableMarkerDepositProtection(ctx); err != nil {
+		return fmt.Errorf("failed to enable marker deposit protection: %w", err)
+	}
+	return nil
 }

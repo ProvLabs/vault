@@ -193,6 +193,7 @@ func AppConfig() depinject.Config {
 			ProvideNameKeeperStub,
 			ProvideAttributeKeeperStub,
 			ProvideExchangeKeeperStub,
+			ProvideExchangeQueryServerStub,
 		),
 		depinject.Supply(
 			map[string]module.AppModuleBasic{
@@ -357,15 +358,25 @@ func ProvideAttributeKeeperStub() *attributekeeper.Keeper {
 // to be included in the dependency graph even though the actual ExchangeKeeper
 // is initialized separately using the legacy Provenance wiring in SimApp.
 //
-// It returns the vaultExchangeKeeper adapter so the stub satisfies the full
-// types.ExchangeKeeper interface, including the GetPaymentsWithTarget lookup that
-// the raw exchange keeper exposes only through its query server.
-//
 // This function should only be used during app setup and should not be relied
 // on at runtime, as the returned keeper is not fully configured and will panic
 // if used.
 func ProvideExchangeKeeperStub() vaulttypes.ExchangeKeeper {
-	return vaultExchangeKeeper{}
+	return exchangekeeper.Keeper{}
+}
+
+// ProvideExchangeQueryServerStub returns an empty types.ExchangeQueryServer
+// instance.
+//
+// This stub is used to satisfy dependency injection requirements when wiring
+// the Vault module in the app module configuration. The real query server is
+// installed by RegisterProvenanceModules once the exchange keeper exists.
+//
+// This function should only be used during app setup and should not be relied
+// on at runtime, as the returned query server is not fully configured and will
+// panic if used.
+func ProvideExchangeQueryServerStub() vaulttypes.ExchangeQueryServer {
+	return exchangekeeper.QueryServer{}
 }
 
 func (app *SimApp) AppCodec() codec.Codec {

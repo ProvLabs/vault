@@ -445,7 +445,7 @@ func (k queryServer) VaultPayments(goCtx context.Context, req *types.QueryVaultP
 		return nil, status.Errorf(codes.Internal, "failed to find vault account %s: %v", req.Id, err)
 	}
 
-	res, err := k.ExchangeKeeper.GetPaymentsWithTarget(goCtx, &exchange.QueryGetPaymentsWithTargetRequest{
+	res, err := k.ExchangeQueryServer.GetPaymentsWithTarget(goCtx, &exchange.QueryGetPaymentsWithTargetRequest{
 		Target:     vault.GetAddress().String(),
 		Pagination: req.Pagination,
 	})

@@ -1,8 +1,6 @@
 package simapp
 
 import (
-	"context"
-
 	storetypes "cosmossdk.io/store/types"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -26,21 +24,6 @@ import (
 	namekeeper "github.com/provenance-io/provenance/x/name/keeper"
 	nametypes "github.com/provenance-io/provenance/x/name/types"
 )
-
-// vaultExchangeKeeper adapts the Provenance exchange keeper to the vault module's
-// ExchangeKeeper interface. The embedded keeper supplies the payment settlement methods
-// directly, while GetPaymentsWithTarget is served through the exchange module's query
-// server, which is the only place that exposes the target-indexed payment lookup the
-// vault's VaultPayments query relies on.
-type vaultExchangeKeeper struct {
-	exchangekeeper.Keeper
-}
-
-// GetPaymentsWithTarget returns the payments whose target is the requested account,
-// delegating to the exchange query server for index-backed pagination.
-func (k vaultExchangeKeeper) GetPaymentsWithTarget(goCtx context.Context, req *exchange.QueryGetPaymentsWithTargetRequest) (*exchange.QueryGetPaymentsWithTargetResponse, error) {
-	return exchangekeeper.NewQueryServer(k.Keeper).GetPaymentsWithTarget(goCtx, req)
-}
 
 // RegisterProvenanceModules sets up and registers the Provenance modules
 // used by the SimApp, including name, attribute, marker, and vault modules.
@@ -127,7 +110,8 @@ func (app *SimApp) RegisterProvenanceModules() error {
 	app.VaultKeeper.MarkerKeeper = app.MarkerKeeper
 	app.VaultKeeper.NameKeeper = app.NameKeeper
 	app.VaultKeeper.AttrKeeper = app.AttributeKeeper
-	app.VaultKeeper.ExchangeKeeper = vaultExchangeKeeper{app.ExchangeKeeper}
+	app.VaultKeeper.ExchangeKeeper = app.ExchangeKeeper
+	app.VaultKeeper.ExchangeQueryServer = exchangekeeper.NewQueryServer(app.ExchangeKeeper)
 
 	return app.RegisterModules(
 		name.NewAppModule(app.appCodec, app.NameKeeper, app.AccountKeeper, app.BankKeeper),

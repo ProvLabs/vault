@@ -43,40 +43,37 @@ func (s *TestSuite) TestCreateVault_Success() {
 func (s *TestSuite) TestCreateVault_ShareMarkerDepositProtection() {
 	share := "vaultshare"
 	base := "undercoin"
-	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(base, 1_000_000), s.adminAddr)
-
-	vault, err := s.k.CreateVault(s.ctx, vaultAttrs{
-		admin:      s.adminAddr.String(),
-		share:      share,
-		underlying: base,
-	})
-	s.Require().NoError(err, "CreateVault should succeed for valid attributes")
+	vault := s.setupBaseVault(base, share)
 
 	marker, err := s.simApp.MarkerKeeper.GetMarkerByDenom(s.ctx, share)
 	s.Require().NoError(err, "share marker should exist after vault creation")
 	s.True(marker.RequiresDepositAccess(), "share marker must require deposit access so arbitrary denoms cannot be sent into it")
-	s.True(marker.AddressHasAccess(vault.GetAddress(), markertypes.Access_Deposit), "vault address must hold deposit access on share marker %s", share)
-	s.True(marker.AddressHasAccess(vault.GetAddress(), markertypes.Access_Mint), "vault address must keep mint access on share marker %s", share)
-	s.True(marker.AddressHasAccess(vault.GetAddress(), markertypes.Access_Burn), "vault address must keep burn access on share marker %s", share)
-	s.True(marker.AddressHasAccess(vault.GetAddress(), markertypes.Access_Withdraw), "vault address must keep withdraw access on share marker %s", share)
+
+	cases := []struct {
+		name   string
+		access markertypes.Access
+	}{
+		{name: "deposit access granted to the vault", access: markertypes.Access_Deposit},
+		{name: "mint access preserved", access: markertypes.Access_Mint},
+		{name: "burn access preserved", access: markertypes.Access_Burn},
+		{name: "withdraw access preserved", access: markertypes.Access_Withdraw},
+	}
+	for _, tc := range cases {
+		s.Run(tc.name, func() {
+			s.True(marker.AddressHasAccess(vault.GetAddress(), tc.access), "vault address must hold %s on share marker %s", tc.access, share)
+		})
+	}
 }
 
 func (s *TestSuite) TestVaultShareMarker_RejectsUnauthorizedDeposits() {
 	share := "vaultshare"
 	base := "undercoin"
-	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(base, 1_000_000), s.adminAddr)
-
-	_, err := s.k.CreateVault(s.ctx, vaultAttrs{
-		admin:      s.adminAddr.String(),
-		share:      share,
-		underlying: base,
-	})
-	s.Require().NoError(err, "CreateVault should succeed for valid attributes")
+	s.setupBaseVault(base, share)
 
 	stranger := s.CreateAndFundAccount(sdk.NewInt64Coin(base, 500))
 	shareMarkerAddr := markertypes.MustGetMarkerAddress(share)
 
-	err = s.simApp.BankKeeper.SendCoins(s.ctx, stranger, shareMarkerAddr, sdk.NewCoins(sdk.NewInt64Coin(base, 100)))
+	err := s.simApp.BankKeeper.SendCoins(s.ctx, stranger, shareMarkerAddr, sdk.NewCoins(sdk.NewInt64Coin(base, 100)))
 	s.Require().Error(err, "a third-party send of an unrestricted denom into a protected share marker must be rejected")
 	s.Require().ErrorContains(err, "does not have ACCESS_DEPOSIT", "rejection should cite the missing deposit access on the share marker")
 }

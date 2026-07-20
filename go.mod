@@ -20,7 +20,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/incu6us/goimports-reviser/v3 v3.8.2
-	github.com/provenance-io/provenance v1.3.2-0.20260720182230-92e6c5bf0d6c
+	github.com/provenance-io/provenance v1.3.2-0.20260720203940-3977c1b90e3c
 	github.com/provlabs/vault/simapp v0.0.0-20250618191328-f45c4bfe12b9
 	github.com/stretchr/testify v1.11.1
 	google.golang.org/genproto/googleapis/api v0.0.0-20260414002931-afd174a4e478

@@ -1,0 +1,1 @@
+* Enable require_deposit_access on every vault share marker, at creation and via the 1->2 migration for existing vaults, and grant the vault address deposit access so only the vault can move coins into its principal marker [#248](https://github.com/provlabs/vault/issues/248).

@@ -67,10 +67,7 @@ type ExchangeKeeper interface {
 
 // ExchangeQueryServer defines the subset of the Provenance exchange module
 // query server that the vault module relies on to list pending payments
-// targeting a vault. It is a separate dependency from ExchangeKeeper because
-// the exchange keeper does not expose a target-indexed payment lookup; only
-// its query server does. Satisfy it with
-// exchangekeeper.NewQueryServer(exchangeKeeper).
+// targeting a vault. Satisfy it with exchangekeeper.NewQueryServer.
 type ExchangeQueryServer interface {
 	GetPaymentsWithTarget(ctx context.Context, req *exchange.QueryGetPaymentsWithTargetRequest) (*exchange.QueryGetPaymentsWithTargetResponse, error)
 }

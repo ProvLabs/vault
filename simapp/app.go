@@ -365,16 +365,9 @@ func ProvideExchangeKeeperStub() vaulttypes.ExchangeKeeper {
 	return exchangekeeper.Keeper{}
 }
 
-// ProvideExchangeQueryServerStub returns an empty types.ExchangeQueryServer
-// instance.
-//
-// This stub is used to satisfy dependency injection requirements when wiring
-// the Vault module in the app module configuration. The real query server is
+// ProvideExchangeQueryServerStub returns an empty types.ExchangeQueryServer to
+// satisfy dependency injection during app wiring. The real query server is
 // installed by RegisterProvenanceModules once the exchange keeper exists.
-//
-// This function should only be used during app setup and should not be relied
-// on at runtime, as the returned query server is not fully configured and will
-// panic if used.
 func ProvideExchangeQueryServerStub() vaulttypes.ExchangeQueryServer {
 	return exchangekeeper.QueryServer{}
 }

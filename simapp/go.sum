@@ -1002,8 +1002,8 @@ github.com/prometheus/procfs v0.19.2 h1:zUMhqEW66Ex7OXIiDkll3tl9a1ZdilUOd/F6ZXw4
 github.com/prometheus/procfs v0.19.2/go.mod h1:M0aotyiemPhBCM0z5w87kL22CxfcH05ZpYlu+b4J7mw=
 github.com/provenance-io/cosmos-sdk v0.53.5-pio-2 h1:+xC5s+abO/BR9OHiJglok3oRC5oBGVjJQ+opv5+ikgQ=
 github.com/provenance-io/cosmos-sdk v0.53.5-pio-2/go.mod h1:AQJx0jpon70WAD4oOs/y+SlST4u7VIwEPR6F8S7JMdo=
-github.com/provenance-io/provenance v1.3.2-0.20260720182230-92e6c5bf0d6c h1:8qZFQOc81KnpphmwSAGF5znOGqVklLr0xIqqO8l64ns=
-github.com/provenance-io/provenance v1.3.2-0.20260720182230-92e6c5bf0d6c/go.mod h1:6mvMTTJJKssARwamGXAV4Z08ZSdW2rLe2mOA5Qg6ch8=
+github.com/provenance-io/provenance v1.3.2-0.20260720203940-3977c1b90e3c h1:1AdxIxZu8Q/CiG07wJjt5G7h2ZdTMQ6nrbRJShjYf7I=
+github.com/provenance-io/provenance v1.3.2-0.20260720203940-3977c1b90e3c/go.mod h1:6mvMTTJJKssARwamGXAV4Z08ZSdW2rLe2mOA5Qg6ch8=
 github.com/provenance-io/wasmd v0.61.10-pio-2 h1:uc0gDj31d2S4010dIy+rtI6RawUzsZ60i0BXcUT2gEk=
 github.com/provenance-io/wasmd v0.61.10-pio-2/go.mod h1:GMPqtsb1T8FvaKpQGJmGuj/JMPXBauk4ZhUErgmtEus=
 github.com/quasilyte/go-ruleguard v0.4.5 h1:AGY0tiOT5hJX9BTdx/xBdoCubQUAE2grkqY2lSwvZcA=

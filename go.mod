@@ -419,7 +419,7 @@ replace (
 	github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt/v4 v4.4.2
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.1
 	github.com/gogo/protobuf => github.com/gogo/protobuf v1.3.2
-	github.com/provenance-io/provenance => github.com/provenance-io/provenance v1.3.2-0.20260720182230-92e6c5bf0d6c
+	github.com/provenance-io/provenance => github.com/provenance-io/provenance v1.3.2-0.20260720203940-3977c1b90e3c
 	// use local provlabs/vault/simapp
 	github.com/provlabs/vault/simapp => ./simapp
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7

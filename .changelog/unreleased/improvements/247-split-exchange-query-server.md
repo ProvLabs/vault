@@ -1,0 +1,1 @@
+* Split the expected `ExchangeKeeper` interface into a keeper part and a new `ExchangeQueryServer` dependency so consuming apps can wire the exchange keeper and `exchangekeeper.NewQueryServer` directly instead of writing an adapter struct [#247](https://github.com/provlabs/vault/issues/247).

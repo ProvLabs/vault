@@ -65,10 +65,7 @@ See: [.changelog/unreleased](.changelog/unreleased)
 
 * Classify swap-out refund reasons with typed errors instead of fragile error-string matching [#90](https://github.com/provlabs/vault/issues/90).
 * Add simulation tests to validate swap estimation accuracy [#112](https://github.com/provlabs/vault/issues/112).
-* Aligned `AutoCLI` positional argument order with proto definitions for `CreateVault` (`[#135](https://github.com/provlabs/vault/issues/135).
-* Switched the valuation engine to read prices exclusively from the per-vault Internal NAV table; `UnitPriceFraction` now performs a single `GetVaultNAV` lookup, no longer consults `MarkerKeeper.GetNetAssetValue`, no longer applies the temporary `uylds.fcc` 1:1 peg, and surfaces a distinct `no internal NAV entry for denom` error when an entry is missing. `MsgCreateVaultRequest` now carries an `initial_payment_nav` field and `Keeper.CreateVault` seeds the payment-denom NAV in the same cache context; the field is required (and is rejected as a vault-wide invariant) whenever `payment_denom` is set and differs from `underlying_asset`, so a vault can never enter an operational state that would silently stall fee collection or payment-denom swap-outs [#190](https://github.com/provlabs/vault/issues/190).
-* Add an absolute interest-rate ceiling and overflow-safe interest calculations [PR 205](https://github.com/provlabs/vault/pull/205).
-* Document and add test coverage for the bridge mint/burn supply-of-record model, where bridge operations never mutate the vault's `TotalShares` [#207](https://github.com/provlabs/vault/issues/207).
+* Switched the valuation engine to read prices exclusively from the per-vault Internal NAV table; `UnitPriceFraction` now performs a single `GetVaultNAV` lookup, no longer consults `MarkerKeeper.GetNetAssetValue`, no longer applies the temporary `uylds.fcc` 1:1 peg, and surfaces a distinct `no internal NAV entry for denom` error when an entry is missing [#190](https://github.com/provlabs/vault/issues/190).
 * Add a net TVV calculation that subtracts the outstanding AUM fee liability from gross vault value, and use it as the valuation basis for share NAV publication, NAV per share, deposit/redeem conversions, and the captured paused balance [PR 213](https://github.com/provlabs/vault/pull/213).
 * Fix the lint workflow and run it against pull requests, upgrade golangci-lint to v2, and resolve the outstanding lint findings [PR 214](https://github.com/provlabs/vault/pull/214).
 * Reworked `GetTVV` to value the accepted denoms directly and iterate the per-vault Internal NAV table for held assets instead of walking every principal-marker balance, so Total Vault Value cost scales with the number of valued denoms rather than with whatever is parked at the principal marker [#223](https://github.com/provlabs/vault/issues/223).
@@ -78,7 +75,6 @@ See: [.changelog/unreleased](.changelog/unreleased)
 
 ### Bug Fixes
 
-* Guard NAV valuation multiplications with `SafeMul` so an oversized net asset value returns an error instead of panicking the block hook [#206](https://github.com/provlabs/vault/issues/206).
 * Enforce per-block visit budgets on all ABCI queue processors (interest timeouts, fee timeouts, payout verification set, and pending swap-outs) and dequeue/refund pending swap-outs for paused vaults so they cannot camp at the front of the queue [#225](https://github.com/provlabs/vault/issues/225).
 * Preserve a pending swap-out and its escrowed shares when a payout or refund fails critically, removing the queue entry only when its payout or refund commits [#226](https://github.com/provlabs/vault/issues/226).
 * Reject swap-in deposits that are too small to mint at least one share, so no funds move when the computed share amount is zero [#237](https://github.com/provlabs/vault/issues/237).
@@ -110,7 +106,7 @@ See: [.changelog/unreleased](.changelog/unreleased)
 ### Improvements
 
 * Ensure atomicity in withdrawal processing via CacheContext to prevent inconsistent states during failures [#131](https://github.com/provlabs/vault/issues/131).
-* Aligned `AutoCLI` positional argument order with proto definitions for `CreateVault` (`[#135](https://github.com/provlabs/vault/issues/135).
+* Aligned `AutoCLI` positional argument order with proto definitions for `CreateVault` (`[admin] [share_denom] [underlying_asset]`) and `SetShareDenomMetadata` (`[metadata] [admin] [vault_address]`). **Client API breaking:** scripts using the previous positional order must be updated [#135](https://github.com/provlabs/vault/issues/135).
 * Replaced all `ctx.Logger()` calls in the keeper package with the module-scoped `k.getLogger(ctx)` for consistent, structured logging attributed to `x/vault`, and documented the convention in `GEMINI.md` [#179](https://github.com/provlabs/vault/issues/179).
 * Implemented global governance parameters for AUM fees and granular per-vault fee rate (bips) management, migrating hardcoded fee logic to a formal Params structure with authorized update capabilities [#180](https://github.com/provlabs/vault/issues/180).
 * Convert the `.claude/skills/*/scripts/` helpers (pr-review, branch-diff-analysis, vault-lint-test) from Bash + `jq` to Python 3 stdlib equivalents [PR 200](https://github.com/provlabs/vault/pull/200).

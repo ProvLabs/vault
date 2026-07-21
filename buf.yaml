@@ -10,7 +10,8 @@ deps:
   - buf.build/googleapis/googleapis:cc916c31859748a68fd229a3c8d7a2e8
 lint:
   use:
-    - COMMENTS 
+    - COMMENTS
+    - IMPORT_USED
   except:
     - SERVICE_SUFFIX
     - RPC_REQUEST_STANDARD_NAME

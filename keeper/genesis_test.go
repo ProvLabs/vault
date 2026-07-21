@@ -171,6 +171,46 @@ func (s *TestSuite) TestVaultGenesis_RoundTrip_FeeTimeoutAndParams() {
 	s.Require().Equal(aumFeeAddress, storedAddr, "stored AUM fee address mismatch in keeper")
 }
 
+func (s *TestSuite) TestVaultGenesis_Params_RoundTrip() {
+	techFeeAddress := sdk.AccAddress{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20}
+
+	tests := []struct {
+		name   string
+		params types.Params
+	}{
+		{
+			name: "zero bips is a valid stored value, should survive export and re-import",
+			params: types.Params{
+				TechFeeAddress:    techFeeAddress.String(),
+				DefaultAumFeeBips: 0,
+			},
+		},
+		{
+			name: "nonzero bips should survive export and re-import",
+			params: types.Params{
+				TechFeeAddress:    techFeeAddress.String(),
+				DefaultAumFeeBips: 100,
+			},
+		},
+		{
+			name:   "default params should survive export and re-import",
+			params: types.DefaultParams(),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+
+			genesis := &types.GenesisState{Params: tc.params}
+			s.k.InitGenesis(s.ctx, genesis)
+
+			exported := s.k.ExportGenesis(s.ctx)
+			s.Require().Equal(tc.params, exported.Params, "params should round-trip through InitGenesis and ExportGenesis unchanged")
+		})
+	}
+}
+
 func (s *TestSuite) TestVaultGenesis_RoundTrip_PastAndFutureTimeouts() {
 	shareDenom1 := "vaultshare2"
 	underlying1 := "under2"

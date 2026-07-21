@@ -1,1 +1,0 @@
-* Honor a genesis `DefaultAumFeeBips` of zero in `InitGenesis` instead of silently replacing it with the module default, so params round-trip through genesis export and import [#253](https://github.com/provlabs/vault/issues/253).

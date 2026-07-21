@@ -1,1 +1,0 @@
-* Removed the unused `provlabs/vault/v1/vault.proto` import from `tx.proto` so downstream consumers linting with `IMPORT_USED` no longer report it [#252](https://github.com/provlabs/vault/issues/252).

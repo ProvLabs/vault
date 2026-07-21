@@ -28,9 +28,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 		// Fallback to chain-specific default if TechFeeAddress is not provided.
 		params.TechFeeAddress = types.GetDefaultTechFeeAddress(ctx.ChainID()).String()
 	}
-	if genState.Params.DefaultAumFeeBips > 0 {
-		params.DefaultAumFeeBips = genState.Params.DefaultAumFeeBips
-	}
+	params.DefaultAumFeeBips = genState.Params.DefaultAumFeeBips
 
 	if err := k.Params.Set(ctx, params); err != nil {
 		panic(fmt.Errorf("failed to set params: %w", err))

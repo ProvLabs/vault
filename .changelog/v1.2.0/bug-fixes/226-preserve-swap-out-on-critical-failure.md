@@ -1,1 +1,0 @@
-* Preserve a pending swap-out and its escrowed shares when a payout or refund fails critically, removing the queue entry only when its payout or refund commits [#226](https://github.com/provlabs/vault/issues/226).

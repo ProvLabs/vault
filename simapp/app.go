@@ -30,6 +30,7 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -45,6 +46,7 @@ import (
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	// Provenance Modules
 	attributekeeper "github.com/provenance-io/provenance/x/attribute/keeper"
@@ -273,12 +275,27 @@ func (app *SimApp) LegacyAmino() *codec.LegacyAmino {
 	return app.legacyAmino
 }
 
+// stakingSimNoBondDenomParamChange drops staking's legacy bond-denom-randomizing MsgUpdateParams proposal, which breaks the staking EndBlocker pool rebalance.
+// TODO: remove once the sim migrates to the simsx harness (https://github.com/ProvLabs/vault/issues/250).
+type stakingSimNoBondDenomParamChange struct {
+	module.AppModuleSimulation
+}
+
+func (stakingSimNoBondDenomParamChange) ProposalMsgs(module.SimulationState) []simtypes.WeightedProposalMsg {
+	return nil
+}
+
 func (app *SimApp) SimulationManager() *module.SimulationManager {
 	if app.sm != nil {
 		return app.sm
 	}
 
-	app.sm = module.NewSimulationManagerFromAppModules(app.App.ModuleManager.Modules, nil)
+	overrides := map[string]module.AppModuleSimulation{}
+	if stakingSim, ok := app.App.ModuleManager.Modules[stakingtypes.ModuleName].(module.AppModuleSimulation); ok {
+		overrides[stakingtypes.ModuleName] = stakingSimNoBondDenomParamChange{AppModuleSimulation: stakingSim}
+	}
+
+	app.sm = module.NewSimulationManagerFromAppModules(app.App.ModuleManager.Modules, overrides)
 	app.sm.RegisterStoreDecoders()
 
 	return app.sm

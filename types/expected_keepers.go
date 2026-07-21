@@ -19,6 +19,7 @@ type MarkerKeeper interface {
 	WithdrawCoins(ctx sdk.Context, caller sdk.AccAddress, recipient sdk.AccAddress, denom string, coins sdk.Coins) error
 	GetMarker(ctx sdk.Context, address sdk.AccAddress) (types.MarkerAccountI, error)
 	GetMarkerByDenom(ctx sdk.Context, denom string) (types.MarkerAccountI, error)
+	SetMarker(ctx sdk.Context, marker types.MarkerAccountI) error
 	IsMarkerAccount(ctx sdk.Context, addr sdk.AccAddress) bool
 	GetNetAssetValue(ctx sdk.Context, markerDenom, priceDenom string) (*types.NetAssetValue, error)
 	SetNetAssetValue(ctx sdk.Context, marker types.MarkerAccountI, netAssetValue types.NetAssetValue, source string) error

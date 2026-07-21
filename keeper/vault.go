@@ -168,7 +168,7 @@ func (k *Keeper) createVaultAccount(ctx sdk.Context, admin, shareDenom, underlyi
 	return vault, nil
 }
 
-// createVaultMarker creates, finalizes, and activates a new restricted marker for the vault's share denomination.
+// createVaultMarker creates, finalizes, and activates the deposit-protected marker for the vault's share denomination.
 func (k *Keeper) createVaultMarker(ctx sdk.Context, markerManager sdk.AccAddress, shareDenom string) (*markertypes.MarkerAccount, error) {
 	vaultShareMarkerAddress, err := markertypes.MarkerAddress(shareDenom)
 	if err != nil {
@@ -191,6 +191,7 @@ func (k *Keeper) createVaultMarker(ctx sdk.Context, markerManager sdk.AccAddress
 					markertypes.Access_Mint,
 					markertypes.Access_Burn,
 					markertypes.Access_Withdraw,
+					markertypes.Access_Deposit,
 				},
 			},
 		},
@@ -201,6 +202,7 @@ func (k *Keeper) createVaultMarker(ctx sdk.Context, markerManager sdk.AccAddress
 		NoForceTransfer,
 		[]string{},
 	)
+	newMarker.SetRequireDepositAccess(true)
 
 	if err := k.MarkerKeeper.AddFinalizeAndActivateMarker(ctx, newMarker); err != nil {
 		return nil, fmt.Errorf("failed to create and activate vault share marker: %w", err)

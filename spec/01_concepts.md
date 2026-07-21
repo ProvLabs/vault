@@ -70,7 +70,7 @@ Example:
 The keeper ties together state management, account operations, marker integration, interest reconciliation, and queued jobs.
 
 ### Vault Lifecycle
-- **CreateVault**: validates an existing marker for the underlying asset, establishes a vault account, and creates the share marker with mint/burn/withdraw permissions.
+- **CreateVault**: validates an existing marker for the underlying asset, establishes a vault account, and creates the share marker with mint/burn/withdraw/deposit permissions for the vault and `require_deposit_access` enabled, so only the vault can move coins into its principal marker.
 - **GetVault**: retrieves and validates a vault account by address.
 - **Pause/Unpause**: admins can pause a vault, freezing operations and fixing balances, or unpause to resume operations.
 - **Bridge Controls**: configure a single **bridge address** and **enable/disable** bridging; capacity checks ensure local marker supply never exceeds `total_shares`.

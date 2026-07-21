@@ -3,6 +3,7 @@ package simapp
 import (
 	storetypes "cosmossdk.io/store/types"
 
+	"github.com/cosmos/cosmos-sdk/runtime"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/provenance-io/provenance/x/attribute"
@@ -66,7 +67,7 @@ func (app *SimApp) RegisterProvenanceModules() error {
 
 	app.MarkerKeeper = markerkeeper.NewKeeper(
 		app.appCodec,
-		app.GetKey(markertypes.StoreKey),
+		runtime.NewKVStoreService(app.GetKey(markertypes.StoreKey)),
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.AuthzKeeper,

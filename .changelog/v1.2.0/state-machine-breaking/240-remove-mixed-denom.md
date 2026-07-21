@@ -1,0 +1,1 @@
+* Remove the mixed-denom (payment denom) vault functionality in favor of the p2p workflow, making vaults strictly single-denom on their underlying asset, with a v1->v2 migration that flattens existing mixed-denom vaults in place [#240](https://github.com/provlabs/vault/issues/240).

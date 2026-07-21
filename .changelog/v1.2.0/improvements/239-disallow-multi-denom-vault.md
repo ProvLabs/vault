@@ -1,1 +1,0 @@
-* Disallow vault creation with a payment denom that differs from the underlying asset. The payment denom must now be empty (defaulting to the underlying) or equal to it. This creation-time check does not itself alter existing vaults; a separate state-machine-breaking migration flattens pre-existing mixed-denom vaults [#239](https://github.com/provlabs/vault/issues/239).

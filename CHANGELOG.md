@@ -52,6 +52,22 @@ See: [.changelog/unreleased](.changelog/unreleased)
 
 ---
 
+## [v1.2.1](https://github.com/provlabs/vault/releases/tag/v1.2.1) 2026-07-21
+
+### Improvements
+
+* Removed the unused `provlabs/vault/v1/vault.proto` import from `tx.proto` so downstream consumers linting with `IMPORT_USED` no longer report it [#252](https://github.com/provlabs/vault/issues/252).
+
+### Bug Fixes
+
+* Honor a genesis `DefaultAumFeeBips` of zero in `InitGenesis` instead of silently replacing it with the module default, so params round-trip through genesis export and import [#253](https://github.com/provlabs/vault/issues/253).
+
+### Full Commit History
+
+* https://github.com/provlabs/vault/compare/v1.2.0...v1.2.1
+
+---
+
 ## [v1.2.0](https://github.com/provlabs/vault/releases/tag/v1.2.0) 2026-07-21
 
 ### Features

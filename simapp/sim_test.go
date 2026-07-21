@@ -75,7 +75,6 @@ func newSimAppOpts(t testing.TB) simtestutil.AppOptionsMap {
 // appStateFn wraps the simtypes.AppStateFn and sets the ICA and ICQ GenesisState if isn't yet defined in the appState.
 func appStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager, genesisState map[string]json.RawMessage) simtypes.AppStateFn {
 	return func(r *rand.Rand, accs []simtypes.Account, config simtypes.Config) (json.RawMessage, []simtypes.Account, string, time.Time) {
-		r.Int63()
 		appState, simAccs, chainID, genesisTimestamp := simtestutil.AppStateFn(cdc, simManager, genesisState)(r, accs, config)
 		return appState, simAccs, chainID, genesisTimestamp
 	}

@@ -49,9 +49,12 @@ func validateVaultNAVFields(vault *types.VaultAccount, nav types.VaultNAV) error
 }
 
 // SetVaultNAV creates or updates the internal net asset value entry for a denom
-// held by the given vault. The nav argument supplies the denom, price, volume,
-// and source; the updated block height and time are stamped from ctx before the
-// entry is stored.
+// on the given vault. The denom need not be one the vault already holds: pricing an
+// unheld denom is what authorizes the asset manager to acquire it, and the entry
+// contributes nothing to total vault value until the asset arrives at the principal
+// marker (see GetTVV). The nav argument supplies the denom, price, volume, and
+// source; the updated block height and time are stamped from ctx before the entry
+// is stored.
 //
 // The denom may not be the vault's share denom, whose value is derived from
 // the vault's total holdings rather than set externally. The denom must also

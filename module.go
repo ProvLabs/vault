@@ -32,11 +32,12 @@ import (
 
 // ConsensusVersion defines the current x/vault module consensus version.
 //
-// Bumped from 1 to 2 to accompany Migrator.Migrate1to2, which seeds the
-// Internal NAV table from the Marker module's NAV store and defaults
-// nav_authority to the vault admin. A v1->v2 migration handler is registered
-// in RegisterServices so the SDK module manager can drive the migration via
-// RunMigrations when an upstream upgrade handler advances the chain.
+// Bumped from 1 to 2 to accompany Migrator.Migrate1to2, which flattens every
+// vault to single-denom on its underlying asset (defaulting nav_authority to the
+// vault admin) and enables deposit protection when a vault's share marker can be loaded. A
+// v1->v2 migration handler is registered in RegisterServices so the SDK module
+// manager can drive the migration via RunMigrations when an upstream upgrade
+// handler advances the chain.
 const ConsensusVersion = 2
 
 var (
@@ -567,7 +568,7 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:       "update-vault-nav [signer] [vault_address] [denom] [price] [volume] [source]",
 					Alias:     []string{"uvn"},
 					Short:     "Create or update a vault's internal NAV entry for a denom",
-					Long:      "Set the internal net asset value for a denom held by a vault. price is the total value of volume units, denominated in the vault's underlying asset. Must be signed by the vault's NAV authority. The denom cannot be the vault's share denom or underlying asset.",
+					Long:      "Set the internal net asset value for a denom on a vault. The denom need not be held yet; pricing it is what authorizes the asset manager to acquire it. price is the total value of volume units, denominated in the vault's underlying asset. Must be signed by the vault's NAV authority. The denom cannot be the vault's share denom or underlying asset.",
 					Example:   fmt.Sprintf("%s update-vault-nav %s %s usdc 1000000nhash 1000000 my-oracle", txStart, exampleAuthorityAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: fieldSigner},

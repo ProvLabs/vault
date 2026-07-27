@@ -110,6 +110,17 @@ func (k Keeper) TestAccessor_checkPayoutRestrictions(t *testing.T, ctx context.C
 	return k.checkPayoutRestrictions(sdk.UnwrapSDKContext(ctx), vault, owner, assets)
 }
 
+// TestAccessor_deferSwapOutRetry exposes this keeper's deferSwapOutRetry function for unit tests.
+func (k Keeper) TestAccessor_deferSwapOutRetry(t *testing.T, ctx context.Context, j types.PayoutJob, reason string) {
+	t.Helper()
+	k.deferSwapOutRetry(sdk.UnwrapSDKContext(ctx), j, reason)
+}
+
+// TestAccessor_swapOutRetryBackoff exposes the swapOutRetryBackoff function for unit tests.
+func (k Keeper) TestAccessor_swapOutRetryBackoff(failureCount uint32) int64 {
+	return swapOutRetryBackoff(failureCount)
+}
+
 // TestAccessor_getRefundReason exposes this keeper's getRefundReason function for unit tests.
 func (k Keeper) TestAccessor_getRefundReason(err error) string {
 	return k.getRefundReason(err)

@@ -283,6 +283,8 @@ Admin or Asset Manager. Immediately processes a specific queued swap-out by ID.
 
 If the vault is paused when the expedited request comes due, the request is dequeued and refunded with `EventSwapOutRefunded{ reason = "vault_paused" }` instead of being paid out.
 
+Expediting also clears the request's `failure_count`, so it is the lever for forcing an immediate retry on a request whose attempts kept failing and which is waiting out a retry backoff. See [Retry & Backoff](06_blocker.md#retry--backoff).
+
 ---
 
 ## PauseVault

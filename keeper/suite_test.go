@@ -165,6 +165,53 @@ func (s *TestSuite) assertInReconciliationQueues(vaultAddr sdk.AccAddress, shoul
 	s.assertInPayoutVerificationQueue(vaultAddr, shouldContain)
 }
 
+// createVaultWithDueInterestTimeout creates a funded vault with a due PayoutTimeoutQueue
+// entry at dueTime, optionally paused, for exercising the per-block visit budget.
+func (s *TestSuite) createVaultWithDueInterestTimeout(info VaultInfo, dueTime int64, paused bool) {
+	s.requireAddFinalizeAndActivateMarker(info.underlying, s.adminAddr)
+	_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+		Admin:           s.adminAddr.String(),
+		ShareDenom:      info.shareDenom,
+		UnderlyingAsset: info.underlying.Denom,
+	})
+	s.Require().NoError(err, "CreateVault should not error for share denom %s", info.shareDenom)
+
+	vault, err := s.k.GetVault(s.ctx, info.vaultAddr)
+	s.Require().NoError(err, "GetVault should not error for vault %s", info.vaultAddr)
+	vault.CurrentInterestRate = "0.1"
+	vault.DesiredInterestRate = "0.1"
+	vault.PeriodStart = dueTime
+	vault.PeriodTimeout = dueTime
+	vault.Paused = paused
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	s.Require().NoError(
+		FundAccount(s.ctx, s.simApp.BankKeeper, info.vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(info.underlying.Denom, 1_000_000))),
+		"funding reserves should not error for vault %s", info.vaultAddr,
+	)
+	s.Require().NoError(
+		FundAccount(s.ctx, s.simApp.BankKeeper, markertypes.MustGetMarkerAddress(info.shareDenom), sdk.NewCoins(info.underlying)),
+		"funding principal should not error for marker %s", info.shareDenom,
+	)
+	s.Require().NoError(
+		s.k.PayoutTimeoutQueue.Enqueue(s.ctx, dueTime, info.vaultAddr),
+		"enqueuing due payout timeout should not error for vault %s", info.vaultAddr,
+	)
+}
+
+// createVaultWithDueFeeTimeout creates a funded vault with a due FeeTimeoutQueue entry at
+// dueTime, optionally paused, for exercising the per-block visit budget.
+func (s *TestSuite) createVaultWithDueFeeTimeout(shareDenom, underlyingDenom string, dueTime int64, paused bool) {
+	vault := s.CreateVaultWithParams(shareDenom, underlyingDenom)
+	vault.Paused = paused
+	s.SetVaultRatesAndPeriod(vault, "0.0", "0.0", dueTime, dueTime)
+	s.FundMarker(shareDenom, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1_000_000_000)))
+	s.Require().NoError(
+		s.k.FeeTimeoutQueue.Enqueue(s.ctx, dueTime, vault.GetAddress()),
+		"enqueuing due fee timeout should not error for vault %s", vault.GetAddress(),
+	)
+}
+
 // countDuePayoutTimeouts returns the number of PayoutTimeoutQueue entries due at or before now.
 func (s *TestSuite) countDuePayoutTimeouts(now int64) int {
 	count := 0

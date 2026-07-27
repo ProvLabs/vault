@@ -4632,6 +4632,32 @@ func (s *TestSuite) TestPauseVault_ClearsReconciliationQueues() {
 	}
 }
 
+func (s *TestSuite) TestPauseVault_LeavesStaleQueueEntryToTheBlockerBackstop() {
+	underlying := "under"
+	share := "vaultshares"
+	vaultAddr := types.GetVaultAddress(share)
+
+	s.CreateAndActivateVault(s.adminAddr, share, underlying)
+	staleTimeout := s.ctx.BlockTime().Add(-time.Hour).Unix()
+	s.Require().NoError(s.k.PayoutTimeoutQueue.Enqueue(s.ctx, staleTimeout, vaultAddr), "enqueuing a stale payout timeout should not error")
+
+	_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).PauseVault(s.ctx, &types.MsgPauseVaultRequest{
+		Authority:    s.adminAddr.String(),
+		VaultAddress: vaultAddr.String(),
+		Reason:       "maintenance",
+	})
+	s.Require().NoError(err, "pause should not error")
+
+	now := s.ctx.BlockTime().Unix()
+	s.Require().Equal(1, s.countDuePayoutTimeouts(now), "pause removes only the entry keyed by the vault's recorded timeout, so an entry filed under another key survives")
+
+	s.Require().NoError(
+		s.k.TestAccessor_handleVaultInterestTimeouts(s.T(), s.ctx, keeper.MaxInterestTimeoutsPerBlock),
+		"handleVaultInterestTimeouts should not error",
+	)
+	s.Assert().Equal(0, s.countDuePayoutTimeouts(now), "the blocker backstop should dequeue the stale entry left behind by pause")
+}
+
 func (s *TestSuite) TestMsgServer_UnpauseVault_RearmsReconciliationQueues() {
 	underlying := "under"
 	share := "vaultshares"

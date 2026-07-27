@@ -114,18 +114,22 @@ func (k Keeper) SafeEnqueueFeeTimeout(ctx sdk.Context, vault *types.VaultAccount
 // paused vaults, so an entry left behind would consume the per-block visit budget forever. Both
 // periods are re-armed on unpause, so the paused span accrues no interest and no AUM fees.
 //
+// Removal uses the vault's recorded timeouts as keys so it stays constant-time; auto-pause calls
+// this from the EndBlocker, where scanning a queue would grow block time with the backlog. An entry
+// filed under any other key is left for the blocker processors to dequeue when it comes due.
+//
 // Like applyPausedState, this does not persist the account; the caller chooses SetVaultAccount
 // (validated) or SetAccount (validation-skipped).
 func (k Keeper) haltVaultAccrual(ctx sdk.Context, vault *types.VaultAccount) error {
 	vaultAddr := vault.GetAddress()
 	cacheCtx, write := ctx.CacheContext()
 
-	if err := k.PayoutTimeoutQueue.RemoveAllForVault(cacheCtx, vaultAddr); err != nil {
-		return fmt.Errorf("failed to remove payout timeout entries for vault %s: %w", vaultAddr, err)
+	if err := k.PayoutTimeoutQueue.Dequeue(cacheCtx, vault.PeriodTimeout, vaultAddr); err != nil {
+		return fmt.Errorf("failed to dequeue payout timeout for vault %s: %w", vaultAddr, err)
 	}
 
-	if err := k.FeeTimeoutQueue.RemoveAllForVault(cacheCtx, vaultAddr); err != nil {
-		return fmt.Errorf("failed to remove fee timeout entries for vault %s: %w", vaultAddr, err)
+	if err := k.FeeTimeoutQueue.Dequeue(cacheCtx, vault.FeePeriodTimeout, vaultAddr); err != nil {
+		return fmt.Errorf("failed to dequeue fee timeout for vault %s: %w", vaultAddr, err)
 	}
 
 	if err := k.PayoutVerificationSet.Remove(cacheCtx, vaultAddr); err != nil {

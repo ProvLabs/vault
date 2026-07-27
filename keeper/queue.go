@@ -110,9 +110,10 @@ func (k Keeper) SafeEnqueueFeeTimeout(ctx sdk.Context, vault *types.VaultAccount
 }
 
 // haltVaultAccrual removes a vault from the payout timeout queue, the fee timeout queue, and the
-// payout verification set, and clears its interest and fee accrual periods. Queue processors skip
-// paused vaults, so an entry left behind would consume the per-block visit budget forever. Both
-// periods are re-armed on unpause, so the paused span accrues no interest and no AUM fees.
+// payout verification set, and clears its interest and fee accrual periods. Removing at pause time
+// keeps a paused vault from occupying a per-block visit slot at all; the blocker processors also
+// dequeue any paused entry they encounter, so this is the cheap path rather than the only safeguard.
+// Both periods are re-armed on unpause, so the paused span accrues no interest and no AUM fees.
 //
 // Removal uses the vault's recorded timeouts as keys so it stays constant-time; auto-pause calls
 // this from the EndBlocker, where scanning a queue would grow block time with the backlog. An entry

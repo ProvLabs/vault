@@ -568,7 +568,7 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:       "update-vault-nav [signer] [vault_address] [denom] [price] [volume] [source]",
 					Alias:     []string{"uvn"},
 					Short:     "Create or update a vault's internal NAV entry for a denom",
-					Long:      "Set the internal net asset value for a denom held by a vault. price is the total value of volume units, denominated in the vault's underlying asset. Must be signed by the vault's NAV authority. The denom cannot be the vault's share denom or underlying asset.",
+					Long:      "Set the internal net asset value for a denom on a vault. The denom need not be held yet; pricing it is what authorizes the asset manager to acquire it. price is the total value of volume units, denominated in the vault's underlying asset. Must be signed by the vault's NAV authority. The denom cannot be the vault's share denom or underlying asset.",
 					Example:   fmt.Sprintf("%s update-vault-nav %s %s usdc 1000000nhash 1000000 my-oracle", txStart, exampleAuthorityAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: fieldSigner},

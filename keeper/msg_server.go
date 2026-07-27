@@ -864,6 +864,22 @@ func (k msgServer) UpdateVaultAUMFeeBips(goCtx context.Context, msg *types.MsgUp
 
 // UpdateVaultNAV creates or updates a vault's internal NAV entry for a denom.
 // Only the vault's NAV authority is authorized to perform this operation.
+//
+// The update is accepted whether or not the vault is paused, so an operator can
+// pause, reprice, and unpause as one deliberate sequence. Swap-ins and swap-outs
+// are closed for the whole paused span, which keeps a repricing from being
+// front-run by a user transaction ordered ahead of it.
+//
+// A paused vault reports its value from the frozen PausedBalance rather than from
+// live state, so repricing a held asset restates that snapshot in the same handler.
+// Without the restatement the vault would keep reporting a price the NAV authority
+// has just superseded, for as long as the pause lasted. The restatement is derived
+// the same way the original snapshot was, net of the OutstandingAumFee liability,
+// which is itself frozen while accrual is halted.
+//
+// The reconcile settles accrued interest against the total vault value that held
+// before the price change. It is a no-op on a paused vault, whose interest and
+// fee accrual is already halted.
 func (k msgServer) UpdateVaultNAV(goCtx context.Context, msg *types.MsgUpdateVaultNAVRequest) (*types.MsgUpdateVaultNAVResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -875,9 +891,6 @@ func (k msgServer) UpdateVaultNAV(goCtx context.Context, msg *types.MsgUpdateVau
 	if err := vault.ValidateNAVAuthority(msg.Signer); err != nil {
 		return nil, fmt.Errorf("failed to validate NAV authority: %w", err)
 	}
-	if vault.Paused {
-		return nil, fmt.Errorf("vault %s is paused: NAV cannot be updated while paused", msg.VaultAddress)
-	}
 
 	if err := k.reconcileVault(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to reconcile vault before NAV update: %w", err)
@@ -886,6 +899,11 @@ func (k msgServer) UpdateVaultNAV(goCtx context.Context, msg *types.MsgUpdateVau
 	nav := types.NewVaultNAV(msg.Denom, msg.Price, msg.Volume, msg.Source)
 	if err := k.SetVaultNAV(ctx, vault, nav, msg.Signer); err != nil {
 		return nil, fmt.Errorf("failed to update vault NAV: %w", err)
+	}
+	if vault.Paused {
+		if err := k.restatePausedBalance(ctx, vault); err != nil {
+			return nil, fmt.Errorf("failed to restate paused balance after NAV update: %w", err)
+		}
 	}
 	if !isMetadataDenom(msg.Denom) {
 		if err := k.publishAssetNAVToMarker(ctx, vault, nav); err != nil {
@@ -905,6 +923,10 @@ func (k msgServer) UpdateVaultNAV(goCtx context.Context, msg *types.MsgUpdateVau
 // asset is written down through UpdateVaultNAV, and the settlement path removes the
 // entry on its own once an outbound trade drains the denom.
 //
+// Removal is accepted whether or not the vault is paused, matching UpdateVaultNAV so
+// the NAV table stays editable across a pause-reprice-unpause sequence. The held-balance
+// check is what keeps a removal from moving value, in either state.
+//
 // No reconcile is needed first: an unheld denom contributes nothing to total vault
 // value, so removing its entry cannot move the valuation basis.
 func (k msgServer) RemoveVaultNAV(goCtx context.Context, msg *types.MsgRemoveVaultNAVRequest) (*types.MsgRemoveVaultNAVResponse, error) {
@@ -917,9 +939,6 @@ func (k msgServer) RemoveVaultNAV(goCtx context.Context, msg *types.MsgRemoveVau
 	}
 	if err := vault.ValidateNAVAuthority(msg.Signer); err != nil {
 		return nil, fmt.Errorf("failed to validate NAV authority: %w", err)
-	}
-	if vault.Paused {
-		return nil, fmt.Errorf("vault %s is paused: NAV cannot be removed while paused", msg.VaultAddress)
 	}
 
 	balance := k.BankKeeper.GetBalance(ctx, vault.PrincipalMarkerAddress(), msg.Denom)

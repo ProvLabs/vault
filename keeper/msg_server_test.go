@@ -5938,6 +5938,16 @@ func (s *TestSuite) TestMsgServer_UpdateVaultNAV() {
 			volume: sdkmath.NewInt(1),
 			source: "bankruptcy-writedown",
 		},
+		{
+			name: "paused vault accepts a repricing so pause, reprice, unpause is a usable sequence",
+			setup: func() {
+				baseSetup()
+				s.pauseVault(vaultAddr)
+			},
+			price:  sdk.NewInt64Coin(underlying, 175),
+			volume: sdkmath.NewInt(3),
+			source: "oracle-while-paused",
+		},
 	}
 
 	for _, tt := range tests {
@@ -6096,24 +6106,6 @@ func (s *TestSuite) TestMsgServer_UpdateVaultNAV_Failures() {
 			},
 			expectedErrSubstrs: []string{"failed to publish vault NAV to marker", "overflows the marker NAV volume"},
 		},
-		{
-			name: "rejects NAV update while vault is paused",
-			setup: func() {
-				setup()
-				vault, err := s.k.GetVault(s.ctx, vaultAddr)
-				s.Require().NoError(err, "failed to get vault %s for paused setup", vaultAddr)
-				vault.Paused = true
-				s.k.AuthKeeper.SetAccount(s.ctx, vault)
-			},
-			msg: types.MsgUpdateVaultNAVRequest{
-				Signer:       admin.String(),
-				VaultAddress: vaultAddr.String(),
-				Denom:        "rwa",
-				Price:        sdk.NewInt64Coin(underlying, 100),
-				Volume:       sdkmath.NewInt(1),
-			},
-			expectedErrSubstrs: []string{"is paused", "NAV cannot be updated while paused"},
-		},
 	}
 
 	for _, tc := range tests {
@@ -6143,11 +6135,10 @@ func (s *TestSuite) TestMsgServer_UpdateVaultNAV_Reconcile() {
 			expectedReconciles: 1,
 		},
 		{
-			name:                "paused vault rejects the NAV update before reconciling",
-			interestRate:        "4.20",
-			paused:              true,
-			expectedErrContains: "NAV cannot be updated while paused",
-			expectedReconciles:  0,
+			name:               "paused vault accepts the NAV update and does not reconcile, its accrual already being halted",
+			interestRate:       "4.20",
+			paused:             true,
+			expectedReconciles: 0,
 		},
 		{
 			name:                 "NAV update that fails validation reconciles first, relying on tx revert to discard it",
@@ -6207,10 +6198,124 @@ func (s *TestSuite) TestMsgServer_UpdateVaultNAV_Reconcile() {
 				s.Require().NoError(err, "UpdateVaultNAV should succeed for case %q", tc.name)
 			}
 			s.Assert().Equal(tc.expectedReconciles, reconcileCount, "EventVaultReconcile count mismatch for case %q", tc.name)
-			if tc.expectedErrContains == "" && tc.expectedReconciles > 0 {
+			if tc.expectedErrContains == "" {
 				s.Require().GreaterOrEqual(updatedIdx, 0, "EventNAVUpdated should be emitted for case %q", tc.name)
+			}
+			if tc.expectedErrContains == "" && tc.expectedReconciles > 0 {
 				s.Assert().Less(reconcileIdx, updatedIdx, "reconcile events should precede EventNAVUpdated for case %q", tc.name)
 			}
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_UpdateVaultNAV_RestatesPausedBalance() {
+	underlying := "under"
+	share := "vaultshares"
+	heldDenom := "rwa"
+	vaultAddr := types.GetVaultAddress(share)
+
+	const (
+		underlyingHeld = 500
+		assetHeld      = 1_000
+		seedPrice      = 2
+		seedVolume     = 1
+		valueAtPause   = underlyingHeld + assetHeld*seedPrice
+	)
+
+	tests := []struct {
+		name          string
+		newPrice      int64
+		newVolume     int64
+		expectedValue int64
+	}{
+		{
+			name:          "marking a held asset down lowers the frozen balance",
+			newPrice:      1,
+			newVolume:     1,
+			expectedValue: underlyingHeld + assetHeld,
+		},
+		{
+			name:          "marking a held asset up raises the frozen balance",
+			newPrice:      5,
+			newVolume:     1,
+			expectedValue: underlyingHeld + assetHeld*5,
+		},
+		{
+			name:          "writing a held asset down to zero leaves only the underlying",
+			newPrice:      0,
+			newVolume:     1,
+			expectedValue: underlyingHeld,
+		},
+		{
+			name:          "repricing to the same value leaves the frozen balance unchanged",
+			newPrice:      seedPrice,
+			newVolume:     seedVolume,
+			expectedValue: valueAtPause,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			origCtx := s.ctx
+			defer func() { s.ctx = origCtx }()
+			s.ctx, _ = s.ctx.CacheContext()
+
+			getVault := func() *types.VaultAccount {
+				vault, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err, "failed to get vault %s", vaultAddr)
+				return vault
+			}
+
+			vault := s.setupBaseVault(underlying, share)
+			s.requireSimpleMarker(heldDenom)
+			s.setVaultNAV(vault, heldDenom, sdk.NewInt64Coin(underlying, seedPrice), seedVolume)
+			s.Require().NoError(
+				FundAccount(s.ctx, s.simApp.BankKeeper, vault.PrincipalMarkerAddress(),
+					sdk.NewCoins(sdk.NewInt64Coin(underlying, underlyingHeld), sdk.NewInt64Coin(heldDenom, assetHeld))),
+				"failed to fund the principal marker with %d%s and %d%s", underlyingHeld, underlying, assetHeld, heldDenom,
+			)
+
+			msgServer := keeper.NewMsgServer(s.simApp.VaultKeeper)
+			_, err := msgServer.PauseVault(s.ctx, &types.MsgPauseVaultRequest{
+				Authority:    s.adminAddr.String(),
+				VaultAddress: vaultAddr.String(),
+				Reason:       "repricing held assets",
+			})
+			s.Require().NoError(err, "PauseVault should succeed before repricing")
+			s.Require().Equal(int64(valueAtPause), getVault().PausedBalance.Amount.Int64(),
+				"pause should snapshot %d%s as the frozen balance", valueAtPause, underlying)
+
+			_, err = msgServer.UpdateVaultNAV(s.ctx, &types.MsgUpdateVaultNAVRequest{
+				Signer:       s.adminAddr.String(),
+				VaultAddress: vaultAddr.String(),
+				Denom:        heldDenom,
+				Price:        sdk.NewInt64Coin(underlying, tc.newPrice),
+				Volume:       sdkmath.NewInt(tc.newVolume),
+				Source:       "oracle",
+			})
+			s.Require().NoError(err, "UpdateVaultNAV should be accepted while the vault is paused")
+
+			repriced := getVault()
+			s.Assert().Equal(underlying, repriced.PausedBalance.Denom,
+				"restated paused balance should stay denominated in the underlying asset")
+			s.Assert().Equal(tc.expectedValue, repriced.PausedBalance.Amount.Int64(),
+				"repricing %s at %d/%d should restate the frozen balance", heldDenom, tc.newPrice, tc.newVolume)
+
+			pausedValue, err := s.k.GetNetTVV(s.ctx, *repriced)
+			s.Require().NoError(err, "failed to value the paused vault after repricing")
+			s.Assert().Equal(tc.expectedValue, pausedValue.Int64(),
+				"a paused vault should report the restated balance rather than the superseded pause-time value")
+
+			_, err = msgServer.UnpauseVault(s.ctx, &types.MsgUnpauseVaultRequest{
+				Authority:    s.adminAddr.String(),
+				VaultAddress: vaultAddr.String(),
+			})
+			s.Require().NoError(err, "UnpauseVault should succeed after repricing")
+
+			liveValue, err := s.k.GetNetTVV(s.ctx, *getVault())
+			s.Require().NoError(err, "failed to value the vault after unpausing")
+			s.Assert().Equal(tc.expectedValue, liveValue.Int64(),
+				"unpausing should not move the value again: the restated balance already matched live state")
 		})
 	}
 }
@@ -6317,20 +6422,43 @@ func (s *TestSuite) TestMsgServer_RemoveVaultNAV() {
 			expectedErrSubstrs: []string{"still holds", "write a held asset down through UpdateVaultNAV"},
 		},
 		{
-			name: "paused vault rejects the removal",
+			name: "paused vault allows the removal of an unheld denom",
 			setup: func() {
 				seedUnheldNAV()
-				vault, err := s.k.GetVault(s.ctx, vaultAddr)
-				s.Require().NoError(err, "failed to get vault %s for paused setup", vaultAddr)
-				vault.Paused = true
-				s.k.AuthKeeper.SetAccount(s.ctx, vault)
+				s.pauseVault(vaultAddr)
 			},
 			msg: types.MsgRemoveVaultNAVRequest{
 				Signer:       admin.String(),
 				VaultAddress: vaultAddr.String(),
 				Denom:        navDenom,
 			},
-			expectedErrSubstrs: []string{"is paused", "NAV cannot be removed while paused"},
+			postCheckArgs: "removed",
+			expectedEvents: sdk.Events{
+				sdk.NewEvent("provlabs.vault.v1.EventNAVRemoved",
+					sdk.NewAttribute("denom", navDenom),
+					sdk.NewAttribute("last_price", seedPrice.String()),
+					sdk.NewAttribute("last_volume", seedVolume.String()),
+					sdk.NewAttribute("signer", admin.String()),
+					sdk.NewAttribute("vault_address", vaultAddr.String()),
+				),
+			},
+		},
+		{
+			name: "paused vault still refuses to remove a denom it holds",
+			setup: func() {
+				seedUnheldNAV()
+				vault := s.pauseVault(vaultAddr)
+				s.Require().NoError(
+					FundAccount(s.ctx, s.simApp.BankKeeper, vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(navDenom, 3))),
+					"failed to fund the principal marker with %s", navDenom,
+				)
+			},
+			msg: types.MsgRemoveVaultNAVRequest{
+				Signer:       admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Denom:        navDenom,
+			},
+			expectedErrSubstrs: []string{"still holds", "write a held asset down through UpdateVaultNAV"},
 		},
 	}
 

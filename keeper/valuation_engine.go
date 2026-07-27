@@ -189,7 +189,14 @@ func (k Keeper) GetTVV(ctx sdk.Context, vault types.VaultAccount) (math.Int, err
 	if vault.Paused {
 		return vault.PausedBalance.Amount, nil
 	}
+	return k.computeTVV(ctx, vault)
+}
 
+// computeTVV values the vault from live state, without the paused fast-path that GetTVV
+// applies. It is the derivation behind PausedBalance: the pause path snapshots it, and a
+// repricing while paused restates the snapshot from it. Every other caller wants GetTVV,
+// which honors the freeze.
+func (k Keeper) computeTVV(ctx sdk.Context, vault types.VaultAccount) (math.Int, error) {
 	principal := vault.PrincipalMarkerAddress()
 	total := k.BankKeeper.GetBalance(ctx, principal, vault.UnderlyingAsset).Amount
 
@@ -229,19 +236,27 @@ func (k Keeper) GetTVV(ctx sdk.Context, vault types.VaultAccount) (math.Int, err
 //
 // Paused fast-path:
 //   - If vault.Paused is true, this returns vault.PausedBalance.Amount directly. The paused
-//     balance is captured net of the OutstandingAumFee liability at pause time, so paused
-//     pricing stays frozen and NAV-independent.
+//     balance is already net of the OutstandingAumFee liability, so paused pricing holds
+//     whatever value was last established for the vault. That is the pause-time snapshot,
+//     or a restatement of it if the NAV authority repriced a held asset during the pause.
 //
-// When not paused, GetTVV supplies the gross sum of principal-marker
-// balances; this method subtracts the OutstandingAumFee (already denominated in the
-// underlying asset) and floors the result at zero.
+// When not paused, this subtracts the OutstandingAumFee (already denominated in the
+// underlying asset) from the gross sum of principal-marker balances and floors the result
+// at zero.
 func (k Keeper) GetNetTVV(ctx sdk.Context, vault types.VaultAccount) (math.Int, error) {
-	gross, err := k.GetTVV(ctx, vault)
+	if vault.Paused {
+		return vault.PausedBalance.Amount, nil
+	}
+	return k.computeNetTVV(ctx, vault)
+}
+
+// computeNetTVV values the vault from live state net of the OutstandingAumFee liability,
+// without the paused fast-path that GetNetTVV applies. See computeTVV for why the live
+// derivation is reachable on its own.
+func (k Keeper) computeNetTVV(ctx sdk.Context, vault types.VaultAccount) (math.Int, error) {
+	gross, err := k.computeTVV(ctx, vault)
 	if err != nil {
 		return math.Int{}, fmt.Errorf("failed to get gross TVV: %w", err)
-	}
-	if vault.Paused {
-		return gross, nil
 	}
 	net := gross.Sub(vault.OutstandingAumFee.Amount)
 	if net.IsNegative() {

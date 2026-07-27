@@ -979,6 +979,18 @@ func (s *TestSuite) setVaultNAV(vault *types.VaultAccount, denom string, price s
 		"should set internal NAV %s -> %s=%s/%d", denom, price.Denom, price.Amount, volume)
 }
 
+// pauseVault flips the paused flag on the stored vault account and persists it, without
+// running the PauseVault handler. Tests that only need a vault to be in the paused state
+// use this to stage it directly, leaving the handler's reconcile, balance snapshot, and
+// queue teardown to the tests that actually exercise pausing.
+func (s *TestSuite) pauseVault(vaultAddr sdk.AccAddress) *types.VaultAccount {
+	vault, err := s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "should get vault %s to pause it", vaultAddr)
+	vault.Paused = true
+	s.Require().NoError(s.k.SetVaultAccount(s.ctx, vault), "should persist paused vault %s", vaultAddr)
+	return vault
+}
+
 // bumpHeight increments the suite's context block height by 1.
 func (s *TestSuite) bumpHeight() {
 	s.ctx = s.ctx.WithBlockHeight(s.ctx.BlockHeight() + 1)

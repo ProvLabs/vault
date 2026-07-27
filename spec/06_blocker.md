@@ -18,6 +18,7 @@ This document explains how the vault module uses ABCI block hooks to keep vaults
     - [handleReconciledVaults](#handlereconciledvaults)
   - [Interest & Fee Accrual](#interest--fee-accrual)
   - [Payout Processing Details](#payout-processing-details)
+    - [Retry & Backoff](#retry--backoff)
   - [Forecast Window](#forecast-window)
   - [Paused Vault Behavior](#paused-vault-behavior)
   - [Events & Operational Signals](#events--operational-signals)
@@ -121,7 +122,7 @@ To prevent a large queue from consuming excessive block time and memory, a maxim
    - This ensures failures do not leave the vault in an inconsistent state and do not interfere with other jobs in the same block.
 
    * Missing vault → dequeue & skip (logged).
-   * Paused vault → atomically dequeue & refund escrowed shares (`EventSwapOutRefunded{ reason = "vault_paused" }`), so paused entries cannot camp at the front of the queue and starve processable requests. If the refund fails, nothing is committed and the request stays queued to retry on a later block.
+   * Paused vault → atomically dequeue & refund escrowed shares (`EventSwapOutRefunded{ reason = "vault_paused" }`), so paused entries cannot camp at the front of the queue and starve processable requests. If the refund fails, nothing is committed and the request is re-keyed to a later retry time (see [Retry & Backoff](#retry--backoff)).
 3. Errors:
 
    * **Recoverable** (e.g., insufficient funds, attribute check failure) → attempt **refund** and emit `EventSwapOutRefunded`.
@@ -182,6 +183,27 @@ This advances vaults from the **verification set**:
 * **Critical errors & auto-pause**
   If a critical error occurs after payout (e.g., burn failed) or the refund itself fails, the vault is **auto-paused** with a stable reason; further user ops are blocked until admin intervention. Auto-pause emits `EventVaultPaused` with `forced = true` and the critical error captured in `reason` (it leaves `forced_error` empty); the manual `PauseVault` path produces the same `forced = true` signal only when called with `force = true`, recording the tolerated error in `forced_error` instead.
 
+### Retry & Backoff
+
+A request that can neither be settled nor refunded stays queued, because the entry is the record of who is owed the escrowed shares. It is not left under its original key: the failures that reach this path (a deactivated share marker, an owner added to a deny list, an owner who lost a required attribute) are deterministic, so an entry left at the front of the queue would be re-collected and re-fail on every block, and enough of them would consume the whole batch budget and stall the vault's queue.
+
+Every path that preserves a request therefore re-keys it:
+
+1. `failure_count` on the request is incremented and stored.
+2. The entry is re-filed under `now + backoff(failure_count)`, which puts it behind the work that is currently due. The re-key is atomic; if it fails, the entry is left in place and retried on the next block.
+3. `EventSwapOutRetryScheduled{ request_id, reason, failure_count, retry_time }` is emitted.
+
+The delay grows with the failure count and is capped, so a permanently failing request is still revisited at a cost the budget can absorb:
+
+| Failure count | Delay |
+| --- | --- |
+| 1 (`SwapOutImmediateRetries`) | none, retries on the next block |
+| 2 | `SwapOutRetryBackoffBase` (10 minutes) |
+| 3, 4, … | doubles each time |
+| capped at | `SwapOutRetryBackoffMax` (6 hours) |
+
+`MsgExpeditePendingSwapOut` clears `failure_count` and re-keys the entry to time 0, which is how an operator forces an immediate retry after fixing the underlying cause. Note that a re-keyed request reports its retry time as the `timeout` in the `PendingSwapOuts` and `VaultPendingSwapOuts` queries, so a rising `failure_count` there marks escrow that needs attention.
+
 ---
 
 ## Forecast Window
@@ -230,6 +252,7 @@ This advances vaults from the **verification set**:
   * Enqueue: `EventSwapOutRequested{request_id,…}`
   * Success: `EventSwapOutCompleted{request_id, assets,…}`
   * Refund: `EventSwapOutRefunded{request_id, reason,…}`
+  * Retry deferred: `EventSwapOutRetryScheduled{request_id, reason, failure_count, retry_time}`
   * Admin expedite: `EventPendingSwapOutExpedited{request_id}`
 * **Pause lifecycle**: `EventVaultPaused`, `EventVaultUnpaused`
 

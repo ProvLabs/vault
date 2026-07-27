@@ -3,6 +3,8 @@ package keeper
 import (
 	"fmt"
 
+	"github.com/provlabs/vault/interest"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -25,6 +27,18 @@ const (
 	// MaxPayoutVerificationsPerBlock is the maximum number of PayoutVerificationSet
 	// entries visited per EndBlocker.
 	MaxPayoutVerificationsPerBlock = 100
+
+	// SwapOutImmediateRetries is the number of failures a pending swap out may accumulate
+	// before its retries start being delayed by SwapOutRetryBackoffBase.
+	SwapOutImmediateRetries = 1
+
+	// SwapOutRetryBackoffBase is the first delay (in seconds) applied to a repeatedly
+	// failing swap out. The delay doubles with each further failure.
+	SwapOutRetryBackoffBase = 600
+
+	// SwapOutRetryBackoffMax caps the retry delay (in seconds) so a permanently failing
+	// swap out is still revisited, at a cost the batch budget can absorb.
+	SwapOutRetryBackoffMax = 6 * interest.SecondsPerHour
 )
 
 // BeginBlocker is a hook that is called at the beginning of every block.

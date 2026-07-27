@@ -126,7 +126,9 @@ func (p *PendingSwapOutQueue) GetByID(ctx context.Context, id uint64) (int64, *t
 	return pk.K1(), &req, nil
 }
 
-// ExpediteSwapOut sets the timestamp of a pending swap out to 0.
+// ExpediteSwapOut sets the timestamp of a pending swap out to 0 and clears its failure count,
+// so an operator who fixed the cause of repeated failures gets an immediate retry instead of
+// waiting out the accumulated backoff.
 func (p *PendingSwapOutQueue) ExpediteSwapOut(ctx context.Context, id uint64) error {
 	pk, err := p.IndexedMap.Indexes.ByID.MatchExact(ctx, id)
 	if err != nil {
@@ -138,11 +140,51 @@ func (p *PendingSwapOutQueue) ExpediteSwapOut(ctx context.Context, id uint64) er
 		return err
 	}
 
-	if err := p.IndexedMap.Remove(ctx, pk); err != nil {
-		return err
+	req.FailureCount = 0
+
+	return p.rekey(ctx, pk, 0, req)
+}
+
+// Reschedule moves an existing pending swap out to newTimestamp and replaces its stored request,
+// which is how a request that could neither be settled nor refunded is moved off the front of the
+// queue without losing its escrow record. The request is not re-validated, since refusing to
+// re-key would leave the entry camped at the front of the queue. Callers must supply an atomic
+// context because removal and insertion are two writes.
+func (p *PendingSwapOutQueue) Reschedule(ctx context.Context, oldTimestamp int64, vault sdk.AccAddress, id uint64, newTimestamp int64, req *types.PendingSwapOut) error {
+	if oldTimestamp < 0 {
+		return fmt.Errorf("timestamp cannot be negative")
+	}
+	if newTimestamp < 0 {
+		return fmt.Errorf("new timestamp cannot be negative")
+	}
+	if req == nil {
+		return fmt.Errorf("pending swap out request cannot be nil")
 	}
 
-	return p.IndexedMap.Set(ctx, collections.Join3(int64(0), pk.K2(), pk.K3()), req)
+	oldKey := collections.Join3(oldTimestamp, id, vault)
+	found, err := p.IndexedMap.Has(ctx, oldKey)
+	if err != nil {
+		return fmt.Errorf("failed to look up pending swap out %d at %d: %w", id, oldTimestamp, err)
+	}
+	if !found {
+		return fmt.Errorf("pending swap out %d not found at timestamp %d for vault %s", id, oldTimestamp, vault)
+	}
+
+	return p.rekey(ctx, oldKey, newTimestamp, *req)
+}
+
+// rekey re-files an entry under a new timestamp, preserving its ID and vault so the ByID and
+// ByVault indexes still resolve it. Callers are responsible for atomicity.
+func (p *PendingSwapOutQueue) rekey(ctx context.Context, oldKey collections.Triple[int64, uint64, sdk.AccAddress], newTimestamp int64, req types.PendingSwapOut) error {
+	if err := p.IndexedMap.Remove(ctx, oldKey); err != nil {
+		return fmt.Errorf("failed to remove pending swap out %d at %d: %w", oldKey.K2(), oldKey.K1(), err)
+	}
+
+	if err := p.IndexedMap.Set(ctx, collections.Join3(newTimestamp, oldKey.K2(), oldKey.K3()), req); err != nil {
+		return fmt.Errorf("failed to re-key pending swap out %d to %d: %w", oldKey.K2(), newTimestamp, err)
+	}
+
+	return nil
 }
 
 // WalkDue iterates over all entries in the PendingSwapOutQueue with
@@ -209,6 +251,7 @@ func (p *PendingSwapOutQueue) Import(ctx context.Context, genQueue *types.Pendin
 			RedeemDenom:  entry.SwapOut.RedeemDenom,
 			Shares:       entry.SwapOut.Shares,
 			VaultAddress: entry.SwapOut.VaultAddress,
+			FailureCount: entry.SwapOut.FailureCount,
 		}
 
 		if err := p.IndexedMap.Set(ctx, collections.Join3(entry.Time, entry.Id, vaultAddr), swapOut); err != nil {

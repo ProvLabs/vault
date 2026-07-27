@@ -24,6 +24,24 @@ func isMetadataDenom(denom string) bool {
 	return err == nil
 }
 
+// requireNAVDenomRegistered enforces the on-chain denom requirement for an internal
+// NAV entry: the denom must be a registered marker, except for metadata value-owner
+// denoms (nft/<scope-id>), which are legitimate vault assets but are barred from
+// being markers.
+//
+// SetVaultNAV and InitGenesis share this check so that every entry one path can write
+// the other can import. A genesis export carrying an entry the importer rejects cannot
+// be used for a chain restart or a state-export upgrade, so the two must not drift.
+func (k Keeper) requireNAVDenomRegistered(ctx sdk.Context, denom string) error {
+	if isMetadataDenom(denom) {
+		return nil
+	}
+	if _, err := k.MarkerKeeper.GetMarkerByDenom(ctx, denom); err != nil {
+		return fmt.Errorf("NAV denom %q is not a registered marker: %w", denom, err)
+	}
+	return nil
+}
+
 // validateVaultNAVFields checks all stateless constraints on a NAV entry
 // against its vault. It does not verify chain state (e.g. registered markers).
 func validateVaultNAVFields(vault *types.VaultAccount, nav types.VaultNAV) error {
@@ -71,10 +89,8 @@ func (k *Keeper) SetVaultNAV(ctx sdk.Context, vault *types.VaultAccount, nav typ
 	if err := validateVaultNAVFields(vault, nav); err != nil {
 		return err
 	}
-	if !isMetadataDenom(nav.Denom) {
-		if _, err := k.MarkerKeeper.GetMarkerByDenom(ctx, nav.Denom); err != nil {
-			return fmt.Errorf("NAV denom %q is not a registered marker: %w", nav.Denom, err)
-		}
+	if err := k.requireNAVDenomRegistered(ctx, nav.Denom); err != nil {
+		return err
 	}
 
 	nav.UpdatedBlockHeight = ctx.BlockHeight()

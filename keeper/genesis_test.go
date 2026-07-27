@@ -9,6 +9,8 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/google/uuid"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 
 	"github.com/provlabs/vault/types"
 )
@@ -588,8 +590,73 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsOnUnregisteredNAVMarker() {
 	s.Require().NotNil(recovered, "InitGenesis should panic when a NAV denom is not a registered marker")
 	err, ok := recovered.(error)
 	s.Require().True(ok, "panic value should be an error, got %T", recovered)
-	s.Require().ErrorContains(err, `nav denom "unregisteredrwa"`)
-	s.Require().ErrorContains(err, "is not a registered marker")
+	s.Require().ErrorContains(err, `NAV denom "unregisteredrwa"`, "panic should name the offending NAV denom")
+	s.Require().ErrorContains(err, "is not a registered marker", "panic should explain that the NAV denom has no marker")
+	s.Require().ErrorContains(err, vaultAddr.String(), "panic should name the vault the NAV entry belongs to")
+}
+
+func (s *TestSuite) TestVaultGenesis_RoundTripsEveryNAVDenomSetVaultNAVAccepts() {
+	metadataDenom := metadatatypes.ScopeMetadataAddress(uuid.MustParse("00000000-0000-4000-8000-000000000004")).Denom()
+
+	tests := []struct {
+		name           string
+		shareDenom     string
+		underlying     string
+		navDenom       string
+		registerMarker bool
+	}{
+		{
+			name:           "registered marker denom",
+			shareDenom:     "gsnavmkrshare",
+			underlying:     "gsnavmkrunder",
+			navDenom:       "gsregisteredrwa",
+			registerMarker: true,
+		},
+		{
+			name:       "metadata value-owner denom with no marker",
+			shareDenom: "gsnavnftshare",
+			underlying: "gsnavnftunder",
+			navDenom:   metadataDenom,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			vaultAddr := types.GetVaultAddress(tt.shareDenom)
+			entry := types.VaultNAVEntry{
+				VaultAddress: vaultAddr.String(),
+				Nav: types.VaultNAV{
+					Denom:              tt.navDenom,
+					Price:              sdk.NewInt64Coin(tt.underlying, 150),
+					Volume:             sdkmath.NewInt(3),
+					Source:             "oracle-one",
+					UpdatedBlockHeight: 7,
+					UpdatedTime:        time.Unix(1_700_000_000, 0).UTC(),
+				},
+			}
+
+			if tt.registerMarker {
+				s.requireSimpleMarker(tt.navDenom)
+			} else {
+				_, markerErr := s.simApp.MarkerKeeper.GetMarkerByDenom(s.ctx, tt.navDenom)
+				s.Require().Error(markerErr, "denom %s must not be a registered marker for this case to be meaningful", tt.navDenom)
+			}
+
+			genesis := buildSingleVaultGenesisState(tt.shareDenom, tt.underlying, s.adminAddr.String(), []types.VaultNAVEntry{entry})
+			s.Require().NotPanics(func() { s.k.InitGenesis(s.ctx, genesis) },
+				"InitGenesis should import a NAV entry for denom %s that SetVaultNAV would accept", tt.navDenom)
+
+			stored, err := s.k.GetVaultNAV(s.ctx, vaultAddr, tt.navDenom)
+			s.Require().NoError(err, "imported NAV entry for denom %s should be readable from state", tt.navDenom)
+			s.Assert().Equal(entry.Nav, stored, "imported NAV entry for denom %s should match the genesis entry", tt.navDenom)
+
+			exported := s.k.ExportGenesis(s.ctx)
+			s.Assert().Contains(exported.Navs, entry, "exported genesis should carry the NAV entry for denom %s", tt.navDenom)
+			s.Require().NoError(exported.Validate(), "exported genesis should pass stateless validation with a NAV entry for denom %s", tt.navDenom)
+			s.Require().NotPanics(func() { s.k.InitGenesis(s.ctx, exported) },
+				"re-importing the exported genesis should succeed for denom %s", tt.navDenom)
+		})
+	}
 }
 
 // TestVaultGenesis_ExportNAVs_MultipleVaults verifies ExportGenesis includes NAV

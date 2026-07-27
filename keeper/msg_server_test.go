@@ -6208,7 +6208,7 @@ func (s *TestSuite) TestMsgServer_UpdateVaultNAV_Reconcile() {
 	}
 }
 
-func (s *TestSuite) TestMsgServer_UpdateVaultNAV_RestatesPausedBalance() {
+func (s *TestSuite) TestMsgServer_UpdateVaultNAV_LeavesPausedBalanceFrozen() {
 	underlying := "under"
 	share := "vaultshares"
 	heldDenom := "rwa"
@@ -6223,34 +6223,36 @@ func (s *TestSuite) TestMsgServer_UpdateVaultNAV_RestatesPausedBalance() {
 	)
 
 	tests := []struct {
-		name          string
-		newPrice      int64
-		newVolume     int64
-		expectedValue int64
+		name              string
+		newPrice          int64
+		newVolume         int64
+		depositWhilePause int64
+		expectedAtUnpause int64
 	}{
 		{
-			name:          "marking a held asset down lowers the frozen balance",
-			newPrice:      1,
-			newVolume:     1,
-			expectedValue: underlyingHeld + assetHeld,
+			name:              "marking a held asset down takes effect at unpause",
+			newPrice:          1,
+			newVolume:         1,
+			expectedAtUnpause: underlyingHeld + assetHeld,
 		},
 		{
-			name:          "marking a held asset up raises the frozen balance",
-			newPrice:      5,
-			newVolume:     1,
-			expectedValue: underlyingHeld + assetHeld*5,
+			name:              "marking a held asset up takes effect at unpause",
+			newPrice:          5,
+			newVolume:         1,
+			expectedAtUnpause: underlyingHeld + assetHeld*5,
 		},
 		{
-			name:          "writing a held asset down to zero leaves only the underlying",
-			newPrice:      0,
-			newVolume:     1,
-			expectedValue: underlyingHeld,
+			name:              "writing a held asset down to zero leaves only the underlying at unpause",
+			newPrice:          0,
+			newVolume:         1,
+			expectedAtUnpause: underlyingHeld,
 		},
 		{
-			name:          "repricing to the same value leaves the frozen balance unchanged",
-			newPrice:      seedPrice,
-			newVolume:     seedVolume,
-			expectedValue: valueAtPause,
+			name:              "a principal deposit during the same pause lands alongside the repricing at unpause",
+			newPrice:          5,
+			newVolume:         1,
+			depositWhilePause: 250,
+			expectedAtUnpause: underlyingHeld + 250 + assetHeld*5,
 		},
 	}
 
@@ -6285,6 +6287,15 @@ func (s *TestSuite) TestMsgServer_UpdateVaultNAV_RestatesPausedBalance() {
 			s.Require().Equal(int64(valueAtPause), getVault().PausedBalance.Amount.Int64(),
 				"pause should snapshot %d%s as the frozen balance", valueAtPause, underlying)
 
+			if tc.depositWhilePause > 0 {
+				_, err = msgServer.DepositPrincipalFunds(s.ctx, &types.MsgDepositPrincipalFundsRequest{
+					Authority:    s.adminAddr.String(),
+					VaultAddress: vaultAddr.String(),
+					Amount:       sdk.NewInt64Coin(underlying, tc.depositWhilePause),
+				})
+				s.Require().NoError(err, "DepositPrincipalFunds should succeed while the vault is paused")
+			}
+
 			_, err = msgServer.UpdateVaultNAV(s.ctx, &types.MsgUpdateVaultNAVRequest{
 				Signer:       s.adminAddr.String(),
 				VaultAddress: vaultAddr.String(),
@@ -6296,15 +6307,18 @@ func (s *TestSuite) TestMsgServer_UpdateVaultNAV_RestatesPausedBalance() {
 			s.Require().NoError(err, "UpdateVaultNAV should be accepted while the vault is paused")
 
 			repriced := getVault()
-			s.Assert().Equal(underlying, repriced.PausedBalance.Denom,
-				"restated paused balance should stay denominated in the underlying asset")
-			s.Assert().Equal(tc.expectedValue, repriced.PausedBalance.Amount.Int64(),
-				"repricing %s at %d/%d should restate the frozen balance", heldDenom, tc.newPrice, tc.newVolume)
+			s.Assert().Equal(int64(valueAtPause), repriced.PausedBalance.Amount.Int64(),
+				"repricing %s at %d/%d must not move the frozen balance", heldDenom, tc.newPrice, tc.newVolume)
 
 			pausedValue, err := s.k.GetNetTVV(s.ctx, *repriced)
 			s.Require().NoError(err, "failed to value the paused vault after repricing")
-			s.Assert().Equal(tc.expectedValue, pausedValue.Int64(),
-				"a paused vault should report the restated balance rather than the superseded pause-time value")
+			s.Assert().Equal(int64(valueAtPause), pausedValue.Int64(),
+				"a paused vault should keep reporting its pause-time value until it is unpaused")
+
+			navEntry, err := s.k.GetVaultNAV(s.ctx, vaultAddr, heldDenom)
+			s.Require().NoError(err, "the repriced NAV entry should be readable while the vault is paused")
+			s.Assert().Equal(tc.newPrice, navEntry.Price.Amount.Int64(),
+				"the NAV table should record the new price even though the frozen value ignores it")
 
 			_, err = msgServer.UnpauseVault(s.ctx, &types.MsgUnpauseVaultRequest{
 				Authority:    s.adminAddr.String(),
@@ -6314,8 +6328,8 @@ func (s *TestSuite) TestMsgServer_UpdateVaultNAV_RestatesPausedBalance() {
 
 			liveValue, err := s.k.GetNetTVV(s.ctx, *getVault())
 			s.Require().NoError(err, "failed to value the vault after unpausing")
-			s.Assert().Equal(tc.expectedValue, liveValue.Int64(),
-				"unpausing should not move the value again: the restated balance already matched live state")
+			s.Assert().Equal(tc.expectedAtUnpause, liveValue.Int64(),
+				"unpausing should apply everything done during the pause at once")
 		})
 	}
 }

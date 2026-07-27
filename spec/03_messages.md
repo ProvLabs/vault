@@ -71,7 +71,7 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 | `PauseVault`             | Admin or Asset Manager            |                   ✅ |                 ❌ | Strict by default: reconciles, snapshots `PausedBalance`, sets paused; aborts if reconcile/valuation fails. `force=true` pauses best-effort, tolerating failures and recording them on `EventVaultPaused`. |
 | `UnpauseVault`           | Admin or Asset Manager            |                   ❌ |                 ✅ | Clears `PausedBalance`, unpauses, emits with current TVV.                                                     |
 | `SetAssetManager`        | Admin only                        |                   ✅ |                 ✅ | Sets or clears the delegated asset manager.                                                                   |
-| `UpdateVaultNAV`         | NAV authority only                |                   ✅ |                 ✅ | Upserts the internal NAV entry and publishes it to the marker module. Reconciles first when unpaused; restates `PausedBalance` when paused, so a pause-reprice-unpause sequence cannot be front-run. |
+| `UpdateVaultNAV`         | NAV authority only                |                   ✅ |                 ✅ | Upserts the internal NAV entry and publishes it to the marker module. Reconciles first when unpaused; leaves `PausedBalance` frozen when paused, so a pause-reprice-unpause sequence cannot be front-run and the new price takes effect at unpause. |
 | `RemoveVaultNAV`         | NAV authority only                |                   ✅ |                 ✅ | Deletes the internal NAV entry for a denom the vault does not hold. Value-neutral in both states, since an unheld denom contributes nothing to total vault value. |
 | `UpdateNAVAuthority`     | Admin only                        |                   ✅ |                 ✅ | Rotates the address authorized to mutate the internal NAV table.                                              |
 | `AcceptAsset`            | Asset Manager only                |                   ✅ |                 ❌ | Rejected while paused (settlement would move value); otherwise reconciles first, requires an internal NAV entry and enforces its price exactly, then settles the `x/exchange` payment. Never writes the NAV table. |
@@ -369,7 +369,7 @@ The handler is accepted **whether or not the vault is paused**, so an operator c
 
 When the vault is **not paused**, the handler reconciles first, so accrued interest settles against the TVV that held before the price change.
 
-When the vault **is paused**, the reconcile is a no-op (accrual is already halted) and the handler instead **restates `PausedBalance`** from live balances and the updated NAV table, net of the `OutstandingAumFee` liability. A paused vault answers every valuation query from `PausedBalance`, so without the restatement it would keep reporting a price the NAV authority had just superseded for the rest of the pause. Restating it also means unpausing does not move the value a second time.
+When the vault **is paused**, the reconcile is a no-op (accrual is already halted) and `PausedBalance` is left untouched, still holding the value as of the moment of pausing. This matches how the pause already treats `DepositPrincipalFunds` and `WithdrawPrincipalFunds`, which are themselves only allowed while paused and likewise do not move the frozen value. Everything done during the pause, repricings and principal movements alike, takes effect together at `UnpauseVault`, when the snapshot is cleared and total vault value is recomputed from live balances and the NAV table.
 
 After the upsert, the NAV is published downstream to the **marker module**, attributed to the vault address. This mirror tracks the internal price list rather than the vault's valuation, so it is published in both states.
 
@@ -390,7 +390,7 @@ NAV authority only (the vault admin when no `nav_authority` is configured). Dele
 
 Only entries for denoms the vault does **not** hold may be removed. Because total vault value is computed by valuing held balances against the entries in the NAV table, dropping the entry for a held asset would erase that balance from the vault's value rather than restate it. A held asset that has lost its value is written down to a zero price through `UpdateVaultNAV` instead, and the settlement path removes the entry on its own once an outbound trade drains the denom.
 
-The handler is accepted **whether or not the vault is paused**, matching `UpdateVaultNAV`, so the NAV table stays editable across a pause-reprice-unpause sequence. No reconcile or `PausedBalance` restatement is needed in either state: the held-balance check above already restricts removal to denoms that contribute nothing to total vault value, so a removal cannot move the valuation basis.
+The handler is accepted **whether or not the vault is paused**, matching `UpdateVaultNAV`, so the NAV table stays editable across a pause-reprice-unpause sequence. No reconcile is needed in either state: the held-balance check above already restricts removal to denoms that contribute nothing to total vault value, so a removal cannot move the valuation basis.
 
 * `denom` must have an existing internal NAV entry on the vault.
 

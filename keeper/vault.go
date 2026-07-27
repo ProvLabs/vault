@@ -497,32 +497,6 @@ func (k *Keeper) applyPausedState(ctx sdk.Context, vault *types.VaultAccount, re
 	k.emitEvent(ctx, types.NewEventVaultInterestChange(vault.GetAddress().String(), types.ZeroInterestRate, vault.DesiredInterestRate))
 }
 
-// restatePausedBalance recomputes and persists a paused vault's frozen balance from live
-// state, and returns without touching an unpaused vault. A paused vault answers every
-// valuation query from PausedBalance rather than from its holdings, so a repricing of a
-// held asset during the pause has to restate that balance or the vault goes on reporting
-// a value the NAV authority has superseded.
-//
-// The restatement uses the same derivation as the original snapshot, net of the
-// OutstandingAumFee liability, which is itself frozen for as long as accrual is halted.
-func (k *Keeper) restatePausedBalance(ctx sdk.Context, vault *types.VaultAccount) error {
-	if !vault.Paused {
-		return nil
-	}
-
-	tvv, err := k.computeNetTVV(ctx, *vault)
-	if err != nil {
-		return fmt.Errorf("failed to value vault %s: %w", vault.GetAddress(), err)
-	}
-
-	vault.PausedBalance = sdk.NewCoin(vault.UnderlyingAsset, tvv)
-	if err := k.SetVaultAccount(ctx, vault); err != nil {
-		return fmt.Errorf("failed to persist restated paused balance for vault %s: %w", vault.GetAddress(), err)
-	}
-
-	return nil
-}
-
 // autoPauseVault sets a vault's state to paused, records the reason, persists it to state,
 // and emits an EventVaultPaused. This function is intended to be called in response to a
 // critical, unrecoverable error for a specific vault. The provided reason should be a stable,

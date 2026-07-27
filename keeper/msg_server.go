@@ -870,12 +870,12 @@ func (k msgServer) UpdateVaultAUMFeeBips(goCtx context.Context, msg *types.MsgUp
 // are closed for the whole paused span, which keeps a repricing from being
 // front-run by a user transaction ordered ahead of it.
 //
-// A paused vault reports its value from the frozen PausedBalance rather than from
-// live state, so repricing a held asset restates that snapshot in the same handler.
-// Without the restatement the vault would keep reporting a price the NAV authority
-// has just superseded, for as long as the pause lasted. The restatement is derived
-// the same way the original snapshot was, net of the OutstandingAumFee liability,
-// which is itself frozen while accrual is halted.
+// Writing the entry is all this handler does to a paused vault. PausedBalance is
+// left alone, holding the value as of the moment of pausing, exactly as it does for
+// the principal deposits and withdrawals that are themselves only allowed while
+// paused. Everything that happened during the pause, repricings included, lands
+// together when UnpauseVault clears the snapshot and recomputes total vault value
+// from live balances and the NAV table.
 //
 // The reconcile settles accrued interest against the total vault value that held
 // before the price change. It is a no-op on a paused vault, whose interest and
@@ -899,11 +899,6 @@ func (k msgServer) UpdateVaultNAV(goCtx context.Context, msg *types.MsgUpdateVau
 	nav := types.NewVaultNAV(msg.Denom, msg.Price, msg.Volume, msg.Source)
 	if err := k.SetVaultNAV(ctx, vault, nav, msg.Signer); err != nil {
 		return nil, fmt.Errorf("failed to update vault NAV: %w", err)
-	}
-	if vault.Paused {
-		if err := k.restatePausedBalance(ctx, vault); err != nil {
-			return nil, fmt.Errorf("failed to restate paused balance after NAV update: %w", err)
-		}
 	}
 	if !isMetadataDenom(msg.Denom) {
 		if err := k.publishAssetNAVToMarker(ctx, vault, nav); err != nil {

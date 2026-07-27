@@ -4237,8 +4237,8 @@ type VaultAccount struct {
 	// paused_balance is the total vault value snapshot taken at the moment of pausing.
 	// This value is used for all NAV calculations while the vault is paused to prevent
 	// apparent devaluation during collateral rebalancing. It is cleared upon unpausing.
-	// UpdateVaultNAV restates it when the NAV authority reprices a held asset during the
-	// pause, so the frozen value never reports a price the authority has superseded.
+	// Nothing done during the pause moves it, neither a principal deposit or withdrawal
+	// nor a NAV repricing; those all take effect together when the vault is unpaused.
 	PausedBalance *v1beta11.Coin `protobuf:"bytes,16,opt,name=paused_balance,json=pausedBalance,proto3" json:"paused_balance,omitempty"`
 	// paused_reason is a human-readable string explaining why the vault was paused, particularly for automatic pauses.
 	PausedReason string `protobuf:"bytes,17,opt,name=paused_reason,json=pausedReason,proto3" json:"paused_reason,omitempty"`

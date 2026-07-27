@@ -121,10 +121,10 @@ func (k Keeper) TestAccessor_checkSettlementNAVGuardrail(t *testing.T, ctx conte
 	return k.checkSettlementNAVGuardrail(sdk.UnwrapSDKContext(ctx), vault, assetCoin, paymentCoin)
 }
 
-// TestAccessor_applySettlementNAV exposes this keeper's applySettlementNAV function for unit tests.
-func (k Keeper) TestAccessor_applySettlementNAV(t *testing.T, ctx context.Context, vault *types.VaultAccount, assetCoin, paymentCoin sdk.Coin, direction, signer string) error {
+// TestAccessor_removeDrainedSettlementNAV exposes this keeper's removeDrainedSettlementNAV function for unit tests.
+func (k Keeper) TestAccessor_removeDrainedSettlementNAV(t *testing.T, ctx context.Context, vault *types.VaultAccount, assetDenom, direction string) error {
 	t.Helper()
-	return k.applySettlementNAV(sdk.UnwrapSDKContext(ctx), vault, assetCoin, paymentCoin, direction, signer)
+	return k.removeDrainedSettlementNAV(sdk.UnwrapSDKContext(ctx), vault, assetDenom, direction)
 }
 
 // TestAccessor_publishAssetNAVToMarker exposes this keeper's publishAssetNAVToMarker function for unit tests.

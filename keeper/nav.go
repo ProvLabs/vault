@@ -97,13 +97,22 @@ func (k *Keeper) GetVaultNAV(ctx sdk.Context, vaultAddr sdk.AccAddress, denom st
 // checkSettlementNAVGuardrail requires an asset settlement to trade exactly at the
 // vault's internal NAV entry for the asset denom, so the manager cannot settle at
 // off-NAV prices. Equality is checked by cross-multiplication
-// (assetAmount * navPrice == paymentAmount * navVolume) to avoid rounding. When no
-// entry exists (first acquisition) the guardrail is skipped.
+// (assetAmount * navPrice == paymentAmount * navVolume) to avoid rounding.
+//
+// A denom with no entry is rejected rather than waved through. The NAV authority must
+// price a denom before the asset manager can trade it, so the manager cannot mint a
+// price of their choosing into the pricing table by being the first to acquire the
+// denom. The internal NAV table is a price list rather than a held-asset inventory:
+// the authority may price a denom the vault does not hold yet, and until the asset
+// arrives at the principal marker that entry contributes nothing to the vault's value
+// (see GetTVV). Pricing first and settling second is therefore the acquisition path,
+// and both messages can ride in a single transaction so the authority's price and the
+// manager's settlement commit atomically.
 func (k *Keeper) checkSettlementNAVGuardrail(ctx sdk.Context, vault *types.VaultAccount, assetCoin, paymentCoin sdk.Coin) error {
 	nav, err := k.GetVaultNAV(ctx, vault.GetAddress(), assetCoin.Denom)
 	if err != nil {
 		if errors.Is(err, collections.ErrNotFound) {
-			return nil
+			return fmt.Errorf("denom %q has no internal NAV entry on vault %s: the NAV authority must price it before it can be settled", assetCoin.Denom, vault.Address)
 		}
 		return fmt.Errorf("failed to get internal NAV for denom %q on vault %s: %w", assetCoin.Denom, vault.Address, err)
 	}
@@ -149,18 +158,21 @@ func (k *Keeper) publishAssetNAVToMarker(ctx sdk.Context, vault *types.VaultAcco
 	return nil
 }
 
-// RemoveVaultNAV deletes the internal net asset value entry for a denom held
-// by the given vault and emits an EventNAVRemoved carrying the last recorded
-// price and volume. It exists for settlement flows that drain the vault's last
-// unit of a denom: a price entry for an asset the vault no longer holds must
-// not linger in the pricing table, but its final price is still worth
-// surfacing to downstream consumers via the event.
+// RemoveVaultNAV deletes the internal net asset value entry for a denom on the
+// given vault and emits an EventNAVRemoved carrying the last recorded price and
+// volume, so a price the vault no longer stands behind stops driving valuation
+// while its final value is still surfaced to downstream consumers.
 //
-// It returns an error when no entry exists for the denom. Callers remove
-// entries they have just read or written (e.g. immediately after a settlement
-// upsert), so a missing entry indicates a caller bug rather than a benign
-// no-op.
-func (k *Keeper) RemoveVaultNAV(ctx sdk.Context, vault *types.VaultAccount, denom string) error {
+// It serves two callers: the outbound settlement path, which drops the entry
+// once it has drained the vault's last unit of a denom, and the NAV authority,
+// which revokes a price it set for a denom the vault never acquired. The
+// signer is recorded on the event for attribution and is empty for the
+// protocol-initiated settlement removal.
+//
+// This method does NOT verify that signer is authorized to mutate the vault's
+// NAV table, nor that the vault has stopped holding the denom; callers own both
+// checks. It returns an error when no entry exists for the denom.
+func (k *Keeper) RemoveVaultNAV(ctx sdk.Context, vault *types.VaultAccount, denom, signer string) error {
 	nav, err := k.GetVaultNAV(ctx, vault.GetAddress(), denom)
 	if err != nil {
 		return fmt.Errorf("failed to get internal NAV for denom %q on vault %s: %w", denom, vault.Address, err)
@@ -168,7 +180,7 @@ func (k *Keeper) RemoveVaultNAV(ctx sdk.Context, vault *types.VaultAccount, deno
 	if err := k.NAVs.Remove(ctx, collections.Join(vault.GetAddress(), denom)); err != nil {
 		return fmt.Errorf("failed to remove internal NAV for denom %q on vault %s: %w", denom, vault.Address, err)
 	}
-	k.emitEvent(ctx, types.NewEventNAVRemoved(vault.Address, nav))
+	k.emitEvent(ctx, types.NewEventNAVRemoved(vault.Address, nav, signer))
 	return nil
 }
 

@@ -67,8 +67,8 @@ func Setup(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, ak types.AccountKeepe
 	}
 	write()
 
-	underlyingDenom := genRandomDenom(r, denomRegex, VaultGlobalDenomSuffix)
-	externalAssetDenom := genRandomDenom(r, denomRegex, VaultGlobalDenomSuffix)
+	underlyingDenom := genRandomDenom(r, denomRegex)
+	externalAssetDenom := genRandomDenom(r, denomRegex)
 
 	markerKeeper, ok := mk.(markerkeeper.Keeper)
 	if !ok {

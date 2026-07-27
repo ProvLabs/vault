@@ -48,6 +48,7 @@ const (
 	Msg_UpdateParams_FullMethodName           = "/provlabs.vault.v1.Msg/UpdateParams"
 	Msg_UpdateVaultAUMFeeBips_FullMethodName  = "/provlabs.vault.v1.Msg/UpdateVaultAUMFeeBips"
 	Msg_UpdateVaultNAV_FullMethodName         = "/provlabs.vault.v1.Msg/UpdateVaultNAV"
+	Msg_RemoveVaultNAV_FullMethodName         = "/provlabs.vault.v1.Msg/RemoveVaultNAV"
 	Msg_UpdateNAVAuthority_FullMethodName     = "/provlabs.vault.v1.Msg/UpdateNAVAuthority"
 	Msg_AcceptAsset_FullMethodName            = "/provlabs.vault.v1.Msg/AcceptAsset"
 	Msg_RejectAsset_FullMethodName            = "/provlabs.vault.v1.Msg/RejectAsset"
@@ -126,6 +127,10 @@ type MsgClient interface {
 	// UpdateVaultNAV creates or updates a vault's internal net asset value entry for a denom.
 	// Must be signed by the vault's NAV authority.
 	UpdateVaultNAV(ctx context.Context, in *MsgUpdateVaultNAVRequest, opts ...grpc.CallOption) (*MsgUpdateVaultNAVResponse, error)
+	// RemoveVaultNAV deletes a vault's internal net asset value entry for a denom the vault
+	// does not hold, revoking the authorization to acquire it at that price.
+	// Must be signed by the vault's NAV authority.
+	RemoveVaultNAV(ctx context.Context, in *MsgRemoveVaultNAVRequest, opts ...grpc.CallOption) (*MsgRemoveVaultNAVResponse, error)
 	// UpdateNAVAuthority rotates the address authorized to mutate a vault's internal NAV table.
 	// Must be signed by the vault admin.
 	UpdateNAVAuthority(ctx context.Context, in *MsgUpdateNAVAuthorityRequest, opts ...grpc.CallOption) (*MsgUpdateNAVAuthorityResponse, error)
@@ -437,6 +442,16 @@ func (c *msgClient) UpdateVaultNAV(ctx context.Context, in *MsgUpdateVaultNAVReq
 	return out, nil
 }
 
+func (c *msgClient) RemoveVaultNAV(ctx context.Context, in *MsgRemoveVaultNAVRequest, opts ...grpc.CallOption) (*MsgRemoveVaultNAVResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(MsgRemoveVaultNAVResponse)
+	err := c.cc.Invoke(ctx, Msg_RemoveVaultNAV_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *msgClient) UpdateNAVAuthority(ctx context.Context, in *MsgUpdateNAVAuthorityRequest, opts ...grpc.CallOption) (*MsgUpdateNAVAuthorityResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(MsgUpdateNAVAuthorityResponse)
@@ -540,6 +555,10 @@ type MsgServer interface {
 	// UpdateVaultNAV creates or updates a vault's internal net asset value entry for a denom.
 	// Must be signed by the vault's NAV authority.
 	UpdateVaultNAV(context.Context, *MsgUpdateVaultNAVRequest) (*MsgUpdateVaultNAVResponse, error)
+	// RemoveVaultNAV deletes a vault's internal net asset value entry for a denom the vault
+	// does not hold, revoking the authorization to acquire it at that price.
+	// Must be signed by the vault's NAV authority.
+	RemoveVaultNAV(context.Context, *MsgRemoveVaultNAVRequest) (*MsgRemoveVaultNAVResponse, error)
 	// UpdateNAVAuthority rotates the address authorized to mutate a vault's internal NAV table.
 	// Must be signed by the vault admin.
 	UpdateNAVAuthority(context.Context, *MsgUpdateNAVAuthorityRequest) (*MsgUpdateNAVAuthorityResponse, error)
@@ -647,6 +666,9 @@ func (UnimplementedMsgServer) UpdateVaultAUMFeeBips(context.Context, *MsgUpdateV
 }
 func (UnimplementedMsgServer) UpdateVaultNAV(context.Context, *MsgUpdateVaultNAVRequest) (*MsgUpdateVaultNAVResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateVaultNAV not implemented")
+}
+func (UnimplementedMsgServer) RemoveVaultNAV(context.Context, *MsgRemoveVaultNAVRequest) (*MsgRemoveVaultNAVResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveVaultNAV not implemented")
 }
 func (UnimplementedMsgServer) UpdateNAVAuthority(context.Context, *MsgUpdateNAVAuthorityRequest) (*MsgUpdateNAVAuthorityResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateNAVAuthority not implemented")
@@ -1200,6 +1222,24 @@ func _Msg_UpdateVaultNAV_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_RemoveVaultNAV_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgRemoveVaultNAVRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).RemoveVaultNAV(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Msg_RemoveVaultNAV_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).RemoveVaultNAV(ctx, req.(*MsgRemoveVaultNAVRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Msg_UpdateNAVAuthority_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(MsgUpdateNAVAuthorityRequest)
 	if err := dec(in); err != nil {
@@ -1376,6 +1416,10 @@ var Msg_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateVaultNAV",
 			Handler:    _Msg_UpdateVaultNAV_Handler,
+		},
+		{
+			MethodName: "RemoveVaultNAV",
+			Handler:    _Msg_RemoveVaultNAV_Handler,
 		},
 		{
 			MethodName: "UpdateNAVAuthority",

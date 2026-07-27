@@ -34,7 +34,7 @@ import (
 //
 // Bumped from 1 to 2 to accompany Migrator.Migrate1to2, which flattens every
 // vault to single-denom on its underlying asset (defaulting nav_authority to the
-// vault admin) and enables deposit protection on every vault's share marker. A
+// vault admin) and enables deposit protection when a vault's share marker can be loaded. A
 // v1->v2 migration handler is registered in RegisterServices so the SDK module
 // manager can drive the migration via RunMigrations when an upstream upgrade
 // handler advances the chain.

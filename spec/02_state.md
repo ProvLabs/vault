@@ -93,8 +93,10 @@ A time-ordered queue scheduling when a vault should be revisited for **automatic
 Holds **withdrawal jobs** created by `SwapOut`. Jobs are processed after the vault’s `WithdrawalDelaySeconds` and include pointers to the vault and the original request.
 
 - **Prefix:** `VaultPendingSwapOutQueuePrefix` (3)  
-- **Key:** typically `(int64 dueTime, uint64 id)` to maintain time ordering  
-- **Value:** `types.PayoutJob` (wraps the `PendingSwapOut` request and metadata)
+- **Key:** `(int64 dueTime, uint64 id, sdk.AccAddress vault)` to maintain time ordering  
+- **Value:** `types.PendingSwapOut { owner, vault_address, shares, redeem_denom (deprecated), failure_count }`
+
+`dueTime` is when the request becomes eligible for processing, and it doubles as a retry-after: an attempt that fails and has to leave the request queued increments `failure_count` and re-keys the entry to a later `dueTime` so it cannot hold the front of the queue. See [Retry & Backoff](06_blocker.md#retry--backoff).
 
 ### Pending Swap-Out Sequence (prefix 4)
 

@@ -16,6 +16,7 @@ This document describes all events emitted by the `x/vault` module and how to us
   - [EventPendingSwapOutExpedited](#eventpendingswapoutexpedited)
   - [EventSwapOutCompleted](#eventswapoutcompleted)
   - [EventSwapOutRefunded](#eventswapoutrefunded)
+  - [EventSwapOutRetryScheduled](#eventswapoutretryscheduled)
   - [How to tell if your SwapOut succeeded](#how-to-tell-if-your-swapout-succeeded)
 - [Interest & Fees](#interest--fees)
   - [EventVaultReconcile](#eventvaultreconcile)
@@ -175,6 +176,22 @@ Emitted when a pending swap-out **fails** and escrowed shares are returned to th
 
 ---
 
+### EventSwapOutRetryScheduled
+
+Emitted when a pending swap-out could neither be settled nor refunded and was re-keyed to a later retry time. The shares stay escrowed on the vault account, so a `failure_count` that keeps rising marks escrow that needs operator attention. See [Retry & Backoff](06_blocker.md#retry--backoff).
+
+**Fields**
+
+* `vault_address` — vault
+* `owner` — address whose shares remain escrowed
+* `shares` — escrowed share amount
+* `request_id` — the request that failed
+* `reason` — what failed (`refund_failure`, `dequeue_failure`, `critical_failure`)
+* `failure_count` — consecutive failed attempts, including this one
+* `retry_time` — UNIX timestamp (seconds) when the request becomes due again
+
+---
+
 ### How to tell if your SwapOut succeeded
 
 Swap-outs are **asynchronous** and complete in `EndBlocker` after the vault’s `withdrawal_delay_seconds` elapses.
@@ -191,6 +208,7 @@ Swap-outs are **asynchronous** and complete in `EndBlocker` after the vault’s 
 **Operational tips**
 
 * If the vault is **paused** after your request, the request is not paid out. When the request comes due it is dequeued and refunded with `EventSwapOutRefunded{ reason = "vault_paused" }`; submit a new `MsgSwapOut` after the vault is unpaused.
+* If the refund itself cannot go through (for example the share marker is no longer active), the request stays queued with its shares escrowed and you will see `EventSwapOutRetryScheduled{ request_id, retry_time }` instead. It is retried automatically at `retry_time`.
 * For monitoring systems, index events by `request_id` and `vault_address`, and set a timeout expectation based on `withdrawal_delay_seconds` plus normal block timings.
 
 ---

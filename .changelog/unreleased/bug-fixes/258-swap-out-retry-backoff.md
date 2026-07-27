@@ -1,0 +1,1 @@
+* Re-key a pending swap-out to a later retry time whenever an attempt fails and the request has to stay queued, so a request whose refund fails deterministically no longer holds the front of the queue and re-consumes the per-block batch budget on every block [PR 258](https://github.com/provlabs/vault/pull/258).

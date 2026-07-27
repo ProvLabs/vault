@@ -61,10 +61,13 @@ func (k *Keeper) processPendingSwapOuts(ctx sdk.Context, batchSize int) error {
 //     the request is preserved. Because the vault is now paused, the preserved request is refunded on a
 //     later block rather than re-executed, so it is never double-processed.
 //
-// A failed Dequeue on an active vault's job is itself treated as a critical, unrecoverable failure.
-// Such a failure is deterministic for a given entry, so without intervention the same request would be
-// re-collected and re-attempted every block in an unbounded loop. Auto-pausing the vault breaks that loop,
-// signals operators, and preserves the escrowed shares (the cache is discarded) until the store issue is resolved.
+// Every path that preserves a request also calls deferSwapOutRetry, which re-keys it behind the
+// currently due work. A failure such as a deactivated share marker or a revoked owner attribute is
+// deterministic, so an entry left under its original key would be re-collected and re-fail every
+// block, and enough of them would consume the whole batch budget and stall the queue.
+//
+// A failed Dequeue on an active vault's job is also treated as a critical, unrecoverable failure, so it
+// auto-pauses the vault to signal operators while the escrowed shares are preserved.
 func (k *Keeper) processSwapOutJobs(ctx sdk.Context, jobsToProcess []types.PayoutJob) {
 	for _, j := range jobsToProcess {
 		vault, ok := k.tryGetVault(ctx, j.VaultAddr)
@@ -74,6 +77,7 @@ func (k *Keeper) processSwapOutJobs(ctx sdk.Context, jobsToProcess []types.Payou
 					fmt.Sprintf("CRITICAL: failed to dequeue withdrawal request %d for non-existent vault %s", j.ID, j.VaultAddr),
 					"error", err,
 				)
+				k.deferSwapOutRetry(ctx, j, types.RetryReasonDequeueFailure)
 			} else {
 				k.getLogger(ctx).Error(
 					"dequeued and skipped pending withdrawal for non-existent vault",
@@ -102,6 +106,7 @@ func (k *Keeper) processSwapOutJobs(ctx sdk.Context, jobsToProcess []types.Payou
 					"error", derr,
 				)
 				k.autoPauseVault(ctx, vault, errMsg)
+				k.deferSwapOutRetry(ctx, j, types.RetryReasonDequeueFailure)
 				continue
 			}
 			write()
@@ -110,6 +115,7 @@ func (k *Keeper) processSwapOutJobs(ctx sdk.Context, jobsToProcess []types.Payou
 
 		if errors.As(err, &cErr) {
 			k.autoPauseVault(ctx, vault, cErr.Reason)
+			k.deferSwapOutRetry(ctx, j, types.RetryReasonCriticalFailure)
 			continue
 		}
 
@@ -131,12 +137,14 @@ func (k *Keeper) processSwapOutJobs(ctx sdk.Context, jobsToProcess []types.Payou
 				"error", derr,
 			)
 			k.autoPauseVault(ctx, vault, errMsg)
+			k.deferSwapOutRetry(ctx, j, types.RetryReasonDequeueFailure)
 			continue
 		}
 		if rerr := k.refundWithdrawal(refundCtx, j.ID, j.Req, reason); rerr != nil {
 			if errors.As(rerr, &cErr) {
 				k.autoPauseVault(ctx, vault, cErr.Reason)
 			}
+			k.deferSwapOutRetry(ctx, j, types.RetryReasonRefundFailure)
 			continue
 		}
 		refundWrite()
@@ -146,7 +154,7 @@ func (k *Keeper) processSwapOutJobs(ctx sdk.Context, jobsToProcess []types.Payou
 // refundPausedVaultSwapOut atomically dequeues a due swap-out job for a paused vault and
 // refunds the escrowed shares, so paused entries cannot camp at the front of the queue.
 // On any failure the cache context is discarded, keeping the request queued as the record
-// of who is owed shares; it retries on a later block within the batch budget.
+// of who is owed shares, and the retry is deferred to a later block.
 func (k *Keeper) refundPausedVaultSwapOut(ctx sdk.Context, j types.PayoutJob) {
 	cacheCtx, write := ctx.CacheContext()
 
@@ -157,6 +165,7 @@ func (k *Keeper) refundPausedVaultSwapOut(ctx sdk.Context, j types.PayoutJob) {
 			"vault_address", j.VaultAddr.String(),
 			"error", err,
 		)
+		k.deferSwapOutRetry(ctx, j, types.RetryReasonDequeueFailure)
 		return
 	}
 
@@ -167,10 +176,59 @@ func (k *Keeper) refundPausedVaultSwapOut(ctx sdk.Context, j types.PayoutJob) {
 			"vault_address", j.VaultAddr.String(),
 			"error", err,
 		)
+		k.deferSwapOutRetry(ctx, j, types.RetryReasonRefundFailure)
 		return
 	}
 
 	write()
+}
+
+// deferSwapOutRetry records a failed attempt on a preserved swap-out request and re-keys it to a
+// later retry time. The escrowed shares stay with the vault, but the request no longer sits at the
+// front of the queue re-failing on every block. If the re-key itself fails, the entry is left where
+// it is and retried on the next block.
+func (k *Keeper) deferSwapOutRetry(ctx sdk.Context, j types.PayoutJob, reason string) {
+	req := j.Req
+	req.FailureCount++
+	retryTime := ctx.BlockTime().Unix() + swapOutRetryBackoff(req.FailureCount)
+
+	cacheCtx, write := ctx.CacheContext()
+	if err := k.PendingSwapOutQueue.Reschedule(cacheCtx, j.Timestamp, j.VaultAddr, j.ID, retryTime, &req); err != nil {
+		k.getLogger(ctx).Error(
+			"CRITICAL: failed to reschedule withdrawal request, leaving it at the front of the queue",
+			"request_id", j.ID,
+			"vault_address", j.VaultAddr.String(),
+			"error", err,
+		)
+		return
+	}
+	write()
+
+	k.getLogger(ctx).Info(
+		"rescheduled withdrawal request after failed attempt",
+		"request_id", j.ID,
+		"vault_address", j.VaultAddr.String(),
+		"reason", reason,
+		"failure_count", req.FailureCount,
+		"retry_time", retryTime,
+	)
+	k.emitEvent(ctx, types.NewEventSwapOutRetryScheduled(req.VaultAddress, req.Owner, req.Shares, j.ID, reason, req.FailureCount, retryTime))
+}
+
+// swapOutRetryBackoff returns how many seconds to delay the next attempt for a swap out that has
+// failed failureCount times. The first SwapOutImmediateRetries failures retry on the next block;
+// after that the delay doubles from SwapOutRetryBackoffBase up to SwapOutRetryBackoffMax.
+func swapOutRetryBackoff(failureCount uint32) int64 {
+	if failureCount <= SwapOutImmediateRetries {
+		return 0
+	}
+
+	backoff := int64(SwapOutRetryBackoffBase)
+	for i := failureCount - SwapOutImmediateRetries - 1; i > 0 && backoff < SwapOutRetryBackoffMax; i-- {
+		backoff *= 2
+	}
+
+	return min(backoff, SwapOutRetryBackoffMax)
 }
 
 // processSingleWithdrawal executes a pending swap-out. It first reconciles the vault (interest and AUM fees), then converts the user's

@@ -41,6 +41,7 @@ func (s *TestSuite) TestVaultGenesis_InitAndExport() {
 						VaultAddress: vault.Address,
 						RedeemDenom:  "ylds",
 						Shares:       sdk.NewInt64Coin("vshares", 100),
+						FailureCount: 3,
 					},
 				},
 			},
@@ -74,6 +75,7 @@ func (s *TestSuite) TestVaultGenesis_InitAndExport() {
 	s.Require().Equal(admin, exported.PendingSwapOutQueue.Entries[0].SwapOut.Owner, "pending swap out entry owner mismatch")
 	s.Require().Equal(vault.Address, exported.PendingSwapOutQueue.Entries[0].SwapOut.VaultAddress, "pending swap out entry vault address mismatch")
 	s.Require().Equal("ylds", exported.PendingSwapOutQueue.Entries[0].SwapOut.RedeemDenom, "pending swap out entry redeem denom mismatch")
+	s.Require().Equal(uint32(3), exported.PendingSwapOutQueue.Entries[0].SwapOut.FailureCount, "pending swap out entry failure count should survive a genesis round trip")
 }
 
 func (s *TestSuite) TestInitGenesis_PanicOnInvalidTimeout() {

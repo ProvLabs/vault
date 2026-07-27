@@ -580,7 +580,7 @@ func (k Keeper) handleVaultInterestTimeouts(ctx sdk.Context, limit int) error {
 			continue
 		}
 
-		if err := k.atomicallyReconcileInterest(ctx, vault); err != nil {
+		if err := k.atomicallyReconcileInterest(ctx, vault, timeoutUnix); err != nil {
 			k.getLogger(ctx).Error("failed to reconcile interest atomically, rescheduling", "vault", addr.String(), "err", err)
 			k.reschedulePayoutTimeout(ctx, vault, timeoutUnix)
 			continue
@@ -594,12 +594,19 @@ func (k Keeper) handleVaultInterestTimeouts(ctx sdk.Context, limit int) error {
 // atomicallyReconcileInterest performs the interest transfer, dequeues the current
 // timeout, and enqueues the next period timeout within a single atomic cache context.
 // If any step fails, the entire operation is reverted.
-func (k Keeper) atomicallyReconcileInterest(ctx sdk.Context, vault *types.VaultAccount) error {
+//
+// walkedTimeout is the key the entry was found under. It can differ from the vault's recorded
+// timeout, so both are dequeued and no entry is left behind to stay due forever.
+func (k Keeper) atomicallyReconcileInterest(ctx sdk.Context, vault *types.VaultAccount, walkedTimeout int64) error {
 	cacheCtx, write := ctx.CacheContext()
 	v := vault.Clone()
 
 	if err := k.PerformVaultInterestTransfer(cacheCtx, v); err != nil {
 		return fmt.Errorf("failed to perform vault interest transfer: %w", err)
+	}
+
+	if err := k.PayoutTimeoutQueue.Dequeue(cacheCtx, walkedTimeout, v.GetAddress()); err != nil {
+		return fmt.Errorf("failed to dequeue walked payout timeout: %w", err)
 	}
 
 	if err := k.SafeEnqueuePayoutTimeout(cacheCtx, v); err != nil {
@@ -778,7 +785,7 @@ func (k Keeper) handleVaultFeeTimeouts(ctx sdk.Context, limit int) error {
 			continue
 		}
 
-		if err := k.atomicallyReconcileFee(ctx, vault); err != nil {
+		if err := k.atomicallyReconcileFee(ctx, vault, timeoutUnix); err != nil {
 			k.getLogger(ctx).Error("failed to collect AUM fee atomically, rescheduling", "vault", addr.String(), "err", err)
 			k.rescheduleFeeTimeout(ctx, vault, timeoutUnix)
 			continue
@@ -791,12 +798,19 @@ func (k Keeper) handleVaultFeeTimeouts(ctx sdk.Context, limit int) error {
 // atomicallyReconcileFee performs the AUM fee collection, dequeues the current
 // fee timeout, and enqueues the next fee period timeout within a single atomic
 // cache context. If any step fails, the entire operation is reverted.
-func (k Keeper) atomicallyReconcileFee(ctx sdk.Context, vault *types.VaultAccount) error {
+//
+// walkedTimeout is the key the entry was found under. It can differ from the vault's recorded
+// fee timeout, so both are dequeued and no entry is left behind to stay due forever.
+func (k Keeper) atomicallyReconcileFee(ctx sdk.Context, vault *types.VaultAccount, walkedTimeout int64) error {
 	cacheCtx, write := ctx.CacheContext()
 	v := vault.Clone()
 
 	if err := k.PerformVaultFeeTransfer(cacheCtx, v); err != nil {
 		return fmt.Errorf("failed to perform vault fee transfer: %w", err)
+	}
+
+	if err := k.FeeTimeoutQueue.Dequeue(cacheCtx, walkedTimeout, v.GetAddress()); err != nil {
+		return fmt.Errorf("failed to dequeue walked fee timeout: %w", err)
 	}
 
 	if err := k.SafeEnqueueFeeTimeout(cacheCtx, v); err != nil {

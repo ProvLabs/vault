@@ -4658,6 +4658,76 @@ func (s *TestSuite) TestPauseVault_LeavesStaleQueueEntryToTheBlockerBackstop() {
 	s.Assert().Equal(0, s.countDuePayoutTimeouts(now), "the blocker backstop should dequeue the stale entry left behind by pause")
 }
 
+func (s *TestSuite) TestUnpauseVault_StaleQueueEntryIsDequeuedWhenProcessed() {
+	underlying := "under"
+	share := "vaultshares"
+	vaultAddr := types.GetVaultAddress(share)
+
+	tests := []struct {
+		name     string
+		enqueue  func(dueTime int64)
+		process  func()
+		countDue func(now int64) int
+	}{
+		{
+			name: "stale payout timeout",
+			enqueue: func(dueTime int64) {
+				s.Require().NoError(s.k.PayoutTimeoutQueue.Enqueue(s.ctx, dueTime, vaultAddr), "enqueuing a stale payout timeout should not error")
+			},
+			process: func() {
+				s.Require().NoError(
+					s.k.TestAccessor_handleVaultInterestTimeouts(s.T(), s.ctx, keeper.MaxInterestTimeoutsPerBlock),
+					"handleVaultInterestTimeouts should not error",
+				)
+			},
+			countDue: func(now int64) int { return s.countDuePayoutTimeouts(now) },
+		},
+		{
+			name: "stale fee timeout",
+			enqueue: func(dueTime int64) {
+				s.Require().NoError(s.k.FeeTimeoutQueue.Enqueue(s.ctx, dueTime, vaultAddr), "enqueuing a stale fee timeout should not error")
+			},
+			process: func() {
+				s.Require().NoError(
+					s.k.TestAccessor_handleVaultFeeTimeouts(s.T(), s.ctx, keeper.MaxFeeTimeoutsPerBlock),
+					"handleVaultFeeTimeouts should not error",
+				)
+			},
+			countDue: func(now int64) int { return s.countDueFeeTimeouts(now) },
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			s.CreateAndActivateVault(s.adminAddr, share, underlying)
+			tc.enqueue(s.ctx.BlockTime().Add(-time.Hour).Unix())
+
+			msgServer := keeper.NewMsgServer(s.simApp.VaultKeeper)
+			_, err := msgServer.PauseVault(s.ctx, &types.MsgPauseVaultRequest{
+				Authority:    s.adminAddr.String(),
+				VaultAddress: vaultAddr.String(),
+				Reason:       "maintenance",
+			})
+			s.Require().NoError(err, "pause should not error")
+			_, err = msgServer.UnpauseVault(s.ctx, &types.MsgUnpauseVaultRequest{
+				Authority:    s.adminAddr.String(),
+				VaultAddress: vaultAddr.String(),
+			})
+			s.Require().NoError(err, "unpause should not error")
+
+			now := s.ctx.BlockTime().Unix()
+			s.Require().Equal(1, tc.countDue(now), "the stale entry should survive pause and unpause, since removal is keyed on the vault's recorded timeout")
+
+			tc.process()
+			s.Assert().Equal(0, tc.countDue(now), "processing an unpaused vault should dequeue the key its entry was walked under")
+
+			tc.process()
+			s.Assert().Equal(0, tc.countDue(now), "the stale entry should not return on later blocks")
+		})
+	}
+}
+
 func (s *TestSuite) TestMsgServer_UnpauseVault_RearmsReconciliationQueues() {
 	underlying := "under"
 	share := "vaultshares"

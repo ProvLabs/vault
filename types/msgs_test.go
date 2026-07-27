@@ -2024,6 +2024,64 @@ func TestMsgUpdateVaultNAVRequest_ValidateBasic(t *testing.T) {
 	})
 }
 
+func TestMsgRemoveVaultNAVRequest_ValidateBasic(t *testing.T) {
+	addr := NewTestAddress()
+
+	RunValidateBasicTable(t, []validateBasicCase{
+		{
+			name: "valid",
+			msg: types.MsgRemoveVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "rwa",
+			},
+		},
+		{
+			name: "valid metadata value owner denom",
+			msg: types.MsgRemoveVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "nft/scope1qzge0zaztu65tx5x5llv5xc9ztsqxlkwel",
+			},
+		},
+		{
+			name: "invalid signer",
+			msg: types.MsgRemoveVaultNAVRequest{
+				Signer:       "bad",
+				VaultAddress: addr,
+				Denom:        "rwa",
+			},
+			expectedErr: "invalid signer address",
+		},
+		{
+			name: "invalid vault address",
+			msg: types.MsgRemoveVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: "bad",
+				Denom:        "rwa",
+			},
+			expectedErr: "invalid vault address",
+		},
+		{
+			name: "invalid denom",
+			msg: types.MsgRemoveVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "bad denom",
+			},
+			expectedErr: "invalid denom",
+		},
+		{
+			name: "empty denom",
+			msg: types.MsgRemoveVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+			},
+			expectedErr: "invalid denom",
+		},
+	})
+}
+
 func TestMsgUpdateNAVAuthorityRequest_ValidateBasic(t *testing.T) {
 	addr := NewTestAddress()
 

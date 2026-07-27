@@ -10,6 +10,7 @@ import (
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
 
+	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,10 +20,10 @@ import (
 // zeroRate is the default decimal interest rate used when a vault has no rate set.
 const zeroRate = "0.0"
 
-// genRandomDenom generates a random denominator string with a given suffix.
-func genRandomDenom(r *rand.Rand, regex, suffix string) string {
-	denom := randomUnrestrictedDenom(r, regex, suffix)
-	return denom
+// genRandomDenom generates a random unrestricted denom carrying the suffix that marks
+// simulation-created global markers.
+func genRandomDenom(r *rand.Rand, regex string) string {
+	return randomUnrestrictedDenom(r, regex, VaultGlobalDenomSuffix)
 }
 
 // randomInt63 generates a random int64 between 0 and maxVal.
@@ -307,6 +308,32 @@ func getRandomPendingSwapOut(r *rand.Rand, k keeper.Keeper, ctx sdk.Context, vau
 	randomID := swapIDs[r.Intn(len(swapIDs))]
 
 	return randomID, nil
+}
+
+// getRandomUnheldNAVDenom returns a denom the vault has priced in its internal NAV table but
+// does not hold at its principal marker, which is the only kind of entry RemoveVaultNAV
+// accepts. The walk stops at the first match in key order rather than sampling, so the
+// choice stays deterministic across simulation replays.
+func getRandomUnheldNAVDenom(k keeper.Keeper, ctx sdk.Context, vault *types.VaultAccount) (string, error) {
+	principal := vault.PrincipalMarkerAddress()
+	navRange := collections.NewPrefixedPairRange[sdk.AccAddress, string](vault.GetAddress())
+
+	var found string
+	err := k.NAVs.Walk(ctx, navRange, func(key collections.Pair[sdk.AccAddress, string], _ types.VaultNAV) (bool, error) {
+		denom := key.K2()
+		if k.BankKeeper.GetBalance(ctx, principal, denom).IsZero() {
+			found = denom
+			return true, nil
+		}
+		return false, nil
+	})
+	if err != nil {
+		return "", fmt.Errorf("failed to walk internal NAV entries for vault %s: %w", vault.GetAddress(), err)
+	}
+	if found == "" {
+		return "", fmt.Errorf("vault %s has no priced denom it does not hold", vault.GetAddress())
+	}
+	return found, nil
 }
 
 // getRandomExternalAssetDenom finds a global sim marker denom, held by one of the

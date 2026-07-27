@@ -511,11 +511,9 @@ type PendingSwapOut struct {
 	// redeem_denom is the denomination of the asset to be redeemed. Always the
 	// vault's underlying_asset; retained for wire compatibility.
 	RedeemDenom string `protobuf:"bytes,4,opt,name=redeem_denom,json=redeemDenom,proto3" json:"redeem_denom,omitempty"` // Deprecated: Do not use.
-	// failure_count is the number of consecutive block-processing attempts that
-	// failed and left this request queued. Each failure re-keys the request to a
-	// later retry time so a deterministically failing request cannot hold the
-	// front of the queue and consume the per-block batch budget every block. It
-	// is zero for a healthy request and is reset when the request is expedited.
+	// failure_count is the number of consecutive failed processing attempts that
+	// left this request queued. Each failure re-keys the request to a later retry
+	// time so it cannot hold the front of the queue. Reset when expedited.
 	FailureCount uint32 `protobuf:"varint,5,opt,name=failure_count,json=failureCount,proto3" json:"failure_count,omitempty"`
 }
 

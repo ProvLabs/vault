@@ -440,7 +440,7 @@ Emitted when the vault's asset manager settles a pending `x/exchange` payment ta
 
 **Notes**
 
-* An `EventNAVUpdated` for the settled asset denom follows in the same tx, carrying the settlement price. When an outbound settlement drains the denom, an `EventNAVRemoved` follows that.
+* Settling does not emit an `EventNAVUpdated`: the price the guardrail matched was already set by the NAV authority, so no new price is recorded. When an outbound settlement drains the denom from the principal, an `EventNAVRemoved` follows this event in the same tx.
 
 ---
 
@@ -458,7 +458,7 @@ Emitted when the vault's asset manager declines a pending `x/exchange` payment t
 
 ### EventNAVUpdated
 
-Emitted when a vault's internal NAV entry for a denom is created or updated — by `MsgUpdateVaultNAV` or by a settlement (`MsgAcceptAsset`).
+Emitted when a vault's internal NAV entry for a denom is created or updated (via `MsgUpdateVaultNAV`).
 
 **Fields**
 
@@ -466,7 +466,7 @@ Emitted when a vault's internal NAV entry for a denom is created or updated — 
 * `denom` — asset denom the entry prices
 * `price` — total value of `volume` units of the denom (coin string)
 * `volume` — number of units `price` covers
-* `source` — origin of the update (e.g., oracle name; the vault address for settlement-driven updates)
+* `source` — origin of the update (e.g., an oracle name)
 * `signer` — address that performed the update
 * `updated_block_height` — block height of the update
 
@@ -478,7 +478,7 @@ Emitted when a vault's internal NAV entry for a denom is created or updated — 
 
 ### EventNAVRemoved
 
-Emitted when a vault's internal NAV entry for a denom is removed — currently when an outbound settlement leaves the vault's principal holding zero of the denom.
+Emitted when a vault's internal NAV entry for a denom is removed: either when an outbound settlement leaves the vault's principal holding zero of the denom, or when the NAV authority revokes a price via `MsgRemoveVaultNAV`.
 
 **Fields**
 
@@ -486,10 +486,11 @@ Emitted when a vault's internal NAV entry for a denom is removed — currently w
 * `denom` — asset denom whose entry was removed
 * `last_price` — total value of `last_volume` units recorded before removal (coin string)
 * `last_volume` — number of units `last_price` covered
+* `signer` — NAV authority that removed the entry; empty when the protocol removed it, as an outbound settlement draining the denom does
 
 **Notes**
 
-* When a settlement both prices and drains a denom, this event follows an `EventNAVUpdated` for the same denom in the same tx; `last_price`/`last_volume` carry that final settlement price. Consumers maintaining a local price cache must process both event types.
+* `last_price`/`last_volume` carry the price the NAV authority had set for the denom, since settling never rewrites it. Consumers maintaining a local price cache must process this event alongside `EventNAVUpdated`.
 * The marker module's NAV is left as-is — publishing simply stops.
 
 ---

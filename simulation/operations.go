@@ -52,6 +52,7 @@ const (
 	OpWeightMsgUpdateMaxSwapInValue  = "op_weight_msg_update_max_swap_in_value"
 	OpWeightMsgUpdateMaxSwapOutValue = "op_weight_msg_update_max_swap_out_value"
 	OpWeightMsgUpdateVaultNAV        = "op_weight_msg_update_vault_nav"
+	OpWeightMsgRemoveVaultNAV        = "op_weight_msg_remove_vault_nav"
 	OpWeightMsgUpdateNAVAuthority    = "op_weight_msg_update_nav_authority"
 	OpWeightMsgAcceptAsset           = "op_weight_msg_accept_asset"
 	OpWeightMsgRejectAsset           = "op_weight_msg_reject_asset"
@@ -82,9 +83,10 @@ var DefaultWeights = map[string]int{
 	OpWeightMsgUpdateVaultAUMFeeBips: 2,
 	OpWeightMsgUpdateMinSwapInValue:  1,
 	OpWeightMsgUpdateMinSwapOutValue: 1,
-	OpWeightMsgUpdateMaxSwapInValue:  2,
+	OpWeightMsgUpdateMaxSwapInValue:  1,
 	OpWeightMsgUpdateMaxSwapOutValue: 2,
 	OpWeightMsgUpdateVaultNAV:        1,
+	OpWeightMsgRemoveVaultNAV:        1,
 	OpWeightMsgUpdateNAVAuthority:    1,
 	OpWeightMsgAcceptAsset:           2,
 	OpWeightMsgRejectAsset:           2,
@@ -119,6 +121,7 @@ func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simula
 		wUpdateMaxSwapInValue  int
 		wUpdateMaxSwapOutValue int
 		wUpdateVaultNAV        int
+		wRemoveVaultNAV        int
 		wUpdateNAVAuthority    int
 		wAcceptAsset           int
 		wRejectAsset           int
@@ -151,6 +154,7 @@ func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simula
 	simState.AppParams.GetOrGenerate(OpWeightMsgUpdateMaxSwapInValue, &wUpdateMaxSwapInValue, simState.Rand, func(_ *rand.Rand) { wUpdateMaxSwapInValue = DefaultWeights[OpWeightMsgUpdateMaxSwapInValue] })
 	simState.AppParams.GetOrGenerate(OpWeightMsgUpdateMaxSwapOutValue, &wUpdateMaxSwapOutValue, simState.Rand, func(_ *rand.Rand) { wUpdateMaxSwapOutValue = DefaultWeights[OpWeightMsgUpdateMaxSwapOutValue] })
 	simState.AppParams.GetOrGenerate(OpWeightMsgUpdateVaultNAV, &wUpdateVaultNAV, simState.Rand, func(_ *rand.Rand) { wUpdateVaultNAV = DefaultWeights[OpWeightMsgUpdateVaultNAV] })
+	simState.AppParams.GetOrGenerate(OpWeightMsgRemoveVaultNAV, &wRemoveVaultNAV, simState.Rand, func(_ *rand.Rand) { wRemoveVaultNAV = DefaultWeights[OpWeightMsgRemoveVaultNAV] })
 	simState.AppParams.GetOrGenerate(OpWeightMsgUpdateNAVAuthority, &wUpdateNAVAuthority, simState.Rand, func(_ *rand.Rand) { wUpdateNAVAuthority = DefaultWeights[OpWeightMsgUpdateNAVAuthority] })
 	simState.AppParams.GetOrGenerate(OpWeightMsgAcceptAsset, &wAcceptAsset, simState.Rand, func(_ *rand.Rand) { wAcceptAsset = DefaultWeights[OpWeightMsgAcceptAsset] })
 	simState.AppParams.GetOrGenerate(OpWeightMsgRejectAsset, &wRejectAsset, simState.Rand, func(_ *rand.Rand) { wRejectAsset = DefaultWeights[OpWeightMsgRejectAsset] })
@@ -183,6 +187,7 @@ func WeightedOperations(simState module.SimulationState, k keeper.Keeper) simula
 		simulation.NewWeightedOperation(wUpdateMaxSwapInValue, SimulateMsgUpdateMaxSwapInValue(k)),
 		simulation.NewWeightedOperation(wUpdateMaxSwapOutValue, SimulateMsgUpdateMaxSwapOutValue(k)),
 		simulation.NewWeightedOperation(wUpdateVaultNAV, SimulateMsgUpdateVaultNAV(k)),
+		simulation.NewWeightedOperation(wRemoveVaultNAV, SimulateMsgRemoveVaultNAV(k)),
 		simulation.NewWeightedOperation(wUpdateNAVAuthority, SimulateMsgUpdateNAVAuthority(k)),
 		simulation.NewWeightedOperation(wAcceptAsset, SimulateMsgAcceptAsset(k)),
 		simulation.NewWeightedOperation(wRejectAsset, SimulateMsgRejectAsset(k)),
@@ -1291,7 +1296,7 @@ func SimulateMsgUpdateVaultNAV(k keeper.Keeper) simtypes.Operation {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateVaultNAVRequest{}), "marker keeper is not of type markerkeeper.Keeper"), nil, fmt.Errorf("marker keeper is not of type markerkeeper.Keeper")
 		}
 
-		navDenom := genRandomDenom(r, k.MarkerKeeper.GetUnrestrictedDenomRegex(ctx), VaultGlobalDenomSuffix)
+		navDenom := genRandomDenom(r, k.MarkerKeeper.GetUnrestrictedDenomRegex(ctx))
 		if err = CreateUnrestrictedMarker(ctx, sdk.NewInt64Coin(navDenom, 1_000_000_000), k.AuthKeeper.GetModuleAddress("mint"), markerKeeper); err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateVaultNAVRequest{}), "unable to create nav marker"), nil, err
 		}
@@ -1315,6 +1320,55 @@ func SimulateMsgUpdateVaultNAV(k keeper.Keeper) simtypes.Operation {
 		}
 
 		return simtypes.NewOperationMsg(msg, true, "successfully updated vault NAV"), nil, nil
+	}
+}
+
+// SimulateMsgRemoveVaultNAV revokes a price the NAV authority set for a denom the vault
+// never acquired. It picks an unheld priced denom because a denom still sitting at the
+// principal marker cannot be removed, and prices a fresh denom when the vault has no
+// removable entry so the operation still exercises the message.
+func SimulateMsgRemoveVaultNAV(k keeper.Keeper) simtypes.Operation {
+	return func(r *rand.Rand, _ *baseapp.BaseApp, ctx sdk.Context,
+		accs []simtypes.Account, _ string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		err := Setup(ctx, r, k, k.AuthKeeper, k.BankKeeper, k.MarkerKeeper, accs)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgRemoveVaultNAVRequest{}), "unable to setup initial state"), nil, err
+		}
+
+		vault, err := getRandomVault(r, k, ctx)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgRemoveVaultNAVRequest{}), "unable to get random vault"), nil, err
+		}
+
+		navDenom, err := getRandomUnheldNAVDenom(k, ctx, vault)
+		if err != nil {
+			markerKeeper, ok := k.MarkerKeeper.(markerkeeper.Keeper)
+			if !ok {
+				return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgRemoveVaultNAVRequest{}), "marker keeper is not of type markerkeeper.Keeper"), nil, fmt.Errorf("marker keeper is not of type markerkeeper.Keeper")
+			}
+			navDenom = genRandomDenom(r, k.MarkerKeeper.GetUnrestrictedDenomRegex(ctx))
+			if err = CreateUnrestrictedMarker(ctx, sdk.NewInt64Coin(navDenom, 1_000_000_000), k.AuthKeeper.GetModuleAddress("mint"), markerKeeper); err != nil {
+				return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgRemoveVaultNAVRequest{}), "unable to create nav marker"), nil, err
+			}
+			if _, err = priceUnpricedAsset(ctx, r, k, vault, navDenom); err != nil {
+				return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgRemoveVaultNAVRequest{}), err.Error()), nil, nil
+			}
+		}
+
+		msg := &types.MsgRemoveVaultNAVRequest{
+			Signer:       vault.GetNAVAuthority(),
+			VaultAddress: vault.GetAddress().String(),
+			Denom:        navDenom,
+		}
+
+		handler := keeper.NewMsgServer(&k)
+		_, err = handler.RemoveVaultNAV(ctx, msg)
+		if err != nil {
+			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(msg), err.Error()), nil, nil
+		}
+
+		return simtypes.NewOperationMsg(msg, true, "successfully removed vault NAV"), nil, nil
 	}
 }
 
@@ -1362,22 +1416,21 @@ type paymentCreator interface {
 	CreatePayment(ctx sdk.Context, payment *exchange.Payment) error
 }
 
-// settlementAmounts picks the source and target leg amounts for a staged payment. When the
-// vault already has an internal NAV for its underlying asset, the amounts are an exact
-// multiple of the reduced NAV ratio so the settlement passes the exact-price guardrail
-// (random amounts would NoOp on every settlement after the first); when no NAV exists yet
-// (first acquisition, guardrail skipped) the amounts are random.
+// settlementAmounts picks the source and target leg amounts for a staged payment. The legs
+// are an exact multiple of the reduced internal NAV ratio for the asset denom so the
+// settlement passes the exact-price guardrail (random amounts would NoOp on every
+// settlement). A denom the vault has never priced is priced first through its NAV
+// authority, since the guardrail requires a price before the asset manager can trade.
 func settlementAmounts(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, vault *types.VaultAccount, sourceDenom, assetDenom string, portion math.Int) (sourceAmount, targetAmount math.Int, err error) {
 	nav, err := k.GetVaultNAV(ctx, vault.GetAddress(), assetDenom)
 	if err != nil {
 		if !errors.Is(err, collections.ErrNotFound) {
 			return math.Int{}, math.Int{}, fmt.Errorf("failed to get internal NAV for denom %q: %w", assetDenom, err)
 		}
-		sourceAmount, err = simtypes.RandPositiveInt(r, portion)
+		nav, err = priceUnpricedAsset(ctx, r, k, vault, assetDenom)
 		if err != nil {
-			return math.Int{}, math.Int{}, fmt.Errorf("failed to sample source amount for first settlement: %w", err)
+			return math.Int{}, math.Int{}, err
 		}
-		return sourceAmount, math.NewInt(int64(r.Intn(1_000) + 1)), nil
 	}
 
 	gcd := new(big.Int).GCD(nil, nil, nav.Price.Amount.BigInt(), nav.Volume.BigInt())
@@ -1397,6 +1450,32 @@ func settlementAmounts(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, vault *ty
 		return math.Int{}, math.Int{}, fmt.Errorf("failed to sample settlement multiple: %w", err)
 	}
 	return sourceUnit.Mul(multiple), targetUnit.Mul(multiple), nil
+}
+
+// priceUnpricedAsset gives an external asset denom the vault has never priced an internal
+// NAV entry, signed by the vault's NAV authority. It mirrors the operator flow the
+// settlement guardrail requires: the NAV authority prices a denom the vault does not hold
+// yet, and only then can the asset manager settle a trade against that price. The stored
+// entry is read back so callers derive the leg amounts from the volume and price actually
+// recorded.
+func priceUnpricedAsset(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, vault *types.VaultAccount, assetDenom string) (types.VaultNAV, error) {
+	msg := &types.MsgUpdateVaultNAVRequest{
+		Signer:       vault.GetNAVAuthority(),
+		VaultAddress: vault.GetAddress().String(),
+		Denom:        assetDenom,
+		Price:        sdk.NewCoin(vault.UnderlyingAsset, math.NewInt(int64(r.Intn(1_000)+1))),
+		Volume:       math.NewInt(int64(r.Intn(1_000) + 1)),
+		Source:       "simulation",
+	}
+	if _, err := keeper.NewMsgServer(&k).UpdateVaultNAV(ctx, msg); err != nil {
+		return types.VaultNAV{}, fmt.Errorf("failed to price asset denom %q before settlement: %w", assetDenom, err)
+	}
+
+	nav, err := k.GetVaultNAV(ctx, vault.GetAddress(), assetDenom)
+	if err != nil {
+		return types.VaultNAV{}, fmt.Errorf("failed to read back internal NAV for denom %q: %w", assetDenom, err)
+	}
+	return nav, nil
 }
 
 // stagePayment creates a pending exchange payment targeting the vault, drawing the source leg

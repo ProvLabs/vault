@@ -55,6 +55,7 @@ var AllRequestMsgs = []sdk.Msg{
 	(*MsgUpdateMaxSwapInValueRequest)(nil),
 	(*MsgUpdateMaxSwapOutValueRequest)(nil),
 	(*MsgUpdateVaultNAVRequest)(nil),
+	(*MsgRemoveVaultNAVRequest)(nil),
 	(*MsgUpdateNAVAuthorityRequest)(nil),
 	(*MsgAcceptAssetRequest)(nil),
 	(*MsgRejectAssetRequest)(nil),
@@ -563,6 +564,22 @@ func (m MsgUpdateVaultNAVRequest) ValidateBasic() error {
 	}
 	if len(m.Source) > MaxNAVSourceLength {
 		return fmt.Errorf("source too long (expected <= %d, actual: %d)", MaxNAVSourceLength, len(m.Source))
+	}
+	return nil
+}
+
+// ValidateBasic performs stateless validation on MsgRemoveVaultNAVRequest. Whether
+// the entry exists, and whether the vault has stopped holding the denom, are stateful
+// and enforced by the keeper.
+func (m MsgRemoveVaultNAVRequest) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(m.Signer); err != nil {
+		return fmt.Errorf("invalid signer address: %q: %w", m.Signer, err)
+	}
+	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
+		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	if err := sdk.ValidateDenom(m.Denom); err != nil {
+		return fmt.Errorf("invalid denom: %q: %w", m.Denom, err)
 	}
 	return nil
 }

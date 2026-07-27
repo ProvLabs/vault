@@ -635,12 +635,17 @@ func (s *TestSuite) TestVaultGenesis_RoundTripsEveryNAVDenomSetVaultNAVAccepts()
 				},
 			}
 
-			if tt.registerMarker {
-				s.requireSimpleMarker(tt.navDenom)
-			} else {
+			arrangeMarkerRegistration := func() {
+				if tt.registerMarker {
+					s.requireSimpleMarker(tt.navDenom)
+					return
+				}
 				_, markerErr := s.simApp.MarkerKeeper.GetMarkerByDenom(s.ctx, tt.navDenom)
 				s.Require().Error(markerErr, "denom %s must not be a registered marker for this case to be meaningful", tt.navDenom)
 			}
+
+			s.SetupTest()
+			arrangeMarkerRegistration()
 
 			genesis := buildSingleVaultGenesisState(tt.shareDenom, tt.underlying, s.adminAddr.String(), []types.VaultNAVEntry{entry})
 			s.Require().NotPanics(func() { s.k.InitGenesis(s.ctx, genesis) },
@@ -653,8 +658,16 @@ func (s *TestSuite) TestVaultGenesis_RoundTripsEveryNAVDenomSetVaultNAVAccepts()
 			exported := s.k.ExportGenesis(s.ctx)
 			s.Assert().Contains(exported.Navs, entry, "exported genesis should carry the NAV entry for denom %s", tt.navDenom)
 			s.Require().NoError(exported.Validate(), "exported genesis should pass stateless validation with a NAV entry for denom %s", tt.navDenom)
+
+			s.SetupTest()
+			arrangeMarkerRegistration()
+
 			s.Require().NotPanics(func() { s.k.InitGenesis(s.ctx, exported) },
-				"re-importing the exported genesis should succeed for denom %s", tt.navDenom)
+				"importing the exported genesis into a fresh chain should succeed for denom %s", tt.navDenom)
+
+			restored, err := s.k.GetVaultNAV(s.ctx, vaultAddr, tt.navDenom)
+			s.Require().NoError(err, "NAV entry for denom %s should be readable after a fresh chain import", tt.navDenom)
+			s.Assert().Equal(entry.Nav, restored, "NAV entry for denom %s should survive the export/import round trip intact", tt.navDenom)
 		})
 	}
 }

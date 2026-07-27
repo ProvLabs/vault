@@ -515,10 +515,12 @@ func (k Keeper) CalculateVaultTotalAssets(ctx sdk.Context, vault *types.VaultAcc
 // handleVaultInterestTimeouts checks vaults with expired interest periods and reconciles or disables them.
 // It uses a safe "collect-then-mutate" pattern to comply with the SDK iterator contract.
 // At most limit due entries are visited per block; the remainder stays queued for later blocks.
+// Paused vaults are dequeued rather than skipped so they cannot hold the front of the queue.
 func (k Keeper) handleVaultInterestTimeouts(ctx sdk.Context, limit int) error {
 	now := ctx.BlockTime().Unix()
 
 	var keysToProcess []collections.Pair[uint64, sdk.AccAddress]
+	var pausedKeys []collections.Pair[uint64, sdk.AccAddress]
 	var depleted []*types.VaultAccount
 
 	visited := 0
@@ -529,6 +531,7 @@ func (k Keeper) handleVaultInterestTimeouts(ctx sdk.Context, limit int) error {
 		visited++
 		vault, ok := k.tryGetVault(ctx, addr)
 		if ok && vault.Paused {
+			pausedKeys = append(pausedKeys, collections.Join(timeout, addr))
 			return false, nil
 		}
 		keysToProcess = append(keysToProcess, collections.Join(timeout, addr))
@@ -536,6 +539,14 @@ func (k Keeper) handleVaultInterestTimeouts(ctx sdk.Context, limit int) error {
 	})
 	if err != nil {
 		return fmt.Errorf("walk failed: %w", err)
+	}
+
+	for _, key := range pausedKeys {
+		timeoutUnix := int64(key.K1()) //nolint:gosec // G115: queue key is a bounded unix-second timestamp.
+		addr := key.K2()
+		if err := k.PayoutTimeoutQueue.Dequeue(ctx, timeoutUnix, addr); err != nil {
+			k.getLogger(ctx).Error("failed to dequeue paused vault from payout timeout queue", "vault", addr.String(), "err", err)
+		}
 	}
 
 	for _, key := range keysToProcess {
@@ -632,8 +643,10 @@ func (k Keeper) tryGetVault(ctx sdk.Context, addr sdk.AccAddress) (*types.VaultA
 // It first collects keys for non-paused vaults, visiting at most limit entries per block and
 // leaving the remainder in the set for later blocks. It then iterates the collected keys,
 // removing each from the set before partitioning them into payable vs depleted groups.
+// Paused vaults are removed from the set rather than skipped so they cannot consume the budget.
 func (k Keeper) handleReconciledVaults(ctx sdk.Context, limit int) error {
 	var keysToProcess []sdk.AccAddress
+	var pausedKeys []sdk.AccAddress
 	var vaultsToProcess []*types.VaultAccount
 
 	visited := 0
@@ -644,6 +657,7 @@ func (k Keeper) handleReconciledVaults(ctx sdk.Context, limit int) error {
 		visited++
 		v, ok := k.tryGetVault(ctx, addr)
 		if ok && v.Paused {
+			pausedKeys = append(pausedKeys, addr)
 			return false, nil
 		}
 		keysToProcess = append(keysToProcess, addr)
@@ -651,6 +665,12 @@ func (k Keeper) handleReconciledVaults(ctx sdk.Context, limit int) error {
 	})
 	if err != nil {
 		return fmt.Errorf("walk failed: %w", err)
+	}
+
+	for _, addr := range pausedKeys {
+		if err := k.PayoutVerificationSet.Remove(ctx, addr); err != nil {
+			k.getLogger(ctx).Error("failed to remove paused vault from payout verification set", "vault", addr.String(), "err", err)
+		}
 	}
 
 	for _, addr := range keysToProcess {
@@ -714,10 +734,12 @@ func (k Keeper) handleDepletedVaults(ctx sdk.Context, failedPayouts []*types.Vau
 // handleVaultFeeTimeouts checks vaults with expired fee periods and reconciles them.
 // It uses a safe "collect-then-mutate" pattern to comply with the SDK iterator contract.
 // At most limit due entries are visited per block; the remainder stays queued for later blocks.
+// Paused vaults are dequeued rather than skipped so they cannot hold the front of the queue.
 func (k Keeper) handleVaultFeeTimeouts(ctx sdk.Context, limit int) error {
 	now := ctx.BlockTime().Unix()
 
 	var keysToProcess []collections.Pair[uint64, sdk.AccAddress]
+	var pausedKeys []collections.Pair[uint64, sdk.AccAddress]
 
 	visited := 0
 	err := k.FeeTimeoutQueue.WalkDue(ctx, now, func(timeout uint64, addr sdk.AccAddress) (bool, error) {
@@ -727,6 +749,7 @@ func (k Keeper) handleVaultFeeTimeouts(ctx sdk.Context, limit int) error {
 		visited++
 		vault, ok := k.tryGetVault(ctx, addr)
 		if ok && vault.Paused {
+			pausedKeys = append(pausedKeys, collections.Join(timeout, addr))
 			return false, nil
 		}
 		keysToProcess = append(keysToProcess, collections.Join(timeout, addr))
@@ -734,6 +757,14 @@ func (k Keeper) handleVaultFeeTimeouts(ctx sdk.Context, limit int) error {
 	})
 	if err != nil {
 		return fmt.Errorf("walk failed: %w", err)
+	}
+
+	for _, key := range pausedKeys {
+		timeoutUnix := int64(key.K1()) //nolint:gosec // G115: queue key is a bounded unix-second timestamp.
+		addr := key.K2()
+		if err := k.FeeTimeoutQueue.Dequeue(ctx, timeoutUnix, addr); err != nil {
+			k.getLogger(ctx).Error("failed to dequeue paused vault from fee timeout queue", "vault", addr.String(), "err", err)
+		}
 	}
 
 	for _, key := range keysToProcess {

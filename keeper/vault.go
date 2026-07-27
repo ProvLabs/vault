@@ -514,6 +514,11 @@ func (k *Keeper) autoPauseVault(ctx sdk.Context, vault *types.VaultAccount, reas
 	}
 
 	k.applyPausedState(ctx, vault, reason, sdk.Coin{Denom: vault.UnderlyingAsset, Amount: tvv})
+
+	if err := k.haltVaultAccrual(ctx, vault); err != nil {
+		k.getLogger(ctx).Error("failed to halt vault accrual during auto-pause", "vault_address", vault.GetAddress().String(), "error", err)
+	}
+
 	k.AuthKeeper.SetAccount(ctx, vault) // Updating via SetAccount to skip validation since auto-pausing is triggered by invalid state
 
 	k.emitEvent(ctx, types.NewEventVaultPaused(vault.GetAddress().String(), vault.GetAddress().String(), reason, vault.PausedBalance, true, ""))
@@ -528,7 +533,8 @@ func (k *Keeper) autoPauseVault(ctx sdk.Context, vault *types.VaultAccount, reas
 // failure so the resulting inconsistency saved to state is auditable. Every tolerated
 // failure is joined and surfaced via EventVaultPaused.forced_error. It shares
 // applyPausedState with autoPauseVault so both emergency pause paths perform an
-// identical in-memory paused-state transition.
+// identical in-memory paused-state transition, and calls haltVaultAccrual so the frozen
+// vault holds no reconciliation queue entries.
 func (k *Keeper) forcePauseVault(ctx sdk.Context, vault *types.VaultAccount, authority, reason string) {
 	var forcedErrors []string
 
@@ -553,6 +559,15 @@ func (k *Keeper) forcePauseVault(ctx sdk.Context, vault *types.VaultAccount, aut
 	}
 
 	k.applyPausedState(ctx, vault, reason, sdk.NewCoin(vault.UnderlyingAsset, tvv))
+
+	if err := k.haltVaultAccrual(ctx, vault); err != nil {
+		forcedErrors = append(forcedErrors, fmt.Sprintf("halt accrual failed: %v", err))
+		k.getLogger(ctx).Error(
+			"failed to halt vault accrual during forced pause; queue entries may remain",
+			"vault", vault.GetAddress().String(),
+			"err", err,
+		)
+	}
 
 	if err := k.SetVaultAccount(ctx, vault); err != nil {
 		forcedErrors = append(forcedErrors, fmt.Sprintf("set vault account failed: %v", err))

@@ -143,6 +143,28 @@ func (s *TestSuite) assertInPayoutVerificationQueue(vaultAddr sdk.AccAddress, sh
 	s.Assert().Equal(shouldContain, isInQueue, "vault should be enqueued in payout verification queue at expected period start")
 }
 
+// assertInReconciliationQueues asserts whether a vault is present in the payout timeout queue,
+// the fee timeout queue, and the payout verification set, matching the expectation flag.
+func (s *TestSuite) assertInReconciliationQueues(vaultAddr sdk.AccAddress, shouldContain bool) {
+	payoutQueued := false
+	err := s.k.PayoutTimeoutQueue.Walk(s.ctx, func(_ uint64, addr sdk.AccAddress) (bool, error) {
+		payoutQueued = payoutQueued || addr.Equals(vaultAddr)
+		return false, nil
+	})
+	s.Require().NoError(err, "walking the payout timeout queue should not error")
+	s.Assert().Equal(shouldContain, payoutQueued, "payout timeout queue membership for vault %s", vaultAddr)
+
+	feeQueued := false
+	err = s.k.FeeTimeoutQueue.Walk(s.ctx, func(_ uint64, addr sdk.AccAddress) (bool, error) {
+		feeQueued = feeQueued || addr.Equals(vaultAddr)
+		return false, nil
+	})
+	s.Require().NoError(err, "walking the fee timeout queue should not error")
+	s.Assert().Equal(shouldContain, feeQueued, "fee timeout queue membership for vault %s", vaultAddr)
+
+	s.assertInPayoutVerificationQueue(vaultAddr, shouldContain)
+}
+
 // countDuePayoutTimeouts returns the number of PayoutTimeoutQueue entries due at or before now.
 func (s *TestSuite) countDuePayoutTimeouts(now int64) int {
 	count := 0

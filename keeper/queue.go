@@ -109,6 +109,38 @@ func (k Keeper) SafeEnqueueFeeTimeout(ctx sdk.Context, vault *types.VaultAccount
 	return nil
 }
 
+// haltVaultAccrual removes a vault from the payout timeout queue, the fee timeout queue, and the
+// payout verification set, and clears its interest and fee accrual periods. Queue processors skip
+// paused vaults, so an entry left behind would consume the per-block visit budget forever. Both
+// periods are re-armed on unpause, so the paused span accrues no interest and no AUM fees.
+//
+// Like applyPausedState, this does not persist the account; the caller chooses SetVaultAccount
+// (validated) or SetAccount (validation-skipped).
+func (k Keeper) haltVaultAccrual(ctx sdk.Context, vault *types.VaultAccount) error {
+	vaultAddr := vault.GetAddress()
+	cacheCtx, write := ctx.CacheContext()
+
+	if err := k.PayoutTimeoutQueue.RemoveAllForVault(cacheCtx, vaultAddr); err != nil {
+		return fmt.Errorf("failed to remove payout timeout entries for vault %s: %w", vaultAddr, err)
+	}
+
+	if err := k.FeeTimeoutQueue.RemoveAllForVault(cacheCtx, vaultAddr); err != nil {
+		return fmt.Errorf("failed to remove fee timeout entries for vault %s: %w", vaultAddr, err)
+	}
+
+	if err := k.PayoutVerificationSet.Remove(cacheCtx, vaultAddr); err != nil {
+		return fmt.Errorf("failed to remove payout verification entry for vault %s: %w", vaultAddr, err)
+	}
+
+	write()
+
+	vault.PeriodStart = 0
+	vault.PeriodTimeout = 0
+	vault.FeePeriodStart = 0
+	vault.FeePeriodTimeout = 0
+	return nil
+}
+
 // ReschedulePayoutTimeout updates a vault's payout timeout to the next window (now + AutoReconcileTimeout)
 // without resetting the PeriodStart. This is used for transient reconciliation failures to
 // preserve accrued interest while preventing block-to-block retry loops.

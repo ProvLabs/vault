@@ -291,6 +291,8 @@ By default the pause is **strict**: it reconciles outstanding interest and fees 
 
 Setting `force = true` makes the pause an **emergency control**: a reconcile or valuation failure is logged and tolerated rather than blocking the freeze. The frozen `PausedBalance` is the net TVV when the vault can be valued, or zero when the valuation itself is what failed, so it may be approximate. Persistence is also best-effort: the handler first writes the paused account with validation, and if that validation fails it falls back to writing without validation so an already-inconsistent vault can still be frozen. Every tolerated failure (reconcile, valuation, and persistence) is recorded on `EventVaultPaused.forced_error`.
 
+Both paths remove the vault from the `PayoutTimeoutQueue`, the `VaultFeeTimeoutQueue`, and the `PayoutVerificationSet`, and clear its interest and fee period starts, so a paused vault holds no queue entries and accrues neither interest nor AUM fees while frozen.
+
 * **Request:** `MsgPauseVaultRequest { authority, vault_address, reason, force }`
 * **Response:** `MsgPauseVaultResponse {}`
 
@@ -299,6 +301,8 @@ Setting `force = true` makes the pause an **emergency control**: a reconcile or 
 ## UnpauseVault
 
 Admin or Asset Manager. Resumes a paused vault, clears paused balance, and recalculates NAV.
+
+It also re-arms what pausing cleared: the vault is added back to the `PayoutVerificationSet` and a fresh fee timeout is enqueued, with both period starts set to the unpause block time so the paused span is never charged interest or AUM fees.
 
 * **Request:** `MsgUnpauseVaultRequest { authority, vault_address }`
 * **Response:** `MsgUnpauseVaultResponse {}`

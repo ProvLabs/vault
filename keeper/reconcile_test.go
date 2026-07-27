@@ -526,9 +526,7 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 	tests := []struct {
 		name           string
 		setup          func()
-		checkAddr      sdk.AccAddress
-		expectExists   bool
-		expectDeleted  bool
+		postCheck      func()
 		expectRate     string
 		expectedEvents sdk.Events
 	}{
@@ -554,10 +552,7 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 				s.Require().NoError(s.k.PayoutTimeoutQueue.Enqueue(s.ctx, testBlockTime.Unix(), vault.GetAddress()), "happy path: enqueuing payout timeout should not error")
 				s.ctx = s.ctx.WithBlockTime(testBlockTime).WithEventManager(sdk.NewEventManager())
 			},
-			checkAddr:     vaultAddr,
-			expectExists:  true,
-			expectDeleted: false,
-			expectRate:    "0.25",
+			expectRate: "0.25",
 			expectedEvents: func() sdk.Events {
 				markerAddr := markertypes.MustGetMarkerAddress(shareDenom)
 				evs := sdk.Events{
@@ -609,10 +604,7 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 				s.Require().NoError(s.k.PayoutTimeoutQueue.Enqueue(s.ctx, testBlockTime.Unix(), vault.GetAddress()), "vault cannot pay: enqueuing payout timeout should not error")
 				s.ctx = s.ctx.WithBlockTime(testBlockTime).WithEventManager(sdk.NewEventManager())
 			},
-			checkAddr:     vaultAddr,
-			expectExists:  false,
-			expectDeleted: true,
-			expectRate:    types.ZeroInterestRate,
+			expectRate: types.ZeroInterestRate,
 			expectedEvents: sdk.Events{
 				sdk.NewEvent("provlabs.vault.v1.EventVaultInterestChange",
 					sdk.NewAttribute("current_rate", types.ZeroInterestRate),
@@ -622,7 +614,7 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 			},
 		},
 		{
-			name: "paused vault is skipped and remains in queue",
+			name: "paused vault is not reconciled and is dequeued",
 			setup: func() {
 				s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
 				_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
@@ -638,9 +630,9 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 				s.Require().NoError(s.k.PayoutTimeoutQueue.Enqueue(s.ctx, testBlockTime.Unix(), vault.GetAddress()), "paused vault: enqueuing payout timeout should not error")
 				s.ctx = s.ctx.WithBlockTime(testBlockTime).WithEventManager(sdk.NewEventManager())
 			},
-			checkAddr:      vaultAddr,
-			expectExists:   true,
-			expectDeleted:  false,
+			postCheck: func() {
+				s.Assert().Equal(0, s.countDuePayoutTimeouts(testBlockTime.Unix()), "paused vault should be dequeued from the payout timeout queue")
+			},
 			expectedEvents: sdk.Events{},
 		},
 		{
@@ -650,10 +642,6 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 				s.Require().NoError(s.k.PayoutTimeoutQueue.Enqueue(s.ctx, testBlockTime.Unix(), markerAddr), "non-vault: enqueuing payout timeout should not error")
 				s.ctx = s.ctx.WithBlockTime(testBlockTime).WithEventManager(sdk.NewEventManager())
 			},
-			checkAddr:      markerAddr,
-			expectExists:   true,
-			expectDeleted:  false,
-			expectRate:     "",
 			expectedEvents: sdk.Events{},
 		},
 	}
@@ -675,6 +663,9 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 				normalizeEvents(em.Events()),
 				"test case %s: beginblocker events mismatch", tc.name,
 			)
+			if tc.postCheck != nil {
+				tc.postCheck()
+			}
 		})
 	}
 }
@@ -769,14 +760,14 @@ func (s *TestSuite) TestKeeper_HandleReconciledVaults() {
 			},
 		},
 		{
-			name: "paused vault is skipped",
+			name: "paused vault is not reconciled and is removed from the verification set",
 			setup: func() {
 				vault := createVaultWithInterest(s, v1, "0.1", testBlockTime.Unix(), testBlockTime.Unix(), true, true)
 				vault.Paused = true
 				s.k.AuthKeeper.SetAccount(s.ctx, vault)
 			},
 			postCheck: func() {
-				s.assertInPayoutVerificationQueue(v1.vaultAddr, true)
+				s.assertInPayoutVerificationQueue(v1.vaultAddr, false)
 			},
 			expectErr:      false,
 			expectedEvents: sdk.Events{},
@@ -2493,40 +2484,6 @@ func (s *TestSuite) TestReconcileVault_BootstrapFeePeriod() {
 	s.Require().Equal(testBlockTime.Unix(), v.FeePeriodStart, "FeePeriodStart should be set to current block time")
 }
 
-// createVaultWithDueInterestTimeout creates a funded vault with a due PayoutTimeoutQueue
-// entry at dueTime, optionally paused, for exercising the per-block visit budget.
-func (s *TestSuite) createVaultWithDueInterestTimeout(info VaultInfo, dueTime int64, paused bool) {
-	s.requireAddFinalizeAndActivateMarker(info.underlying, s.adminAddr)
-	_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
-		Admin:           s.adminAddr.String(),
-		ShareDenom:      info.shareDenom,
-		UnderlyingAsset: info.underlying.Denom,
-	})
-	s.Require().NoError(err, "CreateVault should not error for share denom %s", info.shareDenom)
-
-	vault, err := s.k.GetVault(s.ctx, info.vaultAddr)
-	s.Require().NoError(err, "GetVault should not error for vault %s", info.vaultAddr)
-	vault.CurrentInterestRate = "0.1"
-	vault.DesiredInterestRate = "0.1"
-	vault.PeriodStart = dueTime
-	vault.PeriodTimeout = dueTime
-	vault.Paused = paused
-	s.k.AuthKeeper.SetAccount(s.ctx, vault)
-
-	s.Require().NoError(
-		FundAccount(s.ctx, s.simApp.BankKeeper, info.vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(info.underlying.Denom, 1_000_000))),
-		"funding reserves should not error for vault %s", info.vaultAddr,
-	)
-	s.Require().NoError(
-		FundAccount(s.ctx, s.simApp.BankKeeper, markertypes.MustGetMarkerAddress(info.shareDenom), sdk.NewCoins(info.underlying)),
-		"funding principal should not error for marker %s", info.shareDenom,
-	)
-	s.Require().NoError(
-		s.k.PayoutTimeoutQueue.Enqueue(s.ctx, dueTime, info.vaultAddr),
-		"enqueuing due payout timeout should not error for vault %s", info.vaultAddr,
-	)
-}
-
 func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts_PerBlockVisitBudget() {
 	testBlockTime := time.Now().UTC()
 	dueTime := testBlockTime.Add(-1 * time.Hour).Unix()
@@ -2574,7 +2531,7 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts_PerBlockVisitBudget()
 	}
 }
 
-func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts_PausedVaultsConsumeVisitBudget() {
+func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts_PausedVaultsDoNotStarveActiveVaults() {
 	testBlockTime := time.Now().UTC()
 	pausedDueTime := testBlockTime.Add(-2 * time.Hour).Unix()
 	activeDueTime := testBlockTime.Add(-1 * time.Hour).Unix()
@@ -2582,19 +2539,19 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts_PausedVaultsConsumeVi
 	activeInfo := NewVaultInfo(3)
 
 	tests := []struct {
-		name        string
-		limit       int
-		expectedDue int
+		name                string
+		limit               int
+		expectedDuePerBlock []int
 	}{
 		{
-			name:        "budget filled by paused vaults at the queue front starves the active vault",
-			limit:       2,
-			expectedDue: 3,
+			name:                "budget filled by the paused front dequeues it and the active vault is served the next block",
+			limit:               2,
+			expectedDuePerBlock: []int{1, 0},
 		},
 		{
-			name:        "budget larger than the paused front reaches and processes the active vault",
-			limit:       3,
-			expectedDue: 2,
+			name:                "budget larger than the paused front dequeues it and serves the active vault in the same block",
+			limit:               3,
+			expectedDuePerBlock: []int{0, 0},
 		},
 	}
 
@@ -2607,12 +2564,14 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts_PausedVaultsConsumeVi
 			}
 			s.createVaultWithDueInterestTimeout(activeInfo, activeDueTime, false)
 
-			err := s.k.TestAccessor_handleVaultInterestTimeouts(s.T(), s.ctx, tc.limit)
-			s.Require().NoError(err, "handleVaultInterestTimeouts should not error with limit %d", tc.limit)
-			s.Require().Equal(
-				tc.expectedDue, s.countDuePayoutTimeouts(testBlockTime.Unix()),
-				"due backlog mismatch with limit %d: paused entries stay queued and count against the budget", tc.limit,
-			)
+			for block, expectedDue := range tc.expectedDuePerBlock {
+				err := s.k.TestAccessor_handleVaultInterestTimeouts(s.T(), s.ctx, tc.limit)
+				s.Require().NoError(err, "handleVaultInterestTimeouts should not error on pass %d with limit %d", block+1, tc.limit)
+				s.Require().Equal(
+					expectedDue, s.countDuePayoutTimeouts(testBlockTime.Unix()),
+					"due backlog mismatch after pass %d with limit %d: paused entries must be dequeued instead of starving the active vault", block+1, tc.limit,
+				)
+			}
 		})
 	}
 }
@@ -2620,16 +2579,6 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts_PausedVaultsConsumeVi
 func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts_PerBlockVisitBudget() {
 	underlyingDenom := "underlying"
 	underlying := sdk.NewInt64Coin(underlyingDenom, 1_000_000_000)
-
-	enqueueDueFeeTimeout := func(shareDenom string, dueTime int64) {
-		vault := s.CreateVaultWithParams(shareDenom, underlyingDenom)
-		s.SetVaultRatesAndPeriod(vault, "0.0", "0.0", dueTime, dueTime)
-		s.FundMarker(shareDenom, sdk.NewCoins(underlying))
-		s.Require().NoError(
-			s.k.FeeTimeoutQueue.Enqueue(s.ctx, dueTime, vault.GetAddress()),
-			"enqueuing due fee timeout should not error for vault %s", vault.GetAddress(),
-		)
-	}
 
 	tests := []struct {
 		name                string
@@ -2661,7 +2610,7 @@ func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts_PerBlockVisitBudget() {
 
 			s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
 			for i := 1; i <= 3; i++ {
-				enqueueDueFeeTimeout(fmt.Sprintf("feebudgetshares%d", i), dueTime)
+				s.createVaultWithDueFeeTimeout(fmt.Sprintf("feebudgetshares%d", i), underlyingDenom, dueTime, false)
 			}
 
 			for block, expectedDue := range tc.expectedDuePerBlock {
@@ -2670,6 +2619,51 @@ func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts_PerBlockVisitBudget() {
 				s.Require().Equal(
 					expectedDue, s.countDueFeeTimeouts(now.Unix()),
 					"due fee timeout backlog mismatch after pass %d with limit %d", block+1, tc.limit,
+				)
+			}
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts_PausedVaultsDoNotStarveActiveVaults() {
+	underlyingDenom := "underlying"
+	underlying := sdk.NewInt64Coin(underlyingDenom, 1_000_000_000)
+
+	tests := []struct {
+		name                string
+		limit               int
+		expectedDuePerBlock []int
+	}{
+		{
+			name:                "budget filled by the paused front dequeues it and the active vault is served the next block",
+			limit:               2,
+			expectedDuePerBlock: []int{1, 0},
+		},
+		{
+			name:                "budget larger than the paused front dequeues it and serves the active vault in the same block",
+			limit:               3,
+			expectedDuePerBlock: []int{0, 0},
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			now := s.ctx.BlockTime()
+			pausedDueTime := now.Add(-60 * 24 * time.Hour).Unix()
+			activeDueTime := now.Add(-30 * 24 * time.Hour).Unix()
+
+			s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
+			s.createVaultWithDueFeeTimeout("feepausedshares1", underlyingDenom, pausedDueTime, true)
+			s.createVaultWithDueFeeTimeout("feepausedshares2", underlyingDenom, pausedDueTime, true)
+			s.createVaultWithDueFeeTimeout("feeactiveshares", underlyingDenom, activeDueTime, false)
+
+			for block, expectedDue := range tc.expectedDuePerBlock {
+				err := s.k.TestAccessor_handleVaultFeeTimeouts(s.T(), s.ctx, tc.limit)
+				s.Require().NoError(err, "handleVaultFeeTimeouts should not error on pass %d with limit %d", block+1, tc.limit)
+				s.Require().Equal(
+					expectedDue, s.countDueFeeTimeouts(now.Unix()),
+					"due fee backlog mismatch after pass %d with limit %d: paused entries must be dequeued instead of starving the active vault", block+1, tc.limit,
 				)
 			}
 		})

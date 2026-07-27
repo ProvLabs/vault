@@ -554,6 +554,8 @@ func (k msgServer) ExpeditePendingSwapOut(goCtx context.Context, msg *types.MsgE
 // and the account is persisted with validation first, falling back to an
 // unvalidated persist (also surfaced via forced_error) so an invalid-state vault
 // can still be frozen and the saved inconsistency remains auditable.
+//
+// Both paths call haltVaultAccrual so a paused vault holds no reconciliation queue entries.
 func (k msgServer) PauseVault(goCtx context.Context, msg *types.MsgPauseVaultRequest) (*types.MsgPauseVaultResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -588,6 +590,10 @@ func (k msgServer) PauseVault(goCtx context.Context, msg *types.MsgPauseVaultReq
 	vault.Paused = true
 	vault.PausedReason = msg.Reason
 
+	if err := k.haltVaultAccrual(ctx, vault); err != nil {
+		return nil, fmt.Errorf("failed to halt vault accrual before pausing: %w", err)
+	}
+
 	if err := k.UpdateInterestRates(ctx, vault, types.ZeroInterestRate, vault.DesiredInterestRate); err != nil {
 		return nil, fmt.Errorf("failed to update interest rates: %w", err)
 	}
@@ -602,6 +608,8 @@ func (k msgServer) PauseVault(goCtx context.Context, msg *types.MsgPauseVaultReq
 }
 
 // UnpauseVault unpauses a vault, re-enabling all user-facing operations after a NAV recalculation.
+// It re-arms what pausing cleared: payout verification for interest and the fee timeout for AUM
+// fees, both starting at the current block time so the paused span is never charged.
 func (k msgServer) UnpauseVault(goCtx context.Context, msg *types.MsgUnpauseVaultRequest) (*types.MsgUnpauseVaultResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -636,6 +644,10 @@ func (k msgServer) UnpauseVault(goCtx context.Context, msg *types.MsgUnpauseVaul
 
 	if err := k.SafeAddPayoutVerification(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to enqueue vault payout verification: %w", err)
+	}
+
+	if err := k.SafeEnqueueFeeTimeout(ctx, vault); err != nil {
+		return nil, fmt.Errorf("failed to enqueue vault fee timeout: %w", err)
 	}
 
 	k.emitEvent(ctx, types.NewEventVaultUnpaused(msg.VaultAddress, msg.Authority, sdk.NewCoin(vault.UnderlyingAsset, tvv)))

@@ -78,25 +78,3 @@ func (p *FeeTimeoutQueue) Walk(ctx sdk.Context, fn func(feeTimeout uint64, vault
 	}
 	return nil
 }
-
-// RemoveAllForVault deletes all fee timeout entries in the
-// FeeTimeoutQueue for the given vault address.
-func (p *FeeTimeoutQueue) RemoveAllForVault(ctx sdk.Context, vaultAddr sdk.AccAddress) error {
-	var keys []collections.Pair[uint64, sdk.AccAddress]
-
-	if err := p.keyset.Walk(ctx, nil, func(kv collections.Pair[uint64, sdk.AccAddress]) (bool, error) {
-		if kv.K2().Equals(vaultAddr) {
-			keys = append(keys, kv)
-		}
-		return false, nil
-	}); err != nil {
-		return fmt.Errorf("walk fee timeouts: %w", err)
-	}
-
-	for _, key := range keys {
-		if err := p.keyset.Remove(ctx, key); err != nil {
-			return fmt.Errorf("remove fee timeout: %w", err)
-		}
-	}
-	return nil
-}

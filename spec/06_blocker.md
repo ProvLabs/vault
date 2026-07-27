@@ -62,7 +62,7 @@ Processing model (safe “collect-then-mutate”):
    `MaxInterestTimeoutsPerBlock` (currently 100) entries per block; the remainder stays due
    for later blocks.
 
-   * Skip paused vaults (they count against the visit budget).
+   * Dequeue paused vaults without reconciling them (they count against the visit budget).
 2. **Dequeue** each collected `(timeout, vault)` before processing (prevents iterator invalidation).
 3. **For each vault**:
 
@@ -76,7 +76,9 @@ Processing model (safe “collect-then-mutate”):
    * For **reconciled** vaults → `SafeEnqueuePayoutTimeout` (starts new period and enqueues next timeout).
    * For **depleted** vaults → `handleDepletedVaults` (sets `current_rate = "0"`; interest disabled, desired preserved).
 
-**Skips paused vaults.** They remain in place until unpaused.
+**Never reconciles paused vaults.** Pausing already dequeues the vault; any entry still present
+(filed under another key, or a vault paused after the walk began) is dequeued on sight so it does not
+camp at the front of the queue. A failed dequeue is logged and the entry is retried on a later block.
 
 ### handleVaultFeeTimeouts
 
@@ -84,7 +86,8 @@ Reconciles the 15 bps AUM technology fee for vaults whose fee timeout has elapse
 
 1. **Collect due entries** from `VaultFeeTimeoutQueue` with `timeout <= now`, visiting at most
    `MaxFeeTimeoutsPerBlock` (currently 100) entries per block; the remainder stays due for
-   later blocks and paused vaults count against the budget.
+   later blocks. Paused vaults count against the budget and are dequeued without collecting a fee;
+   a failed dequeue is logged and retried on a later block.
 2. **Dequeue** each collected entry from the main context before processing to ensure it is not retried if a transient error occurs.
 3. **Attempt Atomic Reconciliation** (via `atomicallyReconcileFee` using `CacheContext`):
    - **PerformVaultFeeTransfer**:
@@ -129,7 +132,8 @@ To prevent a large queue from consuming excessive block time and memory, a maxim
 This advances vaults from the **verification set**:
 
 1. **Collect keys** from `PayoutVerificationSet`, visiting at most `MaxPayoutVerificationsPerBlock`
-   (currently 100) entries per block; skip paused vaults (they count against the visit budget).
+   (currently 100) entries per block; paused vaults are removed from the set without being processed
+   (they count against the visit budget), and a failed removal is logged and retried on a later block.
 2. **Remove** each from the set (before processing).
 3. **Partition** into:
 
@@ -196,7 +200,14 @@ This advances vaults from the **verification set**:
 
 * **BeginBlocker / EndBlocker** do not process paused vaults:
 
-  * Interest is **not** reconciled while paused; timeout entries remain in place until unpaused.
+  * Interest and AUM fees are **not** reconciled while paused. Pausing clears both period starts and
+    removes the vault from the `PayoutVerificationSet` and from the `PayoutTimeoutQueue` and
+    `VaultFeeTimeoutQueue` entries keyed by its recorded timeouts, so a paused vault normally holds no
+    queue entries and accrues nothing. Removal is keyed rather than scanned to keep pause
+    constant-time, so an entry filed under any other key survives until a blocker dequeues it. Forced
+    and automatic pauses tolerate a failed removal, logging it rather than aborting the pause.
+    Unpausing re-arms both: payout verification for interest and a fresh fee timeout, each starting at
+    the unpause block time, so the paused span is never charged.
   * Pending swap-outs that come due while paused are **dequeued and refunded** with
     `EventSwapOutRefunded{ reason = "vault_paused" }`; owners resubmit after unpause.
 * A paused vault freezes its value at the `PausedBalance` snapshot, so operations that would change that value are rejected:
@@ -231,7 +242,7 @@ Submit `MsgSwapOut` → capture `request_id` → watch for `Completed` or `Refun
 
 * **Collect-then-mutate** iteration for all queues/sets (prevents iterator invalidation).
 * **Per-block visit budgets** on every queue/set walk keep block execution time bounded regardless of backlog size.
-* **Dequeue before mutate** when processing due items; paused timeout/verification entries remain enqueued, while paused swap-out jobs are dequeued and refunded.
+* **Dequeue before mutate** when processing due items; paused vaults are dequeued at pause and again by the blockers if any entry survives, and paused swap-out jobs are dequeued and refunded.
 * **Reconcile before supply-affecting ops** (e.g., swap-out payout) to keep NAV and TVV consistent.
 * **Flooring** in conversions prevents over-distribution or share inflation.
 * **Auto-pause on critical errors** creates a safe dead-stop until an admin resolves the issue.

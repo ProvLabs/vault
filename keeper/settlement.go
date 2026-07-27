@@ -39,41 +39,34 @@ func (k *Keeper) returnToPrincipal(ctx sdk.Context, vault *types.VaultAccount, a
 	return k.BankKeeper.SendCoins(markertypes.WithBypass(ctx), vault.GetAddress(), vault.PrincipalMarkerAddress(), amt)
 }
 
-// applySettlementNAV records a settlement's price in the vault's internal NAV table:
-// the asset denom's entry is upserted with the single-sided settlement price
-// (paymentCoin per assetCoin.Amount units), sourced to the vault itself, and the
-// upserted price is published downstream to the marker module unless the asset is a
-// metadata value-owner denom (nft/<scope-id>), which cannot be a marker. When an outbound
-// settlement leaves the principal marker holding none of the asset denom, the
-// internal entry is removed so a stale price cannot linger for an asset the vault
-// no longer holds; the marker NAV is left as-is (publishing simply stops).
-func (k *Keeper) applySettlementNAV(ctx sdk.Context, vault *types.VaultAccount, assetCoin, paymentCoin sdk.Coin, direction, signer string) error {
-	nav := types.NewVaultNAV(assetCoin.Denom, paymentCoin, assetCoin.Amount, vault.Address)
-	if err := k.SetVaultNAV(ctx, vault, nav, signer); err != nil {
-		return fmt.Errorf("failed to update internal NAV from settlement: %w", err)
-	}
-	if !isMetadataDenom(assetCoin.Denom) {
-		if err := k.publishAssetNAVToMarker(ctx, vault, nav); err != nil {
-			return fmt.Errorf("failed to publish settlement NAV to marker: %w", err)
-		}
-	}
-
+// removeDrainedSettlementNAV drops the vault's internal NAV entry for an asset denom
+// that an outbound settlement has just emptied out of the principal marker, so a stale
+// price cannot linger for an asset the vault no longer holds. Reacquiring the denom
+// then requires a fresh price from the NAV authority. The published marker NAV is left
+// as-is (publishing simply stops).
+//
+// Settling never writes the internal NAV table. checkSettlementNAVGuardrail has already
+// proven the trade executed at exactly the price the NAV authority recorded, so a
+// settlement has no new price to contribute, and leaving the entry untouched keeps the
+// price attributed to the authority that set it rather than to the asset manager that
+// traded against it.
+func (k *Keeper) removeDrainedSettlementNAV(ctx sdk.Context, vault *types.VaultAccount, assetDenom, direction string) error {
 	if direction != types.AssetDirectionOutbound {
 		return nil
 	}
-	if !k.BankKeeper.GetBalance(ctx, vault.PrincipalMarkerAddress(), assetCoin.Denom).IsZero() {
+	if !k.BankKeeper.GetBalance(ctx, vault.PrincipalMarkerAddress(), assetDenom).IsZero() {
 		return nil
 	}
-	if err := k.RemoveVaultNAV(ctx, vault, assetCoin.Denom); err != nil {
-		return fmt.Errorf("failed to remove internal NAV for drained denom %q: %w", assetCoin.Denom, err)
+	if err := k.RemoveVaultNAV(ctx, vault, assetDenom, ""); err != nil {
+		return fmt.Errorf("failed to remove internal NAV for drained denom %q: %w", assetDenom, err)
 	}
 	return nil
 }
 
 // settlementLegCoins resolves a payment's legs into the single asset coin and the
 // single underlying-asset coin for the given settlement direction. The NAV guardrail
-// and upsert price exactly one asset coin against one payment coin, so the asset leg
-// with zero or multiple coins is rejected. A zero-priced settlement carries no coin on
+// prices exactly one asset coin against one payment coin, so the asset leg with zero
+// or multiple coins is rejected. A zero-priced settlement carries no coin on
 // the payment leg (the zero coin is stripped); an empty payment leg yields a zero coin
 // of underlyingDenom, but a payment leg carrying more than one coin is rejected.
 func settlementLegCoins(payment *exchange.Payment, direction, underlyingDenom string) (assetCoin, paymentCoin sdk.Coin, err error) {

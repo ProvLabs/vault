@@ -468,6 +468,21 @@ func (s *VaultSimTestSuite) TestSimulateMsgUpdateVaultNAV() {
 	s.Require().Len(futureOps, 0, "futureOperations")
 }
 
+func (s *VaultSimTestSuite) TestSimulateMsgRemoveVaultNAV() {
+	selected := s.accs[0]
+
+	err := simulation.CreateVault(s.ctx, s.app.VaultKeeper, s.app.AccountKeeper, s.app.BankKeeper, s.app.MarkerKeeper, "underlying2vx", "underlyingshare", selected, s.accs)
+	s.Require().NoError(err, "CreateVault")
+
+	op := simulation.SimulateMsgRemoveVaultNAV(*s.app.VaultKeeper)
+	opMsg, futureOps, err := op(s.random, s.app.BaseApp, s.ctx, s.accs, "")
+	s.Require().NoError(err, "SimulateMsgRemoveVaultNAV")
+	s.Require().True(opMsg.OK, "expected %s operation to be successful, but got: %s", opMsg.Name, opMsg.Comment)
+	s.Require().NotEmpty(opMsg.Name, "operationMsg.Name")
+	s.Require().NotEmpty(opMsg.Route, "operationMsg.Route")
+	s.Require().Len(futureOps, 0, "futureOperations")
+}
+
 func (s *VaultSimTestSuite) TestSimulateMsgUpdateNAVAuthority() {
 	selected := s.accs[0]
 

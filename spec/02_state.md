@@ -41,7 +41,7 @@ Each vault is an `x/auth` account implementing `VaultAccountI`. The canonical re
 - **Bridging controls:** `bridge_address` (the sole authorized external address) and `bridge_enabled` (feature gate)
 - **Asset Management:** optional `asset_manager` address with delegated authority; it is also the sole authority for P2P settlement (`AcceptAsset`/`RejectAsset`).
 - **AUM Fee State:** `fee_period_start`, `fee_period_timeout`, and `outstanding_aum_fee` (denominated in the underlying asset).
-- **NAV Authority:** optional `nav_authority` address authorized to mutate the vault's internal NAV table via `MsgUpdateVaultNAV`; the admin acts as NAV authority when unset.
+- **NAV Authority:** optional `nav_authority` address authorized to mutate the vault's internal NAV table via `MsgUpdateVaultNAV` and `MsgRemoveVaultNAV`; the admin acts as NAV authority when unset.
 
 `VaultAccount` enforces invariants (e.g., valid denoms, `payment_denom` empty or equal to the underlying asset, rate bounds, etc.) and provides helpers like `IsAcceptedDenom` and `ValidateAcceptedDenom`, which accept only the underlying asset.
 
@@ -93,8 +93,10 @@ A time-ordered queue scheduling when a vault should be revisited for **automatic
 Holds **withdrawal jobs** created by `SwapOut`. Jobs are processed after the vault’s `WithdrawalDelaySeconds` and include pointers to the vault and the original request.
 
 - **Prefix:** `VaultPendingSwapOutQueuePrefix` (3)  
-- **Key:** typically `(int64 dueTime, uint64 id)` to maintain time ordering  
-- **Value:** `types.PayoutJob` (wraps the `PendingSwapOut` request and metadata)
+- **Key:** `(int64 dueTime, uint64 id, sdk.AccAddress vault)` to maintain time ordering  
+- **Value:** `types.PendingSwapOut { owner, vault_address, shares, redeem_denom (deprecated), failure_count }`
+
+`dueTime` is when the request becomes eligible for processing, and it doubles as a retry-after: an attempt that fails and has to leave the request queued increments `failure_count` and re-keys the entry to a later `dueTime` so it cannot hold the front of the queue. See [Retry & Backoff](06_blocker.md#retry--backoff).
 
 ### Pending Swap-Out Sequence (prefix 4)
 
@@ -132,7 +134,9 @@ The address authorized to receive collected AUM technology fees.
 
 ### Internal NAV Table (prefix 11)
 
-Per-vault price entries for asset denoms the vault holds or settles. The vault module is the **sole source of truth** for these values; the valuation engine reads them for TVV/share pricing. Entries are written by the NAV authority (`MsgUpdateVaultNAV`) and by p2p settlements (`MsgAcceptAsset`), which also remove an entry when an outbound settlement drains the denom from the principal.
+Per-vault price entries for asset denoms the vault holds or is authorized to acquire. The vault module is the **sole source of truth** for these values; the valuation engine reads them for TVV/share pricing. Entries are written only by the NAV authority (`MsgUpdateVaultNAV`) and removed either by the authority (`MsgRemoveVaultNAV`, restricted to denoms the vault does not hold) or by an outbound `MsgAcceptAsset` that drains the denom from the principal. Settlement never writes a price.
+
+An entry may exist for a denom the vault does not hold: TVV values held balances against this table, so an unheld denom contributes nothing until the asset arrives at the principal marker.
 
 - **Prefix:** `NAVsKeyPrefix` (11)
 - **Key:** `(sdk.AccAddress vault, string denom)`

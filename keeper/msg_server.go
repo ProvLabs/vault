@@ -554,6 +554,8 @@ func (k msgServer) ExpeditePendingSwapOut(goCtx context.Context, msg *types.MsgE
 // and the account is persisted with validation first, falling back to an
 // unvalidated persist (also surfaced via forced_error) so an invalid-state vault
 // can still be frozen and the saved inconsistency remains auditable.
+//
+// Both paths call haltVaultAccrual so a paused vault holds no reconciliation queue entries.
 func (k msgServer) PauseVault(goCtx context.Context, msg *types.MsgPauseVaultRequest) (*types.MsgPauseVaultResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -588,6 +590,10 @@ func (k msgServer) PauseVault(goCtx context.Context, msg *types.MsgPauseVaultReq
 	vault.Paused = true
 	vault.PausedReason = msg.Reason
 
+	if err := k.haltVaultAccrual(ctx, vault); err != nil {
+		return nil, fmt.Errorf("failed to halt vault accrual before pausing: %w", err)
+	}
+
 	if err := k.UpdateInterestRates(ctx, vault, types.ZeroInterestRate, vault.DesiredInterestRate); err != nil {
 		return nil, fmt.Errorf("failed to update interest rates: %w", err)
 	}
@@ -602,6 +608,8 @@ func (k msgServer) PauseVault(goCtx context.Context, msg *types.MsgPauseVaultReq
 }
 
 // UnpauseVault unpauses a vault, re-enabling all user-facing operations after a NAV recalculation.
+// It re-arms what pausing cleared: payout verification for interest and the fee timeout for AUM
+// fees, both starting at the current block time so the paused span is never charged.
 func (k msgServer) UnpauseVault(goCtx context.Context, msg *types.MsgUnpauseVaultRequest) (*types.MsgUnpauseVaultResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -636,6 +644,10 @@ func (k msgServer) UnpauseVault(goCtx context.Context, msg *types.MsgUnpauseVaul
 
 	if err := k.SafeAddPayoutVerification(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to enqueue vault payout verification: %w", err)
+	}
+
+	if err := k.SafeEnqueueFeeTimeout(ctx, vault); err != nil {
+		return nil, fmt.Errorf("failed to enqueue vault fee timeout: %w", err)
 	}
 
 	k.emitEvent(ctx, types.NewEventVaultUnpaused(msg.VaultAddress, msg.Authority, sdk.NewCoin(vault.UnderlyingAsset, tvv)))
@@ -884,6 +896,44 @@ func (k msgServer) UpdateVaultNAV(goCtx context.Context, msg *types.MsgUpdateVau
 	return &types.MsgUpdateVaultNAVResponse{}, nil
 }
 
+// RemoveVaultNAV deletes a vault's internal NAV entry for a denom the vault does not
+// hold, revoking the authorization to acquire that denom at that price. Only the
+// vault's NAV authority is authorized to perform this operation.
+//
+// A denom still held at the principal marker cannot be removed: dropping its entry
+// would erase the held balance from the vault's value rather than restate it. Such an
+// asset is written down through UpdateVaultNAV, and the settlement path removes the
+// entry on its own once an outbound trade drains the denom.
+//
+// No reconcile is needed first: an unheld denom contributes nothing to total vault
+// value, so removing its entry cannot move the valuation basis.
+func (k msgServer) RemoveVaultNAV(goCtx context.Context, msg *types.MsgRemoveVaultNAVRequest) (*types.MsgRemoveVaultNAVResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	vaultAddr := sdk.MustAccAddressFromBech32(msg.VaultAddress)
+	vault, err := k.getVault(ctx, vaultAddr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get vault %s: %w", msg.VaultAddress, err)
+	}
+	if err := vault.ValidateNAVAuthority(msg.Signer); err != nil {
+		return nil, fmt.Errorf("failed to validate NAV authority: %w", err)
+	}
+	if vault.Paused {
+		return nil, fmt.Errorf("vault %s is paused: NAV cannot be removed while paused", msg.VaultAddress)
+	}
+
+	balance := k.BankKeeper.GetBalance(ctx, vault.PrincipalMarkerAddress(), msg.Denom)
+	if !balance.IsZero() {
+		return nil, fmt.Errorf("vault %s still holds %s: write a held asset down through UpdateVaultNAV instead of removing its NAV", msg.VaultAddress, balance)
+	}
+
+	if err := k.Keeper.RemoveVaultNAV(ctx, vault, msg.Denom, msg.Signer); err != nil {
+		return nil, fmt.Errorf("failed to remove vault NAV: %w", err)
+	}
+
+	return &types.MsgRemoveVaultNAVResponse{}, nil
+}
+
 // UpdateNAVAuthority rotates the address authorized to mutate a vault's internal
 // NAV table. Only the vault admin is authorized to perform this operation.
 func (k msgServer) UpdateNAVAuthority(goCtx context.Context, msg *types.MsgUpdateNAVAuthorityRequest) (*types.MsgUpdateNAVAuthorityResponse, error) {
@@ -983,7 +1033,7 @@ func (k msgServer) AcceptAsset(goCtx context.Context, msg *types.MsgAcceptAssetR
 
 	k.emitEvent(ctx, types.NewEventAssetAccepted(msg.VaultAddress, msg.Source, msg.ExternalId, payment.SourceAmount, payment.TargetAmount, direction))
 
-	if err := k.applySettlementNAV(ctx, vault, assetCoin, paymentCoin, direction, msg.Authority); err != nil {
+	if err := k.removeDrainedSettlementNAV(ctx, vault, assetCoin.Denom, direction); err != nil {
 		return nil, err
 	}
 

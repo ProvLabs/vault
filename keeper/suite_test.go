@@ -143,6 +143,75 @@ func (s *TestSuite) assertInPayoutVerificationQueue(vaultAddr sdk.AccAddress, sh
 	s.Assert().Equal(shouldContain, isInQueue, "vault should be enqueued in payout verification queue at expected period start")
 }
 
+// assertInReconciliationQueues asserts whether a vault is present in the payout timeout queue,
+// the fee timeout queue, and the payout verification set, matching the expectation flag.
+func (s *TestSuite) assertInReconciliationQueues(vaultAddr sdk.AccAddress, shouldContain bool) {
+	payoutQueued := false
+	err := s.k.PayoutTimeoutQueue.Walk(s.ctx, func(_ uint64, addr sdk.AccAddress) (bool, error) {
+		payoutQueued = payoutQueued || addr.Equals(vaultAddr)
+		return false, nil
+	})
+	s.Require().NoError(err, "walking the payout timeout queue should not error")
+	s.Assert().Equal(shouldContain, payoutQueued, "payout timeout queue membership for vault %s", vaultAddr)
+
+	feeQueued := false
+	err = s.k.FeeTimeoutQueue.Walk(s.ctx, func(_ uint64, addr sdk.AccAddress) (bool, error) {
+		feeQueued = feeQueued || addr.Equals(vaultAddr)
+		return false, nil
+	})
+	s.Require().NoError(err, "walking the fee timeout queue should not error")
+	s.Assert().Equal(shouldContain, feeQueued, "fee timeout queue membership for vault %s", vaultAddr)
+
+	s.assertInPayoutVerificationQueue(vaultAddr, shouldContain)
+}
+
+// createVaultWithDueInterestTimeout creates a funded vault with a due PayoutTimeoutQueue
+// entry at dueTime, optionally paused, for exercising the per-block visit budget.
+func (s *TestSuite) createVaultWithDueInterestTimeout(info VaultInfo, dueTime int64, paused bool) {
+	s.requireAddFinalizeAndActivateMarker(info.underlying, s.adminAddr)
+	_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+		Admin:           s.adminAddr.String(),
+		ShareDenom:      info.shareDenom,
+		UnderlyingAsset: info.underlying.Denom,
+	})
+	s.Require().NoError(err, "CreateVault should not error for share denom %s", info.shareDenom)
+
+	vault, err := s.k.GetVault(s.ctx, info.vaultAddr)
+	s.Require().NoError(err, "GetVault should not error for vault %s", info.vaultAddr)
+	vault.CurrentInterestRate = "0.1"
+	vault.DesiredInterestRate = "0.1"
+	vault.PeriodStart = dueTime
+	vault.PeriodTimeout = dueTime
+	vault.Paused = paused
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	s.Require().NoError(
+		FundAccount(s.ctx, s.simApp.BankKeeper, info.vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(info.underlying.Denom, 1_000_000))),
+		"funding reserves should not error for vault %s", info.vaultAddr,
+	)
+	s.Require().NoError(
+		FundAccount(s.ctx, s.simApp.BankKeeper, markertypes.MustGetMarkerAddress(info.shareDenom), sdk.NewCoins(info.underlying)),
+		"funding principal should not error for marker %s", info.shareDenom,
+	)
+	s.Require().NoError(
+		s.k.PayoutTimeoutQueue.Enqueue(s.ctx, dueTime, info.vaultAddr),
+		"enqueuing due payout timeout should not error for vault %s", info.vaultAddr,
+	)
+}
+
+// createVaultWithDueFeeTimeout creates a funded vault with a due FeeTimeoutQueue entry at
+// dueTime, optionally paused, for exercising the per-block visit budget.
+func (s *TestSuite) createVaultWithDueFeeTimeout(shareDenom, underlyingDenom string, dueTime int64, paused bool) {
+	vault := s.CreateVaultWithParams(shareDenom, underlyingDenom)
+	vault.Paused = paused
+	s.SetVaultRatesAndPeriod(vault, "0.0", "0.0", dueTime, dueTime)
+	s.FundMarker(shareDenom, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1_000_000_000)))
+	s.Require().NoError(
+		s.k.FeeTimeoutQueue.Enqueue(s.ctx, dueTime, vault.GetAddress()),
+		"enqueuing due fee timeout should not error for vault %s", vault.GetAddress(),
+	)
+}
+
 // countDuePayoutTimeouts returns the number of PayoutTimeoutQueue entries due at or before now.
 func (s *TestSuite) countDuePayoutTimeouts(now int64) int {
 	count := 0
@@ -664,10 +733,31 @@ func (s *TestSuite) enqueueDueSwapOut(underlyingDenom, shareDenom string, assets
 	return ownerAddr, *minted, id, req
 }
 
+// enqueueUnrefundableSwapOut enqueues an escrowed swap-out for a paused vault and then drains the
+// escrowed shares, so every refund attempt fails deterministically the way a deactivated share
+// marker or a revoked owner attribute would in production.
+func (s *TestSuite) enqueueUnrefundableSwapOut(underlyingDenom, shareDenom string, assets sdk.Coin, duePayoutTime int64) (sdk.AccAddress, sdk.Coin, uint64) {
+	ownerAddr, minted, reqID, _ := s.enqueueDueSwapOut(underlyingDenom, shareDenom, assets, duePayoutTime)
+	vaultAddr := types.GetVaultAddress(shareDenom)
+
+	vault, err := s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "should get vault for share denom %s", shareDenom)
+	vault.Paused = true
+	s.Require().NoError(s.k.SetVaultAccount(s.ctx, vault), "should pause vault for share denom %s", shareDenom)
+
+	s.Require().NoError(
+		s.k.BankKeeper.SendCoins(markertypes.WithBypass(s.ctx), vaultAddr, s.adminAddr, sdk.NewCoins(minted)),
+		"should drain escrowed shares for share denom %s to force the refund to fail", shareDenom,
+	)
+
+	return ownerAddr, minted, reqID
+}
+
 // assertSwapOutEntryPreservedAndPaused verifies the invariant that protects escrowed funds when a
-// swap-out hits a critical, unrecoverable failure: the pending request is still in the queue, the
-// vault is paused, the owner was not paid, and the escrowed shares remain on the vault account. This
-// is the state a fixed processSwapOutJobs must leave behind so the request can be settled after unpause.
+// swap-out hits its first critical, unrecoverable failure: the pending request is still in the queue
+// with the failure recorded, the vault is paused, the owner was not paid, and the escrowed shares
+// remain on the vault account. This is the state a fixed processSwapOutJobs must leave behind so the
+// request can be settled after unpause.
 func (s *TestSuite) assertSwapOutEntryPreservedAndPaused(reqID uint64, vaultAddr, ownerAddr sdk.AccAddress, escrowedShares sdk.Coin, underlyingDenom string) {
 	var entries []uint64
 	err := s.k.PendingSwapOutQueue.Walk(s.ctx, func(_ int64, id uint64, _ sdk.AccAddress, _ types.PendingSwapOut) (bool, error) {
@@ -676,6 +766,7 @@ func (s *TestSuite) assertSwapOutEntryPreservedAndPaused(reqID uint64, vaultAddr
 	})
 	s.Require().NoError(err, "walking the queue should not error")
 	s.Require().Equal([]uint64{reqID}, entries, "request %d must remain queued after a critical failure", reqID)
+	s.assertSwapOutRetryDeferred(reqID, 1)
 
 	vault, err := s.k.GetVault(s.ctx, vaultAddr)
 	s.Require().NoError(err, "should successfully get vault %s", vaultAddr)
@@ -684,6 +775,19 @@ func (s *TestSuite) assertSwapOutEntryPreservedAndPaused(reqID uint64, vaultAddr
 
 	s.assertBalance(ownerAddr, underlyingDenom, sdkmath.ZeroInt())
 	s.assertBalance(vaultAddr, escrowedShares.Denom, escrowedShares.Amount)
+}
+
+// assertSwapOutRetryDeferred asserts request reqID is still queued with the given failure count and
+// has been re-keyed to the retry time that count implies for the current block time.
+func (s *TestSuite) assertSwapOutRetryDeferred(reqID uint64, expectedFailureCount uint32) types.PendingSwapOut {
+	retryTime, req, err := s.k.PendingSwapOutQueue.GetByID(s.ctx, reqID)
+	s.Require().NoError(err, "should find preserved request %d in the queue", reqID)
+	s.Require().Equal(expectedFailureCount, req.FailureCount, "request %d should have recorded %d failed attempts", reqID, expectedFailureCount)
+
+	expectedRetryTime := s.ctx.BlockTime().Unix() + s.k.TestAccessor_swapOutRetryBackoff(expectedFailureCount)
+	s.Require().Equal(expectedRetryTime, retryTime, "request %d should be re-keyed to the retry time implied by its backoff", reqID)
+
+	return *req
 }
 
 // createMarkerMintCoinEvents builds the expected event sequence for minting

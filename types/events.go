@@ -22,6 +22,12 @@ const (
 )
 
 const (
+	RetryReasonDequeueFailure  = "dequeue_failure"
+	RetryReasonRefundFailure   = "refund_failure"
+	RetryReasonCriticalFailure = "critical_failure"
+)
+
+const (
 	// AssetDirectionInbound indicates an external asset moved into the vault in
 	// exchange for the vault's underlying asset (the underlying is the target leg).
 	AssetDirectionInbound = "inbound"
@@ -187,6 +193,20 @@ func NewEventSwapOutRefunded(vaultAddress, owner string, shares sdk.Coin, reques
 		Shares:       shares.String(),
 		RequestId:    requestID,
 		Reason:       reason,
+	}
+}
+
+// NewEventSwapOutRetryScheduled creates a new EventSwapOutRetryScheduled event, recording that a
+// pending swap out failed again and has been re-keyed to retryTime.
+func NewEventSwapOutRetryScheduled(vaultAddress, owner string, shares sdk.Coin, requestID uint64, reason string, failureCount uint32, retryTime int64) *EventSwapOutRetryScheduled {
+	return &EventSwapOutRetryScheduled{
+		VaultAddress: vaultAddress,
+		Owner:        owner,
+		Shares:       shares.String(),
+		RequestId:    requestID,
+		Reason:       reason,
+		FailureCount: failureCount,
+		RetryTime:    retryTime,
 	}
 }
 
@@ -378,13 +398,16 @@ func NewEventNAVUpdated(vaultAddress string, nav VaultNAV, signer string) *Event
 }
 
 // NewEventNAVRemoved creates a new EventNAVRemoved event from the last stored
-// VaultNAV entry for the denom before it was removed.
-func NewEventNAVRemoved(vaultAddress string, nav VaultNAV) *EventNAVRemoved {
+// VaultNAV entry for the denom before it was removed. signer is the NAV authority
+// address that removed the entry, and is empty when the protocol removed it, such
+// as an outbound settlement draining the denom.
+func NewEventNAVRemoved(vaultAddress string, nav VaultNAV, signer string) *EventNAVRemoved {
 	return &EventNAVRemoved{
 		VaultAddress: vaultAddress,
 		Denom:        nav.Denom,
 		LastPrice:    nav.Price.String(),
 		LastVolume:   nav.Volume.String(),
+		Signer:       signer,
 	}
 }
 

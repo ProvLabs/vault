@@ -177,7 +177,7 @@ func (k Keeper) ToUnderlyingAssetAmount(ctx sdk.Context, vault types.VaultAccoun
 //   - Sum the converted amounts (floor at each multiplication/division step).
 //
 // Iterating the NAV table (a protocol-controlled key set written only by SetVaultNAV
-// and settlement) rather than every principal balance makes the cost O(valued denoms):
+// and genesis import) rather than every principal balance makes the cost O(valued denoms):
 // a denom parked at the principal with no NAV entry is never visited, so it is neither
 // valued nor able to inflate the per-call work. This preserves the prior behavior in
 // which such denoms were skipped.
@@ -253,14 +253,13 @@ func (k Keeper) GetNetTVV(ctx sdk.Context, vault types.VaultAccount) (math.Int, 
 // GetNAVPerShare returns the floor NAV per share in units of
 // vault.UnderlyingAsset.
 //
-// Paused fast-path:
-//   - If vault.Paused is true, this function short-circuits and returns
-//     vault.PausedBalance.Amount (ignores live TVV and share supply).
-//
-// Computation (when not paused):
+// Computation:
 //   - TVV(underlying) is obtained from GetNetTVV (net of the OutstandingAumFee liability).
 //   - totalShareSupply is taken from vault.TotalShares.Amount (the recorded share supply).
 //   - If total shares == 0, returns 0. Otherwise returns TVV / totalShareSupply (floor).
+//
+// For a paused vault, GetNetTVV supplies the frozen vault.PausedBalance.Amount,
+// so the result is that frozen balance divided by the share supply.
 func (k Keeper) GetNAVPerShare(ctx sdk.Context, vault types.VaultAccount) (math.Int, error) {
 	tvv, err := k.GetNetTVV(ctx, vault)
 	if err != nil {

@@ -358,8 +358,8 @@ func TestPendingSwapOutQueue_GetByID(t *testing.T) {
 func TestPendingSwapOutQueue_ExpediteSwapOut(t *testing.T) {
 	addr1 := utils.TestProvlabsAddress()
 	addr2 := utils.TestProvlabsAddress()
-	req1 := &vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, RedeemDenom: "usd", Shares: sdk.NewInt64Coin("vshares", 100)}
-	req2 := &vtypes.PendingSwapOut{VaultAddress: addr2.Bech32, Owner: addr2.Bech32, RedeemDenom: "usd", Shares: sdk.NewInt64Coin("vshares", 100)}
+	req1 := &vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, RedeemDenom: "usd", Shares: sdk.NewInt64Coin("vshares", 100), FailureCount: 3}
+	req2 := &vtypes.PendingSwapOut{VaultAddress: addr2.Bech32, Owner: addr2.Bech32, RedeemDenom: "usd", Shares: sdk.NewInt64Coin("vshares", 100), FailureCount: 3}
 
 	tests := map[string]struct {
 		setup      func(t *testing.T, ctx sdk.Context, q *queue.PendingSwapOutQueue) (uint64, int64, sdk.AccAddress)
@@ -420,9 +420,132 @@ func TestPendingSwapOutQueue_ExpediteSwapOut(t *testing.T) {
 				}
 
 				newKey := collections.Join3(int64(0), id, addr)
-				_, err = q.IndexedMap.Get(ctx, newKey)
+				expedited, err := q.IndexedMap.Get(ctx, newKey)
 				require.NoErrorf(t, err, "test case %q: new entry with timestamp 0 should exist", name)
+				require.Zerof(t, expedited.FailureCount, "test case %q: expediting should clear the accumulated failure count", name)
 			}
+		})
+	}
+}
+
+func TestPendingSwapOutQueue_Reschedule(t *testing.T) {
+	addr1 := utils.TestProvlabsAddress()
+	vaultAddr := sdk.MustAccAddressFromBech32(addr1.Bech32)
+	newReq := func(failureCount uint32) *vtypes.PendingSwapOut {
+		return &vtypes.PendingSwapOut{
+			VaultAddress: addr1.Bech32,
+			Owner:        addr1.Bech32,
+			RedeemDenom:  "usd",
+			Shares:       sdk.NewInt64Coin("vshares", 100),
+			FailureCount: failureCount,
+		}
+	}
+
+	tests := map[string]struct {
+		oldTimestamp int64
+		newTimestamp int64
+		req          *vtypes.PendingSwapOut
+		enqueue      bool
+		useUnknownID bool
+		errorMsg     string
+	}{
+		"moves entry to a later timestamp and stores the updated request": {
+			oldTimestamp: 100,
+			newTimestamp: 700,
+			req:          newReq(1),
+			enqueue:      true,
+		},
+		"moves entry to the current timestamp when there is no backoff": {
+			oldTimestamp: 100,
+			newTimestamp: 100,
+			req:          newReq(1),
+			enqueue:      true,
+		},
+		"moves an expedited entry off timestamp 0": {
+			oldTimestamp: 0,
+			newTimestamp: 600,
+			req:          newReq(2),
+			enqueue:      true,
+		},
+		"fails when the entry is not queued": {
+			oldTimestamp: 100,
+			newTimestamp: 700,
+			req:          newReq(1),
+			enqueue:      true,
+			useUnknownID: true,
+			errorMsg:     "not found at timestamp",
+		},
+		"fails on a negative old timestamp": {
+			oldTimestamp: -1,
+			newTimestamp: 700,
+			req:          newReq(1),
+			errorMsg:     "timestamp cannot be negative",
+		},
+		"fails on a negative new timestamp": {
+			oldTimestamp: 100,
+			newTimestamp: -1,
+			req:          newReq(1),
+			enqueue:      true,
+			errorMsg:     "new timestamp cannot be negative",
+		},
+		"fails on a nil request": {
+			oldTimestamp: 100,
+			newTimestamp: 700,
+			enqueue:      true,
+			errorMsg:     "cannot be nil",
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx, q := newTestPendingSwapOutQueue(t)
+
+			var id uint64
+			if tc.enqueue {
+				var err error
+				id, err = q.Enqueue(ctx, max(tc.oldTimestamp, 0), newReq(0))
+				require.NoErrorf(t, err, "test case %q: enqueue should succeed", name)
+			}
+			rescheduleID := id
+			if tc.useUnknownID {
+				rescheduleID = id + 999
+			}
+
+			err := q.Reschedule(ctx, tc.oldTimestamp, vaultAddr, rescheduleID, tc.newTimestamp, tc.req)
+
+			if len(tc.errorMsg) > 0 {
+				require.Errorf(t, err, "test case %q: Reschedule should return an error", name)
+				require.ErrorContainsf(t, err, tc.errorMsg, "test case %q: error message mismatch", name)
+
+				if tc.enqueue {
+					pendingTime, stored, getErr := q.GetByID(ctx, id)
+					require.NoErrorf(t, getErr, "test case %q: the original entry should survive a failed reschedule", name)
+					require.Equalf(t, tc.oldTimestamp, pendingTime, "test case %q: a failed reschedule should not move the entry", name)
+					require.Zerof(t, stored.FailureCount, "test case %q: a failed reschedule should not update the stored request", name)
+				}
+				return
+			}
+
+			require.NoErrorf(t, err, "test case %q: Reschedule should not return an error", name)
+
+			if tc.oldTimestamp != tc.newTimestamp {
+				_, err = q.IndexedMap.Get(ctx, collections.Join3(tc.oldTimestamp, id, vaultAddr))
+				require.ErrorContainsf(t, err, "not found", "test case %q: the entry should no longer exist under its old timestamp", name)
+			}
+
+			pendingTime, stored, err := q.GetByID(ctx, id)
+			require.NoErrorf(t, err, "test case %q: the rescheduled entry should still resolve by ID", name)
+			require.Equalf(t, tc.newTimestamp, pendingTime, "test case %q: the entry should be filed under its new timestamp", name)
+			require.Equalf(t, tc.req.FailureCount, stored.FailureCount, "test case %q: the updated failure count should be stored", name)
+			require.Equalf(t, tc.req.Shares, stored.Shares, "test case %q: the escrowed shares should be preserved", name)
+
+			byVault := 0
+			require.NoErrorf(t, q.WalkByVault(ctx, vaultAddr, func(_ int64, walkedID uint64, _ vtypes.PendingSwapOut) (bool, error) {
+				byVault++
+				require.Equalf(t, id, walkedID, "test case %q: the vault index should resolve the rescheduled entry", name)
+				return false, nil
+			}), "test case %q: walking by vault should not error", name)
+			require.Equalf(t, 1, byVault, "test case %q: the vault index should hold exactly one entry after a reschedule", name)
 		})
 	}
 }

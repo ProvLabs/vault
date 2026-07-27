@@ -85,14 +85,18 @@ func TestNewEventNAVUpdated(t *testing.T) {
 func TestNewEventNAVRemoved(t *testing.T) {
 	vaultAddr := utils.TestAddress().Bech32
 
+	navAuthority := utils.TestAddress().Bech32
+
 	tests := []struct {
 		name           string
 		vaultAddress   string
 		nav            types.VaultNAV
+		signer         string
 		expectedVault  string
 		expectedDenom  string
 		expectedPrice  string
 		expectedVolume string
+		expectedSigner string
 	}{
 		{
 			name:         "round price and volume",
@@ -120,15 +124,31 @@ func TestNewEventNAVRemoved(t *testing.T) {
 			expectedPrice:  "250nhash",
 			expectedVolume: "1",
 		},
+		{
+			name:         "removal by the NAV authority records the signer",
+			vaultAddress: vaultAddr,
+			nav: types.VaultNAV{
+				Denom:  "rwa",
+				Price:  sdk.NewInt64Coin("under", 42),
+				Volume: sdkmath.NewInt(7),
+			},
+			signer:         navAuthority,
+			expectedVault:  vaultAddr,
+			expectedDenom:  "rwa",
+			expectedPrice:  "42under",
+			expectedVolume: "7",
+			expectedSigner: navAuthority,
+		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			event := types.NewEventNAVRemoved(tc.vaultAddress, tc.nav)
+			event := types.NewEventNAVRemoved(tc.vaultAddress, tc.nav, tc.signer)
 			assert.Equal(t, tc.expectedVault, event.VaultAddress, "VaultAddress mismatch for case: %s", tc.name)
 			assert.Equal(t, tc.expectedDenom, event.Denom, "Denom mismatch for case: %s", tc.name)
 			assert.Equal(t, tc.expectedPrice, event.LastPrice, "LastPrice mismatch for case: %s — expected sdk.Coin.String() encoding", tc.name)
 			assert.Equal(t, tc.expectedVolume, event.LastVolume, "LastVolume mismatch for case: %s — expected sdkmath.Int.String() encoding", tc.name)
+			assert.Equal(t, tc.expectedSigner, event.Signer, "Signer mismatch for case: %s — protocol-initiated removals carry no signer", tc.name)
 		})
 	}
 }

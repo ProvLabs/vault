@@ -1,8 +1,6 @@
 package keeper_test
 
 import (
-	"math/big"
-
 	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,53 +10,43 @@ import (
 	"github.com/provlabs/vault/types"
 )
 
-func (s *TestSuite) TestKeeper_ApplySettlementNAV() {
+func (s *TestSuite) TestKeeper_RemoveDrainedSettlementNAV() {
 	underlying := "under"
 	share := "vshare"
 	asset := "rwacoin"
+	seededPrice := sdk.NewInt64Coin(underlying, 5)
+	seededVolume := sdkmath.NewInt(10)
 
 	tests := []struct {
 		name                string
-		registerAssetMarker bool
+		seedNav             bool
 		fundPrincipal       sdk.Coins
-		assetAmount         sdkmath.Int
 		direction           string
 		expectedErrContains string
 		expectNavRemoved    bool
 	}{
 		{
-			name:                "inbound settlement upserts the NAV and keeps it even when the principal holds none of the asset",
-			registerAssetMarker: true,
-			assetAmount:         sdkmath.NewInt(10),
-			direction:           types.AssetDirectionInbound,
+			name:          "inbound settlement keeps the NAV entry the authority set",
+			seedNav:       true,
+			fundPrincipal: sdk.NewCoins(sdk.NewInt64Coin(asset, 10)),
+			direction:     types.AssetDirectionInbound,
 		},
 		{
-			name:                "outbound settlement with a remaining principal balance keeps the NAV entry",
-			registerAssetMarker: true,
-			fundPrincipal:       sdk.NewCoins(sdk.NewInt64Coin(asset, 5)),
-			assetAmount:         sdkmath.NewInt(10),
+			name:          "outbound settlement with a remaining principal balance keeps the NAV entry",
+			seedNav:       true,
+			fundPrincipal: sdk.NewCoins(sdk.NewInt64Coin(asset, 5)),
+			direction:     types.AssetDirectionOutbound,
+		},
+		{
+			name:             "outbound settlement with a drained principal removes the NAV entry",
+			seedNav:          true,
+			direction:        types.AssetDirectionOutbound,
+			expectNavRemoved: true,
+		},
+		{
+			name:                "outbound settlement of a drained denom with no NAV entry surfaces the missing entry",
 			direction:           types.AssetDirectionOutbound,
-		},
-		{
-			name:                "outbound settlement with a drained principal removes the NAV entry",
-			registerAssetMarker: true,
-			assetAmount:         sdkmath.NewInt(10),
-			direction:           types.AssetDirectionOutbound,
-			expectNavRemoved:    true,
-		},
-		{
-			name:                "asset denom without a registered marker fails the upsert",
-			registerAssetMarker: false,
-			assetAmount:         sdkmath.NewInt(10),
-			direction:           types.AssetDirectionInbound,
-			expectedErrContains: "failed to update internal NAV from settlement",
-		},
-		{
-			name:                "asset amount that overflows the marker NAV volume fails the publish",
-			registerAssetMarker: true,
-			assetAmount:         sdkmath.NewIntFromBigInt(new(big.Int).Lsh(big.NewInt(1), 70)),
-			direction:           types.AssetDirectionInbound,
-			expectedErrContains: "failed to publish settlement NAV to marker",
+			expectedErrContains: "failed to remove internal NAV for drained denom",
 		},
 	}
 
@@ -70,18 +58,16 @@ func (s *TestSuite) TestKeeper_ApplySettlementNAV() {
 
 			vault, principalAddr := s.setupAssetSettlementVault(underlying, share)
 			vaultAddr := vault.GetAddress()
-			if tc.registerAssetMarker {
-				s.requireSimpleMarker(asset)
+			s.requireSimpleMarker(asset)
+			if tc.seedNav {
+				s.setVaultNAV(vault, asset, seededPrice, seededVolume.Int64())
 			}
 			if !tc.fundPrincipal.IsZero() {
 				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, tc.fundPrincipal), "failed to fund principal with %s", tc.fundPrincipal)
 			}
 
-			assetCoin := sdk.NewCoin(asset, tc.assetAmount)
-			paymentCoin := sdk.NewInt64Coin(underlying, 5)
-
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
-			err := s.k.TestAccessor_applySettlementNAV(s.T(), s.ctx, vault, assetCoin, paymentCoin, tc.direction, s.adminAddr.String())
+			err := s.k.TestAccessor_removeDrainedSettlementNAV(s.T(), s.ctx, vault, asset, tc.direction)
 
 			var removedEvents []sdk.Event
 			for _, ev := range s.ctx.EventManager().Events() {
@@ -91,10 +77,10 @@ func (s *TestSuite) TestKeeper_ApplySettlementNAV() {
 			}
 
 			if tc.expectedErrContains != "" {
-				s.Require().ErrorContains(err, tc.expectedErrContains, "applySettlementNAV should fail for case %q", tc.name)
+				s.Require().ErrorContains(err, tc.expectedErrContains, "removeDrainedSettlementNAV should fail for case %q", tc.name)
 				return
 			}
-			s.Require().NoError(err, "applySettlementNAV should succeed for asset %s payment %s direction %s", assetCoin, paymentCoin, tc.direction)
+			s.Require().NoError(err, "removeDrainedSettlementNAV should succeed for denom %s direction %s", asset, tc.direction)
 
 			if tc.expectNavRemoved {
 				_, err := s.k.GetVaultNAV(s.ctx, vaultAddr, asset)
@@ -105,10 +91,10 @@ func (s *TestSuite) TestKeeper_ApplySettlementNAV() {
 
 			s.Assert().Empty(removedEvents, "non-draining settlement should not emit EventNAVRemoved for case %q", tc.name)
 			stored, err := s.k.GetVaultNAV(s.ctx, vaultAddr, asset)
-			s.Require().NoError(err, "NAV entry for %s should exist after settlement", asset)
-			s.Assert().Equal(paymentCoin, stored.Price, "stored NAV price should be the payment coin for case %q", tc.name)
-			s.Assert().Equal(tc.assetAmount, stored.Volume, "stored NAV volume should be the asset amount for case %q", tc.name)
-			s.Assert().Equal(vaultAddr.String(), stored.Source, "stored NAV source should be the vault address for case %q", tc.name)
+			s.Require().NoError(err, "NAV entry for %s should still exist after settlement", asset)
+			s.Assert().Equal(seededPrice, stored.Price, "settlement must not rewrite the NAV price the authority set for case %q", tc.name)
+			s.Assert().Equal(seededVolume, stored.Volume, "settlement must not rewrite the NAV volume the authority set for case %q", tc.name)
+			s.Assert().Equal("test", stored.Source, "settlement must not reattribute the NAV source away from the authority for case %q", tc.name)
 		})
 	}
 }

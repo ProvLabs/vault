@@ -335,12 +335,6 @@ func (s *TestSuite) TestKeeper_SetVaultNAV_MetadataDenomSkipsMarkerCheck() {
 	s.Assert().Error(markerErr, "nft/ denom %s must not be a registered marker", navDenom)
 }
 
-// TestKeeper_SetNAVAuthority_PersistsAndEmits verifies that a SetNAVAuthority
-// call that changes the value assigns the new authority on the vault account,
-// persists the change via SetVaultAccount, and emits a single
-// EventNAVAuthorityUpdated with the supplied signer recorded for attribution.
-// Both a rotation to an explicit address and a reset to the empty string
-// (fall-back-to-admin) flow through the same write path.
 func (s *TestSuite) TestKeeper_RemoveVaultNAV() {
 	cases := []struct {
 		name                string
@@ -348,9 +342,11 @@ func (s *TestSuite) TestKeeper_RemoveVaultNAV() {
 		share               string
 		navDenom            string
 		seedNav             *types.VaultNAV
+		signer              string
 		expectedErrContains string
 		expectedLastPrice   string
 		expectedLastVolume  string
+		expectedSigner      string
 	}{
 		{
 			name:       "existing entry is deleted and EventNAVRemoved carries the last price",
@@ -365,6 +361,22 @@ func (s *TestSuite) TestKeeper_RemoveVaultNAV() {
 			},
 			expectedLastPrice:  "1000000under",
 			expectedLastVolume: "500000",
+		},
+		{
+			name:       "removal by the NAV authority records the signer on the event",
+			underlying: "under",
+			share:      "authorityshares",
+			navDenom:   "rwa",
+			seedNav: &types.VaultNAV{
+				Denom:  "rwa",
+				Price:  sdk.NewInt64Coin("under", 250),
+				Volume: sdkmath.NewInt(5),
+				Source: "oracle",
+			},
+			signer:             s.adminAddr.String(),
+			expectedLastPrice:  "250under",
+			expectedLastVolume: "5",
+			expectedSigner:     s.adminAddr.String(),
 		},
 		{
 			name:                "denom with no entry returns an error and emits nothing",
@@ -390,7 +402,7 @@ func (s *TestSuite) TestKeeper_RemoveVaultNAV() {
 			}
 
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
-			err := s.k.RemoveVaultNAV(s.ctx, vault, tc.navDenom)
+			err := s.k.RemoveVaultNAV(s.ctx, vault, tc.navDenom, tc.signer)
 
 			var removedEvents []sdk.Event
 			for _, ev := range s.ctx.EventManager().Events() {
@@ -420,6 +432,7 @@ func (s *TestSuite) TestKeeper_RemoveVaultNAV() {
 			s.Assert().Equal(`"`+tc.navDenom+`"`, attrs["denom"], "event denom attribute should record the removed denom")
 			s.Assert().Equal(`"`+tc.expectedLastPrice+`"`, attrs["last_price"], "event last_price attribute should record the last stored price")
 			s.Assert().Equal(`"`+tc.expectedLastVolume+`"`, attrs["last_volume"], "event last_volume attribute should record the last stored volume")
+			s.Assert().Equal(`"`+tc.expectedSigner+`"`, attrs["signer"], "event signer attribute should record the NAV authority, and stay empty for a protocol-initiated removal")
 		})
 	}
 }
@@ -439,9 +452,10 @@ func (s *TestSuite) TestKeeper_CheckSettlementNAVGuardrail() {
 		expectedErrContains string
 	}{
 		{
-			name:        "no NAV entry for the asset denom skips the guardrail",
-			assetCoin:   sdk.NewInt64Coin(asset, 10),
-			paymentCoin: sdk.NewInt64Coin(underlying, 5),
+			name:                "no NAV entry for the asset denom rejects the settlement",
+			assetCoin:           sdk.NewInt64Coin(asset, 10),
+			paymentCoin:         sdk.NewInt64Coin(underlying, 5),
+			expectedErrContains: "has no internal NAV entry",
 		},
 		{
 			name:                "undecodable NAV entry propagates a non-NotFound lookup error",
@@ -479,7 +493,7 @@ func (s *TestSuite) TestKeeper_CheckSettlementNAVGuardrail() {
 			expectedErrContains: "does not match internal NAV",
 		},
 		{
-			name:        "settlement at the exact NAV price passes the guardrail",
+			name:        "settlement at the exact NAV price passes the guardrail even though the vault holds none of the asset yet",
 			seedNav:     &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(underlying, 5), Volume: sdkmath.NewInt(10)},
 			assetCoin:   sdk.NewInt64Coin(asset, 10),
 			paymentCoin: sdk.NewInt64Coin(underlying, 5),

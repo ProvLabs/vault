@@ -49,7 +49,7 @@ Total share supply is tracked on the vault as **total_shares**, the authoritativ
 - **AUM Technology Fee**: a 15 bps (0.15% annual) fee collected from the vault principal to support protocol maintenance. It is accrued continuously and collected in the vault's underlying asset.
 - **NAV**: conversion rate between denoms, used for valuation and conversions, subject to special-case rules.
 - **Internal NAV Table**: per-vault price entries (`price` for `volume` units of a denom) that are the **sole source of truth** for the valuation engine's conversions. The module never reads external oracles or marker NAVs at valuation time.
-- **NAV Authority**: an optional per-vault address authorized to maintain the internal NAV table via `UpdateVaultNAV`. The vault admin acts as NAV authority when unset; the admin rotates it via `UpdateNAVAuthority`.
+- **NAV Authority**: an optional per-vault address authorized to maintain the internal NAV table via `UpdateVaultNAV` and `RemoveVaultNAV`. The vault admin acts as NAV authority when unset; the admin rotates it via `UpdateNAVAuthority`. Pointing it at an entity separate from the asset manager splits pricing from trading: the authority decides what an asset is worth, and the manager may only trade at that price.
 
 - **Total Shares**: the canonical supply-of-record across chains. Local marker supply must never exceed `total_shares`.  
 - **Asset Manager**: an optional delegated operator address with limited management authority. When set, this account can perform certain administrative actions (e.g., fund management operations) in addition to the vault admin. If unset, only the vault admin holds these permissions.
@@ -138,8 +138,10 @@ Each vault carries its own table of price entries, one per asset denom. An entry
 
 Entries are written by three paths:
 
-1. **NAV authority updates** — the configured `nav_authority` (the admin when unset) maintains entries via `UpdateVaultNAV`.
-2. **Settlements** — each `AcceptAsset` records the realized settlement price as the asset denom's entry (and removes the entry when an outbound settlement drains the denom from the principal).
+1. **NAV authority updates** — the configured `nav_authority` (the admin when unset) maintains entries via `UpdateVaultNAV`, and revokes entries for denoms the vault does not hold via `RemoveVaultNAV`. This is the only path that sets a price.
+2. **Settlements** — `AcceptAsset` trades only at the price already recorded for the denom, so it never writes an entry. It removes one when an outbound settlement drains the denom from the principal.
+
+An entry may exist for a denom the vault does not hold. Total vault value is computed by valuing held balances against the table, so an unheld denom's entry contributes nothing until the asset arrives. That is what makes pre-pricing meaningful: the table doubles as the list of assets the vault is authorized to acquire, and at what price.
 3. **Migration seeding** — a one-time upgrade migration seeded entries from existing marker-module NAVs.
 
 NAV upserts from paths 1 and 2 are also **published one-way to the marker module**, attributed to the vault address, so downstream marker-NAV consumers can distinguish vault-originated prices. Removals are internal-only: when a settlement drains a denom and its entry is deleted, the marker NAV is left as-is — publishing simply stops. The vault never reads marker NAVs back — the internal table remains authoritative.
@@ -153,7 +155,9 @@ Exactly one payment leg must carry the vault's underlying asset, which determine
 Settlement is atomic and layers several protections:
 
 - **Reconcile-first** — accrued interest and fees settle against the pre-settlement TVV.
-- **Exact-price guardrail** — when an internal NAV entry exists for the asset, the settlement legs must match its price exactly (cross-multiplied, no rounding tolerance). A first acquisition has no entry and skips the check; thereafter the authority must update the NAV (`UpdateVaultNAV`) before settling at a different price. This makes every price change an explicit, evented action rather than a side effect of trade flow.
+- **Exact-price guardrail** — the asset denom must already carry an internal NAV entry, and the settlement legs must match its price exactly (cross-multiplied, no rounding tolerance). A denom the NAV authority has never priced cannot be acquired, so the asset manager cannot mint a price of their choosing by being the first to acquire it. Settling at a different price requires the authority to move the NAV first (`UpdateVaultNAV`). Every price change is therefore an explicit, evented action by the NAV authority rather than a side effect of trade flow.
+
+  A first acquisition is two messages: the authority prices the denom, then the manager settles. Both fit in one transaction, so when the two roles belong to different entities the transaction simply carries both signatures and the price and trade commit together.
 - **Price recording** — the realized settlement price becomes the asset's internal NAV entry and is published to the marker module. When an outbound settlement empties the principal of the asset, the entry is removed so a stale price cannot linger.
 
 ### Valuation Scope

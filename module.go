@@ -32,11 +32,12 @@ import (
 
 // ConsensusVersion defines the current x/vault module consensus version.
 //
-// Bumped from 1 to 2 to accompany Migrator.Migrate1to2, which seeds the
-// Internal NAV table from the Marker module's NAV store and defaults
-// nav_authority to the vault admin. A v1->v2 migration handler is registered
-// in RegisterServices so the SDK module manager can drive the migration via
-// RunMigrations when an upstream upgrade handler advances the chain.
+// Bumped from 1 to 2 to accompany Migrator.Migrate1to2, which flattens every
+// vault to single-denom on its underlying asset (defaulting nav_authority to the
+// vault admin) and enables deposit protection when a vault's share marker can be loaded. A
+// v1->v2 migration handler is registered in RegisterServices so the SDK module
+// manager can drive the migration via RunMigrations when an upstream upgrade
+// handler advances the chain.
 const ConsensusVersion = 2
 
 var (
@@ -166,6 +167,8 @@ const (
 	fieldEnabled      = "enabled"
 	fieldAmount       = "amount"
 	fieldShares       = "shares"
+	fieldSigner       = "signer"
+	fieldDenom        = "denom"
 )
 
 // AutoCLIOptions defines CLI commands for tx and query.
@@ -565,15 +568,28 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:       "update-vault-nav [signer] [vault_address] [denom] [price] [volume] [source]",
 					Alias:     []string{"uvn"},
 					Short:     "Create or update a vault's internal NAV entry for a denom",
-					Long:      "Set the internal net asset value for a denom held by a vault. price is the total value of volume units, denominated in the vault's underlying asset. Must be signed by the vault's NAV authority. The denom cannot be the vault's share denom or underlying asset.",
+					Long:      "Set the internal net asset value for a denom on a vault. The denom need not be held yet; pricing it is what authorizes the asset manager to acquire it. price is the total value of volume units, denominated in the vault's underlying asset. Must be signed by the vault's NAV authority. The denom cannot be the vault's share denom or underlying asset.",
 					Example:   fmt.Sprintf("%s update-vault-nav %s %s usdc 1000000nhash 1000000 my-oracle", txStart, exampleAuthorityAddr, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "signer"},
-						{ProtoField: "vault_address"},
-						{ProtoField: "denom"},
+						{ProtoField: fieldSigner},
+						{ProtoField: fieldVaultAddress},
+						{ProtoField: fieldDenom},
 						{ProtoField: "price"},
 						{ProtoField: "volume"},
 						{ProtoField: "source", Optional: true},
+					},
+				},
+				{
+					RpcMethod: "RemoveVaultNAV",
+					Use:       "remove-vault-nav [signer] [vault_address] [denom]",
+					Alias:     []string{"rvn"},
+					Short:     "Remove a vault's internal NAV entry for a denom the vault does not hold",
+					Long:      "Delete the internal net asset value entry for a denom, revoking the authorization to acquire it at that price. Must be signed by the vault's NAV authority. A denom the vault still holds cannot be removed; write it down with update-vault-nav instead.",
+					Example:   fmt.Sprintf("%s remove-vault-nav %s %s usdc", txStart, exampleAuthorityAddr, exampleVaultAddr),
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: fieldSigner},
+						{ProtoField: fieldVaultAddress},
+						{ProtoField: fieldDenom},
 					},
 				},
 				{
@@ -584,8 +600,8 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Long:      "Set the NAV authority for a vault. Must be signed by the vault admin.",
 					Example:   fmt.Sprintf("%s update-nav-authority %s %s %s", txStart, exampleAdminAddr, exampleVaultAddr, exampleAssetMgrAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
-						{ProtoField: "signer"},
-						{ProtoField: "vault_address"},
+						{ProtoField: fieldSigner},
+						{ProtoField: fieldVaultAddress},
 						{ProtoField: "new_authority"},
 					},
 				},
@@ -685,7 +701,7 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Example:   fmt.Sprintf("%s nav-value %s usdc", queryStart, exampleVaultAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: "id"},
-						{ProtoField: "denom"},
+						{ProtoField: fieldDenom},
 					},
 				},
 				{

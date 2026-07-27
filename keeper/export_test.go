@@ -110,6 +110,17 @@ func (k Keeper) TestAccessor_checkPayoutRestrictions(t *testing.T, ctx context.C
 	return k.checkPayoutRestrictions(sdk.UnwrapSDKContext(ctx), vault, owner, assets)
 }
 
+// TestAccessor_deferSwapOutRetry exposes this keeper's deferSwapOutRetry function for unit tests.
+func (k Keeper) TestAccessor_deferSwapOutRetry(t *testing.T, ctx context.Context, j types.PayoutJob, reason string) {
+	t.Helper()
+	k.deferSwapOutRetry(sdk.UnwrapSDKContext(ctx), j, reason)
+}
+
+// TestAccessor_swapOutRetryBackoff exposes the swapOutRetryBackoff function for unit tests.
+func (k Keeper) TestAccessor_swapOutRetryBackoff(failureCount uint32) int64 {
+	return swapOutRetryBackoff(failureCount)
+}
+
 // TestAccessor_getRefundReason exposes this keeper's getRefundReason function for unit tests.
 func (k Keeper) TestAccessor_getRefundReason(err error) string {
 	return k.getRefundReason(err)
@@ -121,10 +132,10 @@ func (k Keeper) TestAccessor_checkSettlementNAVGuardrail(t *testing.T, ctx conte
 	return k.checkSettlementNAVGuardrail(sdk.UnwrapSDKContext(ctx), vault, assetCoin, paymentCoin)
 }
 
-// TestAccessor_applySettlementNAV exposes this keeper's applySettlementNAV function for unit tests.
-func (k Keeper) TestAccessor_applySettlementNAV(t *testing.T, ctx context.Context, vault *types.VaultAccount, assetCoin, paymentCoin sdk.Coin, direction, signer string) error {
+// TestAccessor_removeDrainedSettlementNAV exposes this keeper's removeDrainedSettlementNAV function for unit tests.
+func (k Keeper) TestAccessor_removeDrainedSettlementNAV(t *testing.T, ctx context.Context, vault *types.VaultAccount, assetDenom, direction string) error {
 	t.Helper()
-	return k.applySettlementNAV(sdk.UnwrapSDKContext(ctx), vault, assetCoin, paymentCoin, direction, signer)
+	return k.removeDrainedSettlementNAV(sdk.UnwrapSDKContext(ctx), vault, assetDenom, direction)
 }
 
 // TestAccessor_publishAssetNAVToMarker exposes this keeper's publishAssetNAVToMarker function for unit tests.

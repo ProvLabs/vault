@@ -9,7 +9,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/google/uuid"
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 
 	"github.com/provlabs/vault/types"
@@ -659,37 +658,22 @@ func (s *TestSuite) TestKeeper_CheckSettlementNAVGuardrail() {
 	}
 }
 
-func (s *TestSuite) TestKeeper_PublishAssetNAVToMarker() {
+func (s *TestSuite) TestKeeper_SetVaultNAV_DoesNotTouchAssetMarkerNAV() {
 	underlying := "under"
 	share := "vshare"
 	asset := "rwacoin"
 
 	tests := []struct {
-		name                string
-		registerAssetMarker bool
-		volume              sdkmath.Int
-		expectedErrContains string
+		name   string
+		volume sdkmath.Int
 	}{
 		{
-			name:                "registered marker denom publishes the marker NAV attributed to the vault address",
-			registerAssetMarker: true,
-			volume:              sdkmath.NewInt(10),
+			name:   "volume within the marker NAV uint64 range leaves the asset marker untouched",
+			volume: sdkmath.NewInt(10),
 		},
 		{
-			name:                "volume that does not fit in uint64 is rejected before the marker lookup",
-			volume:              sdkmath.NewIntFromBigInt(new(big.Int).Lsh(big.NewInt(1), 70)),
-			expectedErrContains: "overflows the marker NAV volume",
-		},
-		{
-			name:                "NAV denom without a registered marker fails the lookup",
-			volume:              sdkmath.NewInt(10),
-			expectedErrContains: "failed to get marker for NAV denom",
-		},
-		{
-			name:                "marker NAV the marker module rejects propagates the error",
-			registerAssetMarker: true,
-			volume:              sdkmath.ZeroInt(),
-			expectedErrContains: "failed to set marker NAV for denom",
+			name:   "volume beyond the marker NAV uint64 range is accepted by the internal table",
+			volume: sdkmath.NewIntFromBigInt(new(big.Int).Lsh(big.NewInt(1), 70)),
 		},
 	}
 
@@ -700,31 +684,30 @@ func (s *TestSuite) TestKeeper_PublishAssetNAVToMarker() {
 			s.ctx, _ = s.ctx.CacheContext()
 
 			vault, _ := s.setupAssetSettlementVault(underlying, share)
-			if tc.registerAssetMarker {
-				s.requireSimpleMarker(asset)
-			}
+			s.requireSimpleMarker(asset)
 			nav := types.VaultNAV{
 				Denom:  asset,
 				Price:  sdk.NewInt64Coin(underlying, 5),
 				Volume: tc.volume,
-				Source: vault.Address,
+				Source: "oracle-a",
 			}
 
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
-			err := s.k.TestAccessor_publishAssetNAVToMarker(s.T(), s.ctx, vault, nav)
+			s.Require().NoError(
+				s.k.SetVaultNAV(s.ctx, vault, nav, vault.Admin),
+				"SetVaultNAV should store the entry for denom %s volume %s", nav.Denom, nav.Volume,
+			)
 
-			if tc.expectedErrContains != "" {
-				s.Require().ErrorContains(err, tc.expectedErrContains, "publishAssetNAVToMarker should fail for denom %s volume %s", nav.Denom, nav.Volume)
-				return
-			}
-			s.Require().NoError(err, "publishAssetNAVToMarker should succeed for denom %s volume %s", nav.Denom, nav.Volume)
+			stored, err := s.k.GetVaultNAV(s.ctx, vault.GetAddress(), asset)
+			s.Require().NoError(err, "internal NAV entry for %s should be readable after SetVaultNAV", asset)
+			s.Assert().Equal(nav.Volume, stored.Volume, "internal NAV volume for %s should be stored unmodified", asset)
 
-			stored, err := s.k.MarkerKeeper.GetNetAssetValue(s.ctx, asset, underlying)
+			markerNAV, err := s.k.MarkerKeeper.GetNetAssetValue(s.ctx, asset, underlying)
 			s.Require().NoError(err, "failed to read marker NAV for %s priced in %s", asset, underlying)
-			s.Require().NotNil(stored, "marker NAV for %s priced in %s should exist after publish", asset, underlying)
-			s.Assert().Equal(nav.Price, stored.Price, "marker NAV price should match the internal NAV price for %s", asset)
-			s.Assert().Equal(nav.Volume.Uint64(), stored.Volume, "marker NAV volume should match the internal NAV volume for %s", asset)
-			s.requireTypedEventEmitted(markertypes.NewEventSetNetAssetValue(asset, nav.Price, nav.Volume.Uint64(), vault.Address))
+			s.Assert().Nil(markerNAV, "pricing %s must not write a chain-wide marker NAV for a marker the vault holds no permission on", asset)
+			for _, ev := range s.ctx.EventManager().Events() {
+				s.Assert().NotEqual("provenance.marker.v1.EventSetNetAssetValue", ev.Type, "pricing %s must not emit a marker NAV event", asset)
+			}
 		})
 	}
 }

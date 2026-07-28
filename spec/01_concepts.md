@@ -144,7 +144,7 @@ Entries are written by three paths:
 An entry may exist for a denom the vault does not hold. Total vault value is computed by valuing held balances against the table, so an unheld denom's entry contributes nothing until the asset arrives. That is what makes pre-pricing meaningful: the table doubles as the list of assets the vault is authorized to acquire, and at what price.
 3. **Migration seeding** — a one-time upgrade migration seeded entries from existing marker-module NAVs.
 
-NAV upserts from paths 1 and 2 are also **published one-way to the marker module**, attributed to the vault address, so downstream marker-NAV consumers can distinguish vault-originated prices. Removals are internal-only: when a settlement drains a denom and its entry is deleted, the marker NAV is left as-is — publishing simply stops. The vault never reads marker NAVs back — the internal table remains authoritative.
+Internal NAV entries are **never published to the marker module**. The module writes exactly one marker NAV: the vault's **own share denom**, during reconciliation. That marker is created by the module, which holds grants on it, so setting its price is within the vault's authority. The markers of the assets a vault prices are not: a vault holds no permission on them, and vault creation is permissionless, so mirroring asset prices there would let any vault overwrite the chain-wide NAV of an arbitrary registered marker, bypassing the access controls `x/marker` enforces on its own NAV messages. Traffic is one-way in the other direction too — the vault never reads marker NAVs back at valuation time, so the internal table remains authoritative.
 
 ### P2P Settlement Workflow
 
@@ -158,7 +158,7 @@ Settlement is atomic and layers several protections:
 - **Exact-price guardrail** — the asset denom must already carry an internal NAV entry, and the settlement legs must match its price exactly (cross-multiplied, no rounding tolerance). A denom the NAV authority has never priced cannot be acquired, so the asset manager cannot mint a price of their choosing by being the first to acquire it. Settling at a different price requires the authority to move the NAV first (`UpdateVaultNAV`). Every price change is therefore an explicit, evented action by the NAV authority rather than a side effect of trade flow.
 
   A first acquisition is two messages: the authority prices the denom, then the manager settles. Both fit in one transaction, so when the two roles belong to different entities the transaction simply carries both signatures and the price and trade commit together.
-- **Price recording** — the realized settlement price becomes the asset's internal NAV entry and is published to the marker module. When an outbound settlement empties the principal of the asset, the entry is removed so a stale price cannot linger.
+- **Price recording** — settling writes no price at all: the guardrail has already proven the trade executed at the entry the authority recorded, and no marker NAV is published. When an outbound settlement empties the principal of the asset, the entry is removed so a stale price cannot linger.
 
 ### Valuation Scope
 

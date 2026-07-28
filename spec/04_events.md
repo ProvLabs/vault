@@ -472,7 +472,7 @@ Emitted when a vault's internal NAV entry for a denom is created or updated (via
 
 **Notes**
 
-* The upserted NAV is also published to the **marker module**, attributed to the vault address, so a `provenance.marker.v1.EventSetNetAssetValue` is emitted alongside.
+* The upserted NAV stays internal to the vault, so no `provenance.marker.v1.EventSetNetAssetValue` is emitted alongside it. The only marker NAV the module publishes is the vault's own share denom, during reconciliation.
 
 ---
 
@@ -491,7 +491,7 @@ Emitted when a vault's internal NAV entry for a denom is removed: either when an
 **Notes**
 
 * `last_price`/`last_volume` carry the price the NAV authority had set for the denom, since settling never rewrites it. Consumers maintaining a local price cache must process this event alongside `EventNAVUpdated`.
-* The marker module's NAV is left as-is — publishing simply stops.
+* No marker module NAV is involved: the module never publishes internal NAV entries for asset denoms, so there is nothing to retract.
 
 ---
 

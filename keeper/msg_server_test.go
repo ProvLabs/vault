@@ -97,6 +97,7 @@ func (s *TestSuite) TestMsgServer_CreateVault() {
 	vaultAddr := types.GetVaultAddress(sharedenom)
 
 	vaultReq := types.MsgCreateVaultRequest{
+		Authority:       s.govAuthorityAddr.String(),
 		Admin:           admin,
 		ShareDenom:      sharedenom,
 		UnderlyingAsset: underlying,
@@ -162,11 +163,37 @@ func (s *TestSuite) TestMsgServer_CreateVault_Failures() {
 
 	tests := []msgServerTestCase[types.MsgCreateVaultRequest, any]{
 		{
+			name: "authority is the vault admin instead of governance",
+			setup: func() {
+				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("assetcoin", 100), s.adminAddr)
+			},
+			msg: types.MsgCreateVaultRequest{
+				Authority:       s.adminAddr.String(),
+				Admin:           s.adminAddr.String(),
+				ShareDenom:      "sharecoin",
+				UnderlyingAsset: "assetcoin",
+			},
+			expectedErrSubstrs: []string{"unauthorized: expected " + s.govAuthorityAddr.String() + " got " + s.adminAddr.String()},
+		},
+		{
+			name: "authority is empty",
+			setup: func() {
+				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("assetcoin", 100), s.adminAddr)
+			},
+			msg: types.MsgCreateVaultRequest{
+				Admin:           s.adminAddr.String(),
+				ShareDenom:      "sharecoin",
+				UnderlyingAsset: "assetcoin",
+			},
+			expectedErrSubstrs: []string{"unauthorized: expected " + s.govAuthorityAddr.String() + " got "},
+		},
+		{
 			name: "invalid admin address",
 			setup: func() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("assetcoin", 100), s.adminAddr)
 			},
 			msg: types.MsgCreateVaultRequest{
+				Authority:       s.govAuthorityAddr.String(),
 				Admin:           "invalid_bech32",
 				ShareDenom:      "sharecoin",
 				UnderlyingAsset: "assetcoin",
@@ -179,6 +206,7 @@ func (s *TestSuite) TestMsgServer_CreateVault_Failures() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("assetcoin", 100), s.adminAddr)
 			},
 			msg: types.MsgCreateVaultRequest{
+				Authority:       s.govAuthorityAddr.String(),
 				Admin:           s.adminAddr.String(),
 				ShareDenom:      "invalid denom!",
 				UnderlyingAsset: "assetcoin",
@@ -188,6 +216,7 @@ func (s *TestSuite) TestMsgServer_CreateVault_Failures() {
 		{
 			name: "underlying asset marker not found",
 			msg: types.MsgCreateVaultRequest{
+				Authority:       s.govAuthorityAddr.String(),
 				Admin:           s.adminAddr.String(),
 				ShareDenom:      "vaulttoken",
 				UnderlyingAsset: "nonexistentasset",
@@ -201,6 +230,7 @@ func (s *TestSuite) TestMsgServer_CreateVault_Failures() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("under", 1), s.adminAddr)
 			},
 			msg: types.MsgCreateVaultRequest{
+				Authority:       s.govAuthorityAddr.String(),
 				Admin:           s.adminAddr.String(),
 				ShareDenom:      "existingmarker",
 				UnderlyingAsset: "under",

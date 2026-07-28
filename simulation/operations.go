@@ -220,6 +220,7 @@ func SimulateMsgCreateVault(k keeper.Keeper) simtypes.Operation {
 		}
 
 		msg := &types.MsgCreateVaultRequest{
+			Authority:              sdk.AccAddress(k.GetAuthority()).String(),
 			Admin:                  admin.Address.String(),
 			ShareDenom:             denom,
 			UnderlyingAsset:        underlying,

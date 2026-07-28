@@ -30,13 +30,9 @@ func metadataDenomAddress(denom string) (metadatatypes.MetadataAddress, bool) {
 // NAV entry: a metadata value-owner denom (nft/<scope-id>) must name an existing scope,
 // and every other denom must be a registered marker.
 //
-// Requiring the scope to exist keeps the priceable denom set tied to real on-chain state
-// rather than to string form alone. It does not restrict the price-then-acquire flow: a
-// scope the vault intends to buy already exists under its current owner beforehand.
-//
-// SetVaultNAV and InitGenesis share this check so that every entry one path can write
-// the other can import. A genesis export carrying an entry the importer rejects cannot
-// be used for a chain restart or a state-export upgrade, so the two must not drift.
+// This gates the first pricing of a denom only. The marker or scope belongs to someone
+// else and can disappear afterwards, so re-checking an entry already in the table would
+// strand it: SetVaultNAV skips it when repricing and InitGenesis only warns.
 func (k Keeper) requireNAVDenomRegistered(ctx sdk.Context, denom string) error {
 	if metadataAddr, ok := metadataDenomAddress(denom); ok {
 		if !metadataAddr.IsScopeAddress() {
@@ -80,17 +76,9 @@ func validateVaultNAVFields(vault *types.VaultAccount, nav types.VaultNAV) error
 // requireNAVEntryCapacity reports whether the vault has room to start pricing denom,
 // enforcing the max_vault_nav_entries cap that bounds GetTVV's walk over the table.
 //
-// Repricing a denom the vault already prices does not grow the table, so it short-circuits
-// before any counting. Only a new denom consumes capacity.
+// Callers must only invoke this for a denom the vault does not already price, since
+// repricing does not grow the table.
 func (k Keeper) requireNAVEntryCapacity(ctx sdk.Context, vault *types.VaultAccount, denom string) error {
-	alreadyPriced, err := k.NAVs.Has(ctx, collections.Join(vault.GetAddress(), denom))
-	if err != nil {
-		return fmt.Errorf("failed to check for existing internal NAV for denom %q on vault %s: %w", denom, vault.Address, err)
-	}
-	if alreadyPriced {
-		return nil
-	}
-
 	maxEntries, err := k.GetMaxVaultNAVEntries(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get max vault NAV entries: %w", err)
@@ -132,17 +120,14 @@ func (k Keeper) countVaultNAVEntries(ctx sdk.Context, vaultAddr sdk.AccAddress, 
 // is stored.
 //
 // The denom may not be the vault's share denom, whose value is derived from
-// the vault's total holdings rather than set externally. The denom must also
-// be a registered marker on-chain, except for metadata value-owner denoms
-// (nft/<scope-id>), which cannot be markers and must instead name an existing
-// scope. The price must be a valid coin denominated in the vault's underlying asset.
-// Its amount may be zero so the authority can write a worthless held asset
-// down to zero. The volume must be positive.
+// the vault's total holdings rather than set externally. The price must be a valid coin
+// denominated in the vault's underlying asset. Its amount may be zero so the authority
+// can write a worthless held asset down to zero. The volume must be positive.
 //
-// Adding a denom the vault does not already price is rejected once the vault holds
-// max_vault_nav_entries entries. Repricing a denom already in the table is always allowed,
-// including for a vault over the cap, so a cap lowered by governance (or an oversized table
-// imported from genesis) can never strand a held asset at a stale price.
+// A denom the vault does not already price must be a registered marker (or, for an
+// nft/<scope-id> denom, name an existing scope), and is rejected once the vault holds
+// max_vault_nav_entries entries. Repricing an existing entry skips both checks, so a
+// lowered cap or a vanished marker or scope can never strand a held asset at a stale price.
 //
 // This method does NOT verify that signer is authorized to mutate the vault's
 // NAV table; signer is recorded for event attribution only. Callers must run
@@ -154,11 +139,18 @@ func (k *Keeper) SetVaultNAV(ctx sdk.Context, vault *types.VaultAccount, nav typ
 	if err := validateVaultNAVFields(vault, nav); err != nil {
 		return err
 	}
-	if err := k.requireNAVDenomRegistered(ctx, nav.Denom); err != nil {
-		return err
+
+	alreadyPriced, err := k.NAVs.Has(ctx, collections.Join(vault.GetAddress(), nav.Denom))
+	if err != nil {
+		return fmt.Errorf("failed to check for existing internal NAV for denom %q on vault %s: %w", nav.Denom, vault.Address, err)
 	}
-	if err := k.requireNAVEntryCapacity(ctx, vault, nav.Denom); err != nil {
-		return err
+	if !alreadyPriced {
+		if err := k.requireNAVDenomRegistered(ctx, nav.Denom); err != nil {
+			return err
+		}
+		if err := k.requireNAVEntryCapacity(ctx, vault, nav.Denom); err != nil {
+			return err
+		}
 	}
 
 	nav.UpdatedBlockHeight = ctx.BlockHeight()

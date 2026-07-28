@@ -90,9 +90,10 @@ const (
 	DefaultMaxVaultNAVEntries = 100
 
 	// MaxVaultNAVEntriesLimit is the largest value governance may set for the
-	// max_vault_nav_entries param, bounding how far a param change alone can raise the
-	// per-block valuation cost.
-	MaxVaultNAVEntriesLimit = 10_000
+	// max_vault_nav_entries param. Each entry costs a balance read per valuation, and the
+	// ABCI budgets value several hundred vaults per block without gas metering, so the
+	// ceiling stays within an order of magnitude of DefaultMaxVaultNAVEntries.
+	MaxVaultNAVEntriesLimit = 1_000
 )
 
 // GetVaultAddress returns the module account address for the given shareDenom.

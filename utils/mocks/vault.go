@@ -24,6 +24,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
 var _ types.AccountKeeper = (*MockAuthKeeper)(nil)
@@ -89,6 +91,28 @@ func (m *MockAuthKeeper) GetModuleAddress(moduleName string) sdk.AccAddress {
 	return sdk.AccAddress(moduleName)
 }
 
+var _ types.MetadataKeeper = (*MockMetadataKeeper)(nil)
+
+// MockMetadataKeeper holds the scopes a test wants the vault module to find. With none
+// recorded it reports every scope as missing, so the NAV denom check returns its error for
+// an nft/<scope-id> denom rather than dereferencing a nil keeper.
+type MockMetadataKeeper struct {
+	scopes map[string]metadatatypes.Scope
+}
+
+func NewMockMetadataKeeper() *MockMetadataKeeper {
+	return &MockMetadataKeeper{scopes: make(map[string]metadatatypes.Scope)}
+}
+
+func (m *MockMetadataKeeper) SetScope(scope metadatatypes.Scope) {
+	m.scopes[scope.ScopeId.String()] = scope
+}
+
+func (m *MockMetadataKeeper) GetScope(_ sdk.Context, id metadatatypes.MetadataAddress) (metadatatypes.Scope, bool) {
+	scope, found := m.scopes[id.String()]
+	return scope, found
+}
+
 // NewVaultKeeper returns an instance of the Keeper with all dependencies mocked.
 func NewVaultKeeper(
 	t testing.TB,
@@ -118,7 +142,7 @@ func NewVaultKeeper(
 		nil,
 		nil,
 		nil,
-		nil,
+		NewMockMetadataKeeper(),
 	)
 
 	ctx := wrapper.Ctx.WithHeaderInfo(header.Info{Time: time.Now().UTC()})

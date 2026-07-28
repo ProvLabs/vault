@@ -559,70 +559,52 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidNAV() {
 	}
 }
 
-// TestVaultGenesis_InitPanicsOnUnregisteredNAVMarker verifies InitGenesis rejects
-// a NAV entry whose denom passes stateless genesis validation but is not a
-// registered marker on-chain, matching the invariant enforced by the runtime
-// SetVaultNAV path.
-func (s *TestSuite) TestVaultGenesis_InitPanicsOnUnregisteredNAVMarker() {
+func (s *TestSuite) TestVaultGenesis_InitImportsNAVEntryWithUnregisteredDenom() {
 	shareDenom := "unregisterednavshare"
 	underlying := "unregisterednavunderlying"
 	vaultAddr := types.GetVaultAddress(shareDenom)
+	navDenom := "unregisteredrwa"
 
 	genesis := buildSingleVaultGenesisState(shareDenom, underlying, s.adminAddr.String(),
 		[]types.VaultNAVEntry{{
 			VaultAddress: vaultAddr.String(),
 			Nav: types.VaultNAV{
-				Denom:       "unregisteredrwa",
+				Denom:       navDenom,
 				Price:       sdk.NewInt64Coin(underlying, 100),
 				Volume:      sdkmath.NewInt(1),
 				UpdatedTime: time.Unix(1700000000, 0).UTC(),
 			},
 		}})
 
-	var recovered any
-	func() {
-		defer func() { recovered = recover() }()
-		s.k.InitGenesis(s.ctx, genesis)
-	}()
+	s.Require().NotPanics(func() { s.k.InitGenesis(s.ctx, genesis) },
+		"InitGenesis should import a NAV entry whose denom %s is no longer a registered marker", navDenom)
 
-	s.Require().NotNil(recovered, "InitGenesis should panic when a NAV denom is not a registered marker")
-	err, ok := recovered.(error)
-	s.Require().True(ok, "panic value should be an error, got %T", recovered)
-	s.Require().ErrorContains(err, `NAV denom "unregisteredrwa"`, "panic should name the offending NAV denom")
-	s.Require().ErrorContains(err, "is not a registered marker", "panic should explain that the NAV denom has no marker")
-	s.Require().ErrorContains(err, vaultAddr.String(), "panic should name the vault the NAV entry belongs to")
+	stored, err := s.k.GetVaultNAV(s.ctx, vaultAddr, navDenom)
+	s.Require().NoError(err, "NAV entry for unregistered denom %s should be readable after import", navDenom)
+	s.Assert().Equal(sdk.NewInt64Coin(underlying, 100), stored.Price, "imported NAV price for %s", navDenom)
 }
 
-// TestVaultGenesis_InitEnforcesNAVEntryCap verifies InitGenesis applies the same
-// per-vault NAV entry cap as the runtime SetVaultNAV path, so an oversized table can
-// never enter state through an import.
-func (s *TestSuite) TestVaultGenesis_InitEnforcesNAVEntryCap() {
+func (s *TestSuite) TestVaultGenesis_InitImportsNAVEntriesOverTheCap() {
 	shareDenom := "importcapshare"
 	underlying := "importcapunderlying"
 	vaultAddr := types.GetVaultAddress(shareDenom)
 	navDenoms := []string{"importcapassetone", "importcapassettwo", "importcapassetthree"}
 
 	tests := []struct {
-		name        string
-		maxEntries  uint32
-		navDenoms   []string
-		expectPanic bool
+		name       string
+		maxEntries uint32
 	}{
 		{
 			name:       "entry count equal to the cap imports",
 			maxEntries: 3,
-			navDenoms:  navDenoms,
 		},
 		{
-			name:        "entry count above the cap panics",
-			maxEntries:  2,
-			navDenoms:   navDenoms,
-			expectPanic: true,
+			name:       "entry count above the cap imports so a chain can restart from its own export",
+			maxEntries: 2,
 		},
 		{
 			name:       "unset cap falls back to the module default",
 			maxEntries: 0,
-			navDenoms:  navDenoms,
 		},
 	}
 
@@ -630,8 +612,8 @@ func (s *TestSuite) TestVaultGenesis_InitEnforcesNAVEntryCap() {
 		s.Run(tt.name, func() {
 			s.SetupTest()
 
-			entries := make([]types.VaultNAVEntry, 0, len(tt.navDenoms))
-			for _, denom := range tt.navDenoms {
+			entries := make([]types.VaultNAVEntry, 0, len(navDenoms))
+			for _, denom := range navDenoms {
 				s.requireSimpleMarker(denom)
 				entries = append(entries, types.VaultNAVEntry{
 					VaultAddress: vaultAddr.String(),
@@ -647,18 +629,9 @@ func (s *TestSuite) TestVaultGenesis_InitEnforcesNAVEntryCap() {
 			genesis := buildSingleVaultGenesisState(shareDenom, underlying, s.adminAddr.String(), entries)
 			genesis.Params.MaxVaultNavEntries = tt.maxEntries
 
-			if tt.expectPanic {
-				s.Require().PanicsWithError(
-					fmt.Sprintf("vault %s exceeds the maximum of %d internal NAV entries", vaultAddr, tt.maxEntries),
-					func() { s.k.InitGenesis(s.ctx, genesis) },
-					"InitGenesis should panic when a vault carries more than %d NAV entries", tt.maxEntries,
-				)
-				return
-			}
-
 			s.Require().NotPanics(func() { s.k.InitGenesis(s.ctx, genesis) },
-				"InitGenesis should import %d NAV entries at a cap of %d", len(tt.navDenoms), tt.maxEntries)
-			s.requireVaultNAVEntryCount(vaultAddr, len(tt.navDenoms))
+				"InitGenesis should import %d NAV entries at a cap of %d", len(navDenoms), tt.maxEntries)
+			s.requireVaultNAVEntryCount(vaultAddr, len(navDenoms))
 		})
 	}
 }

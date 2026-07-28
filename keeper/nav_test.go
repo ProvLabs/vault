@@ -460,6 +460,48 @@ func (s *TestSuite) TestKeeper_SetVaultNAV_EntryCapFallsBackToDefaultWhenParamsU
 	s.Require().NoError(s.priceHeldAssets(vault, "defaultcapasset"), "SetVaultNAV should accept an entry well under the default cap")
 }
 
+func (s *TestSuite) TestKeeper_SetVaultNAV_RepricesDenomThatIsNoLongerRegistered() {
+	underlying := "strandedunderlying"
+	share := "strandedshare"
+
+	tests := []struct {
+		name  string
+		denom string
+	}{
+		{
+			name:  "denom whose marker no longer exists",
+			denom: "strandedrwa",
+		},
+		{
+			name:  "nft denom whose scope no longer exists",
+			denom: unregisteredScopeNAVDenom("00000000-0000-4000-8000-000000000009"),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			vault := s.setupBaseVault(underlying, share)
+
+			seeded := types.VaultNAV{Denom: tc.denom, Price: sdk.NewInt64Coin(underlying, 100), Volume: sdkmath.NewInt(1)}
+			s.Require().NoError(
+				s.k.NAVs.Set(s.ctx, collections.Join(vault.GetAddress(), tc.denom), seeded),
+				"failed to seed NAV entry for denom %s", tc.denom,
+			)
+
+			writeDown := types.VaultNAV{Denom: tc.denom, Price: sdk.NewInt64Coin(underlying, 0), Volume: sdkmath.NewInt(1)}
+			s.Require().NoError(
+				s.k.SetVaultNAV(s.ctx, vault, writeDown, s.adminAddr.String()),
+				"the NAV authority should be able to write down denom %s after its marker or scope disappeared", tc.denom,
+			)
+
+			stored, err := s.k.GetVaultNAV(s.ctx, vault.GetAddress(), tc.denom)
+			s.Require().NoError(err, "written-down NAV entry for %s should be readable", tc.denom)
+			s.Assert().True(stored.Price.Amount.IsZero(), "NAV price for %s should be written down to zero", tc.denom)
+		})
+	}
+}
+
 func (s *TestSuite) TestKeeper_RemoveVaultNAV() {
 	cases := []struct {
 		name                string

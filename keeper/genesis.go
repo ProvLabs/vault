@@ -12,6 +12,11 @@ import (
 )
 
 // InitGenesis initializes the vault module state from genesis.
+//
+// Malformed data panics. A NAV entry whose denom is no longer registered, or that puts a
+// vault over max_vault_nav_entries, is imported with a warning instead: both are reachable
+// from legitimate state (a deleted scope, a cap governance lowered), and a chain must be
+// able to import its own export. The cap still bounds growth on the write path.
 func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 	if genState == nil {
 		return
@@ -116,6 +121,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 
 	maxNAVEntries := params.MaxVaultNAVEntriesOrDefault()
 	navEntriesByVault := make(map[string]uint32)
+	logger := k.getLogger(ctx)
 	for _, entry := range genState.Navs {
 		addr, err := sdk.AccAddressFromBech32(entry.VaultAddress)
 		if err != nil {
@@ -129,11 +135,18 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 			panic(fmt.Errorf("invalid nav entry for vault %s: %w", entry.VaultAddress, err))
 		}
 		if err := k.requireNAVDenomRegistered(ctx, entry.Nav.Denom); err != nil {
-			panic(fmt.Errorf("invalid nav denom for vault %s: %w", entry.VaultAddress, err))
+			logger.Warn("importing internal NAV entry whose denom is no longer registered on chain",
+				"vault", entry.VaultAddress,
+				"denom", entry.Nav.Denom,
+				"err", err,
+			)
 		}
 		navEntriesByVault[entry.VaultAddress]++
-		if navEntriesByVault[entry.VaultAddress] > maxNAVEntries {
-			panic(fmt.Errorf("vault %s exceeds the maximum of %d internal NAV entries", entry.VaultAddress, maxNAVEntries))
+		if navEntriesByVault[entry.VaultAddress] == maxNAVEntries+1 {
+			logger.Warn("importing internal NAV entries beyond the per-vault cap",
+				"vault", entry.VaultAddress,
+				"max_vault_nav_entries", maxNAVEntries,
+			)
 		}
 		if err := k.NAVs.Set(ctx, collections.Join(addr, entry.Nav.Denom), entry.Nav); err != nil {
 			panic(fmt.Errorf("failed to import vault nav for %s/%s: %w", entry.VaultAddress, entry.Nav.Denom, err))

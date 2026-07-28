@@ -554,9 +554,10 @@ type Params struct {
 	TechFeeAddress string `protobuf:"bytes,1,opt,name=tech_fee_address,json=techFeeAddress,proto3" json:"tech_fee_address,omitempty"`
 	// default_aum_fee_bips is the default fee rate (in basis points) applied to new vaults upon creation.
 	DefaultAumFeeBips uint32 `protobuf:"varint,2,opt,name=default_aum_fee_bips,json=defaultAumFeeBips,proto3" json:"default_aum_fee_bips,omitempty"`
-	// max_vault_nav_entries caps how many internal NAV entries a single vault may hold.
-	// Total vault value iterates this table on every valuation, so bounding it keeps the
-	// per-block valuation cost predictable. A value of 0 means the module default applies.
+	// max_vault_nav_entries caps how many internal NAV entries a vault may add. Total vault
+	// value iterates this table on every valuation, so bounding it keeps the per-block
+	// valuation cost predictable. Genesis import preserves entries beyond the cap and only
+	// logs, so imported state may exceed it. A value of 0 means the module default applies.
 	MaxVaultNavEntries uint32 `protobuf:"varint,3,opt,name=max_vault_nav_entries,json=maxVaultNavEntries,proto3" json:"max_vault_nav_entries,omitempty"`
 }
 

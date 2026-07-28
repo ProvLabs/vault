@@ -100,14 +100,19 @@ type MockMetadataKeeper struct {
 	scopes map[string]metadatatypes.Scope
 }
 
+// NewMockMetadataKeeper returns a MockMetadataKeeper with no scopes recorded.
 func NewMockMetadataKeeper() *MockMetadataKeeper {
 	return &MockMetadataKeeper{scopes: make(map[string]metadatatypes.Scope)}
 }
 
+// SetScope records a scope so GetScope reports it as present, letting a test price an
+// nft/<scope-id> NAV denom.
 func (m *MockMetadataKeeper) SetScope(scope metadatatypes.Scope) {
 	m.scopes[scope.ScopeId.String()] = scope
 }
 
+// GetScope returns a recorded scope and whether it was found, satisfying
+// types.MetadataKeeper.
 func (m *MockMetadataKeeper) GetScope(_ sdk.Context, id metadatatypes.MetadataAddress) (metadatatypes.Scope, bool) {
 	scope, found := m.scopes[id.String()]
 	return scope, found

@@ -9,8 +9,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/google/uuid"
-	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 
 	"github.com/provlabs/vault/types"
 )
@@ -566,8 +564,8 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidNAV() {
 // registered marker on-chain, matching the invariant enforced by the runtime
 // SetVaultNAV path.
 func (s *TestSuite) TestVaultGenesis_InitPanicsOnUnregisteredNAVMarker() {
-	shareDenom := "navmkrshare"
-	underlying := "navmkrunder"
+	shareDenom := "unregisterednavshare"
+	underlying := "unregisterednavunderlying"
 	vaultAddr := types.GetVaultAddress(shareDenom)
 
 	genesis := buildSingleVaultGenesisState(shareDenom, underlying, s.adminAddr.String(),
@@ -595,8 +593,78 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsOnUnregisteredNAVMarker() {
 	s.Require().ErrorContains(err, vaultAddr.String(), "panic should name the vault the NAV entry belongs to")
 }
 
+// TestVaultGenesis_InitEnforcesNAVEntryCap verifies InitGenesis applies the same
+// per-vault NAV entry cap as the runtime SetVaultNAV path, so an oversized table can
+// never enter state through an import.
+func (s *TestSuite) TestVaultGenesis_InitEnforcesNAVEntryCap() {
+	shareDenom := "importcapshare"
+	underlying := "importcapunderlying"
+	vaultAddr := types.GetVaultAddress(shareDenom)
+	navDenoms := []string{"importcapassetone", "importcapassettwo", "importcapassetthree"}
+
+	tests := []struct {
+		name        string
+		maxEntries  uint32
+		navDenoms   []string
+		expectPanic bool
+	}{
+		{
+			name:       "entry count equal to the cap imports",
+			maxEntries: 3,
+			navDenoms:  navDenoms,
+		},
+		{
+			name:        "entry count above the cap panics",
+			maxEntries:  2,
+			navDenoms:   navDenoms,
+			expectPanic: true,
+		},
+		{
+			name:       "unset cap falls back to the module default",
+			maxEntries: 0,
+			navDenoms:  navDenoms,
+		},
+	}
+
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			s.SetupTest()
+
+			entries := make([]types.VaultNAVEntry, 0, len(tt.navDenoms))
+			for _, denom := range tt.navDenoms {
+				s.requireSimpleMarker(denom)
+				entries = append(entries, types.VaultNAVEntry{
+					VaultAddress: vaultAddr.String(),
+					Nav: types.VaultNAV{
+						Denom:       denom,
+						Price:       sdk.NewInt64Coin(underlying, 100),
+						Volume:      sdkmath.NewInt(1),
+						UpdatedTime: time.Unix(1_700_000_000, 0).UTC(),
+					},
+				})
+			}
+
+			genesis := buildSingleVaultGenesisState(shareDenom, underlying, s.adminAddr.String(), entries)
+			genesis.Params.MaxVaultNavEntries = tt.maxEntries
+
+			if tt.expectPanic {
+				s.Require().PanicsWithError(
+					fmt.Sprintf("vault %s exceeds the maximum of %d internal NAV entries", vaultAddr, tt.maxEntries),
+					func() { s.k.InitGenesis(s.ctx, genesis) },
+					"InitGenesis should panic when a vault carries more than %d NAV entries", tt.maxEntries,
+				)
+				return
+			}
+
+			s.Require().NotPanics(func() { s.k.InitGenesis(s.ctx, genesis) },
+				"InitGenesis should import %d NAV entries at a cap of %d", len(tt.navDenoms), tt.maxEntries)
+			s.requireVaultNAVEntryCount(vaultAddr, len(tt.navDenoms))
+		})
+	}
+}
+
 func (s *TestSuite) TestVaultGenesis_RoundTripsEveryNAVDenomSetVaultNAVAccepts() {
-	metadataDenom := metadatatypes.ScopeMetadataAddress(uuid.MustParse("00000000-0000-4000-8000-000000000004")).Denom()
+	metadataScopeUUID := "00000000-0000-4000-8000-000000000004"
 
 	tests := []struct {
 		name           string
@@ -604,19 +672,21 @@ func (s *TestSuite) TestVaultGenesis_RoundTripsEveryNAVDenomSetVaultNAVAccepts()
 		underlying     string
 		navDenom       string
 		registerMarker bool
+		registerScope  bool
 	}{
 		{
 			name:           "registered marker denom",
-			shareDenom:     "gsnavmkrshare",
-			underlying:     "gsnavmkrunder",
-			navDenom:       "gsregisteredrwa",
+			shareDenom:     "markernavshare",
+			underlying:     "markernavunderlying",
+			navDenom:       "markernavheldasset",
 			registerMarker: true,
 		},
 		{
-			name:       "metadata value-owner denom with no marker",
-			shareDenom: "gsnavnftshare",
-			underlying: "gsnavnftunder",
-			navDenom:   metadataDenom,
+			name:          "metadata value-owner denom with no marker",
+			shareDenom:    "scopenavshare",
+			underlying:    "scopenavunderlying",
+			navDenom:      unregisteredScopeNAVDenom(metadataScopeUUID),
+			registerScope: true,
 		},
 	}
 
@@ -635,7 +705,10 @@ func (s *TestSuite) TestVaultGenesis_RoundTripsEveryNAVDenomSetVaultNAVAccepts()
 				},
 			}
 
-			arrangeMarkerRegistration := func() {
+			arrangeDenomRegistration := func() {
+				if tt.registerScope {
+					s.registerScopeNAVDenom(metadataScopeUUID)
+				}
 				if tt.registerMarker {
 					s.requireSimpleMarker(tt.navDenom)
 					return
@@ -645,7 +718,7 @@ func (s *TestSuite) TestVaultGenesis_RoundTripsEveryNAVDenomSetVaultNAVAccepts()
 			}
 
 			s.SetupTest()
-			arrangeMarkerRegistration()
+			arrangeDenomRegistration()
 
 			genesis := buildSingleVaultGenesisState(tt.shareDenom, tt.underlying, s.adminAddr.String(), []types.VaultNAVEntry{entry})
 			s.Require().NotPanics(func() { s.k.InitGenesis(s.ctx, genesis) },
@@ -660,7 +733,7 @@ func (s *TestSuite) TestVaultGenesis_RoundTripsEveryNAVDenomSetVaultNAVAccepts()
 			s.Require().NoError(exported.Validate(), "exported genesis should pass stateless validation with a NAV entry for denom %s", tt.navDenom)
 
 			s.SetupTest()
-			arrangeMarkerRegistration()
+			arrangeDenomRegistration()
 
 			s.Require().NotPanics(func() { s.k.InitGenesis(s.ctx, exported) },
 				"importing the exported genesis into a fresh chain should succeed for denom %s", tt.navDenom)

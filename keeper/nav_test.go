@@ -272,6 +272,24 @@ func (s *TestSuite) TestKeeper_SetVaultNAV_RejectsInvalidInput() {
 			},
 			expectedErrSubstr: "is not a registered marker",
 		},
+		{
+			name: "rejects a well-formed nft/ denom whose scope does not exist",
+			nav: types.VaultNAV{
+				Denom:  unregisteredScopeNAVDenom("00000000-0000-4000-8000-0000000000ff"),
+				Price:  sdk.NewInt64Coin(underlying, 100),
+				Volume: sdkmath.NewInt(1),
+			},
+			expectedErrSubstr: "does not refer to an existing scope",
+		},
+		{
+			name: "rejects a metadata denom that is not a scope address",
+			nav: types.VaultNAV{
+				Denom:  metadatatypes.SessionMetadataAddress(uuid.MustParse("00000000-0000-4000-8000-0000000000fe"), uuid.MustParse("00000000-0000-4000-8000-0000000000fd")).Denom(),
+				Price:  sdk.NewInt64Coin(underlying, 100),
+				Volume: sdkmath.NewInt(1),
+			},
+			expectedErrSubstr: "is not a scope metadata address",
+		},
 	}
 
 	for _, tc := range tests {
@@ -317,7 +335,7 @@ func (s *TestSuite) TestKeeper_SetVaultNAV_MetadataDenomSkipsMarkerCheck() {
 	vault := s.setupBaseVault(underlying, share)
 	vaultAddr := types.GetVaultAddress(share)
 
-	navDenom := metadatatypes.ScopeMetadataAddress(uuid.MustParse("00000000-0000-4000-8000-000000000003")).Denom()
+	navDenom := s.registerScopeNAVDenom("00000000-0000-4000-8000-000000000003")
 	nav := types.VaultNAV{
 		Denom:  navDenom,
 		Price:  sdk.NewInt64Coin(underlying, 100),
@@ -333,6 +351,114 @@ func (s *TestSuite) TestKeeper_SetVaultNAV_MetadataDenomSkipsMarkerCheck() {
 
 	_, markerErr := s.simApp.MarkerKeeper.GetMarkerByDenom(s.ctx, navDenom)
 	s.Assert().Error(markerErr, "nft/ denom %s must not be a registered marker", navDenom)
+}
+
+func (s *TestSuite) TestKeeper_SetVaultNAV_EnforcesEntryCap() {
+	underlying := "capunderlying"
+	share := "capshare"
+
+	tests := []struct {
+		name              string
+		maxEntries        uint32
+		seedDenoms        []string
+		writeDenom        string
+		expectedErrSubstr string
+		expectedEntries   int
+	}{
+		{
+			name:            "new denom below the cap is accepted",
+			maxEntries:      3,
+			seedDenoms:      []string{"cappedassetone"},
+			writeDenom:      "cappedassettwo",
+			expectedEntries: 2,
+		},
+		{
+			name:            "new denom filling the last slot is accepted",
+			maxEntries:      3,
+			seedDenoms:      []string{"cappedassetone", "cappedassettwo"},
+			writeDenom:      "cappedassetthree",
+			expectedEntries: 3,
+		},
+		{
+			name:              "new denom at the cap is rejected",
+			maxEntries:        2,
+			seedDenoms:        []string{"cappedassetone", "cappedassettwo"},
+			writeDenom:        "cappedassetthree",
+			expectedErrSubstr: "already holds the maximum of 2 internal NAV entries",
+			expectedEntries:   2,
+		},
+		{
+			name:            "repricing an existing denom at the cap is accepted",
+			maxEntries:      2,
+			seedDenoms:      []string{"cappedassetone", "cappedassettwo"},
+			writeDenom:      "cappedassettwo",
+			expectedEntries: 2,
+		},
+		{
+			name:            "repricing an existing denom over the cap is accepted",
+			maxEntries:      1,
+			seedDenoms:      []string{"cappedassetone", "cappedassettwo"},
+			writeDenom:      "cappedassetone",
+			expectedEntries: 2,
+		},
+		{
+			name:              "new denom is rejected when the cap is already exceeded",
+			maxEntries:        1,
+			seedDenoms:        []string{"cappedassetone", "cappedassettwo"},
+			writeDenom:        "cappedassetthree",
+			expectedErrSubstr: "already holds the maximum of 1 internal NAV entries",
+			expectedEntries:   2,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			vault := s.setupBaseVault(underlying, share)
+			vaultAddr := types.GetVaultAddress(share)
+
+			s.setMaxVaultNAVEntries(uint32(len(tc.seedDenoms)))
+			s.Require().NoError(s.priceHeldAssets(vault, tc.seedDenoms...), "seeding %d NAV entries should succeed", len(tc.seedDenoms))
+			s.setMaxVaultNAVEntries(tc.maxEntries)
+
+			s.requireSimpleMarker(tc.writeDenom)
+			nav := types.VaultNAV{
+				Denom:  tc.writeDenom,
+				Price:  sdk.NewInt64Coin(underlying, 250),
+				Volume: sdkmath.NewInt(1),
+			}
+			err := s.k.SetVaultNAV(s.ctx, vault, nav, s.adminAddr.String())
+
+			if tc.expectedErrSubstr != "" {
+				s.Require().Error(err, "SetVaultNAV should reject denom %s at a cap of %d", tc.writeDenom, tc.maxEntries)
+				s.Assert().Contains(err.Error(), tc.expectedErrSubstr, "SetVaultNAV error should explain the entry cap")
+				s.Assert().Contains(err.Error(), tc.writeDenom, "SetVaultNAV error should name the rejected denom")
+			} else {
+				s.Require().NoError(err, "SetVaultNAV should accept denom %s at a cap of %d", tc.writeDenom, tc.maxEntries)
+				stored, getErr := s.k.GetVaultNAV(s.ctx, vaultAddr, tc.writeDenom)
+				s.Require().NoError(getErr, "accepted NAV entry for denom %s should be readable", tc.writeDenom)
+				s.Assert().Equal(nav.Price, stored.Price, "stored NAV price for denom %s", tc.writeDenom)
+			}
+
+			s.requireVaultNAVEntryCount(vaultAddr, tc.expectedEntries)
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_SetVaultNAV_EntryCapFallsBackToDefaultWhenParamsUnset() {
+	underlying := "defaultcapunderlying"
+	share := "defaultcapshare"
+	vault := s.setupBaseVault(underlying, share)
+
+	params := types.DefaultParams()
+	params.MaxVaultNavEntries = 0
+	s.Require().NoError(s.k.Params.Set(s.ctx, params), "failed to store params leaving the NAV entry cap unset")
+
+	maxEntries, err := s.k.GetMaxVaultNAVEntries(s.ctx)
+	s.Require().NoError(err, "failed to read the max vault NAV entries param")
+	s.Require().Equal(uint32(types.DefaultMaxVaultNAVEntries), maxEntries, "an unset cap should fall back to the module default")
+
+	s.Require().NoError(s.priceHeldAssets(vault, "defaultcapasset"), "SetVaultNAV should accept an entry well under the default cap")
 }
 
 func (s *TestSuite) TestKeeper_RemoveVaultNAV() {

@@ -7,9 +7,7 @@ import (
 	"cosmossdk.io/collections"
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/google/uuid"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
-	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
@@ -20,7 +18,7 @@ func (s *TestSuite) TestUnitPriceFraction_Table() {
 	underlyingDenom := "underlying"
 	heldDenom := "usdc"
 	shareDenom := "vshare"
-	heldAsset := metadatatypes.ScopeMetadataAddress(uuid.MustParse("00000000-0000-4000-8000-0000000000e5")).Denom()
+	heldAsset := s.registerScopeNAVDenom("00000000-0000-4000-8000-0000000000e5")
 	vault := s.setupHeldAssetVault(underlyingDenom, shareDenom, heldDenom, 1, 2)
 
 	cases := []struct {
@@ -352,7 +350,7 @@ func (s *TestSuite) TestGetTVV_IncludesUnderlyingPricedHeldAsset() {
 	shareDenom := "vshare"
 	vault := s.setupBaseVault(underlyingDenom, shareDenom)
 
-	heldAsset := metadatatypes.ScopeMetadataAddress(uuid.MustParse("00000000-0000-4000-8000-0000000000a1")).Denom()
+	heldAsset := s.registerScopeNAVDenom("00000000-0000-4000-8000-0000000000a1")
 	s.setVaultNAV(vault, heldAsset, sdk.NewInt64Coin(underlyingDenom, 3), 2)
 
 	principal := vault.PrincipalMarkerAddress()
@@ -371,7 +369,7 @@ func (s *TestSuite) TestGetTVV_SkipsHeldAssetWithoutNAV() {
 	shareDenom := "vshare"
 	vault := s.setupBaseVault(underlyingDenom, shareDenom)
 
-	heldAsset := metadatatypes.ScopeMetadataAddress(uuid.MustParse("00000000-0000-4000-8000-0000000000c3")).Denom()
+	heldAsset := s.registerScopeNAVDenom("00000000-0000-4000-8000-0000000000c3")
 
 	principal := vault.PrincipalMarkerAddress()
 	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principal, sdk.NewCoins(
@@ -435,7 +433,7 @@ func (s *TestSuite) TestGetTVV_InterestAndFeeAccrueOnHeldAssetBase() {
 	s.SetVaultRatesAndPeriod(vault, "0.10", "0.10", 1, 0)
 	vault.PeriodStart = 1
 
-	heldAsset := metadatatypes.ScopeMetadataAddress(uuid.MustParse("00000000-0000-4000-8000-0000000000d4")).Denom()
+	heldAsset := s.registerScopeNAVDenom("00000000-0000-4000-8000-0000000000d4")
 	s.setVaultNAV(vault, heldAsset, sdk.NewInt64Coin(underlyingDenom, 1), 1)
 
 	principal := vault.PrincipalMarkerAddress()

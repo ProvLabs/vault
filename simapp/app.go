@@ -196,6 +196,7 @@ func AppConfig() depinject.Config {
 			ProvideAttributeKeeperStub,
 			ProvideExchangeKeeperStub,
 			ProvideExchangeQueryServerStub,
+			ProvideMetadataKeeperStub,
 		),
 		depinject.Supply(
 			map[string]module.AppModuleBasic{
@@ -387,6 +388,20 @@ func ProvideExchangeKeeperStub() vaulttypes.ExchangeKeeper {
 // installed by RegisterProvenanceModules once the exchange keeper exists.
 func ProvideExchangeQueryServerStub() vaulttypes.ExchangeQueryServer {
 	return exchangekeeper.QueryServer{}
+}
+
+// ProvideMetadataKeeperStub returns an empty types.MetadataKeeper instance.
+//
+// This stub is used to satisfy dependency injection requirements when wiring
+// the Vault module in the app module configuration. It allows the Vault module
+// to be included in the dependency graph even though the actual MetadataKeeper
+// is initialized separately using the legacy Provenance wiring in SimApp.
+//
+// This function should only be used during app setup and should not be relied
+// on at runtime, as the returned keeper is not fully configured and will panic
+// if used.
+func ProvideMetadataKeeperStub() vaulttypes.MetadataKeeper {
+	return metadatakeeper.Keeper{}
 }
 
 func (app *SimApp) AppCodec() codec.Codec {

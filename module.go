@@ -754,6 +754,7 @@ type ModuleInputs struct {
 	AttrKeeper          types.AttributeKeeper
 	ExchangeKeeper      types.ExchangeKeeper
 	ExchangeQueryServer types.ExchangeQueryServer
+	MetadataKeeper      types.MetadataKeeper
 }
 
 // ModuleOutputs defines the outputs of the vault module provider.
@@ -783,6 +784,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		in.AttrKeeper,
 		in.ExchangeKeeper,
 		in.ExchangeQueryServer,
+		in.MetadataKeeper,
 	)
 	m := NewAppModule(k, in.MarkerKeeper, in.BankKeeper, in.NameKeeper, in.AttrKeeper, in.AddressCodec)
 	return ModuleOutputs{Keeper: k, Module: m}

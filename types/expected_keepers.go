@@ -9,6 +9,7 @@ import (
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/marker/types"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
 type MarkerKeeper interface {
@@ -71,4 +72,11 @@ type ExchangeKeeper interface {
 // targeting a vault. Satisfy it with exchangekeeper.NewQueryServer.
 type ExchangeQueryServer interface {
 	GetPaymentsWithTarget(ctx context.Context, req *exchange.QueryGetPaymentsWithTargetRequest) (*exchange.QueryGetPaymentsWithTargetResponse, error)
+}
+
+// MetadataKeeper defines the subset of the Provenance metadata module keeper that the
+// vault module relies on to confirm a metadata value-owner denom (nft/<scope-id>)
+// refers to a scope that exists.
+type MetadataKeeper interface {
+	GetScope(ctx sdk.Context, id metadatatypes.MetadataAddress) (metadatatypes.Scope, bool)
 }

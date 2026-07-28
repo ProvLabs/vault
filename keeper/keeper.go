@@ -33,6 +33,7 @@ type Keeper struct {
 	AttrKeeper          types.AttributeKeeper
 	ExchangeKeeper      types.ExchangeKeeper
 	ExchangeQueryServer types.ExchangeQueryServer
+	MetadataKeeper      types.MetadataKeeper
 
 	Params                collections.Item[types.Params]
 	Vaults                collections.Map[sdk.AccAddress, []byte]
@@ -57,6 +58,7 @@ func NewKeeper(
 	attributekeeper types.AttributeKeeper,
 	exchangekeeper types.ExchangeKeeper,
 	exchangeQueryServer types.ExchangeQueryServer,
+	metadatakeeper types.MetadataKeeper,
 ) *Keeper {
 	if _, err := addressCodec.BytesToString(authority); err != nil {
 		panic(fmt.Sprintf("invalid authority address %s: %s", authority, err))
@@ -84,6 +86,7 @@ func NewKeeper(
 		AttrKeeper:            attributekeeper,
 		ExchangeKeeper:        exchangekeeper,
 		ExchangeQueryServer:   exchangeQueryServer,
+		MetadataKeeper:        metadatakeeper,
 	}
 
 	schema, err := builder.Build()
@@ -125,6 +128,19 @@ func (k Keeper) GetAUMFeeAddress(ctx sdk.Context) (sdk.AccAddress, error) {
 	}
 
 	return addr, nil
+}
+
+// GetMaxVaultNAVEntries returns the per-vault cap on internal NAV entries from params,
+// falling back to the module default when params are absent or leave the cap unset.
+func (k Keeper) GetMaxVaultNAVEntries(ctx sdk.Context) (uint32, error) {
+	params, err := k.Params.Get(ctx)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return types.DefaultMaxVaultNAVEntries, nil
+		}
+		return 0, fmt.Errorf("failed to retrieve params: %w", err)
+	}
+	return params.MaxVaultNAVEntriesOrDefault(), nil
 }
 
 // getLogger returns a logger with vault module context.

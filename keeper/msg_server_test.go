@@ -13,10 +13,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/google/uuid"
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
-	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
@@ -7623,7 +7621,7 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_SettlementNAV() {
 func (s *TestSuite) TestMsgServer_AcceptAsset_SettlementNAV_MetadataDenom() {
 	underlying := "under"
 	share := "vshare"
-	asset := metadatatypes.ScopeMetadataAddress(uuid.MustParse("00000000-0000-4000-8000-000000000001")).Denom()
+	asset := s.registerScopeNAVDenom("00000000-0000-4000-8000-000000000001")
 	externalID := "settle-nav-nft"
 
 	origCtx := s.ctx
@@ -7682,7 +7680,7 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_SettlementNAV_MetadataDenom() {
 func (s *TestSuite) TestMsgServer_UpdateVaultNAV_MetadataDenom() {
 	underlying := "under"
 	share := "vaultshares"
-	navDenom := metadatatypes.ScopeMetadataAddress(uuid.MustParse("00000000-0000-4000-8000-000000000002")).Denom()
+	navDenom := s.registerScopeNAVDenom("00000000-0000-4000-8000-000000000002")
 	admin := s.adminAddr
 	vaultAddr := types.GetVaultAddress(share)
 

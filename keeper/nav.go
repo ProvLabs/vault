@@ -14,26 +14,46 @@ import (
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
-// isMetadataDenom reports whether denom is a well-formed metadata value-owner
-// denom (nft/<bech32-metadata-addr>), such as the coin minted for a scope. These
-// denoms are legitimate vault assets but are barred from being markers, so the
+// metadataDenomAddress returns the metadata address a value-owner denom
+// (nft/<bech32-metadata-addr>) refers to, and whether denom has that form at all.
+// These denoms are legitimate vault assets but are barred from being markers, so the
 // marker requirement and marker NAV mirror are skipped for them. A malformed
 // nft/... string is not a metadata denom and remains subject to the marker check.
+func metadataDenomAddress(denom string) (metadatatypes.MetadataAddress, bool) {
+	addr, err := metadatatypes.MetadataAddressFromDenom(denom)
+	if err != nil {
+		return nil, false
+	}
+	return addr, true
+}
+
+// isMetadataDenom reports whether denom is a well-formed metadata value-owner denom.
+// This checks string form only; whether the denom may be priced is decided by
+// requireNAVDenomRegistered, which also requires the referenced scope to exist.
 func isMetadataDenom(denom string) bool {
-	_, err := metadatatypes.MetadataAddressFromDenom(denom)
-	return err == nil
+	_, ok := metadataDenomAddress(denom)
+	return ok
 }
 
 // requireNAVDenomRegistered enforces the on-chain denom requirement for an internal
-// NAV entry: the denom must be a registered marker, except for metadata value-owner
-// denoms (nft/<scope-id>), which are legitimate vault assets but are barred from
-// being markers.
+// NAV entry: a metadata value-owner denom (nft/<scope-id>) must name an existing scope,
+// and every other denom must be a registered marker.
+//
+// Requiring the scope to exist keeps the priceable denom set tied to real on-chain state
+// rather than to string form alone. It does not restrict the price-then-acquire flow: a
+// scope the vault intends to buy already exists under its current owner beforehand.
 //
 // SetVaultNAV and InitGenesis share this check so that every entry one path can write
 // the other can import. A genesis export carrying an entry the importer rejects cannot
 // be used for a chain restart or a state-export upgrade, so the two must not drift.
 func (k Keeper) requireNAVDenomRegistered(ctx sdk.Context, denom string) error {
-	if isMetadataDenom(denom) {
+	if metadataAddr, ok := metadataDenomAddress(denom); ok {
+		if !metadataAddr.IsScopeAddress() {
+			return fmt.Errorf("NAV denom %q is not a scope metadata address", denom)
+		}
+		if _, found := k.MetadataKeeper.GetScope(ctx, metadataAddr); !found {
+			return fmt.Errorf("NAV denom %q does not refer to an existing scope", denom)
+		}
 		return nil
 	}
 	if _, err := k.MarkerKeeper.GetMarkerByDenom(ctx, denom); err != nil {
@@ -66,6 +86,52 @@ func validateVaultNAVFields(vault *types.VaultAccount, nav types.VaultNAV) error
 	return nil
 }
 
+// requireNAVEntryCapacity reports whether the vault has room to start pricing denom,
+// enforcing the max_vault_nav_entries cap that bounds GetTVV's walk over the table.
+//
+// Repricing a denom the vault already prices does not grow the table, so it short-circuits
+// before any counting. Only a new denom consumes capacity.
+func (k Keeper) requireNAVEntryCapacity(ctx sdk.Context, vault *types.VaultAccount, denom string) error {
+	alreadyPriced, err := k.NAVs.Has(ctx, collections.Join(vault.GetAddress(), denom))
+	if err != nil {
+		return fmt.Errorf("failed to check for existing internal NAV for denom %q on vault %s: %w", denom, vault.Address, err)
+	}
+	if alreadyPriced {
+		return nil
+	}
+
+	maxEntries, err := k.GetMaxVaultNAVEntries(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to get max vault NAV entries: %w", err)
+	}
+
+	entries, err := k.countVaultNAVEntries(ctx, vault.GetAddress(), maxEntries)
+	if err != nil {
+		return err
+	}
+	if entries >= maxEntries {
+		return fmt.Errorf("vault %s already holds the maximum of %d internal NAV entries: remove an entry before pricing denom %q", vault.Address, maxEntries, denom)
+	}
+	return nil
+}
+
+// countVaultNAVEntries returns the number of internal NAV entries stored for a vault,
+// stopping the walk once limit entries have been seen. The result is the exact count below
+// limit and exactly limit at or above it, which is all a capacity check needs and keeps
+// the cost bounded by limit rather than by the size of the table.
+func (k Keeper) countVaultNAVEntries(ctx sdk.Context, vaultAddr sdk.AccAddress, limit uint32) (uint32, error) {
+	var count uint32
+	navRange := collections.NewPrefixedPairRange[sdk.AccAddress, string](vaultAddr)
+	err := k.NAVs.Walk(ctx, navRange, func(_ collections.Pair[sdk.AccAddress, string], _ types.VaultNAV) (bool, error) {
+		count++
+		return count >= limit, nil
+	})
+	if err != nil {
+		return 0, fmt.Errorf("failed to count internal NAV entries for vault %s: %w", vaultAddr, err)
+	}
+	return count, nil
+}
+
 // SetVaultNAV creates or updates the internal net asset value entry for a denom
 // on the given vault. The denom need not be one the vault already holds: pricing an
 // unheld denom is what authorizes the asset manager to acquire it, and the entry
@@ -77,10 +143,15 @@ func validateVaultNAVFields(vault *types.VaultAccount, nav types.VaultNAV) error
 // The denom may not be the vault's share denom, whose value is derived from
 // the vault's total holdings rather than set externally. The denom must also
 // be a registered marker on-chain, except for metadata value-owner denoms
-// (nft/<scope-id>), which are legitimate vault assets but cannot be markers.
-// The price must be a valid coin denominated in the vault's underlying asset.
+// (nft/<scope-id>), which cannot be markers and must instead name an existing
+// scope. The price must be a valid coin denominated in the vault's underlying asset.
 // Its amount may be zero so the authority can write a worthless held asset
 // down to zero. The volume must be positive.
+//
+// Adding a denom the vault does not already price is rejected once the vault holds
+// max_vault_nav_entries entries. Repricing a denom already in the table is always allowed,
+// including for a vault over the cap, so a cap lowered by governance (or an oversized table
+// imported from genesis) can never strand a held asset at a stale price.
 //
 // This method does NOT verify that signer is authorized to mutate the vault's
 // NAV table; signer is recorded for event attribution only. Callers must run
@@ -93,6 +164,9 @@ func (k *Keeper) SetVaultNAV(ctx sdk.Context, vault *types.VaultAccount, nav typ
 		return err
 	}
 	if err := k.requireNAVDenomRegistered(ctx, nav.Denom); err != nil {
+		return err
+	}
+	if err := k.requireNAVEntryCapacity(ctx, vault, nav.Denom); err != nil {
 		return err
 	}
 

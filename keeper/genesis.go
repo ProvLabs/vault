@@ -29,6 +29,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 		params.TechFeeAddress = types.GetDefaultTechFeeAddress(ctx.ChainID()).String()
 	}
 	params.DefaultAumFeeBips = genState.Params.DefaultAumFeeBips
+	params.MaxVaultNavEntries = genState.Params.MaxVaultNavEntries
 
 	if err := k.Params.Set(ctx, params); err != nil {
 		panic(fmt.Errorf("failed to set params: %w", err))
@@ -113,6 +114,8 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 		panic(fmt.Errorf("failed to import pending swap out queue: %w", err))
 	}
 
+	maxNAVEntries := params.MaxVaultNAVEntriesOrDefault()
+	navEntriesByVault := make(map[string]uint32)
 	for _, entry := range genState.Navs {
 		addr, err := sdk.AccAddressFromBech32(entry.VaultAddress)
 		if err != nil {
@@ -127,6 +130,10 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 		}
 		if err := k.requireNAVDenomRegistered(ctx, entry.Nav.Denom); err != nil {
 			panic(fmt.Errorf("invalid nav denom for vault %s: %w", entry.VaultAddress, err))
+		}
+		navEntriesByVault[entry.VaultAddress]++
+		if navEntriesByVault[entry.VaultAddress] > maxNAVEntries {
+			panic(fmt.Errorf("vault %s exceeds the maximum of %d internal NAV entries", entry.VaultAddress, maxNAVEntries))
 		}
 		if err := k.NAVs.Set(ctx, collections.Join(addr, entry.Nav.Denom), entry.Nav); err != nil {
 			panic(fmt.Errorf("failed to import vault nav for %s/%s: %w", entry.VaultAddress, entry.Nav.Denom, err))

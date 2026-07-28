@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
@@ -18,9 +19,11 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/gogoproto/proto"
+	"github.com/google/uuid"
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/exchange"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	suite "github.com/stretchr/testify/suite"
 
 	"github.com/provlabs/vault/keeper"
@@ -133,6 +136,63 @@ func (c *countingBankKeeper) GetBalance(ctx context.Context, addr sdk.AccAddress
 // TestKeeperTestSuite is the entrypoint that runs the keeper TestSuite with testify.
 func TestKeeperTestSuite(t *testing.T) {
 	suite.Run(t, new(TestSuite))
+}
+
+// registerScopeNAVDenom writes a scope for the given UUID into the metadata module and
+// returns the nft/<scope-id> value-owner denom that prices it. An internal NAV entry may
+// only price a metadata denom whose scope exists, so a test that prices an nft/ denom
+// registers its scope first. The scope carries no value owner, leaving the denom's supply
+// under the test's own control.
+func (s *TestSuite) registerScopeNAVDenom(scopeUUID string) string {
+	scopeID := metadatatypes.ScopeMetadataAddress(uuid.MustParse(scopeUUID))
+	err := s.simApp.MetadataKeeper.SetScope(s.ctx, metadatatypes.Scope{ScopeId: scopeID})
+	s.Require().NoError(err, "failed to write scope %s backing metadata NAV denom", scopeID)
+	return scopeID.Denom()
+}
+
+// unregisteredScopeNAVDenom returns the nft/<scope-id> denom for the given UUID without
+// writing the scope, yielding a well-formed metadata denom whose scope does not exist.
+func unregisteredScopeNAVDenom(scopeUUID string) string {
+	return metadatatypes.ScopeMetadataAddress(uuid.MustParse(scopeUUID)).Denom()
+}
+
+// setMaxVaultNAVEntries stores module params carrying the given per-vault NAV entry cap,
+// letting a test exercise the cap at a small value instead of the module default.
+func (s *TestSuite) setMaxVaultNAVEntries(maxEntries uint32) {
+	params := types.DefaultParams()
+	params.MaxVaultNavEntries = maxEntries
+	err := s.k.Params.Set(s.ctx, params)
+	s.Require().NoError(err, "failed to store params with max vault NAV entries %d", maxEntries)
+}
+
+// priceHeldAssets registers a marker for each denom and prices it on the vault through
+// SetVaultNAV, returning the error from the first denom that is rejected. It fills a
+// vault's NAV table up to a known size so a test can act at the capacity boundary.
+func (s *TestSuite) priceHeldAssets(vault *types.VaultAccount, denoms ...string) error {
+	for _, denom := range denoms {
+		s.requireSimpleMarker(denom)
+		nav := types.VaultNAV{
+			Denom:  denom,
+			Price:  sdk.NewInt64Coin(vault.UnderlyingAsset, 100),
+			Volume: sdkmath.NewInt(1),
+		}
+		if err := s.k.SetVaultNAV(s.ctx, vault, nav, s.adminAddr.String()); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// requireVaultNAVEntryCount asserts how many internal NAV entries a vault holds.
+func (s *TestSuite) requireVaultNAVEntryCount(vaultAddr sdk.AccAddress, expected int) {
+	navRange := collections.NewPrefixedPairRange[sdk.AccAddress, string](vaultAddr)
+	actual := 0
+	err := s.k.NAVs.Walk(s.ctx, navRange, func(_ collections.Pair[sdk.AccAddress, string], _ types.VaultNAV) (bool, error) {
+		actual++
+		return false, nil
+	})
+	s.Require().NoError(err, "failed to walk internal NAV entries for vault %s", vaultAddr)
+	s.Require().Equal(expected, actual, "internal NAV entry count for vault %s", vaultAddr)
 }
 
 // assertInPayoutVerificationQueue asserts whether a vault address is present in

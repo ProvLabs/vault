@@ -83,6 +83,16 @@ var (
 const (
 	// DefaultAumFeeBips is the default AUM fee rate in basis points (15 bps = 0.15%).
 	DefaultAumFeeBips = 15
+
+	// DefaultMaxVaultNAVEntries is the default cap on internal NAV entries per vault. It
+	// sits well above a realistic vault, which prices its underlying asset plus a handful
+	// of settled holdings.
+	DefaultMaxVaultNAVEntries = 100
+
+	// MaxVaultNAVEntriesLimit is the largest value governance may set for the
+	// max_vault_nav_entries param, bounding how far a param change alone can raise the
+	// per-block valuation cost.
+	MaxVaultNAVEntriesLimit = 10_000
 )
 
 // GetVaultAddress returns the module account address for the given shareDenom.

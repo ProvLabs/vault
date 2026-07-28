@@ -32,9 +32,10 @@ import (
 // It performs the following actions:
 //   - Registers the KV store keys required by the name, attribute, and marker modules.
 //   - Initializes the NameKeeper, AttributeKeeper, and MarkerKeeper using the legacy Provenance wiring pattern.
-//   - Injects the MarkerKeeper, NameKeeper, and AttributeKeeper into the VaultKeeper (via app.VaultKeeper.MarkerKeeper,
-//     app.VaultKeeper.NameKeeper, and app.VaultKeeper.AttrKeeper) to enable restricted marker management,
-//     name resolution, and attribute-based gating within the vault module.
+//   - Injects the MarkerKeeper, NameKeeper, AttributeKeeper, and MetadataKeeper into the VaultKeeper (via
+//     app.VaultKeeper.MarkerKeeper, app.VaultKeeper.NameKeeper, app.VaultKeeper.AttrKeeper, and
+//     app.VaultKeeper.MetadataKeeper) to enable restricted marker management, name resolution,
+//     attribute-based gating, and scope existence checks for metadata NAV denoms within the vault module.
 //   - Registers the modules with the app for inclusion in BeginBlocker, EndBlocker, InitGenesis, etc.
 //
 // This function is typically called during app initialization to ensure
@@ -113,6 +114,7 @@ func (app *SimApp) RegisterProvenanceModules() error {
 	app.VaultKeeper.AttrKeeper = app.AttributeKeeper
 	app.VaultKeeper.ExchangeKeeper = app.ExchangeKeeper
 	app.VaultKeeper.ExchangeQueryServer = exchangekeeper.NewQueryServer(app.ExchangeKeeper)
+	app.VaultKeeper.MetadataKeeper = app.MetadataKeeper
 
 	return app.RegisterModules(
 		name.NewAppModule(app.appCodec, app.NameKeeper, app.AccountKeeper, app.BankKeeper),

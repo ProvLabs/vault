@@ -144,14 +144,6 @@ func (k Keeper) countVaultNAVEntries(ctx sdk.Context, vaultAddr sdk.AccAddress, 
 // including for a vault over the cap, so a cap lowered by governance (or an oversized table
 // imported from genesis) can never strand a held asset at a stale price.
 //
-// The entry is written to the vault's own table only and is never mirrored into the
-// marker module's NAV records. A vault holds no permission on the markers of the assets
-// it prices, so publishing there would let any vault - and vault creation is
-// permissionless - overwrite the chain-wide price of an arbitrary registered marker
-// outside the access controls x/marker enforces on its own NAV messages. The vault's
-// share marker is the one marker whose NAV the module does publish, since the module
-// creates it and holds grants on it (see publishShareNav).
-//
 // This method does NOT verify that signer is authorized to mutate the vault's
 // NAV table; signer is recorded for event attribution only. Callers must run
 // vault.ValidateNAVAuthority (or an equivalent check) before invoking it.

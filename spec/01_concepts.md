@@ -160,7 +160,7 @@ Settlement is atomic and layers several protections:
 - **Exact-price guardrail** — the asset denom must already carry an internal NAV entry, and the settlement legs must match its price exactly (cross-multiplied, no rounding tolerance). A denom the NAV authority has never priced cannot be acquired, so the asset manager cannot mint a price of their choosing by being the first to acquire it. Settling at a different price requires the authority to move the NAV first (`UpdateVaultNAV`). Every price change is therefore an explicit, evented action by the NAV authority rather than a side effect of trade flow.
 
   A first acquisition is two messages: the authority prices the denom, then the manager settles. Both fit in one transaction, so when the two roles belong to different entities the transaction simply carries both signatures and the price and trade commit together.
-- **Price recording** — settling never writes a price: the guardrail has already proven the trade executed at the entry the NAV authority recorded. When an outbound settlement empties the principal of the asset, the entry is removed so a stale price cannot linger.
+- **No price writes** — settling executes at the price the NAV authority already recorded and writes no entry of its own, since the guardrail has already proven the trade matched that price. When an outbound settlement empties the principal of the asset, the entry is removed so a stale price cannot linger.
 
 ### Valuation Scope
 

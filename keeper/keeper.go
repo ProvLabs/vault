@@ -30,6 +30,7 @@ type Keeper struct {
 
 	AuthKeeper          types.AccountKeeper
 	MarkerKeeper        types.MarkerKeeper
+	MetadataKeeper      types.MetadataKeeper
 	BankKeeper          types.BankKeeper
 	NameKeeper          types.NameKeeper
 	AttrKeeper          types.AttributeKeeper
@@ -54,6 +55,7 @@ func NewKeeper(
 	authority []byte,
 	authKeeper types.AccountKeeper,
 	markerkeeper types.MarkerKeeper,
+	metadatakeeper types.MetadataKeeper,
 	bankkeeper types.BankKeeper,
 	namekeeper types.NameKeeper,
 	attributekeeper types.AttributeKeeper,
@@ -83,6 +85,7 @@ func NewKeeper(
 		PendingSwapOutQueue:   queue.NewPendingSwapOutQueue(builder, cdc),
 		AuthKeeper:            authKeeper,
 		MarkerKeeper:          markerkeeper,
+		MetadataKeeper:        metadatakeeper,
 		BankKeeper:            bankkeeper,
 		NameKeeper:            namekeeper,
 		AttrKeeper:            attributekeeper,

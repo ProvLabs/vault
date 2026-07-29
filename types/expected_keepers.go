@@ -9,6 +9,7 @@ import (
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/exchange"
 	"github.com/provenance-io/provenance/x/marker/types"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
 type MarkerKeeper interface {
@@ -25,6 +26,14 @@ type MarkerKeeper interface {
 	SetNetAssetValue(ctx sdk.Context, marker types.MarkerAccountI, netAssetValue types.NetAssetValue, source string) error
 	SendRestrictionFn(ctx context.Context, fromAddr, toAddr sdk.AccAddress, amt sdk.Coins) (sdk.AccAddress, error)
 	GetUnrestrictedDenomRegex(ctx sdk.Context) (regex string)
+}
+
+// MetadataKeeper defines the subset of the Provenance metadata module keeper that the
+// vault module relies on to confirm that a metadata value-owner denom (nft/<scope-id>)
+// names a scope that actually exists. Such denoms are barred from being markers, so the
+// metadata module is the only registry that can vouch for them.
+type MetadataKeeper interface {
+	GetScope(ctx sdk.Context, id metadatatypes.MetadataAddress) (metadatatypes.Scope, bool)
 }
 
 type AccountKeeper interface {

@@ -42,8 +42,7 @@ func (k *Keeper) returnToPrincipal(ctx sdk.Context, vault *types.VaultAccount, a
 // removeDrainedSettlementNAV drops the vault's internal NAV entry for an asset denom
 // that an outbound settlement has just emptied out of the principal marker, so a stale
 // price cannot linger for an asset the vault no longer holds. Reacquiring the denom
-// then requires a fresh price from the NAV authority. The published marker NAV is left
-// as-is (publishing simply stops).
+// then requires a fresh price from the NAV authority.
 //
 // Settling never writes the internal NAV table. checkSettlementNAVGuardrail has already
 // proven the trade executed at exactly the price the NAV authority recorded, so a

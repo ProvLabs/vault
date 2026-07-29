@@ -138,12 +138,6 @@ func (k Keeper) TestAccessor_removeDrainedSettlementNAV(t *testing.T, ctx contex
 	return k.removeDrainedSettlementNAV(sdk.UnwrapSDKContext(ctx), vault, assetDenom, direction)
 }
 
-// TestAccessor_publishAssetNAVToMarker exposes this keeper's publishAssetNAVToMarker function for unit tests.
-func (k Keeper) TestAccessor_publishAssetNAVToMarker(t *testing.T, ctx context.Context, vault *types.VaultAccount, nav types.VaultNAV) error {
-	t.Helper()
-	return k.publishAssetNAVToMarker(sdk.UnwrapSDKContext(ctx), vault, nav)
-}
-
 // TestAccessor_settlementLegCoins exposes the settlementLegCoins function for unit tests.
 func (k Keeper) TestAccessor_settlementLegCoins(t *testing.T, payment *exchange.Payment, direction, underlyingDenom string) (sdk.Coin, sdk.Coin, error) {
 	t.Helper()

@@ -880,6 +880,12 @@ func (k msgServer) UpdateVaultAUMFeeBips(goCtx context.Context, msg *types.MsgUp
 // UpdateVaultNAV creates or updates a vault's internal NAV entry for a denom.
 // Only the vault's NAV authority is authorized to perform this operation.
 //
+// The price lands in the vault's internal NAV table and nowhere else. A vault does not
+// own the assets it prices, so it does not mirror an asset price into that asset's
+// marker-module NAV records, where it would compete with prices set by the marker's own
+// administrators. Only the vault's share denom, which the vault does own, gets a
+// published marker NAV (see publishShareNav).
+//
 // The update is accepted whether or not the vault is paused, so an operator can
 // pause, reprice, and unpause as one deliberate sequence. Swap-ins and swap-outs
 // are closed for the whole paused span, which keeps a repricing from being
@@ -914,11 +920,6 @@ func (k msgServer) UpdateVaultNAV(goCtx context.Context, msg *types.MsgUpdateVau
 	nav := types.NewVaultNAV(msg.Denom, msg.Price, msg.Volume, msg.Source)
 	if err := k.SetVaultNAV(ctx, vault, nav, msg.Signer); err != nil {
 		return nil, fmt.Errorf("failed to update vault NAV: %w", err)
-	}
-	if !isMetadataDenom(msg.Denom) {
-		if err := k.publishAssetNAVToMarker(ctx, vault, nav); err != nil {
-			return nil, fmt.Errorf("failed to publish vault NAV to marker: %w", err)
-		}
 	}
 
 	return &types.MsgUpdateVaultNAVResponse{}, nil

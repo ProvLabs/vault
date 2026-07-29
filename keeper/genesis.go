@@ -125,8 +125,15 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 		if err := validateVaultNAVFields(vault, entry.Nav); err != nil {
 			panic(fmt.Errorf("invalid nav entry for vault %s: %w", entry.VaultAddress, err))
 		}
+		// A priced scope can be deleted after the fact, so skip stale entries instead of
+		// panicking and blocking the import.
 		if err := k.requireNAVDenomRegistered(ctx, entry.Nav.Denom); err != nil {
-			panic(fmt.Errorf("invalid nav denom for vault %s: %w", entry.VaultAddress, err))
+			k.getLogger(ctx).Warn("skipping vault nav entry for unregistered denom",
+				"vault", entry.VaultAddress,
+				"denom", entry.Nav.Denom,
+				"err", err,
+			)
+			continue
 		}
 		if err := k.NAVs.Set(ctx, collections.Join(addr, entry.Nav.Denom), entry.Nav); err != nil {
 			panic(fmt.Errorf("failed to import vault nav for %s/%s: %w", entry.VaultAddress, entry.Nav.Denom, err))

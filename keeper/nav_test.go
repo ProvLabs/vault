@@ -9,7 +9,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/google/uuid"
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 
 	"github.com/provlabs/vault/types"
@@ -157,8 +156,8 @@ func (s *TestSuite) TestKeeper_SetVaultNAV_OverwriteReStamps() {
 // TestKeeper_SetVaultNAV_RejectsInvalidInput verifies SetVaultNAV rejects every
 // invalid input before persisting an entry: the vault share denom, an invalid
 // price coin, a negative price amount, a price denom that is not the vault
-// underlying asset, a nil or non-positive volume, and a denom that is not a
-// registered marker.
+// underlying asset, a nil or non-positive volume, a denom that is not a
+// registered marker, and an nft/ denom that does not name an existing scope.
 func (s *TestSuite) TestKeeper_SetVaultNAV_RejectsInvalidInput() {
 	underlying := "under"
 	share := "vaultshares"
@@ -272,6 +271,27 @@ func (s *TestSuite) TestKeeper_SetVaultNAV_RejectsInvalidInput() {
 			},
 			expectedErrSubstr: "is not a registered marker",
 		},
+		{
+			name: "rejects an nft/ denom whose scope does not exist",
+			nav: types.VaultNAV{
+				Denom:  metadatatypes.ScopeMetadataAddress(uuid.MustParse("00000000-0000-4000-8000-00000000000f")).Denom(),
+				Price:  sdk.NewInt64Coin(underlying, 100),
+				Volume: sdkmath.NewInt(1),
+			},
+			expectedErrSubstr: "is not an existing metadata scope",
+		},
+		{
+			name: "rejects an nft/ denom naming a session rather than a scope",
+			nav: types.VaultNAV{
+				Denom: metadatatypes.SessionMetadataAddress(
+					uuid.MustParse("00000000-0000-4000-8000-00000000000e"),
+					uuid.MustParse("00000000-0000-4000-8000-00000000000d"),
+				).Denom(),
+				Price:  sdk.NewInt64Coin(underlying, 100),
+				Volume: sdkmath.NewInt(1),
+			},
+			expectedErrSubstr: "is not an existing metadata scope",
+		},
 	}
 
 	for _, tc := range tests {
@@ -311,13 +331,13 @@ func (s *TestSuite) TestKeeper_SetVaultNAV_AllowsZeroPriceForHeldDenom() {
 	s.Assert().True(stored.Price.Amount.IsZero(), "stored NAV price for held denom should be zero, got %s", stored.Price.Amount)
 }
 
-func (s *TestSuite) TestKeeper_SetVaultNAV_MetadataDenomSkipsMarkerCheck() {
+func (s *TestSuite) TestKeeper_SetVaultNAV_MetadataDenomChecksScopeInsteadOfMarker() {
 	underlying := "under"
 	share := "vaultshares"
 	vault := s.setupBaseVault(underlying, share)
 	vaultAddr := types.GetVaultAddress(share)
 
-	navDenom := metadatatypes.ScopeMetadataAddress(uuid.MustParse("00000000-0000-4000-8000-000000000003")).Denom()
+	navDenom := s.requireScope("00000000-0000-4000-8000-000000000003")
 	nav := types.VaultNAV{
 		Denom:  navDenom,
 		Price:  sdk.NewInt64Coin(underlying, 100),
@@ -529,76 +549,6 @@ func (s *TestSuite) TestKeeper_CheckSettlementNAVGuardrail() {
 			}
 
 			s.Require().ErrorContains(err, tc.expectedErrContains, "guardrail error mismatch for asset %s payment %s", tc.assetCoin, tc.paymentCoin)
-		})
-	}
-}
-
-func (s *TestSuite) TestKeeper_PublishAssetNAVToMarker() {
-	underlying := "under"
-	share := "vshare"
-	asset := "rwacoin"
-
-	tests := []struct {
-		name                string
-		registerAssetMarker bool
-		volume              sdkmath.Int
-		expectedErrContains string
-	}{
-		{
-			name:                "registered marker denom publishes the marker NAV attributed to the vault address",
-			registerAssetMarker: true,
-			volume:              sdkmath.NewInt(10),
-		},
-		{
-			name:                "volume that does not fit in uint64 is rejected before the marker lookup",
-			volume:              sdkmath.NewIntFromBigInt(new(big.Int).Lsh(big.NewInt(1), 70)),
-			expectedErrContains: "overflows the marker NAV volume",
-		},
-		{
-			name:                "NAV denom without a registered marker fails the lookup",
-			volume:              sdkmath.NewInt(10),
-			expectedErrContains: "failed to get marker for NAV denom",
-		},
-		{
-			name:                "marker NAV the marker module rejects propagates the error",
-			registerAssetMarker: true,
-			volume:              sdkmath.ZeroInt(),
-			expectedErrContains: "failed to set marker NAV for denom",
-		},
-	}
-
-	for _, tc := range tests {
-		s.Run(tc.name, func() {
-			origCtx := s.ctx
-			defer func() { s.ctx = origCtx }()
-			s.ctx, _ = s.ctx.CacheContext()
-
-			vault, _ := s.setupAssetSettlementVault(underlying, share)
-			if tc.registerAssetMarker {
-				s.requireSimpleMarker(asset)
-			}
-			nav := types.VaultNAV{
-				Denom:  asset,
-				Price:  sdk.NewInt64Coin(underlying, 5),
-				Volume: tc.volume,
-				Source: vault.Address,
-			}
-
-			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
-			err := s.k.TestAccessor_publishAssetNAVToMarker(s.T(), s.ctx, vault, nav)
-
-			if tc.expectedErrContains != "" {
-				s.Require().ErrorContains(err, tc.expectedErrContains, "publishAssetNAVToMarker should fail for denom %s volume %s", nav.Denom, nav.Volume)
-				return
-			}
-			s.Require().NoError(err, "publishAssetNAVToMarker should succeed for denom %s volume %s", nav.Denom, nav.Volume)
-
-			stored, err := s.k.MarkerKeeper.GetNetAssetValue(s.ctx, asset, underlying)
-			s.Require().NoError(err, "failed to read marker NAV for %s priced in %s", asset, underlying)
-			s.Require().NotNil(stored, "marker NAV for %s priced in %s should exist after publish", asset, underlying)
-			s.Assert().Equal(nav.Price, stored.Price, "marker NAV price should match the internal NAV price for %s", asset)
-			s.Assert().Equal(nav.Volume.Uint64(), stored.Volume, "marker NAV volume should match the internal NAV volume for %s", asset)
-			s.requireTypedEventEmitted(markertypes.NewEventSetNetAssetValue(asset, nav.Price, nav.Volume.Uint64(), vault.Address))
 		})
 	}
 }

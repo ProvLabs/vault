@@ -61,6 +61,8 @@ const (
 // Msg is the service for the vault module's tx endpoints.
 type MsgClient interface {
 	// CreateVault creates a new vault.
+	// Must be signed by the governance module account, so vaults can only be created
+	// through a passed governance proposal.
 	CreateVault(ctx context.Context, in *MsgCreateVaultRequest, opts ...grpc.CallOption) (*MsgCreateVaultResponse, error)
 	// SetShareDenomMetadata allows Denom Metadata (see bank module) to be set for the vault's share denom.
 	// Similar to marker's SetDenomMetadata, but scoped to a specific vault. Only the vault admin may call this.
@@ -489,6 +491,8 @@ func (c *msgClient) RejectAsset(ctx context.Context, in *MsgRejectAssetRequest, 
 // Msg is the service for the vault module's tx endpoints.
 type MsgServer interface {
 	// CreateVault creates a new vault.
+	// Must be signed by the governance module account, so vaults can only be created
+	// through a passed governance proposal.
 	CreateVault(context.Context, *MsgCreateVaultRequest) (*MsgCreateVaultResponse, error)
 	// SetShareDenomMetadata allows Denom Metadata (see bank module) to be set for the vault's share denom.
 	// Similar to marker's SetDenomMetadata, but scoped to a specific vault. Only the vault admin may call this.

@@ -46,7 +46,7 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 
 | Endpoint                 | Admin required (or Asset Manager) | Works when UNPAUSED | Works when PAUSED | Notes / gates that still apply                                                                                |
 | ------------------------ | --------------------------------- | ------------------: | ----------------: | ------------------------------------------------------------------------------------------------------------- |
-| `CreateVault`            | No                                |                   ✅ |                 ✅ | Creation only.                                                                                                |
+| `CreateVault`            | Governance only                   |                   ✅ |                 ✅ | Creation only. Must be signed by the governance module account.                                               |
 | `SwapIn`                 | No                                |                   ✅ |                 ❌ | Keeper `SwapIn` enforces `!vault.Paused`, `SwapInEnabled`, accepted denom, reconcile.                         |
 | `SwapOut`                | No                                |                   ✅ |                 ❌ | Keeper `SwapOut` enforces `!vault.Paused`, `SwapOutEnabled`, share denom match, payout restrictions, enqueue. |
 | `BridgeMintShares`       | Bridge only                       |                   ✅ |                 ✅ | Requires `bridge_enabled`, signer == `bridge_address`, shares denom match, positive amount, capacity ≤ `total_shares`. |
@@ -88,8 +88,9 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 ## CreateVault
 
 Creates a new vault account with a configured underlying asset, withdrawal delay, and minimum/maximum swap values.
-The creator is recorded as vault admin.
 
+* **Governance Only:** `authority` must be the governance module account, so a vault can only come into existence through a passed governance proposal. Any other signer is rejected.
+* **Designated Admin:** `admin` is the address recorded as the vault administrator. It is chosen by the proposal and is unrelated to the signer.
 * **Single Denom:** Vaults are strictly single-denom on `underlying_asset`; it is the only denom for deposits, redemptions, interest, and fees.
 * **Units:** All swap limit values (`min_swap_in_value`, `min_swap_out_value`, `max_swap_in_value`, `max_swap_out_value`) are denominated in the vault's **underlying_asset**.
 * **Clearing Limits:** 
@@ -97,8 +98,8 @@ The creator is recorded as vault admin.
     * Maximums: An empty string "" clears/disables the maximum limit.
 * **Constraints:** Any provided maximum swap value must be **positive (> 0)**. A value of "0" is invalid and will be rejected.
 
-* **Request:** `MsgCreateVaultRequest { admin, share_denom, underlying_asset, withdrawal_delay_seconds, min_swap_in_value?, min_swap_out_value?, max_swap_in_value?, max_swap_out_value? }`
-* **Response:** `MsgCreateVaultResponse {}`
+* **Request:** `MsgCreateVaultRequest { authority, admin, share_denom, underlying_asset, withdrawal_delay_seconds, min_swap_in_value?, min_swap_out_value?, max_swap_in_value?, max_swap_out_value? }`
+* **Response:** `MsgCreateVaultResponse { vault_address }`
 
 > **Deprecated:** `payment_denom` is deprecated but retained on the wire for compatibility with
 > released clients; if set, it must equal `underlying_asset` or the message is rejected.

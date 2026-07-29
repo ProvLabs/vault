@@ -63,8 +63,11 @@ var AllRequestMsgs = []sdk.Msg{
 
 // ValidateBasic performs stateless validation on MsgCreateVaultRequest.
 func (m MsgCreateVaultRequest) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(m.Admin)
-	if err != nil {
+	if _, err := sdk.AccAddressFromBech32(m.Authority); err != nil {
+		return fmt.Errorf("invalid authority address: %q: %w", m.Authority, err)
+	}
+
+	if _, err := sdk.AccAddressFromBech32(m.Admin); err != nil {
 		return fmt.Errorf("invalid admin address: %q: %w", m.Admin, err)
 	}
 

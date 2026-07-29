@@ -25,9 +25,24 @@ func NewMsgServer(keeper *Keeper) types.MsgServer {
 	return &msgServer{Keeper: keeper}
 }
 
-// CreateVault creates a vault.
+// validateGovAuthority ensures the provided signer is the module's governance authority.
+// Endpoints that can only be executed by a passed governance proposal use this gate.
+func (k msgServer) validateGovAuthority(signer string) error {
+	expected := k.GetAuthorityString()
+	if signer != expected {
+		return fmt.Errorf("unauthorized: expected %s got %s", expected, signer)
+	}
+	return nil
+}
+
+// CreateVault creates a vault. Vault creation is governance-gated, so the message
+// must be signed by the governance module account.
 func (k msgServer) CreateVault(goCtx context.Context, msg *types.MsgCreateVaultRequest) (*types.MsgCreateVaultResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	if err := k.validateGovAuthority(msg.Authority); err != nil {
+		return nil, err
+	}
 
 	vault, err := k.Keeper.CreateVault(ctx, msg)
 	if err != nil {
@@ -815,8 +830,8 @@ func (k msgServer) SetAssetManager(goCtx context.Context, msg *types.MsgSetAsset
 func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParamsRequest) (*types.MsgUpdateParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if msg.Authority != sdk.AccAddress(k.GetAuthority()).String() {
-		return nil, fmt.Errorf("unauthorized: expected %s got %s", sdk.AccAddress(k.GetAuthority()).String(), msg.Authority)
+	if err := k.validateGovAuthority(msg.Authority); err != nil {
+		return nil, err
 	}
 
 	if err := msg.Params.Validate(); err != nil {

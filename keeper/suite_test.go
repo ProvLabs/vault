@@ -41,6 +41,9 @@ type TestSuite struct {
 	// assetManagerAddr is the asset manager assigned by setupAssetSettlementVault; settlement
 	// messages (AcceptAsset/RejectAsset) must be signed by it, never by the admin.
 	assetManagerAddr sdk.AccAddress
+	// govAuthority is the module's governance authority address, required to sign
+	// governance-gated messages such as CreateVault and UpdateParams.
+	govAuthority string
 }
 
 // SetupTest initializes a new SimApp and context for each test and seeds
@@ -59,6 +62,8 @@ func (s *TestSuite) SetupTest() {
 	if !s.simApp.AccountKeeper.HasAccount(s.ctx, s.assetManagerAddr) {
 		s.simApp.AccountKeeper.SetAccount(s.ctx, s.simApp.AccountKeeper.NewAccountWithAddress(s.ctx, s.assetManagerAddr))
 	}
+
+	s.govAuthority = s.k.GetAuthorityString()
 }
 
 // EnsureTechFeeAccount ensures that the AUM fee address account exists in the account keeper.

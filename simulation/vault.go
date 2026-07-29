@@ -31,7 +31,7 @@ func CreateVault(ctx sdk.Context, vk *keeper.Keeper, ak types.AccountKeeper, _ t
 
 	// Create a vault that uses the marker as an underlying asset
 	newVault := &types.MsgCreateVaultRequest{
-		Authority:              sdk.AccAddress(vk.GetAuthority()).String(),
+		Authority:              vk.GetAuthorityString(),
 		Admin:                  admin.Address.String(),
 		ShareDenom:             share,
 		UnderlyingAsset:        underlying,

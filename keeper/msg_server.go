@@ -28,7 +28,7 @@ func NewMsgServer(keeper *Keeper) types.MsgServer {
 // validateGovAuthority ensures the provided signer is the module's governance authority.
 // Endpoints that can only be executed by a passed governance proposal use this gate.
 func (k msgServer) validateGovAuthority(signer string) error {
-	expected := sdk.AccAddress(k.GetAuthority()).String()
+	expected := k.GetAuthorityString()
 	if signer != expected {
 		return fmt.Errorf("unauthorized: expected %s got %s", expected, signer)
 	}

@@ -61,7 +61,7 @@ See: [.changelog/unreleased](.changelog/unreleased)
 
 ### Client Breaking
 
-* Changed the `tx vault create` CLI command to take `[PR 265](https://github.com/provlabs/vault/pull/265).
+* Changed the `tx vault create` CLI command to take `[authority] [admin] [share_denom] [underlying_asset]`, adding the leading governance authority argument. Because the command now requires the governance module account as signer, it is meant to be run with `--generate-only` and the resulting message submitted as a governance proposal [PR 265](https://github.com/provlabs/vault/pull/265).
 
 ### State Machine Breaking
 

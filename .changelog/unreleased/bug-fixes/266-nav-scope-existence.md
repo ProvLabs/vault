@@ -1,0 +1,1 @@
+* Require a value-owner NAV denom (`nft/<scope-id>`) to name a scope that exists, so a fabricated scope id cannot be priced. A genesis import skips an entry whose denom is no longer registered instead of panicking [PR 266](https://github.com/provlabs/vault/pull/266).

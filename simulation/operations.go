@@ -220,6 +220,7 @@ func SimulateMsgCreateVault(k keeper.Keeper) simtypes.Operation {
 		}
 
 		msg := &types.MsgCreateVaultRequest{
+			Authority:              k.GetAuthorityString(),
 			Admin:                  admin.Address.String(),
 			ShareDenom:             denom,
 			UnderlyingAsset:        underlying,
@@ -1054,13 +1055,8 @@ func SimulateMsgUpdateParams(k keeper.Keeper) simtypes.Operation {
 		techFeeAddr := accs[r.Intn(len(accs))].Address
 		defaultBips := uint32(r.Intn(1001))
 
-		authority, err := k.AddressCodec.BytesToString(k.GetAuthority())
-		if err != nil {
-			return simtypes.NoOpMsg(types.ModuleName, sdk.MsgTypeURL(&types.MsgUpdateParamsRequest{}), "unable to get authority address"), nil, err
-		}
-
 		msg := &types.MsgUpdateParamsRequest{
-			Authority: authority,
+			Authority: k.GetAuthorityString(),
 			Params: types.Params{
 				TechFeeAddress:    techFeeAddr.String(),
 				DefaultAumFeeBips: defaultBips,

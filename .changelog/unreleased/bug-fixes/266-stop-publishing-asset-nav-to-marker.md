@@ -1,0 +1,1 @@
+* Stop mirroring internal NAV entries into the marker module, which let a vault overwrite the chain-wide NAV of any marker it holds no permission on. The vault's share denom is now the only marker NAV published, and a NAV volume above the uint64 range is accepted [PR 266](https://github.com/provlabs/vault/pull/266).

@@ -18,9 +18,11 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/gogoproto/proto"
+	"github.com/google/uuid"
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	"github.com/provenance-io/provenance/x/exchange"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 	suite "github.com/stretchr/testify/suite"
 
 	"github.com/provlabs/vault/keeper"
@@ -41,6 +43,9 @@ type TestSuite struct {
 	// assetManagerAddr is the asset manager assigned by setupAssetSettlementVault; settlement
 	// messages (AcceptAsset/RejectAsset) must be signed by it, never by the admin.
 	assetManagerAddr sdk.AccAddress
+	// govAuthority is the module's governance authority address, required to sign
+	// governance-gated messages such as CreateVault and UpdateParams.
+	govAuthority string
 }
 
 // SetupTest initializes a new SimApp and context for each test and seeds
@@ -59,6 +64,8 @@ func (s *TestSuite) SetupTest() {
 	if !s.simApp.AccountKeeper.HasAccount(s.ctx, s.assetManagerAddr) {
 		s.simApp.AccountKeeper.SetAccount(s.ctx, s.simApp.AccountKeeper.NewAccountWithAddress(s.ctx, s.assetManagerAddr))
 	}
+
+	s.govAuthority = s.k.GetAuthorityString()
 }
 
 // EnsureTechFeeAccount ensures that the AUM fee address account exists in the account keeper.
@@ -372,6 +379,27 @@ func (s *TestSuite) requireAddFinalizeAndActivateMarker(coin sdk.Coin, manager s
 // asset denoms (e.g. "rwa", "bond") that are not otherwise created by setupBaseVault.
 func (s *TestSuite) requireSimpleMarker(denom string) {
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(denom, 0), s.adminAddr)
+}
+
+// scopeSpecUUID is the scope specification every scope written by requireScope points at.
+// The vault module never reads the specification, so a single shared value keeps the
+// fixture minimal.
+const scopeSpecUUID = "00000000-0000-4000-8000-0000000000ff"
+
+// requireScope writes a metadata scope for the given scope UUID and returns the scope's
+// value-owner denom (nft/<scope-id>), so it passes the scope-existence check in SetVaultNAV.
+// Use this in tests that price a scope-backed asset, which cannot be registered as a marker.
+func (s *TestSuite) requireScope(scopeUUID string) string {
+	scopeID := metadatatypes.ScopeMetadataAddress(uuid.MustParse(scopeUUID))
+	scope := metadatatypes.Scope{
+		ScopeId:         scopeID,
+		SpecificationId: metadatatypes.ScopeSpecMetadataAddress(uuid.MustParse(scopeSpecUUID)),
+		Owners: []metadatatypes.Party{
+			{Address: s.adminAddr.String(), Role: metadatatypes.PartyType_PARTY_TYPE_OWNER},
+		},
+	}
+	s.Require().NoError(s.simApp.MetadataKeeper.SetScope(s.ctx, scope), "failed to write metadata scope %s", scopeID)
+	return scopeID.Denom()
 }
 
 // requireRestrictedMarker creates, finalizes, and activates a restricted-coin marker for the

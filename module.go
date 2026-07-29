@@ -190,12 +190,13 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 			RpcCommandOptions: []*autocliv1.RpcCommandOptions{
 				{
 					RpcMethod: "CreateVault",
-					Use:       "create [admin] [share_denom] [underlying_asset]",
+					Use:       "create [authority] [admin] [share_denom] [underlying_asset]",
 					Alias:     []string{"c", "new"},
 					Short:     "Create a new vault",
-					Long:      "Create a new vault with an underlying asset and share denom. Optionally set a withdrawal delay that queues swap-outs until the delay elapses.",
-					Example:   fmt.Sprintf("%s create %s svnhash nhash --withdrawal-delay-seconds 86400", txStart, exampleAdminAddr),
+					Long:      "Create a new vault with an underlying asset and share denom, administered by the designated admin. Optionally set a withdrawal delay that queues swap-outs until the delay elapses. Requires governance authority, so this command is meant to be run with --generate-only and submitted as a governance proposal.",
+					Example:   fmt.Sprintf("%s create %s %s svnhash nhash --withdrawal-delay-seconds 86400 --generate-only", txStart, exampleAuthorityAddr, exampleAdminAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
+						{ProtoField: fieldAuthority},
 						{ProtoField: fieldAdmin},
 						{ProtoField: "share_denom"},
 						{ProtoField: "underlying_asset"},
@@ -749,6 +750,7 @@ type ModuleInputs struct {
 	AddressCodec        address.Codec
 	AuthKeeper          types.AccountKeeper
 	MarkerKeeper        types.MarkerKeeper
+	MetadataKeeper      types.MetadataKeeper
 	BankKeeper          types.BankKeeper
 	NameKeeper          types.NameKeeper
 	AttrKeeper          types.AttributeKeeper
@@ -778,6 +780,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority,
 		in.AuthKeeper,
 		in.MarkerKeeper,
+		in.MetadataKeeper,
 		in.BankKeeper,
 		in.NameKeeper,
 		in.AttrKeeper,

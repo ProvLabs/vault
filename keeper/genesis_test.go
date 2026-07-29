@@ -561,42 +561,66 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidNAV() {
 	}
 }
 
-// TestVaultGenesis_InitPanicsOnUnregisteredNAVMarker verifies InitGenesis rejects
-// a NAV entry whose denom passes stateless genesis validation but is not a
-// registered marker on-chain, matching the invariant enforced by the runtime
-// SetVaultNAV path.
-func (s *TestSuite) TestVaultGenesis_InitPanicsOnUnregisteredNAVMarker() {
-	shareDenom := "navmkrshare"
-	underlying := "navmkrunder"
+func (s *TestSuite) TestVaultGenesis_InitSkipsNAVEntriesForUnregisteredDenoms() {
+	shareDenom := "navskipshare"
+	underlying := "navskipunder"
+	registeredDenom := "navskipregistered"
 	vaultAddr := types.GetVaultAddress(shareDenom)
+	deletedScopeDenom := metadatatypes.ScopeMetadataAddress(uuid.MustParse("00000000-0000-4000-8000-00000000dead")).Denom()
 
-	genesis := buildSingleVaultGenesisState(shareDenom, underlying, s.adminAddr.String(),
-		[]types.VaultNAVEntry{{
-			VaultAddress: vaultAddr.String(),
-			Nav: types.VaultNAV{
-				Denom:       "unregisteredrwa",
-				Price:       sdk.NewInt64Coin(underlying, 100),
-				Volume:      sdkmath.NewInt(1),
-				UpdatedTime: time.Unix(1700000000, 0).UTC(),
-			},
-		}})
+	tests := []struct {
+		name        string
+		staleDenom  string
+		description string
+	}{
+		{
+			name:        "denom that is neither a marker nor a metadata address",
+			staleDenom:  "navskipunregistered",
+			description: "a denom with no marker",
+		},
+		{
+			name:        "value-owner denom whose scope no longer exists",
+			staleDenom:  deletedScopeDenom,
+			description: "a value-owner denom for a deleted scope",
+		},
+	}
 
-	var recovered any
-	func() {
-		defer func() { recovered = recover() }()
-		s.k.InitGenesis(s.ctx, genesis)
-	}()
+	for _, tt := range tests {
+		s.Run(tt.name, func() {
+			s.SetupTest()
+			s.requireSimpleMarker(registeredDenom)
 
-	s.Require().NotNil(recovered, "InitGenesis should panic when a NAV denom is not a registered marker")
-	err, ok := recovered.(error)
-	s.Require().True(ok, "panic value should be an error, got %T", recovered)
-	s.Require().ErrorContains(err, `NAV denom "unregisteredrwa"`, "panic should name the offending NAV denom")
-	s.Require().ErrorContains(err, "is not a registered marker", "panic should explain that the NAV denom has no marker")
-	s.Require().ErrorContains(err, vaultAddr.String(), "panic should name the vault the NAV entry belongs to")
+			navEntry := func(denom string) types.VaultNAVEntry {
+				return types.VaultNAVEntry{
+					VaultAddress: vaultAddr.String(),
+					Nav: types.VaultNAV{
+						Denom:       denom,
+						Price:       sdk.NewInt64Coin(underlying, 100),
+						Volume:      sdkmath.NewInt(1),
+						UpdatedTime: time.Unix(1_700_000_000, 0).UTC(),
+					},
+				}
+			}
+			genesis := buildSingleVaultGenesisState(shareDenom, underlying, s.adminAddr.String(),
+				[]types.VaultNAVEntry{navEntry(tt.staleDenom), navEntry(registeredDenom)})
+
+			s.Require().NotPanics(func() { s.k.InitGenesis(s.ctx, genesis) },
+				"InitGenesis must import a genesis carrying %s rather than halt the chain", tt.description)
+
+			_, err := s.k.GetVaultNAV(s.ctx, vaultAddr, tt.staleDenom)
+			s.Require().ErrorIs(err, collections.ErrNotFound,
+				"NAV entry for %s should be dropped on import", tt.staleDenom)
+
+			imported, err := s.k.GetVaultNAV(s.ctx, vaultAddr, registeredDenom)
+			s.Require().NoError(err, "NAV entry for registered denom %s should still import alongside the stale entry", registeredDenom)
+			s.Require().Equal(registeredDenom, imported.Denom, "imported NAV entry should be the one for denom %s", registeredDenom)
+		})
+	}
 }
 
 func (s *TestSuite) TestVaultGenesis_RoundTripsEveryNAVDenomSetVaultNAVAccepts() {
-	metadataDenom := metadatatypes.ScopeMetadataAddress(uuid.MustParse("00000000-0000-4000-8000-000000000004")).Denom()
+	const metadataScopeUUID = "00000000-0000-4000-8000-000000000004"
+	metadataDenom := metadatatypes.ScopeMetadataAddress(uuid.MustParse(metadataScopeUUID)).Denom()
 
 	tests := []struct {
 		name           string
@@ -604,6 +628,7 @@ func (s *TestSuite) TestVaultGenesis_RoundTripsEveryNAVDenomSetVaultNAVAccepts()
 		underlying     string
 		navDenom       string
 		registerMarker bool
+		scopeUUID      string
 	}{
 		{
 			name:           "registered marker denom",
@@ -617,6 +642,7 @@ func (s *TestSuite) TestVaultGenesis_RoundTripsEveryNAVDenomSetVaultNAVAccepts()
 			shareDenom: "gsnavnftshare",
 			underlying: "gsnavnftunder",
 			navDenom:   metadataDenom,
+			scopeUUID:  metadataScopeUUID,
 		},
 	}
 
@@ -635,17 +661,18 @@ func (s *TestSuite) TestVaultGenesis_RoundTripsEveryNAVDenomSetVaultNAVAccepts()
 				},
 			}
 
-			arrangeMarkerRegistration := func() {
+			arrangeAssetRegistration := func() {
 				if tt.registerMarker {
 					s.requireSimpleMarker(tt.navDenom)
 					return
 				}
+				s.Require().Equal(tt.navDenom, s.requireScope(tt.scopeUUID), "scope %s must back the NAV denom under test", tt.scopeUUID)
 				_, markerErr := s.simApp.MarkerKeeper.GetMarkerByDenom(s.ctx, tt.navDenom)
 				s.Require().Error(markerErr, "denom %s must not be a registered marker for this case to be meaningful", tt.navDenom)
 			}
 
 			s.SetupTest()
-			arrangeMarkerRegistration()
+			arrangeAssetRegistration()
 
 			genesis := buildSingleVaultGenesisState(tt.shareDenom, tt.underlying, s.adminAddr.String(), []types.VaultNAVEntry{entry})
 			s.Require().NotPanics(func() { s.k.InitGenesis(s.ctx, genesis) },
@@ -660,7 +687,7 @@ func (s *TestSuite) TestVaultGenesis_RoundTripsEveryNAVDenomSetVaultNAVAccepts()
 			s.Require().NoError(exported.Validate(), "exported genesis should pass stateless validation with a NAV entry for denom %s", tt.navDenom)
 
 			s.SetupTest()
-			arrangeMarkerRegistration()
+			arrangeAssetRegistration()
 
 			s.Require().NotPanics(func() { s.k.InitGenesis(s.ctx, exported) },
 				"importing the exported genesis into a fresh chain should succeed for denom %s", tt.navDenom)

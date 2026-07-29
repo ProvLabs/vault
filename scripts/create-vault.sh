@@ -116,9 +116,17 @@ if [ $? -ne 0 ]; then
 fi
 
 # --- 4. Vote on the proposal ---
-PROPOSAL_ID=$($SIMD_BIN query gov proposals $HOME_DIR --output json 2>/dev/null | jq -r '.proposals | max_by(.id | tonumber) | .id')
-if [ -z "$PROPOSAL_ID" ] || [ "$PROPOSAL_ID" = "null" ]; then
-  echo "ERROR: Could not determine the submitted proposal id."
+# Identify the proposal by the message it carries rather than by taking the newest
+# proposal, so an unrelated proposal submitted concurrently is never picked up.
+PROPOSAL_ID=$($SIMD_BIN query gov proposals $HOME_DIR --output json 2>/dev/null | jq -r --arg denom "$SHARE_DENOM" '
+  [ .proposals[]?
+    | select(any(.messages[]?;
+        ."@type" == "/provlabs.vault.v1.MsgCreateVaultRequest"
+        and (.share_denom // .shareDenom) == $denom))
+    | .id | tonumber
+  ] | max // empty')
+if [ -z "$PROPOSAL_ID" ]; then
+  echo "ERROR: Could not find a submitted proposal creating vault '$SHARE_DENOM'."
   exit 1
 fi
 
@@ -137,7 +145,7 @@ for _ in $(seq 1 60); do
     PROPOSAL_STATUS_PASSED)
       echo "Proposal $PROPOSAL_ID passed. Vault '$SHARE_DENOM' created."
       $QUERY_SCRIPT vault get "$SHARE_DENOM"
-      exit 0
+      exit $?
       ;;
     PROPOSAL_STATUS_REJECTED|PROPOSAL_STATUS_FAILED)
       echo "ERROR: Proposal $PROPOSAL_ID ended with status $STATUS."

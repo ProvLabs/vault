@@ -52,6 +52,54 @@ See: [.changelog/unreleased](.changelog/unreleased)
 
 ---
 
+## [v1.2.3](https://github.com/provlabs/vault/releases/tag/v1.2.3) 2026-07-29
+
+### Bug Fixes
+
+* Require a value-owner NAV denom (`nft/<scope-id>`) to name a scope that exists, so a fabricated scope id cannot be priced. A genesis import skips an entry whose denom is no longer registered instead of panicking [PR 266](https://github.com/provlabs/vault/pull/266).
+* Stop mirroring internal NAV entries into the marker module, which let a vault overwrite the chain-wide NAV of any marker it holds no permission on. The vault's share denom is now the only marker NAV published, and a NAV volume above the uint64 range is accepted [PR 266](https://github.com/provlabs/vault/pull/266).
+
+### Client Breaking
+
+* Changed the `tx vault create` CLI command to take `[authority] [admin] [share_denom] [underlying_asset]`, adding the leading governance authority argument. Because the command now requires the governance module account as signer, it is meant to be run with `--generate-only` and the resulting message submitted as a governance proposal [PR 265](https://github.com/provlabs/vault/pull/265).
+
+### State Machine Breaking
+
+* Restricted vault creation to governance: `MsgCreateVaultRequest` is now signed by the `authority` field, which must be the governance module account, so a vault can only come into existence through a passed governance proposal. The `admin` field is retained and designates the vault administrator chosen by the proposal, so it no longer has to be the signer. Any other signer is rejected with an unauthorized error [PR 265](https://github.com/provlabs/vault/pull/265).
+
+### Full Commit History
+
+* https://github.com/provlabs/vault/compare/v1.2.2...v1.2.3
+
+---
+
+## [v1.2.2](https://github.com/provlabs/vault/releases/tag/v1.2.2) 2026-07-27
+
+### Features
+
+* Added a `RemoveVaultNAV` transaction that lets the NAV authority delete a vault internal NAV entry, revoking the authorization to acquire that denom at that price. Only denoms the vault does not hold may be removed, since dropping a held asset entry would erase that balance from total vault value rather than restate it; a held asset that has lost its value is written down through `UpdateVaultNAV` instead. `EventNAVRemoved` gained a `signer` field recording the NAV authority that removed the entry, left empty when the protocol removes it as an outbound settlement draining the denom does [PR 259](https://github.com/provlabs/vault/pull/259).
+
+### Improvements
+
+* Remove paused vaults from the payout timeout, fee timeout, and payout verification queues so they no longer consume the per-block visit budget and starve active vaults [PR 257](https://github.com/provlabs/vault/pull/257).
+
+### Bug Fixes
+
+* Reset the AUM fee period on pause and unpause so a paused vault accrues no fees for the paused span [#219](https://github.com/provlabs/vault/issues/219).
+* Re-key a pending swap-out to a later retry time whenever an attempt fails and the request has to stay queued, so a request whose refund fails deterministically no longer holds the front of the queue and re-consumes the per-block batch budget on every block [PR 258](https://github.com/provlabs/vault/pull/258).
+* Allow `InitGenesis` to import an internal NAV entry for a metadata value-owner denom (`nft/<scope-id>`), which cannot be registered as a marker. `InitGenesis` and `SetVaultNAV` now share one denom check, so a genesis export carrying a scope asset price is importable on a chain restart or a state-export upgrade instead of panicking [PR 260](https://github.com/provlabs/vault/pull/260).
+
+### State Machine Breaking
+
+* Require the vault NAV authority to price an asset denom before the asset manager can acquire it: `AcceptAsset` now rejects a settlement whose asset denom has no internal NAV entry instead of letting the first acquisition set the price. Settlement no longer writes the NAV table at all, since the exact-price guardrail has already proven the trade executed at the price the authority recorded, so the price stays attributed to the authority and no marker NAV is republished. The internal NAV table now doubles as the list of denoms a vault is authorized to acquire and at what price: the authority may price a denom the vault does not hold yet, and until the asset arrives at the principal marker that entry contributes nothing to total vault value. A first acquisition therefore takes `UpdateVaultNAV` followed by `AcceptAsset`, which can ride in a single transaction carrying both signatures when the two roles belong to different entities [PR 259](https://github.com/provlabs/vault/pull/259).
+* Allowed `UpdateVaultNAV` and `RemoveVaultNAV` while a vault is paused, so an operator can pause, reprice held assets, and unpause as one sequence with user swaps closed for the whole span. A repricing during a pause leaves `PausedBalance` frozen, matching the principal deposits and withdrawals that are themselves only allowed while paused; everything done during the pause takes effect together at unpause [PR 262](https://github.com/provlabs/vault/pull/262).
+
+### Full Commit History
+
+* https://github.com/provlabs/vault/compare/v1.2.1...v1.2.2
+
+---
+
 ## [v1.2.1](https://github.com/provlabs/vault/releases/tag/v1.2.1) 2026-07-21
 
 ### Improvements

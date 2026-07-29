@@ -192,6 +192,7 @@ func AppConfig() depinject.Config {
 		depinject.Provide(
 			ProvideExchangeCustomSigners,
 			ProvideMarkerKeeperStub,
+			ProvideMetadataKeeperStub,
 			ProvideNameKeeperStub,
 			ProvideAttributeKeeperStub,
 			ProvideExchangeKeeperStub,
@@ -338,6 +339,20 @@ func (app *SimApp) kvStoreKeys() map[string]*storetypes.KVStoreKey {
 // if used.
 func ProvideMarkerKeeperStub() *markerkeeper.Keeper {
 	return &markerkeeper.Keeper{}
+}
+
+// ProvideMetadataKeeperStub returns an empty metadatakeeper.Keeper instance.
+//
+// This stub is used to satisfy dependency injection requirements when wiring
+// the Vault module in the app module configuration. It allows the Vault module
+// to be included in the dependency graph even though the actual MetadataKeeper
+// is initialized separately using the legacy Provenance wiring in SimApp.
+//
+// This function should only be used during app setup and should not be relied
+// on at runtime, as the returned keeper is not fully configured and will panic
+// if used.
+func ProvideMetadataKeeperStub() *metadatakeeper.Keeper {
+	return &metadatakeeper.Keeper{}
 }
 
 // ProvideNameKeeperStub returns an empty namekeeper.Keeper instance.

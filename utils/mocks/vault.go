@@ -118,6 +118,7 @@ func NewVaultKeeper(
 		nil,
 		nil,
 		nil,
+		nil,
 	)
 
 	ctx := wrapper.Ctx.WithHeaderInfo(header.Info{Time: time.Now().UTC()})

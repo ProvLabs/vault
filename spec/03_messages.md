@@ -71,7 +71,7 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 | `PauseVault`             | Admin or Asset Manager            |                   ✅ |                 ❌ | Strict by default: reconciles, snapshots `PausedBalance`, sets paused; aborts if reconcile/valuation fails. `force=true` pauses best-effort, tolerating failures and recording them on `EventVaultPaused`. |
 | `UnpauseVault`           | Admin or Asset Manager            |                   ❌ |                 ✅ | Clears `PausedBalance`, unpauses, emits with current TVV.                                                     |
 | `SetAssetManager`        | Admin only                        |                   ✅ |                 ✅ | Sets or clears the delegated asset manager.                                                                   |
-| `UpdateVaultNAV`         | NAV authority only                |                   ✅ |                 ✅ | Upserts the internal NAV entry and publishes it to the marker module. Reconciles first when unpaused; leaves `PausedBalance` frozen when paused, so a pause-reprice-unpause sequence cannot be front-run and the new price takes effect at unpause. |
+| `UpdateVaultNAV`         | NAV authority only                |                   ✅ |                 ✅ | Upserts the internal NAV entry; the price is never mirrored to the marker module. Reconciles first when unpaused; leaves `PausedBalance` frozen when paused, so a pause-reprice-unpause sequence cannot be front-run and the new price takes effect at unpause. |
 | `RemoveVaultNAV`         | NAV authority only                |                   ✅ |                 ✅ | Deletes the internal NAV entry for a denom the vault does not hold. Value-neutral in both states, since an unheld denom contributes nothing to total vault value. |
 | `UpdateNAVAuthority`     | Admin only                        |                   ✅ |                 ✅ | Rotates the address authorized to mutate the internal NAV table.                                              |
 | `AcceptAsset`            | Asset Manager only                |                   ✅ |                 ❌ | Rejected while paused (settlement would move value); otherwise reconciles first, requires an internal NAV entry and enforces its price exactly, then settles the `x/exchange` payment. Never writes the NAV table. |
@@ -371,9 +371,9 @@ When the vault is **not paused**, the handler reconciles first, so accrued inter
 
 When the vault **is paused**, the reconcile is a no-op (accrual is already halted) and `PausedBalance` is left untouched, still holding the value as of the moment of pausing. This matches how the pause already treats `DepositPrincipalFunds` and `WithdrawPrincipalFunds`, which are themselves only allowed while paused and likewise do not move the frozen value. Everything done during the pause, repricings and principal movements alike, takes effect together at `UnpauseVault`, when the snapshot is cleared and total vault value is recomputed from live balances and the NAV table.
 
-After the upsert, the NAV is published downstream to the **marker module**, attributed to the vault address. This mirror tracks the internal price list rather than the vault's valuation, so it is published in both states.
+The price stays **internal to the vault**. A vault does not own the assets it prices, so an asset price is never mirrored into that asset's marker-module NAV records, where it would compete with prices set by the marker's own administrators. Only the vault's share denom, which the vault does own, gets a published marker NAV.
 
-* `denom` must not be the vault's share denom and must be a registered marker.
+* `denom` must not be the vault's share denom, and must name an asset that exists on-chain: a registered marker, or, for a metadata value-owner denom (`nft/<scope-id>`), an existing metadata scope.
 * `volume` must be positive. The per-unit value is `price / volume`.
 * `source` is an optional origin label (e.g., an oracle name).
 
@@ -426,7 +426,7 @@ Settlement layers several responsibilities into one atomic transaction:
 1. **Reconcile** — the vault reconciles before any value change, so interest settles against the pre-settlement TVV.
 2. **NAV guardrail** — the asset denom must already have an internal NAV entry, and the settlement legs must match its price exactly (cross-multiplied, no rounding). A denom the NAV authority has never priced cannot be acquired.
 3. **Settle** — funds stage through the vault account as an atomic hop (`Principal -> Vault`, exchange `AcceptPayment`, `Vault -> Principal`); the principal marker remains the long-term store.
-4. **Drained-denom cleanup** — when an outbound settlement drains the principal of the asset denom, its internal NAV entry is removed (see `EventNAVRemoved`), so reacquiring the denom requires a fresh price. Nothing else about the NAV table changes: the guardrail has already proven the trade executed at the authority's recorded price, so settling never writes a price and never republishes a marker NAV.
+4. **Drained-denom cleanup** — when an outbound settlement drains the principal of the asset denom, its internal NAV entry is removed (see `EventNAVRemoved`), so reacquiring the denom requires a fresh price. Nothing else about the NAV table changes: the guardrail has already proven the trade executed at the authority's recorded price, so settling never writes a price.
 
 Any failure reverts the whole transaction.
 

@@ -596,7 +596,8 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsOnUnregisteredNAVMarker() {
 }
 
 func (s *TestSuite) TestVaultGenesis_RoundTripsEveryNAVDenomSetVaultNAVAccepts() {
-	metadataDenom := metadatatypes.ScopeMetadataAddress(uuid.MustParse("00000000-0000-4000-8000-000000000004")).Denom()
+	const metadataScopeUUID = "00000000-0000-4000-8000-000000000004"
+	metadataDenom := metadatatypes.ScopeMetadataAddress(uuid.MustParse(metadataScopeUUID)).Denom()
 
 	tests := []struct {
 		name           string
@@ -604,6 +605,7 @@ func (s *TestSuite) TestVaultGenesis_RoundTripsEveryNAVDenomSetVaultNAVAccepts()
 		underlying     string
 		navDenom       string
 		registerMarker bool
+		scopeUUID      string
 	}{
 		{
 			name:           "registered marker denom",
@@ -617,6 +619,7 @@ func (s *TestSuite) TestVaultGenesis_RoundTripsEveryNAVDenomSetVaultNAVAccepts()
 			shareDenom: "gsnavnftshare",
 			underlying: "gsnavnftunder",
 			navDenom:   metadataDenom,
+			scopeUUID:  metadataScopeUUID,
 		},
 	}
 
@@ -635,17 +638,18 @@ func (s *TestSuite) TestVaultGenesis_RoundTripsEveryNAVDenomSetVaultNAVAccepts()
 				},
 			}
 
-			arrangeMarkerRegistration := func() {
+			arrangeAssetRegistration := func() {
 				if tt.registerMarker {
 					s.requireSimpleMarker(tt.navDenom)
 					return
 				}
+				s.Require().Equal(tt.navDenom, s.requireScope(tt.scopeUUID), "scope %s must back the NAV denom under test", tt.scopeUUID)
 				_, markerErr := s.simApp.MarkerKeeper.GetMarkerByDenom(s.ctx, tt.navDenom)
 				s.Require().Error(markerErr, "denom %s must not be a registered marker for this case to be meaningful", tt.navDenom)
 			}
 
 			s.SetupTest()
-			arrangeMarkerRegistration()
+			arrangeAssetRegistration()
 
 			genesis := buildSingleVaultGenesisState(tt.shareDenom, tt.underlying, s.adminAddr.String(), []types.VaultNAVEntry{entry})
 			s.Require().NotPanics(func() { s.k.InitGenesis(s.ctx, genesis) },
@@ -660,7 +664,7 @@ func (s *TestSuite) TestVaultGenesis_RoundTripsEveryNAVDenomSetVaultNAVAccepts()
 			s.Require().NoError(exported.Validate(), "exported genesis should pass stateless validation with a NAV entry for denom %s", tt.navDenom)
 
 			s.SetupTest()
-			arrangeMarkerRegistration()
+			arrangeAssetRegistration()
 
 			s.Require().NotPanics(func() { s.k.InitGenesis(s.ctx, exported) },
 				"importing the exported genesis into a fresh chain should succeed for denom %s", tt.navDenom)

@@ -10,30 +10,27 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	markertypes "github.com/provenance-io/provenance/x/marker/types"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
-// isMetadataDenom reports whether denom is a well-formed metadata value-owner
-// denom (nft/<bech32-metadata-addr>), such as the coin minted for a scope. These
-// denoms are legitimate vault assets but are barred from being markers, so the
-// marker requirement and marker NAV mirror are skipped for them. A malformed
-// nft/... string is not a metadata denom and remains subject to the marker check.
-func isMetadataDenom(denom string) bool {
-	_, err := metadatatypes.MetadataAddressFromDenom(denom)
-	return err == nil
-}
-
 // requireNAVDenomRegistered enforces the on-chain denom requirement for an internal
-// NAV entry: the denom must be a registered marker, except for metadata value-owner
-// denoms (nft/<scope-id>), which are legitimate vault assets but are barred from
-// being markers.
+// NAV entry: the asset the price refers to must exist before a price can be recorded
+// for it, so a typo or a fabricated denom cannot be priced into the vault's table.
+//
+// A well-formed metadata value-owner denom (nft/<bech32-metadata-addr>), such as the
+// coin minted for a scope, must name a scope that exists in the metadata module. These
+// denoms are legitimate vault assets but are barred from being markers, so the metadata
+// module is the only registry that can vouch for them. Every other denom, including a
+// malformed nft/... string, must be a registered marker.
 //
 // SetVaultNAV and InitGenesis share this check so that every entry one path can write
 // the other can import. A genesis export carrying an entry the importer rejects cannot
 // be used for a chain restart or a state-export upgrade, so the two must not drift.
 func (k Keeper) requireNAVDenomRegistered(ctx sdk.Context, denom string) error {
-	if isMetadataDenom(denom) {
+	if metadataAddr, err := metadatatypes.MetadataAddressFromDenom(denom); err == nil {
+		if _, found := k.MetadataKeeper.GetScope(ctx, metadataAddr); !found {
+			return fmt.Errorf("NAV denom %q is not an existing metadata scope", denom)
+		}
 		return nil
 	}
 	if _, err := k.MarkerKeeper.GetMarkerByDenom(ctx, denom); err != nil {
@@ -76,8 +73,8 @@ func validateVaultNAVFields(vault *types.VaultAccount, nav types.VaultNAV) error
 //
 // The denom may not be the vault's share denom, whose value is derived from
 // the vault's total holdings rather than set externally. The denom must also
-// be a registered marker on-chain, except for metadata value-owner denoms
-// (nft/<scope-id>), which are legitimate vault assets but cannot be markers.
+// name an asset that exists on-chain: a registered marker, or for a metadata
+// value-owner denom (nft/<scope-id>) an existing metadata scope.
 // The price must be a valid coin denominated in the vault's underlying asset.
 // Its amount may be zero so the authority can write a worthless held asset
 // down to zero. The volume must be positive.
@@ -154,26 +151,6 @@ func (k *Keeper) checkSettlementNAVGuardrail(ctx sdk.Context, vault *types.Vault
 			assetCoin, paymentCoin, nav.Price, nav.Volume, assetCoin.Denom, vault.Address)
 	}
 
-	return nil
-}
-
-// publishAssetNAVToMarker mirrors an internal NAV entry into the marker module's
-// NAV records for the entry's denom, attributed to the vault address so
-// downstream consumers can tell vault-originated prices apart from other
-// sources. This is a one-way downstream publish: the internal table stays the
-// vault's pricing source of truth and is never read back from the marker.
-func (k *Keeper) publishAssetNAVToMarker(ctx sdk.Context, vault *types.VaultAccount, nav types.VaultNAV) error {
-	if !nav.Volume.IsUint64() {
-		return fmt.Errorf("internal NAV volume %s for denom %q on vault %s overflows the marker NAV volume (uint64)", nav.Volume, nav.Denom, vault.Address)
-	}
-	marker, err := k.MarkerKeeper.GetMarkerByDenom(ctx, nav.Denom)
-	if err != nil {
-		return fmt.Errorf("failed to get marker for NAV denom %q: %w", nav.Denom, err)
-	}
-	markerNAV := markertypes.NetAssetValue{Price: nav.Price, Volume: nav.Volume.Uint64()}
-	if err := k.MarkerKeeper.SetNetAssetValue(ctx, marker, markerNAV, vault.Address); err != nil {
-		return fmt.Errorf("failed to set marker NAV for denom %q on vault %s: %w", nav.Denom, vault.Address, err)
-	}
 	return nil
 }
 

@@ -749,6 +749,7 @@ type ModuleInputs struct {
 	AddressCodec        address.Codec
 	AuthKeeper          types.AccountKeeper
 	MarkerKeeper        types.MarkerKeeper
+	MetadataKeeper      types.MetadataKeeper
 	BankKeeper          types.BankKeeper
 	NameKeeper          types.NameKeeper
 	AttrKeeper          types.AttributeKeeper
@@ -778,6 +779,7 @@ func ProvideModule(in ModuleInputs) ModuleOutputs {
 		authority,
 		in.AuthKeeper,
 		in.MarkerKeeper,
+		in.MetadataKeeper,
 		in.BankKeeper,
 		in.NameKeeper,
 		in.AttrKeeper,

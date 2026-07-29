@@ -25,9 +25,12 @@ type Keeper struct {
 	eventService event.Service
 	AddressCodec address.Codec
 	authority    []byte
+	// authorityString is the bech32 form of authority, encoded once with AddressCodec.
+	authorityString string
 
 	AuthKeeper          types.AccountKeeper
 	MarkerKeeper        types.MarkerKeeper
+	MetadataKeeper      types.MetadataKeeper
 	BankKeeper          types.BankKeeper
 	NameKeeper          types.NameKeeper
 	AttrKeeper          types.AttributeKeeper
@@ -52,13 +55,15 @@ func NewKeeper(
 	authority []byte,
 	authKeeper types.AccountKeeper,
 	markerkeeper types.MarkerKeeper,
+	metadatakeeper types.MetadataKeeper,
 	bankkeeper types.BankKeeper,
 	namekeeper types.NameKeeper,
 	attributekeeper types.AttributeKeeper,
 	exchangekeeper types.ExchangeKeeper,
 	exchangeQueryServer types.ExchangeQueryServer,
 ) *Keeper {
-	if _, err := addressCodec.BytesToString(authority); err != nil {
+	authorityString, err := addressCodec.BytesToString(authority)
+	if err != nil {
 		panic(fmt.Sprintf("invalid authority address %s: %s", authority, err))
 	}
 
@@ -70,6 +75,7 @@ func NewKeeper(
 		eventService:          eventService,
 		AddressCodec:          addressCodec,
 		authority:             authority,
+		authorityString:       authorityString,
 		Params:                collections.NewItem(builder, types.ParamsKeyPrefix, types.ParamsKeyName, codec.CollValue[types.Params](cdc)),
 		Vaults:                collections.NewMap(builder, types.VaultsKeyPrefix, types.VaultsName, sdk.AccAddressKey, collections.BytesValue),
 		NAVs:                  collections.NewMap(builder, types.NAVsKeyPrefix, types.NAVsName, collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey), codec.CollValue[types.VaultNAV](cdc)),
@@ -79,6 +85,7 @@ func NewKeeper(
 		PendingSwapOutQueue:   queue.NewPendingSwapOutQueue(builder, cdc),
 		AuthKeeper:            authKeeper,
 		MarkerKeeper:          markerkeeper,
+		MetadataKeeper:        metadatakeeper,
 		BankKeeper:            bankkeeper,
 		NameKeeper:            namekeeper,
 		AttrKeeper:            attributekeeper,
@@ -98,6 +105,11 @@ func NewKeeper(
 // GetAuthority returns the module's authority.
 func (k Keeper) GetAuthority() []byte {
 	return k.authority
+}
+
+// GetAuthorityString returns the module's authority as a bech32 address.
+func (k Keeper) GetAuthorityString() string {
+	return k.authorityString
 }
 
 // OpenKVStore returns a KVStore for the module.

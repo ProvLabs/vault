@@ -16,6 +16,7 @@ import (
 
 func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 	admin := utils.TestAddress().Bech32
+	authority := utils.TestAddress().Bech32
 
 	tests := []struct {
 		name        string
@@ -23,8 +24,29 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 		expectedErr error
 	}{
 		{
+			name: "authority empty",
+			msg: types.MsgCreateVaultRequest{
+				Authority:       "",
+				Admin:           admin,
+				ShareDenom:      "vaultshare",
+				UnderlyingAsset: "uusd",
+			},
+			expectedErr: fmt.Errorf("invalid authority address: %q", ""),
+		},
+		{
+			name: "authority invalid",
+			msg: types.MsgCreateVaultRequest{
+				Authority:       "bad",
+				Admin:           admin,
+				ShareDenom:      "vaultshare",
+				UnderlyingAsset: "uusd",
+			},
+			expectedErr: fmt.Errorf("invalid authority address: %q", "bad"),
+		},
+		{
 			name: "success",
 			msg: types.MsgCreateVaultRequest{
+				Authority:       authority,
 				Admin:           admin,
 				ShareDenom:      "vaultshare",
 				UnderlyingAsset: "uusd",
@@ -34,6 +56,7 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "admin empty",
 			msg: types.MsgCreateVaultRequest{
+				Authority:       authority,
 				Admin:           "",
 				ShareDenom:      "vaultshare",
 				UnderlyingAsset: "uusd",
@@ -43,6 +66,7 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "admin invalid",
 			msg: types.MsgCreateVaultRequest{
+				Authority:       authority,
 				Admin:           "bad",
 				ShareDenom:      "vaultshare",
 				UnderlyingAsset: "uusd",
@@ -52,6 +76,7 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "share denom empty",
 			msg: types.MsgCreateVaultRequest{
+				Authority:       authority,
 				Admin:           admin,
 				ShareDenom:      "",
 				UnderlyingAsset: "uusd",
@@ -61,6 +86,7 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "share denom invalid",
 			msg: types.MsgCreateVaultRequest{
+				Authority:       authority,
 				Admin:           admin,
 				ShareDenom:      "inv@lid$",
 				UnderlyingAsset: "uusd",
@@ -70,6 +96,7 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "underlying empty",
 			msg: types.MsgCreateVaultRequest{
+				Authority:       authority,
 				Admin:           admin,
 				ShareDenom:      "vaultshare",
 				UnderlyingAsset: "",
@@ -79,6 +106,7 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "underlying invalid",
 			msg: types.MsgCreateVaultRequest{
+				Authority:       authority,
 				Admin:           admin,
 				ShareDenom:      "vaultshare",
 				UnderlyingAsset: "inv@lid$",
@@ -88,6 +116,7 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "share denom equals underlying (not allowed)",
 			msg: types.MsgCreateVaultRequest{
+				Authority:       authority,
 				Admin:           admin,
 				ShareDenom:      "uusd",
 				UnderlyingAsset: "uusd",
@@ -97,6 +126,7 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "deprecated payment denom equal to underlying is allowed",
 			msg: types.MsgCreateVaultRequest{
+				Authority:       authority,
 				Admin:           admin,
 				ShareDenom:      "vaultshare",
 				UnderlyingAsset: "uusd",
@@ -107,6 +137,7 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "deprecated payment denom different from underlying (not allowed)",
 			msg: types.MsgCreateVaultRequest{
+				Authority:       authority,
 				Admin:           admin,
 				ShareDenom:      "vaultshare",
 				UnderlyingAsset: "uusd",
@@ -117,6 +148,7 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "swap out delay over two years (not allowed)",
 			msg: types.MsgCreateVaultRequest{
+				Authority:              authority,
 				Admin:                  admin,
 				ShareDenom:             "vaultshare",
 				UnderlyingAsset:        "uusd",
@@ -127,6 +159,7 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "invalid min swap in (not an integer)",
 			msg: types.MsgCreateVaultRequest{
+				Authority:       authority,
 				Admin:           admin,
 				ShareDenom:      "vaultshare",
 				UnderlyingAsset: "uusd",
@@ -137,6 +170,7 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "negative min swap in",
 			msg: types.MsgCreateVaultRequest{
+				Authority:       authority,
 				Admin:           admin,
 				ShareDenom:      "vaultshare",
 				UnderlyingAsset: "uusd",
@@ -147,6 +181,7 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "min swap in > max swap in",
 			msg: types.MsgCreateVaultRequest{
+				Authority:       authority,
 				Admin:           admin,
 				ShareDenom:      "vaultshare",
 				UnderlyingAsset: "uusd",
@@ -158,6 +193,7 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "min swap out > max swap out",
 			msg: types.MsgCreateVaultRequest{
+				Authority:       authority,
 				Admin:           admin,
 				ShareDenom:      "vaultshare",
 				UnderlyingAsset: "uusd",
@@ -169,6 +205,7 @@ func TestMsgCreateVaultRequest_ValidateBasic(t *testing.T) {
 		{
 			name: "max swap in is zero",
 			msg: types.MsgCreateVaultRequest{
+				Authority:       authority,
 				Admin:           admin,
 				ShareDenom:      "vaultshare",
 				UnderlyingAsset: "uusd",

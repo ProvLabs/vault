@@ -70,7 +70,7 @@ Example:
 The keeper ties together state management, account operations, marker integration, interest reconciliation, and queued jobs.
 
 ### Vault Lifecycle
-- **CreateVault**: validates an existing marker for the underlying asset, establishes a vault account, and creates the share marker with mint/burn/withdraw/deposit permissions for the vault and `require_deposit_access` enabled, so only the vault can move coins into its principal marker.
+- **CreateVault**: governance-gated. Validates an existing marker for the underlying asset, establishes a vault account under the admin designated by the proposal, and creates the share marker with mint/burn/withdraw/deposit permissions for the vault and `require_deposit_access` enabled, so only the vault can move coins into its principal marker.
 - **GetVault**: retrieves and validates a vault account by address.
 - **Pause/Unpause**: admins can pause a vault, freezing operations and fixing balances, or unpause to resume operations.
 - **Bridge Controls**: configure a single **bridge address** and **enable/disable** bridging; capacity checks ensure local marker supply never exceeds `total_shares`.
@@ -144,7 +144,9 @@ Entries are written by three paths:
 An entry may exist for a denom the vault does not hold. Total vault value is computed by valuing held balances against the table, so an unheld denom's entry contributes nothing until the asset arrives. That is what makes pre-pricing meaningful: the table doubles as the list of assets the vault is authorized to acquire, and at what price.
 3. **Migration seeding** — a one-time upgrade migration seeded entries from existing marker-module NAVs.
 
-NAV upserts from paths 1 and 2 are also **published one-way to the marker module**, attributed to the vault address, so downstream marker-NAV consumers can distinguish vault-originated prices. Removals are internal-only: when a settlement drains a denom and its entry is deleted, the marker NAV is left as-is — publishing simply stops. The vault never reads marker NAVs back — the internal table remains authoritative.
+Entries stay **internal to the vault**. A vault does not own the assets it prices, so an asset price is never mirrored into that asset's marker-module NAV records, where it would compete with prices set by the marker's own administrators. Only the vault's own share denom gets a published marker NAV, written by the reconciler. The vault never reads marker NAVs back either — the internal table is authoritative in both directions.
+
+A priced denom must name an asset that exists on-chain: a registered marker, or, for a metadata value-owner denom (`nft/<scope-id>`), an existing metadata scope. Such scope coins are legitimate vault assets but are barred from being markers, so the metadata module is the registry that vouches for them.
 
 ### P2P Settlement Workflow
 
@@ -158,7 +160,7 @@ Settlement is atomic and layers several protections:
 - **Exact-price guardrail** — the asset denom must already carry an internal NAV entry, and the settlement legs must match its price exactly (cross-multiplied, no rounding tolerance). A denom the NAV authority has never priced cannot be acquired, so the asset manager cannot mint a price of their choosing by being the first to acquire it. Settling at a different price requires the authority to move the NAV first (`UpdateVaultNAV`). Every price change is therefore an explicit, evented action by the NAV authority rather than a side effect of trade flow.
 
   A first acquisition is two messages: the authority prices the denom, then the manager settles. Both fit in one transaction, so when the two roles belong to different entities the transaction simply carries both signatures and the price and trade commit together.
-- **Price recording** — the realized settlement price becomes the asset's internal NAV entry and is published to the marker module. When an outbound settlement empties the principal of the asset, the entry is removed so a stale price cannot linger.
+- **No price writes** — settling executes at the price the NAV authority already recorded and writes no entry of its own, since the guardrail has already proven the trade matched that price. When an outbound settlement empties the principal of the asset, the entry is removed so a stale price cannot linger.
 
 ### Valuation Scope
 
@@ -178,7 +180,7 @@ TVV sums every denom held at the principal marker that has a vault internal NAV,
 
 ## High-Level Flow
 
-1. **CreateVault**: admin sets up a new vault.
+1. **CreateVault**: a governance proposal sets up a new vault and designates its admin.
 2. **SwapIn**: users deposit assets → shares minted.
 3. **SwapOut**: users escrow shares → queued for payout.
 4. **Interest**: accrues over time, reconciled on actions or via queues.

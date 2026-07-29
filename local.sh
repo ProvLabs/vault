@@ -20,12 +20,20 @@ if ! [ -f .vaulty/data/priv_validator_state.json ]; then
   "$SIMD_BIN" keys add account-1 --home .vaulty --keyring-backend test --recover <<< "picture pigeon chicken cause quarter script snow concert slim pill wedding oval vacant crew kingdom music ghost symbol sport poet velvet enhance warfare diet" &> /dev/null
   "$SIMD_BIN" keys add account-2 --home .vaulty --keyring-backend test --recover <<< "coyote online awkward talent share next hamster speed minimum color false amazing balcony treat squirrel feature combine negative fame decide usage mistake nurse begin" &> /dev/null
   "$SIMD_BIN" keys add validator --home .vaulty --keyring-backend test &> /dev/null
-  "$SIMD_BIN" genesis add-genesis-account validator 1000000ustake --home .vaulty --keyring-backend test
+  "$SIMD_BIN" genesis add-genesis-account validator 100000000ustake --home .vaulty --keyring-backend test
   "$SIMD_BIN" genesis add-genesis-account provlabs19ftpcggezgal5ascglq5m022z4e453khv4j3k2 1000000uusdc --home .vaulty
   "$SIMD_BIN" genesis add-genesis-account provlabs1evyv7neax9qtxxzuexnhylxyz4guvsyjhxyv47 1000000uusdc --home .vaulty
 
+  # Vault creation is governance-gated, so gov is tuned for a fast local proposal loop.
   TEMP=.vaulty/genesis.json
-  touch $TEMP && jq '.app_state.staking.params.bond_denom = "ustake"' .vaulty/config/genesis.json > $TEMP && mv $TEMP .vaulty/config/genesis.json
+  touch $TEMP && jq '
+      .app_state.staking.params.bond_denom = "ustake"
+    | .app_state.gov.params.min_deposit = [{"denom": "ustake", "amount": "1000000"}]
+    | .app_state.gov.params.expedited_min_deposit = [{"denom": "ustake", "amount": "2000000"}]
+    | .app_state.gov.params.max_deposit_period = "60s"
+    | .app_state.gov.params.voting_period = "15s"
+    | .app_state.gov.params.expedited_voting_period = "10s"
+  ' .vaulty/config/genesis.json > $TEMP && mv $TEMP .vaulty/config/genesis.json
 
   "$SIMD_BIN" genesis gentx validator 1000000ustake --chain-id "$CHAIN_ID" --home .vaulty --keyring-backend test &> /dev/null
   "$SIMD_BIN" genesis collect-gentxs --home .vaulty &> /dev/null 

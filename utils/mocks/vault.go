@@ -24,6 +24,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+
+	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 )
 
 var _ types.AccountKeeper = (*MockAuthKeeper)(nil)
@@ -89,6 +91,31 @@ func (m *MockAuthKeeper) GetModuleAddress(moduleName string) sdk.AccAddress {
 	return sdk.AccAddress(moduleName)
 }
 
+var _ types.MetadataKeeper = (*MockMetadataKeeper)(nil)
+
+// MockMetadataKeeper is an in-memory stand-in for the metadata keeper, holding the scopes
+// that a value-owner NAV denom (nft/<scope-id>) may resolve to. An empty mock reports every
+// scope as missing, which is what the NAV denom check expects for an unknown scope.
+type MockMetadataKeeper struct {
+	scopes map[string]metadatatypes.Scope
+}
+
+// NewMockMetadataKeeper returns a MockMetadataKeeper holding no scopes.
+func NewMockMetadataKeeper() *MockMetadataKeeper {
+	return &MockMetadataKeeper{scopes: make(map[string]metadatatypes.Scope)}
+}
+
+// SetScope records a scope so lookups for its id, and for the value-owner denom derived
+// from it, resolve as existing.
+func (m *MockMetadataKeeper) SetScope(scope metadatatypes.Scope) {
+	m.scopes[scope.ScopeId.String()] = scope
+}
+
+func (m *MockMetadataKeeper) GetScope(_ sdk.Context, id metadatatypes.MetadataAddress) (metadatatypes.Scope, bool) {
+	scope, found := m.scopes[id.String()]
+	return scope, found
+}
+
 // NewVaultKeeper returns an instance of the Keeper with all dependencies mocked.
 func NewVaultKeeper(
 	t testing.TB,
@@ -113,6 +140,7 @@ func NewVaultKeeper(
 		authtypes.NewModuleAddress(govtypes.ModuleName),
 		authMock,
 		nil,
+		NewMockMetadataKeeper(),
 		nil,
 		nil,
 		nil,

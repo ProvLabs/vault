@@ -13,10 +13,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/google/uuid"
 	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
-	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
@@ -97,6 +95,7 @@ func (s *TestSuite) TestMsgServer_CreateVault() {
 	vaultAddr := types.GetVaultAddress(sharedenom)
 
 	vaultReq := types.MsgCreateVaultRequest{
+		Authority:       s.govAuthority,
 		Admin:           admin,
 		ShareDenom:      sharedenom,
 		UnderlyingAsset: underlying,
@@ -162,11 +161,37 @@ func (s *TestSuite) TestMsgServer_CreateVault_Failures() {
 
 	tests := []msgServerTestCase[types.MsgCreateVaultRequest, any]{
 		{
+			name: "authority is the vault admin instead of governance",
+			setup: func() {
+				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("assetcoin", 100), s.adminAddr)
+			},
+			msg: types.MsgCreateVaultRequest{
+				Authority:       s.adminAddr.String(),
+				Admin:           s.adminAddr.String(),
+				ShareDenom:      "sharecoin",
+				UnderlyingAsset: "assetcoin",
+			},
+			expectedErrSubstrs: []string{"unauthorized: expected " + s.govAuthority + " got " + s.adminAddr.String()},
+		},
+		{
+			name: "authority is empty",
+			setup: func() {
+				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("assetcoin", 100), s.adminAddr)
+			},
+			msg: types.MsgCreateVaultRequest{
+				Admin:           s.adminAddr.String(),
+				ShareDenom:      "sharecoin",
+				UnderlyingAsset: "assetcoin",
+			},
+			expectedErrSubstrs: []string{"unauthorized: expected " + s.govAuthority + " got "},
+		},
+		{
 			name: "invalid admin address",
 			setup: func() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("assetcoin", 100), s.adminAddr)
 			},
 			msg: types.MsgCreateVaultRequest{
+				Authority:       s.govAuthority,
 				Admin:           "invalid_bech32",
 				ShareDenom:      "sharecoin",
 				UnderlyingAsset: "assetcoin",
@@ -179,6 +204,7 @@ func (s *TestSuite) TestMsgServer_CreateVault_Failures() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("assetcoin", 100), s.adminAddr)
 			},
 			msg: types.MsgCreateVaultRequest{
+				Authority:       s.govAuthority,
 				Admin:           s.adminAddr.String(),
 				ShareDenom:      "invalid denom!",
 				UnderlyingAsset: "assetcoin",
@@ -188,6 +214,7 @@ func (s *TestSuite) TestMsgServer_CreateVault_Failures() {
 		{
 			name: "underlying asset marker not found",
 			msg: types.MsgCreateVaultRequest{
+				Authority:       s.govAuthority,
 				Admin:           s.adminAddr.String(),
 				ShareDenom:      "vaulttoken",
 				UnderlyingAsset: "nonexistentasset",
@@ -201,6 +228,7 @@ func (s *TestSuite) TestMsgServer_CreateVault_Failures() {
 				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("under", 1), s.adminAddr)
 			},
 			msg: types.MsgCreateVaultRequest{
+				Authority:       s.govAuthority,
 				Admin:           s.adminAddr.String(),
 				ShareDenom:      "existingmarker",
 				UnderlyingAsset: "under",
@@ -5901,6 +5929,10 @@ func (s *TestSuite) TestMsgServer_UpdateVaultNAV() {
 			s.Assert().Equal(args.source, nav.Source, "post-check: NAV source mismatch")
 			s.Assert().Equal(args.height, nav.UpdatedBlockHeight, "post-check: NAV block height mismatch")
 			s.Assert().Equal(s.ctx.BlockTime().UTC(), nav.UpdatedTime, "post-check: NAV updated time mismatch")
+
+			markerNAV, err := s.simApp.MarkerKeeper.GetNetAssetValue(s.ctx, args.denom, args.price.Denom)
+			s.Require().NoError(err, "post-check: failed to read the marker NAV for %s priced in %s", args.denom, args.price.Denom)
+			s.Assert().Nil(markerNAV, "post-check: an asset price must stay in the vault's internal table and never reach the marker module for %s", args.denom)
 		},
 	}
 
@@ -5948,6 +5980,13 @@ func (s *TestSuite) TestMsgServer_UpdateVaultNAV() {
 			volume: sdkmath.NewInt(3),
 			source: "oracle-while-paused",
 		},
+		{
+			name:   "volume beyond the uint64 range is stored, since the internal table is not bounded by a marker mirror",
+			setup:  baseSetup,
+			price:  sdk.NewInt64Coin(underlying, 100),
+			volume: sdkmath.NewIntFromBigInt(new(big.Int).Lsh(big.NewInt(1), 70)),
+			source: "oracle-large-volume",
+		},
 	}
 
 	for _, tt := range tests {
@@ -5972,12 +6011,6 @@ func (s *TestSuite) TestMsgServer_UpdateVaultNAV() {
 						sdk.NewAttribute("source", tt.source),
 						sdk.NewAttribute("updated_block_height", "100"),
 						sdk.NewAttribute("vault_address", vaultAddr.String()),
-						sdk.NewAttribute("volume", tt.volume.String()),
-					),
-					sdk.NewEvent("provenance.marker.v1.EventSetNetAssetValue",
-						sdk.NewAttribute("denom", navDenom),
-						sdk.NewAttribute("price", tt.price.String()),
-						sdk.NewAttribute("source", vaultAddr.String()),
 						sdk.NewAttribute("volume", tt.volume.String()),
 					),
 				},
@@ -6090,21 +6123,6 @@ func (s *TestSuite) TestMsgServer_UpdateVaultNAV_Failures() {
 				Volume:       sdkmath.NewInt(-1),
 			},
 			expectedErrSubstrs: []string{"NAV volume must be positive"},
-		},
-		{
-			name: "rejects volume that overflows the marker NAV volume",
-			setup: func() {
-				setup()
-				s.requireSimpleMarker("rwa")
-			},
-			msg: types.MsgUpdateVaultNAVRequest{
-				Signer:       admin.String(),
-				VaultAddress: vaultAddr.String(),
-				Denom:        "rwa",
-				Price:        sdk.NewInt64Coin(underlying, 100),
-				Volume:       sdkmath.NewIntFromBigInt(new(big.Int).Lsh(big.NewInt(1), 70)),
-			},
-			expectedErrSubstrs: []string{"failed to publish vault NAV to marker", "overflows the marker NAV volume"},
 		},
 	}
 
@@ -7623,7 +7641,7 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_SettlementNAV() {
 func (s *TestSuite) TestMsgServer_AcceptAsset_SettlementNAV_MetadataDenom() {
 	underlying := "under"
 	share := "vshare"
-	asset := metadatatypes.ScopeMetadataAddress(uuid.MustParse("00000000-0000-4000-8000-000000000001")).Denom()
+	asset := s.requireScope("00000000-0000-4000-8000-000000000001")
 	externalID := "settle-nav-nft"
 
 	origCtx := s.ctx
@@ -7682,7 +7700,7 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_SettlementNAV_MetadataDenom() {
 func (s *TestSuite) TestMsgServer_UpdateVaultNAV_MetadataDenom() {
 	underlying := "under"
 	share := "vaultshares"
-	navDenom := metadatatypes.ScopeMetadataAddress(uuid.MustParse("00000000-0000-4000-8000-000000000002")).Denom()
+	navDenom := s.requireScope("00000000-0000-4000-8000-000000000002")
 	admin := s.adminAddr
 	vaultAddr := types.GetVaultAddress(share)
 

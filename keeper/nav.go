@@ -23,9 +23,8 @@ import (
 // module is the only registry that can vouch for them. Every other denom, including a
 // malformed nft/... string, must be a registered marker.
 //
-// SetVaultNAV and InitGenesis share this check so that every entry one path can write
-// the other can import. A genesis export carrying an entry the importer rejects cannot
-// be used for a chain restart or a state-export upgrade, so the two must not drift.
+// SetVaultNAV rejects an entry that fails this check; InitGenesis logs and skips it, so a
+// deleted scope cannot make a state export unimportable.
 func (k Keeper) requireNAVDenomRegistered(ctx sdk.Context, denom string) error {
 	if metadataAddr, err := metadatatypes.MetadataAddressFromDenom(denom); err == nil {
 		if _, found := k.MetadataKeeper.GetScope(ctx, metadataAddr); !found {

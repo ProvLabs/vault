@@ -109,24 +109,32 @@ cat > "$PROPOSAL_FILE" <<EOF
 EOF
 
 echo "Submitting governance proposal to create vault '$SHARE_DENOM'..."
-$TX_SCRIPT gov submit-proposal "$PROPOSAL_FILE" --from "$ADMIN"
-if [ $? -ne 0 ]; then
+SUBMIT_OUTPUT=$($TX_SCRIPT gov submit-proposal "$PROPOSAL_FILE" --from "$ADMIN")
+SUBMIT_STATUS=$?
+echo "$SUBMIT_OUTPUT"
+if [ $SUBMIT_STATUS -ne 0 ]; then
   echo "ERROR: Failed to submit the vault creation proposal."
   exit 1
 fi
 
 # --- 4. Vote on the proposal ---
-# Identify the proposal by the message it carries rather than by taking the newest
-# proposal, so an unrelated proposal submitted concurrently is never picked up.
-PROPOSAL_ID=$($SIMD_BIN query gov proposals $HOME_DIR --output json 2>/dev/null | jq -r --arg denom "$SHARE_DENOM" '
-  [ .proposals[]?
-    | select(any(.messages[]?;
-        ."@type" == "/provlabs.vault.v1.MsgCreateVaultRequest"
-        and (.share_denom // .shareDenom) == $denom))
-    | .id | tonumber
-  ] | max // empty')
+# Read the proposal id off the submit_proposal event of this specific transaction, so a
+# proposal submitted concurrently can never be mistaken for this one.
+TX_HASH=$(printf '%s\n' "$SUBMIT_OUTPUT" | awk '/^txhash:/ { print $2; exit }' | tr -d '\r')
+if [ -z "$TX_HASH" ]; then
+  echo "ERROR: Could not determine the transaction hash of the proposal submission."
+  exit 1
+fi
+
+PROPOSAL_ID=$($SIMD_BIN query tx "$TX_HASH" $HOME_DIR --output json 2>/dev/null | jq -r '
+  [ .events[]?
+    | select(.type == "submit_proposal")
+    | .attributes[]?
+    | select(.key == "proposal_id")
+    | .value
+  ] | first // empty')
 if [ -z "$PROPOSAL_ID" ]; then
-  echo "ERROR: Could not find a submitted proposal creating vault '$SHARE_DENOM'."
+  echo "ERROR: Could not determine the proposal id from transaction $TX_HASH."
   exit 1
 fi
 

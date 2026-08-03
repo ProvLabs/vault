@@ -38,7 +38,10 @@ import (
 // v1->v2 migration handler is registered in RegisterServices so the SDK module
 // manager can drive the migration via RunMigrations when an upstream upgrade
 // handler advances the chain.
-const ConsensusVersion = 2
+//
+// Bumped from 2 to 3 to accompany Migrator.Migrate2to3, which enables the
+// gov_only_vault_creation param on mainnet.
+const ConsensusVersion = 3
 
 var (
 	_ module.AppModuleBasic      = AppModule{}
@@ -156,6 +159,9 @@ func (m AppModule) RegisterServices(cfg module.Configurator) {
 	if err := cfg.RegisterMigration(types.ModuleName, 1, migrator.Migrate1to2); err != nil {
 		panic(fmt.Sprintf("failed to register %s v1->v2 migration: %v", types.ModuleName, err))
 	}
+	if err := cfg.RegisterMigration(types.ModuleName, 2, migrator.Migrate2to3); err != nil {
+		panic(fmt.Sprintf("failed to register %s v2->v3 migration: %v", types.ModuleName, err))
+	}
 }
 
 // Proto field names referenced by the AutoCLI positional argument descriptors.
@@ -193,8 +199,8 @@ func (AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Use:       "create [authority] [admin] [share_denom] [underlying_asset]",
 					Alias:     []string{"c", "new"},
 					Short:     "Create a new vault",
-					Long:      "Create a new vault with an underlying asset and share denom, administered by the designated admin. Optionally set a withdrawal delay that queues swap-outs until the delay elapses. Requires governance authority, so this command is meant to be run with --generate-only and submitted as a governance proposal.",
-					Example:   fmt.Sprintf("%s create %s %s svnhash nhash --withdrawal-delay-seconds 86400 --generate-only", txStart, exampleAuthorityAddr, exampleAdminAddr),
+					Long:      "Create a new vault with an underlying asset and share denom, administered by the designated admin. Optionally set a withdrawal delay that queues swap-outs until the delay elapses. The authority is the signer: when the module's gov_only_vault_creation param is enabled it must be the governance module account, so the command is run with --generate-only and the message submitted as a governance proposal; otherwise it can be any account creating the vault directly.",
+					Example:   fmt.Sprintf("%s create %s %s svnhash nhash --withdrawal-delay-seconds 86400\n%s create %s %s svnhash nhash --withdrawal-delay-seconds 86400 --generate-only", txStart, exampleAdminAddr, exampleAdminAddr, txStart, exampleAuthorityAddr, exampleAdminAddr),
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{
 						{ProtoField: fieldAuthority},
 						{ProtoField: fieldAdmin},

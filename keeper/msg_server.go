@@ -35,12 +35,26 @@ func (k msgServer) validateGovAuthority(signer string) error {
 	return nil
 }
 
-// CreateVault creates a vault. Vault creation is governance-gated, so the message
-// must be signed by the governance module account.
+// validateVaultCreationAuthority gates CreateVault on the gov_only_vault_creation param:
+// only the governance authority may sign while it is on, any account while it is off.
+func (k msgServer) validateVaultCreationAuthority(ctx sdk.Context, signer string) error {
+	govOnly, err := k.IsVaultCreationGovOnly(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to determine vault creation authority: %w", err)
+	}
+	if !govOnly {
+		return nil
+	}
+
+	return k.validateGovAuthority(signer)
+}
+
+// CreateVault creates a vault, signed by the governance module account while the
+// gov_only_vault_creation param is enabled and by any account while it is not.
 func (k msgServer) CreateVault(goCtx context.Context, msg *types.MsgCreateVaultRequest) (*types.MsgCreateVaultResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	if err := k.validateGovAuthority(msg.Authority); err != nil {
+	if err := k.validateVaultCreationAuthority(ctx, msg.Authority); err != nil {
 		return nil, err
 	}
 

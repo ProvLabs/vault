@@ -139,6 +139,21 @@ func (k Keeper) GetAUMFeeAddress(ctx sdk.Context) (sdk.AccAddress, error) {
 	return addr, nil
 }
 
+// IsVaultCreationGovOnly reports whether CreateVault may only be signed by the governance
+// module account. Unset params fall back to the module default; any other read failure is
+// surfaced so the gate never fails open on an unreadable store.
+func (k Keeper) IsVaultCreationGovOnly(ctx sdk.Context) (bool, error) {
+	params, err := k.Params.Get(ctx)
+	if err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			return types.DefaultParams().GovOnlyVaultCreation, nil
+		}
+		return false, fmt.Errorf("failed to retrieve params: %w", err)
+	}
+
+	return params.GovOnlyVaultCreation, nil
+}
+
 // getLogger returns a logger with vault module context.
 func (k Keeper) getLogger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", "x/"+types.ModuleName)

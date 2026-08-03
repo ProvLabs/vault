@@ -200,6 +200,14 @@ func (s *TestSuite) TestVaultGenesis_Params_RoundTrip() {
 			name:   "default params should survive export and re-import",
 			params: types.DefaultParams(),
 		},
+		{
+			name: "gov-only vault creation should survive export and re-import",
+			params: types.Params{
+				TechFeeAddress:       techFeeAddress.String(),
+				DefaultAumFeeBips:    100,
+				GovOnlyVaultCreation: true,
+			},
+		},
 	}
 
 	for _, tc := range tests {

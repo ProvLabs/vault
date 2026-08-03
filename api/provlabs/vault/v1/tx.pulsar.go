@@ -30819,15 +30819,17 @@ const (
 )
 
 // MsgCreateVaultRequest is the request message for the CreateVault endpoint.
-// Vault creation is governance-gated: the message must be signed by the governance
-// module account, so it can only be executed as part of a passed proposal.
+// Who may sign depends on the module's gov_only_vault_creation param: when it is
+// enabled only the governance module account may sign, so a vault can only come
+// into existence through a passed proposal; when it is disabled any account may
+// sign and create a vault directly.
 type MsgCreateVaultRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
 	// admin is the initial administrator of the vault. It is designated by the
-	// governance proposal and is not required to be the signer.
+	// signer and is not required to be the signer itself.
 	Admin string `protobuf:"bytes,1,opt,name=admin,proto3" json:"admin,omitempty"`
 	// share_denom is the name of the assets created by the vault used for distribution.
 	ShareDenom string `protobuf:"bytes,2,opt,name=share_denom,json=shareDenom,proto3" json:"share_denom,omitempty"`
@@ -30858,7 +30860,9 @@ type MsgCreateVaultRequest struct {
 	// - Values must be positive (> 0).
 	// - An empty string "" indicates no maximum limit.
 	MaxSwapOutValue string `protobuf:"bytes,9,opt,name=max_swap_out_value,json=maxSwapOutValue,proto3" json:"max_swap_out_value,omitempty"`
-	// authority is the address of the governance module account.
+	// authority is the address signing the message. It must be the governance module
+	// account while the gov_only_vault_creation param is enabled; otherwise it may be
+	// any account.
 	Authority string `protobuf:"bytes,10,opt,name=authority,proto3" json:"authority,omitempty"`
 }
 

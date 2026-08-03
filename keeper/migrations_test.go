@@ -8,6 +8,7 @@ import (
 
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
+	vault "github.com/provlabs/vault"
 	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
 )
@@ -184,16 +185,18 @@ func (s *TestSuite) TestVaultModule_RunMigrations() {
 	underlying := "ylds"
 	payment := "usdc"
 
-	s.Run("vault pinned to v1 runs the registered v1->v2 flatten migration", func() {
+	s.Run("vault pinned to v1 runs every registered migration in order", func() {
 		s.SetupTest()
+		s.ctx = s.ctx.WithChainID(types.MainnetChainID)
 		legacy := s.createLegacyVaultAccount("vsharemmv1", underlying, payment)
+		s.SetGovOnlyVaultCreation(false)
 
 		fromVM := s.simApp.ModuleManager.GetVersionMap()
 		fromVM[types.ModuleName] = 1
 
 		newVM, err := s.simApp.ModuleManager.RunMigrations(s.ctx, s.simApp.Configurator(), fromVM)
-		s.Require().NoError(err, "RunMigrations must succeed; vault v1->v2 handler must be registered for vault %s", legacy.Address)
-		s.Require().Equal(uint64(2), newVM[types.ModuleName], "vault module version should advance to ConsensusVersion 2")
+		s.Require().NoError(err, "RunMigrations must succeed; vault v1->v2 and v2->v3 handlers must be registered for vault %s", legacy.Address)
+		s.Require().Equal(uint64(vault.ConsensusVersion), newVM[types.ModuleName], "vault module version should advance to the current ConsensusVersion")
 
 		acct := s.simApp.AccountKeeper.GetAccount(s.ctx, legacy.GetAddress())
 		got, ok := acct.(*types.VaultAccount)
@@ -202,11 +205,40 @@ func (s *TestSuite) TestVaultModule_RunMigrations() {
 
 		_, err = s.simApp.VaultKeeper.NAVs.Get(s.ctx, collections.Join(legacy.GetAddress(), payment))
 		s.Require().ErrorIs(err, collections.ErrNotFound, "the flatten migration must not seed internal NAV entries")
+
+		govOnly, err := s.simApp.VaultKeeper.IsVaultCreationGovOnly(s.ctx)
+		s.Require().NoError(err, "reading the gate after RunMigrations should not error")
+		s.Assert().True(govOnly, "the v2->v3 migration should also run for a chain pinned to v1")
+	})
+
+	s.Run("vault pinned to v2 runs only the v2->v3 gate migration", func() {
+		s.SetupTest()
+		s.ctx = s.ctx.WithChainID(types.MainnetChainID)
+		legacy := s.createLegacyVaultAccount("vsharemmv2", underlying, payment)
+		s.SetGovOnlyVaultCreation(false)
+
+		fromVM := s.simApp.ModuleManager.GetVersionMap()
+		fromVM[types.ModuleName] = 2
+
+		newVM, err := s.simApp.ModuleManager.RunMigrations(s.ctx, s.simApp.Configurator(), fromVM)
+		s.Require().NoError(err, "RunMigrations must succeed; the vault v2->v3 handler must be registered")
+		s.Require().Equal(uint64(vault.ConsensusVersion), newVM[types.ModuleName], "vault module version should advance to the current ConsensusVersion")
+
+		govOnly, err := s.simApp.VaultKeeper.IsVaultCreationGovOnly(s.ctx)
+		s.Require().NoError(err, "reading the gate after RunMigrations should not error")
+		s.Assert().True(govOnly, "the v2->v3 migration should enable the gate for a chain pinned to v2")
+
+		acct := s.simApp.AccountKeeper.GetAccount(s.ctx, legacy.GetAddress())
+		got, ok := acct.(*types.VaultAccount)
+		s.Require().True(ok, "account at %s should remain a VaultAccount", legacy.Address)
+		s.Equal(payment, got.PaymentDenom, "starting at v2 must not re-run the v1->v2 flatten")
 	})
 
 	s.Run("version map already at current ConsensusVersion is a no-op", func() {
 		s.SetupTest()
+		s.ctx = s.ctx.WithChainID(types.MainnetChainID)
 		legacy := s.createLegacyVaultAccount("vsharemmnoop", underlying, payment)
+		s.SetGovOnlyVaultCreation(false)
 
 		fromVM := s.simApp.ModuleManager.GetVersionMap()
 		newVM, err := s.simApp.ModuleManager.RunMigrations(s.ctx, s.simApp.Configurator(), fromVM)
@@ -217,6 +249,10 @@ func (s *TestSuite) TestVaultModule_RunMigrations() {
 		got, ok := acct.(*types.VaultAccount)
 		s.Require().True(ok, "account at %s should remain a VaultAccount", legacy.Address)
 		s.Equal(payment, got.PaymentDenom, "a matching version map must not trigger the flatten")
+
+		govOnly, err := s.simApp.VaultKeeper.IsVaultCreationGovOnly(s.ctx)
+		s.Require().NoError(err, "reading the gate after a no-op RunMigrations should not error")
+		s.Assert().False(govOnly, "a matching version map must not trigger the gate migration, even on mainnet")
 	})
 }
 
@@ -310,4 +346,72 @@ func (s *TestSuite) TestKeeper_MigrateEnableMarkerDepositProtection() {
 		after := getShareMarker(shareDenom)
 		s.Equal(before, after, "a marker already carrying deposit protection from creation must pass through the migration unchanged")
 	})
+}
+
+func (s *TestSuite) TestKeeper_MigrateEnableGovOnlyVaultCreation() {
+	tests := []struct {
+		name     string
+		chainID  string
+		setup    func()
+		expected bool
+	}{
+		{
+			name:     "mainnet params stored without the gate, as an upgrading chain has them",
+			chainID:  types.MainnetChainID,
+			setup:    func() { s.SetGovOnlyVaultCreation(false) },
+			expected: true,
+		},
+		{
+			name:     "mainnet gate already enabled is left enabled",
+			chainID:  types.MainnetChainID,
+			setup:    func() { s.SetGovOnlyVaultCreation(true) },
+			expected: true,
+		},
+		{
+			name:    "mainnet with no params stored at all",
+			chainID: types.MainnetChainID,
+			setup: func() {
+				s.Require().NoError(s.k.Params.Remove(s.ctx), "failed to clear stored params")
+			},
+			expected: true,
+		},
+		{
+			name:     "testnet is left open",
+			chainID:  types.TestnetChainID,
+			setup:    func() { s.SetGovOnlyVaultCreation(false) },
+			expected: false,
+		},
+		{
+			name:     "local chain is left open",
+			chainID:  "vaulty-1",
+			setup:    func() { s.SetGovOnlyVaultCreation(false) },
+			expected: false,
+		},
+		{
+			name:     "a chain that already enabled the gate itself keeps it regardless of chain ID",
+			chainID:  "vaulty-1",
+			setup:    func() { s.SetGovOnlyVaultCreation(true) },
+			expected: true,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			s.ctx = s.ctx.WithChainID(tc.chainID)
+			tc.setup()
+
+			migrator := keeper.NewMigrator(s.simApp.VaultKeeper)
+			s.Require().NoError(migrator.Migrate2to3(s.ctx), "2->3 migration should succeed on chain %s", tc.chainID)
+
+			govOnly, err := s.k.IsVaultCreationGovOnly(s.ctx)
+			s.Require().NoError(err, "reading the gate after the 2->3 migration should not error")
+			s.Assert().Equal(tc.expected, govOnly, "gov-only vault creation gate after the 2->3 migration on chain %s", tc.chainID)
+
+			s.Require().NoError(migrator.Migrate2to3(s.ctx), "the 2->3 migration should be idempotent across retries")
+			govOnly, err = s.k.IsVaultCreationGovOnly(s.ctx)
+			s.Require().NoError(err, "reading the gate after a repeated 2->3 migration should not error")
+			s.Assert().Equal(tc.expected, govOnly, "a repeated 2->3 migration must not change the gate on chain %s", tc.chainID)
+		})
+	}
 }

@@ -83,6 +83,15 @@ var (
 const (
 	// DefaultAumFeeBips is the default AUM fee rate in basis points (15 bps = 0.15%).
 	DefaultAumFeeBips = 15
+
+	// DefaultGovOnlyVaultCreation leaves vault creation open to any signer, so dev, docker,
+	// and testnet chains need no proposal. Mainnet enables the gate in genesis or by proposal.
+	DefaultGovOnlyVaultCreation = false
+
+	// MainnetChainID is the chain ID of the Provenance mainnet.
+	MainnetChainID = "pio-mainnet-1"
+	// TestnetChainID is the chain ID of the Provenance testnet.
+	TestnetChainID = "pio-testnet-1"
 )
 
 // GetVaultAddress returns the module account address for the given shareDenom.

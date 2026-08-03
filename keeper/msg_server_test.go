@@ -161,8 +161,9 @@ func (s *TestSuite) TestMsgServer_CreateVault_Failures() {
 
 	tests := []msgServerTestCase[types.MsgCreateVaultRequest, any]{
 		{
-			name: "authority is the vault admin instead of governance",
+			name: "gov gate enabled and authority is the vault admin instead of governance",
 			setup: func() {
+				s.SetGovOnlyVaultCreation(true)
 				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("assetcoin", 100), s.adminAddr)
 			},
 			msg: types.MsgCreateVaultRequest{
@@ -174,8 +175,9 @@ func (s *TestSuite) TestMsgServer_CreateVault_Failures() {
 			expectedErrSubstrs: []string{"unauthorized: expected " + s.govAuthority + " got " + s.adminAddr.String()},
 		},
 		{
-			name: "authority is empty",
+			name: "gov gate enabled and authority is empty",
 			setup: func() {
+				s.SetGovOnlyVaultCreation(true)
 				s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin("assetcoin", 100), s.adminAddr)
 			},
 			msg: types.MsgCreateVaultRequest{
@@ -240,6 +242,79 @@ func (s *TestSuite) TestMsgServer_CreateVault_Failures() {
 	for _, tc := range tests {
 		s.Run(tc.name, func() {
 			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
+}
+
+func (s *TestSuite) TestMsgServer_CreateVault_GovOnlyGate() {
+	msgServer := keeper.NewMsgServer(s.simApp.VaultKeeper)
+	admin := s.adminAddr.String()
+
+	tests := []struct {
+		name              string
+		govOnly           bool
+		authority         string
+		expectedErrSubstr string
+	}{
+		{
+			name:      "gate disabled, the admin creates the vault directly",
+			govOnly:   false,
+			authority: admin,
+		},
+		{
+			name:      "gate disabled, governance may still create the vault",
+			govOnly:   false,
+			authority: s.govAuthority,
+		},
+		{
+			name:      "gate enabled, governance creates the vault",
+			govOnly:   true,
+			authority: s.govAuthority,
+		},
+		{
+			name:              "gate enabled, a direct creation by the admin is rejected",
+			govOnly:           true,
+			authority:         admin,
+			expectedErrSubstr: "unauthorized: expected " + s.govAuthority + " got " + admin,
+		},
+	}
+
+	for i, tc := range tests {
+		s.Run(tc.name, func() {
+			origCtx := s.ctx
+			defer func() { s.ctx = origCtx }()
+			s.ctx, _ = s.ctx.CacheContext()
+
+			s.SetGovOnlyVaultCreation(tc.govOnly)
+
+			underlying := fmt.Sprintf("gateasset%d", i)
+			shareDenom := fmt.Sprintf("gateshare%d", i)
+			vaultAddr := types.GetVaultAddress(shareDenom)
+			s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlying, 100), s.adminAddr)
+
+			resp, err := msgServer.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
+				Authority:       tc.authority,
+				Admin:           admin,
+				ShareDenom:      shareDenom,
+				UnderlyingAsset: underlying,
+			})
+
+			if tc.expectedErrSubstr != "" {
+				s.Require().Error(err, "CreateVault signed by %s should be rejected while gov_only_vault_creation is %t", tc.authority, tc.govOnly)
+				s.Assert().Contains(err.Error(), tc.expectedErrSubstr, "unexpected CreateVault error for signer %s", tc.authority)
+				rejected, getErr := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(getErr, "failed to look up vault %s after a rejected creation", shareDenom)
+				s.Assert().Nil(rejected, "no vault should exist for share denom %s after a rejected creation", shareDenom)
+				return
+			}
+
+			s.Require().NoError(err, "CreateVault signed by %s should succeed while gov_only_vault_creation is %t", tc.authority, tc.govOnly)
+			s.Require().Equal(vaultAddr.String(), resp.VaultAddress, "created vault address for share denom %s", shareDenom)
+
+			created, getErr := s.k.GetVault(s.ctx, vaultAddr)
+			s.Require().NoError(getErr, "failed to look up vault %s after creation", shareDenom)
+			s.Require().NotNil(created, "vault %s should exist after a successful creation", shareDenom)
+			s.Assert().Equal(admin, created.Admin, "vault %s admin should be the designated admin, not the signer", shareDenom)
 		})
 	}
 }

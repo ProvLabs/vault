@@ -29,6 +29,7 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 		params.TechFeeAddress = types.GetDefaultTechFeeAddress(ctx.ChainID()).String()
 	}
 	params.DefaultAumFeeBips = genState.Params.DefaultAumFeeBips
+	params.GovOnlyVaultCreation = genState.Params.GovOnlyVaultCreation
 
 	if err := k.Params.Set(ctx, params); err != nil {
 		panic(fmt.Errorf("failed to set params: %w", err))

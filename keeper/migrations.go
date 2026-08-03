@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/provlabs/vault/types"
@@ -220,6 +221,35 @@ func (k Keeper) migrateEnableMarkerDepositProtection(ctx sdk.Context) error {
 			}
 		}
 	}
+
+	return nil
+}
+
+// migrateEnableGovOnlyVaultCreation turns the gov_only_vault_creation param on for mainnet,
+// which enforced the governance gate before the param existed. Idempotent.
+func (k Keeper) migrateEnableGovOnlyVaultCreation(ctx sdk.Context) error {
+	if !types.GetDefaultGovOnlyVaultCreation(ctx.ChainID()) {
+		return nil
+	}
+
+	params, err := k.Params.Get(ctx)
+	if err != nil {
+		if !errors.Is(err, collections.ErrNotFound) {
+			return fmt.Errorf("failed to retrieve params: %w", err)
+		}
+		params = types.DefaultParams()
+	}
+
+	if params.GovOnlyVaultCreation {
+		return nil
+	}
+
+	params.GovOnlyVaultCreation = true
+	if err := k.Params.Set(ctx, params); err != nil {
+		return fmt.Errorf("failed to persist gov-only vault creation param: %w", err)
+	}
+
+	k.getLogger(ctx).Info("enabled gov-only vault creation", "chain_id", ctx.ChainID())
 
 	return nil
 }

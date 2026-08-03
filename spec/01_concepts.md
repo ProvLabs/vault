@@ -70,7 +70,7 @@ Example:
 The keeper ties together state management, account operations, marker integration, interest reconciliation, and queued jobs.
 
 ### Vault Lifecycle
-- **CreateVault**: governance-gated. Validates an existing marker for the underlying asset, establishes a vault account under the admin designated by the proposal, and creates the share marker with mint/burn/withdraw/deposit permissions for the vault and `require_deposit_access` enabled, so only the vault can move coins into its principal marker.
+- **CreateVault**: gated by the `gov_only_vault_creation` param, which restricts the signer to the governance module account when enabled and allows any signer when disabled. Validates an existing marker for the underlying asset, establishes a vault account under the designated admin, and creates the share marker with mint/burn/withdraw/deposit permissions for the vault and `require_deposit_access` enabled, so only the vault can move coins into its principal marker.
 - **GetVault**: retrieves and validates a vault account by address.
 - **Pause/Unpause**: admins can pause a vault, freezing operations and fixing balances, or unpause to resume operations.
 - **Bridge Controls**: configure a single **bridge address** and **enable/disable** bridging; capacity checks ensure local marker supply never exceeds `total_shares`.
@@ -180,7 +180,7 @@ TVV sums every denom held at the principal marker that has a vault internal NAV,
 
 ## High-Level Flow
 
-1. **CreateVault**: a governance proposal sets up a new vault and designates its admin.
+1. **CreateVault**: a signer — the governance module account while `gov_only_vault_creation` is enabled, otherwise any account — sets up a new vault and designates its admin.
 2. **SwapIn**: users deposit assets → shares minted.
 3. **SwapOut**: users escrow shares → queued for payout.
 4. **Interest**: accrues over time, reconciled on actions or via queues.

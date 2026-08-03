@@ -714,6 +714,14 @@ func (s *TestSuite) CreateAndActivateVault(admin sdk.AccAddress, share, underlyi
 	return types.GetVaultAddress(share)
 }
 
+// SetGovOnlyVaultCreation flips the module's gov_only_vault_creation param.
+func (s *TestSuite) SetGovOnlyVaultCreation(govOnly bool) {
+	params, err := s.k.Params.Get(s.ctx)
+	s.Require().NoError(err, "failed to read params before setting gov_only_vault_creation to %t", govOnly)
+	params.GovOnlyVaultCreation = govOnly
+	s.Require().NoError(s.k.Params.Set(s.ctx, params), "failed to set gov_only_vault_creation to %t", govOnly)
+}
+
 // FundMarker mints and sends the provided coins to the marker account associated with the share denom.
 func (s *TestSuite) FundMarker(shareDenom string, coins sdk.Coins) {
 	markerAddr := markertypes.MustGetMarkerAddress(shareDenom)

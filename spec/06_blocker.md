@@ -234,7 +234,7 @@ The delay grows with the failure count and is capped, so a permanently failing r
     `EventSwapOutRefunded{ reason = "vault_paused" }`; owners resubmit after unpause.
 * A paused vault freezes its value at the `PausedBalance` snapshot, so operations that would change that value are rejected:
 
-  * **UpdateVaultNAV** is rejected — a NAV write would assert a price the frozen vault ignores until unpause.
+  * **UpdateVaultNAV** remains available, and is in fact the only state in which a denom the vault holds may be repriced. The new price is ignored by the frozen valuation until unpause, when `PausedBalance` is cleared and total vault value is recomputed from live balances and the NAV table.
   * **AcceptAsset** is rejected — settlement moves principal funds and the vault's value.
   * **RejectAsset** remains available — it only cancels a pending payment and refunds the source's escrow, with no vault state change.
 * Admins can still:

@@ -6427,6 +6427,154 @@ func (s *TestSuite) TestMsgServer_UpdateVaultNAV_LeavesPausedBalanceFrozen() {
 	}
 }
 
+func (s *TestSuite) TestMsgServer_UpdateVaultNAV_HeldRepriceRequiresPause() {
+	underlying := "under"
+	share := "vaultshares"
+	heldDenom := "rwa"
+	vaultAddr := types.GetVaultAddress(share)
+
+	const (
+		seedPrice  = 2
+		seedVolume = 1
+		heldAmount = 1_000
+	)
+
+	tests := []struct {
+		name               string
+		heldAmount         int64
+		unpriced           bool
+		paused             bool
+		newPrice           int64
+		newVolume          int64
+		expectedErrSubstr  string
+		expectedStorePrice int64
+	}{
+		{
+			name:               "live vault rejects marking a held asset up",
+			heldAmount:         heldAmount,
+			newPrice:           4,
+			newVolume:          1,
+			expectedErrSubstr:  "pause the vault to reprice a held asset",
+			expectedStorePrice: seedPrice,
+		},
+		{
+			name:               "live vault rejects marking a held asset down",
+			heldAmount:         heldAmount,
+			newPrice:           1,
+			newVolume:          1,
+			expectedErrSubstr:  "pause the vault to reprice a held asset",
+			expectedStorePrice: seedPrice,
+		},
+		{
+			name:               "live vault rejects writing a held asset down to zero",
+			heldAmount:         heldAmount,
+			newPrice:           0,
+			newVolume:          1,
+			expectedErrSubstr:  "pause the vault to reprice a held asset",
+			expectedStorePrice: seedPrice,
+		},
+		{
+			name:               "live vault rejects a same-price restatement whose volume changes the unit price",
+			heldAmount:         heldAmount,
+			newPrice:           seedPrice,
+			newVolume:          2,
+			expectedErrSubstr:  "pause the vault to reprice a held asset",
+			expectedStorePrice: seedPrice,
+		},
+		{
+			name:               "live vault accepts the same unit price restated at a larger volume",
+			heldAmount:         heldAmount,
+			newPrice:           seedPrice * 3,
+			newVolume:          seedVolume * 3,
+			expectedStorePrice: seedPrice * 3,
+		},
+		{
+			name:               "live vault accepts an identical restatement",
+			heldAmount:         heldAmount,
+			newPrice:           seedPrice,
+			newVolume:          seedVolume,
+			expectedStorePrice: seedPrice,
+		},
+		{
+			name:               "live vault accepts repricing a denom it does not hold",
+			heldAmount:         0,
+			newPrice:           4,
+			newVolume:          1,
+			expectedStorePrice: 4,
+		},
+		{
+			name:               "paused vault accepts marking a held asset up",
+			heldAmount:         heldAmount,
+			paused:             true,
+			newPrice:           4,
+			newVolume:          1,
+			expectedStorePrice: 4,
+		},
+		{
+			name:              "live vault rejects the first price for an asset it already holds",
+			heldAmount:        heldAmount,
+			unpriced:          true,
+			newPrice:          4,
+			newVolume:         1,
+			expectedErrSubstr: "pause the vault to reprice a held asset",
+		},
+		{
+			name:               "paused vault accepts the first price for an asset it already holds",
+			heldAmount:         heldAmount,
+			unpriced:           true,
+			paused:             true,
+			newPrice:           4,
+			newVolume:          1,
+			expectedStorePrice: 4,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			origCtx := s.ctx
+			defer func() { s.ctx = origCtx }()
+			s.ctx, _ = s.ctx.CacheContext()
+
+			var vault *types.VaultAccount
+			if tc.unpriced {
+				vault = s.setupBaseVault(underlying, share)
+				s.requireSimpleMarker(heldDenom)
+				s.fundPrincipal(vault, sdk.NewInt64Coin(heldDenom, tc.heldAmount))
+			} else {
+				vault = s.setupHeldNAVVault(underlying, share, heldDenom, sdk.NewInt64Coin(underlying, seedPrice), seedVolume, tc.heldAmount)
+			}
+			if tc.paused {
+				s.pauseVault(vaultAddr)
+			}
+
+			_, err := keeper.NewMsgServer(s.simApp.VaultKeeper).UpdateVaultNAV(s.ctx, &types.MsgUpdateVaultNAVRequest{
+				Signer:       s.adminAddr.String(),
+				VaultAddress: vaultAddr.String(),
+				Denom:        heldDenom,
+				Price:        sdk.NewInt64Coin(underlying, tc.newPrice),
+				Volume:       sdkmath.NewInt(tc.newVolume),
+				Source:       "oracle",
+			})
+
+			stored, storeErr := s.k.GetVaultNAV(s.ctx, vaultAddr, heldDenom)
+			if tc.expectedErrSubstr != "" {
+				s.Require().ErrorContains(err, tc.expectedErrSubstr,
+					"UpdateVaultNAV should refuse to reprice %d%s while the vault is live", tc.heldAmount, heldDenom)
+				if tc.unpriced {
+					s.Require().Error(storeErr, "a rejected first price must not leave a NAV entry for %s", heldDenom)
+					return
+				}
+			} else {
+				s.Require().NoError(err, "UpdateVaultNAV should accept this update")
+			}
+
+			s.Require().NoError(storeErr, "the NAV entry for %s should be readable", heldDenom)
+			s.Assert().Equal(tc.expectedStorePrice, stored.Price.Amount.Int64(),
+				"stored NAV price for %s after the update attempt", heldDenom)
+		})
+	}
+}
+
 func (s *TestSuite) TestMsgServer_RemoveVaultNAV() {
 	underlying := "under"
 	share := "vaultshares"

@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"fmt"
+	"math/big"
 	"testing"
 
 	"cosmossdk.io/math"
@@ -973,6 +974,91 @@ func TestNewVaultNAV(t *testing.T) {
 			require.Equal(t, tc.expectedSource, nav.Source, "NewVaultNAV source mismatch for case: %s", tc.name)
 			require.Zero(t, nav.UpdatedBlockHeight, "NewVaultNAV should not stamp a block height for case: %s", tc.name)
 			require.True(t, nav.UpdatedTime.IsZero(), "NewVaultNAV should not stamp an updated time for case: %s", tc.name)
+		})
+	}
+}
+
+func TestVaultNAV_PricesSameAs(t *testing.T) {
+	maxInt := math.NewIntFromBigInt(new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(1)))
+
+	nav := func(price sdk.Coin, volume math.Int) types.VaultNAV {
+		return types.NewVaultNAV("rwa", price, volume, "oracle")
+	}
+
+	tests := []struct {
+		name     string
+		entry    types.VaultNAV
+		other    types.VaultNAV
+		expected bool
+	}{
+		{
+			name:     "identical price and volume",
+			entry:    nav(sdk.NewInt64Coin("under", 2), math.NewInt(1)),
+			other:    nav(sdk.NewInt64Coin("under", 2), math.NewInt(1)),
+			expected: true,
+		},
+		{
+			name:     "same unit price scaled up",
+			entry:    nav(sdk.NewInt64Coin("under", 2), math.NewInt(1)),
+			other:    nav(sdk.NewInt64Coin("under", 500), math.NewInt(250)),
+			expected: true,
+		},
+		{
+			name:     "both priced at zero regardless of volume",
+			entry:    nav(sdk.NewInt64Coin("under", 0), math.NewInt(1)),
+			other:    nav(sdk.NewInt64Coin("under", 0), math.NewInt(7)),
+			expected: true,
+		},
+		{
+			name:     "higher unit price",
+			entry:    nav(sdk.NewInt64Coin("under", 2), math.NewInt(1)),
+			other:    nav(sdk.NewInt64Coin("under", 4), math.NewInt(1)),
+			expected: false,
+		},
+		{
+			name:     "same price amount at a different volume",
+			entry:    nav(sdk.NewInt64Coin("under", 2), math.NewInt(1)),
+			other:    nav(sdk.NewInt64Coin("under", 2), math.NewInt(2)),
+			expected: false,
+		},
+		{
+			name:     "written down to zero",
+			entry:    nav(sdk.NewInt64Coin("under", 2), math.NewInt(1)),
+			other:    nav(sdk.NewInt64Coin("under", 0), math.NewInt(1)),
+			expected: false,
+		},
+		{
+			name:     "different price denom",
+			entry:    nav(sdk.NewInt64Coin("under", 2), math.NewInt(1)),
+			other:    nav(sdk.NewInt64Coin("other", 2), math.NewInt(1)),
+			expected: false,
+		},
+		{
+			name:     "unset price amount",
+			entry:    nav(sdk.Coin{Denom: "under"}, math.NewInt(1)),
+			other:    nav(sdk.NewInt64Coin("under", 2), math.NewInt(1)),
+			expected: false,
+		},
+		{
+			name:     "unset volume",
+			entry:    nav(sdk.NewInt64Coin("under", 2), math.Int{}),
+			other:    nav(sdk.NewInt64Coin("under", 2), math.NewInt(1)),
+			expected: false,
+		},
+		{
+			name:     "overflowing cross product",
+			entry:    nav(sdk.NewCoin("under", maxInt), maxInt),
+			other:    nav(sdk.NewCoin("under", maxInt), maxInt),
+			expected: false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			require.Equal(t, tc.expected, tc.entry.PricesSameAs(tc.other),
+				"PricesSameAs(%s per %s) mismatch for case: %s", tc.other.Price, tc.other.Volume, tc.name)
+			require.Equal(t, tc.expected, tc.other.PricesSameAs(tc.entry),
+				"PricesSameAs should be symmetric for case: %s", tc.name)
 		})
 	}
 }

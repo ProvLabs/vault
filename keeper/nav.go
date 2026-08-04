@@ -103,6 +103,30 @@ func (k *Keeper) SetVaultNAV(ctx sdk.Context, vault *types.VaultAccount, nav typ
 	return nil
 }
 
+// requirePausedHeldReprice requires the vault to be paused to reprice an asset it holds.
+// Pricing a denom it does not hold, or restating a held asset at the price it already
+// carries, is allowed while live.
+func (k *Keeper) requirePausedHeldReprice(ctx sdk.Context, vault *types.VaultAccount, nav types.VaultNAV) error {
+	if vault.Paused {
+		return nil
+	}
+
+	held := k.BankKeeper.GetBalance(ctx, vault.PrincipalMarkerAddress(), nav.Denom)
+	if held.IsZero() {
+		return nil
+	}
+
+	current, err := k.GetVaultNAV(ctx, vault.GetAddress(), nav.Denom)
+	if err != nil && !errors.Is(err, collections.ErrNotFound) {
+		return fmt.Errorf("failed to get internal NAV for denom %q on vault %s: %w", nav.Denom, vault.Address, err)
+	}
+	if err == nil && current.PricesSameAs(nav) {
+		return nil
+	}
+
+	return fmt.Errorf("vault %s holds %s: pause the vault to reprice a held asset", vault.Address, held)
+}
+
 // GetVaultNAV returns the internal NAV entry for the given vault address and
 // denom. It returns collections.ErrNotFound when no entry exists.
 func (k *Keeper) GetVaultNAV(ctx sdk.Context, vaultAddr sdk.AccAddress, denom string) (types.VaultNAV, error) {

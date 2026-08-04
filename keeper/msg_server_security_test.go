@@ -99,3 +99,82 @@ func (s *TestSuite) TestMsgServer_SmallFirstSwapIn_HugeDonation_SwapOut() {
 		s.Require().Equal(math.NewInt(1), impliedPrice, "implied price should normalize to 1 at scale")
 	}
 }
+
+func (s *TestSuite) TestMsgServer_UpdateVaultNAV_LiveHeldRepriceRefusedSoNoSwapCanSandwichTheCorrection() {
+	underlying := "navunderlying"
+	shareDenom := "vaultsharesnav"
+	staleLowPricedHeldDenom := "staleheldrwa"
+
+	const (
+		deposit         = 1_000_000
+		heldAmount      = 1_000_000
+		staleLowPrice   = 1
+		correctedPrice  = 2
+		pricedPerVolume = 1
+	)
+
+	vault := s.setupHeldNAVVault(underlying, shareDenom, staleLowPricedHeldDenom, sdk.NewInt64Coin(underlying, staleLowPrice), pricedPerVolume, heldAmount)
+	vaultAddr := vault.GetAddress()
+	msgServer := keeper.NewMsgServer(s.simApp.VaultKeeper)
+
+	netTVV := func() math.Int {
+		reloaded, err := s.k.GetVault(s.ctx, vaultAddr)
+		s.Require().NoError(err, "should get vault %s to value it", vaultAddr)
+		tvv, err := s.k.GetNetTVV(s.ctx, *reloaded)
+		s.Require().NoError(err, "should value vault %s", vaultAddr)
+		return tvv
+	}
+
+	swapInAtStaleLowPrice := func(who string, funding int64) sdk.AccAddress {
+		addr := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, addr, sdk.NewCoins(sdk.NewInt64Coin(underlying, funding))),
+			"funding the %s with %d%s should succeed", who, funding, underlying)
+		_, err := s.k.SwapIn(s.ctx, vaultAddr, addr, sdk.NewInt64Coin(underlying, deposit))
+		s.Require().NoError(err, "the %s should be able to swap in %d%s while %s is priced stale-low", who, deposit, underlying, staleLowPricedHeldDenom)
+		return addr
+	}
+
+	swapInAtStaleLowPrice("pre-existing shareholder", deposit)
+	sandwicher := swapInAtStaleLowPrice("sandwicher", 2*deposit)
+	sandwicherShares := s.simApp.BankKeeper.GetBalance(s.ctx, sandwicher, shareDenom)
+
+	upwardCorrection := &types.MsgUpdateVaultNAVRequest{
+		Signer:       s.adminAddr.String(),
+		VaultAddress: vaultAddr.String(),
+		Denom:        staleLowPricedHeldDenom,
+		Price:        sdk.NewInt64Coin(underlying, correctedPrice),
+		Volume:       math.NewInt(pricedPerVolume),
+		Source:       "oracle",
+	}
+
+	tvvAtStaleLowPrice := netTVV()
+	_, err := msgServer.UpdateVaultNAV(s.ctx, upwardCorrection)
+	s.Require().ErrorContains(err, "pause the vault to reprice a held asset",
+		"correcting the price of held %s must be refused while the vault is live and swappable", staleLowPricedHeldDenom)
+	s.Require().Equal(tvvAtStaleLowPrice, netTVV(), "a refused correction must leave total vault value untouched")
+
+	_, err = msgServer.PauseVault(s.ctx, &types.MsgPauseVaultRequest{
+		Authority:    s.adminAddr.String(),
+		VaultAddress: vaultAddr.String(),
+		Reason:       "correcting a held asset price",
+	})
+	s.Require().NoError(err, "the admin should be able to pause the vault to correct the price")
+
+	_, err = s.k.SwapIn(s.ctx, vaultAddr, sandwicher, sdk.NewInt64Coin(underlying, deposit))
+	s.Require().ErrorContains(err, "is paused", "no position may be opened across the price step")
+	_, err = s.k.SwapOut(s.ctx, vaultAddr, sandwicher, sandwicherShares)
+	s.Require().ErrorContains(err, "is paused", "no position may be closed across the price step")
+
+	_, err = msgServer.UpdateVaultNAV(s.ctx, upwardCorrection)
+	s.Require().NoError(err, "the paused vault should accept the correction")
+
+	_, err = msgServer.UnpauseVault(s.ctx, &types.MsgUnpauseVaultRequest{
+		Authority:    s.adminAddr.String(),
+		VaultAddress: vaultAddr.String(),
+	})
+	s.Require().NoError(err, "the admin should be able to unpause the vault after correcting the price")
+
+	nav, err := s.k.GetVaultNAV(s.ctx, vaultAddr, staleLowPricedHeldDenom)
+	s.Require().NoError(err, "the corrected NAV entry for %s should be stored", staleLowPricedHeldDenom)
+	s.Require().Equal(int64(correctedPrice), nav.Price.Amount.Int64(), "the correction should be in force once the vault reopens")
+}

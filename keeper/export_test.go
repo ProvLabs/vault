@@ -156,6 +156,12 @@ func (k Keeper) TestAccessor_returnToPrincipal(t *testing.T, ctx context.Context
 	return k.returnToPrincipal(sdk.UnwrapSDKContext(ctx), vault, amt)
 }
 
+// TestAccessor_requirePausedHeldReprice exposes this keeper's requirePausedHeldReprice function for unit tests.
+func (k Keeper) TestAccessor_requirePausedHeldReprice(t *testing.T, ctx context.Context, vault *types.VaultAccount, nav types.VaultNAV) error {
+	t.Helper()
+	return k.requirePausedHeldReprice(sdk.UnwrapSDKContext(ctx), vault, nav)
+}
+
 // TestAccessor_corruptVaultNAV writes undecodable bytes at the internal NAV entry for
 // vaultAddr/denom so unit tests can exercise NAV lookup failures other than not-found.
 func (k Keeper) TestAccessor_corruptVaultNAV(t *testing.T, ctx context.Context, vaultAddr sdk.AccAddress, denom string) error {

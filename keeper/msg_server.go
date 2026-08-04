@@ -900,10 +900,8 @@ func (k msgServer) UpdateVaultAUMFeeBips(goCtx context.Context, msg *types.MsgUp
 // administrators. Only the vault's share denom, which the vault does own, gets a
 // published marker NAV (see publishShareNav).
 //
-// The update is accepted whether or not the vault is paused, so an operator can
-// pause, reprice, and unpause as one deliberate sequence. Swap-ins and swap-outs
-// are closed for the whole paused span, which keeps a repricing from being
-// front-run by a user transaction ordered ahead of it.
+// Repricing an asset the vault holds requires the vault to be paused, so no user can swap
+// across the share price step (see requirePausedHeldReprice).
 //
 // Writing the entry is all this handler does to a paused vault. PausedBalance is
 // left alone, holding the value as of the moment of pausing, exactly as it does for
@@ -927,11 +925,15 @@ func (k msgServer) UpdateVaultNAV(goCtx context.Context, msg *types.MsgUpdateVau
 		return nil, fmt.Errorf("failed to validate NAV authority: %w", err)
 	}
 
+	nav := types.NewVaultNAV(msg.Denom, msg.Price, msg.Volume, msg.Source)
+	if err := k.requirePausedHeldReprice(ctx, vault, nav); err != nil {
+		return nil, err
+	}
+
 	if err := k.reconcileVault(ctx, vault); err != nil {
 		return nil, fmt.Errorf("failed to reconcile vault before NAV update: %w", err)
 	}
 
-	nav := types.NewVaultNAV(msg.Denom, msg.Price, msg.Volume, msg.Source)
 	if err := k.SetVaultNAV(ctx, vault, nav, msg.Signer); err != nil {
 		return nil, fmt.Errorf("failed to update vault NAV: %w", err)
 	}
@@ -948,9 +950,8 @@ func (k msgServer) UpdateVaultNAV(goCtx context.Context, msg *types.MsgUpdateVau
 // asset is written down through UpdateVaultNAV, and the settlement path removes the
 // entry on its own once an outbound trade drains the denom.
 //
-// Removal is accepted whether or not the vault is paused, matching UpdateVaultNAV so
-// the NAV table stays editable across a pause-reprice-unpause sequence. The held-balance
-// check is what keeps a removal from moving value, in either state.
+// Removal is accepted whether or not the vault is paused: the held-balance check above is
+// what keeps it from moving value, in either state.
 //
 // No reconcile is needed first: an unheld denom contributes nothing to total vault
 // value, so removing its entry cannot move the valuation basis.

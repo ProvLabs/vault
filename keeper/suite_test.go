@@ -965,6 +965,28 @@ func (s *TestSuite) setupHeldAssetVault(underlyingDenom, shareDenom, heldDenom s
 	return vault
 }
 
+// fundPrincipal funds the vault's principal marker account, the store the valuation
+// engine reads held balances from.
+func (s *TestSuite) fundPrincipal(vault *types.VaultAccount, coins ...sdk.Coin) {
+	funding := sdk.NewCoins(coins...)
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vault.PrincipalMarkerAddress(), funding),
+		"failed to fund the principal marker of vault %s with %s", vault.Address, funding)
+}
+
+// setupHeldNAVVault creates a live vault holding heldAmount of heldDenom at its principal
+// marker, priced in the internal NAV table at price per volume units. The NAV entry is
+// seeded through the keeper, which skips the msg server's pause requirement for repricing
+// a held asset.
+func (s *TestSuite) setupHeldNAVVault(underlyingDenom, shareDenom, heldDenom string, price sdk.Coin, volume, heldAmount int64) *types.VaultAccount {
+	vault := s.setupBaseVault(underlyingDenom, shareDenom)
+	s.requireSimpleMarker(heldDenom)
+	if heldAmount > 0 {
+		s.fundPrincipal(vault, sdk.NewInt64Coin(heldDenom, heldAmount))
+	}
+	s.setVaultNAV(vault, heldDenom, price, volume)
+	return vault
+}
+
 // createLegacyVaultAccount stores a *types.VaultAccount directly via the
 // AccountKeeper, bypassing keeper.CreateVault entirely. Use this in migration
 // tests that need to simulate a pre-v2 vault in state: one that may still

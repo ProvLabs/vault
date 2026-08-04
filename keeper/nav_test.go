@@ -457,6 +457,144 @@ func (s *TestSuite) TestKeeper_RemoveVaultNAV() {
 	}
 }
 
+func (s *TestSuite) TestKeeper_RequirePausedHeldReprice() {
+	underlying := "under"
+	share := "vaultshares"
+	heldDenom := "rwa"
+
+	const (
+		seedPrice  = 2
+		seedVolume = 1
+		heldAmount = 1_000
+	)
+
+	tests := []struct {
+		name              string
+		heldAmount        int64
+		unpriced          bool
+		corruptNav        bool
+		paused            bool
+		newPrice          int64
+		newVolume         int64
+		expectedErrSubstr string
+	}{
+		{
+			name:       "paused vault may reprice a held asset",
+			heldAmount: heldAmount,
+			paused:     true,
+			newPrice:   4,
+			newVolume:  1,
+		},
+		{
+			name:       "paused vault may price an asset it holds for the first time",
+			heldAmount: heldAmount,
+			unpriced:   true,
+			paused:     true,
+			newPrice:   4,
+			newVolume:  1,
+		},
+		{
+			name:       "live vault may reprice a denom it does not hold",
+			heldAmount: 0,
+			newPrice:   4,
+			newVolume:  1,
+		},
+		{
+			name:       "live vault may restate a held asset at an identical price and volume",
+			heldAmount: heldAmount,
+			newPrice:   seedPrice,
+			newVolume:  seedVolume,
+		},
+		{
+			name:       "live vault may restate a held asset at the same unit price scaled up",
+			heldAmount: heldAmount,
+			newPrice:   seedPrice * 4,
+			newVolume:  seedVolume * 4,
+		},
+		{
+			name:              "live vault may not mark a held asset up",
+			heldAmount:        heldAmount,
+			newPrice:          seedPrice + 1,
+			newVolume:         seedVolume,
+			expectedErrSubstr: "pause the vault to reprice a held asset",
+		},
+		{
+			name:              "live vault may not mark a held asset down",
+			heldAmount:        heldAmount,
+			newPrice:          seedPrice - 1,
+			newVolume:         seedVolume,
+			expectedErrSubstr: "pause the vault to reprice a held asset",
+		},
+		{
+			name:              "live vault may not write a held asset down to zero",
+			heldAmount:        heldAmount,
+			newPrice:          0,
+			newVolume:         seedVolume,
+			expectedErrSubstr: "pause the vault to reprice a held asset",
+		},
+		{
+			name:              "live vault may not change the unit price by changing only the volume",
+			heldAmount:        heldAmount,
+			newPrice:          seedPrice,
+			newVolume:         seedVolume + 1,
+			expectedErrSubstr: "pause the vault to reprice a held asset",
+		},
+		{
+			name:              "live vault may not price an asset it already holds for the first time",
+			heldAmount:        heldAmount,
+			unpriced:          true,
+			newPrice:          seedPrice,
+			newVolume:         seedVolume,
+			expectedErrSubstr: "pause the vault to reprice a held asset",
+		},
+		{
+			name:              "an unreadable NAV entry for a held denom surfaces the lookup failure",
+			heldAmount:        heldAmount,
+			corruptNav:        true,
+			newPrice:          4,
+			newVolume:         1,
+			expectedErrSubstr: "failed to get internal NAV for denom",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			origCtx := s.ctx
+			defer func() { s.ctx = origCtx }()
+			s.ctx, _ = s.ctx.CacheContext()
+
+			vaultAddr := types.GetVaultAddress(share)
+			var vault *types.VaultAccount
+			if tc.unpriced || tc.corruptNav {
+				vault = s.setupBaseVault(underlying, share)
+				s.requireSimpleMarker(heldDenom)
+				s.fundPrincipal(vault, sdk.NewInt64Coin(heldDenom, tc.heldAmount))
+			} else {
+				vault = s.setupHeldNAVVault(underlying, share, heldDenom, sdk.NewInt64Coin(underlying, seedPrice), seedVolume, tc.heldAmount)
+			}
+			if tc.corruptNav {
+				s.Require().NoError(s.k.TestAccessor_corruptVaultNAV(s.T(), s.ctx, vaultAddr, heldDenom),
+					"failed to corrupt the NAV entry for %s", heldDenom)
+			}
+			if tc.paused {
+				vault = s.pauseVault(vaultAddr)
+			}
+
+			nav := types.NewVaultNAV(heldDenom, sdk.NewInt64Coin(underlying, tc.newPrice), sdkmath.NewInt(tc.newVolume), "oracle")
+			err := s.k.TestAccessor_requirePausedHeldReprice(s.T(), s.ctx, vault, nav)
+
+			if tc.expectedErrSubstr == "" {
+				s.Require().NoError(err, "requirePausedHeldReprice should allow pricing %s at %d per %d units",
+					heldDenom, tc.newPrice, tc.newVolume)
+				return
+			}
+			s.Require().ErrorContains(err, tc.expectedErrSubstr,
+				"requirePausedHeldReprice should reject pricing %s at %d per %d units while the vault holds %d",
+				heldDenom, tc.newPrice, tc.newVolume, tc.heldAmount)
+		})
+	}
+}
+
 func (s *TestSuite) TestKeeper_CheckSettlementNAVGuardrail() {
 	underlying := "under"
 	share := "vaultshares"

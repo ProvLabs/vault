@@ -134,7 +134,7 @@ The address authorized to receive collected AUM technology fees.
 
 ### Internal NAV Table (prefix 11)
 
-Per-vault price entries for asset denoms the vault holds or is authorized to acquire. The vault module is the **sole source of truth** for these values; the valuation engine reads them for TVV/share pricing. Entries are written only by the NAV authority (`MsgUpdateVaultNAV`) and removed either by the authority (`MsgRemoveVaultNAV`, restricted to denoms the vault does not hold) or by an outbound `MsgAcceptAsset` that drains the denom from the principal. Settlement never writes a price.
+Per-vault price entries for asset denoms the vault holds or is authorized to acquire. The vault module is the **sole source of truth** for these values; the valuation engine reads them for TVV/share pricing. Entries are written only by the NAV authority (`MsgUpdateVaultNAV`, which requires a paused vault to reprice a denom the vault holds) and removed either by the authority (`MsgRemoveVaultNAV`, restricted to denoms the vault does not hold) or by an outbound `MsgAcceptAsset` that drains the denom from the principal. Settlement never writes a price.
 
 An entry may exist for a denom the vault does not hold: TVV values held balances against this table, so an unheld denom contributes nothing until the asset arrives at the principal marker.
 

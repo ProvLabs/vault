@@ -465,3 +465,24 @@ func NewVaultNAV(denom string, price sdk.Coin, volume sdkmath.Int, source string
 		Source: source,
 	}
 }
+
+// PricesSameAs reports whether other carries the same unit price as this entry, so the
+// same price quoted at a different volume compares equal. It returns false when the two
+// are not comparable: a different price denom, an unset amount, or an overflowing product.
+func (n VaultNAV) PricesSameAs(other VaultNAV) bool {
+	if n.Price.Denom != other.Price.Denom {
+		return false
+	}
+	if n.Price.Amount.IsNil() || other.Price.Amount.IsNil() || n.Volume.IsNil() || other.Volume.IsNil() {
+		return false
+	}
+	thisValue, err := n.Price.Amount.SafeMul(other.Volume)
+	if err != nil {
+		return false
+	}
+	otherValue, err := other.Price.Amount.SafeMul(n.Volume)
+	if err != nil {
+		return false
+	}
+	return thisValue.Equal(otherValue)
+}

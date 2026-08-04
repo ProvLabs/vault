@@ -95,6 +95,7 @@ Reconciles the 15 bps AUM technology fee for vaults whose fee timeout has elapse
      - Computes fee based on **Gross TVV**.
      - Collects from principal marker into the configured ProvLabs collection address.
      - **Success (Partial/Full Collection)**: If the marker lacks liquidity, the uncollected remainder is recorded in `outstanding_aum_fee`. This is considered a successful transfer.
+     - **Success (Rejected Transfer)**: If the transfer itself is rejected (e.g. a restricted underlying whose collection address lacks the required attribute), the error is logged, the whole fee is recorded in `outstanding_aum_fee`, and the fee period still advances. An uncollectable fee never fails reconciliation, so it cannot brick user operations.
      - **Schedules next fee timeout** and commits state changes.
    - **Failure (Transient Error)**:
      - If reconciliation fails (e.g., missing NAV for denom conversion), the `CacheContext` is discarded.

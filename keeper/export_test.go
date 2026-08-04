@@ -138,6 +138,12 @@ func (k Keeper) TestAccessor_checkSettlementNAVGuardrail(t *testing.T, ctx conte
 	return k.checkSettlementNAVGuardrail(sdk.UnwrapSDKContext(ctx), vault, assetCoin, paymentCoin)
 }
 
+// TestAccessor_sendAUMFee exposes this keeper's sendAUMFee function for unit tests.
+func (k Keeper) TestAccessor_sendAUMFee(t *testing.T, ctx context.Context, vault *types.VaultAccount, recipient sdk.AccAddress, fee sdk.Coin) error {
+	t.Helper()
+	return k.sendAUMFee(sdk.UnwrapSDKContext(ctx), vault, recipient, fee)
+}
+
 // TestAccessor_removeDrainedSettlementNAV exposes this keeper's removeDrainedSettlementNAV function for unit tests.
 func (k Keeper) TestAccessor_removeDrainedSettlementNAV(t *testing.T, ctx context.Context, vault *types.VaultAccount, assetDenom, direction string) error {
 	t.Helper()

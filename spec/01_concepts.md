@@ -88,7 +88,7 @@ The keeper ties together state management, account operations, marker integratio
 - **ReconcileVault**: ensures accrued interest is applied and AUM fees are collected before any balance-changing action.
 - **Positive Interest**: paid from vault reserves into the principal marker.
 - **Negative Interest**: refunded from the principal marker into reserves, capped by available funds.
-- **AUM Technology Fee**: 15 bps annual fee collected from the principal marker into the configured ProvLabs collection address.
+- **AUM Technology Fee**: 15 bps annual fee collected from the principal marker into the configured ProvLabs collection address. A fee the vault cannot pay or transfer stays in `outstanding_aum_fee` and is retried on the next reconciliation; it never fails reconciliation.
 - **Rate Controls**: vaults have configurable current/desired rates, and optional min/max bounds.
 - **Queues**: vaults rotate between verification, interest timeout, and fee timeout queues to forecast payout ability and auto-reconcile state periodically.
 

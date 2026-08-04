@@ -2066,6 +2066,195 @@ func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer_OutstandingFeeOverflowDeg
 	s.Require().ErrorContains(err, "overflow", "error should originate from the SafeAdd guard on outstanding AUM fee")
 }
 
+func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer_RejectedTransferLeavesFeeOutstanding() {
+	const (
+		underlyingDenom = "aumu"
+		shareDenom      = "vaumu"
+	)
+	feePeriod := 60 * 24 * time.Hour
+	deposit := sdkmath.NewInt(1_000_000)
+	accruedFee := sdkmath.NewInt(1_643)
+
+	tests := []struct {
+		name                string
+		revokeFeeAttribute  bool
+		expectedCollected   sdkmath.Int
+		expectedOutstanding sdkmath.Int
+	}{
+		{
+			name:                "fee collector holds the required attribute, whole fee is collected",
+			revokeFeeAttribute:  false,
+			expectedCollected:   accruedFee,
+			expectedOutstanding: sdkmath.ZeroInt(),
+		},
+		{
+			name:                "fee collector lost the required attribute, whole fee stays outstanding",
+			revokeFeeAttribute:  true,
+			expectedCollected:   sdkmath.ZeroInt(),
+			expectedOutstanding: accruedFee,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			vault, _ := s.setupRestrictedVaultWithDeposit(underlyingDenom, shareDenom, deposit)
+			now := s.ctx.BlockTime()
+			vault.AumFeeBips = 100
+			s.SetVaultRatesAndPeriod(vault, "0.0", "0.0", now.Add(-feePeriod).Unix(), 0)
+
+			feeCollector, err := s.k.GetAUMFeeAddress(s.ctx)
+			s.Require().NoError(err, "failed to get AUM fee address")
+			if tc.revokeFeeAttribute {
+				s.revokeTechFeeAttribute()
+			}
+
+			s.SetCtxBlockTime(now)
+			err = s.k.PerformVaultFeeTransfer(s.ctx, vault)
+			s.Require().NoError(err, "an uncollectable AUM fee must not fail the transfer, it must be carried as outstanding")
+
+			s.Require().Equal(tc.expectedOutstanding.String(), vault.OutstandingAumFee.Amount.String(), "outstanding AUM fee mismatch after the fee transfer")
+			s.Require().Equal(now.Unix(), vault.FeePeriodStart, "fee period should advance even when the fee could not be transferred")
+			s.assertBalance(feeCollector, underlyingDenom, tc.expectedCollected)
+			s.assertBalance(vault.PrincipalMarkerAddress(), underlyingDenom, deposit.Sub(tc.expectedCollected))
+
+			s.requireTypedEventEmitted(types.NewEventVaultFeeCollected(
+				vault.GetAddress().String(),
+				sdk.NewCoin(underlyingDenom, tc.expectedCollected),
+				sdk.NewCoin(underlyingDenom, accruedFee),
+				sdk.NewCoin(underlyingDenom, deposit),
+				sdk.NewCoin(underlyingDenom, tc.expectedOutstanding),
+				int64(feePeriod/time.Second),
+			))
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_sendAUMFee() {
+	const (
+		underlyingDenom = "aumu"
+		shareDenom      = "vaumu"
+	)
+	deposit := sdkmath.NewInt(1_000_000)
+
+	tests := []struct {
+		name               string
+		revokeFeeAttribute bool
+		fee                sdkmath.Int
+		expectedErr        string
+		expectedCollected  sdkmath.Int
+	}{
+		{
+			name:              "attributed fee collector, whole fee moves out of the principal marker",
+			fee:               sdkmath.NewInt(1_643),
+			expectedCollected: sdkmath.NewInt(1_643),
+		},
+		{
+			name:              "fee equal to the entire principal balance is transferable",
+			fee:               deposit,
+			expectedCollected: deposit,
+		},
+		{
+			name:               "unattributed fee collector is rejected and no coins move",
+			revokeFeeAttribute: true,
+			fee:                sdkmath.NewInt(1_643),
+			expectedErr:        `does not contain the "aumu" required attribute`,
+			expectedCollected:  sdkmath.ZeroInt(),
+		},
+		{
+			name:              "fee larger than the principal balance is rejected and no coins move",
+			fee:               deposit.AddRaw(1),
+			expectedErr:       "insufficient funds",
+			expectedCollected: sdkmath.ZeroInt(),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			vault, _ := s.setupRestrictedVaultWithDeposit(underlyingDenom, shareDenom, deposit)
+			feeCollector, err := s.k.GetAUMFeeAddress(s.ctx)
+			s.Require().NoError(err, "failed to get AUM fee address")
+			if tc.revokeFeeAttribute {
+				s.revokeTechFeeAttribute()
+			}
+
+			err = s.k.TestAccessor_sendAUMFee(s.T(), s.ctx, vault, feeCollector, sdk.NewCoin(underlyingDenom, tc.fee))
+
+			if tc.expectedErr != "" {
+				s.Require().ErrorContains(err, tc.expectedErr, "sending a fee of %s%s should have been rejected", tc.fee, underlyingDenom)
+			} else {
+				s.Require().NoError(err, "sending a fee of %s%s should have succeeded", tc.fee, underlyingDenom)
+			}
+			s.assertBalance(feeCollector, underlyingDenom, tc.expectedCollected)
+			s.assertBalance(vault.PrincipalMarkerAddress(), underlyingDenom, deposit.Sub(tc.expectedCollected))
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_sendAUMFee_GrantsVaultAsTransferAgent() {
+	const (
+		underlyingDenom = "aumu"
+		shareDenom      = "vaumu"
+	)
+	deposit := sdkmath.NewInt(1_000_000)
+	fee := sdk.NewCoin(underlyingDenom, sdkmath.NewInt(1_643))
+
+	vault, _ := s.setupRestrictedVaultWithDeposit(underlyingDenom, shareDenom, deposit)
+	feeCollector, err := s.k.GetAUMFeeAddress(s.ctx)
+	s.Require().NoError(err, "failed to get AUM fee address")
+
+	err = s.k.BankKeeper.SendCoins(s.ctx, vault.PrincipalMarkerAddress(), feeCollector, sdk.NewCoins(fee))
+	s.Require().Error(err, "moving the fee out of the principal marker without a transfer agent should be rejected, otherwise this test proves nothing")
+	s.assertBalance(feeCollector, underlyingDenom, sdkmath.ZeroInt())
+
+	s.Require().NoError(s.k.TestAccessor_sendAUMFee(s.T(), s.ctx, vault, feeCollector, fee),
+		"sendAUMFee must supply the vault as the transfer agent so the same send succeeds")
+	s.assertBalance(feeCollector, underlyingDenom, fee.Amount)
+}
+
+func (s *TestSuite) TestKeeper_ReconcileVault_UncollectableAUMFeeDoesNotBrickVault() {
+	const (
+		underlyingDenom = "aumu"
+		shareDenom      = "vaumu"
+	)
+	feePeriod := 30 * 24 * time.Hour
+	deposit := sdkmath.NewInt(1_000_000)
+
+	vault, _ := s.setupRestrictedVaultWithDeposit(underlyingDenom, shareDenom, deposit)
+	vaultAddr := vault.GetAddress()
+
+	s.SetCtxBlockTime(s.ctx.BlockTime().Add(feePeriod))
+	vault, err := s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "failed to get vault %s before the first reconcile", vaultAddr)
+	s.Require().NoError(s.k.TestAccessor_reconcileVault(s.T(), s.ctx, vault),
+		"reconcile should succeed while the fee collector holds the required attribute")
+	s.Require().NoError(s.k.SetVaultAccount(s.ctx, vault), "failed to persist vault after the first reconcile")
+
+	s.revokeTechFeeAttribute()
+
+	s.SetCtxBlockTime(s.ctx.BlockTime().Add(feePeriod))
+	vault, err = s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "failed to get vault %s before the reconcile with an unattributed fee collector", vaultAddr)
+	s.Require().NoError(s.k.TestAccessor_reconcileVault(s.T(), s.ctx, vault),
+		"reconcile must not fail when the AUM fee cannot be transferred to an unattributed fee collector")
+	s.Require().True(vault.OutstandingAumFee.Amount.IsPositive(), "the uncollected AUM fee must be carried as an outstanding liability")
+	s.Require().NoError(s.k.SetVaultAccount(s.ctx, vault), "failed to persist vault after the reconcile with an unattributed fee collector")
+
+	depositor := s.fundRestrictedHolder(underlyingDenom, sdkmath.NewInt(100_000))
+	shares, err := s.k.SwapIn(s.ctx, vaultAddr, depositor, sdk.NewCoin(underlyingDenom, sdkmath.NewInt(100_000)))
+	s.Require().NoError(err, "swap-in must keep working while the AUM fee is uncollectable")
+
+	_, err = s.k.SwapOut(s.ctx, vaultAddr, depositor, *shares)
+	s.Require().NoError(err, "swap-out must keep working while the AUM fee is uncollectable")
+
+	s.Require().NoError(s.k.TestAccessor_processPendingSwapOuts(s.T(), s.ctx, keeper.MaxSwapOutBatchSize),
+		"swap-out processing must keep working while the AUM fee is uncollectable")
+	s.Require().Zero(s.countPendingSwapOuts(), "the swap-out should have been paid out, not deferred")
+	s.Require().True(s.k.BankKeeper.GetBalance(s.ctx, depositor, underlyingDenom).Amount.IsPositive(),
+		"the depositor should have been paid their redeemed underlying asset")
+}
+
 func (s *TestSuite) TestKeeper_CanPayInterestDuration_WithAUMFee() {
 	s.SetupTest()
 	shareDenom := "fee.payout.shares"

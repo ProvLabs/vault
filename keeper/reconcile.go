@@ -311,6 +311,11 @@ func (k Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vault
 // the principal marker's current underlying-asset balance. Any uncollected remainder is
 // recorded in OutstandingAumFee to be retried during the next reconciliation.
 //
+// A rejected fee transfer is treated the same way as an insufficient balance: the error is
+// logged, the full fee stays in OutstandingAumFee, and the fee period still advances. This
+// keeps an uncollectable fee (for example a restricted underlying whose fee collector lost its
+// required attribute) from failing reconciliation and bricking every vault operation.
+//
 // An EventVaultFeeCollected is emitted upon success.
 func (k Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAccount) error {
 	currentBlockTime := ctx.BlockTime().Unix()
@@ -352,13 +357,14 @@ func (k Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAccou
 	}
 
 	if !toCollect.IsZero() {
-		if err = k.BankKeeper.SendCoins(
-			markertypes.WithTransferAgents(ctx, vault.GetAddress()),
-			principalAddress,
-			provlabsAddr,
-			sdk.NewCoins(toCollect),
-		); err != nil {
-			return fmt.Errorf("failed to transfer AUM fee: %w", err)
+		if err = k.sendAUMFee(ctx, vault, provlabsAddr, toCollect); err != nil {
+			k.getLogger(ctx).Error("failed to transfer AUM fee, leaving it outstanding",
+				"vault", vault.GetAddress().String(),
+				"recipient", provlabsAddr.String(),
+				"fee", toCollect.String(),
+				"err", err,
+			)
+			toCollect = sdk.NewCoin(vault.UnderlyingAsset, sdkmath.ZeroInt())
 		}
 	}
 
@@ -379,6 +385,22 @@ func (k Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAccou
 		periodDuration,
 	))
 
+	return nil
+}
+
+// sendAUMFee transfers the fee from the vault's principal marker to the fee collector inside a
+// cache context, so a rejected transfer leaves no partial state behind for the caller to unwind.
+func (k Keeper) sendAUMFee(ctx sdk.Context, vault *types.VaultAccount, recipient sdk.AccAddress, fee sdk.Coin) error {
+	cacheCtx, write := ctx.CacheContext()
+	if err := k.BankKeeper.SendCoins(
+		markertypes.WithTransferAgents(cacheCtx, vault.GetAddress()),
+		vault.PrincipalMarkerAddress(),
+		recipient,
+		sdk.NewCoins(fee),
+	); err != nil {
+		return err
+	}
+	write()
 	return nil
 }
 

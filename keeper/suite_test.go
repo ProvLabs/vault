@@ -698,6 +698,55 @@ func (s *TestSuite) setupBaseVaultRestricted(underlyingDenom, shareDenom string)
 	})
 }
 
+// setupRestrictedVaultWithDeposit creates a vault over a restricted underlying asset and swaps the
+// given amount in from a freshly attributed holder, leaving the deposit in the principal marker.
+// It returns the vault and the depositor.
+func (s *TestSuite) setupRestrictedVaultWithDeposit(underlyingDenom, shareDenom string, amount sdkmath.Int) (*types.VaultAccount, sdk.AccAddress) {
+	vault := s.setupBaseVaultRestricted(underlyingDenom, shareDenom)
+	depositor := s.fundRestrictedHolder(underlyingDenom, amount)
+
+	_, err := s.k.SwapIn(s.ctx, vault.GetAddress(), depositor, sdk.NewCoin(underlyingDenom, amount))
+	s.Require().NoError(err, "swapping %s%s into vault %s should succeed", amount, underlyingDenom, shareDenom)
+
+	return vault, depositor
+}
+
+// fundRestrictedHolder creates an account holding the restricted marker's required attribute and
+// withdraws the given amount of the restricted underlying asset to it.
+func (s *TestSuite) fundRestrictedHolder(underlyingDenom string, amount sdkmath.Int) sdk.AccAddress {
+	holder := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+	s.grantRequiredMarkerAttribute(holder)
+	s.Require().NoError(
+		s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, holder, underlyingDenom, sdk.NewCoins(sdk.NewCoin(underlyingDenom, amount))),
+		"withdrawing %s%s to holder %s should succeed", amount, underlyingDenom, holder,
+	)
+	return holder
+}
+
+// grantRequiredMarkerAttribute assigns the attribute required by the restricted markers the test
+// fixtures create, so the address may send and receive that restricted asset.
+func (s *TestSuite) grantRequiredMarkerAttribute(addr sdk.AccAddress) {
+	expiration := s.ctx.BlockTime().Add(365 * 24 * time.Hour)
+	attribute := attrtypes.NewAttribute(simulation.RequiredMarkerAttribute, addr.String(), attrtypes.AttributeType_String, []byte("true"), &expiration, "")
+	s.Require().NoError(
+		s.simApp.AttributeKeeper.SetAttribute(s.ctx, attribute, s.adminAddr),
+		"setting required attribute %s on %s should succeed", simulation.RequiredMarkerAttribute, addr,
+	)
+}
+
+// revokeTechFeeAttribute deletes the AUM fee collector's required attribute for the restricted
+// markers the test fixtures create, simulating an expiry, a revocation, or a governance change of
+// the collection address to an unattributed one. It returns the fee collector address.
+func (s *TestSuite) revokeTechFeeAttribute() sdk.AccAddress {
+	feeCollector, err := s.k.GetAUMFeeAddress(s.ctx)
+	s.Require().NoError(err, "failed to get AUM fee address")
+	s.Require().NoError(
+		s.simApp.AttributeKeeper.DeleteAttribute(s.ctx, feeCollector.String(), simulation.RequiredMarkerAttribute, nil, s.adminAddr),
+		"revoking required attribute %s from fee collector %s should succeed", simulation.RequiredMarkerAttribute, feeCollector,
+	)
+	return feeCollector
+}
+
 // setupBaseVault creates and activates the marker for the underlying denom, withdraws some
 // underlying coins to the admin, and creates a single-denom vault. It returns the newly
 // created vault account.

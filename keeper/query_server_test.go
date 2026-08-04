@@ -425,6 +425,33 @@ func (s *TestSuite) TestQueryServer_EstimateSwapIn() {
 			},
 			ExpectedErrSubstrs: []string{"unsupported deposit denom"},
 		},
+		{
+			Name:  "nil assets amount is rejected instead of panicking",
+			Setup: setupVault,
+			Req: &types.QueryEstimateSwapInRequest{
+				VaultAddress: vaultAddr.String(),
+				Assets:       sdk.Coin{Denom: underlyingDenom},
+			},
+			ExpectedErrSubstrs: []string{"invalid assets amount", underlyingDenom, "must be greater than zero", "InvalidArgument"},
+		},
+		{
+			Name:  "zero assets amount is rejected",
+			Setup: setupVault,
+			Req: &types.QueryEstimateSwapInRequest{
+				VaultAddress: vaultAddr.String(),
+				Assets:       sdk.NewInt64Coin(underlyingDenom, 0),
+			},
+			ExpectedErrSubstrs: []string{"invalid assets amount", underlyingDenom, "must be greater than zero", "InvalidArgument"},
+		},
+		{
+			Name:  "negative assets amount is rejected",
+			Setup: setupVault,
+			Req: &types.QueryEstimateSwapInRequest{
+				VaultAddress: vaultAddr.String(),
+				Assets:       sdk.Coin{Denom: underlyingDenom, Amount: math.NewInt(-100)},
+			},
+			ExpectedErrSubstrs: []string{"invalid assets amount", underlyingDenom, "must be greater than zero", "InvalidArgument"},
+		},
 	}
 
 	for _, tc := range tests {

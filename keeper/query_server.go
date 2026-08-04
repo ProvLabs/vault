@@ -135,6 +135,9 @@ func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstim
 	if !vault.IsAcceptedDenom(req.Assets.Denom) {
 		return nil, status.Errorf(codes.InvalidArgument, "unsupported deposit denom: %q", req.Assets.Denom)
 	}
+	if req.Assets.Amount.IsNil() || !req.Assets.Amount.IsPositive() {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid assets amount: %s must be greater than zero", req.Assets.Denom)
+	}
 
 	if vault.Paused || !vault.SwapInEnabled {
 		return nil, status.Error(codes.FailedPrecondition, "swap-in disabled or vault paused")

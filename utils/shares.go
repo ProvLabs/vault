@@ -39,13 +39,16 @@ var (
 //   - First deposit mints amount * ShareScalar.
 //   - Otherwise: shares = floor( amount * ts' / ta' ).
 //
-// Errors if any input is negative.
+// Errors if any input is nil or negative.
 func CalculateSharesProRata(
 	amount math.Int,
 	totalAssets math.Int,
 	totalShares math.Int,
 	shareDenom string,
 ) (sdk.Coin, error) {
+	if amount.IsNil() || totalAssets.IsNil() || totalShares.IsNil() {
+		return sdk.Coin{}, fmt.Errorf("invalid input: nil values not allowed")
+	}
 	if amount.IsNegative() || totalAssets.IsNegative() || totalShares.IsNegative() {
 		return sdk.Coin{}, fmt.Errorf("invalid input: negative values not allowed")
 	}
@@ -59,8 +62,14 @@ func CalculateSharesProRata(
 		}
 		return sdk.NewCoin(shareDenom, scaled), nil
 	}
-	ta := totalAssets.Add(VirtualAssets)
-	ts := totalShares.Add(VirtualShares)
+	ta, err := totalAssets.SafeAdd(VirtualAssets)
+	if err != nil {
+		return sdk.Coin{}, fmt.Errorf("failed to add virtual assets %s to total assets %s: %w", VirtualAssets, totalAssets, err)
+	}
+	ts, err := totalShares.SafeAdd(VirtualShares)
+	if err != nil {
+		return sdk.Coin{}, fmt.Errorf("failed to add virtual shares %s to total shares %s: %w", VirtualShares, totalShares, err)
+	}
 	numerator, err := amount.SafeMul(ts)
 	if err != nil {
 		return sdk.Coin{}, fmt.Errorf("failed to multiply amount %s by total shares %s: %w", amount, ts, err)
@@ -83,16 +92,25 @@ func CalculateSharesProRata(
 //   - Computes: payout = floor( shares * ta' / ts' ).
 //   - Returns sdk.Coin(payoutDenom, payout).
 //
-// Errors if any input is negative.
+// Errors if any input is nil or negative.
 func CalculateRedeemProRata(shares math.Int, totalShares math.Int, totalAssets math.Int, payoutDenom string) (sdk.Coin, error) {
+	if shares.IsNil() || totalShares.IsNil() || totalAssets.IsNil() {
+		return sdk.Coin{}, fmt.Errorf("invalid input: nil values not allowed")
+	}
 	if shares.IsNegative() || totalShares.IsNegative() || totalAssets.IsNegative() {
 		return sdk.Coin{}, fmt.Errorf("invalid input: negative values not allowed")
 	}
 	if shares.IsZero() {
 		return sdk.NewCoin(payoutDenom, math.ZeroInt()), nil
 	}
-	ts := totalShares.Add(VirtualShares)
-	ta := totalAssets.Add(VirtualAssets)
+	ts, err := totalShares.SafeAdd(VirtualShares)
+	if err != nil {
+		return sdk.Coin{}, fmt.Errorf("failed to add virtual shares %s to total shares %s: %w", VirtualShares, totalShares, err)
+	}
+	ta, err := totalAssets.SafeAdd(VirtualAssets)
+	if err != nil {
+		return sdk.Coin{}, fmt.Errorf("failed to add virtual assets %s to total assets %s: %w", VirtualAssets, totalAssets, err)
+	}
 	sharesTa, err := shares.SafeMul(ta)
 	if err != nil {
 		return sdk.Coin{}, fmt.Errorf("failed to multiply shares %s by total assets %s: %w", shares, ta, err)

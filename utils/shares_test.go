@@ -18,6 +18,13 @@ func nearMaxInt() sdkmath.Int {
 	return sdkmath.NewIntFromBigInt(new(big.Int).Lsh(big.NewInt(1), 255))
 }
 
+// maxInt returns the largest value representable by sdkmath.Int, 2^256 - 1.
+// Adding any positive offset to it overflows, exercising the SafeAdd guards on
+// the virtual-offset additions in the pro-rata paths.
+func maxInt() sdkmath.Int {
+	return sdkmath.NewIntFromBigInt(new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(1)))
+}
+
 func TestCalculateAssetsFromShares(t *testing.T) {
 	assetDenom := "asset"
 
@@ -80,12 +87,52 @@ func TestCalculateAssetsFromShares(t *testing.T) {
 			errMsg:      "invalid input: negative values not allowed",
 		},
 		{
+			name:        "reject nil shares instead of panicking",
+			shares:      sdkmath.Int{},
+			totalShares: sdkmath.NewInt(1000),
+			totalAssets: sdkmath.NewInt(1000),
+			expectErr:   true,
+			errMsg:      "invalid input: nil values not allowed",
+		},
+		{
+			name:        "reject nil total shares instead of panicking",
+			shares:      sdkmath.NewInt(100),
+			totalShares: sdkmath.Int{},
+			totalAssets: sdkmath.NewInt(1000),
+			expectErr:   true,
+			errMsg:      "invalid input: nil values not allowed",
+		},
+		{
+			name:        "reject nil total assets instead of panicking",
+			shares:      sdkmath.NewInt(100),
+			totalShares: sdkmath.NewInt(1000),
+			totalAssets: sdkmath.Int{},
+			expectErr:   true,
+			errMsg:      "invalid input: nil values not allowed",
+		},
+		{
 			name:        "oversized shares and assets overflow returns error instead of panicking",
 			shares:      nearMaxInt(),
 			totalShares: sdkmath.NewInt(1_000_000),
 			totalAssets: nearMaxInt(),
 			expectErr:   true,
 			errContains: "integer overflow",
+		},
+		{
+			name:        "total shares within virtual shares of the max overflows the offset add",
+			shares:      sdkmath.NewInt(1),
+			totalShares: maxInt(),
+			totalAssets: sdkmath.ZeroInt(),
+			expectErr:   true,
+			errContains: "failed to add virtual shares",
+		},
+		{
+			name:        "total assets within virtual assets of the max overflows the offset add",
+			shares:      sdkmath.NewInt(1),
+			totalShares: sdkmath.ZeroInt(),
+			totalAssets: maxInt(),
+			expectErr:   true,
+			errContains: "failed to add virtual assets",
 		},
 	}
 
@@ -170,6 +217,30 @@ func TestCalculateSharesProRata(t *testing.T) {
 			expectedErrText: "invalid input: negative values not allowed",
 		},
 		{
+			name:            "reject nil amount instead of panicking",
+			amount:          sdkmath.Int{},
+			totalAssets:     sdkmath.NewInt(100),
+			totalShares:     sdkmath.NewInt(200),
+			expectErr:       true,
+			expectedErrText: "invalid input: nil values not allowed",
+		},
+		{
+			name:            "reject nil total assets instead of panicking",
+			amount:          sdkmath.NewInt(1),
+			totalAssets:     sdkmath.Int{},
+			totalShares:     sdkmath.NewInt(200),
+			expectErr:       true,
+			expectedErrText: "invalid input: nil values not allowed",
+		},
+		{
+			name:            "reject nil total shares instead of panicking",
+			amount:          sdkmath.NewInt(1),
+			totalAssets:     sdkmath.NewInt(100),
+			totalShares:     sdkmath.Int{},
+			expectErr:       true,
+			expectedErrText: "invalid input: nil values not allowed",
+		},
+		{
 			name:        "oversized first deposit overflows share scalar and returns error",
 			amount:      nearMaxInt(),
 			totalAssets: sdkmath.NewInt(0),
@@ -184,6 +255,22 @@ func TestCalculateSharesProRata(t *testing.T) {
 			totalShares: nearMaxInt(),
 			expectErr:   true,
 			errContains: "integer overflow",
+		},
+		{
+			name:        "total assets within virtual assets of the max overflows the offset add",
+			amount:      sdkmath.NewInt(1),
+			totalAssets: maxInt(),
+			totalShares: sdkmath.NewInt(1),
+			expectErr:   true,
+			errContains: "failed to add virtual assets",
+		},
+		{
+			name:        "total shares within virtual shares of the max overflows the offset add",
+			amount:      sdkmath.NewInt(1),
+			totalAssets: sdkmath.ZeroInt(),
+			totalShares: maxInt(),
+			expectErr:   true,
+			errContains: "failed to add virtual shares",
 		},
 	}
 

@@ -91,6 +91,12 @@ func (gs GenesisState) Validate() error {
 			if _, exists := vaults[entry.SwapOut.VaultAddress]; !exists {
 				return fmt.Errorf("pending swap out queue vault address at index %d is not an imported vault: %s", i, entry.SwapOut.VaultAddress)
 			}
+			if err := entry.SwapOut.Validate(); err != nil {
+				return fmt.Errorf("invalid pending swap out at index %d: %w", i, err)
+			}
+			if entry.Time < 0 {
+				return fmt.Errorf("pending swap out queue entry at index %d has negative time %d", i, entry.Time)
+			}
 		}
 	}
 

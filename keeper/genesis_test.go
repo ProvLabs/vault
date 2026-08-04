@@ -338,91 +338,77 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidPendingSwapOut() {
 	shareDenom := "vaultshare"
 	underlying := "undercoin"
 	admin := s.adminAddr.String()
+	vaultAddr := types.GetVaultAddress(shareDenom).String()
+	unknownVaultAddr := types.GetVaultAddress("baddenom").String()
 
-	vault := makeGenesisVaultAccount(shareDenom, underlying, admin)
+	validSwapOut := types.PendingSwapOut{
+		Owner:        admin,
+		VaultAddress: vaultAddr,
+		RedeemDenom:  underlying,
+		Shares:       sdk.NewInt64Coin(shareDenom, 100),
+	}
+	swapOutWith := func(mutate func(*types.PendingSwapOut)) types.PendingSwapOut {
+		swapOut := validSwapOut
+		mutate(&swapOut)
+		return swapOut
+	}
 
-	genesis := &types.GenesisState{
-		Params: types.DefaultParams(),
-		Vaults: []types.VaultAccount{vault},
-		PendingSwapOutQueue: types.PendingSwapOutQueue{
-			LatestSequenceNumber: 55,
-			Entries: []types.PendingSwapOutQueueEntry{
-				{
-					Time: 10000,
-					Id:   1,
-					SwapOut: types.PendingSwapOut{
-						Owner:        "badaddress",
-						VaultAddress: vault.Address,
-						RedeemDenom:  "ylds",
-						Shares:       sdk.NewInt64Coin("vshares", 100),
-					},
-				},
-			},
+	tests := []struct {
+		name          string
+		entry         types.PendingSwapOutQueueEntry
+		expectedPanic string
+	}{
+		{
+			name:          "bad owner address",
+			entry:         types.PendingSwapOutQueueEntry{Time: 10_000, Id: 1, SwapOut: swapOutWith(func(swapOut *types.PendingSwapOut) { swapOut.Owner = "badaddress" })},
+			expectedPanic: "invalid vault genesis state: invalid pending swap out at index 0: invalid owner address badaddress: decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name:          "bad vault address",
+			entry:         types.PendingSwapOutQueueEntry{Time: 10_000, Id: 1, SwapOut: swapOutWith(func(swapOut *types.PendingSwapOut) { swapOut.VaultAddress = "badaddress" })},
+			expectedPanic: "invalid vault genesis state: invalid vault address in pending swap out queue at index 0: decoding bech32 failed: invalid separator index -1",
+		},
+		{
+			name:          "vault address is not an imported vault",
+			entry:         types.PendingSwapOutQueueEntry{Time: 10_000, Id: 1, SwapOut: swapOutWith(func(swapOut *types.PendingSwapOut) { swapOut.VaultAddress = unknownVaultAddr })},
+			expectedPanic: fmt.Sprintf("invalid vault genesis state: pending swap out queue vault address at index 0 is not an imported vault: %s", unknownVaultAddr),
+		},
+		{
+			name: "negative escrowed shares amount",
+			entry: types.PendingSwapOutQueueEntry{Time: 10_000, Id: 1, SwapOut: swapOutWith(func(swapOut *types.PendingSwapOut) {
+				swapOut.Shares = sdk.Coin{Denom: shareDenom, Amount: sdkmath.NewInt(-100)}
+			})},
+			expectedPanic: fmt.Sprintf("invalid vault genesis state: invalid pending swap out at index 0: invalid shares: -100%s", shareDenom),
+		},
+		{
+			name:          "nil escrowed shares amount",
+			entry:         types.PendingSwapOutQueueEntry{Time: 10_000, Id: 1, SwapOut: swapOutWith(func(swapOut *types.PendingSwapOut) { swapOut.Shares = sdk.Coin{Denom: shareDenom} })},
+			expectedPanic: "invalid vault genesis state: invalid pending swap out at index 0: invalid shares: <nil>" + shareDenom,
+		},
+		{
+			name:          "zero escrowed shares amount",
+			entry:         types.PendingSwapOutQueueEntry{Time: 10_000, Id: 1, SwapOut: swapOutWith(func(swapOut *types.PendingSwapOut) { swapOut.Shares = sdk.NewInt64Coin(shareDenom, 0) })},
+			expectedPanic: "invalid vault genesis state: invalid pending swap out at index 0: shares cannot be zero",
+		},
+		{
+			name:          "empty redeem denom",
+			entry:         types.PendingSwapOutQueueEntry{Time: 10_000, Id: 1, SwapOut: swapOutWith(func(swapOut *types.PendingSwapOut) { swapOut.RedeemDenom = "" })},
+			expectedPanic: "invalid vault genesis state: invalid pending swap out at index 0: redeem denom cannot be empty",
+		},
+		{
+			name:          "negative entry time",
+			entry:         types.PendingSwapOutQueueEntry{Time: -1, Id: 1, SwapOut: validSwapOut},
+			expectedPanic: "invalid vault genesis state: pending swap out queue entry at index 0 has negative time -1",
 		},
 	}
-	expectedPanic := "failed to import pending swap out queue: invalid owner address in pending swap out queue: decoding bech32 failed: invalid separator index -1"
-	s.Require().PanicsWithError(expectedPanic, func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on invalid pending swap out")
-}
 
-func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPendingSwapOutHasUnknownVault() {
-	shareDenom := "vaultshare"
-	underlying := "undercoin"
-	admin := s.adminAddr.String()
-	badVaultAddr := types.GetVaultAddress("baddenom")
-
-	vault := makeGenesisVaultAccount(shareDenom, underlying, admin)
-
-	genesis := &types.GenesisState{
-		Params: types.DefaultParams(),
-		Vaults: []types.VaultAccount{vault},
-		PendingSwapOutQueue: types.PendingSwapOutQueue{
-			LatestSequenceNumber: 55,
-			Entries: []types.PendingSwapOutQueueEntry{
-				{
-					Time: 10000,
-					Id:   1,
-					SwapOut: types.PendingSwapOut{
-						Owner:        admin,
-						VaultAddress: badVaultAddr.String(),
-						RedeemDenom:  "ylds",
-						Shares:       sdk.NewInt64Coin("vshares", 100),
-					},
-				},
-			},
-		},
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			genesis := buildSingleVaultPendingSwapOutGenesisState(shareDenom, underlying, admin, tc.entry)
+			s.Require().PanicsWithError(tc.expectedPanic, func() { s.k.InitGenesis(s.ctx, genesis) },
+				"InitGenesis should reject a pending swap out with %s", tc.name)
+		})
 	}
-	expectedPanic := fmt.Sprintf("invalid vault genesis state: pending swap out queue vault address at index 0 is not an imported vault: %s", badVaultAddr.String())
-	s.Require().PanicsWithError(expectedPanic, func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on unknown vault")
-}
-
-func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPendingSwapOutHasBadVaultAddress() {
-	shareDenom := "vaultshare"
-	underlying := "undercoin"
-	admin := s.adminAddr.String()
-
-	vault := makeGenesisVaultAccount(shareDenom, underlying, admin)
-
-	genesis := &types.GenesisState{
-		Params: types.DefaultParams(),
-		Vaults: []types.VaultAccount{vault},
-		PendingSwapOutQueue: types.PendingSwapOutQueue{
-			LatestSequenceNumber: 55,
-			Entries: []types.PendingSwapOutQueueEntry{
-				{
-					Time: 10000,
-					Id:   1,
-					SwapOut: types.PendingSwapOut{
-						Owner:        admin,
-						VaultAddress: "badaddress",
-						RedeemDenom:  "ylds",
-						Shares:       sdk.NewInt64Coin("vshares", 100),
-					},
-				},
-			},
-		},
-	}
-	expectedPanic := "invalid vault genesis state: invalid vault address in pending swap out queue at index 0: decoding bech32 failed: invalid separator index -1"
-	s.Require().PanicsWithError(expectedPanic, func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on bad vault address")
 }
 
 func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPayoutTimeoutHasUnknownVault() {

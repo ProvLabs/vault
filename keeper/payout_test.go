@@ -454,6 +454,31 @@ func (s *TestSuite) TestKeeper_ProcessPendingSwapOuts() {
 			},
 			batchSize: keeper.MaxSwapOutBatchSize,
 		},
+		{
+			name: "request with negative escrowed shares is deferred instead of halting the chain",
+			setup: func(shareDenom string, vaultAddr sdk.AccAddress, shares sdk.Coin) (sdk.AccAddress, uint64) {
+				ownerAddr, _, _, req := s.enqueueDueSwapOut(underlyingDenom, shareDenom, assets, duePayoutTime)
+				req.Shares = sdk.Coin{Denom: shareDenom, Amount: math.NewInt(-100)}
+				const malformedID = 9_000
+				s.forceEnqueuePendingSwapOut(duePayoutTime, malformedID, req)
+				return ownerAddr, malformedID
+			},
+			posthandler: func(ownerAddr sdk.AccAddress, reqID uint64, shareDenom string, vaultAddr sdk.AccAddress, principalAddress sdk.AccAddress, shares sdk.Coin, testBlockTime time.Time) {
+				req := s.assertSwapOutRetryDeferred(reqID, 1)
+				s.Require().True(req.Shares.Amount.IsNegative(), "the malformed escrow record should be preserved for operator remediation")
+
+				retryEvent, err := sdk.TypedEventToEvent(types.NewEventSwapOutRetryScheduled(
+					vaultAddr.String(), ownerAddr.String(), req.Shares, reqID, types.RetryReasonInvalidRequest, 1, testBlockTime.Unix(),
+				))
+				s.Require().NoError(err, "should not error converting typed EventSwapOutRetryScheduled")
+				s.Assert().Contains(
+					normalizeEvents(s.ctx.EventManager().Events()),
+					normalizeEvents(sdk.Events{retryEvent})[0],
+					"a retry event with reason %s should be emitted for the malformed request", types.RetryReasonInvalidRequest,
+				)
+			},
+			batchSize: keeper.MaxSwapOutBatchSize,
+		},
 	}
 
 	for i, tc := range tests {

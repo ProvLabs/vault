@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/collections"
 	sdkmath "cosmossdk.io/math"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/crypto/secp256k1"
@@ -839,6 +840,18 @@ func (s *TestSuite) enqueueDueSwapOut(underlyingDenom, shareDenom string, assets
 	return ownerAddr, *minted, id, req
 }
 
+// forceEnqueuePendingSwapOut writes a pending swap-out straight into the queue's indexed map,
+// bypassing the validation performed by Enqueue and Import. Use it to reproduce malformed state
+// that a hand-authored genesis or a state import could have committed to the store.
+func (s *TestSuite) forceEnqueuePendingSwapOut(timestamp int64, id uint64, req types.PendingSwapOut) {
+	vaultAddr, err := sdk.AccAddressFromBech32(req.VaultAddress)
+	s.Require().NoError(err, "vault address %s should be valid", req.VaultAddress)
+	s.Require().NoError(
+		s.k.PendingSwapOutQueue.IndexedMap.Set(s.ctx, collections.Join3(timestamp, id, vaultAddr), req),
+		"should force-write pending swap out %d into the queue at time %d", id, timestamp,
+	)
+}
+
 // enqueueUnrefundableSwapOut enqueues an escrowed swap-out for a paused vault and then drains the
 // escrowed shares, so every refund attempt fails deterministically the way a deactivated share
 // marker or a revoked owner attribute would in production.
@@ -1333,6 +1346,20 @@ func buildSingleVaultGenesisState(shareDenom, underlying, admin string, navs []t
 		Params: types.DefaultParams(),
 		Vaults: []types.VaultAccount{makeGenesisVaultAccount(shareDenom, underlying, admin)},
 		Navs:   navs,
+	}
+}
+
+// buildSingleVaultPendingSwapOutGenesisState constructs a GenesisState containing one vault and a
+// single pending swap-out queue entry without touching chain state. Use this to prepare a genesis
+// payload for pending swap-out validation tests where InitGenesis must not be called in advance.
+func buildSingleVaultPendingSwapOutGenesisState(shareDenom, underlying, admin string, entry types.PendingSwapOutQueueEntry) *types.GenesisState {
+	return &types.GenesisState{
+		Params: types.DefaultParams(),
+		Vaults: []types.VaultAccount{makeGenesisVaultAccount(shareDenom, underlying, admin)},
+		PendingSwapOutQueue: types.PendingSwapOutQueue{
+			LatestSequenceNumber: 55,
+			Entries:              []types.PendingSwapOutQueueEntry{entry},
+		},
 	}
 }
 

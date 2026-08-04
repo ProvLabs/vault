@@ -25,6 +25,7 @@ const (
 	RetryReasonDequeueFailure  = "dequeue_failure"
 	RetryReasonRefundFailure   = "refund_failure"
 	RetryReasonCriticalFailure = "critical_failure"
+	RetryReasonInvalidRequest  = "invalid_request"
 )
 
 const (

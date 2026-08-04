@@ -7,6 +7,7 @@ import (
 
 	"cosmossdk.io/collections"
 	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
 	"github.com/cosmos/cosmos-sdk/testutil"
@@ -670,7 +671,7 @@ func TestPendingSwapOutQueue_Import(t *testing.T) {
 					{Time: 1, Id: 0, SwapOut: vtypes.PendingSwapOut{VaultAddress: "badaddress", Owner: addr1.Bech32, RedeemDenom: "usd", Shares: sdk.NewInt64Coin("vshares", 100)}},
 				},
 			},
-			errorMsg: "invalid vault address in pending swap out queue:",
+			errorMsg: "invalid pending swap out in pending swap out queue: invalid vault address badaddress",
 		},
 		{
 			name: "bad owner address",
@@ -680,7 +681,57 @@ func TestPendingSwapOutQueue_Import(t *testing.T) {
 					{Time: 1, Id: 0, SwapOut: vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: "badaddress", RedeemDenom: "usd", Shares: sdk.NewInt64Coin("vshares", 100)}},
 				},
 			},
-			errorMsg: "invalid owner address in pending swap out queue:",
+			errorMsg: "invalid pending swap out in pending swap out queue: invalid owner address badaddress",
+		},
+		{
+			name: "negative escrowed shares amount",
+			genQueue: &vtypes.PendingSwapOutQueue{
+				LatestSequenceNumber: 1,
+				Entries: []vtypes.PendingSwapOutQueueEntry{
+					{Time: 1, Id: 0, SwapOut: vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, RedeemDenom: "usd", Shares: sdk.Coin{Denom: "vshares", Amount: sdkmath.NewInt(-100)}}},
+				},
+			},
+			errorMsg: "invalid pending swap out in pending swap out queue: invalid shares: -100vshares",
+		},
+		{
+			name: "nil escrowed shares amount",
+			genQueue: &vtypes.PendingSwapOutQueue{
+				LatestSequenceNumber: 1,
+				Entries: []vtypes.PendingSwapOutQueueEntry{
+					{Time: 1, Id: 0, SwapOut: vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, RedeemDenom: "usd", Shares: sdk.Coin{Denom: "vshares"}}},
+				},
+			},
+			errorMsg: "invalid pending swap out in pending swap out queue: invalid shares:",
+		},
+		{
+			name: "zero escrowed shares amount",
+			genQueue: &vtypes.PendingSwapOutQueue{
+				LatestSequenceNumber: 1,
+				Entries: []vtypes.PendingSwapOutQueueEntry{
+					{Time: 1, Id: 0, SwapOut: vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, RedeemDenom: "usd", Shares: sdk.NewInt64Coin("vshares", 0)}},
+				},
+			},
+			errorMsg: "invalid pending swap out in pending swap out queue: shares cannot be zero",
+		},
+		{
+			name: "empty redeem denom",
+			genQueue: &vtypes.PendingSwapOutQueue{
+				LatestSequenceNumber: 1,
+				Entries: []vtypes.PendingSwapOutQueueEntry{
+					{Time: 1, Id: 0, SwapOut: vtypes.PendingSwapOut{VaultAddress: addr1.Bech32, Owner: addr1.Bech32, Shares: sdk.NewInt64Coin("vshares", 100)}},
+				},
+			},
+			errorMsg: "invalid pending swap out in pending swap out queue: redeem denom cannot be empty",
+		},
+		{
+			name: "negative entry time",
+			genQueue: &vtypes.PendingSwapOutQueue{
+				LatestSequenceNumber: 1,
+				Entries: []vtypes.PendingSwapOutQueueEntry{
+					{Time: -1, Id: 7, SwapOut: req1},
+				},
+			},
+			errorMsg: "pending swap out queue entry 7 has negative time -1",
 		},
 	}
 

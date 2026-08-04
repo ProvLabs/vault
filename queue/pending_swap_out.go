@@ -239,12 +239,15 @@ func (p *PendingSwapOutQueue) Import(ctx context.Context, genQueue *types.Pendin
 		return fmt.Errorf("genesis queue is nil")
 	}
 	for _, entry := range genQueue.Entries {
+		if err := entry.SwapOut.Validate(); err != nil {
+			return fmt.Errorf("invalid pending swap out in pending swap out queue: %w", err)
+		}
+		if entry.Time < 0 {
+			return fmt.Errorf("pending swap out queue entry %d has negative time %d", entry.Id, entry.Time)
+		}
 		vaultAddr, err := sdk.AccAddressFromBech32(entry.SwapOut.VaultAddress)
 		if err != nil {
 			return fmt.Errorf("invalid vault address in pending swap out queue: %w", err)
-		}
-		if _, err := sdk.AccAddressFromBech32(entry.SwapOut.Owner); err != nil {
-			return fmt.Errorf("invalid owner address in pending swap out queue: %w", err)
 		}
 		swapOut := types.PendingSwapOut{
 			Owner:        entry.SwapOut.Owner,

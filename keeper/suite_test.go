@@ -296,6 +296,12 @@ func normalizeEvent(event sdk.Event) sdk.Event {
 	return event
 }
 
+// attributeExpiry returns a fixed far-future expiration so suite attributes never expire under any block time.
+func attributeExpiry() *time.Time {
+	expiry := time.Date(2200, 1, 1, 0, 0, 0, 0, time.UTC)
+	return &expiry
+}
+
 // SetupTechFeeAccount ensures the AUM fee collector account exists and has the required
 // attributes to receive the specified restricted asset. It returns the fee collector address.
 func (s *TestSuite) SetupTechFeeAccount(restrictedUnderlyingDenom string) sdk.AccAddress {
@@ -308,8 +314,7 @@ func (s *TestSuite) SetupTechFeeAccount(restrictedUnderlyingDenom string) sdk.Ac
 	if !s.simApp.NameKeeper.NameExists(s.ctx, restrictedUnderlyingDenom) {
 		s.Require().NoError(s.simApp.NameKeeper.SetNameRecord(s.ctx, restrictedUnderlyingDenom, s.adminAddr, false), "should successfully bind name for %s", restrictedUnderlyingDenom)
 	}
-	expireTime := time.Now().Add(24 * time.Hour)
-	attr := attrtypes.NewAttribute(restrictedUnderlyingDenom, provlabsAddr.String(), attrtypes.AttributeType_String, []byte("true"), &expireTime, "")
+	attr := attrtypes.NewAttribute(restrictedUnderlyingDenom, provlabsAddr.String(), attrtypes.AttributeType_String, []byte("true"), attributeExpiry(), "")
 	s.Require().NoError(s.simApp.AttributeKeeper.SetAttribute(s.ctx, attr, s.adminAddr), "should successfully set attribute for tech fee account")
 
 	return provlabsAddr
@@ -345,8 +350,7 @@ func (s *TestSuite) requireAddFinalizeAndActivateMarker(coin sdk.Coin, manager s
 		if !s.simApp.NameKeeper.NameExists(s.ctx, attrName) {
 			s.Require().NoError(s.simApp.NameKeeper.SetNameRecord(s.ctx, attrName, s.adminAddr, false), "should successfully bind the name")
 		}
-		expireTime := time.Now().Add(365 * 24 * time.Hour)
-		attribute := attrtypes.NewAttribute(attrName, provlabsAddr.String(), attrtypes.AttributeType_String, []byte("true"), &expireTime, "")
+		attribute := attrtypes.NewAttribute(attrName, provlabsAddr.String(), attrtypes.AttributeType_String, []byte("true"), attributeExpiry(), "")
 		s.Require().NoError(s.simApp.AttributeKeeper.SetAttribute(s.ctx, attribute, s.adminAddr), "should successfully set the required attribute on the tech fee account")
 	}
 
@@ -372,6 +376,23 @@ func (s *TestSuite) requireAddFinalizeAndActivateMarker(coin sdk.Coin, manager s
 	}
 	err = s.simApp.MarkerKeeper.AddFinalizeAndActivateMarker(s.ctx, marker)
 	s.Require().NoError(err, "AddFinalizeAndActivateMarker(%s)", coin.Denom)
+}
+
+// requireAttribute grants attrName to addr, binding the attribute name first if needed.
+func (s *TestSuite) requireAttribute(addr sdk.AccAddress, attrName string) {
+	if !s.simApp.NameKeeper.NameExists(s.ctx, attrName) {
+		s.Require().NoError(s.simApp.NameKeeper.SetNameRecord(s.ctx, attrName, s.adminAddr, false), "should successfully bind the attribute name %s", attrName)
+	}
+	attribute := attrtypes.NewAttribute(attrName, addr.String(), attrtypes.AttributeType_String, []byte("true"), attributeExpiry(), "")
+	s.Require().NoError(s.simApp.AttributeKeeper.SetAttribute(s.ctx, attribute, s.adminAddr), "should successfully grant attribute %s to %s", attrName, addr)
+}
+
+// requireSendDeny freezes addr on the deny list of the denom's marker, the control an issuer
+// uses to stop a sanctioned holder from sending a restricted asset.
+func (s *TestSuite) requireSendDeny(denom string, addr sdk.AccAddress) {
+	markerAddr := markertypes.MustGetMarkerAddress(denom)
+	s.simApp.MarkerKeeper.AddSendDeny(s.ctx, markerAddr, addr)
+	s.Require().True(s.simApp.MarkerKeeper.IsSendDeny(s.ctx, markerAddr, addr), "%s should be on the deny list of marker %s", addr, denom)
 }
 
 // requireSimpleMarker registers denom as an unrestricted Coin marker so it passes the

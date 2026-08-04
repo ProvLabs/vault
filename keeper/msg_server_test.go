@@ -13,7 +13,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
 	"github.com/provlabs/vault/keeper"
@@ -2875,10 +2874,7 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds() {
 	setupRestricted := func() {
 		requiredAttribute := "thisisrequired"
 		s.simApp.AccountKeeper.SetAccount(s.ctx, s.simApp.AccountKeeper.NewAccountWithAddress(s.ctx, admin))
-		s.Require().NoError(s.simApp.NameKeeper.SetNameRecord(s.ctx, requiredAttribute, s.adminAddr, false), "should successfully bind the name to the redeemer's address")
-		expireTime := time.Now().Add(24 * time.Hour)
-		attribute := attrtypes.NewAttribute(requiredAttribute, admin.String(), attrtypes.AttributeType_String, []byte("true"), &expireTime, "")
-		s.Require().NoError(s.simApp.AttributeKeeper.SetAttribute(s.ctx, attribute, s.adminAddr), "should successfully set the required attribute on the redeemer")
+		s.requireAttribute(admin, requiredAttribute)
 
 		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin, requiredAttribute)
 		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, admin, sdk.NewCoins(amount)), "failed to fund account")
@@ -3078,6 +3074,19 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds_Failures() {
 				Amount:       sdk.NewInt64Coin(underlying, 9_999_999),
 			},
 			expectedErrSubstrs: []string{"failed to deposit funds", "insufficient funds"},
+		},
+		{
+			name: "authority frozen on the underlying deny list",
+			setup: func() {
+				setupWithAdminFunds()
+				s.requireSendDeny(underlying, admin)
+			},
+			msg: types.MsgDepositInterestFundsRequest{
+				Authority:    admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Amount:       amount,
+			},
+			expectedErrSubstrs: []string{"failed to deposit interest funds", "is on deny list for sending restricted marker"},
 		},
 		{
 			name: "reconcile failure propagates",
@@ -3713,6 +3722,20 @@ func (s *TestSuite) TestMsgServer_DepositPrincipalFunds_Failures() {
 				Amount:       sdk.NewInt64Coin(underlying, 9_999_999),
 			},
 			expectedErrSubstrs: []string{"failed to deposit principal funds", "insufficient funds"},
+		},
+		{
+			name: "authority frozen on the underlying deny list",
+			setup: func() {
+				setup()
+				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, admin, sdk.NewCoins(amount)), "failed to fund admin account")
+				s.requireSendDeny(underlying, admin)
+			},
+			msg: types.MsgDepositPrincipalFundsRequest{
+				Authority:    admin.String(),
+				VaultAddress: vaultAddr.String(),
+				Amount:       amount,
+			},
+			expectedErrSubstrs: []string{"failed to deposit principal funds", "is on deny list for sending restricted marker"},
 		},
 	}
 

@@ -47,7 +47,7 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 | Endpoint                 | Admin required (or Asset Manager) | Works when UNPAUSED | Works when PAUSED | Notes / gates that still apply                                                                                |
 | ------------------------ | --------------------------------- | ------------------: | ----------------: | ------------------------------------------------------------------------------------------------------------- |
 | `CreateVault`            | Governance when gated             |                   ✅ |                 ✅ | Creation only. Must be signed by the governance module account while `gov_only_vault_creation` is enabled.     |
-| `SwapIn`                 | No                                |                   ✅ |                 ❌ | Keeper `SwapIn` enforces `!vault.Paused`, `SwapInEnabled`, accepted denom, reconcile.                         |
+| `SwapIn`                 | No                                |                   ✅ |                 ❌ | Keeper `SwapIn` enforces `!vault.Paused`, `SwapInEnabled`, accepted denom, underlying deny list, reconcile.                         |
 | `SwapOut`                | No                                |                   ✅ |                 ❌ | Keeper `SwapOut` enforces `!vault.Paused`, `SwapOutEnabled`, share denom match, payout restrictions, enqueue. |
 | `BridgeMintShares`       | Bridge only                       |                   ✅ |                 ✅ | Requires `bridge_enabled`, signer == `bridge_address`, shares denom match, positive amount, capacity ≤ `total_shares`. |
 | `BridgeBurnShares`       | Bridge only                       |                   ✅ |                 ✅ | Requires `bridge_enabled`, signer == `bridge_address`, shares denom match, positive amount; burns from marker. |
@@ -63,9 +63,9 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 | `UpdateMaxSwapOutValue`  | Admin or Asset Manager            |                   ✅ |                 ✅ | Updates the maximum allowed value for a swap-out operation.                                                   |
 | `ToggleSwapIn`           | Admin only                        |                   ✅ |                 ✅ | Allows enabling or disabling swap-in operations.                                                              |
 | `ToggleSwapOut`          | Admin only                        |                   ✅ |                 ✅ | Allows enabling or disabling swap-out operations.                                                             |
-| `DepositInterestFunds`   | Admin or Asset Manager            |                   ✅ |                 ✅ | Underlying denom only; reconciles after deposit.                                                              |
+| `DepositInterestFunds`   | Admin or Asset Manager            |                   ✅ |                 ✅ | Underlying denom only; rejects a depositor on the underlying deny list; reconciles after deposit.                                                              |
 | `WithdrawInterestFunds`  | Admin or Asset Manager            |                   ✅ |                 ✅ | Underlying denom only; reconciles before withdrawal.                                                          |
-| `DepositPrincipalFunds`  | Admin or Asset Manager            |                   ❌ |                 ✅ | Requires vault to be paused; reconciles then deposit to principal marker.                                     |
+| `DepositPrincipalFunds`  | Admin or Asset Manager            |                   ❌ |                 ✅ | Requires vault to be paused; rejects a depositor on the underlying deny list; reconciles then deposit to principal marker.                                     |
 | `WithdrawPrincipalFunds` | Admin or Asset Manager            |                   ❌ |                 ✅ | Requires vault to be paused; reconciles then withdraw from principal marker.                                  |
 | `ExpeditePendingSwapOut` | Admin or Asset Manager            |                   ✅ |                 ✅ | No pause gating;                                                                                              |
 | `PauseVault`             | Admin or Asset Manager            |                   ✅ |                 ❌ | Strict by default: reconciles, snapshots `PausedBalance`, sets paused; aborts if reconcile/valuation fails. `force=true` pauses best-effort, tolerating failures and recording them on `EventVaultPaused`. |
@@ -117,7 +117,7 @@ Admin-only. Sets Bank module metadata for a vault’s share denom, defining how 
 
 ## SwapIn
 
-Deposits the vault's underlying asset into a vault in exchange for newly minted shares. The underlying asset is the only accepted deposit denom.
+Deposits the vault's underlying asset into a vault in exchange for newly minted shares. The underlying asset is the only accepted deposit denom. A depositor on the underlying marker's deny list is rejected, since the deposit itself moves funds with a marker bypass.
 
 * **Request:** `MsgSwapInRequest { owner, vault_address, assets }`
 * **Response:** `MsgSwapInResponse {}`

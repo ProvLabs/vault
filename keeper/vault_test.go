@@ -7,10 +7,10 @@ import (
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 
 	"github.com/provlabs/vault/keeper"
+	"github.com/provlabs/vault/simulation"
 	"github.com/provlabs/vault/types"
 	"github.com/provlabs/vault/utils"
 )
@@ -280,6 +280,119 @@ func (s *TestSuite) TestSwapIn_ZeroShareDeposit() {
 	}
 }
 
+func (s *TestSuite) TestCheckDepositDenyList() {
+	frozenDenom := "frozencoin"
+	otherFrozenDenom := "otherfrozencoin"
+	unrestrictedDenom := "plaincoin"
+
+	s.requireRestrictedMarker(frozenDenom)
+	s.requireRestrictedMarker(otherFrozenDenom)
+	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(unrestrictedDenom, 1_000_000), s.adminAddr)
+
+	depositorAddr := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+	unrelatedHolderAddr := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+	s.requireSendDeny(frozenDenom, depositorAddr)
+	s.requireSendDeny(otherFrozenDenom, unrelatedHolderAddr)
+
+	tests := []struct {
+		name                string
+		denom               string
+		expectedErrContains string
+	}{
+		{
+			name:                "depositor is on the deny list of the deposited denom",
+			denom:               frozenDenom,
+			expectedErrContains: "is on deny list for sending restricted marker",
+		},
+		{
+			name:  "only another holder is on the deny list of the deposited denom",
+			denom: otherFrozenDenom,
+		},
+		{
+			name:  "deposited denom is an unrestricted marker with no deny list",
+			denom: unrestrictedDenom,
+		},
+		{
+			name:  "deposited denom has no marker at all",
+			denom: "nomarkercoin",
+		},
+		{
+			name:                "deposited denom is not a valid denom",
+			denom:               "!!bad!!",
+			expectedErrContains: "failed to get marker address for !!bad!!",
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			err := s.k.TestAccessor_checkDepositDenyList(s.T(), s.ctx, depositorAddr, tc.denom)
+
+			if tc.expectedErrContains == "" {
+				s.Require().NoError(err, "deposit of %s by %s should pass the deny list check", tc.denom, depositorAddr)
+				return
+			}
+			s.Require().Error(err, "deposit of %s by %s should fail the deny list check", tc.denom, depositorAddr)
+			s.Require().ErrorContains(err, tc.expectedErrContains, "deny list rejection for denom %s should explain why the depositor is blocked", tc.denom)
+		})
+	}
+}
+
+func (s *TestSuite) TestSwapIn_DenyListedDepositor() {
+	tests := []struct {
+		name                string
+		denyDepositor       bool
+		expectedErrContains string
+	}{
+		{
+			name:                "depositor is frozen on the underlying deny list, swap in is rejected",
+			denyDepositor:       true,
+			expectedErrContains: "is on deny list for sending restricted marker",
+		},
+		{
+			name:          "depositor is not on the underlying deny list, swap in is accepted",
+			denyDepositor: false,
+		},
+	}
+
+	for i, tc := range tests {
+		s.Run(tc.name, func() {
+			underlyingDenom := fmt.Sprintf("restrictedasset%d", i)
+			shareDenom := fmt.Sprintf("vshare%d", i)
+			depositorFunding := int64(1_000)
+			deposit := sdk.NewInt64Coin(underlyingDenom, 100)
+
+			vault := s.setupBaseVaultRestricted(underlyingDenom, shareDenom)
+			vault.SwapInEnabled = true
+			s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+			depositorAddr := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+			s.requireAttribute(depositorAddr, simulation.RequiredMarkerAttribute)
+			s.Require().NoError(s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, depositorAddr, underlyingDenom, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, depositorFunding))),
+				"should seed depositor %s with the restricted underlying %s while it is still an eligible holder", depositorAddr, underlyingDenom)
+
+			if tc.denyDepositor {
+				s.requireSendDeny(underlyingDenom, depositorAddr)
+			}
+
+			mintedShares, err := s.k.SwapIn(s.ctx, vault.GetAddress(), depositorAddr, deposit)
+
+			if tc.expectedErrContains != "" {
+				s.Require().Error(err, "swap in of %s must be rejected for a depositor frozen on the %s deny list", deposit, underlyingDenom)
+				s.Require().ErrorContains(err, tc.expectedErrContains, "swap in rejection should name the deny list enforcement for depositor %s", depositorAddr)
+				s.assertBalance(depositorAddr, underlyingDenom, math.NewInt(depositorFunding))
+				s.assertBalance(depositorAddr, shareDenom, math.ZeroInt())
+				s.assertBalance(vault.PrincipalMarkerAddress(), underlyingDenom, math.ZeroInt())
+				return
+			}
+
+			s.Require().NoError(err, "swap in of %s should succeed for a depositor that is not on the %s deny list", deposit, underlyingDenom)
+			s.Require().True(mintedShares.Amount.IsPositive(), "swap in of %s should mint shares, got %s", deposit, mintedShares)
+			s.assertBalance(depositorAddr, underlyingDenom, math.NewInt(depositorFunding-deposit.Amount.Int64()))
+			s.assertBalance(vault.PrincipalMarkerAddress(), underlyingDenom, deposit.Amount)
+		})
+	}
+}
+
 func (s *TestSuite) TestSwapOut_RedeemsInUnderlying() {
 	underlyingDenom := "ylds"
 	shareDenom := "vshare"
@@ -528,9 +641,7 @@ func (s *TestSuite) TestSwapOut_SucceedsWithRestrictedUnderlyingAssetRequiredAtt
 
 	s.simApp.AccountKeeper.SetAccount(s.ctx, s.simApp.AccountKeeper.NewAccountWithAddress(s.ctx, s.adminAddr))
 
-	expireTime := time.Now().Add(24 * time.Hour)
-	attribute := attrtypes.NewAttribute(requiredAttribute, redeemerAddr.String(), attrtypes.AttributeType_String, []byte("true"), &expireTime, "")
-	s.Require().NoError(s.simApp.AttributeKeeper.SetAttribute(s.ctx, attribute, s.adminAddr), "should successfully set the required attribute on the redeemer")
+	s.requireAttribute(redeemerAddr, requiredAttribute)
 
 	sharesToRedeem := sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(50))
 	_, err = s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sharesToRedeem)

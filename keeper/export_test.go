@@ -110,6 +110,12 @@ func (k Keeper) TestAccessor_checkPayoutRestrictions(t *testing.T, ctx context.C
 	return k.checkPayoutRestrictions(sdk.UnwrapSDKContext(ctx), vault, owner, assets)
 }
 
+// TestAccessor_checkDepositDenyList exposes this keeper's checkDepositDenyList function for unit tests.
+func (k Keeper) TestAccessor_checkDepositDenyList(t *testing.T, ctx context.Context, depositor sdk.AccAddress, denom string) error {
+	t.Helper()
+	return k.checkDepositDenyList(sdk.UnwrapSDKContext(ctx), depositor, denom)
+}
+
 // TestAccessor_deferSwapOutRetry exposes this keeper's deferSwapOutRetry function for unit tests.
 func (k Keeper) TestAccessor_deferSwapOutRetry(t *testing.T, ctx context.Context, j types.PayoutJob, reason string) {
 	t.Helper()

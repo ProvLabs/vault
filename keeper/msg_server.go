@@ -415,6 +415,10 @@ func (k msgServer) DepositInterestFunds(goCtx context.Context, msg *types.MsgDep
 		return nil, fmt.Errorf("denom not supported for vault must be of type \"%s\" : got \"%s\"", vault.UnderlyingAsset, msg.Amount.Denom)
 	}
 
+	if err := k.checkDepositDenyList(ctx, authorityAddr, msg.Amount.Denom); err != nil {
+		return nil, fmt.Errorf("failed to deposit interest funds: %w", err)
+	}
+
 	if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx), authorityAddr, vaultAddr, sdk.NewCoins(msg.Amount)); err != nil {
 		return nil, fmt.Errorf("failed to deposit funds: %w", err)
 	}
@@ -487,6 +491,10 @@ func (k msgServer) DepositPrincipalFunds(goCtx context.Context, msg *types.MsgDe
 
 	if err := vault.ValidateAcceptedCoin(msg.Amount); err != nil {
 		return nil, fmt.Errorf("failed to validate accepted coin: %w", err)
+	}
+
+	if err := k.checkDepositDenyList(ctx, depositFromAddress, msg.Amount.Denom); err != nil {
+		return nil, fmt.Errorf("failed to deposit principal funds: %w", err)
 	}
 
 	if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx),

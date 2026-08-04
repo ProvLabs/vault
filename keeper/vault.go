@@ -220,13 +220,14 @@ func (k *Keeper) createVaultMarker(ctx sdk.Context, markerManager sdk.AccAddress
 //  3. Reconciles the vault (interest and AUM fees) if due.
 //  4. Resolves the vault share marker address.
 //  5. Validates that the provided underlying asset matches the vault’s configured underlying denom.
-//  6. Calculates the number of shares to mint based on the deposit, current supply, and vault balance,
+//  6. Rejects the deposit when the depositor is on the underlying marker’s deny list.
+//  7. Calculates the number of shares to mint based on the deposit, current supply, and vault balance,
 //     rejecting deposits that round down to zero shares before any funds move.
-//  7. Mints the computed amount of shares under the vault’s admin authority.
-//  8. Withdraws the minted shares from the vault to the recipient address.
-//  9. Sends the underlying asset from the recipient to the vault’s marker account.
+//  8. Mints the computed amount of shares under the vault’s admin authority.
+//  9. Withdraws the minted shares from the vault to the recipient address.
 //
-// 10. Emits a SwapIn event with metadata for indexing and audit.
+// 10. Sends the underlying asset from the recipient to the vault’s marker account.
+// 11. Emits a SwapIn event with metadata for indexing and audit.
 //
 // Returns the minted share amount on success, or an error if any step fails.
 func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, asset sdk.Coin) (*sdk.Coin, error) {
@@ -248,6 +249,10 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 
 	if err = vault.ValidateAcceptedCoin(asset); err != nil {
 		return nil, fmt.Errorf("failed to validate asset: %w", err)
+	}
+
+	if err = k.checkDepositDenyList(ctx, recipient, asset.Denom); err != nil {
+		return nil, fmt.Errorf("failed to swap in: %w", err)
 	}
 
 	accept, reason, err := k.AllowSwapInAmount(ctx, asset, *vault)
@@ -296,6 +301,19 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 
 	k.emitEvent(ctx, types.NewEventSwapIn(vaultAddr.String(), recipient.String(), asset, shares))
 	return &shares, nil
+}
+
+// checkDepositDenyList rejects a depositor that is on the deny list of the deposited denom's marker.
+// Deposits move funds with a marker bypass, which skips the deny-list enforcement in SendRestrictionFn.
+func (k *Keeper) checkDepositDenyList(ctx sdk.Context, depositor sdk.AccAddress, denom string) error {
+	markerAddr, err := markertypes.MarkerAddress(denom)
+	if err != nil {
+		return fmt.Errorf("failed to get marker address for %s: %w", denom, err)
+	}
+	if k.MarkerKeeper.IsSendDeny(ctx, markerAddr, depositor) {
+		return fmt.Errorf("%s is on deny list for sending restricted marker %s", depositor, denom)
+	}
+	return nil
 }
 
 // checkPayoutRestrictions performs a pre-flight check to ensure a user is permissioned to receive

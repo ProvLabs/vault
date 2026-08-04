@@ -2,10 +2,8 @@ package keeper_test
 
 import (
 	"fmt"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	attrtypes "github.com/provenance-io/provenance/x/attribute/types"
 )
 
 func (s *TestSuite) TestCheckPayoutRestrictions() {
@@ -56,12 +54,7 @@ func (s *TestSuite) TestCheckPayoutRestrictions() {
 			// 3. Setup Owner (Recipient)
 			ownerAddr := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
 			if tc.hasAttribute {
-				if !s.simApp.NameKeeper.NameExists(s.ctx, requiredAttr) {
-					s.Require().NoError(s.simApp.NameKeeper.SetNameRecord(s.ctx, requiredAttr, s.adminAddr, false))
-				}
-				expireTime := s.ctx.BlockTime().Add(24 * time.Hour)
-				attr := attrtypes.NewAttribute(requiredAttr, ownerAddr.String(), attrtypes.AttributeType_String, []byte("true"), &expireTime, "")
-				s.Require().NoError(s.simApp.AttributeKeeper.SetAttribute(s.ctx, attr, s.adminAddr))
+				s.requireAttribute(ownerAddr, requiredAttr)
 			}
 
 			// 4. Test checkPayoutRestrictions

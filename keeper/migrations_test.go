@@ -181,6 +181,154 @@ func (s *TestSuite) TestKeeper_MigrateFlattenMixedDenomVaults() {
 	})
 }
 
+func (s *TestSuite) TestKeeper_MigrateFlattenLegacyVaultFailingCurrentValidation() {
+	underlying := "ylds"
+	payment := "usdc"
+
+	tests := []struct {
+		name               string
+		corrupt            func(*types.VaultAccount)
+		expForcedErrSubstr string
+		expValidAfterPause bool
+	}{
+		{
+			name: "desired interest rate above the magnitude ceiling",
+			corrupt: func(v *types.VaultAccount) {
+				v.DesiredInterestRate = "200.0"
+				v.CurrentInterestRate = "200.0"
+			},
+			expForcedErrSubstr: "exceeds maximum allowed magnitude",
+			expValidAfterPause: false,
+		},
+		{
+			name: "current interest rate diverging from desired",
+			corrupt: func(v *types.VaultAccount) {
+				v.CurrentInterestRate = "5.0"
+				v.DesiredInterestRate = types.ZeroInterestRate
+			},
+			expForcedErrSubstr: "current interest rate must be zero or equal to desired",
+			expValidAfterPause: true,
+		},
+		{
+			name: "withdrawal delay beyond the two-year cap",
+			corrupt: func(v *types.VaultAccount) {
+				v.WithdrawalDelaySeconds = types.MaxWithdrawalDelay + 1
+			},
+			expForcedErrSubstr: "withdrawal delay cannot exceed",
+			expValidAfterPause: false,
+		},
+		{
+			name: "max swap-in value of zero",
+			corrupt: func(v *types.VaultAccount) {
+				v.MaxSwapInValue = "0"
+			},
+			expForcedErrSubstr: "max value cannot be zero",
+			expValidAfterPause: false,
+		},
+		{
+			name: "AUM fee bips above the ceiling",
+			corrupt: func(v *types.VaultAccount) {
+				v.AumFeeBips = 10_001
+			},
+			expForcedErrSubstr: "AUM fee bips cannot exceed",
+			expValidAfterPause: false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			legacy := s.createLegacyVaultAccount("vshareinvalid", underlying, payment)
+			legacy.NavAuthority = ""
+			legacy.PeriodStart = 1_700_000_000
+			legacy.PeriodTimeout = 1_700_072_000
+			legacy.FeePeriodStart = 1_700_000_000
+			legacy.FeePeriodTimeout = 1_700_072_000
+			tc.corrupt(legacy)
+			s.simApp.AccountKeeper.SetAccount(s.ctx, legacy)
+
+			vaultAddr := legacy.GetAddress()
+			s.Require().NoError(s.simApp.VaultKeeper.PayoutTimeoutQueue.Enqueue(s.ctx, legacy.PeriodTimeout, vaultAddr), "seeding a payout timeout for the invalid legacy vault must succeed")
+			s.Require().NoError(s.simApp.VaultKeeper.FeeTimeoutQueue.Enqueue(s.ctx, legacy.FeePeriodTimeout, vaultAddr), "seeding a fee timeout for the invalid legacy vault must succeed")
+			s.Require().NoError(s.simApp.VaultKeeper.PayoutVerificationSet.Set(s.ctx, vaultAddr), "seeding a payout verification entry for the invalid legacy vault must succeed")
+
+			s.Require().NoError(keeper.NewMigrator(s.simApp.VaultKeeper).Migrate1to2(s.ctx), "a legacy vault failing current validation must never fail the upgrade")
+
+			acct := s.simApp.AccountKeeper.GetAccount(s.ctx, vaultAddr)
+			s.Require().NotNil(acct, "the invalid legacy vault must still be persisted after the migration")
+			got, ok := acct.(*types.VaultAccount)
+			s.Require().True(ok, "account at %s should remain a VaultAccount", vaultAddr)
+
+			s.Equal(underlying, got.PaymentDenom, "the flatten must still be applied to a vault that fails validation")
+			s.Equal(got.Admin, got.NavAuthority, "the nav authority default must still be applied to a vault that fails validation")
+			s.True(got.Paused, "a vault persisted outside current validation must be paused so it cannot transact on questionable configuration")
+			s.Equal(keeper.MigrationInvalidVaultPauseReason, got.PausedReason, "the pause reason must identify the migration as the source")
+			s.Equal(types.ZeroInterestRate, got.CurrentInterestRate, "pausing must zero the current interest rate so the interest math never runs on legacy configuration")
+			s.Equal(sdk.NewCoin(underlying, sdkmath.ZeroInt()), got.PausedBalance, "the migration must snapshot a zero paused balance rather than value an invalid vault")
+			s.Zero(got.PeriodStart, "halting accrual must clear the interest period start")
+			s.Zero(got.PeriodTimeout, "halting accrual must clear the interest period timeout")
+			s.Zero(got.FeePeriodStart, "halting accrual must clear the fee period start")
+			s.Zero(got.FeePeriodTimeout, "halting accrual must clear the fee period timeout")
+
+			s.Equal(tc.expValidAfterPause, got.Validate() == nil, "persisted vault validity should match the expectation for case %q (validate: %v)", tc.name, got.Validate())
+
+			s.Zero(s.countVaultAccrualEntries(vaultAddr), "halting accrual must clear the paused vault from every accrual queue")
+
+			pausedEvent := s.findLastEventVaultPaused()
+			s.Require().NotNil(pausedEvent, "the migration must emit EventVaultPaused for the vault it paused")
+			s.Equal(vaultAddr.String(), pausedEvent.VaultAddress, "the paused event must name the vault the migration paused")
+			s.True(pausedEvent.Forced, "a migration pause is a forced pause")
+			s.Contains(pausedEvent.ForcedError, tc.expForcedErrSubstr, "the paused event must surface the tolerated validation error for case %q", tc.name)
+
+			s.Require().NoError(keeper.NewMigrator(s.simApp.VaultKeeper).Migrate1to2(s.ctx), "re-running the migration over an already-paused vault must still succeed")
+			after := s.simApp.AccountKeeper.GetAccount(s.ctx, vaultAddr).(*types.VaultAccount)
+			s.Equal(*got, *after, "the migration must be idempotent over a vault it already paused")
+		})
+	}
+
+	s.Run("an already-paused vault keeps its frozen valuation snapshot and original reason", func() {
+		s.SetupTest()
+		frozenBalance := sdk.NewCoin(underlying, sdkmath.NewInt(69_526_395))
+		legacy := s.createLegacyVaultAccount("vsharepausedinvalid", underlying, payment)
+		legacy.NavAuthority = ""
+		legacy.Paused = true
+		legacy.PausedReason = "withdraw interest funds"
+		legacy.PausedBalance = frozenBalance
+		legacy.DesiredInterestRate = "200.0"
+		s.simApp.AccountKeeper.SetAccount(s.ctx, legacy)
+
+		s.Require().NoError(keeper.NewMigrator(s.simApp.VaultKeeper).Migrate1to2(s.ctx), "an already-paused invalid vault must not fail the upgrade")
+
+		got := s.simApp.AccountKeeper.GetAccount(s.ctx, legacy.GetAddress()).(*types.VaultAccount)
+		s.True(got.Paused, "an already-paused vault must stay paused")
+		s.Equal(frozenBalance, got.PausedBalance, "the frozen valuation GetTVV reports while paused must survive the migration")
+		s.Equal("withdraw interest funds", got.PausedReason, "the original pause reason must not be overwritten by the migration reason")
+
+		tvv, err := s.simApp.VaultKeeper.GetTVV(s.ctx, *got)
+		s.Require().NoError(err, "valuing a paused vault should not error")
+		s.Equal(frozenBalance.Amount, tvv, "the migrated vault must still report its frozen value rather than zero")
+	})
+
+	s.Run("a vault failing validation does not stop the rest of the migration", func() {
+		s.SetupTest()
+		broken := s.createLegacyVaultAccount("vsharebroken", underlying, payment)
+		broken.DesiredInterestRate = "200.0"
+		s.simApp.AccountKeeper.SetAccount(s.ctx, broken)
+
+		healthy := s.createLegacyVaultAccount("vsharehealthy", underlying, payment)
+		s.simApp.AccountKeeper.SetAccount(s.ctx, healthy)
+
+		s.Require().NoError(keeper.NewMigrator(s.simApp.VaultKeeper).Migrate1to2(s.ctx), "one unmigratable vault must not fail the upgrade for every other vault")
+
+		gotBroken := s.simApp.AccountKeeper.GetAccount(s.ctx, broken.GetAddress()).(*types.VaultAccount)
+		s.True(gotBroken.Paused, "the vault failing validation should be paused")
+
+		gotHealthy := s.simApp.AccountKeeper.GetAccount(s.ctx, healthy.GetAddress()).(*types.VaultAccount)
+		s.Equal(underlying, gotHealthy.PaymentDenom, "a healthy vault must still be flattened alongside one that fails validation")
+		s.False(gotHealthy.Paused, "a healthy vault must not be paused by the migration")
+	})
+}
+
 func (s *TestSuite) TestVaultModule_RunMigrations() {
 	underlying := "ylds"
 	payment := "usdc"

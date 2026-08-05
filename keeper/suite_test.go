@@ -253,6 +253,36 @@ func (s *TestSuite) countPayoutVerificationEntries() int {
 	return count
 }
 
+// countVaultAccrualEntries returns how many accrual records a vault still holds across the
+// payout timeout queue, the fee timeout queue, and the payout verification set. It is the
+// observable signal that haltVaultAccrual removed a vault from the per-block work budgets.
+func (s *TestSuite) countVaultAccrualEntries(vaultAddr sdk.AccAddress) int {
+	count := 0
+	err := s.k.PayoutTimeoutQueue.Walk(s.ctx, func(_ uint64, addr sdk.AccAddress) (bool, error) {
+		if addr.Equals(vaultAddr) {
+			count++
+		}
+		return false, nil
+	})
+	s.Require().NoError(err, "walking the payout timeout queue should not error")
+
+	err = s.k.FeeTimeoutQueue.Walk(s.ctx, func(_ uint64, addr sdk.AccAddress) (bool, error) {
+		if addr.Equals(vaultAddr) {
+			count++
+		}
+		return false, nil
+	})
+	s.Require().NoError(err, "walking the fee timeout queue should not error")
+
+	hasVerification, err := s.k.PayoutVerificationSet.Has(s.ctx, vaultAddr)
+	s.Require().NoError(err, "reading the payout verification set should not error")
+	if hasVerification {
+		count++
+	}
+
+	return count
+}
+
 // countPendingSwapOuts returns the number of entries in the PendingSwapOutQueue.
 func (s *TestSuite) countPendingSwapOuts() int {
 	count := 0

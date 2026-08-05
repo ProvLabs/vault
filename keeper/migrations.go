@@ -14,6 +14,11 @@ import (
 	markertypes "github.com/provenance-io/provenance/x/marker/types"
 )
 
+// migrationInvalidVaultPauseReason is the stable PausedReason recorded for a legacy vault
+// the v1->v2 flatten could not persist through validation, so an operator can find every
+// vault whose configuration an admin must correct before unpausing.
+const migrationInvalidVaultPauseReason = "paused by v1->v2 migration: legacy configuration fails current validation"
+
 // migrateFlattenMixedDenomVaults rewrites all vault state so every vault is
 // strictly single-denom on its underlying asset. Mixed-denom vaults (a payment
 // denom distinct from the underlying) predate the single-denom restriction; the
@@ -44,6 +49,11 @@ import (
 // vault's underlying asset, so queued payouts settle in the only denom the
 // flattened vault can redeem.
 //
+// No step fails over a single vault, since aborting RunMigrations halts every node
+// at the upgrade height: an unpriceable fee is zeroed, an orphaned queue entry is
+// skipped, and persistFlattenedVault pauses rather than rejects a vault that no
+// longer satisfies the current validation.
+//
 // The migration is idempotent: already-flattened vaults and conforming queue
 // entries are left untouched.
 func (k Keeper) migrateFlattenMixedDenomVaults(ctx sdk.Context) error {
@@ -72,9 +82,7 @@ func (k Keeper) migrateFlattenMixedDenomVaults(ctx sdk.Context) error {
 		changed = k.normalizeOutstandingAumFee(ctx, vault) || changed
 
 		if changed {
-			if err := k.SetVaultAccount(ctx, vault); err != nil {
-				return fmt.Errorf("failed to persist flattened vault %s: %w", vault.Address, err)
-			}
+			k.persistFlattenedVault(ctx, vault)
 		}
 	}
 
@@ -83,6 +91,54 @@ func (k Keeper) migrateFlattenMixedDenomVaults(ctx sdk.Context) error {
 	}
 
 	return nil
+}
+
+// persistFlattenedVault writes a vault the flatten step modified. A legacy vault written
+// under looser v1 rules may hold a field today's validation rejects, so rather than fail
+// the upgrade it is paused — zeroing the current interest rate and clearing its queue
+// entries so the questionable configuration never reaches the interest math — and then
+// persisted, falling back to the unvalidated SetAccount like forcePauseVault does. The
+// tolerated error rides out on EventVaultPaused.forced_error for an admin to correct.
+//
+// An already-paused vault keeps its frozen PausedBalance and original reason
+func (k Keeper) persistFlattenedVault(ctx sdk.Context, vault *types.VaultAccount) {
+	validationErr := k.SetVaultAccount(ctx, vault)
+	if validationErr == nil {
+		return
+	}
+
+	k.getLogger(ctx).Error("legacy vault fails current validation; pausing it instead of failing the upgrade",
+		"vault", vault.Address,
+		"err", validationErr,
+	)
+
+	reason := migrationInvalidVaultPauseReason
+	pausedBalance := sdk.NewCoin(vault.UnderlyingAsset, math.ZeroInt())
+	if vault.Paused {
+		reason = vault.PausedReason
+		if !vault.PausedBalance.Amount.IsNil() {
+			pausedBalance = vault.PausedBalance
+		}
+	}
+
+	k.applyPausedState(ctx, vault, reason, pausedBalance)
+
+	if err := k.haltVaultAccrual(ctx, vault); err != nil {
+		k.getLogger(ctx).Error("failed to halt accrual for invalid legacy vault; queue entries may remain",
+			"vault", vault.Address,
+			"err", err,
+		)
+	}
+
+	if err := k.SetVaultAccount(ctx, vault); err != nil {
+		k.getLogger(ctx).Error("paused legacy vault still fails validation; persisting without validation",
+			"vault", vault.Address,
+			"err", err,
+		)
+		k.AuthKeeper.SetAccount(ctx, vault)
+	}
+
+	k.emitEvent(ctx, types.NewEventVaultPaused(vault.Address, vault.Address, vault.PausedReason, vault.PausedBalance, true, validationErr.Error()))
 }
 
 // normalizeOutstandingAumFee re-denominates a vault's OutstandingAumFee into the

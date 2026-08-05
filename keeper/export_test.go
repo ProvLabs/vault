@@ -98,6 +98,10 @@ func (k Keeper) TestAccessor_setShareDenomNAV(t *testing.T, ctx context.Context,
 // assert the scaled-volume behavior against the real constant rather than a duplicated literal.
 var NavReferenceVolume = navReferenceVolume
 
+// MigrationInvalidVaultPauseReason exposes the unexported migrationInvalidVaultPauseReason so
+// migration tests assert against the real constant rather than a duplicated literal.
+var MigrationInvalidVaultPauseReason = migrationInvalidVaultPauseReason
+
 // TestAccessor_publishShareNav exposes this keeper's publishShareNav function for unit tests.
 func (k Keeper) TestAccessor_publishShareNav(t *testing.T, ctx context.Context, vault *types.VaultAccount) error {
 	t.Helper()

@@ -87,8 +87,8 @@ func (m MsgCreateVaultRequest) ValidateBasic() error {
 		return fmt.Errorf("payment denom is deprecated: vaults are single-denom, so payment denom (%q) must be empty or equal underlying asset (%q)", m.PaymentDenom, m.UnderlyingAsset)
 	}
 
-	if m.WithdrawalDelaySeconds > MaxWithdrawalDelay {
-		return fmt.Errorf("withdrawal delay cannot exceed %d seconds", MaxWithdrawalDelay)
+	if err := ValidateWithdrawalDelay(m.WithdrawalDelaySeconds); err != nil {
+		return err
 	}
 
 	if err := ValidateSwapLimits(m.MinSwapInValue, m.MaxSwapInValue); err != nil {
@@ -252,8 +252,8 @@ func (m MsgUpdateWithdrawalDelayRequest) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
 		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
 	}
-	if m.WithdrawalDelaySeconds > MaxWithdrawalDelay {
-		return fmt.Errorf("withdrawal delay cannot exceed %d seconds", MaxWithdrawalDelay)
+	if err := ValidateWithdrawalDelay(m.WithdrawalDelaySeconds); err != nil {
+		return err
 	}
 	return nil
 }

@@ -374,11 +374,14 @@ func (k *Keeper) SwapOut(ctx sdk.Context, vaultAddr, owner sdk.AccAddress, share
 		return 0, fmt.Errorf("failed to check payout restrictions: %w", err)
 	}
 
+	payoutTime, err := vault.SwapOutPayoutTime(ctx.BlockTime().Unix())
+	if err != nil {
+		return 0, fmt.Errorf("failed to determine swap out payout time: %w", err)
+	}
+
 	if err = k.BankKeeper.SendCoins(ctx, owner, vault.GetAddress(), sdk.NewCoins(shares)); err != nil {
 		return 0, fmt.Errorf("failed to escrow shares: %w", err)
 	}
-
-	payoutTime := ctx.BlockTime().Unix() + int64(vault.WithdrawalDelaySeconds) //nolint:gosec // G115: WithdrawalDelaySeconds is validated <= MaxWithdrawalDelay.
 
 	pendingReq := types.NewPendingSwapOut(owner, vaultAddr, shares, vault.UnderlyingAsset)
 	requestID, err := k.PendingSwapOutQueue.Enqueue(ctx, payoutTime, &pendingReq)

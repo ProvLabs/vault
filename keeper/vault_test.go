@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	stdmath "math"
 	"time"
 
 	"cosmossdk.io/math"
@@ -969,4 +970,98 @@ func (s *TestSuite) TestSetWithdrawalDelay() {
 
 	evs := s.ctx.EventManager().Events()
 	s.Require().Equal(normalizeEvents(expectedEvents), normalizeEvents(evs), "events should match expected EventWithdrawalDelayUpdated")
+}
+
+func (s *TestSuite) TestSetWithdrawalDelay_RejectsDelayAboveMax() {
+	underlyingDenom := "delayunder"
+	shareDenom := "delayshare"
+	vault := s.setupBaseVault(underlyingDenom, shareDenom)
+	vaultAddr := vault.GetAddress()
+
+	err := s.k.SetWithdrawalDelay(s.ctx, vault, types.MaxWithdrawalDelay+1, s.adminAddr.String())
+	s.Require().Error(err, "SetWithdrawalDelay should reject a delay above MaxWithdrawalDelay")
+	s.Require().ErrorContains(err, fmt.Sprintf("withdrawal delay cannot exceed %d seconds", types.MaxWithdrawalDelay),
+		"error should name the withdrawal delay bound")
+
+	persisted, err := s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "GetVault should succeed after the rejected update")
+	s.Require().Equal(uint64(0), persisted.WithdrawalDelaySeconds, "the rejected delay must not be persisted")
+}
+
+func (s *TestSuite) TestSetVaultAccount_RejectsWithdrawalDelayAboveMax() {
+	underlyingDenom := "genesisunder"
+	shareDenom := "genesisshare"
+	vault := s.setupBaseVault(underlyingDenom, shareDenom)
+
+	tests := []struct {
+		name         string
+		delaySeconds uint64
+		expectedErr  string
+	}{
+		{
+			name:         "delay at the maximum is accepted",
+			delaySeconds: types.MaxWithdrawalDelay,
+		},
+		{
+			name:         "delay one second above the maximum is rejected",
+			delaySeconds: types.MaxWithdrawalDelay + 1,
+			expectedErr:  fmt.Sprintf("withdrawal delay cannot exceed %d seconds", types.MaxWithdrawalDelay),
+		},
+		{
+			name:         "MaxUint64 delay is rejected before it can truncate to a negative queue key",
+			delaySeconds: stdmath.MaxUint64,
+			expectedErr:  fmt.Sprintf("withdrawal delay cannot exceed %d seconds", types.MaxWithdrawalDelay),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			candidate := vault.Clone()
+			candidate.WithdrawalDelaySeconds = tc.delaySeconds
+
+			err := s.k.SetVaultAccount(s.ctx, candidate)
+			if tc.expectedErr == "" {
+				s.Require().NoError(err, "SetVaultAccount should accept a delay of %d seconds", tc.delaySeconds)
+				return
+			}
+			s.Require().Error(err, "SetVaultAccount should reject a delay of %d seconds", tc.delaySeconds)
+			s.Require().ErrorContains(err, tc.expectedErr, "error should name the withdrawal delay bound")
+		})
+	}
+}
+
+func (s *TestSuite) TestSwapOut_FailsWhenPersistedWithdrawalDelayExceedsMax() {
+	underlyingDenom := "wdgu"
+	shareDenom := "vaultwdgu"
+	blockTime := time.Now().UTC()
+	s.ctx = s.ctx.WithBlockTime(blockTime)
+
+	vault := s.setupBaseVault(underlyingDenom, shareDenom)
+	vaultAddr := vault.GetAddress()
+
+	redeemer := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, redeemer, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1_000_000))),
+		"funding the redeemer with underlying should succeed")
+	_, err := s.k.SwapIn(s.ctx, vaultAddr, redeemer, sdk.NewInt64Coin(underlyingDenom, 1_000_000))
+	s.Require().NoError(err, "swap-in should succeed before the delay is tampered with")
+
+	vault, err = s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "GetVault should succeed after swap-in")
+	vault.WithdrawalDelaySeconds = stdmath.MaxUint64
+	s.k.AuthKeeper.SetAccount(s.ctx, vault)
+
+	shares := s.simApp.BankKeeper.GetBalance(s.ctx, redeemer, shareDenom).Amount
+	_, err = s.k.SwapOut(s.ctx, vaultAddr, redeemer, sdk.NewCoin(shareDenom, shares))
+	s.Require().Error(err, "SwapOut must refuse a vault whose persisted withdrawal delay exceeds MaxWithdrawalDelay")
+	s.Require().ErrorContains(err, fmt.Sprintf("withdrawal delay cannot exceed %d seconds", types.MaxWithdrawalDelay),
+		"error should name the withdrawal delay bound")
+
+	s.assertBalance(redeemer, shareDenom, shares)
+	s.assertBalance(vaultAddr, shareDenom, math.ZeroInt())
+
+	before := s.simApp.BankKeeper.GetBalance(s.ctx, redeemer, underlyingDenom).Amount
+	s.Require().NoError(s.k.TestAccessor_processPendingSwapOuts(s.T(), s.ctx, keeper.MaxSwapOutBatchSize),
+		"processing pending swap-outs should not fail")
+	after := s.simApp.BankKeeper.GetBalance(s.ctx, redeemer, underlyingDenom).Amount
+	s.Require().Equal(before, after, "nothing may pay out in the requesting block when the swap-out was refused")
 }

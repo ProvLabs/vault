@@ -36,6 +36,16 @@ var (
 	maxAbsInterestRateDec = sdkmath.LegacyMustNewDecFromStr(MaxAbsInterestRate)
 )
 
+// ValidateWithdrawalDelay returns an error if delaySeconds exceeds MaxWithdrawalDelay.
+// Every write path must run it: an unbounded delay truncates on conversion to the int64
+// queue key, wrapping the maturity into the past so the swap-out pays out immediately.
+func ValidateWithdrawalDelay(delaySeconds uint64) error {
+	if delaySeconds > MaxWithdrawalDelay {
+		return fmt.Errorf("withdrawal delay cannot exceed %d seconds: %d", MaxWithdrawalDelay, delaySeconds)
+	}
+	return nil
+}
+
 // ValidateInterestRateMagnitude returns an error if the absolute value of rate
 // exceeds the MaxAbsInterestRate ceiling. The check is symmetric: a large negative
 // rate overflows the e^(rt) series exactly as a large positive one does.
@@ -285,6 +295,10 @@ func (v VaultAccount) Validate() error {
 		return fmt.Errorf("AUM fee bips cannot exceed 10,000: %d", v.AumFeeBips)
 	}
 
+	if err := ValidateWithdrawalDelay(v.WithdrawalDelaySeconds); err != nil {
+		return err
+	}
+
 	if v.OutstandingAumFee.Amount.IsNil() {
 		return fmt.Errorf("outstanding AUM fee amount cannot be nil; use a zero coin of the underlying asset %q", v.UnderlyingAsset)
 	}
@@ -384,6 +398,21 @@ func (v *VaultAccount) ValidateAcceptedCoin(c sdk.Coin) error {
 		return fmt.Errorf("amount must be greater than zero")
 	}
 	return v.ValidateAcceptedDenom(c.Denom)
+}
+
+// SwapOutPayoutTime returns the unix timestamp at which a swap-out requested at blockTime
+// becomes payable. It re-validates the delay and checks the addition so a vault whose delay
+// slipped past MaxWithdrawalDelay fails the swap-out instead of maturing in the past.
+func (v VaultAccount) SwapOutPayoutTime(blockTime int64) (int64, error) {
+	if err := ValidateWithdrawalDelay(v.WithdrawalDelaySeconds); err != nil {
+		return 0, err
+	}
+	delay := int64(v.WithdrawalDelaySeconds) //nolint:gosec // G115: ValidateWithdrawalDelay bounds the delay by MaxWithdrawalDelay, far below the int64 ceiling.
+	payoutTime := blockTime + delay
+	if payoutTime < blockTime {
+		return 0, fmt.Errorf("payout time overflows int64: block time %d plus withdrawal delay %d", blockTime, delay)
+	}
+	return payoutTime, nil
 }
 
 // PrincipalMarkerAddress returns the share-denom marker address that holds the

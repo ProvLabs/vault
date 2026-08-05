@@ -411,6 +411,42 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidPendingSwapOut() {
 	}
 }
 
+func (s *TestSuite) TestVaultGenesis_InitPanicsOnWithdrawalDelayAboveMax() {
+	shareDenom := "vaultshare"
+	underlying := "undercoin"
+	admin := s.adminAddr.String()
+
+	tests := []struct {
+		name         string
+		delaySeconds uint64
+	}{
+		{
+			name:         "one second above the maximum",
+			delaySeconds: types.MaxWithdrawalDelay + 1,
+		},
+		{
+			name:         "MaxUint64 truncates to a negative payout time",
+			delaySeconds: math.MaxUint64,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			vault := makeGenesisVaultAccount(shareDenom, underlying, admin)
+			vault.WithdrawalDelaySeconds = tc.delaySeconds
+			genesis := &types.GenesisState{
+				Params: types.DefaultParams(),
+				Vaults: []types.VaultAccount{vault},
+			}
+
+			expectedPanic := fmt.Sprintf("invalid vault genesis state: invalid vault at index 0: withdrawal delay cannot exceed %d seconds: %d",
+				types.MaxWithdrawalDelay, tc.delaySeconds)
+			s.Require().PanicsWithError(expectedPanic, func() { s.k.InitGenesis(s.ctx, genesis) },
+				"InitGenesis should reject a vault whose withdrawal delay is %d seconds", tc.delaySeconds)
+		})
+	}
+}
+
 func (s *TestSuite) TestVaultGenesis_InitPanicsWhenPayoutTimeoutHasUnknownVault() {
 	badVaultAddr := types.GetVaultAddress("baddenom")
 

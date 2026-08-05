@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"fmt"
+	stdmath "math"
 	"math/big"
 	"testing"
 
@@ -728,6 +729,51 @@ func TestVaultAccount_Validate(t *testing.T) {
 			},
 			expectedErr: "",
 		},
+		{
+			name: "withdrawal delay at the maximum is valid",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:            baseAcc,
+				Admin:                  validAdmin,
+				TotalShares:            sdk.NewInt64Coin(validDenom, 0),
+				UnderlyingAsset:        "uusd",
+				PaymentDenom:           "uusd",
+				CurrentInterestRate:    "0.0",
+				DesiredInterestRate:    "0.0",
+				OutstandingAumFee:      sdk.NewInt64Coin("uusd", 0),
+				WithdrawalDelaySeconds: types.MaxWithdrawalDelay,
+			},
+			expectedErr: "",
+		},
+		{
+			name: "withdrawal delay one second over the maximum",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:            baseAcc,
+				Admin:                  validAdmin,
+				TotalShares:            sdk.NewInt64Coin(validDenom, 0),
+				UnderlyingAsset:        "uusd",
+				PaymentDenom:           "uusd",
+				CurrentInterestRate:    "0.0",
+				DesiredInterestRate:    "0.0",
+				OutstandingAumFee:      sdk.NewInt64Coin("uusd", 0),
+				WithdrawalDelaySeconds: types.MaxWithdrawalDelay + 1,
+			},
+			expectedErr: fmt.Sprintf("withdrawal delay cannot exceed %d seconds", types.MaxWithdrawalDelay),
+		},
+		{
+			name: "withdrawal delay at MaxUint64 truncates to a negative queue key",
+			vaultAccount: types.VaultAccount{
+				BaseAccount:            baseAcc,
+				Admin:                  validAdmin,
+				TotalShares:            sdk.NewInt64Coin(validDenom, 0),
+				UnderlyingAsset:        "uusd",
+				PaymentDenom:           "uusd",
+				CurrentInterestRate:    "0.0",
+				DesiredInterestRate:    "0.0",
+				OutstandingAumFee:      sdk.NewInt64Coin("uusd", 0),
+				WithdrawalDelaySeconds: stdmath.MaxUint64,
+			},
+			expectedErr: fmt.Sprintf("withdrawal delay cannot exceed %d seconds", types.MaxWithdrawalDelay),
+		},
 	}
 
 	for _, tc := range tests {
@@ -1383,6 +1429,122 @@ func TestValidateSwapLimits(t *testing.T) {
 					assert.Contains(t, err.Error(), tt.expectedErr, "Test case %q: error message mismatch; expected it to contain %q, but got %q", tt.name, tt.expectedErr, err.Error())
 				}
 			}
+		})
+	}
+}
+
+func TestValidateWithdrawalDelay(t *testing.T) {
+	tests := []struct {
+		name         string
+		delaySeconds uint64
+		expectedErr  string
+	}{
+		{
+			name:         "zero delay pays out immediately and is allowed",
+			delaySeconds: 0,
+			expectedErr:  "",
+		},
+		{
+			name:         "one second below the maximum",
+			delaySeconds: types.MaxWithdrawalDelay - 1,
+			expectedErr:  "",
+		},
+		{
+			name:         "exactly the maximum",
+			delaySeconds: types.MaxWithdrawalDelay,
+			expectedErr:  "",
+		},
+		{
+			name:         "one second above the maximum",
+			delaySeconds: types.MaxWithdrawalDelay + 1,
+			expectedErr:  fmt.Sprintf("withdrawal delay cannot exceed %d seconds: %d", types.MaxWithdrawalDelay, uint64(types.MaxWithdrawalDelay)+1),
+		},
+		{
+			name:         "at the int64 ceiling",
+			delaySeconds: uint64(stdmath.MaxInt64),
+			expectedErr:  fmt.Sprintf("withdrawal delay cannot exceed %d seconds", types.MaxWithdrawalDelay),
+		},
+		{
+			name:         "above the int64 ceiling where the conversion wraps negative",
+			delaySeconds: stdmath.MaxUint64,
+			expectedErr:  fmt.Sprintf("withdrawal delay cannot exceed %d seconds", types.MaxWithdrawalDelay),
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := types.ValidateWithdrawalDelay(tc.delaySeconds)
+			if tc.expectedErr == "" {
+				require.NoError(t, err, "expected delay %d to be accepted", tc.delaySeconds)
+			} else {
+				require.Error(t, err, "expected delay %d to be rejected", tc.delaySeconds)
+				require.Contains(t, err.Error(), tc.expectedErr, "error message mismatch for delay %d", tc.delaySeconds)
+			}
+		})
+	}
+}
+
+func TestVaultAccount_SwapOutPayoutTime(t *testing.T) {
+	const blockTime int64 = 1_704_067_200
+
+	tests := []struct {
+		name               string
+		blockTime          int64
+		delaySeconds       uint64
+		expectedPayoutTime int64
+		expectedErr        string
+	}{
+		{
+			name:               "zero delay matures at the block time",
+			blockTime:          blockTime,
+			delaySeconds:       0,
+			expectedPayoutTime: blockTime,
+		},
+		{
+			name:               "one day delay matures one day out",
+			blockTime:          blockTime,
+			delaySeconds:       86_400,
+			expectedPayoutTime: blockTime + 86_400,
+		},
+		{
+			name:               "maximum delay matures two years out",
+			blockTime:          blockTime,
+			delaySeconds:       types.MaxWithdrawalDelay,
+			expectedPayoutTime: blockTime + types.MaxWithdrawalDelay,
+		},
+		{
+			name:         "delay above the maximum is rejected instead of wrapping",
+			blockTime:    blockTime,
+			delaySeconds: types.MaxWithdrawalDelay + 1,
+			expectedErr:  fmt.Sprintf("withdrawal delay cannot exceed %d seconds", types.MaxWithdrawalDelay),
+		},
+		{
+			name:         "MaxUint64 delay is rejected rather than maturing before the block time",
+			blockTime:    blockTime,
+			delaySeconds: stdmath.MaxUint64,
+			expectedErr:  fmt.Sprintf("withdrawal delay cannot exceed %d seconds", types.MaxWithdrawalDelay),
+		},
+		{
+			name:         "block time near the int64 ceiling overflows the addition",
+			blockTime:    stdmath.MaxInt64 - 1,
+			delaySeconds: 2,
+			expectedErr:  "payout time overflows int64",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			vault := types.VaultAccount{WithdrawalDelaySeconds: tc.delaySeconds}
+			payoutTime, err := vault.SwapOutPayoutTime(tc.blockTime)
+			if tc.expectedErr != "" {
+				require.Error(t, err, "expected an error for delay %d at block time %d", tc.delaySeconds, tc.blockTime)
+				require.Contains(t, err.Error(), tc.expectedErr, "error message mismatch for delay %d", tc.delaySeconds)
+				require.Zero(t, payoutTime, "payout time must be zero when the computation fails")
+				return
+			}
+			require.NoError(t, err, "expected no error for delay %d at block time %d", tc.delaySeconds, tc.blockTime)
+			require.Equal(t, tc.expectedPayoutTime, payoutTime, "payout time mismatch for delay %d at block time %d", tc.delaySeconds, tc.blockTime)
+			require.GreaterOrEqual(t, payoutTime, tc.blockTime, "payout time must never land before the block time")
 		})
 	}
 }

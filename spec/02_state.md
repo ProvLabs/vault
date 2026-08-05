@@ -35,7 +35,7 @@ Each vault is an `x/auth` account implementing `VaultAccountI`. The canonical re
 
 - Admin address, share denom, underlying asset, deprecated **payment denom** (inert; always equal to the underlying asset — enforced at creation, by validation, and by the v1→v2 migration for pre-existing vaults)  
 - Interest configuration: `CurrentInterestRate`, `DesiredInterestRate`, optional `MinInterestRate`/`MaxInterestRate` bounds  
-- Swap toggles, `WithdrawalDelaySeconds`, pause flags/reason and `PausedBalance` snapshot  
+- Swap toggles, `WithdrawalDelaySeconds` (capped at `MaxWithdrawalDelay`, two years, by account validation so genesis import and migration cannot exceed the bound the message handlers enforce), pause flags/reason and `PausedBalance` snapshot  
 - **Swap Limits:** `min_swap_in_value`, `min_swap_out_value`, `max_swap_in_value`, and `max_swap_out_value` (measured in underlying asset)
 - **Total supply-of-record:** `total_shares` (authoritative across chains; includes locally and externally held shares)  
 - **Bridging controls:** `bridge_address` (the sole authorized external address) and `bridge_enabled` (feature gate)

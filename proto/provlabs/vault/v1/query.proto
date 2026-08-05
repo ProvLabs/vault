@@ -177,7 +177,7 @@ message QueryEstimateSwapInResponse {
 message QueryEstimateSwapOutRequest {
   // vault_address is the bech32 address of the vault to query.
   string vault_address = 1;
-  // shares is the amount of shares to swap out.
+  // shares is the amount of shares to swap out, as a non-negative integer of at most 80 characters.
   string shares = 2;
   // redeem_denom previously selected the payout denom to estimate. The estimate
   // is always in the vault's underlying_asset; if set, this must equal

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	stdmath "math"
 	"math/big"
+	"strings"
 	"testing"
 
 	"cosmossdk.io/math"
@@ -1415,6 +1416,24 @@ func TestValidateSwapLimits(t *testing.T) {
 			min:         "100",
 			max:         "0",
 			expectedErr: "max value cannot be zero",
+		},
+		{
+			name:        "valid - min at the largest representable magnitude",
+			min:         "1" + strings.Repeat("0", 77),
+			max:         "",
+			expectedErr: "",
+		},
+		{
+			name:        "invalid - min over the integer string length bound",
+			min:         strings.Repeat("9", types.MaxIntStringLength+1),
+			max:         "",
+			expectedErr: "invalid min value: must be at most 80 characters",
+		},
+		{
+			name:        "invalid - max over the integer string length bound",
+			min:         "",
+			max:         strings.Repeat("9", types.MaxIntStringLength+1),
+			expectedErr: "invalid max value: must be at most 80 characters",
 		},
 	}
 

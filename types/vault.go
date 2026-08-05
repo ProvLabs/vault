@@ -147,6 +147,9 @@ func (v VaultAccount) Clone() *VaultAccount {
 func ValidateSwapLimits(minStr, maxStr string) error {
 	var minVal sdkmath.Int
 	if minStr != "" {
+		if err := ValidateIntStringLength("min value", minStr); err != nil {
+			return err
+		}
 		var ok bool
 		minVal, ok = sdkmath.NewIntFromString(minStr)
 		if !ok {
@@ -160,6 +163,9 @@ func ValidateSwapLimits(minStr, maxStr string) error {
 	}
 
 	if maxStr != "" {
+		if err := ValidateIntStringLength("max value", maxStr); err != nil {
+			return err
+		}
 		maxVal, ok := sdkmath.NewIntFromString(maxStr)
 		if !ok {
 			return fmt.Errorf("invalid max value: %s", maxStr)

@@ -183,6 +183,17 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 		return nil, status.Errorf(codes.InvalidArgument, "invalid vault_address: %v", err)
 	}
 
+	if lenErr := types.ValidateIntStringLength("shares amount", req.Shares); lenErr != nil {
+		return nil, status.Error(codes.InvalidArgument, lenErr.Error())
+	}
+	shares, ok := math.NewIntFromString(req.Shares)
+	if !ok {
+		return nil, status.Error(codes.InvalidArgument, "invalid shares amount: must be a valid integer")
+	}
+	if shares.IsNegative() {
+		return nil, status.Error(codes.InvalidArgument, "invalid shares amount: must not be negative")
+	}
+
 	vault, err := k.GetVault(ctx, vaultAddr)
 	if err != nil || vault == nil {
 		return nil, status.Errorf(codes.NotFound, "vault with address %q not found", req.VaultAddress)
@@ -201,14 +212,6 @@ func (k queryServer) EstimateSwapOut(goCtx context.Context, req *types.QueryEsti
 	estimatedTVV, err := k.EstimateTotalVaultValue(ctx, vault)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to estimate total assets: %v", err)
-	}
-
-	shares, ok := math.NewIntFromString(req.Shares)
-	if !ok {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid shares amount \"%s\" : must be a valid integer", req.Shares)
-	}
-	if shares.IsNegative() {
-		return nil, status.Errorf(codes.InvalidArgument, "invalid shares amount \"%s\" : must not be negative", req.Shares)
 	}
 
 	estimatedPayout, err := utils.CalculateRedeemProRata(

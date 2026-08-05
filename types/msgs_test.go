@@ -581,6 +581,15 @@ func TestMsgUpdateMinInterestRateRequest_ValidateBasic(t *testing.T) {
 			},
 			expectedErr: fmt.Errorf("invalid min rate: %q", "abc"),
 		},
+		{
+			name: "over-length min rate is rejected without echoing the input",
+			msg: types.MsgUpdateMinInterestRateRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				MinRate:      strings.Repeat("9", types.MaxDecStringLength+1),
+			},
+			expectedErr: fmt.Errorf("invalid min rate: must be at most %d characters", types.MaxDecStringLength),
+		},
 	}
 
 	for _, tc := range tests {
@@ -649,6 +658,15 @@ func TestMsgUpdateMaxInterestRateRequest_ValidateBasic(t *testing.T) {
 			},
 			expectedErr: fmt.Errorf("invalid max rate: %q", "notanumber"),
 		},
+		{
+			name: "over-length max rate is rejected without echoing the input",
+			msg: types.MsgUpdateMaxInterestRateRequest{
+				Admin:        addr,
+				VaultAddress: addr,
+				MaxRate:      strings.Repeat("9", types.MaxDecStringLength+1),
+			},
+			expectedErr: fmt.Errorf("invalid max rate: must be at most %d characters", types.MaxDecStringLength),
+		},
 	}
 
 	for _, tc := range tests {
@@ -707,6 +725,15 @@ func TestMsgUpdateInterestRateRequest_ValidateBasic(t *testing.T) {
 				NewRate:      "bad",
 			},
 			expectedErr: fmt.Errorf("invalid interest rate: %q", "bad"),
+		},
+		{
+			name: "over-length new rate is rejected without echoing the input",
+			msg: types.MsgUpdateInterestRateRequest{
+				Authority:    addr,
+				VaultAddress: addr,
+				NewRate:      strings.Repeat("9", types.MaxDecStringLength+1),
+			},
+			expectedErr: fmt.Errorf("invalid interest rate: must be at most %d characters", types.MaxDecStringLength),
 		},
 	}
 

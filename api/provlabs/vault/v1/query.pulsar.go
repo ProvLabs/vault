@@ -13131,7 +13131,7 @@ type QueryEstimateSwapOutRequest struct {
 
 	// vault_address is the bech32 address of the vault to query.
 	VaultAddress string `protobuf:"bytes,1,opt,name=vault_address,json=vaultAddress,proto3" json:"vault_address,omitempty"`
-	// shares is the amount of shares to swap out.
+	// shares is the amount of shares to swap out, as a non-negative integer of at most 80 characters.
 	Shares string `protobuf:"bytes,2,opt,name=shares,proto3" json:"shares,omitempty"`
 	// redeem_denom previously selected the payout denom to estimate. The estimate
 	// is always in the vault's underlying_asset; if set, this must equal

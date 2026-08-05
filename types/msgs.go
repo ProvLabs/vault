@@ -207,6 +207,9 @@ func (m MsgUpdateMinInterestRateRequest) ValidateBasic() error {
 		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
 	}
 	if m.MinRate != "" {
+		if err := ValidateDecStringLength("min rate", m.MinRate); err != nil {
+			return err
+		}
 		if _, err := sdkmath.LegacyNewDecFromStr(m.MinRate); err != nil {
 			return fmt.Errorf("invalid min rate: %q: %w", m.MinRate, err)
 		}
@@ -223,6 +226,9 @@ func (m MsgUpdateMaxInterestRateRequest) ValidateBasic() error {
 		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
 	}
 	if m.MaxRate != "" {
+		if err := ValidateDecStringLength("max rate", m.MaxRate); err != nil {
+			return err
+		}
 		if _, err := sdkmath.LegacyNewDecFromStr(m.MaxRate); err != nil {
 			return fmt.Errorf("invalid max rate: %q: %w", m.MaxRate, err)
 		}
@@ -237,6 +243,9 @@ func (m MsgUpdateInterestRateRequest) ValidateBasic() error {
 	}
 	if _, err := sdk.AccAddressFromBech32(m.VaultAddress); err != nil {
 		return fmt.Errorf("invalid vault address: %q: %w", m.VaultAddress, err)
+	}
+	if err := ValidateDecStringLength("interest rate", m.NewRate); err != nil {
+		return err
 	}
 	if _, err := sdkmath.LegacyNewDecFromStr(m.NewRate); err != nil {
 		return fmt.Errorf("invalid interest rate: %q: %w", m.NewRate, err)

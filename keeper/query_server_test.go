@@ -477,6 +477,10 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 	vaultAddr := types.GetVaultAddress(shareDenom)
 	sharesToSwap := sdk.NewCoin(shareDenom, math.NewInt(100).Mul(utils.ShareScalar))
 
+	reflectableSharesInput := "not-a-number-<echo-probe>"
+	maxLengthSharesInput := strings.Repeat("9", types.MaxIntStringLength)
+	overLengthSharesInput := strings.Repeat("9", types.MaxIntStringLength+1)
+
 	setupVault := func() {
 		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
 		s.CreateVaultWithParams(shareDenom, underlyingDenom)
@@ -575,9 +579,21 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 			ExpectedErrSubstrs: []string{"invalid vault_address", "decoding bech32 failed"},
 		},
 		{
-			Name:               "vault not found",
-			Req:                &types.QueryEstimateSwapOutRequest{VaultAddress: vaultAddr.String()},
+			Name: "vault not found",
+			Req: &types.QueryEstimateSwapOutRequest{
+				VaultAddress: vaultAddr.String(),
+				Shares:       sharesToSwap.Amount.String(),
+			},
 			ExpectedErrSubstrs: []string{"vault with address", "not found"},
+		},
+		{
+			Name:  "fails with empty shares string",
+			Setup: setupVault,
+			Req: &types.QueryEstimateSwapOutRequest{
+				VaultAddress: vaultAddr.String(),
+				Shares:       "",
+			},
+			ExpectedErrSubstrs: []string{"invalid shares amount: must be a valid integer", "InvalidArgument"},
 		},
 		{
 			Name:  "fails with incorrect shares string",
@@ -586,7 +602,17 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 				VaultAddress: vaultAddr.String(),
 				Shares:       "bogus",
 			},
-			ExpectedErrSubstrs: []string{"invalid shares amount \"bogus\" : must be a valid integer"},
+			ExpectedErrSubstrs: []string{"invalid shares amount: must be a valid integer", "InvalidArgument"},
+		},
+		{
+			Name:  "shares string is not echoed back to the caller",
+			Setup: setupVault,
+			Req: &types.QueryEstimateSwapOutRequest{
+				VaultAddress: vaultAddr.String(),
+				Shares:       reflectableSharesInput,
+			},
+			ExpectedErrSubstrs:   []string{"invalid shares amount: must be a valid integer", "InvalidArgument"},
+			UnexpectedErrSubstrs: []string{reflectableSharesInput},
 		},
 		{
 			Name:  "fails with negative shares",
@@ -595,7 +621,25 @@ func (s *TestSuite) TestQueryServer_EstimateSwapOut() {
 				VaultAddress: vaultAddr.String(),
 				Shares:       "-100",
 			},
-			ExpectedErrSubstrs: []string{"invalid shares amount \"-100\" : must not be negative", "InvalidArgument"},
+			ExpectedErrSubstrs: []string{"invalid shares amount: must not be negative", "InvalidArgument"},
+		},
+		{
+			Name:  "shares string at the length limit reaches the parse",
+			Setup: setupVault,
+			Req: &types.QueryEstimateSwapOutRequest{
+				VaultAddress: vaultAddr.String(),
+				Shares:       maxLengthSharesInput,
+			},
+			ExpectedErrSubstrs: []string{"invalid shares amount: must be a valid integer", "InvalidArgument"},
+		},
+		{
+			Name: "over-length shares string is rejected before the vault is read",
+			Req: &types.QueryEstimateSwapOutRequest{
+				VaultAddress: vaultAddr.String(),
+				Shares:       overLengthSharesInput,
+			},
+			ExpectedErrSubstrs:   []string{"invalid shares amount: must be at most 80 characters", "InvalidArgument"},
+			UnexpectedErrSubstrs: []string{"vault with address", "not found"},
 		},
 	}
 

@@ -336,6 +336,8 @@ Admin-only. Enables or disables bridge operations for a vault.
 
 Mints local share marker supply to the bridge within capacity (`total_shares - local_supply`) and transfers the minted shares to the bridge address. The mint re-materializes shares that already exist on a remote chain, so it raises local supply toward `total_shares` but does **not** change `total_shares`.
 
+Capacity is computed with a checked subtraction: if state ever violates the `total_shares >= local_supply` invariant (only reachable through a faulty migration or a crafted genesis import), the message fails with a descriptive invariant error instead of panicking.
+
 * **Request:** `MsgBridgeMintSharesRequest { bridge, vault_address, shares }`
 * **Response:** `MsgBridgeMintSharesResponse {}`
 

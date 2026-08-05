@@ -41,6 +41,9 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 			if err := v.Validate(); err != nil {
 				panic(err)
 			}
+			if err := k.validateShareSupplyInvariant(ctx, v.Clone()); err != nil {
+				panic(fmt.Errorf("invalid existing vault %s: %w", v.GetAddress(), err))
+			}
 			if err := k.SetVaultLookup(ctx, v.Clone()); err != nil {
 				panic(fmt.Errorf("failed to set vault lookup for existing vault %s: %w", v.GetAddress(), err))
 			}
@@ -49,6 +52,10 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 
 	for i := range genState.Vaults {
 		v := &genState.Vaults[i]
+
+		if err := k.validateShareSupplyInvariant(ctx, v); err != nil {
+			panic(fmt.Errorf("invalid vault %s in genesis: %w", v.Address, err))
+		}
 
 		existing := k.AuthKeeper.GetAccount(ctx, v.GetAddress())
 		if existing != nil {
@@ -140,6 +147,12 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 			panic(fmt.Errorf("failed to import vault nav for %s/%s: %w", entry.VaultAddress, entry.Nav.Denom, err))
 		}
 	}
+}
+
+// validateShareSupplyInvariant returns an error when a vault's total_shares is below the local bank supply of its share denom
+func (k Keeper) validateShareSupplyInvariant(ctx sdk.Context, vault *types.VaultAccount) error {
+	_, err := k.availableBridgeMintCapacity(ctx, vault)
+	return err
 }
 
 // ExportGenesis exports the current state of the vault module.

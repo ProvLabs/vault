@@ -5499,26 +5499,68 @@ func (s *TestSuite) TestMsgServer_BridgeMintShares_ErrorMessages() {
 	bridge := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
 	vaultAddr := types.GetVaultAddress(share)
 
-	setup := func() {
-		s.setupBridgeVault(underlying, share, bridge, math.NewInt(100))
-		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	setupWithTotalSharesAndLocalSupply := func(totalShares, localSupply int64) func() {
+		return func() {
+			s.setupBridgeVault(underlying, share, bridge, math.NewInt(totalShares))
+			if localSupply > 0 {
+				s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vaultAddr, sdk.NewInt64Coin(share, localSupply)),
+					"setup: expected marker mint of %d local share supply to succeed", localSupply)
+			}
+			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+		}
 	}
 
-	tc := msgServerTestCase[types.MsgBridgeMintSharesRequest, any]{
-		name:  "capacity message content",
-		setup: setup,
-		msg: types.MsgBridgeMintSharesRequest{
-			VaultAddress: vaultAddr.String(),
-			Bridge:       bridge.String(),
-			Shares:       sdk.NewInt64Coin(share, 101),
+	tests := []msgServerTestCase[types.MsgBridgeMintSharesRequest, any]{
+		{
+			name:  "requested amount exceeds remaining capacity",
+			setup: setupWithTotalSharesAndLocalSupply(100, 0),
+			msg: types.MsgBridgeMintSharesRequest{
+				VaultAddress: vaultAddr.String(),
+				Bridge:       bridge.String(),
+				Shares:       sdk.NewInt64Coin(share, 101),
+			},
+			expectedErrSubstrs: []string{
+				"mint exceeds capacity",
+				fmt.Sprintf("requested %d", 101),
+				fmt.Sprintf("available %d", 100),
+			},
 		},
-		expectedErrSubstrs: []string{
-			"mint exceeds capacity",
-			fmt.Sprintf("requested %d", 101),
-			fmt.Sprintf("available %d", 100),
+		{
+			name:  "local supply already equals total shares, leaving no capacity",
+			setup: setupWithTotalSharesAndLocalSupply(100, 100),
+			msg: types.MsgBridgeMintSharesRequest{
+				VaultAddress: vaultAddr.String(),
+				Bridge:       bridge.String(),
+				Shares:       sdk.NewInt64Coin(share, 1),
+			},
+			expectedErrSubstrs: []string{
+				"mint exceeds capacity",
+				fmt.Sprintf("requested %d", 1),
+				fmt.Sprintf("available %d", 0),
+			},
+		},
+		{
+			name:  "total shares below local supply returns invariant error instead of panicking",
+			setup: setupWithTotalSharesAndLocalSupply(100, 150),
+			msg: types.MsgBridgeMintSharesRequest{
+				VaultAddress: vaultAddr.String(),
+				Bridge:       bridge.String(),
+				Shares:       sdk.NewInt64Coin(share, 1),
+			},
+			expectedErrSubstrs: []string{
+				"share supply invariant violated",
+				vaultAddr.String(),
+				fmt.Sprintf("total shares %d%s", 100, share),
+				fmt.Sprintf("below local supply %d%s", 150, share),
+			},
 		},
 	}
-	runMsgServerTestCase(s, testDef, tc)
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			runMsgServerTestCase(s, testDef, tc)
+		})
+	}
 }
 
 func (s *TestSuite) TestMsgServer_BridgeBurnShares() {

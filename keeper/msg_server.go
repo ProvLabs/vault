@@ -763,8 +763,10 @@ func (k msgServer) BridgeMintShares(goCtx context.Context, msg *types.MsgBridgeM
 		return nil, fmt.Errorf("mint amount must be positive")
 	}
 
-	currentSupply := k.BankKeeper.GetSupply(ctx, vault.TotalShares.Denom)
-	available := vault.TotalShares.Sub(currentSupply)
+	available, err := k.availableBridgeMintCapacity(ctx, vault)
+	if err != nil {
+		return nil, err
+	}
 	if msg.Shares.Amount.GT(available.Amount) {
 		return nil, fmt.Errorf("mint exceeds capacity: requested %s available %s", msg.Shares.Amount.String(), available.Amount.String())
 	}

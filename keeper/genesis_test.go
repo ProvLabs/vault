@@ -334,6 +334,66 @@ func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidVault() {
 	s.Require().PanicsWithError(expectedPanic, func() { s.k.InitGenesis(s.ctx, genesis) }, "InitGenesis should panic on invalid vault")
 }
 
+func (s *TestSuite) TestVaultGenesis_InitEnforcesTotalSharesAtLeastLocalSupply() {
+	shareDenom := "vaultshare"
+	underlying := "undercoin"
+	admin := s.adminAddr.String()
+	vaultAddr := types.GetVaultAddress(shareDenom)
+	localSupply := int64(150)
+
+	tests := []struct {
+		name          string
+		totalShares   int64
+		expectedPanic string
+	}{
+		{
+			name:        "total shares above local supply leaves mint capacity",
+			totalShares: 200,
+		},
+		{
+			name:        "total shares equal to local supply leaves no mint capacity",
+			totalShares: localSupply,
+		},
+		{
+			name:        "total shares below local supply violates the invariant",
+			totalShares: 100,
+			expectedPanic: fmt.Sprintf("invalid vault %s in genesis: share supply invariant violated for vault %s: total shares %d%s is below local supply %d%s: negative coin amount: -%d%s",
+				vaultAddr, vaultAddr, 100, shareDenom, localSupply, shareDenom, localSupply-100, shareDenom),
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			origCtx := s.ctx
+			defer func() { s.ctx = origCtx }()
+			s.ctx, _ = s.ctx.CacheContext()
+
+			s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(shareDenom, localSupply), s.adminAddr)
+
+			vault := makeGenesisVaultAccount(shareDenom, underlying, admin)
+			vault.TotalShares = sdk.NewInt64Coin(shareDenom, tc.totalShares)
+			genesis := &types.GenesisState{
+				Params: types.DefaultParams(),
+				Vaults: []types.VaultAccount{vault},
+			}
+
+			if tc.expectedPanic != "" {
+				s.Require().PanicsWithError(tc.expectedPanic, func() { s.k.InitGenesis(s.ctx, genesis) },
+					"InitGenesis should reject a vault whose total shares %d is below the local supply %d", tc.totalShares, localSupply)
+				return
+			}
+
+			s.Require().NotPanics(func() { s.k.InitGenesis(s.ctx, genesis) },
+				"InitGenesis should accept a vault whose total shares %d is at least the local supply %d", tc.totalShares, localSupply)
+			imported, err := s.k.GetVault(s.ctx, vaultAddr)
+			s.Require().NoError(err, "failed to read back the imported vault %s", vaultAddr)
+			s.Require().NotNil(imported, "vault %s should exist after InitGenesis", vaultAddr)
+			s.Assert().Equal(sdk.NewInt64Coin(shareDenom, tc.totalShares).String(), imported.TotalShares.String(),
+				"imported vault %s should preserve its genesis total shares", vaultAddr)
+		})
+	}
+}
+
 func (s *TestSuite) TestVaultGenesis_InitPanicsOnInvalidPendingSwapOut() {
 	shareDenom := "vaultshare"
 	underlying := "undercoin"

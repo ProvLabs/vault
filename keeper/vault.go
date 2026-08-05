@@ -120,6 +120,17 @@ func (k Keeper) getVault(ctx sdk.Context, addr sdk.AccAddress) (*types.VaultAcco
 	return vault, nil
 }
 
+// availableBridgeMintCapacity returns the share supply the bridge may still mint locally
+func (k Keeper) availableBridgeMintCapacity(ctx sdk.Context, vault *types.VaultAccount) (sdk.Coin, error) {
+	currentSupply := k.BankKeeper.GetSupply(ctx, vault.TotalShares.Denom)
+	available, err := vault.TotalShares.SafeSub(currentSupply)
+	if err != nil {
+		return sdk.Coin{}, fmt.Errorf("share supply invariant violated for vault %s: total shares %s is below local supply %s: %w",
+			vault.Address, vault.TotalShares, currentSupply, err)
+	}
+	return available, nil
+}
+
 // createVaultAccount creates and stores a new vault account and initializes its fee tracking.
 // It verifies that the vault address is available and not already associated with another account.
 func (k *Keeper) createVaultAccount(ctx sdk.Context, admin, shareDenom, underlyingAsset string, withdrawalDelay uint64, minSwapIn, minSwapOut, maxSwapIn, maxSwapOut string) (*types.VaultAccount, error) {

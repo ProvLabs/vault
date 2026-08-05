@@ -107,7 +107,7 @@ The keeper ties together state management, account operations, marker integratio
 ### Genesis
 - **InitGenesis**: loads vault accounts, queue entries, and validates stored state.
 - **ExportGenesis**: exports all vaults and active queue entries for chain restart or upgrades.
-- **Bridge Fields**: genesis includes `total_shares`, `bridge_address`, and `bridge_enabled`; validation asserts local marker supply does not exceed `total_shares`.
+- **Bridge Fields**: genesis includes `total_shares`, `bridge_address`, and `bridge_enabled`; `InitGenesis` asserts local marker supply does not exceed `total_shares` for every imported vault and fails the import otherwise. `GenesisState.Validate` cannot make this assertion because it has no access to the bank module, so migrations must preserve the relationship themselves.
 - **Asset Manager Field**: genesis includes the optional `asset_manager` field for each vault, which may be empty if not configured.
 
 ### Block Hooks
@@ -125,6 +125,8 @@ Bridging lets vault shares move across chains. The on-chain accounting model and
 - **Bridge ops move the local/remote split; they do not change `total_shares`.** `BridgeMintShares` re-materializes shares that already exist remotely (local supply rises toward `total_shares`); `BridgeBurnShares` reflects shares leaving for a remote chain (local supply falls). Neither mints new supply nor destroys shares — they only shift where existing shares live. This is why `BridgeBurnShares` deliberately does **not** perform the `SafeSub`+persist of `total_shares` that the local redemption path does: a bridged-out share still exists, just elsewhere.
 
 - **Capacity is the only on-chain guardrail.** A mint is rejected when it would push local supply above `total_shares` (`available = total_shares - local_supply`). A burn lowering local supply re-widens that capacity by exactly the burned amount, so a later mint can bring those same shares back. Consequently, NAV per share (`Net TVV / total_shares`) is invariant across bridge mint/burn — they cannot dilute holders.
+
+- **Invariant: `total_shares >= local supply`.** Every path that changes both quantities keeps them ordered this way — `SwapIn` and the redemption payout path move them together, and `BridgeBurnShares` only lowers local supply — so no user transaction can invert them. The relationship is nevertheless an explicit obligation for **migrations and genesis imports**: a migration that lowers `total_shares` below local supply, or a crafted genesis file that does the same, would leave capacity uncomputable for that vault. `BridgeMintShares` therefore computes capacity with a checked subtraction and returns a descriptive error rather than panicking, and `InitGenesis` rejects any imported vault that violates the ordering.
 
 - **Trust boundary (accepted assumption).** Both handlers are gated solely on the configured `bridge_address`; there is **no on-chain reconciliation** that a local mint corresponds to a genuine remote burn (or vice versa). Keeping the local/remote split honest is the responsibility of the off-chain bridge operator. A compromised or dishonest bridge key could mint local supply up to `total_shares` without real remote backing; this is bounded by `total_shares` (it can never inflate beyond the supply-of-record or move NAV per share) and is an accepted operator-trust assumption, not an on-chain accounting flaw. Admins can disable bridging (`bridge_enabled`) or rotate `bridge_address` to contain a compromised operator.
 

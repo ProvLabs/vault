@@ -154,7 +154,7 @@ Given a **share denom**, the corresponding vault account address is derived dete
 ## Genesis Notes
 
 The module defines a minimal `GenesisState` with validation and relies on import/export logic to include **vault accounts** (from `x/auth`) and active **queue entries** (timeouts and pending swap-outs). It also carries the module **Params** (`tech_fee_address`, `default_aum_fee_bips`, `gov_only_vault_creation`); an omitted `tech_fee_address` falls back to the chain-specific default, and the other two take their genesis values as given, so a chain that wants governance-gated vault creation must set `gov_only_vault_creation` in genesis or with an `UpdateParams` proposal.  
-Genesis must preserve `total_shares`, `bridge_address`, and `bridge_enabled`, and validate that local marker supply does not exceed `total_shares`.  
+Genesis must preserve `total_shares`, `bridge_address`, and `bridge_enabled`. `InitGenesis` enforces the `total_shares >= local marker supply` invariant per vault — the check lives there, not in `GenesisState.Validate`, because only the keeper can read x/bank's supply — and panics on an import that violates it. Migrations carry the same obligation: they must never lower `total_shares` below the local supply of the share denom.  
 Genesis validation also enforces the single-denom model: every NAV entry's `price` denom must equal the owning vault's underlying asset, and `VaultAccount` validation requires `payment_denom` to be empty or equal to the underlying asset.
 
 ### State Migration (v1 → v2)

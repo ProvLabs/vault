@@ -1904,6 +1904,187 @@ func (s *TestSuite) TestKeeper_publishShareNav_NAVLifecycle() {
 	}
 }
 
+func (s *TestSuite) TestKeeper_ReconcileVault_RefreshesShareNavMirror() {
+	shareDenom := "mirror.shares"
+	underlyingDenom := "underlying"
+	underlying := sdk.NewInt64Coin(underlyingDenom, 1_000_000_000)
+	totalShares := sdk.NewInt64Coin(shareDenom, 1_000_000)
+	testBlockTime := time.Date(2024, 3, 1, 0, 0, 0, 0, time.UTC)
+	twoMonthsAgo := testBlockTime.Add(-60 * 24 * time.Hour).Unix()
+
+	stalePrice := sdk.NewInt64Coin(underlyingDenom, 1)
+	staleVolume := uint64(1)
+
+	tests := []struct {
+		name           string
+		interestRate   string
+		aumFeeBips     uint32
+		periodStart    int64
+		feePeriodStart int64
+		expectRefresh  bool
+	}{
+		{
+			name:           "fee-only reconcile republishes the mirror against the post-fee net TVV",
+			interestRate:   "0.0",
+			aumFeeBips:     100,
+			periodStart:    0,
+			feePeriodStart: twoMonthsAgo,
+			expectRefresh:  true,
+		},
+		{
+			name:           "interest-only reconcile republishes the mirror",
+			interestRate:   "0.10",
+			aumFeeBips:     0,
+			periodStart:    twoMonthsAgo,
+			feePeriodStart: 0,
+			expectRefresh:  true,
+		},
+		{
+			name:           "combined interest and fee reconcile republishes the mirror",
+			interestRate:   "0.10",
+			aumFeeBips:     100,
+			periodStart:    twoMonthsAgo,
+			feePeriodStart: twoMonthsAgo,
+			expectRefresh:  true,
+		},
+		{
+			name:           "reconcile with neither period elapsed leaves the mirror untouched",
+			interestRate:   "0.10",
+			aumFeeBips:     100,
+			periodStart:    testBlockTime.Unix(),
+			feePeriodStart: testBlockTime.Unix(),
+			expectRefresh:  false,
+		},
+		{
+			name:           "elapsed fee period on a vault with no fee rate leaves the mirror untouched",
+			interestRate:   "0.0",
+			aumFeeBips:     0,
+			periodStart:    0,
+			feePeriodStart: twoMonthsAgo,
+			expectRefresh:  false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			vaultAddr, vault := s.setupReconcileVault(tc.interestRate, tc.periodStart, false, underlying, shareDenom, totalShares, testBlockTime)
+			vault.AumFeeBips = tc.aumFeeBips
+			vault.FeePeriodStart = tc.feePeriodStart
+			s.k.AuthKeeper.SetAccount(s.ctx, vault)
+			s.seedShareNav(vault, stalePrice, staleVolume)
+
+			netTVVBefore, err := s.k.GetNetTVV(s.ctx, *vault)
+			s.Require().NoError(err, "should compute net TVV before reconcile for test case %q", tc.name)
+
+			s.Require().NoError(s.k.TestAccessor_reconcileVault(s.T(), s.ctx, vault),
+				"reconcileVault should not error for test case %q", tc.name)
+
+			reconciled, err := s.k.GetVault(s.ctx, vaultAddr)
+			s.Require().NoError(err, "should fetch reconciled vault for test case %q", tc.name)
+
+			netTVVAfter, err := s.k.GetNetTVV(s.ctx, *reconciled)
+			s.Require().NoError(err, "should compute net TVV after reconcile for test case %q", tc.name)
+
+			if !tc.expectRefresh {
+				s.Require().Equal(netTVVBefore.String(), netTVVAfter.String(),
+					"net TVV should not move when neither period elapsed for test case %q", tc.name)
+				stored := s.requireShareNav(reconciled)
+				s.Assert().Equal(stalePrice.Amount.String(), stored.Price.Amount.String(),
+					"a reconcile that moves no value should not republish the mirror for test case %q", tc.name)
+				s.Assert().Equal(staleVolume, stored.Volume,
+					"a reconcile that moves no value should not republish the mirror volume for test case %q", tc.name)
+				return
+			}
+
+			s.Require().NotEqual(netTVVBefore.String(), netTVVAfter.String(),
+				"the accrual should have moved net TVV for test case %q", tc.name)
+			s.assertShareNavMirrorsNetTVV(reconciled)
+		})
+	}
+}
+
+func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts_RefreshesShareNavMirror() {
+	s.SetupTest()
+	shareDenom := "fee.mirror.shares"
+	underlyingDenom := "underlying"
+	underlying := sdk.NewInt64Coin(underlyingDenom, 1_000_000_000)
+	totalShares := sdk.NewInt64Coin(shareDenom, 1_000_000)
+	vaultAddr := types.GetVaultAddress(shareDenom)
+	twoMonthsAgo := s.ctx.BlockTime().Add(-60 * 24 * time.Hour).Unix()
+
+	s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
+	vault := s.CreateVaultWithParams(shareDenom, underlyingDenom)
+	s.Require().NoError(s.k.FeeTimeoutQueue.Dequeue(s.ctx, vault.FeePeriodTimeout, vaultAddr),
+		"should dequeue the initial fee timeout enqueued by CreateVaultWithParams")
+
+	vault.AumFeeBips = 100
+	vault.TotalShares = totalShares
+	s.SetVaultRatesAndPeriod(vault, "0.0", "0.0", twoMonthsAgo, twoMonthsAgo)
+	s.FundMarker(shareDenom, sdk.NewCoins(underlying))
+	s.seedShareNav(vault, sdk.NewInt64Coin(underlyingDenom, 1), 1)
+	s.Require().NoError(s.k.FeeTimeoutQueue.Enqueue(s.ctx, twoMonthsAgo, vaultAddr),
+		"should enqueue the due fee timeout for vault %s", vaultAddr)
+
+	netTVVBefore, err := s.k.GetNetTVV(s.ctx, *vault)
+	s.Require().NoError(err, "should compute net TVV before the fee timeout runs")
+
+	s.Require().NoError(s.k.TestAccessor_handleVaultFeeTimeouts(s.T(), s.ctx, keeper.MaxFeeTimeoutsPerBlock),
+		"handleVaultFeeTimeouts should not error")
+
+	reconciled, err := s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "should fetch the vault after the fee timeout ran")
+
+	netTVVAfter, err := s.k.GetNetTVV(s.ctx, *reconciled)
+	s.Require().NoError(err, "should compute net TVV after the fee timeout ran")
+	s.Require().NotEqual(netTVVBefore.String(), netTVVAfter.String(),
+		"the fee collection should have moved net TVV")
+
+	s.assertShareNavMirrorsNetTVV(reconciled)
+}
+
+func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts_RefreshesShareNavMirror() {
+	s.SetupTest()
+	shareDenom := "interest.mirror.shares"
+	underlyingDenom := "underlying"
+	underlying := sdk.NewInt64Coin(underlyingDenom, 1_000_000_000)
+	totalShares := sdk.NewInt64Coin(shareDenom, 1_000_000)
+	vaultAddr := types.GetVaultAddress(shareDenom)
+	twoMonthsAgo := s.ctx.BlockTime().Add(-60 * 24 * time.Hour).Unix()
+
+	s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)
+	vault := s.CreateVaultWithParams(shareDenom, underlyingDenom)
+
+	vault.TotalShares = totalShares
+	vault.PeriodStart = twoMonthsAgo
+	vault.PeriodTimeout = twoMonthsAgo
+	s.SetVaultRatesAndPeriod(vault, "0.10", "0.10", twoMonthsAgo, twoMonthsAgo)
+	s.Require().NoError(
+		FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(underlying)),
+		"should fund vault reserves so the interest payment succeeds",
+	)
+	s.FundMarker(shareDenom, sdk.NewCoins(underlying))
+	s.seedShareNav(vault, sdk.NewInt64Coin(underlyingDenom, 1), 1)
+	s.Require().NoError(s.k.PayoutTimeoutQueue.Enqueue(s.ctx, twoMonthsAgo, vaultAddr),
+		"should enqueue the due interest timeout for vault %s", vaultAddr)
+
+	netTVVBefore, err := s.k.GetNetTVV(s.ctx, *vault)
+	s.Require().NoError(err, "should compute net TVV before the interest timeout runs")
+
+	s.Require().NoError(s.k.TestAccessor_handleVaultInterestTimeouts(s.T(), s.ctx, keeper.MaxInterestTimeoutsPerBlock),
+		"handleVaultInterestTimeouts should not error")
+
+	reconciled, err := s.k.GetVault(s.ctx, vaultAddr)
+	s.Require().NoError(err, "should fetch the vault after the interest timeout ran")
+
+	netTVVAfter, err := s.k.GetNetTVV(s.ctx, *reconciled)
+	s.Require().NoError(err, "should compute net TVV after the interest timeout ran")
+	s.Require().True(netTVVAfter.GT(netTVVBefore),
+		"the interest payment should have raised net TVV from %s, got %s", netTVVBefore, netTVVAfter)
+
+	s.assertShareNavMirrorsNetTVV(reconciled)
+}
+
 func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer() {
 	tests := []struct {
 		name                string

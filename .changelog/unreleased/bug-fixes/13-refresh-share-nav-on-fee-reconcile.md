@@ -1,0 +1,1 @@
+* Republish the marker mirrored share NAV on any reconcile that moves the net total vault value, including a fee-only reconcile and the `BeginBlocker` interest and fee timeout paths, so external consumers of the mirror no longer read a stale price-per-share [#13](https://github.com/provlabs/vault/issues/13).

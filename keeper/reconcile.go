@@ -35,8 +35,7 @@ var navReferenceVolume = sdkmath.NewIntFromUint64(math.MaxUint64)
 
 // reconcileVault updates interest accounting and collects AUM fees for a vault if a new period has started.
 //
-// If this is the first time the vault accrues interest, it triggers the start of a new period
-// and publishes the initial NAV for the share denom in terms of the underlying asset.
+// If this is the first time the vault accrues fees, it bootstraps the fee period.
 // If the current block time is after the relevant PeriodStart, it applies the interest and/or fee transfers.
 // This function will do nothing if the vault is paused.
 //
@@ -52,6 +51,10 @@ var navReferenceVolume = sdkmath.NewIntFromUint64(math.MaxUint64)
 // 1. Interest is processed first to ensure the Total Vault Value (TVV) is updated.
 // 2. AUM fees are then calculated and collected based on the post-interest TVV.
 // 3. Timeouts are rescheduled and the updated NAV is published.
+//
+// The share NAV is republished whenever either accrual moved the net TVV, so a fee-only
+// reconcile refreshes the marker mirror just as an interest accrual does. A reconcile that
+// moves no value publishes nothing.
 func (k Keeper) reconcileVault(ctx sdk.Context, vault *types.VaultAccount) error {
 	if vault == nil {
 		return fmt.Errorf("vault account cannot be nil")
@@ -63,8 +66,9 @@ func (k Keeper) reconcileVault(ctx sdk.Context, vault *types.VaultAccount) error
 	cacheCtx, write := ctx.CacheContext()
 	v := vault.Clone()
 	currentBlockTime := cacheCtx.BlockTime().Unix()
+	netValueMoved := interestPeriodElapsed(v, currentBlockTime) || feeAccrualMovesNetValue(v, currentBlockTime)
 
-	if v.PeriodStart != 0 && currentBlockTime > v.PeriodStart {
+	if interestPeriodElapsed(v, currentBlockTime) {
 		if err := k.PerformVaultInterestTransfer(cacheCtx, v); err != nil {
 			return fmt.Errorf("perform vault interest transfer: %w", err)
 		}
@@ -83,7 +87,7 @@ func (k Keeper) reconcileVault(ctx sdk.Context, vault *types.VaultAccount) error
 		}
 	}
 
-	if v.PeriodStart != 0 && currentBlockTime > v.PeriodStart {
+	if netValueMoved {
 		if err := k.publishShareNav(cacheCtx, v); err != nil {
 			return fmt.Errorf("publish share nav: %w", err)
 		}
@@ -96,6 +100,35 @@ func (k Keeper) reconcileVault(ctx sdk.Context, vault *types.VaultAccount) error
 	write()
 	*vault = *v
 	return nil
+}
+
+// interestPeriodElapsed reports whether an interest accrual is due for the vault at blockTime,
+// meaning a reconcile will move the vault's total value by settling interest.
+func interestPeriodElapsed(vault *types.VaultAccount, blockTime int64) bool {
+	return vault.PeriodStart != 0 && blockTime > vault.PeriodStart
+}
+
+// feePeriodElapsed reports whether an AUM fee accrual is due for the vault at blockTime.
+func feePeriodElapsed(vault *types.VaultAccount, blockTime int64) bool {
+	return vault.FeePeriodStart != 0 && blockTime > vault.FeePeriodStart
+}
+
+// feeAccrualMovesNetValue reports whether a due AUM fee accrual will move the vault's net total
+// value. The net moves by the newly accrued fee alone, so a vault with no fee rate never moves it.
+func feeAccrualMovesNetValue(vault *types.VaultAccount, blockTime int64) bool {
+	return vault.AumFeeBips != 0 && feePeriodElapsed(vault, blockTime)
+}
+
+// refreshShareNav republishes the mirrored share NAV after an ABCI reconcile moved the vault's net
+// total vault value. The mirror is informational, so a failure is logged rather than returned and
+// cannot roll back the transfer that already succeeded in the same cache context.
+func (k Keeper) refreshShareNav(ctx sdk.Context, vault *types.VaultAccount) {
+	if err := k.publishShareNav(ctx, vault); err != nil {
+		k.getLogger(ctx).Error("failed to publish share NAV after reconcile",
+			"vault", vault.GetAddress().String(),
+			"err", err,
+		)
+	}
 }
 
 // setShareDenomNAV publishes the Net Asset Value (NAV) for a vault’s share denom
@@ -619,12 +652,20 @@ func (k Keeper) handleVaultInterestTimeouts(ctx sdk.Context, limit int) error {
 //
 // walkedTimeout is the key the entry was found under. It can differ from the vault's recorded
 // timeout, so both are dequeued and no entry is left behind to stay due forever.
+//
+// A settled interest accrual moves the total vault value, so the mirrored share NAV is
+// republished before the cache context is written.
 func (k Keeper) atomicallyReconcileInterest(ctx sdk.Context, vault *types.VaultAccount, walkedTimeout int64) error {
 	cacheCtx, write := ctx.CacheContext()
 	v := vault.Clone()
+	interestAccrued := interestPeriodElapsed(v, cacheCtx.BlockTime().Unix())
 
 	if err := k.PerformVaultInterestTransfer(cacheCtx, v); err != nil {
 		return fmt.Errorf("failed to perform vault interest transfer: %w", err)
+	}
+
+	if interestAccrued {
+		k.refreshShareNav(cacheCtx, v)
 	}
 
 	if err := k.PayoutTimeoutQueue.Dequeue(cacheCtx, walkedTimeout, v.GetAddress()); err != nil {
@@ -823,12 +864,20 @@ func (k Keeper) handleVaultFeeTimeouts(ctx sdk.Context, limit int) error {
 //
 // walkedTimeout is the key the entry was found under. It can differ from the vault's recorded
 // fee timeout, so both are dequeued and no entry is left behind to stay due forever.
+//
+// An accrued fee moves the net total vault value, so the mirrored share NAV is republished before
+// the cache context is written.
 func (k Keeper) atomicallyReconcileFee(ctx sdk.Context, vault *types.VaultAccount, walkedTimeout int64) error {
 	cacheCtx, write := ctx.CacheContext()
 	v := vault.Clone()
+	netValueMoved := feeAccrualMovesNetValue(v, cacheCtx.BlockTime().Unix())
 
 	if err := k.PerformVaultFeeTransfer(cacheCtx, v); err != nil {
 		return fmt.Errorf("failed to perform vault fee transfer: %w", err)
+	}
+
+	if netValueMoved {
+		k.refreshShareNav(cacheCtx, v)
 	}
 
 	if err := k.FeeTimeoutQueue.Dequeue(cacheCtx, walkedTimeout, v.GetAddress()); err != nil {

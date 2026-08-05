@@ -1167,6 +1167,36 @@ func (s *TestSuite) seedOversizedNAV(vault *types.VaultAccount, navDenom, underl
 		"should seed oversized internal NAV for %s priced %s/%s", navDenom, priceAmount, volume)
 }
 
+// seedShareNav writes a share-denom NAV onto the vault's principal marker, standing in for a mirror published by an earlier reconcile.
+func (s *TestSuite) seedShareNav(vault *types.VaultAccount, price sdk.Coin, volume uint64) {
+	marker, err := s.k.MarkerKeeper.GetMarker(s.ctx, vault.PrincipalMarkerAddress())
+	s.Require().NoError(err, "should get principal marker for vault %s", vault.GetAddress())
+	s.Require().NoError(
+		s.k.MarkerKeeper.SetNetAssetValue(s.ctx, marker, markertypes.NetAssetValue{Price: price, Volume: volume}, types.ModuleName),
+		"should seed share NAV %s/%d for vault %s", price, volume, vault.GetAddress(),
+	)
+}
+
+// requireShareNav returns the marker's mirrored share-denom NAV, failing the test if none is published.
+func (s *TestSuite) requireShareNav(vault *types.VaultAccount) markertypes.NetAssetValue {
+	stored, err := s.k.MarkerKeeper.GetNetAssetValue(s.ctx, vault.TotalShares.Denom, vault.UnderlyingAsset)
+	s.Require().NoError(err, "should read mirrored share NAV for vault %s", vault.GetAddress())
+	s.Require().NotNil(stored, "a mirrored share NAV should be published for vault %s", vault.GetAddress())
+	return *stored
+}
+
+// assertShareNavMirrorsNetTVV asserts the mirrored share NAV matches the reloaded vault's live net TVV and recorded share supply.
+func (s *TestSuite) assertShareNavMirrorsNetTVV(vault *types.VaultAccount) {
+	stored := s.requireShareNav(vault)
+	netTVV, err := s.k.GetNetTVV(s.ctx, *vault)
+	s.Require().NoError(err, "should compute live net TVV for vault %s", vault.GetAddress())
+
+	s.Assert().Equal(netTVV.String(), stored.Price.Amount.String(),
+		"mirrored share NAV price should equal live net TVV for vault %s", vault.GetAddress())
+	s.Assert().Equal(vault.TotalShares.Amount.Uint64(), stored.Volume,
+		"mirrored share NAV volume should equal the recorded share supply for vault %s", vault.GetAddress())
+}
+
 // setupReconcileVault initializes a vault with the provided parameters, including markers and funding.
 func (s *TestSuite) setupReconcileVault(interestRate string, periodStartSeconds int64, paused bool, underlying sdk.Coin, shareDenom string, totalShares sdk.Coin, testBlockTime time.Time) (sdk.AccAddress, *types.VaultAccount) {
 	s.requireAddFinalizeAndActivateMarker(underlying, s.adminAddr)

@@ -7072,6 +7072,51 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_Outbound() {
 	s.Assert().ErrorIs(err, collections.ErrNotFound, "NAV entry for %s should be removed after the draining outbound settlement", asset)
 }
 
+func (s *TestSuite) TestMsgServer_AcceptAsset_OutboundStaysCommittedWhenDrainedNAVIsAlreadyAbsent() {
+	underlying, share, asset := "under", "vshare", "rwacoin"
+	externalID := "p2p-outbound-nav-absent"
+
+	sourceAmount := sdk.NewCoins(sdk.NewInt64Coin(underlying, 5))
+	targetAmount := sdk.NewCoins(sdk.NewInt64Coin(asset, 10))
+	vault, principalAddr, source := s.setupAcceptAssetScenario(acceptAssetScenario{
+		underlying:    underlying,
+		share:         share,
+		assetMarker:   asset,
+		seedNav:       &types.VaultNAV{Denom: asset, Price: sdk.NewInt64Coin(underlying, 5), Volume: sdkmath.NewInt(10)},
+		fundSource:    sourceAmount,
+		fundPrincipal: targetAmount,
+		sourceAmount:  sourceAmount,
+		targetAmount:  targetAmount,
+		externalID:    externalID,
+	})
+	vaultAddr := vault.GetAddress()
+
+	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+	resp, err := keeper.NewMsgServer(s.simApp.VaultKeeper).AcceptAsset(s.ctx, &types.MsgAcceptAssetRequest{
+		Authority:    s.assetManagerAddr.String(),
+		VaultAddress: vaultAddr.String(),
+		Source:       source.String(),
+		ExternalId:   externalID,
+	})
+	s.Require().NoError(err, "AcceptAsset outbound should succeed")
+	s.Assert().Equal(&types.MsgAcceptAssetResponse{}, resp, "AcceptAsset outbound response")
+
+	_, err = s.k.GetVaultNAV(s.ctx, vaultAddr, asset)
+	s.Require().ErrorIs(err, collections.ErrNotFound, "the draining outbound settlement should leave no NAV entry for %s", asset)
+
+	s.Require().NoError(
+		s.k.TestAccessor_removeDrainedSettlementNAV(s.T(), s.ctx, vault, asset, types.AssetDirectionOutbound),
+		"the drained-NAV cleanup must be best-effort and must not roll back the committed settlement once the NAV entry for %s is already absent", asset,
+	)
+
+	s.assertBalance(source, underlying, sdkmath.NewInt(0))
+	s.assertBalance(source, asset, sdkmath.NewInt(10))
+	s.assertBalance(principalAddr, asset, sdkmath.NewInt(0))
+	s.assertBalance(principalAddr, underlying, sdkmath.NewInt(5))
+	s.assertBalance(vaultAddr, asset, sdkmath.NewInt(0))
+	s.assertBalance(vaultAddr, underlying, sdkmath.NewInt(0))
+}
+
 func (s *TestSuite) TestMsgServer_AcceptAsset_ZeroPriceOutbound() {
 	underlying, share, asset := "under", "vshare", "rwacoin"
 	externalID := "p2p-outbound-zero"

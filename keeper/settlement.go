@@ -1,9 +1,12 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/provlabs/vault/types"
+
+	"cosmossdk.io/collections"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -57,6 +60,11 @@ func (k *Keeper) removeDrainedSettlementNAV(ctx sdk.Context, vault *types.VaultA
 		return nil
 	}
 	if err := k.RemoveVaultNAV(ctx, vault, assetDenom, ""); err != nil {
+		if errors.Is(err, collections.ErrNotFound) {
+			k.getLogger(ctx).Info("no internal NAV entry to remove for drained settlement denom",
+				"vault", vault.Address, "denom", assetDenom)
+			return nil
+		}
 		return fmt.Errorf("failed to remove internal NAV for drained denom %q: %w", assetDenom, err)
 	}
 	return nil

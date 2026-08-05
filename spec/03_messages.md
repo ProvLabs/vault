@@ -429,7 +429,7 @@ Settlement layers several responsibilities into one atomic transaction:
 1. **Reconcile** — the vault reconciles before any value change, so interest settles against the pre-settlement TVV.
 2. **NAV guardrail** — the asset denom must already have an internal NAV entry, and the settlement legs must match its price exactly (cross-multiplied, no rounding). A denom the NAV authority has never priced cannot be acquired.
 3. **Settle** — funds stage through the vault account as an atomic hop (`Principal -> Vault`, exchange `AcceptPayment`, `Vault -> Principal`); the principal marker remains the long-term store.
-4. **Drained-denom cleanup** — when an outbound settlement drains the principal of the asset denom, its internal NAV entry is removed (see `EventNAVRemoved`), so reacquiring the denom requires a fresh price. Nothing else about the NAV table changes: the guardrail has already proven the trade executed at the authority's recorded price, so settling never writes a price.
+4. **Drained-denom cleanup** — when an outbound settlement drains the principal of the asset denom, its internal NAV entry is removed (see `EventNAVRemoved`), so reacquiring the denom requires a fresh price. Nothing else about the NAV table changes: the guardrail has already proven the trade executed at the authority's recorded price, so settling never writes a price. This cleanup is **best-effort**: it runs after the funds have already moved, so an entry that is already gone is logged and waved through rather than rolling back a committed settlement.
 
 Any failure reverts the whole transaction.
 

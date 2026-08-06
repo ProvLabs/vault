@@ -34,13 +34,17 @@ import (
 //
 // Bumped from 1 to 2 to accompany Migrator.Migrate1to2, which flattens every
 // vault to single-denom on its underlying asset (defaulting nav_authority to the
-// vault admin) and enables deposit protection when a vault's share marker can be loaded. A
-// v1->v2 migration handler is registered in RegisterServices so the SDK module
-// manager can drive the migration via RunMigrations when an upstream upgrade
-// handler advances the chain.
+// vault admin) and enables deposit protection when a vault's share marker can be loaded.
 //
 // Bumped from 2 to 3 to accompany Migrator.Migrate2to3, which enables the
-// gov_only_vault_creation param on mainnet.
+// gov_only_vault_creation param on mainnet and materializes every vault's total
+// value. The materialized total is new module state that the total-value invariant
+// requires to be present, so it has to be seeded at upgrade time rather than left
+// to the lazy repair in GetTVV.
+//
+// A handler per step is registered in RegisterServices so the SDK module manager
+// can drive the migrations via RunMigrations when an upstream upgrade handler
+// advances the chain.
 const ConsensusVersion = 3
 
 var (
@@ -49,6 +53,7 @@ var (
 	_ module.HasConsensusVersion = AppModule{}
 	_ module.HasGenesis          = AppModule{}
 	_ module.HasGenesisBasics    = AppModuleBasic{}
+	_ module.HasInvariants       = AppModule{} //nolint:staticcheck // SA1019: deprecated with x/crisis; see RegisterInvariants.
 	_ module.HasServices         = AppModule{}
 	_ module.AppModuleSimulation = AppModule{}
 )
@@ -137,6 +142,13 @@ func (m AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, bz json.Raw
 func (m AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
 	genesis := m.keeper.ExportGenesis(ctx)
 	return cdc.MustMarshalJSON(genesis)
+}
+
+// RegisterInvariants registers the vault module's invariants. Remove it once x/crisis is gone.
+//
+//nolint:staticcheck // SA1019: x/crisis is deprecated, but its registry is still the only wiring the SDK offers for module invariants.
+func (m AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
+	keeper.RegisterInvariants(ir, *m.keeper)
 }
 
 // BeginBlock returns the begin blocker for the vault module.

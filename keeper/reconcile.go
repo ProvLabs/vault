@@ -295,6 +295,9 @@ func (k Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vault
 		); err != nil {
 			return fmt.Errorf("failed to pay interest: %w", err)
 		}
+		if err = k.adjustTotalValue(ctx, *vault, interestEarned); err != nil {
+			return fmt.Errorf("failed to record paid interest value: %w", err)
+		}
 	} else if interestEarned.IsNegative() {
 		principalUnderlying := k.BankKeeper.GetBalance(ctx, principalAddress, denom)
 		owed := interestEarned.Abs()
@@ -311,6 +314,9 @@ func (k Keeper) PerformVaultInterestTransfer(ctx sdk.Context, vault *types.Vault
 				sdk.NewCoins(sdk.NewCoin(denom, owed)),
 			); err != nil {
 				return fmt.Errorf("failed to reclaim negative interest: %w", err)
+			}
+			if err = k.adjustTotalValue(ctx, *vault, owed.Neg()); err != nil {
+				return fmt.Errorf("failed to record reclaimed interest value: %w", err)
 			}
 			actualInterest = owed.Neg()
 		}
@@ -398,6 +404,9 @@ func (k Keeper) PerformVaultFeeTransfer(ctx sdk.Context, vault *types.VaultAccou
 				"err", err,
 			)
 			toCollect = sdk.NewCoin(vault.UnderlyingAsset, sdkmath.ZeroInt())
+		}
+		if err = k.adjustTotalValue(ctx, *vault, toCollect.Amount.Neg()); err != nil {
+			return fmt.Errorf("failed to record collected AUM fee value: %w", err)
 		}
 	}
 

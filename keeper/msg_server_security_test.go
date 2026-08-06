@@ -60,7 +60,7 @@ func (s *TestSuite) TestMsgServer_SmallFirstSwapIn_HugeDonation_SwapOut() {
 	vault.SwapOutEnabled = true
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
-	err = FundAccount(s.ctx, s.simApp.BankKeeper, owner, sdk.NewCoins(tiny))
+	err = FundAccount(s.ctx, s.simApp, owner, sdk.NewCoins(tiny))
 	s.Require().NoError(err, "funding owner with tiny underlying should succeed")
 
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
@@ -78,7 +78,7 @@ func (s *TestSuite) TestMsgServer_SmallFirstSwapIn_HugeDonation_SwapOut() {
 	impliedPricePre := totalAssets.Mul(utils.ShareScalar).Quo(totalShares) // assets per ShareScalar shares
 	s.Require().Equal(math.NewInt(1), impliedPricePre, "implied price should be 1 right after first swap-in")
 
-	err = FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, sdk.NewCoins(hugeDonation))
+	err = FundAccount(s.ctx, s.simApp, markerAddr, sdk.NewCoins(hugeDonation))
 	s.Require().NoError(err, "funding marker with huge donation should succeed")
 
 	s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
@@ -127,7 +127,7 @@ func (s *TestSuite) TestMsgServer_UpdateVaultNAV_LiveHeldRepriceRefusedSoNoSwapC
 
 	swapInAtStaleLowPrice := func(who string, funding int64) sdk.AccAddress {
 		addr := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
-		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, addr, sdk.NewCoins(sdk.NewInt64Coin(underlying, funding))),
+		s.Require().NoError(FundAccount(s.ctx, s.simApp, addr, sdk.NewCoins(sdk.NewInt64Coin(underlying, funding))),
 			"funding the %s with %d%s should succeed", who, funding, underlying)
 		_, err := s.k.SwapIn(s.ctx, vaultAddr, addr, sdk.NewInt64Coin(underlying, deposit))
 		s.Require().NoError(err, "the %s should be able to swap in %d%s while %s is priced stale-low", who, deposit, underlying, staleLowPricedHeldDenom)

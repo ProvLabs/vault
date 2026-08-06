@@ -15,7 +15,6 @@ import (
 	"github.com/cometbft/cometbft/crypto/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/gogoproto/proto"
@@ -97,18 +96,86 @@ func (s *TestSuite) CreateAndFundAccount(coin sdk.Coin) sdk.AccAddress {
 	key2 := secp256k1.GenPrivKey()
 	pub2 := key2.PubKey()
 	addr2 := sdk.AccAddress(pub2.Address())
-	FundAccount(s.ctx, s.simApp.BankKeeper, addr2, sdk.Coins{coin})
+	FundAccount(s.ctx, s.simApp, addr2, sdk.Coins{coin})
 	return addr2
 }
 
-// FundAccount mints the provided coins to the mint module account and then
-// sends them to the given address. This is a convenient way to seed balances
-// in tests without requiring faucet-style logic.
-func FundAccount(ctx context.Context, bankKeeper bankkeeper.Keeper, addr sdk.AccAddress, amounts sdk.Coins) error {
+// FundAccount mints the provided coins to the mint module account and then sends them to the
+// given address, seeding balances in tests without faucet-style logic.
+//
+// It also calls SyncVaultValues, because the send bypasses marker send restrictions and so is
+// invisible to the module's own accounting. Prefer a helper that does not sync when the test is
+// about whether a production path reports its own change; syncing here would hide that.
+func FundAccount(ctx context.Context, app *simapp.SimApp, addr sdk.AccAddress, amounts sdk.Coins) error {
+	bankKeeper := app.BankKeeper
 	if err := bankKeeper.MintCoins(ctx, minttypes.ModuleName, amounts); err != nil {
 		return err
 	}
-	return bankKeeper.SendCoinsFromModuleToAccount(markertypes.WithBypass(ctx), minttypes.ModuleName, addr, amounts)
+	if err := bankKeeper.SendCoinsFromModuleToAccount(markertypes.WithBypass(ctx), minttypes.ModuleName, addr, amounts); err != nil {
+		return err
+	}
+	return SyncVaultValues(sdk.UnwrapSDKContext(ctx), app)
+}
+
+// sendCoinsBypass moves coins with marker send restrictions bypassed, then re-derives vault totals.
+// It is for arranging state, not for asserting that a production path reported its own change.
+func (s *TestSuite) sendCoinsBypass(ctx context.Context, from, to sdk.AccAddress, amt sdk.Coins) error {
+	if err := s.simApp.BankKeeper.SendCoins(ctx, from, to, amt); err != nil {
+		return err
+	}
+	return SyncVaultValues(sdk.UnwrapSDKContext(ctx), s.simApp)
+}
+
+// withdrawMarkerCoins withdraws coins from a marker account and re-derives vault totals, for the
+// same reason as sendCoinsBypass.
+func (s *TestSuite) withdrawMarkerCoins(ctx sdk.Context, caller, recipient sdk.AccAddress, denom string, coins sdk.Coins) error {
+	if err := s.simApp.MarkerKeeper.WithdrawCoins(ctx, caller, recipient, denom, coins); err != nil {
+		return err
+	}
+	return SyncVaultValues(ctx, s.simApp)
+}
+
+// fundPrincipalForBrokenValuation funds a vault's principal and drops its stored total, forcing
+// the next read to rebuild by walking.
+//
+// Tests that exercise a valuation failure need this: a materialized read cannot fail, so NAV
+// conversion — and any overflow or corruption in it — only happens on the walk.
+func (s *TestSuite) fundPrincipalForBrokenValuation(vault *types.VaultAccount, coins sdk.Coins) {
+	principal := vault.PrincipalMarkerAddress()
+	s.Require().NoError(s.simApp.BankKeeper.MintCoins(s.ctx, minttypes.ModuleName, coins),
+		"minting %s should succeed", coins)
+	s.Require().NoError(
+		s.simApp.BankKeeper.SendCoinsFromModuleToAccount(markertypes.WithBypass(s.ctx), minttypes.ModuleName, principal, coins),
+		"funding the principal with %s should succeed", coins,
+	)
+	s.Require().NoError(
+		s.k.TotalValues.Remove(s.ctx, vault.GetAddress()),
+		"dropping the materialized total for vault %s should succeed", vault.GetAddress(),
+	)
+}
+
+// dropStoredTotalValue removes a vault's materialized total, staging the "never materialized"
+// state that seeding, repair and the total-value invariant care about.
+func (s *TestSuite) dropStoredTotalValue(vaultAddr sdk.AccAddress) {
+	s.Require().NoError(s.k.TotalValues.Remove(s.ctx, vaultAddr),
+		"dropping the stored total value for vault %s should succeed", vaultAddr)
+}
+
+// SyncVaultValues re-derives every vault's materialized total value from current state. Tests
+// that bypass marker send restrictions or write balances directly must call it so the stored
+// total agrees with the balances again.
+func SyncVaultValues(ctx sdk.Context, app *simapp.SimApp) error {
+	k := app.VaultKeeper
+	for _, acc := range app.AccountKeeper.GetAllAccounts(ctx) {
+		vault, ok := acc.(*types.VaultAccount)
+		if !ok {
+			continue
+		}
+		if _, err := k.RecomputeTotalValue(ctx, *vault); err != nil {
+			return fmt.Errorf("failed to sync total value for vault %s: %w", vault.GetAddress(), err)
+		}
+	}
+	return nil
 }
 
 // countingBankKeeper wraps a types.BankKeeper and records how often the
@@ -194,11 +261,11 @@ func (s *TestSuite) createVaultWithDueInterestTimeout(info VaultInfo, dueTime in
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 	s.Require().NoError(
-		FundAccount(s.ctx, s.simApp.BankKeeper, info.vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(info.underlying.Denom, 1_000_000))),
+		FundAccount(s.ctx, s.simApp, info.vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(info.underlying.Denom, 1_000_000))),
 		"funding reserves should not error for vault %s", info.vaultAddr,
 	)
 	s.Require().NoError(
-		FundAccount(s.ctx, s.simApp.BankKeeper, markertypes.MustGetMarkerAddress(info.shareDenom), sdk.NewCoins(info.underlying)),
+		FundAccount(s.ctx, s.simApp, markertypes.MustGetMarkerAddress(info.shareDenom), sdk.NewCoins(info.underlying)),
 		"funding principal should not error for marker %s", info.shareDenom,
 	)
 	s.Require().NoError(
@@ -553,10 +620,10 @@ func (s *TestSuite) setupAcceptAssetScenario(sc acceptAssetScenario) (*types.Vau
 
 	source := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1_000))
 	if !sc.fundSource.IsZero() {
-		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, source, sc.fundSource), "failed to fund source with %s", sc.fundSource)
+		s.Require().NoError(FundAccount(s.ctx, s.simApp, source, sc.fundSource), "failed to fund source with %s", sc.fundSource)
 	}
 	if !sc.fundPrincipal.IsZero() {
-		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sc.fundPrincipal), "failed to fund principal with %s", sc.fundPrincipal)
+		s.Require().NoError(FundAccount(s.ctx, s.simApp, principalAddr, sc.fundPrincipal), "failed to fund principal with %s", sc.fundPrincipal)
 	}
 
 	if !sc.omitPayment {
@@ -783,7 +850,7 @@ func (s *TestSuite) revokeTechFeeAttribute() sdk.AccAddress {
 // created vault account.
 func (s *TestSuite) setupBaseVault(underlyingDenom, shareDenom string) *types.VaultAccount {
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(underlyingDenom, 2_000_000), s.adminAddr)
-	s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, underlyingDenom, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 100_000)))
+	s.withdrawMarkerCoins(s.ctx, s.adminAddr, s.adminAddr, underlyingDenom, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 100_000)))
 
 	return s.createSingleDenomVault(vaultAttrs{
 		admin:      s.adminAddr.String(),
@@ -826,7 +893,7 @@ func (s *TestSuite) SetGovOnlyVaultCreation(govOnly bool) {
 // FundMarker mints and sends the provided coins to the marker account associated with the share denom.
 func (s *TestSuite) FundMarker(shareDenom string, coins sdk.Coins) {
 	markerAddr := markertypes.MustGetMarkerAddress(shareDenom)
-	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, coins), "funding marker %s should not error", shareDenom)
+	s.Require().NoError(FundAccount(s.ctx, s.simApp, markerAddr, coins), "funding marker %s should not error", shareDenom)
 }
 
 // SetVaultRatesAndPeriod updates a vault's interest rates and fee period settings.
@@ -895,7 +962,7 @@ func (s *TestSuite) enqueueUnrefundableSwapOut(underlyingDenom, shareDenom strin
 	s.Require().NoError(s.k.SetVaultAccount(s.ctx, vault), "should pause vault for share denom %s", shareDenom)
 
 	s.Require().NoError(
-		s.k.BankKeeper.SendCoins(markertypes.WithBypass(s.ctx), vaultAddr, s.adminAddr, sdk.NewCoins(minted)),
+		s.sendCoinsBypass(markertypes.WithBypass(s.ctx), vaultAddr, s.adminAddr, sdk.NewCoins(minted)),
 		"should drain escrowed shares for share denom %s to force the refund to fail", shareDenom,
 	)
 
@@ -1073,16 +1140,17 @@ func createSwapInEvents(owner, vaultAddr, markerAddr sdk.AccAddress, asset, shar
 func (s *TestSuite) setupHeldAssetVault(underlyingDenom, shareDenom, heldDenom string, price, volume int64) *types.VaultAccount {
 	vault := s.setupBaseVault(underlyingDenom, shareDenom)
 	s.requireAddFinalizeAndActivateMarker(sdk.NewInt64Coin(heldDenom, 2_000_000), s.adminAddr)
-	s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, heldDenom, sdk.NewCoins(sdk.NewInt64Coin(heldDenom, 100_000)))
+	s.withdrawMarkerCoins(s.ctx, s.adminAddr, s.adminAddr, heldDenom, sdk.NewCoins(sdk.NewInt64Coin(heldDenom, 100_000)))
 	s.setVaultNAV(vault, heldDenom, sdk.NewInt64Coin(underlyingDenom, price), volume)
 	return vault
 }
 
-// fundPrincipal funds the vault's principal marker account, the store the valuation
-// engine reads held balances from.
+// fundPrincipal funds the vault's principal marker account, the store the valuation engine reads
+// held balances from, and re-derives vault totals. For arranging state, not for asserting that a
+// production path reported its own change. See sendCoinsBypass.
 func (s *TestSuite) fundPrincipal(vault *types.VaultAccount, coins ...sdk.Coin) {
 	funding := sdk.NewCoins(coins...)
-	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vault.PrincipalMarkerAddress(), funding),
+	s.Require().NoError(FundAccount(s.ctx, s.simApp, vault.PrincipalMarkerAddress(), funding),
 		"failed to fund the principal marker of vault %s with %s", vault.Address, funding)
 }
 
@@ -1184,16 +1252,14 @@ func maxValidNAVPrice() sdkmath.Int {
 	return sdkmath.NewIntFromBigInt(new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), 256), big.NewInt(1)))
 }
 
-// seedOversizedNAV overwrites the vault's internal NAV entry for navDenom,
-// pricing volume units of it at priceAmount of underlyingDenom. The internal
-// NAV write path bounds neither price nor volume magnitude, so this lets the
-// overflow guard tests stage values far beyond any realistic NAV and drive the
-// SafeMul/SafeAdd guards on the valuation paths into overflow. Seed an oversized
-// priceAmount to trip the forward (denom->underlying) multiply, or an oversized
-// volume to trip the reverse (underlying->denom) multiply.
+// seedOversizedNAV writes a NAV entry straight to the store, bypassing the MaxNAVComponentBits bound
+// that now rejects these magnitudes. Oversized priceAmount trips the forward multiply, oversized
+// volume the reverse.
 func (s *TestSuite) seedOversizedNAV(vault *types.VaultAccount, navDenom, underlyingDenom string, priceAmount, volume sdkmath.Int) {
 	nav := types.NewVaultNAV(navDenom, sdk.NewCoin(underlyingDenom, priceAmount), volume, "test-oversized")
-	s.Require().NoError(s.k.SetVaultNAV(s.ctx, vault, nav, s.adminAddr.String()),
+	nav.UpdatedBlockHeight = s.ctx.BlockHeight()
+	nav.UpdatedTime = s.ctx.BlockTime().UTC()
+	s.Require().NoError(s.k.NAVs.Set(s.ctx, collections.Join(vault.GetAddress(), navDenom), nav),
 		"should seed oversized internal NAV for %s priced %s/%s", navDenom, priceAmount, volume)
 }
 
@@ -1248,9 +1314,9 @@ func (s *TestSuite) setupReconcileVault(interestRate string, periodStartSeconds 
 	vault.TotalShares = totalShares
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
-	err = FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(underlying))
+	err = FundAccount(s.ctx, s.simApp, vaultAddr, sdk.NewCoins(underlying))
 	s.Require().NoError(err, "failed to fund vault account %s with %s", vaultAddr.String(), underlying.String())
-	err = FundAccount(s.ctx, s.simApp.BankKeeper, markertypes.MustGetMarkerAddress(shareDenom), sdk.NewCoins(underlying))
+	err = FundAccount(s.ctx, s.simApp, markertypes.MustGetMarkerAddress(shareDenom), sdk.NewCoins(underlying))
 	s.Require().NoError(err, "failed to fund share marker account for denom %s with %s", shareDenom, underlying.String())
 
 	s.ctx = s.ctx.WithBlockTime(testBlockTime)

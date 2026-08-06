@@ -73,6 +73,10 @@ func (k *Keeper) CreateVault(ctx sdk.Context, attributes VaultAttributer) (*type
 		return nil, fmt.Errorf("failed to create vault marker: %w", err)
 	}
 
+	if err = k.InitTotalValue(cacheCtx, vault); err != nil {
+		return nil, fmt.Errorf("failed to seed vault total value: %w", err)
+	}
+
 	provlabsAddr, err := k.GetAUMFeeAddress(cacheCtx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get AUM fee address: %w", err)
@@ -308,6 +312,10 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 
 	if err := k.BankKeeper.SendCoins(markertypes.WithBypass(ctx), recipient, principalAddress, sdk.NewCoins(asset)); err != nil {
 		return nil, fmt.Errorf("failed to send asset to principal: %w", err)
+	}
+
+	if err := k.adjustTotalValue(ctx, *vault, asset.Amount); err != nil {
+		return nil, fmt.Errorf("failed to record swap-in value: %w", err)
 	}
 
 	k.emitEvent(ctx, types.NewEventSwapIn(vaultAddr.String(), recipient.String(), asset, shares))

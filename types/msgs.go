@@ -19,6 +19,22 @@ const maxDenomMetadataDescriptionLength = 200
 // per-entry state and emitted events from being inflated by an unbounded value.
 const MaxNAVSourceLength = 200
 
+// MaxNAVComponentBits bounds a NAV price amount and volume. Valuation multiplies a balance by the
+// price, so an unbounded price makes total vault value overflow and stay underivable.
+const MaxNAVComponentBits = 128
+
+// ValidateNAVComponentMagnitudes rejects a NAV price amount or volume that would overflow valuation.
+// Genesis import skips such an entry rather than refusing to start, so this is checked separately.
+func ValidateNAVComponentMagnitudes(price sdk.Coin, volume sdkmath.Int) error {
+	if !price.Amount.IsNil() && price.Amount.BigInt().BitLen() > MaxNAVComponentBits {
+		return fmt.Errorf("NAV price amount %s exceeds the maximum of %d bits", price.Amount, MaxNAVComponentBits)
+	}
+	if !volume.IsNil() && volume.BigInt().BitLen() > MaxNAVComponentBits {
+		return fmt.Errorf("NAV volume %s exceeds the maximum of %d bits", volume, MaxNAVComponentBits)
+	}
+	return nil
+}
+
 // maxPauseReasonLength bounds the operator-supplied pause reason, which is
 // persisted to vault state on every pause, to keep an unbounded value from
 // inflating state.
@@ -573,6 +589,9 @@ func (m MsgUpdateVaultNAVRequest) ValidateBasic() error {
 	}
 	if m.Volume.IsNil() || !m.Volume.IsPositive() {
 		return fmt.Errorf("volume must be positive")
+	}
+	if err := ValidateNAVComponentMagnitudes(m.Price, m.Volume); err != nil {
+		return err
 	}
 	if len(m.Source) > MaxNAVSourceLength {
 		return fmt.Errorf("source too long (expected <= %d, actual: %d)", MaxNAVSourceLength, len(m.Source))

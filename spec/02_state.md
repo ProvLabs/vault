@@ -142,6 +142,36 @@ An entry may exist for a denom the vault does not hold: TVV values held balances
 - **Key:** `(sdk.AccAddress vault, string denom)`
 - **Value:** `types.VaultNAV { denom, price, volume, source, updated_block_height, updated_time }` — `price` is the total value of `volume` units of `denom`; per-unit value is `price / volume`. The `price` denom must be the owning vault's underlying asset.
 
+### Materialized Total Vault Value (prefix 12)
+
+Each vault's total value, denominated in its underlying asset. This is **derived state**: authoritative for reads, but always reproducible from the vault's principal balances and its Internal NAV table. It exists so reading TVV costs one store read instead of one per priced denom.
+
+Every path that moves a priced balance or changes a price folds its change into this entry — swap-in, swap-out payout, principal deposit/withdraw, interest and AUM fee transfers, settlement staging, and NAV writes and removals. The walk over the NAV table remains the definition of the number, and a registered invariant asserts the two agree (see [Invariants](#invariants)).
+
+A missing entry is derived and stored on first read rather than treated as an error, so the value is self-healing. Vault creation, genesis import, and the v2→v3 migration all seed it up front so the invariant never observes a gap, and unpausing re-derives it. Because a mutation path reports its delta only after the balance has moved, deriving a missing entry supersedes the delta rather than adding to it.
+
+Creation seeds by deriving rather than assuming zero: a vault's principal address follows from its share denom, so `x/marker` can adopt an account that already holds a balance no later path would report.
+
+- **Prefix:** `TotalValuesKeyPrefix` (12)
+- **Key:** `sdk.AccAddress vault`
+- **Value:** `math.Int` — the vault's gross total value in `underlying_asset`, before the `outstanding_aum_fee` liability is deducted.
+
+---
+
+## Invariants
+
+Registered with `x/crisis` under the `vault` module route. A broken invariant panics, so these run only on invariant-enabled chains — that is, nodes started with a non-zero `--inv-check-period`. Registration is wired on the crisis keeper directly rather than through the module manager, whose `RegisterInvariants` is a no-op in the current SDK.
+
+Each assertion is one an outside account cannot forge. Anything an unprivileged sender could trigger would turn the invariant into a halt-on-demand, so those conditions are deliberately tolerated.
+
+Each route resolves the vault lookup the same way every other consumer does, so the set of vaults checked cannot drift from the set the migration and genesis import seed. A lookup entry whose address holds no account, or holds something other than a vault account, is inert — nothing else reads it and the vault it names owns no balances, shares, or NAV entries — so it is logged, counted into the invariant's message, and passed over rather than halting the chain over state no operator can act on.
+
+| Route | Assertion |
+| --- | --- |
+| `total-value` | Each vault's materialized total value equals the value derived by walking its NAV table and principal balances. Drift means some mutation path failed to report its change, so share pricing is running off a stale number. A vault whose walk cannot produce a number at all is logged and passed over, since there is no reference to compare against. |
+| `share-supply` | No vault's local share supply exceeds its `total_shares`. `total_shares` is the cross-chain supply-of-record that bridge mints are gated on, so local supply overtaking it means the bridge can mint shares nothing backs. |
+| `escrowed-shares` | A vault holds at least the shares its pending swap-outs account for. A shortfall means a payout can no longer be honored from escrow. A surplus is tolerated: share transfers to the vault account are unrestricted, so anyone can create one with a bank send. |
+
 ---
 
 ## Deterministic Vault Addressing
@@ -160,5 +190,13 @@ Genesis validation also enforces the single-denom model: every NAV entry's `pric
 ### State Migration (v1 → v2)
 
 The module's consensus version 1→2 migration flattens any pre-existing mixed-denom vaults into the single-denom model. For each vault it sets `payment_denom = underlying_asset`, re-denominates `outstanding_aum_fee` into the underlying asset, and defaults `nav_authority` to the admin when unset; it also rewrites any pending swap-out's redeem denom to the owning vault's underlying asset. No funds move and no accounts are deleted.
+
+### State Migration (v2 → v3)
+
+The module's consensus version 2→3 migration materializes every vault's total value (prefix 12), which became module state alongside the materialized-TVV read path. It derives each total from current balances and the NAV table and stores it. No funds move and no vault configuration changes.
+
+Seeding is required rather than optional: `GetTVV` would repair each vault lazily on first read, but the `total-value` invariant reads state without repairing it, so an unseeded vault would report as broken — and because `x/crisis` panics on a broken invariant, an invariant-enabled chain would halt. The migration is idempotent, since it recomputes from the same source on every run.
+
+It seeds from the vault lookup, resolving it through the same path the invariant uses, so the two cannot disagree about which vaults must have an entry. A vault it cannot value is logged and skipped: such a vault fails the invariant's own derivation too, so seeding could not have satisfied it, and aborting the upgrade over one bad vault would be worse than leaving the rest of the chain seeded. A lookup entry that resolves to no vault account is skipped by both for the same reason (see [Invariants](#invariants)).
 
 ---

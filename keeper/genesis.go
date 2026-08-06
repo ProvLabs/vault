@@ -130,6 +130,14 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 		if !ok {
 			panic(fmt.Errorf("nav entry for unknown vault %s", entry.VaultAddress))
 		}
+		if err := types.ValidateNAVComponentMagnitudes(entry.Nav.Price, entry.Nav.Volume); err != nil {
+			k.getLogger(ctx).Warn("skipping oversized vault nav entry",
+				"vault", entry.VaultAddress,
+				"denom", entry.Nav.Denom,
+				"err", err,
+			)
+			continue
+		}
 		if err := validateVaultNAVFields(vault, entry.Nav); err != nil {
 			panic(fmt.Errorf("invalid nav entry for vault %s: %w", entry.VaultAddress, err))
 		}
@@ -146,6 +154,10 @@ func (k Keeper) InitGenesis(ctx sdk.Context, genState *types.GenesisState) {
 		if err := k.NAVs.Set(ctx, collections.Join(addr, entry.Nav.Denom), entry.Nav); err != nil {
 			panic(fmt.Errorf("failed to import vault nav for %s/%s: %w", entry.VaultAddress, entry.Nav.Denom, err))
 		}
+	}
+
+	if err := k.HydrateTotalValues(ctx); err != nil {
+		panic(fmt.Errorf("failed to seed vault total values: %w", err))
 	}
 }
 

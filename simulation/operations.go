@@ -1528,7 +1528,24 @@ func stagePayment(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, vault *types.V
 // stagePrincipal moves the target leg of a payment into the vault's principal marker from an
 // account that already holds the denom, so AcceptAsset can pay it out. Funds are transferred
 // rather than minted to preserve the fixed-supply marker invariant.
+//
+// The transfer is an out-of-band deposit: it bypasses the marker send restriction and every vault
+// message, so nothing reports the new balance to the vault's materialized total value. The total is
+// therefore rebuilt from state afterwards, on every exit path and whether or not the staged message
+// goes on to succeed. This is scaffolding for reaching AcceptAsset, not a claim that the deposit
+// could not happen on a live chain — x/marker's own transfer paths can also reach a principal
+// without notifying the vault.
 func stagePrincipal(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, vault *types.VaultAccount, accs []simtypes.Account, targetAmount sdk.Coins) error {
+	fundErr := fundPrincipal(ctx, r, k, vault, accs, targetAmount)
+	if _, err := k.RecomputeTotalValue(ctx, *vault); err != nil {
+		return errors.Join(fundErr, fmt.Errorf("failed to rebuild total value after funding principal marker: %w", err))
+	}
+	return fundErr
+}
+
+// fundPrincipal transfers each coin of a payment's target leg into the vault's principal marker
+// from an account that already holds it.
+func fundPrincipal(ctx sdk.Context, r *rand.Rand, k keeper.Keeper, vault *types.VaultAccount, accs []simtypes.Account, targetAmount sdk.Coins) error {
 	for _, coin := range targetAmount {
 		funder, balance, err := getRandomAccountWithDenom(r, k, ctx, accs, coin.Denom)
 		if err != nil {

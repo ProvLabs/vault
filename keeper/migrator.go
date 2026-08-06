@@ -34,10 +34,14 @@ func (m Migrator) Migrate1to2(ctx sdk.Context) error {
 }
 
 // Migrate2to3 advances the vault module from ConsensusVersion 2 to 3 by enabling the
-// gov_only_vault_creation param on mainnet.
+// gov_only_vault_creation param on mainnet and materializing every vault's total value. The two
+// steps are independent and share a version because neither has been released.
 func (m Migrator) Migrate2to3(ctx sdk.Context) error {
 	if err := m.keeper.migrateEnableGovOnlyVaultCreation(ctx); err != nil {
 		return fmt.Errorf("failed to enable gov-only vault creation: %w", err)
+	}
+	if err := m.keeper.HydrateTotalValues(ctx); err != nil {
+		return fmt.Errorf("failed to seed vault total values: %w", err)
 	}
 	return nil
 }

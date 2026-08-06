@@ -505,6 +505,10 @@ func (k msgServer) DepositPrincipalFunds(goCtx context.Context, msg *types.MsgDe
 		return nil, fmt.Errorf("failed to deposit principal funds: %w", err)
 	}
 
+	if err := k.adjustTotalValue(ctx, *vault, msg.Amount.Amount); err != nil {
+		return nil, fmt.Errorf("failed to record principal deposit value: %w", err)
+	}
+
 	k.emitEvent(ctx, types.NewEventDepositPrincipalFunds(msg.VaultAddress, msg.Authority, msg.Amount))
 	return &types.MsgDepositPrincipalFundsResponse{}, nil
 }
@@ -545,6 +549,10 @@ func (k msgServer) WithdrawPrincipalFunds(goCtx context.Context, msg *types.MsgW
 		sdk.NewCoins(msg.Amount),
 	); err != nil {
 		return nil, fmt.Errorf("failed to withdraw principal funds: %w", err)
+	}
+
+	if err := k.adjustTotalValue(ctx, *vault, msg.Amount.Amount.Neg()); err != nil {
+		return nil, fmt.Errorf("failed to record principal withdrawal value: %w", err)
 	}
 
 	k.emitEvent(ctx, types.NewEventWithdrawPrincipalFunds(msg.VaultAddress, msg.Authority, msg.Amount))
@@ -674,9 +682,9 @@ func (k msgServer) UnpauseVault(goCtx context.Context, msg *types.MsgUnpauseVaul
 		return nil, fmt.Errorf("failed to set vault account: %w", err)
 	}
 
-	tvv, err := k.GetTVV(ctx, *vault)
+	tvv, err := k.RecomputeTotalValue(ctx, *vault)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get TVV before pausing: %w", err)
+		return nil, fmt.Errorf("failed to recompute total vault value on unpause: %w", err)
 	}
 
 	if err := k.SafeAddPayoutVerification(ctx, vault); err != nil {

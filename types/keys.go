@@ -66,6 +66,11 @@ var (
 	NAVsKeyPrefix = collections.NewPrefix(11)
 	// NAVsName is a human-readable name for the internal NAV table collection.
 	NAVsName = "vault_navs"
+
+	// TotalValuesKeyPrefix is the prefix for the materialized total vault value, keyed by vault address.
+	TotalValuesKeyPrefix = collections.NewPrefix(12)
+	// TotalValuesName is a human-readable name for the materialized total value collection.
+	TotalValuesName = "vault_total_values"
 )
 
 var (

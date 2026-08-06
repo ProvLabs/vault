@@ -343,7 +343,7 @@ func (s *TestSuite) TestVaultModule_RunMigrations() {
 		fromVM[types.ModuleName] = 1
 
 		newVM, err := s.simApp.ModuleManager.RunMigrations(s.ctx, s.simApp.Configurator(), fromVM)
-		s.Require().NoError(err, "RunMigrations must succeed; vault v1->v2 and v2->v3 handlers must be registered for vault %s", legacy.Address)
+		s.Require().NoError(err, "RunMigrations must succeed; the vault v1->v2 and v2->v3 handlers must be registered for vault %s", legacy.Address)
 		s.Require().Equal(uint64(vault.ConsensusVersion), newVM[types.ModuleName], "vault module version should advance to the current ConsensusVersion")
 
 		acct := s.simApp.AccountKeeper.GetAccount(s.ctx, legacy.GetAddress())
@@ -359,7 +359,7 @@ func (s *TestSuite) TestVaultModule_RunMigrations() {
 		s.Assert().True(govOnly, "the v2->v3 migration should also run for a chain pinned to v1")
 	})
 
-	s.Run("vault pinned to v2 runs only the v2->v3 gate migration", func() {
+	s.Run("vault pinned to v2 runs only the v2->v3 migration, not the v1->v2 flatten", func() {
 		s.SetupTest()
 		s.ctx = s.ctx.WithChainID(types.MainnetChainID)
 		legacy := s.createLegacyVaultAccount("vsharemmv2", underlying, payment)
@@ -562,4 +562,164 @@ func (s *TestSuite) TestKeeper_MigrateEnableGovOnlyVaultCreation() {
 			s.Assert().Equal(tc.expected, govOnly, "a repeated 2->3 migration must not change the gate on chain %s", tc.chainID)
 		})
 	}
+}
+
+func (s *TestSuite) TestKeeper_SeedTotalValues() {
+	underlyingDenom := "ylds"
+	shareDenom := "vshare"
+	heldDenom := "usdc"
+
+	seed := func() error {
+		return s.simApp.VaultKeeper.HydrateTotalValues(s.ctx)
+	}
+
+	requireInvariant := func(expectBroken bool, when string) {
+		msg, broken := keeper.TotalValueInvariant(s.k)(s.ctx)
+		s.Require().Equal(expectBroken, broken, "total value invariant state %s the seeding run: %s", when, msg)
+	}
+
+	tests := []struct {
+		name string
+		// setup stages chain state and returns the total the run must store for each vault,
+		// keyed by bech32 address, plus the vaults that must be left with no stored total.
+		setup                 func() (map[string]int64, []sdk.AccAddress)
+		runs                  int
+		invariantBrokenBefore bool
+		invariantBrokenAfter  bool
+	}{
+		{
+			name: "a vault whose total value was never materialized is seeded from the vault lookup",
+			setup: func() (map[string]int64, []sdk.AccAddress) {
+				v := s.setupHeldAssetVault(underlyingDenom, shareDenom, heldDenom, 1, 2)
+				s.Require().NoError(
+					FundAccount(s.ctx, s.simApp, v.PrincipalMarkerAddress(), sdk.NewCoins(
+						sdk.NewInt64Coin(underlyingDenom, 1_000),
+						sdk.NewInt64Coin(heldDenom, 10),
+					)),
+					"funding the principal should succeed",
+				)
+				s.dropStoredTotalValue(v.GetAddress())
+				return map[string]int64{v.GetAddress().String(): 1_005}, nil
+			},
+			invariantBrokenBefore: true,
+		},
+		{
+			name: "every vault in the lookup is seeded, restoring the total value invariant",
+			setup: func() (map[string]int64, []sdk.AccAddress) {
+				first := s.setupHeldAssetVault(underlyingDenom, shareDenom, heldDenom, 1, 2)
+				second := s.setupBaseVault("uusd", "vsharetwo")
+				s.Require().NoError(
+					FundAccount(s.ctx, s.simApp, first.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(heldDenom, 10))),
+					"funding the first principal should succeed",
+				)
+				s.dropStoredTotalValue(first.GetAddress())
+				s.dropStoredTotalValue(second.GetAddress())
+				return map[string]int64{
+					first.GetAddress().String():  5,
+					second.GetAddress().String(): 0,
+				}, nil
+			},
+			invariantBrokenBefore: true,
+		},
+		{
+			name: "rerunning the seeding recomputes the same total",
+			setup: func() (map[string]int64, []sdk.AccAddress) {
+				v := s.setupHeldAssetVault(underlyingDenom, shareDenom, heldDenom, 1, 2)
+				s.Require().NoError(
+					FundAccount(s.ctx, s.simApp, v.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(heldDenom, 10))),
+					"funding the principal should succeed",
+				)
+				return map[string]int64{v.GetAddress().String(): 5}, nil
+			},
+			runs: 2,
+		},
+		{
+			name: "a lookup entry with no vault account is skipped without failing the upgrade or the invariant",
+			setup: func() (map[string]int64, []sdk.AccAddress) {
+				orphan := sdk.AccAddress("orphanVaultAddress__")
+				s.Require().NoError(s.k.Vaults.Set(s.ctx, orphan, []byte{}),
+					"seeding an orphaned vault lookup entry should succeed")
+				return nil, []sdk.AccAddress{orphan}
+			},
+			invariantBrokenBefore: false,
+			invariantBrokenAfter:  false,
+		},
+		{
+			name: "a vault that cannot be valued is skipped while every healthy vault still gets seeded",
+			setup: func() (map[string]int64, []sdk.AccAddress) {
+				healthy := s.setupBaseVault("uusd", "vsharetwo")
+				s.Require().NoError(
+					FundAccount(s.ctx, s.simApp, healthy.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin("uusd", 2_500))),
+					"funding the healthy principal should succeed",
+				)
+
+				unvaluable, _, unvaluableUnderlying, unvaluableHeld := s.setupOversizedNAVVault()
+				s.seedOversizedNAV(unvaluable, unvaluableHeld, unvaluableUnderlying, maxValidNAVPrice(), sdkmath.OneInt())
+				s.fundPrincipalForBrokenValuation(unvaluable, sdk.NewCoins(
+					sdk.NewInt64Coin(unvaluableHeld, 1),
+					sdk.NewInt64Coin(unvaluableUnderlying, 100),
+				))
+				s.dropStoredTotalValue(healthy.GetAddress())
+
+				return map[string]int64{healthy.GetAddress().String(): 2_500}, []sdk.AccAddress{unvaluable.GetAddress()}
+			},
+			invariantBrokenBefore: true,
+			invariantBrokenAfter:  false,
+		},
+	}
+
+	for _, tc := range tests {
+		s.Run(tc.name, func() {
+			s.SetupTest()
+			expectedTotals, expectedUnseeded := tc.setup()
+
+			requireInvariant(tc.invariantBrokenBefore, "before")
+
+			runs := tc.runs
+			if runs == 0 {
+				runs = 1
+			}
+			for run := 1; run <= runs; run++ {
+				s.Require().NoError(seed(), "seeding run %d must succeed; one unusable vault must never abort the upgrade", run)
+			}
+
+			for addr, expected := range expectedTotals {
+				vaultAddr := sdk.MustAccAddressFromBech32(addr)
+				stored, err := s.k.TotalValues.Get(s.ctx, vaultAddr)
+				s.Require().NoError(err, "seeding should have stored a total for vault %s", vaultAddr)
+				s.Require().Equal(sdkmath.NewInt(expected).String(), stored.String(),
+					"seeded total mismatch for vault %s", vaultAddr)
+			}
+
+			for _, vaultAddr := range expectedUnseeded {
+				_, err := s.k.TotalValues.Get(s.ctx, vaultAddr)
+				s.Require().ErrorIs(err, collections.ErrNotFound,
+					"no total should be stored for vault %s, which cannot be loaded or valued", vaultAddr)
+			}
+
+			requireInvariant(tc.invariantBrokenAfter, "after")
+		})
+	}
+}
+
+func (s *TestSuite) TestVaultModule_RunMigrationsSeedsTotalValues() {
+	underlyingDenom := "ylds"
+	shareDenom := "vshare"
+
+	s.Run("vault pinned to v2 advances to the current version and gets its total seeded", func() {
+		s.SetupTest()
+		v := s.setupBaseVault(underlyingDenom, shareDenom)
+		s.dropStoredTotalValue(v.GetAddress())
+
+		fromVM := s.simApp.ModuleManager.GetVersionMap()
+		fromVM[types.ModuleName] = 2
+
+		newVM, err := s.simApp.ModuleManager.RunMigrations(s.ctx, s.simApp.Configurator(), fromVM)
+		s.Require().NoError(err, "RunMigrations must succeed; the vault v2->v3 handler must be registered")
+		s.Require().Equal(uint64(vault.ConsensusVersion), newVM[types.ModuleName],
+			"vault module version should advance to the current ConsensusVersion")
+
+		_, err = s.k.TotalValues.Get(s.ctx, v.GetAddress())
+		s.Require().NoError(err, "the v2->v3 migration should have seeded vault %s", v.GetAddress())
+	})
 }

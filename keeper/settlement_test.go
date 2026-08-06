@@ -61,7 +61,7 @@ func (s *TestSuite) TestKeeper_RemoveDrainedSettlementNAV() {
 				s.setVaultNAV(vault, asset, seededPrice, seededVolume.Int64())
 			}
 			if !tc.fundPrincipal.IsZero() {
-				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, tc.fundPrincipal), "failed to fund principal with %s", tc.fundPrincipal)
+				s.Require().NoError(FundAccount(s.ctx, s.simApp, principalAddr, tc.fundPrincipal), "failed to fund principal with %s", tc.fundPrincipal)
 			}
 
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
@@ -192,7 +192,7 @@ func (s *TestSuite) TestKeeper_StageAndReturnPrincipal() {
 			deposit: true,
 			seed: func(vault *types.VaultAccount) sdk.Coins {
 				s.requireSimpleMarker(free)
-				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vault.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(free, 10))), "failed to fund vault with %s", free)
+				s.Require().NoError(FundAccount(s.ctx, s.simApp, vault.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(free, 10))), "failed to fund vault with %s", free)
 				return sdk.NewCoins()
 			},
 			denom: free,
@@ -203,7 +203,7 @@ func (s *TestSuite) TestKeeper_StageAndReturnPrincipal() {
 			deposit: true,
 			seed: func(vault *types.VaultAccount) sdk.Coins {
 				s.requireSimpleMarker(free)
-				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vault.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(free, 10))), "failed to fund vault with %s", free)
+				s.Require().NoError(FundAccount(s.ctx, s.simApp, vault.GetAddress(), sdk.NewCoins(sdk.NewInt64Coin(free, 10))), "failed to fund vault with %s", free)
 				return sdk.NewCoins(sdk.NewInt64Coin(free, 10))
 			},
 			denom: free,
@@ -214,7 +214,7 @@ func (s *TestSuite) TestKeeper_StageAndReturnPrincipal() {
 			deposit: true,
 			seed: func(vault *types.VaultAccount) sdk.Coins {
 				s.requireRestrictedMarker(restricted)
-				s.Require().NoError(s.simApp.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, vault.GetAddress(), restricted, sdk.NewCoins(sdk.NewInt64Coin(restricted, 10))), "failed to fund vault with %s", restricted)
+				s.Require().NoError(s.withdrawMarkerCoins(s.ctx, s.adminAddr, vault.GetAddress(), restricted, sdk.NewCoins(sdk.NewInt64Coin(restricted, 10))), "failed to fund vault with %s", restricted)
 				return sdk.NewCoins(sdk.NewInt64Coin(restricted, 10))
 			},
 			denom: restricted,
@@ -225,8 +225,8 @@ func (s *TestSuite) TestKeeper_StageAndReturnPrincipal() {
 			deposit: false,
 			seed: func(vault *types.VaultAccount) sdk.Coins {
 				s.requireRestrictedMarker(restricted)
-				s.Require().NoError(s.simApp.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, vault.GetAddress(), restricted, sdk.NewCoins(sdk.NewInt64Coin(restricted, 10))), "failed to fund vault with %s", restricted)
-				s.Require().NoError(s.simApp.BankKeeper.SendCoins(markertypes.WithBypass(s.ctx), vault.GetAddress(), vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(restricted, 10))), "failed to seed principal with %s", restricted)
+				s.Require().NoError(s.withdrawMarkerCoins(s.ctx, s.adminAddr, vault.GetAddress(), restricted, sdk.NewCoins(sdk.NewInt64Coin(restricted, 10))), "failed to fund vault with %s", restricted)
+				s.Require().NoError(s.sendCoinsBypass(markertypes.WithBypass(s.ctx), vault.GetAddress(), vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(restricted, 10))), "failed to seed principal with %s", restricted)
 				return sdk.NewCoins(sdk.NewInt64Coin(restricted, 10))
 			},
 			denom: restricted,
@@ -277,7 +277,7 @@ func (s *TestSuite) TestKeeper_ReturnToPrincipal_BypassIsLoadBearing() {
 	vaultAddr := vault.GetAddress()
 
 	s.requireRestrictedMarker(restricted)
-	s.Require().NoError(s.simApp.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, vaultAddr, restricted, sdk.NewCoins(sdk.NewInt64Coin(restricted, 10))), "failed to fund vault with %s", restricted)
+	s.Require().NoError(s.withdrawMarkerCoins(s.ctx, s.adminAddr, vaultAddr, restricted, sdk.NewCoins(sdk.NewInt64Coin(restricted, 10))), "failed to fund vault with %s", restricted)
 
 	amt := sdk.NewCoins(sdk.NewInt64Coin(restricted, 10))
 

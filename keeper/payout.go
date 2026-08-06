@@ -277,6 +277,12 @@ func (k *Keeper) processSingleWithdrawal(ctx sdk.Context, id uint64, req types.P
 		return fmt.Errorf("failed to payout assets to owner: %w", err)
 	}
 
+	if err = k.adjustTotalValue(ctx, vault, assets.Amount.Neg()); err != nil {
+		errMsg := fmt.Sprintf("failed to record payout of %s from vault %s in total vault value", assets, vaultAddr)
+		k.getLogger(ctx).Error("CRITICAL: "+errMsg, "error", err)
+		return types.CriticalErr(errMsg, fmt.Errorf("%s: %w", errMsg, err))
+	}
+
 	if err = k.BankKeeper.SendCoins(ctx, vaultAddr, principalAddress, sdk.NewCoins(req.Shares)); err != nil {
 		errMsg := fmt.Sprintf(
 			"failed to transfer %s shares from %s to principal %s for burning",

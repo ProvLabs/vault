@@ -213,8 +213,8 @@ func (s *TestSuite) TestKeeper_PerformVaultReconcile_CompositeWithOutstandingFee
 		s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 		markerAddr := markertypes.MustGetMarkerAddress(shareDenom)
-		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, markerLiquidity), "failed to fund marker account with liquidity")
-		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddress, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1_000_000_000))), "failed to fund vault reserves")
+		s.Require().NoError(FundAccount(s.ctx, s.simApp, markerAddr, markerLiquidity), "failed to fund marker account with liquidity")
+		s.Require().NoError(FundAccount(s.ctx, s.simApp, vaultAddress, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1_000_000_000))), "failed to fund vault reserves")
 
 		if heldNavPrice == nil {
 			heldNavPrice = &sdk.Coin{Denom: underlyingDenom, Amount: sdkmath.NewInt(1)}
@@ -377,7 +377,7 @@ func (s *TestSuite) TestKeeper_ReconcileLeavesUncollectedFee_PricesOffNetTVV() {
 
 	s.setVaultNAV(vault, heldDenom, sdk.NewInt64Coin(underlyingDenom, 1), 1)
 
-	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vault.PrincipalMarkerAddress(), sdk.NewCoins(
+	s.Require().NoError(FundAccount(s.ctx, s.simApp, vault.PrincipalMarkerAddress(), sdk.NewCoins(
 		sdk.NewInt64Coin(heldDenom, 1_000_000_000),
 	)), "should fund principal marker with the held asset only, leaving no underlying liquidity to pay the fee")
 
@@ -547,8 +547,8 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 				vault.PeriodStart = twoMonthsAgo
 				vault.FeePeriodStart = twoMonthsAgo
 				s.k.AuthKeeper.SetAccount(s.ctx, vault)
-				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(underlying)), "happy path: funding vault account should not error")
-				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, sdk.NewCoins(underlying)), "happy path: funding marker account should not error")
+				s.Require().NoError(FundAccount(s.ctx, s.simApp, vaultAddr, sdk.NewCoins(underlying)), "happy path: funding vault account should not error")
+				s.Require().NoError(FundAccount(s.ctx, s.simApp, markerAddr, sdk.NewCoins(underlying)), "happy path: funding marker account should not error")
 				s.Require().NoError(s.k.PayoutTimeoutQueue.Enqueue(s.ctx, testBlockTime.Unix(), vault.GetAddress()), "happy path: enqueuing payout timeout should not error")
 				s.ctx = s.ctx.WithBlockTime(testBlockTime).WithEventManager(sdk.NewEventManager())
 			},
@@ -599,7 +599,7 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts() {
 				vault.CurrentInterestRate = "0.25"
 				vault.DesiredInterestRate = "0.25"
 				s.k.AuthKeeper.SetAccount(s.ctx, vault)
-				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, sdk.NewCoins(underlying)), "vault cannot pay: funding marker account should not error")
+				s.Require().NoError(FundAccount(s.ctx, s.simApp, markerAddr, sdk.NewCoins(underlying)), "vault cannot pay: funding marker account should not error")
 				s.Require().NoError(s.k.SafeAddPayoutVerification(s.ctx, vault), "vault cannot pay: SafeAddPayoutVerification should not error")
 				s.Require().NoError(s.k.PayoutTimeoutQueue.Enqueue(s.ctx, testBlockTime.Unix(), vault.GetAddress()), "vault cannot pay: enqueuing payout timeout should not error")
 				s.ctx = s.ctx.WithBlockTime(testBlockTime).WithEventManager(sdk.NewEventManager())
@@ -1043,11 +1043,11 @@ func createVaultWithInterest(s *TestSuite, info VaultInfo, interestRate string, 
 
 	if fundReserves {
 		// Fund with enough to cover a day's interest
-		err = FundAccount(s.ctx, s.simApp.BankKeeper, info.vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(info.underlying.Denom, 1_000_000)))
+		err = FundAccount(s.ctx, s.simApp, info.vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(info.underlying.Denom, 1_000_000)))
 		s.Require().NoError(err, "failed to fund vault reserves in createVaultWithInterest for vault %s", info.vaultAddr)
 	}
 	if fundPrincipal {
-		err = FundAccount(s.ctx, s.simApp.BankKeeper, markertypes.MustGetMarkerAddress(info.shareDenom), sdk.NewCoins(info.underlying))
+		err = FundAccount(s.ctx, s.simApp, markertypes.MustGetMarkerAddress(info.shareDenom), sdk.NewCoins(info.underlying))
 		s.Require().NoError(err, "failed to fund marker principal in createVaultWithInterest for marker %s", info.shareDenom)
 	}
 
@@ -1153,7 +1153,7 @@ func (s *TestSuite) TestKeeper_CanPayInterestDuration() {
 			if tc.fundReserves.IsPositive() {
 				s.Require().NoError(FundAccount(
 					s.ctx,
-					s.simApp.BankKeeper,
+					s.simApp,
 					vaultAddr,
 					sdk.NewCoins(sdk.NewCoin(underlying.Denom, tc.fundReserves)),
 				), "failed to fund vault reserves for test case %s", tc.name)
@@ -1162,7 +1162,7 @@ func (s *TestSuite) TestKeeper_CanPayInterestDuration() {
 			if tc.fundPrincipal.IsPositive() {
 				s.Require().NoError(FundAccount(
 					s.ctx,
-					s.simApp.BankKeeper,
+					s.simApp,
 					markerAddr,
 					sdk.NewCoins(sdk.NewCoin(underlying.Denom, tc.fundPrincipal)),
 				), "failed to fund marker principal for test case %s", tc.name)
@@ -1196,12 +1196,12 @@ func (s *TestSuite) TestKeeper_CanPayInterestDuration_NegativeInterest_Composite
 	vault.DesiredInterestRate = "-0.5"
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
-	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(sdk.NewCoin(underlyingDenom, sdkmath.NewInt(1_000_000)))), "failed to fund composite vault in TestKeeper_CanPayInterestDuration_NegativeInterest_Composite_InsufficientUnderlying")
+	s.Require().NoError(FundAccount(s.ctx, s.simApp, vaultAddr, sdk.NewCoins(sdk.NewCoin(underlyingDenom, sdkmath.NewInt(1_000_000)))), "failed to fund composite vault in TestKeeper_CanPayInterestDuration_NegativeInterest_Composite_InsufficientUnderlying")
 
 	tinyUnderlying := sdkmath.NewInt(10_000_000)
 	hugeHeld := sdkmath.NewInt(10_000_000_000_000)
 
-	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, sdk.NewCoins(sdk.NewCoin(underlyingDenom, tinyUnderlying), sdk.NewCoin(heldDenom, hugeHeld))), "failed to fund marker account")
+	s.Require().NoError(FundAccount(s.ctx, s.simApp, markerAddr, sdk.NewCoins(sdk.NewCoin(underlyingDenom, tinyUnderlying), sdk.NewCoin(heldDenom, hugeHeld))), "failed to fund marker account")
 
 	year := int64(365 * 24 * time.Hour / time.Second)
 
@@ -1245,11 +1245,11 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_Use
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 	s.Require().NoError(
-		FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(underlying)),
+		FundAccount(s.ctx, s.simApp, vaultAddr, sdk.NewCoins(underlying)),
 		"failed to fund vault account in TestKeeper_PerformVaultInterestTransfer_PositiveInterest_UsesTVV",
 	)
 	s.Require().NoError(
-		FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, sdk.NewCoins(underlying)),
+		FundAccount(s.ctx, s.simApp, markerAddr, sdk.NewCoins(underlying)),
 		"failed to fund marker account in TestKeeper_PerformVaultInterestTransfer_PositiveInterest_UsesTVV",
 	)
 
@@ -1360,7 +1360,7 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_Use
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 	s.Require().NoError(
-		FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(underlying)),
+		FundAccount(s.ctx, s.simApp, vaultAddr, sdk.NewCoins(underlying)),
 		"expected funding vault reserves to succeed",
 	)
 
@@ -1368,7 +1368,7 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_PositiveInterest_Use
 	heldPortion := sdkmath.NewInt(50_000_000)
 
 	s.Require().NoError(
-		FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, sdk.NewCoins(
+		FundAccount(s.ctx, s.simApp, markerAddr, sdk.NewCoins(
 			sdk.NewCoin(underlying.Denom, receiptPortion),
 			sdk.NewCoin(heldDenom, heldPortion),
 		)),
@@ -1493,10 +1493,10 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_NegativeInterest_Par
 	vault.FeePeriodStart = now.Unix()
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
-	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(underlying)), "Funding vault should succeed")
+	s.Require().NoError(FundAccount(s.ctx, s.simApp, vaultAddr, sdk.NewCoins(underlying)), "Funding vault should succeed")
 
 	smallPrincipal := sdk.NewInt64Coin(underlying.Denom, 100_000)
-	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, sdk.NewCoins(smallPrincipal)), "Funding marker with small principal should succeed")
+	s.Require().NoError(FundAccount(s.ctx, s.simApp, markerAddr, sdk.NewCoins(smallPrincipal)), "Funding marker with small principal should succeed")
 
 	s.ctx = s.ctx.WithBlockTime(now).WithEventManager(sdk.NewEventManager())
 
@@ -1558,12 +1558,12 @@ func (s *TestSuite) TestKeeper_PerformVaultInterestTransfer_NegativeInterest_Com
 	vault.FeePeriodStart = periodStart
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
-	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1_000_000))), "Funding vault should succeed")
+	s.Require().NoError(FundAccount(s.ctx, s.simApp, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1_000_000))), "Funding vault should succeed")
 
 	hugeHeldBalance := sdk.NewInt64Coin(heldDenom, 1_000_000_000)
 	tinyUnderlyingBalance := sdk.NewInt64Coin(underlyingDenom, 10)
 
-	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, sdk.NewCoins(hugeHeldBalance, tinyUnderlyingBalance)), "Funding marker with composite assets should succeed")
+	s.Require().NoError(FundAccount(s.ctx, s.simApp, markerAddr, sdk.NewCoins(hugeHeldBalance, tinyUnderlyingBalance)), "Funding marker with composite assets should succeed")
 
 	s.ctx = s.ctx.WithBlockTime(now).WithEventManager(sdk.NewEventManager())
 
@@ -2060,7 +2060,7 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts_RefreshesShareNavMirr
 	vault.PeriodTimeout = twoMonthsAgo
 	s.SetVaultRatesAndPeriod(vault, "0.10", "0.10", twoMonthsAgo, twoMonthsAgo)
 	s.Require().NoError(
-		FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(underlying)),
+		FundAccount(s.ctx, s.simApp, vaultAddr, sdk.NewCoins(underlying)),
 		"should fund vault reserves so the interest payment succeeds",
 	)
 	s.FundMarker(shareDenom, sdk.NewCoins(underlying))
@@ -2209,10 +2209,7 @@ func (s *TestSuite) TestKeeper_PerformVaultFeeTransfer_OversizedTVVDegradesToErr
 	vault, _, underlyingDenom, heldDenom := s.setupOversizedNAVVault()
 	s.seedOversizedNAV(vault, heldDenom, underlyingDenom, maxValidNAVPrice(), sdkmath.OneInt())
 
-	principalAddress := vault.PrincipalMarkerAddress()
-	s.Require().NoError(s.k.BankKeeper.SendCoins(markertypes.WithBypass(s.ctx), s.adminAddr, principalAddress, sdk.NewCoins(
-		sdk.NewInt64Coin(heldDenom, 1),
-	)), "funding principal with one held-asset unit should drive TVV to the 256-bit ceiling")
+	s.fundPrincipalForBrokenValuation(vault, sdk.NewCoins(sdk.NewInt64Coin(heldDenom, 1)))
 
 	now := s.ctx.BlockTime()
 	twoMonthsAgo := now.Add(-60 * 24 * time.Hour)
@@ -2712,7 +2709,7 @@ func (s *TestSuite) TestKeeper_HandleVaultFeeTimeouts_RetryOnFailure() {
 	// An oversized held-asset NAV plus a nonzero balance overflows the 256-bit SafeMul during
 	// valuation, simulating a transient PerformVaultFeeTransfer failure.
 	s.seedOversizedNAV(vault, heldDenom, underlyingDenom, maxValidNAVPrice(), sdkmath.OneInt())
-	s.FundMarker(shareDenom, sdk.NewCoins(sdk.NewInt64Coin(heldDenom, 2)))
+	s.fundPrincipalForBrokenValuation(vault, sdk.NewCoins(sdk.NewInt64Coin(heldDenom, 2)))
 
 	err := s.k.TestAccessor_handleVaultFeeTimeouts(s.T(), s.ctx, keeper.MaxFeeTimeoutsPerBlock)
 	s.Require().NoError(err, "handleVaultFeeTimeouts should not return error even if a vault fails")
@@ -2806,7 +2803,7 @@ func (s *TestSuite) TestKeeper_HandleVaultInterestTimeouts_RetryOnFailure() {
 	// An oversized held-asset NAV plus a nonzero balance overflows the 256-bit SafeMul during
 	// valuation, simulating a transient failure without making the VaultAccount itself invalid.
 	s.seedOversizedNAV(vault, heldDenom, underlyingDenom, maxValidNAVPrice(), sdkmath.OneInt())
-	s.FundMarker(shareDenom, sdk.NewCoins(sdk.NewInt64Coin(heldDenom, 2)))
+	s.fundPrincipalForBrokenValuation(vault, sdk.NewCoins(sdk.NewInt64Coin(heldDenom, 2)))
 
 	err := s.k.TestAccessor_handleVaultInterestTimeouts(s.T(), s.ctx, keeper.MaxInterestTimeoutsPerBlock)
 	s.Require().NoError(err, "handleVaultInterestTimeouts should not return error")

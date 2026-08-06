@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"fmt"
+	"math/big"
 	"strings"
 	"testing"
 
@@ -2085,7 +2086,44 @@ func TestMsgUpdateVaultNAVRequest_ValidateBasic(t *testing.T) {
 			},
 			expectedErr: "source too long",
 		},
+		{
+			name: "price amount at the magnitude ceiling",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.NewCoin("under", maxNAVComponent()),
+				Volume:       sdkmath.NewInt(1),
+			},
+		},
+		{
+			name: "price amount one bit above the magnitude ceiling",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.NewCoin("under", maxNAVComponent().AddRaw(1)),
+				Volume:       sdkmath.NewInt(1),
+			},
+			expectedErr: "NAV price amount",
+		},
+		{
+			name: "volume one bit above the magnitude ceiling",
+			msg: types.MsgUpdateVaultNAVRequest{
+				Signer:       addr,
+				VaultAddress: addr,
+				Denom:        "rwa",
+				Price:        sdk.NewInt64Coin("under", 100),
+				Volume:       maxNAVComponent().AddRaw(1),
+			},
+			expectedErr: "NAV volume",
+		},
 	})
+}
+
+// maxNAVComponent returns the largest NAV price amount or volume that passes the magnitude bound.
+func maxNAVComponent() sdkmath.Int {
+	return sdkmath.NewIntFromBigInt(new(big.Int).Sub(new(big.Int).Lsh(big.NewInt(1), types.MaxNAVComponentBits), big.NewInt(1)))
 }
 
 func TestMsgRemoveVaultNAVRequest_ValidateBasic(t *testing.T) {

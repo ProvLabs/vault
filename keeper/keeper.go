@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/core/event"
 	"cosmossdk.io/core/store"
 	"cosmossdk.io/log"
+	"cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -40,6 +41,7 @@ type Keeper struct {
 	Params                collections.Item[types.Params]
 	Vaults                collections.Map[sdk.AccAddress, []byte]
 	NAVs                  collections.Map[collections.Pair[sdk.AccAddress, string], types.VaultNAV]
+	TotalValues           collections.Map[sdk.AccAddress, math.Int]
 	PayoutVerificationSet collections.KeySet[sdk.AccAddress]
 	PayoutTimeoutQueue    *queue.PayoutTimeoutQueue
 	FeeTimeoutQueue       *queue.FeeTimeoutQueue
@@ -79,6 +81,7 @@ func NewKeeper(
 		Params:                collections.NewItem(builder, types.ParamsKeyPrefix, types.ParamsKeyName, codec.CollValue[types.Params](cdc)),
 		Vaults:                collections.NewMap(builder, types.VaultsKeyPrefix, types.VaultsName, sdk.AccAddressKey, collections.BytesValue),
 		NAVs:                  collections.NewMap(builder, types.NAVsKeyPrefix, types.NAVsName, collections.PairKeyCodec(sdk.AccAddressKey, collections.StringKey), codec.CollValue[types.VaultNAV](cdc)),
+		TotalValues:           collections.NewMap(builder, types.TotalValuesKeyPrefix, types.TotalValuesName, sdk.AccAddressKey, sdk.IntValue),
 		PayoutVerificationSet: collections.NewKeySet(builder, types.VaultPayoutVerificationSetPrefix, types.VaultPayoutVerificationSetName, sdk.AccAddressKey),
 		PayoutTimeoutQueue:    queue.NewPayoutTimeoutQueue(builder),
 		FeeTimeoutQueue:       queue.NewFeeTimeoutQueue(builder),

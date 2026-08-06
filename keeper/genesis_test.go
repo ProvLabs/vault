@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 	metadatatypes "github.com/provenance-io/provenance/x/metadata/types"
 
+	"github.com/provlabs/vault/keeper"
 	"github.com/provlabs/vault/types"
 )
 
@@ -885,4 +886,35 @@ func (s *TestSuite) TestVaultGenesis_ExportPanicsOnNAVKeyValueDenomMismatch() {
 		func() { s.k.ExportGenesis(s.ctx) },
 		"ExportGenesis should panic when a NAV row's key denom does not match value.Denom",
 	)
+}
+
+func (s *TestSuite) TestInitGenesis_SeedsTotalValueForVaultReachedThroughTheAuthStore() {
+	underlying := "ylds"
+	shareDenom := "vshare"
+	const parked = 4_242
+
+	vault := s.setupBaseVault(underlying, shareDenom)
+	vaultAddr := vault.GetAddress()
+	s.Require().NoError(
+		FundAccount(s.ctx, s.simApp, vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(underlying, parked))),
+		"funding the principal of vault %s should succeed", vaultAddr,
+	)
+
+	s.Require().NoError(s.k.Vaults.Remove(s.ctx, vaultAddr),
+		"dropping the vault lookup entry should succeed for vault %s", vaultAddr)
+	s.dropStoredTotalValue(vaultAddr)
+
+	genesis := &types.GenesisState{Params: types.DefaultParams()}
+	s.Require().Empty(genesis.Vaults,
+		"the genesis payload must not list vault %s; it can only be found through the auth store", vaultAddr)
+
+	s.k.InitGenesis(s.ctx, genesis)
+
+	stored, err := s.k.TotalValues.Get(s.ctx, vaultAddr)
+	s.Require().NoError(err, "InitGenesis must seed a total for vault %s, which it recovered from the auth store", vaultAddr)
+	s.Require().Equal(sdkmath.NewInt(parked).String(), stored.String(),
+		"the seeded total must be the %d%s standing at the principal", parked, underlying)
+
+	msg, broken := keeper.TotalValueInvariant(s.k)(s.ctx)
+	s.Require().False(broken, "the total value invariant must hold after a genesis import: %s", msg)
 }

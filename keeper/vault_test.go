@@ -165,10 +165,10 @@ func (s *TestSuite) TestSwapIn_SingleDenomEnforcement() {
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 	depositorAddr := s.CreateAndFundAccount(sdk.NewInt64Coin(underlyingDenom, 1000))
-	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, depositorAddr, sdk.NewCoins(sdk.NewInt64Coin(unacceptedDenom, 1000))), "should fund depositor with a non-underlying denom")
+	s.Require().NoError(FundAccount(s.ctx, s.simApp, depositorAddr, sdk.NewCoins(sdk.NewInt64Coin(unacceptedDenom, 1000))), "should fund depositor with a non-underlying denom")
 
 	totalShares := sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(1000))
-	s.Require().NoError(s.k.BankKeeper.SendCoins(markertypes.WithBypass(s.ctx), s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1000))), "should fund vault principal with initial TVV")
+	s.Require().NoError(s.sendCoinsBypass(markertypes.WithBypass(s.ctx), s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1000))), "should fund vault principal with initial TVV")
 	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), totalShares), "should mint initial share supply")
 	vault.TotalShares = totalShares
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
@@ -245,9 +245,9 @@ func (s *TestSuite) TestSwapIn_ZeroShareDeposit() {
 
 			s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), sdk.NewCoin(shareDenom, tc.totalShares)),
 				"should mint initial share supply %s%s", tc.totalShares, shareDenom)
-			s.Require().NoError(s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, s.adminAddr, underlyingDenom, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, tc.principalBacking))),
+			s.Require().NoError(s.withdrawMarkerCoins(s.ctx, s.adminAddr, s.adminAddr, underlyingDenom, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, tc.principalBacking))),
 				"should withdraw %d%s of backing to the admin", tc.principalBacking, underlyingDenom)
-			s.Require().NoError(s.k.BankKeeper.SendCoins(markertypes.WithBypass(s.ctx), s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, tc.principalBacking))),
+			s.Require().NoError(s.sendCoinsBypass(markertypes.WithBypass(s.ctx), s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, tc.principalBacking))),
 				"should fund vault principal with %d%s of backing", tc.principalBacking, underlyingDenom)
 
 			depositorAddr := s.CreateAndFundAccount(sdk.NewCoin(underlyingDenom, depositorFunding))
@@ -408,7 +408,7 @@ func (s *TestSuite) TestSwapOut_RedeemsInUnderlying() {
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 	redeemerAddr := s.CreateAndFundAccount(sdk.NewCoin(shareDenom, initialShares))
 
-	s.Require().NoError(s.k.BankKeeper.SendCoins(markertypes.WithBypass(s.ctx), s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(
+	s.Require().NoError(s.sendCoinsBypass(markertypes.WithBypass(s.ctx), s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(
 		sdk.NewInt64Coin(underlyingDenom, 600),
 	)), "should fund vault principal with liquidity")
 
@@ -458,13 +458,13 @@ func (s *TestSuite) TestSwapOut_FailsWithInsufficientShares() {
 	vault := s.setupBaseVault(underlyingDenom, shareDenom)
 
 	initialTVV := int64(1000)
-	s.Require().NoError(s.k.BankKeeper.SendCoins(markertypes.WithBypass(s.ctx), s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, initialTVV))), "should fund vault principal to give shares value")
+	s.Require().NoError(s.sendCoinsBypass(markertypes.WithBypass(s.ctx), s.adminAddr, vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, initialTVV))), "should fund vault principal to give shares value")
 	initialShares := utils.ShareScalar.MulRaw(initialTVV)
 	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), sdk.NewCoin(shareDenom, initialShares)), "should mint initial share supply")
 
 	sharesForRedeemer := utils.ShareScalar.MulRaw(100)
 	redeemerAddr := s.CreateAndFundAccount(sdk.Coin{})
-	s.Require().NoError(s.k.MarkerKeeper.WithdrawCoins(s.ctx, vault.GetAddress(), redeemerAddr, shareDenom, sdk.NewCoins(sdk.NewCoin(shareDenom, sharesForRedeemer))), "should fund redeemer with shares")
+	s.Require().NoError(s.withdrawMarkerCoins(s.ctx, vault.GetAddress(), redeemerAddr, shareDenom, sdk.NewCoins(sdk.NewCoin(shareDenom, sharesForRedeemer))), "should fund redeemer with shares")
 
 	vault.SwapOutEnabled = true
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
@@ -527,13 +527,13 @@ func (s *TestSuite) TestSwapOut_FailsWithRestrictedUnderlyingAssetNoAttributes()
 	s.simApp.MarkerKeeper.SetMarker(s.ctx, activeMarker)
 
 	initialTVV := int64(500)
-	s.Require().NoError(s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), restrictedUnderlyingDenom, sdk.NewCoins(sdk.NewInt64Coin(restrictedUnderlyingDenom, initialTVV))))
+	s.Require().NoError(s.withdrawMarkerCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), restrictedUnderlyingDenom, sdk.NewCoins(sdk.NewInt64Coin(restrictedUnderlyingDenom, initialTVV))))
 	initialShares := utils.ShareScalar.MulRaw(initialTVV)
 	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), sdk.NewCoin(shareDenom, initialShares)), "should mint initial share supply")
 
 	redeemerAddr := s.CreateAndFundAccount(sdk.Coin{})
 	sharesForRedeemer := utils.ShareScalar.MulRaw(100)
-	s.Require().NoError(s.k.MarkerKeeper.WithdrawCoins(s.ctx, vault.GetAddress(), redeemerAddr, shareDenom, sdk.NewCoins(sdk.NewCoin(shareDenom, sharesForRedeemer))), "should fund redeemer from the vault's existing shares")
+	s.Require().NoError(s.withdrawMarkerCoins(s.ctx, vault.GetAddress(), redeemerAddr, shareDenom, sdk.NewCoins(sdk.NewCoin(shareDenom, sharesForRedeemer))), "should fund redeemer from the vault's existing shares")
 
 	sharesToRedeem := sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(50))
 	_, err = s.k.SwapOut(s.ctx, vault.GetAddress(), redeemerAddr, sharesToRedeem)
@@ -576,7 +576,7 @@ func (s *TestSuite) TestSwapOut_FailsWithRestrictedUnderlyingAssetRequiredAttrib
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 	initialTVV := int64(500)
-	s.Require().NoError(s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), restrictedUnderlyingDenom, sdk.NewCoins(sdk.NewInt64Coin(restrictedUnderlyingDenom, initialTVV))))
+	s.Require().NoError(s.withdrawMarkerCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), restrictedUnderlyingDenom, sdk.NewCoins(sdk.NewInt64Coin(restrictedUnderlyingDenom, initialTVV))))
 	initialShares := utils.ShareScalar.MulRaw(initialTVV)
 	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), sdk.NewCoin(shareDenom, initialShares)), "should mint initial share supply")
 
@@ -627,7 +627,7 @@ func (s *TestSuite) TestSwapOut_SucceedsWithRestrictedUnderlyingAssetRequiredAtt
 	s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
 	initialTVV := int64(500)
-	s.Require().NoError(s.k.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), restrictedUnderlyingDenom, sdk.NewCoins(sdk.NewInt64Coin(restrictedUnderlyingDenom, initialTVV))))
+	s.Require().NoError(s.withdrawMarkerCoins(s.ctx, s.adminAddr, vault.PrincipalMarkerAddress(), restrictedUnderlyingDenom, sdk.NewCoins(sdk.NewInt64Coin(restrictedUnderlyingDenom, initialTVV))))
 	initialShares := utils.ShareScalar.MulRaw(initialTVV)
 	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), sdk.NewCoin(shareDenom, initialShares)), "should mint initial share supply")
 	vault, err = s.k.GetVault(s.ctx, vault.GetAddress())
@@ -638,7 +638,7 @@ func (s *TestSuite) TestSwapOut_SucceedsWithRestrictedUnderlyingAssetRequiredAtt
 
 	redeemerAddr := s.CreateAndFundAccount(sdk.Coin{})
 	sharesForRedeemer := utils.ShareScalar.MulRaw(100)
-	s.Require().NoError(s.k.MarkerKeeper.WithdrawCoins(s.ctx, vault.GetAddress(), redeemerAddr, shareDenom, sdk.NewCoins(sdk.NewCoin(shareDenom, sharesForRedeemer))), "should fund redeemer from the vault's existing shares")
+	s.Require().NoError(s.withdrawMarkerCoins(s.ctx, vault.GetAddress(), redeemerAddr, shareDenom, sdk.NewCoins(sdk.NewCoin(shareDenom, sharesForRedeemer))), "should fund redeemer from the vault's existing shares")
 
 	s.simApp.AccountKeeper.SetAccount(s.ctx, s.simApp.AccountKeeper.NewAccountWithAddress(s.ctx, s.adminAddr))
 
@@ -1040,7 +1040,7 @@ func (s *TestSuite) TestSwapOut_FailsWhenPersistedWithdrawalDelayExceedsMax() {
 	vaultAddr := vault.GetAddress()
 
 	redeemer := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
-	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, redeemer, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1_000_000))),
+	s.Require().NoError(FundAccount(s.ctx, s.simApp, redeemer, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1_000_000))),
 		"funding the redeemer with underlying should succeed")
 	_, err := s.k.SwapIn(s.ctx, vaultAddr, redeemer, sdk.NewInt64Coin(underlyingDenom, 1_000_000))
 	s.Require().NoError(err, "swap-in should succeed before the delay is tampered with")

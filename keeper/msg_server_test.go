@@ -572,7 +572,7 @@ func (s *TestSuite) TestMsgServer_SwapIn() {
 			vault.SwapInEnabled = true
 			s.k.AuthKeeper.SetAccount(s.ctx, vault)
 			// Fund owner with underlying assets
-			err = FundAccount(s.ctx, s.simApp.BankKeeper, owner, sdk.NewCoins(assets))
+			err = FundAccount(s.ctx, s.simApp, owner, sdk.NewCoins(assets))
 			s.Require().NoError(err, "failed to fund owner in TestMsgServer_SwapIn setup")
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 		},
@@ -613,7 +613,7 @@ func (s *TestSuite) TestMsgServer_SwapIn_Failures() {
 			vault.Paused = vaultPaused
 			s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
-			err = FundAccount(s.ctx, s.simApp.BankKeeper, owner, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1000)))
+			err = FundAccount(s.ctx, s.simApp, owner, sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1000)))
 			s.Require().NoError(err, "funding owner with underlying should succeed")
 		}
 	}
@@ -694,7 +694,7 @@ func (s *TestSuite) TestMsgServer_SwapIn_Failures() {
 			name: "swap in minted shares exceeding maximum mintable supply (precision-scaled above underlying assets) is rejected",
 			setup: func() {
 				setup(true, false, "", "")()
-				err := FundAccount(s.ctx, s.simApp.BankKeeper, owner,
+				err := FundAccount(s.ctx, s.simApp, owner,
 					sdk.NewCoins(sdk.NewInt64Coin(underlyingDenom, 1_000_000_000_000_000)))
 				s.Require().NoError(err, "funding owner with very large underlying should succeed")
 			},
@@ -754,7 +754,7 @@ func (s *TestSuite) TestMsgServer_SwapOut() {
 		vault.SwapOutEnabled = true
 		s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
-		err = FundAccount(s.ctx, s.simApp.BankKeeper, ownerAddr, sdk.NewCoins(deposit))
+		err = FundAccount(s.ctx, s.simApp, ownerAddr, sdk.NewCoins(deposit))
 		s.Require().NoError(err, "funding owner account should succeed")
 
 		s.ctx = s.ctx.WithBlockTime(time.Now())
@@ -838,7 +838,7 @@ func (s *TestSuite) TestMsgServer_SwapOut_Failures() {
 
 			s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
-			err = FundAccount(s.ctx, s.simApp.BankKeeper, owner, sdk.NewCoins(initialAssets))
+			err = FundAccount(s.ctx, s.simApp, owner, sdk.NewCoins(initialAssets))
 			s.Require().NoError(err, "funding owner should succeed")
 
 			_, err = s.k.SwapIn(s.ctx, vaultAddr, owner, initialAssets)
@@ -2860,7 +2860,7 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds() {
 
 	setup := func() {
 		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin)
-		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, admin, sdk.NewCoins(amount)), "failed to fund account")
+		s.Require().NoError(FundAccount(s.ctx, s.simApp, admin, sdk.NewCoins(amount)), "failed to fund account")
 		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 			Admin:           admin.String(),
 			ShareDenom:      shares,
@@ -2877,7 +2877,7 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds() {
 		s.requireAttribute(admin, requiredAttribute)
 
 		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlying, math.NewInt(1000)), admin, requiredAttribute)
-		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, admin, sdk.NewCoins(amount)), "failed to fund account")
+		s.Require().NoError(FundAccount(s.ctx, s.simApp, admin, sdk.NewCoins(amount)), "failed to fund account")
 		_, err := s.k.CreateVault(s.ctx, &types.MsgCreateVaultRequest{
 			Admin:           admin.String(),
 			ShareDenom:      shares,
@@ -2960,7 +2960,7 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds() {
 				AssetManager: assetMgr.String(),
 			})
 			s.Require().NoError(err, "failed to set asset manager")
-			s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, assetMgr, sdk.NewCoins(amount)), "failed to fund asset manager account")
+			s.Require().NoError(FundAccount(s.ctx, s.simApp, assetMgr, sdk.NewCoins(amount)), "failed to fund asset manager account")
 		}
 
 		ev := createSendCoinEvents(assetMgr.String(), vaultAddr.String(), sdk.NewCoins(amount).String())
@@ -3022,7 +3022,7 @@ func (s *TestSuite) TestMsgServer_DepositInterestFunds_Failures() {
 
 	setupWithAdminFunds := func() {
 		setup()
-		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, admin, sdk.NewCoins(amount)), "failed to fund admin account")
+		s.Require().NoError(FundAccount(s.ctx, s.simApp, admin, sdk.NewCoins(amount)), "failed to fund admin account")
 	}
 
 	tests := []msgServerTestCase[types.MsgDepositInterestFundsRequest, any]{
@@ -3144,7 +3144,7 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds() {
 			UnderlyingAsset: underlying,
 		})
 		s.Require().NoError(err, "failed to create vault")
-		err = FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(amount))
+		err = FundAccount(s.ctx, s.simApp, vaultAddr, sdk.NewCoins(amount))
 		s.Require().NoError(err, "failed to fund vault account")
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	}
@@ -3231,7 +3231,7 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds() {
 				UnderlyingAsset: receipt,
 			})
 			s.Require().NoError(err, "failed to create vault with receipt underlying")
-			err = FundAccount(markertypes.WithBypass(s.ctx), s.simApp.BankKeeper, receiptVaultAddr, sdk.NewCoins(withdrawAmt))
+			err = FundAccount(markertypes.WithBypass(s.ctx), s.simApp, receiptVaultAddr, sdk.NewCoins(withdrawAmt))
 			s.Require().NoError(err, "failed to fund vault account with receipt token")
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 		}
@@ -3278,7 +3278,7 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds() {
 				UnderlyingAsset: receipt,
 			})
 			s.Require().NoError(err, "failed to create vault with receipt underlying")
-			err = FundAccount(markertypes.WithBypass(s.ctx), s.simApp.BankKeeper, receiptVaultAddr, sdk.NewCoins(withdrawAmt))
+			err = FundAccount(markertypes.WithBypass(s.ctx), s.simApp, receiptVaultAddr, sdk.NewCoins(withdrawAmt))
 			s.Require().NoError(err, "failed to fund vault account with receipt token")
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 			_, err = keeper.NewMsgServer(s.simApp.VaultKeeper).SetAssetManager(s.ctx, &types.MsgSetAssetManagerRequest{
@@ -3348,7 +3348,7 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds_Failures() {
 
 	setupRegularWithVaultFunds := func() {
 		setupRegular()
-		err := FundAccount(s.ctx, s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(amountRegular))
+		err := FundAccount(s.ctx, s.simApp, vaultAddr, sdk.NewCoins(amountRegular))
 		s.Require().NoError(err, "failed to fund vault account")
 	}
 
@@ -3365,7 +3365,7 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds_Failures() {
 
 	setupReceiptWithVaultFunds := func() {
 		setupReceipt()
-		err := FundAccount(markertypes.WithBypass(s.ctx), s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(amountReceipt))
+		err := FundAccount(markertypes.WithBypass(s.ctx), s.simApp, vaultAddr, sdk.NewCoins(amountReceipt))
 		s.Require().NoError(err, "failed to fund receipt-underlying vault account")
 	}
 
@@ -3378,7 +3378,7 @@ func (s *TestSuite) TestMsgServer_WithdrawInterestFunds_Failures() {
 			UnderlyingAsset: receiptUnderlying,
 		})
 		s.Require().NoError(err, "failed to create vault for send-fails case")
-		err = FundAccount(markertypes.WithBypass(s.ctx), s.simApp.BankKeeper, vaultAddr, sdk.NewCoins(amountReceipt))
+		err = FundAccount(markertypes.WithBypass(s.ctx), s.simApp, vaultAddr, sdk.NewCoins(amountReceipt))
 		s.Require().NoError(err, "failed to fund receipt-underlying vault account for send-fails case")
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	}
@@ -3531,7 +3531,7 @@ func (s *TestSuite) TestMsgServer_DepositPrincipalFunds() {
 			UnderlyingAsset: underlying,
 		})
 		s.Require().NoError(err, "failed to create vault for share denom %s", share)
-		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, admin, sdk.NewCoins(amount)), "failed to fund admin account during setup")
+		s.Require().NoError(FundAccount(s.ctx, s.simApp, admin, sdk.NewCoins(amount)), "failed to fund admin account during setup")
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 		vault, err := s.k.GetVault(s.ctx, vaultAddr)
 		s.Require().NoError(err, "failed to get vault %s", vaultAddr)
@@ -3581,7 +3581,7 @@ func (s *TestSuite) TestMsgServer_DepositPrincipalFunds() {
 			})
 			s.Require().NoError(err, "failed to create vault during asset manager setup")
 
-			s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, assetMgr, sdk.NewCoins(amount)), "failed to fund asset manager during setup")
+			s.Require().NoError(FundAccount(s.ctx, s.simApp, assetMgr, sdk.NewCoins(amount)), "failed to fund asset manager during setup")
 
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 			vault, err := s.k.GetVault(s.ctx, vaultAddr)
@@ -3727,7 +3727,7 @@ func (s *TestSuite) TestMsgServer_DepositPrincipalFunds_Failures() {
 			name: "authority frozen on the underlying deny list",
 			setup: func() {
 				setup()
-				s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, admin, sdk.NewCoins(amount)), "failed to fund admin account")
+				s.Require().NoError(FundAccount(s.ctx, s.simApp, admin, sdk.NewCoins(amount)), "failed to fund admin account")
 				s.requireSendDeny(underlying, admin)
 			},
 			msg: types.MsgDepositPrincipalFundsRequest{
@@ -3777,7 +3777,7 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds() {
 			UnderlyingAsset: underlying,
 		})
 		s.Require().NoError(err, "failed to create vault")
-		err = FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, sdk.NewCoins(amount))
+		err = FundAccount(s.ctx, s.simApp, markerAddr, sdk.NewCoins(amount))
 		s.Require().NoError(err, "failed to fund marker account")
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 		vault, err := s.k.GetVault(s.ctx, vaultAddr)
@@ -3826,7 +3826,7 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds() {
 				UnderlyingAsset: underlying,
 			})
 			s.Require().NoError(err, "failed to create vault")
-			err = FundAccount(s.ctx, s.simApp.BankKeeper, markerAddr, sdk.NewCoins(amount))
+			err = FundAccount(s.ctx, s.simApp, markerAddr, sdk.NewCoins(amount))
 			s.Require().NoError(err, "failed to fund marker account")
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 			vault, err := s.k.GetVault(s.ctx, vaultAddr)
@@ -3884,7 +3884,7 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds() {
 				UnderlyingAsset: receipt,
 			})
 			s.Require().NoError(err, "failed to create vault with receipt underlying")
-			err = FundAccount(markertypes.WithBypass(s.ctx), s.simApp.BankKeeper, receiptMarkerAddr, sdk.NewCoins(withdrawAmt))
+			err = FundAccount(markertypes.WithBypass(s.ctx), s.simApp, receiptMarkerAddr, sdk.NewCoins(withdrawAmt))
 			s.Require().NoError(err, "failed to fund receipt marker account")
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 			vault, err := s.k.GetVault(s.ctx, receiptVaultAddr)
@@ -3937,7 +3937,7 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds() {
 				UnderlyingAsset: receiptDenom,
 			})
 			s.Require().NoError(err, "failed to create vault with receipt underlying")
-			err = FundAccount(markertypes.WithBypass(s.ctx), s.simApp.BankKeeper, receiptMarkerAddr, sdk.NewCoins(withdrawAmt))
+			err = FundAccount(markertypes.WithBypass(s.ctx), s.simApp, receiptMarkerAddr, sdk.NewCoins(withdrawAmt))
 			s.Require().NoError(err, "failed to fund receipt marker account")
 			s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 			vault, err := s.k.GetVault(s.ctx, receiptVaultAddr)
@@ -4024,7 +4024,7 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds_Failures() {
 
 	setupRegularWithShareFunds := func() {
 		setupRegular()
-		err := FundAccount(markertypes.WithBypass(s.ctx), s.simApp.BankKeeper, shareMarkerAddr, sdk.NewCoins(amountRegular))
+		err := FundAccount(markertypes.WithBypass(s.ctx), s.simApp, shareMarkerAddr, sdk.NewCoins(amountRegular))
 		s.Require().NoError(err, "failed to fund share marker account")
 	}
 
@@ -4045,7 +4045,7 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds_Failures() {
 
 	setupReceiptWithShareFunds := func() {
 		setupReceipt()
-		err := FundAccount(markertypes.WithBypass(s.ctx), s.simApp.BankKeeper, shareMarkerAddr, sdk.NewCoins(amountReceipt))
+		err := FundAccount(markertypes.WithBypass(s.ctx), s.simApp, shareMarkerAddr, sdk.NewCoins(amountReceipt))
 		s.Require().NoError(err, "failed to fund share marker account with receipt token")
 	}
 
@@ -4071,7 +4071,7 @@ func (s *TestSuite) TestMsgServer_WithdrawPrincipalFunds_Failures() {
 		})
 		s.simApp.MarkerKeeper.SetMarker(s.ctx, mk)
 
-		err = FundAccount(markertypes.WithBypass(s.ctx), s.simApp.BankKeeper, shareMarkerAddr, sdk.NewCoins(amountReceipt))
+		err = FundAccount(markertypes.WithBypass(s.ctx), s.simApp, shareMarkerAddr, sdk.NewCoins(amountReceipt))
 		s.Require().NoError(err, "failed to fund share marker account with receipt token for send-fails case")
 
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
@@ -4582,7 +4582,7 @@ func (s *TestSuite) TestMsgServer_PauseVault_ForceVsStrict() {
 		vault.PeriodStart = s.ctx.BlockTime().Unix() - oneDay
 		s.k.AuthKeeper.SetAccount(s.ctx, vault)
 
-		s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, vault.PrincipalMarkerAddress(),
+		s.Require().NoError(FundAccount(s.ctx, s.simApp, vault.PrincipalMarkerAddress(),
 			sdk.NewCoins(sdk.NewInt64Coin(underlying, 100_000))),
 			"funding the principal marker should succeed so reconcile owes unpayable interest")
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
@@ -4592,9 +4592,7 @@ func (s *TestSuite) TestMsgServer_PauseVault_ForceVsStrict() {
 	brokenTVVSetup := func() (sdk.AccAddress, string) {
 		vault, _, underlying, heldDenom := s.setupOversizedNAVVault()
 		s.seedOversizedNAV(vault, heldDenom, underlying, maxValidNAVPrice(), math.OneInt())
-		s.Require().NoError(s.k.BankKeeper.SendCoins(markertypes.WithBypass(s.ctx), s.adminAddr, vault.PrincipalMarkerAddress(),
-			sdk.NewCoins(sdk.NewInt64Coin(heldDenom, 2))),
-			"funding the principal with a held asset priced at the 256-bit ceiling should make TVV conversion overflow")
+		s.fundPrincipalForBrokenValuation(vault, sdk.NewCoins(sdk.NewInt64Coin(heldDenom, 2)))
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 		return vault.GetAddress(), underlying
 	}
@@ -5592,7 +5590,7 @@ func (s *TestSuite) TestMsgServer_BridgeBurnShares() {
 
 		err := s.k.MarkerKeeper.MintCoin(s.ctx, vaultAddr, burn)
 		s.Require().NoError(err, "expected marker mint to succeed")
-		err = s.k.MarkerKeeper.WithdrawCoins(s.ctx, vaultAddr, bridgeAddr, share, sdk.NewCoins(burn))
+		err = s.withdrawMarkerCoins(s.ctx, vaultAddr, bridgeAddr, share, sdk.NewCoins(burn))
 		s.Require().NoError(err, "expected marker withdraw to bridge to succeed")
 
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
@@ -5657,7 +5655,7 @@ func (s *TestSuite) TestMsgServer_BridgeBurnShares_Failures() {
 		enabled()
 		err := s.k.MarkerKeeper.MintCoin(s.ctx, vaultAddr, burn)
 		s.Require().NoError(err, "expected marker mint to succeed")
-		err = s.k.MarkerKeeper.WithdrawCoins(s.ctx, vaultAddr, bridgeAddr, share, sdk.NewCoins(burn))
+		err = s.withdrawMarkerCoins(s.ctx, vaultAddr, bridgeAddr, share, sdk.NewCoins(burn))
 		s.Require().NoError(err, "expected marker withdraw to bridge to succeed")
 		s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
 	}
@@ -6430,7 +6428,7 @@ func (s *TestSuite) TestMsgServer_UpdateVaultNAV_LeavesPausedBalanceFrozen() {
 			s.requireSimpleMarker(heldDenom)
 			s.setVaultNAV(vault, heldDenom, sdk.NewInt64Coin(underlying, seedPrice), seedVolume)
 			s.Require().NoError(
-				FundAccount(s.ctx, s.simApp.BankKeeper, vault.PrincipalMarkerAddress(),
+				FundAccount(s.ctx, s.simApp, vault.PrincipalMarkerAddress(),
 					sdk.NewCoins(sdk.NewInt64Coin(underlying, underlyingHeld), sdk.NewInt64Coin(heldDenom, assetHeld))),
 				"failed to fund the principal marker with %d%s and %d%s", underlyingHeld, underlying, assetHeld, heldDenom,
 			)
@@ -6730,7 +6728,7 @@ func (s *TestSuite) TestMsgServer_RemoveVaultNAV() {
 				vault, err := s.k.GetVault(s.ctx, vaultAddr)
 				s.Require().NoError(err, "failed to get vault %s to fund its principal marker", vaultAddr)
 				s.Require().NoError(
-					FundAccount(s.ctx, s.simApp.BankKeeper, vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(navDenom, 3))),
+					FundAccount(s.ctx, s.simApp, vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(navDenom, 3))),
 					"failed to fund the principal marker with %s", navDenom,
 				)
 			},
@@ -6769,7 +6767,7 @@ func (s *TestSuite) TestMsgServer_RemoveVaultNAV() {
 				seedUnheldNAV()
 				vault := s.pauseVault(vaultAddr)
 				s.Require().NoError(
-					FundAccount(s.ctx, s.simApp.BankKeeper, vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(navDenom, 3))),
+					FundAccount(s.ctx, s.simApp, vault.PrincipalMarkerAddress(), sdk.NewCoins(sdk.NewInt64Coin(navDenom, 3))),
 					"failed to fund the principal marker with %s", navDenom,
 				)
 			},
@@ -7305,8 +7303,8 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_RestrictedMarker() {
 				false, true, false, []string{},
 			)
 			s.Require().NoError(s.simApp.MarkerKeeper.AddFinalizeAndActivateMarker(s.ctx, restrictedMarker), "failed to create restricted marker %s", restrictedDenom)
-			s.Require().NoError(s.simApp.MarkerKeeper.WithdrawCoins(s.ctx, s.adminAddr, source, restrictedDenom, sdk.NewCoins(sdk.NewInt64Coin(restrictedDenom, 10))), "failed to fund source %s with restricted marker denom %s", source, restrictedDenom)
-			s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(underlying, 5))), "failed to fund principal %s with underlying asset %s", principalAddr, underlying)
+			s.Require().NoError(s.withdrawMarkerCoins(s.ctx, s.adminAddr, source, restrictedDenom, sdk.NewCoins(sdk.NewInt64Coin(restrictedDenom, 10))), "failed to fund source %s with restricted marker denom %s", source, restrictedDenom)
+			s.Require().NoError(FundAccount(s.ctx, s.simApp, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(underlying, 5))), "failed to fund principal %s with underlying asset %s", principalAddr, underlying)
 			s.setVaultNAV(vault, restrictedDenom, sdk.NewInt64Coin(underlying, 5), 10)
 
 			sourceAmount := sdk.NewCoins(sdk.NewInt64Coin(restrictedDenom, 10))
@@ -8017,8 +8015,8 @@ func (s *TestSuite) TestMsgServer_AcceptAsset_SettlementNAV_MetadataDenom() {
 	}
 
 	const secondID = "settle-nav-nft-2"
-	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, source, sdk.NewCoins(sdk.NewInt64Coin(asset, 10))), "fund source for second settlement")
-	s.Require().NoError(FundAccount(s.ctx, s.simApp.BankKeeper, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(underlying, 6))), "fund principal for second settlement")
+	s.Require().NoError(FundAccount(s.ctx, s.simApp, source, sdk.NewCoins(sdk.NewInt64Coin(asset, 10))), "fund source for second settlement")
+	s.Require().NoError(FundAccount(s.ctx, s.simApp, principalAddr, sdk.NewCoins(sdk.NewInt64Coin(underlying, 6))), "fund principal for second settlement")
 	s.createPayment(source, vaultAddr, sdk.NewCoins(sdk.NewInt64Coin(asset, 10)), sdk.NewCoins(sdk.NewInt64Coin(underlying, 6)), secondID)
 
 	_, err = keeper.NewMsgServer(s.simApp.VaultKeeper).AcceptAsset(s.ctx, &types.MsgAcceptAssetRequest{

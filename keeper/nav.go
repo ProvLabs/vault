@@ -56,6 +56,9 @@ func validateVaultNAVFields(vault *types.VaultAccount, nav types.VaultNAV) error
 	if nav.Volume.IsNil() || !nav.Volume.IsPositive() {
 		return fmt.Errorf("NAV volume must be positive")
 	}
+	if err := types.ValidateNAVComponentMagnitudes(nav.Price, nav.Volume); err != nil {
+		return err
+	}
 	if len(nav.Source) > types.MaxNAVSourceLength {
 		return fmt.Errorf("NAV source too long (expected <= %d, actual: %d)", types.MaxNAVSourceLength, len(nav.Source))
 	}
@@ -92,10 +95,24 @@ func (k *Keeper) SetVaultNAV(ctx sdk.Context, vault *types.VaultAccount, nav typ
 		return err
 	}
 
+	heldBalance := k.BankKeeper.GetBalance(ctx, vault.PrincipalMarkerAddress(), nav.Denom).Amount
+	valueAtOldPrice, err := k.denomValue(ctx, *vault, nav.Denom, heldBalance)
+	if err != nil {
+		return fmt.Errorf("failed to value denom %q at its previous price: %w", nav.Denom, err)
+	}
+
 	nav.UpdatedBlockHeight = ctx.BlockHeight()
 	nav.UpdatedTime = ctx.BlockTime().UTC()
-	if err := k.NAVs.Set(ctx, collections.Join(vault.GetAddress(), nav.Denom), nav); err != nil {
+	if err = k.NAVs.Set(ctx, collections.Join(vault.GetAddress(), nav.Denom), nav); err != nil {
 		return fmt.Errorf("failed to store vault NAV: %w", err)
+	}
+
+	valueAtNewPrice, err := k.denomValue(ctx, *vault, nav.Denom, heldBalance)
+	if err != nil {
+		return fmt.Errorf("failed to value denom %q at its new price: %w", nav.Denom, err)
+	}
+	if err := k.adjustTotalValue(ctx, *vault, valueAtNewPrice.Sub(valueAtOldPrice)); err != nil {
+		return fmt.Errorf("failed to record repriced value for denom %q: %w", nav.Denom, err)
 	}
 
 	k.emitEvent(ctx, types.NewEventNAVUpdated(vault.Address, nav, signer))
@@ -196,9 +213,20 @@ func (k *Keeper) RemoveVaultNAV(ctx sdk.Context, vault *types.VaultAccount, deno
 	if err != nil {
 		return fmt.Errorf("failed to get internal NAV for denom %q on vault %s: %w", denom, vault.Address, err)
 	}
+	remainingBalance := k.BankKeeper.GetBalance(ctx, vault.PrincipalMarkerAddress(), denom).Amount
+	valueLosingItsPrice, err := k.denomValue(ctx, *vault, denom, remainingBalance)
+	if err != nil {
+		return fmt.Errorf("failed to value denom %q before dropping its price: %w", denom, err)
+	}
+
 	if err := k.NAVs.Remove(ctx, collections.Join(vault.GetAddress(), denom)); err != nil {
 		return fmt.Errorf("failed to remove internal NAV for denom %q on vault %s: %w", denom, vault.Address, err)
 	}
+
+	if err := k.adjustTotalValue(ctx, *vault, valueLosingItsPrice.Neg()); err != nil {
+		return fmt.Errorf("failed to record removed value for denom %q: %w", denom, err)
+	}
+
 	k.emitEvent(ctx, types.NewEventNAVRemoved(vault.Address, nav, signer))
 	return nil
 }

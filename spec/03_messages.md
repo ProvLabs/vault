@@ -47,7 +47,7 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 | Endpoint                 | Admin required (or Asset Manager) | Works when UNPAUSED | Works when PAUSED | Notes / gates that still apply                                                                                |
 | ------------------------ | --------------------------------- | ------------------: | ----------------: | ------------------------------------------------------------------------------------------------------------- |
 | `CreateVault`            | Governance when gated             |                   ✅ |                 ✅ | Creation only. Must be signed by the governance module account while `gov_only_vault_creation` is enabled.     |
-| `SwapIn`                 | No                                |                   ✅ |                 ❌ | Keeper `SwapIn` enforces `!vault.Paused`, `SwapInEnabled`, accepted denom, underlying deny list, reconcile.                         |
+| `SwapIn`                 | No                                |                   ✅ |                 ❌ | Keeper `SwapIn` enforces `!vault.Paused`, `SwapInEnabled`, accepted denom, underlying deny list, reconcile, non-zero net TVV when shares are outstanding.                         |
 | `SwapOut`                | No                                |                   ✅ |                 ❌ | Keeper `SwapOut` enforces `!vault.Paused`, `SwapOutEnabled`, share denom match, payout restrictions, enqueue. |
 | `BridgeMintShares`       | Bridge only                       |                   ✅ |                 ✅ | Requires `bridge_enabled`, signer == `bridge_address`, shares denom match, positive amount, capacity ≤ `total_shares`. |
 | `BridgeBurnShares`       | Bridge only                       |                   ✅ |                 ✅ | Requires `bridge_enabled`, signer == `bridge_address`, shares denom match, positive amount; burns from marker. |
@@ -118,6 +118,8 @@ Admin-only. Sets Bank module metadata for a vault’s share denom, defining how 
 ## SwapIn
 
 Deposits the vault's underlying asset into a vault in exchange for newly minted shares. The underlying asset is the only accepted deposit denom. A depositor on the underlying marker's deny list is rejected, since the deposit itself moves funds with a marker bypass.
+
+A deposit is also rejected when the vault's net TVV is zero while shares are outstanding — either the AUM fee sweep drained the principal or an uncollectable `OutstandingAumFee` consumed the gross value. Share pricing has no meaningful basis in that state, and minting against it would overstate shares by roughly the vault's whole unit price. `EstimateSwapIn` rejects the same state with `FailedPrecondition`, so the query and the transaction agree. Recovery is `DepositPrincipalFunds`, which restores value without minting shares.
 
 * **Request:** `MsgSwapInRequest { owner, vault_address, assets }`
 * **Response:** `MsgSwapInResponse {}`

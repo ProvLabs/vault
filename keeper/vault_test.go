@@ -281,6 +281,56 @@ func (s *TestSuite) TestSwapIn_ZeroShareDeposit() {
 	}
 }
 
+func (s *TestSuite) TestSwapIn_ZeroNetTVVWithSharesOutstanding() {
+	tests := []struct {
+		name            string
+		grossUnderlying int64
+		outstandingFee  int64
+	}{
+		{
+			name:            "fee sweep drained the principal, leaving no gross value behind the outstanding shares",
+			grossUnderlying: 0,
+			outstandingFee:  0,
+		},
+		{
+			name:            "uncollectable fee liability consumed the gross value the principal still holds",
+			grossUnderlying: 1_000_000,
+			outstandingFee:  1_000_000,
+		},
+	}
+
+	for i, tc := range tests {
+		s.Run(tc.name, func() {
+			underlyingDenom := fmt.Sprintf("zeronet%d", i)
+			shareDenom := fmt.Sprintf("zeronetshare%d", i)
+			depositorFunding := math.NewInt(1_000_000)
+
+			vault := s.setupZeroNetTVVVault(underlyingDenom, shareDenom, tc.grossUnderlying, tc.outstandingFee)
+			depositor := s.CreateAndFundAccount(sdk.NewCoin(underlyingDenom, depositorFunding))
+			deposit := sdk.NewCoin(underlyingDenom, depositorFunding)
+
+			_, err := s.k.SwapIn(s.ctx, vault.GetAddress(), depositor, deposit)
+			s.Require().Error(err, "swap in of %s should be rejected while net TVV is zero with %s outstanding", deposit, vault.TotalShares)
+			s.Require().ErrorIs(err, utils.ErrZeroAssetsWithSharesOutstanding, "rejection should be classifiable as the zero-net-value guard for vault %s", vault.GetAddress())
+			s.Require().ErrorContains(err, "cannot accept deposits", "rejection should read as a deposit policy rejection for vault %s", vault.GetAddress())
+
+			s.assertBalance(depositor, underlyingDenom, depositorFunding)
+			s.assertBalance(depositor, shareDenom, math.ZeroInt())
+
+			updatedVault, getErr := s.k.GetVault(s.ctx, vault.GetAddress())
+			s.Require().NoError(getErr, "should get vault %s after rejected swap in", vault.GetAddress())
+			s.Require().Equal(vault.TotalShares.Amount.String(), updatedVault.TotalShares.Amount.String(), "vault total shares must be unchanged after rejected swap in for vault %s", vault.GetAddress())
+
+			_, estimateErr := keeper.NewQueryServer(s.simApp.VaultKeeper).EstimateSwapIn(s.ctx, &types.QueryEstimateSwapInRequest{
+				VaultAddress: vault.GetAddress().String(),
+				Assets:       deposit,
+			})
+			s.Require().Error(estimateErr, "the estimate must agree with the transaction and reject the same deposit %s", deposit)
+			s.Require().ErrorContains(estimateErr, "cannot accept deposits", "estimate rejection should match the transaction's reason for vault %s", vault.GetAddress())
+		})
+	}
+}
+
 func (s *TestSuite) TestCheckDepositDenyList() {
 	frozenDenom := "frozencoin"
 	otherFrozenDenom := "otherfrozencoin"

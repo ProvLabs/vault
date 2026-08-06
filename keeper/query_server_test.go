@@ -349,6 +349,10 @@ func (s *TestSuite) TestQueryServer_EstimateSwapIn() {
 	vaultAddr := types.GetVaultAddress(shareDenom)
 	assetsUnderlying := sdk.NewInt64Coin(underlyingDenom, 100)
 
+	zeroNetUnderlying := "uzeronet.fcc"
+	zeroNetShare := "zeronetshares"
+	zeroNetVaultAddr := types.GetVaultAddress(zeroNetShare)
+
 	setupVault := func() {
 		s.requireAddFinalizeAndActivateMarker(sdk.NewCoin(underlyingDenom, math.NewInt(1000)), s.adminAddr)
 		s.CreateVaultWithParams(shareDenom, underlyingDenom)
@@ -395,6 +399,28 @@ func (s *TestSuite) TestQueryServer_EstimateSwapIn() {
 				Assets:       assetsUnderlying,
 			},
 			ExpectedErrSubstrs: []string{"swap-in disabled or vault paused", "FailedPrecondition"},
+		},
+		{
+			Name: "fails when a drained principal leaves zero net value with shares outstanding",
+			Setup: func() {
+				s.setupZeroNetTVVVault(zeroNetUnderlying, zeroNetShare, 0, 0)
+			},
+			Req: &types.QueryEstimateSwapInRequest{
+				VaultAddress: zeroNetVaultAddr.String(),
+				Assets:       sdk.NewInt64Coin(zeroNetUnderlying, 100),
+			},
+			ExpectedErrSubstrs: []string{"cannot accept deposits", "net vault value is zero", "FailedPrecondition"},
+		},
+		{
+			Name: "fails when an uncollectable fee consumes the gross value behind outstanding shares",
+			Setup: func() {
+				s.setupZeroNetTVVVault(zeroNetUnderlying, zeroNetShare, 1_000_000, 1_000_000)
+			},
+			Req: &types.QueryEstimateSwapInRequest{
+				VaultAddress: zeroNetVaultAddr.String(),
+				Assets:       sdk.NewInt64Coin(zeroNetUnderlying, 100),
+			},
+			ExpectedErrSubstrs: []string{"cannot accept deposits", "net vault value is zero", "FailedPrecondition"},
 		},
 		{
 			Name:               "nil request",

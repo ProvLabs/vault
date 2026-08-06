@@ -1,12 +1,18 @@
 package utils
 
 import (
+	"errors"
 	"fmt"
 
 	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
+
+// ErrZeroAssetsWithSharesOutstanding is returned by CalculateSharesProRata when
+// zero assets back outstanding shares, collapsing the pro-rata divisor to
+// VirtualAssets alone. Classify with errors.Is.
+var ErrZeroAssetsWithSharesOutstanding = errors.New("total assets are zero while shares are outstanding")
 
 // Fixed precision / virtual-offset parameters.
 //
@@ -39,7 +45,8 @@ var (
 //   - First deposit mints amount * ShareScalar.
 //   - Otherwise: shares = floor( amount * ts' / ta' ).
 //
-// Errors if any input is nil or negative.
+// Errors if any input is nil or negative, or with
+// ErrZeroAssetsWithSharesOutstanding when zero assets back outstanding shares.
 func CalculateSharesProRata(
 	amount math.Int,
 	totalAssets math.Int,
@@ -61,6 +68,9 @@ func CalculateSharesProRata(
 			return sdk.Coin{}, fmt.Errorf("failed to multiply amount %s by share scalar %s: %w", amount, ShareScalar, err)
 		}
 		return sdk.NewCoin(shareDenom, scaled), nil
+	}
+	if totalAssets.IsZero() {
+		return sdk.Coin{}, ErrZeroAssetsWithSharesOutstanding
 	}
 	ta, err := totalAssets.SafeAdd(VirtualAssets)
 	if err != nil {

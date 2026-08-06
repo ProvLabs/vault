@@ -29,6 +29,7 @@ import (
 	"github.com/provlabs/vault/simapp"
 	"github.com/provlabs/vault/simulation"
 	"github.com/provlabs/vault/types"
+	"github.com/provlabs/vault/utils"
 )
 
 // TestSuite wires up a full SimApp and exposes helpers for keeper tests.
@@ -1249,6 +1250,31 @@ func (s *TestSuite) pauseVault(vaultAddr sdk.AccAddress) *types.VaultAccount {
 	s.Require().NoError(err, "should get vault %s to pause it", vaultAddr)
 	vault.Paused = true
 	s.Require().NoError(s.k.SetVaultAccount(s.ctx, vault), "should persist paused vault %s", vaultAddr)
+	return vault
+}
+
+// setupZeroNetTVVVault stages a live vault holding shares outstanding whose net TVV is zero.
+// grossUnderlying is funded into the principal marker and outstandingFee is recorded as the
+// AUM fee liability, so grossUnderlying=0 models the drained-principal route (FIND-029 route A)
+// and outstandingFee >= grossUnderlying > 0 models the uncollectable-fee route (route B).
+func (s *TestSuite) setupZeroNetTVVVault(underlyingDenom, shareDenom string, grossUnderlying, outstandingFee int64) *types.VaultAccount {
+	vault := s.setupBaseVault(underlyingDenom, shareDenom)
+
+	shares := sdk.NewCoin(shareDenom, utils.ShareScalar.MulRaw(1_000_000))
+	s.Require().NoError(s.k.MarkerKeeper.MintCoin(s.ctx, vault.GetAddress(), shares),
+		"minting %s should succeed for vault %s", shares, shareDenom)
+	vault.TotalShares = shares
+	vault.OutstandingAumFee = sdk.NewInt64Coin(underlyingDenom, outstandingFee)
+	s.Require().NoError(s.k.SetVaultAccount(s.ctx, vault), "persisting zero-net-TVV vault %s should succeed", shareDenom)
+
+	if grossUnderlying > 0 {
+		s.fundPrincipal(vault, sdk.NewInt64Coin(underlyingDenom, grossUnderlying))
+	}
+
+	netTVV, err := s.k.GetNetTVV(s.ctx, *vault)
+	s.Require().NoError(err, "computing net TVV for staged vault %s should succeed", shareDenom)
+	s.Require().True(netTVV.IsZero(), "staged vault %s should have zero net TVV, got %s", shareDenom, netTVV)
+
 	return vault
 }
 

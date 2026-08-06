@@ -113,6 +113,8 @@ func (k queryServer) Vault(goCtx context.Context, req *types.QueryVaultRequest) 
 }
 
 // EstimateSwapIn estimates the amount of shares received for a given amount of deposit assets at query time.
+// It prices off the same net basis as SwapIn, so a vault with zero net value and shares outstanding
+// reports FailedPrecondition here instead of a share count SwapIn would refuse to mint.
 func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstimateSwapInRequest) (*types.QueryEstimateSwapInResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
@@ -157,6 +159,9 @@ func (k queryServer) EstimateSwapIn(goCtx context.Context, req *types.QueryEstim
 		vault.TotalShares.Denom,
 	)
 	if err != nil {
+		if errors.Is(err, utils.ErrZeroAssetsWithSharesOutstanding) {
+			return nil, status.Errorf(codes.FailedPrecondition, "vault %q cannot accept deposits: net vault value is zero with %s outstanding", req.VaultAddress, vault.TotalShares.String())
+		}
 		return nil, status.Errorf(codes.Internal, "failed to calculate shares: %v", err)
 	}
 

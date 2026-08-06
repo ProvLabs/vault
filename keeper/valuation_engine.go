@@ -461,7 +461,8 @@ func (k Keeper) GetNAVPerShare(ctx sdk.Context, vault types.VaultAccount) (math.
 // deposit denom via ValidateAcceptedCoin, so no price conversion is required.
 //
 // Returns a coin in the share denom. This function performs calculation only;
-// callers must enforce liquidity/policy.
+// callers must enforce liquidity/policy. Returns utils.ErrZeroAssetsWithSharesOutstanding
+// when net TVV is zero while shares are outstanding; callers surface that as a rejection.
 func (k Keeper) ConvertDepositToShares(ctx sdk.Context, vault types.VaultAccount, in sdk.Coin) (sdk.Coin, error) {
 	tvv, err := k.GetNetTVV(ctx, vault)
 	if err != nil {

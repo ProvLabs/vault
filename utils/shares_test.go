@@ -171,6 +171,7 @@ func TestCalculateSharesProRata(t *testing.T) {
 		expectErr       bool
 		expectedErrText string
 		errContains     string
+		expectedErrIs   error
 	}{
 		{
 			name:        "first deposit mints amount * ShareScalar",
@@ -180,11 +181,34 @@ func TestCalculateSharesProRata(t *testing.T) {
 			expected:    sdk.NewCoin(shareDenom, sdkmath.NewInt(100_000_000)),
 		},
 		{
-			name:        "assets zero but shares non-zero uses pro-rata path",
-			amount:      sdkmath.NewInt(1),
+			name:          "reject zero assets with a single share outstanding",
+			amount:        sdkmath.NewInt(1),
+			totalAssets:   sdkmath.NewInt(0),
+			totalShares:   sdkmath.NewInt(1),
+			expectErr:     true,
+			expectedErrIs: utils.ErrZeroAssetsWithSharesOutstanding,
+		},
+		{
+			name:          "reject zero assets with a large share supply outstanding",
+			amount:        sdkmath.NewInt(1_000_000),
+			totalAssets:   sdkmath.NewInt(0),
+			totalShares:   sdkmath.NewInt(1_000_000_000_000),
+			expectErr:     true,
+			expectedErrIs: utils.ErrZeroAssetsWithSharesOutstanding,
+		},
+		{
+			name:        "zero deposit into a zero-asset vault with shares outstanding mints nothing",
+			amount:      sdkmath.NewInt(0),
 			totalAssets: sdkmath.NewInt(0),
-			totalShares: sdkmath.NewInt(1),
-			expected:    sdk.NewCoin(shareDenom, sdkmath.NewInt(1_000_001)),
+			totalShares: sdkmath.NewInt(1_000_000_000_000),
+			expected:    sdk.NewCoin(shareDenom, sdkmath.ZeroInt()),
+		},
+		{
+			name:        "one asset unit with shares outstanding still prices pro-rata",
+			amount:      sdkmath.NewInt(1),
+			totalAssets: sdkmath.NewInt(1),
+			totalShares: sdkmath.NewInt(1_000_000),
+			expected:    sdk.NewCoin(shareDenom, sdkmath.NewInt(1_000_000)),
 		},
 		{
 			name:        "proportional mint with virtual offsets",
@@ -267,7 +291,7 @@ func TestCalculateSharesProRata(t *testing.T) {
 		{
 			name:        "total shares within virtual shares of the max overflows the offset add",
 			amount:      sdkmath.NewInt(1),
-			totalAssets: sdkmath.ZeroInt(),
+			totalAssets: sdkmath.OneInt(),
 			totalShares: maxInt(),
 			expectErr:   true,
 			errContains: "failed to add virtual shares",
@@ -280,6 +304,10 @@ func TestCalculateSharesProRata(t *testing.T) {
 
 			if tc.expectErr {
 				require.Error(t, err, "expected error for case: %s", tc.name)
+				if tc.expectedErrIs != nil {
+					require.ErrorIs(t, err, tc.expectedErrIs, "error should be classifiable with errors.Is for case: %s", tc.name)
+					return
+				}
 				if tc.errContains != "" {
 					require.ErrorContains(t, err, tc.errContains, "unexpected error text for case: %s", tc.name)
 					return

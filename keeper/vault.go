@@ -1,10 +1,12 @@
 package keeper
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/provlabs/vault/types"
+	"github.com/provlabs/vault/utils"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -237,7 +239,8 @@ func (k *Keeper) createVaultMarker(ctx sdk.Context, markerManager sdk.AccAddress
 //  5. Validates that the provided underlying asset matches the vault’s configured underlying denom.
 //  6. Rejects the deposit when the depositor is on the underlying marker’s deny list.
 //  7. Calculates the number of shares to mint based on the deposit, current supply, and vault balance,
-//     rejecting deposits that round down to zero shares before any funds move.
+//     rejecting deposits that round down to zero shares, or that price against a zero net vault
+//     value with shares outstanding, before any funds move.
 //  8. Mints the computed amount of shares under the vault’s admin authority.
 //  9. Withdraws the minted shares from the vault to the recipient address.
 //
@@ -286,6 +289,9 @@ func (k *Keeper) SwapIn(ctx sdk.Context, vaultAddr, recipient sdk.AccAddress, as
 
 	shares, err := k.ConvertDepositToShares(ctx, *vault, asset)
 	if err != nil {
+		if errors.Is(err, utils.ErrZeroAssetsWithSharesOutstanding) {
+			return nil, fmt.Errorf("vault %s cannot accept deposits: net vault value is zero with %s outstanding: %w", vaultAddr.String(), vault.TotalShares.String(), err)
+		}
 		return nil, fmt.Errorf("failed to calculate shares from assets: %w", err)
 	}
 

@@ -203,7 +203,7 @@ func (k *Keeper) refundPausedVaultSwapOut(ctx sdk.Context, j types.PayoutJob) {
 func (k *Keeper) deferSwapOutRetry(ctx sdk.Context, j types.PayoutJob, reason string) {
 	req := j.Req
 	req.FailureCount++
-	retryTime := ctx.BlockTime().Unix() + swapOutRetryBackoff(req.FailureCount)
+	retryTime := ctx.BlockTime().Unix() + swapOutRetryDelay(j.ID, req.FailureCount)
 
 	cacheCtx, write := ctx.CacheContext()
 	if err := k.PendingSwapOutQueue.Reschedule(cacheCtx, j.Timestamp, j.VaultAddr, j.ID, retryTime, &req); err != nil {
@@ -226,6 +226,17 @@ func (k *Keeper) deferSwapOutRetry(ctx sdk.Context, j types.PayoutJob, reason st
 		"retry_time", retryTime,
 	)
 	k.emitEvent(ctx, types.NewEventSwapOutRetryScheduled(req.VaultAddress, req.Owner, req.Shares, j.ID, reason, req.FailureCount, retryTime))
+}
+
+// swapOutRetryDelay returns how many seconds to delay the next attempt for swap out id, spreading a
+// delayed retry across SwapOutRetryJitterSpread so entries failing together stop coming due together.
+func swapOutRetryDelay(id uint64, failureCount uint32) int64 {
+	backoff := swapOutRetryBackoff(failureCount)
+	if backoff == 0 {
+		return 0
+	}
+
+	return backoff + int64(id%SwapOutRetryJitterSpread)
 }
 
 // swapOutRetryBackoff returns how many seconds to delay the next attempt for a swap out that has

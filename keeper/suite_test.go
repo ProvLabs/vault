@@ -969,6 +969,28 @@ func (s *TestSuite) enqueueUnrefundableSwapOut(underlyingDenom, shareDenom strin
 	return ownerAddr, minted, reqID
 }
 
+// enqueueUnrefundableSwapOutCluster enqueues count identical unrefundable swap-outs against a single
+// paused vault, reproducing a cluster of entries that all fail in the same block. It returns their ids.
+func (s *TestSuite) enqueueUnrefundableSwapOutCluster(underlyingDenom, shareDenom string, assets sdk.Coin, duePayoutTime int64, count int) []uint64 {
+	ownerAddr, minted, firstID := s.enqueueUnrefundableSwapOut(underlyingDenom, shareDenom, assets, duePayoutTime)
+
+	req := types.PendingSwapOut{
+		Owner:        ownerAddr.String(),
+		VaultAddress: types.GetVaultAddress(shareDenom).String(),
+		RedeemDenom:  underlyingDenom,
+		Shares:       minted,
+	}
+
+	ids := []uint64{firstID}
+	for i := 1; i < count; i++ {
+		id, err := s.k.PendingSwapOutQueue.Enqueue(s.ctx, duePayoutTime, &req)
+		s.Require().NoError(err, "should enqueue clustered swap-out %d of %d for share denom %s", i, count, shareDenom)
+		ids = append(ids, id)
+	}
+
+	return ids
+}
+
 // assertSwapOutEntryPreservedAndPaused verifies the invariant that protects escrowed funds when a
 // swap-out hits its first critical, unrecoverable failure: the pending request is still in the queue
 // with the failure recorded, the vault is paused, the owner was not paid, and the escrowed shares
@@ -994,14 +1016,14 @@ func (s *TestSuite) assertSwapOutEntryPreservedAndPaused(reqID uint64, vaultAddr
 }
 
 // assertSwapOutRetryDeferred asserts request reqID is still queued with the given failure count and
-// has been re-keyed to the retry time that count implies for the current block time.
+// has been re-keyed to the retry time that its id and count imply for the current block time.
 func (s *TestSuite) assertSwapOutRetryDeferred(reqID uint64, expectedFailureCount uint32) types.PendingSwapOut {
 	retryTime, req, err := s.k.PendingSwapOutQueue.GetByID(s.ctx, reqID)
 	s.Require().NoError(err, "should find preserved request %d in the queue", reqID)
 	s.Require().Equal(expectedFailureCount, req.FailureCount, "request %d should have recorded %d failed attempts", reqID, expectedFailureCount)
 
-	expectedRetryTime := s.ctx.BlockTime().Unix() + s.k.TestAccessor_swapOutRetryBackoff(expectedFailureCount)
-	s.Require().Equal(expectedRetryTime, retryTime, "request %d should be re-keyed to the retry time implied by its backoff", reqID)
+	expectedRetryTime := s.ctx.BlockTime().Unix() + s.k.TestAccessor_swapOutRetryDelay(reqID, expectedFailureCount)
+	s.Require().Equal(expectedRetryTime, retryTime, "request %d should be re-keyed to the retry time implied by its backoff and jitter", reqID)
 
 	return *req
 }

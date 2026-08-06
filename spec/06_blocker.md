@@ -191,7 +191,7 @@ A request that can neither be settled nor refunded stays queued, because the ent
 Every path that preserves a request therefore re-keys it:
 
 1. `failure_count` on the request is incremented and stored.
-2. The entry is re-filed under `now + backoff(failure_count)`, which puts it behind the work that is currently due. The re-key is atomic; if it fails, the entry is left in place and retried on the next block.
+2. The entry is re-filed under `now + delay(request_id, failure_count)`, which puts it behind the work that is currently due. The re-key is atomic; if it fails, the entry is left in place and retried on the next block.
 3. `EventSwapOutRetryScheduled{ request_id, reason, failure_count, retry_time }` is emitted.
 
 The delay grows with the failure count and is capped, so a permanently failing request is still revisited at a cost the budget can absorb:
@@ -202,6 +202,8 @@ The delay grows with the failure count and is capped, so a permanently failing r
 | 2 | `SwapOutRetryBackoffBase` (10 minutes) |
 | 3, 4, … | doubles each time |
 | capped at | `SwapOutRetryBackoffMax` (6 hours) |
+
+Any non-zero delay also carries a jitter of `request_id % SwapOutRetryJitterSpread` (10 minutes) seconds. Without it, entries failing in the same block with the same `failure_count` receive the same retry time and re-form as a cluster on every cycle, re-consuming the whole batch budget together and delaying legitimate swap-outs on *other* vaults, since the budget is global. The jitter is derived from the request id, which is already consensus state, so the spread stays deterministic. The one immediate retry granted by `SwapOutImmediateRetries` is deliberately not jittered.
 
 `MsgExpeditePendingSwapOut` clears `failure_count` and re-keys the entry to time 0, which is how an operator forces an immediate retry after fixing the underlying cause. Note that a re-keyed request reports its retry time as the `timeout` in the `PendingSwapOuts` and `VaultPendingSwapOuts` queries, so a rising `failure_count` there marks escrow that needs attention.
 

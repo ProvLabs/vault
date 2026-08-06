@@ -131,6 +131,11 @@ func (k Keeper) TestAccessor_swapOutRetryBackoff(failureCount uint32) int64 {
 	return swapOutRetryBackoff(failureCount)
 }
 
+// TestAccessor_swapOutRetryDelay exposes the swapOutRetryDelay function for unit tests.
+func (k Keeper) TestAccessor_swapOutRetryDelay(id uint64, failureCount uint32) int64 {
+	return swapOutRetryDelay(id, failureCount)
+}
+
 // TestAccessor_getRefundReason exposes this keeper's getRefundReason function for unit tests.
 func (k Keeper) TestAccessor_getRefundReason(err error) string {
 	return k.getRefundReason(err)

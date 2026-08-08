@@ -1029,6 +1029,34 @@ func (s *TestSuite) TestKeeper_ProcessSwapOutJobs() {
 				s.Require().True(supply.Amount.IsZero(), "share supply should be zero after the burn completes")
 			},
 		},
+		{
+			name: "job whose queue entry is already gone is not paid out and pauses the vault",
+			setup: func(shareDenom string, vaultAddr sdk.AccAddress) (sdk.AccAddress, sdk.Coin, uint64, types.PendingSwapOut) {
+				return s.enqueueDueSwapOut(underlyingDenom, shareDenom, assets, duePayoutTime)
+			},
+			act: func(shareDenom string, vaultAddr sdk.AccAddress, ownerAddr sdk.AccAddress, mintedShares sdk.Coin, reqID uint64, req types.PendingSwapOut) {
+				s.Require().NoError(
+					s.k.PendingSwapOutQueue.Dequeue(s.ctx, duePayoutTime, vaultAddr, reqID),
+					"should remove request %d from the queue so the collected job no longer matches queue contents", reqID,
+				)
+				s.k.TestAccessor_processSwapOutJobs(s.T(), s.ctx, []types.PayoutJob{types.NewPayoutJob(duePayoutTime, reqID, vaultAddr, req)})
+			},
+			posthandler: func(ownerAddr sdk.AccAddress, reqID uint64, shareDenom string, vaultAddr sdk.AccAddress, mintedShares sdk.Coin) {
+				s.Require().Zero(s.countPendingSwapOuts(), "a job with no queue entry must not resurrect one")
+
+				s.assertBalance(ownerAddr, underlyingDenom, math.ZeroInt())
+				s.assertBalance(vaultAddr, mintedShares.Denom, mintedShares.Amount)
+				s.Require().Equal(
+					mintedShares.Amount,
+					s.k.BankKeeper.GetSupply(s.ctx, shareDenom).Amount,
+					"share supply must be untouched when the payout rolls back with request %d", reqID,
+				)
+
+				vault, err := s.k.GetVault(s.ctx, vaultAddr)
+				s.Require().NoError(err, "should successfully get vault %s", vaultAddr)
+				s.Require().True(vault.Paused, "vault %s must be paused when the collected job and the queue disagree", vaultAddr)
+			},
+		},
 	}
 
 	for i, tc := range tests {

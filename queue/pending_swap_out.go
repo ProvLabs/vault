@@ -99,16 +99,29 @@ func (p *PendingSwapOutQueue) Enqueue(ctx context.Context, pendingTime int64, re
 	return id, p.IndexedMap.Set(ctx, collections.Join3(pendingTime, id, vault), *req)
 }
 
-// Dequeue removes a pending swap out from the queue.
+// Dequeue removes a pending swap out from the queue. A missing entry is an error.
 func (p *PendingSwapOutQueue) Dequeue(ctx context.Context, timestamp int64, vault sdk.AccAddress, id uint64) error {
 	if timestamp < 0 {
 		return fmt.Errorf("timestamp cannot be negative")
 	}
 	key := collections.Join3(timestamp, id, vault)
-	if ok, _ := p.IndexedMap.Has(ctx, key); !ok {
-		return nil
+	if err := p.requireQueued(ctx, key); err != nil {
+		return err
 	}
 	return p.IndexedMap.Remove(ctx, key)
+}
+
+// requireQueued errors unless the key is currently in the queue, so no mutation that assumes an
+// existing entry can succeed against one that was never there. A failed lookup is propagated.
+func (p *PendingSwapOutQueue) requireQueued(ctx context.Context, key collections.Triple[int64, uint64, sdk.AccAddress]) error {
+	found, err := p.IndexedMap.Has(ctx, key)
+	if err != nil {
+		return fmt.Errorf("failed to look up pending swap out %d at %d: %w", key.K2(), key.K1(), err)
+	}
+	if !found {
+		return fmt.Errorf("pending swap out %d not found at timestamp %d for vault %s", key.K2(), key.K1(), key.K3())
+	}
+	return nil
 }
 
 // GetByID gets the pending swap out by ID.
@@ -162,12 +175,8 @@ func (p *PendingSwapOutQueue) Reschedule(ctx context.Context, oldTimestamp int64
 	}
 
 	oldKey := collections.Join3(oldTimestamp, id, vault)
-	found, err := p.IndexedMap.Has(ctx, oldKey)
-	if err != nil {
-		return fmt.Errorf("failed to look up pending swap out %d at %d: %w", id, oldTimestamp, err)
-	}
-	if !found {
-		return fmt.Errorf("pending swap out %d not found at timestamp %d for vault %s", id, oldTimestamp, vault)
+	if err := p.requireQueued(ctx, oldKey); err != nil {
+		return err
 	}
 
 	return p.rekey(ctx, oldKey, newTimestamp, *req)

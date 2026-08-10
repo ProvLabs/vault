@@ -747,7 +747,8 @@ func (k msgServer) ToggleBridge(goCtx context.Context, msg *types.MsgToggleBridg
 }
 
 // BridgeMintShares mints local share marker supply for a vault; the signer must match the configured bridge address
-// and the mint amount must not exceed (total_shares - current marker supply).
+// and the mint amount must not exceed (total_shares - current marker supply). Pausing a vault is the module's
+// incident circuit breaker, so a paused vault rejects bridge mints alongside every other value-touching path.
 func (k msgServer) BridgeMintShares(goCtx context.Context, msg *types.MsgBridgeMintSharesRequest) (*types.MsgBridgeMintSharesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -757,6 +758,9 @@ func (k msgServer) BridgeMintShares(goCtx context.Context, msg *types.MsgBridgeM
 	vault, err := k.getVault(ctx, vaultAddr)
 	if err != nil {
 		return nil, err
+	}
+	if vault.Paused {
+		return nil, fmt.Errorf("vault %s is paused", msg.VaultAddress)
 	}
 	if !vault.BridgeEnabled {
 		return nil, fmt.Errorf("bridge is disabled for vault %s", msg.VaultAddress)
@@ -794,6 +798,8 @@ func (k msgServer) BridgeMintShares(goCtx context.Context, msg *types.MsgBridgeM
 
 // BridgeBurnShares burns local share marker supply for a vault; the signer must match the configured bridge address
 // and the burn amount must not exceed the current marker supply. Shares are burned from the bridge account balance.
+// Pausing a vault is the module's incident circuit breaker, so a paused vault rejects bridge burns alongside every
+// other value-touching path.
 func (k msgServer) BridgeBurnShares(goCtx context.Context, msg *types.MsgBridgeBurnSharesRequest) (*types.MsgBridgeBurnSharesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -803,6 +809,9 @@ func (k msgServer) BridgeBurnShares(goCtx context.Context, msg *types.MsgBridgeB
 	vault, err := k.getVault(ctx, vaultAddr)
 	if err != nil {
 		return nil, err
+	}
+	if vault.Paused {
+		return nil, fmt.Errorf("vault %s is paused", msg.VaultAddress)
 	}
 	if !vault.BridgeEnabled {
 		return nil, fmt.Errorf("bridge is disabled for vault %s", msg.VaultAddress)

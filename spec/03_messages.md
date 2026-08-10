@@ -14,7 +14,7 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 - [BridgeMintShares](#bridgemintshares)
 - [BridgeBurnShares](#bridgeburnshares)
 - [SetBridgeAddress](#setbridgeaddress)
-- [ToggleBridgeEnabled](#togglebridgeenabled)
+- [ToggleBridge](#togglebridge)
 - [UpdateMinInterestRate](#updatemininterestrate)
 - [UpdateMaxInterestRate](#updatemaxinterestrate)
 - [UpdateInterestRate](#updateinterestrate)
@@ -49,10 +49,10 @@ All messages are protobuf-defined (`vault.v1`) and handled by the module’s `Ms
 | `CreateVault`            | Governance when gated             |                   ✅ |                 ✅ | Creation only. Must be signed by the governance module account while `gov_only_vault_creation` is enabled.     |
 | `SwapIn`                 | No                                |                   ✅ |                 ❌ | Keeper `SwapIn` enforces `!vault.Paused`, `SwapInEnabled`, accepted denom, underlying deny list, reconcile, non-zero net TVV when shares are outstanding.                         |
 | `SwapOut`                | No                                |                   ✅ |                 ❌ | Keeper `SwapOut` enforces `!vault.Paused`, `SwapOutEnabled`, share denom match, payout restrictions, enqueue. |
-| `BridgeMintShares`       | Bridge only                       |                   ✅ |                 ✅ | Requires `bridge_enabled`, signer == `bridge_address`, shares denom match, positive amount, capacity ≤ `total_shares`. |
-| `BridgeBurnShares`       | Bridge only                       |                   ✅ |                 ✅ | Requires `bridge_enabled`, signer == `bridge_address`, shares denom match, positive amount; burns from marker. |
-| `SetBridgeAddress`       | Admin only                        |                   ✅ |                 ✅ | Sets or updates the single authorized `bridge_address`.                                                       |
-| `ToggleBridgeEnabled`    | Admin only                        |                   ✅ |                 ✅ | Enables/disables bridge operations; no mint/burn allowed when disabled.                                       |
+| `BridgeMintShares`       | Bridge only                       |                   ✅ |                 ❌ | Enforces `!vault.Paused`, then `bridge_enabled`, signer == `bridge_address`, shares denom match, positive amount, capacity ≤ `total_shares`. |
+| `BridgeBurnShares`       | Bridge only                       |                   ✅ |                 ❌ | Enforces `!vault.Paused`, then `bridge_enabled`, signer == `bridge_address`, shares denom match, positive amount; burns from marker. |
+| `SetBridgeAddress`       | Admin only                        |                   ✅ |                 ✅ | Sets or updates the single authorized `bridge_address`. Configuration only, so it stays available while paused. |
+| `ToggleBridge`           | Admin only                        |                   ✅ |                 ✅ | Enables/disables bridge operations; no mint/burn allowed when disabled. Configuration only, so it stays available while paused. |
 | `UpdateMinInterestRate`  | Admin only                        |                   ✅ |                 ✅ | Validates and updates the minimum allowable interest rate.                                                    |
 | `UpdateMaxInterestRate`  | Admin only                        |                   ✅ |                 ✅ | Validates and updates the maximum allowable interest rate.                                                    |
 | `UpdateInterestRate`     | Admin or Asset Manager            |                   ✅ |                 ✅ | Validates bounds, may reconcile, updates enable/disable flows.                                                |
@@ -325,12 +325,14 @@ Admin-only. Sets or updates the single authorized external bridge address for a 
 
 ---
 
-## ToggleBridgeEnabled
+## ToggleBridge
 
-Admin-only. Enables or disables bridge operations for a vault.
+Admin-only. Enables or disables bridge operations for a vault. Together with rotating `bridge_address` via
+[SetBridgeAddress](#setbridgeaddress) and pausing the vault, this is one of the bridge containment levers described
+in the [Bridge Trust Model](01_concepts.md#bridge-trust-model--supply-of-record).
 
-* **Request:** `MsgToggleBridgeEnabledRequest { admin, vault_address, enabled }`
-* **Response:** `MsgToggleBridgeEnabledResponse {}`
+* **Request:** `MsgToggleBridgeRequest { admin, vault_address, enabled }`
+* **Response:** `MsgToggleBridgeResponse {}`
 
 ---
 
@@ -339,6 +341,8 @@ Admin-only. Enables or disables bridge operations for a vault.
 Mints local share marker supply to the bridge within capacity (`total_shares - local_supply`) and transfers the minted shares to the bridge address. The mint re-materializes shares that already exist on a remote chain, so it raises local supply toward `total_shares` but does **not** change `total_shares`.
 
 Capacity is computed with a checked subtraction: if state ever violates the `total_shares >= local_supply` invariant (only reachable through a faulty migration or a crafted genesis import), the message fails with a descriptive invariant error instead of panicking.
+
+A **paused vault rejects the mint** before any other gate is evaluated: pausing is the module's incident circuit breaker and covers the bridge along with every other value-touching path.
 
 * **Request:** `MsgBridgeMintSharesRequest { bridge, vault_address, shares }`
 * **Response:** `MsgBridgeMintSharesResponse {}`
@@ -349,7 +353,9 @@ Capacity is computed with a checked subtraction: if state ever violates the `tot
 
 Transfers shares from the bridge back to the vault and burns them from the marker, reducing local supply. It does **not** change `total_shares`: a bridged-out share still exists on the remote chain, so — unlike the local redemption path — no `total_shares` decrement is performed. The burn re-widens mint capacity (`total_shares - local_supply`) by the burned amount, allowing those shares to be re-minted when they return.
 
-See [Bridge Trust Model & Supply-of-Record](01_concepts.md#bridge-trust-model--supply-of-record) for the full model and the off-chain operator trust assumption.
+A **paused vault rejects the burn** before any other gate is evaluated, for the same reason the mint is rejected.
+
+See [Bridge Trust Model & Supply-of-Record](01_concepts.md#bridge-trust-model--supply-of-record) for the full model, the off-chain operator trust assumption, and the containment levers.
 
 * **Request:** `MsgBridgeBurnSharesRequest { bridge, vault_address, shares }`
 * **Response:** `MsgBridgeBurnSharesResponse {}`

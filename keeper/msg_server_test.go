@@ -5552,6 +5552,22 @@ func (s *TestSuite) TestMsgServer_BridgeMintShares_ErrorMessages() {
 				fmt.Sprintf("below local supply %d%s", 150, share),
 			},
 		},
+		{
+			name: "paused vault rejects a mint that would otherwise fit within capacity",
+			setup: func() {
+				setupWithTotalSharesAndLocalSupply(100, 0)()
+				s.pauseVault(vaultAddr)
+				s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			},
+			msg: types.MsgBridgeMintSharesRequest{
+				VaultAddress: vaultAddr.String(),
+				Bridge:       bridge.String(),
+				Shares:       sdk.NewInt64Coin(share, 100),
+			},
+			expectedErrSubstrs: []string{
+				fmt.Sprintf("vault %s is paused", vaultAddr.String()),
+			},
+		},
 	}
 
 	for _, tc := range tests {
@@ -5720,6 +5736,20 @@ func (s *TestSuite) TestMsgServer_BridgeBurnShares_Failures() {
 			},
 			expectedErrSubstrs: []string{"failed to transfer shares from bridge to vault", "insufficient funds"},
 		},
+		{
+			name: "paused vault rejects a burn the bridge holds the full balance for",
+			setup: func() {
+				enabledWithBridgeFunds()
+				s.pauseVault(vaultAddr)
+				s.ctx = s.ctx.WithEventManager(sdk.NewEventManager())
+			},
+			msg: types.MsgBridgeBurnSharesRequest{
+				VaultAddress: vaultAddr.String(),
+				Bridge:       bridgeAddr.String(),
+				Shares:       burn,
+			},
+			expectedErrSubstrs: []string{fmt.Sprintf("vault %s is paused", vaultAddr.String())},
+		},
 	}
 
 	for _, tc := range tests {
@@ -5727,6 +5757,62 @@ func (s *TestSuite) TestMsgServer_BridgeBurnShares_Failures() {
 			runMsgServerTestCase(s, testDef, tc)
 		})
 	}
+}
+
+func (s *TestSuite) TestMsgServer_BridgeShares_PauseContainsBridge() {
+	underlying := "containu"
+	share := "containshare"
+	vaultAddr := types.GetVaultAddress(share)
+	bridgeAddr := s.CreateAndFundAccount(sdk.NewInt64Coin("stake", 1))
+	totalShares := math.NewInt(1_000_000)
+	halfShares := sdk.NewCoin(share, totalShares.QuoRaw(2))
+
+	msgServer := keeper.NewMsgServer(s.simApp.VaultKeeper)
+	s.setupBridgeVault(underlying, share, bridgeAddr, totalShares)
+
+	mintRequest := &types.MsgBridgeMintSharesRequest{
+		VaultAddress: vaultAddr.String(),
+		Bridge:       bridgeAddr.String(),
+		Shares:       halfShares,
+	}
+	burnRequest := &types.MsgBridgeBurnSharesRequest{
+		VaultAddress: vaultAddr.String(),
+		Bridge:       bridgeAddr.String(),
+		Shares:       halfShares,
+	}
+	pausedErr := fmt.Sprintf("vault %s is paused", vaultAddr.String())
+
+	_, err := msgServer.BridgeMintShares(s.ctx, mintRequest)
+	s.Require().NoError(err, "expected bridge mint of %s to succeed while the vault is live", halfShares)
+
+	_, err = msgServer.PauseVault(s.ctx, &types.MsgPauseVaultRequest{
+		VaultAddress: vaultAddr.String(),
+		Authority:    s.adminAddr.String(),
+		Reason:       "suspected bridge compromise",
+	})
+	s.Require().NoError(err, "expected the admin pause of vault %s to succeed", vaultAddr)
+
+	_, err = msgServer.BridgeMintShares(s.ctx, mintRequest)
+	s.Require().ErrorContains(err, pausedErr,
+		"pausing must reject a bridge mint of %s that still fits within the remaining capacity", halfShares)
+
+	_, err = msgServer.BridgeBurnShares(s.ctx, burnRequest)
+	s.Require().ErrorContains(err, pausedErr,
+		"pausing must reject a bridge burn of %s the bridge holds the full balance for", halfShares)
+
+	s.assertBalance(bridgeAddr, share, halfShares.Amount)
+
+	_, err = msgServer.UnpauseVault(s.ctx, &types.MsgUnpauseVaultRequest{
+		VaultAddress: vaultAddr.String(),
+		Authority:    s.adminAddr.String(),
+	})
+	s.Require().NoError(err, "expected the admin unpause of vault %s to succeed", vaultAddr)
+
+	_, err = msgServer.BridgeBurnShares(s.ctx, burnRequest)
+	s.Require().NoError(err, "expected bridge burn of %s to succeed once the vault is unpaused", halfShares)
+
+	_, err = msgServer.BridgeMintShares(s.ctx, mintRequest)
+	s.Require().NoError(err, "expected bridge mint of %s to succeed once the vault is unpaused", halfShares)
 }
 
 // TestMsgServer_BridgeShares_MintBurnMintCycle_TotalSharesInvariant pins the bridge supply-of-record
